@@ -1214,7 +1214,8 @@ class RoundtripOrchestrator:
             # Group by semantic role
             by_role = {}
             for mapping_id, mapping in semantic_mappings.items():
-                role = getattr(mapping, 'semantic_role', 'unknown')
+                kind = getattr(mapping, 'kind', None)
+                role = kind.value if kind is not None else 'unknown'
                 if role not in by_role:
                     by_role[role] = []
 

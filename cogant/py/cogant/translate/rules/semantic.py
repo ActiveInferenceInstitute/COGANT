@@ -130,7 +130,7 @@ class ActionRule(TranslationRule):
             List of matched action functions/methods.
         """
         matches = []
-        action_keywords = ["set", "update", "create", "delete", "send", "push", "execute", "run", "process", "handle", "dispatch"]
+        action_keywords = ["set", "update", "create", "delete", "send", "push", "execute", "run", "process", "handle", "dispatch", "encode", "decode", "dump", "load"]
 
         # Find functions and methods
         functions = graph.get_nodes_by_kind(NodeKind.FUNCTION)
@@ -142,12 +142,14 @@ class ActionRule(TranslationRule):
             # Check for keyword match
             keyword_match = any(kw in name_lower for kw in action_keywords)
 
-            if keyword_match:
-                # Count mutations
-                out_edges = graph.get_edges_from(node.id)
-                writes = sum(1 for e in out_edges if e.kind in (EdgeKind.WRITES, EdgeKind.MUTATES))
-                calls = sum(1 for e in out_edges if e.kind == EdgeKind.CALLS)
+            # Count mutations (also used as edge-based fallback trigger)
+            out_edges = graph.get_edges_from(node.id)
+            writes = sum(1 for e in out_edges if e.kind in (EdgeKind.WRITES, EdgeKind.MUTATES))
+            calls = sum(1 for e in out_edges if e.kind == EdgeKind.CALLS)
+            writes_only = sum(1 for e in out_edges if e.kind == EdgeKind.WRITES)
 
+            # Match on keyword OR on >=2 outgoing WRITES edges (functional-codebase recall)
+            if keyword_match or writes_only >= 2:
                 matches.append({
                     "node_id": node.id,
                     "write_count": writes,
