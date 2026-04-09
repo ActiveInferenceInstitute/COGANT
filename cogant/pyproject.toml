@@ -160,3 +160,11 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.151.12",
+    "mutmut>=3.5.0",
+    "mkdocs-material>=9.7.6",
+    "mkdocstrings[python]>=1.0.3",
+]
