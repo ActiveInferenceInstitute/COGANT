@@ -48,6 +48,33 @@ class PipelineConfig:
     layout_output: bool = False
     """After export, move flat artifacts into data/, diagrams/, site/, reports/, figures/."""
 
+    skip_dynamic: bool = False
+    """Explicit opt-out for the dynamic-analysis enrichment stage.
+
+    When ``True``, the ``dynamic`` stage is treated as skipped for the
+    duration of a single ``run()`` even when it would otherwise appear in
+    ``stages``. This is the flag wired to the ``--no-dynamic`` CLI option
+    and lets callers disable dynamic enrichment without having to edit
+    the stage list by hand.
+    """
+
+    coverage_path: str | None = None
+    """Explicit path to a coverage database (``.coverage`` or ``coverage.xml``).
+
+    When set, the dynamic stage uses this file directly. When ``None``,
+    the dynamic stage looks for ``plugins['dynamic']['coverage_path']``,
+    then falls back to auto-detecting a ``.coverage`` file at the target
+    root before deciding there is no coverage data available.
+    """
+
+    trace_path: str | None = None
+    """Explicit path to a Chrome DevTools trace JSON file.
+
+    When set, the dynamic stage uses this file directly. When ``None``,
+    the dynamic stage looks for ``plugins['dynamic']['trace_path']``
+    before deciding there is no trace data available.
+    """
+
 
 class PipelineRunner:
     """
@@ -105,10 +132,23 @@ class PipelineRunner:
 
         bundle = Bundle(target=target, metadata={"config": vars(config)})
 
+        # Build the effective skip set. ``skip_dynamic`` acts as a shorthand
+        # for adding ``"dynamic"`` to ``skip_stages`` without mutating the
+        # caller-provided config object.
+        effective_skip: set[str] = set(config.skip_stages)
+        if config.skip_dynamic:
+            effective_skip.add("dynamic")
+
         # Execute each stage in order
         for stage in config.stages:
-            if stage in config.skip_stages:
+            if stage in effective_skip:
                 logger.info(f"Skipping stage: {stage}")
+                if stage == "dynamic" and config.skip_dynamic:
+                    bundle.stage_results[stage] = {
+                        "type": "dynamic_enrichment",
+                        "skipped": True,
+                        "reason": "skip_dynamic=True",
+                    }
                 continue
 
             if stage not in self.stage_handlers:
@@ -181,12 +221,64 @@ class PipelineRunner:
     def _stage_dynamic(
         self, bundle: Bundle, config: PipelineConfig
     ) -> dict[str, Any]:
-        """Run dynamic analysis enrichment."""
+        """Run dynamic analysis enrichment.
+
+        Resolution order for coverage / trace paths:
+
+        1. Explicit ``config.coverage_path`` / ``config.trace_path`` fields.
+        2. ``config.plugins['dynamic']['coverage_path']`` / ``['trace_path']``.
+        3. Auto-detection of ``.coverage`` at the target root for coverage.
+
+        When neither path can be resolved, the stage is a no-op and reports
+        ``skipped=True`` with ``reason='no dynamic data available'`` so that
+        downstream tooling and tests can tell the difference between "ran
+        and had nothing to enrich" and "explicitly disabled".
+        """
         if config.dry_run:
             return {"type": "dynamic_enrichment", "dry_run": True}
-        coverage_path = config.plugins.get("dynamic", {}).get("coverage_path")
-        trace_path = config.plugins.get("dynamic", {}).get("trace_path")
-        return orchestration.run_dynamic(bundle, coverage_path=coverage_path, trace_path=trace_path)
+
+        plugins_dynamic = config.plugins.get("dynamic", {}) if config.plugins else {}
+        coverage_path = config.coverage_path or plugins_dynamic.get("coverage_path")
+        trace_path = config.trace_path or plugins_dynamic.get("trace_path")
+
+        # Auto-detect a .coverage file under the target if nothing was supplied.
+        if coverage_path is None:
+            try:
+                from pathlib import Path as _Path
+
+                target_path = _Path(bundle.target)
+                if target_path.exists() and target_path.is_dir():
+                    candidate = target_path / ".coverage"
+                    if candidate.exists() and candidate.is_file():
+                        coverage_path = str(candidate)
+                        logger.info(
+                            "Dynamic stage auto-detected coverage at %s", coverage_path
+                        )
+            except Exception:  # noqa: BLE001
+                logger.debug("Coverage auto-detection skipped", exc_info=True)
+
+        if coverage_path is None and trace_path is None:
+            logger.info(
+                "Dynamic stage: no coverage or trace data found; skipping enrichment"
+            )
+            return {
+                "type": "dynamic_enrichment",
+                "skipped": True,
+                "reason": "no dynamic data available",
+                "coverage_nodes_enriched": 0,
+                "trace_nodes_enriched": 0,
+            }
+
+        result = orchestration.run_dynamic(
+            bundle,
+            coverage_path=coverage_path,
+            trace_path=trace_path,
+        )
+        if coverage_path is not None:
+            result["coverage_path"] = coverage_path
+        if trace_path is not None:
+            result["trace_path"] = trace_path
+        return result
 
     def _stage_translate(
         self, bundle: Bundle, config: PipelineConfig

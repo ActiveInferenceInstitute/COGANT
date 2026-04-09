@@ -129,6 +129,28 @@ class TestTranslateCommand:
         assert result.exit_code == 0, result.stdout
         assert "Skipped" in result.stdout
 
+    def test_translate_with_no_dynamic_flag(self, runner, tmp_path):
+        """``--no-dynamic`` succeeds and records a skipped dynamic stage."""
+        out = tmp_path / "translate_no_dynamic"
+        result = runner.invoke(
+            app,
+            [
+                "translate",
+                str(FIXTURE),
+                "--output",
+                str(out),
+                "--no-dynamic",
+            ],
+        )
+        assert result.exit_code == 0, result.stdout
+        assert "--no-dynamic" in result.stdout
+        # bundle.json should reflect that dynamic was skipped.
+        bundle = json.loads((out / "bundle.json").read_text())
+        stage_results = bundle.get("stage_results", {})
+        dyn = stage_results.get("dynamic", {})
+        assert dyn.get("skipped") is True
+        assert dyn.get("reason") == "skip_dynamic=True"
+
 
 # --------------------------------------------------------- validate -----
 

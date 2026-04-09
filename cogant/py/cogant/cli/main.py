@@ -196,6 +196,21 @@ def translate(
         "--layout-output",
         help="After export, move artifacts into data/, diagrams/, site/, reports/, figures/",
     ),
+    no_dynamic: bool = typer.Option(
+        False,
+        "--no-dynamic",
+        help="Skip the dynamic-analysis enrichment stage (coverage + trace)",
+    ),
+    coverage_path: Optional[str] = typer.Option(
+        None,
+        "--coverage",
+        help="Path to a coverage database (.coverage) or Cobertura coverage.xml",
+    ),
+    trace_path: Optional[str] = typer.Option(
+        None,
+        "--trace",
+        help="Path to a Chrome DevTools trace JSON file",
+    ),
 ) -> None:
     """Run full pipeline translation."""
     console.print(
@@ -238,6 +253,18 @@ def translate(
             console.print(f"[yellow]Warning: failed to load config {config_file}: {e}[/yellow]")
     if skip_stages:
         config.skip_stages = [s.strip() for s in skip_stages.split(",") if s.strip()]
+
+    # CLI overrides for dynamic-analysis wiring. ``--no-dynamic`` takes
+    # precedence over any coverage / trace paths the user may have
+    # supplied; we still record them on the config so a subsequent call
+    # without ``--no-dynamic`` still has them.
+    if no_dynamic:
+        config.skip_dynamic = True
+        console.print("[dim]--no-dynamic: skipping dynamic analysis stage[/dim]")
+    if coverage_path:
+        config.coverage_path = coverage_path
+    if trace_path:
+        config.trace_path = trace_path
 
     runner = PipelineRunner()
     bundle = runner.run(target, config)
@@ -306,12 +333,20 @@ def statespace(
 @app.command()
 def process(
     target: str = typer.Argument(".", help="Target path"),
+    no_dynamic: bool = typer.Option(
+        False,
+        "--no-dynamic",
+        help="Skip the dynamic-analysis enrichment stage (coverage + trace)",
+    ),
 ) -> None:
     """Extract process/execution model."""
     console.print(f"[bold blue]Extracting process model[/bold blue] from {target}")
 
     runner = PipelineRunner()
-    config = PipelineConfig(skip_stages=["export", "validate"])
+    config = PipelineConfig(
+        skip_stages=["export", "validate"],
+        skip_dynamic=no_dynamic,
+    )
     bundle = runner.run(target, config)
 
     process_model = bundle.stage_results.get("process", {})
@@ -607,6 +642,11 @@ def diff(
 def benchmark(
     target: str = typer.Argument(".", help="Target path"),
     iterations: int = typer.Option(3, "--iterations", "-n", help="Number of runs"),
+    no_dynamic: bool = typer.Option(
+        False,
+        "--no-dynamic",
+        help="Skip the dynamic-analysis enrichment stage (coverage + trace)",
+    ),
 ) -> None:
     """Benchmark pipeline performance."""
     import time
@@ -619,7 +659,10 @@ def benchmark(
 
         start = time.time()
         runner = PipelineRunner()
-        config = PipelineConfig(skip_stages=["export", "validate"])
+        config = PipelineConfig(
+            skip_stages=["export", "validate"],
+            skip_dynamic=no_dynamic,
+        )
         runner.run(target, config)
         elapsed = time.time() - start
 
