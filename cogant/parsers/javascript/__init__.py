@@ -1,9 +1,18 @@
-"""JavaScript language parser (uses TypeScript parser)."""
+"""JavaScript language parser package.
 
-# JavaScript is supported through the TypeScript parser
-from parsers.typescript.parser import TypeScriptLanguageParser
+Exposes :class:`JavaScriptLanguageParser`, a tree-sitter backed plugin
+defined in :mod:`parsers.javascript.parser`. For compatibility with the
+pre-tree-sitter plugin layout, the legacy alias pointing at
+``TypeScriptLanguageParser`` is still available under
+``LegacyJavaScriptLanguageParser``.
+"""
 
-# Alias for clarity
-JavaScriptLanguageParser = TypeScriptLanguageParser
+from parsers.javascript.parser import JavaScriptLanguageParser
 
-__all__ = ["JavaScriptLanguageParser"]
+try:  # pragma: no cover - compat shim
+    from parsers.typescript.parser import TypeScriptLanguageParser as _TS
+    LegacyJavaScriptLanguageParser = _TS
+except Exception:  # pragma: no cover
+    LegacyJavaScriptLanguageParser = None  # type: ignore[assignment]
+
+__all__ = ["JavaScriptLanguageParser", "LegacyJavaScriptLanguageParser"]

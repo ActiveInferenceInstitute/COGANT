@@ -638,6 +638,75 @@ def diff(
     console.print("\n[green]✓ Diff complete[/green]")
 
 
+@app.command("changed")
+def changed(
+    path: Path = typer.Argument(
+        Path("."),
+        help="Repository path (must be a git working tree)",
+    ),
+    since: str = typer.Option(
+        "HEAD~1",
+        "--since",
+        "-s",
+        help="Git ref to compare against (default: HEAD~1)",
+    ),
+    python_only: bool = typer.Option(
+        False,
+        "--python-only",
+        help="Only list changed Python files",
+    ),
+    source_only: bool = typer.Option(
+        False,
+        "--source-only",
+        help="Only list changed source files in known languages",
+    ),
+    output: Optional[Path] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Write the list of changed files to this path (one per line)",
+    ),
+) -> None:
+    """List files changed since a git ref (incremental analysis helper).
+
+    This powers COGANT's incremental mode: point the pipeline at the
+    output to re-analyze only the files that actually need it. For
+    non-git directories the command exits with a warning and an empty
+    result.
+    """
+    from cogant.ingest.incremental import IncrementalIngester
+
+    ingester = IncrementalIngester(path)
+    if not ingester.is_git_repo():
+        console.print(
+            f"[yellow]Not a git repository: {path}. "
+            f"Incremental mode is unavailable.[/yellow]"
+        )
+        raise typer.Exit(code=1)
+
+    if python_only:
+        paths = ingester.python_files_changed_since(since)
+        header = f"{len(paths)} Python files changed since {since}"
+        rendered_lines = [str(p) for p in paths]
+    elif source_only:
+        paths = ingester.source_files_changed_since(since)
+        header = f"{len(paths)} source files changed since {since}"
+        rendered_lines = [str(p) for p in paths]
+    else:
+        changes = ingester.changed_since(since)
+        header = f"{len(changes)} files changed since {since}"
+        rendered_lines = [f"{c.change_type}\t{c.path}" for c in changes]
+
+    console.print(f"[bold]{header}[/bold]")
+    for line in rendered_lines:
+        console.print(f"  {line}")
+
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text("\n".join(rendered_lines) + "\n", encoding="utf-8")
+        console.print(f"[green]Wrote {len(rendered_lines)} entries to {output}[/green]")
+
+
 @app.command()
 def benchmark(
     target: str = typer.Argument(".", help="Target path"),

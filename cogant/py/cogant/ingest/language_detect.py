@@ -38,7 +38,13 @@ class LanguageDetector:
 
     @classmethod
     def _lazy_load_parsers(cls):
-        """Lazy load parser classes on first use."""
+        """Lazy load parser classes on first use.
+
+        Prefers the new tree-sitter backed plugins for JavaScript and
+        TypeScript when the ``tree-sitter`` runtime + grammars are
+        installed, and falls back to the legacy regex-based
+        ``TypeScriptLanguageParser`` otherwise.
+        """
         if cls.PARSER_CLASSES["python"] is not None:
             return  # Already loaded
 
@@ -48,10 +54,32 @@ class LanguageDetector:
         except Exception:
             pass
 
+        # Prefer tree-sitter for JavaScript; fall back to the TS regex parser.
+        js_loaded = False
+        try:
+            from javascript.parser import JavaScriptLanguageParser
+            cls.PARSER_CLASSES["javascript"] = JavaScriptLanguageParser
+            js_loaded = True
+        except Exception:
+            pass
+
+        # Prefer tree-sitter for TypeScript when available.
+        ts_loaded = False
+        try:
+            from typescript.tree_sitter_parser import TypeScriptTreeSitterParser
+            if TypeScriptTreeSitterParser is not None:
+                cls.PARSER_CLASSES["typescript"] = TypeScriptTreeSitterParser
+                ts_loaded = True
+        except Exception:
+            pass
+
+        # Regex fallback for either JS or TS that didn't get a tree-sitter plugin.
         try:
             from typescript.parser import TypeScriptLanguageParser
-            cls.PARSER_CLASSES["typescript"] = TypeScriptLanguageParser
-            cls.PARSER_CLASSES["javascript"] = TypeScriptLanguageParser
+            if not ts_loaded:
+                cls.PARSER_CLASSES["typescript"] = TypeScriptLanguageParser
+            if not js_loaded:
+                cls.PARSER_CLASSES["javascript"] = TypeScriptLanguageParser
         except Exception:
             pass
 
@@ -144,3 +172,53 @@ class LanguageDetector:
             if parser_class is not None:
                 supported.append(lang)
         return supported
+
+
+def get_parser_for_extension(ext: str):
+    """Return a LanguagePlugin instance suitable for a file extension.
+
+    Prefers tree-sitter backed plugins when the corresponding grammar is
+    installed, and falls back to the legacy regex plugins otherwise.
+
+    Args:
+        ext: File extension, e.g. ``.py``, ``.ts``, ``.js``.
+
+    Returns:
+        A :class:`cogant.plugins.base.LanguagePlugin` instance, or
+        ``None`` if no parser is registered for the extension.
+    """
+    ext = (ext or "").lower()
+    if not ext.startswith("."):
+        ext = f".{ext}"
+
+    try:
+        from cogant.parsers.tree_sitter_base import get_tree_sitter_parser
+        ts = get_tree_sitter_parser()
+        if ext in ts.supported_extensions():
+            language = ts.language_for_path(Path(f"x{ext}"))
+            if language == "javascript":
+                try:
+                    from javascript.parser import JavaScriptLanguageParser
+                    return JavaScriptLanguageParser()
+                except Exception:
+                    pass
+            if language in ("typescript", "tsx"):
+                try:
+                    from typescript.tree_sitter_parser import (
+                        TypeScriptTreeSitterParser,
+                    )
+                    if TypeScriptTreeSitterParser is not None:
+                        return TypeScriptTreeSitterParser()
+                except Exception:
+                    pass
+            # python / rust / go — fall through to the legacy dispatcher
+    except Exception:
+        pass
+
+    language = LanguageDetector.EXTENSION_MAP.get(ext)
+    if language is None:
+        return None
+    try:
+        return LanguageDetector.get_parser(language)
+    except Exception:
+        return None

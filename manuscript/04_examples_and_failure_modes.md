@@ -8,45 +8,41 @@ The package tree includes runnable examples under [`../cogant/examples/`](../cog
 
 ### Concrete walkthrough: Flask REST API
 
-To make the pipeline's behavior tangible, consider a small Flask application with three HTTP endpoints, two utility modules, and one data-access layer -- 800 lines of Python across 6 files, of which 782 lines are non-blank, non-comment code analyzed by the pipeline. Running `cogant scan ./flask_app && cogant extract-static ./flask_app -o output/ && cogant graph ./flask_app && cogant translate ./flask_app -o output/` on this repository produces a program graph with the following characteristics:
+To make the pipeline's behavior tangible, consider the `flask_app` fixture distributed under `../cogant/examples/real_world/flask_app/`: a small six-module Flask application (`__init__.py`, `app.py`, `config.py`, `models.py`, `services.py`, `utils.py`) totalling 853 lines of Python analyzed end-to-end by the pipeline. Running `RoundtripOrchestrator` on this repository via `../cogant/examples/orchestrate_roundtrip.py` produces a program graph with the characteristics recorded in the canonical `../_rnd/figures/metrics.json`:
 
 | Metric | Value |
 |--------|-------|
 | Source files discovered | 6 |
-| Lines analyzed | 782 / 800 (97.8%) |
-| **Nodes** | **147** |
-| **Edges** | **389** |
-| Mean node confidence | 0.91 |
-| Validation status | PASS (0 errors, 3 warnings) |
+| Lines analyzed | 853 |
+| **Nodes** | **98** |
+| **Edges** | **597** |
+| Total semantic mappings | 51 |
+| GNN package files | 19 |
+| GNN validation | PASS (score 100.0, 0 errors, 0 warnings) |
 
-The node and edge populations distribute across kinds as follows:
+The node and edge populations distribute across the kinds the v0.1.x Python front end actually extracts (structural core: MODULE / CLASS / METHOD / FUNCTION plus CONTAINS / WRITES / READS / CALLS / IMPORTS / INHERITS), rather than the richer taxonomy that is declared in `cogant.schemas.core.NodeKind` and `EdgeKind` but remains roadmap for the Python parser.
 
 **Table 1. Node kind distribution (Flask API example).**
 
 | Node kind | Count | Percentage |
 |-----------|-------|-----------|
-| FUNCTION | 38 | 25.9% |
-| VARIABLE | 52 | 35.4% |
-| TYPE | 11 | 7.5% |
-| MODULE | 6 | 4.1% |
-| CONTROLFLOW_NODE | 18 | 12.2% |
-| DATA_STRUCTURE | 7 | 4.8% |
-| ERRORHANDLER | 5 | 3.4% |
-| CONSTANT | 6 | 4.1% |
-| EXTERNAL | 4 | 2.7% |
+| MODULE | 6 | 6.1% |
+| CLASS | 25 | 25.5% |
+| METHOD | 57 | 58.2% |
+| FUNCTION | 10 | 10.2% |
 
 **Table 2. Edge kind distribution (Flask API example).**
 
 | Edge kind | Count | Percentage |
 |-----------|-------|-----------|
-| CALLS | 87 | 22.4% |
-| USES | 104 | 26.7% |
-| DEFINES | 62 | 15.9% |
-| HAS_TYPE | 48 | 12.3% |
-| DATA_FLOW | 34 | 8.7% |
-| MEMBER_OF | 29 | 7.5% |
-| INHERITS | 3 | 0.8% |
-| Other | 22 | 5.7% |
+| CALLS | 433 | 72.5% |
+| CONTAINS | 92 | 15.4% |
+| READS | 38 | 6.4% |
+| WRITES | 15 | 2.5% |
+| IMPORTS | 10 | 1.7% |
+| INHERITS | 9 | 1.5% |
+
+The CALLS-heavy distribution reflects the call-graph step in `CallGraphBuilder`, which traverses every `ast.Call` node in the module and attaches an edge between the enclosing function or method and its callee when the callee resolves inside the project. Control-flow nodes, anonymous data-flow nodes, and typed variable nodes are not yet emitted by the Python front end; broadening the node taxonomy is tracked as P1-2 and P1-3 in the R&D backlog (`../_rnd/SCOPING_REPORT.md`).
 
 ### Example semantic mapping output
 
