@@ -1,406 +1,167 @@
-# COGANT: Codebase-to-GNN Translation Engine
+# COGANT — Codebase-to-GNN Translation Engine
 
-COGANT turns repositories into **program graphs** you can train on: static structure, typed symbols, and controlled semantics, exported in formats downstream tools already consume (JSON, columnar tables, narrative Markdown). The aim is not to replace your compiler or IDE, but to give models and analyzers a **stable intermediate representation** that is explicit about what was inferred, what was observed, and how confident the pipeline is.
+> **Translate software repositories into Active Inference generative models.**
 
-**Intended uses:** program understanding at scale, architecture mining, retrieval-augmented code generation, and research prototypes that need reproducible graph datasets from real code.
+COGANT converts Python, JavaScript, and TypeScript codebases into
+[Active Inference Institute](https://activeinference.org/) **Generalized Notation Notation (GNN)**
+state-space models — complete with A/B/C/D probabilistic matrices, Markov blanket
+partitions, and principled free-energy derivations.
 
----
-
-## What you get
-
-| Layer | Responsibility |
-| --- | --- |
-| **Ingest** | Discover files, respect size and ignore rules, attach filesystem provenance. |
-| **Parse** | Language-specific ASTs (initial focus: Python and Rust). |
-| **Normalize** | Cross-language naming, qualification, and reference linking. |
-| **Graph** | A property graph: symbols, types, calls, imports, dataflow hints where available. |
-| **Translate & score** | Rule-driven transforms toward GNN-friendly tensors or tables; calibrated confidence (not magic). |
-| **State space** | Optional control-flow and state-machine views for analyzable subsystems. |
-| **Validate & export** | Schema checks, reports, and lossless-ish exports with provenance. |
-
-**Outputs** are meant to be **machine-checkable**: every nontrivial edge or attribute should be traceable to a source span or a documented inference rule.
+Current release: **v0.1.0 Alpha** (2026-04-09). 642+ tests passing.
 
 ---
 
-## Features
+## What it does
 
-- **Codebase ingestion**: Bounded scans with excludes and size limits; deterministic ordering where possible.
-- **Symbol extraction**: Classes, functions, variables, modules, and cross-file edges when resolution is enabled.
-- **Program graph construction**: Property graph with typed nodes and edges (calls, defines, uses, imports, type relations).
-- **Translation rules**: Declarative transforms from program graphs to tensor/table-friendly layouts.
-- **Confidence scoring**: Per-edge or per-node scores with explicit semantics (parser certainty vs. heuristic inference).
-- **State space compilation**: Structured views of control flow for pipelines that expose explicit state machines.
-- **Export**: Markdown (human audit), JSON (interop), PyArrow (columnar training pipelines).
-- **Validation & provenance**: Structural validation, issue reports, and source attribution.
-- **CLI & Python API**: Thin CLI over the same core types the library exposes.
-
----
-
-## Concepts
-
-### Program graph
-
-The **program graph** is the canonical artifact: nodes for symbols and auxiliary entities (files, scopes), edges for semantic relationships. Downstream GNN code typically materializes:
-
-- **Node features** from static attributes (arity, visibility, rough role).
-- **Edge indices** from selected relation types (e.g. `CALLS`, `IMPORTS`, `TYPE_USES`).
-- **Optional labels** for supervised tasks, supplied outside COGANT or via rules.
-
-### GNN-compatible export
-
-“GNN-compatible” here means: **regular tables or tensors** plus **metadata** describing node/edge types and provenance—not a commitment to a single framework. PyArrow and JSON are first-class so you can feed PyTorch Geometric, DGL, JAX, or custom trainers without a lock-in layer.
-
-### Confidence
-
-Scores are **epistemic about the pipeline**, not about whether your app is “good code.” Low confidence usually means incomplete type information, unresolved imports, or heuristic linking—surfaced so training data can be filtered or weighted.
-
----
-
-## Installation
-
-Python sources live under `py/` (see `package-dir` in `pyproject.toml`). Install from the **repository root**.
-
-### From source (development)
-
-```bash
-git clone https://github.com/cogant/cogant.git
-cd cogant
-uv sync --all-extras
-# or: uv pip install -e ".[dev,viz]"
+```text
+repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMappings ──[statespace]──► GNN
+  V=nodes            19 declarative rules             HIDDEN_STATE,                A/B/C/D
+  E=typed edges      fixpoint to convergence          OBSERVATION,                 matrices
+                                                      ACTION, POLICY, ...
 ```
 
-Using `pip` only:
-
-```bash
-pip install -e ".[dev,viz]"
-```
-
-Optional legacy pin file: `py/requirements.txt` (prefer `pyproject.toml` and `uv`).
-
-### Published package (when released)
-
-```bash
-pip install cogant
-```
-
----
+- **Forward path**: source code → program dependence graph → fixpoint translation → semantic
+  mappings → compiled state space → GNN markdown bundle (AII-spec compliant).
+- **Reverse path** *(prototype)*: `py/cogant/reverse/` ships the scaffolding for synthesizing a
+  runnable Python package from a GNN bundle. CLI surface for this is tracked as P2 in
+  [`_rnd/R&D_LOG.md`](_rnd/R&D_LOG.md).
 
 ## Quick start
 
-The API below is the **target surface**; as modules land, imports and method names should converge here. If something drifts during early development, prefer the CLI `--help` and inline package docstrings for ground truth.
-
-### Python API
-
-```python
-from pathlib import Path
-
-from cogant import PipelineRunner, Session
-from cogant.api.pipeline import PipelineConfig
-
-# Option A — ergonomic path-based session
-session = Session(
-    workspace="/tmp/cogant-workspace",
-    repo_path=Path("path/to/repo"),
-)
-session.build_graph()
-session.export_all("output/session", layout=True)
-
-# Option B — full pipeline runner (same underlying orchestration)
-runner = PipelineRunner()
-config = PipelineConfig(output_dir="output/pipeline", layout_output=True)
-bundle = runner.run(str(Path("path/to/repo").resolve()), config)
-
-summary = bundle.repo_summary()
-graph = bundle.program_graph()  # method: stage result "graph"
-validation = bundle.validation_report()
-print(summary, graph.get("statistics", {}), validation)
-bundle.save_json("output/bundle.json")
-```
-
-### Command line
-
-Authoritative reference: [docs/CLI_GUIDE.md](docs/CLI_GUIDE.md). The Typer app in [`py/cogant/cli/main.py`](py/cogant/cli/main.py) registers **14** subcommands; `cogant --help` is ground truth if this count drifts.
-
 ```bash
-cogant scan /path/to/repo
-cogant translate /path/to/repo --output output/ --layout-output
-cogant validate output/bundle.json
-cogant render output/bundle.json --output html_site/
-cogant viz output/
-cogant benchmark /path/to/repo --iterations 1
+uv sync --extra all
+uv run cogant translate examples/control_positive/calculator \
+    --output output/calculator \
+    --layout-output
+uv run cogant validate output/calculator/gnn_package
 ```
 
----
+Expected: a populated `output/calculator/` tree with `bundle.json`, `gnn_package/model.gnn.md`,
+and a validator report scoring **100.0 / 100** on the calculator fixture.
+
+## Features (v0.1.0)
+
+- Python parser via CPython `ast`; JavaScript / TypeScript via `tree-sitter` front ends.
+- **19 translation rules** across five families (structural, semantic, control, behavioral,
+  resilience) — see `py/cogant/translate/rules/`.
+- GNN A/B/C/D matrices derived from READS / WRITES / CONSTRAINT / CONFIGURATION edges; AII
+  validator at **100 / 100** on control-positive fixtures (`calculator`, `event_pipeline`,
+  `flask_mini`).
+- Principled variational free energy / expected free energy math — not keyword heuristics.
+- Markov blanket partition: `O(V + E)`, five seed strategies (`auto`, `module`, `class`,
+  `subgraph`, `manual`).
+- Git-diff incremental mode (`cogant changed`).
+- Rust acceleration backend (optional, feature-gated: `COGANT_USE_RUST=1`).
+- Reverse synthesis scaffolding: GNN bundle → Python package plan.
+- **900+ tests across unit, integration, property, and golden suites**; coverage ~77%.
+- `cogant doctor` — environment diagnostics (Python, `uv`, tree-sitter grammars, Rust
+  backend, disk space).
+
+## CLI surface
+
+`cogant --help` is ground truth. The Typer app in
+[`py/cogant/cli/main.py`](py/cogant/cli/main.py) currently registers **16** subcommands:
+
+| Command | Purpose |
+| --- | --- |
+| `init` | Scaffold a new `cogant.yaml` project config. |
+| `doctor` | Environment diagnostics. |
+| `scan` | Discover and classify source files. |
+| `extract-static` | Run static parsers; produce symbol facts. |
+| `extract-dynamic` | Consume runtime traces (coverage, logs) if present. |
+| `graph` | Build the program graph from extracted facts. |
+| `translate` | Full pipeline: ingest → graph → translate → statespace → export. |
+| `statespace` | Run the state-space compiler only. |
+| `process` | Run post-translation processing passes. |
+| `export-gnn` | Write a GNN package from an existing bundle. |
+| `render` | Render an interactive HTML / Markdown site. |
+| `viz` | Emit graph and blanket visualizations. |
+| `validate` | Validate a bundle, run directory, or GNN package. |
+| `diff` | Compare two runs (drift metrics). |
+| `changed` | Git-diff incremental mode. |
+| `benchmark` | Run the micro-benchmark suite. |
 
 ## Architecture
 
-ASCII overview:
-
-```text
-Input Codebase
-    |
-    v
-[Ingest]
-  - File discovery
-  - Language detection
-  - Size / ignore policy
-    |
-    v
-[Parser]
-  - AST extraction (Python / Rust)
-  - Symbol tables
-  - Partial type and import information
-    |
-    v
-[Normalize]
-  - Cross-language symbol identity
-  - Qualified names
-  - Best-effort reference resolution
-    |
-    v
-[Graph]
-  - Nodes: symbols, files, scopes
-  - Edges: defines, uses, calls, imports, type relations
-  - Attributes: source spans, flags
-    |
-    v
-[Translate + score]
-  - Rule packs
-  - Confidence and diagnostics
-  - Optional state-space compilation
-    |
-    v
-[Validate + export]
-  - Schema validation
-  - Provenance records
-  - Markdown / JSON / PyArrow
-```
-
-Mermaid view (same pipeline):
-
 ```mermaid
-flowchart TD
-  A[Repository] --> B[Ingest]
-  B --> C[Parsers]
-  C --> D[Normalize]
-  D --> E[Program graph]
-  E --> F[Translate + scoring]
-  F --> G[State space optional]
-  G --> H[Validate]
-  H --> I[Export JSON / Arrow / Markdown]
+flowchart LR
+    A[Source code] --> B[AST / tree-sitter]
+    B --> C[ProgramGraph\nV=nodes, E=typed edges]
+    C --> D[Fixpoint engine\n19 declarative rules]
+    D --> E[SemanticMappings\nHIDDEN_STATE / OBS / ACTION / POLICY / ...]
+    E --> F[StateSpaceCompiler\nhidden, obs, actions, transitions]
+    F --> G[GNN matrices\nA / B / C / D]
+    G --> H[GNN markdown + JSON\nAII-spec bundle]
+    H --> I[Validator 0-100]
+    G -.-> J[Reverse synthesis\nPackagePlan - prototype]
+    J -.-> A
+    classDef hot fill:#6B21A8,color:#fff,stroke:#4C1D95
+    classDef cool fill:#1D4ED8,color:#fff,stroke:#1E3A8A
+    class H hot
+    class J cool
 ```
 
----
+See [docs/architecture/](docs/architecture/) for per-module deep dives.
 
-## Modules
+## Documentation
 
-### Core
-
-| Module | Role |
-| --- | --- |
-| `cogant.ingest` | Discovery, policies, staging inputs |
-| `cogant.parsers` | Language front ends |
-| `cogant.schemas` | Shared types and validation |
-| `cogant.graph` | In-memory graph model and queries |
-| `cogant.normalize` | Cross-language alignment |
-| `cogant.process` | Pipeline orchestration |
-| `cogant.translate` | Rule application |
-| `cogant.scoring` | Confidence and diagnostics |
-| `cogant.validate` | Graph and export checks |
-| `cogant.statespace` | Control-flow and state-oriented views |
-| `cogant.export` | Writers for Markdown, JSON, PyArrow |
-| `cogant.config` | Config loading and overrides |
-| `cogant.cli` | User-facing commands |
-| `cogant.api` | Stable Python entry points |
-
-### Supporting
-
-| Module | Role |
-| --- | --- |
-| `cogant.dynamic` | Hooks for execution-informed facts (future / optional) |
-| `cogant.static` | Shared static helpers |
-| `cogant.plugins` | Extension points |
-| `cogant.provenance` | Source attribution and run metadata |
-| `cogant.viz` | Graph and report visualization |
-
----
-
-## Configuration
-
-Place `cogant.yaml` at the repository root (or pass `--config` once the CLI supports it).
-
-```yaml
-# cogant.yaml
-version: 1
-
-ingest:
-  source_dirs:
-    - src
-    - lib
-  exclude_patterns:
-    - "*.pyc"
-    - "__pycache__"
-    - ".git"
-  max_file_size_mb: 50
-
-parser:
-  languages: ["python", "rust"]
-  follow_imports: true
-  resolve_external: false
-
-translation:
-  rules_file: "./rules/default.yaml"
-  confidence_threshold: 0.7
-  include_internal_calls: true
-
-export:
-  format: "json"
-  include_provenance: true
-  compression: "gzip"
-```
-
-A fully commented reference `cogant.yaml` should ship beside this README as the options widen.
-
----
-
-## Testing
-
-```bash
-make test
-uv run pytest tests/unit -v
-uv run pytest tests/integration -v
-uv run pytest --cov=cogant --cov-report=html
-```
-
-Golden tests (where present) protect export stability; integration tests run on small fixture repositories.
-
----
+- **Getting started**
+  - [Installation](docs/getting-started/installation.md)
+  - [Quickstart](docs/getting-started/quickstart.md)
+- **Tutorials (numbered, in order)**
+  - [1. Quickstart — 5 minute end-to-end](docs/tutorials/01_quickstart.md)
+  - [2. Small repo walkthrough — `calculator`](docs/tutorials/02_small_repo_walkthrough.md)
+  - [3. Flask app walkthrough](docs/tutorials/03_flask_walkthrough.md)
+  - [4. Writing a custom translation rule](docs/tutorials/04_custom_rules.md)
+  - [5. Reading A / B / C / D matrices](docs/tutorials/05_gnn_interpretation.md)
+  - [6. Reverse mode — GNN → code](docs/tutorials/06_reverse_mode.md)
+  - [7. Authoring a language plugin](docs/tutorials/07_plugin_authoring.md)
+- **Theory**
+  - [Code as a generative model](docs/theory/code_as_generative_model.md)
+  - [Active Inference primer](docs/theory/active_inference_primer.md)
+  - [Active Inference mapping (deep)](docs/theory/active_inference.md)
+  - [GNN format reference](docs/theory/gnn_format_reference.md)
+- **Reference**
+  - [CLI reference](docs/cli.md)
+  - [Glossary](docs/reference/glossary.md)
+  - [API reference](docs/api/)
+- [R&D log](_rnd/R&D_LOG.md)
 
 ## Development
 
-### Setup
-
 ```bash
-make install
-make dev
+uv sync --extra all            # install everything (python + viz + tree-sitter + rust bindings)
+uv run cogant doctor            # verify the environment
+uv run pytest tests/ -q         # 900+ tests; expect ~77% coverage
+uv run mypy py/cogant/          # type check
+uv run ruff check py/           # lint
+make build-rust                 # optional: compile the rust backend
 ```
 
-### Common tasks
+Contributing guide: [CONTRIBUTING.md](CONTRIBUTING.md). Code of conduct:
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
-```bash
-make test
-make lint
-make format
-make type-check
-make build-rust
-make clean
-```
+## Honest scope
 
-### Target layout
-
-```text
-cogant/
-├── py/
-│   └── cogant/
-│       ├── api/
-│       ├── cli/
-│       ├── config/
-│       ├── export/
-│       ├── graph/
-│       ├── ingest/
-│       ├── normalize/
-│       ├── parsers/
-│       ├── process/
-│       ├── schemas/
-│       ├── scoring/
-│       ├── statespace/
-│       ├── translate/
-│       ├── validate/
-│       └── ...
-├── rust/
-│   ├── cogant-core/
-│   └── bindings/
-├── parsers/
-├── specs/
-├── examples/
-│   ├── python-service/
-│   └── workflow-engine/
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── golden/
-├── docs/
-└── benchmarks/
-```
-
----
-
-## Examples
-
-```bash
-uv run cogant translate examples/python-service --output output/python-service --layout-output
-uv run cogant translate examples/workflow-engine --output output/workflow-engine --layout-output
-```
-
----
-
-## Roadmap
-
-- [ ] **v0.2.0**: JavaScript, Go, Java parsers (behind feature flags)
-- [ ] **v0.3.0**: Optional dynamic analysis hooks with strict sandboxing
-- [ ] **v0.4.0**: Interactive exploration UI for graphs and provenance
-- [ ] **v0.5.0**: Curated plugin channel
-- [ ] **v1.0.0**: Stable graph schema and Python API
-
----
-
-## Contributing
-
-Contributions are welcome. See [`docs/AGENTS.md` § Contributing](docs/AGENTS.md) for process and licensing acknowledgments.
-
-**High-impact areas:** parser fidelity, rule packs for new languages, validation diagnostics, performance on large repos, and documentation of edge cases.
-
----
+COGANT prioritizes **transparent, reproducible graphs** over **complete semantics**. Whole-program
+soundness is not the goal; provenance, deterministic output, and explicit uncertainty are. When
+the pipeline lacks evidence for a rule or matrix entry, it emits a **validation finding** and a
+documented fallback rather than silently guessing. Known limitations — identity-biased A matrix
+fill, identity-fallback B tensor, uniform C/D when no constraint/configuration evidence exists —
+are tracked in [`docs/theory/active_inference.md § Known limitations`](docs/theory/active_inference.md#known-limitations).
 
 ## License
 
-MIT License — see the `LICENSE` file.
-
----
+MIT — see [`LICENSE`](LICENSE).
 
 ## Citation
 
 ```bibtex
-@software{cogant2024,
-  title={COGANT: Codebase-to-GNN Translation Engine},
-  author={{COGANT contributors}},
-  year={2024},
-  url={https://github.com/cogant/cogant}
+@software{cogant2026,
+  title  = {COGANT: Codebase-to-GNN Translation Engine},
+  author = {{COGANT contributors}},
+  year   = {2026},
+  url    = {https://github.com/cogant/cogant},
+  version = {0.1.0}
 }
 ```
-
----
-
-## Support
-
-- Documentation hub: [docs/README.md](docs/README.md) (includes the former documentation map and onboarding)
-- Site (if published): https://cogant.dev/docs  
-- Issues: https://github.com/cogant/cogant/issues  
-- Discussions: https://github.com/cogant/cogant/discussions  
-
----
-
-## Related work
-
-- Neural program synthesis and code generation
-- Static analysis and scalable program graphs
-- Graph neural networks for software engineering tasks
-- AST and graph-based code models
-
----
-
-## Honest scope
-
-COGANT prioritizes **transparent graphs** over **complete semantics**. Whole-program soundness is not the goal; reproducibility, provenance, and explicit uncertainty are. When in doubt, the pipeline should emit a **validation finding** rather than silently guessing.
-
-What is implemented versus aspirational (languages, exporters, depth of analysis) is summarized in [docs/SPEC.md § Implementation status](docs/SPEC.md#implementation-status).
