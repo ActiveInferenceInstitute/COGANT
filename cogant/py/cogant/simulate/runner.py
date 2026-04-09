@@ -13,23 +13,62 @@ from collections import defaultdict
 
 from cogant.statespace.compiler import StateSpaceModel, Action, Transition
 from cogant.simulate.distributions import CategoricalDistribution, TransitionMatrix
-from cogant.simulate.free_energy import FreeEnergyCalculator
+from cogant.simulate.free_energy import (
+    FreeEnergyCalculator,
+    bayesian_belief_update,
+    expected_free_energy as principled_expected_free_energy,
+    uniform_distribution,
+    variational_free_energy as principled_variational_free_energy,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class ModelRunner:
-    """Validate and simulate state space models."""
+    """Validate and simulate state space models.
 
-    def __init__(self, seed: Optional[int] = None):
-        """
-        Initialize the ModelRunner.
+    If the caller provides POMDP matrices ``A`` (likelihood), ``B``
+    (transition), ``C`` (log preferences) and ``D`` (prior), VFE and EFE
+    computations delegate to the principled matrix-based implementations
+    in :mod:`cogant.simulate.free_energy`. When the matrices are absent,
+    the runner falls back to the earlier heuristic implementation.
+    """
+
+    def __init__(
+        self,
+        seed: Optional[int] = None,
+        model: Optional[StateSpaceModel] = None,
+        A: Optional[List[List[float]]] = None,
+        B: Optional[List[List[List[float]]]] = None,
+        C: Optional[List[float]] = None,
+        D: Optional[List[float]] = None,
+    ):
+        """Initialize the ModelRunner.
 
         Args:
             seed: Optional random seed for reproducible simulations.
+            model: Optional StateSpaceModel associated with the runner.
+                Kept on the instance so callers that want to bind a model
+                once don't have to pass it to every method.
+            A: Likelihood matrix ``A[o][s] = P(o|s)``. Shape
+                ``[n_obs, n_states]``.
+            B: Transition tensor ``B[s'][s][a] = P(s'|s, a)``. Shape
+                ``[n_states, n_states, n_actions]``.
+            C: Log preference vector over observations. Shape ``[n_obs]``.
+            D: Initial prior P(s). Shape ``[n_states]``.
         """
         if seed is not None:
             random.seed(seed)
+        self.model = model
+        self.A = A
+        self.B = B
+        self.C = C
+        self.D = D
+
+    @property
+    def has_generative_model(self) -> bool:
+        """Whether A/B/C/D matrices are available for principled VFE/EFE."""
+        return all(x is not None for x in (self.A, self.B, self.C, self.D))
 
     def validate_model(self, state_space: StateSpaceModel) -> Dict[str, Any]:
         """
@@ -213,11 +252,110 @@ class ModelRunner:
 
         return trace
 
+    # ------------------------------------------------------------------
+    # Principled matrix-based VFE/EFE entry points.
+    # ------------------------------------------------------------------
+
+    def vfe_from_beliefs(
+        self,
+        beliefs: List[float],
+        observation: Optional[List[float]] = None,
+        prior: Optional[List[float]] = None,
+    ) -> float:
+        """Compute principled VFE from explicit belief vectors.
+
+        Requires that ``A`` (and either ``D`` or an explicit ``prior``) be
+        set on the runner. Raises ``RuntimeError`` if the generative model
+        is absent.
+
+        Args:
+            beliefs: Q(s) as a list of probabilities.
+            observation: Observation distribution. If None, uniform.
+            prior: Prior P(s). If None, uses ``self.D``.
+
+        Returns:
+            Variational free energy (nats). Lower is better.
+        """
+        if self.A is None:
+            raise RuntimeError(
+                "vfe_from_beliefs requires A (likelihood matrix) on the runner"
+            )
+        effective_prior = prior if prior is not None else self.D
+        if effective_prior is None:
+            effective_prior = uniform_distribution(len(beliefs))
+        return principled_variational_free_energy(
+            beliefs=beliefs,
+            prior=effective_prior,
+            likelihood_matrix=self.A,
+            observation=observation,
+        )
+
+    def efe_for_policy(
+        self,
+        policy_action_sequence: List[int],
+        beliefs: Optional[List[float]] = None,
+    ) -> float:
+        """Compute principled EFE for a sequence of action indices.
+
+        Requires ``A``, ``B`` and ``C`` on the runner. ``beliefs`` defaults
+        to ``self.D`` (the prior) if not provided.
+
+        Args:
+            policy_action_sequence: Sequence of action indices.
+            beliefs: Initial Q(s). Defaults to ``self.D``.
+
+        Returns:
+            Expected free energy (nats). Lower is better.
+        """
+        if self.A is None or self.B is None or self.C is None:
+            raise RuntimeError(
+                "efe_for_policy requires A, B, and C on the runner"
+            )
+        start = beliefs if beliefs is not None else self.D
+        if start is None:
+            raise RuntimeError("No initial beliefs and D is None")
+        return principled_expected_free_energy(
+            policy_action_sequence=policy_action_sequence,
+            beliefs=start,
+            likelihood_matrix=self.A,
+            transition_tensor=self.B,
+            log_preferences=self.C,
+        )
+
+    def update_beliefs_from_observation(
+        self,
+        prior: List[float],
+        observation_index: int,
+    ) -> List[float]:
+        """Bayesian belief update using the runner's likelihood matrix.
+
+        Args:
+            prior: Current Q(s) before the observation.
+            observation_index: Index of the observed outcome.
+
+        Returns:
+            Posterior Q(s | o).
+        """
+        if self.A is None:
+            raise RuntimeError(
+                "update_beliefs_from_observation requires A on the runner"
+            )
+        return bayesian_belief_update(prior, self.A, observation_index)
+
+    # ------------------------------------------------------------------
+    # Back-compat state-dict VFE (used when no generative model matrices).
+    # ------------------------------------------------------------------
+
     def compute_free_energy(
         self, state: Dict[str, Any], observation: str
     ) -> float:
         """
         Compute variational free energy for a state-observation pair.
+
+        When ``self.A`` and ``self.D`` are present, this delegates to the
+        principled matrix-based VFE by projecting ``state`` into a one-hot
+        belief over the variables in ``state``. Otherwise it falls back to
+        the heuristic implementation preserved for backward compatibility.
 
         VFE = KL(Q||P) - E_Q[log P(o|s)]
             = complexity - accuracy
@@ -243,8 +381,31 @@ class ModelRunner:
         if not state:
             return 0.0
 
-        # Create belief distribution from state values
-        # Use state keys as "categories"
+        # Principled path: if A and D are available and their dimensions
+        # match the state, use the matrix-based VFE with a one-hot belief
+        # concentrated on the observed variable.
+        if self.A is not None and self.D is not None:
+            categories = list(state.keys())
+            n_states = len(categories)
+            if n_states == len(self.D) and all(
+                len(row) == n_states for row in self.A
+            ):
+                # Build a one-hot belief focused on the matching variable.
+                if observation in categories:
+                    idx = categories.index(observation)
+                    beliefs = [0.0] * n_states
+                    beliefs[idx] = 1.0
+                else:
+                    beliefs = [1.0 / n_states] * n_states
+                return principled_variational_free_energy(
+                    beliefs=beliefs,
+                    prior=list(self.D),
+                    likelihood_matrix=self.A,
+                    observation=None,
+                )
+
+        # Heuristic fallback (back-compat): create a belief distribution
+        # from state values using state keys as "categories".
         categories = list(state.keys())
 
         # Create a belief distribution that concentrates on states matching the observation

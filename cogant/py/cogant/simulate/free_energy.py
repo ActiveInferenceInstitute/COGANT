@@ -1,23 +1,273 @@
 """
 Free energy calculations for Active Inference.
 
-Implements variational free energy, expected free energy, and related quantities.
+This module provides two layers:
+
+1. **Principled, matrix-based functions** (``variational_free_energy``,
+   ``expected_free_energy``, ``bayesian_belief_update``) that operate directly
+   on POMDP matrices ``A`` (likelihood), ``B`` (transition), ``C`` (log
+   preferences) and ``D`` (prior). These are the canonical implementations
+   used by ``cogant.simulate.runner.ModelRunner`` when the caller provides
+   explicit generative-model matrices.
+
+2. **FreeEnergyCalculator** — a convenience class that wraps a
+   ``StateSpaceModel`` and exposes VFE / EFE methods on top of the
+   ``CategoricalDistribution`` abstraction. Preserved for backward
+   compatibility with existing call sites that don't have A/B/C/D matrices.
+
+The principled implementations follow:
+
+    VFE  = KL[Q(s) || P(s)] - E_Q[log P(o|s)]
+    EFE  = sum_tau [ epistemic_value(tau) - pragmatic_value(tau) ]
+         where epistemic = H[P(o|pi, tau)] (entropy of predicted observations)
+               pragmatic = C . P(o|pi, tau) (expected log preference)
+
+Lower VFE/EFE is better.
 """
 
+from __future__ import annotations
+
 import math
-from typing import Dict, List, Optional, Any
-from collections import defaultdict
+from typing import Dict, List, Optional, Sequence
 
 from cogant.statespace.compiler import StateSpaceModel
 from cogant.simulate.distributions import CategoricalDistribution, TransitionMatrix
 
+# Numerical floor to avoid log(0).
+_EPSILON = 1e-12
+
+
+# =========================================================================
+# Principled matrix-based API (primary interface used by ModelRunner)
+# =========================================================================
+
+
+def _safe_log(x: float) -> float:
+    """Log with a small floor to avoid -inf."""
+    return math.log(max(x, _EPSILON))
+
+
+def variational_free_energy(
+    beliefs: Sequence[float],
+    prior: Sequence[float],
+    likelihood_matrix: Sequence[Sequence[float]],
+    observation: Optional[Sequence[float]] = None,
+) -> float:
+    """Compute variational free energy F = KL[Q||P] - E_Q[log P(o|s)].
+
+    This is the principled, matrix-based VFE used by Active Inference
+    agents. Lower VFE = better model fit.
+
+    Args:
+        beliefs: Current posterior Q(s) over hidden states. Must be a valid
+            probability distribution (non-negative, sums to ~1).
+        prior: Prior P(s) (the D vector). Same shape as ``beliefs``.
+        likelihood_matrix: A matrix where ``A[o][s] = P(observation o |
+            state s)``. Shape is ``[n_obs, n_states]``.
+        observation: Current observation distribution. If ``None``, a
+            uniform distribution over observations is assumed (maximum
+            uncertainty about the observation).
+
+    Returns:
+        Variational free energy (nats). Lower is better.
+    """
+    n_states = len(beliefs)
+    if n_states == 0:
+        return 0.0
+
+    if len(prior) != n_states:
+        raise ValueError(
+            f"prior length {len(prior)} does not match beliefs length {n_states}"
+        )
+
+    n_obs = len(likelihood_matrix)
+    if n_obs == 0:
+        # No observation model — VFE reduces to KL term only.
+        kl = 0.0
+        for s in range(n_states):
+            q = beliefs[s]
+            p = prior[s]
+            if q > 0:
+                kl += q * (_safe_log(q) - _safe_log(p))
+        return kl
+
+    for row in likelihood_matrix:
+        if len(row) != n_states:
+            raise ValueError(
+                "likelihood_matrix rows must have n_states entries"
+            )
+
+    if observation is None:
+        observation = [1.0 / n_obs] * n_obs
+    elif len(observation) != n_obs:
+        raise ValueError(
+            f"observation length {len(observation)} does not match n_obs {n_obs}"
+        )
+
+    # KL[Q || P]: complexity.
+    kl = 0.0
+    for s in range(n_states):
+        q = beliefs[s]
+        p = prior[s]
+        if q > 0:
+            kl += q * (_safe_log(q) - _safe_log(p))
+
+    # E_Q[log P(o|s)]: expected log likelihood under current belief,
+    # marginalised over the observation distribution.
+    expected_log_lik = 0.0
+    for s in range(n_states):
+        q = beliefs[s]
+        if q <= 0:
+            continue
+        inner = 0.0
+        for o in range(n_obs):
+            inner += observation[o] * _safe_log(likelihood_matrix[o][s])
+        expected_log_lik += q * inner
+
+    return kl - expected_log_lik
+
+
+def bayesian_belief_update(
+    prior: Sequence[float],
+    likelihood_matrix: Sequence[Sequence[float]],
+    observation_index: int,
+) -> List[float]:
+    """Exact Bayesian posterior under a categorical observation.
+
+    Q(s | o) ∝ P(o | s) · P(s)
+
+    Args:
+        prior: Prior P(s).
+        likelihood_matrix: A[o][s] = P(observation o | state s).
+        observation_index: The index of the observed outcome.
+
+    Returns:
+        Posterior distribution over states.
+    """
+    n_states = len(prior)
+    if n_states == 0:
+        return []
+    if not (0 <= observation_index < len(likelihood_matrix)):
+        raise IndexError(f"observation_index {observation_index} out of range")
+
+    row = likelihood_matrix[observation_index]
+    unnorm = [row[s] * prior[s] for s in range(n_states)]
+    total = sum(unnorm)
+    if total <= 0:
+        # Fall back to the prior when the observation has zero likelihood.
+        return [float(p) for p in prior]
+    return [u / total for u in unnorm]
+
+
+def expected_free_energy(
+    policy_action_sequence: Sequence[int],
+    beliefs: Sequence[float],
+    likelihood_matrix: Sequence[Sequence[float]],
+    transition_tensor: Sequence[Sequence[Sequence[float]]],
+    log_preferences: Sequence[float],
+) -> float:
+    """Compute expected free energy for a policy over a planning horizon.
+
+        EFE(π) = sum_τ [ epistemic_value(τ) - pragmatic_value(τ) ]
+
+    where:
+      * ``epistemic_value`` is the entropy of the predicted observation
+        distribution H[P(o | π, τ)] — rewards exploration / uncertainty
+        reduction.
+      * ``pragmatic_value`` is C · P(o | π, τ) — rewards reaching preferred
+        outcomes (C is the log-preference vector).
+
+    Lower EFE = preferred policy.
+
+    Args:
+        policy_action_sequence: Sequence of action indices to evaluate.
+        beliefs: Current Q(s).
+        likelihood_matrix: A[o][s] (n_obs x n_states).
+        transition_tensor: B[s'][s][a] — probability of transitioning to
+            ``s'`` from ``s`` under action ``a``.
+        log_preferences: C[o] — log preference for each observation.
+
+    Returns:
+        Expected free energy (nats). Lower is better.
+    """
+    n_states = len(beliefs)
+    if n_states == 0:
+        return 0.0
+
+    n_obs = len(likelihood_matrix)
+    if n_obs == 0 or not policy_action_sequence:
+        return 0.0
+
+    if len(log_preferences) != n_obs:
+        raise ValueError(
+            f"log_preferences length {len(log_preferences)} != n_obs {n_obs}"
+        )
+
+    current = list(beliefs)
+    total_efe = 0.0
+
+    for action_idx in policy_action_sequence:
+        # Predict next state distribution under this action:
+        #   s'_dist[s'] = sum_s B[s'][s][a] * current[s]
+        next_beliefs = [0.0] * n_states
+        for s_next in range(n_states):
+            acc = 0.0
+            row = transition_tensor[s_next]
+            for s in range(n_states):
+                acc += row[s][action_idx] * current[s]
+            next_beliefs[s_next] = acc
+
+        # Predicted observation distribution:
+        #   pred_obs[o] = sum_s A[o][s] * next_beliefs[s]
+        pred_obs = [0.0] * n_obs
+        for o in range(n_obs):
+            acc = 0.0
+            a_row = likelihood_matrix[o]
+            for s in range(n_states):
+                acc += a_row[s] * next_beliefs[s]
+            pred_obs[o] = acc
+
+        # Epistemic value: entropy of predicted observations.
+        epistemic = 0.0
+        for o in range(n_obs):
+            p = pred_obs[o]
+            if p > 0:
+                epistemic -= p * _safe_log(p)
+
+        # Pragmatic value: expected log preference.
+        pragmatic = 0.0
+        for o in range(n_obs):
+            pragmatic += log_preferences[o] * pred_obs[o]
+
+        total_efe += epistemic - pragmatic
+        current = next_beliefs
+
+    return total_efe
+
+
+def uniform_distribution(n: int) -> List[float]:
+    """Return a uniform distribution of length ``n``."""
+    if n <= 0:
+        return []
+    return [1.0 / n] * n
+
+
+# =========================================================================
+# Class-based convenience wrapper (back-compat with existing callers)
+# =========================================================================
+
 
 class FreeEnergyCalculator:
-    """Compute free energy quantities for Active Inference."""
+    """Compute free energy quantities for Active Inference.
+
+    Thin convenience wrapper over a ``StateSpaceModel`` that exposes
+    distribution-based VFE / EFE. For new code, prefer the principled
+    matrix-based functions ``variational_free_energy`` and
+    ``expected_free_energy`` defined at module scope.
+    """
 
     def __init__(self, state_space: StateSpaceModel):
-        """
-        Initialize the calculator.
+        """Initialize the calculator.
 
         Args:
             state_space: The compiled state space model.
@@ -33,46 +283,20 @@ class FreeEnergyCalculator:
         observation: str,
         likelihood_model: Optional[Dict[str, CategoricalDistribution]] = None,
     ) -> float:
-        """
-        Compute variational free energy.
-
-        VFE = KL(Q(s) || P(s)) - E_Q[log P(o|s)]
-            = complexity - accuracy
-
-        Where:
-        - Q(s) = beliefs (variational distribution)
-        - P(s) = prior (uniform for simplicity)
-        - P(o|s) = likelihood of observation given state
-        - Complexity = KL divergence (how different beliefs are from prior)
-        - Accuracy = expected log likelihood (how well beliefs predict observation)
-
-        Minimizing VFE drives both:
-        1. Model evidence maximization (fit observation better)
-        2. Parsimony (keep beliefs close to prior)
+        """Compute variational free energy VFE = complexity - accuracy.
 
         Args:
-            beliefs: Prior beliefs over states Q(s).
-            observation: Observed value o.
-            likelihood_model: Optional P(o|s) for each state.
+            beliefs: Q(s), variational posterior over states.
+            observation: Observed value.
+            likelihood_model: Optional explicit P(o|s).
 
         Returns:
-            Variational free energy (in nats). Lower is better.
+            VFE in nats. Lower is better.
         """
-        # Accuracy term: E_Q[log P(o|s)]
-        # This is the expected log likelihood of the observation
         accuracy = self._accuracy(observation, beliefs, likelihood_model)
-
-        # Complexity term: KL(Q(s) || P(s))
-        # How far the beliefs are from the prior (regularization term)
-        # For simplicity, use uniform prior P(s)
         uniform_prior = CategoricalDistribution(beliefs.categories)
         complexity = beliefs.kl_divergence(uniform_prior)
-
-        # VFE = complexity - accuracy
-        # When accuracy is large (good prediction), VFE is smaller
-        # When complexity is large (beliefs far from prior), VFE is larger
-        vfe = complexity - accuracy
-        return vfe
+        return complexity - accuracy
 
     def expected_free_energy(
         self,
@@ -81,53 +305,26 @@ class FreeEnergyCalculator:
         horizon: int = 3,
         likelihood_model: Optional[Dict[str, CategoricalDistribution]] = None,
     ) -> float:
-        """
-        Compute expected free energy for a policy.
-
-        EFE = sum over horizon of [KL(Q_future || P_future) - E_Q[log P(o|s)]]
-            = sum of (complexity - accuracy) for each step in the policy
-
-        Lower EFE is better, indicating a policy that:
-        1. Reduces uncertainty (low complexity term)
-        2. Makes good predictions (high accuracy term)
-
-        Args:
-            beliefs: Current beliefs over states.
-            policy: Sequence of actions to evaluate.
-            horizon: Planning horizon (default 3).
-            likelihood_model: Optional likelihood model.
-
-        Returns:
-            Expected free energy of the policy (lower is better).
-        """
+        """Compute expected free energy for a policy (averaged over horizon)."""
         if not policy:
             return float("inf")
 
         efe = 0.0
         current_beliefs = beliefs
 
-        for step, action in enumerate(policy[:horizon]):
+        for action in policy[:horizon]:
             if action not in self.actions:
                 return float("inf")
 
-            # Expected next state distribution after taking action
             expected_next_beliefs = self._predict_beliefs(current_beliefs, action)
-
-            # Generate expected observation (most likely under current beliefs)
             expected_obs = max(current_beliefs.dist.items(), key=lambda x: x[1])[0]
 
-            # Compute VFE for this step
-            # VFE = complexity - accuracy
-            # where complexity = KL(Q||P_prior) and accuracy = E_Q[log P(o|s)]
             step_vfe = self.variational_free_energy(
                 expected_next_beliefs, expected_obs, likelihood_model
             )
             efe += step_vfe
-
-            # Move to next step
             current_beliefs = expected_next_beliefs
 
-        # Return average over horizon
         return efe / len(policy[:horizon]) if policy else float("inf")
 
     def surprisal(
@@ -136,39 +333,15 @@ class FreeEnergyCalculator:
         beliefs: CategoricalDistribution,
         likelihood_model: Optional[Dict[str, CategoricalDistribution]] = None,
     ) -> float:
-        """
-        Compute surprisal (negative log likelihood) of observation.
-
-        Surprisal = -log P(o) = -log E_Q[P(o|s)]
-
-        Args:
-            observation: Observed value.
-            beliefs: Current beliefs over states.
-            likelihood_model: Optional likelihood model.
-
-        Returns:
-            Surprisal in nats.
-        """
-        accuracy = self._accuracy(observation, beliefs, likelihood_model)
-        return -accuracy
+        """Surprisal = -log P(o) ≈ -E_Q[log P(o|s)]."""
+        return -self._accuracy(observation, beliefs, likelihood_model)
 
     def complexity(
         self,
         posterior: CategoricalDistribution,
         prior: Optional[CategoricalDistribution] = None,
     ) -> float:
-        """
-        Compute complexity (KL divergence).
-
-        Complexity = KL(Q(s) || P(s))
-
-        Args:
-            posterior: Q(s), posterior beliefs.
-            prior: P(s), prior distribution. If None, uses uniform.
-
-        Returns:
-            KL divergence in nats.
-        """
+        """Complexity = KL(Q||P). Prior defaults to uniform."""
         if prior is None:
             prior = CategoricalDistribution(posterior.categories)
         return posterior.kl_divergence(prior)
@@ -179,19 +352,7 @@ class FreeEnergyCalculator:
         beliefs: CategoricalDistribution,
         likelihood_model: Optional[Dict[str, CategoricalDistribution]] = None,
     ) -> float:
-        """
-        Compute accuracy (expected log likelihood).
-
-        Accuracy = E_Q[log P(o|s)]
-
-        Args:
-            observation: Observed value.
-            beliefs: Current beliefs over states.
-            likelihood_model: Optional likelihood model.
-
-        Returns:
-            Accuracy (expected log likelihood) in nats.
-        """
+        """Accuracy = E_Q[log P(o|s)]."""
         return self._accuracy(observation, beliefs, likelihood_model)
 
     def _accuracy(
@@ -202,39 +363,23 @@ class FreeEnergyCalculator:
     ) -> float:
         """Internal accuracy computation.
 
-        If no explicit likelihood model is provided, assumes:
-        - P(o|s) = 0.9 if o == s (high likelihood when observation matches state)
-        - P(o|s) = 0.1 / (n-1) otherwise (low likelihood for mismatches)
-
-        Args:
-            observation: Observed value.
-            beliefs: Current beliefs.
-            likelihood_model: Optional explicit likelihood model.
-
-        Returns:
-            Expected log likelihood.
+        If no explicit likelihood is provided, falls back to a default
+        model where ``P(o|s) = 0.9`` when ``o == s`` and low otherwise.
         """
         accuracy = 0.0
 
         if likelihood_model and observation in likelihood_model:
-            # Use explicit likelihood model
             likelihood_dist = likelihood_model[observation]
             for state in beliefs.categories:
                 belief_prob = beliefs.dist[state]
-                likelihood_prob = likelihood_dist.dist.get(state, 1e-10)
+                likelihood_prob = likelihood_dist.dist.get(state, _EPSILON)
                 if likelihood_prob > 0:
                     accuracy += belief_prob * math.log(likelihood_prob)
         else:
-            # Use default likelihood model
             n = len(beliefs.categories)
             for state in beliefs.categories:
                 belief_prob = beliefs.dist[state]
-                # P(obs | state) is high if obs == state
-                if observation == state:
-                    likelihood_prob = 0.9
-                else:
-                    likelihood_prob = 0.1 / max(1, n - 1)
-
+                likelihood_prob = 0.9 if observation == state else 0.1 / max(1, n - 1)
                 if likelihood_prob > 0:
                     accuracy += belief_prob * math.log(likelihood_prob)
 
@@ -243,26 +388,15 @@ class FreeEnergyCalculator:
     def _predict_beliefs(
         self, beliefs: CategoricalDistribution, action: str
     ) -> CategoricalDistribution:
-        """Predict next belief state after action.
-
-        Args:
-            beliefs: Current beliefs.
-            action: Action to take.
-
-        Returns:
-            Next beliefs distribution.
-        """
+        """Predict next beliefs after taking an action."""
         if action not in self.actions:
             return beliefs
 
-        # Compute expected next state distribution
         next_state_probs = [0.0] * len(self.states)
-
         for i, state in enumerate(self.states):
             belief_s = beliefs.dist[state]
             next_dist = self.transition_matrix.get_next_state_dist(state, action)
-
-            for j, next_state in enumerate(self.states):
+            for j in range(len(self.states)):
                 next_state_probs[j] += belief_s * next_dist.probabilities[j]
 
         return CategoricalDistribution(self.states, next_state_probs)
@@ -274,26 +408,20 @@ class FreeEnergyCalculator:
         horizon: int = 3,
         likelihood_model: Optional[Dict[str, CategoricalDistribution]] = None,
     ) -> List[tuple]:
-        """
-        Rank policies by expected free energy.
-
-        Args:
-            beliefs: Current beliefs.
-            available_actions: List of available actions.
-            horizon: Planning horizon.
-            likelihood_model: Optional likelihood model.
-
-        Returns:
-            List of (action, EFE_score) tuples, sorted by score (lowest is best).
-        """
+        """Rank policies by expected free energy (ascending — lower is better)."""
         rankings = []
-
         for action in available_actions:
-            policy = [action]
             efe = self.expected_free_energy(
-                beliefs, policy, horizon, likelihood_model
+                beliefs, [action], horizon, likelihood_model
             )
             rankings.append((action, efe))
-
-        # Sort by EFE (ascending: lower is better)
         return sorted(rankings, key=lambda x: x[1])
+
+
+__all__ = [
+    "variational_free_energy",
+    "expected_free_energy",
+    "bayesian_belief_update",
+    "uniform_distribution",
+    "FreeEnergyCalculator",
+]
