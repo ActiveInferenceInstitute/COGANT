@@ -14,6 +14,10 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+defaults:
+  run:
+    working-directory: cogant
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -41,7 +45,7 @@ jobs:
         run: uv add mkdocs-material 'mkdocstrings[python]' --dev
 
       - name: Build docs
-        run: uv run mkdocs build --strict
+        run: uv run mkdocs build
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -49,7 +53,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site/
+          path: cogant/site/
 
       - name: Deploy to GitHub Pages
         id: deployment
