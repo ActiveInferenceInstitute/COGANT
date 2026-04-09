@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>_combined_manuscript</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+
+<style>
+body {
+  font-family: 'Liberation Serif', 'Times New Roman', serif;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f8f8f8;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 5px;
+}
+
+code {
+  background-color: #ecf0f1;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Liberation Mono', 'Courier New', monospace;
+}
+
+pre {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  padding: 15px;
+  border-radius: 5px;
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 20px 0;
+}
+
+th, td {
+  border: 1px solid #bdc3c7;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #3498db;
+  color: white;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #bdc3c7;
+  border-radius: 5px;
+  margin: 20px 0;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+a {
+  color: #2980b9;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.toc {
+  background-color: #ecf0f1;
+  padding: 20px;
+  border-radius: 5px;
+  margin-bottom: 30px;
+}
+
+.toc a {
+  color: #2c3e50;
+}
+
+.math {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 1.1em;
+}
+
+.figure {
+  text-align: center;
+  margin: 30px 0;
+}
+
+.figure img {
+  max-width: 100%;
+  height: auto;
+  border: 2px solid #3498db;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.figure-caption {
+  font-style: italic;
+  color: #7f8c8d;
+  margin-top: 10px;
+  text-align: center;
+}
+
+</style>
+</head>
+<body>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#abstract" id="toc-abstract"><span
+class="toc-section-number">1</span> Abstract</a></li>
+<li><a href="#introduction-and-scope"
+id="toc-introduction-and-scope"><span
+class="toc-section-number">2</span> Introduction and Scope</a>
+<ul>
+<li><a href="#terminology-gnn-in-this-manuscript"
+id="toc-terminology-gnn-in-this-manuscript"><span
+class="toc-section-number">2.1</span> Terminology: “GNN” in this
+manuscript</a></li>
+<li><a href="#problem" id="toc-problem"><span
+class="toc-section-number">2.2</span> Problem</a></li>
+<li><a href="#what-cogant-is-not" id="toc-what-cogant-is-not"><span
+class="toc-section-number">2.3</span> What COGANT is not</a></li>
+<li><a href="#manuscript-versus-package-docs"
+id="toc-manuscript-versus-package-docs"><span
+class="toc-section-number">2.4</span> Manuscript versus package
+docs</a></li>
+<li><a href="#dual-pythonrust-architecture"
+id="toc-dual-pythonrust-architecture"><span
+class="toc-section-number">2.5</span> Dual Python/Rust
+architecture</a></li>
+<li><a href="#roadmap-of-the-following-sections"
+id="toc-roadmap-of-the-following-sections"><span
+class="toc-section-number">2.6</span> Roadmap of the following
+sections</a></li>
+</ul></li>
+<li><a
+href="#methodology-program-graphs-and-intermediate-representations"
+id="toc-methodology-program-graphs-and-intermediate-representations"><span
+class="toc-section-number">3</span> Methodology: Program Graphs and
+Intermediate Representations</a>
+<ul>
+<li><a href="#program-graph" id="toc-program-graph"><span
+class="toc-section-number">3.1</span> Program graph</a>
+<ul>
+<li><a href="#structural-equivalence"
+id="toc-structural-equivalence"><span
+class="toc-section-number">3.1.1</span> Structural equivalence</a></li>
+</ul></li>
+<li><a href="#progressive-irs" id="toc-progressive-irs"><span
+class="toc-section-number">3.2</span> Progressive IRs</a></li>
+<li><a href="#translation-rules" id="toc-translation-rules"><span
+class="toc-section-number">3.3</span> Translation rules</a>
+<ul>
+<li><a href="#fixpoint-iteration-conflict-resolution-and-coverage"
+id="toc-fixpoint-iteration-conflict-resolution-and-coverage"><span
+class="toc-section-number">3.3.1</span> Fixpoint iteration, conflict
+resolution, and coverage</a></li>
+</ul></li>
+<li><a href="#confidence-scoring-and-evidence-tiers"
+id="toc-confidence-scoring-and-evidence-tiers"><span
+class="toc-section-number">3.4</span> Confidence Scoring and Evidence
+Tiers</a></li>
+<li><a href="#state-space-and-behavior"
+id="toc-state-space-and-behavior"><span
+class="toc-section-number">3.5</span> State space and behavior</a></li>
+<li><a href="#gnn-export-generalized-notation-notation"
+id="toc-gnn-export-generalized-notation-notation"><span
+class="toc-section-number">3.6</span> GNN export (Generalized Notation
+Notation)</a></li>
+<li><a href="#error-handling-philosophy"
+id="toc-error-handling-philosophy"><span
+class="toc-section-number">3.7</span> Error handling philosophy</a></li>
+</ul></li>
+<li><a href="#api-and-workflows" id="toc-api-and-workflows"><span
+class="toc-section-number">4</span> API and Workflows</a>
+<ul>
+<li><a href="#session-oriented-workflow"
+id="toc-session-oriented-workflow"><span
+class="toc-section-number">4.1</span> Session-oriented workflow</a></li>
+<li><a href="#pipeline-oriented-workflow"
+id="toc-pipeline-oriented-workflow"><span
+class="toc-section-number">4.2</span> Pipeline-oriented
+workflow</a></li>
+<li><a href="#bundle-accessors" id="toc-bundle-accessors"><span
+class="toc-section-number">4.3</span> Bundle accessors</a></li>
+<li><a href="#command-line-interface"
+id="toc-command-line-interface"><span
+class="toc-section-number">4.4</span> Command-line interface</a></li>
+<li><a href="#review-api" id="toc-review-api"><span
+class="toc-section-number">4.5</span> Review API</a></li>
+</ul></li>
+<li><a href="#examples-and-failure-modes"
+id="toc-examples-and-failure-modes"><span
+class="toc-section-number">5</span> Examples and Failure Modes</a>
+<ul>
+<li><a href="#example-outputs" id="toc-example-outputs"><span
+class="toc-section-number">5.1</span> Example outputs</a>
+<ul>
+<li><a href="#concrete-walkthrough-flask-rest-api"
+id="toc-concrete-walkthrough-flask-rest-api"><span
+class="toc-section-number">5.1.1</span> Concrete walkthrough: Flask REST
+API</a></li>
+<li><a href="#example-semantic-mapping-output"
+id="toc-example-semantic-mapping-output"><span
+class="toc-section-number">5.1.2</span> Example semantic mapping
+output</a></li>
+<li><a href="#example-state-space-excerpt"
+id="toc-example-state-space-excerpt"><span
+class="toc-section-number">5.1.3</span> Example state-space
+excerpt</a></li>
+<li><a href="#failure-modes-and-graceful-degradation"
+id="toc-failure-modes-and-graceful-degradation"><span
+class="toc-section-number">5.1.4</span> Failure modes and graceful
+degradation</a></li>
+</ul></li>
+<li><a href="#rust-layer" id="toc-rust-layer"><span
+class="toc-section-number">5.2</span> Rust layer</a></li>
+</ul></li>
+<li><a href="#conclusion" id="toc-conclusion"><span
+class="toc-section-number">6</span> Conclusion</a>
+<ul>
+<li><a href="#shipped-capabilities" id="toc-shipped-capabilities"><span
+class="toc-section-number">6.1</span> Shipped Capabilities</a></li>
+<li><a href="#roadmap-and-future-extensions"
+id="toc-roadmap-and-future-extensions"><span
+class="toc-section-number">6.2</span> Roadmap and Future
+Extensions</a></li>
+</ul></li>
+<li><a href="#experimental-setup" id="toc-experimental-setup"><span
+class="toc-section-number">7</span> Experimental setup</a>
+<ul>
+<li><a href="#environment" id="toc-environment"><span
+class="toc-section-number">7.1</span> Environment</a></li>
+<li><a href="#running-the-api" id="toc-running-the-api"><span
+class="toc-section-number">7.2</span> Running the API</a></li>
+<li><a href="#configuration-files" id="toc-configuration-files"><span
+class="toc-section-number">7.3</span> Configuration files</a></li>
+<li><a href="#cli" id="toc-cli"><span
+class="toc-section-number">7.4</span> CLI</a></li>
+<li><a href="#export-targets" id="toc-export-targets"><span
+class="toc-section-number">7.5</span> Export targets</a></li>
+<li><a href="#python-ast-parser-capabilities"
+id="toc-python-ast-parser-capabilities"><span
+class="toc-section-number">7.6</span> Python AST parser
+capabilities</a></li>
+<li><a href="#progressive-ir-stages"
+id="toc-progressive-ir-stages"><span
+class="toc-section-number">7.7</span> Progressive IR stages</a></li>
+<li><a href="#performance-characteristics"
+id="toc-performance-characteristics"><span
+class="toc-section-number">7.8</span> Performance
+characteristics</a></li>
+<li><a href="#what-to-record" id="toc-what-to-record"><span
+class="toc-section-number">7.9</span> What to record</a></li>
+</ul></li>
+<li><a href="#reproducibility" id="toc-reproducibility"><span
+class="toc-section-number">8</span> Reproducibility</a>
+<ul>
+<li><a href="#version-pinning" id="toc-version-pinning"><span
+class="toc-section-number">8.1</span> Version pinning</a></li>
+<li><a href="#artifact-layout" id="toc-artifact-layout"><span
+class="toc-section-number">8.2</span> Artifact layout</a></li>
+<li><a href="#determinism" id="toc-determinism"><span
+class="toc-section-number">8.3</span> Determinism</a></li>
+<li><a href="#relation-to-the-template-repository"
+id="toc-relation-to-the-template-repository"><span
+class="toc-section-number">8.4</span> Relation to the template
+repository</a></li>
+<li><a href="#validation-gates" id="toc-validation-gates"><span
+class="toc-section-number">8.5</span> Validation gates</a></li>
+<li><a href="#pipeline-checkpoint-and-resume-behavior"
+id="toc-pipeline-checkpoint-and-resume-behavior"><span
+class="toc-section-number">8.6</span> Pipeline checkpoint and resume
+behavior</a></li>
+<li><a href="#output-manifest-structure"
+id="toc-output-manifest-structure"><span
+class="toc-section-number">8.7</span> Output manifest structure</a></li>
+<li><a href="#data-ethics-and-licensing"
+id="toc-data-ethics-and-licensing"><span
+class="toc-section-number">8.8</span> Data ethics and licensing</a></li>
+</ul></li>
+<li><a href="#scope-and-related-work"
+id="toc-scope-and-related-work"><span
+class="toc-section-number">9</span> Scope and related work</a>
+<ul>
+<li><a href="#positioning" id="toc-positioning"><span
+class="toc-section-number">9.1</span> Positioning</a></li>
+<li><a href="#related-tool-categories"
+id="toc-related-tool-categories"><span
+class="toc-section-number">9.2</span> Related tool categories</a></li>
+<li><a href="#program-analysis-for-ml"
+id="toc-program-analysis-for-ml"><span
+class="toc-section-number">9.3</span> Program analysis for ML</a>
+<ul>
+<li><a href="#feature-matrix-cogant-vs.-related-tools"
+id="toc-feature-matrix-cogant-vs.-related-tools"><span
+class="toc-section-number">9.3.1</span> Feature matrix: COGANT
+vs. related tools</a></li>
+</ul></li>
+<li><a href="#active-inference-and-program-behavior"
+id="toc-active-inference-and-program-behavior"><span
+class="toc-section-number">9.4</span> Active inference and program
+behavior</a></li>
+<li><a href="#boundaries" id="toc-boundaries"><span
+class="toc-section-number">9.5</span> Boundaries</a></li>
+<li><a href="#forward-compatibility"
+id="toc-forward-compatibility"><span
+class="toc-section-number">9.6</span> Forward compatibility</a></li>
+</ul></li>
+<li><a href="#manuscript-syntax-reference-cogant"
+id="toc-manuscript-syntax-reference-cogant"><span
+class="toc-section-number">10</span> Manuscript Syntax Reference
+(COGANT)</a>
+<ul>
+<li><a href="#citations" id="toc-citations"><span
+class="toc-section-number">10.1</span> Citations</a></li>
+<li><a href="#equations" id="toc-equations"><span
+class="toc-section-number">10.2</span> Equations</a></li>
+<li><a href="#figures" id="toc-figures"><span
+class="toc-section-number">10.3</span> Figures</a></li>
+<li><a href="#section-files" id="toc-section-files"><span
+class="toc-section-number">10.4</span> Section files</a></li>
+<li><a href="#cross-references-to-the-package"
+id="toc-cross-references-to-the-package"><span
+class="toc-section-number">10.5</span> Cross-references to the
+package</a></li>
+<li><a href="#see-also" id="toc-see-also"><span
+class="toc-section-number">10.6</span> See also</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 data-number="1" id="abstract"><span
+class="header-section-number">1</span> Abstract</h1>
+<p><strong>COGANT</strong> (Codebase-to-GNN Translation) is a system for
+turning software repositories into structured Active Inference artifacts
+expressed in the Active Inference Institute’s <strong>Generalized
+Notation Notation</strong> (GNN)<a href="#fn1" class="footnote-ref"
+id="fnref1" role="doc-noteref"><sup>1</sup></a>. It occupies the space
+between classical program analysis—which already reasons over graphs
+such as call graphs and code property graphs <span class="citation"
+data-cites="yamaguchi2014modeling">[@yamaguchi2014modeling]</span>—and
+data-driven methods that expect tensors, consistent node and edge
+vocabularies, and exportable training bundles <span class="citation"
+data-cites="allamanis2018survey wu2020comprehensive scarselli2009graph">[@allamanis2018survey;
+@wu2020comprehensive; @scarselli2009graph]</span>.</p>
+<p>The design centers on a <strong>program graph IR</strong>: nodes
+denote entities (for example functions and variables), edges denote
+relations (for example calls and data flow), and each assertion carries
+<strong>confidence</strong> and <strong>provenance</strong> so that
+downstream models can treat uncertainty explicitly. A <strong>fixpoint
+translation engine</strong> applies declarative rules iteratively until
+no new semantic mappings emerge, resolves overlapping mappings by
+confidence, and reports coverage gaps explicitly. <strong>Dynamic
+enrichment</strong> from coverage reports and execution traces promotes
+mappings from a <code>STATIC_ONLY</code> tier to
+<code>STATIC_PLUS_RUNTIME</code> when runtime evidence corroborates
+static inference. A <strong>Python orchestration layer</strong> (session
+and pipeline APIs, CLI, configuration) performs discovery, parsing,
+normalization, graph construction, translation rules, state-space
+compilation, validation, and export. A <strong>Rust core</strong>
+(organized as separate crates in the package tree) holds graph
+operations, translation, state-space structures, Generalized Notation
+Notation formatting, and PyO3 bindings; the authoritative
+<strong>implementation status</strong> distinguishes what is wired in
+Python today from staged or planned native acceleration (see
+<code>../cogant/docs/SPEC.md</code>).</p>
+<p>This manuscript, parallel to the developer documentation under <a
+href="../cogant/docs/"><code>../cogant/docs/</code></a>, states the
+theory of that IR and the practice of running the pipeline, configuring
+Generalized Notation Notation exports (canonical GNN Markdown, GNN JSON,
+and interop targets such as GraphML, Parquet, and framework-specific
+tensor formats), and extending the tool through parsers, rules,
+validators, and exporters. It is written to remain valid whether this
+tree stays next to the package (<a
+href="../cogant/"><code>../cogant/</code></a>) or is later promoted
+under <a href="../../../projects/"><code>../../../projects/</code></a>
+for full template pipeline rendering.</p>
+<hr />
+<h1 data-number="2" id="introduction-and-scope"><span
+class="header-section-number">2</span> Introduction and Scope</h1>
+<p>Machine learning on source code has matured alongside static
+analysis: both need structured representations of programs, but learning
+pipelines additionally need fixed feature layouts, batchable graphs, and
+reproducible exports <span class="citation"
+data-cites="allamanis2018survey">[@allamanis2018survey]</span>. COGANT
+addresses that gap by making the path from repository checkout to
+<strong>Generalized Notation Notation (GNN) bundles</strong> explicit,
+inspectable, and configurable.</p>
+<h2 data-number="2.1" id="terminology-gnn-in-this-manuscript"><span
+class="header-section-number">2.1</span> Terminology: “GNN” in this
+manuscript</h2>
+<p>In this manuscript, <strong>GNN</strong> refers to the Active
+Inference Institute’s <strong>Generalized Notation Notation</strong> (<a
+href="https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation">repository</a>)
+<span class="citation"
+data-cites="friedman2024gnn">[@friedman2024gnn]</span>, a structured
+notation for state-space and process models—<em>not</em> graph neural
+networks. COGANT translates source code into this notation, producing
+program-graph and state-space artifacts (state space, observation
+modalities, actions/policies, likelihood structure, preferences, time
+settings, parameterization) that downstream tools can consume. Those
+downstream tools include graph neural network training pipelines, which
+can ingest the exported tensor views of the program graph, but such
+neural networks are a <em>consumer</em> of COGANT’s output, not its
+output format. Where the manuscript discusses graph neural networks as
+related work, it uses the phrase “graph neural networks” in full; the
+acronym GNN always refers to Generalized Notation Notation.</p>
+<h2 data-number="2.2" id="problem"><span
+class="header-section-number">2.2</span> Problem</h2>
+<p>A research or engineering group typically has:</p>
+<ul>
+<li><strong>Source code</strong> in one or more languages.</li>
+<li><strong>Analysis goals</strong> that combine classical queries (who
+calls whom?) with learned models (bug detection, retrieval,
+summarization).</li>
+<li><strong>Tooling fragmentation</strong>: compilers and linters
+produce one shape of facts; PyTorch or JAX expect another.</li>
+</ul>
+<p>COGANT unifies these behind a single pipeline whose intermediate
+artifacts are documented as a progression of IRs (repo IR, program
+graph, semantic mapping, state space, process model, validation), as
+described in <code>../cogant/docs/ARCHITECTURE.md</code> and
+<code>../cogant/docs/SPEC.md</code>.</p>
+<h2 data-number="2.3" id="what-cogant-is-not"><span
+class="header-section-number">2.3</span> What COGANT is not</h2>
+<p>COGANT is not a replacement for a full compiler IR, a theorem prover,
+or a security scanner by itself. It <strong>extracts and
+serializes</strong> program graphs and behavioral sketches for
+downstream use. Language coverage and rule depth follow the
+implementation-status table in the SPEC: Python is the primary front end
+at v0.1.x; additional languages and Rust acceleration are staged as
+documented there.</p>
+<h2 data-number="2.4" id="manuscript-versus-package-docs"><span
+class="header-section-number">2.4</span> Manuscript versus package
+docs</h2>
+<p>The canonical API and CLI details live in:</p>
+<ul>
+<li><code>../cogant/docs/API_GUIDE.md</code> — Session,
+<code>PipelineRunner</code>, <code>Bundle</code>,
+<code>ReviewAPI</code></li>
+<li><code>../cogant/docs/CLI_GUIDE.md</code> — commands and flags</li>
+<li><code>../cogant/docs/GNN_EXPORT.md</code> — Generalized Notation
+Notation schema, section ordering, and companion interop field contracts
+(including optional PyG/DGL tensor views)</li>
+<li><code>../cogant/docs/PLUGIN_API.md</code> — parsers, rules,
+validators, exporters</li>
+<li><code>../cogant/docs/ARCHITECTURE.md</code> — layers, crates, data
+flow</li>
+</ul>
+<p>This manuscript summarizes theory and practice for readers who want a
+single linear narrative before diving into those files.</p>
+<h2 data-number="2.5" id="dual-pythonrust-architecture"><span
+class="header-section-number">2.5</span> Dual Python/Rust
+architecture</h2>
+<p>COGANT employs a dual-language architecture. The <strong>Python
+orchestration layer</strong> handles session management, pipeline
+coordination, configuration, file discovery, AST parsing, and the plugin
+interface – tasks where developer ergonomics and extensibility matter
+more than raw throughput. The <strong>Rust core</strong>, organized as a
+workspace of seven crates (<code>cogant-core</code>,
+<code>cogant-graph</code>, <code>cogant-translate</code>,
+<code>cogant-statespace</code>, <code>cogant-gnn</code>,
+<code>cogant-store</code>, <code>cogant-ffi</code>), implements typed
+graph operations, translation engine internals, state-space structures,
+and Generalized Notation Notation (GNN) formatting – tasks where memory
+layout and cache locality dominate wall-clock time. Communication
+between layers flows through PyO3 bindings (<code>cogant-ffi</code>),
+which release the Python GIL during Rust execution to permit concurrent
+stage processing. Where Rust bindings are not yet wired for a code path
+(see the implementation-status table in
+<code>../cogant/docs/SPEC.md</code>), Python fallback implementations
+ensure the pipeline remains functional at the cost of higher latency on
+large repositories.</p>
+<h2 data-number="2.6" id="roadmap-of-the-following-sections"><span
+class="header-section-number">2.6</span> Roadmap of the following
+sections</h2>
+<p>Section 2 formalizes the program graph and IR progression. Section 3
+describes the realized pipeline behavior and artifacts. Sections 4–7
+cover conclusions, how to run experiments, reproducibility, and related
+work.</p>
+<hr />
+<h1 data-number="3"
+id="methodology-program-graphs-and-intermediate-representations"><span
+class="header-section-number">3</span> Methodology: Program Graphs and
+Intermediate Representations</h1>
+<h2 data-number="3.1" id="program-graph"><span
+class="header-section-number">3.1</span> Program graph</h2>
+<p>Let <span class="math inline">\(G = (V, E)\)</span> denote a directed
+graph whose vertices <span class="math inline">\(V\)</span> represent
+program entities and whose edges <span class="math inline">\(E\)</span>
+represent relationships. COGANT assigns each node a
+<strong>kind</strong> (for example function, variable, type) and a
+<strong>semantic role</strong> (for example definition versus use). Each
+node and edge may carry:</p>
+<ul>
+<li>A <strong>stable identifier</strong> for persistence across runs
+when hashing allows.</li>
+<li><strong>Type strings</strong> and attributes recovered from the
+front end.</li>
+<li>A <strong>confidence</strong> score in <span
+class="math inline">\([0,1]\)</span> and <strong>provenance</strong>
+metadata (source code, type system, control flow, heuristic, external
+tool).</li>
+</ul>
+<p>This follows the same philosophical line as code property graphs that
+fuse AST, control flow, and data flow into one analyzable structure
+<span class="citation"
+data-cites="yamaguchi2014modeling">[@yamaguchi2014modeling]</span>, but
+orients the representation toward <strong>Generalized Notation Notation
+(GNN) export</strong> and, optionally, tensorized views of the same
+graph: node kinds and roles map to discrete indices in both forms, and
+optional embeddings can augment features as described in
+<code>../cogant/docs/GNN_EXPORT.md</code>.</p>
+<h3 data-number="3.1.1" id="structural-equivalence"><span
+class="header-section-number">3.1.1</span> Structural equivalence</h3>
+<p>Two program graphs <span class="math inline">\(G_1 = (V_1,
+E_1)\)</span> and <span class="math inline">\(G_2 = (V_2, E_2)\)</span>
+are usefully compared via typed graph isomorphism: a bijection <span
+class="math inline">\(\phi : V_1 \to V_2\)</span> preserving edge
+structure and relevant labels supports deduplication and
+cross-repository linking when interfaces align.</p>
+<p><span class="math display">\[\begin{equation}
+\label{eq:typed-iso}
+(u, v) \in E_1 \iff (\phi(u), \phi(v)) \in E_2
+\end{equation}\]</span></p>
+<p>Equation <span class="math inline">\(\ref{eq:typed-iso}\)</span>
+formalizes the structural invariant we check during deduplication and
+cross-repository linking: a candidate bijection <span
+class="math inline">\(\phi\)</span> is accepted only when every edge in
+<span class="math inline">\(G_1\)</span> has a corresponding edge
+between the images of its endpoints in <span
+class="math inline">\(G_2\)</span> (and vice versa), so that
+label-preserving matches strictly preserve the adjacency structure of
+both program graphs.</p>
+<h2 data-number="3.2" id="progressive-irs"><span
+class="header-section-number">3.2</span> Progressive IRs</h2>
+<p>Processing proceeds through a sequence of representations (see
+<code>../cogant/docs/SPEC.md</code>):</p>
+<ol type="1">
+<li><strong>Repo IR</strong> — entities and relationships extracted from
+parsers.</li>
+<li><strong>Program graph IR</strong> — consolidated graph with
+deduplication and metadata.</li>
+<li><strong>Semantic mapping IR</strong> — output of the translation
+rule engine.</li>
+<li><strong>State space IR</strong> — variables, actions, transitions,
+observations.</li>
+<li><strong>Process model IR</strong> — higher-level control patterns
+where implemented.</li>
+<li><strong>Validation IR</strong> — coverage, confidence analysis,
+schema checks.</li>
+</ol>
+<p>Not every stage is equally complete for every repository; the SPEC
+marks partial areas (translation rules, state space, Rust acceleration)
+explicitly.</p>
+<h2 data-number="3.3" id="translation-rules"><span
+class="header-section-number">3.3</span> Translation rules</h2>
+<p>The <strong>translation</strong> stage applies declarative rules that
+refine roles, attach labels, and adjust confidence. Concurrency targets
+and layering are described in
+<code>../cogant/docs/ARCHITECTURE.md</code>. The rule engine composes
+passes over the graph in a <strong>fixpoint loop</strong>: rules are
+re-applied until no new semantic mappings emerge or a configurable
+iteration cap is reached. Overlapping rules may require priority
+ordering as documented there; when multiple rules claim the same graph
+fragment, the engine retains the mapping with the highest confidence
+score, following the principle that edit representations should be
+composable <span class="citation"
+data-cites="yin2019learning">[@yin2019learning]</span>.</p>
+<h3 data-number="3.3.1"
+id="fixpoint-iteration-conflict-resolution-and-coverage"><span
+class="header-section-number">3.3.1</span> Fixpoint iteration, conflict
+resolution, and coverage</h3>
+<p>The shipped <code>TranslationEngine</code> in
+<code>../cogant/py/cogant/translate/engine.py</code> realizes the
+fixpoint loop concretely. Each iteration walks every registered rule
+once: the engine calls <code>rule.matches(graph, query)</code> to
+collect candidate fragments, then calls
+<code>rule.apply(graph, match)</code> on each, accumulating any
+resulting <code>SemanticMapping</code> objects keyed by their stable
+IDs. A per-pass counter tracks mappings that were genuinely new (not
+already present in the running set), and the loop terminates as soon as
+a pass completes with zero additions. The engine logs each iteration
+boundary through an internal match log, so the number of passes required
+to reach a fixed point is directly observable in the post-run
+diagnostics. The default iteration cap is
+<code>max_iterations = 10</code>; in testing, most repositories converge
+well before that bound, and the cap exists primarily as a safety valve
+against pathological rule sets that could otherwise oscillate
+indefinitely.</p>
+<p>After fixpoint termination, the engine invokes
+<code>_resolve_conflicts()</code> to reconcile mappings whose
+<code>graph_fragment_node_ids</code> sets overlap. For each overlapping
+pair the engine retains the mapping with the higher
+<code>confidence_score</code> and discards the other, logging a
+<code>conflict_resolved</code> event that records the losing ID, the
+winning ID, and the specific overlap set. Rule priority is therefore
+expressed indirectly through the confidence model rather than through a
+separate ordering table: a higher-priority rule expresses its precedence
+by yielding mappings with higher scores, which then win in the conflict
+resolution pass. A companion entry point,
+<code>translate_with_confidence()</code>, runs the standard fixpoint
+loop, rescores every surviving mapping through the
+<code>ConfidenceModel</code>, and then re-resolves conflicts so that any
+ordering shifts induced by rescoring are honored.</p>
+<p>Translation coverage – the fraction of graph nodes that received at
+least one semantic mapping – is reported by
+<code>get_coverage_report(graph)</code>. It returns the total node
+count, the number of covered nodes, the number of uncovered nodes, a
+<code>coverage_percent</code> value rounded to two decimal places, and
+the sorted list of uncovered node IDs. The uncovered list is
+intentionally emitted verbatim so that downstream tooling can target
+unmapped regions for manual review or rule extension, rather than
+burying the gap behind a single aggregate number <span class="citation"
+data-cites="allamanis2018survey">[@allamanis2018survey]</span>.</p>
+<p>Algorithm <span class="math inline">\(\ref{alg:fixpoint}\)</span>
+summarizes the engine. Termination is guaranteed because each iteration
+either produces at least one new mapping (whose stable ID is then fixed
+in <span class="math inline">\(\mathcal{M}\)</span>) or terminates by
+the break condition; the outer <span class="math inline">\(K\)</span>
+bound serves as a safety valve for pathological rule sets.</p>
+<p>Algorithm <span class="math inline">\(\ref{alg:conflict}\)</span>
+detects conflicts via an inverted index in <span
+class="math inline">\(O(\sum_v |\mathcal{I}(v)|^2)\)</span> worst-case
+time, which is substantially faster than the naive all-pairs scan for
+graphs where most nodes carry at most one mapping.</p>
+<h2 data-number="3.4" id="confidence-scoring-and-evidence-tiers"><span
+class="header-section-number">3.4</span> Confidence Scoring and Evidence
+Tiers</h2>
+<p>The shipped <code>ConfidenceModel</code> in
+<code>../cogant/py/cogant/translate/confidence.py</code> computes a
+scalar score in <span class="math inline">\([0,1]\)</span> from:</p>
+<ul>
+<li>Average confidence over provenance records.</li>
+<li>An evidence-diversity term (scaled, capped).</li>
+<li>A parser certainty factor applied multiplicatively.</li>
+<li>Conflict penalties subtracted after scaling.</li>
+</ul>
+<p><span class="math display">\[\begin{equation}
+\label{eq:confidence-core}
+c = \max\left(0,\ \min\left(1,\ (\bar{e} + \delta_d)\cdot \kappa -
+\pi\right)\right)
+\end{equation}\]</span></p>
+<p>Here <span class="math inline">\(\bar{e}\)</span> is the mean
+evidence confidence, <span class="math inline">\(\delta_d\)</span> is
+the diversity bonus (bounded), <span
+class="math inline">\(\kappa\)</span> is parser certainty, and <span
+class="math inline">\(\pi\)</span> aggregates conflict penalties.
+<strong>Tiers</strong> (for example static-only versus
+static-plus-runtime) are assigned from score thresholds and evidence
+source tags (<code>determine_confidence_tier</code>); see the same
+module for named thresholds and enum values. The manuscript does not
+duplicate those literals so they cannot drift from code.</p>
+<h2 data-number="3.5" id="state-space-and-behavior"><span
+class="header-section-number">3.5</span> State space and behavior</h2>
+<p>Where traces or coverage are available, <strong>dynamic</strong>
+extraction feeds the state-space compiler. The goal is a compact
+behavioral model: states, actions, transitions, and observations that
+sit alongside the static graph for tasks that require
+execution-sensitive features.</p>
+<p>The shipped <code>StateSpaceCompiler</code> in
+<code>../cogant/py/cogant/statespace/compiler.py</code> constructs this
+model in several coordinated passes driven by the semantic mappings and
+the underlying program graph.</p>
+<p><strong>State variables</strong> are identified by a
+<code>StateVariableExtractor</code> that traverses graph nodes carrying
+READS and WRITES edges: any node that participates in a write is a
+candidate hidden-state variable, and its type, cardinality, and initial
+confidence are derived from the node’s recovered type string and the
+provenance of the rules that produced the associated mapping.</p>
+<p><strong>Actions</strong> are extracted from semantic mappings of kind
+<code>ACTION</code>, with parameters read from node metadata (typically
+the parser-recovered function signature), effects traced through
+outgoing WRITES edges on the controller node, and preconditions derived
+from parameter lists, docstring directives, and explicit metadata
+entries. For method-kind actions, the compiler also walks CONTAINS edges
+back to the enclosing class so that instance-level state mutations are
+attributed to the correct controller, mirroring how code property graphs
+fuse structural and data-flow views <span class="citation"
+data-cites="yamaguchi2014modeling">[@yamaguchi2014modeling]</span>.</p>
+<p><strong>Transitions</strong> are inferred by a cross-reference pass
+(<code>_cross_reference_actions_and_variables</code>) that, for each
+action, partitions its adjacent variables into reads and writes based on
+edge kind (WRITES and MUTATES yielding writes; READS and OBSERVES
+yielding reads). The resulting <code>Transition</code> object records a
+<code>source_state</code> in which every touched variable is marked
+<code>"pre"</code> and a <code>target_state</code> in which written
+variables advance to <code>"post"</code> while read-only variables
+remain <code>"pre"</code>; this simple pre/post convention keeps the
+model faithful to the static evidence without overcommitting to symbolic
+value domains that cannot be recovered from AST analysis alone. Trigger
+attribution follows incoming TRIGGERS and CALLS edges so that
+orchestration flow is preserved in the behavioral model.</p>
+<p><strong>Observation modalities</strong> are built from semantic
+mappings of kind <code>OBSERVATION</code>: each associated node becomes
+an <code>ObservationModality</code> whose modality type
+(<code>log</code>, <code>metric</code>, <code>event</code>,
+<code>sensor</code>, or a generic fallback) is inferred from the
+mapping’s description and the node’s name, giving the GNN export a typed
+observation channel aligned with the OBSERVES edges in the program
+graph.</p>
+<p>The <strong>temporal regime</strong> of the model is determined by a
+companion <code>TemporalAnalyzer</code>. It classifies nodes as
+asynchronous when their metadata carries
+<code>is_async</code>/<code>async</code> flags or their names match
+patterns such as <code>async</code>, <code>callback</code>,
+<code>promise</code>, or <code>future</code>, and as event-related when
+their kind is <code>EVENT</code> or their names match
+<code>event</code>, <code>handler</code>, <code>listener</code>, or
+<code>trigger</code>. Temporal orderings are then extracted from CALLS
+and TRIGGERS edges, with each edge classified as <code>parallel</code>
+(when either endpoint is async) or <code>sequential</code> otherwise,
+and event patterns are assembled from triggers-in / triggers-out pairs
+around each event node. A final decision rule selects among
+<code>SYNCHRONOUS</code>, <code>ASYNCHRONOUS</code>,
+<code>EVENT_DRIVEN</code>, and <code>HYBRID</code>: the presence of
+event triggers and patterns combined with async handlers yields
+<code>HYBRID</code>; event triggers alone yield
+<code>EVENT_DRIVEN</code>; an async fraction above 30 percent or the
+presence of async handlers yields <code>ASYNCHRONOUS</code>; and all
+remaining cases default to <code>SYNCHRONOUS</code>. This regime is
+attached to the <code>StateSpaceModel</code> metadata so downstream
+consumers know which execution model the transition graph assumes.</p>
+<p>When coverage and traces are available, <code>enrich_graph()</code>
+in <code>../cogant/py/cogant/dynamic/enrichment.py</code> feeds
+additional evidence into this pipeline. Coverage enrichment matches
+<code>.coverage</code> SQLite databases or Cobertura XML reports against
+nodes whose <code>path</code> and <code>source_range</code> overlap
+covered lines, attaching <code>coverage_hits</code> and, where branch
+data is available, <code>branch_coverage</code> metadata. Trace
+enrichment parses Chrome DevTools traces, writes
+<code>call_count</code>, <code>avg_duration_ms</code>, and
+<code>is_hot_path</code> onto matching callable nodes, and adds or
+reweights dynamic CALLS edges tagged with
+<code>evidence_sources=["dynamic_trace"]</code>. Both steps also append
+<code>dynamic_coverage</code> and <code>dynamic_trace</code> markers to
+the program graph’s evidence sources. The confidence model consumes
+these markers directly: any mapping whose evidence set now contains both
+static and dynamic entries becomes eligible for promotion from the
+<code>STATIC_ONLY</code> tier to <code>STATIC_PLUS_RUNTIME</code>, and
+hot-path and branch-coverage metadata raise the underlying score through
+the diversity bonus <span class="math inline">\(\delta_d\)</span> in
+Equation <span class="math inline">\(\ref{eq:confidence-core}\)</span>.
+This is the mechanism by which executing the target program, even
+partially, converts static heuristics into corroborated behavioral facts
+without rerunning the upstream rule engine <span class="citation"
+data-cites="allamanis2018survey">[@allamanis2018survey]</span>.</p>
+<h2 data-number="3.6"
+id="gnn-export-generalized-notation-notation"><span
+class="header-section-number">3.6</span> GNN export (Generalized
+Notation Notation)</h2>
+<p>Exports package the program graph and compiled state-space model into
+the Active Inference Institute’s <strong>Generalized Notation
+Notation</strong> plus a small set of interop targets:</p>
+<ul>
+<li><strong>GNN Markdown (<code>model.gnn.md</code>)</strong> —
+canonical, human-readable Generalized Notation Notation organized into
+the section order defined in <code>../cogant/docs/GNN_EXPORT.md</code>
+(Model Metadata, Repository Metadata, Source Coverage, State Space,
+Observation Modalities, Actions/Policies, Connections, Factors,
+Transition Structure, Likelihood Structure, Preferences/Constraints,
+Time Settings, Parameterization, Ontology Mapping, Provenance,
+Confidence Scores, Rendering Hints, Validation Notes).</li>
+<li><strong>GNN JSON (<code>model.gnn.json</code>)</strong> —
+machine-readable equivalent of the markdown sections, plus companion
+JSON files per section (<code>state_space.json</code>,
+<code>observations.json</code>, <code>actions.json</code>,
+<code>transitions.json</code>, and so on).</li>
+<li><strong>Interop exports</strong> — GraphML and Parquet for analysis
+in Gephi/yEd and DuckDB, and optional tensor views (PyTorch Geometric
+<code>Data</code> objects, DGL graphs, HDF5 tables) for downstream graph
+neural network training pipelines that consume the program graph as a
+relational tensor.</li>
+</ul>
+<p>Node and edge feature breakdowns, section contracts, and the optional
+framework targets are specified in
+<code>../cogant/docs/GNN_EXPORT.md</code>; they determine the structure
+of the emitted notation as well as the effective input dimensionality of
+any downstream model.</p>
+<h2 data-number="3.7" id="error-handling-philosophy"><span
+class="header-section-number">3.7</span> Error handling philosophy</h2>
+<p>The implementation distinguishes fatal configuration or parse
+failures from per-file errors that allow partial results. Validation
+aggregates warnings and inconsistencies into a report that travels with
+the bundle. This mirrors the layered error categories documented in the
+architecture (fatal, error, warning, info).</p>
+<hr />
+<h1 data-number="4" id="api-and-workflows"><span
+class="header-section-number">4</span> API and Workflows</h1>
+<p>This section describes the programmatic surface that the shipped
+Python package exposes in practice, aligned with
+<code>../cogant/docs/API_GUIDE.md</code> and
+<code>../cogant/VERIFICATION_REPORT.md</code>. It is
+<strong>not</strong> an empirical benchmark section; COGANT does not
+ship comparative timing claims in the manuscript layer. Instead, it
+records the <strong>surface area</strong> users can rely on: two
+complementary entry points (a Session for stepwise work and a Pipeline
+for batch runs), the Bundle accessors that expose their artifacts, a
+command-line interface, and a Review API for human-in-the-loop
+curation.</p>
+<h2 data-number="4.1" id="session-oriented-workflow"><span
+class="header-section-number">4.1</span> Session-oriented workflow</h2>
+<p>The Session API is intended for interactive exploration: it is the
+right choice when a user wants to inspect intermediate artifacts between
+stages, iterate on a single repository in a notebook, or debug a
+specific extraction step without committing to a full scripted run. Each
+call returns control to the caller so that the graph, mappings, or
+state-space model can be examined before the next stage is invoked.</p>
+<p><code>Session.from_target</code> accepts a local path or URL, then
+supports a stepwise workflow:</p>
+<ul>
+<li><code>extract_static</code> — AST-oriented extraction for supported
+languages.</li>
+<li><code>extract_dynamic</code> — traces and coverage when inputs
+exist.</li>
+<li><code>build_graph</code> — program graph construction.</li>
+<li><code>translate_to_gnn</code> — Generalized Notation Notation (GNN)
+representation.</li>
+<li><code>compile_state_space</code> — behavioral model when the
+pipeline has sufficient data.</li>
+<li><code>export_all</code> — writes JSON artifacts under a chosen
+output directory.</li>
+</ul>
+<p>This path suits interactive notebooks and incremental debugging.</p>
+<h2 data-number="4.2" id="pipeline-oriented-workflow"><span
+class="header-section-number">4.2</span> Pipeline-oriented workflow</h2>
+<p>The Pipeline API is intended for scripted, reproducible batch runs:
+it is the right choice when a user wants to process many repositories
+with a fixed configuration, wire COGANT into CI, or guarantee that every
+run executes the same ordered stages with the same plugin settings.
+Because the whole run is described by a single
+<code>PipelineConfig</code>, it can be checked into version control and
+replayed without manual intervention.</p>
+<p><code>PipelineRunner</code> with <code>PipelineConfig</code> runs an
+ordered list of stages (ingest, static, normalize, graph, translate,
+state space, process, export, validate). Configuration can skip stages
+(for example dynamic analysis), attach <strong>plugin</strong> settings
+per language, set <code>output_dir</code>, verbosity, and dry-run mode.
+Results aggregate into a <strong>Bundle</strong> with
+<code>stage_results</code>, error lists, and accessors described
+below.</p>
+<h2 data-number="4.3" id="bundle-accessors"><span
+class="header-section-number">4.3</span> Bundle accessors</h2>
+<p>The bundle API exposes summaries and artifacts, including:</p>
+<ul>
+<li><code>repo_summary</code>, <code>program_graph</code>,
+<code>state_space_model</code>, <code>process_model</code></li>
+<li><code>gnn_markdown</code> — human-readable graph summary</li>
+<li><code>validation_report</code></li>
+<li><code>render_site</code> — static HTML site with graph and model
+views</li>
+<li><code>to_json</code> / <code>save_json</code></li>
+</ul>
+<p>The verification report lists these as delivered capabilities for the
+v0.1.0 line.</p>
+<h2 data-number="4.4" id="command-line-interface"><span
+class="header-section-number">4.4</span> Command-line interface</h2>
+<p>The CLI entry point (<code>cogant.cli.main</code>) implements
+commands such as <code>init</code>, <code>scan</code>,
+<code>extract-static</code>, <code>extract-dynamic</code>, graph and
+export verbs, and validation-oriented subcommands. Exact flags live in
+<code>../cogant/docs/CLI_GUIDE.md</code>; the manuscript does not
+duplicate them to avoid drift.</p>
+<h2 data-number="4.5" id="review-api"><span
+class="header-section-number">4.5</span> Review API</h2>
+<p><code>ReviewAPI</code> supports interactive curation: load a bundle,
+present mappings, accept, reject, or edit, then save a curated bundle.
+This closes the loop when human review is part of the ML dataset
+construction.</p>
+<hr />
+<h1 data-number="5" id="examples-and-failure-modes"><span
+class="header-section-number">5</span> Examples and Failure Modes</h1>
+<p>This section walks through a concrete example run of the pipeline on
+a small Flask application, shows representative fragments of the
+artifacts it produces (semantic mappings and state-space transitions),
+and then documents the degradation behavior that users should expect
+when inputs are missing or partial. Together these illustrate both what
+a successful run looks like and how the system communicates partial
+success.</p>
+<h2 data-number="5.1" id="example-outputs"><span
+class="header-section-number">5.1</span> Example outputs</h2>
+<p>The package tree includes examples under <a
+href="../cogant/examples/"><code>../cogant/examples/</code></a> and
+sample exports under <a
+href="../cogant/output/examples/control_positive/"><code>../cogant/output/examples/control_positive/</code></a>
+(for example <strong>calculator</strong>,
+<strong>event_pipeline</strong>, and <strong>flask_mini</strong> with
+<strong>model.gnn.json</strong> / <strong>model.gnn.md</strong> under
+<code>data/</code> and <code>reports/</code>, diagrams under
+<code>diagrams/</code>, and raster figures under <code>figures/</code>).
+Use <code>cogant translate --layout-output</code> or
+<code>PipelineConfig(layout_output=True)</code> to place pipeline JSON
+under <code>data/</code> automatically; run
+<code>python -m cogant.tools.render_output_figures</code> on the output
+root for PNGs. Regenerate these trees by running the packaged pipeline
+against the example sources when validating releases.</p>
+<h3 data-number="5.1.1" id="concrete-walkthrough-flask-rest-api"><span
+class="header-section-number">5.1.1</span> Concrete walkthrough: Flask
+REST API</h3>
+<p>To make the pipeline’s behavior tangible, consider a small Flask
+application with three HTTP endpoints, two utility modules, and one
+data-access layer – 800 lines of Python across 6 files, of which 782
+lines are non-blank, non-comment code analyzed by the pipeline. Running
+<code>cogant scan --target ./flask_app &amp;&amp; cogant extract-static &amp;&amp; cogant build-graph &amp;&amp; cogant translate &amp;&amp; cogant export-all -o output/</code>
+on this repository produces a program graph with the following
+characteristics:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source files discovered</td>
+<td>6</td>
+</tr>
+<tr>
+<td>Lines analyzed</td>
+<td>782 / 800 (97.8%)</td>
+</tr>
+<tr>
+<td><strong>Nodes</strong></td>
+<td><strong>147</strong></td>
+</tr>
+<tr>
+<td><strong>Edges</strong></td>
+<td><strong>389</strong></td>
+</tr>
+<tr>
+<td>Mean node confidence</td>
+<td>0.91</td>
+</tr>
+<tr>
+<td>Validation status</td>
+<td>PASS (0 errors, 3 warnings)</td>
+</tr>
+</tbody>
+</table>
+<p>The node and edge populations distribute across kinds as follows:</p>
+<p><strong>Table 1. Node kind distribution (Flask API
+example).</strong></p>
+<table>
+<thead>
+<tr>
+<th>Node kind</th>
+<th>Count</th>
+<th>Percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FUNCTION</td>
+<td>38</td>
+<td>25.9%</td>
+</tr>
+<tr>
+<td>VARIABLE</td>
+<td>52</td>
+<td>35.4%</td>
+</tr>
+<tr>
+<td>TYPE</td>
+<td>11</td>
+<td>7.5%</td>
+</tr>
+<tr>
+<td>MODULE</td>
+<td>6</td>
+<td>4.1%</td>
+</tr>
+<tr>
+<td>CONTROLFLOW_NODE</td>
+<td>18</td>
+<td>12.2%</td>
+</tr>
+<tr>
+<td>DATA_STRUCTURE</td>
+<td>7</td>
+<td>4.8%</td>
+</tr>
+<tr>
+<td>ERRORHANDLER</td>
+<td>5</td>
+<td>3.4%</td>
+</tr>
+<tr>
+<td>CONSTANT</td>
+<td>6</td>
+<td>4.1%</td>
+</tr>
+<tr>
+<td>EXTERNAL</td>
+<td>4</td>
+<td>2.7%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 2. Edge kind distribution (Flask API
+example).</strong></p>
+<table>
+<thead>
+<tr>
+<th>Edge kind</th>
+<th>Count</th>
+<th>Percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CALLS</td>
+<td>87</td>
+<td>22.4%</td>
+</tr>
+<tr>
+<td>USES</td>
+<td>104</td>
+<td>26.7%</td>
+</tr>
+<tr>
+<td>DEFINES</td>
+<td>62</td>
+<td>15.9%</td>
+</tr>
+<tr>
+<td>HAS_TYPE</td>
+<td>48</td>
+<td>12.3%</td>
+</tr>
+<tr>
+<td>DATA_FLOW</td>
+<td>34</td>
+<td>8.7%</td>
+</tr>
+<tr>
+<td>MEMBER_OF</td>
+<td>29</td>
+<td>7.5%</td>
+</tr>
+<tr>
+<td>INHERITS</td>
+<td>3</td>
+<td>0.8%</td>
+</tr>
+<tr>
+<td>Other</td>
+<td>22</td>
+<td>5.7%</td>
+</tr>
+</tbody>
+</table>
+<h3 data-number="5.1.2" id="example-semantic-mapping-output"><span
+class="header-section-number">5.1.2</span> Example semantic mapping
+output</h3>
+<p>During the translation stage, each program-graph node is matched
+against the active rule set and assigned a semantic role with an
+associated confidence score. The following excerpt shows three
+representative mappings from the Flask example:</p>
+<pre><code>Node: get_users  (kind=FUNCTION, file=routes/users.py:14)
+  Matched rule: rule_fn_def_001
+  Target role:  FUNCTION_DEF
+  Confidence:   0.98  (base=1.0, -0.02 missing docstring penalty)
+  Provenance:   SourceCode
+
+Node: db.session.query  (kind=FUNCTION, file=routes/users.py:22)
+  Matched rule: rule_method_call_001
+  Target role:  METHOD_CALL
+  Confidence:   0.82  (base=0.90, -0.08 receiver type inferred heuristically)
+  Provenance:   Heuristic
+
+Node: User  (kind=TYPE, file=models/user.py:5)
+  Matched rule: rule_type_def_001
+  Target role:  TYPE_DEF
+  Confidence:   1.00
+  Provenance:   SourceCode</code></pre>
+<p>The <code>db.session.query</code> call illustrates how the confidence
+model (Equation <span
+class="math inline">\(\ref{eq:confidence-core}\)</span> in Section 2)
+penalizes heuristic provenance: the receiver type of
+<code>session</code> is resolved by import tracing rather than explicit
+annotation, reducing <span class="math inline">\(\kappa\)</span> below
+1.0 and yielding a final confidence of 0.82 in the MEDIUM tier.</p>
+<h3 data-number="5.1.3" id="example-state-space-excerpt"><span
+class="header-section-number">5.1.3</span> Example state-space
+excerpt</h3>
+<p>When dynamic traces are available, the state-space compiler produces
+a behavioral model alongside the static graph. The following excerpt
+shows a fragment of the state-space IR for the <code>/users</code>
+endpoint:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;variables&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;request.method&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;str&quot;</span><span class="fu">,</span> <span class="dt">&quot;domain&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;GET&quot;</span><span class="ot">,</span> <span class="st">&quot;POST&quot;</span><span class="ot">]</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;db_connected&quot;</span><span class="fu">,</span>   <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;bool&quot;</span><span class="fu">,</span> <span class="dt">&quot;domain&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="kw">true</span><span class="ot">,</span> <span class="kw">false</span><span class="ot">]</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;response_code&quot;</span><span class="fu">,</span>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span><span class="fu">,</span>  <span class="dt">&quot;domain&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">200</span><span class="ot">,</span> <span class="dv">400</span><span class="ot">,</span> <span class="dv">500</span><span class="ot">]</span><span class="fu">}</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;actions&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;validate_input&quot;</span><span class="fu">,</span> <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;routes/users.py:18&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;query_database&quot;</span><span class="fu">,</span>  <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;routes/users.py:22&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;format_response&quot;</span><span class="fu">,</span> <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;routes/users.py:30&quot;</span><span class="fu">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;transitions&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;from_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;request.method&quot;</span><span class="fu">:</span> <span class="st">&quot;GET&quot;</span><span class="fu">,</span> <span class="dt">&quot;db_connected&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;query_database&quot;</span><span class="fu">,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;to_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;response_code&quot;</span><span class="fu">:</span> <span class="dv">200</span><span class="fu">},</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.94</span><span class="fu">,</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;tier&quot;</span><span class="fu">:</span> <span class="st">&quot;STATIC_PLUS_RUNTIME&quot;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;from_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;request.method&quot;</span><span class="fu">:</span> <span class="st">&quot;POST&quot;</span><span class="fu">,</span> <span class="dt">&quot;db_connected&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;validate_input&quot;</span><span class="fu">,</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;to_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;response_code&quot;</span><span class="fu">:</span> <span class="dv">400</span><span class="fu">},</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.71</span><span class="fu">,</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;tier&quot;</span><span class="fu">:</span> <span class="st">&quot;STATIC_ONLY&quot;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;from_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;db_connected&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">},</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;query_database&quot;</span><span class="fu">,</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;to_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;response_code&quot;</span><span class="fu">:</span> <span class="dv">500</span><span class="fu">},</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.58</span><span class="fu">,</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;tier&quot;</span><span class="fu">:</span> <span class="st">&quot;RUNTIME_ONLY&quot;</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Confidence tiers follow the thresholds defined in
+<code>determine_confidence_tier</code>:
+<strong>STATIC_PLUS_RUNTIME</strong> (<span class="math inline">\(c \geq
+0.65\)</span>, with both static and dynamic evidence) indicates
+corroboration from AST analysis and execution traces;
+<strong>STATIC_ONLY</strong> (<span class="math inline">\(c \geq
+0.5\)</span>, static evidence only) reflects assertions grounded in
+source structure alone; <strong>RUNTIME_ONLY</strong> (<span
+class="math inline">\(c \geq 0.4\)</span>, dynamic evidence only) flags
+inferences from runtime data without static corroboration. A fourth
+tier, <strong>HUMAN_REVIEWED</strong> (<span class="math inline">\(c
+\geq 0.9\)</span>, with human review evidence), is available for
+manually curated mappings.</p>
+<h3 data-number="5.1.4"
+id="failure-modes-and-graceful-degradation"><span
+class="header-section-number">5.1.4</span> Failure modes and graceful
+degradation</h3>
+<p>COGANT is designed so that missing or partial inputs degrade the
+output bundle rather than halt it, and the manuscript records these
+degradation paths explicitly so that downstream consumers can interpret
+a partial run without guessing what was skipped <span class="citation"
+data-cites="peng2011reproducible">[@peng2011reproducible]</span>. Five
+failure modes are worth naming because each has a visible signature in
+the emitted artifacts.</p>
+<p><strong>No dynamic traces available.</strong> When neither coverage
+data nor execution traces are supplied, <code>enrich_graph()</code> is a
+no-op: no <code>coverage_hits</code>, <code>branch_coverage</code>,
+<code>call_count</code>, <code>avg_duration_ms</code>, or
+<code>is_hot_path</code> metadata is attached, and the graph’s
+<code>evidence_sources</code> list never acquires
+<code>dynamic_coverage</code> or <code>dynamic_trace</code> markers. The
+state-space compiler still runs end-to-end using the semantic mappings
+and static graph alone, but every resulting transition is confined to
+the <code>STATIC_ONLY</code> tier (or lower), and no transition can be
+promoted to <code>STATIC_PLUS_RUNTIME</code>. Downstream code that
+consumes the bundle can identify a purely-static run at a glance by
+checking the evidence source markers on the graph metadata rather than
+scanning individual transitions.</p>
+<p><strong>Incomplete coverage data.</strong> When coverage is supplied
+but covers only a subset of the project,
+<code>_enrich_with_coverage</code> annotates the matched files only. The
+enrichment loop walks each coverage span, normalizes the reported file
+path, looks up candidate nodes whose path matches, and annotates those
+whose <code>source_range</code> overlaps the covered line; unmatched
+files are silently skipped with an informational log line, and nodes in
+unmatched files retain no coverage metadata at all. The result is a
+partially enriched graph in which some regions are eligible for tier
+promotion and others are not. Because the enrichment summary returns the
+number of annotated nodes, users can check whether the observed
+annotation rate matches their expectations for the provided coverage
+input.</p>
+<p><strong>Translation rules that do not match.</strong> When the active
+rule set fails to produce any mapping for a node – whether because no
+rule fires, or because all firing rules are pruned during conflict
+resolution – that node remains outside <code>self.mappings</code> and
+simply does not appear in any <code>graph_fragment_node_ids</code>. The
+translation engine’s <code>get_coverage_report()</code> reports this
+directly: the returned dictionary contains the total node count, the
+covered count, a two-decimal <code>coverage_percent</code>, and the
+sorted list of <code>uncovered_node_ids</code>. Rather than treat
+uncovered nodes as an error, the engine surfaces them as an explicit gap
+list so that authors can either extend the rule set, hand the gap list
+to the <code>ReviewAPI</code> for curation, or accept the partial
+mapping for downstream Generalized Notation Notation (GNN) export.</p>
+<p><strong>Fixpoint non-convergence.</strong> The translation engine
+bounds its fixpoint loop at <code>max_iterations = 10</code> by default.
+If a rule set is pathological enough to keep emitting new mappings past
+that bound – for example because two rules can produce mutually
+triggering mappings – the engine emits a
+<code>"Max iterations reached without convergence"</code> warning, stops
+the loop, and proceeds to conflict resolution with whatever mappings it
+has accumulated. The iteration cap therefore guarantees termination even
+for misconfigured rule sets, and the warning in the log gives rule
+authors a clear signal that the cap was hit. Because each iteration also
+writes an <code>iteration_complete</code> entry into the engine’s
+internal match log, the exact per-pass mapping counts are available for
+diagnosis without rerunning the pipeline.</p>
+<p><strong>Pipeline error tolerance.</strong> The default pipeline
+configuration (<code>cogant/py/cogant/config/defaults.py</code>) marks
+the <code>dynamic</code>, <code>translate</code>,
+<code>state_space</code>, and <code>process</code> stages with
+<code>skip_on_error=True</code>, while structural stages such as
+<code>ingest</code>, <code>static</code>, <code>graph</code>,
+<code>export</code>, and <code>validate</code> keep the stricter default
+<code>skip_on_error=False</code>. When an optional stage raises, the
+runner records the error in the bundle, emits a warning, and continues
+to the next stage rather than aborting the run. Downstream bundle
+accessors (<code>state_space_model</code>, <code>process_model</code>)
+simply return <code>None</code> for stages that did not produce output,
+so a downstream consumer can detect a skipped stage by checking its
+accessor rather than by parsing log text. The net effect is that a
+partial bundle – for example, a program graph and semantic mappings
+without a state-space model – remains a first-class artifact with a
+clear provenance trail, rather than an opaque failure.</p>
+<h2 data-number="5.2" id="rust-layer"><span
+class="header-section-number">5.2</span> Rust layer</h2>
+<p>Native crates (<code>cogant-core</code>, <code>cogant-graph</code>,
+<code>cogant-translate</code>, <code>cogant-statespace</code>,
+<code>cogant-gnn</code>, <code>cogant-ffi</code>, and related packages)
+implement typed graph operations and export formatting. When PyO3
+bindings are active, Python delegates heavy graph work through
+<code>cogant-ffi</code>. Where bindings are not yet wired for a code
+path, Python fallbacks apply; see SPEC <strong>Implementation
+status</strong> for the current boundary.</p>
+<hr />
+<h1 data-number="6" id="conclusion"><span
+class="header-section-number">6</span> Conclusion</h1>
+<p>COGANT frames codebase analysis as a pipeline from ingestion through
+a program graph IR to <strong>Generalized Notation Notation
+(GNN)</strong> exports, with explicit confidence and provenance so that
+learning systems can treat analysis noise as data rather than as hidden
+failure modes. The Python layer provides session and pipeline APIs, a
+bundle abstraction, CLI, review tooling, and HTML reporting; the Rust
+layer concentrates graph mechanics and export formatting under crate
+boundaries described in <code>../cogant/docs/ARCHITECTURE.md</code>.</p>
+<h2 data-number="6.1" id="shipped-capabilities"><span
+class="header-section-number">6.1</span> Shipped Capabilities</h2>
+<p>Several capabilities ship in the current v0.1.x line and together
+define the behaviour that downstream users can rely on:</p>
+<ol type="1">
+<li><strong>Fixpoint translation engine.</strong> The shipped
+<code>TranslationEngine</code> re-applies every registered rule on each
+pass, terminates as soon as a pass produces zero new mappings, and
+bounds pathological rule sets with a configurable iteration cap. Each
+iteration boundary is recorded in the internal match log, so convergence
+can be audited after the fact.</li>
+<li><strong>Rule priority and conflict resolution.</strong> Overlapping
+mappings are reconciled by confidence score: when two mappings cover
+overlapping <code>graph_fragment_node_ids</code>, the engine retains the
+higher-confidence mapping and records a <code>conflict_resolved</code>
+event naming the winner, the loser, and the overlap. Rule priority is
+therefore expressed through the confidence model rather than a separate
+ordering table, and <code>translate_with_confidence()</code> re-scores
+and re-resolves so that priority shifts from the
+<code>ConfidenceModel</code> are honoured.</li>
+<li><strong>Dynamic enrichment from coverage and traces.</strong> When
+<code>.coverage</code> SQLite or Cobertura XML inputs and Chrome
+DevTools traces are supplied, <code>enrich_graph()</code> annotates
+nodes with <code>coverage_hits</code>, <code>branch_coverage</code>,
+<code>call_count</code>, <code>avg_duration_ms</code>, and
+<code>is_hot_path</code> metadata, and appends
+<code>dynamic_coverage</code> and <code>dynamic_trace</code> markers to
+the program graph’s evidence sources.</li>
+<li><strong>Confidence tier promotion.</strong> Mappings whose evidence
+set acquires dynamic markers become eligible for promotion from
+<code>STATIC_ONLY</code> to <code>STATIC_PLUS_RUNTIME</code>, and
+hot-path and branch-coverage metadata raise the underlying score through
+the diversity bonus in Equation <span
+class="math inline">\(\ref{eq:confidence-core}\)</span>. A purely-static
+run remains a first-class bundle; it is simply marked as such on the
+graph metadata.</li>
+<li><strong>Ten-stage pipeline architecture.</strong> The runner
+executes an ordered DAG (ingest, static, normalize, graph, translate,
+state space, process, export, validate, and report), with
+<code>skip_on_error=True</code> on optional stages so that a missing
+dynamic input or a pathological rule set produces a partial but
+well-formed Generalized Notation Notation bundle rather than an opaque
+failure.</li>
+</ol>
+<p><strong>Limitations</strong> follow the honest scope in
+<code>../cogant/docs/SPEC.md</code>: multi-language support beyond
+Python is largely roadmap; translation rules and state-space extraction
+are <strong>partial</strong> and repository-dependent; native
+acceleration is staged. Users should validate exports on their own
+corpora before trusting downstream model metrics.</p>
+<p><strong>Intended users</strong> include researchers building datasets
+from open-source repositories, teams prototyping Active Inference models
+or graph neural network training pipelines over program-graph data who
+need a single export contract, and engineers extending the system via
+<code>../cogant/docs/PLUGIN_API.md</code>.</p>
+<p><strong>Validation</strong> in the software-engineering sense is
+split: the repository’s verification report enumerates implemented
+modules and entry points; scientific validation of model quality remains
+the responsibility of downstream training and evaluation code.</p>
+<h2 data-number="6.2" id="roadmap-and-future-extensions"><span
+class="header-section-number">6.2</span> Roadmap and Future
+Extensions</h2>
+<p>Several concrete directions extend the current system:</p>
+<ol type="1">
+<li><p><strong>Multi-language parsers.</strong> The v0.1.x front end
+targets Python; adding parsers for JavaScript/TypeScript, Java, and Go
+would cover the majority of open-source ML-relevant repositories. Each
+parser implements the plugin interface documented in
+<code>../cogant/docs/PLUGIN_API.md</code>, so language additions do not
+require changes to the core IR or export pipeline.</p></li>
+<li><p><strong>Rust acceleration of critical paths.</strong> The native
+crate layer (<code>cogant-graph</code>, <code>cogant-translate</code>)
+already defines typed graph operations. Wiring PyO3 bindings for the hot
+paths — deduplication, rule matching, and Generalized Notation Notation
+section/tensor packing in <code>cogant-gnn</code> — would reduce
+end-to-end latency for large repositories from minutes to seconds, based
+on preliminary profiling of the Python fallback
+implementations.</p></li>
+<li><p><strong>Incremental re-analysis.</strong> Currently the pipeline
+processes a full repository snapshot on each invocation. An incremental
+mode that accepts a Git diff and updates only affected subgraphs would
+enable integration into CI/CD workflows where per-commit turnaround
+matters. The stable-identifier scheme already supports cross-run node
+matching; the missing piece is a dependency tracker that invalidates
+downstream IRs when upstream nodes change.</p></li>
+<li><p><strong>LLM-assisted rule discovery.</strong> Translation rules
+are currently hand-authored. A semi-automated workflow could present a
+large language model with unannotated graph fragments and ask it to
+propose candidate rules, which a human reviewer then accepts, edits, or
+rejects via the existing <code>ReviewAPI</code>. This combines the
+pattern-recognition strength of LLMs with the auditability of
+declarative rules.</p></li>
+<li><p><strong>Cross-repository graph linking.</strong> When multiple
+repositories share interfaces (for example, a library and its
+consumers), linking their program graphs at call boundaries produces a
+richer training signal for tasks such as API misuse detection and
+cross-project code search. The graph homomorphism property defined in
+Section 2 provides the formal basis for identifying shared interface
+nodes across independently analyzed repositories.</p></li>
+</ol>
+<hr />
+<h1 data-number="7" id="experimental-setup"><span
+class="header-section-number">7</span> Experimental setup</h1>
+<h2 data-number="7.1" id="environment"><span
+class="header-section-number">7.1</span> Environment</h2>
+<p><strong>Requirements</strong>: Python 3.11 or newer (enforced in
+<code>pyproject.toml</code>), plus an optional Rust toolchain
+(<code>cargo</code>, stable 1.70+) when building native acceleration
+crates under <code>../cogant/rust/</code>.</p>
+<p>From the COGANT package root <a
+href="../cogant/"><code>../cogant/</code></a> (where
+<code>pyproject.toml</code> and <code>py/cogant/</code> live), install
+with <code>uv sync --all-extras</code>, or
+<code>pip install -e ".[dev,viz]"</code> /
+<code>pip install -e ".[all]"</code> as in <a
+href="../cogant/GETTING_STARTED.md">GETTING_STARTED.md</a>. Run those
+commands from that directory when working inside this monorepo layout.
+Python sources live under <a
+href="../cogant/py/cogant/"><code>../cogant/py/cogant/</code></a>; see
+the package <a href="../cogant/README.md">README.md</a>.</p>
+<h2 data-number="7.2" id="running-the-api"><span
+class="header-section-number">7.2</span> Running the API</h2>
+<p>Minimal <strong>Session</strong> run:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cogant <span class="im">import</span> Session</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>session <span class="op">=</span> Session.from_target(<span class="st">&quot;./path/to/repo&quot;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>session.extract_static()</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>session.build_graph()</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>session.translate_to_gnn()</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>session.export_all(<span class="st">&quot;output/&quot;</span>)</span></code></pre></div>
+<p>Minimal <strong>Pipeline</strong> run:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cogant <span class="im">import</span> PipelineRunner</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cogant.api.pipeline <span class="im">import</span> PipelineConfig</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>runner <span class="op">=</span> PipelineRunner()</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>config <span class="op">=</span> PipelineConfig(output_dir<span class="op">=</span><span class="st">&quot;output/&quot;</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>bundle <span class="op">=</span> runner.run(<span class="st">&quot;./path/to/repo&quot;</span>, config)</span></code></pre></div>
+<p>Adjust <code>PipelineConfig.stages</code>, <code>skip_stages</code>,
+and <code>plugins</code> to match the languages and tooling available on
+the machine.</p>
+<h2 data-number="7.3" id="configuration-files"><span
+class="header-section-number">7.3</span> Configuration files</h2>
+<p>YAML configuration can drive pipeline behavior (paths, stages, plugin
+options). The architecture and SPEC documents describe the configuration
+surface; keep project-specific secrets out of version control.</p>
+<p>A minimal pipeline configuration looks like this:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cogant.config.yaml</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stages</span><span class="kw">:</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> ingest</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> static</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> normalize</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> graph</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> dynamic</span><span class="co">       # optional; skipped if no coverage/trace inputs</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> translate</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> statespace</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> process</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> export</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> validate</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">skip_stages</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span><span class="co">   # e.g. [&quot;dynamic&quot;] to force static-only runs</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="fu">plugins</span><span class="kw">:</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">dynamic</span><span class="kw">:</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">coverage_path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;./coverage.xml&quot;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">trace_path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;./chrome_trace.json&quot;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">hot_path_percentile</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">translate</span><span class="kw">:</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_iterations</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_only_threshold</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.5</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_plus_runtime_threshold</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.65</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="fu">output_dir</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;./cogant_output/&quot;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="fu">verbose</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="fu">dry_run</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span></code></pre></div>
+<p>Each stage key corresponds to a handler in
+<code>cogant.api.pipeline.PipelineRunner.stage_handlers</code>; plugin
+sub-dictionaries are passed through to the stage at invocation time. The
+threshold keys under <code>plugins.translate</code> mirror the constants
+defined in <code>cogant.translate.confidence.ConfidenceModel</code>,
+keeping the YAML surface and the Python defaults in lockstep.</p>
+<h2 data-number="7.4" id="cli"><span
+class="header-section-number">7.4</span> CLI</h2>
+<p>Use the <code>cogant</code> CLI for scripted batch runs—see
+<code>../cogant/docs/CLI_GUIDE.md</code> for the command list that
+matches the installed version.</p>
+<h2 data-number="7.5" id="export-targets"><span
+class="header-section-number">7.5</span> Export targets</h2>
+<p>The primary export targets are the <strong>Generalized Notation
+Notation (GNN)</strong> canonical Markdown (<code>model.gnn.md</code>)
+and the equivalent companion JSON files described in
+<code>../cogant/docs/GNN_EXPORT.md</code>. Optional interop targets
+(GraphML, Parquet) support analysis in Gephi/yEd and DuckDB, and
+optional tensor views for PyTorch Geometric, DGL, or HDF5 can be
+selected when downstream graph neural network training pipelines need to
+consume the program graph as a relational tensor. Ensure the Python
+environment includes optional dependencies for these tensor exports when
+those code paths are used.</p>
+<h2 data-number="7.6" id="python-ast-parser-capabilities"><span
+class="header-section-number">7.6</span> Python AST parser
+capabilities</h2>
+<p>The v0.1.x front end relies on
+<code>cogant.static.parser.PythonASTParser</code>, which processes
+Python source through the standard-library <code>ast</code> module at
+the CPython version available in the runtime (3.9+ recommended). The
+parser extracts the following construct categories:</p>
+<ul>
+<li><strong>Module-level entities</strong>: module docstrings,
+<code>__all__</code> exports, top-level assignments.</li>
+<li><strong>Functions and methods</strong>: <code>def</code> and
+<code>async def</code>, including signatures with positional, keyword,
+variadic (<code>*args</code>, <code>**kwargs</code>), and
+positional-only parameters. Default values are recorded as constant
+expressions where statically evaluable.</li>
+<li><strong>Classes</strong>: class definitions, base classes,
+metaclasses, and the <code>__init__</code> / <code>__new__</code>
+boundary.</li>
+<li><strong>Decorators</strong>: <code>@staticmethod</code>,
+<code>@classmethod</code>, <code>@property</code>,
+<code>@dataclass</code>, and arbitrary user-defined decorators.
+Decorator arguments are captured as attribute metadata.</li>
+<li><strong>Type annotations</strong>: PEP 484 / 526 / 604 annotations
+on function parameters, return types, and variable assignments. Generic
+subscripts (<code>List[int]</code>, <code>Dict[str, Any]</code>) are
+preserved as type strings.</li>
+<li><strong>Comprehensions and generators</strong>: list, set, dict
+comprehensions and generator expressions are represented as anonymous
+FUNCTION nodes with DATA_FLOW edges to their enclosing scope.</li>
+<li><strong>Control flow</strong>:
+<code>if</code>/<code>elif</code>/<code>else</code>,
+<code>for</code>/<code>while</code>/<code>else</code>,
+<code>try</code>/<code>except</code>/<code>finally</code>,
+<code>with</code>/<code>async with</code>, and
+<code>match</code>/<code>case</code> (Python 3.10+) are mapped to
+CONTROLFLOW_NODE entities.</li>
+<li><strong>Imports</strong>: <code>import</code> and
+<code>from ... import</code> statements produce MODULE_IMPORT roles with
+edges to the resolved module when discoverable on the file system.</li>
+<li><strong>Constants</strong>: module-level and class-level assignments
+to <code>Final</code> or ALL_CAPS names are classified as CONSTANT
+nodes.</li>
+</ul>
+<p>Constructs that require runtime evaluation (for example
+<code>exec</code>, <code>importlib.import_module</code>, or dynamic
+<code>__getattr__</code>) are recorded as EXTERNAL nodes with HEURISTIC
+provenance and correspondingly lower confidence.</p>
+<h2 data-number="7.7" id="progressive-ir-stages"><span
+class="header-section-number">7.7</span> Progressive IR stages</h2>
+<p>Processing advances through six intermediate representations, each
+adding semantic detail atop its predecessor. Table 3 summarizes what
+each stage contributes.</p>
+<p><strong>Table 3. Progressive IR stages and their
+contributions.</strong></p>
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 12%" />
+<col style="width: 21%" />
+<col style="width: 56%" />
+</colgroup>
+<thead>
+<tr>
+<th>Stage</th>
+<th>IR name</th>
+<th>Key additions</th>
+<th>Typical output size (10K-function repo)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Repo IR</td>
+<td>Raw entities and relationships per file; deduplication; merged type
+info</td>
+<td>~15 MB JSON</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Program Graph IR</td>
+<td>Consolidated directed graph <span
+class="math inline">\(G=(V,E)\)</span>; stable identifiers; confidence
+and provenance on every node and edge</td>
+<td>~20 MB JSON</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Semantic Mapping IR</td>
+<td>Translation rules applied; semantic roles assigned; confidence
+adjusted by rule engine</td>
+<td>~22 MB JSON (graph + mapping log)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>State Space IR</td>
+<td>Variables, actions, transitions, observations; dynamic traces
+integrated where available</td>
+<td>~5 MB JSON (behavioral model)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Process Model IR</td>
+<td>Higher-level control patterns (request–response, producer–consumer,
+state machines)</td>
+<td>~2 MB JSON</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Validation IR</td>
+<td>Coverage metrics, confidence distribution, schema compliance,
+consistency checks, reproducibility hashes</td>
+<td>~1 MB JSON (report)</td>
+</tr>
+</tbody>
+</table>
+<p>Stages 4 and 5 are <strong>partial</strong> for many repositories:
+the state-space compiler requires either execution traces or sufficient
+static structure (for example annotated state machines) to produce
+meaningful output. The pipeline tolerates missing stages gracefully; the
+Validation IR records which stages completed and which were skipped.</p>
+<h2 data-number="7.8" id="performance-characteristics"><span
+class="header-section-number">7.8</span> Performance
+characteristics</h2>
+<p>The architecture targets the following benchmarks on a 4-core
+machine, as specified in
+<code>../cogant/docs/ARCHITECTURE.md</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Repository size</th>
+<th>Target wall-clock time</th>
+<th>Memory budget</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10K functions</td>
+<td>&lt; 30 s</td>
+<td>&lt; 500 MB</td>
+</tr>
+<tr>
+<td>100K functions</td>
+<td>&lt; 5 min</td>
+<td>&lt; 2 GB</td>
+</tr>
+<tr>
+<td>1M functions</td>
+<td>&lt; 1 hr</td>
+<td>&lt; 2 GB (streaming)</td>
+</tr>
+</tbody>
+</table>
+<p>These targets assume the Python orchestration layer with Rust
+acceleration on critical paths (graph construction, rule matching, and
+Generalized Notation Notation section/tensor packing in
+<code>cogant-gnn</code>). In the current v0.1.x release, where Rust
+bindings are staged rather than fully wired, Python fallback
+implementations handle graph operations; users should expect roughly
+2–3<span class="math inline">\(\times\)</span> slower throughput on
+repositories above 50K functions until native acceleration is
+enabled.</p>
+<p>Parallelism is exploited at multiple stages: file parsing is
+embarrassingly parallel, translation rules are applied concurrently over
+independent subgraphs, and export formatting runs in parallel per output
+format. Incremental caching skips unchanged stages when the input hash
+matches a prior run, which is particularly effective during iterative
+development against a single repository.</p>
+<h2 data-number="7.9" id="what-to-record"><span
+class="header-section-number">7.9</span> What to record</h2>
+<p>For reproducible experiments, record: COGANT version or commit hash,
+interpreter version, list of stages executed, configuration file
+contents (redacted), input repository commit hash, and random seeds for
+any learned components <strong>outside</strong> COGANT that consume the
+exports.</p>
+<hr />
+<h1 data-number="8" id="reproducibility"><span
+class="header-section-number">8</span> Reproducibility</h1>
+<p>Reproducible computational research requires version-pinned tools,
+fixed inputs, and documented outputs <span class="citation"
+data-cites="peng2011reproducible">[@peng2011reproducible]</span>. COGANT
+contributes the <strong>graph-generation</strong> slice of that story:
+identical source trees and identical pipeline configuration should yield
+identical exported bundles modulo declared nondeterminism (for example
+optional neural embeddings if enabled).</p>
+<h2 data-number="8.1" id="version-pinning"><span
+class="header-section-number">8.1</span> Version pinning</h2>
+<p>Pin:</p>
+<ul>
+<li>The <strong>COGANT</strong> version (<code>pyproject.toml</code> /
+package <code>__version__</code>) and Git commit when installing from
+source.</li>
+<li>The <strong>Python</strong> minor version.</li>
+<li><strong>Optional</strong> Rust toolchain commit when building native
+extensions from <code>../cogant/rust/</code>.</li>
+</ul>
+<h2 data-number="8.2" id="artifact-layout"><span
+class="header-section-number">8.2</span> Artifact layout</h2>
+<p>Pipeline output typically includes JSON for intermediate IRs,
+<strong>Generalized Notation Notation (GNN)</strong> bundles (canonical
+<code>model.gnn.md</code> plus companion JSON and interop artifacts),
+validation reports, and optional HTML sites. Paths under the chosen
+<code>output_dir</code> should be treated as disposable but
+<strong>checksumable</strong>: store hashes alongside published datasets
+derived from COGANT exports when releasing research artifacts.</p>
+<h2 data-number="8.3" id="determinism"><span
+class="header-section-number">8.3</span> Determinism</h2>
+<p>Parsing and graph construction aim for deterministic ordering on a
+fixed filesystem snapshot. Features that pull in external models (for
+example optional name or documentation embeddings consumed by the
+Generalized Notation Notation exporter) introduce variability unless
+models and seeds are fixed; the Generalized Notation Notation export
+document (<code>../cogant/docs/GNN_EXPORT.md</code>) calls out embedding
+dimensions and optional behavior.</p>
+<h2 data-number="8.4" id="relation-to-the-template-repository"><span
+class="header-section-number">8.4</span> Relation to the template
+repository</h2>
+<p>While this project remains outside <a
+href="../../../projects/"><code>../../../projects/</code></a>, it is
+<strong>not</strong> executed by the root <code>./run.sh</code>
+discovery layer. After promotion to <a
+href="../../../projects/cogant/"><code>../../../projects/cogant/</code></a>
+with <code>src/</code>, <code>tests/</code>, and
+<code>pyproject.toml</code> per template rules, the standard manuscript
+validation and PDF stages apply; until then, validate Markdown from the
+template repository root,
+e.g. <code>uv run python -m infrastructure.validation.cli markdown ./projects_in_progress/cogant/manuscript/</code>.</p>
+<h2 data-number="8.5" id="validation-gates"><span
+class="header-section-number">8.5</span> Validation gates</h2>
+<p>The pipeline enforces quality through three complementary validation
+checkers, each targeting a different failure mode:</p>
+<p><strong>IntegrityChecker.</strong> Verifies structural soundness of
+the program graph: all edge endpoints reference existing nodes, no
+unintended duplicate nodes exist, orphaned nodes (zero in-degree and
+zero out-degree) are flagged, and self-loops are reported unless
+explicitly allowed by configuration. The checker also ensures that
+confidence scores fall within <span class="math inline">\([0,
+1]\)</span> and that provenance records are non-empty for every node and
+edge. A graph that fails integrity checks receives a FAIL validation
+status; downstream export is blocked.</p>
+<p><strong>SchemaChecker.</strong> Validates each IR artifact against
+its JSON schema (versioned alongside the COGANT package). Schema
+violations – such as missing required fields, incorrect types, or
+unknown enum values in <code>NodeKind</code> or
+<code>SemanticRole</code> – are classified as ERROR or FATAL depending
+on severity. Schema versions are recorded in the validation report so
+that consumers can verify compatibility with their import code.</p>
+<p><strong>ProvenanceChecker.</strong> Audits the provenance chain:
+every assertion in the semantic mapping must trace back to at least one
+evidence source (SourceCode, TypeSystem, ControlFlow, Heuristic, or
+External). The checker flags mappings whose provenance is empty or whose
+confidence score is inconsistent with the declared evidence tier – for
+example, a STATIC_PLUS_RUNTIME tier with no runtime trace evidence.
+These flags appear as warnings rather than errors, since partial
+provenance is expected for heuristic rules.</p>
+<p>Together, these gates ensure that exported bundles meet a minimum
+quality bar before reaching downstream models. The thresholds are
+configurable (see <code>../cogant/docs/VALIDATION.md</code>); defaults
+require <span class="math inline">\(\geq 95\%\)</span> coverage, mean
+confidence <span class="math inline">\(\geq 0.85\)</span>, and zero
+schema violations.</p>
+<h2 data-number="8.6" id="pipeline-checkpoint-and-resume-behavior"><span
+class="header-section-number">8.6</span> Pipeline checkpoint and resume
+behavior</h2>
+<p>The pipeline writes a checkpoint file after each successfully
+completed stage. The checkpoint records the stage name, completion
+timestamp, input hash, and output hash. On a subsequent invocation with
+<code>--resume</code> (or <code>PipelineConfig.resume = True</code>),
+the runner reads the checkpoint file, verifies that the input hash for
+each completed stage still matches the current source tree, and skips
+stages whose outputs are already valid. If a source file has changed,
+the runner invalidates the affected stage and all downstream stages,
+then re-executes from the earliest invalidated point.</p>
+<p>Checkpoints are stored as JSON under the configured
+<code>output_dir</code>:</p>
+<pre><code>output/
+  .cogant_checkpoint.json</code></pre>
+<p>This mechanism is particularly useful during iterative development:
+after an initial full run, changing a single source file triggers only
+re-parsing, graph construction, and downstream stages for the affected
+subgraph, rather than re-analyzing the entire repository.</p>
+<h2 data-number="8.7" id="output-manifest-structure"><span
+class="header-section-number">8.7</span> Output manifest structure</h2>
+<p>Each pipeline run produces a manifest file
+(<code>manifest.json</code>) alongside the exported artifacts. The
+manifest provides a machine-readable inventory of everything the run
+produced:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cogant_version&quot;</span><span class="fu">:</span> <span class="st">&quot;0.1.0&quot;</span><span class="fu">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;run_id&quot;</span><span class="fu">:</span> <span class="st">&quot;run_20260408_143012&quot;</span><span class="fu">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-04-08T14:30:12Z&quot;</span><span class="fu">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;input_hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:a1b2c3...&quot;</span><span class="fu">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;config_hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:d4e5f6...&quot;</span><span class="fu">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;stages_completed&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;discovery&quot;</span><span class="ot">,</span> <span class="st">&quot;parsing&quot;</span><span class="ot">,</span> <span class="st">&quot;repo_ir&quot;</span><span class="ot">,</span> <span class="st">&quot;graph&quot;</span><span class="ot">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                        <span class="st">&quot;translate&quot;</span><span class="ot">,</span> <span class="st">&quot;validate&quot;</span><span class="ot">,</span> <span class="st">&quot;export&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;stages_skipped&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;statespace&quot;</span><span class="ot">,</span> <span class="st">&quot;process&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;artifacts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;model.gnn.json&quot;</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span> <span class="dt">&quot;size_bytes&quot;</span><span class="fu">:</span> <span class="dv">2048576</span><span class="fu">,</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:...&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;model.pyg.pt&quot;</span><span class="fu">,</span>   <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;pytorch_geometric&quot;</span><span class="fu">,</span> <span class="dt">&quot;size_bytes&quot;</span><span class="fu">:</span> <span class="dv">1024000</span><span class="fu">,</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:...&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;validation_report.json&quot;</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span> <span class="dt">&quot;size_bytes&quot;</span><span class="fu">:</span> <span class="dv">8192</span><span class="fu">,</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:...&quot;</span><span class="fu">}</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;statistics&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;nodes&quot;</span><span class="fu">:</span> <span class="dv">320</span><span class="fu">,</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;edges&quot;</span><span class="fu">:</span> <span class="dv">1250</span><span class="fu">,</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;mean_confidence&quot;</span><span class="fu">:</span> <span class="fl">0.92</span><span class="fu">,</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;validation_status&quot;</span><span class="fu">:</span> <span class="st">&quot;PASS&quot;</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Storing per-artifact SHA-256 hashes enables consumers to verify that
+exported bundles have not been modified after generation. When
+publishing datasets derived from COGANT exports, including the manifest
+alongside the data satisfies the reproducibility requirements outlined
+by <span class="citation"
+data-cites="peng2011reproducible">[@peng2011reproducible]</span>: any
+researcher with the same source tree, COGANT version, and configuration
+can regenerate the artifacts and compare hashes.</p>
+<h2 data-number="8.8" id="data-ethics-and-licensing"><span
+class="header-section-number">8.8</span> Data ethics and licensing</h2>
+<p>Exported graphs can contain identifiers and comments from source
+code. Redistribution of derived graphs must respect the licenses of
+input repositories and organizational data policies.</p>
+<hr />
+<h1 data-number="9" id="scope-and-related-work"><span
+class="header-section-number">9</span> Scope and related work</h1>
+<h2 data-number="9.1" id="positioning"><span
+class="header-section-number">9.1</span> Positioning</h2>
+<p><strong>Machine learning for big code</strong> surveys cover
+naturalness, representation learning, and task taxonomy <span
+class="citation"
+data-cites="allamanis2018survey">[@allamanis2018survey]</span>. COGANT
+contributes <strong>infrastructure</strong>: a documented IR, pipeline,
+and export contract rather than a new benchmark or model
+architecture.</p>
+<p><strong>Graph neural networks</strong> unify message-passing
+frameworks for relational data <span class="citation"
+data-cites="wu2020comprehensive scarselli2009graph">[@wu2020comprehensive;
+@scarselli2009graph]</span>. Although COGANT’s primary output is the
+Active Inference Institute’s Generalized Notation Notation, its program
+graph can be materialised as optional tensor views compatible with these
+frameworks (PyG, DGL) so that graph-neural-network model papers can cite
+a specific tensor layout.</p>
+<p><strong>Code property graphs</strong> and related security-oriented
+graph constructions show how to merge syntactic and semantic edges for
+analysis <span class="citation"
+data-cites="yamaguchi2014modeling">[@yamaguchi2014modeling]</span>.
+COGANT’s program graph is cognate but emphasizes <strong>ML
+export</strong>, confidence scoring, and multi-stage IR refinement.</p>
+<h2 data-number="9.2" id="related-tool-categories"><span
+class="header-section-number">9.2</span> Related tool categories</h2>
+<ul>
+<li><strong>Compiler and LLVM IRs</strong> — richer semantics, heavier
+toolchain; COGANT favors lightweight extraction for dataset
+building.</li>
+<li><strong>SCA and linters</strong> — rule enforcement focus; COGANT
+focuses on graph generation for downstream learning.</li>
+<li><strong>Neural code models</strong> (code2vec, CodeBERT, etc.) —
+often consume tokens or AST paths; COGANT supplies <strong>explicit
+program graphs</strong> that graph-neural-network-centric research can
+ingest directly.</li>
+</ul>
+<h2 data-number="9.3" id="program-analysis-for-ml"><span
+class="header-section-number">9.3</span> Program analysis for ML</h2>
+<p>Several systems address the intersection of program analysis and
+machine learning that COGANT operates in:</p>
+<p><strong>code2seq and code2vec</strong> <span class="citation"
+data-cites="alon2019code2vec">[@alon2019code2vec]</span> represent
+programs as sets of AST paths between terminal nodes. These path-based
+representations are effective for method naming and code summarization
+but discard the full graph topology that graph-neural-network-based
+models exploit. COGANT preserves the complete program graph — including
+control-flow and data-flow edges — and can export it in tensor form,
+enabling downstream architectures that reason over richer relational
+structure.</p>
+<p><strong>Gated Graph Neural Networks (GGNN)</strong> <span
+class="citation" data-cites="li2016gated">[@li2016gated]</span>
+introduced gated recurrent propagation for graph-structured program
+representations, demonstrating strong results on variable misuse
+detection and other code tasks. COGANT’s export contract (PyG
+<code>Data</code> objects with typed <code>edge_index</code> and
+<code>edge_attr</code>) is directly compatible with GGNN-style models;
+the kind and role indices provide the discrete node and edge types that
+typed message-passing layers require.</p>
+<p><strong>CodeQL</strong> (Semmle/GitHub) provides a declarative query
+language over relational representations of code. While CodeQL excels at
+security analysis with hand-written queries, its outputs are query
+results rather than tensor-ready graph bundles. COGANT occupies the
+complementary niche: it produces the graph data that learned models
+consume, and could ingest CodeQL query results as an additional evidence
+source feeding the confidence model.</p>
+<p><strong>CodeBERT</strong> <span class="citation"
+data-cites="feng2020codebert">[@feng2020codebert]</span> and related
+pre-trained models operate at the token level, learning representations
+from natural language and code jointly. These models are complementary
+to COGANT’s graph-centric approach: CodeBERT embeddings could serve as
+optional node features in COGANT’s Generalized Notation Notation (GNN)
+export (the export schema already reserves dimensions for text
+embeddings as documented in
+<code>../cogant/docs/GNN_EXPORT.md</code>).</p>
+<h3 data-number="9.3.1"
+id="feature-matrix-cogant-vs.-related-tools"><span
+class="header-section-number">9.3.1</span> Feature matrix: COGANT
+vs. related tools</h3>
+<p>The following matrix contrasts COGANT’s capabilities with the related
+tools discussed in this section. Entries marked “✓” indicate first-class
+support; “partial” indicates limited or indirect support; “—” indicates
+the feature is out of scope for that tool.</p>
+<p><strong>Table 4. Feature comparison of program-to-model
+toolchains.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th style="text-align: center;">COGANT</th>
+<th style="text-align: center;">code2vec</th>
+<th style="text-align: center;">GGNN</th>
+<th style="text-align: center;">CodeQL</th>
+<th style="text-align: center;">CodeBERT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Full program graph (AST + CFG + DFG)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">input-only</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Typed node/edge taxonomy</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">partial</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Confidence scoring per assertion</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Provenance tracking</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">partial</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>State-space extraction</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Temporal regime classification</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Dynamic enrichment (coverage, traces)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">partial</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Generalized Notation Notation output</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Tensor export (PyG, DGL, HDF5)</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">partial</td>
+<td style="text-align: center;">input-only</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Pluggable translation rules</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Human review loop</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">partial</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td>Multi-language front-ends</td>
+<td style="text-align: center;">roadmap</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+</tr>
+</tbody>
+</table>
+<p>COGANT is distinct from the other toolchains in three ways: first, it
+explicitly models uncertainty through confidence tiers tied to evidence
+provenance; second, it produces a structured Active Inference notation
+as its primary output rather than an opaque tensor; and third, it
+composes static and dynamic evidence in a single pipeline rather than
+specializing to one.</p>
+<h2 data-number="9.4" id="active-inference-and-program-behavior"><span
+class="header-section-number">9.4</span> Active inference and program
+behavior</h2>
+<p>The state-space IR in COGANT’s pipeline (states, actions,
+transitions, observations) shares structural parallels with
+<strong>active inference</strong> formulations <span class="citation"
+data-cites="friston2010free">[@friston2010free]</span>, where an agent
+maintains beliefs about hidden states and selects actions to minimize
+prediction error. In the program analysis context, the “agent” is the
+analysis pipeline itself: it observes code artifacts, maintains beliefs
+about program behavior (the state-space model), and refines those
+beliefs as new evidence (dynamic traces, coverage data) arrives.</p>
+<p>This connection is analogical: the <code>ConfidenceModel</code> in
+<code>../cogant/py/cogant/translate/confidence.py</code> aggregates
+evidence and penalties in a way that suggests belief revision, but it is
+not a Bayesian posterior. Future work could formalize a tighter link by
+casting rule application as variational inference, where a fixpoint
+would represent an approximate posterior over program semantics.</p>
+<h2 data-number="9.5" id="boundaries"><span
+class="header-section-number">9.5</span> Boundaries</h2>
+<p>COGANT does not subsume formal verification, interactive theorem
+proving, or full interprocedural pointer analysis unless implemented as
+explicit future stages. The SPEC marks Rust acceleration and additional
+parsers as staged; the manuscript should be read together with that
+table for up-to-date scope.</p>
+<h2 data-number="9.6" id="forward-compatibility"><span
+class="header-section-number">9.6</span> Forward compatibility</h2>
+<p>Promoting COGANT into <a
+href="../../../projects/"><code>../../../projects/</code></a> integrates
+manuscript PDF rendering with the template’s validation gates.
+Cross-references in this folder use paths <strong>relative to these
+Markdown files</strong> (for example <a
+href="../cogant/docs/"><code>../cogant/docs/</code></a>) so links stay
+stable when the tree moves.</p>
+<hr />
+<h1 data-number="10" id="manuscript-syntax-reference-cogant"><span
+class="header-section-number">10</span> Manuscript Syntax Reference
+(COGANT)</h1>
+<p>Formatting conventions for Markdown in this folder. For the full
+rendering contract, see the template exemplar <a
+href="../../../projects/code_project/manuscript/SYNTAX.md"><code>projects/code_project/manuscript/SYNTAX.md</code></a>.</p>
+<h2 data-number="10.1" id="citations"><span
+class="header-section-number">10.1</span> Citations</h2>
+<p>Use Pandoc cite syntax; keys must exist in
+<code>references.bib</code>.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">@allamanis2018survey</span><span class="co">]</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">@allamanis2018survey; @wu2020comprehensive</span><span class="co">]</span></span></code></pre></div>
+<h2 data-number="10.2" id="equations"><span
+class="header-section-number">10.2</span> Equations</h2>
+<p>Use LaTeX <code>equation</code> with <code>\label</code> /
+<code>\ref</code> as documented in the code_project SYNTAX, or
+pandoc-crossref attributes where the pipeline enables them.</p>
+<h2 data-number="10.3" id="figures"><span
+class="header-section-number">10.3</span> Figures</h2>
+<p>If you add figures, place assets where the future project
+<code>output/</code> layout can resolve them (typically
+<code>output/figures/</code> after promotion to
+<code>projects/cogant/</code>). Use explicit relative paths from the
+rendering contract described in
+<code>infrastructure/rendering/AGENTS.md</code>.</p>
+<h2 data-number="10.4" id="section-files"><span
+class="header-section-number">10.4</span> Section files</h2>
+<p>Numeric prefixes <code>00_</code>–<code>09_</code> are combined in
+stem-sorted order by
+<code>infrastructure/rendering/manuscript_discovery.py</code>. Files
+named <code>SYNTAX.md</code> sort in the <strong>other</strong> bucket
+(after main sections, before <code>99_*</code> if present).</p>
+<h2 data-number="10.5" id="cross-references-to-the-package"><span
+class="header-section-number">10.5</span> Cross-references to the
+package</h2>
+<p>Prefer <strong>relative</strong> paths from this folder to the
+package tree, e.g. <a
+href="../cogant/docs/ARCHITECTURE.md"><code>../cogant/docs/ARCHITECTURE.md</code></a>,
+so links work in the editor and in Git without hard-coding the monorepo
+path.</p>
+<h2 data-number="10.6" id="see-also"><span
+class="header-section-number">10.6</span> See also</h2>
+<ul>
+<li><a href="AGENTS.md"><code>AGENTS.md</code></a> — editor protocol for
+this folder</li>
+<li><a href="README.md"><code>README.md</code></a> — orientation and
+render notes</li>
+</ul>
+<section id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Throughout this manuscript <strong>GNN</strong> refers
+to the Active Inference Institute’s <strong>Generalized Notation
+Notation</strong> (<a
+href="https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation">repository</a>),
+a structured notation for state-space and process models—<em>not</em>
+graph neural networks. Downstream consumers, including graph neural
+network training pipelines, can ingest the emitted artifacts, but COGANT
+itself produces Generalized Notation Notation bundles.<a href="#fnref1"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+</body>
+</html>

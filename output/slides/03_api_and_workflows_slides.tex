@@ -1,0 +1,201 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\begin{frame}[fragile]{API and Workflows}
+\protect\phantomsection\label{api-and-workflows}
+This section describes the programmatic surface that the shipped Python
+package exposes in practice, aligned with
+\texttt{../cogant/docs/API\_GUIDE.md} and
+\texttt{../cogant/VERIFICATION\_REPORT.md}. It is \textbf{not} an
+empirical benchmark section; COGANT does not ship comparative timing
+claims in the manuscript layer. Instead, it records the \textbf{surface
+area} users can rely on: two complementary entry points (a Session for
+stepwise work and a Pipeline for batch runs), the Bundle accessors that
+expose their artifacts, a command-line interface, and a Review API for
+human-in-the-loop curation.
+
+\begin{block}{Session-oriented workflow}
+\protect\phantomsection\label{session-oriented-workflow}
+The Session API is intended for interactive exploration: it is the right
+choice when a user wants to inspect intermediate artifacts between
+stages, iterate on a single repository in a notebook, or debug a
+specific extraction step without committing to a full scripted run. Each
+call returns control to the caller so that the graph, mappings, or
+state-space model can be examined before the next stage is invoked.
+
+\texttt{Session.from\_target} accepts a local path or URL, then supports
+a stepwise workflow:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{extract\_static} --- AST-oriented extraction for supported
+  languages.
+\item
+  \texttt{extract\_dynamic} --- traces and coverage when inputs exist.
+\item
+  \texttt{build\_graph} --- program graph construction.
+\item
+  \texttt{translate\_to\_gnn} --- Generalized Notation Notation (GNN)
+  representation.
+\item
+  \texttt{compile\_state\_space} --- behavioral model when the pipeline
+  has sufficient data.
+\item
+  \texttt{export\_all} --- writes JSON artifacts under a chosen output
+  directory.
+\end{itemize}
+
+This path suits interactive notebooks and incremental debugging.
+\end{block}
+
+\begin{block}{Pipeline-oriented workflow}
+\protect\phantomsection\label{pipeline-oriented-workflow}
+The Pipeline API is intended for scripted, reproducible batch runs: it
+is the right choice when a user wants to process many repositories with
+a fixed configuration, wire COGANT into CI, or guarantee that every run
+executes the same ordered stages with the same plugin settings. Because
+the whole run is described by a single \texttt{PipelineConfig}, it can
+be checked into version control and replayed without manual
+intervention.
+
+\texttt{PipelineRunner} with \texttt{PipelineConfig} runs an ordered
+list of stages (ingest, static, normalize, graph, translate, state
+space, process, export, validate). Configuration can skip stages (for
+example dynamic analysis), attach \textbf{plugin} settings per language,
+set \texttt{output\_dir}, verbosity, and dry-run mode. Results aggregate
+into a \textbf{Bundle} with \texttt{stage\_results}, error lists, and
+accessors described below.
+\end{block}
+
+\begin{block}{Bundle accessors}
+\protect\phantomsection\label{bundle-accessors}
+The bundle API exposes summaries and artifacts, including:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{repo\_summary}, \texttt{program\_graph},
+  \texttt{state\_space\_model}, \texttt{process\_model}
+\item
+  \texttt{gnn\_markdown} --- human-readable graph summary
+\item
+  \texttt{validation\_report}
+\item
+  \texttt{render\_site} --- static HTML site with graph and model views
+\item
+  \texttt{to\_json} / \texttt{save\_json}
+\end{itemize}
+
+The verification report lists these as delivered capabilities for the
+v0.1.0 line.
+\end{block}
+
+\begin{block}{Command-line interface}
+\protect\phantomsection\label{command-line-interface}
+The CLI entry point (\texttt{cogant.cli.main}) implements commands such
+as \texttt{init}, \texttt{scan}, \texttt{extract-static},
+\texttt{extract-dynamic}, graph and export verbs, and
+validation-oriented subcommands. Exact flags live in
+\texttt{../cogant/docs/CLI\_GUIDE.md}; the manuscript does not duplicate
+them to avoid drift.
+\end{block}
+
+\begin{block}{Review API}
+\protect\phantomsection\label{review-api}
+\texttt{ReviewAPI} supports interactive curation: load a bundle, present
+mappings, accept, reject, or edit, then save a curated bundle. This
+closes the loop when human review is part of the ML dataset
+construction.
+\end{block}
+\end{frame}
+
+\end{document}

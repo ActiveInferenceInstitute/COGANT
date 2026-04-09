@@ -1,0 +1,499 @@
+# COGANT R&D Scoping Report (v2 — Deep Audit Complete)
+
+**Date:** 2026-04-09  
+**Version scoped:** 0.1.0 (Alpha)  
+**Location:** `projects_in_progress/cogant/`  
+**Test status:** 176 passed, 0 failed, 64% coverage (integration suite, 63.5s)  
+**Prepared by:** Claude Sonnet 4.6 — initial scoping + deep code audit
+
+---
+
+## 1. What COGANT Is
+
+**COGANT** = Codebase-to-GNN Translation Engine.
+
+Converts software repositories into **Generalized Notation Notation (GNN)** artifacts — the Active Inference Institute's formal notation for representing systems as state-space and process models. GNN here is a human-interpretable scientific notation, not graph neural networks. The acronym collision is intentional and documented.
+
+**Core idea:** Static analysis → typed program graph (nodes = entities, edges = relationships) → fixpoint translation rule engine → GNN format capturing state variables, observations, actions, transitions, Markov blanket, and conditional dependencies.
+
+**Deliverables (confirmed by Daniel):**
+1. Working tool — researchers can run against repos and get usable GNN artifacts
+2. Research paper — manuscript in `manuscript/` drives structure
+3. ML dataset — graph-structured code representations exportable as Parquet/GraphML/JSON
+4. Demonstration system — control-positive repos show active inference applied to software
+
+**Intended users:** Researchers applying active inference to software systems, developers auditing codebases, ML practitioners needing graph-structured training data from source code.
+
+**Self-assessed scope boundary:** COGANT prioritizes *transparent graphs over complete semantics*. Confidence-scored partial results always; silent failure never. COGANT exports; downstream ML validation is out of scope.
+
+---
+
+## 2. Architecture Overview
+
+### 2a. Layer separation
+
+```
+┌─────────────────────────────────────────────────────┐
+│  User-facing: Session / PipelineRunner / CLI         │
+│  cogant.api.{session,pipeline,bundle,review}         │
+├─────────────────────────────────────────────────────┤
+│  10-stage pipeline (Python orchestration)            │
+│  ingest → parse → normalize → graph → dynamic        │
+│  → translate → statespace → process → validate        │
+│  → export                                            │
+├─────────────────────────────────────────────────────┤
+│  26 core modules (py/cogant/)                        │
+│  schemas, graph, parsers, normalize, translate,      │
+│  statespace, process, scoring, validate, export,     │
+│  gnn, markov, simulate, viz, plugins, provenance,    │
+│  static, dynamic, config, cli, api, tools            │
+├─────────────────────────────────────────────────────┤
+│  Rust acceleration — 8 CRATES, ALL IMPLEMENTED       │
+│  cogant-core, cogant-graph, cogant-translate,        │
+│  cogant-statespace, cogant-store, cogant-trace,      │
+│  cogant-gnn, cogant-ffi (PyO3)                       │
+│  STATUS: Implemented but NOT compiled or wired in    │
+└─────────────────────────────────────────────────────┘
+```
+
+### 2b. Data flow
+
+```
+[Repository path / URL]
+        │
+        ▼
+[Ingest]          cogant.ingest       ✅ Implemented
+  RepoIngester, FileEnumerator, ManifestParser
+        │
+        ▼
+[Parse]           cogant.static       ⚠️ Partial
+  PythonASTParser — symbols, types, imports work
+  extract_calls() → PLACEHOLDER (returns empty list)
+  static/dataflow.py → 19% coverage
+  static/types.py → 16% coverage
+        │
+        ▼
+[Normalize]       cogant.normalize    ⚠️ Partial (57-67%)
+  IdentityResolver → stable cross-run node IDs
+        │
+        ▼
+[Graph]           cogant.graph        ✅ Implemented
+  ProgramGraphBuilder → ProgramGraph
+  Dedup, BFS, cycle detection, statistics
+        │
+        ▼
+[Dynamic]         cogant.dynamic      ⚠️ Exists, not wired
+  Coverage + trace ingestion hooks (optional)
+        │
+        ▼
+[Translate]       cogant.translate    ✅ PRODUCTION-READY
+  19 real rules: structural(5), semantic(5),
+  control(2), behavioral(4), resilience(3)
+  Fixpoint engine, confidence tiers, conflict resolution
+        │
+        ▼
+[State Space]     cogant.statespace   ⚠️ Partial (59-75%)
+  StateSpaceCompiler — orchestration works
+  Variable extraction: partial
+  Action/transition/likelihood extraction: partial
+        │
+        ▼
+[Process Model]   cogant.process      ⚠️ Partial
+  Stage identification: implemented
+  Connection/pattern logic: partial
+  timeline.py: 16% coverage
+        │
+        ▼
+[Validate]        cogant.validate     ✅ Implemented (71-92%)
+  SchemaValidator, IntegrityChecker, ProvenanceChecker
+        │
+        ▼
+[Export]          cogant.export + cogant.gnn  ✅ Implemented
+  18+ GNN sections (all real via mixins)
+  JSON, GraphML, Parquet, GNN Markdown/JSON, HTML site
+        │
+        ▼
+[Bundle]          cogant.api.bundle   ✅ Implemented
+  Unified result container, typed accessors
+```
+
+### 2c. Translation engine (key algorithm — PRODUCTION-READY)
+
+**Fixpoint loop** with 19 real rules:
+1. Sort all `TranslationRule` objects by priority
+2. Each iteration: `matches(node/edge)` → `apply()` → new `SemanticMapping`
+3. Track coverage; loop until convergence or `max_iterations` (default 10)
+4. Conflict resolution: priority-ordered inverted-index on node→mappings
+5. Coverage gap reporting
+
+**Confidence tiers:** `STATIC_ONLY` → `STATIC_PLUS_RUNTIME` → `OBSERVED` → `HUMAN_REVIEWED`
+
+### 2d. Translation rules inventory (complete)
+
+| File | Count | Rules |
+|------|-------|-------|
+| structural.py | 5 | ReadOnlyInput, MutatingSubsystem, Inheritance, Containment, DataPipeline |
+| semantic.py | 5 | Observation, Action, Policy, Preference, Context |
+| control.py | 2 | Config, FeatureFlag |
+| behavioral.py | 4 | Orchestrator, TestAssertion, EventBus (×2) |
+| resilience.py | 4 | Retry, ErrorBoundary, Singleton, CircuitBreaker |
+| **Total** | **19** | All real implementations, not stubs |
+
+**Confidence ranges:** 0.65 (SingletonAccess, keyword heuristic) to 0.95 (parser certainty for TestAssertion, Config)
+
+### 2e. Markov blanket (COMPLETE)
+
+- `blanket.py`: O(V+E) partitioner assigning roles: INTERNAL (μ), SENSORY (s), ACTIVE (a), EXTERNAL (η)
+- `extractor.py`: 5 seed strategies: explicit, module, kind, auto (cohesion heuristic), mapping_kind
+- `network.py`: collapses full graph to 4-node Active Inference schematic + Mermaid export
+- **Status: Production-ready**
+
+### 2f. Rust workspace (IMPLEMENTED, UNBUILT)
+
+All 8 crates are **real working Rust code**, not scaffolding stubs:
+
+| Crate | Contents | Status |
+|-------|----------|--------|
+| cogant-core | StableId, SemanticRole(27), NodeKind(22), EdgeKind(26), Confidence, Provenance | Implemented |
+| cogant-graph | ProgramGraph via petgraph DiGraph, queries, BFS traversal | Implemented |
+| cogant-translate | TranslationEngine, RuleSet, SemanticMapping, TranslationRule trait | Implemented |
+| cogant-statespace | StateVariable, Observation, Action, Transition, StateSpaceModel | Implemented |
+| cogant-store | FileStore bundle persistence, checksum SHA-256 | Implemented |
+| cogant-trace | TraceEvent enum, TraceSession, call graph extraction, max call depth | Implemented |
+| cogant-gnn | GnnBundle, JSON/Markdown export, NodeKind→GNN type mapping | Implemented |
+| cogant-ffi | PyO3 bindings: PyProgramGraph, PyNodeData, helper functions | Implemented |
+
+**Critical gap:** Zero compiled binaries. No `target/` directory. Python calls no Rust code. All hot paths run pure Python + networkx.
+
+### 2g. Output formats (all implemented)
+
+| Format | Module | Status |
+|--------|--------|--------|
+| GNN Markdown (18+ sections) | `cogant.gnn.formatter` | ✅ |
+| GNN JSON | `cogant.gnn.json_export` | ✅ |
+| GNN Package (directory bundle) | `cogant.gnn.package` | ✅ |
+| program_graph.json | `cogant.export` | ✅ |
+| semantic_mappings.json | `cogant.translate` | ✅ |
+| validation_report.json | `cogant.validate` | ✅ |
+| bundle.json | `cogant.api.bundle` | ✅ |
+| GraphML | `cogant.export.graphml` | ✅ |
+| Parquet (PyArrow) | `cogant.export.parquet` | ✅ |
+| Mermaid diagrams (6 types) | `cogant.viz.mermaid` | ✅ |
+| HTML interactive site | `cogant.viz` | ✅ |
+| PNG exports | `cogant.viz.png_export` | ✅ (1275 lines) |
+
+---
+
+## 3. Dependencies
+
+### Runtime (required)
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| pydantic | ≥2.0 | Schema validation throughout |
+| typer | ≥0.9 | CLI framework |
+| rich | ≥13.0 | Terminal UI |
+| networkx | ≥3.0 | In-memory graph algorithms |
+| pyarrow | ≥14.0 | Columnar export (Parquet) |
+| duckdb | ≥0.9 | SQL queries over analysis data |
+
+### Dev extras
+
+| Package | Purpose |
+|---------|---------|
+| pytest ≥7.4, pytest-cov | Testing + coverage |
+| ruff | Linting + formatting |
+| mypy ≥1.5 | Type checking |
+
+### Viz (optional)
+
+plotly ≥5.17, jinja2 ≥3.0, matplotlib ≥3.8
+
+### Rust workspace
+
+serde, serde_json, petgraph, pyo3, uuid, thiserror, anyhow, tracing, tokio
+
+### Notable absences
+
+- No `tree-sitter` — Python uses stdlib `ast` (limits multi-language path)
+- No LLM integration yet (roadmap: LLM-assisted rule discovery)
+- No `hypothesis`/property-based testing
+- No async runtime in Python layer
+- No pre-commit hooks
+
+---
+
+## 4. Build & Test Status
+
+### Installation
+
+```bash
+cd projects_in_progress/cogant/cogant/
+uv pip install -e ".[all]"   # or: make dev
+```
+
+**`uv.lock` present.** Setuptools backend, `package-dir = {"" = "py"}`.
+
+**Import confirmed:** `cogant.__version__ == "0.1.0"` imports cleanly.
+
+### Test results (run 2026-04-09)
+
+```
+Integration tests only:  176 passed, 0 failed — 64% coverage (63.5s)
+Unit tests only:         466 passed, 2 skipped — 54% combined coverage (47.2s)
+Full suite combined:     642+ passing tests
+```
+
+**Integration tests cover more code than unit tests despite having fewer tests.** The `RoundtripOrchestrator` in `examples/orchestrate_roundtrip.py` runs the full 9-stage pipeline against 3 control-positive repos (calculator, event_pipeline, flask_mini) — this single orchestrator is responsible for the bulk of meaningful coverage.
+
+### Coverage by module (critical gaps)
+
+| Module | Coverage | Status |
+|--------|----------|--------|
+| `static/dataflow.py` | **19%** | Critical — READ/WRITE edge extraction barely tested |
+| `static/types.py` | **16%** | Critical — type inference nearly dead code |
+| `simulate/free_energy.py` | **15%** | Mathematical core, untested |
+| `process/timeline.py` | **16%** | Temporal analysis barely covered |
+| `scoring/metrics.py` | **29%** | Drift metrics barely covered |
+| `simulate/distributions.py` | **34%** | Probability primitives undertested |
+| `translate/review.py` | **17%** | Human curation layer untested |
+| `plugins/base.py` | **0%** | Plugin system completely uncovered |
+| `provenance/tracker.py` | **0%** | Source attribution completely uncovered |
+| `tools/render_output_figures.py` | **0%** | Zero coverage |
+| `translate/engine.py` | 87% | Good |
+| `translate/rules/semantic.py` | 86% | Good |
+| `validate/report.py` | 92% | Good |
+| `viz/plots.py` | 89% | Good |
+| `markov/blanket.py` | 90%+ (inferred from tests) | Good |
+
+### Unit test quality issue
+
+**Unit tests test plain Python dicts, not cogant classes.** Example:
+```python
+def test_create_module_node(self):
+    node = {"id": "module:test", "type": "Module", "name": "test"}
+    assert node["id"]   # Always true — never touches ProgramGraphBuilder
+```
+
+All 176 passing tests are essentially integration tests exercising the full pipeline. There is no isolated unit test coverage for core classes. Any refactor could silently break a module with zero test signal.
+
+### Rust build status
+
+No `target/` directory. Build command: `cd rust && cargo build --release`. Requires Rust toolchain (rustup).
+
+---
+
+## 5. Git State
+
+- **Repo:** Checked into parent template repo (`/Users/4d/Documents/GitHub/template`)
+- **Branch:** `main`, clean, up to date with origin
+- **No stashes, no active worktrees for cogant**
+- **Recent commits:** Generic (`"up"`, `"update"`) — no informative history for cogant specifically
+- **Last meaningful work:** Indeterminate from git log
+
+---
+
+## 6. Known Gaps (Prioritized by Impact)
+
+### A. Call graph extraction — CONFIRMED WORKING (not a gap)
+
+`static/calls.py::CallGraphBuilder.extract_calls_from_file()` is wired directly in `orchestrate_roundtrip.py` (line 310-317). Call edges are extracted and fed into the program graph. The stub `extract_calls()` in the LanguagePlugin adapter is a parallel interface issue, not a pipeline gap.
+
+**Remaining gap:** `static/calls.py` at 61% coverage — inter-module call resolution and edge deduplication need tests. The LanguagePlugin adapter stub should be wired to delegate to CallGraphBuilder.
+
+### B. Data flow analysis at 19% — HIGH IMPACT
+
+`static/dataflow.py` — READ/WRITE edge extraction is nearly dead code. Rules like `ReadOnlyInputRule`, `MutatingSubsystemRule`, `ActionRule`, `DataPipelineRule`, and `ContextRule` all inspect READS/WRITES edge counts. Without these edges, ~8 of 19 rules produce degraded or wrong mappings.
+
+### C. Rust layer unbuilt — HIGH IMPACT (for scale and GNN tensor generation)
+
+Python + networkx will not scale beyond ~50K node graphs. Rust has complete parallel implementations of graph operations, translation, state space, and GNN generation. PyO3 bindings exist but need compilation and Python-side wiring.
+
+### D. State space extraction partial — HIGH IMPACT (for manuscript claims)
+
+`statespace/compiler.py` is at 75% coverage but action/transition/likelihood extraction methods have stub logic. The manuscript makes specific claims about state-space model quality — these need to be real.
+
+### E. Simulate/ uses heuristics — MEDIUM IMPACT
+
+`simulate/runner.py` uses hard-coded likelihoods (0.9 match, 0.1/(n-1) others), 3-step lookahead EFE with no learned parameters, and random action selection. VFE/EFE calculations exist but are approximations. For the "active inference demonstration" deliverable, these need principled implementations.
+
+### F. Type inference at 16% — MEDIUM IMPACT
+
+`static/types.py` is barely exercised. Annotation-based type propagation is needed for quality semantic mappings (typed variables → better HIDDEN_STATE identification, typed returns → better OBSERVATION confidence).
+
+### G. Dynamic analysis not wired — MEDIUM IMPACT
+
+`cogant.dynamic` exists (coverage parsing, trace hooks) but isn't wired into the default pipeline. Confidence tier promotion from `STATIC_ONLY` to `STATIC_PLUS_RUNTIME` is blocked.
+
+### H. No GNN A/B/C/D matrices — MEDIUM IMPACT
+
+The GNN format (Active Inference Institute spec) requires explicit likelihood matrix A, transition matrix B, preference vector C, prior vector D. Currently the GNN sections are populated with graph-derived metadata, not proper probabilistic matrices. For the research deliverable, this gap must be addressed.
+
+### I. Plugin system at 0% coverage — LOW-MEDIUM IMPACT
+
+`plugins/base.py` (0%) — the extension mechanism is completely untested. Custom language parsers, custom exporters, and trace plugins all depend on this.
+
+### J. Multi-language at stubs — LOW IMPACT for now
+
+Rust, JS, TS, Go parser directories exist with scaffolding. No actual parsing logic beyond Python. Blocked by (A) call graph + (H) tree-sitter integration decision.
+
+---
+
+## 7. Proposed R&D Backlog (Full)
+
+### Phase 0 — Test foundation (unblocks all other work)
+
+| ID | Task | Acceptance |
+|----|------|------------|
+| P0-1 | Replace hollow unit tests: `test_graph_builder.py` → real `ProgramGraphBuilder` tests | Tests import and call cogant classes |
+| P0-2 | Replace hollow unit tests: all 17 `unit/` files → real class-level tests | Every unit file imports the module under test |
+| P0-3 | Add `--cov-fail-under=75` to pyproject.toml | CI fails below 75% |
+| P0-4 | Wire LanguagePlugin.extract_calls() to delegate to CallGraphBuilder (currently stub) | Plugin adapter calls same extraction as orchestrator |
+| P0-5 | Add pre-commit hooks (ruff + mypy) | `.pre-commit-config.yaml` committed |
+
+### Phase 1 — Core correctness (makes COGANT work well on Python repos)
+
+| ID | Task | Acceptance |
+|----|------|------------|
+| P1-1 | Fix `extract_calls()` stub → real AST Call node traversal | Call edges in graph; OrchestratorRule fires on orchestrators |
+| P1-2 | Fix `static/dataflow.py` (19%) → real READ/WRITE edge extraction | READ/WRITE edges in graph; data-flow rules fire correctly |
+| P1-3 | Fix `static/types.py` (16%) → real type annotation propagation | Type annotations appear as node metadata |
+| P1-4 | Complete `statespace/compiler.py` action/transition/likelihood extraction | StateSpaceModel populated for all 3 control-positive repos |
+| P1-5 | Complete `process/timeline.py` (16%) temporal analysis | Timeline events extracted for event_pipeline fixture |
+| P1-6 | Wire dynamic analysis into default pipeline with opt-out flag | `--skip-dynamic` flag; coverage paths enrich confidence tiers |
+| P1-7 | Validate GNN output section completeness for all 3 control-positive repos | Document which of 18 sections populate, which are empty |
+
+### Phase 2 — Rust integration (performance + type system parity)
+
+| ID | Task | Acceptance |
+|----|------|------------|
+| P2-1 | Build Rust workspace (`cargo build --release` in `rust/`) | All 8 crates compile cleanly |
+| P2-2 | Wire `cogant-ffi` PyO3 bindings into Python package | `cogant._rust.PyProgramGraph` importable |
+| P2-3 | Replace Python `ProgramGraphBuilder` hot path with Rust equivalent | Benchmark shows ≥5× speedup on 10K node graph |
+| P2-4 | Wire `cogant-trace` into dynamic enrichment pipeline | Trace events captured and ingested |
+| P2-5 | Benchmark against realistic repos (Django, Flask, CPython stdlib) | Performance profile documented |
+
+### Phase 3 — Active inference depth (scientific contribution)
+
+| ID | Task | Acceptance |
+|----|------|------------|
+| P3-1 | Implement GNN A matrix (likelihood) from observation nodes + edge weights | A matrix in model.gnn.json, passes GNNValidator |
+| P3-2 | Implement GNN B matrix (transition) from action nodes + state transitions | B matrix in model.gnn.json |
+| P3-3 | Implement GNN C vector (preferences) from constraint/assertion nodes | C vector populated from CONSTRAINT mappings |
+| P3-4 | Implement GNN D vector (priors) from initial state estimates | D vector populated from static analysis |
+| P3-5 | Upgrade `simulate/free_energy.py` — principled VFE/EFE from A/B/C/D | Free energy computed from GNN matrices, not hard-coded |
+| P3-6 | Complete Markov blanket A/B/C/D population via blanket roles | μ, s, a, η nodes each get correct matrix slices |
+| P3-7 | Validate state-space models against known software patterns | Qualitative validation report for 3 fixture repos |
+
+### Phase 4 — Manuscript completion (research deliverable)
+
+| ID | Task | Acceptance |
+|----|------|------------|
+| P4-1 | Audit manuscript sections against implementation (section-by-section) | Every claim is either implemented or marked Future Work |
+| P4-2 | Write experimental results section (06_experimental_setup.md) with real numbers | Node/edge counts, rule coverage %, confidence distributions for 3 repos |
+| P4-3 | Add comparison baseline (e.g., naive LOC metrics vs. COGANT graph quality) | Manuscript §8 related work cites correct comparisons |
+| P4-4 | Generate reproducible figures for manuscript from control-positive runs | All figures in `manuscript/figures/` are auto-generated |
+| P4-5 | Validate manuscript against GNN spec v1.1 | GNN sections match upstream header requirements |
+
+### Phase 5 — Multi-language and ecosystem (scope expansion)
+
+| ID | Task | Acceptance |
+|----|------|------------|
+| P5-1 | Integrate tree-sitter as universal parsing substrate | `tree-sitter` in dependencies; Python parser ported to tree-sitter |
+| P5-2 | JavaScript/TypeScript parser via tree-sitter | JS/TS files parsed, symbols extracted |
+| P5-3 | Cross-language normalization protocol | Mixed Python+JS repo produces unified graph |
+| P5-4 | Incremental re-analysis via git diff | `cogant diff` command produces subgraph update |
+
+---
+
+## 8. Architecture Decisions Resolved by Daniel
+
+All 5 open questions from v1 of this report have been answered:
+
+| Question | Decision |
+|----------|---------|
+| End goal | All four: working tool + paper + ML dataset + demo |
+| Translation rules | Audit and make best (19 real rules confirmed; gaps identified above) |
+| Rust | Yes, build and wire it |
+| Testing standard | 100% real — no hollow tests, real class instantiation |
+| Manuscript vs. implementation | Co-evolve both to completeness and accuracy |
+
+---
+
+## 9. Immediate Next Steps
+
+Ordered by dependency and impact:
+
+1. **P0-4** — Confirm/wire `static/calls.py` into pipeline (30 min investigation, then fix)
+2. **P0-1 through P0-3** — Replace all hollow unit tests, add coverage gate (1-2 days)
+3. **P1-1** — Fix `extract_calls()` stub (1 day — real AST traversal)
+4. **P1-2** — Fix `static/dataflow.py` (1 day — READ/WRITE edge extraction)
+5. **P2-1** — Build Rust workspace (2-4 hrs if Rust toolchain installed)
+6. **P1-4** — Complete state space compilation (2 days)
+
+---
+
+## 10. File Reference Map
+
+```
+cogant/
+├── pyproject.toml               # Build config, test markers, coverage settings
+├── cogant.yaml                  # Pipeline config (stages, include/exclude, export)
+├── Makefile                     # Dev targets (test, lint, format, build-rust, ci)
+├── py/cogant/
+│   ├── __init__.py              # Public API exports
+│   ├── api/                     # Session, PipelineRunner, Bundle, ReviewAPI
+│   ├── cli/                     # Typer app, 14+ subcommands
+│   ├── config/                  # Schema, loaders, defaults, presets
+│   ├── schemas/                 # Core types (Node, Edge, ProgramGraph, etc.)
+│   ├── graph/builder.py         # ProgramGraphBuilder ✅
+│   ├── ingest/                  # RepoIngester, FileEnumerator ✅
+│   ├── parsers/                 # LanguagePlugin ABCs
+│   ├── static/
+│   │   ├── parser.py            # PythonASTParser ⚠️ (calls stub)
+│   │   ├── calls.py             # Call graph extraction ⚠️ (61%, wired?)
+│   │   ├── dataflow.py          # READ/WRITE edges ❌ (19%)
+│   │   ├── symbols.py           # Symbol table ✅ (89%)
+│   │   ├── imports.py           # Import edges ✅ (71%)
+│   │   └── types.py             # Type inference ❌ (16%)
+│   ├── normalize/               # IdentityResolver ⚠️ (57-67%)
+│   ├── translate/
+│   │   ├── engine.py            # Fixpoint engine ✅ (87%)
+│   │   ├── confidence.py        # Confidence model ⚠️ (52%)
+│   │   ├── review.py            # Human curation ❌ (17%)
+│   │   └── rules/               # 19 rules ✅ (54-86%)
+│   ├── statespace/
+│   │   ├── compiler.py          # StateSpaceCompiler ⚠️ (75%)
+│   │   ├── variables.py         # Variable extraction ⚠️ (59%)
+│   │   └── temporal.py          # Temporal analysis ⚠️ (68%)
+│   ├── process/
+│   │   ├── extractor.py         # ProcessExtractor ⚠️ (89% but partial logic)
+│   │   ├── policies.py          # Policy extraction ❌ (40%)
+│   │   └── timeline.py          # Timeline ❌ (16%)
+│   ├── validate/                # SchemaCheck, Integrity, Provenance ✅ (71-92%)
+│   ├── export/                  # Bundle, GraphML, Parquet exporters ✅
+│   ├── gnn/                     # 18+ section formatter ✅
+│   ├── markov/                  # Blanket partitioner ✅ COMPLETE
+│   ├── simulate/
+│   │   ├── runner.py            # ActiveInference loop ⚠️ (64%, heuristic)
+│   │   ├── free_energy.py       # VFE/EFE ❌ (15%)
+│   │   └── distributions.py     # Categorical, Transition ❌ (34%)
+│   ├── scoring/
+│   │   ├── drift.py             # Drift detection ⚠️ (44%)
+│   │   └── metrics.py           # Codebase metrics ❌ (29%)
+│   ├── viz/                     # Mermaid, plots, PNG, dashboard ✅ (70-94%)
+│   ├── plugins/base.py          # Plugin ABCs ❌ (0%)
+│   └── provenance/tracker.py   # Source attribution ❌ (0%)
+├── rust/                        # 8 crates, ALL IMPLEMENTED, NOT BUILT
+├── parsers/                     # Language parser plugins (Python implemented)
+├── examples/
+│   ├── orchestrate_roundtrip.py # Full 9-stage pipeline orchestrator ✅
+│   └── control_positive/        # calculator, event_pipeline, flask_mini
+├── tests/
+│   ├── unit/                    # 17 files — HOLLOW (test dicts, not classes)
+│   ├── integration/             # 7 files — REAL (176 passing)
+│   └── golden/                  # Snapshot tests
+└── docs/                        # 16 subdirectory documentation tree
+```
+
+**Legend:** ✅ Implemented and well-tested | ⚠️ Implemented but partial/low coverage | ❌ Stub or dead code

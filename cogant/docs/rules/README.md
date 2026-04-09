@@ -1,0 +1,15 @@
+# Rules Index
+
+- [Overview](overview.md)
+- [## Configuration and precedence](configuration_and_precedence.md)
+- [## Core Rules Summary](core_rules_summary.md)
+- [## Rule Application](rule_application.md)
+- [## Custom Rules](custom_rules.md)
+- [## Language-Specific Variants](language_specific_variants.md)
+- [## Heuristic Rules](heuristic_rules.md)
+- [## Conflict Resolution](conflict_resolution.md)
+- [## Rule Set Management](rule_set_management.md)
+- [## Performance](performance.md)
+- [## Testing Rules](testing_rules.md)
+- [## Debugging](debugging.md)
+- [## See also](see_also.md)

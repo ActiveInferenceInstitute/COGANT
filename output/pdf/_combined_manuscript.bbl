@@ -1,0 +1,96 @@
+\begin{thebibliography}{11}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[{Active Inference Institute}(2024)]{friedman2024gnn}
+{Active Inference Institute}.
+\newblock Generalized notation notation (gnn): A structured notation for active
+  inference state-space and process models.
+\newblock
+  \url{https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation},
+  2024.
+\newblock Open-source specification and reference implementation; not to be
+  confused with graph neural networks.
+
+\bibitem[Allamanis et~al.(2018)Allamanis, Barr, Devanbu, and
+  Sutton]{allamanis2018survey}
+Miltiadis Allamanis, Earl~T. Barr, Premkumar Devanbu, and Charles Sutton.
+\newblock A survey of machine learning for big code and naturalness.
+\newblock \emph{ACM Computing Surveys}, 51\penalty0 (3):\penalty0 1--37, 2018.
+\newblock \doi{10.1145/3212695}.
+
+\bibitem[Alon et~al.(2019)Alon, Zilberstein, Levy, and Yahav]{alon2019code2vec}
+Uri Alon, Meital Zilberstein, Omer Levy, and Eran Yahav.
+\newblock code2vec: Learning distributed representations of code.
+\newblock In \emph{Proceedings of the ACM on Programming Languages (POPL)},
+  volume~3, pages 1--29, 2019.
+\newblock \doi{10.1145/3290353}.
+
+\bibitem[Feng et~al.(2020)Feng, Guo, Tang, Duan, Feng, Gong, Shou, Qin, Liu,
+  Jiang, and Zhou]{feng2020codebert}
+Zhangyin Feng, Daya Guo, Duyu Tang, Nan Duan, Xiaocheng Feng, Ming Gong, Linjun
+  Shou, Bing Qin, Ting Liu, Daxin Jiang, and Ming Zhou.
+\newblock Codebert: A pre-trained model for programming and natural languages.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  EMNLP 2020}, pages 1536--1547, 2020.
+\newblock \doi{10.18653/v1/2020.findings-emnlp.139}.
+
+\bibitem[Friston(2010)]{friston2010free}
+Karl Friston.
+\newblock The free-energy principle: a unified brain theory?
+\newblock \emph{Nature Reviews Neuroscience}, 11\penalty0 (2):\penalty0
+  127--138, 2010.
+\newblock \doi{10.1038/nrn2787}.
+
+\bibitem[Li et~al.(2016)Li, Tarlow, Brockschmidt, and Zemel]{li2016gated}
+Yujia Li, Daniel Tarlow, Marc Brockschmidt, and Richard Zemel.
+\newblock Gated graph sequence neural networks.
+\newblock In \emph{Proceedings of the International Conference on Learning
+  Representations (ICLR)}, 2016.
+\newblock URL \url{https://arxiv.org/abs/1511.05493}.
+
+\bibitem[Peng(2011)]{peng2011reproducible}
+Roger~D. Peng.
+\newblock Reproducible research in computational science.
+\newblock \emph{Science}, 334\penalty0 (6060):\penalty0 1226--1227, 2011.
+\newblock \doi{10.1126/science.1213847}.
+
+\bibitem[Scarselli et~al.(2009)Scarselli, Gori, Tsoi, Hagenbuchner, and
+  Monfardini]{scarselli2009graph}
+Franco Scarselli, Marco Gori, Ah~Chung Tsoi, Markus Hagenbuchner, and Gabriele
+  Monfardini.
+\newblock The graph neural network model.
+\newblock In \emph{IEEE International Joint Conference on Neural Networks},
+  pages 1--8, 2009.
+\newblock \doi{10.1109/IJCNN.2009.5178198}.
+
+\bibitem[Wu et~al.(2021)Wu, Pan, Chen, Long, Zhang, and
+  Yu]{wu2020comprehensive}
+Zonghan Wu, Shirui Pan, Fengwen Chen, Guodong Long, Chengqi Zhang, and
+  Philip~S. Yu.
+\newblock A comprehensive survey on graph neural networks.
+\newblock \emph{IEEE Transactions on Neural Networks and Learning Systems},
+  32\penalty0 (1):\penalty0 4--24, 2021.
+\newblock \doi{10.1109/TNNLS.2020.2978386}.
+
+\bibitem[Yamaguchi et~al.(2014)Yamaguchi, Golde, Arzt, and
+  Rieck]{yamaguchi2014modeling}
+Fabian Yamaguchi, Nico Golde, Sascha Arzt, and Konrad Rieck.
+\newblock Modeling and discovering vulnerabilities with code property graphs.
+\newblock In \emph{Proceedings of the 2014 IEEE Symposium on Security and
+  Privacy}, pages 590--604, 2014.
+\newblock \doi{10.1109/SP.2014.43}.
+
+\bibitem[Yin et~al.(2019)Yin, Neubig, Allamanis, Brockschmidt, and
+  Gaunt]{yin2019learning}
+Pengcheng Yin, Graham Neubig, Miltiadis Allamanis, Marc Brockschmidt, and
+  Alexander~L. Gaunt.
+\newblock Learning to represent edits.
+\newblock In \emph{Proceedings of the International Conference on Learning
+  Representations (ICLR)}, 2019.
+\newblock URL \url{https://openreview.net/forum?id=BJl6AjC5F7}.
+
+\end{thebibliography}

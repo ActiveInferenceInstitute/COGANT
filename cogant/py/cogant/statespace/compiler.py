@@ -1,0 +1,810 @@
+"""
+State space compiler.
+
+Takes semantic mappings and program graph, identifies hidden state variables,
+observation modalities, actions, transitions, and preferences. Outputs
+comprehensive StateSpaceModel.
+"""
+
+from typing import Dict, List, Set, Optional, Any
+from dataclasses import dataclass, field
+from collections import defaultdict
+import logging
+
+from cogant.schemas.core import Node, NodeKind, EdgeKind
+from cogant.schemas.graph import ProgramGraph
+from cogant.schemas.semantic import SemanticMapping, MappingKind
+
+from cogant.statespace.variables import StateVariableExtractor, StateVariable, ConfidenceLevel
+from cogant.statespace.temporal import TemporalAnalyzer, TimeRegime
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ObservationModality:
+    """An observation channel for the system."""
+    id: str
+    name: str
+    source_node_id: str  # Reference to read-only node
+    modality_type: str  # "sensor", "log", "metric", "event", etc.
+    cardinality: Optional[int] = None
+    description: Optional[str] = None
+    confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
+
+
+@dataclass
+class Action:
+    """An action the system can take."""
+    id: str
+    name: str
+    controller_id: str  # Reference to controller/API node
+    parameters: Dict[str, Any] = field(default_factory=dict)
+    effects: List[str] = field(default_factory=list)  # State variable IDs affected
+    preconditions: List[str] = field(default_factory=list)  # State variable constraints
+    description: Optional[str] = None
+    confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
+
+
+@dataclass
+class Transition:
+    """A state transition in the system."""
+    id: str
+    source_state: Dict[str, Any]
+    target_state: Dict[str, Any]
+    action_id: Optional[str] = None
+    triggered_by: Optional[str] = None  # Event or condition
+    probability: Optional[float] = None
+    confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
+
+
+@dataclass
+class Likelihood:
+    """Likelihood distribution over state variables or observations."""
+    id: str
+    variable_id: str
+    distribution_type: str  # "bernoulli", "categorical", "gaussian", etc.
+    parameters: Dict[str, float] = field(default_factory=dict)
+    confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
+
+
+@dataclass
+class Preference:
+    """A preference or constraint on states."""
+    id: str
+    name: str
+    description: str
+    scope: List[str]  # State variable IDs
+    expression: str  # Logical expression
+    weight: float = 1.0
+    source: Optional[str] = None  # Reference to test/spec node
+    confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
+
+
+@dataclass
+class StateSpaceModel:
+    """Complete state space model for a schema."""
+    id: str
+    schema_name: str
+    variables: Dict[str, StateVariable]
+    observations: Dict[str, ObservationModality]
+    actions: Dict[str, Action]
+    transitions: Dict[str, Transition]
+    likelihoods: Dict[str, Likelihood]
+    preferences: Dict[str, Preference]
+    time_regime: TimeRegime
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+class StateSpaceCompiler:
+    """
+    Compiles a complete state space model from program graph and semantic
+    mappings. Identifies hidden state, observations, actions, transitions,
+    and preferences.
+    """
+
+    def __init__(self, program_graph: ProgramGraph, schema_name: str):
+        """
+        Initialize the compiler.
+
+        Args:
+            program_graph: The program graph to compile.
+            schema_name: Name of the schema being compiled.
+        """
+        self.graph = program_graph
+        self.schema_name = schema_name
+        self.var_extractor = StateVariableExtractor(program_graph)
+        self.temporal_analyzer = TemporalAnalyzer(program_graph)
+
+    def compile(self, semantic_mappings: Dict[str, SemanticMapping]) -> StateSpaceModel:
+        """
+        Compile a complete state space model.
+
+        Args:
+            semantic_mappings: Semantic mappings from the program.
+
+        Returns:
+            Compiled StateSpaceModel.
+        """
+        logger.info(f"Compiling state space model for schema '{self.schema_name}'")
+
+        # Extract state variables
+        variables = self.var_extractor.extract(semantic_mappings)
+
+        # Extract observations from read-only nodes
+        observations = self._extract_observations(semantic_mappings)
+
+        # Extract actions from controllers and APIs
+        actions = self._extract_actions(semantic_mappings)
+
+        # Extract transitions from control flow
+        transitions = self._extract_transitions(variables, actions)
+
+        # Extract likelihoods from metrics/tests
+        likelihoods = self._extract_likelihoods(variables, semantic_mappings)
+
+        # Extract preferences from tests and assertions
+        preferences = self._extract_preferences(semantic_mappings)
+
+        # Determine time regime
+        time_regime = self.temporal_analyzer.analyze()
+
+        # Build metadata for the state space model
+        metadata = {
+            "step_unit": "discrete" if time_regime.value == "discrete" else "continuous",
+            "is_async": False,  # Default to synchronous
+            "max_steps": 1000,
+            "variable_count": len(variables),
+            "observation_count": len(observations),
+            "action_count": len(actions),
+            "transition_count": len(transitions),
+        }
+
+        model = StateSpaceModel(
+            id=f"model_{self.schema_name}",
+            schema_name=self.schema_name,
+            variables=variables,
+            observations=observations,
+            actions=actions,
+            transitions=transitions,
+            likelihoods=likelihoods,
+            preferences=preferences,
+            time_regime=time_regime,
+            metadata=metadata,
+        )
+
+        logger.info(f"Compiled model with {len(variables)} variables, "
+                   f"{len(observations)} observations, {len(actions)} actions")
+
+        return model
+
+    def _extract_observations(
+        self,
+        semantic_mappings: Dict[str, SemanticMapping]
+    ) -> Dict[str, ObservationModality]:
+        """
+        Extract observation modalities from semantic mappings.
+
+        Args:
+            semantic_mappings: Semantic mappings.
+
+        Returns:
+            Dictionary of observation modalities.
+        """
+        observations = {}
+
+        # Find OBSERVATION mappings
+        obs_mappings = {
+            mid: m for mid, m in semantic_mappings.items()
+            if m.kind == MappingKind.OBSERVATION
+        }
+
+        for i, (mapping_id, mapping) in enumerate(obs_mappings.items()):
+            for node_id in mapping.graph_fragment_node_ids:
+                node = self.graph.get_node(node_id)
+                if not node:
+                    continue
+
+                obs_id = f"obs_{node_id}"
+                obs_name = mapping.semantic_label or node.name
+
+                # Infer modality type from metadata or description
+                modality_type = self._infer_modality_type(node, mapping)
+
+                obs = ObservationModality(
+                    id=obs_id,
+                    name=obs_name,
+                    source_node_id=node_id,
+                    modality_type=modality_type,
+                    description=mapping.description,
+                    confidence=self._map_confidence(mapping.confidence_score),
+                )
+                observations[obs_id] = obs
+
+        logger.debug(f"Extracted {len(observations)} observation modalities")
+        return observations
+
+    def _extract_actions(
+        self,
+        semantic_mappings: Dict[str, SemanticMapping]
+    ) -> Dict[str, Action]:
+        """
+        Extract actions from semantic mappings and controller nodes.
+
+        Args:
+            semantic_mappings: Semantic mappings.
+
+        Returns:
+            Dictionary of actions.
+        """
+        actions = {}
+
+        # Find ACTION mappings
+        action_mappings = {
+            mid: m for mid, m in semantic_mappings.items()
+            if m.kind == MappingKind.ACTION
+        }
+
+        for mapping_id, mapping in action_mappings.items():
+            for node_id in mapping.graph_fragment_node_ids:
+                node = self.graph.get_node(node_id)
+                if not node:
+                    continue
+
+                action_id = f"act_{node_id}"
+                action_name = mapping.semantic_label or node.name
+
+                # Extract parameters and effects
+                parameters = self._extract_action_parameters(node)
+                effects = self._extract_action_effects(node_id, mapping)
+                preconditions = self._extract_action_preconditions(node)
+
+                action = Action(
+                    id=action_id,
+                    name=action_name,
+                    controller_id=node_id,
+                    parameters=parameters,
+                    effects=effects,
+                    preconditions=preconditions,
+                    description=mapping.description,
+                    confidence=self._map_confidence(mapping.confidence_score),
+                )
+                actions[action_id] = action
+
+        logger.debug(f"Extracted {len(actions)} actions")
+        return actions
+
+    def _cross_reference_actions_and_variables(
+        self,
+        variables: Dict[str, StateVariable],
+        actions: Dict[str, Action],
+    ) -> Dict[str, Dict[str, List[str]]]:
+        """
+        Build a mapping of which actions read/write which state variables.
+
+        For each action, examines WRITES and READS edges from the action's
+        controller node and maps them to known state variables.
+
+        Args:
+            variables: Extracted state variables.
+            actions: Extracted actions.
+
+        Returns:
+            Dict keyed by action_id, each value is
+            {"reads": [var_id, ...], "writes": [var_id, ...]}.
+        """
+        # Build reverse lookup: graph node_id -> variable id
+        node_to_var: Dict[str, str] = {}
+        for var_id, var in variables.items():
+            node_to_var[var.node_id] = var_id
+
+        xref: Dict[str, Dict[str, List[str]]] = {}
+
+        for action_id, action in actions.items():
+            reads: List[str] = []
+            writes: List[str] = []
+
+            for edge in self.graph.get_edges_from(action.controller_id):
+                target_var = node_to_var.get(edge.target_id)
+                if not target_var:
+                    continue
+                if edge.kind == EdgeKind.WRITES or edge.kind == EdgeKind.MUTATES:
+                    writes.append(target_var)
+                elif edge.kind == EdgeKind.READS or edge.kind == EdgeKind.OBSERVES:
+                    reads.append(target_var)
+
+            # Also check incoming edges for reads (the action may be the target)
+            for edge in self.graph.get_edges_to(action.controller_id):
+                source_var = node_to_var.get(edge.source_id)
+                if not source_var:
+                    continue
+                if edge.kind == EdgeKind.READS or edge.kind == EdgeKind.OBSERVES:
+                    reads.append(source_var)
+
+            xref[action_id] = {"reads": reads, "writes": writes}
+
+        return xref
+
+    def _extract_transitions(
+        self,
+        variables: Dict[str, StateVariable],
+        actions: Dict[str, Action]
+    ) -> Dict[str, Transition]:
+        """
+        Extract state transitions from control flow and actions.
+
+        Uses WRITES edges from action nodes to populate source_state (pre-action
+        variable values) and target_state (post-action variable values). Also
+        examines CALLS edges to show orchestration flows.
+
+        Args:
+            variables: Extracted state variables.
+            actions: Extracted actions.
+
+        Returns:
+            Dictionary of transitions.
+        """
+        transitions = {}
+
+        # Build action-to-variable cross-reference
+        xref = self._cross_reference_actions_and_variables(variables, actions)
+
+        for action_id, action in actions.items():
+            trans_id = f"trans_{action_id}"
+            action_xref = xref.get(action_id, {"reads": [], "writes": []})
+
+            # Source state: variables the action reads or writes, in their
+            # pre-action ("pre") state
+            source_state: Dict[str, Any] = {}
+            all_involved = set(action_xref["reads"]) | set(action_xref["writes"])
+            for var_id in all_involved:
+                source_state[var_id] = "pre"
+
+            # Target state: written variables move to "post", read-only stay "pre"
+            target_state: Dict[str, Any] = {}
+            written_set = set(action_xref["writes"])
+            for var_id in all_involved:
+                target_state[var_id] = "post" if var_id in written_set else "pre"
+
+            # Infer trigger from control-flow edges into the action node
+            triggered_by: Optional[str] = None
+            next_actions: List[str] = []
+
+            # Look for edges to this action (what triggers it)
+            for edge in self.graph.get_edges_to(action.controller_id):
+                if edge.kind == EdgeKind.TRIGGERS:
+                    source_node = self.graph.get_node(edge.source_id)
+                    triggered_by = source_node.name if source_node else edge.source_id
+                    break
+                elif edge.kind == EdgeKind.CALLS:
+                    source_node = self.graph.get_node(edge.source_id)
+                    if source_node and source_node.name != action.name:
+                        triggered_by = f"called_by:{source_node.name}"
+                        break
+
+            # Look for CALLS edges FROM this action (what it calls)
+            for edge in self.graph.get_edges_from(action.controller_id):
+                if edge.kind == EdgeKind.CALLS:
+                    target_node = self.graph.get_node(edge.target_id)
+                    if target_node:
+                        next_actions.append(f"calls:{target_node.name}")
+
+            transition = Transition(
+                id=trans_id,
+                source_state=source_state,
+                target_state=target_state,
+                action_id=action_id,
+                triggered_by=triggered_by or f"{', '.join(next_actions) if next_actions else 'init'}",
+                confidence=action.confidence,
+            )
+            transitions[trans_id] = transition
+
+        logger.debug(f"Extracted {len(transitions)} transitions")
+        return transitions
+
+    def _extract_likelihoods(
+        self,
+        variables: Dict[str, StateVariable],
+        semantic_mappings: Dict[str, SemanticMapping]
+    ) -> Dict[str, Likelihood]:
+        """
+        Extract likelihood distributions from metrics and observations.
+
+        Args:
+            variables: State variables.
+            semantic_mappings: Semantic mappings.
+
+        Returns:
+            Dictionary of likelihoods.
+        """
+        likelihoods = {}
+
+        # For each state variable, attempt to infer a distribution
+        for var_id, variable in variables.items():
+            likelihood_id = f"like_{var_id}"
+
+            # Infer distribution type from variable type
+            dist_type = self._infer_distribution_type(variable)
+
+            likelihood = Likelihood(
+                id=likelihood_id,
+                variable_id=var_id,
+                distribution_type=dist_type,
+                confidence=variable.confidence,
+            )
+            likelihoods[likelihood_id] = likelihood
+
+        logger.debug(f"Extracted {len(likelihoods)} likelihoods")
+        return likelihoods
+
+    def _extract_preferences(
+        self,
+        semantic_mappings: Dict[str, SemanticMapping]
+    ) -> Dict[str, Preference]:
+        """
+        Extract preferences and constraints from tests and assertions.
+
+        Args:
+            semantic_mappings: Semantic mappings.
+
+        Returns:
+            Dictionary of preferences.
+        """
+        preferences = {}
+
+        # Find CONSTRAINT and PREFERENCE mappings
+        pref_kinds = {MappingKind.CONSTRAINT, MappingKind.PREFERENCE, MappingKind.POLICY}
+        pref_mappings = {
+            mid: m for mid, m in semantic_mappings.items()
+            if m.kind in pref_kinds
+        }
+
+        for i, (mapping_id, mapping) in enumerate(pref_mappings.items()):
+            pref_id = f"pref_{i}"
+
+            # Extract scope: find which state variables the constraint's
+            # graph fragment nodes read or write
+            scope = self._extract_preference_scope(mapping)
+
+            # Extract expression from node metadata or assertion patterns
+            expression = self._extract_preference_expression(mapping)
+
+            # Create preference
+            preference = Preference(
+                id=pref_id,
+                name=mapping.semantic_label or f"Preference {i}",
+                description=mapping.description,
+                scope=scope,
+                expression=expression,
+                source=mapping_id,
+                confidence=self._map_confidence(mapping.confidence_score),
+            )
+            preferences[pref_id] = preference
+
+        logger.debug(f"Extracted {len(preferences)} preferences")
+        return preferences
+
+    def _extract_preference_scope(self, mapping: SemanticMapping) -> List[str]:
+        """
+        Extract scope (affected state variable IDs) for a preference mapping.
+
+        Examines READS, WRITES, OBSERVES, and MUTATES edges from/to the
+        mapping's graph fragment nodes to find related state variables.
+
+        Args:
+            mapping: The semantic mapping for the preference/constraint.
+
+        Returns:
+            List of state variable IDs (var_<node_id> format).
+        """
+        scope_ids: List[str] = []
+        seen: Set[str] = set()
+        read_write_kinds = {EdgeKind.READS, EdgeKind.WRITES, EdgeKind.MUTATES}
+        if hasattr(EdgeKind, "OBSERVES"):
+            read_write_kinds.add(EdgeKind.OBSERVES)
+
+        for node_id in mapping.graph_fragment_node_ids:
+            # Outgoing edges
+            for edge in self.graph.get_edges_from(node_id):
+                if edge.kind in read_write_kinds:
+                    var_id = f"var_{edge.target_id}"
+                    if var_id not in seen:
+                        seen.add(var_id)
+                        scope_ids.append(var_id)
+            # Incoming edges
+            for edge in self.graph.get_edges_to(node_id):
+                if edge.kind in read_write_kinds:
+                    var_id = f"var_{edge.source_id}"
+                    if var_id not in seen:
+                        seen.add(var_id)
+                        scope_ids.append(var_id)
+
+        return scope_ids
+
+    def _extract_preference_expression(self, mapping: SemanticMapping) -> str:
+        """
+        Extract a logical expression for a preference/constraint mapping.
+
+        Strategy:
+        1. Check mapping metadata for an explicit "expression" key.
+        2. Check graph fragment nodes for ASSERTION nodes with metadata.
+        3. Construct from semantic label and description as a fallback.
+
+        Args:
+            mapping: The semantic mapping.
+
+        Returns:
+            Expression string (may be empty if nothing can be inferred).
+        """
+        # Strategy 1: explicit expression in mapping metadata
+        if mapping.metadata.get("expression"):
+            return str(mapping.metadata["expression"])
+
+        # Strategy 2: look for assertion nodes in the fragment
+        for node_id in mapping.graph_fragment_node_ids:
+            node = self.graph.get_node(node_id)
+            if not node:
+                continue
+            # Assertion nodes often carry the expression in metadata
+            if node.kind == NodeKind.ASSERTION:
+                expr = node.metadata.get("expression") or node.metadata.get("condition")
+                if expr:
+                    return str(expr)
+            # Test nodes may carry assertion text
+            if node.kind == NodeKind.TEST:
+                expr = node.metadata.get("assertion") or node.metadata.get("expression")
+                if expr:
+                    return str(expr)
+            # Policy nodes
+            if node.kind == NodeKind.POLICY:
+                expr = node.metadata.get("rule") or node.metadata.get("expression")
+                if expr:
+                    return str(expr)
+
+        # Strategy 3: construct from label/description
+        label = mapping.semantic_label.strip() if mapping.semantic_label else ""
+        desc = mapping.description.strip() if mapping.description else ""
+        if label and desc:
+            return f"{label}: {desc}"
+        return label or desc or ""
+
+    def _infer_modality_type(self, node: Node, mapping: SemanticMapping) -> str:
+        """
+        Infer observation modality type from node and mapping.
+
+        Args:
+            node: The node.
+            mapping: The semantic mapping.
+
+        Returns:
+            Modality type string.
+        """
+        desc = (mapping.description or "").lower()
+        name = (mapping.semantic_label or node.name).lower()
+
+        if "log" in desc or "log" in name:
+            return "log"
+        elif "metric" in desc or "metric" in name:
+            return "metric"
+        elif "event" in desc or "event" in name:
+            return "event"
+        elif "sensor" in desc or "sensor" in name:
+            return "sensor"
+        else:
+            return "generic"
+
+    def _extract_action_parameters(self, node: Node) -> Dict[str, Any]:
+        """
+        Extract action parameters from node metadata.
+
+        Args:
+            node: The action node.
+
+        Returns:
+            Dictionary of parameters.
+        """
+        # Would extract from function signature or metadata
+        return node.metadata.get("parameters", {})
+
+    def _extract_action_effects(
+        self,
+        node_id: str,
+        mapping: SemanticMapping
+    ) -> List[str]:
+        """
+        Extract action effects on state variables from graph structure.
+
+        For each action (which maps to a method node), finds:
+        1. Direct WRITES edges FROM the action's node → that is the effect
+        2. CONTAINS edges TO the action (parent class) → modifying that class is an effect
+        3. CALLS edges FROM the action → those methods/functions are called side effects
+        4. For __init__ methods, the effect is "initializes <class_name>"
+        5. READS edges combined with CONTAINS relationship indicate state mutation
+
+        Args:
+            node_id: The action node ID.
+            mapping: The semantic mapping.
+
+        Returns:
+            List of affected state variable IDs or descriptive names.
+        """
+        effects = []
+        visited = set()
+
+        action_node = self.graph.get_node(node_id)
+        if not action_node:
+            return effects
+
+        # Strategy 1: Check if this is an __init__ method
+        if action_node.name == "__init__" or "__init__" in action_node.name:
+            # Find the parent class that this __init__ initializes
+            for edge in self.graph.get_edges_to(node_id):
+                if edge.kind == EdgeKind.CONTAINS:
+                    parent_id = edge.source_id
+                    parent_node = self.graph.get_node(parent_id)
+                    if parent_node and parent_node.kind == NodeKind.CLASS:
+                        effect_name = f"initializes {parent_node.name}"
+                        if effect_name not in visited:
+                            visited.add(effect_name)
+                            effects.append(effect_name)
+                    break
+
+        # Strategy 2: Find direct WRITES edges from this action node
+        for edge in self.graph.get_edges_from(node_id):
+            if edge.kind == EdgeKind.WRITES:
+                target_node = self.graph.get_node(edge.target_id)
+                effect_name = f"var_{edge.target_id}"
+                if effect_name not in visited:
+                    visited.add(effect_name)
+                    if target_node:
+                        effects.append(f"{target_node.name} (writes)")
+                    else:
+                        effects.append(effect_name)
+
+        # Strategy 3: For methods, check parent class via CONTAINS relationship
+        # Methods that are part of a class implicitly modify that class's state
+        if action_node.kind == NodeKind.METHOD:
+            for edge in self.graph.get_edges_to(node_id):
+                if edge.kind == EdgeKind.CONTAINS:
+                    parent_id = edge.source_id
+                    parent_node = self.graph.get_node(parent_id)
+                    if parent_node and parent_node.kind == NodeKind.CLASS:
+                        # This method is part of a class - it can modify class state
+                        effect_name = f"var_{parent_id}"
+                        if effect_name not in visited:
+                            visited.add(effect_name)
+                            effects.append(f"modifies {parent_node.name}")
+                    break
+
+        # Strategy 4: Find CALLS edges - methods called are side effects
+        called_methods = []
+        for edge in self.graph.get_edges_from(node_id):
+            if edge.kind == EdgeKind.CALLS:
+                target_node = self.graph.get_node(edge.target_id)
+                if target_node:
+                    called_methods.append(target_node.name)
+
+        if called_methods and not effects:
+            # If no other effects found but we call other methods, those are effects
+            for method_name in called_methods[:3]:  # Limit to first 3 to avoid clutter
+                effects.append(f"calls {method_name}")
+
+        # Strategy 5: If still no effects, check READS relationship
+        # A method that reads from a class typically also modifies it
+        if not effects:
+            for edge in self.graph.get_edges_from(node_id):
+                if edge.kind in (EdgeKind.READS, EdgeKind.OBSERVES):
+                    target_node = self.graph.get_node(edge.target_id)
+                    if target_node and target_node.kind == NodeKind.CLASS:
+                        # This method reads from (and likely modifies) a class
+                        effects.append(f"manages {target_node.name}")
+                        break
+
+        return effects
+
+    def _extract_action_preconditions(self, node: Node) -> List[str]:
+        """
+        Extract action preconditions from node metadata, parameters, and graph edges.
+
+        Preconditions can come from:
+        1. Explicit metadata in node.metadata["preconditions"]
+        2. Required parameters (from method signature)
+        3. READS edges showing required state access
+        4. Docstring hints
+
+        Args:
+            node: The action node.
+
+        Returns:
+            List of precondition expressions.
+        """
+        preconditions = []
+
+        # Strategy 1: Check explicit metadata
+        if "preconditions" in node.metadata:
+            return node.metadata["preconditions"]
+
+        # Strategy 2: Extract from parameters (method signature)
+        if "parameters" in node.metadata:
+            params = node.metadata["parameters"]
+            if isinstance(params, list):
+                # Skip 'self' parameter
+                param_list = [p for p in params if p != "self"]
+                if param_list:
+                    preconditions.append(f"requires: {', '.join(param_list)} to be defined")
+
+        # Strategy 3: Check graph edges for required state
+        # READS edges indicate that this action depends on reading certain state
+        reads_targets = []
+        for edge in self.graph.get_edges_from(node.id):
+            if edge.kind in (EdgeKind.READS, EdgeKind.OBSERVES):
+                target_node = self.graph.get_node(edge.target_id)
+                if target_node:
+                    reads_targets.append(target_node.name)
+
+        if reads_targets:
+            preconditions.append(f"requires state: {', '.join(set(reads_targets))}")
+
+        # Strategy 4: CONTAINS edge to parent - methods need the parent class instance
+        for edge in self.graph.get_edges_to(node.id):
+            if edge.kind == EdgeKind.CONTAINS:
+                parent_node = self.graph.get_node(edge.source_id)
+                if parent_node and parent_node.kind == NodeKind.CLASS:
+                    preconditions.append(f"requires {parent_node.name} instance")
+                break
+
+        # Strategy 5: Extract from docstring if available
+        if "docstring" in node.metadata and node.metadata["docstring"]:
+            doc = node.metadata["docstring"].lower()
+            if "require" in doc or "expect" in doc or "must" in doc:
+                docstring = node.metadata["docstring"]
+                preconditions.append(f"docstring: {docstring[:60]}")
+
+        return preconditions
+
+    def _infer_distribution_type(self, variable: StateVariable) -> str:
+        """
+        Infer distribution type from variable characteristics.
+
+        Args:
+            variable: The state variable.
+
+        Returns:
+            Distribution type string.
+        """
+        from cogant.statespace.variables import StateVariableType
+
+        if variable.var_type == StateVariableType.BOOLEAN:
+            return "bernoulli"
+        elif variable.var_type == StateVariableType.DISCRETE:
+            if variable.cardinality == 2:
+                return "bernoulli"
+            else:
+                return "categorical"
+        elif variable.var_type == StateVariableType.CONTINUOUS:
+            return "gaussian"
+        elif variable.var_type == StateVariableType.CATEGORICAL:
+            return "categorical"
+        else:
+            return "unknown"
+
+    def _map_confidence(self, confidence_score: float) -> ConfidenceLevel:
+        """
+        Map numeric confidence score to ConfidenceLevel.
+
+        Args:
+            confidence_score: Score from 0.0 to 1.0.
+
+        Returns:
+            ConfidenceLevel.
+        """
+        if confidence_score >= 0.95:
+            return ConfidenceLevel.DEFINITE
+        elif confidence_score >= 0.80:
+            return ConfidenceLevel.HIGH
+        elif confidence_score >= 0.60:
+            return ConfidenceLevel.MEDIUM
+        elif confidence_score >= 0.40:
+            return ConfidenceLevel.LOW
+        else:
+            return ConfidenceLevel.UNCERTAIN

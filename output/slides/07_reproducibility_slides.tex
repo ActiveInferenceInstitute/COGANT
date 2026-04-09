@@ -1,0 +1,307 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\newenvironment{Shaded}{}{}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{\textbf{#1}}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\begin{frame}[fragile]{Reproducibility}
+\protect\phantomsection\label{reproducibility}
+Reproducible computational research requires version-pinned tools, fixed
+inputs, and documented outputs {[}@peng2011reproducible{]}. COGANT
+contributes the \textbf{graph-generation} slice of that story: identical
+source trees and identical pipeline configuration should yield identical
+exported bundles modulo declared nondeterminism (for example optional
+neural embeddings if enabled).
+
+\begin{block}{Version pinning}
+\protect\phantomsection\label{version-pinning}
+Pin:
+
+\begin{itemize}
+\tightlist
+\item
+  The \textbf{COGANT} version (\texttt{pyproject.toml} / package
+  \texttt{\_\_version\_\_}) and Git commit when installing from source.
+\item
+  The \textbf{Python} minor version.
+\item
+  \textbf{Optional} Rust toolchain commit when building native
+  extensions from \texttt{../cogant/rust/}.
+\end{itemize}
+\end{block}
+
+\begin{block}{Artifact layout}
+\protect\phantomsection\label{artifact-layout}
+Pipeline output typically includes JSON for intermediate IRs,
+\textbf{Generalized Notation Notation (GNN)} bundles (canonical
+\texttt{model.gnn.md} plus companion JSON and interop artifacts),
+validation reports, and optional HTML sites. Paths under the chosen
+\texttt{output\_dir} should be treated as disposable but
+\textbf{checksumable}: store hashes alongside published datasets derived
+from COGANT exports when releasing research artifacts.
+\end{block}
+
+\begin{block}{Determinism}
+\protect\phantomsection\label{determinism}
+Parsing and graph construction aim for deterministic ordering on a fixed
+filesystem snapshot. Features that pull in external models (for example
+optional name or documentation embeddings consumed by the Generalized
+Notation Notation exporter) introduce variability unless models and
+seeds are fixed; the Generalized Notation Notation export document
+(\texttt{../cogant/docs/GNN\_EXPORT.md}) calls out embedding dimensions
+and optional behavior.
+\end{block}
+
+\begin{block}{Relation to the template repository}
+\protect\phantomsection\label{relation-to-the-template-repository}
+While this project remains outside
+\href{../../../projects/}{\texttt{../../../projects/}}, it is
+\textbf{not} executed by the root \texttt{./run.sh} discovery layer.
+After promotion to
+\href{../../../projects/cogant/}{\texttt{../../../projects/cogant/}}
+with \texttt{src/}, \texttt{tests/}, and \texttt{pyproject.toml} per
+template rules, the standard manuscript validation and PDF stages apply;
+until then, validate Markdown from the template repository root,
+e.g.~\texttt{uv\ run\ python\ -m\ infrastructure.validation.cli\ markdown\ ./projects\_in\_progress/cogant/manuscript/}.
+\end{block}
+
+\begin{block}{Validation gates}
+\protect\phantomsection\label{validation-gates}
+The pipeline enforces quality through three complementary validation
+checkers, each targeting a different failure mode:
+
+\textbf{IntegrityChecker.} Verifies structural soundness of the program
+graph: all edge endpoints reference existing nodes, no unintended
+duplicate nodes exist, orphaned nodes (zero in-degree and zero
+out-degree) are flagged, and self-loops are reported unless explicitly
+allowed by configuration. The checker also ensures that confidence
+scores fall within \([0, 1]\) and that provenance records are non-empty
+for every node and edge. A graph that fails integrity checks receives a
+FAIL validation status; downstream export is blocked.
+
+\textbf{SchemaChecker.} Validates each IR artifact against its JSON
+schema (versioned alongside the COGANT package). Schema violations --
+such as missing required fields, incorrect types, or unknown enum values
+in \texttt{NodeKind} or \texttt{SemanticRole} -- are classified as ERROR
+or FATAL depending on severity. Schema versions are recorded in the
+validation report so that consumers can verify compatibility with their
+import code.
+
+\textbf{ProvenanceChecker.} Audits the provenance chain: every assertion
+in the semantic mapping must trace back to at least one evidence source
+(SourceCode, TypeSystem, ControlFlow, Heuristic, or External). The
+checker flags mappings whose provenance is empty or whose confidence
+score is inconsistent with the declared evidence tier -- for example, a
+STATIC\_PLUS\_RUNTIME tier with no runtime trace evidence. These flags
+appear as warnings rather than errors, since partial provenance is
+expected for heuristic rules.
+
+Together, these gates ensure that exported bundles meet a minimum
+quality bar before reaching downstream models. The thresholds are
+configurable (see \texttt{../cogant/docs/VALIDATION.md}); defaults
+require \(\geq 95\%\) coverage, mean confidence \(\geq 0.85\), and zero
+schema violations.
+\end{block}
+
+\begin{block}{Pipeline checkpoint and resume behavior}
+\protect\phantomsection\label{pipeline-checkpoint-and-resume-behavior}
+The pipeline writes a checkpoint file after each successfully completed
+stage. The checkpoint records the stage name, completion timestamp,
+input hash, and output hash. On a subsequent invocation with
+\texttt{-\/-resume} (or \texttt{PipelineConfig.resume\ =\ True}), the
+runner reads the checkpoint file, verifies that the input hash for each
+completed stage still matches the current source tree, and skips stages
+whose outputs are already valid. If a source file has changed, the
+runner invalidates the affected stage and all downstream stages, then
+re-executes from the earliest invalidated point.
+
+Checkpoints are stored as JSON under the configured
+\texttt{output\_dir}:
+
+\begin{verbatim}
+output/
+  .cogant_checkpoint.json
+\end{verbatim}
+
+This mechanism is particularly useful during iterative development:
+after an initial full run, changing a single source file triggers only
+re-parsing, graph construction, and downstream stages for the affected
+subgraph, rather than re-analyzing the entire repository.
+\end{block}
+
+\begin{block}{Output manifest structure}
+\protect\phantomsection\label{output-manifest-structure}
+Each pipeline run produces a manifest file (\texttt{manifest.json})
+alongside the exported artifacts. The manifest provides a
+machine-readable inventory of everything the run produced:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"cogant\_version"}\FunctionTok{:} \StringTok{"0.1.0"}\FunctionTok{,}
+  \DataTypeTok{"run\_id"}\FunctionTok{:} \StringTok{"run\_20260408\_143012"}\FunctionTok{,}
+  \DataTypeTok{"timestamp"}\FunctionTok{:} \StringTok{"2026{-}04{-}08T14:30:12Z"}\FunctionTok{,}
+  \DataTypeTok{"input\_hash"}\FunctionTok{:} \StringTok{"sha256:a1b2c3..."}\FunctionTok{,}
+  \DataTypeTok{"config\_hash"}\FunctionTok{:} \StringTok{"sha256:d4e5f6..."}\FunctionTok{,}
+  \DataTypeTok{"stages\_completed"}\FunctionTok{:} \OtherTok{[}\StringTok{"discovery"}\OtherTok{,} \StringTok{"parsing"}\OtherTok{,} \StringTok{"repo\_ir"}\OtherTok{,} \StringTok{"graph"}\OtherTok{,}
+                        \StringTok{"translate"}\OtherTok{,} \StringTok{"validate"}\OtherTok{,} \StringTok{"export"}\OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"stages\_skipped"}\FunctionTok{:} \OtherTok{[}\StringTok{"statespace"}\OtherTok{,} \StringTok{"process"}\OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"artifacts"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}\DataTypeTok{"path"}\FunctionTok{:} \StringTok{"model.gnn.json"}\FunctionTok{,} \DataTypeTok{"format"}\FunctionTok{:} \StringTok{"json"}\FunctionTok{,} \DataTypeTok{"size\_bytes"}\FunctionTok{:} \DecValTok{2048576}\FunctionTok{,}
+     \DataTypeTok{"hash"}\FunctionTok{:} \StringTok{"sha256:..."}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"path"}\FunctionTok{:} \StringTok{"model.pyg.pt"}\FunctionTok{,}   \DataTypeTok{"format"}\FunctionTok{:} \StringTok{"pytorch\_geometric"}\FunctionTok{,} \DataTypeTok{"size\_bytes"}\FunctionTok{:} \DecValTok{1024000}\FunctionTok{,}
+     \DataTypeTok{"hash"}\FunctionTok{:} \StringTok{"sha256:..."}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"path"}\FunctionTok{:} \StringTok{"validation\_report.json"}\FunctionTok{,} \DataTypeTok{"format"}\FunctionTok{:} \StringTok{"json"}\FunctionTok{,} \DataTypeTok{"size\_bytes"}\FunctionTok{:} \DecValTok{8192}\FunctionTok{,}
+     \DataTypeTok{"hash"}\FunctionTok{:} \StringTok{"sha256:..."}\FunctionTok{\}}
+  \OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"statistics"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"nodes"}\FunctionTok{:} \DecValTok{320}\FunctionTok{,}
+    \DataTypeTok{"edges"}\FunctionTok{:} \DecValTok{1250}\FunctionTok{,}
+    \DataTypeTok{"mean\_confidence"}\FunctionTok{:} \FloatTok{0.92}\FunctionTok{,}
+    \DataTypeTok{"validation\_status"}\FunctionTok{:} \StringTok{"PASS"}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Storing per-artifact SHA-256 hashes enables consumers to verify that
+exported bundles have not been modified after generation. When
+publishing datasets derived from COGANT exports, including the manifest
+alongside the data satisfies the reproducibility requirements outlined
+by {[}@peng2011reproducible{]}: any researcher with the same source
+tree, COGANT version, and configuration can regenerate the artifacts and
+compare hashes.
+\end{block}
+
+\begin{block}{Data ethics and licensing}
+\protect\phantomsection\label{data-ethics-and-licensing}
+Exported graphs can contain identifiers and comments from source code.
+Redistribution of derived graphs must respect the licenses of input
+repositories and organizational data policies.
+\end{block}
+\end{frame}
+
+\end{document}

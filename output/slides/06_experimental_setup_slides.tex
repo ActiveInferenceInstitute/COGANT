@@ -1,0 +1,415 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\newenvironment{Shaded}{}{}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{\textbf{#1}}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+\usepackage{caption}
+% Make caption package work with longtable
+\makeatletter
+\def\fnum@table{\tablename~\thetable}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\section{Experimental setup}\label{experimental-setup}
+
+\begin{frame}[fragile]{Environment}
+\protect\phantomsection\label{environment}
+\textbf{Requirements}: Python 3.11 or newer (enforced in
+\texttt{pyproject.toml}), plus an optional Rust toolchain
+(\texttt{cargo}, stable 1.70+) when building native acceleration crates
+under \texttt{../cogant/rust/}.
+
+From the COGANT package root \href{../cogant/}{\texttt{../cogant/}}
+(where \texttt{pyproject.toml} and \texttt{py/cogant/} live), install
+with \texttt{uv\ sync\ -\/-all-extras}, or
+\texttt{pip\ install\ -e\ ".{[}dev,viz{]}"} /
+\texttt{pip\ install\ -e\ ".{[}all{]}"} as in
+\href{../cogant/GETTING_STARTED.md}{GETTING\_STARTED.md}. Run those
+commands from that directory when working inside this monorepo layout.
+Python sources live under
+\href{../cogant/py/cogant/}{\texttt{../cogant/py/cogant/}}; see the
+package \href{../cogant/README.md}{README.md}.
+\end{frame}
+
+\begin{frame}[fragile]{Running the API}
+\protect\phantomsection\label{running-the-api}
+Minimal \textbf{Session} run:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{from}\NormalTok{ cogant }\ImportTok{import}\NormalTok{ Session}
+
+\NormalTok{session }\OperatorTok{=}\NormalTok{ Session.from\_target(}\StringTok{"./path/to/repo"}\NormalTok{)}
+\NormalTok{session.extract\_static()}
+\NormalTok{session.build\_graph()}
+\NormalTok{session.translate\_to\_gnn()}
+\NormalTok{session.export\_all(}\StringTok{"output/"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Minimal \textbf{Pipeline} run:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{from}\NormalTok{ cogant }\ImportTok{import}\NormalTok{ PipelineRunner}
+\ImportTok{from}\NormalTok{ cogant.api.pipeline }\ImportTok{import}\NormalTok{ PipelineConfig}
+
+\NormalTok{runner }\OperatorTok{=}\NormalTok{ PipelineRunner()}
+\NormalTok{config }\OperatorTok{=}\NormalTok{ PipelineConfig(output\_dir}\OperatorTok{=}\StringTok{"output/"}\NormalTok{)}
+\NormalTok{bundle }\OperatorTok{=}\NormalTok{ runner.run(}\StringTok{"./path/to/repo"}\NormalTok{, config)}
+\end{Highlighting}
+\end{Shaded}
+
+Adjust \texttt{PipelineConfig.stages}, \texttt{skip\_stages}, and
+\texttt{plugins} to match the languages and tooling available on the
+machine.
+\end{frame}
+
+\begin{frame}[fragile]{Configuration files}
+\protect\phantomsection\label{configuration-files}
+YAML configuration can drive pipeline behavior (paths, stages, plugin
+options). The architecture and SPEC documents describe the configuration
+surface; keep project-specific secrets out of version control.
+
+A minimal pipeline configuration looks like this:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# cogant.config.yaml}
+\FunctionTok{stages}\KeywordTok{:}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ ingest}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ static}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ normalize}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ graph}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ dynamic}\CommentTok{       \# optional; skipped if no coverage/trace inputs}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ translate}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ statespace}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ process}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ export}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ validate}
+
+\FunctionTok{skip\_stages}\KeywordTok{:}\AttributeTok{ }\KeywordTok{[]}\CommentTok{   \# e.g. ["dynamic"] to force static{-}only runs}
+
+\FunctionTok{plugins}\KeywordTok{:}
+\AttributeTok{  }\FunctionTok{dynamic}\KeywordTok{:}
+\AttributeTok{    }\FunctionTok{coverage\_path}\KeywordTok{:}\AttributeTok{ }\StringTok{"./coverage.xml"}
+\AttributeTok{    }\FunctionTok{trace\_path}\KeywordTok{:}\AttributeTok{ }\StringTok{"./chrome\_trace.json"}
+\AttributeTok{    }\FunctionTok{hot\_path\_percentile}\KeywordTok{:}\AttributeTok{ }\DecValTok{10}
+\AttributeTok{  }\FunctionTok{translate}\KeywordTok{:}
+\AttributeTok{    }\FunctionTok{max\_iterations}\KeywordTok{:}\AttributeTok{ }\DecValTok{10}
+\AttributeTok{    }\FunctionTok{static\_only\_threshold}\KeywordTok{:}\AttributeTok{ }\FloatTok{0.5}
+\AttributeTok{    }\FunctionTok{static\_plus\_runtime\_threshold}\KeywordTok{:}\AttributeTok{ }\FloatTok{0.65}
+
+\FunctionTok{output\_dir}\KeywordTok{:}\AttributeTok{ }\StringTok{"./cogant\_output/"}
+\FunctionTok{verbose}\KeywordTok{:}\AttributeTok{ }\CharTok{true}
+\FunctionTok{dry\_run}\KeywordTok{:}\AttributeTok{ }\CharTok{false}
+\end{Highlighting}
+\end{Shaded}
+
+Each stage key corresponds to a handler in
+\texttt{cogant.api.pipeline.PipelineRunner.stage\_handlers}; plugin
+sub-dictionaries are passed through to the stage at invocation time. The
+threshold keys under \texttt{plugins.translate} mirror the constants
+defined in \texttt{cogant.translate.confidence.ConfidenceModel}, keeping
+the YAML surface and the Python defaults in lockstep.
+\end{frame}
+
+\begin{frame}[fragile]{CLI}
+\protect\phantomsection\label{cli}
+Use the \texttt{cogant} CLI for scripted batch runs---see
+\texttt{../cogant/docs/CLI\_GUIDE.md} for the command list that matches
+the installed version.
+\end{frame}
+
+\begin{frame}[fragile]{Export targets}
+\protect\phantomsection\label{export-targets}
+The primary export targets are the \textbf{Generalized Notation Notation
+(GNN)} canonical Markdown (\texttt{model.gnn.md}) and the equivalent
+companion JSON files described in
+\texttt{../cogant/docs/GNN\_EXPORT.md}. Optional interop targets
+(GraphML, Parquet) support analysis in Gephi/yEd and DuckDB, and
+optional tensor views for PyTorch Geometric, DGL, or HDF5 can be
+selected when downstream graph neural network training pipelines need to
+consume the program graph as a relational tensor. Ensure the Python
+environment includes optional dependencies for these tensor exports when
+those code paths are used.
+\end{frame}
+
+\begin{frame}[fragile]{Python AST parser capabilities}
+\protect\phantomsection\label{python-ast-parser-capabilities}
+The v0.1.x front end relies on
+\texttt{cogant.static.parser.PythonASTParser}, which processes Python
+source through the standard-library \texttt{ast} module at the CPython
+version available in the runtime (3.9+ recommended). The parser extracts
+the following construct categories:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Module-level entities}: module docstrings,
+  \texttt{\_\_all\_\_} exports, top-level assignments.
+\item
+  \textbf{Functions and methods}: \texttt{def} and \texttt{async\ def},
+  including signatures with positional, keyword, variadic
+  (\texttt{*args}, \texttt{**kwargs}), and positional-only parameters.
+  Default values are recorded as constant expressions where statically
+  evaluable.
+\item
+  \textbf{Classes}: class definitions, base classes, metaclasses, and
+  the \texttt{\_\_init\_\_} / \texttt{\_\_new\_\_} boundary.
+\item
+  \textbf{Decorators}: \texttt{@staticmethod}, \texttt{@classmethod},
+  \texttt{@property}, \texttt{@dataclass}, and arbitrary user-defined
+  decorators. Decorator arguments are captured as attribute metadata.
+\item
+  \textbf{Type annotations}: PEP 484 / 526 / 604 annotations on function
+  parameters, return types, and variable assignments. Generic subscripts
+  (\texttt{List{[}int{]}}, \texttt{Dict{[}str,\ Any{]}}) are preserved
+  as type strings.
+\item
+  \textbf{Comprehensions and generators}: list, set, dict comprehensions
+  and generator expressions are represented as anonymous FUNCTION nodes
+  with DATA\_FLOW edges to their enclosing scope.
+\item
+  \textbf{Control flow}: \texttt{if}/\texttt{elif}/\texttt{else},
+  \texttt{for}/\texttt{while}/\texttt{else},
+  \texttt{try}/\texttt{except}/\texttt{finally},
+  \texttt{with}/\texttt{async\ with}, and \texttt{match}/\texttt{case}
+  (Python 3.10+) are mapped to CONTROLFLOW\_NODE entities.
+\item
+  \textbf{Imports}: \texttt{import} and \texttt{from\ ...\ import}
+  statements produce MODULE\_IMPORT roles with edges to the resolved
+  module when discoverable on the file system.
+\item
+  \textbf{Constants}: module-level and class-level assignments to
+  \texttt{Final} or ALL\_CAPS names are classified as CONSTANT nodes.
+\end{itemize}
+
+Constructs that require runtime evaluation (for example \texttt{exec},
+\texttt{importlib.import\_module}, or dynamic \texttt{\_\_getattr\_\_})
+are recorded as EXTERNAL nodes with HEURISTIC provenance and
+correspondingly lower confidence.
+\end{frame}
+
+\begin{frame}{Progressive IR stages}
+\protect\phantomsection\label{progressive-ir-stages}
+Processing advances through six intermediate representations, each
+adding semantic detail atop its predecessor. Table 3 summarizes what
+each stage contributes.
+
+\textbf{Table 3. Progressive IR stages and their contributions.}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.0986}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1268}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2113}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.5634}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Stage
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+IR name
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Key additions
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Typical output size (10K-function repo)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+1 & Repo IR & Raw entities and relationships per file; deduplication;
+merged type info & \textasciitilde15 MB JSON \\
+2 & Program Graph IR & Consolidated directed graph \(G=(V,E)\); stable
+identifiers; confidence and provenance on every node and edge &
+\textasciitilde20 MB JSON \\
+3 & Semantic Mapping IR & Translation rules applied; semantic roles
+assigned; confidence adjusted by rule engine & \textasciitilde22 MB JSON
+(graph + mapping log) \\
+4 & State Space IR & Variables, actions, transitions, observations;
+dynamic traces integrated where available & \textasciitilde5 MB JSON
+(behavioral model) \\
+5 & Process Model IR & Higher-level control patterns (request--response,
+producer--consumer, state machines) & \textasciitilde2 MB JSON \\
+6 & Validation IR & Coverage metrics, confidence distribution, schema
+compliance, consistency checks, reproducibility hashes &
+\textasciitilde1 MB JSON (report) \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+Stages 4 and 5 are \textbf{partial} for many repositories: the
+state-space compiler requires either execution traces or sufficient
+static structure (for example annotated state machines) to produce
+meaningful output. The pipeline tolerates missing stages gracefully; the
+Validation IR records which stages completed and which were skipped.
+\end{frame}
+
+\begin{frame}[fragile]{Performance characteristics}
+\protect\phantomsection\label{performance-characteristics}
+The architecture targets the following benchmarks on a 4-core machine,
+as specified in \texttt{../cogant/docs/ARCHITECTURE.md}:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Repository size & Target wall-clock time & Memory budget \\
+\midrule\noalign{}
+\endhead
+10K functions & \textless{} 30 s & \textless{} 500 MB \\
+100K functions & \textless{} 5 min & \textless{} 2 GB \\
+1M functions & \textless{} 1 hr & \textless{} 2 GB (streaming) \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+These targets assume the Python orchestration layer with Rust
+acceleration on critical paths (graph construction, rule matching, and
+Generalized Notation Notation section/tensor packing in
+\texttt{cogant-gnn}). In the current v0.1.x release, where Rust bindings
+are staged rather than fully wired, Python fallback implementations
+handle graph operations; users should expect roughly 2--3\(\times\)
+slower throughput on repositories above 50K functions until native
+acceleration is enabled.
+
+Parallelism is exploited at multiple stages: file parsing is
+embarrassingly parallel, translation rules are applied concurrently over
+independent subgraphs, and export formatting runs in parallel per output
+format. Incremental caching skips unchanged stages when the input hash
+matches a prior run, which is particularly effective during iterative
+development against a single repository.
+\end{frame}
+
+\begin{frame}{What to record}
+\protect\phantomsection\label{what-to-record}
+For reproducible experiments, record: COGANT version or commit hash,
+interpreter version, list of stages executed, configuration file
+contents (redacted), input repository commit hash, and random seeds for
+any learned components \textbf{outside} COGANT that consume the exports.
+\end{frame}
+
+\end{document}

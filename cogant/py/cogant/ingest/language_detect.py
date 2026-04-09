@@ -1,0 +1,146 @@
+"""Language detection and parser loading."""
+
+import sys
+from pathlib import Path
+from typing import Dict, Optional
+from collections import defaultdict
+
+# Add parsers to path
+parsers_root = Path(__file__).parent.parent.parent.parent / "parsers"
+sys.path.insert(0, str(parsers_root))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "py"))
+
+
+class LanguageDetector:
+    """Detect programming languages in a repository."""
+
+    # Map file extensions to language names
+    EXTENSION_MAP = {
+        ".py": "python",
+        ".pyx": "python",
+        ".pyi": "python",
+        ".ts": "typescript",
+        ".tsx": "typescript",
+        ".js": "javascript",
+        ".jsx": "javascript",
+        ".rs": "rust",
+        ".go": "go",
+    }
+
+    # Map language names to parser classes
+    PARSER_CLASSES = {
+        "python": None,  # Lazy-loaded
+        "typescript": None,
+        "javascript": None,
+        "rust": None,
+        "go": None,
+    }
+
+    @classmethod
+    def _lazy_load_parsers(cls):
+        """Lazy load parser classes on first use."""
+        if cls.PARSER_CLASSES["python"] is not None:
+            return  # Already loaded
+
+        try:
+            from python.parser import PythonLanguageParser
+            cls.PARSER_CLASSES["python"] = PythonLanguageParser
+        except Exception:
+            pass
+
+        try:
+            from typescript.parser import TypeScriptLanguageParser
+            cls.PARSER_CLASSES["typescript"] = TypeScriptLanguageParser
+            cls.PARSER_CLASSES["javascript"] = TypeScriptLanguageParser
+        except Exception:
+            pass
+
+        try:
+            from rust.parser import RustLanguageParser
+            cls.PARSER_CLASSES["rust"] = RustLanguageParser
+        except Exception:
+            pass
+
+        try:
+            from go.parser import GoLanguageParser
+            cls.PARSER_CLASSES["go"] = GoLanguageParser
+        except Exception:
+            pass
+
+    @staticmethod
+    def detect_language(file_path: Path) -> Optional[str]:
+        """Detect programming language from file extension.
+
+        Args:
+            file_path: Path to file.
+
+        Returns:
+            Language name or None if not recognized.
+        """
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+
+        ext = file_path.suffix.lower()
+        return LanguageDetector.EXTENSION_MAP.get(ext)
+
+    @staticmethod
+    def detect_repo_languages(repo_path: Path) -> Dict[str, int]:
+        """Detect all programming languages in a repository.
+
+        Args:
+            repo_path: Path to repository root.
+
+        Returns:
+            Dictionary mapping language names to file counts.
+        """
+        if isinstance(repo_path, str):
+            repo_path = Path(repo_path)
+
+        language_counts = defaultdict(int)
+
+        # Iterate through all files recursively
+        try:
+            for file_path in repo_path.rglob("*"):
+                if file_path.is_file():
+                    lang = LanguageDetector.detect_language(file_path)
+                    if lang:
+                        language_counts[lang] += 1
+        except Exception:
+            pass
+
+        return dict(language_counts)
+
+    @classmethod
+    def get_parser(cls, language: str):
+        """Get parser instance for a language.
+
+        Args:
+            language: Language name (e.g., "python", "typescript").
+
+        Returns:
+            LanguagePlugin instance or None if language not supported.
+
+        Raises:
+            ImportError: If parser module cannot be loaded.
+        """
+        cls._lazy_load_parsers()
+
+        parser_class = cls.PARSER_CLASSES.get(language.lower())
+        if parser_class is None:
+            raise ImportError(f"No parser available for language: {language}")
+
+        return parser_class()
+
+    @classmethod
+    def get_supported_languages(cls) -> list:
+        """Get list of supported languages.
+
+        Returns:
+            List of supported language names.
+        """
+        cls._lazy_load_parsers()
+        supported = []
+        for lang, parser_class in cls.PARSER_CLASSES.items():
+            if parser_class is not None:
+                supported.append(lang)
+        return supported

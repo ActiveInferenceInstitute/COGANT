@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>07_reproducibility</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<h1 id="reproducibility">Reproducibility</h1>
+<p>Reproducible computational research requires version-pinned tools,
+fixed inputs, and documented outputs <span class="citation"
+data-cites="peng2011reproducible">[@peng2011reproducible]</span>. COGANT
+contributes the <strong>graph-generation</strong> slice of that story:
+identical source trees and identical pipeline configuration should yield
+identical exported bundles modulo declared nondeterminism (for example
+optional neural embeddings if enabled).</p>
+<h2 id="version-pinning">Version pinning</h2>
+<p>Pin:</p>
+<ul>
+<li>The <strong>COGANT</strong> version (<code>pyproject.toml</code> /
+package <code>__version__</code>) and Git commit when installing from
+source.</li>
+<li>The <strong>Python</strong> minor version.</li>
+<li><strong>Optional</strong> Rust toolchain commit when building native
+extensions from <code>../cogant/rust/</code>.</li>
+</ul>
+<h2 id="artifact-layout">Artifact layout</h2>
+<p>Pipeline output typically includes JSON for intermediate IRs,
+<strong>Generalized Notation Notation (GNN)</strong> bundles (canonical
+<code>model.gnn.md</code> plus companion JSON and interop artifacts),
+validation reports, and optional HTML sites. Paths under the chosen
+<code>output_dir</code> should be treated as disposable but
+<strong>checksumable</strong>: store hashes alongside published datasets
+derived from COGANT exports when releasing research artifacts.</p>
+<h2 id="determinism">Determinism</h2>
+<p>Parsing and graph construction aim for deterministic ordering on a
+fixed filesystem snapshot. Features that pull in external models (for
+example optional name or documentation embeddings consumed by the
+Generalized Notation Notation exporter) introduce variability unless
+models and seeds are fixed; the Generalized Notation Notation export
+document (<code>../cogant/docs/GNN_EXPORT.md</code>) calls out embedding
+dimensions and optional behavior.</p>
+<h2 id="relation-to-the-template-repository">Relation to the template
+repository</h2>
+<p>While this project remains outside <a
+href="../../../projects/"><code>../../../projects/</code></a>, it is
+<strong>not</strong> executed by the root <code>./run.sh</code>
+discovery layer. After promotion to <a
+href="../../../projects/cogant/"><code>../../../projects/cogant/</code></a>
+with <code>src/</code>, <code>tests/</code>, and
+<code>pyproject.toml</code> per template rules, the standard manuscript
+validation and PDF stages apply; until then, validate Markdown from the
+template repository root,
+e.g. <code>uv run python -m infrastructure.validation.cli markdown ./projects_in_progress/cogant/manuscript/</code>.</p>
+<h2 id="validation-gates">Validation gates</h2>
+<p>The pipeline enforces quality through three complementary validation
+checkers, each targeting a different failure mode:</p>
+<p><strong>IntegrityChecker.</strong> Verifies structural soundness of
+the program graph: all edge endpoints reference existing nodes, no
+unintended duplicate nodes exist, orphaned nodes (zero in-degree and
+zero out-degree) are flagged, and self-loops are reported unless
+explicitly allowed by configuration. The checker also ensures that
+confidence scores fall within <span class="math inline">\([0,
+1]\)</span> and that provenance records are non-empty for every node and
+edge. A graph that fails integrity checks receives a FAIL validation
+status; downstream export is blocked.</p>
+<p><strong>SchemaChecker.</strong> Validates each IR artifact against
+its JSON schema (versioned alongside the COGANT package). Schema
+violations – such as missing required fields, incorrect types, or
+unknown enum values in <code>NodeKind</code> or
+<code>SemanticRole</code> – are classified as ERROR or FATAL depending
+on severity. Schema versions are recorded in the validation report so
+that consumers can verify compatibility with their import code.</p>
+<p><strong>ProvenanceChecker.</strong> Audits the provenance chain:
+every assertion in the semantic mapping must trace back to at least one
+evidence source (SourceCode, TypeSystem, ControlFlow, Heuristic, or
+External). The checker flags mappings whose provenance is empty or whose
+confidence score is inconsistent with the declared evidence tier – for
+example, a STATIC_PLUS_RUNTIME tier with no runtime trace evidence.
+These flags appear as warnings rather than errors, since partial
+provenance is expected for heuristic rules.</p>
+<p>Together, these gates ensure that exported bundles meet a minimum
+quality bar before reaching downstream models. The thresholds are
+configurable (see <code>../cogant/docs/VALIDATION.md</code>); defaults
+require <span class="math inline">\(\geq 95\%\)</span> coverage, mean
+confidence <span class="math inline">\(\geq 0.85\)</span>, and zero
+schema violations.</p>
+<h2 id="pipeline-checkpoint-and-resume-behavior">Pipeline checkpoint and
+resume behavior</h2>
+<p>The pipeline writes a checkpoint file after each successfully
+completed stage. The checkpoint records the stage name, completion
+timestamp, input hash, and output hash. On a subsequent invocation with
+<code>--resume</code> (or <code>PipelineConfig.resume = True</code>),
+the runner reads the checkpoint file, verifies that the input hash for
+each completed stage still matches the current source tree, and skips
+stages whose outputs are already valid. If a source file has changed,
+the runner invalidates the affected stage and all downstream stages,
+then re-executes from the earliest invalidated point.</p>
+<p>Checkpoints are stored as JSON under the configured
+<code>output_dir</code>:</p>
+<pre><code>output/
+  .cogant_checkpoint.json</code></pre>
+<p>This mechanism is particularly useful during iterative development:
+after an initial full run, changing a single source file triggers only
+re-parsing, graph construction, and downstream stages for the affected
+subgraph, rather than re-analyzing the entire repository.</p>
+<h2 id="output-manifest-structure">Output manifest structure</h2>
+<p>Each pipeline run produces a manifest file
+(<code>manifest.json</code>) alongside the exported artifacts. The
+manifest provides a machine-readable inventory of everything the run
+produced:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cogant_version&quot;</span><span class="fu">:</span> <span class="st">&quot;0.1.0&quot;</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;run_id&quot;</span><span class="fu">:</span> <span class="st">&quot;run_20260408_143012&quot;</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-04-08T14:30:12Z&quot;</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;input_hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:a1b2c3...&quot;</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;config_hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:d4e5f6...&quot;</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;stages_completed&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;discovery&quot;</span><span class="ot">,</span> <span class="st">&quot;parsing&quot;</span><span class="ot">,</span> <span class="st">&quot;repo_ir&quot;</span><span class="ot">,</span> <span class="st">&quot;graph&quot;</span><span class="ot">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                        <span class="st">&quot;translate&quot;</span><span class="ot">,</span> <span class="st">&quot;validate&quot;</span><span class="ot">,</span> <span class="st">&quot;export&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;stages_skipped&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;statespace&quot;</span><span class="ot">,</span> <span class="st">&quot;process&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;artifacts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;model.gnn.json&quot;</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span> <span class="dt">&quot;size_bytes&quot;</span><span class="fu">:</span> <span class="dv">2048576</span><span class="fu">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:...&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;model.pyg.pt&quot;</span><span class="fu">,</span>   <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;pytorch_geometric&quot;</span><span class="fu">,</span> <span class="dt">&quot;size_bytes&quot;</span><span class="fu">:</span> <span class="dv">1024000</span><span class="fu">,</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:...&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;validation_report.json&quot;</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span> <span class="dt">&quot;size_bytes&quot;</span><span class="fu">:</span> <span class="dv">8192</span><span class="fu">,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:...&quot;</span><span class="fu">}</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;statistics&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;nodes&quot;</span><span class="fu">:</span> <span class="dv">320</span><span class="fu">,</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;edges&quot;</span><span class="fu">:</span> <span class="dv">1250</span><span class="fu">,</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;mean_confidence&quot;</span><span class="fu">:</span> <span class="fl">0.92</span><span class="fu">,</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;validation_status&quot;</span><span class="fu">:</span> <span class="st">&quot;PASS&quot;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Storing per-artifact SHA-256 hashes enables consumers to verify that
+exported bundles have not been modified after generation. When
+publishing datasets derived from COGANT exports, including the manifest
+alongside the data satisfies the reproducibility requirements outlined
+by <span class="citation"
+data-cites="peng2011reproducible">[@peng2011reproducible]</span>: any
+researcher with the same source tree, COGANT version, and configuration
+can regenerate the artifacts and compare hashes.</p>
+<h2 id="data-ethics-and-licensing">Data ethics and licensing</h2>
+<p>Exported graphs can contain identifiers and comments from source
+code. Redistribution of derived graphs must respect the licenses of
+input repositories and organizational data policies.</p>
+</body>
+</html>

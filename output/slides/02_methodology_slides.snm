@@ -1,0 +1,13 @@
+\beamer@slide {program-graph}{2}
+\beamer@slide {structural-equivalence}{2}
+\beamer@slide {eq:typed-iso}{2}
+\beamer@slide {progressive-irs}{3}
+\beamer@slide {translation-rules}{4}
+\beamer@slide {fixpoint-iteration-conflict-resolution-and-coverage}{4}
+\beamer@slide {alg:fixpoint}{4}
+\beamer@slide {alg:conflict}{4}
+\beamer@slide {confidence-scoring-and-evidence-tiers}{5}
+\beamer@slide {eq:confidence-core}{5}
+\beamer@slide {state-space-and-behavior}{6}
+\beamer@slide {gnn-export-generalized-notation-notation}{7}
+\beamer@slide {error-handling-philosophy}{8}

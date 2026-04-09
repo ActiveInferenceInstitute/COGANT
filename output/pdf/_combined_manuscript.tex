@@ -1,0 +1,1890 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% \usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\newenvironment{Shaded}{}{}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{\textbf{#1}}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage[]{natbib}
+\bibliographystyle{plainnat}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  colorlinks=true,linkcolor=red,urlcolor=red,citecolor=red,anchorcolor=red,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{}
+
+\title{COGANT: Codebase-to-GNN Translation\\\normalsize Theory of the Program Graph IR and Practice of the Python Pipeline}
+\author{Daniel Ari Friedman\\\footnotesize{Active Inference Institute}\\\footnotesize{\texttt{daniel@activeinference.institute}}\\\footnotesize{\href{https://orcid.org/0000-0001-6232-9096}{ORCID: 0000-0001-6232-9096}}}
+\date{\today}
+
+% Core mathematics
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+
+% Document layout
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{graphicx}
+
+% Tables
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+
+% Algorithm typesetting
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+
+% Code listings
+\usepackage{listings}
+
+% Typography and formatting
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage[binary-units]{siunitx}
+
+% Cross-references and citations
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    allcolors=red
+}
+\usepackage[capitalise,noabbrev]{cleveref}
+\usepackage{natbib}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\tableofcontents
+\newpage
+
+
+\section{Abstract}\label{abstract}
+
+\textbf{COGANT} (Codebase-to-GNN Translation) is a system for turning
+software repositories into structured Active Inference artifacts
+expressed in the Active Inference Institute's \textbf{Generalized
+Notation Notation} (GNN)\footnote{Throughout this manuscript
+  \textbf{GNN} refers to the Active Inference Institute's
+  \textbf{Generalized Notation Notation}
+  (\href{https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation}{repository}),
+  a structured notation for state-space and process models---\emph{not}
+  graph neural networks. Downstream consumers, including graph neural
+  network training pipelines, can ingest the emitted artifacts, but
+  COGANT itself produces Generalized Notation Notation bundles.}. It
+occupies the space between classical program analysis---which already
+reasons over graphs such as call graphs and code property graphs
+\citep{yamaguchi2014modeling}---and data-driven methods that expect
+tensors, consistent node and edge vocabularies, and exportable training
+bundles
+\citep{allamanis2018survey, wu2020comprehensive, scarselli2009graph}.
+
+The design centers on a \textbf{program graph IR}: nodes denote entities
+(for example functions and variables), edges denote relations (for
+example calls and data flow), and each assertion carries
+\textbf{confidence} and \textbf{provenance} so that downstream models
+can treat uncertainty explicitly. A \textbf{fixpoint translation engine}
+applies declarative rules iteratively until no new semantic mappings
+emerge, resolves overlapping mappings by confidence, and reports
+coverage gaps explicitly. \textbf{Dynamic enrichment} from coverage
+reports and execution traces promotes mappings from a
+\texttt{STATIC\_ONLY} tier to \texttt{STATIC\_PLUS\_RUNTIME} when
+runtime evidence corroborates static inference. A \textbf{Python
+orchestration layer} (session and pipeline APIs, CLI, configuration)
+performs discovery, parsing, normalization, graph construction,
+translation rules, state-space compilation, validation, and export. A
+\textbf{Rust core} (organized as separate crates in the package tree)
+holds graph operations, translation, state-space structures, Generalized
+Notation Notation formatting, and PyO3 bindings; the authoritative
+\textbf{implementation status} distinguishes what is wired in Python
+today from staged or planned native acceleration (see
+\texttt{../cogant/docs/SPEC.md}).
+
+This manuscript, parallel to the developer documentation under
+\href{../cogant/docs/}{\texttt{../cogant/docs/}}, states the theory of
+that IR and the practice of running the pipeline, configuring
+Generalized Notation Notation exports (canonical GNN Markdown, GNN JSON,
+and interop targets such as GraphML, Parquet, and framework-specific
+tensor formats), and extending the tool through parsers, rules,
+validators, and exporters. It is written to remain valid whether this
+tree stays next to the package (\href{../cogant/}{\texttt{../cogant/}})
+or is later promoted under
+\href{../../../projects/}{\texttt{../../../projects/}} for full template
+pipeline rendering.
+
+\newpage
+
+\section{Introduction and Scope}\label{introduction-and-scope}
+
+Machine learning on source code has matured alongside static analysis:
+both need structured representations of programs, but learning pipelines
+additionally need fixed feature layouts, batchable graphs, and
+reproducible exports \citep{allamanis2018survey}. COGANT addresses that
+gap by making the path from repository checkout to \textbf{Generalized
+Notation Notation (GNN) bundles} explicit, inspectable, and
+configurable.
+
+\subsection{Terminology: ``GNN'' in this
+manuscript}\label{terminology-gnn-in-this-manuscript}
+
+In this manuscript, \textbf{GNN} refers to the Active Inference
+Institute's \textbf{Generalized Notation Notation}
+(\href{https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation}{repository})
+\citep{friedman2024gnn}, a structured notation for state-space and
+process models---\emph{not} graph neural networks. COGANT translates
+source code into this notation, producing program-graph and state-space
+artifacts (state space, observation modalities, actions/policies,
+likelihood structure, preferences, time settings, parameterization) that
+downstream tools can consume. Those downstream tools include graph
+neural network training pipelines, which can ingest the exported tensor
+views of the program graph, but such neural networks are a
+\emph{consumer} of COGANT's output, not its output format. Where the
+manuscript discusses graph neural networks as related work, it uses the
+phrase ``graph neural networks'' in full; the acronym GNN always refers
+to Generalized Notation Notation.
+
+\subsection{Problem}\label{problem}
+
+A research or engineering group typically has:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Source code} in one or more languages.
+\item
+  \textbf{Analysis goals} that combine classical queries (who calls
+  whom?) with learned models (bug detection, retrieval, summarization).
+\item
+  \textbf{Tooling fragmentation}: compilers and linters produce one
+  shape of facts; PyTorch or JAX expect another.
+\end{itemize}
+
+COGANT unifies these behind a single pipeline whose intermediate
+artifacts are documented as a progression of IRs (repo IR, program
+graph, semantic mapping, state space, process model, validation), as
+described in \texttt{../cogant/docs/ARCHITECTURE.md} and
+\texttt{../cogant/docs/SPEC.md}.
+
+\subsection{What COGANT is not}\label{what-cogant-is-not}
+
+COGANT is not a replacement for a full compiler IR, a theorem prover, or
+a security scanner by itself. It \textbf{extracts and serializes}
+program graphs and behavioral sketches for downstream use. Language
+coverage and rule depth follow the implementation-status table in the
+SPEC: Python is the primary front end at v0.1.x; additional languages
+and Rust acceleration are staged as documented there.
+
+\subsection{Manuscript versus package
+docs}\label{manuscript-versus-package-docs}
+
+The canonical API and CLI details live in:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{../cogant/docs/API\_GUIDE.md} --- Session,
+  \texttt{PipelineRunner}, \texttt{Bundle}, \texttt{ReviewAPI}
+\item
+  \texttt{../cogant/docs/CLI\_GUIDE.md} --- commands and flags
+\item
+  \texttt{../cogant/docs/GNN\_EXPORT.md} --- Generalized Notation
+  Notation schema, section ordering, and companion interop field
+  contracts (including optional PyG/DGL tensor views)
+\item
+  \texttt{../cogant/docs/PLUGIN\_API.md} --- parsers, rules, validators,
+  exporters
+\item
+  \texttt{../cogant/docs/ARCHITECTURE.md} --- layers, crates, data flow
+\end{itemize}
+
+This manuscript summarizes theory and practice for readers who want a
+single linear narrative before diving into those files.
+
+\subsection{Dual Python/Rust
+architecture}\label{dual-pythonrust-architecture}
+
+COGANT employs a dual-language architecture. The \textbf{Python
+orchestration layer} handles session management, pipeline coordination,
+configuration, file discovery, AST parsing, and the plugin interface --
+tasks where developer ergonomics and extensibility matter more than raw
+throughput. The \textbf{Rust core}, organized as a workspace of seven
+crates (\texttt{cogant-core}, \texttt{cogant-graph},
+\texttt{cogant-translate}, \texttt{cogant-statespace},
+\texttt{cogant-gnn}, \texttt{cogant-store}, \texttt{cogant-ffi}),
+implements typed graph operations, translation engine internals,
+state-space structures, and Generalized Notation Notation (GNN)
+formatting -- tasks where memory layout and cache locality dominate
+wall-clock time. Communication between layers flows through PyO3
+bindings (\texttt{cogant-ffi}), which release the Python GIL during Rust
+execution to permit concurrent stage processing. Where Rust bindings are
+not yet wired for a code path (see the implementation-status table in
+\texttt{../cogant/docs/SPEC.md}), Python fallback implementations ensure
+the pipeline remains functional at the cost of higher latency on large
+repositories.
+
+\subsection{Roadmap of the following
+sections}\label{roadmap-of-the-following-sections}
+
+Section 2 formalizes the program graph and IR progression. Section 3
+describes the realized pipeline behavior and artifacts. Sections 4--7
+cover conclusions, how to run experiments, reproducibility, and related
+work.
+
+\newpage
+
+\section{Methodology: Program Graphs and Intermediate
+Representations}\label{methodology-program-graphs-and-intermediate-representations}
+
+\subsection{Program graph}\label{program-graph}
+
+Let \(G = (V, E)\) denote a directed graph whose vertices \(V\)
+represent program entities and whose edges \(E\) represent
+relationships. COGANT assigns each node a \textbf{kind} (for example
+function, variable, type) and a \textbf{semantic role} (for example
+definition versus use). Each node and edge may carry:
+
+\begin{itemize}
+\tightlist
+\item
+  A \textbf{stable identifier} for persistence across runs when hashing
+  allows.
+\item
+  \textbf{Type strings} and attributes recovered from the front end.
+\item
+  A \textbf{confidence} score in \([0,1]\) and \textbf{provenance}
+  metadata (source code, type system, control flow, heuristic, external
+  tool).
+\end{itemize}
+
+This follows the same philosophical line as code property graphs that
+fuse AST, control flow, and data flow into one analyzable structure
+\citep{yamaguchi2014modeling}, but orients the representation toward
+\textbf{Generalized Notation Notation (GNN) export} and, optionally,
+tensorized views of the same graph: node kinds and roles map to discrete
+indices in both forms, and optional embeddings can augment features as
+described in \texttt{../cogant/docs/GNN\_EXPORT.md}.
+
+\subsubsection{Structural equivalence}\label{structural-equivalence}
+
+Two program graphs \(G_1 = (V_1, E_1)\) and \(G_2 = (V_2, E_2)\) are
+usefully compared via typed graph isomorphism: a bijection
+\(\phi : V_1 \to V_2\) preserving edge structure and relevant labels
+supports deduplication and cross-repository linking when interfaces
+align.
+
+\begin{equation}
+\label{eq:typed-iso}
+(u, v) \in E_1 \iff (\phi(u), \phi(v)) \in E_2
+\end{equation}
+
+Equation \ref{eq:typed-iso} formalizes the structural invariant we check
+during deduplication and cross-repository linking: a candidate bijection
+\(\phi) is accepted only when every edge in \(G_1\) has a corresponding
+edge between the images of its endpoints in \(G_2\) (and vice versa), so
+that label-preserving matches strictly preserve the adjacency structure
+of both program graphs.
+
+\subsection{Progressive IRs}\label{progressive-irs}
+
+Processing proceeds through a sequence of representations (see
+\texttt{../cogant/docs/SPEC.md}):
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Repo IR} --- entities and relationships extracted from
+  parsers.
+\item
+  \textbf{Program graph IR} --- consolidated graph with deduplication
+  and metadata.
+\item
+  \textbf{Semantic mapping IR} --- output of the translation rule
+  engine.
+\item
+  \textbf{State space IR} --- variables, actions, transitions,
+  observations.
+\item
+  \textbf{Process model IR} --- higher-level control patterns where
+  implemented.
+\item
+  \textbf{Validation IR} --- coverage, confidence analysis, schema
+  checks.
+\end{enumerate}
+
+Not every stage is equally complete for every repository; the SPEC marks
+partial areas (translation rules, state space, Rust acceleration)
+explicitly.
+
+\subsection{Translation rules}\label{translation-rules}
+
+The \textbf{translation} stage applies declarative rules that refine
+roles, attach labels, and adjust confidence. Concurrency targets and
+layering are described in \texttt{../cogant/docs/ARCHITECTURE.md}. The
+rule engine composes passes over the graph in a \textbf{fixpoint loop}:
+rules are re-applied until no new semantic mappings emerge or a
+configurable iteration cap is reached. Overlapping rules may require
+priority ordering as documented there; when multiple rules claim the
+same graph fragment, the engine retains the mapping with the highest
+confidence score, following the principle that edit representations
+should be composable \citep{yin2019learning}.
+
+\subsubsection{Fixpoint iteration, conflict resolution, and
+coverage}\label{fixpoint-iteration-conflict-resolution-and-coverage}
+
+The shipped \texttt{TranslationEngine} in
+\texttt{../cogant/py/cogant/translate/engine.py} realizes the fixpoint
+loop concretely. Each iteration walks every registered rule once: the
+engine calls \texttt{rule.matches(graph,\ query)} to collect candidate
+fragments, then calls \texttt{rule.apply(graph,\ match)} on each,
+accumulating any resulting \texttt{SemanticMapping} objects keyed by
+their stable IDs. A per-pass counter tracks mappings that were genuinely
+new (not already present in the running set), and the loop terminates as
+soon as a pass completes with zero additions. The engine logs each
+iteration boundary through an internal match log, so the number of
+passes required to reach a fixed point is directly observable in the
+post-run diagnostics. The default iteration cap is
+\texttt{max\_iterations\ =\ 10}; in testing, most repositories converge
+well before that bound, and the cap exists primarily as a safety valve
+against pathological rule sets that could otherwise oscillate
+indefinitely.
+
+After fixpoint termination, the engine invokes
+\texttt{\_resolve\_conflicts()} to reconcile mappings whose
+\texttt{graph\_fragment\_node\_ids} sets overlap. For each overlapping
+pair the engine retains the mapping with the higher
+\texttt{confidence\_score} and discards the other, logging a
+\texttt{conflict\_resolved} event that records the losing ID, the
+winning ID, and the specific overlap set. Rule priority is therefore
+expressed indirectly through the confidence model rather than through a
+separate ordering table: a higher-priority rule expresses its precedence
+by yielding mappings with higher scores, which then win in the conflict
+resolution pass. A companion entry point,
+\texttt{translate\_with\_confidence()}, runs the standard fixpoint loop,
+rescores every surviving mapping through the \texttt{ConfidenceModel},
+and then re-resolves conflicts so that any ordering shifts induced by
+rescoring are honored.
+
+Translation coverage -- the fraction of graph nodes that received at
+least one semantic mapping -- is reported by
+\texttt{get\_coverage\_report(graph)}. It returns the total node count,
+the number of covered nodes, the number of uncovered nodes, a
+\texttt{coverage\_percent} value rounded to two decimal places, and the
+sorted list of uncovered node IDs. The uncovered list is intentionally
+emitted verbatim so that downstream tooling can target unmapped regions
+for manual review or rule extension, rather than burying the gap behind
+a single aggregate number \citep{allamanis2018survey}.
+
+\begin{algorithm}
+\caption{Fixpoint translation engine}
+\label{alg:fixpoint}
+\KwIn{Program graph $G = (V, E)$; rule set $R$; maximum iterations $K$ (default 10)}
+\KwOut{Set of semantic mappings $\mathcal{M}$ keyed by stable ID}
+$\mathcal{M} \leftarrow \emptyset$\;
+\For{$k \leftarrow 1$ \KwTo $K$}{
+    $n_{\text{new}} \leftarrow 0$\;
+    \ForEach{rule $r \in R$ sorted by $\text{priority}(r)$ descending}{
+        \ForEach{match $m \in r.\text{matches}(G)$}{
+            $\mu \leftarrow r.\text{apply}(G, m)$\;
+            \If{$\mu \neq \bot$ \textbf{and} $\mu.\text{id} \notin \mathcal{M}$}{
+                $\mathcal{M} \leftarrow \mathcal{M} \cup \{\mu\}$\;
+                $n_{\text{new}} \leftarrow n_{\text{new}} + 1$\;
+            }
+        }
+    }
+    \If{$n_{\text{new}} = 0$}{
+        \textbf{break} \tcp*{fixed point reached}
+    }
+}
+$\mathcal{M} \leftarrow \textsc{ResolveConflicts}(\mathcal{M})$\;
+\Return $\mathcal{M}$\;
+\end{algorithm}
+
+Algorithm \ref{alg:fixpoint} summarizes the engine. Termination is
+guaranteed because each iteration either produces at least one new
+mapping (whose stable ID is then fixed in \(\mathcal{M}\)) or terminates
+by the break condition; the outer \(K\) bound serves as a safety valve
+for pathological rule sets.
+
+\begin{algorithm}
+\caption{Priority-ordered conflict resolution}
+\label{alg:conflict}
+\KwIn{Mapping set $\mathcal{M}$; priority function $p(\cdot)$}
+\KwOut{Reduced mapping set with no overlapping fragments}
+Build inverted index $\mathcal{I}: V \to 2^{\mathcal{M}}$ from node IDs to mappings touching them\;
+$\mathcal{C} \leftarrow \emptyset$ \tcp*{conflict pairs}
+\ForEach{node $v$ with $|\mathcal{I}(v)| \geq 2$}{
+    \ForEach{$(\mu_a, \mu_b) \in \binom{\mathcal{I}(v)}{2}$}{
+        $\mathcal{C} \leftarrow \mathcal{C} \cup \{(\mu_a, \mu_b)\}$\;
+    }
+}
+$\mathcal{R} \leftarrow \emptyset$ \tcp*{removal set}
+\ForEach{$(\mu_a, \mu_b) \in \mathcal{C}$}{
+    \If{$\mu_a \in \mathcal{R}$ \textbf{or} $\mu_b \in \mathcal{R}$}{\textbf{continue}}
+    $k_a \leftarrow (p(\mu_a), c(\mu_a))$; $k_b \leftarrow (p(\mu_b), c(\mu_b))$\;
+    \eIf{$k_a \geq k_b$}{$\mathcal{R} \leftarrow \mathcal{R} \cup \{\mu_b\}$}{$\mathcal{R} \leftarrow \mathcal{R} \cup \{\mu_a\}$}
+}
+\Return $\mathcal{M} \setminus \mathcal{R}$\;
+\end{algorithm}
+
+Algorithm \ref{alg:conflict} detects conflicts via an inverted index in
+\(O(\sum_v |\mathcal{I}(v)|^2)\) worst-case time, which is substantially
+faster than the naive all-pairs scan for graphs where most nodes carry
+at most one mapping.
+
+\subsection{Confidence Scoring and Evidence
+Tiers}\label{confidence-scoring-and-evidence-tiers}
+
+The shipped \texttt{ConfidenceModel} in
+\texttt{../cogant/py/cogant/translate/confidence.py} computes a scalar
+score in \([0,1]\) from:
+
+\begin{itemize}
+\tightlist
+\item
+  Average confidence over provenance records.
+\item
+  An evidence-diversity term (scaled, capped).
+\item
+  A parser certainty factor applied multiplicatively.
+\item
+  Conflict penalties subtracted after scaling.
+\end{itemize}
+
+\begin{equation}
+\label{eq:confidence-core}
+c = \max\left(0,\ \min\left(1,\ (\bar{e} + \delta_d)\cdot \kappa - \pi\right)\right)
+\end{equation}
+
+Here \(\bar{e}\) is the mean evidence confidence, \(\delta_d\) is the
+diversity bonus (bounded), \(\kappa) is parser certainty, and \(\pi)
+aggregates conflict penalties. \textbf{Tiers} (for example static-only
+versus static-plus-runtime) are assigned from score thresholds and
+evidence source tags (\texttt{determine\_confidence\_tier}); see the
+same module for named thresholds and enum values. The manuscript does
+not duplicate those literals so they cannot drift from code.
+
+\subsection{State space and behavior}\label{state-space-and-behavior}
+
+Where traces or coverage are available, \textbf{dynamic} extraction
+feeds the state-space compiler. The goal is a compact behavioral model:
+states, actions, transitions, and observations that sit alongside the
+static graph for tasks that require execution-sensitive features.
+
+The shipped \texttt{StateSpaceCompiler} in
+\texttt{../cogant/py/cogant/statespace/compiler.py} constructs this
+model in several coordinated passes driven by the semantic mappings and
+the underlying program graph.
+
+\textbf{State variables} are identified by a
+\texttt{StateVariableExtractor} that traverses graph nodes carrying
+READS and WRITES edges: any node that participates in a write is a
+candidate hidden-state variable, and its type, cardinality, and initial
+confidence are derived from the node's recovered type string and the
+provenance of the rules that produced the associated mapping.
+
+\textbf{Actions} are extracted from semantic mappings of kind
+\texttt{ACTION}, with parameters read from node metadata (typically the
+parser-recovered function signature), effects traced through outgoing
+WRITES edges on the controller node, and preconditions derived from
+parameter lists, docstring directives, and explicit metadata entries.
+For method-kind actions, the compiler also walks CONTAINS edges back to
+the enclosing class so that instance-level state mutations are
+attributed to the correct controller, mirroring how code property graphs
+fuse structural and data-flow views \citep{yamaguchi2014modeling}.
+
+\textbf{Transitions} are inferred by a cross-reference pass
+(\texttt{\_cross\_reference\_actions\_and\_variables}) that, for each
+action, partitions its adjacent variables into reads and writes based on
+edge kind (WRITES and MUTATES yielding writes; READS and OBSERVES
+yielding reads). The resulting \texttt{Transition} object records a
+\texttt{source\_state} in which every touched variable is marked
+\texttt{"pre"} and a \texttt{target\_state} in which written variables
+advance to \texttt{"post"} while read-only variables remain
+\texttt{"pre"}; this simple pre/post convention keeps the model faithful
+to the static evidence without overcommitting to symbolic value domains
+that cannot be recovered from AST analysis alone. Trigger attribution
+follows incoming TRIGGERS and CALLS edges so that orchestration flow is
+preserved in the behavioral model.
+
+\textbf{Observation modalities} are built from semantic mappings of kind
+\texttt{OBSERVATION}: each associated node becomes an
+\texttt{ObservationModality} whose modality type (\texttt{log},
+\texttt{metric}, \texttt{event}, \texttt{sensor}, or a generic fallback)
+is inferred from the mapping's description and the node's name, giving
+the GNN export a typed observation channel aligned with the OBSERVES
+edges in the program graph.
+
+The \textbf{temporal regime} of the model is determined by a companion
+\texttt{TemporalAnalyzer}. It classifies nodes as asynchronous when
+their metadata carries \texttt{is\_async}/\texttt{async} flags or their
+names match patterns such as \texttt{async}, \texttt{callback},
+\texttt{promise}, or \texttt{future}, and as event-related when their
+kind is \texttt{EVENT} or their names match \texttt{event},
+\texttt{handler}, \texttt{listener}, or \texttt{trigger}. Temporal
+orderings are then extracted from CALLS and TRIGGERS edges, with each
+edge classified as \texttt{parallel} (when either endpoint is async) or
+\texttt{sequential} otherwise, and event patterns are assembled from
+triggers-in / triggers-out pairs around each event node. A final
+decision rule selects among \texttt{SYNCHRONOUS}, \texttt{ASYNCHRONOUS},
+\texttt{EVENT\_DRIVEN}, and \texttt{HYBRID}: the presence of event
+triggers and patterns combined with async handlers yields
+\texttt{HYBRID}; event triggers alone yield \texttt{EVENT\_DRIVEN}; an
+async fraction above 30 percent or the presence of async handlers yields
+\texttt{ASYNCHRONOUS}; and all remaining cases default to
+\texttt{SYNCHRONOUS}. This regime is attached to the
+\texttt{StateSpaceModel} metadata so downstream consumers know which
+execution model the transition graph assumes.
+
+When coverage and traces are available, \texttt{enrich\_graph()} in
+\texttt{../cogant/py/cogant/dynamic/enrichment.py} feeds additional
+evidence into this pipeline. Coverage enrichment matches
+\texttt{.coverage} SQLite databases or Cobertura XML reports against
+nodes whose \texttt{path} and \texttt{source\_range} overlap covered
+lines, attaching \texttt{coverage\_hits} and, where branch data is
+available, \texttt{branch\_coverage} metadata. Trace enrichment parses
+Chrome DevTools traces, writes \texttt{call\_count},
+\texttt{avg\_duration\_ms}, and \texttt{is\_hot\_path} onto matching
+callable nodes, and adds or reweights dynamic CALLS edges tagged with
+\texttt{evidence\_sources={[}"dynamic\_trace"{]}}. Both steps also
+append \texttt{dynamic\_coverage} and \texttt{dynamic\_trace} markers to
+the program graph's evidence sources. The confidence model consumes
+these markers directly: any mapping whose evidence set now contains both
+static and dynamic entries becomes eligible for promotion from the
+\texttt{STATIC\_ONLY} tier to \texttt{STATIC\_PLUS\_RUNTIME}, and
+hot-path and branch-coverage metadata raise the underlying score through
+the diversity bonus \(\delta_d\) in Equation \ref{eq:confidence-core}.
+This is the mechanism by which executing the target program, even
+partially, converts static heuristics into corroborated behavioral facts
+without rerunning the upstream rule engine \citep{allamanis2018survey}.
+
+\subsection{GNN export (Generalized Notation
+Notation)}\label{gnn-export-generalized-notation-notation}
+
+Exports package the program graph and compiled state-space model into
+the Active Inference Institute's \textbf{Generalized Notation Notation}
+plus a small set of interop targets:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{GNN Markdown (\texttt{model.gnn.md})} --- canonical,
+  human-readable Generalized Notation Notation organized into the
+  section order defined in \texttt{../cogant/docs/GNN\_EXPORT.md} (Model
+  Metadata, Repository Metadata, Source Coverage, State Space,
+  Observation Modalities, Actions/Policies, Connections, Factors,
+  Transition Structure, Likelihood Structure, Preferences/Constraints,
+  Time Settings, Parameterization, Ontology Mapping, Provenance,
+  Confidence Scores, Rendering Hints, Validation Notes).
+\item
+  \textbf{GNN JSON (\texttt{model.gnn.json})} --- machine-readable
+  equivalent of the markdown sections, plus companion JSON files per
+  section (\texttt{state\_space.json}, \texttt{observations.json},
+  \texttt{actions.json}, \texttt{transitions.json}, and so on).
+\item
+  \textbf{Interop exports} --- GraphML and Parquet for analysis in
+  Gephi/yEd and DuckDB, and optional tensor views (PyTorch Geometric
+  \texttt{Data} objects, DGL graphs, HDF5 tables) for downstream graph
+  neural network training pipelines that consume the program graph as a
+  relational tensor.
+\end{itemize}
+
+Node and edge feature breakdowns, section contracts, and the optional
+framework targets are specified in
+\texttt{../cogant/docs/GNN\_EXPORT.md}; they determine the structure of
+the emitted notation as well as the effective input dimensionality of
+any downstream model.
+
+\subsection{Error handling philosophy}\label{error-handling-philosophy}
+
+The implementation distinguishes fatal configuration or parse failures
+from per-file errors that allow partial results. Validation aggregates
+warnings and inconsistencies into a report that travels with the bundle.
+This mirrors the layered error categories documented in the architecture
+(fatal, error, warning, info).
+
+\newpage
+
+\section{API and Workflows}\label{api-and-workflows}
+
+This section describes the programmatic surface that the shipped Python
+package exposes in practice, aligned with
+\texttt{../cogant/docs/API\_GUIDE.md} and
+\texttt{../cogant/VERIFICATION\_REPORT.md}. It is \textbf{not} an
+empirical benchmark section; COGANT does not ship comparative timing
+claims in the manuscript layer. Instead, it records the \textbf{surface
+area} users can rely on: two complementary entry points (a Session for
+stepwise work and a Pipeline for batch runs), the Bundle accessors that
+expose their artifacts, a command-line interface, and a Review API for
+human-in-the-loop curation.
+
+\subsection{Session-oriented workflow}\label{session-oriented-workflow}
+
+The Session API is intended for interactive exploration: it is the right
+choice when a user wants to inspect intermediate artifacts between
+stages, iterate on a single repository in a notebook, or debug a
+specific extraction step without committing to a full scripted run. Each
+call returns control to the caller so that the graph, mappings, or
+state-space model can be examined before the next stage is invoked.
+
+\texttt{Session.from\_target} accepts a local path or URL, then supports
+a stepwise workflow:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{extract\_static} --- AST-oriented extraction for supported
+  languages.
+\item
+  \texttt{extract\_dynamic} --- traces and coverage when inputs exist.
+\item
+  \texttt{build\_graph} --- program graph construction.
+\item
+  \texttt{translate\_to\_gnn} --- Generalized Notation Notation (GNN)
+  representation.
+\item
+  \texttt{compile\_state\_space} --- behavioral model when the pipeline
+  has sufficient data.
+\item
+  \texttt{export\_all} --- writes JSON artifacts under a chosen output
+  directory.
+\end{itemize}
+
+This path suits interactive notebooks and incremental debugging.
+
+\subsection{Pipeline-oriented
+workflow}\label{pipeline-oriented-workflow}
+
+The Pipeline API is intended for scripted, reproducible batch runs: it
+is the right choice when a user wants to process many repositories with
+a fixed configuration, wire COGANT into CI, or guarantee that every run
+executes the same ordered stages with the same plugin settings. Because
+the whole run is described by a single \texttt{PipelineConfig}, it can
+be checked into version control and replayed without manual
+intervention.
+
+\texttt{PipelineRunner} with \texttt{PipelineConfig} runs an ordered
+list of stages (ingest, static, normalize, graph, translate, state
+space, process, export, validate). Configuration can skip stages (for
+example dynamic analysis), attach \textbf{plugin} settings per language,
+set \texttt{output\_dir}, verbosity, and dry-run mode. Results aggregate
+into a \textbf{Bundle} with \texttt{stage\_results}, error lists, and
+accessors described below.
+
+\subsection{Bundle accessors}\label{bundle-accessors}
+
+The bundle API exposes summaries and artifacts, including:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{repo\_summary}, \texttt{program\_graph},
+  \texttt{state\_space\_model}, \texttt{process\_model}
+\item
+  \texttt{gnn\_markdown} --- human-readable graph summary
+\item
+  \texttt{validation\_report}
+\item
+  \texttt{render\_site} --- static HTML site with graph and model views
+\item
+  \texttt{to\_json} / \texttt{save\_json}
+\end{itemize}
+
+The verification report lists these as delivered capabilities for the
+v0.1.0 line.
+
+\subsection{Command-line interface}\label{command-line-interface}
+
+The CLI entry point (\texttt{cogant.cli.main}) implements commands such
+as \texttt{init}, \texttt{scan}, \texttt{extract-static},
+\texttt{extract-dynamic}, graph and export verbs, and
+validation-oriented subcommands. Exact flags live in
+\texttt{../cogant/docs/CLI\_GUIDE.md}; the manuscript does not duplicate
+them to avoid drift.
+
+\subsection{Review API}\label{review-api}
+
+\texttt{ReviewAPI} supports interactive curation: load a bundle, present
+mappings, accept, reject, or edit, then save a curated bundle. This
+closes the loop when human review is part of the ML dataset
+construction.
+
+\newpage
+
+\section{Examples and Failure Modes}\label{examples-and-failure-modes}
+
+This section walks through a concrete example run of the pipeline on a
+small Flask application, shows representative fragments of the artifacts
+it produces (semantic mappings and state-space transitions), and then
+documents the degradation behavior that users should expect when inputs
+are missing or partial. Together these illustrate both what a successful
+run looks like and how the system communicates partial success.
+
+\subsection{Example outputs}\label{example-outputs}
+
+The package tree includes examples under
+\href{../cogant/examples/}{\texttt{../cogant/examples/}} and sample
+exports under
+\href{../cogant/output/examples/control_positive/}{\texttt{../cogant/output/examples/control\_positive/}}
+(for example \textbf{calculator}, \textbf{event\_pipeline}, and
+\textbf{flask\_mini} with \textbf{model.gnn.json} /
+\textbf{model.gnn.md} under \texttt{data/} and \texttt{reports/},
+diagrams under \texttt{diagrams/}, and raster figures under
+\texttt{figures/}). Use \texttt{cogant\ translate\ -\/-layout-output} or
+\texttt{PipelineConfig(layout\_output=True)} to place pipeline JSON
+under \texttt{data/} automatically; run
+\texttt{python\ -m\ cogant.tools.render\_output\_figures} on the output
+root for PNGs. Regenerate these trees by running the packaged pipeline
+against the example sources when validating releases.
+
+\subsubsection{Concrete walkthrough: Flask REST
+API}\label{concrete-walkthrough-flask-rest-api}
+
+To make the pipeline's behavior tangible, consider a small Flask
+application with three HTTP endpoints, two utility modules, and one
+data-access layer -- 800 lines of Python across 6 files, of which 782
+lines are non-blank, non-comment code analyzed by the pipeline. Running
+\texttt{cogant\ scan\ -\/-target\ ./flask\_app\ \&\&\ cogant\ extract-static\ \&\&\ cogant\ build-graph\ \&\&\ cogant\ translate\ \&\&\ cogant\ export-all\ -o\ output/}
+on this repository produces a program graph with the following
+characteristics:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Metric & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Source files discovered & 6 \\
+Lines analyzed & 782 / 800 (97.8\%) \\
+\textbf{Nodes} & \textbf{147} \\
+\textbf{Edges} & \textbf{389} \\
+Mean node confidence & 0.91 \\
+Validation status & PASS (0 errors, 3 warnings) \\
+\end{longtable}
+}
+
+The node and edge populations distribute across kinds as follows:
+
+\textbf{Table 1. Node kind distribution (Flask API example).}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Node kind & Count & Percentage \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+FUNCTION & 38 & 25.9\% \\
+VARIABLE & 52 & 35.4\% \\
+TYPE & 11 & 7.5\% \\
+MODULE & 6 & 4.1\% \\
+CONTROLFLOW\_NODE & 18 & 12.2\% \\
+DATA\_STRUCTURE & 7 & 4.8\% \\
+ERRORHANDLER & 5 & 3.4\% \\
+CONSTANT & 6 & 4.1\% \\
+EXTERNAL & 4 & 2.7\% \\
+\end{longtable}
+}
+
+\textbf{Table 2. Edge kind distribution (Flask API example).}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Edge kind & Count & Percentage \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+CALLS & 87 & 22.4\% \\
+USES & 104 & 26.7\% \\
+DEFINES & 62 & 15.9\% \\
+HAS\_TYPE & 48 & 12.3\% \\
+DATA\_FLOW & 34 & 8.7\% \\
+MEMBER\_OF & 29 & 7.5\% \\
+INHERITS & 3 & 0.8\% \\
+Other & 22 & 5.7\% \\
+\end{longtable}
+}
+
+\subsubsection{Example semantic mapping
+output}\label{example-semantic-mapping-output}
+
+During the translation stage, each program-graph node is matched against
+the active rule set and assigned a semantic role with an associated
+confidence score. The following excerpt shows three representative
+mappings from the Flask example:
+
+\begin{verbatim}
+Node: get_users  (kind=FUNCTION, file=routes/users.py:14)
+  Matched rule: rule_fn_def_001
+  Target role:  FUNCTION_DEF
+  Confidence:   0.98  (base=1.0, -0.02 missing docstring penalty)
+  Provenance:   SourceCode
+
+Node: db.session.query  (kind=FUNCTION, file=routes/users.py:22)
+  Matched rule: rule_method_call_001
+  Target role:  METHOD_CALL
+  Confidence:   0.82  (base=0.90, -0.08 receiver type inferred heuristically)
+  Provenance:   Heuristic
+
+Node: User  (kind=TYPE, file=models/user.py:5)
+  Matched rule: rule_type_def_001
+  Target role:  TYPE_DEF
+  Confidence:   1.00
+  Provenance:   SourceCode
+\end{verbatim}
+
+The \texttt{db.session.query} call illustrates how the confidence model
+(Equation \ref{eq:confidence-core} in Section 2) penalizes heuristic
+provenance: the receiver type of \texttt{session} is resolved by import
+tracing rather than explicit annotation, reducing \(\kappa) below 1.0
+and yielding a final confidence of 0.82 in the MEDIUM tier.
+
+\subsubsection{Example state-space
+excerpt}\label{example-state-space-excerpt}
+
+When dynamic traces are available, the state-space compiler produces a
+behavioral model alongside the static graph. The following excerpt shows
+a fragment of the state-space IR for the \texttt{/users} endpoint:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"variables"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"request.method"}\FunctionTok{,} \DataTypeTok{"type"}\FunctionTok{:} \StringTok{"str"}\FunctionTok{,} \DataTypeTok{"domain"}\FunctionTok{:} \OtherTok{[}\StringTok{"GET"}\OtherTok{,} \StringTok{"POST"}\OtherTok{]}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"db\_connected"}\FunctionTok{,}   \DataTypeTok{"type"}\FunctionTok{:} \StringTok{"bool"}\FunctionTok{,} \DataTypeTok{"domain"}\FunctionTok{:} \OtherTok{[}\KeywordTok{true}\OtherTok{,} \KeywordTok{false}\OtherTok{]}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"response\_code"}\FunctionTok{,}  \DataTypeTok{"type"}\FunctionTok{:} \StringTok{"int"}\FunctionTok{,}  \DataTypeTok{"domain"}\FunctionTok{:} \OtherTok{[}\DecValTok{200}\OtherTok{,} \DecValTok{400}\OtherTok{,} \DecValTok{500}\OtherTok{]}\FunctionTok{\}}
+  \OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"actions"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"validate\_input"}\FunctionTok{,} \DataTypeTok{"source"}\FunctionTok{:} \StringTok{"routes/users.py:18"}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"query\_database"}\FunctionTok{,}  \DataTypeTok{"source"}\FunctionTok{:} \StringTok{"routes/users.py:22"}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"format\_response"}\FunctionTok{,} \DataTypeTok{"source"}\FunctionTok{:} \StringTok{"routes/users.py:30"}\FunctionTok{\}}
+  \OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"transitions"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}
+      \DataTypeTok{"from\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"request.method"}\FunctionTok{:} \StringTok{"GET"}\FunctionTok{,} \DataTypeTok{"db\_connected"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{\},}
+      \DataTypeTok{"action"}\FunctionTok{:} \StringTok{"query\_database"}\FunctionTok{,}
+      \DataTypeTok{"to\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"response\_code"}\FunctionTok{:} \DecValTok{200}\FunctionTok{\},}
+      \DataTypeTok{"confidence"}\FunctionTok{:} \FloatTok{0.94}\FunctionTok{,}
+      \DataTypeTok{"tier"}\FunctionTok{:} \StringTok{"STATIC\_PLUS\_RUNTIME"}
+    \FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}
+      \DataTypeTok{"from\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"request.method"}\FunctionTok{:} \StringTok{"POST"}\FunctionTok{,} \DataTypeTok{"db\_connected"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{\},}
+      \DataTypeTok{"action"}\FunctionTok{:} \StringTok{"validate\_input"}\FunctionTok{,}
+      \DataTypeTok{"to\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"response\_code"}\FunctionTok{:} \DecValTok{400}\FunctionTok{\},}
+      \DataTypeTok{"confidence"}\FunctionTok{:} \FloatTok{0.71}\FunctionTok{,}
+      \DataTypeTok{"tier"}\FunctionTok{:} \StringTok{"STATIC\_ONLY"}
+    \FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}
+      \DataTypeTok{"from\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"db\_connected"}\FunctionTok{:} \KeywordTok{false}\FunctionTok{\},}
+      \DataTypeTok{"action"}\FunctionTok{:} \StringTok{"query\_database"}\FunctionTok{,}
+      \DataTypeTok{"to\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"response\_code"}\FunctionTok{:} \DecValTok{500}\FunctionTok{\},}
+      \DataTypeTok{"confidence"}\FunctionTok{:} \FloatTok{0.58}\FunctionTok{,}
+      \DataTypeTok{"tier"}\FunctionTok{:} \StringTok{"RUNTIME\_ONLY"}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Confidence tiers follow the thresholds defined in
+\texttt{determine\_confidence\_tier}: \textbf{STATIC\_PLUS\_RUNTIME}
+(\(c \geq 0.65\), with both static and dynamic evidence) indicates
+corroboration from AST analysis and execution traces;
+\textbf{STATIC\_ONLY} (\(c \geq 0.5\), static evidence only) reflects
+assertions grounded in source structure alone; \textbf{RUNTIME\_ONLY}
+(\(c \geq 0.4\), dynamic evidence only) flags inferences from runtime
+data without static corroboration. A fourth tier,
+\textbf{HUMAN\_REVIEWED} (\(c \geq 0.9\), with human review evidence),
+is available for manually curated mappings.
+
+\subsubsection{Failure modes and graceful
+degradation}\label{failure-modes-and-graceful-degradation}
+
+COGANT is designed so that missing or partial inputs degrade the output
+bundle rather than halt it, and the manuscript records these degradation
+paths explicitly so that downstream consumers can interpret a partial
+run without guessing what was skipped \citep{peng2011reproducible}. Five
+failure modes are worth naming because each has a visible signature in
+the emitted artifacts.
+
+\textbf{No dynamic traces available.} When neither coverage data nor
+execution traces are supplied, \texttt{enrich\_graph()} is a no-op: no
+\texttt{coverage\_hits}, \texttt{branch\_coverage},
+\texttt{call\_count}, \texttt{avg\_duration\_ms}, or
+\texttt{is\_hot\_path} metadata is attached, and the graph's
+\texttt{evidence\_sources} list never acquires
+\texttt{dynamic\_coverage} or \texttt{dynamic\_trace} markers. The
+state-space compiler still runs end-to-end using the semantic mappings
+and static graph alone, but every resulting transition is confined to
+the \texttt{STATIC\_ONLY} tier (or lower), and no transition can be
+promoted to \texttt{STATIC\_PLUS\_RUNTIME}. Downstream code that
+consumes the bundle can identify a purely-static run at a glance by
+checking the evidence source markers on the graph metadata rather than
+scanning individual transitions.
+
+\textbf{Incomplete coverage data.} When coverage is supplied but covers
+only a subset of the project, \texttt{\_enrich\_with\_coverage}
+annotates the matched files only. The enrichment loop walks each
+coverage span, normalizes the reported file path, looks up candidate
+nodes whose path matches, and annotates those whose
+\texttt{source\_range} overlaps the covered line; unmatched files are
+silently skipped with an informational log line, and nodes in unmatched
+files retain no coverage metadata at all. The result is a partially
+enriched graph in which some regions are eligible for tier promotion and
+others are not. Because the enrichment summary returns the number of
+annotated nodes, users can check whether the observed annotation rate
+matches their expectations for the provided coverage input.
+
+\textbf{Translation rules that do not match.} When the active rule set
+fails to produce any mapping for a node -- whether because no rule
+fires, or because all firing rules are pruned during conflict resolution
+-- that node remains outside \texttt{self.mappings} and simply does not
+appear in any \texttt{graph\_fragment\_node\_ids}. The translation
+engine's \texttt{get\_coverage\_report()} reports this directly: the
+returned dictionary contains the total node count, the covered count, a
+two-decimal \texttt{coverage\_percent}, and the sorted list of
+\texttt{uncovered\_node\_ids}. Rather than treat uncovered nodes as an
+error, the engine surfaces them as an explicit gap list so that authors
+can either extend the rule set, hand the gap list to the
+\texttt{ReviewAPI} for curation, or accept the partial mapping for
+downstream Generalized Notation Notation (GNN) export.
+
+\textbf{Fixpoint non-convergence.} The translation engine bounds its
+fixpoint loop at \texttt{max\_iterations\ =\ 10} by default. If a rule
+set is pathological enough to keep emitting new mappings past that bound
+-- for example because two rules can produce mutually triggering
+mappings -- the engine emits a
+\texttt{"Max\ iterations\ reached\ without\ convergence"} warning, stops
+the loop, and proceeds to conflict resolution with whatever mappings it
+has accumulated. The iteration cap therefore guarantees termination even
+for misconfigured rule sets, and the warning in the log gives rule
+authors a clear signal that the cap was hit. Because each iteration also
+writes an \texttt{iteration\_complete} entry into the engine's internal
+match log, the exact per-pass mapping counts are available for diagnosis
+without rerunning the pipeline.
+
+\textbf{Pipeline error tolerance.} The default pipeline configuration
+(\texttt{cogant/py/cogant/config/defaults.py}) marks the
+\texttt{dynamic}, \texttt{translate}, \texttt{state\_space}, and
+\texttt{process} stages with \texttt{skip\_on\_error=True}, while
+structural stages such as \texttt{ingest}, \texttt{static},
+\texttt{graph}, \texttt{export}, and \texttt{validate} keep the stricter
+default \texttt{skip\_on\_error=False}. When an optional stage raises,
+the runner records the error in the bundle, emits a warning, and
+continues to the next stage rather than aborting the run. Downstream
+bundle accessors (\texttt{state\_space\_model}, \texttt{process\_model})
+simply return \texttt{None} for stages that did not produce output, so a
+downstream consumer can detect a skipped stage by checking its accessor
+rather than by parsing log text. The net effect is that a partial bundle
+-- for example, a program graph and semantic mappings without a
+state-space model -- remains a first-class artifact with a clear
+provenance trail, rather than an opaque failure.
+
+\subsection{Rust layer}\label{rust-layer}
+
+Native crates (\texttt{cogant-core}, \texttt{cogant-graph},
+\texttt{cogant-translate}, \texttt{cogant-statespace},
+\texttt{cogant-gnn}, \texttt{cogant-ffi}, and related packages)
+implement typed graph operations and export formatting. When PyO3
+bindings are active, Python delegates heavy graph work through
+\texttt{cogant-ffi}. Where bindings are not yet wired for a code path,
+Python fallbacks apply; see SPEC \textbf{Implementation status} for the
+current boundary.
+
+\newpage
+
+\section{Conclusion}\label{conclusion}
+
+COGANT frames codebase analysis as a pipeline from ingestion through a
+program graph IR to \textbf{Generalized Notation Notation (GNN)}
+exports, with explicit confidence and provenance so that learning
+systems can treat analysis noise as data rather than as hidden failure
+modes. The Python layer provides session and pipeline APIs, a bundle
+abstraction, CLI, review tooling, and HTML reporting; the Rust layer
+concentrates graph mechanics and export formatting under crate
+boundaries described in \texttt{../cogant/docs/ARCHITECTURE.md}.
+
+\subsection{Shipped Capabilities}\label{shipped-capabilities}
+
+Several capabilities ship in the current v0.1.x line and together define
+the behaviour that downstream users can rely on:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Fixpoint translation engine.} The shipped
+  \texttt{TranslationEngine} re-applies every registered rule on each
+  pass, terminates as soon as a pass produces zero new mappings, and
+  bounds pathological rule sets with a configurable iteration cap. Each
+  iteration boundary is recorded in the internal match log, so
+  convergence can be audited after the fact.
+\item
+  \textbf{Rule priority and conflict resolution.} Overlapping mappings
+  are reconciled by confidence score: when two mappings cover
+  overlapping \texttt{graph\_fragment\_node\_ids}, the engine retains
+  the higher-confidence mapping and records a
+  \texttt{conflict\_resolved} event naming the winner, the loser, and
+  the overlap. Rule priority is therefore expressed through the
+  confidence model rather than a separate ordering table, and
+  \texttt{translate\_with\_confidence()} re-scores and re-resolves so
+  that priority shifts from the \texttt{ConfidenceModel} are honoured.
+\item
+  \textbf{Dynamic enrichment from coverage and traces.} When
+  \texttt{.coverage} SQLite or Cobertura XML inputs and Chrome DevTools
+  traces are supplied, \texttt{enrich\_graph()} annotates nodes with
+  \texttt{coverage\_hits}, \texttt{branch\_coverage},
+  \texttt{call\_count}, \texttt{avg\_duration\_ms}, and
+  \texttt{is\_hot\_path} metadata, and appends
+  \texttt{dynamic\_coverage} and \texttt{dynamic\_trace} markers to the
+  program graph's evidence sources.
+\item
+  \textbf{Confidence tier promotion.} Mappings whose evidence set
+  acquires dynamic markers become eligible for promotion from
+  \texttt{STATIC\_ONLY} to \texttt{STATIC\_PLUS\_RUNTIME}, and hot-path
+  and branch-coverage metadata raise the underlying score through the
+  diversity bonus in Equation \ref{eq:confidence-core}. A purely-static
+  run remains a first-class bundle; it is simply marked as such on the
+  graph metadata.
+\item
+  \textbf{Ten-stage pipeline architecture.} The runner executes an
+  ordered DAG (ingest, static, normalize, graph, translate, state space,
+  process, export, validate, and report), with
+  \texttt{skip\_on\_error=True} on optional stages so that a missing
+  dynamic input or a pathological rule set produces a partial but
+  well-formed Generalized Notation Notation bundle rather than an opaque
+  failure.
+\end{enumerate}
+
+\textbf{Limitations} follow the honest scope in
+\texttt{../cogant/docs/SPEC.md}: multi-language support beyond Python is
+largely roadmap; translation rules and state-space extraction are
+\textbf{partial} and repository-dependent; native acceleration is
+staged. Users should validate exports on their own corpora before
+trusting downstream model metrics.
+
+\textbf{Intended users} include researchers building datasets from
+open-source repositories, teams prototyping Active Inference models or
+graph neural network training pipelines over program-graph data who need
+a single export contract, and engineers extending the system via
+\texttt{../cogant/docs/PLUGIN\_API.md}.
+
+\textbf{Validation} in the software-engineering sense is split: the
+repository's verification report enumerates implemented modules and
+entry points; scientific validation of model quality remains the
+responsibility of downstream training and evaluation code.
+
+\subsection{Roadmap and Future
+Extensions}\label{roadmap-and-future-extensions}
+
+Several concrete directions extend the current system:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Multi-language parsers.} The v0.1.x front end targets Python;
+  adding parsers for JavaScript/TypeScript, Java, and Go would cover the
+  majority of open-source ML-relevant repositories. Each parser
+  implements the plugin interface documented in
+  \texttt{../cogant/docs/PLUGIN\_API.md}, so language additions do not
+  require changes to the core IR or export pipeline.
+\item
+  \textbf{Rust acceleration of critical paths.} The native crate layer
+  (\texttt{cogant-graph}, \texttt{cogant-translate}) already defines
+  typed graph operations. Wiring PyO3 bindings for the hot paths ---
+  deduplication, rule matching, and Generalized Notation Notation
+  section/tensor packing in \texttt{cogant-gnn} --- would reduce
+  end-to-end latency for large repositories from minutes to seconds,
+  based on preliminary profiling of the Python fallback implementations.
+\item
+  \textbf{Incremental re-analysis.} Currently the pipeline processes a
+  full repository snapshot on each invocation. An incremental mode that
+  accepts a Git diff and updates only affected subgraphs would enable
+  integration into CI/CD workflows where per-commit turnaround matters.
+  The stable-identifier scheme already supports cross-run node matching;
+  the missing piece is a dependency tracker that invalidates downstream
+  IRs when upstream nodes change.
+\item
+  \textbf{LLM-assisted rule discovery.} Translation rules are currently
+  hand-authored. A semi-automated workflow could present a large
+  language model with unannotated graph fragments and ask it to propose
+  candidate rules, which a human reviewer then accepts, edits, or
+  rejects via the existing \texttt{ReviewAPI}. This combines the
+  pattern-recognition strength of LLMs with the auditability of
+  declarative rules.
+\item
+  \textbf{Cross-repository graph linking.} When multiple repositories
+  share interfaces (for example, a library and its consumers), linking
+  their program graphs at call boundaries produces a richer training
+  signal for tasks such as API misuse detection and cross-project code
+  search. The graph homomorphism property defined in Section 2 provides
+  the formal basis for identifying shared interface nodes across
+  independently analyzed repositories.
+\end{enumerate}
+
+\newpage
+
+\section{Experimental setup}\label{experimental-setup}
+
+\subsection{Environment}\label{environment}
+
+\textbf{Requirements}: Python 3.11 or newer (enforced in
+\texttt{pyproject.toml}), plus an optional Rust toolchain
+(\texttt{cargo}, stable 1.70+) when building native acceleration crates
+under \texttt{../cogant/rust/}.
+
+From the COGANT package root \href{../cogant/}{\texttt{../cogant/}}
+(where \texttt{pyproject.toml} and \texttt{py/cogant/} live), install
+with \texttt{uv\ sync\ -\/-all-extras}, or
+\texttt{pip\ install\ -e\ ".{[}dev,viz{]}"} /
+\texttt{pip\ install\ -e\ ".{[}all{]}"} as in
+\href{../cogant/GETTING_STARTED.md}{GETTING\_STARTED.md}. Run those
+commands from that directory when working inside this monorepo layout.
+Python sources live under
+\href{../cogant/py/cogant/}{\texttt{../cogant/py/cogant/}}; see the
+package \href{../cogant/README.md}{README.md}.
+
+\subsection{Running the API}\label{running-the-api}
+
+Minimal \textbf{Session} run:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{from}\NormalTok{ cogant }\ImportTok{import}\NormalTok{ Session}
+
+\NormalTok{session }\OperatorTok{=}\NormalTok{ Session.from\_target(}\StringTok{"./path/to/repo"}\NormalTok{)}
+\NormalTok{session.extract\_static()}
+\NormalTok{session.build\_graph()}
+\NormalTok{session.translate\_to\_gnn()}
+\NormalTok{session.export\_all(}\StringTok{"output/"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Minimal \textbf{Pipeline} run:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{from}\NormalTok{ cogant }\ImportTok{import}\NormalTok{ PipelineRunner}
+\ImportTok{from}\NormalTok{ cogant.api.pipeline }\ImportTok{import}\NormalTok{ PipelineConfig}
+
+\NormalTok{runner }\OperatorTok{=}\NormalTok{ PipelineRunner()}
+\NormalTok{config }\OperatorTok{=}\NormalTok{ PipelineConfig(output\_dir}\OperatorTok{=}\StringTok{"output/"}\NormalTok{)}
+\NormalTok{bundle }\OperatorTok{=}\NormalTok{ runner.run(}\StringTok{"./path/to/repo"}\NormalTok{, config)}
+\end{Highlighting}
+\end{Shaded}
+
+Adjust \texttt{PipelineConfig.stages}, \texttt{skip\_stages}, and
+\texttt{plugins} to match the languages and tooling available on the
+machine.
+
+\subsection{Configuration files}\label{configuration-files}
+
+YAML configuration can drive pipeline behavior (paths, stages, plugin
+options). The architecture and SPEC documents describe the configuration
+surface; keep project-specific secrets out of version control.
+
+A minimal pipeline configuration looks like this:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# cogant.config.yaml}
+\FunctionTok{stages}\KeywordTok{:}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ ingest}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ static}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ normalize}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ graph}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ dynamic}\CommentTok{       \# optional; skipped if no coverage/trace inputs}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ translate}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ statespace}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ process}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ export}
+\AttributeTok{  }\KeywordTok{{-}}\AttributeTok{ validate}
+
+\FunctionTok{skip\_stages}\KeywordTok{:}\AttributeTok{ }\KeywordTok{[]}\CommentTok{   \# e.g. ["dynamic"] to force static{-}only runs}
+
+\FunctionTok{plugins}\KeywordTok{:}
+\AttributeTok{  }\FunctionTok{dynamic}\KeywordTok{:}
+\AttributeTok{    }\FunctionTok{coverage\_path}\KeywordTok{:}\AttributeTok{ }\StringTok{"./coverage.xml"}
+\AttributeTok{    }\FunctionTok{trace\_path}\KeywordTok{:}\AttributeTok{ }\StringTok{"./chrome\_trace.json"}
+\AttributeTok{    }\FunctionTok{hot\_path\_percentile}\KeywordTok{:}\AttributeTok{ }\DecValTok{10}
+\AttributeTok{  }\FunctionTok{translate}\KeywordTok{:}
+\AttributeTok{    }\FunctionTok{max\_iterations}\KeywordTok{:}\AttributeTok{ }\DecValTok{10}
+\AttributeTok{    }\FunctionTok{static\_only\_threshold}\KeywordTok{:}\AttributeTok{ }\FloatTok{0.5}
+\AttributeTok{    }\FunctionTok{static\_plus\_runtime\_threshold}\KeywordTok{:}\AttributeTok{ }\FloatTok{0.65}
+
+\FunctionTok{output\_dir}\KeywordTok{:}\AttributeTok{ }\StringTok{"./cogant\_output/"}
+\FunctionTok{verbose}\KeywordTok{:}\AttributeTok{ }\CharTok{true}
+\FunctionTok{dry\_run}\KeywordTok{:}\AttributeTok{ }\CharTok{false}
+\end{Highlighting}
+\end{Shaded}
+
+Each stage key corresponds to a handler in
+\texttt{cogant.api.pipeline.PipelineRunner.stage\_handlers}; plugin
+sub-dictionaries are passed through to the stage at invocation time. The
+threshold keys under \texttt{plugins.translate} mirror the constants
+defined in \texttt{cogant.translate.confidence.ConfidenceModel}, keeping
+the YAML surface and the Python defaults in lockstep.
+
+\subsection{CLI}\label{cli}
+
+Use the \texttt{cogant} CLI for scripted batch runs---see
+\texttt{../cogant/docs/CLI\_GUIDE.md} for the command list that matches
+the installed version.
+
+\subsection{Export targets}\label{export-targets}
+
+The primary export targets are the \textbf{Generalized Notation Notation
+(GNN)} canonical Markdown (\texttt{model.gnn.md}) and the equivalent
+companion JSON files described in
+\texttt{../cogant/docs/GNN\_EXPORT.md}. Optional interop targets
+(GraphML, Parquet) support analysis in Gephi/yEd and DuckDB, and
+optional tensor views for PyTorch Geometric, DGL, or HDF5 can be
+selected when downstream graph neural network training pipelines need to
+consume the program graph as a relational tensor. Ensure the Python
+environment includes optional dependencies for these tensor exports when
+those code paths are used.
+
+\subsection{Python AST parser
+capabilities}\label{python-ast-parser-capabilities}
+
+The v0.1.x front end relies on
+\texttt{cogant.static.parser.PythonASTParser}, which processes Python
+source through the standard-library \texttt{ast} module at the CPython
+version available in the runtime (3.9+ recommended). The parser extracts
+the following construct categories:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Module-level entities}: module docstrings,
+  \texttt{\_\_all\_\_} exports, top-level assignments.
+\item
+  \textbf{Functions and methods}: \texttt{def} and \texttt{async\ def},
+  including signatures with positional, keyword, variadic
+  (\texttt{*args}, \texttt{**kwargs}), and positional-only parameters.
+  Default values are recorded as constant expressions where statically
+  evaluable.
+\item
+  \textbf{Classes}: class definitions, base classes, metaclasses, and
+  the \texttt{\_\_init\_\_} / \texttt{\_\_new\_\_} boundary.
+\item
+  \textbf{Decorators}: \texttt{@staticmethod}, \texttt{@classmethod},
+  \texttt{@property}, \texttt{@dataclass}, and arbitrary user-defined
+  decorators. Decorator arguments are captured as attribute metadata.
+\item
+  \textbf{Type annotations}: PEP 484 / 526 / 604 annotations on function
+  parameters, return types, and variable assignments. Generic subscripts
+  (\texttt{List{[}int{]}}, \texttt{Dict{[}str,\ Any{]}}) are preserved
+  as type strings.
+\item
+  \textbf{Comprehensions and generators}: list, set, dict comprehensions
+  and generator expressions are represented as anonymous FUNCTION nodes
+  with DATA\_FLOW edges to their enclosing scope.
+\item
+  \textbf{Control flow}: \texttt{if}/\texttt{elif}/\texttt{else},
+  \texttt{for}/\texttt{while}/\texttt{else},
+  \texttt{try}/\texttt{except}/\texttt{finally},
+  \texttt{with}/\texttt{async\ with}, and \texttt{match}/\texttt{case}
+  (Python 3.10+) are mapped to CONTROLFLOW\_NODE entities.
+\item
+  \textbf{Imports}: \texttt{import} and \texttt{from\ ...\ import}
+  statements produce MODULE\_IMPORT roles with edges to the resolved
+  module when discoverable on the file system.
+\item
+  \textbf{Constants}: module-level and class-level assignments to
+  \texttt{Final} or ALL\_CAPS names are classified as CONSTANT nodes.
+\end{itemize}
+
+Constructs that require runtime evaluation (for example \texttt{exec},
+\texttt{importlib.import\_module}, or dynamic \texttt{\_\_getattr\_\_})
+are recorded as EXTERNAL nodes with HEURISTIC provenance and
+correspondingly lower confidence.
+
+\subsection{Progressive IR stages}\label{progressive-ir-stages}
+
+Processing advances through six intermediate representations, each
+adding semantic detail atop its predecessor. Table 3 summarizes what
+each stage contributes.
+
+\textbf{Table 3. Progressive IR stages and their contributions.}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.0986}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1268}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2113}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.5634}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Stage
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+IR name
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Key additions
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Typical output size (10K-function repo)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+1 & Repo IR & Raw entities and relationships per file; deduplication;
+merged type info & \textasciitilde15 MB JSON \\
+2 & Program Graph IR & Consolidated directed graph \(G=(V,E)\); stable
+identifiers; confidence and provenance on every node and edge &
+\textasciitilde20 MB JSON \\
+3 & Semantic Mapping IR & Translation rules applied; semantic roles
+assigned; confidence adjusted by rule engine & \textasciitilde22 MB JSON
+(graph + mapping log) \\
+4 & State Space IR & Variables, actions, transitions, observations;
+dynamic traces integrated where available & \textasciitilde5 MB JSON
+(behavioral model) \\
+5 & Process Model IR & Higher-level control patterns (request--response,
+producer--consumer, state machines) & \textasciitilde2 MB JSON \\
+6 & Validation IR & Coverage metrics, confidence distribution, schema
+compliance, consistency checks, reproducibility hashes &
+\textasciitilde1 MB JSON (report) \\
+\end{longtable}
+}
+
+Stages 4 and 5 are \textbf{partial} for many repositories: the
+state-space compiler requires either execution traces or sufficient
+static structure (for example annotated state machines) to produce
+meaningful output. The pipeline tolerates missing stages gracefully; the
+Validation IR records which stages completed and which were skipped.
+
+\subsection{Performance
+characteristics}\label{performance-characteristics}
+
+The architecture targets the following benchmarks on a 4-core machine,
+as specified in \texttt{../cogant/docs/ARCHITECTURE.md}:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Repository size & Target wall-clock time & Memory budget \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+10K functions & \textless{} 30 s & \textless{} 500 MB \\
+100K functions & \textless{} 5 min & \textless{} 2 GB \\
+1M functions & \textless{} 1 hr & \textless{} 2 GB (streaming) \\
+\end{longtable}
+}
+
+These targets assume the Python orchestration layer with Rust
+acceleration on critical paths (graph construction, rule matching, and
+Generalized Notation Notation section/tensor packing in
+\texttt{cogant-gnn}). In the current v0.1.x release, where Rust bindings
+are staged rather than fully wired, Python fallback implementations
+handle graph operations; users should expect roughly 2--3\(\times\)
+slower throughput on repositories above 50K functions until native
+acceleration is enabled.
+
+Parallelism is exploited at multiple stages: file parsing is
+embarrassingly parallel, translation rules are applied concurrently over
+independent subgraphs, and export formatting runs in parallel per output
+format. Incremental caching skips unchanged stages when the input hash
+matches a prior run, which is particularly effective during iterative
+development against a single repository.
+
+\subsection{What to record}\label{what-to-record}
+
+For reproducible experiments, record: COGANT version or commit hash,
+interpreter version, list of stages executed, configuration file
+contents (redacted), input repository commit hash, and random seeds for
+any learned components \textbf{outside} COGANT that consume the exports.
+
+\newpage
+
+\section{Reproducibility}\label{reproducibility}
+
+Reproducible computational research requires version-pinned tools, fixed
+inputs, and documented outputs \citep{peng2011reproducible}. COGANT
+contributes the \textbf{graph-generation} slice of that story: identical
+source trees and identical pipeline configuration should yield identical
+exported bundles modulo declared nondeterminism (for example optional
+neural embeddings if enabled).
+
+\subsection{Version pinning}\label{version-pinning}
+
+Pin:
+
+\begin{itemize}
+\tightlist
+\item
+  The \textbf{COGANT} version (\texttt{pyproject.toml} / package
+  \texttt{\_\_version\_\_}) and Git commit when installing from source.
+\item
+  The \textbf{Python} minor version.
+\item
+  \textbf{Optional} Rust toolchain commit when building native
+  extensions from \texttt{../cogant/rust/}.
+\end{itemize}
+
+\subsection{Artifact layout}\label{artifact-layout}
+
+Pipeline output typically includes JSON for intermediate IRs,
+\textbf{Generalized Notation Notation (GNN)} bundles (canonical
+\texttt{model.gnn.md} plus companion JSON and interop artifacts),
+validation reports, and optional HTML sites. Paths under the chosen
+\texttt{output\_dir} should be treated as disposable but
+\textbf{checksumable}: store hashes alongside published datasets derived
+from COGANT exports when releasing research artifacts.
+
+\subsection{Determinism}\label{determinism}
+
+Parsing and graph construction aim for deterministic ordering on a fixed
+filesystem snapshot. Features that pull in external models (for example
+optional name or documentation embeddings consumed by the Generalized
+Notation Notation exporter) introduce variability unless models and
+seeds are fixed; the Generalized Notation Notation export document
+(\texttt{../cogant/docs/GNN\_EXPORT.md}) calls out embedding dimensions
+and optional behavior.
+
+\subsection{Relation to the template
+repository}\label{relation-to-the-template-repository}
+
+While this project remains outside
+\href{../../../projects/}{\texttt{../../../projects/}}, it is
+\textbf{not} executed by the root \texttt{./run.sh} discovery layer.
+After promotion to
+\href{../../../projects/cogant/}{\texttt{../../../projects/cogant/}}
+with \texttt{src/}, \texttt{tests/}, and \texttt{pyproject.toml} per
+template rules, the standard manuscript validation and PDF stages apply;
+until then, validate Markdown from the template repository root,
+e.g.~\texttt{uv\ run\ python\ -m\ infrastructure.validation.cli\ markdown\ ./projects\_in\_progress/cogant/manuscript/}.
+
+\subsection{Validation gates}\label{validation-gates}
+
+The pipeline enforces quality through three complementary validation
+checkers, each targeting a different failure mode:
+
+\textbf{IntegrityChecker.} Verifies structural soundness of the program
+graph: all edge endpoints reference existing nodes, no unintended
+duplicate nodes exist, orphaned nodes (zero in-degree and zero
+out-degree) are flagged, and self-loops are reported unless explicitly
+allowed by configuration. The checker also ensures that confidence
+scores fall within \([0, 1]\) and that provenance records are non-empty
+for every node and edge. A graph that fails integrity checks receives a
+FAIL validation status; downstream export is blocked.
+
+\textbf{SchemaChecker.} Validates each IR artifact against its JSON
+schema (versioned alongside the COGANT package). Schema violations --
+such as missing required fields, incorrect types, or unknown enum values
+in \texttt{NodeKind} or \texttt{SemanticRole} -- are classified as ERROR
+or FATAL depending on severity. Schema versions are recorded in the
+validation report so that consumers can verify compatibility with their
+import code.
+
+\textbf{ProvenanceChecker.} Audits the provenance chain: every assertion
+in the semantic mapping must trace back to at least one evidence source
+(SourceCode, TypeSystem, ControlFlow, Heuristic, or External). The
+checker flags mappings whose provenance is empty or whose confidence
+score is inconsistent with the declared evidence tier -- for example, a
+STATIC\_PLUS\_RUNTIME tier with no runtime trace evidence. These flags
+appear as warnings rather than errors, since partial provenance is
+expected for heuristic rules.
+
+Together, these gates ensure that exported bundles meet a minimum
+quality bar before reaching downstream models. The thresholds are
+configurable (see \texttt{../cogant/docs/VALIDATION.md}); defaults
+require \(\geq 95\%\) coverage, mean confidence \(\geq 0.85\), and zero
+schema violations.
+
+\subsection{Pipeline checkpoint and resume
+behavior}\label{pipeline-checkpoint-and-resume-behavior}
+
+The pipeline writes a checkpoint file after each successfully completed
+stage. The checkpoint records the stage name, completion timestamp,
+input hash, and output hash. On a subsequent invocation with
+\texttt{-\/-resume} (or \texttt{PipelineConfig.resume\ =\ True}), the
+runner reads the checkpoint file, verifies that the input hash for each
+completed stage still matches the current source tree, and skips stages
+whose outputs are already valid. If a source file has changed, the
+runner invalidates the affected stage and all downstream stages, then
+re-executes from the earliest invalidated point.
+
+Checkpoints are stored as JSON under the configured
+\texttt{output\_dir}:
+
+\begin{verbatim}
+output/
+  .cogant_checkpoint.json
+\end{verbatim}
+
+This mechanism is particularly useful during iterative development:
+after an initial full run, changing a single source file triggers only
+re-parsing, graph construction, and downstream stages for the affected
+subgraph, rather than re-analyzing the entire repository.
+
+\subsection{Output manifest structure}\label{output-manifest-structure}
+
+Each pipeline run produces a manifest file (\texttt{manifest.json})
+alongside the exported artifacts. The manifest provides a
+machine-readable inventory of everything the run produced:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"cogant\_version"}\FunctionTok{:} \StringTok{"0.1.0"}\FunctionTok{,}
+  \DataTypeTok{"run\_id"}\FunctionTok{:} \StringTok{"run\_20260408\_143012"}\FunctionTok{,}
+  \DataTypeTok{"timestamp"}\FunctionTok{:} \StringTok{"2026{-}04{-}08T14:30:12Z"}\FunctionTok{,}
+  \DataTypeTok{"input\_hash"}\FunctionTok{:} \StringTok{"sha256:a1b2c3..."}\FunctionTok{,}
+  \DataTypeTok{"config\_hash"}\FunctionTok{:} \StringTok{"sha256:d4e5f6..."}\FunctionTok{,}
+  \DataTypeTok{"stages\_completed"}\FunctionTok{:} \OtherTok{[}\StringTok{"discovery"}\OtherTok{,} \StringTok{"parsing"}\OtherTok{,} \StringTok{"repo\_ir"}\OtherTok{,} \StringTok{"graph"}\OtherTok{,}
+                        \StringTok{"translate"}\OtherTok{,} \StringTok{"validate"}\OtherTok{,} \StringTok{"export"}\OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"stages\_skipped"}\FunctionTok{:} \OtherTok{[}\StringTok{"statespace"}\OtherTok{,} \StringTok{"process"}\OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"artifacts"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}\DataTypeTok{"path"}\FunctionTok{:} \StringTok{"model.gnn.json"}\FunctionTok{,} \DataTypeTok{"format"}\FunctionTok{:} \StringTok{"json"}\FunctionTok{,} \DataTypeTok{"size\_bytes"}\FunctionTok{:} \DecValTok{2048576}\FunctionTok{,}
+     \DataTypeTok{"hash"}\FunctionTok{:} \StringTok{"sha256:..."}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"path"}\FunctionTok{:} \StringTok{"model.pyg.pt"}\FunctionTok{,}   \DataTypeTok{"format"}\FunctionTok{:} \StringTok{"pytorch\_geometric"}\FunctionTok{,} \DataTypeTok{"size\_bytes"}\FunctionTok{:} \DecValTok{1024000}\FunctionTok{,}
+     \DataTypeTok{"hash"}\FunctionTok{:} \StringTok{"sha256:..."}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"path"}\FunctionTok{:} \StringTok{"validation\_report.json"}\FunctionTok{,} \DataTypeTok{"format"}\FunctionTok{:} \StringTok{"json"}\FunctionTok{,} \DataTypeTok{"size\_bytes"}\FunctionTok{:} \DecValTok{8192}\FunctionTok{,}
+     \DataTypeTok{"hash"}\FunctionTok{:} \StringTok{"sha256:..."}\FunctionTok{\}}
+  \OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"statistics"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"nodes"}\FunctionTok{:} \DecValTok{320}\FunctionTok{,}
+    \DataTypeTok{"edges"}\FunctionTok{:} \DecValTok{1250}\FunctionTok{,}
+    \DataTypeTok{"mean\_confidence"}\FunctionTok{:} \FloatTok{0.92}\FunctionTok{,}
+    \DataTypeTok{"validation\_status"}\FunctionTok{:} \StringTok{"PASS"}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Storing per-artifact SHA-256 hashes enables consumers to verify that
+exported bundles have not been modified after generation. When
+publishing datasets derived from COGANT exports, including the manifest
+alongside the data satisfies the reproducibility requirements outlined
+by \citep{peng2011reproducible}: any researcher with the same source
+tree, COGANT version, and configuration can regenerate the artifacts and
+compare hashes.
+
+\subsection{Data ethics and licensing}\label{data-ethics-and-licensing}
+
+Exported graphs can contain identifiers and comments from source code.
+Redistribution of derived graphs must respect the licenses of input
+repositories and organizational data policies.
+
+\newpage
+
+\section{Scope and related work}\label{scope-and-related-work}
+
+\subsection{Positioning}\label{positioning}
+
+\textbf{Machine learning for big code} surveys cover naturalness,
+representation learning, and task taxonomy \citep{allamanis2018survey}.
+COGANT contributes \textbf{infrastructure}: a documented IR, pipeline,
+and export contract rather than a new benchmark or model architecture.
+
+\textbf{Graph neural networks} unify message-passing frameworks for
+relational data \citep{wu2020comprehensive, scarselli2009graph}.
+Although COGANT's primary output is the Active Inference Institute's
+Generalized Notation Notation, its program graph can be materialised as
+optional tensor views compatible with these frameworks (PyG, DGL) so
+that graph-neural-network model papers can cite a specific tensor
+layout.
+
+\textbf{Code property graphs} and related security-oriented graph
+constructions show how to merge syntactic and semantic edges for
+analysis \citep{yamaguchi2014modeling}. COGANT's program graph is
+cognate but emphasizes \textbf{ML export}, confidence scoring, and
+multi-stage IR refinement.
+
+\subsection{Related tool categories}\label{related-tool-categories}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Compiler and LLVM IRs} --- richer semantics, heavier
+  toolchain; COGANT favors lightweight extraction for dataset building.
+\item
+  \textbf{SCA and linters} --- rule enforcement focus; COGANT focuses on
+  graph generation for downstream learning.
+\item
+  \textbf{Neural code models} (code2vec, CodeBERT, etc.) --- often
+  consume tokens or AST paths; COGANT supplies \textbf{explicit program
+  graphs} that graph-neural-network-centric research can ingest
+  directly.
+\end{itemize}
+
+\subsection{Program analysis for ML}\label{program-analysis-for-ml}
+
+Several systems address the intersection of program analysis and machine
+learning that COGANT operates in:
+
+\textbf{code2seq and code2vec} \citep{alon2019code2vec} represent
+programs as sets of AST paths between terminal nodes. These path-based
+representations are effective for method naming and code summarization
+but discard the full graph topology that graph-neural-network-based
+models exploit. COGANT preserves the complete program graph ---
+including control-flow and data-flow edges --- and can export it in
+tensor form, enabling downstream architectures that reason over richer
+relational structure.
+
+\textbf{Gated Graph Neural Networks (GGNN)} \citep{li2016gated}
+introduced gated recurrent propagation for graph-structured program
+representations, demonstrating strong results on variable misuse
+detection and other code tasks. COGANT's export contract (PyG
+\texttt{Data} objects with typed \texttt{edge\_index} and
+\texttt{edge\_attr}) is directly compatible with GGNN-style models; the
+kind and role indices provide the discrete node and edge types that
+typed message-passing layers require.
+
+\textbf{CodeQL} (Semmle/GitHub) provides a declarative query language
+over relational representations of code. While CodeQL excels at security
+analysis with hand-written queries, its outputs are query results rather
+than tensor-ready graph bundles. COGANT occupies the complementary
+niche: it produces the graph data that learned models consume, and can
+ingest CodeQL query results as an additional evidence source feeding the
+confidence model.
+
+\textbf{CodeBERT} \citep{feng2020codebert} and related pre-trained
+models operate at the token level, learning representations from natural
+language and code jointly. These models are complementary to COGANT's
+graph-centric approach: CodeBERT embeddings could serve as optional node
+features in COGANT's Generalized Notation Notation (GNN) export (the
+export schema already reserves dimensions for text embeddings as
+documented in \texttt{../cogant/docs/GNN\_EXPORT.md}).
+
+\subsubsection{Feature matrix: COGANT vs.~related
+tools}\label{feature-matrix-cogant-vs.-related-tools}
+
+The following matrix contrasts COGANT's capabilities with the related
+tools discussed in this section. Entries marked ``✓'' indicate
+first-class support; ``partial'' indicates limited or indirect support;
+``---'' indicates the feature is out of scope for that tool.
+
+\textbf{Table 4. Feature comparison of program-to-model toolchains.}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lccccc@{}}
+\toprule\noalign{}
+Feature & COGANT & code2vec & GGNN & CodeQL & CodeBERT \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Full program graph (AST + CFG + DFG) & ✓ & --- & input-only & ✓ & --- \\
+Typed node/edge taxonomy & ✓ & --- & partial & ✓ & --- \\
+Confidence scoring per assertion & ✓ & --- & --- & --- & --- \\
+Provenance tracking & ✓ & --- & --- & partial & --- \\
+State-space extraction & ✓ & --- & --- & --- & --- \\
+Temporal regime classification & ✓ & --- & --- & --- & --- \\
+Dynamic enrichment (coverage, traces) & ✓ & --- & --- & partial & --- \\
+Generalized Notation Notation output & ✓ & --- & --- & --- & --- \\
+Tensor export (PyG, DGL, HDF5) & ✓ & partial & input-only & --- & --- \\
+Pluggable translation rules & ✓ & --- & --- & ✓ & --- \\
+Human review loop & ✓ & --- & --- & partial & --- \\
+Multi-language front-ends & roadmap & ✓ & --- & ✓ & ✓ \\
+\end{longtable}
+}
+
+COGANT is distinct from the other toolchains in three ways: first, it
+explicitly models uncertainty through confidence tiers tied to evidence
+provenance; second, it produces a structured Active Inference notation
+as its primary output rather than an opaque tensor; and third, it
+composes static and dynamic evidence in a single pipeline rather than
+specializing to one.
+
+\subsection{Active inference and program
+behavior}\label{active-inference-and-program-behavior}
+
+The state-space IR in COGANT's pipeline (states, actions, transitions,
+observations) shares structural parallels with \textbf{active inference}
+formulations \citep{friston2010free}, where an agent maintains beliefs
+about hidden states and selects actions to minimize prediction error. In
+the program analysis context, the ``agent'' is the analysis pipeline
+itself: it observes code artifacts, maintains beliefs about program
+behavior (the state-space model), and refines those beliefs as new
+evidence (dynamic traces, coverage data) arrives.
+
+This connection is analogical: the \texttt{ConfidenceModel} in
+\texttt{../cogant/py/cogant/translate/confidence.py} aggregates evidence
+and penalties in a way that suggests belief revision, but it is not a
+Bayesian posterior. Future work could formalize a tighter link by
+casting rule application as variational inference, where a fixpoint
+would represent an approximate posterior over program semantics.
+
+\subsection{Boundaries}\label{boundaries}
+
+COGANT does not subsume formal verification, interactive theorem
+proving, or full interprocedural pointer analysis unless implemented as
+explicit future stages. The SPEC marks Rust acceleration and additional
+parsers as staged; the manuscript should be read together with that
+table for up-to-date scope.
+
+\subsection{Forward compatibility}\label{forward-compatibility}
+
+Promoting COGANT into
+\href{../../../projects/}{\texttt{../../../projects/}} integrates
+manuscript PDF rendering with the template's validation gates.
+Cross-references in this folder use paths \textbf{relative to these
+Markdown files} (for example
+\href{../cogant/docs/}{\texttt{../cogant/docs/}}) so links stay stable
+when the tree moves.
+
+\newpage
+
+\section{Manuscript Syntax Reference
+(COGANT)}\label{manuscript-syntax-reference-cogant}
+
+Formatting conventions for Markdown in this folder. For the full
+rendering contract, see the template exemplar
+\href{../../../projects/code_project/manuscript/SYNTAX.md}{\texttt{projects/code\_project/manuscript/SYNTAX.md}}.
+
+\subsection{Citations}\label{citations}
+
+Use Pandoc cite syntax; keys must exist in \texttt{references.bib}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{[}\OtherTok{@allamanis2018survey}\CommentTok{]}
+
+\CommentTok{[}\OtherTok{@allamanis2018survey; @wu2020comprehensive}\CommentTok{]}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Equations}\label{equations}
+
+Use LaTeX \texttt{equation} with \texttt{\textbackslash{}label} /
+\texttt{\textbackslash{}ref} as documented in the code\_project SYNTAX,
+or pandoc-crossref attributes where the pipeline enables them.
+
+\subsection{Figures}\label{figures}
+
+If you add figures, place assets where the future project
+\texttt{output/} layout can resolve them (typically \texttt{../figures/}
+after promotion to \texttt{projects/cogant/}). Use explicit relative
+paths from the rendering contract described in
+\texttt{infrastructure/rendering/AGENTS.md}.
+
+\subsection{Section files}\label{section-files}
+
+Numeric prefixes \texttt{00\_}--\texttt{09\_} are combined in
+stem-sorted order by
+\texttt{infrastructure/rendering/manuscript\_discovery.py}. Files named
+\texttt{SYNTAX.md} sort in the \textbf{other} bucket (after main
+sections, before \texttt{99\_*} if present).
+
+\subsection{Cross-references to the
+package}\label{cross-references-to-the-package}
+
+Prefer \textbf{relative} paths from this folder to the package tree,
+e.g.~\href{../cogant/docs/ARCHITECTURE.md}{\texttt{../cogant/docs/ARCHITECTURE.md}},
+so links work in the editor and in Git without hard-coding the monorepo
+path.
+
+\subsection{See also}\label{see-also}
+
+\begin{itemize}
+\tightlist
+\item
+  \href{AGENTS.md}{\texttt{AGENTS.md}} --- editor protocol for this
+  folder
+\item
+  \href{README.md}{\texttt{README.md}} --- orientation and render notes
+\end{itemize}
+
+
+
+\clearpage
+
+\bibliography{references}
+\end{document}

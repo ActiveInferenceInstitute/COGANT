@@ -1,0 +1,307 @@
+This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex)
+ \write18 enabled.
+entering extended mode
+(./_combined_manuscript.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2025/01/22 v1.4n Standard LaTeX document class
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/size10.clo))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/xcolor/xcolor.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-def/xetex.def)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amstext.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsgen.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsbsy.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsopn.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/amssymb.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/amsfonts.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/generic/iftex/iftex.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/unicode-math/unicode-math.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/l3kernel/expl3.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/l3backend/l3backend-xetex.def))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/unicode-math/unicode-math-xetex.s
+ty (/usr/local/texlive/2026/texmf-dist/tex/latex/l3packages/xparse/xparse.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/l3packages/l3keys2e/l3keys2e.sty)
+ (/usr/local/texlive/2026/texmf-dist/tex/latex/fontspec/fontspec.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/fontspec/fontspec-xetex.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/fontenc.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/fontspec/fontspec.cfg)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/fix-cm.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/ts1enc.def))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/unicode-math/unicode-math-table.t
+ex))) (/usr/local/texlive/2026/texmf-dist/tex/latex/upquote/upquote.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/textcomp.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/microtype/microtype.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/keyval.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/etoolbox/etoolbox.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/microtype/microtype-xetex.def)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/microtype/microtype.cfg))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/parskip/parskip.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/kvoptions/kvoptions.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/kvsetkeys/kvsetkeys.sty)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/fancyvrb/fancyvrb.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/tools/longtable.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/booktabs/booktabs.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/tools/array.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/tools/calc.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/footnotehyper/footnotehyper.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/natbib/natbib.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/bookmark/bookmark.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/hyperref/hyperref.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pdfescape/pdfescape.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/infwarerr/infwarerr.sty)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/hycolor/hycolor.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/hyperref/nameref.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/refcount/refcount.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/gettitlestring/gettitlestring.s
+ty)) (/usr/local/texlive/2026/texmf-dist/tex/generic/stringenc/stringenc.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/hyperref/pd1enc.def)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/intcalc/intcalc.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/hyperref/puenc.def)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/url/url.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/generic/bitset/bitset.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/hyperref/hxetex.def
+(/usr/local/texlive/2026/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
+
+(/usr/local/texlive/2026/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty
+))) (/usr/local/texlive/2026/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/xurl/xurl.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amscls/amsthm.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/geometry/geometry.sty
+(/usr/local/texlive/2026/texmf-dist/tex/generic/iftex/ifvtex.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/float/float.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphicx.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphics.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/trig.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/graphics.cfg)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/algorithm2e/algorithm2e.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/ifthen.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/ifoddpage/ifoddpage.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/tools/xspace.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/relsize/relsize.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/listings/listings.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/listings/lstpatch.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/listings/lstmisc.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/listings/listings.cfg))
+==> First Aid for listings.sty no longer applied!
+    Expected:
+        2024/09/23 1.10c (Carsten Heinz)
+    but found:
+        2025/11/14 1.11b (Carsten Heinz)
+    so I'm assuming it got fixed.
+(/usr/local/texlive/2026/texmf-dist/tex/latex/siunitx/siunitx.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/translations/translations.sty)
+
+Package siunitx Warning: Option "binary-units" has been removed in this
+(siunitx)                release.
+
+) (/usr/local/texlive/2026/texmf-dist/tex/latex/cleveref/cleveref.sty)
+==> First Aid for cleveref.sty applied!
+(./_combined_manuscript.aux)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/microtype/mt-LatinModernRoman.cfg
+)
+*geometry* driver: auto-detecting
+*geometry* detected driver: xetex
+
+(/usr/local/texlive/2026/texmf-dist/tex/latex/translations/translations-basic-d
+ictionary-english.trsl)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/microtype/mt-msa.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/microtype/mt-msb.cfg)
+(./_combined_manuscript.toc [1] [2]) [3] [4] [5] [6]
+
+! LaTeX Error: Bad math environment delimiter.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.371 ...i) is accepted only when every edge in \(
+                                                  G_1\) has a corresponding
+[7] [8] [9]
+
+! LaTeX Error: Bad math environment delimiter.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.549 ...d), \(\kappa) is parser certainty, and \(
+                                                  \pi)
+! Missing $ inserted.
+<inserted text> 
+                $
+l.555 
+      
+
+Overfull \hbox (255.11713pt too wide) in paragraph at lines 548--555
+[]\TU/lmr/m/n/10 Here $[]$ is the mean evidence confidence, $[][]$ is the diver
+sity bonus (bounded), $[][][][][][][][][][][][][][][][][][][][] [][][][][][][][
+][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]
+[][][][] []
+
+Overfull \hbox (693.40213pt too wide) in paragraph at lines 548--555
+[][][][][][][][][][][][][][][][] [] [][][][] [] [][][][][][][][][][][][][][][][
+][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]
+[][][][][][][][] [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]
+[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][
+][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]
+[][][][][][]$ 
+[10]
+Overfull \hbox (43.02739pt too wide) in paragraph at lines 628--649
+[]\TU/lmr/m/n/10 When coverage and traces are available, \TU/lmtt/m/n/10 enrich
+_graph() \TU/lmr/m/n/10 in \TU/lmtt/m/n/10 ../cogant/py/cogant/dynamic/enrichme
+nt.py
+[11] [12] [13]
+Overfull \hbox (7.4683pt too wide) in paragraph at lines 787--793
+\TU/lmr/m/n/10 The CLI entry point (\TU/lmtt/m/n/10 cogant.cli.main\TU/lmr/m/n/
+10 ) implements commands such as \TU/lmtt/m/n/10 init\TU/lmr/m/n/10 , \TU/lmtt/
+m/n/10 scan\TU/lmr/m/n/10 , \TU/lmtt/m/n/10 extract-static\TU/lmr/m/n/10 ,
+[14]
+Underfull \hbox (badness 10000) in paragraph at lines 832--839
+\TU/lmtt/m/n/10 --target ./flask_app && cogant extract-static && cogant build-g
+raph && cogant
+ [15]
+! Missing $ inserted.
+<inserted text> 
+                $
+l.935 
+      
+[16]
+Overfull \hbox (59.93037pt too wide) in paragraph at lines 983--993
+[]\TU/lmr/m/n/10 Confidence tiers follow the thresholds defined in \TU/lmtt/m/n
+/10 determine_confidence_tier\TU/lmr/m/n/10 : \TU/lmr/bx/n/10 STATIC_PLUS_RUNTI
+ME
+[17]
+Underfull \hbox (badness 1107) in paragraph at lines 1004--1018
+[]\TU/lmr/bx/n/10 No dynamic traces available. \TU/lmr/m/n/10 When neither cove
+rage data nor execution traces are
+
+Overfull \hbox (32.65211pt too wide) in paragraph at lines 1060--1076
+[]\TU/lmr/bx/n/10 Pipeline error tolerance. \TU/lmr/m/n/10 The default pipeline
+ configuration (\TU/lmtt/m/n/10 cogant/py/cogant/config/defaults.py\TU/lmr/m/n/
+10 )
+[18]
+Overfull \hbox (1.34338pt too wide) in paragraph at lines 1079--1087
+\TU/lmr/m/n/10 Native crates (\TU/lmtt/m/n/10 cogant-core\TU/lmr/m/n/10 , \TU/l
+mtt/m/n/10 cogant-graph\TU/lmr/m/n/10 , \TU/lmtt/m/n/10 cogant-translate\TU/lmr
+/m/n/10 , \TU/lmtt/m/n/10 cogant-statespace\TU/lmr/m/n/10 , \TU/lmtt/m/n/10 cog
+ant-gnn\TU/lmr/m/n/10 ,
+[19]
+Underfull \hbox (badness 1342) in paragraph at lines 1160--1165
+\TU/lmr/m/n/10 graph data who need a single export contract, and engineers exte
+nding the system via
+[20]
+Underfull \hbox (badness 1418) in paragraph at lines 1179--1186
+\TU/lmr/m/n/10 JavaScript/TypeScript, Java, and Go would cover the majority of 
+open-source ML-
+
+Underfull \hbox (badness 1931) in paragraph at lines 1179--1186
+\TU/lmr/m/n/10 relevant repositories. Each parser implements the plugin interfa
+ce documented in
+
+Underfull \hbox (badness 2903) in paragraph at lines 1186--1194
+[]\TU/lmr/bx/n/10 Rust acceleration of critical paths. \TU/lmr/m/n/10 The nativ
+e crate layer (\TU/lmtt/m/n/10 cogant-graph\TU/lmr/m/n/10 ,
+
+Underfull \hbox (badness 1189) in paragraph at lines 1186--1194
+\TU/lmtt/m/n/10 cogant-translate\TU/lmr/m/n/10 ) already defines typed graph op
+erations. Wiring PyO3 bindings
+[21]
+Underfull \hbox (badness 1721) in paragraph at lines 1230--1240
+\TU/lmr/m/n/10 install with \TU/lmtt/m/n/10 uv sync --all-extras\TU/lmr/m/n/10 
+, or \TU/lmtt/m/n/10 pip install -e ".[dev,viz]" \TU/lmr/m/n/10 / \TU/lmtt/m/n/
+10 pip install -e
+[22]
+Overfull \hbox (11.52539pt too wide) in paragraph at lines 1315--1321
+[]\TU/lmr/m/n/10 Each stage key corresponds to a handler in \TU/lmtt/m/n/10 cog
+ant.api.pipeline.PipelineRunner.stage_handlers\TU/lmr/m/n/10 ;
+
+Overfull \hbox (21.86537pt too wide) in paragraph at lines 1315--1321
+\TU/lmtt/m/n/10 plugins.translate \TU/lmr/m/n/10 mirror the constants defined i
+n \TU/lmtt/m/n/10 cogant.translate.confidence.ConfidenceModel\TU/lmr/m/n/10 ,
+
+Underfull \hbox (badness 1838) in paragraph at lines 1330--1340
+\TU/lmr/m/n/10 The primary export targets are the \TU/lmr/bx/n/10 Generalized N
+otation Notation (GNN) \TU/lmr/m/n/10 canon-
+
+Underfull \hbox (badness 2894) in paragraph at lines 1330--1340
+\TU/lmr/m/n/10 ical Markdown (\TU/lmtt/m/n/10 model.gnn.md\TU/lmr/m/n/10 ) and 
+the equivalent companion JSON files described in
+
+Underfull \hbox (badness 2302) in paragraph at lines 1330--1340
+\TU/lmtt/m/n/10 ../cogant/docs/GNN_EXPORT.md\TU/lmr/m/n/10 . Optional interop t
+argets (GraphML, Parquet) support
+[23] [24]
+Underfull \hbox (badness 1622) in paragraph at lines 1453--1455
+\TU/lmr/m/n/10 The architecture targets the following benchmarks on a 4-core ma
+chine, as specified in
+[25] [26] [27] [28] [29] [30]
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+
+Overfull \hbox (34.21552pt too wide) in alignment at lines 1757--1761
+ [] [] [] [] [] [] 
+
+Overfull \hbox (34.21552pt too wide) in alignment at lines 1761--1763
+ [] [] [] [] [] [] 
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+Missing character: There is no ✓ (U+2713) in font [lmroman10-regular]:mapping=t
+ex-text;!
+
+Overfull \hbox (34.21552pt too wide) in alignment at lines 1763--1776
+ [] [] [] [] [] [] 
+
+Overfull \hbox (32.58038pt too wide) in paragraph at lines 1798--1804
+[]\TU/lmr/m/n/10 This connection is analogical: the \TU/lmtt/m/n/10 ConfidenceM
+odel \TU/lmr/m/n/10 in \TU/lmtt/m/n/10 ../cogant/py/cogant/translate/confidence
+.py
+[31] [32]
+Overfull \hbox (96.58539pt too wide) in paragraph at lines 1860--1865
+\TU/lmr/m/n/10 Numeric prefixes \TU/lmtt/m/n/10 00_\TU/lmr/m/n/10 –\TU/lmtt/m/n
+/10 09_ \TU/lmr/m/n/10 are combined in stem-sorted order by \TU/lmtt/m/n/10 inf
+rastructure/rendering/manuscript_discovery.py\TU/lmr/m/n/10 .
+[33] (./_combined_manuscript.bbl) [34] (./_combined_manuscript.aux) )
+(see the transcript file for additional information)
+Output written on _combined_manuscript.pdf (34 pages).
+Transcript written on _combined_manuscript.log.

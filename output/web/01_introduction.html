@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>01_introduction</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+<h1 id="introduction-and-scope">Introduction and Scope</h1>
+<p>Machine learning on source code has matured alongside static
+analysis: both need structured representations of programs, but learning
+pipelines additionally need fixed feature layouts, batchable graphs, and
+reproducible exports <span class="citation"
+data-cites="allamanis2018survey">[@allamanis2018survey]</span>. COGANT
+addresses that gap by making the path from repository checkout to
+<strong>Generalized Notation Notation (GNN) bundles</strong> explicit,
+inspectable, and configurable.</p>
+<h2 id="terminology-gnn-in-this-manuscript">Terminology: “GNN” in this
+manuscript</h2>
+<p>In this manuscript, <strong>GNN</strong> refers to the Active
+Inference Institute’s <strong>Generalized Notation Notation</strong> (<a
+href="https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation">repository</a>)
+<span class="citation"
+data-cites="friedman2024gnn">[@friedman2024gnn]</span>, a structured
+notation for state-space and process models—<em>not</em> graph neural
+networks. COGANT translates source code into this notation, producing
+program-graph and state-space artifacts (state space, observation
+modalities, actions/policies, likelihood structure, preferences, time
+settings, parameterization) that downstream tools can consume. Those
+downstream tools include graph neural network training pipelines, which
+can ingest the exported tensor views of the program graph, but such
+neural networks are a <em>consumer</em> of COGANT’s output, not its
+output format. Where the manuscript discusses graph neural networks as
+related work, it uses the phrase “graph neural networks” in full; the
+acronym GNN always refers to Generalized Notation Notation.</p>
+<h2 id="problem">Problem</h2>
+<p>A research or engineering group typically has:</p>
+<ul>
+<li><strong>Source code</strong> in one or more languages.</li>
+<li><strong>Analysis goals</strong> that may mix classical queries (who
+calls whom?) with learned models (bug detection, retrieval,
+summarization).</li>
+<li><strong>Tooling fragmentation</strong>: compilers and linters
+produce one shape of facts; PyTorch or JAX expect another.</li>
+</ul>
+<p>COGANT unifies these behind a single pipeline whose intermediate
+artifacts are documented as a progression of IRs (repo IR, program
+graph, semantic mapping, state space, process model, validation), as
+described in <code>../cogant/docs/ARCHITECTURE.md</code> and
+<code>../cogant/docs/SPEC.md</code>.</p>
+<h2 id="what-cogant-is-not">What COGANT is not</h2>
+<p>COGANT is not a replacement for a full compiler IR, a theorem prover,
+or a security scanner by itself. It <strong>extracts and
+serializes</strong> program graphs and behavioral sketches for
+downstream use. Language coverage and rule depth follow the
+implementation-status table in the SPEC: Python is the primary front end
+at v0.1.x; additional languages and Rust acceleration are staged as
+documented there.</p>
+<h2 id="manuscript-versus-package-docs">Manuscript versus package
+docs</h2>
+<p>The canonical API and CLI details live in:</p>
+<ul>
+<li><code>../cogant/docs/API_GUIDE.md</code> — Session,
+<code>PipelineRunner</code>, <code>Bundle</code>,
+<code>ReviewAPI</code></li>
+<li><code>../cogant/docs/CLI_GUIDE.md</code> — commands and flags</li>
+<li><code>../cogant/docs/GNN_EXPORT.md</code> — Generalized Notation
+Notation schema, section ordering, and companion interop field contracts
+(including optional PyG/DGL tensor views)</li>
+<li><code>../cogant/docs/PLUGIN_API.md</code> — parsers, rules,
+validators, exporters</li>
+<li><code>../cogant/docs/ARCHITECTURE.md</code> — layers, crates, data
+flow</li>
+</ul>
+<p>This manuscript summarizes theory and practice for readers who want a
+single linear narrative before diving into those files.</p>
+<h2 id="dual-pythonrust-architecture">Dual Python/Rust architecture</h2>
+<p>COGANT employs a dual-language architecture. The <strong>Python
+orchestration layer</strong> handles session management, pipeline
+coordination, configuration, file discovery, AST parsing, and the plugin
+interface – tasks where developer ergonomics and extensibility matter
+more than raw throughput. The <strong>Rust core</strong>, organized as a
+workspace of seven crates (<code>cogant-core</code>,
+<code>cogant-graph</code>, <code>cogant-translate</code>,
+<code>cogant-statespace</code>, <code>cogant-gnn</code>,
+<code>cogant-store</code>, <code>cogant-ffi</code>), implements typed
+graph operations, translation engine internals, state-space structures,
+and Generalized Notation Notation (GNN) formatting – tasks where memory
+layout and cache locality dominate wall-clock time. Communication
+between layers flows through PyO3 bindings (<code>cogant-ffi</code>),
+which release the Python GIL during Rust execution to permit concurrent
+stage processing. Where Rust bindings are not yet wired for a code path
+(see the implementation-status table in
+<code>../cogant/docs/SPEC.md</code>), Python fallback implementations
+ensure the pipeline remains functional at the cost of higher latency on
+large repositories.</p>
+<h2 id="roadmap-of-the-following-sections">Roadmap of the following
+sections</h2>
+<p>Section 2 formalizes the program graph and IR progression. Section 3
+describes the realized pipeline behavior and artifacts. Sections 4–7
+cover conclusions, how to run experiments, reproducibility, and related
+work.</p>
+</body>
+</html>

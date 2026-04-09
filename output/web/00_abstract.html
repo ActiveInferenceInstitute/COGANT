@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>00_abstract</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+<h1 id="abstract">Abstract</h1>
+<p><strong>COGANT</strong> (Codebase-to-GNN Translation) is a system for
+turning software repositories into structured Active Inference artifacts
+expressed in the Active Inference Institute’s <strong>Generalized
+Notation Notation</strong> (GNN)<a href="#fn1" class="footnote-ref"
+id="fnref1" role="doc-noteref"><sup>1</sup></a>. It occupies the space
+between classical program analysis—which already reasons over graphs
+such as call graphs and code property graphs <span class="citation"
+data-cites="yamaguchi2014modeling">[@yamaguchi2014modeling]</span>—and
+data-driven methods that expect tensors, consistent node and edge
+vocabularies, and exportable training bundles <span class="citation"
+data-cites="allamanis2018survey wu2020comprehensive scarselli2009graph">[@allamanis2018survey;
+@wu2020comprehensive; @scarselli2009graph]</span>.</p>
+<p>The design centers on a <strong>program graph IR</strong>: nodes
+denote entities (for example functions and variables), edges denote
+relations (for example calls and data flow), and each assertion carries
+<strong>confidence</strong> and <strong>provenance</strong> so that
+downstream models can treat uncertainty explicitly. A <strong>fixpoint
+translation engine</strong> applies declarative rules iteratively until
+no new semantic mappings emerge, resolves overlapping mappings by
+confidence, and reports coverage gaps explicitly. <strong>Dynamic
+enrichment</strong> from coverage reports and execution traces promotes
+mappings from a <code>STATIC_ONLY</code> tier to
+<code>STATIC_PLUS_RUNTIME</code> when runtime evidence corroborates
+static inference. A <strong>Python orchestration layer</strong> (session
+and pipeline APIs, CLI, configuration) performs discovery, parsing,
+normalization, graph construction, translation rules, state-space
+compilation, validation, and export. A <strong>Rust core</strong>
+(organized as separate crates in the package tree) holds graph
+operations, translation, state-space structures, Generalized Notation
+Notation formatting, and PyO3 bindings; the authoritative
+<strong>implementation status</strong> distinguishes what is wired in
+Python today from staged or planned native acceleration (see
+<code>../cogant/docs/SPEC.md</code>).</p>
+<p>This manuscript, parallel to the developer documentation under <a
+href="../cogant/docs/"><code>../cogant/docs/</code></a>, states the
+theory of that IR and the practice of running the pipeline, configuring
+Generalized Notation Notation exports (canonical GNN Markdown, GNN JSON,
+and interop targets such as GraphML, Parquet, and framework-specific
+tensor formats), and extending the tool through parsers, rules,
+validators, and exporters. It is written to remain valid whether this
+tree stays next to the package (<a
+href="../cogant/"><code>../cogant/</code></a>) or is later promoted
+under <a href="../../../projects/"><code>../../../projects/</code></a>
+for full template pipeline rendering.</p>
+<section id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Throughout this manuscript <strong>GNN</strong> refers
+to the Active Inference Institute’s <strong>Generalized Notation
+Notation</strong> (<a
+href="https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation">repository</a>),
+a structured notation for state-space and process models—<em>not</em>
+graph neural networks. Downstream consumers, including graph neural
+network training pipelines, can ingest the emitted artifacts, but COGANT
+itself produces Generalized Notation Notation bundles.<a href="#fnref1"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+</body>
+</html>

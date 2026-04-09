@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>04_examples_and_failure_modes</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<h1 id="examples-and-failure-modes">Examples and Failure Modes</h1>
+<p>This section walks through a concrete example run of the pipeline on
+a small Flask application, shows representative fragments of the
+artifacts it produces (semantic mappings and state-space transitions),
+and then documents the degradation behavior that users should expect
+when inputs are missing or partial. Together these illustrate both what
+a successful run looks like and how the system communicates partial
+success.</p>
+<h2 id="example-outputs">Example outputs</h2>
+<p>The package tree includes examples under <a
+href="../cogant/examples/"><code>../cogant/examples/</code></a> and
+sample exports under <a
+href="../cogant/output/examples/control_positive/"><code>../cogant/output/examples/control_positive/</code></a>
+(for example <strong>calculator</strong>,
+<strong>event_pipeline</strong>, and <strong>flask_mini</strong> with
+<strong>model.gnn.json</strong> / <strong>model.gnn.md</strong> under
+<code>data/</code> and <code>reports/</code>, diagrams under
+<code>diagrams/</code>, and raster figures under <code>figures/</code>).
+Use <code>cogant translate --layout-output</code> or
+<code>PipelineConfig(layout_output=True)</code> to place pipeline JSON
+under <code>data/</code> automatically; run
+<code>python -m cogant.tools.render_output_figures</code> on the output
+root for PNGs. Regenerate these trees by running the packaged pipeline
+against the example sources when validating releases.</p>
+<h3 id="concrete-walkthrough-flask-rest-api">Concrete walkthrough: Flask
+REST API</h3>
+<p>To make the pipeline’s behavior tangible, consider a small Flask
+application with three HTTP endpoints, two utility modules, and one
+data-access layer – 800 lines of Python across 6 files, of which 782
+lines are non-blank, non-comment code analyzed by the pipeline. Running
+<code>cogant scan --target ./flask_app &amp;&amp; cogant extract-static &amp;&amp; cogant build-graph &amp;&amp; cogant translate &amp;&amp; cogant export-all -o output/</code>
+on this repository produces a program graph with the following
+characteristics:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source files discovered</td>
+<td>6</td>
+</tr>
+<tr>
+<td>Lines analyzed</td>
+<td>782 / 800 (97.8%)</td>
+</tr>
+<tr>
+<td><strong>Nodes</strong></td>
+<td><strong>147</strong></td>
+</tr>
+<tr>
+<td><strong>Edges</strong></td>
+<td><strong>389</strong></td>
+</tr>
+<tr>
+<td>Mean node confidence</td>
+<td>0.91</td>
+</tr>
+<tr>
+<td>Validation status</td>
+<td>PASS (0 errors, 3 warnings)</td>
+</tr>
+</tbody>
+</table>
+<p>The node and edge populations distribute across kinds as follows:</p>
+<p><strong>Table 1. Node kind distribution (Flask API
+example).</strong></p>
+<table>
+<thead>
+<tr>
+<th>Node kind</th>
+<th>Count</th>
+<th>Percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FUNCTION</td>
+<td>38</td>
+<td>25.9%</td>
+</tr>
+<tr>
+<td>VARIABLE</td>
+<td>52</td>
+<td>35.4%</td>
+</tr>
+<tr>
+<td>TYPE</td>
+<td>11</td>
+<td>7.5%</td>
+</tr>
+<tr>
+<td>MODULE</td>
+<td>6</td>
+<td>4.1%</td>
+</tr>
+<tr>
+<td>CONTROLFLOW_NODE</td>
+<td>18</td>
+<td>12.2%</td>
+</tr>
+<tr>
+<td>DATA_STRUCTURE</td>
+<td>7</td>
+<td>4.8%</td>
+</tr>
+<tr>
+<td>ERRORHANDLER</td>
+<td>5</td>
+<td>3.4%</td>
+</tr>
+<tr>
+<td>CONSTANT</td>
+<td>6</td>
+<td>4.1%</td>
+</tr>
+<tr>
+<td>EXTERNAL</td>
+<td>4</td>
+<td>2.7%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 2. Edge kind distribution (Flask API
+example).</strong></p>
+<table>
+<thead>
+<tr>
+<th>Edge kind</th>
+<th>Count</th>
+<th>Percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CALLS</td>
+<td>87</td>
+<td>22.4%</td>
+</tr>
+<tr>
+<td>USES</td>
+<td>104</td>
+<td>26.7%</td>
+</tr>
+<tr>
+<td>DEFINES</td>
+<td>62</td>
+<td>15.9%</td>
+</tr>
+<tr>
+<td>HAS_TYPE</td>
+<td>48</td>
+<td>12.3%</td>
+</tr>
+<tr>
+<td>DATA_FLOW</td>
+<td>34</td>
+<td>8.7%</td>
+</tr>
+<tr>
+<td>MEMBER_OF</td>
+<td>29</td>
+<td>7.5%</td>
+</tr>
+<tr>
+<td>INHERITS</td>
+<td>3</td>
+<td>0.8%</td>
+</tr>
+<tr>
+<td>Other</td>
+<td>22</td>
+<td>5.7%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-semantic-mapping-output">Example semantic mapping
+output</h3>
+<p>During the translation stage, each program-graph node is matched
+against the active rule set and assigned a semantic role with an
+associated confidence score. The following excerpt shows three
+representative mappings from the Flask example:</p>
+<pre><code>Node: get_users  (kind=FUNCTION, file=routes/users.py:14)
+  Matched rule: rule_fn_def_001
+  Target role:  FUNCTION_DEF
+  Confidence:   0.98  (base=1.0, -0.02 missing docstring penalty)
+  Provenance:   SourceCode
+
+Node: db.session.query  (kind=FUNCTION, file=routes/users.py:22)
+  Matched rule: rule_method_call_001
+  Target role:  METHOD_CALL
+  Confidence:   0.82  (base=0.90, -0.08 receiver type inferred heuristically)
+  Provenance:   Heuristic
+
+Node: User  (kind=TYPE, file=models/user.py:5)
+  Matched rule: rule_type_def_001
+  Target role:  TYPE_DEF
+  Confidence:   1.00
+  Provenance:   SourceCode</code></pre>
+<p>The <code>db.session.query</code> call illustrates how the confidence
+model (Equation <span
+class="math inline">\(\ref{eq:confidence-core}\)</span> in Section 2)
+penalizes heuristic provenance: the receiver type of
+<code>session</code> is resolved by import tracing rather than explicit
+annotation, reducing <span class="math inline">\(\kappa\)</span> below
+1.0 and yielding a final confidence of 0.82 in the MEDIUM tier.</p>
+<h3 id="example-state-space-excerpt">Example state-space excerpt</h3>
+<p>When dynamic traces are available, the state-space compiler produces
+a behavioral model alongside the static graph. The following excerpt
+shows a fragment of the state-space IR for the <code>/users</code>
+endpoint:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;variables&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;request.method&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;str&quot;</span><span class="fu">,</span> <span class="dt">&quot;domain&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;GET&quot;</span><span class="ot">,</span> <span class="st">&quot;POST&quot;</span><span class="ot">]</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;db_connected&quot;</span><span class="fu">,</span>   <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;bool&quot;</span><span class="fu">,</span> <span class="dt">&quot;domain&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="kw">true</span><span class="ot">,</span> <span class="kw">false</span><span class="ot">]</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;response_code&quot;</span><span class="fu">,</span>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span><span class="fu">,</span>  <span class="dt">&quot;domain&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">200</span><span class="ot">,</span> <span class="dv">400</span><span class="ot">,</span> <span class="dv">500</span><span class="ot">]</span><span class="fu">}</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;actions&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;validate_input&quot;</span><span class="fu">,</span> <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;routes/users.py:18&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;query_database&quot;</span><span class="fu">,</span>  <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;routes/users.py:22&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;format_response&quot;</span><span class="fu">,</span> <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;routes/users.py:30&quot;</span><span class="fu">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;transitions&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;from_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;request.method&quot;</span><span class="fu">:</span> <span class="st">&quot;GET&quot;</span><span class="fu">,</span> <span class="dt">&quot;db_connected&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;query_database&quot;</span><span class="fu">,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;to_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;response_code&quot;</span><span class="fu">:</span> <span class="dv">200</span><span class="fu">},</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.94</span><span class="fu">,</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;tier&quot;</span><span class="fu">:</span> <span class="st">&quot;STATIC_PLUS_RUNTIME&quot;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;from_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;request.method&quot;</span><span class="fu">:</span> <span class="st">&quot;POST&quot;</span><span class="fu">,</span> <span class="dt">&quot;db_connected&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;validate_input&quot;</span><span class="fu">,</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;to_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;response_code&quot;</span><span class="fu">:</span> <span class="dv">400</span><span class="fu">},</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.71</span><span class="fu">,</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;tier&quot;</span><span class="fu">:</span> <span class="st">&quot;STATIC_ONLY&quot;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;from_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;db_connected&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">},</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;query_database&quot;</span><span class="fu">,</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;to_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;response_code&quot;</span><span class="fu">:</span> <span class="dv">500</span><span class="fu">},</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.58</span><span class="fu">,</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;tier&quot;</span><span class="fu">:</span> <span class="st">&quot;RUNTIME_ONLY&quot;</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Confidence tiers follow the thresholds defined in
+<code>determine_confidence_tier</code>:
+<strong>STATIC_PLUS_RUNTIME</strong> (<span class="math inline">\(c \geq
+0.65\)</span>, with both static and dynamic evidence) indicates
+corroboration from AST analysis and execution traces;
+<strong>STATIC_ONLY</strong> (<span class="math inline">\(c \geq
+0.5\)</span>, static evidence only) reflects assertions grounded in
+source structure alone; <strong>RUNTIME_ONLY</strong> (<span
+class="math inline">\(c \geq 0.4\)</span>, dynamic evidence only) flags
+inferences from runtime data without static corroboration. A fourth
+tier, <strong>HUMAN_REVIEWED</strong> (<span class="math inline">\(c
+\geq 0.9\)</span>, with human review evidence), is available for
+manually curated mappings.</p>
+<h3 id="failure-modes-and-graceful-degradation">Failure modes and
+graceful degradation</h3>
+<p>COGANT is designed so that missing or partial inputs degrade the
+output bundle rather than halt it, and the manuscript records these
+degradation paths explicitly so that downstream consumers can interpret
+a partial run without guessing what was skipped <span class="citation"
+data-cites="peng2011reproducible">[@peng2011reproducible]</span>. Five
+failure modes are worth naming because each has a visible signature in
+the emitted artifacts.</p>
+<p><strong>No dynamic traces available.</strong> When neither coverage
+data nor execution traces are supplied, <code>enrich_graph()</code> is a
+no-op: no <code>coverage_hits</code>, <code>branch_coverage</code>,
+<code>call_count</code>, <code>avg_duration_ms</code>, or
+<code>is_hot_path</code> metadata is attached, and the graph’s
+<code>evidence_sources</code> list never acquires
+<code>dynamic_coverage</code> or <code>dynamic_trace</code> markers. The
+state-space compiler still runs end-to-end using the semantic mappings
+and static graph alone, but every resulting transition is confined to
+the <code>STATIC_ONLY</code> tier (or lower), and no transition can be
+promoted to <code>STATIC_PLUS_RUNTIME</code>. Downstream code that
+consumes the bundle can identify a purely-static run at a glance by
+checking the evidence source markers on the graph metadata rather than
+scanning individual transitions.</p>
+<p><strong>Incomplete coverage data.</strong> When coverage is supplied
+but covers only a subset of the project,
+<code>_enrich_with_coverage</code> annotates the matched files only. The
+enrichment loop walks each coverage span, normalizes the reported file
+path, looks up candidate nodes whose path matches, and annotates those
+whose <code>source_range</code> overlaps the covered line; unmatched
+files are silently skipped with an informational log line, and nodes in
+unmatched files retain no coverage metadata at all. The result is a
+partially enriched graph in which some regions are eligible for tier
+promotion and others are not. Because the enrichment summary returns the
+number of annotated nodes, users can check whether the observed
+annotation rate matches their expectations for the provided coverage
+input.</p>
+<p><strong>Translation rules that do not match.</strong> When the active
+rule set fails to produce any mapping for a node – whether because no
+rule fires, or because all firing rules are pruned during conflict
+resolution – that node remains outside <code>self.mappings</code> and
+simply does not appear in any <code>graph_fragment_node_ids</code>. The
+translation engine’s <code>get_coverage_report()</code> reports this
+directly: the returned dictionary contains the total node count, the
+covered count, a two-decimal <code>coverage_percent</code>, and the
+sorted list of <code>uncovered_node_ids</code>. Rather than treat
+uncovered nodes as an error, the engine surfaces them as an explicit gap
+list so that authors can either extend the rule set, hand the gap list
+to the <code>ReviewAPI</code> for curation, or accept the partial
+mapping for downstream Generalized Notation Notation (GNN) export.</p>
+<p><strong>Fixpoint non-convergence.</strong> The translation engine
+bounds its fixpoint loop at <code>max_iterations = 10</code> by default.
+If a rule set is pathological enough to keep emitting new mappings past
+that bound – for example because two rules can produce mutually
+triggering mappings – the engine emits a
+<code>"Max iterations reached without convergence"</code> warning, stops
+the loop, and proceeds to conflict resolution with whatever mappings it
+has accumulated. The iteration cap therefore guarantees termination even
+for misconfigured rule sets, and the warning in the log gives rule
+authors a clear signal that the cap was hit. Because each iteration also
+writes an <code>iteration_complete</code> entry into the engine’s
+internal match log, the exact per-pass mapping counts are available for
+diagnosis without rerunning the pipeline.</p>
+<p><strong>Pipeline error tolerance.</strong> The default pipeline
+configuration (<code>cogant/py/cogant/config/defaults.py</code>) marks
+the <code>dynamic</code>, <code>translate</code>,
+<code>state_space</code>, and <code>process</code> stages with
+<code>skip_on_error=True</code>, while structural stages such as
+<code>ingest</code>, <code>static</code>, <code>graph</code>,
+<code>export</code>, and <code>validate</code> keep the stricter default
+<code>skip_on_error=False</code>. When an optional stage raises, the
+runner records the error in the bundle, emits a warning, and continues
+to the next stage rather than aborting the run. Downstream bundle
+accessors (<code>state_space_model</code>, <code>process_model</code>)
+simply return <code>None</code> for stages that did not produce output,
+so a downstream consumer can detect a skipped stage by checking its
+accessor rather than by parsing log text. The net effect is that a
+partial bundle – for example, a program graph and semantic mappings
+without a state-space model – remains a first-class artifact with a
+clear provenance trail, rather than an opaque failure.</p>
+<h2 id="rust-layer">Rust layer</h2>
+<p>Native crates (<code>cogant-core</code>, <code>cogant-graph</code>,
+<code>cogant-translate</code>, <code>cogant-statespace</code>,
+<code>cogant-gnn</code>, <code>cogant-ffi</code>, and related packages)
+implement typed graph operations and export formatting. When PyO3
+bindings are active, Python delegates heavy graph work through
+<code>cogant-ffi</code>. Where bindings are not yet wired for a code
+path, Python fallbacks apply; see SPEC <strong>Implementation
+status</strong> for the current boundary.</p>
+</body>
+</html>

@@ -1,0 +1,68 @@
+\contentsline {section}{\numberline {1}Abstract}{4}{section.1}%
+\contentsline {section}{\numberline {2}Introduction and Scope}{5}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Terminology: ``GNN'' in this manuscript}{5}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Problem}{5}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}What COGANT is not}{5}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Manuscript versus package docs}{5}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Dual Python/Rust architecture}{6}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}Roadmap of the following sections}{6}{subsection.2.6}%
+\contentsline {section}{\numberline {3}Methodology: Program Graphs and Intermediate Representations}{7}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Program graph}{7}{subsection.3.1}%
+\contentsline {subsubsection}{\numberline {3.1.1}Structural equivalence}{7}{subsubsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.2}Progressive IRs}{7}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Translation rules}{8}{subsection.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.1}Fixpoint iteration, conflict resolution, and coverage}{8}{subsubsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.4}Confidence Scoring and Evidence Tiers}{10}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}State space and behavior}{10}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}GNN export (Generalized Notation Notation)}{11}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.7}Error handling philosophy}{12}{subsection.3.7}%
+\contentsline {section}{\numberline {4}API and Workflows}{13}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Session-oriented workflow}{13}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Pipeline-oriented workflow}{13}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Bundle accessors}{13}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Command-line interface}{14}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Review API}{14}{subsection.4.5}%
+\contentsline {section}{\numberline {5}Examples and Failure Modes}{15}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Example outputs}{15}{subsection.5.1}%
+\contentsline {subsubsection}{\numberline {5.1.1}Concrete walkthrough: Flask REST API}{15}{subsubsection.5.1.1}%
+\contentsline {subsubsection}{\numberline {5.1.2}Example semantic mapping output}{16}{subsubsection.5.1.2}%
+\contentsline {subsubsection}{\numberline {5.1.3}Example state-space excerpt}{17}{subsubsection.5.1.3}%
+\contentsline {subsubsection}{\numberline {5.1.4}Failure modes and graceful degradation}{18}{subsubsection.5.1.4}%
+\contentsline {subsection}{\numberline {5.2}Rust layer}{19}{subsection.5.2}%
+\contentsline {section}{\numberline {6}Conclusion}{20}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Shipped Capabilities}{20}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Roadmap and Future Extensions}{21}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Experimental setup}{22}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Environment}{22}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Running the API}{22}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Configuration files}{22}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}CLI}{23}{subsection.7.4}%
+\contentsline {subsection}{\numberline {7.5}Export targets}{23}{subsection.7.5}%
+\contentsline {subsection}{\numberline {7.6}Python AST parser capabilities}{24}{subsection.7.6}%
+\contentsline {subsection}{\numberline {7.7}Progressive IR stages}{24}{subsection.7.7}%
+\contentsline {subsection}{\numberline {7.8}Performance characteristics}{25}{subsection.7.8}%
+\contentsline {subsection}{\numberline {7.9}What to record}{26}{subsection.7.9}%
+\contentsline {section}{\numberline {8}Reproducibility}{27}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Version pinning}{27}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Artifact layout}{27}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Determinism}{27}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.4}Relation to the template repository}{27}{subsection.8.4}%
+\contentsline {subsection}{\numberline {8.5}Validation gates}{27}{subsection.8.5}%
+\contentsline {subsection}{\numberline {8.6}Pipeline checkpoint and resume behavior}{28}{subsection.8.6}%
+\contentsline {subsection}{\numberline {8.7}Output manifest structure}{28}{subsection.8.7}%
+\contentsline {subsection}{\numberline {8.8}Data ethics and licensing}{29}{subsection.8.8}%
+\contentsline {section}{\numberline {9}Scope and related work}{30}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Positioning}{30}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Related tool categories}{30}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Program analysis for ML}{30}{subsection.9.3}%
+\contentsline {subsubsection}{\numberline {9.3.1}Feature matrix: COGANT vs.~related tools}{31}{subsubsection.9.3.1}%
+\contentsline {subsection}{\numberline {9.4}Active inference and program behavior}{31}{subsection.9.4}%
+\contentsline {subsection}{\numberline {9.5}Boundaries}{32}{subsection.9.5}%
+\contentsline {subsection}{\numberline {9.6}Forward compatibility}{32}{subsection.9.6}%
+\contentsline {section}{\numberline {10}Manuscript Syntax Reference (COGANT)}{33}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Citations}{33}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Equations}{33}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Figures}{33}{subsection.10.3}%
+\contentsline {subsection}{\numberline {10.4}Section files}{33}{subsection.10.4}%
+\contentsline {subsection}{\numberline {10.5}Cross-references to the package}{33}{subsection.10.5}%
+\contentsline {subsection}{\numberline {10.6}See also}{33}{subsection.10.6}%

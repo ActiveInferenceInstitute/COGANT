@@ -1,0 +1,33 @@
+\frametitle{Performance characteristics}
+\protect\phantomsection\label{performance-characteristics}
+The architecture targets the following benchmarks on a 4-core machine,
+as specified in \texttt{../cogant/docs/ARCHITECTURE.md}:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Repository size & Target wall-clock time & Memory budget \\
+\midrule\noalign{}
+\endhead
+10K functions & \textless{} 30 s & \textless{} 500 MB \\
+100K functions & \textless{} 5 min & \textless{} 2 GB \\
+1M functions & \textless{} 1 hr & \textless{} 2 GB (streaming) \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+These targets assume the Python orchestration layer with Rust
+acceleration on critical paths (graph construction, rule matching, and
+Generalized Notation Notation section/tensor packing in
+\texttt{cogant-gnn}). In the current v0.1.x release, where Rust bindings
+are staged rather than fully wired, Python fallback implementations
+handle graph operations; users should expect roughly 2--3\(\times\)
+slower throughput on repositories above 50K functions until native
+acceleration is enabled.
+
+Parallelism is exploited at multiple stages: file parsing is
+embarrassingly parallel, translation rules are applied concurrently over
+independent subgraphs, and export formatting runs in parallel per output
+format. Incremental caching skips unchanged stages when the input hash
+matches a prior run, which is particularly effective during iterative
+development against a single repository.

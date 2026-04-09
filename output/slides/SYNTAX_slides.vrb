@@ -1,0 +1,63 @@
+\frametitle{Manuscript Syntax Reference (COGANT)}
+\protect\phantomsection\label{manuscript-syntax-reference-cogant}
+Formatting conventions for Markdown in this folder. For the full
+rendering contract, see the template exemplar
+\href{../../../projects/code_project/manuscript/SYNTAX.md}{\texttt{projects/code\_project/manuscript/SYNTAX.md}}.
+
+\begin{block}{Citations}
+\protect\phantomsection\label{citations}
+Use Pandoc cite syntax; keys must exist in \texttt{references.bib}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{[}\OtherTok{@allamanis2018survey}\CommentTok{]}
+
+\CommentTok{[}\OtherTok{@allamanis2018survey; @wu2020comprehensive}\CommentTok{]}
+\end{Highlighting}
+\end{Shaded}
+\end{block}
+
+\begin{block}{Equations}
+\protect\phantomsection\label{equations}
+Use LaTeX \texttt{equation} with \texttt{\textbackslash{}label} /
+\texttt{\textbackslash{}ref} as documented in the code\_project SYNTAX,
+or pandoc-crossref attributes where the pipeline enables them.
+\end{block}
+
+\begin{block}{Figures}
+\protect\phantomsection\label{figures}
+If you add figures, place assets where the future project
+\texttt{output/} layout can resolve them (typically
+\texttt{output/figures/} after promotion to \texttt{projects/cogant/}).
+Use explicit relative paths from the rendering contract described in
+\texttt{infrastructure/rendering/AGENTS.md}.
+\end{block}
+
+\begin{block}{Section files}
+\protect\phantomsection\label{section-files}
+Numeric prefixes \texttt{00\_}--\texttt{09\_} are combined in
+stem-sorted order by
+\texttt{infrastructure/rendering/manuscript\_discovery.py}. Files named
+\texttt{SYNTAX.md} sort in the \textbf{other} bucket (after main
+sections, before \texttt{99\_*} if present).
+\end{block}
+
+\begin{block}{Cross-references to the package}
+\protect\phantomsection\label{cross-references-to-the-package}
+Prefer \textbf{relative} paths from this folder to the package tree,
+e.g.~\href{../cogant/docs/ARCHITECTURE.md}{\texttt{../cogant/docs/ARCHITECTURE.md}},
+so links work in the editor and in Git without hard-coding the monorepo
+path.
+\end{block}
+
+\begin{block}{See also}
+\protect\phantomsection\label{see-also}
+\begin{itemize}
+\tightlist
+\item
+  \href{AGENTS.md}{\texttt{AGENTS.md}} --- editor protocol for this
+  folder
+\item
+  \href{README.md}{\texttt{README.md}} --- orientation and render notes
+\end{itemize}
+\end{block}

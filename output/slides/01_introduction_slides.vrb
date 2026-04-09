@@ -1,0 +1,117 @@
+\frametitle{Introduction and Scope}
+\protect\phantomsection\label{introduction-and-scope}
+Machine learning on source code has matured alongside static analysis:
+both need structured representations of programs, but learning pipelines
+additionally need fixed feature layouts, batchable graphs, and
+reproducible exports {[}@allamanis2018survey{]}. COGANT addresses that
+gap by making the path from repository checkout to \textbf{Generalized
+Notation Notation (GNN) bundles} explicit, inspectable, and
+configurable.
+
+\begin{block}{Terminology: ``GNN'' in this manuscript}
+\protect\phantomsection\label{terminology-gnn-in-this-manuscript}
+In this manuscript, \textbf{GNN} refers to the Active Inference
+Institute's \textbf{Generalized Notation Notation}
+(\href{https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation}{repository})
+{[}@friedman2024gnn{]}, a structured notation for state-space and
+process models---\emph{not} graph neural networks. COGANT translates
+source code into this notation, producing program-graph and state-space
+artifacts (state space, observation modalities, actions/policies,
+likelihood structure, preferences, time settings, parameterization) that
+downstream tools can consume. Those downstream tools include graph
+neural network training pipelines, which can ingest the exported tensor
+views of the program graph, but such neural networks are a
+\emph{consumer} of COGANT's output, not its output format. Where the
+manuscript discusses graph neural networks as related work, it uses the
+phrase ``graph neural networks'' in full; the acronym GNN always refers
+to Generalized Notation Notation.
+\end{block}
+
+\begin{block}{Problem}
+\protect\phantomsection\label{problem}
+A research or engineering group typically has:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Source code} in one or more languages.
+\item
+  \textbf{Analysis goals} that may mix classical queries (who calls
+  whom?) with learned models (bug detection, retrieval, summarization).
+\item
+  \textbf{Tooling fragmentation}: compilers and linters produce one
+  shape of facts; PyTorch or JAX expect another.
+\end{itemize}
+
+COGANT unifies these behind a single pipeline whose intermediate
+artifacts are documented as a progression of IRs (repo IR, program
+graph, semantic mapping, state space, process model, validation), as
+described in \texttt{../cogant/docs/ARCHITECTURE.md} and
+\texttt{../cogant/docs/SPEC.md}.
+\end{block}
+
+\begin{block}{What COGANT is not}
+\protect\phantomsection\label{what-cogant-is-not}
+COGANT is not a replacement for a full compiler IR, a theorem prover, or
+a security scanner by itself. It \textbf{extracts and serializes}
+program graphs and behavioral sketches for downstream use. Language
+coverage and rule depth follow the implementation-status table in the
+SPEC: Python is the primary front end at v0.1.x; additional languages
+and Rust acceleration are staged as documented there.
+\end{block}
+
+\begin{block}{Manuscript versus package docs}
+\protect\phantomsection\label{manuscript-versus-package-docs}
+The canonical API and CLI details live in:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{../cogant/docs/API\_GUIDE.md} --- Session,
+  \texttt{PipelineRunner}, \texttt{Bundle}, \texttt{ReviewAPI}
+\item
+  \texttt{../cogant/docs/CLI\_GUIDE.md} --- commands and flags
+\item
+  \texttt{../cogant/docs/GNN\_EXPORT.md} --- Generalized Notation
+  Notation schema, section ordering, and companion interop field
+  contracts (including optional PyG/DGL tensor views)
+\item
+  \texttt{../cogant/docs/PLUGIN\_API.md} --- parsers, rules, validators,
+  exporters
+\item
+  \texttt{../cogant/docs/ARCHITECTURE.md} --- layers, crates, data flow
+\end{itemize}
+
+This manuscript summarizes theory and practice for readers who want a
+single linear narrative before diving into those files.
+\end{block}
+
+\begin{block}{Dual Python/Rust architecture}
+\protect\phantomsection\label{dual-pythonrust-architecture}
+COGANT employs a dual-language architecture. The \textbf{Python
+orchestration layer} handles session management, pipeline coordination,
+configuration, file discovery, AST parsing, and the plugin interface --
+tasks where developer ergonomics and extensibility matter more than raw
+throughput. The \textbf{Rust core}, organized as a workspace of seven
+crates (\texttt{cogant-core}, \texttt{cogant-graph},
+\texttt{cogant-translate}, \texttt{cogant-statespace},
+\texttt{cogant-gnn}, \texttt{cogant-store}, \texttt{cogant-ffi}),
+implements typed graph operations, translation engine internals,
+state-space structures, and Generalized Notation Notation (GNN)
+formatting -- tasks where memory layout and cache locality dominate
+wall-clock time. Communication between layers flows through PyO3
+bindings (\texttt{cogant-ffi}), which release the Python GIL during Rust
+execution to permit concurrent stage processing. Where Rust bindings are
+not yet wired for a code path (see the implementation-status table in
+\texttt{../cogant/docs/SPEC.md}), Python fallback implementations ensure
+the pipeline remains functional at the cost of higher latency on large
+repositories.
+\end{block}
+
+\begin{block}{Roadmap of the following sections}
+\protect\phantomsection\label{roadmap-of-the-following-sections}
+Section 2 formalizes the program graph and IR progression. Section 3
+describes the realized pipeline behavior and artifacts. Sections 4--7
+cover conclusions, how to run experiments, reproducibility, and related
+work.
+\end{block}

@@ -1,0 +1,221 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\begin{frame}[fragile]{Conclusion}
+\protect\phantomsection\label{conclusion}
+COGANT frames codebase analysis as a pipeline from ingestion through a
+program graph IR to \textbf{Generalized Notation Notation (GNN)}
+exports, with explicit confidence and provenance so that learning
+systems can treat analysis noise as data rather than as hidden failure
+modes. The Python layer provides session and pipeline APIs, a bundle
+abstraction, CLI, review tooling, and HTML reporting; the Rust layer
+concentrates graph mechanics and export formatting under crate
+boundaries described in \texttt{../cogant/docs/ARCHITECTURE.md}.
+
+\begin{block}{Shipped Capabilities}
+\protect\phantomsection\label{shipped-capabilities}
+Several capabilities ship in the current v0.1.x line and together define
+the behaviour that downstream users can rely on:
+
+\begin{enumerate}
+\tightlist
+\item
+  \textbf{Fixpoint translation engine.} The shipped
+  \texttt{TranslationEngine} re-applies every registered rule on each
+  pass, terminates as soon as a pass produces zero new mappings, and
+  bounds pathological rule sets with a configurable iteration cap. Each
+  iteration boundary is recorded in the internal match log, so
+  convergence can be audited after the fact.
+\item
+  \textbf{Rule priority and conflict resolution.} Overlapping mappings
+  are reconciled by confidence score: when two mappings cover
+  overlapping \texttt{graph\_fragment\_node\_ids}, the engine retains
+  the higher-confidence mapping and records a
+  \texttt{conflict\_resolved} event naming the winner, the loser, and
+  the overlap. Rule priority is therefore expressed through the
+  confidence model rather than a separate ordering table, and
+  \texttt{translate\_with\_confidence()} re-scores and re-resolves so
+  that priority shifts from the \texttt{ConfidenceModel} are honoured.
+\item
+  \textbf{Dynamic enrichment from coverage and traces.} When
+  \texttt{.coverage} SQLite or Cobertura XML inputs and Chrome DevTools
+  traces are supplied, \texttt{enrich\_graph()} annotates nodes with
+  \texttt{coverage\_hits}, \texttt{branch\_coverage},
+  \texttt{call\_count}, \texttt{avg\_duration\_ms}, and
+  \texttt{is\_hot\_path} metadata, and appends
+  \texttt{dynamic\_coverage} and \texttt{dynamic\_trace} markers to the
+  program graph's evidence sources.
+\item
+  \textbf{Confidence tier promotion.} Mappings whose evidence set
+  acquires dynamic markers become eligible for promotion from
+  \texttt{STATIC\_ONLY} to \texttt{STATIC\_PLUS\_RUNTIME}, and hot-path
+  and branch-coverage metadata raise the underlying score through the
+  diversity bonus in Equation \ref{eq:confidence-core}. A purely-static
+  run remains a first-class bundle; it is simply marked as such on the
+  graph metadata.
+\item
+  \textbf{Ten-stage pipeline architecture.} The runner executes an
+  ordered DAG (ingest, static, normalize, graph, translate, state space,
+  process, export, validate, and report), with
+  \texttt{skip\_on\_error=True} on optional stages so that a missing
+  dynamic input or a pathological rule set produces a partial but
+  well-formed Generalized Notation Notation bundle rather than an opaque
+  failure.
+\end{enumerate}
+
+\textbf{Limitations} follow the honest scope in
+\texttt{../cogant/docs/SPEC.md}: multi-language support beyond Python is
+largely roadmap; translation rules and state-space extraction are
+\textbf{partial} and repository-dependent; native acceleration is
+staged. Users should validate exports on their own corpora before
+trusting downstream model metrics.
+
+\textbf{Intended users} include researchers building datasets from
+open-source repositories, teams prototyping Active Inference models or
+graph neural network training pipelines over program-graph data who need
+a single export contract, and engineers extending the system via
+\texttt{../cogant/docs/PLUGIN\_API.md}.
+
+\textbf{Validation} in the software-engineering sense is split: the
+repository's verification report enumerates implemented modules and
+entry points; scientific validation of model quality remains the
+responsibility of downstream training and evaluation code.
+\end{block}
+
+\begin{block}{Roadmap and Future Extensions}
+\protect\phantomsection\label{roadmap-and-future-extensions}
+Several concrete directions extend the current system:
+
+\begin{enumerate}
+\item
+  \textbf{Multi-language parsers.} The v0.1.x front end targets Python;
+  adding parsers for JavaScript/TypeScript, Java, and Go would cover the
+  majority of open-source ML-relevant repositories. Each parser
+  implements the plugin interface documented in
+  \texttt{../cogant/docs/PLUGIN\_API.md}, so language additions do not
+  require changes to the core IR or export pipeline.
+\item
+  \textbf{Rust acceleration of critical paths.} The native crate layer
+  (\texttt{cogant-graph}, \texttt{cogant-translate}) already defines
+  typed graph operations. Wiring PyO3 bindings for the hot paths ---
+  deduplication, rule matching, and Generalized Notation Notation
+  section/tensor packing in \texttt{cogant-gnn} --- would reduce
+  end-to-end latency for large repositories from minutes to seconds,
+  based on preliminary profiling of the Python fallback implementations.
+\item
+  \textbf{Incremental re-analysis.} Currently the pipeline processes a
+  full repository snapshot on each invocation. An incremental mode that
+  accepts a Git diff and updates only affected subgraphs would enable
+  integration into CI/CD workflows where per-commit turnaround matters.
+  The stable-identifier scheme already supports cross-run node matching;
+  the missing piece is a dependency tracker that invalidates downstream
+  IRs when upstream nodes change.
+\item
+  \textbf{LLM-assisted rule discovery.} Translation rules are currently
+  hand-authored. A semi-automated workflow could present a large
+  language model with unannotated graph fragments and ask it to propose
+  candidate rules, which a human reviewer then accepts, edits, or
+  rejects via the existing \texttt{ReviewAPI}. This combines the
+  pattern-recognition strength of LLMs with the auditability of
+  declarative rules.
+\item
+  \textbf{Cross-repository graph linking.} When multiple repositories
+  share interfaces (for example, a library and its consumers), linking
+  their program graphs at call boundaries produces a richer training
+  signal for tasks such as API misuse detection and cross-project code
+  search. The graph homomorphism property defined in Section 2 provides
+  the formal basis for identifying shared interface nodes across
+  independently analyzed repositories.
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\end{document}

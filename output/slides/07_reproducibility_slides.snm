@@ -1,0 +1,9 @@
+\beamer@slide {reproducibility}{1}
+\beamer@slide {version-pinning}{1}
+\beamer@slide {artifact-layout}{1}
+\beamer@slide {determinism}{1}
+\beamer@slide {relation-to-the-template-repository}{1}
+\beamer@slide {validation-gates}{1}
+\beamer@slide {pipeline-checkpoint-and-resume-behavior}{1}
+\beamer@slide {output-manifest-structure}{1}
+\beamer@slide {data-ethics-and-licensing}{1}
