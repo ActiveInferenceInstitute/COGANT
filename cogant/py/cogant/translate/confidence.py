@@ -17,11 +17,31 @@ class ConfidenceModel:
     to produce confidence tiers and scores.
     """
 
-    # Thresholds for confidence tiers
-    STATIC_ONLY_THRESHOLD = 0.5
-    STATIC_PLUS_RUNTIME_THRESHOLD = 0.65
-    RUNTIME_ONLY_THRESHOLD = 0.4
-    HUMAN_REVIEWED_THRESHOLD = 0.9
+    # ------------------------------------------------------------------
+    # Confidence-tier thresholds
+    # ------------------------------------------------------------------
+    # These four scalars carve [0, 1] into the four ConfidenceTier
+    # bands used by ``determine_confidence_tier``. They are principled
+    # defaults — not empirically calibrated — anchored to the
+    # "weak / moderate / strong evidence" bands from classical
+    # meta-analysis reporting conventions. Read them as:
+    #   0.5  — minimum to accept a static-only mapping; below this the
+    #          tier falls back to the lowest band.
+    #   0.65 — extra-evidence promotion threshold: static-only rules
+    #          with dynamic corroboration need the combined score to
+    #          clear this bar (+0.15 over the static-only floor) before
+    #          promotion to STATIC_PLUS_RUNTIME.
+    #   0.4  — lower bar for runtime-only evidence because dynamic
+    #          traces are noisier than static edges (-0.1 dynamic-noise
+    #          discount relative to the static floor).
+    #   0.9  — strong-consensus band for human-reviewed mappings.
+    # See ``_rnd/CALIBRATION.md`` for the full sweep plan.
+    # TODO(calibration): sweep {0.4, 0.5, 0.55, 0.6, 0.65, 0.7} over a
+    # 20+ repo fixture set and pick the precision/recall sweet spot.
+    STATIC_ONLY_THRESHOLD = 0.5            # principled default
+    STATIC_PLUS_RUNTIME_THRESHOLD = 0.65   # principled default (+0.15 corroboration bonus)
+    RUNTIME_ONLY_THRESHOLD = 0.4           # principled default (-0.1 dynamic-noise discount)
+    HUMAN_REVIEWED_THRESHOLD = 0.9         # principled default (strong-consensus band)
 
     def __init__(self):
         """Initialize the confidence model."""
@@ -50,19 +70,33 @@ class ConfidenceModel:
         if not mapping.provenance:
             return 0.0
 
-        # Base score: average of evidence confidence
+        # Base score: unweighted average of per-provenance confidences.
         avg_evidence = sum(p.confidence for p in mapping.provenance) / len(mapping.provenance)
 
-        # Evidence diversity bonus (max 0.1)
+        # Evidence diversity bonus — multiplicative weight 0.1 = "at
+        # most a 10-percentage-point reward for multi-source
+        # agreement". Principled default: large enough to lift a
+        # borderline mapping across the STATIC_ONLY→STATIC_PLUS_RUNTIME
+        # boundary (gap=0.15) when combined with dynamic evidence, small
+        # enough never to override a strong evidence base on its own.
+        # TODO(calibration): sweep {0.05, 0.10, 0.15, 0.20} on the 20+
+        # repo fixture set (see CALIBRATION.md).
         diversity_bonus = mapping.evidence_diversity * 0.1
 
-        # Parser certainty factor
+        # Parser certainty factor — multiplicative discount for noisy
+        # parsers (e.g. tree-sitter fallback ≈ 0.8 vs. full Python AST
+        # ≈ 0.95).
         certainty_factor = mapping.parser_certainty
 
-        # Conflict penalties (cumulative)
+        # Conflict penalties — 0.05-per-conflict principled default,
+        # chosen so two detected conflicts (~0.10) roughly cancel a full
+        # diversity bonus. TODO(calibration): log penalty distributions
+        # on the 20-repo corpus and retune.
         conflict_penalty = sum(mapping.conflict_penalties) * 0.05
 
-        # Compute confidence
+        # Compose: evidence base, lifted by diversity, discounted by
+        # parser certainty, reduced by conflict penalties. Clamped to
+        # [0, 1] for downstream tier assignment.
         confidence = (avg_evidence + diversity_bonus) * certainty_factor - conflict_penalty
         confidence = max(0.0, min(1.0, confidence))
 
@@ -131,7 +165,13 @@ class ConfidenceModel:
         sources = [p.source for p in mapping.provenance]
         unique_sources = len(set(sources))
 
-        # Normalize by number of total evidence pieces
+        # Normalize by number of total evidence pieces. Cap at 5
+        # distinct source types because the evidence-source taxonomy
+        # currently defines exactly 5 labels
+        # (static_analysis, dynamic_trace, runtime_profile, human_review,
+        # llm_review). A single mapping with 5 different labels already
+        # saturates the diversity bonus. TODO(calibration): revisit if
+        # new evidence sources are added in P5+.
         max_unique = min(len(sources), 5)  # Cap at 5 source types for normalization
         diversity = unique_sources / max(1, max_unique)
 
@@ -151,7 +191,15 @@ class ConfidenceModel:
         if not mapping.provenance or len(mapping.provenance) < 2:
             return penalties
 
-        # Check for confidence divergence
+        # Check for confidence divergence across evidence sources. A
+        # spread > 0.3 is flagged as "significant divergence" and
+        # incurs a 0.10 penalty. Both thresholds are principled
+        # defaults: 0.3 is larger than any two neighbouring tier gaps
+        # (max gap = 0.25 between RUNTIME_ONLY and STATIC_PLUS_RUNTIME)
+        # so only genuinely disagreeing sources trigger it; 0.10 makes
+        # one divergence cost the same as a full diversity bonus.
+        # TODO(calibration): retune on observed evidence-spread
+        # distributions from the 20-repo corpus (see CALIBRATION.md).
         confidence_values = [p.confidence for p in mapping.provenance]
         max_conf = max(confidence_values)
         min_conf = min(confidence_values)
@@ -175,6 +223,16 @@ class ConfidenceModel:
                 static_avg = static_conf / max(1, static_count)
                 dynamic_avg = dynamic_conf / max(1, dynamic_count)
 
+                # Static vs. dynamic disagreement threshold = 0.25.
+                # Principled default: equals the gap between
+                # RUNTIME_ONLY (0.4) and STATIC_PLUS_RUNTIME (0.65), so
+                # disagreement only triggers when the two sources would
+                # land in non-adjacent tiers. The 0.15 penalty is
+                # intentionally larger than the 0.10 spread penalty
+                # above because a static-vs-dynamic disagreement is
+                # structurally more meaningful than a within-source
+                # spread. TODO(calibration): validate on the 20-repo
+                # corpus.
                 if abs(static_avg - dynamic_avg) > 0.25:
                     penalties.append(0.15)
 
@@ -227,7 +285,12 @@ class ConfidenceModel:
 
         Args:
             mappings: List of mappings.
-            threshold: Minimum confidence threshold.
+            threshold: Minimum confidence threshold. Default 0.7 is a
+                principled "trust without review" bar — safely above
+                ``STATIC_PLUS_RUNTIME_THRESHOLD`` (0.65) but well below
+                ``HUMAN_REVIEWED_THRESHOLD`` (0.9). TODO(calibration):
+                tune against observed precision on the 20-repo corpus
+                (see ``_rnd/CALIBRATION.md``).
 
         Returns:
             Filtered list of high-confidence mappings.
@@ -243,7 +306,14 @@ class ConfidenceModel:
 
         Args:
             mappings: List of mappings.
-            threshold: Maximum confidence threshold.
+            threshold: Maximum confidence threshold. Default 0.6 is a
+                principled "needs reviewer attention" bar — halfway
+                between ``STATIC_ONLY_THRESHOLD`` (0.5) and
+                ``STATIC_PLUS_RUNTIME_THRESHOLD`` (0.65), so that
+                mappings which pass the accept floor but fail the
+                "corroborated" bar are surfaced for human review.
+                TODO(calibration): retune against observed human-review
+                false-positive rates.
 
         Returns:
             Filtered list of low-confidence mappings.

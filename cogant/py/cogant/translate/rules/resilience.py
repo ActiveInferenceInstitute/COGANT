@@ -26,7 +26,22 @@ from cogant.translate.engine import TranslationRule
 
 
 class RetryPatternRule(TranslationRule):
-    """Maps retry/backoff/circuit breaker patterns to policy under uncertainty."""
+    """Maps retry/backoff/circuit breaker patterns to policy under uncertainty.
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.70)``. **Bottom band** (0.70),
+        tied with ``ReadOnlyInputRule``, ``InheritanceRule``,
+        ``ErrorBoundaryRule``, and the lexical fallback of
+        ``ObservationRule``. Rationale: keyword matching alone is
+        a weak signal for retry logic — a function named
+        ``retry_count`` might be a counter, not a retry executor.
+        This rule intentionally loses to the stronger
+        ``CircuitBreakerRule`` (0.80) when both fire. Parser
+        certainty 0.70 is the lowest in the family because tree-
+        sitter pattern detection for retry decorators is
+        incomplete. TODO(calibration): promote to 0.80 if GUARDS
+        edge coverage improves in the parser.
+    """
 
     def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
         """Find retry and circuit breaker patterns.
@@ -74,13 +89,19 @@ class RetryPatternRule(TranslationRule):
 
         mapping_id = f"policy_{node_id}_{hashlib.sha256(b'retry_pattern').hexdigest()[:8]}"
 
+        # Confidence 0.70 — principled default (bottom band).
+        # Keyword-only matching is noisy (``retry_count`` might be
+        # just a counter). Parser certainty 0.70 is the lowest in
+        # the family because decorator-based retry patterns have
+        # incomplete tree-sitter coverage. Intentionally loses to
+        # CircuitBreakerRule (0.80) on the same fragment.
         return SemanticMapping(
             id=mapping_id,
             kind=MappingKind.POLICY,
             graph_fragment_node_ids=[node_id],
             semantic_label=f"{node.name} - Retry Policy",
             description=f"Function '{node.name}' implements retry/circuit breaker policy",
-            confidence_score=0.7,
+            confidence_score=0.7,  # principled default (bottom band)
             confidence_tier=ConfidenceTier.STATIC_ONLY,
             provenance=[
                 ProvenanceRecord(
@@ -89,7 +110,7 @@ class RetryPatternRule(TranslationRule):
                 )
             ],
             evidence_count=1,
-            parser_certainty=0.7,
+            parser_certainty=0.7,  # lowest in family (decorator gap)
         )
 
     @property
@@ -108,6 +129,16 @@ class ErrorBoundaryRule(TranslationRule):
 
     Detects functions/methods with CATCHES or THROWS edges, representing
     error boundaries in the system.
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.70)``. **Bottom band** (0.70).
+        Rationale: CATCHES/THROWS edges are directly extracted from
+        ``try/except`` / ``raise`` Python constructs (high structural
+        precision) but the *semantic* meaning — "this is an error
+        boundary worth modeling" — is weak because most non-trivial
+        functions have at least one try/except for cleanup. Parser
+        certainty 0.75 (below the 0.80 norm) reflects the fact that
+        tree-sitter does not resolve exception-type hierarchies.
     """
 
     def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
@@ -173,13 +204,18 @@ class ErrorBoundaryRule(TranslationRule):
 
         mapping_id = f"errbnd_{node_id}_{hashlib.sha256(b'error_boundary').hexdigest()[:8]}"
 
+        # Confidence 0.70 — principled default (bottom band).
+        # CATCHES/THROWS edges are structurally precise but
+        # semantically overloaded: most non-trivial functions have
+        # some error handling. Parser certainty 0.75 reflects the
+        # lack of exception-hierarchy resolution in tree-sitter.
         return SemanticMapping(
             id=mapping_id,
             kind=MappingKind.ERROR_HANDLING,
             graph_fragment_node_ids=fragment_node_ids,
             semantic_label=f"{node.name} - Error Boundary",
             description=f"Function '{node.name}' handles errors (catches {match['catches_count']}, throws {match['throws_count']})",
-            confidence_score=0.70,
+            confidence_score=0.70,  # principled default (bottom band)
             confidence_tier=ConfidenceTier.STATIC_ONLY,
             provenance=[
                 ProvenanceRecord(
@@ -192,7 +228,7 @@ class ErrorBoundaryRule(TranslationRule):
                 )
             ],
             evidence_count=1,
-            parser_certainty=0.75,
+            parser_certainty=0.75,  # no exception-hierarchy resolution
         )
 
     @property
@@ -212,6 +248,20 @@ class SingletonAccessRule(TranslationRule):
     Detects variables or classes that are read by many different modules
     (high in-degree of READS edges from diverse paths). Threshold: 3+ readers
     from different modules.
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.65)``. **Lowest band** (0.65) —
+        the lowest confidence score in the entire rule family.
+        Rationale: "accessed by many modules" is a very weak signal
+        (logging facilities, common types, and enum constants all
+        trigger it), so this rule is explicitly the last to win in
+        any conflict. Thresholds: ``read_edges >= 3`` and
+        ``len(reader_modules) >= 3``. The module-diversity check
+        prevents the rule from firing on intra-module utilities.
+        TODO(calibration): if the false-positive rate on the
+        20-repo corpus exceeds 30%, raise the module-diversity
+        threshold to 5 or combine with a "not in typing/stdlib
+        whitelist" filter.
     """
 
     def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
@@ -235,6 +285,11 @@ class SingletonAccessRule(TranslationRule):
             incoming = graph.get_edges_to(node.id)
             read_edges = [e for e in incoming if e.kind == EdgeKind.READS]
 
+            # Read-count threshold = 3. Principled default: below 3
+            # readers is indistinguishable from ordinary 2-caller
+            # helper code. TODO(calibration): sweep {3, 5, 8} on
+            # 20-repo corpus; consider combining with a "stdlib/
+            # typing whitelist" filter to cut false positives.
             if len(read_edges) < 3:
                 continue
 
@@ -250,7 +305,12 @@ class SingletonAccessRule(TranslationRule):
                     reader_modules.add(module_path)
                 reader_ids.append(edge.source_id)
 
-            # Threshold: 3+ readers from different modules
+            # Module-diversity threshold = 3. Principled default:
+            # fewer than 3 distinct module paths in the reader set
+            # typically indicates an intra-package helper rather
+            # than a true singleton/global. Matches the read-count
+            # threshold for symmetry. TODO(calibration): sweep {3,
+            # 5, 8} in tandem with the read-count sweep.
             if len(reader_modules) >= 3:
                 matches.append({
                     "node_id": node.id,
@@ -279,13 +339,20 @@ class SingletonAccessRule(TranslationRule):
 
         mapping_id = f"single_{node_id}_{hashlib.sha256(b'singleton_access').hexdigest()[:8]}"
 
+        # Confidence 0.65 — principled default (LOWEST band in the
+        # entire rule family). "Accessed by many modules" is a very
+        # weak semantic signal; this rule is explicitly the last to
+        # win in any conflict. 0.65 = STATIC_PLUS_RUNTIME_THRESHOLD
+        # exactly, so this rule's mapping is *only* promoted past
+        # the "trust without review" bar if runtime evidence
+        # corroborates it.
         return SemanticMapping(
             id=mapping_id,
             kind=MappingKind.CONTEXT,
             graph_fragment_node_ids=[node_id] + match.get("reader_ids", []),
             semantic_label=f"{node.name} - Singleton/Global State",
             description=f"{'Variable' if node.kind == NodeKind.VARIABLE else 'Class'} '{node.name}' is accessed by {match['reader_count']} readers across {match['module_count']} modules",
-            confidence_score=0.65,
+            confidence_score=0.65,  # principled default (LOWEST in family)
             confidence_tier=ConfidenceTier.STATIC_ONLY,
             provenance=[
                 ProvenanceRecord(
@@ -298,7 +365,7 @@ class SingletonAccessRule(TranslationRule):
                 )
             ],
             evidence_count=1,
-            parser_certainty=0.7,
+            parser_certainty=0.7,  # cross-module READS noise
         )
 
     @property
@@ -318,6 +385,17 @@ class CircuitBreakerRule(TranslationRule):
     Detects functions/classes that contain both a GUARDS edge and a
     retry/fallback pattern (name contains retry/fallback/circuit/breaker
     keywords or has metadata indicating retry logic).
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.80)``. **Upper-mid band** (0.80),
+        tied with ``ActionRule``/``PolicyRule``/``ContextRule``/
+        ``OrchestratorRule``. Rationale: the combined signal of
+        GUARDS edge + retry keyword (or metadata hit) is much
+        stronger than the keyword-only ``RetryPatternRule`` (0.70),
+        so CircuitBreakerRule correctly wins on overlapping
+        fragments. The composite requirement keeps false positives
+        low — a function named ``retry_helper`` alone won't fire
+        without a GUARDS edge.
     """
 
     def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
@@ -386,13 +464,18 @@ class CircuitBreakerRule(TranslationRule):
 
         mapping_id = f"cb_{node_id}_{hashlib.sha256(b'circuit_breaker').hexdigest()[:8]}"
 
+        # Confidence 0.80 — principled default (upper-mid band).
+        # The composite (GUARDS edge + retry keyword/metadata)
+        # requirement is a much stronger signal than
+        # RetryPatternRule's keyword-only matching (0.70), so this
+        # rule correctly wins overlapping conflicts.
         return SemanticMapping(
             id=mapping_id,
             kind=MappingKind.CIRCUIT_BREAKER,
             graph_fragment_node_ids=[node_id] + match.get("guarded_ids", []),
             semantic_label=f"{node.name} - Circuit Breaker",
             description=f"{'Function' if node.kind in (NodeKind.FUNCTION, NodeKind.METHOD) else 'Class'} '{node.name}' implements circuit breaker pattern (guards {match['guards_count']} target(s))",
-            confidence_score=0.80,
+            confidence_score=0.80,  # principled default (upper-mid band)
             confidence_tier=ConfidenceTier.STATIC_ONLY,
             provenance=[
                 ProvenanceRecord(
@@ -406,7 +489,7 @@ class CircuitBreakerRule(TranslationRule):
                 )
             ],
             evidence_count=1,
-            parser_certainty=0.85,
+            parser_certainty=0.85,  # AST-native on GUARDS edges
         )
 
     @property

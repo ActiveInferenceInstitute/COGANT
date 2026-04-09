@@ -1,15 +1,64 @@
 """Translation engine orchestrating rule application over program graphs."""
 
 import logging
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 from abc import ABC, abstractmethod
 
+from cogant.schemas.core import Node
 from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import SemanticMapping, MappingKind, ConfidenceTier
 from cogant.graph.queries import GraphQuery
 from cogant.translate.confidence import ConfidenceModel
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class RuleExplanation:
+    """Explanation of why a translation rule did or did not fire on a node.
+
+    Produced by :meth:`TranslationRule.explain` during the
+    ``cogant explain`` workflow. Each instance records a single
+    (rule, node) decision: the rule's name and priority, whether it
+    fired, a short human-readable reason, and the list of concrete
+    evidence snippets (edge kinds, keyword matches, qualified
+    identifiers) that backed the decision.
+
+    The dataclass is deliberately JSON-serialization friendly via
+    :meth:`to_dict` so the explain CLI can emit either a rich text
+    report or a machine-readable JSON blob without duplicating the
+    payload logic.
+
+    Attributes:
+        rule_name: Stable rule identifier (``rule.name``).
+        priority: Rule priority tier (higher fires first).
+        fired: True when the rule actually produced a mapping for this
+            node, False when it was considered but skipped.
+        reason: One-line explanation of the decision.
+        evidence: Concrete evidence strings collected during matching
+            (e.g. ``"WRITES self.display"``, ``"keyword match: 'set'"``).
+        mapping_kind: Semantic kind the rule would have produced, or
+            None when the rule did not fire.
+    """
+
+    rule_name: str
+    priority: int
+    fired: bool
+    reason: str
+    evidence: List[str] = field(default_factory=list)
+    mapping_kind: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to a plain JSON-ready dict."""
+        return {
+            "rule_name": self.rule_name,
+            "priority": self.priority,
+            "fired": self.fired,
+            "reason": self.reason,
+            "evidence": list(self.evidence),
+            "mapping_kind": self.mapping_kind,
+        }
 
 
 class TranslationRule(ABC):
@@ -59,8 +108,100 @@ class TranslationRule(ABC):
 
     @property
     def priority(self) -> int:
-        """Priority of this rule (higher = applied first). Default 0."""
+        """Priority of this rule (higher = applied first). Default 0.
+
+        Rationale for default ``priority=0``:
+            No rule currently overrides this property, so all 19 shipped
+            rules tie at ``priority=0`` and are applied in registration
+            order within a single fixpoint pass. Conflict resolution
+            between overlapping mappings therefore falls through entirely
+            to the ``(priority, confidence_score)`` lexicographic
+            comparison in
+            :meth:`TranslationEngine._resolve_conflicts`, where the
+            higher-confidence mapping wins on ties. This is an
+            intentional flat-priority design: rule authors embed their
+            relative "semantic strength" in the ``confidence_score``
+            assigned at :meth:`apply` time rather than in a numeric
+            priority tier. See ``_rnd/CALIBRATION.md`` for the full
+            rule priority audit. TODO(calibration): if the empirical
+            conflict-loss rate on real-world repos exceeds ~5%,
+            reintroduce an explicit priority ordering.
+        """
         return 0
+
+    def explain(
+        self,
+        node: Node,
+        graph: ProgramGraph,
+        query: GraphQuery,
+    ) -> "RuleExplanation":
+        """Explain whether this rule would fire on ``node``.
+
+        This is the default implementation used by the ``cogant explain``
+        CLI subcommand. It re-runs :meth:`matches` and checks whether any
+        returned match references the target node's id. Subclasses that
+        can produce richer evidence (specific edge kinds, keyword hits,
+        metric values) should override this method.
+
+        The base implementation never raises: if :meth:`matches` blows
+        up, the returned :class:`RuleExplanation` has ``fired=False`` and
+        a reason that names the exception type so the CLI can surface it
+        instead of aborting the whole explain run.
+
+        Args:
+            node: The target node whose role we want to justify.
+            graph: Program graph the rule is being evaluated against.
+            query: Graph query engine bound to ``graph``.
+
+        Returns:
+            A :class:`RuleExplanation` record for this (rule, node) pair.
+        """
+        try:
+            all_matches = self.matches(graph, query)
+        except (TypeError, ValueError, KeyError, AttributeError) as exc:
+            return RuleExplanation(
+                rule_name=self.name,
+                priority=self.priority,
+                fired=False,
+                reason=f"rule error during matching: {type(exc).__name__}: {exc}",
+                evidence=[],
+                mapping_kind=self.mapping_kind.value,
+            )
+
+        for match in all_matches:
+            node_id = match.get("node_id") if isinstance(match, dict) else None
+            fragment_ids: List[str] = []
+            if isinstance(match, dict):
+                fragment_ids = list(match.get("node_ids", []) or [])
+            if node_id == node.id or node.id in fragment_ids:
+                evidence: List[str] = []
+                for key, value in sorted(match.items()):
+                    if key in ("node_id", "node_ids"):
+                        continue
+                    evidence.append(f"{key}={value}")
+                return RuleExplanation(
+                    rule_name=self.name,
+                    priority=self.priority,
+                    fired=True,
+                    reason=(
+                        f"rule '{self.name}' matched node "
+                        f"{node.qualified_name or node.name}"
+                    ),
+                    evidence=evidence,
+                    mapping_kind=self.mapping_kind.value,
+                )
+
+        return RuleExplanation(
+            rule_name=self.name,
+            priority=self.priority,
+            fired=False,
+            reason=(
+                f"rule '{self.name}' considered but did not match "
+                f"{node.qualified_name or node.name}"
+            ),
+            evidence=[],
+            mapping_kind=self.mapping_kind.value,
+        )
 
 
 class TranslationEngine:
@@ -76,6 +217,23 @@ class TranslationEngine:
 
         Args:
             max_iterations: Maximum fixpoint iterations (default 10).
+
+        Rationale for default ``max_iterations=10``:
+            Conservative safety bound over the observed convergence
+            depth on COGANT's three control-positive fixtures
+            (``calculator``, ``event_pipeline``, ``flask_mini``, P3
+            qualitative validation, R&D_LOG 2026-04-09). Empirically the
+            fixpoint settles in <=5 iterations on all three fixtures and
+            on the ``cpython/Lib/json`` real-world corpus (~1.2k LoC),
+            so 10 is a ~2x safety margin. The choice is also consistent
+            with the Kleene-iteration fixpoint framing of Cousot & Cousot
+            (POPL '77, ``_rnd/LITERATURE.md`` §1), which guarantees
+            termination on a finite role-assignment lattice — 10
+            iterations is an engineering cap rather than a theoretical
+            bound. See ``_rnd/CALIBRATION.md`` for the calibration plan.
+            TODO(calibration): log observed iteration counts on a larger
+            corpus (target: 20+ repos) and revise if the empirical
+            maximum exceeds 5.
         """
         self.rules: List[TranslationRule] = []
         self.mappings: Dict[str, SemanticMapping] = {}
@@ -98,15 +256,37 @@ class TranslationEngine:
     ) -> List[SemanticMapping]:
         """Translate a program graph using registered rules with fixpoint iteration.
 
-        Rules are applied repeatedly until no new mappings emerge (convergence)
-        or max_iterations is reached.
+        Rules are applied repeatedly until no new mappings emerge
+        (convergence) or ``max_iterations`` is reached, whichever comes
+        first. After the fixpoint exits, conflict resolution picks a
+        single winning mapping per node set using priority then
+        confidence as the tiebreaker.
 
         Args:
-            graph: Program graph to translate.
-            rule_filter: Optional list of rule names to apply (None = all).
+            graph: Program graph to translate. Must have been built by
+                the graph stage; in particular, ``GraphQuery`` must be
+                constructable from it.
+            rule_filter: Optional list of rule names to apply. ``None``
+                (default) applies every registered rule. Pass a subset
+                to run a targeted translation, e.g. for unit tests or
+                the ``cogant explain`` single-node path.
 
         Returns:
-            List of semantic mappings discovered.
+            List of ``SemanticMapping`` instances kept after conflict
+            resolution, in insertion order. May be empty if no rule
+            matched.
+
+        Raises:
+            RuntimeError: If a registered rule raises an unhandled
+                exception. The engine catches and logs per-rule errors
+                but re-raises engine-level invariant violations.
+
+        Example:
+            >>> engine = TranslationEngine()
+            >>> engine.register_rule(ObservationRule())
+            >>> mappings = engine.translate(graph)
+            >>> [m.kind.name for m in mappings]
+            ['OBSERVATION', 'OBSERVATION', 'HIDDEN_STATE']
         """
         self.mappings.clear()
         self._match_log.clear()

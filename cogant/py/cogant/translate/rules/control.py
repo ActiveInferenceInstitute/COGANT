@@ -26,7 +26,23 @@ from cogant.translate.engine import TranslationRule
 
 
 class ConfigRule(TranslationRule):
-    """Maps configuration files and structures to context priors."""
+    """Maps configuration files and structures to context priors.
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.90)``. **Top band** (0.90) —
+        the highest confidence score in the entire translation rule
+        family. Rationale: ``ConfigRule`` fires only when the
+        upstream parser has already classified a node as
+        ``NodeKind.CONFIGURATION`` (yaml/toml/ini/json config files,
+        module-level ``CONFIG = {...}`` dicts, ``Settings`` subclasses).
+        That classification is itself strongly evidenced, so the
+        confidence stacks: parser_certainty 0.95 (highest) plus
+        confidence 0.90 makes this rule effectively unbeatable by
+        heuristic rules, which is correct — explicit config is
+        ground truth for context. TODO(calibration): confirm that
+        ``NodeKind.CONFIGURATION`` extraction has <5% false-positive
+        rate on the 20-repo corpus.
+    """
 
     def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
         """Find configuration nodes.
@@ -68,13 +84,18 @@ class ConfigRule(TranslationRule):
 
         mapping_id = f"ctx_{node_id}_{hashlib.sha256(b'config').hexdigest()[:8]}"
 
+        # Confidence 0.90 — principled default (top band, highest in
+        # entire rule family). The upstream parser has already
+        # classified this node as CONFIGURATION, which is a strongly-
+        # evidenced classification in its own right. Parser certainty
+        # 0.95 is the highest in the family.
         return SemanticMapping(
             id=mapping_id,
             kind=MappingKind.CONTEXT,
             graph_fragment_node_ids=[node_id],
             semantic_label=f"{node.name} - Context Prior",
             description=f"Configuration '{node.name}' provides system context",
-            confidence_score=0.9,
+            confidence_score=0.9,  # principled default (top band)
             confidence_tier=ConfidenceTier.STATIC_ONLY,
             provenance=[
                 ProvenanceRecord(
@@ -83,7 +104,7 @@ class ConfigRule(TranslationRule):
                 )
             ],
             evidence_count=1,
-            parser_certainty=0.95,
+            parser_certainty=0.95,  # highest in family (explicit config)
         )
 
     @property
@@ -98,7 +119,18 @@ class ConfigRule(TranslationRule):
 
 
 class FeatureFlagRule(TranslationRule):
-    """Maps feature flags to latent context selectors."""
+    """Maps feature flags to latent context selectors.
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.85)``. **High band** (0.85),
+        tied with ``PreferenceRule``/``TestAssertionRule`` and the
+        keyword branch of ``ObservationRule``. Rationale: feature
+        flags are specific but slightly less unambiguous than raw
+        configuration (which gets 0.90); some "feature flag"
+        patterns are actually dynamic toggles rather than static
+        context selectors. The rule relies on upstream
+        ``NodeKind.FEATURE_FLAG`` classification.
+    """
 
     def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
         """Find feature flag nodes.
@@ -140,13 +172,16 @@ class FeatureFlagRule(TranslationRule):
 
         mapping_id = f"fflag_{node_id}_{hashlib.sha256(b'feature_flag').hexdigest()[:8]}"
 
+        # Confidence 0.85 — principled default (high band). Relies on
+        # upstream NodeKind.FEATURE_FLAG classification which is
+        # slightly less precise than explicit CONFIGURATION.
         return SemanticMapping(
             id=mapping_id,
             kind=MappingKind.CONTEXT,
             graph_fragment_node_ids=[node_id],
             semantic_label=f"{node.name} - Feature Flag",
             description=f"Feature flag '{node.name}' selects system context",
-            confidence_score=0.85,
+            confidence_score=0.85,  # principled default (high band)
             confidence_tier=ConfidenceTier.STATIC_ONLY,
             provenance=[
                 ProvenanceRecord(
@@ -155,7 +190,7 @@ class FeatureFlagRule(TranslationRule):
                 )
             ],
             evidence_count=1,
-            parser_certainty=0.9,
+            parser_certainty=0.9,  # high AST precision on flag nodes
         )
 
     @property

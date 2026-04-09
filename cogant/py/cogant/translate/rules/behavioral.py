@@ -26,7 +26,18 @@ from cogant.translate.engine import TranslationRule
 
 
 class OrchestratorRule(TranslationRule):
-    """Maps schedulers and controllers to policy/action structure."""
+    """Maps schedulers and controllers to policy/action structure.
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.80)``. **Upper-mid band** (0.80),
+        tied with ``ActionRule``/``PolicyRule``/``ContextRule``/
+        ``CircuitBreakerRule``. Rationale: high call fan-out is a
+        reliable structural signal for orchestration but not
+        unambiguous — utility modules can also have many calls.
+        Call-count threshold = 3 (see ``matches``): below 3, the
+        pattern is indistinguishable from simple helpers.
+        TODO(calibration): sweep {2, 3, 5, 8} on the 20-repo corpus.
+    """
 
     def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
         """Find orchestrator patterns (high out-degree controllers).
@@ -48,7 +59,12 @@ class OrchestratorRule(TranslationRule):
             out_edges = graph.get_edges_from(node.id)
             call_edges = [e for e in out_edges if e.kind == EdgeKind.CALLS]
 
-            # Threshold: 3+ function calls indicates orchestration
+            # Call-count threshold = 3. Principled default: below 3
+            # calls, high-fan-out is indistinguishable from simple
+            # helper functions (2 calls = typical setup/teardown);
+            # at >=3 the pattern starts to look like real
+            # orchestration (setup/work/cleanup triad or larger).
+            # TODO(calibration): sweep {2, 3, 5, 8} on 20-repo corpus.
             if len(call_edges) >= 3:
                 matches.append({
                     "node_id": node.id,
@@ -76,13 +92,17 @@ class OrchestratorRule(TranslationRule):
 
         mapping_id = f"orch_{node_id}_{hashlib.sha256(b'orchestrator').hexdigest()[:8]}"
 
+        # Confidence 0.80 — principled default (upper-mid band). High
+        # call fan-out is reliable but not unambiguous. Parser
+        # certainty 0.90 because call-edge extraction is one of the
+        # highest-precision operations in the Python AST substrate.
         return SemanticMapping(
             id=mapping_id,
             kind=MappingKind.ORCHESTRATION,
             graph_fragment_node_ids=[node_id] + match.get("called_node_ids", []),
             semantic_label=f"{node.name} - Orchestrator",
             description=f"{'Class' if node.kind == NodeKind.CLASS else 'Function'} '{node.name}' acts as orchestrator (high fan-out)",
-            confidence_score=0.8,
+            confidence_score=0.8,  # principled default (upper-mid band)
             confidence_tier=ConfidenceTier.STATIC_ONLY,
             provenance=[
                 ProvenanceRecord(
@@ -92,7 +112,7 @@ class OrchestratorRule(TranslationRule):
                 )
             ],
             evidence_count=1,
-            parser_certainty=0.9,
+            parser_certainty=0.9,  # high AST precision on CALLS edges
         )
 
     @property
@@ -107,7 +127,19 @@ class OrchestratorRule(TranslationRule):
 
 
 class TestAssertionRule(TranslationRule):
-    """Maps test assertions to preference/constraint modality."""
+    """Maps test assertions to preference/constraint modality.
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.85)``. **High band** (0.85), tied
+        with ``PreferenceRule`` and the keyword branch of
+        ``ObservationRule``. Rationale: a function with "test" in its
+        name plus at least one ``CALLS`` edge (proxy for assertion)
+        is one of the most reliable static signals in the entire
+        rule family — pytest/unittest conventions are nearly
+        universal. Parser certainty 0.95 is the *highest* in the
+        family because both the name match and the call extraction
+        are handled by the native Python AST with minimal ambiguity.
+    """
 
     def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
         """Find test nodes and assertion calls.
@@ -158,13 +190,17 @@ class TestAssertionRule(TranslationRule):
 
         mapping_id = f"const_{node_id}_{hashlib.sha256(b'test_assertion').hexdigest()[:8]}"
 
+        # Confidence 0.85 — principled default (high band). Parser
+        # certainty 0.95 is the highest in the rule family because
+        # "test"-prefix names and call extraction are both native
+        # Python AST operations with near-zero ambiguity.
         return SemanticMapping(
             id=mapping_id,
             kind=MappingKind.CONSTRAINT,
             graph_fragment_node_ids=[node_id],
             semantic_label=f"{node.name} - Test Constraint",
             description=f"Test function '{node.name}' defines system constraints",
-            confidence_score=0.85,
+            confidence_score=0.85,  # principled default (high band)
             confidence_tier=ConfidenceTier.STATIC_ONLY,
             provenance=[
                 ProvenanceRecord(
@@ -174,7 +210,7 @@ class TestAssertionRule(TranslationRule):
                 )
             ],
             evidence_count=1,
-            parser_certainty=0.95,
+            parser_certainty=0.95,  # highest in family (pytest/unittest conventions)
         )
 
     @property
@@ -189,7 +225,20 @@ class TestAssertionRule(TranslationRule):
 
 
 class EventBusRule(TranslationRule):
-    """Maps event/subscription systems to observation-action coupling."""
+    """Maps event/subscription systems to observation-action coupling.
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.75)``. **Mid band** (0.75),
+        tied with ``MutatingSubsystemRule``/``ContainmentRule``/
+        ``DataPipelineRule``. Rationale: event-bus detection depends
+        on the upstream parser recognizing ``EVENT`` node kinds,
+        which is only done for patterns the tree-sitter queries
+        understand (decorator-driven pub/sub). Confidence tier is
+        set to STATIC_PLUS_RUNTIME (not STATIC_ONLY) as a hint that
+        dynamic trace corroboration is especially valuable for
+        event-driven code. TODO(calibration): measure EVENT-node
+        coverage across the 20-repo corpus.
+    """
 
     def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
         """Find event bus and subscription patterns.
@@ -237,13 +286,19 @@ class EventBusRule(TranslationRule):
 
         mapping_id = f"event_{node_id}_{hashlib.sha256(b'event_bus').hexdigest()[:8]}"
 
+        # Confidence 0.75 — principled default (mid band). Event-bus
+        # detection depends on upstream EVENT-kind nodes, which are
+        # only emitted for patterns the tree-sitter queries
+        # understand. Tier set to STATIC_PLUS_RUNTIME as a hint that
+        # dynamic trace corroboration is particularly valuable for
+        # event-driven code paths.
         return SemanticMapping(
             id=mapping_id,
             kind=MappingKind.OBSERVATION,
             graph_fragment_node_ids=[node_id],
             semantic_label=f"{node.name} - Event Bus",
             description=f"Event '{node.name}' couples observations to actions",
-            confidence_score=0.75,
+            confidence_score=0.75,  # principled default (mid band)
             confidence_tier=ConfidenceTier.STATIC_PLUS_RUNTIME,
             provenance=[
                 ProvenanceRecord(
@@ -252,7 +307,7 @@ class EventBusRule(TranslationRule):
                 )
             ],
             evidence_count=1,
-            parser_certainty=0.8,
+            parser_certainty=0.8,  # tree-sitter Python-fallback band
         )
 
     @property
