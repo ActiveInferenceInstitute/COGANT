@@ -207,6 +207,35 @@ Four bugs / gaps uncovered while writing the validation tests — documented in-
 
 ---
 
+## 2026-04-09 — P1.5 Rust Benchmark
+
+**What changed:**
+- Verified the Rust workspace builds clean in release mode (`cargo build --release` from `rust/`). All 8 crates compile; warnings only, no errors.
+- Root cause of the previous "linker can't find `_PyUnicode_*`" failure on macOS: `.cargo/config.toml` already had the correct PyO3 flags (`-C link-arg=-undefined -C link-arg=dynamic_lookup`), but they are only picked up when cargo is invoked from inside `rust/`. Invoking `cargo build --manifest-path rust/Cargo.toml` from the parent directory silently drops the config and fails to link. Documented the invocation requirement.
+- Installed `maturin` as a uv tool and ran `maturin develop --release` in `rust/cogant-ffi/`. Fresh `cogant._rust` (`_rust.cpython-312-darwin.so`) installed into `py/cogant/`; `cogant._rust.get_version()` returns `"0.1.0"`.
+- New benchmark harness: `cogant/benchmarks/rust_vs_python.py` — 3-sample best-of on three fixtures with `COGANT_USE_RUST=0` vs `COGANT_USE_RUST=1`.
+- Wrote `_rnd/figures/rust_vs_python.md` with full build status, raw samples, speedup table, and the adapter-overhead explanation.
+
+**Test results:** N/A (benchmark run, not test suite). Pipeline functionally identical under both backends (same node/edge counts per fixture).
+
+**Speedup achieved (best-of-3):**
+
+| Fixture       | Python (ms) | Rust (ms) | Speedup |
+|---------------|-------------|-----------|---------|
+| calculator    |       34.0  |    31.7   |  1.07x  |
+| flask_app     |       82.6  |    81.6   |  1.01x  |
+| requests_lib  |       69.7  |    75.5   |  0.92x  |
+
+Parity, not speedup. The `RustProgramGraphAdapter` mirrors every insertion into a Python shadow store (pydantic `Node`/`Edge`) and `finalize()` materialises the output `ProgramGraph` from the Python side — the Rust graph is effectively write-only. The ~1.28x Rust insertion win from the P1 node-only benchmark is cancelled by the extra FFI round-trip and duplicated pydantic allocation. Pipeline wall-clock is also dominated by parsing/normalization, not graph insertion — even an infinite-speedup graph backend would barely move the needle on 98-node fixtures.
+
+**Decision:** The adapter pattern as shipped gives us functional Rust integration (module loads, env gating works, tests pass) but no speedup on real-repo pipelines. Two changes unlock the real speedup and are deferred to P1.6:
+1. Move `add_edge` into Rust FFI (currently Python-only).
+2. Remove the Python shadow store; `finalize()` should materialise from the Rust graph, or downstream consumers (`statespace/`, `translate/`, `export/`) should accept the Rust handle.
+
+**What's next:** P1.6 — edge-ingest FFI + shadow-store removal. Needs a large fixture (cogant-on-cogant or CPython stdlib) to actually stress the graph hot path; flask_app is too small.
+
+---
+
 ## Upcoming
 
 | Phase | Status | Target |
@@ -216,6 +245,7 @@ Four bugs / gaps uncovered while writing the validation tests — documented in-
 | P3 | ✅ Complete | Qualitative validation, ACTIVE_INFERENCE_MAPPING.md, 885 tests |
 | P4 | ✅ Complete | Manuscript audit, experimental numbers, figures/metrics.json |
 | P5 | ✅ Complete | tree-sitter Py/JS/TS, git-diff incremental, 907 tests |
-| P1.5 | 🔄 In progress | Rust edge FFI, benchmark |
+| P1.5 | ✅ Complete | Rust build verified, benchmark run — parity, not speedup (adapter overhead dominates) |
+| P1.6 | ⏭ Deferred | Rust edge-ingest FFI + Python shadow-store removal (target: 2-4x on large fixtures) |
 | EXP streams | 🔄 In progress | Property tests, `cogant explain` CLI, perf harness |
 | LIT stream | 🔄 In progress | LITERATURE.md, RELATED_WORK.md |
