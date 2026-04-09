@@ -1,0 +1,59 @@
+# COGANT
+
+**Codebase-to-GNN Translation Engine** — turn software repositories into Active Inference state-space models expressed in Generalized Notation Notation (GNN).
+
+COGANT parses a repository, builds a typed program graph, assigns every node an Active Inference role (HIDDEN_STATE / OBSERVATION / ACTION / POLICY / CONSTRAINT / ...), compiles a Markov blanket, derives A/B/C/D generative-model matrices, and exports a validated GNN package plus JSON / PyArrow / HTML artifacts for downstream training pipelines and audits.
+
+---
+
+## Why COGANT
+
+- **Structural, not heuristic.** Roles are assigned from `NodeKind`, `EdgeKind`, name keywords, and degree statistics — every decision is inspectable and reproducible.
+- **Provenance-first.** Every node, edge, and mapping is traceable to a source span or a documented inference rule.
+- **Confidence-aware.** Every mapping carries an epistemic score; partial inputs degrade gracefully instead of halting.
+- **GNN-native.** Output follows the Active Inference Institute's Generalized Notation Notation bracket format and validates against a shipped schema.
+
+---
+
+## Install
+
+```bash
+pip install cogant
+# or, with all extras (viz + multilang + dev):
+pip install "cogant[all]"
+```
+
+From source:
+
+```bash
+git clone https://github.com/cogant-contributors/cogant.git
+cd cogant
+uv sync --all-extras
+```
+
+See [Installation](getting-started/installation.md) for the full matrix.
+
+---
+
+## Quickstart
+
+Translate a repository into a full GNN bundle:
+
+```bash
+cogant translate ./my_repo --output output/ --layout-output
+cogant validate output/
+cogant explain ./my_repo my_function
+```
+
+The full Python API and CLI walkthrough live in [Quick Start](getting-started/quickstart.md).
+
+---
+
+## Where to go next
+
+- **[Small repo walkthrough](tutorials/calculator.md)** — step through the `calculator` fixture: 6 mappings, 12 nodes, one clean Markov blanket.
+- **[Flask app walkthrough](tutorials/flask.md)** — a 98-node / 597-edge real-world example with role counts and GNN output excerpts.
+- **[Active Inference mapping](theory/active_inference.md)** — the theoretical justification for how code constructs become mu / s / a / pi.
+- **[GNN format](theory/gnn_format.md)** — bracket notation, A/B/C/D matrices, and an example export block.
+- **[CLI Reference](cli_reference.md)** — every subcommand, flag, and output artifact.
+- **[API Reference](api/translate.md)** — auto-generated module docs for `cogant.translate`, `cogant.gnn`, `cogant.markov`, `cogant.statespace`, `cogant.static`, and `cogant.simulate`.

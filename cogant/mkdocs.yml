@@ -1,0 +1,72 @@
+site_name: COGANT — Codebase-to-GNN Translation Engine
+site_description: Translate software repositories into Active Inference GNN state-space models
+site_author: COGANT Contributors
+repo_url: https://github.com/cogant-contributors/cogant
+repo_name: cogant
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [py]
+          options:
+            show_source: true
+            show_root_heading: true
+            docstring_style: google
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+  - Tutorials:
+    - Small repo walkthrough: tutorials/calculator.md
+    - Flask app walkthrough: tutorials/flask.md
+  - Theory:
+    - Active Inference mapping: theory/active_inference.md
+    - GNN format: theory/gnn_format.md
+  - CLI Reference: cli_reference.md
+  - API Reference:
+    - cogant.translate: api/translate.md
+    - cogant.gnn: api/gnn.md
+    - cogant.markov: api/markov.md
+    - cogant.statespace: api/statespace.md
+    - cogant.static: api/static.md
+    - cogant.simulate: api/simulate.md
+  - R&D:
+    - Calibration: rnd/calibration.md
+    - Active Inference Mapping: rnd/active_inference_mapping.md
