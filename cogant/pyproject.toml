@@ -78,7 +78,7 @@ addopts = [
     "--cov=cogant",
     "--cov-report=term-missing",
     "--cov-report=html:htmlcov",
-    "--cov-fail-under=70",
+    "--cov-fail-under=75",
 ]
 markers = [
     "unit: Unit tests",

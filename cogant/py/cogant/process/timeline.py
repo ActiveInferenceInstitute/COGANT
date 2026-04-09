@@ -67,6 +67,13 @@ class TimelineBuilder:
         # Find critical path
         critical_path = self._find_critical_path()
 
+        # Mark stages on the critical path with criticality=1.0 so that
+        # downstream Gantt/vis consumers can render them distinctly.
+        critical_set = set(critical_path)
+        for stage_id, gantt_stage in self.gantt_stages.items():
+            if stage_id in critical_set:
+                gantt_stage.criticality = 1.0
+
         # Identify parallel groups
         parallel_groups = self._identify_parallel_groups()
 
@@ -86,55 +93,73 @@ class TimelineBuilder:
     def _create_gantt_stages(self) -> None:
         """
         Create Gantt stages from process model stages.
+
+        Dependencies are taken from ``stage.entry_points`` when present,
+        otherwise derived from :class:`ProcessConnection` objects so the
+        builder works with either hand-built models or those produced by
+        :class:`cogant.process.extractor.ProcessExtractor`.
         """
+        # Derive fallback dependencies from connections in case entry_points
+        # were not populated.
+        derived_deps: Dict[str, List[str]] = {sid: [] for sid in self.process_model.stages}
+        for conn in self.process_model.connections.values():
+            if (
+                conn.source_stage_id in derived_deps
+                and conn.target_stage_id in derived_deps
+                and conn.source_stage_id != conn.target_stage_id
+            ):
+                if conn.source_stage_id not in derived_deps[conn.target_stage_id]:
+                    derived_deps[conn.target_stage_id].append(conn.source_stage_id)
+
         for stage_id, stage in self.process_model.stages.items():
+            deps = list(stage.entry_points) if stage.entry_points else derived_deps.get(stage_id, [])
             gantt_stage = GanttStage(
                 stage_id=stage_id,
                 name=stage.name,
                 duration=stage.expected_duration or 1.0,
-                dependencies=stage.entry_points,
+                dependencies=deps,
             )
             self.gantt_stages[stage_id] = gantt_stage
 
     def _assign_timing(self) -> None:
         """
         Assign start times to stages based on dependencies.
-        Uses topological ordering to determine earliest possible start time.
+
+        Uses a pull-style DFS: for each stage, the start time is the
+        maximum end time over its direct dependencies. Because this is
+        recursive on predecessors, we must invoke it for every stage
+        (not just the entry point) so downstream stages are reached
+        through their dependency links.
         """
-        # Topological sort of stages
-        visited = set()
-        time_map = {}
+        visited: set = set()
+        time_map: Dict[str, float] = {}
 
-        def assign_time(stage_id: str, current_time: float = 0.0) -> float:
-            """Recursively compute the earliest start time for ``stage_id``."""
+        def assign_time(stage_id: str) -> float:
+            """Return the end time (start + duration) of ``stage_id``."""
+            if stage_id in time_map:
+                return time_map[stage_id] + self.gantt_stages[stage_id].duration
+            if stage_id not in self.gantt_stages:
+                return 0.0
             if stage_id in visited:
+                # Cycle guard — treat the partially-assigned stage as 0
                 return time_map.get(stage_id, 0.0)
-
             visited.add(stage_id)
 
-            # Find latest end time of dependencies
-            max_end_time = current_time
-            if stage_id in self.gantt_stages:
-                for dep_id in self.gantt_stages[stage_id].dependencies:
-                    dep_end_time = assign_time(dep_id)
-                    if dep_end_time > max_end_time:
-                        max_end_time = dep_end_time
+            # Earliest start = max(end_time(dep) for dep in deps), or 0.
+            max_end_time = 0.0
+            for dep_id in self.gantt_stages[stage_id].dependencies:
+                dep_end_time = assign_time(dep_id)
+                if dep_end_time > max_end_time:
+                    max_end_time = dep_end_time
 
-            # Assign start time and compute end time
             time_map[stage_id] = max_end_time
-            if stage_id in self.gantt_stages:
-                self.gantt_stages[stage_id].start_time = max_end_time
-
+            self.gantt_stages[stage_id].start_time = max_end_time
             return max_end_time + self.gantt_stages[stage_id].duration
 
-        # Assign times starting from entry point
-        if self.process_model.entry_stage_id:
-            assign_time(self.process_model.entry_stage_id)
-        else:
-            # Assign times for all stages
-            for stage_id in self.gantt_stages.keys():
-                if stage_id not in visited:
-                    assign_time(stage_id)
+        # Walk every stage — pull-style DFS will visit predecessors first
+        # and set their start times correctly before this stage is set.
+        for stage_id in self.gantt_stages:
+            assign_time(stage_id)
 
     def _find_critical_path(self) -> List[str]:
         """

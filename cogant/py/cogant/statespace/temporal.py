@@ -52,6 +52,12 @@ class TemporalMetrics:
     event_patterns_count: int
     has_async_handlers: bool
     has_event_triggers: bool
+    has_loops: bool = False
+    """True when a cycle was detected among CALLS/TRIGGERS edges, indicating
+    iterative execution (loops, recursion, or event-handler cycles)."""
+    is_discrete: bool = True
+    """True when the execution model is discrete-time (the default); set to
+    False only for purely continuous-time signal processing flows."""
 
 
 class TemporalAnalyzer:
@@ -233,6 +239,10 @@ class TemporalAnalyzer:
             else:
                 sequential_edges += 1
 
+        # Detect cycles among CALLS/TRIGGERS edges. A cycle indicates a loop
+        # (iterative execution), recursion, or a handler feedback pattern.
+        has_loops = self._detect_loops()
+
         return TemporalMetrics(
             async_fraction=async_fraction,
             event_driven_fraction=event_fraction,
@@ -241,7 +251,52 @@ class TemporalAnalyzer:
             event_patterns_count=len(self.event_patterns),
             has_async_handlers=len(async_nodes) > 0,
             has_event_triggers=len(event_nodes) > 0,
+            has_loops=has_loops,
+            is_discrete=True,  # COGANT assumes discrete-time semantics.
         )
+
+    def _detect_loops(self) -> bool:
+        """
+        Detect whether the CALLS/TRIGGERS subgraph contains a directed cycle.
+
+        Uses iterative DFS with a recursion stack so it is robust against
+        very deep or very wide call graphs (no Python recursion limits).
+
+        Returns:
+            True if any cycle is reachable via CALLS/TRIGGERS edges.
+        """
+        call_kinds = {EdgeKind.CALLS, EdgeKind.TRIGGERS}
+        # Build adjacency for call-graph edges only.
+        adj: Dict[str, List[str]] = {}
+        for edge in self.graph.edges.values():
+            if edge.kind in call_kinds:
+                adj.setdefault(edge.source_id, []).append(edge.target_id)
+
+        WHITE, GRAY, BLACK = 0, 1, 2
+        color: Dict[str, int] = {nid: WHITE for nid in self.graph.nodes}
+
+        for start in list(color.keys()):
+            if color[start] != WHITE:
+                continue
+            stack: List[Tuple[str, int]] = [(start, 0)]
+            while stack:
+                node_id, child_idx = stack[-1]
+                if color[node_id] == WHITE:
+                    color[node_id] = GRAY
+                children = adj.get(node_id, [])
+                if child_idx < len(children):
+                    stack[-1] = (node_id, child_idx + 1)
+                    next_id = children[child_idx]
+                    if next_id not in color:
+                        continue  # dangling edge
+                    if color[next_id] == GRAY:
+                        return True  # back edge -> cycle
+                    if color[next_id] == WHITE:
+                        stack.append((next_id, 0))
+                else:
+                    color[node_id] = BLACK
+                    stack.pop()
+        return False
 
     def _determine_regime(self, metrics: TemporalMetrics) -> TimeRegime:
         """

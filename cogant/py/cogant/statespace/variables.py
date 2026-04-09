@@ -51,6 +51,13 @@ class StateVariable:
     description: Optional[str] = None
     mutations: List[str] = field(default_factory=list)  # Edge IDs of mutations
     reads: List[str] = field(default_factory=list)  # Edge IDs of reads
+    observable: bool = False
+    """True when the same underlying node also has an OBSERVATION mapping.
+
+    Used by the state-space compiler and downstream GNN formatter to decide
+    whether this hidden-state variable should expose an observation channel
+    in the generated A/B/C/D matrices.
+    """
 
 
 @dataclass
@@ -82,22 +89,40 @@ class StateVariableExtractor:
         """
         Extract state variables from the program graph.
 
+        Walks every ``HIDDEN_STATE`` mapping and builds a
+        :class:`StateVariable` for each referenced graph node, inferring type,
+        cardinality and domain from node metadata. Variables whose underlying
+        node *also* has an ``OBSERVATION`` mapping are flagged as observable,
+        so the compiler can wire the corresponding observation channel later.
+
         Args:
             semantic_mappings: Semantic mappings identifying hidden state nodes.
 
         Returns:
-            Dictionary mapping variable ID to StateVariable.
+            Dictionary mapping variable ID to :class:`StateVariable`.
         """
         # Find all hidden_state mappings
         hidden_state_mappings = {
             mid: m for mid, m in semantic_mappings.items()
             if m.kind == MappingKind.HIDDEN_STATE
         }
+        # Pre-compute the set of node IDs that carry an OBSERVATION mapping so
+        # we can cheaply mark hidden-state variables as observable.
+        observation_node_ids: Set[str] = set()
+        for m in semantic_mappings.values():
+            if m.kind == MappingKind.OBSERVATION:
+                observation_node_ids.update(m.graph_fragment_node_ids)
 
         logger.info(f"Found {len(hidden_state_mappings)} hidden state mappings")
 
         for mapping_id, mapping in hidden_state_mappings.items():
             self._extract_from_mapping(mapping_id, mapping)
+
+        # Mark observable flag for any variable whose node also has an
+        # OBSERVATION mapping (POMDP observation channel).
+        for var in self.state_variables.values():
+            if var.node_id in observation_node_ids:
+                var.observable = True
 
         # Analyze factorization
         self._analyze_factorization()

@@ -229,32 +229,50 @@ class StateSpaceCompiler:
         semantic_mappings: Dict[str, SemanticMapping]
     ) -> Dict[str, Action]:
         """
-        Extract actions from semantic mappings and controller nodes.
+        Extract actions from ACTION and POLICY semantic mappings.
+
+        For each ACTION or POLICY mapping, walks the underlying graph fragment
+        nodes to build an :class:`Action` object populated with parameters
+        (from function signature metadata), effects (from WRITES/MUTATES edges
+        and containment), and preconditions (from READS edges and parameters).
+
+        Only the first encountered mapping per graph node is used, so policy
+        mappings cannot clobber action mappings with the same controller.
 
         Args:
-            semantic_mappings: Semantic mappings.
+            semantic_mappings: Semantic mappings keyed by mapping id.
 
         Returns:
-            Dictionary of actions.
+            Dictionary keyed by ``act_<node_id>`` whose values are
+            :class:`Action` objects.
         """
-        actions = {}
+        actions: Dict[str, Action] = {}
+        seen_controllers: Set[str] = set()
 
-        # Find ACTION mappings
-        action_mappings = {
-            mid: m for mid, m in semantic_mappings.items()
-            if m.kind == MappingKind.ACTION
-        }
+        # Find ACTION and POLICY mappings. POLICY is folded in because the
+        # COGANT spec treats policies as structured actions (decision rules
+        # that write to state). CONSTRAINT/PREFERENCE are handled separately.
+        action_kinds = {MappingKind.ACTION, MappingKind.POLICY}
+        action_mappings = [
+            (mid, m) for mid, m in semantic_mappings.items()
+            if m.kind in action_kinds
+        ]
 
-        for mapping_id, mapping in action_mappings.items():
+        for mapping_id, mapping in action_mappings:
             for node_id in mapping.graph_fragment_node_ids:
                 node = self.graph.get_node(node_id)
                 if not node:
                     continue
 
+                # Skip if another ACTION mapping already claimed this node.
+                if node_id in seen_controllers:
+                    continue
+                seen_controllers.add(node_id)
+
                 action_id = f"act_{node_id}"
                 action_name = mapping.semantic_label or node.name
 
-                # Extract parameters and effects
+                # Extract parameters and effects from the program graph
                 parameters = self._extract_action_parameters(node)
                 effects = self._extract_action_effects(node_id, mapping)
                 preconditions = self._extract_action_preconditions(node)
@@ -408,74 +426,209 @@ class StateSpaceCompiler:
         semantic_mappings: Dict[str, SemanticMapping]
     ) -> Dict[str, Likelihood]:
         """
-        Extract likelihood distributions from metrics and observations.
+        Build :class:`Likelihood` distributions for hidden-state variables and
+        observation channels.
+
+        For each :class:`StateVariable`, a likelihood is produced whose
+        distribution kind is inferred from the variable's
+        :class:`StateVariableType`:
+
+        - ``BOOLEAN`` -> Bernoulli
+        - ``DISCRETE`` with cardinality 2 -> Bernoulli
+        - ``DISCRETE`` / ``CATEGORICAL`` with larger cardinality -> Categorical
+        - ``CONTINUOUS`` -> Gaussian
+        - anything else -> ``unknown``
+
+        In addition, each :class:`OBSERVATION` semantic mapping produces an
+        observation-channel likelihood whose parameters are derived from the
+        underlying graph node's ``type_hint``/``cardinality`` metadata. Boolean
+        hints map to Bernoulli, small-integer hints to Categorical, and float
+        hints to Gaussian, mirroring the hidden-state logic above.
 
         Args:
-            variables: State variables.
-            semantic_mappings: Semantic mappings.
+            variables: State variables produced by the
+                :class:`StateVariableExtractor`.
+            semantic_mappings: Semantic mappings keyed by mapping id.
 
         Returns:
-            Dictionary of likelihoods.
+            Dictionary keyed by ``like_<identifier>`` whose values are
+            :class:`Likelihood` objects.
         """
-        likelihoods = {}
+        likelihoods: Dict[str, Likelihood] = {}
 
-        # For each state variable, attempt to infer a distribution
+        # ------------------------------------------------------------------
+        # Hidden-state likelihoods: one per StateVariable.
+        # ------------------------------------------------------------------
         for var_id, variable in variables.items():
             likelihood_id = f"like_{var_id}"
 
-            # Infer distribution type from variable type
             dist_type = self._infer_distribution_type(variable)
+            parameters = self._default_distribution_parameters(
+                dist_type, variable.cardinality
+            )
 
-            likelihood = Likelihood(
+            likelihoods[likelihood_id] = Likelihood(
                 id=likelihood_id,
                 variable_id=var_id,
                 distribution_type=dist_type,
+                parameters=parameters,
                 confidence=variable.confidence,
             )
-            likelihoods[likelihood_id] = likelihood
+
+        # ------------------------------------------------------------------
+        # Observation-channel likelihoods: one per OBSERVATION mapping. These
+        # describe ``P(observation | hidden_state)`` and are keyed by the
+        # underlying graph node so they can be correlated with the
+        # ObservationModality output from _extract_observations.
+        # ------------------------------------------------------------------
+        for mapping_id, mapping in semantic_mappings.items():
+            if mapping.kind != MappingKind.OBSERVATION:
+                continue
+            for node_id in mapping.graph_fragment_node_ids:
+                node = self.graph.get_node(node_id)
+                if not node:
+                    continue
+
+                obs_like_id = f"like_obs_{node_id}"
+                if obs_like_id in likelihoods:
+                    continue
+
+                dist_type = self._infer_observation_distribution(node)
+                cardinality = node.metadata.get("cardinality") if node.metadata else None
+                parameters = self._default_distribution_parameters(
+                    dist_type, cardinality
+                )
+
+                likelihoods[obs_like_id] = Likelihood(
+                    id=obs_like_id,
+                    variable_id=f"obs_{node_id}",
+                    distribution_type=dist_type,
+                    parameters=parameters,
+                    confidence=self._map_confidence(mapping.confidence_score),
+                )
 
         logger.debug(f"Extracted {len(likelihoods)} likelihoods")
         return likelihoods
+
+    def _infer_observation_distribution(self, node: Node) -> str:
+        """
+        Infer a distribution type for an observation modality from the
+        node's ``type_hint`` metadata.
+
+        - Boolean hints (``bool``, ``boolean``) -> ``bernoulli``.
+        - Integer hints (``int``, ``integer``) -> ``categorical`` when
+          cardinality metadata is small (<= 10), otherwise ``categorical``
+          (Gaussian doesn't make sense for discrete observations).
+        - Float hints (``float``, ``real``, ``double``) -> ``gaussian``.
+        - String hints (``str``, ``string``) -> ``categorical``.
+        - Unknown -> ``unknown``.
+
+        Args:
+            node: The observation's underlying graph node.
+
+        Returns:
+            Distribution type identifier.
+        """
+        meta = node.metadata or {}
+        hint = str(meta.get("type_hint", "")).lower()
+        if hint in ("bool", "boolean"):
+            return "bernoulli"
+        if hint in ("int", "integer"):
+            return "categorical"
+        if hint in ("float", "real", "double"):
+            return "gaussian"
+        if hint in ("str", "string"):
+            return "categorical"
+        if "list" in hint or "array" in hint or "vector" in hint:
+            return "categorical"
+        return "unknown"
+
+    def _default_distribution_parameters(
+        self,
+        dist_type: str,
+        cardinality: Optional[int],
+    ) -> Dict[str, float]:
+        """
+        Produce default parameters for a given distribution type. These
+        parameters are placeholders that satisfy the GNN schema (each
+        likelihood needs *some* parameters for downstream formatters) but
+        remain easily recognisable as priors.
+
+        Args:
+            dist_type: One of ``bernoulli``, ``categorical``, ``gaussian``.
+            cardinality: Optional known cardinality of the underlying variable.
+
+        Returns:
+            Dictionary of parameter name -> float value.
+        """
+        if dist_type == "bernoulli":
+            return {"p": 0.5}
+        if dist_type == "categorical":
+            # Uniform categorical: 1/n per class if we know n, else placeholder.
+            if cardinality and cardinality > 0:
+                return {"alpha": 1.0, "n_classes": float(cardinality)}
+            return {"alpha": 1.0}
+        if dist_type == "gaussian":
+            return {"mean": 0.0, "variance": 1.0}
+        return {}
 
     def _extract_preferences(
         self,
         semantic_mappings: Dict[str, SemanticMapping]
     ) -> Dict[str, Preference]:
         """
-        Extract preferences and constraints from tests and assertions.
+        Extract preferences and constraints from CONSTRAINT/PREFERENCE mappings.
+
+        For each CONSTRAINT or PREFERENCE mapping, builds a :class:`Preference`
+        whose ``variable_id`` scope is discovered from READS/WRITES edges on
+        the mapping's graph fragment, whose ``expression`` is pulled from
+        mapping metadata, assertion/test node metadata, or falls back to the
+        semantic label, and whose ``weight`` is derived directly from the
+        mapping's confidence score.
+
+        POLICY mappings are *not* treated as preferences — they are handled in
+        :meth:`_extract_actions` because policies express decision rules that
+        mutate state rather than goal constraints over state.
 
         Args:
-            semantic_mappings: Semantic mappings.
+            semantic_mappings: Semantic mappings keyed by mapping id.
 
         Returns:
-            Dictionary of preferences.
+            Dictionary keyed by ``pref_<index>`` whose values are
+            :class:`Preference` objects.
         """
-        preferences = {}
+        preferences: Dict[str, Preference] = {}
 
-        # Find CONSTRAINT and PREFERENCE mappings
-        pref_kinds = {MappingKind.CONSTRAINT, MappingKind.PREFERENCE, MappingKind.POLICY}
-        pref_mappings = {
-            mid: m for mid, m in semantic_mappings.items()
+        # Find CONSTRAINT and PREFERENCE mappings.  POLICY is intentionally
+        # excluded here so that policies and preferences do not double-count
+        # the same underlying mapping.
+        pref_kinds = {MappingKind.CONSTRAINT, MappingKind.PREFERENCE}
+        pref_mappings = [
+            (mid, m) for mid, m in semantic_mappings.items()
             if m.kind in pref_kinds
-        }
+        ]
 
-        for i, (mapping_id, mapping) in enumerate(pref_mappings.items()):
+        for i, (mapping_id, mapping) in enumerate(pref_mappings):
             pref_id = f"pref_{i}"
 
-            # Extract scope: find which state variables the constraint's
-            # graph fragment nodes read or write
+            # Extract scope: which state variables are touched by the
+            # constraint's graph fragment.
             scope = self._extract_preference_scope(mapping)
 
-            # Extract expression from node metadata or assertion patterns
+            # Extract expression from node metadata or assertion patterns.
             expression = self._extract_preference_expression(mapping)
 
-            # Create preference
+            # Weight is driven by the mapping confidence -- a constraint we
+            # are certain of carries more weight in the preference model.
+            weight = float(mapping.confidence_score) if mapping.confidence_score else 1.0
+
             preference = Preference(
                 id=pref_id,
                 name=mapping.semantic_label or f"Preference {i}",
                 description=mapping.description,
                 scope=scope,
                 expression=expression,
+                weight=weight,
                 source=mapping_id,
                 confidence=self._map_confidence(mapping.confidence_score),
             )
@@ -597,14 +750,40 @@ class StateSpaceCompiler:
         """
         Extract action parameters from node metadata.
 
+        Handles both the dict form (``{"param_name": type}``) and the list
+        form (``["self", "digit"]``) commonly emitted by static parsers.
+        Drops the ``self`` parameter because it is implicit for methods.
+
         Args:
             node: The action node.
 
         Returns:
-            Dictionary of parameters.
+            Dictionary mapping parameter name to type (or ``None`` when
+            no type annotation is available). Always returns a ``dict``.
         """
-        # Would extract from function signature or metadata
-        return node.metadata.get("parameters", {})
+        raw = node.metadata.get("parameters") if node.metadata else None
+        if not raw:
+            return {}
+        if isinstance(raw, dict):
+            return {name: ty for name, ty in raw.items() if name != "self"}
+        if isinstance(raw, (list, tuple)):
+            params: Dict[str, Any] = {}
+            for entry in raw:
+                if isinstance(entry, dict):
+                    name = entry.get("name")
+                    if name and name != "self":
+                        params[str(name)] = entry.get("type")
+                elif isinstance(entry, (list, tuple)) and len(entry) >= 1:
+                    name = entry[0]
+                    if name and name != "self":
+                        params[str(name)] = entry[1] if len(entry) > 1 else None
+                else:
+                    name = str(entry)
+                    if name and name != "self":
+                        params[name] = None
+            return params
+        # Unknown shape — return empty dict so Action.parameters stays typed.
+        return {}
 
     def _extract_action_effects(
         self,
