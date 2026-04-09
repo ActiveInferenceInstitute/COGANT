@@ -34,26 +34,47 @@ Several systems address the intersection of program analysis and machine learnin
 
 ### Feature matrix: COGANT vs. related tools
 
-The following matrix contrasts COGANT's capabilities with the related tools discussed in this section. Entries marked "✓" indicate first-class support; "partial" indicates limited or indirect support; "—" indicates the feature is out of scope for that tool.
+The following matrix contrasts COGANT's capabilities with the related tools discussed in this section. Entries marked "yes" indicate first-class support; "partial" indicates limited or indirect support; "no" indicates the feature is out of scope for that tool.
 
-**Table 4. Feature comparison of program-to-model toolchains.**
+**Table 8. Feature comparison of program-to-model toolchains.**
 
 | Feature | COGANT | code2vec | GGNN | CodeQL | CodeBERT |
 |---------|:------:|:--------:|:----:|:------:|:--------:|
-| Full program graph (AST + CFG + DFG) | ✓ | — | input-only | ✓ | — |
-| Typed node/edge taxonomy | ✓ | — | partial | ✓ | — |
-| Confidence scoring per assertion | ✓ | — | — | — | — |
-| Provenance tracking | ✓ | — | — | partial | — |
-| State-space extraction | ✓ | — | — | — | — |
-| Temporal regime classification | ✓ | — | — | — | — |
-| Dynamic enrichment (coverage, traces) | ✓ | — | — | partial | — |
-| Generalized Notation Notation output | ✓ | — | — | — | — |
-| Tensor export (PyG, DGL, HDF5) | ✓ | partial | input-only | — | — |
-| Pluggable translation rules | ✓ | — | — | ✓ | — |
-| Human review loop | ✓ | — | — | partial | — |
-| Multi-language front-ends | roadmap | ✓ | — | ✓ | ✓ |
+| Full program graph (AST + CFG + DFG) | yes | no | input-only | yes | no |
+| Typed node/edge taxonomy | yes | no | partial | yes | no |
+| Confidence scoring per assertion | yes | no | no | no | no |
+| Provenance tracking | yes | no | no | partial | no |
+| State-space extraction | yes | no | no | no | no |
+| Temporal regime classification | yes | no | no | no | no |
+| Dynamic enrichment (coverage, traces) | yes | no | no | partial | no |
+| Generalized Notation Notation output | yes | no | no | no | no |
+| Tensor export (PyG, DGL, HDF5) | yes | partial | input-only | no | no |
+| Pluggable translation rules | yes | no | no | yes | no |
+| Human review loop | yes | no | no | partial | no |
+| Multi-language front-ends | roadmap | yes | no | yes | yes |
 
 COGANT is distinct from the other toolchains in three ways: first, it explicitly models uncertainty through confidence tiers tied to evidence provenance; second, it produces a structured Active Inference notation as its primary output rather than an opaque tensor; and third, it composes static and dynamic evidence in a single pipeline rather than specializing to one.
+
+### Input/output comparison vs prior art
+
+Table 8 contrasts fine-grained feature flags; Table 9 expands the frame to include the *input/output contract* of each approach, because the most consequential difference between COGANT and its neighbours is what a user has to supply (training data, hand-written queries, manual modelling) and what they get back (vector, query table, simulator-ready model). The comparison covers code-representation learning (code2vec), learned graph models for programs (GGNN, Typilus, LambdaNet), code-property-graph-based analysers (CodeQL, the original Joern/CPG line), compiler IRs (PDG, LLVM IR, MLIR), and Active Inference tooling (hand-authored GNN with PyMDP as the downstream runtime).
+
+**Table 9. Input/output comparison of COGANT and prior approaches.**
+
+| Approach | Primary input | Primary output | Requires training | Languages (as shipped) | Produces Active Inference model |
+|---|---|---|:---:|---|:---:|
+| **COGANT** (this work) | Source repository (checkout or URL) | Generalized Notation Notation bundle (A/B/C/D, state space, Markov blanket, tensor views) | no | Python (JS/TS roadmap) | yes (end-to-end) |
+| code2vec / code2seq [@alon2019code2vec] | Single method or function body | Fixed-size embedding vector (predicted method name or tag) | yes (14M-method corpus) | Java (primary), C\#, Python (partial) | no |
+| Gated GNN for programs [@allamanis2018learning; @li2016gated] | Typed program graph (AST + control + data-flow) | Task-specific prediction (variable misuse, variable naming) | yes (task-specific labels) | C\# (original), Java | no |
+| Typilus [@allamanis2020typilus] / LambdaNet [@wei2020lambdanet] | Typed program graph | Predicted type annotations | yes | Python / TypeScript | no |
+| Program Dependence Graph [ferrante1987pdg; horwitz1990slicing] | Single procedure or interprocedural bundle | PDG / System Dependence Graph | no | Any (formalism-level) | no |
+| LLVM / MLIR IR [@lattner2004llvm; @lattner2021mlir] | Source in supported front-end language | SSA-form compiler IR, optimisation passes, code generation | no | C/C++/Rust/Swift/many via LLVM | no |
+| CodeQL / QL [@avgustinov2016ql] | Source repository + hand-written query | Query result table (alerts, findings) | no | Python, JS/TS, Java, C\#, Go, C/C++ | no |
+| CodeBERT / GraphCodeBERT [@feng2020codebert; @guo2021graphcodebert] | Token (and DFG) sequence for a code fragment | Contextual embeddings for downstream tasks | yes (multi-million-pair corpus) | Python, Java, JS, PHP, Ruby, Go | no |
+| PyMDP [@heins2022pymdp] | Hand-authored A/B/C/D matrices (Python objects) | Active Inference simulation trajectories | no | N/A (runtime, not extractor) | yes (consumer of hand-authored input) |
+| Generalized Notation Notation reference [@friedman2024gnn] | Hand-authored GNN Markdown or JSON | State-space/process model artifacts | no | N/A (notation + validator) | yes (format, not extractor) |
+
+Three things are visible in this table that the fine-grained feature matrix does not capture. First, **COGANT is the only row whose input is a raw repository and whose output is a simulator-ready Active Inference model**: every other Active-Inference entry in the rightmost column (PyMDP, the GNN reference) requires a human to author the model by hand, and every code-modelling entry (code2vec through CodeBERT) produces either a vector, a type annotation, or a query result rather than a generative model. Second, **COGANT's rule-based pipeline does not require training**, which places it alongside the compiler-IR and code-property-graph lines rather than the learned-embedding lines in Section 8's "training" column. Third, **the languages column highlights that COGANT's Python-only v0.1.x front end is a deliberate scope choice, not a structural limitation**: the rule engine and state-space compiler consume a language-agnostic `ProgramGraph` IR, so adding a JavaScript/TypeScript parser is a matter of implementing the plugin interface in `../cogant/docs/PLUGIN_API.md` and does not touch the translation, matrix, or export layers.
 
 ## Active inference and program behavior
 
