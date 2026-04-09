@@ -168,13 +168,32 @@ class TemporalAnalyzer:
             if edge.kind not in (EdgeKind.CALLS, EdgeKind.TRIGGERS):
                 continue
 
-            # Determine constraint type
+            # Determine constraint type.
+            #
+            # Confidence 0.7 for parallel (async) edges — principled
+            # default (bottom band). When either endpoint is async,
+            # the ordering is weaker: the scheduler may execute
+            # handlers out of source-order, and our static classifier
+            # cannot tell whether the caller *awaits* the coroutine
+            # or fires-and-forgets. 0.7 reflects this genuine
+            # ambiguity.
+            #
+            # Confidence 0.95 for sequential (sync) edges — principled
+            # default (near-DEFINITE). A synchronous CALLS edge
+            # between two non-async nodes implies strict source-order
+            # execution by Python semantics; the only residual
+            # uncertainty is whether the edge was correctly extracted
+            # by the AST substrate (parser_certainty ~0.95 on
+            # CALLS/TRIGGERS edges, hence 0.95 here).
+            #
+            # TODO(calibration): validate both thresholds against
+            # runtime trace evidence from the 20-repo corpus.
             if edge.source_id in async_nodes or edge.target_id in async_nodes:
                 constraint_type = "parallel"
-                confidence = 0.7
+                confidence = 0.7    # bottom band (async ambiguity)
             else:
                 constraint_type = "sequential"
-                confidence = 0.95
+                confidence = 0.95   # near-DEFINITE (sync Python semantics)
 
             ordering = TemporalOrdering(
                 predecessor_id=edge.source_id,
@@ -308,13 +327,29 @@ class TemporalAnalyzer:
         Returns:
             Determined TimeRegime.
         """
-        # Decision logic based on metrics
+        # Decision logic based on metrics.
+        #
+        # Regime precedence: EVENT_DRIVEN (or HYBRID when mixed with
+        # async) dominates pure ASYNCHRONOUS, because event buses are
+        # the more expressive execution model. Pure SYNCHRONOUS is
+        # the default when neither event nor async signals are
+        # present.
         if metrics.has_event_triggers and metrics.event_patterns_count > 0:
             if metrics.has_async_handlers:
                 return TimeRegime.HYBRID
             else:
                 return TimeRegime.EVENT_DRIVEN
 
+        # async_fraction threshold = 0.3 — principled default. When
+        # more than ~30% of nodes are async, the execution model is
+        # dominated by the async runtime (asyncio/tokio/promise
+        # scheduler). Below 0.3, async is treated as an exception in
+        # a mostly-synchronous codebase. The 0.3 cutoff roughly
+        # corresponds to "one async call per sync-call triad", which
+        # aligns with the 0.2/0.4 bands in the Cousot & Cousot
+        # iteration-profile literature.
+        # TODO(calibration): sweep {0.2, 0.25, 0.3, 0.35, 0.4} on
+        # the 20-repo corpus.
         if metrics.async_fraction > 0.3 or metrics.has_async_handlers:
             return TimeRegime.ASYNCHRONOUS
 

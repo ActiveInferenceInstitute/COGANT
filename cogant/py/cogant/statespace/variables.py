@@ -335,15 +335,38 @@ class StateVariableExtractor:
                     dependencies.append(other_var.id)
 
             if dependencies:
+                # independence_score = 0.5 — principled default
+                # ("moderately dependent"). Our current dependency
+                # check is binary (shared-edge overlap), so we cannot
+                # yet produce a graded score; 0.5 is the maximum-
+                # entropy placeholder. TODO(calibration): replace
+                # with a proper score derived from the fraction of
+                # overlapping mutation/read edges, calibrated against
+                # a human-labelled factorization gold standard on
+                # the 20-repo corpus.
                 self.factorization_map[var.id] = FactorizationInfo(
                     factors=[var.id] + dependencies,
-                    independence_score=0.5,  # Moderately dependent
+                    independence_score=0.5,  # placeholder (see above)
                     dependencies={var.id: dependencies}
                 )
 
     def _map_confidence(self, confidence_score: float) -> ConfidenceLevel:
-        """
-        Map numeric confidence score to ConfidenceLevel.
+        """Map numeric confidence score to ConfidenceLevel.
+
+        Thresholds (audit 2026-04-09):
+            The 0.95 / 0.80 / 0.60 / 0.40 ladder is a **principled
+            default** set to align with the translation-rule
+            confidence bands documented in
+            :mod:`cogant.translate.rules` (top/high/upper-mid/mid/
+            bottom/lowest at 0.90/0.85/0.80/0.75/0.70/0.65). The
+            ladder is intentionally coarser than the rule bands so
+            that adjacent rule bands map to the same
+            ConfidenceLevel label, giving downstream consumers a
+            stable categorical view. TODO(calibration): validate the
+            mapping against the human-reviewed GNN gold standard
+            from the 20-repo corpus; thresholds may be re-centered
+            if the resulting LOW/MEDIUM split does not match human
+            judgments.
 
         Args:
             confidence_score: Score from 0.0 to 1.0.
@@ -351,11 +374,13 @@ class StateVariableExtractor:
         Returns:
             Corresponding ConfidenceLevel.
         """
-        if confidence_score >= 0.95:
+        # Principled-default ladder; see docstring for rationale and
+        # TODO(calibration) against 20-repo gold standard.
+        if confidence_score >= 0.95:        # matches "definite" (near-1)
             return ConfidenceLevel.DEFINITE
-        elif confidence_score >= 0.80:
+        elif confidence_score >= 0.80:      # >= upper-mid rule band
             return ConfidenceLevel.HIGH
-        elif confidence_score >= 0.60:
+        elif confidence_score >= 0.60:      # below lowest rule band
             return ConfidenceLevel.MEDIUM
         elif confidence_score >= 0.40:
             return ConfidenceLevel.LOW

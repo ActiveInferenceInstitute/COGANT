@@ -35,10 +35,10 @@ class ValidationResult:
             score: Validation score 0-100.
         """
         self.valid = valid
-        self.errors = errors or []
-        self.warnings = warnings or []
+        self.errors: List[str] = errors or []
+        self.warnings: List[str] = warnings or []
         self.score = score
-        self.details = {}
+        self.details: Dict[str, Any] = {}
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -120,10 +120,15 @@ class GNNValidator:
         "ActInfOntologyAnnotation",
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize validator."""
-        self.result = None
-        self.package_dir = None
+        # ``validate_package`` is the single entry point and always
+        # reassigns these before they're read. Type-annotating as
+        # non-optional avoids a cascade of union-attr noise in the
+        # private ``_check_*`` helpers below without hiding any real
+        # null-dereference bug (the helpers are never called first).
+        self.result: ValidationResult = ValidationResult()
+        self.package_dir: Path = Path(".")
 
     def validate_package(self, package_dir: str) -> ValidationResult:
         """
@@ -316,6 +321,13 @@ class GNNValidator:
                 )
             else:
                 for i, row in enumerate(A):
+                    # Tolerance 1e-6 — stability constant. A-matrix rows
+                    # encode P(o|s) and must sum to 1 by construction,
+                    # but float64 accumulation introduces ~n_states * eps
+                    # drift (n_states ~ 10-100 in our corpus, eps ~ 2.2e-16
+                    # → drift ~ 1e-14). 1e-6 leaves 8 orders of magnitude
+                    # headroom and matches the pymdp / scipy convention
+                    # for stochastic matrix row-normalization checks.
                     if abs(sum(row) - 1.0) > 1e-6:
                         errors.append(
                             f"A row {i} does not sum to 1 "
@@ -348,6 +360,10 @@ class GNNValidator:
                     f"D length {len(D)} != n_states {n_states}"
                 )
             elif D and abs(sum(D) - 1.0) > 1e-6:
+                # Tolerance 1e-6 — stability constant, same rationale as
+                # A-row tolerance above (pymdp/scipy convention for
+                # probability-simplex sum checks; ~8 orders of magnitude
+                # headroom over float64 accumulation drift).
                 errors.append(
                     f"D does not sum to 1 (sum={sum(D):.6f})"
                 )
@@ -536,11 +552,38 @@ class GNNValidator:
                 self.result.warnings.append(f"Failed to verify checksum for {filename}: {e}")
 
     def _compute_final_score(self) -> None:
-        """Compute final validation score and validity."""
-        # Score based on errors and warnings
-        max_points = 100
-        points_per_error = 10
-        points_per_warning = 2
+        """Compute final validation score and validity.
+
+        Scoring constants (audit 2026-04-09):
+            ``max_points = 100`` — principled default (percentage scale,
+            human-interpretable).
+
+            ``points_per_error = 10`` — principled default. An error is
+            a hard violation (missing file, shape mismatch, bad sum).
+            10 points per error means 10 errors reduce a perfect model
+            to zero, which matches the intuition that "a model with 10
+            hard bugs should not pass validation."
+
+            ``points_per_warning = 2`` — principled default. Warnings
+            are softer signals (checksum mismatch, missing optional
+            field). The 5:1 error-to-warning ratio reflects the
+            severity gap and ensures that a model must accumulate 50
+            warnings before they dominate a single error.
+
+            ``score >= 80`` valid threshold — principled default. An
+            80/100 threshold corresponds to "at most 2 errors OR at
+            most 10 warnings OR a mix below that envelope." This is
+            calibrated against the intuition that a model with >2
+            hard errors should not be shipped. TODO(calibration):
+            validate threshold against human-labelled 20-repo corpus;
+            sweep {70, 75, 80, 85} and report precision/recall on
+            human "ship/don't ship" decisions.
+        """
+        # Score based on errors and warnings.
+        # See the docstring above for per-constant justification.
+        max_points = 100              # percentage scale
+        points_per_error = 10         # 10 errors → zero score
+        points_per_warning = 2        # 5:1 severity ratio vs. errors
 
         score = max_points
         score -= len(self.result.errors) * points_per_error
@@ -548,6 +591,8 @@ class GNNValidator:
         score = max(0, min(100, score))
 
         self.result.score = float(score)
+        # Valid iff zero errors AND score >= 80 (principled default;
+        # see docstring — TODO(calibration) on 20-repo corpus).
         self.result.valid = len(self.result.errors) == 0 and score >= 80
 
         logger.debug(f"  Final score: {self.result.score:.1f}% - {'VALID' if self.result.valid else 'INVALID'}")

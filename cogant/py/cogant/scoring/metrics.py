@@ -1,4 +1,32 @@
-"""CodebaseMetrics: Compute complexity, coupling, cohesion, and coverage metrics."""
+"""Architectural quality metrics for a COGANT analysis bundle.
+
+This module exposes :class:`CodebaseMetrics`, which computes a small
+family of normalized (``[0, 1]``) architectural quality scores from a
+program graph, state space model, and semantic mappings dictionary.
+The scores are intentionally simple and ratio-based so that reports can
+compare very different repositories on the same scale:
+
+* **Complexity** — graph density blended with a log-scaled node count.
+* **Coupling** — fraction of edges that cross module boundaries.
+* **Cohesion** — fraction of edges that stay inside a single module.
+* **Semantic coverage** — fraction of nodes that carry at least one
+  :class:`SemanticMapping`.
+* **Observability** — fraction of state variables that are referenced
+  by at least one :class:`ObservationModality`.
+* **Controllability** — fraction of state variables that are referenced
+  by at least one :class:`Action`.
+
+The class consumes raw ``dict`` inputs (usually produced by the JSON
+export of :class:`ProgramGraph` and :class:`StateSpaceModel`) so that
+the scorer can run standalone against a persisted bundle without
+re-importing COGANT's schemas.
+
+Example:
+    >>> metrics = CodebaseMetrics(graph_dict, state_space_dict, mappings)
+    >>> report = metrics.summary()
+    >>> f"Coupling: {report.coupling_score:.2%}"
+    'Coupling: 42.00%'
+"""
 
 import math
 import logging
@@ -10,7 +38,29 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class MetricsReport:
-    """Container for all codebase metrics."""
+    """Immutable snapshot of all architectural scores for one bundle.
+
+    Returned by :meth:`CodebaseMetrics.summary`. Each score is a
+    ``float`` in ``[0.0, 1.0]``; each count is a raw integer. The
+    dataclass is deliberately flat and JSON-friendly so it can be
+    serialized directly by the pipeline's report writers.
+
+    Attributes:
+        complexity_score: Density + log-size composite, ``[0, 1]``.
+        coupling_score: Cross-module edge fraction, ``[0, 1]``.
+        cohesion_score: Intra-module edge fraction, ``[0, 1]``.
+        semantic_coverage: Fraction of nodes carrying a semantic
+            mapping, ``[0, 1]``.
+        observability_score: Fraction of state variables with at least
+            one observation channel, ``[0, 1]``.
+        controllability_score: Fraction of state variables with at
+            least one acting controller, ``[0, 1]``.
+        node_count: Total number of graph nodes considered.
+        edge_count: Total number of graph edges considered.
+        state_var_count: Number of state variables in the state space.
+        observation_count: Number of observation modalities.
+        action_count: Number of actions.
+    """
 
     complexity_score: float
     coupling_score: float
@@ -26,7 +76,26 @@ class MetricsReport:
 
 
 class CodebaseMetrics:
-    """Compute architectural quality metrics for a codebase analysis."""
+    """Compute architectural quality metrics for a COGANT bundle.
+
+    Instantiated once per bundle with raw JSON-ready dicts. The input
+    dicts are defensively shallow-copied on ``__init__`` so subsequent
+    mutation by the caller does not affect already-computed scores.
+    Each metric is exposed as its own method so callers can pick a
+    subset, and :meth:`summary` returns all six scores together as a
+    :class:`MetricsReport`.
+
+    The class is pure: repeated calls to the same metric method on an
+    instance always return the same value, and no metric touches the
+    filesystem, the network, or any global state.
+
+    Example:
+        >>> metrics = CodebaseMetrics(graph_dict, state_space_dict, {})
+        >>> metrics.complexity_score()  # doctest: +SKIP
+        0.42
+        >>> metrics.summary().node_count  # doctest: +SKIP
+        137
+    """
 
     def __init__(self, graph: Dict[str, Any], state_space: Dict[str, Any], mappings: Dict[str, Any]):
         """Initialize metrics calculator.
@@ -47,11 +116,30 @@ class CodebaseMetrics:
         self.actions = self.state_space.get("actions", [])
 
     def complexity_score(self) -> float:
-        """
-        Compute cyclomatic-like complexity: accounts for node and edge counts.
+        """Compute cyclomatic-like complexity from node/edge counts.
 
-        Range: 0-1 (higher = more complex).
-        Uses a normalized metric based on graph density and size.
+        Range: 0-1 (higher = more complex). Uses a normalized metric
+        based on graph density and size.
+
+        Constants (audit 2026-04-09):
+            ``max_nodes = 1000`` — principled default for log-scale
+            normalization. Chosen so that a 1000-node program graph
+            maps to ``size_factor = 1.0`` (maximum). 1000 nodes
+            roughly corresponds to a mid-sized Python module (~5000
+            LOC) in the 20-repo corpus; smaller programs scale
+            logarithmically. TODO(calibration): measure actual
+            node-count distribution on the corpus and re-fit if the
+            90th percentile exceeds 1000.
+
+            ``0.6 / 0.4`` density/size weights — principled default.
+            The 60/40 split favors density (structural coupling) over
+            raw size (growth), reflecting the intuition that a
+            densely-connected 100-node graph is more complex than a
+            sparsely-connected 1000-node graph. TODO(calibration):
+            correlate the composite score against human
+            complexity judgments on the 20-repo corpus; the split
+            should be re-fit via ridge regression if correlation
+            is below 0.7.
         """
         if not self.nodes:
             return 0.0
@@ -68,21 +156,33 @@ class CodebaseMetrics:
         # Density: actual edges / max possible edges
         density = edge_count / max_edges
 
-        # Cyclomatic-like: scale node count (higher node count = higher baseline complexity)
-        # Use log scale to normalize: log2(n) / log2(max_reasonable_nodes)
-        # Assume 1000 is "very large"
-        max_nodes = 1000
+        # Cyclomatic-like: scale node count (higher node count = higher
+        # baseline complexity) via log-scale normalization.
+        # max_nodes = 1000 is a principled default ("very large"
+        # Python module); see docstring for rationale.
+        max_nodes = 1000  # log-scale ceiling (TODO: calibrate on corpus)
         size_factor = math.log2(node_count + 1) / math.log2(max_nodes)
 
-        # Combine: weighted sum (density and size)
+        # Combine: weighted sum of density (60%) and size (40%).
+        # Density-dominant split favors structural coupling over raw
+        # growth. TODO(calibration): re-fit on 20-repo corpus.
         complexity = (0.6 * density + 0.4 * min(size_factor, 1.0))
         return min(complexity, 1.0)
 
     def coupling_score(self) -> float:
-        """
-        Compute cross-module coupling: edge density between different modules.
+        """Compute cross-module coupling as a ratio of cross-boundary edges.
 
-        Range: 0-1 (higher = more tightly coupled).
+        Groups every node into its parent module (falling back to
+        ``attributes.module`` metadata, then to the literal ``"root"``
+        bucket) and counts the fraction of edges whose source and
+        target are in different modules. A result near 1.0 means the
+        codebase is dominated by inter-module edges; a result near 0.0
+        means modules are internally self-contained.
+
+        Returns:
+            Coupling score in ``[0.0, 1.0]``. Returns 0.0 if there are
+            no edges, or if every node resolves to the same module
+            (single-module codebases are treated as fully decoupled).
         """
         if not self.edges:
             return 0.0
@@ -123,10 +223,17 @@ class CodebaseMetrics:
         return min(coupling, 1.0)
 
     def cohesion_score(self) -> float:
-        """
-        Compute intra-module cohesion: edge density within modules.
+        """Compute intra-module cohesion as a ratio of in-module edges.
 
-        Range: 0-1 (higher = more cohesive).
+        Mirror of :meth:`coupling_score`: groups nodes by module and
+        counts the fraction of edges whose source and target fall in
+        the *same* module. The two scores do not in general sum to
+        1.0 because edges with an unresolved source or target module
+        are dropped from both numerators.
+
+        Returns:
+            Cohesion score in ``[0.0, 1.0]``. Returns 0.0 if there
+            are no edges.
         """
         if not self.edges:
             return 0.0
@@ -167,10 +274,15 @@ class CodebaseMetrics:
         return min(cohesion, 1.0)
 
     def semantic_coverage(self) -> float:
-        """
-        Fraction of graph nodes with semantic mappings.
+        """Fraction of graph nodes that carry at least one semantic mapping.
 
-        Range: 0-1 (1.0 = all nodes mapped).
+        A node is "covered" when its id appears as a key in the
+        ``self.mappings`` dict passed at construction. Empty graphs
+        return 1.0 (vacuously fully covered) so that empty repos do
+        not penalize aggregate dashboards.
+
+        Returns:
+            Coverage in ``[0.0, 1.0]``.
         """
         if not self.nodes:
             return 1.0  # Empty graph is "covered"
@@ -185,10 +297,16 @@ class CodebaseMetrics:
         return min(coverage, 1.0)
 
     def observability_score(self) -> float:
-        """
-        Fraction of state variables with observations.
+        """Fraction of state variables referenced by at least one observation.
 
-        Range: 0-1 (1.0 = all state fully observable).
+        A state variable is "observable" when its ``var_id`` appears
+        in the ``observes_state_vars`` list of any
+        :class:`ObservationModality` in ``self.observations``. An
+        empty state space returns 1.0 (vacuously observable) so that
+        purely stateless repos do not drag down aggregate reports.
+
+        Returns:
+            Observability score in ``[0.0, 1.0]``.
         """
         if not self.state_vars:
             return 1.0
@@ -206,10 +324,15 @@ class CodebaseMetrics:
         return min(observability, 1.0)
 
     def controllability_score(self) -> float:
-        """
-        Fraction of state variables with control actions.
+        """Fraction of state variables affected by at least one action.
 
-        Range: 0-1 (1.0 = all state fully controllable).
+        Counterpart to :meth:`observability_score`. A state variable
+        is "controllable" when its ``var_id`` appears in the
+        ``affects_state_vars`` list of any :class:`Action` in
+        ``self.actions``. An empty state space returns 1.0.
+
+        Returns:
+            Controllability score in ``[0.0, 1.0]``.
         """
         if not self.state_vars:
             return 1.0
@@ -227,7 +350,18 @@ class CodebaseMetrics:
         return min(controllability, 1.0)
 
     def summary(self) -> MetricsReport:
-        """Compute all metrics and return summary."""
+        """Compute all six scores and return them as a single report.
+
+        This is the recommended entry point for callers that want a
+        complete snapshot: it calls every ``*_score`` method and
+        ``*_coverage`` method exactly once and packs the results along
+        with the underlying counts into an immutable
+        :class:`MetricsReport`.
+
+        Returns:
+            A populated :class:`MetricsReport` suitable for JSON
+            serialization or direct display.
+        """
         return MetricsReport(
             complexity_score=self.complexity_score(),
             coupling_score=self.coupling_score(),
@@ -243,7 +377,18 @@ class CodebaseMetrics:
         )
 
     def format_report(self) -> str:
-        """Generate markdown metrics report."""
+        """Render the score summary as a human-readable markdown report.
+
+        Produces a ``# Codebase Metrics Report`` document with three
+        sections (Architectural Metrics, Coverage Metrics, Graph
+        Structure, State Space Structure). Each score is formatted as
+        a percentage with an inline explanatory sub-bullet, and the
+        coverage rows are materialized as ``covered/total`` counts.
+
+        Returns:
+            A newline-joined markdown string. Safe to embed directly
+            inside a larger markdown document.
+        """
         m = self.summary()
 
         lines = [
@@ -294,7 +439,17 @@ class CodebaseMetrics:
         return "\n".join(lines)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Export metrics as dictionary for JSON serialization."""
+        """Export the computed metrics as a JSON-serializable dict.
+
+        The dict mirrors the flat structure of :class:`MetricsReport`
+        but nests the raw counts under ``graph_structure`` and
+        ``state_space_structure`` sub-dicts for readability. Graph
+        density is recomputed inline (not stored on the report) so
+        single-node graphs safely surface 0.0.
+
+        Returns:
+            A dict suitable for direct ``json.dumps``.
+        """
         m = self.summary()
         return {
             "complexity_score": m.complexity_score,

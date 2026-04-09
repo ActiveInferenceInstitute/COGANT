@@ -23,7 +23,26 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ObservationModality:
-    """An observation channel for the system."""
+    """A single observation channel in the compiled state space.
+
+    Represents one observable the system can sense (sensor reading,
+    log line, metric, event, etc.). Produced by
+    :meth:`StateSpaceCompiler._extract_observations` from
+    :class:`MappingKind.OBSERVATION` semantic mappings; one instance
+    per unique graph node backing the mapping.
+
+    Attributes:
+        id: Stable identifier, typically ``obs_<node_id>``.
+        name: Human-readable name (semantic label, falling back to the
+            node name).
+        source_node_id: Graph node id that emits this observation.
+        modality_type: Heuristic channel class — ``"sensor"``,
+            ``"log"``, ``"metric"``, ``"event"``, or ``"other"``.
+        cardinality: Optional number of discrete channels if known.
+        description: Optional free-text description from the mapping.
+        confidence: Confidence tier inherited from the upstream
+            semantic mapping.
+    """
     id: str
     name: str
     source_node_id: str  # Reference to read-only node
@@ -97,19 +116,44 @@ class StateSpaceModel:
 
 
 class StateSpaceCompiler:
-    """
-    Compiles a complete state space model from program graph and semantic
-    mappings. Identifies hidden state, observations, actions, transitions,
-    and preferences.
+    """Compile a state-space model from a program graph and semantic mappings.
+
+    The compiler is the bridge between the symbolic output of the
+    translation engine (``SemanticMapping`` instances) and the numerical
+    output that the GNN matrix builder consumes (``StateSpaceModel``).
+    Given a program graph and a dictionary of mappings, it identifies:
+
+    * hidden state variables (from ``HIDDEN_STATE`` mappings);
+    * observation modalities (from ``OBSERVATION`` mappings);
+    * actions and control factors (from ``ACTION`` and ``POLICY``
+      mappings);
+    * transitions derived from control-flow edges;
+    * likelihoods derived from READS/OBSERVES edges; and
+    * preferences derived from ``CONSTRAINT``/``PREFERENCE`` mappings.
+
+    The compiler is stateless beyond a reference to the program graph
+    and the auxiliary ``StateVariableExtractor`` / ``TemporalAnalyzer``
+    helpers. Construct one per compilation run; do not reuse across
+    graphs.
+
+    Example:
+        >>> from cogant.schemas.graph import ProgramGraph
+        >>> from cogant.statespace.compiler import StateSpaceCompiler
+        >>> graph = ProgramGraph()  # populated by the graph stage
+        >>> compiler = StateSpaceCompiler(graph, schema_name="calculator")
+        >>> model = compiler.compile(semantic_mappings={})
+        >>> model.variables  # dict of StateVariable keyed by id
+        {}
     """
 
     def __init__(self, program_graph: ProgramGraph, schema_name: str):
-        """
-        Initialize the compiler.
+        """Initialize the compiler.
 
         Args:
             program_graph: The program graph to compile.
-            schema_name: Name of the schema being compiled.
+            schema_name: Name of the schema being compiled. Used in
+                diagnostic logging and stamped on the resulting
+                ``StateSpaceModel`` as a provenance tag.
         """
         self.graph = program_graph
         self.schema_name = schema_name
@@ -117,14 +161,28 @@ class StateSpaceCompiler:
         self.temporal_analyzer = TemporalAnalyzer(program_graph)
 
     def compile(self, semantic_mappings: Dict[str, SemanticMapping]) -> StateSpaceModel:
-        """
-        Compile a complete state space model.
+        """Compile a complete state space model.
 
         Args:
-            semantic_mappings: Semantic mappings from the program.
+            semantic_mappings: Semantic mappings keyed by mapping id.
+                Usually produced by ``TranslationEngine.translate()`` and
+                passed through conflict resolution.
 
         Returns:
-            Compiled StateSpaceModel.
+            A fully populated ``StateSpaceModel`` with variables,
+            observations, actions, transitions, likelihoods, and
+            preferences. Empty collections are returned for any category
+            with no matching mappings (never ``None``).
+
+        Raises:
+            ValueError: If ``semantic_mappings`` contains a value that is
+                not a ``SemanticMapping`` instance.
+
+        Example:
+            >>> compiler = StateSpaceCompiler(graph, "calculator")
+            >>> model = compiler.compile(mappings)
+            >>> len(model.variables)
+            3
         """
         logger.info(f"Compiling state space model for schema '{self.schema_name}'")
 
@@ -561,14 +619,27 @@ class StateSpaceCompiler:
         Returns:
             Dictionary of parameter name -> float value.
         """
+        # Distribution defaults below are **principled, maximum-
+        # entropy priors** chosen to be explicitly uninformative so
+        # that downstream consumers can immediately recognise "this
+        # parameter has not been learned yet" and either replace it
+        # with posterior data or trigger a calibration pass.
         if dist_type == "bernoulli":
+            # p = 0.5 — maximum-entropy Bernoulli prior
+            # (H(p=0.5) = 1 bit; no class preference encoded).
             return {"p": 0.5}
         if dist_type == "categorical":
-            # Uniform categorical: 1/n per class if we know n, else placeholder.
+            # alpha = 1.0 — symmetric Dirichlet prior
+            # (uniform over the simplex). Standard pymdp default.
             if cardinality and cardinality > 0:
                 return {"alpha": 1.0, "n_classes": float(cardinality)}
             return {"alpha": 1.0}
         if dist_type == "gaussian":
+            # Standard normal N(0, 1) — maximum-entropy Gaussian
+            # prior subject to unit variance; matches the
+            # conventional Active Inference generative-model prior
+            # (Friston et al. 2017, "Active Inference: A Process
+            # Theory", Neural Computation 29(1)).
             return {"mean": 0.0, "variance": 1.0}
         return {}
 
@@ -968,8 +1039,18 @@ class StateSpaceCompiler:
             return "unknown"
 
     def _map_confidence(self, confidence_score: float) -> ConfidenceLevel:
-        """
-        Map numeric confidence score to ConfidenceLevel.
+        """Map numeric confidence score to ConfidenceLevel.
+
+        Thresholds (audit 2026-04-09):
+            The 0.95 / 0.80 / 0.60 / 0.40 ladder mirrors
+            :meth:`cogant.statespace.variables.StateVariableExtractor._map_confidence`
+            (see that docstring for full rationale). The two
+            implementations are kept in sync intentionally — both
+            consume ``SemanticMapping.confidence_score`` and both
+            need to align with the translation-rule confidence
+            bands (0.65-0.90). TODO(refactor): consolidate into a
+            single helper in ``cogant.schemas.semantic`` and
+            re-calibrate both call sites at once.
 
         Args:
             confidence_score: Score from 0.0 to 1.0.
@@ -977,11 +1058,13 @@ class StateSpaceCompiler:
         Returns:
             ConfidenceLevel.
         """
-        if confidence_score >= 0.95:
+        # Principled-default ladder aligned with rule bands;
+        # TODO(refactor) to merge with variables._map_confidence.
+        if confidence_score >= 0.95:        # matches "definite"
             return ConfidenceLevel.DEFINITE
-        elif confidence_score >= 0.80:
+        elif confidence_score >= 0.80:      # >= upper-mid rule band
             return ConfidenceLevel.HIGH
-        elif confidence_score >= 0.60:
+        elif confidence_score >= 0.60:      # below lowest rule band
             return ConfidenceLevel.MEDIUM
         elif confidence_score >= 0.40:
             return ConfidenceLevel.LOW

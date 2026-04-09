@@ -51,11 +51,35 @@ logger = logging.getLogger(__name__)
 
 
 # Default probability masses used when no graph evidence is present.
-# These follow the standard "high direct, low indirect" Active Inference
-# placeholder convention used by the upstream PyMDP examples.
-_DEFAULT_DIRECT_MASS = 0.9
-_DEFAULT_INDIRECT_MASS = 0.1
-_EPSILON = 1e-9
+#
+# Principled defaults — not empirically calibrated. These follow the
+# "high direct, low indirect" Active Inference placeholder convention
+# used by the upstream PyMDP examples (see Da Costa et al., "Active
+# inference on discrete state-spaces: a synthesis", J. Math. Psychol.
+# 2020, and the PyMDP tutorials at pymdp-rtd.readthedocs.io). The
+# 0.9/0.1 split encodes the prior that a directly-linked
+# (READS/OBSERVES/WRITES/MUTATES) node pair carries 9x the
+# probability mass of any indirectly-linked pair. This is a standard
+# sparse-observation-matrix placeholder and is *not* intended to
+# represent ground-truth PyMDP weights; it is the starting point for
+# manual or empirical refinement.
+#
+# The two masses must sum to 1.0 because every row of A and every
+# column of each B slice is row-normalized in
+# ``_normalize_row`` — the 0.9/0.1 split is a pre-normalization
+# ratio, not a post-normalization target. TODO(calibration): sweep
+# {0.80/0.20, 0.85/0.15, 0.90/0.10, 0.95/0.05} on the 20-repo
+# fixture set and compare against hand-labeled likelihood matrices
+# (see ``_rnd/CALIBRATION.md``).
+_DEFAULT_DIRECT_MASS = 0.9   # principled default (PyMDP convention)
+_DEFAULT_INDIRECT_MASS = 0.1  # principled default (1.0 - direct)
+
+# Numerical stability constant. 1e-9 is the canonical
+# "well below float64 round-off noise but well above denormal"
+# band used throughout scientific Python (scipy, pymdp, torch).
+# Chosen to guard against division-by-zero in ``_normalize_row``
+# without suppressing legitimate near-zero entries. Not calibrated.
+_EPSILON = 1e-9  # stability constant (scipy/pymdp convention)
 
 
 def _normalize_row(row: List[float]) -> List[float]:
@@ -569,6 +593,12 @@ class GNNMatrices:
         n_a = self.n_actions
 
         # A: n_obs x n_states, rows sum to 1.
+        # Row-sum tolerance 1e-6 — principled default, matches the
+        # PyMDP validator tolerance and is ~7 orders of magnitude
+        # above float64 round-off noise (~1e-16) for a typical
+        # n_states <= 50. Strict enough to catch normalization bugs
+        # but loose enough to tolerate accumulated rounding across
+        # multiple ``_normalize_row`` passes.
         if n_o > 0 and n_s > 0:
             if len(A) != n_o:
                 errors.append(f"A row count {len(A)} != n_obs {n_o}")
@@ -576,7 +606,7 @@ class GNNMatrices:
                 errors.append(f"A has inconsistent column count (expected {n_s})")
             else:
                 for i, row in enumerate(A):
-                    if abs(sum(row) - 1.0) > 1e-6:
+                    if abs(sum(row) - 1.0) > 1e-6:  # row-norm tolerance
                         errors.append(
                             f"A row {i} does not sum to 1 (sum={sum(row):.6f})"
                         )
@@ -594,10 +624,11 @@ class GNNMatrices:
         if len(C) != n_o:
             errors.append(f"C length {len(C)} != n_obs {n_o}")
 
-        # D: length n_states, sums to 1
+        # D: length n_states, sums to 1 (same 1e-6 tolerance as A/B
+        # row-normalization check above).
         if len(D) != n_s:
             errors.append(f"D length {len(D)} != n_states {n_s}")
-        elif D and abs(sum(D) - 1.0) > 1e-6:
+        elif D and abs(sum(D) - 1.0) > 1e-6:  # same tolerance as A rows
             errors.append(f"D does not sum to 1 (sum={sum(D):.6f})")
 
         return (len(errors) == 0, errors)

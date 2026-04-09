@@ -147,12 +147,22 @@ class ProcessExtractor:
 
                 side_effects = self._find_side_effects(component_ids)
 
+                # Confidence 0.6 — principled default. Stage
+                # identification is a heuristic clustering step
+                # (connected components over CALLS edges within a
+                # module) and cannot claim the precision of the
+                # static translation rules. 0.6 sits just below the
+                # lowest translation-rule band (0.65) to signal
+                # "derived, not directly extracted" to downstream
+                # consumers. TODO(calibration): compare extracted
+                # stages against human-labelled process maps on the
+                # 20-repo corpus and re-fit the confidence.
                 stage = Stage(
                     id=stage_id,
                     name=stage_name,
                     node_ids=component_ids,
                     side_effects=side_effects,
-                    confidence=0.6,
+                    confidence=0.6,  # principled default (below rule bands)
                 )
                 self.stages[stage_id] = stage
 
