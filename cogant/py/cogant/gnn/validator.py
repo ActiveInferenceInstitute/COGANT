@@ -268,6 +268,92 @@ class GNNValidator:
 
         return errors
 
+    def validate_matrices(self, matrices_json: dict) -> List[str]:
+        """Validate the AII Active Inference matrix block.
+
+        Checks presence and shape of the A/B/C/D matrices emitted by
+        :class:`cogant.gnn.matrices.GNNMatrices`. The matrices must
+        satisfy:
+
+        * A: shape ``[n_obs x n_states]``, rows sum to 1.0.
+        * B: shape ``[n_states x n_states x n_actions]``.
+        * C: length equal to ``n_obs``.
+        * D: length equal to ``n_states``, sums to 1.0.
+
+        Args:
+            matrices_json: Dict of the form
+                ``{"A": ..., "B": ..., "C": ..., "D": ...,
+                "dimensions": {"n_states", "n_obs", "n_actions"}}``.
+
+        Returns:
+            List of errors (empty if matrices are well-formed).
+        """
+        errors: List[str] = []
+
+        for key in ("A", "B", "C", "D"):
+            if key not in matrices_json:
+                errors.append(f"Missing matrix: {key}")
+
+        dims = matrices_json.get("dimensions") or {}
+        n_states = int(dims.get("n_states") or 0)
+        n_obs = int(dims.get("n_obs") or 0)
+        n_actions = int(dims.get("n_actions") or 0)
+
+        A = matrices_json.get("A") or []
+        B = matrices_json.get("B") or []
+        C = matrices_json.get("C") or []
+        D = matrices_json.get("D") or []
+
+        # A: rows == n_obs, cols == n_states, rows sum to 1.
+        if n_obs > 0 and n_states > 0:
+            if len(A) != n_obs:
+                errors.append(
+                    f"A row count {len(A)} != n_obs {n_obs}"
+                )
+            elif A and any(len(row) != n_states for row in A):
+                errors.append(
+                    f"A column count mismatch; expected {n_states}"
+                )
+            else:
+                for i, row in enumerate(A):
+                    if abs(sum(row) - 1.0) > 1e-6:
+                        errors.append(
+                            f"A row {i} does not sum to 1 "
+                            f"(sum={sum(row):.6f})"
+                        )
+
+        # B: shape n_states x n_states x n_actions.
+        if n_states > 0:
+            if len(B) != n_states:
+                errors.append(
+                    f"B first dim {len(B)} != n_states {n_states}"
+                )
+            elif any(len(row) != n_states for row in B):
+                errors.append(
+                    f"B second dim mismatch; expected {n_states}"
+                )
+            elif any(len(cell) != n_actions for row in B for cell in row):
+                errors.append(
+                    f"B third dim mismatch; expected {n_actions}"
+                )
+
+        # C: length n_obs.
+        if n_obs > 0 and len(C) != n_obs:
+            errors.append(f"C length {len(C)} != n_obs {n_obs}")
+
+        # D: length n_states, sums to 1.
+        if n_states > 0:
+            if len(D) != n_states:
+                errors.append(
+                    f"D length {len(D)} != n_states {n_states}"
+                )
+            elif D and abs(sum(D) - 1.0) > 1e-6:
+                errors.append(
+                    f"D does not sum to 1 (sum={sum(D):.6f})"
+                )
+
+        return errors
+
     def validate_provenance(self, provenance_json: dict) -> List[str]:
         """
         Validate provenance structure.

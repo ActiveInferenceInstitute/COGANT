@@ -16,6 +16,7 @@ from cogant.schemas.core import NodeKind, EdgeKind
 from cogant.statespace.compiler import StateSpaceModel
 from cogant.process.extractor import ProcessModel
 from cogant.schemas.semantic import MappingKind
+from cogant.gnn.matrices import GNNMatrices
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +90,9 @@ class GNNJSONExporter:
             "rendering_hints": self._export_rendering_hints(),
             "validation_notes": self._export_validation_notes(),
 
+            # AII Active Inference matrices (A, B, C, D)
+            "matrices": self._export_matrices(),
+
             # Additional cross-reference sections
             "program_graph": self._export_program_graph(),
             "process_model": self._export_process_model(),
@@ -96,6 +100,35 @@ class GNNJSONExporter:
         }
 
         return output
+
+    def _export_matrices(self) -> Dict[str, Any]:
+        """Export the AII Active Inference A/B/C/D matrices.
+
+        Delegates to :class:`cogant.gnn.matrices.GNNMatrices`. On failure
+        (e.g. empty state space) a safe empty structure is returned so
+        the downstream validator can cleanly skip the check.
+        """
+        try:
+            matrices = GNNMatrices(
+                graph=self.graph,
+                mappings=self.mappings,
+                state_space=self.state_space,
+            )
+            return matrices.to_dict()
+        except (ValueError, KeyError, AttributeError) as exc:
+            logger.warning(
+                "Failed to derive GNN matrices for export: %s: %s",
+                type(exc).__name__,
+                exc,
+            )
+            return {
+                "A": [],
+                "B": [],
+                "C": [],
+                "D": [],
+                "shapes": {"A": [0, 0], "B": [0, 0, 0], "C": [0], "D": [0]},
+                "dimensions": {"n_states": 0, "n_obs": 0, "n_actions": 0},
+            }
 
     def export_to_string(self, indent: Optional[int] = 2) -> str:
         """

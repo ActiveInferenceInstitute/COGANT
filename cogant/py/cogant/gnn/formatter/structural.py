@@ -29,6 +29,7 @@ from cogant.schemas.core import NodeKind, EdgeKind
 from cogant.statespace.compiler import StateSpaceModel
 from cogant.process.extractor import ProcessModel
 from cogant.schemas.semantic import MappingKind
+from cogant.gnn.matrices import GNNMatrices
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,44 @@ class _StructuralSectionsMixin:
         else:
             lines.append("No state variables detected in this codebase.")
             lines.append("")
+
+        # Emit the A/B/C/D Active Inference matrices derived from the
+        # graph and semantic mappings. These are required by the AII
+        # upstream GNN validator and are computed by GNNMatrices.
+        try:
+            matrices = GNNMatrices(
+                graph=self.graph,
+                mappings=self.mappings,
+                state_space=self.state_space,
+            )
+            block = matrices.to_gnn_markdown_block()
+            if block:
+                lines.append("### Active Inference Matrices (A/B/C/D)")
+                lines.append("")
+                lines.append(
+                    "The following matrices are derived from the program graph "
+                    "and semantic mappings. They conform to the AII GNN matrix "
+                    "notation: `A[[rows=n_obs][cols=n_states]]`, "
+                    "`B[[rows=n_states][cols=n_states][depth=n_actions]]`, "
+                    "`C[[rows=n_obs]]`, `D[[rows=n_states]]`."
+                )
+                lines.append("")
+                lines.append("```gnn-matrices")
+                lines.append(block)
+                lines.append("```")
+                lines.append("")
+                dims = matrices.to_dict()["dimensions"]
+                lines.append(
+                    f"**Matrix dimensions**: n_states={dims['n_states']}, "
+                    f"n_obs={dims['n_obs']}, n_actions={dims['n_actions']}"
+                )
+                lines.append("")
+        except (ValueError, KeyError, AttributeError) as exc:
+            logger.warning(
+                "Failed to derive GNN A/B/C/D matrices: %s: %s",
+                type(exc).__name__,
+                exc,
+            )
 
         return "\n".join(lines)
     def _format_observation_modalities(self) -> str:
