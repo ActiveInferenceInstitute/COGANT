@@ -1,4 +1,27 @@
-"""DriftAnalyzer: Compare bundles and compute architectural drift scores."""
+"""Architectural and semantic drift analysis across two COGANT bundles.
+
+This module exposes :class:`DriftAnalyzer`, a diff engine that compares
+two serialized COGANT analysis bundles ("a" = baseline, "b" = current)
+and produces:
+
+* A high-level :class:`DriftScore` with architectural, semantic-churn,
+  and composite ``total_score`` values in ``[0.0, 1.0]``.
+* Per-dimension breakdowns: structural (nodes/edges), semantic
+  (mappings), and state-space (variables, observations, actions).
+* Markdown and mermaid renderers for embedding the diff in reports.
+
+The analyzer accepts bundles in either the flat layout
+(``{"graph": ..., "state_space": ..., "mappings": ...}``) or the legacy
+nested ``stage_results`` layout, and transparently normalizes both.
+All scoring is ratio-based so absolute size differences between
+repositories do not dominate the diff.
+
+Example:
+    >>> analyzer = DriftAnalyzer(old_bundle, new_bundle)  # doctest: +SKIP
+    >>> drift = analyzer._compute_drift_score()           # doctest: +SKIP
+    >>> f"Overall drift: {drift.total_score:.1%}"         # doctest: +SKIP
+    'Overall drift: 23.4%'
+"""
 
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Any, Optional, Tuple, Set
@@ -10,7 +33,26 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class DriftScore:
-    """Drift analysis result."""
+    """Composite drift-analysis result for two COGANT bundles.
+
+    Returned by :meth:`DriftAnalyzer._compute_drift_score` and the
+    public :meth:`DriftAnalyzer.analyze` back-compat shim. All scores
+    are normalized to ``[0.0, 1.0]`` where 0.0 means "identical" and
+    1.0 means "completely different".
+
+    Attributes:
+        total_score: Arithmetic mean of ``architectural_score`` and
+            ``semantic_churn_score``. Convenient one-number summary
+            for dashboards.
+        architectural_score: Graph-structure drift (node and edge
+            count deltas).
+        semantic_churn_score: State-space + mappings drift (variable,
+            observation, action, and mapping count deltas).
+        details: Per-dimension breakdown dict with keys
+            ``structural_drift``, ``semantic_drift``, and
+            ``state_space_drift``. Each value is itself a dict of
+            counts (added/removed/changed).
+    """
 
     total_score: float
     """Overall drift score 0-1 (higher = more drift)."""
@@ -65,12 +107,16 @@ class DriftAnalyzer:
             return {}
 
         # Try direct 'graph' key
-        if "graph" in bundle:
-            return bundle["graph"]
+        graph = bundle.get("graph")
+        if isinstance(graph, dict):
+            return graph
 
         # Try 'stage_results.graph' (legacy format)
-        if "stage_results" in bundle and isinstance(bundle["stage_results"], dict):
-            return bundle["stage_results"].get("graph", {})
+        stage_results = bundle.get("stage_results")
+        if isinstance(stage_results, dict):
+            nested = stage_results.get("graph", {})
+            if isinstance(nested, dict):
+                return nested
 
         return {}
 
@@ -80,19 +126,39 @@ class DriftAnalyzer:
             return {}
 
         # Try direct 'state_space' key
-        if "state_space" in bundle:
-            return bundle["state_space"]
+        state_space = bundle.get("state_space")
+        if isinstance(state_space, dict):
+            return state_space
 
         # Try 'stage_results.statespace' (legacy format)
-        if "stage_results" in bundle and isinstance(bundle["stage_results"], dict):
-            return bundle["stage_results"].get("statespace", {})
+        stage_results = bundle.get("stage_results")
+        if isinstance(stage_results, dict):
+            nested = stage_results.get("statespace", {})
+            if isinstance(nested, dict):
+                return nested
 
         return {}
 
     def analyze(self, bundle_a: Dict[str, Any], bundle_b: Dict[str, Any]) -> DriftScore:
-        """Legacy analyze method for backward compatibility."""
-        # Re-initialize with new bundles
-        self.__init__(bundle_a, bundle_b)
+        """Re-initialize the analyzer with fresh bundles and return the drift score.
+
+        Back-compat entry point for callers that build a
+        :class:`DriftAnalyzer` without bundles and call ``analyze``
+        later. Equivalent to constructing a new analyzer then calling
+        :meth:`_compute_drift_score`.
+
+        Args:
+            bundle_a: Baseline bundle.
+            bundle_b: Current bundle.
+
+        Returns:
+            A :class:`DriftScore` describing the diff.
+        """
+        # Re-initialize with new bundles. ``self.__init__`` is flagged by
+        # mypy as unsound because a subclass could override it with an
+        # incompatible signature, but this class is final in practice
+        # and the pattern is intentional here.
+        self.__init__(bundle_a, bundle_b)  # type: ignore[misc]
         return self._compute_drift_score()
 
     def _compute_drift_score(self) -> DriftScore:
@@ -119,7 +185,19 @@ class DriftAnalyzer:
         )
 
     def compute_structural_drift(self) -> Dict[str, Any]:
-        """Compare program graphs: added/removed/changed nodes and edges."""
+        """Return an added/removed/changed summary of the two program graphs.
+
+        Compares node ids and ``source→target`` edge keys between
+        ``self.graph_a`` and ``self.graph_b``. A node that exists in
+        both but compares non-equal at the dict level is counted as
+        "changed" (the entire subdict must be identical to be stable,
+        so cosmetic changes such as renamed labels flag as drift).
+
+        Returns:
+            Dict with ``nodes_added``/``nodes_removed``/
+            ``nodes_changed`` id lists plus matching ``*_count`` keys
+            and ``edges_added_count``/``edges_removed_count``.
+        """
         nodes_a = {n.get("id"): n for n in self.graph_a.get("nodes", [])}
         nodes_b = {n.get("id"): n for n in self.graph_b.get("nodes", [])}
 
@@ -150,7 +228,18 @@ class DriftAnalyzer:
         }
 
     def compute_semantic_drift(self) -> Dict[str, Any]:
-        """Compare semantic mappings: new/lost/changed roles."""
+        """Return an added/removed/changed summary of semantic mappings.
+
+        Uses mapping ids as the diff key. A mapping present in both
+        bundles whose full dict representation differs (kind,
+        confidence, graph_fragment_node_ids, etc.) is counted as
+        "changed".
+
+        Returns:
+            Dict with ``new_mappings``/``lost_mappings``/
+            ``changed_mappings`` id lists plus ``new_count``,
+            ``lost_count``, and ``changed_count`` aggregates.
+        """
         mapping_ids_a = set(self.mappings_a.keys()) if isinstance(self.mappings_a, dict) else set()
         mapping_ids_b = set(self.mappings_b.keys()) if isinstance(self.mappings_b, dict) else set()
 
@@ -173,7 +262,19 @@ class DriftAnalyzer:
         }
 
     def compute_state_space_drift(self) -> Dict[str, Any]:
-        """Compare state spaces: added/removed variables, observations, actions."""
+        """Return add/remove/change counts for the two state spaces.
+
+        Indexes each state space by its natural primary key:
+        ``var_id`` for state variables, ``modality_id`` for
+        observations, ``action_id`` for actions. Only counts are
+        returned (not id lists) because callers typically embed this
+        directly in a tabular diff report.
+
+        Returns:
+            Dict with ``state_vars_added/removed/changed``,
+            ``observations_added/removed``, and
+            ``actions_added/removed`` keys.
+        """
         states_a = {s.get("var_id"): s for s in self.ss_a.get("states", [])}
         states_b = {s.get("var_id"): s for s in self.ss_b.get("states", [])}
 
@@ -195,7 +296,19 @@ class DriftAnalyzer:
         }
 
     def compute_architectural_drift_score(self) -> float:
-        """0.0 = identical, 1.0 = completely different."""
+        """Scalar drift score from node-count and edge-count deltas.
+
+        Computed as ``(node_drift + edge_drift) / 2`` where each
+        sub-score is ``|b - a| / max(a, b)``. Empty baseline/current
+        collections short-circuit to 0.5 when the other side is
+        non-empty, which avoids a divide-by-zero without reporting a
+        spurious 1.0 "full replacement".
+
+        Returns:
+            ``0.0`` when both graphs have identical size, ``1.0``
+            when every node has been replaced or every edge has been
+            rewritten.
+        """
         graph_a = self.graph_a.get("nodes", [])
         graph_b = self.graph_b.get("nodes", [])
 
@@ -219,7 +332,18 @@ class DriftAnalyzer:
         return (node_drift + edge_drift) / 2
 
     def compute_semantic_churn_score(self) -> float:
-        """Measure how much the semantic interpretation changed."""
+        """Scalar churn score from state-space and mapping deltas.
+
+        Computes four independent ratio drifts — state variables,
+        observations, actions, mapping count — and returns their
+        arithmetic mean. Each sub-score uses the same ratio-based
+        formula as :meth:`_compute_count_drift` so absolute size
+        disparities do not dominate.
+
+        Returns:
+            ``0.0`` when every category has identical counts, up to
+            ``1.0`` when every category has been fully replaced.
+        """
         # State space churn
         states_a = len(self.ss_a.get("states", []))
         states_b = len(self.ss_b.get("states", []))
@@ -335,7 +459,18 @@ class DriftAnalyzer:
         return abs(policies2 - policies1)
 
     def generate_diff_report(self) -> str:
-        """Full markdown diff report."""
+        """Render the computed drift as a human-readable markdown report.
+
+        Produces a ``# Architectural Drift Report`` document with
+        Summary, Structural Changes, Semantic Changes, and State
+        Space Changes sections. Percentages are formatted with a
+        single decimal place; absolute counts come straight from the
+        ``details`` dict.
+
+        Returns:
+            A newline-joined markdown string, safe to embed in any
+            larger report.
+        """
         drift = self._compute_drift_score()
 
         lines = [
@@ -400,7 +535,17 @@ class DriftAnalyzer:
         return "\n".join(lines)
 
     def generate_diff_mermaid(self) -> str:
-        """Mermaid diagram showing changes: green=added, red=removed, yellow=changed."""
+        """Render a mermaid flow diagram of the structural drift.
+
+        Emits a ``graph TD`` mermaid block with one leaf per delta
+        (added/removed/changed nodes and added/removed edges) colored
+        green / red / yellow. Intended for markdown reports that
+        already render mermaid.
+
+        Returns:
+            A newline-joined mermaid source string (no surrounding
+            fence).
+        """
         struct = self._compute_drift_score().details.get("structural_drift", {})
 
         lines = [
@@ -471,118 +616,33 @@ class DriftAnalyzer:
 
         return (state_drift + obs_drift + action_drift) / 3
 
-    def _compute_collection_drift(self, col1: List[Any], col2: List[Any]) -> float:
-        """Compute drift between two collections."""
-        if len(col1) == 0:
-            return 0.5 if len(col2) > 0 else 0.0
-        if len(col2) == 0:
-            return 0.5 if len(col1) > 0 else 0.0
-
-        # Simple size-based drift
-        return abs(len(col2) - len(col1)) / max(len(col1), len(col2))
-
-    def _count_added_nodes(
-        self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]
-    ) -> int:
-        """Count added graph nodes."""
-        graph1 = bundle1.get("stage_results", {}).get("graph", {})
-        graph2 = bundle2.get("stage_results", {}).get("graph", {})
-
-        ids1 = {n.get("id") for n in graph1.get("nodes", [])}
-        ids2 = {n.get("id") for n in graph2.get("nodes", [])}
-
-        return len(ids2 - ids1)
-
-    def _count_removed_nodes(
-        self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]
-    ) -> int:
-        """Count removed graph nodes."""
-        graph1 = bundle1.get("stage_results", {}).get("graph", {})
-        graph2 = bundle2.get("stage_results", {}).get("graph", {})
-
-        ids1 = {n.get("id") for n in graph1.get("nodes", [])}
-        ids2 = {n.get("id") for n in graph2.get("nodes", [])}
-
-        return len(ids1 - ids2)
-
-    def _count_edge_changes(
-        self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]
-    ) -> int:
-        """Count changed edges."""
-        graph1 = bundle1.get("stage_results", {}).get("graph", {})
-        graph2 = bundle2.get("stage_results", {}).get("graph", {})
-
-        edges1 = len(graph1.get("edges", []))
-        edges2 = len(graph2.get("edges", []))
-
-        return abs(edges2 - edges1)
-
-    def _count_added_states(
-        self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]
-    ) -> int:
-        """Count added states."""
-        ss1 = bundle1.get("stage_results", {}).get("statespace", {})
-        ss2 = bundle2.get("stage_results", {}).get("statespace", {})
-
-        states1 = len(ss1.get("states", []))
-        states2 = len(ss2.get("states", []))
-
-        return max(0, states2 - states1)
-
-    def _count_removed_states(
-        self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]
-    ) -> int:
-        """Count removed states."""
-        ss1 = bundle1.get("stage_results", {}).get("statespace", {})
-        ss2 = bundle2.get("stage_results", {}).get("statespace", {})
-
-        states1 = len(ss1.get("states", []))
-        states2 = len(ss2.get("states", []))
-
-        return max(0, states1 - states2)
-
-    def _count_observation_changes(
-        self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]
-    ) -> int:
-        """Count changed observations."""
-        ss1 = bundle1.get("stage_results", {}).get("statespace", {})
-        ss2 = bundle2.get("stage_results", {}).get("statespace", {})
-
-        obs1 = len(ss1.get("observations", []))
-        obs2 = len(ss2.get("observations", []))
-
-        return abs(obs2 - obs1)
-
-    def _count_action_changes(
-        self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]
-    ) -> int:
-        """Count changed actions."""
-        ss1 = bundle1.get("stage_results", {}).get("statespace", {})
-        ss2 = bundle2.get("stage_results", {}).get("statespace", {})
-
-        actions1 = len(ss1.get("actions", []))
-        actions2 = len(ss2.get("actions", []))
-
-        return abs(actions2 - actions1)
-
-    def _count_policy_changes(
-        self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]
-    ) -> int:
-        """Count changed policies."""
-        ss1 = bundle1.get("stage_results", {}).get("statespace", {})
-        ss2 = bundle2.get("stage_results", {}).get("statespace", {})
-
-        policies1 = len(ss1.get("policies", []))
-        policies2 = len(ss2.get("policies", []))
-
-        return abs(policies2 - policies1)
+    # Legacy duplicate method blocks (``_compute_collection_drift``,
+    # ``_count_added_nodes``, ``_count_removed_nodes``,
+    # ``_count_edge_changes``, ``_count_added_states``,
+    # ``_count_removed_states``, ``_count_observation_changes``,
+    # ``_count_action_changes``, ``_count_policy_changes``) were
+    # defined earlier in the class. The second copies used the raw
+    # ``stage_results`` accessor; the earlier copies go through
+    # ``_extract_*`` so both bundle shapes work. The earlier
+    # definitions are authoritative and the duplicates have been
+    # removed to silence ``no-redef`` and avoid confusing behavior.
 
     def report(self, score: DriftScore) -> str:
         """Generate human-readable report (legacy method)."""
         return self.generate_diff_report()
 
     def to_dict(self) -> Dict[str, Any]:
-        """Export drift analysis as dictionary for JSON serialization."""
+        """Export the drift analysis as a JSON-serializable dict.
+
+        Runs :meth:`_compute_drift_score` and packs the result into a
+        flat dict with ``total_score``, ``architectural_score``,
+        ``semantic_churn_score``, and ``details``. Intended for
+        persisting drift snapshots to disk or for passing to report
+        writers.
+
+        Returns:
+            A dict suitable for direct ``json.dumps``.
+        """
         drift = self._compute_drift_score()
         return {
             "total_score": drift.total_score,

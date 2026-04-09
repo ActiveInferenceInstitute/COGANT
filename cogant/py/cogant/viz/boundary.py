@@ -4,12 +4,15 @@ Boundary mapping and analysis for program graphs.
 Identifies module boundaries, type boundaries, and cross-boundary couplings.
 """
 
-from typing import Dict, List, Set, Optional, Tuple, Any
+from typing import Dict, List, Set, Optional, Tuple, Any, cast, TYPE_CHECKING
 from collections import defaultdict
 import logging
 
 from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
 from cogant.schemas.graph import ProgramGraph
+
+if TYPE_CHECKING:
+    from cogant.markov.extractor import SeedStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -49,13 +52,16 @@ class BoundaryMapper:
             label = module.name or module.qualified_name
             lines.append(f"    subgraph {safe_id}['{label}']")
 
-            # Get classes in this module
-            classes = [
-                graph.get_node(edge.target_id)
-                for edge in graph.get_edges_from(module.id)
-                if edge.kind == EdgeKind.CONTAINS and graph.get_node(edge.target_id)
-                and graph.get_node(edge.target_id).kind == NodeKind.CLASS
-            ]
+            # Get classes in this module. ``get_node`` may return
+            # ``None`` for dangling edges, so filter explicitly before
+            # using attributes on the narrowed result.
+            classes = []
+            for edge in graph.get_edges_from(module.id):
+                if edge.kind != EdgeKind.CONTAINS:
+                    continue
+                target = graph.get_node(edge.target_id)
+                if target is not None and target.kind == NodeKind.CLASS:
+                    classes.append(target)
 
             # Add class subgraphs within modules
             for cls in classes:
@@ -63,11 +69,13 @@ class BoundaryMapper:
                 lines.append(f"        subgraph {cls_safe}['{cls.name}']")
 
                 # Get methods/functions in this class
-                methods = [
-                    graph.get_node(edge.target_id)
-                    for edge in graph.get_edges_from(cls.id)
-                    if edge.kind == EdgeKind.CONTAINS and graph.get_node(edge.target_id)
-                ]
+                methods = []
+                for edge in graph.get_edges_from(cls.id):
+                    if edge.kind != EdgeKind.CONTAINS:
+                        continue
+                    target = graph.get_node(edge.target_id)
+                    if target is not None:
+                        methods.append(target)
 
                 for method in methods[:3]:  # Limit to 3 methods per class
                     method_safe = method.id.replace("-", "_").replace(".", "_")
@@ -383,7 +391,9 @@ class BoundaryMapper:
 
         if blanket is None:
             extractor = MarkovBlanketExtractor(graph)
-            blanket = extractor.extract(strategy=strategy, **extract_kwargs)
+            blanket = extractor.extract(
+                strategy=cast("SeedStrategy", strategy), **extract_kwargs
+            )
         network = build_blanket_network(graph, blanket)
         return network.to_mermaid()
 
@@ -424,7 +434,9 @@ class BoundaryMapper:
 
         if blanket is None:
             extractor = MarkovBlanketExtractor(graph)
-            blanket = extractor.extract(strategy=strategy, **extract_kwargs)
+            blanket = extractor.extract(
+                strategy=cast("SeedStrategy", strategy), **extract_kwargs
+            )
 
         def _safe(nid: str) -> str:
             return "n_" + nid.replace("-", "_").replace(".", "_").replace(":", "_")

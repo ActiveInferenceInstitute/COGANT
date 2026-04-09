@@ -183,25 +183,29 @@ class MermaidGenerator:
             label = module.name or module.qualified_name
             lines.append(f"    subgraph {safe_id}['{label}']")
 
-            # Find classes contained in this module
-            contained_classes = [
-                graph.get_node(edge.target_id)
-                for edge in graph.get_edges_from(module.id)
-                if edge.kind == EdgeKind.CONTAINS and graph.get_node(edge.target_id)
-                and graph.get_node(edge.target_id).kind == NodeKind.CLASS
-            ]
+            # Find classes contained in this module. ``get_node`` may
+            # return ``None`` for dangling edges, so filter explicitly
+            # before using attributes.
+            contained_classes = []
+            for edge in graph.get_edges_from(module.id):
+                if edge.kind != EdgeKind.CONTAINS:
+                    continue
+                target = graph.get_node(edge.target_id)
+                if target is not None and target.kind == NodeKind.CLASS:
+                    contained_classes.append(target)
 
             for cls in contained_classes:
                 cls_safe = cls.id.replace("-", "_").replace(".", "_")
                 lines.append(f"        {cls_safe}['{cls.name}']")
 
                 # Find methods in this class
-                contained_methods = [
-                    graph.get_node(edge.target_id)
-                    for edge in graph.get_edges_from(cls.id)
-                    if edge.kind == EdgeKind.CONTAINS and graph.get_node(edge.target_id)
-                    and graph.get_node(edge.target_id).kind == NodeKind.METHOD
-                ]
+                contained_methods = []
+                for edge in graph.get_edges_from(cls.id):
+                    if edge.kind != EdgeKind.CONTAINS:
+                        continue
+                    target = graph.get_node(edge.target_id)
+                    if target is not None and target.kind == NodeKind.METHOD:
+                        contained_methods.append(target)
 
                 for method in contained_methods[:5]:  # Limit to 5 methods per class
                     method_safe = method.id.replace("-", "_").replace(".", "_")
@@ -329,8 +333,8 @@ class MermaidGenerator:
 
             # Add participants
             for stage_id in sorted(participant_set):
-                stage = process_model.stages.get(stage_id)
-                if stage:
+                stage_opt = process_model.stages.get(stage_id)
+                if stage_opt is not None:
                     lines.append(f"    participant {stage_id}")
 
             # Add connections as sequence interactions with enhanced labels
@@ -514,7 +518,7 @@ class MermaidGenerator:
         )
 
         # Build semantic role to source nodes mapping
-        role_to_nodes = {}
+        role_to_nodes: Dict[str, List[str]] = {}
         for mapping in sorted_mappings:
             if not hasattr(mapping, 'kind'):
                 continue

@@ -1,9 +1,35 @@
-"""
-State space compiler.
+"""State-space compiler: semantic mappings + program graph → StateSpaceModel.
 
-Takes semantic mappings and program graph, identifies hidden state variables,
-observation modalities, actions, transitions, and preferences. Outputs
-comprehensive StateSpaceModel.
+This module provides :class:`StateSpaceCompiler`, the bridge between
+the symbolic output of the translation engine
+(:class:`SemanticMapping` instances) and the numerical output that
+downstream Active Inference stages consume
+(:class:`StateSpaceModel`). Given a :class:`ProgramGraph` and a dict
+of semantic mappings, the compiler identifies:
+
+* **hidden state variables** — from :class:`MappingKind.HIDDEN_STATE`
+  mappings and from the graph's variable nodes;
+* **observation modalities** — from :class:`MappingKind.OBSERVATION`
+  mappings;
+* **actions and policies** — from :class:`MappingKind.ACTION` and
+  :class:`MappingKind.POLICY` mappings;
+* **transitions** — derived from WRITES/MUTATES edges originating on
+  action nodes;
+* **likelihoods** — distribution families inferred from variable type
+  hints; and
+* **preferences** — from :class:`MappingKind.CONSTRAINT` and
+  :class:`MappingKind.PREFERENCE` mappings (usually rooted in tests).
+
+The resulting :class:`StateSpaceModel` is the canonical input to
+:class:`cogant.gnn.matrices.GNNMatrices`,
+:class:`cogant.simulate.runner.ModelRunner`, and the GNN markdown
+formatter.
+
+Example:
+    >>> compiler = StateSpaceCompiler(graph, schema_name="calculator")
+    >>> model = compiler.compile(semantic_mappings)
+    >>> len(model.variables), len(model.actions)  # doctest: +SKIP
+    (3, 2)
 """
 
 from typing import Dict, List, Set, Optional, Any
@@ -54,7 +80,29 @@ class ObservationModality:
 
 @dataclass
 class Action:
-    """An action the system can take."""
+    """An action the system can take on its hidden state.
+
+    Represents a controllable intervention: a function, method, or
+    API call that writes to (or conditions on) state variables.
+    Produced by :meth:`StateSpaceCompiler._extract_actions` from
+    :class:`MappingKind.ACTION` or :class:`MappingKind.POLICY`
+    semantic mappings.
+
+    Attributes:
+        id: Stable identifier, typically ``act_<node_id>``.
+        name: Human-readable name (semantic label or node name).
+        controller_id: Graph node id of the controller / API /
+            function that executes this action.
+        parameters: Parameter-name → parameter-metadata dict pulled
+            from the underlying function signature.
+        effects: List of state-variable ids written or mutated by
+            this action (from WRITES/MUTATES edges).
+        preconditions: List of state-variable ids read before the
+            action fires (from READS edges or declared parameters).
+        description: Optional free-text description.
+        confidence: Confidence tier inherited from the semantic
+            mapping.
+    """
     id: str
     name: str
     controller_id: str  # Reference to controller/API node
@@ -67,7 +115,30 @@ class Action:
 
 @dataclass
 class Transition:
-    """A state transition in the system."""
+    """A symbolic pre → post state transition triggered by an action.
+
+    Represents one reachability edge in the state space, derived from
+    the static effect set of an :class:`Action` on the extracted
+    :class:`StateVariable` collection. Produced by
+    :meth:`StateSpaceCompiler._extract_transitions`.
+
+    Attributes:
+        id: Stable identifier, typically ``trans_<action_id>``.
+        source_state: Pre-action variable snapshot — maps variable
+            id → symbolic value tag (usually ``"pre"``).
+        target_state: Post-action variable snapshot — maps variable
+            id → symbolic value tag (``"post"`` for written vars,
+            ``"pre"`` for read-only vars).
+        action_id: Id of the :class:`Action` that drives this
+            transition, or ``None`` for unconditional flows.
+        triggered_by: Optional free-text trigger description
+            (``"called_by:<name>"``, ``"event:<name>"``, or
+            ``"init"``).
+        probability: Optional explicit transition probability if a
+            rule supplied one; otherwise ``None`` and downstream code
+            falls back to the deterministic default.
+        confidence: Inherited from the driving action.
+    """
     id: str
     source_state: Dict[str, Any]
     target_state: Dict[str, Any]
@@ -79,7 +150,27 @@ class Transition:
 
 @dataclass
 class Likelihood:
-    """Likelihood distribution over state variables or observations."""
+    """A probabilistic distribution attached to a variable or observation.
+
+    Produced by :meth:`StateSpaceCompiler._extract_likelihoods`. The
+    distribution family is inferred from the variable's
+    :class:`StateVariableType` (or the observation node's type hint):
+    booleans become Bernoulli, small-cardinality discretes become
+    Categorical, and continuous types become Gaussian.
+
+    Attributes:
+        id: Stable identifier, typically ``like_<variable_or_obs_id>``.
+        variable_id: Id of the :class:`StateVariable` or
+            :class:`ObservationModality` this likelihood describes.
+        distribution_type: Distribution family —
+            ``"bernoulli"``, ``"categorical"``, ``"gaussian"``, or
+            ``"unknown"`` when the type could not be inferred.
+        parameters: Distribution parameters (e.g. ``{"p": 0.5}`` for
+            Bernoulli; ``{"mean": 0.0, "variance": 1.0}`` for
+            Gaussian). Kept as a plain dict for JSON portability.
+        confidence: Inherited from the underlying variable or
+            mapping.
+    """
     id: str
     variable_id: str
     distribution_type: str  # "bernoulli", "categorical", "gaussian", etc.
@@ -89,7 +180,29 @@ class Likelihood:
 
 @dataclass
 class Preference:
-    """A preference or constraint on states."""
+    """A desired or forbidden configuration of state variables.
+
+    Produced by :meth:`StateSpaceCompiler._extract_preferences` from
+    :class:`MappingKind.CONSTRAINT` and :class:`MappingKind.PREFERENCE`
+    semantic mappings (usually rooted in a test, assertion, or
+    domain rule). Populates the C vector downstream.
+
+    Attributes:
+        id: Stable identifier, typically ``pref_<mapping_id>``.
+        name: Human-readable name.
+        description: Free-text description of what the preference
+            encodes.
+        scope: List of state-variable ids the preference applies to.
+        expression: Logical expression (free text) describing the
+            constraint, e.g. ``"balance >= 0"``.
+        weight: Scalar weight used to convert the preference into a
+            log-preference contribution for the GNN C vector.
+            Defaults to 1.0.
+        source: Optional graph node id of the test or spec that
+            originated the preference.
+        confidence: Confidence tier inherited from the upstream
+            mapping.
+    """
     id: str
     name: str
     description: str
@@ -102,7 +215,37 @@ class Preference:
 
 @dataclass
 class StateSpaceModel:
-    """Complete state space model for a schema."""
+    """Fully compiled state-space model for a single schema.
+
+    The canonical output of :meth:`StateSpaceCompiler.compile`. Bundles
+    all structural (variables, observations, actions), dynamic
+    (transitions, likelihoods), and normative (preferences) components
+    along with the inferred time regime and arbitrary metadata. Every
+    downstream consumer (:class:`GNNMatrices`, :class:`GNNModelRunner`,
+    scoring metrics, formatters) operates on this single type.
+
+    Attributes:
+        id: Stable identifier, typically ``model_<schema_name>``.
+        schema_name: Human-readable schema name passed at compile
+            time; useful as a provenance tag.
+        variables: Dict keyed by variable id; values are
+            :class:`StateVariable` instances.
+        observations: Dict keyed by observation id; values are
+            :class:`ObservationModality` instances.
+        actions: Dict keyed by action id; values are :class:`Action`
+            instances.
+        transitions: Dict keyed by transition id; values are
+            :class:`Transition` instances.
+        likelihoods: Dict keyed by likelihood id; values are
+            :class:`Likelihood` instances.
+        preferences: Dict keyed by preference id; values are
+            :class:`Preference` instances.
+        time_regime: Inferred :class:`TimeRegime` — discrete,
+            continuous, or hybrid.
+        metadata: Free-form metadata (step_unit, is_async, max_steps,
+            counts, compiler version, etc.). Kept as a plain dict for
+            JSON portability.
+    """
     id: str
     schema_name: str
     variables: Dict[str, StateVariable]

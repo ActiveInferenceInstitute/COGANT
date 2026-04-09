@@ -1,0 +1,167 @@
+# Contributing to COGANT
+
+Thank you for your interest in contributing. COGANT is a research-oriented project with a
+strong test-driven development culture. This document describes how to get set up, the
+standards your contribution is expected to meet, and the pull-request workflow.
+
+## Code of Conduct
+
+This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md) based on the Contributor
+Covenant. By participating, you agree to uphold it. Report unacceptable behavior to the
+project maintainers listed in `.github/CODEOWNERS`.
+
+## Where to start
+
+High-impact areas for contribution (in rough order of project need):
+
+1. **Parser fidelity** — extend the Python or JS/TS front ends, or add a new
+   `LanguagePlugin` (see [Tutorial 7](docs/tutorials/07_plugin_authoring.md)).
+2. **Translation rules** — add new rules to `py/cogant/translate/rules/` (see
+   [Tutorial 4](docs/tutorials/04_custom_rules.md)).
+3. **Validation diagnostics** — tighter error messages in `py/cogant/gnn/validator.py` and
+   the bundle validator.
+4. **Performance on large repos** — the graph stage is the current bottleneck on
+   1k+-file codebases.
+5. **Documentation of edge cases** — open an issue with "docs:" in the title and propose
+   the addition.
+6. **Reverse-mode synthesis** — the prototype in `py/cogant/reverse/` needs a real code
+   emitter. See [Tutorial 6](docs/tutorials/06_reverse_mode.md) for the current state.
+
+## Development setup
+
+Prerequisites:
+
+- Python 3.11 or 3.12
+- [`uv`](https://github.com/astral-sh/uv) (recommended) or plain `pip`
+- `git`
+- Optional: Rust toolchain if you plan to work on the acceleration backend.
+
+One-time setup:
+
+```bash
+git clone https://github.com/cogant/cogant.git
+cd cogant
+uv sync --extra all
+uv run cogant doctor   # verify the environment
+uv run pytest tests/ -q
+```
+
+The test suite has ~900 tests and should complete in under two minutes on a modern laptop.
+Coverage is currently ~77%; new code should keep or improve that.
+
+## Branch workflow
+
+1. **Fork** the repository on GitHub.
+2. **Clone** your fork and add the upstream remote:
+
+   ```bash
+   git clone https://github.com/<your-username>/cogant.git
+   cd cogant
+   git remote add upstream https://github.com/cogant/cogant.git
+   ```
+
+3. **Create a topic branch** off `main`:
+
+   ```bash
+   git checkout -b feat/my-feature
+   ```
+
+   Branch naming conventions:
+   - `feat/<short-name>` — new feature
+   - `fix/<short-name>` — bug fix
+   - `docs/<short-name>` — docs-only change
+   - `refactor/<short-name>` — no-behavior-change cleanup
+   - `test/<short-name>` — adding or reworking tests
+
+4. **Write the test first.** COGANT follows test-driven development. Every non-docs PR must
+   land with at least one test that fails without the change and passes with it.
+
+5. **Implement the change.** Keep PRs small and focused. A good PR touches one module or one
+   tightly coupled set of files.
+
+6. **Run the local quality gates** before pushing:
+
+   ```bash
+   uv run pytest tests/ -q
+   uv run mypy py/cogant/
+   uv run ruff check py/
+   uv run ruff format --check py/
+   ```
+
+7. **Commit with a clear message.** Format:
+
+   ```text
+   <type>(<scope>): <imperative summary>
+
+   <optional body explaining *why*>
+
+   Refs: #<issue number if applicable>
+   ```
+
+   `<type>` is one of `feat`, `fix`, `docs`, `refactor`, `test`, `perf`, `build`, `ci`,
+   `chore`.
+
+8. **Push and open a PR** against `main`.
+
+## PR checklist
+
+Every pull request must:
+
+- [ ] Reference an open issue (or explain in the description why none is needed).
+- [ ] Include at least one new test **unless** the change is docs-only.
+- [ ] Pass `uv run pytest tests/ -q` with no failures and no new skips.
+- [ ] Pass `uv run mypy py/cogant/` with no new errors.
+- [ ] Pass `uv run ruff check py/` and `uv run ruff format --check py/`.
+- [ ] Maintain or improve overall test coverage (reported in CI).
+- [ ] Update documentation in `docs/` when the change affects public API or user-visible
+      behavior.
+- [ ] Document any new `cogant.yaml` keys in `docs/getting-started/configuration.md`.
+- [ ] For rule additions: update the rule count in `README.md` and add a qualitative test
+      in `tests/unit/test_ai_role_validation.py`.
+
+## No-mock policy
+
+COGANT tests **do not use mocks**. Use real files with `tmp_path`, real `pytest-httpserver`
+instances for HTTP, and real tree-sitter grammars for parser tests. The only approved
+"fakes" are in-memory `ProgramGraph` instances constructed explicitly for unit tests.
+
+Rationale: we are a research project that depends on **end-to-end determinism**. Mocks
+introduce a second source of truth that can diverge silently from the real one.
+
+## Commit signing
+
+Commits to `main` must be signed. Configure your local git with:
+
+```bash
+git config --global commit.gpgsign true
+git config --global user.signingkey <your-key-id>
+```
+
+## Review process
+
+1. A maintainer will review your PR within a few business days.
+2. Expect at least one round of review feedback. Please respond in comments rather than
+   force-pushing silently — the review history is part of the project record.
+3. **Create new commits** in response to feedback rather than amending. We squash on merge.
+4. Once approved, a maintainer will merge via squash commit.
+
+## Release cadence
+
+- Patch releases (0.x.Y) — bug fixes and small improvements, roughly every two weeks.
+- Minor releases (0.Y.0) — new features and breaking changes to unstable APIs, roughly
+  monthly.
+- Major release (1.0.0) — planned when the graph schema and Python API are stable. See the
+  roadmap in [`README.md`](README.md).
+
+## Licensing
+
+COGANT is MIT-licensed. By submitting a contribution you agree to license your work under
+the same terms. See [`LICENSE`](LICENSE) for the full text.
+
+## Questions?
+
+- Technical questions: open a GitHub Discussion.
+- Bug reports: open an issue using the [bug report template](.github/ISSUE_TEMPLATE/bug_report.md).
+- Feature requests: open an issue using the [feature request template](.github/ISSUE_TEMPLATE/feature_request.md).
+- Security issues: **do not** open a public issue. Email the maintainers listed in
+  `.github/CODEOWNERS`.

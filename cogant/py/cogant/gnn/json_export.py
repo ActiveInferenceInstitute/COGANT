@@ -145,7 +145,7 @@ class GNNJSONExporter:
 
     def _export_metadata(self) -> Dict[str, Any]:
         """Export comprehensive metadata."""
-        metadata = {
+        metadata: Dict[str, Any] = {
             "generated_at": datetime.now().isoformat(),
             "schema_version": "1.0",
             "cogant_version": "0.1.0",
@@ -237,7 +237,7 @@ class GNNJSONExporter:
 
     def _export_observation_details(self) -> Dict[str, Any]:
         """Export observation details for canonical section."""
-        observations = {}
+        observations: Dict[str, Dict[str, Any]] = {}
         for obs_id, obs in self.state_space.observations.items():
             observations[obs_id] = {
                 "id": obs.id,
@@ -275,8 +275,8 @@ class GNNJSONExporter:
 
     def _export_connections(self) -> Dict[str, Any]:
         """Export connections (edges) as canonical section."""
-        edges = {}
-        edge_kinds = defaultdict(int)
+        edges: Dict[str, Dict[str, Any]] = {}
+        edge_kinds: Dict[str, int] = defaultdict(int)
         for edge_id, edge in self.graph.edges.items():
             edge_kinds[edge.kind.value] += 1
             edges[edge_id] = {
@@ -449,6 +449,7 @@ class GNNJSONExporter:
 
     def _compute_component_confidence(self, component: str) -> float:
         """Compute confidence for a specific component."""
+        components: Any
         if component == "variables":
             components = self.state_space.variables.values()
         elif component == "observations":
@@ -460,7 +461,7 @@ class GNNJSONExporter:
         else:
             return 0.5
 
-        confidences = []
+        confidences: List[float] = []
         for comp in components:
             if hasattr(comp, 'confidence') and comp.confidence:
                 try:
@@ -492,8 +493,8 @@ class GNNJSONExporter:
 
     def _export_program_graph(self) -> Dict[str, Any]:
         """Export program graph with rich metadata."""
-        nodes = {}
-        node_kinds = defaultdict(int)
+        nodes: Dict[str, Dict[str, Any]] = {}
+        node_kinds: Dict[str, int] = defaultdict(int)
 
         for node_id, node in self.graph.nodes.items():
             node_kinds[node.kind.value] += 1
@@ -509,7 +510,7 @@ class GNNJSONExporter:
                 "created_at": node.created_at.isoformat(),
             }
 
-        edges = {}
+        edges: Dict[str, Dict[str, Any]] = {}
         edge_kinds = defaultdict(int)
 
         for edge_id, edge in self.graph.edges.items():
@@ -558,7 +559,7 @@ class GNNJSONExporter:
                 for factor in var.factors:
                     var_by_factor[factor].append(var_id)
 
-        observations = {}
+        observations: Dict[str, Dict[str, Any]] = {}
         for obs_id, obs in self.state_space.observations.items():
             observations[obs_id] = {
                 "id": obs.id,
@@ -570,7 +571,7 @@ class GNNJSONExporter:
                 "confidence": obs.confidence.value if hasattr(obs.confidence, 'value') else str(obs.confidence),
             }
 
-        actions = {}
+        actions: Dict[str, Dict[str, Any]] = {}
         for action_id, action in self.state_space.actions.items():
             actions[action_id] = {
                 "id": action.id,
@@ -679,10 +680,10 @@ class GNNJSONExporter:
 
     def _export_mappings(self) -> Dict[str, Any]:
         """Export comprehensive semantic mappings."""
-        mappings = {}
-        kind_counts = defaultdict(int)
-        tier_counts = defaultdict(int)
-        status_counts = defaultdict(int)
+        mappings: Dict[str, Dict[str, Any]] = {}
+        kind_counts: Dict[str, int] = defaultdict(int)
+        tier_counts: Dict[str, int] = defaultdict(int)
+        status_counts: Dict[str, int] = defaultdict(int)
 
         for mapping_id, mapping in self.mappings.items():
             kind = mapping.kind.value if hasattr(mapping, 'kind') else "unknown"

@@ -30,7 +30,12 @@ class HTMLSiteRenderer:
             bundle: Analysis bundle to render.
         """
         self.bundle = bundle
-        self.output_dir: Optional[Path] = None
+        # ``output_dir`` is set by ``render()`` before any of the
+        # private ``_emit_*`` helpers read it. Typing as ``Path`` rather
+        # than ``Path | None`` avoids a cascade of operator errors in
+        # the ``self.output_dir / "..."`` expressions below without
+        # hiding any real null dereference.
+        self.output_dir: Path = Path(".")
 
     def render(self, output_dir: str) -> Path:
         """

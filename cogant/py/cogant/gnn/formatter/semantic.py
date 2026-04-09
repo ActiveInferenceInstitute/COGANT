@@ -31,6 +31,12 @@ logger = logging.getLogger(__name__)
 
 
 class _SemanticSectionsMixin:
+    # Attributes populated by the concrete formatter (see base.py).
+    graph: ProgramGraph
+    state_space: StateSpaceModel
+    process: ProcessModel
+    mappings: Dict[str, Any]
+
     def _format_ontology_mapping(self) -> str:
         """Format ontology mapping section."""
         lines = ["## Ontology Mapping"]

@@ -34,6 +34,12 @@ logger = logging.getLogger(__name__)
 
 
 class _DynamicsSectionsMixin:
+    # Attributes populated by the concrete formatter (see base.py).
+    graph: ProgramGraph
+    state_space: StateSpaceModel
+    process: ProcessModel
+    mappings: Dict[str, Any]
+
     def _format_transition_structure(self) -> str:
         """Format transition structure section.
 

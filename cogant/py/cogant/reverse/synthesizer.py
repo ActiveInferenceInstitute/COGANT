@@ -93,53 +93,158 @@ def _render_package_init(plan: PackagePlan) -> str:
 
 
 def _render_state_module(plan: PackagePlan) -> str:
-    """Render ``state.py`` containing the ``State`` dataclass.
+    """Render ``state.py`` containing one class per hidden-state factor.
 
-    Each hidden-state variable in the plan becomes a dataclass field.
-    The field default is the initial value computed by the planner
-    (derived from the D-vector prior when available). A ``copy``
-    method is provided so actions can return an updated State without
-    mutating the original — this matches the pattern COGANT's forward
-    pipeline looks for when detecting MUTATES edges.
+    Rationale for one-class-per-factor
+    ----------------------------------
+    COGANT's forward pipeline counts hidden-state factors by counting
+    **classes** that match the MutatingSubsystemRule — any class whose
+    methods assign to ``self.<attr>`` (≥1 WRITES edge). To preserve
+    role multiset cardinality through the round-trip, the synthesizer
+    must emit one class per HIDDEN_STATE slot declared in the source
+    GNN. A single container class with many fields would collapse
+    N factors into 1, destroying cardinality and the shape match.
+
+    Each emitted class therefore:
+
+    1. Exposes a single value attribute matching the factor's type and
+       cardinality.
+    2. Provides an ``update(value)`` mutator that assigns ``self.value``
+       — the canonical WRITES edge forward looks for.
+    3. Provides a ``copy()`` helper for functional-style action code.
+    4. Has a descriptive ``__repr__`` for debug output.
+
+    A top-level ``State`` aggregator class is also emitted for
+    convenience so the driver (``main.py``) can pass a single object
+    around. The aggregator instantiates one of each factor class and
+    forwards ``update_<name>`` / attribute access through them. The
+    aggregator also has its own ``self.*`` assignments so it contributes
+    one extra potential HIDDEN_STATE edge, but because every leaf factor
+    is its own class, the forward count matches the source count
+    regardless.
     """
     header = dedent(
         f'''
-        """Generated State container for model {plan.raw_model_name!r}.
+        """Generated hidden-state factor classes for model {plan.raw_model_name!r}.
 
-        Each attribute corresponds to a HIDDEN_STATE mapping in the source
-        GNN. The forward COGANT pipeline classifies this class as the
-        Active Inference hidden-state factor for the synthesized model.
+        Each leaf class corresponds to a single HIDDEN_STATE mapping in
+        the source GNN and carries exactly one value attribute with an
+        ``update(value)`` mutator — the signature MutatingSubsystemRule
+        pattern the forward COGANT pipeline detects. A top-level
+        ``State`` aggregator combines all factors for convenient use
+        from the driver and action functions.
         """
 
-        from dataclasses import dataclass, field, replace
         from typing import Any
-
-
-        @dataclass
-        class State:
-            """Hidden-state factor for the synthesized GNN model."""
 
         '''
     ).lstrip()
     lines: List[str] = [header]
 
+    # Degenerate case: no hidden states declared.
     if not plan.state_vars:
-        lines.append("    # No hidden-state variables were declared in the source GNN.")
-        lines.append("    _placeholder: int = 0")
-    else:
-        for node in plan.state_vars:
-            comment = f"  # GNN slot {node.slot}, role={node.role}"
-            if node.cardinality:
-                comment += f", card={node.cardinality}"
-            lines.append(
-                f"    {node.name}: {node.python_type} = {node.initial_value}{comment}"
-            )
+        lines.append("class State:")
+        lines.append('    """Empty hidden-state aggregator (no factors in source GNN)."""')
+        lines.append("")
+        lines.append("    def __init__(self) -> None:")
+        lines.append('        """Initialize an empty State."""')
+        lines.append("        self._placeholder: int = 0")
+        lines.append("")
+        lines.append("    def update_placeholder(self, value: int) -> None:")
+        lines.append('        """Mutator retained so forward rules see a WRITES edge."""')
+        lines.append("        self._placeholder = value")
+        lines.append("")
+        lines.append("    def copy(self, **changes: Any) -> \"State\":")
+        lines.append('        """Return a copy; retained for API symmetry."""')
+        lines.append("        new = State()")
+        lines.append("        new._placeholder = self._placeholder")
+        lines.append("        for key, val in changes.items():")
+        lines.append("            setattr(new, key, val)")
+        lines.append("        return new")
+        lines.append("")
+        return "\n".join(lines)
 
+    # Emit one class per hidden-state factor.
+    factor_class_names: List[str] = []
+    for n in plan.state_vars:
+        cls_name = "HS_" + n.name  # stable, collision-free class name
+        factor_class_names.append(cls_name)
+        lines.append(f"class {cls_name}:")
+        lines.append(
+            f'    """Hidden-state factor for GNN slot {n.slot} ({n.name})."""'
+        )
+        lines.append("")
+        lines.append(f"    def __init__(self, value: {n.python_type} = {n.initial_value}) -> None:")
+        lines.append(
+            f'        """Initialize factor {n.name} with default ``{n.initial_value}``."""'
+        )
+        card_comment = f"  # slot={n.slot}, card={n.cardinality}" if n.cardinality else f"  # slot={n.slot}"
+        lines.append(f"        self.value: {n.python_type} = value{card_comment}")
+        lines.append("")
+        lines.append(f"    def update(self, value: {n.python_type}) -> None:")
+        lines.append(
+            f'        """Mutate the {n.name} factor value. WRITES edge for forward rules."""'
+        )
+        lines.append("        self.value = value")
+        lines.append("")
+        lines.append(f"    def copy(self) -> \"{cls_name}\":")
+        lines.append(
+            '        """Return an independent copy of this factor."""'
+        )
+        lines.append(f"        return {cls_name}(value=self.value)")
+        lines.append("")
+        lines.append("    def __repr__(self) -> str:")
+        lines.append(f"        return f\"{cls_name}(value={{self.value!r}})\"")
+        lines.append("")
+
+    # Aggregator ``State`` class — holds instances of every factor class.
+    lines.append("class State:")
+    lines.append(
+        f'    """Aggregator holding one instance of each hidden-state factor class."""'
+    )
     lines.append("")
+    init_args = ", ".join(
+        f"{n.name}: {n.python_type} = {n.initial_value}" for n in plan.state_vars
+    )
+    lines.append(f"    def __init__(self, {init_args}) -> None:")
+    lines.append('        """Initialize every factor with an optional override."""')
+    for n, cls_name in zip(plan.state_vars, factor_class_names):
+        lines.append(f"        self.{n.name}: {cls_name} = {cls_name}(value={n.name})")
+    lines.append("")
+
+    # Mutators at the aggregator level delegate into the leaf factors.
+    for n in plan.state_vars:
+        lines.append(f"    def update_{n.name}(self, value: {n.python_type}) -> None:")
+        lines.append(
+            f'        """Forward ``update`` to the {n.name} factor instance."""'
+        )
+        lines.append(f"        self.{n.name}.update(value)")
+        lines.append("")
+
+    # ``copy`` helper returns a new State.
     lines.append("    def copy(self, **changes: Any) -> \"State\":")
     lines.append('        """Return a new State with the given field updates applied."""')
-    lines.append("        return replace(self, **changes)")
+    lines.append("        new = State(")
+    lines.append(
+        "            "
+        + ", ".join(f"{n.name}=self.{n.name}.value" for n in plan.state_vars)
+    )
+    lines.append("        )")
+    lines.append("        for key, val in changes.items():")
+    lines.append(f"            # Map top-level keys to the corresponding factor's update.")
+    lines.append("            factor = getattr(new, key, None)")
+    lines.append("            if factor is not None and hasattr(factor, 'update'):")
+    lines.append("                factor.update(val)")
+    lines.append("            else:")
+    lines.append("                setattr(new, key, val)")
+    lines.append("        return new")
     lines.append("")
+
+    lines.append("    def __repr__(self) -> str:")
+    repr_fields = ", ".join(f"{n.name}={{self.{n.name}.value!r}}" for n in plan.state_vars)
+    lines.append(f"        return f\"State({repr_fields})\"")
+    lines.append("")
+
     return "\n".join(lines)
 
 
@@ -522,7 +627,7 @@ def synthesize_package(
         package_path / "constraints.py": _render_constraints_module(plan),
         package_path / "matrices.py": render_matrices_module(model),
         package_path / "main.py": _render_main_module(plan),
-        tests_path / "__init__.py": "",
+        tests_path / "__init__.py": '"""Test package for the synthesized model."""\n',
         tests_path / "test_smoke.py": _render_test_smoke(plan),
     }
 

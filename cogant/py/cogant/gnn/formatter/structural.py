@@ -35,8 +35,49 @@ logger = logging.getLogger(__name__)
 
 
 class _StructuralSectionsMixin:
+    """Mixin providing the structural-section formatters for GNN export.
+
+    Implements the COGANT-extended "structural" block family of the GNN
+    markdown document: the state space (with derived A/B/C/D matrices),
+    observation modalities, actions/policies, program-graph connections,
+    and factorization. Each ``_format_*`` method returns a newline-joined
+    markdown string suitable for concatenation into the document by
+    :meth:`cogant.gnn.formatter.base.GNNMarkdownFormatter.format`.
+
+    The mixin is not instantiable on its own. It expects the concrete
+    formatter to expose:
+
+    * ``self.graph``       -- :class:`cogant.schemas.graph.ProgramGraph`
+    * ``self.state_space`` -- :class:`cogant.statespace.compiler.StateSpaceModel`
+    * ``self.process``     -- :class:`cogant.process.extractor.ProcessModel`
+    * ``self.mappings``    -- dict of ``SemanticMapping`` keyed by id
+    * ``self._action_effects(action)`` helper for action effect extraction
+    """
+
+    # Attributes populated by the concrete formatter (see base.py).
+    graph: ProgramGraph
+    state_space: StateSpaceModel
+    process: ProcessModel
+    mappings: Dict[str, Any]
+
     def _format_state_space(self) -> str:
-        """Format state space section."""
+        """Format the State Space section of the GNN markdown document.
+
+        Emits the ``## State Space`` heading, a table of state variables
+        pulled from ``self.state_space.variables`` (with per-row source
+        node, domain, cardinality, factorization, and confidence), and,
+        when the program graph exposes enough evidence, an embedded
+        ``### Active Inference Matrices (A/B/C/D)`` block produced by
+        :class:`cogant.gnn.matrices.GNNMatrices`.
+
+        The matrix block is best-effort: any ``ValueError``,
+        ``KeyError``, or ``AttributeError`` raised during derivation is
+        logged at warning level and swallowed so the rest of the report
+        still renders.
+
+        Returns:
+            A newline-joined markdown string for the state space section.
+        """
         lines = ["## State Space"]
         lines.append("")
 
@@ -103,7 +144,21 @@ class _StructuralSectionsMixin:
 
         return "\n".join(lines)
     def _format_observation_modalities(self) -> str:
-        """Format observation modalities section."""
+        """Format the Observation Modalities section.
+
+        Emits a ``## Observation Modalities`` heading followed by one
+        table sourced from ``self.state_space.observations`` (each row
+        describes an :class:`ObservationModality` with its source node
+        name resolved from the graph) and, if any
+        :class:`MappingKind.OBSERVATION` semantic mappings are present,
+        a secondary ``### Observation Mappings from Semantic Analysis``
+        subsection capped at 20 rows for readability.
+
+        Returns:
+            A newline-joined markdown string. If no observations are
+            detected, the section still renders with an explanatory
+            placeholder sentence.
+        """
         lines = ["## Observation Modalities"]
         lines.append("")
 
@@ -141,7 +196,24 @@ class _StructuralSectionsMixin:
 
         return "\n".join(lines)
     def _format_actions_policies(self) -> str:
-        """Format actions and policies section."""
+        """Format the Actions and Policies section.
+
+        Emits a ``## Actions Policies`` heading followed by:
+
+        1. An ``### Actions`` table built from
+           ``self.state_space.actions``. For each
+           :class:`cogant.statespace.compiler.Action`, the row records
+           its parameters (truncated to 2), effects (computed via
+           ``self._action_effects``), first precondition, confidence
+           tier, and the resolved controller-node name.
+        2. An ``### Action and Policy Mappings`` subsection listing the
+           first 30 :class:`MappingKind.ACTION` / :class:`MappingKind.POLICY`
+           semantic mappings with their evidence counts.
+
+        Returns:
+            A newline-joined markdown string. Falls back to an
+            explanatory placeholder when no actions are detected.
+        """
         lines = ["## Actions Policies"]
         lines.append("")
 

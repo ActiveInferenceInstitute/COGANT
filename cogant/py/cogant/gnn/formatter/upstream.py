@@ -43,9 +43,14 @@ main entry point and :mod:`cogant.gnn.formatter` for the package.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Any, Dict, List, TYPE_CHECKING
 
 from cogant.schemas.core import EdgeKind, NodeKind
+
+if TYPE_CHECKING:
+    from cogant.schemas.graph import ProgramGraph
+    from cogant.statespace.compiler import StateSpaceModel
+    from cogant.process.extractor import ProcessModel
 
 
 # Upstream canonical section list, in the order the type-checker expects.
@@ -97,6 +102,12 @@ class _UpstreamSectionsMixin:
     ``self.graph``, ``self.state_space``, ``self.process``, and
     ``self.mappings`` to be populated by the concrete formatter.
     """
+
+    # Attributes populated by the concrete formatter (see base.py).
+    graph: "ProgramGraph"
+    state_space: "StateSpaceModel"
+    process: "ProcessModel"
+    mappings: Dict[str, Any]
 
     # ------------------------------------------------------------------
     # Public aggregate

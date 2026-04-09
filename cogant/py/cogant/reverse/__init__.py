@@ -47,7 +47,12 @@ Public API
 from cogant.reverse.parser import ReverseGNNModel, parse_gnn
 from cogant.reverse.planner import NodePlan, PackagePlan, plan_package
 from cogant.reverse.synthesizer import synthesize_package
-from cogant.reverse.idempotency import RoundtripResult, verify_roundtrip
+from cogant.reverse.idempotency import (
+    ROLE_MATCH_THRESHOLD,
+    RoundtripResult,
+    verify_repo_roundtrip,
+    verify_roundtrip,
+)
 
 __all__ = [
     "ReverseGNNModel",
@@ -58,4 +63,6 @@ __all__ = [
     "synthesize_package",
     "RoundtripResult",
     "verify_roundtrip",
+    "verify_repo_roundtrip",
+    "ROLE_MATCH_THRESHOLD",
 ]

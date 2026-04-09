@@ -32,37 +32,37 @@ except (ImportError, ModuleNotFoundError):
 try:
     from cogant.api.session import Session
 except (ImportError, ModuleNotFoundError):
-    Session = None
+    Session = None  # type: ignore[assignment,misc]
 
 try:
     from cogant.api.pipeline import PipelineRunner
 except (ImportError, ModuleNotFoundError):
-    PipelineRunner = None
+    PipelineRunner = None  # type: ignore[assignment,misc]
 
 try:
     from cogant.api.bundle import Bundle
 except (ImportError, ModuleNotFoundError):
-    Bundle = None
+    Bundle = None  # type: ignore[assignment,misc]
 
 try:
     from cogant.graph.builder import ProgramGraphBuilder
 except (ImportError, ModuleNotFoundError):
-    ProgramGraphBuilder = None
+    ProgramGraphBuilder = None  # type: ignore[assignment,misc]
 
 try:
     from cogant.translate.engine import TranslationEngine
 except (ImportError, ModuleNotFoundError):
-    TranslationEngine = None
+    TranslationEngine = None  # type: ignore[assignment,misc]
 
 try:
     from cogant.statespace.compiler import StateSpaceCompiler
 except (ImportError, ModuleNotFoundError):
-    StateSpaceCompiler = None
+    StateSpaceCompiler = None  # type: ignore[assignment,misc]
 
 try:
     from cogant.gnn.formatter import GNNMarkdownFormatter
 except (ImportError, ModuleNotFoundError):
-    GNNMarkdownFormatter = None
+    GNNMarkdownFormatter = None  # type: ignore[assignment,misc]
 
 __all__ = [
     "Session",

@@ -307,7 +307,7 @@ class StaticPlotter:
         actions = list(state_space.actions.values())
 
         # Build variable-observation connectivity map with confidence
-        var_obs_connectivity = {}
+        var_obs_connectivity: Dict[str, Dict[str, float]] = {}
         for var in variables:
             var_obs_connectivity[var.id] = {}
             for obs in observations:
@@ -319,7 +319,7 @@ class StaticPlotter:
                 var_obs_connectivity[var.id][obs.id] = confidence
 
         # Build variable-action connectivity map with confidence
-        var_action_connectivity = {}
+        var_action_connectivity: Dict[str, Dict[str, float]] = {}
         for var in variables:
             var_action_connectivity[var.id] = {}
             for action in actions:
@@ -581,13 +581,13 @@ class StaticPlotter:
             output_path: Path to save the SVG file.
         """
         # Count nodes by kind
-        kind_counts = {}
+        kind_counts: Dict[str, int] = {}
         for node in graph.nodes.values():
             kind_str = str(node.kind).replace("NodeKind.", "")
             kind_counts[kind_str] = kind_counts.get(kind_str, 0) + 1
 
         # Count semantic roles
-        role_counts = {}
+        role_counts: Dict[str, int] = {}
         for mapping_id, mapping in mappings.items():
             role = getattr(mapping, 'kind', type(mapping).__name__)
             if hasattr(role, 'value'):
@@ -633,7 +633,7 @@ class StaticPlotter:
         }
 
         total_kinds = sum(kind_counts.values())
-        angle_start = 0
+        angle_start: float = 0.0
         for kind_name, count in sorted(kind_counts.items(), key=lambda x: x[1], reverse=True):
             angle_size = (count / total_kinds) * 360 if total_kinds > 0 else 0
             angle_mid = angle_start + angle_size / 2
@@ -719,7 +719,7 @@ class StaticPlotter:
         import math
 
         # Group mappings by kind and calculate mean confidence
-        kind_confidence = {}
+        kind_confidence: Dict[str, List[float]] = {}
         for mapping_id, mapping in mappings.items():
             kind = getattr(mapping, 'kind', type(mapping).__name__)
             if hasattr(kind, 'value'):

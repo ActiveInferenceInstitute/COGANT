@@ -36,6 +36,14 @@ logger = logging.getLogger(__name__)
 
 
 class _MetadataSectionsMixin:
+    # Attributes populated by the concrete formatter (see base.py).
+    # Declared here so that type checkers can resolve references in
+    # mixin methods without running into missing-attribute errors.
+    graph: ProgramGraph
+    state_space: StateSpaceModel
+    process: ProcessModel
+    mappings: Dict[str, Any]
+
     def _format_model_metadata(self) -> str:
         """Format model metadata section."""
         lines = ["# GNN Model: " + self.state_space.schema_name]

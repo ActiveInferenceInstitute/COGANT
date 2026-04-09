@@ -100,18 +100,22 @@ try:
     )
     _extended_available = True
 except (ImportError, ModuleNotFoundError):
-    # Fall back to basic implementations
-    from cogant.schemas.core import (
+    # Fall back to basic implementations. The fallback types are
+    # intentionally distinct from the extended ones; mypy sees two
+    # incompatible "Node"/"Edge"/"ProgramGraph"/"SemanticMapping"/
+    # "ProvenanceRecord" definitions at package-import time, so we
+    # silence the assignment diagnostic here.
+    from cogant.schemas.core import (  # type: ignore[assignment]
         Node,
         Edge,
         NodeKind,
         EdgeKind,
     )
-    from cogant.schemas.graph import (
+    from cogant.schemas.graph import (  # type: ignore[assignment]
         ProgramGraph,
         GraphMetadata,
     )
-    from cogant.schemas.semantic import (
+    from cogant.schemas.semantic import (  # type: ignore[assignment]
         SemanticMapping,
         MappingKind,
         ConfidenceTier,

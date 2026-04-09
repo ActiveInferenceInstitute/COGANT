@@ -282,7 +282,7 @@ class DashboardGenerator:
             return "<p>No nodes to display</p>"
 
         # Count nodes by kind
-        kind_counts = defaultdict(int)
+        kind_counts: Dict[str, int] = defaultdict(int)
         for node in self.graph.nodes.values():
             kind_counts[node.kind.value] += 1
 
@@ -302,7 +302,7 @@ class DashboardGenerator:
             return "<p>No edges to display</p>"
 
         # Count edges by kind
-        kind_counts = defaultdict(int)
+        kind_counts: Dict[str, int] = defaultdict(int)
         for edge in self.graph.edges.values():
             kind_counts[edge.kind.value] += 1
 
