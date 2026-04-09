@@ -91,7 +91,7 @@ class GNNValidator:
         "state_space",
         "observation_modalities",
         "actions_policies",
-        "connections",
+        "program_graph_connections",
         "factors",
         "transition_structure",
         "likelihood_structure",

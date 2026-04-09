@@ -192,8 +192,17 @@ class _StructuralSectionsMixin:
 
         return "\n".join(lines)
     def _format_connections(self) -> str:
-        """Format connections section (graph edges)."""
-        lines = ["## Connections"]
+        """Format program-graph connections section (graph edges).
+
+        This COGANT-extended section uses the header ``## Program Graph
+        Connections`` (not ``## Connections``) to avoid a duplicate level-2
+        header collision with the upstream GNN v1.1 ``## Connections`` section
+        that appears earlier in the document.  The upstream type-checker only
+        processes the first ``## Connections`` section it encounters; a second
+        identically-named section would be parsed as a continuation of the
+        upstream connections block and generate spurious parse errors.
+        """
+        lines = ["## Program Graph Connections"]
         lines.append("")
 
         # Group edges by kind

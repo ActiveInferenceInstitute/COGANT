@@ -237,14 +237,25 @@ class _UpstreamSectionsMixin:
     def _format_upstream_connections(self) -> str:
         """Emit ``## Connections`` — upstream arrow-syntax causal edges.
 
-        Produces the standard Active Inference POMDP connection pattern:
-            D_f > s_f      (prior → state)
-            s_f > A_m      (state → likelihood)
-            (A_m, s_f) > o_m (likelihood + state → observation)
-            u_c > B_f      (control → transition)
-            (B_f, s_f) > s_f' (transition updates state)
-            (C_m, o_m) > G  (preference over observation → expected free energy)
-            G > u_c        (EFE → action selection)
+        Produces the standard Active Inference POMDP connection pattern using
+        the upstream GNN v1.1 canonical syntax (no parentheses for single-variable
+        sources/targets; multi-source tuple syntax uses bare comma-separated form):
+
+            D_f0>s_f0           (prior -> state)
+            s_f0>A_m0           (state -> likelihood)
+            A_m0,s_f0>o_m0      (likelihood + state -> observation)
+            u_c0>B_f0           (control -> transition)
+            s_f0,B_f0>s_f0      (transition updates state)
+            C_m0,o_m0>G         (preference over observation -> expected free energy)
+            G>u_c0              (EFE -> action selection)
+
+        The upstream type-checker's ``_check_connections()`` splits on ``>``
+        and ``-`` characters. Wrapping single-variable nodes in parentheses
+        (e.g., ``(D_f0)``) causes the source/target name to include the
+        parenthesis character, which the checker flags as "potentially undefined
+        variable: (D_f0". This fix removes parentheses for single-variable
+        endpoints and uses bare comma-separated syntax for multi-source tuples,
+        matching the canonical upstream examples (e.g., ``two_state_bistable.md``).
         """
         lines: List[str] = ["## Connections"]
         n_states = len(self.state_space.variables)
@@ -252,22 +263,22 @@ class _UpstreamSectionsMixin:
         n_act = len(self.state_space.actions)
 
         for i in range(n_states):
-            lines.append(f"(D_f{i}) > (s_f{i})")
+            lines.append(f"D_f{i}>s_f{i}")
 
         for i in range(min(n_states, n_obs)):
-            lines.append(f"(s_f{i}) > (A_m{i})")
-            lines.append(f"(A_m{i}, s_f{i}) > (o_m{i})")
+            lines.append(f"s_f{i}>A_m{i}")
+            lines.append(f"A_m{i},s_f{i}>o_m{i}")
 
         for i in range(n_states):
-            lines.append(f"(s_f{i}, B_f{i}) > (s_f{i})")
+            lines.append(f"s_f{i},B_f{i}>s_f{i}")
             if n_act > 0:
-                lines.append(f"(u_c{min(i, n_act - 1)}) > (B_f{i})")
+                lines.append(f"u_c{min(i, n_act - 1)}>B_f{i}")
 
         if self.state_space.preferences and n_obs > 0:
             for i in range(n_obs):
-                lines.append(f"(C_m{i}, o_m{i}) > G")
+                lines.append(f"C_m{i},o_m{i}>G")
             if n_act > 0:
-                lines.append("G > (u_c0)")
+                lines.append("G>u_c0")
 
         if len(lines) == 1:
             lines.append("# No connections derivable from empty state space")
@@ -374,12 +385,24 @@ class _UpstreamSectionsMixin:
         """Emit ``## Time`` — GNN v1.1 time block.
 
         Uses ``Static`` when the state space has no transitions and
-        ``Dynamic/DiscreteTime=t/ModelTimeHorizon=Unbounded`` when it does.
+        ``Dynamic/Discrete/Time=t/ModelTimeHorizon=Unbounded`` when it does.
+
+        The upstream type-checker (``src/type_checker/checker.py``) treats
+        these as separate valid keywords:
+          * ``Dynamic``        — model has temporal dynamics
+          * ``Discrete``       — discrete-time (not continuous)
+          * ``Time=t``         — time index variable is ``t``
+          * ``ModelTimeHorizon=Unbounded`` — no fixed horizon
+
+        Previously ``DiscreteTime=t`` was emitted as a single fused token,
+        which is not in the upstream valid-specification list and would
+        generate a warning from the upstream type-checker.
         """
         lines = ["## Time"]
         if self.state_space.transitions:
             lines.append("Dynamic")
-            lines.append("DiscreteTime=t")
+            lines.append("Discrete")
+            lines.append("Time=t")
             lines.append("ModelTimeHorizon=Unbounded")
         else:
             lines.append("Static")
