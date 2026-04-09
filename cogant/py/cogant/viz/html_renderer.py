@@ -5,6 +5,8 @@ from typing import Dict, Any, Optional, List
 import json
 import logging
 
+from cogant.viz.cytoscape_view import build_cytoscape_html
+
 logger = logging.getLogger(__name__)
 
 
@@ -103,6 +105,7 @@ class HTMLSiteRenderer:
             <ul>
                 <li><a href="index.html" class="active">Overview</a></li>
                 <li><a href="graph/program_graph.html">Program Graph</a></li>
+                <li><a href="graph/force_graph.html">Force-Directed View</a></li>
                 <li><a href="models/state_space.html">State Space</a></li>
                 <li><a href="models/process.html">Process</a></li>
                 <li><a href="provenance/index.html">Provenance</a></li>
@@ -169,7 +172,7 @@ class HTMLSiteRenderer:
         """
 
     def _render_graph(self) -> None:
-        """Render program graph page."""
+        """Render program graph pages (classic D3 stub + cytoscape force view)."""
         html = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -191,6 +194,7 @@ class HTMLSiteRenderer:
             <ul>
                 <li><a href="../index.html">Overview</a></li>
                 <li><a href="program_graph.html" class="active">Program Graph</a></li>
+                <li><a href="force_graph.html">Force-Directed View</a></li>
                 <li><a href="../models/state_space.html">State Space</a></li>
             </ul>
         </div>
@@ -200,6 +204,11 @@ class HTMLSiteRenderer:
         <section>
             <div id="graph-container" style="width: 100%; height: 600px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;"></div>
             <p style="color: #999; text-align: center; margin-top: 10px;">Interactive program dependency graph (drag to move, scroll to zoom)</p>
+            <p style="text-align: center; margin-top: 14px;">
+                See also the
+                <a href="force_graph.html"><strong>force-directed (cytoscape.js)</strong></a>
+                view — nodes coloured by AI role, sized by degree.
+            </p>
         </section>
 
         <section style="margin-top: 40px;">
@@ -223,6 +232,54 @@ class HTMLSiteRenderer:
 """
         with open(self.output_dir / "graph" / "program_graph.html", "w") as f:
             f.write(html)
+
+        # Also render the cytoscape.js force-directed view. The graph payload
+        # is pulled from the bundle so the same renderer can serve both a
+        # full pipeline bundle and lightweight test bundles.
+        graph_payload = self._extract_graph_payload()
+        mappings_payload = self._extract_semantic_mappings()
+        force_html = build_cytoscape_html(graph_payload, mappings_payload)
+        with open(self.output_dir / "graph" / "force_graph.html", "w") as f:
+            f.write(force_html)
+
+    def _extract_graph_payload(self) -> Dict[str, Any]:
+        """Best-effort extraction of a program-graph dict from the bundle.
+
+        Looks in a handful of well-known locations so that both the typed
+        ``PipelineRunner`` bundle and legacy / ad-hoc bundles can render.
+        Always returns a dict with ``nodes`` and ``edges`` keys.
+        """
+        candidates: List[Any] = [
+            self.bundle.get("program_graph"),
+            self.bundle.get("graph"),
+            (self.bundle.get("stage_results", {}) or {}).get("graph"),
+            (self.bundle.get("artifacts", {}) or {}).get("program_graph"),
+        ]
+        for candidate in candidates:
+            if isinstance(candidate, dict) and (
+                "nodes" in candidate or "edges" in candidate
+            ):
+                return {
+                    "nodes": candidate.get("nodes", []),
+                    "edges": candidate.get("edges", []),
+                }
+        return {"nodes": [], "edges": []}
+
+    def _extract_semantic_mappings(self) -> List[Any]:
+        """Best-effort extraction of semantic mappings for role colouring."""
+        candidates: List[Any] = [
+            self.bundle.get("semantic_mappings"),
+            self.bundle.get("mappings"),
+            (self.bundle.get("stage_results", {}) or {}).get("translate"),
+        ]
+        for candidate in candidates:
+            if isinstance(candidate, list):
+                return candidate
+            if isinstance(candidate, dict) and "mappings" in candidate:
+                inner = candidate.get("mappings")
+                if isinstance(inner, list):
+                    return inner
+        return []
 
     def _render_models(self) -> None:
         """Render state space and process model pages."""
