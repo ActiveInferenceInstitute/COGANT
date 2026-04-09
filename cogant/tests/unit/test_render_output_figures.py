@@ -2,10 +2,18 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 
+import pytest
 import cogant.tools.render_output_figures as rof
+
+_HAS_MATPLOTLIB = importlib.util.find_spec("matplotlib") is not None
+_needs_matplotlib = pytest.mark.skipif(
+    not _HAS_MATPLOTLIB,
+    reason="matplotlib not installed — install cogant[viz] to enable PNG rendering tests",
+)
 
 
 def test_discover_run_dirs_examples_control_positive(tmp_path: Path) -> None:
@@ -70,6 +78,7 @@ def test_has_program_graph_under_data(tmp_path: Path) -> None:
     assert rof._has_program_graph(d) is True
 
 
+@_needs_matplotlib
 def test_process_run_dir_writes_program_graph_png(tmp_path: Path) -> None:
     run = tmp_path / "run"
     run.mkdir()
@@ -98,6 +107,7 @@ def test_main_no_program_graph_returns_1(tmp_path: Path) -> None:
     assert rof.main([str(d)]) == 1
 
 
+@_needs_matplotlib
 def test_main_success_on_flat_run(tmp_path: Path) -> None:
     run = tmp_path / "run"
     run.mkdir()

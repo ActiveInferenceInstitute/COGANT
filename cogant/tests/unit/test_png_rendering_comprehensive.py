@@ -13,12 +13,19 @@ test even on CI runners with matplotlib's first-run font cache.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import shutil
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+
+_HAS_MATPLOTLIB = importlib.util.find_spec("matplotlib") is not None
+_needs_matplotlib = pytest.mark.skipif(
+    not _HAS_MATPLOTLIB,
+    reason="matplotlib not installed — install cogant[viz] to enable PNG rendering tests",
+)
 
 from cogant.viz.png_export import (
     RenderConfig,
@@ -235,6 +242,7 @@ class TestMermaidGanttParser:
 # Native mermaid-to-PNG renderer for every diagram kind                        #
 # --------------------------------------------------------------------------- #
 
+@_needs_matplotlib
 class TestRenderMermaidTextToPng:
     def test_graph_render(self, tmp_path: Path) -> None:
         out = tmp_path / "g.png"
@@ -283,6 +291,7 @@ class TestRenderMermaidTextToPng:
         assert ok is False
 
 
+@_needs_matplotlib
 class TestRenderMermaidFileFallback:
     def test_native_fallback_used_when_mmdc_absent(self, tmp_path: Path) -> None:
         src = tmp_path / "sample.mermaid"
@@ -308,6 +317,7 @@ class TestRenderMermaidFileFallback:
         assert ok is False
 
 
+@_needs_matplotlib
 class TestRenderAllMermaidInRun:
     def test_walks_run_directory(self, tmp_path: Path) -> None:
         (tmp_path / "a.mermaid").write_text("graph TD\n    A --> B\n")
@@ -390,6 +400,7 @@ class TestSvgRendering:
 # State-space factor and process Gantt PNG renderers                           #
 # --------------------------------------------------------------------------- #
 
+@_needs_matplotlib
 class TestStateSpaceFactorPng:
     def test_renders_factor_graph(self, tmp_path: Path) -> None:
         ss = SimpleNamespace(
@@ -409,6 +420,7 @@ class TestStateSpaceFactorPng:
         assert render_state_space_factor_png(None, out) is False
 
 
+@_needs_matplotlib
 class TestProcessGanttPng:
     def test_renders_gantt(self, tmp_path: Path) -> None:
         pm = SimpleNamespace(
@@ -431,6 +443,7 @@ class TestProcessGanttPng:
 # One-shot entrypoint: render_all_pngs                                         #
 # --------------------------------------------------------------------------- #
 
+@_needs_matplotlib
 class TestRenderAllPngs:
     def _write_corpus(self, run: Path) -> None:
         run.mkdir(parents=True, exist_ok=True)
@@ -522,6 +535,7 @@ class TestRenderAllDotInRun:
 # Connections matrix renderer (A/B/C/D quadrants)                              #
 # --------------------------------------------------------------------------- #
 
+@_needs_matplotlib
 class TestRenderConnectionsMatrixPng:
     def test_renders_quadrants(self, tmp_path: Path) -> None:
         out = tmp_path / "connections.png"
@@ -556,6 +570,7 @@ class TestRenderConnectionsMatrixPng:
 # Markov blanket renderer                                                      #
 # --------------------------------------------------------------------------- #
 
+@_needs_matplotlib
 class TestRenderMarkovBlanketPng:
     def test_renders_roles_dict(self, tmp_path: Path) -> None:
         blanket = tmp_path / "markov_blanket.json"
@@ -629,6 +644,7 @@ class TestRenderMarkovBlanketPng:
 # GNN markdown → multi-page PNG                                                #
 # --------------------------------------------------------------------------- #
 
+@_needs_matplotlib
 class TestRenderGnnMarkdownPng:
     def _sample_gnn(self) -> str:
         sections = []
@@ -669,6 +685,7 @@ class TestRenderGnnMarkdownPng:
 # Summary cover renderer                                                       #
 # --------------------------------------------------------------------------- #
 
+@_needs_matplotlib
 class TestRenderSummaryCoverPng:
     def test_renders_with_minimal_inputs(self, tmp_path: Path) -> None:
         run = tmp_path / "run"
@@ -700,6 +717,7 @@ class TestRenderSummaryCoverPng:
 # render_all_pngs auto-discovery + full coverage                               #
 # --------------------------------------------------------------------------- #
 
+@_needs_matplotlib
 class TestRenderAllPngsAutoDiscovery:
     def test_auto_loads_state_space_and_process_model(self, tmp_path: Path) -> None:
         run = tmp_path / "run"

@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import shutil
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+
+_HAS_MATPLOTLIB = importlib.util.find_spec("matplotlib") is not None
+_needs_matplotlib = pytest.mark.skipif(
+    not _HAS_MATPLOTLIB,
+    reason="matplotlib not installed — install cogant[viz] to enable PNG rendering tests",
+)
 
 from cogant.viz.png_export import (
     RenderConfig,
@@ -65,6 +72,7 @@ def test_render_program_graph_png_empty_graph_returns_false(tmp_path: Path) -> N
     assert render_program_graph_png(pg, out) is False
 
 
+@_needs_matplotlib
 def test_render_program_graph_png_writes_file(tmp_path: Path) -> None:
     pg = tmp_path / "program_graph.json"
     pg.write_text(
@@ -174,6 +182,7 @@ def _make_state_space(n_vars: int, n_obs: int, n_acts: int) -> SimpleNamespace:
     )
 
 
+@_needs_matplotlib
 def test_render_state_space_factor_png_handles_tiny(tmp_path: Path) -> None:
     ss = _make_state_space(2, 3, 1)
     out = tmp_path / "ss.png"
@@ -181,6 +190,7 @@ def test_render_state_space_factor_png_handles_tiny(tmp_path: Path) -> None:
     assert out.stat().st_size > 500
 
 
+@_needs_matplotlib
 def test_render_state_space_factor_png_handles_huge_layers(tmp_path: Path) -> None:
     """A 200×1200 state space must render in seconds, not hang on 240k edges.
 
@@ -203,6 +213,7 @@ def test_render_state_space_factor_png_handles_huge_layers(tmp_path: Path) -> No
     assert elapsed < 25.0, f"render took {elapsed:.2f}s — layer cap not active"
 
 
+@_needs_matplotlib
 def test_render_connections_matrix_png_handles_huge_matrix(tmp_path: Path) -> None:
     """A 1200×200 A matrix must be capped — previous versions hung on set_xticks."""
     import time
@@ -242,6 +253,7 @@ def _make_process_model(n_stages: int) -> SimpleNamespace:
     )
 
 
+@_needs_matplotlib
 def test_render_process_gantt_png_handles_huge_process(tmp_path: Path) -> None:
     """A 6800-stage process model must render via row cap, not hit canvas limit."""
     import time
