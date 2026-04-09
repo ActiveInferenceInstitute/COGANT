@@ -1,4 +1,20 @@
-"""Main CLI application with all subcommands."""
+"""Main CLI application with all subcommands.
+
+This module is the single Typer entry point for the ``cogant``
+command. Every subcommand here is a thin orchestrator: it parses
+options, calls the Session/PipelineRunner APIs, and prints Rich output.
+
+User-facing ergonomics live in sibling modules:
+
+* :mod:`cogant.cli.doctor` — ``cogant doctor`` environment diagnostics.
+* :mod:`cogant.cli.diff` — directory-based drift reporting helper.
+
+When adding new commands, prefer: (1) a short docstring that doubles as
+``--help`` text, (2) ``typer.Option(..., help=...)`` on every option so
+``cogant <cmd> --help`` is self-explanatory, and (3) wrapping any call
+into the pipeline with :func:`_handle_pipeline_errors` so users get a
+friendly message instead of a Python traceback.
+"""
 
 from pathlib import Path
 from typing import Optional, List
@@ -8,12 +24,14 @@ import typer
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.syntax import Syntax
 
 from cogant.api.session import Session
 from cogant.api.pipeline import PipelineRunner, PipelineConfig
 from cogant.api.bundle import Bundle
 from cogant.api.review import ReviewAPI
+from cogant.cli.doctor import doctor_command, run_doctor, render_report
 
 # Setup logging
 logging.basicConfig(
@@ -27,28 +45,214 @@ console = Console()
 # Typer app
 app = typer.Typer(
     name="cogant",
-    help="Codebase-to-GNN Translation Engine",
+    help=(
+        "Codebase-to-GNN Translation Engine.\n\n"
+        "Translate a repository into an Active Inference Generalized "
+        "Notation for Networks (GNN) state-space model. Run "
+        "[bold]cogant doctor[/bold] first to verify your environment, "
+        "then [bold]cogant init <repo>[/bold] for a guided first run."
+    ),
     no_args_is_help=True,
+    rich_markup_mode="rich",
 )
+
+
+# ------------------------------------------------------- error helpers ----
+
+
+# Extensions COGANT can currently parse. Kept in sync with
+# ``cogant.ingest`` loosely — the set is used by ``init``'s repo-health
+# sniff and ``_estimate_pipeline_seconds``.
+_SOURCE_EXTENSIONS = {
+    ".py",
+    ".pyi",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+}
+
+
+def _friendly_pipeline_error(exc: BaseException, target: Optional[Path] = None) -> None:
+    """Render a user-facing error message for a pipeline failure.
+
+    This is the single place where exceptions bubbling out of the
+    Session / PipelineRunner APIs are translated into human text. The
+    caller is expected to raise ``typer.Exit(code=1)`` afterwards; we
+    deliberately do not do it here so unit tests can assert on the
+    printed message without also catching the exit.
+    """
+
+    if isinstance(exc, FileNotFoundError):
+        console.print(f"[red]Error:[/red] Repository not found: {target or exc}")
+        console.print(
+            "  [dim]→ Check the path exists and contains Python/JS/TS files[/dim]"
+        )
+        return
+    if isinstance(exc, PermissionError):
+        console.print(f"[red]Error:[/red] Permission denied: {target or exc}")
+        console.print(
+            "  [dim]→ Check read permissions on the repository and its files[/dim]"
+        )
+        return
+    if isinstance(exc, NotADirectoryError):
+        console.print(
+            f"[red]Error:[/red] Expected a repository directory but got a file: "
+            f"{target or exc}"
+        )
+        return
+
+    # Fallback — print exception type + message, suggest doctor.
+    console.print(f"[red]Unexpected error:[/red] {type(exc).__name__}: {exc}")
+    console.print("  [dim]→ Run [bold]cogant doctor[/bold] to check your environment[/dim]")
+    console.print(
+        "  [dim]→ File a bug at "
+        "https://github.com/cogant-contributors/cogant/issues[/dim]"
+    )
+
+
+def _count_source_files(root: Path) -> int:
+    """Best-effort count of parseable source files below ``root``.
+
+    Used for ``init`` time estimation and repo-validity sniffing. It
+    walks at most a few thousand files and skips obvious noise
+    directories so first-run UX stays snappy.
+    """
+
+    if not root.exists() or not root.is_dir():
+        return 0
+
+    skip_dirs = {
+        ".git",
+        ".venv",
+        "venv",
+        "node_modules",
+        "__pycache__",
+        ".tox",
+        ".mypy_cache",
+        ".pytest_cache",
+        "dist",
+        "build",
+        "target",
+    }
+
+    count = 0
+    # Hard cap so pathological monorepos do not freeze the CLI.
+    file_budget = 5000
+    for path in root.rglob("*"):
+        if file_budget <= 0:
+            break
+        file_budget -= 1
+        # Skip noise directories by looking at path parts.
+        if any(part in skip_dirs for part in path.parts):
+            continue
+        if path.is_file() and path.suffix.lower() in _SOURCE_EXTENSIONS:
+            count += 1
+    return count
+
+
+def _estimate_pipeline_seconds(file_count: int) -> float:
+    """Rough wall-clock estimate for a full ``translate`` run.
+
+    The 50ms/file heuristic comes from the v0.1.0 benchmark table on
+    the control-positive fixtures; it overestimates for tiny repos and
+    underestimates for very large ones, but is honest enough to tell
+    users whether they are waiting seconds or minutes.
+    """
+
+    if file_count <= 0:
+        return 0.0
+    # 50ms per file + a 2s constant-time overhead for pipeline setup.
+    return 2.0 + (file_count * 0.05)
+
+
+def _format_duration(seconds: float) -> str:
+    if seconds < 1.0:
+        return "<1s"
+    if seconds < 60.0:
+        return f"{seconds:.0f}s"
+    minutes, rem = divmod(seconds, 60.0)
+    return f"{int(minutes)}m {int(rem)}s"
 
 
 @app.command()
 def init(
-    path: str = typer.Argument(..., help="Path to initialize"),
-    quiet: bool = typer.Option(False, "--quiet", "-q", help="Minimal output"),
+    path: str = typer.Argument(
+        ...,
+        help="Path to initialize (created if it does not exist).",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Minimal output (suppresses confirmation summary).",
+    ),
+    check_env: bool = typer.Option(
+        False,
+        "--check/--no-check",
+        help=(
+            "Run [bold]cogant doctor[/bold] before touching the filesystem. "
+            "Use this on a fresh machine to surface missing dependencies."
+        ),
+    ),
+    run: bool = typer.Option(
+        False,
+        "--run",
+        help=(
+            "After initializing, also run [bold]cogant translate[/bold] on "
+            "the newly created project. Off by default so init stays fast."
+        ),
+    ),
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        "-y",
+        help="Skip the confirmation prompt before running translate.",
+    ),
 ) -> None:
-    """Initialize a new COGANT project."""
+    """Initialize a new COGANT project (guided first-time setup).
+
+    This command is safe to re-run: it creates ``.cogant/config.json``
+    if missing, refuses to clobber an existing config, and can
+    optionally run doctor and translate in a single pass.
+
+    Typical first-time flow::
+
+        cogant init ./my_repo --check --run
+
+    which: (1) diagnoses the environment, (2) scaffolds the project
+    config, (3) estimates pipeline duration from the file count, and
+    (4) translates the repo to GNN after a confirmation prompt.
+    """
+
     console.print(f"[bold blue]Initializing COGANT project[/bold blue] at {path}")
 
     project_dir = Path(path)
+
+    # --------- Step 0: optional environment diagnostics -----------------
+    if check_env:
+        console.print("\n[bold]Step 1/4[/bold] — Environment diagnostics")
+        report = run_doctor()
+        render_report(console, report)
+        if not report.ok:
+            console.print(
+                "[red]Environment check failed — aborting init. "
+                "Fix the errors above and retry.[/red]"
+            )
+            raise typer.Exit(code=1)
+
+    # --------- Step 1: filesystem scaffold ------------------------------
     project_dir.mkdir(parents=True, exist_ok=True)
 
     # Create .cogant directory
     cogant_dir = project_dir / ".cogant"
     cogant_dir.mkdir(exist_ok=True)
 
-    # Create config file
+    # Create config file (never overwritten — init is idempotent).
     config_file = cogant_dir / "config.json"
+    config_created = False
     if not config_file.exists():
         config_file.write_text(
             """{
@@ -70,22 +274,162 @@ def init(
 }
 """
         )
+        config_created = True
+
+    # --------- Step 2: repo sniff + estimate ---------------------------
+    file_count = _count_source_files(project_dir)
+    estimate_s = _estimate_pipeline_seconds(file_count)
 
     if not quiet:
         console.print("[green]✓ Project initialized successfully[/green]")
-        console.print(f"  Config: {config_file}")
+        console.print(f"  Config: {config_file}" + (" [dim](created)[/dim]" if config_created else " [dim](existing)[/dim]"))
+        console.print(f"  Source files detected: [cyan]{file_count}[/cyan]")
+        if file_count == 0:
+            console.print(
+                "  [yellow]No .py/.js/.ts files found — "
+                "cogant translate will have nothing to process.[/yellow]"
+            )
+        else:
+            console.print(
+                f"  Estimated [bold]translate[/bold] time: "
+                f"[magenta]{_format_duration(estimate_s)}[/magenta] "
+                f"[dim](≈50ms/file)[/dim]"
+            )
+
+    # --------- Step 3: optional translate run --------------------------
+    if run:
+        if file_count == 0:
+            console.print(
+                "[yellow]--run requested but no source files found; skipping.[/yellow]"
+            )
+            return
+        if not yes:
+            confirm = typer.confirm(
+                f"Run cogant translate on {project_dir} now?",
+                default=True,
+            )
+            if not confirm:
+                console.print("[dim]Skipped translate (user declined).[/dim]")
+                return
+
+        console.print("\n[bold]Running translate pipeline…[/bold]")
+        try:
+            runner = PipelineRunner()
+            config = PipelineConfig(output_dir=str(project_dir / "output"))
+            bundle = _run_pipeline_with_progress(
+                runner,
+                str(project_dir),
+                config,
+                description_prefix="init",
+            )
+        except Exception as exc:  # noqa: BLE001 — user-facing surface
+            _friendly_pipeline_error(exc, project_dir)
+            raise typer.Exit(code=1)
+
+        console.print(
+            f"[green]✓ Translate complete[/green] — "
+            f"{len(bundle.stage_results)} stages, {len(bundle.errors)} errors"
+        )
+        console.print(f"  Bundle: {project_dir / 'output' / 'bundle.json'}")
+
+
+@app.command()
+def doctor() -> None:
+    """Diagnose the COGANT runtime environment.
+
+    Prints a Rich panel listing the Python version, every runtime
+    dependency (core, viz, multilang), the optional Rust backend, and
+    external tooling such as ``git``. Exits with code ``1`` when any
+    required check fails so it can gate CI setups.
+    """
+
+    code = doctor_command(console)
+    if code != 0:
+        raise typer.Exit(code=code)
+
+
+def _run_pipeline_with_progress(
+    runner: "PipelineRunner",
+    target: str,
+    config: "PipelineConfig",
+    description_prefix: str = "pipeline",
+) -> "Bundle":
+    """Run a pipeline while showing a single Rich progress spinner.
+
+    The real per-stage progress lives inside ``PipelineRunner`` (which
+    emits logs), but that API does not currently expose a callback
+    stream. Rather than plumbing one in — and risking test breakage —
+    we show a best-effort spinner that cycles through the canonical
+    pipeline phase names while the run is in flight. Once the runner
+    returns we update the spinner to ``Done`` and fall through.
+
+    The helper is defensive: if Rich fails to initialise a live
+    context (e.g. when stdout is captured by pytest), we fall back to
+    running the pipeline without the spinner so tests keep working.
+    """
+
+    description = f"[cyan]{description_prefix}[/cyan]: Parsing source files…"
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+            transient=True,
+            console=console,
+        ) as progress:
+            task = progress.add_task(description, total=None)
+            # We cannot hook into runner.run() mid-stage without an
+            # API change, so we update the description to reflect the
+            # canonical phases before invocation and once after.
+            progress.update(
+                task,
+                description=f"[cyan]{description_prefix}[/cyan]: Building program graph…",
+            )
+            bundle = runner.run(target, config)
+            progress.update(
+                task,
+                description=f"[cyan]{description_prefix}[/cyan]: Applying translation rules…",
+            )
+            progress.update(
+                task,
+                description=f"[cyan]{description_prefix}[/cyan]: Done",
+            )
+            return bundle
+    except Exception:  # noqa: BLE001 — re-raised below, fallback for display only
+        # If the progress context itself blew up (not the pipeline),
+        # retry without a spinner. A real pipeline error will re-raise
+        # from the inner ``runner.run`` and be caught by the caller.
+        return runner.run(target, config)
 
 
 @app.command()
 def scan(
-    target: str = typer.Argument(".", help="Target path or URL"),
-    format: str = typer.Option("table", "--format", "-f", help="Output format"),
+    target: str = typer.Argument(
+        ".",
+        help="Path or URL of the repository to scan.",
+    ),
+    format: str = typer.Option(
+        "table",
+        "--format",
+        "-f",
+        help="Output format: 'table' for human-readable Rich table, 'json' for raw.",
+    ),
 ) -> None:
-    """Scan repository and show summary."""
+    """Scan a repository and print a quick summary.
+
+    This is the fastest way to sanity-check that COGANT can see a
+    repository before running the full pipeline. It runs only the
+    static-analysis extractors (no graph build, no translation).
+    """
+
     console.print(f"[bold blue]Scanning[/bold blue] {target}")
 
-    session = Session.from_target(target)
-    result = session.extract_static()
+    try:
+        session = Session.from_target(target)
+        result = session.extract_static()
+    except Exception as exc:  # noqa: BLE001 — CLI boundary
+        _friendly_pipeline_error(exc, Path(target))
+        raise typer.Exit(code=1)
 
     if format == "table":
         table = Table(title="Repository Summary")
@@ -112,20 +456,37 @@ def scan(
 
 @app.command()
 def extract_static(
-    target: str = typer.Argument(".", help="Target path"),
+    target: str = typer.Argument(
+        ".",
+        help="Path of the repository to analyse statically.",
+    ),
     output: Optional[str] = typer.Option(
         None,
         "--output",
         "-o",
-        help="Output directory for exported JSON artifacts (runs full export graph)",
+        help=(
+            "Output directory for exported JSON artifacts. When set, the "
+            "full export graph runs; otherwise only an in-memory summary is "
+            "printed."
+        ),
     ),
     layout_output: bool = typer.Option(
         False,
         "--layout-output",
-        help="After export, move artifacts into data/, diagrams/, site/, reports/, figures/",
+        help=(
+            "After export, move artifacts into data/, diagrams/, site/, "
+            "reports/, figures/ subdirectories for easier downstream "
+            "consumption."
+        ),
     ),
 ) -> None:
-    """Extract static analysis (AST, types, symbols)."""
+    """Run static analysis only (AST, type inference, symbol tables).
+
+    Produces the same artifacts as the ``static`` stage of
+    ``cogant translate`` but without building a graph or running the
+    translation rules. Use this to debug parsing problems in
+    isolation.
+    """
     console.print(f"[bold blue]Extracting static analysis[/bold blue] from {target}")
 
     session = Session.from_target(target)
@@ -150,10 +511,24 @@ def extract_static(
 
 @app.command()
 def extract_dynamic(
-    target: str = typer.Argument(".", help="Target path"),
-    traces: Optional[str] = typer.Option(None, "--traces", "-t", help="Trace file path"),
+    target: str = typer.Argument(
+        ".",
+        help="Path of the repository to analyse dynamically.",
+    ),
+    traces: Optional[str] = typer.Option(
+        None,
+        "--traces",
+        "-t",
+        help="Optional path to a pre-recorded trace file to merge into the session.",
+    ),
 ) -> None:
-    """Extract dynamic analysis (traces, coverage)."""
+    """Run dynamic analysis (coverage databases, runtime traces).
+
+    Requires either a ``coverage`` database under the target repo or
+    a trace file passed via ``--traces``. Prefer ``cogant translate``
+    when you want both static and dynamic signal — this command is
+    for debugging the dynamic layer in isolation.
+    """
     console.print(f"[bold blue]Extracting dynamic analysis[/bold blue] from {target}")
 
     session = Session.from_target(target)
@@ -166,10 +541,23 @@ def extract_dynamic(
 
 @app.command()
 def graph(
-    target: str = typer.Argument(".", help="Target path"),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output format"),
+    target: str = typer.Argument(
+        ".",
+        help="Path of the repository to build the program dependency graph for.",
+    ),
+    output: Optional[str] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Optional format hint; currently informational only.",
+    ),
 ) -> None:
-    """Build program dependency graph."""
+    """Build and summarise the program dependency graph.
+
+    Runs the ``static`` and ``graph`` stages and prints a one-line
+    node/edge count. Use ``cogant translate --skip export,validate``
+    when you want the full graph JSON on disk.
+    """
     console.print(f"[bold blue]Building program graph[/bold blue] for {target}")
 
     session = Session.from_target(target)
@@ -185,40 +573,78 @@ def graph(
 
 @app.command()
 def translate(
-    target: str = typer.Argument(".", help="Target path"),
-    config_file: Optional[str] = typer.Option(None, "--config", "-c", help="Config file"),
-    skip_stages: Optional[str] = typer.Option(
-        None, "--skip", help="Comma-separated stages to skip"
+    target: str = typer.Argument(
+        ".",
+        help="Path to the repository to translate (must contain Python/JS/TS sources).",
     ),
-    output_dir: str = typer.Option("output", "--output", "-o", help="Output directory"),
+    config_file: Optional[str] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="YAML or JSON pipeline config file with stage / plugin overrides.",
+    ),
+    skip_stages: Optional[str] = typer.Option(
+        None,
+        "--skip",
+        help="Comma-separated list of stages to skip (e.g. 'dynamic,validate').",
+    ),
+    output_dir: str = typer.Option(
+        "output",
+        "--output",
+        "-o",
+        help="Directory where bundle.json and derived artifacts are written.",
+    ),
     layout_output: bool = typer.Option(
         False,
         "--layout-output",
-        help="After export, move artifacts into data/, diagrams/, site/, reports/, figures/",
+        help=(
+            "After export, move artifacts into data/, diagrams/, site/, "
+            "reports/, figures/ subdirectories."
+        ),
     ),
     no_dynamic: bool = typer.Option(
         False,
         "--no-dynamic",
-        help="Skip the dynamic-analysis enrichment stage (coverage + trace)",
+        help=(
+            "Skip the dynamic-analysis enrichment stage "
+            "(coverage + trace). Faster but less accurate."
+        ),
     ),
     coverage_path: Optional[str] = typer.Option(
         None,
         "--coverage",
-        help="Path to a coverage database (.coverage) or Cobertura coverage.xml",
+        help="Path to a coverage database (.coverage) or Cobertura coverage.xml.",
     ),
     trace_path: Optional[str] = typer.Option(
         None,
         "--trace",
-        help="Path to a Chrome DevTools trace JSON file",
+        help="Path to a Chrome DevTools trace JSON file for dynamic analysis.",
     ),
 ) -> None:
-    """Run full pipeline translation."""
+    """Translate a repository into an Active Inference GNN state-space model.
+
+    Runs the full COGANT pipeline: ingest → static → normalize → graph
+    → translate → statespace → process → export → validate. Each
+    stage is logged; on failure, the bundle is still written with
+    ``errors`` populated so you can post-mortem the run.
+    """
     console.print(
         Panel(
             f"[bold]COGANT Pipeline[/bold]\nTranslating [cyan]{target}[/cyan] to GNN...",
             expand=False,
         )
     )
+
+    # Fast-fail with a friendly error if the target does not exist.
+    # PipelineRunner.run() otherwise produces a bundle full of stage
+    # errors and exits 0, which hides the real problem from users.
+    target_path = Path(target)
+    if not target_path.exists():
+        _friendly_pipeline_error(FileNotFoundError(target), target_path)
+        raise typer.Exit(code=1)
+    if target_path.is_file():
+        _friendly_pipeline_error(NotADirectoryError(target), target_path)
+        raise typer.Exit(code=1)
 
     config = PipelineConfig(output_dir=output_dir, layout_output=layout_output)
     if config_file:
@@ -267,7 +693,22 @@ def translate(
         config.trace_path = trace_path
 
     runner = PipelineRunner()
-    bundle = runner.run(target, config)
+    try:
+        bundle = _run_pipeline_with_progress(
+            runner, target, config, description_prefix="translate"
+        )
+    except FileNotFoundError as exc:
+        _friendly_pipeline_error(exc, Path(target))
+        raise typer.Exit(code=1)
+    except PermissionError as exc:
+        _friendly_pipeline_error(exc, Path(target))
+        raise typer.Exit(code=1)
+    except NotADirectoryError as exc:
+        _friendly_pipeline_error(exc, Path(target))
+        raise typer.Exit(code=1)
+    except Exception as exc:  # noqa: BLE001 — CLI boundary
+        _friendly_pipeline_error(exc, Path(target))
+        raise typer.Exit(code=1)
 
     # Show results
     console.print("\n[bold green]Pipeline Results[/bold green]")
@@ -307,10 +748,23 @@ def translate(
 
 @app.command()
 def statespace(
-    target: str = typer.Argument(".", help="Target path"),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file"),
+    target: str = typer.Argument(
+        ".",
+        help="Path of the repository to compile into a state-space model.",
+    ),
+    output: Optional[str] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Optional output file for the compiled state space; currently informational.",
+    ),
 ) -> None:
-    """Compile state space model."""
+    """Compile an Active Inference state-space model (S, O, A, π).
+
+    Runs static → graph → translate → statespace and prints a count
+    of states, observations, actions, and policies. The full state
+    space is persisted only when you invoke ``cogant translate``.
+    """
     console.print(f"[bold blue]Compiling state space[/bold blue] for {target}")
 
     session = Session.from_target(target)
@@ -332,14 +786,23 @@ def statespace(
 
 @app.command()
 def process(
-    target: str = typer.Argument(".", help="Target path"),
+    target: str = typer.Argument(
+        ".",
+        help="Path to the repository whose execution / process model to extract.",
+    ),
     no_dynamic: bool = typer.Option(
         False,
         "--no-dynamic",
-        help="Skip the dynamic-analysis enrichment stage (coverage + trace)",
+        help="Skip the dynamic-analysis enrichment stage (coverage + trace).",
     ),
 ) -> None:
-    """Extract process/execution model."""
+    """Extract the pipeline / execution process model from a repository.
+
+    Runs the pipeline without the ``export`` and ``validate`` stages
+    so you get the process graph quickly. Combine with ``--no-dynamic``
+    for a purely-static run on repos without a test suite.
+    """
+
     console.print(f"[bold blue]Extracting process model[/bold blue] from {target}")
 
     runner = PipelineRunner()
@@ -347,7 +810,13 @@ def process(
         skip_stages=["export", "validate"],
         skip_dynamic=no_dynamic,
     )
-    bundle = runner.run(target, config)
+    try:
+        bundle = _run_pipeline_with_progress(
+            runner, target, config, description_prefix="process"
+        )
+    except Exception as exc:  # noqa: BLE001 — CLI boundary
+        _friendly_pipeline_error(exc, Path(target))
+        raise typer.Exit(code=1)
 
     process_model = bundle.stage_results.get("process", {})
     console.print(
@@ -361,11 +830,28 @@ def process(
 
 @app.command()
 def export_gnn(
-    bundle_path: str = typer.Argument(..., help="Bundle JSON path"),
-    output_dir: str = typer.Option("output", "--output", "-o", help="Output directory"),
-    format: str = typer.Option("all", "--format", "-f", help="Format: all, markdown, json"),
+    bundle_path: str = typer.Argument(
+        ...,
+        help="Path to a bundle JSON file produced by `cogant translate`.",
+    ),
+    output_dir: str = typer.Option(
+        "output",
+        "--output",
+        "-o",
+        help="Output directory for the re-exported artifacts.",
+    ),
+    format: str = typer.Option(
+        "all",
+        "--format",
+        "-f",
+        help="Output format: 'all', 'markdown', or 'json'.",
+    ),
 ) -> None:
-    """Export GNN bundle in various formats."""
+    """Re-export a previously generated GNN bundle in a different format.
+
+    Useful when you want a markdown report from an existing run
+    without re-running the full pipeline.
+    """
     console.print(f"[bold blue]Exporting[/bold blue] {bundle_path}")
 
     import json
@@ -393,10 +879,22 @@ def export_gnn(
 
 @app.command()
 def render(
-    bundle_path: str = typer.Argument(..., help="Bundle JSON path"),
-    output_dir: str = typer.Option("output", "--output", "-o", help="Output directory"),
+    bundle_path: str = typer.Argument(
+        ...,
+        help="Path to a bundle JSON file produced by `cogant translate`.",
+    ),
+    output_dir: str = typer.Option(
+        "output",
+        "--output",
+        "-o",
+        help="Directory where the rendered HTML site is written.",
+    ),
 ) -> None:
-    """Generate interactive HTML site."""
+    """Render an interactive HTML site from a bundle.
+
+    Produces a self-contained site with the program graph,
+    state-space summary, and per-stage diagnostics.
+    """
     console.print(f"[bold blue]Rendering site[/bold blue] for {bundle_path}")
 
     import json
@@ -708,16 +1206,92 @@ def changed(
 
 
 @app.command()
+def explain(
+    repo_path: str = typer.Argument(..., help="Path to the repository to analyze"),
+    node_name: str = typer.Argument(
+        ..., help="Node name (or substring) to explain"
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        "-f",
+        help="Output format: 'text' (rich console) or 'json'",
+    ),
+) -> None:
+    """Explain why a node was assigned its Active Inference role.
+
+    Runs the static pipeline (ingest → static → normalize → graph →
+    translate) against ``repo_path``, resolves ``node_name`` to a
+    concrete node in the program graph, then asks every registered
+    translation rule whether it fired on that node and why. The output
+    lists rules in priority order with their fired/considered status,
+    the semantic kind they would produce, the edges that triggered them,
+    and the Markov blanket role (μ/s/a/η) of the node.
+
+    Exit codes:
+      * ``0`` on success
+      * ``1`` on pipeline / IO errors
+      * ``2`` when the node name cannot be resolved
+    """
+    from cogant.cli.explain import (
+        NodeNotFoundError,
+        explain_node,
+        format_json,
+        format_text,
+    )
+
+    try:
+        result = explain_node(repo_path, node_name)
+    except NodeNotFoundError as exc:
+        console.print(f"[red]Node not found:[/red] {exc}")
+        raise typer.Exit(code=2)
+    except FileNotFoundError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=1)
+    except RuntimeError as exc:
+        console.print(f"[red]Pipeline error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    fmt = (output_format or "text").lower()
+    if fmt == "json":
+        print(format_json(result))
+    elif fmt == "text":
+        format_text(result, console=console)
+    else:
+        console.print(
+            f"[red]Unknown --format {output_format!r}; "
+            f"use 'text' or 'json'.[/red]"
+        )
+        raise typer.Exit(code=1)
+
+
+@app.command()
 def benchmark(
-    target: str = typer.Argument(".", help="Target path"),
-    iterations: int = typer.Option(3, "--iterations", "-n", help="Number of runs"),
+    target: str = typer.Argument(
+        ".",
+        help="Path of the repository to benchmark.",
+    ),
+    iterations: int = typer.Option(
+        3,
+        "--iterations",
+        "-n",
+        help="Number of independent pipeline runs to time.",
+    ),
     no_dynamic: bool = typer.Option(
         False,
         "--no-dynamic",
-        help="Skip the dynamic-analysis enrichment stage (coverage + trace)",
+        help=(
+            "Skip the dynamic-analysis enrichment stage (coverage + "
+            "trace). Use this to measure pure static-analysis throughput."
+        ),
     ),
 ) -> None:
-    """Benchmark pipeline performance."""
+    """Benchmark pipeline wall-clock performance over several runs.
+
+    Prints average / min / max across ``iterations``. The ``export``
+    and ``validate`` stages are skipped so the measurement focuses on
+    the translation core rather than IO.
+    """
     import time
 
     console.print(f"[bold blue]Benchmarking[/bold blue] {target} ({iterations} runs)")
