@@ -22,8 +22,13 @@ from cogant.cli.main import app
 from cogant.cli.doctor import (
     DoctorCheck,
     DoctorReport,
-    run_doctor,
+    _check_external_tool,
+    _check_mermaid_cli,
+    _check_mypy,
+    _check_ruff,
+    _check_tree_sitter_node_types,
     doctor_command,
+    run_doctor,
 )
 
 
@@ -202,6 +207,86 @@ class TestFriendlyErrors:
         )
         assert result.exit_code != 0
         assert "Traceback" not in result.stdout
+
+
+# ---------------------------------------------- extended doctor checks --
+
+
+class TestExtendedDoctorChecks:
+    """Behavioural tests for the mypy / ruff / mmdc / tree-sitter probes.
+
+    These tests run the real probes (no mocks) and assert only on the
+    stable contract: every check returns a :class:`DoctorCheck` with a
+    known status domain. They are resilient to environments where the
+    optional tool is or is not installed — the check result shape must
+    be valid either way.
+    """
+
+    def test_check_mypy_returns_known_status(self) -> None:
+        check = _check_mypy()
+        assert isinstance(check, DoctorCheck)
+        assert check.name == "mypy"
+        assert check.status in {"ok", "warn", "fail"}
+        assert check.detail  # always has some detail
+
+    def test_check_ruff_returns_known_status(self) -> None:
+        check = _check_ruff()
+        assert isinstance(check, DoctorCheck)
+        assert check.name == "ruff"
+        assert check.status in {"ok", "warn", "fail"}
+        assert check.detail
+
+    def test_check_mermaid_cli_returns_known_status(self) -> None:
+        check = _check_mermaid_cli()
+        assert isinstance(check, DoctorCheck)
+        assert "mermaid" in check.name.lower() or "mmdc" in check.name.lower()
+        # mmdc is optional, so it must never hard-fail the gate.
+        assert check.status in {"ok", "warn"}
+
+    def test_check_tree_sitter_node_types_returns_known_status(self) -> None:
+        check = _check_tree_sitter_node_types()
+        assert isinstance(check, DoctorCheck)
+        assert "tree-sitter" in check.name
+        assert check.status in {"ok", "warn"}
+
+    def test_missing_external_tool_marked_warn(self) -> None:
+        """Nonexistent binaries are reported as warnings (not crashes)."""
+        check = _check_external_tool(
+            "definitely_not_a_real_binary_xyz",
+            "fake-tool",
+            required=False,
+        )
+        assert check.status == "warn"
+        assert check.name == "fake-tool"
+        assert "not on PATH" in check.detail
+
+    def test_missing_required_external_tool_marked_fail(self) -> None:
+        """Required tools fail hard so CI can gate on them."""
+        check = _check_external_tool(
+            "definitely_not_a_real_binary_xyz",
+            "fake-required-tool",
+            required=True,
+        )
+        assert check.status == "fail"
+
+    def test_run_doctor_includes_extended_checks(self) -> None:
+        """The extended checks are wired into the full doctor report."""
+        report = run_doctor()
+        names = {c.name for c in report.checks}
+        assert "mypy" in names
+        assert "ruff" in names
+        # Mermaid is labelled with the binary name for grep-ability.
+        assert any("mmdc" in n or "mermaid" in n.lower() for n in names)
+        assert any("tree-sitter" in n for n in names)
+
+    def test_extended_checks_do_not_downgrade_healthy_env(
+        self, runner: CliRunner
+    ) -> None:
+        """Adding warn-level checks must not turn a green run into red."""
+        result = runner.invoke(app, ["doctor"])
+        # ``cogant doctor`` only fails when a *required* check fails.
+        # The extended checks are all warn-level, so exit must stay 0.
+        assert result.exit_code == 0, result.stdout
 
 
 # ------------------------------------------------------------- help ----

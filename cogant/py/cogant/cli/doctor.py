@@ -29,10 +29,12 @@ from __future__ import annotations
 
 import importlib
 import importlib.metadata as importlib_metadata
+import importlib.util
 import shutil
 import subprocess
 import sys
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import typer
 from rich import box
@@ -53,6 +55,7 @@ class DoctorCheck:
 
     @property
     def icon(self) -> str:
+        """Return a single-character visual glyph matching :attr:`status`."""
         return {"ok": "✅", "warn": "⚠️", "fail": "❌"}.get(self.status, "?")
 
 
@@ -63,6 +66,7 @@ class DoctorReport:
     checks: list[DoctorCheck] = field(default_factory=list)
 
     def add(self, check: DoctorCheck) -> None:
+        """Append ``check`` to this report's ordered list of diagnostics."""
         self.checks.append(check)
 
     @property
@@ -72,10 +76,17 @@ class DoctorReport:
 
     @property
     def has_warnings(self) -> bool:
+        """``True`` when at least one check carries ``"warn"`` status."""
         return any(c.status == "warn" for c in self.checks)
 
     @property
     def verdict(self) -> str:
+        """Return ``"READY"``, ``"READY (with warnings)"`` or ``"NOT READY"``.
+
+        A failing check (``status == "fail"``) yields ``"NOT READY"``; a
+        clean report with one or more warnings yields the parenthesized
+        form; otherwise the verdict is the plain ``"READY"`` string.
+        """
         if not self.ok:
             return "NOT READY"
         if self.has_warnings:
@@ -192,6 +203,110 @@ def _check_git() -> DoctorCheck:
     return DoctorCheck(name="git", status="ok", detail=version)
 
 
+def _check_external_tool(
+    binary: str,
+    label: str,
+    *,
+    version_args: tuple[str, ...] = ("--version",),
+    required: bool = False,
+    strip_prefix: str = "",
+) -> DoctorCheck:
+    """Check an external CLI tool via ``shutil.which`` + ``--version``.
+
+    Returns a ``warn`` status (not ``fail``) for missing optional tools
+    so an incomplete dev environment still passes the doctor gate.
+    Required tools report ``fail`` when missing.
+    """
+
+    binary_path = shutil.which(binary)
+    if binary_path is None:
+        return DoctorCheck(
+            name=label,
+            status="fail" if required else "warn",
+            detail=f"not on PATH (install {binary})",
+        )
+    try:
+        out = subprocess.run(  # noqa: S603 — trusted PATH lookup
+            [binary_path, *version_args],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return DoctorCheck(
+            name=label,
+            status="warn",
+            detail=f"found but unreadable: {type(exc).__name__}",
+        )
+    raw = (out.stdout or out.stderr or "").strip().splitlines()
+    version = raw[0] if raw else "unknown"
+    if strip_prefix and version.startswith(strip_prefix):
+        version = version[len(strip_prefix):].strip()
+    return DoctorCheck(name=label, status="ok", detail=version or "unknown")
+
+
+def _check_mypy() -> DoctorCheck:
+    """mypy is optional but strongly recommended for CI runs."""
+    return _check_external_tool("mypy", "mypy", required=False, strip_prefix="mypy ")
+
+
+def _check_ruff() -> DoctorCheck:
+    """ruff is optional; used for lint/format in the dev loop."""
+    return _check_external_tool("ruff", "ruff", required=False, strip_prefix="ruff ")
+
+
+def _check_mermaid_cli() -> DoctorCheck:
+    """mermaid CLI (``mmdc``) renders the diagram exports."""
+    return _check_external_tool(
+        "mmdc", "mermaid CLI (mmdc)", required=False
+    )
+
+
+def _find_tree_sitter_node_types() -> Path | None:
+    """Locate a tree-sitter ``node-types.json`` bundled with grammars.
+
+    The COGANT multilang extras ship language grammars as wheel
+    resources. We walk the installed ``tree_sitter_languages`` /
+    ``tree_sitter_python`` packages for a ``node-types.json``, which
+    is the canonical marker that the grammar assets landed on disk.
+    """
+
+    candidates = (
+        "tree_sitter_languages",
+        "tree_sitter_python",
+        "tree_sitter_javascript",
+        "tree_sitter_typescript",
+    )
+    for pkg in candidates:
+        try:
+            spec = importlib.util.find_spec(pkg)
+        except (ImportError, ValueError):
+            continue
+        if spec is None or spec.origin is None:
+            continue
+        pkg_root = Path(spec.origin).parent
+        for path in pkg_root.rglob("node-types.json"):
+            return path
+    return None
+
+
+def _check_tree_sitter_node_types() -> DoctorCheck:
+    """Locate a ``node-types.json`` resource from a tree-sitter grammar."""
+    path = _find_tree_sitter_node_types()
+    if path is None:
+        return DoctorCheck(
+            name="tree-sitter node-types.json",
+            status="warn",
+            detail="not found (multilang extras missing)",
+        )
+    return DoctorCheck(
+        name="tree-sitter node-types.json",
+        status="ok",
+        detail=str(path),
+    )
+
+
 # ------------------------------------------------------------- public API --
 
 
@@ -208,6 +323,10 @@ def run_doctor() -> DoctorReport:
         report.add(_check_dependency(module_name, label, required))
     report.add(_check_rust_backend())
     report.add(_check_git())
+    report.add(_check_mypy())
+    report.add(_check_ruff())
+    report.add(_check_mermaid_cli())
+    report.add(_check_tree_sitter_node_types())
     return report
 
 
