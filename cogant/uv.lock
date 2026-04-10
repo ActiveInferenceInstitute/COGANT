@@ -180,6 +180,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "networkx" },
+    { name = "numpy" },
     { name = "pyarrow" },
     { name = "pydantic" },
     { name = "pytest-anyio" },
@@ -225,6 +226,7 @@ dev = [
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
     { name = "mutmut" },
+    { name = "pytest-cov" },
 ]
 
 [package.metadata]
@@ -239,6 +241,7 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'all'", specifier = ">=1.5.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.5.0" },
     { name = "networkx", specifier = ">=3.0" },
+    { name = "numpy", specifier = ">=2.4.4" },
     { name = "plotly", marker = "extra == 'all'", specifier = ">=5.17.0" },
     { name = "plotly", marker = "extra == 'viz'", specifier = ">=5.17.0" },
     { name = "pyarrow", specifier = ">=14.0" },
@@ -269,6 +272,7 @@ dev = [
     { name = "mkdocs-material", specifier = ">=9.7.6" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.3" },
     { name = "mutmut", specifier = ">=3.5.0" },
+    { name = "pytest-cov", specifier = ">=7.1.0" },
 ]
 
 [[package]]

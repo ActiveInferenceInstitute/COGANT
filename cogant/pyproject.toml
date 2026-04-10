@@ -35,6 +35,7 @@ dependencies = [
     "fastapi>=0.135.3",
     "httpx>=0.27",
     "pytest-anyio>=0.0.0",
+    "numpy>=2.4.4",
 ]
 
 [project.optional-dependencies]
@@ -185,4 +186,5 @@ dev = [
     "mutmut>=3.5.0",
     "mkdocs-material>=9.7.6",
     "mkdocstrings[python]>=1.0.3",
+    "pytest-cov>=7.1.0",
 ]

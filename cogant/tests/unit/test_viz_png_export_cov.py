@@ -18,6 +18,8 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 import pytest
 
+matplotlib = pytest.importorskip("matplotlib", reason="cogant[viz] not installed — skip PNG export tests")
+
 from cogant.viz.png_export import (
     RenderConfig,
     _build_kind_legend,
