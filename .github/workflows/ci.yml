@@ -90,6 +90,9 @@ jobs:
       - name: Fast tests (no coverage, skip property and slow)
         run: uv run pytest tests/ --no-cov -q --ignore=tests/property/ -m "not slow"
 
+      - name: Property / hypothesis tests
+        run: uv run pytest tests/property/ -q --override-ini="addopts=" -p no:warnings
+
       - name: Full tests with coverage gate (3.11 only)
         if: matrix.python-version == '3.11'
         run: uv run pytest tests/ -q -m "not slow" --cov=cogant --cov-fail-under=75

@@ -1,6 +1,5 @@
 from typing import Any
 
-from cogant.schemas.semantic import ConfidenceTier as ConfidenceTier
 from cogant.schemas.semantic import SemanticMapping as SemanticMapping
 
 class ReviewManager:

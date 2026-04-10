@@ -1,6 +1,4 @@
-from _typeshed import Incomplete
-
-from cogant.plugins.registry import PluginRegistry as PluginRegistry
+from _typeshed import Incomplete as Incomplete
 
 console: Incomplete
 plugin_app: Incomplete

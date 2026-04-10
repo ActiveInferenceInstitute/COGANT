@@ -1,10 +1,6 @@
 from pathlib import Path
 
-from _typeshed import Incomplete
-
-from cogant.schema import SchemaVersion as SchemaVersion
-from cogant.schema import detect_version as detect_version
-from cogant.schema import migrate_gnn as migrate_gnn
+from _typeshed import Incomplete as Incomplete
 
 console: Incomplete
 migrate_app: Incomplete

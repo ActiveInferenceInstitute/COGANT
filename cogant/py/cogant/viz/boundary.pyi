@@ -1,11 +1,7 @@
 from typing import Any
 
-from _typeshed import Incomplete
+from _typeshed import Incomplete as Incomplete
 
-from cogant.markov.extractor import SeedStrategy as SeedStrategy
-from cogant.schemas.core import Edge as Edge
-from cogant.schemas.core import EdgeKind as EdgeKind
-from cogant.schemas.core import NodeKind as NodeKind
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 logger: Incomplete

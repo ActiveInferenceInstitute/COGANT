@@ -27,7 +27,8 @@ _METRICS_PATH = Path(__file__).parent.parent.parent / "evaluation" / "METRICS.ya
 def load() -> dict[str, Any]:
     """Load and return the full METRICS.yaml as a dict."""
     with open(_METRICS_PATH) as f:
-        return yaml.safe_load(f)
+        result: dict[str, Any] = yaml.safe_load(f)
+        return result
 
 
 def _get(path: str, default: Any = None) -> Any:
@@ -45,7 +46,7 @@ def _get(path: str, default: Any = None) -> Any:
 
 def version() -> str:
     """Return the cogant package version string."""
-    return _get("package.version", "unknown")
+    return str(_get("package.version", "unknown"))
 
 
 def test_count() -> int:
@@ -65,12 +66,12 @@ def mypy_errors() -> int:
 
 def isomorphic_count() -> int:
     """Return the number of ISOMORPHIC roundtrip targets."""
-    return _get("evaluation.roundtrip.isomorphic_count", 0)
+    return int(_get("evaluation.roundtrip.isomorphic_count", 0))
 
 
 def total_targets() -> int:
     """Return the total number of roundtrip evaluation targets."""
-    return _get("evaluation.roundtrip.total_targets", 0)
+    return int(_get("evaluation.roundtrip.total_targets", 0))
 
 
 def mean_epsilon() -> float:

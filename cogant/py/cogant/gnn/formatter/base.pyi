@@ -1,6 +1,6 @@
 from typing import Any
 
-from _typeshed import Incomplete
+from _typeshed import Incomplete as Incomplete
 
 from cogant.gnn.formatter.dynamics import _DynamicsSectionsMixin
 from cogant.gnn.formatter.metadata import _MetadataSectionsMixin
@@ -8,7 +8,6 @@ from cogant.gnn.formatter.semantic import _SemanticSectionsMixin
 from cogant.gnn.formatter.structural import _StructuralSectionsMixin
 from cogant.gnn.formatter.upstream import _UpstreamSectionsMixin
 from cogant.process.extractor import ProcessModel as ProcessModel
-from cogant.schemas.core import EdgeKind as EdgeKind
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
 

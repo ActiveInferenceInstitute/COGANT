@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any, ClassVar, Literal
 
-from _typeshed import Incomplete
+from _typeshed import Incomplete as Incomplete
 
 from .base import CogantBaseModel as CogantBaseModel
 from .base import ConfidenceMetric as ConfidenceMetric

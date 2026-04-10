@@ -24,7 +24,6 @@ from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import (
     ConfidenceTier,
     MappingKind,
-    ProvenanceRecord,
     SemanticMapping,
 )
 from cogant.statespace.compiler import (
@@ -138,7 +137,7 @@ def state_space(sample_graph_and_ids) -> StateSpaceModel:
     """Minimal StateSpaceModel with 3 variables, 2 obs, 2 actions."""
     _graph, ids = sample_graph_and_ids
     variables = {}
-    for i, key in enumerate(("s0", "s1", "s2")):
+    for _i, key in enumerate(("s0", "s1", "s2")):
         v = StateVariable(
             id=f"var:{key}",
             name=key,
@@ -150,7 +149,7 @@ def state_space(sample_graph_and_ids) -> StateSpaceModel:
         variables[v.id] = v
 
     observations = {}
-    for i, key in enumerate(("o0", "o1")):
+    for _i, key in enumerate(("o0", "o1")):
         o = ObservationModality(
             id=f"obs:{key}",
             name=key,
@@ -162,7 +161,7 @@ def state_space(sample_graph_and_ids) -> StateSpaceModel:
         observations[o.id] = o
 
     actions = {}
-    for i, key in enumerate(("a0", "a1")):
+    for _i, key in enumerate(("a0", "a1")):
         a = Action(
             id=f"act:{key}",
             name=key,
@@ -204,7 +203,7 @@ def semantic_mappings(sample_graph_and_ids) -> dict[str, SemanticMapping]:
         mappings[m.id] = m
 
     # Observations
-    for i, key in enumerate(("o0", "o1")):
+    for _i, key in enumerate(("o0", "o1")):
         m = SemanticMapping(
             id=f"m:{key}",
             kind=MappingKind.OBSERVATION,
@@ -215,7 +214,7 @@ def semantic_mappings(sample_graph_and_ids) -> dict[str, SemanticMapping]:
         mappings[m.id] = m
 
     # Actions
-    for i, key in enumerate(("a0", "a1")):
+    for _i, key in enumerate(("a0", "a1")):
         m = SemanticMapping(
             id=f"m:{key}",
             kind=MappingKind.ACTION,

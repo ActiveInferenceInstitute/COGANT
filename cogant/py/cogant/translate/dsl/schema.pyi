@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from _typeshed import Incomplete
+from _typeshed import Incomplete as Incomplete
 
 KNOWN_CONDITION_KEYS: Incomplete
 

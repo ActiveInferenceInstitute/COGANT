@@ -1,9 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-from cogant.markov.blanket import BlanketRole as BlanketRole
 from cogant.markov.blanket import MarkovBlanket as MarkovBlanket
-from cogant.schemas.core import EdgeKind as EdgeKind
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 @dataclass

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from _typeshed import Incomplete
+from _typeshed import Incomplete as Incomplete
 
 logger: Incomplete
 LANGUAGE_EXTENSIONS: Incomplete

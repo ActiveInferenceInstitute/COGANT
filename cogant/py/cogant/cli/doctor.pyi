@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from rich.console import Console
+from rich.console import Console as Console
 
 @dataclass
 class DoctorCheck:

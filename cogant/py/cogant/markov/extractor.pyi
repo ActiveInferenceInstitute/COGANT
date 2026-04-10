@@ -1,11 +1,9 @@
 from collections.abc import Iterable, Sequence
 from typing import Any
 
-from _typeshed import Incomplete
+from _typeshed import Incomplete as Incomplete
 
 from cogant.markov.blanket import MarkovBlanket as MarkovBlanket
-from cogant.markov.blanket import partition_by_seeds as partition_by_seeds
-from cogant.schemas.core import EdgeKind as EdgeKind
 from cogant.schemas.core import NodeKind as NodeKind
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 

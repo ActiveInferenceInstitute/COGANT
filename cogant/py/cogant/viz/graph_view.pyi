@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from _typeshed import Incomplete
+from _typeshed import Incomplete as Incomplete
 
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 

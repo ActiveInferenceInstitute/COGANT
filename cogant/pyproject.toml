@@ -44,6 +44,7 @@ dev = [
     "pytest-cov>=4.1.0",
     "ruff>=0.1.0",
     "mypy>=1.5.0",
+    "hypothesis>=6.0",
 ]
 viz = [
     "plotly>=5.17.0",
@@ -127,6 +128,9 @@ extend-ignore = [
 # parameter-info objects, not shared mutable state).
 "py/cogant/cli/*.py" = ["B008"]
 "py/cogant/reverse/cli.py" = ["B008"]
+# Test files use sys.path manipulation before imports for editable-install fallback;
+# E402 (module-level import not at top) is expected and intentional there.
+"tests/**/*.py" = ["E402"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["cogant"]
@@ -160,6 +164,7 @@ module = [
     "cairosvg.*",
     "numpy.*",
     "cogant._rust",
+    "yaml.*",
 ]
 ignore_missing_imports = true
 
@@ -179,6 +184,11 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
+
+[tool.mutmut]
+paths_to_mutate = ["py/cogant/translate/engine.py"]
+tests_dir = ["tests/unit/"]
+pytest_add_cli_args = ["-x", "-q", "--no-header", "--ignore=tests/integration"]
 
 [dependency-groups]
 dev = [

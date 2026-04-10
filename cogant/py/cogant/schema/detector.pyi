@@ -1,3 +1,1 @@
-from cogant.schema.versions import SchemaVersion as SchemaVersion
-
 def detect_version(gnn_text: str) -> str: ...

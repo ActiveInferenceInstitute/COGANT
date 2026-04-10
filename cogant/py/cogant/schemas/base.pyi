@@ -1,6 +1,6 @@
 from typing import Any, ClassVar, Literal
 
-from _typeshed import Incomplete
+from _typeshed import Incomplete as Incomplete
 from pydantic import BaseModel
 from pydantic import ValidationInfo as ValidationInfo
 

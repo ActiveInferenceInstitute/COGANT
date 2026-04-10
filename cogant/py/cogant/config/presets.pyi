@@ -1,16 +1,6 @@
 from typing import Any
 
-from _typeshed import Incomplete
-
-from .schema import CogantConfig as CogantConfig
-from .schema import ExportConfig as ExportConfig
-from .schema import ExportFormat as ExportFormat
-from .schema import LanguageConfig as LanguageConfig
-from .schema import LogLevel as LogLevel
-from .schema import PipelineConfig as PipelineConfig
-from .schema import PipelineStage as PipelineStage
-from .schema import ValidationConfig as ValidationConfig
-from .schema import ValidationLevel as ValidationLevel
+from _typeshed import Incomplete as Incomplete
 
 def create_minimal_preset() -> dict[str, Any]: ...
 def create_standard_preset() -> dict[str, Any]: ...

@@ -1,6 +1,6 @@
 from typing import Any
 
-from _typeshed import Incomplete
+from _typeshed import Incomplete as Incomplete
 
 from cogant.schemas.core import Edge as Edge
 from cogant.schemas.core import EdgeKind as EdgeKind

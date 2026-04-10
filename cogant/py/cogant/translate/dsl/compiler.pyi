@@ -1,10 +1,7 @@
 from dataclasses import dataclass
 
-from cogant.schemas.core import EdgeKind as EdgeKind
 from cogant.schemas.core import Node as Node
-from cogant.schemas.core import NodeKind as NodeKind
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
-from cogant.translate.dsl.schema import DSLCondition as DSLCondition
 from cogant.translate.dsl.schema import DSLRuleSet as DSLRuleSet
 
 @dataclass

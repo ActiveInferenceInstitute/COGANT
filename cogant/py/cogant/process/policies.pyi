@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
 
-from _typeshed import Incomplete
+from _typeshed import Incomplete as Incomplete
 
-from cogant.schemas.core import EdgeKind as EdgeKind
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 logger: Incomplete

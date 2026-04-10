@@ -51,7 +51,6 @@ from cogant.viz.png_export import (
     render_svg_file_to_png,
 )
 
-
 # --------------------------------------------------------------------------- #
 # Mermaid kind detection + parsers                                             #
 # --------------------------------------------------------------------------- #
@@ -337,22 +336,20 @@ class TestRenderAllMermaidInRun:
 # SVG → PNG                                                                    #
 # --------------------------------------------------------------------------- #
 
-_HAS_SVG_BACKEND = (
-    shutil.which("rsvg-convert")
-    or shutil.which("inkscape")
-    or shutil.which("convert")
-    or _importable("cairosvg")
-    if False
-    else bool(shutil.which("rsvg-convert") or shutil.which("inkscape") or shutil.which("convert"))
-)
-
-
 def _importable(module_name: str) -> bool:
     try:
         __import__(module_name)
         return True
     except ImportError:
         return False
+
+
+_HAS_SVG_BACKEND = bool(
+    shutil.which("rsvg-convert")
+    or shutil.which("inkscape")
+    or shutil.which("convert")
+    or _importable("cairosvg")
+)
 
 
 class TestSvgRendering:
