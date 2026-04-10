@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cogant"
-version = "0.2.0rc1"
+version = "0.2.0"
 description = "Codebase-to-GNN Translation Engine: translate software repositories into Generalized Notation Notation (Active Inference Institute) state-space and process-model representations"
 authors = [
     {name = "COGANT Contributors", email = "contributors@cogant.dev"}
