@@ -266,15 +266,25 @@ def _parse_ontology_annotation(body: str, model: ReverseGNNModel) -> None:
         concept = match.group(2)
         model.annotations[var_name] = concept
 
-        # If the ontology block introduces a Policy / Constraint variable
-        # that wasn't in StateSpaceBlock, register it so the planner can
-        # emit a corresponding Python function.
+        # If the ontology block introduces a variable that wasn't classified
+        # by StateSpaceBlock prefix heuristics, register it by concept type.
         lc = concept.lower()
-        if "policy" in lc and var_name not in model.policies:
-            if var_name not in model.hidden_states + model.observations + model.actions:
+        all_classified = (
+            model.hidden_states + model.observations + model.actions
+            + model.policies + model.constraints
+        )
+        if "hiddenstate" in lc.replace(" ", "") or "hidden" == lc:
+            if var_name not in all_classified:
+                model.hidden_states.append(var_name)
+        elif "observation" in lc and var_name not in all_classified:
+            model.observations.append(var_name)
+        elif "action" in lc and var_name not in all_classified:
+            model.actions.append(var_name)
+        elif "policy" in lc and var_name not in model.policies:
+            if var_name not in all_classified:
                 model.policies.append(var_name)
         elif ("constraint" in lc or "preference" in lc) and var_name not in model.constraints:
-            if var_name not in model.hidden_states + model.observations + model.actions:
+            if var_name not in all_classified:
                 model.constraints.append(var_name)
 
 

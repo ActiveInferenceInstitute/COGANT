@@ -69,6 +69,12 @@ class MatrixFunctions:
         self._n_obs = n_obs
         self._n_actions = n_actions
 
+        # Public attributes so AgentRuntime can read raw matrices
+        self.A = A
+        self.B = B
+        self.C = C
+        self.D = D
+
     def likelihood(self, state_dist: List[float]) -> List[float]:
         """Return P(observation) given a hidden-state distribution.
 
