@@ -660,12 +660,18 @@ def test_synthesize_package_observe_module_has_noop_fallback(tmp_path: Path) -> 
 
 
 def test_synthesize_package_constraints_module_noop_fallback(tmp_path: Path) -> None:
-    """When there are no constraints, constraints.py emits check_noop."""
+    """When there are no explicit constraints, constraints.py emits check_* stubs.
+
+    Wave-14 synthesizer change: noop stubs replaced with per-factor scaffold
+    predicates (check_hs_<factor>) so forward pipeline's PreferenceRule can
+    detect them as CONSTRAINT mappings.  Any check_* function satisfies the
+    invariant.
+    """
     model = parse_gnn(MINIMAL_HIDDEN_ONLY_GNN)
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
     src = (pkg / "constraints.py").read_text()
-    assert "def check_noop(" in src
+    assert "def check_" in src
 
 
 # ---------------------------------------------------------------------------

@@ -288,10 +288,16 @@ def parse_ts_file(path: Path) -> ProgramGraph | None:
     suffix = path.suffix.lower()
     preferred = "tsx" if suffix == ".tsx" else "typescript"
     if preferred not in parser.available_languages():
-        # Fall through to javascript grammar if TS isn't installed
+        # Fall through to javascript grammar if TS grammar isn't installed.
+        # We cannot call parse_file() here because it routes by extension
+        # (.ts → typescript which is not loaded), so use parse_source instead.
         if "javascript" not in parser.available_languages():
             return None
-        parsed = parser.parse_file(path)
+        try:
+            source = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return None
+        parsed = parser.parse_source(source, "javascript", str(path))
     else:
         # Force the TS grammar even though the default extension map
         # already routes .ts/.tsx there.
