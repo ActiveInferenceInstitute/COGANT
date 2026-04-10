@@ -3,6 +3,33 @@
 All notable changes to COGANT are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] - 2026-04-10
+
+### Added
+- Incremental analysis mode: `cogant analyze --incremental <git-ref>` / `PipelineConfig.incremental_since` — 19.6× no-change speedup, 5.6× single-file speedup on Flask benchmark
+- Multi-episode Bayesian learning: `AgentRuntime.run_multi_episode`, `run_episode`, `update_D_from_posterior`, `update_A_from_counts`
+- Production FastAPI server: `cogant.server.app` with `/health` and `/translate` endpoints, integration test suite
+- Dockerfile (python:3.12-slim + uv, `EXPOSE 8080`, curl healthcheck) and docker-compose.yml
+- `cogant doctor` extended: tree-sitter grammar checks, uv lockfile parity, optional-dep audit
+- `cogant init <path>`: scaffold helpers for `cogant.yaml`, source stub, `pyproject.toml`
+- Tutorial notebooks 07–12: Flask walkthrough, constraints, plugins, YAML DSL, multi-episode learning, cross-language roundtrip
+- Cross-language roundtrip claim: JS Observer (`examples/zoo/13_js_observer`) → GNN → AI cycle, `role_match_score=1.0`
+- POLICY/CONTEXT stub emission in synthesizer: `decide_*` / `get_context_*` stubs proportional to origin GNN role counts
+- Scaling regression tests: guards for B-tensor, BFS, AST cache, INHERITS edge deduplification at dulwich edge density
+- Benchmark dashboard: `_rnd/dashboards/benchmarks.html` (Chart.js, self-contained)
+- Comprehensive docstring pass + mkdocs nav update + getting started guide
+- Manuscript appendices A–E: Galois proofs, GNN compliance audit, ε derivation, scaling analysis, cross-language extension; 40+ new citations
+
+### Fixed
+- tree-sitter JS grammar fallback for `.ts` files prevents hard parse failure on mixed JS/TS repos (`10c87ea`)
+- Loosen `parse_ts_file` test assertion to accommodate JS grammar fallback path (`bf386b5`)
+
+### Changed
+- `pyproject.toml` dep updates + uv.lock sync (`fbd8d39`)
+
+### Roundtrip ε
+- 19/23 ISOMORPHIC (83%) → **23/23 ISOMORPHIC (100%)** after POLICY/CONTEXT stub emission
+
 ## [0.4.0] - 2026-04-10
 
 ### Added
