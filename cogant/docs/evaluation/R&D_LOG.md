@@ -1011,3 +1011,23 @@ code (e.g., celery task routing) show low POLICY recall.
 
 ### Summary verdict
 COGANT is solid alpha/beta. The empirical claim (Active Inference cycle on real Python code, VFE=0.0, ε-isomorphism validated on 19/23 targets) is reproducible and documented. The engineering foundation (1873 tests, mypy strict enforced in CI, 82.6% coverage) is production-ready for non-edge-case repos. The dulwich scaling cliff and missing POLICY/CONTEXT synthesis are documented limitations, not correctness issues. v1.0 is achievable with 1–2 weeks of focused work on the scaling fix.
+
+---
+
+## Wave 18 — 2026-04-10 — Accuracy + Completeness
+
+**Goals:** Full package accuracy pass, benchmark re-run, coverage 83→90%, CI hardening.
+
+**Key actions:**
+- Roundtrip benchmark re-run on all 23 targets (post-wave-16 synthesizer changes)
+- METRICS.yaml refreshed with live values
+- CI: metrics staleness gate, hypothesis tests, mypy strict gate
+- CLI coverage pushed to 90%+
+- Overall coverage pushed toward 90%
+- Docstrings + __all__ completed across public API
+- Documentation accuracy pass (api-ref, concepts, faq, tutorials, cookbook)
+- CONTRIBUTING, README, CHANGELOG refreshed
+- Tools: manuscript_vars.py expanded, inject + audit scripts completed
+- Scaffolding stubs filled
+
+**Honest benchmark note:** roundtrip_results.jsonl was pre-wave-16; re-benchmarking in this wave. Results in benchmark_refresh_result.md.
