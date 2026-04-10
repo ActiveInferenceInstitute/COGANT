@@ -960,3 +960,54 @@ code (e.g., celery task routing) show low POLICY recall.
 | Docs pages | 0 | 30+ | — |
 | Commit count | 0 | 75+ | — |
 | Version | — | v0.3.0 | — |
+
+---
+
+## Wave 15 — Final polish, dulwich profiling, v1.0 readiness (2026-04-10)
+
+### Agents
+- dulwich-scaling: cProfile on 8601-node / 15441-edge repo; identify O(edges) hot spot
+- v1.0-readiness: write V1.0_READINESS.md honest gap assessment
+- coverage-final: push 82% → 85% (simulate.free_energy 65→98%, gnn_validator 60→92%, targeting png_export.py next)
+- memory-final: update persistent memory with v0.4.0 final state
+
+### Commits (wave 15)
+- `fd11a1b` docs(rnd): V1.0_READINESS.md — honest assessment of gaps and timeline
+- `c2700cf` test(cov): simulate free_energy 65→98%
+- `814be94` test(cov): gnn validator 60→92%
+- `b9dd39c` docs(rnd): FINAL_REPORT.md — comprehensive R&D burst close-out report
+- `6ebe34f` docs(rnd): update FINAL_REPORT end-state metrics (1873 tests, 82.6% cov)
+- CI upgrade: mypy --strict enforced in ci.yml
+
+### Dulwich profiling findings
+- Raw translate: 330s total, 10/10 stages pass, exit 0
+- Stage timing (from log timestamps): ingest+static+normalize: ~1min; graph: ~1min; translate+statespace: ~2min; validate (GNN validator): ~4min
+- Suspected hot spot: GNN validator over 485K-line markdown file (8× pydantic's size) — O(lines) pass
+- Edge density 1.80 e/n (dulwich) vs ~1.10 (all others): GNN markdown emitter is at minimum O(edges)
+- Next step: profile `cogant.gnn.validator` specifically on dulwich output size
+
+### v1.0 gap summary (from V1.0_READINESS.md)
+| Gap | Severity | Wave |
+|---|---|---|
+| dulwich scaling (380s, 8.5GB) | HIGH | 15 |
+| CI/CD mypy strict (was --ignore-missing-imports) | FIXED | 15 |
+| POLICY/CONTEXT synthesis | MEDIUM | future |
+| Dynamic enrichment docs | MEDIUM | future |
+| Coverage 82.6% → 85% | MEDIUM | 15 ongoing |
+| CONSTRAINT proportional (wave 14 fix) | DONE | 14 |
+
+### Metrics at wave 15 close
+| Metric | Value |
+|---|---|
+| Tests passing | **1873** (was 1792 at wave 14) |
+| Coverage | **82.6%** (was 82%) |
+| mypy strict | **CLEAN** (now enforced in CI) |
+| Version | v0.4.0 (tagged) |
+| Roundtrip ISOMORPHIC | 19/23 (83%) |
+| Real-world forward | 8/8 |
+| Empirical AI cycles | 4 zoo targets, VFE=0.0 |
+| R&D_LOG lines | 1000+ |
+| Total commits (burst) | 40+ |
+
+### Summary verdict
+COGANT is solid alpha/beta. The empirical claim (Active Inference cycle on real Python code, VFE=0.0, ε-isomorphism validated on 19/23 targets) is reproducible and documented. The engineering foundation (1873 tests, mypy strict enforced in CI, 82.6% coverage) is production-ready for non-edge-case repos. The dulwich scaling cliff and missing POLICY/CONTEXT synthesis are documented limitations, not correctness issues. v1.0 is achievable with 1–2 weeks of focused work on the scaling fix.

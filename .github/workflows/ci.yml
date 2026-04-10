@@ -59,8 +59,8 @@ jobs:
       - name: Install dev dependencies
         run: uv sync --extra dev
 
-      - name: Run mypy
-        run: uv run mypy py/cogant/ --ignore-missing-imports
+      - name: Run mypy (strict)
+        run: uv run mypy py/cogant/ --strict
 
   test:
     name: Test (py${{ matrix.python-version }})
