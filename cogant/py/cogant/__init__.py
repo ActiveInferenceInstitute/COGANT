@@ -68,7 +68,52 @@ try:
 except (ImportError, ModuleNotFoundError):
     GNNMarkdownFormatter = None  # type: ignore[assignment,misc]
 
+try:
+    from cogant.schemas.program_graph import ProgramGraph
+except (ImportError, ModuleNotFoundError):
+    try:
+        from cogant.schemas.graph import ProgramGraph  # type: ignore[assignment]
+    except (ImportError, ModuleNotFoundError):
+        ProgramGraph = None  # type: ignore[assignment,misc]
+
+# Convenience aliases for the public API.
+# Users can write:
+#   from cogant import CogantSession, run_pipeline, GNNBundle, ProgramGraph
+CogantSession = Session
+"""Alias for :class:`cogant.api.session.Session`."""
+
+GNNBundle = Bundle
+"""Alias for :class:`cogant.api.bundle.Bundle`."""
+
+
+def run_pipeline(target: str, output_dir: str = "output") -> object:
+    """Run the full COGANT pipeline on *target* and return the completed session.
+
+    This is a convenience wrapper around :class:`Session` that runs all stages
+    (static extraction, graph build, translation, state-space compilation, and
+    export) in one call.
+
+    Args:
+        target: Filesystem path or URL of the repository to analyse.
+        output_dir: Directory where artifacts are written. Defaults to ``"output"``.
+
+    Returns:
+        The :class:`Session` object after ``export_all`` has been called, or
+        ``None`` if the session API is unavailable.
+    """
+    if Session is None:
+        raise ImportError("cogant.api.session is not available; check your installation.")
+    sess = Session(target=target)
+    sess.extract_static()
+    sess.build_graph()
+    sess.translate_to_gnn()
+    sess.compile_state_space()
+    sess.export_all(output_dir)
+    return sess
+
+
 __all__ = [
+    # Core API
     "Session",
     "PipelineRunner",
     "Bundle",
@@ -76,6 +121,12 @@ __all__ = [
     "TranslationEngine",
     "StateSpaceCompiler",
     "GNNMarkdownFormatter",
+    "ProgramGraph",
+    # Convenience aliases
+    "CogantSession",
+    "GNNBundle",
+    "run_pipeline",
+    # Version info
     "__version__",
     "__rust_version__",
     "_RUST_AVAILABLE",

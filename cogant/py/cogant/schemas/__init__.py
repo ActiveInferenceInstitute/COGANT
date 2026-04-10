@@ -72,6 +72,7 @@ try:
         ProvenanceRecord,
         ProvenanceStore,
     )
+    from .semantic import MappingKind  # noqa: F401 — re-exported for backwards compat
     from .semantic_mapping import (
         MappingRule,
         ReviewStatus,
@@ -150,6 +151,7 @@ if _extended_available:
         "SemanticMapping",
         "SemanticMappingCollection",
         "SemanticRole",
+        "MappingKind",
         "MappingRule",
         "SourceGraphElement",
         "TargetSemanticElement",
