@@ -385,10 +385,95 @@ class _JavaScriptExtractor(_BaseExtractor):
         "interface_declaration",
     }
 
+    # Node types that can hold an arrow_function or function_expression
+    # as their right-hand side, giving the symbol its lexical name.
+    _VAR_DECL_TYPES = {
+        "variable_declarator",
+        "assignment_expression",
+    }
+
+    @staticmethod
+    def _has_child_type(node: Any, child_type: str) -> bool:
+        """Return True iff any direct child of ``node`` has type ``child_type``."""
+        return any(c.type == child_type for c in node.children)
+
+    def _collect_decorators(self, node: Any, source: bytes) -> list[str]:
+        """Return decorator name strings attached as direct children of ``node``."""
+        decorators: list[str] = []
+        for child in node.children:
+            if child.type == "decorator":
+                # The decorator body: `@name` or `@name(args)`.
+                # We slice everything after the leading `@`.
+                raw = self._slice(source, child)
+                # raw is e.g. "@injectable()" — trim the "@" prefix.
+                decorators.append(raw.lstrip("@").strip())
+        return decorators
+
+    def _bases_of_class(self, node: Any, source: bytes) -> list[str]:
+        """Return base-class name strings from a ``class_heritage`` child."""
+        for child in node.children:
+            if child.type == "class_heritage":
+                # Collect identifiers / member_expressions after "extends"
+                bases: list[str] = []
+                for gc in child.children:
+                    if gc.type not in ("extends", ","):
+                        text = self._slice(source, gc).strip()
+                        if text:
+                            bases.append(text)
+                return bases
+        return []
+
+    def _name_from_parent(self, node: Any, source: bytes) -> str | None:
+        """Try to infer a name for ``node`` from its parent variable declarator.
+
+        Arrow functions and anonymous function expressions assigned to a
+        ``const``/``let``/``var`` binding should inherit the binding name
+        so the graph stays useful.  Returns ``None`` if no parent name can
+        be determined.
+        """
+        parent = node.parent
+        if parent is None:
+            return None
+        if parent.type in self._VAR_DECL_TYPES:
+            name_node = parent.child_by_field_name("name")
+            if name_node is not None:
+                return self._slice(source, name_node)
+            # assignment_expression: left side
+            left = parent.child_by_field_name("left")
+            if left is not None:
+                return self._slice(source, left)
+        return None
+
+    def _is_async(self, node: Any) -> bool:
+        """Return True iff ``node`` has a direct ``async`` keyword child."""
+        return self._has_child_type(node, "async")
+
+    def _type_params_of(self, node: Any, source: bytes) -> list[str]:
+        """Return TypeScript type parameter names (e.g. ``["T", "U"]``)."""
+        for child in node.children:
+            if child.type == "type_parameters":
+                params: list[str] = []
+                for gc in child.children:
+                    if gc.type in ("type_parameter", "identifier"):
+                        text = self._slice(source, gc).strip()
+                        if text:
+                            params.append(text)
+                return params
+        return []
+
     def extract_symbols(
         self, tree: Any, source: bytes, path: str
     ) -> list[ParsedSymbol]:
-        """Walk the JS/TS tree-sitter tree and collect class/interface/function symbols."""
+        """Walk the JS/TS tree-sitter tree and collect class/interface/function symbols.
+
+        Advanced patterns handled:
+        * Arrow functions assigned to ``const``/``let``/``var`` → named symbol
+        * ``async`` functions/arrows → ``metadata["is_async"] = True``
+        * ``class … extends Base`` → ``metadata["bases"] = ["Base"]``
+        * Decorators → ``metadata["decorators"] = ["injectable()"]``
+        * TypeScript generic type params → ``metadata["type_params"] = ["T"]``
+        * TypeScript ``interface`` declarations → ``kind="interface"``
+        """
         symbols: list[ParsedSymbol] = []
 
         def name_of(node: Any) -> str:
@@ -396,6 +481,10 @@ class _JavaScriptExtractor(_BaseExtractor):
             name_node = node.child_by_field_name("name")
             if name_node is not None:
                 return self._slice(source, name_node)
+            # For arrow functions / anonymous expressions try the parent binding.
+            inferred = self._name_from_parent(node, source)
+            if inferred:
+                return inferred
             return "<anonymous>"
 
         def visit(node: Any, scope: str = "") -> None:
@@ -403,6 +492,13 @@ class _JavaScriptExtractor(_BaseExtractor):
             if node.type in self._CLASS_TYPES:
                 name = name_of(node)
                 qname = f"{scope}.{name}" if scope else name
+                bases = self._bases_of_class(node, source)
+                decorators = self._collect_decorators(node, source)
+                meta: dict[str, Any] = {}
+                if bases:
+                    meta["bases"] = bases
+                if decorators:
+                    meta["decorators"] = decorators
                 symbols.append(
                     ParsedSymbol(
                         name=name,
@@ -410,6 +506,7 @@ class _JavaScriptExtractor(_BaseExtractor):
                         line_start=node.start_point[0] + 1,
                         line_end=node.end_point[0] + 1,
                         qualified_name=qname,
+                        metadata=meta,
                     )
                 )
                 body = node.child_by_field_name("body")
@@ -420,6 +517,10 @@ class _JavaScriptExtractor(_BaseExtractor):
             if node.type in self._INTERFACE_TYPES:
                 name = name_of(node)
                 qname = f"{scope}.{name}" if scope else name
+                type_params = self._type_params_of(node, source)
+                meta = {}
+                if type_params:
+                    meta["type_params"] = type_params
                 symbols.append(
                     ParsedSymbol(
                         name=name,
@@ -427,12 +528,23 @@ class _JavaScriptExtractor(_BaseExtractor):
                         line_start=node.start_point[0] + 1,
                         line_end=node.end_point[0] + 1,
                         qualified_name=qname,
+                        metadata=meta,
                     )
                 )
                 return
             if node.type in self._FUNCTION_TYPES:
                 name = name_of(node)
                 qname = f"{scope}.{name}" if scope and name != "<anonymous>" else name
+                is_async = self._is_async(node)
+                type_params = self._type_params_of(node, source)
+                decorators = self._collect_decorators(node, source)
+                meta = {}
+                if is_async:
+                    meta["is_async"] = True
+                if type_params:
+                    meta["type_params"] = type_params
+                if decorators:
+                    meta["decorators"] = decorators
                 symbols.append(
                     ParsedSymbol(
                         name=name,
@@ -440,6 +552,7 @@ class _JavaScriptExtractor(_BaseExtractor):
                         line_start=node.start_point[0] + 1,
                         line_end=node.end_point[0] + 1,
                         qualified_name=qname,
+                        metadata=meta,
                     )
                 )
                 # Recurse into body for nested functions / classes
