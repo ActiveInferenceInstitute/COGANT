@@ -144,6 +144,8 @@ output/
 *.gnn
 *.gnn.json
 *.gnn.md
+# Allow hand-written GNN models in the example zoo
+!examples/zoo/**/*.gnn.md
 *.bundle
 workspace/
 .cogant/
