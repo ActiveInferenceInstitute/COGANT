@@ -140,8 +140,8 @@ Running `cogant forward` on this synthesized code produces a GNN with the same `
 
 ## Current limitations
 
-- Reverse synthesis is a prototype. There is no `cogant reverse` CLI command yet.
-- Only Python output is supported.
+- `cogant reverse` and `cogant roundtrip` are available CLI subcommands as of v0.5.0.
+- Only Python synthesis output is supported.
 - The B matrix placeholder code does not implement real transition logic -- it preserves the structural skeleton.
 - Complex control flow (loops, conditionals, exception handling) is not synthesized.
 

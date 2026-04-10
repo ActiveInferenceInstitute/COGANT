@@ -61,7 +61,7 @@ COGANT uses a heuristic `0.9 / 0.1` diagonal-vs-off-diagonal fill: the state tha
 
 **What it answers:** "Given the current state and an action, what is the next state?"
 
-**In code terms:** This is the `update_state()` or `set_*()` layer. Every `WRITES`, `MUTATES`, or `CALLS` edge contributes. If `_execute_operation()` writes to `self.accumulator`, that creates a non-zero B entry linking the action to the state transition.
+**In code terms:** This is the `update_state()` or `set_*()` layer. Every `WRITES` or `MUTATES` edge contributes. If `_execute_operation()` writes to `self.accumulator`, that creates a non-zero B entry linking the action to the state transition.
 
 ```python
 # This method IS a slice of the B matrix:
@@ -107,9 +107,9 @@ When no `CONSTRAINT` mappings exist, C defaults to uniform (no preference).
 # Configuration nodes become D matrix entries:
 # P(initial_state) is informed by these defaults
 class AppConfig:
-    max_retries: int = 3          # CONTEXT -> D vector
-    timeout_seconds: float = 30.0  # CONTEXT -> D vector
-    debug_mode: bool = False       # CONTEXT -> D vector
+    max_retries: int = 3          # CONFIGURATION node -> D vector
+    timeout_seconds: float = 30.0  # CONFIGURATION node -> D vector
+    debug_mode: bool = False       # CONFIGURATION node -> D vector
 ```
 
 When no configuration evidence exists, D defaults to uniform.

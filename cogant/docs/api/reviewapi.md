@@ -5,7 +5,7 @@ The `ReviewAPI` provides interactive curation and review functionality.
 ### Loading a Bundle
 
 ```python
-from cogant import ReviewAPI
+from cogant.api.review import ReviewAPI
 
 review = ReviewAPI()
 review.load_bundle("bundle.json")

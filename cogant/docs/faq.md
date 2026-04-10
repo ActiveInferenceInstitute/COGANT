@@ -20,11 +20,11 @@ See [Theory — GNN Format](theory/gnn_format.md).
 
 ### 3. What languages does COGANT support?
 
-v0.1.0 supports **Python only**. The mapping rules are language-agnostic (they operate on `NodeKind`/`EdgeKind` in the program graph), but the parser and type-inference layer currently only handle Python AST. Rust, TypeScript, and Java parsers are on the v0.2 roadmap.
+v0.5.0 supports **Python** (via CPython `ast`) and **JavaScript / TypeScript** (via a complete tree-sitter front end). The mapping rules are language-agnostic (they operate on `NodeKind`/`EdgeKind` in the program graph). Java and Rust parsers remain on the roadmap.
 
 ### 4. How accurate is role assignment?
 
-On the three control-positive fixtures shipped with v0.1.0 (calculator, event_pipeline, flask_mini), mean confidence scores range from 0.83 to 0.91. However, confidence is not accuracy. The known recall gap is real: for example, the calculator fixture never emits an ACTION mapping for `input_digit` or `input_operation` because those method names do not match the keyword list (`set/update/create/delete/send/push/execute/run/process/handle/dispatch`). Only the private helper `_execute_operation` matches. Expect roughly 73% precision and 82% recall on well-structured Python codebases, with worse numbers on codebases that use unconventional naming.
+On the six control-positive fixtures shipped with v0.5.0 (calculator, event_pipeline, flask_mini, flask_app, requests_lib, json_stdlib), mean confidence scores range from 0.83 to 0.91. However, confidence is not accuracy. The known recall gap is real: for example, the calculator fixture never emits an ACTION mapping for `input_digit` or `input_operation` because those method names do not match the keyword list (`set/update/create/delete/send/push/execute/run/process/handle/dispatch`). Only the private helper `_execute_operation` matches. Expect roughly 73% precision and 82% recall on well-structured Python codebases, with worse numbers on codebases that use unconventional naming.
 
 See [R&D — Calibration](rnd/calibration.md).
 
@@ -70,7 +70,15 @@ Three things help:
 
 ### 10. Can I run COGANT on a monorepo?
 
-Yes, but point `cogant translate` at a specific subdirectory rather than the repo root. COGANT analyzes one project at a time (no cross-codebase analysis in v0.1). For a monorepo with `services/auth/`, `services/billing/`, etc., run each service as a separate translation.
+Yes, but point `cogant translate` at a specific subdirectory rather than the repo root. COGANT analyzes one project at a time. For a monorepo with `services/auth/`, `services/billing/`, etc., run each service as a separate translation.
+
+### 10a. Is there Rust FFI acceleration?
+
+Yes. Set `COGANT_USE_RUST=1` to enable the optional PyO3 `connected_components` backend for graph construction. When the compiled Rust extension is absent, COGANT falls back to pure Python automatically. Run `cogant doctor` to verify Rust backend availability.
+
+### 10b. Does COGANT ship type stubs?
+
+Yes. v0.5.0 ships `.pyi` stub files for all public API modules and a `py.typed` marker. Mypy, Pyright, and Pylance resolve types from the stubs without requiring the source.
 
 ---
 
@@ -114,13 +122,13 @@ See [R&D — Active Inference Mapping, Surprising Findings](rnd/active_inference
 
 ### 15. Does COGANT understand runtime behavior?
 
-No. COGANT is **static analysis only** in v0.1.0. It parses Python AST, builds a program graph from structural relationships (calls, imports, inheritance, reads, writes), and applies rules to that graph. It does not execute your code, trace actual function calls, or observe runtime state.
+No. COGANT is **static analysis only** by default in v0.5.0. It parses Python AST (and JS/TS via tree-sitter), builds a program graph from structural relationships (calls, imports, inheritance, reads, writes), and applies rules to that graph. It does not execute your code, trace actual function calls, or observe runtime state.
 
 The `--coverage` and `--trace` flags accept pre-collected runtime data (coverage.py JSON and function-call traces) and merge them into the graph, but COGANT itself does not generate that data.
 
 ### 16. Can COGANT analyze dynamic languages like Ruby or PHP?
 
-Not in v0.1.0. The parser is Python-only. Even when multi-language support ships (v0.2 roadmap), highly dynamic languages will be harder to analyze because static analysis cannot resolve runtime dispatch, monkey-patching, or eval-based code generation. Expect lower confidence scores and more RUNTIME_ONLY tier mappings for dynamic language targets.
+Not in v0.5.0. The parsers currently cover Python and JavaScript/TypeScript. Highly dynamic languages will be harder to analyze because static analysis cannot resolve runtime dispatch, monkey-patching, or eval-based code generation. Expect lower confidence scores and more RUNTIME_ONLY tier mappings for dynamic language targets.
 
 ### 17. What happens with code below the confidence threshold?
 
@@ -134,7 +142,7 @@ Mappings with confidence below 0.4 are kept in the bundle for traceability but e
 
 The reverse direction takes a GNN generative model and synthesizes a minimal Python package that implements it: a class per hidden-state node, a method per action, a getter per observation, and module-level constants for preferences and priors. The goal is to close the loop: `code -> GNN -> code'`.
 
-**Status:** Reverse synthesis is a prototype in v0.1.0. There is no CLI subcommand yet; you must drive it from the Python API. See [Tutorial 6 — Reverse Mode](tutorials/06_reverse_mode.md).
+**Status:** `cogant reverse` and `cogant roundtrip` are fully available CLI subcommands as of v0.5.0. See [Tutorial 6 — Reverse Mode](tutorials/06_reverse_mode.md).
 
 ### 19. Can I generate a working Python package from a GNN?
 
@@ -177,7 +185,7 @@ Run `cogant translate` and `cogant validate` as CI steps. The validate command e
 
 ### 24. Is there a GitHub Action?
 
-Not yet. v0.1.0 is CLI and Python API only. A reusable GitHub Action is on the roadmap. For now, install COGANT in your CI environment and call the CLI directly.
+Not yet. A reusable GitHub Action is on the roadmap. For now, install COGANT in your CI environment and call the CLI directly.
 
 ### 25. Can COGANT work with pyproject.toml projects?
 
@@ -250,13 +258,13 @@ Validation scores (0-100) measure **structural correctness** of the GNN bundle: 
 
 ### 33. Will COGANT support Rust, Go, and Java?
 
-Rust, TypeScript, and Java parsers are planned for v0.2.0, built on tree-sitter. Go is not explicitly on the roadmap but would follow the same pattern. The translation rules are language-agnostic; only the parser and fact-extraction layers need to be language-specific.
+TypeScript is now supported (v0.5.0). Rust, Go, and Java parsers are on the roadmap, built on tree-sitter. The translation rules are language-agnostic; only the parser and fact-extraction layers need to be language-specific.
 
 See [Roadmap — v0.2.0](roadmap/version_020_planned.md).
 
 ### 34. Is there a web UI?
 
-Not yet. v0.1.0 ships a basic HTML site via `cogant render` for browsing the program graph and GNN output. An interactive graph visualization with role filtering, Markov blanket highlighting, and drill-down is a roadmap item but has no committed timeline.
+v0.5.0 ships a basic HTML site via `cogant render` for browsing the program graph and GNN output. An interactive graph visualization with role filtering, Markov blanket highlighting, and drill-down is a roadmap item but has no committed timeline.
 
 ### 35. What is the long-term vision?
 

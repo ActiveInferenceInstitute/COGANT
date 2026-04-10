@@ -7,7 +7,7 @@ COGANT converts Python, JavaScript, and TypeScript codebases into
 state-space models — complete with A/B/C/D probabilistic matrices, Markov blanket
 partitions, and principled free-energy derivations.
 
-Current release: **v0.5.0** (2026-04-10). 2143 tests passing, 11 skipped, 2 xfailed, 1 xpassed; line coverage 86.47% on `py/cogant/`.
+Current release: **v0.5.0** (2026-04-10). 2129 tests passing, 86 skipped, 12 failing, 2 xfailed, 1 xpassed; line coverage 83.42% on `py/cogant/`. mypy strict: 0 errors.
 
 ---
 
@@ -79,8 +79,7 @@ and a validator report scoring **100.0 / 100** on the calculator fixture.
 - Reverse synthesis: `cogant reverse` and `cogant roundtrip` subcommands synthesize a
   runnable Python package from any GNN bundle and verify forward-reverse-forward
   isomorphism.
-- **2143 tests** across unit, integration, property, golden, and fuzz suites (plus 11 skips
-  for optional toolchains); line coverage **86.47%** on `py/cogant/`.
+- **2230 tests** across unit, integration, property, golden, and fuzz suites (2129 passing, 86 skipped for optional toolchains); line coverage **83.42%** on `py/cogant/`. Type stubs (`.pyi`) and `py.typed` marker ship with the package.
 - `cogant doctor` — environment diagnostics extended in v0.5.0 with tree-sitter grammar
   checks, uv lockfile parity, and optional-dependency audit.
 
@@ -167,7 +166,7 @@ See [docs/architecture/](docs/architecture/) for per-module deep dives.
 ```bash
 uv sync --extra all            # install everything (python + viz + tree-sitter + rust bindings)
 uv run cogant doctor            # verify the environment
-uv run pytest tests/ -q         # 2143 passing tests; expect ~86.47% line coverage
+uv run pytest tests/ -q         # 2129 passing tests; expect ~83.42% line coverage
 uv run mypy py/cogant/          # type check (strict; 0 errors on 179 source files)
 uv run ruff check py/cogant/    # lint (0 errors on v0.5.0)
 make build-rust                 # optional: compile the rust backend

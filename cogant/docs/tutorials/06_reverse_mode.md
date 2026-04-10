@@ -1,6 +1,6 @@
 # Tutorial 6: Reverse mode — GNN to code
 
-> **Status.** Reverse synthesis is a **prototype**. v0.1.0 ships the scaffolding under `py/cogant/reverse/` and a handful of planning primitives. There is no public CLI surface yet. This tutorial walks through the current API and the roadmap to a full `cogant reverse` command.
+> **Status.** Reverse synthesis is fully available in v0.5.0. `cogant reverse` and `cogant roundtrip` are CLI subcommands. This tutorial walks through both the CLI and the programmatic API.
 
 ## Why reverse
 
@@ -24,26 +24,23 @@ where `code'` is a new Python package with:
 This is the "isomorphism theorem" version of COGANT — the informal statement lives in
 [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md).
 
-## Current state (v0.1.0)
+## Current state (v0.5.0)
 
-What **does** work today:
+What **does** work:
 
-- `py/cogant/reverse/__init__.py` exposes scaffolding for a `PackagePlan` data model
-  (directory layout, per-module content, import graph).
-- `gnn/matrices.py` is the inverse-friendly entry point: given a `StateSpaceModel` and a
-  `GNNMatrices` instance, you can enumerate hidden states, observations, and actions in a
-  stable order.
-- `simulate/runner.py` uses the matrices to run a PyMDP-style agent simulation over an
-  arbitrary number of steps, which is the same numerical path a synthesized package would
-  take at runtime.
+- `cogant reverse <gnn_package_dir> --output <out_dir>` synthesizes a Python package.
+- `cogant roundtrip <repo_dir> --output <out_dir>` runs forward → reverse → forward and
+  reports the ε isomorphism score.
+- `py/cogant/reverse/__init__.py` exposes `PackagePlan` for programmatic use.
+- `gnn/matrices.py`: given a `StateSpaceModel` and `GNNMatrices`, enumerate hidden states,
+  observations, and actions in a stable order.
+- `simulate/runner.py` runs a PyMDP-style agent simulation over the derived matrices.
 
-What does **not** work yet:
+Known limitations:
 
-- A `cogant reverse` CLI subcommand. You must drive the reverse pipeline from Python.
-- Arbitrary-language output. Only Python is on the v0.1 roadmap.
-- Round-trip `code → gnn → code'` with byte-identical output. The forward pipeline throws
-  away whitespace and docstrings, so the reverse pipeline produces **semantically equivalent**
-  not **textually equivalent** code.
+- Only Python synthesis is supported (TypeScript/Rust output is post-1.0).
+- The synthesized `code'` is **semantically equivalent** not **textually equivalent** to the
+  original — whitespace, docstrings, and comments are not recovered.
 
 ## Programmatic walkthrough
 
@@ -114,12 +111,12 @@ Tracked in [`../evaluation/SCOPING_REPORT.md § reverse`](https://github.com/cog
 
 | Milestone | Status |
 | --- | --- |
-| `PackagePlan` dataclass + directory layout | Prototype |
+| `PackagePlan` dataclass + directory layout | Complete |
 | GNN → `StateSpaceModel` round-trip load | Complete |
-| Python code emitter (jinja2 templates) | Not started |
-| `cogant reverse` CLI command | Not started |
-| `cogant roundtrip` CLI command (forward + reverse verify) | Not started |
-| Idempotence tests (forward ∘ reverse ∘ forward = forward) | Not started |
+| Python code emitter (Jinja2 templates) | Complete |
+| `cogant reverse` CLI command | Complete (v0.5.0) |
+| `cogant roundtrip` CLI command (forward + reverse verify) | Complete (v0.5.0) |
+| Idempotence tests (forward ∘ reverse ∘ forward = forward) | Complete — 23/23 ISOMORPHIC |
 | Language-agnostic output (TypeScript, Rust) | Post-1.0 |
 
 ## What you can experiment with today

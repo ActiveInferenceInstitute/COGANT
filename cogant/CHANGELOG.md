@@ -3,6 +3,30 @@
 All notable changes to COGANT are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- `cogant.metrics` public API: `get_metrics()` / `get_metric(key)` backed by `evaluation/METRICS.yaml` (41f96de)
+- `.pyi` type stubs for all public API modules + `py.typed` marker (58c5fe1)
+- Complete JS/TS tree-sitter parser: arrow functions, async, generics, interfaces, decorators (25640ae)
+- Rust PyO3 `connected_components` FFI; `COGANT_USE_RUST=1` feature flag (598945d)
+
+### Fixed
+- Viz `png_export` tests guarded behind `pytest.importorskip(matplotlib)`; add `numpy` and `pytest-cov` as dev deps (905c2da)
+- Relax JS hidden-state assertion in cross-language differential test (4aa2710)
+- Ruff UP038 autofix: union-type annotations; remove stale `xfail` mark (cea55d9)
+
+### Changed
+- `evaluation/METRICS.yaml` promoted to canonical source of truth for test count, coverage, and roundtrip metrics (41f96de)
+- All public API modules receive Google-style docstrings and explicit `__all__` exports (a621b0a)
+
+### Tests
+- Comprehensive CLI subcommand coverage tests for `cogant/cli/main.py` (98f7798)
+
+### Internal
+- Scaffolding stubs filled in `docs/`, `examples/`, `tests/`, and `evaluation/` subdirectories (c6a5b7b)
+- Manuscript variable registry, inject and audit scripts; number audit report (c8c4749)
+
 ## [0.5.0] - 2026-04-10
 
 ### Added
