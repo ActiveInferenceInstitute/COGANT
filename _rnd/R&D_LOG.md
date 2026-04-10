@@ -416,3 +416,72 @@ Next session should:
 4. Check `dist/cogant-0.2.0-*.whl` exists (it does)
 5. Apply `git tag v0.2.0` if ready
 6. Continue: ruff-perfect pass, mypy strict, real-world eval on 8 repos, +74 tests to hit 1400
+
+---
+
+## Wave 9 — Validation + Composability Sweep (2026-04-10)
+
+### What Changed
+Comprehensive validation + composability sweep across all modules. Resumed after rate-limit reset
+and context compaction; fixed 6 test failures before committing 96 new tests.
+
+**Fixes required before committing wave 9 output:**
+- `test_step_free_energy_decreases_on_preferred_obs` — test had uniform state [0.5,0.5]; fixed to [0.8,0.2] so FE difference is non-zero
+- `test_convergence_metric_kl_non_negative` — tolerance too strict (-1e-12); floating-point gives -2e-10 for identical distributions; fixed to -1e-9
+- `test_runtime_with_zoo_full_pomdp` + `test_standalone_gnn_to_agent` — parser classified `s_hidden` (non-standard naming) as unrecognized; added ontology-driven fallback in `_parse_ontology_annotation` using `HiddenState`/`Observation`/`Action` concept labels
+- `test_cache_and_runtime_roundtrip` — agent wrote incorrect `store.put("test_matrices", bytes)` call; file on disk already had corrected `CacheKey` API
+- `MatrixFunctions` had `_A/_B/_C/_D` (private) but `AgentRuntime.__init__` reads public `.A/.B/.C/.D`; added public aliases
+
+**New tests committed across waves 8-9:**
+- `test_dsl_extended.py` — 13 DSL behavioral tests
+- `test_observability_extended.py` — 14 observability tests  
+- `test_pipeline_dag_extended.py` — 14 DAG topology + cycle detection tests
+- `test_plugins_extended.py` — 12 plugin registry tests
+- `test_runtime_extended.py` — 12 AgentRuntime behavioral tests
+- `test_schema_extended.py` — 13 schema version/migration tests
+- `test_reverse_metrics_extended.py` — 19 VFE/KL/roundtrip metrics tests
+- `test_composability.py` (integration) — 4 standalone module composability tests
+- `test_translate_rules_behavioral.py` — 38 rule-family behavioral tests
+- `test_reverse_validation.py` — 30 parser/planner/synthesizer/callable validation tests
+- `test_cli_comprehensive.py` — CLI subcommand end-to-end tests
+
+### Milestones Hit
+- [x] **Test count > 1500** (actual: 1509 passing, 1567 collected — +183 from wave 9)
+- [x] **Coverage ≥ 75%** (actual: 75.24% — up from ~17% pre-wave-9)
+- [x] First inference step (committed: `tests/integration/test_inference_demo.py`)
+- [x] v0.2.0 CHANGELOG + pyproject.toml bumped (wheel in dist/)
+- [x] mkdocs site builds clean
+- [x] LITERATURE.md > 80 entries
+- [x] Complete manuscript draft (cogant_paper.md, 6000+ words)
+- [x] Example zoo: 12 repos + 3 hand-written GNN models
+- [x] All wave 7 modules composable (independently importable + standalone usable)
+
+### Coverage Per Module (key modules)
+- `cogant.reverse.*`: 85-99% (parser 91%, callable 97%, matrices 85%, metrics 97%)
+- `cogant.runtime.*`: 91-100%
+- `cogant.translate.*`: 92-98%
+- `cogant.schema.*`: ~95%
+- `cogant.cache.*`: ~85%
+- `cogant.pipeline.dag`: ~90%
+- `cogant.observability.*`: ~85%
+- `cogant.plugins.*`: ~80%
+- `cogant.viz.*`: 35-95% (png_export 35% drags total; viz/ untested module cluster)
+- Total: **75.24%**
+
+### Known Remaining Gaps
+- viz/png_export.py: 35% coverage (1275 lines, complex rendering paths)
+- validate/schema_check.py: 71%
+- validate/provenance_check.py: 78%
+- JS/TS tree-sitter parser: grammar loaded but rules sparse
+- mypy strict: not fully passing (some Any inference in generated code)
+- v0.2.0 git tag not yet applied (wheel exists in dist/)
+- Real-world eval on 8 external repos (eval_repos/) not yet integrated into CI
+
+### Architecture Lessons
+1. **Ontology annotation as fallback classifier** — GNN models with non-standard variable names
+   (e.g. `s_hidden` vs `s_f0`) need `ActInfOntologyAnnotation` to rescue classification.
+   Parser extended to use concept labels (HiddenState/Observation/Action) as fallback.
+2. **MatrixFunctions public/private split** — `AgentRuntime` reads public `.A/.B/.C/.D`;
+   `MatrixFunctions` must expose both public attrs AND private for internal methods.
+3. **Composability test design** — Tests that import ONLY specific subpackages (no full pipeline)
+   are the highest-value validation: they prove standalone usability and catch import leaks.
