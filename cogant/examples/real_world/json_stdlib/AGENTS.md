@@ -1,3 +1,7 @@
 # Agents — examples/real_world/json_stdlib
 
-Stdlib JSON usage sample. See [AGENTS.md](../AGENTS.md).
+Python stdlib `json` module usage sample for static analysis exercises.
+
+- `encoder.py`, `decoder.py`, `scanner.py` — JSON encode/decode paths
+- Used to verify COGANT handles standard-library patterns without false positives
+- Parent coordination: [../AGENTS.md](../AGENTS.md)
