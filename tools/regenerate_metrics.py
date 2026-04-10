@@ -122,88 +122,68 @@ def get_test_count_total() -> int:
 
 
 # ---------------------------------------------------------------------------
-# 5. Pytest run results (passing/failing/skipped etc.)
+# 5+6. Pytest run results + coverage (single combined invocation)
 # ---------------------------------------------------------------------------
 
-def get_test_results() -> dict[str, int]:
-    """Run pytest and parse the summary line."""
+def get_test_results_and_coverage() -> tuple[dict[str, int], float]:
+    """Run pytest with coverage, then export JSON. Returns (test_results, coverage_pct).
+
+    Both steps are done in a single shell pipeline so .coverage is not
+    garbage-collected between subprocesses.
+    """
+    coverage_json = COGANT_DIR / "coverage.json"
     try:
         rc, out = _run(
-            "uv run pytest -q --override-ini='addopts=' --cov=cogant -p no:warnings 2>&1",
+            "uv run pytest -q --override-ini='addopts=' --cov=cogant -p no:warnings 2>&1"
+            " && uv run coverage json -o coverage.json",
             cwd=COGANT_DIR,
-            timeout=300,
+            timeout=600,
         )
     except subprocess.TimeoutExpired:
         print("WARNING: pytest run timed out", file=sys.stderr)
-        return {"passing": 0, "failing": 0, "skipped": 0, "xfailed": 0, "xpassed": 0}
+        return (
+            {"passing": 0, "failing": 0, "skipped": 0, "xfailed": 0, "xpassed": 0},
+            0.0,
+        )
 
-    # Example: "1945 passed, 12 skipped, 3 xfailed in 42.50s"
-    result = {"passing": 0, "failing": 0, "skipped": 0, "xfailed": 0, "xpassed": 0}
+    # Parse test counts from summary line
+    # Example: "2059 passed, 86 skipped, 2 xfailed, 1 xpassed, 12 failed in 75s"
+    test_result = {"passing": 0, "failing": 0, "skipped": 0, "xfailed": 0, "xpassed": 0}
     for line in out.splitlines():
-        if "passed" in line or "failed" in line or "error" in line:
+        if re.search(r"\d+\s+passed", line) or re.search(r"\d+\s+failed", line):
             mp = re.search(r"(\d+)\s+passed", line)
             mf = re.search(r"(\d+)\s+failed", line)
             ms = re.search(r"(\d+)\s+skipped", line)
             mxf = re.search(r"(\d+)\s+xfailed", line)
             mxp = re.search(r"(\d+)\s+xpassed", line)
             if mp:
-                result["passing"] = int(mp.group(1))
+                test_result["passing"] = int(mp.group(1))
             if mf:
-                result["failing"] = int(mf.group(1))
+                test_result["failing"] = int(mf.group(1))
             if ms:
-                result["skipped"] = int(ms.group(1))
+                test_result["skipped"] = int(ms.group(1))
             if mxf:
-                result["xfailed"] = int(mxf.group(1))
+                test_result["xfailed"] = int(mxf.group(1))
             if mxp:
-                result["xpassed"] = int(mxp.group(1))
-    return result
+                test_result["xpassed"] = int(mxp.group(1))
 
-
-# ---------------------------------------------------------------------------
-# 6. Coverage
-# ---------------------------------------------------------------------------
-
-def get_coverage() -> float:
-    """Run coverage json on existing .coverage data and return aggregate percent.
-
-    Assumes pytest with --cov=cogant has already been run (by get_test_results).
-    Falls back to running pytest --cov if no .coverage file exists.
-    """
-    coverage_json = COGANT_DIR / "coverage.json"
-    dot_coverage = COGANT_DIR / ".coverage"
-
-    if not dot_coverage.exists():
-        # Run pytest with coverage to generate .coverage
-        try:
-            _run(
-                "uv run pytest --override-ini='addopts=' --cov=cogant -q -p no:warnings 2>&1",
-                cwd=COGANT_DIR,
-                timeout=600,
-            )
-        except subprocess.TimeoutExpired:
-            print("WARNING: coverage run timed out", file=sys.stderr)
-            return 0.0
-
-    # Export to JSON
-    try:
-        rc, out = _run(
-            f"uv run coverage json -o coverage.json 2>&1",
-            cwd=COGANT_DIR,
-            timeout=60,
-        )
-    except subprocess.TimeoutExpired:
-        return 0.0
-
+    # Parse coverage percent
+    coverage_pct = 0.0
     if coverage_json.exists():
         try:
             data = json.loads(coverage_json.read_text())
             totals = data.get("totals", {})
-            pct = totals.get("percent_covered", 0.0)
-            return round(float(pct), 2)
+            coverage_pct = round(float(totals.get("percent_covered", 0.0)), 2)
         except (json.JSONDecodeError, KeyError):
             pass
 
-    return 0.0
+    if coverage_pct == 0.0:
+        # Fallback: parse TOTAL line from stdout
+        m = re.search(r"TOTAL\s+\d+\s+\d+\s+([\d.]+)%", out)
+        if m:
+            coverage_pct = float(m.group(1))
+
+    return test_result, coverage_pct
 
 
 # ---------------------------------------------------------------------------
@@ -434,11 +414,8 @@ def main() -> None:
     print("  [3/9] Test collection count...", file=sys.stderr)
     test_count_total = get_test_count_total()
 
-    print("  [4/9] Test run results (this may take a few minutes)...", file=sys.stderr)
-    test_results = get_test_results()
-
-    print("  [5/9] Coverage...", file=sys.stderr)
-    coverage_pct = get_coverage()
+    print("  [4/9] Test run results + coverage (this may take a few minutes)...", file=sys.stderr)
+    test_results, coverage_pct = get_test_results_and_coverage()
 
     print("  [6/9] mypy strict errors...", file=sys.stderr)
     mypy_errors = get_mypy_errors()
