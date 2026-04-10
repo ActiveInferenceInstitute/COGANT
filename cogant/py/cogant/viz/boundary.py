@@ -44,7 +44,7 @@ class BoundaryMapper:
         lines = ["graph TD"]
 
         # Track cross-module edges for annotation
-        cross_module_edge_counts: dict[tuple, int] = defaultdict(int)
+        cross_module_edge_counts: dict[tuple[str, str], int] = defaultdict(int)
 
         # Add module clusters with classes inside
         for module in modules:

@@ -46,7 +46,9 @@ try:
     from cogant._rust import (
         create_example_graph as _create_example_graph,  # type: ignore[import-not-found,unused-ignore]
     )
-    from cogant._rust import get_version as _rust_version  # type: ignore[import-not-found,unused-ignore]
+    from cogant._rust import (
+        get_version as _rust_version,  # type: ignore[import-not-found,unused-ignore]
+    )
 
     RUST_AVAILABLE: bool = True
     _RUST_VERSION: str | None = _rust_version()

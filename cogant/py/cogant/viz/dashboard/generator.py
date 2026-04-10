@@ -910,7 +910,7 @@ class DashboardGenerator:
     </div>
 """
 
-    def _generate_free_energy_chart(self, trace_list: list[dict]) -> str:
+    def _generate_free_energy_chart(self, trace_list: list[dict[str, Any]]) -> str:
         """Generate free energy trajectory line chart."""
         if not trace_list:
             return "<p>No trace data</p>"
@@ -960,7 +960,7 @@ class DashboardGenerator:
         svg_parts.append('</svg>')
         return "".join(svg_parts)
 
-    def _generate_belief_evolution_table(self, trace_list: list[dict]) -> str:
+    def _generate_belief_evolution_table(self, trace_list: list[dict[str, Any]]) -> str:
         """Generate belief evolution table."""
         if not trace_list:
             return "<p>No trace data</p>"

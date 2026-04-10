@@ -23,7 +23,9 @@ try:
     from cogant import (
         _rust,  # type: ignore[import-not-found,unused-ignore]  # optional Rust extension  # noqa: F401
     )
-    from cogant._rust import get_version as _rust_version  # type: ignore[import-not-found,unused-ignore]
+    from cogant._rust import (
+        get_version as _rust_version,  # type: ignore[import-not-found,unused-ignore]
+    )
 
     _RUST_AVAILABLE = True
     __rust_version__: str | None = _rust_version()

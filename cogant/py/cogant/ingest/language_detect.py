@@ -48,7 +48,9 @@ class LanguageDetector:
             return  # Already loaded
 
         try:
-            from python.parser import PythonLanguageParser  # type: ignore[import-not-found,unused-ignore]
+            from python.parser import (
+                PythonLanguageParser,  # type: ignore[import-not-found,unused-ignore]
+            )
             cls.PARSER_CLASSES["python"] = PythonLanguageParser
         except Exception:
             pass
@@ -56,7 +58,9 @@ class LanguageDetector:
         # Prefer tree-sitter for JavaScript; fall back to the TS regex parser.
         js_loaded = False
         try:
-            from javascript.parser import JavaScriptLanguageParser  # type: ignore[import-not-found,unused-ignore]
+            from javascript.parser import (
+                JavaScriptLanguageParser,  # type: ignore[import-not-found,unused-ignore]
+            )
             cls.PARSER_CLASSES["javascript"] = JavaScriptLanguageParser
             js_loaded = True
         except Exception:
@@ -76,7 +80,9 @@ class LanguageDetector:
 
         # Regex fallback for either JS or TS that didn't get a tree-sitter plugin.
         try:
-            from typescript.parser import TypeScriptLanguageParser  # type: ignore[import-not-found,unused-ignore]
+            from typescript.parser import (
+                TypeScriptLanguageParser,  # type: ignore[import-not-found,unused-ignore]
+            )
             if not ts_loaded:
                 cls.PARSER_CLASSES["typescript"] = TypeScriptLanguageParser
             if not js_loaded:
@@ -85,7 +91,9 @@ class LanguageDetector:
             pass
 
         try:
-            from rust.parser import RustLanguageParser  # type: ignore[import-not-found,unused-ignore]
+            from rust.parser import (
+                RustLanguageParser,  # type: ignore[import-not-found,unused-ignore]
+            )
             cls.PARSER_CLASSES["rust"] = RustLanguageParser
         except Exception:
             pass

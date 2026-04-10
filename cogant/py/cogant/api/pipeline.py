@@ -99,7 +99,7 @@ class PipelineRunner:
 
     def __init__(self) -> None:
         """Initialize pipeline runner."""
-        self.stage_handlers: dict[str, Callable] = {
+        self.stage_handlers: dict[str, Callable[..., Any]] = {
             "ingest": self._stage_ingest,
             "static": self._stage_static,
             "normalize": self._stage_normalize,
