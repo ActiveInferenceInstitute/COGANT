@@ -32,6 +32,7 @@ from cogant.api.pipeline import PipelineRunner, PipelineConfig
 from cogant.api.bundle import Bundle
 from cogant.api.review import ReviewAPI
 from cogant.cli.doctor import doctor_command, run_doctor, render_report
+from cogant.cli.migrate import migrate_app
 from cogant.cli.plugin import plugin_app
 from cogant.reverse.cli import reverse_command, roundtrip_command
 
@@ -1350,6 +1351,7 @@ app.command(name="roundtrip", help="Verify forward-reverse-forward round-trip is
 
 # Plugin management subcommands (cogant plugin list / cogant plugin info)
 app.add_typer(plugin_app, name="plugin")
+app.add_typer(migrate_app, name="migrate")
 
 
 if __name__ == "__main__":
