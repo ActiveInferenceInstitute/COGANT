@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COGANT Playground</title>
+
+  <!-- CodeMirror 6 is ESM-only; we use CodeMirror 5 from CDN for a lightweight, single-file setup. -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+
+  <!-- Cytoscape.js for graph visualization -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f1419;
+      --bg-panel: #161b22;
+      --bg-elevated: #1c232c;
+      --border: #2a313c;
+      --border-accent: #3a4250;
+      --fg: #e6edf3;
+      --fg-muted: #8b949e;
+      --fg-dim: #6e7681;
+      --accent: #58a6ff;
+      --accent-warm: #f0b429;
+      --mono: "SF Mono", "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+
+      /* Role colors */
+      --role-hidden-state: #4A90D9;
+      --role-observation: #7ED321;
+      --role-action: #F5A623;
+      --role-policy: #BD10E0;
+      --role-constraint: #D0021B;
+      --role-context: #9B9B9B;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    header h1 .tag {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 13px;
+      margin-left: 8px;
+    }
+
+    header .subtitle {
+      color: var(--fg-muted);
+      font-size: 12px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1px;
+      background: var(--border);
+      height: calc(100vh - 56px);
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+
+    .panel-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--fg-muted);
+      font-weight: 600;
+    }
+
+    .panel-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Editor panel */
+    #editor-host {
+      position: absolute;
+      inset: 0;
+    }
+    .CodeMirror {
+      height: 100% !important;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    /* Graph panel */
+    #graph-host {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 20%, #182030 0%, #0f1419 65%);
+    }
+
+    /* Example selector panel */
+    .examples {
+      padding: 16px 20px;
+      overflow-y: auto;
+    }
+
+    .examples p {
+      color: var(--fg-muted);
+      margin: 0 0 14px 0;
+      font-size: 13px;
+    }
+
+    .example-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .example-btn {
+      text-align: left;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      padding: 10px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 13px;
+      transition: background 0.15s, border-color 0.15s, transform 0.05s;
+    }
+
+    .example-btn:hover {
+      background: #1f2630;
+      border-color: var(--border-accent);
+    }
+
+    .example-btn.active {
+      background: #1d2b3e;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .example-btn .name { font-weight: 600; display: block; }
+    .example-btn .desc { color: var(--fg-muted); font-size: 11px; display: block; margin-top: 2px; }
+
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #0b1320;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 5px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+
+    .btn:hover { background: #79b8ff; }
+
+    .btn.secondary {
+      background: transparent;
+      color: var(--fg-muted);
+      border: 1px solid var(--border-accent);
+    }
+
+    .btn.secondary:hover { color: var(--fg); border-color: var(--fg-muted); }
+
+    /* Legend */
+    .legend {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--fg-muted);
+    }
+
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    /* GNN Preview */
+    .gnn-body {
+      padding: 14px 18px;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    .gnn-body pre {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: #c9d1d9;
+      white-space: pre;
+    }
+
+    .gnn-body .k { color: #ff7b72; }
+    .gnn-body .v { color: #79c0ff; }
+    .gnn-body .c { color: #8b949e; font-style: italic; }
+
+    /* Tooltip */
+    #tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-accent);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--fg);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      display: none;
+      z-index: 100;
+      max-width: 240px;
+    }
+
+    #tooltip .tt-label {
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-family: var(--mono);
+    }
+
+    #tooltip .tt-row {
+      color: var(--fg-muted);
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    #tooltip .tt-row span:last-child { color: var(--fg); font-family: var(--mono); }
+
+    .badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>COGANT Playground <span class="tag">v0.2.0</span></h1>
+    <span class="subtitle">Code &rarr; Active Inference graph &rarr; GNN specification</span>
+  </header>
+
+  <div class="layout">
+    <!-- Top-left: Editor -->
+    <section class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Python Source</span>
+        <span class="panel-title" id="editor-filename" style="text-transform: none; color: var(--fg-dim); font-family: var(--mono);">calculator.py</span>
+      </div>
+      <div class="panel-body">
+        <div id="editor-host"></div>
+      </div>
+    </section>
+
+    <!-- Top-right: Graph -->
+    <section class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Active Inference Graph</span>
+        <span class="panel-title" id="graph-stats" style="text-transform: none; color: var(--fg-dim); font-family: var(--mono);">0 nodes · 0 edges</span>
+      </div>
+      <div class="panel-body">
+        <div id="graph-host"></div>
+        <div id="tooltip"></div>
+      </div>
+    </section>
+
+    <!-- Bottom-left: Example selector -->
+    <section class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Examples</span>
+      </div>
+      <div class="panel-body examples">
+        <p>
+          Pre-computed fixtures. The in-browser playground ships with saved
+          COGANT outputs because the full pipeline (parsing, role inference,
+          ontology alignment) runs as a native Python package.
+        </p>
+        <div class="example-list" id="example-list"></div>
+        <div class="actions">
+          <button class="btn" id="analyze-btn">Analyze</button>
+          <button class="btn secondary" id="reset-btn">Reset Code</button>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item"><span class="legend-swatch" style="background: var(--role-hidden-state)"></span>Hidden State</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: var(--role-observation)"></span>Observation</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: var(--role-action)"></span>Action</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: var(--role-policy)"></span>Policy</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: var(--role-constraint)"></span>Constraint</div>
+          <div class="legend-item"><span class="legend-swatch" style="background: var(--role-context)"></span>Context</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom-right: GNN Preview -->
+    <section class="panel">
+      <div class="panel-header">
+        <span class="panel-title">GNN Specification</span>
+        <span class="panel-title" id="gnn-filename" style="text-transform: none; color: var(--fg-dim); font-family: var(--mono);">calculator.gnn</span>
+      </div>
+      <div class="panel-body">
+        <div class="gnn-body">
+          <pre id="gnn-output"></pre>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+  // ---------------------------------------------------------------------------
+  // Role → color map (matches CSS variables)
+  // ---------------------------------------------------------------------------
+  const ROLE_COLORS = {
+    HIDDEN_STATE: "#4A90D9",
+    OBSERVATION: "#7ED321",
+    ACTION:      "#F5A623",
+    POLICY:      "#BD10E0",
+    CONSTRAINT:  "#D0021B",
+    CONTEXT:     "#9B9B9B",
+  };
+
+  // ---------------------------------------------------------------------------
+  // Pre-computed fixtures. Each fixture mirrors the JSON emitted by the full
+  // COGANT pipeline (`cogant analyze` → graph.json + .gnn). Confidences are
+  // representative values from calibration runs and are NOT live-computed here.
+  // ---------------------------------------------------------------------------
+  const FIXTURES = {
+    calculator: {
+      name: "Calculator",
+      description: "Simple state machine with update/read",
+      filename: "calculator.py",
+      code: `class Calculator:
+    def __init__(self):
+        self.state = 0
+
+    def update(self, value: float) -> None:
+        """Mutate internal state with an external value."""
+        self.state = value
+
+    def get_result(self) -> float:
+        """Return the current state as an observation."""
+        return self.state
+`,
+      nodes: [
+        { id: "n1", label: "Calculator",  role: "HIDDEN_STATE", kind: "CLASS",    confidence: 0.94 },
+        { id: "n2", label: "state",       role: "HIDDEN_STATE", kind: "VARIABLE", confidence: 0.97 },
+        { id: "n3", label: "update",      role: "ACTION",       kind: "METHOD",   confidence: 0.89 },
+        { id: "n4", label: "get_result",  role: "OBSERVATION",  kind: "METHOD",   confidence: 0.91 },
+      ],
+      edges: [
+        { source: "n1", target: "n2", kind: "CONTAINS" },
+        { source: "n1", target: "n3", kind: "CONTAINS" },
+        { source: "n1", target: "n4", kind: "CONTAINS" },
+        { source: "n3", target: "n2", kind: "WRITES" },
+        { source: "n4", target: "n2", kind: "READS" },
+      ],
+      gnn: `## ModelName
+Calculator
+
+## StateSpaceBlock
+s_f0[1,1,type=float]      # Calculator.state
+u_f0[1,1,type=float]      # update input
+o_f0[1,1,type=float]      # get_result output
+
+## Connections
+s_f0 > o_f0
+u_f0 > s_f0
+
+## ActInfOntologyAnnotation
+s_f0=HiddenState
+u_f0=Action
+o_f0=Observation
+update=ActionTransition
+get_result=ObservationEmission
+`,
+    },
+
+    auth: {
+      name: "Auth / Session Manager",
+      description: "Hidden credential state + request observation",
+      filename: "session_manager.py",
+      code: `class SessionManager:
+    def __init__(self, secret: str):
+        self._token = None
+        self._secret = secret
+
+    def observe_request(self, headers: dict) -> str:
+        """Extract the bearer token from an incoming request."""
+        token = headers.get("Authorization", "")
+        return token
+
+    def validate_session(self, token: str) -> bool:
+        """Constraint: token must match the current session."""
+        return token == self._token
+
+    def update_state(self, token: str) -> None:
+        """Rotate the stored session token."""
+        self._token = token
+`,
+      nodes: [
+        { id: "n1", label: "SessionManager",   role: "HIDDEN_STATE", kind: "CLASS",    confidence: 0.92 },
+        { id: "n2", label: "_token",           role: "HIDDEN_STATE", kind: "VARIABLE", confidence: 0.96 },
+        { id: "n3", label: "_secret",          role: "CONTEXT",      kind: "VARIABLE", confidence: 0.81 },
+        { id: "n4", label: "observe_request",  role: "OBSERVATION",  kind: "METHOD",   confidence: 0.93 },
+        { id: "n5", label: "validate_session", role: "CONSTRAINT",   kind: "METHOD",   confidence: 0.88 },
+        { id: "n6", label: "update_state",     role: "ACTION",       kind: "METHOD",   confidence: 0.90 },
+      ],
+      edges: [
+        { source: "n1", target: "n2", kind: "CONTAINS" },
+        { source: "n1", target: "n3", kind: "CONTAINS" },
+        { source: "n1", target: "n4", kind: "CONTAINS" },
+        { source: "n1", target: "n5", kind: "CONTAINS" },
+        { source: "n1", target: "n6", kind: "CONTAINS" },
+        { source: "n4", target: "n2", kind: "READS" },
+        { source: "n5", target: "n2", kind: "READS" },
+        { source: "n6", target: "n2", kind: "WRITES" },
+      ],
+      gnn: `## ModelName
+SessionManager
+
+## StateSpaceBlock
+s_f0[1,1,type=str]        # SessionManager._token
+c_f0[1,1,type=str]        # SessionManager._secret (context)
+o_f0[1,1,type=str]        # observe_request -> token
+g_f0[1,1,type=bool]       # validate_session guard
+
+## Connections
+o_f0 > s_f0
+s_f0 > g_f0
+c_f0 > g_f0
+
+## ActInfOntologyAnnotation
+s_f0=HiddenState
+c_f0=Context
+o_f0=Observation
+g_f0=Constraint
+observe_request=ObservationEmission
+validate_session=ConstraintCheck
+update_state=ActionTransition
+`,
+    },
+
+    eventbus: {
+      name: "Event Bus",
+      description: "Policy-heavy dispatch with subscribers",
+      filename: "event_bus.py",
+      code: `class EventBus:
+    def __init__(self):
+        self._subscribers = {}
+        self._queue = []
+
+    def subscribe(self, topic: str, handler) -> None:
+        self._subscribers.setdefault(topic, []).append(handler)
+
+    def publish(self, topic: str, payload: dict) -> None:
+        self._queue.append((topic, payload))
+
+    def dispatch_policy(self) -> None:
+        """Policy: drain queue in FIFO order, fan out to handlers."""
+        while self._queue:
+            topic, payload = self._queue.pop(0)
+            for handler in self._subscribers.get(topic, []):
+                handler(payload)
+
+    def observe_backlog(self) -> int:
+        return len(self._queue)
+`,
+      nodes: [
+        { id: "n1", label: "EventBus",         role: "HIDDEN_STATE", kind: "CLASS",    confidence: 0.90 },
+        { id: "n2", label: "_subscribers",     role: "HIDDEN_STATE", kind: "VARIABLE", confidence: 0.94 },
+        { id: "n3", label: "_queue",           role: "HIDDEN_STATE", kind: "VARIABLE", confidence: 0.95 },
+        { id: "n4", label: "subscribe",        role: "ACTION",       kind: "METHOD",   confidence: 0.87 },
+        { id: "n5", label: "publish",          role: "ACTION",       kind: "METHOD",   confidence: 0.89 },
+        { id: "n6", label: "dispatch_policy",  role: "POLICY",       kind: "METHOD",   confidence: 0.93 },
+        { id: "n7", label: "observe_backlog",  role: "OBSERVATION",  kind: "METHOD",   confidence: 0.92 },
+      ],
+      edges: [
+        { source: "n1", target: "n2", kind: "CONTAINS" },
+        { source: "n1", target: "n3", kind: "CONTAINS" },
+        { source: "n1", target: "n4", kind: "CONTAINS" },
+        { source: "n1", target: "n5", kind: "CONTAINS" },
+        { source: "n1", target: "n6", kind: "CONTAINS" },
+        { source: "n1", target: "n7", kind: "CONTAINS" },
+        { source: "n4", target: "n2", kind: "WRITES" },
+        { source: "n5", target: "n3", kind: "WRITES" },
+        { source: "n6", target: "n3", kind: "WRITES" },
+        { source: "n6", target: "n2", kind: "READS" },
+        { source: "n7", target: "n3", kind: "READS" },
+      ],
+      gnn: `## ModelName
+EventBus
+
+## StateSpaceBlock
+s_f0[N,1,type=dict]       # EventBus._subscribers
+s_f1[M,1,type=tuple]      # EventBus._queue
+o_f0[1,1,type=int]        # observe_backlog
+pi_f0[1,1,type=policy]    # dispatch_policy
+
+## Connections
+s_f1 > pi_f0
+s_f0 > pi_f0
+pi_f0 > s_f1
+s_f1 > o_f0
+
+## ActInfOntologyAnnotation
+s_f0=HiddenState
+s_f1=HiddenState
+o_f0=Observation
+pi_f0=Policy
+subscribe=ActionTransition
+publish=ActionTransition
+dispatch_policy=PolicySelection
+observe_backlog=ObservationEmission
+`,
+    },
+  };
+
+  // ---------------------------------------------------------------------------
+  // CodeMirror editor setup
+  // ---------------------------------------------------------------------------
+  const editor = CodeMirror(document.getElementById("editor-host"), {
+    value: "",
+    mode: "python",
+    theme: "material-darker",
+    lineNumbers: true,
+    indentUnit: 4,
+    tabSize: 4,
+    lineWrapping: false,
+    styleActiveLine: true,
+  });
+
+  // ---------------------------------------------------------------------------
+  // Cytoscape graph setup
+  // ---------------------------------------------------------------------------
+  const cy = cytoscape({
+    container: document.getElementById("graph-host"),
+    minZoom: 0.4,
+    maxZoom: 2.5,
+    wheelSensitivity: 0.25,
+    style: [
+      {
+        selector: "node",
+        style: {
+          "background-color": "data(color)",
+          "label": "data(label)",
+          "color": "#e6edf3",
+          "font-family": "SF Mono, Menlo, monospace",
+          "font-size": "11px",
+          "font-weight": "600",
+          "text-valign": "bottom",
+          "text-margin-y": 6,
+          "text-outline-color": "#0f1419",
+          "text-outline-width": 2,
+          "width": 32,
+          "height": 32,
+          "border-width": 2,
+          "border-color": "rgba(255,255,255,0.25)",
+          "transition-property": "width height border-color",
+          "transition-duration": "150ms",
+        },
+      },
+      {
+        selector: "node[kind = 'CLASS']",
+        style: { "width": 44, "height": 44, "shape": "round-rectangle" },
+      },
+      {
+        selector: "node[kind = 'METHOD']",
+        style: { "shape": "ellipse" },
+      },
+      {
+        selector: "node[kind = 'VARIABLE']",
+        style: { "shape": "diamond", "width": 28, "height": 28 },
+      },
+      {
+        selector: "node:selected",
+        style: { "border-color": "#58a6ff", "border-width": 3 },
+      },
+      {
+        selector: "edge",
+        style: {
+          "width": 1.5,
+          "line-color": "#3a4250",
+          "target-arrow-color": "#3a4250",
+          "target-arrow-shape": "triangle",
+          "curve-style": "bezier",
+          "label": "data(kind)",
+          "font-size": "9px",
+          "color": "#6e7681",
+          "text-rotation": "autorotate",
+          "text-margin-y": -6,
+        },
+      },
+      {
+        selector: "edge[kind = 'CONTAINS']",
+        style: { "line-style": "dashed", "line-color": "#2a313c", "target-arrow-color": "#2a313c" },
+      },
+      {
+        selector: "edge[kind = 'WRITES']",
+        style: { "line-color": "#F5A623", "target-arrow-color": "#F5A623" },
+      },
+      {
+        selector: "edge[kind = 'READS']",
+        style: { "line-color": "#7ED321", "target-arrow-color": "#7ED321" },
+      },
+    ],
+    layout: { name: "preset" },
+  });
+
+  const tooltip = document.getElementById("tooltip");
+
+  cy.on("mouseover", "node", (evt) => {
+    const n = evt.target.data();
+    const color = ROLE_COLORS[n.role] || "#9B9B9B";
+    tooltip.innerHTML = `
+      <div class="tt-label">${escapeHtml(n.label)}</div>
+      <div class="tt-row"><span>role</span><span style="color:${color}">${n.role}</span></div>
+      <div class="tt-row"><span>kind</span><span>${n.kind}</span></div>
+      <div class="tt-row"><span>confidence</span><span>${n.confidence.toFixed(2)}</span></div>
+    `;
+    tooltip.style.display = "block";
+  });
+
+  cy.on("mousemove", "node", (evt) => {
+    const renderedPos = evt.renderedPosition || evt.target.renderedPosition();
+    const host = document.getElementById("graph-host").getBoundingClientRect();
+    const parent = tooltip.offsetParent.getBoundingClientRect();
+    tooltip.style.left = (host.left - parent.left + renderedPos.x + 18) + "px";
+    tooltip.style.top  = (host.top  - parent.top  + renderedPos.y + 14) + "px";
+  });
+
+  cy.on("mouseout", "node", () => { tooltip.style.display = "none"; });
+
+  // ---------------------------------------------------------------------------
+  // GNN syntax highlighting — light-touch, header/comment/keyword only
+  // ---------------------------------------------------------------------------
+  function renderGnn(text) {
+    const escaped = escapeHtml(text);
+    return escaped
+      .replace(/^(##[^\n]*)/gm, '<span class="k">$1</span>')
+      .replace(/(#[^\n]*)$/gm, (m) => m.startsWith('##') ? m : `<span class="c">${m}</span>`)
+      .replace(/=([A-Z][A-Za-z]+)/g, '=<span class="v">$1</span>');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    })[c]);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Load fixture into all panels
+  // ---------------------------------------------------------------------------
+  let activeKey = null;
+
+  function loadFixture(key) {
+    const fx = FIXTURES[key];
+    if (!fx) return;
+    activeKey = key;
+
+    // Editor
+    editor.setValue(fx.code);
+    document.getElementById("editor-filename").textContent = fx.filename;
+
+    // Graph
+    const elements = [
+      ...fx.nodes.map((n) => ({
+        group: "nodes",
+        data: { ...n, color: ROLE_COLORS[n.role] || "#9B9B9B" },
+      })),
+      ...fx.edges.map((e, i) => ({
+        group: "edges",
+        data: { id: `e${i}`, ...e },
+      })),
+    ];
+
+    cy.elements().remove();
+    cy.add(elements);
+    cy.layout({
+      name: "cose",
+      animate: false,
+      padding: 40,
+      nodeRepulsion: 8000,
+      idealEdgeLength: 90,
+      gravity: 0.25,
+    }).run();
+    cy.fit(undefined, 40);
+
+    document.getElementById("graph-stats").textContent =
+      `${fx.nodes.length} nodes · ${fx.edges.length} edges`;
+
+    // GNN
+    document.getElementById("gnn-output").innerHTML = renderGnn(fx.gnn);
+    document.getElementById("gnn-filename").textContent =
+      fx.filename.replace(/\.py$/, ".gnn");
+
+    // Active button
+    document.querySelectorAll(".example-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.key === key);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Build example selector
+  // ---------------------------------------------------------------------------
+  const listEl = document.getElementById("example-list");
+  Object.entries(FIXTURES).forEach(([key, fx]) => {
+    const btn = document.createElement("button");
+    btn.className = "example-btn";
+    btn.dataset.key = key;
+    btn.innerHTML = `
+      <span class="name">${escapeHtml(fx.name)}</span>
+      <span class="desc">${escapeHtml(fx.description)}</span>
+    `;
+    btn.addEventListener("click", () => loadFixture(key));
+    listEl.appendChild(btn);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Buttons
+  // ---------------------------------------------------------------------------
+  document.getElementById("analyze-btn").addEventListener("click", () => {
+    alert(
+      "Full analysis requires the COGANT Python package — " +
+      "install with: pip install cogant\n\n" +
+      "The in-browser playground shows pre-computed fixture outputs. " +
+      "Run `cogant analyze <path>` locally for live parsing, role inference, " +
+      "and GNN generation on your own code."
+    );
+  });
+
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    if (activeKey) loadFixture(activeKey);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Bootstrap: load first fixture
+  // ---------------------------------------------------------------------------
+  loadFixture("calculator");
+
+  // Re-layout graph on window resize
+  let resizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      cy.resize();
+      cy.fit(undefined, 40);
+    }, 120);
+  });
+  </script>
+</body>
+</html>
