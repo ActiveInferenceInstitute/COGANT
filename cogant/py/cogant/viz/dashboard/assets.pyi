@@ -1,0 +1,2 @@
+DASHBOARD_CSS: str
+DASHBOARD_JS: str

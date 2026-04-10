@@ -1,0 +1,26 @@
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+def get_cache_dir() -> Path: ...
+
+@dataclass(frozen=True)
+class CacheKey:
+    repo_path: str
+    content_hash: str
+    cogant_version: str
+
+@dataclass
+class CacheEntry:
+    key: CacheKey
+    created_at: str
+    stage_results: dict[str, Any]
+    hit: bool = ...
+
+class CacheStore:
+    def __init__(self, cache_dir: Path | None = None, ttl_seconds: int = ...) -> None: ...
+    def get(self, key: CacheKey) -> CacheEntry | None: ...
+    def put(self, key: CacheKey, stage_results: dict[str, Any]) -> CacheEntry: ...
+    def invalidate(self, key: CacheKey) -> bool: ...
+    def clear(self) -> int: ...
+    def stats(self) -> dict[str, Any]: ...
