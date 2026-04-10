@@ -104,6 +104,9 @@ class PipelineConfig:
     """
 
 
+__all__ = ["PipelineConfig", "PipelineRunner"]
+
+
 class PipelineRunner:
     """
     Orchestrates the full analysis pipeline.

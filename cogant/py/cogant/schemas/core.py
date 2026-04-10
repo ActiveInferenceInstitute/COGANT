@@ -6,6 +6,9 @@ from enum import StrEnum
 from typing import Any
 
 
+__all__ = ["NodeKind", "EdgeKind", "Node", "Edge"]
+
+
 class NodeKind(StrEnum):
     """Types of nodes in a program graph."""
     # Code structure

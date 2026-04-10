@@ -11,6 +11,9 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+__all__ = ["Bundle", "ArtifactKey", "_json_default"]
+
+
 def _json_default(obj: Any) -> Any:
     """Best-effort JSON fallback for arbitrary Python objects.
 
@@ -269,7 +272,14 @@ class Bundle:
         return json.dumps(data, indent=2, default=_json_default)
 
     def save_json(self, path: str) -> None:
-        """Save bundle to JSON file."""
+        """Save the bundle to a JSON file at ``path``.
+
+        Calls :meth:`to_json` and writes the result to disk. The file is
+        created or overwritten if it already exists.
+
+        Args:
+            path: Destination file path (string).
+        """
         with open(path, "w") as f:
             f.write(self.to_json())
         logger.info(f"Bundle saved to {path}")

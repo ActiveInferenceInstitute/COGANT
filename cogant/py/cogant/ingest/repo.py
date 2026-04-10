@@ -12,6 +12,8 @@ from cogant.ingest.manifest import Dependency, ManifestParser
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["RepoMetadata", "RepoSnapshot", "RepoIngester"]
+
 
 @dataclass
 class RepoMetadata:

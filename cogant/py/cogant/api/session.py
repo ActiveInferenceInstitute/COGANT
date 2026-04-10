@@ -15,6 +15,9 @@ from cogant.api.bundle import Bundle
 logger = logging.getLogger(__name__)
 
 
+__all__ = ["Session"]
+
+
 @dataclass
 class Session:
     """

@@ -8,6 +8,8 @@ from cogant.schemas.semantic import (
     SemanticMapping,
 )
 
+__all__ = ["ConfidenceModel"]
+
 
 class ConfidenceModel:
     """Computes and manages confidence scores for semantic mappings.

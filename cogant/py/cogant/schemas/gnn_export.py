@@ -17,6 +17,28 @@ from pydantic import ConfigDict, Field
 
 from .base import CogantBaseModel
 
+__all__ = [
+    "GNNExportBundle",
+    "GNNMetadata",
+    "RepositoryMetadata",
+    "SourceCoverage",
+    "GraphSection",
+    "ObservationModalitySection",
+    "ActionPolicySection",
+    "ConnectionSection",
+    "FactorSection",
+    "TransitionStructureSection",
+    "LikelihoodStructureSection",
+    "PreferenceConstraintSection",
+    "TimeSettingSection",
+    "ParameterizationSection",
+    "OntologyMappingSection",
+    "ProvenanceSection",
+    "ConfidenceSection",
+    "RenderingHints",
+    "ValidationNotes",
+]
+
 
 class GNNMetadata(CogantBaseModel):
     """Metadata about the GNN export."""

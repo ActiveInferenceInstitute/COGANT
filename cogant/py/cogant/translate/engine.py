@@ -13,6 +13,8 @@ from cogant.translate.confidence import ConfidenceModel
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["RuleExplanation", "TranslationRule", "TranslationEngine"]
+
 
 @dataclass
 class RuleExplanation:

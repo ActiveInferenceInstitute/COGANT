@@ -19,6 +19,8 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["ExecutionTrace", "GNNModelRunner"]
+
 # Import Active Inference components
 try:
     from cogant.simulate.free_energy import FreeEnergyCalculator

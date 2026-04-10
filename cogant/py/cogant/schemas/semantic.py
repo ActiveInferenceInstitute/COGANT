@@ -6,6 +6,9 @@ from enum import StrEnum
 from typing import Any
 
 
+__all__ = ["MappingKind", "ConfidenceTier", "ProvenanceRecord", "SemanticMapping"]
+
+
 class MappingKind(StrEnum):
     """Types of semantic mappings."""
     # Observation and action modalities

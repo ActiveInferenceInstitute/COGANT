@@ -7,6 +7,8 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["FileInfo", "FileEnumerator", "LANGUAGE_EXTENSIONS", "TEST_PATTERNS", "IGNORE_PATTERNS"]
+
 
 LANGUAGE_EXTENSIONS = {
     "python": {".py", ".pyx", ".pyi"},

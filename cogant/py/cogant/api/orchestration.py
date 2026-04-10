@@ -50,6 +50,21 @@ from cogant.validate.schema_check import SchemaValidator
 logger = logging.getLogger(__name__)
 
 
+__all__ = [
+    "run_ingest",
+    "run_static",
+    "run_normalize",
+    "run_graph",
+    "run_translate",
+    "run_statespace",
+    "run_process",
+    "run_export",
+    "run_validate",
+    "run_dynamic",
+    "program_graph_to_dict",
+]
+
+
 def _repo_uri(target: str) -> str:
     """Normalize a target into a canonical repository URI.
 
@@ -97,7 +112,22 @@ def _serialize_edge(e: Any) -> dict[str, Any]:
 
 
 def program_graph_to_dict(pg: ProgramGraph, statistics: dict[str, Any] | None = None) -> dict[str, Any]:
-    """JSON-friendly program graph summary."""
+    """Serialize a ProgramGraph to a JSON-friendly summary dict.
+
+    Converts all node and edge dataclasses to plain dicts with enum
+    values coerced to strings. The result is suitable for ``json.dump``
+    without a custom encoder.
+
+    Args:
+        pg: The finalized program graph to serialize.
+        statistics: Optional statistics dict (e.g. from
+            ``ProgramGraphBuilder.get_statistics()``) to embed under
+            the ``"statistics"`` key.
+
+    Returns:
+        Dict with keys ``type``, ``metadata``, ``nodes``, ``edges``,
+        and ``statistics``.
+    """
     return {
         "type": "program_graph",
         "metadata": {

@@ -16,6 +16,15 @@ from cogant.schemas.semantic import MappingKind, SemanticMapping
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "StateVariableType",
+    "ConfidenceLevel",
+    "map_confidence_score",
+    "StateVariable",
+    "FactorizationInfo",
+    "StateVariableExtractor",
+]
+
 
 class StateVariableType(StrEnum):
     """Classification of state variables."""
@@ -76,7 +85,28 @@ def map_confidence_score(confidence_score: float) -> ConfidenceLevel:
 
 @dataclass
 class StateVariable:
-    """A state variable in the system."""
+    """A hidden-state variable extracted from the program graph.
+
+    Represents one factor of the system's hidden state as identified
+    by a ``HIDDEN_STATE`` semantic mapping. Downstream consumers
+    (``GNNMatrices``, ``StateSpaceCompiler``) use these to build the
+    B transition tensor and D prior vector.
+
+    Attributes:
+        id: Stable identifier (``var_<node_id>``).
+        name: Human-readable name derived from the graph node.
+        var_type: Inferred variable type (boolean, discrete, continuous, …).
+        node_id: Graph node id marked as HIDDEN_STATE.
+        cardinality: Number of discrete states (None for continuous).
+        domain: Optional list of explicit domain values.
+        factors: Optional list of factor ids for factored representations.
+        is_discrete: True when cardinality is finite.
+        confidence: Confidence level of the extraction.
+        description: Optional free-text description.
+        mutations: Edge IDs of WRITES edges touching this variable.
+        reads: Edge IDs of READS edges touching this variable.
+        observable: True when this variable also has an OBSERVATION mapping.
+    """
     id: str
     name: str
     var_type: StateVariableType

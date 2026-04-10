@@ -6,6 +6,8 @@ from typing import Any
 
 from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
 
+__all__ = ["GraphMetadata", "ProgramGraph"]
+
 
 @dataclass
 class GraphMetadata:

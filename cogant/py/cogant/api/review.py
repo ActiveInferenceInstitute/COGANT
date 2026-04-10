@@ -8,6 +8,9 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+__all__ = ["ReviewableMapping", "ReviewAPI"]
+
+
 @dataclass
 class ReviewableMapping:
     """Single mapping available for review."""
