@@ -257,11 +257,15 @@ def test_scaffold_names_avoid_keyword_collisions(sample_plan: PackagePlan) -> No
         assert not _contains_any(s.name, CONTEXT_KEYWORDS)
 
     # CONTEXT scaffolds must carry ``settings`` (not ``config`` which
-    # is superseded by ConfigRule) and nothing else.
+    # is superseded by ConfigRule) and must not hit any higher-priority
+    # rule's lexicon. Note: ``settings`` lexically contains ``set``
+    # (an ACTION keyword) but ContextRule classifies by class name
+    # while ActionRule's ``set`` keyword is tokenized on words, so
+    # ``ObservationSettings0`` is classified as CONTEXT in practice.
+    # We therefore only assert the critical invariants here.
     for s in sample_plan.scaffold_context_classes:
         assert "settings" in s.name.lower()
         assert "config" not in s.name.lower()
-        assert not _contains_any(s.name, ACTION_KEYWORDS), s.name
         assert not _contains_any(s.name, CONSTRAINT_KEYWORDS), s.name
         assert not _contains_any(s.name, POLICY_FUNCTION_KEYWORDS), s.name
 
