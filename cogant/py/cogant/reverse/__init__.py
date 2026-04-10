@@ -53,6 +53,7 @@ from cogant.reverse.idempotency import (
     verify_repo_roundtrip,
     verify_roundtrip,
 )
+from cogant.reverse.callable import MatrixFunctions, make_matrix_functions
 from cogant.reverse.metrics import (
     DEFAULT_ISOMORPHISM_THRESHOLD,
     IsomorphismReport,
@@ -79,4 +80,6 @@ __all__ = [
     "compare_graph_structure",
     "compute_isomorphism_report",
     "DEFAULT_ISOMORPHISM_THRESHOLD",
+    "MatrixFunctions",
+    "make_matrix_functions",
 ]
