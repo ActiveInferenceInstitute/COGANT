@@ -64,7 +64,13 @@ def _shape_to_ints(shape: list[int] | None, idx: int) -> int:
 # ---------------------------------------------------------------------------
 
 def run_zoo_fixture(fixture_path: Path) -> dict[str, Any]:
-    """Run roundtrip via cogant Python API on a zoo fixture directory."""
+    """Run roundtrip via cogant Python API on a zoo fixture directory.
+
+    ``verify_repo_roundtrip`` now returns a ``RoundtripResult`` dataclass
+    (post-wave-16). Shape fields are derived from the role multisets
+    (``original_roles`` / ``synthesized_roles``) rather than a deprecated
+    ``state_space_shape`` list.
+    """
     try:
         from cogant.reverse.idempotency import verify_repo_roundtrip  # type: ignore[import]
     except ImportError as exc:
@@ -74,32 +80,41 @@ def run_zoo_fixture(fixture_path: Path) -> dict[str, Any]:
         ) from exc
 
     t0 = time.perf_counter()
-    report = verify_repo_roundtrip(fixture_path)
+    result = verify_repo_roundtrip(fixture_path)
     elapsed = time.perf_counter() - t0
 
-    orig = report.get("original_gnn", {})
-    synth = report.get("synthesized_gnn", {})
-
-    orig_shape = orig.get("state_space_shape", [])
-    synth_shape = synth.get("state_space_shape", [])
+    orig_roles: dict[str, int] = result.original_roles
+    synth_roles: dict[str, int] = result.synthesized_roles
 
     return {
-        "epsilon": float(report.get("role_match_score", 0.0)),
-        "orig_n_hidden": _shape_to_ints(orig_shape, 0),
-        "orig_n_obs": _shape_to_ints(orig_shape, 1),
-        "orig_n_actions": _shape_to_ints(orig_shape, 2),
-        "synth_n_hidden": _shape_to_ints(synth_shape, 0),
-        "synth_n_obs": _shape_to_ints(synth_shape, 1),
-        "synth_n_actions": _shape_to_ints(synth_shape, 2),
+        "epsilon": float(result.role_match_score),
+        "orig_n_hidden": orig_roles.get("HIDDEN_STATE", 0),
+        "orig_n_obs": orig_roles.get("OBSERVATION", 0),
+        "orig_n_actions": orig_roles.get("ACTION", 0),
+        "synth_n_hidden": synth_roles.get("HIDDEN_STATE", 0),
+        "synth_n_obs": synth_roles.get("OBSERVATION", 0),
+        "synth_n_actions": synth_roles.get("ACTION", 0),
         "elapsed_s": round(elapsed, 3),
     }
 
 
 def run_subprocess_roundtrip(target_path: Path) -> dict[str, Any]:
-    """Run roundtrip via ``cogant roundtrip <path> --json`` subprocess."""
+    """Run roundtrip via ``cogant roundtrip <path> --json`` subprocess.
+
+    Uses the ``cogant`` console-script entry-point rather than
+    ``python -m cogant``, which is not supported post-wave-16. The JSON
+    payload now carries ``original_roles`` / ``synthesized_roles`` dicts
+    (role-name → count) instead of the former ``original_gnn.state_space_shape``
+    list.
+    """
+    # Locate the cogant console-script inside the venv managed by uv.
+    # Prefer the venv binary so we don't rely on a global install.
+    venv_cogant = REPO_ROOT / ".venv" / "bin" / "cogant"
+    cogant_bin = str(venv_cogant) if venv_cogant.exists() else "cogant"
+
     t0 = time.perf_counter()
     result = subprocess.run(
-        [sys.executable, "-m", "cogant", "roundtrip", str(target_path), "--json"],
+        [cogant_bin, "roundtrip", str(target_path), "--json"],
         capture_output=True,
         text=True,
         cwd=REPO_ROOT,
@@ -107,27 +122,33 @@ def run_subprocess_roundtrip(target_path: Path) -> dict[str, Any]:
     )
     elapsed = time.perf_counter() - t0
 
-    if result.returncode != 0:
+    if result.returncode not in (0, 1):
+        # rc=1 means not-isomorphic but the run succeeded; only hard errors matter.
         raise RuntimeError(
             f"cogant roundtrip failed for {target_path.name} "
             f"(rc={result.returncode}):\n{result.stderr[:2000]}"
         )
 
-    data = json.loads(result.stdout)
-    orig = data.get("original_gnn", {})
-    synth = data.get("synthesized_gnn", {})
+    # The CLI prints JSON to stdout; stderr carries log lines — strip those.
+    stdout = result.stdout.strip()
+    if not stdout:
+        raise RuntimeError(
+            f"cogant roundtrip produced no JSON output for {target_path.name}."
+            f"\nstderr: {result.stderr[:2000]}"
+        )
+    data = json.loads(stdout)
 
-    orig_shape = orig.get("state_space_shape", [])
-    synth_shape = synth.get("state_space_shape", [])
+    orig_roles: dict[str, int] = data.get("original_roles", {})
+    synth_roles: dict[str, int] = data.get("synthesized_roles", {})
 
     return {
         "epsilon": float(data.get("role_match_score", 0.0)),
-        "orig_n_hidden": _shape_to_ints(orig_shape, 0),
-        "orig_n_obs": _shape_to_ints(orig_shape, 1),
-        "orig_n_actions": _shape_to_ints(orig_shape, 2),
-        "synth_n_hidden": _shape_to_ints(synth_shape, 0),
-        "synth_n_obs": _shape_to_ints(synth_shape, 1),
-        "synth_n_actions": _shape_to_ints(synth_shape, 2),
+        "orig_n_hidden": orig_roles.get("HIDDEN_STATE", 0),
+        "orig_n_obs": orig_roles.get("OBSERVATION", 0),
+        "orig_n_actions": orig_roles.get("ACTION", 0),
+        "synth_n_hidden": synth_roles.get("HIDDEN_STATE", 0),
+        "synth_n_obs": synth_roles.get("OBSERVATION", 0),
+        "synth_n_actions": synth_roles.get("ACTION", 0),
         "elapsed_s": round(elapsed, 3),
     }
 
