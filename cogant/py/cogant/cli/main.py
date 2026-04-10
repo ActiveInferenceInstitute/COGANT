@@ -32,6 +32,7 @@ from cogant.api.pipeline import PipelineRunner, PipelineConfig
 from cogant.api.bundle import Bundle
 from cogant.api.review import ReviewAPI
 from cogant.cli.doctor import doctor_command, run_doctor, render_report
+from cogant.cli.plugin import plugin_app
 from cogant.reverse.cli import reverse_command, roundtrip_command
 
 # Setup logging
@@ -1346,6 +1347,9 @@ app.command(name="reverse", help="Synthesize a Python package from a GNN markdow
 app.command(name="roundtrip", help="Verify forward-reverse-forward round-trip isomorphism.")(
     roundtrip_command
 )
+
+# Plugin management subcommands (cogant plugin list / cogant plugin info)
+app.add_typer(plugin_app, name="plugin")
 
 
 if __name__ == "__main__":

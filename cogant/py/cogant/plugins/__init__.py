@@ -13,8 +13,16 @@ from cogant.plugins.base import (
     ValidationPlugin,
     VisualizationPlugin,
 )
+from cogant.plugins.registry import PluginInfo, PluginRegistry
+
+
+def discover_plugins() -> list[PluginInfo]:
+    """Convenience wrapper: discover all installed COGANT plugins."""
+    return PluginRegistry().discover()
+
 
 __all__ = [
+    # Base protocols
     "Plugin",
     "PluginMetadata",
     "LanguagePlugin",
@@ -26,4 +34,8 @@ __all__ = [
     "ExportPlugin",
     "ValidationPlugin",
     "VisualizationPlugin",
+    # Registry
+    "PluginInfo",
+    "PluginRegistry",
+    "discover_plugins",
 ]
