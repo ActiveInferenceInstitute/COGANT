@@ -149,12 +149,14 @@ nav:
       - Testing Strategy: architecture/testing_strategy.md
       - Concurrency: architecture/concurrency_parallelism.md
   - Theory:
+      - Overview: theory/README.md
       - Active Inference Mapping: theory/active_inference.md
       - Active Inference Primer: theory/active_inference_primer.md
       - Code as Generative Model: theory/code_as_generative_model.md
       - GNN Format: theory/gnn_format.md
       - GNN Format Reference: theory/gnn_format_reference.md
       - Isomorphism Theorem: theory/isomorphism.md
+      - Contributing Notes: theory/AGENTS.md
   - Plugins:
       - Overview: plugins/overview.md
       - Language Parser: plugins/language_parser_plugin.md

@@ -2,7 +2,7 @@
 
 Generated: 2026-04-10
 Author: COGANT multi-agent development system
-Version: v0.4.0
+Version: v0.5.0
 
 ---
 
@@ -34,13 +34,13 @@ perception-action cycle runs on it with provably correct free energy (VFE=0.0).*
 
 ---
 
-## End State (v0.4.0, 2026-04-10)
+## End State (v0.5.0, 2026-04-10)
 
 | Metric | Value |
 |---|---|
-| Tests passing | **1945** |
-| Coverage | **86%** |
-| mypy strict | **CLEAN — 0 errors, 177 source files** |
+| Tests passing | **2,146 / 0 failing** |
+| Coverage | **87%** |
+| mypy strict | **CLEAN — 0 errors** |
 | Reverse pipeline | complete (parse → plan → synthesize) |
 | Runtime | complete (AgentRuntime, step/convergence/VFE) |
 | Docs site | mkdocs-material + GitHub Pages workflow |
@@ -48,9 +48,12 @@ perception-action cycle runs on it with provably correct free energy (VFE=0.0).*
 | Empirical claim | **CONFIRMED — 4 AI cycles validated** |
 | Languages | Python + JavaScript + TypeScript (tree-sitter) |
 | Real-world eval | **8/8 repos pass forward pipeline** |
-| Roundtrip ε | **19/23 ISOMORPHIC (83%)** |
+| Roundtrip ε | **14/23 ISOMORPHIC, 6/23 APPROXIMATE, 3/23 DIVERGENT at ε≥0.8** (pre-wave-16 benchmark, JSONL ground truth) |
 | Zoo examples | 12 hand-crafted POMDP examples |
-| Version | v0.4.0 tagged |
+| Version | v0.5.0 |
+
+> **Note:** wave-16 synthesizer improvements (POLICY/CONTEXT stubs) are not yet re-benchmarked.
+> Re-run `cogant/evaluation/dataset/regenerate.py` to update roundtrip numbers.
 
 ---
 
@@ -85,13 +88,21 @@ Extended claim (zoo/02_observer, zoo/04_pomdp_minimal, zoo/06_hierarchical):
 
 ## Roundtrip ε Evaluation (23 targets)
 
-### Before CONSTRAINT fix (wave 9 baseline)
+### Pre-wave-16 benchmark (JSONL ground truth, current)
+- ISOMORPHIC (ε≥0.8): **14/23**
+- APPROXIMATE (0.5≤ε<0.8): **6/23**
+- DIVERGENT (ε<0.5): **3/23**
+
+> **Note:** These are the v0.5.0 numbers from the JSONL ground-truth dataset. Wave-16
+> synthesizer improvements (POLICY/CONTEXT stubs) have not yet been re-benchmarked.
+
+### Historical: Before CONSTRAINT fix (wave 9 baseline)
 - ISOMORPHIC (ε≥0.8): 14/23 (61%)
 - APPROXIMATE (0.5≤ε<0.8): 6/23 (26%)
 - DIVERGENT (ε<0.5): 3/23 (13%)
 
-### After CONSTRAINT fix (wave 14, commit ee96a34)
-- ISOMORPHIC (ε≥0.8): **19/23 (83%)**
+### Historical: After CONSTRAINT fix (wave 14, commit ee96a34)
+- ISOMORPHIC (ε≥0.8): 19/23 (83%)
 - APPROXIMATE: ~3/23 (13%)
 - DIVERGENT: ~1/23 (4%) or 0
 
