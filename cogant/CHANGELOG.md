@@ -3,6 +3,33 @@
 All notable changes to COGANT are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-04-10
+
+### Added
+- CONSTRAINT synthesizer: proportional `check_*` stubs — variable-count assertion scaffolding matching origin GNN role counts (was fixed 3-4 stubs)
+- Empirical claim extended: full 10-step Active Inference cycles on zoo/02_observer, zoo/04_pomdp_minimal, zoo/06_hierarchical
+- mypy strict: 0 errors across 177 source files (was 163 at v0.3.0 start)
+- Coverage: 81% total (was 76% at v0.3.0)
+- tree-sitter multi-language parser: JS/TS + Python fallback
+- Tutorial notebooks: 6 Jupyter notebooks (01-06)
+- Interactive playground: single-file HTML with cytoscape.js + CodeMirror
+- mkdocs-material docs site + GitHub Pages workflow
+- ROUNDTRIP_EVAL.md: 23-target roundtrip ε evaluation — now 19/23 ISOMORPHIC (83%) after CONSTRAINT fix
+
+### Fixed
+- CONSTRAINT role collapse: `cnst_` prefix not detected by forward pipeline's PreferenceRule → now emits `check_` prefix proportional to origin count
+- model_name default lowercased: `CogantModel` → `cogant_model` (law7 property enforcement)
+- MatrixFunctions public/private split: AgentRuntime now reads A/B/C/D correctly
+- Parser ontology fallback: non-standard variable names (s_hidden, o_sensor) now classified via ActInfOntologyAnnotation
+
+### Improved
+- Roundtrip ε: 14/23 ISOMORPHIC (61%) → 19/23 ISOMORPHIC (83%) after CONSTRAINT fix
+- Real-world eval: 8/8 repos pass forward pipeline
+- Type annotations: 50+ modules updated to modern Python typing (Counter[str], list[T])
+
+### Performance
+- Dulwich scaling cliff documented: 1.80 e/n ratio → 380s / 8.5 GB (known issue, wave 15 target)
+
 ## [0.2.0] - 2026-04-09
 
 ### Added
