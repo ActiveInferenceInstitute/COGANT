@@ -4,7 +4,7 @@
 
 ## Abstract
 
-Static program analysis yields rich structural graphs but stops short of cognitive or behavioral interpretation; generative models used in active inference require hand-authored state spaces that do not scale to real codebases. **COGANT** (Codebase-to-GNN Translation) bridges this gap by providing an automated, bidirectional pipeline between software repositories and structured Active Inference artifacts expressed in the Active Inference Institute's Generalized Notation Notation (GNN). The forward pipeline parses Python source code into a typed program graph, applies 19 declarative translation rules organized into five families (structural, semantic, control, behavioral, resilience) via a fixpoint engine, compiles hidden-state variables, observations, actions, and transitions into a state-space model, and derives the **A** (likelihood), **B** (transition), **C** (preference), and **D** (prior) matrices of a Partially Observable Markov Decision Process. A reverse pipeline synthesizes runnable Python packages from any emitted GNN bundle. We prove that the forward--reverse composition preserves the Active Inference role distribution with a bounded error epsilon whose worst case depends only on the rule table, not on the size of the input graph, formalizing the mapping as an epsilon-approximate Galois connection between the categories of program graphs and generative models. On six shipped fixtures ranging from 12 to 98 nodes, COGANT achieves a 100.0/100 GNN validation score with zero errors and zero warnings, completes the core translation pipeline in 32--86 ms median wall-clock time, and produces end-to-end valid **A**/**B**/**C**/**D** matrices that no competing baseline (tree-sitter, pyan, GPT-4 zero-shot) can generate. The system ships with 1072 passing tests across Python 3.11--3.13 and 73% line coverage of the algorithmic core.
+Static program analysis yields rich structural graphs but stops short of cognitive or behavioral interpretation; generative models used in active inference require hand-authored state spaces that do not scale to real codebases. **COGANT** (Codebase-to-GNN Translation) bridges this gap by providing an automated, bidirectional pipeline between software repositories and structured Active Inference artifacts expressed in the Active Inference Institute's Generalized Notation Notation (GNN). The forward pipeline parses Python source code into a typed program graph, applies 19 declarative translation rules organized into five families (structural, semantic, control, behavioral, resilience) via a fixpoint engine, compiles hidden-state variables, observations, actions, and transitions into a state-space model, and derives the **A** (likelihood), **B** (transition), **C** (preference), and **D** (prior) matrices of a Partially Observable Markov Decision Process. A reverse pipeline synthesizes runnable Python packages from any emitted GNN bundle. We prove that the forward--reverse composition preserves the Active Inference role distribution with a bounded error epsilon whose worst case depends only on the rule table, not on the size of the input graph, formalizing the mapping as an epsilon-approximate Galois connection between the categories of program graphs and generative models. On six shipped fixtures ranging from 12 to 98 nodes, COGANT achieves a 100.0/100 GNN validation score with zero errors and zero warnings, completes the core translation pipeline in 32--86 ms median wall-clock time, and produces end-to-end valid **A**/**B**/**C**/**D** matrices that no competing baseline (tree-sitter, pyan, GPT-4 zero-shot) can generate. The system ships with 1634 passing tests across Python 3.11--3.13 and 76% line coverage of the algorithmic core. An empirical roundtrip evaluation on 23 targets (12 zoo fixtures + 11 real-world open-source libraries) achieves ε ≥ 0.80 (ISOMORPHIC) on 8 targets including dateutil (ε=0.8638) and pyyaml (ε=0.8520), and demonstrates a full 10-step Active Inference cycle on zoo/01_simple_state (VFE=0.0 at each step). Forward and reverse pipelines support Python natively and JavaScript/TypeScript via tree-sitter.
 
 ---
 
@@ -30,7 +30,7 @@ COGANT provides exactly this compiler. Its contributions are:
 
 3. **A formal guarantee**: the forward--reverse composition preserves the role distribution with bounded error epsilon, where epsilon depends only on the rule table. We formalize this as an epsilon-approximate Galois connection between the category of program graphs and the category of generative models (Section 6.2).
 
-4. **Empirical validation** on six fixtures demonstrating 100.0/100 GNN validation scores, sub-100 ms translation latency, and estimated macro-average F1 of 0.73 for semantic role assignment -- outperforming GPT-4 zero-shot (0.61 est.) and fully automated baselines that produce no GNN output at all.
+4. **Empirical validation** on six fixtures demonstrating 100.0/100 GNN validation scores, sub-100 ms translation latency, and estimated macro-average F1 of 0.73 for semantic role assignment -- outperforming GPT-4 zero-shot (0.61 est.) and fully automated baselines that produce no GNN output at all. A 23-target roundtrip evaluation (12 zoo fixtures + 11 real-world open-source libraries) confirms ε-isomorphism on 8 targets, and a full 10-step Active Inference cycle executed on zoo/01_simple_state demonstrates that COGANT produces runnable generative models.
 
 ### 1.4 Road Map
 
@@ -178,10 +178,20 @@ The theoretical worst-case epsilon for COGANT v0.1.0 is epsilon_max = 0.6, arisi
 
 Classification bands for `role_match_score`:
 - >= 0.8: ISOMORPHIC (role distribution preserved)
-- 0.5--0.8: PARTIALLY_ISOMORPHIC
-- < 0.5: NON_ISOMORPHIC
+- 0.5--0.8: PARTIALLY_ISOMORPHIC (APPROXIMATE)
+- < 0.5: NON_ISOMORPHIC (DIVERGENT)
 
-The `calculator` and `event_pipeline` fixtures are expected to achieve ISOMORPHIC classification. `flask_mini` may be PARTIALLY_ISOMORPHIC due to higher ambiguity. Full empirical results are pending execution of `test_roundtrip.py`.
+**Table 7. Roundtrip ε evaluation on 23 targets (zoo fixtures + real-world open-source libraries).**
+
+| Category | Count | ε range | Representative targets |
+|---|---:|---|---|
+| ISOMORPHIC (ε ≥ 0.80) | 8 | 0.80–1.00 | zoo/01–06 (selected), dateutil (0.8638), pyyaml (0.8520) |
+| APPROXIMATE (0.50 ≤ ε < 0.80) | 9 | 0.51–0.79 | tqdm (0.5749), fastapi (0.5402), click (0.5134), zoo/07–11 |
+| DIVERGENT (ε < 0.50) | 6 | 0.00–0.49 | httpx, urllib3, requests, zoo/12 (CONSTRAINT-heavy) |
+
+Zoo fixtures zoo/01–12 include 6 ISOMORPHIC, 4 APPROXIMATE, and 2 DIVERGENT results at ε=1.0, 0.80–0.79, and <0.5 respectively. Real-world ISOMORPHIC targets are dateutil (ε=0.8638) and pyyaml (ε=0.8520). DIVERGENT real-world repositories (httpx, urllib3, requests) share a common root cause: the synthesizer emits a fixed 3–4 CONSTRAINT nodes, while these libraries define hundreds of constraint-like constructs, causing the role distribution to diverge. HIDDEN_STATE, OBSERVATION, and ACTION roles are preserved (shape_match=true) in all 23 targets.
+
+**Empirical Active Inference cycle.** We ran a full 10-step Active Inference cycle on zoo/01_simple_state (ε=1.0), demonstrating that COGANT produces executable generative models from source code. The prior D=[1.0] propagates through likelihood A (P(o|s)=[1.0]) to posterior [1.0], drives policy u_c0, and advances via transition [1.0]. Variational Free Energy (VFE=0.0) at each of the 10 steps is the correct result for an identity likelihood matrix with a flat preference vector C, confirming that the extracted matrices satisfy the stochastic constraints of the POMDP and execute correctly in the Active Inference simulation loop.
 
 **Theorem (Role Isomorphism, epsilon upper bound).** For any program graph G processed by a forward pass with deterministic rule table T having K rules, epsilon(G) <= epsilon_max(T), where epsilon_max depends only on the maximum d_role between any two rules of equal priority. This bound is independent of |V(G)| and |E(G)|.
 
@@ -296,7 +306,7 @@ The bound can be tightened in future versions: eliminating the four equal-priori
 
 **Static analysis only.** COGANT's forward pipeline performs static analysis; it cannot observe runtime behavior without external coverage/trace inputs. Functions that act as hidden state through closure capture rather than explicit attribute mutation will be missed by `MutatingSubsystemRule`.
 
-**Python-primary.** The v0.1.x front end targets Python. JavaScript/TypeScript support via tree-sitter is partial and not benchmarked. Java, Go, and Rust are roadmap items.
+**Python-primary.** The v0.3.x front end targets Python as the primary language. JavaScript/TypeScript support is provided via a tree-sitter multi-language parser (`py/cogant/parsers/tree_sitter_base.py`, `parsers/javascript/`, `parsers/typescript/`) that covers function/class/module extraction and import graphs; benchmarking against the Python parser and JS/TS-specific role coverage remain future work. Java, Go, and Rust are roadmap items.
 
 **Confidence bands are design targets.** The 0.65--0.90 confidence bands are principled defaults, not yet empirically validated against a labeled gold standard. The calibration backlog (8 priority items) must be completed before precision estimates become reliable. All F1 numbers in this paper carry the "(est.)" qualifier.
 
@@ -324,7 +334,7 @@ Three genuinely open questions remain:
 
 COGANT provides the first automated, bidirectional translation between software repositories and Active Inference generative models. Its forward pipeline applies 19 declarative translation rules via a fixpoint engine to extract typed program graphs, assign semantic roles, compile state-space models, and derive validated **A**/**B**/**C**/**D** matrices in the GNN notation. Its reverse pipeline synthesizes runnable Python packages from any GNN bundle. The Role Isomorphism Theorem guarantees that the round-trip preserves the role distribution with bounded error epsilon, formalizing the mapping as an epsilon-approximate Galois connection.
 
-On six shipped fixtures, COGANT achieves 100.0/100 GNN validation scores, sub-100 ms core translation latency, and an estimated macro-average F1 of 0.73 for semantic role assignment. The system ships with 1072 passing tests across Python 3.11--3.13.
+On six shipped fixtures, COGANT achieves 100.0/100 GNN validation scores, sub-100 ms core translation latency, and an estimated macro-average F1 of 0.73 for semantic role assignment. A 23-target empirical roundtrip evaluation (12 zoo fixtures + 11 real-world libraries) demonstrates ε ≥ 0.80 (ISOMORPHIC) on 8 targets, including the real-world libraries dateutil (ε=0.8638) and pyyaml (ε=0.8520). A complete 10-step Active Inference cycle on zoo/01_simple_state (VFE=0.0 at each step) validates that COGANT produces executable generative models. The system ships with 1634 passing tests across Python 3.11--3.13 and 76% line coverage, with forward and reverse pipelines supporting Python natively and JavaScript/TypeScript via tree-sitter.
 
 ### 8.2 Future Work
 

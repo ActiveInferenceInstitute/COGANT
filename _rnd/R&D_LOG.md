@@ -485,3 +485,42 @@ and context compaction; fixed 6 test failures before committing 96 new tests.
    `MatrixFunctions` must expose both public attrs AND private for internal methods.
 3. **Composability test design** — Tests that import ONLY specific subpackages (no full pipeline)
    are the highest-value validation: they prove standalone usability and catch import leaks.
+
+---
+
+## Wave 10–12 (2026-04-10): Real-world evaluation, empirical claim, multi-language support
+
+### Commits
+```
+7e6387c notebooks 02-06 + law7 fix + ruff/mypy type annotations
+a8bb7a1 playground.html (cytoscape.js + CodeMirror, 3 pre-computed fixtures)
+6ec1bec mkdocs-material nav + GitHub Pages workflow
+c9dead2 tree-sitter multi-language parser (JS/TS + Python fallback)
+dafd391 EMPIRICAL_CLAIM.md + empirical_claim_demo.py
+1232247 ROUNDTRIP_EVAL.md: ε measurement on 23 targets
+5cca793 ruff violations resolved (50+ files, type annotations)
+```
+
+### Deliverables
+1. **Roundtrip ε evaluation**: 23 targets (zoo/01–12 + 11 real-world repos); 8 ISOMORPHIC (ε≥0.80), 9 APPROXIMATE (0.50≤ε<0.80), 6 DIVERGENT (ε<0.50)
+2. **Empirical claim**: Full 10-step Active Inference cycle on zoo/01_simple_state (ε=1.0, VFE=0.0 at each step); prior D=[1.0] → likelihood A=[1.0] → posterior [1.0] → policy u_c0 → transition [1.0]
+3. **Tree-sitter**: JS/TS multi-language parser (`parsers/tree_sitter_base.py`, `parsers/javascript/`, `parsers/typescript/`) + Python AST fallback; both `.ts` and `.tsx` routed correctly
+4. **Playground**: Single-file HTML (cytoscape.js + CodeMirror, 3 pre-computed fixtures) for interactive GNN exploration
+5. **Notebooks**: 6 Jupyter tutorials (01–06) covering forward pipeline, reverse pipeline, roundtrip, and Active Inference simulation
+6. **mkdocs**: Full nav + GitHub Pages workflow
+7. **Quality**: Ruff violations resolved across 50+ files, mypy type annotations, 1634 tests (0 failures), 76% coverage
+
+### Architecture lessons
+- **CONSTRAINT role collapse**: synthesizer emits fixed 3–4 CONSTRAINT nodes; repos with hundreds of constraint-like constructs (httpx, urllib3, requests) fail to roundtrip — closing this gap is wave 14 priority
+- **Role preservation**: HIDDEN_STATE, OBSERVATION, and ACTION preserved in ALL 23 targets (shape_match=true everywhere); divergence is exclusively in CONSTRAINT count
+- **ε metric**: multiset similarity (Jensen-Shannon on role distributions); a coverage-weighted metric or per-role recall alternative would improve DIVERGENT recall without abandoning the Galois connection framing
+- **Real-world forward pipeline**: `translate --no-dynamic` required for all repos (no `scan` dynamic mode yet); dynamic skip is graceful
+
+### Remaining gaps
+- mypy strict: 163 errors in 65 files (typing gaps, PipelineRunner untyped)
+- Coverage: 76% (target: 85%)
+- CONSTRAINT synthesizer: fixed 3–4 nodes vs hundreds in real-world repos
+- Real-world forward pipeline: `translate --no-dynamic` required for all repos (no `scan` dynamic mode yet)
+
+### Resume marker
+Next session: wave 14 — CONSTRAINT synthesizer (emit variable-count CONSTRAINT nodes proportional to CONSTRAINT-role mappings), coverage 85%, mypy strict pass
