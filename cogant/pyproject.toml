@@ -32,6 +32,9 @@ dependencies = [
     "networkx>=3.0",
     "pyarrow>=14.0",
     "duckdb>=0.9",
+    "fastapi>=0.135.3",
+    "httpx>=0.27",
+    "pytest-anyio>=0.0.0",
 ]
 
 [project.optional-dependencies]
