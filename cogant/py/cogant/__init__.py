@@ -11,7 +11,7 @@ preferences, factors, provenance, and confidence — all derived from static
 and dynamic program evidence and all traceable back to source spans.
 """
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 __author__ = "COGANT Contributors"
 
 # Optional Rust acceleration backend. Built from `rust/cogant-ffi` via maturin

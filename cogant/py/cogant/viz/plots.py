@@ -184,7 +184,7 @@ class StaticPlotter:
                 score = getattr(mapping_data, "confidence_score", None)
                 if score is None:
                     score = getattr(mapping_data, "confidence", None)
-                if isinstance(score, (int, float)):
+                if isinstance(score, int | float):
                     confidences.append(float(score))
 
         if not confidences:

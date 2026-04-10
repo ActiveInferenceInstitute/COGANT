@@ -47,7 +47,7 @@ def _json_default(obj: Any) -> Any:
         return str(obj)
     if isinstance(obj, Enum):
         return obj.value
-    if isinstance(obj, (set, frozenset)):
+    if isinstance(obj, set | frozenset):
         return sorted(obj, key=str)
     if hasattr(obj, "__dict__"):
         try:

@@ -118,7 +118,7 @@ class DataFlowAnalyzer:
             for stmt in tree.body
             if not isinstance(
                 stmt,
-                (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef),
+                ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
             )
         ]
         if module_stmts:
@@ -127,7 +127,7 @@ class DataFlowAnalyzer:
 
         # Top-level functions
         for node in tree.body:
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 visitor = DataFlowVisitor(file_path, node.name, node.body)
                 flows.extend(visitor.flows)
             elif isinstance(node, ast.ClassDef):
@@ -136,7 +136,7 @@ class DataFlowAnalyzer:
                     item
                     for item in node.body
                     if not isinstance(
-                        item, (ast.FunctionDef, ast.AsyncFunctionDef)
+                        item, ast.FunctionDef | ast.AsyncFunctionDef
                     )
                 ]
                 if class_body_stmts:
@@ -148,7 +148,7 @@ class DataFlowAnalyzer:
                 # Analyze methods
                 for item in node.body:
                     if isinstance(
-                        item, (ast.FunctionDef, ast.AsyncFunctionDef)
+                        item, ast.FunctionDef | ast.AsyncFunctionDef
                     ):
                         context = f"{node.name}.{item.name}"
                         visitor = DataFlowVisitor(
@@ -496,7 +496,7 @@ class DataFlowVisitor(ast.NodeVisitor):
                 dotted = self._ast_to_dotted(target)
                 if dotted:
                     names.add(dotted)
-            elif isinstance(target, (ast.Tuple, ast.List)):
+            elif isinstance(target, ast.Tuple | ast.List):
                 for elt in target.elts:
                     if isinstance(elt, ast.Name):
                         names.add(elt.id)
@@ -577,7 +577,7 @@ class DataFlowVisitor(ast.NodeVisitor):
 
     def _attribute_root(self, node: ast.AST) -> str | None:
         """Return the root name of an attribute/subscript chain."""
-        while isinstance(node, (ast.Attribute, ast.Subscript)):
+        while isinstance(node, ast.Attribute | ast.Subscript):
             node = node.value
         if isinstance(node, ast.Name):
             return node.id

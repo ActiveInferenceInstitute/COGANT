@@ -526,7 +526,7 @@ class GNNPackageBuilder:
                     return obj.model_dump()
                 if hasattr(obj, "__dict__"):
                     return {k: _to_dict(v) for k, v in vars(obj).items()}
-                if isinstance(obj, (list, tuple)):
+                if isinstance(obj, list | tuple):
                     return [_to_dict(v) for v in obj]
                 if isinstance(obj, dict):
                     return {k: _to_dict(v) for k, v in obj.items()}

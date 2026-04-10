@@ -469,7 +469,7 @@ class GNNModelRunner:
             obs_list = self.state_space["observations"]
             if obs_list:
                 # Pick observation based on state and variable values
-                state_sum = sum(v for v in state.values() if isinstance(v, (int, float)))
+                state_sum = sum(v for v in state.values() if isinstance(v, int | float))
                 obs_idx = int(state_sum * len(obs_list)) % len(obs_list)
                 return str(obs_list[obs_idx].get("name", f"obs_{obs_idx}"))
         return "obs_0"
@@ -634,7 +634,7 @@ class GNNModelRunner:
         new_state = state.copy()
         # Simple state transition: increment numeric values
         for key in new_state:
-            if isinstance(new_state[key], (int, float)):
+            if isinstance(new_state[key], int | float):
                 new_state[key] += 0.1
         new_state[f"step_result_{action}"] = True
         return new_state

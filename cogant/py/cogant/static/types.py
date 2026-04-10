@@ -121,7 +121,7 @@ class TypeInferencer:
 
         # Walk each top-level definition.
         for node in tree.body:
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 type_infos.extend(
                     self._infer_from_function(node, scope="module")
                 )
@@ -239,7 +239,7 @@ class TypeInferencer:
 
         # Method return types and parameters
         for item in node.body:
-            if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef):
                 results.extend(
                     self._infer_from_function(item, scope=node.name)
                 )
@@ -464,7 +464,7 @@ class TypeInferencer:
             return "Any"
         # Detect yield → Iterator
         for sub in ast.walk(func):
-            if isinstance(sub, (ast.Yield, ast.YieldFrom)):
+            if isinstance(sub, ast.Yield | ast.YieldFrom):
                 return "Iterator"
         return None
 

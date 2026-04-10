@@ -196,7 +196,7 @@ class PythonASTParser:
                 cls = self._extract_class(node)
                 if cls:
                     module.classes.append(cls)
-            elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            elif isinstance(node, ast.Import | ast.ImportFrom):
                 imports = self._extract_imports(node)
                 module.imports.extend(imports)
             elif isinstance(node, ast.Assign) or isinstance(node, ast.AnnAssign):
@@ -251,7 +251,7 @@ class PythonASTParser:
                 cls = self._extract_class(node)
                 if cls:
                     module.classes.append(cls)
-            elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            elif isinstance(node, ast.Import | ast.ImportFrom):
                 imports = self._extract_imports(node)
                 module.imports.extend(imports)
             elif isinstance(node, ast.Assign) or isinstance(node, ast.AnnAssign):

@@ -186,7 +186,7 @@ class ModelRunner:
                 current_val = next_state[effect_var]
                 if isinstance(current_val, bool):
                     next_state[effect_var] = not current_val
-                elif isinstance(current_val, (int, float)):
+                elif isinstance(current_val, int | float):
                     next_state[effect_var] = current_val + 1
                 elif isinstance(current_val, str):
                     next_state[effect_var] = f"{current_val}_modified"

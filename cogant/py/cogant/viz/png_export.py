@@ -2098,7 +2098,7 @@ def render_markov_blanket_png(
         if original_total > cfg.max_render_nodes:
             incidence: dict[str, int] = dict.fromkeys(id_to_role, 0)
             for edge_spec in edges_in:
-                if isinstance(edge_spec, (list, tuple)) and len(edge_spec) >= 2:
+                if isinstance(edge_spec, list | tuple) and len(edge_spec) >= 2:
                     s, t = str(edge_spec[0]), str(edge_spec[1])
                 elif isinstance(edge_spec, dict):
                     s, t = str(edge_spec.get("source") or ""), str(edge_spec.get("target") or "")
@@ -2131,7 +2131,7 @@ def render_markov_blanket_png(
                 label=_truncate(label, cfg.max_label_len),
             )
         for edge_spec in edges_in:
-            if isinstance(edge_spec, (list, tuple)) and len(edge_spec) >= 2:
+            if isinstance(edge_spec, list | tuple) and len(edge_spec) >= 2:
                 s_any, t_any = edge_spec[0], edge_spec[1]
             elif isinstance(edge_spec, dict):
                 s_any, t_any = edge_spec.get("source"), edge_spec.get("target")
@@ -2269,12 +2269,12 @@ def render_summary_cover_png(
         n_edges = 0
         nodes = program.get("nodes", [])
         edges = program.get("edges", [])
-        n_nodes = len(nodes) if isinstance(nodes, (list, dict)) else 0
-        n_edges = len(edges) if isinstance(edges, (list, dict)) else 0
+        n_nodes = len(nodes) if isinstance(nodes, list | dict) else 0
+        n_edges = len(edges) if isinstance(edges, list | dict) else 0
 
         n_mappings = 0
         if isinstance(mappings, dict):
-            if "mappings" in mappings and isinstance(mappings["mappings"], (list, dict)):
+            if "mappings" in mappings and isinstance(mappings["mappings"], list | dict):
                 n_mappings = len(mappings["mappings"])
             else:
                 n_mappings = len(mappings)

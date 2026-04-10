@@ -983,14 +983,14 @@ class StateSpaceCompiler:
             return {}
         if isinstance(raw, dict):
             return {name: ty for name, ty in raw.items() if name != "self"}
-        if isinstance(raw, (list, tuple)):
+        if isinstance(raw, list | tuple):
             params: dict[str, Any] = {}
             for entry in raw:
                 if isinstance(entry, dict):
                     name = entry.get("name")
                     if name and name != "self":
                         params[str(name)] = entry.get("type")
-                elif isinstance(entry, (list, tuple)) and len(entry) >= 1:
+                elif isinstance(entry, list | tuple) and len(entry) >= 1:
                     name = entry[0]
                     if name and name != "self":
                         params[str(name)] = entry[1] if len(entry) > 1 else None

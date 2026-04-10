@@ -32,7 +32,7 @@ class SimulationVisualizer:
         fe_values = []
         for step in trace:
             fe = step.get("free_energy", 0.0)
-            if isinstance(fe, (int, float)):
+            if isinstance(fe, int | float):
                 fe_values.append(float(fe))
             else:
                 fe_values.append(0.0)
@@ -397,7 +397,7 @@ class SimulationVisualizer:
         ])
 
         # Add mean free energy if available
-        fe_values = [s.get("free_energy", 0) for s in trace if isinstance(s.get("free_energy"), (int, float))]
+        fe_values = [s.get("free_energy", 0) for s in trace if isinstance(s.get("free_energy"), int | float)]
         if fe_values:
             mean_fe = sum(fe_values) / len(fe_values)
             html_lines.append(

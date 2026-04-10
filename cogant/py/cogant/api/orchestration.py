@@ -561,7 +561,7 @@ def _emit_dataflow_edges(
 
     for node in ast_mod.walk(tree):
         if not isinstance(
-            node, (ast_mod.FunctionDef, ast_mod.AsyncFunctionDef)
+            node, ast_mod.FunctionDef | ast_mod.AsyncFunctionDef
         ):
             continue
         if node.name != method_name:
