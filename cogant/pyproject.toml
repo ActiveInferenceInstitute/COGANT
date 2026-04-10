@@ -96,6 +96,7 @@ markers = [
     "slow: Slow running tests",
     "requires_rust: Tests that require Rust bindings",
     "fuzz: Hypothesis-based fuzz / property tests",
+    "property: Hypothesis property-based correctness law tests",
 ]
 
 [tool.ruff]
