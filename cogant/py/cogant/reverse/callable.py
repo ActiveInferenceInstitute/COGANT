@@ -32,6 +32,23 @@ class MatrixFunctions:
 
     Unlike render_matrices_module (which generates Python source),
     these are Python closures that can be called directly without exec().
+
+    Example:
+        Build a MatrixFunctions instance from a parsed GNN and score an
+        observation distribution::
+
+            from cogant.reverse.parser import ReverseGNNModel
+            from cogant.reverse.callable import MatrixFunctions
+
+            model = ReverseGNNModel()
+            model.hidden_states = ["s_f0", "s_f1"]
+            model.observations = ["o_m0", "o_m1"]
+            model.actions = ["u_c0"]
+            model.A = [[0.9, 0.1], [0.1, 0.9]]
+            model.C = [1.0, 0.0]
+            mf = MatrixFunctions(model)
+            obs = mf.likelihood([0.5, 0.5])
+            assert len(obs) == 2
     """
 
     def __init__(self, model: ReverseGNNModel) -> None:
@@ -159,13 +176,42 @@ class MatrixFunctions:
 
     @classmethod
     def from_gnn_text(cls, gnn_text: str) -> MatrixFunctions:
-        """Convenience: parse GNN markdown and return MatrixFunctions."""
+        """Convenience: parse GNN markdown and return MatrixFunctions.
+
+        Args:
+            gnn_text: The full body of a ``*.gnn.md`` file as a string.
+
+        Returns:
+            A :class:`MatrixFunctions` bound to the parsed model.
+
+        Example:
+            >>> gnn = '''## ModelName\\nDemo\\n\\n## StateSpaceBlock\\ns[2]\\no[2]\\n'''
+            >>> mf = MatrixFunctions.from_gnn_text(gnn)
+            >>> isinstance(mf, MatrixFunctions)
+            True
+        """
         model = parse_gnn(gnn_text)
         return cls(model)
 
 
 def make_matrix_functions(model: ReverseGNNModel) -> MatrixFunctions:
-    """Convenience wrapper -- equivalent to MatrixFunctions(model)."""
+    """Convenience wrapper -- equivalent to MatrixFunctions(model).
+
+    Args:
+        model: A parsed :class:`ReverseGNNModel`.
+
+    Returns:
+        A :class:`MatrixFunctions` bound to ``model``.
+
+    Example:
+        >>> from cogant.reverse.parser import ReverseGNNModel
+        >>> model = ReverseGNNModel()
+        >>> model.hidden_states = ["s_f0", "s_f1"]
+        >>> model.observations = ["o_m0", "o_m1"]
+        >>> mf = make_matrix_functions(model)
+        >>> isinstance(mf, MatrixFunctions)
+        True
+    """
     return MatrixFunctions(model)
 
 

@@ -285,9 +285,31 @@ class RustProgramGraphAdapter:
         return self.finalize()
 
     def node_count(self) -> int:
+        """Return the number of nodes currently buffered in the builder.
+
+        Returns:
+            Count of nodes that will be placed in the finalized
+            :class:`ProgramGraph` view.
+
+        Example:
+            >>> builder = RustProgramGraphBuilder()
+            >>> builder.node_count()
+            0
+        """
         return len(self._nodes)
 
     def edge_count(self) -> int:
+        """Return the number of edges currently buffered in the builder.
+
+        Returns:
+            Count of edges that will be placed in the finalized
+            :class:`ProgramGraph` view.
+
+        Example:
+            >>> builder = RustProgramGraphBuilder()
+            >>> builder.edge_count()
+            0
+        """
         return len(self._edges)
 
 

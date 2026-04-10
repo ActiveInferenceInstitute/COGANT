@@ -44,7 +44,19 @@ from cogant.schemas.graph import ProgramGraph
 
 @dataclass
 class BlanketNetwork:
-    """Collapsed four-node Active Inference network view of a blanket."""
+    """Collapsed four-node Active Inference network view of a blanket.
+
+    Example:
+        >>> from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        >>> from cogant.markov.blanket import partition_by_seeds
+        >>> graph = ProgramGraph(metadata=GraphMetadata(repo_uri="demo"))
+        >>> blanket = partition_by_seeds(graph, seeds=[])
+        >>> net = build_blanket_network(graph, blanket)
+        >>> isinstance(net, BlanketNetwork)
+        True
+        >>> "graph LR" in net.to_mermaid()
+        True
+    """
 
     role_counts: dict[str, int]
     """Number of concrete nodes per role (``internal``, ``sensory``, …)."""
@@ -114,6 +126,15 @@ def build_blanket_network(
 
     Returns:
         A :class:`BlanketNetwork` summarising the collapsed view.
+
+    Example:
+        >>> from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        >>> from cogant.markov.blanket import partition_by_seeds
+        >>> graph = ProgramGraph(metadata=GraphMetadata(repo_uri="demo"))
+        >>> blanket = partition_by_seeds(graph, seeds=[])
+        >>> network = build_blanket_network(graph, blanket)
+        >>> sorted(network.role_counts.keys())
+        ['active', 'external', 'internal', 'sensory']
     """
     aggregate: dict[tuple[str, str], int] = defaultdict(int)
     kind_break: dict[tuple[str, str], dict[str, int]] = defaultdict(lambda: defaultdict(int))

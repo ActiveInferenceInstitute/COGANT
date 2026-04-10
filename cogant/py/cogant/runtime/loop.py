@@ -162,6 +162,21 @@ class AgentRuntime:
 
     Args:
         matrices: A module or namespace with A, B, C, D attributes.
+
+    Example:
+        Build a runtime from raw POMDP matrices and run three perception
+        steps::
+
+            from cogant.runtime.loop import AgentRuntime
+
+            rt = AgentRuntime.from_matrices_dict({
+                "A": [[0.9, 0.1], [0.1, 0.9]],
+                "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+                "C": [1.0, 0.0],
+                "D": [0.5, 0.5],
+            })
+            steps = rt.run_n_steps(3)
+            assert len(steps) == 3
     """
 
     def __init__(self, matrices: Any) -> None:
@@ -206,6 +221,16 @@ class AgentRuntime:
 
         Returns:
             An AgentRuntime instance.
+
+        Example:
+            >>> rt = AgentRuntime.from_matrices_dict({
+            ...     "A": [[1.0, 0.0], [0.0, 1.0]],
+            ...     "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+            ...     "C": [0.0, 1.0],
+            ...     "D": [0.5, 0.5],
+            ... })
+            >>> isinstance(rt, AgentRuntime)
+            True
         """
         ns = types.SimpleNamespace(
             A=d["A"],
@@ -237,6 +262,17 @@ class AgentRuntime:
 
         Returns:
             An AgentStep with the updated belief, action, and VFE.
+
+        Example:
+            >>> rt = AgentRuntime.from_matrices_dict({
+            ...     "A": [[0.9, 0.1], [0.1, 0.9]],
+            ...     "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+            ...     "C": [1.0, 0.0],
+            ...     "D": [0.5, 0.5],
+            ... })
+            >>> s = rt.step([0.5, 0.5], obs_idx=0, t=0)
+            >>> s.t, len(s.state_dist)
+            (0, 2)
         """
         # 1. Predicted observations
         self._likelihood(state_dist)
@@ -291,6 +327,17 @@ class AgentRuntime:
 
         Returns:
             List of ``n`` AgentStep records.
+
+        Example:
+            >>> rt = AgentRuntime.from_matrices_dict({
+            ...     "A": [[0.9, 0.1], [0.1, 0.9]],
+            ...     "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+            ...     "C": [1.0, 0.0],
+            ...     "D": [0.5, 0.5],
+            ... })
+            >>> steps = rt.run_n_steps(5)
+            >>> [s.t for s in steps]
+            [0, 1, 2, 3, 4]
         """
         state = list(initial_state) if initial_state is not None else list(self.D)
         state = _normalize(state)
@@ -317,6 +364,18 @@ class AgentRuntime:
         Returns:
             List of AgentStep records up to and including the
             converged step.
+
+        Example:
+            >>> from cogant.runtime.config import AgentConfig
+            >>> rt = AgentRuntime.from_matrices_dict({
+            ...     "A": [[0.99, 0.01], [0.01, 0.99]],
+            ...     "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+            ...     "C": [1.0, 0.0],
+            ...     "D": [0.5, 0.5],
+            ... })
+            >>> steps = rt.run_until_convergence(cfg=AgentConfig(max_steps=20))
+            >>> 1 <= len(steps) <= 20
+            True
         """
         if cfg is None:
             cfg = AgentConfig()
@@ -369,6 +428,17 @@ class AgentRuntime:
         Returns:
             An :class:`EpisodeResult` capturing the trajectory and the
             sufficient statistics for learning updates.
+
+        Example:
+            >>> rt = AgentRuntime.from_matrices_dict({
+            ...     "A": [[0.9, 0.1], [0.1, 0.9]],
+            ...     "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+            ...     "C": [1.0, 0.0],
+            ...     "D": [0.5, 0.5],
+            ... })
+            >>> result = rt.run_episode(4)
+            >>> len(result.steps), len(result.final_posterior)
+            (4, 2)
         """
         n_obs = max(self._n_obs, 1)
         n_states = max(self._n_states, 1)
@@ -555,6 +625,17 @@ class AgentRuntime:
         Returns:
             A :class:`MultiEpisodeResult` with per-episode VFE trajectories
             and snapshots of the D prior after each update.
+
+        Example:
+            >>> rt = AgentRuntime.from_matrices_dict({
+            ...     "A": [[0.9, 0.1], [0.1, 0.9]],
+            ...     "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+            ...     "C": [1.0, 0.0],
+            ...     "D": [0.5, 0.5],
+            ... })
+            >>> result = rt.run_multi_episode(n_episodes=3, steps_per_episode=2, learning_rate=0.1)
+            >>> len(result.episodes), len(result.D_trajectory)
+            (3, 3)
         """
         episodes: list[EpisodeResult] = []
         vfe_traj: list[float] = []
@@ -596,6 +677,17 @@ def run_n_steps(
 
     Returns:
         List of AgentStep records.
+
+    Example:
+        >>> from cogant.runtime.loop import AgentRuntime, run_n_steps
+        >>> rt = AgentRuntime.from_matrices_dict({
+        ...     "A": [[1.0, 0.0], [0.0, 1.0]],
+        ...     "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+        ...     "C": [1.0, 0.0],
+        ...     "D": [0.5, 0.5],
+        ... })
+        >>> len(run_n_steps(rt, 2))
+        2
     """
     return runtime.run_n_steps(n, initial_state)
 
@@ -614,6 +706,18 @@ def run_until_convergence(
 
     Returns:
         List of AgentStep records.
+
+    Example:
+        >>> from cogant.runtime.loop import AgentRuntime, run_until_convergence
+        >>> rt = AgentRuntime.from_matrices_dict({
+        ...     "A": [[0.99, 0.01], [0.01, 0.99]],
+        ...     "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+        ...     "C": [1.0, 0.0],
+        ...     "D": [0.5, 0.5],
+        ... })
+        >>> steps = run_until_convergence(rt)
+        >>> len(steps) > 0
+        True
     """
     return runtime.run_until_convergence(initial_state, cfg)
 

@@ -535,10 +535,12 @@ class DataFlowVisitor(ast.NodeVisitor):
             """Collect Name/Attribute loads."""
 
             def visit_Name(self, inner: ast.Name) -> None:
+                """Record plain identifier loads (e.g. ``x``) into the outer name set."""
                 if isinstance(inner.ctx, ast.Load):
                     names.add(inner.id)
 
             def visit_Attribute(self, inner: ast.Attribute) -> None:
+                """Record dotted attribute loads (e.g. ``self.x``) into the outer name set."""
                 if isinstance(inner.ctx, ast.Load):
                     dotted = DataFlowVisitor._ast_to_dotted_static(inner)
                     if dotted:

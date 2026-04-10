@@ -73,6 +73,16 @@ class MarkovBlanket:
     serialization-friendly: ``serialize_blanket`` returns a dictionary
     suitable for JSON, parquet, or YAML output.
 
+    Example:
+        >>> from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        >>> from cogant.markov.blanket import partition_by_seeds
+        >>> graph = ProgramGraph(metadata=GraphMetadata(repo_uri="demo"))
+        >>> blanket = partition_by_seeds(graph, seeds=set())
+        >>> isinstance(blanket, MarkovBlanket)
+        True
+        >>> blanket.boundary_ids
+        set()
+
     Attributes:
         roles: Mapping of node id → :class:`BlanketRole`.
         seeds: The seed set supplied to the partitioner.
@@ -174,6 +184,13 @@ def partition_by_seeds(
         node ∈ seeds  and  all neighbours ∈ seeds         → INTERNAL
         node ∈ seeds  and  ∃ external neighbour           → SENSORY/ACTIVE
         node ∉ seeds                                       → EXTERNAL
+
+    Example:
+        >>> from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        >>> graph = ProgramGraph(metadata=GraphMetadata(repo_uri="demo"))
+        >>> blanket = partition_by_seeds(graph, seeds=[])
+        >>> blanket.stats["total_nodes"]
+        0
     """
     seed_set: set[str] = {s for s in seeds if s in graph.nodes}
 
@@ -300,6 +317,16 @@ def serialize_blanket(
               },
               "metadata": {...}
             }
+
+    Example:
+        >>> from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        >>> graph = ProgramGraph(metadata=GraphMetadata(repo_uri="demo"))
+        >>> blanket = partition_by_seeds(graph, seeds=[])
+        >>> doc = serialize_blanket(blanket, graph)
+        >>> doc["schema_version"]
+        '1.0.0'
+        >>> sorted(doc["roles"].keys())
+        ['active', 'external', 'internal', 'sensory']
     """
 
     def _format(node_ids: Iterable[str]) -> list[dict[str, Any]]:

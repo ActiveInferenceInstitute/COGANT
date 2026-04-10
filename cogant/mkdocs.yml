@@ -59,6 +59,8 @@ nav:
   - Getting Started:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
+  - Guides:
+      - Getting Started (End-to-End): guides/getting_started.md
   - Concepts:
       - What is a GNN?: concepts/gnn.md
       - Active Inference for Programmers: concepts/active_inference.md

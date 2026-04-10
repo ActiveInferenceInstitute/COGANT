@@ -255,12 +255,15 @@ class _BaseExtractor:
     def extract_symbols(
         self, tree: Any, source: bytes, path: str
     ) -> list[ParsedSymbol]:  # pragma: no cover - overridden
+        """Return parsed symbols from a tree-sitter tree (overridden by subclasses)."""
         return []
 
     def extract_imports(self, tree: Any, source: bytes) -> list[dict[str, Any]]:  # pragma: no cover
+        """Return import records from a tree-sitter tree (overridden by subclasses)."""
         return []
 
     def extract_calls(self, tree: Any, source: bytes) -> list[dict[str, Any]]:  # pragma: no cover
+        """Return call records from a tree-sitter tree (overridden by subclasses)."""
         return []
 
 
@@ -270,9 +273,11 @@ class _PythonExtractor(_BaseExtractor):
     def extract_symbols(
         self, tree: Any, source: bytes, path: str
     ) -> list[ParsedSymbol]:
+        """Walk the Python tree-sitter tree and collect class/function symbols."""
         symbols: list[ParsedSymbol] = []
 
         def visit(node: Any, scope: str = "") -> None:
+            """Recurse into ``node`` carrying the current qualified-name ``scope``."""
             if node.type == "function_definition":
                 name_node = node.child_by_field_name("name")
                 if name_node is not None:
@@ -318,9 +323,11 @@ class _PythonExtractor(_BaseExtractor):
         return symbols
 
     def extract_imports(self, tree: Any, source: bytes) -> list[dict[str, Any]]:
+        """Collect ``import`` and ``from ... import`` statements from a Python tree."""
         imports: list[dict[str, Any]] = []
 
         def visit(node: Any) -> None:
+            """Recursively visit ``node`` and append any import statement records."""
             if node.type in ("import_statement", "import_from_statement"):
                 imports.append(
                     {
@@ -336,9 +343,11 @@ class _PythonExtractor(_BaseExtractor):
         return imports
 
     def extract_calls(self, tree: Any, source: bytes) -> list[dict[str, Any]]:
+        """Collect function/method ``call`` nodes from a Python tree."""
         calls: list[dict[str, Any]] = []
 
         def visit(node: Any) -> None:
+            """Recursively visit ``node`` and append any call-site records."""
             if node.type == "call":
                 fn_node = node.child_by_field_name("function")
                 if fn_node is not None:
@@ -379,15 +388,18 @@ class _JavaScriptExtractor(_BaseExtractor):
     def extract_symbols(
         self, tree: Any, source: bytes, path: str
     ) -> list[ParsedSymbol]:
+        """Walk the JS/TS tree-sitter tree and collect class/interface/function symbols."""
         symbols: list[ParsedSymbol] = []
 
         def name_of(node: Any) -> str:
+            """Return the declared name of ``node`` or ``"<anonymous>"``."""
             name_node = node.child_by_field_name("name")
             if name_node is not None:
                 return self._slice(source, name_node)
             return "<anonymous>"
 
         def visit(node: Any, scope: str = "") -> None:
+            """Recurse into ``node`` carrying the current qualified-name ``scope``."""
             if node.type in self._CLASS_TYPES:
                 name = name_of(node)
                 qname = f"{scope}.{name}" if scope else name
@@ -443,9 +455,11 @@ class _JavaScriptExtractor(_BaseExtractor):
         return symbols
 
     def extract_imports(self, tree: Any, source: bytes) -> list[dict[str, Any]]:
+        """Collect ES module ``import`` statements and import clauses from a JS/TS tree."""
         imports: list[dict[str, Any]] = []
 
         def visit(node: Any) -> None:
+            """Recursively visit ``node`` and append any import statement records."""
             if node.type in ("import_statement", "import_clause"):
                 imports.append(
                     {
@@ -461,9 +475,11 @@ class _JavaScriptExtractor(_BaseExtractor):
         return imports
 
     def extract_calls(self, tree: Any, source: bytes) -> list[dict[str, Any]]:
+        """Collect ``call_expression`` nodes from a JS/TS tree."""
         calls: list[dict[str, Any]] = []
 
         def visit(node: Any) -> None:
+            """Recursively visit ``node`` and append any call-site records."""
             if node.type == "call_expression":
                 fn_node = node.child_by_field_name("function")
                 if fn_node is not None:

@@ -104,6 +104,15 @@ class MarkovBlanketExtractor:
         Returns:
             A :class:`MarkovBlanket` with metadata recording the
             strategy and inputs that produced it.
+
+        Example:
+            >>> from cogant.schemas.graph import ProgramGraph, GraphMetadata
+            >>> from cogant.markov.extractor import MarkovBlanketExtractor
+            >>> graph = ProgramGraph(metadata=GraphMetadata(repo_uri="demo"))
+            >>> extractor = MarkovBlanketExtractor(graph)
+            >>> blanket = extractor.extract(strategy="auto")
+            >>> blanket.metadata["strategy"]
+            'auto'
         """
         if strategy == "explicit":
             if not seeds:

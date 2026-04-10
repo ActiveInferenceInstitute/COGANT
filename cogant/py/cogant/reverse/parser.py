@@ -584,6 +584,19 @@ def parse_gnn(gnn: str | Path) -> ReverseGNNModel:
         parsed from the source (e.g. observations when the GNN only
         declares hidden states) remain empty — the caller is expected
         to handle that gracefully.
+
+    Example:
+        >>> from cogant.reverse.parser import parse_gnn
+        >>> gnn = '''## ModelName
+        ... Demo
+        ...
+        ... ## StateSpaceBlock
+        ... s_f0[2,1,type=int]
+        ... o_m0[2,1,type=int]
+        ... '''
+        >>> model = parse_gnn(gnn)
+        >>> model.raw_model_name
+        'Demo'
     """
     if isinstance(gnn, Path):
         text = gnn.read_text(encoding="utf-8")
@@ -606,10 +619,12 @@ def parse_gnn(gnn: str | Path) -> ReverseGNNModel:
     sections = _split_sections(text)
 
     def first(name: str) -> str | None:
+        """Return the first body under section ``name``, or ``None`` if absent."""
         bodies = sections.get(name)
         return bodies[0] if bodies else None
 
     def last(name: str) -> str | None:
+        """Return the last body under section ``name``, or ``None`` if absent."""
         bodies = sections.get(name)
         return bodies[-1] if bodies else None
 
