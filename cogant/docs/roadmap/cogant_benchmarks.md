@@ -134,7 +134,7 @@ Regressions require either (a) an accompanying optimization, (b) a raised target
 
 ### Related documents
 
-- [benchmarks/README.md](../benchmarks/README.md) — low-level benchmark layout and running guide
+- [benchmarks/README.md](https://github.com/cogant-contributors/cogant/blob/main/cogant/benchmarks/README.md) — low-level benchmark layout and running guide
 - [ARCHITECTURE.md](../architecture/README.md) — layered architecture and stage boundaries
 - [Changelog](#changelog) (below) — performance notes per release
 - [AGENTS.md § Contributing](./AGENTS.md#contributing) — PR checklist including benchmark expectations

@@ -6,7 +6,7 @@ R&D notes. Where a term is implemented as a concrete Python object, the module p
 ## A
 
 **A matrix** — Likelihood matrix `P(o | s)`, shape `[n_obs × n_states]`. Encodes how hidden
-states produce observations. See [`py/cogant/gnn/matrices.py`](../../py/cogant/gnn/matrices.py).
+states produce observations. See [`py/cogant/gnn/matrices.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/gnn/matrices.py).
 
 **Action** — An Active Inference role for code that mutates hidden state. Detected by
 `ActionRule`. Examples: setter methods, `handle_request`, `dispatch`, event publishers.

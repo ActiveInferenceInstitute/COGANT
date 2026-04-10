@@ -16,5 +16,5 @@ Roles classify entities for GNN training. Key roles:
 | INHERITANCE | Type hierarchy | `class B(A):` |
 | POLYMORPHISM | Virtual dispatch | `obj.method()` (overridden) |
 
-See [GNN Roles Ontology](../specs/ontology/gnn-roles.md) for complete taxonomy.
+See [GNN Roles Ontology](https://github.com/cogant-contributors/cogant/blob/main/cogant/specs/ontology/gnn-roles.md) for complete taxonomy.
 

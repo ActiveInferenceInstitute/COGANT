@@ -2,7 +2,7 @@
 
 > **Thesis.** A software repository is not merely *describable* as an Active Inference generative model — it **is** one. Program graphs, hidden states, observations, and actions are not analogies borrowed from neuroscience. They are the literal ontology a compiler produces and an interpreter executes.
 
-This page is the informal companion to [`_rnd/ISOMORPHISM_THEOREM.md`](../../_rnd/ISOMORPHISM_THEOREM.md),
+This page is the informal companion to [`_rnd/ISOMORPHISM_THEOREM.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/ISOMORPHISM_THEOREM.md),
 which states the formal version.
 
 ## The core claim
@@ -121,7 +121,7 @@ Each arrow is **content-preserving**:
 
 ## Further reading
 
-- [`_rnd/ISOMORPHISM_THEOREM.md`](../../_rnd/ISOMORPHISM_THEOREM.md) — the formal statement
+- [`_rnd/ISOMORPHISM_THEOREM.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/ISOMORPHISM_THEOREM.md) — the formal statement
   with the proof sketch.
 - [Active Inference primer](active_inference_primer.md) — three-paragraph background if the
   neuroscience vocabulary is new.

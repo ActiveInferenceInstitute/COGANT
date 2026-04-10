@@ -9,7 +9,7 @@ The COGANT Python API provides high-level interfaces for codebase analysis and G
 
 ### Session method index
 
-Public methods on [`Session`](../py/cogant/api/session.py) (use in order for a manual pipeline):
+Public methods on [`Session`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/api/session.py) (use in order for a manual pipeline):
 
 | Method | Section |
 |--------|---------|

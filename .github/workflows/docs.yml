@@ -1,60 +1,30 @@
-name: Deploy docs
+name: Deploy Docs
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'cogant/docs/**'
+      - 'cogant/mkdocs.yml'
   workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
-
-defaults:
-  run:
-    working-directory: cogant
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    defaults:
+      run:
+        working-directory: cogant
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v3
+      - uses: actions/checkout@v4
         with:
-          enable-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v4
         with:
-          python-version: "3.11"
-
-      - name: Install project
-        run: uv sync --extra dev
-
-      - name: Install mkdocs-material + mkdocstrings
-        run: uv add mkdocs-material 'mkdocstrings[python]' --dev
-
-      - name: Build docs
-        run: uv run mkdocs build
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+          version: "latest"
+      - run: uv sync
+      - run: uv run mkdocs build
+      - uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
         with:
-          path: cogant/site/
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: cogant/site

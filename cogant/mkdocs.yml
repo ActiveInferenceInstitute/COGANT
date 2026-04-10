@@ -236,6 +236,15 @@ nav:
       - Performance Targets: roadmap/performance_targets.md
       - Deprecation Policy: roadmap/deprecation_policy.md
       - Test Coverage Goals: roadmap/test_coverage_goals.md
+  - Playground: playground.md
+  - Notebooks:
+      - Overview: notebooks/README.md
+      - 01 Forward Pipeline: notebooks/01_forward_pipeline.md
+      - 02 Explore GNN: notebooks/02_explore_gnn.md
+      - 03 Reverse Synthesis: notebooks/03_reverse_synthesis.md
+      - 04 Roundtrip: notebooks/04_roundtrip.md
+      - 05 Custom Rules: notebooks/05_custom_rules.md
+      - 06 Plugin Authoring: notebooks/06_plugin_authoring.md
   - FAQ: faq.md
   - Changelog: changelog.md
   - Deployment: CI.md

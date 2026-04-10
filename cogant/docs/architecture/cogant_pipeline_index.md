@@ -6,8 +6,8 @@ Quick reference guide to the ingest and static analysis pipeline implementation.
 
 - **[SPEC.md](../reference/README.md)** — Ingest/static milestone and high-level overview
 - **[ARCHITECTURE.md](../architecture/README.md)** — Complete pipeline user guide and API reference
-- **[examples/example_pipeline.py](examples/example_pipeline.py)** - Runnable API example
-- **[tests/integration/test_pipeline_runner_e2e.py](tests/integration/test_pipeline_runner_e2e.py)** - Integration tests
+- **[examples/example_pipeline.py](https://github.com/cogant-contributors/cogant/blob/main/cogant/examples/example_pipeline.py)** - Runnable API example
+- **[tests/integration/test_pipeline_runner_e2e.py](https://github.com/cogant-contributors/cogant/blob/main/cogant/tests/integration/test_pipeline_runner_e2e.py)** - Integration tests
 
 ### Module Overview
 

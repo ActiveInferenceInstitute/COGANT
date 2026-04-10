@@ -183,11 +183,11 @@ cogant viz output/my_repo_run/
 
 - `run_dir`: Directory containing `program_graph.json`, `.mermaid`, `.dot`, `.svg`, or other assets produced by analysis (walks recursively).
 
-Uses [`cogant.viz.png_export.render_all_pngs`](../py/cogant/viz/png_export.py). Safe to re-run; overwrites existing PNGs.
+Uses [`cogant.viz.png_export.render_all_pngs`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/viz/png_export.py). Safe to re-run; overwrites existing PNGs.
 
 ### validate
 
-Run validation checks on a bundle file or on a directory (run output, `gnn_package`, or hybrid). Implementation: [`py/cogant/cli/main.py`](../py/cogant/cli/main.py).
+Run validation checks on a bundle file or on a directory (run output, `gnn_package`, or hybrid). Implementation: [`py/cogant/cli/main.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/cli/main.py).
 
 ```bash
 cogant validate <bundle_or_dir>
@@ -201,7 +201,7 @@ cogant validate output/gnn_package/            # directory that *is* a package
 | Input | Behavior |
 |-------|----------|
 | **File** (e.g. `…/bundle.json`) | Lightweight JSON checks: `target`, `artifacts`, `stage_results`, empty `errors`. |
-| **Directory** whose path **is** a GNN package (`manifest.json` + `model.gnn.md` at that path) | Full [`GNNValidator`](../py/cogant/gnn/validator.py): score, errors, warnings (18-section contract). |
+| **Directory** whose path **is** a GNN package (`manifest.json` + `model.gnn.md` at that path) | Full [`GNNValidator`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/gnn/validator.py): score, errors, warnings (18-section contract). |
 | **Directory** containing `gnn_package/manifest.json` | Same GNN validator on `…/gnn_package/`. |
 | **Directory** with **`bundle.json`** but no resolvable GNN package above | Same lightweight checks on `dir/bundle.json` (run-directory fallback). |
 | **Directory** with neither `gnn_package/` nor `bundle.json` | Exit **2** with an error message. |

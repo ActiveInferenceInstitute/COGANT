@@ -1,6 +1,6 @@
 ## Command index
 
-Fourteen Typer subcommands are registered in [`py/cogant/cli/main.py`](../py/cogant/cli/main.py).
+Fourteen Typer subcommands are registered in [`py/cogant/cli/main.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/cli/main.py).
 
 | Command | Purpose |
 |---------|---------|

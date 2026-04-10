@@ -239,5 +239,5 @@ for m in data['stages']['translate']['mappings']:
 
 - [Tutorial 5: reading GNN matrices](05_gnn_interpretation.md) — see how rule output flows
   into A / B / C / D.
-- [`py/cogant/translate/rules/README.md`](../../py/cogant/translate/rules/README.md) — the
+- [`py/cogant/translate/rules/README.md`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/translate/rules/README.md) — the
   rule-family reference.

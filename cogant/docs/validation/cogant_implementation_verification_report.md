@@ -3,7 +3,7 @@
 **Date**: April 8, 2026
 **Status**: ✓ COMPLETE
 
-**Navigation:** [README.md](./README.md) (documentation hub) · [SPEC.md](../reference/README.md) (normative behavior) · [README.md](../README.md) (install and CLI quick start)
+**Navigation:** [README.md](./README.md) (documentation hub) · [SPEC.md](../reference/README.md) (normative behavior) · [README.md](https://github.com/cogant-contributors/cogant/blob/main/cogant/README.md) (install and CLI quick start)
 
 ### Implementation Summary
 
@@ -387,7 +387,7 @@ pip install -e .
 - ✓ [CLI_GUIDE.md](../cli/README.md) — Complete CLI reference
 - ✓ [API_GUIDE.md](../api/README.md) — Complete Python API reference
 - ✓ [SPEC.md](../reference/README.md) — Architecture and implementation detail
-- ✓ [example_pipeline.py](../examples/example_pipeline.py) — Working examples
+- ✓ [example_pipeline.py](https://github.com/cogant-contributors/cogant/blob/main/cogant/examples/example_pipeline.py) — Working examples
 
 ### Next Steps for Development
 

@@ -21,5 +21,5 @@ Rules are:
 - **Traceable**: Log all rule matches in provenance
 - **Versioned**: Rules evolve with language versions
 
-See [Translation Rules](../specs/mappings/code-to-gnn.md) for full reference.
+See [Translation Rules](https://github.com/cogant-contributors/cogant/blob/main/cogant/specs/mappings/code-to-gnn.md) for full reference.
 

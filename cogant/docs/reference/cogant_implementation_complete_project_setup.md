@@ -1,12 +1,12 @@
 ## COGANT Implementation - Complete Project Setup
 
-**Navigation:** [README.md](./README.md) · [SPEC.md](../reference/README.md) · [README.md](../README.md)
+**Navigation:** [README.md](./README.md) · [SPEC.md](../reference/README.md) · [README.md](https://github.com/cogant-contributors/cogant/blob/main/cogant/README.md)
 
 **Which doc should I read?**
 
 | Goal | Doc |
 |------|-----|
-| User-facing overview, install, CLI | [README.md](../README.md), [CLI_GUIDE.md](../cli/README.md) |
+| User-facing overview, install, CLI | [README.md](https://github.com/cogant-contributors/cogant/blob/main/cogant/README.md), [CLI_GUIDE.md](../cli/README.md) |
 | Documentation index | [README.md](./README.md) |
 | What the pipeline modules do (ingest/static) | [SPEC.md](../reference/README.md), [ARCHITECTURE.md](../architecture/README.md) |
 | Engine (graph/normalize/translate) | [ARCHITECTURE.md](../architecture/README.md) |
