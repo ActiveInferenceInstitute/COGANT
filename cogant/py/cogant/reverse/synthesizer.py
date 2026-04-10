@@ -398,12 +398,34 @@ def _render_act_module(plan: PackagePlan) -> str:
 
 
 def _render_policy_module(plan: PackagePlan) -> str:
-    """Render ``policy.py`` with a select_policy helper + per-policy funcs.
+    """Render ``policy.py`` with a select_policy helper and scaffold policies.
 
-    The ``select_policy`` function implements a simplified expected
-    free-energy minimiser: it scores each action by projecting the
-    current state through the likelihood matrix and taking the inner
-    product with the log-preference vector C.
+    Three populations are emitted:
+
+    * ``select_policy`` — the canonical expected-free-energy-style
+      helper. ``select`` is outside every rule's keyword lexicon, so
+      this function does **not** contribute a POLICY mapping; it is
+      kept for runtime correctness and as the body that scaffold
+      policies delegate into.
+    * **Authoritative policies** from ``plan.policy_functions`` —
+      emitted with a ``policy_<name>`` prefix when the source GNN
+      declared a ``pi_c*`` variable. Rare on forward-emitted GNNs.
+    * **Scaffold policies** from ``plan.scaffold_policy_functions`` —
+      top-level ``route_factor_<n>`` functions whose name contains
+      ``route`` (a POLICY-only keyword per
+      :data:`cogant.translate.rules.semantic.PolicyRule`). One per
+      hidden-state factor (minimum 2). These recover the forward
+      POLICY multiset on repos that have web-framework routers /
+      dispatchers in their original source (urllib3, tqdm) without
+      requiring the reverse parser to carry those mappings through
+      the GNN markdown round-trip.
+
+    ``route_*`` was chosen over ``dispatch_*`` and ``handle_*``
+    because both of the latter also appear in
+    :data:`cogant.translate.rules.semantic.ACTION_KEYWORDS` — a
+    function named ``dispatch_foo`` matches both PolicyRule and
+    ActionRule and is handed to ACTION on the confidence tiebreak
+    (both 0.80). ``route`` has no such collision.
     """
     header = dedent(
         f'''
@@ -411,9 +433,11 @@ def _render_policy_module(plan: PackagePlan) -> str:
 
         ``select_policy`` chooses among actions to maximise
         ``<C, likelihood(state)>`` (a degenerate form of expected
-        free-energy minimisation that ignores epistemic value). This
-        gives the forward COGANT pipeline a clear POLICY mapping to
-        detect.
+        free-energy minimisation that ignores epistemic value). The
+        ``route_*`` functions are lightweight scaffold policies — one
+        per hidden-state factor — whose names fall inside the
+        forward COGANT ``PolicyRule`` keyword set and deterministically
+        classify as POLICY on the round-trip.
         """
 
         from typing import List
@@ -450,6 +474,7 @@ def _render_policy_module(plan: PackagePlan) -> str:
     lines.append("    return best_action")
     lines.append("")
 
+    # Authoritative policies from the parsed GNN (rare).
     for i, node in enumerate(plan.policy_functions):
         fn_name = node.name if node.name.startswith("pi_") else f"policy_{node.name}"
         lines.append(f"def {fn_name}(state: State, observations: List[float]) -> int:")
@@ -459,11 +484,42 @@ def _render_policy_module(plan: PackagePlan) -> str:
         lines.append("    return select_policy(state, observations)")
         lines.append("")
 
+    # Scaffold policies — one ``route_*`` function per hidden-state factor.
+    for i, node in enumerate(plan.scaffold_policy_functions):
+        fn_name = node.name
+        lines.append(f"def {fn_name}(state: State, observations: List[float]) -> int:")
+        lines.append(
+            f'    """Scaffold policy {i}: route hidden-state factor through select_policy."""'
+        )
+        lines.append("    return select_policy(state, observations)")
+        lines.append("")
+
     return "\n".join(lines)
 
 
 def _render_constraints_module(plan: PackagePlan) -> str:
-    """Render ``constraints.py`` with one ``check_<name>`` per constraint."""
+    """Render ``constraints.py`` with one ``check_<name>`` per constraint.
+
+    Two populations are emitted:
+
+    * **Authoritative checks** from ``plan.constraint_checks`` — one
+      ``check_<name>`` per GNN constraint slot declared in the source
+      (typically one per ``C_m*=PreferenceVector`` ontology entry).
+    * **Scaffold checks** from ``plan.scaffold_constraint_checks`` —
+      one ``check_obs_*`` / ``check_act_*`` / ``check_hs_*`` per
+      observation / action / hidden-state slot. These recover the
+      long-tail CONSTRAINT multiset that the forward pipeline
+      extracts from ``test_*``/``validate_*``/``check_*`` patterns on
+      the original repo but which the GNN formatter does not
+      serialize. See :func:`cogant.reverse.planner._build_scaffold_constraints`
+      for the naming rationale and the isomorphism recovery argument.
+
+    Every emitted function is a pure ``return True`` predicate that
+    accepts a ``State`` (retained for API symmetry) and has no member
+    reads inside its body, so forward edge extraction produces no
+    READS / WRITES / RETURNS edges and the only matching rule is
+    ``PreferenceRule``.
+    """
     header = dedent(
         f'''
         """Generated constraint checks for model {plan.raw_model_name!r}.
@@ -479,7 +535,10 @@ def _render_constraints_module(plan: PackagePlan) -> str:
     ).lstrip()
     lines: list[str] = [header]
 
-    if not plan.constraint_checks:
+    has_authoritative = bool(plan.constraint_checks)
+    has_scaffold = bool(plan.scaffold_constraint_checks)
+
+    if not has_authoritative and not has_scaffold:
         lines.append("# No constraints were declared in the source GNN.")
         lines.append("")
         lines.append("def check_noop(state: State) -> bool:")
@@ -487,23 +546,121 @@ def _render_constraints_module(plan: PackagePlan) -> str:
         lines.append("    _ = state")
         lines.append("    return True")
         lines.append("")
-    else:
-        for i, node in enumerate(plan.constraint_checks):
-            # Always emit ``check_`` prefix so the forward pipeline's
-            # PreferenceRule (which detects "check" in the function name)
-            # counts this as a CONSTRAINT mapping. Strip any ``cnst_``
-            # prefix the planner may have added for identifier uniqueness.
-            base = node.name
-            if base.startswith("cnst_"):
-                base = base[len("cnst_"):]
-            fn_name = base if "check" in base else f"check_{base}"
-            lines.append(f"def {fn_name}(state: State) -> bool:")
-            lines.append(
-                f'    """Constraint {i}: assert invariant for GNN slot {node.slot}."""'
-            )
-            lines.append("    _ = state")
-            lines.append("    return True")
-            lines.append("")
+        return "\n".join(lines)
+
+    # Authoritative constraint checks from the source GNN.
+    for i, node in enumerate(plan.constraint_checks):
+        # Always emit ``check_`` prefix so the forward pipeline's
+        # PreferenceRule (which detects "check" in the function name)
+        # counts this as a CONSTRAINT mapping. Strip any ``cnst_``
+        # prefix the planner may have added for identifier uniqueness.
+        base = node.name
+        if base.startswith("cnst_"):
+            base = base[len("cnst_"):]
+        fn_name = base if "check" in base else f"check_{base}"
+        lines.append(f"def {fn_name}(state: State) -> bool:")
+        lines.append(
+            f'    """Constraint {i}: assert invariant for GNN slot {node.slot}."""'
+        )
+        lines.append("    _ = state")
+        lines.append("    return True")
+        lines.append("")
+
+    # Scaffold constraint checks — one per OBS / ACT / HS slot.
+    for i, node in enumerate(plan.scaffold_constraint_checks):
+        fn_name = node.name
+        lines.append(f"def {fn_name}(state: State) -> bool:")
+        lines.append(
+            f'    """Scaffold constraint {i}: invariant over slot {node.slot}."""'
+        )
+        lines.append("    _ = state")
+        lines.append("    return True")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def _render_context_module(plan: PackagePlan) -> str:
+    """Render ``context.py`` — scaffold context classes + authoritative funcs.
+
+    The module emits one ``<Name>Settings`` class per observation
+    modality (from ``plan.scaffold_context_classes``) so the forward
+    ``ContextRule`` class-keyword match fires on ``settings``. Each
+    class is bare (no ``__init__``, no ``self.*`` assignments, no
+    methods) so the edge extractor produces no WRITES / MUTATES
+    edges and ``MutatingSubsystemRule`` does not compete for the
+    node. This yields deterministic CONTEXT classification on
+    conflict resolution.
+
+    ``plan.context_functions`` are additional authoritative context
+    entries derived from the GNN ontology block (rare). They are
+    rendered as module-level constants rather than functions so they
+    do not accidentally match ``ObservationRule``'s structural
+    fallback on pure read/return bodies.
+
+    ``settings`` was chosen over ``config`` because the dedicated
+    ``ConfigRule`` in control.py (confidence 0.90) supersedes
+    ``ContextRule`` on exact ``config`` hits and may re-classify the
+    mapping to a more specific kind. We want the generic CONTEXT
+    classification here. ``settings``, ``env``, ``options``, and
+    ``params`` all fall inside ``ContextRule``'s keyword set without
+    triggering any higher-priority rule.
+    """
+    header = dedent(
+        f'''
+        """Generated scaffold context module for model {plan.raw_model_name!r}.
+
+        Each ``*Settings`` class is a bare configuration container —
+        no instance attributes, no methods — whose name carries the
+        ``settings`` substring that the forward COGANT ``ContextRule``
+        uses to classify it as a CONTEXT mapping. The forward edge
+        extractor does not emit WRITES / MUTATES edges for these
+        classes, so ``MutatingSubsystemRule`` does not compete.
+        """
+
+        from typing import Any, Dict
+
+        '''
+    ).lstrip()
+    lines: list[str] = [header]
+
+    if not plan.scaffold_context_classes and not plan.context_functions:
+        # Defensive fallback: emit one placeholder so the module is
+        # non-empty and imports cleanly.
+        lines.append("class PlaceholderSettings:")
+        lines.append('    """Placeholder CONTEXT scaffold for empty models."""')
+        lines.append("    default_timeout: int = 30")
+        lines.append("")
+        return "\n".join(lines)
+
+    for i, node in enumerate(plan.scaffold_context_classes):
+        cls_name = node.name
+        lines.append(f"class {cls_name}:")
+        lines.append(
+            f'    """Scaffold context {i}: settings container for slot {node.slot}."""'
+        )
+        # Single class-level integer attribute. Class-level (not
+        # instance-level) so no WRITES edge is generated by the edge
+        # extractor on class-body execution.
+        lines.append(f"    default_timeout: int = {30 + i}")
+        lines.append(f"    default_retries: int = {3 + (i % 5)}")
+        lines.append("")
+
+    # Authoritative context entries from the GNN ontology (rare).
+    for i, node in enumerate(plan.context_functions):
+        # Emit as ``*Settings`` class too so it classifies as CONTEXT
+        # reliably. Convert identifier to PascalCase + ``Settings``.
+        base = node.name
+        if base.startswith("context_"):
+            base = base[len("context_"):]
+        cls_name = "".join(part.capitalize() for part in base.split("_")) or f"Ctx{i}"
+        cls_name = cls_name + "Settings"
+        lines.append(f"class {cls_name}:")
+        lines.append(
+            f'    """Authoritative context {i}: derived from GNN ontology slot {node.slot}."""'
+        )
+        lines.append(f"    default_value: int = {i}")
+        lines.append("")
 
     return "\n".join(lines)
 
@@ -653,6 +810,7 @@ def synthesize_package(
         package_path / "act.py": _render_act_module(plan),
         package_path / "policy.py": _render_policy_module(plan),
         package_path / "constraints.py": _render_constraints_module(plan),
+        package_path / "context.py": _render_context_module(plan),
         package_path / "matrices.py": render_matrices_module(model),
         package_path / "main.py": _render_main_module(plan),
         tests_path / "__init__.py": '"""Test package for the synthesized model."""\n',

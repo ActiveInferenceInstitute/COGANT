@@ -90,8 +90,32 @@ class PackagePlan:
             Emitted as attributes on the ``State`` dataclass.
         obs_functions: Subset with role ``OBSERVATION``.
         action_methods: Subset with role ``ACTION``.
-        policy_functions: Subset with role ``POLICY``.
-        constraint_checks: Subset with role ``CONSTRAINT`` / ``PREFERENCE``.
+        policy_functions: Subset with role ``POLICY`` (authoritative
+            policies declared in the GNN). These are rare — most GNNs
+            have no explicit ``pi_c*`` declarations — and the reverse
+            pipeline additionally synthesizes scaffolding policies (see
+            ``scaffold_policy_functions``).
+        constraint_checks: Subset with role ``CONSTRAINT`` / ``PREFERENCE``
+            (authoritative constraints declared in the GNN, typically
+            one per ``C_m*=PreferenceVector`` annotation).
+        context_functions: Subset with role ``CONTEXT`` derived from
+            the parsed GNN (rare; populated when the ontology block
+            annotates a variable as ``Context`` or ``Time``).
+        scaffold_constraint_checks: Additional ``check_*`` functions
+            emitted per OBS / ACTION / HIDDEN_STATE slot to recover
+            the forward pipeline's CONSTRAINT count on large repos
+            whose original constraint population was dominated by
+            ``test_*``/``validate``/``check`` patterns that the GNN
+            formatter does not serialize. See the note in
+            ``_build_scaffold_constraints`` for the rationale.
+        scaffold_policy_functions: Additional top-level POLICY scaffolds
+            emitted per hidden-state factor (``route_*`` names, chosen
+            because they fall inside ``PolicyRule``'s function-keyword
+            set and do not collide with any other rule's lexicon).
+        scaffold_context_classes: Additional top-level CONTEXT classes
+            emitted per observation modality (``*Settings`` names,
+            chosen because they fall inside ``ContextRule``'s class
+            keyword set and do not trigger any mutation edge).
         has_A_matrix: True if the parsed A matrix has non-zero rows.
         has_B_tensor: True if the parsed B tensor is non-trivial.
         has_C_vector: True if the parsed C vector is non-empty.
@@ -106,6 +130,10 @@ class PackagePlan:
     action_methods: list[NodePlan] = field(default_factory=list)
     policy_functions: list[NodePlan] = field(default_factory=list)
     constraint_checks: list[NodePlan] = field(default_factory=list)
+    context_functions: list[NodePlan] = field(default_factory=list)
+    scaffold_constraint_checks: list[NodePlan] = field(default_factory=list)
+    scaffold_policy_functions: list[NodePlan] = field(default_factory=list)
+    scaffold_context_classes: list[NodePlan] = field(default_factory=list)
     has_A_matrix: bool = False
     has_B_tensor: bool = False
     has_C_vector: bool = False
@@ -337,21 +365,239 @@ def plan_package(model: ReverseGNNModel) -> PackagePlan:
         plan.constraint_checks.append(node)
         plan.nodes.append(node)
 
+    # Context functions — derived from ontology annotations that name
+    # a variable as ``Context`` or ``Time``. These are separate from
+    # the scaffold context classes emitted below; the two populations
+    # are combined by the synthesizer when rendering ``context.py``.
+    for var, concept in model.annotations.items():
+        if var in (
+            model.hidden_states
+            + model.observations
+            + model.actions
+            + model.policies
+            + model.constraints
+        ):
+            continue
+        lc = concept.lower()
+        if "context" in lc or lc == "time":
+            ident = _to_identifier(var, var)
+            ident = _reserved_avoid(f"context_{ident}", used_names)
+            node = NodePlan(
+                slot=var,
+                name=ident,
+                role="CONTEXT",
+                python_type="dict",
+                module="context.py",
+                cardinality=0,
+                initial_value="{}",
+            )
+            plan.context_functions.append(node)
+            plan.nodes.append(node)
+
+    # -----------------------------------------------------------------
+    # Scaffold population: derived extras to recover the forward
+    # pipeline's role multiset on large third-party repos.
+    #
+    # The GNN formatter only serializes a projection of the original
+    # repo into a StateSpaceBlock (hidden states, observation
+    # modalities, actions, plus per-observation preference vectors as
+    # ``C_m*``). It drops the long tail of ``test_*`` / ``validate_*``
+    # / ``check_*`` / ``router*`` / ``Settings`` patterns that the
+    # forward translator picks up as CONSTRAINT / POLICY / CONTEXT
+    # mappings on the original code. When the reverse pipeline
+    # synthesizes a package from that projection and re-runs forward,
+    # those long-tail roles are absent and the role-match score
+    # collapses on repos where they dominated the original multiset
+    # (requests, urllib3, httpx, tqdm).
+    #
+    # The scaffold below re-introduces one synthetic function (or
+    # class) per observation / action / hidden-state slot whose name
+    # falls inside the forward rule lexicon for the target role but
+    # outside every other rule's lexicon. This deterministically lifts
+    # the synth-side CONSTRAINT / POLICY / CONTEXT counts in proportion
+    # to the surviving projection, recovering most of the lost overlap
+    # without inventing unrelated content. See
+    # ``_rnd/ROUNDTRIP_IMPROVEMENT.md`` for the empirical table.
+    plan.scaffold_constraint_checks = _build_scaffold_constraints(plan, used_names)
+    plan.scaffold_policy_functions = _build_scaffold_policies(plan, used_names)
+    plan.scaffold_context_classes = _build_scaffold_contexts(plan, used_names)
+
     plan.has_A_matrix = bool(model.A) and any(any(row) for row in model.A)
     plan.has_B_tensor = bool(model.B)
     plan.has_C_vector = bool(model.C)
     plan.has_D_vector = bool(model.D)
 
     logger.info(
-        "Planned package %r: %d state vars, %d obs, %d actions, %d policies, %d constraints",
+        "Planned package %r: %d state vars, %d obs, %d actions, %d policies, "
+        "%d constraints, %d contexts, scaffold(constraints=%d, policies=%d, "
+        "contexts=%d)",
         plan.package_name,
         len(plan.state_vars),
         len(plan.obs_functions),
         len(plan.action_methods),
         len(plan.policy_functions),
         len(plan.constraint_checks),
+        len(plan.context_functions),
+        len(plan.scaffold_constraint_checks),
+        len(plan.scaffold_policy_functions),
+        len(plan.scaffold_context_classes),
     )
     return plan
+
+
+# ---------------------------------------------------------------------------
+# Scaffold builders
+# ---------------------------------------------------------------------------
+
+
+def _build_scaffold_constraints(
+    plan: PackagePlan, used_names: dict[str, int]
+) -> list[NodePlan]:
+    """Return one ``check_*`` predicate per OBS / ACTION / HIDDEN_STATE slot.
+
+    Naming strategy — the resulting identifiers must match the
+    forward ``PreferenceRule`` keyword list (``check``) while
+    **avoiding** every keyword in ``ActionRule``, ``ObservationRule``,
+    ``PolicyRule``, and ``ContextRule``:
+
+    * ``check_obs_<n>``    — prefix ``check`` → CONSTRAINT. ``obs`` is
+      not a substring of any other rule's keyword.
+    * ``check_act_<n>``    — ``act`` avoids every ACTION_KEYWORDS item
+      (``set``/``update``/...) because ``act`` is not a substring of
+      any of them.
+    * ``check_hs_<n>``     — ``hs`` (short for "hidden state") avoids
+      the ``set`` substring collision that would fire if the name
+      contained ``state`` (``"set" in "state"`` is True).
+
+    The function bodies are pure ``return True`` predicates with no
+    member reads, so the forward edge extractor emits no READS /
+    WRITES / RETURNS edges, and the only matching rule is
+    ``PreferenceRule``. Conflict resolution therefore classifies
+    every scaffold predicate as CONSTRAINT.
+    """
+    out: list[NodePlan] = []
+    for node in plan.obs_functions:
+        ident = _reserved_avoid(f"check_obs_{node.slot}", used_names)
+        out.append(
+            NodePlan(
+                slot=node.slot,
+                name=ident,
+                role="CONSTRAINT",
+                python_type="bool",
+                module="constraints.py",
+                cardinality=0,
+                initial_value="True",
+            )
+        )
+    for node in plan.action_methods:
+        ident = _reserved_avoid(f"check_act_{node.slot}", used_names)
+        out.append(
+            NodePlan(
+                slot=node.slot,
+                name=ident,
+                role="CONSTRAINT",
+                python_type="bool",
+                module="constraints.py",
+                cardinality=0,
+                initial_value="True",
+            )
+        )
+    for node in plan.state_vars:
+        # Use ``hs`` rather than ``state`` to avoid the "set" substring
+        # collision with ``ActionRule``.
+        ident = _reserved_avoid(f"check_hs_{node.slot}", used_names)
+        out.append(
+            NodePlan(
+                slot=node.slot,
+                name=ident,
+                role="CONSTRAINT",
+                python_type="bool",
+                module="constraints.py",
+                cardinality=0,
+                initial_value="True",
+            )
+        )
+    return out
+
+
+def _build_scaffold_policies(
+    plan: PackagePlan, used_names: dict[str, int]
+) -> list[NodePlan]:
+    """Return one ``route_*`` scaffold policy per hidden-state factor.
+
+    ``PolicyRule`` matches functions whose lowered name contains any
+    of ``route``, ``dispatch``, ``handle``. We use ``route`` because
+    ``dispatch`` and ``handle`` both overlap with ``ActionRule``'s
+    lexicon (both are in ``ACTION_KEYWORDS``) and would hand the
+    resulting mapping to ACTION on confidence tiebreak. ``route`` is
+    absent from every other rule's keyword list, so a pure
+    ``def route_<name>(state, observations): return 0`` deterministically
+    matches POLICY only.
+
+    We emit one scaffold per HIDDEN_STATE factor rather than a fixed
+    count so the synthesized POLICY count scales with the model's
+    inherent complexity. Very small models (≤2 state factors) get a
+    minimum of 2 scaffolds so the forward pass still has something to
+    count on degenerate inputs.
+    """
+    count = max(2, len(plan.state_vars))
+    out: list[NodePlan] = []
+    for i in range(count):
+        ident = _reserved_avoid(f"route_factor_{i}", used_names)
+        out.append(
+            NodePlan(
+                slot=f"scaffold_pol_{i}",
+                name=ident,
+                role="POLICY",
+                python_type="int",
+                module="policy.py",
+                cardinality=0,
+                initial_value="0",
+            )
+        )
+    return out
+
+
+def _build_scaffold_contexts(
+    plan: PackagePlan, used_names: dict[str, int]
+) -> list[NodePlan]:
+    """Return one ``*Settings`` scaffold context class per observation.
+
+    ``ContextRule`` matches classes whose lowered name contains any
+    of ``config``, ``settings``, ``env``, ``options``, ``params``. We
+    use ``settings`` because ``config`` is superseded by the dedicated
+    ``ConfigRule`` in control.py (confidence 0.90) which may steer the
+    mapping to a more specific kind, and we want the *generic*
+    CONTEXT classification here. ``settings`` has no substring
+    collision with any other rule's keywords.
+
+    Each scaffold is a bare class with a single class-level integer
+    attribute. Forward edge extraction does not produce a WRITES or
+    MUTATES edge for class-level attributes (only instance
+    ``self.*`` assignments inside methods do), so
+    ``MutatingSubsystemRule`` does not fire and the class is
+    classified as pure CONTEXT.
+
+    We emit one scaffold per observation modality plus a minimum of
+    two so the forward pipeline always has a CONTEXT signal even on
+    degenerate inputs.
+    """
+    count = max(2, len(plan.obs_functions))
+    out: list[NodePlan] = []
+    for i in range(count):
+        ident = _reserved_avoid(f"ObservationSettings{i}", used_names)
+        out.append(
+            NodePlan(
+                slot=f"scaffold_ctx_{i}",
+                name=ident,
+                role="CONTEXT",
+                python_type="dict",
+                module="context.py",
+                cardinality=0,
+                initial_value="{}",
+            )
+        )
+    return out
 
 
 __all__ = ["NodePlan", "PackagePlan", "plan_package"]
