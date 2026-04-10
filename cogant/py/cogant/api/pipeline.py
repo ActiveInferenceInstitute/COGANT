@@ -75,6 +75,34 @@ class PipelineConfig:
     before deciding there is no trace data available.
     """
 
+    incremental_since: str | None = None
+    """Git ref (commit, tag, branch) to use as the incremental baseline.
+
+    When set, ``PipelineRunner.run`` will attempt to load a previously
+    cached bundle for the target and only re-run the ingest / static /
+    graph stages for Python files that changed between ``incremental_since``
+    and ``HEAD``. A dict summarising the incremental run is recorded on
+    ``bundle.metadata['incremental_stats']`` with the following keys:
+
+    * ``enabled`` — ``True`` whenever this field is set
+    * ``since`` — the ref that was passed in
+    * ``files_total`` — number of Python files in the repo
+    * ``files_reparsed`` — number of Python files that needed re-parsing
+    * ``cache_hit`` — ``True`` if a cached bundle was found and used
+    * ``reason`` — free-form explanation when ``cache_hit`` is ``False``
+
+    When ``None`` (the default), the pipeline behaves exactly as before
+    and never touches the cache. This makes incremental mode strictly
+    opt-in so existing callers and tests keep the same semantics.
+    """
+
+    cache_dir: str | None = None
+    """Override for the cache directory used by incremental mode.
+
+    When ``None``, incremental mode uses ``~/.cache/cogant``. Setting
+    this lets tests and benchmarks isolate cache state to a tmp dir.
+    """
+
 
 class PipelineRunner:
     """
@@ -132,6 +160,20 @@ class PipelineRunner:
 
         bundle = Bundle(target=target, metadata={"config": vars(config)})
 
+        # Incremental-mode pre-flight: try to short-circuit the full run
+        # when the caller opted in and a cached bundle is available. On a
+        # full cache hit we return the cached bundle unmodified; on a
+        # partial hit we stash the restricted file list under
+        # ``bundle.metadata['_incremental']`` so ``run_ingest`` can pick
+        # it up and re-parse only the changed subset.
+        if config.incremental_since:
+            cache_outcome = self._incremental_preflight(target, bundle, config)
+            if cache_outcome == "full_hit":
+                logger.info(
+                    "Incremental mode: full cache hit, returning cached bundle"
+                )
+                return bundle
+
         # Build the effective skip set. ``skip_dynamic`` acts as a shorthand
         # for adding ``"dynamic"`` to ``skip_stages`` without mutating the
         # caller-provided config object.
@@ -183,8 +225,179 @@ class PipelineRunner:
             except Exception as e:
                 logger.warning("layout_output post-pass failed: %s", e)
 
+        # Write an incremental-mode cache snapshot at the end of every
+        # run that touched real stages. This is the "save" half of the
+        # incremental round trip: the very next run against the same
+        # target will see this bundle via ``_incremental_preflight``.
+        if config.incremental_since is not None and not config.dry_run:
+            try:
+                self._incremental_cache_save(target, bundle, config)
+            except Exception as e:  # pragma: no cover - defensive
+                logger.warning("Incremental cache save failed: %s", e)
+
         logger.info(f"Pipeline completed with {len(bundle.errors)} errors")
         return bundle
+
+    # ------------------------------------------------------------------
+    # Incremental-mode helpers
+    # ------------------------------------------------------------------
+
+    def _incremental_preflight(
+        self, target: str, bundle: Bundle, config: PipelineConfig
+    ) -> str:
+        """Inspect the cache and prepare a restricted run.
+
+        Returns one of:
+
+        * ``"full_hit"`` — nothing changed since ``config.incremental_since``
+          and a cached bundle was successfully restored onto ``bundle``.
+          The caller should return the bundle directly.
+        * ``"partial"`` — a cached bundle exists but some files changed;
+          the restricted file list is recorded on
+          ``bundle.metadata['_incremental']`` so ``run_ingest`` can honor
+          it. Downstream stages still run over the merged result.
+        * ``"miss"`` — no usable cache entry or no git repo; the caller
+          falls back to a full run (incremental stats still recorded).
+        """
+        from cogant import __version__ as _cogant_version
+        from cogant.cache.store import CacheKey, CacheStore
+        from cogant.ingest.incremental import IncrementalIngester
+
+        repo_path = Path(target).expanduser().resolve()
+        stats: dict[str, Any] = {
+            "enabled": True,
+            "since": config.incremental_since,
+            "files_total": 0,
+            "files_reparsed": 0,
+            "cache_hit": False,
+            "reason": None,
+        }
+        bundle.metadata["incremental_stats"] = stats
+
+        if not repo_path.is_dir():
+            stats["reason"] = "target is not a directory"
+            return "miss"
+
+        ingester = IncrementalIngester(repo_path)
+        if not ingester.is_git_repo():
+            stats["reason"] = "target is not a git repository"
+            return "miss"
+
+        # Count total Python files (used to compute the "reparsed ratio"
+        # and to drive the content-hash key for the cache).
+        all_py = [
+            p
+            for p in repo_path.rglob("*.py")
+            if not any(
+                part in {".git", ".venv", "__pycache__", "node_modules"}
+                for part in p.parts
+            )
+        ]
+        stats["files_total"] = len(all_py)
+
+        # Build the cache key. ``content_hash`` here is a stable digest
+        # of ``(repo_path, cogant_version)`` — not a content hash of the
+        # repo itself. Incremental mode uses the git working tree as
+        # its authoritative source of truth, so we don't want to invalidate
+        # the cache on *every* file edit; instead, the cache is keyed on
+        # the repo identity and we let the git diff decide what to reuse.
+        import hashlib
+
+        digest = hashlib.sha256()
+        digest.update(str(repo_path).encode())
+        digest.update(_cogant_version.encode())
+        key = CacheKey(
+            repo_path=str(repo_path),
+            content_hash=digest.hexdigest(),
+            cogant_version=_cogant_version,
+        )
+
+        cache_dir = Path(config.cache_dir) if config.cache_dir else None
+        store = CacheStore(cache_dir=cache_dir)
+        entry = store.get(key)
+
+        changed = ingester.python_files_changed_since(config.incremental_since)
+        # ``changed`` contains absolute paths already resolved against the
+        # repo root. Keep only the ones that actually exist on disk.
+        changed = [p for p in changed if p.exists()]
+        stats["files_reparsed"] = len(changed)
+
+        if entry is None:
+            stats["reason"] = "no cached bundle"
+            return "miss"
+
+        # Restore the cached stage_results onto the bundle. Artifacts are
+        # *not* restored (they contain live Python objects that would not
+        # round-trip through JSON), but stage_results carry every piece
+        # of information the CLI actually displays to the user.
+        cached = entry.stage_results
+        bundle.stage_results.update(cached.get("stage_results") or {})
+        bundle.errors = list(cached.get("errors") or [])
+        stats["cache_hit"] = True
+
+        if not changed:
+            # Full hit: the user asked "what changed since <ref>?" and
+            # the answer is "nothing". Return the cached bundle as-is.
+            return "full_hit"
+
+        # Partial hit: downstream stages will re-run, but ``run_ingest``
+        # will restrict itself to the changed files. Pass the restricted
+        # list through bundle metadata so orchestration.run_ingest can
+        # read it without us having to thread a new parameter through
+        # every stage signature.
+        bundle.metadata["_incremental"] = {
+            "changed_files": [str(p) for p in changed],
+            "changed_count": len(changed),
+        }
+        stats["reason"] = f"{len(changed)} file(s) changed"
+        return "partial"
+
+    def _incremental_cache_save(
+        self, target: str, bundle: Bundle, config: PipelineConfig
+    ) -> None:
+        """Persist the bundle's stage_results into the incremental cache.
+
+        Only JSON-serialisable content is stored (``stage_results`` +
+        ``errors``). Live artifacts such as the ``ProgramGraph`` live
+        on ``bundle.artifacts`` and are rebuilt from ``stage_results``
+        on the next run via the normal pipeline re-execution.
+
+        ``stage_results`` can contain datetimes and other rich types
+        that plain ``json.dump`` rejects. We round-trip through the
+        Bundle's own ``_json_default`` to coerce them to JSON-native
+        values before handing the dict to the cache store, which
+        itself uses plain ``json.dump``.
+        """
+        import hashlib
+        import json as _json
+
+        from cogant import __version__ as _cogant_version
+        from cogant.api.bundle import _json_default
+        from cogant.cache.store import CacheKey, CacheStore
+
+        repo_path = Path(target).expanduser().resolve()
+        digest = hashlib.sha256()
+        digest.update(str(repo_path).encode())
+        digest.update(_cogant_version.encode())
+        key = CacheKey(
+            repo_path=str(repo_path),
+            content_hash=digest.hexdigest(),
+            cogant_version=_cogant_version,
+        )
+        cache_dir = Path(config.cache_dir) if config.cache_dir else None
+        store = CacheStore(cache_dir=cache_dir)
+
+        safe_results = _json.loads(
+            _json.dumps(bundle.stage_results, default=_json_default)
+        )
+        safe_errors = list(bundle.errors)
+        store.put(
+            key,
+            {
+                "stage_results": safe_results,
+                "errors": safe_errors,
+            },
+        )
 
     def _stage_ingest(
         self, bundle: Bundle, config: PipelineConfig

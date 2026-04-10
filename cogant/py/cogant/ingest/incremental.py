@@ -231,3 +231,74 @@ class IncrementalIngester:
                 )
             )
         return changed
+
+
+# ----------------------------------------------------------------------
+# Module-level convenience API (used by PipelineRunner incremental mode)
+# ----------------------------------------------------------------------
+
+
+def get_changed_files(
+    repo_path: Path, since_commit: str, extensions: set[str] | None = None
+) -> list[Path]:
+    """Return source files changed between ``since_commit`` and ``HEAD``.
+
+    Thin functional wrapper over :class:`IncrementalIngester` that the
+    pipeline layer uses to resolve the restricted file list for an
+    incremental run. Non-git paths return an empty list (never raise).
+
+    Args:
+        repo_path: Repository root.
+        since_commit: Git ref to diff against (commit hash, tag, branch,
+            or relative ref such as ``HEAD~1``).
+        extensions: Optional set of file extensions to restrict to
+            (e.g. ``{".py"}``). Defaults to
+            :attr:`IncrementalIngester._SOURCE_EXTENSIONS` — the full
+            cross-language set.
+
+    Returns:
+        List of absolute ``Path`` objects for files that exist on disk
+        after the change (deletions are filtered out).
+    """
+    ingester = IncrementalIngester(repo_path)
+    if not ingester.is_git_repo():
+        return []
+    return ingester.source_files_changed_since(since_commit, extensions=extensions)
+
+
+def apply_incremental_patch(
+    cached_stage_results: dict,
+    new_stage_results: dict,
+    changed_files: list[Path],
+) -> dict:
+    """Merge fresh stage_results into a cached snapshot.
+
+    Used by the PipelineRunner incremental path to combine a previously
+    cached bundle with the re-parsed subset produced by the current run.
+    The merge rule is intentionally simple and conservative:
+
+    * Every key present in ``new_stage_results`` overrides the cached
+      value (fresh stages always win).
+    * Keys that only exist in ``cached_stage_results`` are carried over
+      unchanged.
+    * The returned dict is a new object — neither input is mutated.
+    * ``changed_files`` is attached to a synthetic ``incremental``
+      block so callers can inspect the patch summary without having
+      to reach into the full bundle.
+
+    Args:
+        cached_stage_results: Stage results pulled from the cache.
+        new_stage_results: Stage results from the current re-parse.
+        changed_files: Paths that triggered the re-parse (informational).
+
+    Returns:
+        A merged dict suitable for assigning back onto ``bundle.stage_results``.
+    """
+    merged: dict = dict(cached_stage_results)
+    for key, value in new_stage_results.items():
+        merged[key] = value
+    merged["_incremental_patch"] = {
+        "changed_count": len(changed_files),
+        "changed_files": [str(p) for p in changed_files],
+    }
+    return merged

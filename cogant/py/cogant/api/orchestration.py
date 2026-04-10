@@ -153,6 +153,11 @@ def run_ingest(bundle_target: str, bundle: Any) -> dict[str, Any]:
     ``bundle.artifacts['repo_snapshot']``, and computes a per-language
     file count distribution.
 
+    When ``bundle.metadata['_incremental']`` is present, the snapshot's
+    ``files`` list is filtered down to just the subset whose absolute
+    paths appear in ``changed_files``. This lets downstream stages
+    re-parse only the modified subset of a large repository.
+
     Args:
         bundle_target: Local path (or path-like string) to the repository root.
         bundle: Pipeline bundle used to accumulate stage artifacts.
@@ -164,6 +169,20 @@ def run_ingest(bundle_target: str, bundle: Any) -> dict[str, Any]:
     root = Path(bundle_target).expanduser().resolve()
     ingester = RepoIngester()
     snapshot = ingester.ingest_local(root, include_test_files=True, compute_checksums=False)
+
+    # Honor incremental mode by shrinking the file list to the changed
+    # subset. We preserve the snapshot's metadata and dependency info,
+    # so downstream stages still see a complete-looking RepoSnapshot
+    # object, just with fewer ``files`` entries to iterate.
+    incremental = getattr(bundle, "metadata", {}).get("_incremental") if hasattr(bundle, "metadata") else None
+    total_files = len(snapshot.files)
+    if incremental and incremental.get("changed_files"):
+        changed_set = {str(Path(p).resolve()) for p in incremental["changed_files"]}
+        filtered = [
+            f for f in snapshot.files if str(Path(f.path).resolve()) in changed_set
+        ]
+        snapshot.files = filtered
+
     bundle.artifacts["repo_snapshot"] = snapshot
 
     lang_dist: dict[str, int] = {}
@@ -171,13 +190,19 @@ def run_ingest(bundle_target: str, bundle: Any) -> dict[str, Any]:
         if f.language:
             lang_dist[f.language] = lang_dist.get(f.language, 0) + 1
 
-    return {
+    result: dict[str, Any] = {
         "type": "ingest",
         "target": bundle_target,
         "file_count": len(snapshot.files),
         "language_distribution": lang_dist,
         "root": str(snapshot.root_path),
     }
+    if incremental:
+        result["incremental"] = {
+            "changed_count": incremental.get("changed_count", 0),
+            "total_before_filter": total_files,
+        }
+    return result
 
 
 def run_static(bundle: Any) -> dict[str, Any]:

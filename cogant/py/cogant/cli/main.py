@@ -549,6 +549,25 @@ def translate(
         "--trace",
         help="Path to a Chrome DevTools trace JSON file for dynamic analysis.",
     ),
+    incremental: str | None = typer.Option(
+        None,
+        "--incremental",
+        help=(
+            "Git ref (e.g. HEAD~1, a commit hash, or a tag) to use as the "
+            "incremental baseline. Only files that changed between this "
+            "ref and HEAD are re-parsed; unchanged results are served "
+            "from ~/.cache/cogant when available."
+        ),
+    ),
+    cache_dir: str | None = typer.Option(
+        None,
+        "--cache-dir",
+        help=(
+            "Override the incremental cache directory. Defaults to "
+            "~/.cache/cogant. Useful for tests and benchmarks that need "
+            "an isolated cache state."
+        ),
+    ),
 ) -> None:
     """Translate a repository into an Active Inference GNN state-space model.
 
@@ -621,6 +640,13 @@ def translate(
         config.coverage_path = coverage_path
     if trace_path:
         config.trace_path = trace_path
+    if incremental:
+        config.incremental_since = incremental
+        console.print(
+            f"[dim]--incremental {incremental}: only re-parsing files changed since ref[/dim]"
+        )
+    if cache_dir:
+        config.cache_dir = cache_dir
 
     runner = PipelineRunner()
     try:
@@ -660,6 +686,18 @@ def translate(
         console.print("\n[red bold]Errors:[/red bold]")
         for error in bundle.errors:
             console.print(f"  • {error}")
+
+    inc_stats = bundle.metadata.get("incremental_stats") if bundle.metadata else None
+    if inc_stats and inc_stats.get("enabled"):
+        hit = "hit" if inc_stats.get("cache_hit") else "miss"
+        console.print(
+            f"\n[bold]Incremental:[/bold] cache {hit} "
+            f"(since {inc_stats.get('since')}, "
+            f"{inc_stats.get('files_reparsed', 0)}/"
+            f"{inc_stats.get('files_total', 0)} files re-parsed)"
+        )
+        if inc_stats.get("reason"):
+            console.print(f"[dim]  {inc_stats['reason']}[/dim]")
 
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
