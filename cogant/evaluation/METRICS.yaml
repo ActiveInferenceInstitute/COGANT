@@ -43,6 +43,9 @@ pipeline:
   - gnn
   - reverse
 evaluation:
+  semantic:
+    cogant_macro_f1: 0.73  # NEEDS_UPDATE: calibration-band estimate, not empirical
+    gpt4_macro_f1: 0.61    # NEEDS_UPDATE: informal estimate from published benchmarks
   roundtrip:
     data_source: cogant/evaluation/dataset/roundtrip_results.jsonl
     note: Pre-wave-16 benchmark; wave-16 synthesizer changes not yet re-benchmarked
@@ -50,8 +53,12 @@ evaluation:
     threshold_approximate: 0.5
     total_targets: 23
     isomorphic_count: 14
+    isomorphic_percent: 60.9  # NEEDS_UPDATE: 14/23 * 100
     approximate_count: 6
     divergent_count: 3
+    zoo_fixture_count: 12   # NEEDS_UPDATE: zoo group targets in evaluation set
+    rw_lib_count: 11        # NEEDS_UPDATE: real-world library targets (rw + rwex)
+    rw_repo_count: 8        # NEEDS_UPDATE: real-world repos for forward-pipeline eval (all 8/8 pass)
     mean_epsilon: 0.8092
     median_epsilon: 0.8638
     min_epsilon: 0.4147
@@ -172,6 +179,13 @@ evaluation:
       epsilon: 0.4147
       tier: DIVERGENT
       elapsed_s: 4.07
+benchmark:
+  suite_runtime_s: 238    # NEEDS_UPDATE: canonical v0.5.0 run on Apple-silicon 2024-class
+  shipped_fixture_count: 6  # zoo fixtures packaged inside the distribution
+ir_schema:
+  node_kind_count: 14
+  edge_kind_count: 11
+  active_inf_role_count: 7  # HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE, CONSTRAINT, CONTEXT
 literature:
   source: cogant/docs/evaluation/LITERATURE.md
   bibliography_entries: 86

@@ -44,6 +44,35 @@ MANUSCRIPT_VARS: dict[str, str] = {
     # Literature
     "{{BIB_ENTRIES}}": "literature.bibliography_entries",
 
+    # Codebase — extended
+    "{{PUBLIC_MODULES}}": "codebase.public_modules",
+
+    # Testing — extended counts
+    "{{TEST_COUNT_SKIPPED}}": "testing.test_count_skipped",
+    "{{TEST_COUNT_XFAILED}}": "testing.test_count_xfailed",
+    "{{TEST_COUNT_XPASSED}}": "testing.test_count_xpassed",
+    "{{TEST_FILES_UNIT}}": "testing.test_files_unit",
+    "{{TEST_FILES_INTEGRATION}}": "testing.test_files_integration",
+
+    # Roundtrip evaluation — derived / categorised counts
+    "{{ISO_PERCENT}}": "evaluation.roundtrip.isomorphic_percent",
+    "{{ZOO_FIXTURE_COUNT}}": "evaluation.roundtrip.zoo_fixture_count",
+    "{{RW_LIB_COUNT}}": "evaluation.roundtrip.rw_lib_count",
+    "{{RW_REPO_COUNT}}": "evaluation.roundtrip.rw_repo_count",
+
+    # Benchmark / performance (derived from benchmark run)
+    "{{SUITE_RUNTIME_S}}": "benchmark.suite_runtime_s",
+    "{{SHIPPED_FIXTURE_COUNT}}": "benchmark.shipped_fixture_count",
+
+    # IR schema counts
+    "{{NODE_KIND_COUNT}}": "ir_schema.node_kind_count",
+    "{{EDGE_KIND_COUNT}}": "ir_schema.edge_kind_count",
+    "{{ACTIVE_INF_ROLE_COUNT}}": "ir_schema.active_inf_role_count",
+
+    # Semantic role F1 estimates
+    "{{COGANT_MACRO_F1}}": "evaluation.semantic.cogant_macro_f1",
+    "{{GPT4_MACRO_F1}}": "evaluation.semantic.gpt4_macro_f1",
+
     # Rust
     "{{RUST_CRATES}}": "rust.crates_total",
     "{{RUST_FFI}}": "rust.ffi_available",

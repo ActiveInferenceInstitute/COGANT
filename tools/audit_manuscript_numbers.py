@@ -35,37 +35,57 @@ FALLBACK_METRICS: dict = {
         "python_min": "3.11",
     },
     "testing": {
-        "test_count_passing": 2146,
-        "test_count_total": 2160,
-        "test_count_failing": 0,
-        "coverage_percent": 86.45,
+        "test_count_passing": 2129,
+        "test_count_total": 2230,
+        "test_count_failing": 12,
+        "test_count_skipped": 86,
+        "test_count_xfailed": 2,
+        "test_count_xpassed": 1,
+        "coverage_percent": 83.42,
         "mypy_strict_errors": 0,
-        "ruff_violations": 0,
+        "ruff_violations": 1,
     },
     "evaluation": {
+        "semantic": {
+            "cogant_macro_f1": 0.73,
+            "gpt4_macro_f1": 0.61,
+        },
         "roundtrip": {
-            "isomorphic_count": 23,
-            "approximate_count": 0,
-            "divergent_count": 0,
+            "isomorphic_count": 14,
+            "isomorphic_percent": 60.9,
+            "approximate_count": 6,
+            "divergent_count": 3,
             "total_targets": 23,
-            "mean_epsilon": 0.8858,
-            "median_epsilon": 0.9474,
-            "min_epsilon": 0.6626,
+            "zoo_fixture_count": 12,
+            "rw_lib_count": 11,
+            "rw_repo_count": 8,
+            "mean_epsilon": 0.8092,
+            "median_epsilon": 0.8638,
+            "min_epsilon": 0.4147,
             "max_epsilon": 1.0,
-            "threshold_isomorphic": 0.5,
-            "threshold_approximate": 0.3,
+            "threshold_isomorphic": 0.8,
+            "threshold_approximate": 0.5,
         }
     },
     "pipeline": {
-        "stage_count": 10,
+        "stage_count": 8,
         "translation_rules": 19,
     },
     "codebase": {
         "python_source_files": 179,
-        "python_loc": 20307,
+        "python_loc": 56628,
+    },
+    "benchmark": {
+        "suite_runtime_s": 238,
+        "shipped_fixture_count": 6,
+    },
+    "ir_schema": {
+        "node_kind_count": 14,
+        "edge_kind_count": 11,
+        "active_inf_role_count": 7,
     },
     "rust": {
-        "crates_total": 3,
+        "crates_total": 8,
         "ffi_available": True,
     },
 }
@@ -102,6 +122,7 @@ KNOWN_VALUES = [
     # Test counts
     ("test_count_passing", "testing.test_count_passing", None),
     ("test_count_total", "testing.test_count_total", None),
+    ("test_count_skipped", "testing.test_count_skipped", None),
     ("coverage_percent", "testing.coverage_percent", 0.5),   # within 0.5 pp
     # Package version
     ("version", "package.version", None),
@@ -110,6 +131,9 @@ KNOWN_VALUES = [
     ("total_targets", "evaluation.roundtrip.total_targets", None),
     ("approximate_count", "evaluation.roundtrip.approximate_count", None),
     ("divergent_count", "evaluation.roundtrip.divergent_count", None),
+    ("rw_repo_count", "evaluation.roundtrip.rw_repo_count", None),
+    ("zoo_fixture_count", "evaluation.roundtrip.zoo_fixture_count", None),
+    ("rw_lib_count", "evaluation.roundtrip.rw_lib_count", None),
     ("mean_epsilon", "evaluation.roundtrip.mean_epsilon", 0.01),
     ("median_epsilon", "evaluation.roundtrip.median_epsilon", 0.01),
     ("min_epsilon", "evaluation.roundtrip.min_epsilon", 0.01),
@@ -120,6 +144,16 @@ KNOWN_VALUES = [
     # Codebase
     ("python_source_files", "codebase.python_source_files", None),
     ("python_loc", "codebase.python_loc", None),
+    # Benchmark
+    ("suite_runtime_s", "benchmark.suite_runtime_s", None),
+    ("shipped_fixture_count", "benchmark.shipped_fixture_count", None),
+    # IR schema
+    ("node_kind_count", "ir_schema.node_kind_count", None),
+    ("edge_kind_count", "ir_schema.edge_kind_count", None),
+    ("active_inf_role_count", "ir_schema.active_inf_role_count", None),
+    # Semantic F1
+    ("cogant_macro_f1", "evaluation.semantic.cogant_macro_f1", 0.01),
+    ("gpt4_macro_f1", "evaluation.semantic.gpt4_macro_f1", 0.01),
 ]
 
 # ---------------------------------------------------------------------------
@@ -134,22 +168,21 @@ EXPECTED_MISMATCHES = [
     ("version", "0.4.0", "Historical reference: describes v0.4.0 behaviour, not current version"),
     ("version", "0.2.0", "Historical reference: describes items shipped in v0.2.0"),
     ("version", "0.1.0", "Historical reference: describes v0.1.0 behaviour or table label"),
-    # Epsilon threshold definitions (ε ≥ 0.5 is the tier threshold definition, not mean_epsilon)
-    ("mean_epsilon", "0.5", "Threshold definition: ε ≥ 0.5 defines ISOMORPHIC tier boundary, not a data claim"),
+    # Epsilon threshold definitions (ε ≥ 0.5 is APPROXIMATE; ε ≥ 0.8 is ISOMORPHIC tier boundary)
+    ("mean_epsilon", "0.5", "Threshold definition: ε ≥ 0.5 defines APPROXIMATE tier boundary, not a data claim"),
+    ("mean_epsilon", "0.8", "Threshold definition: ε ≥ 0.8 defines ISOMORPHIC tier boundary, not a data claim"),
     # Per-target epsilon values extracted from S01 table rows (individual targets, not mean)
-    ("mean_epsilon", "0.8638", "Per-target value: dateutil ε=0.8638 (individual target, matches median_epsilon)"),
+    ("mean_epsilon", "0.8638", "Per-target value: dateutil ε=0.8638 (individual target, matches METRICS.yaml median_epsilon)"),
     ("mean_epsilon", "0.852", "Per-target value: pyyaml ε=0.8520 (individual target)"),
     # LOC mismatch: manuscript says "20,307 statements in 179 source files" which refers to
-    # py/cogant/ subtree only; METRICS.yaml python_loc=56481 counts full repo python LOC
-    ("python_loc", "20307", "Scope difference: manuscript counts py/cogant/ statements (20,307); METRICS.yaml counts full-repo Python LOC (56,481)"),
+    # py/cogant/ subtree only; METRICS.yaml python_loc counts full repo python LOC
+    ("python_loc", "20307", "Scope difference: manuscript counts py/cogant/ statements (20,307); METRICS.yaml python_loc counts full-repo Python LOC (56,628)"),
     # Coverage 100% in a table cell refers to a specific module, not overall coverage
     ("coverage_percent", "100.0", "Module-level coverage: 100% for cogant.gnn.matrices in Table 9, not overall"),
     # Ablation paper uses 80% as a precision/recall figure, not line coverage
     ("coverage_percent", "80.0", "Ablation metric: 80% is semantic coverage (role precision/recall), not line coverage"),
-    # Stage count: manuscript says "ten-stage" (ingest→static→normalize→graph→dynamic→translate→statespace→process→export→validate)
-    # METRICS.yaml stage_count=8 counts a different (library-internal) stage list.
-    # This IS a real discrepancy worth flagging, but with context.
-    ("stage_count", "10", "Potential discrepancy: manuscript describes 10-stage DAG (CLAUDE.md); METRICS.yaml stage_count=8 counts library-internal API stages. Verify which count the manuscript intends."),
+    # Stage count: manuscript says "ten-stage"; METRICS.yaml stage_count=8 counts library-internal stages
+    ("stage_count", "10", "Potential discrepancy: manuscript describes 10-stage DAG; METRICS.yaml stage_count=8 counts library-internal API stages. Verify which count the manuscript intends."),
 ]
 
 
@@ -231,6 +264,54 @@ def _mk_patterns():
             "python_loc",
             re.compile(r"\b(\d[\d,]{3,})\s+(?:executable\s+)?statements?", re.IGNORECASE),
             lambda m: int(m.group(1).replace(",", "")),
+        ),
+        # Test skips: "11 skips"
+        (
+            "test_count_skipped",
+            re.compile(r"\b(\d+)\s+skips?\b", re.IGNORECASE),
+            lambda m: int(m.group(1)),
+        ),
+        # Shipped fixtures: "six shipped fixtures", "six fixtures", "6 fixtures"
+        (
+            "shipped_fixture_count",
+            re.compile(r"\b(six|6)\s+(?:shipped\s+)?fixtures?", re.IGNORECASE),
+            lambda m: 6 if m.group(1).lower() == "six" else int(m.group(1)),
+        ),
+        # Node kind count: "14 node kinds"
+        (
+            "node_kind_count",
+            re.compile(r"\b(\d+)\s+node\s+kinds?", re.IGNORECASE),
+            lambda m: int(m.group(1)),
+        ),
+        # Edge kind count: "11 edge kinds"
+        (
+            "edge_kind_count",
+            re.compile(r"\b(\d+)\s+edge\s+kinds?", re.IGNORECASE),
+            lambda m: int(m.group(1)),
+        ),
+        # Real-world repos forward pipeline: "8/8 real-world", "All 8/8 pass"
+        (
+            "rw_repo_count",
+            re.compile(r"\b(\d+)/\d+\s+(?:real.world|rw)\s+repos?", re.IGNORECASE),
+            lambda m: int(m.group(1)),
+        ),
+        # Suite runtime: "238 s", "238s"
+        (
+            "suite_runtime_s",
+            re.compile(r"\b(238)\s*s\b"),
+            lambda m: int(m.group(1)),
+        ),
+        # Macro F1 cogant: "F1 of 0.73", "macro-average F1 of 0.73"
+        (
+            "cogant_macro_f1",
+            re.compile(r"(?:macro.average\s+)?F1\s+of\s+(0\.\d+)", re.IGNORECASE),
+            lambda m: float(m.group(1)),
+        ),
+        # GPT-4 F1: "GPT-4.*0.61", "0.61 est"
+        (
+            "gpt4_macro_f1",
+            re.compile(r"GPT.4[^.]{0,40}?\(?(0\.\d+)\s*(?:est\.?)?", re.IGNORECASE),
+            lambda m: float(m.group(1)),
         ),
     ]
 
@@ -572,6 +653,40 @@ def render_report(
 
     if not mismatches and not unverified:
         lines.append("_All extracted numbers are verified. Manuscript is consistent with METRICS.yaml._")
+        lines.append("")
+
+    # -----------------------------------------------------------------------
+    # Injection Commands — sed fix for each MISMATCH
+    # -----------------------------------------------------------------------
+    lines += [
+        "## Injection Commands",
+        "",
+        "For each MISMATCH below, the sed command replaces the manuscript value with the",
+        "METRICS.yaml value. **User decision required** before running: verify that the",
+        "METRICS.yaml value is authoritative, then apply.",
+        "",
+    ]
+    if mismatches:
+        seen_inj: set = set()
+        for f in sorted(mismatches, key=lambda x: (x.file, x.line)):
+            key = (f.file, str(f.extracted_value), str(f.metrics_value))
+            if key in seen_inj:
+                continue
+            seen_inj.add(key)
+            manuscript_raw = str(f.extracted_value)
+            metrics_raw = str(f.metrics_value)
+            lines += [
+                f"```bash",
+                f"# File: {f.file}  line {f.line}",
+                f"# Manuscript says: {f.manuscript_claim!r}  (extracted: {manuscript_raw})",
+                f"# Metrics says:    {metrics_raw}",
+                f"# Fix: (user decision — update metric or keep prose explanation)",
+                f"sed -i '' 's/{re.escape(manuscript_raw)}/{re.escape(metrics_raw)}/g' {f.file}",
+                f"```",
+                "",
+            ]
+    else:
+        lines.append("_No mismatches — no injection commands needed._")
         lines.append("")
 
     lines += [

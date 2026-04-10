@@ -54,14 +54,34 @@ def inject(text: str, metrics: dict, dry_run: bool = False) -> tuple[str, list[s
     return text, substitutions
 
 
+def report(metrics: dict) -> None:
+    """Print a compact table of all registered vars and their current METRICS.yaml values."""
+    col_var = max(len(v) for v in MANUSCRIPT_VARS) + 2
+    col_path = max(len(p) for p in MANUSCRIPT_VARS.values()) + 2
+    header_var = "VAR"
+    header_path = "METRICS_PATH"
+    header_val = "CURRENT_VALUE"
+    print(f"{header_var:<{col_var}}  {header_path:<{col_path}}  {header_val}")
+    print(f"{'-' * col_var}  {'-' * col_path}  {'-' * 20}")
+    for var, path in sorted(MANUSCRIPT_VARS.items()):
+        value = resolve_path(metrics, path)
+        val_str = str(value) if value is not None else "<not found>"
+        print(f"{var:<{col_var}}  {path:<{col_path}}  {val_str}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Inject METRICS.yaml values into manuscript {{VAR}} placeholders."
     )
-    parser.add_argument("input", help="Input markdown file or directory")
+    parser.add_argument("input", nargs="?", help="Input markdown file or directory (omit when using --report)")
     parser.add_argument("--dry-run", action="store_true", help="Show substitutions without modifying files")
     parser.add_argument("--output", help="Output file (default: in-place)")
     parser.add_argument("--all", dest="all_files", action="store_true", help="Process all .md files in directory")
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        help="Print a compact table of all registered vars and their current METRICS.yaml values, then exit.",
+    )
     args = parser.parse_args()
 
     if not METRICS_PATH.exists():
@@ -70,6 +90,14 @@ def main():
         sys.exit(1)
 
     metrics = load_metrics()
+
+    if args.report:
+        report(metrics)
+        return
+
+    if not args.input:
+        parser.error("the following arguments are required: input (unless --report is used)")
+
     input_path = Path(args.input)
 
     if args.all_files or input_path.is_dir():
