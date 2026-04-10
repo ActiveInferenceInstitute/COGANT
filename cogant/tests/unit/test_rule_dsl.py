@@ -10,7 +10,7 @@ import pytest
 from cogant.translate.dsl import DSLRule, DSLRuleSet, load_rules_from_dict, compile_ruleset
 from cogant.translate.dsl.schema import DSLCondition
 from cogant.schemas.core import Node, NodeKind, EdgeKind, Edge
-from cogant.schemas.graph import ProgramGraph
+from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
 
 # ---------------------------------------------------------------------------
@@ -25,7 +25,7 @@ def _make_graph_with_node(
     outgoing_edge_kinds: list[EdgeKind] | None = None,
 ) -> ProgramGraph:
     """Build a minimal ProgramGraph for matcher tests."""
-    graph = ProgramGraph(name="test", language="python")
+    graph = ProgramGraph(metadata=GraphMetadata(repo_uri="test"))
     node = Node(id=node_id, kind=kind, name=name, qualified_name=name)
     graph.add_node(node)
 
