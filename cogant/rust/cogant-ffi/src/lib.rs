@@ -6,6 +6,8 @@
 use cogant_core::{Confidence, EdgeKind, NodeKind, Provenance, SemanticRole, StableId};
 use cogant_graph::{EdgeData, NodeData, ProgramGraph};
 use cogant_gnn::{format_json, format_markdown};
+use petgraph::graph::UnGraph;
+use petgraph::algo::connected_components as petgraph_connected_components;
 use pyo3::prelude::*;
 
 /// Python wrapper for StableId.
@@ -327,6 +329,97 @@ fn parse_semantic_role(role: &str) -> PyResult<SemanticRole> {
     }
 }
 
+/// Compute connected components of an undirected graph.
+///
+/// Given a list of node IDs and a list of (source, target) edge pairs, returns
+/// a list of components where each component is a list of node IDs that are
+/// reachable from each other.
+///
+/// This is the Rust hot path replacing the Python BFS in
+/// ``ProgramGraphBuilder.get_connected_components()``. Enable it by setting
+/// the environment variable ``COGANT_USE_RUST=1``.
+///
+/// Complexity: O(V + E) using petgraph's union-find.
+#[pyfunction]
+pub fn connected_components(
+    nodes: Vec<String>,
+    edges: Vec<(String, String)>,
+) -> Vec<Vec<String>> {
+    if nodes.is_empty() {
+        return Vec::new();
+    }
+
+    // Map node IDs to petgraph NodeIndex.
+    let mut node_index: std::collections::HashMap<&str, petgraph::graph::NodeIndex> =
+        std::collections::HashMap::with_capacity(nodes.len());
+    let mut graph: UnGraph<usize, ()> = UnGraph::with_capacity(nodes.len(), edges.len());
+
+    for (i, node_id) in nodes.iter().enumerate() {
+        let idx = graph.add_node(i);
+        node_index.insert(node_id.as_str(), idx);
+    }
+
+    for (src, dst) in &edges {
+        if let (Some(&a), Some(&b)) = (node_index.get(src.as_str()), node_index.get(dst.as_str()))
+        {
+            // petgraph's UnGraph deduplicates automatically via the adjacency
+            // representation; adding parallel edges is harmless for BFS/union-find.
+            graph.add_edge(a, b, ());
+        }
+    }
+
+    // Use petgraph's union-find to assign each node to a component label.
+    let num_components = petgraph_connected_components(&graph);
+    if num_components == 0 {
+        return Vec::new();
+    }
+
+    // Walk nodes in petgraph order to collect component membership.
+    // petgraph doesn't expose the component map directly from
+    // `connected_components`, so we run a manual BFS to group them — this
+    // keeps the result order deterministic (same as the Python BFS).
+    let n = nodes.len();
+    let mut visited = vec![false; n];
+    let mut components: Vec<Vec<String>> = Vec::with_capacity(num_components);
+
+    // Build an adjacency list indexed by our 0..n positions.
+    let mut adj: Vec<Vec<usize>> = vec![Vec::new(); n];
+    for (src, dst) in &edges {
+        if let (Some(&a), Some(&b)) = (node_index.get(src.as_str()), node_index.get(dst.as_str()))
+        {
+            let ai = a.index();
+            let bi = b.index();
+            adj[ai].push(bi);
+            adj[bi].push(ai);
+        }
+    }
+
+    for (i, node_id) in nodes.iter().enumerate() {
+        if visited[i] {
+            continue;
+        }
+        // BFS from node i.
+        let mut component: Vec<String> = Vec::new();
+        let mut queue: std::collections::VecDeque<usize> = std::collections::VecDeque::new();
+        queue.push_back(i);
+        visited[i] = true;
+        while let Some(cur) = queue.pop_front() {
+            component.push(nodes[cur].clone());
+            for &nb in &adj[cur] {
+                if !visited[nb] {
+                    visited[nb] = true;
+                    queue.push_back(nb);
+                }
+            }
+        }
+        // Suppress unused warning: node_id is the canonical label for i.
+        let _ = node_id;
+        components.push(component);
+    }
+
+    components
+}
+
 /// Get COGANT version.
 #[pyfunction]
 pub fn get_version() -> &'static str {
@@ -384,6 +477,7 @@ pub fn create_example_graph() -> PyProgramGraph {
 pub fn cogant_rust_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_version, m)?)?;
     m.add_function(wrap_pyfunction!(create_example_graph, m)?)?;
+    m.add_function(wrap_pyfunction!(connected_components, m)?)?;
 
     m.add_class::<PyStableId>()?;
     m.add_class::<PyConfidence>()?;

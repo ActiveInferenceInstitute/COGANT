@@ -249,7 +249,31 @@ class ProgramGraphBuilder:
 
         Returns:
             List of lists, each containing node IDs in a connected component.
+
+        When ``COGANT_USE_RUST=1`` is set in the environment and the Rust
+        extension module (``cogant._rust``) is installed, the computation is
+        delegated to the Rust hot path which uses petgraph's union-find and
+        runs entirely in compiled code.  The fallback path is a pure-Python
+        BFS that is O(V + E).
         """
+        import os
+
+        if os.environ.get("COGANT_USE_RUST") == "1":
+            try:
+                from cogant._rust import (  # type: ignore[import-not-found]
+                    connected_components as _rust_cc,
+                )
+
+                node_ids = list(self.graph.nodes.keys())
+                edge_pairs = [
+                    (e.source_id, e.target_id)
+                    for e in self.graph.edges.values()
+                ]
+                return _rust_cc(node_ids, edge_pairs)
+            except (ImportError, ModuleNotFoundError):
+                pass  # fall through to Python BFS
+
+        # Pure-Python BFS — O(V + E) via a pre-built adjacency list.
         # Build an undirected adjacency list in O(|E|) so that the BFS
         # below runs in O(|V| + |E|) instead of O(|V| × |E|).
         # The original implementation called graph.get_neighbors() inside
