@@ -17,6 +17,8 @@ from cogant.runtime.config import AgentConfig
 from cogant.runtime.loop import (
     AgentRuntime,
     AgentStep,
+    EpisodeResult,
+    MultiEpisodeResult,
     run_n_steps,
     run_until_convergence,
 )
@@ -25,6 +27,8 @@ __all__ = [
     "AgentConfig",
     "AgentStep",
     "AgentRuntime",
+    "EpisodeResult",
+    "MultiEpisodeResult",
     "run_n_steps",
     "run_until_convergence",
 ]

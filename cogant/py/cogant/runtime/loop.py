@@ -48,6 +48,52 @@ class AgentStep:
     free_energy: float
 
 
+@dataclass
+class EpisodeResult:
+    """Result of running one learning episode.
+
+    Attributes:
+        steps: Ordered list of :class:`AgentStep` records for the episode.
+        final_posterior: Belief distribution over hidden states at the
+            end of the episode (the last step's ``state_dist``).
+        obs_counts: Histogram of observation indices seen during the
+            episode (length ``n_obs``; entries sum to ``len(steps)``).
+        obs_state_counts: Joint soft counts ``[n_obs x n_states]`` —
+            ``obs_state_counts[o][s]`` accumulates ``state_dist[s]`` over
+            every step where observation ``o`` was seen. Used for the
+            frequency-based A update.
+        mean_free_energy: Arithmetic mean of ``step.free_energy`` over
+            the episode (``nan`` if the episode is empty).
+        final_free_energy: VFE at the last step (``nan`` if empty).
+    """
+
+    steps: list[AgentStep]
+    final_posterior: list[float]
+    obs_counts: list[float]
+    obs_state_counts: list[list[float]]
+    mean_free_energy: float
+    final_free_energy: float
+
+
+@dataclass
+class MultiEpisodeResult:
+    """Result of a multi-episode learning run.
+
+    Attributes:
+        episodes: Per-episode :class:`EpisodeResult` records.
+        vfe_trajectory: Mean VFE per episode (parallel to ``episodes``).
+        final_vfe_trajectory: Final-step VFE per episode.
+        D_trajectory: Snapshot of the D prior after each episode update.
+        learning_rate: Learning rate used for the A likelihood update.
+    """
+
+    episodes: list[EpisodeResult]
+    vfe_trajectory: list[float]
+    final_vfe_trajectory: list[float]
+    D_trajectory: list[list[float]]
+    learning_rate: float
+
+
 def _normalize(dist: list[float]) -> list[float]:
     """Normalize a distribution to sum to 1, with epsilon safety."""
     total = sum(dist)
@@ -145,6 +191,8 @@ class AgentRuntime:
         self._n_actions = (
             len(self.B[0][0]) if self.B and self.B[0] and self.B[0][0] else 1
         )
+        # Number of episodes completed — drives the running-average D update.
+        self._episode_count = 0
 
     @classmethod
     def from_matrices_dict(cls, d: dict[str, Any]) -> AgentRuntime:
@@ -294,6 +342,247 @@ class AgentRuntime:
 
         return steps
 
+    # ------------------------------------------------------------------
+    # Multi-episode learning
+    # ------------------------------------------------------------------
+
+    def run_episode(
+        self,
+        n_steps: int,
+        initial_state: list[float] | None = None,
+    ) -> EpisodeResult:
+        """Run one learning episode of ``n_steps`` inference cycles.
+
+        Re-uses :meth:`run_n_steps` for the perception-action loop and
+        additionally accumulates per-modality observation histograms and
+        joint ``(obs, state)`` soft counts. The joint counts are the
+        statistic required by the frequency-based A update in
+        :meth:`update_A_from_counts`.
+
+        Args:
+            n_steps: Number of perception-action cycles. ``0`` yields an
+                empty result whose posterior falls back to the current
+                prior ``D`` (or a uniform distribution if ``D`` is empty).
+            initial_state: Optional belief distribution to start from. If
+                ``None`` the current ``D`` prior is used.
+
+        Returns:
+            An :class:`EpisodeResult` capturing the trajectory and the
+            sufficient statistics for learning updates.
+        """
+        n_obs = max(self._n_obs, 1)
+        n_states = max(self._n_states, 1)
+        obs_counts = [0.0] * n_obs
+        obs_state_counts = [[0.0] * n_states for _ in range(n_obs)]
+
+        steps = self.run_n_steps(n_steps, initial_state=initial_state)
+
+        if not steps:
+            if initial_state is not None:
+                posterior = _normalize(list(initial_state))
+            elif self.D:
+                posterior = _normalize(list(self.D))
+            else:
+                posterior = [1.0 / n_states] * n_states
+            return EpisodeResult(
+                steps=[],
+                final_posterior=posterior,
+                obs_counts=obs_counts,
+                obs_state_counts=obs_state_counts,
+                mean_free_energy=float("nan"),
+                final_free_energy=float("nan"),
+            )
+
+        total_fe = 0.0
+        for step in steps:
+            o = step.obs
+            if 0 <= o < n_obs:
+                obs_counts[o] += 1.0
+                row = obs_state_counts[o]
+                for j in range(min(n_states, len(step.state_dist))):
+                    row[j] += step.state_dist[j]
+            total_fe += step.free_energy
+
+        return EpisodeResult(
+            steps=steps,
+            final_posterior=list(steps[-1].state_dist),
+            obs_counts=obs_counts,
+            obs_state_counts=obs_state_counts,
+            mean_free_energy=total_fe / len(steps),
+            final_free_energy=steps[-1].free_energy,
+        )
+
+    def update_D_from_posterior(self, posterior: list[float]) -> list[float]:
+        """Update the D prior as a running average with the new posterior.
+
+        Implements::
+
+            D_new = (D_old * episode_num + posterior) / (episode_num + 1)
+
+        where ``episode_num`` is the number of episodes completed **before**
+        the current update (``self._episode_count``). After the update,
+        ``_episode_count`` is incremented so that successive calls produce a
+        true arithmetic running mean of posteriors.
+
+        The update mutates ``self.D`` in place **and** rebinds the attribute
+        so callers that cached a reference still see consistent values.
+        ``posterior`` is normalised defensively before mixing.
+
+        Args:
+            posterior: The (unnormalised or normalised) posterior belief
+                distribution from the most recent episode.
+
+        Returns:
+            The updated D prior (same object as ``self.D``).
+        """
+        if not self.D or not posterior:
+            return self.D
+        n = min(len(self.D), len(posterior))
+        norm_post = _normalize(list(posterior[:n]))
+        k = self._episode_count
+        new_D: list[float] = []
+        for i in range(n):
+            d_old = self.D[i]
+            p_new = norm_post[i] if i < len(norm_post) else 0.0
+            new_D.append((d_old * k + p_new) / (k + 1))
+        # Normalise to guard against floating-point drift.
+        new_D = _normalize(new_D)
+        # Preserve list identity for any cached references.
+        for i in range(n):
+            self.D[i] = new_D[i]
+        self._episode_count = k + 1
+        return self.D
+
+    def update_A_from_counts(
+        self,
+        obs_state_counts: list[list[float]],
+        learning_rate: float = 0.1,
+    ) -> list[list[float]]:
+        """Frequency-based A likelihood update from episode observations.
+
+        For every observation ``o`` the empirical conditional frequency
+        over hidden states,
+
+            freq[o, s] = obs_state_counts[o][s] / sum_s obs_state_counts[o][s]
+
+        is blended into the corresponding row of A::
+
+            A[o, :] += learning_rate * (freq[o, :] - A[o, :])
+
+        After the row update each **column** of A is normalised so that
+        ``sum_o A[o, s] == 1`` for every state ``s`` — this preserves the
+        likelihood-matrix invariant that each column is a proper
+        distribution over observations.
+
+        Observations that were never seen during the episode leave their
+        corresponding A rows unchanged, which keeps the update conservative
+        and avoids collapsing A toward zeros.
+
+        Args:
+            obs_state_counts: ``[n_obs x n_states]`` soft counts from an
+                :class:`EpisodeResult`.
+            learning_rate: Step size in ``[0, 1]``. ``0`` disables the
+                update; ``1`` replaces A rows with empirical frequencies
+                (still followed by column normalisation).
+
+        Returns:
+            The updated A matrix (same object as ``self.A``).
+        """
+        if not self.A or not obs_state_counts:
+            return self.A
+        lr = max(0.0, min(1.0, float(learning_rate)))
+        n_obs = len(self.A)
+        n_states = len(self.A[0]) if self.A[0] else 0
+        if n_states == 0:
+            return self.A
+
+        # Row update: blend empirical frequencies into each row.
+        for o in range(min(n_obs, len(obs_state_counts))):
+            row_counts = obs_state_counts[o]
+            total = sum(row_counts[:n_states])
+            if total <= _EPS:
+                # No observations of this modality -> leave row alone.
+                continue
+            freq = [row_counts[j] / total if j < len(row_counts) else 0.0 for j in range(n_states)]
+            for j in range(n_states):
+                self.A[o][j] = (1.0 - lr) * self.A[o][j] + lr * freq[j]
+
+        # Column normalisation: enforce sum_o A[o, s] == 1 per state.
+        for s in range(n_states):
+            col_sum = 0.0
+            for o in range(n_obs):
+                col_sum += self.A[o][s]
+            if col_sum > _EPS:
+                for o in range(n_obs):
+                    self.A[o][s] = self.A[o][s] / col_sum
+            else:
+                # Degenerate column -> reset to uniform so A stays a
+                # proper likelihood matrix.
+                uniform = 1.0 / n_obs
+                for o in range(n_obs):
+                    self.A[o][s] = uniform
+
+        return self.A
+
+    def run_multi_episode(
+        self,
+        n_episodes: int,
+        steps_per_episode: int,
+        learning_rate: float = 0.1,
+        initial_state: list[float] | None = None,
+    ) -> MultiEpisodeResult:
+        """Run multiple episodes, updating D and A between each.
+
+        Between episodes the runtime:
+
+        1. Updates the D prior as a running average of episode posteriors
+           (see :meth:`update_D_from_posterior`).
+        2. Updates the A likelihood from observation/state soft counts
+           (see :meth:`update_A_from_counts`).
+
+        Each episode starts from ``initial_state`` if provided, otherwise
+        from the current (already-updated) D prior — so the agent both
+        *uses* and *refines* what it has learned.
+
+        Args:
+            n_episodes: Number of episodes to run.
+            steps_per_episode: Steps within each episode.
+            learning_rate: Learning rate for the A update (0 disables A
+                learning; D learning is always a running average).
+            initial_state: Optional fixed initial belief for every
+                episode. Defaults to the current (updated) D prior.
+
+        Returns:
+            A :class:`MultiEpisodeResult` with per-episode VFE trajectories
+            and snapshots of the D prior after each update.
+        """
+        episodes: list[EpisodeResult] = []
+        vfe_traj: list[float] = []
+        final_vfe_traj: list[float] = []
+        D_traj: list[list[float]] = []
+
+        for _ep in range(max(0, n_episodes)):
+            result = self.run_episode(
+                steps_per_episode,
+                initial_state=initial_state,
+            )
+            episodes.append(result)
+            vfe_traj.append(result.mean_free_energy)
+            final_vfe_traj.append(result.final_free_energy)
+
+            # Learning updates (order: D then A; both operate on episode stats).
+            self.update_D_from_posterior(result.final_posterior)
+            self.update_A_from_counts(result.obs_state_counts, learning_rate=learning_rate)
+            D_traj.append(list(self.D))
+
+        return MultiEpisodeResult(
+            episodes=episodes,
+            vfe_trajectory=vfe_traj,
+            final_vfe_trajectory=final_vfe_traj,
+            D_trajectory=D_traj,
+            learning_rate=learning_rate,
+        )
+
 
 def run_n_steps(
     runtime: AgentRuntime, n: int, initial_state: list[float] | None = None
@@ -332,6 +621,8 @@ def run_until_convergence(
 __all__ = [
     "AgentStep",
     "AgentRuntime",
+    "EpisodeResult",
+    "MultiEpisodeResult",
     "run_n_steps",
     "run_until_convergence",
 ]
