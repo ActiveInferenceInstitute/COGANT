@@ -3,11 +3,12 @@
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def load_bundle(output_dir: Path) -> dict:
+def load_bundle(output_dir: Path) -> dict[str, Any]:
     """Load a bundle from an output directory.
 
     Args:

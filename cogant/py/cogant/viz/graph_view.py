@@ -50,7 +50,7 @@ class GraphVisualizer:
       - HTML/SVG export
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize visualizer."""
         self.nodes: list[D3Node] = []
         self.links: list[D3Link] = []

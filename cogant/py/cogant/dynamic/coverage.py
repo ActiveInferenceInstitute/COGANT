@@ -40,7 +40,7 @@ class CoverageIngester:
       - Custom coverage formats
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize coverage ingester."""
         self.coverage_data: dict[str, Any] = {}
 

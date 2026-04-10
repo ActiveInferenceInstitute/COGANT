@@ -72,7 +72,7 @@ except ImportError:
         """Tiny ``tomllib`` shim used on Python versions that lack it."""
 
         @staticmethod
-        def load(f):
+        def load(f: Any) -> dict[str, Any]:
             """Read a TOML file and return it as a nested dict."""
             content = f.read()
             if isinstance(content, bytes):
@@ -104,7 +104,7 @@ class Dependency:
 class ManifestParser:
     """Parse package manifests to extract dependencies and metadata."""
 
-    def parse(self, path: Path) -> tuple[dict, list[Dependency]]:
+    def parse(self, path: Path) -> tuple[dict[str, Any], list[Dependency]]:
         """Parse a manifest file, automatically detecting type.
 
         Args:
@@ -131,7 +131,7 @@ class ManifestParser:
         else:
             raise ValueError(f"Unknown manifest file type: {filename}")
 
-    def parse_setup_py(self, path: Path) -> tuple[dict, list[Dependency]]:
+    def parse_setup_py(self, path: Path) -> tuple[dict[str, Any], list[Dependency]]:
         """Parse Python setup.py file.
 
         Args:
@@ -200,7 +200,7 @@ class ManifestParser:
 
         return metadata, dependencies
 
-    def parse_pyproject_toml(self, path: Path) -> tuple[dict, list[Dependency]]:
+    def parse_pyproject_toml(self, path: Path) -> tuple[dict[str, Any], list[Dependency]]:
         """Parse Python pyproject.toml file.
 
         Args:
@@ -273,7 +273,7 @@ class ManifestParser:
 
         return dependencies
 
-    def parse_package_json(self, path: Path) -> tuple[dict, list[Dependency]]:
+    def parse_package_json(self, path: Path) -> tuple[dict[str, Any], list[Dependency]]:
         """Parse Node.js package.json file.
 
         Args:
@@ -314,7 +314,7 @@ class ManifestParser:
 
         return metadata, dependencies
 
-    def parse_cargo_toml(self, path: Path) -> tuple[dict, list[Dependency]]:
+    def parse_cargo_toml(self, path: Path) -> tuple[dict[str, Any], list[Dependency]]:
         """Parse Rust Cargo.toml file.
 
         Args:

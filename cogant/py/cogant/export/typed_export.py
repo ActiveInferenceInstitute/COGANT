@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class TypedExporter:
     """Export program graphs in various typed formats."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the TypedExporter."""
         pass
 

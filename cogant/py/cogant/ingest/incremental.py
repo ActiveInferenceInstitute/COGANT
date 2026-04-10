@@ -188,7 +188,7 @@ class IncrementalIngester:
     def source_files_changed_since(
         self,
         ref: str = "HEAD~1",
-        extensions: set | None = None,
+        extensions: set[str] | None = None,
     ) -> list[Path]:
         """Return source files changed since ``ref``.
 

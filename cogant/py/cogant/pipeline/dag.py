@@ -12,6 +12,7 @@ import time
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Any
 
 
 class StageStatus(enum.Enum):
@@ -39,7 +40,7 @@ class Stage:
     """
 
     name: str
-    fn: Callable[[dict], dict]
+    fn: Callable[[dict[str, Any]], dict[str, Any]]
     deps: list[str] = field(default_factory=list)
     timeout: float = 60.0
 
@@ -52,7 +53,7 @@ class StageResult:
     status: StageStatus
     elapsed: float = 0.0
     error: str | None = None
-    output: dict = field(default_factory=dict)
+    output: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -82,7 +83,7 @@ class PipelineDAG:
             )
         self._stages[stage.name] = stage
 
-    def run(self, context: dict) -> DAGResult:
+    def run(self, context: dict[str, Any]) -> DAGResult:
         """Execute all stages in topological order.
 
         Parameters

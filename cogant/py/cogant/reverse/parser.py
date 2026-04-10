@@ -74,8 +74,8 @@ class ReverseGNNModel:
             Used by the planner to produce meaningful Python identifiers.
     """
 
-    model_name: str = "CogantModel"
-    raw_model_name: str = "CogantModel"
+    model_name: str = "cogant_model"
+    raw_model_name: str = "cogant_model"
     hidden_states: list[str] = field(default_factory=list)
     observations: list[str] = field(default_factory=list)
     actions: list[str] = field(default_factory=list)

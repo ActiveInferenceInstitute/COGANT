@@ -97,7 +97,7 @@ class PipelineRunner:
         bundle = runner.run("path/to/repo", config)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize pipeline runner."""
         self.stage_handlers: dict[str, Callable] = {
             "ingest": self._stage_ingest,

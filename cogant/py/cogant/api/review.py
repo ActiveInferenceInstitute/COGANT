@@ -45,7 +45,7 @@ class ReviewAPI:
       4. Save curated bundle
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize review API."""
         self.current_bundle: Any | None = None
         self.mappings: list[ReviewableMapping] = []

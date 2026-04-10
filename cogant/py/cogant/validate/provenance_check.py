@@ -7,6 +7,7 @@ Flags gaps in provenance.
 
 import logging
 from dataclasses import dataclass
+from typing import Any
 
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
@@ -93,21 +94,21 @@ class ProvenanceChecker:
 
     # Private checking methods
 
-    def _check_node_provenance(self, node_id: str, node) -> None:
+    def _check_node_provenance(self, node_id: str, node: Any) -> None:
         """Check provenance for a single node."""
         if node_id not in self.provenance_records or not self.provenance_records[node_id]:
             self._add_gap(node_id, "node",
                          f"Node {node_id} has no provenance records",
                          "warning")
 
-    def _check_edge_provenance(self, edge_id: str, edge) -> None:
+    def _check_edge_provenance(self, edge_id: str, edge: Any) -> None:
         """Check provenance for a single edge."""
         if edge_id not in self.provenance_records or not self.provenance_records[edge_id]:
             self._add_gap(edge_id, "edge",
                          f"Edge {edge_id} has no provenance records",
                          "warning")
 
-    def _check_variable_provenance(self, var_id: str, var) -> None:
+    def _check_variable_provenance(self, var_id: str, var: Any) -> None:
         """Check provenance for a state variable."""
         if var_id not in self.provenance_records or not self.provenance_records[var_id]:
             # Check if derived from a node
@@ -116,7 +117,7 @@ class ProvenanceChecker:
                              f"State variable {var_id} has no provenance (nor its source node)",
                              "warning")
 
-    def _check_observation_provenance(self, obs_id: str, obs) -> None:
+    def _check_observation_provenance(self, obs_id: str, obs: Any) -> None:
         """Check provenance for an observation."""
         if obs_id not in self.provenance_records or not self.provenance_records[obs_id]:
             # Check if derived from a node
@@ -125,7 +126,7 @@ class ProvenanceChecker:
                              f"Observation {obs_id} has no provenance (nor its source node)",
                              "warning")
 
-    def _check_action_provenance(self, action_id: str, action) -> None:
+    def _check_action_provenance(self, action_id: str, action: Any) -> None:
         """Check provenance for an action."""
         if action_id not in self.provenance_records or not self.provenance_records[action_id]:
             # Check if derived from a node

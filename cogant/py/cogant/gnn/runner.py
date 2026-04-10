@@ -115,7 +115,7 @@ class GNNModelRunner:
         self.free_energy_trajectory: list[float] = []
         self.action_counts: dict[str, int] = defaultdict(int)
 
-    def load_package(self, package_dir: str) -> dict:
+    def load_package(self, package_dir: str) -> dict[str, Any]:
         """
         Load a GNN package from disk.
 
@@ -177,7 +177,7 @@ class GNNModelRunner:
         except Exception as e:
             logger.warning(f"Could not load Active Inference models: {e}")
 
-    def run(self, steps: int = 10) -> dict:
+    def run(self, steps: int = 10) -> dict[str, Any]:
         """
         Execute the GNN model with Active Inference.
 
@@ -295,7 +295,7 @@ class GNNModelRunner:
 
         return result
 
-    def generate_execution_report(self, trace: dict | None = None) -> str:
+    def generate_execution_report(self, trace: dict[str, Any] | None = None) -> str:
         """
         Generate comprehensive markdown report of the GNN model execution with Active Inference.
 

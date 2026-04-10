@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class StaticPlotter:
     """Generate static HTML/SVG plots for COGANT models."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the StaticPlotter."""
         pass
 
@@ -173,7 +173,7 @@ class StaticPlotter:
         # Extract confidence scores. Accept both dict-shape mappings
         # ({"confidence": float, ...}) and object-shape mappings
         # (SemanticMapping with .confidence_score / .confidence).
-        confidences: list = []
+        confidences: list[float] = []
         for mapping_data in mappings.values():
             if isinstance(mapping_data, dict):
                 if "confidence" in mapping_data:

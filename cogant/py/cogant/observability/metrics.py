@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import threading
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -77,7 +78,7 @@ class MetricsRegistry:
         self._counters: dict[str, Counter] = {}
         self._histograms: dict[str, Histogram] = {}
 
-    def counter(self, name: str, labels: dict | None = None) -> Counter:
+    def counter(self, name: str, labels: dict[str, str] | None = None) -> Counter:
         """Return (or create) a :class:`Counter` by *name*."""
         with self._lock:
             if name not in self._counters:
@@ -94,7 +95,7 @@ class MetricsRegistry:
                 self._histograms[name] = Histogram(name=name)
             return self._histograms[name]
 
-    def summary(self) -> dict:
+    def summary(self) -> dict[str, Any]:
         """Snapshot of all metrics as plain dicts."""
         with self._lock:
             return {

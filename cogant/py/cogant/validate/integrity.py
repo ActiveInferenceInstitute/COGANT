@@ -25,7 +25,7 @@ class IntegrityChecker:
     - Confidence values in [0, 1]
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the checker."""
         self.issues: list[ValidationIssue] = []
 

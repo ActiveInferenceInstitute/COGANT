@@ -232,7 +232,7 @@ class GNNValidator:
 
         return errors
 
-    def validate_state_space(self, state_space_json: dict) -> list[str]:
+    def validate_state_space(self, state_space_json: dict[str, Any]) -> list[str]:
         """
         Validate state space structure.
 
@@ -272,7 +272,7 @@ class GNNValidator:
 
         return errors
 
-    def validate_matrices(self, matrices_json: dict) -> list[str]:
+    def validate_matrices(self, matrices_json: dict[str, Any]) -> list[str]:
         """Validate the AII Active Inference matrix block.
 
         Checks presence and shape of the A/B/C/D matrices emitted by
@@ -369,7 +369,7 @@ class GNNValidator:
 
         return errors
 
-    def validate_provenance(self, provenance_json: dict) -> list[str]:
+    def validate_provenance(self, provenance_json: dict[str, Any]) -> list[str]:
         """
         Validate provenance structure.
 
@@ -417,7 +417,7 @@ class GNNValidator:
             else:
                 logger.debug(f"  ✓ Found {filename}")
 
-    def _check_manifest(self) -> dict | None:
+    def _check_manifest(self) -> dict[str, Any] | None:
         """Check manifest validity and return parsed manifest."""
         manifest_path = self.package_dir / "manifest.json"
         if not manifest_path.exists():
@@ -519,7 +519,7 @@ class GNNValidator:
         except Exception as e:
             self.result.errors.append(f"Failed to validate provenance.json: {e}")
 
-    def _check_checksums(self, manifest: dict) -> None:
+    def _check_checksums(self, manifest: dict[str, Any]) -> None:
         """Check that checksums match."""
         checksums = manifest.get("checksums", {})
         if not checksums:

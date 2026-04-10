@@ -171,7 +171,7 @@ class PluginRegistry:
     # ------------------------------------------------------------------ #
 
     @staticmethod
-    def _get_entry_points() -> list:
+    def _get_entry_points() -> list[importlib.metadata.EntryPoint]:
         """Retrieve entry points, compatible with Python 3.9+."""
         try:
             # Python 3.12+ and some back-ports accept group=
@@ -179,7 +179,7 @@ class PluginRegistry:
         except TypeError:
             # Older Python: returns a dict keyed by group
             all_eps = importlib.metadata.entry_points()
-            eps = all_eps.get(ENTRY_POINT_GROUP, [])  # type: ignore[union-attr]
+            eps = all_eps.get(ENTRY_POINT_GROUP, [])  # type: ignore[union-attr,unused-ignore]
         return list(eps)
 
     @staticmethod

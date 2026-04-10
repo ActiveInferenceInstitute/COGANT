@@ -20,7 +20,7 @@ class TraceIngester:
       - Timing and performance data
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize trace ingester."""
         self.traces: list[dict[str, Any]] = []
         self.call_graph: dict[str, list[str]] = {}
@@ -208,7 +208,7 @@ class TraceIngester:
         logger.debug("Extracting call graph from traces")
 
         # Track caller->callee relationships using adjacency sets
-        adjacency: dict[str, set] = defaultdict(set)
+        adjacency: dict[str, set[str]] = defaultdict(set)
 
         # Group events by thread
         thread_events: dict[tuple[int, int], list[dict[str, Any]]] = defaultdict(list)
@@ -321,7 +321,7 @@ class TraceIngester:
         sequences = self.extract_call_sequences()
 
         # Count path frequencies using tuple keys for hashability
-        path_counts: dict[tuple, int] = defaultdict(int)
+        path_counts: dict[tuple[str, ...], int] = defaultdict(int)
         for seq in sequences:
             # Use the full sequence as a path
             key = tuple(seq)

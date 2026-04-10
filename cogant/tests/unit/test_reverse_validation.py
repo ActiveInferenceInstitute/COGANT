@@ -219,7 +219,7 @@ class TestParser:
     def test_parse_invalid_empty(self) -> None:
         """Parse invalid/empty -> no crash, default model."""
         model = parse_gnn("")
-        assert model.model_name == "CogantModel"
+        assert model.model_name == "cogant_model"
         assert model.hidden_states == []
         assert model.n_states == 0
 

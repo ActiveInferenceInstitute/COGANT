@@ -1351,7 +1351,7 @@ def render_svg_file_to_png(svg_file: Path, output_png: Path, *, timeout: int = 6
 
     # 1) cairosvg
     try:
-        import cairosvg  # type: ignore[import-not-found]
+        import cairosvg  # type: ignore[import-not-found,unused-ignore]
 
         cairosvg.svg2png(url=str(svg_file), write_to=str(output_png), output_width=1400)
         if output_png.is_file():
@@ -1774,7 +1774,7 @@ def render_connections_matrix_png(
 
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
-        import numpy as np  # type: ignore[import-not-found]
+        import numpy as np  # type: ignore[import-not-found,unused-ignore]
     except ImportError:
         return False
 

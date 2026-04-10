@@ -25,7 +25,7 @@ class GanttRenderer:
       - Parallel stage groups
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Gantt renderer."""
         self.stages: list[dict[str, Any]] = []
         self.dependencies: list[dict[str, Any]] = []

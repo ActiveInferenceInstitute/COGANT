@@ -175,7 +175,7 @@ class StateSpacePlugin(Plugin):
 
     @abstractmethod
     def learn_policies(
-        self, states: list[dict], observations: list[dict], actions: list[dict]
+        self, states: list[dict[str, Any]], observations: list[dict[str, Any]], actions: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
         """Learn policies from model."""
         pass
@@ -197,13 +197,13 @@ class ProcessModelPlugin(Plugin):
         pass
 
     @abstractmethod
-    def extract_dependencies(self, stages: list[dict]) -> list[dict[str, Any]]:
+    def extract_dependencies(self, stages: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Extract dependencies between stages."""
         pass
 
     @abstractmethod
     def compute_ordering(
-        self, stages: list[dict], dependencies: list[dict]
+        self, stages: list[dict[str, Any]], dependencies: list[dict[str, Any]]
     ) -> list[str]:
         """Compute execution order."""
         pass

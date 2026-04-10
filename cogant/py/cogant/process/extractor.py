@@ -227,7 +227,7 @@ class ProcessExtractor:
         node_set = set(node_ids)
         call_edge_kinds = {EdgeKind.CALLS, EdgeKind.TRIGGERS}
         if hasattr(EdgeKind, "CONTROL_FLOW"):
-            call_edge_kinds.add(EdgeKind.CONTROL_FLOW)  # type: ignore[attr-defined]
+            call_edge_kinds.add(EdgeKind.CONTROL_FLOW)  # type: ignore[attr-defined,unused-ignore]
 
         # Build adjacency within the node set
         adjacency: dict[str, set[str]] = defaultdict(set)

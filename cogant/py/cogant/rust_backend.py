@@ -41,19 +41,19 @@ if TYPE_CHECKING:
 
 try:
     from cogant._rust import (
-        PyProgramGraph as _RustGraph,  # type: ignore[import-not-found]  # optional Rust extension
+        PyProgramGraph as _RustGraph,  # type: ignore[import-not-found,unused-ignore]  # optional Rust extension
     )
     from cogant._rust import (
-        create_example_graph as _create_example_graph,  # type: ignore[import-not-found]
+        create_example_graph as _create_example_graph,  # type: ignore[import-not-found,unused-ignore]
     )
-    from cogant._rust import get_version as _rust_version  # type: ignore[import-not-found]
+    from cogant._rust import get_version as _rust_version  # type: ignore[import-not-found,unused-ignore]
 
     RUST_AVAILABLE: bool = True
     _RUST_VERSION: str | None = _rust_version()
 except (ImportError, ModuleNotFoundError):
-    _RustGraph = None  # type: ignore[assignment,misc]
-    _create_example_graph = None  # type: ignore[assignment]
-    _rust_version = None  # type: ignore[assignment]
+    _RustGraph = None  # type: ignore[assignment,misc,unused-ignore]
+    _create_example_graph = None  # type: ignore[assignment,unused-ignore]
+    _rust_version = None  # type: ignore[assignment,unused-ignore]
     RUST_AVAILABLE = False
     _RUST_VERSION = None
 

@@ -431,7 +431,7 @@ class TranslationEngine:
                 node_to_mappings.setdefault(node_id, []).append(mapping.id)
 
         # Collect unique colliding pairs via the inverted index.
-        conflict_pairs: set[tuple] = set()
+        conflict_pairs: set[tuple[str, str]] = set()
         for mids in node_to_mappings.values():
             if len(mids) < 2:
                 continue

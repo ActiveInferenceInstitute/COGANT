@@ -66,7 +66,7 @@ def _get_method_visibility(name: str) -> str:
 class MermaidGenerator:
     """Generate Mermaid diagrams from COGANT models."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the MermaidGenerator."""
         pass
 

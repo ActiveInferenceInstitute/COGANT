@@ -21,9 +21,9 @@ __author__ = "COGANT Contributors"
 # implementation.
 try:
     from cogant import (
-        _rust,  # type: ignore[import-not-found]  # optional Rust extension  # noqa: F401
+        _rust,  # type: ignore[import-not-found,unused-ignore]  # optional Rust extension  # noqa: F401
     )
-    from cogant._rust import get_version as _rust_version  # type: ignore[import-not-found]
+    from cogant._rust import get_version as _rust_version  # type: ignore[import-not-found,unused-ignore]
 
     _RUST_AVAILABLE = True
     __rust_version__: str | None = _rust_version()

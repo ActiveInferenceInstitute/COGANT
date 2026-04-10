@@ -6,6 +6,7 @@ Validates all IR objects against Pydantic schemas.
 
 import logging
 from dataclasses import dataclass
+from typing import Any
 
 from cogant.process.extractor import ProcessModel
 from cogant.schemas.graph import ProgramGraph
@@ -31,7 +32,7 @@ class SchemaValidator:
     Checks type consistency, required fields, and value ranges.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the validator."""
         self.issues: list[ValidationIssue] = []
 
@@ -121,7 +122,7 @@ class SchemaValidator:
 
     # Private validation methods
 
-    def _validate_node(self, node_id: str, node) -> None:
+    def _validate_node(self, node_id: str, node: Any) -> None:
         """Validate a single node."""
         # Check required fields
         if not node.id:
@@ -131,7 +132,7 @@ class SchemaValidator:
         if not node.qualified_name:
             self._add_issue("warning", "schema", f"Node {node_id} missing qualified_name", [node_id])
 
-    def _validate_edge(self, edge_id: str, edge, graph: ProgramGraph) -> None:
+    def _validate_edge(self, edge_id: str, edge: Any, graph: ProgramGraph) -> None:
         """Validate a single edge."""
         # Check required fields
         if not edge.id:
@@ -157,45 +158,45 @@ class SchemaValidator:
                            f"Edge {edge_id} has negative weight: {edge.weight}",
                            [edge_id])
 
-    def _validate_graph_metadata(self, metadata) -> None:
+    def _validate_graph_metadata(self, metadata: Any) -> None:
         """Validate graph metadata."""
         if not metadata.repo_uri:
             self._add_issue("warning", "schema", "Graph metadata missing repo_uri", [])
 
-    def _validate_state_variable(self, var_id: str, var) -> None:
+    def _validate_state_variable(self, var_id: str, var: Any) -> None:
         """Validate a state variable."""
         if not var.id:
             self._add_issue("error", "schema", "State variable missing id", [var_id])
         if not var.name:
             self._add_issue("warning", "schema", f"State variable {var_id} missing name", [var_id])
 
-    def _validate_observation(self, obs_id: str, obs) -> None:
+    def _validate_observation(self, obs_id: str, obs: Any) -> None:
         """Validate an observation."""
         if not obs.id:
             self._add_issue("error", "schema", "Observation missing id", [obs_id])
         if not obs.name:
             self._add_issue("warning", "schema", f"Observation {obs_id} missing name", [obs_id])
 
-    def _validate_action(self, action_id: str, action) -> None:
+    def _validate_action(self, action_id: str, action: Any) -> None:
         """Validate an action."""
         if not action.id:
             self._add_issue("error", "schema", "Action missing id", [action_id])
         if not action.name:
             self._add_issue("warning", "schema", f"Action {action_id} missing name", [action_id])
 
-    def _validate_transition(self, trans_id: str, trans) -> None:
+    def _validate_transition(self, trans_id: str, trans: Any) -> None:
         """Validate a transition."""
         if not trans.id:
             self._add_issue("error", "schema", "Transition missing id", [trans_id])
 
-    def _validate_stage(self, stage_id: str, stage) -> None:
+    def _validate_stage(self, stage_id: str, stage: Any) -> None:
         """Validate a stage."""
         if not stage.id:
             self._add_issue("error", "schema", "Stage missing id", [stage_id])
         if not stage.name:
             self._add_issue("warning", "schema", f"Stage {stage_id} missing name", [stage_id])
 
-    def _validate_connection(self, conn_id: str, conn, process: ProcessModel) -> None:
+    def _validate_connection(self, conn_id: str, conn: Any, process: ProcessModel) -> None:
         """Validate a connection."""
         if not conn.id:
             self._add_issue("error", "schema", "Connection missing id", [conn_id])

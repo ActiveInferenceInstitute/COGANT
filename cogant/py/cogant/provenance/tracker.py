@@ -32,7 +32,7 @@ class ProvenanceTracker:
     Enables tracing of how elements were extracted and confidence assessment.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the tracker."""
         self.records: dict[str, ProvenanceRecord] = {}
         self.target_to_records: dict[str, list[str]] = {}  # target_id -> record IDs

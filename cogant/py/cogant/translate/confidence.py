@@ -42,7 +42,7 @@ class ConfidenceModel:
     RUNTIME_ONLY_THRESHOLD = 0.4           # principled default (-0.1 dynamic-noise discount)
     HUMAN_REVIEWED_THRESHOLD = 0.9         # principled default (strong-consensus band)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the confidence model."""
         self._scoring_log: list[dict[str, Any]] = []
 

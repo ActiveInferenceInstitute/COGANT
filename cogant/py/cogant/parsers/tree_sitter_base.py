@@ -111,7 +111,7 @@ class TreeSitterParser:
         special-cased.
         """
         try:
-            import tree_sitter  # type: ignore[import-not-found]  # noqa: F401
+            import tree_sitter  # type: ignore[import-not-found,unused-ignore]  # noqa: F401
         except ImportError:
             logger.debug("tree-sitter runtime not installed; no grammars loaded")
             return

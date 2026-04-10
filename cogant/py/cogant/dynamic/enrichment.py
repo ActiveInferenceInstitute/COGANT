@@ -207,7 +207,7 @@ def _enrich_with_traces(
             cutoff_idx = min(len(totals) - 1, max(0, len(totals) // 10 - 1))
             hot_threshold = totals[cutoff_idx]
 
-    enriched_ids: set = set()
+    enriched_ids: set[str] = set()
 
     for func_name, stats in timing.items():
         node_ids = func_index.get(func_name, [])

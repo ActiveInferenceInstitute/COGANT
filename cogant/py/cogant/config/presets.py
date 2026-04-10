@@ -9,6 +9,8 @@ Provides optimized presets for common analysis scenarios:
 - security: Boundary and security analysis
 """
 
+from typing import Any
+
 from .schema import (
     CogantConfig,
     ExportConfig,
@@ -22,7 +24,7 @@ from .schema import (
 )
 
 
-def create_minimal_preset() -> dict:
+def create_minimal_preset() -> dict[str, Any]:
     """
     Minimal preset: Fast scan with core output.
 
@@ -136,7 +138,7 @@ def create_minimal_preset() -> dict:
     }
 
 
-def create_standard_preset() -> dict:
+def create_standard_preset() -> dict[str, Any]:
     """
     Standard preset: Balanced analysis with common stages.
 
@@ -221,7 +223,7 @@ def create_standard_preset() -> dict:
     }
 
 
-def create_comprehensive_preset() -> dict:
+def create_comprehensive_preset() -> dict[str, Any]:
     """
     Comprehensive preset: All features enabled for deep analysis.
 
@@ -315,7 +317,7 @@ def create_comprehensive_preset() -> dict:
     }
 
 
-def create_gnn_focused_preset() -> dict:
+def create_gnn_focused_preset() -> dict[str, Any]:
     """
     GNN-focused preset: Optimized for graph neural network export quality.
 
@@ -409,7 +411,7 @@ def create_gnn_focused_preset() -> dict:
     }
 
 
-def create_security_preset() -> dict:
+def create_security_preset() -> dict[str, Any]:
     """
     Security preset: Focus on boundary and security analysis.
 
@@ -505,7 +507,7 @@ PRESETS = {
 }
 
 
-def get_preset(name: str) -> dict:
+def get_preset(name: str) -> dict[str, Any]:
     """
     Get a preset configuration by name.
 
@@ -526,6 +528,6 @@ def get_preset(name: str) -> dict:
     return PRESETS[name]
 
 
-def list_presets() -> list:
+def list_presets() -> list[str]:
     """Get list of available preset names."""
     return list(PRESETS.keys())

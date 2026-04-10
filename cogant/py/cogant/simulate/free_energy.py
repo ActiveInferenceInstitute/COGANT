@@ -407,7 +407,7 @@ class FreeEnergyCalculator:
         available_actions: list[str],
         horizon: int = 3,
         likelihood_model: dict[str, CategoricalDistribution] | None = None,
-    ) -> list[tuple]:
+    ) -> list[tuple[str, float]]:
         """Rank policies by expected free energy (ascending — lower is better)."""
         rankings = []
         for action in available_actions:

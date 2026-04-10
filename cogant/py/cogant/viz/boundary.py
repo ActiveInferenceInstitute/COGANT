@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class BoundaryMapper:
     """Analyze and visualize module and type boundaries."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the BoundaryMapper."""
         pass
 

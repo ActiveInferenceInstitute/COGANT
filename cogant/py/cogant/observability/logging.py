@@ -11,7 +11,7 @@ from typing import Any
 
 _STRUCTLOG_AVAILABLE = False
 try:
-    import structlog  # type: ignore[import-untyped]
+    import structlog  # type: ignore[import-untyped,unused-ignore]
 
     _STRUCTLOG_AVAILABLE = True
 except ImportError:

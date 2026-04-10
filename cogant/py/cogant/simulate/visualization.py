@@ -11,7 +11,7 @@ from typing import Any
 class SimulationVisualizer:
     """Generate visualizations of simulation traces."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the visualizer."""
         pass
 
@@ -130,7 +130,7 @@ class SimulationVisualizer:
             return self._empty_svg("No trace data")
 
         # Extract beliefs
-        all_states: set = set()
+        all_states: set[str] = set()
         belief_history = []
 
         for step in trace:

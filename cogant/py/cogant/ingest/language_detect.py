@@ -48,7 +48,7 @@ class LanguageDetector:
             return  # Already loaded
 
         try:
-            from python.parser import PythonLanguageParser  # type: ignore[import-not-found]
+            from python.parser import PythonLanguageParser  # type: ignore[import-not-found,unused-ignore]
             cls.PARSER_CLASSES["python"] = PythonLanguageParser
         except Exception:
             pass
@@ -56,7 +56,7 @@ class LanguageDetector:
         # Prefer tree-sitter for JavaScript; fall back to the TS regex parser.
         js_loaded = False
         try:
-            from javascript.parser import JavaScriptLanguageParser  # type: ignore[import-not-found]
+            from javascript.parser import JavaScriptLanguageParser  # type: ignore[import-not-found,unused-ignore]
             cls.PARSER_CLASSES["javascript"] = JavaScriptLanguageParser
             js_loaded = True
         except Exception:
@@ -66,7 +66,7 @@ class LanguageDetector:
         ts_loaded = False
         try:
             from typescript.tree_sitter_parser import (
-                TypeScriptTreeSitterParser,  # type: ignore[import-not-found]
+                TypeScriptTreeSitterParser,  # type: ignore[import-not-found,unused-ignore]
             )
             if TypeScriptTreeSitterParser is not None:
                 cls.PARSER_CLASSES["typescript"] = TypeScriptTreeSitterParser
@@ -76,7 +76,7 @@ class LanguageDetector:
 
         # Regex fallback for either JS or TS that didn't get a tree-sitter plugin.
         try:
-            from typescript.parser import TypeScriptLanguageParser  # type: ignore[import-not-found]
+            from typescript.parser import TypeScriptLanguageParser  # type: ignore[import-not-found,unused-ignore]
             if not ts_loaded:
                 cls.PARSER_CLASSES["typescript"] = TypeScriptLanguageParser
             if not js_loaded:
@@ -85,13 +85,13 @@ class LanguageDetector:
             pass
 
         try:
-            from rust.parser import RustLanguageParser  # type: ignore[import-not-found]
+            from rust.parser import RustLanguageParser  # type: ignore[import-not-found,unused-ignore]
             cls.PARSER_CLASSES["rust"] = RustLanguageParser
         except Exception:
             pass
 
         try:
-            from go.parser import GoLanguageParser  # type: ignore[import-not-found]
+            from go.parser import GoLanguageParser  # type: ignore[import-not-found,unused-ignore]
             cls.PARSER_CLASSES["go"] = GoLanguageParser
         except Exception:
             pass
@@ -161,7 +161,7 @@ class LanguageDetector:
         return parser_class()
 
     @classmethod
-    def get_supported_languages(cls) -> list:
+    def get_supported_languages(cls) -> list[str]:
         """Get list of supported languages.
 
         Returns:

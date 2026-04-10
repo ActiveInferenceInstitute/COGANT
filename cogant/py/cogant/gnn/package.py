@@ -94,7 +94,7 @@ class GNNPackageBuilder:
         self.timestamp = datetime.now(UTC).isoformat()
         self.checksums: dict[str, str] = {}
 
-    def build(self, output_dir: str) -> dict:
+    def build(self, output_dir: str) -> dict[str, Any]:
         """
         Build the complete GNN package.
 
@@ -714,7 +714,7 @@ class GNNPackageBuilder:
             + "</svg></body></html>"
         )
 
-    def _create_manifest(self, output_path: Path) -> dict:
+    def _create_manifest(self, output_path: Path) -> dict[str, Any]:
         """Create and save the package manifest."""
         manifest = {
             "version": self.PACKAGE_VERSION,
@@ -1250,7 +1250,7 @@ th, td {{ border: 1px solid #999; padding: 4px 10px; text-align: left }}
         return hashlib.sha256(text.encode()).hexdigest()
 
     @staticmethod
-    def _checksum_dict(data: dict) -> str:
+    def _checksum_dict(data: dict[str, Any]) -> str:
         """Compute SHA256 checksum of dictionary."""
         text = json.dumps(data, sort_keys=True, default=str)
         return hashlib.sha256(text.encode()).hexdigest()

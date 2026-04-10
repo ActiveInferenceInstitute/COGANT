@@ -130,7 +130,7 @@ class TimelineBuilder:
         (not just the entry point) so downstream stages are reached
         through their dependency links.
         """
-        visited: set = set()
+        visited: set[str] = set()
         time_map: dict[str, float] = {}
 
         def assign_time(stage_id: str) -> float:

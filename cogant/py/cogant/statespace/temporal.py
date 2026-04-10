@@ -395,7 +395,7 @@ class TemporalAnalyzer:
                        if len(self.graph.get_edges_to(n.id)) == 0]
 
         critical_path: list[str] = []
-        visited: set = set()
+        visited: set[str] = set()
 
         def dfs(node_id: str, path: list[str]) -> list[str]:
             """Walk outgoing edges greedily to extend the critical path."""

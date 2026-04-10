@@ -84,7 +84,7 @@ class CanonicalNormalizer:
         "generic:module": NodeKind.MODULE,
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the canonical normalizer."""
         self._normalization_log: list[dict[str, Any]] = []
 

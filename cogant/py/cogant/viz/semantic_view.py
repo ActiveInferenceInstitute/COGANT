@@ -23,7 +23,7 @@ class SemanticVisualizer:
       - Direct mappings: solid/darker
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize semantic visualizer."""
         self.states: list[dict[str, Any]] = []
         self.observations: list[dict[str, Any]] = []

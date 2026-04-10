@@ -141,7 +141,7 @@ _ONTOLOGY_TO_ROLE: dict[str, str] = {
 }
 
 
-def _role_multiset_from_model(model: ReverseGNNModel) -> Counter:
+def _role_multiset_from_model(model: ReverseGNNModel) -> Counter[str]:
     """Derive the expected role multiset from a parsed GNN model.
 
     Rather than trust the ontology annotations alone (which often
@@ -157,7 +157,7 @@ def _role_multiset_from_model(model: ReverseGNNModel) -> Counter:
     We then fold in any additional ontology-only annotations (e.g. a
     bare ``G=ExpectedFreeEnergy`` line) as a separate POLICY tick.
     """
-    roles: Counter = Counter()
+    roles: Counter[str] = Counter()
     roles["HIDDEN_STATE"] += len(model.hidden_states)
     roles["OBSERVATION"] += len(model.observations)
     roles["ACTION"] += len(model.actions)
@@ -180,9 +180,9 @@ def _role_multiset_from_model(model: ReverseGNNModel) -> Counter:
     return Counter({k: v for k, v in roles.items() if v > 0})
 
 
-def _role_multiset_from_mappings(mappings: Any) -> Counter:
+def _role_multiset_from_mappings(mappings: Any) -> Counter[str]:
     """Derive a role multiset from a forward-pipeline semantic mappings dict."""
-    roles: Counter = Counter()
+    roles: Counter[str] = Counter()
     if mappings is None:
         return roles
     values = mappings.values() if isinstance(mappings, dict) else list(mappings)
@@ -230,15 +230,15 @@ def _state_space_matrices(state_space: Any) -> dict[str, Any]:
     return out
 
 
-def _nodes_edges_from_mappings(mappings: Any) -> tuple[list, list]:
+def _nodes_edges_from_mappings(mappings: Any) -> tuple[list[dict[str, Any]], list[Any]]:
     """Project a semantic-mappings dict into simple node/edge lists.
 
     Each mapping becomes a node labelled by its ``kind``. We do not
     currently materialise edges here — :func:`compare_graph_structure`
     handles the edge-less case correctly.
     """
-    nodes: list = []
-    edges: list = []
+    nodes: list[dict[str, Any]] = []
+    edges: list[Any] = []
     if mappings is None:
         return nodes, edges
     values = mappings.values() if isinstance(mappings, dict) else list(mappings)

@@ -54,7 +54,7 @@ class MergeProvenance:
 class GraphMerger:
     """Merges multiple program graphs while handling conflicts and recording provenance."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the graph merger."""
         self.merge_history: list[MergeProvenance] = []
 
