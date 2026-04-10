@@ -231,7 +231,7 @@ class _StructuralSectionsMixin:
                         params = str(action.parameters)[:20]
                 else:
                     params = "none"
-                effects_list = self._action_effects(action)
+                effects_list = self._action_effects(action)  # type: ignore[attr-defined]
                 effects = ", ".join(effects_list[:2]) if effects_list else "none"
                 precond = ", ".join(action.preconditions[:1]) if action.preconditions else "none"
                 controller = action.controller_id

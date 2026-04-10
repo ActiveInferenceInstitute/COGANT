@@ -152,7 +152,7 @@ def _run_pipeline(repo_path: str) -> Bundle:
 
 def _graph_from_bundle(bundle: Bundle) -> ProgramGraph:
     """Extract the program graph, raising if it is missing."""
-    pg = bundle.get_artifact(ArtifactKey.PROGRAM_GRAPH, required=True)
+    pg: ProgramGraph = bundle.get_artifact(ArtifactKey.PROGRAM_GRAPH, required=True)
     return pg
 
 

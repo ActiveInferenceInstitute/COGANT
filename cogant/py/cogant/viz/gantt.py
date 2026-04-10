@@ -130,7 +130,7 @@ class GanttRenderer:
 
     def _stage_id(self, stage: dict[str, Any], index: int) -> str:
         """Return a stable identifier for a stage dict."""
-        return stage.get("id", stage.get("name", f"stage_{index}"))
+        return str(stage.get("id") or stage.get("name") or f"stage_{index}")
 
     def _is_critical(self, stage: dict[str, Any], index: int) -> bool:
         """Check whether a stage is on the critical path."""

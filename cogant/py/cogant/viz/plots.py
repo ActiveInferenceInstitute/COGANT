@@ -694,7 +694,7 @@ class StaticPlotter:
             lines.append(f'<path d="{path}" class="ring2-segment"/>')
 
             # Add label
-            label_r = (middle_radius + outer_radius) / 2
+            label_r = (middle_radius + outer_radius) // 2
             label_x = center_x + label_r * __import__('math').cos(mid_rad)
             label_y = center_y + label_r * __import__('math').sin(mid_rad)
             lines.append(f'<text x="{label_x:.1f}" y="{label_y:.1f}" class="ring-label">{role_name} ({count})</text>')

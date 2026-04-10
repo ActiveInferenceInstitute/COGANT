@@ -7,7 +7,7 @@ and edges (semantic relationships). Forms the foundation of all downstream analy
 
 from typing import Any
 
-from pydantic import ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, ValidationInfo, field_validator
 
 from cogant.schemas.core import EdgeKind as EdgeKind
 from cogant.schemas.core import NodeKind as NodeKind
@@ -82,7 +82,7 @@ class Node(CogantBaseModel):
 
     @field_validator("children_ids")
     @classmethod
-    def validate_no_self_children(cls, v: list[StableID], info) -> list[StableID]:
+    def validate_no_self_children(cls, v: list[StableID], info: ValidationInfo) -> list[StableID]:
         """Ensure node doesn't list itself as child."""
         if "id" in info.data:
             if info.data["id"] in v:
@@ -183,7 +183,7 @@ class ProgramGraph(CogantBaseModel):
 
     @field_validator("edges")
     @classmethod
-    def validate_edge_endpoints(cls, edges: list[Edge], info) -> list[Edge]:
+    def validate_edge_endpoints(cls, edges: list[Edge], info: ValidationInfo) -> list[Edge]:
         """Ensure all edges reference valid nodes."""
         if "nodes" in info.data:
             node_ids = {node.id for node in info.data["nodes"]}

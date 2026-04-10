@@ -668,7 +668,7 @@ class GNNPackageBuilder:
             return {}
         for m in self.mappings.values():
             tier = getattr(m, "confidence_tier", None)
-            label = tier.value if hasattr(tier, "value") else str(tier or "unknown")
+            label = tier.value if hasattr(tier, "value") else str(tier or "unknown")  # type: ignore[union-attr]
             counts[label] += 1
         return dict(counts)
 
@@ -1135,7 +1135,7 @@ class GNNPackageBuilder:
     def _count_edges_by_kind(self) -> dict[str, int]:
         """Count edges by kind."""
         from collections import defaultdict
-        counts = defaultdict(int)
+        counts: dict[str, int] = defaultdict(int)
         if self.graph and hasattr(self.graph, "edges"):
             for edge in self.graph.edges.values():
                 counts[str(edge.kind)] += 1

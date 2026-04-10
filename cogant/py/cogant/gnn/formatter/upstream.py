@@ -316,6 +316,10 @@ class _UpstreamSectionsMixin:
         n_obs = len(self.state_space.observations)
         n_act = len(self.state_space.actions)
 
+        _A: list[Any] = []
+        _B: list[Any] = []
+        C: list[Any] = []
+        D: list[Any] = []
         try:
             matrices = GNNMatrices(
                 graph=self.graph,
@@ -327,7 +331,7 @@ class _UpstreamSectionsMixin:
             C = matrices.compute_C()
             D = matrices.compute_D()
         except (ValueError, KeyError, AttributeError):
-            _A, _B, C, D = [], [], [], []
+            pass
 
         # D_f: derived prior over hidden states (or uniform fallback).
         for i, var in enumerate(self.state_space.variables.values()):

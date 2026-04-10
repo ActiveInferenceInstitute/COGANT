@@ -391,7 +391,7 @@ class DashboardGenerator:
         colors = ["#667eea", "#764ba2", "#f093fb", "#4facfe", "#43e97b", "#fa709a", "#fee140", "#30b0fe"]
         svg_parts = [f'<svg width="{size}" height="{size}" viewBox="0 0 {size} {size}">']
 
-        angle = 0
+        angle = 0.0
         for i, (_kind, count) in enumerate(zip(kinds, counts, strict=False)):
             slice_angle = (count / total) * 360
             color = colors[i % len(colors)]

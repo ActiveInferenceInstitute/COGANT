@@ -34,7 +34,7 @@ from __future__ import annotations
 
 import os
 from datetime import UTC
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from cogant.schemas.core import Edge, Node
@@ -69,7 +69,7 @@ def get_program_graph_impl() -> type[Any]:
     surface area for the primitive-argument call form used by the pipeline.
     """
     if RUST_AVAILABLE and _RustGraph is not None:
-        return _RustGraph
+        return cast(type[Any], _RustGraph)
     from cogant.graph.builder import ProgramGraphBuilder
 
     return ProgramGraphBuilder

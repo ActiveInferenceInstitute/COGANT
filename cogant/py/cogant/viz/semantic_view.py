@@ -87,9 +87,9 @@ class SemanticVisualizer:
         def to_dict(item: Any) -> dict[str, Any]:
             """Coerce an arbitrary state/observation/action record into a dict."""
             if isinstance(item, dict):
-                return item
+                return dict(item)
             elif hasattr(item, '__dict__'):
-                return vars(item)
+                return dict(vars(item))
             else:
                 return {"name": str(item), "description": str(item)}
 

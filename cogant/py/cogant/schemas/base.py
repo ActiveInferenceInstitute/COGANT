@@ -8,7 +8,7 @@ used across all schema modules.
 import hashlib
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 
 class CogantBaseModel(BaseModel):
@@ -73,7 +73,7 @@ class Span(CogantBaseModel):
 
     @field_validator("end_line", mode="after")
     @classmethod
-    def validate_end_after_start(cls, v: int, info) -> int:
+    def validate_end_after_start(cls, v: int, info: ValidationInfo) -> int:
         """Ensure end_line >= start_line."""
         if "start_line" in info.data and v < info.data["start_line"]:
             raise ValueError("end_line must be >= start_line")

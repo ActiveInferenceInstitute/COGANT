@@ -509,7 +509,7 @@ class GNNJSONExporter:
             }
 
         edges: dict[str, dict[str, Any]] = {}
-        edge_kinds = defaultdict(int)
+        edge_kinds: dict[str, int] = defaultdict(int)
 
         for edge_id, edge in self.graph.edges.items():
             edge_kinds[edge.kind.value] += 1

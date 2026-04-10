@@ -156,7 +156,7 @@ class GNNModelRunner:
 
         return self.manifest
 
-    def _load_active_inference_models(self):
+    def _load_active_inference_models(self) -> None:
         """Load transition and preference models for Active Inference."""
         try:
             # Load transitions.json

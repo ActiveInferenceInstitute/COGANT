@@ -158,7 +158,7 @@ class CoreBundleSchema(CogantBaseModel):
     # Core metadata
     target: TargetInfo = Field(..., description="Information about analyzed target")
     provenance: ProvenanceOrigin = Field(
-        default_factory=ProvenanceOrigin,
+        default_factory=ProvenanceOrigin,  # type: ignore[arg-type]
         description="Provenance of bundle creation",
     )
 

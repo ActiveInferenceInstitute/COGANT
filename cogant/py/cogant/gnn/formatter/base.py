@@ -231,5 +231,6 @@ class GNNMarkdownFormatter(
         """
         method_name = f"_format_{section_name}"
         if hasattr(self, method_name):
-            return getattr(self, method_name)()
+            result: str | None = getattr(self, method_name)()
+            return result
         return None

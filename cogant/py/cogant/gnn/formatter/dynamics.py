@@ -166,11 +166,11 @@ class _DynamicsSectionsMixin:
                 for src_stage in sorted(stage_transitions.keys())[:15]:
                     conns = stage_transitions[src_stage]
                     next_stages = [c.target_stage_id for c in conns]
-                    pattern = "sequential" if len(next_stages) == 1 else "fan_out" if len(next_stages) > 1 else "terminal"
+                    trans_pattern = "sequential" if len(next_stages) == 1 else "fan_out" if len(next_stages) > 1 else "terminal"
                     next_str = ", ".join(next_stages[:2])
                     if len(next_stages) > 2:
                         next_str += f", +{len(next_stages)-2} more"
-                    lines.append(f"| {src_stage} | {next_str} | {pattern} |")
+                    lines.append(f"| {src_stage} | {next_str} | {trans_pattern} |")
                 lines.append("")
 
         return "\n".join(lines)
@@ -376,7 +376,7 @@ class _DynamicsSectionsMixin:
         # Count rules by mapping kind
         rule_counts: dict[str, int] = defaultdict(int)
         rule_confidence: dict[str, list[float]] = defaultdict(list)
-        rule_status: dict[str, int] = defaultdict(int)
+        rule_status: dict[tuple[str, str], int] = defaultdict(int)
 
         for mapping in self.mappings.values():
             if hasattr(mapping, 'kind'):
