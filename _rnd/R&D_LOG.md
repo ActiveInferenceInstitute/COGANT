@@ -338,3 +338,81 @@ Next session should start with:
 3. Check `_rnd/REAL_WORLD_EVAL.md` for first ε < 0.3 success on real-world repo
 4. If demo-agent committed, test `python examples/demo_server.py &; curl localhost:8080/health`
 5. Check CHANGELOG.md for v0.2.0-rc1 tag
+
+---
+
+## 2026-04-09 — Wave 7-8 R&D Burst: Docs, Architecture, Runtime, Release
+
+### Session Start State (after wave 2-6)
+- Tests: 1072 passed, 56 skipped
+- Modules: forward pipeline complete, reverse synthesizer complete
+- Missing: example zoo, deep docs, runtime loop, architectural modules, release packaging
+
+### Session End State (after wave 7-8)
+- Tests: 1326 passed, 55 skipped, 2 xfailed, 1 xpassed (56.58s)
+- Modules added: cache, pipeline-DAG, schema-versioning, plugins/registry, translate/dsl, observability, runtime/loop
+- Docs: concepts (6 pages), cookbook (20 recipes), FAQ (35 Q&A), zoo (12 repos + 3 hand-written GNNs)
+- Literature: 83+ entries across 14 themes (593 lines in LITERATURE.md)
+- First inference step: synthesized package executed as Active Inference agent (FIRST_INFERENCE.md)
+- Release: v0.2.0 wheel built (`dist/cogant-0.2.0-py3-none-any.whl`), git tag not yet applied
+- mkdocs site builds clean (4 minor anchor warnings, no errors, 6.40s)
+- Manuscript: 10 sections complete (00_abstract through 09_ablation)
+
+### Commits (wave 7-8, newest first)
+```
+c12a72b feat(reverse): runtime-callable matrix functions (no exec) — likelihood/transition/EFE/best_action
+c26700f feat(observability): structured logging + in-process metrics (Counter, Histogram, span)
+72317bd docs(lit): expand annotated bibliography to 83+ entries across 14 themes
+6e04e52 feat(dsl): YAML rule DSL compiled to Python matchers — custom role rules without code
+5c97c97 feat(schema): register cogant migrate CLI subcommand in main app
+0a8c506 docs(rnd): BENCHMARK_VS_PRIOR.md — COGANT vs tree-sitter, pyan, LLM-only, manual
+7b81e01 feat(wave7): zoo, concepts, cookbook, FAQ, runtime, cache, schema, pipeline-DAG, plugins
+8f4beeb feat(cache): content-addressed result cache keyed on repo sha256
+c9a77a8 feat(pipeline): DAG execution engine with topological sort and cycle detection
+60ee951 feat(plugins): entry-point plugin registry + cogant plugin list/info CLI
+eb958f1 docs(concepts): 6 deep concept explainers — GNN, AI, Markov blankets, roles, roundtrip, program graphs
+89e664c docs(cookbook): 20 recipes — scan, reverse, CI, custom rules, dataset export
+f4a4520 feat(zoo): add hand-written GNN models for repos 04, 06, 12
+e1b3398 feat(runtime): Active Inference agent loop — step/convergence/VFE metrics
+ac0d67c feat(zoo): 12-repo Active Inference example zoo
+7e61c0d docs(faq): 35 honest Q&A covering accuracy, limitations, and roadmap
+c7f5e99 test(property): hypothesis tests for 7 COGANT correctness laws
+b41c85f fix(tests): resolve 6 reverse-module failures + commit wave 5/6 agent output
+```
+
+### Key Decisions
+1. **Plugin registry via entry_points** — not import hooks; cleaner for user-provided rules
+2. **Pipeline DAG with Kahn's algorithm** — avoids recursion limit on large dependency graphs
+3. **Content-addressed cache keyed on sha256** — not mtime; correct for reproducibility
+4. **Schema versioning explicit** — GNN v1.0 vs v1.1 distinction; migrate CLI idempotent
+5. **Rule DSL in YAML** — not Python class; lowers barrier for non-programmers
+6. **Observability with stdlib fallback** — structlog optional; in-process registry sufficient
+7. **MatrixFunctions as closures** — complement to render_matrices_module (code-gen); direct execution path
+
+### Milestones Hit
+- [ ] Test count > 1400 (actual: 1326 — short by ~74)
+- [x] First inference step (FIRST_INFERENCE.md written)
+- [ ] v0.2.0 released (wheel built, git tag NOT applied)
+- [x] mkdocs site builds clean (4 anchor warnings, no errors)
+- [x] LITERATURE.md > 80 entries (done: 83+, 593 lines)
+- [x] Complete manuscript draft (10 sections: abstract through ablation)
+- [x] Example zoo: 12 repos + 3 hand-written GNN models
+- [x] Deep docs: 6 concepts + 20 cookbook recipes + 35 FAQ entries
+
+### Known Remaining Gaps
+- Coverage ~17% (viz/ modules drag it down, untested)
+- event_pipeline roundtrip: 47.6% — fan-out heuristic still weak
+- JS/TS parser: partial (tree-sitter grammar loaded but rules sparse)
+- mypy strict: not fully passing
+- v0.2.0 git tag missing (wheel exists in dist/)
+- Test count 1326 vs 1400+ target — need ~74 more tests
+- FAQ lives at `docs/faq.md` (single file), not `docs/faq/` directory
+
+### RESUME MARKER
+Next session should:
+1. `git log --oneline -10` — verify wave 8 commits landed
+2. `uv run pytest -q --no-cov 2>&1 | tail -3` — confirm suite green (1326 passed)
+3. Check if inference demo test passes: `uv run pytest tests/integration/test_inference_demo.py -v`
+4. Check `dist/cogant-0.2.0-*.whl` exists (it does)
+5. Apply `git tag v0.2.0` if ready
+6. Continue: ruff-perfect pass, mypy strict, real-world eval on 8 repos, +74 tests to hit 1400
