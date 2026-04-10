@@ -5,6 +5,7 @@ Exports program graph as GraphML XML for compatibility with graph visualization 
 """
 
 import logging
+from typing import Any
 from xml.etree import ElementTree as ET
 
 from cogant.schemas.graph import ProgramGraph
@@ -79,7 +80,7 @@ class GraphMLExporter:
             key.set("attr.name", attr)
             key.set("attr.type", "string")
 
-    def _add_node(self, graph_elem: ET.Element, node) -> None:
+    def _add_node(self, graph_elem: ET.Element, node: Any) -> None:
         """Add a node element."""
         node_elem = ET.SubElement(graph_elem, "node")
         node_elem.set("id", node.id)
@@ -93,7 +94,7 @@ class GraphMLExporter:
         if node.language:
             self._add_data(node_elem, "language", node.language)
 
-    def _add_edge(self, graph_elem: ET.Element, edge) -> None:
+    def _add_edge(self, graph_elem: ET.Element, edge: Any) -> None:
         """Add an edge element."""
         edge_elem = ET.SubElement(graph_elem, "edge")
         edge_elem.set("source", edge.source_id)

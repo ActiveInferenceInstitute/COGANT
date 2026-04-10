@@ -284,7 +284,7 @@ class _MetadataSectionsMixin:
             max_count = max(high_conf, medium_conf, low_conf)
             bar_width = 30
 
-            def make_bar(count, max_val, width):
+            def make_bar(count: int, max_val: int, width: int) -> str:
                 """Build a fixed-width ASCII bar for a histogram cell."""
                 if max_val == 0:
                     return "█" * 0

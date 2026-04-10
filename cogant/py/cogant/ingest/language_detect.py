@@ -3,6 +3,7 @@
 import sys
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
 
 # Add parsers to path
 parsers_root = Path(__file__).parent.parent.parent.parent / "parsers"
@@ -36,7 +37,7 @@ class LanguageDetector:
     }
 
     @classmethod
-    def _lazy_load_parsers(cls):
+    def _lazy_load_parsers(cls) -> None:
         """Lazy load parser classes on first use.
 
         Prefers the new tree-sitter backed plugins for JavaScript and
@@ -148,7 +149,7 @@ class LanguageDetector:
         return dict(language_counts)
 
     @classmethod
-    def get_parser(cls, language: str):
+    def get_parser(cls, language: str) -> Any:
         """Get parser instance for a language.
 
         Args:
@@ -183,7 +184,7 @@ class LanguageDetector:
         return supported
 
 
-def get_parser_for_extension(ext: str):
+def get_parser_for_extension(ext: str) -> Any:
     """Return a LanguagePlugin instance suitable for a file extension.
 
     Prefers tree-sitter backed plugins when the corresponding grammar is

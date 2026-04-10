@@ -108,12 +108,12 @@ class RepoIngester:
 
         # Detect primary language
         if files:
-            lang_counts = {}
+            lang_counts: dict[str, int] = {}
             for f in files:
                 if f.language:
                     lang_counts[f.language] = lang_counts.get(f.language, 0) + 1
             if lang_counts:
-                primary_lang = max(lang_counts, key=lang_counts.get)
+                primary_lang = max(lang_counts, key=lambda k: lang_counts[k])
                 metadata.language = primary_lang
 
         # Extract dependencies

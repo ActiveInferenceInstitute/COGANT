@@ -255,8 +255,8 @@ class DataFlowVisitor(ast.NodeVisitor):
                 )
 
         # Don't recurse into target subtrees — they are stores, not loads.
-        for target in node.targets:
-            self._mark_handled(target)
+        for target_node in node.targets:
+            self._mark_handled(target_node)
 
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
         """Handle an annotated assignment (``x: int = 5`` or ``x: int``).

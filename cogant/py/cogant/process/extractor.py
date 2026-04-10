@@ -7,6 +7,7 @@ Identifies workflow stages, predecessors/successors, triggers, and side effects.
 import logging
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
+from typing import Any
 
 from cogant.schemas.core import EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
@@ -509,7 +510,7 @@ class ProcessExtractor:
 
         return side_effects
 
-    def _infer_trigger(self, edge) -> str | None:
+    def _infer_trigger(self, edge: Any) -> str | None:
         """
         Infer the trigger for an inter-stage connection.
 

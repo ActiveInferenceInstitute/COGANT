@@ -44,8 +44,8 @@ class _SemanticSectionsMixin:
             return "\n".join(lines)
 
         # Count mappings by kind and node kind
-        mapping_by_kind = defaultdict(int)
-        node_to_role = defaultdict(list)
+        mapping_by_kind: dict[str, int] = defaultdict(int)
+        node_to_role: dict[str, list[str]] = defaultdict(list)
 
         for mapping in self.mappings.values():
             if hasattr(mapping, 'kind'):
@@ -71,7 +71,7 @@ class _SemanticSectionsMixin:
         lines.append("|----|----|")
         for node_kind in sorted(node_to_role.keys()):
             roles = node_to_role[node_kind]
-            role_counts = defaultdict(int)
+            role_counts: dict[str, int] = defaultdict(int)
             for role in roles:
                 role_counts[role] += 1
             role_str = ", ".join([f"{r}({c})" for r, c in sorted(role_counts.items())])

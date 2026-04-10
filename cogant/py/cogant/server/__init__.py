@@ -25,6 +25,6 @@ the notebook walk-through.
 
 from __future__ import annotations
 
-from cogant.server.app import create_app, run_server
+from cogant.server.app import create_app, run_server  # type: ignore[import-not-found]
 
 __all__ = ["create_app", "run_server"]

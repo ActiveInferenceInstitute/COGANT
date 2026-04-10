@@ -517,7 +517,7 @@ class MermaidGenerator:
         )
 
         # Build semantic role to source nodes mapping
-        role_to_nodes: dict[str, list[str]] = {}
+        role_to_nodes: dict[str, list[tuple[Any, Any]]] = {}
         for mapping in sorted_mappings:
             if not hasattr(mapping, 'kind'):
                 continue

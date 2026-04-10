@@ -60,7 +60,7 @@ except (ImportError, ModuleNotFoundError):
     _RUST_VERSION = None
 
 
-def get_program_graph_impl() -> type:
+def get_program_graph_impl() -> type[Any]:
     """Return the preferred ``ProgramGraph`` implementation.
 
     When the Rust extension is present this returns ``PyProgramGraph`` from

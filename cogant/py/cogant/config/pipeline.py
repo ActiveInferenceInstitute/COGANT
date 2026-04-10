@@ -133,7 +133,7 @@ class PipelineConfig(BaseModel):
         it is not installed.
         """
         try:
-            import yaml  # type: ignore[import-not-found,unused-ignore]
+            import yaml  # type: ignore[import-not-found,import-untyped,unused-ignore]
         except ImportError as exc:  # pragma: no cover - exercised via skipif
             raise ImportError(
                 "PipelineConfig.from_yaml requires pyyaml; "
@@ -174,7 +174,7 @@ class PipelineConfig(BaseModel):
         it is not installed.
         """
         try:
-            import yaml  # type: ignore[import-not-found,unused-ignore]
+            import yaml  # type: ignore[import-not-found,import-untyped,unused-ignore]
         except ImportError as exc:  # pragma: no cover
             raise ImportError(
                 "PipelineConfig.to_yaml requires pyyaml; "

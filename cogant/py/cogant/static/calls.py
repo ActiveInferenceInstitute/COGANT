@@ -163,7 +163,7 @@ class CallExtractorVisitor(ast.NodeVisitor):
         file_path: Path,
         function_name: str,
         scope: str,
-        symbol_table,
+        symbol_table: Any,
     ):
         """Initialize call extractor visitor.
 

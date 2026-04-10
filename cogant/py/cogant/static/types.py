@@ -131,9 +131,9 @@ class TypeInferencer:
                 info = self._infer_from_assign(node, scope="module")
                 type_infos.extend(info)
             elif isinstance(node, ast.AnnAssign):
-                info = self._infer_from_annassign(node, scope="module")
-                if info is not None:
-                    type_infos.append(info)
+                ann_info = self._infer_from_annassign(node, scope="module")
+                if ann_info is not None:
+                    type_infos.append(ann_info)
 
         # Back-fill symbol_ids from the symbol table when possible.
         if symbol_table is not None:
@@ -360,7 +360,7 @@ class TypeInferencer:
     # ------------------------------------------------------------------
 
     def _infer_function_return_type(
-        self, func: FunctionDef, symbol_table
+        self, func: FunctionDef, symbol_table: Any
     ) -> TypeInfo | None:
         """Infer return type of a function from a parser FunctionDef."""
         symbol = next(
@@ -393,7 +393,7 @@ class TypeInferencer:
         )
 
     def _infer_variable_type(
-        self, assign: AssignmentDef, symbol_table
+        self, assign: AssignmentDef, symbol_table: Any
     ) -> TypeInfo | None:
         """Infer type of a variable from a parser AssignmentDef."""
         symbol = next(
@@ -550,7 +550,7 @@ class TypeInferencer:
         return None
 
     def _resolve_symbol_ids(
-        self, infos: list[TypeInfo], symbol_table
+        self, infos: list[TypeInfo], symbol_table: Any
     ) -> None:
         """Populate ``symbol_id`` from the symbol table where possible."""
         by_name: dict[str, str] = {}

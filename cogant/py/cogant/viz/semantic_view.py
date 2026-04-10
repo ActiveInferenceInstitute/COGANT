@@ -84,7 +84,7 @@ class SemanticVisualizer:
         """Generate HTML for semantic view."""
         # Pre-compute slices to avoid f-string slicing issues
         # Also convert all items to dicts if they're objects
-        def to_dict(item):
+        def to_dict(item: Any) -> dict[str, Any]:
             """Coerce an arbitrary state/observation/action record into a dict."""
             if isinstance(item, dict):
                 return item

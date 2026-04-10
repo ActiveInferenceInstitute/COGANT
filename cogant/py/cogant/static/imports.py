@@ -93,7 +93,7 @@ class ImportAnalyzer:
         return self._build_import_edges(file_path, module.imports)
 
     def _build_import_edges(
-        self, file_path: Path, import_defs
+        self, file_path: Path, import_defs: Any
     ) -> list[ImportEdge]:
         """Build import edges from import definitions.
 

@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Any
 
 from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
@@ -110,7 +111,7 @@ def _graph_for_file(path: Path, language: str) -> ProgramGraph:
     return graph
 
 
-def _emit_parsed_file(path: Path, language: str, parsed) -> ProgramGraph:
+def _emit_parsed_file(path: Path, language: str, parsed: Any) -> ProgramGraph:
     """Convert a :class:`ParsedFile` into a :class:`ProgramGraph`.
 
     Args:

@@ -64,7 +64,7 @@ class ParquetExporter:
         logger.info(f"Exported {len(files)} Parquet files")
         return files
 
-    def _export_nodes(self, output_dir: Path, pa, pq) -> str | None:
+    def _export_nodes(self, output_dir: Path, pa: Any, pq: Any) -> str | None:
         """Export nodes to Parquet."""
         try:
             data = self._prepare_nodes_data()
@@ -82,7 +82,7 @@ class ParquetExporter:
             logger.error(f"Failed to export nodes: {e}")
             return None
 
-    def _export_edges(self, output_dir: Path, pa, pq) -> str | None:
+    def _export_edges(self, output_dir: Path, pa: Any, pq: Any) -> str | None:
         """Export edges to Parquet."""
         try:
             data = self._prepare_edges_data()

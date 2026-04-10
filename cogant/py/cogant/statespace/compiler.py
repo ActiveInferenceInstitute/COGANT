@@ -1019,8 +1019,8 @@ class StateSpaceCompiler:
         Returns:
             List of affected state variable IDs or descriptive names.
         """
-        effects = []
-        visited = set()
+        effects: list[str] = []
+        visited: set[str] = set()
 
         action_node = self.graph.get_node(node_id)
         if not action_node:
@@ -1113,7 +1113,7 @@ class StateSpaceCompiler:
 
         # Strategy 1: Check explicit metadata
         if "preconditions" in node.metadata:
-            return node.metadata["preconditions"]
+            return list(node.metadata["preconditions"])
 
         # Strategy 2: Extract from parameters (method signature)
         if "parameters" in node.metadata:

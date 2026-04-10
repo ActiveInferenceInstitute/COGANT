@@ -173,7 +173,7 @@ class TimelineBuilder:
             return []
 
         visited = set()
-        path_cache = {}
+        path_cache: dict[str, tuple[float, list[str]]] = {}
 
         def longest_path_from(stage_id: str) -> tuple[float, list[str]]:
             """DP helper: return (max_length, path) reachable from ``stage_id``."""

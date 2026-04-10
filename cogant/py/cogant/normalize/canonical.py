@@ -260,7 +260,7 @@ class CanonicalNormalizer:
             qualified_name=normalized.qualified_name,
             path=normalized.path,
             language=normalized.language,
-            metadata=normalized.metadata,
+            metadata=normalized.metadata or {},
         )
 
     def _log_normalization(
