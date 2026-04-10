@@ -1,5 +1,8 @@
 # COGANT Project
 
+[![CI](https://github.com/docxology/template/actions/workflows/ci.yml/badge.svg)](https://github.com/docxology/template/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-gh--pages-blue)](https://docxology.github.io/template/)
+
 This directory contains the COGANT (Codebase-to-GNN Translation Engine) research project, currently in progress. COGANT turns repositories into program graphs you can train on.
 
 ## Directory Structure
