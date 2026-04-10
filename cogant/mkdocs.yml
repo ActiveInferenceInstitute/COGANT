@@ -23,6 +23,7 @@ theme:
     - navigation.tabs
     - navigation.sections
     - navigation.top
+    - navigation.expand
     - search.highlight
     - content.code.copy
 
@@ -47,26 +48,194 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - tables
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
   - Home: index.md
   - Getting Started:
-    - Installation: getting-started/installation.md
-    - Quick Start: getting-started/quickstart.md
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+  - Concepts:
+      - What is a GNN?: concepts/gnn.md
+      - Active Inference for Programmers: concepts/active_inference.md
+      - Markov Blankets in Codebases: concepts/markov_blanket.md
+      - How Roles Are Assigned: concepts/role_assignment.md
+      - The Forward-Reverse Cycle: concepts/roundtrip.md
+      - Program Graphs: concepts/program_graph.md
   - Tutorials:
-    - Small repo walkthrough: tutorials/calculator.md
-    - Flask app walkthrough: tutorials/flask.md
-  - Theory:
-    - Active Inference mapping: theory/active_inference.md
-    - GNN format: theory/gnn_format.md
+      - Quick Start Tutorial: tutorials/01_quickstart.md
+      - Small Repo Walkthrough: tutorials/02_small_repo_walkthrough.md
+      - Flask App Walkthrough: tutorials/03_flask_walkthrough.md
+      - Custom Rules: tutorials/04_custom_rules.md
+      - GNN Interpretation: tutorials/05_gnn_interpretation.md
+      - Reverse Mode: tutorials/06_reverse_mode.md
+      - Plugin Authoring: tutorials/07_plugin_authoring.md
+      - Calculator (legacy): tutorials/calculator.md
+      - Flask (legacy): tutorials/flask.md
+  - Cookbook:
+      - Overview: cookbook/README.md
+      - Scan a Repo: cookbook/01_scan_basic.md
+      - JSON Output: cookbook/02_json_output.md
+      - Explain a Node: cookbook/03_explain_node.md
+      - Custom Threshold: cookbook/04_custom_threshold.md
+      - Multi-Project: cookbook/05_multi_project.md
+      - Reverse Basic: cookbook/06_reverse_basic.md
+      - Reverse Custom: cookbook/07_reverse_custom.md
+      - CI Integration: cookbook/08_ci_integration.md
+      - Pre-Commit Hook: cookbook/09_precommit_hook.md
+      - Docker: cookbook/10_docker.md
+      - JavaScript: cookbook/11_javascript.md
+      - Batch Scan: cookbook/12_batch_scan.md
+      - Incremental: cookbook/13_incremental.md
+      - GNN Validation: cookbook/14_gnn_validation.md
+      - Markov Blanket: cookbook/15_markov_blanket.md
+      - PNG Figures: cookbook/16_png_figures.md
+      - Benchmark: cookbook/17_benchmark.md
+      - Role Filter: cookbook/18_role_filter.md
+      - Extend Rules: cookbook/19_extend_rules.md
+      - Dataset: cookbook/20_dataset.md
   - CLI Reference: cli_reference.md
   - API Reference:
-    - cogant.translate: api/translate.md
-    - cogant.gnn: api/gnn.md
-    - cogant.markov: api/markov.md
-    - cogant.statespace: api/statespace.md
-    - cogant.static: api/static.md
-    - cogant.simulate: api/simulate.md
+      - Overview: api/overview.md
+      - cogant.translate: api/translate.md
+      - cogant.reverse: api/reverse.md
+      - cogant.runtime: api/runtime.md
+      - cogant.gnn: api/gnn.md
+      - cogant.markov: api/markov.md
+      - cogant.statespace: api/statespace.md
+      - cogant.static: api/static.md
+      - cogant.simulate: api/simulate.md
+      - API Stability: api/api_stability.md
+      - Bundle API: api/bundle_api.md
+      - Confidence Model: api/confidence_model_api.md
+      - Dynamic Analysis: api/dynamic_analysis_api.md
+      - Dynamic Enrichment: api/dynamic_enrichment_api.md
+      - Error Handling: api/error_handling.md
+      - Export & GNN Package: api/export_stage_and_gnn_package.md
+      - Fixpoint Translation: api/fixpoint_translation_api.md
+      - Pipeline Runner: api/pipelinerunner_api.md
+      - Plugin API: api/plugin_api.md
+      - Review API: api/reviewapi.md
+      - Scoring API: api/scoring_api.md
+      - Session API: api/session_api.md
+      - Visualization: api/visualization_api.md
+      - Debugging: api/debugging.md
+      - Performance Tips: api/performance_tips.md
+      - Complete Example: api/complete_example.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - System Overview: architecture/system_overview.md
+      - "Stage 1: Normalize": architecture/1_normalize.md
+      - "Stage 2: Build Graph": architecture/2_build_graph.md
+      - "Stage 3: Translate": architecture/3_translate.md
+      - "Stage 4: Score": architecture/4_score.md
+      - "Stage 5: Review": architecture/5_review.md
+      - "Stage 6: Export": architecture/6_export.md
+      - Component Details: architecture/component_details.md
+      - Configuration System: architecture/configuration_system.md
+      - Data Flow: architecture/data_flow.md
+      - Dependencies: architecture/dependencies.md
+      - Error Handling: architecture/error_handling.md
+      - Extensibility: architecture/extensibility.md
+      - Memory Management: architecture/memory_management.md
+      - Performance: architecture/performance.md
+      - Security Considerations: architecture/security_considerations.md
+      - Testing Strategy: architecture/testing_strategy.md
+      - Concurrency: architecture/concurrency_parallelism.md
+  - Theory:
+      - Active Inference Mapping: theory/active_inference.md
+      - Active Inference Primer: theory/active_inference_primer.md
+      - Code as Generative Model: theory/code_as_generative_model.md
+      - GNN Format: theory/gnn_format.md
+      - GNN Format Reference: theory/gnn_format_reference.md
+      - Isomorphism Theorem: theory/isomorphism.md
+  - Plugins:
+      - Overview: plugins/overview.md
+      - Language Parser: plugins/language_parser_plugin.md
+      - Translation Rule: plugins/translation_rule_plugin.md
+      - Exporter: plugins/exporter_plugin.md
+      - Validator: plugins/validator_plugin.md
+      - Plugin Configuration: plugins/plugin_configuration.md
+      - Plugin Discovery: plugins/plugin_discovery.md
+      - Plugin Publishing: plugins/plugin_publishing.md
+      - Development Tips: plugins/plugin_development_tips.md
+      - Best Practices: plugins/best_practices.md
+  - Export:
+      - Overview: export/overview.md
+      - JSON Format: export/json_export_format.md
+      - PyTorch Geometric: export/pytorch_geometric_export.md
+      - DGL Export: export/dgl_export.md
+      - Feature Engineering: export/feature_engineering.md
+      - Incremental Export: export/incremental_export.md
+      - Compression & Size: export/compression_size.md
+      - Artifact Ownership: export/artifact_ownership.md
+      - Reproducibility: export/reproducibility.md
+      - Validation: export/validation.md
+  - Validation:
+      - Overview: validation/overview.md
+      - Validation Stages: validation/validation_stages.md
+      - Validation via CLI: validation/validation_via_cli.md
+      - Issue Categories: validation/issue_categories.md
+      - Issue Levels: validation/issue_levels.md
+      - Thresholds & Policies: validation/thresholds_policies.md
+      - Custom Validators: validation/custom_validators.md
+      - Audit Trail: validation/audit_trail.md
+      - Validation Report: validation/validation_report.md
+  - Rules:
+      - Overview: rules/overview.md
+      - Core Rules Summary: rules/core_rules_summary.md
+      - Custom Rules: rules/custom_rules.md
+      - Heuristic Rules: rules/heuristic_rules.md
+      - Rule Application: rules/rule_application.md
+      - Rule Set Management: rules/rule_set_management.md
+      - Language Variants: rules/language_specific_variants.md
+      - Configuration & Precedence: rules/configuration_and_precedence.md
+      - Conflict Resolution: rules/conflict_resolution.md
+      - Debugging: rules/debugging.md
+      - Performance: rules/performance.md
+      - Testing Rules: rules/testing_rules.md
+  - Security:
+      - Overview: security/overview.md
+      - Threat Model: security/threat_model.md
+      - Security Controls: security/security_controls.md
+      - Secure Coding Practices: security/secure_coding_practices.md
+      - Dependency Security: security/dependency_security.md
+      - Cryptography: security/cryptography.md
+      - Privacy Protections: security/privacy_protections.md
+      - Security Testing: security/security_testing.md
+      - Compliance: security/compliance.md
+      - Responsible Disclosure: security/responsible_disclosure.md
+      - Security Release Process: security/security_release_process.md
+  - Reference:
+      - Overview: reference/overview.md
+      - Core Concepts: reference/core_concepts.md
+      - Schemas Reference: reference/schemas_reference.md
+      - Semantic Roles: reference/semantic_roles.md
+      - Translation Rules: reference/translation_rules.md
+      - Configuration: reference/configuration.md
+      - Data Representations: reference/data_representations.md
+      - Pipeline Stages: reference/pipeline_stages.md
+      - Glossary: reference/glossary.md
+      - Examples: reference/examples.md
   - R&D:
-    - Calibration: rnd/calibration.md
-    - Active Inference Mapping: rnd/active_inference_mapping.md
+      - Calibration: rnd/calibration.md
+      - Active Inference Mapping: rnd/active_inference_mapping.md
+  - Roadmap:
+      - Overview: roadmap/overview.md
+      - "v0.1.0 (Current)": roadmap/version_010_current.md
+      - "v0.2.0 (Planned)": roadmap/version_020_planned.md
+      - "v0.3.0 (Planned)": roadmap/version_030_planned.md
+      - "v1.0.0 (Planned)": roadmap/version_100_planned.md
+      - Version Strategy: roadmap/version_strategy.md
+      - Feature Backlog: roadmap/feature_backlog.md
+      - Known Limitations: roadmap/known_limitations_010.md
+      - Performance Targets: roadmap/performance_targets.md
+      - Deprecation Policy: roadmap/deprecation_policy.md
+      - Test Coverage Goals: roadmap/test_coverage_goals.md
+  - FAQ: faq.md
+  - Changelog: changelog.md
+  - Deployment: CI.md
