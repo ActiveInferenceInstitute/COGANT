@@ -80,6 +80,21 @@ _DEFAULT_INDIRECT_MASS = 0.1  # principled default (1.0 - direct)
 # without suppressing legitimate near-zero entries. Not calibrated.
 _EPSILON = 1e-9  # stability constant (scipy/pymdp convention)
 
+# Maximum number of entries in the B transition tensor before truncation
+# kicks in. B is shape [n_states × n_states × n_actions]; for dulwich
+# (429 states × 1085 actions) the full tensor is 200 M entries ≈ 1.6 GB
+# as float64 and causes a 380 s / 8.5 GB-peak-RSS run. The cap triggers
+# a principal-submatrix approximation: keep the top-K highest-degree
+# state nodes so that B fits in ≤ _MAX_B_ENTRIES entries. A warning is
+# logged and the ``truncation`` key in ``to_dict()`` records the cut.
+#
+# Calibration: 5 M entries ≈ 40 MB at float64; keeps B serialization
+# under ~400 MB JSON even for the largest repos in the eval corpus.
+# 5 M corresponds to roughly 170 states × 170 states × 173 actions —
+# enough to represent a mid-size Python library accurately. For repos
+# with fewer states this cap is never hit.
+_MAX_B_ENTRIES = 5_000_000  # principled default; see docstring above
+
 
 def _normalize_row(row: list[float]) -> list[float]:
     """Normalize a row of non-negative floats so that it sums to 1.0.
@@ -162,6 +177,13 @@ class GNNMatrices:
             not self._hidden_states and bool(self.state_space.variables)
         )
 
+        # Populated by compute_B() when the full B tensor would exceed
+        # _MAX_B_ENTRIES.  Callers can inspect these to understand the
+        # approximation that was applied.
+        self._b_truncated: bool = False
+        self._b_n_states_full: int = 0   # untruncated n_states
+        self._b_n_states_kept: int = 0   # n_states after truncation
+
     # ------------------------------------------------------------------
     # Dimensions
     # ------------------------------------------------------------------
@@ -239,6 +261,40 @@ class GNNMatrices:
             return []
         return [e for e in self.graph.edges.values() if e.target_id == node_id]
 
+    def _top_k_state_ids(self, state_ids: list[str], k: int) -> list[str]:
+        """Return the *k* state node IDs with the highest combined degree.
+
+        Used by :meth:`compute_B` when the full ``n_states × n_states ×
+        n_actions`` tensor would exceed ``_MAX_B_ENTRIES``.  We keep the
+        highest-degree nodes because they carry the most transition
+        information; the approximation is a principal submatrix of the
+        full B tensor restricted to the top-k row/column indices.
+
+        Args:
+            state_ids: Full ordered list of state node IDs.
+            k: Number of state IDs to keep.
+
+        Returns:
+            A list of at most *k* node IDs, ordered by descending degree.
+        """
+        if k >= len(state_ids):
+            return state_ids
+
+        # Count in+out degree for each state node using a single pass
+        # over the full edge list (O(|E|), not O(|V|²)).
+        degree: dict[str, int] = {nid: 0 for nid in state_ids if nid}
+        state_id_set = set(degree)
+        for edge in self.graph.edges.values():
+            if edge.source_id in state_id_set:
+                degree[edge.source_id] += 1
+            if edge.target_id in state_id_set:
+                degree[edge.target_id] += 1
+
+        # Sort by descending degree, preserving original order for ties
+        # so the truncated matrix is deterministic.
+        ranked = sorted(state_ids, key=lambda nid: -degree.get(nid, 0))
+        return ranked[:k]
+
     # ------------------------------------------------------------------
     # A matrix — likelihood
     # ------------------------------------------------------------------
@@ -315,6 +371,17 @@ class GNNMatrices:
             successors of every current state; otherwise the transition
             defaults to an identity (stay) move. Every column
             ``(cur, action)`` is normalized so that it sums to 1.0.
+
+        Truncation:
+            When ``n_states² × n_actions`` would exceed ``_MAX_B_ENTRIES``
+            (default 5 M), the state space is reduced to the top-K
+            highest-degree nodes so that the tensor fits in memory and
+            serializes in reasonable time. The truncation is recorded in
+            ``self._b_truncated``, ``self._b_n_states_full``, and
+            ``self._b_n_states_kept``, and surfaced in :meth:`to_dict`
+            under the ``"truncation"`` key. This approximation is a
+            principal submatrix of the full B restricted to the most
+            structurally important state nodes.
         """
         n_states = self.n_states
         n_actions = self.n_actions
@@ -323,6 +390,35 @@ class GNNMatrices:
 
         state_ids = self._state_node_ids()
         action_ids = self._action_node_ids()
+
+        # ---- Truncation guard ----------------------------------------
+        # If the full tensor would exceed _MAX_B_ENTRIES, keep only the
+        # top-K state nodes ranked by in+out degree.  This turns an O(S²A)
+        # explosion into O(_MAX_B_ENTRIES) work, preserving the most
+        # structurally important nodes.
+        full_b_entries = n_states * n_states * n_actions
+        self._b_n_states_full = n_states
+        self._b_truncated = False
+
+        if full_b_entries > _MAX_B_ENTRIES and n_actions > 0:
+            # Solve for max_k: k² × n_actions ≤ _MAX_B_ENTRIES
+            import math
+            max_k = max(1, int(math.isqrt(_MAX_B_ENTRIES // n_actions)))
+            self._b_truncated = True
+            self._b_n_states_kept = max_k
+            logger.warning(
+                "B tensor would be %d entries (%d states × %d states × %d actions) "
+                "which exceeds _MAX_B_ENTRIES=%d. Truncating to top-%d state nodes "
+                "by graph degree. Set _MAX_B_ENTRIES higher to disable truncation.",
+                full_b_entries, n_states, n_states, n_actions,
+                _MAX_B_ENTRIES, max_k,
+            )
+            state_ids = self._top_k_state_ids(state_ids, max_k)
+            n_states = len(state_ids)
+        else:
+            self._b_n_states_kept = n_states
+        # ---------------------------------------------------------------
+
         state_index = {nid: j for j, nid in enumerate(state_ids) if nid}
 
         write_kinds = {EdgeKind.WRITES, EdgeKind.MUTATES}
@@ -488,12 +584,38 @@ class GNNMatrices:
         """Return a JSON-serializable dict of all four matrices.
 
         Returns:
-            ``{"A": ..., "B": ..., "C": ..., "D": ..., "shapes": ...}``
+            ``{"A": ..., "B": ..., "C": ..., "D": ..., "shapes": ...,
+            "dimensions": ..., "truncation": ...}``
+
+            The ``"truncation"`` key is ``None`` when no truncation
+            occurred; otherwise it is a dict with:
+
+            * ``"applied"``: ``True``
+            * ``"n_states_full"``: original (un-truncated) n_states
+            * ``"n_states_kept"``: n_states after truncation
+            * ``"max_b_entries"``: the ``_MAX_B_ENTRIES`` threshold
+            * ``"reason"``: human-readable explanation
         """
         A = self.compute_A()
         B = self.compute_B()
         C = self.compute_C()
         D = self.compute_D()
+
+        truncation: dict[str, Any] | None = None
+        if self._b_truncated:
+            truncation = {
+                "applied": True,
+                "n_states_full": self._b_n_states_full,
+                "n_states_kept": self._b_n_states_kept,
+                "max_b_entries": _MAX_B_ENTRIES,
+                "reason": (
+                    f"B tensor ({self._b_n_states_full}² × {self.n_actions} = "
+                    f"{self._b_n_states_full ** 2 * self.n_actions:,} entries) "
+                    f"exceeded _MAX_B_ENTRIES={_MAX_B_ENTRIES:,}; "
+                    f"kept top-{self._b_n_states_kept} state nodes by degree."
+                ),
+            }
+
         return {
             "A": A,
             "B": B,
@@ -514,6 +636,7 @@ class GNNMatrices:
                 "n_obs": self.n_obs,
                 "n_actions": self.n_actions,
             },
+            "truncation": truncation,
         }
 
     def to_gnn_markdown_block(self) -> str:

@@ -86,7 +86,17 @@ class _StructuralSectionsMixin:
             lines.append("|----|----|------|--------|------|---------|------|-------|")
             for var_id, var in self.state_space.variables.items():
                 card = var.cardinality or "∞"
-                domain = var.domain or "unknown"
+                # Truncate domain to avoid multi-thousand-element lists that
+                # balloon the markdown to hundreds of MB on large repos.
+                # Show the first 5 elements and a count suffix when longer.
+                raw_domain = var.domain or "unknown"
+                if isinstance(raw_domain, list):
+                    if len(raw_domain) > 5:
+                        domain = str(raw_domain[:5])[:-1] + f", +{len(raw_domain)-5} more]"
+                    else:
+                        domain = str(raw_domain)
+                else:
+                    domain = str(raw_domain)[:120]
                 factors = ", ".join(var.factors) if var.factors else "none"
                 # Extract source node name if available
                 source = ""

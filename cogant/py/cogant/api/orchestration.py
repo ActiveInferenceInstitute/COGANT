@@ -394,6 +394,12 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
     module_nodes: dict[str, Any] = {}
     class_nodes: dict[str, Any] = {}
 
+    # AST cache: avoid re-parsing the same file for every method it contains.
+    # Without caching, _emit_dataflow_edges called ast.parse() once per
+    # method, so a file with N methods was parsed N times (O(files × methods)
+    # compile calls). With the cache each file is parsed at most once.
+    _ast_cache: dict[Path, Any] = {}
+
     def _rel(p: Path) -> str:
         try:
             return str(p.relative_to(repo_root))
@@ -440,7 +446,8 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                 )
                 builder.add_edge(class_node.id, method_node.id, EdgeKind.CONTAINS)
                 _emit_dataflow_edges(
-                    builder, method_node, class_node, method.name, file_path, _ast
+                    builder, method_node, class_node, method.name, file_path, _ast,
+                    ast_cache=_ast_cache,
                 )
 
         for func in getattr(module, "functions", []) or []:
@@ -465,16 +472,24 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                     module_node.id, module_nodes[head].id, EdgeKind.IMPORTS
                 )
 
-    # INHERITS edges
+    # INHERITS edges.
+    # Build a name→node index first so lookup is O(1) instead of O(|classes|)
+    # per base class. The original nested loop was O(|classes|² × |bases|),
+    # which is tolerable for small repos but degrades for large ones.
+    class_by_name: dict[str, Any] = {}
+    for other_qname, other_node in class_nodes.items():
+        # Later definitions override earlier ones; for duplicate simple
+        # names we keep the last-seen (arbitrary but deterministic).
+        class_by_name[other_node.name] = other_node
+
     for class_qname, class_node in class_nodes.items():
         bases = (class_node.metadata or {}).get("bases", [])
         for base in bases:
-            for other_qname, other_node in class_nodes.items():
-                if other_node.name == base and other_qname != class_qname:
-                    builder.add_edge(
-                        class_node.id, other_node.id, EdgeKind.INHERITS
-                    )
-                    break
+            other_node = class_by_name.get(base)
+            if other_node is not None and other_node.id != class_node.id:
+                builder.add_edge(
+                    class_node.id, other_node.id, EdgeKind.INHERITS
+                )
 
     pg = builder.finalize()
     bundle.artifacts["_program_graph"] = pg
@@ -490,18 +505,34 @@ def _emit_dataflow_edges(
     method_name: str,
     file_path: Path,
     ast_mod: Any,
+    ast_cache: dict[Path, Any] | None = None,
 ) -> None:
     """Emit ``READS``/``WRITES`` edges from a method to its enclosing class.
 
     Walks the method body for ``self.attr = ...`` (writes) and
     ``self.attr`` (reads). Mirrors ``_add_dataflow_edges`` in
     ``examples/thin_orchestrated/_common.py``.
+
+    Args:
+        ast_cache: Optional dict mapping ``Path`` → parsed AST tree.
+            When supplied, each file is parsed at most once regardless of
+            how many methods it contains. This reduces graph-stage time
+            from O(files × methods) AST-compile calls to O(files).
     """
-    try:
-        tree = ast_mod.parse(file_path.read_text())
-    except (SyntaxError, UnicodeDecodeError, OSError) as e:
-        logger.debug("Skipping dataflow edges for %s: %s", file_path, e)
-        return
+    if ast_cache is not None and file_path in ast_cache:
+        tree = ast_cache[file_path]
+        if tree is None:
+            return  # Previously failed to parse
+    else:
+        try:
+            tree = ast_mod.parse(file_path.read_text())
+        except (SyntaxError, UnicodeDecodeError, OSError) as e:
+            logger.debug("Skipping dataflow edges for %s: %s", file_path, e)
+            if ast_cache is not None:
+                ast_cache[file_path] = None  # Cache the failure
+            return
+        if ast_cache is not None:
+            ast_cache[file_path] = tree
 
     for node in ast_mod.walk(tree):
         if not isinstance(

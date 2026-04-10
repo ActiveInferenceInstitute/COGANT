@@ -250,32 +250,41 @@ class ProgramGraphBuilder:
         Returns:
             List of lists, each containing node IDs in a connected component.
         """
-        visited = set()
-        components = []
+        # Build an undirected adjacency list in O(|E|) so that the BFS
+        # below runs in O(|V| + |E|) instead of O(|V| × |E|).
+        # The original implementation called graph.get_neighbors() inside
+        # the BFS loop; each call linearly scanned all edges (O(|E|) per
+        # call), making the overall complexity O(|V| × |E|) which is ~133M
+        # comparisons for dulwich (8601 nodes, 15441 edges).
+        from collections import defaultdict, deque
 
-        for node in self.graph.nodes.values():
-            if node.id in visited:
+        adj: dict[str, list[str]] = defaultdict(list)
+        for edge in self.graph.edges.values():
+            adj[edge.source_id].append(edge.target_id)
+            adj[edge.target_id].append(edge.source_id)
+
+        visited: set[str] = set()
+        components: list[list[str]] = []
+
+        for node_id in self.graph.nodes:
+            if node_id in visited:
                 continue
 
-            # BFS to find connected component
-            component = []
-            queue = [node.id]
+            # BFS using a deque (O(1) popleft) and the pre-built adj index.
+            component: list[str] = []
+            queue: deque[str] = deque([node_id])
+            visited.add(node_id)
 
             while queue:
-                current_id = queue.pop(0)
-                if current_id in visited:
-                    continue
-
-                visited.add(current_id)
+                current_id = queue.popleft()
                 component.append(current_id)
 
-                neighbors = self.graph.get_neighbors(current_id)
-                for neighbor in neighbors:
-                    if neighbor.id not in visited:
-                        queue.append(neighbor.id)
+                for neighbor_id in adj.get(current_id, []):
+                    if neighbor_id not in visited and neighbor_id in self.graph.nodes:
+                        visited.add(neighbor_id)
+                        queue.append(neighbor_id)
 
-            if component:
-                components.append(component)
+            components.append(component)
 
         return components
 
