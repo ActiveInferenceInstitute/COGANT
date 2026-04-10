@@ -20,13 +20,39 @@ Two layers coexist here:
 """
 
 # Composable per-stage pydantic configs (primary export).
+# Defaults and presets
+from .defaults import (
+    COMPREHENSIVE_PIPELINE_CONFIG,
+    DEFAULT_COGANT_CONFIG,
+    DEFAULT_EXPORT_CONFIG,
+    DEFAULT_JAVA_CONFIG,
+    DEFAULT_JAVASCRIPT_CONFIG,
+    DEFAULT_PIPELINE_CONFIG,
+    DEFAULT_PYTHON_CONFIG,
+    DEFAULT_VALIDATION_CONFIG,
+    GNN_EXPORT_CONFIG,
+    LENIENT_VALIDATION_CONFIG,
+    MINIMAL_PIPELINE_CONFIG,
+    PRESETS,
+    STRICT_VALIDATION_CONFIG,
+    get_preset,
+)
 from .gnn import GNNConfig
 from .graph import GraphConfig
 from .ingest import IngestConfig
+
+# Configuration loaders
+from .loaders import ConfigLoader, ConfigLoadError
 from .pipeline import PipelineConfig
+
+# Named presets
+from .presets import (
+    get_preset as get_named_preset,
+)
+from .presets import (
+    list_presets,
+)
 from .reverse import ReverseConfig
-from .statespace import StatespaceConfig
-from .translate import TranslateConfig
 
 # Legacy high-level configuration schemas.
 #
@@ -46,33 +72,8 @@ from .schema import (
     ValidationConfig,
     ValidationLevel,
 )
-
-# Configuration loaders
-from .loaders import ConfigLoader, ConfigLoadError
-
-# Defaults and presets
-from .defaults import (
-    DEFAULT_COGANT_CONFIG,
-    DEFAULT_PIPELINE_CONFIG,
-    DEFAULT_EXPORT_CONFIG,
-    DEFAULT_VALIDATION_CONFIG,
-    MINIMAL_PIPELINE_CONFIG,
-    COMPREHENSIVE_PIPELINE_CONFIG,
-    GNN_EXPORT_CONFIG,
-    STRICT_VALIDATION_CONFIG,
-    LENIENT_VALIDATION_CONFIG,
-    DEFAULT_PYTHON_CONFIG,
-    DEFAULT_JAVASCRIPT_CONFIG,
-    DEFAULT_JAVA_CONFIG,
-    PRESETS,
-    get_preset,
-)
-
-# Named presets
-from .presets import (
-    get_preset as get_named_preset,
-    list_presets,
-)
+from .statespace import StatespaceConfig
+from .translate import TranslateConfig
 
 __all__ = [
     # Composable per-stage configs (new)

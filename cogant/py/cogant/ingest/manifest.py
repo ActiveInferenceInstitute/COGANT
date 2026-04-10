@@ -5,17 +5,16 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 try:
     import tomllib
 except ImportError:
     # Python < 3.11: provide minimal TOML parsing
-    def _parse_toml(content: str) -> Dict[str, Any]:
+    def _parse_toml(content: str) -> dict[str, Any]:
         """Minimal TOML parser for pyproject.toml (handles common patterns)."""
-        result: Dict[str, Any] = {}
-        current_section = None
-        current_dict: Dict[str, Any] = result
+        result: dict[str, Any] = {}
+        current_dict: dict[str, Any] = result
 
         for raw_line in content.split("\n"):
             line = raw_line.strip()
@@ -25,7 +24,6 @@ except ImportError:
             # Section headers [section]
             if line.startswith("["):
                 section = line.strip("[]").strip()
-                current_section = section
                 # Handle nested sections like [tool.poetry.dev-dependencies]
                 parts = section.split(".")
                 current_dict = result
@@ -93,7 +91,7 @@ class Dependency:
     name: str
     """Package name."""
 
-    version: Optional[str] = None
+    version: str | None = None
     """Version specifier (e.g., ">=1.0,<2.0")."""
 
     is_dev: bool = False
@@ -106,7 +104,7 @@ class Dependency:
 class ManifestParser:
     """Parse package manifests to extract dependencies and metadata."""
 
-    def parse(self, path: Path) -> Tuple[Dict, List[Dependency]]:
+    def parse(self, path: Path) -> tuple[dict, list[Dependency]]:
         """Parse a manifest file, automatically detecting type.
 
         Args:
@@ -133,7 +131,7 @@ class ManifestParser:
         else:
             raise ValueError(f"Unknown manifest file type: {filename}")
 
-    def parse_setup_py(self, path: Path) -> Tuple[Dict, List[Dependency]]:
+    def parse_setup_py(self, path: Path) -> tuple[dict, list[Dependency]]:
         """Parse Python setup.py file.
 
         Args:
@@ -146,7 +144,7 @@ class ManifestParser:
         dependencies = []
 
         try:
-            with open(path, "r") as f:
+            with open(path) as f:
                 content = f.read()
 
             # Extract setup() call arguments using regex
@@ -202,7 +200,7 @@ class ManifestParser:
 
         return metadata, dependencies
 
-    def parse_pyproject_toml(self, path: Path) -> Tuple[Dict, List[Dependency]]:
+    def parse_pyproject_toml(self, path: Path) -> tuple[dict, list[Dependency]]:
         """Parse Python pyproject.toml file.
 
         Args:
@@ -248,7 +246,7 @@ class ManifestParser:
 
         return metadata, dependencies
 
-    def parse_requirements_txt(self, path: Path) -> List[Dependency]:
+    def parse_requirements_txt(self, path: Path) -> list[Dependency]:
         """Parse Python requirements.txt file.
 
         Args:
@@ -260,7 +258,7 @@ class ManifestParser:
         dependencies = []
 
         try:
-            with open(path, "r") as f:
+            with open(path) as f:
                 for line in f:
                     line = line.strip()
                     if not line or line.startswith("#"):
@@ -275,7 +273,7 @@ class ManifestParser:
 
         return dependencies
 
-    def parse_package_json(self, path: Path) -> Tuple[Dict, List[Dependency]]:
+    def parse_package_json(self, path: Path) -> tuple[dict, list[Dependency]]:
         """Parse Node.js package.json file.
 
         Args:
@@ -288,7 +286,7 @@ class ManifestParser:
         dependencies = []
 
         try:
-            with open(path, "r") as f:
+            with open(path) as f:
                 data = json.load(f)
 
             metadata = {
@@ -316,7 +314,7 @@ class ManifestParser:
 
         return metadata, dependencies
 
-    def parse_cargo_toml(self, path: Path) -> Tuple[Dict, List[Dependency]]:
+    def parse_cargo_toml(self, path: Path) -> tuple[dict, list[Dependency]]:
         """Parse Rust Cargo.toml file.
 
         Args:
@@ -371,7 +369,7 @@ class ManifestParser:
         return metadata, dependencies
 
     @staticmethod
-    def _parse_requirements_string(req_str: str) -> List[Dependency]:
+    def _parse_requirements_string(req_str: str) -> list[Dependency]:
         """Parse requirements from a string (setup.py format).
 
         Args:
@@ -398,7 +396,7 @@ class ManifestParser:
         return dependencies
 
     @staticmethod
-    def _parse_requirement_list(reqs: List[str]) -> List[Dependency]:
+    def _parse_requirement_list(reqs: list[str]) -> list[Dependency]:
         """Parse requirements from a list.
 
         Args:
@@ -415,7 +413,7 @@ class ManifestParser:
         return dependencies
 
     @staticmethod
-    def _parse_requirement_line(line: str) -> Optional[Dependency]:
+    def _parse_requirement_line(line: str) -> Dependency | None:
         """Parse a single requirement line.
 
         Args:

@@ -9,8 +9,8 @@ from cogant.gnn.formatter import GNNMarkdownFormatter
 from cogant.gnn.json_export import GNNJSONExporter
 from cogant.gnn.matrices import GNNMatrices
 from cogant.gnn.package import GNNPackageBuilder
+from cogant.gnn.runner import ExecutionTrace, GNNModelRunner
 from cogant.gnn.validator import GNNValidator, ValidationResult
-from cogant.gnn.runner import GNNModelRunner, ExecutionTrace
 
 __all__ = [
     "GNNMarkdownFormatter",

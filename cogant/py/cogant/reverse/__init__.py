@@ -44,16 +44,13 @@ Public API
 * :func:`verify_roundtrip` — round-trip idempotency verifier.
 """
 
-from cogant.reverse.parser import ReverseGNNModel, parse_gnn
-from cogant.reverse.planner import NodePlan, PackagePlan, plan_package
-from cogant.reverse.synthesizer import synthesize_package
+from cogant.reverse.callable import MatrixFunctions, make_matrix_functions
 from cogant.reverse.idempotency import (
     ROLE_MATCH_THRESHOLD,
     RoundtripResult,
     verify_repo_roundtrip,
     verify_roundtrip,
 )
-from cogant.reverse.callable import MatrixFunctions, make_matrix_functions
 from cogant.reverse.metrics import (
     DEFAULT_ISOMORPHISM_THRESHOLD,
     IsomorphismReport,
@@ -62,6 +59,9 @@ from cogant.reverse.metrics import (
     compare_role_distributions,
     compute_isomorphism_report,
 )
+from cogant.reverse.parser import ReverseGNNModel, parse_gnn
+from cogant.reverse.planner import NodePlan, PackagePlan, plan_package
+from cogant.reverse.synthesizer import synthesize_package
 
 __all__ = [
     "ReverseGNNModel",

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Dict, List, Any, Optional
 import json
 import logging
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from cogant.schemas.graph import ProgramGraph
@@ -21,11 +21,11 @@ class D3Node:
     label: str
     group: str
     size: int = 10
-    color: Optional[str] = None
-    language: Optional[str] = None
-    kind: Optional[str] = None
-    path: Optional[str] = None
-    qualified_name: Optional[str] = None
+    color: str | None = None
+    language: str | None = None
+    kind: str | None = None
+    path: str | None = None
+    qualified_name: str | None = None
 
 
 @dataclass
@@ -52,11 +52,11 @@ class GraphVisualizer:
 
     def __init__(self):
         """Initialize visualizer."""
-        self.nodes: List[D3Node] = []
-        self.links: List[D3Link] = []
-        self.metadata: Dict[str, Any] = {}
+        self.nodes: list[D3Node] = []
+        self.links: list[D3Link] = []
+        self.metadata: dict[str, Any] = {}
 
-    def from_program_graph(self, graph: Dict[str, Any]) -> "GraphVisualizer":
+    def from_program_graph(self, graph: dict[str, Any]) -> GraphVisualizer:
         """
         Load program graph data from a plain dict.
 
@@ -99,7 +99,7 @@ class GraphVisualizer:
         self.metadata = graph.get("metadata", {})
         return self
 
-    def from_typed_graph(self, graph: ProgramGraph) -> "GraphVisualizer":
+    def from_typed_graph(self, graph: ProgramGraph) -> GraphVisualizer:
         """
         Load from a typed ProgramGraph object.
 
@@ -144,7 +144,7 @@ class GraphVisualizer:
         }
         return self
 
-    def cluster_by_package(self) -> "GraphVisualizer":
+    def cluster_by_package(self) -> GraphVisualizer:
         """
         Cluster nodes by package/namespace.
 
@@ -169,7 +169,7 @@ class GraphVisualizer:
                 node.group = ".".join(parts[:-1]) if len(parts) > 1 else "root"
         return self
 
-    def cluster_by_language(self) -> "GraphVisualizer":
+    def cluster_by_language(self) -> GraphVisualizer:
         """
         Cluster nodes by programming language.
 
@@ -187,7 +187,7 @@ class GraphVisualizer:
                 node.group = "unknown_lang"
         return self
 
-    def cluster_by_kind(self) -> "GraphVisualizer":
+    def cluster_by_kind(self) -> GraphVisualizer:
         """
         Cluster nodes by their kind (NodeKind value).
 
@@ -206,7 +206,7 @@ class GraphVisualizer:
                 node.group = "unknown_kind"
         return self
 
-    def cluster_by_service(self) -> "GraphVisualizer":
+    def cluster_by_service(self) -> GraphVisualizer:
         """
         Cluster nodes by logical service/module.
 
@@ -226,7 +226,7 @@ class GraphVisualizer:
                 node.group = "unknown_service"
         return self
 
-    def get_clusters(self) -> Dict[str, List[str]]:
+    def get_clusters(self) -> dict[str, list[str]]:
         """
         Return current cluster mapping (group name -> list of node IDs).
 
@@ -235,12 +235,12 @@ class GraphVisualizer:
         Returns:
             Dict mapping cluster/group names to lists of node IDs.
         """
-        clusters: Dict[str, List[str]] = {}
+        clusters: dict[str, list[str]] = {}
         for node in self.nodes:
             clusters.setdefault(node.group, []).append(node.id)
         return clusters
 
-    def filter_by_edge_type(self, edge_type: str) -> "GraphVisualizer":
+    def filter_by_edge_type(self, edge_type: str) -> GraphVisualizer:
         """
         Filter to show only specific edge types.
 
@@ -251,7 +251,7 @@ class GraphVisualizer:
             self (for chaining).
         """
         logger.debug(f"Filtering by edge type: {edge_type}")
-        self.links = [l for l in self.links if l.label == edge_type]
+        self.links = [link for link in self.links if link.label == edge_type]
         return self
 
     def render_html(self, output_path: str) -> str:
@@ -290,7 +290,7 @@ class GraphVisualizer:
 
         return output_path
 
-    def to_d3_json(self) -> Dict[str, Any]:
+    def to_d3_json(self) -> dict[str, Any]:
         """
         Export as D3.js-compatible JSON.
 
@@ -315,8 +315,8 @@ class GraphVisualizer:
                 for n in self.nodes
             ],
             "links": [
-                {"source": l.source, "target": l.target, "label": l.label, "weight": l.weight}
-                for l in self.links
+                {"source": link.source, "target": link.target, "label": link.label, "weight": link.weight}
+                for link in self.links
             ],
             "clusters": clusters,
         }
@@ -520,7 +520,7 @@ class GraphVisualizer:
 
     <!-- Links -->
     <g class="links">
-        {''.join(f'<line class="link" x1="0" y1="0" x2="100" y2="100" />' for _ in self.links[:10])}
+        {''.join('<line class="link" x1="0" y1="0" x2="100" y2="100" />' for _ in self.links[:10])}
     </g>
 
     <!-- Nodes -->

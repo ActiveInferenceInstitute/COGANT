@@ -1,15 +1,15 @@
 """COGANT Plugins: Plugin protocol system for extensibility."""
 
 from cogant.plugins.base import (
+    ExportPlugin,
+    LanguagePlugin,
+    NormalizerPlugin,
     Plugin,
     PluginMetadata,
-    LanguagePlugin,
-    TracePlugin,
-    NormalizerPlugin,
-    TranslationRulePlugin,
-    StateSpacePlugin,
     ProcessModelPlugin,
-    ExportPlugin,
+    StateSpacePlugin,
+    TracePlugin,
+    TranslationRulePlugin,
     ValidationPlugin,
     VisualizationPlugin,
 )

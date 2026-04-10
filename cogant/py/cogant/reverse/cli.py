@@ -16,10 +16,8 @@ modules; this file only handles option parsing and Rich output.
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -201,7 +199,7 @@ def roundtrip_command(
         exists=True,
         help="Either a GNN markdown file or a repository directory to round-trip.",
     ),
-    output_dir: Optional[Path] = typer.Option(
+    output_dir: Path | None = typer.Option(
         None,
         "--output",
         "-o",

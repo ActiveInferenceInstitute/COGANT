@@ -11,17 +11,17 @@ See :mod:`cogant.translate.rules` for the umbrella re-export and
 """
 
 import hashlib
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from cogant.schemas.core import Node, NodeKind, EdgeKind
+from cogant.graph.queries import GraphQuery
+from cogant.schemas.core import EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import (
-    SemanticMapping,
-    MappingKind,
     ConfidenceTier,
+    MappingKind,
     ProvenanceRecord,
+    SemanticMapping,
 )
-from cogant.graph.queries import GraphQuery
 from cogant.translate.engine import RuleExplanation, TranslationRule
 
 
@@ -44,7 +44,7 @@ class ReadOnlyInputRule(TranslationRule):
         if the loss rate exceeds ~20%.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find modules with predominance of read operations.
 
         Args:
@@ -62,7 +62,7 @@ class ReadOnlyInputRule(TranslationRule):
         for module in modules:
             # Get all edges from module
             outgoing_edges = graph.get_edges_from(module.id)
-            incoming_edges = graph.get_edges_to(module.id)
+            graph.get_edges_to(module.id)
 
             # Count read vs write operations
             reads = sum(1 for e in outgoing_edges if e.kind == EdgeKind.READS)
@@ -78,7 +78,7 @@ class ReadOnlyInputRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create observation mapping for read-only module.
 
         Args:
@@ -153,7 +153,7 @@ class MutatingSubsystemRule(TranslationRule):
         precision at the cost of recall on under-instrumented fixtures.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find objects/classes with high mutation frequency.
 
         Args:
@@ -192,7 +192,7 @@ class MutatingSubsystemRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create hidden-state mapping for mutating subsystem.
 
         Args:
@@ -271,7 +271,7 @@ class MutatingSubsystemRule(TranslationRule):
             ):
                 mutation_edges.append(edge)
 
-        evidence: List[str] = [
+        evidence: list[str] = [
             f"mutation edges (WRITES|MUTATES) touching class: {len(mutation_edges)}",
         ]
         if mutation_edges:
@@ -336,7 +336,7 @@ class InheritanceRule(TranslationRule):
         rule that never writes a mapping.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find classes with inheritance relationships.
 
         Args:
@@ -364,7 +364,7 @@ class InheritanceRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create semantic mapping based on inheritance pattern.
 
         Args:
@@ -452,7 +452,7 @@ class ContainmentRule(TranslationRule):
         ``max(actions, observations)`` tie-breaking rule.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find classes with multiple methods for detailed analysis.
 
         Args:
@@ -489,7 +489,7 @@ class ContainmentRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create containment analysis mapping.
 
         Args:
@@ -600,7 +600,7 @@ class DataPipelineRule(TranslationRule):
         promote to 0.80.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find functions with both read and write edges to different targets.
 
         Args:
@@ -641,7 +641,7 @@ class DataPipelineRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create data-flow mapping for data pipeline node.
 
         Args:

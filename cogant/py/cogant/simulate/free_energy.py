@@ -28,10 +28,10 @@ Lower VFE/EFE is better.
 from __future__ import annotations
 
 import math
-from typing import Dict, List, Optional, Sequence
+from collections.abc import Sequence
 
-from cogant.statespace.compiler import StateSpaceModel
 from cogant.simulate.distributions import CategoricalDistribution, TransitionMatrix
+from cogant.statespace.compiler import StateSpaceModel
 
 # Numerical floor to avoid log(0).
 _EPSILON = 1e-12
@@ -51,7 +51,7 @@ def variational_free_energy(
     beliefs: Sequence[float],
     prior: Sequence[float],
     likelihood_matrix: Sequence[Sequence[float]],
-    observation: Optional[Sequence[float]] = None,
+    observation: Sequence[float] | None = None,
 ) -> float:
     """Compute variational free energy F = KL[Q||P] - E_Q[log P(o|s)].
 
@@ -131,7 +131,7 @@ def bayesian_belief_update(
     prior: Sequence[float],
     likelihood_matrix: Sequence[Sequence[float]],
     observation_index: int,
-) -> List[float]:
+) -> list[float]:
     """Exact Bayesian posterior under a categorical observation.
 
     Q(s | o) ∝ P(o | s) · P(s)
@@ -245,7 +245,7 @@ def expected_free_energy(
     return total_efe
 
 
-def uniform_distribution(n: int) -> List[float]:
+def uniform_distribution(n: int) -> list[float]:
     """Return a uniform distribution of length ``n``."""
     if n <= 0:
         return []
@@ -281,7 +281,7 @@ class FreeEnergyCalculator:
         self,
         beliefs: CategoricalDistribution,
         observation: str,
-        likelihood_model: Optional[Dict[str, CategoricalDistribution]] = None,
+        likelihood_model: dict[str, CategoricalDistribution] | None = None,
     ) -> float:
         """Compute variational free energy VFE = complexity - accuracy.
 
@@ -301,9 +301,9 @@ class FreeEnergyCalculator:
     def expected_free_energy(
         self,
         beliefs: CategoricalDistribution,
-        policy: List[str],
+        policy: list[str],
         horizon: int = 3,
-        likelihood_model: Optional[Dict[str, CategoricalDistribution]] = None,
+        likelihood_model: dict[str, CategoricalDistribution] | None = None,
     ) -> float:
         """Compute expected free energy for a policy (averaged over horizon)."""
         if not policy:
@@ -331,7 +331,7 @@ class FreeEnergyCalculator:
         self,
         observation: str,
         beliefs: CategoricalDistribution,
-        likelihood_model: Optional[Dict[str, CategoricalDistribution]] = None,
+        likelihood_model: dict[str, CategoricalDistribution] | None = None,
     ) -> float:
         """Surprisal = -log P(o) ≈ -E_Q[log P(o|s)]."""
         return -self._accuracy(observation, beliefs, likelihood_model)
@@ -339,7 +339,7 @@ class FreeEnergyCalculator:
     def complexity(
         self,
         posterior: CategoricalDistribution,
-        prior: Optional[CategoricalDistribution] = None,
+        prior: CategoricalDistribution | None = None,
     ) -> float:
         """Complexity = KL(Q||P). Prior defaults to uniform."""
         if prior is None:
@@ -350,7 +350,7 @@ class FreeEnergyCalculator:
         self,
         observation: str,
         beliefs: CategoricalDistribution,
-        likelihood_model: Optional[Dict[str, CategoricalDistribution]] = None,
+        likelihood_model: dict[str, CategoricalDistribution] | None = None,
     ) -> float:
         """Accuracy = E_Q[log P(o|s)]."""
         return self._accuracy(observation, beliefs, likelihood_model)
@@ -359,7 +359,7 @@ class FreeEnergyCalculator:
         self,
         observation: str,
         beliefs: CategoricalDistribution,
-        likelihood_model: Optional[Dict[str, CategoricalDistribution]] = None,
+        likelihood_model: dict[str, CategoricalDistribution] | None = None,
     ) -> float:
         """Internal accuracy computation.
 
@@ -393,7 +393,7 @@ class FreeEnergyCalculator:
             return beliefs
 
         next_state_probs = [0.0] * len(self.states)
-        for i, state in enumerate(self.states):
+        for _i, state in enumerate(self.states):
             belief_s = beliefs.dist[state]
             next_dist = self.transition_matrix.get_next_state_dist(state, action)
             for j in range(len(self.states)):
@@ -404,10 +404,10 @@ class FreeEnergyCalculator:
     def policy_ranking(
         self,
         beliefs: CategoricalDistribution,
-        available_actions: List[str],
+        available_actions: list[str],
         horizon: int = 3,
-        likelihood_model: Optional[Dict[str, CategoricalDistribution]] = None,
-    ) -> List[tuple]:
+        likelihood_model: dict[str, CategoricalDistribution] | None = None,
+    ) -> list[tuple]:
         """Rank policies by expected free energy (ascending — lower is better)."""
         rankings = []
         for action in available_actions:

@@ -5,19 +5,19 @@ Identifies and classifies state variables from hidden_state nodes in the
 program graph, computing cardinality, domain, and factorization.
 """
 
-from typing import Dict, List, Set, Optional, Any
-from dataclasses import dataclass, field
-from enum import Enum
 import logging
+from dataclasses import dataclass, field
+from enum import StrEnum
+from typing import Any
 
-from cogant.schemas.core import Node, NodeKind, EdgeKind
+from cogant.schemas.core import EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.semantic import SemanticMapping, MappingKind
+from cogant.schemas.semantic import MappingKind, SemanticMapping
 
 logger = logging.getLogger(__name__)
 
 
-class StateVariableType(str, Enum):
+class StateVariableType(StrEnum):
     """Classification of state variables."""
     BOOLEAN = "boolean"
     DISCRETE = "discrete"
@@ -27,7 +27,7 @@ class StateVariableType(str, Enum):
     COMPOSITE = "composite"
 
 
-class ConfidenceLevel(str, Enum):
+class ConfidenceLevel(StrEnum):
     """Confidence in extracted information."""
     DEFINITE = "definite"
     HIGH = "high"
@@ -43,14 +43,14 @@ class StateVariable:
     name: str
     var_type: StateVariableType
     node_id: str  # Reference to graph node marked as hidden_state
-    cardinality: Optional[int] = None
-    domain: Optional[List[Any]] = None
-    factors: Optional[List[str]] = None  # For factorization
+    cardinality: int | None = None
+    domain: list[Any] | None = None
+    factors: list[str] | None = None  # For factorization
     is_discrete: bool = True
     confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
-    description: Optional[str] = None
-    mutations: List[str] = field(default_factory=list)  # Edge IDs of mutations
-    reads: List[str] = field(default_factory=list)  # Edge IDs of reads
+    description: str | None = None
+    mutations: list[str] = field(default_factory=list)  # Edge IDs of mutations
+    reads: list[str] = field(default_factory=list)  # Edge IDs of reads
     observable: bool = False
     """True when the same underlying node also has an OBSERVATION mapping.
 
@@ -63,9 +63,9 @@ class StateVariable:
 @dataclass
 class FactorizationInfo:
     """Information about state variable factorization."""
-    factors: List[str]
+    factors: list[str]
     independence_score: float  # 0-1: how independent are factors
-    dependencies: Dict[str, List[str]]  # Factor ID -> list of dependent factors
+    dependencies: dict[str, list[str]]  # Factor ID -> list of dependent factors
 
 
 class StateVariableExtractor:
@@ -82,10 +82,10 @@ class StateVariableExtractor:
             program_graph: The program graph to analyze.
         """
         self.graph = program_graph
-        self.state_variables: Dict[str, StateVariable] = {}
-        self.factorization_map: Dict[str, FactorizationInfo] = {}
+        self.state_variables: dict[str, StateVariable] = {}
+        self.factorization_map: dict[str, FactorizationInfo] = {}
 
-    def extract(self, semantic_mappings: Dict[str, SemanticMapping]) -> Dict[str, StateVariable]:
+    def extract(self, semantic_mappings: dict[str, SemanticMapping]) -> dict[str, StateVariable]:
         """
         Extract state variables from the program graph.
 
@@ -108,7 +108,7 @@ class StateVariableExtractor:
         }
         # Pre-compute the set of node IDs that carry an OBSERVATION mapping so
         # we can cheaply mark hidden-state variables as observable.
-        observation_node_ids: Set[str] = set()
+        observation_node_ids: set[str] = set()
         for m in semantic_mappings.values():
             if m.kind == MappingKind.OBSERVATION:
                 observation_node_ids.update(m.graph_fragment_node_ids)
@@ -233,7 +233,7 @@ class StateVariableExtractor:
         node: Node,
         var_type: StateVariableType,
         mapping: SemanticMapping
-    ) -> tuple[Optional[int], Optional[List[Any]]]:
+    ) -> tuple[int | None, list[Any] | None]:
         """
         Infer cardinality and domain from node metadata, class attributes, and type.
 
@@ -274,7 +274,7 @@ class StateVariableExtractor:
 
         return None, None
 
-    def _extract_class_attributes_cardinality(self, class_node: Node) -> tuple[Optional[int], Optional[List[str]]]:
+    def _extract_class_attributes_cardinality(self, class_node: Node) -> tuple[int | None, list[str] | None]:
         """
         Extract cardinality and domain from class attributes in the graph.
 
@@ -328,7 +328,7 @@ class StateVariableExtractor:
             dependencies = []
             for other_var in var_list[i + 1:]:
                 other_mutations = set(other_var.mutations)
-                other_reads = set(other_var.reads)
+                set(other_var.reads)
 
                 # Check for shared mutations or data dependencies
                 if var_mutations & other_mutations or var_reads & other_mutations:
@@ -387,7 +387,7 @@ class StateVariableExtractor:
         else:
             return ConfidenceLevel.UNCERTAIN
 
-    def get_state_variables(self) -> Dict[str, StateVariable]:
+    def get_state_variables(self) -> dict[str, StateVariable]:
         """
         Get all extracted state variables.
 
@@ -396,7 +396,7 @@ class StateVariableExtractor:
         """
         return self.state_variables
 
-    def get_factorization(self, var_id: str) -> Optional[FactorizationInfo]:
+    def get_factorization(self, var_id: str) -> FactorizationInfo | None:
         """
         Get factorization information for a variable.
 

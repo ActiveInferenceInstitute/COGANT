@@ -10,8 +10,8 @@ from __future__ import annotations
 import enum
 import time
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional
 
 
 class StageStatus(enum.Enum):
@@ -40,7 +40,7 @@ class Stage:
 
     name: str
     fn: Callable[[dict], dict]
-    deps: List[str] = field(default_factory=list)
+    deps: list[str] = field(default_factory=list)
     timeout: float = 60.0
 
 
@@ -51,16 +51,16 @@ class StageResult:
     name: str
     status: StageStatus
     elapsed: float = 0.0
-    error: Optional[str] = None
-    output: Dict = field(default_factory=dict)
+    error: str | None = None
+    output: dict = field(default_factory=dict)
 
 
 @dataclass
 class DAGResult:
     """Aggregate result of a full pipeline run."""
 
-    stage_results: Dict[str, StageResult] = field(default_factory=dict)
-    errors: List[str] = field(default_factory=list)
+    stage_results: dict[str, StageResult] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
     elapsed: float = 0.0
 
 
@@ -68,7 +68,7 @@ class PipelineDAG:
     """DAG-based pipeline that resolves stage dependencies via Kahn's algorithm."""
 
     def __init__(self) -> None:
-        self._stages: Dict[str, Stage] = {}
+        self._stages: dict[str, Stage] = {}
 
     # ------------------------------------------------------------------
     # Public API
@@ -106,8 +106,8 @@ class PipelineDAG:
 
         t0 = time.monotonic()
         ctx = dict(context)
-        results: Dict[str, StageResult] = {}
-        errors: List[str] = []
+        results: dict[str, StageResult] = {}
+        errors: list[str] = []
         failed_ancestors: set[str] = set()
 
         for name in order:
@@ -158,7 +158,7 @@ class PipelineDAG:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _topological_sort(self) -> List[str]:
+    def _topological_sort(self) -> list[str]:
         """Kahn's algorithm -- iterative, no recursion.
 
         Ties are broken alphabetically for deterministic ordering.
@@ -173,8 +173,8 @@ class PipelineDAG:
         ValueError
             If the graph contains a cycle.
         """
-        in_degree: Dict[str, int] = {name: 0 for name in self._stages}
-        dependents: Dict[str, List[str]] = {name: [] for name in self._stages}
+        in_degree: dict[str, int] = dict.fromkeys(self._stages, 0)
+        dependents: dict[str, list[str]] = {name: [] for name in self._stages}
 
         for name, stage in self._stages.items():
             for dep in stage.deps:
@@ -185,7 +185,7 @@ class PipelineDAG:
         queue: deque[str] = deque(sorted(
             n for n, d in in_degree.items() if d == 0
         ))
-        order: List[str] = []
+        order: list[str] = []
 
         while queue:
             node = queue.popleft()
@@ -223,12 +223,12 @@ class PipelineDAG:
                         f"Stage {name!r} depends on unknown stage {dep!r}"
                     )
 
-    def _find_cycle(self, nodes: set[str]) -> List[str]:
+    def _find_cycle(self, nodes: set[str]) -> list[str]:
         """Find one cycle among *nodes* for a useful error message."""
         visited: set[str] = set()
-        path: List[str] = []
+        path: list[str] = []
 
-        def _dfs(n: str) -> List[str] | None:
+        def _dfs(n: str) -> list[str] | None:
             if n in visited:
                 idx = path.index(n)
                 return path[idx:] + [n]

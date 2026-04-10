@@ -23,10 +23,9 @@ Example:
     'Overall drift: 23.4%'
 """
 
-from dataclasses import dataclass, asdict
-from typing import Dict, List, Any, Optional, Tuple, Set
 import logging
-import json
+from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +62,7 @@ class DriftScore:
     semantic_churn_score: float
     """Semantic model changes (0-1)."""
 
-    details: Dict[str, Any]
+    details: dict[str, Any]
     """Detailed breakdown of changes."""
 
 
@@ -79,7 +78,7 @@ class DriftAnalyzer:
       - Validation results
     """
 
-    def __init__(self, bundle_a: Dict[str, Any], bundle_b: Dict[str, Any]):
+    def __init__(self, bundle_a: dict[str, Any], bundle_b: dict[str, Any]):
         """Initialize drift analyzer.
 
         Args:
@@ -101,7 +100,7 @@ class DriftAnalyzer:
 
         logger.info(f"DriftAnalyzer initialized: {len(self.graph_a.get('nodes', []))} -> {len(self.graph_b.get('nodes', []))} nodes")
 
-    def _extract_graph(self, bundle: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_graph(self, bundle: dict[str, Any]) -> dict[str, Any]:
         """Extract graph from bundle, handling different nesting levels."""
         if not isinstance(bundle, dict):
             return {}
@@ -120,7 +119,7 @@ class DriftAnalyzer:
 
         return {}
 
-    def _extract_statespace(self, bundle: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_statespace(self, bundle: dict[str, Any]) -> dict[str, Any]:
         """Extract state space from bundle, handling different nesting levels."""
         if not isinstance(bundle, dict):
             return {}
@@ -139,7 +138,7 @@ class DriftAnalyzer:
 
         return {}
 
-    def analyze(self, bundle_a: Dict[str, Any], bundle_b: Dict[str, Any]) -> DriftScore:
+    def analyze(self, bundle_a: dict[str, Any], bundle_b: dict[str, Any]) -> DriftScore:
         """Re-initialize the analyzer with fresh bundles and return the drift score.
 
         Back-compat entry point for callers that build a
@@ -184,7 +183,7 @@ class DriftAnalyzer:
             details=details,
         )
 
-    def compute_structural_drift(self) -> Dict[str, Any]:
+    def compute_structural_drift(self) -> dict[str, Any]:
         """Return an added/removed/changed summary of the two program graphs.
 
         Compares node ids and ``source→target`` edge keys between
@@ -227,7 +226,7 @@ class DriftAnalyzer:
             "edges_removed_count": len(removed_edges),
         }
 
-    def compute_semantic_drift(self) -> Dict[str, Any]:
+    def compute_semantic_drift(self) -> dict[str, Any]:
         """Return an added/removed/changed summary of semantic mappings.
 
         Uses mapping ids as the diff key. A mapping present in both
@@ -261,7 +260,7 @@ class DriftAnalyzer:
             "changed_count": len(changed_mappings),
         }
 
-    def compute_state_space_drift(self) -> Dict[str, Any]:
+    def compute_state_space_drift(self) -> dict[str, Any]:
         """Return add/remove/change counts for the two state spaces.
 
         Indexes each state space by its natural primary key:
@@ -374,11 +373,11 @@ class DriftAnalyzer:
 
         return abs(count_b - count_a) / max(count_a, count_b)
 
-    def _compute_collection_drift(self, col1: List[Any], col2: List[Any]) -> float:
+    def _compute_collection_drift(self, col1: list[Any], col2: list[Any]) -> float:
         """Compute drift between two collections (legacy method)."""
         return self._compute_count_drift(len(col1), len(col2))
 
-    def _count_added_nodes(self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]) -> int:
+    def _count_added_nodes(self, bundle1: dict[str, Any], bundle2: dict[str, Any]) -> int:
         """Count added graph nodes."""
         graph1 = self._extract_graph(bundle1)
         graph2 = self._extract_graph(bundle2)
@@ -388,7 +387,7 @@ class DriftAnalyzer:
 
         return len(ids2 - ids1)
 
-    def _count_removed_nodes(self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]) -> int:
+    def _count_removed_nodes(self, bundle1: dict[str, Any], bundle2: dict[str, Any]) -> int:
         """Count removed graph nodes."""
         graph1 = self._extract_graph(bundle1)
         graph2 = self._extract_graph(bundle2)
@@ -398,7 +397,7 @@ class DriftAnalyzer:
 
         return len(ids1 - ids2)
 
-    def _count_edge_changes(self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]) -> int:
+    def _count_edge_changes(self, bundle1: dict[str, Any], bundle2: dict[str, Any]) -> int:
         """Count changed edges."""
         graph1 = self._extract_graph(bundle1)
         graph2 = self._extract_graph(bundle2)
@@ -408,7 +407,7 @@ class DriftAnalyzer:
 
         return abs(edges2 - edges1)
 
-    def _count_added_states(self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]) -> int:
+    def _count_added_states(self, bundle1: dict[str, Any], bundle2: dict[str, Any]) -> int:
         """Count added states."""
         ss1 = self._extract_statespace(bundle1)
         ss2 = self._extract_statespace(bundle2)
@@ -418,7 +417,7 @@ class DriftAnalyzer:
 
         return max(0, states2 - states1)
 
-    def _count_removed_states(self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]) -> int:
+    def _count_removed_states(self, bundle1: dict[str, Any], bundle2: dict[str, Any]) -> int:
         """Count removed states."""
         ss1 = self._extract_statespace(bundle1)
         ss2 = self._extract_statespace(bundle2)
@@ -428,7 +427,7 @@ class DriftAnalyzer:
 
         return max(0, states1 - states2)
 
-    def _count_observation_changes(self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]) -> int:
+    def _count_observation_changes(self, bundle1: dict[str, Any], bundle2: dict[str, Any]) -> int:
         """Count changed observations."""
         ss1 = self._extract_statespace(bundle1)
         ss2 = self._extract_statespace(bundle2)
@@ -438,7 +437,7 @@ class DriftAnalyzer:
 
         return abs(obs2 - obs1)
 
-    def _count_action_changes(self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]) -> int:
+    def _count_action_changes(self, bundle1: dict[str, Any], bundle2: dict[str, Any]) -> int:
         """Count changed actions."""
         ss1 = self._extract_statespace(bundle1)
         ss2 = self._extract_statespace(bundle2)
@@ -448,7 +447,7 @@ class DriftAnalyzer:
 
         return abs(actions2 - actions1)
 
-    def _count_policy_changes(self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]) -> int:
+    def _count_policy_changes(self, bundle1: dict[str, Any], bundle2: dict[str, Any]) -> int:
         """Count changed policies."""
         ss1 = self._extract_statespace(bundle1)
         ss2 = self._extract_statespace(bundle2)
@@ -489,12 +488,12 @@ class DriftAnalyzer:
         lines.extend([
             "## Structural Changes",
             "",
-            f"**Nodes**:",
+            "**Nodes**:",
             f"- Added: {struct.get('nodes_added_count', 0)}",
             f"- Removed: {struct.get('nodes_removed_count', 0)}",
             f"- Changed: {struct.get('nodes_changed_count', 0)}",
             "",
-            f"**Edges**:",
+            "**Edges**:",
             f"- Added: {struct.get('edges_added_count', 0)}",
             f"- Removed: {struct.get('edges_removed_count', 0)}",
             "",
@@ -505,7 +504,7 @@ class DriftAnalyzer:
         lines.extend([
             "## Semantic Changes",
             "",
-            f"**Mappings**:",
+            "**Mappings**:",
             f"- New: {sem.get('new_count', 0)}",
             f"- Lost: {sem.get('lost_count', 0)}",
             f"- Changed: {sem.get('changed_count', 0)}",
@@ -517,16 +516,16 @@ class DriftAnalyzer:
         lines.extend([
             "## State Space Changes",
             "",
-            f"**State Variables**:",
+            "**State Variables**:",
             f"- Added: {ss.get('state_vars_added', 0)}",
             f"- Removed: {ss.get('state_vars_removed', 0)}",
             f"- Changed: {ss.get('state_vars_changed', 0)}",
             "",
-            f"**Observations**:",
+            "**Observations**:",
             f"- Added: {ss.get('observations_added', 0)}",
             f"- Removed: {ss.get('observations_removed', 0)}",
             "",
-            f"**Actions**:",
+            "**Actions**:",
             f"- Added: {ss.get('actions_added', 0)}",
             f"- Removed: {ss.get('actions_removed', 0)}",
             "",
@@ -572,7 +571,7 @@ class DriftAnalyzer:
         return "\n".join(lines)
 
     def _compute_architectural_drift(
-        self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]
+        self, bundle1: dict[str, Any], bundle2: dict[str, Any]
     ) -> float:
         """Compute drift in program graph structure."""
         graph1 = bundle1.get("stage_results", {}).get("graph", {})
@@ -598,7 +597,7 @@ class DriftAnalyzer:
         return (node_drift + edge_drift) / 2
 
     def _compute_semantic_churn(
-        self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]
+        self, bundle1: dict[str, Any], bundle2: dict[str, Any]
     ) -> float:
         """Compute semantic model churn."""
         ss1 = bundle1.get("stage_results", {}).get("statespace", {})
@@ -631,7 +630,7 @@ class DriftAnalyzer:
         """Generate human-readable report (legacy method)."""
         return self.generate_diff_report()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Export the drift analysis as a JSON-serializable dict.
 
         Runs :meth:`_compute_drift_score` and packs the result into a

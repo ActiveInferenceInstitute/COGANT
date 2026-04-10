@@ -23,7 +23,7 @@ import hashlib
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from cogant.static.parser import PythonASTParser
 from cogant.static.symbols import SymbolExtractor
@@ -56,14 +56,14 @@ class DataFlowEdge:
     context: str = "module"
     """Context (module, function name, class.method)."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     """Additional metadata."""
 
 
 class DataFlowAnalyzer:
     """Analyze data flow: track variable reads, writes, and mutations."""
 
-    def __init__(self, repo_root: Optional[Path] = None):
+    def __init__(self, repo_root: Path | None = None):
         """Initialize data flow analyzer.
 
         Args:
@@ -73,7 +73,7 @@ class DataFlowAnalyzer:
         self.parser = PythonASTParser()
         self.symbol_extractor = SymbolExtractor(repo_root)
 
-    def analyze_file(self, file_path: Path) -> List[DataFlowEdge]:
+    def analyze_file(self, file_path: Path) -> list[DataFlowEdge]:
         """Analyze data flow in a Python file.
 
         Args:
@@ -83,7 +83,7 @@ class DataFlowAnalyzer:
             List of DataFlowEdge for data flow relationships.
         """
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 source = f.read()
         except OSError as e:
             logger.debug(f"Failed to read {file_path}: {e}")
@@ -91,7 +91,7 @@ class DataFlowAnalyzer:
 
         return self.analyze_source(source, file_path)
 
-    def analyze_source(self, source: str, file_path: Path) -> List[DataFlowEdge]:
+    def analyze_source(self, source: str, file_path: Path) -> list[DataFlowEdge]:
         """Analyze data flow in Python source code.
 
         Args:
@@ -101,7 +101,7 @@ class DataFlowAnalyzer:
         Returns:
             List of DataFlowEdge for data flow relationships.
         """
-        flows: List[DataFlowEdge] = []
+        flows: list[DataFlowEdge] = []
 
         try:
             tree = ast.parse(source)
@@ -191,8 +191,8 @@ class DataFlowVisitor(ast.NodeVisitor):
         self,
         file_path: Path,
         context: str,
-        body: List[ast.stmt],
-        symbol_extractor: Optional[Any] = None,
+        body: list[ast.stmt],
+        symbol_extractor: Any | None = None,
     ):
         """Initialize data flow visitor.
 
@@ -207,13 +207,13 @@ class DataFlowVisitor(ast.NodeVisitor):
         self.file_path = file_path
         self.context = context
         self.symbol_extractor = symbol_extractor
-        self.flows: List[DataFlowEdge] = []
-        self._assignments: Dict[str, int] = {}
-        self._reads: Set[str] = set()
+        self.flows: list[DataFlowEdge] = []
+        self._assignments: dict[str, int] = {}
+        self._reads: set[str] = set()
         # Track which Name nodes have already been emitted as reads via an
         # enclosing construct so we don't double-count them when generic_visit
         # eventually reaches them.
-        self._handled_nodes: Set[int] = set()
+        self._handled_nodes: set[int] = set()
 
         for node in body:
             self.visit(node)
@@ -266,7 +266,7 @@ class DataFlowVisitor(ast.NodeVisitor):
         """
         target_names = self._extract_targets([node.target])
 
-        source_names: Set[str] = set()
+        source_names: set[str] = set()
         if node.value is not None:
             source_names = self._extract_loads(node.value)
             self._mark_handled(node.value)
@@ -483,12 +483,12 @@ class DataFlowVisitor(ast.NodeVisitor):
         )
         self.flows.append(edge)
 
-    def _extract_targets(self, targets: List[ast.expr]) -> Set[str]:
+    def _extract_targets(self, targets: list[ast.expr]) -> set[str]:
         """Extract target names from assignment targets.
 
         Handles ``Name``, ``Attribute``, and ``Tuple``/``List`` unpacking.
         """
-        names: Set[str] = set()
+        names: set[str] = set()
         for target in targets:
             if isinstance(target, ast.Name):
                 names.add(target.id)
@@ -511,7 +511,7 @@ class DataFlowVisitor(ast.NodeVisitor):
                     names.add(base)
         return names
 
-    def _target_name(self, target: ast.expr) -> Optional[str]:
+    def _target_name(self, target: ast.expr) -> str | None:
         """Return a single target name for an AugAssign target."""
         if isinstance(target, ast.Name):
             return target.id
@@ -520,7 +520,7 @@ class DataFlowVisitor(ast.NodeVisitor):
         return None
 
     @staticmethod
-    def _extract_loads(node: Optional[ast.AST]) -> Set[str]:
+    def _extract_loads(node: ast.AST | None) -> set[str]:
         """Extract names that are *loaded* inside an expression subtree.
 
         Includes simple ``Name`` loads and dotted attribute loads so that
@@ -529,7 +529,7 @@ class DataFlowVisitor(ast.NodeVisitor):
         if node is None:
             return set()
 
-        names: Set[str] = set()
+        names: set[str] = set()
 
         class Collector(ast.NodeVisitor):
             """Collect Name/Attribute loads."""
@@ -550,19 +550,19 @@ class DataFlowVisitor(ast.NodeVisitor):
         Collector().visit(node)
         return names
 
-    def _mark_handled(self, node: Optional[ast.AST]) -> None:
+    def _mark_handled(self, node: ast.AST | None) -> None:
         """Mark a subtree as already-handled to prevent double emission."""
         if node is None:
             return
         for sub in ast.walk(node):
             self._handled_nodes.add(id(sub))
 
-    def _ast_to_dotted(self, node: ast.AST) -> Optional[str]:
+    def _ast_to_dotted(self, node: ast.AST) -> str | None:
         """Return a dotted-string representation of an attribute chain."""
         return self._ast_to_dotted_static(node)
 
     @staticmethod
-    def _ast_to_dotted_static(node: ast.AST) -> Optional[str]:
+    def _ast_to_dotted_static(node: ast.AST) -> str | None:
         """Static variant of ``_ast_to_dotted`` (used by closures)."""
         if isinstance(node, ast.Name):
             return node.id
@@ -573,7 +573,7 @@ class DataFlowVisitor(ast.NodeVisitor):
             return f"{base}.{node.attr}"
         return None
 
-    def _attribute_root(self, node: ast.AST) -> Optional[str]:
+    def _attribute_root(self, node: ast.AST) -> str | None:
         """Return the root name of an attribute/subscript chain."""
         while isinstance(node, (ast.Attribute, ast.Subscript)):
             node = node.value

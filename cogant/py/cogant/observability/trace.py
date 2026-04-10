@@ -7,8 +7,9 @@ named ``cogant.span.<name>``.
 from __future__ import annotations
 
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from cogant.observability.metrics import MetricsRegistry

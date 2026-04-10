@@ -38,15 +38,16 @@ graph and seed set, it always produces the same partition.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
+from enum import StrEnum
+from typing import Any
 
-from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+from cogant.schemas.core import Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
 
 
-class BlanketRole(str, Enum):
+class BlanketRole(StrEnum):
     """Active Inference role of a node within a Markov blanket."""
 
     INTERNAL = "internal"
@@ -88,18 +89,18 @@ class MarkovBlanket:
             heuristic, graph hash, etc.).
     """
 
-    roles: Dict[str, BlanketRole]
-    seeds: Set[str]
-    internal_ids: Set[str] = field(default_factory=set)
-    sensory_ids: Set[str] = field(default_factory=set)
-    active_ids: Set[str] = field(default_factory=set)
-    external_ids: Set[str] = field(default_factory=set)
-    rationale: Dict[str, str] = field(default_factory=dict)
-    stats: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    roles: dict[str, BlanketRole]
+    seeds: set[str]
+    internal_ids: set[str] = field(default_factory=set)
+    sensory_ids: set[str] = field(default_factory=set)
+    active_ids: set[str] = field(default_factory=set)
+    external_ids: set[str] = field(default_factory=set)
+    rationale: dict[str, str] = field(default_factory=dict)
+    stats: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
-    def boundary_ids(self) -> Set[str]:
+    def boundary_ids(self) -> set[str]:
         """Union of sensory and active nodes — the Markov blanket B."""
         return self.sensory_ids | self.active_ids
 
@@ -107,7 +108,7 @@ class MarkovBlanket:
         """Return the role of ``node_id``, defaulting to EXTERNAL."""
         return self.roles.get(node_id, BlanketRole.EXTERNAL)
 
-    def ids_by_role(self, role: BlanketRole) -> Set[str]:
+    def ids_by_role(self, role: BlanketRole) -> set[str]:
         """Return the set of node ids that carry a given role."""
         if role is BlanketRole.INTERNAL:
             return self.internal_ids
@@ -120,7 +121,7 @@ class MarkovBlanket:
 
 def _bidirectional_adjacency(
     graph: ProgramGraph,
-) -> Dict[str, Tuple[Set[str], Set[str]]]:
+) -> dict[str, tuple[set[str], set[str]]]:
     """Build in/out neighbour sets for every node.
 
     Returns a mapping ``node_id → (in_neighbours, out_neighbours)``
@@ -131,8 +132,8 @@ def _bidirectional_adjacency(
     We precompute this once so the partitioner is O(V + E) rather than
     O(V²) through repeated calls to :meth:`ProgramGraph.get_edges_from`.
     """
-    in_adj: Dict[str, Set[str]] = {n: set() for n in graph.nodes}
-    out_adj: Dict[str, Set[str]] = {n: set() for n in graph.nodes}
+    in_adj: dict[str, set[str]] = {n: set() for n in graph.nodes}
+    out_adj: dict[str, set[str]] = {n: set() for n in graph.nodes}
 
     for edge in graph.edges.values():
         s, t = edge.source_id, edge.target_id
@@ -150,7 +151,7 @@ def partition_by_seeds(
     graph: ProgramGraph,
     seeds: Iterable[str],
     *,
-    adjacency: Optional[Mapping[str, Tuple[Set[str], Set[str]]]] = None,
+    adjacency: Mapping[str, tuple[set[str], set[str]]] | None = None,
 ) -> MarkovBlanket:
     """Assign every node in ``graph`` a Markov blanket role.
 
@@ -174,19 +175,19 @@ def partition_by_seeds(
         node ∈ seeds  and  ∃ external neighbour           → SENSORY/ACTIVE
         node ∉ seeds                                       → EXTERNAL
     """
-    seed_set: Set[str] = {s for s in seeds if s in graph.nodes}
+    seed_set: set[str] = {s for s in seeds if s in graph.nodes}
 
     if adjacency is None:
         adjacency = _bidirectional_adjacency(graph)
 
-    roles: Dict[str, BlanketRole] = {}
-    rationale: Dict[str, str] = {}
-    internal: Set[str] = set()
-    sensory: Set[str] = set()
-    active: Set[str] = set()
-    external: Set[str] = set()
-    bidirectional: Set[str] = set()
-    external_neighbours: Set[str] = set()
+    roles: dict[str, BlanketRole] = {}
+    rationale: dict[str, str] = {}
+    internal: set[str] = set()
+    sensory: set[str] = set()
+    active: set[str] = set()
+    external: set[str] = set()
+    bidirectional: set[str] = set()
+    external_neighbours: set[str] = set()
 
     for node_id in graph.nodes:
         in_neigh, out_neigh = adjacency[node_id]
@@ -268,8 +269,8 @@ def serialize_blanket(
     graph: ProgramGraph,
     *,
     include_rationale: bool = True,
-    max_nodes_per_role: Optional[int] = None,
-) -> Dict[str, Any]:
+    max_nodes_per_role: int | None = None,
+) -> dict[str, Any]:
     """Convert a :class:`MarkovBlanket` into a JSON-friendly dictionary.
 
     Args:
@@ -301,14 +302,14 @@ def serialize_blanket(
             }
     """
 
-    def _format(node_ids: Iterable[str]) -> List[Dict[str, Any]]:
+    def _format(node_ids: Iterable[str]) -> list[dict[str, Any]]:
         ids = sorted(node_ids)
         if max_nodes_per_role is not None:
             ids = ids[:max_nodes_per_role]
-        out: List[Dict[str, Any]] = []
+        out: list[dict[str, Any]] = []
         for nid in ids:
             node = graph.get_node(nid)
-            record: Dict[str, Any] = {
+            record: dict[str, Any] = {
                 "id": nid,
                 "kind": _node_kind_value(node) if node else None,
                 "name": node.name if node else None,

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
 
 # Keys that a condition dict is allowed to contain.
 KNOWN_CONDITION_KEYS = frozenset({
@@ -22,16 +21,16 @@ class DSLCondition:
     validates this and raises ``ValueError`` for unknown keys.
     """
 
-    node_kind: Optional[str] = None
+    node_kind: str | None = None
     """Match nodes whose ``NodeKind.value`` equals this (case-insensitive)."""
 
-    name_pattern: Optional[str] = None
+    name_pattern: str | None = None
     """Glob pattern matched against ``node.name`` via ``fnmatch``."""
 
-    has_method: Optional[str] = None
+    has_method: str | None = None
     """Class must contain a METHOD child whose name equals this string."""
 
-    edge_type: Optional[str] = None
+    edge_type: str | None = None
     """Node must have at least one outgoing edge whose ``EdgeKind.value`` matches."""
 
 
@@ -48,10 +47,10 @@ class DSLRule:
     confidence: float
     """Confidence score returned when the rule matches (0.0 -- 1.0)."""
 
-    conditions: List[DSLCondition]
+    conditions: list[DSLCondition]
     """All conditions must match for the rule to fire."""
 
-    description: Optional[str] = None
+    description: str | None = None
     """Optional human-readable description."""
 
 
@@ -59,4 +58,4 @@ class DSLRule:
 class DSLRuleSet:
     """An ordered collection of DSL rules."""
 
-    rules: List[DSLRule] = field(default_factory=list)
+    rules: list[DSLRule] = field(default_factory=list)

@@ -4,11 +4,9 @@ Static plotter for HTML/SVG visualizations of COGANT models.
 Generates bar charts, histograms, and tables using inline SVG.
 """
 
-from typing import Dict, List, Optional, Any
-from collections import Counter
 import logging
+from typing import Any
 
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
 
@@ -33,7 +31,7 @@ class StaticPlotter:
             HTML string containing SVG bar chart.
         """
         # Count nodes by kind
-        kind_counts: Dict[str, int] = {}
+        kind_counts: dict[str, int] = {}
         for node in graph.nodes.values():
             kind_name = node.kind.value
             kind_counts[kind_name] = kind_counts.get(kind_name, 0) + 1
@@ -103,7 +101,7 @@ class StaticPlotter:
             HTML string containing SVG bar chart.
         """
         # Count edges by kind
-        kind_counts: Dict[str, int] = {}
+        kind_counts: dict[str, int] = {}
         for edge in graph.edges.values():
             kind_name = edge.kind.value
             kind_counts[kind_name] = kind_counts.get(kind_name, 0) + 1
@@ -162,7 +160,7 @@ class StaticPlotter:
 
         return "\n".join(lines)
 
-    def plot_confidence_distribution(self, mappings: Dict[str, Any]) -> str:
+    def plot_confidence_distribution(self, mappings: dict[str, Any]) -> str:
         """
         Generate HTML/SVG histogram of mapping confidence scores.
 
@@ -307,7 +305,7 @@ class StaticPlotter:
         actions = list(state_space.actions.values())
 
         # Build variable-observation connectivity map with confidence
-        var_obs_connectivity: Dict[str, Dict[str, float]] = {}
+        var_obs_connectivity: dict[str, dict[str, float]] = {}
         for var in variables:
             var_obs_connectivity[var.id] = {}
             for obs in observations:
@@ -319,7 +317,7 @@ class StaticPlotter:
                 var_obs_connectivity[var.id][obs.id] = confidence
 
         # Build variable-action connectivity map with confidence
-        var_action_connectivity: Dict[str, Dict[str, float]] = {}
+        var_action_connectivity: dict[str, dict[str, float]] = {}
         for var in variables:
             var_action_connectivity[var.id] = {}
             for action in actions:
@@ -500,7 +498,7 @@ class StaticPlotter:
         ]
 
         # Draw edges (factors)
-        for var_id, var in state_space.variables.items():
+        for var_id, _var in state_space.variables.items():
             if var_id not in var_positions:
                 continue
             var_x, var_y = var_positions[var_id]
@@ -555,7 +553,7 @@ class StaticPlotter:
         # Add legend
         legend_y = height - 80
         lines.extend([
-            f'<g id="legend">',
+            '<g id="legend">',
             f'  <text x="80" y="{legend_y}" class="label" text-anchor="start" font-size="12" font-weight="bold">Legend:</text>',
             f'  <circle cx="80" cy="{legend_y + 20}" r="12" class="var-circle"/>',
             f'  <text x="100" y="{legend_y + 25}" class="label" text-anchor="start" font-size="10">State Variable</text>',
@@ -563,7 +561,7 @@ class StaticPlotter:
             f'  <text x="270" y="{legend_y + 25}" class="label" text-anchor="start" font-size="10">Observation</text>',
             f'  <polygon points="420,{legend_y + 20} 432,{legend_y + 32} 420,{legend_y + 44} 408,{legend_y + 32}" class="action-diamond"/>',
             f'  <text x="450" y="{legend_y + 25}" class="label" text-anchor="start" font-size="10">Action</text>',
-            f'</g>',
+            '</g>',
         ])
 
         lines.append("</svg>")
@@ -571,7 +569,7 @@ class StaticPlotter:
         with open(output_path, "w") as f:
             f.write("\n".join(lines))
 
-    def plot_ontology_sunburst(self, graph: ProgramGraph, mappings: Dict[str, Any], output_path: str) -> None:
+    def plot_ontology_sunburst(self, graph: ProgramGraph, mappings: dict[str, Any], output_path: str) -> None:
         """
         Generate SVG sunburst diagram showing ontology structure.
 
@@ -581,14 +579,14 @@ class StaticPlotter:
             output_path: Path to save the SVG file.
         """
         # Count nodes by kind
-        kind_counts: Dict[str, int] = {}
+        kind_counts: dict[str, int] = {}
         for node in graph.nodes.values():
             kind_str = str(node.kind).replace("NodeKind.", "")
             kind_counts[kind_str] = kind_counts.get(kind_str, 0) + 1
 
         # Count semantic roles
-        role_counts: Dict[str, int] = {}
-        for mapping_id, mapping in mappings.items():
+        role_counts: dict[str, int] = {}
+        for _mapping_id, mapping in mappings.items():
             role = getattr(mapping, 'kind', type(mapping).__name__)
             if hasattr(role, 'value'):
                 role = role.value
@@ -645,8 +643,8 @@ class StaticPlotter:
             mid_rad = (angle_mid - 90) * 3.14159 / 180
 
             # Draw segment
-            x1 = center_x + inner_radius * (angle_start - 90)**0 * 0 + inner_radius * 0.707
-            y1 = center_y + inner_radius * (angle_start - 90)**0 * 0 + inner_radius * 0.707
+            center_x + inner_radius * (angle_start - 90)**0 * 0 + inner_radius * 0.707
+            center_y + inner_radius * (angle_start - 90)**0 * 0 + inner_radius * 0.707
 
             # SVG arc path
             large_arc = 1 if angle_size > 180 else 0
@@ -708,7 +706,7 @@ class StaticPlotter:
         with open(output_path, "w") as f:
             f.write("\n".join(lines))
 
-    def plot_confidence_radar(self, mappings: Dict[str, Any], output_path: str) -> None:
+    def plot_confidence_radar(self, mappings: dict[str, Any], output_path: str) -> None:
         """
         Generate SVG radar/spider chart showing confidence by mapping kind.
 
@@ -719,8 +717,8 @@ class StaticPlotter:
         import math
 
         # Group mappings by kind and calculate mean confidence
-        kind_confidence: Dict[str, List[float]] = {}
-        for mapping_id, mapping in mappings.items():
+        kind_confidence: dict[str, list[float]] = {}
+        for _mapping_id, mapping in mappings.items():
             kind = getattr(mapping, 'kind', type(mapping).__name__)
             if hasattr(kind, 'value'):
                 kind = kind.value

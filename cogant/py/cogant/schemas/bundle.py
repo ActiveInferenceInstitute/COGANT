@@ -5,17 +5,17 @@ Defines the structure for packaging all analysis artifacts, metadata,
 and provenance into a single portable bundle.
 """
 
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timezone
-from uuid import UUID, uuid4
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
+from uuid import uuid4
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import ConfigDict, Field
 
-from .base import CogantBaseModel, SemanticVersion, StableID, EvidenceRef, generate_stable_id
+from .base import CogantBaseModel, EvidenceRef, SemanticVersion
 
 
-class TargetLanguage(str, Enum):
+class TargetLanguage(StrEnum):
     """Programming languages supported as analysis targets."""
 
     PYTHON = "python"
@@ -38,17 +38,17 @@ class TargetInfo(CogantBaseModel):
     name: str = Field(..., description="Project/repository name")
     version: str = Field(..., description="Project version")
     primary_language: TargetLanguage = Field(..., description="Primary programming language")
-    supported_languages: List[TargetLanguage] = Field(
+    supported_languages: list[TargetLanguage] = Field(
         default_factory=list,
         description="All languages detected in codebase",
     )
-    repository_url: Optional[str] = Field(
+    repository_url: str | None = Field(
         default=None, description="URL of source repository (e.g., GitHub)"
     )
-    commit_hash: Optional[str] = Field(
+    commit_hash: str | None = Field(
         default=None, description="Git commit hash of analyzed version"
     )
-    analysis_scope: Optional[str] = Field(
+    analysis_scope: str | None = Field(
         default=None,
         description="Scope of analysis (e.g., 'full', 'public_api', 'main_branch')",
     )
@@ -62,19 +62,19 @@ class ProvenanceOrigin(CogantBaseModel):
     analyzer_name: str = Field(..., description="Name of analysis tool/framework")
     analyzer_version: str = Field(..., description="Version of analyzer")
     ingest_timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="When analysis was performed",
     )
-    ingest_host: Optional[str] = Field(
+    ingest_host: str | None = Field(
         default=None, description="Hostname of analysis environment"
     )
-    ingest_user: Optional[str] = Field(
+    ingest_user: str | None = Field(
         default=None, description="User who initiated analysis"
     )
-    command_line: Optional[str] = Field(
+    command_line: str | None = Field(
         default=None, description="Command used to invoke analyzer"
     )
-    parameters: Dict[str, Any] = Field(
+    parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Analysis configuration parameters",
     )
@@ -141,17 +141,17 @@ class CoreBundleSchema(CogantBaseModel):
         description="Version of COGANT framework used",
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="ISO 8601 timestamp of bundle creation",
     )
-    updated_at: Optional[datetime] = Field(
+    updated_at: datetime | None = Field(
         default=None,
         description="ISO 8601 timestamp of last update",
     )
-    title: Optional[str] = Field(
+    title: str | None = Field(
         default=None, description="Human-readable bundle title"
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None, description="Detailed description of bundle contents"
     )
 
@@ -169,16 +169,16 @@ class CoreBundleSchema(CogantBaseModel):
     )
 
     # Optional metadata
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list, description="User-defined tags for bundle categorization"
     )
-    annotations: Dict[str, Any] = Field(
+    annotations: dict[str, Any] = Field(
         default_factory=dict,
         description="Custom annotations/metadata",
     )
 
     # Evidence references for bundle-level provenance
-    evidence_references: List[EvidenceRef] = Field(
+    evidence_references: list[EvidenceRef] = Field(
         default_factory=list,
         description="Evidence supporting bundle metadata",
     )

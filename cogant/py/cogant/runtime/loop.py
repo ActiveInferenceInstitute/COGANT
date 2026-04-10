@@ -18,10 +18,9 @@ observation, chosen action, and variational free energy at that timestep.
 
 from __future__ import annotations
 
-import math
 import types
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from cogant.runtime.config import AgentConfig
 from cogant.runtime.metrics import free_energy as compute_free_energy
@@ -43,13 +42,13 @@ class AgentStep:
     """
 
     t: int
-    state_dist: List[float]
+    state_dist: list[float]
     obs: int
     action: int
     free_energy: float
 
 
-def _normalize(dist: List[float]) -> List[float]:
+def _normalize(dist: list[float]) -> list[float]:
     """Normalize a distribution to sum to 1, with epsilon safety."""
     total = sum(dist)
     if total > _EPS:
@@ -58,7 +57,7 @@ def _normalize(dist: List[float]) -> List[float]:
     return [1.0 / n] * n if n > 0 else []
 
 
-def _argmax(values: List[float]) -> int:
+def _argmax(values: list[float]) -> int:
     """Return the index of the maximum value."""
     if not values:
         return 0
@@ -71,25 +70,25 @@ def _argmax(values: List[float]) -> int:
     return best_idx
 
 
-def _mat_vec(mat: List[List[float]], vec: List[float]) -> List[float]:
+def _mat_vec(mat: list[list[float]], vec: list[float]) -> list[float]:
     """Multiply a 2D matrix by a vector: result[i] = sum_j mat[i][j] * vec[j]."""
     result = []
     for row in mat:
         s = 0.0
-        for a, b in zip(row, vec):
+        for a, b in zip(row, vec, strict=False):
             s += a * b
         result.append(s)
     return result
 
 
-def _default_likelihood(A: List[List[float]], state_dist: List[float]) -> List[float]:
+def _default_likelihood(A: list[list[float]], state_dist: list[float]) -> list[float]:
     """Fallback likelihood when the matrices module has no likelihood function."""
     return _mat_vec(A, state_dist)
 
 
 def _default_transition(
-    B: List[List[List[float]]], state_dist: List[float], action: int = 0
-) -> List[float]:
+    B: list[list[list[float]]], state_dist: list[float], action: int = 0
+) -> list[float]:
     """Fallback transition when the matrices module has no transition function."""
     n_states = len(state_dist)
     result = [0.0] * n_states
@@ -102,9 +101,9 @@ def _default_transition(
     return _normalize(result)
 
 
-def _default_preference_score(C: List[float], obs_dist: List[float]) -> float:
+def _default_preference_score(C: list[float], obs_dist: list[float]) -> float:
     """Fallback preference score when the matrices module has none."""
-    return sum(c * o for c, o in zip(C, obs_dist))
+    return sum(c * o for c, o in zip(C, obs_dist, strict=False))
 
 
 class AgentRuntime:
@@ -120,10 +119,10 @@ class AgentRuntime:
     """
 
     def __init__(self, matrices: Any) -> None:
-        self.A: List[List[float]] = getattr(matrices, "A", [])
-        self.B: List[List[List[float]]] = getattr(matrices, "B", [])
-        self.C: List[float] = getattr(matrices, "C", [])
-        self.D: List[float] = getattr(matrices, "D", [])
+        self.A: list[list[float]] = getattr(matrices, "A", [])
+        self.B: list[list[list[float]]] = getattr(matrices, "B", [])
+        self.C: list[float] = getattr(matrices, "C", [])
+        self.D: list[float] = getattr(matrices, "D", [])
 
         # Bind helper functions (use module's if available, else fallback)
         if hasattr(matrices, "likelihood") and callable(matrices.likelihood):
@@ -148,7 +147,7 @@ class AgentRuntime:
         )
 
     @classmethod
-    def from_matrices_dict(cls, d: Dict[str, Any]) -> "AgentRuntime":
+    def from_matrices_dict(cls, d: dict[str, Any]) -> AgentRuntime:
         """Create an AgentRuntime from a plain dict with keys A, B, C, D.
 
         Builds lightweight likelihood/transition/preference_score helpers
@@ -173,7 +172,7 @@ class AgentRuntime:
         ns.preference_score = lambda od: _default_preference_score(C, od)
         return cls(ns)
 
-    def step(self, state_dist: List[float], obs_idx: int, t: int = 0) -> AgentStep:
+    def step(self, state_dist: list[float], obs_idx: int, t: int = 0) -> AgentStep:
         """Execute one inference step.
 
         1. Compute predicted observations from current belief.
@@ -192,7 +191,7 @@ class AgentRuntime:
             An AgentStep with the updated belief, action, and VFE.
         """
         # 1. Predicted observations
-        pred_obs = self._likelihood(state_dist)
+        self._likelihood(state_dist)
 
         # 2. Bayesian belief update: weight state by likelihood of obs
         if obs_idx < self._n_obs and self.A:
@@ -200,7 +199,7 @@ class AgentRuntime:
                 self.A[obs_idx][j] if j < len(self.A[obs_idx]) else _EPS
                 for j in range(len(state_dist))
             ]
-            updated = [s * w for s, w in zip(state_dist, weights)]
+            updated = [s * w for s, w in zip(state_dist, weights, strict=False)]
             state_dist = _normalize(updated)
 
         # 3. Action selection: evaluate each action
@@ -230,8 +229,8 @@ class AgentRuntime:
         )
 
     def run_n_steps(
-        self, n: int, initial_state: Optional[List[float]] = None
-    ) -> List[AgentStep]:
+        self, n: int, initial_state: list[float] | None = None
+    ) -> list[AgentStep]:
         """Run ``n`` inference steps from an initial state.
 
         At each step the observation is chosen as the argmax of the
@@ -247,7 +246,7 @@ class AgentRuntime:
         """
         state = list(initial_state) if initial_state is not None else list(self.D)
         state = _normalize(state)
-        steps: List[AgentStep] = []
+        steps: list[AgentStep] = []
         for t in range(n):
             pred_obs = self._likelihood(state)
             obs_idx = _argmax(pred_obs)
@@ -258,9 +257,9 @@ class AgentRuntime:
 
     def run_until_convergence(
         self,
-        initial_state: Optional[List[float]] = None,
-        cfg: Optional[AgentConfig] = None,
-    ) -> List[AgentStep]:
+        initial_state: list[float] | None = None,
+        cfg: AgentConfig | None = None,
+    ) -> list[AgentStep]:
         """Run until KL(state[t] || state[t-1]) < convergence_threshold.
 
         Args:
@@ -275,7 +274,7 @@ class AgentRuntime:
             cfg = AgentConfig()
         state = list(initial_state) if initial_state is not None else list(self.D)
         state = _normalize(state)
-        steps: List[AgentStep] = []
+        steps: list[AgentStep] = []
         prev_state = list(state)
 
         for t in range(cfg.max_steps):
@@ -297,8 +296,8 @@ class AgentRuntime:
 
 
 def run_n_steps(
-    runtime: AgentRuntime, n: int, initial_state: Optional[List[float]] = None
-) -> List[AgentStep]:
+    runtime: AgentRuntime, n: int, initial_state: list[float] | None = None
+) -> list[AgentStep]:
     """Module-level convenience: run ``n`` steps on a runtime.
 
     Args:
@@ -314,9 +313,9 @@ def run_n_steps(
 
 def run_until_convergence(
     runtime: AgentRuntime,
-    initial_state: Optional[List[float]] = None,
-    cfg: Optional[AgentConfig] = None,
-) -> List[AgentStep]:
+    initial_state: list[float] | None = None,
+    cfg: AgentConfig | None = None,
+) -> list[AgentStep]:
     """Module-level convenience: run until convergence.
 
     Args:

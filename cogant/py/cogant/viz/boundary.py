@@ -4,11 +4,11 @@ Boundary mapping and analysis for program graphs.
 Identifies module boundaries, type boundaries, and cross-boundary couplings.
 """
 
-from typing import Dict, List, Set, Optional, Tuple, Any, cast, TYPE_CHECKING
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from typing import TYPE_CHECKING, Any, cast
 
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
+from cogant.schemas.core import Edge, EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
 
 if TYPE_CHECKING:
@@ -39,12 +39,12 @@ class BoundaryMapper:
         """
         # Get all modules
         modules = graph.get_nodes_by_kind(NodeKind.MODULE)
-        module_map = {node.id: node for node in modules}
+        {node.id: node for node in modules}
 
         lines = ["graph TD"]
 
         # Track cross-module edges for annotation
-        cross_module_edge_counts: Dict[tuple, int] = defaultdict(int)
+        cross_module_edge_counts: dict[tuple, int] = defaultdict(int)
 
         # Add module clusters with classes inside
         for module in modules:
@@ -86,7 +86,7 @@ class BoundaryMapper:
             lines.append("    end")
 
         # Add cross-class call edges
-        cross_class_edges: List[Edge] = []
+        cross_class_edges: list[Edge] = []
         for edge in graph.edges.values():
             source = graph.get_node(edge.source_id)
             target = graph.get_node(edge.target_id)
@@ -111,7 +111,7 @@ class BoundaryMapper:
                 cross_module_edge_counts[edge_key] += 1
 
         # Draw cross-module edges
-        cross_module_edges: List[Edge] = []
+        cross_module_edges: list[Edge] = []
         for edge in graph.edges.values():
             source = graph.get_node(edge.source_id)
             target = graph.get_node(edge.target_id)
@@ -141,7 +141,7 @@ class BoundaryMapper:
 
     def _find_containing_class(
         self, node_id: str, graph: ProgramGraph
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Find the class that contains a given node.
 
@@ -218,7 +218,7 @@ class BoundaryMapper:
 
         return "\n".join(lines)
 
-    def generate_boundary_report(self, graph: ProgramGraph) -> Dict[str, Any]:
+    def generate_boundary_report(self, graph: ProgramGraph) -> dict[str, Any]:
         """
         Generate metrics on boundary crossings and coupling scores.
 
@@ -229,11 +229,11 @@ class BoundaryMapper:
             Dict with keys: "total_boundary_crossings", "module_coupling_matrix",
             "type_coupling_score", "external_dependencies".
         """
-        report: Dict[str, Any] = {}
+        report: dict[str, Any] = {}
 
         # Count boundary crossings
         boundary_crossings = 0
-        crossing_by_type: Dict[str, int] = defaultdict(int)
+        crossing_by_type: dict[str, int] = defaultdict(int)
 
         for edge in graph.edges.values():
             source = graph.get_node(edge.source_id)
@@ -251,7 +251,7 @@ class BoundaryMapper:
         modules = graph.get_nodes_by_kind(NodeKind.MODULE)
         module_names = {node.id: node.name for node in modules}
 
-        coupling_matrix: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        coupling_matrix: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
         for edge in graph.edges.values():
             source = graph.get_node(edge.source_id)
             target = graph.get_node(edge.target_id)
@@ -289,7 +289,7 @@ class BoundaryMapper:
 
     def _find_containing_module(
         self, node_id: str, graph: ProgramGraph
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Find the module that contains a given node.
 
@@ -323,7 +323,7 @@ class BoundaryMapper:
 
         return None
 
-    def _find_inter_type_edges(self, graph: ProgramGraph) -> List[Edge]:
+    def _find_inter_type_edges(self, graph: ProgramGraph) -> list[Edge]:
         """
         Find edges that cross type boundaries (CLASS, FUNCTION, MODULE).
 
@@ -449,7 +449,7 @@ class BoundaryMapper:
             kind = node.kind.value if hasattr(node.kind, "value") else str(node.kind)
             return f"{name} :{kind}"
 
-        role_members: Dict[str, List[str]] = {
+        role_members: dict[str, list[str]] = {
             "internal": sorted(blanket.internal_ids),
             "sensory": sorted(blanket.sensory_ids),
             "active": sorted(blanket.active_ids),
@@ -463,7 +463,7 @@ class BoundaryMapper:
         }
 
         lines = ["graph LR"]
-        drawn: Set[str] = set()
+        drawn: set[str] = set()
         for role, members in role_members.items():
             total = len(members)
             shown = members[:max_per_role]

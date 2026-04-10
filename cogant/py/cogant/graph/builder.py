@@ -1,11 +1,11 @@
 """Program graph builder for constructing graphs from normalized facts."""
 
-from typing import Any, Dict, List, Optional, Set
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
-from cogant.schemas.graph import ProgramGraph, GraphMetadata
 from cogant.normalize.identities import IdentityResolver
+from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
 
 class ProgramGraphBuilder:
@@ -29,17 +29,17 @@ class ProgramGraphBuilder:
             metadata=GraphMetadata(repo_uri=repo_uri),
         )
 
-        self._languages: Set[str] = set()
+        self._languages: set[str] = set()
 
     def add_node(
         self,
         kind: NodeKind,
         name: str,
         qualified_name: str,
-        path: Optional[str] = None,
-        language: Optional[str] = None,
-        source_range: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        path: str | None = None,
+        language: str | None = None,
+        source_range: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Node:
         """Add a node to the graph.
 
@@ -96,9 +96,9 @@ class ProgramGraphBuilder:
         target_id: str,
         kind: EdgeKind,
         weight: float = 1.0,
-        metadata: Optional[Dict[str, Any]] = None,
-        evidence_sources: Optional[List[str]] = None,
-    ) -> Optional[Edge]:
+        metadata: dict[str, Any] | None = None,
+        evidence_sources: list[str] | None = None,
+    ) -> Edge | None:
         """Add an edge to the graph.
 
         Args:
@@ -148,7 +148,7 @@ class ProgramGraphBuilder:
 
         return edge
 
-    def get_node(self, node_id: str) -> Optional[Node]:
+    def get_node(self, node_id: str) -> Node | None:
         """Get a node by ID.
 
         Args:
@@ -159,7 +159,7 @@ class ProgramGraphBuilder:
         """
         return self.graph.get_node(node_id)
 
-    def get_neighbors(self, node_id: str) -> List[Node]:
+    def get_neighbors(self, node_id: str) -> list[Node]:
         """Get all neighbors of a node.
 
         Args:
@@ -170,7 +170,7 @@ class ProgramGraphBuilder:
         """
         return self.graph.get_neighbors(node_id)
 
-    def find_path(self, source_id: str, target_id: str, max_depth: int = 10) -> Optional[List[str]]:
+    def find_path(self, source_id: str, target_id: str, max_depth: int = 10) -> list[str] | None:
         """Find a path between two nodes using BFS.
 
         Args:
@@ -209,7 +209,7 @@ class ProgramGraphBuilder:
 
     def get_subgraph(
         self,
-        node_ids: List[str],
+        node_ids: list[str],
         include_neighbors: bool = False,
     ) -> ProgramGraph:
         """Extract a subgraph containing specified nodes.
@@ -244,7 +244,7 @@ class ProgramGraphBuilder:
 
         return subgraph
 
-    def get_connected_components(self) -> List[List[str]]:
+    def get_connected_components(self) -> list[list[str]]:
         """Find all connected components in the graph.
 
         Returns:
@@ -279,7 +279,7 @@ class ProgramGraphBuilder:
 
         return components
 
-    def find_cycles(self) -> List[List[str]]:
+    def find_cycles(self) -> list[list[str]]:
         """Find simple cycles in the graph.
 
         Returns:
@@ -288,7 +288,7 @@ class ProgramGraphBuilder:
         cycles = []
         visited_global = set()
 
-        def dfs_cycle(node_id: str, path: List[str], visited: Set[str]) -> None:
+        def dfs_cycle(node_id: str, path: list[str], visited: set[str]) -> None:
             """DFS helper to find cycles."""
             if node_id in path:
                 # Found a cycle
@@ -315,7 +315,7 @@ class ProgramGraphBuilder:
 
         return cycles
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get statistics about the graph.
 
         Returns:
@@ -348,5 +348,5 @@ class ProgramGraphBuilder:
         Returns:
             The complete ProgramGraph.
         """
-        self.graph.metadata.updated_at = datetime.now(timezone.utc)
+        self.graph.metadata.updated_at = datetime.now(UTC)
         return self.graph

@@ -1,10 +1,10 @@
 """Program graph schema definitions."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
+from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
 
 
 @dataclass
@@ -14,22 +14,22 @@ class GraphMetadata:
     repo_uri: str
     """URI or path of the repository."""
 
-    languages: Set[str] = field(default_factory=set)
+    languages: set[str] = field(default_factory=set)
     """Languages found in the codebase."""
 
     version: str = "1.0"
     """Graph schema version."""
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """Creation timestamp."""
 
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """Last update timestamp."""
 
-    evidence_sources: List[str] = field(default_factory=list)
+    evidence_sources: list[str] = field(default_factory=list)
     """Sources of evidence (static, dynamic, etc.)."""
 
-    custom_metadata: Dict[str, Any] = field(default_factory=dict)
+    custom_metadata: dict[str, Any] = field(default_factory=dict)
     """Additional custom metadata."""
 
 
@@ -40,10 +40,10 @@ class ProgramGraph:
     metadata: GraphMetadata
     """Graph metadata."""
 
-    nodes: Dict[str, Node] = field(default_factory=dict)
+    nodes: dict[str, Node] = field(default_factory=dict)
     """Map of node ID to Node object."""
 
-    edges: Dict[str, Edge] = field(default_factory=dict)
+    edges: dict[str, Edge] = field(default_factory=dict)
     """Map of edge ID to Edge object."""
 
     def add_node(self, node: Node) -> None:
@@ -88,7 +88,7 @@ class ProgramGraph:
         if edge_id in self.edges:
             del self.edges[edge_id]
 
-    def get_node(self, node_id: str) -> Optional[Node]:
+    def get_node(self, node_id: str) -> Node | None:
         """Get a node by ID.
 
         Args:
@@ -99,7 +99,7 @@ class ProgramGraph:
         """
         return self.nodes.get(node_id)
 
-    def get_edges_from(self, node_id: str) -> List[Edge]:
+    def get_edges_from(self, node_id: str) -> list[Edge]:
         """Get all outgoing edges from a node.
 
         Args:
@@ -110,7 +110,7 @@ class ProgramGraph:
         """
         return [e for e in self.edges.values() if e.source_id == node_id]
 
-    def get_edges_to(self, node_id: str) -> List[Edge]:
+    def get_edges_to(self, node_id: str) -> list[Edge]:
         """Get all incoming edges to a node.
 
         Args:
@@ -121,7 +121,7 @@ class ProgramGraph:
         """
         return [e for e in self.edges.values() if e.target_id == node_id]
 
-    def get_neighbors(self, node_id: str) -> List[Node]:
+    def get_neighbors(self, node_id: str) -> list[Node]:
         """Get all neighbors of a node (both incoming and outgoing).
 
         Args:
@@ -139,7 +139,7 @@ class ProgramGraph:
                 neighbors.add(edge.source_id)
         return [self.nodes[nid] for nid in neighbors if nid in self.nodes]
 
-    def get_nodes_by_kind(self, kind: NodeKind) -> List[Node]:
+    def get_nodes_by_kind(self, kind: NodeKind) -> list[Node]:
         """Get all nodes of a specific kind.
 
         Args:
@@ -150,7 +150,7 @@ class ProgramGraph:
         """
         return [n for n in self.nodes.values() if n.kind == kind]
 
-    def get_edges_by_kind(self, kind: EdgeKind) -> List[Edge]:
+    def get_edges_by_kind(self, kind: EdgeKind) -> list[Edge]:
         """Get all edges of a specific kind.
 
         Args:

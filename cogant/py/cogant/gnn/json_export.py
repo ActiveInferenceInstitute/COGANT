@@ -5,18 +5,16 @@ Emits machine-readable JSON with stable IDs across all sections
 and comprehensive data extraction from all model components.
 """
 
-from typing import Dict, List, Any, Optional
 import json
 import logging
 from collections import defaultdict
 from datetime import datetime
+from typing import Any
 
-from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.statespace.compiler import StateSpaceModel
-from cogant.process.extractor import ProcessModel
-from cogant.schemas.semantic import MappingKind
 from cogant.gnn.matrices import GNNMatrices
+from cogant.process.extractor import ProcessModel
+from cogant.schemas.graph import ProgramGraph
+from cogant.statespace.compiler import StateSpaceModel
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +29,7 @@ class GNNJSONExporter:
         program_graph: ProgramGraph,
         state_space_model: StateSpaceModel,
         process_model: ProcessModel,
-        semantic_mappings: Dict[str, Any],
+        semantic_mappings: dict[str, Any],
     ):
         """
         Initialize the exporter.
@@ -47,7 +45,7 @@ class GNNJSONExporter:
         self.process = process_model
         self.mappings = semantic_mappings
 
-    def export(self) -> Dict[str, Any]:
+    def export(self) -> dict[str, Any]:
         """
         Export the complete GNN model as a JSON-serializable dictionary.
 
@@ -101,7 +99,7 @@ class GNNJSONExporter:
 
         return output
 
-    def _export_matrices(self) -> Dict[str, Any]:
+    def _export_matrices(self) -> dict[str, Any]:
         """Export the AII Active Inference A/B/C/D matrices.
 
         Delegates to :class:`cogant.gnn.matrices.GNNMatrices`. On failure
@@ -130,7 +128,7 @@ class GNNJSONExporter:
                 "dimensions": {"n_states": 0, "n_obs": 0, "n_actions": 0},
             }
 
-    def export_to_string(self, indent: Optional[int] = 2) -> str:
+    def export_to_string(self, indent: int | None = 2) -> str:
         """
         Export the model to a JSON string.
 
@@ -143,9 +141,9 @@ class GNNJSONExporter:
         data = self.export()
         return json.dumps(data, indent=indent, default=str)
 
-    def _export_metadata(self) -> Dict[str, Any]:
+    def _export_metadata(self) -> dict[str, Any]:
         """Export comprehensive metadata."""
-        metadata: Dict[str, Any] = {
+        metadata: dict[str, Any] = {
             "generated_at": datetime.now().isoformat(),
             "schema_version": "1.0",
             "cogant_version": "0.1.0",
@@ -188,7 +186,7 @@ class GNNJSONExporter:
 
         return metadata
 
-    def _export_repository_metadata(self) -> Dict[str, Any]:
+    def _export_repository_metadata(self) -> dict[str, Any]:
         """Export repository metadata section."""
         if self.graph.metadata:
             meta = self.graph.metadata
@@ -203,7 +201,7 @@ class GNNJSONExporter:
             }
         return {}
 
-    def _export_source_coverage(self) -> Dict[str, Any]:
+    def _export_source_coverage(self) -> dict[str, Any]:
         """Export source coverage information."""
         return {
             "nodes": len(self.graph.nodes),
@@ -219,7 +217,7 @@ class GNNJSONExporter:
         # Coverage is based on all nodes being covered
         return 100.0
 
-    def _export_observation_modalities(self) -> Dict[str, Any]:
+    def _export_observation_modalities(self) -> dict[str, Any]:
         """Export observation modalities section."""
         return {
             "modalities": self._extract_modality_list(),
@@ -227,17 +225,17 @@ class GNNJSONExporter:
             "observations": self._export_observation_details(),
         }
 
-    def _extract_modality_list(self) -> List[str]:
+    def _extract_modality_list(self) -> list[str]:
         """Extract list of observation modalities."""
         modalities = set()
         for obs in self.state_space.observations.values():
             if hasattr(obs, 'modality_type') and obs.modality_type:
                 modalities.add(obs.modality_type)
-        return sorted(list(modalities)) if modalities else ["symbolic"]
+        return sorted(modalities) if modalities else ["symbolic"]
 
-    def _export_observation_details(self) -> Dict[str, Any]:
+    def _export_observation_details(self) -> dict[str, Any]:
         """Export observation details for canonical section."""
-        observations: Dict[str, Dict[str, Any]] = {}
+        observations: dict[str, dict[str, Any]] = {}
         for obs_id, obs in self.state_space.observations.items():
             observations[obs_id] = {
                 "id": obs.id,
@@ -250,7 +248,7 @@ class GNNJSONExporter:
             }
         return observations
 
-    def _export_actions_policies(self) -> Dict[str, Any]:
+    def _export_actions_policies(self) -> dict[str, Any]:
         """Export actions and policies as canonical section."""
         actions = {}
         for action_id, action in self.state_space.actions.items():
@@ -269,14 +267,14 @@ class GNNJSONExporter:
             "count": len(actions),
         }
 
-    def _extract_policy_details(self) -> List[Dict[str, Any]]:
+    def _extract_policy_details(self) -> list[dict[str, Any]]:
         """Extract policy details."""
         return [{"type": "deterministic", "coverage": 1.0, "actions": len(self.state_space.actions)}]
 
-    def _export_connections(self) -> Dict[str, Any]:
+    def _export_connections(self) -> dict[str, Any]:
         """Export connections (edges) as canonical section."""
-        edges: Dict[str, Dict[str, Any]] = {}
-        edge_kinds: Dict[str, int] = defaultdict(int)
+        edges: dict[str, dict[str, Any]] = {}
+        edge_kinds: dict[str, int] = defaultdict(int)
         for edge_id, edge in self.graph.edges.items():
             edge_kinds[edge.kind.value] += 1
             edges[edge_id] = {
@@ -294,7 +292,7 @@ class GNNJSONExporter:
             "by_kind": dict(edge_kinds),
         }
 
-    def _export_factors_section(self) -> Dict[str, Any]:
+    def _export_factors_section(self) -> dict[str, Any]:
         """Export factorization as canonical section."""
         var_by_factor = defaultdict(list)
         for var_id, var in self.state_space.variables.items():
@@ -302,12 +300,12 @@ class GNNJSONExporter:
                 for factor in var.factors:
                     var_by_factor[factor].append(var_id)
         return {
-            "factorization": {factor: vars for factor, vars in var_by_factor.items()},
+            "factorization": dict(var_by_factor.items()),
             "factors": list(var_by_factor.keys()),
             "count": len(var_by_factor),
         }
 
-    def _export_transition_structure(self) -> Dict[str, Any]:
+    def _export_transition_structure(self) -> dict[str, Any]:
         """Export transition structure as canonical section."""
         transitions = {}
         for trans_id, trans in self.state_space.transitions.items():
@@ -335,7 +333,7 @@ class GNNJSONExporter:
         """Check if model is Markovian."""
         return True  # Default assumption
 
-    def _export_likelihood_structure(self) -> Dict[str, Any]:
+    def _export_likelihood_structure(self) -> dict[str, Any]:
         """Export likelihood structure as canonical section."""
         likelihoods = {}
         for like_id, like in self.state_space.likelihoods.items():
@@ -351,7 +349,7 @@ class GNNJSONExporter:
             "count": len(likelihoods),
         }
 
-    def _export_preferences_constraints(self) -> Dict[str, Any]:
+    def _export_preferences_constraints(self) -> dict[str, Any]:
         """Export preferences and constraints as canonical section."""
         preferences = {}
         for pref_id, pref in self.state_space.preferences.items():
@@ -371,7 +369,7 @@ class GNNJSONExporter:
             "count": len(preferences),
         }
 
-    def _export_time_settings(self) -> Dict[str, Any]:
+    def _export_time_settings(self) -> dict[str, Any]:
         """Export time regime and settings."""
         return {
             "time_regime": self.state_space.time_regime.value if hasattr(self.state_space.time_regime, 'value') else str(self.state_space.time_regime),
@@ -379,7 +377,7 @@ class GNNJSONExporter:
             "synchronous": True,
         }
 
-    def _export_parameterization(self) -> Dict[str, Any]:
+    def _export_parameterization(self) -> dict[str, Any]:
         """Export parameterization details."""
         return {
             "parameters": {},
@@ -387,7 +385,7 @@ class GNNJSONExporter:
             "configuration": self.state_space.metadata.copy() if self.state_space.metadata else {},
         }
 
-    def _export_ontology_mapping(self) -> Dict[str, Any]:
+    def _export_ontology_mapping(self) -> dict[str, Any]:
         """Export ontology mapping as canonical section."""
         mappings_data = {}
         for mapping_id, mapping in self.mappings.items():
@@ -402,7 +400,7 @@ class GNNJSONExporter:
             "count": len(mappings_data),
         }
 
-    def _export_provenance_section(self) -> Dict[str, Any]:
+    def _export_provenance_section(self) -> dict[str, Any]:
         """Export provenance as canonical section."""
         return {
             "timestamp": datetime.now().isoformat(),
@@ -416,7 +414,7 @@ class GNNJSONExporter:
             "sources": self.graph.metadata.evidence_sources if self.graph.metadata else [],
         }
 
-    def _export_confidence(self) -> Dict[str, Any]:
+    def _export_confidence(self) -> dict[str, Any]:
         """Export confidence metrics as canonical section."""
         return {
             "overall_confidence": self._compute_average_confidence(),
@@ -461,7 +459,7 @@ class GNNJSONExporter:
         else:
             return 0.5
 
-        confidences: List[float] = []
+        confidences: list[float] = []
         for comp in components:
             if hasattr(comp, 'confidence') and comp.confidence:
                 try:
@@ -471,7 +469,7 @@ class GNNJSONExporter:
                     pass
         return sum(confidences) / len(confidences) if confidences else 0.5
 
-    def _export_rendering_hints(self) -> Dict[str, Any]:
+    def _export_rendering_hints(self) -> dict[str, Any]:
         """Export rendering hints for visualization."""
         return {
             "layout": "force-directed",
@@ -482,7 +480,7 @@ class GNNJSONExporter:
             "features": ["interactive", "zoomable", "searchable"],
         }
 
-    def _export_validation_notes(self) -> Dict[str, Any]:
+    def _export_validation_notes(self) -> dict[str, Any]:
         """Export validation notes and metadata."""
         return {
             "schema_version": "1.0",
@@ -491,10 +489,10 @@ class GNNJSONExporter:
             "validation_status": "valid",
         }
 
-    def _export_program_graph(self) -> Dict[str, Any]:
+    def _export_program_graph(self) -> dict[str, Any]:
         """Export program graph with rich metadata."""
-        nodes: Dict[str, Dict[str, Any]] = {}
-        node_kinds: Dict[str, int] = defaultdict(int)
+        nodes: dict[str, dict[str, Any]] = {}
+        node_kinds: dict[str, int] = defaultdict(int)
 
         for node_id, node in self.graph.nodes.items():
             node_kinds[node.kind.value] += 1
@@ -510,7 +508,7 @@ class GNNJSONExporter:
                 "created_at": node.created_at.isoformat(),
             }
 
-        edges: Dict[str, Dict[str, Any]] = {}
+        edges: dict[str, dict[str, Any]] = {}
         edge_kinds = defaultdict(int)
 
         for edge_id, edge in self.graph.edges.items():
@@ -537,7 +535,7 @@ class GNNJSONExporter:
             "edges": edges,
         }
 
-    def _export_state_space(self) -> Dict[str, Any]:
+    def _export_state_space(self) -> dict[str, Any]:
         """Export comprehensive state space model."""
         variables = {}
         var_by_factor = defaultdict(list)
@@ -559,7 +557,7 @@ class GNNJSONExporter:
                 for factor in var.factors:
                     var_by_factor[factor].append(var_id)
 
-        observations: Dict[str, Dict[str, Any]] = {}
+        observations: dict[str, dict[str, Any]] = {}
         for obs_id, obs in self.state_space.observations.items():
             observations[obs_id] = {
                 "id": obs.id,
@@ -571,7 +569,7 @@ class GNNJSONExporter:
                 "confidence": obs.confidence.value if hasattr(obs.confidence, 'value') else str(obs.confidence),
             }
 
-        actions: Dict[str, Dict[str, Any]] = {}
+        actions: dict[str, dict[str, Any]] = {}
         for action_id, action in self.state_space.actions.items():
             actions[action_id] = {
                 "id": action.id,
@@ -638,7 +636,7 @@ class GNNJSONExporter:
             "preferences": preferences,
         }
 
-    def _export_process_model(self) -> Dict[str, Any]:
+    def _export_process_model(self) -> dict[str, Any]:
         """Export comprehensive process model."""
         stages = {}
         if self.process.stages:
@@ -678,12 +676,12 @@ class GNNJSONExporter:
             "connections": connections,
         }
 
-    def _export_mappings(self) -> Dict[str, Any]:
+    def _export_mappings(self) -> dict[str, Any]:
         """Export comprehensive semantic mappings."""
-        mappings: Dict[str, Dict[str, Any]] = {}
-        kind_counts: Dict[str, int] = defaultdict(int)
-        tier_counts: Dict[str, int] = defaultdict(int)
-        status_counts: Dict[str, int] = defaultdict(int)
+        mappings: dict[str, dict[str, Any]] = {}
+        kind_counts: dict[str, int] = defaultdict(int)
+        tier_counts: dict[str, int] = defaultdict(int)
+        status_counts: dict[str, int] = defaultdict(int)
 
         for mapping_id, mapping in self.mappings.items():
             kind = mapping.kind.value if hasattr(mapping, 'kind') else "unknown"

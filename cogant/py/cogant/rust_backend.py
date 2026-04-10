@@ -33,14 +33,19 @@ The returned object always exposes ``add_node``, ``add_edge``, and
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from datetime import UTC
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from cogant.schemas.core import Edge, Node
 
 try:
-    from cogant._rust import PyProgramGraph as _RustGraph  # type: ignore[import-not-found]  # optional Rust extension
-    from cogant._rust import create_example_graph as _create_example_graph  # type: ignore[import-not-found]
+    from cogant._rust import (
+        PyProgramGraph as _RustGraph,  # type: ignore[import-not-found]  # optional Rust extension
+    )
+    from cogant._rust import (
+        create_example_graph as _create_example_graph,  # type: ignore[import-not-found]
+    )
     from cogant._rust import get_version as _rust_version  # type: ignore[import-not-found]
 
     RUST_AVAILABLE: bool = True
@@ -125,8 +130,8 @@ class RustProgramGraphAdapter:
         self.repo_uri = repo_uri
         self._identity_resolver = IdentityResolver()
         self._rust_graph = _RustGraph()
-        self._nodes: dict[str, "Node"] = {}
-        self._edges: dict[str, "Edge"] = {}
+        self._nodes: dict[str, Node] = {}
+        self._edges: dict[str, Edge] = {}
         self._languages: set[str] = set()
 
     # ------------------------------------------------------------------
@@ -135,14 +140,14 @@ class RustProgramGraphAdapter:
 
     def add_node(
         self,
-        kind: "Any",
+        kind: Any,
         name: str,
         qualified_name: str,
-        path: Optional[str] = None,
-        language: Optional[str] = None,
-        source_range: Optional[dict[str, Any]] = None,
-        metadata: Optional[dict[str, Any]] = None,
-    ) -> "Node":
+        path: str | None = None,
+        language: str | None = None,
+        source_range: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> Node:
         """Add a node to the Rust-backed graph.
 
         Returns the created Python ``Node`` (or the existing one on duplicate
@@ -203,11 +208,11 @@ class RustProgramGraphAdapter:
         self,
         source_id: str,
         target_id: str,
-        kind: "Any",
+        kind: Any,
         weight: float = 1.0,
-        metadata: Optional[dict[str, Any]] = None,
-        evidence_sources: Optional[list[str]] = None,
-    ) -> "Edge | None":
+        metadata: dict[str, Any] | None = None,
+        evidence_sources: list[str] | None = None,
+    ) -> Edge | None:
         """Add an edge to the Rust-backed graph.
 
         Returns the created Python ``Edge`` or ``None`` if the endpoints
@@ -249,17 +254,17 @@ class RustProgramGraphAdapter:
     # finalize() — convert Rust graph back to a Python ProgramGraph.
     # ------------------------------------------------------------------
 
-    def finalize(self) -> "Any":
+    def finalize(self) -> Any:
         """Materialise a ``cogant.schemas.graph.ProgramGraph`` from the
         accumulated nodes and edges.
         """
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
         metadata = GraphMetadata(repo_uri=self.repo_uri)
         metadata.languages = set(self._languages)
-        metadata.updated_at = datetime.now(timezone.utc)
+        metadata.updated_at = datetime.now(UTC)
 
         graph = ProgramGraph(metadata=metadata)
         for node in self._nodes.values():
@@ -273,7 +278,7 @@ class RustProgramGraphAdapter:
     # ------------------------------------------------------------------
 
     @property
-    def graph(self) -> "Any":
+    def graph(self) -> Any:
         """Return a finalized ``ProgramGraph`` view (does not mutate state)."""
         return self.finalize()
 
@@ -289,7 +294,7 @@ class RustProgramGraphAdapter:
 # ============================================================================
 
 
-def _env_prefers_rust() -> Optional[bool]:
+def _env_prefers_rust() -> bool | None:
     """Read ``COGANT_USE_RUST`` and interpret truthy/falsy values.
 
     Returns ``None`` if the variable is unset (auto-detect mode).
@@ -307,8 +312,8 @@ def _env_prefers_rust() -> Optional[bool]:
 
 def build_program_graph(
     repo_uri: str = "repo://unknown",
-    use_rust: Optional[bool] = None,
-) -> "Any":
+    use_rust: bool | None = None,
+) -> Any:
     """Construct a ``ProgramGraphBuilder`` using the best backend available.
 
     Args:

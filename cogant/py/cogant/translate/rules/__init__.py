@@ -17,12 +17,28 @@ exactly as they did when this was a single flat file.
 """
 
 from cogant.translate.engine import TranslationRule
-
-from cogant.translate.rules.structural import ContainmentRule, DataPipelineRule, InheritanceRule, MutatingSubsystemRule, ReadOnlyInputRule
 from cogant.translate.rules.behavioral import EventBusRule, OrchestratorRule, TestAssertionRule
 from cogant.translate.rules.control import ConfigRule, FeatureFlagRule
-from cogant.translate.rules.semantic import ActionRule, ContextRule, ObservationRule, PolicyRule, PreferenceRule
-from cogant.translate.rules.resilience import CircuitBreakerRule, ErrorBoundaryRule, RetryPatternRule, SingletonAccessRule
+from cogant.translate.rules.resilience import (
+    CircuitBreakerRule,
+    ErrorBoundaryRule,
+    RetryPatternRule,
+    SingletonAccessRule,
+)
+from cogant.translate.rules.semantic import (
+    ActionRule,
+    ContextRule,
+    ObservationRule,
+    PolicyRule,
+    PreferenceRule,
+)
+from cogant.translate.rules.structural import (
+    ContainmentRule,
+    DataPipelineRule,
+    InheritanceRule,
+    MutatingSubsystemRule,
+    ReadOnlyInputRule,
+)
 
 __all__ = [
     "TranslationRule",

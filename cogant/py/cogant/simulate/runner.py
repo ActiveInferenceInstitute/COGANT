@@ -5,21 +5,24 @@ Validates state space models and runs simulations using Active Inference
 to explore state trajectories and compute free energy dynamics.
 """
 
-from typing import Dict, List, Optional, Any, Tuple
-import random
 import logging
 import math
+import random
 from collections import defaultdict
+from typing import Any
 
-from cogant.statespace.compiler import StateSpaceModel, Action, Transition
-from cogant.simulate.distributions import CategoricalDistribution, TransitionMatrix
+from cogant.simulate.distributions import CategoricalDistribution
 from cogant.simulate.free_energy import (
-    FreeEnergyCalculator,
     bayesian_belief_update,
-    expected_free_energy as principled_expected_free_energy,
     uniform_distribution,
+)
+from cogant.simulate.free_energy import (
+    expected_free_energy as principled_expected_free_energy,
+)
+from cogant.simulate.free_energy import (
     variational_free_energy as principled_variational_free_energy,
 )
+from cogant.statespace.compiler import StateSpaceModel
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +39,12 @@ class ModelRunner:
 
     def __init__(
         self,
-        seed: Optional[int] = None,
-        model: Optional[StateSpaceModel] = None,
-        A: Optional[List[List[float]]] = None,
-        B: Optional[List[List[List[float]]]] = None,
-        C: Optional[List[float]] = None,
-        D: Optional[List[float]] = None,
+        seed: int | None = None,
+        model: StateSpaceModel | None = None,
+        A: list[list[float]] | None = None,
+        B: list[list[list[float]]] | None = None,
+        C: list[float] | None = None,
+        D: list[float] | None = None,
     ):
         """Initialize the ModelRunner.
 
@@ -70,7 +73,7 @@ class ModelRunner:
         """Whether A/B/C/D matrices are available for principled VFE/EFE."""
         return all(x is not None for x in (self.A, self.B, self.C, self.D))
 
-    def validate_model(self, state_space: StateSpaceModel) -> Dict[str, Any]:
+    def validate_model(self, state_space: StateSpaceModel) -> dict[str, Any]:
         """
         Check that model is well-formed.
 
@@ -86,8 +89,8 @@ class ModelRunner:
         Returns:
             Dict with "valid" (bool), "errors" (list), "warnings" (list).
         """
-        errors: List[str] = []
-        warnings: List[str] = []
+        errors: list[str] = []
+        warnings: list[str] = []
         valid = True
 
         # Check variables exist
@@ -142,8 +145,8 @@ class ModelRunner:
         }
 
     def simulate_step(
-        self, state_space: StateSpaceModel, current_state: Dict[str, Any], action_id: str
-    ) -> Dict[str, Any]:
+        self, state_space: StateSpaceModel, current_state: dict[str, Any], action_id: str
+    ) -> dict[str, Any]:
         """
         Given current state and action, compute next state (simple transition).
 
@@ -197,7 +200,7 @@ class ModelRunner:
 
     def run_simulation(
         self, state_space: StateSpaceModel, steps: int = 10
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Run N steps of random walk simulation.
 
@@ -209,7 +212,7 @@ class ModelRunner:
             List of state dicts, one per step, with "state", "action", "step" keys.
         """
         # Initialize state with default values
-        current_state: Dict[str, Any] = {}
+        current_state: dict[str, Any] = {}
         for var_id, variable in state_space.variables.items():
             # Use type default based on variable type
             if variable.var_type.value == "boolean":
@@ -221,7 +224,7 @@ class ModelRunner:
             else:
                 current_state[var_id] = None
 
-        trace: List[Dict[str, Any]] = [
+        trace: list[dict[str, Any]] = [
             {
                 "step": 0,
                 "state": current_state.copy(),
@@ -258,9 +261,9 @@ class ModelRunner:
 
     def vfe_from_beliefs(
         self,
-        beliefs: List[float],
-        observation: Optional[List[float]] = None,
-        prior: Optional[List[float]] = None,
+        beliefs: list[float],
+        observation: list[float] | None = None,
+        prior: list[float] | None = None,
     ) -> float:
         """Compute principled VFE from explicit belief vectors.
 
@@ -292,8 +295,8 @@ class ModelRunner:
 
     def efe_for_policy(
         self,
-        policy_action_sequence: List[int],
-        beliefs: Optional[List[float]] = None,
+        policy_action_sequence: list[int],
+        beliefs: list[float] | None = None,
     ) -> float:
         """Compute principled EFE for a sequence of action indices.
 
@@ -324,9 +327,9 @@ class ModelRunner:
 
     def update_beliefs_from_observation(
         self,
-        prior: List[float],
+        prior: list[float],
         observation_index: int,
-    ) -> List[float]:
+    ) -> list[float]:
         """Bayesian belief update using the runner's likelihood matrix.
 
         Args:
@@ -347,7 +350,7 @@ class ModelRunner:
     # ------------------------------------------------------------------
 
     def compute_free_energy(
-        self, state: Dict[str, Any], observation: str
+        self, state: dict[str, Any], observation: str
     ) -> float:
         """
         Compute variational free energy for a state-observation pair.
@@ -443,8 +446,8 @@ class ModelRunner:
         return float(vfe)
 
     def belief_update(
-        self, prior_beliefs: Dict[str, float], observation: str
-    ) -> Dict[str, float]:
+        self, prior_beliefs: dict[str, float], observation: str
+    ) -> dict[str, float]:
         """
         Bayesian belief update using observation.
 
@@ -481,8 +484,8 @@ class ModelRunner:
         return posterior_dist.dist
 
     def policy_evaluation(
-        self, beliefs: Dict[str, float], available_actions: List[str]
-    ) -> List[Tuple[str, float]]:
+        self, beliefs: dict[str, float], available_actions: list[str]
+    ) -> list[tuple[str, float]]:
         """
         Evaluate expected free energy for each action.
 
@@ -514,7 +517,7 @@ class ModelRunner:
             efe = 0.0
             current_beliefs = beliefs_dist
 
-            for step in range(3):  # Planning horizon
+            for _step in range(3):  # Planning horizon
                 # Epistemic value: KL(Q || P_uniform) - rewards exploration
                 uniform_prior = CategoricalDistribution(states)
                 epistemic = current_beliefs.kl_divergence(uniform_prior)
@@ -547,8 +550,8 @@ class ModelRunner:
         return sorted(rankings, key=lambda x: x[1])
 
     def active_inference_step(
-        self, beliefs: Dict[str, float], observation: str, state_space: StateSpaceModel
-    ) -> Dict[str, Any]:
+        self, beliefs: dict[str, float], observation: str, state_space: StateSpaceModel
+    ) -> dict[str, Any]:
         """
         Full Active Inference step.
 
@@ -579,12 +582,12 @@ class ModelRunner:
 
         # Step 3: Action selection (choose lowest EFE)
         selected_action = policy_ranking[0][0] if policy_ranking else None
-        selected_efe = policy_ranking[0][1] if policy_ranking else 0.0
+        policy_ranking[0][1] if policy_ranking else 0.0
 
         # Step 4: State transition
         # Use the most likely state under updated beliefs
         most_likely_state_id = max(new_beliefs.items(), key=lambda x: x[1])[0]
-        initial_state = {var_id: 0 for var_id in state_space.variables.keys()}
+        initial_state = dict.fromkeys(state_space.variables.keys(), 0)
         initial_state[most_likely_state_id] = 1
 
         predicted_next_state = {}
@@ -608,7 +611,7 @@ class ModelRunner:
 
     def run_active_inference(
         self, state_space: StateSpaceModel, steps: int = 20
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Run full Active Inference loop.
 
@@ -647,7 +650,7 @@ class ModelRunner:
 
         initial_beliefs = {state_id: 1.0 / len(state_ids) for state_id in state_ids}
 
-        trace: List[Dict[str, Any]] = [
+        trace: list[dict[str, Any]] = [
             {
                 "step": 0,
                 "beliefs": initial_beliefs.copy(),
@@ -687,7 +690,7 @@ class ModelRunner:
 
         return trace
 
-    def generate_report(self, trace: List[Dict[str, Any]]) -> str:
+    def generate_report(self, trace: list[dict[str, Any]]) -> str:
         """
         Generate markdown report of Active Inference simulation.
 
@@ -700,9 +703,9 @@ class ModelRunner:
         lines = [
             "# Active Inference Simulation Report",
             "",
-            f"## Summary",
+            "## Summary",
             f"- Total steps: {len(trace)}",
-            f"- Initial beliefs: uniform",
+            "- Initial beliefs: uniform",
             "",
             "## Free Energy Dynamics",
             "",
@@ -723,7 +726,7 @@ class ModelRunner:
 
         # Action distribution
         lines.append("## Actions Taken")
-        action_counts: Dict[str, int] = defaultdict(int)
+        action_counts: dict[str, int] = defaultdict(int)
         for step in trace:
             action = step.get("action")
             if action:
@@ -759,7 +762,7 @@ class ModelRunner:
 
         return "\n".join(lines)
 
-    def generate_trace(self, state_space: StateSpaceModel) -> Dict[str, Any]:
+    def generate_trace(self, state_space: StateSpaceModel) -> dict[str, Any]:
         """
         Produce a trace of state transitions as JSON.
 

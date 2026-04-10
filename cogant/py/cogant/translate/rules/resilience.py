@@ -11,17 +11,17 @@ See :mod:`cogant.translate.rules` for the umbrella re-export and
 """
 
 import hashlib
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from cogant.schemas.core import NodeKind, EdgeKind
+from cogant.graph.queries import GraphQuery
+from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import (
-    SemanticMapping,
-    MappingKind,
     ConfidenceTier,
+    MappingKind,
     ProvenanceRecord,
+    SemanticMapping,
 )
-from cogant.graph.queries import GraphQuery
 from cogant.translate.engine import TranslationRule
 
 
@@ -43,7 +43,7 @@ class RetryPatternRule(TranslationRule):
         edge coverage improves in the parser.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find retry and circuit breaker patterns.
 
         Args:
@@ -71,7 +71,7 @@ class RetryPatternRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create policy mapping for retry pattern.
 
         Args:
@@ -141,7 +141,7 @@ class ErrorBoundaryRule(TranslationRule):
         tree-sitter does not resolve exception-type hierarchies.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find nodes with CATCHES or THROWS edges.
 
         Args:
@@ -180,7 +180,7 @@ class ErrorBoundaryRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create error-handling mapping for error boundary node.
 
         Args:
@@ -264,7 +264,7 @@ class SingletonAccessRule(TranslationRule):
         whitelist" filter.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find nodes with high in-degree READS from diverse modules.
 
         Args:
@@ -321,7 +321,7 @@ class SingletonAccessRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create context mapping for singleton/global state node.
 
         Args:
@@ -398,7 +398,7 @@ class CircuitBreakerRule(TranslationRule):
         without a GUARDS edge.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find nodes with GUARDS edges and retry/fallback indicators.
 
         Args:
@@ -446,7 +446,7 @@ class CircuitBreakerRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create circuit-breaker mapping.
 
         Args:

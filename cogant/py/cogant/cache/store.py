@@ -13,9 +13,8 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-import time
-from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -95,7 +94,7 @@ class CacheStore:
         """Store *stage_results* under *key* and return the new entry."""
         entry = CacheEntry(
             key=key,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
             stage_results=stage_results,
         )
         path = self._path_for(key)
@@ -165,7 +164,7 @@ class CacheStore:
 
     def _is_expired(self, entry: CacheEntry) -> bool:
         created = datetime.fromisoformat(entry.created_at)
-        age = (datetime.now(timezone.utc) - created).total_seconds()
+        age = (datetime.now(UTC) - created).total_seconds()
         return age > self._ttl
 
     @staticmethod

@@ -27,8 +27,6 @@ synthesized package and is imported by ``observe.py``, ``act.py``, and
 
 from __future__ import annotations
 
-from typing import List
-
 from cogant.reverse.parser import ReverseGNNModel
 
 
@@ -37,12 +35,12 @@ def _format_float(value: float) -> str:
     return f"{round(float(value), 6)!r}"
 
 
-def _format_vector(vec: List[float]) -> str:
+def _format_vector(vec: list[float]) -> str:
     """Format a 1D list as a Python list literal."""
     return "[" + ", ".join(_format_float(v) for v in vec) + "]"
 
 
-def _format_matrix_2d(mat: List[List[float]]) -> str:
+def _format_matrix_2d(mat: list[list[float]]) -> str:
     """Format a 2D matrix as nested list literal with one row per line."""
     if not mat:
         return "[]"
@@ -50,11 +48,11 @@ def _format_matrix_2d(mat: List[List[float]]) -> str:
     return "[\n" + ",\n".join(rows) + ",\n]"
 
 
-def _format_tensor_3d(ten: List[List[List[float]]]) -> str:
+def _format_tensor_3d(ten: list[list[list[float]]]) -> str:
     """Format a 3D tensor ``[n_states][n_states][n_actions]``."""
     if not ten:
         return "[]"
-    outer_rows: List[str] = []
+    outer_rows: list[str] = []
     for row in ten:
         inner = []
         for cell in row:
@@ -102,7 +100,7 @@ def render_matrices_module(model: ReverseGNNModel) -> str:
     C = model.C if model.C else [0.0] * n_obs
     D = model.D if model.D else ([1.0 / n_states] * n_states if n_states else [])
 
-    lines: List[str] = [
+    lines: list[str] = [
         '"""Generated Active Inference matrices from the GNN.',
         "",
         f"Model: {model.raw_model_name}",

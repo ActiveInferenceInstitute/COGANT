@@ -11,11 +11,11 @@ Checks:
 - Provenance complete
 """
 
+import hashlib
 import json
 import logging
 from pathlib import Path
-from typing import List, Dict, Any, Optional
-import hashlib
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 class ValidationResult:
     """Result of a GNN package validation."""
 
-    def __init__(self, valid: bool = False, errors: Optional[List[str]] = None,
-                 warnings: Optional[List[str]] = None, score: float = 0.0):
+    def __init__(self, valid: bool = False, errors: list[str] | None = None,
+                 warnings: list[str] | None = None, score: float = 0.0):
         """
         Initialize validation result.
 
@@ -35,12 +35,12 @@ class ValidationResult:
             score: Validation score 0-100.
         """
         self.valid = valid
-        self.errors: List[str] = errors or []
-        self.warnings: List[str] = warnings or []
+        self.errors: list[str] = errors or []
+        self.warnings: list[str] = warnings or []
         self.score = score
-        self.details: Dict[str, Any] = {}
+        self.details: dict[str, Any] = {}
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "valid": self.valid,
@@ -53,7 +53,6 @@ class ValidationResult:
     def badge_svg(self) -> str:
         """Generate SVG badge."""
         status = "VALID" if self.valid else "INVALID"
-        color = "32a852" if self.valid else "e74c3c"
         return f"""<svg xmlns="http://www.w3.org/2000/svg" width="120" height="20">
   <rect width="120" height="20" fill="#333"/>
   <text x="10" y="15" fill="white" font-size="12" font-family="Arial">
@@ -180,7 +179,7 @@ class GNNValidator:
         logger.info(f"Validation complete: {self.result.valid} (score: {self.result.score:.1f}%)")
         return self.result
 
-    def validate_markdown(self, markdown: str) -> List[str]:
+    def validate_markdown(self, markdown: str) -> list[str]:
         """
         Validate GNN markdown structure.
 
@@ -199,7 +198,7 @@ class GNNValidator:
         Returns:
             List of errors (empty if valid).
         """
-        errors: List[str] = []
+        errors: list[str] = []
         lowered = markdown.lower()
 
         # 1) COGANT-extended canonical sections (case-insensitive presence check).
@@ -209,8 +208,8 @@ class GNNValidator:
                 errors.append(f"Missing canonical section: {section}")
 
         # 2) Upstream GNN v1.1 required sections — each must be present.
-        missing_upstream: List[str] = []
-        upstream_offsets: List[tuple[str, int]] = []
+        missing_upstream: list[str] = []
+        upstream_offsets: list[tuple[str, int]] = []
         for section in self.UPSTREAM_SECTIONS:
             marker = f"## {section}"
             idx = markdown.find(marker)
@@ -233,7 +232,7 @@ class GNNValidator:
 
         return errors
 
-    def validate_state_space(self, state_space_json: dict) -> List[str]:
+    def validate_state_space(self, state_space_json: dict) -> list[str]:
         """
         Validate state space structure.
 
@@ -273,7 +272,7 @@ class GNNValidator:
 
         return errors
 
-    def validate_matrices(self, matrices_json: dict) -> List[str]:
+    def validate_matrices(self, matrices_json: dict) -> list[str]:
         """Validate the AII Active Inference matrix block.
 
         Checks presence and shape of the A/B/C/D matrices emitted by
@@ -293,7 +292,7 @@ class GNNValidator:
         Returns:
             List of errors (empty if matrices are well-formed).
         """
-        errors: List[str] = []
+        errors: list[str] = []
 
         for key in ("A", "B", "C", "D"):
             if key not in matrices_json:
@@ -370,7 +369,7 @@ class GNNValidator:
 
         return errors
 
-    def validate_provenance(self, provenance_json: dict) -> List[str]:
+    def validate_provenance(self, provenance_json: dict) -> list[str]:
         """
         Validate provenance structure.
 
@@ -418,7 +417,7 @@ class GNNValidator:
             else:
                 logger.debug(f"  ✓ Found {filename}")
 
-    def _check_manifest(self) -> Optional[dict]:
+    def _check_manifest(self) -> dict | None:
         """Check manifest validity and return parsed manifest."""
         manifest_path = self.package_dir / "manifest.json"
         if not manifest_path.exists():
@@ -426,9 +425,9 @@ class GNNValidator:
             return None
 
         try:
-            with open(manifest_path, "r") as f:
+            with open(manifest_path) as f:
                 loaded = json.load(f)
-            manifest: Dict[str, Any] = dict(loaded) if isinstance(loaded, dict) else {}
+            manifest: dict[str, Any] = dict(loaded) if isinstance(loaded, dict) else {}
             logger.debug("  ✓ manifest.json is valid JSON")
             self.result.details["manifest"] = manifest
             return manifest
@@ -459,8 +458,8 @@ class GNNValidator:
                 continue
 
             try:
-                with open(filepath, "r") as f:
-                    data = json.load(f)
+                with open(filepath) as f:
+                    json.load(f)
                 logger.debug(f"  ✓ {filename} is valid JSON")
             except json.JSONDecodeError as e:
                 self.result.errors.append(f"Invalid JSON in {filename}: {e}")
@@ -492,7 +491,7 @@ class GNNValidator:
             return
 
         try:
-            with open(state_space_path, "r") as f:
+            with open(state_space_path) as f:
                 state_space = json.load(f)
             errors = self.validate_state_space(state_space)
             if errors:
@@ -510,7 +509,7 @@ class GNNValidator:
             return
 
         try:
-            with open(provenance_path, "r") as f:
+            with open(provenance_path) as f:
                 provenance = json.load(f)
             errors = self.validate_provenance(provenance)
             if errors:
@@ -534,7 +533,7 @@ class GNNValidator:
 
             try:
                 if filepath.suffix == ".json":
-                    with open(filepath, "r") as f:
+                    with open(filepath) as f:
                         data = json.load(f)
                     actual = hashlib.sha256(
                         json.dumps(data, sort_keys=True, default=str).encode()

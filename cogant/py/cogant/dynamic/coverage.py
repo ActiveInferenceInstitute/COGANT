@@ -1,15 +1,15 @@
 """CoverageIngester: Parse coverage files and map to source."""
 
-from pathlib import Path
-from typing import Dict, List, Any, Optional
 import logging
 import sqlite3
 import xml.etree.ElementTree as ET
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def _decode_numbits(numbits_blob: bytes) -> List[int]:
+def _decode_numbits(numbits_blob: bytes) -> list[int]:
     """Decode a coverage.py numbits blob into a list of line numbers.
 
     The numbits format stores executed line numbers as a compressed
@@ -22,7 +22,7 @@ def _decode_numbits(numbits_blob: bytes) -> List[int]:
     Returns:
         Sorted list of 1-based line numbers that were executed.
     """
-    lines: List[int] = []
+    lines: list[int] = []
     for byte_index, byte_val in enumerate(numbits_blob):
         for bit_index in range(8):
             if byte_val & (1 << bit_index):
@@ -42,9 +42,9 @@ class CoverageIngester:
 
     def __init__(self):
         """Initialize coverage ingester."""
-        self.coverage_data: Dict[str, Any] = {}
+        self.coverage_data: dict[str, Any] = {}
 
-    def ingest_coverage_xml(self, xml_path: str) -> Dict[str, Any]:
+    def ingest_coverage_xml(self, xml_path: str) -> dict[str, Any]:
         """
         Parse Cobertura coverage.xml file.
 
@@ -103,7 +103,7 @@ class CoverageIngester:
         branches_valid = int(root.get("branches-valid", "0"))
         branches_covered = int(root.get("branches-covered", "0"))
 
-        files: List[Dict[str, Any]] = []
+        files: list[dict[str, Any]] = []
 
         for package_el in root.iter("package"):
             package_name = package_el.get("name", "")
@@ -113,9 +113,9 @@ class CoverageIngester:
                 class_line_rate = float(class_el.get("line-rate", "0"))
                 class_branch_rate = float(class_el.get("branch-rate", "0"))
 
-                covered_lines: List[int] = []
-                uncovered_lines: List[int] = []
-                branches: List[Dict[str, Any]] = []
+                covered_lines: list[int] = []
+                uncovered_lines: list[int] = []
+                branches: list[dict[str, Any]] = []
 
                 lines_el = class_el.find("lines")
                 if lines_el is not None:
@@ -175,7 +175,7 @@ class CoverageIngester:
 
         return self.coverage_data
 
-    def ingest_coverage_py(self, coverage_file: str) -> Dict[str, Any]:
+    def ingest_coverage_py(self, coverage_file: str) -> dict[str, Any]:
         """
         Parse .coverage file from coverage.py.
 
@@ -202,7 +202,7 @@ class CoverageIngester:
             }
             return self.coverage_data
 
-        files: List[Dict[str, Any]] = []
+        files: list[dict[str, Any]] = []
         total_lines = 0
         covered_lines_total = 0
 
@@ -325,7 +325,7 @@ class CoverageIngester:
 
         return self.coverage_data
 
-    def map_coverage_to_spans(self) -> List[Dict[str, Any]]:
+    def map_coverage_to_spans(self) -> list[dict[str, Any]]:
         """
         Map coverage data to source code spans.
 
@@ -339,13 +339,13 @@ class CoverageIngester:
             filename = file_data.get("filename")
 
             # Build a set of branch lines for enrichment
-            branch_lines: Dict[int, Dict[str, Any]] = {}
+            branch_lines: dict[int, dict[str, Any]] = {}
             for branch in file_data.get("branches", []):
                 branch_lines[branch["line"]] = branch
 
             # Create span records for each covered line
             for line_num in file_data.get("covered_lines", []):
-                span: Dict[str, Any] = {
+                span: dict[str, Any] = {
                     "file": filename,
                     "start_line": line_num,
                     "end_line": line_num,
@@ -377,12 +377,12 @@ class CoverageIngester:
 
         return spans
 
-    def get_coverage_summary(self) -> Dict[str, Any]:
+    def get_coverage_summary(self) -> dict[str, Any]:
         """Get coverage summary statistics."""
         summary = self.coverage_data.get("summary", {})
         return dict(summary) if isinstance(summary, dict) else {}
 
-    def get_file_coverage(self, filepath: str) -> Optional[Dict[str, Any]]:
+    def get_file_coverage(self, filepath: str) -> dict[str, Any] | None:
         """Get coverage for specific file."""
         for file_data in self.coverage_data.get("files", []):
             if file_data.get("filename") == filepath:

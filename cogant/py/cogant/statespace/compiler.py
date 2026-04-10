@@ -32,17 +32,15 @@ Example:
     (3, 2)
 """
 
-from typing import Dict, List, Set, Optional, Any
-from dataclasses import dataclass, field
-from collections import defaultdict
 import logging
+from dataclasses import dataclass, field
+from typing import Any
 
-from cogant.schemas.core import Node, NodeKind, EdgeKind
+from cogant.schemas.core import EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.semantic import SemanticMapping, MappingKind
-
-from cogant.statespace.variables import StateVariableExtractor, StateVariable, ConfidenceLevel
+from cogant.schemas.semantic import MappingKind, SemanticMapping
 from cogant.statespace.temporal import TemporalAnalyzer, TimeRegime
+from cogant.statespace.variables import ConfidenceLevel, StateVariable, StateVariableExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +71,8 @@ class ObservationModality:
     name: str
     source_node_id: str  # Reference to read-only node
     modality_type: str  # "sensor", "log", "metric", "event", etc.
-    cardinality: Optional[int] = None
-    description: Optional[str] = None
+    cardinality: int | None = None
+    description: str | None = None
     confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
 
 
@@ -106,10 +104,10 @@ class Action:
     id: str
     name: str
     controller_id: str  # Reference to controller/API node
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    effects: List[str] = field(default_factory=list)  # State variable IDs affected
-    preconditions: List[str] = field(default_factory=list)  # State variable constraints
-    description: Optional[str] = None
+    parameters: dict[str, Any] = field(default_factory=dict)
+    effects: list[str] = field(default_factory=list)  # State variable IDs affected
+    preconditions: list[str] = field(default_factory=list)  # State variable constraints
+    description: str | None = None
     confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
 
 
@@ -140,11 +138,11 @@ class Transition:
         confidence: Inherited from the driving action.
     """
     id: str
-    source_state: Dict[str, Any]
-    target_state: Dict[str, Any]
-    action_id: Optional[str] = None
-    triggered_by: Optional[str] = None  # Event or condition
-    probability: Optional[float] = None
+    source_state: dict[str, Any]
+    target_state: dict[str, Any]
+    action_id: str | None = None
+    triggered_by: str | None = None  # Event or condition
+    probability: float | None = None
     confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
 
 
@@ -174,7 +172,7 @@ class Likelihood:
     id: str
     variable_id: str
     distribution_type: str  # "bernoulli", "categorical", "gaussian", etc.
-    parameters: Dict[str, float] = field(default_factory=dict)
+    parameters: dict[str, float] = field(default_factory=dict)
     confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
 
 
@@ -206,10 +204,10 @@ class Preference:
     id: str
     name: str
     description: str
-    scope: List[str]  # State variable IDs
+    scope: list[str]  # State variable IDs
     expression: str  # Logical expression
     weight: float = 1.0
-    source: Optional[str] = None  # Reference to test/spec node
+    source: str | None = None  # Reference to test/spec node
     confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
 
 
@@ -248,14 +246,14 @@ class StateSpaceModel:
     """
     id: str
     schema_name: str
-    variables: Dict[str, StateVariable]
-    observations: Dict[str, ObservationModality]
-    actions: Dict[str, Action]
-    transitions: Dict[str, Transition]
-    likelihoods: Dict[str, Likelihood]
-    preferences: Dict[str, Preference]
+    variables: dict[str, StateVariable]
+    observations: dict[str, ObservationModality]
+    actions: dict[str, Action]
+    transitions: dict[str, Transition]
+    likelihoods: dict[str, Likelihood]
+    preferences: dict[str, Preference]
     time_regime: TimeRegime
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class StateSpaceCompiler:
@@ -303,7 +301,7 @@ class StateSpaceCompiler:
         self.var_extractor = StateVariableExtractor(program_graph)
         self.temporal_analyzer = TemporalAnalyzer(program_graph)
 
-    def compile(self, semantic_mappings: Dict[str, SemanticMapping]) -> StateSpaceModel:
+    def compile(self, semantic_mappings: dict[str, SemanticMapping]) -> StateSpaceModel:
         """Compile a complete state space model.
 
         Args:
@@ -381,8 +379,8 @@ class StateSpaceCompiler:
 
     def _extract_observations(
         self,
-        semantic_mappings: Dict[str, SemanticMapping]
-    ) -> Dict[str, ObservationModality]:
+        semantic_mappings: dict[str, SemanticMapping]
+    ) -> dict[str, ObservationModality]:
         """
         Extract observation modalities from semantic mappings.
 
@@ -400,7 +398,7 @@ class StateSpaceCompiler:
             if m.kind == MappingKind.OBSERVATION
         }
 
-        for i, (mapping_id, mapping) in enumerate(obs_mappings.items()):
+        for _i, (_mapping_id, mapping) in enumerate(obs_mappings.items()):
             for node_id in mapping.graph_fragment_node_ids:
                 node = self.graph.get_node(node_id)
                 if not node:
@@ -427,8 +425,8 @@ class StateSpaceCompiler:
 
     def _extract_actions(
         self,
-        semantic_mappings: Dict[str, SemanticMapping]
-    ) -> Dict[str, Action]:
+        semantic_mappings: dict[str, SemanticMapping]
+    ) -> dict[str, Action]:
         """
         Extract actions from ACTION and POLICY semantic mappings.
 
@@ -447,8 +445,8 @@ class StateSpaceCompiler:
             Dictionary keyed by ``act_<node_id>`` whose values are
             :class:`Action` objects.
         """
-        actions: Dict[str, Action] = {}
-        seen_controllers: Set[str] = set()
+        actions: dict[str, Action] = {}
+        seen_controllers: set[str] = set()
 
         # Find ACTION and POLICY mappings. POLICY is folded in because the
         # COGANT spec treats policies as structured actions (decision rules
@@ -459,7 +457,7 @@ class StateSpaceCompiler:
             if m.kind in action_kinds
         ]
 
-        for mapping_id, mapping in action_mappings:
+        for _mapping_id, mapping in action_mappings:
             for node_id in mapping.graph_fragment_node_ids:
                 node = self.graph.get_node(node_id)
                 if not node:
@@ -495,9 +493,9 @@ class StateSpaceCompiler:
 
     def _cross_reference_actions_and_variables(
         self,
-        variables: Dict[str, StateVariable],
-        actions: Dict[str, Action],
-    ) -> Dict[str, Dict[str, List[str]]]:
+        variables: dict[str, StateVariable],
+        actions: dict[str, Action],
+    ) -> dict[str, dict[str, list[str]]]:
         """
         Build a mapping of which actions read/write which state variables.
 
@@ -513,15 +511,15 @@ class StateSpaceCompiler:
             {"reads": [var_id, ...], "writes": [var_id, ...]}.
         """
         # Build reverse lookup: graph node_id -> variable id
-        node_to_var: Dict[str, str] = {}
+        node_to_var: dict[str, str] = {}
         for var_id, var in variables.items():
             node_to_var[var.node_id] = var_id
 
-        xref: Dict[str, Dict[str, List[str]]] = {}
+        xref: dict[str, dict[str, list[str]]] = {}
 
         for action_id, action in actions.items():
-            reads: List[str] = []
-            writes: List[str] = []
+            reads: list[str] = []
+            writes: list[str] = []
 
             for edge in self.graph.get_edges_from(action.controller_id):
                 target_var = node_to_var.get(edge.target_id)
@@ -546,9 +544,9 @@ class StateSpaceCompiler:
 
     def _extract_transitions(
         self,
-        variables: Dict[str, StateVariable],
-        actions: Dict[str, Action]
-    ) -> Dict[str, Transition]:
+        variables: dict[str, StateVariable],
+        actions: dict[str, Action]
+    ) -> dict[str, Transition]:
         """
         Extract state transitions from control flow and actions.
 
@@ -574,20 +572,20 @@ class StateSpaceCompiler:
 
             # Source state: variables the action reads or writes, in their
             # pre-action ("pre") state
-            source_state: Dict[str, Any] = {}
+            source_state: dict[str, Any] = {}
             all_involved = set(action_xref["reads"]) | set(action_xref["writes"])
             for var_id in all_involved:
                 source_state[var_id] = "pre"
 
             # Target state: written variables move to "post", read-only stay "pre"
-            target_state: Dict[str, Any] = {}
+            target_state: dict[str, Any] = {}
             written_set = set(action_xref["writes"])
             for var_id in all_involved:
                 target_state[var_id] = "post" if var_id in written_set else "pre"
 
             # Infer trigger from control-flow edges into the action node
-            triggered_by: Optional[str] = None
-            next_actions: List[str] = []
+            triggered_by: str | None = None
+            next_actions: list[str] = []
 
             # Look for edges to this action (what triggers it)
             for edge in self.graph.get_edges_to(action.controller_id):
@@ -623,9 +621,9 @@ class StateSpaceCompiler:
 
     def _extract_likelihoods(
         self,
-        variables: Dict[str, StateVariable],
-        semantic_mappings: Dict[str, SemanticMapping]
-    ) -> Dict[str, Likelihood]:
+        variables: dict[str, StateVariable],
+        semantic_mappings: dict[str, SemanticMapping]
+    ) -> dict[str, Likelihood]:
         """
         Build :class:`Likelihood` distributions for hidden-state variables and
         observation channels.
@@ -655,7 +653,7 @@ class StateSpaceCompiler:
             Dictionary keyed by ``like_<identifier>`` whose values are
             :class:`Likelihood` objects.
         """
-        likelihoods: Dict[str, Likelihood] = {}
+        likelihoods: dict[str, Likelihood] = {}
 
         # ------------------------------------------------------------------
         # Hidden-state likelihoods: one per StateVariable.
@@ -682,7 +680,7 @@ class StateSpaceCompiler:
         # underlying graph node so they can be correlated with the
         # ObservationModality output from _extract_observations.
         # ------------------------------------------------------------------
-        for mapping_id, mapping in semantic_mappings.items():
+        for _mapping_id, mapping in semantic_mappings.items():
             if mapping.kind != MappingKind.OBSERVATION:
                 continue
             for node_id in mapping.graph_fragment_node_ids:
@@ -747,8 +745,8 @@ class StateSpaceCompiler:
     def _default_distribution_parameters(
         self,
         dist_type: str,
-        cardinality: Optional[int],
-    ) -> Dict[str, float]:
+        cardinality: int | None,
+    ) -> dict[str, float]:
         """
         Produce default parameters for a given distribution type. These
         parameters are placeholders that satisfy the GNN schema (each
@@ -788,8 +786,8 @@ class StateSpaceCompiler:
 
     def _extract_preferences(
         self,
-        semantic_mappings: Dict[str, SemanticMapping]
-    ) -> Dict[str, Preference]:
+        semantic_mappings: dict[str, SemanticMapping]
+    ) -> dict[str, Preference]:
         """
         Extract preferences and constraints from CONSTRAINT/PREFERENCE mappings.
 
@@ -811,7 +809,7 @@ class StateSpaceCompiler:
             Dictionary keyed by ``pref_<index>`` whose values are
             :class:`Preference` objects.
         """
-        preferences: Dict[str, Preference] = {}
+        preferences: dict[str, Preference] = {}
 
         # Find CONSTRAINT and PREFERENCE mappings.  POLICY is intentionally
         # excluded here so that policies and preferences do not double-count
@@ -851,7 +849,7 @@ class StateSpaceCompiler:
         logger.debug(f"Extracted {len(preferences)} preferences")
         return preferences
 
-    def _extract_preference_scope(self, mapping: SemanticMapping) -> List[str]:
+    def _extract_preference_scope(self, mapping: SemanticMapping) -> list[str]:
         """
         Extract scope (affected state variable IDs) for a preference mapping.
 
@@ -864,8 +862,8 @@ class StateSpaceCompiler:
         Returns:
             List of state variable IDs (var_<node_id> format).
         """
-        scope_ids: List[str] = []
-        seen: Set[str] = set()
+        scope_ids: list[str] = []
+        seen: set[str] = set()
         read_write_kinds = {EdgeKind.READS, EdgeKind.WRITES, EdgeKind.MUTATES}
         if hasattr(EdgeKind, "OBSERVES"):
             read_write_kinds.add(EdgeKind.OBSERVES)
@@ -960,7 +958,7 @@ class StateSpaceCompiler:
         else:
             return "generic"
 
-    def _extract_action_parameters(self, node: Node) -> Dict[str, Any]:
+    def _extract_action_parameters(self, node: Node) -> dict[str, Any]:
         """
         Extract action parameters from node metadata.
 
@@ -981,7 +979,7 @@ class StateSpaceCompiler:
         if isinstance(raw, dict):
             return {name: ty for name, ty in raw.items() if name != "self"}
         if isinstance(raw, (list, tuple)):
-            params: Dict[str, Any] = {}
+            params: dict[str, Any] = {}
             for entry in raw:
                 if isinstance(entry, dict):
                     name = entry.get("name")
@@ -1003,7 +1001,7 @@ class StateSpaceCompiler:
         self,
         node_id: str,
         mapping: SemanticMapping
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Extract action effects on state variables from graph structure.
 
@@ -1095,7 +1093,7 @@ class StateSpaceCompiler:
 
         return effects
 
-    def _extract_action_preconditions(self, node: Node) -> List[str]:
+    def _extract_action_preconditions(self, node: Node) -> list[str]:
         """
         Extract action preconditions from node metadata, parameters, and graph edges.
 

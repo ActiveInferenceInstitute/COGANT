@@ -12,16 +12,15 @@ Loads a GNN package from disk and runs the generative model with proper Active I
 import json
 import logging
 import math
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timezone
 from collections import defaultdict
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # Import Active Inference components
 try:
-    from cogant.simulate.distributions import CategoricalDistribution
     from cogant.simulate.free_energy import FreeEnergyCalculator
     ACTIVE_INFERENCE_AVAILABLE = True
 except ImportError:
@@ -35,17 +34,17 @@ class ExecutionTrace:
     def __init__(
         self,
         step: int,
-        state: Dict[str, Any],
-        action: Optional[str] = None,
-        observation: Optional[str] = None,
+        state: dict[str, Any],
+        action: str | None = None,
+        observation: str | None = None,
         reward: float = 0.0,
-        beliefs: Optional[Dict[str, float]] = None,
-        beliefs_prior: Optional[Dict[str, float]] = None,
+        beliefs: dict[str, float] | None = None,
+        beliefs_prior: dict[str, float] | None = None,
         free_energy_before: float = 0.0,
         free_energy_after: float = 0.0,
-        policy_scores: Optional[List[Tuple[str, float]]] = None,
-        action_rationale: Optional[str] = None,
-        predicted_state: Optional[Dict[str, Any]] = None,
+        policy_scores: list[tuple[str, float]] | None = None,
+        action_rationale: str | None = None,
+        predicted_state: dict[str, Any] | None = None,
     ):
         """
         Initialize execution trace with Active Inference data.
@@ -69,7 +68,7 @@ class ExecutionTrace:
         self.action = action
         self.observation = observation
         self.reward = reward
-        self.timestamp = datetime.now(timezone.utc).isoformat()
+        self.timestamp = datetime.now(UTC).isoformat()
         self.beliefs = beliefs or {}
         self.beliefs_prior = beliefs_prior or {}
         self.free_energy_before = free_energy_before
@@ -78,7 +77,7 @@ class ExecutionTrace:
         self.action_rationale = action_rationale
         self.predicted_state = predicted_state or {}
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "step": self.step,
@@ -107,14 +106,14 @@ class GNNModelRunner:
         # silences a cascade of union-attr / operator noise without
         # hiding a real null dereference.
         self.package_dir: Path = Path(".")
-        self.manifest: Dict[str, Any] = {}
-        self.model: Dict[str, Any] = {}
-        self.state_space: Dict[str, Any] = {}
-        self.traces: List[ExecutionTrace] = []
-        self.fe_calculator: Optional[FreeEnergyCalculator] = None
-        self.beliefs_history: List[Dict[str, float]] = []
-        self.free_energy_trajectory: List[float] = []
-        self.action_counts: Dict[str, int] = defaultdict(int)
+        self.manifest: dict[str, Any] = {}
+        self.model: dict[str, Any] = {}
+        self.state_space: dict[str, Any] = {}
+        self.traces: list[ExecutionTrace] = []
+        self.fe_calculator: FreeEnergyCalculator | None = None
+        self.beliefs_history: list[dict[str, float]] = []
+        self.free_energy_trajectory: list[float] = []
+        self.action_counts: dict[str, int] = defaultdict(int)
 
     def load_package(self, package_dir: str) -> dict:
         """
@@ -134,23 +133,23 @@ class GNNModelRunner:
         if not manifest_path.exists():
             raise FileNotFoundError(f"Manifest not found: {manifest_path}")
 
-        with open(manifest_path, "r") as f:
+        with open(manifest_path) as f:
             self.manifest = json.load(f)
         logger.info(f"Loaded manifest: version {self.manifest.get('version')}")
 
         # Load model
         model_path = self.package_dir / "model.gnn.json"
         if model_path.exists():
-            with open(model_path, "r") as f:
+            with open(model_path) as f:
                 self.model = json.load(f)
-            logger.info(f"Loaded model.gnn.json")
+            logger.info("Loaded model.gnn.json")
 
         # Load state space
         state_space_path = self.package_dir / "state_space.json"
         if state_space_path.exists():
-            with open(state_space_path, "r") as f:
+            with open(state_space_path) as f:
                 self.state_space = json.load(f)
-            logger.info(f"Loaded state_space.json")
+            logger.info("Loaded state_space.json")
 
         # Try to load transitions and preferences for Active Inference
         self._load_active_inference_models()
@@ -162,19 +161,17 @@ class GNNModelRunner:
         try:
             # Load transitions.json
             transitions_path = self.package_dir / "transitions.json"
-            transitions = {}
             if transitions_path.exists():
-                with open(transitions_path, "r") as f:
-                    transitions = json.load(f)
-                logger.debug(f"Loaded transitions.json")
+                with open(transitions_path) as f:
+                    json.load(f)
+                logger.debug("Loaded transitions.json")
 
             # Load preferences.json
             preferences_path = self.package_dir / "preferences.json"
-            preferences = {}
             if preferences_path.exists():
-                with open(preferences_path, "r") as f:
-                    preferences = json.load(f)
-                logger.debug(f"Loaded preferences.json")
+                with open(preferences_path) as f:
+                    json.load(f)
+                logger.debug("Loaded preferences.json")
 
             logger.info("Active Inference models loaded successfully")
         except Exception as e:
@@ -298,7 +295,7 @@ class GNNModelRunner:
 
         return result
 
-    def generate_execution_report(self, trace: Optional[dict] = None) -> str:
+    def generate_execution_report(self, trace: dict | None = None) -> str:
         """
         Generate comprehensive markdown report of the GNN model execution with Active Inference.
 
@@ -318,7 +315,7 @@ class GNNModelRunner:
         if trace is None and not self.traces:
             return "# GNN Execution Report\n\nNo traces to report.\n"
 
-        trace_data: Dict[str, Any] = trace if trace is not None else {}
+        trace_data: dict[str, Any] = trace if trace is not None else {}
         traces = trace_data.get("traces", []) if trace_data else [t.to_dict() for t in self.traces]
         stats = trace_data.get("statistics", {}) if trace_data else self._compute_statistics()
         fe_trajectory = trace_data.get("free_energy_trajectory", []) if trace_data else self.free_energy_trajectory
@@ -328,12 +325,12 @@ class GNNModelRunner:
 
         # Summary section
         report += "## Execution Summary\n\n"
-        report += f"- **Timestamp**: {datetime.now(timezone.utc).isoformat()}\n"
+        report += f"- **Timestamp**: {datetime.now(UTC).isoformat()}\n"
         report += f"- **Package**: {self.package_dir}\n"
         report += f"- **Steps Completed**: {len(traces)}\n"
         report += f"- **Total Reward**: {trace_data.get('total_reward', 0.0):.3f}\n"
         report += f"- **Average Reward**: {trace_data.get('avg_reward', 0.0):.3f}\n"
-        report += f"- **Execution Mode**: Active Inference with Bayesian Belief Updates\n\n"
+        report += "- **Execution Mode**: Active Inference with Bayesian Belief Updates\n\n"
 
         # Belief evolution section
         report += "## Belief Evolution\n\n"
@@ -354,7 +351,7 @@ class GNNModelRunner:
             # Belief convergence
             initial_entropy = self._entropy(initial_beliefs)
             final_entropy = self._entropy(final_beliefs)
-            report += f"**Belief Convergence Metrics**:\n\n"
+            report += "**Belief Convergence Metrics**:\n\n"
             report += f"- Initial entropy (uncertainty): {initial_entropy:.4f} nats\n"
             report += f"- Final entropy (uncertainty): {final_entropy:.4f} nats\n"
             report += f"- Entropy reduction: {(initial_entropy - final_entropy):.4f} nats\n\n"
@@ -435,7 +432,7 @@ class GNNModelRunner:
 
     # Private execution methods — Active Inference core
 
-    def _initialize_beliefs(self) -> Dict[str, float]:
+    def _initialize_beliefs(self) -> dict[str, float]:
         """
         Initialize beliefs (uniform distribution over hidden states).
 
@@ -448,7 +445,7 @@ class GNNModelRunner:
             return {var.get("name", f"var_{i}"): 1.0 / n for i, var in enumerate(variables)}
         return {"state_0": 0.5, "state_1": 0.5}
 
-    def _initialize_state(self) -> Dict[str, Any]:
+    def _initialize_state(self) -> dict[str, Any]:
         """Initialize actual state representation."""
         if self.state_space and "variables" in self.state_space:
             state = {}
@@ -458,7 +455,7 @@ class GNNModelRunner:
             return state
         return {"initial": True}
 
-    def _generate_observation(self, state: Dict[str, Any]) -> str:
+    def _generate_observation(self, state: dict[str, Any]) -> str:
         """
         Generate observation from state using generative model.
 
@@ -478,8 +475,8 @@ class GNNModelRunner:
         return "obs_0"
 
     def _update_beliefs(
-        self, prior_beliefs: Dict[str, float], observation: str
-    ) -> Dict[str, float]:
+        self, prior_beliefs: dict[str, float], observation: str
+    ) -> dict[str, float]:
         """
         Update beliefs using Bayesian inference.
 
@@ -521,7 +518,7 @@ class GNNModelRunner:
         posterior = {state: prob / total for state, prob in posterior_unnormalized.items()}
         return posterior
 
-    def _compute_vfe(self, beliefs: Dict[str, float], observation: str) -> float:
+    def _compute_vfe(self, beliefs: dict[str, float], observation: str) -> float:
         """
         Compute Variational Free Energy.
 
@@ -544,7 +541,7 @@ class GNNModelRunner:
         # Complexity: KL(beliefs || uniform prior)
         uniform_prior = 1.0 / n
         kl_div = 0.0
-        for state, prob in beliefs.items():
+        for _state, prob in beliefs.items():
             if prob > 0:
                 kl_div += prob * (math.log(prob) - math.log(uniform_prior))
 
@@ -562,7 +559,7 @@ class GNNModelRunner:
         vfe = kl_div - accuracy
         return vfe
 
-    def _evaluate_policies(self, beliefs: Dict[str, float]) -> List[Tuple[str, float]]:
+    def _evaluate_policies(self, beliefs: dict[str, float]) -> list[tuple[str, float]]:
         """
         Evaluate Expected Free Energy for each action.
 
@@ -601,8 +598,8 @@ class GNNModelRunner:
         return sorted(policy_scores, key=lambda x: x[1])
 
     def _select_action_active_inference(
-        self, beliefs: Dict[str, float], policy_scores: List[Tuple[str, float]]
-    ) -> Tuple[str, str]:
+        self, beliefs: dict[str, float], policy_scores: list[tuple[str, float]]
+    ) -> tuple[str, str]:
         """
         Select action with lowest EFE (best free energy).
 
@@ -630,9 +627,9 @@ class GNNModelRunner:
 
     def _compute_transition(
         self,
-        state: Dict[str, Any],
+        state: dict[str, Any],
         action: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Compute next state from current state and action."""
         new_state = state.copy()
         # Simple state transition: increment numeric values
@@ -644,15 +641,15 @@ class GNNModelRunner:
 
     def _compute_reward(
         self,
-        state: Dict[str, Any],
+        state: dict[str, Any],
         action: str,
-        new_state: Dict[str, Any],
+        new_state: dict[str, Any],
     ) -> float:
         """Compute reward for transition."""
         # Simple reward: positive if state changed
         return 0.1 if new_state != state else 0.0
 
-    def _count_unique_states(self, traces: List[Dict[str, Any]]) -> int:
+    def _count_unique_states(self, traces: list[dict[str, Any]]) -> int:
         """Count unique states visited."""
         unique_states = set()
         for trace in traces:
@@ -660,7 +657,7 @@ class GNNModelRunner:
             unique_states.add(state_str)
         return len(unique_states)
 
-    def _count_unique_actions(self, traces: List[Dict[str, Any]]) -> int:
+    def _count_unique_actions(self, traces: list[dict[str, Any]]) -> int:
         """Count unique actions taken."""
         actions = set()
         for trace in traces:
@@ -669,7 +666,7 @@ class GNNModelRunner:
                 actions.add(action)
         return len(actions)
 
-    def _compute_coverage_score(self, traces: List[Dict[str, Any]]) -> float:
+    def _compute_coverage_score(self, traces: list[dict[str, Any]]) -> float:
         """Compute state space coverage score."""
         if not self.state_space:
             return 0.5
@@ -683,7 +680,7 @@ class GNNModelRunner:
         unique_states = self._count_unique_states(traces)
         return min(1.0, unique_states / total_possible_states)
 
-    def _entropy(self, distribution: Dict[str, float]) -> float:
+    def _entropy(self, distribution: dict[str, float]) -> float:
         """
         Compute Shannon entropy of a probability distribution.
 
@@ -701,7 +698,7 @@ class GNNModelRunner:
                 entropy -= prob * math.log(prob)
         return entropy
 
-    def _compute_statistics(self) -> Dict[str, Any]:
+    def _compute_statistics(self) -> dict[str, Any]:
         """Compute execution statistics."""
         if not self.traces:
             return {}
@@ -735,7 +732,7 @@ class GNNModelRunner:
         return stats
 
     def _assess_model_quality(
-        self, traces: List[Dict[str, Any]], fe_trajectory: List[float], stats: Dict[str, Any]
+        self, traces: list[dict[str, Any]], fe_trajectory: list[float], stats: dict[str, Any]
     ) -> str:
         """
         Assess the quality of the GNN model dynamics.

@@ -17,18 +17,13 @@ Builds a package with:
 - visualizations/: HTML visualizations
 """
 
+import hashlib
 import json
 import logging
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, List, Any, Optional
-import hashlib
+from typing import Any
 
-from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.schemas.semantic import MappingKind, SemanticMapping
-from cogant.statespace.compiler import StateSpaceModel
-from cogant.process.extractor import ProcessModel
 from cogant.gnn.formatter import GNNMarkdownFormatter
 from cogant.gnn.json_export import GNNJSONExporter
 from cogant.markov import (
@@ -36,6 +31,11 @@ from cogant.markov import (
     build_blanket_network,
     serialize_blanket,
 )
+from cogant.process.extractor import ProcessModel
+from cogant.schemas.core import NodeKind
+from cogant.schemas.graph import ProgramGraph
+from cogant.schemas.semantic import MappingKind
+from cogant.statespace.compiler import StateSpaceModel
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +73,8 @@ class GNNPackageBuilder:
         graph: ProgramGraph,
         state_space: StateSpaceModel,
         process_model: ProcessModel,
-        mappings: Dict[str, Any],
-        config: Optional[Dict[str, Any]] = None,
+        mappings: dict[str, Any],
+        config: dict[str, Any] | None = None,
     ):
         """
         Initialize the GNN package builder.
@@ -91,8 +91,8 @@ class GNNPackageBuilder:
         self.process_model = process_model
         self.mappings = mappings
         self.config = config or {}
-        self.timestamp = datetime.now(timezone.utc).isoformat()
-        self.checksums: Dict[str, str] = {}
+        self.timestamp = datetime.now(UTC).isoformat()
+        self.checksums: dict[str, str] = {}
 
     def build(self, output_dir: str) -> dict:
         """
@@ -615,7 +615,7 @@ class GNNPackageBuilder:
             charts_dir.mkdir(exist_ok=True)
 
             plotter = StaticPlotter()
-            charts: Dict[str, str] = {}
+            charts: dict[str, str] = {}
             try:
                 charts["node_dist.html"] = plotter.plot_node_type_distribution(self.graph)
             except Exception as e:
@@ -649,21 +649,21 @@ class GNNPackageBuilder:
         except Exception as e:
             logger.error(f"Failed to generate visualizations: {e}", exc_info=True)
 
-    def _count_nodes_by_kind(self) -> Dict[str, int]:
+    def _count_nodes_by_kind(self) -> dict[str, int]:
         """Count nodes by kind for fallback charts."""
         from collections import defaultdict
 
-        counts: Dict[str, int] = defaultdict(int)
+        counts: dict[str, int] = defaultdict(int)
         if self.graph and hasattr(self.graph, "nodes"):
             for node in self.graph.nodes.values():
                 counts[str(node.kind)] += 1
         return dict(counts)
 
-    def _count_mappings_by_tier(self) -> Dict[str, int]:
+    def _count_mappings_by_tier(self) -> dict[str, int]:
         """Count semantic mappings by confidence tier."""
         from collections import defaultdict
 
-        counts: Dict[str, int] = defaultdict(int)
+        counts: dict[str, int] = defaultdict(int)
         if not isinstance(self.mappings, dict):
             return {}
         for m in self.mappings.values():
@@ -672,7 +672,7 @@ class GNNPackageBuilder:
             counts[label] += 1
         return dict(counts)
 
-    def _fallback_chart(self, title: str, counts: Dict[str, int]) -> str:
+    def _fallback_chart(self, title: str, counts: dict[str, int]) -> str:
         """Render a tiny SVG bar chart from a counts dict.
 
         Used when the StaticPlotter raises (e.g. matplotlib unavailable
@@ -685,8 +685,8 @@ class GNNPackageBuilder:
         gap = 12
         chart_h = 200
         x = gap
-        bars: List[str] = []
-        labels: List[str] = []
+        bars: list[str] = []
+        labels: list[str] = []
         for key, value in sorted(counts.items(), key=lambda kv: -kv[1]):
             bar_h = int((value / max_v) * (chart_h - 30)) if max_v else 0
             y = chart_h - bar_h - 20
@@ -734,13 +734,13 @@ class GNNPackageBuilder:
 
         manifest_path = output_path / "manifest.json"
         manifest_path.write_text(json.dumps(manifest, indent=2, default=str), encoding="utf-8")
-        logger.info(f"Generated manifest.json")
+        logger.info("Generated manifest.json")
 
         return manifest
 
     # Data extraction helpers
 
-    def _state_var_object(self, var_id: str) -> Optional[Any]:
+    def _state_var_object(self, var_id: str) -> Any | None:
         """Resolve a state-space variable id back to its full object.
 
         ``StateSpaceModel.variables`` is a list of string ids; the full
@@ -753,16 +753,16 @@ class GNNPackageBuilder:
             return store.get(var_id)
         return None
 
-    def _action_object(self, action_id: str) -> Optional[Any]:
+    def _action_object(self, action_id: str) -> Any | None:
         """Resolve an action id back to its full ``Action`` object."""
         actions = getattr(self.state_space, "actions", None)
         if isinstance(actions, dict):
             return actions.get(action_id)
         return None
 
-    def _extract_state_variables(self) -> List[Dict[str, Any]]:
+    def _extract_state_variables(self) -> list[dict[str, Any]]:
         """Extract state variables with type/cardinality/source info."""
-        out: List[Dict[str, Any]] = []
+        out: list[dict[str, Any]] = []
         for var_id in getattr(self.state_space, "variables", []) or []:
             obj = self._state_var_object(var_id)
             if obj is None:
@@ -784,9 +784,9 @@ class GNNPackageBuilder:
             )
         return out
 
-    def _extract_observation_space(self) -> List[Dict[str, Any]]:
+    def _extract_observation_space(self) -> list[dict[str, Any]]:
         """Extract observation space with full modality info."""
-        out: List[Dict[str, Any]] = []
+        out: list[dict[str, Any]] = []
         observations = getattr(self.state_space, "observations", None)
         if observations is None:
             return out
@@ -811,9 +811,9 @@ class GNNPackageBuilder:
                 out.append({"id": str(obs), "name": str(obs), "modality": "symbolic"})
         return out
 
-    def _extract_action_space(self) -> List[Dict[str, Any]]:
+    def _extract_action_space(self) -> list[dict[str, Any]]:
         """Extract action space with controllers and effects."""
-        out: List[Dict[str, Any]] = []
+        out: list[dict[str, Any]] = []
         actions = getattr(self.state_space, "actions", None)
         if actions is None:
             return out
@@ -842,7 +842,7 @@ class GNNPackageBuilder:
                 out.append({"id": str(action), "name": str(action)})
         return out
 
-    def _extract_transition_structure(self) -> Dict[str, Any]:
+    def _extract_transition_structure(self) -> dict[str, Any]:
         """Extract transition structure from the real state space."""
         transitions = getattr(self.state_space, "transitions", None) or []
         return {
@@ -853,9 +853,9 @@ class GNNPackageBuilder:
             "time_regime": getattr(self.state_space, "time_regime", None),
         }
 
-    def _extract_observation_modalities(self) -> List[str]:
+    def _extract_observation_modalities(self) -> list[str]:
         """Extract observation modalities present in the state space."""
-        modalities: List[str] = []
+        modalities: list[str] = []
         observations = getattr(self.state_space, "observations", None)
         if observations is not None:
             iterable = (
@@ -869,19 +869,19 @@ class GNNPackageBuilder:
             modalities = ["symbolic"]
         return modalities
 
-    def _extract_actions(self) -> List[Dict[str, Any]]:
+    def _extract_actions(self) -> list[dict[str, Any]]:
         """Extract actions with full details including effects and preconditions."""
         actions = getattr(self.state_space, "actions", None)
         if actions is None:
             return []
 
-        def _effects_for_action(action: Any) -> List[str]:
+        def _effects_for_action(action: Any) -> list[str]:
             effects = getattr(action, "effects", None)
             if effects is None:
                 effects = getattr(action, "affects_state_vars", None)
             return list(effects or [])
 
-        actions_list: List[Dict[str, Any]] = []
+        actions_list: list[dict[str, Any]] = []
         iterable: Any
         if isinstance(actions, dict):
             iterable = actions.values()
@@ -905,13 +905,13 @@ class GNNPackageBuilder:
             )
         return actions_list
 
-    def _extract_policies(self) -> List[Dict[str, Any]]:
+    def _extract_policies(self) -> list[dict[str, Any]]:
         """Extract policies derived from POLICY/ORCHESTRATION mappings.
 
         Falls back to a single deterministic stub if no policy mappings
         exist so the section is never empty in a working pipeline.
         """
-        out: List[Dict[str, Any]] = []
+        out: list[dict[str, Any]] = []
         if isinstance(self.mappings, dict):
             for mid, m in self.mappings.items():
                 kind = getattr(m, "kind", None)
@@ -943,12 +943,12 @@ class GNNPackageBuilder:
             )
         return out
 
-    def _extract_preferences(self) -> List[Dict[str, Any]]:
+    def _extract_preferences(self) -> list[dict[str, Any]]:
         """Extract preferences from state space."""
         if not hasattr(self.state_space, "preferences"):
             return []
         prefs_list = []
-        for pref_id, pref in self.state_space.preferences.items():
+        for _pref_id, pref in self.state_space.preferences.items():
             prefs_list.append({
                 "id": pref.id,
                 "name": pref.name,
@@ -961,9 +961,9 @@ class GNNPackageBuilder:
             })
         return prefs_list
 
-    def _extract_constraints(self) -> List[Dict[str, Any]]:
+    def _extract_constraints(self) -> list[dict[str, Any]]:
         """Extract constraints from CONSTRAINT mappings and state-space preferences."""
-        out: List[Dict[str, Any]] = []
+        out: list[dict[str, Any]] = []
         if isinstance(self.mappings, dict):
             for mid, m in self.mappings.items():
                 if getattr(m, "kind", None) == MappingKind.CONSTRAINT:
@@ -998,9 +998,9 @@ class GNNPackageBuilder:
                     )
         return out
 
-    def _extract_objectives(self) -> List[Dict[str, Any]]:
+    def _extract_objectives(self) -> list[dict[str, Any]]:
         """Extract objectives from PREFERENCE mappings and state-space preferences."""
-        out: List[Dict[str, Any]] = []
+        out: list[dict[str, Any]] = []
         if isinstance(self.mappings, dict):
             for mid, m in self.mappings.items():
                 if getattr(m, "kind", None) == MappingKind.PREFERENCE:
@@ -1037,7 +1037,7 @@ class GNNPackageBuilder:
                     )
         return out
 
-    def _extract_factorization(self) -> Dict[str, Any]:
+    def _extract_factorization(self) -> dict[str, Any]:
         """Extract factorization structure from the state space.
 
         Groups state variables by their ``factor`` attribute (assigned by
@@ -1047,8 +1047,8 @@ class GNNPackageBuilder:
         """
         from collections import defaultdict
 
-        groups: Dict[str, List[str]] = defaultdict(list)
-        ungrouped: List[str] = []
+        groups: dict[str, list[str]] = defaultdict(list)
+        ungrouped: list[str] = []
         for var_id in getattr(self.state_space, "variables", []) or []:
             obj = self._state_var_object(var_id)
             factor = getattr(obj, "factor", None) if obj else None
@@ -1071,14 +1071,14 @@ class GNNPackageBuilder:
             ],
         }
 
-    def _extract_factor_list(self) -> List[Dict[str, Any]]:
+    def _extract_factor_list(self) -> list[dict[str, Any]]:
         """Flat list of factor descriptors used by the factors.json export."""
         factorization = self._extract_factorization()
         return list(factorization.get("factors", []))
 
-    def _extract_ontology_mappings(self) -> List[Dict[str, Any]]:
+    def _extract_ontology_mappings(self) -> list[dict[str, Any]]:
         """Extract ontology mappings — one row per semantic mapping with full role info."""
-        out: List[Dict[str, Any]] = []
+        out: list[dict[str, Any]] = []
         if not isinstance(self.mappings, dict):
             return out
         for mid, m in self.mappings.items():
@@ -1101,22 +1101,22 @@ class GNNPackageBuilder:
             )
         return out
 
-    def _extract_classes(self) -> List[str]:
+    def _extract_classes(self) -> list[str]:
         """Extract class definitions."""
         classes = set()
-        for nid, node in self.graph.nodes.items():
+        for _nid, node in self.graph.nodes.items():
             if node.kind == NodeKind.CLASS:
                 classes.add(node.name)
         return list(classes)
 
-    def _extract_relationships(self) -> List[Dict[str, str]]:
+    def _extract_relationships(self) -> list[dict[str, str]]:
         """Extract relationships."""
         relationships = []
-        for eid, edge in self.graph.edges.items():
+        for _eid, edge in self.graph.edges.items():
             relationships.append({"source": edge.source_id, "target": edge.target_id, "kind": str(edge.kind)})
         return relationships[:100]  # Limit to first 100
 
-    def _extract_source_evidence(self) -> Dict[str, Any]:
+    def _extract_source_evidence(self) -> dict[str, Any]:
         """Extract source evidence."""
         return {
             "graph_nodes": self._count_graph_nodes(),
@@ -1132,7 +1132,7 @@ class GNNPackageBuilder:
         """Count edges in graph."""
         return len(self.graph.edges) if self.graph and hasattr(self.graph, "edges") else 0
 
-    def _count_edges_by_kind(self) -> Dict[str, int]:
+    def _count_edges_by_kind(self) -> dict[str, int]:
         """Count edges by kind."""
         from collections import defaultdict
         counts = defaultdict(int)
@@ -1141,7 +1141,7 @@ class GNNPackageBuilder:
                 counts[str(edge.kind)] += 1
         return dict(counts)
 
-    def _count_state_space_elements(self) -> Dict[str, int]:
+    def _count_state_space_elements(self) -> dict[str, int]:
         """Count state space elements."""
         return {
             "variables": len(self.state_space.variables)
@@ -1168,8 +1168,8 @@ class GNNPackageBuilder:
             if hasattr(to_states, "__len__") and len(to_states) > 1:
                 return False
         likelihoods = getattr(self.state_space, "likelihoods", None) or []
-        for l in likelihoods:
-            obs = getattr(l, "observations", None) or []
+        for likelihood in likelihoods:
+            obs = getattr(likelihood, "observations", None) or []
             if hasattr(obs, "__len__") and len(obs) > 1:
                 return False
         return True
@@ -1203,7 +1203,7 @@ class GNNPackageBuilder:
         mappings_by_tier = self._count_mappings_by_tier()
         state_space_counts = self._count_state_space_elements()
 
-        def _rows(d: Dict[str, Any]) -> str:
+        def _rows(d: dict[str, Any]) -> str:
             if not d:
                 return "<tr><td colspan='2'><em>(none)</em></td></tr>"
             return "".join(

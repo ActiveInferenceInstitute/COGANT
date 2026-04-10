@@ -20,7 +20,9 @@ __author__ = "COGANT Contributors"
 # installed) the flag stays False and callers fall back to the pure-Python
 # implementation.
 try:
-    from cogant import _rust  # type: ignore[import-not-found]  # optional Rust extension  # noqa: F401
+    from cogant import (
+        _rust,  # type: ignore[import-not-found]  # optional Rust extension  # noqa: F401
+    )
     from cogant._rust import get_version as _rust_version  # type: ignore[import-not-found]
 
     _RUST_AVAILABLE = True

@@ -5,13 +5,11 @@ Checks provenance coverage and verifies every node has evidence.
 Flags gaps in provenance.
 """
 
-from typing import Dict, List, Set, Optional
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
-from cogant.validate.schema_check import ValidationIssue
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +29,7 @@ class ProvenanceChecker:
     Flags gaps in provenance that might indicate low-confidence extractions.
     """
 
-    def __init__(self, provenance_records: Optional[Dict[str, List[object]]] = None):
+    def __init__(self, provenance_records: dict[str, list[object]] | None = None):
         """
         Initialize the checker.
 
@@ -39,9 +37,9 @@ class ProvenanceChecker:
             provenance_records: Dictionary of element IDs to provenance records.
         """
         self.provenance_records = provenance_records or {}
-        self.gaps: List[ProvenanceGap] = []
+        self.gaps: list[ProvenanceGap] = []
 
-    def check_graph_provenance(self, graph: ProgramGraph) -> List[ProvenanceGap]:
+    def check_graph_provenance(self, graph: ProgramGraph) -> list[ProvenanceGap]:
         """
         Check provenance coverage for a program graph.
 
@@ -65,7 +63,7 @@ class ProvenanceChecker:
         logger.info(f"Found {len(self.gaps)} provenance gaps in program graph")
         return self.gaps
 
-    def check_state_space_provenance(self, state_space: StateSpaceModel) -> List[ProvenanceGap]:
+    def check_state_space_provenance(self, state_space: StateSpaceModel) -> list[ProvenanceGap]:
         """
         Check provenance coverage for a state space model.
 
@@ -152,7 +150,7 @@ class ProvenanceChecker:
         )
         self.gaps.append(gap)
 
-    def get_gaps(self) -> List[ProvenanceGap]:
+    def get_gaps(self) -> list[ProvenanceGap]:
         """Get all provenance gaps."""
         return self.gaps
 
@@ -172,7 +170,7 @@ class ProvenanceChecker:
         missing_count = len([g for g in self.gaps if g.severity == "warning"])
         return ((total_elements - missing_count) / total_elements) * 100.0
 
-    def merge_records(self, other_records: Dict[str, List[object]]) -> None:
+    def merge_records(self, other_records: dict[str, list[object]]) -> None:
         """
         Merge additional provenance records.
 

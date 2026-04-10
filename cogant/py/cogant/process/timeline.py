@@ -4,11 +4,10 @@ Timeline construction for process visualization.
 Builds stage sequences with expected ordering for Gantt visualization.
 """
 
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, field
 import logging
+from dataclasses import dataclass, field
 
-from cogant.process.extractor import Stage, ProcessConnection, ProcessModel
+from cogant.process.extractor import ProcessModel
 
 logger = logging.getLogger(__name__)
 
@@ -20,17 +19,17 @@ class GanttStage:
     name: str
     start_time: float = 0.0  # Relative time in seconds
     duration: float = 1.0  # Expected duration in seconds
-    dependencies: List[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
     criticality: float = 0.5  # 0-1: how critical is this on the path
 
 
 @dataclass
 class Timeline:
     """Complete timeline for process execution."""
-    stages: List[GanttStage]
+    stages: list[GanttStage]
     total_duration: float
-    critical_path: List[str]
-    parallel_groups: List[List[str]]  # Groups of stages that can run in parallel
+    critical_path: list[str]
+    parallel_groups: list[list[str]]  # Groups of stages that can run in parallel
 
 
 class TimelineBuilder:
@@ -46,8 +45,8 @@ class TimelineBuilder:
             process_model: The process model to build timeline for.
         """
         self.process_model = process_model
-        self.gantt_stages: Dict[str, GanttStage] = {}
-        self.timeline: Optional[Timeline] = None
+        self.gantt_stages: dict[str, GanttStage] = {}
+        self.timeline: Timeline | None = None
 
     def build(self) -> Timeline:
         """
@@ -101,7 +100,7 @@ class TimelineBuilder:
         """
         # Derive fallback dependencies from connections in case entry_points
         # were not populated.
-        derived_deps: Dict[str, List[str]] = {sid: [] for sid in self.process_model.stages}
+        derived_deps: dict[str, list[str]] = {sid: [] for sid in self.process_model.stages}
         for conn in self.process_model.connections.values():
             if (
                 conn.source_stage_id in derived_deps
@@ -132,7 +131,7 @@ class TimelineBuilder:
         through their dependency links.
         """
         visited: set = set()
-        time_map: Dict[str, float] = {}
+        time_map: dict[str, float] = {}
 
         def assign_time(stage_id: str) -> float:
             """Return the end time (start + duration) of ``stage_id``."""
@@ -161,7 +160,7 @@ class TimelineBuilder:
         for stage_id in self.gantt_stages:
             assign_time(stage_id)
 
-    def _find_critical_path(self) -> List[str]:
+    def _find_critical_path(self) -> list[str]:
         """
         Find the critical path (longest path from entry to exit).
 
@@ -176,7 +175,7 @@ class TimelineBuilder:
         visited = set()
         path_cache = {}
 
-        def longest_path_from(stage_id: str) -> Tuple[float, List[str]]:
+        def longest_path_from(stage_id: str) -> tuple[float, list[str]]:
             """DP helper: return (max_length, path) reachable from ``stage_id``."""
             if stage_id in path_cache:
                 return path_cache[stage_id]
@@ -208,7 +207,7 @@ class TimelineBuilder:
         _, critical_path = longest_path_from(entry_id)
         return critical_path
 
-    def _identify_parallel_groups(self) -> List[List[str]]:
+    def _identify_parallel_groups(self) -> list[list[str]]:
         """
         Identify groups of stages that can run in parallel.
 
@@ -289,7 +288,7 @@ class TimelineBuilder:
 
         return max_end_time
 
-    def get_timeline(self) -> Optional[Timeline]:
+    def get_timeline(self) -> Timeline | None:
         """
         Get the constructed timeline.
 
@@ -298,7 +297,7 @@ class TimelineBuilder:
         """
         return self.timeline
 
-    def get_stage_at_time(self, time: float) -> Optional[str]:
+    def get_stage_at_time(self, time: float) -> str | None:
         """
         Get the stage ID active at a given time.
 
@@ -313,7 +312,7 @@ class TimelineBuilder:
                 return stage.stage_id
         return None
 
-    def get_stages_in_range(self, start_time: float, end_time: float) -> List[str]:
+    def get_stages_in_range(self, start_time: float, end_time: float) -> list[str]:
         """
         Get stages active during a time range.
 
@@ -331,7 +330,7 @@ class TimelineBuilder:
                 stages.append(stage.stage_id)
         return stages
 
-    def export_gantt_data(self) -> Dict[str, object]:
+    def export_gantt_data(self) -> dict[str, object]:
         """
         Export timeline data in Gantt-friendly format.
 

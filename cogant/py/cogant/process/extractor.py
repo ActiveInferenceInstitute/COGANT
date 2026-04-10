@@ -4,12 +4,11 @@ Process model extraction from call graphs and control flow.
 Identifies workflow stages, predecessors/successors, triggers, and side effects.
 """
 
-from typing import Dict, List, Set, Optional, Tuple
-from dataclasses import dataclass, field
-from collections import defaultdict, deque
 import logging
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
 
-from cogant.schemas.core import Node, NodeKind, EdgeKind
+from cogant.schemas.core import EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
 
 logger = logging.getLogger(__name__)
@@ -20,14 +19,14 @@ class Stage:
     """A workflow stage."""
     id: str
     name: str
-    description: Optional[str] = None
-    node_ids: List[str] = field(default_factory=list)  # Program nodes involved
-    entry_points: List[str] = field(default_factory=list)  # Predecessor stage IDs
-    exit_points: List[str] = field(default_factory=list)  # Successor stage IDs
-    side_effects: List[str] = field(default_factory=list)  # State mutations
-    expected_duration: Optional[float] = None  # Seconds
+    description: str | None = None
+    node_ids: list[str] = field(default_factory=list)  # Program nodes involved
+    entry_points: list[str] = field(default_factory=list)  # Predecessor stage IDs
+    exit_points: list[str] = field(default_factory=list)  # Successor stage IDs
+    side_effects: list[str] = field(default_factory=list)  # State mutations
+    expected_duration: float | None = None  # Seconds
     confidence: float = 0.5
-    pattern_type: Optional[str] = None  # "sequential", "fan_out", "fan_in", "loop_member"
+    pattern_type: str | None = None  # "sequential", "fan_out", "fan_in", "loop_member"
 
 
 @dataclass
@@ -36,9 +35,9 @@ class ProcessConnection:
     id: str
     source_stage_id: str
     target_stage_id: str
-    trigger: Optional[str] = None
-    condition: Optional[str] = None
-    success_rate: Optional[float] = None
+    trigger: str | None = None
+    condition: str | None = None
+    success_rate: float | None = None
 
 
 @dataclass
@@ -46,11 +45,11 @@ class ProcessModel:
     """Workflow model extracted from call graph."""
     id: str
     schema_name: str
-    stages: Dict[str, Stage]
-    connections: Dict[str, ProcessConnection]
-    entry_stage_id: Optional[str] = None
-    exit_stage_ids: List[str] = field(default_factory=list)
-    metadata: Dict[str, object] = field(default_factory=dict)
+    stages: dict[str, Stage]
+    connections: dict[str, ProcessConnection]
+    entry_stage_id: str | None = None
+    exit_stage_ids: list[str] = field(default_factory=list)
+    metadata: dict[str, object] = field(default_factory=dict)
 
 
 class ProcessExtractor:
@@ -69,8 +68,8 @@ class ProcessExtractor:
         """
         self.graph = program_graph
         self.schema_name = schema_name
-        self.stages: Dict[str, Stage] = {}
-        self.connections: Dict[str, ProcessConnection] = {}
+        self.stages: dict[str, Stage] = {}
+        self.connections: dict[str, ProcessConnection] = {}
 
     def extract(self) -> ProcessModel:
         """
@@ -120,7 +119,7 @@ class ProcessExtractor:
         Each stage is named after the primary function/method within it.
         """
         # First pass: group by module/class
-        module_groups: Dict[str, List[str]] = {}
+        module_groups: dict[str, list[str]] = {}
 
         for node in self.graph.nodes.values():
             module = node.path.split("/")[0] if node.path else "root"
@@ -168,7 +167,7 @@ class ProcessExtractor:
 
         logger.debug(f"Identified {len(self.stages)} stages")
 
-    def _find_primary_node(self, node_ids: List[str]) -> Optional[Node]:
+    def _find_primary_node(self, node_ids: list[str]) -> Node | None:
         """
         Find the primary (most significant) node in a component.
 
@@ -208,7 +207,7 @@ class ProcessExtractor:
         ranked.sort(key=lambda x: x[0], reverse=True)
         return ranked[0][1]
 
-    def _find_connected_components(self, node_ids: List[str]) -> List[List[str]]:
+    def _find_connected_components(self, node_ids: list[str]) -> list[list[str]]:
         """
         Find connected components within a set of nodes using call/control-flow edges.
 
@@ -231,7 +230,7 @@ class ProcessExtractor:
             call_edge_kinds.add(EdgeKind.CONTROL_FLOW)  # type: ignore[attr-defined]
 
         # Build adjacency within the node set
-        adjacency: Dict[str, Set[str]] = defaultdict(set)
+        adjacency: dict[str, set[str]] = defaultdict(set)
         for edge in self.graph.edges.values():
             if edge.kind not in call_edge_kinds:
                 continue
@@ -240,13 +239,13 @@ class ProcessExtractor:
                 adjacency[edge.target_id].add(edge.source_id)
 
         # BFS to find components
-        visited: Set[str] = set()
-        components: List[List[str]] = []
+        visited: set[str] = set()
+        components: list[list[str]] = []
 
         for nid in node_ids:
             if nid in visited:
                 continue
-            component: List[str] = []
+            component: list[str] = []
             queue = deque([nid])
             while queue:
                 current = queue.popleft()
@@ -273,10 +272,10 @@ class ProcessExtractor:
             return
 
         # Build adjacency and in-degree from connections
-        in_degree: Dict[str, int] = {sid: 0 for sid in self.stages}
-        successors: Dict[str, List[str]] = defaultdict(list)
+        in_degree: dict[str, int] = dict.fromkeys(self.stages, 0)
+        successors: dict[str, list[str]] = defaultdict(list)
 
-        seen_edges: Set[Tuple[str, str]] = set()
+        seen_edges: set[tuple[str, str]] = set()
         for conn in self.connections.values():
             pair = (conn.source_stage_id, conn.target_stage_id)
             if pair in seen_edges:
@@ -288,7 +287,7 @@ class ProcessExtractor:
 
         # Kahn's algorithm
         queue = deque([sid for sid, deg in in_degree.items() if deg == 0])
-        sorted_ids: List[str] = []
+        sorted_ids: list[str] = []
 
         while queue:
             current = queue.popleft()
@@ -306,7 +305,7 @@ class ProcessExtractor:
         # Rebuild stages dict in sorted order
         self.stages = {sid: self.stages[sid] for sid in sorted_ids}
 
-    def _detect_patterns(self) -> Dict[str, List[str]]:
+    def _detect_patterns(self) -> dict[str, list[str]]:
         """
         Detect workflow patterns in the stage connection graph.
 
@@ -321,7 +320,7 @@ class ProcessExtractor:
             Also sets pattern_type on each Stage and stores results in
             ProcessModel metadata (via the caller).
         """
-        patterns: Dict[str, List[str]] = {
+        patterns: dict[str, list[str]] = {
             "sequential": [],
             "fan_out": [],
             "fan_in": [],
@@ -332,8 +331,8 @@ class ProcessExtractor:
             return patterns
 
         # Build out-degree and in-degree per stage from connections
-        out_targets: Dict[str, Set[str]] = defaultdict(set)
-        in_sources: Dict[str, Set[str]] = defaultdict(set)
+        out_targets: dict[str, set[str]] = defaultdict(set)
+        in_sources: dict[str, set[str]] = defaultdict(set)
 
         for conn in self.connections.values():
             src, tgt = conn.source_stage_id, conn.target_stage_id
@@ -356,9 +355,9 @@ class ProcessExtractor:
                     self.stages[sid].pattern_type = "fan_in"
 
         # Detect loops via DFS cycle detection
-        loop_members: Set[str] = set()
-        visited: Set[str] = set()
-        rec_stack: Set[str] = set()
+        loop_members: set[str] = set()
+        visited: set[str] = set()
+        rec_stack: set[str] = set()
 
         def _dfs_cycle(node: str) -> None:
             visited.add(node)
@@ -411,8 +410,8 @@ class ProcessExtractor:
         connection_count = 0
 
         # Track which stages are sources/targets
-        stage_exits: Dict[str, Set[str]] = defaultdict(set)
-        stage_entries: Dict[str, Set[str]] = defaultdict(set)
+        stage_exits: dict[str, set[str]] = defaultdict(set)
+        stage_entries: dict[str, set[str]] = defaultdict(set)
 
         for edge in self.graph.edges.values():
             # Find stages containing the endpoints
@@ -447,7 +446,7 @@ class ProcessExtractor:
 
         logger.debug(f"Built {len(self.connections)} inter-stage connections")
 
-    def _find_stage_for_node(self, node_id: str) -> Optional[str]:
+    def _find_stage_for_node(self, node_id: str) -> str | None:
         """
         Find the stage ID containing a given node.
 
@@ -462,7 +461,7 @@ class ProcessExtractor:
                 return stage_id
         return None
 
-    def _find_entry_stage(self) -> Optional[str]:
+    def _find_entry_stage(self) -> str | None:
         """
         Find the entry stage (stage with no incoming inter-stage edges).
 
@@ -470,7 +469,7 @@ class ProcessExtractor:
             Entry stage ID or None.
         """
         # Find stage with no incoming connections
-        incoming_stages = set(c.source_stage_id for c in self.connections.values())
+        incoming_stages = {c.source_stage_id for c in self.connections.values()}
 
         for stage_id in self.stages.keys():
             if stage_id not in incoming_stages:
@@ -479,18 +478,18 @@ class ProcessExtractor:
         # Fallback: return first stage
         return next(iter(self.stages.keys())) if self.stages else None
 
-    def _find_exit_stages(self) -> List[str]:
+    def _find_exit_stages(self) -> list[str]:
         """
         Find exit stages (stages with no outgoing inter-stage edges).
 
         Returns:
             List of exit stage IDs.
         """
-        outgoing_stages = set(c.target_stage_id for c in self.connections.values())
+        outgoing_stages = {c.target_stage_id for c in self.connections.values()}
         exit_stages = [sid for sid in self.stages.keys() if sid not in outgoing_stages]
         return exit_stages if exit_stages else []
 
-    def _find_side_effects(self, node_ids: List[str]) -> List[str]:
+    def _find_side_effects(self, node_ids: list[str]) -> list[str]:
         """
         Find state mutations (side effects) in a set of nodes.
 
@@ -510,7 +509,7 @@ class ProcessExtractor:
 
         return side_effects
 
-    def _infer_trigger(self, edge) -> Optional[str]:
+    def _infer_trigger(self, edge) -> str | None:
         """
         Infer the trigger for an inter-stage connection.
 
@@ -565,7 +564,7 @@ class ProcessExtractor:
         self,
         source_stage_id: str,
         target_stage_id: str,
-        trigger: Optional[str] = None
+        trigger: str | None = None
     ) -> None:
         """
         Manually add a dependency between stages.

@@ -14,89 +14,89 @@ _extended_available = False
 try:
     from .base import (
         CogantBaseModel,
-        StableID,
+        ConfidenceMetric,
+        EvidenceRef,
+        LocationInfo,
         SemanticVersion,
         Span,
-        EvidenceRef,
+        StableID,
         TypeInfo,
-        ConfidenceMetric,
-        LocationInfo,
         generate_stable_id,
     )
     from .bundle import (
+        ArtifactPaths,
         CoreBundleSchema,
+        ProvenanceOrigin,
         TargetInfo,
         TargetLanguage,
-        ProvenanceOrigin,
-        ArtifactPaths,
+    )
+    from .gnn_export import (
+        ActionPolicySection,
+        ConfidenceSection,
+        ConnectionSection,
+        FactorSection,
+        GNNExportBundle,
+        GNNMetadata,
+        GraphSection,
+        LikelihoodStructureSection,
+        ObservationModalitySection,
+        OntologyMappingSection,
+        ParameterizationSection,
+        PreferenceConstraintSection,
+        ProvenanceSection,
+        RenderingHints,
+        RepositoryMetadata,
+        SourceCoverage,
+        TimeSettingSection,
+        TransitionStructureSection,
+        ValidationNotes,
+    )
+    from .process_model import (
+        ProcessKind,
+        ProcessModel,
+        ProcessPolicy,
+        ProcessStage,
+        ProcessTimeline,
+        SideEffect,
+        TriggerKind,
     )
     from .program_graph import (
-        ProgramGraph,
-        Node,
-        NodeKind,
         Edge,
         EdgeKind,
+        Node,
+        NodeKind,
+        ProgramGraph,
+    )
+    from .provenance import (
+        EvidenceKind,
+        ProvenanceRecord,
+        ProvenanceStore,
     )
     from .semantic_mapping import (
+        MappingRule,
+        ReviewStatus,
         SemanticMapping,
         SemanticMappingCollection,
         SemanticRole,
-        MappingRule,
         SourceGraphElement,
         TargetSemanticElement,
-        ReviewStatus,
     )
     from .state_space import (
-        StateSpaceModel,
-        StateSpaceKind,
-        StateVariable,
-        ObservationModality,
         Action,
-        Transition,
         Likelihood,
-    )
-    from .process_model import (
-        ProcessModel,
-        ProcessKind,
-        ProcessStage,
-        ProcessPolicy,
-        ProcessTimeline,
-        TriggerKind,
-        SideEffect,
-    )
-    from .provenance import (
-        ProvenanceRecord,
-        ProvenanceStore,
-        EvidenceKind,
+        ObservationModality,
+        StateSpaceKind,
+        StateSpaceModel,
+        StateVariable,
+        Transition,
     )
     from .validation import (
-        ValidationReport,
+        CheckLevel,
+        CheckStatus,
         ValidationCheck,
         ValidationMetrics,
         ValidationRecommendation,
-        CheckLevel,
-        CheckStatus,
-    )
-    from .gnn_export import (
-        GNNExportBundle,
-        GNNMetadata,
-        RepositoryMetadata,
-        SourceCoverage,
-        GraphSection,
-        ObservationModalitySection,
-        ActionPolicySection,
-        ConnectionSection,
-        FactorSection,
-        TransitionStructureSection,
-        LikelihoodStructureSection,
-        PreferenceConstraintSection,
-        TimeSettingSection,
-        ParameterizationSection,
-        OntologyMappingSection,
-        ProvenanceSection,
-        ConfidenceSection,
-        RenderingHints,
-        ValidationNotes,
+        ValidationReport,
     )
     _extended_available = True
 except (ImportError, ModuleNotFoundError):
@@ -106,20 +106,20 @@ except (ImportError, ModuleNotFoundError):
     # "ProvenanceRecord" definitions at package-import time, so we
     # silence the assignment diagnostic here.
     from cogant.schemas.core import (  # type: ignore[assignment]
-        Node,
         Edge,
-        NodeKind,
         EdgeKind,
+        Node,
+        NodeKind,
     )
     from cogant.schemas.graph import (  # type: ignore[assignment]
-        ProgramGraph,
         GraphMetadata,
+        ProgramGraph,
     )
     from cogant.schemas.semantic import (  # type: ignore[assignment]
-        SemanticMapping,
-        MappingKind,
         ConfidenceTier,
+        MappingKind,
         ProvenanceRecord,
+        SemanticMapping,
     )
 
 if _extended_available:

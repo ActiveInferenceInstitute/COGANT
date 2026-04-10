@@ -1,9 +1,9 @@
 """Review manager for semantic mapping validation and curation."""
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
-from cogant.schemas.semantic import SemanticMapping, ConfidenceTier
+from cogant.schemas.semantic import ConfidenceTier, SemanticMapping
 
 
 class ReviewManager:
@@ -15,8 +15,8 @@ class ReviewManager:
 
     def __init__(self) -> None:
         """Initialize the review manager."""
-        self.mappings: Dict[str, SemanticMapping] = {}
-        self.review_history: List[Dict[str, Any]] = []
+        self.mappings: dict[str, SemanticMapping] = {}
+        self.review_history: list[dict[str, Any]] = []
 
     def add_mapping(self, mapping: SemanticMapping) -> None:
         """Add a mapping for potential review.
@@ -30,7 +30,7 @@ class ReviewManager:
         self,
         mapping_id: str,
         reviewer: str,
-        feedback: Optional[str] = None,
+        feedback: str | None = None,
     ) -> bool:
         """Accept a mapping as valid.
 
@@ -48,7 +48,7 @@ class ReviewManager:
         mapping = self.mappings[mapping_id]
         mapping.status = "accepted"
         mapping.reviewed_by = reviewer
-        mapping.reviewed_at = datetime.now(timezone.utc)
+        mapping.reviewed_at = datetime.now(UTC)
         mapping.review_feedback = feedback
 
         # Upgrade confidence tier if human reviewed
@@ -81,7 +81,7 @@ class ReviewManager:
         mapping = self.mappings[mapping_id]
         mapping.status = "rejected"
         mapping.reviewed_by = reviewer
-        mapping.reviewed_at = datetime.now(timezone.utc)
+        mapping.reviewed_at = datetime.now(UTC)
         mapping.review_feedback = reason
         mapping.confidence_score = 0.0
 
@@ -92,7 +92,7 @@ class ReviewManager:
         self,
         mapping_id: str,
         reviewer: str,
-        updates: Dict[str, Any],
+        updates: dict[str, Any],
     ) -> bool:
         """Edit a mapping based on review feedback.
 
@@ -118,7 +118,7 @@ class ReviewManager:
 
         mapping.status = "edited"
         mapping.reviewed_by = reviewer
-        mapping.reviewed_at = datetime.now(timezone.utc)
+        mapping.reviewed_at = datetime.now(UTC)
 
         self._log_review("edit", mapping_id, reviewer, {"old_values": old_values, "new_values": updates})
         return True
@@ -127,8 +127,8 @@ class ReviewManager:
         self,
         mapping_id: str,
         reviewer: str,
-        split_definitions: List[Dict[str, Any]],
-    ) -> List[str]:
+        split_definitions: list[dict[str, Any]],
+    ) -> list[str]:
         """Split a mapping into multiple mappings.
 
         Args:
@@ -158,7 +158,7 @@ class ReviewManager:
                 confidence_tier=ConfidenceTier.HUMAN_REVIEWED,
                 status="edited",
                 reviewed_by=reviewer,
-                reviewed_at=datetime.now(timezone.utc),
+                reviewed_at=datetime.now(UTC),
             )
 
             self.mappings[new_id] = new_mapping
@@ -167,17 +167,17 @@ class ReviewManager:
         # Mark original as split
         original.status = "split"
         original.reviewed_by = reviewer
-        original.reviewed_at = datetime.now(timezone.utc)
+        original.reviewed_at = datetime.now(UTC)
 
         self._log_review("split", mapping_id, reviewer, {"new_mappings": new_ids})
         return new_ids
 
     def merge_mappings(
         self,
-        mapping_ids: List[str],
+        mapping_ids: list[str],
         reviewer: str,
-        merged_definition: Dict[str, Any],
-    ) -> Optional[str]:
+        merged_definition: dict[str, Any],
+    ) -> str | None:
         """Merge multiple mappings into one.
 
         Args:
@@ -218,7 +218,7 @@ class ReviewManager:
             confidence_tier=ConfidenceTier.HUMAN_REVIEWED,
             status="merged",
             reviewed_by=reviewer,
-            reviewed_at=datetime.now(timezone.utc),
+            reviewed_at=datetime.now(UTC),
         )
 
         self.mappings[merged_id] = merged
@@ -227,12 +227,12 @@ class ReviewManager:
         for mid in mapping_ids:
             self.mappings[mid].status = "merged"
             self.mappings[mid].reviewed_by = reviewer
-            self.mappings[mid].reviewed_at = datetime.now(timezone.utc)
+            self.mappings[mid].reviewed_at = datetime.now(UTC)
 
         self._log_review("merge", ",".join(mapping_ids), reviewer, {"merged_id": merged_id})
         return merged_id
 
-    def get_mapping_for_review(self, mapping_id: str) -> Optional[SemanticMapping]:
+    def get_mapping_for_review(self, mapping_id: str) -> SemanticMapping | None:
         """Get a mapping for review.
 
         Args:
@@ -243,7 +243,7 @@ class ReviewManager:
         """
         return self.mappings.get(mapping_id)
 
-    def get_mappings_by_status(self, status: str) -> List[SemanticMapping]:
+    def get_mappings_by_status(self, status: str) -> list[SemanticMapping]:
         """Get all mappings with a specific status.
 
         Args:
@@ -254,7 +254,7 @@ class ReviewManager:
         """
         return [m for m in self.mappings.values() if m.status == status]
 
-    def get_unreviewed_mappings(self) -> List[SemanticMapping]:
+    def get_unreviewed_mappings(self) -> list[SemanticMapping]:
         """Get all mappings that haven't been reviewed.
 
         Returns:
@@ -262,13 +262,13 @@ class ReviewManager:
         """
         return [m for m in self.mappings.values() if m.status == "auto_proposed"]
 
-    def get_review_summary(self) -> Dict[str, Any]:
+    def get_review_summary(self) -> dict[str, Any]:
         """Get a summary of review status.
 
         Returns:
             Dictionary with review statistics.
         """
-        statuses: Dict[str, int] = {}
+        statuses: dict[str, int] = {}
         for mapping in self.mappings.values():
             status = mapping.status
             statuses[status] = statuses.get(status, 0) + 1
@@ -290,14 +290,14 @@ class ReviewManager:
             detail: Action details.
         """
         self.review_history.append({
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
             "action": action,
             "mapping_id": mapping_id,
             "reviewer": reviewer,
             "detail": detail,
         })
 
-    def get_review_history(self) -> List[Dict[str, Any]]:
+    def get_review_history(self) -> list[dict[str, Any]]:
         """Get the complete review history.
 
         Returns:
@@ -305,7 +305,7 @@ class ReviewManager:
         """
         return self.review_history.copy()
 
-    def export_reviewed_mappings(self) -> List[SemanticMapping]:
+    def export_reviewed_mappings(self) -> list[SemanticMapping]:
         """Export all mappings that have been accepted or edited by reviewers.
 
         Returns:

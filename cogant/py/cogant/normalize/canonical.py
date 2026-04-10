@@ -1,7 +1,7 @@
 """Canonical normalization for converting language-specific facts into generic form."""
 
-from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
+from typing import Any
 
 from cogant.schemas.core import Node, NodeKind
 
@@ -16,7 +16,7 @@ class LanguageFact:
     language: str
     """Source language."""
 
-    data: Dict[str, Any]
+    data: dict[str, Any]
     """Raw language-specific data."""
 
 
@@ -33,13 +33,13 @@ class NormalizedFact:
     qualified_name: str
     """Fully qualified name."""
 
-    path: Optional[str] = None
+    path: str | None = None
     """File/module path."""
 
-    language: Optional[str] = None
+    language: str | None = None
     """Source language."""
 
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
     """Normalized metadata."""
 
     def __post_init__(self) -> None:
@@ -86,9 +86,9 @@ class CanonicalNormalizer:
 
     def __init__(self):
         """Initialize the canonical normalizer."""
-        self._normalization_log: List[Dict[str, Any]] = []
+        self._normalization_log: list[dict[str, Any]] = []
 
-    def normalize(self, fact: LanguageFact) -> Optional[NormalizedFact]:
+    def normalize(self, fact: LanguageFact) -> NormalizedFact | None:
         """Normalize a language-specific fact to canonical form.
 
         Args:
@@ -134,7 +134,7 @@ class CanonicalNormalizer:
 
         return normalized
 
-    def _normalize_metadata(self, fact: LanguageFact) -> Dict[str, Any]:
+    def _normalize_metadata(self, fact: LanguageFact) -> dict[str, Any]:
         """Extract and normalize metadata from a language-specific fact.
 
         Args:
@@ -143,7 +143,7 @@ class CanonicalNormalizer:
         Returns:
             Normalized metadata dictionary.
         """
-        metadata: Dict[str, Any] = {}
+        metadata: dict[str, Any] = {}
 
         # Extract common fields
         if "visibility" in fact.data:
@@ -173,8 +173,8 @@ class CanonicalNormalizer:
 
     def _extract_python_metadata(
         self,
-        fact_data: Dict[str, Any],
-        metadata: Dict[str, Any],
+        fact_data: dict[str, Any],
+        metadata: dict[str, Any],
     ) -> None:
         """Extract Python-specific metadata.
 
@@ -193,8 +193,8 @@ class CanonicalNormalizer:
 
     def _extract_javascript_metadata(
         self,
-        fact_data: Dict[str, Any],
-        metadata: Dict[str, Any],
+        fact_data: dict[str, Any],
+        metadata: dict[str, Any],
     ) -> None:
         """Extract JavaScript-specific metadata.
 
@@ -213,8 +213,8 @@ class CanonicalNormalizer:
 
     def _extract_java_metadata(
         self,
-        fact_data: Dict[str, Any],
-        metadata: Dict[str, Any],
+        fact_data: dict[str, Any],
+        metadata: dict[str, Any],
     ) -> None:
         """Extract Java-specific metadata.
 
@@ -228,7 +228,7 @@ class CanonicalNormalizer:
         if "annotations" in fact_data:
             metadata["annotations"] = fact_data["annotations"]
 
-    def normalize_batch(self, facts: List[LanguageFact]) -> List[Optional[NormalizedFact]]:
+    def normalize_batch(self, facts: list[LanguageFact]) -> list[NormalizedFact | None]:
         """Normalize a batch of language-specific facts.
 
         Args:
@@ -285,7 +285,7 @@ class CanonicalNormalizer:
             "fact_type": fact_type,
         })
 
-    def get_normalization_log(self) -> List[Dict[str, Any]]:
+    def get_normalization_log(self) -> list[dict[str, Any]]:
         """Get the normalization log.
 
         Returns:
@@ -293,7 +293,7 @@ class CanonicalNormalizer:
         """
         return self._normalization_log.copy()
 
-    def get_normalization_stats(self) -> Dict[str, int]:
+    def get_normalization_stats(self) -> dict[str, int]:
         """Get statistics about normalizations.
 
         Returns:

@@ -52,10 +52,10 @@ def plugin_info(
     registry.discover()
 
     try:
-        info = registry.get_plugin_info(name)
-    except KeyError:
+        registry.get_plugin_info(name)
+    except KeyError as exc:
         console.print(f"[red]Plugin '{name}' not found.[/red]")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from exc
 
     # Attempt to load it
     loaded_info = registry.load(name)

@@ -1,14 +1,14 @@
 """Translation engine orchestrating rule application over program graphs."""
 
 import logging
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Any
 
+from cogant.graph.queries import GraphQuery
 from cogant.schemas.core import Node
 from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.semantic import SemanticMapping, MappingKind, ConfidenceTier
-from cogant.graph.queries import GraphQuery
+from cogant.schemas.semantic import ConfidenceTier, MappingKind, SemanticMapping
 from cogant.translate.confidence import ConfidenceModel
 
 logger = logging.getLogger(__name__)
@@ -46,10 +46,10 @@ class RuleExplanation:
     priority: int
     fired: bool
     reason: str
-    evidence: List[str] = field(default_factory=list)
-    mapping_kind: Optional[str] = None
+    evidence: list[str] = field(default_factory=list)
+    mapping_kind: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain JSON-ready dict."""
         return {
             "rule_name": self.rule_name,
@@ -65,7 +65,7 @@ class TranslationRule(ABC):
     """Base class for translation rules."""
 
     @abstractmethod
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Check if rule matches graph patterns.
 
         Args:
@@ -81,8 +81,8 @@ class TranslationRule(ABC):
     def apply(
         self,
         graph: ProgramGraph,
-        match: Dict[str, Any],
-    ) -> Optional[SemanticMapping]:
+        match: dict[str, Any],
+    ) -> SemanticMapping | None:
         """Apply rule to a matched pattern.
 
         Args:
@@ -170,11 +170,11 @@ class TranslationRule(ABC):
 
         for match in all_matches:
             node_id = match.get("node_id") if isinstance(match, dict) else None
-            fragment_ids: List[str] = []
+            fragment_ids: list[str] = []
             if isinstance(match, dict):
                 fragment_ids = list(match.get("node_ids", []) or [])
             if node_id == node.id or node.id in fragment_ids:
-                evidence: List[str] = []
+                evidence: list[str] = []
                 for key, value in sorted(match.items()):
                     if key in ("node_id", "node_ids"):
                         continue
@@ -235,10 +235,10 @@ class TranslationEngine:
             corpus (target: 20+ repos) and revise if the empirical
             maximum exceeds 5.
         """
-        self.rules: List[TranslationRule] = []
-        self.mappings: Dict[str, SemanticMapping] = {}
-        self._match_log: List[Dict[str, Any]] = []
-        self._rule_priority: Dict[str, int] = {}
+        self.rules: list[TranslationRule] = []
+        self.mappings: dict[str, SemanticMapping] = {}
+        self._match_log: list[dict[str, Any]] = []
+        self._rule_priority: dict[str, int] = {}
         self.max_iterations = max_iterations
 
     def register_rule(self, rule: TranslationRule) -> None:
@@ -252,8 +252,8 @@ class TranslationEngine:
     def translate(
         self,
         graph: ProgramGraph,
-        rule_filter: Optional[List[str]] = None,
-    ) -> List[SemanticMapping]:
+        rule_filter: list[str] | None = None,
+    ) -> list[SemanticMapping]:
         """Translate a program graph using registered rules with fixpoint iteration.
 
         Rules are applied repeatedly until no new mappings emerge
@@ -327,7 +327,7 @@ class TranslationEngine:
         self,
         graph: ProgramGraph,
         query: GraphQuery,
-        rule_filter: Optional[List[str]] = None,
+        rule_filter: list[str] | None = None,
         iteration: int = 0,
     ) -> int:
         """Apply all rules once, sorted by priority. Returns count of new mappings created.
@@ -389,8 +389,8 @@ class TranslationEngine:
     def translate_with_confidence(
         self,
         graph: ProgramGraph,
-        rule_filter: Optional[List[str]] = None,
-    ) -> List[SemanticMapping]:
+        rule_filter: list[str] | None = None,
+    ) -> list[SemanticMapping]:
         """Translate and rescore all mappings using the ConfidenceModel.
 
         Runs the standard fixpoint translation, then applies the
@@ -425,13 +425,13 @@ class TranslationEngine:
         equal.
         """
         # Build inverted index: node_id -> list of mapping IDs touching it.
-        node_to_mappings: Dict[str, List[str]] = {}
+        node_to_mappings: dict[str, list[str]] = {}
         for mapping in self.mappings.values():
             for node_id in mapping.graph_fragment_node_ids:
                 node_to_mappings.setdefault(node_id, []).append(mapping.id)
 
         # Collect unique colliding pairs via the inverted index.
-        conflict_pairs: Set[tuple] = set()
+        conflict_pairs: set[tuple] = set()
         for mids in node_to_mappings.values():
             if len(mids) < 2:
                 continue
@@ -440,7 +440,7 @@ class TranslationEngine:
                     a, b = mids[i], mids[j]
                     conflict_pairs.add((a, b) if a < b else (b, a))
 
-        to_remove: Set[str] = set()
+        to_remove: set[str] = set()
         for a_id, b_id in conflict_pairs:
             if a_id in to_remove or b_id in to_remove:
                 continue
@@ -470,7 +470,7 @@ class TranslationEngine:
         for mid in to_remove:
             del self.mappings[mid]
 
-    def get_coverage_report(self, graph: ProgramGraph) -> Dict[str, Any]:
+    def get_coverage_report(self, graph: ProgramGraph) -> dict[str, Any]:
         """Report what percentage of graph nodes received at least one mapping.
 
         Args:
@@ -481,7 +481,7 @@ class TranslationEngine:
             covered nodes, uncovered node IDs, and coverage percentage.
         """
         all_node_ids = set(graph.nodes.keys())
-        covered_node_ids: Set[str] = set()
+        covered_node_ids: set[str] = set()
 
         for mapping in self.mappings.values():
             covered_node_ids.update(mapping.graph_fragment_node_ids)
@@ -501,7 +501,7 @@ class TranslationEngine:
             "uncovered_node_ids": sorted(uncovered),
         }
 
-    def get_mappings_by_kind(self, kind: MappingKind) -> List[SemanticMapping]:
+    def get_mappings_by_kind(self, kind: MappingKind) -> list[SemanticMapping]:
         """Get all mappings of a specific kind.
 
         Args:
@@ -515,7 +515,7 @@ class TranslationEngine:
     def get_mappings_by_confidence(
         self,
         tier: ConfidenceTier,
-    ) -> List[SemanticMapping]:
+    ) -> list[SemanticMapping]:
         """Get all mappings with a specific confidence tier.
 
         Args:
@@ -526,7 +526,7 @@ class TranslationEngine:
         """
         return [m for m in self.mappings.values() if m.confidence_tier == tier]
 
-    def get_mapping(self, mapping_id: str) -> Optional[SemanticMapping]:
+    def get_mapping(self, mapping_id: str) -> SemanticMapping | None:
         """Get a mapping by ID.
 
         Args:
@@ -551,7 +551,7 @@ class TranslationEngine:
             "detail": detail,
         })
 
-    def get_match_log(self) -> List[Dict[str, Any]]:
+    def get_match_log(self) -> list[dict[str, Any]]:
         """Get the match log.
 
         Returns:
@@ -559,18 +559,18 @@ class TranslationEngine:
         """
         return self._match_log.copy()
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get statistics about translations.
 
         Returns:
             Dictionary with statistics.
         """
-        by_kind: Dict[str, int] = {}
+        by_kind: dict[str, int] = {}
         for mapping in self.mappings.values():
             kind = mapping.kind.value
             by_kind[kind] = by_kind.get(kind, 0) + 1
 
-        by_tier: Dict[str, int] = {}
+        by_tier: dict[str, int] = {}
         for mapping in self.mappings.values():
             tier = mapping.confidence_tier.value
             by_tier[tier] = by_tier.get(tier, 0) + 1

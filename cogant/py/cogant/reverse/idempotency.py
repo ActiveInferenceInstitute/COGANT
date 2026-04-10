@@ -43,7 +43,7 @@ import tempfile
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from cogant.reverse.metrics import (
     compare_graph_structure,
@@ -97,11 +97,11 @@ class RoundtripResult:
     role_match_score: float = 0.0
     matrix_score: float = 0.0
     structural_score: float = 0.0
-    original_roles: Dict[str, int] = field(default_factory=dict)
-    synthesized_roles: Dict[str, int] = field(default_factory=dict)
-    shape_match: Dict[str, bool] = field(default_factory=dict)
-    package_path: Optional[Path] = None
-    errors: List[str] = field(default_factory=list)
+    original_roles: dict[str, int] = field(default_factory=dict)
+    synthesized_roles: dict[str, int] = field(default_factory=dict)
+    shape_match: dict[str, bool] = field(default_factory=dict)
+    package_path: Path | None = None
+    errors: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
         """Return a human-readable single-line summary of the result."""
@@ -124,7 +124,7 @@ class RoundtripResult:
 # COGANT. Anything not in this map falls back to "UNKNOWN" — it won't
 # match any forward-derived role but will show up in the ``original``
 # multiset for diagnostic purposes.
-_ONTOLOGY_TO_ROLE: Dict[str, str] = {
+_ONTOLOGY_TO_ROLE: dict[str, str] = {
     "HiddenState": "HIDDEN_STATE",
     "Observation": "OBSERVATION",
     "Action": "ACTION",
@@ -195,13 +195,13 @@ def _role_multiset_from_mappings(mappings: Any) -> Counter:
     return roles
 
 
-def _model_matrices(model: ReverseGNNModel) -> Dict[str, Any]:
+def _model_matrices(model: ReverseGNNModel) -> dict[str, Any]:
     """Return the A/B/C/D matrices of a ReverseGNNModel as a metrics dict.
 
     Only non-empty matrices are included; :func:`compare_matrices`
     treats missing keys correctly.
     """
-    out: Dict[str, Any] = {}
+    out: dict[str, Any] = {}
     if getattr(model, "A", None):
         out["A"] = model.A
     if getattr(model, "B", None):
@@ -213,7 +213,7 @@ def _model_matrices(model: ReverseGNNModel) -> Dict[str, Any]:
     return out
 
 
-def _state_space_matrices(state_space: Any) -> Dict[str, Any]:
+def _state_space_matrices(state_space: Any) -> dict[str, Any]:
     """Best-effort A/B/C/D extractor for a compiled StateSpaceModel.
 
     Returns an empty dict when the compiled state-space object does
@@ -222,7 +222,7 @@ def _state_space_matrices(state_space: Any) -> Dict[str, Any]:
     """
     if state_space is None:
         return {}
-    out: Dict[str, Any] = {}
+    out: dict[str, Any] = {}
     for key in ("A", "B", "C", "D"):
         val = getattr(state_space, key, None)
         if val is not None:
@@ -251,14 +251,14 @@ def _nodes_edges_from_mappings(mappings: Any) -> tuple[list, list]:
     return nodes, edges
 
 
-def _run_forward(repo_path: Path) -> Dict[str, Any]:
+def _run_forward(repo_path: Path) -> dict[str, Any]:
     """Run the COGANT forward pipeline on ``repo_path``.
 
     Returns a dict with keys ``mappings`` (the semantic-mapping dict),
     ``state_space`` (the compiled StateSpaceModel), and ``error``
     (non-None on failure).
     """
-    result: Dict[str, Any] = {
+    result: dict[str, Any] = {
         "mappings": {},
         "state_space": None,
         "error": None,
@@ -288,8 +288,8 @@ def _run_forward(repo_path: Path) -> Dict[str, Any]:
 
 
 def verify_roundtrip(
-    gnn_path: Union[str, Path],
-    tmp_dir: Optional[Union[str, Path]] = None,
+    gnn_path: str | Path,
+    tmp_dir: str | Path | None = None,
     *,
     role_threshold: float = ROLE_MATCH_THRESHOLD,
     keep_tmp: bool = False,
@@ -321,7 +321,7 @@ def verify_roundtrip(
     original_roles = _role_multiset_from_model(model)
 
     # 2. Plan and synthesize into a temporary directory.
-    cleanup_dir: Optional[Path] = None
+    cleanup_dir: Path | None = None
     if tmp_dir is None:
         tmp_dir_obj = Path(tempfile.mkdtemp(prefix="cogant-roundtrip-"))
         if not keep_tmp:
@@ -353,7 +353,7 @@ def verify_roundtrip(
     synth_n_obs = len(getattr(ss, "observations", {}) or {}) if ss else 0
     synth_n_actions = len(getattr(ss, "actions", {}) or {}) if ss else 0
 
-    shape_match: Dict[str, bool] = {}
+    shape_match: dict[str, bool] = {}
     if model.n_states > 0:
         shape_match["n_states"] = synth_n_states >= 1
     if model.n_obs > 0:
@@ -408,8 +408,8 @@ def verify_roundtrip(
 
 
 def verify_repo_roundtrip(
-    repo_path: Union[str, Path],
-    output_dir: Optional[Union[str, Path]] = None,
+    repo_path: str | Path,
+    output_dir: str | Path | None = None,
     *,
     role_threshold: float = ROLE_MATCH_THRESHOLD,
 ) -> RoundtripResult:
@@ -502,7 +502,7 @@ def verify_repo_roundtrip(
             score = overlap / sum(original_roles.values())
 
         # Shape match: compare the two state-space models directly.
-        shape_match: Dict[str, bool] = {}
+        shape_match: dict[str, bool] = {}
         orig_ss = original_state_space
         new_ss = forward.get("state_space")
         orig_n_states = len(getattr(orig_ss, "variables", {}) or {}) if orig_ss else 0

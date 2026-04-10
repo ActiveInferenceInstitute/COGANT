@@ -4,9 +4,8 @@ Visualization for Active Inference simulations.
 Generates SVG plots and HTML reports of simulation traces.
 """
 
-import math
-from typing import Dict, List, Any, Optional
 from collections import defaultdict
+from typing import Any
 
 
 class SimulationVisualizer:
@@ -16,7 +15,7 @@ class SimulationVisualizer:
         """Initialize the visualizer."""
         pass
 
-    def plot_free_energy_trajectory(self, trace: List[Dict[str, Any]]) -> str:
+    def plot_free_energy_trajectory(self, trace: list[dict[str, Any]]) -> str:
         """
         Generate SVG plot of free energy over time.
 
@@ -117,7 +116,7 @@ class SimulationVisualizer:
         svg_lines.append("</svg>")
         return "\n".join(svg_lines)
 
-    def plot_belief_evolution(self, trace: List[Dict[str, Any]]) -> str:
+    def plot_belief_evolution(self, trace: list[dict[str, Any]]) -> str:
         """
         Generate SVG showing belief evolution over time.
 
@@ -145,7 +144,7 @@ class SimulationVisualizer:
         if not belief_history or not all_states:
             return self._empty_svg("No belief data")
 
-        states = sorted(list(all_states))
+        states = sorted(all_states)
         colors = self._generate_colors(len(states))
 
         # SVG parameters
@@ -176,7 +175,7 @@ class SimulationVisualizer:
 
         # Draw stacked area chart
         n_steps = len(belief_history)
-        for state_idx, state in enumerate(states):
+        for state_idx, _state in enumerate(states):
             cumulative = [0.0] * n_steps
             for i in range(n_steps):
                 beliefs = belief_history[i]
@@ -236,7 +235,7 @@ class SimulationVisualizer:
         svg_lines.append("</svg>")
         return "\n".join(svg_lines)
 
-    def plot_action_distribution(self, trace: List[Dict[str, Any]]) -> str:
+    def plot_action_distribution(self, trace: list[dict[str, Any]]) -> str:
         """
         Generate SVG bar chart of actions taken.
 
@@ -250,7 +249,7 @@ class SimulationVisualizer:
             return self._empty_svg("No trace data")
 
         # Count actions
-        action_counts: Dict[str, int] = defaultdict(int)
+        action_counts: dict[str, int] = defaultdict(int)
         for step in trace:
             action = step.get("action")
             if action:
@@ -259,7 +258,7 @@ class SimulationVisualizer:
         if not action_counts:
             return self._empty_svg("No action data")
 
-        actions = sorted(list(action_counts.keys()))
+        actions = sorted(action_counts.keys())
         counts = [action_counts[a] for a in actions]
         max_count = max(counts) if counts else 1
 
@@ -311,7 +310,7 @@ class SimulationVisualizer:
         svg_lines.append("</svg>")
         return "\n".join(svg_lines)
 
-    def generate_mermaid_trajectory(self, trace: List[Dict[str, Any]]) -> str:
+    def generate_mermaid_trajectory(self, trace: list[dict[str, Any]]) -> str:
         """
         Generate Mermaid sequence diagram of state transitions.
 
@@ -347,7 +346,7 @@ class SimulationVisualizer:
         return "\n".join(lines)
 
     def generate_html_report(
-        self, trace: List[Dict[str, Any]], state_space: Any
+        self, trace: list[dict[str, Any]], state_space: Any
     ) -> str:
         """
         Generate full HTML report of simulation.
@@ -394,7 +393,7 @@ class SimulationVisualizer:
         html_lines.extend([
             "    <div class='section stats'>",
             f"      <div class='stat-box'><div class='stat-value'>{len(trace)}</div><div class='stat-label'>Steps</div></div>",
-            f"      <div class='stat-box'><div class='stat-value'>{len(set(s.get('action') for s in trace if s.get('action')))}</div><div class='stat-label'>Unique Actions</div></div>",
+            f"      <div class='stat-box'><div class='stat-value'>{len({s.get('action') for s in trace if s.get('action')})}</div><div class='stat-label'>Unique Actions</div></div>",
         ])
 
         # Add mean free energy if available
@@ -441,7 +440,7 @@ class SimulationVisualizer:
 </svg>"""
 
     @staticmethod
-    def _generate_colors(n: int) -> List[str]:
+    def _generate_colors(n: int) -> list[str]:
         """Generate n distinct colors."""
         colors = [
             "#FF6B6B",

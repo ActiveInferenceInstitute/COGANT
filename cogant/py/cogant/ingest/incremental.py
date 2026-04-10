@@ -22,7 +22,6 @@ import logging
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +90,7 @@ class IncrementalIngester:
     # Public query API
     # ------------------------------------------------------------------
 
-    def changed_since(self, ref: str = "HEAD~1") -> List[ChangedFile]:
+    def changed_since(self, ref: str = "HEAD~1") -> list[ChangedFile]:
         """Return files changed between ``ref`` and ``HEAD``.
 
         Non-git repos return an empty list (with a warning log).
@@ -123,11 +122,11 @@ class IncrementalIngester:
 
         return self._parse_name_status(result.stdout)
 
-    def changed_since_commit(self, commit_hash: str) -> List[ChangedFile]:
+    def changed_since_commit(self, commit_hash: str) -> list[ChangedFile]:
         """Return files changed since a specific commit."""
         return self.changed_since(commit_hash)
 
-    def working_tree_changes(self) -> List[ChangedFile]:
+    def working_tree_changes(self) -> list[ChangedFile]:
         """Return uncommitted (index + worktree) changes.
 
         Uses ``git status --porcelain`` so both staged and unstaged
@@ -154,7 +153,7 @@ class IncrementalIngester:
             logger.warning("git status failed: %s", result.stderr.strip())
             return []
 
-        changed: List[ChangedFile] = []
+        changed: list[ChangedFile] = []
         for line in result.stdout.splitlines():
             if len(line) < 3:
                 continue
@@ -180,7 +179,7 @@ class IncrementalIngester:
             )
         return changed
 
-    def python_files_changed_since(self, ref: str = "HEAD~1") -> List[Path]:
+    def python_files_changed_since(self, ref: str = "HEAD~1") -> list[Path]:
         """Return only Python files changed between ``ref`` and ``HEAD``."""
         return self.source_files_changed_since(
             ref, extensions={".py", ".pyx", ".pyi"}
@@ -189,8 +188,8 @@ class IncrementalIngester:
     def source_files_changed_since(
         self,
         ref: str = "HEAD~1",
-        extensions: Optional[set] = None,
-    ) -> List[Path]:
+        extensions: set | None = None,
+    ) -> list[Path]:
         """Return source files changed since ``ref``.
 
         ``extensions`` defaults to the full cross-language set COGANT
@@ -209,9 +208,9 @@ class IncrementalIngester:
     # Helpers
     # ------------------------------------------------------------------
 
-    def _parse_name_status(self, stdout: str) -> List[ChangedFile]:
+    def _parse_name_status(self, stdout: str) -> list[ChangedFile]:
         """Parse ``git diff --name-status`` output into ChangedFile list."""
-        changed: List[ChangedFile] = []
+        changed: list[ChangedFile] = []
         for line in stdout.strip().splitlines():
             if not line:
                 continue

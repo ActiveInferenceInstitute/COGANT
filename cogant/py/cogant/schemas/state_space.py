@@ -5,22 +5,22 @@ Models discretized, continuous, and hybrid state spaces with observation
 and action modalities for use in MDP, POMDP, and control system analysis.
 """
 
-from typing import Optional, Dict, Any, List, Literal, Union
-from enum import Enum
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import ConfigDict, Field
 
 from .base import (
     CogantBaseModel,
+    ConfidenceMetric,
+    EvidenceRef,
     StableID,
     TypeInfo,
-    EvidenceRef,
-    ConfidenceMetric,
 )
 
 
-class StateSpaceKind(str, Enum):
+class StateSpaceKind(StrEnum):
     """Types of state spaces."""
 
     DISCRETE = "discrete"
@@ -35,7 +35,7 @@ class StateVariable(CogantBaseModel):
 
     var_id: str = Field(..., description="Unique identifier for variable")
     name: str = Field(..., description="Human-readable name")
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None, description="Detailed description"
     )
 
@@ -45,11 +45,11 @@ class StateVariable(CogantBaseModel):
     )
 
     # Domain specification
-    domain: Dict[str, Any] = Field(
+    domain: dict[str, Any] = Field(
         default_factory=dict,
         description="Domain specification (min/max for continuous, discrete values list)",
     )
-    default_value: Optional[Any] = Field(
+    default_value: Any | None = Field(
         default=None, description="Default initial value"
     )
 
@@ -68,7 +68,7 @@ class StateVariable(CogantBaseModel):
     )
 
     # Provenance
-    provenance: List[EvidenceRef] = Field(
+    provenance: list[EvidenceRef] = Field(
         default_factory=list,
         description="Evidence for this variable",
     )
@@ -81,36 +81,36 @@ class ObservationModality(CogantBaseModel):
 
     modality_id: str = Field(..., description="Unique identifier")
     name: str = Field(..., description="Human-readable name (e.g., 'camera', 'lidar')")
-    description: Optional[str] = Field(default=None)
+    description: str | None = Field(default=None)
 
     # Observation structure
     observation_type: TypeInfo = Field(
         ..., description="Type of observations from this modality"
     )
-    observation_space: Dict[str, Any] = Field(
+    observation_space: dict[str, Any] = Field(
         default_factory=dict,
         description="Specification of observation space (dimensions, ranges, etc.)",
     )
 
     # Noise & uncertainty
-    noise_model: Optional[str] = Field(
+    noise_model: str | None = Field(
         default=None, description="Noise model (e.g., 'gaussian', 'poisson')"
     )
-    noise_parameters: Dict[str, float] = Field(
+    noise_parameters: dict[str, float] = Field(
         default_factory=dict,
         description="Noise parameters (e.g., stddev, rate)",
     )
 
     # Temporal properties
-    observation_frequency: Optional[float] = Field(
+    observation_frequency: float | None = Field(
         default=None, description="Observation frequency (Hz)"
     )
-    latency: Optional[float] = Field(
+    latency: float | None = Field(
         default=None, description="Observation latency (seconds)"
     )
 
     # Relationships
-    observes_state_vars: List[str] = Field(
+    observes_state_vars: list[str] = Field(
         default_factory=list,
         description="IDs of state variables this modality observes",
     )
@@ -145,32 +145,32 @@ class Action(CogantBaseModel):
 
     action_id: str = Field(..., description="Unique identifier")
     name: str = Field(..., description="Human-readable name")
-    description: Optional[str] = Field(default=None)
+    description: str | None = Field(default=None)
 
     # Action specification
     action_type: TypeInfo = Field(
         ..., description="Type of action values"
     )
-    action_space: Dict[str, Any] = Field(
+    action_space: dict[str, Any] = Field(
         default_factory=dict,
         description="Specification of action space (dimensions, ranges, discrete values)",
     )
 
     # Effects
-    affects_state_vars: List[str] = Field(
+    affects_state_vars: list[str] = Field(
         default_factory=list,
         description="IDs of state variables affected by this action",
     )
-    effect_description: Optional[str] = Field(
+    effect_description: str | None = Field(
         default=None, description="Description of action's effects"
     )
 
     # Constraints
-    preconditions: List[str] = Field(
+    preconditions: list[str] = Field(
         default_factory=list,
         description="Conditions that must hold for action to be valid",
     )
-    cost: Optional[float] = Field(
+    cost: float | None = Field(
         default=None, description="Action cost (e.g., energy, time)"
     )
 
@@ -179,7 +179,7 @@ class Action(CogantBaseModel):
         default=True,
         description="Whether action has deterministic effects",
     )
-    execution_time: Optional[float] = Field(
+    execution_time: float | None = Field(
         default=None, description="Expected execution time (seconds)"
     )
 
@@ -205,23 +205,23 @@ class Transition(CogantBaseModel):
     """
 
     transition_id: str = Field(..., description="Unique identifier")
-    source_state_id: Optional[str] = Field(
+    source_state_id: str | None = Field(
         default=None, description="Source state ID (if state-specific)"
     )
-    target_state_id: Optional[str] = Field(
+    target_state_id: str | None = Field(
         default=None, description="Target state ID (if state-specific)"
     )
 
     # Trigger
-    trigger_action: Optional[str] = Field(
+    trigger_action: str | None = Field(
         default=None, description="Action that triggers transition"
     )
-    trigger_condition: Optional[str] = Field(
+    trigger_condition: str | None = Field(
         default=None, description="Condition expression for transition"
     )
 
     # Effects
-    state_updates: Dict[str, Any] = Field(
+    state_updates: dict[str, Any] = Field(
         default_factory=dict,
         description="State variable updates on transition",
     )
@@ -230,7 +230,7 @@ class Transition(CogantBaseModel):
     is_deterministic: bool = Field(
         default=True, description="Whether transition is deterministic"
     )
-    probability: Optional[float] = Field(
+    probability: float | None = Field(
         default=None, description="Probability if stochastic"
     )
 
@@ -246,7 +246,7 @@ class Likelihood(CogantBaseModel):
     )
 
     # Conditioning variables
-    conditioned_on: List[str] = Field(
+    conditioned_on: list[str] = Field(
         default_factory=list,
         description="State/action variables this likelihood depends on",
     )
@@ -256,7 +256,7 @@ class Likelihood(CogantBaseModel):
         ...,
         description="Distribution type (e.g., 'gaussian', 'categorical', 'dirichlet')",
     )
-    parameters: Dict[str, Any] = Field(
+    parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Distribution parameters (mean, variance, alpha, etc.)",
     )
@@ -265,10 +265,10 @@ class Likelihood(CogantBaseModel):
     is_learned: bool = Field(
         default=False, description="Whether likelihood was learned from data"
     )
-    learning_data_count: Optional[int] = Field(
+    learning_data_count: int | None = Field(
         default=None, description="Number of samples used for learning"
     )
-    confidence: Optional[ConfidenceMetric] = Field(
+    confidence: ConfidenceMetric | None = Field(
         default=None, description="Confidence in likelihood"
     )
 
@@ -286,7 +286,7 @@ class StateSpaceModel(CogantBaseModel):
         ..., description="Type of state space (discrete, continuous, hybrid)"
     )
     name: str = Field(..., description="Human-readable name")
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None, description="Detailed description"
     )
 
@@ -294,70 +294,70 @@ class StateSpaceModel(CogantBaseModel):
     is_continuous_time: bool = Field(
         default=False, description="Whether time is continuous (else discrete)"
     )
-    time_step: Optional[float] = Field(
+    time_step: float | None = Field(
         default=None, description="Time step size (for discrete time)"
     )
-    max_episode_length: Optional[int] = Field(
+    max_episode_length: int | None = Field(
         default=None, description="Maximum steps per episode"
     )
 
     # State definition
-    state_variables: List[StateVariable] = Field(
+    state_variables: list[StateVariable] = Field(
         ...,
         description="All state variables",
     )
 
     # Observations
-    observation_modalities: List[ObservationModality] = Field(
+    observation_modalities: list[ObservationModality] = Field(
         default_factory=list,
         description="Observable signals/sensors",
     )
 
     # Actions
-    actions: List[Action] = Field(
+    actions: list[Action] = Field(
         default_factory=list,
         description="Controllable actions",
     )
 
     # Dynamics
-    transitions: List[Transition] = Field(
+    transitions: list[Transition] = Field(
         default_factory=list,
         description="State transition specifications",
     )
 
     # Likelihoods
-    likelihoods: List[Likelihood] = Field(
+    likelihoods: list[Likelihood] = Field(
         default_factory=list,
         description="Observation likelihoods and transition probabilities",
     )
 
     # Preferences & rewards
-    preferences: Optional[Dict[str, Any]] = Field(
+    preferences: dict[str, Any] | None = Field(
         default=None,
         description="Preference/reward specification (separate from constraints)",
     )
 
     # Constraints
-    constraints: List[str] = Field(
+    constraints: list[str] = Field(
         default_factory=list,
         description="System constraints (must always hold)",
     )
 
     # Provenance
-    provenance: List[EvidenceRef] = Field(
+    provenance: list[EvidenceRef] = Field(
         default_factory=list,
         description="Evidence supporting model structure",
     )
 
     # Metadata
-    source_graph_id: Optional[StableID] = Field(
+    source_graph_id: StableID | None = Field(
         default=None, description="ID of source program graph"
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="When model was created",
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list, description="User-defined tags"
     )
 

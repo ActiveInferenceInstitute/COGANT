@@ -4,12 +4,10 @@ Typed export formats for program graphs and models.
 Supports JSON, DOT, Cytoscape.js, and adjacency matrix formats with full type information.
 """
 
-from typing import Dict, List, Any, Optional, Set
-from datetime import datetime
-import json
 import logging
+from typing import Any
 
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
+from cogant.schemas.core import NodeKind
 from cogant.schemas.graph import ProgramGraph
 
 logger = logging.getLogger(__name__)
@@ -22,7 +20,7 @@ class TypedExporter:
         """Initialize the TypedExporter."""
         pass
 
-    def export_typed_graph(self, graph: ProgramGraph) -> Dict[str, Any]:
+    def export_typed_graph(self, graph: ProgramGraph) -> dict[str, Any]:
         """
         Export full typed JSON with all node/edge metadata and provenance.
 
@@ -32,7 +30,7 @@ class TypedExporter:
         Returns:
             Dict with "metadata", "nodes", "edges" keys containing complete graph data.
         """
-        export_dict: Dict[str, Any] = {}
+        export_dict: dict[str, Any] = {}
 
         # Export metadata
         export_dict["metadata"] = {
@@ -48,7 +46,7 @@ class TypedExporter:
         }
 
         # Export nodes with full metadata
-        nodes_list: List[Dict[str, Any]] = []
+        nodes_list: list[dict[str, Any]] = []
         for node in graph.nodes.values():
             node_dict = {
                 "id": node.id,
@@ -66,7 +64,7 @@ class TypedExporter:
         export_dict["nodes"] = nodes_list
 
         # Export edges with full metadata and provenance
-        edges_list: List[Dict[str, Any]] = []
+        edges_list: list[dict[str, Any]] = []
         for edge in graph.edges.values():
             edge_dict = {
                 "id": edge.id,
@@ -100,7 +98,6 @@ class TypedExporter:
         for node in graph.nodes.values():
             safe_id = node.id.replace("-", "_").replace(".", "_")
             label = node.name
-            kind = node.kind.value
             color = self._get_node_color(node.kind)
             lines.append(
                 f'    {safe_id} [label="{label}", shape=box, color="{color}"];'
@@ -118,7 +115,7 @@ class TypedExporter:
 
         return "\n".join(lines)
 
-    def export_cytoscape_json(self, graph: ProgramGraph) -> Dict[str, Any]:
+    def export_cytoscape_json(self, graph: ProgramGraph) -> dict[str, Any]:
         """
         Export in Cytoscape.js compatible JSON format.
 
@@ -128,7 +125,7 @@ class TypedExporter:
         Returns:
             Dict with "elements" key containing nodes and edges for Cytoscape.
         """
-        elements: List[Dict[str, Any]] = []
+        elements: list[dict[str, Any]] = []
 
         # Add nodes
         for node in graph.nodes.values():
@@ -158,7 +155,7 @@ class TypedExporter:
 
         return {"elements": elements}
 
-    def export_adjacency_matrix(self, graph: ProgramGraph) -> Dict[str, Any]:
+    def export_adjacency_matrix(self, graph: ProgramGraph) -> dict[str, Any]:
         """
         Export adjacency matrix as nested dict with labels.
 
@@ -173,9 +170,9 @@ class TypedExporter:
 
         # Create adjacency matrix
         n = len(node_list)
-        matrix: List[List[int]] = [[0] * n for _ in range(n)]
+        matrix: list[list[int]] = [[0] * n for _ in range(n)]
 
-        edge_type_map: Dict[str, List[List[int]]] = {}
+        edge_type_map: dict[str, list[list[int]]] = {}
 
         for edge in graph.edges.values():
             if edge.source_id in node_indices and edge.target_id in node_indices:

@@ -5,13 +5,10 @@ Defines shared types, validation utilities, and BaseModel configuration
 used across all schema modules.
 """
 
-from typing import Optional, Dict, Any, List, Literal
-from datetime import datetime
-from uuid import UUID, uuid4
-from enum import Enum
 import hashlib
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class CogantBaseModel(BaseModel):
@@ -106,7 +103,7 @@ class EvidenceRef(CogantBaseModel):
         le=1.0,
         description="Confidence in this evidence [0, 1]",
     )
-    locator: Optional[str] = Field(
+    locator: str | None = Field(
         default=None, description="Additional locator within evidence (e.g., line number)"
     )
 
@@ -122,17 +119,17 @@ class TypeInfo(CogantBaseModel):
         default=False, description="Whether type is Optional/Nullable"
     )
     is_generic: bool = Field(default=False, description="Whether type is parameterized")
-    type_parameters: List[str] = Field(
+    type_parameters: list[str] = Field(
         default_factory=list,
         description="Type parameters for generics (e.g., ['int', 'str'] for Dict[int, str])",
     )
     is_collection: bool = Field(
         default=False, description="Whether type is a collection (List, Set, Dict)"
     )
-    collection_element_type: Optional[str] = Field(
+    collection_element_type: str | None = Field(
         default=None, description="Type of collection elements if is_collection=True"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Language-specific type metadata (e.g., array dimensions)",
     )
@@ -150,10 +147,10 @@ class ConfidenceMetric(CogantBaseModel):
         le=1.0,
         description="Confidence score in range [0, 1]",
     )
-    rationale: Optional[str] = Field(
+    rationale: str | None = Field(
         default=None, description="Human-readable explanation of score"
     )
-    evidence_types: List[str] = Field(
+    evidence_types: list[str] = Field(
         default_factory=list,
         description="Types of evidence contributing to this score (e.g., 'static_analysis', 'test_coverage')",
     )
@@ -166,13 +163,13 @@ class LocationInfo(CogantBaseModel):
     """
 
     path: str = Field(..., description="Absolute or relative file path")
-    span: Optional[Span] = Field(
+    span: Span | None = Field(
         default=None, description="Source span if element is a code region"
     )
-    language: Optional[str] = Field(
+    language: str | None = Field(
         default=None, description="Programming language (e.g., 'python', 'javascript')"
     )
-    repo_root: Optional[str] = Field(
+    repo_root: str | None = Field(
         default=None, description="Repository root path for context"
     )
 

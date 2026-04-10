@@ -33,14 +33,12 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
 
 import typer
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich import box
-
 
 # --------------------------------------------------------------------- data --
 
@@ -62,7 +60,7 @@ class DoctorCheck:
 class DoctorReport:
     """Aggregated diagnostic report."""
 
-    checks: List[DoctorCheck] = field(default_factory=list)
+    checks: list[DoctorCheck] = field(default_factory=list)
 
     def add(self, check: DoctorCheck) -> None:
         self.checks.append(check)
@@ -88,11 +86,11 @@ class DoctorReport:
 # --------------------------------------------------------------- helpers ----
 
 
-MIN_PYTHON: Tuple[int, int] = (3, 11)
+MIN_PYTHON: tuple[int, int] = (3, 11)
 
 # (module_name, friendly_label, category, required)
 # category is one of: "core", "viz", "multilang", "optional"
-_DEPENDENCIES: List[Tuple[str, str, str, bool]] = [
+_DEPENDENCIES: list[tuple[str, str, str, bool]] = [
     ("cogant", "cogant", "core", True),
     ("networkx", "networkx", "core", True),
     ("pyarrow", "pyarrow", "core", True),
@@ -103,7 +101,7 @@ _DEPENDENCIES: List[Tuple[str, str, str, bool]] = [
 ]
 
 
-def _package_version(module_name: str) -> Optional[str]:
+def _package_version(module_name: str) -> str | None:
     """Return the installed version of ``module_name`` if available.
 
     Uses :mod:`importlib.metadata` with a fallback to the module's
@@ -243,7 +241,7 @@ def render_report(console: Console, report: DoctorReport) -> None:
     )
 
 
-def doctor_command(console: Optional[Console] = None) -> int:
+def doctor_command(console: Console | None = None) -> int:
     """Entrypoint used by ``main.py``'s ``@app.command()`` wrapper.
 
     Returns a shell exit code (``0`` success, ``1`` failure) so the

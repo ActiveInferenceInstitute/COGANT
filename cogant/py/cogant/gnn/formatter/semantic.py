@@ -15,17 +15,13 @@ See :class:`cogant.gnn.formatter.base.GNNMarkdownFormatter` for the
 main entry point and :mod:`cogant.gnn.formatter` for the package.
 """
 
-from typing import Dict, List, Any, Optional, Tuple, Set
-from datetime import datetime, timezone
 import logging
-import traceback
 from collections import defaultdict
+from typing import Any
 
-from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.statespace.compiler import StateSpaceModel
 from cogant.process.extractor import ProcessModel
-from cogant.schemas.semantic import MappingKind
+from cogant.schemas.graph import ProgramGraph
+from cogant.statespace.compiler import StateSpaceModel
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +31,7 @@ class _SemanticSectionsMixin:
     graph: ProgramGraph
     state_space: StateSpaceModel
     process: ProcessModel
-    mappings: Dict[str, Any]
+    mappings: dict[str, Any]
 
     def _format_ontology_mapping(self) -> str:
         """Format ontology mapping section."""
@@ -121,7 +117,7 @@ class _SemanticSectionsMixin:
 
         try:
             extractor = MarkovBlanketExtractor(self.graph)
-            kwargs: Dict[str, Any] = {"strategy": strategy}
+            kwargs: dict[str, Any] = {"strategy": strategy}
             if module_names:
                 kwargs["module_names"] = list(module_names)
             if mapping_kinds and self.mappings:
@@ -191,7 +187,7 @@ class _SemanticSectionsMixin:
             return f"`{name}`" + (f" ({kind})" if kind else "")
 
         max_members = 8
-        role_sections: List[Tuple[str, str, List[str]]] = [
+        role_sections: list[tuple[str, str, list[str]]] = [
             ("Internal (μ)", "internal", sorted(blanket.internal_ids)),
             ("Sensory (s)", "sensory", sorted(blanket.sensory_ids)),
             ("Active (a)", "active", sorted(blanket.active_ids)),

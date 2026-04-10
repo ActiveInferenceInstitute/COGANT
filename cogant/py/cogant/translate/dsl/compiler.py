@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import fnmatch
 from dataclasses import dataclass
-from typing import List
 
 from cogant.schemas.core import EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
-from cogant.translate.dsl.schema import DSLCondition, DSLRule, DSLRuleSet
+from cogant.translate.dsl.schema import DSLCondition, DSLRuleSet
 
 
 @dataclass
@@ -42,7 +41,7 @@ class CompiledRule:
         return self.confidence
 
 
-def compile_ruleset(ruleset: DSLRuleSet) -> List[CompiledRule]:
+def compile_ruleset(ruleset: DSLRuleSet) -> list[CompiledRule]:
     """Compile a :class:`DSLRuleSet` into a list of :class:`CompiledRule`.
 
     An empty ruleset yields an empty list (no error).

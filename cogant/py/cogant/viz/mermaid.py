@@ -5,18 +5,18 @@ Produces class diagrams, dependency graphs, state diagrams, sequence diagrams,
 flowcharts, and Active Inference loop diagrams using Mermaid syntax.
 """
 
-from typing import Dict, List, Set, Optional, Any
 import logging
+from typing import Any
 
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
+from cogant.process.extractor import ProcessModel
+from cogant.schemas.core import EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
-from cogant.process.extractor import ProcessModel
 
 logger = logging.getLogger(__name__)
 
 
-def _infer_class_stereotype(node: Node, graph: ProgramGraph) -> Optional[str]:
+def _infer_class_stereotype(node: Node, graph: ProgramGraph) -> str | None:
     """Infer class stereotype from node metadata and relationships."""
     if not node.metadata:
         return None
@@ -91,7 +91,7 @@ class MermaidGenerator:
 
         # Get all classes
         classes = graph.get_nodes_by_kind(NodeKind.CLASS)
-        class_map = {node.id: node for node in classes}
+        {node.id: node for node in classes}
 
         # Define classes and their methods
         for class_node in classes:
@@ -175,7 +175,7 @@ class MermaidGenerator:
 
         # Get modules and their contents
         modules = graph.get_nodes_by_kind(NodeKind.MODULE)
-        classes = graph.get_nodes_by_kind(NodeKind.CLASS)
+        graph.get_nodes_by_kind(NodeKind.CLASS)
 
         # Add modules as subgraphs (hierarchy visualization)
         for module in modules:
@@ -233,7 +233,6 @@ class MermaidGenerator:
                 edge_color = edge_colors.get(edge.kind, "#666666")
                 lines.append(f"    {source_safe} -->|{edge_label}{weight}| {target_safe}")
                 # Apply color via style
-                edge_id = f"{source_safe}_{target_safe}_{edge_label}"
                 lines.append(f"    linkStyle {len([e for e in lines if '---' in e or '-->' in e]) - 1} stroke:{edge_color},stroke-width:2px")
 
         return "\n".join(lines)
@@ -273,12 +272,12 @@ class MermaidGenerator:
                 lines.append(f"    {state_id}: {var_label}")
                 lines.append(f"    note right of {state_id}")
                 lines.append(f"        {variable.description[:60]}")
-                lines.append(f"    end note")
+                lines.append("    end note")
             else:
                 lines.append(f"    {state_id}: {var_label}")
 
         # Add transitions with enhanced labels
-        for trans_id, transition in state_space.transitions.items():
+        for _trans_id, transition in state_space.transitions.items():
             # Simple representation: use state variable changes
             source_state = transition.source_state
             target_state = transition.target_state
@@ -297,7 +296,7 @@ class MermaidGenerator:
 
             # Add observation emission if available
             if hasattr(transition, 'observations') and transition.observations:
-                obs_names = [obs for obs in transition.observations][:2]
+                obs_names = list(transition.observations)[:2]
                 obs_label = f"\\n[obs: {', '.join(obs_names)}]"
 
             label = f"{action_label}{obs_label}"
@@ -305,7 +304,7 @@ class MermaidGenerator:
 
         return "\n".join(lines)
 
-    def generate_sequence_diagram(self, process_model: Optional[ProcessModel] = None, graph: Optional[ProgramGraph] = None) -> str:
+    def generate_sequence_diagram(self, process_model: ProcessModel | None = None, graph: ProgramGraph | None = None) -> str:
         """
         Generate an enhanced Mermaid sequenceDiagram showing request flow through middleware chain.
 
@@ -327,7 +326,7 @@ class MermaidGenerator:
         # Try process model first
         if process_model and process_model.stages:
             # Map stages to actors/participants
-            participant_set: Set[str] = set()
+            participant_set: set[str] = set()
             for stage in process_model.stages.values():
                 participant_set.add(stage.id)
 
@@ -365,8 +364,8 @@ class MermaidGenerator:
 
             if calls_edges:
                 # Get unique participants organized by module
-                participants: Set[str] = set()
-                module_map: Dict[str, List[str]] = {}
+                participants: set[str] = set()
+                module_map: dict[str, list[str]] = {}
                 for edge in calls_edges:
                     participants.add(edge.source_id)
                     participants.add(edge.target_id)
@@ -380,7 +379,7 @@ class MermaidGenerator:
                         module_map[module_id].append(edge.source_id)
 
                 # Add participants (limit to top 10 to avoid clutter)
-                for pid in sorted(list(participants))[:10]:
+                for pid in sorted(participants)[:10]:
                     node = graph.get_node(pid)
                     if node:
                         safe_id = pid.replace("-", "_").replace(".", "_")
@@ -485,7 +484,7 @@ class MermaidGenerator:
         return "\n".join(lines)
 
     def generate_flowchart(
-        self, graph: ProgramGraph, semantic_mappings: Dict[str, Any]
+        self, graph: ProgramGraph, semantic_mappings: dict[str, Any]
     ) -> str:
         """
         Generate a Mermaid flowchart showing the translation from code elements
@@ -518,7 +517,7 @@ class MermaidGenerator:
         )
 
         # Build semantic role to source nodes mapping
-        role_to_nodes: Dict[str, List[str]] = {}
+        role_to_nodes: dict[str, list[str]] = {}
         for mapping in sorted_mappings:
             if not hasattr(mapping, 'kind'):
                 continue
@@ -557,10 +556,10 @@ class MermaidGenerator:
     def generate_all(
         self,
         graph: ProgramGraph,
-        state_space: Optional[StateSpaceModel] = None,
-        process_model: Optional[ProcessModel] = None,
-        mappings: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, str]:
+        state_space: StateSpaceModel | None = None,
+        process_model: ProcessModel | None = None,
+        mappings: dict[str, Any] | None = None,
+    ) -> dict[str, str]:
         """
         Generate all diagrams and return as dict of name -> mermaid_content.
 

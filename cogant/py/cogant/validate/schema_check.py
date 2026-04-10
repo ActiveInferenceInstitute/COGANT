@@ -4,13 +4,12 @@ Schema validation for IR objects.
 Validates all IR objects against Pydantic schemas.
 """
 
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
+from cogant.process.extractor import ProcessModel
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
-from cogant.process.extractor import ProcessModel
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +21,8 @@ class ValidationIssue:
     severity: str  # "error", "warning", "info"
     category: str  # "schema", "integrity", "provenance", "coverage"
     message: str
-    affected_ids: List[str]
-    recommendation: Optional[str] = None
+    affected_ids: list[str]
+    recommendation: str | None = None
 
 
 class SchemaValidator:
@@ -34,9 +33,9 @@ class SchemaValidator:
 
     def __init__(self):
         """Initialize the validator."""
-        self.issues: List[ValidationIssue] = []
+        self.issues: list[ValidationIssue] = []
 
-    def validate_program_graph(self, graph: ProgramGraph) -> List[ValidationIssue]:
+    def validate_program_graph(self, graph: ProgramGraph) -> list[ValidationIssue]:
         """
         Validate a program graph.
 
@@ -64,7 +63,7 @@ class SchemaValidator:
         logger.info(f"Found {len(self.issues)} issues in program graph")
         return self.issues
 
-    def validate_state_space(self, state_space: StateSpaceModel) -> List[ValidationIssue]:
+    def validate_state_space(self, state_space: StateSpaceModel) -> list[ValidationIssue]:
         """
         Validate a state space model.
 
@@ -96,7 +95,7 @@ class SchemaValidator:
         logger.info(f"Found {len(self.issues)} issues in state space model")
         return self.issues
 
-    def validate_process_model(self, process: ProcessModel) -> List[ValidationIssue]:
+    def validate_process_model(self, process: ProcessModel) -> list[ValidationIssue]:
         """
         Validate a process model.
 
@@ -126,7 +125,7 @@ class SchemaValidator:
         """Validate a single node."""
         # Check required fields
         if not node.id:
-            self._add_issue("error", "schema", f"Node missing id", [node_id])
+            self._add_issue("error", "schema", "Node missing id", [node_id])
         if not node.name:
             self._add_issue("warning", "schema", f"Node {node_id} missing name", [node_id])
         if not node.qualified_name:
@@ -136,7 +135,7 @@ class SchemaValidator:
         """Validate a single edge."""
         # Check required fields
         if not edge.id:
-            self._add_issue("error", "schema", f"Edge missing id", [edge_id])
+            self._add_issue("error", "schema", "Edge missing id", [edge_id])
         if not edge.source_id:
             self._add_issue("error", "schema", f"Edge {edge_id} missing source_id", [edge_id])
         if not edge.target_id:
@@ -166,40 +165,40 @@ class SchemaValidator:
     def _validate_state_variable(self, var_id: str, var) -> None:
         """Validate a state variable."""
         if not var.id:
-            self._add_issue("error", "schema", f"State variable missing id", [var_id])
+            self._add_issue("error", "schema", "State variable missing id", [var_id])
         if not var.name:
             self._add_issue("warning", "schema", f"State variable {var_id} missing name", [var_id])
 
     def _validate_observation(self, obs_id: str, obs) -> None:
         """Validate an observation."""
         if not obs.id:
-            self._add_issue("error", "schema", f"Observation missing id", [obs_id])
+            self._add_issue("error", "schema", "Observation missing id", [obs_id])
         if not obs.name:
             self._add_issue("warning", "schema", f"Observation {obs_id} missing name", [obs_id])
 
     def _validate_action(self, action_id: str, action) -> None:
         """Validate an action."""
         if not action.id:
-            self._add_issue("error", "schema", f"Action missing id", [action_id])
+            self._add_issue("error", "schema", "Action missing id", [action_id])
         if not action.name:
             self._add_issue("warning", "schema", f"Action {action_id} missing name", [action_id])
 
     def _validate_transition(self, trans_id: str, trans) -> None:
         """Validate a transition."""
         if not trans.id:
-            self._add_issue("error", "schema", f"Transition missing id", [trans_id])
+            self._add_issue("error", "schema", "Transition missing id", [trans_id])
 
     def _validate_stage(self, stage_id: str, stage) -> None:
         """Validate a stage."""
         if not stage.id:
-            self._add_issue("error", "schema", f"Stage missing id", [stage_id])
+            self._add_issue("error", "schema", "Stage missing id", [stage_id])
         if not stage.name:
             self._add_issue("warning", "schema", f"Stage {stage_id} missing name", [stage_id])
 
     def _validate_connection(self, conn_id: str, conn, process: ProcessModel) -> None:
         """Validate a connection."""
         if not conn.id:
-            self._add_issue("error", "schema", f"Connection missing id", [conn_id])
+            self._add_issue("error", "schema", "Connection missing id", [conn_id])
 
         # Check that stages exist
         if conn.source_stage_id not in process.stages:
@@ -216,7 +215,7 @@ class SchemaValidator:
         severity: str,
         category: str,
         message: str,
-        affected_ids: List[str],
+        affected_ids: list[str],
     ) -> None:
         """Add a validation issue."""
         issue = ValidationIssue(
@@ -228,15 +227,15 @@ class SchemaValidator:
         )
         self.issues.append(issue)
 
-    def get_issues(self) -> List[ValidationIssue]:
+    def get_issues(self) -> list[ValidationIssue]:
         """Get all validation issues."""
         return self.issues
 
-    def get_errors(self) -> List[ValidationIssue]:
+    def get_errors(self) -> list[ValidationIssue]:
         """Get only error issues."""
         return [i for i in self.issues if i.severity == "error"]
 
-    def get_warnings(self) -> List[ValidationIssue]:
+    def get_warnings(self) -> list[ValidationIssue]:
         """Get only warning issues."""
         return [i for i in self.issues if i.severity == "warning"]
 

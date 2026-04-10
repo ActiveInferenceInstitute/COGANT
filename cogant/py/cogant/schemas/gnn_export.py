@@ -10,13 +10,12 @@ process model, provenance, confidence) into a format suitable for downstream
 GNN tooling, renderers, and simulation.
 """
 
-from typing import Optional, Dict, Any, List, Literal
-from enum import Enum
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import ConfigDict, Field
 
-from .base import CogantBaseModel, StableID
+from .base import CogantBaseModel
 
 
 class GNNMetadata(CogantBaseModel):
@@ -25,7 +24,7 @@ class GNNMetadata(CogantBaseModel):
     export_id: str = Field(..., description="Unique export identifier")
     bundle_id: str = Field(..., description="Source bundle ID")
     export_timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="When export was created",
     )
     export_version: str = Field(
@@ -34,7 +33,7 @@ class GNNMetadata(CogantBaseModel):
     source_graph_version: str = Field(
         default="1.0.0", description="Program graph schema version"
     )
-    gnn_framework: Optional[str] = Field(
+    gnn_framework: str | None = Field(
         default=None,
         description="Target GNN framework (e.g., 'pytorch_geometric', 'dgl', 'spektral')",
     )
@@ -44,18 +43,18 @@ class RepositoryMetadata(CogantBaseModel):
     """Metadata about the analyzed repository."""
 
     repository_name: str = Field(..., description="Name of repository")
-    repository_url: Optional[str] = Field(
+    repository_url: str | None = Field(
         default=None, description="URL of repository"
     )
-    commit_hash: Optional[str] = Field(
+    commit_hash: str | None = Field(
         default=None, description="Commit hash analyzed"
     )
     primary_language: str = Field(..., description="Primary programming language")
-    supported_languages: List[str] = Field(
+    supported_languages: list[str] = Field(
         default_factory=list, description="All languages in repository"
     )
     analysis_date: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Date of analysis",
     )
 
@@ -74,7 +73,7 @@ class SourceCoverage(CogantBaseModel):
     coverage_percentage: float = Field(
         default=0.0, ge=0.0, le=100.0, description="Coverage percentage"
     )
-    excluded_patterns: List[str] = Field(
+    excluded_patterns: list[str] = Field(
         default_factory=list,
         description="Patterns excluded from analysis (e.g., 'test_*.py')",
     )
@@ -85,23 +84,23 @@ class GraphSection(CogantBaseModel):
 
     node_count: int = Field(default=0, description="Number of nodes")
     edge_count: int = Field(default=0, description="Number of edges")
-    node_features: Dict[str, Any] = Field(
+    node_features: dict[str, Any] = Field(
         default_factory=dict,
         description="Node feature specifications",
     )
-    edge_features: Dict[str, Any] = Field(
+    edge_features: dict[str, Any] = Field(
         default_factory=dict,
         description="Edge feature specifications",
     )
-    edge_list: List[List[int]] = Field(
+    edge_list: list[list[int]] = Field(
         default_factory=list,
         description="Edge list as node index pairs",
     )
-    node_types: Dict[int, str] = Field(
+    node_types: dict[int, str] = Field(
         default_factory=dict,
         description="Map from node index to type",
     )
-    edge_types: Dict[int, str] = Field(
+    edge_types: dict[int, str] = Field(
         default_factory=dict,
         description="Map from edge index to type",
     )
@@ -112,14 +111,14 @@ class ObservationModalitySection(CogantBaseModel):
 
     modality_id: str = Field(..., description="Modality identifier")
     name: str = Field(..., description="Human-readable name")
-    observation_space_size: Optional[int] = Field(
+    observation_space_size: int | None = Field(
         default=None, description="Dimension of observation space"
     )
     observation_space_type: str = Field(
         default="continuous",
         description="Type of observation space",
     )
-    noise_characteristics: Dict[str, Any] = Field(
+    noise_characteristics: dict[str, Any] = Field(
         default_factory=dict,
         description="Noise model and parameters",
     )
@@ -130,14 +129,14 @@ class ActionPolicySection(CogantBaseModel):
 
     action_id: str = Field(..., description="Action identifier")
     action_name: str = Field(..., description="Human-readable name")
-    action_space_size: Optional[int] = Field(
+    action_space_size: int | None = Field(
         default=None, description="Dimension of action space"
     )
     action_space_type: str = Field(
         default="discrete",
         description="Type of action space",
     )
-    action_cost: Optional[float] = Field(
+    action_cost: float | None = Field(
         default=None, description="Cost of action execution"
     )
 
@@ -149,7 +148,7 @@ class ConnectionSection(CogantBaseModel):
     target_node_index: int = Field(..., description="Target node index")
     edge_type: str = Field(..., description="Type of edge")
     edge_weight: float = Field(default=1.0, description="Edge weight")
-    edge_attributes: Dict[str, Any] = Field(
+    edge_attributes: dict[str, Any] = Field(
         default_factory=dict,
         description="Additional edge attributes",
     )
@@ -163,13 +162,13 @@ class FactorSection(CogantBaseModel):
         ...,
         description="Type of factor (e.g., 'unary', 'pairwise', 'higher_order')",
     )
-    variables: List[str] = Field(
+    variables: list[str] = Field(
         ..., description="Variable IDs in factor"
     )
-    cardinalities: List[int] = Field(
+    cardinalities: list[int] = Field(
         ..., description="Cardinality of each variable"
     )
-    potentials: Optional[List[float]] = Field(
+    potentials: list[float] | None = Field(
         default=None,
         description="Factor potential values",
     )
@@ -178,10 +177,10 @@ class FactorSection(CogantBaseModel):
 class TransitionStructureSection(CogantBaseModel):
     """State transition structure."""
 
-    source_state_id: Optional[str] = Field(default=None)
-    target_state_id: Optional[str] = Field(default=None)
-    trigger_action: Optional[str] = Field(default=None)
-    transition_probability: Optional[float] = Field(default=None)
+    source_state_id: str | None = Field(default=None)
+    target_state_id: str | None = Field(default=None)
+    trigger_action: str | None = Field(default=None)
+    transition_probability: float | None = Field(default=None)
 
 
 class LikelihoodStructureSection(CogantBaseModel):
@@ -192,11 +191,11 @@ class LikelihoodStructureSection(CogantBaseModel):
         ...,
         description="Distribution type (gaussian, categorical, etc.)",
     )
-    parameters: Dict[str, float] = Field(
+    parameters: dict[str, float] = Field(
         default_factory=dict,
         description="Distribution parameters",
     )
-    conditioned_on: List[str] = Field(
+    conditioned_on: list[str] = Field(
         default_factory=list,
         description="Variables this is conditioned on",
     )
@@ -213,7 +212,7 @@ class PreferenceConstraintSection(CogantBaseModel):
     expression: str = Field(
         ..., description="Constraint expression"
     )
-    variables: List[str] = Field(
+    variables: list[str] = Field(
         default_factory=list,
         description="Variables involved",
     )
@@ -229,14 +228,14 @@ class TimeSettingSection(CogantBaseModel):
     is_continuous_time: bool = Field(
         default=False, description="Continuous or discrete time"
     )
-    time_unit: Optional[str] = Field(
+    time_unit: str | None = Field(
         default=None,
         description="Unit of time (seconds, steps, etc.)",
     )
-    time_step: Optional[float] = Field(
+    time_step: float | None = Field(
         default=None, description="Time step size"
     )
-    max_episode_length: Optional[int] = Field(
+    max_episode_length: int | None = Field(
         default=None, description="Maximum steps per episode"
     )
 
@@ -244,11 +243,11 @@ class TimeSettingSection(CogantBaseModel):
 class ParameterizationSection(CogantBaseModel):
     """Model parameters."""
 
-    parameters: Dict[str, Any] = Field(
+    parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Parameter name -> value mapping",
     )
-    parameter_ranges: Dict[str, Dict[str, float]] = Field(
+    parameter_ranges: dict[str, dict[str, float]] = Field(
         default_factory=dict,
         description="Parameter name -> {min, max, default} ranges",
     )
@@ -265,14 +264,14 @@ class OntologyMappingSection(CogantBaseModel):
     confidence_score: float = Field(
         default=1.0, ge=0.0, le=1.0, description="Confidence [0, 1]"
     )
-    justification: Optional[str] = Field(default=None)
+    justification: str | None = Field(default=None)
 
 
 class ProvenanceSection(CogantBaseModel):
     """Provenance and evidence information."""
 
     total_evidence_count: int = Field(default=0)
-    evidence_by_kind: Dict[str, int] = Field(
+    evidence_by_kind: dict[str, int] = Field(
         default_factory=dict,
         description="Count of evidence by kind",
     )
@@ -293,7 +292,7 @@ class ConfidenceSection(CogantBaseModel):
     min_confidence: float = Field(
         default=0.0, ge=0.0, le=1.0, description="Minimum confidence"
     )
-    confidence_distribution: Dict[str, int] = Field(
+    confidence_distribution: dict[str, int] = Field(
         default_factory=dict,
         description="Histogram of confidence scores",
     )
@@ -306,21 +305,21 @@ class ConfidenceSection(CogantBaseModel):
 class RenderingHints(CogantBaseModel):
     """Hints for visualization and rendering."""
 
-    recommended_layout: Optional[str] = Field(
+    recommended_layout: str | None = Field(
         default=None,
         description="Recommended graph layout (force-directed, hierarchical, etc.)",
     )
-    node_color_scheme: Optional[str] = Field(
+    node_color_scheme: str | None = Field(
         default=None, description="Color scheme by node type"
     )
-    edge_color_scheme: Optional[str] = Field(
+    edge_color_scheme: str | None = Field(
         default=None, description="Color scheme by edge type"
     )
-    node_size_metric: Optional[str] = Field(
+    node_size_metric: str | None = Field(
         default=None,
         description="Metric for sizing nodes (degree, betweenness, etc.)",
     )
-    edge_width_metric: Optional[str] = Field(
+    edge_width_metric: str | None = Field(
         default=None, description="Metric for edge widths"
     )
 
@@ -330,16 +329,16 @@ class ValidationNotes(CogantBaseModel):
 
     is_valid: bool = Field(default=True)
     validation_timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="When validation was performed",
     )
-    issues: List[str] = Field(
+    issues: list[str] = Field(
         default_factory=list, description="Any issues found"
     )
-    warnings: List[str] = Field(
+    warnings: list[str] = Field(
         default_factory=list, description="Non-fatal warnings"
     )
-    recommendations: List[str] = Field(
+    recommendations: list[str] = Field(
         default_factory=list,
         description="Recommendations for improvement",
     )
@@ -369,40 +368,40 @@ class GNNExportBundle(CogantBaseModel):
         default_factory=GraphSection,
         description="Graph nodes and edges",
     )
-    connections: List[ConnectionSection] = Field(
+    connections: list[ConnectionSection] = Field(
         default_factory=list,
         description="Detailed edge information",
     )
 
     # Semantic model
-    state_space: Optional[Dict[str, Any]] = Field(
+    state_space: dict[str, Any] | None = Field(
         default=None, description="State space specification"
     )
-    observation_modalities: List[ObservationModalitySection] = Field(
+    observation_modalities: list[ObservationModalitySection] = Field(
         default_factory=list,
         description="Observable signals",
     )
-    actions_policies: List[ActionPolicySection] = Field(
+    actions_policies: list[ActionPolicySection] = Field(
         default_factory=list,
         description="Actions and policies",
     )
 
     # Probabilistic structure
-    factors: List[FactorSection] = Field(
+    factors: list[FactorSection] = Field(
         default_factory=list,
         description="Probabilistic factors",
     )
-    transition_structure: List[TransitionStructureSection] = Field(
+    transition_structure: list[TransitionStructureSection] = Field(
         default_factory=list,
         description="State transitions",
     )
-    likelihood_structure: List[LikelihoodStructureSection] = Field(
+    likelihood_structure: list[LikelihoodStructureSection] = Field(
         default_factory=list,
         description="Likelihoods and probabilities",
     )
 
     # Constraints and preferences
-    preferences_constraints: List[PreferenceConstraintSection] = Field(
+    preferences_constraints: list[PreferenceConstraintSection] = Field(
         default_factory=list,
         description="System preferences and constraints",
     )
@@ -418,7 +417,7 @@ class GNNExportBundle(CogantBaseModel):
     )
 
     # Mappings
-    ontology_mapping: List[OntologyMappingSection] = Field(
+    ontology_mapping: list[OntologyMappingSection] = Field(
         default_factory=list,
         description="Code to semantic mappings",
     )

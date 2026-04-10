@@ -48,13 +48,12 @@ from __future__ import annotations
 import datetime as _dt
 import json
 import logging
-import math
 import re
 import shutil
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +152,7 @@ def _downsample_graph(
 
     ranked = sorted(degree.items(), key=lambda kv: (-kv[1], kv[0]))
     keep_ids = {nid for nid, _ in ranked[:max_nodes]}
-    label_by_id = {nid: lbl for nid, lbl in nodes}
+    label_by_id = dict(nodes)
     sampled_nodes = [(nid, label_by_id.get(nid, nid)) for nid in keep_ids]
     sampled_edges = [
         (s, t, el) for (s, t, el) in edges if s in keep_ids and t in keep_ids
@@ -187,10 +186,9 @@ def _draw_metadata_banner(
     cfg: RenderConfig = _DEFAULT_CONFIG,
 ) -> None:
     """Draw a title + subtitle + stats banner at the top of an axes."""
-    import matplotlib.patches as mpatches
 
-    xlim = ax.get_xlim()
-    ylim = ax.get_ylim()
+    ax.get_xlim()
+    ax.get_ylim()
     ax.set_title(
         title,
         fontsize=cfg.title_fontsize,
@@ -225,7 +223,7 @@ def _draw_metadata_banner(
                 va="top",
                 fontsize=cfg.banner_fontsize,
                 color="#333333",
-                bbox=dict(boxstyle="round,pad=0.4", facecolor="#f0f2f5", edgecolor="#cccccc"),
+                bbox={"boxstyle": "round,pad=0.4", "facecolor": "#f0f2f5", "edgecolor": "#cccccc"},
             )
 
 
@@ -468,7 +466,7 @@ def render_program_graph_png(
             edge_labels=edge_labels,
             font_size=cfg.edge_fontsize,
             font_color="#222222",
-            bbox=dict(boxstyle="round,pad=0.2", facecolor=cfg.edge_label_bg, edgecolor="none"),
+            bbox={"boxstyle": "round,pad=0.2", "facecolor": cfg.edge_label_bg, "edgecolor": "none"},
             ax=ax,
         )
 
@@ -815,7 +813,7 @@ def _parse_mermaid_class_diagram(
             continue
         rel = _MERMAID_CLASS_REL_RE.match(raw)
         if rel:
-            a, op, b = rel.group(1), rel.group(2), rel.group(3)
+            a, _op, b = rel.group(1), rel.group(2), rel.group(3)
             edge_label = (rel.group("label") or "").strip() if rel.lastgroup else ""
             edges.append((a, b, edge_label))
             node_labels.setdefault(a, a)
@@ -1096,7 +1094,7 @@ def render_mermaid_text_to_png(
                 edge_labels=edge_labels,
                 font_size=cfg.edge_fontsize,
                 font_color="#222222",
-                bbox=dict(boxstyle="round,pad=0.2", facecolor=cfg.edge_label_bg, edgecolor="none"),
+                bbox={"boxstyle": "round,pad=0.2", "facecolor": cfg.edge_label_bg, "edgecolor": "none"},
                 ax=ax,
             )
 
@@ -1119,7 +1117,7 @@ def render_mermaid_text_to_png(
         if clusters:
             _draw_color_legend(
                 ax,
-                {c: node_color for c in list(clusters.values())[:6]},
+                dict.fromkeys(list(clusters.values())[:6], node_color),
                 title="Clusters",
                 cfg=cfg,
             )
@@ -1153,7 +1151,7 @@ def _render_sequence_png(
     # involved in the most messages) and drop the rest.
     original_participants = len(participants)
     if original_participants > cfg.max_sequence_participants and messages:
-        activity: dict[str, int] = {p: 0 for p in participants}
+        activity: dict[str, int] = dict.fromkeys(participants, 0)
         for s, t, _ in messages:
             activity[s] = activity.get(s, 0) + 1
             activity[t] = activity.get(t, 0) + 1
@@ -1196,11 +1194,11 @@ def _render_sequence_png(
             va="bottom",
             fontsize=cfg.node_fontsize + 1,
             fontweight="bold",
-            bbox=dict(
-                boxstyle="round,pad=0.35",
-                facecolor="#4A76D8",
-                edgecolor="#1f3a75",
-            ),
+            bbox={
+                "boxstyle": "round,pad=0.35",
+                "facecolor": "#4A76D8",
+                "edgecolor": "#1f3a75",
+            },
             color="white",
         )
 
@@ -1212,14 +1210,14 @@ def _render_sequence_png(
                 "",
                 xy=(xs[s] + 0.25, y - 0.1),
                 xytext=(xs[s], y + 0.1),
-                arrowprops=dict(arrowstyle="->", color="#8e44ad", lw=1.6, connectionstyle="arc3,rad=-0.5"),
+                arrowprops={"arrowstyle": "->", "color": "#8e44ad", "lw": 1.6, "connectionstyle": "arc3,rad=-0.5"},
             )
         else:
             ax.annotate(
                 "",
                 xy=(xs[t], y),
                 xytext=(xs[s], y),
-                arrowprops=dict(arrowstyle="->", color="#2c3e50", lw=1.6),
+                arrowprops={"arrowstyle": "->", "color": "#2c3e50", "lw": 1.6},
             )
         mid = (xs[s] + xs[t]) / 2 if s != t else xs[s] + 0.25
         if msg:
@@ -1230,7 +1228,7 @@ def _render_sequence_png(
                 ha="center",
                 va="bottom",
                 fontsize=cfg.edge_fontsize,
-                bbox=dict(boxstyle="round,pad=0.25", facecolor=cfg.edge_label_bg, edgecolor="none"),
+                bbox={"boxstyle": "round,pad=0.25", "facecolor": cfg.edge_label_bg, "edgecolor": "none"},
             )
 
     ax.set_xlim(-0.7, max(len(participants) - 0.3, 1.0))
@@ -1460,11 +1458,11 @@ def _render_svg_placeholder_png(
         va="center",
         fontsize=cfg.node_fontsize,
         color="#555555",
-        bbox=dict(
-            boxstyle="round,pad=0.6",
-            facecolor="#f0f2f5",
-            edgecolor="#cccccc",
-        ),
+        bbox={
+            "boxstyle": "round,pad=0.6",
+            "facecolor": "#f0f2f5",
+            "edgecolor": "#cccccc",
+        },
     )
     _draw_footer(fig, source=svg_file.name, cfg=cfg)
     output_png.parent.mkdir(parents=True, exist_ok=True)
@@ -1722,7 +1720,7 @@ def render_state_space_factor_png(
                 pos,
                 edge_labels=minimal_labels,
                 font_size=cfg.edge_fontsize,
-                bbox=dict(boxstyle="round,pad=0.25", facecolor=cfg.edge_label_bg, edgecolor="none"),
+                bbox={"boxstyle": "round,pad=0.25", "facecolor": cfg.edge_label_bg, "edgecolor": "none"},
                 ax=ax,
             )
 
@@ -1823,7 +1821,7 @@ def render_connections_matrix_png(
             ("C — preference (o)", C, cmaps[2], (n_o, 1), (original_n_o, 1)),
             ("D — prior (s)", D, cmaps[3], (n_s, 1), (original_n_s, 1)),
         ]
-        for ax, (name, m, cmap, shape, real_shape) in zip(axes.flat, mats):
+        for ax, (name, m, cmap, shape, real_shape) in zip(axes.flat, mats, strict=False):
             im = ax.imshow(m, aspect="auto", cmap=cmap)
             ax.set_title(
                 _shape_label(name, shape, real_shape),
@@ -1947,7 +1945,7 @@ def render_process_gantt_png(
         # + 3.5 in banner = ~47.5 in which is already large but renderable.
         height = max(cfg.figsize[1], min(0.55 * len(stage_list) + 3.5, 50.0))
         fig, ax = plt.subplots(figsize=(figsize[0], height))
-        for i, (start, dur, t) in enumerate(zip(starts, durations, types)):
+        for i, (start, dur, t) in enumerate(zip(starts, durations, types, strict=False)):
             ax.barh(
                 i,
                 max(dur, 1),
@@ -2098,7 +2096,7 @@ def render_markov_blanket_png(
         # capped external subset ranked by edge connectivity.
         original_total = len(id_to_role)
         if original_total > cfg.max_render_nodes:
-            incidence: dict[str, int] = {nid: 0 for nid in id_to_role}
+            incidence: dict[str, int] = dict.fromkeys(id_to_role, 0)
             for edge_spec in edges_in:
                 if isinstance(edge_spec, (list, tuple)) and len(edge_spec) >= 2:
                     s, t = str(edge_spec[0]), str(edge_spec[1])
@@ -2536,11 +2534,11 @@ def render_gnn_markdown_png(
                 fontsize=cfg.edge_fontsize + 1,
                 family="monospace",
                 color="#222222",
-                bbox=dict(
-                    boxstyle="round,pad=0.5",
-                    facecolor="#f7f8fb",
-                    edgecolor="#dfe2e8",
-                ),
+                bbox={
+                    "boxstyle": "round,pad=0.5",
+                    "facecolor": "#f7f8fb",
+                    "edgecolor": "#dfe2e8",
+                },
             )
             y -= 0.04 + 0.028 * min(len(body_lines), max_lines)
             y = max(y, 0.05)

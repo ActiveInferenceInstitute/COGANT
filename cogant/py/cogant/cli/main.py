@@ -16,22 +16,19 @@ into the pipeline with :func:`_handle_pipeline_errors` so users get a
 friendly message instead of a Python traceback.
 """
 
-from pathlib import Path
-from typing import Optional, List
 import logging
+from pathlib import Path
 
 import typer
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
-from rich.syntax import Syntax
+from rich.table import Table
 
-from cogant.api.session import Session
-from cogant.api.pipeline import PipelineRunner, PipelineConfig
 from cogant.api.bundle import Bundle
-from cogant.api.review import ReviewAPI
-from cogant.cli.doctor import doctor_command, run_doctor, render_report
+from cogant.api.pipeline import PipelineConfig, PipelineRunner
+from cogant.api.session import Session
+from cogant.cli.doctor import doctor_command, render_report, run_doctor
 from cogant.cli.migrate import migrate_app
 from cogant.cli.plugin import plugin_app
 from cogant.reverse.cli import reverse_command, roundtrip_command
@@ -78,7 +75,7 @@ _SOURCE_EXTENSIONS = {
 }
 
 
-def _friendly_pipeline_error(exc: BaseException, target: Optional[Path] = None) -> None:
+def _friendly_pipeline_error(exc: BaseException, target: Path | None = None) -> None:
     """Render a user-facing error message for a pipeline failure.
 
     This is the single place where exceptions bubbling out of the
@@ -327,7 +324,7 @@ def init(
             )
         except Exception as exc:  # noqa: BLE001 — user-facing surface
             _friendly_pipeline_error(exc, project_dir)
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from exc
 
         console.print(
             f"[green]✓ Translate complete[/green] — "
@@ -432,7 +429,7 @@ def scan(
         result = session.extract_static()
     except Exception as exc:  # noqa: BLE001 — CLI boundary
         _friendly_pipeline_error(exc, Path(target))
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from exc
 
     if format == "table":
         table = Table(title="Repository Summary")
@@ -452,7 +449,6 @@ def scan(
 
         console.print(table)
     elif format == "json":
-        import json
 
         console.print_json(data=result)
 
@@ -463,7 +459,7 @@ def extract_static(
         ".",
         help="Path of the repository to analyse statically.",
     ),
-    output: Optional[str] = typer.Option(
+    output: str | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -518,7 +514,7 @@ def extract_dynamic(
         ".",
         help="Path of the repository to analyse dynamically.",
     ),
-    traces: Optional[str] = typer.Option(
+    traces: str | None = typer.Option(
         None,
         "--traces",
         "-t",
@@ -548,7 +544,7 @@ def graph(
         ".",
         help="Path of the repository to build the program dependency graph for.",
     ),
-    output: Optional[str] = typer.Option(
+    output: str | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -580,13 +576,13 @@ def translate(
         ".",
         help="Path to the repository to translate (must contain Python/JS/TS sources).",
     ),
-    config_file: Optional[str] = typer.Option(
+    config_file: str | None = typer.Option(
         None,
         "--config",
         "-c",
         help="YAML or JSON pipeline config file with stage / plugin overrides.",
     ),
-    skip_stages: Optional[str] = typer.Option(
+    skip_stages: str | None = typer.Option(
         None,
         "--skip",
         help="Comma-separated list of stages to skip (e.g. 'dynamic,validate').",
@@ -613,12 +609,12 @@ def translate(
             "(coverage + trace). Faster but less accurate."
         ),
     ),
-    coverage_path: Optional[str] = typer.Option(
+    coverage_path: str | None = typer.Option(
         None,
         "--coverage",
         help="Path to a coverage database (.coverage) or Cobertura coverage.xml.",
     ),
-    trace_path: Optional[str] = typer.Option(
+    trace_path: str | None = typer.Option(
         None,
         "--trace",
         help="Path to a Chrome DevTools trace JSON file for dynamic analysis.",
@@ -702,16 +698,16 @@ def translate(
         )
     except FileNotFoundError as exc:
         _friendly_pipeline_error(exc, Path(target))
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from exc
     except PermissionError as exc:
         _friendly_pipeline_error(exc, Path(target))
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from exc
     except NotADirectoryError as exc:
         _friendly_pipeline_error(exc, Path(target))
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from exc
     except Exception as exc:  # noqa: BLE001 — CLI boundary
         _friendly_pipeline_error(exc, Path(target))
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from exc
 
     # Show results
     console.print("\n[bold green]Pipeline Results[/bold green]")
@@ -744,7 +740,7 @@ def translate(
 
         organize_run_dir(out, dry_run=False)
 
-    console.print(f"\n[green]✓ Translation complete[/green]")
+    console.print("\n[green]✓ Translation complete[/green]")
     console.print(f"Output: {output_dir}")
     console.print(f"[dim]Saved bundle: {bundle_path}[/dim]")
 
@@ -755,7 +751,7 @@ def statespace(
         ".",
         help="Path of the repository to compile into a state-space model.",
     ),
-    output: Optional[str] = typer.Option(
+    output: str | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -819,7 +815,7 @@ def process(
         )
     except Exception as exc:  # noqa: BLE001 — CLI boundary
         _friendly_pipeline_error(exc, Path(target))
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from exc
 
     process_model = bundle.stage_results.get("process", {})
     console.print(
@@ -859,7 +855,7 @@ def export_gnn(
 
     import json
 
-    with open(bundle_path, "r") as f:
+    with open(bundle_path) as f:
         data = json.load(f)
 
     output_path = Path(output_dir)
@@ -877,7 +873,7 @@ def export_gnn(
             f.write(f"# COGANT Export\n\nTarget: {data['target']}\n")
         console.print(f"[green]✓ Markdown[/green] → {md_file}")
 
-    console.print(f"\n[green]✓ Export complete[/green]")
+    console.print("\n[green]✓ Export complete[/green]")
 
 
 @app.command()
@@ -902,7 +898,7 @@ def render(
 
     import json
 
-    with open(bundle_path, "r") as f:
+    with open(bundle_path) as f:
         data = json.load(f)
 
     # Create a Bundle object from data
@@ -917,7 +913,7 @@ def render(
     )
 
     index_path = bundle.render_site(output_dir)
-    console.print(f"[green]✓ Site rendered[/green]")
+    console.print("[green]✓ Site rendered[/green]")
     console.print(f"  Open: {index_path}")
 
 
@@ -977,7 +973,7 @@ def validate(
     p = Path(bundle_path)
 
     # Route 1: directory — look for a gnn_package subdir or assume it *is* one
-    gnn_dir: Optional[Path] = None
+    gnn_dir: Path | None = None
     if p.is_dir():
         if (p / "manifest.json").exists() and (p / "model.gnn.md").exists():
             gnn_dir = p
@@ -1028,7 +1024,7 @@ def validate(
         console.print(f"[red]✗ Not a file or directory:[/red] {bundle_path}")
         raise typer.Exit(code=2)
 
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         data = json.load(f)
 
     checks = {
@@ -1060,7 +1056,7 @@ def validate(
 def diff(
     path_a: str = typer.Argument(..., help="Baseline bundle JSON or output directory"),
     path_b: str = typer.Argument(..., help="Current bundle JSON or output directory"),
-    output: Optional[str] = typer.Option(
+    output: str | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -1109,9 +1105,9 @@ def diff(
     # File-based shallow diff (legacy behavior)
     import json
 
-    with open(p_a, "r") as f:
+    with open(p_a) as f:
         data1 = json.load(f)
-    with open(p_b, "r") as f:
+    with open(p_b) as f:
         data2 = json.load(f)
 
     console.print(f"\nBundle 1: {data1.get('target', p_a)}")
@@ -1161,7 +1157,7 @@ def changed(
         "--source-only",
         help="Only list changed source files in known languages",
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -1247,13 +1243,13 @@ def explain(
         result = explain_node(repo_path, node_name)
     except NodeNotFoundError as exc:
         console.print(f"[red]Node not found:[/red] {exc}")
-        raise typer.Exit(code=2)
+        raise typer.Exit(code=2) from exc
     except FileNotFoundError as exc:
         console.print(f"[red]{exc}[/red]")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from exc
     except RuntimeError as exc:
         console.print(f"[red]Pipeline error:[/red] {exc}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from exc
 
     fmt = (output_format or "text").lower()
     if fmt == "json":

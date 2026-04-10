@@ -20,12 +20,11 @@ of the observed modality under the current belief.
 from __future__ import annotations
 
 import math
-from typing import List
 
 _EPS = 1e-10
 
 
-def kl_divergence(p: List[float], q: List[float]) -> float:
+def kl_divergence(p: list[float], q: list[float]) -> float:
     """Compute KL(p || q) = sum_i p[i] * log(p[i] / (q[i] + eps)).
 
     Args:
@@ -36,18 +35,18 @@ def kl_divergence(p: List[float], q: List[float]) -> float:
         Non-negative KL divergence value.
     """
     kl = 0.0
-    for pi, qi in zip(p, q):
+    for pi, qi in zip(p, q, strict=False):
         if pi > _EPS:
             kl += pi * math.log(pi / (qi + _EPS))
     return kl
 
 
 def free_energy(
-    state_dist: List[float],
+    state_dist: list[float],
     obs_idx: int,
-    A: List[List[float]],
-    C: List[float],
-    D: List[float],
+    A: list[list[float]],
+    C: list[float],
+    D: list[float],
 ) -> float:
     """Compute variational free energy for a single observation.
 
@@ -74,7 +73,7 @@ def free_energy(
         obs_idx = 0
     row = A[obs_idx] if obs_idx < n_obs else []
     p_obs = _EPS
-    for a_val, s_val in zip(row, state_dist):
+    for a_val, s_val in zip(row, state_dist, strict=False):
         p_obs += a_val * s_val
 
     neg_log_evidence = -math.log(max(p_obs, _EPS))

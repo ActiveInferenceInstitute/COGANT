@@ -1,8 +1,8 @@
 """SemanticVisualizer: Render semantic graphs with states, observations, actions."""
 
-from typing import Dict, List, Any, Optional
 import json
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +25,13 @@ class SemanticVisualizer:
 
     def __init__(self):
         """Initialize semantic visualizer."""
-        self.states: List[Dict[str, Any]] = []
-        self.observations: List[Dict[str, Any]] = []
-        self.actions: List[Dict[str, Any]] = []
-        self.policies: List[Dict[str, Any]] = []
-        self.transitions: List[Dict[str, Any]] = []
+        self.states: list[dict[str, Any]] = []
+        self.observations: list[dict[str, Any]] = []
+        self.actions: list[dict[str, Any]] = []
+        self.policies: list[dict[str, Any]] = []
+        self.transitions: list[dict[str, Any]] = []
 
-    def from_state_space(self, state_space: Dict[str, Any]) -> "SemanticVisualizer":
+    def from_state_space(self, state_space: dict[str, Any]) -> "SemanticVisualizer":
         """
         Load state space model data.
 

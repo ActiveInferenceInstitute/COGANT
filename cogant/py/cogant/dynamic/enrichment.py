@@ -5,10 +5,10 @@ pipeline, mapping dynamic observations onto existing graph nodes and
 adding dynamic CALLS edges derived from trace call-graphs.
 """
 
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 import hashlib
 import logging
+from pathlib import Path
+from typing import Any
 
 from cogant.dynamic.coverage import CoverageIngester
 from cogant.dynamic.traces import TraceIngester
@@ -98,7 +98,7 @@ def _enrich_with_coverage(
         return 0
 
     # Group spans by normalised file path for fast lookup.
-    file_spans: Dict[str, List[Dict[str, Any]]] = {}
+    file_spans: dict[str, list[dict[str, Any]]] = {}
     for span in spans:
         key = _normalize_path(span["file"])
         file_spans.setdefault(key, []).append(span)
@@ -148,7 +148,7 @@ def _enrich_with_coverage(
 # Trace enrichment
 # ------------------------------------------------------------------
 
-def _build_function_index(graph: ProgramGraph) -> Dict[str, List[str]]:
+def _build_function_index(graph: ProgramGraph) -> dict[str, list[str]]:
     """Map unqualified and qualified function names to node IDs.
 
     Returns a dict where each key is a name (or qualified_name) and the
@@ -156,7 +156,7 @@ def _build_function_index(graph: ProgramGraph) -> Dict[str, List[str]]:
     names -- which are typically unqualified -- to be resolved to graph
     nodes.
     """
-    index: Dict[str, List[str]] = {}
+    index: dict[str, list[str]] = {}
     for node in graph.nodes.values():
         if node.kind not in _CALLABLE_KINDS:
             continue
@@ -233,7 +233,7 @@ def _enrich_with_traces(
     edges_added = 0
 
     # Build a call-count map from timing for edge weights.
-    call_counts: Dict[str, int] = {}
+    call_counts: dict[str, int] = {}
     for name, stats in timing.items():
         call_counts[name] = int(stats["count"])
 
@@ -284,9 +284,9 @@ def _enrich_with_traces(
 
 def enrich_graph(
     graph: ProgramGraph,
-    coverage_path: Optional[str] = None,
-    trace_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    coverage_path: str | None = None,
+    trace_path: str | None = None,
+) -> dict[str, Any]:
     """Enrich a ProgramGraph with runtime coverage and trace data.
 
     This is the main entry point for dynamic analysis integration.
@@ -306,7 +306,7 @@ def enrich_graph(
         ``graph`` (the same ``ProgramGraph`` instance, returned for
         functional-style composition even though mutation is in-place).
     """
-    summary: Dict[str, Any] = {
+    summary: dict[str, Any] = {
         "coverage_nodes_enriched": 0,
         "trace_nodes_enriched": 0,
         "evidence_sources": [],

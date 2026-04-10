@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Any, Optional, Set
+import html as html_mod
 import json
 import logging
-import html as html_mod
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from cogant.process.timeline import Timeline
@@ -27,13 +27,13 @@ class GanttRenderer:
 
     def __init__(self):
         """Initialize Gantt renderer."""
-        self.stages: List[Dict[str, Any]] = []
-        self.dependencies: List[Dict[str, Any]] = []
-        self.timeline: List[Dict[str, Any]] = []
-        self.critical_path: List[str] = []
-        self.parallel_groups: List[List[str]] = []
+        self.stages: list[dict[str, Any]] = []
+        self.dependencies: list[dict[str, Any]] = []
+        self.timeline: list[dict[str, Any]] = []
+        self.critical_path: list[str] = []
+        self.parallel_groups: list[list[str]] = []
 
-    def from_process_model(self, process_model: Dict[str, Any]) -> "GanttRenderer":
+    def from_process_model(self, process_model: dict[str, Any]) -> GanttRenderer:
         """
         Load process model data.
 
@@ -54,7 +54,7 @@ class GanttRenderer:
 
         return self
 
-    def from_timeline(self, timeline: Timeline) -> "GanttRenderer":
+    def from_timeline(self, timeline: Timeline) -> GanttRenderer:
         """
         Load from a typed Timeline object.
 
@@ -128,11 +128,11 @@ class GanttRenderer:
                 max_end = end
         return max_end if max_end > 0 else 1.0
 
-    def _stage_id(self, stage: Dict[str, Any], index: int) -> str:
+    def _stage_id(self, stage: dict[str, Any], index: int) -> str:
         """Return a stable identifier for a stage dict."""
         return stage.get("id", stage.get("name", f"stage_{index}"))
 
-    def _is_critical(self, stage: Dict[str, Any], index: int) -> bool:
+    def _is_critical(self, stage: dict[str, Any], index: int) -> bool:
         """Check whether a stage is on the critical path."""
         if not self.critical_path:
             return False
@@ -140,7 +140,7 @@ class GanttRenderer:
         name = stage.get("name", "")
         return sid in self.critical_path or name in self.critical_path
 
-    def _parallel_group_for(self, stage: Dict[str, Any], index: int) -> Optional[int]:
+    def _parallel_group_for(self, stage: dict[str, Any], index: int) -> int | None:
         """Return the parallel-group index for a stage, or None."""
         sid = self._stage_id(stage, index)
         name = stage.get("name", "")
@@ -149,13 +149,13 @@ class GanttRenderer:
                 return gi
         return None
 
-    def _timeline_ticks(self, total: float, num_ticks: int = 5) -> List[str]:
+    def _timeline_ticks(self, total: float, num_ticks: int = 5) -> list[str]:
         """Generate evenly spaced tick labels for the timeline axis."""
         if total <= 0:
             return ["0"]
         if num_ticks <= 1:
             return [f"{total:.1f}" if total != int(total) else str(int(total))]
-        ticks: List[str] = []
+        ticks: list[str] = []
         for i in range(num_ticks):
             val = total * i / (num_ticks - 1)
             ticks.append(f"{val:.1f}" if val != int(val) else str(int(val)))
@@ -171,7 +171,7 @@ class GanttRenderer:
         total_duration = self._compute_total_duration()
 
         # Build the critical-path set for fast lookup
-        critical_set: Set[str] = set(self.critical_path)
+        set(self.critical_path)
 
         # Parallel-group colour bands (up to 6 distinct hues)
         pg_colors = [
@@ -184,8 +184,8 @@ class GanttRenderer:
         ]
 
         # --- Build label rows ---
-        label_rows: List[str] = []
-        bar_rows: List[str] = []
+        label_rows: list[str] = []
+        bar_rows: list[str] = []
         for i, s in enumerate(all_stages):
             name = html_mod.escape(s.get("name", f"Stage {i}"))
             start = s.get("start", 0)
@@ -254,7 +254,7 @@ class GanttRenderer:
         timeline_html = "".join(f"<span>{t}</span>" for t in ticks)
 
         # --- Tasks JSON for potential JS consumers ---
-        tasks_json = json.dumps(
+        json.dumps(
             [
                 {
                     "id": self._stage_id(s, i),

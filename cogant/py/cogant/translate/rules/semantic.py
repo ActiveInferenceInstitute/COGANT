@@ -11,19 +11,18 @@ See :mod:`cogant.translate.rules` for the umbrella re-export and
 """
 
 import hashlib
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from cogant.schemas.core import Node, NodeKind, EdgeKind
+from cogant.graph.queries import GraphQuery
+from cogant.schemas.core import EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import (
-    SemanticMapping,
-    MappingKind,
     ConfidenceTier,
+    MappingKind,
     ProvenanceRecord,
+    SemanticMapping,
 )
-from cogant.graph.queries import GraphQuery
 from cogant.translate.engine import RuleExplanation, TranslationRule
-
 
 OBSERVATION_KEYWORDS = [
     "get", "read", "fetch", "query", "display", "show", "status", "info", "list",
@@ -77,7 +76,7 @@ class ObservationRule(TranslationRule):
         against a hand-labeled observation fixture.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find functions/methods that observe state without mutation.
 
         Args:
@@ -116,7 +115,7 @@ class ObservationRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create observation mapping.
 
         Args:
@@ -194,7 +193,7 @@ class ObservationRule(TranslationRule):
         read_targets = [e.target_id for e in out_edges if e.kind == EdgeKind.READS]
         write_targets = [e.target_id for e in out_edges if e.kind == EdgeKind.WRITES]
 
-        evidence: List[str] = []
+        evidence: list[str] = []
         if matched_keywords:
             evidence.append(f"keyword match: {matched_keywords}")
         evidence.append(f"READS count: {len(read_targets)}")
@@ -270,7 +269,7 @@ class ActionRule(TranslationRule):
         {1, 2, 3} on the 20-repo corpus.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find functions/methods that mutate state.
 
         Args:
@@ -297,7 +296,7 @@ class ActionRule(TranslationRule):
             out_edges = graph.get_edges_from(node.id)
             writes = sum(1 for e in out_edges if e.kind in (EdgeKind.WRITES, EdgeKind.MUTATES))
             calls = sum(1 for e in out_edges if e.kind == EdgeKind.CALLS)
-            writes_only = sum(1 for e in out_edges if e.kind == EdgeKind.WRITES)
+            sum(1 for e in out_edges if e.kind == EdgeKind.WRITES)
 
             # Fallback threshold: ``writes >= 1`` outgoing WRITES/MUTATES
             # edge. Principled default aligned with the property invariant
@@ -318,7 +317,7 @@ class ActionRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create action mapping.
 
         Args:
@@ -396,7 +395,7 @@ class ActionRule(TranslationRule):
         mutate_edges = [e for e in out_edges if e.kind == EdgeKind.MUTATES]
         call_edges = [e for e in out_edges if e.kind == EdgeKind.CALLS]
 
-        evidence: List[str] = []
+        evidence: list[str] = []
         if matched_keywords:
             evidence.append(f"keyword match: {matched_keywords}")
         evidence.append(f"WRITES count: {len(write_edges)}")
@@ -473,7 +472,7 @@ class PolicyRule(TranslationRule):
         the 20-repo corpus.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find classes and functions that implement policy/control logic.
 
         Args:
@@ -524,7 +523,7 @@ class PolicyRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create policy mapping.
 
         Args:
@@ -590,7 +589,7 @@ class PreferenceRule(TranslationRule):
         because name-only matching doesn't depend on edge extraction.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find validation and test functions.
 
         Args:
@@ -630,7 +629,7 @@ class PreferenceRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create preference/constraint mapping.
 
         Args:
@@ -700,7 +699,7 @@ class ContextRule(TranslationRule):
         ``settings``/``params``/``env`` fallback.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find context/configuration classes and functions.
 
         Args:
@@ -740,7 +739,7 @@ class ContextRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create context mapping.
 
         Args:

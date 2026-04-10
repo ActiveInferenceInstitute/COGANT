@@ -7,7 +7,7 @@ and merge configurations with proper override semantics.
 
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional, Union
+from typing import Any
 
 try:
     import yaml  # type: ignore[import-untyped]
@@ -15,20 +15,18 @@ try:
 except ImportError:
     HAS_YAML = False
 
-from .schema import (
-    CogantConfig,
-    PipelineConfig,
-    ExportConfig,
-    ValidationConfig,
-    LanguageConfig,
-    PipelineStage,
-)
 from .defaults import (
     DEFAULT_COGANT_CONFIG,
-    DEFAULT_PIPELINE_CONFIG,
     DEFAULT_EXPORT_CONFIG,
+    DEFAULT_PIPELINE_CONFIG,
     DEFAULT_VALIDATION_CONFIG,
     PRESETS,
+)
+from .schema import (
+    CogantConfig,
+    ExportConfig,
+    PipelineConfig,
+    ValidationConfig,
 )
 
 
@@ -41,7 +39,7 @@ class ConfigLoader:
     """Loads and manages COGANT configurations from various sources."""
 
     @staticmethod
-    def load_from_yaml(path: Union[str, Path]) -> Dict[str, Any]:
+    def load_from_yaml(path: str | Path) -> dict[str, Any]:
         """
         Load configuration from a YAML file.
 
@@ -60,7 +58,7 @@ class ConfigLoader:
             )
 
         try:
-            with open(path, 'r') as f:
+            with open(path) as f:
                 data = yaml.safe_load(f)
                 if data is None:
                     data = {}
@@ -75,7 +73,7 @@ class ConfigLoader:
             ) from e
 
     @staticmethod
-    def load_from_dict(data: Dict[str, Any]) -> Dict[str, Any]:
+    def load_from_dict(data: dict[str, Any]) -> dict[str, Any]:
         """
         Validate and normalize configuration dictionary.
 
@@ -90,7 +88,7 @@ class ConfigLoader:
         return data
 
     @staticmethod
-    def load_json_from_file(path: Union[str, Path]) -> Dict[str, Any]:
+    def load_json_from_file(path: str | Path) -> dict[str, Any]:
         """
         Load configuration from a JSON file.
 
@@ -104,7 +102,7 @@ class ConfigLoader:
             ConfigLoadError: If file cannot be read or JSON is invalid.
         """
         try:
-            with open(path, 'r') as f:
+            with open(path) as f:
                 loaded = json.load(f)
                 return dict(loaded) if isinstance(loaded, dict) else {}
         except FileNotFoundError as e:
@@ -118,10 +116,10 @@ class ConfigLoader:
 
     @staticmethod
     def merge_configs(
-        base: Dict[str, Any],
-        override: Dict[str, Any],
+        base: dict[str, Any],
+        override: dict[str, Any],
         deep: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Merge configuration dictionaries with override semantics.
 
@@ -149,7 +147,7 @@ class ConfigLoader:
         return result
 
     @staticmethod
-    def load_default() -> Dict[str, Any]:
+    def load_default() -> dict[str, Any]:
         """
         Get the default configuration.
 
@@ -164,7 +162,7 @@ class ConfigLoader:
         }
 
     @staticmethod
-    def load_preset(name: str) -> Dict[str, Any]:
+    def load_preset(name: str) -> dict[str, Any]:
         """
         Load a named preset configuration.
 
@@ -186,8 +184,8 @@ class ConfigLoader:
 
     @staticmethod
     def build_cogant_config(
-        config_dict: Optional[Dict[str, Any]] = None,
-        preset: Optional[str] = None,
+        config_dict: dict[str, Any] | None = None,
+        preset: str | None = None,
     ) -> CogantConfig:
         """
         Build a CogantConfig from dictionary data and/or preset.
@@ -221,8 +219,8 @@ class ConfigLoader:
 
     @staticmethod
     def build_pipeline_config(
-        config_dict: Optional[Dict[str, Any]] = None,
-        preset: Optional[str] = None,
+        config_dict: dict[str, Any] | None = None,
+        preset: str | None = None,
     ) -> PipelineConfig:
         """
         Build a PipelineConfig from dictionary data and/or preset.
@@ -268,8 +266,8 @@ class ConfigLoader:
 
     @staticmethod
     def build_export_config(
-        config_dict: Optional[Dict[str, Any]] = None,
-        preset: Optional[str] = None,
+        config_dict: dict[str, Any] | None = None,
+        preset: str | None = None,
     ) -> ExportConfig:
         """
         Build an ExportConfig from dictionary data and/or preset.
@@ -303,8 +301,8 @@ class ConfigLoader:
 
     @staticmethod
     def build_validation_config(
-        config_dict: Optional[Dict[str, Any]] = None,
-        preset: Optional[str] = None,
+        config_dict: dict[str, Any] | None = None,
+        preset: str | None = None,
     ) -> ValidationConfig:
         """
         Build a ValidationConfig from dictionary data and/or preset.
@@ -338,9 +336,9 @@ class ConfigLoader:
 
     @staticmethod
     def load_all_configs(
-        yaml_path: Optional[Union[str, Path]] = None,
-        preset: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        yaml_path: str | Path | None = None,
+        preset: str | None = None,
+    ) -> dict[str, Any]:
         """
         Load all configuration objects from YAML file and/or preset.
 

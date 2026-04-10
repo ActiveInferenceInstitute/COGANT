@@ -11,17 +11,17 @@ See :mod:`cogant.translate.rules` for the umbrella re-export and
 """
 
 import hashlib
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from cogant.schemas.core import NodeKind, EdgeKind
+from cogant.graph.queries import GraphQuery
+from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import (
-    SemanticMapping,
-    MappingKind,
     ConfidenceTier,
+    MappingKind,
     ProvenanceRecord,
+    SemanticMapping,
 )
-from cogant.graph.queries import GraphQuery
 from cogant.translate.engine import TranslationRule
 
 
@@ -39,7 +39,7 @@ class OrchestratorRule(TranslationRule):
         TODO(calibration): sweep {2, 3, 5, 8} on the 20-repo corpus.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find orchestrator patterns (high out-degree controllers).
 
         Args:
@@ -74,7 +74,7 @@ class OrchestratorRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create orchestration mapping.
 
         Args:
@@ -141,7 +141,7 @@ class TestAssertionRule(TranslationRule):
         are handled by the native Python AST with minimal ambiguity.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find test nodes and assertion calls.
 
         Args:
@@ -172,7 +172,7 @@ class TestAssertionRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create constraint mapping from test assertions.
 
         Args:
@@ -240,7 +240,7 @@ class EventBusRule(TranslationRule):
         coverage across the 20-repo corpus.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find event bus and subscription patterns.
 
         Args:
@@ -268,7 +268,7 @@ class EventBusRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create observation-action coupling mapping.
 
         Args:

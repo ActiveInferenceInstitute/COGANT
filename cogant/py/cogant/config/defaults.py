@@ -5,20 +5,19 @@ Provides sensible defaults that can be overridden by configuration files
 and command-line arguments.
 """
 
-from typing import Dict, Any
+from typing import Any
 
 from .schema import (
     CogantConfig,
-    PipelineConfig,
     ExportConfig,
-    ValidationConfig,
-    LogLevel,
     ExportFormat,
-    ValidationLevel,
     LanguageConfig,
+    LogLevel,
+    PipelineConfig,
     PipelineStage,
+    ValidationConfig,
+    ValidationLevel,
 )
-
 
 # Default system configuration
 DEFAULT_COGANT_CONFIG = CogantConfig(
@@ -450,7 +449,7 @@ PRESETS = {
 }
 
 
-def get_preset(name: str) -> Dict[str, Any]:
+def get_preset(name: str) -> dict[str, Any]:
     """
     Get a preset configuration by name.
 

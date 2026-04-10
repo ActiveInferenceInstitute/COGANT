@@ -4,23 +4,22 @@ Policy extraction from graph patterns.
 Identifies decision points, retry logic, branching policies from graph patterns.
 """
 
-from typing import Dict, List, Optional, Set
-from dataclasses import dataclass, field
 import logging
+from dataclasses import dataclass, field
 
-from cogant.schemas.core import Node, NodeKind, EdgeKind
+from cogant.schemas.core import EdgeKind
 from cogant.schemas.graph import ProgramGraph
 
 logger = logging.getLogger(__name__)
 
 # Name fragments that strongly indicate retry, branching, or circuit-breaker
 # behaviour. Lower-cased on input, matched as substrings.
-_RETRY_NAME_HINTS: Set[str] = {"retry", "retries", "backoff", "reattempt"}
-_BRANCH_NAME_HINTS: Set[str] = {
+_RETRY_NAME_HINTS: set[str] = {"retry", "retries", "backoff", "reattempt"}
+_BRANCH_NAME_HINTS: set[str] = {
     "decision", "branch", "dispatch", "route", "router", "choose", "select",
     "switch", "if_", "when_", "case_", "predicate",
 }
-_CIRCUIT_NAME_HINTS: Set[str] = {
+_CIRCUIT_NAME_HINTS: set[str] = {
     "circuit", "breaker", "fuse", "tripped", "open_circuit", "half_open",
 }
 
@@ -42,8 +41,8 @@ class BranchingPolicy:
     id: str
     stage_id: str
     decision_point: str  # Node ID making the decision
-    branches: Dict[str, str] = field(default_factory=dict)  # Condition -> target_stage_id
-    default_branch: Optional[str] = None
+    branches: dict[str, str] = field(default_factory=dict)  # Condition -> target_stage_id
+    default_branch: str | None = None
 
 
 @dataclass
@@ -70,11 +69,11 @@ class PolicyExtractor:
             program_graph: The program graph to analyze.
         """
         self.graph = program_graph
-        self.retry_policies: Dict[str, RetryPolicy] = {}
-        self.branching_policies: Dict[str, BranchingPolicy] = {}
-        self.circuit_breaker_policies: Dict[str, CircuitBreakerPolicy] = {}
+        self.retry_policies: dict[str, RetryPolicy] = {}
+        self.branching_policies: dict[str, BranchingPolicy] = {}
+        self.circuit_breaker_policies: dict[str, CircuitBreakerPolicy] = {}
 
-    def extract(self) -> Dict[str, object]:
+    def extract(self) -> dict[str, object]:
         """
         Extract all policies from the program graph.
 
@@ -227,7 +226,7 @@ class PolicyExtractor:
         Return True when ``node_id`` has 2+ distinct downstream targets
         via CALLS or TRIGGERS edges. Self-loops do not count.
         """
-        targets: Set[str] = set()
+        targets: set[str] = set()
         for edge in self.graph.get_edges_from(node_id):
             if edge.kind not in (EdgeKind.CALLS, EdgeKind.TRIGGERS):
                 continue
@@ -238,7 +237,7 @@ class PolicyExtractor:
                 return True
         return False
 
-    def _extract_branches_for_node(self, node_id: str) -> Dict[str, str]:
+    def _extract_branches_for_node(self, node_id: str) -> dict[str, str]:
         """
         Extract branches (outgoing edges) for a decision node.
 
@@ -305,7 +304,7 @@ class PolicyExtractor:
                 policy_id, metadata_hit, name_hit,
             )
 
-    def get_retry_policy(self, policy_id: str) -> Optional[RetryPolicy]:
+    def get_retry_policy(self, policy_id: str) -> RetryPolicy | None:
         """
         Get a retry policy by ID.
 
@@ -317,7 +316,7 @@ class PolicyExtractor:
         """
         return self.retry_policies.get(policy_id)
 
-    def get_branching_policy(self, policy_id: str) -> Optional[BranchingPolicy]:
+    def get_branching_policy(self, policy_id: str) -> BranchingPolicy | None:
         """
         Get a branching policy by ID.
 
@@ -329,7 +328,7 @@ class PolicyExtractor:
         """
         return self.branching_policies.get(policy_id)
 
-    def get_circuit_breaker_policy(self, policy_id: str) -> Optional[CircuitBreakerPolicy]:
+    def get_circuit_breaker_policy(self, policy_id: str) -> CircuitBreakerPolicy | None:
         """
         Get a circuit breaker policy by ID.
 
@@ -341,7 +340,7 @@ class PolicyExtractor:
         """
         return self.circuit_breaker_policies.get(policy_id)
 
-    def list_policies_for_stage(self, stage_id: str) -> Dict[str, List[object]]:
+    def list_policies_for_stage(self, stage_id: str) -> dict[str, list[object]]:
         """
         Get all policies affecting a particular stage.
 

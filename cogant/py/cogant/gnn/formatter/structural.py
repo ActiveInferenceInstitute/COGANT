@@ -18,18 +18,16 @@ See :class:`cogant.gnn.formatter.base.GNNMarkdownFormatter` for the
 main entry point and :mod:`cogant.gnn.formatter` for the package.
 """
 
-from typing import Dict, List, Any, Optional, Tuple, Set
-from datetime import datetime, timezone
 import logging
-import traceback
 from collections import defaultdict
+from typing import Any
 
-from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.statespace.compiler import StateSpaceModel
-from cogant.process.extractor import ProcessModel
-from cogant.schemas.semantic import MappingKind
 from cogant.gnn.matrices import GNNMatrices
+from cogant.process.extractor import ProcessModel
+from cogant.schemas.core import NodeKind
+from cogant.schemas.graph import ProgramGraph
+from cogant.schemas.semantic import MappingKind
+from cogant.statespace.compiler import StateSpaceModel
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +56,7 @@ class _StructuralSectionsMixin:
     graph: ProgramGraph
     state_space: StateSpaceModel
     process: ProcessModel
-    mappings: Dict[str, Any]
+    mappings: dict[str, Any]
 
     def _format_state_space(self) -> str:
         """Format the State Space section of the GNN markdown document.
@@ -341,7 +339,6 @@ class _StructuralSectionsMixin:
         lines = ["## Factors"]
         lines.append("")
 
-        factors_by_group: Dict[str, List[str]] = {}
 
         # Option 1: Use state space variables if present
         if self.state_space.variables:
@@ -374,7 +371,7 @@ class _StructuralSectionsMixin:
             lines.append("")
 
             # Group nodes by class/module
-            components_by_class: Dict[str, List[str]] = defaultdict(list)
+            components_by_class: dict[str, list[str]] = defaultdict(list)
             for node in self.graph.nodes.values():
                 # Get class name or module as factor
                 if node.kind == NodeKind.METHOD:

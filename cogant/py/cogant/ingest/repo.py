@@ -4,9 +4,8 @@ import logging
 import shutil
 import subprocess
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 from cogant.ingest.files import FileEnumerator, FileInfo
 from cogant.ingest.manifest import Dependency, ManifestParser
@@ -24,22 +23,22 @@ class RepoMetadata:
     url: str
     """Repository URL (git or local path)."""
 
-    commit_hash: Optional[str] = None
+    commit_hash: str | None = None
     """Current commit hash."""
 
-    commit_message: Optional[str] = None
+    commit_message: str | None = None
     """Current commit message."""
 
-    timestamp: Optional[datetime] = None
+    timestamp: datetime | None = None
     """Timestamp of repository snapshot."""
 
-    author: Optional[str] = None
+    author: str | None = None
     """Author of current commit."""
 
-    language: Optional[str] = None
+    language: str | None = None
     """Primary language detected."""
 
-    description: Optional[str] = None
+    description: str | None = None
     """Repository description."""
 
 
@@ -50,10 +49,10 @@ class RepoSnapshot:
     metadata: RepoMetadata
     """Repository metadata."""
 
-    files: List[FileInfo]
+    files: list[FileInfo]
     """Source files in repository."""
 
-    dependencies: List[Dependency]
+    dependencies: list[Dependency]
     """Package dependencies."""
 
     root_path: Path
@@ -63,7 +62,7 @@ class RepoSnapshot:
 class RepoIngester:
     """Ingest and analyze repositories."""
 
-    def __init__(self, work_dir: Optional[Path] = None):
+    def __init__(self, work_dir: Path | None = None):
         """Initialize repository ingester.
 
         Args:
@@ -130,7 +129,7 @@ class RepoIngester:
     def ingest_git_remote(
         self,
         url: str,
-        branch: Optional[str] = None,
+        branch: str | None = None,
         include_test_files: bool = True,
         compute_checksums: bool = False,
         cleanup: bool = True,
@@ -174,10 +173,10 @@ class RepoIngester:
                     f"Failed to clone repository: {result.stderr}"
                 )
 
-        except subprocess.TimeoutExpired:
-            raise RuntimeError(f"Clone operation timed out for {url}")
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(f"Clone operation timed out for {url}") from exc
         except Exception as e:
-            raise RuntimeError(f"Failed to clone repository {url}: {e}")
+            raise RuntimeError(f"Failed to clone repository {url}: {e}") from e
 
         try:
             # Ingest the cloned repository
@@ -213,7 +212,7 @@ class RepoIngester:
         metadata = RepoMetadata(
             name=repo_name,
             url=str(repo_path),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
 
         # Try to extract git information
@@ -256,7 +255,7 @@ class RepoIngester:
 
         return metadata
 
-    def _extract_dependencies(self, repo_path: Path) -> List[Dependency]:
+    def _extract_dependencies(self, repo_path: Path) -> list[Dependency]:
         """Extract dependencies from manifest files.
 
         Args:

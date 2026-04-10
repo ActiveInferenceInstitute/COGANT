@@ -34,7 +34,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel
@@ -84,16 +84,16 @@ class ExplainResult:
     node_name: str
     node_id: str
     node_kind: str
-    assigned_role: Optional[str]
-    rules_fired: List[RuleExplanation]
-    rules_considered: List[RuleExplanation]
+    assigned_role: str | None
+    rules_fired: list[RuleExplanation]
+    rules_considered: list[RuleExplanation]
     blanket_role: str
     target: str = ""
-    mapping_label: Optional[str] = None
-    mapping_description: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    mapping_label: str | None = None
+    mapping_description: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain JSON-ready dict."""
         return {
             "node_name": self.node_name,
@@ -217,9 +217,9 @@ def resolve_node(graph: ProgramGraph, query: str) -> Node:
     )
 
 
-def _candidate_sample(graph: ProgramGraph, limit: int = 10) -> List[str]:
+def _candidate_sample(graph: ProgramGraph, limit: int = 10) -> list[str]:
     """Return up to ``limit`` candidate node names for error messages."""
-    names: List[str] = []
+    names: list[str] = []
     for node in graph.nodes.values():
         if node.name:
             names.append(node.name)
@@ -229,10 +229,10 @@ def _candidate_sample(graph: ProgramGraph, limit: int = 10) -> List[str]:
 
 
 def _find_assigned_mapping(
-    node_id: str, mappings: Dict[str, SemanticMapping]
-) -> Optional[SemanticMapping]:
+    node_id: str, mappings: dict[str, SemanticMapping]
+) -> SemanticMapping | None:
     """Return the highest-confidence mapping whose fragment contains ``node_id``."""
-    hits: List[SemanticMapping] = []
+    hits: list[SemanticMapping] = []
     for mapping in mappings.values():
         if node_id in (mapping.graph_fragment_node_ids or []):
             hits.append(mapping)
@@ -260,7 +260,7 @@ def _compute_blanket_role(graph: ProgramGraph, node: Node) -> str:
     """
     extractor = MarkovBlanketExtractor(graph)
 
-    module_hint: Optional[str] = None
+    module_hint: str | None = None
     if node.path:
         module_hint = Path(node.path).stem
 
@@ -308,7 +308,7 @@ def explain_node(repo_path: str, node_query: str) -> ExplainResult:
 
     node = resolve_node(graph, node_query)
 
-    engine: Optional[TranslationEngine] = bundle.get_artifact(
+    engine: TranslationEngine | None = bundle.get_artifact(
         ArtifactKey.TRANSLATION_ENGINE
     )
     if engine is None:
@@ -317,13 +317,13 @@ def explain_node(repo_path: str, node_query: str) -> ExplainResult:
             "cannot explain rule decisions"
         )
 
-    mappings: Dict[str, SemanticMapping] = (
+    mappings: dict[str, SemanticMapping] = (
         bundle.get_artifact(ArtifactKey.SEMANTIC_MAPPINGS) or {}
     )
     query = GraphQuery(graph)
 
-    rules_fired: List[RuleExplanation] = []
-    rules_considered: List[RuleExplanation] = []
+    rules_fired: list[RuleExplanation] = []
+    rules_considered: list[RuleExplanation] = []
     for rule in engine.rules:
         try:
             rx = rule.explain(node, graph, query)
@@ -383,7 +383,7 @@ def explain_node(repo_path: str, node_query: str) -> ExplainResult:
     )
 
 
-def format_text(result: ExplainResult, console: Optional[Console] = None) -> None:
+def format_text(result: ExplainResult, console: Console | None = None) -> None:
     """Render ``result`` as a human-readable report on ``console``.
 
     Uses Rich panels and tables to make the output scannable. The

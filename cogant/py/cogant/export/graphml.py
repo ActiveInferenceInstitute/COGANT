@@ -4,7 +4,6 @@ GraphML exporter for program graph visualization.
 Exports program graph as GraphML XML for compatibility with graph visualization tools.
 """
 
-from typing import Optional
 import logging
 from xml.etree import ElementTree as ET
 
@@ -51,11 +50,11 @@ class GraphMLExporter:
         graph_elem.set("edgedefault", "directed")
 
         # Add nodes
-        for node_id, node in self.graph.nodes.items():
+        for _node_id, node in self.graph.nodes.items():
             self._add_node(graph_elem, node)
 
         # Add edges
-        for edge_id, edge in self.graph.edges.items():
+        for _edge_id, edge in self.graph.edges.items():
             self._add_edge(graph_elem, edge)
 
         # Convert to string

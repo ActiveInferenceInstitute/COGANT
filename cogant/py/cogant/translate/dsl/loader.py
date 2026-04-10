@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from cogant.translate.dsl.schema import (
+    KNOWN_CONDITION_KEYS,
     DSLCondition,
     DSLRule,
     DSLRuleSet,
-    KNOWN_CONDITION_KEYS,
 )
 
 
@@ -45,7 +45,7 @@ def load_rules_from_yaml(path: Path | str) -> DSLRuleSet:
     return load_rules_from_dict(data)
 
 
-def load_rules_from_dict(data: Dict[str, Any]) -> DSLRuleSet:
+def load_rules_from_dict(data: dict[str, Any]) -> DSLRuleSet:
     """Load a DSL rule-set from an already-parsed dict.
 
     This is the preferred entry-point for tests (avoids YAML
@@ -83,7 +83,7 @@ def load_rules_from_dict(data: Dict[str, Any]) -> DSLRuleSet:
 # ------------------------------------------------------------------
 
 def _parse_conditions(
-    raw_conditions: list[Dict[str, Any]],
+    raw_conditions: list[dict[str, Any]],
     rule_index: int,
 ) -> list[DSLCondition]:
     """Parse and validate a list of raw condition dicts."""

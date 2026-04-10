@@ -22,8 +22,9 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 # so that arbitrary ``MappingKind`` values can be looked up via ``.name``.
 # Anything not in the map falls back to ``DEFAULT_NODE_COLOR``.
 # ---------------------------------------------------------------------------
-AI_ROLE_COLORS: Dict[str, str] = {
+AI_ROLE_COLORS: dict[str, str] = {
     "HIDDEN_STATE": "#9b59b6",  # purple
     "OBSERVATION": "#3498db",   # blue
     "ACTION": "#e67e22",        # orange
@@ -63,7 +64,7 @@ CYTOSCAPE_CDN: str = (
 # ---------------------------------------------------------------------------
 
 
-def _node_list(graph: Mapping[str, Any]) -> List[Mapping[str, Any]]:
+def _node_list(graph: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     """Return the node collection of ``graph`` as a list regardless of shape."""
     raw = graph.get("nodes", [])
     if isinstance(raw, Mapping):
@@ -71,7 +72,7 @@ def _node_list(graph: Mapping[str, Any]) -> List[Mapping[str, Any]]:
     return list(raw)
 
 
-def _edge_list(graph: Mapping[str, Any]) -> List[Mapping[str, Any]]:
+def _edge_list(graph: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     """Return the edge collection of ``graph`` as a list regardless of shape."""
     raw = graph.get("edges", [])
     if isinstance(raw, Mapping):
@@ -80,8 +81,8 @@ def _edge_list(graph: Mapping[str, Any]) -> List[Mapping[str, Any]]:
 
 
 def _build_role_index(
-    mappings: Optional[Iterable[Any]],
-) -> Dict[str, Dict[str, Any]]:
+    mappings: Iterable[Any] | None,
+) -> dict[str, dict[str, Any]]:
     """Index semantic mappings by node id.
 
     ``mappings`` is expected to contain objects with ``kind`` and
@@ -90,13 +91,13 @@ def _build_role_index(
     mappings, the mapping with the highest ``confidence_score`` wins so
     the colouring is stable and deterministic.
     """
-    index: Dict[str, Dict[str, Any]] = {}
+    index: dict[str, dict[str, Any]] = {}
     if not mappings:
         return index
 
     for mapping in mappings:
         if hasattr(mapping, "kind") and not isinstance(mapping, Mapping):
-            kind = getattr(mapping, "kind")
+            kind = mapping.kind
             node_ids = getattr(mapping, "graph_fragment_node_ids", []) or []
             confidence = float(getattr(mapping, "confidence_score", 0.0) or 0.0)
         else:
@@ -119,9 +120,9 @@ def _build_role_index(
     return index
 
 
-def _compute_degrees(edges: Iterable[Mapping[str, Any]]) -> Dict[str, int]:
+def _compute_degrees(edges: Iterable[Mapping[str, Any]]) -> dict[str, int]:
     """Count the number of incident edges per node id (undirected)."""
-    degree: Dict[str, int] = {}
+    degree: dict[str, int] = {}
     for edge in edges:
         source = edge.get("source") or edge.get("source_id")
         target = edge.get("target") or edge.get("target_id")
@@ -142,8 +143,8 @@ def _scale_degree_to_size(degree: int, max_degree: int) -> int:
 
 def build_cytoscape_graph_data(
     graph: Mapping[str, Any],
-    mappings: Optional[Iterable[Any]] = None,
-) -> Dict[str, List[Dict[str, Any]]]:
+    mappings: Iterable[Any] | None = None,
+) -> dict[str, list[dict[str, Any]]]:
     """Transform a program graph + semantic mappings into cytoscape payload.
 
     The returned dict has two keys:
@@ -163,7 +164,7 @@ def build_cytoscape_graph_data(
     degree_index = _compute_degrees(edges_raw)
     max_degree = max(degree_index.values(), default=0)
 
-    nodes_out: List[Dict[str, Any]] = []
+    nodes_out: list[dict[str, Any]] = []
     for node in nodes_raw:
         node_id = str(node.get("id") or node.get("qualified_name") or "")
         if not node_id:
@@ -188,7 +189,7 @@ def build_cytoscape_graph_data(
             }
         )
 
-    edges_out: List[Dict[str, Any]] = []
+    edges_out: list[dict[str, Any]] = []
     for edge in edges_raw:
         source = edge.get("source") or edge.get("source_id")
         target = edge.get("target") or edge.get("target_id")
@@ -391,7 +392,7 @@ _CYTOSCAPE_TEMPLATE = """<!DOCTYPE html>
 
 def build_cytoscape_html(
     graph: Mapping[str, Any],
-    mappings: Optional[Iterable[Any]] = None,
+    mappings: Iterable[Any] | None = None,
 ) -> str:
     """Return a full HTML page rendering ``graph`` with cytoscape.js (no I/O)."""
     graph_data = build_cytoscape_graph_data(graph, mappings)
@@ -408,8 +409,8 @@ def build_cytoscape_html(
 
 def render_cytoscape_html(
     graph: Mapping[str, Any],
-    output_path: Union[str, Path],
-    mappings: Optional[Iterable[Any]] = None,
+    output_path: str | Path,
+    mappings: Iterable[Any] | None = None,
 ) -> Path:
     """Render ``graph`` as a self-contained cytoscape.js page at ``output_path``."""
     output = Path(output_path)

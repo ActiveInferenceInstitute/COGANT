@@ -1,12 +1,11 @@
 """Confidence scoring model for semantic mappings."""
 
-from typing import Any, Dict, List, Optional
 from collections import Counter
+from typing import Any
 
 from cogant.schemas.semantic import (
-    SemanticMapping,
     ConfidenceTier,
-    ProvenanceRecord,
+    SemanticMapping,
 )
 
 
@@ -45,7 +44,7 @@ class ConfidenceModel:
 
     def __init__(self):
         """Initialize the confidence model."""
-        self._scoring_log: List[Dict[str, Any]] = []
+        self._scoring_log: list[dict[str, Any]] = []
 
     def compute(self, mapping: SemanticMapping) -> float:
         """Convenience alias for compute_confidence_score.
@@ -105,7 +104,7 @@ class ConfidenceModel:
     def determine_confidence_tier(
         self,
         mapping: SemanticMapping,
-        score: Optional[float] = None,
+        score: float | None = None,
     ) -> ConfidenceTier:
         """Determine confidence tier based on evidence sources and score.
 
@@ -121,7 +120,7 @@ class ConfidenceModel:
 
         # Check evidence sources
         sources = [p.source for p in mapping.provenance]
-        source_types = set(sources)
+        set(sources)
 
         has_static = any("static" in s for s in sources)
         has_dynamic = any("dynamic" in s or "runtime" in s for s in sources)
@@ -177,7 +176,7 @@ class ConfidenceModel:
 
         return min(1.0, diversity)
 
-    def detect_conflicts(self, mapping: SemanticMapping) -> List[float]:
+    def detect_conflicts(self, mapping: SemanticMapping) -> list[float]:
         """Detect and score conflicts in evidence.
 
         Args:
@@ -186,7 +185,7 @@ class ConfidenceModel:
         Returns:
             List of conflict penalty scores.
         """
-        penalties: List[float] = []
+        penalties: list[float] = []
 
         if not mapping.provenance or len(mapping.provenance) < 2:
             return penalties
@@ -267,7 +266,7 @@ class ConfidenceModel:
             "evidence_count": mapping.evidence_count,
         })
 
-    def score_batch(self, mappings: List[SemanticMapping]) -> None:
+    def score_batch(self, mappings: list[SemanticMapping]) -> None:
         """Update confidence for a batch of mappings.
 
         Args:
@@ -278,9 +277,9 @@ class ConfidenceModel:
 
     def get_high_confidence_mappings(
         self,
-        mappings: List[SemanticMapping],
+        mappings: list[SemanticMapping],
         threshold: float = 0.7,
-    ) -> List[SemanticMapping]:
+    ) -> list[SemanticMapping]:
         """Filter mappings by minimum confidence score.
 
         Args:
@@ -299,9 +298,9 @@ class ConfidenceModel:
 
     def get_low_confidence_mappings(
         self,
-        mappings: List[SemanticMapping],
+        mappings: list[SemanticMapping],
         threshold: float = 0.6,
-    ) -> List[SemanticMapping]:
+    ) -> list[SemanticMapping]:
         """Find mappings below confidence threshold that may need review.
 
         Args:
@@ -322,8 +321,8 @@ class ConfidenceModel:
 
     def get_conflicted_mappings(
         self,
-        mappings: List[SemanticMapping],
-    ) -> List[SemanticMapping]:
+        mappings: list[SemanticMapping],
+    ) -> list[SemanticMapping]:
         """Find mappings with detected conflicts.
 
         Args:
@@ -334,7 +333,7 @@ class ConfidenceModel:
         """
         return [m for m in mappings if m.conflict_penalties]
 
-    def get_scoring_report(self) -> Dict[str, Any]:
+    def get_scoring_report(self) -> dict[str, Any]:
         """Generate a report of confidence scoring.
 
         Returns:

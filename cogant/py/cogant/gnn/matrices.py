@@ -39,8 +39,7 @@ dependency of this module.
 from __future__ import annotations
 
 import logging
-import math
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any
 
 from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
@@ -82,7 +81,7 @@ _DEFAULT_INDIRECT_MASS = 0.1  # principled default (1.0 - direct)
 _EPSILON = 1e-9  # stability constant (scipy/pymdp convention)
 
 
-def _normalize_row(row: List[float]) -> List[float]:
+def _normalize_row(row: list[float]) -> list[float]:
     """Normalize a row of non-negative floats so that it sums to 1.0.
 
     If the row is empty or sums to zero, returns a uniform distribution.
@@ -96,7 +95,7 @@ def _normalize_row(row: List[float]) -> List[float]:
     return [v / total for v in row]
 
 
-def _normalize_vector(vec: List[float]) -> List[float]:
+def _normalize_vector(vec: list[float]) -> list[float]:
     """Normalize a non-negative vector so it sums to 1.0."""
     return _normalize_row(vec)
 
@@ -129,28 +128,28 @@ class GNNMatrices:
         # Normalize mappings to a list for convenient filtering while
         # preserving a stable ordering.
         if isinstance(mappings, dict):
-            mapping_list: List[SemanticMapping] = list(mappings.values())
+            mapping_list: list[SemanticMapping] = list(mappings.values())
         elif isinstance(mappings, list):
             mapping_list = list(mappings)
         elif mappings is None:
             mapping_list = []
         else:
             mapping_list = list(mappings)
-        self._mappings: List[SemanticMapping] = mapping_list
+        self._mappings: list[SemanticMapping] = mapping_list
 
         # Enumerate spaces.
-        self._hidden_states: List[SemanticMapping] = [
+        self._hidden_states: list[SemanticMapping] = [
             m for m in self._mappings if m.kind == MappingKind.HIDDEN_STATE
         ]
-        self._observations: List[SemanticMapping] = [
+        self._observations: list[SemanticMapping] = [
             m for m in self._mappings if m.kind == MappingKind.OBSERVATION
         ]
-        self._actions: List[SemanticMapping] = [
+        self._actions: list[SemanticMapping] = [
             m
             for m in self._mappings
             if m.kind in (MappingKind.ACTION, MappingKind.POLICY)
         ]
-        self._constraints: List[SemanticMapping] = [
+        self._constraints: list[SemanticMapping] = [
             m
             for m in self._mappings
             if m.kind in (MappingKind.CONSTRAINT, MappingKind.PREFERENCE)
@@ -192,11 +191,11 @@ class GNNMatrices:
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
-    def _state_node_ids(self) -> List[str]:
+    def _state_node_ids(self) -> list[str]:
         """Return the ordered list of graph node IDs backing hidden states."""
         if self._use_state_space_vars:
             return [v.node_id for v in self.state_space.variables.values()]
-        ids: List[str] = []
+        ids: list[str] = []
         for mapping in self._hidden_states:
             if mapping.graph_fragment_node_ids:
                 ids.append(mapping.graph_fragment_node_ids[0])
@@ -204,10 +203,10 @@ class GNNMatrices:
                 ids.append("")
         return ids
 
-    def _obs_node_ids(self) -> List[str]:
+    def _obs_node_ids(self) -> list[str]:
         """Return the ordered list of graph node IDs backing observations."""
         if self._observations:
-            ids: List[str] = []
+            ids: list[str] = []
             for mapping in self._observations:
                 if mapping.graph_fragment_node_ids:
                     ids.append(mapping.graph_fragment_node_ids[0])
@@ -216,10 +215,10 @@ class GNNMatrices:
             return ids
         return [o.source_node_id for o in self.state_space.observations.values()]
 
-    def _action_node_ids(self) -> List[str]:
+    def _action_node_ids(self) -> list[str]:
         """Return the ordered list of graph node IDs backing actions."""
         if self._actions:
-            ids: List[str] = []
+            ids: list[str] = []
             for mapping in self._actions:
                 if mapping.graph_fragment_node_ids:
                     ids.append(mapping.graph_fragment_node_ids[0])
@@ -228,13 +227,13 @@ class GNNMatrices:
             return ids
         return [a.controller_id for a in self.state_space.actions.values()]
 
-    def _edges_from(self, node_id: str) -> List[Any]:
+    def _edges_from(self, node_id: str) -> list[Any]:
         """Return outgoing edges from ``node_id`` (or an empty list)."""
         if not node_id:
             return []
         return [e for e in self.graph.edges.values() if e.source_id == node_id]
 
-    def _edges_to(self, node_id: str) -> List[Any]:
+    def _edges_to(self, node_id: str) -> list[Any]:
         """Return incoming edges to ``node_id`` (or an empty list)."""
         if not node_id:
             return []
@@ -243,7 +242,7 @@ class GNNMatrices:
     # ------------------------------------------------------------------
     # A matrix — likelihood
     # ------------------------------------------------------------------
-    def compute_A(self) -> List[List[float]]:
+    def compute_A(self) -> list[list[float]]:
         """Compute the likelihood matrix ``A[n_obs x n_states]``.
 
         ``A[i][j] = P(observation_i | hidden_state_j)``.
@@ -266,11 +265,11 @@ class GNNMatrices:
 
         direct_kinds = {EdgeKind.READS, EdgeKind.OBSERVES, EdgeKind.DEPENDS_ON}
 
-        A: List[List[float]] = [[0.0] * n_states for _ in range(n_obs)]
+        A: list[list[float]] = [[0.0] * n_states for _ in range(n_obs)]
 
         for i in range(n_obs):
             obs_node_id = obs_ids[i] if i < len(obs_ids) else ""
-            direct: List[int] = []
+            direct: list[int] = []
             if obs_node_id:
                 for edge in self._edges_from(obs_node_id):
                     if edge.kind in direct_kinds and edge.target_id in state_index:
@@ -305,7 +304,7 @@ class GNNMatrices:
     # ------------------------------------------------------------------
     # B matrix — transition
     # ------------------------------------------------------------------
-    def compute_B(self) -> List[List[List[float]]]:
+    def compute_B(self) -> list[list[list[float]]]:
         """Compute the transition tensor ``B[n_states x n_states x n_actions]``.
 
         ``B[next][cur][action] = P(next_state | current_state, action)``.
@@ -330,7 +329,7 @@ class GNNMatrices:
 
         # Initialize to identity per action so that non-writing actions
         # leave the state unchanged (a valid default transition).
-        B: List[List[List[float]]] = [
+        B: list[list[list[float]]] = [
             [[0.0] * n_actions for _ in range(n_states)] for _ in range(n_states)
         ]
         for cur in range(n_states):
@@ -339,7 +338,7 @@ class GNNMatrices:
 
         for k in range(n_actions):
             act_node_id = action_ids[k] if k < len(action_ids) else ""
-            written: List[int] = []
+            written: list[int] = []
             if act_node_id:
                 for edge in self._edges_from(act_node_id):
                     if edge.kind in write_kinds and edge.target_id in state_index:
@@ -376,7 +375,7 @@ class GNNMatrices:
     # ------------------------------------------------------------------
     # C vector — log preferences over observations
     # ------------------------------------------------------------------
-    def compute_C(self) -> List[float]:
+    def compute_C(self) -> list[float]:
         """Compute the log-preference vector ``C[n_obs]``.
 
         Derivation:
@@ -392,7 +391,7 @@ class GNNMatrices:
             return []
 
         obs_node_ids = self._obs_node_ids()
-        C: List[float] = [0.0] * n_obs
+        C: list[float] = [0.0] * n_obs
 
         for i in range(n_obs):
             obs_nid = obs_node_ids[i] if i < len(obs_node_ids) else ""
@@ -423,7 +422,7 @@ class GNNMatrices:
     # ------------------------------------------------------------------
     # D vector — initial prior over hidden states
     # ------------------------------------------------------------------
-    def compute_D(self) -> List[float]:
+    def compute_D(self) -> list[float]:
         """Compute the initial prior ``D[n_states]``.
 
         Derivation:
@@ -437,7 +436,7 @@ class GNNMatrices:
             return []
 
         # Base: uniform prior.
-        D: List[float] = [1.0 / n_states] * n_states
+        D: list[float] = [1.0 / n_states] * n_states
 
         if self._use_state_space_vars:
             # Bias toward any variable whose StateVariable has a default
@@ -485,7 +484,7 @@ class GNNMatrices:
     # ------------------------------------------------------------------
     # Output formatting
     # ------------------------------------------------------------------
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a JSON-serializable dict of all four matrices.
 
         Returns:
@@ -530,7 +529,7 @@ class GNNMatrices:
         C = self.compute_C()
         D = self.compute_D()
 
-        lines: List[str] = []
+        lines: list[str] = []
 
         # --- A matrix ---
         if A:
@@ -575,14 +574,14 @@ class GNNMatrices:
     # ------------------------------------------------------------------
     # Validation helpers
     # ------------------------------------------------------------------
-    def validate_shapes(self) -> Tuple[bool, List[str]]:
+    def validate_shapes(self) -> tuple[bool, list[str]]:
         """Validate that all four matrices have the expected shapes.
 
         Returns:
             ``(ok, errors)`` where ``ok`` is True if no shape errors
             were found.
         """
-        errors: List[str] = []
+        errors: list[str] = []
         A = self.compute_A()
         B = self.compute_B()
         C = self.compute_C()

@@ -9,30 +9,23 @@ Time Settings, Parameterization, Ontology Mapping, Provenance,
 Confidence, Rendering Hints, Validation Notes.
 """
 
-from typing import Dict, List, Any, Optional, Tuple, Set
-from datetime import datetime, timezone
 import logging
 import traceback
-from collections import defaultdict
+from typing import Any
 
-from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.statespace.compiler import StateSpaceModel
-from cogant.process.extractor import ProcessModel
-from cogant.schemas.semantic import MappingKind
-
-logger = logging.getLogger(__name__)
-
-
-from cogant.gnn.formatter.metadata import _MetadataSectionsMixin
-from cogant.gnn.formatter.structural import _StructuralSectionsMixin
 from cogant.gnn.formatter.dynamics import _DynamicsSectionsMixin
+from cogant.gnn.formatter.metadata import _MetadataSectionsMixin
 from cogant.gnn.formatter.semantic import _SemanticSectionsMixin
+from cogant.gnn.formatter.structural import _StructuralSectionsMixin
 from cogant.gnn.formatter.upstream import (
     _UpstreamSectionsMixin,
-    UPSTREAM_REQUIRED_SECTIONS,
-    UPSTREAM_OPTIONAL_SECTIONS,
 )
+from cogant.process.extractor import ProcessModel
+from cogant.schemas.core import EdgeKind
+from cogant.schemas.graph import ProgramGraph
+from cogant.statespace.compiler import StateSpaceModel
+
+logger = logging.getLogger(__name__)
 
 
 class GNNMarkdownFormatter(
@@ -86,7 +79,7 @@ class GNNMarkdownFormatter(
         program_graph: ProgramGraph,
         state_space_model: StateSpaceModel,
         process_model: ProcessModel,
-        semantic_mappings: Dict[str, Any],
+        semantic_mappings: dict[str, Any],
     ):
         """
         Initialize the formatter.
@@ -160,7 +153,7 @@ class GNNMarkdownFormatter(
         return "\n\n".join(output)
 
     @staticmethod
-    def _action_effects(action: Any) -> List[str]:
+    def _action_effects(action: Any) -> list[str]:
         """Read action effects across schema variants."""
         effects = getattr(action, "effects", None)
         if effects is None:
@@ -168,7 +161,7 @@ class GNNMarkdownFormatter(
         return list(effects or [])
 
 
-    def _derive_probability_from_edges(self, action_id: Optional[str]) -> Optional[float]:
+    def _derive_probability_from_edges(self, action_id: str | None) -> float | None:
         """
         Derive action transition probability from edge weights in the graph.
 
@@ -226,7 +219,7 @@ class GNNMarkdownFormatter(
 
 
 
-    def format_section(self, section_name: str) -> Optional[str]:
+    def format_section(self, section_name: str) -> str | None:
         """
         Format a specific section.
 

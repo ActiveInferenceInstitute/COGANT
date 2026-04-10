@@ -1,10 +1,10 @@
 """TraceIngester: Parse runtime traces and extract call sequences."""
 
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-from collections import defaultdict
 import json
 import logging
+from collections import defaultdict
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +22,10 @@ class TraceIngester:
 
     def __init__(self):
         """Initialize trace ingester."""
-        self.traces: List[Dict[str, Any]] = []
-        self.call_graph: Dict[str, List[str]] = {}
+        self.traces: list[dict[str, Any]] = []
+        self.call_graph: dict[str, list[str]] = {}
 
-    def ingest_chrome_trace(self, json_path: str) -> List[Dict[str, Any]]:
+    def ingest_chrome_trace(self, json_path: str) -> list[dict[str, Any]]:
         """
         Parse Chrome DevTools trace JSON.
 
@@ -51,7 +51,7 @@ class TraceIngester:
             return self.traces
 
         try:
-            with open(json_path, "r", encoding="utf-8") as fh:
+            with open(json_path, encoding="utf-8") as fh:
                 raw = json.load(fh)
         except (json.JSONDecodeError, OSError) as exc:
             logger.error(f"Failed to parse trace file {json_path}: {exc}")
@@ -75,7 +75,7 @@ class TraceIngester:
             events = []
 
         # Normalize events: ensure each has the expected keys
-        normalized: List[Dict[str, Any]] = []
+        normalized: list[dict[str, Any]] = []
         for evt in events:
             if not isinstance(evt, dict):
                 continue
@@ -118,7 +118,7 @@ class TraceIngester:
 
         return self.traces
 
-    def ingest_custom_trace(self, trace_path: str, format: str) -> List[Dict[str, Any]]:
+    def ingest_custom_trace(self, trace_path: str, format: str) -> list[dict[str, Any]]:
         """
         Parse custom trace format.
 
@@ -142,14 +142,14 @@ class TraceIngester:
 
         return self.traces
 
-    def _all_events(self) -> List[Dict[str, Any]]:
+    def _all_events(self) -> list[dict[str, Any]]:
         """Collect all events from all ingested traces."""
-        events: List[Dict[str, Any]] = []
+        events: list[dict[str, Any]] = []
         for trace in self.traces:
             events.extend(trace.get("events", []))
         return events
 
-    def extract_call_sequences(self) -> List[List[str]]:
+    def extract_call_sequences(self) -> list[list[str]]:
         """
         Extract function call sequences from traces.
 
@@ -158,25 +158,25 @@ class TraceIngester:
         """
         logger.debug("Extracting call sequences from traces")
 
-        sequences: List[List[str]] = []
+        sequences: list[list[str]] = []
 
         # Group events by thread (pid, tid) to track per-thread call stacks
-        thread_events: Dict[Tuple[int, int], List[Dict[str, Any]]] = defaultdict(list)
+        thread_events: dict[tuple[int, int], list[dict[str, Any]]] = defaultdict(list)
         for evt in self._all_events():
             ph = evt.get("ph", "")
             if ph in ("B", "E", "X"):
                 key = (evt.get("pid", 0), evt.get("tid", 0))
                 thread_events[key].append(evt)
 
-        for thread_key, events in thread_events.items():
+        for _thread_key, events in thread_events.items():
             # Sort by timestamp, then B before E for same timestamp
             phase_order = {"B": 0, "X": 1, "E": 2}
             events.sort(
                 key=lambda e: (e["ts"], phase_order.get(e.get("ph", ""), 1))
             )
 
-            stack: List[str] = []
-            sequence: List[str] = []
+            stack: list[str] = []
+            sequence: list[str] = []
 
             for evt in events:
                 ph = evt.get("ph", "")
@@ -198,7 +198,7 @@ class TraceIngester:
         logger.debug(f"Extracted {len(sequences)} call sequences")
         return sequences
 
-    def extract_call_graph(self) -> Dict[str, List[str]]:
+    def extract_call_graph(self) -> dict[str, list[str]]:
         """
         Build call graph from traces.
 
@@ -208,23 +208,23 @@ class TraceIngester:
         logger.debug("Extracting call graph from traces")
 
         # Track caller->callee relationships using adjacency sets
-        adjacency: Dict[str, set] = defaultdict(set)
+        adjacency: dict[str, set] = defaultdict(set)
 
         # Group events by thread
-        thread_events: Dict[Tuple[int, int], List[Dict[str, Any]]] = defaultdict(list)
+        thread_events: dict[tuple[int, int], list[dict[str, Any]]] = defaultdict(list)
         for evt in self._all_events():
             ph = evt.get("ph", "")
             if ph in ("B", "E", "X"):
                 key = (evt.get("pid", 0), evt.get("tid", 0))
                 thread_events[key].append(evt)
 
-        for thread_key, events in thread_events.items():
+        for _thread_key, events in thread_events.items():
             phase_order = {"B": 0, "X": 1, "E": 2}
             events.sort(
                 key=lambda e: (e["ts"], phase_order.get(e.get("ph", ""), 1))
             )
 
-            stack: List[str] = []
+            stack: list[str] = []
 
             for evt in events:
                 ph = evt.get("ph", "")
@@ -250,7 +250,7 @@ class TraceIngester:
         )
         return self.call_graph
 
-    def extract_timing(self) -> Dict[str, Dict[str, float]]:
+    def extract_timing(self) -> dict[str, dict[str, float]]:
         """
         Extract timing information for functions.
 
@@ -260,10 +260,10 @@ class TraceIngester:
         logger.debug("Extracting timing data")
 
         # Collect durations per function name
-        durations: Dict[str, List[float]] = defaultdict(list)
+        durations: dict[str, list[float]] = defaultdict(list)
 
         # Build duration data from B/E pairs and X events
-        thread_stacks: Dict[Tuple[int, int], List[Dict[str, Any]]] = defaultdict(list)
+        thread_stacks: dict[tuple[int, int], list[dict[str, Any]]] = defaultdict(list)
 
         for evt in self._all_events():
             ph = evt.get("ph", "")
@@ -278,9 +278,9 @@ class TraceIngester:
                 thread_stacks[key].append(evt)
 
         # Match B/E pairs per thread
-        for thread_key, events in thread_stacks.items():
+        for _thread_key, events in thread_stacks.items():
             events.sort(key=lambda e: e["ts"])
-            stack: List[Dict[str, Any]] = []
+            stack: list[dict[str, Any]] = []
 
             for evt in events:
                 ph = evt.get("ph", "")
@@ -292,7 +292,7 @@ class TraceIngester:
                     dur_us = evt["ts"] - begin_evt["ts"]
                     durations[name].append(dur_us / 1000.0)  # convert to ms
 
-        timing_stats: Dict[str, Dict[str, float]] = {}
+        timing_stats: dict[str, dict[str, float]] = {}
         for name, durs in durations.items():
             if not durs:
                 continue
@@ -306,7 +306,7 @@ class TraceIngester:
         logger.debug(f"Computed timing for {len(timing_stats)} functions")
         return timing_stats
 
-    def extract_hot_paths(self, count: int = 10) -> List[Tuple[List[str], int]]:
+    def extract_hot_paths(self, count: int = 10) -> list[tuple[list[str], int]]:
         """
         Extract most frequently executed code paths.
 
@@ -321,7 +321,7 @@ class TraceIngester:
         sequences = self.extract_call_sequences()
 
         # Count path frequencies using tuple keys for hashability
-        path_counts: Dict[tuple, int] = defaultdict(int)
+        path_counts: dict[tuple, int] = defaultdict(int)
         for seq in sequences:
             # Use the full sequence as a path
             key = tuple(seq)
@@ -343,7 +343,7 @@ class TraceIngester:
         logger.debug(f"Found {len(result)} hot paths")
         return result
 
-    def get_trace_summary(self) -> Dict[str, Any]:
+    def get_trace_summary(self) -> dict[str, Any]:
         """Get summary of trace data."""
         return {
             "trace_count": len(self.traces),
@@ -351,9 +351,9 @@ class TraceIngester:
             "call_graph_size": len(self.call_graph),
         }
 
-    def get_function_calls(self, function_name: str) -> List[Dict[str, Any]]:
+    def get_function_calls(self, function_name: str) -> list[dict[str, Any]]:
         """Get all calls to a specific function."""
-        matches: List[Dict[str, Any]] = []
+        matches: list[dict[str, Any]] = []
         for evt in self._all_events():
             if evt.get("name") == function_name and evt.get("ph") in (
                 "B",
@@ -362,18 +362,18 @@ class TraceIngester:
                 matches.append(evt)
         return matches
 
-    def get_caller_functions(self, function_name: str) -> List[str]:
+    def get_caller_functions(self, function_name: str) -> list[str]:
         """Get list of functions that call the given function."""
         # Ensure call graph is populated
         if not self.call_graph:
             self.extract_call_graph()
 
-        callers: List[str] = []
+        callers: list[str] = []
         for caller, callees in self.call_graph.items():
             if function_name in callees:
                 callers.append(caller)
         return sorted(callers)
 
-    def get_callee_functions(self, function_name: str) -> List[str]:
+    def get_callee_functions(self, function_name: str) -> list[str]:
         """Get list of functions called by the given function."""
         return self.call_graph.get(function_name, [])

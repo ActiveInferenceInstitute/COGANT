@@ -4,17 +4,17 @@ Validation report generation.
 Compiles all validation results into comprehensive ValidationReport.
 """
 
-from typing import Dict, List, Optional, Any
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-import logging
+from typing import Any
 
+from cogant.process.extractor import ProcessModel
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
-from cogant.process.extractor import ProcessModel
-from cogant.validate.schema_check import SchemaValidator, ValidationIssue
 from cogant.validate.integrity import IntegrityChecker
 from cogant.validate.provenance_check import ProvenanceChecker
+from cogant.validate.schema_check import SchemaValidator, ValidationIssue
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +26,12 @@ class ValidationReport:
     schema_name: str
     validated_at: datetime
     model_id: str
-    issues: List[ValidationIssue]
+    issues: list[ValidationIssue]
     is_valid: bool
     coverage_score: float  # 0-1
     confidence_score: float  # 0-1
     summary: str
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 class ReportGenerator:
@@ -63,7 +63,7 @@ class ReportGenerator:
 
     def generate(
         self,
-        provenance_records: Optional[Dict[str, List[object]]] = None,
+        provenance_records: dict[str, list[object]] | None = None,
     ) -> ValidationReport:
         """
         Generate a complete validation report.
@@ -143,7 +143,7 @@ class ReportGenerator:
         logger.info(f"Report generated: valid={is_valid}, coverage={coverage_score:.1%}")
         return report
 
-    def _compute_confidence_score(self, issues: List[ValidationIssue]) -> float:
+    def _compute_confidence_score(self, issues: list[ValidationIssue]) -> float:
         """
         Compute overall confidence score from issues.
 
@@ -166,7 +166,7 @@ class ReportGenerator:
         penalty = (error_count * 0.1 + warning_count * 0.02 + info_count * 0.001) / total_elements
         return max(0.0, 1.0 - penalty)
 
-    def _generate_summary(self, issues: List[ValidationIssue], is_valid: bool) -> str:
+    def _generate_summary(self, issues: list[ValidationIssue], is_valid: bool) -> str:
         """
         Generate a text summary of validation results.
 
@@ -191,7 +191,7 @@ class ReportGenerator:
 
         return summary
 
-    def export_to_dict(self, report: ValidationReport) -> Dict[str, Any]:
+    def export_to_dict(self, report: ValidationReport) -> dict[str, Any]:
         """
         Export report to dictionary.
 

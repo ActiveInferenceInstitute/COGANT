@@ -5,17 +5,16 @@ Provides categorical distributions, transition matrices, and belief updates.
 """
 
 import math
-from typing import Dict, List, Optional, Tuple
-from collections import defaultdict
 import random
+from collections import defaultdict
 
-from cogant.statespace.compiler import StateSpaceModel, Action, Transition
+from cogant.statespace.compiler import StateSpaceModel
 
 
 class CategoricalDistribution:
     """Categorical probability distribution over discrete states."""
 
-    def __init__(self, categories: List[str], probabilities: Optional[List[float]] = None):
+    def __init__(self, categories: list[str], probabilities: list[float] | None = None):
         """
         Initialize a categorical distribution.
 
@@ -46,7 +45,7 @@ class CategoricalDistribution:
             self.probabilities = [p / total for p in probabilities]
 
         # Build category -> probability mapping
-        self.dist = {cat: prob for cat, prob in zip(categories, self.probabilities)}
+        self.dist = dict(zip(categories, self.probabilities, strict=False))
 
     def sample(self) -> str:
         """Sample a category from the distribution.
@@ -147,7 +146,7 @@ class CategoricalDistribution:
 class TransitionMatrix:
     """Transition probabilities between states under actions."""
 
-    def __init__(self, states: List[str], actions: List[str]):
+    def __init__(self, states: list[str], actions: list[str]):
         """
         Initialize a transition matrix.
 
@@ -158,7 +157,7 @@ class TransitionMatrix:
         self.states = states
         self.actions = actions
         # transitions[action][state] = CategoricalDistribution over next states
-        self.transitions: Dict[str, Dict[str, CategoricalDistribution]] = {
+        self.transitions: dict[str, dict[str, CategoricalDistribution]] = {
             action: {} for action in actions
         }
 
@@ -241,7 +240,7 @@ class TransitionMatrix:
         matrix = cls(states, actions)
 
         # Count transitions to estimate probabilities
-        transition_counts: Dict[Tuple[str, str, str], int] = defaultdict(int)
+        transition_counts: dict[tuple[str, str, str], int] = defaultdict(int)
 
         for trans_id, trans in state_space.transitions.items():
             if trans.action_id:
@@ -256,8 +255,8 @@ class TransitionMatrix:
                     transition_counts[(source, action_id, target)] += 1
 
         # Convert counts to probabilities
-        action_state_counts: Dict[Tuple[str, str], int] = defaultdict(int)
-        for (source, action, target), count in transition_counts.items():
+        action_state_counts: dict[tuple[str, str], int] = defaultdict(int)
+        for (source, action, _target), count in transition_counts.items():
             action_state_counts[(action, source)] += count
 
         for (source, action, target), count in transition_counts.items():

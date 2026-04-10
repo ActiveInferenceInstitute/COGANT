@@ -4,7 +4,7 @@ import ast
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -22,25 +22,25 @@ class FunctionDef:
     line_end: int
     """Ending line number."""
 
-    decorators: List[str] = field(default_factory=list)
+    decorators: list[str] = field(default_factory=list)
     """List of decorator names."""
 
-    args: List[str] = field(default_factory=list)
+    args: list[str] = field(default_factory=list)
     """Parameter names."""
 
-    return_annotation: Optional[str] = None
+    return_annotation: str | None = None
     """Return type annotation if present."""
 
-    docstring: Optional[str] = None
+    docstring: str | None = None
     """Function docstring."""
 
-    parent: Optional[str] = None
+    parent: str | None = None
     """Parent class name if method."""
 
     is_async: bool = False
     """Whether function is async."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     """Additional metadata."""
 
 
@@ -57,22 +57,22 @@ class ClassDef:
     line_end: int
     """Ending line number."""
 
-    bases: List[str] = field(default_factory=list)
+    bases: list[str] = field(default_factory=list)
     """Base class names."""
 
-    decorators: List[str] = field(default_factory=list)
+    decorators: list[str] = field(default_factory=list)
     """List of decorator names."""
 
-    docstring: Optional[str] = None
+    docstring: str | None = None
     """Class docstring."""
 
-    methods: List[FunctionDef] = field(default_factory=list)
+    methods: list[FunctionDef] = field(default_factory=list)
     """Methods defined in class."""
 
-    attributes: List[str] = field(default_factory=list)
+    attributes: list[str] = field(default_factory=list)
     """Class attributes."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     """Additional metadata."""
 
 
@@ -86,13 +86,13 @@ class ImportDef:
     is_relative: bool
     """Whether import is relative."""
 
-    names: List[str] = field(default_factory=list)
+    names: list[str] = field(default_factory=list)
     """Specific names imported (for 'from X import Y')."""
 
     line_num: int = 0
     """Line number of import."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     """Additional metadata."""
 
 
@@ -106,16 +106,16 @@ class AssignmentDef:
     line_num: int
     """Line number of assignment."""
 
-    annotation: Optional[str] = None
+    annotation: str | None = None
     """Type annotation if present."""
 
-    value: Optional[str] = None
+    value: str | None = None
     """String representation of assigned value."""
 
-    parent_scope: Optional[str] = None
+    parent_scope: str | None = None
     """Scope containing assignment (module or function)."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     """Additional metadata."""
 
 
@@ -126,22 +126,22 @@ class PythonModule:
     file_path: Path
     """Source file path."""
 
-    docstring: Optional[str] = None
+    docstring: str | None = None
     """Module docstring."""
 
-    functions: List[FunctionDef] = field(default_factory=list)
+    functions: list[FunctionDef] = field(default_factory=list)
     """Module-level functions."""
 
-    classes: List[ClassDef] = field(default_factory=list)
+    classes: list[ClassDef] = field(default_factory=list)
     """Module-level classes."""
 
-    imports: List[ImportDef] = field(default_factory=list)
+    imports: list[ImportDef] = field(default_factory=list)
     """Import statements."""
 
-    assignments: List[AssignmentDef] = field(default_factory=list)
+    assignments: list[AssignmentDef] = field(default_factory=list)
     """Module-level assignments."""
 
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     """Parse errors encountered."""
 
 
@@ -160,7 +160,7 @@ class PythonASTParser:
         module = PythonModule(file_path=file_path)
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 source = f.read()
         except Exception as e:
             module.errors.append(f"Failed to read file: {e}")
@@ -206,7 +206,7 @@ class PythonASTParser:
 
         return module
 
-    def parse_string(self, source: str, file_path: Optional[Path] = None) -> PythonModule:
+    def parse_string(self, source: str, file_path: Path | None = None) -> PythonModule:
         """Parse Python source from string.
 
         Args:
@@ -263,7 +263,7 @@ class PythonASTParser:
 
     def _extract_function(
         self, node: ast.FunctionDef | ast.AsyncFunctionDef
-    ) -> Optional[FunctionDef]:
+    ) -> FunctionDef | None:
         """Extract function definition from AST node.
 
         Args:
@@ -313,7 +313,7 @@ class PythonASTParser:
             logger.debug(f"Failed to extract function {getattr(node, 'name', '?')}: {e}")
             return None
 
-    def _extract_class(self, node: ast.ClassDef) -> Optional[ClassDef]:
+    def _extract_class(self, node: ast.ClassDef) -> ClassDef | None:
         """Extract class definition from AST node.
 
         Args:
@@ -373,7 +373,7 @@ class PythonASTParser:
             logger.debug(f"Failed to extract class {getattr(node, 'name', '?')}: {e}")
             return None
 
-    def _extract_imports(self, node: ast.Import | ast.ImportFrom) -> List[ImportDef]:
+    def _extract_imports(self, node: ast.Import | ast.ImportFrom) -> list[ImportDef]:
         """Extract import statements from AST node.
 
         Args:
@@ -415,7 +415,7 @@ class PythonASTParser:
 
     def _extract_assignment(
         self, node: ast.Assign | ast.AnnAssign
-    ) -> Optional[AssignmentDef]:
+    ) -> AssignmentDef | None:
         """Extract assignment from AST node.
 
         Args:

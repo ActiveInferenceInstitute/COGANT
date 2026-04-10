@@ -1,8 +1,10 @@
 """GNN schema migration functions."""
 from __future__ import annotations
+
 import re
-from cogant.schema.versions import SchemaVersion
+
 from cogant.schema.detector import detect_version
+from cogant.schema.versions import SchemaVersion
 
 _GNN_SECTION_RE = re.compile(r"^##\s+GNNSection\b", re.MULTILINE)
 

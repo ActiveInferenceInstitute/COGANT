@@ -35,7 +35,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from cogant.markov.blanket import BlanketRole, MarkovBlanket
 from cogant.schemas.core import EdgeKind
@@ -46,21 +46,21 @@ from cogant.schemas.graph import ProgramGraph
 class BlanketNetwork:
     """Collapsed four-node Active Inference network view of a blanket."""
 
-    role_counts: Dict[str, int]
+    role_counts: dict[str, int]
     """Number of concrete nodes per role (``internal``, ``sensory``, …)."""
 
-    role_members: Dict[str, List[str]]
+    role_members: dict[str, list[str]]
     """Node ids per role, sorted."""
 
-    aggregate_edges: Dict[Tuple[str, str], int]
+    aggregate_edges: dict[tuple[str, str], int]
     """Dict of ``(from_role, to_role) → edge count``."""
 
-    edge_kind_breakdown: Dict[Tuple[str, str], Dict[str, int]]
+    edge_kind_breakdown: dict[tuple[str, str], dict[str, int]]
     """Same shape as ``aggregate_edges`` but bucketed by ``EdgeKind``."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize the network as a JSON-friendly dictionary."""
         return {
             "role_counts": dict(self.role_counts),
@@ -115,8 +115,8 @@ def build_blanket_network(
     Returns:
         A :class:`BlanketNetwork` summarising the collapsed view.
     """
-    aggregate: Dict[Tuple[str, str], int] = defaultdict(int)
-    kind_break: Dict[Tuple[str, str], Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    aggregate: dict[tuple[str, str], int] = defaultdict(int)
+    kind_break: dict[tuple[str, str], dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
     def _role_name(node_id: str) -> str:
         return blanket.role_of(node_id).value

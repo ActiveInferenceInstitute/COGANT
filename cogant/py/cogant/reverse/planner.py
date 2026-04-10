@@ -37,7 +37,6 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List
 
 from cogant.reverse.parser import ReverseGNNModel
 
@@ -101,12 +100,12 @@ class PackagePlan:
 
     package_name: str = "cogant_model"
     raw_model_name: str = "cogant_model"
-    nodes: List[NodePlan] = field(default_factory=list)
-    state_vars: List[NodePlan] = field(default_factory=list)
-    obs_functions: List[NodePlan] = field(default_factory=list)
-    action_methods: List[NodePlan] = field(default_factory=list)
-    policy_functions: List[NodePlan] = field(default_factory=list)
-    constraint_checks: List[NodePlan] = field(default_factory=list)
+    nodes: list[NodePlan] = field(default_factory=list)
+    state_vars: list[NodePlan] = field(default_factory=list)
+    obs_functions: list[NodePlan] = field(default_factory=list)
+    action_methods: list[NodePlan] = field(default_factory=list)
+    policy_functions: list[NodePlan] = field(default_factory=list)
+    constraint_checks: list[NodePlan] = field(default_factory=list)
     has_A_matrix: bool = False
     has_B_tensor: bool = False
     has_C_vector: bool = False
@@ -186,7 +185,7 @@ def _default_value_for(py_type: str, cardinality: int, d_mass: float) -> str:
     return "0.0"
 
 
-def _reserved_avoid(name: str, existing: Dict[str, int]) -> str:
+def _reserved_avoid(name: str, existing: dict[str, int]) -> str:
     """Avoid Python keywords and name collisions by appending ``_N``.
 
     Reserved words are silently prefixed with ``var_``. Collisions add
@@ -223,7 +222,7 @@ def plan_package(model: ReverseGNNModel) -> PackagePlan:
         package_name=model.model_name or "cogant_model",
         raw_model_name=model.raw_model_name or model.model_name or "cogant_model",
     )
-    used_names: Dict[str, int] = {}
+    used_names: dict[str, int] = {}
 
     # Hidden states → State attributes in state.py
     for i, slot in enumerate(model.hidden_states):
@@ -256,7 +255,7 @@ def plan_package(model: ReverseGNNModel) -> PackagePlan:
     # records a READS edge for the function body. This gives the
     # reverse → forward round-trip a strong, first-class lexical signal
     # that cannot be lost to edge-extraction noise.
-    for i, slot in enumerate(model.observations):
+    for _i, slot in enumerate(model.observations):
         human = model.human_names.get(slot, "")
         ident = _to_identifier(human, slot)
         ident = _reserved_avoid(f"get_{ident}" if ident == slot else f"get_{ident}", used_names)
@@ -285,7 +284,7 @@ def plan_package(model: ReverseGNNModel) -> PackagePlan:
     # body. This matches the symmetry with ``get_`` on the observation
     # side and guarantees the forward pass will classify the right
     # number of actions on the synthesized package.
-    for i, slot in enumerate(model.actions):
+    for _i, slot in enumerate(model.actions):
         human = model.human_names.get(slot, "")
         ident = _to_identifier(human, slot)
         ident = _reserved_avoid(f"update_{ident}" if ident == slot else f"update_{ident}", used_names)

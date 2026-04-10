@@ -7,17 +7,16 @@ embedded SVG charts, Mermaid diagrams, and comprehensive data views.
 
 import html
 import json
-from datetime import datetime
-from typing import Dict, Any, Optional, List
-from collections import defaultdict
-from pathlib import Path
 import logging
+from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
-from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.semantic import SemanticMapping, MappingKind
-from cogant.statespace.compiler import StateSpaceModel
 from cogant.process.extractor import ProcessModel
+from cogant.schemas.graph import ProgramGraph
+from cogant.schemas.semantic import SemanticMapping
+from cogant.statespace.compiler import StateSpaceModel
 from cogant.validate.report import ValidationReport
 
 logger = logging.getLogger(__name__)
@@ -34,13 +33,13 @@ class DashboardGenerator:
         graph: ProgramGraph,
         state_space: StateSpaceModel,
         process_model: ProcessModel,
-        semantic_mappings: Dict[str, SemanticMapping],
-        mermaid_diagrams: Dict[str, str],
+        semantic_mappings: dict[str, SemanticMapping],
+        mermaid_diagrams: dict[str, str],
         validation_report: ValidationReport,
         repo_name: str,
-        output_dir: Optional[Path] = None,
-        trace_data: Optional[Dict[str, Any]] = None,
-        gnn_validation: Optional[Dict[str, Any]] = None,
+        output_dir: Path | None = None,
+        trace_data: dict[str, Any] | None = None,
+        gnn_validation: dict[str, Any] | None = None,
     ):
         """
         Initialize dashboard generator.
@@ -224,7 +223,7 @@ class DashboardGenerator:
                 trace_file = output_path / "simulation_trace.json"
             if trace_file.exists():
                 try:
-                    with open(trace_file, "r") as f:
+                    with open(trace_file) as f:
                         self.trace_data = json.load(f)
                 except Exception as e:
                     logger.warning(f"Failed to load trace data: {e}")
@@ -234,7 +233,7 @@ class DashboardGenerator:
             gnn_file = output_path / "gnn_validation_report.json"
             if gnn_file.exists():
                 try:
-                    with open(gnn_file, "r") as f:
+                    with open(gnn_file) as f:
                         self.gnn_validation = json.load(f)
                 except Exception as e:
                     logger.warning(f"Failed to load GNN validation: {e}")
@@ -282,7 +281,7 @@ class DashboardGenerator:
             return "<p>No nodes to display</p>"
 
         # Count nodes by kind
-        kind_counts: Dict[str, int] = defaultdict(int)
+        kind_counts: dict[str, int] = defaultdict(int)
         for node in self.graph.nodes.values():
             kind_counts[node.kind.value] += 1
 
@@ -292,7 +291,7 @@ class DashboardGenerator:
 
         # Generate SVG
         width, height = 800, 250
-        bar_width = width / len(kinds) if kinds else width
+        width / len(kinds) if kinds else width
         chart_html = self._create_bar_chart(kinds, counts, max_count, width, height)
         return chart_html
 
@@ -302,7 +301,7 @@ class DashboardGenerator:
             return "<p>No edges to display</p>"
 
         # Count edges by kind
-        kind_counts: Dict[str, int] = defaultdict(int)
+        kind_counts: dict[str, int] = defaultdict(int)
         for edge in self.graph.edges.values():
             kind_counts[edge.kind.value] += 1
 
@@ -313,7 +312,7 @@ class DashboardGenerator:
         chart_html = self._create_bar_chart(kinds, counts, max_count, 800, 250)
         return chart_html
 
-    def _create_bar_chart(self, labels: List[str], values: List[int], max_val: int, width: int, height: int) -> str:
+    def _create_bar_chart(self, labels: list[str], values: list[int], max_val: int, width: int, height: int) -> str:
         """Create a simple SVG bar chart."""
         if not labels or not values:
             return '<p>No data to display</p>'
@@ -329,7 +328,7 @@ class DashboardGenerator:
 
         # Bars
         bar_width = chart_width / len(labels)
-        for i, (label, value) in enumerate(zip(labels, values)):
+        for i, (label, value) in enumerate(zip(labels, values, strict=False)):
             x = padding + i * bar_width
             bar_height = (value / max_val) * chart_height if max_val > 0 else 0
             y = padding + chart_height - bar_height
@@ -372,7 +371,7 @@ class DashboardGenerator:
             return "<p>No semantic mappings to display</p>"
 
         # Count mappings by kind
-        kind_counts: Dict[str, int] = defaultdict(int)
+        kind_counts: dict[str, int] = defaultdict(int)
         for mapping in self.semantic_mappings.values():
             kind = getattr(mapping, "kind", "unknown")
             if hasattr(kind, "value"):
@@ -393,18 +392,17 @@ class DashboardGenerator:
         svg_parts = [f'<svg width="{size}" height="{size}" viewBox="0 0 {size} {size}">']
 
         angle = 0
-        for i, (kind, count) in enumerate(zip(kinds, counts)):
+        for i, (_kind, count) in enumerate(zip(kinds, counts, strict=False)):
             slice_angle = (count / total) * 360
             color = colors[i % len(colors)]
 
             # Calculate path
-            start_angle = angle * (3.14159 / 180)
-            end_angle = (angle + slice_angle) * (3.14159 / 180)
+            angle * (3.14159 / 180)
+            (angle + slice_angle) * (3.14159 / 180)
 
-            x1 = cx + radius * (3.14159 / 180) * (angle + slice_angle / 2)
-            y1 = cy + radius * (3.14159 / 180) * (angle + slice_angle / 2)
+            cx + radius * (3.14159 / 180) * (angle + slice_angle / 2)
+            cy + radius * (3.14159 / 180) * (angle + slice_angle / 2)
 
-            large_arc = 1 if slice_angle > 180 else 0
 
             # Simplified: just use circles colored by angle
             svg_parts.append(
@@ -416,15 +414,14 @@ class DashboardGenerator:
 
             # Label
             label_angle = angle + slice_angle / 2
-            label_rad = label_angle * (3.14159 / 180)
-            label_x = cx + (radius - 20) * (3.14159 / 180) * slice_angle / 2
-            label_y = cy
+            label_angle * (3.14159 / 180)
+            cx + (radius - 20) * (3.14159 / 180) * slice_angle / 2
 
             angle += slice_angle
 
         # Legend
-        svg_parts.append(f'<text x="20" y="20" font-size="12" font-weight="bold" fill="#667eea">Mapping Kinds</text>')
-        for i, (kind, count) in enumerate(zip(kinds, counts)):
+        svg_parts.append('<text x="20" y="20" font-size="12" font-weight="bold" fill="#667eea">Mapping Kinds</text>')
+        for i, (kind, count) in enumerate(zip(kinds, counts, strict=False)):
             color = colors[i % len(colors)]
             y = 40 + i * 20
             svg_parts.append(f'<rect x="20" y="{y-8}" width="12" height="12" fill="{color}" rx="2"/>')
@@ -660,7 +657,7 @@ class DashboardGenerator:
 
         # Build stages table
         stages_rows = ""
-        for stage_id, stage in self.process_model.stages.items():
+        for _stage_id, stage in self.process_model.stages.items():
             preds = ", ".join(self.process_model.stages[p].name for p in stage.entry_points if p in self.process_model.stages) if stage.entry_points else "-"
             succs = ", ".join(self.process_model.stages[s].name for s in stage.exit_points if s in self.process_model.stages) if stage.exit_points else "-"
 
@@ -889,7 +886,7 @@ class DashboardGenerator:
 """
 
         # Parse trace data
-        trace_list: List[Any] = self.trace_data if isinstance(self.trace_data, list) else []
+        trace_list: list[Any] = self.trace_data if isinstance(self.trace_data, list) else []
 
         # Generate free energy chart
         fe_svg = self._generate_free_energy_chart(trace_list)
@@ -913,12 +910,12 @@ class DashboardGenerator:
     </div>
 """
 
-    def _generate_free_energy_chart(self, trace_list: List[Dict]) -> str:
+    def _generate_free_energy_chart(self, trace_list: list[dict]) -> str:
         """Generate free energy trajectory line chart."""
         if not trace_list:
             return "<p>No trace data</p>"
 
-        steps = [t.get("step", i) for i, t in enumerate(trace_list[:100])]
+        [t.get("step", i) for i, t in enumerate(trace_list[:100])]
         free_energies = [t.get("free_energy", 0.0) for t in trace_list[:100]]
 
         if not free_energies:
@@ -963,7 +960,7 @@ class DashboardGenerator:
         svg_parts.append('</svg>')
         return "".join(svg_parts)
 
-    def _generate_belief_evolution_table(self, trace_list: List[Dict]) -> str:
+    def _generate_belief_evolution_table(self, trace_list: list[dict]) -> str:
         """Generate belief evolution table."""
         if not trace_list:
             return "<p>No trace data</p>"

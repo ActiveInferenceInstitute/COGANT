@@ -4,11 +4,9 @@ import hashlib
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from cogant.static.parser import (
-    ClassDef,
-    FunctionDef,
     PythonASTParser,
     PythonModule,
 )
@@ -44,16 +42,16 @@ class SymbolInfo:
     scope: str
     """Scope context (module, class_name, function_name)."""
 
-    parent_id: Optional[str] = None
+    parent_id: str | None = None
     """ID of parent symbol if nested."""
 
-    doc: Optional[str] = None
+    doc: str | None = None
     """Docstring if available."""
 
-    decorators: List[str] = field(default_factory=list)
+    decorators: list[str] = field(default_factory=list)
     """List of decorators."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     """Language-specific metadata."""
 
 
@@ -64,17 +62,17 @@ class SymbolTable:
     file_path: Path
     """Source file path."""
 
-    symbols: List[SymbolInfo] = field(default_factory=list)
+    symbols: list[SymbolInfo] = field(default_factory=list)
     """Extracted symbols."""
 
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     """Errors encountered during extraction."""
 
 
 class SymbolExtractor:
     """Extract symbols from parsed Python modules."""
 
-    def __init__(self, repo_root: Optional[Path] = None):
+    def __init__(self, repo_root: Path | None = None):
         """Initialize symbol extractor.
 
         Args:

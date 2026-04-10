@@ -1,7 +1,6 @@
 """Identity resolver for generating stable, deterministic IDs for repository elements."""
 
 import hashlib
-from typing import Dict, Optional, Tuple
 from dataclasses import dataclass
 
 
@@ -18,10 +17,10 @@ class IdentityRecord:
     repo_uri: str
     """URI of the repository."""
 
-    path: Optional[str]
+    path: str | None
     """Path within repository."""
 
-    qualified_name: Optional[str]
+    qualified_name: str | None
     """Qualified name of the entity."""
 
     hash_inputs: str
@@ -37,15 +36,15 @@ class IdentityResolver:
 
     def __init__(self) -> None:
         """Initialize the identity resolver."""
-        self._id_cache: Dict[str, IdentityRecord] = {}
-        self._reverse_lookup: Dict[str, str] = {}
+        self._id_cache: dict[str, IdentityRecord] = {}
+        self._reverse_lookup: dict[str, str] = {}
 
     def generate_id(
         self,
         entity_type: str,
         repo_uri: str,
-        path: Optional[str] = None,
-        qualified_name: Optional[str] = None,
+        path: str | None = None,
+        qualified_name: str | None = None,
     ) -> str:
         """Generate a deterministic ID for an entity.
 
@@ -82,8 +81,8 @@ class IdentityResolver:
     def _build_hash_input(
         self,
         repo_uri: str,
-        path: Optional[str] = None,
-        qualified_name: Optional[str] = None,
+        path: str | None = None,
+        qualified_name: str | None = None,
     ) -> str:
         """Build concatenated string for hashing.
 
@@ -106,8 +105,8 @@ class IdentityResolver:
         self,
         entity_type: str,
         repo_uri: str,
-        path: Optional[str] = None,
-        qualified_name: Optional[str] = None,
+        path: str | None = None,
+        qualified_name: str | None = None,
     ) -> str:
         """Get or create ID for an entity (idempotent).
 
@@ -129,9 +128,9 @@ class IdentityResolver:
         self,
         entity_type: str,
         repo_uri: str,
-        path: Optional[str] = None,
-        qualified_name: Optional[str] = None,
-    ) -> Optional[str]:
+        path: str | None = None,
+        qualified_name: str | None = None,
+    ) -> str | None:
         """Look up an existing ID without creating one.
 
         Args:
@@ -146,7 +145,7 @@ class IdentityResolver:
         hash_input = self._build_hash_input(repo_uri, path, qualified_name)
         return self._reverse_lookup.get(hash_input)
 
-    def get_record(self, identity_id: str) -> Optional[IdentityRecord]:
+    def get_record(self, identity_id: str) -> IdentityRecord | None:
         """Retrieve the record for an identity.
 
         Args:
@@ -189,13 +188,13 @@ class IdentityResolver:
         hash_obj = hashlib.sha256(edge_input.encode("utf-8"))
         return hash_obj.hexdigest()[:16]
 
-    def get_statistics(self) -> Dict[str, int]:
+    def get_statistics(self) -> dict[str, int]:
         """Get statistics about cached identities.
 
         Returns:
             Dictionary with cache statistics.
         """
-        entity_types: Dict[str, int] = {}
+        entity_types: dict[str, int] = {}
         for record in self._id_cache.values():
             entity_types[record.entity_type] = entity_types.get(record.entity_type, 0) + 1
 

@@ -40,11 +40,10 @@ partition ready for serialization into the GNN bundle.
 from __future__ import annotations
 
 import logging
-from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Literal, Optional, Sequence, Set
+from collections.abc import Iterable, Sequence
+from typing import Any, Literal
 
 from cogant.markov.blanket import (
-    BlanketRole,
     MarkovBlanket,
     _bidirectional_adjacency,
     partition_by_seeds,
@@ -82,11 +81,11 @@ class MarkovBlanketExtractor:
         self,
         *,
         strategy: SeedStrategy = "auto",
-        seeds: Optional[Iterable[str]] = None,
-        module_names: Optional[Sequence[str]] = None,
-        kinds: Optional[Sequence[NodeKind]] = None,
-        mapping_kinds: Optional[Sequence[str]] = None,
-        semantic_mappings: Optional[Dict[str, Any]] = None,
+        seeds: Iterable[str] | None = None,
+        module_names: Sequence[str] | None = None,
+        kinds: Sequence[NodeKind] | None = None,
+        mapping_kinds: Sequence[str] | None = None,
+        semantic_mappings: dict[str, Any] | None = None,
     ) -> MarkovBlanket:
         """Compute a Markov blanket.
 
@@ -150,10 +149,10 @@ class MarkovBlanketExtractor:
 
     # ---------------------- Seed strategy helpers ---------------------- #
 
-    def _seeds_from_modules(self, module_names: Sequence[str]) -> Set[str]:
+    def _seeds_from_modules(self, module_names: Sequence[str]) -> set[str]:
         """Collect module nodes + everything they ``CONTAINS``-reach."""
         targets = {m.lower() for m in module_names}
-        seeds: Set[str] = set()
+        seeds: set[str] = set()
         module_nodes = self.graph.get_nodes_by_kind(NodeKind.MODULE)
         for node in module_nodes:
             name_match = (node.name or "").lower()
@@ -163,9 +162,9 @@ class MarkovBlanketExtractor:
                 seeds.update(self._descend_contains(node.id))
         return seeds
 
-    def _descend_contains(self, root_id: str) -> Set[str]:
+    def _descend_contains(self, root_id: str) -> set[str]:
         """Return the transitive CONTAINS-closure of ``root_id``."""
-        collected: Set[str] = set()
+        collected: set[str] = set()
         frontier = [root_id]
         while frontier:
             cur = frontier.pop()
@@ -175,8 +174,8 @@ class MarkovBlanketExtractor:
                     frontier.append(edge.target_id)
         return collected
 
-    def _seeds_from_kinds(self, kinds: Sequence[NodeKind]) -> Set[str]:
-        seeds: Set[str] = set()
+    def _seeds_from_kinds(self, kinds: Sequence[NodeKind]) -> set[str]:
+        seeds: set[str] = set()
         for kind in kinds:
             for node in self.graph.get_nodes_by_kind(kind):
                 seeds.add(node.id)
@@ -184,11 +183,11 @@ class MarkovBlanketExtractor:
 
     def _seeds_from_mapping_kinds(
         self,
-        semantic_mappings: Dict[str, Any],
+        semantic_mappings: dict[str, Any],
         mapping_kinds: Sequence[str],
-    ) -> Set[str]:
+    ) -> set[str]:
         wanted = {mk.lower() for mk in mapping_kinds}
-        seeds: Set[str] = set()
+        seeds: set[str] = set()
         for mapping in semantic_mappings.values():
             kind_value = getattr(mapping, "kind", None)
             if kind_value is None:
@@ -202,7 +201,7 @@ class MarkovBlanketExtractor:
                     seeds.add(nid)
         return seeds
 
-    def _seeds_auto(self) -> tuple[Set[str], Dict[str, Any]]:
+    def _seeds_auto(self) -> tuple[set[str], dict[str, Any]]:
         """Pick the best cohesion/coupling seed set automatically.
 
         The heuristic has two tiers:
@@ -237,9 +236,9 @@ class MarkovBlanketExtractor:
             return self._auto_class_fallback(reason="no modules present")
 
         best_score = -1.0
-        best_id: Optional[str] = None
+        best_id: str | None = None
         best_size = 0
-        scoreboard: List[Dict[str, Any]] = []
+        scoreboard: list[dict[str, Any]] = []
 
         for module in modules:
             closure = {module.id} | self._descend_contains(module.id)
@@ -300,7 +299,7 @@ class MarkovBlanketExtractor:
         )
         return seeds, meta
 
-    def _auto_class_fallback(self, *, reason: str) -> tuple[Set[str], Dict[str, Any]]:
+    def _auto_class_fallback(self, *, reason: str) -> tuple[set[str], dict[str, Any]]:
         """Pick the largest ``CLASS`` closure as the auto seed set.
 
         Chooses the class whose ``CONTAINS``-closure size is largest
@@ -317,8 +316,8 @@ class MarkovBlanketExtractor:
                 "candidate_classes": 0,
             }
 
-        best_cls_id: Optional[str] = None
-        best_closure: Set[str] = set()
+        best_cls_id: str | None = None
+        best_closure: set[str] = set()
         for cls in sorted(classes, key=lambda c: c.id):
             closure = {cls.id} | self._descend_contains(cls.id)
             if len(closure) > len(best_closure):

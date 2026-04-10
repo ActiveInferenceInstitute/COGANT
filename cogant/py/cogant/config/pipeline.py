@@ -34,7 +34,6 @@ from .reverse import ReverseConfig
 from .statespace import StatespaceConfig
 from .translate import TranslateConfig
 
-
 _DEFAULT_STAGES: list[str] = [
     "ingest",
     "static",
@@ -117,7 +116,7 @@ class PipelineConfig(BaseModel):
     # ------------------------------------------------------------------
 
     @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> "PipelineConfig":
+    def from_dict(cls, d: dict[str, Any]) -> PipelineConfig:
         """Build a :class:`PipelineConfig` from a plain dictionary.
 
         Nested sub-config dicts (``ingest``, ``graph``, ...) are passed
@@ -127,7 +126,7 @@ class PipelineConfig(BaseModel):
         return cls.model_validate(d)
 
     @classmethod
-    def from_yaml(cls, path: str | Path) -> "PipelineConfig":
+    def from_yaml(cls, path: str | Path) -> PipelineConfig:
         """Build a :class:`PipelineConfig` from a YAML file.
 
         Requires ``pyyaml``; a clear :class:`ImportError` is raised if
@@ -151,7 +150,7 @@ class PipelineConfig(BaseModel):
         return cls.from_dict(data)
 
     @classmethod
-    def from_json(cls, path: str | Path) -> "PipelineConfig":
+    def from_json(cls, path: str | Path) -> PipelineConfig:
         """Build a :class:`PipelineConfig` from a JSON file."""
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         if not isinstance(data, dict):
@@ -198,7 +197,7 @@ class PipelineConfig(BaseModel):
     # Immutable-update helpers
     # ------------------------------------------------------------------
 
-    def override(self, **kwargs: Any) -> "PipelineConfig":
+    def override(self, **kwargs: Any) -> PipelineConfig:
         """Return a new config with top-level fields overridden.
 
         Unknown fields raise :class:`ValueError` immediately so typos

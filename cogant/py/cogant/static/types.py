@@ -16,7 +16,7 @@ import ast
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from cogant.static.parser import AssignmentDef, FunctionDef, PythonASTParser
 from cogant.static.symbols import SymbolExtractor
@@ -37,10 +37,10 @@ class TypeInfo:
     symbol_kind: str
     """Symbol kind (function, variable, parameter, attribute)."""
 
-    inferred_type: Optional[str] = None
+    inferred_type: str | None = None
     """Inferred type."""
 
-    annotation: Optional[str] = None
+    annotation: str | None = None
     """Explicit type annotation."""
 
     is_mutable: bool = True
@@ -49,14 +49,14 @@ class TypeInfo:
     confidence: float = 0.0
     """Confidence score (0.0 to 1.0)."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     """Additional type metadata."""
 
 
 class TypeInferencer:
     """Infer and extract type information from Python code."""
 
-    def __init__(self, repo_root: Optional[Path] = None):
+    def __init__(self, repo_root: Path | None = None):
         """Initialize type inferencer.
 
         Args:
@@ -70,7 +70,7 @@ class TypeInferencer:
     # Public API
     # ------------------------------------------------------------------
 
-    def infer_types_from_file(self, file_path: Path) -> List[TypeInfo]:
+    def infer_types_from_file(self, file_path: Path) -> list[TypeInfo]:
         """Infer types for all symbols in a Python file.
 
         Args:
@@ -80,7 +80,7 @@ class TypeInferencer:
             List of TypeInfo for symbols with inferred types.
         """
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 source = f.read()
         except OSError as e:
             logger.debug(f"Failed to read {file_path}: {e}")
@@ -90,7 +90,7 @@ class TypeInferencer:
 
     def infer_types_from_source(
         self, source: str, file_path: Path
-    ) -> List[TypeInfo]:
+    ) -> list[TypeInfo]:
         """Infer types from Python source code.
 
         Args:
@@ -117,7 +117,7 @@ class TypeInferencer:
             logger.debug(f"Symbol extraction failed for {file_path}: {e}")
             symbol_table = None
 
-        type_infos: List[TypeInfo] = []
+        type_infos: list[TypeInfo] = []
 
         # Walk each top-level definition.
         for node in tree.body:
@@ -149,9 +149,9 @@ class TypeInferencer:
         self,
         node: ast.FunctionDef | ast.AsyncFunctionDef,
         scope: str,
-    ) -> List[TypeInfo]:
+    ) -> list[TypeInfo]:
         """Return TypeInfos for a function/method: return type and params."""
-        results: List[TypeInfo] = []
+        results: list[TypeInfo] = []
 
         qualified = (
             node.name if scope == "module" else f"{scope}.{node.name}"
@@ -189,7 +189,7 @@ class TypeInferencer:
             )
 
         # Parameter annotations
-        all_args: List[ast.arg] = []
+        all_args: list[ast.arg] = []
         all_args.extend(node.args.args)
         all_args.extend(getattr(node.args, "kwonlyargs", []))
         all_args.extend(getattr(node.args, "posonlyargs", []))
@@ -220,9 +220,9 @@ class TypeInferencer:
 
         return results
 
-    def _infer_from_class(self, node: ast.ClassDef) -> List[TypeInfo]:
+    def _infer_from_class(self, node: ast.ClassDef) -> list[TypeInfo]:
         """Return TypeInfos for a class body and all its methods."""
-        results: List[TypeInfo] = []
+        results: list[TypeInfo] = []
 
         # Class-level annotated attributes (``x: int = 0``)
         for item in node.body:
@@ -252,9 +252,9 @@ class TypeInferencer:
         self,
         init: ast.FunctionDef | ast.AsyncFunctionDef,
         class_name: str,
-    ) -> List[TypeInfo]:
+    ) -> list[TypeInfo]:
         """Detect ``self.x = ...`` assignments in ``__init__``."""
-        results: List[TypeInfo] = []
+        results: list[TypeInfo] = []
         for stmt in ast.walk(init):
             if isinstance(stmt, ast.Assign):
                 for target in stmt.targets:
@@ -310,9 +310,9 @@ class TypeInferencer:
         node: ast.Assign,
         scope: str,
         kind: str = "variable",
-    ) -> List[TypeInfo]:
+    ) -> list[TypeInfo]:
         """Handle plain ``x = value`` assignments outside of __init__."""
-        results: List[TypeInfo] = []
+        results: list[TypeInfo] = []
         inferred = self._infer_literal_type(node.value)
         if inferred is None:
             return results
@@ -336,7 +336,7 @@ class TypeInferencer:
 
     def _infer_from_annassign(
         self, node: ast.AnnAssign, scope: str
-    ) -> Optional[TypeInfo]:
+    ) -> TypeInfo | None:
         """Handle ``x: int`` or ``x: int = 5`` at module or class scope."""
         if not isinstance(node.target, ast.Name):
             return None
@@ -361,7 +361,7 @@ class TypeInferencer:
 
     def _infer_function_return_type(
         self, func: FunctionDef, symbol_table
-    ) -> Optional[TypeInfo]:
+    ) -> TypeInfo | None:
         """Infer return type of a function from a parser FunctionDef."""
         symbol = next(
             (s for s in symbol_table.symbols if s.name == func.name), None
@@ -394,7 +394,7 @@ class TypeInferencer:
 
     def _infer_variable_type(
         self, assign: AssignmentDef, symbol_table
-    ) -> Optional[TypeInfo]:
+    ) -> TypeInfo | None:
         """Infer type of a variable from a parser AssignmentDef."""
         symbol = next(
             (s for s in symbol_table.symbols if s.name == assign.target_name),
@@ -430,7 +430,7 @@ class TypeInferencer:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _annotation_to_str(node: Optional[ast.AST]) -> Optional[str]:
+    def _annotation_to_str(node: ast.AST | None) -> str | None:
         """Convert an annotation AST node to a display string."""
         if node is None:
             return None
@@ -444,7 +444,7 @@ class TypeInferencer:
             return type(node).__name__
 
     @staticmethod
-    def _safe_unparse(node: Optional[ast.AST]) -> Optional[str]:
+    def _safe_unparse(node: ast.AST | None) -> str | None:
         """Best-effort :func:`ast.unparse`."""
         if node is None:
             return None
@@ -455,7 +455,7 @@ class TypeInferencer:
 
     def _infer_return_from_body(
         self, func: ast.FunctionDef | ast.AsyncFunctionDef
-    ) -> Optional[str]:
+    ) -> str | None:
         """Very simple return-type heuristic."""
         if any(
             isinstance(dec, ast.Name) and dec.id == "property"
@@ -468,7 +468,7 @@ class TypeInferencer:
                 return "Iterator"
         return None
 
-    def _infer_literal_type(self, node: Optional[ast.AST]) -> Optional[str]:
+    def _infer_literal_type(self, node: ast.AST | None) -> str | None:
         """Infer type from an AST literal expression."""
         if node is None:
             return None
@@ -504,7 +504,7 @@ class TypeInferencer:
         return None
 
     @staticmethod
-    def _call_name(node: ast.AST) -> Optional[str]:
+    def _call_name(node: ast.AST) -> str | None:
         """Return the name of a call callee if simple."""
         if isinstance(node, ast.Name):
             return node.id
@@ -513,7 +513,7 @@ class TypeInferencer:
         return None
 
     @staticmethod
-    def _infer_type_from_value(value: Optional[str]) -> Optional[str]:
+    def _infer_type_from_value(value: str | None) -> str | None:
         """Try to infer type from the string repr of an assigned value.
 
         Retained from the original implementation for callers using the
@@ -550,10 +550,10 @@ class TypeInferencer:
         return None
 
     def _resolve_symbol_ids(
-        self, infos: List[TypeInfo], symbol_table
+        self, infos: list[TypeInfo], symbol_table
     ) -> None:
         """Populate ``symbol_id`` from the symbol table where possible."""
-        by_name: Dict[str, str] = {}
+        by_name: dict[str, str] = {}
         for sym in symbol_table.symbols:
             by_name.setdefault(sym.name, sym.id)
         for info in infos:

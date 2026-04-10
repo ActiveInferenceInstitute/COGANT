@@ -4,7 +4,7 @@ import dataclasses
 import json
 import logging
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -57,7 +57,7 @@ def _json_default(obj: Any) -> Any:
     return str(obj)
 
 
-class ArtifactKey(str, Enum):
+class ArtifactKey(StrEnum):
     """Canonical keys for bundle artifacts populated by pipeline stages."""
 
     REPO_SNAPSHOT = "repo_snapshot"

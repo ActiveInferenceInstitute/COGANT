@@ -1,8 +1,8 @@
 """DiffVisualizer: Compare two bundles and highlight differences."""
 
-from typing import Dict, List, Any, Tuple, Optional
 import json
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class DiffVisualizer:
       - Performance deltas
     """
 
-    def __init__(self, bundle1: Dict[str, Any], bundle2: Dict[str, Any]):
+    def __init__(self, bundle1: dict[str, Any], bundle2: dict[str, Any]):
         """
         Initialize diff visualizer.
 
@@ -28,9 +28,9 @@ class DiffVisualizer:
         """
         self.bundle1 = bundle1
         self.bundle2 = bundle2
-        self.added: List[Dict[str, Any]] = []
-        self.removed: List[Dict[str, Any]] = []
-        self.changed: List[Dict[str, Any]] = []
+        self.added: list[dict[str, Any]] = []
+        self.removed: list[dict[str, Any]] = []
+        self.changed: list[dict[str, Any]] = []
         self._compute_diff()
 
     def _compute_diff(self) -> None:

@@ -18,17 +18,15 @@ See :class:`cogant.gnn.formatter.base.GNNMarkdownFormatter` for the
 main entry point and :mod:`cogant.gnn.formatter` for the package.
 """
 
-from typing import Dict, List, Any, Optional, Tuple, Set, TYPE_CHECKING
-from datetime import datetime, timezone
 import logging
-import traceback
 from collections import defaultdict
+from typing import TYPE_CHECKING, Any
 
-from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.statespace.compiler import StateSpaceModel
 from cogant.process.extractor import ProcessModel
+from cogant.schemas.core import EdgeKind
+from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import MappingKind
+from cogant.statespace.compiler import StateSpaceModel
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +36,7 @@ class _DynamicsSectionsMixin:
     graph: ProgramGraph
     state_space: StateSpaceModel
     process: ProcessModel
-    mappings: Dict[str, Any]
+    mappings: dict[str, Any]
 
     # Helper declared on the concrete formatter (base.py). Declared
     # here via ``TYPE_CHECKING`` so type checkers resolve it when the
@@ -46,7 +44,7 @@ class _DynamicsSectionsMixin:
     # implementation at runtime.
     if TYPE_CHECKING:
         @staticmethod
-        def _action_effects(action: Any) -> List[str]: ...
+        def _action_effects(action: Any) -> list[str]: ...
 
     def _format_transition_structure(self) -> str:
         """Format transition structure section.
@@ -91,7 +89,7 @@ class _DynamicsSectionsMixin:
             lines.append("|----|----|------|------|")
 
             # Calculate transition probabilities by counting transitions per action
-            action_to_count: Dict[str, int] = defaultdict(int)
+            action_to_count: dict[str, int] = defaultdict(int)
             for trans in self.state_space.transitions.values():
                 action_key = trans.action_id or "spontaneous"
                 action_to_count[action_key] += 1
@@ -115,7 +113,7 @@ class _DynamicsSectionsMixin:
             lines.append("")
 
             # Find all CALLS edges that have corresponding WRITES edges from the same source
-            call_to_write: Dict[str, List[str]] = defaultdict(list)
+            defaultdict(list)
             calls_edges = []
             writes_edges = []
 
@@ -126,7 +124,7 @@ class _DynamicsSectionsMixin:
                     writes_edges.append(edge)
 
             # Build map of nodes that write
-            write_targets = {e.target_id for e in writes_edges}
+            {e.target_id for e in writes_edges}
 
             # Show top call-to-write patterns
             call_write_patterns = []
@@ -161,7 +159,7 @@ class _DynamicsSectionsMixin:
                 lines.append("|----|----|------|")
 
                 # Group connections by source stage
-                stage_transitions: Dict[str, List[Any]] = defaultdict(list)
+                stage_transitions: dict[str, list[Any]] = defaultdict(list)
                 for conn in self.process.connections.values():
                     stage_transitions[conn.source_stage_id].append(conn)
 
@@ -193,7 +191,7 @@ class _DynamicsSectionsMixin:
         lines.append("")
         lines.append("| Variable | Distribution | Parameters | Confidence |")
         lines.append("|----|----|------|------|")
-        for like_id, like in self.state_space.likelihoods.items():
+        for _like_id, like in self.state_space.likelihoods.items():
             var_name = var_names.get(like.variable_id, like.variable_id)
             # Handle parameters - could be dict or list
             if like.parameters:
@@ -220,7 +218,7 @@ class _DynamicsSectionsMixin:
         var_to_obs = defaultdict(list)
 
         # Use source_node_id from ObservationModality to find READS edges to state variables
-        for obs_id, obs in self.state_space.observations.items():
+        for _obs_id, obs in self.state_space.observations.items():
             # Find state variables this observation connects to via READS edges in the graph
             source_node_id = obs.source_node_id
 
@@ -376,9 +374,9 @@ class _DynamicsSectionsMixin:
         lines.append("|----|----|------|------|")
 
         # Count rules by mapping kind
-        rule_counts: Dict[str, int] = defaultdict(int)
-        rule_confidence: Dict[str, List[float]] = defaultdict(list)
-        rule_status: Dict[str, int] = defaultdict(int)
+        rule_counts: dict[str, int] = defaultdict(int)
+        rule_confidence: dict[str, list[float]] = defaultdict(list)
+        rule_status: dict[str, int] = defaultdict(int)
 
         for mapping in self.mappings.values():
             if hasattr(mapping, 'kind'):
@@ -403,7 +401,7 @@ class _DynamicsSectionsMixin:
             lines.append("")
             lines.append("| Rule | Weight | Impact |")
             lines.append("|----|----|------|")
-            for pref_id, pref in list(self.state_space.preferences.items())[:10]:
+            for _pref_id, pref in list(self.state_space.preferences.items())[:10]:
                 impact = "high" if pref.weight > 0.7 else "medium" if pref.weight > 0.3 else "low"
                 lines.append(f"| {pref.name} | {pref.weight:.2f} | {impact} |")
             lines.append("")

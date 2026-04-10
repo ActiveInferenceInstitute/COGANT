@@ -4,9 +4,9 @@ Parquet exporter for efficient data storage.
 Exports nodes and edges as Parquet files using pyarrow.
 """
 
-from typing import List, Dict, Any, Optional
-from pathlib import Path
 import logging
+from pathlib import Path
+from typing import Any
 
 from cogant.schemas.graph import ProgramGraph
 
@@ -27,7 +27,7 @@ class ParquetExporter:
         """
         self.graph = program_graph
 
-    def export(self, output_dir: Path) -> List[str]:
+    def export(self, output_dir: Path) -> list[str]:
         """
         Export nodes and edges to Parquet files.
 
@@ -42,7 +42,7 @@ class ParquetExporter:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        files: List[str] = []
+        files: list[str] = []
 
         try:
             import pyarrow as pa
@@ -64,7 +64,7 @@ class ParquetExporter:
         logger.info(f"Exported {len(files)} Parquet files")
         return files
 
-    def _export_nodes(self, output_dir: Path, pa, pq) -> Optional[str]:
+    def _export_nodes(self, output_dir: Path, pa, pq) -> str | None:
         """Export nodes to Parquet."""
         try:
             data = self._prepare_nodes_data()
@@ -82,7 +82,7 @@ class ParquetExporter:
             logger.error(f"Failed to export nodes: {e}")
             return None
 
-    def _export_edges(self, output_dir: Path, pa, pq) -> Optional[str]:
+    def _export_edges(self, output_dir: Path, pa, pq) -> str | None:
         """Export edges to Parquet."""
         try:
             data = self._prepare_edges_data()
@@ -100,9 +100,9 @@ class ParquetExporter:
             logger.error(f"Failed to export edges: {e}")
             return None
 
-    def _prepare_nodes_data(self) -> Dict[str, List[Any]]:
+    def _prepare_nodes_data(self) -> dict[str, list[Any]]:
         """Prepare nodes data for Parquet export."""
-        data: Dict[str, List[Any]] = {
+        data: dict[str, list[Any]] = {
             "id": [],
             "name": [],
             "kind": [],
@@ -123,9 +123,9 @@ class ParquetExporter:
 
         return data
 
-    def _prepare_edges_data(self) -> Dict[str, List[Any]]:
+    def _prepare_edges_data(self) -> dict[str, list[Any]]:
         """Prepare edges data for Parquet export."""
-        data: Dict[str, List[Any]] = {
+        data: dict[str, list[Any]] = {
             "id": [],
             "source_id": [],
             "target_id": [],

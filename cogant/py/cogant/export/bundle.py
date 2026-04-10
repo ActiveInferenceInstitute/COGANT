@@ -5,20 +5,20 @@ Writes GNN markdown, JSON, GraphML, Parquet, HTML, and provenance bundle
 to output directory with manifest.
 """
 
-from typing import Dict, List, Any, Optional
-from pathlib import Path
-from datetime import datetime
-from dataclasses import dataclass
 import json
 import logging
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
-from cogant.schemas.graph import ProgramGraph
-from cogant.statespace.compiler import StateSpaceModel
-from cogant.process.extractor import ProcessModel
-from cogant.gnn.formatter import GNNMarkdownFormatter
-from cogant.gnn.json_export import GNNJSONExporter
 from cogant.export.graphml import GraphMLExporter
 from cogant.export.parquet import ParquetExporter
+from cogant.gnn.formatter import GNNMarkdownFormatter
+from cogant.gnn.json_export import GNNJSONExporter
+from cogant.process.extractor import ProcessModel
+from cogant.schemas.graph import ProgramGraph
+from cogant.statespace.compiler import StateSpaceModel
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +29,9 @@ class BundleManifest:
     bundle_id: str
     schema_name: str
     created_at: datetime
-    files: Dict[str, str]  # filename -> description
-    checksums: Dict[str, str]  # filename -> checksum
-    metadata: Dict[str, Any]
+    files: dict[str, str]  # filename -> description
+    checksums: dict[str, str]  # filename -> checksum
+    metadata: dict[str, Any]
 
 
 class BundleExporter:
@@ -46,7 +46,7 @@ class BundleExporter:
         program_graph: ProgramGraph,
         state_space_model: StateSpaceModel,
         process_model: ProcessModel,
-        semantic_mappings: Dict[str, Any],
+        semantic_mappings: dict[str, Any],
         output_dir: Path,
     ):
         """
@@ -65,7 +65,7 @@ class BundleExporter:
         self.mappings = semantic_mappings
         self.output_dir = Path(output_dir)
 
-    def export(self, formats: Optional[List[str]] = None) -> Path:
+    def export(self, formats: list[str] | None = None) -> Path:
         """
         Export model to all specified formats.
 
@@ -108,7 +108,7 @@ class BundleExporter:
 
         if "parquet" in formats:
             file_paths, checksums_dict = self._export_parquet()
-            files.update({f: "Graph data in Parquet format" for f in file_paths})
+            files.update(dict.fromkeys(file_paths, "Graph data in Parquet format"))
             checksums.update(checksums_dict)
 
         if "html" in formats:
@@ -128,7 +128,7 @@ class BundleExporter:
         logger.info(f"Export complete: {len(files)} files written")
         return self.output_dir
 
-    def _export_markdown(self) -> tuple[Optional[Path], str]:
+    def _export_markdown(self) -> tuple[Path | None, str]:
         """Export to markdown format."""
         try:
             formatter = GNNMarkdownFormatter(
@@ -150,7 +150,7 @@ class BundleExporter:
             logger.error(f"Failed to export markdown: {e}")
             return None, ""
 
-    def _export_json(self) -> tuple[Optional[Path], str]:
+    def _export_json(self) -> tuple[Path | None, str]:
         """Export to JSON format."""
         try:
             exporter = GNNJSONExporter(
@@ -172,7 +172,7 @@ class BundleExporter:
             logger.error(f"Failed to export JSON: {e}")
             return None, ""
 
-    def _export_graphml(self) -> tuple[Optional[Path], str]:
+    def _export_graphml(self) -> tuple[Path | None, str]:
         """Export to GraphML format."""
         try:
             exporter = GraphMLExporter(self.graph)
@@ -189,7 +189,7 @@ class BundleExporter:
             logger.error(f"Failed to export GraphML: {e}")
             return None, ""
 
-    def _export_parquet(self) -> tuple[List[str], Dict[str, str]]:
+    def _export_parquet(self) -> tuple[list[str], dict[str, str]]:
         """Export to Parquet format."""
         try:
             exporter = ParquetExporter(self.graph)
@@ -205,7 +205,7 @@ class BundleExporter:
             logger.error(f"Failed to export Parquet: {e}")
             return [], {}
 
-    def _export_html(self) -> tuple[Optional[Path], str]:
+    def _export_html(self) -> tuple[Path | None, str]:
         """Export to HTML format."""
         try:
             # For now, create a simple HTML wrapper
@@ -248,11 +248,10 @@ class BundleExporter:
 
     def _create_manifest(
         self,
-        files: Dict[str, str],
-        checksums: Dict[str, str],
+        files: dict[str, str],
+        checksums: dict[str, str],
     ) -> BundleManifest:
         """Create bundle manifest."""
-        from dataclasses import dataclass
 
         return BundleManifest(
             bundle_id=f"bundle_{self.state_space.id}",
@@ -268,7 +267,7 @@ class BundleExporter:
             },
         )
 
-    def _manifest_to_dict(self, manifest: BundleManifest) -> Dict[str, Any]:
+    def _manifest_to_dict(self, manifest: BundleManifest) -> dict[str, Any]:
         """Convert manifest to dictionary."""
         return {
             "bundle_id": manifest.bundle_id,
@@ -287,6 +286,3 @@ class BundleExporter:
             for byte_block in iter(lambda: f.read(4096), b""):
                 sha256_hash.update(byte_block)
         return sha256_hash.hexdigest()
-
-
-from dataclasses import dataclass

@@ -1,9 +1,9 @@
 """Base plugin protocol classes."""
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, Any, List, Optional, Set
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class Plugin(ABC):
         logger.info(f"Loaded plugin: {metadata.name} v{metadata.version}")
 
     @abstractmethod
-    def initialize(self, config: Dict[str, Any]) -> None:
+    def initialize(self, config: dict[str, Any]) -> None:
         """Initialize plugin with configuration."""
         pass
 
@@ -48,25 +48,25 @@ class LanguagePlugin(Plugin):
       - Symbol resolution
     """
 
-    supported_languages: Set[str] = set()
+    supported_languages: set[str] = set()
 
     @abstractmethod
-    def parse(self, source_code: str) -> Dict[str, Any]:
+    def parse(self, source_code: str) -> dict[str, Any]:
         """Parse source code and return AST."""
         pass
 
     @abstractmethod
-    def extract_symbols(self, ast: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def extract_symbols(self, ast: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract symbols from AST."""
         pass
 
     @abstractmethod
-    def extract_types(self, ast: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_types(self, ast: dict[str, Any]) -> dict[str, Any]:
         """Extract type information."""
         pass
 
     @abstractmethod
-    def resolve_imports(self, ast: Dict[str, Any]) -> List[str]:
+    def resolve_imports(self, ast: dict[str, Any]) -> list[str]:
         """Resolve import dependencies."""
         pass
 
@@ -83,17 +83,17 @@ class TracePlugin(Plugin):
     """
 
     @abstractmethod
-    def parse_trace(self, trace_file: str) -> Dict[str, Any]:
+    def parse_trace(self, trace_file: str) -> dict[str, Any]:
         """Parse trace file and return trace data."""
         pass
 
     @abstractmethod
-    def parse_coverage(self, coverage_file: str) -> Dict[str, Any]:
+    def parse_coverage(self, coverage_file: str) -> dict[str, Any]:
         """Parse coverage file (coverage.xml, .coverage, etc)."""
         pass
 
     @abstractmethod
-    def extract_call_graph(self, trace_data: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_call_graph(self, trace_data: dict[str, Any]) -> dict[str, Any]:
         """Extract call graph from trace."""
         pass
 
@@ -109,12 +109,12 @@ class NormalizerPlugin(Plugin):
     """
 
     @abstractmethod
-    def normalize(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def normalize(self, data: dict[str, Any]) -> dict[str, Any]:
         """Normalize data to canonical form."""
         pass
 
     @abstractmethod
-    def validate_schema(self, data: Dict[str, Any]) -> bool:
+    def validate_schema(self, data: dict[str, Any]) -> bool:
         """Validate data against schema."""
         pass
 
@@ -130,17 +130,17 @@ class TranslationRulePlugin(Plugin):
     """
 
     @abstractmethod
-    def translate_nodes(self, graph_nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def translate_nodes(self, graph_nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Translate program graph nodes to GNN nodes."""
         pass
 
     @abstractmethod
-    def translate_edges(self, graph_edges: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def translate_edges(self, graph_edges: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Translate program graph edges to GNN edges."""
         pass
 
     @abstractmethod
-    def compute_features(self, node: Dict[str, Any]) -> List[float]:
+    def compute_features(self, node: dict[str, Any]) -> list[float]:
         """Compute feature vector for a node."""
         pass
 
@@ -157,26 +157,26 @@ class StateSpacePlugin(Plugin):
     """
 
     @abstractmethod
-    def extract_states(self, gnn_model: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def extract_states(self, gnn_model: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract states from GNN model."""
         pass
 
     @abstractmethod
     def extract_observations(
-        self, gnn_model: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, gnn_model: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Define observation space."""
         pass
 
     @abstractmethod
-    def extract_actions(self, gnn_model: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def extract_actions(self, gnn_model: dict[str, Any]) -> list[dict[str, Any]]:
         """Define action space."""
         pass
 
     @abstractmethod
     def learn_policies(
-        self, states: List[Dict], observations: List[Dict], actions: List[Dict]
-    ) -> List[Dict[str, Any]]:
+        self, states: list[dict], observations: list[dict], actions: list[dict]
+    ) -> list[dict[str, Any]]:
         """Learn policies from model."""
         pass
 
@@ -192,19 +192,19 @@ class ProcessModelPlugin(Plugin):
     """
 
     @abstractmethod
-    def extract_stages(self, bundle: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def extract_stages(self, bundle: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract process stages."""
         pass
 
     @abstractmethod
-    def extract_dependencies(self, stages: List[Dict]) -> List[Dict[str, Any]]:
+    def extract_dependencies(self, stages: list[dict]) -> list[dict[str, Any]]:
         """Extract dependencies between stages."""
         pass
 
     @abstractmethod
     def compute_ordering(
-        self, stages: List[Dict], dependencies: List[Dict]
-    ) -> List[str]:
+        self, stages: list[dict], dependencies: list[dict]
+    ) -> list[str]:
         """Compute execution order."""
         pass
 
@@ -219,17 +219,17 @@ class ExportPlugin(Plugin):
       - File writing
     """
 
-    supported_formats: Set[str] = set()
+    supported_formats: set[str] = set()
 
     @abstractmethod
     def export(
-        self, bundle: Dict[str, Any], output_path: str, format: str
+        self, bundle: dict[str, Any], output_path: str, format: str
     ) -> None:
         """Export bundle in specified format."""
         pass
 
     @abstractmethod
-    def get_format_info(self, format: str) -> Dict[str, Any]:
+    def get_format_info(self, format: str) -> dict[str, Any]:
         """Get information about export format."""
         pass
 
@@ -245,12 +245,12 @@ class ValidationPlugin(Plugin):
     """
 
     @abstractmethod
-    def validate(self, bundle: Dict[str, Any]) -> Dict[str, Any]:
+    def validate(self, bundle: dict[str, Any]) -> dict[str, Any]:
         """Run validation checks."""
         pass
 
     @abstractmethod
-    def compute_quality_metrics(self, bundle: Dict[str, Any]) -> Dict[str, float]:
+    def compute_quality_metrics(self, bundle: dict[str, Any]) -> dict[str, float]:
         """Compute quality/completeness metrics."""
         pass
 
@@ -265,16 +265,16 @@ class VisualizationPlugin(Plugin):
       - Interactive views
     """
 
-    supported_visualizations: Set[str] = set()
+    supported_visualizations: set[str] = set()
 
     @abstractmethod
     def render(
-        self, bundle: Dict[str, Any], output_path: str, viz_type: str
+        self, bundle: dict[str, Any], output_path: str, viz_type: str
     ) -> None:
         """Render visualization."""
         pass
 
     @abstractmethod
-    def get_viz_info(self, viz_type: str) -> Dict[str, Any]:
+    def get_viz_info(self, viz_type: str) -> dict[str, Any]:
         """Get information about visualization type."""
         pass

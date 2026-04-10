@@ -34,11 +34,10 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 from textwrap import dedent
-from typing import List, Union
 
 from cogant.reverse.matrices import render_matrices_module
 from cogant.reverse.parser import ReverseGNNModel
-from cogant.reverse.planner import NodePlan, PackagePlan
+from cogant.reverse.planner import PackagePlan
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +138,7 @@ def _render_state_module(plan: PackagePlan) -> str:
 
         '''
     ).lstrip()
-    lines: List[str] = [header]
+    lines: list[str] = [header]
 
     # Degenerate case: no hidden states declared.
     if not plan.state_vars:
@@ -176,7 +175,7 @@ def _render_state_module(plan: PackagePlan) -> str:
     # no substring collision with ACTION_KEYWORDS, OBSERVATION_KEYWORDS,
     # or the policy keyword list, so every factor keeps its HIDDEN_STATE
     # classification through the round-trip.
-    factor_class_names: List[str] = []
+    factor_class_names: list[str] = []
     for i, n in enumerate(plan.state_vars):
         cls_name = f"Factor{i}"  # opaque, keyword-collision-free
         factor_class_names.append(cls_name)
@@ -211,7 +210,7 @@ def _render_state_module(plan: PackagePlan) -> str:
     # Aggregator ``State`` class — holds instances of every factor class.
     lines.append("class State:")
     lines.append(
-        f'    """Aggregator holding one instance of each hidden-state factor class."""'
+        '    """Aggregator holding one instance of each hidden-state factor class."""'
     )
     lines.append("")
     init_args = ", ".join(
@@ -219,7 +218,7 @@ def _render_state_module(plan: PackagePlan) -> str:
     )
     lines.append(f"    def __init__(self, {init_args}) -> None:")
     lines.append('        """Initialize every factor with an optional override."""')
-    for n, cls_name in zip(plan.state_vars, factor_class_names):
+    for n, cls_name in zip(plan.state_vars, factor_class_names, strict=False):
         lines.append(f"        self.{n.name}: {cls_name} = {cls_name}(value={n.name})")
     lines.append("")
 
@@ -242,7 +241,7 @@ def _render_state_module(plan: PackagePlan) -> str:
     )
     lines.append("        )")
     lines.append("        for key, val in changes.items():")
-    lines.append(f"            # Map top-level keys to the corresponding factor's update.")
+    lines.append("            # Map top-level keys to the corresponding factor's update.")
     lines.append("            factor = getattr(new, key, None)")
     lines.append("            if factor is not None and hasattr(factor, 'update'):")
     lines.append("                factor.update(val)")
@@ -283,7 +282,7 @@ def _render_observe_module(plan: PackagePlan) -> str:
 
         '''
     ).lstrip()
-    lines: List[str] = [header]
+    lines: list[str] = [header]
 
     if not plan.obs_functions:
         lines.append("# No observation modalities were declared in the source GNN.")
@@ -356,7 +355,7 @@ def _render_act_module(plan: PackagePlan) -> str:
 
         '''
     ).lstrip()
-    lines: List[str] = [header]
+    lines: list[str] = [header]
 
     if not plan.action_methods:
         lines.append("# No actions were declared in the source GNN.")
@@ -424,7 +423,7 @@ def _render_policy_module(plan: PackagePlan) -> str:
 
         '''
     ).lstrip()
-    lines: List[str] = [header]
+    lines: list[str] = [header]
 
     lines.append("def select_policy(state: State, observations: List[float]) -> int:")
     lines.append(
@@ -478,7 +477,7 @@ def _render_constraints_module(plan: PackagePlan) -> str:
 
         '''
     ).lstrip()
-    lines: List[str] = [header]
+    lines: list[str] = [header]
 
     if not plan.constraint_checks:
         lines.append("# No constraints were declared in the source GNN.")
@@ -504,8 +503,8 @@ def _render_constraints_module(plan: PackagePlan) -> str:
 
 def _render_main_module(plan: PackagePlan) -> str:
     """Render ``main.py`` — a small driver loop that exercises everything."""
-    first_obs = plan.obs_functions[0].name if plan.obs_functions else None
-    first_act = plan.action_methods[0].name if plan.action_methods else None
+    plan.obs_functions[0].name if plan.obs_functions else None
+    plan.action_methods[0].name if plan.action_methods else None
 
     header = dedent(
         f'''
@@ -521,7 +520,7 @@ def _render_main_module(plan: PackagePlan) -> str:
         '''
     ).lstrip()
 
-    lines: List[str] = [header]
+    lines: list[str] = [header]
     if plan.obs_functions:
         fn = plan.obs_functions[0].name
         canonical = fn if fn.startswith("get_") else f"get_{fn}"
@@ -613,7 +612,7 @@ def _render_test_smoke(plan: PackagePlan) -> str:
 def synthesize_package(
     plan: PackagePlan,
     model: ReverseGNNModel,
-    output_dir: Union[str, Path],
+    output_dir: str | Path,
 ) -> Path:
     """Emit a full Python package to ``output_dir`` from ``plan``.
 

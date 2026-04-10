@@ -11,17 +11,17 @@ See :mod:`cogant.translate.rules` for the umbrella re-export and
 """
 
 import hashlib
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from cogant.schemas.core import NodeKind, EdgeKind
+from cogant.graph.queries import GraphQuery
+from cogant.schemas.core import NodeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import (
-    SemanticMapping,
-    MappingKind,
     ConfidenceTier,
+    MappingKind,
     ProvenanceRecord,
+    SemanticMapping,
 )
-from cogant.graph.queries import GraphQuery
 from cogant.translate.engine import TranslationRule
 
 
@@ -44,7 +44,7 @@ class ConfigRule(TranslationRule):
         rate on the 20-repo corpus.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find configuration nodes.
 
         Args:
@@ -66,7 +66,7 @@ class ConfigRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create context mapping for configuration.
 
         Args:
@@ -132,7 +132,7 @@ class FeatureFlagRule(TranslationRule):
         ``NodeKind.FEATURE_FLAG`` classification.
     """
 
-    def matches(self, graph: ProgramGraph, query: GraphQuery) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         """Find feature flag nodes.
 
         Args:
@@ -154,7 +154,7 @@ class FeatureFlagRule(TranslationRule):
 
         return matches
 
-    def apply(self, graph: ProgramGraph, match: Dict[str, Any]) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         """Create context selector mapping for feature flag.
 
         Args:

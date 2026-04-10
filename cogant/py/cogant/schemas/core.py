@@ -1,12 +1,12 @@
 """Core schema definitions for program graphs."""
 
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Dict, List, Optional
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 
 
-class NodeKind(str, Enum):
+class NodeKind(StrEnum):
     """Types of nodes in a program graph."""
     # Code structure
     REPO = "repo"
@@ -35,7 +35,7 @@ class NodeKind(str, Enum):
     ACTION = "action"
 
 
-class EdgeKind(str, Enum):
+class EdgeKind(StrEnum):
     """Types of edges in a program graph."""
     # Structural
     CONTAINS = "contains"
@@ -82,19 +82,19 @@ class Node:
     qualified_name: str
     """Fully qualified name in source language."""
 
-    path: Optional[str] = None
+    path: str | None = None
     """File path or module path."""
 
-    language: Optional[str] = None
+    language: str | None = None
     """Source language (python, javascript, java, etc.)."""
 
-    source_range: Optional[Dict[str, Any]] = None
+    source_range: dict[str, Any] | None = None
     """Start/end line and column in source file."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     """Language-specific metadata (visibility, decorators, etc.)."""
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """Timestamp of creation."""
 
     def __hash__(self) -> int:
@@ -125,13 +125,13 @@ class Edge:
     weight: float = 1.0
     """Edge weight (frequency, confidence, etc.)."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     """Additional relationship metadata."""
 
-    evidence_sources: List[str] = field(default_factory=list)
+    evidence_sources: list[str] = field(default_factory=list)
     """List of evidence sources (static, dynamic, etc.)."""
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     """Timestamp of creation."""
 
     def __hash__(self) -> int:

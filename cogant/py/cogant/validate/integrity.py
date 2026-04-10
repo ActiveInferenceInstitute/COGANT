@@ -5,13 +5,11 @@ Verifies node ID uniqueness, edge endpoints, mapping references,
 orphaned nodes, and confidence values.
 """
 
-from typing import Dict, List, Set, Optional
-from dataclasses import dataclass
 import logging
 
+from cogant.process.extractor import ProcessModel
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
-from cogant.process.extractor import ProcessModel
 from cogant.validate.schema_check import ValidationIssue
 
 logger = logging.getLogger(__name__)
@@ -29,9 +27,9 @@ class IntegrityChecker:
 
     def __init__(self):
         """Initialize the checker."""
-        self.issues: List[ValidationIssue] = []
+        self.issues: list[ValidationIssue] = []
 
-    def check_program_graph(self, graph: ProgramGraph) -> List[ValidationIssue]:
+    def check_program_graph(self, graph: ProgramGraph) -> list[ValidationIssue]:
         """
         Check integrity of a program graph.
 
@@ -59,7 +57,7 @@ class IntegrityChecker:
         logger.info(f"Found {len(self.issues)} integrity issues in program graph")
         return self.issues
 
-    def check_state_space(self, state_space: StateSpaceModel) -> List[ValidationIssue]:
+    def check_state_space(self, state_space: StateSpaceModel) -> list[ValidationIssue]:
         """
         Check integrity of a state space model.
 
@@ -84,7 +82,7 @@ class IntegrityChecker:
         logger.info(f"Found {len(self.issues)} integrity issues in state space")
         return self.issues
 
-    def check_process_model(self, process: ProcessModel) -> List[ValidationIssue]:
+    def check_process_model(self, process: ProcessModel) -> list[ValidationIssue]:
         """
         Check integrity of a process model.
 
@@ -114,7 +112,7 @@ class IntegrityChecker:
     def _check_node_uniqueness(self, graph: ProgramGraph) -> None:
         """Check that all node IDs are unique."""
         node_ids = set()
-        for node_id, node in graph.nodes.items():
+        for node_id, _node in graph.nodes.items():
             if node_id in node_ids:
                 self._add_issue("error", "integrity",
                                f"Duplicate node ID: {node_id}", [node_id])
@@ -230,15 +228,15 @@ class IntegrityChecker:
     def _check_confidence_values(self, state_space: StateSpaceModel) -> None:
         """Check that confidence values are in [0, 1]."""
         # Check variable confidences
-        for var_id, var in state_space.variables.items():
+        for _var_id, _var in state_space.variables.items():
             pass  # ConfidenceLevel is an enum, so this check is implicit
 
         # Check observation confidences
-        for obs_id, obs in state_space.observations.items():
+        for _obs_id, _obs in state_space.observations.items():
             pass  # Enum values are valid by definition
 
         # Check action confidences
-        for action_id, action in state_space.actions.items():
+        for _action_id, _action in state_space.actions.items():
             pass  # Enum values are valid
 
     def _check_stage_uniqueness(self, process: ProcessModel) -> None:
@@ -285,7 +283,7 @@ class IntegrityChecker:
         severity: str,
         category: str,
         message: str,
-        affected_ids: List[str],
+        affected_ids: list[str],
     ) -> None:
         """Add an integrity issue."""
         issue = ValidationIssue(
@@ -297,7 +295,7 @@ class IntegrityChecker:
         )
         self.issues.append(issue)
 
-    def get_issues(self) -> List[ValidationIssue]:
+    def get_issues(self) -> list[ValidationIssue]:
         """Get all integrity issues."""
         return self.issues
 

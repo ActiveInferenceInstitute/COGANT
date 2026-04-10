@@ -9,13 +9,13 @@ With ``--dry-run``, prints a unified diff of what would change without
 writing the file.
 """
 
-from pathlib import Path
 import difflib
+from pathlib import Path
 
 import typer
 from rich.console import Console
 
-from cogant.schema import detect_version, migrate_gnn, SchemaVersion
+from cogant.schema import SchemaVersion, detect_version, migrate_gnn
 
 console = Console()
 

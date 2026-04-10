@@ -4,7 +4,6 @@ import hashlib
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +62,7 @@ class FileInfo:
     relative_path: str
     """Path relative to repository root."""
 
-    language: Optional[str]
+    language: str | None
     """Detected programming language."""
 
     size_bytes: int
@@ -72,7 +71,7 @@ class FileInfo:
     is_test: bool = False
     """Whether file is a test file."""
 
-    checksum: Optional[str] = None
+    checksum: str | None = None
     """SHA256 checksum of file contents."""
 
 
@@ -88,9 +87,9 @@ class FileEnumerator:
         """
         self.repo_root = Path(repo_root).resolve()
         self.respect_gitignore = respect_gitignore
-        self._gitignore_patterns: Optional[Set[str]] = None
+        self._gitignore_patterns: set[str] | None = None
 
-    def _load_gitignore(self) -> Set[str]:
+    def _load_gitignore(self) -> set[str]:
         """Load .gitignore patterns from repository.
 
         Returns:
@@ -104,7 +103,7 @@ class FileEnumerator:
 
         if gitignore_path.exists():
             try:
-                with open(gitignore_path, "r") as f:
+                with open(gitignore_path) as f:
                     for line in f:
                         line = line.strip()
                         # Skip comments and empty lines
@@ -152,7 +151,7 @@ class FileEnumerator:
 
         return False
 
-    def _detect_language(self, path: Path) -> Optional[str]:
+    def _detect_language(self, path: Path) -> str | None:
         """Detect programming language from file extension.
 
         Args:
@@ -205,7 +204,7 @@ class FileEnumerator:
 
     def enumerate(
         self, include_test_files: bool = True, compute_checksums: bool = False
-    ) -> List[FileInfo]:
+    ) -> list[FileInfo]:
         """Enumerate all source files in repository.
 
         Args:
@@ -215,7 +214,7 @@ class FileEnumerator:
         Returns:
             List of FileInfo for source files.
         """
-        files: List[FileInfo] = []
+        files: list[FileInfo] = []
 
         try:
             for path in self.repo_root.rglob("*"):

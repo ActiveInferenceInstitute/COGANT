@@ -20,17 +20,16 @@ See :class:`cogant.gnn.formatter.base.GNNMarkdownFormatter` for the
 main entry point and :mod:`cogant.gnn.formatter` for the package.
 """
 
-from typing import Dict, List, Any, Optional, Tuple, Set
-from datetime import datetime, timezone
 import logging
-import traceback
 from collections import defaultdict
+from datetime import UTC, datetime
+from typing import Any
 
-from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.statespace.compiler import StateSpaceModel
 from cogant.process.extractor import ProcessModel
+from cogant.schemas.core import EdgeKind, NodeKind
+from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import MappingKind
+from cogant.statespace.compiler import StateSpaceModel
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +41,7 @@ class _MetadataSectionsMixin:
     graph: ProgramGraph
     state_space: StateSpaceModel
     process: ProcessModel
-    mappings: Dict[str, Any]
+    mappings: dict[str, Any]
 
     def _format_model_metadata(self) -> str:
         """Format model metadata section."""
@@ -52,8 +51,8 @@ class _MetadataSectionsMixin:
         lines.append("")
         lines.append(f"- **Model ID**: {self.state_space.id}")
         lines.append(f"- **Schema Name**: {self.state_space.schema_name}")
-        lines.append(f"- **Generated**: {datetime.now(timezone.utc).isoformat()}")
-        lines.append(f"- **COGANT Version**: 0.1.0")
+        lines.append(f"- **Generated**: {datetime.now(UTC).isoformat()}")
+        lines.append("- **COGANT Version**: 0.1.0")
 
         # Pipeline stages from metadata
         if self.state_space.metadata and "pipeline_stages" in self.state_space.metadata:
@@ -109,12 +108,12 @@ class _MetadataSectionsMixin:
         lines.append("")
 
         # Count nodes by kind
-        node_counts: Dict[str, int] = defaultdict(int)
+        node_counts: dict[str, int] = defaultdict(int)
         for node in self.graph.nodes.values():
             node_counts[node.kind.value] += 1
 
         # Count edges by kind
-        edge_counts: Dict[str, int] = defaultdict(int)
+        edge_counts: dict[str, int] = defaultdict(int)
         for edge in self.graph.edges.values():
             edge_counts[edge.kind.value] += 1
 
@@ -161,7 +160,7 @@ class _MetadataSectionsMixin:
             lines.append("")
             lines.append("| Source | Count |")
             lines.append("|----|----|")
-            source_counts: Dict[str, int] = defaultdict(int)
+            source_counts: dict[str, int] = defaultdict(int)
             for source in self.graph.metadata.evidence_sources:
                 source_counts[source] += 1
             for source in sorted(source_counts.keys()):
@@ -172,8 +171,8 @@ class _MetadataSectionsMixin:
         lines.append("### Provenance Chain for Semantic Mappings")
         lines.append("")
         if self.mappings:
-            provenance_sources: Dict[str, int] = defaultdict(int)
-            provenance_confidence: Dict[str, List[float]] = defaultdict(list)
+            provenance_sources: dict[str, int] = defaultdict(int)
+            provenance_confidence: dict[str, list[float]] = defaultdict(list)
 
             for mapping in self.mappings.values():
                 if hasattr(mapping, 'provenance') and mapping.provenance:
@@ -216,7 +215,7 @@ class _MetadataSectionsMixin:
             lines.append("")
             lines.append("| Tier | Count |")
             lines.append("|----|----|")
-            tier_counts: Dict[str, int] = defaultdict(int)
+            tier_counts: dict[str, int] = defaultdict(int)
             for mapping in self.mappings.values():
                 if hasattr(mapping, 'confidence_tier'):
                     tier_counts[mapping.confidence_tier.value] += 1
@@ -326,7 +325,7 @@ class _MetadataSectionsMixin:
         lines.append("")
 
         # Find high-degree nodes
-        node_degrees: Dict[str, int] = defaultdict(int)
+        node_degrees: dict[str, int] = defaultdict(int)
         for edge in self.graph.edges.values():
             node_degrees[edge.source_id] += 1
             node_degrees[edge.target_id] += 1
@@ -458,7 +457,7 @@ class _MetadataSectionsMixin:
             warnings.append(f"- {actionless} actions have no effects on state variables")
 
         # Check for variables with no transitions
-        vars_with_transitions: Set[str] = set()
+        vars_with_transitions: set[str] = set()
         for trans in self.state_space.transitions.values():
             if hasattr(trans, 'source_state') and trans.source_state:
                 src: Any = trans.source_state

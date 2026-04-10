@@ -5,21 +5,20 @@ Models sequential and parallel execution patterns, event-driven architectures,
 and business processes extracted from program code.
 """
 
-from typing import Optional, Dict, Any, List, Literal
-from enum import Enum
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import ConfigDict, Field
 
 from .base import (
     CogantBaseModel,
-    StableID,
     EvidenceRef,
-    ConfidenceMetric,
+    StableID,
 )
 
 
-class ProcessKind(str, Enum):
+class ProcessKind(StrEnum):
     """Types of processes."""
 
     SEQUENTIAL = "sequential"
@@ -32,7 +31,7 @@ class ProcessKind(str, Enum):
     STATE_MACHINE = "state_machine"
 
 
-class TriggerKind(str, Enum):
+class TriggerKind(StrEnum):
     """How a process stage is triggered."""
 
     MANUAL = "manual"
@@ -69,23 +68,23 @@ class ProcessStage(CogantBaseModel):
 
     stage_id: str = Field(..., description="Unique identifier")
     name: str = Field(..., description="Human-readable name")
-    description: Optional[str] = Field(default=None)
+    description: str | None = Field(default=None)
 
     # Execution
     kind: ProcessKind = Field(
         default=ProcessKind.SEQUENTIAL,
         description="Type of process stage",
     )
-    entry_point_id: Optional[StableID] = Field(
+    entry_point_id: StableID | None = Field(
         default=None, description="ID of program graph node implementing stage"
     )
 
     # Relationships
-    predecessors: List[str] = Field(
+    predecessors: list[str] = Field(
         default_factory=list,
         description="IDs of preceding stages",
     )
-    successors: List[str] = Field(
+    successors: list[str] = Field(
         default_factory=list,
         description="IDs of following stages",
     )
@@ -95,48 +94,48 @@ class ProcessStage(CogantBaseModel):
         default=TriggerKind.AUTOMATIC,
         description="How stage is triggered",
     )
-    trigger_description: Optional[str] = Field(
+    trigger_description: str | None = Field(
         default=None, description="Description of trigger condition"
     )
 
     # Inputs/outputs
-    input_parameters: Dict[str, Any] = Field(
+    input_parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Input parameter specifications",
     )
-    output_parameters: Dict[str, Any] = Field(
+    output_parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Output parameter specifications",
     )
 
     # Effects
-    side_effects: List[SideEffect] = Field(
+    side_effects: list[SideEffect] = Field(
         default_factory=list,
         description="Side effects produced by this stage",
     )
 
     # Timing
-    typical_duration: Optional[float] = Field(
+    typical_duration: float | None = Field(
         default=None, description="Typical execution time (seconds)"
     )
-    timeout: Optional[float] = Field(
+    timeout: float | None = Field(
         default=None, description="Timeout for stage execution (seconds)"
     )
 
     # Error handling
-    error_handlers: Dict[str, str] = Field(
+    error_handlers: dict[str, str] = Field(
         default_factory=dict,
         description="Error type -> handler mapping",
     )
     is_compensatable: bool = Field(
         default=False, description="Whether stage has compensation logic"
     )
-    compensation_stage_id: Optional[str] = Field(
+    compensation_stage_id: str | None = Field(
         default=None, description="ID of compensation/rollback stage"
     )
 
     # Provenance
-    provenance: List[EvidenceRef] = Field(
+    provenance: list[EvidenceRef] = Field(
         default_factory=list,
         description="Evidence for stage",
     )
@@ -149,7 +148,7 @@ class ProcessPolicy(CogantBaseModel):
 
     policy_id: str = Field(..., description="Unique identifier")
     name: str = Field(..., description="Human-readable name")
-    description: Optional[str] = Field(default=None)
+    description: str | None = Field(default=None)
 
     # Policy type
     policy_type: str = Field(
@@ -158,17 +157,17 @@ class ProcessPolicy(CogantBaseModel):
     )
 
     # Applicability
-    applies_to_stages: List[str] = Field(
+    applies_to_stages: list[str] = Field(
         default_factory=list,
         description="Stage IDs this policy applies to",
     )
 
     # Specification
-    rules: List[Dict[str, Any]] = Field(
+    rules: list[dict[str, Any]] = Field(
         default_factory=list,
         description="Policy rules/conditions",
     )
-    parameters: Dict[str, Any] = Field(
+    parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Policy parameters",
     )
@@ -197,13 +196,13 @@ class ProcessTimeline(CogantBaseModel):
     )
 
     # Deadlines & constraints
-    start_time: Optional[float] = Field(
+    start_time: float | None = Field(
         default=None, description="Start time relative to process begin"
     )
-    end_time: Optional[float] = Field(
+    end_time: float | None = Field(
         default=None, description="End time relative to process begin"
     )
-    deadline: Optional[float] = Field(
+    deadline: float | None = Field(
         default=None, description="Deadline for process completion"
     )
     deadline_type: Literal["hard", "soft", "firm"] = Field(
@@ -212,15 +211,15 @@ class ProcessTimeline(CogantBaseModel):
     )
 
     # Scheduling
-    period: Optional[float] = Field(
+    period: float | None = Field(
         default=None, description="If periodic, the period"
     )
-    jitter: Optional[float] = Field(
+    jitter: float | None = Field(
         default=None, description="Allowed jitter/variance in timing"
     )
 
     # Stage timings
-    stage_timings: Dict[str, float] = Field(
+    stage_timings: dict[str, float] = Field(
         default_factory=dict,
         description="Expected duration for each stage (stage_id -> duration)",
     )
@@ -237,7 +236,7 @@ class ProcessModel(CogantBaseModel):
 
     process_id: StableID = Field(..., description="Unique identifier")
     name: str = Field(..., description="Human-readable name")
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None, description="Detailed description"
     )
 
@@ -245,55 +244,55 @@ class ProcessModel(CogantBaseModel):
     kind: ProcessKind = Field(
         ..., description="Type of process"
     )
-    stages: List[ProcessStage] = Field(
+    stages: list[ProcessStage] = Field(
         ...,
         description="All stages in process",
     )
-    root_stage_id: Optional[str] = Field(
+    root_stage_id: str | None = Field(
         default=None, description="ID of root/entry stage"
     )
-    leaf_stage_ids: List[str] = Field(
+    leaf_stage_ids: list[str] = Field(
         default_factory=list,
         description="IDs of terminal/exit stages",
     )
 
     # Execution policies
-    policies: List[ProcessPolicy] = Field(
+    policies: list[ProcessPolicy] = Field(
         default_factory=list,
         description="Policies governing execution",
     )
 
     # Timing
-    timelines: List[ProcessTimeline] = Field(
+    timelines: list[ProcessTimeline] = Field(
         default_factory=list,
         description="Temporal specifications",
     )
 
     # Global constraints
-    concurrency_constraints: Dict[str, Any] = Field(
+    concurrency_constraints: dict[str, Any] = Field(
         default_factory=dict,
         description="Constraints on parallel execution",
     )
-    resource_constraints: Dict[str, Any] = Field(
+    resource_constraints: dict[str, Any] = Field(
         default_factory=dict,
         description="Resource limits (memory, connections, etc.)",
     )
 
     # Provenance
-    provenance: List[EvidenceRef] = Field(
+    provenance: list[EvidenceRef] = Field(
         default_factory=list,
         description="Evidence supporting process model",
     )
 
     # Metadata
-    source_graph_id: Optional[StableID] = Field(
+    source_graph_id: StableID | None = Field(
         default=None, description="ID of source program graph"
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="When model was created",
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list, description="User-defined tags"
     )
 

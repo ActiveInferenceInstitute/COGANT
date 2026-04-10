@@ -28,10 +28,10 @@ Example:
     'Coupling: 42.00%'
 """
 
-import math
 import logging
-from typing import Dict, Any, Optional, List
+import math
 from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ class CodebaseMetrics:
         137
     """
 
-    def __init__(self, graph: Dict[str, Any], state_space: Dict[str, Any], mappings: Dict[str, Any]):
+    def __init__(self, graph: dict[str, Any], state_space: dict[str, Any], mappings: dict[str, Any]):
         """Initialize metrics calculator.
 
         Args:
@@ -188,7 +188,7 @@ class CodebaseMetrics:
             return 0.0
 
         # Group nodes by module (assume 'parent_id' or 'attributes.module' indicates module)
-        modules: Dict[str, List[str]] = {}
+        modules: dict[str, list[str]] = {}
         for node in self.nodes:
             module_id = node.get("parent_id") or node.get("attributes", {}).get("module", "root")
             if module_id not in modules:
@@ -239,7 +239,7 @@ class CodebaseMetrics:
             return 0.0
 
         # Group nodes by module
-        modules: Dict[str, List[str]] = {}
+        modules: dict[str, list[str]] = {}
         for node in self.nodes:
             module_id = node.get("parent_id") or node.get("attributes", {}).get("module", "root")
             if module_id not in modules:
@@ -397,29 +397,29 @@ class CodebaseMetrics:
             "## Architectural Metrics",
             "",
             f"- **Complexity Score**: {m.complexity_score:.2%}",
-            f"  - Measures cyclomatic-like complexity based on graph density and size.",
-            f"  - Range: 0% (simple) to 100% (highly complex).",
+            "  - Measures cyclomatic-like complexity based on graph density and size.",
+            "  - Range: 0% (simple) to 100% (highly complex).",
             "",
             f"- **Coupling Score**: {m.coupling_score:.2%}",
-            f"  - Measures cross-module dependencies.",
-            f"  - Range: 0% (decoupled) to 100% (tightly coupled).",
+            "  - Measures cross-module dependencies.",
+            "  - Range: 0% (decoupled) to 100% (tightly coupled).",
             "",
             f"- **Cohesion Score**: {m.cohesion_score:.2%}",
-            f"  - Measures intra-module connectivity.",
-            f"  - Range: 0% (scattered) to 100% (highly cohesive).",
+            "  - Measures intra-module connectivity.",
+            "  - Range: 0% (scattered) to 100% (highly cohesive).",
             "",
             "## Coverage Metrics",
             "",
             f"- **Semantic Coverage**: {m.semantic_coverage:.2%}",
-            f"  - Fraction of nodes with semantic mappings.",
+            "  - Fraction of nodes with semantic mappings.",
             f"  - {int(m.node_count * m.semantic_coverage)}/{m.node_count} nodes mapped.",
             "",
             f"- **Observability Score**: {m.observability_score:.2%}",
-            f"  - Fraction of state variables with observations.",
+            "  - Fraction of state variables with observations.",
             f"  - {int(m.state_var_count * m.observability_score)}/{m.state_var_count} state variables observable.",
             "",
             f"- **Controllability Score**: {m.controllability_score:.2%}",
-            f"  - Fraction of state variables with control actions.",
+            "  - Fraction of state variables with control actions.",
             f"  - {int(m.state_var_count * m.controllability_score)}/{m.state_var_count} state variables controllable.",
             "",
             "## Graph Structure",
@@ -438,7 +438,7 @@ class CodebaseMetrics:
 
         return "\n".join(lines)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Export the computed metrics as a JSON-serializable dict.
 
         The dict mirrors the flat structure of :class:`MetricsReport`

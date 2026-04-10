@@ -6,27 +6,27 @@ and semantic mappings.
 """
 
 from cogant.statespace.compiler import (
+    Action,
+    Likelihood,
+    ObservationModality,
+    Preference,
     StateSpaceCompiler,
     StateSpaceModel,
-    ObservationModality,
-    Action,
     Transition,
-    Likelihood,
-    Preference,
-)
-from cogant.statespace.variables import (
-    StateVariableExtractor,
-    StateVariable,
-    StateVariableType,
-    ConfidenceLevel,
-    FactorizationInfo,
 )
 from cogant.statespace.temporal import (
-    TemporalAnalyzer,
-    TimeRegime,
-    TemporalOrdering,
     EventPattern,
+    TemporalAnalyzer,
     TemporalMetrics,
+    TemporalOrdering,
+    TimeRegime,
+)
+from cogant.statespace.variables import (
+    ConfidenceLevel,
+    FactorizationInfo,
+    StateVariable,
+    StateVariableExtractor,
+    StateVariableType,
 )
 
 __all__ = [

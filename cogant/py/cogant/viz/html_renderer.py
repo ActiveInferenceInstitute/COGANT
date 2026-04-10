@@ -1,9 +1,9 @@
 """HTMLSiteRenderer: Generate complete static HTML site with all views."""
 
-from pathlib import Path
-from typing import Dict, Any, Optional, List
 import json
 import logging
+from pathlib import Path
+from typing import Any
 
 from cogant.viz.cytoscape_view import build_cytoscape_html
 
@@ -22,7 +22,7 @@ class HTMLSiteRenderer:
       - assets/ (CSS, JavaScript, data files)
     """
 
-    def __init__(self, bundle: Dict[str, Any]):
+    def __init__(self, bundle: dict[str, Any]):
         """
         Initialize renderer.
 
@@ -72,7 +72,7 @@ class HTMLSiteRenderer:
 
     def _render_index(self) -> None:
         """Render main index page."""
-        summary = self.bundle.get("artifacts", {})
+        self.bundle.get("artifacts", {})
         errors = len(self.bundle.get("errors", []))
         target_name = self.bundle.get("target", "Unknown")
         stage_results = self.bundle.get("stage_results", {})
@@ -247,14 +247,14 @@ class HTMLSiteRenderer:
         with open(self.output_dir / "graph" / "force_graph.html", "w") as f:
             f.write(force_html)
 
-    def _extract_graph_payload(self) -> Dict[str, Any]:
+    def _extract_graph_payload(self) -> dict[str, Any]:
         """Best-effort extraction of a program-graph dict from the bundle.
 
         Looks in a handful of well-known locations so that both the typed
         ``PipelineRunner`` bundle and legacy / ad-hoc bundles can render.
         Always returns a dict with ``nodes`` and ``edges`` keys.
         """
-        candidates: List[Any] = [
+        candidates: list[Any] = [
             self.bundle.get("program_graph"),
             self.bundle.get("graph"),
             (self.bundle.get("stage_results", {}) or {}).get("graph"),
@@ -270,9 +270,9 @@ class HTMLSiteRenderer:
                 }
         return {"nodes": [], "edges": []}
 
-    def _extract_semantic_mappings(self) -> List[Any]:
+    def _extract_semantic_mappings(self) -> list[Any]:
         """Best-effort extraction of semantic mappings for role colouring."""
-        candidates: List[Any] = [
+        candidates: list[Any] = [
             self.bundle.get("semantic_mappings"),
             self.bundle.get("mappings"),
             (self.bundle.get("stage_results", {}) or {}).get("translate"),

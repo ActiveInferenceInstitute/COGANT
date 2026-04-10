@@ -5,20 +5,21 @@ Models the code as a directed multigraph with nodes (code elements)
 and edges (semantic relationships). Forms the foundation of all downstream analyses.
 """
 
-from typing import Optional, Dict, Any, List
+from typing import Any
 
-from pydantic import Field, ConfigDict, field_validator
+from pydantic import ConfigDict, Field, field_validator
+
+from cogant.schemas.core import EdgeKind as EdgeKind
+from cogant.schemas.core import NodeKind as NodeKind
 
 from .base import (
     CogantBaseModel,
-    StableID,
-    Span,
-    TypeInfo,
+    ConfidenceMetric,
     EvidenceRef,
     LocationInfo,
-    ConfidenceMetric,
+    StableID,
+    TypeInfo,
 )
-from cogant.schemas.core import NodeKind as NodeKind, EdgeKind as EdgeKind
 
 
 class Node(CogantBaseModel):
@@ -33,15 +34,15 @@ class Node(CogantBaseModel):
     location: LocationInfo = Field(..., description="File path and span information")
 
     # Type system
-    type_info: Optional[TypeInfo] = Field(
+    type_info: TypeInfo | None = Field(
         default=None, description="Type signature if applicable"
     )
 
     # Structure
-    parent_id: Optional[StableID] = Field(
+    parent_id: StableID | None = Field(
         default=None, description="ID of containing scope (module, class, etc.)"
     )
-    children_ids: List[StableID] = Field(
+    children_ids: list[StableID] = Field(
         default_factory=list,
         description="IDs of directly contained elements",
     )
@@ -62,26 +63,26 @@ class Node(CogantBaseModel):
     )
 
     # Metadata
-    attributes: Dict[str, Any] = Field(
+    attributes: dict[str, Any] = Field(
         default_factory=dict,
         description="Language-specific attributes (e.g., decorators, modifiers)",
     )
-    documentation: Optional[str] = Field(
+    documentation: str | None = Field(
         default=None, description="Extracted docstring/documentation"
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list, description="User/analyzer-defined tags"
     )
 
     # Provenance
-    provenance: List[EvidenceRef] = Field(
+    provenance: list[EvidenceRef] = Field(
         default_factory=list,
         description="Evidence supporting this node's existence and properties",
     )
 
     @field_validator("children_ids")
     @classmethod
-    def validate_no_self_children(cls, v: List[StableID], info) -> List[StableID]:
+    def validate_no_self_children(cls, v: list[StableID], info) -> list[StableID]:
         """Ensure node doesn't list itself as child."""
         if "id" in info.data:
             if info.data["id"] in v:
@@ -110,25 +111,25 @@ class Edge(CogantBaseModel):
     )
 
     # Metadata
-    attributes: Dict[str, Any] = Field(
+    attributes: dict[str, Any] = Field(
         default_factory=dict,
         description="Language-specific attributes (e.g., call context, conditions)",
     )
-    label: Optional[str] = Field(
+    label: str | None = Field(
         default=None, description="Human-readable label for edge"
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list, description="User/analyzer-defined tags"
     )
 
     # Provenance
-    provenance: List[EvidenceRef] = Field(
+    provenance: list[EvidenceRef] = Field(
         default_factory=list,
         description="Evidence supporting this edge",
     )
 
     # Confidence
-    confidence: Optional[ConfidenceMetric] = Field(
+    confidence: ConfidenceMetric | None = Field(
         default=None,
         description="Confidence in edge's validity (for inferred edges)",
     )
@@ -147,42 +148,42 @@ class ProgramGraph(CogantBaseModel):
     version: str = Field(default="1.0.0", description="Schema version")
 
     # Core graph data
-    nodes: List[Node] = Field(
+    nodes: list[Node] = Field(
         default_factory=list, description="All semantic nodes in graph"
     )
-    edges: List[Edge] = Field(
+    edges: list[Edge] = Field(
         default_factory=list, description="All semantic edges in graph"
     )
 
     # Indices for fast lookup (optional but recommended)
-    node_index: Dict[StableID, int] = Field(
+    node_index: dict[StableID, int] = Field(
         default_factory=dict,
         description="Map node IDs to their index in nodes list",
     )
-    edge_index: Dict[StableID, int] = Field(
+    edge_index: dict[StableID, int] = Field(
         default_factory=dict,
         description="Map edge IDs to their index in edges list",
     )
 
     # Statistics
-    stats: Dict[str, Any] = Field(
+    stats: dict[str, Any] = Field(
         default_factory=dict,
         description="Graph statistics (node counts by kind, edge counts by kind, etc.)",
     )
 
     # Metadata
-    root_ids: List[StableID] = Field(
+    root_ids: list[StableID] = Field(
         default_factory=list,
         description="IDs of root nodes (e.g., repository, top-level modules)",
     )
-    external_dependencies: Dict[str, str] = Field(
+    external_dependencies: dict[str, str] = Field(
         default_factory=dict,
         description="Mapping of external module names to versions",
     )
 
     @field_validator("edges")
     @classmethod
-    def validate_edge_endpoints(cls, edges: List[Edge], info) -> List[Edge]:
+    def validate_edge_endpoints(cls, edges: list[Edge], info) -> list[Edge]:
         """Ensure all edges reference valid nodes."""
         if "nodes" in info.data:
             node_ids = {node.id for node in info.data["nodes"]}
@@ -207,13 +208,13 @@ class ProgramGraph(CogantBaseModel):
         self.edge_index[edge.id] = len(self.edges)
         self.edges.append(edge)
 
-    def get_node(self, node_id: StableID) -> Optional[Node]:
+    def get_node(self, node_id: StableID) -> Node | None:
         """Retrieve node by ID using index."""
         if node_id in self.node_index:
             return self.nodes[self.node_index[node_id]]
         return None
 
-    def get_edge(self, edge_id: StableID) -> Optional[Edge]:
+    def get_edge(self, edge_id: StableID) -> Edge | None:
         """Retrieve edge by ID using index."""
         if edge_id in self.edge_index:
             return self.edges[self.edge_index[edge_id]]

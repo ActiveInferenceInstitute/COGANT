@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import threading
 from dataclasses import dataclass, field
-from typing import Dict, List
 
 
 @dataclass
@@ -17,7 +16,7 @@ class Counter:
 
     name: str
     value: int = 0
-    labels: Dict[str, str] = field(default_factory=dict)
+    labels: dict[str, str] = field(default_factory=dict)
 
     def inc(self, by: int = 1) -> None:
         """Increment the counter by *by* (default 1)."""
@@ -33,10 +32,10 @@ class Histogram:
     """Records observations and exposes simple percentile helpers."""
 
     name: str
-    buckets: List[float] = field(
+    buckets: list[float] = field(
         default_factory=lambda: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0],
     )
-    _observations: List[float] = field(default_factory=list)
+    _observations: list[float] = field(default_factory=list)
 
     def observe(self, value: float) -> None:
         """Record a single observation."""
@@ -75,8 +74,8 @@ class MetricsRegistry:
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._counters: Dict[str, Counter] = {}
-        self._histograms: Dict[str, Histogram] = {}
+        self._counters: dict[str, Counter] = {}
+        self._histograms: dict[str, Histogram] = {}
 
     def counter(self, name: str, labels: dict | None = None) -> Counter:
         """Return (or create) a :class:`Counter` by *name*."""

@@ -26,7 +26,6 @@ import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -77,20 +76,20 @@ class ReverseGNNModel:
 
     model_name: str = "CogantModel"
     raw_model_name: str = "CogantModel"
-    hidden_states: List[str] = field(default_factory=list)
-    observations: List[str] = field(default_factory=list)
-    actions: List[str] = field(default_factory=list)
-    policies: List[str] = field(default_factory=list)
-    constraints: List[str] = field(default_factory=list)
-    annotations: Dict[str, str] = field(default_factory=dict)
-    cardinalities: Dict[str, int] = field(default_factory=dict)
-    types: Dict[str, str] = field(default_factory=dict)
-    A: List[List[float]] = field(default_factory=list)
-    B: List[List[List[float]]] = field(default_factory=list)
-    C: List[float] = field(default_factory=list)
-    D: List[float] = field(default_factory=list)
-    connections: List[str] = field(default_factory=list)
-    human_names: Dict[str, str] = field(default_factory=dict)
+    hidden_states: list[str] = field(default_factory=list)
+    observations: list[str] = field(default_factory=list)
+    actions: list[str] = field(default_factory=list)
+    policies: list[str] = field(default_factory=list)
+    constraints: list[str] = field(default_factory=list)
+    annotations: dict[str, str] = field(default_factory=dict)
+    cardinalities: dict[str, int] = field(default_factory=dict)
+    types: dict[str, str] = field(default_factory=dict)
+    A: list[list[float]] = field(default_factory=list)
+    B: list[list[list[float]]] = field(default_factory=list)
+    C: list[float] = field(default_factory=list)
+    D: list[float] = field(default_factory=list)
+    connections: list[str] = field(default_factory=list)
+    human_names: dict[str, str] = field(default_factory=dict)
 
     @property
     def n_states(self) -> int:
@@ -147,7 +146,7 @@ _MATRIX_BLOCK_HEADER_RE = re.compile(
 _FLOAT_RE = re.compile(r"[-+]?\d*\.\d+(?:[eE][-+]?\d+)?|[-+]?\d+(?:[eE][-+]?\d+)?")
 
 
-def _split_sections(text: str) -> Dict[str, List[str]]:
+def _split_sections(text: str) -> dict[str, list[str]]:
     """Split markdown into a dict of section_name → list of body occurrences.
 
     COGANT emits some headers (notably ``## Connections``) twice — once
@@ -157,7 +156,7 @@ def _split_sections(text: str) -> Dict[str, List[str]]:
     needed. The upstream GNN type-checker only honours the first
     occurrence, and so does this parser for canonical sections.
     """
-    sections: Dict[str, List[str]] = {}
+    sections: dict[str, list[str]] = {}
     matches = list(_SECTION_RE.finditer(text))
     for idx, match in enumerate(matches):
         header = match.group(1).strip()
@@ -168,10 +167,10 @@ def _split_sections(text: str) -> Dict[str, List[str]]:
     return sections
 
 
-def _parse_cardinality_and_type(decl: str) -> tuple[Optional[int], Optional[str]]:
+def _parse_cardinality_and_type(decl: str) -> tuple[int | None, str | None]:
     """Parse ``10,1,type=int`` style declaration into ``(10, "int")``."""
-    card: Optional[int] = None
-    type_str: Optional[str] = None
+    card: int | None = None
+    type_str: str | None = None
     parts = [p.strip() for p in decl.split(",")]
     for p in parts:
         if p.startswith("type="):
@@ -181,7 +180,7 @@ def _parse_cardinality_and_type(decl: str) -> tuple[Optional[int], Optional[str]
     return card, type_str
 
 
-def _parse_tuple_vector(body: str) -> List[float]:
+def _parse_tuple_vector(body: str) -> list[float]:
     """Parse a ``(0.1, 0.2, 0.7)`` tuple into a list of floats.
 
     Tolerates nested tuples (``((a,b),(c,d))``) by flattening, which is
@@ -197,11 +196,11 @@ def _parse_state_space_block(body: str, model: ReverseGNNModel) -> None:
     Sorts factor-indexed variables by their numeric suffix so ``s_f10``
     follows ``s_f9`` rather than ``s_f1``.
     """
-    hidden: Dict[int, str] = {}
-    obs: Dict[int, str] = {}
-    acts: Dict[int, str] = {}
-    constraints: Dict[int, str] = {}
-    policies: Dict[int, str] = {}
+    hidden: dict[int, str] = {}
+    obs: dict[int, str] = {}
+    acts: dict[int, str] = {}
+    constraints: dict[int, str] = {}
+    policies: dict[int, str] = {}
 
     for line in body.splitlines():
         line = line.strip()
@@ -299,10 +298,10 @@ def _parse_initial_parameterization(
     states, we aggregate per-factor D values into the global D vector
     by taking the first element of each factor's distribution.
     """
-    per_factor_D: Dict[str, List[float]] = {}
-    per_factor_C: Dict[str, List[float]] = {}
-    per_factor_A: Dict[str, List[List[float]]] = {}
-    per_factor_B: Dict[str, List[List[List[float]]]] = {}
+    per_factor_D: dict[str, list[float]] = {}
+    per_factor_C: dict[str, list[float]] = {}
+    per_factor_A: dict[str, list[list[float]]] = {}
+    per_factor_B: dict[str, list[list[list[float]]]] = {}
 
     for line in body.splitlines():
         line = line.strip()
@@ -350,7 +349,7 @@ def _parse_initial_parameterization(
     # (a principled choice that matches how the forward GNNMatrices
     # constructs D — see gnn/matrices.py:compute_D).
     if model.hidden_states:
-        D_vec: List[float] = []
+        D_vec: list[float] = []
         for i, _ in enumerate(model.hidden_states):
             key = f"D_f{i}"
             if key in per_factor_D and per_factor_D[key]:
@@ -366,7 +365,7 @@ def _parse_initial_parameterization(
 
     # Assemble the aggregate C vector (one value per observation).
     if model.observations:
-        C_vec: List[float] = []
+        C_vec: list[float] = []
         for i, _ in enumerate(model.observations):
             key = f"C_m{i}"
             if key in per_factor_C and per_factor_C[key]:
@@ -422,7 +421,7 @@ def _parse_state_variables_extended(
     attribute names.
     """
     in_table = False
-    headers: List[str] = []
+    headers: list[str] = []
     idx = 0
     for line in body.splitlines():
         stripped = line.strip()
@@ -499,7 +498,7 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
         depth = int(header.group(4)) if header.group(4) else 0
         i += 1
         if tag == "A":
-            A: List[List[float]] = []
+            A: list[list[float]] = []
             while i < len(lines) and len(A) < rows:
                 row_line = lines[i].strip()
                 if row_line and not row_line.startswith("#"):
@@ -511,7 +510,7 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
                 model.A = A
         elif tag == "B":
             # Block format: ``# action=k`` header followed by rows rows.
-            B: List[List[List[float]]] = [
+            B: list[list[list[float]]] = [
                 [[0.0] * depth for _ in range(cols)] for _ in range(rows)
             ]
             current_action = -1
@@ -544,7 +543,7 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
             if B and B[0]:
                 model.B = B
         elif tag == "C":
-            C: List[float] = []
+            C: list[float] = []
             while i < len(lines) and len(C) < rows:
                 row_line = lines[i].strip()
                 if row_line and not row_line.startswith("#"):
@@ -555,7 +554,7 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
             if C:
                 model.C = C[:rows]
         elif tag == "D":
-            D: List[float] = []
+            D: list[float] = []
             while i < len(lines) and len(D) < rows:
                 row_line = lines[i].strip()
                 if row_line and not row_line.startswith("#"):
@@ -572,7 +571,7 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
 # ---------------------------------------------------------------------------
 
 
-def parse_gnn(gnn: Union[str, Path]) -> ReverseGNNModel:
+def parse_gnn(gnn: str | Path) -> ReverseGNNModel:
     """Parse a GNN markdown file or string into a :class:`ReverseGNNModel`.
 
     Args:
@@ -606,11 +605,11 @@ def parse_gnn(gnn: Union[str, Path]) -> ReverseGNNModel:
     model = ReverseGNNModel()
     sections = _split_sections(text)
 
-    def first(name: str) -> Optional[str]:
+    def first(name: str) -> str | None:
         bodies = sections.get(name)
         return bodies[0] if bodies else None
 
-    def last(name: str) -> Optional[str]:
+    def last(name: str) -> str | None:
         bodies = sections.get(name)
         return bodies[-1] if bodies else None
 

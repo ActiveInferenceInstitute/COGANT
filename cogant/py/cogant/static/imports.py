@@ -2,10 +2,9 @@
 
 import hashlib
 import logging
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from cogant.static.parser import PythonASTParser
 
@@ -37,26 +36,26 @@ class ImportEdge:
     is_local: bool
     """Whether module is local to repository."""
 
-    resolved_file: Optional[Path] = None
+    resolved_file: Path | None = None
     """Resolved file path if found."""
 
-    resolved_module: Optional[str] = None
+    resolved_module: str | None = None
     """Resolved module name."""
 
     line_num: int = 0
     """Line number of import statement."""
 
-    imported_names: List[str] = field(default_factory=list)
+    imported_names: list[str] = field(default_factory=list)
     """Specific names imported (for 'from X import Y')."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     """Additional metadata."""
 
 
 class ImportAnalyzer:
     """Analyze and resolve import statements."""
 
-    def __init__(self, repo_root: Optional[Path] = None):
+    def __init__(self, repo_root: Path | None = None):
         """Initialize import analyzer.
 
         Args:
@@ -66,7 +65,7 @@ class ImportAnalyzer:
         self.parser = PythonASTParser()
         self._stdlib_modules = self._load_stdlib_modules()
 
-    def analyze_file(self, file_path: Path) -> List[ImportEdge]:
+    def analyze_file(self, file_path: Path) -> list[ImportEdge]:
         """Analyze imports in a Python file.
 
         Args:
@@ -80,7 +79,7 @@ class ImportAnalyzer:
 
     def analyze_source(
         self, source: str, file_path: Path
-    ) -> List[ImportEdge]:
+    ) -> list[ImportEdge]:
         """Analyze imports in Python source code.
 
         Args:
@@ -95,7 +94,7 @@ class ImportAnalyzer:
 
     def _build_import_edges(
         self, file_path: Path, import_defs
-    ) -> List[ImportEdge]:
+    ) -> list[ImportEdge]:
         """Build import edges from import definitions.
 
         Args:
@@ -141,7 +140,7 @@ class ImportAnalyzer:
 
     def _resolve_local_import(
         self, source_file: Path, module_name: str, is_relative: bool
-    ) -> Optional[Path]:
+    ) -> Path | None:
         """Try to resolve a local import to a file.
 
         Args:
@@ -178,7 +177,7 @@ class ImportAnalyzer:
         return None
 
     @staticmethod
-    def _load_stdlib_modules() -> Set[str]:
+    def _load_stdlib_modules() -> set[str]:
         """Load set of Python standard library module names.
 
         Returns:

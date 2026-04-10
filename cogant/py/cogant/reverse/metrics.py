@@ -45,8 +45,9 @@ Python lists; they are coerced to ``float64`` on entry.
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -68,7 +69,7 @@ __all__ = [
 DEFAULT_ISOMORPHISM_THRESHOLD: float = 0.7
 """Default cutoff for :attr:`IsomorphismReport.is_isomorphic`."""
 
-MATRIX_KEYS: Tuple[str, ...] = ("A", "B", "C", "D")
+MATRIX_KEYS: tuple[str, ...] = ("A", "B", "C", "D")
 """Canonical Active Inference matrix slot names used by COGANT."""
 
 _EPS: float = 1e-12
@@ -108,7 +109,7 @@ class IsomorphismReport:
     matrix_score: float = 0.0
     total_score: float = 0.0
     is_isomorphic: bool = False
-    breakdown: Dict[str, Any] = field(default_factory=dict)
+    breakdown: dict[str, Any] = field(default_factory=dict)
 
     def summary(self) -> str:
         """Return a compact, human-readable one-line summary.
@@ -206,7 +207,7 @@ def compare_role_distributions(
     if total_a <= 0.0 or total_b <= 0.0:
         return 0.0
 
-    support: List[str] = sorted(set(roles_a.keys()) | set(roles_b.keys()))
+    support: list[str] = sorted(set(roles_a.keys()) | set(roles_b.keys()))
     p = _to_probability(roles_a, support)
     q = _to_probability(roles_b, support)
 
@@ -248,7 +249,7 @@ def _coerce_matrix(value: Any) -> np.ndarray | None:
     return arr
 
 
-def _pad_to_envelope(m1: np.ndarray, m2: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def _pad_to_envelope(m1: np.ndarray, m2: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Zero-pad two arrays to their common bounding shape.
 
     Supports arbitrary rank (both arrays must share the same
@@ -261,13 +262,13 @@ def _pad_to_envelope(m1: np.ndarray, m2: np.ndarray) -> Tuple[np.ndarray, np.nda
         m1 = m1.reshape(-1)
         m2 = m2.reshape(-1)
 
-    shape = tuple(max(a, b) for a, b in zip(m1.shape, m2.shape))
+    shape = tuple(max(a, b) for a, b in zip(m1.shape, m2.shape, strict=False))
     pad1 = [(0, shape[i] - m1.shape[i]) for i in range(len(shape))]
     pad2 = [(0, shape[i] - m2.shape[i]) for i in range(len(shape))]
     return np.pad(m1, pad1), np.pad(m2, pad2)
 
 
-def _matrix_pair_score(m1: np.ndarray, m2: np.ndarray) -> Tuple[float, float]:
+def _matrix_pair_score(m1: np.ndarray, m2: np.ndarray) -> tuple[float, float]:
     """Return ``(score, raw_distance)`` for a single matrix pair.
 
     ``score`` is ``1 - raw_distance`` clamped to ``[0, 1]``.
@@ -323,7 +324,7 @@ def compare_matrices(
     """
     # Stable key ordering: canonical A/B/C/D first, then any extras
     # sorted alphabetically.
-    shared_keys: List[str] = []
+    shared_keys: list[str] = []
     for key in MATRIX_KEYS:
         if key in matrices_a and key in matrices_b:
             shared_keys.append(key)
@@ -335,7 +336,7 @@ def compare_matrices(
     if not shared_keys:
         return 0.5
 
-    scores: List[float] = []
+    scores: list[float] = []
     for key in shared_keys:
         arr_a = _coerce_matrix(matrices_a.get(key))
         arr_b = _coerce_matrix(matrices_b.get(key))
@@ -379,7 +380,7 @@ def _node_role_label(node: Any) -> str:
     return "NODE"
 
 
-def _edge_role_pair(edge: Any) -> Tuple[str, str]:
+def _edge_role_pair(edge: Any) -> tuple[str, str]:
     """Return a ``(source_role, target_role)`` label pair for an edge.
 
     As with :func:`_node_role_label`, we key on role labels (not node
@@ -394,15 +395,15 @@ def _edge_role_pair(edge: Any) -> Tuple[str, str]:
     return (str(src), str(dst))
 
 
-def _multiset(items: Iterable[Any]) -> Dict[Any, int]:
+def _multiset(items: Iterable[Any]) -> dict[Any, int]:
     """Return a counter-style multiset dict from any iterable."""
-    result: Dict[Any, int] = {}
+    result: dict[Any, int] = {}
     for item in items:
         result[item] = result.get(item, 0) + 1
     return result
 
 
-def _multiset_symmetric_difference(a: Dict[Any, int], b: Dict[Any, int]) -> int:
+def _multiset_symmetric_difference(a: dict[Any, int], b: dict[Any, int]) -> int:
     """Size of the symmetric difference of two count-dict multisets."""
     keys = set(a.keys()) | set(b.keys())
     return sum(abs(a.get(k, 0) - b.get(k, 0)) for k in keys)
@@ -537,7 +538,7 @@ def compute_isomorphism_report(
     # Clamp for floating-point safety.
     total_score = max(0.0, min(1.0, total_score))
 
-    breakdown: Dict[str, Any] = {
+    breakdown: dict[str, Any] = {
         "role_score": role_score,
         "matrix_score": matrix_score,
         "structural_score": structural_score,
@@ -558,7 +559,7 @@ def compute_isomorphism_report(
     }
 
     # Per-matrix raw Frobenius detail, if we can compute it cheaply.
-    per_matrix: Dict[str, float] = {}
+    per_matrix: dict[str, float] = {}
     for key in MATRIX_KEYS:
         if key in matrices_a and key in matrices_b:
             arr_a = _coerce_matrix(matrices_a.get(key))

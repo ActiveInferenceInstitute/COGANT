@@ -5,21 +5,21 @@ Bridges source code representations to domain-specific semantic models
 (e.g., MDP states, POMDP observations, control system components).
 """
 
-from typing import Optional, Dict, Any, List
-from enum import Enum
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import ConfigDict, Field
 
 from .base import (
     CogantBaseModel,
-    StableID,
-    EvidenceRef,
     ConfidenceMetric,
+    EvidenceRef,
+    StableID,
 )
 
 
-class SemanticRole(str, Enum):
+class SemanticRole(StrEnum):
     """
     Roles that program graph elements can play in semantic models.
     Enables flexible mapping to diverse target formalisms.
@@ -71,7 +71,7 @@ class MappingRule(CogantBaseModel):
     target_role: SemanticRole = Field(
         ..., description="Target semantic role"
     )
-    transformation: Optional[str] = Field(
+    transformation: str | None = Field(
         default=None,
         description="Optional transformation to apply (e.g., 'extract_return_value')",
     )
@@ -112,13 +112,13 @@ class TargetSemanticElement(CogantBaseModel):
     model_type: str = Field(
         ..., description="Type of semantic model (e.g., 'mdp', 'pomdp', 'markov_chain')"
     )
-    domain_specific_properties: Dict[str, Any] = Field(
+    domain_specific_properties: dict[str, Any] = Field(
         default_factory=dict,
         description="Domain-specific properties (e.g., state_space_size, action_range)",
     )
 
 
-class ReviewStatus(str, Enum):
+class ReviewStatus(StrEnum):
     """Status of semantic mapping review."""
 
     UNREVIEWED = "unreviewed"
@@ -140,25 +140,25 @@ class SemanticMapping(CogantBaseModel):
         ..., description="Unique identifier for this mapping"
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="When mapping was created",
     )
-    created_by: Optional[str] = Field(
+    created_by: str | None = Field(
         default=None, description="User or tool that created mapping"
     )
 
     # Graph elements
-    source_graph_elements: List[SourceGraphElement] = Field(
+    source_graph_elements: list[SourceGraphElement] = Field(
         ...,
         description="Program graph elements involved in this mapping",
     )
-    target_semantic_elements: List[TargetSemanticElement] = Field(
+    target_semantic_elements: list[TargetSemanticElement] = Field(
         ...,
         description="Target semantic model elements",
     )
 
     # Mapping details
-    mapping_rule: Optional[MappingRule] = Field(
+    mapping_rule: MappingRule | None = Field(
         default=None,
         description="Rule that generated this mapping (if automated)",
     )
@@ -166,7 +166,7 @@ class SemanticMapping(CogantBaseModel):
         default="manual",
         description="How mapping was created ('manual', 'heuristic', 'learned')",
     )
-    justification: Optional[str] = Field(
+    justification: str | None = Field(
         default=None, description="Explanation of why this mapping is valid"
     )
 
@@ -181,27 +181,27 @@ class SemanticMapping(CogantBaseModel):
         default=ReviewStatus.UNREVIEWED,
         description="Review and approval status",
     )
-    review_notes: Optional[str] = Field(
+    review_notes: str | None = Field(
         default=None, description="Notes from reviewer"
     )
-    reviewed_by: Optional[str] = Field(
+    reviewed_by: str | None = Field(
         default=None, description="User who reviewed mapping"
     )
-    reviewed_at: Optional[datetime] = Field(
+    reviewed_at: datetime | None = Field(
         default=None, description="When mapping was reviewed"
     )
 
     # Provenance & evidence
-    evidence_references: List[EvidenceRef] = Field(
+    evidence_references: list[EvidenceRef] = Field(
         default_factory=list,
         description="Evidence supporting mapping validity",
     )
 
     # Metadata
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list, description="User-defined tags"
     )
-    annotations: Dict[str, Any] = Field(
+    annotations: dict[str, Any] = Field(
         default_factory=dict,
         description="Custom annotations",
     )
@@ -252,15 +252,15 @@ class SemanticMappingCollection(CogantBaseModel):
     program_graph_id: StableID = Field(
         ..., description="ID of source program graph"
     )
-    mappings: List[SemanticMapping] = Field(
+    mappings: list[SemanticMapping] = Field(
         default_factory=list,
         description="All mappings",
     )
-    mapping_statistics: Dict[str, Any] = Field(
+    mapping_statistics: dict[str, Any] = Field(
         default_factory=dict,
         description="Statistics about mappings (coverage, confidence distribution, etc.)",
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="When collection was created",
     )

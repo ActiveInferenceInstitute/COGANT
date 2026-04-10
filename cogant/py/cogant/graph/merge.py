@@ -1,11 +1,11 @@
 """Graph merging for combining static and dynamic evidence graphs."""
 
-from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
-from cogant.schemas.core import Node, Edge, EdgeKind
-from cogant.schemas.graph import ProgramGraph, GraphMetadata
+from cogant.schemas.core import Edge
+from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
 
 @dataclass
@@ -21,10 +21,10 @@ class MergeConflict:
     entity_id: str
     """ID of the conflicting entity."""
 
-    details: Dict[str, Any]
+    details: dict[str, Any]
     """Conflict details."""
 
-    resolution: Optional[str] = None
+    resolution: str | None = None
     """How the conflict was resolved."""
 
 
@@ -35,10 +35,10 @@ class MergeProvenance:
     timestamp: datetime
     """When the merge occurred."""
 
-    source_graphs: List[str]
+    source_graphs: list[str]
     """Names of merged graphs."""
 
-    conflicts: List[MergeConflict]
+    conflicts: list[MergeConflict]
     """Conflicts encountered."""
 
     edges_added: int = 0
@@ -56,9 +56,9 @@ class GraphMerger:
 
     def __init__(self):
         """Initialize the graph merger."""
-        self.merge_history: List[MergeProvenance] = []
+        self.merge_history: list[MergeProvenance] = []
 
-    def merge(self, graphs: List[ProgramGraph], conflict_resolution: str = "union") -> ProgramGraph:
+    def merge(self, graphs: list[ProgramGraph], conflict_resolution: str = "union") -> ProgramGraph:
         """Merge multiple graphs into one (convenience method).
 
         Args:
@@ -86,7 +86,7 @@ class GraphMerger:
         static_graph: ProgramGraph,
         dynamic_graph: ProgramGraph,
         conflict_resolution: str = "union",
-    ) -> Tuple[ProgramGraph, MergeProvenance]:
+    ) -> tuple[ProgramGraph, MergeProvenance]:
         """Merge static and dynamic graphs.
 
         Args:
@@ -100,7 +100,7 @@ class GraphMerger:
         merged = ProgramGraph(metadata=self._merge_metadata(static_graph, dynamic_graph))
 
         provenance = MergeProvenance(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             source_graphs=["static", "dynamic"],
             conflicts=[],
         )
@@ -191,7 +191,7 @@ class GraphMerger:
         dynamic_graph: ProgramGraph,
         merged: ProgramGraph,
         conflict_resolution: str,
-    ) -> Tuple[int, int, List[MergeConflict]]:
+    ) -> tuple[int, int, list[MergeConflict]]:
         """Merge edges from both graphs, handling conflicts.
 
         Args:
@@ -205,7 +205,7 @@ class GraphMerger:
         """
         edges_added = 0
         edges_updated = 0
-        conflicts: List[MergeConflict] = []
+        conflicts: list[MergeConflict] = []
 
         # Add edges from static graph
         for edge in static_graph.edges.values():
@@ -259,7 +259,7 @@ class GraphMerger:
         static_edge: Edge,
         dynamic_edge: Edge,
         strategy: str,
-    ) -> Optional[MergeConflict]:
+    ) -> MergeConflict | None:
         """Resolve a conflict between two edges.
 
         Args:
@@ -298,7 +298,7 @@ class GraphMerger:
 
     def merge_multiple_graphs(
         self,
-        graphs: List[Tuple[str, ProgramGraph]],
+        graphs: list[tuple[str, ProgramGraph]],
     ) -> ProgramGraph:
         """Merge multiple graphs sequentially.
 
@@ -313,12 +313,12 @@ class GraphMerger:
 
         merged = graphs[0][1]
 
-        for name, graph in graphs[1:]:
+        for _name, graph in graphs[1:]:
             merged, _ = self.merge_graphs(merged, graph)
 
         return merged
 
-    def get_merge_statistics(self) -> Dict[str, Any]:
+    def get_merge_statistics(self) -> dict[str, Any]:
         """Get statistics about merges performed.
 
         Returns:

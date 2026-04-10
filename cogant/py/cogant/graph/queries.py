@@ -1,9 +1,9 @@
 """Graph query operations for analysis and exploration."""
 
-from typing import Any, Dict, List, Optional, Set
 from collections import defaultdict
+from typing import Any
 
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
+from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
 
 
@@ -21,7 +21,7 @@ class GraphQuery:
         """
         self.graph = graph
 
-    def find_nodes_by_kind(self, kind: NodeKind) -> List[Node]:
+    def find_nodes_by_kind(self, kind: NodeKind) -> list[Node]:
         """Find all nodes of a given kind (convenience method).
 
         Args:
@@ -34,11 +34,11 @@ class GraphQuery:
 
     def filter_nodes(
         self,
-        kind: Optional[NodeKind] = None,
-        language: Optional[str] = None,
-        name_pattern: Optional[str] = None,
-        metadata_filter: Optional[Dict[str, Any]] = None,
-    ) -> List[Node]:
+        kind: NodeKind | None = None,
+        language: str | None = None,
+        name_pattern: str | None = None,
+        metadata_filter: dict[str, Any] | None = None,
+    ) -> list[Node]:
         """Filter nodes by various criteria.
 
         Args:
@@ -69,11 +69,11 @@ class GraphQuery:
 
     def filter_edges(
         self,
-        kind: Optional[EdgeKind] = None,
-        source_id: Optional[str] = None,
-        target_id: Optional[str] = None,
+        kind: EdgeKind | None = None,
+        source_id: str | None = None,
+        target_id: str | None = None,
         min_weight: float = 0.0,
-    ) -> List[Edge]:
+    ) -> list[Edge]:
         """Filter edges by various criteria.
 
         Args:
@@ -105,7 +105,7 @@ class GraphQuery:
         self,
         source_id: str,
         target_id: str,
-    ) -> Optional[List[str]]:
+    ) -> list[str] | None:
         """Find shortest path between two nodes using BFS.
 
         Args:
@@ -145,7 +145,7 @@ class GraphQuery:
         source_id: str,
         target_id: str,
         max_depth: int = 5,
-    ) -> List[List[str]]:
+    ) -> list[list[str]]:
         """Find all paths between two nodes up to max depth.
 
         Args:
@@ -158,7 +158,7 @@ class GraphQuery:
         """
         paths = []
 
-        def dfs(current_id: str, target: str, path: List[str], visited: Set[str]) -> None:
+        def dfs(current_id: str, target: str, path: list[str], visited: set[str]) -> None:
             """Depth-first walk that records every simple path up to ``max_depth``."""
             if len(path) > max_depth:
                 return
@@ -200,7 +200,7 @@ class GraphQuery:
         edges = self.graph.get_edges_from(node_id)
         return len(edges)
 
-    def compute_betweenness_centrality(self) -> Dict[str, float]:
+    def compute_betweenness_centrality(self) -> dict[str, float]:
         """Compute betweenness centrality for all nodes.
 
         Measures how often a node appears in shortest paths between other nodes.
@@ -208,7 +208,7 @@ class GraphQuery:
         Returns:
             Dictionary mapping node IDs to centrality scores.
         """
-        centrality: Dict[str, float] = defaultdict(float)
+        centrality: dict[str, float] = defaultdict(float)
         nodes = list(self.graph.nodes.keys())
 
         for source in nodes:
@@ -229,7 +229,7 @@ class GraphQuery:
 
         return dict(centrality)
 
-    def compute_closeness_centrality(self) -> Dict[str, float]:
+    def compute_closeness_centrality(self) -> dict[str, float]:
         """Compute closeness centrality for all nodes.
 
         Measures average distance to all other nodes.
@@ -258,7 +258,7 @@ class GraphQuery:
 
         return centrality
 
-    def compute_degree_centrality(self) -> Dict[str, float]:
+    def compute_degree_centrality(self) -> dict[str, float]:
         """Compute degree centrality for all nodes.
 
         Measures the number of connections relative to maximum possible.
@@ -277,7 +277,7 @@ class GraphQuery:
 
         return centrality
 
-    def find_connected_components(self) -> List[Set[str]]:
+    def find_connected_components(self) -> list[set[str]]:
         """Find all connected components.
 
         Returns:
@@ -311,7 +311,7 @@ class GraphQuery:
 
         return components
 
-    def find_cycles(self, max_cycle_size: int = 10) -> List[List[str]]:
+    def find_cycles(self, max_cycle_size: int = 10) -> list[list[str]]:
         """Find cycles in the graph.
 
         Args:
@@ -337,7 +337,7 @@ class GraphQuery:
 
     def extract_subgraph_by_kind(
         self,
-        node_kinds: List[NodeKind],
+        node_kinds: list[NodeKind],
     ) -> ProgramGraph:
         """Extract subgraph containing only nodes of specified kinds.
 
@@ -361,7 +361,7 @@ class GraphQuery:
 
         return subgraph
 
-    def get_dependency_chain(self, node_id: str, max_depth: int = 5) -> Dict[str, List[str]]:
+    def get_dependency_chain(self, node_id: str, max_depth: int = 5) -> dict[str, list[str]]:
         """Get all dependencies of a node up to max depth.
 
         Args:
@@ -371,7 +371,7 @@ class GraphQuery:
         Returns:
             Dictionary mapping depth level to list of node IDs.
         """
-        dependencies: Dict[str, List[str]] = defaultdict(list)
+        dependencies: dict[str, list[str]] = defaultdict(list)
         visited = {node_id}
         current_level = [node_id]
         depth = 0
@@ -392,7 +392,7 @@ class GraphQuery:
 
         return dict(dependencies)
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get query statistics.
 
         Returns:

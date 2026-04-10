@@ -102,6 +102,8 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.ruff.lint]
 extend-select = [
     "E",     # pycodestyle errors
     "W",     # pycodestyle warnings
@@ -115,7 +117,14 @@ extend-ignore = [
     "E501",  # Line too long (handled by formatter)
 ]
 
-[tool.ruff.isort]
+[tool.ruff.lint.per-file-ignores]
+# Typer CLI modules intentionally use typer.Argument/typer.Option as defaults;
+# that is the canonical Typer pattern and is safe (the callables produce
+# parameter-info objects, not shared mutable state).
+"py/cogant/cli/*.py" = ["B008"]
+"py/cogant/reverse/cli.py" = ["B008"]
+
+[tool.ruff.lint.isort]
 known-first-party = ["cogant"]
 known-third-party = ["pydantic", "typer", "rich", "networkx", "pyarrow", "duckdb"]
 

@@ -5,10 +5,10 @@ import hashlib
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from cogant.static.parser import PythonASTParser
-from cogant.static.symbols import SymbolExtractor, SymbolInfo
+from cogant.static.symbols import SymbolExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class CallEdge:
     callee_name: str
     """Name of called function/method."""
 
-    callee_id: Optional[str] = None
+    callee_id: str | None = None
     """Symbol ID of called function (if resolved)."""
 
     line_num: int = 0
@@ -41,20 +41,20 @@ class CallEdge:
     is_method_call: bool = False
     """Whether this is a method call."""
 
-    receiver: Optional[str] = None
+    receiver: str | None = None
     """Object/module the method is called on."""
 
-    args: List[str] = field(default_factory=list)
+    args: list[str] = field(default_factory=list)
     """Argument values as strings."""
 
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     """Additional metadata."""
 
 
 class CallGraphBuilder:
     """Extract function and method calls from Python source."""
 
-    def __init__(self, repo_root: Optional[Path] = None):
+    def __init__(self, repo_root: Path | None = None):
         """Initialize call graph builder.
 
         Args:
@@ -64,7 +64,7 @@ class CallGraphBuilder:
         self.parser = PythonASTParser()
         self.symbol_extractor = SymbolExtractor(repo_root)
 
-    def extract_calls_from_file(self, file_path: Path) -> List[CallEdge]:
+    def extract_calls_from_file(self, file_path: Path) -> list[CallEdge]:
         """Extract all function/method calls from a Python file.
 
         Args:
@@ -83,7 +83,7 @@ class CallGraphBuilder:
             )
             # Parse again to visit AST
             try:
-                with open(file_path, "r") as f:
+                with open(file_path) as f:
                     tree = ast.parse(f.read())
                 for node in tree.body:
                     if isinstance(node, ast.FunctionDef) and node.name == func.name:
@@ -98,7 +98,7 @@ class CallGraphBuilder:
                     file_path, method.name, cls.name, symbol_table
                 )
                 try:
-                    with open(file_path, "r") as f:
+                    with open(file_path) as f:
                         tree = ast.parse(f.read())
                     for node in tree.body:
                         if isinstance(node, ast.ClassDef) and node.name == cls.name:
@@ -113,7 +113,7 @@ class CallGraphBuilder:
 
     def extract_calls_from_source(
         self, source: str, file_path: Path
-    ) -> List[CallEdge]:
+    ) -> list[CallEdge]:
         """Extract function/method calls from Python source code.
 
         Args:
@@ -177,7 +177,7 @@ class CallExtractorVisitor(ast.NodeVisitor):
         self.function_name = function_name
         self.scope = scope
         self.symbol_table = symbol_table
-        self.calls: List[CallEdge] = []
+        self.calls: list[CallEdge] = []
 
     def visit_Call(self, node: ast.Call) -> None:
         """Visit function call node.
@@ -191,7 +191,7 @@ class CallExtractorVisitor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def _extract_call(self, node: ast.Call) -> Optional[CallEdge]:
+    def _extract_call(self, node: ast.Call) -> CallEdge | None:
         """Extract call information from AST Call node.
 
         Args:

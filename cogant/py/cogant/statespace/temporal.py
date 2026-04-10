@@ -5,18 +5,17 @@ Determines execution model (synchronous/asynchronous/event-driven) and
 extracts temporal ordering from process flow and event patterns.
 """
 
-from typing import Dict, List, Set, Optional, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
 import logging
+from dataclasses import dataclass
+from enum import StrEnum
 
-from cogant.schemas.core import Node, NodeKind, EdgeKind
+from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
 
 logger = logging.getLogger(__name__)
 
 
-class TimeRegime(str, Enum):
+class TimeRegime(StrEnum):
     """Temporal execution model."""
     SYNCHRONOUS = "synchronous"
     ASYNCHRONOUS = "asynchronous"
@@ -37,8 +36,8 @@ class TemporalOrdering:
 class EventPattern:
     """Pattern of event-driven execution."""
     event_node_id: str
-    trigger_nodes: List[str]
-    handler_nodes: List[str]
+    trigger_nodes: list[str]
+    handler_nodes: list[str]
     is_async: bool = False
 
 
@@ -75,9 +74,9 @@ class TemporalAnalyzer:
         """
         self.graph = program_graph
         self.time_regime = TimeRegime.SYNCHRONOUS
-        self.orderings: List[TemporalOrdering] = []
-        self.event_patterns: List[EventPattern] = []
-        self.metrics: Optional[TemporalMetrics] = None
+        self.orderings: list[TemporalOrdering] = []
+        self.event_patterns: list[EventPattern] = []
+        self.metrics: TemporalMetrics | None = None
 
     def analyze(self) -> TimeRegime:
         """
@@ -110,7 +109,7 @@ class TemporalAnalyzer:
 
         return self.time_regime
 
-    def _detect_async_nodes(self) -> Set[str]:
+    def _detect_async_nodes(self) -> set[str]:
         """
         Detect asynchronous nodes from graph.
 
@@ -131,7 +130,7 @@ class TemporalAnalyzer:
 
         return async_nodes
 
-    def _detect_event_nodes(self) -> Set[str]:
+    def _detect_event_nodes(self) -> set[str]:
         """
         Detect event-related nodes.
 
@@ -156,7 +155,7 @@ class TemporalAnalyzer:
 
         return event_nodes
 
-    def _extract_orderings(self, async_nodes: Set[str]) -> None:
+    def _extract_orderings(self, async_nodes: set[str]) -> None:
         """
         Extract temporal orderings from control flow edges.
 
@@ -203,7 +202,7 @@ class TemporalAnalyzer:
             )
             self.orderings.append(ordering)
 
-    def _detect_event_patterns(self, event_nodes: Set[str]) -> None:
+    def _detect_event_patterns(self, event_nodes: set[str]) -> None:
         """
         Detect event-driven execution patterns.
 
@@ -234,7 +233,7 @@ class TemporalAnalyzer:
                 )
                 self.event_patterns.append(pattern)
 
-    def _compute_metrics(self, async_nodes: Set[str], event_nodes: Set[str]) -> TemporalMetrics:
+    def _compute_metrics(self, async_nodes: set[str], event_nodes: set[str]) -> TemporalMetrics:
         """
         Compute temporal metrics.
 
@@ -287,18 +286,18 @@ class TemporalAnalyzer:
         """
         call_kinds = {EdgeKind.CALLS, EdgeKind.TRIGGERS}
         # Build adjacency for call-graph edges only.
-        adj: Dict[str, List[str]] = {}
+        adj: dict[str, list[str]] = {}
         for edge in self.graph.edges.values():
             if edge.kind in call_kinds:
                 adj.setdefault(edge.source_id, []).append(edge.target_id)
 
         WHITE, GRAY, BLACK = 0, 1, 2
-        color: Dict[str, int] = {nid: WHITE for nid in self.graph.nodes}
+        color: dict[str, int] = dict.fromkeys(self.graph.nodes, WHITE)
 
         for start in list(color.keys()):
             if color[start] != WHITE:
                 continue
-            stack: List[Tuple[str, int]] = [(start, 0)]
+            stack: list[tuple[str, int]] = [(start, 0)]
             while stack:
                 node_id, child_idx = stack[-1]
                 if color[node_id] == WHITE:
@@ -356,7 +355,7 @@ class TemporalAnalyzer:
 
         return TimeRegime.SYNCHRONOUS
 
-    def get_ordering_constraints(self) -> List[TemporalOrdering]:
+    def get_ordering_constraints(self) -> list[TemporalOrdering]:
         """
         Get temporal ordering constraints.
 
@@ -365,7 +364,7 @@ class TemporalAnalyzer:
         """
         return self.orderings
 
-    def get_event_patterns(self) -> List[EventPattern]:
+    def get_event_patterns(self) -> list[EventPattern]:
         """
         Get detected event patterns.
 
@@ -374,7 +373,7 @@ class TemporalAnalyzer:
         """
         return self.event_patterns
 
-    def get_metrics(self) -> Optional[TemporalMetrics]:
+    def get_metrics(self) -> TemporalMetrics | None:
         """
         Get computed temporal metrics.
 
@@ -383,7 +382,7 @@ class TemporalAnalyzer:
         """
         return self.metrics
 
-    def get_critical_path(self) -> List[str]:
+    def get_critical_path(self) -> list[str]:
         """
         Compute the critical path through the execution.
 
@@ -395,10 +394,10 @@ class TemporalAnalyzer:
         entry_points = [n.id for n in self.graph.nodes.values()
                        if len(self.graph.get_edges_to(n.id)) == 0]
 
-        critical_path: List[str] = []
+        critical_path: list[str] = []
         visited: set = set()
 
-        def dfs(node_id: str, path: List[str]) -> List[str]:
+        def dfs(node_id: str, path: list[str]) -> list[str]:
             """Walk outgoing edges greedily to extend the critical path."""
             if node_id in visited:
                 return path

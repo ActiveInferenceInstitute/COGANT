@@ -9,13 +9,13 @@ detect_version : Detect the schema version of a GNN text.
 migrate_gnn : Migrate a GNN text to a target schema version.
 """
 
-from cogant.schema.versions import (
-    SchemaVersion,
-    GNN_V1_0_REQUIRED_SECTIONS,
-    GNN_V1_1_REQUIRED_SECTIONS,
-)
 from cogant.schema.detector import detect_version
 from cogant.schema.migrations import migrate_gnn
+from cogant.schema.versions import (
+    GNN_V1_0_REQUIRED_SECTIONS,
+    GNN_V1_1_REQUIRED_SECTIONS,
+    SchemaVersion,
+)
 
 __all__ = [
     "SchemaVersion",

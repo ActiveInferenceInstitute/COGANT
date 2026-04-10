@@ -5,10 +5,10 @@ Pydantic v2 models for system-wide configuration, pipeline configuration,
 export settings, and validation configuration.
 """
 
-from typing import Optional, Dict, Any, List, Literal
-from enum import Enum
+from enum import StrEnum
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CogantBaseConfig(BaseModel):
@@ -21,7 +21,7 @@ class CogantBaseConfig(BaseModel):
     )
 
 
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     """Logging verbosity levels."""
 
     DEBUG = "debug"
@@ -55,7 +55,7 @@ class CogantConfig(CogantBaseConfig):
         default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         description="Log message format",
     )
-    log_file: Optional[str] = Field(
+    log_file: str | None = Field(
         default=None, description="Log file path (None = stdout only)"
     )
 
@@ -77,7 +77,7 @@ class CogantConfig(CogantBaseConfig):
     enable_caching: bool = Field(
         default=True, description="Enable result caching"
     )
-    cache_dir: Optional[str] = Field(
+    cache_dir: str | None = Field(
         default=None, description="Cache directory path"
     )
     cache_ttl_hours: int = Field(
@@ -138,7 +138,7 @@ class LanguageConfig(CogantBaseConfig):
     analyzer_version: str = Field(
         default="1.0.0", description="Version of analyzer"
     )
-    analyzer_config: Dict[str, Any] = Field(
+    analyzer_config: dict[str, Any] = Field(
         default_factory=dict,
         description="Language-specific analyzer configuration",
     )
@@ -159,7 +159,7 @@ class PipelineStage(CogantBaseConfig):
         default=False,
         description="Continue pipeline if stage fails",
     )
-    parameters: Dict[str, Any] = Field(
+    parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Stage-specific parameters",
     )
@@ -176,12 +176,12 @@ class PipelineConfig(CogantBaseConfig):
     name: str = Field(
         default="default", description="Pipeline name"
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None, description="Pipeline description"
     )
 
     # Execution
-    run_stages: List[str] = Field(
+    run_stages: list[str] = Field(
         default_factory=lambda: [
             "ingest",
             "static",
@@ -196,29 +196,29 @@ class PipelineConfig(CogantBaseConfig):
         ],
         description="Stages to run in order",
     )
-    parallel_stages: List[List[str]] = Field(
+    parallel_stages: list[list[str]] = Field(
         default_factory=list,
         description="Groups of stages to run in parallel",
     )
 
     # Stage configs
-    stages: Dict[str, PipelineStage] = Field(
+    stages: dict[str, PipelineStage] = Field(
         default_factory=dict,
         description="Configuration for each stage",
     )
 
     # Language support
-    languages: List[LanguageConfig] = Field(
+    languages: list[LanguageConfig] = Field(
         default_factory=list,
         description="Language-specific analyzer configs",
     )
 
     # Filtering
-    include_patterns: List[str] = Field(
+    include_patterns: list[str] = Field(
         default_factory=list,
         description="File patterns to include (e.g., '*.py')",
     )
-    exclude_patterns: List[str] = Field(
+    exclude_patterns: list[str] = Field(
         default_factory=list,
         description="File patterns to exclude (e.g., 'test_*.py')",
     )
@@ -257,7 +257,7 @@ class PipelineConfig(CogantBaseConfig):
     )
 
 
-class ExportFormat(str, Enum):
+class ExportFormat(StrEnum):
     """Supported export formats."""
 
     JSON = "json"
@@ -278,7 +278,7 @@ class ExportConfig(CogantBaseConfig):
         default=ExportFormat.JSON,
         description="Primary export format",
     )
-    additional_formats: List[ExportFormat] = Field(
+    additional_formats: list[ExportFormat] = Field(
         default_factory=list,
         description="Additional export formats",
     )
@@ -323,7 +323,7 @@ class ExportConfig(CogantBaseConfig):
     )
 
     # GNN-specific options
-    gnn_format: Optional[str] = Field(
+    gnn_format: str | None = Field(
         default=None,
         description="Target GNN framework (pytorch_geometric, dgl, etc.)",
     )
@@ -354,7 +354,7 @@ class ExportConfig(CogantBaseConfig):
     )
 
 
-class ValidationLevel(str, Enum):
+class ValidationLevel(StrEnum):
     """Validation strictness levels."""
 
     LENIENT = "lenient"  # Only critical checks

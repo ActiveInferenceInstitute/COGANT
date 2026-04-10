@@ -26,7 +26,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class ParsedSymbol:
     line_end: int
     qualified_name: str
     docstring: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -55,10 +55,10 @@ class ParsedFile:
 
     path: str
     language: str
-    symbols: List[ParsedSymbol] = field(default_factory=list)
-    imports: List[Dict[str, Any]] = field(default_factory=list)
-    calls: List[Dict[str, Any]] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    symbols: list[ParsedSymbol] = field(default_factory=list)
+    imports: list[dict[str, Any]] = field(default_factory=list)
+    calls: list[dict[str, Any]] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ class TreeSitterParser:
     silently skips the ones that aren't installed.
     """
 
-    _LANGUAGE_MAP: Dict[str, str] = {
+    _LANGUAGE_MAP: dict[str, str] = {
         ".py": "python",
         ".pyi": "python",
         ".pyx": "python",
@@ -90,8 +90,8 @@ class TreeSitterParser:
     }
 
     def __init__(self) -> None:
-        self._parsers: Dict[str, Any] = {}  # lang -> tree_sitter.Parser
-        self._languages: Dict[str, Any] = {}  # lang -> tree_sitter.Language
+        self._parsers: dict[str, Any] = {}  # lang -> tree_sitter.Parser
+        self._languages: dict[str, Any] = {}  # lang -> tree_sitter.Language
         self._load_available_languages()
 
     # ------------------------------------------------------------------
@@ -158,11 +158,11 @@ class TreeSitterParser:
     # Public API
     # ------------------------------------------------------------------
 
-    def available_languages(self) -> Set[str]:
+    def available_languages(self) -> set[str]:
         """Return the set of language names with a loaded parser."""
         return set(self._parsers.keys())
 
-    def supported_extensions(self) -> Set[str]:
+    def supported_extensions(self) -> set[str]:
         """Return file extensions that can be parsed by a loaded grammar."""
         exts = set()
         for ext, lang in self._LANGUAGE_MAP.items():
@@ -170,11 +170,11 @@ class TreeSitterParser:
                 exts.add(ext)
         return exts
 
-    def language_for_path(self, path: Path) -> Optional[str]:
+    def language_for_path(self, path: Path) -> str | None:
         """Return the language name for a given file path, or None."""
         return self._LANGUAGE_MAP.get(path.suffix.lower())
 
-    def parse_file(self, path: Path) -> Optional[ParsedFile]:
+    def parse_file(self, path: Path) -> ParsedFile | None:
         """Parse a file and return structured symbols.
 
         Returns ``None`` if the file's language is not recognized or
@@ -212,7 +212,7 @@ class TreeSitterParser:
 
     def parse_source(
         self, source: str, language: str, path: str = ""
-    ) -> Optional[ParsedFile]:
+    ) -> ParsedFile | None:
         """Parse a source string in the given language."""
         if language not in self._parsers:
             return None
@@ -254,13 +254,13 @@ class _BaseExtractor:
 
     def extract_symbols(
         self, tree: Any, source: bytes, path: str
-    ) -> List[ParsedSymbol]:  # pragma: no cover - overridden
+    ) -> list[ParsedSymbol]:  # pragma: no cover - overridden
         return []
 
-    def extract_imports(self, tree: Any, source: bytes) -> List[Dict[str, Any]]:  # pragma: no cover
+    def extract_imports(self, tree: Any, source: bytes) -> list[dict[str, Any]]:  # pragma: no cover
         return []
 
-    def extract_calls(self, tree: Any, source: bytes) -> List[Dict[str, Any]]:  # pragma: no cover
+    def extract_calls(self, tree: Any, source: bytes) -> list[dict[str, Any]]:  # pragma: no cover
         return []
 
 
@@ -269,8 +269,8 @@ class _PythonExtractor(_BaseExtractor):
 
     def extract_symbols(
         self, tree: Any, source: bytes, path: str
-    ) -> List[ParsedSymbol]:
-        symbols: List[ParsedSymbol] = []
+    ) -> list[ParsedSymbol]:
+        symbols: list[ParsedSymbol] = []
 
         def visit(node: Any, scope: str = "") -> None:
             if node.type == "function_definition":
@@ -317,8 +317,8 @@ class _PythonExtractor(_BaseExtractor):
         visit(tree.root_node)
         return symbols
 
-    def extract_imports(self, tree: Any, source: bytes) -> List[Dict[str, Any]]:
-        imports: List[Dict[str, Any]] = []
+    def extract_imports(self, tree: Any, source: bytes) -> list[dict[str, Any]]:
+        imports: list[dict[str, Any]] = []
 
         def visit(node: Any) -> None:
             if node.type in ("import_statement", "import_from_statement"):
@@ -335,8 +335,8 @@ class _PythonExtractor(_BaseExtractor):
         visit(tree.root_node)
         return imports
 
-    def extract_calls(self, tree: Any, source: bytes) -> List[Dict[str, Any]]:
-        calls: List[Dict[str, Any]] = []
+    def extract_calls(self, tree: Any, source: bytes) -> list[dict[str, Any]]:
+        calls: list[dict[str, Any]] = []
 
         def visit(node: Any) -> None:
             if node.type == "call":
@@ -378,8 +378,8 @@ class _JavaScriptExtractor(_BaseExtractor):
 
     def extract_symbols(
         self, tree: Any, source: bytes, path: str
-    ) -> List[ParsedSymbol]:
-        symbols: List[ParsedSymbol] = []
+    ) -> list[ParsedSymbol]:
+        symbols: list[ParsedSymbol] = []
 
         def name_of(node: Any) -> str:
             name_node = node.child_by_field_name("name")
@@ -442,8 +442,8 @@ class _JavaScriptExtractor(_BaseExtractor):
         visit(tree.root_node)
         return symbols
 
-    def extract_imports(self, tree: Any, source: bytes) -> List[Dict[str, Any]]:
-        imports: List[Dict[str, Any]] = []
+    def extract_imports(self, tree: Any, source: bytes) -> list[dict[str, Any]]:
+        imports: list[dict[str, Any]] = []
 
         def visit(node: Any) -> None:
             if node.type in ("import_statement", "import_clause"):
@@ -460,8 +460,8 @@ class _JavaScriptExtractor(_BaseExtractor):
         visit(tree.root_node)
         return imports
 
-    def extract_calls(self, tree: Any, source: bytes) -> List[Dict[str, Any]]:
-        calls: List[Dict[str, Any]] = []
+    def extract_calls(self, tree: Any, source: bytes) -> list[dict[str, Any]]:
+        calls: list[dict[str, Any]] = []
 
         def visit(node: Any) -> None:
             if node.type == "call_expression":
@@ -496,7 +496,7 @@ def _get_extractor(lang: str) -> _BaseExtractor:
 # ---------------------------------------------------------------------------
 
 
-_instance: Optional[TreeSitterParser] = None
+_instance: TreeSitterParser | None = None
 
 
 def get_tree_sitter_parser() -> TreeSitterParser:

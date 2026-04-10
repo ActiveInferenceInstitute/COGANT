@@ -14,10 +14,9 @@ callers that want the raw dict can use ``response.model_dump()`` or
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
 
 # ---------------------------------------------------------------------------
 # /analyze
@@ -44,7 +43,7 @@ class AnalyzeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     repo_path: str = Field(..., min_length=1, description="Path to repository to analyze")
-    stages: Optional[List[str]] = Field(
+    stages: list[str] | None = Field(
         default=None,
         description="Explicit pipeline stages (None = default stage list)",
     )
@@ -72,8 +71,8 @@ class AnalyzeResponse(BaseModel):
     nodes: int = Field(..., ge=0)
     edges: int = Field(..., ge=0)
     mappings: int = Field(..., ge=0)
-    roles: Dict[str, int] = Field(default_factory=dict)
-    errors: List[str] = Field(default_factory=list)
+    roles: dict[str, int] = Field(default_factory=dict)
+    errors: list[str] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -116,14 +115,14 @@ class ExplainResponse(BaseModel):
     node_name: str
     node_id: str
     node_kind: str
-    assigned_role: Optional[str] = None
-    rules_fired: List[Dict[str, Any]] = Field(default_factory=list)
-    rules_considered: List[Dict[str, Any]] = Field(default_factory=list)
+    assigned_role: str | None = None
+    rules_fired: list[dict[str, Any]] = Field(default_factory=list)
+    rules_considered: list[dict[str, Any]] = Field(default_factory=list)
     blanket_role: str
     target: str = ""
-    mapping_label: Optional[str] = None
-    mapping_description: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    mapping_label: str | None = None
+    mapping_description: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -159,10 +158,10 @@ class RoundtripResponse(BaseModel):
 
     role_match_score: float = Field(..., ge=0.0, le=1.0)
     is_isomorphic: bool
-    original_roles: Dict[str, int] = Field(default_factory=dict)
-    synthesized_roles: Dict[str, int] = Field(default_factory=dict)
+    original_roles: dict[str, int] = Field(default_factory=dict)
+    synthesized_roles: dict[str, int] = Field(default_factory=dict)
     threshold: float = Field(..., ge=0.0, le=1.0)
-    errors: List[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -176,7 +175,7 @@ class GraphNode(BaseModel):
     id: str
     name: str
     kind: str
-    role: Optional[str] = None
+    role: str | None = None
 
 
 class GraphEdge(BaseModel):
@@ -197,8 +196,8 @@ class GraphResponse(BaseModel):
         edges: Flat list of graph edges.
     """
 
-    nodes: List[GraphNode] = Field(default_factory=list)
-    edges: List[GraphEdge] = Field(default_factory=list)
+    nodes: list[GraphNode] = Field(default_factory=list)
+    edges: list[GraphEdge] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

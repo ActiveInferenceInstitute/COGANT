@@ -5,16 +5,16 @@ Provides metrics, checks, and recommendations for validating bundle contents
 and identifying gaps or issues in analysis results.
 """
 
-from typing import Optional, Dict, Any, List, Literal
-from enum import Enum
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import ConfigDict, Field
 
 from .base import CogantBaseModel, StableID
 
 
-class CheckLevel(str, Enum):
+class CheckLevel(StrEnum):
     """Severity levels for validation checks."""
 
     INFO = "info"
@@ -22,7 +22,7 @@ class CheckLevel(str, Enum):
     ERROR = "error"
 
 
-class CheckStatus(str, Enum):
+class CheckStatus(StrEnum):
     """Outcome of a validation check."""
 
     PASSED = "passed"
@@ -38,7 +38,7 @@ class ValidationCheck(CogantBaseModel):
 
     check_id: str = Field(..., description="Unique identifier")
     name: str = Field(..., description="Human-readable name")
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None, description="Detailed description of check"
     )
 
@@ -56,26 +56,26 @@ class ValidationCheck(CogantBaseModel):
     )
 
     # Details
-    details: Optional[str] = Field(
+    details: str | None = Field(
         default=None, description="Detailed results/explanation"
     )
-    issues: List[str] = Field(
+    issues: list[str] = Field(
         default_factory=list,
         description="Specific issues found",
     )
-    affected_elements: List[str] = Field(
+    affected_elements: list[str] = Field(
         default_factory=list,
         description="IDs of elements affected by issue",
     )
 
     # Recommendation
-    recommendation: Optional[str] = Field(
+    recommendation: str | None = Field(
         default=None,
         description="Suggested action to resolve issue",
     )
 
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="When check was performed",
     )
 
@@ -165,13 +165,13 @@ class ValidationMetrics(CogantBaseModel):
         default=0.0,
         description="Average node degree",
     )
-    largest_strongly_connected_component_size: Optional[int] = Field(
+    largest_strongly_connected_component_size: int | None = Field(
         default=None,
         description="Size of largest SCC",
     )
 
     # Custom metrics
-    custom_metrics: Dict[str, Any] = Field(
+    custom_metrics: dict[str, Any] = Field(
         default_factory=dict,
         description="Custom/domain-specific metrics",
     )
@@ -195,11 +195,11 @@ class ValidationRecommendation(CogantBaseModel):
     description: str = Field(
         ..., description="Detailed recommendation"
     )
-    affected_elements: List[str] = Field(
+    affected_elements: list[str] = Field(
         default_factory=list,
         description="IDs of affected elements",
     )
-    estimated_effort: Optional[str] = Field(
+    estimated_effort: str | None = Field(
         default=None,
         description="Estimated effort to address (e.g., 'quick', 'medium', 'large')",
     )
@@ -220,15 +220,15 @@ class ValidationReport(CogantBaseModel):
         ..., description="ID of bundle being validated"
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="When report was generated",
     )
-    created_by: Optional[str] = Field(
+    created_by: str | None = Field(
         default=None, description="Tool/user that created report"
     )
 
     # Checks
-    checks: List[ValidationCheck] = Field(
+    checks: list[ValidationCheck] = Field(
         default_factory=list,
         description="Results of validation checks",
     )
@@ -240,7 +240,7 @@ class ValidationReport(CogantBaseModel):
     )
 
     # Recommendations
-    recommendations: List[ValidationRecommendation] = Field(
+    recommendations: list[ValidationRecommendation] = Field(
         default_factory=list,
         description="Recommendations for improvement",
     )
@@ -256,13 +256,13 @@ class ValidationReport(CogantBaseModel):
         le=1.0,
         description="Overall quality score [0, 1]",
     )
-    summary: Optional[str] = Field(
+    summary: str | None = Field(
         default=None,
         description="Human-readable summary of validation",
     )
 
     # Configuration
-    validation_config: Dict[str, Any] = Field(
+    validation_config: dict[str, Any] = Field(
         default_factory=dict,
         description="Configuration used for validation",
     )

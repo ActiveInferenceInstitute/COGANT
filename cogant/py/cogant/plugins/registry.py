@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import importlib.metadata
 import logging
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class PluginInfo:
     version: str = "unknown"
     entry_point: str = ""
     loaded: bool = False
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class PluginRegistry:
@@ -50,14 +50,14 @@ class PluginRegistry:
     """
 
     def __init__(self) -> None:
-        self._cache: Dict[str, PluginInfo] = {}
-        self._loaded_objects: Dict[str, Any] = {}
+        self._cache: dict[str, PluginInfo] = {}
+        self._loaded_objects: dict[str, Any] = {}
 
     # ------------------------------------------------------------------ #
     # Public API
     # ------------------------------------------------------------------ #
 
-    def discover(self) -> List[PluginInfo]:
+    def discover(self) -> list[PluginInfo]:
         """Discover all installed plugins under *cogant.plugins*.
 
         Returns an empty list when no plugins are registered -- never
@@ -65,7 +65,7 @@ class PluginRegistry:
         """
         self._cache.clear()
         self._loaded_objects.clear()
-        infos: List[PluginInfo] = []
+        infos: list[PluginInfo] = []
 
         eps = self._get_entry_points()
         for ep in eps:
@@ -130,7 +130,7 @@ class PluginRegistry:
 
         return info
 
-    def list_plugins(self) -> List[str]:
+    def list_plugins(self) -> list[str]:
         """Return names of all discovered plugins.
 
         Triggers discovery if it hasn't happened yet.
@@ -195,7 +195,7 @@ class PluginRegistry:
 
     def _find_entry_point(
         self, name: str
-    ) -> Optional[importlib.metadata.EntryPoint]:
+    ) -> importlib.metadata.EntryPoint | None:
         """Find a specific entry point by name."""
         for ep in self._get_entry_points():
             if ep.name == name:

@@ -24,8 +24,6 @@ Typical usage::
 
 from __future__ import annotations
 
-from typing import List
-
 from cogant.reverse.parser import ReverseGNNModel, parse_gnn
 
 
@@ -75,7 +73,7 @@ class MatrixFunctions:
         self.C = C
         self.D = D
 
-    def likelihood(self, state_dist: List[float]) -> List[float]:
+    def likelihood(self, state_dist: list[float]) -> list[float]:
         """Return P(observation) given a hidden-state distribution.
 
         Implements ``P(o) = A . state_dist`` — identical to the generated
@@ -93,7 +91,7 @@ class MatrixFunctions:
                 result[i] += row[j] * state_dist[j]
         return result
 
-    def transition(self, state_dist: List[float], action: int = 0) -> List[float]:
+    def transition(self, state_dist: list[float], action: int = 0) -> list[float]:
         """Return P(next hidden_state) given current distribution and action.
 
         Implements ``P(s') = B[:,:,action] . state_dist``, normalized —
@@ -117,7 +115,7 @@ class MatrixFunctions:
             result = [v / total for v in result]
         return result
 
-    def preference_score(self, obs_dist: List[float]) -> float:
+    def preference_score(self, obs_dist: list[float]) -> float:
         """Return log-preference score <C, obs_dist> for policy selection."""
         C = self._C
         if not C or not obs_dist:
@@ -127,12 +125,12 @@ class MatrixFunctions:
             score += C[i] * obs_dist[i]
         return score
 
-    def prior(self) -> List[float]:
+    def prior(self) -> list[float]:
         """Return D vector (initial state prior)."""
         return list(self._D)
 
     def expected_free_energy(
-        self, state_dist: List[float], action: int
+        self, state_dist: list[float], action: int
     ) -> float:
         """Simplified EFE: -preference_score(likelihood(transition(s, a))).
 
@@ -146,7 +144,7 @@ class MatrixFunctions:
             return float("inf")
         return -self.preference_score(obs)
 
-    def best_action(self, state_dist: List[float]) -> int:
+    def best_action(self, state_dist: list[float]) -> int:
         """Return argmin EFE over all actions (0 if n_actions == 0)."""
         if self._n_actions == 0:
             return 0
@@ -160,7 +158,7 @@ class MatrixFunctions:
         return best_a
 
     @classmethod
-    def from_gnn_text(cls, gnn_text: str) -> "MatrixFunctions":
+    def from_gnn_text(cls, gnn_text: str) -> MatrixFunctions:
         """Convenience: parse GNN markdown and return MatrixFunctions."""
         model = parse_gnn(gnn_text)
         return cls(model)

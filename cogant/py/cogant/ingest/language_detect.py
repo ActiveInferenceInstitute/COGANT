@@ -1,9 +1,8 @@
 """Language detection and parser loading."""
 
 import sys
-from pathlib import Path
-from typing import Dict, List, Optional
 from collections import defaultdict
+from pathlib import Path
 
 # Add parsers to path
 parsers_root = Path(__file__).parent.parent.parent.parent / "parsers"
@@ -66,7 +65,9 @@ class LanguageDetector:
         # Prefer tree-sitter for TypeScript when available.
         ts_loaded = False
         try:
-            from typescript.tree_sitter_parser import TypeScriptTreeSitterParser  # type: ignore[import-not-found]
+            from typescript.tree_sitter_parser import (
+                TypeScriptTreeSitterParser,  # type: ignore[import-not-found]
+            )
             if TypeScriptTreeSitterParser is not None:
                 cls.PARSER_CLASSES["typescript"] = TypeScriptTreeSitterParser
                 ts_loaded = True
@@ -96,7 +97,7 @@ class LanguageDetector:
             pass
 
     @staticmethod
-    def detect_language(file_path: Path) -> Optional[str]:
+    def detect_language(file_path: Path) -> str | None:
         """Detect programming language from file extension.
 
         Args:
@@ -112,7 +113,7 @@ class LanguageDetector:
         return LanguageDetector.EXTENSION_MAP.get(ext)
 
     @staticmethod
-    def detect_repo_languages(repo_path: Path) -> Dict[str, int]:
+    def detect_repo_languages(repo_path: Path) -> dict[str, int]:
         """Detect all programming languages in a repository.
 
         Args:
@@ -124,7 +125,7 @@ class LanguageDetector:
         if isinstance(repo_path, str):
             repo_path = Path(repo_path)
 
-        language_counts: Dict[str, int] = defaultdict(int)
+        language_counts: dict[str, int] = defaultdict(int)
 
         # Iterate through all files recursively
         try:
@@ -167,7 +168,7 @@ class LanguageDetector:
             List of supported language names.
         """
         cls._lazy_load_parsers()
-        supported: List[str] = []
+        supported: list[str] = []
         for lang, parser_class in cls.PARSER_CLASSES.items():
             if parser_class is not None:
                 supported.append(lang)
