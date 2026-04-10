@@ -38,8 +38,8 @@ perception-action cycle runs on it with provably correct free energy (VFE=0.0).*
 
 | Metric | Value |
 |---|---|
-| Tests passing | **1873** |
-| Coverage | **82.6%** |
+| Tests passing | **1945** |
+| Coverage | **86%** |
 | mypy strict | **CLEAN — 0 errors, 177 source files** |
 | Reverse pipeline | complete (parse → plan → synthesize) |
 | Runtime | complete (AgentRuntime, step/convergence/VFE) |
