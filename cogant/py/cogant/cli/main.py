@@ -31,6 +31,15 @@ from cogant.api.session import Session
 from cogant.cli.doctor import doctor_command, render_report, run_doctor
 from cogant.cli.migrate import migrate_app
 from cogant.cli.plugin import plugin_app
+from cogant.ingest.repo_sniff import (
+    count_source_files as _count_source_files,
+)
+from cogant.ingest.repo_sniff import (
+    estimate_pipeline_seconds as _estimate_pipeline_seconds,
+)
+from cogant.ingest.repo_sniff import (
+    format_duration as _format_duration,
+)
 from cogant.reverse.cli import reverse_command, roundtrip_command
 
 # Setup logging
@@ -58,21 +67,6 @@ app = typer.Typer(
 
 
 # ------------------------------------------------------- error helpers ----
-
-
-# Extensions COGANT can currently parse. Kept in sync with
-# ``cogant.ingest`` loosely — the set is used by ``init``'s repo-health
-# sniff and ``_estimate_pipeline_seconds``.
-_SOURCE_EXTENSIONS = {
-    ".py",
-    ".pyi",
-    ".js",
-    ".jsx",
-    ".mjs",
-    ".cjs",
-    ".ts",
-    ".tsx",
-}
 
 
 def _friendly_pipeline_error(exc: BaseException, target: Path | None = None) -> None:
@@ -111,70 +105,6 @@ def _friendly_pipeline_error(exc: BaseException, target: Path | None = None) -> 
         "  [dim]→ File a bug at "
         "https://github.com/cogant-contributors/cogant/issues[/dim]"
     )
-
-
-def _count_source_files(root: Path) -> int:
-    """Best-effort count of parseable source files below ``root``.
-
-    Used for ``init`` time estimation and repo-validity sniffing. It
-    walks at most a few thousand files and skips obvious noise
-    directories so first-run UX stays snappy.
-    """
-
-    if not root.exists() or not root.is_dir():
-        return 0
-
-    skip_dirs = {
-        ".git",
-        ".venv",
-        "venv",
-        "node_modules",
-        "__pycache__",
-        ".tox",
-        ".mypy_cache",
-        ".pytest_cache",
-        "dist",
-        "build",
-        "target",
-    }
-
-    count = 0
-    # Hard cap so pathological monorepos do not freeze the CLI.
-    file_budget = 5000
-    for path in root.rglob("*"):
-        if file_budget <= 0:
-            break
-        file_budget -= 1
-        # Skip noise directories by looking at path parts.
-        if any(part in skip_dirs for part in path.parts):
-            continue
-        if path.is_file() and path.suffix.lower() in _SOURCE_EXTENSIONS:
-            count += 1
-    return count
-
-
-def _estimate_pipeline_seconds(file_count: int) -> float:
-    """Rough wall-clock estimate for a full ``translate`` run.
-
-    The 50ms/file heuristic comes from the v0.1.0 benchmark table on
-    the control-positive fixtures; it overestimates for tiny repos and
-    underestimates for very large ones, but is honest enough to tell
-    users whether they are waiting seconds or minutes.
-    """
-
-    if file_count <= 0:
-        return 0.0
-    # 50ms per file + a 2s constant-time overhead for pipeline setup.
-    return 2.0 + (file_count * 0.05)
-
-
-def _format_duration(seconds: float) -> str:
-    if seconds < 1.0:
-        return "<1s"
-    if seconds < 60.0:
-        return f"{seconds:.0f}s"
-    minutes, rem = divmod(seconds, 60.0)
-    return f"{int(minutes)}m {int(rem)}s"
 
 
 @app.command()
@@ -660,7 +590,8 @@ def translate(
             pipe_data = cf_data.get("pipeline", cf_data)
             if isinstance(pipe_data, dict):
                 if "stages" in pipe_data or "run_stages" in pipe_data:
-                    config.stages = list(pipe_data.get("stages") or pipe_data.get("run_stages"))
+                    _stages = pipe_data.get("stages") or pipe_data.get("run_stages") or []
+                    config.stages = list(_stages)
                 if "skip_stages" in pipe_data:
                     config.skip_stages = list(pipe_data["skip_stages"])
                 if "plugins" in pipe_data:
