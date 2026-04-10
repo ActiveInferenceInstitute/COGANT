@@ -1,6 +1,8 @@
-from _typeshed import Incomplete
-from pydantic import BaseModel, ValidationInfo as ValidationInfo
 from typing import Any, ClassVar, Literal
+
+from _typeshed import Incomplete
+from pydantic import BaseModel
+from pydantic import ValidationInfo as ValidationInfo
 
 class CogantBaseModel(BaseModel):
     model_config: ClassVar[Incomplete]

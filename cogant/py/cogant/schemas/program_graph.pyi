@@ -1,8 +1,17 @@
-from .base import CogantBaseModel as CogantBaseModel, ConfidenceMetric as ConfidenceMetric, EvidenceRef as EvidenceRef, LocationInfo as LocationInfo, StableID as StableID, TypeInfo as TypeInfo
-from _typeshed import Incomplete
-from cogant.schemas.core import EdgeKind as EdgeKind, NodeKind as NodeKind
-from pydantic import ValidationInfo as ValidationInfo
 from typing import Any, ClassVar
+
+from _typeshed import Incomplete
+from pydantic import ValidationInfo as ValidationInfo
+
+from cogant.schemas.core import EdgeKind as EdgeKind
+from cogant.schemas.core import NodeKind as NodeKind
+
+from .base import CogantBaseModel as CogantBaseModel
+from .base import ConfidenceMetric as ConfidenceMetric
+from .base import EvidenceRef as EvidenceRef
+from .base import LocationInfo as LocationInfo
+from .base import StableID as StableID
+from .base import TypeInfo as TypeInfo
 
 class Node(CogantBaseModel):
     id: StableID

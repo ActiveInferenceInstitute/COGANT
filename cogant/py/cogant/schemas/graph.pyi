@@ -1,8 +1,13 @@
-from _typeshed import Incomplete
-from cogant.schemas.core import Edge as Edge, EdgeKind as EdgeKind, Node as Node, NodeKind as NodeKind
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.schemas.core import Edge as Edge
+from cogant.schemas.core import EdgeKind as EdgeKind
+from cogant.schemas.core import Node as Node
+from cogant.schemas.core import NodeKind as NodeKind
 
 @dataclass
 class GraphMetadata:

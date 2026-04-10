@@ -1,7 +1,9 @@
-from _typeshed import Incomplete
-from cogant.viz.cytoscape_view import build_cytoscape_html as build_cytoscape_html
 from pathlib import Path
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.viz.cytoscape_view import build_cytoscape_html as build_cytoscape_html
 
 logger: Incomplete
 

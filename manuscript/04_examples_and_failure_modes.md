@@ -8,7 +8,7 @@ The package tree includes runnable examples under [`../cogant/examples/`](../cog
 
 ### Concrete walkthrough: Flask REST API
 
-To make the pipeline's behavior tangible, consider the `flask_app` fixture distributed under `../cogant/examples/real_world/flask_app/`: a small six-module Flask application (`__init__.py`, `app.py`, `config.py`, `models.py`, `services.py`, `utils.py`) totalling 853 lines of Python analyzed end-to-end by the pipeline. Running `RoundtripOrchestrator` on this repository via `../cogant/examples/orchestrate_roundtrip.py` produces a program graph with the characteristics recorded in the canonical `../_rnd/figures/metrics.json`:
+To make the pipeline's behavior tangible, consider the `flask_app` fixture distributed under `../cogant/examples/real_world/flask_app/`: a small six-module Flask application (`__init__.py`, `app.py`, `config.py`, `models.py`, `services.py`, `utils.py`) totalling 853 lines of Python analyzed end-to-end by the pipeline. Running `RoundtripOrchestrator` on this repository via `../cogant/examples/orchestrate_roundtrip.py` produces a program graph with the characteristics recorded in the canonical `../cogant/evaluation/figures/metrics.json`:
 
 | Metric | Value |
 |--------|-------|
@@ -20,7 +20,7 @@ To make the pipeline's behavior tangible, consider the `flask_app` fixture distr
 | GNN package files | 19 |
 | GNN validation | PASS (score 100.0, 0 errors, 0 warnings) |
 
-The node and edge populations distribute across the kinds the v0.1.x Python front end actually extracts (structural core: MODULE / CLASS / METHOD / FUNCTION plus CONTAINS / WRITES / READS / CALLS / IMPORTS / INHERITS), rather than the richer taxonomy that is declared in `cogant.schemas.core.NodeKind` and `EdgeKind` but remains roadmap for the Python parser.
+The node and edge populations distribute across the kinds the v0.5.x Python front end actually extracts (structural core: MODULE / CLASS / METHOD / FUNCTION plus CONTAINS / WRITES / READS / CALLS / IMPORTS / INHERITS), rather than the richer taxonomy that is declared in `cogant.schemas.core.NodeKind` and `EdgeKind` but remains roadmap for the Python parser.
 
 **Table 1. Node kind distribution (Flask API example).**
 
@@ -42,33 +42,45 @@ The node and edge populations distribute across the kinds the v0.1.x Python fron
 | IMPORTS | 10 | 1.7% |
 | INHERITS | 9 | 1.5% |
 
-The CALLS-heavy distribution reflects the call-graph step in `CallGraphBuilder`, which traverses every `ast.Call` node in the module and attaches an edge between the enclosing function or method and its callee when the callee resolves inside the project. Control-flow nodes, anonymous data-flow nodes, and typed variable nodes are not yet emitted by the Python front end; broadening the node taxonomy is tracked as P1-2 and P1-3 in the R&D backlog (`../_rnd/SCOPING_REPORT.md`).
+The CALLS-heavy distribution reflects the call-graph step in `CallGraphBuilder`, which traverses every `ast.Call` node in the module and attaches an edge between the enclosing function or method and its callee when the callee resolves inside the project. Control-flow nodes, anonymous data-flow nodes, and typed variable nodes are not yet emitted by the Python front end; broadening the node taxonomy is tracked as P1-2 and P1-3 in the R&D backlog (`../cogant/docs/evaluation/SCOPING_REPORT.md`).
 
 ### Example semantic mapping output
 
-During the translation stage, each program-graph node is matched against the active rule set and assigned a semantic role with an associated confidence score. The following excerpt shows three representative mappings from the Flask example:
+During the translation stage, each program-graph node is matched against the active rule set and assigned a `SemanticMapping` with a `MappingKind` and confidence fields defined in [`../cogant/py/cogant/schemas/semantic.py`](../cogant/py/cogant/schemas/semantic.py). The following excerpt uses **real field names**; node IDs and file paths are **representative** of the `flask_app` fixture, not a verbatim `semantic_mappings.json` dump:
 
+```yaml
+# Illustrative SemanticMapping-shaped records (see semantic.SemanticMapping)
+- id: sm_get_users_obs
+  kind: OBSERVATION
+  graph_fragment_node_ids: [fn_get_users]
+  semantic_label: "GET /users handler"
+  confidence_score: 0.98
+  confidence_tier: STATIC_ONLY
+  parser_certainty: 1.0
+  provenance:
+    - {source: static_analysis, confidence: 1.0}
+
+- id: sm_query_action
+  kind: ACTION
+  graph_fragment_node_ids: [call_db_session_query]
+  semantic_label: "database query"
+  confidence_score: 0.82
+  confidence_tier: STATIC_ONLY
+  parser_certainty: 0.90
+  provenance:
+    - {source: static_analysis, confidence: 0.90, metadata: {note: "receiver type partly heuristic"}}
+
+- id: sm_user_model_hidden
+  kind: HIDDEN_STATE
+  graph_fragment_node_ids: [class_user]
+  semantic_label: "User model state"
+  confidence_score: 1.0
+  confidence_tier: STATIC_ONLY
+  provenance:
+    - {source: static_analysis, confidence: 1.0}
 ```
-Node: get_users  (kind=FUNCTION, file=routes/users.py:14)
-  Matched rule: rule_fn_def_001
-  Target role:  FUNCTION_DEF
-  Confidence:   0.98  (base=1.0, -0.02 missing docstring penalty)
-  Provenance:   SourceCode
 
-Node: db.session.query  (kind=FUNCTION, file=routes/users.py:22)
-  Matched rule: rule_method_call_001
-  Target role:  METHOD_CALL
-  Confidence:   0.82  (base=0.90, -0.08 receiver type inferred heuristically)
-  Provenance:   Heuristic
-
-Node: User  (kind=TYPE, file=models/user.py:5)
-  Matched rule: rule_type_def_001
-  Target role:  TYPE_DEF
-  Confidence:   1.00
-  Provenance:   SourceCode
-```
-
-The `db.session.query` call illustrates how the confidence model (Equation \ref{eq:confidence-core} in Section 2) penalizes heuristic provenance: the receiver type of `session` is resolved by import tracing rather than explicit annotation, reducing $\kappa$ below 1.0 and yielding a final confidence of 0.82 in the MEDIUM tier.
+The middle row illustrates how the confidence model (Equation \ref{eq:confidence-core} in §2) responds when parser certainty drops: import-traced receivers lower `parser_certainty`, which feeds Equation \ref{eq:confidence-core} and yields a sub-1.0 `confidence_score` even before dynamic evidence is available.
 
 ### Example state-space excerpt
 
@@ -114,6 +126,52 @@ When dynamic traces are available, the state-space compiler produces a behaviora
 
 Confidence tiers follow the thresholds defined in `determine_confidence_tier`: **STATIC_PLUS_RUNTIME** ($c \geq 0.65$, with both static and dynamic evidence) indicates corroboration from AST analysis and execution traces; **STATIC_ONLY** ($c \geq 0.5$, static evidence only) reflects assertions grounded in source structure alone; **RUNTIME_ONLY** ($c \geq 0.4$, dynamic evidence only) flags inferences from runtime data without static corroboration. A fourth tier, **HUMAN_REVIEWED** ($c \geq 0.9$, with human review evidence), is available for manually curated mappings.
 
+### Dynamically enriched excerpt
+
+The previous excerpt shows a purely-static run. When `.coverage` / Cobertura XML and Chrome DevTools trace inputs are supplied to the `dynamic` stage, `enrich_graph()` annotates the affected nodes with `coverage_hits`, `branch_coverage`, `call_count`, `avg_duration_ms`, and `is_hot_path` metadata, and appends `dynamic_coverage` / `dynamic_trace` markers to the program graph's `evidence_sources` list. The downstream state-space compiler then becomes eligible to promote individual transitions from `STATIC_ONLY` to `STATIC_PLUS_RUNTIME` whenever the diversity bonus in Equation \ref{eq:confidence-core} clears the 0.65 boundary. The following excerpt shows the same Flask `/users` endpoint after re-running the pipeline with the application's `.coverage` file and a captured Chrome DevTools trace attached:
+
+```json
+{
+  "variables": [
+    {
+      "name": "request.method", "type": "str", "domain": ["GET", "POST"],
+      "evidence_sources": ["static_ast", "dynamic_coverage", "dynamic_trace"],
+      "coverage_hits": 47, "call_count": 47, "is_hot_path": true
+    },
+    {
+      "name": "db_connected", "type": "bool", "domain": [true, false],
+      "evidence_sources": ["static_ast", "dynamic_coverage"],
+      "coverage_hits": 47, "branch_coverage": 0.92, "is_hot_path": false
+    }
+  ],
+  "transitions": [
+    {
+      "from_state": {"request.method": "GET", "db_connected": true},
+      "action": "query_database",
+      "to_state": {"response_code": 200},
+      "confidence": 0.94, "tier": "STATIC_PLUS_RUNTIME",
+      "evidence": {
+        "static": {"rule_id": "rule_method_call_001", "parser_certainty": 0.95},
+        "dynamic": {"coverage_hits": 47, "call_count": 47,
+                    "avg_duration_ms": 12.4, "is_hot_path": true}
+      }
+    },
+    {
+      "from_state": {"db_connected": false},
+      "action": "query_database",
+      "to_state": {"response_code": 500},
+      "confidence": 0.58, "tier": "RUNTIME_ONLY",
+      "evidence": {
+        "dynamic": {"coverage_hits": 2, "call_count": 2,
+                    "avg_duration_ms": 3.1, "is_hot_path": false}
+      }
+    }
+  ]
+}
+```
+
+Two consequences of the enrichment are visible above. First, the `request.method` state variable's `is_hot_path: true` annotation, combined with the `dynamic_coverage` and `dynamic_trace` markers in its `evidence_sources`, carried enough diversity mass through the confidence formula to lift the previously-static `GET` transition from the MEDIUM tier into `STATIC_PLUS_RUNTIME`, and the transition's `evidence` field now records both the `rule_id` that fired statically and the `avg_duration_ms` measured dynamically. Second, the previously-`RUNTIME_ONLY` `db_connected=false` transition remains in its lower tier because it has only dynamic evidence (the error branch fired twice in the captured trace but has no corroborating static rule match) — a concrete illustration of the degradation behaviour documented in the "Incomplete coverage data" and "No dynamic traces available" subsections below.
+
 ### Failure modes and graceful degradation
 
 COGANT is designed so that missing or partial inputs degrade the output bundle rather than halt it, and the manuscript records these degradation paths explicitly so that downstream consumers can interpret a partial run without guessing what was skipped [@peng2011reproducible]. Five failure modes are worth naming because each has a visible signature in the emitted artifacts.
@@ -130,4 +188,4 @@ COGANT is designed so that missing or partial inputs degrade the output bundle r
 
 ## Rust layer
 
-Native crates (`cogant-core`, `cogant-graph`, `cogant-translate`, `cogant-statespace`, `cogant-gnn`, `cogant-ffi`, and related packages) implement typed graph operations and export formatting. When PyO3 bindings are active, Python delegates heavy graph work through `cogant-ffi`. Where bindings are not yet wired for a code path, Python fallbacks apply; see SPEC **Implementation status** for the current boundary.
+Native crates (`cogant-core`, `cogant-graph`, `cogant-translate`, `cogant-statespace`, `cogant-gnn`, `cogant-ffi`, and related packages) implement typed graph operations and export formatting. When PyO3 bindings are active, Python delegates heavy graph work through `cogant-ffi`. Where bindings are not yet wired for a code path, Python fallbacks apply; see [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md) for the current boundary.

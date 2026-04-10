@@ -145,6 +145,16 @@ git config --global user.signingkey <your-key-id>
 3. **Create new commits** in response to feedback rather than amending. We squash on merge.
 4. Once approved, a maintainer will merge via squash commit.
 
+## Changelog
+
+The authoritative changelog is [`CHANGELOG.md`](CHANGELOG.md) at the repository root.
+[`docs/changelog.md`](docs/changelog.md) is a **mirror** used by MkDocs; after editing the
+root file, sync it:
+
+```bash
+cp CHANGELOG.md docs/changelog.md
+```
+
 ## Release cadence
 
 - Patch releases (0.x.Y) — bug fixes and small improvements, roughly every two weeks.

@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+
 from rich.console import Console
 
 @dataclass

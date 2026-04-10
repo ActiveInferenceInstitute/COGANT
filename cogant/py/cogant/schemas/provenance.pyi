@@ -1,8 +1,11 @@
-from .base import CogantBaseModel as CogantBaseModel, Span as Span
-from _typeshed import Incomplete
 from datetime import datetime
 from enum import StrEnum
 from typing import Any, ClassVar
+
+from _typeshed import Incomplete
+
+from .base import CogantBaseModel as CogantBaseModel
+from .base import Span as Span
 
 class EvidenceKind(StrEnum):
     SOURCE_SPAN = 'source_span'

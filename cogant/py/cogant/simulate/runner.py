@@ -566,12 +566,8 @@ class ModelRunner:
             state_space: State space model for dynamics.
 
         Returns:
-            Dict with keys:
-              - new_beliefs: Updated beliefs
-              - selected_action: Chosen action ID
-              - predicted_next_state: Expected next state
-              - free_energy: Variational free energy
-              - efe_ranking: Policy ranking by EFE
+            Dictionary with string keys ``new_beliefs``, ``selected_action``,
+            ``predicted_next_state``, ``free_energy``, and ``efe_ranking``.
         """
         # Step 1: Belief update
         new_beliefs = self.belief_update(beliefs, observation)
@@ -623,13 +619,8 @@ class ModelRunner:
             steps: Number of steps to simulate.
 
         Returns:
-            List of trace dicts, each with:
-              - step: step number
-              - beliefs: belief distribution
-              - observation: observed value
-              - action: selected action
-              - free_energy: VFE for this step
-              - predicted_state: expected next state
+            List of per-step trace dicts with keys ``step``, ``beliefs``,
+            ``observation``, ``action``, ``free_energy``, and ``predicted_state``.
         """
         # Initialize beliefs (uniform over states)
         state_ids = list(state_space.variables.keys())

@@ -22,11 +22,19 @@ If you add figures, place assets where the future project `output/` layout can r
 
 ## Section files
 
-Numeric prefixes `00_`–`08_` are combined in stem-sorted order by `infrastructure/rendering/manuscript_discovery.py`. Files named `SYNTAX.md` sort in the **other** bucket (after main/supplemental sections and before `99_*` if present).
+[`infrastructure/rendering/manuscript_discovery.py`](../../../infrastructure/rendering/manuscript_discovery.py) concatenates:
+
+1. Digit-prefixed `*.md` files (`00_` … `09_`, including splits such as `02_01_…`, `06_04_…`) in **lexicographic stem order**.
+2. Supplemental `S*.md` appendices.
+3. `98_*.md` glossary files when present.
+4. Other `*.md` files not matching the above (for example `SYNTAX.md`) — the **other** bucket.
+5. `99_*.md` references when present.
+
+Excluded from the body: `preamble.md`, `AGENTS.md`, `README.md`, `config.yaml`, `config.yaml.example`, `references.bib`.
 
 ## Cross-references to the package
 
-Prefer **relative** paths from this folder to the package tree, e.g. [`../cogant/docs/ARCHITECTURE.md`](../cogant/docs/ARCHITECTURE.md), so links work in the editor and in Git without hard-coding the monorepo path.
+Prefer **relative** paths from this folder to the docs tree: site home [`../cogant/docs/index.md`](../cogant/docs/index.md), module map [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md), and per-module indexes such as [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md). Do not link a root `docs/README.md` — it is not part of the MkDocs tree (it would duplicate `index.md`).
 
 ## See also
 

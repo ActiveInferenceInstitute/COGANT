@@ -1,4 +1,5 @@
 from _typeshed import Incomplete
+
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 logger: Incomplete

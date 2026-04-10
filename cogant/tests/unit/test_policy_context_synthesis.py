@@ -3,7 +3,7 @@
 These tests lock down the fix that pushed the real-world roundtrip
 ISOMORPHIC rate from 19/23 to 23/23 by emitting scaffold CONSTRAINT /
 POLICY / CONTEXT populations proportional to the state / observation /
-action cardinality of the parsed GNN. See ``_rnd/ROUNDTRIP_IMPROVEMENT.md``
+action cardinality of the parsed GNN. See ``docs/evaluation/ROUNDTRIP_IMPROVEMENT.md``
 for the empirical before/after table.
 
 The tests assert:

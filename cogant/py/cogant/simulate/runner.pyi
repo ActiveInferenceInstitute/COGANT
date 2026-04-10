@@ -1,8 +1,11 @@
-from _typeshed import Incomplete
-from cogant.simulate.distributions import CategoricalDistribution as CategoricalDistribution
-from cogant.simulate.free_energy import bayesian_belief_update as bayesian_belief_update, uniform_distribution as uniform_distribution
-from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.simulate.distributions import CategoricalDistribution as CategoricalDistribution
+from cogant.simulate.free_energy import bayesian_belief_update as bayesian_belief_update
+from cogant.simulate.free_energy import uniform_distribution as uniform_distribution
+from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
 
 logger: Incomplete
 

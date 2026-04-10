@@ -215,7 +215,7 @@ Features:
 
 #### 12. Documentation ✓
 
-**Getting started** ([README.md § Getting started](./README.md#getting-started)):
+**Getting started** ([Validation index § Getting started](./README.md#getting-started)):
 - ✓ Quick start guide
 - ✓ Common tasks
 - ✓ Directory structure

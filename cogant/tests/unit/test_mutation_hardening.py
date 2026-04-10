@@ -1,7 +1,7 @@
 """Targeted tests that kill specific surviving mutants.
 
 These tests exist because mutation testing (see
-``_rnd/MUTATION_REPORT.md``) found that the baseline suite silently
+``docs/evaluation/MUTATION_REPORT.md``) found that the baseline suite silently
 ignored a handful of semantically meaningful code changes. Each test in
 this file pins one of those behaviours so a mutation that previously
 "survived" is now caught.
@@ -10,7 +10,7 @@ Every test is deliberately narrow: one behaviour, one assertion, no
 fixture reuse. The goal is not coverage, it is *defensive coverage* of
 the exact contract the original code intended.
 
-Cross-reference: ``_rnd/MUTATION_REPORT.md`` → "Surviving mutants"
+Cross-reference: ``docs/evaluation/MUTATION_REPORT.md`` → "Surviving mutants"
 section.
 """
 

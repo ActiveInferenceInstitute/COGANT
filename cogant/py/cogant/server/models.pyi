@@ -1,6 +1,7 @@
+from typing import Any, ClassVar
+
 from _typeshed import Incomplete
 from pydantic import BaseModel
-from typing import Any, ClassVar
 
 class AnalyzeRequest(BaseModel):
     model_config: ClassVar[Incomplete]

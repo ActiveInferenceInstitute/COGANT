@@ -1,8 +1,14 @@
-from _typeshed import Incomplete
-from cogant.normalize.identities import IdentityResolver as IdentityResolver
-from cogant.schemas.core import Edge as Edge, EdgeKind as EdgeKind, Node as Node, NodeKind as NodeKind
-from cogant.schemas.graph import GraphMetadata as GraphMetadata, ProgramGraph as ProgramGraph
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.normalize.identities import IdentityResolver as IdentityResolver
+from cogant.schemas.core import Edge as Edge
+from cogant.schemas.core import EdgeKind as EdgeKind
+from cogant.schemas.core import Node as Node
+from cogant.schemas.core import NodeKind as NodeKind
+from cogant.schemas.graph import GraphMetadata as GraphMetadata
+from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 class ProgramGraphBuilder:
     repo_uri: Incomplete

@@ -1,7 +1,9 @@
+from collections.abc import Sequence
+
 from _typeshed import Incomplete
+
 from cogant.simulate.distributions import CategoricalDistribution
 from cogant.statespace.compiler import StateSpaceModel
-from collections.abc import Sequence
 
 __all__ = ['variational_free_energy', 'expected_free_energy', 'bayesian_belief_update', 'uniform_distribution', 'FreeEnergyCalculator']
 

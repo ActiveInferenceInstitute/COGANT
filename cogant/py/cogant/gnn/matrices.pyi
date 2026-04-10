@@ -1,7 +1,9 @@
+from typing import Any
+
 from _typeshed import Incomplete
+
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
-from typing import Any
 
 __all__ = ['GNNMatrices']
 

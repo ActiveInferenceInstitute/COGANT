@@ -502,12 +502,12 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
     # per base class. The original nested loop was O(|classes|² × |bases|),
     # which is tolerable for small repos but degrades for large ones.
     class_by_name: dict[str, Any] = {}
-    for other_qname, other_node in class_nodes.items():
+    for other_node in class_nodes.values():
         # Later definitions override earlier ones; for duplicate simple
         # names we keep the last-seen (arbitrary but deterministic).
         class_by_name[other_node.name] = other_node
 
-    for class_qname, class_node in class_nodes.items():
+    for class_node in class_nodes.values():
         bases = (class_node.metadata or {}).get("bases", [])
         for base in bases:
             other_node = class_by_name.get(base)

@@ -1,5 +1,9 @@
 # Architecture Index
 
+### Documentation map
+
+The links below list architecture fragments; start from [Overview](overview.md) or [System Overview](system_overview.md) for the layered picture.
+
 - [Overview](overview.md)
 - [On this page](on_this_page.md)
 - [System Overview](system_overview.md)

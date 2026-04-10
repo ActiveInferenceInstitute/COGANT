@@ -1,6 +1,7 @@
+from typing import ClassVar, Literal
+
 from _typeshed import Incomplete
 from pydantic import BaseModel
-from typing import Literal, ClassVar
 
 class ReverseConfig(BaseModel):
     synthesis_strategy: Literal['minimal', 'full']

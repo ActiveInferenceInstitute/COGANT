@@ -175,9 +175,9 @@ All files are located relative to `/sessions/focused-bold-noether/mnt/cogant/`:
 
 **Tests & Documentation:**
 - `py/cogant/test_pipeline_integration.py`
-- [Detailed pipeline guide](#detailed-pipeline-guide) (this document)
-- [SPEC.md](../reference/README.md) (ingest milestone)
-- [Pipeline module index](#pipeline-module-index) (this document)
+- [Detailed pipeline guide](detailed_pipeline_guide.md#detailed-pipeline-guide) (sibling doc)
+- [Reference index](../reference/README.md) (ingest milestone)
+- [Pipeline module index](pipeline_module_index.md#pipeline-module-index) (sibling doc)
 
 ### Key Statistics
 
@@ -220,7 +220,7 @@ The pipeline outputs are ready to be fed into:
 
 ---
 
-For detailed information, see [Detailed pipeline guide](#detailed-pipeline-guide) or [SPEC.md](../reference/README.md).
+For detailed information, see [Detailed pipeline guide](detailed_pipeline_guide.md#detailed-pipeline-guide) or [Reference index](../reference/README.md).
 
 ---
 

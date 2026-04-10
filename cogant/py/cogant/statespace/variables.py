@@ -36,6 +36,44 @@ class ConfidenceLevel(StrEnum):
     UNCERTAIN = "uncertain"
 
 
+def map_confidence_score(confidence_score: float) -> ConfidenceLevel:
+    """Map a numeric confidence score in [0, 1] to a :class:`ConfidenceLevel`.
+
+    The single source of truth for the state-space layer's categorical
+    confidence ladder. Both :meth:`StateVariableExtractor._map_confidence`
+    and :meth:`cogant.statespace.compiler.StateSpaceCompiler._map_confidence`
+    delegate to this helper so the two call sites cannot drift.
+
+    Thresholds (audit 2026-04-09):
+        The 0.95 / 0.80 / 0.60 / 0.40 ladder is a **principled default**
+        aligned with the translation-rule confidence bands documented in
+        :mod:`cogant.translate.rules` (top/high/upper-mid/mid/bottom/lowest
+        at 0.90/0.85/0.80/0.75/0.70/0.65). The ladder is intentionally
+        coarser than the rule bands so that adjacent rule bands collapse
+        to the same ``ConfidenceLevel`` label, giving downstream consumers
+        a stable categorical view. TODO(calibration): validate the mapping
+        against the human-reviewed GNN gold standard from the 20-repo
+        corpus; thresholds may be re-centered if the resulting LOW/MEDIUM
+        split does not match human judgments.
+
+    Args:
+        confidence_score: Score from 0.0 to 1.0.
+
+    Returns:
+        Corresponding :class:`ConfidenceLevel`.
+    """
+    if confidence_score >= 0.95:        # matches "definite" (near-1)
+        return ConfidenceLevel.DEFINITE
+    elif confidence_score >= 0.80:      # >= upper-mid rule band
+        return ConfidenceLevel.HIGH
+    elif confidence_score >= 0.60:      # below lowest rule band
+        return ConfidenceLevel.MEDIUM
+    elif confidence_score >= 0.40:
+        return ConfidenceLevel.LOW
+    else:
+        return ConfidenceLevel.UNCERTAIN
+
+
 @dataclass
 class StateVariable:
     """A state variable in the system."""
@@ -351,41 +389,21 @@ class StateVariableExtractor:
                 )
 
     def _map_confidence(self, confidence_score: float) -> ConfidenceLevel:
-        """Map numeric confidence score to ConfidenceLevel.
+        """Map numeric confidence score to :class:`ConfidenceLevel`.
 
-        Thresholds (audit 2026-04-09):
-            The 0.95 / 0.80 / 0.60 / 0.40 ladder is a **principled
-            default** set to align with the translation-rule
-            confidence bands documented in
-            :mod:`cogant.translate.rules` (top/high/upper-mid/mid/
-            bottom/lowest at 0.90/0.85/0.80/0.75/0.70/0.65). The
-            ladder is intentionally coarser than the rule bands so
-            that adjacent rule bands map to the same
-            ConfidenceLevel label, giving downstream consumers a
-            stable categorical view. TODO(calibration): validate the
-            mapping against the human-reviewed GNN gold standard
-            from the 20-repo corpus; thresholds may be re-centered
-            if the resulting LOW/MEDIUM split does not match human
-            judgments.
+        Thin delegator to the module-level :func:`map_confidence_score`
+        helper. Kept as an instance method so that subclasses and existing
+        test fixtures that call ``extractor._map_confidence(...)`` continue
+        to work without churn. See :func:`map_confidence_score` for the
+        full threshold rationale and calibration notes.
 
         Args:
             confidence_score: Score from 0.0 to 1.0.
 
         Returns:
-            Corresponding ConfidenceLevel.
+            Corresponding :class:`ConfidenceLevel`.
         """
-        # Principled-default ladder; see docstring for rationale and
-        # TODO(calibration) against 20-repo gold standard.
-        if confidence_score >= 0.95:        # matches "definite" (near-1)
-            return ConfidenceLevel.DEFINITE
-        elif confidence_score >= 0.80:      # >= upper-mid rule band
-            return ConfidenceLevel.HIGH
-        elif confidence_score >= 0.60:      # below lowest rule band
-            return ConfidenceLevel.MEDIUM
-        elif confidence_score >= 0.40:
-            return ConfidenceLevel.LOW
-        else:
-            return ConfidenceLevel.UNCERTAIN
+        return map_confidence_score(confidence_score)
 
     def get_state_variables(self) -> dict[str, StateVariable]:
         """

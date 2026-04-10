@@ -1,6 +1,7 @@
+from typing import ClassVar, Literal
+
 from _typeshed import Incomplete
 from pydantic import BaseModel
-from typing import Literal, ClassVar
 
 class GNNConfig(BaseModel):
     include_metadata: bool

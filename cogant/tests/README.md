@@ -13,11 +13,21 @@ Some integration cases in `test_full_pipeline.py` **skip** when the roundtrip do
 
 ## Running tests
 
+From the package root (`cogant/cogant/`, the directory that contains `py/` and `docs/`):
+
 ```bash
-pytest tests/unit -v
-pytest tests/integration -v
-pytest --cov=cogant --cov-report=html
+uv run pytest tests/ -q
+uv run pytest tests/unit -v
+uv run pytest tests/integration -v
 ```
+
+Default `addopts` in `pyproject.toml` enable coverage with `--cov-fail-under=75`. When you run **a single test file** that does not execute enough of `cogant`, coverage can drop below the threshold and fail. Use:
+
+```bash
+uv run pytest tests/unit/test_foo.py --no-cov
+```
+
+Full-suite runs should omit `--no-cov` so CI and local defaults stay aligned.
 
 ## Golden tests
 

@@ -31,33 +31,22 @@ import pytest
 from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import MappingKind, SemanticMapping
 
-pytestmark = pytest.mark.integration
-
-
-# ---------------------------------------------------------------------------
-# Bootstrap: make the parsers/ package importable and load the JS plugin.
-# ---------------------------------------------------------------------------
-
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_PARSERS_ROOT = _REPO_ROOT / "parsers"
-if str(_PARSERS_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PARSERS_ROOT))
-
-_INTEGRATION_ROOT = Path(__file__).resolve().parent
-if str(_INTEGRATION_ROOT) not in sys.path:
-    sys.path.insert(0, str(_INTEGRATION_ROOT))
-
-# Reuse the differential test's JS graph builder so we exercise exactly the
-# same parse → symbol → dataflow path the cross-language claim rests on.
-from test_cross_lang_differential import (  # type: ignore  # noqa: E402
+from ._js_helpers import (  # noqa: E402
+    _HAS_JS_PARSER,
     _build_javascript_graph,
     _run_translation,
-    _HAS_JS_PARSER,
 )
+
+pytestmark = pytest.mark.integration
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Probe the tree-sitter JS grammar at import time so the skip message is
 # attached to a concrete reason rather than an opaque ImportError.
 try:
+    _PARSERS_ROOT = _REPO_ROOT / "parsers"
+    if str(_PARSERS_ROOT) not in sys.path:
+        sys.path.insert(0, str(_PARSERS_ROOT))
     from javascript.parser import JavaScriptLanguageParser  # type: ignore
 
     _probe = JavaScriptLanguageParser()
@@ -125,14 +114,10 @@ def _js_pipeline() -> Dict[str, Any]:
     }
 
 
-_PIPELINE_CACHE: Dict[str, Any] | None = None
-
-
-def _cached_pipeline() -> Dict[str, Any]:
-    global _PIPELINE_CACHE
-    if _PIPELINE_CACHE is None:
-        _PIPELINE_CACHE = _js_pipeline()
-    return _PIPELINE_CACHE
+@pytest.fixture
+def js_pipeline() -> Dict[str, Any]:
+    """Fresh JS Observer forward pipeline per test (no shared mutable cache)."""
+    return _js_pipeline()
 
 
 # ---------------------------------------------------------------------------
@@ -141,7 +126,7 @@ def _cached_pipeline() -> Dict[str, Any]:
 
 
 @_requires_js
-def test_js_fixture_parses_without_error() -> None:
+def test_js_fixture_parses_without_error(js_pipeline: Dict[str, Any]) -> None:
     """The JS fixture must parse cleanly and produce a non-empty graph.
 
     Verifies:
@@ -157,8 +142,7 @@ def test_js_fixture_parses_without_error() -> None:
         f"Python twin)."
     )
 
-    pipeline = _cached_pipeline()
-    graph: ProgramGraph = pipeline["graph"]
+    graph: ProgramGraph = js_pipeline["graph"]
     assert len(graph.nodes) > 0, "JS graph must not be empty"
 
     from cogant.schemas.core import NodeKind
@@ -189,7 +173,9 @@ def test_js_fixture_parses_without_error() -> None:
 
 
 @_requires_js
-def test_js_translation_produces_core_active_inference_roles() -> None:
+def test_js_translation_produces_core_active_inference_roles(
+    js_pipeline: Dict[str, Any],
+) -> None:
     """At least one HIDDEN_STATE, OBSERVATION, and ACTION mapping.
 
     This is the cross-language equivalent of the Python zoo/02_observer
@@ -200,8 +186,7 @@ def test_js_translation_produces_core_active_inference_roles() -> None:
     should trigger the constraint rule, but we keep the mandatory list
     aligned with the cross-language differential test.
     """
-    pipeline = _cached_pipeline()
-    mappings: List[SemanticMapping] = pipeline["mappings"]
+    mappings: List[SemanticMapping] = js_pipeline["mappings"]
     assert mappings, "JS translation produced no mappings"
 
     kinds = {m.kind for m in mappings}
@@ -218,7 +203,9 @@ def test_js_translation_produces_core_active_inference_roles() -> None:
 
 
 @_requires_js
-def test_js_state_space_and_matrices_are_non_degenerate() -> None:
+def test_js_state_space_and_matrices_are_non_degenerate(
+    js_pipeline: Dict[str, Any],
+) -> None:
     """The compiled state-space must expose matrices with sensible shapes.
 
     We do not require any particular cardinality — the fixture is tiny
@@ -226,11 +213,10 @@ def test_js_state_space_and_matrices_are_non_degenerate() -> None:
     but every matrix must be non-empty and rectangular so the runtime
     can consume it.
     """
-    pipeline = _cached_pipeline()
-    A = pipeline["A"]
-    B = pipeline["B"]
-    C = pipeline["C"]
-    D = pipeline["D"]
+    A = js_pipeline["A"]
+    B = js_pipeline["B"]
+    C = js_pipeline["C"]
+    D = js_pipeline["D"]
 
     assert A and all(len(row) == len(A[0]) for row in A), (
         f"A must be rectangular and non-empty; got shape "
@@ -258,7 +244,10 @@ def test_js_state_space_and_matrices_are_non_degenerate() -> None:
 
 
 @_requires_js
-def test_js_gnn_emission_has_all_canonical_sections(tmp_path: Path) -> None:
+def test_js_gnn_emission_has_all_canonical_sections(
+    tmp_path: Path,
+    js_pipeline: Dict[str, Any],
+) -> None:
     """GNN markdown emitted from the JS-derived pipeline has every section.
 
     The canonical GNN sections (``StateSpaceBlock``, ``Connections``,
@@ -269,10 +258,9 @@ def test_js_gnn_emission_has_all_canonical_sections(tmp_path: Path) -> None:
     from cogant.gnn.formatter import GNNMarkdownFormatter
     from cogant.process.extractor import ProcessExtractor
 
-    pipeline = _cached_pipeline()
-    graph = pipeline["graph"]
-    mapping_dict = pipeline["mapping_dict"]
-    state_space = pipeline["state_space"]
+    graph = js_pipeline["graph"]
+    mapping_dict = js_pipeline["mapping_dict"]
+    state_space = js_pipeline["state_space"]
 
     process_model = ProcessExtractor(
         program_graph=graph, schema_name="js_observer"
@@ -308,6 +296,7 @@ def test_js_gnn_emission_has_all_canonical_sections(tmp_path: Path) -> None:
 @_requires_js
 def test_js_forward_reverse_forward_role_match_above_threshold(
     tmp_path: Path,
+    js_pipeline: Dict[str, Any],
 ) -> None:
     """JS → GNN → Python package → forward: role_match_score > 0.5.
 
@@ -330,10 +319,9 @@ def test_js_forward_reverse_forward_role_match_above_threshold(
     from cogant.reverse.planner import plan_package
     from cogant.reverse.synthesizer import synthesize_package
 
-    pipeline = _cached_pipeline()
-    graph = pipeline["graph"]
-    mapping_dict = pipeline["mapping_dict"]
-    state_space = pipeline["state_space"]
+    graph = js_pipeline["graph"]
+    mapping_dict = js_pipeline["mapping_dict"]
+    state_space = js_pipeline["state_space"]
 
     process_model = ProcessExtractor(
         program_graph=graph, schema_name="js_observer"
@@ -398,7 +386,9 @@ def test_js_forward_reverse_forward_role_match_above_threshold(
 
 
 @_requires_js
-def test_js_agent_runtime_runs_ten_steps_without_exception() -> None:
+def test_js_agent_runtime_runs_ten_steps_without_exception(
+    js_pipeline: Dict[str, Any],
+) -> None:
     """AgentRuntime must execute ≥10 perception–action steps on JS matrices.
 
     Exercises the full runtime path from JS-derived A/B/C/D through
@@ -409,12 +399,11 @@ def test_js_agent_runtime_runs_ten_steps_without_exception() -> None:
     """
     from cogant.runtime.loop import AgentRuntime, AgentStep
 
-    pipeline = _cached_pipeline()
     mats = {
-        "A": pipeline["A"],
-        "B": pipeline["B"],
-        "C": pipeline["C"],
-        "D": pipeline["D"],
+        "A": js_pipeline["A"],
+        "B": js_pipeline["B"],
+        "C": js_pipeline["C"],
+        "D": js_pipeline["D"],
     }
     runtime = AgentRuntime.from_matrices_dict(mats)
 

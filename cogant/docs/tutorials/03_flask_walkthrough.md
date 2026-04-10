@@ -31,7 +31,7 @@ GNN validation: output/flask_app/gnn_package
 
 ## 2. The numbers
 
-Canonical metrics from `_rnd/figures/metrics.json` (2026-04-09 run):
+Canonical metrics from `../evaluation/figures/metrics.json` (2026-04-09 run):
 
 | Metric | Value |
 | --- | --- |
@@ -54,7 +54,7 @@ Canonical metrics from `_rnd/figures/metrics.json` (2026-04-09 run):
 
 v0.1.x Python front end emits only these four structural kinds. The richer taxonomy in
 `cogant.schemas.core.NodeKind` (variables, parameters, type references, control-flow
-nodes) is roadmap — tracked as P1-2 / P1-3 in [`_rnd/SCOPING_REPORT.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/SCOPING_REPORT.md).
+nodes) is roadmap — tracked as P1-2 / P1-3 in [`../evaluation/SCOPING_REPORT.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/SCOPING_REPORT.md).
 
 ### Edge kinds (597 total)
 

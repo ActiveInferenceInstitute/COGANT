@@ -1,7 +1,9 @@
+from dataclasses import dataclass
+
 from _typeshed import Incomplete
+
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
-from dataclasses import dataclass
 
 logger: Incomplete
 

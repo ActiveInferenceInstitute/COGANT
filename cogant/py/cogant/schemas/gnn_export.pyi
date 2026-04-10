@@ -1,7 +1,9 @@
-from .base import CogantBaseModel as CogantBaseModel
-from _typeshed import Incomplete
 from datetime import datetime
 from typing import Any, ClassVar, Literal
+
+from _typeshed import Incomplete
+
+from .base import CogantBaseModel as CogantBaseModel
 
 class GNNMetadata(CogantBaseModel):
     export_id: str

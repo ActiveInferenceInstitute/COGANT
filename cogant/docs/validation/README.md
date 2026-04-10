@@ -1,5 +1,9 @@
 # Validation Index
 
+### Getting started
+
+Start from [Overview](overview.md) and [Validation via CLI](validation_via_cli.md) for command-level checks.
+
 - [Overview](overview.md)
 - [Validation via CLI](validation_via_cli.md)
 - [Archival note](archival_note.md)

@@ -43,7 +43,7 @@ to identity-per-action when the program graph has no `WRITES` evidence.
 negative means aversive. Softmax is taken over `-C` when computing expected free energy.
 
 **Calibration** — The open R&D plan for empirically validating COGANT's confidence scores
-against hand-labelled ground truth. See `_rnd/CALIBRATION.md`.
+against hand-labelled ground truth. See `../evaluation/CALIBRATION.md`.
 
 **CIRCUIT_BREAKER** — Semantic role for code that guards a failure-prone call site with a
 retry/backoff/fallback pattern. Detected by `CircuitBreakerRule`.
@@ -146,7 +146,7 @@ interest with no direct external adjacency. Node role `BlanketRole.INTERNAL`.
 
 **Isomorphism** — The formal claim that a program and its generative-model interpretation
 carry the same information, so the forward and reverse COGANT pipelines should be inverses
-up to whitespace and naming. See `_rnd/ISOMORPHISM_THEOREM.md`.
+up to whitespace and naming. See `../evaluation/ISOMORPHISM_THEOREM.md`.
 
 ## K
 

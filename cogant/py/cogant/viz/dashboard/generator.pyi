@@ -1,11 +1,13 @@
+from pathlib import Path
+from typing import Any
+
 from _typeshed import Incomplete
+
 from cogant.process.extractor import ProcessModel as ProcessModel
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from cogant.schemas.semantic import SemanticMapping as SemanticMapping
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
 from cogant.validate.report import ValidationReport as ValidationReport
-from pathlib import Path
-from typing import Any
 
 logger: Incomplete
 

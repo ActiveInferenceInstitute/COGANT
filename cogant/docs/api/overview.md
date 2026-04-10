@@ -21,3 +21,29 @@ Public methods on [`Session`](https://github.com/cogant-contributors/cogant/blob
 | `compile_state_space()` | [Compiling State Space](#compiling-state-space) |
 | `export_all(output_dir, layout=False)` | [Exporting Results](#exporting-results) |
 
+These headings anchor the table above; for narrative detail see [Quick Start](../getting-started/quickstart.md) and the source in `py/cogant/api/session.py`.
+
+### Creating a Session
+
+Construct with `Session.from_target(path)` after configuration is available.
+
+### Extracting Analysis
+
+`extract_static()` and optional `extract_dynamic(...)` populate repo and trace facts used by later stages.
+
+### Building Program Graph
+
+`build_graph()` materializes the typed program graph IR.
+
+### Translating to GNN
+
+`translate_to_gnn()` runs the semantic rule engine over the graph.
+
+### Compiling State Space
+
+`compile_state_space()` builds state-space variables from semantic mappings.
+
+### Exporting Results
+
+`export_all(output_dir, layout=False)` writes bundles, GNN artifacts, and optional layout outputs.
+

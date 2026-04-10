@@ -1,6 +1,7 @@
+from pathlib import Path
+
 from cogant.reverse.parser import ReverseGNNModel
 from cogant.reverse.planner import PackagePlan
-from pathlib import Path
 
 __all__ = ['synthesize_package']
 

@@ -1,4 +1,5 @@
 from _typeshed import Incomplete
+
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
 
 class CategoricalDistribution:

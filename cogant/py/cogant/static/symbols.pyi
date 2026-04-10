@@ -1,8 +1,11 @@
-from _typeshed import Incomplete
-from cogant.static.parser import PythonASTParser as PythonASTParser, PythonModule as PythonModule
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.static.parser import PythonASTParser as PythonASTParser
+from cogant.static.parser import PythonModule as PythonModule
 
 logger: Incomplete
 

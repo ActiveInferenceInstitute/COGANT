@@ -69,7 +69,7 @@ logger = logging.getLogger(__name__)
 # ratio, not a post-normalization target. TODO(calibration): sweep
 # {0.80/0.20, 0.85/0.15, 0.90/0.10, 0.95/0.05} on the 20-repo
 # fixture set and compare against hand-labeled likelihood matrices
-# (see ``_rnd/CALIBRATION.md``).
+# (see ``docs/evaluation/CALIBRATION.md``).
 _DEFAULT_DIRECT_MASS = 0.9   # principled default (PyMDP convention)
 _DEFAULT_INDIRECT_MASS = 0.1  # principled default (1.0 - direct)
 

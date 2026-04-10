@@ -1,9 +1,11 @@
-from cogant.schemas.core import Node as Node, NodeKind as NodeKind
-from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
+
+from cogant.schemas.core import Node as Node
+from cogant.schemas.core import NodeKind as NodeKind
+from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 class BlanketRole(StrEnum):
     INTERNAL = 'internal'

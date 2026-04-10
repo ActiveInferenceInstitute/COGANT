@@ -1,4 +1,5 @@
 from _typeshed import Incomplete
+
 from cogant.plugins.registry import PluginRegistry as PluginRegistry
 
 console: Incomplete

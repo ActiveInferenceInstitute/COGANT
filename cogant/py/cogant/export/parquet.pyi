@@ -1,6 +1,8 @@
-from _typeshed import Incomplete
-from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from pathlib import Path
+
+from _typeshed import Incomplete
+
+from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 logger: Incomplete
 

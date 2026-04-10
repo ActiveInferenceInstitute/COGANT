@@ -101,4 +101,4 @@ The natural hope — following the standard categorical treatment of bidirection
 
 ---
 
-*Full proof continues in `_rnd/ISOMORPHISM_THEOREM.md`.*
+*Full proof continues in `../evaluation/ISOMORPHISM_THEOREM.md`.*

@@ -1,6 +1,8 @@
-from _typeshed import Incomplete
-from cogant.schemas.core import Edge, Node
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.schemas.core import Edge, Node
 
 __all__ = ['RUST_AVAILABLE', 'RustProgramGraphAdapter', 'build_program_graph', 'create_example_graph', 'get_program_graph_impl', 'rust_version']
 

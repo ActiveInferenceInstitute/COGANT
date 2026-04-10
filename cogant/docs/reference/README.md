@@ -1,5 +1,9 @@
 # Reference Index
 
+### Documentation map
+
+The links below are the canonical entry points for this module’s long-form specification fragments.
+
 - [Overview](overview.md)
 - [Table of Contents](table_of_contents.md)
 - [Implementation status](implementation_status.md)

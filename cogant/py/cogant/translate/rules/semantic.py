@@ -35,7 +35,7 @@ accessor prefixes; ``display``/``show``/``status``/``info``/``list`` round
 out the set with UI/introspection verbs commonly attached to observers in
 Python web frameworks (Flask, Django). TODO(calibration): expand the list
 against a frequency analysis of observation methods in the 20-repo corpus
-(see ``_rnd/CALIBRATION.md``). Known gaps: ``peek``, ``sample``,
+(see ``docs/evaluation/CALIBRATION.md``). Known gaps: ``peek``, ``sample``,
 ``inspect`` — add if they appear.
 """
 

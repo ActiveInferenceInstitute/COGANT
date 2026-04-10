@@ -1,9 +1,13 @@
-from _typeshed import Incomplete
-from cogant.static.parser import AssignmentDef as AssignmentDef, FunctionDef as FunctionDef, PythonASTParser as PythonASTParser
-from cogant.static.symbols import SymbolExtractor as SymbolExtractor
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.static.parser import AssignmentDef as AssignmentDef
+from cogant.static.parser import FunctionDef as FunctionDef
+from cogant.static.parser import PythonASTParser as PythonASTParser
+from cogant.static.symbols import SymbolExtractor as SymbolExtractor
 
 logger: Incomplete
 

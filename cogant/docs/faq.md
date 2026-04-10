@@ -157,7 +157,7 @@ Several reasons:
 
 The theoretical framing for the forward/reverse pipeline is a Galois connection between the lattice of Python programs (ordered by structural refinement) and the lattice of GNN generative models (ordered by information content). The forward map `F` is abstraction; the reverse map `G` is concretization. The roundtrip `G . F` is a closure operator: `code' = G(F(code))` is always a simplification of `code` that preserves the Active Inference structure.
 
-The formal statement and epsilon-bounded roundtrip error proof live in `_rnd/ISOMORPHISM_THEOREM.md`. This is a theoretical result; the current implementation does not achieve the bounds due to the serialization and conflict-resolution issues above.
+The formal statement and epsilon-bounded roundtrip error proof live in `evaluation/ISOMORPHISM_THEOREM.md`. This is a theoretical result; the current implementation does not achieve the bounds due to the serialization and conflict-resolution issues above.
 
 ---
 

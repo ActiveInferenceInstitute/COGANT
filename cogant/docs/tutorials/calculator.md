@@ -39,8 +39,9 @@ The `auto` strategy scores modules by cohesion / coupling and seeds on the one w
 
 Internal ratio: 0.833. Boundary ratio: 0.083. A clean minimal blanket for a single-class fixture.
 
-!!! note "Why the module is external"
-    The auto-seed scorer picks the class cluster (higher cohesion) as the system of interest, so the module that `contains` the class becomes environment. It is a correct application of the scoring function but counter-intuitive — worth keeping in mind when reading blanket reports.
+### Why the module is external
+
+The auto-seed scorer picks the class cluster (higher cohesion) as the system of interest, so the module that `contains` the class becomes environment. It is a correct application of the scoring function but counter-intuitive — worth keeping in mind when reading blanket reports.
 
 ## GNN output excerpt
 

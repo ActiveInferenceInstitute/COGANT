@@ -14,5 +14,5 @@ Authoritative for **what is wired in the Python package today** (see `py/cogant/
 | Export stage (`gnn_package/`) | Implemented | `api/orchestration.run_export`: writes JSON artifacts and builds `output_dir/gnn_package/` when graph + state space + process model + `_semantic_mappings` dict are available; failures are non-fatal (warnings) |
 | CLI `validate` | Implemented | Bundle file, `gnn_package` directory, run dir with `gnn_package/` or `bundle.json`; see [CLI_GUIDE § validate](../cli/README.md) |
 | Rust crates / native acceleration | Planned / staged | `rust/` |
-| Additional language front-ends (JS, Java, …) | Planned | `parsers/*`, roadmap |
+| Additional language front-ends | Partial | **Python** is first-class. **JS/TS** (and other tree-sitter grammars) are **optional**: install `cogant[multilang]` and an available grammar; parity is exercised in integration tests when those pieces are present. Further front-ends (e.g. Java) remain **planned** — see `parsers/*`, roadmap. |
 

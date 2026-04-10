@@ -1,6 +1,8 @@
-from _typeshed import Incomplete
-from cogant.process.timeline import Timeline as Timeline
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.process.timeline import Timeline as Timeline
 
 logger: Incomplete
 

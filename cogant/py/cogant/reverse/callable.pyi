@@ -1,4 +1,5 @@
 from _typeshed import Incomplete
+
 from cogant.reverse.parser import ReverseGNNModel
 
 __all__ = ['MatrixFunctions', 'make_matrix_functions']

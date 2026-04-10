@@ -1,6 +1,7 @@
-from _typeshed import Incomplete
 from dataclasses import dataclass
 from typing import Any
+
+from _typeshed import Incomplete
 
 logger: Incomplete
 ENTRY_POINT_GROUP: str

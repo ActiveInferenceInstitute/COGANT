@@ -3,7 +3,7 @@
 Machine-oriented index for automation and editors.
 
 - Repository root: [README.md](../../README.md)
-- Docs index: [docs/README.md](../../docs/README.md)
+- Docs index: [docs/index.md](../../docs/index.md)
 
 ## Scope
 

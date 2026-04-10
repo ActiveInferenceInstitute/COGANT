@@ -1,6 +1,6 @@
 ## COGANT Graph Construction, Normalization, and Translation Engine
 
-**Which doc should I read?** Short inventory: [Graph engine summary](#graph-engine-summary). Ingest/static pipeline: [SPEC.md](../reference/README.md). Architecture: [ARCHITECTURE.md](../architecture/README.md). Hub: [README.md](./README.md).
+**Which doc should I read?** Short inventory: [Graph engine summary](graph_engine_summary.md#graph-engine-summary). Ingest/static pipeline: [Reference index](../reference/README.md). Architecture: [Architecture index](../architecture/README.md). Hub: [README.md](./README.md).
 
 This document describes the complete engine for COGANT - the **Codebase-to-GNN Translation** system. The engine consists of three major components: normalization, graph construction, and semantic translation.
 

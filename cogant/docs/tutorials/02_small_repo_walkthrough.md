@@ -123,7 +123,7 @@ for m in mappings:
 ```
 
 Expected role distribution on `event_pipeline` (from
-`_rnd/figures/metrics.json`, 2026-04-09 run):
+`../evaluation/figures/metrics.json`, 2026-04-09 run):
 
 | Role | Count | Representative nodes |
 | --- | ---: | --- |

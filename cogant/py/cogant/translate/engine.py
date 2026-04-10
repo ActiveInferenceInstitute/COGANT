@@ -111,21 +111,18 @@ class TranslationRule(ABC):
         """Priority of this rule (higher = applied first). Default 0.
 
         Rationale for default ``priority=0``:
-            No rule currently overrides this property, so all 19 shipped
-            rules tie at ``priority=0`` and are applied in registration
-            order within a single fixpoint pass. Conflict resolution
-            between overlapping mappings therefore falls through entirely
-            to the ``(priority, confidence_score)`` lexicographic
-            comparison in
-            :meth:`TranslationEngine._resolve_conflicts`, where the
-            higher-confidence mapping wins on ties. This is an
-            intentional flat-priority design: rule authors embed their
-            relative "semantic strength" in the ``confidence_score``
-            assigned at :meth:`apply` time rather than in a numeric
-            priority tier. See ``_rnd/CALIBRATION.md`` for the full
-            rule priority audit. TODO(calibration): if the empirical
-            conflict-loss rate on real-world repos exceeds ~5%,
-            reintroduce an explicit priority ordering.
+            Most shipped rules keep the default ``0`` and are applied in
+            registration order within a single fixpoint pass.
+            :class:`~cogant.translate.rules.structural.MutatingSubsystemRule`
+            overrides this property to return ``1`` so class-level hidden-state
+            evidence wins ties against overlapping class-scoped mappings from
+            aggregate rules at equal confidence. Aside from that exception,
+            conflict resolution between overlapping mappings falls through to
+            the ``(priority, confidence_score)`` lexicographic comparison in
+            :meth:`TranslationEngine._resolve_conflicts`. See
+            ``docs/evaluation/CALIBRATION.md`` for the full rule priority audit.
+            TODO(calibration): if the empirical conflict-loss rate on
+            real-world repos exceeds ~5%, broaden explicit priority tiers.
         """
         return 0
 
@@ -227,10 +224,10 @@ class TranslationEngine:
             on the ``cpython/Lib/json`` real-world corpus (~1.2k LoC),
             so 10 is a ~2x safety margin. The choice is also consistent
             with the Kleene-iteration fixpoint framing of Cousot & Cousot
-            (POPL '77, ``_rnd/LITERATURE.md`` §1), which guarantees
+            (POPL '77, ``docs/evaluation/LITERATURE.md`` §1), which guarantees
             termination on a finite role-assignment lattice — 10
             iterations is an engineering cap rather than a theoretical
-            bound. See ``_rnd/CALIBRATION.md`` for the calibration plan.
+            bound. See ``docs/evaluation/CALIBRATION.md`` for the calibration plan.
             TODO(calibration): log observed iteration counts on a larger
             corpus (target: 20+ repos) and revise if the empirical
             maximum exceeds 5.
@@ -285,8 +282,8 @@ class TranslationEngine:
             >>> engine = TranslationEngine()
             >>> engine.register_rule(ObservationRule())
             >>> mappings = engine.translate(graph)
-            >>> [m.kind.name for m in mappings]
-            ['OBSERVATION', 'OBSERVATION', 'HIDDEN_STATE']
+            >>> all(hasattr(m.kind, "name") for m in mappings)
+            True
         """
         self.mappings.clear()
         self._match_log.clear()

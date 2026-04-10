@@ -1,7 +1,9 @@
-from _typeshed import Incomplete
-from cogant.simulate.free_energy import FreeEnergyCalculator as FreeEnergyCalculator
 from pathlib import Path
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.simulate.free_energy import FreeEnergyCalculator as FreeEnergyCalculator
 
 logger: Incomplete
 ACTIVE_INFERENCE_AVAILABLE: bool

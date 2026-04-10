@@ -8,10 +8,12 @@ Long-form prose describing COGANT theory and practice in the same structural sha
 
 When the Python API, CLI, export schema, or implementation status changes, update **both**:
 
-1. Package docs under [`../cogant/docs/`](../cogant/docs/) (or the paths referenced there).
-2. The corresponding section here (`02_methodology.md`, `03_api_and_workflows.md`, `06_experimental_setup.md`, etc.).
+1. Package docs under [`../cogant/docs/`](../cogant/docs/): MkDocs home [`../cogant/docs/index.md`](../cogant/docs/index.md), module map [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md), each `docs/<module>/README.md`, and deep pages.
+2. The corresponding manuscript fragments (`02_01_*.md`, `06_04_*.md`, `08_02_*.md`, etc.).
 
-Implementation status tables: [`../cogant/docs/SPEC.md`](../cogant/docs/SPEC.md).
+Implementation status: [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md).
+
+When updating `00_abstract.md` quantitative claims, re-run `uv run pytest tests/` (and coverage if cited) from [`../cogant/`](../cogant/) so narrative numbers match the package at release time.
 
 ## Files excluded from combined PDF body
 
@@ -19,15 +21,29 @@ Per `infrastructure/rendering/manuscript_discovery.py`, these names are **not** 
 
 ## Section ordering
 
-Numeric prefixes `00_`–`08_` sort before supplemental `S*.md`, then `98_*`, then other `*.md` (e.g. `SYNTAX.md`), then `99_*`. Keep numbering aligned with [`../../../infrastructure/rendering/manuscript_discovery.py`](../../../infrastructure/rendering/manuscript_discovery.py).
+- Main narrative: `00_`–`09_` with optional splits `NN_MM_slug.md` (for example `02_01_…`, `06_03_…`) — sorted by **full stem** string order.
+- Supplemental appendices: `S01_*.md` … `S99_*.md` after main sections.
+- Glossary: `98_*.md` when present.
+- Other Markdown (for example `SYNTAX.md`): **other** bucket after supplemental.
+- References: `99_*.md` last among Markdown.
 
-Canonical technical references to sync when the implementation changes:
+Keep numbering aligned with [`../../../infrastructure/rendering/manuscript_discovery.py`](../../../infrastructure/rendering/manuscript_discovery.py).
 
-- [`../cogant/docs/SPEC.md`](../cogant/docs/SPEC.md)
-- [`../cogant/docs/API_GUIDE.md`](../cogant/docs/API_GUIDE.md)
-- [`../cogant/docs/CLI_GUIDE.md`](../cogant/docs/CLI_GUIDE.md)
-- [`../cogant/docs/GNN_EXPORT.md`](../cogant/docs/GNN_EXPORT.md)
-- [`../cogant/docs/VALIDATION.md`](../cogant/docs/VALIDATION.md)
+Do **not** place full duplicate papers in the flat manuscript directory if they are not intended as PDF sections; store archival copies under `_archive/` (subdirectories are not scanned by discovery) or outside `manuscript/`. One-off split scripts that referenced removed monoliths have been removed; do not reintroduce them—edit the numbered fragments directly.
+
+Canonical technical hubs to sync when the implementation changes:
+
+- [`../cogant/docs/index.md`](../cogant/docs/index.md) (published docs entry)
+- [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md) (map of `docs/<module>/` areas)
+- [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md)
+- [`../cogant/docs/api/README.md`](../cogant/docs/api/README.md)
+- [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md)
+- [`../cogant/docs/export/README.md`](../cogant/docs/export/README.md)
+- [`../cogant/docs/plugins/README.md`](../cogant/docs/plugins/README.md)
+- [`../cogant/docs/validation/README.md`](../cogant/docs/validation/README.md)
+- [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md)
+- [`../cogant/docs/evaluation/README.md`](../cogant/docs/evaluation/README.md) (R&D log, empirical reports)
+- [`../cogant/evaluation/README.md`](../cogant/evaluation/README.md) (benchmark corpora, dashboards; not in the wheel)
 
 ## Citations
 

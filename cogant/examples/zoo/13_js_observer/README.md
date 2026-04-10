@@ -7,5 +7,5 @@ invariant. The fixture exists to prove that the COGANT forward
 pipeline, reverse synthesis, and Active Inference runtime all work on
 a non-Python language via the tree-sitter backed JS plugin.
 
-See `_rnd/CROSS_LANG_ROUNDTRIP.md` for the cross-language empirical
+See `docs/evaluation/CROSS_LANG_ROUNDTRIP.md` for the cross-language empirical
 claim and measured results.

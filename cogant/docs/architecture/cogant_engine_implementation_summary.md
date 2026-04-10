@@ -1,6 +1,6 @@
 ## COGANT Engine Implementation Summary
 
-**Which doc should I read?** Long-form engine design: [Detailed graph engine](#detailed-graph-engine). Pipeline module index: [Pipeline module index](#pipeline-module-index). User docs hub: [README.md](./README.md). Normative pipeline behavior: [SPEC.md](../reference/README.md). See [documentation map](./README.md#documentation-map).
+**Which doc should I read?** Long-form engine design: [Detailed graph engine](detailed_graph_engine.md#detailed-graph-engine). Pipeline module index: [Pipeline module index](pipeline_module_index.md#pipeline-module-index). User docs hub: [README.md](./README.md). Normative pipeline behavior: [Reference index](../reference/README.md). See [documentation map](./README.md#documentation-map).
 
 ### Completion Status: 100%
 

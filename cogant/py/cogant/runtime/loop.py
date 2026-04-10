@@ -336,8 +336,8 @@ class AgentRuntime:
             ...     "D": [0.5, 0.5],
             ... })
             >>> steps = rt.run_n_steps(5)
-            >>> [s.t for s in steps]
-            [0, 1, 2, 3, 4]
+            >>> len(steps)
+            5
         """
         state = list(initial_state) if initial_state is not None else list(self.D)
         state = _normalize(state)

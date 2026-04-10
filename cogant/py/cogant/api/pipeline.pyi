@@ -1,9 +1,11 @@
-from _typeshed import Incomplete
-from cogant.api import orchestration as orchestration
-from cogant.api.bundle import Bundle as Bundle
 from collections.abc import Callable as Callable
 from dataclasses import dataclass, field
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.api import orchestration as orchestration
+from cogant.api.bundle import Bundle as Bundle
 
 logger: Incomplete
 

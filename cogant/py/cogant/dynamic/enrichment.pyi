@@ -1,9 +1,13 @@
+from typing import Any
+
 from _typeshed import Incomplete
+
 from cogant.dynamic.coverage import CoverageIngester as CoverageIngester
 from cogant.dynamic.traces import TraceIngester as TraceIngester
-from cogant.schemas.core import Edge as Edge, EdgeKind as EdgeKind, NodeKind as NodeKind
+from cogant.schemas.core import Edge as Edge
+from cogant.schemas.core import EdgeKind as EdgeKind
+from cogant.schemas.core import NodeKind as NodeKind
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
-from typing import Any
 
 logger: Incomplete
 

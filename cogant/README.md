@@ -7,7 +7,7 @@ COGANT converts Python, JavaScript, and TypeScript codebases into
 state-space models — complete with A/B/C/D probabilistic matrices, Markov blanket
 partitions, and principled free-energy derivations.
 
-Current release: **v0.1.0 Alpha** (2026-04-09). 642+ tests passing.
+Current release: **v0.5.0** (2026-04-10). 2143 tests passing, 11 skipped, 2 xfailed, 1 xpassed; line coverage 86.47% on `py/cogant/`.
 
 ---
 
@@ -22,9 +22,19 @@ repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMa
 
 - **Forward path**: source code → program dependence graph → fixpoint translation → semantic
   mappings → compiled state space → GNN markdown bundle (AII-spec compliant).
-- **Reverse path** *(prototype)*: `py/cogant/reverse/` ships the scaffolding for synthesizing a
-  runnable Python package from a GNN bundle. CLI surface for this is tracked as P2 in
-  [`_rnd/R&D_LOG.md`](_rnd/R&D_LOG.md).
+- **Reverse path**: `py/cogant/reverse/` synthesizes a runnable Python package from any GNN
+  bundle and is exposed through the top-level `cogant reverse` and `cogant roundtrip` CLI
+  subcommands. The v0.5.0 POLICY / CONTEXT stub-emission fix attains **23 / 23 ISOMORPHIC**
+  ($\varepsilon \geq 0.8$) on the canonical roundtrip evaluation set — see
+  [`docs/evaluation/ROUNDTRIP_IMPROVEMENT.md`](docs/evaluation/ROUNDTRIP_IMPROVEMENT.md) and
+  [`docs/evaluation/ROUNDTRIP_EVAL.md`](docs/evaluation/ROUNDTRIP_EVAL.md).
+- **Incremental mode**: `cogant analyze --incremental <git-ref>` (or
+  `PipelineConfig.incremental_since`) re-uses the previous run's program graph for unchanged
+  source paths, measuring **19.6× no-change** and **5.6× single-file** speedups on the Flask
+  benchmark.
+- **Production server**: `cogant.server.app` exposes `/health` and `/translate` endpoints; a
+  packaged `Dockerfile` (python:3.12-slim + uv, `EXPOSE 8080`) and `docker-compose.yml` turn
+  the pipeline into a deployable microservice.
 
 ## Quick start
 
@@ -39,47 +49,72 @@ uv run cogant validate output/calculator/gnn_package
 Expected: a populated `output/calculator/` tree with `bundle.json`, `gnn_package/model.gnn.md`,
 and a validator report scoring **100.0 / 100** on the calculator fixture.
 
-## Features (v0.1.0)
+## Features (v0.5.0)
 
-- Python parser via CPython `ast`; JavaScript / TypeScript via `tree-sitter` front ends.
+- Python parser via CPython `ast`; JavaScript / TypeScript via `tree-sitter` front ends
+  (JS-grammar fallback for `.ts` files on mixed repositories).
 - **19 translation rules** across five families (structural, semantic, control, behavioral,
   resilience) — see `py/cogant/translate/rules/`.
 - GNN A/B/C/D matrices derived from READS / WRITES / CONSTRAINT / CONFIGURATION edges; AII
-  validator at **100 / 100** on control-positive fixtures (`calculator`, `event_pipeline`,
-  `flask_mini`).
+  validator at **100 / 100** on all six shipped fixtures (`calculator`, `event_pipeline`,
+  `flask_mini`, `flask_app`, `requests_lib`, `json_stdlib`).
 - Principled variational free energy / expected free energy math — not keyword heuristics.
 - Markov blanket partition: `O(V + E)`, five seed strategies (`auto`, `module`, `class`,
   `subgraph`, `manual`).
-- Git-diff incremental mode (`cogant changed`).
-- Rust acceleration backend (optional, feature-gated: `COGANT_USE_RUST=1`).
-- Reverse synthesis scaffolding: GNN bundle → Python package plan.
-- **900+ tests across unit, integration, property, and golden suites**; coverage ~77%.
-- `cogant doctor` — environment diagnostics (Python, `uv`, tree-sitter grammars, Rust
-  backend, disk space).
+- **Incremental analysis mode**: `cogant analyze --incremental <git-ref>` /
+  `PipelineConfig.incremental_since` — 19.6× no-change, 5.6× single-file speedups on the
+  Flask benchmark. Complements the file-level `cogant changed` git-diff helper.
+- **Multi-episode Bayesian learning**: `AgentRuntime.run_multi_episode`, `run_episode`,
+  `update_D_from_posterior`, `update_A_from_counts`.
+- **Production FastAPI server**: `cogant.server.app` with `/health` and `/translate`
+  endpoints, integration test suite, and Docker / docker-compose packaging.
+- **Forward-reverse-forward round-trip**: 23 / 23 ISOMORPHIC across 13 zoo fixtures,
+  3 real-world-example fixtures, and 8 uncurated third-party libraries; see
+  [`docs/evaluation/ROUNDTRIP_EVAL.md`](docs/evaluation/ROUNDTRIP_EVAL.md) and
+  [`docs/evaluation/ROUNDTRIP_IMPROVEMENT.md`](docs/evaluation/ROUNDTRIP_IMPROVEMENT.md).
+- **Cross-language roundtrip**: `examples/zoo/13_js_observer` demonstrates a JavaScript
+  observer round-trip with `role_match_score = 1.0`.
+- **Rust acceleration** (optional, feature-gated: `COGANT_USE_RUST=1`): PyO3
+  `connected_components` FFI for graph construction; pure-Python fallback elsewhere.
+- Reverse synthesis: `cogant reverse` and `cogant roundtrip` subcommands synthesize a
+  runnable Python package from any GNN bundle and verify forward-reverse-forward
+  isomorphism.
+- **2143 tests** across unit, integration, property, golden, and fuzz suites (plus 11 skips
+  for optional toolchains); line coverage **86.47%** on `py/cogant/`.
+- `cogant doctor` — environment diagnostics extended in v0.5.0 with tree-sitter grammar
+  checks, uv lockfile parity, and optional-dependency audit.
 
 ## CLI surface
 
 `cogant --help` is ground truth. The Typer app in
-[`py/cogant/cli/main.py`](py/cogant/cli/main.py) currently registers **16** subcommands:
+[`py/cogant/cli/main.py`](py/cogant/cli/main.py) currently registers **22** subcommands:
 
 | Command | Purpose |
 | --- | --- |
-| `init` | Scaffold a new `cogant.yaml` project config. |
-| `doctor` | Environment diagnostics. |
-| `scan` | Discover and classify source files. |
-| `extract-static` | Run static parsers; produce symbol facts. |
-| `extract-dynamic` | Consume runtime traces (coverage, logs) if present. |
-| `graph` | Build the program graph from extracted facts. |
+| `init` | Initialize a new COGANT project (guided first-time setup). |
+| `doctor` | Diagnose the COGANT runtime environment (Python, uv, tree-sitter, Rust, disk). |
+| `scan` | Scan a repository and print a quick summary. |
+| `extract-static` | Run static analysis only (AST, type inference, symbol tables). |
+| `extract-dynamic` | Run dynamic analysis (coverage databases, runtime traces). |
+| `graph` | Build and summarise the program dependency graph. |
 | `translate` | Full pipeline: ingest → graph → translate → statespace → export. |
-| `statespace` | Run the state-space compiler only. |
-| `process` | Run post-translation processing passes. |
-| `export-gnn` | Write a GNN package from an existing bundle. |
-| `render` | Render an interactive HTML / Markdown site. |
-| `viz` | Emit graph and blanket visualizations. |
-| `validate` | Validate a bundle, run directory, or GNN package. |
-| `diff` | Compare two runs (drift metrics). |
-| `changed` | Git-diff incremental mode. |
-| `benchmark` | Run the micro-benchmark suite. |
+| `statespace` | Compile an Active Inference state-space model (S, O, A, π). |
+| `process` | Extract the pipeline / execution process model from a repository. |
+| `export-gnn` | Re-export a previously generated GNN bundle in a different format. |
+| `render` | Render an interactive HTML site from a bundle. |
+| `viz` | Generate PNGs for every Mermaid / SVG / dot / network artifact in a run. |
+| `validate` | Run validation checks on a bundle, run directory, or GNN package. |
+| `diff` | Compare two bundles or output directories and report drift. |
+| `changed` | List files changed since a git ref (incremental analysis helper). |
+| `explain` | Explain why a node was assigned its Active Inference role. |
+| `benchmark` | Benchmark pipeline wall-clock performance over several runs. |
+| `reverse` | Synthesize a Python package from a GNN markdown file. |
+| `roundtrip` | Verify forward-reverse-forward round-trip isomorphism. |
+| `plugin` | Manage and inspect COGANT plugins. |
+| `migrate` | Migrate GNN files to the current schema version. |
+
+The `translate` subcommand accepts `--incremental <git-ref>` (equivalent to
+`PipelineConfig.incremental_since`) for per-commit CI re-runs over a Git diff.
 
 ## Architecture
 
@@ -125,16 +160,16 @@ See [docs/architecture/](docs/architecture/) for per-module deep dives.
   - [CLI reference](docs/cli.md)
   - [Glossary](docs/reference/glossary.md)
   - [API reference](docs/api/)
-- [R&D log](_rnd/R&D_LOG.md)
+- [R&D log](docs/evaluation/R&D_LOG.md)
 
 ## Development
 
 ```bash
 uv sync --extra all            # install everything (python + viz + tree-sitter + rust bindings)
 uv run cogant doctor            # verify the environment
-uv run pytest tests/ -q         # 900+ tests; expect ~77% coverage
-uv run mypy py/cogant/          # type check
-uv run ruff check py/           # lint
+uv run pytest tests/ -q         # 2143 passing tests; expect ~86.47% line coverage
+uv run mypy py/cogant/          # type check (strict; 0 errors on 179 source files)
+uv run ruff check py/cogant/    # lint (0 errors on v0.5.0)
 make build-rust                 # optional: compile the rust backend
 ```
 
@@ -162,6 +197,6 @@ MIT — see [`LICENSE`](LICENSE).
   author = {{COGANT contributors}},
   year   = {2026},
   url    = {https://github.com/cogant/cogant},
-  version = {0.1.0}
+  version = {0.5.0}
 }
 ```

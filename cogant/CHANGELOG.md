@@ -16,7 +16,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Cross-language roundtrip claim: JS Observer (`examples/zoo/13_js_observer`) → GNN → AI cycle, `role_match_score=1.0`
 - POLICY/CONTEXT stub emission in synthesizer: `decide_*` / `get_context_*` stubs proportional to origin GNN role counts
 - Scaling regression tests: guards for B-tensor, BFS, AST cache, INHERITS edge deduplification at dulwich edge density
-- Benchmark dashboard: `_rnd/dashboards/benchmarks.html` (Chart.js, self-contained)
+- Benchmark dashboard: `evaluation/dashboards/benchmarks.html` (Chart.js, self-contained)
 - Comprehensive docstring pass + mkdocs nav update + getting started guide
 - Manuscript appendices A–E: Galois proofs, GNN compliance audit, ε derivation, scaling analysis, cross-language extension; 40+ new citations
 

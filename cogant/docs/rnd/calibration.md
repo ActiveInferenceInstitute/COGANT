@@ -1,6 +1,6 @@
 # Calibration
 
-This page collects the confidence-calibration notes for COGANT. A dedicated `CALIBRATION.md` is tracked in the R&D backlog — until it lands, the canonical source is the confidence discussion in `_rnd/ACTIVE_INFERENCE_MAPPING.md` and the behavior in `py/cogant/translate/confidence.py`.
+This page collects a short summary for the docs site. The full calibration backlog and parameter discussion live in **[Calibration](../evaluation/CALIBRATION.md)** under [`docs/evaluation/`](../evaluation/README.md). For role-mapping context see **[Active Inference Mapping](../evaluation/ACTIVE_INFERENCE_MAPPING.md)** and `py/cogant/translate/confidence.py`.
 
 ## What the score means
 

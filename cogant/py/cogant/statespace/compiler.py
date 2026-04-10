@@ -40,7 +40,12 @@ from cogant.schemas.core import EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import MappingKind, SemanticMapping
 from cogant.statespace.temporal import TemporalAnalyzer, TimeRegime
-from cogant.statespace.variables import ConfidenceLevel, StateVariable, StateVariableExtractor
+from cogant.statespace.variables import (
+    ConfidenceLevel,
+    StateVariable,
+    StateVariableExtractor,
+    map_confidence_score,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1180,34 +1185,20 @@ class StateSpaceCompiler:
             return "unknown"
 
     def _map_confidence(self, confidence_score: float) -> ConfidenceLevel:
-        """Map numeric confidence score to ConfidenceLevel.
+        """Map numeric confidence score to :class:`ConfidenceLevel`.
 
-        Thresholds (audit 2026-04-09):
-            The 0.95 / 0.80 / 0.60 / 0.40 ladder mirrors
-            :meth:`cogant.statespace.variables.StateVariableExtractor._map_confidence`
-            (see that docstring for full rationale). The two
-            implementations are kept in sync intentionally — both
-            consume ``SemanticMapping.confidence_score`` and both
-            need to align with the translation-rule confidence
-            bands (0.65-0.90). TODO(refactor): consolidate into a
-            single helper in ``cogant.schemas.semantic`` and
-            re-calibrate both call sites at once.
+        Thin delegator to the shared
+        :func:`cogant.statespace.variables.map_confidence_score` helper,
+        which is the single source of truth for the state-space layer's
+        categorical confidence ladder. Kept as an instance method so that
+        the existing test fixtures in ``tests/unit/test_mutation_hardening.py``
+        that invoke ``compiler._map_confidence(...)`` continue to work
+        without churn.
 
         Args:
             confidence_score: Score from 0.0 to 1.0.
 
         Returns:
-            ConfidenceLevel.
+            :class:`ConfidenceLevel`.
         """
-        # Principled-default ladder aligned with rule bands;
-        # TODO(refactor) to merge with variables._map_confidence.
-        if confidence_score >= 0.95:        # matches "definite"
-            return ConfidenceLevel.DEFINITE
-        elif confidence_score >= 0.80:      # >= upper-mid rule band
-            return ConfidenceLevel.HIGH
-        elif confidence_score >= 0.60:      # below lowest rule band
-            return ConfidenceLevel.MEDIUM
-        elif confidence_score >= 0.40:
-            return ConfidenceLevel.LOW
-        else:
-            return ConfidenceLevel.UNCERTAIN
+        return map_confidence_score(confidence_score)

@@ -417,7 +417,7 @@ def plan_package(model: ReverseGNNModel) -> PackagePlan:
     # the synth-side CONSTRAINT / POLICY / CONTEXT counts in proportion
     # to the surviving projection, recovering most of the lost overlap
     # without inventing unrelated content. See
-    # ``_rnd/ROUNDTRIP_IMPROVEMENT.md`` for the empirical table.
+    # ``docs/evaluation/ROUNDTRIP_IMPROVEMENT.md`` for the empirical table.
     plan.scaffold_constraint_checks = _build_scaffold_constraints(plan, used_names)
     plan.scaffold_policy_functions = _build_scaffold_policies(plan, used_names)
     plan.scaffold_context_classes = _build_scaffold_contexts(plan, used_names)

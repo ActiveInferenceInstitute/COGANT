@@ -1,6 +1,8 @@
-from cogant.schemas.core import Node as Node, NodeKind as NodeKind
 from dataclasses import dataclass
 from typing import Any
+
+from cogant.schemas.core import Node as Node
+from cogant.schemas.core import NodeKind as NodeKind
 
 @dataclass
 class LanguageFact:

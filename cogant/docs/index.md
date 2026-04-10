@@ -51,9 +51,20 @@ The full Python API and CLI walkthrough live in [Quick Start](getting-started/qu
 
 ## Where to go next
 
+- **[Documentation modules](reference/documentation_modules.md)** — map of every `docs/<module>/` area (API, architecture, evaluation, export, and others).
+- **[Evaluation index](evaluation/README.md)** — R&D reports, dated gate log ([R&D log](evaluation/R&D_LOG.md)), calibration and roundtrip studies. Machine-readable corpora and dashboards live in the `evaluation/` directory at the repository root (sibling of `docs/`; not shipped in the installable wheel).
 - **[Small repo walkthrough](tutorials/calculator.md)** — step through the `calculator` fixture: 6 mappings, 12 nodes, one clean Markov blanket.
 - **[Flask app walkthrough](tutorials/flask.md)** — a 98-node / 597-edge real-world example with role counts and GNN output excerpts.
 - **[Active Inference mapping](theory/active_inference.md)** — the theoretical justification for how code constructs become mu / s / a / pi.
 - **[GNN format](theory/gnn_format.md)** — bracket notation, A/B/C/D matrices, and an example export block.
 - **[CLI Reference](cli_reference.md)** — every subcommand, flag, and output artifact.
 - **[API Reference](api/translate.md)** — auto-generated module docs for `cogant.translate`, `cogant.gnn`, `cogant.markov`, `cogant.statespace`, `cogant.static`, and `cogant.simulate`.
+
+---
+
+## Docs layout (maintainers)
+
+- **Agent routing and tooling:** [AGENTS.md](AGENTS.md).
+- **Module map:** [Documentation modules](reference/documentation_modules.md).
+- **Changelog mirror:** [changelog.md](changelog.md) (source of truth: repository root `CHANGELOG.md`).
+- **Package README:** [repository `README.md`](https://github.com/cogant-contributors/cogant/blob/main/cogant/README.md) (install and repo overview).

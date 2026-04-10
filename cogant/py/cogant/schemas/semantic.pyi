@@ -1,8 +1,9 @@
-from _typeshed import Incomplete
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
+
+from _typeshed import Incomplete
 
 class MappingKind(StrEnum):
     OBSERVATION = 'observation'

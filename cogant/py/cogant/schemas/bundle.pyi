@@ -1,8 +1,12 @@
-from .base import CogantBaseModel as CogantBaseModel, EvidenceRef as EvidenceRef, SemanticVersion as SemanticVersion
-from _typeshed import Incomplete
 from datetime import datetime
 from enum import StrEnum
 from typing import Any, ClassVar
+
+from _typeshed import Incomplete
+
+from .base import CogantBaseModel as CogantBaseModel
+from .base import EvidenceRef as EvidenceRef
+from .base import SemanticVersion as SemanticVersion
 
 class TargetLanguage(StrEnum):
     PYTHON = 'python'

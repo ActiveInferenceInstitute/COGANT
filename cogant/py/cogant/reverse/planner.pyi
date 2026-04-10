@@ -1,5 +1,6 @@
-from cogant.reverse.parser import ReverseGNNModel
 from dataclasses import dataclass, field
+
+from cogant.reverse.parser import ReverseGNNModel
 
 __all__ = ['NodePlan', 'PackagePlan', 'plan_package']
 

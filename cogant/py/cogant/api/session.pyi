@@ -1,10 +1,12 @@
-from _typeshed import Incomplete
-from cogant.api import orchestration as orchestration
-from cogant.api.bundle import Bundle as Bundle
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.api import orchestration as orchestration
+from cogant.api.bundle import Bundle as Bundle
 
 logger: Incomplete
 

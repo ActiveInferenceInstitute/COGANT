@@ -1,6 +1,6 @@
 # API and Workflows
 
-This section describes the programmatic surface that the shipped Python package exposes in practice, aligned with `../cogant/docs/API_GUIDE.md` and `../cogant/VERIFICATION_REPORT.md`. It is **not** an empirical benchmark section; COGANT does not ship comparative timing claims in the manuscript layer. Instead, it records the **surface area** users can rely on: two complementary entry points (a Session for stepwise work and a Pipeline for batch runs), the Bundle accessors that expose their artifacts, a command-line interface, and a Review API for human-in-the-loop curation.
+This section describes the programmatic surface that the shipped Python package exposes in practice, aligned with `../cogant/docs/api/README.md` and the inventory-style notes under `../cogant/docs/reference/`. It is **not** an empirical benchmark section; COGANT does not ship comparative timing claims in the manuscript layer. Instead, it records the **surface area** users can rely on: two complementary entry points (a Session for stepwise work and a Pipeline for batch runs), the Bundle accessors that expose their artifacts, a command-line interface, and a Review API for human-in-the-loop curation.
 
 ## Session-oriented workflow
 
@@ -33,11 +33,11 @@ The bundle API exposes stage summaries and convenience render/export helpers, in
 - `render_site` — static HTML site with graph and model views
 - `to_json` / `save_json`
 
-For canonical 18-section Generalized Notation Notation artifacts (`model.gnn.md` plus companion JSON), use the export outputs documented in `../cogant/docs/GNN_EXPORT.md`; `Bundle.gnn_markdown()` is intentionally a lightweight report surface.
+For canonical 18-section Generalized Notation Notation artifacts (`model.gnn.md` plus companion JSON), use the export outputs documented in `../cogant/docs/export/README.md`; `Bundle.gnn_markdown()` is intentionally a lightweight report surface.
 
 ## Command-line interface
 
-The CLI entry point (`cogant.cli.main`) implements commands such as `init`, `scan`, `extract-static`, `extract-dynamic`, `graph`, `translate`, `statespace`, `validate`, and visualization/export helpers. Exact flags live in `../cogant/docs/CLI_GUIDE.md`; the manuscript does not duplicate them to avoid drift.
+The CLI entry point (`cogant.cli.main`) implements commands such as `init`, `scan`, `extract-static`, `extract-dynamic`, `graph`, `translate`, `statespace`, `validate`, and visualization/export helpers. Exact flags live in `../cogant/docs/cli/README.md`; the manuscript does not duplicate them to avoid drift.
 
 ## Review API
 

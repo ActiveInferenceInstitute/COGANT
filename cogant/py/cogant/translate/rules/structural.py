@@ -139,18 +139,18 @@ class MutatingSubsystemRule(TranslationRule):
     """Maps objects with frequent internal mutations to hidden-state modality.
 
     Rule priority (audit 2026-04-09):
-        Effective priority = ``(0, 0.75)``. **Mid band** (0.75) alongside
-        ``ContainmentRule``, ``DataPipelineRule`` and ``EventBusRule``.
-        Rationale: a class touched by any ``WRITES``/``MUTATES`` edge is
-        a mild structural cue for hidden state, stronger than a pure
-        read-only module (0.70) but weaker than a lexical action match
-        (0.80) or a configuration hit (0.85+). The mutation-count
-        threshold is deliberately ``>=1`` — any mutation edge counts —
-        because classes with internal state typically exhibit bursty
-        mutation patterns and a higher threshold would miss lazy
-        singletons. TODO(calibration): sweep the threshold in {1, 2, 3}
-        on the 20-repo corpus; a higher floor would likely raise
-        precision at the cost of recall on under-instrumented fixtures.
+        :meth:`priority` returns ``1`` (see override below) so
+        ``HIDDEN_STATE`` wins class-level overlaps against aggregate
+        ``POLICY`` from :class:`InheritanceRule` at default priority ``0``
+        when both fire on the same ``CLASS`` node. The confidence score
+        remains **mid band** (0.75): a class touched by any
+        ``WRITES``/``MUTATES`` edge is a mild structural cue for hidden
+        state, stronger than a pure read-only module (0.70) but weaker
+        than a lexical action match (0.80) or a configuration hit
+        (0.85+). The mutation-count threshold is deliberately ``>=1``.
+        TODO(calibration): sweep the threshold in {1, 2, 3} on the
+        20-repo corpus; a higher floor would likely raise precision at
+        the cost of recall on under-instrumented fixtures.
     """
 
     def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
@@ -309,6 +309,17 @@ class MutatingSubsystemRule(TranslationRule):
     def name(self) -> str:
         """Stable identifier for this rule."""
         return "mutating_subsystem"
+
+    @property
+    def priority(self) -> int:
+        """Above class-level aggregate rules (e.g. ``ContainmentRule`` at 0).
+
+        ``ContainmentRule`` can emit a class-scoped mapping that overlaps the
+        same ``CLASS`` node as this rule. Equal ``(priority, confidence)``
+        ties previously dropped the hidden-state mapping lexicographically.
+        Hidden-state evidence from WRITES/MUTATES edges should win that tie.
+        """
+        return 1
 
     @property
     def mapping_kind(self) -> MappingKind:

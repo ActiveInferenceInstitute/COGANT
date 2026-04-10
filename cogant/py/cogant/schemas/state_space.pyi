@@ -1,8 +1,14 @@
-from .base import CogantBaseModel as CogantBaseModel, ConfidenceMetric as ConfidenceMetric, EvidenceRef as EvidenceRef, StableID as StableID, TypeInfo as TypeInfo
-from _typeshed import Incomplete
 from datetime import datetime
 from enum import StrEnum
 from typing import Any, ClassVar, Literal
+
+from _typeshed import Incomplete
+
+from .base import CogantBaseModel as CogantBaseModel
+from .base import ConfidenceMetric as ConfidenceMetric
+from .base import EvidenceRef as EvidenceRef
+from .base import StableID as StableID
+from .base import TypeInfo as TypeInfo
 
 class StateSpaceKind(StrEnum):
     DISCRETE = 'discrete'

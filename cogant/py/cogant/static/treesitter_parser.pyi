@@ -1,5 +1,6 @@
-from cogant.schemas.graph import ProgramGraph
 from pathlib import Path
+
+from cogant.schemas.graph import ProgramGraph
 
 __all__ = ['HAS_TREESITTER', 'parse_file_treesitter', 'parse_python_file', 'parse_js_file', 'parse_ts_file']
 

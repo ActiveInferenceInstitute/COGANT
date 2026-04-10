@@ -1,8 +1,10 @@
-from cogant.schemas.core import Edge as Edge
-from cogant.schemas.graph import GraphMetadata as GraphMetadata, ProgramGraph as ProgramGraph
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
+
+from cogant.schemas.core import Edge as Edge
+from cogant.schemas.graph import GraphMetadata as GraphMetadata
+from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 @dataclass
 class MergeConflict:

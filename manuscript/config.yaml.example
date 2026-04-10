@@ -4,8 +4,8 @@
 paper:
   title: "COGANT: Codebase-to-GNN Translation"
   subtitle: "Theory of the Program Graph IR and Practice of the Python Pipeline"
-  version: "0.1.0"
-  date: ""
+  version: "0.5.0"
+  date: "2026-04-10"
 
 authors:
   - name: "Your Name"
@@ -19,13 +19,16 @@ publication:
   journal: ""
   volume: ""
   pages: ""
-  year: ""
+  year: "2026"
 
 keywords:
   - "program analysis"
   - "Generalized Notation Notation (GNN)"
+  - "Generative Modeling"
   - "intermediate representation"
   - "code property graph"
+  - "reproducible research"
+  - "cognitive ecosystem modeling"
 
 metadata:
   license: "MIT"

@@ -1,8 +1,13 @@
-from .base import CogantBaseModel as CogantBaseModel, ConfidenceMetric as ConfidenceMetric, EvidenceRef as EvidenceRef, StableID as StableID
-from _typeshed import Incomplete
 from datetime import datetime
 from enum import StrEnum
 from typing import Any, ClassVar
+
+from _typeshed import Incomplete
+
+from .base import CogantBaseModel as CogantBaseModel
+from .base import ConfidenceMetric as ConfidenceMetric
+from .base import EvidenceRef as EvidenceRef
+from .base import StableID as StableID
 
 class SemanticRole(StrEnum):
     HIDDEN_STATE = 'hidden_state'

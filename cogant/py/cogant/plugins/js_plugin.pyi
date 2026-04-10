@@ -1,6 +1,7 @@
-from cogant.plugins.base import LanguagePlugin
 from pathlib import Path
 from typing import Any
+
+from cogant.plugins.base import LanguagePlugin
 
 __all__ = ['JsLanguagePlugin']
 

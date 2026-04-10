@@ -134,11 +134,11 @@ def bayesian_belief_update(
 ) -> list[float]:
     """Exact Bayesian posterior under a categorical observation.
 
-    Q(s | o) ∝ P(o | s) · P(s)
+    Discrete update: posterior proportional to likelihood times prior (see source).
 
     Args:
-        prior: Prior P(s).
-        likelihood_matrix: A[o][s] = P(observation o | state s).
+        prior: Prior over state indices (categorical).
+        likelihood_matrix: Rows are observations, columns states (see implementation).
         observation_index: The index of the observed outcome.
 
     Returns:
@@ -181,11 +181,10 @@ def expected_free_energy(
 
     Args:
         policy_action_sequence: Sequence of action indices to evaluate.
-        beliefs: Current Q(s).
-        likelihood_matrix: A[o][s] (n_obs x n_states).
-        transition_tensor: B[s'][s][a] — probability of transitioning to
-            ``s'`` from ``s`` under action ``a``.
-        log_preferences: C[o] — log preference for each observation.
+        beliefs: Current belief vector over discrete states.
+        likelihood_matrix: Observation-by-state likelihood table (rows: observations).
+        transition_tensor: Transition dynamics (next state, current state, action).
+        log_preferences: Per-observation log-preference vector.
 
     Returns:
         Expected free energy (nats). Lower is better.

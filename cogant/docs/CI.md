@@ -1,6 +1,6 @@
 # Deploying the Documentation Site
 
-COGANT uses [mkdocs-material](https://squidfund.github.io/mkdocs-material/) for documentation.
+COGANT uses [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) for documentation.
 
 ## Local Development
 
@@ -17,6 +17,8 @@ uv run --with mkdocs-material --with 'mkdocstrings[python]' mkdocs build
 ```
 
 The static site is written to `site/` (git-ignored).
+
+`mkdocs build --strict` currently fails on legacy anchor and cross-reference warnings across split docs; use the non-strict command above unless you are fixing those warnings deliberately.
 
 ## GitHub Pages Deployment
 

@@ -1,6 +1,6 @@
 ## COGANT Ingest and Static Analysis Pipeline - Implementation Summary
 
-> See [README.md](./README.md) and this file (implementation status) for the current system picture; this section captures a milestone snapshot. **Other summaries:** file inventory and project setup in [SPEC.md](../reference/README.md); graph engine in [ARCHITECTURE.md](../architecture/README.md). The [documentation map](./README.md#documentation-map) lists entry points.
+> See [README.md](./README.md) and this file (implementation status) for the current system picture; this section captures a milestone snapshot. **Other summaries:** file inventory and project setup in [Reference index](../reference/README.md); graph engine in [Architecture index](../architecture/README.md). The [documentation map](./README.md#documentation-map) lists entry points.
 
 ### Project Overview
 

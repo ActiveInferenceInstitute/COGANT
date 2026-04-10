@@ -1,6 +1,6 @@
 # Active Inference mapping
 
-This page records the theoretical justification for how COGANT maps software constructs to Active Inference roles and composes those roles into a Markov blanket and A/B/C/D generative-model matrices. The canonical source is [`_rnd/ACTIVE_INFERENCE_MAPPING.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/ACTIVE_INFERENCE_MAPPING.md); the rule implementations live in `py/cogant/translate/rules/`.
+This page records the theoretical justification for how COGANT maps software constructs to Active Inference roles and composes those roles into a Markov blanket and A/B/C/D generative-model matrices. The canonical source is [`../evaluation/ACTIVE_INFERENCE_MAPPING.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md); the rule implementations live in `py/cogant/translate/rules/`.
 
 The mapping pipeline is intentionally **structural**: every role is assigned by inspecting `NodeKind`, `EdgeKind`, name keywords, and degree statistics in the program graph. No language-specific heuristics beyond keyword scanning are required, which is what lets the same engine generalize from Python to Rust, TypeScript, and Lean.
 

@@ -34,7 +34,7 @@ class ConfidenceModel:
     #          traces are noisier than static edges (-0.1 dynamic-noise
     #          discount relative to the static floor).
     #   0.9  — strong-consensus band for human-reviewed mappings.
-    # See ``_rnd/CALIBRATION.md`` for the full sweep plan.
+    # See ``docs/evaluation/CALIBRATION.md`` for the full sweep plan.
     # TODO(calibration): sweep {0.4, 0.5, 0.55, 0.6, 0.65, 0.7} over a
     # 20+ repo fixture set and pick the precision/recall sweet spot.
     STATIC_ONLY_THRESHOLD = 0.5            # principled default
@@ -289,7 +289,7 @@ class ConfidenceModel:
                 ``STATIC_PLUS_RUNTIME_THRESHOLD`` (0.65) but well below
                 ``HUMAN_REVIEWED_THRESHOLD`` (0.9). TODO(calibration):
                 tune against observed precision on the 20-repo corpus
-                (see ``_rnd/CALIBRATION.md``).
+                (see ``docs/evaluation/CALIBRATION.md``).
 
         Returns:
             Filtered list of high-confidence mappings.

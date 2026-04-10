@@ -1,10 +1,15 @@
-from _typeshed import Incomplete
-from cogant.schemas.core import EdgeKind as EdgeKind, Node as Node, NodeKind as NodeKind
-from cogant.schemas.graph import ProgramGraph as ProgramGraph
-from cogant.schemas.semantic import MappingKind as MappingKind, SemanticMapping as SemanticMapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
+
+from _typeshed import Incomplete
+
+from cogant.schemas.core import EdgeKind as EdgeKind
+from cogant.schemas.core import Node as Node
+from cogant.schemas.core import NodeKind as NodeKind
+from cogant.schemas.graph import ProgramGraph as ProgramGraph
+from cogant.schemas.semantic import MappingKind as MappingKind
+from cogant.schemas.semantic import SemanticMapping as SemanticMapping
 
 logger: Incomplete
 

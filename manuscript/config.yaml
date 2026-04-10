@@ -4,8 +4,8 @@
 paper:
   title: "COGANT: Codebase-to-GNN Translation"
   subtitle: "Theory of the Program Graph IR and Practice of the Python Pipeline"
-  version: "0.1.0"
-  date: ""
+  version: "0.5.0"
+  date: "2026-04-10"
 
 authors:
   - name: "Daniel Ari Friedman"

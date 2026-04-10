@@ -1,5 +1,6 @@
-from _typeshed import Incomplete
 from pathlib import Path
+
+from _typeshed import Incomplete
 
 logger: Incomplete
 

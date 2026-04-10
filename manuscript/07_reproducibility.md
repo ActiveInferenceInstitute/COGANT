@@ -16,7 +16,7 @@ Pipeline output typically includes JSON for intermediate IRs, **Generalized Nota
 
 ## Determinism
 
-Parsing and graph construction aim for deterministic ordering on a fixed filesystem snapshot. Features that pull in external models (for example optional name or documentation embeddings consumed by the Generalized Notation Notation exporter) introduce variability unless models and seeds are fixed; the Generalized Notation Notation export document (`../cogant/docs/GNN_EXPORT.md`) calls out embedding dimensions and optional behavior.
+Parsing and graph construction aim for deterministic ordering on a fixed filesystem snapshot. Features that pull in external models (for example optional name or documentation embeddings consumed by the Generalized Notation Notation exporter) introduce variability unless models and seeds are fixed; the Generalized Notation Notation export document (`../cogant/docs/export/README.md`) calls out embedding dimensions and optional behavior.
 
 ## Relation to the template repository
 
@@ -32,7 +32,39 @@ The pipeline enforces quality through three complementary validation checkers, e
 
 **ProvenanceChecker.** Audits the provenance chain: every assertion in the semantic mapping must trace back to at least one evidence source (SourceCode, TypeSystem, ControlFlow, Heuristic, or External). The checker flags mappings whose provenance is empty or whose confidence score is inconsistent with the declared evidence tier -- for example, a STATIC_PLUS_RUNTIME tier with no runtime trace evidence. These flags appear as warnings rather than errors, since partial provenance is expected for heuristic rules.
 
-Together, these gates ensure that exported bundles meet a minimum quality bar before reaching downstream models. Thresholds and policy defaults are configurable and documented in `../cogant/docs/VALIDATION.md`.
+Together, these gates ensure that exported bundles meet a minimum quality bar before reaching downstream models. Thresholds and policy defaults are configurable and documented in `../cogant/docs/validation/README.md`.
+
+The concrete shape of a validation report is the `ValidationReport` dataclass defined in `../cogant/py/cogant/validate/report.py`, which bundles the timestamp, the model identifier, a boolean `is_valid` flag, numerical `coverage_score` and `confidence_score` fields in $[0, 1]$, a free-form human-readable `summary` string, and a list of `ValidationIssue` records. Each `ValidationIssue` (defined in `../cogant/py/cogant/validate/schema_check.py`) carries a stable `id`, a `severity` of `error`, `warning`, or `info`, a `category` of `schema`, `integrity`, `provenance`, or `coverage`, the set of `affected_ids`, and an optional `recommendation` string. On a clean calculator run, for example, the report has the following shape:
+
+```json
+{
+  "id": "report_calculator_20260410T081234Z",
+  "schema_name": "calculator",
+  "validated_at": "2026-04-10T08:12:34Z",
+  "model_id": "model_calculator",
+  "is_valid": true,
+  "coverage_score": 1.0,
+  "confidence_score": 0.94,
+  "summary": "Validation PASS — 0 errors, 0 warnings, 12/12 nodes covered",
+  "issues": [],
+  "details": {"gnn_validator_score": 100.0, "elapsed_ms": 73}
+}
+```
+
+When one of the gates fires, the same `issues` list accumulates structured records of the form:
+
+```json
+{
+  "id": "prov_001",
+  "severity": "warning",
+  "category": "provenance",
+  "message": "Mapping 'map_42' declared STATIC_PLUS_RUNTIME but has no dynamic_trace evidence source",
+  "affected_ids": ["map_42"],
+  "recommendation": "Re-run with --coverage/--trace inputs, or downgrade the declared tier in the rule"
+}
+```
+
+Errors block export (`is_valid` flips to `false` and the pipeline refuses to write the `gnn_package/` directory); warnings are recorded in the bundle but do not block. Downstream consumers therefore only need to inspect the top-level `is_valid` flag plus any `severity == "error"` entries to decide whether a bundle is safe to ingest.
 
 ## Current runner behavior vs template checkpointing
 
@@ -42,4 +74,4 @@ If COGANT is promoted into the template project workflow under `projects/`, repo
 
 ## Data ethics and licensing
 
-Exported graphs can contain identifiers and comments from source code. Redistribution of derived graphs must respect the licenses of input repositories and organizational data policies.
+Exported graphs can contain identifiers and comments from source code. Redistribution of derived graphs must respect the licenses of input repositories and organizational data policies. For a **checklist** (version pins, lockfiles, input hashes, manifest verification) when publishing or citing a run, see [`06_05_reproducible_recording.md`](06_05_reproducible_recording.md).

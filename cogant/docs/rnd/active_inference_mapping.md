@@ -1,6 +1,6 @@
 # Active Inference Mapping (R&D)
 
-This page mirrors the internal R&D document `_rnd/ACTIVE_INFERENCE_MAPPING.md` — the long-form justification for how COGANT maps software constructs to Active Inference roles, plus the 2026-04-09 validation data and the surprising findings that informed the current rule priorities.
+This page mirrors the internal R&D document `../evaluation/ACTIVE_INFERENCE_MAPPING.md` — the long-form justification for how COGANT maps software constructs to Active Inference roles, plus the 2026-04-09 validation data and the surprising findings that informed the current rule priorities. See the **[evaluation docs index](../evaluation/README.md)** for related reports (R&D log, roundtrip studies, readiness).
 
 The curated public version lives in [Theory — Active Inference mapping](../theory/active_inference.md). This page is kept for research transparency and to record the open questions the team is still working through.
 

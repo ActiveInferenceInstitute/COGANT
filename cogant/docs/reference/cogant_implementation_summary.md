@@ -1,6 +1,6 @@
 ## COGANT Implementation Summary
 
-> Canonical docs index: [README.md](./README.md). For **what is implemented today**, prefer this file (implementation status) and the `py/cogant/` tree. This section is a component inventory and may lag minor refactors. **Related:** [Ingest and static pipeline milestone](#ingest-and-static-pipeline-milestone), [Project setup and component inventory](#project-setup-and-component-inventory), [documentation map](./README.md#documentation-map).
+> Canonical docs index: [README.md](./README.md). For **what is implemented today**, prefer this file (implementation status) and the `py/cogant/` tree. This section is a component inventory and may lag minor refactors. **Related:** [Ingest and static pipeline milestone](ingest_and_static_pipeline_milestone.md#ingest-and-static-pipeline-milestone), [Project setup and component inventory](project_setup_and_component_inventory.md#project-setup-and-component-inventory), [documentation map](./README.md#documentation-map).
 
 ### Overview
 

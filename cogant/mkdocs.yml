@@ -214,6 +214,7 @@ nav:
       - Security Release Process: security/security_release_process.md
   - Reference:
       - Overview: reference/overview.md
+      - Documentation modules: reference/documentation_modules.md
       - Core Concepts: reference/core_concepts.md
       - Schemas Reference: reference/schemas_reference.md
       - Semantic Roles: reference/semantic_roles.md
@@ -226,6 +227,12 @@ nav:
   - R&D:
       - Calibration: rnd/calibration.md
       - Active Inference Mapping: rnd/active_inference_mapping.md
+  - Evaluation:
+      - Overview: evaluation/README.md
+      - "R&D Log": "evaluation/R&D_LOG.md"
+      - Calibration notes: evaluation/CALIBRATION.md
+      - Roundtrip evaluation: evaluation/ROUNDTRIP_EVAL.md
+      - Readiness: evaluation/V1.0_READINESS.md
   - Roadmap:
       - Overview: roadmap/overview.md
       - "v0.1.0 (Current)": roadmap/version_010_current.md

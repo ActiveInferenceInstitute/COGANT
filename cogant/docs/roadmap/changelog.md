@@ -14,7 +14,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Boundary maps: `module_boundaries.mermaid`, `type_boundaries.mermaid`, `boundary_report.json` via `cogant.viz.boundary.BoundaryMapper`.
 - Self-diff artifacts: `diff_view.html`, `diff_view.json` via `cogant.viz.diff_view.DiffVisualizer`.
 - Thin orchestrated examples in `examples/thin_orchestrated/` demonstrating each stage independently (ingest, graph, translate, statespace, process, GNN export, simulation, validation).
-- Canonical technical docs consolidated under `docs/` (see [README.md](./README.md)); changelog and benchmarks live in this file ([Benchmarks and performance](#benchmarks-and-performance)).
+- Canonical technical docs consolidated under `docs/` (see [README.md](./README.md)); changelog and benchmarks live in this file ([Benchmarks and performance](cogant_benchmarks.md#cogant-benchmarks)).
 
 #### Changed
 - Terminology across all docs and source: "Graph Neural Network" replaced with "Generalized Notation Notation" everywhere, with explicit disambiguation from graph neural networks.

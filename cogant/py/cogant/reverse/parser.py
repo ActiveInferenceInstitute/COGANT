@@ -61,8 +61,8 @@ class ReverseGNNModel:
             (``int``, ``float``, ``bool``).
         A: Likelihood matrix ``P(o | s)`` of shape ``[n_obs x n_states]``.
             Populated from ``## InitialParameterization`` or from the
-            A[[rows=..][cols=..]] block if present. May be empty when
-            the model has no observations.
+            bracket-style ``A`` matrix header in the GNN file if present.
+            May be empty when the model has no observations.
         B: Transition tensor ``P(s' | s, a)`` of shape
             ``[n_states x n_states x n_actions]``. May be empty.
         C: Log-preference vector over observations of shape ``[n_obs]``.

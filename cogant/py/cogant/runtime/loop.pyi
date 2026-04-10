@@ -1,6 +1,7 @@
-from cogant.runtime.config import AgentConfig
 from dataclasses import dataclass
 from typing import Any
+
+from cogant.runtime.config import AgentConfig
 
 __all__ = ['AgentStep', 'AgentRuntime', 'EpisodeResult', 'MultiEpisodeResult', 'run_n_steps', 'run_until_convergence']
 

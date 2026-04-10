@@ -22,7 +22,7 @@ where `code'` is a new Python package with:
 - preference and prior metadata baked into module-level constants.
 
 This is the "isomorphism theorem" version of COGANT — the informal statement lives in
-[`_rnd/ISOMORPHISM_THEOREM.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/ISOMORPHISM_THEOREM.md).
+[`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md).
 
 ## Current state (v0.1.0)
 
@@ -109,8 +109,8 @@ print(plan.directory_layout())
 
 ## Roadmap to full reverse mode
 
-Tracked in [`_rnd/SCOPING_REPORT.md § reverse`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/SCOPING_REPORT.md#reverse) and
-[`_rnd/R&D_LOG.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/R&D_LOG.md):
+Tracked in [`../evaluation/SCOPING_REPORT.md § reverse`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/SCOPING_REPORT.md#reverse) and
+[`../evaluation/R&D_LOG.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/R&D_LOG.md):
 
 | Milestone | Status |
 | --- | --- |
@@ -138,5 +138,5 @@ Tracked in [`_rnd/SCOPING_REPORT.md § reverse`](https://github.com/cogant-contr
 
 - [Tutorial 7: authoring a language plugin](07_plugin_authoring.md) — the forward direction of
   the language-agnostic roadmap.
-- [`_rnd/ISOMORPHISM_THEOREM.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/ISOMORPHISM_THEOREM.md) — the informal theorem
+- [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md) — the informal theorem
   that motivates reverse mode.

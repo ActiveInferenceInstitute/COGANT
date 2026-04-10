@@ -35,7 +35,7 @@ Adjust `PipelineConfig.stages`, `skip_stages`, and `plugins` to match the langua
 
 ## Configuration files
 
-YAML configuration can drive pipeline behavior (paths, stages, plugin options). The architecture and SPEC documents describe the configuration surface; keep project-specific secrets out of version control.
+YAML configuration can drive pipeline behavior (paths, stages, plugin options). [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md) and [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md) describe the configuration surface; keep project-specific secrets out of version control.
 
 A minimal pipeline configuration looks like this:
 
@@ -70,15 +70,15 @@ Each stage key corresponds to a handler in `cogant.api.pipeline.PipelineRunner.s
 
 ## CLI
 
-Use the `cogant` CLI for scripted batch runs—see `../cogant/docs/CLI_GUIDE.md` for the command list that matches the installed version.
+Use the `cogant` CLI for scripted batch runs—see `../cogant/docs/cli/README.md` for the command list that matches the installed version.
 
 ## Export targets
 
-The primary export targets are the **Generalized Notation Notation (GNN)** canonical Markdown (`model.gnn.md`) and the equivalent companion JSON files described in `../cogant/docs/GNN_EXPORT.md`. Optional interop targets (GraphML, Parquet) support analysis in Gephi/yEd and DuckDB, and optional tensor views for PyTorch Geometric, DGL, or HDF5 can be selected when downstream graph neural network training pipelines need to consume the program graph as a relational tensor. Ensure the Python environment includes optional dependencies for these tensor exports when those code paths are used.
+The primary export targets are the **Generalized Notation Notation (GNN)** canonical Markdown (`model.gnn.md`) and the equivalent companion JSON files described in `../cogant/docs/export/README.md`. Optional interop targets (GraphML, Parquet) support analysis in Gephi/yEd and DuckDB, and optional tensor views for PyTorch Geometric, DGL, or HDF5 can be selected when downstream graph neural network training pipelines need to consume the program graph as a relational tensor. Ensure the Python environment includes optional dependencies for these tensor exports when those code paths are used.
 
 ## Python AST parser capabilities
 
-The v0.1.x front end relies on `cogant.static.parser.PythonASTParser`, which processes Python source through the standard-library `ast` module at the CPython version available in the runtime (3.9+ recommended). The parser extracts the following construct categories:
+The v0.5.x front end relies on `cogant.static.parser.PythonASTParser`, which processes Python source through the standard-library `ast` module at the CPython version available in the runtime (3.11+ required, consistent with the `requires-python = ">=3.11"` declared in `../cogant/pyproject.toml`). The parser extracts the following construct categories:
 
 - **Module-level entities**: module docstrings, `__all__` exports, top-level assignments.
 - **Functions and methods**: `def` and `async def`, including signatures with positional, keyword, variadic (`*args`, `**kwargs`), and positional-only parameters. Default values are recorded as constant expressions where statically evaluable.
@@ -111,7 +111,7 @@ Stages 4 and 5 are **partial** for many repositories: the state-space compiler r
 
 ## Performance characteristics
 
-The architecture targets the following benchmarks on a 4-core machine, as specified in `../cogant/docs/ARCHITECTURE.md`:
+The architecture targets the following benchmarks on a 4-core machine, as specified in `../cogant/docs/architecture/README.md`:
 
 | Repository size | Target wall-clock time | Memory budget |
 |----------------|----------------------|---------------|
@@ -119,15 +119,15 @@ The architecture targets the following benchmarks on a 4-core machine, as specif
 | 100K functions | < 5 min | < 2 GB |
 | 1M functions | < 1 hr | < 2 GB (streaming) |
 
-These are architecture targets, not benchmark claims from this manuscript. They assume the Python orchestration layer with Rust acceleration on critical paths (graph construction, rule matching, and Generalized Notation Notation section/tensor packing in `cogant-gnn`). In the current v0.1.x release, where Rust bindings are staged rather than fully wired, Python fallback implementations handle most graph operations.
+These are architecture targets, not benchmark claims from this manuscript. They assume the Python orchestration layer with Rust acceleration on critical paths (graph construction, rule matching, and Generalized Notation Notation section/tensor packing in `cogant-gnn`). In the current v0.5.x release, Rust acceleration is partially wired — `cogant._rust` exposes a PyO3 `connected_components` FFI for graph construction behind the `COGANT_USE_RUST` feature flag — and a pure-Python fallback handles the remaining code paths.
 
 Current `PipelineRunner` behavior is stage-sequential with per-stage error capture and continuation. It does not currently expose built-in incremental checkpoint/resume in `cogant.api.pipeline`; treat checkpointing as a potential outer-orchestration feature rather than a guaranteed package-level runtime behavior.
 
 ## Measured runs on packaged fixtures
 
-The following tables record measurements taken by running the shipped `RoundtripOrchestrator` (`../cogant/examples/orchestrate_roundtrip.py`) against every fixture distributed with the package. Three fixtures are the control-positive synthetic repositories under `../cogant/examples/control_positive/` (`calculator`, `event_pipeline`, `flask_mini`); the other three are real-world code under `../cogant/examples/real_world/` (`flask_app`, a six-module Flask service; `requests_lib`, a six-module reduction of the `requests` HTTP library; and `json_stdlib`, a four-module reduction of the CPython `json` package). Each run executes the full static pipeline (ingest, parse, symbols, imports, call graph, program graph, translation, state-space compilation, GNN package build, validation). Wall-clock times were measured on a single macOS workstation with the pure-Python fallback implementations --- Rust acceleration is not wired in v0.1.x, so these numbers correspond to the Python orchestration layer with no native crates loaded.
+The following tables record measurements taken by running the shipped `RoundtripOrchestrator` (`../cogant/examples/orchestrate_roundtrip.py`) against every fixture distributed with the package. Three fixtures are the control-positive synthetic repositories under `../cogant/examples/control_positive/` (`calculator`, `event_pipeline`, `flask_mini`); the other three are real-world code under `../cogant/examples/real_world/` (`flask_app`, a six-module Flask service; `requests_lib`, a six-module reduction of the `requests` HTTP library; and `json_stdlib`, a four-module reduction of the CPython `json` package). Each run executes the full static pipeline (ingest, parse, symbols, imports, call graph, program graph, translation, state-space compilation, GNN package build, validation). Wall-clock times were measured on a single macOS workstation with the pure-Python fallback implementations --- the v0.5.x PyO3 `connected_components` FFI is disabled for this canonical run (`COGANT_USE_RUST=0`) so that these numbers correspond to the Python orchestration layer with no native crates loaded.
 
-All numbers in Tables 4--7 are regenerated by `../_rnd/figures/generate_figures.py`, which re-runs the orchestrator over every fixture, re-reads the emitted JSON, and writes `../_rnd/figures/metrics.json` alongside the figure PNGs. Structural metrics (nodes, edges, edge-kind and node-kind breakdowns, LOC, file counts) are deterministic; rule-driven metrics (total mappings, state variables, observations, actions, transitions) vary by at most one or two units across runs because the extractor walks dictionaries whose ordering is process-local, and wall-clock times vary by a few seconds depending on whether the visualization pass rasterizes PNGs. The figures below match the canonical `metrics.json` committed under `../_rnd/figures/`.
+All numbers in Tables 4--7 are regenerated by `../cogant/evaluation/figures/generate_figures.py`, which re-runs the orchestrator over every fixture, re-reads the emitted JSON, and writes `../cogant/evaluation/figures/metrics.json` alongside the figure PNGs. Structural metrics (nodes, edges, edge-kind and node-kind breakdowns, LOC, file counts) are deterministic; rule-driven metrics (total mappings, state variables, observations, actions, transitions) vary by at most one or two units across runs because the extractor walks dictionaries whose ordering is process-local, and wall-clock times vary by a few seconds depending on whether the visualization pass rasterizes PNGs. The figures below match the canonical `metrics.json` committed under `../cogant/evaluation/figures/`.
 
 **Table 4. Repository-level pipeline metrics (canonical run, COGANT v0.1.0).**
 
@@ -185,11 +185,11 @@ Every fixture emits the same `gnn_package/` directory layout with 19 canonical f
 | `requests_lib` | 19 | 0 | 0 |
 | `json_stdlib` | 19 | 0 | 0 |
 
-These numbers were collected by the reproducible script `../_rnd/figures/generate_figures.py`, which re-runs the orchestrator over every fixture, re-reads the emitted JSON, and writes both the summary table and the figures used in this manuscript into `../_rnd/figures/` (namely `fig1_graph_sizes.png`, `fig2_node_kinds.png`, `fig3_state_space.png`, and `fig4_pipeline_latency.png`, plus the machine-readable `metrics.json`).
+These numbers were collected by the reproducible script `../cogant/evaluation/figures/generate_figures.py`, which re-runs the orchestrator over every fixture, re-reads the emitted JSON, and writes both the summary table and the figures used in this manuscript into `../cogant/evaluation/figures/` (namely `fig1_graph_sizes.png`, `fig2_node_kinds.png`, `fig3_state_space.png`, and `fig4_pipeline_latency.png`, plus the machine-readable `metrics.json`).
 
 ## Test matrix and coverage
 
-The v0.1.0 Python implementation ships a test suite of **1072 passing tests** with **56 conditional skips** for optional dependencies (Rust toolchain, `matplotlib`, `tree-sitter` language grammars, PNG rasterization). The suite executes in approximately 55 seconds on a 2024-class Apple-silicon workstation, and the overall line coverage of `py/cogant/` is **73%**, measured against the 12 367 executable statements reported by `coverage.py` on the most recent canonical run (commit `722a60a`, "feat: docstring audit, type hygiene, reverse synthesizer/idempotency complete").
+The v0.5.0 Python implementation ships a test suite of **2146 passing tests** with **11 skips** for optional dependencies (Rust toolchain, `matplotlib`, `tree-sitter` language grammars, PNG rasterization) plus 2 expected `xfail` and 1 `xpass`. The suite executes in approximately four minutes on a 2024-class Apple-silicon workstation (238 s in the canonical v0.5.0 run), and the overall line coverage of `py/cogant/` is **86.45%**, measured against the 20 307 executable statements reported by `coverage.py` on the canonical v0.5.0 run (2026-04-10).
 
 **Table 8. Python interpreter matrix.**
 
@@ -201,7 +201,7 @@ The v0.1.0 Python implementation ships a test suite of **1072 passing tests** wi
 
 All three interpreters are listed in the `classifiers` block of [`../cogant/pyproject.toml`](../cogant/pyproject.toml). The declared minimum is Python 3.11 so that the pattern-matching front end in `cogant.static.parser.PythonASTParser` can use `match`/`case` statements without a compatibility shim, and the benchmark suite recorded in `benchmarks/results/suite_20260409.md` was executed on CPython 3.12.11 under macOS arm64.
 
-Module-level coverage is concentrated in the layers that the six packaged fixtures exercise end-to-end. Table 9 records the coverage of the algorithmic core (translation, state-space compilation, Markov blanket extraction, GNN matrix construction, and the reverse synthesizer) --- the modules whose correctness is load-bearing for every claim in the manuscript. Numbers are taken from the `TOTAL`-line breakdown of the `uv run pytest --cov` run that produced the 1072/56 pass/skip summary.
+Module-level coverage is concentrated in the layers that the six packaged fixtures exercise end-to-end. Table 9 records the coverage of the algorithmic core (translation, state-space compilation, Markov blanket extraction, GNN matrix construction, and the reverse synthesizer) --- the modules whose correctness is load-bearing for every claim in the manuscript. Numbers are taken from the `TOTAL`-line breakdown of the canonical v0.5.0 `uv run pytest --cov` run (2026-04-10).
 
 **Table 9. Line coverage of load-bearing modules.**
 
@@ -224,7 +224,7 @@ The aggregate project-level coverage reported at the end of the run is **73%**; 
 
 ## Mutation testing
 
-Mutation testing was performed on the algorithmic core modules (`gnn/matrices.py`, `translate/engine.py`, `markov/blanket.py`, `statespace/compiler.py`, `static/dataflow.py`). The canonical `mutmut` 3.5.0 runner was evaluated but rejected: on COGANT's test layout `mutmut` reported every one of the 403 auto-generated mutants on `matrices.py` as "no tests" because its v3 trampoline requires tests to import the mutated module through the `mutants/<path>` shadow tree, and the project's `pytest` configuration does not. Rather than ship a "no tests" score, the mutation analysis in `_rnd/MUTATION_REPORT.md` is based on a **hand-picked set of fifteen semantic mutations** that target the algorithmic predicates, constants, and loop bounds of the above modules; each mutation was applied, the relevant `pytest` subset was rerun, and the mutation was reverted immediately. This is a more informative experiment than a green `mutmut` run because it documents exactly *which* invariants the tests enforce.
+Mutation testing was performed on the algorithmic core modules (`gnn/matrices.py`, `translate/engine.py`, `markov/blanket.py`, `statespace/compiler.py`, `static/dataflow.py`). The canonical `mutmut` 3.5.0 runner was evaluated but rejected: on COGANT's test layout `mutmut` reported every one of the 403 auto-generated mutants on `matrices.py` as "no tests" because its v3 trampoline requires tests to import the mutated module through the `mutants/<path>` shadow tree, and the project's `pytest` configuration does not. Rather than ship a "no tests" score, the mutation analysis in `../cogant/docs/evaluation/MUTATION_REPORT.md` is based on a **hand-picked set of fifteen semantic mutations** that target the algorithmic predicates, constants, and loop bounds of the above modules; each mutation was applied, the relevant `pytest` subset was rerun, and the mutation was reverted immediately. This is a more informative experiment than a green `mutmut` run because it documents exactly *which* invariants the tests enforce.
 
 **Table 10. Hand-curated mutation results on COGANT algorithmic core.**
 
@@ -237,7 +237,7 @@ Mutation testing was performed on the algorithmic core modules (`gnn/matrices.py
 | `static/dataflow.py` | 3 | 3 | 0 | 100% |
 | **Total** | **15** | **10** | **5** | **66.7%** |
 
-The five surviving mutants are documented individually in `_rnd/MUTATION_REPORT.md` §"Surviving mutants --- action required" (aversive preference path in `compute_C`, sensory↔active boundary role swap in `markov/blanket.py`, `>=`→`>` boundary flip in `_map_confidence`, `CONFIGURATION` neighbour bias in `compute_D`, and the single-pass fixpoint iteration cap). Three of the five were closed by hardening tests in the same commit: `test_C_aversive_preference_produces_negative_log_pref` kills the aversive-preference survivor, `test_boundary_with_only_outgoing_edge_is_active` / `test_boundary_with_only_incoming_edge_is_sensory` kill the Markov-blanket swap, and `test_map_confidence_exact_boundary_values` kills the `>=`→`>` family. The remaining two survivors (CONFIGURATION-bias and single-pass fixpoint) are documented follow-ups that require non-trivial fixture extensions. The measured score on the hand-picked set is therefore **10 killed / 15 total = 66.7%** before hardening, and the documented target after the follow-ups is 80% or better.
+The five surviving mutants are documented individually in `../cogant/docs/evaluation/MUTATION_REPORT.md` §"Surviving mutants --- action required" (aversive preference path in `compute_C`, sensory↔active boundary role swap in `markov/blanket.py`, `>=`→`>` boundary flip in `_map_confidence`, `CONFIGURATION` neighbour bias in `compute_D`, and the single-pass fixpoint iteration cap). Three of the five were closed by hardening tests in the same commit: `test_C_aversive_preference_produces_negative_log_pref` kills the aversive-preference survivor, `test_boundary_with_only_outgoing_edge_is_active` / `test_boundary_with_only_incoming_edge_is_sensory` kill the Markov-blanket swap, and `test_map_confidence_exact_boundary_values` kills the `>=`→`>` family. The remaining two survivors (CONFIGURATION-bias and single-pass fixpoint) are documented follow-ups that require non-trivial fixture extensions. The measured score on the hand-picked set is therefore **10 killed / 15 total = 66.7%** before hardening, and the documented target after the follow-ups is 80% or better.
 
 The modules with the strongest mutation signal are `static/dataflow.py` (3 of 3 killed --- every edge-kind string mutation is caught by the dataflow-tuple-assertion tests) and the row/column normalisation paths in `gnn/matrices.py` (4 of 5 killed --- every arithmetic mutation to `_normalize_row`, `_DEFAULT_DIRECT_MASS`, the `compute_C` sign-flip, the `compute_B` axis swap, and the `compute_A` fallback branch is killed by the `A_rows_sum_to_one`, `B_columns_sum_to_one_per_action`, and `A_concentrates_mass_on_direct_reads` tests). The modules that drag the overall score down are those whose tests assert structural invariants (disjointness, normalisation, shape) but do not pin down the *direction* or *magnitude* of individual entries.
 

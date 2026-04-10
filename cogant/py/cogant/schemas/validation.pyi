@@ -1,8 +1,11 @@
-from .base import CogantBaseModel as CogantBaseModel, StableID as StableID
-from _typeshed import Incomplete
 from datetime import datetime
 from enum import StrEnum
 from typing import Any, ClassVar, Literal
+
+from _typeshed import Incomplete
+
+from .base import CogantBaseModel as CogantBaseModel
+from .base import StableID as StableID
 
 class CheckLevel(StrEnum):
     INFO = 'info'

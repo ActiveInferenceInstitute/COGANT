@@ -1,8 +1,9 @@
 import abc
-from _typeshed import Incomplete
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
+
+from _typeshed import Incomplete
 
 logger: Incomplete
 
