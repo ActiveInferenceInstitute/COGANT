@@ -489,7 +489,14 @@ def _render_constraints_module(plan: PackagePlan) -> str:
         lines.append("")
     else:
         for i, node in enumerate(plan.constraint_checks):
-            fn_name = node.name if node.name.startswith("cnst_") else f"check_{node.name}"
+            # Always emit ``check_`` prefix so the forward pipeline's
+            # PreferenceRule (which detects "check" in the function name)
+            # counts this as a CONSTRAINT mapping. Strip any ``cnst_``
+            # prefix the planner may have added for identifier uniqueness.
+            base = node.name
+            if base.startswith("cnst_"):
+                base = base[len("cnst_"):]
+            fn_name = base if "check" in base else f"check_{base}"
             lines.append(f"def {fn_name}(state: State) -> bool:")
             lines.append(
                 f'    """Constraint {i}: assert invariant for GNN slot {node.slot}."""'
