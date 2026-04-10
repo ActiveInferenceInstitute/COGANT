@@ -182,9 +182,9 @@ class ProvenanceTracker:
         total_targets = len(self.target_to_records)
 
         # Count by type
-        by_target_type = {}
-        by_evidence_type = {}
-        by_method = {}
+        by_target_type: Dict[str, int] = {}
+        by_evidence_type: Dict[str, int] = {}
+        by_method: Dict[str, int] = {}
 
         for record in self.records.values():
             by_target_type[record.target_type] = by_target_type.get(record.target_type, 0) + 1
@@ -226,7 +226,7 @@ class ProvenanceTracker:
         Returns:
             Matching records.
         """
-        results = self.records.values()
+        results: List[ProvenanceRecord] = list(self.records.values())
 
         if target_id:
             results = [r for r in results if r.target_id == target_id]
@@ -240,7 +240,7 @@ class ProvenanceTracker:
         if min_confidence > 0.0:
             results = [r for r in results if r.confidence >= min_confidence]
 
-        return list(results)
+        return results
 
     def merge_tracker(self, other: "ProvenanceTracker") -> None:
         """

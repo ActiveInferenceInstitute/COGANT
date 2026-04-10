@@ -45,6 +45,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+from cogant.reverse.metrics import (
+    compare_graph_structure,
+    compare_matrices,
+)
 from cogant.reverse.parser import ReverseGNNModel, parse_gnn
 from cogant.reverse.planner import plan_package
 from cogant.reverse.synthesizer import synthesize_package
@@ -70,6 +74,14 @@ class RoundtripResult:
         role_match_score: Fraction of source-GNN roles that were
             recovered by the forward pipeline on the synthesized
             package. Range ``[0.0, 1.0]``.
+        matrix_score: Frobenius-based similarity of the A/B/C/D
+            matrix stacks produced by the two sides of the round-trip.
+            Range ``[0.0, 1.0]``. Defaults to ``0.0`` when matrices
+            were not available on either side of the comparison.
+        structural_score: Graph-structure similarity (node/edge role
+            multiset symmetric difference, normalized and inverted).
+            Range ``[0.0, 1.0]``. Defaults to ``0.0`` when the
+            round-trip did not expose a node/edge view.
         original_roles: Role multiset derived from the source GNN
             (``{role_name: count}``).
         synthesized_roles: Role multiset from the forward pipeline's
@@ -83,6 +95,8 @@ class RoundtripResult:
 
     is_isomorphic: bool = False
     role_match_score: float = 0.0
+    matrix_score: float = 0.0
+    structural_score: float = 0.0
     original_roles: Dict[str, int] = field(default_factory=dict)
     synthesized_roles: Dict[str, int] = field(default_factory=dict)
     shape_match: Dict[str, bool] = field(default_factory=dict)
@@ -94,6 +108,8 @@ class RoundtripResult:
         status = "ISO" if self.is_isomorphic else "DRIFT"
         return (
             f"[{status}] role_match={self.role_match_score:.2%} "
+            f"matrix={self.matrix_score:.2f} "
+            f"struct={self.structural_score:.2f} "
             f"orig={dict(self.original_roles)} "
             f"synth={dict(self.synthesized_roles)}"
         )
@@ -177,6 +193,62 @@ def _role_multiset_from_mappings(mappings: Any) -> Counter:
         name = getattr(kind, "name", None) or getattr(kind, "value", None) or str(kind)
         roles[name.upper()] += 1
     return roles
+
+
+def _model_matrices(model: ReverseGNNModel) -> Dict[str, Any]:
+    """Return the A/B/C/D matrices of a ReverseGNNModel as a metrics dict.
+
+    Only non-empty matrices are included; :func:`compare_matrices`
+    treats missing keys correctly.
+    """
+    out: Dict[str, Any] = {}
+    if getattr(model, "A", None):
+        out["A"] = model.A
+    if getattr(model, "B", None):
+        out["B"] = model.B
+    if getattr(model, "C", None):
+        out["C"] = model.C
+    if getattr(model, "D", None):
+        out["D"] = model.D
+    return out
+
+
+def _state_space_matrices(state_space: Any) -> Dict[str, Any]:
+    """Best-effort A/B/C/D extractor for a compiled StateSpaceModel.
+
+    Returns an empty dict when the compiled state-space object does
+    not expose matrix slots (the common case today) — the metrics
+    layer will then fall back to its neutral matrix score.
+    """
+    if state_space is None:
+        return {}
+    out: Dict[str, Any] = {}
+    for key in ("A", "B", "C", "D"):
+        val = getattr(state_space, key, None)
+        if val is not None:
+            out[key] = val
+    return out
+
+
+def _nodes_edges_from_mappings(mappings: Any) -> tuple[list, list]:
+    """Project a semantic-mappings dict into simple node/edge lists.
+
+    Each mapping becomes a node labelled by its ``kind``. We do not
+    currently materialise edges here — :func:`compare_graph_structure`
+    handles the edge-less case correctly.
+    """
+    nodes: list = []
+    edges: list = []
+    if mappings is None:
+        return nodes, edges
+    values = mappings.values() if isinstance(mappings, dict) else list(mappings)
+    for mapping in values:
+        kind = getattr(mapping, "kind", None)
+        if kind is None:
+            continue
+        name = getattr(kind, "name", None) or getattr(kind, "value", None) or str(kind)
+        nodes.append({"role": str(name).upper()})
+    return nodes, edges
 
 
 def _run_forward(repo_path: Path) -> Dict[str, Any]:
@@ -289,9 +361,30 @@ def verify_roundtrip(
     if model.n_actions > 0:
         shape_match["n_actions"] = synth_n_actions >= 1
 
+    # Compute auxiliary distance metrics (matrix Frobenius + graph
+    # structure) from whatever the forward pipeline exposed. These
+    # never cause the round-trip to fail — they are reported as
+    # diagnostic signal alongside the authoritative role_match_score.
+    matrix_score = compare_matrices(
+        _model_matrices(model),
+        _state_space_matrices(forward.get("state_space")),
+    )
+    # For the orig side we lack a real semantic-mapping view, so
+    # synthesise node dicts directly from the role multiset derived
+    # from the parsed GNN. The synth side uses the real mappings.
+    orig_nodes = [
+        {"role": role} for role, count in original_roles.items() for _ in range(count)
+    ]
+    synth_nodes, _synth_edges = _nodes_edges_from_mappings(forward.get("mappings"))
+    structural_score = compare_graph_structure(
+        orig_nodes, [], synth_nodes, []
+    )
+
     result = RoundtripResult(
         is_isomorphic=score >= role_threshold,
         role_match_score=score,
+        matrix_score=matrix_score,
+        structural_score=structural_score,
         original_roles=dict(original_roles),
         synthesized_roles=dict(synthesized_roles),
         shape_match=shape_match,
@@ -325,11 +418,23 @@ def verify_repo_roundtrip(
     This is the entry point used by the ``cogant roundtrip`` CLI
     subcommand. It:
 
-    1. Runs the forward pipeline on ``repo_path`` and emits a GNN.
-    2. Parses that GNN back into a ReverseGNNModel.
-    3. Synthesizes a Python package.
-    4. Runs forward again on the synthesized package.
-    5. Compares the two runs' role multisets and shapes.
+    1. Runs the forward pipeline on ``repo_path`` and emits a GNN plus
+       a **first** semantic-mappings multiset ``R1``.
+    2. Parses the emitted GNN back into a ReverseGNNModel.
+    3. Synthesizes a Python package from the plan.
+    4. Runs the forward pipeline again on the synthesized package and
+       collects a **second** semantic-mappings multiset ``R2``.
+    5. Compares ``R1`` and ``R2`` directly; the role-match score is
+       ``|R1 ∩ R2| / |R1|`` under multiset intersection.
+
+    This comparison style (forward-vs-forward) is the strictest
+    definition of round-trip isomorphism for an existing repository:
+    it asks whether the *same* pipeline sees the *same* roles in the
+    synthesized package that it saw in the original. The alternative
+    (parse the GNN, compare to forward-on-synth) is weaker because it
+    mixes two different rule systems — the parser's role derivation
+    and the forward pipeline's semantic rules — on the two sides of
+    the comparison.
 
     Args:
         repo_path: Repository to round-trip.
@@ -338,7 +443,9 @@ def verify_repo_roundtrip(
         role_threshold: Minimum role match score to accept.
 
     Returns:
-        :class:`RoundtripResult` for the round-trip.
+        :class:`RoundtripResult` with ``original_roles`` drawn from the
+        first forward pass and ``synthesized_roles`` drawn from the
+        second.
     """
     from cogant.api.session import Session
 
@@ -349,9 +456,11 @@ def verify_repo_roundtrip(
 
     gnn_dir = work_dir / "forward"
     gnn_dir.mkdir(parents=True, exist_ok=True)
+    reverse_dir = work_dir / "reverse"
+    reverse_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        # Stage 1: forward on the original repo → GNN markdown.
+        # Stage 1: forward on the original repo → GNN markdown + mappings.
         session = Session(target=str(repo_path))
         session.extract_static()
         session.build_graph()
@@ -359,25 +468,84 @@ def verify_repo_roundtrip(
         session.compile_state_space()
         bundle = session._bundle_internal()
 
+        original_mappings = bundle.artifacts.get("_semantic_mappings", {}) or {}
+        original_roles = _role_multiset_from_mappings(original_mappings)
+        original_state_space = bundle.artifacts.get("_state_space_model")
+
         from cogant.gnn.formatter import GNNMarkdownFormatter
 
         formatter = GNNMarkdownFormatter(
             program_graph=bundle.artifacts["_program_graph"],
             state_space_model=bundle.artifacts["_state_space_model"],
             process_model=bundle.artifacts["_process_model"],
-            semantic_mappings=bundle.artifacts.get("_semantic_mappings", {}),
+            semantic_mappings=original_mappings,
         )
         gnn_md = formatter.format()
         gnn_path = gnn_dir / "model.gnn.md"
         gnn_path.write_text(gnn_md, encoding="utf-8")
         logger.info("Wrote forward GNN to %s", gnn_path)
 
-        # Stage 2+3+4: reverse → synthesize → forward again via verify_roundtrip.
-        result = verify_roundtrip(
-            gnn_path,
-            tmp_dir=work_dir / "reverse",
-            role_threshold=role_threshold,
+        # Stage 2+3: parse → plan → synthesize.
+        model = parse_gnn(gnn_path)
+        plan = plan_package(model)
+        package_path = synthesize_package(plan, model, reverse_dir)
+
+        # Stage 4: forward on the synthesized package.
+        forward = _run_forward(package_path)
+        synthesized_roles = _role_multiset_from_mappings(forward.get("mappings"))
+
+        # Score: overlap / |original| under multiset intersection.
+        if sum(original_roles.values()) == 0:
+            score = 1.0
+        else:
+            overlap = sum((original_roles & synthesized_roles).values())
+            score = overlap / sum(original_roles.values())
+
+        # Shape match: compare the two state-space models directly.
+        shape_match: Dict[str, bool] = {}
+        orig_ss = original_state_space
+        new_ss = forward.get("state_space")
+        orig_n_states = len(getattr(orig_ss, "variables", {}) or {}) if orig_ss else 0
+        orig_n_obs = len(getattr(orig_ss, "observations", {}) or {}) if orig_ss else 0
+        orig_n_actions = len(getattr(orig_ss, "actions", {}) or {}) if orig_ss else 0
+        new_n_states = len(getattr(new_ss, "variables", {}) or {}) if new_ss else 0
+        new_n_obs = len(getattr(new_ss, "observations", {}) or {}) if new_ss else 0
+        new_n_actions = len(getattr(new_ss, "actions", {}) or {}) if new_ss else 0
+        if orig_n_states > 0:
+            shape_match["n_states"] = new_n_states >= 1
+        if orig_n_obs > 0:
+            shape_match["n_obs"] = new_n_obs >= 1
+        if orig_n_actions > 0:
+            shape_match["n_actions"] = new_n_actions >= 1
+
+        # Auxiliary distance metrics. The repo round-trip has access
+        # to two compiled state-space models, so we can compare their
+        # matrix slots directly when available.
+        matrix_score = compare_matrices(
+            _state_space_matrices(orig_ss),
+            _state_space_matrices(new_ss),
         )
+        orig_nodes, orig_edges = _nodes_edges_from_mappings(original_mappings)
+        synth_nodes, synth_edges = _nodes_edges_from_mappings(
+            forward.get("mappings")
+        )
+        structural_score = compare_graph_structure(
+            orig_nodes, orig_edges, synth_nodes, synth_edges
+        )
+
+        result = RoundtripResult(
+            is_isomorphic=score >= role_threshold,
+            role_match_score=score,
+            matrix_score=matrix_score,
+            structural_score=structural_score,
+            original_roles=dict(original_roles),
+            synthesized_roles=dict(synthesized_roles),
+            shape_match=shape_match,
+            package_path=package_path,
+        )
+        if forward.get("error"):
+            result.errors.append(str(forward["error"]))
+        logger.info("Repo round-trip result: %s", result.summary())
         return result
     finally:
         if using_tmp:

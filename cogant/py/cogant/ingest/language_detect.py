@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from collections import defaultdict
 
 # Add parsers to path
@@ -49,7 +49,7 @@ class LanguageDetector:
             return  # Already loaded
 
         try:
-            from python.parser import PythonLanguageParser
+            from python.parser import PythonLanguageParser  # type: ignore[import-not-found]
             cls.PARSER_CLASSES["python"] = PythonLanguageParser
         except Exception:
             pass
@@ -57,7 +57,7 @@ class LanguageDetector:
         # Prefer tree-sitter for JavaScript; fall back to the TS regex parser.
         js_loaded = False
         try:
-            from javascript.parser import JavaScriptLanguageParser
+            from javascript.parser import JavaScriptLanguageParser  # type: ignore[import-not-found]
             cls.PARSER_CLASSES["javascript"] = JavaScriptLanguageParser
             js_loaded = True
         except Exception:
@@ -66,7 +66,7 @@ class LanguageDetector:
         # Prefer tree-sitter for TypeScript when available.
         ts_loaded = False
         try:
-            from typescript.tree_sitter_parser import TypeScriptTreeSitterParser
+            from typescript.tree_sitter_parser import TypeScriptTreeSitterParser  # type: ignore[import-not-found]
             if TypeScriptTreeSitterParser is not None:
                 cls.PARSER_CLASSES["typescript"] = TypeScriptTreeSitterParser
                 ts_loaded = True
@@ -75,7 +75,7 @@ class LanguageDetector:
 
         # Regex fallback for either JS or TS that didn't get a tree-sitter plugin.
         try:
-            from typescript.parser import TypeScriptLanguageParser
+            from typescript.parser import TypeScriptLanguageParser  # type: ignore[import-not-found]
             if not ts_loaded:
                 cls.PARSER_CLASSES["typescript"] = TypeScriptLanguageParser
             if not js_loaded:
@@ -84,13 +84,13 @@ class LanguageDetector:
             pass
 
         try:
-            from rust.parser import RustLanguageParser
+            from rust.parser import RustLanguageParser  # type: ignore[import-not-found]
             cls.PARSER_CLASSES["rust"] = RustLanguageParser
         except Exception:
             pass
 
         try:
-            from go.parser import GoLanguageParser
+            from go.parser import GoLanguageParser  # type: ignore[import-not-found]
             cls.PARSER_CLASSES["go"] = GoLanguageParser
         except Exception:
             pass
@@ -124,7 +124,7 @@ class LanguageDetector:
         if isinstance(repo_path, str):
             repo_path = Path(repo_path)
 
-        language_counts = defaultdict(int)
+        language_counts: Dict[str, int] = defaultdict(int)
 
         # Iterate through all files recursively
         try:
@@ -167,7 +167,7 @@ class LanguageDetector:
             List of supported language names.
         """
         cls._lazy_load_parsers()
-        supported = []
+        supported: List[str] = []
         for lang, parser_class in cls.PARSER_CLASSES.items():
             if parser_class is not None:
                 supported.append(lang)

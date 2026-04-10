@@ -39,10 +39,10 @@ class NormalizedFact:
     language: Optional[str] = None
     """Source language."""
 
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
     """Normalized metadata."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.metadata is None:
             self.metadata = {}
 
@@ -228,7 +228,7 @@ class CanonicalNormalizer:
         if "annotations" in fact_data:
             metadata["annotations"] = fact_data["annotations"]
 
-    def normalize_batch(self, facts: List[LanguageFact]) -> List[NormalizedFact]:
+    def normalize_batch(self, facts: List[LanguageFact]) -> List[Optional[NormalizedFact]]:
         """Normalize a batch of language-specific facts.
 
         Args:

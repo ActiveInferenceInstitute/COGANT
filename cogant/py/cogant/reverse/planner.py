@@ -247,11 +247,19 @@ def plan_package(model: ReverseGNNModel) -> PackagePlan:
         plan.state_vars.append(node)
         plan.nodes.append(node)
 
-    # Observations → observe_<name> functions in observe.py
+    # Observations → get_<name> functions in observe.py.
+    #
+    # Naming rationale: the forward ObservationRule keyword match fires
+    # on ``get/read/fetch/query/display/show/status/info/list``. Prefix
+    # every synthesized observation with ``get_`` so the keyword hit is
+    # deterministic regardless of whether the edge extractor later
+    # records a READS edge for the function body. This gives the
+    # reverse → forward round-trip a strong, first-class lexical signal
+    # that cannot be lost to edge-extraction noise.
     for i, slot in enumerate(model.observations):
         human = model.human_names.get(slot, "")
         ident = _to_identifier(human, slot)
-        ident = _reserved_avoid(f"obs_{ident}" if ident == slot else ident, used_names)
+        ident = _reserved_avoid(f"get_{ident}" if ident == slot else f"get_{ident}", used_names)
         gnn_type = model.types.get(slot, "int")
         py_type = _python_type_for(gnn_type)
         card = model.cardinalities.get(slot, 0)
@@ -267,11 +275,20 @@ def plan_package(model: ReverseGNNModel) -> PackagePlan:
         plan.obs_functions.append(node)
         plan.nodes.append(node)
 
-    # Actions → act_<name> functions in act.py
+    # Actions → update_<name> functions in act.py.
+    #
+    # Naming rationale: the forward ActionRule keyword match fires on
+    # ``set/update/create/delete/send/push/execute/run/process/handle/
+    # dispatch/encode/decode/dump/load``. Prefix every synthesized action
+    # with ``update_`` so the keyword hit is deterministic regardless of
+    # whether the edge extractor records a WRITES edge for the function
+    # body. This matches the symmetry with ``get_`` on the observation
+    # side and guarantees the forward pass will classify the right
+    # number of actions on the synthesized package.
     for i, slot in enumerate(model.actions):
         human = model.human_names.get(slot, "")
         ident = _to_identifier(human, slot)
-        ident = _reserved_avoid(f"act_{ident}" if ident == slot else ident, used_names)
+        ident = _reserved_avoid(f"update_{ident}" if ident == slot else f"update_{ident}", used_names)
         gnn_type = model.types.get(slot, "int")
         py_type = _python_type_for(gnn_type)
         card = model.cardinalities.get(slot, 0)

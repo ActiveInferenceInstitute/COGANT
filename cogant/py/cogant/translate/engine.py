@@ -444,20 +444,23 @@ class TranslationEngine:
         for a_id, b_id in conflict_pairs:
             if a_id in to_remove or b_id in to_remove:
                 continue
-            a = self.mappings.get(a_id)
-            b = self.mappings.get(b_id)
-            if a is None or b is None:
+            mapping_a = self.mappings.get(a_id)
+            mapping_b = self.mappings.get(b_id)
+            if mapping_a is None or mapping_b is None:
                 continue
             pri_a = self._rule_priority.get(a_id, 0)
             pri_b = self._rule_priority.get(b_id, 0)
-            key_a = (pri_a, a.confidence_score)
-            key_b = (pri_b, b.confidence_score)
+            key_a = (pri_a, mapping_a.confidence_score)
+            key_b = (pri_b, mapping_b.confidence_score)
             if key_a >= key_b:
-                loser, winner = b, a
+                loser, winner = mapping_b, mapping_a
             else:
-                loser, winner = a, b
+                loser, winner = mapping_a, mapping_b
             to_remove.add(loser.id)
-            overlap = set(a.graph_fragment_node_ids) & set(b.graph_fragment_node_ids)
+            overlap = (
+                set(mapping_a.graph_fragment_node_ids)
+                & set(mapping_b.graph_fragment_node_ids)
+            )
             self._log_match(
                 "conflict_resolved",
                 "engine",
@@ -562,12 +565,12 @@ class TranslationEngine:
         Returns:
             Dictionary with statistics.
         """
-        by_kind = {}
+        by_kind: Dict[str, int] = {}
         for mapping in self.mappings.values():
             kind = mapping.kind.value
             by_kind[kind] = by_kind.get(kind, 0) + 1
 
-        by_tier = {}
+        by_tier: Dict[str, int] = {}
         for mapping in self.mappings.values():
             tier = mapping.confidence_tier.value
             by_tier[tier] = by_tier.get(tier, 0) + 1

@@ -208,7 +208,7 @@ class GraphQuery:
         Returns:
             Dictionary mapping node IDs to centrality scores.
         """
-        centrality = defaultdict(float)
+        centrality: Dict[str, float] = defaultdict(float)
         nodes = list(self.graph.nodes.keys())
 
         for source in nodes:
@@ -371,7 +371,7 @@ class GraphQuery:
         Returns:
             Dictionary mapping depth level to list of node IDs.
         """
-        dependencies = defaultdict(list)
+        dependencies: Dict[str, List[str]] = defaultdict(list)
         visited = {node_id}
         current_level = [node_id]
         depth = 0
@@ -386,7 +386,7 @@ class GraphQuery:
                     if neighbor.id not in visited:
                         visited.add(neighbor.id)
                         next_level.append(neighbor.id)
-                        dependencies[depth].append(neighbor.id)
+                        dependencies[str(depth)].append(neighbor.id)
 
             current_level = next_level
 

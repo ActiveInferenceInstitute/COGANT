@@ -35,7 +35,7 @@ class IdentityResolver:
     collision-resistant IDs across multiple processing runs.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the identity resolver."""
         self._id_cache: Dict[str, IdentityRecord] = {}
         self._reverse_lookup: Dict[str, str] = {}
@@ -157,7 +157,7 @@ class IdentityResolver:
         """
         return self._id_cache.get(identity_id)
 
-    def deduplicate_ids(self, identity_ids: list) -> list:
+    def deduplicate_ids(self, identity_ids: list[str]) -> list[str]:
         """Remove duplicate IDs, preserving order.
 
         Args:
@@ -166,8 +166,8 @@ class IdentityResolver:
         Returns:
             Deduplicated list maintaining first occurrence order.
         """
-        seen = set()
-        result = []
+        seen: set[str] = set()
+        result: list[str] = []
         for iid in identity_ids:
             if iid not in seen:
                 seen.add(iid)
@@ -195,7 +195,7 @@ class IdentityResolver:
         Returns:
             Dictionary with cache statistics.
         """
-        entity_types = {}
+        entity_types: Dict[str, int] = {}
         for record in self._id_cache.values():
             entity_types[record.entity_type] = entity_types.get(record.entity_type, 0) + 1
 

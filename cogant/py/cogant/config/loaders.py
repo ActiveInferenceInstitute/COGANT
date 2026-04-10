@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Union
 
 try:
-    import yaml
+    import yaml  # type: ignore[import-untyped]
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
@@ -64,7 +64,7 @@ class ConfigLoader:
                 data = yaml.safe_load(f)
                 if data is None:
                     data = {}
-                return data
+                return dict(data) if isinstance(data, dict) else {}
         except FileNotFoundError as e:
             raise ConfigLoadError(f"Configuration file not found: {path}") from e
         except yaml.YAMLError as e:
@@ -105,7 +105,8 @@ class ConfigLoader:
         """
         try:
             with open(path, 'r') as f:
-                return json.load(f)
+                loaded = json.load(f)
+                return dict(loaded) if isinstance(loaded, dict) else {}
         except FileNotFoundError as e:
             raise ConfigLoadError(f"Configuration file not found: {path}") from e
         except json.JSONDecodeError as e:

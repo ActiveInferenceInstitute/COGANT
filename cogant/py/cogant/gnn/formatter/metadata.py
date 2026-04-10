@@ -109,12 +109,12 @@ class _MetadataSectionsMixin:
         lines.append("")
 
         # Count nodes by kind
-        node_counts = defaultdict(int)
+        node_counts: Dict[str, int] = defaultdict(int)
         for node in self.graph.nodes.values():
             node_counts[node.kind.value] += 1
 
         # Count edges by kind
-        edge_counts = defaultdict(int)
+        edge_counts: Dict[str, int] = defaultdict(int)
         for edge in self.graph.edges.values():
             edge_counts[edge.kind.value] += 1
 
@@ -161,7 +161,7 @@ class _MetadataSectionsMixin:
             lines.append("")
             lines.append("| Source | Count |")
             lines.append("|----|----|")
-            source_counts = defaultdict(int)
+            source_counts: Dict[str, int] = defaultdict(int)
             for source in self.graph.metadata.evidence_sources:
                 source_counts[source] += 1
             for source in sorted(source_counts.keys()):
@@ -172,8 +172,8 @@ class _MetadataSectionsMixin:
         lines.append("### Provenance Chain for Semantic Mappings")
         lines.append("")
         if self.mappings:
-            provenance_sources = defaultdict(int)
-            provenance_confidence = defaultdict(list)
+            provenance_sources: Dict[str, int] = defaultdict(int)
+            provenance_confidence: Dict[str, List[float]] = defaultdict(list)
 
             for mapping in self.mappings.values():
                 if hasattr(mapping, 'provenance') and mapping.provenance:
@@ -216,7 +216,7 @@ class _MetadataSectionsMixin:
             lines.append("")
             lines.append("| Tier | Count |")
             lines.append("|----|----|")
-            tier_counts = defaultdict(int)
+            tier_counts: Dict[str, int] = defaultdict(int)
             for mapping in self.mappings.values():
                 if hasattr(mapping, 'confidence_tier'):
                     tier_counts[mapping.confidence_tier.value] += 1
@@ -326,7 +326,7 @@ class _MetadataSectionsMixin:
         lines.append("")
 
         # Find high-degree nodes
-        node_degrees = defaultdict(int)
+        node_degrees: Dict[str, int] = defaultdict(int)
         for edge in self.graph.edges.values():
             node_degrees[edge.source_id] += 1
             node_degrees[edge.target_id] += 1
@@ -458,20 +458,20 @@ class _MetadataSectionsMixin:
             warnings.append(f"- {actionless} actions have no effects on state variables")
 
         # Check for variables with no transitions
-        vars_with_transitions = set()
+        vars_with_transitions: Set[str] = set()
         for trans in self.state_space.transitions.values():
             if hasattr(trans, 'source_state') and trans.source_state:
-                src = trans.source_state
+                src: Any = trans.source_state
                 # source_state could be a dict or string
                 if isinstance(src, dict):
                     src = str(src.get('id', src.get('var_id', str(src))))
-                vars_with_transitions.add(src)
+                vars_with_transitions.add(str(src))
             if hasattr(trans, 'target_state') and trans.target_state:
-                tgt = trans.target_state
+                tgt: Any = trans.target_state
                 # target_state could be a dict or string
                 if isinstance(tgt, dict):
                     tgt = str(tgt.get('id', tgt.get('var_id', str(tgt))))
-                vars_with_transitions.add(tgt)
+                vars_with_transitions.add(str(tgt))
 
         static_vars = len(self.state_space.variables) - len(vars_with_transitions)
         if static_vars > 0:

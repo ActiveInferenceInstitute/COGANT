@@ -131,7 +131,7 @@ class SimulationVisualizer:
             return self._empty_svg("No trace data")
 
         # Extract beliefs
-        all_states = set()
+        all_states: set = set()
         belief_history = []
 
         for step in trace:
@@ -250,7 +250,7 @@ class SimulationVisualizer:
             return self._empty_svg("No trace data")
 
         # Count actions
-        action_counts = defaultdict(int)
+        action_counts: Dict[str, int] = defaultdict(int)
         for step in trace:
             action = step.get("action")
             if action:

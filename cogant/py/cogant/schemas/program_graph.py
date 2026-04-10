@@ -18,7 +18,7 @@ from .base import (
     LocationInfo,
     ConfidenceMetric,
 )
-from cogant.schemas.core import NodeKind, EdgeKind
+from cogant.schemas.core import NodeKind as NodeKind, EdgeKind as EdgeKind
 
 
 class Node(CogantBaseModel):

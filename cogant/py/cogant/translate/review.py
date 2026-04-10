@@ -13,7 +13,7 @@ class ReviewManager:
     all provenance and changes.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the review manager."""
         self.mappings: Dict[str, SemanticMapping] = {}
         self.review_history: List[Dict[str, Any]] = []
@@ -210,7 +210,7 @@ class ReviewManager:
 
         merged = SemanticMapping(
             id=merged_id,
-            kind=merged_definition.get("kind"),
+            kind=merged_definition.get("kind"),  # type: ignore[arg-type]
             graph_fragment_node_ids=all_node_ids,
             graph_fragment_edge_ids=all_edge_ids,
             semantic_label=merged_definition.get("label", "Merged Mapping"),
@@ -268,7 +268,7 @@ class ReviewManager:
         Returns:
             Dictionary with review statistics.
         """
-        statuses = {}
+        statuses: Dict[str, int] = {}
         for mapping in self.mappings.values():
             status = mapping.status
             statuses[status] = statuses.get(status, 0) + 1

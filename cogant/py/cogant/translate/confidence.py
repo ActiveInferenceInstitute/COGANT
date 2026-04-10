@@ -186,7 +186,7 @@ class ConfidenceModel:
         Returns:
             List of conflict penalty scores.
         """
-        penalties = []
+        penalties: List[float] = []
 
         if not mapping.provenance or len(mapping.provenance) < 2:
             return penalties

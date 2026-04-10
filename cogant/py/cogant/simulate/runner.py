@@ -416,18 +416,18 @@ class ModelRunner:
             else:
                 belief_probs.append(0.1 / max(1, len(categories) - 1))
 
-        beliefs = CategoricalDistribution(categories, belief_probs)
+        belief_dist = CategoricalDistribution(categories, belief_probs)
 
         # Compute KL divergence: KL(Q||P) where P is uniform prior
         # KL divergence is always >= 0, = 0 only when Q = P
         uniform_prior = CategoricalDistribution(categories)
-        complexity = beliefs.kl_divergence(uniform_prior)
+        complexity = belief_dist.kl_divergence(uniform_prior)
 
         # Compute expected log likelihood: E_Q[log P(o|s)]
         # Likelihood model: observation == state gives high likelihood
         accuracy = 0.0
         for var_id in categories:
-            belief_prob = beliefs.dist[var_id]
+            belief_prob = belief_dist.dist[var_id]
             if str(observation) == str(var_id):
                 likelihood_prob = 0.9  # High likelihood if match
             else:
@@ -440,7 +440,7 @@ class ModelRunner:
         # When accuracy is large (good prediction), VFE is smaller
         # When complexity is large (beliefs far from prior), VFE is larger
         vfe = complexity - accuracy
-        return vfe
+        return float(vfe)
 
     def belief_update(
         self, prior_beliefs: Dict[str, float], observation: str
@@ -723,7 +723,7 @@ class ModelRunner:
 
         # Action distribution
         lines.append("## Actions Taken")
-        action_counts = defaultdict(int)
+        action_counts: Dict[str, int] = defaultdict(int)
         for step in trace:
             action = step.get("action")
             if action:

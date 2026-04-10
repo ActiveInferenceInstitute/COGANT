@@ -1353,7 +1353,7 @@ def render_svg_file_to_png(svg_file: Path, output_png: Path, *, timeout: int = 6
 
     # 1) cairosvg
     try:
-        import cairosvg  # type: ignore
+        import cairosvg  # type: ignore[import-not-found]
 
         cairosvg.svg2png(url=str(svg_file), write_to=str(output_png), output_width=1400)
         if output_png.is_file():
@@ -1776,7 +1776,7 @@ def render_connections_matrix_png(
 
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
-        import numpy as np
+        import numpy as np  # type: ignore[import-not-found]
     except ImportError:
         return False
 
@@ -2099,11 +2099,11 @@ def render_markov_blanket_png(
         original_total = len(id_to_role)
         if original_total > cfg.max_render_nodes:
             incidence: dict[str, int] = {nid: 0 for nid in id_to_role}
-            for e in edges_in:
-                if isinstance(e, (list, tuple)) and len(e) >= 2:
-                    s, t = str(e[0]), str(e[1])
-                elif isinstance(e, dict):
-                    s, t = str(e.get("source") or ""), str(e.get("target") or "")
+            for edge_spec in edges_in:
+                if isinstance(edge_spec, (list, tuple)) and len(edge_spec) >= 2:
+                    s, t = str(edge_spec[0]), str(edge_spec[1])
+                elif isinstance(edge_spec, dict):
+                    s, t = str(edge_spec.get("source") or ""), str(edge_spec.get("target") or "")
                 else:
                     continue
                 if s in incidence:
@@ -2132,15 +2132,15 @@ def render_markov_blanket_png(
                 role=role,
                 label=_truncate(label, cfg.max_label_len),
             )
-        for e in edges_in:
-            if isinstance(e, (list, tuple)) and len(e) >= 2:
-                s, t = e[0], e[1]
-            elif isinstance(e, dict):
-                s, t = e.get("source"), e.get("target")
+        for edge_spec in edges_in:
+            if isinstance(edge_spec, (list, tuple)) and len(edge_spec) >= 2:
+                s_any, t_any = edge_spec[0], edge_spec[1]
+            elif isinstance(edge_spec, dict):
+                s_any, t_any = edge_spec.get("source"), edge_spec.get("target")
             else:
                 continue
-            if s and t and s in id_to_role and t in id_to_role:
-                g.add_edge(s, t)
+            if s_any and t_any and s_any in id_to_role and t_any in id_to_role:
+                g.add_edge(s_any, t_any)
 
         if g.number_of_nodes() == 0:
             return False
@@ -2196,7 +2196,7 @@ def render_markov_blanket_png(
             role: sum(1 for _, d in g.nodes(data=True) if d.get("role") == role)
             for role in _BLANKET_ROLE_COLOR
         }
-        stats = {k: v for k, v in counts.items() if v}
+        stats: dict[str, Any] = {k: v for k, v in counts.items() if v}
         stats["edges"] = g.number_of_edges()
         if g.number_of_nodes() < original_total:
             stats["sampled"] = f"{g.number_of_nodes()}/{original_total} nodes"

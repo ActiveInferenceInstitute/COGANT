@@ -11,7 +11,7 @@ preferences, factors, provenance, and confidence — all derived from static
 and dynamic program evidence and all traceable back to source spans.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0rc1"
 __author__ = "COGANT Contributors"
 
 # Optional Rust acceleration backend. Built from `rust/cogant-ffi` via maturin
@@ -20,11 +20,11 @@ __author__ = "COGANT Contributors"
 # installed) the flag stays False and callers fall back to the pure-Python
 # implementation.
 try:
-    from cogant import _rust  # noqa: F401
-    from cogant._rust import get_version as _rust_version
+    from cogant import _rust  # type: ignore[import-not-found]  # optional Rust extension  # noqa: F401
+    from cogant._rust import get_version as _rust_version  # type: ignore[import-not-found]
 
     _RUST_AVAILABLE = True
-    __rust_version__ = _rust_version()
+    __rust_version__: str | None = _rust_version()
 except (ImportError, ModuleNotFoundError):
     _RUST_AVAILABLE = False
     __rust_version__ = None

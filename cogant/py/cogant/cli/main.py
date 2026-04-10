@@ -32,6 +32,7 @@ from cogant.api.pipeline import PipelineRunner, PipelineConfig
 from cogant.api.bundle import Bundle
 from cogant.api.review import ReviewAPI
 from cogant.cli.doctor import doctor_command, run_doctor, render_report
+from cogant.reverse.cli import reverse_command, roundtrip_command
 
 # Setup logging
 logging.basicConfig(
@@ -1327,6 +1328,24 @@ def benchmark(
     stats_table.add_row("Max", f"{max_time:.2f}s")
 
     console.print(stats_table)
+
+
+# ---------------------------------------------------------------------------
+# Reverse synthesis subcommands
+#
+# These are registered via ``app.command`` after the reverse_command /
+# roundtrip_command callables are imported from ``cogant.reverse.cli``.
+# Keeping the implementation in ``cogant.reverse.cli`` means the reverse
+# module can be tested and imported independently of the global Typer
+# app — the registration here is purely glue.
+# ---------------------------------------------------------------------------
+
+app.command(name="reverse", help="Synthesize a Python package from a GNN markdown file.")(
+    reverse_command
+)
+app.command(name="roundtrip", help="Verify forward-reverse-forward round-trip isomorphism.")(
+    roundtrip_command
+)
 
 
 if __name__ == "__main__":

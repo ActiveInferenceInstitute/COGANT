@@ -13,6 +13,10 @@ class TestSymbolExtractor:
         """Test creating a symbol extractor instance."""
         extractor = SymbolExtractor()
         assert extractor is not None
+        # Value-check: a fresh extractor should expose a callable extract_from_file
+        # and extract_from_source API (no hidden state to inspect otherwise).
+        assert callable(getattr(extractor, "extract_from_file", None))
+        assert callable(getattr(extractor, "extract_from_source", None))
 
     def test_extract_from_simple_code(self, sample_python_code: str, temp_dir: Path):
         """Test extracting symbols from simple code."""
@@ -25,6 +29,12 @@ class TestSymbolExtractor:
 
         assert symbol_table is not None
         assert len(symbol_table.symbols) > 0
+        # sample_python_code defines classes User, Database and functions
+        # process_users, fetch_and_store. All four must appear by name.
+        names = {s.name for s in symbol_table.symbols}
+        assert {"User", "Database", "process_users", "fetch_and_store"} <= names, (
+            f"missing expected symbols from sample_python_code: got {sorted(names)}"
+        )
 
     def test_extract_classes(self, temp_dir: Path):
         """Test extracting classes."""
@@ -51,6 +61,11 @@ class Connection:
         assert symbol_table is not None
         classes = [s for s in symbol_table.symbols if s.kind == "class"]
         assert len(classes) >= 3
+        # The three classes declared in source must all be present by name.
+        class_names = {c.name for c in classes}
+        assert {"User", "Database", "Connection"} <= class_names, (
+            f"expected User/Database/Connection, got {sorted(class_names)}"
+        )
 
     def test_extract_functions(self, temp_dir: Path):
         """Test extracting functions."""
@@ -76,6 +91,10 @@ async def fetch_data():
         assert symbol_table is not None
         functions = [s for s in symbol_table.symbols if s.kind == "function"]
         assert len(functions) >= 3
+        function_names = {f.name for f in functions}
+        assert {"hello", "goodbye", "fetch_data"} <= function_names, (
+            f"expected hello/goodbye/fetch_data, got {sorted(function_names)}"
+        )
 
     def test_extract_qualified_names(self, sample_python_code: str, temp_dir: Path):
         """Test extracting qualified names for nested symbols."""
@@ -92,6 +111,15 @@ async def fetch_data():
         # Methods should have qualified names with class prefix
         for method in methods:
             assert "." in method.qualified_name
+        # Concrete: Database.__init__, .connect, .create_user, .get_user must exist.
+        qnames = {m.qualified_name for m in methods}
+        database_methods = {q for q in qnames if q.split(".")[-2:-1] == ["Database"]}
+        # Accept either "Database.connect" or "<module>.Database.connect" suffixes.
+        assert any(q.endswith("Database.connect") for q in qnames), (
+            f"expected Database.connect method; got {sorted(qnames)}"
+        )
+        assert any(q.endswith("Database.create_user") for q in qnames)
+        assert any(q.endswith("Database.get_user") for q in qnames)
 
     def test_extract_symbol_types(self, temp_dir: Path):
         """Test extracting various symbol types."""
@@ -140,6 +168,14 @@ def module_func():
         assert len(class_symbols) >= 1
         assert len(method_symbols) >= 4
         assert len(function_symbols) >= 1
+        # Concrete membership: MyClass class, __init__/method/prop/static/cls_method,
+        # and the module-level module_func.
+        assert {c.name for c in class_symbols} >= {"MyClass"}
+        method_names = {m.name for m in method_symbols}
+        assert {"__init__", "method", "prop", "static", "cls_method"} <= method_names, (
+            f"missing expected methods; got {sorted(method_names)}"
+        )
+        assert {f.name for f in function_symbols} >= {"module_func"}
 
     def test_extract_scopes(self, temp_dir: Path):
         """Test extracting symbol scopes."""
@@ -170,6 +206,12 @@ def function():
         # Should have module-scope variables
         variables = [s for s in symbol_table.symbols if s.kind == "variable"]
         assert len(variables) > 0
+        # Both the public and private module-scope vars must be captured by name.
+        variable_names = {v.name for v in variables}
+        assert "PUBLIC_VAR" in variable_names, (
+            f"expected PUBLIC_VAR in module-scope variables; got {sorted(variable_names)}"
+        )
+        assert "_PRIVATE_VAR" in variable_names
 
     def test_extract_with_decorators(self, temp_dir: Path):
         """Test extracting decorated symbols."""
@@ -201,6 +243,20 @@ class DecoratedClass:
         # Check that decorators are captured
         decorated = [s for s in symbol_table.symbols if len(s.decorators) > 0]
         assert len(decorated) > 0
+        # Concrete membership: decorated_func, DecoratedClass, and prop/static
+        # inside it must all carry at least one decorator.
+        decorated_names = {s.name for s in decorated}
+        assert "decorated_func" in decorated_names, (
+            f"expected decorated_func; got decorated={sorted(decorated_names)}"
+        )
+        assert "DecoratedClass" in decorated_names
+        # The specific decorator strings should also survive to the symbol record.
+        decorated_class = next(
+            s for s in decorated if s.name == "DecoratedClass"
+        )
+        assert any(
+            "decorator1" in d for d in decorated_class.decorators
+        ), f"DecoratedClass decorators: {decorated_class.decorators}"
 
     def test_extract_with_annotations(self, temp_dir: Path):
         """Test extracting symbols with type annotations."""
@@ -226,6 +282,11 @@ class TypedClass:
         assert symbol_table is not None
         # Should extract typed symbols
         assert len(symbol_table.symbols) > 0
+        # Concrete: the annotated function, typed class, and typed method exist.
+        names = {s.name for s in symbol_table.symbols}
+        assert {"typed_func", "TypedClass", "typed_method"} <= names, (
+            f"missing typed declarations; got {sorted(names)}"
+        )
 
     def test_extract_from_tmp_repo(self, tmp_repo: Path):
         """Test extracting from sample repository."""
@@ -237,6 +298,12 @@ class TypedClass:
 
         assert symbol_table is not None
         assert len(symbol_table.symbols) > 0
+        # The tmp_repo fixture's main.py declares User, Database, process_users,
+        # fetch_data. All four must round-trip through the extractor.
+        names = {s.name for s in symbol_table.symbols}
+        assert {"User", "Database", "process_users", "fetch_data"} <= names, (
+            f"tmp_repo main.py missing symbols; got {sorted(names)}"
+        )
 
     def test_extract_multiple_files(self, tmp_repo: Path):
         """Test extracting from multiple files."""
@@ -246,11 +313,21 @@ class TypedClass:
         main_table = extractor.extract_from_file(tmp_repo / "main.py")
         assert main_table is not None
         assert len(main_table.symbols) > 0
+        main_names = {s.name for s in main_table.symbols}
+        assert "Database" in main_names and "fetch_data" in main_names
 
         # Extract from utils.py
         utils_table = extractor.extract_from_file(tmp_repo / "utils.py")
         assert utils_table is not None
         assert len(utils_table.symbols) > 0
+        # utils.py declares format_name and validate_email (and nothing else
+        # at module level), so the extractor's output must include both.
+        utils_names = {s.name for s in utils_table.symbols}
+        assert {"format_name", "validate_email"} <= utils_names, (
+            f"utils.py missing expected helpers; got {sorted(utils_names)}"
+        )
+        # Cross-table isolation: Database belongs to main, not utils.
+        assert "Database" not in utils_names
 
     def test_symbol_has_metadata(self, temp_dir: Path):
         """Test extracted symbols have metadata."""
@@ -271,6 +348,11 @@ def my_function(x: int) -> str:
         for symbol in symbol_table.symbols:
             assert symbol.line_start > 0
             assert symbol.file_path is not None
+        # my_function must land at a real line in the source (the def is on
+        # line 2 of the triple-quoted string, accounting for the leading \n).
+        my_fn = next(s for s in symbol_table.symbols if s.name == "my_function")
+        assert my_fn.line_start >= 2
+        assert str(my_fn.file_path).endswith("metadata.py")
 
     def test_extract_from_source_string(self, temp_dir: Path):
         """Test extracting symbols from source code string."""
@@ -289,3 +371,8 @@ class TestClass:
 
         assert symbol_table is not None
         assert len(symbol_table.symbols) > 0
+        # The source literal defines exactly test_func, TestClass and test_method.
+        names = {s.name for s in symbol_table.symbols}
+        assert {"test_func", "TestClass", "test_method"} <= names, (
+            f"extract_from_source dropped declarations; got {sorted(names)}"
+        )

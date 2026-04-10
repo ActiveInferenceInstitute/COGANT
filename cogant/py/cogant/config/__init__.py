@@ -1,26 +1,49 @@
 """
 COGANT Configuration Module
 
-Comprehensive configuration system for the COGANT framework, including:
-- System-wide settings (CogantConfig)
-- Pipeline execution configuration (PipelineConfig)
-- Export/output configuration (ExportConfig)
-- Validation configuration (ValidationConfig)
-- Configuration loading from YAML/JSON
-- Sensible defaults and preset configurations
+Comprehensive configuration system for the COGANT framework.
+
+Two layers coexist here:
+
+1. **Composable per-stage pydantic configs** (preferred for new code):
+   :class:`PipelineConfig` plus its sub-configs (:class:`IngestConfig`,
+   :class:`GraphConfig`, :class:`TranslateConfig`, :class:`StatespaceConfig`,
+   :class:`GNNConfig`, :class:`ReverseConfig`). Every stage and method
+   should take one of these — no global flags, no singletons. Configs
+   are frozen; use :meth:`PipelineConfig.override` to derive variants.
+
+2. **Legacy schema configs** (still used by the defaults/loaders/presets
+   subsystem): :class:`CogantConfig`, :class:`ExportConfig`,
+   :class:`ValidationConfig`, :class:`LanguageConfig`, etc. The legacy
+   high-level pipeline schema is still available as
+   ``cogant.config.schema.PipelineConfig`` for code that needs it.
 """
 
-# Configuration schemas
+# Composable per-stage pydantic configs (primary export).
+from .gnn import GNNConfig
+from .graph import GraphConfig
+from .ingest import IngestConfig
+from .pipeline import PipelineConfig
+from .reverse import ReverseConfig
+from .statespace import StatespaceConfig
+from .translate import TranslateConfig
+
+# Legacy high-level configuration schemas.
+#
+# NOTE: the legacy ``schema.PipelineConfig`` is intentionally *not*
+# re-exported at the top level; the composable ``pipeline.PipelineConfig``
+# owns the ``cogant.config.PipelineConfig`` name. External callers that
+# want the legacy schema should import it as
+# ``from cogant.config.schema import PipelineConfig as LegacyPipelineSchema``.
 from .schema import (
     CogantBaseConfig,
     CogantConfig,
-    PipelineConfig,
     ExportConfig,
-    ValidationConfig,
-    LanguageConfig,
-    PipelineStage,
-    LogLevel,
     ExportFormat,
+    LanguageConfig,
+    LogLevel,
+    PipelineStage,
+    ValidationConfig,
     ValidationLevel,
 )
 
@@ -52,10 +75,17 @@ from .presets import (
 )
 
 __all__ = [
-    # Schemas
+    # Composable per-stage configs (new)
+    "PipelineConfig",
+    "IngestConfig",
+    "GraphConfig",
+    "TranslateConfig",
+    "StatespaceConfig",
+    "GNNConfig",
+    "ReverseConfig",
+    # Legacy schemas
     "CogantBaseConfig",
     "CogantConfig",
-    "PipelineConfig",
     "ExportConfig",
     "ValidationConfig",
     "LanguageConfig",

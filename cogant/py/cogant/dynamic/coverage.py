@@ -379,11 +379,12 @@ class CoverageIngester:
 
     def get_coverage_summary(self) -> Dict[str, Any]:
         """Get coverage summary statistics."""
-        return self.coverage_data.get("summary", {})
+        summary = self.coverage_data.get("summary", {})
+        return dict(summary) if isinstance(summary, dict) else {}
 
     def get_file_coverage(self, filepath: str) -> Optional[Dict[str, Any]]:
         """Get coverage for specific file."""
         for file_data in self.coverage_data.get("files", []):
             if file_data.get("filename") == filepath:
-                return file_data
+                return dict(file_data) if isinstance(file_data, dict) else None
         return None

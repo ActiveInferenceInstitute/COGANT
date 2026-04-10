@@ -53,6 +53,14 @@ from cogant.reverse.idempotency import (
     verify_repo_roundtrip,
     verify_roundtrip,
 )
+from cogant.reverse.metrics import (
+    DEFAULT_ISOMORPHISM_THRESHOLD,
+    IsomorphismReport,
+    compare_graph_structure,
+    compare_matrices,
+    compare_role_distributions,
+    compute_isomorphism_report,
+)
 
 __all__ = [
     "ReverseGNNModel",
@@ -65,4 +73,10 @@ __all__ = [
     "verify_roundtrip",
     "verify_repo_roundtrip",
     "ROLE_MATCH_THRESHOLD",
+    "IsomorphismReport",
+    "compare_role_distributions",
+    "compare_matrices",
+    "compare_graph_structure",
+    "compute_isomorphism_report",
+    "DEFAULT_ISOMORPHISM_THRESHOLD",
 ]

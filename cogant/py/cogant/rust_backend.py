@@ -33,19 +33,22 @@ The returned object always exposes ``add_node``, ``add_edge``, and
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
+
+if TYPE_CHECKING:
+    from cogant.schemas.core import Edge, Node
 
 try:
-    from cogant._rust import PyProgramGraph as _RustGraph
-    from cogant._rust import create_example_graph as _create_example_graph
-    from cogant._rust import get_version as _rust_version
+    from cogant._rust import PyProgramGraph as _RustGraph  # type: ignore[import-not-found]  # optional Rust extension
+    from cogant._rust import create_example_graph as _create_example_graph  # type: ignore[import-not-found]
+    from cogant._rust import get_version as _rust_version  # type: ignore[import-not-found]
 
     RUST_AVAILABLE: bool = True
     _RUST_VERSION: str | None = _rust_version()
 except (ImportError, ModuleNotFoundError):
-    _RustGraph = None
-    _create_example_graph = None
-    _rust_version = None
+    _RustGraph = None  # type: ignore[assignment,misc]
+    _create_example_graph = None  # type: ignore[assignment]
+    _rust_version = None  # type: ignore[assignment]
     RUST_AVAILABLE = False
     _RUST_VERSION = None
 
@@ -108,7 +111,7 @@ class RustProgramGraphAdapter:
         ``finalize()`` can materialise ``schemas.core.Node`` instances.
     """
 
-    def __init__(self, repo_uri: str):
+    def __init__(self, repo_uri: str) -> None:
         if not RUST_AVAILABLE or _RustGraph is None:
             raise RuntimeError(
                 "RustProgramGraphAdapter requires the Rust backend; "
@@ -118,14 +121,12 @@ class RustProgramGraphAdapter:
         # Import lazily to avoid pulling pydantic at module import time
         # when the Rust backend is not being used.
         from cogant.normalize.identities import IdentityResolver
-        from cogant.schemas.core import Node  # noqa: F401 (used in finalize)
-        from cogant.schemas.graph import GraphMetadata, ProgramGraph  # noqa: F401
 
         self.repo_uri = repo_uri
         self._identity_resolver = IdentityResolver()
         self._rust_graph = _RustGraph()
-        self._nodes: Dict[str, "Node"] = {}
-        self._edges: Dict[str, "Edge"] = {}  # type: ignore[name-defined]  # noqa: F821
+        self._nodes: dict[str, "Node"] = {}
+        self._edges: dict[str, "Edge"] = {}
         self._languages: set[str] = set()
 
     # ------------------------------------------------------------------
@@ -134,14 +135,14 @@ class RustProgramGraphAdapter:
 
     def add_node(
         self,
-        kind,
+        kind: "Any",
         name: str,
         qualified_name: str,
         path: Optional[str] = None,
         language: Optional[str] = None,
-        source_range: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-    ):
+        source_range: Optional[dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> "Node":
         """Add a node to the Rust-backed graph.
 
         Returns the created Python ``Node`` (or the existing one on duplicate
@@ -202,11 +203,11 @@ class RustProgramGraphAdapter:
         self,
         source_id: str,
         target_id: str,
-        kind,
+        kind: "Any",
         weight: float = 1.0,
-        metadata: Optional[Dict[str, Any]] = None,
-        evidence_sources: Optional[List[str]] = None,
-    ):
+        metadata: Optional[dict[str, Any]] = None,
+        evidence_sources: Optional[list[str]] = None,
+    ) -> "Edge | None":
         """Add an edge to the Rust-backed graph.
 
         Returns the created Python ``Edge`` or ``None`` if the endpoints
@@ -248,7 +249,7 @@ class RustProgramGraphAdapter:
     # finalize() — convert Rust graph back to a Python ProgramGraph.
     # ------------------------------------------------------------------
 
-    def finalize(self):
+    def finalize(self) -> "Any":
         """Materialise a ``cogant.schemas.graph.ProgramGraph`` from the
         accumulated nodes and edges.
         """
@@ -272,7 +273,7 @@ class RustProgramGraphAdapter:
     # ------------------------------------------------------------------
 
     @property
-    def graph(self):
+    def graph(self) -> "Any":
         """Return a finalized ``ProgramGraph`` view (does not mutate state)."""
         return self.finalize()
 
@@ -307,7 +308,7 @@ def _env_prefers_rust() -> Optional[bool]:
 def build_program_graph(
     repo_uri: str = "repo://unknown",
     use_rust: Optional[bool] = None,
-):
+) -> "Any":
     """Construct a ``ProgramGraphBuilder`` using the best backend available.
 
     Args:

@@ -42,7 +42,7 @@ class ParquetExporter:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        files = []
+        files: List[str] = []
 
         try:
             import pyarrow as pa
@@ -102,7 +102,7 @@ class ParquetExporter:
 
     def _prepare_nodes_data(self) -> Dict[str, List[Any]]:
         """Prepare nodes data for Parquet export."""
-        data = {
+        data: Dict[str, List[Any]] = {
             "id": [],
             "name": [],
             "kind": [],
@@ -125,7 +125,7 @@ class ParquetExporter:
 
     def _prepare_edges_data(self) -> Dict[str, List[Any]]:
         """Prepare edges data for Parquet export."""
-        data = {
+        data: Dict[str, List[Any]] = {
             "id": [],
             "source_id": [],
             "target_id": [],

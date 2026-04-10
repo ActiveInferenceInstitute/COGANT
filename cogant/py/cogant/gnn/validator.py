@@ -427,7 +427,8 @@ class GNNValidator:
 
         try:
             with open(manifest_path, "r") as f:
-                manifest = json.load(f)
+                loaded = json.load(f)
+            manifest: Dict[str, Any] = dict(loaded) if isinstance(loaded, dict) else {}
             logger.debug("  ✓ manifest.json is valid JSON")
             self.result.details["manifest"] = manifest
             return manifest

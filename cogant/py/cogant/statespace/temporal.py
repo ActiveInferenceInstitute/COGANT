@@ -221,9 +221,10 @@ class TemporalAnalyzer:
 
             if trigger_nodes or handler_nodes:
                 # Determine if async
+                _async_kind = getattr(NodeKind, "ASYNC_HANDLER", None)
                 is_async = any(nid in self.graph.nodes and
-                             self.graph.nodes[nid].kind == NodeKind.ASYNC_HANDLER
-                             for nid in handler_nodes)
+                             self.graph.nodes[nid].kind == _async_kind
+                             for nid in handler_nodes) if _async_kind is not None else False
 
                 pattern = EventPattern(
                     event_node_id=event_id,
@@ -394,8 +395,8 @@ class TemporalAnalyzer:
         entry_points = [n.id for n in self.graph.nodes.values()
                        if len(self.graph.get_edges_to(n.id)) == 0]
 
-        critical_path = []
-        visited = set()
+        critical_path: List[str] = []
+        visited: set = set()
 
         def dfs(node_id: str, path: List[str]) -> List[str]:
             """Walk outgoing edges greedily to extend the critical path."""

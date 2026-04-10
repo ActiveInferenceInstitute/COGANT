@@ -1,15 +1,8 @@
 # COGANT Literature Review
 
-This file is an annotated bibliography for COGANT (Codebase-to-GNN Translation Engine). It documents key papers across thirteen research areas that inform COGANT's design, its theoretical foundations, and its relationship to adjacent lines of work. Sections 1–9 cover the core areas identified during scoping; sections 10–13 were added in an extended search pass focused on the round-trip guarantee and its categorical semantics.
+This file is an annotated bibliography for COGANT (Codebase-to-GNN Translation Engine). It documents key papers across thirteen research areas that inform COGANT's design, its theoretical foundations, and its relationship to adjacent lines of work. Sections 1–9 cover the core areas identified during scoping; sections 10–13 were added in an extended search pass focused on the round-trip guarantee and its categorical semantics, and use a distinct format that records the original search terms alongside the references.
 
-Each entry follows the format:
-
-```
-### [SHORT_KEY] Author et al. (Year) — "Title"
-**Relevance**: Why this paper matters to COGANT.
-**Key contribution**: What technique or result is relevant.
-**Connection**: How COGANT builds on or differs from this work.
-```
+Entries in sections 1–9 follow a `[SHORT_KEY] Author (Year) — "Title"` header with three labelled fields (Relevance, Key contribution, Connection). Entries in sections 10–13 use a bold-author block with an indented citation-and-annotation bullet list. Both formats are preserved verbatim.
 
 Entries marked with "(details need verification)" have authors and approximate years that are reliable, but specific venues, page numbers, or DOIs should be checked before formal citation.
 
@@ -217,15 +210,7 @@ Entries marked with "(details need verification)" have authors and approximate y
 **Key contribution**: Seven self-contained chapters introducing poset adjunctions, databases-as-functors, profunctors, operads, topoi, and signal-flow graphs in a way accessible to non-specialists.
 **Connection**: Chapter 1 on Galois connections is the immediate mathematical home for COGANT's confidence tiers: the tier lattice and the rule-promotion order form a Galois connection with the set of extracted assertions. Chapter 3 on databases-as-functors is the template for reading COGANT's graph schema as a category.
 
-### [spivak2020poly] Spivak (2020) — "Poly: An Abundant Categorical Setting for Mode-Dependent Dynamics"
-**Relevance**: Introduces the category **Poly** of polynomial endofunctors on **Set** as a natural home for dynamical systems, with four interacting monoidal structures that give COGANT's functor pair four distinct compositional interpretations.
-**Key contribution**: Identifies coalgebras in Poly with deterministic automata, matching COGANT's finite-state-machine view of program behavior.
-**Connection**: Full context in Section 13 below; cited here as the primary categorical framework for COGANT's forward+reverse pair.
-
-### [niu2023polynomial] Niu, Spivak (2023) — "Polynomial Functors: A Mathematical Theory of Interaction"
-**Relevance**: A 372-page monograph treating polynomial endofunctors as a unified framework for interaction, dynamical systems, and database schemas.
-**Key contribution**: Chapter 4 on wiring diagrams is directly applicable to COGANT: the wiring diagram for `extract ∘ reverse` is precisely the round-trip composition whose correctness properties mirror the lens laws.
-**Connection**: Full context in Section 13 below; cited here for its categorical grounding of round-trip properties.
+*Note:* Spivak's **Poly** framework (Spivak 2020, 2022; Niu & Spivak 2023) is the deepest categorical setting for COGANT's functor pair and is catalogued in full in Section 13 below; it is not duplicated here.
 
 ### [hedges2018lenses] Hedges (2018) — "Limits of Bidirectional Model Transformations" and related lens-categorical literature (details need verification)
 **Relevance**: Connects the lens framework of Foster et al. to the categorical machinery of optics, showing that lenses are morphisms in a particular cofree-comonoid category.

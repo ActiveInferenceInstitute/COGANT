@@ -100,12 +100,16 @@ class ExecutionTrace:
 class GNNModelRunner:
     """Runs a GNN model package — executes the generative model with Active Inference."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize runner."""
-        self.package_dir = None
-        self.manifest = None
-        self.model = None
-        self.state_space = None
+        # These are populated by ``load_package`` before any of the
+        # ``run``/``_load_*`` helpers read them. Typing as non-optional
+        # silences a cascade of union-attr / operator noise without
+        # hiding a real null dereference.
+        self.package_dir: Path = Path(".")
+        self.manifest: Dict[str, Any] = {}
+        self.model: Dict[str, Any] = {}
+        self.state_space: Dict[str, Any] = {}
         self.traces: List[ExecutionTrace] = []
         self.fe_calculator: Optional[FreeEnergyCalculator] = None
         self.beliefs_history: List[Dict[str, float]] = []
@@ -314,10 +318,11 @@ class GNNModelRunner:
         if trace is None and not self.traces:
             return "# GNN Execution Report\n\nNo traces to report.\n"
 
-        traces = trace.get("traces", []) if trace else [t.to_dict() for t in self.traces]
-        stats = trace.get("statistics", {}) if trace else self._compute_statistics()
-        fe_trajectory = trace.get("free_energy_trajectory", []) if trace else self.free_energy_trajectory
-        action_dist = trace.get("action_distribution", {}) if trace else dict(self.action_counts)
+        trace_data: Dict[str, Any] = trace if trace is not None else {}
+        traces = trace_data.get("traces", []) if trace_data else [t.to_dict() for t in self.traces]
+        stats = trace_data.get("statistics", {}) if trace_data else self._compute_statistics()
+        fe_trajectory = trace_data.get("free_energy_trajectory", []) if trace_data else self.free_energy_trajectory
+        action_dist = trace_data.get("action_distribution", {}) if trace_data else dict(self.action_counts)
 
         report = "# GNN Model Execution Report (Active Inference)\n\n"
 
@@ -326,8 +331,8 @@ class GNNModelRunner:
         report += f"- **Timestamp**: {datetime.now(timezone.utc).isoformat()}\n"
         report += f"- **Package**: {self.package_dir}\n"
         report += f"- **Steps Completed**: {len(traces)}\n"
-        report += f"- **Total Reward**: {trace.get('total_reward', 0.0):.3f}\n"
-        report += f"- **Average Reward**: {trace.get('avg_reward', 0.0):.3f}\n"
+        report += f"- **Total Reward**: {trace_data.get('total_reward', 0.0):.3f}\n"
+        report += f"- **Average Reward**: {trace_data.get('avg_reward', 0.0):.3f}\n"
         report += f"- **Execution Mode**: Active Inference with Bayesian Belief Updates\n\n"
 
         # Belief evolution section
@@ -469,7 +474,7 @@ class GNNModelRunner:
                 # Pick observation based on state and variable values
                 state_sum = sum(v for v in state.values() if isinstance(v, (int, float)))
                 obs_idx = int(state_sum * len(obs_list)) % len(obs_list)
-                return obs_list[obs_idx].get("name", f"obs_{obs_idx}")
+                return str(obs_list[obs_idx].get("name", f"obs_{obs_idx}"))
         return "obs_0"
 
     def _update_beliefs(

@@ -88,9 +88,7 @@ def render_matrices_module(model: ReverseGNNModel) -> str:
     # the parser extracted. The round-trip verifier compares shapes,
     # so "something rather than nothing" is the right default.
     A = model.A if model.A else []
-    if A and len(A) != n_obs:
-        A = [row[:n_states] for row in A[:n_obs]]
-    elif not A and n_obs and n_states:
+    if not A and n_obs and n_states:
         A = [[1.0 / n_states] * n_states for _ in range(n_obs)]
 
     B = model.B if model.B else []

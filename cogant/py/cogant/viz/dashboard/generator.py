@@ -372,7 +372,7 @@ class DashboardGenerator:
             return "<p>No semantic mappings to display</p>"
 
         # Count mappings by kind
-        kind_counts = defaultdict(int)
+        kind_counts: Dict[str, int] = defaultdict(int)
         for mapping in self.semantic_mappings.values():
             kind = getattr(mapping, "kind", "unknown")
             if hasattr(kind, "value"):
@@ -889,7 +889,7 @@ class DashboardGenerator:
 """
 
         # Parse trace data
-        trace_list = self.trace_data if isinstance(self.trace_data, list) else []
+        trace_list: List[Any] = self.trace_data if isinstance(self.trace_data, list) else []
 
         # Generate free energy chart
         fe_svg = self._generate_free_energy_chart(trace_list)

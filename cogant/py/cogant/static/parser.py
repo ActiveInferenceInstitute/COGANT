@@ -175,9 +175,10 @@ class PythonASTParser:
             module.errors.append(f"Parse error: {e}")
             return module
 
-        # Extract module docstring
+        # Extract module docstring (guard against empty files like bare __init__.py)
         if (
-            isinstance(tree.body[0], ast.Expr)
+            tree.body
+            and isinstance(tree.body[0], ast.Expr)
             and isinstance(tree.body[0].value, ast.Constant)
             and isinstance(tree.body[0].value.value, str)
         ):

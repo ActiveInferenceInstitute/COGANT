@@ -13,12 +13,12 @@ except ImportError:
     # Python < 3.11: provide minimal TOML parsing
     def _parse_toml(content: str) -> Dict[str, Any]:
         """Minimal TOML parser for pyproject.toml (handles common patterns)."""
-        result = {}
+        result: Dict[str, Any] = {}
         current_section = None
-        current_dict = result
+        current_dict: Dict[str, Any] = result
 
-        for line in content.split("\n"):
-            line = line.strip()
+        for raw_line in content.split("\n"):
+            line = raw_line.strip()
             if not line or line.startswith("#"):
                 continue
 
@@ -40,32 +40,33 @@ except ImportError:
 
             # Key-value pairs
             if "=" in line:
-                key, value = line.split("=", 1)
+                key, raw_value = line.split("=", 1)
                 key = key.strip()
-                value = value.strip()
+                raw_value = raw_value.strip()
 
                 # Parse value
-                if value.startswith("["):
+                parsed_value: Any
+                if raw_value.startswith("["):
                     # Array
-                    value = value.strip("[]").split(",")
-                    value = [v.strip().strip("\"'") for v in value]
-                elif value.startswith("{"):
+                    items = raw_value.strip("[]").split(",")
+                    parsed_value = [v.strip().strip("\"'") for v in items]
+                elif raw_value.startswith("{"):
                     # Dict (simplified)
-                    pass
-                elif value.startswith('"') or value.startswith("'"):
-                    value = value.strip('"\'')
-                elif value.lower() in ("true", "false"):
-                    value = value.lower() == "true"
+                    parsed_value = raw_value
+                elif raw_value.startswith('"') or raw_value.startswith("'"):
+                    parsed_value = raw_value.strip('"\'')
+                elif raw_value.lower() in ("true", "false"):
+                    parsed_value = raw_value.lower() == "true"
                 else:
                     try:
-                        value = int(value)
+                        parsed_value = int(raw_value)
                     except ValueError:
                         try:
-                            value = float(value)
+                            parsed_value = float(raw_value)
                         except ValueError:
-                            pass
+                            parsed_value = raw_value
 
-                current_dict[key] = value
+                current_dict[key] = parsed_value
 
         return result
 

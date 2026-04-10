@@ -18,7 +18,7 @@ See :class:`cogant.gnn.formatter.base.GNNMarkdownFormatter` for the
 main entry point and :mod:`cogant.gnn.formatter` for the package.
 """
 
-from typing import Dict, List, Any, Optional, Tuple, Set
+from typing import Dict, List, Any, Optional, Tuple, Set, TYPE_CHECKING
 from datetime import datetime, timezone
 import logging
 import traceback
@@ -39,6 +39,14 @@ class _DynamicsSectionsMixin:
     state_space: StateSpaceModel
     process: ProcessModel
     mappings: Dict[str, Any]
+
+    # Helper declared on the concrete formatter (base.py). Declared
+    # here via ``TYPE_CHECKING`` so type checkers resolve it when the
+    # mixin is inspected in isolation without replacing the real
+    # implementation at runtime.
+    if TYPE_CHECKING:
+        @staticmethod
+        def _action_effects(action: Any) -> List[str]: ...
 
     def _format_transition_structure(self) -> str:
         """Format transition structure section.
@@ -83,22 +91,22 @@ class _DynamicsSectionsMixin:
             lines.append("|----|----|------|------|")
 
             # Calculate transition probabilities by counting transitions per action
-            action_to_count = defaultdict(int)
+            action_to_count: Dict[str, int] = defaultdict(int)
             for trans in self.state_space.transitions.values():
-                action = trans.action_id or "spontaneous"
-                action_to_count[action] += 1
+                action_key = trans.action_id or "spontaneous"
+                action_to_count[action_key] += 1
 
             for trans_id, trans in list(self.state_space.transitions.items())[:20]:
-                action = trans.action_id or "spontaneous"
+                action_key = trans.action_id or "spontaneous"
                 # Extract probability from transition or derive from count
                 if trans.probability is not None:
                     prob = f"{trans.probability:.2f}"
                 else:
                     # Derive from normalized action count: 1/N where N = transitions from that action
-                    action_count = action_to_count.get(action, 1)
+                    action_count = action_to_count.get(action_key, 1)
                     computed_prob = 1.0 / action_count if action_count > 0 else 1.0
                     prob = f"{computed_prob:.3f}"
-                lines.append(f"| {trans_id[:12]} | {action} | {prob} | {trans.confidence.value} |")
+                lines.append(f"| {trans_id[:12]} | {action_key} | {prob} | {trans.confidence.value} |")
             lines.append("")
 
         else:
@@ -153,7 +161,7 @@ class _DynamicsSectionsMixin:
                 lines.append("|----|----|------|")
 
                 # Group connections by source stage
-                stage_transitions = defaultdict(list)
+                stage_transitions: Dict[str, List[Any]] = defaultdict(list)
                 for conn in self.process.connections.values():
                     stage_transitions[conn.source_stage_id].append(conn)
 
@@ -368,9 +376,9 @@ class _DynamicsSectionsMixin:
         lines.append("|----|----|------|------|")
 
         # Count rules by mapping kind
-        rule_counts = defaultdict(int)
-        rule_confidence = defaultdict(list)
-        rule_status = defaultdict(int)
+        rule_counts: Dict[str, int] = defaultdict(int)
+        rule_confidence: Dict[str, List[float]] = defaultdict(list)
+        rule_status: Dict[str, int] = defaultdict(int)
 
         for mapping in self.mappings.values():
             if hasattr(mapping, 'kind'):

@@ -626,8 +626,9 @@ def parse_gnn(gnn: Union[str, Path]) -> ReverseGNNModel:
 
     # COGANT extended section with the human-readable state variable
     # table (header is ``## State Space``). This gives the planner
-    # meaningful Python identifier roots.
-    body = last("State Space")
+    # meaningful Python identifier roots. Use first() — the last
+    # ``## State Space`` occurrence may be the matrices section.
+    body = first("State Space")
     if body:
         _parse_state_variables_extended(body, model)
 

@@ -7,8 +7,8 @@ with the following layout::
     <output_dir>/
     +-- __init__.py
     +-- state.py         # State dataclass (HIDDEN_STATE fields)
-    +-- observe.py       # observe_<name> functions (OBSERVATION)
-    +-- act.py           # act_<name> functions (ACTION)
+    +-- observe.py       # get_<name> functions (OBSERVATION)
+    +-- act.py           # update_<name> functions (ACTION)
     +-- policy.py        # select_policy + policy_<name> functions
     +-- constraints.py   # check_<name> functions (CONSTRAINT)
     +-- matrices.py      # A/B/C/D runtime matrices
@@ -165,9 +165,20 @@ def _render_state_module(plan: PackagePlan) -> str:
         return "\n".join(lines)
 
     # Emit one class per hidden-state factor.
+    #
+    # Class naming strategy: we use opaque ``Factor<N>`` names rather
+    # than names derived from the human label. This is critical because
+    # COGANT's forward rules fire on substring matches in class names
+    # (e.g. a class named ``HS_authmiddleware`` matches PolicyRule's
+    # ``middleware`` keyword and gets reclassified as POLICY, which then
+    # wins conflict resolution over MutatingSubsystemRule and destroys
+    # the HIDDEN_STATE cardinality). An opaque ``Factor<N>`` prefix has
+    # no substring collision with ACTION_KEYWORDS, OBSERVATION_KEYWORDS,
+    # or the policy keyword list, so every factor keeps its HIDDEN_STATE
+    # classification through the round-trip.
     factor_class_names: List[str] = []
-    for n in plan.state_vars:
-        cls_name = "HS_" + n.name  # stable, collision-free class name
+    for i, n in enumerate(plan.state_vars):
+        cls_name = f"Factor{i}"  # opaque, keyword-collision-free
         factor_class_names.append(cls_name)
         lines.append(f"class {cls_name}:")
         lines.append(
@@ -249,18 +260,21 @@ def _render_state_module(plan: PackagePlan) -> str:
 
 
 def _render_observe_module(plan: PackagePlan) -> str:
-    """Render ``observe.py`` with one ``observe_<name>`` per observation.
+    """Render ``observe.py`` with one ``get_<name>`` per observation.
 
     Each observation function reads (but does not mutate) the State and
-    returns a value. The COGANT forward pipeline classifies functions
-    with READS-only behaviour as OBSERVATION mappings.
+    returns a value. The planner prefixes every observation with
+    ``get_`` so that the forward ``ObservationRule`` keyword match fires
+    deterministically on name alone — no dependence on whether the edge
+    extractor records a READS edge for the function body.
     """
     header = dedent(
         f'''
         """Generated observation functions for model {plan.raw_model_name!r}.
 
-        Each ``observe_*`` function is a READS-only projection of State;
-        the forward COGANT pipeline classifies these as OBSERVATION
+        Each ``get_*`` function is a READS-only projection of State; the
+        forward COGANT pipeline's ``ObservationRule`` matches the
+        ``get`` lexical prefix and classifies these as OBSERVATION
         semantic mappings.
         """
 
@@ -274,14 +288,16 @@ def _render_observe_module(plan: PackagePlan) -> str:
     if not plan.obs_functions:
         lines.append("# No observation modalities were declared in the source GNN.")
         lines.append("")
-        lines.append("def observe_noop(state: State) -> float:")
+        lines.append("def get_noop(state: State) -> float:")
         lines.append('    """Placeholder observation for GNNs without observations."""')
         lines.append("    _ = state")
         lines.append("    return 0.0")
         lines.append("")
     else:
         for i, node in enumerate(plan.obs_functions):
-            fn_name = node.name if node.name.startswith("obs_") else f"observe_{node.name}"
+            # Planner already guarantees ``get_`` prefix; fall back for
+            # any legacy plan that did not apply it.
+            fn_name = node.name if node.name.startswith("get_") else f"get_{node.name}"
             lines.append(f"def {fn_name}(state: State) -> {node.python_type}:")
             lines.append(
                 f'    """Observation {i}: reads hidden state and returns modality {node.slot}.'
@@ -316,19 +332,23 @@ def _render_observe_module(plan: PackagePlan) -> str:
 
 
 def _render_act_module(plan: PackagePlan) -> str:
-    """Render ``act.py`` with one ``act_<name>`` per action.
+    """Render ``act.py`` with one ``update_<name>`` per action.
 
     Each action function WRITES to at least one State field and returns
-    the updated State. COGANT forward classifies WRITES/MUTATES
-    patterns as ACTION mappings.
+    the updated State. The planner prefixes every action with
+    ``update_`` so the forward ``ActionRule`` keyword match fires
+    deterministically — no dependence on whether the edge extractor
+    produces a WRITES edge for the synthesized body.
     """
     header = dedent(
         f'''
         """Generated action functions for model {plan.raw_model_name!r}.
 
-        Each ``act_*`` function performs a WRITES/MUTATES-style update
-        of the State and returns the resulting value. The forward
-        COGANT pipeline classifies these as ACTION semantic mappings.
+        Each ``update_*`` function performs a WRITES/MUTATES-style
+        update of the State and returns the resulting value. The
+        forward COGANT pipeline's ``ActionRule`` matches the
+        ``update`` lexical prefix and classifies these as ACTION
+        semantic mappings.
         """
 
         from .matrices import B, transition
@@ -341,7 +361,7 @@ def _render_act_module(plan: PackagePlan) -> str:
     if not plan.action_methods:
         lines.append("# No actions were declared in the source GNN.")
         lines.append("")
-        lines.append("def act_noop(state: State) -> State:")
+        lines.append("def update_noop(state: State) -> State:")
         lines.append('    """No-op action for GNNs without explicit actions."""')
         lines.append("    return state.copy()")
         lines.append("")
@@ -350,7 +370,9 @@ def _render_act_module(plan: PackagePlan) -> str:
         first_state_var = plan.state_vars[0].name if plan.state_vars else None
 
         for i, node in enumerate(plan.action_methods):
-            fn_name = node.name if node.name.startswith("act_") else f"act_{node.name}"
+            # Planner already guarantees ``update_`` prefix; fall back
+            # for any legacy plan that did not apply it.
+            fn_name = node.name if node.name.startswith("update_") else f"update_{node.name}"
             lines.append(f"def {fn_name}(state: State) -> State:")
             lines.append(
                 f'    """Action {i}: applies transition slice {i} of the B tensor to state."""'
@@ -502,16 +524,16 @@ def _render_main_module(plan: PackagePlan) -> str:
     lines: List[str] = [header]
     if plan.obs_functions:
         fn = plan.obs_functions[0].name
-        canonical = fn if fn.startswith("obs_") else f"observe_{fn}"
+        canonical = fn if fn.startswith("get_") else f"get_{fn}"
         lines.append(f"from .observe import {canonical}")
     else:
-        lines.append("from .observe import observe_noop")
+        lines.append("from .observe import get_noop")
     if plan.action_methods:
         fn = plan.action_methods[0].name
-        canonical = fn if fn.startswith("act_") else f"act_{fn}"
+        canonical = fn if fn.startswith("update_") else f"update_{fn}"
         lines.append(f"from .act import {canonical}")
     else:
-        lines.append("from .act import act_noop")
+        lines.append("from .act import update_noop")
     lines.append("from .policy import select_policy")
     lines.append("")
     lines.append("")
@@ -519,18 +541,18 @@ def _render_main_module(plan: PackagePlan) -> str:
     lines.append('    """One inference step: observe, choose action, update state."""')
     if plan.obs_functions:
         fn = plan.obs_functions[0].name
-        canonical = fn if fn.startswith("obs_") else f"observe_{fn}"
+        canonical = fn if fn.startswith("get_") else f"get_{fn}"
         lines.append(f"    obs_value = {canonical}(state)")
         lines.append("    observations = [float(obs_value)]")
     else:
-        lines.append("    observations = [observe_noop(state)]")
+        lines.append("    observations = [get_noop(state)]")
     lines.append("    _action = select_policy(state, observations)")
     if plan.action_methods:
         fn = plan.action_methods[0].name
-        canonical = fn if fn.startswith("act_") else f"act_{fn}"
+        canonical = fn if fn.startswith("update_") else f"update_{fn}"
         lines.append(f"    return {canonical}(state)")
     else:
-        lines.append("    return act_noop(state)")
+        lines.append("    return update_noop(state)")
     lines.append("")
     lines.append("")
     lines.append("def main(num_steps: int = 10) -> State:")
