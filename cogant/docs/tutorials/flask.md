@@ -2,6 +2,12 @@
 
 A walkthrough of COGANT on the `flask_app` fixture under `examples/real_world/flask_app/`: a six-module Flask application (`__init__.py`, `app.py`, `config.py`, `models.py`, `services.py`, `utils.py`) totalling **853 lines** of Python, analyzed end-to-end by the pipeline.
 
+> **Theory background:** This walkthrough is the bigger sibling of `calculator.md` and exercises
+> the same conceptual machinery on real-world code. The role distribution table below is
+> produced by [role assignment](../concepts/role_assignment.md), the agent / non-agent split is
+> the [Markov blanket](../concepts/markov_blanket.md) over the [program graph](../concepts/program_graph.md),
+> and the exported bundle format is documented under [GNN](../concepts/gnn.md).
+
 ## Run it
 
 ```bash

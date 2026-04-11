@@ -1,6 +1,20 @@
 # Tutorial 3: Flask app walkthrough — 98 nodes, 597 edges
 
+> **What this page is:** A walkthrough of COGANT on a real-world six-module Flask application — the largest fixture you can still trace by hand.
+>
+> **Prerequisites:** [Tutorial 2: Small repo walkthrough](02_small_repo_walkthrough.md) and basic Flask familiarity.
+>
+> **Reading time:** ~25 minutes
+>
+> **Next steps:** [Tutorial 5: Reading the A/B/C/D matrices](05_gnn_interpretation.md) · [Tutorial 6: Reverse mode](06_reverse_mode.md) · [Markov blankets in codebases](../concepts/markov_blanket.md)
+
 > **Goal.** Translate a six-module real-world Flask application and read the full GNN bundle. This is the largest "hand-traceable" fixture in the repo.
+
+> **Theory background:** The role distribution you will see (HIDDEN_STATE / OBSERVATION /
+> ACTION / CONSTRAINT) comes from COGANT's [role assignment system](../concepts/role_assignment.md),
+> and the agent / non-agent split shown in the partition table is the
+> [Markov blanket](../concepts/markov_blanket.md) over the program graph. Both concept pages are
+> short reads and make the numeric tables below much easier to interpret.
 
 The `flask_app` fixture lives at `examples/real_world/flask_app/` and contains six Python
 modules totalling 853 lines: `__init__.py`, `app.py`, `config.py`, `models.py`, `services.py`,

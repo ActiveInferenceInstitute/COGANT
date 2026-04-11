@@ -2,6 +2,12 @@
 
 > **Goal.** Write a new `LanguagePlugin` that teaches COGANT to parse a language it does not currently support, using `tree-sitter` as the AST front end.
 
+> **Theory background:** A language plugin is a registered extension point in COGANT's parser
+> layer. The contract you implement is documented in the [plugin API reference](../api/plugin_api.md),
+> and the broader rule / extension model that plugins slot into is in the
+> [rules overview](../rules/overview.md). Skim both before writing your first plugin so the
+> abstract methods below have context.
+
 COGANT's parser layer is plugin-based. v0.1.0 ships plugins for Python (CPython `ast`) and
 JavaScript / TypeScript (via `tree-sitter`). Adding a new language means:
 

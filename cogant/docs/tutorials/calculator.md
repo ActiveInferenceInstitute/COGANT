@@ -2,6 +2,15 @@
 
 The `calculator` fixture under `tests/fixtures/control_positive/calculator/` is the smallest control-positive example that still exercises every layer of the pipeline: ingest, static parse, graph build, semantic translation, Markov blanket partitioning, and GNN export.
 
+> **Theory background:** The four sections below correspond directly to four COGANT concept
+> pages. Read them in this order if you are new:
+>
+> - [Program graph](../concepts/program_graph.md) — what `ingest`, `static`, and `graph` build.
+> - [Role assignment](../concepts/role_assignment.md) — how HIDDEN_STATE / OBSERVATION /
+>   ACTION / CONSTRAINT mappings are produced.
+> - [Markov blankets](../concepts/markov_blanket.md) — the agent / non-agent partition.
+> - [GNN](../concepts/gnn.md) — what the exported `gnn_package/` actually contains.
+
 ## Run it
 
 ```bash

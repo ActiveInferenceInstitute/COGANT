@@ -1,6 +1,20 @@
 # Tutorial 2: Small repo walkthrough — `event_pipeline`
 
+> **What this page is:** A guided walkthrough that translates the `event_pipeline` fixture stage by stage, connecting each rule firing back to the source line that triggered it.
+>
+> **Prerequisites:** [Tutorial 1: Quickstart](01_quickstart.md) and a brief skim of [Program graphs in COGANT](../concepts/program_graph.md).
+>
+> **Reading time:** ~20 minutes
+>
+> **Next steps:** [Tutorial 3: Flask app walkthrough](03_flask_walkthrough.md) · [Tutorial 4: Writing a custom rule](04_custom_rules.md) · [How COGANT assigns roles](../concepts/role_assignment.md)
+
 > **Goal.** Translate the `event_pipeline` control-positive fixture step by step, watch each pipeline stage, and connect each rule firing to its source code.
+
+> **Theory background:** Every stage in this tutorial operates on the COGANT
+> [program graph](../concepts/program_graph.md) — the typed node/edge structure built during the
+> `graph` stage. The Markov blanket partition shown later in the tutorial is explained in
+> [Markov blankets in COGANT](../concepts/markov_blanket.md). Read those two concept pages first
+> if any of the node-kind / edge-kind / blanket terminology feels unfamiliar.
 
 The `event_pipeline` fixture under `examples/control_positive/event_pipeline/` is a three-file
 event processing microservice with retry logic, a bus, and a handler hierarchy. It is the

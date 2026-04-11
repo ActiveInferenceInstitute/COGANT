@@ -1,6 +1,24 @@
 # Tutorial 4: Writing a custom translation rule
 
+> **What this page is:** A hands-on tutorial for authoring, registering, and testing your own `TranslationRule` against the COGANT fixpoint engine.
+>
+> **Prerequisites:** [How COGANT assigns roles](../concepts/role_assignment.md) and Tutorials [1](01_quickstart.md)–[2](02_small_repo_walkthrough.md). Comfortable writing pytest tests.
+>
+> **Reading time:** ~25 minutes
+>
+> **Next steps:** [Tutorial 7: Authoring a language plugin](07_plugin_authoring.md) · [Plugin API reference](../api/plugin_api.md) · [Translation rules reference](../reference/translation_rules.md)
+
 > **Goal.** Write and register a new `TranslationRule` that assigns an Active Inference role based on graph evidence. Ship it with tests.
+
+> **Theory background:** A "translation rule" is the unit of work that turns program-graph
+> evidence into an Active Inference role assignment. Before writing one, read:
+>
+> - [Translation rules reference](../reference/translation_rules.md) — the data model and
+>   precedence semantics the engine enforces.
+> - [Rules overview](../rules/overview.md) — the five rule families COGANT ships and where each
+>   one fits.
+> - [Custom rules guide](../rules/custom_rules.md) — registration, configuration, and packaging
+>   conventions for third-party rules.
 
 Translation rules are the pluggable units of COGANT's fixpoint engine. Each rule inspects the
 program graph and, if its pattern matches, produces one or more `SemanticMapping`s. COGANT ships

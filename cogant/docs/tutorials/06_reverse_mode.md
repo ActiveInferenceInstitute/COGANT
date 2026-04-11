@@ -1,6 +1,20 @@
 # Tutorial 6: Reverse mode — GNN to code
 
+> **What this page is:** A walkthrough of `cogant reverse` and `cogant roundtrip` — synthesizing source code back from a GNN bundle and verifying the round-trip diff.
+>
+> **Prerequisites:** [Tutorial 5: Reading the A/B/C/D matrices](05_gnn_interpretation.md) and [The forward-reverse cycle](../concepts/roundtrip.md).
+>
+> **Reading time:** ~18 minutes
+>
+> **Next steps:** [Reverse API reference](../api/reverse.md) · [Tutorial 7: Plugin authoring](07_plugin_authoring.md) · [What is a GNN?](../concepts/gnn.md)
+
 > **Status.** Reverse synthesis is fully available in v0.5.0. `cogant reverse` and `cogant roundtrip` are CLI subcommands. This tutorial walks through both the CLI and the programmatic API.
+
+> **Theory background:** "Forward → reverse → forward" is the COGANT
+> [roundtrip](../concepts/roundtrip.md) construction, and the ε isomorphism score reported by
+> `cogant roundtrip` is defined there. The synthesis API surface used in the programmatic
+> sections lives in [api/reverse.md](../api/reverse.md). Read the roundtrip page first if you
+> want the categorical / Galois framing behind the score.
 
 ## Why reverse
 

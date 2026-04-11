@@ -1,6 +1,20 @@
 # Tutorial 5: Reading the A / B / C / D matrices
 
+> **What this page is:** A guided reading of an exported GNN bundle's A/B/C/D matrices, explaining each entry in terms of the source code that produced it.
+>
+> **Prerequisites:** [What is a GNN?](../concepts/gnn.md), [Active Inference for programmers](../concepts/active_inference.md), and any earlier tutorial that produced a bundle.
+>
+> **Reading time:** ~20 minutes
+>
+> **Next steps:** [Tutorial 6: Reverse mode](06_reverse_mode.md) · [The forward-reverse cycle](../concepts/roundtrip.md) · [`cogant.gnn` API reference](../api/gnn.md)
+
 > **Goal.** Take an exported GNN bundle, open the matrices, and explain each entry in terms of the source code that produced it.
+
+> **Theory background:** The A / B / C / D matrices are the canonical building blocks of an
+> [Active Inference](../concepts/active_inference.md) generative model. The bundle they live in
+> is COGANT's [GNN package](../concepts/gnn.md). Read the Active Inference primer first if the
+> `p(o, s, a)` factorization shown in the next section is new — it makes the row/column
+> walkthroughs much easier to follow.
 
 COGANT's `gnn_package/` directory contains four probabilistic structures at the heart of an
 Active Inference generative model: **A** (likelihood), **B** (transition), **C** (log-preference),

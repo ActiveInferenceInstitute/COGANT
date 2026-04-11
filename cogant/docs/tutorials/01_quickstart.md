@@ -1,6 +1,19 @@
 # Tutorial 1: Quickstart — end-to-end in five minutes
 
+> **What this page is:** The fastest path from "nothing installed" to "first GNN bundle in hand" using the `calculator` fixture.
+>
+> **Prerequisites:** Python 3.11+ and a terminal. No prior COGANT or Active Inference background required.
+>
+> **Reading time:** ~5 minutes
+>
+> **Next steps:** [Tutorial 2: Small repo walkthrough](02_small_repo_walkthrough.md) · [Tutorial 5: Reading the A/B/C/D matrices](05_gnn_interpretation.md) · [API quick start](../api/quick_start.md)
+
 > **Goal.** Install COGANT, translate the `calculator` fixture, and read the generated GNN bundle. Five minutes, one terminal, no optional stages.
+
+> **Theory background:** This tutorial produces a [GNN (Generalized Notation Notation)](../concepts/gnn.md)
+> bundle from source code. The pipeline assigns Active Inference roles to graph nodes via the
+> [role assignment system](../concepts/role_assignment.md). If you have never seen these terms
+> before, skim those two pages first — five minutes is enough to follow this tutorial after.
 
 ## Prerequisites
 
