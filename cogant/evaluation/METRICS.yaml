@@ -3,27 +3,27 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-04-11T04:59:51.231385Z'
-generator_git_sha: f52f990f9d3f4d633ae2909a200d2ef3d0f59e14
+generated_at: '2026-04-11T13:03:42.939453Z'
+generator_git_sha: 586a2d7ad0f2d000788503b262f5bfaf09400c87
 cogant_version: 0.5.0
 package:
   name: cogant
   version: 0.5.0
   python_min: '3.10'
 testing:
-  test_count_total: 5084
-  test_count_passing: 4979
+  test_count_total: 6955
+  test_count_passing: 6884
   test_count_failing: 0
-  test_count_skipped: 103
+  test_count_skipped: 68
   test_count_xfailed: 2
   test_count_xpassed: 1
-  test_files_unit: 141
+  test_files_unit: 192
   test_files_integration: 21
   test_files_property: 2
   test_files_fuzz: 1
-  coverage_percent: 86.8
+  coverage_percent: 91.0
   mypy_strict_errors: 0
-  ruff_violations: 1
+  ruff_violations: 2
 codebase:
   python_source_files: 180
   python_loc: 56788
@@ -45,7 +45,8 @@ pipeline:
 evaluation:
   roundtrip:
     data_source: cogant/evaluation/dataset/roundtrip_results.jsonl
-    note: Pre-wave-16 benchmark; wave-16 synthesizer changes not yet re-benchmarked
+    note: Post-wave-16 benchmark (wave-16 CONSTRAINT/POLICY/CONTEXT synthesizer fixes;
+      re-run 2026-04-10). 23/23 ISOMORPHIC.
     threshold_isomorphic: 0.8
     threshold_approximate: 0.5
     total_targets: 23
