@@ -5,7 +5,6 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-
 __all__ = ["MappingKind", "ConfidenceTier", "ProvenanceRecord", "SemanticMapping"]
 
 
