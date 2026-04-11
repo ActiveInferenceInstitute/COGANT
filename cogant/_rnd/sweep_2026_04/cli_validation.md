@@ -63,6 +63,10 @@ Subcommands that **do not exist** despite occasional doc mentions:
 | `docs/tutorials/02_small_repo_walkthrough.md:157` | `cogant viz output/event_pipeline --diagram blanket --output …/diagrams/` | `cogant viz output/event_pipeline` |
 | `docs/tutorials/05_gnn_interpretation.md:190` | `cogant viz output/<project> --diagram graph` | `cogant viz output/<project>` (with corrected description) |
 | `docs/cli/commands.md:89` | `cogant translate ./my_repo --output output/ --skip ingest,export` | `cogant translate ./my_repo --output output/ --skip dynamic,export` |
+| `docs/learning-paths/new-user.md:23` | `Verify with \`cogant --version\`` | `Verify with \`cogant doctor\`` (the Typer app exposes only `--help`, `--install-completion`, `--show-completion`; there is no `--version` flag) |
+| `docs/concepts/roundtrip.md:152` | `Running \`cogant forward\` on this synthesized code` | `Running \`cogant translate\` on this synthesized code` (forward pass IS `cogant translate`; no `forward` subcommand exists) |
+| `docs/playground.html:389` (JS comment) | `\`cogant analyze\` → graph.json + .gnn` | `\`cogant translate\` → bundle.json + gnn_package/` |
+| `docs/playground.html:791` (UI alert string) | `Run \`cogant analyze <path>\` locally for live parsing` | `Run \`cogant translate <path>\` locally for live parsing` |
 
 ## Drift NOT fixed (out of scope or low risk)
 
@@ -80,10 +84,9 @@ Subcommands that **do not exist** despite occasional doc mentions:
   left alone.
 * **`docs/api/installation.md`** mentions `py/requirements.txt` and `py/cogant/`
   — verified `py/cogant/` directory still exists. OK.
-* **`docs/concepts/roundtrip.md:139`** mentions a `cogant forward` command that
-  doesn't exist. Prose only ("Running `cogant forward` on this synthesized
-  code…"), not a runnable example. Left as is (prose, not a CLI invocation
-  block).
+* **`docs/tutorials/06_reverse_mode.md:21`** uses the phrase "A cogant forward run"
+  in descriptive prose (no backticks, no command). This is an English description
+  of the forward translation pipeline, not a CLI invocation. Left as prose.
 
 ## Code Bugs Surfaced (filed for follow-up — not fixed by this agent)
 
@@ -103,6 +106,9 @@ Subcommands that **do not exist** despite occasional doc mentions:
 
 ## Files Touched by This Agent
 
+First pass (also produced in parallel by sibling agents and already in HEAD via
+commits 2e2b095 and earlier):
+
 ```
 CHANGELOG.md
 docs/changelog.md
@@ -114,6 +120,15 @@ docs/guides/getting_started.md
 docs/tutorials/02_small_repo_walkthrough.md
 docs/tutorials/05_gnn_interpretation.md
 _rnd/sweep_2026_04/cli_validation.md  (this file)
+```
+
+Second pass (additional drift discovered, committed by this agent):
+
+```
+docs/concepts/roundtrip.md
+docs/learning-paths/new-user.md
+docs/playground.html
+_rnd/sweep_2026_04/cli_validation.md  (extended)
 ```
 
 No `manuscript/` files were modified.

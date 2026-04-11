@@ -20,7 +20,7 @@ Estimated reading time: ~45 minutes. Estimated hands-on time: ~30 minutes.
    any.
 
 3. **[Installation](../getting-started/installation.md)** — Install the package
-   (uv-managed, Python 3.11+). Verify with `cogant --version`. Roughly five
+   (uv-managed, Python 3.11+). Verify with `cogant doctor`. Roughly five
    minutes if your environment is already set up.
 
 4. **[Quick Start Tutorial](../tutorials/01_quickstart.md)** — Your first

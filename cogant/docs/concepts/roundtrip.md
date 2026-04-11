@@ -148,7 +148,7 @@ class CalculatorModel:
         self.display = self.display          # B matrix placeholder
 ```
 
-Running `cogant forward` on this synthesized code produces a GNN with the same `StateSpaceBlock` dimensions, the same A matrix non-zero pattern, and the same blanket partition -- confirming epsilon is near zero for this fixture.
+Running `cogant translate` on this synthesized code produces a GNN with the same `StateSpaceBlock` dimensions, the same A matrix non-zero pattern, and the same blanket partition -- confirming epsilon is near zero for this fixture.
 
 ## Current limitations
 

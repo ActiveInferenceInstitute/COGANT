@@ -386,7 +386,7 @@
 
   // ---------------------------------------------------------------------------
   // Pre-computed fixtures. Each fixture mirrors the JSON emitted by the full
-  // COGANT pipeline (`cogant analyze` → graph.json + .gnn). Confidences are
+  // COGANT pipeline (`cogant translate` → bundle.json + gnn_package/). Confidences are
   // representative values from calibration runs and are NOT live-computed here.
   // ---------------------------------------------------------------------------
   const FIXTURES = {
@@ -788,7 +788,7 @@ observe_backlog=ObservationEmission
       "Full analysis requires the COGANT Python package — " +
       "install with: pip install cogant\n\n" +
       "The in-browser playground shows pre-computed fixture outputs. " +
-      "Run `cogant analyze <path>` locally for live parsing, role inference, " +
+      "Run `cogant translate <path>` locally for live parsing, role inference, " +
       "and GNN generation on your own code."
     );
   });
