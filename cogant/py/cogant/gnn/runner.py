@@ -19,7 +19,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["ExecutionTrace", "GNNModelRunner"]
+__all__ = ["ExecutionTrace", "GNNModelRunner", "load_gnn_package"]
 
 # Import Active Inference components
 try:
@@ -795,3 +795,11 @@ class GNNModelRunner:
             assessment += "\n**Overall**: Model needs refinement for better Active Inference dynamics.\n"
 
         return assessment
+
+
+# Module-level convenience alias — mirrors :meth:`GNNModelRunner.load_package`
+# as a free function so tutorials and doctests can call
+# ``load_gnn_package(package_dir)`` without first instantiating a runner.
+# Bound to a module-scoped runner so repeated calls share state the way a
+# normal ``GNNModelRunner()`` would after one ``load_package`` call.
+load_gnn_package = GNNModelRunner().load_package
