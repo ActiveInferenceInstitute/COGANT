@@ -24,3 +24,13 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
         args: [--maxkb=1024]
+
+  - repo: local
+    hooks:
+      - id: metrics-freshness
+        name: METRICS.yaml freshness
+        entry: uv run python ../tools/check_metrics_fresh.py
+        language: system
+        pass_filenames: false
+        always_run: false
+        files: ^evaluation/METRICS\.yaml$
