@@ -57,11 +57,20 @@ extra_javascript:
 nav:
   - Home: index.md
   - Getting Started:
+      - Section Index: getting-started/README.md
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
+  - Learning Paths:
+      - New User: learning-paths/new-user.md
+      - API Consumer: learning-paths/api-consumer.md
+      - Theory Reader: learning-paths/theory-reader.md
+      - Plugin Author: learning-paths/plugin-author.md
+      - Contributor: learning-paths/contributor.md
   - Guides:
+      - Section Index: guides/README.md
       - Getting Started (End-to-End): guides/getting_started.md
   - Concepts:
+      - Section Index: concepts/README.md
       - What is a GNN?: concepts/gnn.md
       - Active Inference for Programmers: concepts/active_inference.md
       - Markov Blankets in Codebases: concepts/markov_blanket.md
@@ -69,6 +78,7 @@ nav:
       - The Forward-Reverse Cycle: concepts/roundtrip.md
       - Program Graphs: concepts/program_graph.md
   - Tutorials:
+      - Section Index: tutorials/README.md
       - Quick Start Tutorial: tutorials/01_quickstart.md
       - Small Repo Walkthrough: tutorials/02_small_repo_walkthrough.md
       - Flask App Walkthrough: tutorials/03_flask_walkthrough.md
@@ -100,9 +110,27 @@ nav:
       - Role Filter: cookbook/18_role_filter.md
       - Extend Rules: cookbook/19_extend_rules.md
       - Dataset: cookbook/20_dataset.md
-  - CLI Reference: cli_reference.md
+  - CLI Reference:
+      - Single-Page CLI Reference: cli_reference.md
+      - Section Index: cli/README.md
+      - Overview: cli/overview.md
+      - Installation: cli/installation.md
+      - Quick Start: cli/quick_start.md
+      - Commands: cli/commands.md
+      - Command Index: cli/command_index.md
+      - Usage Examples: cli/usage_examples.md
+      - Configuration File: cli/configuration_file.md
+      - Environment Variables: cli/environment_variables.md
+      - Output Files: cli/output_files.md
+      - API Reference: cli/api_reference.md
+      - Troubleshooting: cli/troubleshooting.md
+      - Support: cli/support.md
+      - See Also: cli/see_also.md
   - API Reference:
+      - Section Index: api/README.md
       - Overview: api/overview.md
+      - Installation: api/installation.md
+      - Quick Start: api/quick_start.md
       - cogant.translate: api/translate.md
       - cogant.reverse: api/reverse.md
       - cogant.runtime: api/runtime.md
@@ -128,6 +156,7 @@ nav:
       - Debugging: api/debugging.md
       - Performance Tips: api/performance_tips.md
       - Complete Example: api/complete_example.md
+      - See Also: api/see_also.md
   - Architecture:
       - Overview: architecture/overview.md
       - System Overview: architecture/system_overview.md
@@ -158,7 +187,9 @@ nav:
       - Isomorphism Theorem: theory/isomorphism.md
       - Contributing Notes: theory/AGENTS.md
   - Plugins:
+      - Section Index: plugins/README.md
       - Overview: plugins/overview.md
+      - Plugin Taxonomy & Abstract Bases: plugins/plugin_taxonomy_abstract_bases.md
       - Language Parser: plugins/language_parser_plugin.md
       - Translation Rule: plugins/translation_rule_plugin.md
       - Exporter: plugins/exporter_plugin.md
@@ -168,7 +199,9 @@ nav:
       - Plugin Publishing: plugins/plugin_publishing.md
       - Development Tips: plugins/plugin_development_tips.md
       - Best Practices: plugins/best_practices.md
+      - See Also: plugins/see_also.md
   - Export:
+      - Section Index: export/README.md
       - Overview: export/overview.md
       - JSON Format: export/json_export_format.md
       - PyTorch Geometric: export/pytorch_geometric_export.md
@@ -179,7 +212,9 @@ nav:
       - Artifact Ownership: export/artifact_ownership.md
       - Reproducibility: export/reproducibility.md
       - Validation: export/validation.md
+      - See Also: export/see_also.md
   - Validation:
+      - Section Index: validation/README.md
       - Overview: validation/overview.md
       - Validation Stages: validation/validation_stages.md
       - Validation via CLI: validation/validation_via_cli.md
@@ -189,7 +224,12 @@ nav:
       - Custom Validators: validation/custom_validators.md
       - Audit Trail: validation/audit_trail.md
       - Validation Report: validation/validation_report.md
+      - Verification & Test Posture: validation/verification_and_test_posture.md
+      - Implementation Verification Report: validation/cogant_implementation_verification_report.md
+      - Archival Note: validation/archival_note.md
+      - See Also: validation/see_also.md
   - Rules:
+      - Section Index: rules/README.md
       - Overview: rules/overview.md
       - Core Rules Summary: rules/core_rules_summary.md
       - Custom Rules: rules/custom_rules.md
@@ -202,7 +242,9 @@ nav:
       - Debugging: rules/debugging.md
       - Performance: rules/performance.md
       - Testing Rules: rules/testing_rules.md
+      - See Also: rules/see_also.md
   - Security:
+      - Section Index: security/README.md
       - Overview: security/overview.md
       - Threat Model: security/threat_model.md
       - Security Controls: security/security_controls.md
@@ -214,11 +256,24 @@ nav:
       - Compliance: security/compliance.md
       - Responsible Disclosure: security/responsible_disclosure.md
       - Security Release Process: security/security_release_process.md
+      - Future Improvements: security/future_improvements.md
+      - Python Package Audit — Module Exports: security/python_package_audit_module_exports.md
+      - Security Documentation: security/security_documentation.md
+      - References: security/references.md
+      - See Also: security/see_also.md
   - Reference:
+      - Section Index: reference/README.md
       - Overview: reference/overview.md
+      - Introduction: reference/introduction.md
+      - Table of Contents: reference/table_of_contents.md
       - Documentation modules: reference/documentation_modules.md
       - Core Concepts: reference/core_concepts.md
+      - Architecture Overview: reference/architecture_overview.md
+      - API Overview: reference/api_overview.md
+      - Python API Usage: reference/python_api_usage.md
+      - CLI Usage: reference/cli_usage.md
       - Schemas Reference: reference/schemas_reference.md
+      - Schemas Reference (legacy): reference/cogant_schemas_reference.md
       - Semantic Roles: reference/semantic_roles.md
       - Translation Rules: reference/translation_rules.md
       - Configuration: reference/configuration.md
@@ -226,16 +281,61 @@ nav:
       - Pipeline Stages: reference/pipeline_stages.md
       - Glossary: reference/glossary.md
       - Examples: reference/examples.md
+      - References (Bibliography): reference/references.md
+      - File & Module Inventory: reference/file_and_module_inventory.md
+      - Implementation Status: reference/implementation_status.md
+      - Implementation Summary: reference/cogant_implementation_summary.md
+      - Implementation — Complete Project Setup: reference/cogant_implementation_complete_project_setup.md
+      - Ingest & Static Pipeline — Implementation Summary: reference/cogant_ingest_and_static_analysis_pipeline_implementation_summary.md
+      - Ingest & Static Pipeline — Milestone: reference/ingest_and_static_pipeline_milestone.md
+      - How-To — Initialize a Project: reference/initialize_a_project.md
+      - How-To — Install Dependencies: reference/install_dependencies.md
+      - How-To — Install Package (Dev Mode): reference/install_package_in_development_mode.md
+      - How-To — Installation: reference/installation.md
+      - How-To — Navigate to Python Package Directory: reference/navigate_to_python_package_directory.md
+      - How-To — Project Setup & Component Inventory: reference/project_setup_and_component_inventory.md
+      - How-To — Method 1 (Simple Session): reference/method_1_simple_session.md
+      - How-To — Method 2 (Orchestrated Pipeline): reference/method_2_orchestrated_pipeline.md
+      - How-To — Scan a Repository: reference/scan_a_repository.md
+      - How-To — Run Full Analysis: reference/run_full_analysis.md
+      - How-To — Compare Two Analyses: reference/compare_two_analyses.md
+      - How-To — Access Results: reference/access_results.md
+      - How-To — Validate Results: reference/validate_results.md
+      - How-To — Render Site: reference/render_site.md
+      - How-To — Render Interactive HTML Site: reference/render_interactive_html_site.md
+      - Next Steps: reference/next_steps.md
   - R&D:
+      - Section Index: rnd/README.md
       - Calibration: rnd/calibration.md
       - Active Inference Mapping: rnd/active_inference_mapping.md
   - Evaluation:
       - Overview: evaluation/README.md
       - "R&D Log": "evaluation/R&D_LOG.md"
-      - Calibration notes: evaluation/CALIBRATION.md
-      - Roundtrip evaluation: evaluation/ROUNDTRIP_EVAL.md
+      - Final Report: evaluation/FINAL_REPORT.md
       - Readiness: evaluation/V1.0_READINESS.md
+      - Calibration notes: evaluation/CALIBRATION.md
+      - Empirical Claim: evaluation/EMPIRICAL_CLAIM.md
+      - First Inference: evaluation/FIRST_INFERENCE.md
+      - Active Inference Mapping: evaluation/ACTIVE_INFERENCE_MAPPING.md
+      - Isomorphism Theorem: evaluation/ISOMORPHISM_THEOREM.md
+      - Constraint Fix: evaluation/CONSTRAINT_FIX.md
+      - Roundtrip evaluation: evaluation/ROUNDTRIP_EVAL.md
+      - Roundtrip Validation: evaluation/ROUNDTRIP_VALIDATION.md
+      - Roundtrip Improvement: evaluation/ROUNDTRIP_IMPROVEMENT.md
+      - Cross-Language Roundtrip: evaluation/CROSS_LANG_ROUNDTRIP.md
+      - GNN Validation Report: evaluation/GNN_VALIDATION_REPORT.md
+      - Mutation Report: evaluation/MUTATION_REPORT.md
+      - Benchmark vs Prior Work: evaluation/BENCHMARK_VS_PRIOR.md
+      - Incremental Benchmark: evaluation/INCREMENTAL_BENCHMARK.md
+      - Scaling Analysis: evaluation/SCALING_ANALYSIS.md
+      - Real-World Evaluation: evaluation/REAL_WORLD_EVAL.md
+      - Scoping Report: evaluation/SCOPING_REPORT.md
+      - Literature: evaluation/LITERATURE.md
+      - Related Work: evaluation/RELATED_WORK.md
+      - "Release Notes — v0.2.0": evaluation/RELEASE_NOTES_v0.2.0.md
+      - "Release Notes — v0.5.0": evaluation/RELEASE_NOTES_v0.5.0.md
   - Roadmap:
+      - Section Index: roadmap/README.md
       - Overview: roadmap/overview.md
       - "v0.1.0 (Current)": roadmap/version_010_current.md
       - "v0.2.0 (Planned)": roadmap/version_020_planned.md
@@ -245,8 +345,18 @@ nav:
       - Feature Backlog: roadmap/feature_backlog.md
       - Known Limitations: roadmap/known_limitations_010.md
       - Performance Targets: roadmap/performance_targets.md
+      - Benchmarks & Performance: roadmap/benchmarks_and_performance.md
+      - COGANT Benchmarks: roadmap/cogant_benchmarks.md
       - Deprecation Policy: roadmap/deprecation_policy.md
       - Test Coverage Goals: roadmap/test_coverage_goals.md
+      - Documentation Roadmap: roadmap/documentation_roadmap.md
+      - Community Milestones: roadmap/community_milestones.md
+      - "Success Metrics (post-1.0)": roadmap/success_metrics_post_10.md
+      - Budget & Resources: roadmap/budget_resources.md
+      - Contingencies: roadmap/contingencies.md
+      - Related Work: roadmap/related_work.md
+      - Changelog: roadmap/changelog.md
+      - See Also: roadmap/see_also.md
   - Playground: playground.md
   - Notebooks:
       - Overview: notebooks/README.md
