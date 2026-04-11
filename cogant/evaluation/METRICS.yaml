@@ -3,7 +3,7 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-04-11T13:03:42.939453Z'
+generated_at: '2026-04-11T13:09:40.530061Z'
 generator_git_sha: 586a2d7ad0f2d000788503b262f5bfaf09400c87
 cogant_version: 0.5.0
 package:
