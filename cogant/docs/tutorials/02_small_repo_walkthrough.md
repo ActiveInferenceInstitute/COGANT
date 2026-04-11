@@ -154,8 +154,7 @@ Each count lines up with the qualitative assertions in
 ## 5. Markov blanket
 
 ```bash
-uv run cogant viz output/event_pipeline --diagram blanket \
-    --output output/event_pipeline/diagrams/
+uv run cogant viz output/event_pipeline
 ```
 
 The default `auto` seed strategy scores each module and picks `event_bus` for this fixture. The

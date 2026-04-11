@@ -47,6 +47,28 @@
 | [COGANT Graph Construction, Normalization, and Translation Engine](cogant_graph_construction_normalization_and_translation_engine.md) | Long-form engine description | Advanced |
 | [COGANT Ingest and Static Analysis Pipeline](cogant_ingest_and_static_analysis_pipeline.md) | Long-form ingest + static analysis description | Advanced |
 
+### Pipeline stage → API reference
+
+Each stage on this page maps directly onto a `cogant` Python package. Use this table when you have an architecture stage in mind and want to jump straight to the implementing module's API docs:
+
+| Stage | Architecture page | API reference | Implementing package |
+|-------|-------------------|---------------|----------------------|
+| Ingest | [Step 1: Ingest Repository](step_1_ingest_repository.md), [COGANT Ingest and Static Analysis Pipeline](cogant_ingest_and_static_analysis_pipeline.md) | [`cogant.static`](../api/static.md) | `cogant.ingest`, `cogant.static.parser` |
+| 1. Normalize | [1. Normalize](1_normalize.md), [Step 1: Normalize Language-Specific Facts](step_1_normalize_language_specific_facts.md) | [`cogant.static` → Symbols](../api/static.md#symbols), [`cogant.static` → Types](../api/static.md#types) | `cogant.static.symbols`, `cogant.static.types` |
+| 2. Build Graph | [2. Build Graph](2_build_graph.md), [Step 2: Build Graph from Normalized Facts](step_2_build_graph_from_normalized_facts.md), [Step 3: Build Program Graph from Extracted Information](step_3_build_program_graph_from_extracted_information.md) | [`cogant.static` → Calls](../api/static.md#calls), [`cogant.static` → Dataflow](../api/static.md#dataflow), [`cogant.static` → Imports](../api/static.md#imports) | `cogant.static.calls`, `cogant.static.dataflow`, `cogant.static.imports`, `cogant.graph.builder` |
+| 2a. Markov blanket | [Detailed Graph Engine](detailed_graph_engine.md) | [`cogant.markov`](../api/markov.md), [`cogant.markov` → Blanket](../api/markov.md#blanket), [`cogant.markov` → Extractor](../api/markov.md#extractor) | `cogant.markov.blanket`, `cogant.markov.extractor` |
+| 2b. State-space compilation | [Detailed Pipeline Guide](detailed_pipeline_guide.md) | [`cogant.statespace` → Compiler](../api/statespace.md#compiler) | `cogant.statespace.compiler` |
+| 3. Translate | [3. Translate](3_translate.md), [Step 4: Translate Using Rules](step_4_translate_using_rules.md), [Register Rules](register_rules.md) | [`cogant.translate` → Engine](../api/translate.md#engine), [`cogant.translate` → Rules](../api/translate.md#rules), [Translation rules reference](../reference/translation_rules.md) | `cogant.translate.engine`, `cogant.translate.rules.*` |
+| 4. Score | [4. Score](4_score.md), [Step 5: Score by Confidence](step_5_score_by_confidence.md), [Score Mappings](score_mappings.md) | [`cogant.translate` → Confidence](../api/translate.md#confidence), [scoring API](../api/scoring_api.md), [confidence model](../api/confidence_model_api.md) | `cogant.translate.confidence`, `cogant.scoring` |
+| 5. Review | [5. Review](5_review.md), [Step 6: Human Review and Curation](step_6_human_review_and_curation.md), [Review Process (Interactive)](review_process_interactive.md) | [`cogant.translate` → Review](../api/translate.md#review), [review API](../api/reviewapi.md) | `cogant.translate.review` |
+| 6a. Build A/B/C/D matrices | [Detailed Pipeline Guide](detailed_pipeline_guide.md) | [`cogant.gnn` → Matrix builder](../api/gnn.md#matrix-builder) | `cogant.gnn.matrices` |
+| 6b. Format & emit GNN package | [6. Export](6_export.md), [Export](export.md), [Step 7: Export Final Mappings](step_7_export_final_mappings.md), [Use final_mappings for GNN Training](use_finalmappings_for_gnn_training.md) | [`cogant.gnn`](../api/gnn.md), [`cogant.gnn` → Package builder](../api/gnn.md#package-builder), [export stage and GNN package](../api/export_stage_and_gnn_package.md) | `cogant.gnn.formatter`, `cogant.gnn.package`, `cogant.gnn.json_export` |
+| 6c. Validate GNN package | [Audit](audit.md), [Identify Issues](identify_issues.md), [Report](report.md) | [`cogant.gnn` → Validator](../api/gnn.md#validator) | `cogant.gnn.validator` |
+| Reverse — synthesize code from a GNN | (forward stages run in reverse) | [`cogant.reverse`](../api/reverse.md), [`cogant.reverse` → Parser](../api/reverse.md#parser), [`cogant.reverse` → Synthesizer](../api/reverse.md#synthesizer) | `cogant.reverse.parser`, `cogant.reverse.planner`, `cogant.reverse.synthesizer`, `cogant.reverse.callable` |
+| Runtime — Active Inference agent loop | [Concurrency and Parallelism](concurrency_parallelism.md) | [`cogant.runtime`](../api/runtime.md), [`cogant.runtime` → Loop](../api/runtime.md#loop), [`cogant.runtime` → Metrics](../api/runtime.md#metrics) | `cogant.runtime.loop`, `cogant.runtime.metrics`, `cogant.runtime.config` |
+
+For a conceptual walkthrough of each stage, see the [concepts](../concepts/README.md) pages — every concept page now links back to its implementing module under its own **Implementation** section.
+
 ### Stage-by-stage step references
 
 These finer-grained pages document individual operations inside each stage. Useful when debugging a specific call site; not required reading for the big picture.

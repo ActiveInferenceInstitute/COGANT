@@ -187,7 +187,7 @@ If your output matrices look unexpected, the debugging steps are, in order:
 1. `cat output/<project>/gnn_package/reports/gnn_score.json` — any validator warnings will
    appear here with an explanation.
 2. `uv run python -c "import json; print(json.load(open('output/<project>/bundle.json'))['stages']['translate']['mappings'])"` — check which nodes got which roles.
-3. `uv run cogant viz output/<project> --diagram graph` — inspect the READS/WRITES edges visually.
+3. `uv run cogant viz output/<project>` — rasterize Mermaid/SVG/dot artifacts and `program_graph.png` for visual inspection of READS/WRITES edges.
 4. Open the rule definitions in `py/cogant/translate/rules/` — every rule documents its
    matching conditions in its docstring.
 

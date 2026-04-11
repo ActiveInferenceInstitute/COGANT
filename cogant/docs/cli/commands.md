@@ -86,7 +86,7 @@ Run the full pipeline translation from code to GNN.
 ```bash
 cogant translate <target>
 cogant translate ./my_repo
-cogant translate ./my_repo --output output/ --skip ingest,export
+cogant translate ./my_repo --output output/ --skip dynamic,export
 ```
 
 **Arguments:**
