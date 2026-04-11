@@ -183,6 +183,42 @@ class DriftAnalyzer:
             details=details,
         )
 
+    @staticmethod
+    def _iter_graph_collection(collection: Any) -> list[dict[str, Any]]:
+        """Normalize a graph ``nodes``/``edges`` collection to a list of dicts.
+
+        Run-dir bundles written by
+        :func:`cogant.api.orchestration._dump_program_graph` store
+        ``nodes`` and ``edges`` as dicts keyed by id
+        (``{id: payload}``). Legacy/test bundles use a list of
+        payloads. Both shapes must flow through
+        :meth:`compute_structural_drift` without crashing.
+
+        Args:
+            collection: Raw value from ``graph.get("nodes")`` or
+                ``graph.get("edges")``. May be a list, a dict, or
+                anything else (including ``None``).
+
+        Returns:
+            A list of payload dicts. Non-dict entries (``None``,
+            strings, numbers) are filtered out so downstream
+            ``.get(...)`` calls are always safe.
+        """
+        if isinstance(collection, dict):
+            # Dict shape: values are the node/edge payloads. Inject the
+            # key as ``id`` when the payload omits it so id-based diffs
+            # still work against the orchestration output.
+            normalized: list[dict[str, Any]] = []
+            for key, value in collection.items():
+                if isinstance(value, dict):
+                    if "id" not in value:
+                        value = {**value, "id": key}
+                    normalized.append(value)
+            return normalized
+        if isinstance(collection, list):
+            return [item for item in collection if isinstance(item, dict)]
+        return []
+
     def compute_structural_drift(self) -> dict[str, Any]:
         """Return an added/removed/changed summary of the two program graphs.
 
@@ -192,16 +228,28 @@ class DriftAnalyzer:
         "changed" (the entire subdict must be identical to be stable,
         so cosmetic changes such as renamed labels flag as drift).
 
+        Accepts both the list-shaped graph layout
+        (``{"nodes": [...], "edges": [...]}``) used by in-memory test
+        fixtures and the dict-shaped layout
+        (``{"nodes": {id: {...}}, "edges": {id: {...}}}``) persisted by
+        run-directory bundles. Prior to the normalization guard, the
+        dict shape crashed with ``AttributeError`` because the
+        comprehension iterated the dict keys (strings).
+
         Returns:
             Dict with ``nodes_added``/``nodes_removed``/
             ``nodes_changed`` id lists plus matching ``*_count`` keys
             and ``edges_added_count``/``edges_removed_count``.
         """
-        nodes_a = {n.get("id"): n for n in self.graph_a.get("nodes", [])}
-        nodes_b = {n.get("id"): n for n in self.graph_b.get("nodes", [])}
+        nodes_list_a = self._iter_graph_collection(self.graph_a.get("nodes"))
+        nodes_list_b = self._iter_graph_collection(self.graph_b.get("nodes"))
+        nodes_a = {n.get("id"): n for n in nodes_list_a}
+        nodes_b = {n.get("id"): n for n in nodes_list_b}
 
-        edges_a = [f"{e.get('source')}→{e.get('target')}" for e in self.graph_a.get("edges", [])]
-        edges_b = [f"{e.get('source')}→{e.get('target')}" for e in self.graph_b.get("edges", [])]
+        edges_list_a = self._iter_graph_collection(self.graph_a.get("edges"))
+        edges_list_b = self._iter_graph_collection(self.graph_b.get("edges"))
+        edges_a = [f"{e.get('source')}→{e.get('target')}" for e in edges_list_a]
+        edges_b = [f"{e.get('source')}→{e.get('target')}" for e in edges_list_b]
 
         added_nodes = set(nodes_b.keys()) - set(nodes_a.keys())
         removed_nodes = set(nodes_a.keys()) - set(nodes_b.keys())
