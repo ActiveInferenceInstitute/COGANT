@@ -6,10 +6,10 @@
 
 | Page | Description | Level |
 |------|-------------|-------|
-| [Getting Started Guide](getting_started.md) | Extended narrative introduction to the COGANT workflow | Beginner |
+| [Your First Project (End-to-End)](first_project.md) | Extended narrative walkthrough of a full translate → roundtrip → interpret cycle on the `examples/zoo/01_simple_state` fixture | Beginner |
 
 ## Recommended Reading Order
 
-1. [Getting Started Guide](getting_started.md) — read once after the [getting-started](../getting-started/) quickstart to consolidate the mental model before tackling the [tutorials](../tutorials/).
+1. [Your First Project (End-to-End)](first_project.md) — read once after the [getting-started](../getting-started/) quickstart to consolidate the mental model before tackling the [tutorials](../tutorials/).
 
 See [AGENTS.md](AGENTS.md) for maintenance rules. Hub: [../index.md](../index.md)

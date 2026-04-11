@@ -68,7 +68,7 @@ nav:
       - Contributor: learning-paths/contributor.md
   - Guides:
       - Section Index: guides/README.md
-      - Getting Started (End-to-End): guides/getting_started.md
+      - Your First Project (End-to-End): guides/first_project.md
   - Concepts:
       - Section Index: concepts/README.md
       - What is a GNN?: concepts/gnn.md

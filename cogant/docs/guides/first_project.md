@@ -1,8 +1,8 @@
-# Getting Started (End-to-End)
+# Your First Project (End-to-End)
 
-> **What this page is:** A full COGANT workflow guide using the `examples/zoo/01_simple_state` fixture, from CLI invocation to bundle inspection.
+> **What this page is:** A full COGANT workflow guide using the `examples/zoo/01_simple_state` fixture, from CLI invocation to bundle inspection. This is the narrative companion to the terse [Quick Start](../getting-started/quickstart.md) in `getting-started/`: read it after installing COGANT to see a complete translate → roundtrip → interpret cycle on a real example.
 >
-> **Prerequisites:** [Installation](../getting-started/installation.md) complete.
+> **Prerequisites:** [Installation](../getting-started/installation.md) and [Quick Start](../getting-started/quickstart.md) complete.
 >
 > **Reading time:** ~12 minutes
 >
