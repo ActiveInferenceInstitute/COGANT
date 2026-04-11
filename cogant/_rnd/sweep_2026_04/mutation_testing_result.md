@@ -146,3 +146,19 @@ pre-existing gaps that were not mutation-related:
    behavioral contract asserted in tests.
 
 Both are acceptable gaps: they affect observability output, not correctness.
+
+---
+
+## See also
+
+- **Published mutation report:** [`docs/evaluation/MUTATION_REPORT.md`](../../docs/evaluation/MUTATION_REPORT.md)
+- **Calibration registry (boundary thresholds):** [`docs/evaluation/CALIBRATION.md`](../../docs/evaluation/CALIBRATION.md)
+- **v1.0 readiness:** [`docs/evaluation/V1.0_READINESS.md`](../../docs/evaluation/V1.0_READINESS.md)
+- **Mutation killer test suite:**
+  [`tests/unit/test_mutation_killers_w18.py`](../../tests/unit/test_mutation_killers_w18.py),
+  [`tests/unit/test_mutation_hardening.py`](../../tests/unit/test_mutation_hardening.py)
+- **Modules under test:**
+  [`py/cogant/translate/engine.py`](../../py/cogant/translate/engine.py),
+  [`py/cogant/gnn/matrices.py`](../../py/cogant/gnn/matrices.py),
+  [`py/cogant/statespace/compiler.py`](../../py/cogant/statespace/compiler.py),
+  [`py/cogant/reverse/synthesizer.py`](../../py/cogant/reverse/synthesizer.py)
