@@ -209,6 +209,30 @@ Entries marked with "(details need verification)" have authors and approximate y
 **Key contribution**: Refined pseudocode for the full active inference loop (perception, planning, learning) with explicit treatment of policy-dependent state transitions and hierarchical models.
 **Connection**: COGANT's `cogant.process` module tracks updates to this paper. The extended treatment of hierarchical models is relevant to COGANT's multi-granularity extraction (function/class/module levels).
 
+### [MILLIDGE_2020] Millidge, Tschantz, Seth, Buckley (2020) — "On the Relationship Between Active Inference and Control as Inference"
+*arXiv: 2006.12964*
+**Relevance**: Provides the most careful formal comparison between Active Inference and Control-as-Inference (a.k.a. KL control), tracing the precise differences to how value/preference enters the generative model. Essential for positioning COGANT against RL-oriented approaches.
+**Key contribution**: Demonstrates that the key divergence between the two frameworks is whether the preference distribution is inside the generative model (active inference) or appended as an external reward signal (control as inference), and that this design choice has downstream consequences for exploration behaviour.
+**Connection**: COGANT's A/B/C/D extraction treats the C matrix (preference prior) as an explicit, structurally derived component of the generative model, which is the active-inference design choice. This paper validates that choice: if COGANT used an RL framing, the C matrix would be conflated with the reward function, losing the structural interpretation that makes COGANT's extraction useful.
+
+### [TSCHANTZ_2020] Tschantz, Millidge, Seth, Buckley (2020) — "Reinforcement Learning through Active Inference"
+*arXiv: 2002.12636*
+**Relevance**: Demonstrates empirically that active inference agents with an explicit C matrix and EFE objective can match or outperform standard RL agents on sparse-reward benchmarks, establishing active inference as a practical decision-making framework rather than just a theoretical one.
+**Key contribution**: Introduces the "free energy of the expected future" objective and shows it induces balanced exploration-exploitation without requiring explicit entropy bonuses, because the epistemic term in EFE already rewards uncertainty reduction.
+**Connection**: Provides a computational validation for COGANT's claim that extracting a C matrix from code is meaningful: the C matrix is not merely descriptive but would, if used downstream, generate behaviour that the code's control-flow is "trying to" produce. Bridges the gap between COGANT's static extraction and the dynamic agent execution that a downstream pymdp consumer would perform.
+
+### [CHAMPION_2022] Champion, Da Costa, Bowman, Grześ (2022) — "Branching Time Active Inference: The Theory and Its Generality"
+*Neural Networks (accepted 2022). arXiv: 2111.11107*
+**Relevance**: Develops a tree-search formulation of active inference where planning is cast as inference over a branching tree of possible futures, unifying forward and backward planning under a single variational objective. Directly relevant to COGANT's v0.2 target of emitting branching-time GNN.
+**Key contribution**: Two complementary tree-search algorithms — one propagating EFE forward (optimistic planning) and one backward (pessimistic planning) — both derived from the same variational principle. Establishes connections to sophisticated inference and proves correctness of the branching-time formulation.
+**Connection**: This paper is the primary reference for COGANT's planned branching-time extension (Section 4 mentions `champion2022branching` as the v0.2 target, but that entry cited an earlier, shorter companion paper). The full theory here makes precise what a "branching GNN specification" is: each branch corresponds to a policy-conditioned unrolling of the B matrix, a structure that COGANT's reverse module would have to synthesise back into code.
+
+### [FRISTON_2024] Friston, Heins, Verbelen, Da Costa, Salvatori, et al. (2024) — "From Pixels to Planning: Scale-Free Active Inference"
+*arXiv: 2407.20292*
+**Relevance**: Introduces renormalising generative models (RGMs) — a hierarchical discrete active inference framework that uses renormalisation-group ideas to achieve scale invariance across spatial and temporal resolution levels. The most recent large-scale extension of the pymdp-style formalism.
+**Key contribution**: A general hierarchical POMDP architecture that applies the same variational update equations at each level of a spatial or temporal hierarchy, enabling single-model solutions to image classification, video generation, music generation, and Atari game play.
+**Connection**: Directly relevant to COGANT's multi-granularity (function / class / module) extraction: each granularity level corresponds to a level in an RGM. COGANT currently emits flat GNN; encoding the nesting relationship as an RGM-style hierarchy is the theoretical target for a v0.3 hierarchical extension described in `R&D_LOG.md`.
+
 ---
 
 ## 4. GNN Tooling and Notation (Generalized Notation Notation)
@@ -245,6 +269,12 @@ Entries marked with "(details need verification)" have authors and approximate y
 **Relevance**: The reference Python implementation for discrete active inference, which consumes models specified in the A/B/C/D matrix format that COGANT's GNN output encodes.
 **Key contribution**: A modular Python library implementing perception, planning, and learning for discrete POMDP active inference, with an API organized around the A/B/C/D matrix convention.
 **Connection**: pymdp is COGANT's primary downstream consumer: a GNN bundle produced by COGANT can be converted to pymdp's matrix format and executed. Integration tests in COGANT verify that extracted A/B/C/D matrices are valid pymdp inputs.
+
+### [FRISTON_2024_ECOSYSTEMS] Friston, Ramstead, Kiefer, Tschantz, Buckley, et al. (2022/2024) — "Designing Ecosystems of Intelligence from First Principles"
+*Collective Intelligence, 3(1), 2024. arXiv: 2212.01354*
+**Relevance**: Proposes a vision for cyber-physical multi-agent ecosystems where each agent carries an active-inference generative model, and agents share beliefs via a common "hyper-spatial modelling language." The paper directly addresses the question of how multiple GNN-specified agents should interoperate.
+**Key contribution**: A formal account of how shared generative models can scale from individual agents to collectives, using variational message passing on a distributed factor graph where agents are nodes and shared observations are edges.
+**Connection**: COGANT currently extracts a single-agent GNN per repository module. This paper provides the theoretical target for COGANT's multi-module mode: each module emits a GNN bundle that, once linked via shared observation modalities, forms the multi-agent factor graph described here. The "hyper-spatial modelling language" motivation aligns with GNN's role as a portable agent specification format.
 
 ---
 
@@ -341,6 +371,24 @@ Entries marked with "(details need verification)" have authors and approximate y
 **Relevance**: Uses graph neural networks to learn bug-fixing transformations directly over program graphs, demonstrating that GNN-based program transformations can be practical.
 **Key contribution**: A graph-to-graph transformation model that predicts a sequence of edit operations (insert, delete, replace) to fix bugs in JavaScript programs.
 **Connection**: Hoppity's graph transformation approach is structurally similar to COGANT's translate stage: both apply learned/rule-based transformations to a program graph. COGANT's rules are deterministic where Hoppity's are learned, but the graph-transformation formalism is shared.
+
+### [GEORGIEV_2022] Georgiev, Brockschmidt, Allamanis (2022) — "HEAT: Hyperedge Attention Networks"
+*Transactions on Machine Learning Research (TMLR). arXiv: 2201.12113*
+**Relevance**: Extends graph attention to hypergraphs where a single hyperedge can relate more than two nodes, demonstrating this on a novel program representation where control-flow, data-flow, and type-constraint edges are unified into a single typed hypergraph. The paper achieves state-of-the-art on bug detection and repair tasks.
+**Key contribution**: A typed hyperedge representation for programs where each hyperedge specifies "how participating nodes contribute" via explicit positional roles, combined with multi-head attention over hyperedge neighbourhoods. Subsumes standard GCN and Transformer architectures as special cases.
+**Connection**: HEAT's typed hyperedge representation is a strict generalization of COGANT's typed edge schema: some of COGANT's 11 edge kinds (e.g., computed-from edges relating multiple data sources to one target) are naturally hyperedges. HEAT suggests that future COGANT versions could emit a hypergraph GNN specification rather than a binary-edge one, with richer downstream modelling capability.
+
+### [WANG_2020_FA_AST] Wang, Li, Ma, Xia, Jin (2020) — "Detecting Code Clones with Graph Neural Network and Flow-Augmented Abstract Syntax Tree"
+*SANER 2020. arXiv: 2002.08653*
+**Relevance**: Proposes the Flow-Augmented AST (FA-AST), which enriches a standard Python/Java AST with explicit control-flow and data-flow edges, then applies GNNs for code clone detection. Reported as the first GNN-based approach to code clone detection.
+**Key contribution**: A concrete augmentation recipe — "add CFG back-edges and PDG def-use edges to the raw AST" — plus an empirical demonstration that this augmentation substantially improves clone detection F1 on BigCloneBench and Google Code Jam.
+**Connection**: The FA-AST augmentation recipe is almost identical to what COGANT's `cogant.static` module produces during the graph construction phase. The paper validates COGANT's edge selection empirically: the same CFG and PDG edges that improve clone detection also provide the structural signal COGANT's rules need to distinguish state from observation nodes.
+
+### [SCHLICHTKRULL_2018] Schlichtkrull, Kipf, Bloem, van den Berg, Titov, Welling (2018) — "Modeling Relational Data with Graph Convolutional Networks"
+*ESWC 2018. arXiv: 1703.06103*
+**Relevance**: Introduces Relational Graph Convolutional Networks (R-GCN), which handle multi-relational graphs by maintaining separate weight matrices per relation type. Solves the "all edges look the same" limitation of basic GCN for knowledge graph completion and entity classification.
+**Key contribution**: Basis decomposition and block-diagonal decomposition strategies that keep parameter count tractable as the number of relation types grows, demonstrated on Freebase entity classification and link prediction.
+**Connection**: COGANT's program graphs are multi-relational by design (11 distinct edge kinds), so any GNN trained on COGANT outputs must handle multiple relation types. R-GCN is the foundational reference for this setting. The basis-decomposition strategy is particularly relevant because COGANT's edge kinds are not independent — they share substructure (e.g., both data-flow and computed-from edges represent value dependency) — making a shared basis appropriate.
 
 ---
 
@@ -623,7 +671,8 @@ Entries marked with "(details need verification)" have authors and approximate y
 ## Summary Statistics
 
 - **Sections:** 14 (10 core topic areas + 4 extended-search areas)
-- **Entries:** 83 (55 core sections 1-10 + 28 extended sections 11-14)
-- **Entries with full DOI/arXiv:** 18
+- **Entries:** 100 (72 core sections 1-10 + 28 extended sections 11-14)
+- **New entries added (2026-04-11):** 17 — Sections 1 (3), 2 (3), 3 (4), 4 (1), 6 (4)
+- **Entries with full DOI/arXiv:** 32
 - **Entries flagged "details need verification":** 9
-- **Last updated:** 2026-04-09
+- **Last updated:** 2026-04-11
