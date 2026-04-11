@@ -341,32 +341,80 @@ def get_expected_mismatch_note(pattern_name: str, extracted) -> str:
     return ""
 
 
+# Fuzzy match tolerance: relative ±0.5% of the METRICS.yaml value.
+FUZZY_RELATIVE_TOLERANCE = 0.005  # 0.5%
+
+
+def _relative_delta_percent(extracted, metrics_val) -> float | None:
+    """Return |extracted - metrics_val| / |metrics_val| * 100, or None if non-numeric / zero base."""
+    try:
+        e = float(extracted)
+        m = float(metrics_val)
+    except (TypeError, ValueError):
+        return None
+    if m == 0:
+        # Fall back to absolute delta; avoid divide-by-zero.
+        return abs(e - m) * 100.0
+    return abs(e - m) / abs(m) * 100.0
+
+
 def classify(
     extracted,
     metrics_val,
     tolerance,
     is_archive: bool,
-) -> str:
+) -> tuple[str, str, float | None]:
+    """Classify a finding.
+
+    Returns ``(status, confidence, delta_percent)`` where:
+    - ``status`` ∈ {MATCH, CLOSE, MISMATCH, UNVERIFIED, STALE_ARCHIVE}
+    - ``confidence`` ∈ {HIGH, MEDIUM, LOW}:
+        * HIGH   — exact match against a known METRICS.yaml variable
+        * MEDIUM — within fuzzy ±0.5% of a known variable (CLOSE tier)
+        * LOW    — no METRICS.yaml mapping, or numeric drift beyond tolerance
+    - ``delta_percent`` — relative delta (numeric cases only), ``None`` otherwise.
+    """
     if metrics_val is None:
-        return "UNVERIFIED"
+        # No reference — LOW confidence, UNVERIFIED.
+        return "UNVERIFIED", "LOW", None
+
     if is_archive:
-        return "STALE_ARCHIVE"
+        # Archive files are informational only; confidence is LOW regardless.
+        delta = _relative_delta_percent(extracted, metrics_val)
+        return "STALE_ARCHIVE", "LOW", delta
+
+    # Numeric comparison path (tolerance-based)
     if tolerance is not None:
         try:
-            if abs(float(extracted) - float(metrics_val)) <= tolerance:
-                return "MATCH"
-            else:
-                # Check if it's an expected mismatch before returning MISMATCH
-                return "MISMATCH"
+            e_num = float(extracted)
+            m_num = float(metrics_val)
+            abs_delta = abs(e_num - m_num)
+            rel_delta = _relative_delta_percent(e_num, m_num)
+            # Within explicit per-variable tolerance → hard MATCH, HIGH confidence.
+            if abs_delta <= tolerance:
+                return "MATCH", "HIGH", rel_delta
+            # Within fuzzy ±0.5% envelope → CLOSE, MEDIUM confidence.
+            if rel_delta is not None and rel_delta <= FUZZY_RELATIVE_TOLERANCE * 100:
+                return "CLOSE", "MEDIUM", rel_delta
+            return "MISMATCH", "LOW", rel_delta
         except (TypeError, ValueError):
             pass
-    # String / exact comparison
+
+    # String / exact comparison path
     if str(extracted) == str(metrics_val):
-        return "MATCH"
-    # Near-match for version strings like "0.5.0" vs "0.5.0"
+        return "MATCH", "HIGH", 0.0
+    # Near-match for version strings like "0.5.0" vs "v0.5.0"
     if str(extracted).lstrip("v") == str(metrics_val).lstrip("v"):
-        return "MATCH"
-    return "MISMATCH"
+        return "MATCH", "HIGH", 0.0
+
+    # Try numeric fuzzy match even when no explicit tolerance was set — this
+    # catches drift like "86.45%" vs METRICS.yaml 86.0 for variables that
+    # don't carry a hand-coded tolerance.
+    rel_delta = _relative_delta_percent(extracted, metrics_val)
+    if rel_delta is not None and rel_delta <= FUZZY_RELATIVE_TOLERANCE * 100:
+        return "CLOSE", "MEDIUM", rel_delta
+
+    return "MISMATCH", "LOW", rel_delta
 
 
 def audit_file(
