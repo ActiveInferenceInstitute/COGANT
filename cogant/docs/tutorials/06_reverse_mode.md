@@ -103,22 +103,25 @@ written. Current API (subject to change in 0.2):
 
 ```python
 # doctest: +SKIP  # example requires runtime context or external resources
-from cogant.reverse import build_package_plan, PackagePlan
+from cogant.reverse import plan_package, PackagePlan
 
-plan: PackagePlan = build_package_plan(
-    gnn=gnn,
-    package_name="calculator_synth",
-    output_root=Path("output/reverse/"),
-)
+plan: PackagePlan = plan_package(model)  # model is a ReverseGNNModel
 
-print(plan.directory_layout())
-# calculator_synth/
-#   __init__.py
-#   hidden_state.py    # class Display, Accumulator, HistoryLen
-#   observations.py    # def get_display, get_history, assert_display
-#   actions.py         # def execute_operation
-#   model.py           # A, B, C, D as module-level constants
+print(plan)
+# PackagePlan(package_name="calculator_synth", nodes=[...])
+#   calculator_synth/
+#     __init__.py
+#     hidden_state.py    # class Display, Accumulator, HistoryLen
+#     observations.py    # def get_display, get_history, assert_display
+#     actions.py         # def execute_operation
+#     model.py           # A, B, C, D as module-level constants
 ```
+
+> **API note.** `plan_package` is the public entry point exported from
+> `cogant.reverse` (see `py/cogant/reverse/__init__.py`). It takes a
+> `ReverseGNNModel` and returns a `PackagePlan` describing the directory
+> layout. Earlier drafts of this tutorial referenced `build_package_plan`
+> — that name was renamed before v0.5.0 and no longer exists.
 
 ## Roadmap to full reverse mode
 
