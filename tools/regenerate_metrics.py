@@ -134,7 +134,7 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float]:
     coverage_json = COGANT_DIR / "coverage.json"
     try:
         rc, out = _run(
-            "uv run pytest -q --override-ini='addopts=' --cov=cogant -p no:warnings 2>&1"
+            "uv run pytest -q --override-ini='addopts=' --cov=py/cogant -p no:warnings 2>&1"
             " && uv run coverage json -o coverage.json",
             cwd=COGANT_DIR,
             timeout=600,
@@ -179,7 +179,7 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float]:
 
     if coverage_pct == 0.0:
         # Fallback: parse TOTAL line from stdout
-        m = re.search(r"TOTAL\s+\d+\s+\d+\s+([\d.]+)%", out)
+        m = re.search(r"TOTAL\s+[\d\s]+([\d.]+)%", out)
         if m:
             coverage_pct = float(m.group(1))
 
@@ -193,7 +193,7 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float]:
 def get_mypy_errors() -> int:
     try:
         rc, out = _run(
-            "uv run mypy --strict cogant/ 2>&1 | grep 'error:' | wc -l",
+            "uv run mypy --strict py/cogant/ 2>&1 | grep 'error:' | wc -l",
             cwd=COGANT_DIR,
             timeout=120,
         )
@@ -209,7 +209,7 @@ def get_mypy_errors() -> int:
 def get_ruff_violations() -> int:
     try:
         rc, out = _run(
-            "uv run ruff check cogant/ 2>&1",
+            "uv run ruff check py/cogant/ 2>&1",
             cwd=COGANT_DIR,
             timeout=60,
         )
