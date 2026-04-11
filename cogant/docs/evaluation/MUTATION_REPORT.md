@@ -185,17 +185,17 @@ left as follow-ups.
 
 ## See also
 
-- **Wave-18 mutation testing notes:** [`_rnd/sweep_2026_04/mutation_testing_result.md`](../../_rnd/sweep_2026_04/mutation_testing_result.md)
+- **Wave-18 mutation testing notes:** [`_rnd/sweep_2026_04/mutation_testing_result.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/sweep_2026_04/mutation_testing_result.md)
 - **Calibration registry (boundary thresholds):** [CALIBRATION.md](CALIBRATION.md)
 - **Active Inference mapping:** [ACTIVE_INFERENCE_MAPPING.md](ACTIVE_INFERENCE_MAPPING.md)
 - **v1.0 readiness:** [V1.0_READINESS.md](V1.0_READINESS.md)
 - **Mutation killer test suite:**
-  [`tests/unit/test_mutation_killers_w18.py`](../../tests/unit/test_mutation_killers_w18.py),
-  [`tests/unit/test_mutation_hardening.py`](../../tests/unit/test_mutation_hardening.py)
+  [`tests/unit/test_mutation_killers_w18.py`](https://github.com/cogant-contributors/cogant/blob/main/tests/unit/test_mutation_killers_w18.py),
+  [`tests/unit/test_mutation_hardening.py`](https://github.com/cogant-contributors/cogant/blob/main/tests/unit/test_mutation_hardening.py)
 - **Implementing modules under test:**
-  [`py/cogant/gnn/matrices.py`](../../py/cogant/gnn/matrices.py),
-  [`py/cogant/markov/blanket.py`](../../py/cogant/markov/blanket.py),
-  [`py/cogant/statespace/compiler.py`](../../py/cogant/statespace/compiler.py),
-  [`py/cogant/translate/engine.py`](../../py/cogant/translate/engine.py),
-  [`py/cogant/static/dataflow.py`](../../py/cogant/static/dataflow.py),
-  [`py/cogant/reverse/synthesizer.py`](../../py/cogant/reverse/synthesizer.py)
+  [`py/cogant/gnn/matrices.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/gnn/matrices.py),
+  [`py/cogant/markov/blanket.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/markov/blanket.py),
+  [`py/cogant/statespace/compiler.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/statespace/compiler.py),
+  [`py/cogant/translate/engine.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/engine.py),
+  [`py/cogant/static/dataflow.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/static/dataflow.py),
+  [`py/cogant/reverse/synthesizer.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/reverse/synthesizer.py)

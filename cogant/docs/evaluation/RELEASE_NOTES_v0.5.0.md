@@ -6,7 +6,7 @@
 **Branch:** main
 **Commits since v0.4.0:** 29
 
-> **Source of truth for current numeric metrics:** [`evaluation/METRICS.yaml`](../../evaluation/METRICS.yaml)
+> **Source of truth for current numeric metrics:** [`evaluation/METRICS.yaml`](https://github.com/cogant-contributors/cogant/blob/main/evaluation/METRICS.yaml)
 > (auto-generated). This document is a frozen release artifact for v0.5.0; references to v0.4.0
 > are intentional historical context.
 

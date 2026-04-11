@@ -68,9 +68,9 @@ See also the [Active Inference mapping (R&D)](active_inference_mapping.md) page 
 - **Active Inference mapping (R&D):** [active_inference_mapping.md](active_inference_mapping.md)
 - **Translation rules reference:** [`../reference/translation_rules.md`](../reference/translation_rules.md)
 - **Implementing modules:**
-  [`py/cogant/translate/confidence.py`](../../py/cogant/translate/confidence.py) (`determine_confidence_tier`, base/provenance/conflict factors),
-  [`py/cogant/translate/engine.py`](../../py/cogant/translate/engine.py),
-  [`py/cogant/translate/rules/`](../../py/cogant/translate/rules/),
-  [`py/cogant/gnn/matrices.py`](../../py/cogant/gnn/matrices.py),
-  [`py/cogant/gnn/validator.py`](../../py/cogant/gnn/validator.py),
-  [`py/cogant/statespace/compiler.py`](../../py/cogant/statespace/compiler.py)
+  [`py/cogant/translate/confidence.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/confidence.py) (`determine_confidence_tier`, base/provenance/conflict factors),
+  [`py/cogant/translate/engine.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/engine.py),
+  [`py/cogant/translate/rules/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/rules/),
+  [`py/cogant/gnn/matrices.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/gnn/matrices.py),
+  [`py/cogant/gnn/validator.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/gnn/validator.py),
+  [`py/cogant/statespace/compiler.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/statespace/compiler.py)

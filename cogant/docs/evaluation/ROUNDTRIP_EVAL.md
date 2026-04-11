@@ -4,7 +4,7 @@ Generated: 2026-04-10 (post-wave-16 refresh; numbers re-verified 2026-04-11)
 Tool: `cogant roundtrip` (v0.5.0)
 Threshold convention: ε ≥ 0.8 = ISOMORPHIC, 0.5 ≤ ε < 0.8 = APPROXIMATE, ε < 0.5 = DIVERGENT
 
-> **Source of truth for headline numbers:** [`evaluation/METRICS.yaml`](../../evaluation/METRICS.yaml)
+> **Source of truth for headline numbers:** [`evaluation/METRICS.yaml`](https://github.com/cogant-contributors/cogant/blob/main/evaluation/METRICS.yaml)
 > (auto-generated). Current state: 23/23 ISOMORPHIC, mean ε = 1.0. The per-target table below
 > is the canonical post-wave-16 re-run; pre-wave-16 figures are preserved as historical context only.
 
@@ -146,13 +146,13 @@ For a first demonstration of the Active Inference cycle (forward → GNN → pol
 
 - **Conceptual roundtrip explainer (published docs):** [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md)
 - **Wave-16 CONSTRAINT fix details:** [CONSTRAINT_FIX.md](CONSTRAINT_FIX.md)
-- **Benchmark refresh notes:** [`_rnd/sweep_2026_04/benchmark_refresh_result.md`](../../_rnd/sweep_2026_04/benchmark_refresh_result.md)
+- **Benchmark refresh notes:** [`_rnd/sweep_2026_04/benchmark_refresh_result.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/sweep_2026_04/benchmark_refresh_result.md)
 - **v1.0 readiness assessment:** [V1.0_READINESS.md](V1.0_READINESS.md)
-- **Live metrics (source of truth):** [`evaluation/METRICS.yaml`](../../evaluation/METRICS.yaml)
-- **Dataset (HuggingFace/Kaggle layout):** [`evaluation/dataset/`](../../evaluation/dataset/)
-- **Driver script:** [`evaluation/dataset/regenerate.py`](../../evaluation/dataset/regenerate.py)
+- **Live metrics (source of truth):** [`evaluation/METRICS.yaml`](https://github.com/cogant-contributors/cogant/blob/main/evaluation/METRICS.yaml)
+- **Dataset (HuggingFace/Kaggle layout):** [`evaluation/dataset/`](https://github.com/cogant-contributors/cogant/blob/main/evaluation/dataset/)
+- **Driver script:** [`evaluation/dataset/regenerate.py`](https://github.com/cogant-contributors/cogant/blob/main/evaluation/dataset/regenerate.py)
 - **Implementing modules:**
-  [`py/cogant/reverse/idempotency.py`](../../py/cogant/reverse/idempotency.py) (verify_repo_roundtrip),
-  [`py/cogant/reverse/synthesizer.py`](../../py/cogant/reverse/synthesizer.py),
-  [`py/cogant/reverse/parser.py`](../../py/cogant/reverse/parser.py),
-  [`py/cogant/reverse/planner.py`](../../py/cogant/reverse/planner.py)
+  [`py/cogant/reverse/idempotency.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/reverse/idempotency.py) (verify_repo_roundtrip),
+  [`py/cogant/reverse/synthesizer.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/reverse/synthesizer.py),
+  [`py/cogant/reverse/parser.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/reverse/parser.py),
+  [`py/cogant/reverse/planner.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/reverse/planner.py)
