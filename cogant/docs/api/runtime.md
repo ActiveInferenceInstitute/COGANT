@@ -43,3 +43,13 @@ runtime loop.
     options:
       show_root_heading: true
       show_source: true
+
+## Examples
+
+`AgentRuntime`, `AgentConfig`, the `run_n_steps` / `run_until_convergence` / `run_multi_episode` drivers, and the free-energy / KL helpers are exercised by:
+
+- **Zoo:** [`examples/zoo/04_pomdp_minimal/`](../../examples/zoo/04_pomdp_minimal/) — minimal POMDP that the runtime loop can drive end-to-end.
+- **Zoo:** [`examples/zoo/09_policy/`](../../examples/zoo/09_policy/) — policy + action selection target for `run_until_convergence`.
+- **Zoo:** [`examples/zoo/12_full_pomdp/`](../../examples/zoo/12_full_pomdp/) — the canonical multi-episode learning target for `run_multi_episode`.
+- **Cookbook:** [Recipe 17: Benchmarking the runtime](../cookbook/17_benchmark.md) — wall-clock characterization of the loop.
+- **Tutorial:** [Tutorial 6: Reverse mode — GNN to code](../tutorials/06_reverse_mode.md) — runs the synthesized package under `AgentRuntime` after reverse synthesis.

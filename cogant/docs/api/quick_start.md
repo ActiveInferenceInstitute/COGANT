@@ -22,3 +22,14 @@ bundle.save_json("output/bundle.json")  # same artifact as `cogant translate --o
 bundle.render_site("html_site/")
 ```
 
+## Examples
+
+The two snippets above are run end-to-end against real targets in:
+
+- **Zoo:** [`examples/zoo/01_simple_state/`](../../examples/zoo/01_simple_state/) — point `Session.from_target("./examples/zoo/01_simple_state")` here for the smallest reproducible run.
+- **Zoo:** [`examples/zoo/12_full_pomdp/`](../../examples/zoo/12_full_pomdp/) — exercises every stage in `PipelineConfig.stages` on a non-trivial repo.
+- **Cookbook:** [Recipe 1: Scan your first Python project](../cookbook/01_scan_basic.md) — Method 1 (Session) recipe.
+- **Cookbook:** [Recipe 2: JSON output](../cookbook/02_json_output.md) — Method 2 (PipelineRunner + `bundle.save_json`).
+- **Tutorial:** [Tutorial 1: Quickstart](../tutorials/01_quickstart.md) — five-minute walkthrough that maps directly onto Method 1.
+- **Tutorial:** [Tutorial 3: Flask walkthrough](../tutorials/03_flask_walkthrough.md) — same API on a real-world six-module Flask app.
+

@@ -47,3 +47,18 @@ Rule classes are split by theme and priority:
 ### Resilience rules
 
 ::: cogant.translate.rules.resilience
+
+## Examples
+
+`TranslationEngine`, the confidence scorer, the review API, and every rule family above are exercised by:
+
+- **Zoo:** [`examples/zoo/01_simple_state/`](../../examples/zoo/01_simple_state/) — exercises `HiddenStateRule` (semantic family).
+- **Zoo:** [`examples/zoo/02_observer/`](../../examples/zoo/02_observer/) — exercises `ObservationRule` (semantic).
+- **Zoo:** [`examples/zoo/03_actor/`](../../examples/zoo/03_actor/) — exercises `ActionRule` (behavioral).
+- **Zoo:** [`examples/zoo/09_policy/`](../../examples/zoo/09_policy/) — exercises `PolicyRule` (control-flow).
+- **Zoo:** [`examples/zoo/10_constraint/`](../../examples/zoo/10_constraint/) — exercises `PreferenceRule` / constraint family.
+- **Zoo:** [`examples/zoo/12_full_pomdp/`](../../examples/zoo/12_full_pomdp/) — fixpoint loop + conflict resolution under all five families simultaneously.
+- **Cookbook:** [Recipe 3: Explain a single node](../cookbook/03_explain_node.md) — `RuleExplanation` from the `.explain()` API.
+- **Cookbook:** [Recipe 19: Adding a custom translation rule](../cookbook/19_extend_rules.md) — registering a new `TranslationRule` against the engine.
+- **Cookbook:** [Recipe: Custom translation rules](../cookbook/custom_translation_rules.md) — packaging-and-tests workflow for shipping rules.
+- **Tutorial:** [Tutorial 4: Writing a custom translation rule](../tutorials/04_custom_rules.md) — full narrative on rule authorship and registration.
