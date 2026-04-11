@@ -76,11 +76,11 @@ def test_epsilon_for_unknown_target_returns_none() -> None:
     assert result is None
 
 
-def test_epsilon_for_divergent_target_below_threshold() -> None:
-    """requests is DIVERGENT with epsilon < 0.5."""
+def test_epsilon_for_requests_target_is_isomorphic() -> None:
+    """requests is ISOMORPHIC post-wave-16 synthesizer fix (epsilon = 1.0)."""
     result = m.epsilon_for("requests")
     assert result is not None
-    assert result < 0.5
+    assert result >= 0.8  # ISOMORPHIC threshold
 
 
 def test_bibliography_entries_is_positive() -> None:
