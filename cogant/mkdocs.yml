@@ -110,6 +110,9 @@ nav:
       - Role Filter: cookbook/18_role_filter.md
       - Extend Rules: cookbook/19_extend_rules.md
       - Dataset: cookbook/20_dataset.md
+      - Analyze a Flask App: cookbook/analyze_a_flask_app.md
+      - Custom Translation Rules: cookbook/custom_translation_rules.md
+      - Interpret GNN Output: cookbook/interpret_gnn_output.md
   - CLI Reference:
       - Single-Page CLI Reference: cli_reference.md
       - Section Index: cli/README.md
@@ -158,6 +161,7 @@ nav:
       - Complete Example: api/complete_example.md
       - See Also: api/see_also.md
   - Architecture:
+      - Section Index: architecture/README.md
       - Overview: architecture/overview.md
       - System Overview: architecture/system_overview.md
       - "Stage 1: Normalize": architecture/1_normalize.md
@@ -177,6 +181,88 @@ nav:
       - Security Considerations: architecture/security_considerations.md
       - Testing Strategy: architecture/testing_strategy.md
       - Concurrency: architecture/concurrency_parallelism.md
+      - Pipeline Walkthroughs:
+          - COGANT Engine Implementation Summary: architecture/cogant_engine_implementation_summary.md
+          - COGANT Graph Construction, Normalization, Translation: architecture/cogant_graph_construction_normalization_and_translation_engine.md
+          - COGANT Ingest & Static Analysis Pipeline: architecture/cogant_ingest_and_static_analysis_pipeline.md
+          - COGANT Pipeline Index: architecture/cogant_pipeline_index.md
+          - Use FinalMappings for GNN Training: architecture/use_finalmappings_for_gnn_training.md
+      - Pipeline Steps (Detail):
+          - Analyze: architecture/analyze.md
+          - Analyze Data Flow: architecture/analyze_data_flow.md
+          - Analyze Source: architecture/analyze_source.md
+          - Convert to Node: architecture/convert_to_node.md
+          - Enumerate All Source Files: architecture/enumerate_all_source_files.md
+          - Extract from Source: architecture/extract_from_source.md
+          - Infer from Source: architecture/infer_from_source.md
+          - Ingest a Remote Git Repository: architecture/ingest_a_remote_git_repository.md
+          - Merge Static and Dynamic Graphs: architecture/merge_static_and_dynamic_graphs.md
+          - Parse Cargo.toml: architecture/parse_cargotoml.md
+          - Parse from String: architecture/parse_from_string.md
+          - Step 2 — Analyze Each Python File: architecture/step_2_analyze_each_python_file.md
+          - Step 3 — Build Program Graph from Extracted Information: architecture/step_3_build_program_graph_from_extracted_information.md
+          - Access Results: architecture/access_results.md
+      - Symbol Snippets:
+          - Accept: architecture/accept.md
+          - Add Edge: architecture/add_edge.md
+          - Add Edges from Analysis Results: architecture/add_edges_from_analysis_results.md
+          - Add for Review: architecture/add_for_review.md
+          - Add Nodes: architecture/add_nodes.md
+          - Analyze File: architecture/analyze_file.md
+          - Analyze Imports: architecture/analyze_imports.md
+          - Audit: architecture/audit.md
+          - Average Confidence: architecture/averageconfidence_xxx.md
+          - Build Call Graph: architecture/build_call_graph.md
+          - Centrality: architecture/centrality.md
+          - Components and Cycles: architecture/components_and_cycles.md
+          - Detailed Graph Engine: architecture/detailed_graph_engine.md
+          - Detailed Pipeline Guide: architecture/detailed_pipeline_guide.md
+          - Export: architecture/export.md
+          - Extract from File: architecture/extract_from_file.md
+          - Extract Symbols: architecture/extract_symbols.md
+          - Filter: architecture/filter.md
+          - Filter by Confidence: architecture/filter_by_confidence.md
+          - Finalize: architecture/finalize.md
+          - Generate Stable IDs: architecture/generate_stable_ids.md
+          - Graph Engine Summary: architecture/graph_engine_summary.md
+          - Identify Issues: architecture/identify_issues.md
+          - Infer from File: architecture/infer_from_file.md
+          - Infer Types: architecture/infer_types.md
+          - Ingest a Local Repository: architecture/ingest_a_local_repository.md
+          - Language-Specific Fact: architecture/language_specific_fact.md
+          - Normalize to Canonical Form: architecture/normalize_to_canonical_form.md
+          - NormalizedMetadata Fields: architecture/normalizedmetadata_contains_visibility_decorators_etc.md
+          - NormalizedNodeKind / NodeKindClass: architecture/normalizednodekind_nodekindclass.md
+          - On This Page: architecture/on_this_page.md
+          - Parse from File: architecture/parse_from_file.md
+          - Parse package.json: architecture/parse_packagejson.md
+          - Parse pyproject.toml: architecture/parse_pyprojecttoml.md
+          - Parse Python setup.py: architecture/parse_python_setuppy.md
+          - Parse requirements.txt: architecture/parse_requirementstxt.md
+          - Path Finding: architecture/path_finding.md
+          - Pipeline Module Index: architecture/pipeline_module_index.md
+          - Query: architecture/query.md
+          - Register 6 More Rules: architecture/register_6_more_rules.md
+          - Register Rules: architecture/register_rules.md
+          - Report: architecture/report.md
+          - Review Process (Interactive): architecture/review_process_interactive.md
+          - Same Inputs Same ID (Determinism): architecture/same_inputs_same_id_deterministic.md
+          - Score Mappings: architecture/score_mappings.md
+          - See Also: architecture/see_also.md
+          - Split: architecture/split.md
+          - Step 1 — Ingest Repository: architecture/step_1_ingest_repository.md
+          - Step 1 — Normalize Language-Specific Facts: architecture/step_1_normalize_language_specific_facts.md
+          - Step 2 — Build Graph from Normalized Facts: architecture/step_2_build_graph_from_normalized_facts.md
+          - Step 3 — Merge with Dynamic Analysis Results: architecture/step_3_merge_with_dynamic_analysis_results_if_available.md
+          - Step 4 — Translate Using Rules: architecture/step_4_translate_using_rules.md
+          - Step 5 — Score by Confidence: architecture/step_5_score_by_confidence.md
+          - Step 6 — Human Review and Curation: architecture/step_6_human_review_and_curation.md
+          - Step 7 — Export Final Mappings: architecture/step_7_export_final_mappings.md
+          - Tier Distribution: architecture/tierdistribution.md
+          - Total Identities Hash Inputs: architecture/totalidentities_n_uniquehashinputs_m_typemodule_x.md
+          - Total Nodes / Edges / Components: architecture/totalnodes_2_totaledges_1_connectedcomponents_1.md
+          - Total Scored: architecture/totalscored_n.md
+          - Translate: architecture/translate.md
   - Theory:
       - Overview: theory/README.md
       - Active Inference Mapping: theory/active_inference.md
