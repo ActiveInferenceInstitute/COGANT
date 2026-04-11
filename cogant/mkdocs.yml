@@ -452,6 +452,12 @@ nav:
       - 04 Roundtrip: notebooks/04_roundtrip.md
       - 05 Custom Rules: notebooks/05_custom_rules.md
       - 06 Plugin Authoring: notebooks/06_plugin_authoring.md
+      - 07 Real-world Flask: notebooks/07_real_world_flask.md
+      - 08 Constraint Authoring: notebooks/08_constraint_authoring.md
+      - 09 Plugin Authoring (Minimal LanguagePlugin): notebooks/09_plugin_authoring.md
+      - 10 YAML Rule DSL: notebooks/10_rule_dsl.md
+      - 11 Inference Learning: notebooks/11_inference_learning.md
+      - 12 Cross-language Round-trip: notebooks/12_cross_language.md
   - FAQ: faq.md
   - Changelog: changelog.md
   - Deployment: CI.md
