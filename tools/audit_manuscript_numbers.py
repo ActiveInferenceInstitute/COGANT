@@ -68,7 +68,7 @@ FALLBACK_METRICS: dict = {
         }
     },
     "pipeline": {
-        "stage_count": 8,
+        "stage_count": 10,
         "translation_rules": 19,
     },
     "codebase": {
@@ -181,8 +181,6 @@ EXPECTED_MISMATCHES = [
     ("coverage_percent", "100.0", "Module-level coverage: 100% for cogant.gnn.matrices in Table 9, not overall"),
     # Ablation paper uses 80% as a precision/recall figure, not line coverage
     ("coverage_percent", "80.0", "Ablation metric: 80% is semantic coverage (role precision/recall), not line coverage"),
-    # Stage count: manuscript says "ten-stage"; METRICS.yaml stage_count=8 counts library-internal stages
-    ("stage_count", "10", "Potential discrepancy: manuscript describes 10-stage DAG; METRICS.yaml stage_count=8 counts library-internal API stages. Verify which count the manuscript intends."),
 ]
 
 
