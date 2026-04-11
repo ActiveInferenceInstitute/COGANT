@@ -451,7 +451,9 @@ def audit_file(
 
                 metrics_val, tolerance = kv_lookup.get(pattern_name, (None, None))
 
-                status = classify(extracted, metrics_val, tolerance, is_archive)
+                status, confidence, delta_percent = classify(
+                    extracted, metrics_val, tolerance, is_archive,
+                )
 
                 # Upgrade MISMATCH to EXPECTED_MISMATCH if it's in our whitelist
                 note = ""
@@ -459,6 +461,10 @@ def audit_file(
                     note = get_expected_mismatch_note(pattern_name, extracted)
                     if note:
                         status = "EXPECTED_MISMATCH"
+                        # Expected mismatches are intentional — they carry a
+                        # documented justification, so confidence is HIGH in
+                        # the "this is fine" sense.
+                        confidence = "HIGH"
 
                 findings.append(Finding(
                     file=str(md_path.relative_to(_REPO_ROOT)),
@@ -470,6 +476,8 @@ def audit_file(
                     status=status,
                     context=context,
                     note=note,
+                    confidence=confidence,
+                    delta_percent=delta_percent,
                 ))
 
     return findings
@@ -496,10 +504,16 @@ def render_report(
     from datetime import date
 
     mismatches = [f for f in findings if f.status == "MISMATCH"]
+    close_findings = [f for f in findings if f.status == "CLOSE"]
     expected_mismatches = [f for f in findings if f.status == "EXPECTED_MISMATCH"]
     matches = [f for f in findings if f.status == "MATCH"]
     unverified = [f for f in findings if f.status == "UNVERIFIED"]
     stale = [f for f in findings if f.status == "STALE_ARCHIVE"]
+
+    # Confidence totals across the entire run
+    n_high = sum(1 for f in findings if f.confidence == "HIGH")
+    n_medium = sum(1 for f in findings if f.confidence == "MEDIUM")
+    n_low = sum(1 for f in findings if f.confidence == "LOW")
 
     lines = [
         "# Manuscript Number Audit",
@@ -507,17 +521,27 @@ def render_report(
         f"**Generated:** {date.today().isoformat()}  ",
         f"**METRICS.yaml source:** {'FALLBACK DEFAULTS (METRICS.yaml not found)' if is_fallback else str(METRICS_PATH.relative_to(_REPO_ROOT))}  ",
         f"**Manuscript directory:** {str(MANUSCRIPT_DIR.relative_to(_REPO_ROOT))}  ",
+        f"**Fuzzy tolerance:** ±{FUZZY_RELATIVE_TOLERANCE * 100:.1f}% relative (CLOSE tier)  ",
         "",
         "## Summary",
         "",
         "| Status | Count | Description |",
         "|--------|-------|-------------|",
         f"| MISMATCH | {len(mismatches)} | Real data drift — update manuscript or METRICS.yaml |",
+        f"| CLOSE | {len(close_findings)} | Within ±0.5% of METRICS.yaml — likely rounding / stale cache |",
         f"| EXPECTED_MISMATCH | {len(expected_mismatches)} | Contextually valid — historical refs, scope differences, threshold definitions |",
-        f"| MATCH | {len(matches)} | Verified correct |",
+        f"| MATCH | {len(matches)} | Verified exact |",
         f"| UNVERIFIED | {len(unverified)} | No METRICS.yaml entry to compare against |",
         f"| STALE_ARCHIVE | {len(stale)} | In _archive/ — expected to differ |",
         f"| **Total findings** | **{len(findings)}** | |",
+        "",
+        "### Confidence distribution",
+        "",
+        "| Confidence | Count | Meaning |",
+        "|------------|-------|---------|",
+        f"| HIGH | {n_high} | Exact match (or expected-mismatch with documented rationale) |",
+        f"| MEDIUM | {n_medium} | Fuzzy match within ±0.5% |",
+        f"| LOW | {n_low} | No METRICS.yaml mapping, or drift beyond tolerance |",
         "",
     ]
 
@@ -554,17 +578,44 @@ def render_report(
     ]
     if mismatches:
         lines += [
-            "| File | Line | Claim | Extracted | Metrics Value | Context |",
-            "|------|------|-------|-----------|---------------|---------|",
+            "| File | Line | Claim | Was | Should be | Δ% | Confidence | Context |",
+            "|------|------|-------|-----|-----------|----|------------|---------|",
         ]
         for f in sorted(mismatches, key=lambda x: (x.file, x.line)):
             ctx = f.context.replace("|", "\\|").replace("\n", " ")
+            delta_str = f"{f.delta_percent:.2f}%" if f.delta_percent is not None else "—"
             lines.append(
                 f"| `{f.file}` | {f.line} | `{f.manuscript_claim}` "
-                f"| {f.extracted_value} | {f.metrics_value} | {ctx} |"
+                f"| {f.extracted_value} | {f.metrics_value} | {delta_str} | {f.confidence} | {ctx} |"
             )
     else:
         lines.append("_No mismatches found._")
+    lines.append("")
+
+    # -----------------------------------------------------------------------
+    # Close matches — fuzzy hits within ±0.5%
+    # -----------------------------------------------------------------------
+    lines += [
+        "## Close Matches (within tolerance)",
+        "",
+        f"These manuscript claims are within ±{FUZZY_RELATIVE_TOLERANCE * 100:.1f}% of the METRICS.yaml value.",
+        "Likely a rounding artefact or a stale cache. Fixing these is typically a one-line update.",
+        "",
+    ]
+    if close_findings:
+        lines += [
+            "| File | Line | Claim | Was | Should be | Δ% | Confidence | Context |",
+            "|------|------|-------|-----|-----------|----|------------|---------|",
+        ]
+        for f in sorted(close_findings, key=lambda x: (x.file, x.line)):
+            ctx = f.context.replace("|", "\\|").replace("\n", " ")
+            delta_str = f"{f.delta_percent:.2f}%" if f.delta_percent is not None else "—"
+            lines.append(
+                f"| `{f.file}` | {f.line} | `{f.manuscript_claim}` "
+                f"| {f.extracted_value} | {f.metrics_value} | {delta_str} | {f.confidence} | {ctx} |"
+            )
+    else:
+        lines.append("_No close matches within the fuzzy tolerance window._")
     lines.append("")
 
     # -----------------------------------------------------------------------
@@ -573,14 +624,14 @@ def render_report(
     lines += [
         "## Matches (verified correct)",
         "",
-        "| File | Line | Claim | Value | Pattern |",
-        "|------|------|-------|-------|---------|",
+        "| File | Line | Claim | Value | Pattern | Confidence |",
+        "|------|------|-------|-------|---------|------------|",
     ]
     if matches:
         for f in sorted(matches, key=lambda x: (x.file, x.line)):
             lines.append(
                 f"| `{f.file}` | {f.line} | `{f.manuscript_claim}` "
-                f"| {f.extracted_value} | {f.pattern_name} |"
+                f"| {f.extracted_value} | {f.pattern_name} | {f.confidence} |"
             )
     else:
         lines.append("_No verified matches._")
@@ -674,10 +725,28 @@ def render_report(
             if key in seen_claims:
                 continue
             seen_claims.add(key)
+            delta_str = f", Δ={f.delta_percent:.2f}%" if f.delta_percent is not None else ""
             lines.append(
-                f"- **{f.pattern_name}**: manuscript says `{f.extracted_value}`, "
-                f"METRICS.yaml says `{f.metrics_value}` — "
-                f"update `{f.file}` (first occurrence line {f.line})"
+                f"- **{f.pattern_name}**: was `{f.extracted_value}`, "
+                f"should be `{f.metrics_value}`, confidence `{f.confidence}`"
+                f"{delta_str} — update `{f.file}` (first occurrence line {f.line})"
+            )
+        lines.append("")
+
+    if close_findings:
+        lines.append("### Medium priority — close matches within ±0.5% (likely rounding)")
+        lines.append("")
+        seen_close: set = set()
+        for f in sorted(close_findings, key=lambda x: (x.file, x.line)):
+            key = (f.pattern_name, str(f.extracted_value))
+            if key in seen_close:
+                continue
+            seen_close.add(key)
+            delta_str = f", Δ={f.delta_percent:.2f}%" if f.delta_percent is not None else ""
+            lines.append(
+                f"- **{f.pattern_name}**: was `{f.extracted_value}`, "
+                f"should be `{f.metrics_value}`, confidence `{f.confidence}`"
+                f"{delta_str} — `{f.file}` line {f.line}"
             )
         lines.append("")
 
@@ -792,17 +861,25 @@ def main():
     all_findings = deduplicate(all_findings)
 
     mismatches = [f for f in all_findings if f.status == "MISMATCH"]
+    close_findings = [f for f in all_findings if f.status == "CLOSE"]
     expected_mismatches = [f for f in all_findings if f.status == "EXPECTED_MISMATCH"]
     matches = [f for f in all_findings if f.status == "MATCH"]
     unverified = [f for f in all_findings if f.status == "UNVERIFIED"]
     stale = [f for f in all_findings if f.status == "STALE_ARCHIVE"]
 
     print(f"  MISMATCH:          {len(mismatches)}")
+    print(f"  CLOSE (±0.5%):     {len(close_findings)}")
     print(f"  EXPECTED_MISMATCH: {len(expected_mismatches)}")
     print(f"  MATCH:             {len(matches)}")
     print(f"  UNVERIFIED:        {len(unverified)}")
     print(f"  STALE_ARCHIVE:     {len(stale)}")
     print(f"  Total:             {len(all_findings)}")
+
+    # Confidence summary
+    n_high = sum(1 for f in all_findings if f.confidence == "HIGH")
+    n_medium = sum(1 for f in all_findings if f.confidence == "MEDIUM")
+    n_low = sum(1 for f in all_findings if f.confidence == "LOW")
+    print(f"  Confidence:        HIGH={n_high}  MEDIUM={n_medium}  LOW={n_low}")
 
     report = render_report(all_findings, metrics, is_fallback, KNOWN_VALUES)
 
