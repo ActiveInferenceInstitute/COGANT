@@ -1,1 +1,0 @@
-"""COGANT test suite."""
