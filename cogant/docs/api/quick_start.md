@@ -1,5 +1,13 @@
 ## Quick Start
 
+> **What this page is:** Copy-pasteable Python snippets for the two most common COGANT API entry points: a manual `Session` and an orchestrated `PipelineRunner`.
+>
+> **Prerequisites:** [Installation](installation.md) and the [API overview](overview.md).
+>
+> **Reading time:** ~5 minutes
+>
+> **Next steps:** [Session API](session_api.md) · [PipelineRunner API](pipelinerunner_api.md) · [Bundle API](bundle_api.md)
+
 ```python
 from cogant import Session, PipelineRunner, Bundle
 from cogant.api.pipeline import PipelineConfig

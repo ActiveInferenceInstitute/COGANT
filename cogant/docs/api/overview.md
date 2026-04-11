@@ -1,5 +1,13 @@
 ## Overview
 
+> **What this page is:** A high-level tour of COGANT's stable Python API surface — `Session`, `PipelineRunner`, `Bundle`, and `ReviewAPI`.
+>
+> **Prerequisites:** [Installation](installation.md) and a brief skim of [Tutorial 1: Quickstart](../tutorials/01_quickstart.md).
+>
+> **Reading time:** ~8 minutes
+>
+> **Next steps:** [Quick Start](quick_start.md) · [Session API](session_api.md) · [PipelineRunner API](pipelinerunner_api.md)
+
 The COGANT Python API provides high-level interfaces for codebase analysis and GNN translation. The main classes are:
 
 - **Session**: Manages pipeline state and intermediate results

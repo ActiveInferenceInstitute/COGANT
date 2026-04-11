@@ -13,8 +13,8 @@ with open("bundle_v1.json") as f:
 with open("bundle_v2.json") as f:
     data2 = json.load(f)
 
-# Analyze drift
-analyzer = DriftAnalyzer()
+# Analyze drift — the analyzer is constructed with both bundles
+analyzer = DriftAnalyzer(data1, data2)
 score = analyzer.analyze(data1, data2)
 
 # Get scores

@@ -64,3 +64,19 @@ The `regenerate.py` driver was also updated to match the post-wave-16 API:
 ## No Regressions
 
 All 14 targets that were ISOMORPHIC pre-wave-16 remain ISOMORPHIC post-wave-16. No target regressed.
+
+---
+
+## See also
+
+- **Published roundtrip evaluation report:** [`docs/evaluation/ROUNDTRIP_EVAL.md`](../../docs/evaluation/ROUNDTRIP_EVAL.md)
+- **CONSTRAINT fix details:** [`docs/evaluation/CONSTRAINT_FIX.md`](../../docs/evaluation/CONSTRAINT_FIX.md)
+- **v1.0 readiness assessment:** [`docs/evaluation/V1.0_READINESS.md`](../../docs/evaluation/V1.0_READINESS.md)
+- **Live metrics (source of truth):** [`evaluation/METRICS.yaml`](../../evaluation/METRICS.yaml)
+- **Driver script:** [`evaluation/dataset/regenerate.py`](../../evaluation/dataset/regenerate.py)
+- **JSONL results:** [`evaluation/dataset/roundtrip_results.jsonl`](../../evaluation/dataset/roundtrip_results.jsonl)
+- **Implementing modules:**
+  [`py/cogant/reverse/synthesizer.py`](../../py/cogant/reverse/synthesizer.py),
+  [`py/cogant/reverse/idempotency.py`](../../py/cogant/reverse/idempotency.py),
+  [`py/cogant/reverse/planner.py`](../../py/cogant/reverse/planner.py),
+  [`py/cogant/reverse/parser.py`](../../py/cogant/reverse/parser.py)

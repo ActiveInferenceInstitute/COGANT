@@ -1,5 +1,13 @@
 # Flask app walkthrough
 
+> **What this page is:** An end-to-end COGANT walkthrough on a six-module, 853-line Flask fixture, with role distributions and Markov blanket inspection.
+>
+> **Prerequisites:** [Calculator walkthrough](calculator.md) or [Tutorial 2](02_small_repo_walkthrough.md), and basic Flask familiarity.
+>
+> **Reading time:** ~15 minutes
+>
+> **Next steps:** [Tutorial 3: Flask app walkthrough (98 nodes, 597 edges)](03_flask_walkthrough.md) · [Tutorial 5: Reading the A/B/C/D matrices](05_gnn_interpretation.md) · [Markov blankets in codebases](../concepts/markov_blanket.md)
+
 A walkthrough of COGANT on the `flask_app` fixture under `examples/real_world/flask_app/`: a six-module Flask application (`__init__.py`, `app.py`, `config.py`, `models.py`, `services.py`, `utils.py`) totalling **853 lines** of Python, analyzed end-to-end by the pipeline.
 
 > **Theory background:** This walkthrough is the bigger sibling of `calculator.md` and exercises

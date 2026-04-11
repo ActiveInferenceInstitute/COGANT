@@ -90,10 +90,13 @@ R1 (JS forward)    = {HIDDEN_STATE: 1, OBSERVATION: 2, ACTION: 2, CONSTRAINT: 1}
 R2 (re-forward)    = {HIDDEN_STATE: 1, OBSERVATION: 8, ACTION: 5,
                       POLICY: 2, CONSTRAINT: 10, CONTEXT: 3}
 |R1 ∩ R2| / |R1|   = 6 / 6 = 1.0000     (PERFECT)
-threshold          = 0.5
+threshold          = 0.8 (ISOMORPHIC)
 is_isomorphic      = True
-tier               = PERFECT (ε = 0)
+tier               = ISOMORPHIC (ε = 1.0 — every original role preserved)
 ```
+
+> **Note:** The project-wide ε convention is role-preservation ratio (`|roles_preserved| / |roles_original|`), where ε = 1.0 is a perfect roundtrip and ε ≥ 0.8 is ISOMORPHIC. This matches `cogant/evaluation/METRICS.yaml` and the current benchmark (23/23 ISOMORPHIC, mean ε = 1.0).
+
 
 The reverse pipeline synthesises a Python package with the standard
 eight modules plus an extra `context.py`:

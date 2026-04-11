@@ -14,7 +14,7 @@ complete Active Inference perception-action cycle on it.
 
 - **Source**: `cogant/examples/zoo/01_simple_state/` (1 file, 3 functions)
 - **Source code**: `BeliefState` class with `__init__`, `update_state`, `get_state`
-- **Pipeline**: `cogant translate --no-dynamic` (10 stages: ingest → static → normalize → graph → translate → statespace → process → export → validate)
+- **Pipeline**: `cogant translate --no-dynamic` (8 stages: ingest → parse → graph → translate → statespace → markov → gnn → reverse; canonical source `cogant/evaluation/METRICS.yaml`)
 - **GNN sections present**: `StateSpaceBlock`, `Connections`, `ActInfOntologyAnnotation`, `InitialParameterization`, `ModelParameters`, `Time`
 - **Extracted structure**:
   - 1 hidden-state factor: `s_f0` (cardinality 3 — three discrete belief states)

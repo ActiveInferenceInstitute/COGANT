@@ -1,5 +1,13 @@
 # Small repo walkthrough: `calculator`
 
+> **What this page is:** A short narrative walkthrough of the `calculator` fixture — the smallest control-positive example that exercises every pipeline layer (ingest, parse, graph, translate, blanket, GNN export).
+>
+> **Prerequisites:** [Tutorial 1: Quickstart](01_quickstart.md). Helpful: [How COGANT assigns roles](../concepts/role_assignment.md).
+>
+> **Reading time:** ~8 minutes
+>
+> **Next steps:** [Tutorial 2: Small repo walkthrough (`event_pipeline`)](02_small_repo_walkthrough.md) · [Flask app walkthrough](flask.md) · [Tutorial 5: Reading the A/B/C/D matrices](05_gnn_interpretation.md)
+
 The `calculator` fixture under `tests/fixtures/control_positive/calculator/` is the smallest control-positive example that still exercises every layer of the pipeline: ingest, static parse, graph build, semantic translation, Markov blanket partitioning, and GNN export.
 
 > **Theory background:** The four sections below correspond directly to four COGANT concept

@@ -8,7 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [0.5.0] - 2026-04-10
 
 ### Added
-- Incremental analysis mode: `cogant analyze --incremental <git-ref>` / `PipelineConfig.incremental_since` — 19.6× no-change speedup, 5.6× single-file speedup on Flask benchmark
+- Incremental analysis mode: `cogant translate --incremental <git-ref>` / `PipelineConfig.incremental_since` — 19.6× no-change speedup, 5.6× single-file speedup on Flask benchmark
 - Multi-episode Bayesian learning: `AgentRuntime.run_multi_episode`, `run_episode`, `update_D_from_posterior`, `update_A_from_counts`
 - Production FastAPI server: `cogant.server.app` with `/health` and `/translate` endpoints, integration test suite
 - Dockerfile (python:3.12-slim + uv, `EXPOSE 8080`, curl healthcheck) and docker-compose.yml

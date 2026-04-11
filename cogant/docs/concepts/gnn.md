@@ -1,5 +1,13 @@
 # What is a GNN?
 
+> **What this page is:** An explanation of Generalized Notation Notation — the structured markdown format COGANT emits — including its sections, headers, and how to read a generated bundle.
+>
+> **Prerequisites:** Basic familiarity with [Active Inference concepts](active_inference.md). No prior GNN knowledge needed.
+>
+> **Reading time:** ~10 minutes
+>
+> **Next steps:** [Program graphs in COGANT](program_graph.md) · [How COGANT assigns roles](role_assignment.md) · [Tutorial: Reading the A/B/C/D matrices](../tutorials/05_gnn_interpretation.md)
+
 GNN stands for **Generalized Notation Notation** -- a structured markdown format created by the Active Inference Institute for describing Active Inference state-space models. It is not "graph neural networks." This distinction matters because the entire COGANT pipeline produces GNN files as its primary output, and reading them correctly is the key to understanding what COGANT has learned about your codebase.
 
 ## The purpose of GNN
@@ -59,7 +67,7 @@ COGANT assigns every code node one of seven primary semantic roles. These roles 
 | CONTEXT | InitialParameterization | Config files, feature flags, env vars |
 | DATA_FLOW | Connections | Reader-writer pipelines |
 
-See [How COGANT assigns roles](role_assignment.md) for the full rule engine.
+See [How COGANT assigns roles](role_assignment.md) for the full rule engine, and the [Translation rules reference](../reference/translation_rules.md) for the per-rule API entry that detects each role.
 
 ## How COGANT reads GNN files
 
@@ -89,9 +97,26 @@ The package directory contains `model.gnn.md` (the human-readable GNN), `model.g
 
 Given a Python module with a `Calculator` class, COGANT's forward pipeline produces a GNN whose `StateSpaceBlock` contains entries like `s_f0: display`, `s_f1: accumulator` -- because these are the mutable attributes identified by `MutatingSubsystemRule`. The `ObservationRule` maps `get_display()` and `get_history()` to observation modalities. The `ActionRule` maps `_execute_operation()` to an action. The resulting GNN file is a complete Active Inference model that a PyMDP agent could run immediately.
 
+## Implementation
+
+The behavior described on this page is implemented by the `cogant.gnn` package. Every concept on this page can be traced to a specific module:
+
+| Concept on this page | Module (`py/cogant/...`) | API reference | Key class / function |
+| --- | --- | --- | --- |
+| Anatomy of a GNN file (markdown emit) | `gnn/formatter/` | [`cogant.gnn`](../api/gnn.md) | `GNNMarkdownFormatter` |
+| `model.gnn.json` machine-readable export | `gnn/json_export.py` | [`cogant.gnn` → JSON export](../api/gnn.md#json-export) | `to_json` |
+| `GNNPackage` directory layout (`model.gnn.md` + satellites) | `gnn/package.py` | [`cogant.gnn` → Package builder](../api/gnn.md#package-builder) | `GNNPackageBuilder` |
+| A / B / C / D matrix construction from rule output | `gnn/matrices.py` | [`cogant.gnn` → Matrix builder](../api/gnn.md#matrix-builder) | `build_matrices`, `MatrixBuilder` |
+| `load_gnn_package()` parser used in [reverse mode](roundtrip.md) | `gnn/runner.py` | [`cogant.gnn` → Runner](../api/gnn.md#runner) | `load_gnn_package` |
+| GNN v1.1 conformance + 0–100 score | `gnn/validator.py` | [`cogant.gnn` → Validator](../api/gnn.md#validator) | `GNNValidator` |
+| Mapping the [seven semantic roles](../reference/semantic_roles.md) onto GNN sections | `translate/rules/` | [`cogant.translate` → Rules](../api/translate.md#rules) | `ObservationRule`, `ActionRule`, `MutatingSubsystemRule`, ... — see [Translation rules reference](../reference/translation_rules.md) |
+| State-space basis projection (variables / observations / actions) | `statespace/compiler.py` | [`cogant.statespace`](../api/statespace.md#compiler) | `StateSpaceCompiler` |
+
 ## Further reading
 
 - [Active Inference from a programmer's perspective](active_inference.md) -- the theory behind A/B/C/D matrices
 - [How COGANT assigns roles](role_assignment.md) -- the rule engine that populates GNN sections
 - [The forward-reverse cycle](roundtrip.md) -- how GNN files participate in the roundtrip
 - [Program graphs in COGANT](program_graph.md) -- the intermediate representation before GNN
+- [`cogant.gnn` API reference](../api/gnn.md) -- module-by-module class and function index
+- [Translation rules reference](../reference/translation_rules.md) -- the rules that drive GNN section content

@@ -1,5 +1,13 @@
 # Getting Started (End-to-End)
 
+> **What this page is:** A full COGANT workflow guide using the `examples/zoo/01_simple_state` fixture, from CLI invocation to bundle inspection.
+>
+> **Prerequisites:** [Installation](../getting-started/installation.md) complete.
+>
+> **Reading time:** ~12 minutes
+>
+> **Next steps:** [Tutorial 2: Small repo walkthrough](../tutorials/02_small_repo_walkthrough.md) · [Tutorial 5: Reading the A/B/C/D matrices](../tutorials/05_gnn_interpretation.md) · [API quick start](../api/quick_start.md)
+
 This guide walks through a full COGANT workflow using the smallest
 example in the test zoo: `examples/zoo/01_simple_state`. You will:
 
@@ -111,7 +119,7 @@ The rule that assigned `BeliefState` to `HIDDEN_STATE` and `update_state`
 to `ACTION` can be inspected with:
 
 ```bash
-uv run cogant explain output/simple_state/bundle.json BeliefState
+uv run cogant explain examples/zoo/01_simple_state BeliefState
 ```
 
 `explain` prints the rule name, priority, the pattern it matched, and
@@ -194,7 +202,7 @@ forward and reverse pipelines disagree about some aspect of the mapping.
 The `validate` subcommand reports the same ε alongside contract checks:
 
 ```bash
-uv run cogant validate output/simple_state --json | jq '.epsilon, .isomorphic'
+uv run cogant validate output/simple_state
 ```
 
 ---

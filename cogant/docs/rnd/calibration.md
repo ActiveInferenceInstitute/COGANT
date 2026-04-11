@@ -59,3 +59,18 @@ Per-fixture breakdown (2026-04-09):
 4. Should `HUMAN_REVIEWED` be a separate orthogonal flag rather than a tier, so human-reviewed low-confidence mappings can be distinguished from never-reviewed high-confidence ones?
 
 See also the [Active Inference mapping (R&D)](active_inference_mapping.md) page for the surprising findings that informed the current calibration approach.
+
+---
+
+## See also
+
+- **Long-form calibration registry:** [`../evaluation/CALIBRATION.md`](../evaluation/CALIBRATION.md)
+- **Active Inference mapping (R&D):** [active_inference_mapping.md](active_inference_mapping.md)
+- **Translation rules reference:** [`../reference/translation_rules.md`](../reference/translation_rules.md)
+- **Implementing modules:**
+  [`py/cogant/translate/confidence.py`](../../py/cogant/translate/confidence.py) (`determine_confidence_tier`, base/provenance/conflict factors),
+  [`py/cogant/translate/engine.py`](../../py/cogant/translate/engine.py),
+  [`py/cogant/translate/rules/`](../../py/cogant/translate/rules/),
+  [`py/cogant/gnn/matrices.py`](../../py/cogant/gnn/matrices.py),
+  [`py/cogant/gnn/validator.py`](../../py/cogant/gnn/validator.py),
+  [`py/cogant/statespace/compiler.py`](../../py/cogant/statespace/compiler.py)

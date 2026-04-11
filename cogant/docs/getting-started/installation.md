@@ -1,5 +1,13 @@
 # Installation
 
+> **What this page is:** Step-by-step COGANT installation instructions for PyPI, source, and editable/development setups, including optional extras.
+>
+> **Prerequisites:** Python 3.11+ and pip (or `uv`/`pipx`).
+>
+> **Reading time:** ~5 minutes
+>
+> **Next steps:** [Quick Start](quickstart.md) · [Tutorial 1: Quickstart](../tutorials/01_quickstart.md) · [API quick start](../api/quick_start.md)
+
 COGANT targets Python **3.11+** and ships a Typer-based CLI (`cogant`) plus a stable Python API (`cogant.api`).
 
 ## From PyPI
@@ -44,7 +52,7 @@ cogant --help
 ## Verify the install
 
 ```bash
-cogant --help           # Typer app registers 14 subcommands
+cogant --help           # Typer app registers 21 top-level subcommands
 cogant scan .           # run a minimal static analysis on the current directory
 ```
 

@@ -1,5 +1,13 @@
 # Active Inference from a programmer's perspective
 
+> **What this page is:** A programmer-friendly translation of Active Inference (POMDPs, hidden states, observations, actions, policies) into vocabulary from everyday software engineering.
+>
+> **Prerequisites:** Comfort reading Python; no neuroscience background required.
+>
+> **Reading time:** ~12 minutes
+>
+> **Next steps:** [Markov blankets in codebases](markov_blanket.md) · [What is a GNN?](gnn.md) · [Tutorial: Reading the A/B/C/D matrices](../tutorials/05_gnn_interpretation.md)
+
 Active Inference is a framework from computational neuroscience that describes how agents interact with their environment. COGANT uses it as a formal model for codebases. This page translates the key Active Inference concepts into programming terms you already know.
 
 ## The POMDP framing
@@ -80,7 +88,7 @@ When an action has no `WRITES` edges, COGANT fills the B slice with an identity 
 
 **What it answers:** "Which observations does the system prefer?"
 
-**In code terms:** This is the `validate()` and `assert_*()` layer. Every `CONSTRAINT` mapping contributes to C. A test assertion like `assert result > 0` encodes a preference for observations where the result is positive.
+**In code terms:** This is the `validate()` and `assert_*()` layer. Every [`CONSTRAINT`](../reference/translation_rules.md) mapping contributes to C — these are detected by `PreferenceRule` (semantic) and `TestAssertionRule` (behavioral) in `cogant.translate.rules`. A test assertion like `assert result > 0` encodes a preference for observations where the result is positive.
 
 ```python
 # This function contributes to the C vector:
@@ -101,7 +109,7 @@ When no `CONSTRAINT` mappings exist, C defaults to uniform (no preference).
 
 **What it answers:** "What is the initial state before any observations?"
 
-**In code terms:** This is the `__init__()` and configuration layer. `CONFIGURATION` nodes (YAML files, Settings classes, environment variables) seed the D vector. A `config.yaml` with `max_retries: 3` contributes a prior belief about the initial system state.
+**In code terms:** This is the `__init__()` and configuration layer. [`CONFIGURATION`](../reference/translation_rules.md) nodes (YAML files, Settings classes, environment variables) seed the D vector — these are detected by `ConfigRule` and `FeatureFlagRule` in `cogant.translate.rules.control`. A `config.yaml` with `max_retries: 3` contributes a prior belief about the initial system state.
 
 ```python
 # Configuration nodes become D matrix entries:
@@ -131,8 +139,25 @@ COGANT's job is to extract this loop from your source code and make it explicit.
 
 If COGANT reports that your A matrix is nearly singular (most observations have weak evidence linking them to hidden states), it means your getters do not clearly expose your internal state -- a measurable form of "hidden coupling." If the B matrix is mostly identity, your actions do not clearly change state -- possibly dead code. If C is uniform, you have no tests or validators. These are not analogies: they are numerical signatures of real architectural properties.
 
+## Implementation
+
+The four matrices, the agent loop, and the rule wiring are implemented across three packages:
+
+| Concept on this page | Module (`py/cogant/...`) | API reference | Key class / function |
+| --- | --- | --- | --- |
+| A / B / C / D matrix construction | `gnn/matrices.py` | [`cogant.gnn` → Matrix builder](../api/gnn.md#matrix-builder) | `build_matrices`, `MatrixBuilder` |
+| `READS`/`OBSERVES` → A matrix entries | `translate/rules/structural.py`, `translate/rules/semantic.py` | [`cogant.translate` → Rules](../api/translate.md#rules) | `ReadOnlyInputRule`, `ObservationRule` — see [translation rules reference](../reference/translation_rules.md) |
+| `WRITES`/`MUTATES` → B matrix entries | `translate/rules/structural.py`, `translate/rules/semantic.py` | [`cogant.translate` → Rules](../api/translate.md#rules) | `MutatingSubsystemRule`, `ActionRule` — see [translation rules reference](../reference/translation_rules.md) |
+| `CONSTRAINT` mappings → C vector | `translate/rules/semantic.py`, `translate/rules/behavioral.py` | [`cogant.translate` → Rules](../api/translate.md#rules) | `PreferenceRule`, `TestAssertionRule` — see [translation rules reference](../reference/translation_rules.md) |
+| `CONFIGURATION` nodes → D vector | `translate/rules/control.py` | [`cogant.translate` → Rules](../api/translate.md#rules) | `ConfigRule`, `FeatureFlagRule` — see [translation rules reference](../reference/translation_rules.md) |
+| Free-energy minimization loop (Observe → Infer → Plan → Act) | `runtime/loop.py` | [`cogant.runtime` → Loop](../api/runtime.md#loop) | `AgentRuntime`, `run_n_steps`, `run_until_convergence` |
+| Free-energy / KL divergence numerics | `runtime/metrics.py` | [`cogant.runtime` → Metrics](../api/runtime.md#metrics) | numerically-stable helpers |
+| Agent hyperparameters | `runtime/config.py` | [`cogant.runtime` → Config](../api/runtime.md#config) | `AgentConfig` |
+
 ## Further reading
 
 - [What is a GNN?](gnn.md) -- the output format that encodes A/B/C/D
 - [Markov blankets in codebases](markov_blanket.md) -- the boundary between system and environment
 - [How COGANT assigns roles](role_assignment.md) -- how code nodes become states, observations, and actions
+- [`cogant.runtime` API reference](../api/runtime.md) -- the agent loop that consumes the synthesized matrices
+- [`cogant.gnn` API reference](../api/gnn.md) -- where the matrices themselves are built

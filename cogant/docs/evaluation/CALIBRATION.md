@@ -273,3 +273,20 @@ values in production use.
 | Date | Change | Author |
 | --- | --- | --- |
 | 2026-04-09 | Initial calibration audit; all magic numbers annotated inline | COGANT team |
+
+---
+
+## See also
+
+- **Published calibration summary:** [`docs/rnd/calibration.md`](../rnd/calibration.md)
+- **Active Inference mapping (theory):** [ACTIVE_INFERENCE_MAPPING.md](ACTIVE_INFERENCE_MAPPING.md)
+- **Translation rules reference:** [`docs/reference/translation_rules.md`](../reference/translation_rules.md)
+- **Implementing modules:**
+  [`py/cogant/translate/confidence.py`](../../py/cogant/translate/confidence.py) (confidence combiner),
+  [`py/cogant/translate/engine.py`](../../py/cogant/translate/engine.py) (fixpoint cap),
+  [`py/cogant/translate/rules/`](../../py/cogant/translate/rules/) (19 rules across semantic/structural/behavioral/control/resilience),
+  [`py/cogant/gnn/matrices.py`](../../py/cogant/gnn/matrices.py) (matrix defaults / stability constants),
+  [`py/cogant/gnn/validator.py`](../../py/cogant/gnn/validator.py) (validator scoring),
+  [`py/cogant/statespace/compiler.py`](../../py/cogant/statespace/compiler.py) (confidence-tier mapping),
+  [`py/cogant/statespace/temporal.py`](../../py/cogant/statespace/temporal.py),
+  [`py/cogant/scoring/metrics.py`](../../py/cogant/scoring/metrics.py)

@@ -1,6 +1,6 @@
 # Incremental Mode Benchmark
 
-Measures the wall-time speedup of `cogant analyze --incremental <commit>`
+Measures the wall-time speedup of `cogant translate --incremental <commit>`
 against the full pipeline on a real-world Python repository.
 
 ## Setup

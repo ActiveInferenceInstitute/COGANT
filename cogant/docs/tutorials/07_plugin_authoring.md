@@ -1,5 +1,13 @@
 # Tutorial 7: Authoring a language plugin
 
+> **What this page is:** A guided implementation of a new `LanguagePlugin` so COGANT can ingest a language it does not currently support, using tree-sitter as the AST front end.
+>
+> **Prerequisites:** [Tutorial 4: Writing a custom rule](04_custom_rules.md), familiarity with tree-sitter grammars, and the [Plugin API reference](../api/plugin_api.md).
+>
+> **Reading time:** ~30 minutes
+>
+> **Next steps:** [Plugin API reference](../api/plugin_api.md) · [Static analysis API](../api/static.md) · [Translation rules reference](../reference/translation_rules.md)
+
 > **Goal.** Write a new `LanguagePlugin` that teaches COGANT to parse a language it does not currently support, using `tree-sitter` as the AST front end.
 
 > **Theory background:** A language plugin is a registered extension point in COGANT's parser

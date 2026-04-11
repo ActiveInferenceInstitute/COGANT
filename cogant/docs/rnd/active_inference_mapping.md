@@ -117,3 +117,21 @@ Once a seed set `S` is chosen, the pure-function partitioner `partition_by_seeds
 2. **Calculator never emits an `ACTION` mapping** even though `input_digit`, `input_operation`, and `equals` clearly mutate state — because `ActionRule` keyword-matches on `set/update/create/delete/send/push/execute/run/process/handle/dispatch` and none of those keywords appear in those method names. Only the private helper `_execute_operation` matches via `execute`. This is a real recall gap that should be addressed by adding an edge-based fallback: any method with 2+ `WRITES` edges targeting `self.*` attributes should become an action regardless of name.
 3. **Conflict resolution silently drops `HIDDEN_STATE` mappings when `InheritanceRule` fires** — if a class inherits from a handler base it is relabelled `POLICY`, which then wins the overlap resolution against the `HIDDEN_STATE` emitted by `MutatingSubsystemRule`. This is why `EventHandler` subclasses never appear as hidden state in the event-pipeline fixture despite having `failed_events` lists. Worth a follow-up to emit both roles where it is semantically accurate.
 4. **Calculator's Markov blanket uses the *module* as the external node** even though the module `contains` the class — a byproduct of the auto-seed scoring: the `calculator` module's cohesion score is below the class cluster's score, so the class and its methods are chosen as the system of interest and the module becomes environment. It is a correct application of the scoring function but counter-intuitive.
+
+---
+
+## See also
+
+- **Long-form R&D mapping document:** [`../evaluation/ACTIVE_INFERENCE_MAPPING.md`](../evaluation/ACTIVE_INFERENCE_MAPPING.md)
+- **Published Active Inference theory:** [`../concepts/active_inference.md`](../concepts/active_inference.md)
+- **Published Markov blanket explainer:** [`../concepts/markov_blanket.md`](../concepts/markov_blanket.md)
+- **Calibration registry:** [`../evaluation/CALIBRATION.md`](../evaluation/CALIBRATION.md)
+- **Implementing modules:**
+  [`py/cogant/translate/rules/semantic.py`](../../py/cogant/translate/rules/semantic.py),
+  [`py/cogant/translate/rules/structural.py`](../../py/cogant/translate/rules/structural.py),
+  [`py/cogant/translate/rules/behavioral.py`](../../py/cogant/translate/rules/behavioral.py),
+  [`py/cogant/translate/rules/control.py`](../../py/cogant/translate/rules/control.py),
+  [`py/cogant/translate/rules/resilience.py`](../../py/cogant/translate/rules/resilience.py),
+  [`py/cogant/markov/extractor.py`](../../py/cogant/markov/extractor.py),
+  [`py/cogant/markov/blanket.py`](../../py/cogant/markov/blanket.py),
+  [`py/cogant/gnn/matrices.py`](../../py/cogant/gnn/matrices.py)

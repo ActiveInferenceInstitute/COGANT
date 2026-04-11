@@ -6,6 +6,10 @@
 **Branch:** main
 **Commits since v0.4.0:** 29
 
+> **Source of truth for current numeric metrics:** [`evaluation/METRICS.yaml`](../../evaluation/METRICS.yaml)
+> (auto-generated). This document is a frozen release artifact for v0.5.0; references to v0.4.0
+> are intentional historical context.
+
 ---
 
 ## Headline
@@ -26,7 +30,7 @@ synthesis gap that held four targets at APPROXIMATE in v0.4.0.
 ### Incremental Analysis Mode (`--incremental <git-ref>`)
 
 - **Commit:** `1d5d390`
-- Adds `cogant analyze --incremental <git-ref>` (and `PipelineConfig.incremental_since`)
+- Adds `cogant translate --incremental <git-ref>` (and `PipelineConfig.incremental_since`)
   that diffs the working tree against a prior commit, re-parses only changed files,
   and merges the cached subgraph with the live result.
 - **Benchmark (Flask, 83 files):** no-change run 0.027 s vs 0.536 s baseline

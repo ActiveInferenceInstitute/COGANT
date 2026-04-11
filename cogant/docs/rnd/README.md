@@ -1,8 +1,19 @@
 # R&D Notes
 
-Exploratory documentation for the COGANT research track.
+> Exploratory, work-in-progress documentation for the COGANT research track. Notes here are intentionally less polished than the [evaluation/](../evaluation/) reports: they are scratchpads for active experiments and design discussions. Treat anything in this section as provisional.
 
-- [active_inference_mapping.md](active_inference_mapping.md) — code-pattern to AI-role mapping notes
-- [calibration.md](calibration.md) — rule calibration and confidence backlog
+## Contents
 
-Agent notes: [AGENTS.md](AGENTS.md) · Hub: [../index.md](../index.md)
+| Page | Description | Level |
+|------|-------------|-------|
+| [Active Inference Mapping](active_inference_mapping.md) | Code-pattern to Active Inference role mapping notes | Intermediate |
+| [Calibration](calibration.md) | Rule calibration and confidence backlog | Advanced |
+
+## Recommended Reading Order
+
+1. [Active Inference Mapping](active_inference_mapping.md) — start here for the conceptual scaffolding the rest of the R&D notes assume.
+2. [Calibration](calibration.md) — open work items on the confidence and rule calibration front.
+
+For dated, formal reports rather than working notes, see [../evaluation/](../evaluation/).
+
+Agent notes: [AGENTS.md](AGENTS.md) - Hub: [../index.md](../index.md)

@@ -1,4 +1,6 @@
-## Use final_mappings for GNN training
+## Use final_mappings for GNN export
+
+> **Note:** "GNN" here refers to Generalized Notation Notation (the Active Inference Institute's structured state-space and process-model notation), NOT graph neural networks. COGANT translates code into GNN model artifacts; it does not train neural network layers.
 ```
 
 ---
@@ -104,15 +106,15 @@ Output shows:
 
 ---
 
-### Integration with GNN Training
+### Integration with GNN (Generalized Notation Notation) export
 
 The final semantic mappings from the ReviewManager are ready for:
 
-1. **State space modeling** - Observations, actions, hidden states
-2. **Policy learning** - Constraint and preference extraction
-3. **Transition modeling** - State transition structure
-4. **Likelihood modeling** - Probabilistic relationships
-5. **Graph neural networks** - Input to GNN layers
+1. **State space modeling** - Observations, actions, hidden states populate the GNN `StateSpaceBlock`
+2. **Policy synthesis** - Constraint and preference roles populate the GNN policy section
+3. **Transition modeling** - State transition structure populates the B matrix
+4. **Likelihood modeling** - Probabilistic relationships populate the A matrix
+5. **GNN package emission** - Final mappings are serialized to a GNN package directory consumed by the reverse pipeline. GNN here is the Active Inference Institute's notation, not graph neural networks.
 
 All mappings include provenance, confidence scores, and human review status for traceability and quality assurance.
 

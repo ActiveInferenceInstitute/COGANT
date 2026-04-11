@@ -1,5 +1,13 @@
 # How COGANT assigns roles
 
+> **What this page is:** An explanation of COGANT's semantic rule engine — how rules fire on graph evidence, how conflicts are resolved, and what each of the seven Active Inference roles means.
+>
+> **Prerequisites:** [Program graphs in COGANT](program_graph.md) and the role vocabulary from [Active Inference](active_inference.md).
+>
+> **Reading time:** ~14 minutes
+>
+> **Next steps:** [Markov blankets in codebases](markov_blanket.md) · [Tutorial: Writing a custom translation rule](../tutorials/04_custom_rules.md) · [The forward-reverse cycle](roundtrip.md)
+
 COGANT's rule engine is the component that looks at a [program graph](program_graph.md) and decides: "This function is an observation. That class is hidden state. This validator is a constraint." This page explains the engine, the rule families, how conflicts are resolved, and what each of the seven semantic roles means.
 
 ## The rule engine
@@ -103,31 +111,31 @@ If `ContainmentRule` also fires on `UserService` (it has methods), the majority-
 
 ### HIDDEN_STATE
 
-Internal mutable state that is not directly observable from outside. Private fields, caches, buffers, accumulators. In the [GNN output](gnn.md), these become `StateSpaceBlock` variables. In the [Markov blanket](markov_blanket.md), these are internal nodes.
+Internal mutable state that is not directly observable from outside. Private fields, caches, buffers, accumulators. In the [GNN output](gnn.md), these become `StateSpaceBlock` variables. In the [Markov blanket](markov_blanket.md), these are internal nodes. Detected by `MutatingSubsystemRule` — see [translation rules reference](../reference/translation_rules.md) and [semantic roles reference](../reference/semantic_roles.md).
 
 ### OBSERVATION
 
-Read-only access points that expose hidden state. Getter methods, query functions, logging handlers. These become observation modalities in the GNN and feed the A (likelihood) matrix.
+Read-only access points that expose hidden state. Getter methods, query functions, logging handlers. These become observation modalities in the GNN and feed the A (likelihood) matrix. Detected by `ObservationRule` and `ReadOnlyInputRule` — see [translation rules reference](../reference/translation_rules.md).
 
 ### ACTION
 
-Functions that change hidden state. Setters, mutators, event publishers, request handlers. These become action variables in the GNN and define the B (transition) matrix slices.
+Functions that change hidden state. Setters, mutators, event publishers, request handlers. These become action variables in the GNN and define the B (transition) matrix slices. Detected by `ActionRule` — see [translation rules reference](../reference/translation_rules.md).
 
 ### POLICY
 
-Control logic that selects which action to execute. Controllers, routers, schedulers, retry strategies. These map to the policy layer in Active Inference -- the mechanism that minimizes expected free energy.
+Control logic that selects which action to execute. Controllers, routers, schedulers, retry strategies. These map to the policy layer in Active Inference -- the mechanism that minimizes expected free energy. Detected by `PolicyRule`, `InheritanceRule`, and `RetryPatternRule` — see [translation rules reference](../reference/translation_rules.md).
 
 ### CONSTRAINT
 
-Validators and tests that define what the system considers correct. Assertions, schema validators, type checkers. These populate the C (preference) matrix in the GNN.
+Validators and tests that define what the system considers correct. Assertions, schema validators, type checkers. These populate the C (preference) matrix in the GNN. Detected by `PreferenceRule` and `TestAssertionRule` — see [translation rules reference](../reference/translation_rules.md).
 
 ### CONTEXT
 
-Configuration, feature flags, and global state that parameterize the system. These populate the D (prior) matrix in the GNN -- the initial beliefs before any observations.
+Configuration, feature flags, and global state that parameterize the system. These populate the D (prior) matrix in the GNN -- the initial beliefs before any observations. Detected by `ContextRule`, `ConfigRule`, `FeatureFlagRule`, and `SingletonAccessRule` — see [translation rules reference](../reference/translation_rules.md).
 
 ### DATA_FLOW
 
-Functions that read from one source and write to a different target. Transformation pipelines, ETL functions, adapters. These appear in the Connections section of the GNN.
+Functions that read from one source and write to a different target. Transformation pipelines, ETL functions, adapters. These appear in the Connections section of the GNN. Detected by `DataPipelineRule` — see [translation rules reference](../reference/translation_rules.md).
 
 ## Confidence tiers
 
@@ -140,9 +148,28 @@ Every mapping carries a `ConfidenceTier` label:
 
 The confidence score (0.65 to 0.90) determines conflict resolution priority. `ConfigRule` at 0.90 is the highest confidence in the entire family -- explicit configuration is ground truth. `SingletonAccessRule` at 0.65 is the lowest -- "read by many modules" is a weak signal.
 
+## Implementation
+
+The rule engine, the five rule families, and the conflict-resolution machinery all live in `cogant.translate`:
+
+| Concept on this page | Module (`py/cogant/...`) | API reference | Key class / function |
+| --- | --- | --- | --- |
+| Engine: rule registration, fixpoint loop, conflict resolution, `.explain()` | `translate/engine.py` | [`cogant.translate` → Engine](../api/translate.md#engine) | `TranslationEngine`, `RuleExplanation` |
+| Confidence scoring and tiering (`STATIC_ONLY`, `STATIC_PLUS_RUNTIME`, ...) | `translate/confidence.py` | [`cogant.translate` → Confidence](../api/translate.md#confidence) | `ConfidenceTier`, scoring helpers |
+| Human-in-the-loop curation API | `translate/review.py` | [`cogant.translate` → Review](../api/translate.md#review) | `ReviewQueue` |
+| **Structural rules** family (`ReadOnlyInputRule`, `MutatingSubsystemRule`, `InheritanceRule`, `ContainmentRule`, `DataPipelineRule`) | `translate/rules/structural.py` | [`cogant.translate` → Structural rules](../api/translate.md#structural-rules) | see [translation rules reference](../reference/translation_rules.md) |
+| **Semantic rules** family (`ObservationRule`, `ActionRule`, `PolicyRule`, `PreferenceRule`, `ContextRule`) | `translate/rules/semantic.py` | [`cogant.translate` → Semantic rules](../api/translate.md#semantic-rules) | see [translation rules reference](../reference/translation_rules.md) |
+| **Behavioral rules** family (`OrchestratorRule`, `TestAssertionRule`, `EventBusRule`) | `translate/rules/behavioral.py` | [`cogant.translate` → Behavioral rules](../api/translate.md#behavioral-rules) | see [translation rules reference](../reference/translation_rules.md) |
+| **Control rules** family (`ConfigRule`, `FeatureFlagRule`) | `translate/rules/control.py` | [`cogant.translate` → Control-flow rules](../api/translate.md#control-flow-rules) | see [translation rules reference](../reference/translation_rules.md) |
+| **Resilience rules** family (`RetryPatternRule`, `ErrorBoundaryRule`, `SingletonAccessRule`, `CircuitBreakerRule`) | `translate/rules/resilience.py` | [`cogant.translate` → Resilience rules](../api/translate.md#resilience-rules) | see [translation rules reference](../reference/translation_rules.md) |
+| Mapping the seven semantic roles onto Active Inference ontology terms | `gnn/formatter/`, `statespace/compiler.py` | [`cogant.gnn`](../api/gnn.md), [`cogant.statespace`](../api/statespace.md) | `GNNMarkdownFormatter`, `StateSpaceCompiler` |
+
 ## Further reading
 
 - [What is a GNN?](gnn.md) -- how role assignments become GNN sections
 - [Active Inference from a programmer's perspective](active_inference.md) -- the theory behind the seven roles
 - [Program graphs in COGANT](program_graph.md) -- the graph structure that rules analyze
 - [Markov blankets in codebases](markov_blanket.md) -- the complementary partitioning approach
+- [`cogant.translate` API reference](../api/translate.md) -- engine + every rule class indexed by family
+- [Translation rules reference](../reference/translation_rules.md) -- per-rule descriptions, confidence levels, and matching conditions
+- [Semantic roles reference](../reference/semantic_roles.md) -- the role taxonomy that the rules emit

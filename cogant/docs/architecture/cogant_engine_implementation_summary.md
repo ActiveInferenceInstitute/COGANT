@@ -154,13 +154,13 @@ Raw Facts (language-specific)
     ↓
 [GraphMerger] → Merge static + dynamic evidence
     ↓
-[TranslationEngine] → Apply 8 rules for semantic patterns
+[TranslationEngine] → Apply 19 translation rules (fixpoint) for semantic role assignment
     ↓
 [ConfidenceModel] → Score by evidence and diversity
     ↓
 [ReviewManager] → Human curation and approval
     ↓
-Final SemanticMappings (ready for GNN training)
+Final SemanticMappings (consumed by the GNN — Generalized Notation Notation, Active Inference Institute spec — package emitter; not graph-neural-network training)
 ```
 
 ### Usage Example

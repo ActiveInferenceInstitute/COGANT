@@ -1,5 +1,13 @@
 # Program graphs in COGANT
 
+> **What this page is:** A reference to COGANT's central IR — what nodes and edges exist, how tree-sitter extracts them, and the JSON schema downstream stages consume.
+>
+> **Prerequisites:** Familiarity with abstract syntax trees and call graphs is helpful but not required.
+>
+> **Reading time:** ~12 minutes
+>
+> **Next steps:** [How COGANT assigns roles](role_assignment.md) · [Markov blankets in codebases](markov_blanket.md) · [Tutorial: Small repo walkthrough](../tutorials/02_small_repo_walkthrough.md)
+
 The program graph is COGANT's central data structure. Every analysis -- [role assignment](role_assignment.md), [Markov blanket extraction](markov_blanket.md), [matrix derivation](active_inference.md), and [GNN emission](gnn.md) -- operates on this graph. This page explains what nodes and edges exist, how tree-sitter extracts them, and what the JSON schema looks like.
 
 ## What is a program graph?

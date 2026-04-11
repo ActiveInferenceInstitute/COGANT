@@ -270,3 +270,23 @@ covering:
    function but counter-intuitive - normally one would call the module
    "the system" and the class "inside". Worth documenting in the
    blanket extractor README.
+
+---
+
+## See also
+
+- **Published Active Inference theory page:** [`docs/concepts/active_inference.md`](../concepts/active_inference.md)
+- **Published Markov blanket page:** [`docs/concepts/markov_blanket.md`](../concepts/markov_blanket.md)
+- **R&D mirror:** [`docs/rnd/active_inference_mapping.md`](../rnd/active_inference_mapping.md)
+- **Calibration registry:** [CALIBRATION.md](CALIBRATION.md)
+- **Roundtrip evaluation:** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md)
+- **Implementing modules:**
+  [`py/cogant/translate/rules/semantic.py`](../../py/cogant/translate/rules/semantic.py) (ObservationRule, ActionRule, PolicyRule, PreferenceRule, ContextRule),
+  [`py/cogant/translate/rules/structural.py`](../../py/cogant/translate/rules/structural.py) (MutatingSubsystemRule, ReadOnlyInputRule, InheritanceRule, ContainmentRule, DataPipelineRule),
+  [`py/cogant/translate/rules/behavioral.py`](../../py/cogant/translate/rules/behavioral.py) (OrchestratorRule, EventBusRule, TestAssertionRule),
+  [`py/cogant/translate/rules/control.py`](../../py/cogant/translate/rules/control.py) (ConfigRule, FeatureFlagRule),
+  [`py/cogant/translate/rules/resilience.py`](../../py/cogant/translate/rules/resilience.py) (RetryPatternRule, CircuitBreakerRule, ErrorBoundaryRule, SingletonAccessRule),
+  [`py/cogant/markov/extractor.py`](../../py/cogant/markov/extractor.py),
+  [`py/cogant/markov/blanket.py`](../../py/cogant/markov/blanket.py),
+  [`py/cogant/statespace/compiler.py`](../../py/cogant/statespace/compiler.py),
+  [`py/cogant/gnn/matrices.py`](../../py/cogant/gnn/matrices.py)

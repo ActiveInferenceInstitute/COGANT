@@ -1,8 +1,12 @@
 # COGANT Roundtrip Evaluation
 
-Generated: 2026-04-10 (post-wave-16 refresh)
-Tool: `cogant roundtrip` (v0.4.0)
+Generated: 2026-04-10 (post-wave-16 refresh; numbers re-verified 2026-04-11)
+Tool: `cogant roundtrip` (v0.5.0)
 Threshold convention: ε ≥ 0.8 = ISOMORPHIC, 0.5 ≤ ε < 0.8 = APPROXIMATE, ε < 0.5 = DIVERGENT
+
+> **Source of truth for headline numbers:** [`evaluation/METRICS.yaml`](../../evaluation/METRICS.yaml)
+> (auto-generated). Current state: 23/23 ISOMORPHIC, mean ε = 1.0. The per-target table below
+> is the canonical post-wave-16 re-run; pre-wave-16 figures are preserved as historical context only.
 
 **Wave-16 note:** The CONSTRAINT fix, POLICY stub, and CONTEXT stub changes landed in wave-16 and dramatically improved synthesizer fidelity. The table below reflects a full re-run of all 23 targets post-wave-16. All targets are now ISOMORPHIC (ε = 1.0000). The pre-wave-16 figures (14/23 ISO, 6/23 APPROX, 3/23 DIV) are preserved in git history at the commit before `eval(benchmark): re-run all 23 roundtrip targets post-wave-16`.
 
@@ -135,3 +139,20 @@ For a first demonstration of the Active Inference cycle (forward → GNN → pol
 - JSONL results: `cogant/evaluation/dataset/roundtrip_results.jsonl` (23 rows, one per target)
 - Driver script: `cogant/evaluation/dataset/regenerate.py`
 - Benchmark summary: `cogant/_rnd/sweep_2026_04/benchmark_refresh_result.md`
+
+---
+
+## See also
+
+- **Conceptual roundtrip explainer (published docs):** [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md)
+- **Wave-16 CONSTRAINT fix details:** [CONSTRAINT_FIX.md](CONSTRAINT_FIX.md)
+- **Benchmark refresh notes:** [`_rnd/sweep_2026_04/benchmark_refresh_result.md`](../../_rnd/sweep_2026_04/benchmark_refresh_result.md)
+- **v1.0 readiness assessment:** [V1.0_READINESS.md](V1.0_READINESS.md)
+- **Live metrics (source of truth):** [`evaluation/METRICS.yaml`](../../evaluation/METRICS.yaml)
+- **Dataset (HuggingFace/Kaggle layout):** [`evaluation/dataset/`](../../evaluation/dataset/)
+- **Driver script:** [`evaluation/dataset/regenerate.py`](../../evaluation/dataset/regenerate.py)
+- **Implementing modules:**
+  [`py/cogant/reverse/idempotency.py`](../../py/cogant/reverse/idempotency.py) (verify_repo_roundtrip),
+  [`py/cogant/reverse/synthesizer.py`](../../py/cogant/reverse/synthesizer.py),
+  [`py/cogant/reverse/parser.py`](../../py/cogant/reverse/parser.py),
+  [`py/cogant/reverse/planner.py`](../../py/cogant/reverse/planner.py)

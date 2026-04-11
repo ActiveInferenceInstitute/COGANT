@@ -74,3 +74,16 @@ Changed: `cogant/py/cogant/reverse/synthesizer.py`, function `_render_constraint
 - Proportional by construction: one stub per `NodePlan` in `plan.constraint_checks`
 - Zero stubs when plan has no constraints; N stubs when plan has N constraints
 - 120/120 unit+integration tests pass after the change
+
+---
+
+## See also
+
+- **Translation rules reference (PreferenceRule, etc.):** [`docs/reference/translation_rules.md`](../reference/translation_rules.md)
+- **Roundtrip evaluation report (post-fix benchmark):** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md)
+- **Benchmark refresh notes:** [`_rnd/sweep_2026_04/benchmark_refresh_result.md`](../../_rnd/sweep_2026_04/benchmark_refresh_result.md)
+- **v1.0 readiness:** [V1.0_READINESS.md](V1.0_READINESS.md)
+- **Implementing modules:**
+  [`py/cogant/reverse/synthesizer.py`](../../py/cogant/reverse/synthesizer.py) (`_render_constraints_module`),
+  [`py/cogant/reverse/planner.py`](../../py/cogant/reverse/planner.py) (`plan.constraint_checks`),
+  [`py/cogant/translate/rules/semantic.py`](../../py/cogant/translate/rules/semantic.py) (`PreferenceRule`)

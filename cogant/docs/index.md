@@ -1,5 +1,13 @@
 # COGANT
 
+> **What this page is:** The documentation entry point for COGANT — what the project does, why it exists, and where to go next.
+>
+> **Prerequisites:** None.
+>
+> **Reading time:** ~4 minutes
+>
+> **Next steps:** [Installation](getting-started/installation.md) · [Tutorial 1: Quickstart](tutorials/01_quickstart.md) · [Active Inference for programmers](concepts/active_inference.md)
+
 **Codebase-to-GNN Translation Engine** — turn software repositories into Active Inference state-space models expressed in Generalized Notation Notation (GNN).
 
 COGANT parses a repository, builds a typed program graph, assigns every node an Active Inference role (HIDDEN_STATE / OBSERVATION / ACTION / POLICY / CONSTRAINT / ...), compiles a Markov blanket, derives A/B/C/D generative-model matrices, and exports a validated GNN package plus JSON / PyArrow / HTML artifacts for downstream training pipelines and audits.

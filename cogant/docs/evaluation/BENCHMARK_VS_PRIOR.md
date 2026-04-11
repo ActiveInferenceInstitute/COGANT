@@ -335,3 +335,21 @@ future work.
   (semantic.py, structural.py, behavioral.py, control.py, resilience.py)
 - `cogant/gnn/matrices.py` -- GNN matrix construction
 - `cogant/gnn/validator.py` -- GNN validation scoring
+
+---
+
+## See also
+
+- **Roundtrip evaluation report:** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md) (23/23 ISOMORPHIC at ε = 1.0)
+- **Calibration registry:** [CALIBRATION.md](CALIBRATION.md)
+- **Active Inference mapping (theory):** [ACTIVE_INFERENCE_MAPPING.md](ACTIVE_INFERENCE_MAPPING.md)
+- **Published roundtrip explainer:** [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md)
+- **Translation rules reference:** [`docs/reference/translation_rules.md`](../reference/translation_rules.md)
+- **Implementing modules:**
+  [`py/cogant/translate/rules/semantic.py`](../../py/cogant/translate/rules/semantic.py),
+  [`py/cogant/translate/rules/structural.py`](../../py/cogant/translate/rules/structural.py),
+  [`py/cogant/translate/rules/behavioral.py`](../../py/cogant/translate/rules/behavioral.py),
+  [`py/cogant/translate/rules/control.py`](../../py/cogant/translate/rules/control.py),
+  [`py/cogant/translate/rules/resilience.py`](../../py/cogant/translate/rules/resilience.py),
+  [`py/cogant/gnn/matrices.py`](../../py/cogant/gnn/matrices.py),
+  [`py/cogant/gnn/validator.py`](../../py/cogant/gnn/validator.py)

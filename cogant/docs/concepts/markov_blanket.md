@@ -1,5 +1,13 @@
 # Markov blankets in codebases
 
+> **What this page is:** A mathematical and engineering explanation of how COGANT extracts Markov blankets from program graphs to formalize module boundaries.
+>
+> **Prerequisites:** [Active Inference concepts](active_inference.md) and a working understanding of [program graphs](program_graph.md).
+>
+> **Reading time:** ~15 minutes
+>
+> **Next steps:** [How COGANT assigns roles](role_assignment.md) · [The forward-reverse cycle](roundtrip.md) · [Tutorial: Small repo walkthrough](../tutorials/02_small_repo_walkthrough.md)
+
 A Markov blanket is a boundary in a graph that makes one set of nodes conditionally independent from another. In COGANT, it is the formal mechanism for answering the question: "Where does this module end and the rest of the system begin?" This page explains the mathematics, the COGANT implementation, and why the result matters for software architecture.
 
 ## The mathematical definition
@@ -114,8 +122,22 @@ class SessionManager:
 
 COGANT's blanket extractor would partition this as: `_token_cache` and `_refresh_timer` are **internal**, `verify_token` is **sensory** (incoming information flow from callers), and `refresh` is **active** (outgoing information flow to the OAuth provider). The OAuth client itself is **external**. This partition exactly captures the module's architectural role.
 
+## Implementation
+
+The blanket partitioner, the seeded extractor, and the multi-blanket helpers all live in the `cogant.markov` package; the seed-classification rules that complement them live in `cogant.translate.rules`:
+
+| Concept on this page | Module (`py/cogant/...`) | API reference | Key class / function |
+| --- | --- | --- | --- |
+| Pure-function partitioner (`partition_by_seeds`) | `markov/blanket.py` | [`cogant.markov` → Blanket](../api/markov.md#blanket) | `partition_by_seeds`, `BlanketRole` |
+| Seeded extractor with the five strategies (`auto`, `module`, `class`, `cluster`, `explicit`) | `markov/extractor.py` | [`cogant.markov` → Extractor](../api/markov.md#extractor) | `MarkovBlanketExtractor` |
+| Multi-blanket and network-level helpers | `markov/network.py` | [`cogant.markov` → Network](../api/markov.md#network) | network helpers |
+| Internal/sensory/active classification of seeded nodes | `translate/rules/structural.py`, `translate/rules/semantic.py` | [`cogant.translate` → Rules](../api/translate.md#rules) | `MutatingSubsystemRule` (internal), `ObservationRule` (sensory), `ActionRule` (active) — see [translation rules reference](../reference/translation_rules.md) |
+| `markov_blanket.json` satellite in the GNN package | `gnn/package.py` | [`cogant.gnn` → Package builder](../api/gnn.md#package-builder) | `GNNPackageBuilder` |
+
 ## Further reading
 
 - [Active Inference from a programmer's perspective](active_inference.md) -- how the blanket feeds into A/B/C/D matrices
 - [How COGANT assigns roles](role_assignment.md) -- the rule engine that complements blanket partitioning
 - [Program graphs in COGANT](program_graph.md) -- the graph structure that blanket extraction operates on
+- [`cogant.markov` API reference](../api/markov.md) -- module-by-module class and function index
+- [Translation rules reference](../reference/translation_rules.md) -- rules that classify each blanket node by role

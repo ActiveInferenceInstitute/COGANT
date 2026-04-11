@@ -1,5 +1,13 @@
 # Quick Start
 
+> **What this page is:** A minimal end-to-end COGANT run — translate a repository, validate the bundle, and explain a single node.
+>
+> **Prerequisites:** [Installation](installation.md) complete and `cogant --help` works in your terminal.
+>
+> **Reading time:** ~6 minutes
+>
+> **Next steps:** [Tutorial 1: Quickstart](../tutorials/01_quickstart.md) · [Tutorial 2: Small repo walkthrough](../tutorials/02_small_repo_walkthrough.md) · [API quick start](../api/quick_start.md)
+
 This page walks through a minimal end-to-end COGANT run: translate a repository, validate the bundle, and explain a single node.
 
 ## 1. Translate a repository

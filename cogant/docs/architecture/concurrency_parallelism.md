@@ -2,11 +2,13 @@
 
 ### Stage Parallelization
 
-- **Stage 2 (Static)**: Parallel per-file (independent parsers)
-- **Stage 3 (Normalize)**: Parallel per-file + reduce
-- **Stage 5 (Dynamic)**: Parallel per-file (independent trace loading)
-- **Stage 6 (Translate)**: Parallel over rule set
-- **Stage 9 (Export)**: Parallel per format
+The current 8-stage pipeline (`ingest → parse → graph → translate → statespace → markov → gnn → reverse`; see `cogant/evaluation/METRICS.yaml`) parallelizes as follows:
+
+- **Stage 2 (Parse)**: Parallel per-file (independent parsers; absorbs the legacy `static` and `normalize` stages)
+- **Stage 3 (Graph)**: Parallel per-file + reduce on the merge step
+- **Stage 4 (Translate)**: Parallel over the 19-rule fixpoint set
+- **Stage 7 (GNN)**: Parallel per export format (JSON / Markdown / matrices)
+- **Stage 8 (Reverse)**: Parallel per `PackagePlan` module during synthesis
 
 ### Thread Safety
 

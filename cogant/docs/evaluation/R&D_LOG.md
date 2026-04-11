@@ -1079,3 +1079,19 @@ COGANT is solid alpha/beta. The empirical claim (Active Inference cycle on real 
 
 **Binding rules:** NO manuscript/ edits; every number → METRICS.yaml; every link resolves; every example runs.
 
+---
+
+## See also
+
+- **v1.0 readiness assessment:** [V1.0_READINESS.md](V1.0_READINESS.md)
+- **Roundtrip evaluation report:** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md)
+- **Active Inference mapping:** [ACTIVE_INFERENCE_MAPPING.md](ACTIVE_INFERENCE_MAPPING.md)
+- **Calibration registry:** [CALIBRATION.md](CALIBRATION.md)
+- **CONSTRAINT fix details (wave 16):** [CONSTRAINT_FIX.md](CONSTRAINT_FIX.md)
+- **Mutation report (wave 18):** [MUTATION_REPORT.md](MUTATION_REPORT.md)
+- **Benchmark vs prior:** [BENCHMARK_VS_PRIOR.md](BENCHMARK_VS_PRIOR.md)
+- **Wave-19 sweep notes:** [`_rnd/sweep_2026_04/benchmark_refresh_result.md`](../../_rnd/sweep_2026_04/benchmark_refresh_result.md), [`_rnd/sweep_2026_04/mutation_testing_result.md`](../../_rnd/sweep_2026_04/mutation_testing_result.md)
+- **Live metrics (source of truth):** [`evaluation/METRICS.yaml`](../../evaluation/METRICS.yaml)
+- **Implementing modules (forward):** [`py/cogant/translate/`](../../py/cogant/translate/), [`py/cogant/statespace/`](../../py/cogant/statespace/), [`py/cogant/gnn/`](../../py/cogant/gnn/), [`py/cogant/markov/`](../../py/cogant/markov/), [`py/cogant/static/`](../../py/cogant/static/)
+- **Implementing modules (reverse):** [`py/cogant/reverse/`](../../py/cogant/reverse/)
+

@@ -1,5 +1,13 @@
 # The forward-reverse cycle
 
+> **What this page is:** A conceptual overview of COGANT's bidirectional pipeline — code-to-GNN, GNN-to-code, and the round-trip that closes the loop with diff-based equivalence checks.
+>
+> **Prerequisites:** [What is a GNN?](gnn.md), [How COGANT assigns roles](role_assignment.md).
+>
+> **Reading time:** ~10 minutes
+>
+> **Next steps:** [Tutorial: Reverse mode — GNN to code](../tutorials/06_reverse_mode.md) · [Markov blankets in codebases](markov_blanket.md) · [Active Inference for programmers](active_inference.md)
+
 COGANT's most ambitious claim is that the mapping between source code and Active Inference models is not one-way. The forward pipeline translates code into a [GNN](gnn.md). The reverse pipeline synthesizes code back from a GNN. Together they form a cycle:
 
 ```
@@ -60,22 +68,26 @@ The synthesized code is not a copy of the original -- it is a **minimal implemen
 
 ## The isomorphism measure
 
-How do you know the roundtrip worked? COGANT defines the isomorphism measure as a comparison of two GNN bundles:
+How do you know the roundtrip worked? COGANT defines the role-preservation fidelity metric as:
 
 ```
-epsilon = distance(GNN_original, GNN_roundtrip)
+ε = |roles_preserved| / |roles_original|
 ```
 
-where `distance` compares:
+where the numerator counts semantic-role assignments preserved across the `forward → reverse → forward` roundtrip and the denominator counts the roles in the original GNN bundle. The metric compares:
 
-1. **State space dimensionality** -- same number of hidden states, observations, actions
-2. **A matrix structure** -- same non-zero pattern in the likelihood matrix
-3. **B matrix structure** -- same non-zero pattern in the transition matrix
-4. **C vector** -- same preference ordering
-5. **D vector** -- same prior distribution
-6. **Blanket partition** -- same internal/sensory/active/external assignment
+1. **State space dimensionality** — same number of hidden states, observations, actions
+2. **A matrix structure** — same non-zero pattern in the likelihood matrix
+3. **B matrix structure** — same non-zero pattern in the transition matrix
+4. **C vector** — same preference ordering
+5. **D vector** — same prior distribution
+6. **Blanket partition** — same internal/sensory/active/external assignment
 
-A perfect roundtrip has epsilon = 0. In practice, the forward pipeline discards information that cannot be recovered:
+A perfect roundtrip has **ε = 1.0** (all roles preserved), and the ISOMORPHIC threshold is **ε ≥ 0.8**. Current benchmark: **23/23 targets ISOMORPHIC, mean ε = 1.0** (canonical source `cogant/evaluation/METRICS.yaml`).
+
+> **Legacy note:** Earlier drafts (pre-wave-14, see `ISOMORPHISM_THEOREM.md` §4) used a complementary "error" formulation where ε_max = 0 meant exact recovery. The current project-wide convention is the role-preservation ratio above, where 1.0 is exact.
+
+In practice, the forward pipeline discards information that cannot be recovered:
 
 - **Whitespace and comments** are lost at stage 1 (AST extraction)
 - **Dead code** that has no edges in the program graph is invisible to the rule engine
@@ -145,9 +157,30 @@ Running `cogant forward` on this synthesized code produces a GNN with the same `
 - The B matrix placeholder code does not implement real transition logic -- it preserves the structural skeleton.
 - Complex control flow (loops, conditionals, exception handling) is not synthesized.
 
+## Implementation
+
+The forward stages live across `cogant.static`, `cogant.translate`, `cogant.statespace`, and `cogant.gnn`; the reverse stages and the ε metric live in `cogant.reverse`:
+
+| Concept on this page | Module (`py/cogant/...`) | API reference | Key class / function |
+| --- | --- | --- | --- |
+| Forward stage 1 — source → AST → program graph | `static/parser.py`, `static/treesitter_parser.py`, `graph/builder.py` | [`cogant.static`](../api/static.md) | `TreeSitterParser`, graph builder |
+| Forward stage 2 — graph → semantic mappings (rule fixpoint) | `translate/engine.py`, `translate/rules/` | [`cogant.translate` → Engine](../api/translate.md#engine), [`cogant.translate` → Rules](../api/translate.md#rules) | `TranslationEngine` — see [translation rules reference](../reference/translation_rules.md) |
+| Forward stage 3 — mappings → state-space basis | `statespace/compiler.py` | [`cogant.statespace` → Compiler](../api/statespace.md#compiler) | `StateSpaceCompiler` |
+| Forward stage 4 — state space → A/B/C/D matrices | `gnn/matrices.py` | [`cogant.gnn` → Matrix builder](../api/gnn.md#matrix-builder) | `build_matrices` |
+| Forward stage 5 — matrices → GNN markdown (`model.gnn.md`) | `gnn/formatter/` | [`cogant.gnn`](../api/gnn.md) | `GNNMarkdownFormatter` |
+| Forward stage 6 — `GNNPackageBuilder` writes the package directory | `gnn/package.py` | [`cogant.gnn` → Package builder](../api/gnn.md#package-builder) | `GNNPackageBuilder` |
+| Reverse — `load_gnn_package()` and parser tolerant of canonical + extended sections | `gnn/runner.py`, `reverse/parser.py` | [`cogant.gnn` → Runner](../api/gnn.md#runner), [`cogant.reverse` → Parser](../api/reverse.md#parser) | `load_gnn_package`, `ReverseGNNModel` |
+| Reverse — synthesis planning | `reverse/planner.py` | [`cogant.reverse` → Planner](../api/reverse.md#planner) | planner classes |
+| Reverse — Python package synthesis (`synthesize_package`) | `reverse/synthesizer.py`, `reverse/matrices.py` | [`cogant.reverse` → Synthesizer](../api/reverse.md#synthesizer) | `synthesize_package` |
+| Reverse — runtime-callable closures (`MatrixFunctions`) | `reverse/callable.py` | [`cogant.reverse` → Callable](../api/reverse.md#callable) | `MatrixFunctions` |
+| Roundtrip ε metric and idempotency checks | `reverse/metrics.py`, `reverse/idempotency.py` | [`cogant.reverse` → Metrics](../api/reverse.md#metrics), [`cogant.reverse` → Idempotency](../api/reverse.md#idempotency) | epsilon helpers |
+| Forward-pipeline orchestration consumed by `cogant roundtrip` | `pipeline/`, `cli/` | [`cogant.gnn` → Runner](../api/gnn.md#runner), [pipelinerunner_api](../api/pipelinerunner_api.md) | pipeline runner |
+
 ## Further reading
 
 - [What is a GNN?](gnn.md) -- the format that the roundtrip preserves
 - [Active Inference from a programmer's perspective](active_inference.md) -- the A/B/C/D matrices being compared
 - [Program graphs in COGANT](program_graph.md) -- the intermediate representation in the forward pipeline
 - [How COGANT assigns roles](role_assignment.md) -- the rule engine that populates the GNN
+- [`cogant.reverse` API reference](../api/reverse.md) -- module-by-module class and function index for the reverse pipeline
+- [`cogant.gnn` API reference](../api/gnn.md) -- the forward output that the reverse pipeline consumes
