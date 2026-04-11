@@ -46,10 +46,10 @@ Converts software repositories into **Generalized Notation Notation (GNN)** arti
 │  User-facing: Session / PipelineRunner / CLI         │
 │  cogant.api.{session,pipeline,bundle,review}         │
 ├─────────────────────────────────────────────────────┤
-│  10-stage pipeline (Python orchestration)            │
-│  ingest → parse → normalize → graph → dynamic        │
-│  → translate → statespace → process → validate        │
-│  → export                                            │
+│  8-stage pipeline (Python orchestration)             │
+│  ingest → parse → graph → translate → statespace     │
+│  → markov → gnn → reverse                            │
+│  (see cogant/evaluation/METRICS.yaml)                │
 ├─────────────────────────────────────────────────────┤
 │  26 core modules (py/cogant/)                        │
 │  schemas, graph, parsers, normalize, translate,      │

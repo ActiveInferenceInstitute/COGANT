@@ -67,7 +67,7 @@ Same forward pipeline as above, producing a second GNN.
 **ε computation:**
 `cogant.reverse.idempotency.verify_repo_roundtrip(repo_path).role_match_score`
 
-Role-match is computed over the multiset of node roles (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT) — comparing the role populations from the first and second forward passes. `is_isomorphic` uses default threshold 0.5; this report re-classifies with the stricter tiered thresholds above.
+Role-match is computed over the multiset of node roles (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT) — comparing the role populations from the first and second forward passes. The canonical tiered thresholds (from `cogant/evaluation/METRICS.yaml`: `threshold_isomorphic = 0.8`, `threshold_approximate = 0.5`) partition outcomes into ISOMORPHIC (`ε ≥ 0.8`), APPROXIMATE (`0.5 ≤ ε < 0.8`), and DIVERGENT (`ε < 0.5`). Legacy roundtrip driver code may still report a loose `is_isomorphic` at a 0.5 gate; this report always uses the stricter ε ≥ 0.8 tier classification.
 
 **Command used:**
 ```

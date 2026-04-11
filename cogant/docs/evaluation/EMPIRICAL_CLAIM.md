@@ -32,7 +32,7 @@ complete Active Inference perception-action cycle on it.
 
 ```
 role_match_score: 1.0   (PERFECT)
-is_isomorphic:    true  (threshold 0.5)
+is_isomorphic:    true  (ISOMORPHIC threshold ε ≥ 0.8; see cogant/evaluation/METRICS.yaml)
 original_roles:   {HIDDEN_STATE: 1, OBSERVATION: 1, ACTION: 2}
 synthesized_roles:{HIDDEN_STATE: 1, OBSERVATION: 7, ACTION: 5, CONSTRAINT: 4}
 shape_match:      {n_states: true, n_obs: true, n_actions: true}
@@ -110,7 +110,7 @@ requires no external services (`--no-dynamic` skips coverage tracing).
   contributes one degree of freedom to the top-level state-space).
 - `role_match=1.0` means the forward→reverse→forward roundtrip recovers all
   three role categories (HIDDEN_STATE, OBSERVATION, ACTION) without loss.
-- `is_isomorphic=true` at threshold 0.5 means the structural invariant holds
+- `is_isomorphic=true` at the canonical ISOMORPHIC threshold (ε ≥ 0.8) means the structural invariant holds
   across the Galois connection.
 - The demo uses real GNN text (no mocks, no fixtures) generated live from the
   source code via the cogant CLI subprocess call.

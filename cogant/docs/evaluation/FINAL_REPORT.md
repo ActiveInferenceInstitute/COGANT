@@ -69,11 +69,11 @@ model and runs a complete perception-action cycle on it.**
 
 Evidence chain (zoo/01_simple_state):
 1. **Forward pass**: `cogant translate examples/zoo/01_simple_state --no-dynamic`
-   - 10 pipeline stages: all status=success, validate.passed=True, score=100%
+   - 8 pipeline stages (`ingest → parse → graph → translate → statespace → markov → gnn → reverse`, canonical list in `cogant/evaluation/METRICS.yaml`): all status=success, validate.passed=True, score=100%
    - Extracted: s_f0 (cardinality 3), o_m0, u_c0, u_c1
    - GNN sections: StateSpaceBlock, Connections, ActInfOntologyAnnotation,
      InitialParameterization, ModelParameters, Time
-2. **Roundtrip**: `role_match_score=1.0`, `is_isomorphic=true` (threshold 0.5)
+2. **Roundtrip**: `role_match_score=1.0`, `is_isomorphic=true` (ISOMORPHIC threshold ε ≥ 0.8; perfect roundtrip at ε = 1.0)
    - Galois connection confirmed: forward→reverse→forward preserves roles
 3. **Active Inference cycle** (10 steps):
    - Prior D=[1.0] → likelihood A=[[1.0]] → obs o_m0 → posterior [1.0]
