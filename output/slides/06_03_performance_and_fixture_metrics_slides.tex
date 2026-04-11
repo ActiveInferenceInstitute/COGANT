@@ -1,0 +1,442 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+\usepackage{caption}
+% Make caption package work with longtable
+\makeatletter
+\def\fnum@table{\tablename~\thetable}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\section{Performance targets and measured runs on packaged
+fixtures}\label{performance-targets-and-measured-runs-on-packaged-fixtures}
+
+\begin{frame}[fragile]{Performance characteristics}
+\protect\phantomsection\label{performance-characteristics}
+The architecture targets the following benchmarks on a 4-core machine,
+as specified in \texttt{../cogant/docs/architecture/README.md}:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Repository size & Target wall-clock time & Memory budget \\
+\midrule\noalign{}
+\endhead
+10K functions & \textless{} 30 s & \textless{} 500 MB \\
+100K functions & \textless{} 5 min & \textless{} 2 GB \\
+1M functions & \textless{} 1 hr & \textless{} 2 GB (streaming) \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+These are architecture targets, not benchmark claims from this
+manuscript. They assume the Python orchestration layer with Rust
+acceleration on critical paths (graph construction, rule matching, and
+Generalized Notation Notation section/tensor packing in
+\texttt{cogant-gnn}). In the current v0.5.x release, Rust acceleration
+is partially wired --- \texttt{cogant.\_rust} exposes a PyO3
+\texttt{connected\_components} FFI for graph construction behind the
+\texttt{COGANT\_USE\_RUST} feature flag --- and a pure-Python fallback
+handles the remaining code paths.
+
+Current \texttt{PipelineRunner} behavior is stage-sequential with
+per-stage error capture and continuation. It does not currently expose
+built-in incremental checkpoint/resume in \texttt{cogant.api.pipeline};
+treat checkpointing as a potential outer-orchestration feature rather
+than a guaranteed package-level runtime behavior.
+\end{frame}
+
+\begin{frame}[fragile]{Measured runs on packaged fixtures}
+\protect\phantomsection\label{measured-runs-on-packaged-fixtures}
+The following tables record measurements taken by running the shipped
+\texttt{RoundtripOrchestrator}
+(\texttt{../cogant/examples/orchestrate\_roundtrip.py}) against every
+fixture distributed with the package. Three fixtures are the
+control-positive synthetic repositories under
+\texttt{../cogant/examples/control\_positive/} (\texttt{calculator},
+\texttt{event\_pipeline}, \texttt{flask\_mini}); the other three are
+real-world code under \texttt{../cogant/examples/real\_world/}
+(\texttt{flask\_app}, a six-module Flask service;
+\texttt{requests\_lib}, a six-module reduction of the \texttt{requests}
+HTTP library; and \texttt{json\_stdlib}, a four-module reduction of the
+CPython \texttt{json} package). Each run executes the full static
+pipeline (ingest, parse, symbols, imports, call graph, program graph,
+translation, state-space compilation, GNN package build, validation).
+Wall-clock times were measured on a single macOS workstation with the
+pure-Python fallback implementations --- the v0.5.x PyO3
+\texttt{connected\_components} FFI is disabled for this canonical run
+(\texttt{COGANT\_USE\_RUST=0}) so that these numbers correspond to the
+Python orchestration layer with no native crates loaded.
+
+All numbers in Tables 4--7 are regenerated by
+\texttt{../cogant/evaluation/figures/generate\_figures.py}, which
+re-runs the orchestrator over every fixture, re-reads the emitted JSON,
+and writes \texttt{../cogant/evaluation/figures/metrics.json} alongside
+the figure PNGs. Structural metrics (nodes, edges, edge-kind and
+node-kind breakdowns, LOC, file counts) are deterministic; rule-driven
+metrics (total mappings, state variables, observations, actions,
+transitions) vary by at most one or two units across runs because the
+extractor walks dictionaries whose ordering is process-local, and
+wall-clock times vary by a few seconds depending on whether the
+visualization pass rasterizes PNGs. The figures below match the
+canonical \texttt{metrics.json} committed under
+\texttt{../cogant/evaluation/figures/}.
+
+\textbf{Table 4. Repository-level pipeline metrics (canonical run,
+COGANT v0.1.0).}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0588}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0784}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Fixture
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Files
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+LOC
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Nodes
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Edges
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Mappings
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+State vars
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Obs
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Actions
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Transitions
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+GNN sections
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+GNN score
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Wall-clock (s)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\texttt{calculator} & 1 & 122 & 12 & 27 & 5 & 0 & 3 & 1 & 1 & 31 & 100.0
+& 7.42 \\
+\texttt{event\_pipeline} & 1 & 147 & 23 & 66 & 20 & 1 & 9 & 10 & 10 & 31
+& 100.0 & 8.58 \\
+\texttt{flask\_mini} & 1 & 168 & 26 & 51 & 19 & 3 & 2 & 14 & 14 & 31 &
+100.0 & 8.80 \\
+\texttt{flask\_app} & 6 & 853 & 98 & 597 & 51 & 16 & 19 & 16 & 16 & 31 &
+100.0 & 14.58 \\
+\texttt{requests\_lib} & 6 & 750 & 98 & 345 & 46 & 9 & 31 & 7 & 7 & 31 &
+100.0 & 12.19 \\
+\texttt{json\_stdlib} & 4 & 1231 & 29 & 68 & 8 & 3 & 5 & 0 & 0 & 31 &
+100.0 & 9.08 \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+``GNN sections'' counts the level-two Markdown headings emitted in
+\texttt{model.gnn.md}, which on every fixture sits at 31 (the 18 core
+Generalized Notation Notation sections plus section-specific subheadings
+for state space, observations, actions, and transitions). ``GNN score''
+is the \texttt{score} field returned by \texttt{GNNValidator.validate()}
+on the compiled \texttt{gnn\_package/} directory; every fixture
+validates at 100.0 with zero errors and zero warnings. The six fixtures
+together cover one-to-six file repositories and 122 to 1231 lines of
+code, exercising the pipeline on both minimal control positives and
+small real-world modules. Wall-clock times fall between roughly seven
+and fifteen seconds on a 2024-class Apple-silicon workstation; the bulk
+of the cost on the larger fixtures is the call-graph construction step
+in \texttt{CallGraphBuilder} plus the PNG rasterization pass in
+\texttt{cogant.viz.png\_export}.
+
+\textbf{Table 5. Program graph composition by fixture.}
+
+Node kinds (MODULE / CLASS / METHOD / FUNCTION) and edge kinds (CONTAINS
+/ WRITES / READS / CALLS / IMPORTS / INHERITS) are populated directly
+from the AST extractor and call-graph builder; all other kinds listed in
+\texttt{cogant.schemas.core.NodeKind} and \texttt{EdgeKind} remain
+unused on these fixtures because the Python front end currently focuses
+on the structural core. The counts below are taken verbatim from the
+\texttt{statistics} block of each fixture's
+\texttt{program\_graph.json}.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.0698}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.0930}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.0930}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.0930}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.0930}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.0930}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.0930}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.0930}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.0930}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.0930}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 20\tabcolsep) * \real{0.0930}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Fixture
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+MODULE
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+CLASS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+METHOD
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+FUNCTION
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+CONTAINS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+WRITES
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+READS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+CALLS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+IMPORTS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+INHERITS
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\texttt{calculator} & 1 & 1 & 10 & --- & 11 & 5 & 9 & 2 & --- & --- \\
+\texttt{event\_pipeline} & 1 & 6 & 16 & --- & 22 & 1 & 10 & 30 & --- &
+3 \\
+\texttt{flask\_mini} & 1 & 7 & 18 & --- & 25 & 6 & 7 & 11 & --- & 2 \\
+\texttt{flask\_app} & 6 & 25 & 57 & 10 & 92 & 15 & 38 & 433 & 10 & 9 \\
+\texttt{requests\_lib} & 6 & 20 & 59 & 13 & 92 & 8 & 42 & 183 & 10 &
+10 \\
+\texttt{json\_stdlib} & 4 & 3 & 9 & 13 & 25 & 3 & 6 & 32 & 2 & --- \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+The distribution matches the intuitive shape of the fixtures:
+class-heavy repositories (\texttt{flask\_app}, \texttt{requests\_lib},
+\texttt{flask\_mini}) show METHOD-dominated node counts and INHERITS
+edges, while the functional \texttt{json\_stdlib} shows a balanced
+METHOD/FUNCTION split and no INHERITS edges. CALLS edges dominate the
+large repositories (\texttt{flask\_app} at 433, \texttt{requests\_lib}
+at 183), confirming that the call-graph construction step in
+\texttt{CallGraphBuilder} is the primary source of edge density on real
+code.
+
+\textbf{Table 6. State-space compilation outputs.}
+
+For each fixture the \texttt{StateSpaceCompiler} emits a
+\texttt{StateSpaceModel} whose variables, observations, actions, and
+transitions are then packaged into
+\texttt{gnn\_package/state\_space.json}, \texttt{observations.json},
+\texttt{actions.json}, and \texttt{transitions.json}. The counts reflect
+the end-to-end behavior of the compiler on these inputs, not the rule
+engine's raw mapping output.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1304}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1739}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1739}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1739}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1739}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1739}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Fixture
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+State variables
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Observations
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Actions
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Transitions
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Policies
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\texttt{calculator} & 0 & 3 & 1 & 1 & 1 \\
+\texttt{event\_pipeline} & 1 & 9 & 10 & 10 & 4 \\
+\texttt{flask\_mini} & 3 & 2 & 14 & 14 & 6 \\
+\texttt{flask\_app} & 16 & 19 & 16 & 16 & 6 \\
+\texttt{requests\_lib} & 9 & 31 & 7 & 7 & 1 \\
+\texttt{json\_stdlib} & 3 & 5 & 0 & 0 & 1 \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+\texttt{calculator} compiles zero hidden-state variables because the
+fixture exposes pure arithmetic methods whose WRITES-edge footprint does
+not cross the classifier threshold used by
+\texttt{StateVariableExtractor}; it still compiles a single action and a
+single transition, so the pipeline remains end-to-end valid and the GNN
+package still validates at 100.0. \texttt{json\_stdlib} compiles zero
+actions because the reduced CPython \texttt{json} sources consist almost
+entirely of function-level utilities whose semantic role falls outside
+the ACTION-mapping rule set, but the pipeline still emits a compiled
+\texttt{actions.json} with an empty \texttt{actions} list and a single
+default policy --- downstream consumers see the same schema as for the
+action-bearing fixtures. The \texttt{requests\_lib} fixture has the
+highest observation count in the table because its session/adapter
+classes expose a large number of read-only attributes that the rule
+engine matches as \texttt{OBSERVATION} mappings.
+
+\textbf{Table 7. Output artifacts per run.}
+
+Every fixture emits the same \texttt{gnn\_package/} directory layout
+with 19 canonical files: \texttt{model.gnn.md}, \texttt{model.gnn.json},
+the section JSONs (\texttt{state\_space}, \texttt{observations},
+\texttt{actions}, \texttt{actions\_policies}, \texttt{transitions},
+\texttt{preferences}, \texttt{preferences\_constraints},
+\texttt{factors}, \texttt{connections}, \texttt{ontology},
+\texttt{provenance}), the \texttt{program\_graph.json} and
+\texttt{process\_model.json} snapshots, the
+\texttt{markov\_blanket.json} and \texttt{markov\_network.json}
+extracts, and the \texttt{manifest.json} index. The
+\texttt{RoundtripOrchestrator} additionally writes diagnostic artifacts
+at the top level of \texttt{output\_dir}: six Mermaid diagrams (class,
+state, sequence, dependency, boundary, semantic flow), typed graph and
+Cytoscape exports, a GraphML file, a Parquet table, a dashboard HTML
+site, simulation traces, and a GNN execution report.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2000}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2667}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2667}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Fixture
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+\texttt{gnn\_package/} files
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Validation errors
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Validation warnings
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\texttt{calculator} & 19 & 0 & 0 \\
+\texttt{event\_pipeline} & 19 & 0 & 0 \\
+\texttt{flask\_mini} & 19 & 0 & 0 \\
+\texttt{flask\_app} & 19 & 0 & 0 \\
+\texttt{requests\_lib} & 19 & 0 & 0 \\
+\texttt{json\_stdlib} & 19 & 0 & 0 \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+These numbers were collected by the reproducible script
+\texttt{../cogant/evaluation/figures/generate\_figures.py}, which
+re-runs the orchestrator over every fixture, re-reads the emitted JSON,
+and writes both the summary table and the figures used in this
+manuscript into \texttt{../cogant/evaluation/figures/} (namely
+\texttt{fig1\_graph\_sizes.png}, \texttt{fig2\_node\_kinds.png},
+\texttt{fig3\_state\_space.png}, and
+\texttt{fig4\_pipeline\_latency.png}, plus the machine-readable
+\texttt{metrics.json}).
+\end{frame}
+
+\end{document}

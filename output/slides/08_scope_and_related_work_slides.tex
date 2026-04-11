@@ -74,14 +74,6 @@
 }{% if KOMA class
   \KOMAoptions{parskip=half}}
 \makeatother
-\usepackage{longtable,booktabs,array}
-\newcounter{none} % for unnumbered tables
-\usepackage{calc} % for calculating minipage widths
-\usepackage{caption}
-% Make caption package work with longtable
-\makeatletter
-\def\fnum@table{\tablename~\thetable}
-\makeatother
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
@@ -99,8 +91,14 @@
 
 \section{Scope and related work}\label{scope-and-related-work}
 
-\begin{frame}{Positioning}
-\protect\phantomsection\label{positioning}
+\begin{frame}{COGANT in the program-analysis landscape}
+\protect\phantomsection\label{cogant-in-the-program-analysis-landscape}
+COGANT sits at the intersection of three established research areas:
+machine learning for source code, graph-based program representations,
+and active-inference behavioral modeling. The following subsections
+place it against each, emphasizing what COGANT provides as
+infrastructure rather than as a novel model or benchmark.
+
 \textbf{Machine learning for big code} surveys cover naturalness,
 representation learning, and task taxonomy {[}@allamanis2018survey{]}.
 COGANT contributes \textbf{infrastructure}: a documented IR, pipeline,
@@ -139,122 +137,35 @@ IR refinement.
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Program analysis for ML}
-\protect\phantomsection\label{program-analysis-for-ml}
-Several systems address the intersection of program analysis and machine
-learning that COGANT operates in:
+\begin{frame}[fragile]{Where the full comparison lives}
+\protect\phantomsection\label{where-the-full-comparison-lives}
+The numbered fragments that follow this file (lexicographic order under
+Section 8) carry the detailed related-work comparison so tables and
+proofs are not duplicated here:
 
-\textbf{code2seq and code2vec} {[}@alon2019code2vec{]} represent
-programs as sets of AST paths between terminal nodes. These path-based
-representations are effective for method naming and code summarization
-but discard the full graph topology that graph-neural-network-based
-models exploit. COGANT preserves the complete program graph ---
-including control-flow and data-flow edges --- and can export it in
-tensor form, enabling downstream architectures that reason over richer
-relational structure.
+\begin{itemize}
+\tightlist
+\item
+  \href{08_01_landscape_and_tool_categories.md}{\texttt{08\_01\_landscape\_and\_tool\_categories.md}}
+  --- landscape overview.
+\item
+  \href{08_02_program_analysis_for_ml_and_tables.md}{\texttt{08\_02\_program\_analysis\_for\_ml\_and\_tables.md}}
+  --- program analysis for ML, \textbf{Table 8} (feature matrix),
+  \textbf{Table 9} (input/output contracts), and positioning vs prior
+  art.
+\item
+  \href{08_03_lenses_and_synthesis.md}{\texttt{08\_03\_lenses\_and\_synthesis.md}}
+  --- bidirectional lenses, edit lenses, incremental analysis,
+  categorical framing, and synthesis positioning.
+\item
+  \href{08_04_world_models_boundaries_and_compatibility.md}{\texttt{08\_04\_world\_models\_boundaries\_and\_compatibility.md}}
+  --- world models from code, active inference, boundaries, forward
+  compatibility.
+\end{itemize}
 
-\textbf{Gated Graph Neural Networks (GGNN)} {[}@li2016gated{]}
-introduced gated recurrent propagation for graph-structured program
-representations, demonstrating strong results on variable misuse
-detection and other code tasks. COGANT's export contract (PyG
-\texttt{Data} objects with typed \texttt{edge\_index} and
-\texttt{edge\_attr}) is directly compatible with GGNN-style models; the
-kind and role indices provide the discrete node and edge types that
-typed message-passing layers require.
-
-\textbf{CodeQL} (Semmle/GitHub) provides a declarative query language
-over relational representations of code. While CodeQL excels at security
-analysis with hand-written queries, its outputs are query results rather
-than tensor-ready graph bundles. COGANT occupies the complementary
-niche: it produces the graph data that learned models consume, and can
-ingest CodeQL query results as an additional evidence source feeding the
-confidence model.
-
-\textbf{CodeBERT} {[}@feng2020codebert{]} and related pre-trained models
-operate at the token level, learning representations from natural
-language and code jointly. These models are complementary to COGANT's
-graph-centric approach: CodeBERT embeddings could serve as optional node
-features in COGANT's Generalized Notation Notation (GNN) export (the
-export schema already reserves dimensions for text embeddings as
-documented in \texttt{../cogant/docs/GNN\_EXPORT.md}).
-
-\begin{block}{Feature matrix: COGANT vs.~related tools}
-\protect\phantomsection\label{feature-matrix-cogant-vs.-related-tools}
-The following matrix contrasts COGANT's capabilities with the related
-tools discussed in this section. Entries marked ``✓'' indicate
-first-class support; ``partial'' indicates limited or indirect support;
-``---'' indicates the feature is out of scope for that tool.
-
-\textbf{Table 4. Feature comparison of program-to-model toolchains.}
-
-{\def\LTcaptype{none} % do not increment counter
-\begin{longtable}[]{@{}lccccc@{}}
-\toprule\noalign{}
-Feature & COGANT & code2vec & GGNN & CodeQL & CodeBERT \\
-\midrule\noalign{}
-\endhead
-Full program graph (AST + CFG + DFG) & ✓ & --- & input-only & ✓ & --- \\
-Typed node/edge taxonomy & ✓ & --- & partial & ✓ & --- \\
-Confidence scoring per assertion & ✓ & --- & --- & --- & --- \\
-Provenance tracking & ✓ & --- & --- & partial & --- \\
-State-space extraction & ✓ & --- & --- & --- & --- \\
-Temporal regime classification & ✓ & --- & --- & --- & --- \\
-Dynamic enrichment (coverage, traces) & ✓ & --- & --- & partial & --- \\
-Generalized Notation Notation output & ✓ & --- & --- & --- & --- \\
-Tensor export (PyG, DGL, HDF5) & ✓ & partial & input-only & --- & --- \\
-Pluggable translation rules & ✓ & --- & --- & ✓ & --- \\
-Human review loop & ✓ & --- & --- & partial & --- \\
-Multi-language front-ends & roadmap & ✓ & --- & ✓ & ✓ \\
-\bottomrule\noalign{}
-\end{longtable}
-}
-
-COGANT is distinct from the other toolchains in three ways: first, it
-explicitly models uncertainty through confidence tiers tied to evidence
-provenance; second, it produces a structured Active Inference notation
-as its primary output rather than an opaque tensor; and third, it
-composes static and dynamic evidence in a single pipeline rather than
-specializing to one.
-\end{block}
-\end{frame}
-
-\begin{frame}[fragile]{Active inference and program behavior}
-\protect\phantomsection\label{active-inference-and-program-behavior}
-The state-space IR in COGANT's pipeline (states, actions, transitions,
-observations) shares structural parallels with \textbf{active inference}
-formulations {[}@friston2010free{]}, where an agent maintains beliefs
-about hidden states and selects actions to minimize prediction error. In
-the program analysis context, the ``agent'' is the analysis pipeline
-itself: it observes code artifacts, maintains beliefs about program
-behavior (the state-space model), and refines those beliefs as new
-evidence (dynamic traces, coverage data) arrives.
-
-This connection is analogical: the \texttt{ConfidenceModel} in
-\texttt{../cogant/py/cogant/translate/confidence.py} aggregates evidence
-and penalties in a way that suggests belief revision, but it is not a
-Bayesian posterior. Future work could formalize a tighter link by
-casting rule application as variational inference, where a fixpoint
-would represent an approximate posterior over program semantics.
-\end{frame}
-
-\begin{frame}{Boundaries}
-\protect\phantomsection\label{boundaries}
-COGANT does not subsume formal verification, interactive theorem
-proving, or full interprocedural pointer analysis unless implemented as
-explicit future stages. The SPEC marks Rust acceleration and additional
-parsers as staged; the manuscript should be read together with that
-table for up-to-date scope.
-\end{frame}
-
-\begin{frame}[fragile]{Forward compatibility}
-\protect\phantomsection\label{forward-compatibility}
-Promoting COGANT into
-\href{../../../projects/}{\texttt{../../../projects/}} integrates
-manuscript PDF rendering with the template's validation gates.
-Cross-references in this folder use paths \textbf{relative to these
-Markdown files} (for example
-\href{../cogant/docs/}{\texttt{../cogant/docs/}}) so links stay stable
-when the tree moves.
+Authoritative \textbf{implementation scope} (languages, parsers, Rust
+acceleration) is always
+\href{../cogant/docs/reference/implementation_status.md}{\texttt{../cogant/docs/reference/implementation\_status.md}}.
 \end{frame}
 
 \end{document}

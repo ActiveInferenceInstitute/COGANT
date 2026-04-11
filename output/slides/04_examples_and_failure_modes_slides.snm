@@ -3,5 +3,6 @@
 \beamer@slide {concrete-walkthrough-flask-rest-api}{1}
 \beamer@slide {example-semantic-mapping-output}{1}
 \beamer@slide {example-state-space-excerpt}{1}
+\beamer@slide {dynamically-enriched-excerpt}{1}
 \beamer@slide {failure-modes-and-graceful-degradation}{1}
 \beamer@slide {rust-layer}{1}

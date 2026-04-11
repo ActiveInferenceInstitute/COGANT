@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>06_05_reproducible_recording</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="what-to-record-for-reproducible-experiments">What to record for
+reproducible experiments</h1>
+<h2 id="minimum-recording-checklist">Minimum recording checklist</h2>
+<p>The COGANT pipeline is deterministic on a fixed filesystem snapshot
+under a fixed Python interpreter, so bit-for-bit reproduction of a
+published run reduces to pinning exactly the inputs that the pipeline
+consumes and the environment it consumes them in. For every experiment
+whose output you intend to re-run, redistribute, or cite, record the
+following:</p>
+<ol type="1">
+<li><strong>COGANT version and commit hash.</strong> The
+<code>__version__</code> string in
+<code>../cogant/py/cogant/__init__.py</code> matches
+<code>project.version</code> in <code>../cogant/pyproject.toml</code>
+(currently <code>0.5.0</code>). Also capture the Git SHA of the checkout
+used — <code>git rev-parse HEAD</code> from inside the
+<code>cogant/</code> subtree — because a single version tag can span
+several bug-fix commits and the reproducibility contract is at commit
+granularity, not tag granularity. The shipped <code>cogant doctor</code>
+command prints both values.</li>
+<li><strong>Python interpreter version.</strong> Either
+<code>CPython 3.11.x</code>, <code>3.12.x</code>, or <code>3.13.x</code>
+per the <code>classifiers</code> block in <code>pyproject.toml</code>;
+the canonical benchmark run used <code>CPython 3.12.11</code> on macOS
+arm64. Capture <code>python --version</code> plus <code>uname -a</code>
+(or the equivalent on Windows / Linux) so that the OS and architecture
+are visible downstream.</li>
+<li><strong>Dependency lock.</strong> <code>uv sync --extra all</code>
+resolves from <code>../cogant/uv.lock</code>; include the lockfile in
+any redistributed dataset so that optional extras (<code>viz</code>,
+<code>multilang</code>, <code>all</code>) resolve to the exact versions
+that produced the published numbers. If the pinned
+<code>tree-sitter-javascript</code>,
+<code>tree-sitter-typescript</code>, <code>pyarrow</code>, or
+<code>duckdb</code> versions drift, re-parsing the same JavaScript
+sources can produce different AST shapes and therefore different
+<code>program_graph.json</code> outputs.</li>
+<li><strong>Input repository commit hash.</strong> For every target
+repository processed through the pipeline, record the Git commit hash of
+the snapshot at ingest time. The pipeline does not hash the input for
+you — it simply walks the filesystem — so an unpinned input is the most
+common source of non-reproducibility. For the shipped fixtures under
+<code>../cogant/examples/</code>, the relevant hash is the COGANT commit
+itself (the fixtures are vendored).</li>
+<li><strong>Configuration file contents (redacted).</strong> If you
+invoked the pipeline via <code>cogant.yaml</code> or
+<code>PipelineConfig(...)</code>, persist the configuration next to the
+run outputs. Redact any credentials, private path components, or API
+tokens before publication; the config loader in
+<code>../cogant/py/cogant/config/</code> does not automatically strip
+these.</li>
+<li><strong>List of stages executed.</strong> The default ten-stage DAG
+is
+<code>ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate</code>,
+but the CLI and <code>PipelineConfig</code> expose selective-execution
+flags (<code>--no-dynamic</code>, <code>--skip-validate</code>,
+<code>PipelineConfig.skip_stages</code>). Record which stages were
+enabled for the published run so that a reproducer does not silently
+re-enable an optional stage whose output was not part of the original
+report.</li>
+<li><strong>Random seeds for learned consumers.</strong> COGANT itself
+is deterministic — it does not invoke any stochastic components in the
+default pipeline. However, any <strong>downstream learned
+component</strong> (for example an optional embedding model supplied to
+the GNN exporter, or a graph neural network trained on COGANT’s exports)
+<em>is</em> stochastic and must record its own seeds. Include the seed
+with the derived dataset, not with the COGANT bundle.</li>
+<li><strong>Canonical output hashes.</strong> After each run, hash the
+<code>gnn_package/</code> directory and the top-level
+<code>bundle.json</code> with a content-addressable digest
+(<code>sha256</code> is sufficient). Store these hashes alongside the
+run outputs; republishing the same hash across different machines is the
+strongest reproducibility signal available to a reader.</li>
+</ol>
+<h2 id="how-to-re-run-the-canonical-fixture-experiments">How to re-run
+the canonical fixture experiments</h2>
+<p>All numbers in Tables 4–7 of §6.3 and in the benchmark suite of §6.4
+are regenerated by two scripts that live inside the COGANT package tree
+and take no arguments beyond a <code>--output</code> directory:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># One-shot regeneration of every figure and the metrics.json summary</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python ../cogant/evaluation/figures/generate_figures.py <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output</span> ../cogant/evaluation/figures/</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Benchmark harness — three iterations per fixture, stage-level timing</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python ../cogant/benchmarks/bench_suite.py <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">--iterations</span> 3 <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output</span> ../cogant/benchmarks/results/</span></code></pre></div>
+<p>The figure-generation script re-runs the
+<code>RoundtripOrchestrator</code>
+(<code>../cogant/examples/orchestrate_roundtrip.py</code>) against every
+fixture under <code>../cogant/examples/control_positive/</code> and
+<code>../cogant/examples/real_world/</code>, re-reads the emitted JSON,
+writes <code>metrics.json</code> alongside
+<code>fig1_graph_sizes.png</code>, <code>fig2_node_kinds.png</code>,
+<code>fig3_state_space.png</code>, and
+<code>fig4_pipeline_latency.png</code>, and finally copies the canonical
+figure set back into the <code>../cogant/evaluation/figures/</code>
+tree. The benchmark-suite harness times the bare translation pipeline
+(<code>ingest</code>, <code>static</code>, <code>normalize</code>,
+<code>graph</code>, <code>translate</code>, <code>statespace</code>) and
+writes a dated Markdown report of the form
+<code>suite_YYYYMMDD.md</code> alongside a machine-readable JSON
+sidecar; the report committed as
+<code>../cogant/benchmarks/results/suite_20260409.md</code> is the
+canonical source for Table 11 in §6.4.</p>
+<h2 id="what-the-manifest.json-index-records">What the manifest.json
+index records</h2>
+<p>Every <code>gnn_package/</code> directory emitted by the pipeline
+includes a <code>manifest.json</code> file whose job is to close the
+reproducibility loop without requiring the downstream consumer to
+re-hash the bundle. The manifest records: the COGANT version that
+produced the bundle, the interpreter and platform identifiers from step
+2 of the checklist, the list of stages actually executed (step 6), the
+schema name passed to the state-space compiler, the paths of every file
+in the <code>gnn_package/</code> directory, and the SHA-256 hash of each
+file. A reproducer can therefore verify a published bundle with a single
+pass over the manifest, without consulting any external metadata
+file.</p>
+<h2
+id="worked-example-regenerating-the-table-4-row-for-flask_app">Worked
+example: regenerating the Table 4 row for <code>flask_app</code></h2>
+<p>The canonical Table 4 row for the <code>flask_app</code> fixture (six
+files, 853 lines, 98 nodes, 597 edges, 14.58 s wall-clock) was produced
+as follows, and the command sequence below should bit-for-bit reproduce
+the same <code>program_graph.json</code> and
+<code>state_space.json</code> on any macOS arm64 machine with the same
+uv lockfile:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> projects_in_progress/cogant/cogant           <span class="co"># package root</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> sync <span class="at">--extra</span> all                               <span class="co"># pins every dep per uv.lock</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rev-parse HEAD                                <span class="co"># record the commit hash</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">--version</span> <span class="kw">&amp;&amp;</span> <span class="fu">uname</span> <span class="at">-a</span>                      <span class="co"># record interpreter + platform</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run cogant translate <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    examples/real_world/flask_app <span class="dt">\</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output</span> /tmp/repro_flask_app <span class="dt">\</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--layout-output</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run cogant validate /tmp/repro_flask_app/gnn_package</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sha256sum</span> /tmp/repro_flask_app/gnn_package/<span class="pp">*</span>.json <span class="kw">|</span> <span class="fu">sort</span></span></code></pre></div>
+<p>The <code>validate</code> step should report score
+<code>100.0 / 100</code> with zero errors and zero warnings, and the
+sorted SHA-256 listing should match the one recorded in
+<code>../cogant/examples/real_world/flask_app/output/manifest.json</code>
+(committed alongside the fixture). Any mismatch points to either a
+dependency drift (step 3) or an input drift (the Flask fixture itself
+changed between the committed output and the re-run).</p>
+<h2 id="data-ethics-and-licensing-for-exported-bundles">Data ethics and
+licensing for exported bundles</h2>
+<p>Every COGANT bundle can contain identifiers, docstrings, and inline
+comments lifted verbatim from the input source code. When redistributing
+a bundle derived from a third-party repository — for example when
+publishing a dataset of <code>gnn_package/</code> outputs from
+open-source Python projects — the downstream license terms must be
+respected: the original repository’s license applies to any prose or
+identifier that the bundle quotes, and the COGANT MIT license covers
+only the pipeline code and the synthetic fixtures it ships.
+Organisations with private data policies should additionally review
+bundles for personally identifiable information before publication; the
+pipeline does not perform PII scrubbing on its own. The short policy
+statement is in §7 (see <strong>Data ethics and licensing</strong> in <a
+href="07_reproducibility.md"><code>07_reproducibility.md</code></a>);
+this subsection supplies the actionable hashing and manifest-recording
+recipe.</p>
+<h2 id="cross-references">Cross-references</h2>
+<ul>
+<li>The CLI hub at <a
+href="../cogant/docs/cli/README.md"><code>../cogant/docs/cli/README.md</code></a>
+links to every flag that changes the recorded-output shape, and the
+stage list in <a
+href="../cogant/docs/architecture/README.md"><code>../cogant/docs/architecture/README.md</code></a>
+enumerates the ten-stage DAG.</li>
+<li>The per-release narrative in <code>../cogant/CHANGELOG.md</code> and
+<code>../cogant/RELEASE_NOTES.md</code> documents which
+default-behaviour changes (for example the v0.5.0 POLICY / CONTEXT
+stub-emission fix discussed in §5 and
+<code>ROUNDTRIP_IMPROVEMENT.md</code>) could affect a re-run against a
+pre-v0.5.0 bundle.</li>
+<li>The calibration sweep plan in
+<code>../cogant/docs/evaluation/CALIBRATION.md</code> is the canonical
+reference for the <code>TODO(calibration)</code> markers cited in §5;
+re-running a confidence-threshold sweep requires the 20+ repository
+gold-standard corpus discussed there.</li>
+</ul>
+</body>
+</html>

@@ -164,19 +164,41 @@ Use explicit relative paths from the rendering contract described in
 
 \begin{block}{Section files}
 \protect\phantomsection\label{section-files}
-Numeric prefixes \texttt{00\_}--\texttt{09\_} are combined in
-stem-sorted order by
-\texttt{infrastructure/rendering/manuscript\_discovery.py}. Files named
-\texttt{SYNTAX.md} sort in the \textbf{other} bucket (after main
-sections, before \texttt{99\_*} if present).
+\href{../../../infrastructure/rendering/manuscript_discovery.py}{\texttt{infrastructure/rendering/manuscript\_discovery.py}}
+concatenates:
+
+\begin{enumerate}
+\tightlist
+\item
+  Digit-prefixed \texttt{*.md} files (\texttt{00\_} \ldots{}
+  \texttt{09\_}, including splits such as \texttt{02\_01\_…},
+  \texttt{06\_04\_…}) in \textbf{lexicographic stem order}.
+\item
+  Supplemental \texttt{S*.md} appendices.
+\item
+  \texttt{98\_*.md} glossary files when present.
+\item
+  Other \texttt{*.md} files not matching the above (for example
+  \texttt{SYNTAX.md}) --- the \textbf{other} bucket.
+\item
+  \texttt{99\_*.md} references when present.
+\end{enumerate}
+
+Excluded from the body: \texttt{preamble.md}, \texttt{AGENTS.md},
+\texttt{README.md}, \texttt{config.yaml}, \texttt{config.yaml.example},
+\texttt{references.bib}.
 \end{block}
 
 \begin{block}{Cross-references to the package}
 \protect\phantomsection\label{cross-references-to-the-package}
-Prefer \textbf{relative} paths from this folder to the package tree,
-e.g.~\href{../cogant/docs/ARCHITECTURE.md}{\texttt{../cogant/docs/ARCHITECTURE.md}},
-so links work in the editor and in Git without hard-coding the monorepo
-path.
+Prefer \textbf{relative} paths from this folder to the docs tree: site
+home \href{../cogant/docs/index.md}{\texttt{../cogant/docs/index.md}},
+module map
+\href{../cogant/docs/reference/documentation_modules.md}{\texttt{../cogant/docs/reference/documentation\_modules.md}},
+and per-module indexes such as
+\href{../cogant/docs/architecture/README.md}{\texttt{../cogant/docs/architecture/README.md}}.
+Do not link a root \texttt{docs/README.md} --- it is not part of the
+MkDocs tree (it would duplicate \texttt{index.md}).
 \end{block}
 
 \begin{block}{See also}

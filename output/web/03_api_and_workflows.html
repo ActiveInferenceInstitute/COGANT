@@ -174,22 +174,23 @@
 <h1 id="api-and-workflows">API and Workflows</h1>
 <p>This section describes the programmatic surface that the shipped
 Python package exposes in practice, aligned with
-<code>../cogant/docs/API_GUIDE.md</code> and
-<code>../cogant/VERIFICATION_REPORT.md</code>. It is
-<strong>not</strong> an empirical benchmark section; COGANT does not
-ship comparative timing claims in the manuscript layer. Instead, it
-records the <strong>surface area</strong> users can rely on: two
-complementary entry points (a Session for stepwise work and a Pipeline
-for batch runs), the Bundle accessors that expose their artifacts, a
-command-line interface, and a Review API for human-in-the-loop
-curation.</p>
+<code>../cogant/docs/api/README.md</code> and the inventory-style notes
+under <code>../cogant/docs/reference/</code>. It is <strong>not</strong>
+an empirical benchmark section; COGANT does not ship comparative timing
+claims in the manuscript layer. Instead, it records the <strong>surface
+area</strong> users can rely on: two complementary entry points (a
+Session for stepwise work and a Pipeline for batch runs), the Bundle
+accessors that expose their artifacts, a command-line interface, and a
+Review API for human-in-the-loop curation.</p>
 <h2 id="session-oriented-workflow">Session-oriented workflow</h2>
-<p>The Session API is intended for interactive exploration: it is the
-right choice when a user wants to inspect intermediate artifacts between
-stages, iterate on a single repository in a notebook, or debug a
-specific extraction step without committing to a full scripted run. Each
-call returns control to the caller so that the graph, mappings, or
-state-space model can be examined before the next stage is invoked.</p>
+<p>Use <code>Session</code> for interactive exploration, notebook-driven
+debugging, and incremental re-runs where you want to materialize each
+stage’s output as a Python attribute. It is the right choice when a user
+wants to inspect intermediate artifacts between stages, iterate on a
+single repository in a notebook, or debug a specific extraction step
+without committing to a full scripted run. Each call returns control to
+the caller so that the graph, mappings, or state-space model can be
+examined before the next stage is invoked.</p>
 <p><code>Session.from_target</code> accepts a local path or URL, then
 supports a stepwise workflow:</p>
 <ul>
@@ -207,11 +208,12 @@ output directory.</li>
 </ul>
 <p>This path suits interactive notebooks and incremental debugging.</p>
 <h2 id="pipeline-oriented-workflow">Pipeline-oriented workflow</h2>
-<p>The Pipeline API is intended for scripted, reproducible batch runs:
-it is the right choice when a user wants to process many repositories
-with a fixed configuration, wire COGANT into CI, or guarantee that every
-run executes the same ordered stages with the same plugin settings.
-Because the whole run is described by a single
+<p>Use <code>PipelineRunner</code> for scripted, reproducible batch runs
+where all stages are configured up front and the end-state is a single
+<code>Bundle</code>. It is the right choice when a user wants to process
+many repositories with a fixed configuration, wire COGANT into CI, or
+guarantee that every run executes the same ordered stages with the same
+plugin settings. Because the whole run is described by a single
 <code>PipelineConfig</code>, it can be checked into version control and
 replayed without manual intervention.</p>
 <p><code>PipelineRunner</code> with <code>PipelineConfig</code> runs an
@@ -223,25 +225,31 @@ Results aggregate into a <strong>Bundle</strong> with
 <code>stage_results</code>, error lists, and accessors described
 below.</p>
 <h2 id="bundle-accessors">Bundle accessors</h2>
-<p>The bundle API exposes summaries and artifacts, including:</p>
+<p>The bundle API exposes stage summaries and convenience render/export
+helpers, including:</p>
 <ul>
 <li><code>repo_summary</code>, <code>program_graph</code>,
 <code>state_space_model</code>, <code>process_model</code></li>
-<li><code>gnn_markdown</code> — human-readable graph summary</li>
+<li><code>gnn_markdown</code> — compact markdown summary built from
+<code>stage_results["translate"]</code></li>
 <li><code>validation_report</code></li>
 <li><code>render_site</code> — static HTML site with graph and model
 views</li>
 <li><code>to_json</code> / <code>save_json</code></li>
 </ul>
-<p>The verification report lists these as delivered capabilities for the
-v0.1.0 line.</p>
+<p>For canonical 18-section Generalized Notation Notation artifacts
+(<code>model.gnn.md</code> plus companion JSON), use the export outputs
+documented in <code>../cogant/docs/export/README.md</code>;
+<code>Bundle.gnn_markdown()</code> is intentionally a lightweight report
+surface.</p>
 <h2 id="command-line-interface">Command-line interface</h2>
 <p>The CLI entry point (<code>cogant.cli.main</code>) implements
 commands such as <code>init</code>, <code>scan</code>,
-<code>extract-static</code>, <code>extract-dynamic</code>, graph and
-export verbs, and validation-oriented subcommands. Exact flags live in
-<code>../cogant/docs/CLI_GUIDE.md</code>; the manuscript does not
-duplicate them to avoid drift.</p>
+<code>extract-static</code>, <code>extract-dynamic</code>,
+<code>graph</code>, <code>translate</code>, <code>statespace</code>,
+<code>validate</code>, and visualization/export helpers. Exact flags
+live in <code>../cogant/docs/cli/README.md</code>; the manuscript does
+not duplicate them to avoid drift.</p>
 <h2 id="review-api">Review API</h2>
 <p><code>ReviewAPI</code> supports interactive curation: load a bundle,
 present mappings, accept, reject, or edit, then save a curated bundle.

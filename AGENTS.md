@@ -1,15 +1,26 @@
-# AGENTS.md — COGANT Project Root
+# AGENTS.md — `projects_in_progress/cogant/`
 
-This is the staging area for the **COGANT (Codebase-to-GNN Translation Engine)** research project before it is officially promoted to the active `projects/` directory.
+## Layout
 
-## Subdirectories
+| Path | Role |
+|------|------|
+| [`cogant/`](cogant/) | Nested COGANT package (`py/cogant/`, `tests/`, `pyproject.toml`, Rust crates, docs). |
+| [`manuscript/`](manuscript/) | PDF/HTML manuscript templates (`{{PLACEHOLDER}}` syntax). |
+| [`tools/`](tools/) | Metrics regeneration, `MANUSCRIPT_VARS` registry, inject CLI. |
+| [`scripts/`](scripts/) | Thin orchestrators (`z_generate_manuscript_variables.py`). |
+| [`output/`](output/) | Generated `data/manuscript_variables.json`, `output/manuscript/` injected copy (disposable). |
+| [`src/`](src/) | Compatibility note only; real package under `cogant/py/cogant/`. |
+| [`tests/`](tests/) | Compatibility note; real suite under `cogant/tests/`. |
+| [`PROMOTION.md`](PROMOTION.md) | Steps to move to `projects/cogant/`. |
 
-*   [`cogant/`](cogant/AGENTS.md): The implementation layer. Contains the software documentation, Python package, and Rust workspace.
-*   [`manuscript/`](manuscript/AGENTS.md): The narrative layer. Contains the markdown manuscript for PDF generation.
-*   [`output/`](output/AGENTS.md): The artifact layer. Holds generated outputs from the rendering pipeline.
+## Key APIs (tools)
 
-## Architectural Notes
+- `tools/manuscript_vars.py` — `MANUSCRIPT_VARS`, `resolve_path`, `format_value_for_path`, `build_flat_variables`, `substitute_text`.
+- `tools/inject_manuscript_vars.py` — CLI to substitute one file or directory (dry-run supported).
+- `scripts/z_generate_manuscript_variables.py` — Writes JSON + full `output/manuscript/` tree for rendering.
 
-**Important**: Because this project resides under `projects_in_progress/`, it is **not** automatically discovered by the `infrastructure.project.discovery.discover_projects()` routing logic. The overarching template pipeline actions (such as `run_tests` and `render_pdf`) will not target COGANT until the entire directory is moved to `projects/cogant/`.
+Authoritative numbers: `cogant/evaluation/METRICS.yaml` (from `tools/regenerate_metrics.py`).
 
-When modifying structural parameters or definitions, mandate parity across the `cogant/` software documentation (e.g., `SPEC.md`, `API_GUIDE.md`) and the theoretical `manuscript/` sections.
+## Discovery
+
+Not in `discover_projects()` until promoted; see [`PROMOTION.md`](PROMOTION.md).

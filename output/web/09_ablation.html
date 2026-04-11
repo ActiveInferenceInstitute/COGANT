@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>09_ablation</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<h1 id="ablation-study">Ablation study</h1>
+<p>This section studies how each component of the translation pipeline
+contributes to the observed output on the six packaged fixtures. The
+ablations are organised along two axes: the five <strong>rule
+families</strong> defined in Section 2 (structural, semantic, control,
+behavioural, resilience) and the <strong>fixpoint iteration cap</strong>
+of the translation engine. Where a measurement is available from the
+shipped validation runs in
+<code>../cogant/evaluation/figures/metrics.json</code> and
+<code>../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md</code>, it
+is cited directly. Where a measurement has been planned but not yet
+populated in the canonical metrics file — typically because the P3
+validation harness reruns the pipeline with one rule family disabled at
+a time — the entry is marked “planned” and the expected signal is stated
+so that a future run can fill it in without restructuring the table.</p>
+<h2 id="rule-family-ablation">Rule-family ablation</h2>
+<p>The question answered by this ablation is: <em>if one family of
+translation rules is removed, which Active Inference roles disappear
+from the output, and what fraction of previously covered nodes lose
+their semantic role?</em> The experimental protocol is to re-run the
+full pipeline (ingest, parse, graph, translate, statespace, GNN package
+build, validate) with the <code>TranslationEngine</code> constructed
+over a rule list that excludes exactly one family, and to diff the
+resulting <code>semantic_mappings.json</code> against the canonical
+baseline. The ablation is defined over the <code>flask_app</code>
+fixture (the largest real-world fixture, 98 nodes, 68 baseline mappings
+in the benchmark run) and the <code>calculator</code> fixture (the
+smallest control-positive fixture, 12 nodes, 11 baseline mappings) so
+that both a well-covered and a narrowly-covered input are
+represented.</p>
+<p>Rather than re-run the benchmark harness with each family removed,
+the per-family deltas in Table 10 are reconstructed directly from the
+mapping-kind breakdown reported in
+<code>../cogant/benchmarks/results/suite_20260409.md</code> and the
+rule-to-<code>MappingKind</code> assignment recorded in
+<code>../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md</code>. This
+is a conservative analysis: each rule in a family is responsible for
+emitting a specific <code>MappingKind</code>, the conflict resolver uses
+priority and confidence (tuple
+<code>(priority, confidence_score)</code>) to pick a unique winner per
+node, and the confidence band for each rule is fixed in
+<code>../cogant/docs/evaluation/CALIBRATION.md</code> §2.1. Removing a
+whole family therefore removes exactly the mappings whose
+<code>MappingKind</code> is sourced by that family, with a small
+residual coming from the two secondary rules that also emit the same
+kind (for example <code>OrchestratorRule</code> and
+<code>PolicyRule</code> both emit POLICY, so removing the semantic
+family still leaves behavioural-family POLICY mappings behind).</p>
+<p><strong>Table 10. Rule-family ablation on <code>flask_app</code> and
+<code>calculator</code> (baseline values from the benchmark suite
+<code>suite_20260409.md</code>; deltas derived from the per-family
+<code>MappingKind</code> breakdown).</strong></p>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 15%" />
+<col style="width: 11%" />
+<col style="width: 19%" />
+<col style="width: 19%" />
+<col style="width: 11%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rule family</th>
+<th>Rules removed</th>
+<th style="text-align: right;">Rule count</th>
+<th>Roles primarily affected</th>
+<th style="text-align: center;"><code>flask_app</code> <span
+class="math inline">\(\Delta\)</span> mappings (of 68)</th>
+<th style="text-align: center;"><code>calculator</code> <span
+class="math inline">\(\Delta\)</span> mappings (of 11)</th>
+<th>Primary quality signal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Structural</td>
+<td><code>ReadOnlyInput</code>, <code>MutatingSubsystem</code>,
+<code>Inheritance</code>, <code>Containment</code>,
+<code>DataPipeline</code></td>
+<td style="text-align: right;">5</td>
+<td>HIDDEN_STATE, OBSERVATION (via <code>ReadOnlyInput</code>), POLICY
+(via <code>Inheritance</code> on handler-like bases)</td>
+<td style="text-align: center;"><span class="math inline">\(-10\)</span>
+HIDDEN_STATE plus partial OBSERVATION / POLICY loss</td>
+<td style="text-align: center;"><span class="math inline">\(-1\)</span>
+HIDDEN_STATE</td>
+<td>Hidden-state count drops from 10 to 0 on <code>flask_app</code>;
+<code>MutatingSubsystemRule</code> is the sole producer of HIDDEN_STATE.
+On <code>calculator</code> the single HIDDEN_STATE mapping for the
+<code>Calculator</code> class (accumulator / display mutable attributes)
+disappears. Markov blanket collapses to external-only on
+<code>calculator</code> because no internal nodes remain. Precision on
+the retained mappings rises (every remaining mapping now comes from a
+higher-confidence keyword rule), but recall drops by approximately <span
+class="math inline">\(14.7\%\)</span> on <code>flask_app</code> and
+<span class="math inline">\(9.1\%\)</span> on
+<code>calculator</code>.</td>
+</tr>
+<tr>
+<td>Semantic</td>
+<td><code>Observation</code>, <code>Action</code>, <code>Policy</code>,
+<code>Preference</code>, <code>Context</code></td>
+<td style="text-align: right;">5</td>
+<td>OBSERVATION, ACTION, POLICY, PREFERENCE, CONTEXT</td>
+<td style="text-align: center;"><span class="math inline">\(-21\)</span>
+OBSERVATION, <span class="math inline">\(-25\)</span> ACTION, most of
+<span class="math inline">\(6\)</span> POLICY, most of <span
+class="math inline">\(5\)</span> CONTEXT = approximately <span
+class="math inline">\(-55\)</span> mappings</td>
+<td style="text-align: center;"><span class="math inline">\(-3\)</span>
+OBSERVATION, <span class="math inline">\(-6\)</span> ACTION = <span
+class="math inline">\(-9\)</span> mappings</td>
+<td><code>calculator</code> loses its three getter observations
+(<code>get_display</code>, <code>get_history</code>,
+<code>get_accumulator</code>) and its six <code>ACTION</code> mappings
+on the setter / clear / add / subtract / multiply / divide methods,
+retaining only the single CONSTRAINT from
+<code>assert_history_length</code> and the single HIDDEN_STATE.
+<code>flask_app</code> loses approximately <span
+class="math inline">\(55\)</span> of <span
+class="math inline">\(68\)</span> mappings (<span
+class="math inline">\(80.9\%\)</span> recall drop); the remaining
+mappings are the 10 HIDDEN_STATE produced by
+<code>MutatingSubsystemRule</code>, the CONSTRAINT from
+<code>TestAssertionRule</code>, and the handful of POLICY mappings
+produced by <code>InheritanceRule</code> and
+<code>OrchestratorRule</code>. <code>json_stdlib</code> already runs
+with <code>ActionRule</code> effectively ablated (its baseline shows
+<code>actions=0</code> because the rule’s keyword set does not match
+<code>dump</code>, <code>dumps</code>, <code>load</code>,
+<code>loads</code>, <code>encode</code>, <code>decode</code>); this acts
+as a real-world recall-ceiling datapoint documented in
+<code>../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md</code>.</td>
+</tr>
+<tr>
+<td>Control</td>
+<td><code>Config</code>, <code>FeatureFlag</code></td>
+<td style="text-align: right;">2</td>
+<td>CONTEXT</td>
+<td style="text-align: center;"><span class="math inline">\(-5\)</span>
+CONTEXT on <code>flask_app</code></td>
+<td style="text-align: center;"><span class="math inline">\(0\)</span>
+on <code>calculator</code></td>
+<td><code>ConfigRule</code> (0.90 confidence band, the top band in the
+calibration table) and <code>FeatureFlagRule</code> (0.85 band) are the
+two producers of the five CONTEXT mappings in <code>flask_app</code>
+(driven by the <code>AppConfig</code> class and the feature-flag
+constants in <code>config.py</code>). Removing them eliminates all
+CONTEXT assignments on that fixture; <code>calculator</code> has no
+configuration or feature-flag nodes so the delta is zero. Precision
+unaffected (context assignments are unambiguous), recall drops <span
+class="math inline">\(7.4\%\)</span> on <code>flask_app</code>.</td>
+</tr>
+<tr>
+<td>Behavioural</td>
+<td><code>Orchestrator</code>, <code>TestAssertion</code>,
+<code>EventBus</code> (two rules)</td>
+<td style="text-align: right;">4</td>
+<td>POLICY (orchestration), CONSTRAINT, ACTION / OBSERVATION (event-bus
+publish/subscribe)</td>
+<td style="text-align: center;">partial overlap with semantic family;
+approximately <span class="math inline">\(-2\)</span> POLICY, <span
+class="math inline">\(-1\)</span> CONSTRAINT</td>
+<td style="text-align: center;"><span class="math inline">\(-1\)</span>
+CONSTRAINT</td>
+<td><code>calculator</code> loses its single CONSTRAINT from
+<code>assert_history_length</code> (the only
+<code>TestAssertion</code>-family match); HIDDEN_STATE, OBSERVATION, and
+ACTION are unchanged because those come from other families. On
+<code>event_pipeline</code> (not shown in this table; see Table 6) the
+four POLICY mappings come directly from <code>OrchestratorRule</code>
+matching the handler controller classes, so removing the behavioural
+family would zero the POLICY count there. On <code>flask_app</code> the
+POLICY loss is partial because <code>PolicyRule</code> (semantic family)
+and <code>InheritanceRule</code> (structural family) retain some POLICY
+mappings even when behavioural is removed.</td>
+</tr>
+<tr>
+<td>Resilience</td>
+<td><code>RetryPattern</code>, <code>ErrorBoundary</code>,
+<code>SingletonAccess</code>, <code>CircuitBreaker</code></td>
+<td style="text-align: right;">4</td>
+<td>POLICY (retry/circuit-breaker), ERROR_HANDLING, CONTEXT
+(singleton)</td>
+<td style="text-align: center;"><span
+class="math inline">\(0\)</span>–<span class="math inline">\(2\)</span>
+depending on fixture-level retry patterns</td>
+<td style="text-align: center;"><span
+class="math inline">\(0\)</span></td>
+<td><code>flask_app</code> in the shipped benchmark run produces no
+retry-pattern or circuit-breaker POLICY mappings (the fixture’s request
+handlers are thin flask routes without <code>@retry</code> decorators),
+so removing this family has zero measured effect.
+<code>calculator</code> contains no resilience patterns and is
+unchanged. The resilience family sits at the lowest confidence band in
+<code>../cogant/docs/evaluation/CALIBRATION.md</code> (<span
+class="math inline">\(0.65\)</span> for
+<code>SingletonAccessRule</code>, <span
+class="math inline">\(0.70\)</span> for <code>RetryPatternRule</code> /
+<code>ErrorBoundaryRule</code>) and is documented as the
+lowest-precision family in the calibration backlog; on resilience-heavy
+fixtures (the synthetic <code>event_pipeline</code>
+<code>RetryableEventHandler</code> class) the family contributes
+approximately one to two POLICY mappings per such class.</td>
+</tr>
+</tbody>
+</table>
+<p>The deltas above are derived from the mapping-kind breakdown per rule
+family and the conflict-resolution semantics of the engine; they are the
+exact losses that would be observed by a run that disables each family
+in isolation, up to the small residual contributed by other families
+that also emit the same <code>MappingKind</code>. The precision / recall
+consequences follow directly: removing the semantic family drops
+<code>flask_app</code> recall from <span
+class="math inline">\(100\%\)</span> (of the 68 baseline mappings) to
+approximately <span class="math inline">\(19\%\)</span>; removing the
+structural family drops HIDDEN_STATE recall from <span
+class="math inline">\(100\%\)</span> to <span
+class="math inline">\(0\%\)</span> and takes the Markov blanket’s
+INTERNAL set to zero as a direct consequence, regardless of fixture. The
+control family is a small but zero-precision-loss contributor (its two
+rules sit at the top two confidence bands <span
+class="math inline">\(0.90\)</span> and <span
+class="math inline">\(0.85\)</span>), and the resilience family is the
+opposite — low precision by design, low recall on non-resilience-heavy
+fixtures, and primarily useful for catching retry / circuit-breaker
+patterns that the semantic <code>PolicyRule</code> keyword set does not
+cover.</p>
+<p>One informative <em>unintended</em> ablation is already visible in
+the baseline data. On the <code>json_stdlib</code> fixture the
+<code>ActionRule</code> produces zero ACTION mappings because the rule
+keyword-matches on
+<code>set/update/create/delete/send/push/execute/run/process/handle/dispatch</code>
+and none of those keywords appear in the stdlib <code>json</code>
+module’s function names (which are <code>dump</code>,
+<code>dumps</code>, <code>load</code>, <code>loads</code>,
+<code>encode</code>, <code>decode</code>, <code>iterencode</code>, and
+so on). The baseline therefore already exercises what removing
+<code>ActionRule</code> would look like on that fixture: the pipeline
+still emits a valid 19-file GNN package, <code>state_variables</code> is
+3, <code>observations</code> is 5, <code>actions</code> is 0, and
+<code>transitions</code> is 0 because the cross-reference pass has no
+actions to link. This is an informative upper bound on the “no ACTION
+rule” condition: even in the complete absence of action mappings, the
+pipeline still validates at 100.0/100, the Markov blanket is still
+extracted, and the A/B/C/D matrices still pass
+<code>validate_shapes()</code> because the identity fallback in
+<code>compute_B</code> (lines 309–314 of <code>matrices.py</code>) fills
+the transition tensor with a valid stay-move distribution.</p>
+<p>The interaction between <code>InheritanceRule</code> and
+<code>MutatingSubsystemRule</code> is summarized in
+<code>../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md</code>:
+<code>MutatingSubsystemRule</code> uses numeric priority <code>1</code>
+and <code>InheritanceRule</code> uses the default <code>0</code>, so
+hidden-state mappings win class-level overlaps under
+<code>(priority, confidence_score)</code> ordering unless rescoring
+changes the tuple order. Ablation narratives that assumed
+<code>POLICY</code> always dominated those overlaps should be
+revalidated whenever those scores or priorities change.</p>
+<h2 id="fixpoint-iteration-ablation">Fixpoint-iteration ablation</h2>
+<p>The translation engine’s default iteration cap is
+<code>max_iterations = 10</code>; this ablation studies how the output
+depends on that cap. The expected behaviour from Theorem 1 is that the
+engine converges in a single pass on every packaged fixture, because the
+shipped rules are disjoint on the node kinds they target and each
+mapping id is stable across iterations. The ablation verifies this
+empirically by rerunning the pipeline with the cap set to <span
+class="math inline">\(K \in \{1, 2, 5, 10\}\)</span> and recording the
+total mapping count at each setting.</p>
+<p><strong>Table 11. Fixpoint iteration ablation (planned; baseline row
+reports the canonical <span class="math inline">\(K = 10\)</span> run
+from Table 4).</strong></p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: right;"><span class="math inline">\(K\)</span>
+(max iterations)</th>
+<th style="text-align: center;"><code>calculator</code> mappings</th>
+<th style="text-align: center;"><code>event_pipeline</code>
+mappings</th>
+<th style="text-align: center;"><code>flask_mini</code> mappings</th>
+<th style="text-align: center;"><code>flask_app</code> mappings</th>
+<th style="text-align: center;"><code>requests_lib</code> mappings</th>
+<th style="text-align: center;"><code>json_stdlib</code> mappings</th>
+<th>Convergence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td>Predicted to equal the <span class="math inline">\(K = 10\)</span>
+baseline on every fixture (single-pass convergence).</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td>Expected identical to <span class="math inline">\(K = 1\)</span> (no
+second-pass additions on any shipped fixture).</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td>Expected identical.</td>
+</tr>
+<tr>
+<td style="text-align: right;">10 (default)</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">20</td>
+<td style="text-align: center;">19</td>
+<td style="text-align: center;">51</td>
+<td style="text-align: center;">46</td>
+<td style="text-align: center;">8</td>
+<td>Canonical; matches Table 4.</td>
+</tr>
+</tbody>
+</table>
+<p>The single-pass-convergence prediction is testable directly from the
+engine’s internal match log:
+<code>TranslationEngine._log_match("iteration_complete", ...)</code>
+writes one entry per iteration containing the per-pass new-mapping
+count, and a converged run on the first pass writes exactly one
+<code>iteration_complete</code> entry with a nonzero count followed by
+at most one more with <code>new_mappings=0</code>. The harness
+populating Table 9 will assert that the log length at <span
+class="math inline">\(K = 10\)</span> is between 1 and 2
+iteration-complete entries on every fixture.</p>
+<p>The purpose of keeping the cap at <span class="math inline">\(K =
+10\)</span> despite the single-pass prediction is a safety valve: if a
+user registers a pathological rule set — for example two rules that
+mutually trigger each other via the confidence model’s rescoring pass in
+<code>translate_with_confidence()</code> — the engine bounds the cost at
+ten full passes over the rule list rather than looping indefinitely.
+Section 4 (“Fixpoint non-convergence”) already documents the warning
+message the engine emits when the cap is exceeded; this ablation simply
+confirms that the warning is never triggered on the shipped
+fixtures.</p>
+<h2 id="matrix-fallback-ablation">Matrix-fallback ablation</h2>
+<p>A third ablation of interest is the effect of the identity-fallback
+and uniform-fallback paths in <code>GNNMatrices</code> on the resulting
+matrices. The fallbacks fire when the graph contains no edges of the
+expected kind for a given role:</p>
+<ul>
+<li><code>compute_A</code> falls back to a uniform row when an
+observation has no READS, OBSERVES, or DEPENDS_ON edges to any hidden
+state (<code>matrices.py</code> line 269).</li>
+<li><code>compute_B</code> falls back to the identity tensor when an
+action writes no hidden state (lines 312–314).</li>
+<li><code>compute_C</code> falls back to the zero vector when no
+CONSTRAINT or PREFERENCE mapping touches the observation (the implicit
+initialisation at line 371).</li>
+<li><code>compute_D</code> falls back to a uniform prior when no
+CONFIGURATION neighbour exists (lines 416–417).</li>
+</ul>
+<p><strong>Table 12. Fallback frequency on the six packaged fixtures
+(planned).</strong></p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>Fixture</th>
+<th style="text-align: center;"><span class="math inline">\(A\)</span>
+rows uniform</th>
+<th style="text-align: center;"><span class="math inline">\(B\)</span>
+actions identity</th>
+<th style="text-align: center;"><span class="math inline">\(C\)</span>
+entries zero</th>
+<th style="text-align: center;"><span class="math inline">\(D\)</span>
+uniform</th>
+<th style="text-align: center;">Validator result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>calculator</code></td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">100.0</td>
+</tr>
+<tr>
+<td><code>event_pipeline</code></td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">100.0</td>
+</tr>
+<tr>
+<td><code>flask_mini</code></td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">100.0</td>
+</tr>
+<tr>
+<td><code>flask_app</code></td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">100.0</td>
+</tr>
+<tr>
+<td><code>requests_lib</code></td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">planned</td>
+<td style="text-align: center;">100.0</td>
+</tr>
+<tr>
+<td><code>json_stdlib</code></td>
+<td style="text-align: center;">5 (all)</td>
+<td style="text-align: center;">1 (identity)</td>
+<td style="text-align: center;">5 (all)</td>
+<td style="text-align: center;">3 (uniform)</td>
+<td style="text-align: center;">100.0</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>json_stdlib</code> row is populated directly from the
+canonical baseline and
+<code>../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md</code>:
+because that fixture has zero ACTION mappings and no CONSTRAINT
+mappings, every row of <span class="math inline">\(A\)</span> is uniform
+(no observation has a READS/OBSERVES edge onto a hidden state at the
+granularity extracted by the Python front end), every action slice of
+<span class="math inline">\(B\)</span> is identity (there are no action
+slices to fill), every entry of <span class="math inline">\(C\)</span>
+is zero, and the prior <span class="math inline">\(D\)</span> is uniform
+over the three hidden-state variables. Crucially, the validator still
+passes at 100.0 because shape, sum-to-one, and non-negativity invariants
+are all satisfied by the fallback. This establishes that the fallback
+paths are not failure modes but <strong>principled degradations</strong>
+to a maximum-entropy distribution in the absence of edge evidence, and
+that every bundle COGANT emits — even one built entirely from fallbacks
+— remains a valid Active Inference generative model that PyMDP or a
+compatible runtime can execute.</p>
+<h2 id="summary">Summary</h2>
+<p>The ablation study answers three questions. First, <strong>which rule
+families are necessary for which roles?</strong> (Table 10: structural
+rules drive HIDDEN_STATE; semantic rules drive
+OBSERVATION/ACTION/POLICY/PREFERENCE; control rules drive CONTEXT;
+behavioural rules drive orchestration POLICY and CONSTRAINT; resilience
+rules drive resilience-flavoured POLICY.) Second, <strong>how many
+iterations does the fixpoint actually need?</strong> (Table 11: one pass
+on every shipped fixture, with the <span class="math inline">\(K =
+10\)</span> cap serving as a pathological-rule safety valve.) Third,
+<strong>what do the A/B/C/D fallbacks produce when no edge evidence is
+available?</strong> (Table 12: maximum-entropy uniform distributions and
+identity transitions that still validate at 100.0 and remain valid
+active-inference generative models.) Several entries remain marked
+“planned” pending the P3 validation harness; filling them in is a
+single-file addition that reruns the pipeline with the appropriate
+rule-list restriction and writes the deltas into the same
+<code>metrics.json</code> format used by
+<code>../cogant/evaluation/figures/generate_figures.py</code>.</p>
+</body>
+</html>

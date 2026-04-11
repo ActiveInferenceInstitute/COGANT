@@ -203,6 +203,7 @@ all = [
     { name = "tree-sitter-typescript" },
 ]
 dev = [
+    { name = "hypothesis" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -234,6 +235,7 @@ requires-dist = [
     { name = "duckdb", specifier = ">=0.9" },
     { name = "fastapi", specifier = ">=0.135.3" },
     { name = "httpx", specifier = ">=0.27" },
+    { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.0" },
     { name = "jinja2", marker = "extra == 'all'", specifier = ">=3.0.0" },
     { name = "jinja2", marker = "extra == 'viz'", specifier = ">=3.0.0" },
     { name = "matplotlib", marker = "extra == 'all'", specifier = ">=3.8.0" },

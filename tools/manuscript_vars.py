@@ -5,6 +5,82 @@ Usage:
     # MANUSCRIPT_VARS["{{TEST_COUNT}}"] == "testing.test_count_passing"
 """
 
+from __future__ import annotations
+
+import re
+from typing import Any
+
+_PLACEHOLDER_INNER = re.compile(r"^\{\{([A-Za-z0-9_]+)\}\}$")
+
+
+def resolve_path(data: dict[str, Any] | Any, dotpath: str) -> Any:
+    """Traverse a nested mapping using dotted path segments."""
+    cur: Any = data
+    for part in dotpath.split("."):
+        if not isinstance(cur, dict):
+            return None
+        cur = cur.get(part)
+        if cur is None:
+            return None
+    return cur
+
+
+def format_value_for_path(path: str, value: Any) -> str:
+    """Format a METRICS value for manuscript substitution (aligned with inject tool)."""
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return str(value)
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        if "epsilon" in path or "threshold_" in path:
+            s = f"{value:.4f}"
+            return s.rstrip("0").rstrip(".") if "." in s else s
+        if "coverage_percent" in path:
+            return f"{value:.2f}"
+        if "macro_f1" in path or path.endswith("_f1"):
+            return f"{value:.2f}"
+        if "isomorphic_percent" in path or ("_percent" in path and "coverage" not in path):
+            return f"{value:.1f}"
+        return f"{value:.1f}"
+    return str(value)
+
+
+def placeholder_to_json_key(placeholder: str) -> str:
+    """Map ``{{NAME}}`` -> ``NAME`` for JSON keys."""
+    m = _PLACEHOLDER_INNER.match(placeholder.strip())
+    if m:
+        return m.group(1)
+    return placeholder.strip("{}").replace("{", "").replace("}", "")
+
+
+def build_flat_variables(metrics: dict[str, Any]) -> dict[str, str]:
+    """Build ``NAME -> formatted string`` for manuscript_variables.json."""
+    out: dict[str, str] = {}
+    for placeholder, path in MANUSCRIPT_VARS.items():
+        value = resolve_path(metrics, path)
+        if value is None:
+            continue
+        key = placeholder_to_json_key(placeholder)
+        out[key] = format_value_for_path(path, value)
+    return out
+
+
+def substitute_text(text: str, metrics: dict[str, Any]) -> tuple[str, list[str]]:
+    """Replace every registered ``{{VAR}}`` in *text*; return (new_text, log lines)."""
+    substitutions: list[str] = []
+    for var, path in MANUSCRIPT_VARS.items():
+        value = resolve_path(metrics, path)
+        if value is None:
+            continue
+        formatted = format_value_for_path(path, value)
+        if var in text:
+            substitutions.append(f"  {var} → {formatted} (from {path})")
+            text = text.replace(var, formatted)
+    return text, substitutions
+
+
 MANUSCRIPT_VARS: dict[str, str] = {
     # Package identity
     "{{VERSION}}": "package.version",
@@ -76,4 +152,7 @@ MANUSCRIPT_VARS: dict[str, str] = {
     # Rust
     "{{RUST_CRATES}}": "rust.crates_total",
     "{{RUST_FFI}}": "rust.ffi_available",
+
+    # Provenance (top-level METRICS.yaml)
+    "{{METRICS_GENERATED_AT}}": "generated_at",
 }

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>S05_appendix_extended_related_work</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+<h1 id="appendix-e-extended-related-work">Appendix E — Extended Related
+Work</h1>
+<p>This appendix consolidates the related-work references cited in the
+main text (Section 6) and the annotated bibliography in
+<code>../cogant/docs/evaluation/LITERATURE.md</code> (which contains 83
+entries across 14 sections). The list below is organized into 10 topical
+clusters spanning program analysis → GNN, active inference tooling, code
+understanding, formal methods, POMDP solvers, and the categorical
+foundations of the forward/reverse pair. References are numbered
+consecutively across clusters so that the in-text citations in other
+appendices can use <code>[N]</code> format.</p>
+<h3 id="e.1-program-analysis-gnn-learned-and-symbolic">E.1 Program
+analysis → GNN (learned and symbolic)</h3>
+<p>[1] Allamanis, M., Brockschmidt, M., Khademi, M. (2018).
+<strong>Learning to Represent Programs with Graphs.</strong>
+<em>Proceedings of the International Conference on Learning
+Representations (ICLR).</em> The canonical multi-edge typed program
+graph reference; COGANT’s 14 node kinds and 11 edge kinds extend this
+taxonomy with ActInf roles.</p>
+<p>[2] Cummins, C., Fisches, Z. V., Ben-Nun, T., Hoefler, T., O’Boyle,
+M. F., Leather, H. (2021). <strong>ProGraML: A Graph-based Program
+Representation for Data Flow Analysis and Compiler
+Optimizations.</strong> <em>ICML.</em> LLVM-IR level unified
+AST/data-flow/control-flow program graph; design reference for COGANT’s
+unified edge labeling.</p>
+<p>[3] Yamaguchi, F., Golde, N., Arp, D., Rieck, K. (2014).
+<strong>Modeling and Discovering Vulnerabilities with Code Property
+Graphs.</strong> <em>IEEE Symposium on Security and Privacy.</em>
+Introduces the CPG (merged AST/CFG/PDG); COGANT’s graph is conceptually
+a CPG restricted to ActInf-relevant edges.</p>
+<p>[4] Dinella, E., Dai, H., Li, Z., Naik, M., Song, L., Wang, K.
+(2020). <strong>Hoppity: Learning Graph Transformations to Detect and
+Fix Bugs in Programs.</strong> <em>ICLR.</em> Learned graph-to-graph
+transformations on program graphs; structurally analogous to COGANT’s
+rule-based transformation stage.</p>
+<p>[5] Li, Y., Tarlow, D., Brockschmidt, M., Zemel, R. (2016).
+<strong>Gated Graph Sequence Neural Networks.</strong> <em>ICLR.</em>
+The foundational GGNN architecture used by most learned program-graph
+models; cited for completeness of the “learned GNNs over program graphs”
+lineage.</p>
+<p>[6] Ben-Nun, T., Jakobovits, A. S., Hoefler, T. (2018).
+<strong>Neural Code Comprehension: A Learnable Representation of Code
+Semantics.</strong> <em>NeurIPS.</em> inst2vec: LLVM-IR embeddings for
+code representation; the learned counterpart to COGANT’s symbolic
+statespace module.</p>
+<p>[7] Mir, A. M., Latoškinas, E., Proksch, S., Gousios, G. (2022).
+<strong>Type4Py: Practical Deep Similarity Learning-Based Type Inference
+for Python.</strong> <em>ICSE.</em> Learned type inference over Python
+program graphs; the closest “learned role assignment” analogue to
+COGANT’s declarative translate rules.</p>
+<p>[8] Kanade, A., Maniatis, P., Balakrishnan, G., Shi, K. (2020).
+<strong>Learning and Evaluating Contextual Embedding of Source
+Code.</strong> <em>ICML.</em> CuBERT: BERT pretraining on Python source;
+baseline for position-aware token representations that could serve as
+features for a hybrid COGANT variant.</p>
+<h3 id="e.2-active-inference-tooling-and-implementations">E.2 Active
+inference tooling and implementations</h3>
+<p>[9] Heins, C., Millidge, B., Demekas, D., Klein, B., Friston, K.,
+Fields, C., Buckley, C., Tschantz, A. (2022). <strong>pymdp: A Python
+library for active inference in discrete state spaces.</strong>
+<em>Journal of Open Source Software, 7(73).</em> The reference Python
+implementation of discrete active inference; COGANT’s
+<code>cogant.process</code> module targets pymdp’s matrix
+conventions.</p>
+<p>[10] Smith, R., Friston, K. J., Whyte, C. J. (2022). <strong>A
+Step-by-Step Tutorial on Active Inference and Its Application to
+Empirical Data.</strong> <em>Journal of Mathematical Psychology,
+107.</em> The practitioner tutorial against which COGANT’s
+<code>cogant.process</code> test fixtures are validated.</p>
+<p>[11] Parr, T., Pezzulo, G., Friston, K. J. (2022). <strong>Active
+Inference: The Free Energy Principle in Mind, Brain, and
+Behavior.</strong> MIT Press. The current textbook reference for
+discrete-time active inference and the A/B/C/D matrix formalism that
+COGANT targets.</p>
+<p>[12] Da Costa, L., Parr, T., Sajid, N., Veselic, S., Neacsu, V.,
+Friston, K. (2020). <strong>Active Inference on Discrete State-Spaces: A
+Synthesis.</strong> <em>Journal of Mathematical Psychology, 99.</em>
+Explicit algorithms for policy evaluation via Expected Free Energy;
+COGANT’s EFE implementation follows the pseudocode in this paper.</p>
+<p>[13] Sajid, N., Ball, P. J., Parr, T., Friston, K. J. (2021).
+<strong>Active Inference: Demystified and Compared.</strong> <em>Neural
+Computation, 33(3).</em> Compares active inference to RL and optimal
+control; used to position COGANT’s choice of the A/B/C/D representation
+against reward-function alternatives.</p>
+<p>[14] Friston, K. J., Lin, M., Frith, C. D., Pezzulo, G., Hobson, J.
+A., Ondobaka, S. (2017). <strong>Active Inference, Curiosity and
+Insight.</strong> <em>Neural Computation, 29(10).</em> Decomposes EFE
+into pragmatic and epistemic components; COGANT’s EFE includes the
+epistemic term.</p>
+<p>[15] Active Inference Institute (2022–2026). <strong>infer-actively /
+pymdp reference implementation and example gallery.</strong> GitHub:
+<code>infer-actively/pymdp</code>. The living library of example GNN
+specifications against which COGANT’s output is diffed in the
+reference-corpus integration tests.</p>
+<p>[16] Friston, K. J., Mattout, J., Trujillo-Barreto, N., Ashburner,
+J., Penny, W. (2007). <strong>Variational Free Energy and the Laplace
+Approximation.</strong> <em>NeuroImage, 34(1).</em> SPM12
+active-inference variational Bayesian framework; the historical
+predecessor to pymdp and the source of the Laplace approximation used in
+continuous-state extensions of COGANT.</p>
+<p>[17] Smekal, J., Friedman, D. A. et al. (2023). <strong>Generalized
+Notation Notation: A Text-Based Format for Active Inference Generative
+Models.</strong> Active Inference Institute technical report. The
+specification document for GNN v1.1, which COGANT’s
+<code>cogant.gnn</code> formatter targets.</p>
+<p>[18] Champion, T., Grzes, M., Bowman, H. (2022). <strong>Branching
+Time Active Inference: Empirical Study and Complexity Class
+Analysis.</strong> <em>Neural Networks, 152.</em> Demonstrates GNN-style
+specifications for hierarchical active inference; target formalism for
+COGANT’s branching-time extension.</p>
+<h3 id="e.3-code-understanding-and-learned-code-models">E.3 Code
+understanding and learned code models</h3>
+<p>[19] Feng, Z., Guo, D., Tang, D., Duan, N. et al. (2020).
+<strong>CodeBERT: A Pre-Trained Model for Programming and Natural
+Languages.</strong> <em>Findings of EMNLP.</em> Bimodal pretraining for
+code + NL; baseline for semantic similarity tasks over code.</p>
+<p>[20] Guo, D., Ren, S., Lu, S., Feng, Z. et al. (2021).
+<strong>GraphCodeBERT: Pre-training Code Representations with Data
+Flow.</strong> <em>ICLR.</em> BERT-style model with data-flow attention
+masks; the closest learned analogue to COGANT’s graph-structured role
+assignment.</p>
+<p>[21] Guo, D., Lu, S., Duan, N., Wang, Y., Yin, M., Ren, S. (2022).
+<strong>UniXcoder: Unified Cross-Modal Pre-training for Code
+Representation.</strong> <em>ACL.</em> Unified encoder-decoder over AST,
+code, and comments.</p>
+<p>[22] Wang, Y., Wang, W., Joty, S., Hoi, S. C. H. (2021).
+<strong>CodeT5: Identifier-Aware Unified Pre-trained Encoder-Decoder
+Model for Code Understanding and Generation.</strong> <em>EMNLP.</em>
+Identifier-aware T5 for code; node-kind classification parallels
+COGANT’s 14 node kinds.</p>
+<p>[23] Alon, U., Zilberstein, M., Levy, O., Yahav, E. (2019).
+<strong>code2vec: Learning Distributed Representations of Code.</strong>
+<em>POPL.</em> AST-path aggregation for code embedding; complementary to
+COGANT’s whole-graph approach.</p>
+<p>[24] Hellendoorn, V. J., Sutton, C., Singh, R., Maniatis, P., Bieber,
+D. (2019). <strong>Global Relational Models of Source Code.</strong>
+<em>ICLR.</em> Relational graph attention over program graphs; validates
+COGANT’s premise that graph structure carries essential semantic
+information.</p>
+<p>[25] Allamanis, M., Barr, E. T., Devanbu, P., Sutton, C. (2018).
+<strong>A Survey of Machine Learning for Big Code and
+Naturalness.</strong> <em>ACM Computing Surveys, 51(4).</em> Landscape
+of learned code models against which COGANT is positioned as a
+graph-based symbolic extractor.</p>
+<p>[26] Bielik, P., Raychev, V., Vechev, M. (2016). <strong>PHOG:
+Probabilistic Model for Code.</strong> <em>ICML.</em> Tree-conditional
+grammar for context-sensitive role prediction; symbolic analogue of
+COGANT’s rule engine with learned grammars.</p>
+<p>[27] Raychev, V., Vechev, M., Krause, A. (2015). <strong>Predicting
+Program Properties from “Big Code”.</strong> <em>POPL.</em> CRF over
+program graphs for learned role assignment; the learned counterpart to
+COGANT’s rule engine.</p>
+<h3 id="e.4-graph-kernels-and-structural-similarity-for-code">E.4 Graph
+kernels and structural similarity for code</h3>
+<p>[28] Shervashidze, N., Schweitzer, P., van Leeuwen, E. J., Mehlhorn,
+K., Borgwardt, K. M. (2011). <strong>Weisfeiler-Lehman Graph
+Kernels.</strong> <em>Journal of Machine Learning Research, 12.</em> The
+foundational graph kernel that COGANT’s role-multiset similarity metric
+is a weighted analogue of (the WL-subtree kernel reduces to multiset
+comparison at depth 1).</p>
+<p>[29] Kriege, N. M., Johansson, F. D., Morris, C. (2020). <strong>A
+Survey on Graph Kernels.</strong> <em>Applied Network Science,
+5(1).</em> Comprehensive survey of graph kernels; locates COGANT’s
+role-match score in the kernel lineage.</p>
+<p>[30] Nikolentzos, G., Siglidis, G., Vazirgiannis, M. (2021).
+<strong>Graph Kernels: A Survey.</strong> <em>Journal of Artificial
+Intelligence Research, 72.</em> Alternative survey with emphasis on
+structural kernels over labeled graphs.</p>
+<h3
+id="e.5-formal-methods-abstract-interpretation-and-galois-connections-in-static-analysis">E.5
+Formal methods: abstract interpretation and Galois connections in static
+analysis</h3>
+<p>[31] Cousot, P., Cousot, R. (1977). <strong>Abstract Interpretation:
+A Unified Lattice Model for Static Analysis of Programs by Construction
+or Approximation of Fixpoints.</strong> <em>POPL.</em> The foundational
+framework; COGANT’s confidence tiers and the forward/reverse functor
+pair are both instances.</p>
+<p>[32] Cousot, P., Cousot, R. (1992). <strong>Abstract Interpretation
+Frameworks.</strong> <em>Journal of Logic and Computation, 2(4).</em>
+Generalizes the 1977 framework with explicit Galois connections between
+concrete and abstract domains.</p>
+<p>[33] Nielson, F., Nielson, H. R., Hankin, C. (2005, 2nd printing).
+<strong>Principles of Program Analysis.</strong> Springer. The standard
+textbook; COGANT’s translate stage is a worklist fixpoint in the
+monotone framework.</p>
+<p>[34] Bravenboer, M., Smaragdakis, Y. (2009). <strong>Strictly
+Declarative Specification of Sophisticated Points-to Analyses.</strong>
+<em>OOPSLA.</em> Doop and Datalog-based static analysis; validates the
+principle that declarative rule systems can handle sophisticated
+whole-program analyses at scale.</p>
+<p>[35] Rice, H. G. (1953). <strong>Classes of Recursively Enumerable
+Sets and Their Decision Problems.</strong> <em>Transactions of the AMS,
+74(2).</em> Rice’s theorem establishes the fundamental undecidability
+that motivates the approximate (Galois-connection) approach to semantic
+role assignment.</p>
+<p>[36] Jones, N. D., Nielson, F. (1995). <strong>Abstract
+Interpretation: A Semantics-Based Tool for Program Analysis.</strong> In
+<em>Handbook of Logic in Computer Science.</em> Comprehensive reference
+for Galois-connection-based static analysis; the categorical machinery
+used in Appendix C.</p>
+<p>[37] Hoare, C. A. R. (1969). <strong>An Axiomatic Basis for Computer
+Programming.</strong> <em>Communications of the ACM, 12(10).</em> The
+foundational paper for program logic; COGANT’s translate rules can be
+read as Hoare-style inference rules.</p>
+<p>[38] Reynolds, J. C. (2002). <strong>Separation Logic: A Logic for
+Shared Mutable Data Structures.</strong> <em>LICS.</em> Separation logic
+frame rule; analogue of COGANT’s Markov blanket extraction over program
+graphs.</p>
+<p>[39] Milner, R. (1978). <strong>A Theory of Type Polymorphism in
+Programming.</strong> <em>Journal of Computer and System Sciences,
+17(3).</em> Hindley-Milner type inference; COGANT’s role assignment
+computes a “principal role” analogous to a principal type.</p>
+<p>[40] Leroy, X. (2009). <strong>Formal Verification of a Realistic
+Compiler.</strong> <em>Communications of the ACM, 52(7).</em> CompCert:
+the gold standard for verified program transformation; COGANT’s
+roundtrip property is a weaker but analogous correctness statement.</p>
+<h3 id="e.6-pomdp-solvers-and-planning">E.6 POMDP solvers and
+planning</h3>
+<p>[41] Kaelbling, L. P., Littman, M. L., Cassandra, A. R. (1998).
+<strong>Planning and Acting in Partially Observable Stochastic
+Domains.</strong> <em>Artificial Intelligence, 101(1-2).</em> The
+foundational POMDP reference; establishes the belief-state MDP
+reformulation that active inference specializes.</p>
+<p>[42] Silver, D., Veness, J. (2010). <strong>Monte-Carlo Planning in
+Large POMDPs.</strong> <em>NeurIPS.</em> POMCP: Monte Carlo tree search
+for large POMDPs. Alternative planner to active inference’s EFE-based
+policy selection; cited as a scalable baseline for large extracted state
+spaces.</p>
+<p>[43] Ye, N., Somani, A., Hsu, D., Lee, W. S. (2017). <strong>DESPOT:
+Online POMDP Planning with Regularization.</strong> <em>Journal of AI
+Research, 58.</em> Determinized Sparse Partially Observable Tree;
+anytime online POMDP planner whose specification format could be
+generated from COGANT’s extracted A/B/C/D matrices as an alternative
+runtime.</p>
+<p>[44] Kurniawati, H., Hsu, D., Lee, W. S. (2008). <strong>SARSOP:
+Efficient Point-Based POMDP Planning by Approximating Optimally
+Reachable Belief Spaces.</strong> <em>Robotics: Science and
+Systems.</em> Point-based value iteration; the anytime offline
+counterpart to DESPOT. Relevant to COGANT extensions that compute exact
+EFE-optimal policies rather than argmin-tie-break.</p>
+<p>[45] Astrom, K. J. (1965). <strong>Optimal Control of Markov Decision
+Processes with Incomplete State Information.</strong> <em>Journal of
+Mathematical Analysis and Applications, 10(1).</em> The historical
+origin of the belief-state MDP reformulation used throughout the POMDP
+literature.</p>
+<p>[46] Hansen, E. A. (1998). <strong>Solving POMDPs by Searching in
+Policy Space.</strong> <em>UAI.</em> Finite-state controllers for
+POMDPs; an alternative representation of π that could be extracted by
+COGANT from repository control flow.</p>
+<h3 id="e.7-program-synthesis-and-reverse-engineering">E.7 Program
+synthesis and reverse engineering</h3>
+<p>[47] Alur, R., Bodik, R., Juniwal, G., Martin, M. M. K., Raghothaman,
+M., Seshia, S. A., Singh, R., Solar-Lezama, A., Torlak, E., Udupa, A.
+(2013). <strong>Syntax-Guided Synthesis.</strong> <em>FMCAD.</em> SyGuS
+framework; COGANT’s reverse is a specialization with Python AST as
+grammar and GNN as specification.</p>
+<p>[48] Solar-Lezama, A. (2008). <strong>Program Synthesis by
+Sketching.</strong> PhD thesis, UC Berkeley. The sketching paradigm;
+COGANT’s reverse output is a sketch whose holes correspond to behaviors
+underspecified by the GNN.</p>
+<p>[49] Gulwani, S. (2011). <strong>Automating String Processing in
+Spreadsheets Using Input-Output Examples.</strong> <em>POPL.</em>
+FlashFill; popularized program synthesis from input-output examples.
+Relevant to future COGANT work using extract(code)→GNN pairs as
+synthesis training data.</p>
+<p>[50] Jha, S., Gulwani, S., Seshia, S. A., Tiwari, A. (2010).
+<strong>Oracle-Guided Component-Based Program Synthesis.</strong>
+<em>ICSE.</em> CEGIS loop; COGANT’s forward extraction is a natural
+correctness oracle for the reverse synthesis.</p>
+<p>[51] Polozov, O., Gulwani, S. (2015). <strong>FlashMeta: A Framework
+for Inductive Program Synthesis.</strong> <em>OOPSLA.</em>
+Witness-function synthesis framework; candidate refactor for COGANT’s
+reverse module.</p>
+<p>[52] Gulwani, S., Polozov, O., Singh, R. (2017). <strong>Program
+Synthesis.</strong> <em>Foundations and Trends in Programming Languages,
+4(1-2).</em> The definitive survey; locates COGANT’s reverse in the
+deductive-from-formal-spec corner.</p>
+<h3
+id="e.8-bidirectional-transformations-lenses-and-the-categorical-frame">E.8
+Bidirectional transformations, lenses, and the categorical frame</h3>
+<p>[53] Foster, J. N., Greenwald, M. B., Moore, J. T., Pierce, B. C.,
+Schmitt, A. (2007). <strong>Combinators for Bidirectional Tree
+Transformations: A Linguistic Approach to the View-Update
+Problem.</strong> <em>ACM TOPLAS, 29(3).</em> The foundational lens
+paper; COGANT’s forward/reverse pair is a partial lens in this
+sense.</p>
+<p>[54] Hofmann, M., Pierce, B. C., Wagner, D. (2011). <strong>Edit
+Lenses.</strong> <em>POPL.</em> Extends lenses with edit actions;
+relevant to COGANT’s incremental update mode.</p>
+<p>[55] Diskin, Z., Xiong, Y., Czarnecki, K., Ehrig, H., Hermann, F.,
+Orejas, F. (2011). <strong>From State- to Delta-Based Bidirectional
+Model Transformations: The Symmetric Case.</strong> <em>ICMT.</em>
+Symmetric lens generalization; candidate for COGANT’s future
+bidirectional synchronization.</p>
+<p>[56] Fong, B., Spivak, D. I. (2019). <strong>Seven Sketches in
+Compositionality: An Invitation to Applied Category Theory.</strong>
+Cambridge University Press. Accessible reference for Galois connections
+(Chapter 1) and databases-as-functors (Chapter 3); the mathematical home
+for COGANT’s confidence tiers and graph-as-category reading.</p>
+<p>[57] Spivak, D. I. (2020). <strong>Poly: An Abundant Categorical
+Setting for Mode-Dependent Dynamics.</strong> arXiv:2005.01894. The
+category <strong>Poly</strong> of polynomial endofunctors on
+<strong>Set</strong>; the deepest categorical setting for COGANT’s
+forward/reverse functor pair.</p>
+<p>[58] Niu, N., Spivak, D. I. (2023). <strong>Polynomial Functors: A
+Mathematical Theory of Interaction.</strong> arXiv:2312.00990. 372-page
+monograph; the reference for COGANT-Theory follow-on work.</p>
+<p>[59] Awodey, S. (2010). <strong>Category Theory (2nd ed.).</strong>
+Oxford University Press. The standard graduate textbook; definitions of
+functor, adjunction, and unit/counit used in Appendix C.</p>
+<h3 id="e.9-markov-blankets-and-active-inference-foundations">E.9 Markov
+blankets and active inference foundations</h3>
+<p>[60] Friston, K. J. (2010). <strong>The Free-Energy Principle: A
+Unified Brain Theory?</strong> <em>Nature Reviews Neuroscience,
+11(2).</em> The canonical statement of the Free Energy Principle; the
+theoretical substrate of GNN notation.</p>
+<p>[61] Pearl, J. (1988). <strong>Probabilistic Reasoning in Intelligent
+Systems: Networks of Plausible Inference.</strong> Morgan Kaufmann. The
+book that introduced Markov blankets for Bayesian networks; COGANT’s
+blanket extraction is over the program graph in Pearl’s sense.</p>
+<p>[62] Kirchhoff, M., Parr, T., Palacios, E., Friston, K., Kiverstein,
+J. (2018). <strong>The Markov Blankets of Life: Autonomy, Active
+Inference and the Free Energy Principle.</strong> <em>Journal of the
+Royal Society Interface, 15(138).</em> Lifts Markov blankets from
+graphical models to dynamical systems; the conceptual warrant for
+COGANT’s “software Markov blanket” claim.</p>
+<p>[63] Bruineberg, J., Dolega, K., Dewhurst, J., Baltieri, M. (2022).
+<strong>The Emperor’s New Markov Blankets.</strong> <em>Behavioral and
+Brain Sciences.</em> Critical examination of Markov blanket usage;
+informs COGANT’s cautious framing (Pearl blankets, not Friston
+blankets).</p>
+<p>[64] Biehl, M., Pollock, F. A., Kanai, R. (2021). <strong>A Technical
+Critique of Some Parts of the Free Energy Principle.</strong>
+<em>Entropy, 23(3).</em> Conditions under which FEP’s Markov blanket
+claims hold rigorously vs break down; COGANT’s discrete-graph setting
+sidesteps the continuous-dynamics concerns.</p>
+<hr />
+</body>
+</html>

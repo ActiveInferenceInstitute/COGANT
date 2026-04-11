@@ -1,12 +1,12 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.3.22)  9 APR 2026 08:49
+This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.3.22)  10 APR 2026 18:03
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
-**/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experime
-ntal_setup_slides.tex
+**/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides
+/06_experimental_setup_slides.tex
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experimen
-tal_setup_slides.tex
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/local/texlive/2026/texmf-dist/tex/latex/beamer/beamer.cls
@@ -1213,8 +1213,8 @@ File: bkm-dvipdfm.def 2023-12-10 v1.31 bookmark driver for dvipdfm (HO)
 (/usr/local/texlive/2026/texmf-dist/tex/latex/xurl/xurl.sty
 Package: xurl 2022/01/09 v 0.10 modify URL breaks
 )
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experimen
-tal_setup_slides.aux)
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.aux)
 \openout1 = `06_experimental_setup_slides.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 136.
@@ -1576,22 +1576,22 @@ Package microtype Info: Loading generic protrusion settings for font family
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: End \AtBeginDocument code.
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experimen
-tal_setup_slides.nav) [1
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.nav) [1
 
 ]
 \openout4 = `06_experimental_setup_slides.vrb'.
 
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experimen
-tal_setup_slides.vrb) [2
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.vrb) [2
 
 ]
 \openout4 = `06_experimental_setup_slides.vrb'.
 
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experimen
-tal_setup_slides.vrb
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.vrb
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10.95> not available
 (Font)              Font shape `TU/lmtt/b/n' tried instead on input line 7.
 )
@@ -1604,9 +1604,9 @@ Overfull \vbox (14.39543pt too high) detected at line 191
 \openout4 = `06_experimental_setup_slides.vrb'.
 
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experimen
-tal_setup_slides.vrb)
-Overfull \vbox (320.38461pt too high) detected at line 240
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.vrb)
+Overfull \vbox (266.24739pt too high) detected at line 240
  []
 
 [4
@@ -1615,52 +1615,54 @@ Overfull \vbox (320.38461pt too high) detected at line 240
 \openout4 = `06_experimental_setup_slides.vrb'.
 
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experimen
-tal_setup_slides.vrb) [5
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.vrb) [5
 
 ]
 \openout4 = `06_experimental_setup_slides.vrb'.
 
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experimen
-tal_setup_slides.vrb) [6
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.vrb) [6
 
 ]
 \openout4 = `06_experimental_setup_slides.vrb'.
 
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experimen
-tal_setup_slides.vrb
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.vrb
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 7.8961pt on input line 12.
+(Font)              scaled to size 7.8961pt on input line 14.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 5.64008pt on input line 12.
+(Font)              scaled to size 5.64008pt on input line 14.
 LaTeX Font Info:    Trying to load font information for OML+lmm on input line 1
-2.
- (/usr/local/texlive/2026/texmf-dist/tex/latex/lm/omllmm.fd
+4.
+
+(/usr/local/texlive/2026/texmf-dist/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 11.28131pt on input line 12.
+(Font)              scaled to size 11.28131pt on input line 14.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 7.89691pt on input line 12.
+(Font)              scaled to size 7.89691pt on input line 14.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 5.64066pt on input line 12.
+(Font)              scaled to size 5.64066pt on input line 14.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 11.27914pt on input line 12.
+(Font)              scaled to size 11.27914pt on input line 14.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 7.8954pt on input line 12.
+(Font)              scaled to size 7.8954pt on input line 14.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 5.63957pt on input line 12.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 12.
+(Font)              scaled to size 5.63957pt on input line 14.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 14.
 
- (/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd
+
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
 (/usr/local/texlive/2026/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 12.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 14.
 
 
 (/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd
@@ -1669,33 +1671,33 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 (/usr/local/texlive/2026/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 ))
-Overfull \vbox (272.79555pt too high) detected at line 317
+Overfull \vbox (299.99556pt too high) detected at line 319
  []
 
 [7
 
 ]
-Overfull \hbox (4.9984pt too wide) in paragraph at lines 370--370
+Overfull \hbox (4.9984pt too wide) in paragraph at lines 379--379
 []|\TU/lmss/m/n/10.95 Program 
  []
 
 
-Overfull \hbox (1.11559pt too wide) in paragraph at lines 370--370
+Overfull \hbox (1.11559pt too wide) in paragraph at lines 379--379
 []|\TU/lmss/m/n/10.95 Consolidated 
  []
 
 
-Overfull \hbox (7.6045pt too wide) in paragraph at lines 370--370
+Overfull \hbox (7.6045pt too wide) in paragraph at lines 379--379
 []|\TU/lmss/m/n/10.95 Semantic 
  []
 
 
-Overfull \hbox (11.73265pt too wide) in paragraph at lines 370--370
+Overfull \hbox (11.73265pt too wide) in paragraph at lines 379--379
 []|\TU/lmss/m/n/10.95 Validation 
  []
 
 
-Overfull \vbox (750.30847pt too high) detected at line 370
+Overfull \vbox (832.03992pt too high) detected at line 379
  []
 
 [8
@@ -1704,14 +1706,493 @@ Overfull \vbox (750.30847pt too high) detected at line 370
 \openout4 = `06_experimental_setup_slides.vrb'.
 
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experimen
-tal_setup_slides.vrb)
-Overfull \vbox (72.61212pt too high) detected at line 405
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.vrb)
+Overfull \vbox (97.67688pt too high) detected at line 414
  []
 
 [9
 
-] [10
+]
+\openout4 = `06_experimental_setup_slides.vrb'.
+
+
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.vrb
+Overfull \hbox (22.5137pt too wide) in paragraph at lines 57--58
+[]\TU/lmss/m/n/10.95 Fixture  
+ []
+
+
+Overfull \hbox (7.71843pt too wide) in paragraph at lines 59--60
+ []\TU/lmss/m/n/10.95 Files
+ []
+
+
+Overfull \hbox (8.18929pt too wide) in paragraph at lines 61--62
+ []\TU/lmss/m/n/10.95 LOC
+ []
+
+
+Overfull \hbox (15.44913pt too wide) in paragraph at lines 63--64
+ []\TU/lmss/m/n/10.95 Nodes
+ []
+
+
+Overfull \hbox (13.92708pt too wide) in paragraph at lines 65--66
+ []\TU/lmss/m/n/10.95 Edges
+ []
+
+
+Overfull \hbox (31.31567pt too wide) in paragraph at lines 67--68
+ []\TU/lmss/m/n/10.95 Mappings
+ []
+
+
+Overfull \hbox (11.32098pt too wide) in paragraph at lines 69--70
+ []\TU/lmss/m/n/10.95 State
+ []
+
+
+Overfull \hbox (4.89334pt too wide) in paragraph at lines 69--70
+ \TU/lmss/m/n/10.95 vars
+ []
+
+
+Overfull \hbox (5.11234pt too wide) in paragraph at lines 71--72
+ []\TU/lmss/m/n/10.95 Obs
+ []
+
+
+Overfull \hbox (20.59563pt too wide) in paragraph at lines 73--74
+ []\TU/lmss/m/n/10.95 Actions
+ []
+
+
+Overfull \hbox (36.75783pt too wide) in paragraph at lines 75--76
+ []\TU/lmss/m/n/10.95 Transitions
+ []
+
+
+Overfull \hbox (10.00697pt too wide) in paragraph at lines 77--78
+ []\TU/lmss/m/n/10.95 GNN
+ []
+
+
+Overfull \hbox (2.94423pt too wide) in paragraph at lines 77--78
+ \TU/lmss/m/n/10.95 sec-
+ []
+
+
+Overfull \hbox (9.09813pt too wide) in paragraph at lines 77--78
+ \TU/lmss/m/n/10.95 tions
+ []
+
+
+Overfull \hbox (10.00697pt too wide) in paragraph at lines 79--80
+ []\TU/lmss/m/n/10.95 GNN
+ []
+
+
+Overfull \hbox (10.02888pt too wide) in paragraph at lines 79--80
+ \TU/lmss/m/n/10.95 score
+ []
+
+
+Overfull \hbox (9.04338pt too wide) in paragraph at lines 81--82
+ []\TU/lmss/m/n/10.95 Wall-
+ []
+
+
+Overfull \hbox (10.41212pt too wide) in paragraph at lines 81--82
+ \TU/lmss/m/n/10.95 clock
+ []
+
+
+Overfull \hbox (47.88484pt too wide) in paragraph at lines 85--85
+[]|\TU/lmtt/m/n/10.95 calculator|  
+ []
+
+
+Overfull \hbox (3.62314pt too wide) in paragraph at lines 85--85
+ []|\TU/lmss/m/n/10.95 122|
+ []
+
+
+Overfull \hbox (12.14223pt too wide) in paragraph at lines 85--86
+ []|\TU/lmss/m/n/10.95 100.0|
+ []
+
+
+Overfull \hbox (6.66724pt too wide) in paragraph at lines 86--87
+ []|\TU/lmss/m/n/10.95 7.42|
+ []
+
+
+Overfull \hbox (70.87984pt too wide) in paragraph at lines 87--87
+[]|\TU/lmtt/m/n/10.95 event_pipeline|  
+ []
+
+
+Overfull \hbox (3.62314pt too wide) in paragraph at lines 87--87
+ []|\TU/lmss/m/n/10.95 147|
+ []
+
+
+Overfull \hbox (12.14223pt too wide) in paragraph at lines 88--88
+ []|\TU/lmss/m/n/10.95 100.0|
+ []
+
+
+Overfull \hbox (6.66724pt too wide) in paragraph at lines 88--89
+ []|\TU/lmss/m/n/10.95 8.58|
+ []
+
+
+Overfull \hbox (47.88484pt too wide) in paragraph at lines 89--89
+[]|\TU/lmtt/m/n/10.95 flask_mini|  
+ []
+
+
+Overfull \hbox (3.62314pt too wide) in paragraph at lines 89--89
+ []|\TU/lmss/m/n/10.95 168|
+ []
+
+
+Overfull \hbox (12.14223pt too wide) in paragraph at lines 90--90
+ []|\TU/lmss/m/n/10.95 100.0|
+ []
+
+
+Overfull \hbox (6.66724pt too wide) in paragraph at lines 90--91
+ []|\TU/lmss/m/n/10.95 8.80|
+ []
+
+
+Overfull \hbox (42.1361pt too wide) in paragraph at lines 91--91
+[]|\TU/lmtt/m/n/10.95 flask_app|  
+ []
+
+
+Overfull \hbox (3.62314pt too wide) in paragraph at lines 91--91
+ []|\TU/lmss/m/n/10.95 853|
+ []
+
+
+Overfull \hbox (3.62314pt too wide) in paragraph at lines 91--91
+ []|\TU/lmss/m/n/10.95 597|
+ []
+
+
+Overfull \hbox (12.14223pt too wide) in paragraph at lines 92--92
+ []|\TU/lmss/m/n/10.95 100.0|
+ []
+
+
+Overfull \hbox (12.14223pt too wide) in paragraph at lines 92--93
+ []|\TU/lmss/m/n/10.95 14.58|
+ []
+
+
+Overfull \hbox (59.38234pt too wide) in paragraph at lines 93--93
+[]|\TU/lmtt/m/n/10.95 requests_lib|  
+ []
+
+
+Overfull \hbox (3.62314pt too wide) in paragraph at lines 93--93
+ []|\TU/lmss/m/n/10.95 750|
+ []
+
+
+Overfull \hbox (3.62314pt too wide) in paragraph at lines 93--93
+ []|\TU/lmss/m/n/10.95 345|
+ []
+
+
+Overfull \hbox (12.14223pt too wide) in paragraph at lines 94--94
+ []|\TU/lmss/m/n/10.95 100.0|
+ []
+
+
+Overfull \hbox (12.14223pt too wide) in paragraph at lines 94--95
+ []|\TU/lmss/m/n/10.95 12.19|
+ []
+
+
+Overfull \hbox (53.63359pt too wide) in paragraph at lines 95--95
+[]|\TU/lmtt/m/n/10.95 json_stdlib|  
+ []
+
+
+Overfull \hbox (9.09813pt too wide) in paragraph at lines 95--95
+ []|\TU/lmss/m/n/10.95 1231|
+ []
+
+
+Overfull \hbox (12.14223pt too wide) in paragraph at lines 96--96
+ []|\TU/lmss/m/n/10.95 100.0|
+ []
+
+
+Overfull \hbox (6.66724pt too wide) in paragraph at lines 96--97
+ []|\TU/lmss/m/n/10.95 9.08|
+ []
+
+
+Overfull \hbox (19.04471pt too wide) in paragraph at lines 142--143
+[]\TU/lmss/m/n/10.95 Fixture  
+ []
+
+
+Overfull \hbox (28.1336pt too wide) in paragraph at lines 144--145
+ []\TU/lmss/m/n/10.95 MODULE
+ []
+
+
+Overfull \hbox (14.9936pt too wide) in paragraph at lines 146--147
+ []\TU/lmss/m/n/10.95 CLASS
+ []
+
+
+Overfull \hbox (29.87465pt too wide) in paragraph at lines 148--149
+ []\TU/lmss/m/n/10.95 METHOD
+ []
+
+
+Overfull \hbox (37.40825pt too wide) in paragraph at lines 150--151
+ []\TU/lmss/m/n/10.95 FUNCTION
+ []
+
+
+Overfull \hbox (36.1271pt too wide) in paragraph at lines 152--153
+ []\TU/lmss/m/n/10.95 CONTAINS
+ []
+
+
+Overfull \hbox (22.60387pt too wide) in paragraph at lines 154--155
+ []\TU/lmss/m/n/10.95 WRITES
+ []
+
+
+Overfull \hbox (17.4902pt too wide) in paragraph at lines 156--157
+ []\TU/lmss/m/n/10.95 READS
+ []
+
+
+Overfull \hbox (14.84032pt too wide) in paragraph at lines 158--159
+ []\TU/lmss/m/n/10.95 CALLS
+ []
+
+
+Overfull \hbox (30.88206pt too wide) in paragraph at lines 160--161
+ []\TU/lmss/m/n/10.95 IMPORTS
+ []
+
+
+Overfull \hbox (31.33101pt too wide) in paragraph at lines 162--163
+ []\TU/lmss/m/n/10.95 INHERITS
+ []
+
+
+Overfull \hbox (44.41585pt too wide) in paragraph at lines 166--166
+[]|\TU/lmtt/m/n/10.95 calculator|  
+ []
+
+
+Overfull \hbox (67.41084pt too wide) in paragraph at lines 167--167
+[]|\TU/lmtt/m/n/10.95 event_pipeline|  
+ []
+
+
+Overfull \hbox (44.41585pt too wide) in paragraph at lines 169--169
+[]|\TU/lmtt/m/n/10.95 flask_mini|  
+ []
+
+
+Overfull \hbox (38.6671pt too wide) in paragraph at lines 170--170
+[]|\TU/lmtt/m/n/10.95 flask_app|  
+ []
+
+
+Overfull \hbox (55.91335pt too wide) in paragraph at lines 171--171
+[]|\TU/lmtt/m/n/10.95 requests_lib|  
+ []
+
+
+Overfull \hbox (50.1646pt too wide) in paragraph at lines 173--173
+[]|\TU/lmtt/m/n/10.95 json_stdlib|  
+ []
+
+
+Overfull \hbox (15.731pt too wide) in paragraph at lines 212--213
+ []\TU/lmss/m/n/10.95 Observations
+ []
+
+
+Overfull \hbox (6.5549pt too wide) in paragraph at lines 216--217
+ []\TU/lmss/m/n/10.95 Transitions
+ []
+
+
+Overfull \hbox (25.2405pt too wide) in paragraph at lines 222--222
+[]|\TU/lmtt/m/n/10.95 calculator|  
+ []
+
+
+Overfull \hbox (48.23549pt too wide) in paragraph at lines 223--223
+[]|\TU/lmtt/m/n/10.95 event_pipeline|  
+ []
+
+
+Overfull \hbox (25.2405pt too wide) in paragraph at lines 224--224
+[]|\TU/lmtt/m/n/10.95 flask_mini|  
+ []
+
+
+Overfull \hbox (19.49174pt too wide) in paragraph at lines 225--225
+[]|\TU/lmtt/m/n/10.95 flask_app|  
+ []
+
+
+Overfull \hbox (36.73799pt too wide) in paragraph at lines 226--226
+[]|\TU/lmtt/m/n/10.95 requests_lib|  
+ []
+
+
+Overfull \hbox (30.98924pt too wide) in paragraph at lines 227--227
+[]|\TU/lmtt/m/n/10.95 json_stdlib|  
+ []
+
+
+Overfull \hbox (3.23035pt too wide) in paragraph at lines 284--284
+[]|\TU/lmtt/m/n/10.95 calculator|  
+ []
+
+
+Overfull \hbox (26.22534pt too wide) in paragraph at lines 285--285
+[]|\TU/lmtt/m/n/10.95 event_pipeline|  
+ []
+
+
+Overfull \hbox (3.23035pt too wide) in paragraph at lines 286--286
+[]|\TU/lmtt/m/n/10.95 flask_mini|  
+ []
+
+
+Overfull \hbox (14.72784pt too wide) in paragraph at lines 288--288
+[]|\TU/lmtt/m/n/10.95 requests_lib|  
+ []
+
+
+Overfull \hbox (8.9791pt too wide) in paragraph at lines 289--289
+[]|\TU/lmtt/m/n/10.95 json_stdlib|  
+ []
+
+)
+Overfull \vbox (1941.94974pt too high) detected at line 718
+ []
+
+[10
+
+]
+\openout4 = `06_experimental_setup_slides.vrb'.
+
+
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.vrb
+Overfull \hbox (2.7241pt too wide) in alignment at lines 62--66
+ [] [] [] 
+ []
+
+
+Overfull \hbox (2.7241pt too wide) in alignment at lines 66--80
+ [] [] [] 
+ []
+
+)
+Overfull \vbox (691.88477pt too high) detected at line 811
+ []
+
+[11
+
+]
+\openout4 = `06_experimental_setup_slides.vrb'.
+
+
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.vrb
+LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <10.95> not available
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 20.
+
+Overfull \hbox (69.93282pt too wide) in alignment at lines 26--30
+ [] [] [] [] [] 
+ []
+
+
+Overfull \hbox (69.93282pt too wide) in alignment at lines 30--39
+ [] [] [] [] [] 
+ []
+
+Missing character: There is no ↔ (U+2194) in font [lmsans10-regular]:mapping=te
+x-text;!
+)
+Overfull \vbox (595.96046pt too high) detected at line 889
+ []
+
+[12
+
+]
+\openout4 = `06_experimental_setup_slides.vrb'.
+
+
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.vrb
+Overfull \hbox (5.97583pt too wide) in paragraph at lines 29--30
+[]\TU/lmss/m/n/10.95 Fixture  
+ []
+
+
+Overfull \hbox (9.27069pt too wide) in paragraph at lines 39--40
+ []\TU/lmss/m/n/10.95 Mappings
+ []
+
+
+Overfull \hbox (31.34697pt too wide) in paragraph at lines 45--45
+[]|\TU/lmtt/m/n/10.95 calculator|  
+ []
+
+
+Overfull \hbox (54.34196pt too wide) in paragraph at lines 46--46
+[]|\TU/lmtt/m/n/10.95 event_pipeline|  
+ []
+
+
+Overfull \hbox (31.34697pt too wide) in paragraph at lines 47--47
+[]|\TU/lmtt/m/n/10.95 flask_mini|  
+ []
+
+
+Overfull \hbox (25.59822pt too wide) in paragraph at lines 48--48
+[]|\TU/lmtt/m/n/10.95 flask_app|  
+ []
+
+
+Overfull \hbox (42.84447pt too wide) in paragraph at lines 49--49
+[]|\TU/lmtt/m/n/10.95 requests_lib|  
+ []
+
+
+Overfull \hbox (37.09572pt too wide) in paragraph at lines 50--50
+[]|\TU/lmtt/m/n/10.95 json_stdlib|  
+ []
+
+)
+Overfull \vbox (417.72153pt too high) detected at line 972
+ []
+
+[13
+
+] [14
 
 ]
 \tf@nav=\write6
@@ -1724,21 +2205,21 @@ Overfull \vbox (72.61212pt too high) detected at line 405
 \openout8 = `06_experimental_setup_slides.snm'.
 
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/06_experimen
-tal_setup_slides.aux)
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+06_experimental_setup_slides.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 31470 strings out of 468168
- 632556 string characters out of 5432815
- 1191732 words of memory out of 5000000
- 59630 multiletter control sequences out of 15000+600000
- 631248 words of font info for 71 fonts, out of 8000000 for 9000
+ 31503 strings out of 468168
+ 634082 string characters out of 5432815
+ 1281037 words of memory out of 5000000
+ 59653 multiletter control sequences out of 15000+600000
+ 631256 words of font info for 72 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 128i,11n,123p,1091b,427s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 128i,11n,123p,1103b,427s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on /Users/4d/Documents/GitHub/template/projects/cogant/output/sl
-ides/06_experimental_setup_slides.pdf (10 pages).
+Output written on /Users/4d/Documents/GitHub/template/projects_in_progress/coga
+nt/output/slides/06_experimental_setup_slides.pdf (14 pages).

@@ -1,0 +1,158 @@
+\frametitle{State space and behavior}
+\protect\phantomsection\label{state-space-and-behavior}
+Where traces or coverage are available, \textbf{dynamic} extraction
+feeds the state-space compiler. The goal is a compact behavioral model:
+states, actions, transitions, and observations that sit alongside the
+static graph for tasks that require execution-sensitive features. The
+tuple \((S, A, T, O)\) of variables, actions, transitions, and
+observation modalities mirrors the structure of a partially observed
+Markov decision process as used in discrete active inference
+{[}@parr2022active; @dacosta2020active; @smith2022stepbystep{]}, and at
+the level of reachable state/transition graphs it also resembles the
+Kripke structures traditionally used in model checking
+{[}@clarke1999model{]}, without attempting to discharge temporal-logic
+obligations. PyMDP {[}@heins2022pymdp{]} is one such downstream consumer
+that executes the compiled state-spaces as discrete active inference
+simulations over the exported Generalized Notation Notation bundles.
+
+The shipped \texttt{StateSpaceCompiler} in
+\texttt{../cogant/py/cogant/statespace/compiler.py} constructs this
+model in several coordinated passes driven by the semantic mappings and
+the underlying program graph.
+
+\textbf{State variables} are identified by a
+\texttt{StateVariableExtractor} that traverses graph nodes carrying
+READS and WRITES edges: any node that participates in a write is a
+candidate hidden-state variable, and its type, cardinality, and initial
+confidence are derived from the node's recovered type string and the
+provenance of the rules that produced the associated mapping.
+
+\textbf{Actions} are extracted from semantic mappings of kind
+\texttt{ACTION}, with parameters read from node metadata (typically the
+parser-recovered function signature), effects traced through outgoing
+WRITES edges on the controller node, and preconditions derived from
+parameter lists, docstring directives, and explicit metadata entries.
+For method-kind actions, the compiler also walks CONTAINS edges back to
+the enclosing class so that instance-level state mutations are
+attributed to the correct controller, mirroring how code property graphs
+fuse structural and data-flow views {[}@yamaguchi2014modeling{]}.
+
+\textbf{Transitions} are inferred by a cross-reference pass
+(\texttt{\_cross\_reference\_actions\_and\_variables}) that, for each
+action, partitions its adjacent variables into reads and writes based on
+edge kind (WRITES and MUTATES yielding writes; READS and OBSERVES
+yielding reads). The resulting \texttt{Transition} object records a
+\texttt{source\_state} in which every touched variable is marked
+\texttt{"pre"} and a \texttt{target\_state} in which written variables
+advance to \texttt{"post"} while read-only variables remain
+\texttt{"pre"}; this simple pre/post convention keeps the model faithful
+to the static evidence without overcommitting to symbolic value domains
+that cannot be recovered from AST analysis alone.
+
+Trigger attribution follows incoming TRIGGERS and CALLS edges so that
+orchestration flow is preserved in the behavioral model.
+
+\textbf{Observation modalities} are built from semantic mappings of kind
+\texttt{OBSERVATION}: each associated node becomes an
+\texttt{ObservationModality} whose modality type (\texttt{log},
+\texttt{metric}, \texttt{event}, \texttt{sensor}, or a generic fallback)
+is inferred from the mapping's description and the node's name, giving
+the GNN export a typed observation channel aligned with the OBSERVES
+edges in the program graph.
+
+The \textbf{temporal regime} of the model is determined by a companion
+\texttt{TemporalAnalyzer}. It classifies nodes as asynchronous when
+their metadata carries \texttt{is\_async}/\texttt{async} flags or their
+names match patterns such as \texttt{async}, \texttt{callback},
+\texttt{promise}, or \texttt{future}, and as event-related when their
+kind is \texttt{EVENT} or their names match \texttt{event},
+\texttt{handler}, \texttt{listener}, or \texttt{trigger}. Temporal
+orderings are then extracted from CALLS and TRIGGERS edges, with each
+edge classified as \texttt{parallel} (when either endpoint is async) or
+\texttt{sequential} otherwise, and event patterns are assembled from
+triggers-in / triggers-out pairs around each event node.
+
+A final decision rule selects among \texttt{SYNCHRONOUS},
+\texttt{ASYNCHRONOUS}, \texttt{EVENT\_DRIVEN}, and \texttt{HYBRID}: the
+presence of event triggers and patterns combined with async handlers
+yields \texttt{HYBRID}; event triggers alone yield
+\texttt{EVENT\_DRIVEN}; an async fraction above 30 percent or the
+presence of async handlers yields \texttt{ASYNCHRONOUS}; and all
+remaining cases default to \texttt{SYNCHRONOUS}. This regime is attached
+to the \texttt{StateSpaceModel} metadata so downstream consumers know
+which execution model the transition graph assumes.
+
+When coverage and traces are available, \texttt{enrich\_graph()} in
+\texttt{../cogant/py/cogant/dynamic/enrichment.py} feeds additional
+evidence into this pipeline. Coverage enrichment matches
+\texttt{.coverage} SQLite databases or Cobertura XML reports against
+nodes whose \texttt{path} and \texttt{source\_range} overlap covered
+lines, attaching \texttt{coverage\_hits} and, where branch data is
+available, \texttt{branch\_coverage} metadata. Trace enrichment parses
+Chrome DevTools traces, writes \texttt{call\_count},
+\texttt{avg\_duration\_ms}, and \texttt{is\_hot\_path} onto matching
+callable nodes, and adds or reweights dynamic CALLS edges tagged with
+\texttt{evidence\_sources={[}"dynamic\_trace"{]}}.
+
+Both steps also append \texttt{dynamic\_coverage} and
+\texttt{dynamic\_trace} markers to the program graph's evidence sources.
+The confidence model consumes these markers directly: any mapping whose
+evidence set now contains both static and dynamic entries becomes
+eligible for promotion from the \texttt{STATIC\_ONLY} tier to
+\texttt{STATIC\_PLUS\_RUNTIME}, and hot-path and branch-coverage
+metadata raise the underlying score through the diversity bonus
+\(\delta_d\) in Equation \ref{eq:confidence-core}. This is the mechanism
+by which executing the target program, even partially, converts static
+heuristics into corroborated behavioral facts without rerunning the
+upstream rule engine {[}@allamanis2018survey{]}.
+
+\begin{block}{Worked example: temperature controller}
+\protect\phantomsection\label{worked-example-temperature-controller}
+Consider a small Python controller extracted from a HVAC codebase:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ TemperatureController:}
+    \KeywordTok{def} \FunctionTok{\_\_init\_\_}\NormalTok{(}\VariableTok{self}\NormalTok{):}
+        \VariableTok{self}\NormalTok{.current\_temp: }\BuiltInTok{float} \OperatorTok{=} \FloatTok{20.0}
+        \VariableTok{self}\NormalTok{.target\_temp: }\BuiltInTok{float} \OperatorTok{=} \FloatTok{22.0}
+        \VariableTok{self}\NormalTok{.heater\_on: }\BuiltInTok{bool} \OperatorTok{=} \VariableTok{False}
+
+    \KeywordTok{def}\NormalTok{ set\_target(}\VariableTok{self}\NormalTok{, t: }\BuiltInTok{float}\NormalTok{) }\OperatorTok{{-}\textgreater{}} \VariableTok{None}\NormalTok{:}
+        \VariableTok{self}\NormalTok{.target\_temp }\OperatorTok{=}\NormalTok{ t}
+
+    \KeywordTok{def}\NormalTok{ read\_sensor(}\VariableTok{self}\NormalTok{, reading: }\BuiltInTok{float}\NormalTok{) }\OperatorTok{{-}\textgreater{}} \VariableTok{None}\NormalTok{:}
+        \VariableTok{self}\NormalTok{.current\_temp }\OperatorTok{=}\NormalTok{ reading}
+
+    \KeywordTok{def}\NormalTok{ actuate\_heater(}\VariableTok{self}\NormalTok{) }\OperatorTok{{-}\textgreater{}} \VariableTok{None}\NormalTok{:}
+        \ControlFlowTok{if} \VariableTok{self}\NormalTok{.current\_temp }\OperatorTok{\textless{}} \VariableTok{self}\NormalTok{.target\_temp:}
+            \VariableTok{self}\NormalTok{.heater\_on }\OperatorTok{=} \VariableTok{True}
+        \ControlFlowTok{else}\NormalTok{:}
+            \VariableTok{self}\NormalTok{.heater\_on }\OperatorTok{=} \VariableTok{False}
+\end{Highlighting}
+\end{Shaded}
+
+\texttt{StateVariableExtractor} identifies three \textbf{state
+variables} from WRITES edges on \texttt{\_\_init\_\_} and the three
+methods: \texttt{current\_temp} (float, cardinality continuous),
+\texttt{target\_temp} (float), and \texttt{heater\_on} (bool,
+cardinality 2). Three \textbf{actions} are extracted from
+\texttt{ACTION}-kind mappings: \texttt{set\_target} (writes
+\texttt{target\_temp}), \texttt{read\_sensor} (writes
+\texttt{current\_temp}), and \texttt{actuate\_heater} (reads
+\texttt{current\_temp}, \texttt{target\_temp}; writes
+\texttt{heater\_on}). All three actions are attributed to
+\texttt{TemperatureController} via CONTAINS edges.
+
+The cross-reference pass yields three \textbf{transitions}. For
+\texttt{actuate\_heater} the \texttt{source\_state} records
+\texttt{\{current\_temp:\ "pre",\ target\_temp:\ "pre",\ heater\_on:\ "pre"\}}
+and the \texttt{target\_state} records
+\texttt{\{current\_temp:\ "pre",\ target\_temp:\ "pre",\ heater\_on:\ "post"\}},
+capturing that only \texttt{heater\_on} advances while the read-only
+variables remain pinned. Because no node carries async flags or
+event-kind markers and no CALLS or TRIGGERS edges cross into async
+endpoints, the \texttt{TemporalAnalyzer} classifies the model as
+\texttt{SYNCHRONOUS} and attaches that regime to the
+\texttt{StateSpaceModel} metadata.
+\end{block}

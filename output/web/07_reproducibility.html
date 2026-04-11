@@ -271,8 +271,8 @@ fixed filesystem snapshot. Features that pull in external models (for
 example optional name or documentation embeddings consumed by the
 Generalized Notation Notation exporter) introduce variability unless
 models and seeds are fixed; the Generalized Notation Notation export
-document (<code>../cogant/docs/GNN_EXPORT.md</code>) calls out embedding
-dimensions and optional behavior.</p>
+document (<code>../cogant/docs/export/README.md</code>) calls out
+embedding dimensions and optional behavior.</p>
 <h2 id="relation-to-the-template-repository">Relation to the template
 repository</h2>
 <p>While this project remains outside <a
@@ -297,13 +297,12 @@ confidence scores fall within <span class="math inline">\([0,
 1]\)</span> and that provenance records are non-empty for every node and
 edge. A graph that fails integrity checks receives a FAIL validation
 status; downstream export is blocked.</p>
-<p><strong>SchemaChecker.</strong> Validates each IR artifact against
-its JSON schema (versioned alongside the COGANT package). Schema
+<p><strong>SchemaValidator.</strong> Validates each IR artifact against
+its schema contracts (versioned alongside the COGANT package). Schema
 violations – such as missing required fields, incorrect types, or
 unknown enum values in <code>NodeKind</code> or
-<code>SemanticRole</code> – are classified as ERROR or FATAL depending
-on severity. Schema versions are recorded in the validation report so
-that consumers can verify compatibility with their import code.</p>
+<code>SemanticRole</code> – are classified by severity in the validation
+report.</p>
 <p><strong>ProvenanceChecker.</strong> Audits the provenance chain:
 every assertion in the semantic mapping must trace back to at least one
 evidence source (SourceCode, TypeSystem, ControlFlow, Heuristic, or
@@ -313,71 +312,77 @@ example, a STATIC_PLUS_RUNTIME tier with no runtime trace evidence.
 These flags appear as warnings rather than errors, since partial
 provenance is expected for heuristic rules.</p>
 <p>Together, these gates ensure that exported bundles meet a minimum
-quality bar before reaching downstream models. The thresholds are
-configurable (see <code>../cogant/docs/VALIDATION.md</code>); defaults
-require <span class="math inline">\(\geq 95\%\)</span> coverage, mean
-confidence <span class="math inline">\(\geq 0.85\)</span>, and zero
-schema violations.</p>
-<h2 id="pipeline-checkpoint-and-resume-behavior">Pipeline checkpoint and
-resume behavior</h2>
-<p>The pipeline writes a checkpoint file after each successfully
-completed stage. The checkpoint records the stage name, completion
-timestamp, input hash, and output hash. On a subsequent invocation with
-<code>--resume</code> (or <code>PipelineConfig.resume = True</code>),
-the runner reads the checkpoint file, verifies that the input hash for
-each completed stage still matches the current source tree, and skips
-stages whose outputs are already valid. If a source file has changed,
-the runner invalidates the affected stage and all downstream stages,
-then re-executes from the earliest invalidated point.</p>
-<p>Checkpoints are stored as JSON under the configured
-<code>output_dir</code>:</p>
-<pre><code>output/
-  .cogant_checkpoint.json</code></pre>
-<p>This mechanism is particularly useful during iterative development:
-after an initial full run, changing a single source file triggers only
-re-parsing, graph construction, and downstream stages for the affected
-subgraph, rather than re-analyzing the entire repository.</p>
-<h2 id="output-manifest-structure">Output manifest structure</h2>
-<p>Each pipeline run produces a manifest file
-(<code>manifest.json</code>) alongside the exported artifacts. The
-manifest provides a machine-readable inventory of everything the run
-produced:</p>
+quality bar before reaching downstream models. Thresholds and policy
+defaults are configurable and documented in
+<code>../cogant/docs/validation/README.md</code>.</p>
+<p>The concrete shape of a validation report is the
+<code>ValidationReport</code> dataclass defined in
+<code>../cogant/py/cogant/validate/report.py</code>, which bundles the
+timestamp, the model identifier, a boolean <code>is_valid</code> flag,
+numerical <code>coverage_score</code> and <code>confidence_score</code>
+fields in <span class="math inline">\([0, 1]\)</span>, a free-form
+human-readable <code>summary</code> string, and a list of
+<code>ValidationIssue</code> records. Each <code>ValidationIssue</code>
+(defined in <code>../cogant/py/cogant/validate/schema_check.py</code>)
+carries a stable <code>id</code>, a <code>severity</code> of
+<code>error</code>, <code>warning</code>, or <code>info</code>, a
+<code>category</code> of <code>schema</code>, <code>integrity</code>,
+<code>provenance</code>, or <code>coverage</code>, the set of
+<code>affected_ids</code>, and an optional <code>recommendation</code>
+string. On a clean calculator run, for example, the report has the
+following shape:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;report_calculator_20260410T081234Z&quot;</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;schema_name&quot;</span><span class="fu">:</span> <span class="st">&quot;calculator&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;validated_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-04-10T08:12:34Z&quot;</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;model_id&quot;</span><span class="fu">:</span> <span class="st">&quot;model_calculator&quot;</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;is_valid&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;coverage_score&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;confidence_score&quot;</span><span class="fu">:</span> <span class="fl">0.94</span><span class="fu">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;summary&quot;</span><span class="fu">:</span> <span class="st">&quot;Validation PASS — 0 errors, 0 warnings, 12/12 nodes covered&quot;</span><span class="fu">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;issues&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;details&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;gnn_validator_score&quot;</span><span class="fu">:</span> <span class="fl">100.0</span><span class="fu">,</span> <span class="dt">&quot;elapsed_ms&quot;</span><span class="fu">:</span> <span class="dv">73</span><span class="fu">}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>When one of the gates fires, the same <code>issues</code> list
+accumulates structured records of the form:</p>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cogant_version&quot;</span><span class="fu">:</span> <span class="st">&quot;0.1.0&quot;</span><span class="fu">,</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;run_id&quot;</span><span class="fu">:</span> <span class="st">&quot;run_20260408_143012&quot;</span><span class="fu">,</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-04-08T14:30:12Z&quot;</span><span class="fu">,</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;input_hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:a1b2c3...&quot;</span><span class="fu">,</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;config_hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:d4e5f6...&quot;</span><span class="fu">,</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;stages_completed&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;discovery&quot;</span><span class="ot">,</span> <span class="st">&quot;parsing&quot;</span><span class="ot">,</span> <span class="st">&quot;repo_ir&quot;</span><span class="ot">,</span> <span class="st">&quot;graph&quot;</span><span class="ot">,</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                        <span class="st">&quot;translate&quot;</span><span class="ot">,</span> <span class="st">&quot;validate&quot;</span><span class="ot">,</span> <span class="st">&quot;export&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;stages_skipped&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;statespace&quot;</span><span class="ot">,</span> <span class="st">&quot;process&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;artifacts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;model.gnn.json&quot;</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span> <span class="dt">&quot;size_bytes&quot;</span><span class="fu">:</span> <span class="dv">2048576</span><span class="fu">,</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:...&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;model.pyg.pt&quot;</span><span class="fu">,</span>   <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;pytorch_geometric&quot;</span><span class="fu">,</span> <span class="dt">&quot;size_bytes&quot;</span><span class="fu">:</span> <span class="dv">1024000</span><span class="fu">,</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:...&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;validation_report.json&quot;</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span> <span class="dt">&quot;size_bytes&quot;</span><span class="fu">:</span> <span class="dv">8192</span><span class="fu">,</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;hash&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:...&quot;</span><span class="fu">}</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;statistics&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;nodes&quot;</span><span class="fu">:</span> <span class="dv">320</span><span class="fu">,</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;edges&quot;</span><span class="fu">:</span> <span class="dv">1250</span><span class="fu">,</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;mean_confidence&quot;</span><span class="fu">:</span> <span class="fl">0.92</span><span class="fu">,</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;validation_status&quot;</span><span class="fu">:</span> <span class="st">&quot;PASS&quot;</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<p>Storing per-artifact SHA-256 hashes enables consumers to verify that
-exported bundles have not been modified after generation. When
-publishing datasets derived from COGANT exports, including the manifest
-alongside the data satisfies the reproducibility requirements outlined
-by <span class="citation"
-data-cites="peng2011reproducible">[@peng2011reproducible]</span>: any
-researcher with the same source tree, COGANT version, and configuration
-can regenerate the artifacts and compare hashes.</p>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;prov_001&quot;</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;severity&quot;</span><span class="fu">:</span> <span class="st">&quot;warning&quot;</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;category&quot;</span><span class="fu">:</span> <span class="st">&quot;provenance&quot;</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="st">&quot;Mapping &#39;map_42&#39; declared STATIC_PLUS_RUNTIME but has no dynamic_trace evidence source&quot;</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;affected_ids&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;map_42&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;recommendation&quot;</span><span class="fu">:</span> <span class="st">&quot;Re-run with --coverage/--trace inputs, or downgrade the declared tier in the rule&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Errors block export (<code>is_valid</code> flips to
+<code>false</code> and the pipeline refuses to write the
+<code>gnn_package/</code> directory); warnings are recorded in the
+bundle but do not block. Downstream consumers therefore only need to
+inspect the top-level <code>is_valid</code> flag plus any
+<code>severity == "error"</code> entries to decide whether a bundle is
+safe to ingest.</p>
+<h2 id="current-runner-behavior-vs-template-checkpointing">Current
+runner behavior vs template checkpointing</h2>
+<p>The current <code>cogant.api.pipeline.PipelineRunner</code> executes
+stages in order and records stage outputs in a <code>Bundle</code>, but
+it does <strong>not</strong> currently expose built-in checkpoint/resume
+flags or a dedicated <code>manifest.json</code> writer in that module.
+Reproducibility is therefore captured today by persisting
+<code>bundle.json</code> (<code>Bundle.save_json</code>), pinning config
+and versions, and retaining exported artifacts.</p>
+<p>If COGANT is promoted into the template project workflow under
+<code>projects/</code>, repository-level checkpoint utilities from
+<code>infrastructure/core/runtime/checkpoint.py</code> can be used by
+the outer orchestration layer. That template capability should be
+treated as infrastructure-level behavior, distinct from the current
+COGANT package runner.</p>
 <h2 id="data-ethics-and-licensing">Data ethics and licensing</h2>
 <p>Exported graphs can contain identifiers and comments from source
 code. Redistribution of derived graphs must respect the licenses of
-input repositories and organizational data policies.</p>
+input repositories and organizational data policies. For a
+<strong>checklist</strong> (version pins, lockfiles, input hashes,
+manifest verification) when publishing or citing a run, see <a
+href="06_05_reproducible_recording.md"><code>06_05_reproducible_recording.md</code></a>.</p>
 </body>
 </html>

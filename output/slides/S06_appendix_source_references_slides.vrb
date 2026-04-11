@@ -1,0 +1,34 @@
+\frametitle{References back to COGANT source material}
+\protect\phantomsection\label{references-back-to-cogant-source-material}
+\begin{itemize}
+\tightlist
+\item
+  Roundtrip data: \texttt{../cogant/docs/evaluation/ROUNDTRIP\_EVAL.md}
+  (Appendix A)
+\item
+  Real-world eval data:
+  \texttt{../cogant/docs/evaluation/REAL\_WORLD\_EVAL.md} (Appendix A)
+\item
+  Empirical claim runs:
+  \texttt{../cogant/docs/evaluation/EMPIRICAL\_CLAIM.md} (Appendices A,
+  D)
+\item
+  CONSTRAINT synthesizer fix:
+  \texttt{../cogant/docs/evaluation/CONSTRAINT\_FIX.md} (Appendix A.2)
+\item
+  Annotated bibliography (86 entries):
+  \texttt{../cogant/docs/evaluation/LITERATURE.md} (Appendix E)
+\item
+  Section 9 rule-family ablation:
+  \href{09_ablation.md}{\texttt{09\_ablation.md}} (main text; cross-ref
+  Appendix B in
+  \href{S02_appendix_ablation.md}{\texttt{S02\_appendix\_ablation.md}})
+\item
+  Formal program-graph definitions and theorems (Section 2):
+  \href{02_01_program_graph_and_formal_foundations.md}{\texttt{02\_01\_program\_graph\_and\_formal\_foundations.md}}
+\item
+  Galois / ε-isomorphism sketch (Appendix C):
+  \href{S03_appendix_galois_sketch.md}{\texttt{S03\_appendix\_galois\_sketch.md}};
+  machine-readable statement:
+  \href{../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md}{\texttt{../cogant/docs/evaluation/ISOMORPHISM\_THEOREM.md}}
+\end{itemize}

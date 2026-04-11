@@ -189,7 +189,7 @@ These numbers were collected by the reproducible script `../cogant/evaluation/fi
 
 ## Test matrix and coverage
 
-The v0.5.0 Python implementation ships a test suite of **2146 passing tests** with **11 skips** for optional dependencies (Rust toolchain, `matplotlib`, `tree-sitter` language grammars, PNG rasterization) plus 2 expected `xfail` and 1 `xpass`. The suite executes in approximately four minutes on a 2024-class Apple-silicon workstation (238 s in the canonical v0.5.0 run), and the overall line coverage of `py/cogant/` is **86.45%**, measured against the 20 307 executable statements reported by `coverage.py` on the canonical v0.5.0 run (2026-04-10).
+The v{{VERSION}} Python implementation ships a test suite of **{{TEST_COUNT}} passing tests** with **{{TEST_COUNT_SKIPPED}} skips** for optional dependencies (Rust toolchain, `matplotlib`, `tree-sitter` language grammars, PNG rasterization) plus **{{TEST_COUNT_XFAILED}}** expected `xfail` and **{{TEST_COUNT_XPASSED}}** `xpass`. The suite executes in approximately four minutes on a 2024-class Apple-silicon workstation (**{{SUITE_RUNTIME_S}}** s in the canonical run recorded in `METRICS.yaml`), and the overall line coverage of `py/cogant/` is **{{COVERAGE_PCT}}%**, measured against executable statements reported by `coverage.py` on the canonical run (**{{METRICS_GENERATED_AT}}**).
 
 **Table 8. Python interpreter matrix.**
 
@@ -220,7 +220,7 @@ Module-level coverage is concentrated in the layers that the six packaged fixtur
 | `cogant.simulate.runner` | 250 | 67% |
 | `cogant.simulate.distributions` | 119 | 34% |
 
-The aggregate project-level coverage reported at the end of the run is **73%**; the modules that drag the average down are the visualisation layer (`cogant.viz.png_export`, `cogant.viz.plots`, `cogant.viz.mermaid`, all single-digit to low-double-digit percent because they exercise optional `matplotlib` and `plotly` code paths that the default CI skip set excludes) and the scaffolded plugin and provenance trackers. The algorithmic core --- everything that participates in the round-trip theorem of §9 --- is covered at 80% or better.
+The aggregate project-level coverage reported at the end of the run is **{{COVERAGE_PCT}}%**; the modules that drag the average down are the visualisation layer (`cogant.viz.png_export`, `cogant.viz.plots`, `cogant.viz.mermaid`, where optional `matplotlib` and `plotly` code paths are skipped under the default CI configuration) and the scaffolded plugin and provenance trackers. The algorithmic core --- everything that participates in the round-trip theorem of §9 --- remains the focus of the high-coverage modules in Table 9.
 
 ## Mutation testing
 

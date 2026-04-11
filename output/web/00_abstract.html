@@ -169,53 +169,67 @@
       vertical-align: middle;
     }
   </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
 </head>
 <body>
 <h1 id="abstract">Abstract</h1>
-<p><strong>COGANT</strong> (Codebase-to-GNN Translation) is a system for
-turning software repositories into structured Active Inference artifacts
+<p><strong>COGANT</strong> (Codebase-to-GNN Translation) converts
+software repositories into structured Active Inference artifacts
 expressed in the Active Inference Institute’s <strong>Generalized
 Notation Notation</strong> (GNN)<a href="#fn1" class="footnote-ref"
-id="fnref1" role="doc-noteref"><sup>1</sup></a>. It occupies the space
-between classical program analysis—which already reasons over graphs
-such as call graphs and code property graphs <span class="citation"
-data-cites="yamaguchi2014modeling">[@yamaguchi2014modeling]</span>—and
+id="fnref1" role="doc-noteref"><sup>1</sup></a>. It sits between
+classical program analysis, which already reasons over graphs such as
+call graphs and code property graphs <span class="citation"
+data-cites="yamaguchi2014modeling">[@yamaguchi2014modeling]</span>, and
 data-driven methods that expect tensors, consistent node and edge
 vocabularies, and exportable training bundles <span class="citation"
 data-cites="allamanis2018survey wu2020comprehensive scarselli2009graph">[@allamanis2018survey;
 @wu2020comprehensive; @scarselli2009graph]</span>.</p>
-<p>The design centers on a <strong>program graph IR</strong>: nodes
-denote entities (for example functions and variables), edges denote
-relations (for example calls and data flow), and each assertion carries
-<strong>confidence</strong> and <strong>provenance</strong> so that
-downstream models can treat uncertainty explicitly. A <strong>fixpoint
-translation engine</strong> applies declarative rules iteratively until
-no new semantic mappings emerge, resolves overlapping mappings by
-confidence, and reports coverage gaps explicitly. <strong>Dynamic
-enrichment</strong> from coverage reports and execution traces promotes
-mappings from a <code>STATIC_ONLY</code> tier to
-<code>STATIC_PLUS_RUNTIME</code> when runtime evidence corroborates
-static inference. A <strong>Python orchestration layer</strong> (session
-and pipeline APIs, CLI, configuration) performs discovery, parsing,
-normalization, graph construction, translation rules, state-space
-compilation, validation, and export. A <strong>Rust core</strong>
-(organized as separate crates in the package tree) holds graph
-operations, translation, state-space structures, Generalized Notation
-Notation formatting, and PyO3 bindings; the authoritative
-<strong>implementation status</strong> distinguishes what is wired in
-Python today from staged or planned native acceleration (see
-<code>../cogant/docs/SPEC.md</code>).</p>
-<p>This manuscript, parallel to the developer documentation under <a
-href="../cogant/docs/"><code>../cogant/docs/</code></a>, states the
-theory of that IR and the practice of running the pipeline, configuring
-Generalized Notation Notation exports (canonical GNN Markdown, GNN JSON,
-and interop targets such as GraphML, Parquet, and framework-specific
-tensor formats), and extending the tool through parsers, rules,
-validators, and exporters. It is written to remain valid whether this
-tree stays next to the package (<a
-href="../cogant/"><code>../cogant/</code></a>) or is later promoted
-under <a href="../../../projects/"><code>../../../projects/</code></a>
-for full template pipeline rendering.</p>
+<p>The design centres on a <strong>program graph IR</strong> whose nodes
+and edges carry <strong>confidence</strong> and
+<strong>provenance</strong>. A <strong>fixpoint translation
+engine</strong> applies <strong>19 declarative rules</strong> (five
+structural, five semantic, two control, three behavioural, four
+resilience) that map nodes onto <strong>7 Active Inference semantic
+roles</strong> — HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE,
+CONSTRAINT, and CONTEXT — with conflict resolution by priority and
+score. Each bundle includes a <strong>Markov blanket partition</strong>
+in <span class="math inline">\(O(V+E)\)</span> time. A <strong>reverse
+synthesizer</strong> (<code>cogant.reverse</code>) reconstructs a
+runnable Python package from an emitted GNN bundle. After the v0.5.0
+POLICY/CONTEXT stub-emission fix (<a
+href="../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md"><code>../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md</code></a>),
+the forward–reverse–forward round-trip on the canonical evaluation set
+reports <strong>14</strong> isomorphic (<span
+class="math inline">\(\varepsilon \geq 0.8\)</span>), <strong>6</strong>
+approximate (<span class="math inline">\(\varepsilon \geq 0.5\)</span>),
+and <strong>3</strong> divergent targets (of <strong>23</strong> total;
+twelve zoo fixtures, three real-world-example fixtures, eight
+third-party libraries in scope); details and tables are in <a
+href="../cogant/docs/evaluation/ROUNDTRIP_EVAL.md"><code>../cogant/docs/evaluation/ROUNDTRIP_EVAL.md</code></a>
+and §9.</p>
+<p>The v0.5.0 <strong>Python</strong> pipeline uses the standard-library
+<code>ast</code> module. <strong>JavaScript and TypeScript</strong> are
+<strong>optional</strong>: install <code>cogant[multilang]</code> and an
+available <code>tree-sitter</code> grammar (including the JS-grammar
+fallback path for <code>.ts</code> on mixed repositories); integration
+tests cover this path when those pieces are installed. HTTP service,
+container image, incremental analysis, and multi-episode agent runtime
+are documented under <a
+href="../cogant/docs/index.md"><code>../cogant/docs/index.md</code></a>
+and the package <a href="../cogant/README.md"><code>README.md</code></a>
+rather than repeated here. The test suite reports <strong>2129</strong>
+passing tests, <strong>86</strong> skips, <strong>2</strong> expected
+<code>xfail</code>, and <strong>1</strong> <code>xpass</code>;
+<strong><code>py/cogant/</code> line coverage is 83.42%</strong>
+(canonical run aligned to <code>METRICS.yaml</code>, generated
+<strong>2026-04-10T21:03:18.504378Z</strong>) under
+<code>pytest --cov</code>. Interpreters: Python 3.11–3.13. This
+manuscript gives the theory of the IR, running practice, and extension
+points (parsers, rules, validators, exporters) alongside that
+documentation.</p>
 <section id="footnotes" class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />
@@ -224,7 +238,7 @@ role="doc-endnotes">
 to the Active Inference Institute’s <strong>Generalized Notation
 Notation</strong> (<a
 href="https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation">repository</a>),
-a structured notation for state-space and process models—<em>not</em>
+a structured notation for state-space and process models — <em>not</em>
 graph neural networks. Downstream consumers, including graph neural
 network training pipelines, can ingest the emitted artifacts, but COGANT
 itself produces Generalized Notation Notation bundles.<a href="#fnref1"

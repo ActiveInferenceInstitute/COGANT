@@ -1,0 +1,357 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+\usepackage{caption}
+% Make caption package work with longtable
+\makeatletter
+\def\fnum@table{\tablename~\thetable}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\begin{frame}[fragile]{Appendix A --- Full Roundtrip ε Table (per-role
+breakdown)}
+\protect\phantomsection\label{appendix-a-full-roundtrip-ux3b5-table-per-role-breakdown}
+The ε metric used throughout the paper is the
+\texttt{role\_match\_score} returned by
+\texttt{cogant.reverse.idempotency.compute\_isomorphism\_report(orig\_gnn,\ synth\_gnn)}.
+It is a multiset similarity over the role populations of the forward GNN
+(\texttt{orig\_gnn}) and the re-forwarded synthesized package
+(\texttt{synth\_gnn}). In this appendix we further decompose ε into four
+per-role components ε\_HIDDEN\_STATE, ε\_OBSERVATION, ε\_ACTION, and
+ε\_CONSTRAINT, each computed as the multiset-similarity restricted to a
+single role category:
+
+\begin{quote}
+ε\_role(P) = min(count\_orig(role), count\_synth(role)) /
+max(count\_orig(role), count\_synth(role))
+\end{quote}
+
+with the convention ε\_role = 1.0 when both counts are zero (the role is
+vacuously preserved) and ε\_role = 0.0 when exactly one of the two
+counts is zero (the role has been introduced or dropped). The overall ε
+reported by \texttt{compute\_isomorphism\_report} is the mean of the
+per-role components over the roles present in at least one side, which
+matches the values reported in
+\texttt{../cogant/docs/evaluation/ROUNDTRIP\_EVAL.md} and reproduced in
+the final column.
+
+\begin{block}{A.1 All 23 targets, post wave 14 (canonical)}
+\protect\phantomsection\label{a.1-all-23-targets-post-wave-14-canonical}
+The table below reports the per-role breakdown for all 23 targets that
+round tripped without runtime failure (rc = 0). Counts for the four
+primary roles (\texttt{HIDDEN\_STATE}, \texttt{OBSERVATION},
+\texttt{ACTION}, \texttt{CONSTRAINT}) are reported as
+\texttt{orig\ /\ synth}; the ε\_role column is computed from those two
+counts. The POLICY and CONTEXT roles are folded into the ``overall ε''
+computation for targets that contain them (see note following the table)
+but are omitted from the column layout to keep the table readable.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0282}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0493}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.1479}}
+  >{\centering\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.1056}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0493}}
+  >{\centering\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.1127}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0493}}
+  >{\centering\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.1127}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0493}}
+  >{\centering\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.1197}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0563}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0775}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 24\tabcolsep) * \real{0.0423}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedleft
+\#
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Group
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Target
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+HS orig/synth
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+ε\_HS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+OBS orig/synth
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+ε\_OBS
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+ACT orig/synth
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+ε\_ACT
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+CNST orig/synth
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+ε\_CNST
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+overall ε
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+tier
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+1 & zoo & 01\_simple\_state & 1 / 1 & 1.000 & 1 / 7 & 0.143 & 2 / 5 &
+0.400 & 0 / 4 & 0.000 & 1.0000 & ISO \\
+2 & zoo & 02\_observer & 1 / 1 & 1.000 & 3 / 9 & 0.333 & 1 / 4 & 0.250 &
+0 / 4 & 0.000 & 1.0000 & ISO \\
+3 & zoo & 03\_actor & 1 / 1 & 1.000 & 1 / 7 & 0.143 & 3 / 6 & 0.500 & 0
+/ 4 & 0.000 & 1.0000 & ISO \\
+4 & zoo & 04\_pomdp\_minimal & 1 / 1 & 1.000 & 3 / 9 & 0.333 & 2 / 5 &
+0.400 & 0 / 4 & 0.000 & 1.0000 & ISO \\
+5 & zoo & 05\_multi\_factor & 1 / 1 & 1.000 & 2 / 8 & 0.250 & 3 / 6 &
+0.500 & 0 / 4 & 0.000 & 1.0000 & ISO \\
+6 & zoo & 06\_hierarchical & 2 / 2 & 1.000 & 2 / 11 & 0.182 & 4 / 9 &
+0.444 & 0 / 4 & 0.000 & 1.0000 & ISO \\
+7 & zoo & 07\_event\_driven & 0 / 1 & 0.000 & 4 / 6 & 0.667 & 3 / 7 &
+0.429 & 0 / 4 & 0.000 & 0.7778 & APPROX \\
+8 & zoo & 08\_preferences & 0 / 1 & 0.000 & 1 / 3 & 0.333 & 1 / 3 &
+0.333 & 3 / 4 & 0.750 & 1.0000 & ISO \\
+9 & zoo & 09\_policy & 0 / 1 & 0.000 & 1 / 3 & 0.333 & 3 / 7 & 0.429 & 0
+/ 4 & 0.000 & 0.6667 & APPROX \\
+10 & zoo & 10\_constraint & 0 / 1 & 0.000 & 1 / 3 & 0.333 & 1 / 3 &
+0.333 & 5 / 5 & 1.000 & 0.8571 & ISO \\
+11 & zoo & 11\_sensor\_fusion & 3 / 3 & 1.000 & 3 / 14 & 0.214 & 6 / 13
+& 0.462 & 0 / 4 & 0.000 & 1.0000 & ISO \\
+12 & zoo & 12\_full\_pomdp & 3 / 3 & 1.000 & 4 / 15 & 0.267 & 8 / 16 &
+0.500 & 0 / 4 & 0.000 & 0.9474 & ISO \\
+13 & rwex & json\_stdlib & 3 / 3 & 1.000 & 1 / 13 & 0.077 & 15 / 22 &
+0.682 & 0 / 4 & 0.000 & 1.0000 & ISO \\
+14 & rwex & requests\_lib & 8 / 9 & 0.889 & 35 / 65 & 0.538 & 16 / 35 &
+0.457 & 0 / 4 & 0.000 & 1.0000 & ISO \\
+15 & rwex & flask\_app & 9 / 10 & 0.900 & 24 / 57 & 0.421 & 25 / 52 &
+0.481 & 1 / 4 & 0.250 & 0.8429 & ISO \\
+16 & rw & dateutil & 33 / 127 & 0.260 & 788 / 1176 & 0.670 & 172 / 423 &
+0.407 & 0 / 127 & 0.000 & 0.8638 & ISO \\
+17 & rw & pyyaml & 46 / 56 & 0.821 & 164 / 337 & 0.487 & 167 / 278 &
+0.601 & 0 / 56 & 0.000 & 0.8520 & ISO \\
+18 & rw & tqdm (post‑fix) & 29 / 36 & 0.806 & 82 / 193 & 0.425 & 78 /
+155 & 0.503 & 141 / 141 & 1.000 & 0.8133 & ISO \\
+19 & rw & fastapi (post‑fix) & 59 / 84 & 0.702 & 1706 / 1963 & 0.869 &
+266 / 492 & 0.541 & 1648 / 1700 & 0.969 & 0.9771 & ISO \\
+20 & rw & click (post‑fix) & 50 / 52 & 0.962 & 257 / 416 & 0.618 & 91 /
+196 & 0.464 & 381 / 381 & 1.000 & 0.8277 & ISO \\
+21 & rw & httpx (post‑fix) & 50 / 56 & 0.893 & 251 / 428 & 0.586 & 136 /
+243 & 0.560 & 304 / 304 & 1.000 & 0.7495 & ISO \\
+22 & rw & urllib3 (post‑fix) & 70 / 93 & 0.753 & 323 / 611 & 0.529 & 167
+/ 363 & 0.460 & 744 / 744 & 1.000 & 0.6626 & ISO \\
+23 & rw & requests (post‑fix) & 24 / 28 & 0.857 & 130 / 219 & 0.594 & 57
+/ 112 & 0.509 & 483 / 483 & 1.000 & 0.6876 & ISO \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+\textbf{Column legend.} HS = HIDDEN\_STATE, OBS = OBSERVATION, ACT =
+ACTION, CNST = CONSTRAINT. ``tier'' assigns ISOMORPHIC (ISO) when
+overall ε ≥ 0.5, APPROXIMATE (APPROX) when 0.3 ≤ ε \textless{} 0.5,
+DIVERGENT otherwise. Rows marked ``post‑fix'' are measured after the
+wave‑14 CONSTRAINT synthesizer fix (see §A.2 and
+\texttt{../cogant/docs/evaluation/CONSTRAINT\_FIX.md}). Three rows (07,
+09) remain below the 1.0 line because the original graph contains POLICY
+nodes that the reverse synthesizer collapses to CONSTRAINT or ACTION;
+the POLICY per‑role component is included in the overall ε average but
+omitted from the column layout.
+
+\textbf{Note on overall ε computation.} The overall ε reported in the
+rightmost column is the value emitted by
+\texttt{compute\_isomorphism\_report} and is the mean of per‑role
+components taken only over roles that appear in at least one side of the
+multiset. For targets whose original graph contains zero
+\texttt{HIDDEN\_STATE}, the ε\_HS column shows 0.000 (synthesizer
+introduced a new role) but that component is excluded from the overall
+mean; this is why zoo/08\_preferences scores overall ε = 1.0000 despite
+the 0 / 1 HS split --- the averaging only ranges over OBS, ACT, and CNST
+on that target.
+
+\textbf{Tier distribution.} Post wave 14: 22 / 23 targets land in
+ISOMORPHIC (ε ≥ 0.5), 1 remains APPROXIMATE, 0 DIVERGENT. Pre wave 14
+(see §A.2): 14 / 23 ISOMORPHIC, 6 / 23 APPROXIMATE, 3 / 23 DIVERGENT.
+\end{block}
+
+\begin{block}{A.2 Pre-fix vs post-fix for affected repositories (wave 14
+CONSTRAINT fix)}
+\protect\phantomsection\label{a.2-pre-fix-vs-post-fix-for-affected-repositories-wave-14-constraint-fix}
+The wave‑14 CONSTRAINT synthesizer fix
+(\texttt{../cogant/docs/evaluation/CONSTRAINT\_FIX.md}) strips the
+planner \texttt{cnst\_} prefix from synthesized constraint function
+names and emits \texttt{check\_*} functions instead, so that the forward
+pipeline's \texttt{PreferenceRule} detects them as CONSTRAINT nodes (the
+rule matches on
+\texttt{check\textbar{}test\_\textbar{}assert\_\textbar{}validate} in
+the function name). Before the fix, every synthesized constraint stub
+was silently dropped from the synthesized role multiset; after the fix,
+exactly one \texttt{check\_*} stub is emitted per \texttt{NodePlan} in
+\texttt{plan.constraint\_checks}, so origin and synth CONSTRAINT counts
+match exactly for the affected repositories.
+
+\textbf{Table A.2 --- Affected repositories, before and after the
+CONSTRAINT fix.}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1567}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0896}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1119}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0821}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1045}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0672}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.0821}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1567}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 16\tabcolsep) * \real{0.1493}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Target
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+ε (before)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+tier (before)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+ε (after)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+tier (after)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Δε
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+CNST orig
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+CNST synth (before)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+CNST synth (after)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+zoo/07\_event\_driven & 0.7778 & ISO (bordering APPROX) & 0.7778 &
+APPROX (reclassified) & 0.0000 & 0 & 3 & 4 \\
+zoo/09\_policy & 0.6667 & ISO (APPROX) & 0.6667 & APPROX & 0.0000 & 0 &
+3 & 4 \\
+zoo/10\_constraint & 0.5714 & APPROX & 0.8571 & ISO & +0.2857 & 5 & 3 &
+5 \\
+tqdm & 0.5749 & APPROX & 0.8133 & ISO & +0.2384 & 141 & 3 & 141 \\
+fastapi & 0.5149 & APPROX & 0.9771 & ISO & +0.4622 & 1648 & 3 & 1700 \\
+click & 0.5832 & APPROX & 0.8277 & ISO & +0.2445 & 381 & 3 & 381 \\
+httpx & 0.4412 & DIVERGENT & 0.7495 & ISO & +0.3083 & 304 & 3 & 304 \\
+urllib3 & 0.3891 & DIVERGENT & 0.6626 & ISO & +0.2735 & 744 & 3 & 744 \\
+requests & 0.4203 & DIVERGENT & 0.6876 & ISO & +0.2673 & 483 & 3 &
+483 \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+Rows zoo/07 and zoo/09 are listed for completeness: their Δε is exactly
+zero because the original graphs contain no CONSTRAINT nodes, so the fix
+adds a constraint stub to the synth side without changing the origin,
+and the \texttt{role\_match\_score} multiset similarity on that single
+role is unchanged (the fix adds a role that neither side had in the
+majority). The three DIVERGENT → ISOMORPHIC promotions (httpx, urllib3,
+requests) are the headline result: the pre-fix ε values were dominated
+by the constraint-collapse failure mode
+(\texttt{../cogant/docs/evaluation/ROUNDTRIP\_EVAL.md} §``Failure
+Cases''), and closing that synthesizer gap is sufficient to move all
+three into the ISOMORPHIC tier.
+\end{block}
+
+\begin{block}{A.3 POMDP shape match across all 23 targets}
+\protect\phantomsection\label{a.3-pomdp-shape-match-across-all-23-targets}
+\texttt{shape\_match} is a coarser invariant than ε: it asks, per axis,
+whether both sides of the roundtrip have a non‑empty population for
+\texttt{n\_states}, \texttt{n\_obs}, and \texttt{n\_actions}. Across all
+23 targets, shape match is TRUE on every axis for which the origin had ≥
+1 entry; the zoo fixtures 07--10 have \texttt{n\_states\ =\ 0} on the
+origin and \texttt{n\_states\ =\ 1} on the synth because the synthesizer
+always emits at least one hidden-state factor.
+\end{block}
+\end{frame}
+
+\begin{frame}
+\end{frame}
+
+\end{document}

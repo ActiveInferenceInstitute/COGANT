@@ -172,7 +172,13 @@
 </head>
 <body>
 <h1 id="scope-and-related-work">Scope and related work</h1>
-<h2 id="positioning">Positioning</h2>
+<h2 id="cogant-in-the-program-analysis-landscape">COGANT in the
+program-analysis landscape</h2>
+<p>COGANT sits at the intersection of three established research areas:
+machine learning for source code, graph-based program representations,
+and active-inference behavioral modeling. The following subsections
+place it against each, emphasizing what COGANT provides as
+infrastructure rather than as a novel model or benchmark.</p>
 <p><strong>Machine learning for big code</strong> surveys cover
 naturalness, representation learning, and task taxonomy <span
 class="citation"
@@ -206,197 +212,31 @@ often consume tokens or AST paths; COGANT supplies <strong>explicit
 program graphs</strong> that graph-neural-network-centric research can
 ingest directly.</li>
 </ul>
-<h2 id="program-analysis-for-ml">Program analysis for ML</h2>
-<p>Several systems address the intersection of program analysis and
-machine learning that COGANT operates in:</p>
-<p><strong>code2seq and code2vec</strong> <span class="citation"
-data-cites="alon2019code2vec">[@alon2019code2vec]</span> represent
-programs as sets of AST paths between terminal nodes. These path-based
-representations are effective for method naming and code summarization
-but discard the full graph topology that graph-neural-network-based
-models exploit. COGANT preserves the complete program graph — including
-control-flow and data-flow edges — and can export it in tensor form,
-enabling downstream architectures that reason over richer relational
-structure.</p>
-<p><strong>Gated Graph Neural Networks (GGNN)</strong> <span
-class="citation" data-cites="li2016gated">[@li2016gated]</span>
-introduced gated recurrent propagation for graph-structured program
-representations, demonstrating strong results on variable misuse
-detection and other code tasks. COGANT’s export contract (PyG
-<code>Data</code> objects with typed <code>edge_index</code> and
-<code>edge_attr</code>) is directly compatible with GGNN-style models;
-the kind and role indices provide the discrete node and edge types that
-typed message-passing layers require.</p>
-<p><strong>CodeQL</strong> (Semmle/GitHub) provides a declarative query
-language over relational representations of code. While CodeQL excels at
-security analysis with hand-written queries, its outputs are query
-results rather than tensor-ready graph bundles. COGANT occupies the
-complementary niche: it produces the graph data that learned models
-consume, and can ingest CodeQL query results as an additional evidence
-source feeding the confidence model.</p>
-<p><strong>CodeBERT</strong> <span class="citation"
-data-cites="feng2020codebert">[@feng2020codebert]</span> and related
-pre-trained models operate at the token level, learning representations
-from natural language and code jointly. These models are complementary
-to COGANT’s graph-centric approach: CodeBERT embeddings could serve as
-optional node features in COGANT’s Generalized Notation Notation (GNN)
-export (the export schema already reserves dimensions for text
-embeddings as documented in
-<code>../cogant/docs/GNN_EXPORT.md</code>).</p>
-<h3 id="feature-matrix-cogant-vs.-related-tools">Feature matrix: COGANT
-vs. related tools</h3>
-<p>The following matrix contrasts COGANT’s capabilities with the related
-tools discussed in this section. Entries marked “✓” indicate first-class
-support; “partial” indicates limited or indirect support; “—” indicates
-the feature is out of scope for that tool.</p>
-<p><strong>Table 4. Feature comparison of program-to-model
-toolchains.</strong></p>
-<table>
-<thead>
-<tr>
-<th>Feature</th>
-<th style="text-align: center;">COGANT</th>
-<th style="text-align: center;">code2vec</th>
-<th style="text-align: center;">GGNN</th>
-<th style="text-align: center;">CodeQL</th>
-<th style="text-align: center;">CodeBERT</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Full program graph (AST + CFG + DFG)</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">input-only</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-</tr>
-<tr>
-<td>Typed node/edge taxonomy</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">partial</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-</tr>
-<tr>
-<td>Confidence scoring per assertion</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-</tr>
-<tr>
-<td>Provenance tracking</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">partial</td>
-<td style="text-align: center;">—</td>
-</tr>
-<tr>
-<td>State-space extraction</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-</tr>
-<tr>
-<td>Temporal regime classification</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-</tr>
-<tr>
-<td>Dynamic enrichment (coverage, traces)</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">partial</td>
-<td style="text-align: center;">—</td>
-</tr>
-<tr>
-<td>Generalized Notation Notation output</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-</tr>
-<tr>
-<td>Tensor export (PyG, DGL, HDF5)</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">partial</td>
-<td style="text-align: center;">input-only</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-</tr>
-<tr>
-<td>Pluggable translation rules</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-</tr>
-<tr>
-<td>Human review loop</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">partial</td>
-<td style="text-align: center;">—</td>
-</tr>
-<tr>
-<td>Multi-language front-ends</td>
-<td style="text-align: center;">roadmap</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">—</td>
-<td style="text-align: center;">✓</td>
-<td style="text-align: center;">✓</td>
-</tr>
-</tbody>
-</table>
-<p>COGANT is distinct from the other toolchains in three ways: first, it
-explicitly models uncertainty through confidence tiers tied to evidence
-provenance; second, it produces a structured Active Inference notation
-as its primary output rather than an opaque tensor; and third, it
-composes static and dynamic evidence in a single pipeline rather than
-specializing to one.</p>
-<h2 id="active-inference-and-program-behavior">Active inference and
-program behavior</h2>
-<p>The state-space IR in COGANT’s pipeline (states, actions,
-transitions, observations) shares structural parallels with
-<strong>active inference</strong> formulations <span class="citation"
-data-cites="friston2010free">[@friston2010free]</span>, where an agent
-maintains beliefs about hidden states and selects actions to minimize
-prediction error. In the program analysis context, the “agent” is the
-analysis pipeline itself: it observes code artifacts, maintains beliefs
-about program behavior (the state-space model), and refines those
-beliefs as new evidence (dynamic traces, coverage data) arrives.</p>
-<p>This connection is analogical: the <code>ConfidenceModel</code> in
-<code>../cogant/py/cogant/translate/confidence.py</code> aggregates
-evidence and penalties in a way that suggests belief revision, but it is
-not a Bayesian posterior. Future work could formalize a tighter link by
-casting rule application as variational inference, where a fixpoint
-would represent an approximate posterior over program semantics.</p>
-<h2 id="boundaries">Boundaries</h2>
-<p>COGANT does not subsume formal verification, interactive theorem
-proving, or full interprocedural pointer analysis unless implemented as
-explicit future stages. The SPEC marks Rust acceleration and additional
-parsers as staged; the manuscript should be read together with that
-table for up-to-date scope.</p>
-<h2 id="forward-compatibility">Forward compatibility</h2>
-<p>Promoting COGANT into <a
-href="../../../projects/"><code>../../../projects/</code></a> integrates
-manuscript PDF rendering with the template’s validation gates.
-Cross-references in this folder use paths <strong>relative to these
-Markdown files</strong> (for example <a
-href="../cogant/docs/"><code>../cogant/docs/</code></a>) so links stay
-stable when the tree moves.</p>
+<h2 id="where-the-full-comparison-lives">Where the full comparison
+lives</h2>
+<p>The numbered fragments that follow this file (lexicographic order
+under Section 8) carry the detailed related-work comparison so tables
+and proofs are not duplicated here:</p>
+<ul>
+<li><a
+href="08_01_landscape_and_tool_categories.md"><code>08_01_landscape_and_tool_categories.md</code></a>
+— landscape overview.</li>
+<li><a
+href="08_02_program_analysis_for_ml_and_tables.md"><code>08_02_program_analysis_for_ml_and_tables.md</code></a>
+— program analysis for ML, <strong>Table 8</strong> (feature matrix),
+<strong>Table 9</strong> (input/output contracts), and positioning vs
+prior art.</li>
+<li><a
+href="08_03_lenses_and_synthesis.md"><code>08_03_lenses_and_synthesis.md</code></a>
+— bidirectional lenses, edit lenses, incremental analysis, categorical
+framing, and synthesis positioning.</li>
+<li><a
+href="08_04_world_models_boundaries_and_compatibility.md"><code>08_04_world_models_boundaries_and_compatibility.md</code></a>
+— world models from code, active inference, boundaries, forward
+compatibility.</li>
+</ul>
+<p>Authoritative <strong>implementation scope</strong> (languages,
+parsers, Rust acceleration) is always <a
+href="../cogant/docs/reference/implementation_status.md"><code>../cogant/docs/reference/implementation_status.md</code></a>.</p>
 </body>
 </html>

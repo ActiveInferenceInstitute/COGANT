@@ -1,0 +1,35 @@
+\frametitle{GNN export (Generalized Notation Notation)}
+\protect\phantomsection\label{gnn-export-generalized-notation-notation}
+Exports package the program graph and compiled state-space model into
+the Active Inference Institute's \textbf{Generalized Notation Notation}
+plus a small set of interop targets:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{GNN Markdown (\texttt{model.gnn.md})} --- canonical,
+  human-readable Generalized Notation Notation organized into the
+  section order defined in \texttt{../cogant/docs/export/README.md}
+  (Model Metadata, Repository Metadata, Source Coverage, State Space,
+  Observation Modalities, Actions/Policies, Connections, Factors,
+  Transition Structure, Likelihood Structure, Preferences/Constraints,
+  Time Settings, Parameterization, Ontology Mapping, Provenance,
+  Confidence Scores, Rendering Hints, Validation Notes).
+\item
+  \textbf{GNN JSON (\texttt{model.gnn.json})} --- machine-readable
+  equivalent of the markdown sections, plus companion JSON files per
+  section (\texttt{state\_space.json}, \texttt{observations.json},
+  \texttt{actions.json}, \texttt{transitions.json}, and so on).
+\item
+  \textbf{Interop exports} --- GraphML and Parquet for analysis in
+  Gephi/yEd and DuckDB, and optional tensor views (PyTorch Geometric
+  \texttt{Data} objects {[}@fey2019pyg{]}, DGL graphs, HDF5 tables) for
+  downstream graph neural network training pipelines that consume the
+  program graph as a relational tensor.
+\end{itemize}
+
+Node and edge feature breakdowns, section contracts, and the optional
+framework targets are specified in
+\texttt{../cogant/docs/export/README.md}; they determine the structure
+of the emitted notation as well as the effective input dimensionality of
+any downstream model.

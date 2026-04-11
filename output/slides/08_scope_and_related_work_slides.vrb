@@ -1,9 +1,29 @@
-\frametitle{Forward compatibility}
-\protect\phantomsection\label{forward-compatibility}
-Promoting COGANT into
-\href{../../../projects/}{\texttt{../../../projects/}} integrates
-manuscript PDF rendering with the template's validation gates.
-Cross-references in this folder use paths \textbf{relative to these
-Markdown files} (for example
-\href{../cogant/docs/}{\texttt{../cogant/docs/}}) so links stay stable
-when the tree moves.
+\frametitle{Where the full comparison lives}
+\protect\phantomsection\label{where-the-full-comparison-lives}
+The numbered fragments that follow this file (lexicographic order under
+Section 8) carry the detailed related-work comparison so tables and
+proofs are not duplicated here:
+
+\begin{itemize}
+\tightlist
+\item
+  \href{08_01_landscape_and_tool_categories.md}{\texttt{08\_01\_landscape\_and\_tool\_categories.md}}
+  --- landscape overview.
+\item
+  \href{08_02_program_analysis_for_ml_and_tables.md}{\texttt{08\_02\_program\_analysis\_for\_ml\_and\_tables.md}}
+  --- program analysis for ML, \textbf{Table 8} (feature matrix),
+  \textbf{Table 9} (input/output contracts), and positioning vs prior
+  art.
+\item
+  \href{08_03_lenses_and_synthesis.md}{\texttt{08\_03\_lenses\_and\_synthesis.md}}
+  --- bidirectional lenses, edit lenses, incremental analysis,
+  categorical framing, and synthesis positioning.
+\item
+  \href{08_04_world_models_boundaries_and_compatibility.md}{\texttt{08\_04\_world\_models\_boundaries\_and\_compatibility.md}}
+  --- world models from code, active inference, boundaries, forward
+  compatibility.
+\end{itemize}
+
+Authoritative \textbf{implementation scope} (languages, parsers, Rust
+acceleration) is always
+\href{../cogant/docs/reference/implementation_status.md}{\texttt{../cogant/docs/reference/implementation\_status.md}}.

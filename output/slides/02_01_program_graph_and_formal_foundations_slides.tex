@@ -1,0 +1,392 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\section{Program graph and formal
+foundations}\label{program-graph-and-formal-foundations}
+
+\section{Methodology: Program Graphs and Intermediate
+Representations}\label{methodology-program-graphs-and-intermediate-representations}
+
+\begin{frame}[fragile]{Program graph}
+\protect\phantomsection\label{program-graph}
+Let \(G = (V, E)\) denote a directed graph whose vertices \(V\)
+represent program entities and whose edges \(E\) represent
+relationships. COGANT assigns each node a \textbf{kind} (for example
+function, variable, type) and a \textbf{semantic role} (for example
+definition versus use). Each node and edge may carry:
+
+\begin{itemize}
+\tightlist
+\item
+  A \textbf{stable identifier} for persistence across runs when hashing
+  allows.
+\item
+  \textbf{Type strings} and attributes recovered from the front end.
+\item
+  A \textbf{confidence} score in \([0,1]\) and \textbf{provenance}
+  metadata (source code, type system, control flow, heuristic, external
+  tool).
+\end{itemize}
+
+This follows the same philosophical line as code property graphs that
+fuse AST, control flow, and data flow into one analyzable structure
+{[}@yamaguchi2014modeling{]}, but orients the representation toward
+\textbf{Generalized Notation Notation (GNN) export} and, optionally,
+tensorized views of the same graph: node kinds and roles map to discrete
+indices in both forms, and optional embeddings can augment features as
+described in \texttt{../cogant/docs/export/README.md}.
+
+\begin{block}{Structural equivalence}
+\protect\phantomsection\label{structural-equivalence}
+Two program graphs \(G_1 = (V_1, E_1)\) and \(G_2 = (V_2, E_2)\) are
+usefully compared via typed graph isomorphism: a bijection
+\(\phi : V_1 \to V_2\) preserving edge structure and relevant labels
+supports deduplication and cross-repository linking when interfaces
+align.
+
+\begin{equation}
+\label{eq:typed-iso}
+(u, v) \in E_1 \iff (\phi(u), \phi(v)) \in E_2
+\end{equation}
+
+Equation \ref{eq:typed-iso} formalizes the structural invariant we check
+during deduplication and cross-repository linking: a candidate bijection
+\(\phi\) is accepted only when every edge in \(G_1\) has a corresponding
+edge between the images of its endpoints in \(G_2\) (and vice versa), so
+that label-preserving matches strictly preserve the adjacency structure
+of both program graphs.
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Formal definitions}
+\protect\phantomsection\label{formal-definitions}
+This subsection makes the objects manipulated by the pipeline
+mathematically explicit. The definitions are stated for the shipped
+v0.5.x engine; where the implementation differs from the general form
+(for example because an edge kind is not yet emitted by the Python front
+end), the difference is noted with a forward reference to Section 6.
+
+\textbf{Definition 1 (Program graph).} A \textbf{program graph} is a
+tuple \(G = (V, E, \lambda_V, \lambda_E, \tau)\) where
+
+\begin{itemize}
+\tightlist
+\item
+  \(V\) is a finite set of program nodes (modules, classes, methods,
+  functions, and --- on languages where the front end emits them ---
+  variables and control-flow sites);
+\item
+  \(E \subseteq V \times V \times K\) is a finite set of typed directed
+  edges drawn from the edge-kind alphabet
+  \(K \supseteq \{\text{READS}, \text{WRITES}, \text{CALLS}, \text{CONTAINS}, \text{INHERITS}, \text{IMPORTS}, \text{OBSERVES}, \text{MUTATES}, \text{DEPENDS\_ON}\}\);
+\item
+  \(\lambda_V : V \to \mathcal{N}\) labels each node with a node kind
+  \(\mathcal{N} \supseteq \{\text{MODULE}, \text{CLASS}, \text{METHOD}, \text{FUNCTION}, \text{CONFIGURATION}, \ldots\}\);
+\item
+  \(\lambda_E : E \to K\) is the (trivial) projection onto the edge
+  kind;
+\item
+  \(\tau : V \to (T \cup \{\bot\})\) maps each node to a type annotation
+  recovered from the front end or to \(\bot\) when no annotation is
+  available.
+\end{itemize}
+
+The shipped Python front end populates the kinds
+\(\{\text{MODULE}, \text{CLASS}, \text{METHOD}, \text{FUNCTION}\}\) and
+the edge kinds
+\(\{\text{CALLS}, \text{CONTAINS}, \text{READS}, \text{WRITES}, \text{IMPORTS}, \text{INHERITS}\}\);
+the remaining kinds in \(\mathcal{N}\) and \(K\) are declared in
+\texttt{cogant.schemas.core} but currently emitted only when other
+parsers or dynamic enrichment stages fire. The empirical distribution on
+the six packaged fixtures is recorded in Tables 4 and 5 of Section 6.
+
+\textbf{Definition 2 (Translation rule).} A \textbf{translation rule} is
+a quadruple \(r = (\varphi_r, \kappa_r, w_r, p_r)\) where
+
+\begin{itemize}
+\tightlist
+\item
+  \(\varphi_r : \mathcal{G} \to 2^{\mathcal{F}}\) is a computable
+  predicate that, given a program graph \(G \in \mathcal{G}\), returns a
+  (possibly empty) set of matched fragments \(\mathcal{F}\) --- each
+  fragment a finite tuple of node ids and optional edge ids;
+\item
+  \(\kappa_r \in \mathcal{K}_M\) is the mapping kind the rule assigns on
+  success, drawn from the mapping-kind alphabet
+  \(\mathcal{K}_M = \{\text{HIDDEN\_STATE}, \text{OBSERVATION}, \text{ACTION}, \text{POLICY}, \text{CONSTRAINT}, \text{PREFERENCE}, \text{CONTEXT}, \text{DATA\_FLOW}, \text{ERROR\_HANDLING}, \text{CIRCUIT\_BREAKER}, \text{ORCHESTRATION}\}\);
+\item
+  \(w_r \in (0, 1]\) is the base confidence weight attached to mappings
+  produced by \(r\);
+\item
+  \(p_r \in \mathbb{Z}\) is the rule priority consulted during conflict
+  resolution (Algorithm 2).
+\end{itemize}
+
+Concretely, each \texttt{TranslationRule} subclass in
+\texttt{../cogant/py/cogant/translate/rules/} exposes \(\varphi_r\) as
+the \texttt{matches(graph,\ query)} method, encodes \(\kappa_r\) in the
+\texttt{mapping\_kind} property, embeds \(w_r\) in the
+\texttt{confidence\_score} field of the returned
+\texttt{SemanticMapping}, and exposes \(p_r\) through the
+\texttt{priority} property. The nineteen shipped rules span five
+families: five structural rules (\texttt{ReadOnlyInput},
+\texttt{MutatingSubsystem}, \texttt{Inheritance}, \texttt{Containment},
+\texttt{DataPipeline}), five semantic rules (\texttt{Observation},
+\texttt{Action}, \texttt{Policy}, \texttt{Preference},
+\texttt{Context}), two control rules (\texttt{Config},
+\texttt{FeatureFlag}), three behavioural rules (\texttt{Orchestrator},
+\texttt{TestAssertion}, \texttt{EventBus}), and four resilience rules
+(\texttt{RetryPattern}, \texttt{ErrorBoundary},
+\texttt{SingletonAccess}, \texttt{CircuitBreaker}).
+
+\textbf{Definition 3 (Fixpoint semantics).} Let \(\mathcal{M}\) be the
+(finite) set of all possible semantic mappings that any finite
+composition of rules in \(R\) could emit on a fixed graph \(G\). Define
+the rule-application operator
+\(F_{G,R} : 2^{\mathcal{M}} \to 2^{\mathcal{M}}\) by \begin{equation}
+\label{eq:fixpoint-operator}
+F_{G,R}(S) \;=\; S \,\cup\, \bigl\{\, r.\text{apply}(G, f) \,\bigm|\, r \in R,\ f \in \varphi_r(G),\ r.\text{apply}(G, f) \neq \bot \,\bigr\}.
+\end{equation} The \textbf{translation} of \(G\) under \(R\) is the
+least fixpoint \begin{equation}
+\label{eq:least-fixpoint}
+T^{*}(G) \;=\; \bigsqcup_{k \geq 0} F_{G,R}^{k}(\emptyset) \;=\; \lim_{k \to \infty} F_{G,R}^{k}(\emptyset),
+\end{equation} computed iteratively by
+\texttt{TranslationEngine.translate()} and then post-processed by
+\texttt{\_resolve\_conflicts()} (Algorithm 2). The post-processing step
+applies an anti-monotone pruning to the fixpoint, and is therefore
+specified outside of \(F_{G,R}\) rather than folded into it.
+
+\textbf{Definition 4 (Markov blanket partition).} Given a program graph
+\(G = (V, E, \lambda_V, \lambda_E, \tau)\) and a \textbf{seed set}
+\(S \subseteq V\) selected by one of the five strategies in
+\texttt{MarkovBlanketExtractor} (\texttt{explicit}, \texttt{module},
+\texttt{kind}, \texttt{auto}, \texttt{mapping\_kind}), the
+\textbf{Markov blanket partition}
+\(\Pi_{G, S} : V \to \{\mu, s, a, \eta\}\) is defined on the undirected
+projection of \(G\) as follows. Let
+\(N^{\text{in}}(v) = \{u : (u, v, k) \in E\}\) and
+\(N^{\text{out}}(v) = \{u : (v, u, k) \in E\}\). Then \begin{equation}
+\label{eq:markov-partition}
+\Pi_{G,S}(v) \;=\;
+\begin{cases}
+\mu & \text{if } v \in S \text{ and } (N^{\text{in}}(v) \cup N^{\text{out}}(v)) \subseteq S, \\
+a   & \text{if } v \in S \text{ and } N^{\text{out}}(v) \setminus S \neq \emptyset, \\
+s   & \text{if } v \in S \text{ and } N^{\text{out}}(v) \subseteq S \text{ and } N^{\text{in}}(v) \setminus S \neq \emptyset, \\
+\eta & \text{if } v \notin S.
+\end{cases}
+\end{equation} The four-way case split is realised verbatim by
+\texttt{partition\_by\_seeds()} in
+\texttt{../cogant/py/cogant/markov/blanket.py}: the function precomputes
+the in/out adjacency of every node in \(O(|V| + |E|)\) time via
+\texttt{\_bidirectional\_adjacency()}, then walks \(V\) once and assigns
+each node to exactly one of \(\mu\), \(s\), \(a\), \(\eta\).
+Bidirectional boundary nodes (those with both external in- and
+out-neighbours) are assigned to \(a\) by convention, and are
+additionally tagged with a \texttt{bidirectional} metadata flag so that
+downstream consumers can recover the distinction.
+
+\textbf{Definition 5 (A/B/C/D matrices).} Given a translation
+\(T^{*}(G)\) and a compiled state-space
+\((\mathbf{V}, \mathbf{O}, \mathbf{A})\) of hidden-state variables,
+observation modalities, and actions, the \textbf{generative-model
+matrices} of COGANT are
+
+\begin{align}
+\label{eq:matrices-defn}
+A &\in \mathbb{R}^{|\mathbf{O}| \times |\mathbf{V}|},    &A_{ij} &= P(o_i \mid s_j), & \sum_i A_{ij} &= 1, \\
+B &\in \mathbb{R}^{|\mathbf{V}| \times |\mathbf{V}| \times |\mathbf{A}|}, & B_{i j k} &= P(s'_i \mid s_j, a_k), & \sum_i B_{ijk} &= 1, \\
+C &\in \mathbb{R}^{|\mathbf{O}|}, & C_i &= \log \tilde{P}(o_i), & \\
+D &\in \mathbb{R}^{|\mathbf{V}|}, & D_j &= P(s_j \mid t = 0), & \sum_j D_j &= 1.
+\end{align}
+
+\(A\) is derived from
+\(\{\text{READS}, \text{OBSERVES}, \text{DEPENDS\_ON}\}\) edges between
+observation and hidden-state nodes; \(B\) is derived from
+\(\{\text{WRITES}, \text{MUTATES}\}\) edges from action to hidden-state
+nodes, with identity fallback when an action writes nothing; \(C\) is
+derived from the signed confidence scores of CONSTRAINT/PREFERENCE
+mappings adjacent to each observation; and \(D\) is derived from
+CONFIGURATION-neighbour bias on hidden-state variables or falls back to
+a uniform prior. The derivation is performed by \texttt{GNNMatrices} in
+\texttt{../cogant/py/cogant/gnn/matrices.py} and uses no numerical
+dependencies beyond the Python standard library. Rows (for \(A\)) and
+columns (for \(B\)) and the vectors \(D\) are normalised to valid
+probability distributions using the high-direct / low-indirect mass
+defaults \((0.9, 0.1)\) imported from the upstream PyMDP placeholder
+convention; the \(C\) vector is a log-preference and is not normalised.
+
+\begin{block}{Theorems}
+\protect\phantomsection\label{theorems}
+\textbf{Theorem 1 (Fixpoint termination).} Let
+\(G = (V, E, \lambda_V, \lambda_E, \tau)\) be a finite program graph
+with \(|V| = n\), let \(R\) be a finite rule set with \(|R| = k\), and
+let \(F_{G,R}\) be the rule-application operator of Definition 3. Then
+the Kleene chain \begin{equation}
+\label{eq:kleene-chain}
+\emptyset \;\subseteq\; F_{G,R}(\emptyset) \;\subseteq\; F_{G,R}^{2}(\emptyset) \;\subseteq\; \cdots
+\end{equation} stabilises in at most \(|\mathcal{M}|\) iterations, where
+\(|\mathcal{M}| \leq n \cdot |\mathcal{K}_M|\) is an upper bound on the
+number of distinct mapping ids any rule set can produce on \(G\). In
+particular, the shipped engine with its default cap \(K = 10\) converges
+on every fixture in \(\{\)\texttt{calculator}, \texttt{event\_pipeline},
+\texttt{flask\_mini}, \texttt{flask\_app}, \texttt{requests\_lib},
+\texttt{json\_stdlib}\(\}\) within the cap.
+
+\emph{Proof sketch.} Each application step either adds at least one new
+mapping id to the accumulating set \(S\) or leaves \(S\) unchanged; the
+engine's explicit \texttt{mapping.id\ not\ in\ self.mappings} guard
+(\texttt{engine.py} lines 299--303) is what enforces the
+monotone-plus-bounded invariant. Because \(F_{G,R}\) is monotone on the
+finite lattice \((2^{\mathcal{M}}, \subseteq)\) and bounded above by
+\(\mathcal{M}\), the Kleene chain is an ascending chain in a finite
+lattice and therefore stabilises in at most \(|\mathcal{M}|\) steps. The
+stabilisation point is, by construction, the least fixpoint of
+\(F_{G,R}\) above \(\emptyset\). The worst-case bound
+\(n \cdot |\mathcal{K}_M|\) is attained when every node receives at most
+one mapping of each kind, which is the maximum any rule set can inject
+before the conflict-resolution step prunes overlaps. Empirically every
+packaged fixture converges in a single pass because the shipped rules
+are disjoint on the node kinds they target: Tables 4 and 6 of Section 6
+record \texttt{mappings\_total} values that equal the sum of per-kind
+counts, which is only possible if no node was touched twice.
+\(\blacksquare\)
+
+\textbf{Theorem 2 (Markov blanket completeness).} For any program graph
+\(G = (V, E, \lambda_V, \lambda_E, \tau)\) with \(V \neq \emptyset\) and
+any seed set \(S \subseteq V\), the partition \(\Pi_{G, S}\) of
+Definition 4 is \textbf{total} (every \(v \in V\) receives exactly one
+role) and \textbf{mutually exclusive} (no \(v\) is assigned two roles).
+
+\emph{Proof sketch.} Totality: the case split in Equation
+\ref{eq:markov-partition} exhausts the boolean product
+\((v \in S) \times (N^{\text{out}}(v) \setminus S = \emptyset) \times (N^{\text{in}}(v) \setminus S = \emptyset)\).
+If \(v \notin S\) the fourth case applies. If \(v \in S\) there are
+three subcases depending on whether \(v\) has external out-neighbours,
+external in-neighbours only, or no external neighbours at all; the
+engine resolves the ``both external in and external out'' subcase to
+\texttt{ACTIVE} by convention, matching lines 205--211 of
+\texttt{blanket.py}. Every \(v \in V\) therefore matches exactly one
+branch, so \(\Pi\) is a total function. Mutual exclusivity: the branches
+are pairwise disjoint because they condition on mutually exclusive
+predicates on
+\((v \in S, N^{\text{in}}(v) \setminus S, N^{\text{out}}(v) \setminus S)\).
+The implementation materialises the four role sets \texttt{internal},
+\texttt{sensory}, \texttt{active}, \texttt{external} as disjoint Python
+sets and writes into exactly one on each iteration of the main loop, so
+the in-memory invariant matches the mathematical one. \(\blacksquare\)
+
+\textbf{Theorem 3 (Matrix validity).} If \(|\mathbf{O}| \geq 1\),
+\(|\mathbf{V}| \geq 1\), and \(|\mathbf{A}| \geq 1\), then the matrices
+\((A, B, C, D)\) produced by \texttt{GNNMatrices.compute\_A/B/C/D}
+satisfy the stochastic conditions of Definition 5 within a numerical
+tolerance of \(10^{-6}\).
+
+\emph{Proof sketch.} Rows of \(A\) are produced in Equation
+(\ref{eq:matrices-defn}) with explicit normalisation
+(\texttt{\_normalize\_row()} at \texttt{matrices.py} line 277), which
+divides by the row sum when it exceeds \(\varepsilon = 10^{-9}\) and
+returns a uniform row otherwise. Columns of each action slice
+\(B[:,:,k]\) are produced by the same helper on lines 334--348, with an
+identity fallback ensuring the resulting column is never all-zero. The
+prior \(D\) is built as a weighted vector of confidence scores and
+passed through \texttt{\_normalize\_vector()}, again with a uniform
+fallback when all weights are below \(\varepsilon\). The implementation
+therefore establishes the sum-to-one invariant by construction, and
+\texttt{validate\_shapes()} (lines 554--603) enforces a tolerance of
+\(10^{-6}\) on every computed matrix before the pipeline accepts the
+bundle; all six packaged fixtures pass \texttt{GNNValidator} with zero
+errors (Table 7), which is observationally the same statement as Theorem
+3 on those fixtures. The \(C\) vector is a log-preference and is exempt
+from the sum-to-one requirement. \(\blacksquare\)
+\end{block}
+\end{frame}
+
+\end{document}

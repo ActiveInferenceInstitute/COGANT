@@ -1,0 +1,302 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\begin{frame}[fragile]{Appendix C --- Galois Connection Proof Sketch}
+\protect\phantomsection\label{appendix-c-galois-connection-proof-sketch}
+This appendix gives the formal statement and proof sketch of the
+ε-approximate Galois connection between the category of Python program
+graphs and the category of GNN generative models. The informal version
+appears in Section 6.2 of the main text.
+
+\begin{block}{C.1 Categories}
+\protect\phantomsection\label{c.1-categories}
+Let \textbf{Prog} be the category whose objects are typed Python program
+graphs \texttt{G\ =\ (V,\ E,\ λ\_V,\ λ\_E,\ τ)} in the sense of Section
+2.2 (14 node kinds, 11 edge kinds) and whose morphisms are graph
+homomorphisms that preserve node and edge labels. Let \textbf{GNN} be
+the category whose objects are GNN v1.1 bundles (the Markdown sections
+\texttt{StateSpaceBlock}, \texttt{Connections},
+\texttt{InitialParameterization}, \texttt{ActInfOntologyAnnotation},
+plus the A/B/C/D matrices) and whose morphisms are role-preserving
+bundle embeddings.
+
+Both categories are posets under the pointwise subset order:
+\texttt{G\ ≤\ G\textquotesingle{}} in \textbf{Prog} iff
+\texttt{V\ ⊆\ V\textquotesingle{}}, \texttt{E\ ⊆\ E\textquotesingle{}},
+and the labelings agree on the common subset;
+\texttt{M\ ≤\ M\textquotesingle{}} in \textbf{GNN} iff each bundle
+section of \texttt{M} is included in the corresponding section of
+\texttt{M\textquotesingle{}}.
+\end{block}
+
+\begin{block}{C.2 Forward and reverse functors}
+\protect\phantomsection\label{c.2-forward-and-reverse-functors}
+Define two order-preserving maps:
+
+\begin{quote}
+\textbf{F : Prog → GNN} --- the forward pipeline. \texttt{F(G)} is the
+GNN bundle emitted by \texttt{cogant\ translate\ G}: it runs ingest →
+static → normalize → graph → translate → statespace → process → export →
+validate and returns the \texttt{gnn\_package/model.gnn.md} bundle
+together with the derived A/B/C/D matrices.
+
+\textbf{R : GNN → Prog} --- the reverse pipeline. \texttt{R(M)} is the
+typed program graph extracted by running \texttt{cogant\ reverse\ M}
+(which internally invokes
+\texttt{parse\_gnn\ →\ plan\_package\ →\ synthesize\_package}) and then
+re-parsing the synthesized Python package through the static + graph
+stages of the forward pipeline.
+\end{quote}
+
+Both \texttt{F} and \texttt{R} are monotone because each underlying
+stage is monotone: adding a node or edge to the input graph can only add
+mappings to \texttt{semantic\_mappings.json}, which can only add
+declarations to the GNN bundle, which can only add planned nodes to
+\texttt{plan\_package}, which can only add synthesized code artefacts.
+\end{block}
+
+\begin{block}{C.3 Role multiset functor}
+\protect\phantomsection\label{c.3-role-multiset-functor}
+Define the role-multiset functor \textbf{ρ : Prog → Mset(Roles)} that
+sends a program graph \texttt{G} to the multiset of Active Inference
+roles assigned to its nodes by the translate engine, where
+\texttt{Roles\ =\ \{HIDDEN\_STATE,\ OBSERVATION,\ ACTION,\ POLICY,\ CONSTRAINT,\ CONTEXT\}}.
+Extend \texttt{ρ} to \textbf{GNN → Mset(Roles)} by counting the
+declarations in each role-tagged section of a GNN bundle
+(\texttt{StateSpaceBlock} → HIDDEN\_STATE, observation modalities →
+OBSERVATION, control states → ACTION, etc.). Both extensions agree on
+the image of \texttt{F}: \texttt{ρ(F(G))\ =\ ρ\_GNN(F(G))} for every
+\texttt{G\ ∈\ Prog}, because the forward pipeline emits one section
+entry per mapping in the translate output.
+\end{block}
+
+\begin{block}{C.4 Adjunction (approximate)}
+\protect\phantomsection\label{c.4-adjunction-approximate}
+\textbf{Proposition C.1 (ε-approximate Galois connection).} The
+forward/reverse pair \texttt{(F,\ R)} satisfies the approximate Galois
+condition
+
+\begin{quote}
+**F(G) ≤\_GNN M ⟺\_ε G ≤\_Prog R(M)**
+\end{quote}
+
+where \texttt{⟺\_ε} means ``the two inequalities agree on at least the
+ε-fraction of the role multiset'', i.e.~for every \texttt{G\ ∈\ Prog}
+and \texttt{M\ ∈\ GNN}:
+
+\begin{quote}
+\texttt{multiset\_sim(ρ(G),\ ρ(R(F(G))))\ ≥\ 1\ −\ ε\_worst}
+\end{quote}
+
+where \texttt{ε\_worst} depends only on the rule table and the
+synthesizer.
+
+\textbf{Proof sketch.} The forward pipeline is the composition of a
+finite sequence of monotone rule applications (the 19 translation rules
+in the translate engine plus the A/B/C/D derivation in
+\texttt{statespace}), each of which emits exactly one mapping per
+triggering graph pattern. The reverse pipeline is the composition of
+\texttt{parse\_gnn} (which is a right inverse of the GNN emitter by
+construction --- the emitter's output is parseable by its own parser)
+and \texttt{synthesize\_package} (which emits one Python function per
+planned node). Composing the two:
+
+\begin{enumerate}
+\tightlist
+\item
+  Start with \texttt{G\ ∈\ Prog}.
+\item
+  \texttt{F(G)} emits one GNN declaration per mapping in
+  \texttt{translate(G)}; the number of declarations of role \texttt{r}
+  equals \texttt{count\_ρ(G,\ r)}.
+\item
+  \texttt{parse\_gnn(F(G))} recovers the full declaration list
+  bijectively.
+\item
+  \texttt{synthesize\_package(plan)} emits one Python artefact per
+  \texttt{NodePlan}; by the wave‑14 CONSTRAINT fix, the mapping from
+  \texttt{NodePlan} to emitted artefact is injective on role
+  multiplicity.
+\item
+  Re‑running \texttt{F} on the synthesized package recovers the same
+  role multiset up to the \textbf{synthesizer gap}: extra
+  OBSERVATION/CONSTRAINT nodes produced by scaffolding, which inflate
+  \texttt{count\_ρ(R(F(G)),\ r)} for those roles but preserve the origin
+  roles exactly.
+\end{enumerate}
+
+The multiset similarity \texttt{min(a,b)\ /\ max(a,b)} averaged over
+roles is therefore bounded below by
+\texttt{(count\_origin)\ /\ (count\_origin\ +\ scaffold\_r)} for each
+role \texttt{r}, where \texttt{scaffold\_r} is the fixed contribution of
+the reverse synthesizer's scaffolding (4 CONSTRAINT, 7 OBSERVATION, 5
+ACTION on the minimum-case synthesis). The worst-case ε is achieved on
+targets where the origin role counts are smaller than the scaffold; on
+zoo fixtures (small origin, scaffold dominates) the ratio saturates
+because both sides collapse to the scaffold, and on real-world libraries
+(large origin, scaffold negligible) the ratio approaches 1.0 once the
+CONSTRAINT fix is applied. In both regimes the Galois condition holds up
+to a bounded ε that depends only on the rule table and the fixed
+synthesizer scaffolding. ∎
+\end{block}
+
+\begin{block}{C.5 ε-isomorphism theorem}
+\protect\phantomsection\label{c.5-ux3b5-isomorphism-theorem}
+\textbf{Theorem C.2 (ε-Isomorphism).} For any \texttt{P\ ∈\ Prog}, the
+roundtrip \texttt{P\ →\ F(P)\ →\ R(F(P))} preserves the role
+distribution up to
+
+\begin{quote}
+\textbf{ε(P, R(F(P))) = JS(ρ\_norm(P) ∥ ρ\_norm(R(F(P))))}
+\end{quote}
+
+where \texttt{ρ\_norm} is the role multiset normalized to a probability
+distribution over \texttt{Roles}, and \texttt{JS} is the Jensen--Shannon
+distance. When the multiset-similarity implementation in
+\texttt{compute\_isomorphism\_report.role\_match\_score} is substituted
+for \texttt{JS}, the theorem holds with the multiset-similarity metric
+in place of JS‑distance and yields the values reported in Appendix A.
+
+\textbf{Proof sketch.} The translate engine emits one
+\texttt{SemanticMapping} per triggered rule, and each mapping carries
+exactly one role label. The forward GNN bundle's
+\texttt{StateSpaceBlock}, observation modalities, control states, and
+constraint annotations are in one-to-one correspondence with those
+mappings, so \texttt{ρ\_norm(F(P))\ =\ ρ\_norm(P)} (the forward map is
+role-preserving up to normalization). The reverse map introduces
+scaffolding nodes that inflate the role counts additively:
+\texttt{count(R(F(P)),\ r)\ =\ count(P,\ r)\ +\ scaffold\_r} for each
+role. The Jensen--Shannon distance between \texttt{P} and
+\texttt{R(F(P))} is therefore bounded by the JS distance between two
+distributions that differ only by a fixed additive shift, which in turn
+is bounded by a function of
+\texttt{sum\_r\ scaffold\_r\ /\ sum\_r\ count(P,\ r)}. In the limit of
+large programs (real-world libraries), this ratio vanishes and ε → 0; in
+the limit of small programs (zoo fixtures), the ratio saturates to the
+scaffold-only distribution, which is equal on both sides, so ε → 0
+again. The worst case falls at intermediate sizes where origin and
+scaffold are comparable; this is exactly where Appendix A.1 shows
+overall ε ≈ 0.85--0.95. ∎
+\end{block}
+
+\begin{block}{C.6 ISOMORPHIC threshold corresponds to majority role
+preservation}
+\protect\phantomsection\label{c.6-isomorphic-threshold-corresponds-to-majority-role-preservation}
+\textbf{Proposition C.3.} The threshold \texttt{ε\ ≥\ 0.5} used
+throughout the paper to classify a target as ISOMORPHIC is equivalent to
+``a majority of the origin role multiset is preserved in the
+roundtrip''.
+
+\textbf{Proof.} The multiset similarity per role is
+\texttt{min(a,b)\ /\ max(a,b)}. Averaging over the \texttt{k} roles
+present on either side and requiring the mean ≥ 0.5 is equivalent to
+requiring that at least \texttt{k/2} of the per-role ratios are ≥ 0.5
+(or a weighted combination of more and fewer). For a single role,
+\texttt{min(a,b)\ /\ max(a,b)\ ≥\ 0.5} iff
+\texttt{max(a,b)\ ≤\ 2·min(a,b)} iff each count is at most twice the
+other. When the reverse synthesizer only adds scaffolding, this is
+equivalent to requiring \texttt{count\_origin\ ≥\ scaffold\ /\ 2},
+i.e.~that the origin population is at least half of the synth
+population. Summing over roles, the ISOMORPHIC threshold corresponds to
+``the majority of the origin role multiset survives to the roundtrip
+without being drowned out by scaffolding''. The CONSTRAINT fix (§A.2) is
+exactly the transformation that makes this true for constraint-heavy
+real-world libraries: it raises the CONSTRAINT component of
+\texttt{count\_synth} from 3 (scaffolding) to \texttt{count\_origin}
+(proportional), so \texttt{min\ =\ count\_origin} and the per-role ratio
+jumps to 1.0. ∎
+\end{block}
+\end{frame}
+
+\begin{frame}
+\end{frame}
+
+\end{document}

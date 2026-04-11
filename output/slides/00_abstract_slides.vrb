@@ -1,52 +1,59 @@
 \frametitle{Abstract}
 \protect\phantomsection\label{abstract}
-\textbf{COGANT} (Codebase-to-GNN Translation) is a system for turning
-software repositories into structured Active Inference artifacts
-expressed in the Active Inference Institute's \textbf{Generalized
-Notation Notation} (GNN)\footnote<\value{beamerpauses}->[frame]{Throughout
-  this manuscript \textbf{GNN} refers to the Active Inference
-  Institute's \textbf{Generalized Notation Notation}
+\textbf{COGANT} (Codebase-to-GNN Translation) converts software
+repositories into structured Active Inference artifacts expressed in the
+Active Inference Institute's \textbf{Generalized Notation Notation}
+(GNN)\footnote<\value{beamerpauses}->[frame]{Throughout this manuscript
+  \textbf{GNN} refers to the Active Inference Institute's
+  \textbf{Generalized Notation Notation}
   (\href{https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation}{repository}),
-  a structured notation for state-space and process models---\emph{not}
-  graph neural networks. Downstream consumers, including graph neural
-  network training pipelines, can ingest the emitted artifacts, but
-  COGANT itself produces Generalized Notation Notation bundles.}. It
-occupies the space between classical program analysis---which already
+  a structured notation for state-space and process models ---
+  \emph{not} graph neural networks. Downstream consumers, including
+  graph neural network training pipelines, can ingest the emitted
+  artifacts, but COGANT itself produces Generalized Notation Notation
+  bundles.}. It sits between classical program analysis, which already
 reasons over graphs such as call graphs and code property graphs
-{[}@yamaguchi2014modeling{]}---and data-driven methods that expect
+{[}@yamaguchi2014modeling{]}, and data-driven methods that expect
 tensors, consistent node and edge vocabularies, and exportable training
 bundles {[}@allamanis2018survey; @wu2020comprehensive;
 @scarselli2009graph{]}.
 
-The design centers on a \textbf{program graph IR}: nodes denote entities
-(for example functions and variables), edges denote relations (for
-example calls and data flow), and each assertion carries
-\textbf{confidence} and \textbf{provenance} so that downstream models
-can treat uncertainty explicitly. A \textbf{fixpoint translation engine}
-applies declarative rules iteratively until no new semantic mappings
-emerge, resolves overlapping mappings by confidence, and reports
-coverage gaps explicitly. \textbf{Dynamic enrichment} from coverage
-reports and execution traces promotes mappings from a
-\texttt{STATIC\_ONLY} tier to \texttt{STATIC\_PLUS\_RUNTIME} when
-runtime evidence corroborates static inference. A \textbf{Python
-orchestration layer} (session and pipeline APIs, CLI, configuration)
-performs discovery, parsing, normalization, graph construction,
-translation rules, state-space compilation, validation, and export. A
-\textbf{Rust core} (organized as separate crates in the package tree)
-holds graph operations, translation, state-space structures, Generalized
-Notation Notation formatting, and PyO3 bindings; the authoritative
-\textbf{implementation status} distinguishes what is wired in Python
-today from staged or planned native acceleration (see
-\texttt{../cogant/docs/SPEC.md}).
+The design centres on a \textbf{program graph IR} whose nodes and edges
+carry \textbf{confidence} and \textbf{provenance}. A \textbf{fixpoint
+translation engine} applies \textbf{19 declarative rules} (five
+structural, five semantic, two control, three behavioural, four
+resilience) that map nodes onto \textbf{7 Active Inference semantic
+roles} --- HIDDEN\_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE,
+CONSTRAINT, and CONTEXT --- with conflict resolution by priority and
+score. Each bundle includes a \textbf{Markov blanket partition} in
+\(O(V+E)\) time. A \textbf{reverse synthesizer}
+(\texttt{cogant.reverse}) reconstructs a runnable Python package from an
+emitted GNN bundle. After the v0.5.0 POLICY/CONTEXT stub-emission fix
+(\href{../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md}{\texttt{../cogant/docs/evaluation/ROUNDTRIP\_IMPROVEMENT.md}}),
+the forward--reverse--forward round-trip on the canonical evaluation set
+reports \textbf{14} isomorphic (\(\varepsilon \geq 0.8\)), \textbf{6}
+approximate (\(\varepsilon \geq 0.5\)), and \textbf{3} divergent targets
+(of \textbf{23} total; twelve zoo fixtures, three real-world-example
+fixtures, eight third-party libraries in scope); details and tables are
+in
+\href{../cogant/docs/evaluation/ROUNDTRIP_EVAL.md}{\texttt{../cogant/docs/evaluation/ROUNDTRIP\_EVAL.md}}
+and §9.
 
-This manuscript, parallel to the developer documentation under
-\href{../cogant/docs/}{\texttt{../cogant/docs/}}, states the theory of
-that IR and the practice of running the pipeline, configuring
-Generalized Notation Notation exports (canonical GNN Markdown, GNN JSON,
-and interop targets such as GraphML, Parquet, and framework-specific
-tensor formats), and extending the tool through parsers, rules,
-validators, and exporters. It is written to remain valid whether this
-tree stays next to the package (\href{../cogant/}{\texttt{../cogant/}})
-or is later promoted under
-\href{../../../projects/}{\texttt{../../../projects/}} for full template
-pipeline rendering.
+The v0.5.0 \textbf{Python} pipeline uses the standard-library
+\texttt{ast} module. \textbf{JavaScript and TypeScript} are
+\textbf{optional}: install \texttt{cogant{[}multilang{]}} and an
+available \texttt{tree-sitter} grammar (including the JS-grammar
+fallback path for \texttt{.ts} on mixed repositories); integration tests
+cover this path when those pieces are installed. HTTP service, container
+image, incremental analysis, and multi-episode agent runtime are
+documented under
+\href{../cogant/docs/index.md}{\texttt{../cogant/docs/index.md}} and the
+package \href{../cogant/README.md}{\texttt{README.md}} rather than
+repeated here. The test suite reports \textbf{2129} passing tests,
+\textbf{86} skips, \textbf{2} expected \texttt{xfail}, and \textbf{1}
+\texttt{xpass}; \textbf{\texttt{py/cogant/} line coverage is 83.42\%}
+(canonical run aligned to \texttt{METRICS.yaml}, generated
+\textbf{2026-04-10T21:03:18.504378Z}) under \texttt{pytest\ -\/-cov}.
+Interpreters: Python 3.11--3.13. This manuscript gives the theory of the
+IR, running practice, and extension points (parsers, rules, validators,
+exporters) alongside that documentation.

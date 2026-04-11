@@ -1,4 +1,4 @@
-\begin{thebibliography}{11}
+\begin{thebibliography}{38}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -15,12 +15,29 @@
 \newblock Open-source specification and reference implementation; not to be
   confused with graph neural networks.
 
-\bibitem[Allamanis et~al.(2018)Allamanis, Barr, Devanbu, and
+\bibitem[Allamanis et~al.(2018{\natexlab{a}})Allamanis, Barr, Devanbu, and
   Sutton]{allamanis2018survey}
 Miltiadis Allamanis, Earl~T. Barr, Premkumar Devanbu, and Charles Sutton.
 \newblock A survey of machine learning for big code and naturalness.
-\newblock \emph{ACM Computing Surveys}, 51\penalty0 (3):\penalty0 1--37, 2018.
+\newblock \emph{ACM Computing Surveys}, 51\penalty0 (3):\penalty0 1--37,
+  2018{\natexlab{a}}.
 \newblock \doi{10.1145/3212695}.
+
+\bibitem[Allamanis et~al.(2018{\natexlab{b}})Allamanis, Brockschmidt, and
+  Khademi]{allamanis2018learning}
+Miltiadis Allamanis, Marc Brockschmidt, and Mahmoud Khademi.
+\newblock Learning to represent programs with graphs.
+\newblock In \emph{6th International Conference on Learning Representations
+  (ICLR)}, 2018{\natexlab{b}}.
+\newblock URL \url{https://openreview.net/forum?id=BJOFETxR-}.
+
+\bibitem[Allamanis et~al.(2020)Allamanis, Barr, Ducousso, and
+  Gao]{allamanis2020typilus}
+Miltiadis Allamanis, Earl~T. Barr, Soline Ducousso, and Zheng Gao.
+\newblock Typilus: Neural type hints.
+\newblock In \emph{Proceedings of the 41st ACM SIGPLAN Conference on
+  Programming Language Design and Implementation (PLDI)}, pages 91--105, 2020.
+\newblock \doi{10.1145/3385412.3385997}.
 
 \bibitem[Alon et~al.(2019)Alon, Zilberstein, Levy, and Yahav]{alon2019code2vec}
 Uri Alon, Meital Zilberstein, Omer Levy, and Eran Yahav.
@@ -28,6 +45,66 @@ Uri Alon, Meital Zilberstein, Omer Levy, and Eran Yahav.
 \newblock In \emph{Proceedings of the ACM on Programming Languages (POPL)},
   volume~3, pages 1--29, 2019.
 \newblock \doi{10.1145/3290353}.
+
+\bibitem[Alur et~al.(2013)Alur, Bod{\'{\i}}k, Juniwal, Martin, Raghothaman,
+  Seshia, Singh, Solar-Lezama, Torlak, and Udupa]{alur2013sygus}
+Rajeev Alur, Rastislav Bod{\'{\i}}k, Garvit Juniwal, Milo M.~K. Martin, Mukund
+  Raghothaman, Sanjit~A. Seshia, Rishabh Singh, Armando Solar-Lezama, Emina
+  Torlak, and Abhishek Udupa.
+\newblock Syntax-guided synthesis.
+\newblock In \emph{Proceedings of the IEEE International Conference on Formal
+  Methods in Computer-Aided Design (FMCAD 2013)}, pages 1--8, 2013.
+\newblock URL \url{https://sygus.org/assets/pdf/Journal_SyGuS.pdf}.
+
+\bibitem[Avgustinov et~al.(2016)Avgustinov, de~Moor, Peyton~Jones, and
+  Sch{\"a}fer]{avgustinov2016ql}
+Pavel Avgustinov, Oege de~Moor, Michael Peyton~Jones, and Max Sch{\"a}fer.
+\newblock {QL}: Object-oriented queries on relational data.
+\newblock In \emph{30th European Conference on Object-Oriented Programming
+  (ECOOP 2016)}, volume~56 of \emph{LIPIcs}, pages 2:1--2:25, 2016.
+\newblock \doi{10.4230/LIPIcs.ECOOP.2016.2}.
+
+\bibitem[Clarke et~al.(1999)Clarke, Grumberg, and Peled]{clarke1999model}
+Edmund~M. Clarke, Orna Grumberg, and Doron~A. Peled.
+\newblock \emph{Model Checking}.
+\newblock MIT Press, Cambridge, MA, 1999.
+\newblock ISBN 9780262032704.
+
+\bibitem[Cousot and Cousot(1977)]{cousot1977abstract}
+Patrick Cousot and Radhia Cousot.
+\newblock Abstract interpretation: A unified lattice model for static analysis
+  of programs by construction or approximation of fixpoints.
+\newblock In \emph{Conference Record of the Fourth ACM Symposium on Principles
+  of Programming Languages (POPL)}, pages 238--252, 1977.
+\newblock \doi{10.1145/512950.512973}.
+
+\bibitem[Da~Costa et~al.(2020)Da~Costa, Parr, Sajid, Veselic, Neacsu, and
+  Friston]{dacosta2020active}
+Lancelot Da~Costa, Thomas Parr, Noor Sajid, Sebastijan Veselic, Victorita
+  Neacsu, and Karl Friston.
+\newblock Active inference on discrete state-spaces: A synthesis.
+\newblock \emph{Journal of Mathematical Psychology}, 99:\penalty0 102447, 2020.
+\newblock \doi{10.1016/j.jmp.2020.102447}.
+
+\bibitem[Diskin et~al.(2011)Diskin, Xiong, Czarnecki, Ehrig, Hermann, and
+  Orejas]{diskin2011symmetric}
+Zinovy Diskin, Yingfei Xiong, Krzysztof Czarnecki, Hartmut Ehrig, Frank
+  Hermann, and Fernando Orejas.
+\newblock From state- to delta-based bidirectional model transformations: The
+  symmetric case.
+\newblock In \emph{Proceedings of the 4th International Conference on Model
+  Transformation (ICMT 2011)}, volume 6707 of \emph{Lecture Notes in Computer
+  Science}, pages 61--76, 2011.
+\newblock \doi{10.1007/978-3-642-21732-6_5}.
+
+\bibitem[Ernst et~al.(2007)Ernst, Perkins, Guo, McCamant, Pacheco, Tschantz,
+  and Xiao]{ernst2007daikon}
+Michael~D. Ernst, Jeff~H. Perkins, Philip~J. Guo, Stephen McCamant, Carlos
+  Pacheco, Matthew~S. Tschantz, and Chen Xiao.
+\newblock The {D}aikon system for dynamic detection of likely invariants.
+\newblock \emph{Science of Computer Programming}, 69\penalty0 (1--3):\penalty0
+  35--45, 2007.
+\newblock \doi{10.1016/j.scico.2007.01.015}.
 
 \bibitem[Feng et~al.(2020)Feng, Guo, Tang, Duan, Feng, Gong, Shou, Qin, Liu,
   Jiang, and Zhou]{feng2020codebert}
@@ -38,6 +115,29 @@ Zhangyin Feng, Daya Guo, Duyu Tang, Nan Duan, Xiaocheng Feng, Ming Gong, Linjun
   EMNLP 2020}, pages 1536--1547, 2020.
 \newblock \doi{10.18653/v1/2020.findings-emnlp.139}.
 
+\bibitem[Fey and Lenssen(2019)]{fey2019pyg}
+Matthias Fey and Jan~Eric Lenssen.
+\newblock Fast graph representation learning with {PyTorch} {G}eometric.
+\newblock In \emph{ICLR Workshop on Representation Learning on Graphs and
+  Manifolds}, 2019.
+
+\bibitem[Fong and Spivak(2019)]{fong2019sevensketches}
+Brendan Fong and David~I. Spivak.
+\newblock \emph{Seven Sketches in Compositionality: An Invitation to Applied
+  Category Theory}.
+\newblock Cambridge University Press, Cambridge, UK, 2019.
+\newblock URL \url{https://arxiv.org/abs/1803.05316}.
+
+\bibitem[Foster et~al.(2007)Foster, Greenwald, Moore, Pierce, and
+  Schmitt]{foster2007lenses}
+J.~Nathan Foster, Michael~B. Greenwald, Jonathan~T. Moore, Benjamin~C. Pierce,
+  and Alan Schmitt.
+\newblock Combinators for bidirectional tree transformations: A linguistic
+  approach to the view-update problem.
+\newblock \emph{ACM Transactions on Programming Languages and Systems},
+  29\penalty0 (3):\penalty0 Article 17, 2007.
+\newblock \doi{10.1145/1232420.1232424}.
+
 \bibitem[Friston(2010)]{friston2010free}
 Karl Friston.
 \newblock The free-energy principle: a unified brain theory?
@@ -45,12 +145,106 @@ Karl Friston.
   127--138, 2010.
 \newblock \doi{10.1038/nrn2787}.
 
+\bibitem[Gulwani(2011)]{gulwani2011flashfill}
+Sumit Gulwani.
+\newblock Automating string processing in spreadsheets using input-output
+  examples.
+\newblock In \emph{Proceedings of the 38th Annual ACM SIGPLAN-SIGACT Symposium
+  on Principles of Programming Languages (POPL 2011)}, pages 317--330, 2011.
+\newblock \doi{10.1145/1926385.1926358}.
+
+\bibitem[Guo et~al.(2021)Guo, Ren, Lu, Feng, Tang, Liu, Zhou, Duan,
+  Svyatkovskiy, Fu, Tufano, Deng, Clement, Drain, Sundaresan, Yin, Jiang, and
+  Zhou]{guo2021graphcodebert}
+Daya Guo, Shuo Ren, Shuai Lu, Zhangyin Feng, Duyu Tang, Shujie Liu, Long Zhou,
+  Nan Duan, Alexey Svyatkovskiy, Shengyu Fu, Michele Tufano, Shao~Kun Deng,
+  Colin Clement, Dawn Drain, Neel Sundaresan, Jian Yin, Daxin Jiang, and Ming
+  Zhou.
+\newblock {GraphCodeBERT}: Pre-training code representations with data flow.
+\newblock In \emph{9th International Conference on Learning Representations
+  (ICLR)}, 2021.
+\newblock URL \url{https://openreview.net/forum?id=jLoC4ez43PZ}.
+
+\bibitem[Hafner et~al.(2023)Hafner, Pasukonis, Ba, and
+  Lillicrap]{hafner2023dreamerv3}
+Danijar Hafner, Jurgis Pasukonis, Jimmy Ba, and Timothy Lillicrap.
+\newblock Mastering diverse domains through world models, 2023.
+\newblock URL \url{https://arxiv.org/abs/2301.04104}.
+
+\bibitem[Heins et~al.(2022)Heins, Millidge, Demekas, Klein, Friston, Couzin,
+  and Tschantz]{heins2022pymdp}
+Conor Heins, Beren Millidge, Daphne Demekas, Brennan Klein, Karl Friston,
+  Iain~D. Couzin, and Alexander Tschantz.
+\newblock pymdp: A {P}ython library for active inference in discrete state
+  spaces.
+\newblock \emph{Journal of Open Source Software}, 7\penalty0 (73):\penalty0
+  4098, 2022.
+\newblock \doi{10.21105/joss.04098}.
+
+\bibitem[Hofmann et~al.(2011)Hofmann, Pierce, and Wagner]{hofmann2011edit}
+Martin Hofmann, Benjamin~C. Pierce, and Daniel Wagner.
+\newblock Edit lenses.
+\newblock In \emph{Proceedings of the 38th Annual ACM SIGPLAN-SIGACT Symposium
+  on Principles of Programming Languages (POPL 2011)}, pages 495--508, 2011.
+\newblock \doi{10.1145/1926385.1926392}.
+
+\bibitem[Lack and Sobocinski(2004)]{lack2004adhesive}
+Stephen Lack and Pawel Sobocinski.
+\newblock Adhesive categories.
+\newblock In \emph{Proceedings of the 7th International Conference on
+  Foundations of Software Science and Computation Structures (FoSSaCS 2004)},
+  volume 2987 of \emph{Lecture Notes in Computer Science}, pages 273--288,
+  2004.
+\newblock \doi{10.1007/978-3-540-24727-2_20}.
+
+\bibitem[Lattner and Adve(2004)]{lattner2004llvm}
+Chris Lattner and Vikram Adve.
+\newblock {LLVM}: A compilation framework for lifelong program analysis and
+  transformation.
+\newblock In \emph{Proceedings of the 2004 International Symposium on Code
+  Generation and Optimization (CGO)}, pages 75--86, 2004.
+\newblock \doi{10.1109/CGO.2004.1281665}.
+
+\bibitem[Lattner et~al.(2021)Lattner, Amini, Bondhugula, Cohen, Davis, Pienaar,
+  Riddle, Shpeisman, Vasilache, and Zinenko]{lattner2021mlir}
+Chris Lattner, Mehdi Amini, Uday Bondhugula, Albert Cohen, Andy Davis, Jacques
+  Pienaar, River Riddle, Tatiana Shpeisman, Nicolas Vasilache, and Oleksandr
+  Zinenko.
+\newblock {MLIR}: Scaling compiler infrastructure for domain specific
+  computation.
+\newblock In \emph{2021 IEEE/ACM International Symposium on Code Generation and
+  Optimization (CGO)}, pages 2--14, 2021.
+\newblock \doi{10.1109/CGO51591.2021.9370308}.
+
 \bibitem[Li et~al.(2016)Li, Tarlow, Brockschmidt, and Zemel]{li2016gated}
 Yujia Li, Daniel Tarlow, Marc Brockschmidt, and Richard Zemel.
 \newblock Gated graph sequence neural networks.
 \newblock In \emph{Proceedings of the International Conference on Learning
   Representations (ICLR)}, 2016.
 \newblock URL \url{https://arxiv.org/abs/1511.05493}.
+
+\bibitem[Luk et~al.(2005)Luk, Cohn, Muth, Patil, Klauser, Lowney, Wallace,
+  Reddi, and Hazelwood]{luk2005pin}
+Chi-Keung Luk, Robert Cohn, Robert Muth, Harish Patil, Artur Klauser, Geoff
+  Lowney, Steven Wallace, Vijay~Janapa Reddi, and Kim Hazelwood.
+\newblock Pin: Building customized program analysis tools with dynamic
+  instrumentation.
+\newblock In \emph{Proceedings of the 2005 ACM SIGPLAN Conference on
+  Programming Language Design and Implementation (PLDI)}, pages 190--200, 2005.
+\newblock \doi{10.1145/1065010.1065034}.
+
+\bibitem[Niu and Spivak(2023)]{niu2023polynomial}
+Nelson Niu and David~I. Spivak.
+\newblock Polynomial functors: A mathematical theory of interaction, 2023.
+\newblock URL \url{https://arxiv.org/abs/2312.00990}.
+
+\bibitem[Parr et~al.(2022)Parr, Pezzulo, and Friston]{parr2022active}
+Thomas Parr, Giovanni Pezzulo, and Karl~J. Friston.
+\newblock \emph{Active Inference: The Free Energy Principle in Mind, Brain, and
+  Behavior}.
+\newblock MIT Press, Cambridge, MA, 2022.
+\newblock ISBN 9780262045353.
+\newblock \doi{10.7551/mitpress/12441.001.0001}.
 
 \bibitem[Peng(2011)]{peng2011reproducible}
 Roger~D. Peng.
@@ -66,6 +260,33 @@ Franco Scarselli, Marco Gori, Ah~Chung Tsoi, Markus Hagenbuchner, and Gabriele
 \newblock In \emph{IEEE International Joint Conference on Neural Networks},
   pages 1--8, 2009.
 \newblock \doi{10.1109/IJCNN.2009.5178198}.
+
+\bibitem[Smith et~al.(2022)Smith, Friston, and Whyte]{smith2022stepbystep}
+Ryan Smith, Karl~J. Friston, and Christopher~J. Whyte.
+\newblock A step-by-step tutorial on active inference and its application to
+  empirical data.
+\newblock \emph{Journal of Mathematical Psychology}, 107:\penalty0 102632,
+  2022.
+\newblock \doi{10.1016/j.jmp.2021.102632}.
+
+\bibitem[Solar-Lezama(2008)]{solar2008sketching}
+Armando Solar-Lezama.
+\newblock \emph{Program Synthesis by Sketching}.
+\newblock PhD thesis, University of California, Berkeley, 2008.
+
+\bibitem[Spivak(2020)]{spivak2020poly}
+David~I. Spivak.
+\newblock Poly: An abundant categorical setting for mode-dependent dynamics,
+  2020.
+\newblock URL \url{https://arxiv.org/abs/2005.01894}.
+
+\bibitem[Wei et~al.(2020)Wei, Goyal, Durrett, and Dillig]{wei2020lambdanet}
+Jiayi Wei, Maruth Goyal, Greg Durrett, and Isil Dillig.
+\newblock {LambdaNet}: Probabilistic type inference using graph neural
+  networks.
+\newblock In \emph{8th International Conference on Learning Representations
+  (ICLR)}, 2020.
+\newblock URL \url{https://openreview.net/forum?id=Hkx6hANtwH}.
 
 \bibitem[Wu et~al.(2021)Wu, Pan, Chen, Long, Zhang, and
   Yu]{wu2020comprehensive}

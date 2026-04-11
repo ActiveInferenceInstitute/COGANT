@@ -16,7 +16,12 @@ _TOOLS_DIR = Path(__file__).parent
 _REPO_ROOT = _TOOLS_DIR.parent
 sys.path.insert(0, str(_TOOLS_DIR))
 
-from manuscript_vars import MANUSCRIPT_VARS
+from manuscript_vars import (
+    MANUSCRIPT_VARS,
+    format_value_for_path,
+    resolve_path,
+    substitute_text,
+)
 
 METRICS_PATH = _REPO_ROOT / "cogant" / "evaluation" / "METRICS.yaml"
 
@@ -26,32 +31,12 @@ def load_metrics() -> dict:
         return yaml.safe_load(f)
 
 
-def resolve_path(data: dict, dotpath: str):
-    parts = dotpath.split(".")
-    for p in parts:
-        if isinstance(data, dict):
-            data = data.get(p)
-        else:
-            return None
-    return data
-
-
 def inject(text: str, metrics: dict, dry_run: bool = False) -> tuple[str, list[str]]:
     """Substitute {{VAR}} patterns. Returns (new_text, list_of_substitutions)."""
-    substitutions = []
-    for var, path in MANUSCRIPT_VARS.items():
-        value = resolve_path(metrics, path)
-        if value is None:
-            continue
-        if isinstance(value, float):
-            formatted = f"{value:.4f}" if "epsilon" in path else f"{value:.1f}"
-        else:
-            formatted = str(value)
-        if var in text:
-            substitutions.append(f"  {var} → {formatted} (from {path})")
-            if not dry_run:
-                text = text.replace(var, formatted)
-    return text, substitutions
+    new_text, substitutions = substitute_text(text, metrics)
+    if dry_run:
+        return text, substitutions
+    return new_text, substitutions
 
 
 def report(metrics: dict) -> None:
@@ -65,7 +50,10 @@ def report(metrics: dict) -> None:
     print(f"{'-' * col_var}  {'-' * col_path}  {'-' * 20}")
     for var, path in sorted(MANUSCRIPT_VARS.items()):
         value = resolve_path(metrics, path)
-        val_str = str(value) if value is not None else "<not found>"
+        if value is None:
+            val_str = "<not found>"
+        else:
+            val_str = format_value_for_path(path, value)
         print(f"{var:<{col_var}}  {path:<{col_path}}  {val_str}")
 
 

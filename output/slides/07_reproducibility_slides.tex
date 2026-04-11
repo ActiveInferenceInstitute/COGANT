@@ -171,8 +171,8 @@ filesystem snapshot. Features that pull in external models (for example
 optional name or documentation embeddings consumed by the Generalized
 Notation Notation exporter) introduce variability unless models and
 seeds are fixed; the Generalized Notation Notation export document
-(\texttt{../cogant/docs/GNN\_EXPORT.md}) calls out embedding dimensions
-and optional behavior.
+(\texttt{../cogant/docs/export/README.md}) calls out embedding
+dimensions and optional behavior.
 \end{block}
 
 \begin{block}{Relation to the template repository}
@@ -202,13 +202,11 @@ scores fall within \([0, 1]\) and that provenance records are non-empty
 for every node and edge. A graph that fails integrity checks receives a
 FAIL validation status; downstream export is blocked.
 
-\textbf{SchemaChecker.} Validates each IR artifact against its JSON
-schema (versioned alongside the COGANT package). Schema violations --
+\textbf{SchemaValidator.} Validates each IR artifact against its schema
+contracts (versioned alongside the COGANT package). Schema violations --
 such as missing required fields, incorrect types, or unknown enum values
-in \texttt{NodeKind} or \texttt{SemanticRole} -- are classified as ERROR
-or FATAL depending on severity. Schema versions are recorded in the
-validation report so that consumers can verify compatibility with their
-import code.
+in \texttt{NodeKind} or \texttt{SemanticRole} -- are classified by
+severity in the validation report.
 
 \textbf{ProvenanceChecker.} Audits the provenance chain: every assertion
 in the semantic mapping must trace back to at least one evidence source
@@ -220,87 +218,92 @@ appear as warnings rather than errors, since partial provenance is
 expected for heuristic rules.
 
 Together, these gates ensure that exported bundles meet a minimum
-quality bar before reaching downstream models. The thresholds are
-configurable (see \texttt{../cogant/docs/VALIDATION.md}); defaults
-require \(\geq 95\%\) coverage, mean confidence \(\geq 0.85\), and zero
-schema violations.
-\end{block}
+quality bar before reaching downstream models. Thresholds and policy
+defaults are configurable and documented in
+\texttt{../cogant/docs/validation/README.md}.
 
-\begin{block}{Pipeline checkpoint and resume behavior}
-\protect\phantomsection\label{pipeline-checkpoint-and-resume-behavior}
-The pipeline writes a checkpoint file after each successfully completed
-stage. The checkpoint records the stage name, completion timestamp,
-input hash, and output hash. On a subsequent invocation with
-\texttt{-\/-resume} (or \texttt{PipelineConfig.resume\ =\ True}), the
-runner reads the checkpoint file, verifies that the input hash for each
-completed stage still matches the current source tree, and skips stages
-whose outputs are already valid. If a source file has changed, the
-runner invalidates the affected stage and all downstream stages, then
-re-executes from the earliest invalidated point.
-
-Checkpoints are stored as JSON under the configured
-\texttt{output\_dir}:
-
-\begin{verbatim}
-output/
-  .cogant_checkpoint.json
-\end{verbatim}
-
-This mechanism is particularly useful during iterative development:
-after an initial full run, changing a single source file triggers only
-re-parsing, graph construction, and downstream stages for the affected
-subgraph, rather than re-analyzing the entire repository.
-\end{block}
-
-\begin{block}{Output manifest structure}
-\protect\phantomsection\label{output-manifest-structure}
-Each pipeline run produces a manifest file (\texttt{manifest.json})
-alongside the exported artifacts. The manifest provides a
-machine-readable inventory of everything the run produced:
+The concrete shape of a validation report is the
+\texttt{ValidationReport} dataclass defined in
+\texttt{../cogant/py/cogant/validate/report.py}, which bundles the
+timestamp, the model identifier, a boolean \texttt{is\_valid} flag,
+numerical \texttt{coverage\_score} and \texttt{confidence\_score} fields
+in \([0, 1]\), a free-form human-readable \texttt{summary} string, and a
+list of \texttt{ValidationIssue} records. Each \texttt{ValidationIssue}
+(defined in \texttt{../cogant/py/cogant/validate/schema\_check.py})
+carries a stable \texttt{id}, a \texttt{severity} of \texttt{error},
+\texttt{warning}, or \texttt{info}, a \texttt{category} of
+\texttt{schema}, \texttt{integrity}, \texttt{provenance}, or
+\texttt{coverage}, the set of \texttt{affected\_ids}, and an optional
+\texttt{recommendation} string. On a clean calculator run, for example,
+the report has the following shape:
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{\{}
-  \DataTypeTok{"cogant\_version"}\FunctionTok{:} \StringTok{"0.1.0"}\FunctionTok{,}
-  \DataTypeTok{"run\_id"}\FunctionTok{:} \StringTok{"run\_20260408\_143012"}\FunctionTok{,}
-  \DataTypeTok{"timestamp"}\FunctionTok{:} \StringTok{"2026{-}04{-}08T14:30:12Z"}\FunctionTok{,}
-  \DataTypeTok{"input\_hash"}\FunctionTok{:} \StringTok{"sha256:a1b2c3..."}\FunctionTok{,}
-  \DataTypeTok{"config\_hash"}\FunctionTok{:} \StringTok{"sha256:d4e5f6..."}\FunctionTok{,}
-  \DataTypeTok{"stages\_completed"}\FunctionTok{:} \OtherTok{[}\StringTok{"discovery"}\OtherTok{,} \StringTok{"parsing"}\OtherTok{,} \StringTok{"repo\_ir"}\OtherTok{,} \StringTok{"graph"}\OtherTok{,}
-                        \StringTok{"translate"}\OtherTok{,} \StringTok{"validate"}\OtherTok{,} \StringTok{"export"}\OtherTok{]}\FunctionTok{,}
-  \DataTypeTok{"stages\_skipped"}\FunctionTok{:} \OtherTok{[}\StringTok{"statespace"}\OtherTok{,} \StringTok{"process"}\OtherTok{]}\FunctionTok{,}
-  \DataTypeTok{"artifacts"}\FunctionTok{:} \OtherTok{[}
-    \FunctionTok{\{}\DataTypeTok{"path"}\FunctionTok{:} \StringTok{"model.gnn.json"}\FunctionTok{,} \DataTypeTok{"format"}\FunctionTok{:} \StringTok{"json"}\FunctionTok{,} \DataTypeTok{"size\_bytes"}\FunctionTok{:} \DecValTok{2048576}\FunctionTok{,}
-     \DataTypeTok{"hash"}\FunctionTok{:} \StringTok{"sha256:..."}\FunctionTok{\}}\OtherTok{,}
-    \FunctionTok{\{}\DataTypeTok{"path"}\FunctionTok{:} \StringTok{"model.pyg.pt"}\FunctionTok{,}   \DataTypeTok{"format"}\FunctionTok{:} \StringTok{"pytorch\_geometric"}\FunctionTok{,} \DataTypeTok{"size\_bytes"}\FunctionTok{:} \DecValTok{1024000}\FunctionTok{,}
-     \DataTypeTok{"hash"}\FunctionTok{:} \StringTok{"sha256:..."}\FunctionTok{\}}\OtherTok{,}
-    \FunctionTok{\{}\DataTypeTok{"path"}\FunctionTok{:} \StringTok{"validation\_report.json"}\FunctionTok{,} \DataTypeTok{"format"}\FunctionTok{:} \StringTok{"json"}\FunctionTok{,} \DataTypeTok{"size\_bytes"}\FunctionTok{:} \DecValTok{8192}\FunctionTok{,}
-     \DataTypeTok{"hash"}\FunctionTok{:} \StringTok{"sha256:..."}\FunctionTok{\}}
-  \OtherTok{]}\FunctionTok{,}
-  \DataTypeTok{"statistics"}\FunctionTok{:} \FunctionTok{\{}
-    \DataTypeTok{"nodes"}\FunctionTok{:} \DecValTok{320}\FunctionTok{,}
-    \DataTypeTok{"edges"}\FunctionTok{:} \DecValTok{1250}\FunctionTok{,}
-    \DataTypeTok{"mean\_confidence"}\FunctionTok{:} \FloatTok{0.92}\FunctionTok{,}
-    \DataTypeTok{"validation\_status"}\FunctionTok{:} \StringTok{"PASS"}
-  \FunctionTok{\}}
+  \DataTypeTok{"id"}\FunctionTok{:} \StringTok{"report\_calculator\_20260410T081234Z"}\FunctionTok{,}
+  \DataTypeTok{"schema\_name"}\FunctionTok{:} \StringTok{"calculator"}\FunctionTok{,}
+  \DataTypeTok{"validated\_at"}\FunctionTok{:} \StringTok{"2026{-}04{-}10T08:12:34Z"}\FunctionTok{,}
+  \DataTypeTok{"model\_id"}\FunctionTok{:} \StringTok{"model\_calculator"}\FunctionTok{,}
+  \DataTypeTok{"is\_valid"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{,}
+  \DataTypeTok{"coverage\_score"}\FunctionTok{:} \FloatTok{1.0}\FunctionTok{,}
+  \DataTypeTok{"confidence\_score"}\FunctionTok{:} \FloatTok{0.94}\FunctionTok{,}
+  \DataTypeTok{"summary"}\FunctionTok{:} \StringTok{"Validation PASS — 0 errors, 0 warnings, 12/12 nodes covered"}\FunctionTok{,}
+  \DataTypeTok{"issues"}\FunctionTok{:} \OtherTok{[]}\FunctionTok{,}
+  \DataTypeTok{"details"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"gnn\_validator\_score"}\FunctionTok{:} \FloatTok{100.0}\FunctionTok{,} \DataTypeTok{"elapsed\_ms"}\FunctionTok{:} \DecValTok{73}\FunctionTok{\}}
 \FunctionTok{\}}
 \end{Highlighting}
 \end{Shaded}
 
-Storing per-artifact SHA-256 hashes enables consumers to verify that
-exported bundles have not been modified after generation. When
-publishing datasets derived from COGANT exports, including the manifest
-alongside the data satisfies the reproducibility requirements outlined
-by {[}@peng2011reproducible{]}: any researcher with the same source
-tree, COGANT version, and configuration can regenerate the artifacts and
-compare hashes.
+When one of the gates fires, the same \texttt{issues} list accumulates
+structured records of the form:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"id"}\FunctionTok{:} \StringTok{"prov\_001"}\FunctionTok{,}
+  \DataTypeTok{"severity"}\FunctionTok{:} \StringTok{"warning"}\FunctionTok{,}
+  \DataTypeTok{"category"}\FunctionTok{:} \StringTok{"provenance"}\FunctionTok{,}
+  \DataTypeTok{"message"}\FunctionTok{:} \StringTok{"Mapping \textquotesingle{}map\_42\textquotesingle{} declared STATIC\_PLUS\_RUNTIME but has no dynamic\_trace evidence source"}\FunctionTok{,}
+  \DataTypeTok{"affected\_ids"}\FunctionTok{:} \OtherTok{[}\StringTok{"map\_42"}\OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"recommendation"}\FunctionTok{:} \StringTok{"Re{-}run with {-}{-}coverage/{-}{-}trace inputs, or downgrade the declared tier in the rule"}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Errors block export (\texttt{is\_valid} flips to \texttt{false} and the
+pipeline refuses to write the \texttt{gnn\_package/} directory);
+warnings are recorded in the bundle but do not block. Downstream
+consumers therefore only need to inspect the top-level
+\texttt{is\_valid} flag plus any \texttt{severity\ ==\ "error"} entries
+to decide whether a bundle is safe to ingest.
+\end{block}
+
+\begin{block}{Current runner behavior vs template checkpointing}
+\protect\phantomsection\label{current-runner-behavior-vs-template-checkpointing}
+The current \texttt{cogant.api.pipeline.PipelineRunner} executes stages
+in order and records stage outputs in a \texttt{Bundle}, but it does
+\textbf{not} currently expose built-in checkpoint/resume flags or a
+dedicated \texttt{manifest.json} writer in that module. Reproducibility
+is therefore captured today by persisting \texttt{bundle.json}
+(\texttt{Bundle.save\_json}), pinning config and versions, and retaining
+exported artifacts.
+
+If COGANT is promoted into the template project workflow under
+\texttt{projects/}, repository-level checkpoint utilities from
+\texttt{infrastructure/core/runtime/checkpoint.py} can be used by the
+outer orchestration layer. That template capability should be treated as
+infrastructure-level behavior, distinct from the current COGANT package
+runner.
 \end{block}
 
 \begin{block}{Data ethics and licensing}
 \protect\phantomsection\label{data-ethics-and-licensing}
 Exported graphs can contain identifiers and comments from source code.
 Redistribution of derived graphs must respect the licenses of input
-repositories and organizational data policies.
+repositories and organizational data policies. For a \textbf{checklist}
+(version pins, lockfiles, input hashes, manifest verification) when
+publishing or citing a run, see
+\href{06_05_reproducible_recording.md}{\texttt{06\_05\_reproducible\_recording.md}}.
 \end{block}
 \end{frame}
 

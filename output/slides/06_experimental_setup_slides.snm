@@ -6,4 +6,8 @@
 \beamer@slide {python-ast-parser-capabilities}{7}
 \beamer@slide {progressive-ir-stages}{8}
 \beamer@slide {performance-characteristics}{9}
-\beamer@slide {what-to-record}{10}
+\beamer@slide {measured-runs-on-packaged-fixtures}{10}
+\beamer@slide {test-matrix-and-coverage}{11}
+\beamer@slide {mutation-testing}{12}
+\beamer@slide {benchmark-suite-shipped}{13}
+\beamer@slide {what-to-record}{14}

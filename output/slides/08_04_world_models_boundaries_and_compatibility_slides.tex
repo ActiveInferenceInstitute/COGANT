@@ -1,0 +1,162 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\section{World models, active inference, boundaries, and forward
+compatibility}\label{world-models-active-inference-boundaries-and-forward-compatibility}
+
+\begin{frame}{World models from code}
+\protect\phantomsection\label{world-models-from-code}
+The central theoretical claim of COGANT is that source code implicitly
+defines a generative model of system behaviour, a claim that is
+structurally analogous to the \emph{world-model} line of
+reinforcement-learning work exemplified by Dreamer V3
+{[}@hafner2023dreamerv3{]}: an encoder maps observations to a latent
+state, latent dynamics predict forward, and a decoder maps back. The
+Dreamer architecture learns the world model from observation
+trajectories. COGANT extracts it symbolically from the program graph;
+the comparison is productive precisely because it clarifies that COGANT
+produces an explicit, interpretable state-space and transition structure
+where Dreamer produces an opaque learned latent. Both are generative
+models that a downstream Active Inference agent {[}@friston2010free;
+@parr2022active; @dacosta2020active; @heins2022pymdp{]} can treat as the
+\(p(o, s)\) component of a variational free-energy functional.
+\end{frame}
+
+\begin{frame}[fragile]{Active inference and program behavior}
+\protect\phantomsection\label{active-inference-and-program-behavior}
+The state-space IR in COGANT's pipeline (states, actions, transitions,
+observations) shares structural parallels with \textbf{active inference}
+formulations {[}@friston2010free; @parr2022active{]}, where an agent
+maintains beliefs about hidden states and selects actions to minimize
+prediction error. The discrete-state synthesis presented in
+{[}@dacosta2020active{]} is the closest formal target of COGANT's
+compilation: variables, actions, observation modalities, and transition
+structures in the Generalized Notation Notation bundle map directly onto
+the tuples required by a discrete-state active inference agent, and the
+step-by-step construction protocol of {[}@smith2022stepbystep{]} can be
+followed literally against those bundles. PyMDP {[}@heins2022pymdp{]}
+provides a reference Python runtime that executes exactly this form of
+agent, making it a natural downstream consumer of COGANT exports. In the
+program analysis context, the ``agent'' is the analysis pipeline itself:
+it observes code artifacts, maintains beliefs about program behavior
+(the state-space model), and refines those beliefs as new evidence
+(dynamic traces, coverage data) arrives.
+
+This connection is analogical: the \texttt{ConfidenceModel} in
+\texttt{../cogant/py/cogant/translate/confidence.py} aggregates evidence
+and penalties in a way that suggests belief revision, but it is not a
+Bayesian posterior. Future work could formalize a tighter link by
+casting rule application as variational inference, where a fixpoint
+would represent an approximate posterior over program semantics.
+\end{frame}
+
+\begin{frame}[fragile]{Boundaries}
+\protect\phantomsection\label{boundaries}
+COGANT does not subsume formal verification, interactive theorem
+proving, or full interprocedural pointer analysis unless implemented as
+explicit future stages.
+\href{../cogant/docs/reference/implementation_status.md}{\texttt{../cogant/docs/reference/implementation\_status.md}}
+marks Rust acceleration and additional parsers as staged; the manuscript
+should be read together with that table for up-to-date scope.
+\end{frame}
+
+\begin{frame}[fragile]{Forward compatibility}
+\protect\phantomsection\label{forward-compatibility}
+Promoting COGANT into
+\href{../../../projects/}{\texttt{../../../projects/}} integrates
+manuscript PDF rendering with the template's validation gates.
+Cross-references in this folder use paths \textbf{relative to these
+Markdown files} (for example
+\href{../cogant/docs/}{\texttt{../cogant/docs/}}) so links stay stable
+when the tree moves.
+\end{frame}
+
+\end{document}

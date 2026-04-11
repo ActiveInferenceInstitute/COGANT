@@ -2,8 +2,8 @@
 \protect\phantomsection\label{api-and-workflows}
 This section describes the programmatic surface that the shipped Python
 package exposes in practice, aligned with
-\texttt{../cogant/docs/API\_GUIDE.md} and
-\texttt{../cogant/VERIFICATION\_REPORT.md}. It is \textbf{not} an
+\texttt{../cogant/docs/api/README.md} and the inventory-style notes
+under \texttt{../cogant/docs/reference/}. It is \textbf{not} an
 empirical benchmark section; COGANT does not ship comparative timing
 claims in the manuscript layer. Instead, it records the \textbf{surface
 area} users can rely on: two complementary entry points (a Session for
@@ -13,12 +13,14 @@ human-in-the-loop curation.
 
 \begin{block}{Session-oriented workflow}
 \protect\phantomsection\label{session-oriented-workflow}
-The Session API is intended for interactive exploration: it is the right
-choice when a user wants to inspect intermediate artifacts between
-stages, iterate on a single repository in a notebook, or debug a
-specific extraction step without committing to a full scripted run. Each
-call returns control to the caller so that the graph, mappings, or
-state-space model can be examined before the next stage is invoked.
+Use \texttt{Session} for interactive exploration, notebook-driven
+debugging, and incremental re-runs where you want to materialize each
+stage's output as a Python attribute. It is the right choice when a user
+wants to inspect intermediate artifacts between stages, iterate on a
+single repository in a notebook, or debug a specific extraction step
+without committing to a full scripted run. Each call returns control to
+the caller so that the graph, mappings, or state-space model can be
+examined before the next stage is invoked.
 
 \texttt{Session.from\_target} accepts a local path or URL, then supports
 a stepwise workflow:
@@ -48,13 +50,14 @@ This path suits interactive notebooks and incremental debugging.
 
 \begin{block}{Pipeline-oriented workflow}
 \protect\phantomsection\label{pipeline-oriented-workflow}
-The Pipeline API is intended for scripted, reproducible batch runs: it
-is the right choice when a user wants to process many repositories with
-a fixed configuration, wire COGANT into CI, or guarantee that every run
-executes the same ordered stages with the same plugin settings. Because
-the whole run is described by a single \texttt{PipelineConfig}, it can
-be checked into version control and replayed without manual
-intervention.
+Use \texttt{PipelineRunner} for scripted, reproducible batch runs where
+all stages are configured up front and the end-state is a single
+\texttt{Bundle}. It is the right choice when a user wants to process
+many repositories with a fixed configuration, wire COGANT into CI, or
+guarantee that every run executes the same ordered stages with the same
+plugin settings. Because the whole run is described by a single
+\texttt{PipelineConfig}, it can be checked into version control and
+replayed without manual intervention.
 
 \texttt{PipelineRunner} with \texttt{PipelineConfig} runs an ordered
 list of stages (ingest, static, normalize, graph, translate, state
@@ -67,7 +70,8 @@ accessors described below.
 
 \begin{block}{Bundle accessors}
 \protect\phantomsection\label{bundle-accessors}
-The bundle API exposes summaries and artifacts, including:
+The bundle API exposes stage summaries and convenience render/export
+helpers, including:
 
 \begin{itemize}
 \tightlist
@@ -75,7 +79,8 @@ The bundle API exposes summaries and artifacts, including:
   \texttt{repo\_summary}, \texttt{program\_graph},
   \texttt{state\_space\_model}, \texttt{process\_model}
 \item
-  \texttt{gnn\_markdown} --- human-readable graph summary
+  \texttt{gnn\_markdown} --- compact markdown summary built from
+  \texttt{stage\_results{[}"translate"{]}}
 \item
   \texttt{validation\_report}
 \item
@@ -84,18 +89,21 @@ The bundle API exposes summaries and artifacts, including:
   \texttt{to\_json} / \texttt{save\_json}
 \end{itemize}
 
-The verification report lists these as delivered capabilities for the
-v0.1.0 line.
+For canonical 18-section Generalized Notation Notation artifacts
+(\texttt{model.gnn.md} plus companion JSON), use the export outputs
+documented in \texttt{../cogant/docs/export/README.md};
+\texttt{Bundle.gnn\_markdown()} is intentionally a lightweight report
+surface.
 \end{block}
 
 \begin{block}{Command-line interface}
 \protect\phantomsection\label{command-line-interface}
 The CLI entry point (\texttt{cogant.cli.main}) implements commands such
 as \texttt{init}, \texttt{scan}, \texttt{extract-static},
-\texttt{extract-dynamic}, graph and export verbs, and
-validation-oriented subcommands. Exact flags live in
-\texttt{../cogant/docs/CLI\_GUIDE.md}; the manuscript does not duplicate
-them to avoid drift.
+\texttt{extract-dynamic}, \texttt{graph}, \texttt{translate},
+\texttt{statespace}, \texttt{validate}, and visualization/export
+helpers. Exact flags live in \texttt{../cogant/docs/cli/README.md}; the
+manuscript does not duplicate them to avoid drift.
 \end{block}
 
 \begin{block}{Review API}

@@ -1,12 +1,12 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.3.22)  9 APR 2026 08:49
+This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.3.22)  10 APR 2026 18:03
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
-**/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/07_reproduc
-ibility_slides.tex
+**/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides
+/07_reproducibility_slides.tex
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/07_reproduci
-bility_slides.tex
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+07_reproducibility_slides.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (/usr/local/texlive/2026/texmf-dist/tex/latex/beamer/beamer.cls
@@ -1133,8 +1133,8 @@ File: bkm-dvipdfm.def 2023-12-10 v1.31 bookmark driver for dvipdfm (HO)
 (/usr/local/texlive/2026/texmf-dist/tex/latex/xurl/xurl.sty
 Package: xurl 2022/01/09 v 0.10 modify URL breaks
 )
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/07_reproduci
-bility_slides.aux)
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+07_reproducibility_slides.aux)
 \openout1 = `07_reproducibility_slides.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 128.
@@ -1494,20 +1494,21 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/07_reproduci
-bility_slides.nav)
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+07_reproducibility_slides.nav)
 \openout4 = `07_reproducibility_slides.vrb'.
 
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/07_reproduci
-bility_slides.vrb
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+07_reproducibility_slides.vrb
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
 (Font)              scaled to size 7.8961pt on input line 17.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
 (Font)              scaled to size 5.64008pt on input line 17.
 LaTeX Font Info:    Trying to load font information for OML+lmm on input line 1
 7.
- (/usr/local/texlive/2026/texmf-dist/tex/latex/lm/omllmm.fd
+
+(/usr/local/texlive/2026/texmf-dist/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
@@ -1539,8 +1540,11 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 (/usr/local/texlive/2026/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
-))
-Overfull \vbox (1535.432pt too high) detected at line 305
+)
+LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10.95> not available
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 118.
+)
+Overfull \vbox (1568.50333pt too high) detected at line 308
  []
 
 [1
@@ -1556,21 +1560,21 @@ Overfull \vbox (1535.432pt too high) detected at line 305
 \openout8 = `07_reproducibility_slides.snm'.
 
 
-(/Users/4d/Documents/GitHub/template/projects/cogant/output/slides/07_reproduci
-bility_slides.aux)
+(/Users/4d/Documents/GitHub/template/projects_in_progress/cogant/output/slides/
+07_reproducibility_slides.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 29780 strings out of 468168
- 599894 string characters out of 5432815
- 1204532 words of memory out of 5000000
+ 29782 strings out of 468168
+ 600071 string characters out of 5432815
+ 1203503 words of memory out of 5000000
  57977 multiletter control sequences out of 15000+600000
- 631240 words of font info for 70 fonts, out of 8000000 for 9000
+ 631248 words of font info for 71 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 128i,11n,123p,1088b,641s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 128i,11n,123p,1100b,641s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on /Users/4d/Documents/GitHub/template/projects/cogant/output/sl
-ides/07_reproducibility_slides.pdf (1 page).
+Output written on /Users/4d/Documents/GitHub/template/projects_in_progress/coga
+nt/output/slides/07_reproducibility_slides.pdf (1 page).

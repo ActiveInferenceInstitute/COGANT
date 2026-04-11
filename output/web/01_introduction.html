@@ -169,6 +169,9 @@
       vertical-align: middle;
     }
   </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
 </head>
 <body>
 <h1 id="introduction-and-scope">Introduction and Scope</h1>
@@ -202,7 +205,7 @@ acronym GNN always refers to Generalized Notation Notation.</p>
 <p>A research or engineering group typically has:</p>
 <ul>
 <li><strong>Source code</strong> in one or more languages.</li>
-<li><strong>Analysis goals</strong> that may mix classical queries (who
+<li><strong>Analysis goals</strong> that combine classical queries (who
 calls whom?) with learned models (bug detection, retrieval,
 summarization).</li>
 <li><strong>Tooling fragmentation</strong>: compilers and linters
@@ -211,59 +214,148 @@ produce one shape of facts; PyTorch or JAX expect another.</li>
 <p>COGANT unifies these behind a single pipeline whose intermediate
 artifacts are documented as a progression of IRs (repo IR, program
 graph, semantic mapping, state space, process model, validation), as
-described in <code>../cogant/docs/ARCHITECTURE.md</code> and
-<code>../cogant/docs/SPEC.md</code>.</p>
+described in <code>../cogant/docs/architecture/README.md</code> and
+<code>../cogant/docs/reference/implementation_status.md</code>.</p>
 <h2 id="what-cogant-is-not">What COGANT is not</h2>
 <p>COGANT is not a replacement for a full compiler IR, a theorem prover,
 or a security scanner by itself. It <strong>extracts and
 serializes</strong> program graphs and behavioral sketches for
-downstream use. Language coverage and rule depth follow the
-implementation-status table in the SPEC: Python is the primary front end
-at v0.1.x; additional languages and Rust acceleration are staged as
-documented there.</p>
+downstream use. Language coverage and rule depth follow <a
+href="../cogant/docs/reference/implementation_status.md"><code>../cogant/docs/reference/implementation_status.md</code></a>:
+Python is the primary front end at v0.5.x. JavaScript/TypeScript run
+through optional <code>cogant[multilang]</code> plus
+<code>tree-sitter</code> grammars (including a JS-grammar fallback path
+for <code>.ts</code> on mixed repositories) when installed. Rust
+acceleration is partially wired — <code>cogant._rust</code> exposes a
+PyO3 <code>connected_components</code> FFI behind the
+<code>COGANT_USE_RUST</code> feature flag, with a pure-Python fallback
+for all other code paths as documented there.</p>
+<h2 id="positioning">Positioning</h2>
+<p>COGANT occupies a specific niche in the program-analysis and
+code-modelling landscape that is worth making explicit from the outset.
+Unlike learned code-embedding approaches such as code2vec and code2seq
+<span class="citation"
+data-cites="alon2019code2vec">[@alon2019code2vec]</span>, which map
+programs to opaque distributed representations via AST path attention,
+COGANT produces <strong>interpretable rule-based role
+assignments</strong> that a human reviewer can inspect, edit, or reject
+through the <code>ReviewAPI</code> and that require no training corpus,
+no GPU budget, and no curated supervision signal. Every mapping carries
+a provenance record and a confidence score derived from a transparent
+rule (Equation <span
+class="math inline">\(\ref{eq:confidence-core}\)</span>), so the output
+can be audited in the same way a conventional static analyser’s findings
+are audited <span class="citation"
+data-cites="yamaguchi2014modeling">[@yamaguchi2014modeling]</span>.
+While graph-learning methods such as gated graph neural networks for
+programs <span class="citation"
+data-cites="allamanis2018learning li2016gated">[@allamanis2018learning;
+@li2016gated]</span> train supervised models to predict variable names
+or detect bugs from raw graph topology, COGANT complements that line by
+supplying a typed, confidence-annotated program graph in a documented
+export contract that such models can consume directly (Section 2 and
+<code>../cogant/docs/export/README.md</code>).</p>
+<p>On the Active Inference side, Friston et al.’s free energy principle
+<span class="citation"
+data-cites="friston2010free">[@friston2010free]</span> and the
+discrete-state synthesis of <span class="citation"
+data-cites="dacosta2020active">[@dacosta2020active]</span> provide the
+theoretical foundation for the A/B/C/D matrix formalism, and the PyMDP
+runtime <span class="citation"
+data-cites="heins2022pymdp">[@heins2022pymdp]</span> implements the
+simulation side of that formalism. COGANT sits between those layers: it
+extracts the same matrices directly from an existing codebase — rather
+than asking a human to hand-author them, as <span class="citation"
+data-cites="smith2022stepbystep">[@smith2022stepbystep]</span> walks
+through for small examples — and emits them in the Active Inference
+Institute’s Generalized Notation Notation <span class="citation"
+data-cites="friedman2024gnn">[@friedman2024gnn]</span> so that PyMDP and
+compatible runtimes can execute them without manual translation. No
+other shipped tool combines all three properties: declarative rule-based
+role assignment, typed program-graph extraction with dynamic enrichment,
+and direct GNN/A/B/C/D export compatible with an active-inference
+runtime. Section 8 walks through the feature matrix that makes this
+positioning concrete.</p>
 <h2 id="manuscript-versus-package-docs">Manuscript versus package
 docs</h2>
 <p>The canonical API and CLI details live in:</p>
 <ul>
-<li><code>../cogant/docs/API_GUIDE.md</code> — Session,
+<li><code>../cogant/docs/api/README.md</code> — Session,
 <code>PipelineRunner</code>, <code>Bundle</code>,
 <code>ReviewAPI</code></li>
-<li><code>../cogant/docs/CLI_GUIDE.md</code> — commands and flags</li>
-<li><code>../cogant/docs/GNN_EXPORT.md</code> — Generalized Notation
+<li><code>../cogant/docs/cli/README.md</code> — commands and flags</li>
+<li><code>../cogant/docs/export/README.md</code> — Generalized Notation
 Notation schema, section ordering, and companion interop field contracts
 (including optional PyG/DGL tensor views)</li>
-<li><code>../cogant/docs/PLUGIN_API.md</code> — parsers, rules,
+<li><code>../cogant/docs/plugins/README.md</code> — parsers, rules,
 validators, exporters</li>
-<li><code>../cogant/docs/ARCHITECTURE.md</code> — layers, crates, data
-flow</li>
+<li><code>../cogant/docs/architecture/README.md</code> — layers, crates,
+data flow</li>
 </ul>
 <p>This manuscript summarizes theory and practice for readers who want a
 single linear narrative before diving into those files.</p>
+<h2 id="documentation-map-package-hubs">Documentation map (package
+hubs)</h2>
+<p>The modular docs tree under <a
+href="../cogant/docs/"><code>../cogant/docs/</code></a> is the
+authoritative reference. The MkDocs entry page is <a
+href="../cogant/docs/index.md"><code>../cogant/docs/index.md</code></a>;
+the full module index is <a
+href="../cogant/docs/reference/documentation_modules.md"><code>../cogant/docs/reference/documentation_modules.md</code></a>.
+Beyond the API, CLI, export, plugins, and architecture indexes above,
+editors and agents should route through:</p>
+<ul>
+<li><a
+href="../cogant/docs/reference/README.md"><code>../cogant/docs/reference/README.md</code></a>
+— implementation status, pipeline narratives, onboarding-style
+how-tos</li>
+<li><a
+href="../cogant/docs/rules/README.md"><code>../cogant/docs/rules/README.md</code></a>
+— translation rule framework and mapping definitions</li>
+<li><a
+href="../cogant/docs/validation/README.md"><code>../cogant/docs/validation/README.md</code></a>
+— integrity, schema, and provenance checks</li>
+<li><a
+href="../cogant/docs/security/README.md"><code>../cogant/docs/security/README.md</code></a>
+— threat model and sandboxing notes</li>
+<li><a
+href="../cogant/docs/roadmap/README.md"><code>../cogant/docs/roadmap/README.md</code></a>
+— releases and backlog</li>
+<li><a
+href="../cogant/specs/README.md"><code>../cogant/specs/README.md</code></a>
+— machine-readable schemas and IR contracts</li>
+</ul>
 <h2 id="dual-pythonrust-architecture">Dual Python/Rust architecture</h2>
 <p>COGANT employs a dual-language architecture. The <strong>Python
 orchestration layer</strong> handles session management, pipeline
 coordination, configuration, file discovery, AST parsing, and the plugin
 interface – tasks where developer ergonomics and extensibility matter
 more than raw throughput. The <strong>Rust core</strong>, organized as a
-workspace of seven crates (<code>cogant-core</code>,
+workspace of eight crates (<code>cogant-core</code>,
 <code>cogant-graph</code>, <code>cogant-translate</code>,
-<code>cogant-statespace</code>, <code>cogant-gnn</code>,
-<code>cogant-store</code>, <code>cogant-ffi</code>), implements typed
-graph operations, translation engine internals, state-space structures,
-and Generalized Notation Notation (GNN) formatting – tasks where memory
+<code>cogant-statespace</code>, <code>cogant-store</code>,
+<code>cogant-trace</code>, <code>cogant-gnn</code>,
+<code>cogant-ffi</code>), implements typed graph operations, translation
+internals, trace-oriented plumbing, state-space structures, and
+Generalized Notation Notation (GNN) formatting – tasks where memory
 layout and cache locality dominate wall-clock time. Communication
 between layers flows through PyO3 bindings (<code>cogant-ffi</code>),
 which release the Python GIL during Rust execution to permit concurrent
 stage processing. Where Rust bindings are not yet wired for a code path
 (see the implementation-status table in
-<code>../cogant/docs/SPEC.md</code>), Python fallback implementations
-ensure the pipeline remains functional at the cost of higher latency on
-large repositories.</p>
+<code>../cogant/docs/reference/implementation_status.md</code>), Python
+fallback implementations ensure the pipeline remains functional at the
+cost of higher latency on large repositories.</p>
 <h2 id="roadmap-of-the-following-sections">Roadmap of the following
 sections</h2>
-<p>Section 2 formalizes the program graph and IR progression. Section 3
-describes the realized pipeline behavior and artifacts. Sections 4–7
-cover conclusions, how to run experiments, reproducibility, and related
-work.</p>
+<p>Section 2 formalizes the program graph and IR progression, and states
+the five formal definitions and three termination/completeness/validity
+theorems that govern the rest of the manuscript. Section 3 describes the
+realized pipeline behavior and artifacts. Section 4 provides concrete
+examples and failure modes. Section 5 closes with limitations and
+roadmap. Section 6 covers experimental setup, Section 7 reproducibility,
+Section 8 related work and the COGANT-vs-prior-art feature and
+input/output comparison tables, and Section 9 an ablation study over
+rule families, fixpoint iterations, and A/B/C/D fallback paths.</p>
 </body>
 </html>

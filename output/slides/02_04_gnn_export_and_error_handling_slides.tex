@@ -1,0 +1,141 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\section{GNN export and error-handling
+philosophy}\label{gnn-export-and-error-handling-philosophy}
+
+\begin{frame}[fragile]{GNN export (Generalized Notation Notation)}
+\protect\phantomsection\label{gnn-export-generalized-notation-notation}
+Exports package the program graph and compiled state-space model into
+the Active Inference Institute's \textbf{Generalized Notation Notation}
+plus a small set of interop targets:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{GNN Markdown (\texttt{model.gnn.md})} --- canonical,
+  human-readable Generalized Notation Notation organized into the
+  section order defined in \texttt{../cogant/docs/export/README.md}
+  (Model Metadata, Repository Metadata, Source Coverage, State Space,
+  Observation Modalities, Actions/Policies, Connections, Factors,
+  Transition Structure, Likelihood Structure, Preferences/Constraints,
+  Time Settings, Parameterization, Ontology Mapping, Provenance,
+  Confidence Scores, Rendering Hints, Validation Notes).
+\item
+  \textbf{GNN JSON (\texttt{model.gnn.json})} --- machine-readable
+  equivalent of the markdown sections, plus companion JSON files per
+  section (\texttt{state\_space.json}, \texttt{observations.json},
+  \texttt{actions.json}, \texttt{transitions.json}, and so on).
+\item
+  \textbf{Interop exports} --- GraphML and Parquet for analysis in
+  Gephi/yEd and DuckDB, and optional tensor views (PyTorch Geometric
+  \texttt{Data} objects {[}@fey2019pyg{]}, DGL graphs, HDF5 tables) for
+  downstream graph neural network training pipelines that consume the
+  program graph as a relational tensor.
+\end{itemize}
+
+Node and edge feature breakdowns, section contracts, and the optional
+framework targets are specified in
+\texttt{../cogant/docs/export/README.md}; they determine the structure
+of the emitted notation as well as the effective input dimensionality of
+any downstream model.
+\end{frame}
+
+\begin{frame}{Error handling philosophy}
+\protect\phantomsection\label{error-handling-philosophy}
+The implementation distinguishes fatal configuration or parse failures
+from per-file errors that allow partial results. Validation aggregates
+warnings and inconsistencies into a report that travels with the bundle.
+This mirrors the layered error categories documented in the architecture
+(fatal, error, warning, info).
+\end{frame}
+
+\end{document}

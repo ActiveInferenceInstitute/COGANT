@@ -4,6 +4,5 @@
 \beamer@slide {determinism}{1}
 \beamer@slide {relation-to-the-template-repository}{1}
 \beamer@slide {validation-gates}{1}
-\beamer@slide {pipeline-checkpoint-and-resume-behavior}{1}
-\beamer@slide {output-manifest-structure}{1}
+\beamer@slide {current-runner-behavior-vs-template-checkpointing}{1}
 \beamer@slide {data-ethics-and-licensing}{1}
