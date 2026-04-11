@@ -126,48 +126,45 @@ def get_test_count_total() -> int:
 # ---------------------------------------------------------------------------
 
 def get_test_results_and_coverage() -> tuple[dict[str, int], float]:
-    """Run pytest with coverage, then export JSON. Returns (test_results, coverage_pct).
+    """Read test results from pytest --tb=no summary and coverage.json.
 
-    Both steps are done in a single shell pipeline so .coverage is not
-    garbage-collected between subprocesses.
+    Runs pytest --tb=no -q (fast, no full suite re-run for coverage) then
+    reads coverage.json for the coverage percentage.  This is O(seconds) not
+    O(minutes) because we skip --cov during this invocation — the caller is
+    expected to have already run the suite with coverage separately and
+    committed coverage.json.
     """
     coverage_json = COGANT_DIR / "coverage.json"
+
+    # Run pytest in fast mode to get pass/fail counts (no coverage collection).
+    test_result = {"passing": 0, "failing": 0, "skipped": 0, "xfailed": 0, "xpassed": 0}
     try:
         rc, out = _run(
-            "uv run pytest -q --override-ini='addopts=' --cov=py/cogant -p no:warnings 2>&1"
-            " && uv run coverage json -o coverage.json",
+            "uv run pytest -q --tb=no -p no:warnings --no-header 2>&1",
             cwd=COGANT_DIR,
-            timeout=600,
+            timeout=900,
         )
+        for line in out.splitlines():
+            if re.search(r"\d+\s+passed", line) or re.search(r"\d+\s+failed", line):
+                mp = re.search(r"(\d+)\s+passed", line)
+                mf = re.search(r"(\d+)\s+failed", line)
+                ms = re.search(r"(\d+)\s+skipped", line)
+                mxf = re.search(r"(\d+)\s+xfailed", line)
+                mxp = re.search(r"(\d+)\s+xpassed", line)
+                if mp:
+                    test_result["passing"] = int(mp.group(1))
+                if mf:
+                    test_result["failing"] = int(mf.group(1))
+                if ms:
+                    test_result["skipped"] = int(ms.group(1))
+                if mxf:
+                    test_result["xfailed"] = int(mxf.group(1))
+                if mxp:
+                    test_result["xpassed"] = int(mxp.group(1))
     except subprocess.TimeoutExpired:
-        print("WARNING: pytest run timed out", file=sys.stderr)
-        return (
-            {"passing": 0, "failing": 0, "skipped": 0, "xfailed": 0, "xpassed": 0},
-            0.0,
-        )
+        print("WARNING: pytest run timed out; test counts will be 0", file=sys.stderr)
 
-    # Parse test counts from summary line
-    # Example: "2059 passed, 86 skipped, 2 xfailed, 1 xpassed, 12 failed in 75s"
-    test_result = {"passing": 0, "failing": 0, "skipped": 0, "xfailed": 0, "xpassed": 0}
-    for line in out.splitlines():
-        if re.search(r"\d+\s+passed", line) or re.search(r"\d+\s+failed", line):
-            mp = re.search(r"(\d+)\s+passed", line)
-            mf = re.search(r"(\d+)\s+failed", line)
-            ms = re.search(r"(\d+)\s+skipped", line)
-            mxf = re.search(r"(\d+)\s+xfailed", line)
-            mxp = re.search(r"(\d+)\s+xpassed", line)
-            if mp:
-                test_result["passing"] = int(mp.group(1))
-            if mf:
-                test_result["failing"] = int(mf.group(1))
-            if ms:
-                test_result["skipped"] = int(ms.group(1))
-            if mxf:
-                test_result["xfailed"] = int(mxf.group(1))
-            if mxp:
-                test_result["xpassed"] = int(mxp.group(1))
-
-    # Parse coverage percent
+    # Read coverage from coverage.json (expected to exist from last --cov run).
     coverage_pct = 0.0
     if coverage_json.exists():
         try:
@@ -176,12 +173,6 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float]:
             coverage_pct = round(float(totals.get("percent_covered", 0.0)), 2)
         except (json.JSONDecodeError, KeyError):
             pass
-
-    if coverage_pct == 0.0:
-        # Fallback: parse TOTAL line from stdout
-        m = re.search(r"TOTAL\s+[\d\s]+([\d.]+)%", out)
-        if m:
-            coverage_pct = float(m.group(1))
 
     return test_result, coverage_pct
 
