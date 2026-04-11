@@ -324,9 +324,11 @@ class Finding:
     manuscript_claim: str     # the raw matched text
     extracted_value: object   # numeric or string extracted
     metrics_value: object     # what METRICS.yaml says
-    status: str               # MATCH | MISMATCH | EXPECTED_MISMATCH | UNVERIFIED | STALE_ARCHIVE
+    status: str               # MATCH | CLOSE | MISMATCH | EXPECTED_MISMATCH | UNVERIFIED | STALE_ARCHIVE
     context: str              # surrounding text (~80 chars)
     note: str = ""
+    confidence: str = "LOW"   # HIGH | MEDIUM | LOW
+    delta_percent: float | None = None  # |was - should| / |should| * 100, when numeric
 
 
 def get_expected_mismatch_note(pattern_name: str, extracted) -> str:

@@ -66,6 +66,24 @@ Entries marked with "(details need verification)" have authors and approximate y
 **Key contribution**: Techniques for syntactic and semantic normalization that make code from different projects comparable, including identifier canonicalization and structural alignment.
 **Connection**: Relevant to COGANT's normalization stage (`cogant.normalize`), which must produce consistent graph representations regardless of project-specific coding conventions. Cross-project consistency is essential for any future multi-repository COGANT deployment.
 
+### [BATTAGLIA_2018] Battaglia, Hamrick, Bapst, Sanchez-Gonzalez, et al. (2018) — "Relational Inductive Biases, Deep Learning, and Graph Networks"
+*arXiv: 1806.01261*
+**Relevance**: A position paper introducing the Graph Network (GN) block as a unified framework for graph-to-graph neural computations, subsuming GCNs, attention networks, and message-passing networks as special cases.
+**Key contribution**: A single architectural primitive — the GN block with per-node, per-edge, and global update functions — that factors any graph transformation into composable, relational operations. Provides the broadest theoretical umbrella for understanding GNN design choices.
+**Connection**: COGANT's fixpoint rule engine is a symbolic instance of a GN block where update functions are deterministic rules rather than learned MLPs. The GN framework's distinction between edge, node, and global attributes maps directly onto COGANT's edge-kind taxonomy, node-kind taxonomy, and GNN-level global assertions respectively. Provides vocabulary for formally characterising COGANT's translate stage.
+
+### [KIPF_2017] Kipf, Welling (2017) — "Semi-Supervised Classification with Graph Convolutional Networks"
+*ICLR 2017. arXiv: 1609.02907*
+**Relevance**: Introduces the Graph Convolutional Network (GCN), the simplest and most widely cited instantiation of spectral graph convolutions. Establishes the message-passing paradigm that almost all subsequent program-graph GNN work builds on.
+**Key contribution**: A first-order approximation of spectral convolution that reduces to a simple neighbourhood-aggregation rule: each node's new representation is a linear combination of its own features and its neighbours', normalised by degree.
+**Connection**: GCN is the implicit baseline for COGANT's graph-based design choices. COGANT processes program graphs symbolically rather than with learned GCN weights, but the neighbourhood-aggregation intuition — "a node's role is informed by its neighbours" — is exactly the principle behind COGANT's context-sensitive fixpoint rules. Understanding GCN limitations (lack of edge-type awareness) motivates COGANT's typed, multi-relational graph schema.
+
+### [XU_2019] Xu, Hu, Leskovec, Jegelka (2019) — "How Powerful are Graph Neural Networks?"
+*ICLR 2019. arXiv: 1810.00826*
+**Relevance**: Provides the first rigorous theoretical analysis of the expressive power of GNNs, proving that standard message-passing GNNs are at most as expressive as the Weisfeiler-Lehman (WL) graph isomorphism test, and introducing the Graph Isomorphism Network (GIN) that achieves this bound.
+**Key contribution**: A clean theoretical characterisation of when two graph nodes receive identical representations under any sum-aggregation GNN, with a constructive architecture (GIN with sum aggregation and MLP updates) that achieves maximum expressiveness within the WL hierarchy.
+**Connection**: COGANT's fixpoint rule engine must distinguish program graph nodes that a WL-bounded GNN would conflate — for example, two variables with identical local neighbourhoods but different data-flow paths. Understanding the WL expressiveness ceiling helps specify exactly which structural features COGANT's rules must exploit to go beyond what learned GNNs can capture, justifying the richer typed-edge representation.
+
 ---
 
 ## 2. Semantic Role Assignment in Static Analysis
@@ -98,6 +116,24 @@ Entries marked with "(details need verification)" have authors and approximate y
 **Relevance**: Shows that incorporating relational structure (data-flow, type hierarchies) into neural code models improves code completion and bug detection tasks beyond what flat token sequences achieve.
 **Key contribution**: A relational graph attention mechanism over program graphs that augments a sequential code model, demonstrating the value of explicit structural edges for code understanding.
 **Connection**: Validates COGANT's core premise that graph structure carries essential semantic information beyond what token sequences contain. The relational edges used by Hellendoorn et al. overlap significantly with COGANT's edge taxonomy.
+
+### [TAI_2015] Tai, Socher, Manning (2015) — "Improved Semantic Representations from Tree-Structured Long Short-Term Memory Networks"
+*ACL 2015. arXiv: 1503.00075*
+**Relevance**: Introduces Tree-LSTM, an extension of LSTM to tree-structured inputs that can represent hierarchically composed meanings. Directly relevant because Python ASTs are trees, and Tree-LSTM is a natural learned baseline for any symbolic role assignment that operates top-down over an AST.
+**Key contribution**: Two variants (Child-Sum and N-ary Tree-LSTM) that process parse trees instead of linear sequences, with gating mechanisms sensitive to the subtree structure below each node. Demonstrates state-of-the-art on sentence similarity and sentiment analysis using syntactic trees.
+**Connection**: Tree-LSTM is the learned counterpart of COGANT's rule-based AST traversal: both propagate information bottom-up through the AST to assign a representation (learned embedding vs. symbolic role) to each node. The Tree-LSTM formulation makes explicit the inductive structure — "role of a node depends on roles of children" — that COGANT's downward and upward fixpoint passes implement deterministically.
+
+### [VELICKOVIC_2018] Veličković, Cucurull, Casanova, Romero, Liò, Bengio (2018) — "Graph Attention Networks"
+*ICLR 2018. arXiv: 1710.10903*
+**Relevance**: Introduces the Graph Attention Network (GAT), which replaces uniform neighbourhood aggregation with learned attention weights over neighbours. GAT is now the standard learned baseline for any node-classification task over program graphs, including role assignment.
+**Key contribution**: A multi-head self-attention mechanism over graph neighbourhoods that enables each node to differentially weight its neighbours during aggregation, achieving state-of-the-art on multiple node-classification benchmarks without requiring costly spectral methods.
+**Connection**: COGANT's confidence tier system (HIGH / MEDIUM / LOW) is a coarse, symbolic analogue of GAT's attention weights: both mechanisms express "how much does neighbour v's role influence node u's role assignment." A hybrid system where GAT attention weights guide COGANT's rule-firing priority is a natural direction identified in `R&D_LOG.md`.
+
+### [CHIRKOVA_2021] Chirkova, Troshin (2021) — "Empirical Study of Transformers for Source Code"
+*ESEC/FSE 2021. arXiv: 2010.07987*
+**Relevance**: A systematic empirical investigation of how Transformer models exploit syntactic structure when applied to code tasks (code completion, function naming, bug fixing), including syntax-aware variants that inject tree or graph information.
+**Key contribution**: Shows that vanilla Transformers can already capture meaningful syntactic patterns even without explicit AST injection, but that syntax-aware variants (those receiving tree positional encodings or tree-structured attention) consistently outperform purely sequential baselines.
+**Connection**: Provides the empirical baseline against which COGANT's symbolic role assignments should be benchmarked on downstream tasks. The paper's finding that syntax matters confirms COGANT's architectural bet; its finding that flat Transformers already capture some structure sets the bar COGANT must exceed to justify the additional symbolic machinery.
 
 ### [ALON_2019] Alon, Zilberstein, Levy, Yahav (2019) — "code2vec: Learning Distributed Representations of Code"
 *Proceedings of the ACM on Programming Languages (POPL)*

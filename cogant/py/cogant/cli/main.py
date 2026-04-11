@@ -715,6 +715,178 @@ def translate(
 
 
 @app.command()
+def analyze(
+    target: str = typer.Argument(
+        ".",
+        help="Path of the repository to analyze (must contain Python/JS/TS sources).",
+    ),
+    incremental: str | None = typer.Option(
+        None,
+        "--incremental",
+        help=(
+            "Git commit SHA, tag, branch, or relative ref (e.g. HEAD~1) to "
+            "use as the incremental baseline. Only source files that changed "
+            "between this ref and HEAD are re-parsed; unchanged stage "
+            "results are served from the incremental cache. Omit to run a "
+            "full cold analysis."
+        ),
+    ),
+    output_dir: str = typer.Option(
+        "output",
+        "--output",
+        "-o",
+        help="Directory where bundle.json and derived artifacts are written.",
+    ),
+    cache_dir: str | None = typer.Option(
+        None,
+        "--cache-dir",
+        help=(
+            "Override the incremental cache directory. Defaults to "
+            "~/.cache/cogant. Useful for tests and benchmarks that need an "
+            "isolated cache state."
+        ),
+    ),
+    no_dynamic: bool = typer.Option(
+        False,
+        "--no-dynamic",
+        help=(
+            "Skip the dynamic-analysis enrichment stage. Faster, pure "
+            "static-analysis mode — recommended for incremental runs."
+        ),
+    ),
+    skip_stages: str | None = typer.Option(
+        None,
+        "--skip",
+        help="Comma-separated list of stages to skip (e.g. 'dynamic,validate').",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Suppress per-stage progress output (still prints summary).",
+    ),
+) -> None:
+    """Analyze a repository, optionally in incremental mode.
+
+    ``cogant analyze`` is the canonical entry point for running the
+    COGANT pipeline on a codebase. In its default form it is equivalent
+    to ``cogant translate`` (ingest → static → normalize → graph →
+    dynamic → translate → statespace → process → export → validate).
+
+    With ``--incremental <commit>`` it switches to the fast path:
+
+    1. Compute ``git diff --name-only <commit> HEAD`` to resolve the
+       changed source file set.
+    2. Look up a cached bundle for the target repository in
+       ``~/.cache/cogant`` (or ``--cache-dir`` override).
+    3. On a full cache hit with zero changed files, return the cached
+       bundle without touching the parsers — the typical "second run
+       with no edits" fast path.
+    4. On a partial hit, re-parse only the changed subset, patch the
+       cached stage-results via
+       :func:`cogant.ingest.incremental.apply_incremental_patch`, and
+       write the updated bundle/GNN output.
+    5. On a cache miss or non-git target, fall back to a full cold run
+       and populate the cache so the next incremental call can benefit.
+
+    Incremental stats (``cache_hit``, ``files_reparsed``, ``files_total``,
+    ``reason``) are reported after the run and are also persisted on
+    ``bundle.metadata['incremental_stats']``.
+    """
+    if not quiet:
+        title = "[bold]COGANT Analyze[/bold]"
+        if incremental:
+            title += f"\n[dim]Incremental baseline: [cyan]{incremental}[/cyan][/dim]"
+        console.print(
+            Panel(
+                f"{title}\nTarget: [cyan]{target}[/cyan]",
+                expand=False,
+            )
+        )
+
+    target_path = Path(target)
+    if not target_path.exists():
+        _friendly_pipeline_error(FileNotFoundError(target), target_path)
+        raise typer.Exit(code=1)
+    if target_path.is_file():
+        _friendly_pipeline_error(NotADirectoryError(target), target_path)
+        raise typer.Exit(code=1)
+
+    config = PipelineConfig(output_dir=output_dir)
+    if skip_stages:
+        config.skip_stages = [s.strip() for s in skip_stages.split(",") if s.strip()]
+    if no_dynamic:
+        config.skip_dynamic = True
+    if incremental:
+        config.incremental_since = incremental
+    if cache_dir:
+        config.cache_dir = cache_dir
+
+    runner = PipelineRunner()
+    try:
+        if quiet:
+            bundle = runner.run(target, config)
+        else:
+            bundle = _run_pipeline_with_progress(
+                runner, target, config, description_prefix="analyze"
+            )
+    except FileNotFoundError as exc:
+        _friendly_pipeline_error(exc, Path(target))
+        raise typer.Exit(code=1) from exc
+    except PermissionError as exc:
+        _friendly_pipeline_error(exc, Path(target))
+        raise typer.Exit(code=1) from exc
+    except NotADirectoryError as exc:
+        _friendly_pipeline_error(exc, Path(target))
+        raise typer.Exit(code=1) from exc
+    except Exception as exc:  # noqa: BLE001 — CLI boundary
+        _friendly_pipeline_error(exc, Path(target))
+        raise typer.Exit(code=1) from exc
+
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    bundle_path = out / "bundle.json"
+    bundle.save_json(str(bundle_path))
+
+    inc_stats = bundle.metadata.get("incremental_stats") if bundle.metadata else None
+    if not quiet:
+        console.print("\n[bold green]Analyze Results[/bold green]")
+        results_table = Table()
+        results_table.add_column("Stage", style="cyan")
+        results_table.add_column("Status", style="magenta")
+        for stage in config.stages:
+            if stage in bundle.stage_results:
+                results_table.add_row(stage, "[green]✓ Success[/green]")
+            elif stage in config.skip_stages or (
+                stage == "dynamic" and config.skip_dynamic
+            ):
+                results_table.add_row(stage, "[yellow]⊘ Skipped[/yellow]")
+            else:
+                results_table.add_row(stage, "[red]✗ Failed[/red]")
+        console.print(results_table)
+
+    if bundle.errors and not quiet:
+        console.print("\n[red bold]Errors:[/red bold]")
+        for error in bundle.errors:
+            console.print(f"  • {error}")
+
+    if inc_stats and inc_stats.get("enabled"):
+        hit = "hit" if inc_stats.get("cache_hit") else "miss"
+        console.print(
+            f"\n[bold]Incremental:[/bold] cache {hit} "
+            f"(since {inc_stats.get('since')}, "
+            f"{inc_stats.get('files_reparsed', 0)}/"
+            f"{inc_stats.get('files_total', 0)} files re-parsed)"
+        )
+        if inc_stats.get("reason"):
+            console.print(f"[dim]  {inc_stats['reason']}[/dim]")
+
+    if not quiet:
+        console.print("\n[green]✓ Analysis complete[/green]")
+        console.print(f"[dim]Saved bundle: {bundle_path}[/dim]")
+
+
+@app.command()
 def statespace(
     target: str = typer.Argument(
         ".",
