@@ -5,6 +5,7 @@ The `TranslationEngine` drives rule-based translation from a `ProgramGraph` to G
 ### Basic Usage
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.translate.engine import TranslationEngine
 
 engine = TranslationEngine(max_iterations=10)

@@ -59,6 +59,7 @@ For supervised tasks, labels are:
 ### Export Example
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant import Session
 import torch
 
@@ -81,6 +82,7 @@ torch.save(pyg_data, "graph_data.pt")
 ### Training Example
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant import Session
 from torch_geometric.data import DataLoader
 from torch_geometric.nn import GCNConv

@@ -143,6 +143,7 @@ Rules are registered via `TranslationEngine.register_rule()`. COGANT's bootstrap
 `py/cogant/translate/__init__.py` wires the default 19; add yours there:
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 # py/cogant/translate/__init__.py
 
 from cogant.translate.rules.semantic import (
@@ -171,6 +172,7 @@ COGANT is test-driven: every rule ships with at least one positive and one negat
 minimal test pattern (pattern borrowed from `tests/unit/test_ai_role_validation.py`):
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 # tests/unit/test_read_only_cache_rule.py
 
 from cogant.schemas.core import Node, NodeKind, Edge, EdgeKind

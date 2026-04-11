@@ -8,6 +8,7 @@ print([d.name for d in snapshot.dependencies])    # Dependencies
 #### Pattern 2: Clone and Analyze Remote Repository
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.ingest import RepoIngester
 
 ingester = RepoIngester()

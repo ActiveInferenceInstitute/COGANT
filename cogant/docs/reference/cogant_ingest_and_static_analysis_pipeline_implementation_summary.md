@@ -211,6 +211,7 @@ SPEC.md (ingest milestone section) — this narrative
 
 #### Basic Repository Ingestion
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.ingest import RepoIngester
 
 ingester = RepoIngester()
@@ -224,6 +225,7 @@ print(f"Dependencies: {len(snapshot.dependencies)}")
 
 #### Complete Static Analysis
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.static import (
     SymbolExtractor, ImportAnalyzer, CallGraphBuilder,
     TypeInferencer, DataFlowAnalyzer

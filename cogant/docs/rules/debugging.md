@@ -21,6 +21,7 @@ Output:
 ### Inspect Rule Application
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant import PipelineRunner
 from cogant.api.pipeline import PipelineConfig
 

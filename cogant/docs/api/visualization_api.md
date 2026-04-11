@@ -3,6 +3,7 @@
 ### Graph Visualization
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.viz import GraphVisualizer
 
 visualizer = GraphVisualizer()
@@ -27,6 +28,7 @@ d3_data = visualizer.to_d3_json()
 ### Semantic Visualization
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.viz import SemanticVisualizer
 
 sem_viz = SemanticVisualizer()
@@ -37,6 +39,7 @@ sem_viz.render_html("semantic.html")
 ### Gantt/Timeline Visualization
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.viz import GanttRenderer
 
 gantt = GanttRenderer()
@@ -47,6 +50,7 @@ gantt.render_html("gantt.html")
 ### Difference Visualization
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.viz import DiffVisualizer
 
 diff = DiffVisualizer(bundle1_data, bundle2_data)
@@ -57,6 +61,7 @@ diff_json = diff.render_json()
 ### HTML Site Renderer
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.viz import HTMLSiteRenderer
 import json
 

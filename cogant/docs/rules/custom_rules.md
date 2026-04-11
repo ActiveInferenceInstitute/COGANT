@@ -44,6 +44,7 @@ translation:
 Or programmatically:
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant import PipelineRunner
 from cogant.api.pipeline import PipelineConfig
 from rules.my_rules import MyCustomRule

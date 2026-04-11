@@ -9,6 +9,7 @@
 > **Next steps:** [Session API](session_api.md) · [PipelineRunner API](pipelinerunner_api.md) · [Bundle API](bundle_api.md)
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant import Session, PipelineRunner, Bundle
 from cogant.api.pipeline import PipelineConfig
 

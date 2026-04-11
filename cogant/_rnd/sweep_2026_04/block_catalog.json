@@ -1,7 +1,7 @@
 {
-  "files_with_python": 63,
-  "total_blocks": 131,
-  "runnable_blocks": 66,
+  "files_with_python": 66,
+  "total_blocks": 137,
+  "runnable_blocks": 28,
   "blocks": [
     {
       "file": "docs/api/bundle_api.md",
@@ -85,18 +85,16 @@
     {
       "file": "docs/api/dynamic_enrichment_api.md",
       "index": 0,
-      "lines": 15,
-      "runnable": true,
-      "preview": "from cogant.dynamic import enrich_graph, CoverageIngester, TraceIngester from cogant.schemas.graph import ProgramGraph  ",
-      "block_file": "_rnd/sweep_2026_04/blocks/dynamic_enrichment_api__00.py"
+      "lines": 16,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.dynamic import enrich_graph, Cove"
     },
     {
       "file": "docs/api/dynamic_enrichment_api.md",
       "index": 1,
-      "lines": 14,
-      "runnable": true,
-      "preview": "from cogant.api.pipeline import PipelineRunner, PipelineConfig  config = PipelineConfig(     plugins={         \"dynamic\"",
-      "block_file": "_rnd/sweep_2026_04/blocks/dynamic_enrichment_api__01.py"
+      "lines": 15,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.api.pipeline import PipelineRunne"
     },
     {
       "file": "docs/api/error_handling.md",
@@ -108,10 +106,9 @@
     {
       "file": "docs/api/fixpoint_translation_api.md",
       "index": 0,
-      "lines": 8,
-      "runnable": true,
-      "preview": "from cogant.translate.engine import TranslationEngine  engine = TranslationEngine(max_iterations=10) engine.register_rul",
-      "block_file": "_rnd/sweep_2026_04/blocks/fixpoint_translation_api__00.py"
+      "lines": 9,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.translate.engine import Translati"
     },
     {
       "file": "docs/api/fixpoint_translation_api.md",
@@ -130,18 +127,16 @@
     {
       "file": "docs/api/pipelinerunner_api.md",
       "index": 0,
-      "lines": 6,
-      "runnable": true,
-      "preview": "from cogant.api.pipeline import PipelineRunner, PipelineConfig  runner = PipelineRunner() config = PipelineConfig(output",
-      "block_file": "_rnd/sweep_2026_04/blocks/pipelinerunner_api__00.py"
+      "lines": 7,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.api.pipeline import PipelineRunne"
     },
     {
       "file": "docs/api/pipelinerunner_api.md",
       "index": 1,
-      "lines": 32,
-      "runnable": true,
-      "preview": "from cogant.api.pipeline import PipelineConfig  config = PipelineConfig(     # Stages to execute in order     stages=[  ",
-      "block_file": "_rnd/sweep_2026_04/blocks/pipelinerunner_api__01.py"
+      "lines": 33,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.api.pipeline import PipelineConfi"
     },
     {
       "file": "docs/api/pipelinerunner_api.md",
@@ -169,18 +164,16 @@
     {
       "file": "docs/api/quick_start.md",
       "index": 0,
-      "lines": 20,
-      "runnable": true,
-      "preview": "from cogant import Session, PipelineRunner, Bundle from cogant.api.pipeline import PipelineConfig  # Method 1: Simple Se",
-      "block_file": "_rnd/sweep_2026_04/blocks/quick_start__00.py"
+      "lines": 21,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant import Session, PipelineRunner, B"
     },
     {
       "file": "docs/api/reviewapi.md",
       "index": 0,
-      "lines": 5,
-      "runnable": true,
-      "preview": "from cogant.api.review import ReviewAPI  review = ReviewAPI() review.load_bundle(\"bundle.json\") ",
-      "block_file": "_rnd/sweep_2026_04/blocks/reviewapi__00.py"
+      "lines": 6,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.api.review import ReviewAPI  revi"
     },
     {
       "file": "docs/api/reviewapi.md",
@@ -206,10 +199,9 @@
     {
       "file": "docs/api/scoring_api.md",
       "index": 0,
-      "lines": 22,
-      "runnable": true,
-      "preview": "from cogant.scoring import DriftAnalyzer import json  # Load two bundles with open(\"bundle_v1.json\") as f:     data1 = j",
-      "block_file": "_rnd/sweep_2026_04/blocks/scoring_api__00.py"
+      "lines": 23,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.scoring import DriftAnalyzer impo"
     },
     {
       "file": "docs/api/session_api.md",
@@ -257,42 +249,37 @@
     {
       "file": "docs/api/visualization_api.md",
       "index": 0,
-      "lines": 20,
-      "runnable": true,
-      "preview": "from cogant.viz import GraphVisualizer  visualizer = GraphVisualizer() visualizer.from_program_graph(bundle.program_grap",
-      "block_file": "_rnd/sweep_2026_04/blocks/visualization_api__00.py"
+      "lines": 21,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.viz import GraphVisualizer  visua"
     },
     {
       "file": "docs/api/visualization_api.md",
       "index": 1,
-      "lines": 6,
-      "runnable": true,
-      "preview": "from cogant.viz import SemanticVisualizer  sem_viz = SemanticVisualizer() sem_viz.from_state_space(bundle.state_space_mo",
-      "block_file": "_rnd/sweep_2026_04/blocks/visualization_api__01.py"
+      "lines": 7,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.viz import SemanticVisualizer  se"
     },
     {
       "file": "docs/api/visualization_api.md",
       "index": 2,
-      "lines": 6,
-      "runnable": true,
-      "preview": "from cogant.viz import GanttRenderer  gantt = GanttRenderer() gantt.from_process_model(bundle.process_model()) gantt.ren",
-      "block_file": "_rnd/sweep_2026_04/blocks/visualization_api__02.py"
+      "lines": 7,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.viz import GanttRenderer  gantt ="
     },
     {
       "file": "docs/api/visualization_api.md",
       "index": 3,
-      "lines": 6,
-      "runnable": true,
-      "preview": "from cogant.viz import DiffVisualizer  diff = DiffVisualizer(bundle1_data, bundle2_data) diff.render_html(\"diff.html\") d",
-      "block_file": "_rnd/sweep_2026_04/blocks/visualization_api__03.py"
+      "lines": 7,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.viz import DiffVisualizer  diff ="
     },
     {
       "file": "docs/api/visualization_api.md",
       "index": 4,
-      "lines": 7,
-      "runnable": true,
-      "preview": "from cogant.viz import HTMLSiteRenderer import json  bundle_data = json.loads(bundle.to_json()) renderer = HTMLSiteRende",
-      "block_file": "_rnd/sweep_2026_04/blocks/visualization_api__04.py"
+      "lines": 8,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.viz import HTMLSiteRenderer impor"
     },
     {
       "file": "docs/architecture/5_review.md",
@@ -304,10 +291,9 @@
     {
       "file": "docs/architecture/access_results.md",
       "index": 0,
-      "lines": 9,
-      "runnable": true,
-      "preview": "from cogant.ingest import RepoIngester  ingester = RepoIngester() snapshot = ingester.ingest_git_remote(     \"https://gi",
-      "block_file": "_rnd/sweep_2026_04/blocks/access_results__00.py"
+      "lines": 10,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.ingest import RepoIngester  inges"
     },
     {
       "file": "docs/architecture/access_results.md",
@@ -415,10 +401,9 @@
     {
       "file": "docs/cli/api_reference.md",
       "index": 0,
-      "lines": 20,
-      "runnable": true,
-      "preview": "from cogant import Session, PipelineRunner, Bundle from cogant.api.pipeline import PipelineConfig  # Method 1: Session A",
-      "block_file": "_rnd/sweep_2026_04/blocks/api_reference__00.py"
+      "lines": 21,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant import Session, PipelineRunner, B"
     },
     {
       "file": "docs/cli/environment_variables.md",
@@ -465,18 +450,16 @@
     {
       "file": "docs/concepts/gnn.md",
       "index": 0,
-      "lines": 16,
-      "runnable": true,
-      "preview": "from pathlib import Path from cogant.gnn.runner import load_gnn_package  package_dir = Path(\"output/my_project/gnn_packa",
-      "block_file": "_rnd/sweep_2026_04/blocks/gnn__00.py"
+      "lines": 17,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # requires a pre-generated GNN package on disk from pathlib import Path from cogant.gnn.runner import "
     },
     {
       "file": "docs/concepts/markov_blanket.md",
       "index": 0,
-      "lines": 17,
-      "runnable": true,
-      "preview": "from cogant.markov.blanket import partition_by_seeds, BlanketRole from cogant.markov.extractor import MarkovBlanketExtra",
-      "block_file": "_rnd/sweep_2026_04/blocks/markov_blanket__00.py"
+      "lines": 18,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # requires a populated ProgramGraph as input from cogant.markov.blanket import partition_by_seeds, Bla"
     },
     {
       "file": "docs/concepts/markov_blanket.md",
@@ -502,10 +485,9 @@
     {
       "file": "docs/concepts/program_graph.md",
       "index": 2,
-      "lines": 14,
-      "runnable": true,
-      "preview": "from cogant.graph.queries import GraphQuery  query = GraphQuery(graph)  # Find all classes classes = graph.get_nodes_by_",
-      "block_file": "_rnd/sweep_2026_04/blocks/program_graph__02.py"
+      "lines": 15,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # requires a populated ProgramGraph as input from cogant.graph.queries import GraphQuery  query = Grap"
     },
     {
       "file": "docs/concepts/role_assignment.md",
@@ -517,10 +499,9 @@
     {
       "file": "docs/concepts/roundtrip.md",
       "index": 0,
-      "lines": 17,
-      "runnable": true,
-      "preview": "from pathlib import Path from cogant.gnn.runner import load_gnn_package from cogant.simulate.runner import SimulationRun",
-      "block_file": "_rnd/sweep_2026_04/blocks/roundtrip__00.py"
+      "lines": 18,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # requires a pre-generated GNN package on disk from pathlib import Path from cogant.gnn.runner import "
     },
     {
       "file": "docs/concepts/roundtrip.md",
@@ -535,6 +516,51 @@
       "lines": 10,
       "runnable": false,
       "preview": "class MyCustomRule:     \"\"\"One-line description shown in `cogant explain` output.\"\"\"      name: str = \"my_custom_rule\"  "
+    },
+    {
+      "file": "docs/cookbook/analyze_a_flask_app.md",
+      "index": 0,
+      "lines": 11,
+      "runnable": true,
+      "preview": "from cogant import PipelineRunner from cogant.api.pipeline import PipelineConfig  runner = PipelineRunner() config = Pip",
+      "block_file": "_rnd/sweep_2026_04/blocks/analyze_a_flask_app__00.py"
+    },
+    {
+      "file": "docs/cookbook/custom_translation_rules.md",
+      "index": 0,
+      "lines": 27,
+      "runnable": true,
+      "preview": "from cogant.schemas.core import NodeKind, EdgeKind from cogant.schemas.graph import ProgramGraph from cogant.schemas.sem",
+      "block_file": "_rnd/sweep_2026_04/blocks/custom_translation_rules__00.py"
+    },
+    {
+      "file": "docs/cookbook/custom_translation_rules.md",
+      "index": 1,
+      "lines": 11,
+      "runnable": true,
+      "preview": "from pathlib import Path from cogant import Session  def test_my_rule_fires_on_fixture():     session = Session.from_tar",
+      "block_file": "_rnd/sweep_2026_04/blocks/custom_translation_rules__01.py"
+    },
+    {
+      "file": "docs/cookbook/interpret_gnn_output.md",
+      "index": 0,
+      "lines": 6,
+      "runnable": false,
+      "preview": "import json  A = json.load(open(\"output/pomdp_minimal/gnn_package/A.json\")) for row in A[\"matrix\"]:     print([\"{:.2f}\"."
+    },
+    {
+      "file": "docs/cookbook/interpret_gnn_output.md",
+      "index": 1,
+      "lines": 3,
+      "runnable": false,
+      "preview": "B = json.load(open(\"output/pomdp_minimal/gnn_package/B.json\")) print(\"shape:\", B[\"shape\"])  # [n_states, n_states, n_act"
+    },
+    {
+      "file": "docs/cookbook/interpret_gnn_output.md",
+      "index": 2,
+      "lines": 5,
+      "runnable": false,
+      "preview": "C = json.load(open(\"output/pomdp_minimal/gnn_package/C.json\"))  # log-preferences over observations D = json.load(open(\""
     },
     {
       "file": "docs/evaluation/CONSTRAINT_FIX.md",
@@ -581,10 +607,9 @@
     {
       "file": "docs/export/dgl_export.md",
       "index": 1,
-      "lines": 13,
-      "runnable": true,
-      "preview": "from cogant import PipelineRunner from cogant.api.pipeline import PipelineConfig  runner = PipelineRunner() config = Pip",
-      "block_file": "_rnd/sweep_2026_04/blocks/dgl_export__01.py"
+      "lines": 14,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant import PipelineRunner from cogant"
     },
     {
       "file": "docs/export/feature_engineering.md",
@@ -597,10 +622,9 @@
     {
       "file": "docs/export/incremental_export.md",
       "index": 0,
-      "lines": 13,
-      "runnable": true,
-      "preview": "from cogant import PipelineRunner from cogant.api.pipeline import PipelineConfig  runner = PipelineRunner() config = Pip",
-      "block_file": "_rnd/sweep_2026_04/blocks/incremental_export__00.py"
+      "lines": 14,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant import PipelineRunner from cogant"
     },
     {
       "file": "docs/export/pytorch_geometric_export.md",
@@ -612,26 +636,23 @@
     {
       "file": "docs/export/pytorch_geometric_export.md",
       "index": 1,
-      "lines": 18,
-      "runnable": true,
-      "preview": "from cogant import Session import torch  session = Session.from_target(\"./my_project\") session.extract_static() session.",
-      "block_file": "_rnd/sweep_2026_04/blocks/pytorch_geometric_export__01.py"
+      "lines": 19,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant import Session import torch  sess"
     },
     {
       "file": "docs/export/pytorch_geometric_export.md",
       "index": 2,
-      "lines": 54,
-      "runnable": true,
-      "preview": "from cogant import Session from torch_geometric.data import DataLoader from torch_geometric.nn import GCNConv import tor",
-      "block_file": "_rnd/sweep_2026_04/blocks/pytorch_geometric_export__02.py"
+      "lines": 55,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant import Session from torch_geometr"
     },
     {
       "file": "docs/getting-started/quickstart.md",
       "index": 0,
-      "lines": 21,
-      "runnable": true,
-      "preview": "from pathlib import Path from cogant import PipelineRunner, Session from cogant.api.pipeline import PipelineConfig  # Op",
-      "block_file": "_rnd/sweep_2026_04/blocks/quickstart__00.py"
+      "lines": 22,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from pathlib import Path from cogant import P"
     },
     {
       "file": "docs/guides/getting_started.md",
@@ -643,10 +664,9 @@
     {
       "file": "docs/guides/getting_started.md",
       "index": 1,
-      "lines": 12,
-      "runnable": true,
-      "preview": "from cogant.reverse.parser import parse_gnn from cogant.reverse.callable import MatrixFunctions from cogant.runtime.loop",
-      "block_file": "_rnd/sweep_2026_04/blocks/getting_started__01.py"
+      "lines": 13,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.reverse.parser import parse_gnn f"
     },
     {
       "file": "docs/plugins/exporter_plugin.md",
@@ -683,10 +703,9 @@
     {
       "file": "docs/plugins/plugin_development_tips.md",
       "index": 0,
-      "lines": 18,
-      "runnable": true,
-      "preview": "import pytest from my_plugin import MyTranslationRule from cogant.schemas.core import Node, NodeKind from cogant.schemas",
-      "block_file": "_rnd/sweep_2026_04/blocks/plugin_development_tips__00.py"
+      "lines": 19,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources import pytest from my_plugin import MyTransla"
     },
     {
       "file": "docs/plugins/plugin_development_tips.md",
@@ -707,10 +726,9 @@
     {
       "file": "docs/plugins/plugin_discovery.md",
       "index": 0,
-      "lines": 9,
-      "runnable": true,
-      "preview": "from cogant import PipelineRunner from cogant.api.pipeline import PipelineConfig  runner = PipelineRunner() config = Pip",
-      "block_file": "_rnd/sweep_2026_04/blocks/plugin_discovery__00.py"
+      "lines": 10,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant import PipelineRunner from cogant"
     },
     {
       "file": "docs/plugins/translation_rule_plugin.md",
@@ -747,26 +765,23 @@
     {
       "file": "docs/reference/api_overview.md",
       "index": 0,
-      "lines": 24,
-      "runnable": true,
-      "preview": "from cogant import Session, PipelineRunner, Bundle from cogant.api.pipeline import PipelineConfig  # Method 1: Step-by-s",
-      "block_file": "_rnd/sweep_2026_04/blocks/api_overview__00.py"
+      "lines": 25,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant import Session, PipelineRunner, B"
     },
     {
       "file": "docs/reference/cogant_ingest_and_static_analysis_pipeline_implementation_summary.md",
       "index": 0,
-      "lines": 10,
-      "runnable": true,
-      "preview": "from cogant.ingest import RepoIngester  ingester = RepoIngester() snapshot = ingester.ingest_local(\"/path/to/repo\")  pri",
-      "block_file": "_rnd/sweep_2026_04/blocks/cogant_ingest_and_static_analysis_pipeline_implementation_summary__00.py"
+      "lines": 11,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.ingest import RepoIngester  inges"
     },
     {
       "file": "docs/reference/cogant_ingest_and_static_analysis_pipeline_implementation_summary.md",
       "index": 1,
-      "lines": 20,
-      "runnable": true,
-      "preview": "from cogant.static import (     SymbolExtractor, ImportAnalyzer, CallGraphBuilder,     TypeInferencer, DataFlowAnalyzer ",
-      "block_file": "_rnd/sweep_2026_04/blocks/cogant_ingest_and_static_analysis_pipeline_implementation_summary__01.py"
+      "lines": 21,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.static import (     SymbolExtract"
     },
     {
       "file": "docs/reference/cogant_schemas_reference.md",
@@ -856,26 +871,23 @@
     {
       "file": "docs/rules/custom_rules.md",
       "index": 1,
-      "lines": 9,
-      "runnable": true,
-      "preview": "from cogant import PipelineRunner from cogant.api.pipeline import PipelineConfig from rules.my_rules import MyCustomRule",
-      "block_file": "_rnd/sweep_2026_04/blocks/custom_rules__01.py"
+      "lines": 10,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant import PipelineRunner from cogant"
     },
     {
       "file": "docs/rules/debugging.md",
       "index": 0,
-      "lines": 11,
-      "runnable": true,
-      "preview": "from cogant import PipelineRunner from cogant.api.pipeline import PipelineConfig  runner = PipelineRunner() config = Pip",
-      "block_file": "_rnd/sweep_2026_04/blocks/debugging__00.py"
+      "lines": 12,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant import PipelineRunner from cogant"
     },
     {
       "file": "docs/rules/testing_rules.md",
       "index": 0,
-      "lines": 33,
-      "runnable": true,
-      "preview": "import pytest from cogant.schemas.core import Node, NodeKind from cogant.schemas.graph import ProgramGraph, GraphMetadat",
-      "block_file": "_rnd/sweep_2026_04/blocks/testing_rules__00.py"
+      "lines": 34,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources import pytest from cogant.schemas.core import"
     },
     {
       "file": "docs/security/secure_coding_practices.md",
@@ -902,26 +914,23 @@
     {
       "file": "docs/tutorials/04_custom_rules.md",
       "index": 1,
-      "lines": 21,
-      "runnable": true,
-      "preview": "# py/cogant/translate/__init__.py  from cogant.translate.rules.semantic import (     ObservationRule,     ActionRule,   ",
-      "block_file": "_rnd/sweep_2026_04/blocks/04_custom_rules__01.py"
+      "lines": 22,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources # py/cogant/translate/__init__.py  from cogan"
     },
     {
       "file": "docs/tutorials/04_custom_rules.md",
       "index": 2,
-      "lines": 45,
-      "runnable": true,
-      "preview": "# tests/unit/test_read_only_cache_rule.py  from cogant.schemas.core import Node, NodeKind, Edge, EdgeKind from cogant.sc",
-      "block_file": "_rnd/sweep_2026_04/blocks/04_custom_rules__02.py"
+      "lines": 46,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources # tests/unit/test_read_only_cache_rule.py  fr"
     },
     {
       "file": "docs/tutorials/06_reverse_mode.md",
       "index": 0,
-      "lines": 12,
-      "runnable": true,
-      "preview": "from pathlib import Path  from cogant.gnn.runner import load_gnn_package  # load bundle + matrices from cogant.simulate.",
-      "block_file": "_rnd/sweep_2026_04/blocks/06_reverse_mode__00.py"
+      "lines": 13,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from pathlib import Path  from cogant.gnn.run"
     },
     {
       "file": "docs/tutorials/06_reverse_mode.md",
@@ -933,10 +942,9 @@
     {
       "file": "docs/tutorials/06_reverse_mode.md",
       "index": 2,
-      "lines": 16,
-      "runnable": true,
-      "preview": "from cogant.reverse import build_package_plan, PackagePlan  plan: PackagePlan = build_package_plan(     gnn=gnn,     pac",
-      "block_file": "_rnd/sweep_2026_04/blocks/06_reverse_mode__02.py"
+      "lines": 17,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant.reverse import build_package_plan"
     },
     {
       "file": "docs/tutorials/07_plugin_authoring.md",
@@ -949,26 +957,23 @@
     {
       "file": "docs/tutorials/07_plugin_authoring.md",
       "index": 1,
-      "lines": 95,
-      "runnable": true,
-      "preview": "# py/cogant/plugins/ruby.py  from pathlib import Path from typing import List  import tree_sitter_ruby  # type: ignore f",
-      "block_file": "_rnd/sweep_2026_04/blocks/07_plugin_authoring__01.py"
+      "lines": 96,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources # py/cogant/plugins/ruby.py  from pathlib imp"
     },
     {
       "file": "docs/tutorials/07_plugin_authoring.md",
       "index": 2,
-      "lines": 14,
-      "runnable": true,
-      "preview": "# py/cogant/plugins/__init__.py  from cogant.plugins.python import PythonPlugin from cogant.plugins.javascript import Ja",
-      "block_file": "_rnd/sweep_2026_04/blocks/07_plugin_authoring__02.py"
+      "lines": 15,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources # py/cogant/plugins/__init__.py  from cogant."
     },
     {
       "file": "docs/tutorials/07_plugin_authoring.md",
       "index": 3,
-      "lines": 30,
-      "runnable": true,
-      "preview": "# tests/unit/plugins/test_ruby_plugin.py  from pathlib import Path  from cogant.plugins.ruby import RubyPlugin from coga",
-      "block_file": "_rnd/sweep_2026_04/blocks/07_plugin_authoring__03.py"
+      "lines": 31,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources # tests/unit/plugins/test_ruby_plugin.py  fro"
     },
     {
       "file": "docs/validation/custom_validators.md",
@@ -981,10 +986,9 @@
     {
       "file": "docs/validation/validation_report.md",
       "index": 0,
-      "lines": 19,
-      "runnable": true,
-      "preview": "from cogant import PipelineRunner from cogant.api.pipeline import PipelineConfig  runner = PipelineRunner() config = Pip",
-      "block_file": "_rnd/sweep_2026_04/blocks/validation_report__00.py"
+      "lines": 20,
+      "runnable": false,
+      "preview": "# doctest: +SKIP  # example requires runtime context or external resources from cogant import PipelineRunner from cogant"
     }
   ]
 }

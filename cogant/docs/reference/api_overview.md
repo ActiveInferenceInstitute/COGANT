@@ -3,6 +3,7 @@
 ### Python API
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant import Session, PipelineRunner, Bundle
 from cogant.api.pipeline import PipelineConfig
 

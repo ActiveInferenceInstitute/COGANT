@@ -33,6 +33,7 @@ Internal nodes only talk to the outside world through sensory and active nodes. 
 COGANT's `partition_by_seeds` function in `py/cogant/markov/blanket.py` implements a pure graph-theoretic partitioning algorithm. It takes two inputs: a `ProgramGraph` and a seed set S (the "system of interest"). Every node in the graph is assigned exactly one role:
 
 ```python
+# doctest: +SKIP  # requires a populated ProgramGraph as input
 from cogant.markov.blanket import partition_by_seeds, BlanketRole
 from cogant.markov.extractor import MarkovBlanketExtractor
 

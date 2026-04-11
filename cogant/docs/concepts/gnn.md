@@ -74,6 +74,7 @@ See [How COGANT assigns roles](role_assignment.md) for the full rule engine, and
 COGANT's `load_gnn_package()` function parses a GNN package directory (produced by a forward run) back into in-memory data structures. This is the entry point for [reverse mode](roundtrip.md):
 
 ```python
+# doctest: +SKIP  # requires a pre-generated GNN package on disk
 from pathlib import Path
 from cogant.gnn.runner import load_gnn_package
 

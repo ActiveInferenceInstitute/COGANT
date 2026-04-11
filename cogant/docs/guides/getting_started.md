@@ -169,6 +169,7 @@ You can also run the roundtrip directly from Python using the
 no `exec()`:
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.reverse.parser import parse_gnn
 from cogant.reverse.callable import MatrixFunctions
 from cogant.runtime.loop import AgentRuntime

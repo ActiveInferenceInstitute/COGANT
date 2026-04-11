@@ -5,6 +5,7 @@ For programmatic usage, see `examples/example_pipeline.py` for the Python API.
 Quick reference:
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant import Session, PipelineRunner, Bundle
 from cogant.api.pipeline import PipelineConfig
 

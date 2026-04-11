@@ -13,6 +13,7 @@ The `PipelineRunner` orchestrates all stages in sequence with configuration.
 ### Basic Usage
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.api.pipeline import PipelineRunner, PipelineConfig
 
 runner = PipelineRunner()
@@ -23,6 +24,7 @@ bundle = runner.run("./my_repo", config)
 ### Configuration
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.api.pipeline import PipelineConfig
 
 config = PipelineConfig(

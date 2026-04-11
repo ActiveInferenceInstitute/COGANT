@@ -1,0 +1,231 @@
+{
+  "total": 28,
+  "passed": 28,
+  "failed": 0,
+  "results": [
+    {
+      "file": "docs/api/dynamic_analysis_api.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/dynamic_analysis_api__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": "Coverage XML file not found: coverage.xml\nCoverage file not found: .coverage\n"
+    },
+    {
+      "file": "docs/api/dynamic_analysis_api.md",
+      "index": 1,
+      "block_file": "_rnd/sweep_2026_04/blocks/dynamic_analysis_api__01.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": "Trace file not found: trace.json\n"
+    },
+    {
+      "file": "docs/api/plugin_api.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/plugin_api__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/api/plugin_api.md",
+      "index": 1,
+      "block_file": "_rnd/sweep_2026_04/blocks/plugin_api__01.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/api/session_api.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/session_api__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/architecture/access_results.md",
+      "index": 1,
+      "block_file": "_rnd/sweep_2026_04/blocks/access_results__01.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/architecture/analyze_data_flow.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/analyze_data_flow__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/architecture/extensibility.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/extensibility__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/architecture/extensibility.md",
+      "index": 1,
+      "block_file": "_rnd/sweep_2026_04/blocks/extensibility__01.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/architecture/extensibility.md",
+      "index": 2,
+      "block_file": "_rnd/sweep_2026_04/blocks/extensibility__02.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/cookbook/analyze_a_flask_app.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/analyze_a_flask_app__00.py",
+      "ok": true,
+      "stdout_tail": "{'target': './examples/real_world/flask_app', 'file_count': 6, 'language_distribution': {'python': 6}, 'total_errors': 0}\n",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/cookbook/custom_translation_rules.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/custom_translation_rules__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/cookbook/custom_translation_rules.md",
+      "index": 1,
+      "block_file": "_rnd/sweep_2026_04/blocks/custom_translation_rules__01.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/export/feature_engineering.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/feature_engineering__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/plugins/exporter_plugin.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/exporter_plugin__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/plugins/exporter_plugin.md",
+      "index": 1,
+      "block_file": "_rnd/sweep_2026_04/blocks/exporter_plugin__01.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/plugins/language_parser_plugin.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/language_parser_plugin__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/plugins/language_parser_plugin.md",
+      "index": 1,
+      "block_file": "_rnd/sweep_2026_04/blocks/language_parser_plugin__01.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/plugins/plugin_development_tips.md",
+      "index": 1,
+      "block_file": "_rnd/sweep_2026_04/blocks/plugin_development_tips__01.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/plugins/plugin_development_tips.md",
+      "index": 2,
+      "block_file": "_rnd/sweep_2026_04/blocks/plugin_development_tips__02.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/plugins/translation_rule_plugin.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/translation_rule_plugin__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/plugins/translation_rule_plugin.md",
+      "index": 1,
+      "block_file": "_rnd/sweep_2026_04/blocks/translation_rule_plugin__01.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/plugins/validator_plugin.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/validator_plugin__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/plugins/validator_plugin.md",
+      "index": 1,
+      "block_file": "_rnd/sweep_2026_04/blocks/validator_plugin__01.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/rules/custom_rules.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/custom_rules__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/tutorials/04_custom_rules.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/04_custom_rules__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/tutorials/07_plugin_authoring.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/07_plugin_authoring__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "file": "docs/validation/custom_validators.md",
+      "index": 0,
+      "block_file": "_rnd/sweep_2026_04/blocks/custom_validators__00.py",
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    }
+  ]
+}

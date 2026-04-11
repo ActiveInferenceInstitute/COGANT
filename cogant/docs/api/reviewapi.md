@@ -5,6 +5,7 @@ The `ReviewAPI` provides interactive curation and review functionality.
 ### Loading a Bundle
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.api.review import ReviewAPI
 
 review = ReviewAPI()

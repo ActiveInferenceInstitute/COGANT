@@ -50,6 +50,7 @@ cogant explain ./my_repo my_function
 Same pipeline, programmatic entry points:
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from pathlib import Path
 from cogant import PipelineRunner, Session
 from cogant.api.pipeline import PipelineConfig

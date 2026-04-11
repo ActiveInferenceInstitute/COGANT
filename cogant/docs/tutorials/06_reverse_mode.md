@@ -61,6 +61,7 @@ Known limitations:
 Start from a `gnn_package/` directory produced by a forward run.
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from pathlib import Path
 
 from cogant.gnn.runner import load_gnn_package  # load bundle + matrices
@@ -101,6 +102,7 @@ The reverse module's `PackagePlan` captures the Python package structure before 
 written. Current API (subject to change in 0.2):
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.reverse import build_package_plan, PackagePlan
 
 plan: PackagePlan = build_package_plan(

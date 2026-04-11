@@ -3,6 +3,7 @@
 ### Unit Test Template
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 import pytest
 from cogant.schemas.core import Node, NodeKind
 from cogant.schemas.graph import ProgramGraph, GraphMetadata

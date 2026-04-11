@@ -74,6 +74,7 @@ COGANT's parser uses `tree_sitter.Language.build_library()` at import time — s
 ## 3. Write the plugin
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 # py/cogant/plugins/ruby.py
 
 from pathlib import Path
@@ -173,6 +174,7 @@ class RubyPlugin(LanguagePlugin):
 ## 4. Register the plugin
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 # py/cogant/plugins/__init__.py
 
 from cogant.plugins.python import PythonPlugin
@@ -215,6 +217,7 @@ end
 Write the test (no mocks — real tree-sitter, real source):
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 # tests/unit/plugins/test_ruby_plugin.py
 
 from pathlib import Path

@@ -39,6 +39,7 @@ Each stage is content-preserving: the output contains at least as much semantic 
 The reverse pipeline reads a GNN package and synthesizes a Python package that, when analyzed by a forward run, would produce an isomorphic GNN. The current v0.1.0 implementation provides scaffolding in `py/cogant/reverse/`:
 
 ```python
+# doctest: +SKIP  # requires a pre-generated GNN package on disk
 from pathlib import Path
 from cogant.gnn.runner import load_gnn_package
 from cogant.simulate.runner import SimulationRunner

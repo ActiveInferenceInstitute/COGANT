@@ -3,6 +3,7 @@
 ### Testing
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 import pytest
 from my_plugin import MyTranslationRule
 from cogant.schemas.core import Node, NodeKind

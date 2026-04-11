@@ -5,6 +5,7 @@ The dynamic enrichment API merges coverage and trace data directly onto a `Progr
 ### Standalone Enrichment
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.dynamic import enrich_graph, CoverageIngester, TraceIngester
 from cogant.schemas.graph import ProgramGraph
 
@@ -28,6 +29,7 @@ Either `coverage_path` or `trace_path` may be omitted to apply only one source o
 When coverage or trace paths are provided via plugin configuration, the pipeline applies enrichment automatically during the `dynamic` stage:
 
 ```python
+# doctest: +SKIP  # example requires runtime context or external resources
 from cogant.api.pipeline import PipelineRunner, PipelineConfig
 
 config = PipelineConfig(

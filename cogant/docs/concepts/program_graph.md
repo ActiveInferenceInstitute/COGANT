@@ -190,6 +190,7 @@ This certainty propagates into the [role assignment](role_assignment.md) confide
 The `GraphQuery` class provides convenience methods for common graph traversals:
 
 ```python
+# doctest: +SKIP  # requires a populated ProgramGraph as input
 from cogant.graph.queries import GraphQuery
 
 query = GraphQuery(graph)
