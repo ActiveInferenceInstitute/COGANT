@@ -3,8 +3,8 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-04-11T13:42:13.878254Z'
-generator_git_sha: 4d26e6129cb17f98f51ef43c0d2d00e724396129
+generated_at: '2026-04-11T14:42:49.000000Z'
+generator_git_sha: 6d83c8b5fe5b817cc9320478983d9ff2e40f3d8e
 cogant_version: 0.5.0
 package:
   name: cogant
@@ -17,13 +17,13 @@ testing:
   test_count_skipped: 68
   test_count_xfailed: 2
   test_count_xpassed: 1
-  test_files_unit: 192
-  test_files_integration: 21
-  test_files_property: 2
+  test_files_unit: 201
+  test_files_integration: 22
+  test_files_property: 9
   test_files_fuzz: 1
   coverage_percent: 90.77
   mypy_strict_errors: 0
-  ruff_violations: 2
+  ruff_violations: 0
 codebase:
   python_source_files: 180
   python_loc: 56788
