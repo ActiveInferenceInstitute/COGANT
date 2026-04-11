@@ -1,5 +1,13 @@
 ## Session API
 
+> **What this page is:** Reference for the `Session` class — the manual, stage-by-stage interface to COGANT's analysis pipeline.
+>
+> **Prerequisites:** [API overview](overview.md) and [Quick Start](quick_start.md).
+>
+> **Reading time:** ~8 minutes
+>
+> **Next steps:** [PipelineRunner API](pipelinerunner_api.md) · [Bundle API](bundle_api.md) · [Tutorial 1: Quickstart](../tutorials/01_quickstart.md)
+
 The `Session` class manages the analysis pipeline state step-by-step.
 
 ### Creating a Session

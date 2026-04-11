@@ -1,5 +1,13 @@
 # Glossary
 
+> **What this page is:** Alphabetized definitions of every domain term used across COGANT — codebase, docs, and R&D notes — with module paths where the term is implemented.
+>
+> **Prerequisites:** None — designed for lookup, not linear reading.
+>
+> **Reading time:** ~5 minutes per lookup (or skim for one term)
+>
+> **Next steps:** [Core concepts](core_concepts.md) · [Active Inference for programmers](../concepts/active_inference.md) · [What is a GNN?](../concepts/gnn.md)
+
 Alphabetized definitions of every domain term used across the COGANT codebase, docs, and
 R&D notes. Where a term is implemented as a concrete Python object, the module path is given.
 
@@ -17,8 +25,7 @@ and should be normalized on sight:
   `forward pass` / `reverse pass` are reserved for the categorical / functorial framing in
   `evaluation/ISOMORPHISM_THEOREM.md`.
 - `fixpoint` is one word. Never `fix-point` or `fixed point`.
-- `ε` (epsilon) is the **fidelity score** of a roundtrip — a count of ambiguous nodes, not
-  an "accuracy" or "similarity".
+- `ε` (epsilon) is the **role-preservation fidelity** of a roundtrip: `ε = |roles_preserved| / |roles_original|`. It is a ratio in `[0, 1]`, where `ε = 1.0` is a perfect roundtrip and `ε ≥ 0.8` is the ISOMORPHIC threshold. Canonical values live in `cogant/evaluation/METRICS.yaml`; current benchmark is 23/23 ISOMORPHIC, mean ε = 1.0.
 - Roundtrip-fidelity tiers are `ISOMORPHIC`, `APPROXIMATE`, `DIVERGENT` (all caps).
 - `Markov blanket` (uppercase M, lowercase b in prose; capitalized only in headings).
 - `Galois connection` (uppercase G, lowercase c in prose; capitalized only in headings).
@@ -131,11 +138,15 @@ stripped during validation).
 `CATCHES`, `THROWS`, `GUARDS`. These are the only relationships the graph can represent in
 v0.1.0.
 
-**ε** — The fidelity score (epsilon) of a forward → reverse → forward roundtrip on a
-program graph. ε counts the ambiguous nodes whose role assignment is not preserved. ε is
-**not** an "accuracy" or "similarity"; it is a structural distance bounded above by the
-rule-table parameters of the forward pipeline. See ε-bounded adjunction and
-`evaluation/ISOMORPHISM_THEOREM.md`.
+**ε** — Role-preservation fidelity (epsilon) of a forward → reverse → forward roundtrip on
+a program graph. Defined as `ε = |roles_preserved| / |roles_original|`, so ε ∈ [0, 1] and
+`ε = 1.0` is a perfect roundtrip (every original semantic role is recovered). The
+ISOMORPHIC threshold is `ε ≥ 0.8`; below that the tiers are APPROXIMATE
+(`0.5 ≤ ε < 0.8`) and DIVERGENT (`ε < 0.5`). Canonical current values live in
+`cogant/evaluation/METRICS.yaml` (currently 23/23 ISOMORPHIC, mean ε = 1.0). An earlier
+pre-wave-14 "error" formulation (where `ε_max = 0` meant exact recovery; see
+`evaluation/ISOMORPHISM_THEOREM.md` §4) is preserved for theoretical context only. See also
+ε-bounded adjunction.
 
 **ε-bounded adjunction** — The categorical-strength claim that COGANT's forward and reverse
 pipelines form a Galois connection whose roundtrip error is bounded by ε(G), with an

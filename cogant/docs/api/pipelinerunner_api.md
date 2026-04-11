@@ -1,5 +1,13 @@
 ## PipelineRunner API
 
+> **What this page is:** Reference for `PipelineRunner` — the high-level orchestrator that runs every COGANT stage from a single configuration object.
+>
+> **Prerequisites:** [API overview](overview.md), [Quick Start](quick_start.md), and basic familiarity with `Session`.
+>
+> **Reading time:** ~6 minutes
+>
+> **Next steps:** [Session API](session_api.md) · [Bundle API](bundle_api.md) · [Configuration reference](../reference/configuration.md)
+
 The `PipelineRunner` orchestrates all stages in sequence with configuration.
 
 ### Basic Usage

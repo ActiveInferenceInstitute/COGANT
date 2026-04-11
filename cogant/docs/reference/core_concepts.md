@@ -1,5 +1,13 @@
 ## Core Concepts
 
+> **What this page is:** A reference index of COGANT's core data-model concepts — entities, relationships, confidence, and provenance — with pointers into the deep-dive concept pages.
+>
+> **Prerequisites:** None for the high-level reading; concept pages assume Python literacy.
+>
+> **Reading time:** ~10 minutes
+>
+> **Next steps:** [Active Inference for programmers](../concepts/active_inference.md) · [Program graphs in COGANT](../concepts/program_graph.md) · [Glossary](glossary.md)
+
 ### Entities & Relationships
 
 Code is represented as a directed graph:

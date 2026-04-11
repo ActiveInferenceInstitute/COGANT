@@ -207,9 +207,30 @@ writes = [e for e in edges if e.kind == EdgeKind.WRITES]
 
 The rule engine uses these queries extensively. For example, `MutatingSubsystemRule` finds all CLASS nodes, counts their WRITES/MUTATES edges, and fires when the count is at least 1. `OrchestratorRule` counts outgoing CALLS edges and fires when there are 3 or more.
 
+## Implementation
+
+The program-graph data type, the tree-sitter extraction passes, the cross-file linker, and the query helpers are all implemented across `cogant.ingest`, `cogant.static`, and `cogant.graph`:
+
+| Concept on this page | Module (`py/cogant/...`) | API reference | Key class / function |
+| --- | --- | --- | --- |
+| Repository ingest (file enumeration, language sniff, repo manifest) | `ingest/repo.py`, `ingest/files.py`, `ingest/language_detect.py` | [`cogant.static`](../api/static.md) | `IngestRepo`, `enumerate_files` |
+| Tree-sitter parser base + Python parser passes | `static/treesitter_parser.py`, `static/parser.py` | [`cogant.static` → Parser](../api/static.md#parser) | `TreeSitterParser` |
+| Pass 1 — symbol / node extraction | `static/symbols.py` | [`cogant.static` → Symbols](../api/static.md#symbols) | symbol extractors |
+| Pass 2 — type inference annotations | `static/types.py` | [`cogant.static` → Types](../api/static.md#types) | type inferrer |
+| Pass 2 — call-graph (CALLS edges) | `static/calls.py` | [`cogant.static` → Calls](../api/static.md#calls) | call resolver |
+| Pass 2 — READS / WRITES dataflow edges | `static/dataflow.py` | [`cogant.static` → Dataflow](../api/static.md#dataflow) | dataflow extractor |
+| Pass 3 — IMPORTS / cross-file linking | `static/imports.py` | [`cogant.static` → Imports](../api/static.md#imports) | import resolver |
+| `ProgramGraph` dataclass + `Node` / `Edge` / `NodeKind` / `EdgeKind` schemas | `schemas/graph.py`, `schemas/core.py` | [`cogant.gnn` → Package](../api/gnn.md#package) (consumer) | `ProgramGraph`, `Node`, `Edge`, `NodeKind`, `EdgeKind` |
+| Graph builder (assembles the typed multigraph from extracted facts) | `graph/builder.py` | [`cogant.translate`](../api/translate.md) (consumer) | `GraphBuilder` |
+| Static + dynamic graph merge | `graph/merge.py` | [dynamic_analysis_api](../api/dynamic_analysis_api.md) | `merge_graphs` |
+| `GraphQuery` traversal helpers | `graph/queries.py` | [`cogant.translate` → Engine](../api/translate.md#engine) (primary consumer) | `GraphQuery` |
+| Parser certainty propagation into mappings | `translate/confidence.py` | [`cogant.translate` → Confidence](../api/translate.md#confidence) | `ConfidenceTier` |
+
 ## Further reading
 
 - [How COGANT assigns roles](role_assignment.md) -- the rules that analyze program graph structure
 - [Markov blankets in codebases](markov_blanket.md) -- blanket extraction from the graph
 - [What is a GNN?](gnn.md) -- the output format derived from the graph
 - [The forward-reverse cycle](roundtrip.md) -- how graphs participate in the roundtrip pipeline
+- [`cogant.static` API reference](../api/static.md) -- the parsing and edge-extraction modules
+- [Data representations reference](../reference/data_representations.md) -- JSON schema for nodes and edges

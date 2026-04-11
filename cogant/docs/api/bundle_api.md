@@ -1,5 +1,13 @@
 ## Bundle API
 
+> **What this page is:** Reference for the `Bundle` class — the high-level accessor over a finished analysis run's artifacts (graph, mappings, GNN, blanket).
+>
+> **Prerequisites:** [Session API](session_api.md) or [PipelineRunner API](pipelinerunner_api.md).
+>
+> **Reading time:** ~10 minutes
+>
+> **Next steps:** [Tutorial 5: Reading the A/B/C/D matrices](../tutorials/05_gnn_interpretation.md) · [`cogant.gnn` API reference](gnn.md) · [Visualization API](visualization_api.md)
+
 The `Bundle` class provides convenient accessors for analysis results.
 
 ### Summary

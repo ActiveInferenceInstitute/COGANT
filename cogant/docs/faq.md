@@ -1,5 +1,13 @@
 # FAQ
 
+> **What this page is:** Frequently asked questions about COGANT — getting started, technical limits, the reverse pipeline, integration, research, and roadmap.
+>
+> **Prerequisites:** None — this is a browse-as-needed reference.
+>
+> **Reading time:** ~15 minutes (or skim for one section)
+>
+> **Next steps:** [Quick Start](getting-started/quickstart.md) · [Tutorial 1: Quickstart](tutorials/01_quickstart.md) · [Active Inference for programmers](concepts/active_inference.md)
+
 Frequently asked questions about COGANT, organized from "just getting started" through technical limitations, the reverse pipeline, integration, research, and roadmap.
 
 ---
