@@ -482,7 +482,7 @@ def main() -> None:
         "evaluation": {
             "roundtrip": {
                 "data_source": "cogant/evaluation/dataset/roundtrip_results.jsonl",
-                "note": "Pre-wave-16 benchmark; wave-16 synthesizer changes not yet re-benchmarked",
+                "note": "Post-wave-16 benchmark (wave-16 CONSTRAINT/POLICY/CONTEXT synthesizer fixes; re-run 2026-04-10). 23/23 ISOMORPHIC.",
                 "threshold_isomorphic": 0.8,
                 "threshold_approximate": 0.5,
                 "total_targets": roundtrip["total_targets"],
