@@ -66,7 +66,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Reverse Pipeline (GNN to Code)**
 - `cogant.reverse` subpackage: GNN markdown parser, package planner, Python synthesizer, idempotency checker
 - Runtime-callable matrix functions (likelihood, transition, EFE, best_action) without exec
-- ISOMORPHISM_THEOREM.md: Galois connection proof + epsilon-bounded roundtrip error formalization
+- ISOMORPHISM_THEOREM.md: Galois connection proof + ε-bounded roundtrip error formalization
 
 **Active Inference Runtime**
 - Active Inference agent loop with step/convergence/VFE metrics

@@ -3,14 +3,46 @@
 Alphabetized definitions of every domain term used across the COGANT codebase, docs, and
 R&D notes. Where a term is implemented as a concrete Python object, the module path is given.
 
+## Canonical conventions
+
+The following spellings are **canonical** across COGANT documentation. Variants are wrong
+and should be normalized on sight:
+
+- Semantic roles are written **all caps**: `HIDDEN_STATE`, `OBSERVATION`, `ACTION`, `POLICY`,
+  `CONSTRAINT`, `CONTEXT`. Lowercase prose forms ("the observation", "an action") are
+  reserved for the underlying Active Inference concept, not the COGANT role label.
+- Matrix names use a single capital letter, a space, and the lowercase noun: `A matrix`,
+  `B matrix`, `C matrix`, `D matrix`. Never `A_matrix`, `a_matrix`, or `A-matrix`.
+- The pipeline halves are `forward pipeline` and `reverse pipeline`. The bare phrases
+  `forward pass` / `reverse pass` are reserved for the categorical / functorial framing in
+  `evaluation/ISOMORPHISM_THEOREM.md`.
+- `fixpoint` is one word. Never `fix-point` or `fixed point`.
+- `ε` (epsilon) is the **fidelity score** of a roundtrip — a count of ambiguous nodes, not
+  an "accuracy" or "similarity".
+- Roundtrip-fidelity tiers are `ISOMORPHIC`, `APPROXIMATE`, `DIVERGENT` (all caps).
+- `Markov blanket` (uppercase M, lowercase b in prose; capitalized only in headings).
+- `Galois connection` (uppercase G, lowercase c in prose; capitalized only in headings).
+- `ε-bounded adjunction` (lowercase ε, hyphen, lowercase a).
+- `GNN` **always** means *Generalized Notation Notation* (Active Inference Institute), never
+  Graph Neural Network.
+- Class / type names are CamelCase single tokens: `PackagePlan`, `ProgramGraph`,
+  `ReverseGNNModel`. Never `package_plan`, `program_graph`, or `reverse_gnn_model`.
+
 ## A
 
 **A matrix** — Likelihood matrix `P(o | s)`, shape `[n_obs × n_states]`. Encodes how hidden
-states produce observations. See [`py/cogant/gnn/matrices.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/gnn/matrices.py).
+states produce observations. The canonical spelling is `A matrix` (single capital letter,
+space, lowercase noun); do **not** write `A_matrix`, `a_matrix`, or `A-matrix`. See
+[`py/cogant/gnn/matrices.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/gnn/matrices.py).
 
-**Action** — An Active Inference role for code that mutates hidden state. Detected by
-`ActionRule`. Examples: setter methods, `handle_request`, `dispatch`, event publishers.
-Maps to the **u** variables in the GNN export.
+**ACTION** — Semantic role for code that mutates hidden state. Detected by `ActionRule`.
+The canonical capitalization is **ACTION** (all caps) when referring to the role; lowercase
+"action" is reserved for the Active-Inference-theoretic action interpretation. Examples:
+setter methods, `handle_request`, `dispatch`, event publishers. Maps to the **u** variables
+in the GNN export.
+
+**Action** — In Active Inference: the agent's active intervention on its environment. In
+COGANT: any code patterning marked `ACTION`. See **ACTION**.
 
 **Active Inference** — A framework from computational neuroscience (Friston et al.) in which
 agents are modeled as probabilistic machines that minimize variational free energy. The
@@ -27,7 +59,8 @@ declared variable to an Active Inference ontology term (e.g. `HiddenStateFactor0
 
 **B matrix** — Transition tensor `P(s' | s, a)`, shape `[n_states × n_states × n_actions]`.
 Encodes how actions change hidden state. Column-stochastic per AII convention. Falls back
-to identity-per-action when the program graph has no `WRITES` evidence.
+to identity-per-action when the program graph has no `WRITES` evidence. Canonical spelling
+is `B matrix`; do **not** write `B_matrix` or `b_matrix`.
 
 **Blanket** — See **Markov blanket**.
 
@@ -39,8 +72,10 @@ to identity-per-action when the program graph has no `WRITES` evidence.
 
 ## C
 
-**C vector** — Log-preference over observations, shape `[n_obs]`. Positive means preferred,
-negative means aversive. Softmax is taken over `-C` when computing expected free energy.
+**C matrix** / **C vector** — Log-preference over observations, shape `[n_obs]`. Positive
+means preferred, negative means aversive. Softmax is taken over `-C` when computing expected
+free energy. Canonical spelling is `C matrix` (or `C vector` when the modality count is 1);
+do **not** write `C_matrix` or `c_matrix`.
 
 **Calibration** — The open R&D plan for empirically validating COGANT's confidence scores
 against hand-labelled ground truth. See `../evaluation/CALIBRATION.md`.
@@ -59,7 +94,14 @@ hidden state emits the observation"). Not to be confused with an `EdgeKind` in t
 graph.
 
 **CONSTRAINT** — Semantic role for validators, assertions, and tests. Detected by
-`PreferenceRule` and `TestAssertionRule`. Contributes to the C vector.
+`PreferenceRule` and `TestAssertionRule`. Contributes to the C matrix. The canonical
+capitalization is **CONSTRAINT** (all caps); the historical reverse-pipeline planner prefix
+`cnst_` is a stale internal artifact, not a canonical spelling — synthesizer output is
+normalized to `check_*`.
+
+**CONTEXT** — Semantic role for configuration, feature flags, and global state that
+parameterize the system. Maps to the **D matrix** (initial-state prior) in the GNN export.
+The canonical capitalization is **CONTEXT** (all caps).
 
 **CONTAINS** — An `EdgeKind` representing lexical containment: a module contains a class,
 a class contains its methods, and so on.
@@ -71,8 +113,9 @@ nodes joined by a `CONTAINS` edge.
 
 ## D
 
-**D vector** — Initial-state prior `P(s_0)`, shape `[n_states]`. Uniform fallback when no
-`CONFIGURATION` nodes exist.
+**D matrix** / **D vector** — Initial-state prior `P(s_0)`, shape `[n_states]`. Uniform
+fallback when no `CONFIGURATION` nodes exist. Canonical spelling is `D matrix` (or
+`D vector`); do **not** write `D_matrix` or `d_matrix`.
 
 **DAG** — Directed Acyclic Graph. The COGANT pipeline is expressed as a DAG of stages, each
 with declared inputs and outputs.
@@ -88,6 +131,17 @@ stripped during validation).
 `CATCHES`, `THROWS`, `GUARDS`. These are the only relationships the graph can represent in
 v0.1.0.
 
+**ε** — The fidelity score (epsilon) of a forward → reverse → forward roundtrip on a
+program graph. ε counts the ambiguous nodes whose role assignment is not preserved. ε is
+**not** an "accuracy" or "similarity"; it is a structural distance bounded above by the
+rule-table parameters of the forward pipeline. See ε-bounded adjunction and
+`evaluation/ISOMORPHISM_THEOREM.md`.
+
+**ε-bounded adjunction** — The categorical-strength claim that COGANT's forward and reverse
+pipelines form a Galois connection whose roundtrip error is bounded by ε(G), with an
+explicit upper bound derived from the rule table T. The structure is weaker than a full
+adjunction (no unit/counit isomorphism) but stronger than a bare order-preserving map.
+
 **Expected free energy (EFE)** — A forward-looking free-energy functional used to score
 candidate action sequences (policies) in Active Inference. The planner picks the policy with
 the lowest EFE.
@@ -99,23 +153,42 @@ interest. Node role `BlanketRole.EXTERNAL`.
 
 **FEP** — See **Free Energy Principle**.
 
+**Fixpoint** — A point at which iterated rule application produces no new mappings. The
+canonical spelling across COGANT is `fixpoint` (one word). Do **not** write `fix-point` or
+`fixed point`. See **Fixpoint engine**.
+
 **Fixpoint engine** — The rule-application loop inside `TranslationEngine.translate()`. It
 runs every registered rule until no new mappings are produced (convergence) or
 `max_iterations` is reached.
+
+**Forward pipeline** — The source-code → program-graph → semantic-mappings →
+state-space-model → GNN package direction of the COGANT pipeline. Implemented under
+`cogant.translate` and `cogant.gnn`. The categorical functor is written F : 𝒫 → 𝒢. Do
+**not** write "forward pass" in operational documentation; reserve "forward pass" for the
+formal categorical / functorial framing in `evaluation/ISOMORPHISM_THEOREM.md`.
 
 **Free Energy Principle** — The theoretical claim that all self-organizing systems can be
 described as minimizing variational free energy. Karl Friston's foundational framework.
 
 ## G
 
+**Galois connection** — A pair of order-preserving maps (F, R) between two preorders
+satisfying F(p) ≤ g  ⇔  p ≤ R(g). Weaker than a full categorical adjunction. COGANT's
+forward and reverse pipelines form a Galois connection between program graphs and GNN
+state-space models, with roundtrip error bounded by ε. See **ε-bounded adjunction** and
+`evaluation/ISOMORPHISM_THEOREM.md`.
+
 **GNN** — **Generalized Notation Notation**. The Active Inference Institute's reference
 text format for generative-model specifications. Not to be confused with *Graph Neural
 Network*. COGANT's GNN output is a directory with a bracket-notation markdown file plus
-machine-readable JSON twins.
+machine-readable JSON twins. Throughout this codebase the acronym **GNN always means
+Generalized Notation Notation**, never Graph Neural Network. Where the JSON twins happen to
+be structurally usable as input to a downstream graph-neural-network trainer, that is a
+coincidence of representation, not a claim about COGANT's pipeline.
 
 **`GNNMatrices`** — Class in `py/cogant/gnn/matrices.py`. Wraps a `ProgramGraph`, a list of
-`SemanticMapping`, and a `StateSpaceModel`, and derives the A / B / C / D matrices on
-demand.
+`SemanticMapping`, and a `StateSpaceModel`, and derives the **A matrix**, **B matrix**,
+**C matrix**, and **D matrix** on demand.
 
 **`GNNValidator`** — Class in `py/cogant/gnn/validator.py`. Scores a GNN package 0–100
 against structural, shape, normalization, ontology, and fallback-disclosure checks.
@@ -144,8 +217,20 @@ the base class name, can assign roles like `POLICY` or `ERROR_HANDLING`.
 **Internal state** — The μ component of a Markov blanket: everything inside the system of
 interest with no direct external adjacency. Node role `BlanketRole.INTERNAL`.
 
+**ISOMORPHIC** — The strictest of the three roundtrip-fidelity tiers. A roundtrip is
+classified `ISOMORPHIC` when ε(G) = 0 — every node role is preserved exactly under the
+forward → reverse → forward composition. Compare with **APPROXIMATE** and **DIVERGENT**.
+
+**APPROXIMATE** — The middle roundtrip-fidelity tier. A roundtrip is classified
+`APPROXIMATE` when 0 < ε(G) ≤ ε_max — some node roles are ambiguous, but the role-population
+distribution is preserved within tolerance.
+
+**DIVERGENT** — The weakest roundtrip-fidelity tier. A roundtrip is classified `DIVERGENT`
+when ε(G) > ε_max — the synthesized program no longer reproduces the original role
+distribution under re-ingestion. Indicates a structural failure of the rule table.
+
 **Isomorphism** — The formal claim that a program and its generative-model interpretation
-carry the same information, so the forward and reverse COGANT pipelines should be inverses
+carry the same information, so the forward pipeline and reverse pipeline should be inverses
 up to whitespace and naming. See `../evaluation/ISOMORPHISM_THEOREM.md`.
 
 ## K
@@ -193,6 +278,11 @@ four kinds: `MODULE`, `CLASS`, `METHOD`, `FUNCTION`. Additional kinds (`VARIABLE
 
 ## O
 
+**OBSERVATION** — Semantic role for code that produces a read-only signal about hidden
+state. Detected by `ObservationRule`. The canonical capitalization is **OBSERVATION** (all
+caps) when referring to the role; lowercase "observation" is reserved for the
+Active-Inference-theoretic signal interpretation.
+
 **`ObservationRule`** — Semantic rule that tags getters and read-only functions as
 `OBSERVATION`. Keyword set: `get`, `read`, `fetch`, `query`, `display`, `show`, `status`,
 `info`, `list`.
@@ -205,8 +295,10 @@ terms. Section 8 of the GNN markdown.
 
 ## P
 
-**`PackagePlan`** — Prototype dataclass in `py/cogant/reverse/__init__.py` describing the
-directory layout of a synthesized Python package. The reverse direction of the pipeline.
+**`PackagePlan`** — Dataclass in `py/cogant/reverse/__init__.py` describing the directory
+layout of a synthesized Python package. Produced by the reverse pipeline planner and
+consumed by the synthesizer. The canonical spelling is `PackagePlan` (CamelCase, single
+token); do not write `package_plan` or `Package Plan` in type-reference contexts.
 
 **`ParseResult`** — Container returned by a `LanguagePlugin.parse_file()` call. Carries
 `nodes`, `edges`, and `diagnostics`.
@@ -215,7 +307,8 @@ directory layout of a synthesized Python package. The reverse direction of the p
 
 **POLICY** — Semantic role for handler / controller / router classes and retry / circuit-
 breaker patterns. Detected by `PolicyRule`, `RetryPatternRule`, and some applications of
-`InheritanceRule`.
+`InheritanceRule`. The canonical capitalization is **POLICY** (all caps); lowercase "policy"
+is reserved for the Active-Inference-theoretic action-sequence interpretation.
 
 **Preference** — Positive entry in the C vector, or equivalently a `PREFERENCE` mapping.
 The Active Inference equivalent of a goal.
@@ -225,7 +318,10 @@ conflicts. Confidence is the tiebreaker when priorities are equal.
 
 **Program graph** — The canonical intermediate representation produced by the graph stage.
 A typed, directed property graph with `NodeKind`-labelled nodes and `EdgeKind`-labelled
-edges. Instance of `py/cogant/schemas/graph.py::ProgramGraph`.
+edges. Instance of `py/cogant/schemas/graph.py::ProgramGraph`. The type-reference spelling
+is `ProgramGraph` (CamelCase, single token); the prose phrase "program graph" is acceptable
+when not naming the type. Do not write `program_graph` or `Program Graph` in code or type
+contexts.
 
 **Provenance** — Source-level attribution for every non-trivial mapping or matrix entry.
 Recorded as file:line:col spans and stored in `provenance.json` in the GNN package.
@@ -238,8 +334,20 @@ Recorded as file:line:col spans and stored in `provenance.json` in the GNN packa
 **Resilience rules** — The `resilience.py` rule family. Includes `RetryPatternRule`,
 `ErrorBoundaryRule`, `SingletonAccessRule`, `CircuitBreakerRule`.
 
-**Reverse mode** — The GNN → code direction of the pipeline. Prototype only in v0.1.0.
-See [Tutorial 6](../tutorials/06_reverse_mode.md).
+**Reverse mode** — Synonym for **reverse pipeline**. Prefer "reverse pipeline" in operational
+documentation.
+
+**Reverse pipeline** — The GNN → code direction of COGANT. Implemented under
+`cogant.reverse` (parser, planner, synthesizer, idempotency checker). The categorical
+functor is written R : 𝒢 → 𝒫. Do **not** write "reverse pass" in operational
+documentation; reserve "reverse pass" for the formal categorical / functorial framing in
+`evaluation/ISOMORPHISM_THEOREM.md`. See [Tutorial 6](../tutorials/06_reverse_mode.md).
+
+**`ReverseGNNModel`** — Wrapper class produced by the reverse pipeline. Holds the parsed
+GNN package alongside the planner output (`PackagePlan`) and the metadata needed for the
+synthesizer to emit an idempotent Python package. The canonical spelling is
+`ReverseGNNModel` (CamelCase, single token); do not write `reverse_gnn_model` or
+`Reverse GNN Model`.
 
 **`RoundtripResult`** — Planned dataclass for the output of `cogant roundtrip`. Will carry
 the original bundle, the synthesized bundle, and a structural diff. Not yet implemented.

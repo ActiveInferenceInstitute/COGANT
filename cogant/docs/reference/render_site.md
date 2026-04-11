@@ -177,7 +177,7 @@ Bundle (results container)
 
 1. **Implement parsing modules** - Fill in static analysis with real parsers
 2. **Add language support** - Extend with Python, Java, Go, etc. parsers
-3. **Implement GNN translation** - Add actual graph neural network logic
+3. **Implement GNN translation** - Map program graphs to Generalized Notation Notation (Active Inference Institute) state-space models. Note: GNN here means Generalized Notation Notation, not graph neural networks.
 4. **Add database backend** - Store bundles for comparison
 5. **Extend visualization** - Add more interactive views
 6. **Build web UI** - Create web interface for analysis
