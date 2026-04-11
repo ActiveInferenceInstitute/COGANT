@@ -15,6 +15,7 @@ import re
 import statistics
 import subprocess
 import sys
+import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -66,6 +67,71 @@ def get_cogant_version() -> str:
     text = init_path.read_text()
     m = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', text)
     return m.group(1) if m else "unknown"
+
+
+def get_python_min_from_pyproject() -> str:
+    """Minimum CPython ``X.Y`` from ``[project].requires-python`` in ``cogant/pyproject.toml``."""
+    pyproject = COGANT_DIR / "pyproject.toml"
+    if not pyproject.is_file():
+        return "3.11"
+    try:
+        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    except OSError:
+        return "3.11"
+    req = (data.get("project") or {}).get("requires-python") or ""
+    if not isinstance(req, str):
+        return "3.11"
+    # ">=3.11", ">=3.11,<3.14", "~=3.11.0"
+    m = re.search(r">=\s*(\d+)\.(\d+)", req)
+    if m:
+        return f"{m.group(1)}.{m.group(2)}"
+    m = re.search(r"~=\s*(\d+)\.(\d+)", req)
+    if m:
+        return f"{m.group(1)}.{m.group(2)}"
+    return "3.11"
+
+
+def get_default_runner_stages() -> list[str]:
+    """Ordered stage names from :class:`cogant.api.pipeline.PipelineConfig` defaults."""
+    py_root = COGANT_DIR / "py"
+    if not py_root.is_dir():
+        return [
+            "ingest",
+            "static",
+            "normalize",
+            "graph",
+            "dynamic",
+            "translate",
+            "statespace",
+            "process",
+            "export",
+            "validate",
+        ]
+    insert_at = str(py_root.resolve())
+    if insert_at not in sys.path:
+        sys.path.insert(0, insert_at)
+    try:
+        from cogant.api.pipeline import PipelineConfig  # noqa: PLC0415
+
+        return list(PipelineConfig().stages)
+    except Exception as exc:  # pragma: no cover - import guard for stripped checkouts
+        print(
+            f"WARNING: could not import PipelineConfig for runner stages ({exc}); "
+            "using static fallback list.",
+            file=sys.stderr,
+        )
+        return [
+            "ingest",
+            "static",
+            "normalize",
+            "graph",
+            "dynamic",
+            "translate",
+            "statespace",
+            "process",
+            "export",
+            "validate",
+        ]
 
 
 # ---------------------------------------------------------------------------
@@ -423,6 +489,8 @@ def main() -> None:
     rust_crates = count_rust_crates()
     ffi = rust_ffi_available()
     translation_rules = count_translation_rules()
+    python_min = get_python_min_from_pyproject()
+    runner_stages = get_default_runner_stages()
 
     metrics = {
         "schema_version": "1.0",
@@ -432,7 +500,7 @@ def main() -> None:
         "package": {
             "name": "cogant",
             "version": version,
-            "python_min": "3.10",
+            "python_min": python_min,
         },
         "testing": {
             "test_count_total": test_count_total,
@@ -457,18 +525,9 @@ def main() -> None:
             "public_functions": source_stats["public_functions"],
         },
         "pipeline": {
-            "stage_count": 8,
+            "stage_count": len(runner_stages),
             "translation_rules": translation_rules,
-            "stages": [
-                "ingest",
-                "parse",
-                "graph",
-                "translate",
-                "statespace",
-                "markov",
-                "gnn",
-                "reverse",
-            ],
+            "runner_stages": runner_stages,
         },
         "evaluation": {
             "roundtrip": {

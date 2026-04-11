@@ -1,61 +1,22 @@
-## Pipeline Stages
+## Pipeline runner stages
 
-> **Canonical source:** `cogant/evaluation/METRICS.yaml` (`pipeline.stage_count`, `pipeline.stages`).
-> The current pipeline has **8 stages**: `ingest → parse → graph → translate → statespace → markov → gnn → reverse`.
-> Earlier R&D drafts described a 9- or 10-stage layout (with separate `static`, `normalize`, `dynamic`, `process`, `export`, `validate` stages); those have been merged into the current 8-stage DAG. The legacy stage numbering still appears in some `docs/architecture/` and `docs/evaluation/` pages and is being progressively updated.
+> **Canonical source:** `cogant/evaluation/METRICS.yaml` (`pipeline.stage_count`, `pipeline.runner_stages`), generated from the default `PipelineConfig.stages` list in `py/cogant/api/pipeline.py`.
 
-### Stage 1: Ingest
+The `PipelineRunner` executes an ordered list of **runner stages** (currently **10**). This is distinct from the **six-layer conceptual IR progression** (repo → program graph → semantic mapping → state space → process → validation) described in the manuscript and architecture docs—those layers are *artifacts*, not necessarily 1:1 with runner stage boundaries.
 
-**Input**: Directory path or git URL
-**Output**: File manifest with metadata
+Default order:
 
-Load target codebase, enumerate files, detect languages, load configuration.
+1. **ingest** — snapshot repository, enumerate files  
+2. **static** — AST / symbols / per-file extraction  
+3. **normalize** — canonicalize representations before graph build  
+4. **graph** — build the typed program graph  
+5. **dynamic** — optional coverage/trace enrichment  
+6. **translate** — fixpoint translation rules and semantic roles  
+7. **statespace** — compile state-space model  
+8. **process** — process / execution sketch  
+9. **export** — GNN bundle and companion artifacts  
+10. **validate** — integrity and schema checks  
 
-### Stage 2: Parse
+Markov blanket extraction and GNN matrix formatting run inside the orchestrated pipeline where the implementation wires them (typically around state-space, process, and export). The **reverse** synthesizer (`cogant.reverse`) is a separate workflow from a completed bundle, not a `PipelineRunner` stage in the default list.
 
-**Input**: File manifest + source files
-**Output**: AST + types + symbols + imports + call graph + data flow per file
-
-Extract AST, types, symbols, imports, call graph, and data flow per file using language-specific parsers (tree-sitter, Python AST, etc.). This stage absorbs the legacy `static` and `normalize` steps: identities are resolved and entities canonicalized inline.
-
-### Stage 3: Graph
-
-**Input**: Parsed entities
-**Output**: `ProgramGraph` IR
-
-Build the program graph: nodes, edges, confidence, provenance. The `ProgramGraph` is the lower lattice of the COGANT Galois connection.
-
-### Stage 4: Translate
-
-**Input**: `ProgramGraph` IR
-**Output**: Translated graph + semantic role assignments
-
-Apply the **19 translation rules** via fixpoint iteration, resolve conflicts, assign semantic roles (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT, DATA_FLOW), compute per-mapping confidence.
-
-### Stage 5: Statespace
-
-**Input**: Translated graph
-**Output**: State-space model
-
-Compile state-space model: identify hidden-state variables, extract actions, infer transitions, collect observations.
-
-### Stage 6: Markov
-
-**Input**: Translated graph + state-space model
-**Output**: Markov blanket partition
-
-Partition the program graph into the four Markov blanket sets: internal states (HIDDEN_STATE), sensory states (OBSERVATION), active states (ACTION), external states (CONTEXT).
-
-### Stage 7: GNN
-
-**Input**: Statespace + Markov partition
-**Output**: GNN package directory (Generalized Notation Notation, Active Inference Institute spec — **not** graph neural networks)
-
-Emit the GNN model artifact: `model.gnn.json`, `model.gnn.md`, A/B/C/D matrices, ontology annotations. This is the upper lattice of the Galois connection.
-
-### Stage 8: Reverse
-
-**Input**: GNN package
-**Output**: Synthesized Python `PackagePlan`
-
-Run the reverse pipeline: `GNNModel → ReverseGNNModel → PackagePlan → synthesized Python source`. The reverse pipeline closes the Galois loop. Roundtrip fidelity is measured by ε = `|roles_preserved| / |roles_original|`; ε ≥ 0.8 = ISOMORPHIC. Current benchmark: **23/23 ISOMORPHIC, mean ε = 1.0** (see `cogant/evaluation/METRICS.yaml`).
+Roundtrip evaluation figures (for example **23/23 ISOMORPHIC**, mean ε = 1.0) are recorded in `cogant/evaluation/METRICS.yaml` and `cogant/docs/evaluation/ROUNDTRIP_EVAL.md`.

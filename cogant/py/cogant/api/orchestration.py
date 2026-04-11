@@ -150,7 +150,8 @@ def _default_translation_engine() -> TranslationEngine:
     own engine and register the subset they need.
 
     Returns:
-        A ready-to-use ``TranslationEngine`` instance with all 18 rules.
+        A ready-to-use ``TranslationEngine`` instance with the full shipped
+        concrete rule set (see ``cogant.translate.rules`` / ``METRICS.yaml``).
     """
     eng = TranslationEngine()
     eng.register_rule(ReadOnlyInputRule())

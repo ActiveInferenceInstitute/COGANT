@@ -88,7 +88,7 @@ MANUSCRIPT_VARS: dict[str, str] = {
     "{{VERSION}}": "package.version",              # Semantic version string (e.g. "0.5.0")
     "{{COGANT_VERSION}}": "package.version",       # Alias for VERSION; used in prose "cogant v{{...}}"
     "{{PACKAGE_NAME}}": "package.name",            # Canonical distribution name ("cogant")
-    "{{PYTHON_MIN}}": "package.python_min",        # Minimum supported CPython (e.g. "3.10")
+    "{{PYTHON_MIN}}": "package.python_min",        # Minimum supported CPython (from pyproject ``requires-python``)
 
     # ---------------------------------------------------------------
     # Testing — counts, coverage, and lint health
