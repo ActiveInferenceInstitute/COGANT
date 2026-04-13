@@ -9,7 +9,7 @@ import logging
 import subprocess
 from pathlib import Path
 
-from cogant.markov.partition import MarkovBlanket
+from cogant.markov.blanket import MarkovBlanket
 from cogant.schemas.graph import ProgramGraph
 
 logger = logging.getLogger(__name__)

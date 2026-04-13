@@ -33,6 +33,7 @@ from cogant.translate.rules import (
     CircuitBreakerRule,
     ConfigRule,
     ContainmentRule,
+    ContextRule,
     DataPipelineRule,
     ErrorBoundaryRule,
     EventBusRule,

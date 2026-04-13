@@ -33,7 +33,7 @@ a 23-fixture cross-language roundtrip suite (ε = 1.0, 100% ISOMORPHIC).
 | Visualization suite (PDF, PNG, Mermaid, SVG) | ✅ Production |
 | Export: 9 formats (JSON, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT, JSONLINES) | ✅ Production |
 | FastAPI server + WebSocket streaming | ✅ Production |
-| CLI: 22 subcommands | ✅ Production |
+| CLI: 24 subcommands | ✅ Production |
 | Type system: 9 Protocols, 15+ TypedDicts, 49 .pyi stubs | ✅ Production |
 | Test suite: 2,129 passing, 83.42% coverage | ✅ Production |
 | Rust PyO3 acceleration (optional) | ✅ Beta |

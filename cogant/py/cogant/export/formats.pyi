@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from cogant.markov.partition import MarkovBlanket as MarkovBlanket
+from cogant.markov.blanket import MarkovBlanket as MarkovBlanket
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 logger: Any

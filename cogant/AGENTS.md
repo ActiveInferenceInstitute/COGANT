@@ -39,7 +39,7 @@ cogant/                         ← package root (this directory)
 │   ├── runtime/                ← AgentRuntime: multi-episode Bayesian learning
 │   ├── api/                    ← PipelineConfig, orchestration, session management
 │   ├── server/                 ← FastAPI app (REST + WebSocket)
-│   ├── cli/                    ← 22 Typer subcommands
+│   ├── cli/                    ← 24 Typer subcommands
 │   ├── protocols.py            ← 9 @runtime_checkable Protocols
 │   └── types.py                ← 15+ TypedDicts, type aliases
 ├── rust/                       ← PyO3 Rust workspace (optional acceleration)

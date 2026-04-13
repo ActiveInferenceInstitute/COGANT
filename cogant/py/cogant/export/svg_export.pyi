@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from cogant.markov.partition import MarkovBlanket as MarkovBlanket
+from cogant.markov.blanket import MarkovBlanket as MarkovBlanket
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 class SVGExporter:

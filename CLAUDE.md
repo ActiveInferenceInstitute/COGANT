@@ -14,7 +14,7 @@ When the parent template's `CLAUDE.md` talks about `projects/{name}/src/`, that 
 
 ## What COGANT is
 
-Codebase-to-GNN translation engine: ingests Python / JS / TS source, builds a `ProgramGraph` (typed nodes + edges), runs a **fixpoint engine with 22 declarative translation rules** to produce `SemanticMappings` (HIDDEN_STATE / OBSERVATION / ACTION / POLICY / ...), compiles those into an Active Inference state space, and emits a GNN markdown bundle with A/B/C/D matrices plus an AII validator score. A reverse path (`py/cogant/reverse/`) synthesizes a runnable Python package from a GNN bundle; `cogant roundtrip` closes the forward–reverse–forward loop. See `cogant/README.md` for the full architecture diagram and CLI surface (22 Typer subcommands registered in `py/cogant/cli/main.py`).
+Codebase-to-GNN translation engine: ingests Python / JS / TS source, builds a `ProgramGraph` (typed nodes + edges), runs a **fixpoint engine with 22 declarative translation rules** to produce `SemanticMappings` (HIDDEN_STATE / OBSERVATION / ACTION / POLICY / ...), compiles those into an Active Inference state space, and emits a GNN markdown bundle with A/B/C/D matrices plus an AII validator score. A reverse path (`py/cogant/reverse/`) synthesizes a runnable Python package from a GNN bundle; `cogant roundtrip` closes the forward–reverse–forward loop. See `cogant/README.md` for the full architecture diagram and CLI surface (24 Typer subcommands registered in `py/cogant/cli/main.py`).
 
 ## Commands
 
@@ -75,9 +75,9 @@ The package is a forward pipeline with a reverse synthesis arm. Key module group
 - `gnn/`, `export/` — AII-spec-compliant GNN markdown bundle emission (A/B/C/D matrices derived from edge kinds; **not** keyword heuristics).
 - `reverse/` — `PackagePlan`-based synthesis of a runnable Python package from a GNN bundle; drives `cogant reverse` and `cogant roundtrip`. v0.5.0 fixed POLICY / CONTEXT stub emission to attain 23/23 ISOMORPHIC on the canonical roundtrip eval.
 - `runtime/` — `AgentRuntime` with `run_episode`, `run_multi_episode`, `update_D_from_posterior`, `update_A_from_counts` (multi-episode Bayesian learning).
-- `server/` — FastAPI app (`cogant.server.app`) with `/health` and `/translate`; packaged via `cogant/Dockerfile` and `docker-compose.yml` (EXPOSE 8080).
+- `server/` — FastAPI app (`cogant.server.app`) with 12 routes: `/health`, `/ready`, `/metrics`, `/analyze`, `/reverse`, `/roundtrip`, plus `/api/v1/` namespace (`rules`, `analyze`, `roundtrip`, `visualize`, `metrics`); packaged via `cogant/Dockerfile` and `docker-compose.yml` (EXPOSE 8080).
 - `pipeline/` — `PipelineConfig` orchestrates the forward run. `PipelineConfig.incremental_since` (same as `cogant translate --incremental <git-ref>`) re-uses the previous run's `ProgramGraph` for unchanged paths; benchmarked at 19.6× no-change / 5.6× single-file on Flask.
-- `cli/main.py` — Typer app registering the 22 subcommands documented in `cogant/README.md`. Ruff `B008` is intentionally suppressed here (Typer's `typer.Argument` / `typer.Option` defaults are the canonical idiom).
+- `cli/main.py` — Typer app registering the 24 subcommands documented in `cogant/README.md`. Ruff `B008` is intentionally suppressed here (Typer's `typer.Argument` / `typer.Option` defaults are the canonical idiom).
 - `rust_backend.py` — thin Python wrapper over the compiled `_rust` extension when `COGANT_USE_RUST=1`; transparently falls back to pure Python otherwise.
 - `validate/`, `scoring/` — AII validator that scores bundles 0–100 (all six shipped fixtures score 100/100).
 
