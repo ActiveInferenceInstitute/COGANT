@@ -3,8 +3,8 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-04-11T20:31:43.442193Z'
-generator_git_sha: eca7da5077e22ba8152d065a29e4e89d0853b47a
+generated_at: '2026-04-13T20:29:40.068269Z'
+generator_git_sha: 11f0fcad867015c1e1d8a2bab16e595047a4ab95
 cogant_version: 0.5.0
 package:
   name: cogant
@@ -25,14 +25,14 @@ testing:
   mypy_strict_errors: 0
   ruff_violations: 0
 codebase:
-  python_source_files: 180
-  python_loc: 57015
+  python_source_files: 200
+  python_loc: 69221
   public_modules: 145
   public_classes: 303
   public_functions: 759
 pipeline:
   stage_count: 10
-  translation_rules: 19
+  translation_rules: 22  # 19 original + 3 wave-21 additions (ParameterRule, StateMachineRule, RateLimiterRule)
   runner_stages:
   - ingest
   - static

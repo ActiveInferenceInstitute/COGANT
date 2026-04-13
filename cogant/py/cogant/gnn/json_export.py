@@ -435,14 +435,14 @@ class GNNJSONExporter:
                     val = float(var.confidence.value if hasattr(var.confidence, 'value') else var.confidence)
                     confidences.append(val)
                 except (TypeError, ValueError):
-                    pass
+                    logger.debug("Skipping non-numeric confidence value for variable: %r", var)
         for obs in self.state_space.observations.values():
             if obs.confidence:
                 try:
                     val = float(obs.confidence.value if hasattr(obs.confidence, 'value') else obs.confidence)
                     confidences.append(val)
                 except (TypeError, ValueError):
-                    pass
+                    logger.debug("Skipping non-numeric confidence value for observation: %r", obs)
         return sum(confidences) / len(confidences) if confidences else 0.5
 
     def _compute_component_confidence(self, component: str) -> float:
@@ -466,7 +466,7 @@ class GNNJSONExporter:
                     val = float(comp.confidence.value if hasattr(comp.confidence, 'value') else comp.confidence)
                     confidences.append(val)
                 except (TypeError, ValueError):
-                    pass
+                    logger.debug("Skipping non-numeric confidence value in component %r: %r", component, comp)
         return sum(confidences) / len(confidences) if confidences else 0.5
 
     def _export_rendering_hints(self) -> dict[str, Any]:

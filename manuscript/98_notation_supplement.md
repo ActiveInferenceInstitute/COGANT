@@ -37,7 +37,7 @@ Cross-references use the equation, definition, and theorem numbers from the main
 
 | Symbol | LaTeX | Meaning | First defined | Notes |
 |--------|-------|---------|---------------|-------|
-| $r$ | `$r$` | Translation rule quadruple $({\varphi_r, \kappa_r, w_r, p_r})$ | §2.2 Def. 2 | 19 shipped rules in 5 families |
+| $r$ | `$r$` | Translation rule quadruple $({\varphi_r, \kappa_r, w_r, p_r})$ | §2.2 Def. 2 | 22 shipped rules in 5 families (5+5+3+4+5; three added in wave-21) |
 | $\varphi_r$ | `$\varphi_r$` | Rule match predicate; $\varphi_r : \mathcal{G} \to 2^{\mathcal{F}}$ | §2.2 Def. 2 | `matches(graph, query)` in code |
 | $\mathcal{G}$ | `$\mathcal{G}$` | Universe of finite program graphs | §2.2 Def. 2 | |
 | $\mathcal{F}$ | `$\mathcal{F}$` | Fragment space (finite tuples of node/edge ids) | §2.2 Def. 2 | |
