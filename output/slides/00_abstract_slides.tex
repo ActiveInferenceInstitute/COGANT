@@ -1,0 +1,153 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\begin{frame}[fragile]{Abstract}
+\protect\phantomsection\label{abstract}
+\textbf{COGANT} (Codebase-to-GNN Translation) converts software
+repositories into structured Active Inference artifacts expressed in the
+Active Inference Institute's \textbf{Generalized Notation Notation}
+(GNN)\footnote<\value{beamerpauses}->[frame]{Throughout this manuscript
+  \textbf{GNN} refers to the Active Inference Institute's
+  \textbf{Generalized Notation Notation}
+  (\href{https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation}{repository}),
+  a structured notation for state-space and process models ---
+  \emph{not} graph neural networks. Downstream consumers, including
+  graph neural network training pipelines, can ingest the emitted
+  artifacts, but COGANT itself produces Generalized Notation Notation
+  bundles.}. It sits between classical program analysis, which already
+reasons over graphs such as call graphs and code property graphs
+{[}@yamaguchi2014modeling{]}, and data-driven methods that expect
+tensors, consistent node and edge vocabularies, and exportable training
+bundles {[}@allamanis2018survey; @wu2020comprehensive;
+@scarselli2009graph{]}.
+
+The design centres on a \textbf{program graph IR} whose nodes and edges
+carry \textbf{confidence} and \textbf{provenance}. A \textbf{fixpoint
+translation engine} applies \textbf{19 declarative rules} (five
+structural, five semantic, two control, three behavioural, four
+resilience) that map nodes onto \textbf{7 Active Inference semantic
+roles} --- HIDDEN\_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE,
+CONSTRAINT, and CONTEXT --- with conflict resolution by priority and
+score. Each bundle includes a \textbf{Markov blanket partition} in
+\(O(V+E)\) time. A \textbf{reverse synthesizer}
+(\texttt{cogant.reverse}) reconstructs a runnable Python package from an
+emitted GNN bundle. After the v0.5.0 POLICY/CONTEXT stub-emission fix
+(\href{../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md}{\texttt{../cogant/docs/evaluation/ROUNDTRIP\_IMPROVEMENT.md}}),
+the forward--reverse--forward round-trip on the canonical evaluation set
+reports \textbf{14} isomorphic (\(\varepsilon \geq 0.8\)), \textbf{6}
+approximate (\(\varepsilon \geq 0.5\)), and \textbf{3} divergent targets
+(of \textbf{23} total; twelve zoo fixtures, three real-world-example
+fixtures, eight third-party libraries in scope); details and tables are
+in
+\href{../cogant/docs/evaluation/ROUNDTRIP_EVAL.md}{\texttt{../cogant/docs/evaluation/ROUNDTRIP\_EVAL.md}}
+and §9.
+
+The v0.5.0 \textbf{Python} pipeline uses the standard-library
+\texttt{ast} module. \textbf{JavaScript and TypeScript} are
+\textbf{optional}: install \texttt{cogant{[}multilang{]}} and an
+available \texttt{tree-sitter} grammar (including the JS-grammar
+fallback path for \texttt{.ts} on mixed repositories); integration tests
+cover this path when those pieces are installed. HTTP service, container
+image, incremental analysis, and multi-episode agent runtime are
+documented under
+\href{../cogant/docs/index.md}{\texttt{../cogant/docs/index.md}} and the
+package \href{../cogant/README.md}{\texttt{README.md}} rather than
+repeated here. The test suite reports \textbf{2129} passing tests,
+\textbf{86} skips, \textbf{2} expected \texttt{xfail}, and \textbf{1}
+\texttt{xpass}; \textbf{\texttt{py/cogant/} line coverage is 83.42\%}
+(canonical run aligned to \texttt{METRICS.yaml}, generated
+\textbf{2026-04-10T21:03:18.504378Z}) under \texttt{pytest\ -\/-cov}.
+Interpreters: Python 3.11--3.13. This manuscript gives the theory of the
+IR, running practice, and extension points (parsers, rules, validators,
+exporters) alongside that documentation.
+\end{frame}
+
+\end{document}

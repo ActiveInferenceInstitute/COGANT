@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/ingest/repo.py
+# hypothesis_version: 6.135.29
+
+[300, '--branch', '--pretty=%B', '--pretty=%an', '-1', '.git', '/', '/tmp/cogant', 'Cargo.toml', 'HEAD', 'RepoIngester', 'RepoMetadata', 'RepoSnapshot', 'clone', 'git', 'log', 'package.json', 'pyproject.toml', 'requirements.txt', 'rev-parse', 'setup.py']

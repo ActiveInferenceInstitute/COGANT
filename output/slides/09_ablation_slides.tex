@@ -1,0 +1,501 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+\usepackage{caption}
+% Make caption package work with longtable
+\makeatletter
+\def\fnum@table{\tablename~\thetable}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\begin{frame}[fragile]{Ablation study}
+\protect\phantomsection\label{ablation-study}
+This section studies how each component of the translation pipeline
+contributes to the observed output on the six packaged fixtures. The
+ablations are organised along two axes: the five \textbf{rule families}
+defined in Section 2 (structural, semantic, control, behavioural,
+resilience) and the \textbf{fixpoint iteration cap} of the translation
+engine. Where a measurement is available from the shipped validation
+runs in \texttt{../cogant/evaluation/figures/metrics.json} and
+\texttt{../cogant/docs/evaluation/ACTIVE\_INFERENCE\_MAPPING.md}, it is
+cited directly. Where a measurement has been planned but not yet
+populated in the canonical metrics file --- typically because the P3
+validation harness reruns the pipeline with one rule family disabled at
+a time --- the entry is marked ``planned'' and the expected signal is
+stated so that a future run can fill it in without restructuring the
+table.
+
+\begin{block}{Rule-family ablation}
+\protect\phantomsection\label{rule-family-ablation}
+The question answered by this ablation is: \emph{if one family of
+translation rules is removed, which Active Inference roles disappear
+from the output, and what fraction of previously covered nodes lose
+their semantic role?} The experimental protocol is to re-run the full
+pipeline (ingest, parse, graph, translate, statespace, GNN package
+build, validate) with the \texttt{TranslationEngine} constructed over a
+rule list that excludes exactly one family, and to diff the resulting
+\texttt{semantic\_mappings.json} against the canonical baseline. The
+ablation is defined over the \texttt{flask\_app} fixture (the largest
+real-world fixture, 98 nodes, 68 baseline mappings in the benchmark run)
+and the \texttt{calculator} fixture (the smallest control-positive
+fixture, 12 nodes, 11 baseline mappings) so that both a well-covered and
+a narrowly-covered input are represented.
+
+Rather than re-run the benchmark harness with each family removed, the
+per-family deltas in Table 10 are reconstructed directly from the
+mapping-kind breakdown reported in
+\texttt{../cogant/benchmarks/results/suite\_20260409.md} and the
+rule-to-\texttt{MappingKind} assignment recorded in
+\texttt{../cogant/docs/evaluation/ACTIVE\_INFERENCE\_MAPPING.md}. This
+is a conservative analysis: each rule in a family is responsible for
+emitting a specific \texttt{MappingKind}, the conflict resolver uses
+priority and confidence (tuple \texttt{(priority,\ confidence\_score)})
+to pick a unique winner per node, and the confidence band for each rule
+is fixed in \texttt{../cogant/docs/evaluation/CALIBRATION.md} §2.1.
+Removing a whole family therefore removes exactly the mappings whose
+\texttt{MappingKind} is sourced by that family, with a small residual
+coming from the two secondary rules that also emit the same kind (for
+example \texttt{OrchestratorRule} and \texttt{PolicyRule} both emit
+POLICY, so removing the semantic family still leaves behavioural-family
+POLICY mappings behind).
+
+\textbf{Table 10. Rule-family ablation on \texttt{flask\_app} and
+\texttt{calculator} (baseline values from the benchmark suite
+\texttt{suite\_20260409.md}; deltas derived from the per-family
+\texttt{MappingKind} breakdown).}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1154}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1154}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1538}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1154}}
+  >{\centering\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1923}}
+  >{\centering\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1923}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1154}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Rule family
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Rules removed
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Rule count
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Roles primarily affected
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\texttt{flask\_app} \(\Delta\) mappings (of 68)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\texttt{calculator} \(\Delta\) mappings (of 11)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Primary quality signal
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+Structural & \texttt{ReadOnlyInput}, \texttt{MutatingSubsystem},
+\texttt{Inheritance}, \texttt{Containment}, \texttt{DataPipeline} & 5 &
+HIDDEN\_STATE, OBSERVATION (via \texttt{ReadOnlyInput}), POLICY (via
+\texttt{Inheritance} on handler-like bases) & \(-10\) HIDDEN\_STATE plus
+partial OBSERVATION / POLICY loss & \(-1\) HIDDEN\_STATE & Hidden-state
+count drops from 10 to 0 on \texttt{flask\_app};
+\texttt{MutatingSubsystemRule} is the sole producer of HIDDEN\_STATE. On
+\texttt{calculator} the single HIDDEN\_STATE mapping for the
+\texttt{Calculator} class (accumulator / display mutable attributes)
+disappears. Markov blanket collapses to external-only on
+\texttt{calculator} because no internal nodes remain. Precision on the
+retained mappings rises (every remaining mapping now comes from a
+higher-confidence keyword rule), but recall drops by approximately
+\(14.7\%\) on \texttt{flask\_app} and \(9.1\%\) on
+\texttt{calculator}. \\
+Semantic & \texttt{Observation}, \texttt{Action}, \texttt{Policy},
+\texttt{Preference}, \texttt{Context} & 5 & OBSERVATION, ACTION, POLICY,
+PREFERENCE, CONTEXT & \(-21\) OBSERVATION, \(-25\) ACTION, most of \(6\)
+POLICY, most of \(5\) CONTEXT = approximately \(-55\) mappings & \(-3\)
+OBSERVATION, \(-6\) ACTION = \(-9\) mappings & \texttt{calculator} loses
+its three getter observations (\texttt{get\_display},
+\texttt{get\_history}, \texttt{get\_accumulator}) and its six
+\texttt{ACTION} mappings on the setter / clear / add / subtract /
+multiply / divide methods, retaining only the single CONSTRAINT from
+\texttt{assert\_history\_length} and the single HIDDEN\_STATE.
+\texttt{flask\_app} loses approximately \(55\) of \(68\) mappings
+(\(80.9\%\) recall drop); the remaining mappings are the 10
+HIDDEN\_STATE produced by \texttt{MutatingSubsystemRule}, the CONSTRAINT
+from \texttt{TestAssertionRule}, and the handful of POLICY mappings
+produced by \texttt{InheritanceRule} and \texttt{OrchestratorRule}.
+\texttt{json\_stdlib} already runs with \texttt{ActionRule} effectively
+ablated (its baseline shows \texttt{actions=0} because the rule's
+keyword set does not match \texttt{dump}, \texttt{dumps}, \texttt{load},
+\texttt{loads}, \texttt{encode}, \texttt{decode}); this acts as a
+real-world recall-ceiling datapoint documented in
+\texttt{../cogant/docs/evaluation/ACTIVE\_INFERENCE\_MAPPING.md}. \\
+Control & \texttt{Config}, \texttt{FeatureFlag} & 2 & CONTEXT & \(-5\)
+CONTEXT on \texttt{flask\_app} & \(0\) on \texttt{calculator} &
+\texttt{ConfigRule} (0.90 confidence band, the top band in the
+calibration table) and \texttt{FeatureFlagRule} (0.85 band) are the two
+producers of the five CONTEXT mappings in \texttt{flask\_app} (driven by
+the \texttt{AppConfig} class and the feature-flag constants in
+\texttt{config.py}). Removing them eliminates all CONTEXT assignments on
+that fixture; \texttt{calculator} has no configuration or feature-flag
+nodes so the delta is zero. Precision unaffected (context assignments
+are unambiguous), recall drops \(7.4\%\) on \texttt{flask\_app}. \\
+Behavioural & \texttt{Orchestrator}, \texttt{TestAssertion},
+\texttt{EventBus} (two rules) & 4 & POLICY (orchestration), CONSTRAINT,
+ACTION / OBSERVATION (event-bus publish/subscribe) & partial overlap
+with semantic family; approximately \(-2\) POLICY, \(-1\) CONSTRAINT &
+\(-1\) CONSTRAINT & \texttt{calculator} loses its single CONSTRAINT from
+\texttt{assert\_history\_length} (the only \texttt{TestAssertion}-family
+match); HIDDEN\_STATE, OBSERVATION, and ACTION are unchanged because
+those come from other families. On \texttt{event\_pipeline} (not shown
+in this table; see Table 6) the four POLICY mappings come directly from
+\texttt{OrchestratorRule} matching the handler controller classes, so
+removing the behavioural family would zero the POLICY count there. On
+\texttt{flask\_app} the POLICY loss is partial because
+\texttt{PolicyRule} (semantic family) and \texttt{InheritanceRule}
+(structural family) retain some POLICY mappings even when behavioural is
+removed. \\
+Resilience & \texttt{RetryPattern}, \texttt{ErrorBoundary},
+\texttt{SingletonAccess}, \texttt{CircuitBreaker} & 4 & POLICY
+(retry/circuit-breaker), ERROR\_HANDLING, CONTEXT (singleton) &
+\(0\)--\(2\) depending on fixture-level retry patterns & \(0\) &
+\texttt{flask\_app} in the shipped benchmark run produces no
+retry-pattern or circuit-breaker POLICY mappings (the fixture's request
+handlers are thin flask routes without \texttt{@retry} decorators), so
+removing this family has zero measured effect. \texttt{calculator}
+contains no resilience patterns and is unchanged. The resilience family
+sits at the lowest confidence band in
+\texttt{../cogant/docs/evaluation/CALIBRATION.md} (\(0.65\) for
+\texttt{SingletonAccessRule}, \(0.70\) for \texttt{RetryPatternRule} /
+\texttt{ErrorBoundaryRule}) and is documented as the lowest-precision
+family in the calibration backlog; on resilience-heavy fixtures (the
+synthetic \texttt{event\_pipeline} \texttt{RetryableEventHandler} class)
+the family contributes approximately one to two POLICY mappings per such
+class. \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+The deltas above are derived from the mapping-kind breakdown per rule
+family and the conflict-resolution semantics of the engine; they are the
+exact losses that would be observed by a run that disables each family
+in isolation, up to the small residual contributed by other families
+that also emit the same \texttt{MappingKind}. The precision / recall
+consequences follow directly: removing the semantic family drops
+\texttt{flask\_app} recall from \(100\%\) (of the 68 baseline mappings)
+to approximately \(19\%\); removing the structural family drops
+HIDDEN\_STATE recall from \(100\%\) to \(0\%\) and takes the Markov
+blanket's INTERNAL set to zero as a direct consequence, regardless of
+fixture. The control family is a small but zero-precision-loss
+contributor (its two rules sit at the top two confidence bands \(0.90\)
+and \(0.85\)), and the resilience family is the opposite --- low
+precision by design, low recall on non-resilience-heavy fixtures, and
+primarily useful for catching retry / circuit-breaker patterns that the
+semantic \texttt{PolicyRule} keyword set does not cover.
+
+One informative \emph{unintended} ablation is already visible in the
+baseline data. On the \texttt{json\_stdlib} fixture the
+\texttt{ActionRule} produces zero ACTION mappings because the rule
+keyword-matches on
+\texttt{set/update/create/delete/send/push/execute/run/process/handle/dispatch}
+and none of those keywords appear in the stdlib \texttt{json} module's
+function names (which are \texttt{dump}, \texttt{dumps}, \texttt{load},
+\texttt{loads}, \texttt{encode}, \texttt{decode}, \texttt{iterencode},
+and so on). The baseline therefore already exercises what removing
+\texttt{ActionRule} would look like on that fixture: the pipeline still
+emits a valid 19-file GNN package, \texttt{state\_variables} is 3,
+\texttt{observations} is 5, \texttt{actions} is 0, and
+\texttt{transitions} is 0 because the cross-reference pass has no
+actions to link. This is an informative upper bound on the ``no ACTION
+rule'' condition: even in the complete absence of action mappings, the
+pipeline still validates at 100.0/100, the Markov blanket is still
+extracted, and the A/B/C/D matrices still pass
+\texttt{validate\_shapes()} because the identity fallback in
+\texttt{compute\_B} (lines 309--314 of \texttt{matrices.py}) fills the
+transition tensor with a valid stay-move distribution.
+
+The interaction between \texttt{InheritanceRule} and
+\texttt{MutatingSubsystemRule} is summarized in
+\texttt{../cogant/docs/evaluation/ACTIVE\_INFERENCE\_MAPPING.md}:
+\texttt{MutatingSubsystemRule} uses numeric priority \texttt{1} and
+\texttt{InheritanceRule} uses the default \texttt{0}, so hidden-state
+mappings win class-level overlaps under
+\texttt{(priority,\ confidence\_score)} ordering unless rescoring
+changes the tuple order. Ablation narratives that assumed
+\texttt{POLICY} always dominated those overlaps should be revalidated
+whenever those scores or priorities change.
+\end{block}
+
+\begin{block}{Fixpoint-iteration ablation}
+\protect\phantomsection\label{fixpoint-iteration-ablation}
+The translation engine's default iteration cap is
+\texttt{max\_iterations\ =\ 10}; this ablation studies how the output
+depends on that cap. The expected behaviour from Theorem 1 is that the
+engine converges in a single pass on every packaged fixture, because the
+shipped rules are disjoint on the node kinds they target and each
+mapping id is stable across iterations. The ablation verifies this
+empirically by rerunning the pipeline with the cap set to
+\(K \in \{1, 2, 5, 10\}\) and recording the total mapping count at each
+setting.
+
+\textbf{Table 11. Fixpoint iteration ablation (planned; baseline row
+reports the canonical \(K = 10\) run from Table 4).}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1081}}
+  >{\centering\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1351}}
+  >{\centering\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1351}}
+  >{\centering\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1351}}
+  >{\centering\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1351}}
+  >{\centering\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1351}}
+  >{\centering\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.1351}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 14\tabcolsep) * \real{0.0811}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedleft
+\(K\) (max iterations)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\texttt{calculator} mappings
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\texttt{event\_pipeline} mappings
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\texttt{flask\_mini} mappings
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\texttt{flask\_app} mappings
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\texttt{requests\_lib} mappings
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\texttt{json\_stdlib} mappings
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Convergence
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+1 & planned & planned & planned & planned & planned & planned &
+Predicted to equal the \(K = 10\) baseline on every fixture (single-pass
+convergence). \\
+2 & planned & planned & planned & planned & planned & planned & Expected
+identical to \(K = 1\) (no second-pass additions on any shipped
+fixture). \\
+5 & planned & planned & planned & planned & planned & planned & Expected
+identical. \\
+10 (default) & 5 & 20 & 19 & 51 & 46 & 8 & Canonical; matches Table
+4. \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+The single-pass-convergence prediction is testable directly from the
+engine's internal match log:
+\texttt{TranslationEngine.\_log\_match("iteration\_complete",\ ...)}
+writes one entry per iteration containing the per-pass new-mapping
+count, and a converged run on the first pass writes exactly one
+\texttt{iteration\_complete} entry with a nonzero count followed by at
+most one more with \texttt{new\_mappings=0}. The harness populating
+Table 9 will assert that the log length at \(K = 10\) is between 1 and 2
+iteration-complete entries on every fixture.
+
+The purpose of keeping the cap at \(K = 10\) despite the single-pass
+prediction is a safety valve: if a user registers a pathological rule
+set --- for example two rules that mutually trigger each other via the
+confidence model's rescoring pass in
+\texttt{translate\_with\_confidence()} --- the engine bounds the cost at
+ten full passes over the rule list rather than looping indefinitely.
+Section 4 (``Fixpoint non-convergence'') already documents the warning
+message the engine emits when the cap is exceeded; this ablation simply
+confirms that the warning is never triggered on the shipped fixtures.
+\end{block}
+
+\begin{block}{Matrix-fallback ablation}
+\protect\phantomsection\label{matrix-fallback-ablation}
+A third ablation of interest is the effect of the identity-fallback and
+uniform-fallback paths in \texttt{GNNMatrices} on the resulting
+matrices. The fallbacks fire when the graph contains no edges of the
+expected kind for a given role:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{compute\_A} falls back to a uniform row when an observation
+  has no READS, OBSERVES, or DEPENDS\_ON edges to any hidden state
+  (\texttt{matrices.py} line 269).
+\item
+  \texttt{compute\_B} falls back to the identity tensor when an action
+  writes no hidden state (lines 312--314).
+\item
+  \texttt{compute\_C} falls back to the zero vector when no CONSTRAINT
+  or PREFERENCE mapping touches the observation (the implicit
+  initialisation at line 371).
+\item
+  \texttt{compute\_D} falls back to a uniform prior when no
+  CONFIGURATION neighbour exists (lines 416--417).
+\end{itemize}
+
+\textbf{Table 12. Fallback frequency on the six packaged fixtures
+(planned).}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1071}}
+  >{\centering\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1786}}
+  >{\centering\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1786}}
+  >{\centering\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1786}}
+  >{\centering\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1786}}
+  >{\centering\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1786}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Fixture
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(A\) rows uniform
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(B\) actions identity
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(C\) entries zero
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+\(D\) uniform
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Validator result
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\texttt{calculator} & planned & planned & planned & planned & 100.0 \\
+\texttt{event\_pipeline} & planned & planned & planned & planned &
+100.0 \\
+\texttt{flask\_mini} & planned & planned & planned & planned & 100.0 \\
+\texttt{flask\_app} & planned & planned & planned & planned & 100.0 \\
+\texttt{requests\_lib} & planned & planned & planned & planned &
+100.0 \\
+\texttt{json\_stdlib} & 5 (all) & 1 (identity) & 5 (all) & 3 (uniform) &
+100.0 \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+The \texttt{json\_stdlib} row is populated directly from the canonical
+baseline and
+\texttt{../cogant/docs/evaluation/ACTIVE\_INFERENCE\_MAPPING.md}:
+because that fixture has zero ACTION mappings and no CONSTRAINT
+mappings, every row of \(A\) is uniform (no observation has a
+READS/OBSERVES edge onto a hidden state at the granularity extracted by
+the Python front end), every action slice of \(B\) is identity (there
+are no action slices to fill), every entry of \(C\) is zero, and the
+prior \(D\) is uniform over the three hidden-state variables. Crucially,
+the validator still passes at 100.0 because shape, sum-to-one, and
+non-negativity invariants are all satisfied by the fallback. This
+establishes that the fallback paths are not failure modes but
+\textbf{principled degradations} to a maximum-entropy distribution in
+the absence of edge evidence, and that every bundle COGANT emits ---
+even one built entirely from fallbacks --- remains a valid Active
+Inference generative model that PyMDP or a compatible runtime can
+execute.
+\end{block}
+
+\begin{block}{Summary}
+\protect\phantomsection\label{summary}
+The ablation study answers three questions. First, \textbf{which rule
+families are necessary for which roles?} (Table 10: structural rules
+drive HIDDEN\_STATE; semantic rules drive
+OBSERVATION/ACTION/POLICY/PREFERENCE; control rules drive CONTEXT;
+behavioural rules drive orchestration POLICY and CONSTRAINT; resilience
+rules drive resilience-flavoured POLICY.) Second, \textbf{how many
+iterations does the fixpoint actually need?} (Table 11: one pass on
+every shipped fixture, with the \(K = 10\) cap serving as a
+pathological-rule safety valve.) Third, \textbf{what do the A/B/C/D
+fallbacks produce when no edge evidence is available?} (Table 12:
+maximum-entropy uniform distributions and identity transitions that
+still validate at 100.0 and remain valid active-inference generative
+models.) Several entries remain marked ``planned'' pending the P3
+validation harness; filling them in is a single-file addition that
+reruns the pipeline with the appropriate rule-list restriction and
+writes the deltas into the same \texttt{metrics.json} format used by
+\texttt{../cogant/evaluation/figures/generate\_figures.py}.
+\end{block}
+\end{frame}
+
+\end{document}

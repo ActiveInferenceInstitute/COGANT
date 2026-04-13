@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/schemas/state_space.py
+# hypothesis_version: 6.135.29
+
+[0.0, 0.1, 50.0, 100.0, 10000.0, '1.0.0', 'API Response Time', 'All state variables', 'Controllable actions', 'Detailed description', 'Human-readable name', 'Retry API Request', 'Type of likelihood', 'Unique identifier', 'User-defined tags', 'act_retry_request', 'action_id', 'action_space', 'action_type', 'affects_state_vars', 'attempt_count', 'attempt_count < 3', 'backoff_strategy', 'base_type', 'continuous', 'cost', 'description', 'discrete', 'example', 'exponential', 'float', 'gaussian', 'hybrid', 'is_generic', 'is_optional', 'last_request_failed', 'last_response_code', 'max', 'max_retries', 'milliseconds', 'min', 'modality_id', 'name', 'noise_model', 'noise_parameters', 'obs_api_response', 'observation_space', 'observation_type', 'preconditions', 'stddev', 'unit', 'version', 'void']

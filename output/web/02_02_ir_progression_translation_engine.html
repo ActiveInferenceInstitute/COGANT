@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>02_02_ir_progression_translation_engine</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<h1 id="ir-progression-translation-engine-and-algorithms">IR
+progression, translation engine, and algorithms</h1>
+<h2 id="progressive-irs">Progressive IRs</h2>
+<p>Processing proceeds through a sequence of representations. Which
+stages are complete for a given repository is summarized in <a
+href="../cogant/docs/reference/implementation_status.md"><code>../cogant/docs/reference/implementation_status.md</code></a>
+(partial areas include translation rules, state space, and Rust
+acceleration):</p>
+<ol type="1">
+<li><strong>Repo IR</strong> — entities and relationships extracted from
+parsers.</li>
+<li><strong>Program graph IR</strong> — consolidated graph with
+deduplication and metadata.</li>
+<li><strong>Semantic mapping IR</strong> — output of the translation
+rule engine.</li>
+<li><strong>State space IR</strong> — variables, actions, transitions,
+observations.</li>
+<li><strong>Process model IR</strong> — higher-level control patterns
+where implemented.</li>
+<li><strong>Validation IR</strong> — coverage, confidence analysis,
+schema checks.</li>
+</ol>
+<p>COGANT’s program graph sits in the same conceptual space as compiler
+intermediate representations such as LLVM <span class="citation"
+data-cites="lattner2004llvm">[@lattner2004llvm]</span> and MLIR <span
+class="citation" data-cites="lattner2021mlir">[@lattner2021mlir]</span>,
+but targets behavioral extraction and export for downstream learning
+rather than code generation or optimization.</p>
+<h2 id="translation-rules">Translation rules</h2>
+<p>The <strong>translation</strong> stage applies declarative rules that
+refine roles, attach labels, and adjust confidence. Concurrency targets
+and layering are described in
+<code>../cogant/docs/architecture/README.md</code>. The rule engine
+composes passes over the graph in a <strong>fixpoint loop</strong>:
+rules are re-applied until no new semantic mappings emerge or a
+configurable iteration cap is reached. The fixpoint loop follows the
+classical formulation of program analysis as fixpoint computation over a
+lattice of abstract states <span class="citation"
+data-cites="cousot1977abstract">[@cousot1977abstract]</span>; in our
+setting the lattice is the set of semantic mappings partially ordered by
+inclusion, and the monotone operator is the composition of all
+registered rule applications. In the shipped implementation, each pass
+applies rules in descending <code>rule.priority</code>, and conflict
+resolution later compares <code>(rule_priority, confidence_score)</code>
+tuples when two mappings overlap, following the principle that edit
+representations should be composable <span class="citation"
+data-cites="yin2019learning">[@yin2019learning]</span>.</p>
+<h3 id="fixpoint-iteration-conflict-resolution-and-coverage">Fixpoint
+iteration, conflict resolution, and coverage</h3>
+<p>The shipped <code>TranslationEngine</code> in
+<code>../cogant/py/cogant/translate/engine.py</code> realizes the
+fixpoint loop concretely. Each iteration walks every registered rule
+once: the engine calls <code>rule.matches(graph, query)</code> to
+collect candidate fragments, then calls
+<code>rule.apply(graph, match)</code> on each, accumulating any
+resulting <code>SemanticMapping</code> objects keyed by their stable
+IDs. A per-pass counter tracks mappings that were genuinely new (not
+already present in the running set), and the loop terminates as soon as
+a pass completes with zero additions. The engine logs each iteration
+boundary through an internal match log, so the number of passes required
+to reach a fixed point is directly observable in the post-run
+diagnostics. The default iteration cap is
+<code>max_iterations = 10</code>; in testing, most repositories converge
+well before that bound, and the cap exists primarily as a safety valve
+against pathological rule sets that could otherwise oscillate
+indefinitely.</p>
+<p>After fixpoint termination, the engine invokes
+<code>_resolve_conflicts()</code> to reconcile mappings whose
+<code>graph_fragment_node_ids</code> sets overlap. For each overlapping
+pair the engine retains the mapping with the larger
+<code>(rule_priority, confidence_score)</code> key and discards the
+other, logging a <code>conflict_resolved</code> event that records the
+losing ID, the winning ID, and the specific overlap set. Most shipped
+rules use the default <code>rule.priority</code> of 0; the
+mutating-subsystem / hidden-state rule uses priority 1 so it survives
+overlaps with same-confidence class-level aggregates (for example
+containment summaries) on the same <code>CLASS</code> node. A companion
+entry point, <code>translate_with_confidence()</code>, runs the standard
+fixpoint loop, rescores every surviving mapping through the
+<code>ConfidenceModel</code>, and then re-resolves conflicts so that any
+ordering shifts induced by rescoring are honored.</p>
+<p>Translation coverage – the fraction of graph nodes that received at
+least one semantic mapping – is reported by
+<code>get_coverage_report(graph)</code>. It returns the total node
+count, the number of covered nodes, the number of uncovered nodes, a
+<code>coverage_percent</code> value rounded to two decimal places, and
+the sorted list of uncovered node IDs. The uncovered list is
+intentionally emitted verbatim so that downstream tooling can target
+unmapped regions for manual review or rule extension, rather than
+burying the gap behind a single aggregate number <span class="citation"
+data-cites="allamanis2018survey">[@allamanis2018survey]</span>.</p>
+<p>Algorithm <span class="math inline">\(\ref{alg:fixpoint}\)</span>
+summarizes the engine. Termination is guaranteed because each iteration
+either produces at least one new mapping (whose stable ID is then fixed
+in <span class="math inline">\(\mathcal{M}\)</span>) or terminates by
+the break condition; the outer <span class="math inline">\(K\)</span>
+bound serves as a safety valve for pathological rule sets.</p>
+<p>Algorithm <span class="math inline">\(\ref{alg:conflict}\)</span>
+detects conflicts via an inverted index in <span
+class="math inline">\(O(\sum_v |\mathcal{I}(v)|^2)\)</span> worst-case
+time, which is substantially faster than the naive all-pairs scan for
+graphs where most nodes carry at most one mapping.</p>
+</body>
+</html>

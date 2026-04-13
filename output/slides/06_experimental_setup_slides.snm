@@ -1,0 +1,13 @@
+\beamer@slide {environment}{2}
+\beamer@slide {running-the-api}{3}
+\beamer@slide {configuration-files}{4}
+\beamer@slide {cli}{5}
+\beamer@slide {export-targets}{6}
+\beamer@slide {python-ast-parser-capabilities}{7}
+\beamer@slide {progressive-ir-stages}{8}
+\beamer@slide {performance-characteristics}{9}
+\beamer@slide {measured-runs-on-packaged-fixtures}{10}
+\beamer@slide {test-matrix-and-coverage}{11}
+\beamer@slide {mutation-testing}{12}
+\beamer@slide {benchmark-suite-shipped}{13}
+\beamer@slide {what-to-record}{14}

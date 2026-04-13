@@ -1,0 +1,1 @@
+\beamer@sectionintoc {1}{Bidirectional lenses, synthesis, and categorical framing}{1}{0}{1}

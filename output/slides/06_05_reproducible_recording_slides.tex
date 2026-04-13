@@ -1,0 +1,346 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\newenvironment{Shaded}{}{}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{\textbf{#1}}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\section{What to record for reproducible
+experiments}\label{what-to-record-for-reproducible-experiments}
+
+\begin{frame}[fragile]{Minimum recording checklist}
+\protect\phantomsection\label{minimum-recording-checklist}
+The COGANT pipeline is deterministic on a fixed filesystem snapshot
+under a fixed Python interpreter, so bit-for-bit reproduction of a
+published run reduces to pinning exactly the inputs that the pipeline
+consumes and the environment it consumes them in. For every experiment
+whose output you intend to re-run, redistribute, or cite, record the
+following:
+
+\begin{enumerate}
+\tightlist
+\item
+  \textbf{COGANT version and commit hash.} The \texttt{\_\_version\_\_}
+  string in \texttt{../cogant/py/cogant/\_\_init\_\_.py} matches
+  \texttt{project.version} in \texttt{../cogant/pyproject.toml}
+  (currently \texttt{0.5.0}). Also capture the Git SHA of the checkout
+  used --- \texttt{git\ rev-parse\ HEAD} from inside the
+  \texttt{cogant/} subtree --- because a single version tag can span
+  several bug-fix commits and the reproducibility contract is at commit
+  granularity, not tag granularity. The shipped \texttt{cogant\ doctor}
+  command prints both values.
+\item
+  \textbf{Python interpreter version.} Either \texttt{CPython\ 3.11.x},
+  \texttt{3.12.x}, or \texttt{3.13.x} per the \texttt{classifiers} block
+  in \texttt{pyproject.toml}; the canonical benchmark run used
+  \texttt{CPython\ 3.12.11} on macOS arm64. Capture
+  \texttt{python\ -\/-version} plus \texttt{uname\ -a} (or the
+  equivalent on Windows / Linux) so that the OS and architecture are
+  visible downstream.
+\item
+  \textbf{Dependency lock.} \texttt{uv\ sync\ -\/-extra\ all} resolves
+  from \texttt{../cogant/uv.lock}; include the lockfile in any
+  redistributed dataset so that optional extras (\texttt{viz},
+  \texttt{multilang}, \texttt{all}) resolve to the exact versions that
+  produced the published numbers. If the pinned
+  \texttt{tree-sitter-javascript}, \texttt{tree-sitter-typescript},
+  \texttt{pyarrow}, or \texttt{duckdb} versions drift, re-parsing the
+  same JavaScript sources can produce different AST shapes and therefore
+  different \texttt{program\_graph.json} outputs.
+\item
+  \textbf{Input repository commit hash.} For every target repository
+  processed through the pipeline, record the Git commit hash of the
+  snapshot at ingest time. The pipeline does not hash the input for you
+  --- it simply walks the filesystem --- so an unpinned input is the
+  most common source of non-reproducibility. For the shipped fixtures
+  under \texttt{../cogant/examples/}, the relevant hash is the COGANT
+  commit itself (the fixtures are vendored).
+\item
+  \textbf{Configuration file contents (redacted).} If you invoked the
+  pipeline via \texttt{cogant.yaml} or \texttt{PipelineConfig(...)},
+  persist the configuration next to the run outputs. Redact any
+  credentials, private path components, or API tokens before
+  publication; the config loader in \texttt{../cogant/py/cogant/config/}
+  does not automatically strip these.
+\item
+  \textbf{List of stages executed.} The default ten-stage DAG is
+  \texttt{ingest\ →\ static\ →\ normalize\ →\ graph\ →\ dynamic\ →\ translate\ →\ statespace\ →\ process\ →\ export\ →\ validate},
+  but the CLI and \texttt{PipelineConfig} expose selective-execution
+  flags (\texttt{-\/-no-dynamic}, \texttt{-\/-skip-validate},
+  \texttt{PipelineConfig.skip\_stages}). Record which stages were
+  enabled for the published run so that a reproducer does not silently
+  re-enable an optional stage whose output was not part of the original
+  report.
+\item
+  \textbf{Random seeds for learned consumers.} COGANT itself is
+  deterministic --- it does not invoke any stochastic components in the
+  default pipeline. However, any \textbf{downstream learned component}
+  (for example an optional embedding model supplied to the GNN exporter,
+  or a graph neural network trained on COGANT's exports) \emph{is}
+  stochastic and must record its own seeds. Include the seed with the
+  derived dataset, not with the COGANT bundle.
+\item
+  \textbf{Canonical output hashes.} After each run, hash the
+  \texttt{gnn\_package/} directory and the top-level
+  \texttt{bundle.json} with a content-addressable digest
+  (\texttt{sha256} is sufficient). Store these hashes alongside the run
+  outputs; republishing the same hash across different machines is the
+  strongest reproducibility signal available to a reader.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{How to re-run the canonical fixture experiments}
+\protect\phantomsection\label{how-to-re-run-the-canonical-fixture-experiments}
+All numbers in Tables 4--7 of §6.3 and in the benchmark suite of §6.4
+are regenerated by two scripts that live inside the COGANT package tree
+and take no arguments beyond a \texttt{-\/-output} directory:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# One{-}shot regeneration of every figure and the metrics.json summary}
+\ExtensionTok{uv}\NormalTok{ run python ../cogant/evaluation/figures/generate\_figures.py }\DataTypeTok{\textbackslash{}}
+    \AttributeTok{{-}{-}output}\NormalTok{ ../cogant/evaluation/figures/}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Benchmark harness — three iterations per fixture, stage{-}level timing}
+\ExtensionTok{uv}\NormalTok{ run python ../cogant/benchmarks/bench\_suite.py }\DataTypeTok{\textbackslash{}}
+    \AttributeTok{{-}{-}iterations}\NormalTok{ 3 }\DataTypeTok{\textbackslash{}}
+    \AttributeTok{{-}{-}output}\NormalTok{ ../cogant/benchmarks/results/}
+\end{Highlighting}
+\end{Shaded}
+
+The figure-generation script re-runs the \texttt{RoundtripOrchestrator}
+(\texttt{../cogant/examples/orchestrate\_roundtrip.py}) against every
+fixture under \texttt{../cogant/examples/control\_positive/} and
+\texttt{../cogant/examples/real\_world/}, re-reads the emitted JSON,
+writes \texttt{metrics.json} alongside \texttt{fig1\_graph\_sizes.png},
+\texttt{fig2\_node\_kinds.png}, \texttt{fig3\_state\_space.png}, and
+\texttt{fig4\_pipeline\_latency.png}, and finally copies the canonical
+figure set back into the \texttt{../cogant/evaluation/figures/} tree.
+The benchmark-suite harness times the bare translation pipeline
+(\texttt{ingest}, \texttt{static}, \texttt{normalize}, \texttt{graph},
+\texttt{translate}, \texttt{statespace}) and writes a dated Markdown
+report of the form \texttt{suite\_YYYYMMDD.md} alongside a
+machine-readable JSON sidecar; the report committed as
+\texttt{../cogant/benchmarks/results/suite\_20260409.md} is the
+canonical source for Table 11 in §6.4.
+\end{frame}
+
+\begin{frame}[fragile]{What the manifest.json index records}
+\protect\phantomsection\label{what-the-manifest.json-index-records}
+Every \texttt{gnn\_package/} directory emitted by the pipeline includes
+a \texttt{manifest.json} file whose job is to close the reproducibility
+loop without requiring the downstream consumer to re-hash the bundle.
+The manifest records: the COGANT version that produced the bundle, the
+interpreter and platform identifiers from step 2 of the checklist, the
+list of stages actually executed (step 6), the schema name passed to the
+state-space compiler, the paths of every file in the
+\texttt{gnn\_package/} directory, and the SHA-256 hash of each file. A
+reproducer can therefore verify a published bundle with a single pass
+over the manifest, without consulting any external metadata file.
+\end{frame}
+
+\begin{frame}[fragile]{Worked example: regenerating the Table 4 row for
+\texttt{flask\_app}}
+\protect\phantomsection\label{worked-example-regenerating-the-table-4-row-for-flask_app}
+The canonical Table 4 row for the \texttt{flask\_app} fixture (six
+files, 853 lines, 98 nodes, 597 edges, 14.58 s wall-clock) was produced
+as follows, and the command sequence below should bit-for-bit reproduce
+the same \texttt{program\_graph.json} and \texttt{state\_space.json} on
+any macOS arm64 machine with the same uv lockfile:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\BuiltInTok{cd}\NormalTok{ projects\_in\_progress/cogant/cogant           }\CommentTok{\# package root}
+\ExtensionTok{uv}\NormalTok{ sync }\AttributeTok{{-}{-}extra}\NormalTok{ all                               }\CommentTok{\# pins every dep per uv.lock}
+\FunctionTok{git}\NormalTok{ rev{-}parse HEAD                                }\CommentTok{\# record the commit hash}
+\ExtensionTok{python} \AttributeTok{{-}{-}version} \KeywordTok{\&\&} \FunctionTok{uname} \AttributeTok{{-}a}                      \CommentTok{\# record interpreter + platform}
+\ExtensionTok{uv}\NormalTok{ run cogant translate }\DataTypeTok{\textbackslash{}}
+\NormalTok{    examples/real\_world/flask\_app }\DataTypeTok{\textbackslash{}}
+    \AttributeTok{{-}{-}output}\NormalTok{ /tmp/repro\_flask\_app }\DataTypeTok{\textbackslash{}}
+    \AttributeTok{{-}{-}layout{-}output}
+\ExtensionTok{uv}\NormalTok{ run cogant validate /tmp/repro\_flask\_app/gnn\_package}
+\FunctionTok{sha256sum}\NormalTok{ /tmp/repro\_flask\_app/gnn\_package/}\PreprocessorTok{*}\NormalTok{.json }\KeywordTok{|} \FunctionTok{sort}
+\end{Highlighting}
+\end{Shaded}
+
+The \texttt{validate} step should report score \texttt{100.0\ /\ 100}
+with zero errors and zero warnings, and the sorted SHA-256 listing
+should match the one recorded in
+\texttt{../cogant/examples/real\_world/flask\_app/output/manifest.json}
+(committed alongside the fixture). Any mismatch points to either a
+dependency drift (step 3) or an input drift (the Flask fixture itself
+changed between the committed output and the re-run).
+\end{frame}
+
+\begin{frame}[fragile]{Data ethics and licensing for exported bundles}
+\protect\phantomsection\label{data-ethics-and-licensing-for-exported-bundles}
+Every COGANT bundle can contain identifiers, docstrings, and inline
+comments lifted verbatim from the input source code. When redistributing
+a bundle derived from a third-party repository --- for example when
+publishing a dataset of \texttt{gnn\_package/} outputs from open-source
+Python projects --- the downstream license terms must be respected: the
+original repository's license applies to any prose or identifier that
+the bundle quotes, and the COGANT MIT license covers only the pipeline
+code and the synthetic fixtures it ships. Organisations with private
+data policies should additionally review bundles for personally
+identifiable information before publication; the pipeline does not
+perform PII scrubbing on its own. The short policy statement is in §7
+(see \textbf{Data ethics and licensing} in
+\href{07_reproducibility.md}{\texttt{07\_reproducibility.md}}); this
+subsection supplies the actionable hashing and manifest-recording
+recipe.
+\end{frame}
+
+\begin{frame}[fragile]{Cross-references}
+\protect\phantomsection\label{cross-references}
+\begin{itemize}
+\tightlist
+\item
+  The CLI hub at
+  \href{../cogant/docs/cli/README.md}{\texttt{../cogant/docs/cli/README.md}}
+  links to every flag that changes the recorded-output shape, and the
+  stage list in
+  \href{../cogant/docs/architecture/README.md}{\texttt{../cogant/docs/architecture/README.md}}
+  enumerates the ten-stage DAG.
+\item
+  The per-release narrative in \texttt{../cogant/CHANGELOG.md} and
+  \texttt{../cogant/RELEASE\_NOTES.md} documents which default-behaviour
+  changes (for example the v0.5.0 POLICY / CONTEXT stub-emission fix
+  discussed in §5 and \texttt{ROUNDTRIP\_IMPROVEMENT.md}) could affect a
+  re-run against a pre-v0.5.0 bundle.
+\item
+  The calibration sweep plan in
+  \texttt{../cogant/docs/evaluation/CALIBRATION.md} is the canonical
+  reference for the \texttt{TODO(calibration)} markers cited in §5;
+  re-running a confidence-threshold sweep requires the 20+ repository
+  gold-standard corpus discussed there.
+\end{itemize}
+\end{frame}
+
+\end{document}

@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/ingest/incremental.py
+# hypothesis_version: 6.135.29
+
+[30.0, ' -> ', '--git-dir', '--name-status', '--porcelain', '.cjs', '.go', '.js', '.jsx', '.mjs', '.py', '.pyi', '.pyx', '.rs', '.ts', '.tsx', '?', 'C', 'D', 'HEAD', 'HEAD~1', 'M', 'R', '_incremental_patch', 'changed_count', 'changed_files', 'diff', 'git', 'git diff error: %s', 'git diff failed: %s', 'git status error: %s', 'rev-parse', 'status']

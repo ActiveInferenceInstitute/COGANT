@@ -1,0 +1,38 @@
+# Workflow Engine Example
+
+Workflow execution engine demonstrating complex control flow and state management.
+
+CLI reference: [docs/CLI_GUIDE.md](../../docs/CLI_GUIDE.md).
+
+## Structure
+
+```
+workflow-engine/
+├── src/
+│   ├── __init__.py
+│   ├── executor.py      # Workflow executor
+│   ├── parser.py        # Workflow definition parser
+│   ├── state.py         # State management
+│   └── plugins.py       # Plugin system
+└── tests/
+    └── test_executor.py
+```
+
+## Analysis
+
+From the repository root:
+
+```bash
+cogant translate examples/workflow-engine --output output/workflow-engine
+```
+
+Interactive HTML (`cogant render`) expects a **bundle-shaped JSON** (see [docs/CLI_GUIDE.md](../../docs/CLI_GUIDE.md)). Save one via `Bundle.save_json(...)` after a pipeline run, or use [example_pipeline.py](../example_pipeline.py).
+
+Expected output: complex control flow, state transitions, variable tracking
+
+## Demonstrates
+- Complex control flow patterns
+- State machine modeling
+- Plugin architecture
+- Recursion and mutual calls
+- Temporal reasoning (with state space)

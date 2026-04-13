@@ -1,0 +1,20 @@
+{
+  "id": "model_test_run_none_config_uses_defa0",
+  "schema_name": "test_run_none_config_uses_defa0",
+  "variables": {},
+  "observations": {},
+  "actions": {},
+  "transitions": {},
+  "likelihoods": {},
+  "preferences": {},
+  "time_regime": "synchronous",
+  "metadata": {
+    "step_unit": "continuous",
+    "is_async": false,
+    "max_steps": 1000,
+    "variable_count": 0,
+    "observation_count": 0,
+    "action_count": 0,
+    "transition_count": 0
+  }
+}

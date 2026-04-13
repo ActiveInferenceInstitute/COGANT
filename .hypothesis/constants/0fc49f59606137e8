@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/ingest/files.py
+# hypothesis_version: 6.135.29
+
+[4096, '#', '*', '*.egg', '*.whl', '.DS_Store', '.c', '.cc', '.cjs', '.cpp', '.cs', '.cxx', '.egg-info', '.git', '.gitignore', '.go', '.h', '.hpp', '.idea', '.java', '.js', '.jsx', '.mjs', '.mypy_cache', '.php', '.py', '.pyi', '.pytest_cache', '.pyx', '.rb', '.rs', '.tox', '.ts', '.tsx', '.venv', '.vscode', 'FileEnumerator', 'FileInfo', 'IGNORE_PATTERNS', 'LANGUAGE_EXTENSIONS', 'TEST_PATTERNS', '__pycache__', '__tests__/', '_spec.py', '_test.py', 'build', 'cpp', 'csharp', 'dist', 'go', 'java', 'javascript', 'node_modules', 'php', 'python', 'rb', 'ruby', 'rust', 'spec/', 'target', 'test/', 'test_', 'tests/', 'typescript', 'venv']

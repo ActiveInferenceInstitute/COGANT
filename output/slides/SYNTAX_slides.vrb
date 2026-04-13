@@ -1,0 +1,85 @@
+\frametitle{Manuscript Syntax Reference (COGANT)}
+\protect\phantomsection\label{manuscript-syntax-reference-cogant}
+Formatting conventions for Markdown in this folder. For the full
+rendering contract, see the template exemplar
+\href{../../../projects/code_project/manuscript/SYNTAX.md}{\texttt{projects/code\_project/manuscript/SYNTAX.md}}.
+
+\begin{block}{Citations}
+\protect\phantomsection\label{citations}
+Use Pandoc cite syntax; keys must exist in \texttt{references.bib}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{[}\OtherTok{@allamanis2018survey}\CommentTok{]}
+
+\CommentTok{[}\OtherTok{@allamanis2018survey; @wu2020comprehensive}\CommentTok{]}
+\end{Highlighting}
+\end{Shaded}
+\end{block}
+
+\begin{block}{Equations}
+\protect\phantomsection\label{equations}
+Use LaTeX \texttt{equation} with \texttt{\textbackslash{}label} /
+\texttt{\textbackslash{}ref} as documented in the code\_project SYNTAX,
+or pandoc-crossref attributes where the pipeline enables them.
+\end{block}
+
+\begin{block}{Figures}
+\protect\phantomsection\label{figures}
+If you add figures, place assets where the future project
+\texttt{output/} layout can resolve them (typically
+\texttt{output/figures/} after promotion to \texttt{projects/cogant/}).
+Use explicit relative paths from the rendering contract described in
+\texttt{infrastructure/rendering/AGENTS.md}.
+\end{block}
+
+\begin{block}{Section files}
+\protect\phantomsection\label{section-files}
+\href{../../../infrastructure/rendering/manuscript_discovery.py}{\texttt{infrastructure/rendering/manuscript\_discovery.py}}
+concatenates:
+
+\begin{enumerate}
+\tightlist
+\item
+  Digit-prefixed \texttt{*.md} files (\texttt{00\_} \ldots{}
+  \texttt{09\_}, including splits such as \texttt{02\_01\_…},
+  \texttt{06\_04\_…}) in \textbf{lexicographic stem order}.
+\item
+  Supplemental \texttt{S*.md} appendices.
+\item
+  \texttt{98\_*.md} glossary files when present.
+\item
+  Other \texttt{*.md} files not matching the above (for example
+  \texttt{SYNTAX.md}) --- the \textbf{other} bucket.
+\item
+  \texttt{99\_*.md} references when present.
+\end{enumerate}
+
+Excluded from the body: \texttt{preamble.md}, \texttt{AGENTS.md},
+\texttt{README.md}, \texttt{config.yaml}, \texttt{config.yaml.example},
+\texttt{references.bib}.
+\end{block}
+
+\begin{block}{Cross-references to the package}
+\protect\phantomsection\label{cross-references-to-the-package}
+Prefer \textbf{relative} paths from this folder to the docs tree: site
+home \href{../cogant/docs/index.md}{\texttt{../cogant/docs/index.md}},
+module map
+\href{../cogant/docs/reference/documentation_modules.md}{\texttt{../cogant/docs/reference/documentation\_modules.md}},
+and per-module indexes such as
+\href{../cogant/docs/architecture/README.md}{\texttt{../cogant/docs/architecture/README.md}}.
+Do not link a root \texttt{docs/README.md} --- it is not part of the
+MkDocs tree (it would duplicate \texttt{index.md}).
+\end{block}
+
+\begin{block}{See also}
+\protect\phantomsection\label{see-also}
+\begin{itemize}
+\tightlist
+\item
+  \href{AGENTS.md}{\texttt{AGENTS.md}} --- editor protocol for this
+  folder
+\item
+  \href{README.md}{\texttt{README.md}} --- orientation and render notes
+\end{itemize}
+\end{block}

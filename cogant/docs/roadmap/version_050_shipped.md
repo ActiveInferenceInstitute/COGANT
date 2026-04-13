@@ -13,12 +13,12 @@ Established the forward pipeline and basic tooling.
 - [x] Forward pipeline: ingest → static → normalize → graph → translate → export
 - [x] Python AST parser (`cogant.parsers.python`)
 - [x] `ProgramGraph` with typed nodes and edges
-- [x] 19 translation rules in 5 families (5 structural + 5 semantic + 3 control + 4 behavioral + 2 resilience)
+- [x] 19 translation rules in 5 families (5 structural + 5 semantic + 3 control + 4 behavioral + 2 resilience) — grew to 22 in wave-21
 - [x] Markov blanket partition (`cogant.markov`), O(V+E), 5 seed strategies
 - [x] State space compiler (A/B/C/D matrices from SemanticMappings)
 - [x] GNN markdown bundle emission (AII-spec-compliant)
 - [x] AII validator scoring 0–100 (all 6 fixtures score 100/100)
-- [x] Typer CLI with 18 subcommands
+- [x] Typer CLI with 18 subcommands — grew to 22 in wave-21
 - [x] `cogant.server.app` FastAPI `/health` + `/translate`
 - [x] Dockerfile + docker-compose (EXPOSE 8080)
 - [x] mkdocs-material docs site with 16 sections

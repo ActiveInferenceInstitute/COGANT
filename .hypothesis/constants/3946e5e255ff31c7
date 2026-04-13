@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/gnn/formatter/base.py
+# hypothesis_version: 6.135.29
+
+[0.0, 0.5, 1.0, 10.0, 'actions_policies', 'affects_state_vars', 'confidence', 'effects', 'factors', 'likelihood_structure', 'markov_blanket', 'model_metadata', 'ontology_mapping', 'parameterization', 'provenance', 'rendering_hints', 'repository_metadata', 'source_coverage', 'state_space', 'time_settings', 'transition_structure', 'upstream_header', 'validation_notes']

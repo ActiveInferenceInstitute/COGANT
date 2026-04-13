@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/api/session.py
+# hypothesis_version: 6.135.29
+
+['Session', '_program_graph', '_semantic_mappings', '_state_space_model', 'export_paths', 'ingest', 'normalized_facts', 'repo_snapshot', 'static', 'syntax_tree', 'syntax_tree.json', 'target', 'type', 'utf-8', 'w', 'workspace']

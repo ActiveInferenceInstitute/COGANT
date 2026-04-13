@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/parsers/typescript/tree_sitter_parser.py
+# hypothesis_version: 6.135.29
+
+['.ts', '.tsx', '0.2.0', 'ArrowFunction', 'COGANT', 'CallExpression', 'ClassDeclaration', 'FunctionDeclaration', 'ImportStatement', 'InterfaceDeclaration', 'MethodDefinition', 'calls', 'class', 'classes', 'error', 'errors', 'file_path', 'imports', 'interface', 'interfaces', 'kind', 'language', 'name', 'py', 'qualified_name', 'symbols', 'tsx', 'typescript']

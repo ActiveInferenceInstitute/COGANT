@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/schemas/validation.py
+# hypothesis_version: 6.135.29
+
+[0.0, 0.023, 0.85, 0.87, 0.88, 0.95, 1.0, 150, 250, 1200, 'Average node degree', 'Human-readable name', 'Outcome of check', 'Quantitative metrics', 'Schema Validity', 'Short title', 'Size of largest SCC', 'Total edges in graph', 'Total nodes in graph', 'Total process stages', 'Unique identifier', 'bundle_550e8400', 'bundle_id', 'category', 'check_001', 'check_002', 'check_id', 'checks', 'confidence_mean', 'coverage', 'critical', 'description', 'edge_count', 'error', 'example', 'failed', 'graph_density', 'high', 'inconclusive', 'info', 'is_valid', 'level', 'low', 'mapping_count', 'medium', 'metrics', 'name', 'node_count', 'passed', 'priority', 'rec_001', 'recommendation_id', 'recommendations', 'report_id', 'skipped', 'status', 'title', 'val_report_abc123', 'warning']

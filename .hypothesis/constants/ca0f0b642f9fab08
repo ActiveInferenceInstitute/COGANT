@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/api/pipeline.py
+# hypothesis_version: 6.135.29
+
+['*.py', '.coverage', '.git', '.venv', 'PipelineConfig', 'PipelineRunner', '__pycache__', '_incremental', 'cache_hit', 'changed_count', 'changed_files', 'config', 'coverage_path', 'dry_run', 'dynamic', 'dynamic_enrichment', 'enabled', 'errors', 'export', 'files_reparsed', 'files_total', 'full_hit', 'gnn_model', 'graph', 'incremental_stats', 'ingest', 'miss', 'no cached bundle', 'node_modules', 'normalize', 'normalized', 'output', 'output_dir', 'partial', 'passed', 'process', 'process_model', 'program_graph', 'reason', 'since', 'skip_dynamic=True', 'skipped', 'stage_results', 'state_space_model', 'statespace', 'static', 'static_analysis', 'target', 'trace_nodes_enriched', 'trace_path', 'translate', 'type', 'validate', 'validation']

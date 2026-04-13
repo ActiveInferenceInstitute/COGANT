@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/translate/rules/semantic.py
+# hypothesis_version: 6.135.29
+
+[0.7, 0.8, 0.85, 0.9, 'ACTION_KEYWORDS', 'ActionRule', 'ContextRule', 'OBSERVATION_KEYWORDS', 'ObservationRule', 'PolicyRule', 'PreferenceRule', 'action', 'assert_', 'call_count', 'check', 'checker', 'class', 'config', 'constraint_type', 'context', 'context_type', 'controller', 'create', 'decode', 'delete', 'dispatch', 'dispatcher', 'display', 'dump', 'encode', 'env', 'execute', 'fetch', 'function', 'get', 'handle', 'handler', 'info', 'keyword_match', 'list', 'load', 'manager', 'middleware', 'node_id', 'node_type', 'observation', 'options', 'params', 'policy', 'preference', 'process', 'push', 'query', 'read', 'read_count', 'route', 'router', 'run', 'scheduler', 'send', 'set', 'settings', 'show', 'static_analysis', 'status', 'test_', 'update', 'validate', 'validator', 'write_count']

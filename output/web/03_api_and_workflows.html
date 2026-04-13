@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>03_api_and_workflows</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+<h1 id="api-and-workflows">API and Workflows</h1>
+<p>This section describes the programmatic surface that the shipped
+Python package exposes in practice, aligned with
+<code>../cogant/docs/api/README.md</code> and the inventory-style notes
+under <code>../cogant/docs/reference/</code>. It is <strong>not</strong>
+an empirical benchmark section; COGANT does not ship comparative timing
+claims in the manuscript layer. Instead, it records the <strong>surface
+area</strong> users can rely on: two complementary entry points (a
+Session for stepwise work and a Pipeline for batch runs), the Bundle
+accessors that expose their artifacts, a command-line interface, and a
+Review API for human-in-the-loop curation.</p>
+<h2 id="session-oriented-workflow">Session-oriented workflow</h2>
+<p>Use <code>Session</code> for interactive exploration, notebook-driven
+debugging, and incremental re-runs where you want to materialize each
+stage’s output as a Python attribute. It is the right choice when a user
+wants to inspect intermediate artifacts between stages, iterate on a
+single repository in a notebook, or debug a specific extraction step
+without committing to a full scripted run. Each call returns control to
+the caller so that the graph, mappings, or state-space model can be
+examined before the next stage is invoked.</p>
+<p><code>Session.from_target</code> accepts a local path or URL, then
+supports a stepwise workflow:</p>
+<ul>
+<li><code>extract_static</code> — AST-oriented extraction for supported
+languages.</li>
+<li><code>extract_dynamic</code> — traces and coverage when inputs
+exist.</li>
+<li><code>build_graph</code> — program graph construction.</li>
+<li><code>translate_to_gnn</code> — Generalized Notation Notation (GNN)
+representation.</li>
+<li><code>compile_state_space</code> — behavioral model when the
+pipeline has sufficient data.</li>
+<li><code>export_all</code> — writes JSON artifacts under a chosen
+output directory.</li>
+</ul>
+<p>This path suits interactive notebooks and incremental debugging.</p>
+<h2 id="pipeline-oriented-workflow">Pipeline-oriented workflow</h2>
+<p>Use <code>PipelineRunner</code> for scripted, reproducible batch runs
+where all stages are configured up front and the end-state is a single
+<code>Bundle</code>. It is the right choice when a user wants to process
+many repositories with a fixed configuration, wire COGANT into CI, or
+guarantee that every run executes the same ordered stages with the same
+plugin settings. Because the whole run is described by a single
+<code>PipelineConfig</code>, it can be checked into version control and
+replayed without manual intervention.</p>
+<p><code>PipelineRunner</code> with <code>PipelineConfig</code> runs an
+ordered list of stages (ingest, static, normalize, graph, translate,
+state space, process, export, validate). Configuration can skip stages
+(for example dynamic analysis), attach <strong>plugin</strong> settings
+per language, set <code>output_dir</code>, verbosity, and dry-run mode.
+Results aggregate into a <strong>Bundle</strong> with
+<code>stage_results</code>, error lists, and accessors described
+below.</p>
+<h2 id="bundle-accessors">Bundle accessors</h2>
+<p>The bundle API exposes stage summaries and convenience render/export
+helpers, including:</p>
+<ul>
+<li><code>repo_summary</code>, <code>program_graph</code>,
+<code>state_space_model</code>, <code>process_model</code></li>
+<li><code>gnn_markdown</code> — compact markdown summary built from
+<code>stage_results["translate"]</code></li>
+<li><code>validation_report</code></li>
+<li><code>render_site</code> — static HTML site with graph and model
+views</li>
+<li><code>to_json</code> / <code>save_json</code></li>
+</ul>
+<p>For canonical 18-section Generalized Notation Notation artifacts
+(<code>model.gnn.md</code> plus companion JSON), use the export outputs
+documented in <code>../cogant/docs/export/README.md</code>;
+<code>Bundle.gnn_markdown()</code> is intentionally a lightweight report
+surface.</p>
+<h2 id="command-line-interface">Command-line interface</h2>
+<p>The CLI entry point (<code>cogant.cli.main</code>) implements
+commands such as <code>init</code>, <code>scan</code>,
+<code>extract-static</code>, <code>extract-dynamic</code>,
+<code>graph</code>, <code>translate</code>, <code>statespace</code>,
+<code>validate</code>, and visualization/export helpers. Exact flags
+live in <code>../cogant/docs/cli/README.md</code>; the manuscript does
+not duplicate them to avoid drift.</p>
+<h2 id="review-api">Review API</h2>
+<p><code>ReviewAPI</code> supports interactive curation: load a bundle,
+present mappings, accept, reject, or edit, then save a curated bundle.
+This closes the loop when human review is part of the ML dataset
+construction.</p>
+</body>
+</html>

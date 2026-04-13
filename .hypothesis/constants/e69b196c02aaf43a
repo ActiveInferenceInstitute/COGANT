@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/normalize/canonical.py
+# hypothesis_version: 6.135.29
+
+['annotations', 'decorators', 'export_type', 'fact_key', 'fact_type', 'generic:class', 'generic:function', 'generic:module', 'is_abstract', 'is_arrow', 'is_async', 'is_generator', 'is_static', 'java', 'java:class', 'java:field', 'java:interface', 'java:method', 'java:package', 'javascript', 'javascript:class', 'javascript:function', 'javascript:method', 'javascript:module', 'javascript:variable', 'language', 'modifiers', 'name', 'normalized', 'path', 'python', 'python:class', 'python:decorator', 'python:function', 'python:method', 'python:module', 'python:parameter', 'python:variable', 'qualified_name', 'status', 'total_normalizations', 'type_hints', 'unmapped_fact', 'unmapped_facts', 'visibility']

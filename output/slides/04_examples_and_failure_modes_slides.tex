@@ -1,0 +1,527 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\newif\ifbibliography
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% remove section numbering
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{subsection title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\newenvironment{Shaded}{}{}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{\textbf{#1}}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+\usepackage{caption}
+% Make caption package work with longtable
+\makeatletter
+\def\fnum@table{\tablename~\thetable}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{\texorpdfstring{}{}}
+\date{}
+
+\begin{document}
+
+\begin{frame}[fragile]{Examples and Failure Modes}
+\protect\phantomsection\label{examples-and-failure-modes}
+This section walks through a concrete example run of the pipeline on a
+small Flask application, shows representative fragments of the artifacts
+it produces (semantic mappings and state-space transitions), and then
+documents the degradation behavior that users should expect when inputs
+are missing or partial. Together these illustrate both what a successful
+run looks like and how the system communicates partial success.
+
+\begin{block}{Example outputs}
+\protect\phantomsection\label{example-outputs}
+The package tree includes runnable examples under
+\href{../cogant/examples/}{\texttt{../cogant/examples/}} (for example
+\texttt{control\_positive/}, \texttt{python-service/},
+\texttt{workflow-engine/}, and \texttt{thin\_orchestrated/}) and
+generated sample outputs under
+\href{../cogant/output/}{\texttt{../cogant/output/}} (for example
+\texttt{roundtrip\_calculator/} with \texttt{model.gnn.md}, diagrams,
+and rendered charts). Use \texttt{cogant\ translate\ -\/-layout-output}
+or \texttt{PipelineConfig(layout\_output=True)} to place pipeline JSON
+under \texttt{data/} automatically; run
+\texttt{python\ -m\ cogant.tools.render\_output\_figures} on the output
+root for PNGs. Regenerate these trees by running the packaged pipeline
+against the example sources when validating releases.
+
+\begin{block}{Concrete walkthrough: Flask REST API}
+\protect\phantomsection\label{concrete-walkthrough-flask-rest-api}
+To make the pipeline's behavior tangible, consider the
+\texttt{flask\_app} fixture distributed under
+\texttt{../cogant/examples/real\_world/flask\_app/}: a small six-module
+Flask application (\texttt{\_\_init\_\_.py}, \texttt{app.py},
+\texttt{config.py}, \texttt{models.py}, \texttt{services.py},
+\texttt{utils.py}) totalling 853 lines of Python analyzed end-to-end by
+the pipeline. Running \texttt{RoundtripOrchestrator} on this repository
+via \texttt{../cogant/examples/orchestrate\_roundtrip.py} produces a
+program graph with the characteristics recorded in the canonical
+\texttt{../cogant/evaluation/figures/metrics.json}:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Metric & Value \\
+\midrule\noalign{}
+\endhead
+Source files discovered & 6 \\
+Lines analyzed & 853 \\
+\textbf{Nodes} & \textbf{98} \\
+\textbf{Edges} & \textbf{597} \\
+Total semantic mappings & 51 \\
+GNN package files & 19 \\
+GNN validation & PASS (score 100.0, 0 errors, 0 warnings) \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+The node and edge populations distribute across the kinds the v0.5.x
+Python front end actually extracts (structural core: MODULE / CLASS /
+METHOD / FUNCTION plus CONTAINS / WRITES / READS / CALLS / IMPORTS /
+INHERITS), rather than the richer taxonomy that is declared in
+\texttt{cogant.schemas.core.NodeKind} and \texttt{EdgeKind} but remains
+roadmap for the Python parser.
+
+\textbf{Table 1. Node kind distribution (Flask API example).}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Node kind & Count & Percentage \\
+\midrule\noalign{}
+\endhead
+MODULE & 6 & 6.1\% \\
+CLASS & 25 & 25.5\% \\
+METHOD & 57 & 58.2\% \\
+FUNCTION & 10 & 10.2\% \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+\textbf{Table 2. Edge kind distribution (Flask API example).}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Edge kind & Count & Percentage \\
+\midrule\noalign{}
+\endhead
+CALLS & 433 & 72.5\% \\
+CONTAINS & 92 & 15.4\% \\
+READS & 38 & 6.4\% \\
+WRITES & 15 & 2.5\% \\
+IMPORTS & 10 & 1.7\% \\
+INHERITS & 9 & 1.5\% \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+
+The CALLS-heavy distribution reflects the call-graph step in
+\texttt{CallGraphBuilder}, which traverses every \texttt{ast.Call} node
+in the module and attaches an edge between the enclosing function or
+method and its callee when the callee resolves inside the project.
+Control-flow nodes, anonymous data-flow nodes, and typed variable nodes
+are not yet emitted by the Python front end; broadening the node
+taxonomy is tracked as P1-2 and P1-3 in the R\&D backlog
+(\texttt{../cogant/docs/evaluation/SCOPING\_REPORT.md}).
+\end{block}
+
+\begin{block}{Example semantic mapping output}
+\protect\phantomsection\label{example-semantic-mapping-output}
+During the translation stage, each program-graph node is matched against
+the active rule set and assigned a \texttt{SemanticMapping} with a
+\texttt{MappingKind} and confidence fields defined in
+\href{../cogant/py/cogant/schemas/semantic.py}{\texttt{../cogant/py/cogant/schemas/semantic.py}}.
+The following excerpt uses \textbf{real field names}; node IDs and file
+paths are \textbf{representative} of the \texttt{flask\_app} fixture,
+not a verbatim \texttt{semantic\_mappings.json} dump:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Illustrative SemanticMapping{-}shaped records (see semantic.SemanticMapping)}
+\KeywordTok{{-}}\AttributeTok{ }\FunctionTok{id}\KeywordTok{:}\AttributeTok{ sm\_get\_users\_obs}
+\AttributeTok{  }\FunctionTok{kind}\KeywordTok{:}\AttributeTok{ OBSERVATION}
+\AttributeTok{  }\FunctionTok{graph\_fragment\_node\_ids}\KeywordTok{:}\AttributeTok{ }\KeywordTok{[}\AttributeTok{fn\_get\_users}\KeywordTok{]}
+\AttributeTok{  }\FunctionTok{semantic\_label}\KeywordTok{:}\AttributeTok{ }\StringTok{"GET /users handler"}
+\AttributeTok{  }\FunctionTok{confidence\_score}\KeywordTok{:}\AttributeTok{ }\FloatTok{0.98}
+\AttributeTok{  }\FunctionTok{confidence\_tier}\KeywordTok{:}\AttributeTok{ STATIC\_ONLY}
+\AttributeTok{  }\FunctionTok{parser\_certainty}\KeywordTok{:}\AttributeTok{ }\FloatTok{1.0}
+\AttributeTok{  }\FunctionTok{provenance}\KeywordTok{:}
+\AttributeTok{    }\KeywordTok{{-}}\AttributeTok{ }\KeywordTok{\{}\FunctionTok{source}\KeywordTok{:}\AttributeTok{ static\_analysis}\KeywordTok{,}\AttributeTok{ }\FunctionTok{confidence}\KeywordTok{:}\AttributeTok{ }\FloatTok{1.0}\KeywordTok{\}}
+
+\KeywordTok{{-}}\AttributeTok{ }\FunctionTok{id}\KeywordTok{:}\AttributeTok{ sm\_query\_action}
+\AttributeTok{  }\FunctionTok{kind}\KeywordTok{:}\AttributeTok{ ACTION}
+\AttributeTok{  }\FunctionTok{graph\_fragment\_node\_ids}\KeywordTok{:}\AttributeTok{ }\KeywordTok{[}\AttributeTok{call\_db\_session\_query}\KeywordTok{]}
+\AttributeTok{  }\FunctionTok{semantic\_label}\KeywordTok{:}\AttributeTok{ }\StringTok{"database query"}
+\AttributeTok{  }\FunctionTok{confidence\_score}\KeywordTok{:}\AttributeTok{ }\FloatTok{0.82}
+\AttributeTok{  }\FunctionTok{confidence\_tier}\KeywordTok{:}\AttributeTok{ STATIC\_ONLY}
+\AttributeTok{  }\FunctionTok{parser\_certainty}\KeywordTok{:}\AttributeTok{ }\FloatTok{0.90}
+\AttributeTok{  }\FunctionTok{provenance}\KeywordTok{:}
+\AttributeTok{    }\KeywordTok{{-}}\AttributeTok{ }\KeywordTok{\{}\FunctionTok{source}\KeywordTok{:}\AttributeTok{ static\_analysis}\KeywordTok{,}\AttributeTok{ }\FunctionTok{confidence}\KeywordTok{:}\AttributeTok{ }\FloatTok{0.90}\KeywordTok{,}\AttributeTok{ }\FunctionTok{metadata}\KeywordTok{:}\AttributeTok{ }\KeywordTok{\{}\FunctionTok{note}\KeywordTok{:}\AttributeTok{ }\StringTok{"receiver type partly heuristic"}\KeywordTok{\}\}}
+
+\KeywordTok{{-}}\AttributeTok{ }\FunctionTok{id}\KeywordTok{:}\AttributeTok{ sm\_user\_model\_hidden}
+\AttributeTok{  }\FunctionTok{kind}\KeywordTok{:}\AttributeTok{ HIDDEN\_STATE}
+\AttributeTok{  }\FunctionTok{graph\_fragment\_node\_ids}\KeywordTok{:}\AttributeTok{ }\KeywordTok{[}\AttributeTok{class\_user}\KeywordTok{]}
+\AttributeTok{  }\FunctionTok{semantic\_label}\KeywordTok{:}\AttributeTok{ }\StringTok{"User model state"}
+\AttributeTok{  }\FunctionTok{confidence\_score}\KeywordTok{:}\AttributeTok{ }\FloatTok{1.0}
+\AttributeTok{  }\FunctionTok{confidence\_tier}\KeywordTok{:}\AttributeTok{ STATIC\_ONLY}
+\AttributeTok{  }\FunctionTok{provenance}\KeywordTok{:}
+\AttributeTok{    }\KeywordTok{{-}}\AttributeTok{ }\KeywordTok{\{}\FunctionTok{source}\KeywordTok{:}\AttributeTok{ static\_analysis}\KeywordTok{,}\AttributeTok{ }\FunctionTok{confidence}\KeywordTok{:}\AttributeTok{ }\FloatTok{1.0}\KeywordTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+The middle row illustrates how the confidence model (Equation
+\ref{eq:confidence-core} in §2) responds when parser certainty drops:
+import-traced receivers lower \texttt{parser\_certainty}, which feeds
+Equation \ref{eq:confidence-core} and yields a sub-1.0
+\texttt{confidence\_score} even before dynamic evidence is available.
+\end{block}
+
+\begin{block}{Example state-space excerpt}
+\protect\phantomsection\label{example-state-space-excerpt}
+When dynamic traces are available, the state-space compiler produces a
+behavioral model alongside the static graph. The following excerpt shows
+a fragment of the state-space IR for the \texttt{/users} endpoint:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"variables"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"request.method"}\FunctionTok{,} \DataTypeTok{"type"}\FunctionTok{:} \StringTok{"str"}\FunctionTok{,} \DataTypeTok{"domain"}\FunctionTok{:} \OtherTok{[}\StringTok{"GET"}\OtherTok{,} \StringTok{"POST"}\OtherTok{]}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"db\_connected"}\FunctionTok{,}   \DataTypeTok{"type"}\FunctionTok{:} \StringTok{"bool"}\FunctionTok{,} \DataTypeTok{"domain"}\FunctionTok{:} \OtherTok{[}\KeywordTok{true}\OtherTok{,} \KeywordTok{false}\OtherTok{]}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"response\_code"}\FunctionTok{,}  \DataTypeTok{"type"}\FunctionTok{:} \StringTok{"int"}\FunctionTok{,}  \DataTypeTok{"domain"}\FunctionTok{:} \OtherTok{[}\DecValTok{200}\OtherTok{,} \DecValTok{400}\OtherTok{,} \DecValTok{500}\OtherTok{]}\FunctionTok{\}}
+  \OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"actions"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"validate\_input"}\FunctionTok{,} \DataTypeTok{"source"}\FunctionTok{:} \StringTok{"routes/users.py:18"}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"query\_database"}\FunctionTok{,}  \DataTypeTok{"source"}\FunctionTok{:} \StringTok{"routes/users.py:22"}\FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}\DataTypeTok{"name"}\FunctionTok{:} \StringTok{"format\_response"}\FunctionTok{,} \DataTypeTok{"source"}\FunctionTok{:} \StringTok{"routes/users.py:30"}\FunctionTok{\}}
+  \OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"transitions"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}
+      \DataTypeTok{"from\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"request.method"}\FunctionTok{:} \StringTok{"GET"}\FunctionTok{,} \DataTypeTok{"db\_connected"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{\},}
+      \DataTypeTok{"action"}\FunctionTok{:} \StringTok{"query\_database"}\FunctionTok{,}
+      \DataTypeTok{"to\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"response\_code"}\FunctionTok{:} \DecValTok{200}\FunctionTok{\},}
+      \DataTypeTok{"confidence"}\FunctionTok{:} \FloatTok{0.94}\FunctionTok{,}
+      \DataTypeTok{"tier"}\FunctionTok{:} \StringTok{"STATIC\_PLUS\_RUNTIME"}
+    \FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}
+      \DataTypeTok{"from\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"request.method"}\FunctionTok{:} \StringTok{"POST"}\FunctionTok{,} \DataTypeTok{"db\_connected"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{\},}
+      \DataTypeTok{"action"}\FunctionTok{:} \StringTok{"validate\_input"}\FunctionTok{,}
+      \DataTypeTok{"to\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"response\_code"}\FunctionTok{:} \DecValTok{400}\FunctionTok{\},}
+      \DataTypeTok{"confidence"}\FunctionTok{:} \FloatTok{0.71}\FunctionTok{,}
+      \DataTypeTok{"tier"}\FunctionTok{:} \StringTok{"STATIC\_ONLY"}
+    \FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}
+      \DataTypeTok{"from\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"db\_connected"}\FunctionTok{:} \KeywordTok{false}\FunctionTok{\},}
+      \DataTypeTok{"action"}\FunctionTok{:} \StringTok{"query\_database"}\FunctionTok{,}
+      \DataTypeTok{"to\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"response\_code"}\FunctionTok{:} \DecValTok{500}\FunctionTok{\},}
+      \DataTypeTok{"confidence"}\FunctionTok{:} \FloatTok{0.58}\FunctionTok{,}
+      \DataTypeTok{"tier"}\FunctionTok{:} \StringTok{"RUNTIME\_ONLY"}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Confidence tiers follow the thresholds defined in
+\texttt{determine\_confidence\_tier}: \textbf{STATIC\_PLUS\_RUNTIME}
+(\(c \geq 0.65\), with both static and dynamic evidence) indicates
+corroboration from AST analysis and execution traces;
+\textbf{STATIC\_ONLY} (\(c \geq 0.5\), static evidence only) reflects
+assertions grounded in source structure alone; \textbf{RUNTIME\_ONLY}
+(\(c \geq 0.4\), dynamic evidence only) flags inferences from runtime
+data without static corroboration. A fourth tier,
+\textbf{HUMAN\_REVIEWED} (\(c \geq 0.9\), with human review evidence),
+is available for manually curated mappings.
+\end{block}
+
+\begin{block}{Dynamically enriched excerpt}
+\protect\phantomsection\label{dynamically-enriched-excerpt}
+The previous excerpt shows a purely-static run. When \texttt{.coverage}
+/ Cobertura XML and Chrome DevTools trace inputs are supplied to the
+\texttt{dynamic} stage, \texttt{enrich\_graph()} annotates the affected
+nodes with \texttt{coverage\_hits}, \texttt{branch\_coverage},
+\texttt{call\_count}, \texttt{avg\_duration\_ms}, and
+\texttt{is\_hot\_path} metadata, and appends \texttt{dynamic\_coverage}
+/ \texttt{dynamic\_trace} markers to the program graph's
+\texttt{evidence\_sources} list. The downstream state-space compiler
+then becomes eligible to promote individual transitions from
+\texttt{STATIC\_ONLY} to \texttt{STATIC\_PLUS\_RUNTIME} whenever the
+diversity bonus in Equation \ref{eq:confidence-core} clears the 0.65
+boundary. The following excerpt shows the same Flask \texttt{/users}
+endpoint after re-running the pipeline with the application's
+\texttt{.coverage} file and a captured Chrome DevTools trace attached:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"variables"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}
+      \DataTypeTok{"name"}\FunctionTok{:} \StringTok{"request.method"}\FunctionTok{,} \DataTypeTok{"type"}\FunctionTok{:} \StringTok{"str"}\FunctionTok{,} \DataTypeTok{"domain"}\FunctionTok{:} \OtherTok{[}\StringTok{"GET"}\OtherTok{,} \StringTok{"POST"}\OtherTok{]}\FunctionTok{,}
+      \DataTypeTok{"evidence\_sources"}\FunctionTok{:} \OtherTok{[}\StringTok{"static\_ast"}\OtherTok{,} \StringTok{"dynamic\_coverage"}\OtherTok{,} \StringTok{"dynamic\_trace"}\OtherTok{]}\FunctionTok{,}
+      \DataTypeTok{"coverage\_hits"}\FunctionTok{:} \DecValTok{47}\FunctionTok{,} \DataTypeTok{"call\_count"}\FunctionTok{:} \DecValTok{47}\FunctionTok{,} \DataTypeTok{"is\_hot\_path"}\FunctionTok{:} \KeywordTok{true}
+    \FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}
+      \DataTypeTok{"name"}\FunctionTok{:} \StringTok{"db\_connected"}\FunctionTok{,} \DataTypeTok{"type"}\FunctionTok{:} \StringTok{"bool"}\FunctionTok{,} \DataTypeTok{"domain"}\FunctionTok{:} \OtherTok{[}\KeywordTok{true}\OtherTok{,} \KeywordTok{false}\OtherTok{]}\FunctionTok{,}
+      \DataTypeTok{"evidence\_sources"}\FunctionTok{:} \OtherTok{[}\StringTok{"static\_ast"}\OtherTok{,} \StringTok{"dynamic\_coverage"}\OtherTok{]}\FunctionTok{,}
+      \DataTypeTok{"coverage\_hits"}\FunctionTok{:} \DecValTok{47}\FunctionTok{,} \DataTypeTok{"branch\_coverage"}\FunctionTok{:} \FloatTok{0.92}\FunctionTok{,} \DataTypeTok{"is\_hot\_path"}\FunctionTok{:} \KeywordTok{false}
+    \FunctionTok{\}}
+  \OtherTok{]}\FunctionTok{,}
+  \DataTypeTok{"transitions"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}
+      \DataTypeTok{"from\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"request.method"}\FunctionTok{:} \StringTok{"GET"}\FunctionTok{,} \DataTypeTok{"db\_connected"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{\},}
+      \DataTypeTok{"action"}\FunctionTok{:} \StringTok{"query\_database"}\FunctionTok{,}
+      \DataTypeTok{"to\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"response\_code"}\FunctionTok{:} \DecValTok{200}\FunctionTok{\},}
+      \DataTypeTok{"confidence"}\FunctionTok{:} \FloatTok{0.94}\FunctionTok{,} \DataTypeTok{"tier"}\FunctionTok{:} \StringTok{"STATIC\_PLUS\_RUNTIME"}\FunctionTok{,}
+      \DataTypeTok{"evidence"}\FunctionTok{:} \FunctionTok{\{}
+        \DataTypeTok{"static"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"rule\_id"}\FunctionTok{:} \StringTok{"rule\_method\_call\_001"}\FunctionTok{,} \DataTypeTok{"parser\_certainty"}\FunctionTok{:} \FloatTok{0.95}\FunctionTok{\},}
+        \DataTypeTok{"dynamic"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"coverage\_hits"}\FunctionTok{:} \DecValTok{47}\FunctionTok{,} \DataTypeTok{"call\_count"}\FunctionTok{:} \DecValTok{47}\FunctionTok{,}
+                    \DataTypeTok{"avg\_duration\_ms"}\FunctionTok{:} \FloatTok{12.4}\FunctionTok{,} \DataTypeTok{"is\_hot\_path"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{\}}
+      \FunctionTok{\}}
+    \FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}
+      \DataTypeTok{"from\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"db\_connected"}\FunctionTok{:} \KeywordTok{false}\FunctionTok{\},}
+      \DataTypeTok{"action"}\FunctionTok{:} \StringTok{"query\_database"}\FunctionTok{,}
+      \DataTypeTok{"to\_state"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"response\_code"}\FunctionTok{:} \DecValTok{500}\FunctionTok{\},}
+      \DataTypeTok{"confidence"}\FunctionTok{:} \FloatTok{0.58}\FunctionTok{,} \DataTypeTok{"tier"}\FunctionTok{:} \StringTok{"RUNTIME\_ONLY"}\FunctionTok{,}
+      \DataTypeTok{"evidence"}\FunctionTok{:} \FunctionTok{\{}
+        \DataTypeTok{"dynamic"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"coverage\_hits"}\FunctionTok{:} \DecValTok{2}\FunctionTok{,} \DataTypeTok{"call\_count"}\FunctionTok{:} \DecValTok{2}\FunctionTok{,}
+                    \DataTypeTok{"avg\_duration\_ms"}\FunctionTok{:} \FloatTok{3.1}\FunctionTok{,} \DataTypeTok{"is\_hot\_path"}\FunctionTok{:} \KeywordTok{false}\FunctionTok{\}}
+      \FunctionTok{\}}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Two consequences of the enrichment are visible above. First, the
+\texttt{request.method} state variable's \texttt{is\_hot\_path:\ true}
+annotation, combined with the \texttt{dynamic\_coverage} and
+\texttt{dynamic\_trace} markers in its \texttt{evidence\_sources},
+carried enough diversity mass through the confidence formula to lift the
+previously-static \texttt{GET} transition from the MEDIUM tier into
+\texttt{STATIC\_PLUS\_RUNTIME}, and the transition's \texttt{evidence}
+field now records both the \texttt{rule\_id} that fired statically and
+the \texttt{avg\_duration\_ms} measured dynamically. Second, the
+previously-\texttt{RUNTIME\_ONLY} \texttt{db\_connected=false}
+transition remains in its lower tier because it has only dynamic
+evidence (the error branch fired twice in the captured trace but has no
+corroborating static rule match) --- a concrete illustration of the
+degradation behaviour documented in the ``Incomplete coverage data'' and
+``No dynamic traces available'' subsections below.
+\end{block}
+
+\begin{block}{Failure modes and graceful degradation}
+\protect\phantomsection\label{failure-modes-and-graceful-degradation}
+COGANT is designed so that missing or partial inputs degrade the output
+bundle rather than halt it, and the manuscript records these degradation
+paths explicitly so that downstream consumers can interpret a partial
+run without guessing what was skipped {[}@peng2011reproducible{]}. Five
+failure modes are worth naming because each has a visible signature in
+the emitted artifacts.
+
+\textbf{No dynamic traces available.} When neither coverage data nor
+execution traces are supplied, \texttt{enrich\_graph()} is a no-op: no
+\texttt{coverage\_hits}, \texttt{branch\_coverage},
+\texttt{call\_count}, \texttt{avg\_duration\_ms}, or
+\texttt{is\_hot\_path} metadata is attached, and the graph's
+\texttt{evidence\_sources} list never acquires
+\texttt{dynamic\_coverage} or \texttt{dynamic\_trace} markers. The
+state-space compiler still runs end-to-end using the semantic mappings
+and static graph alone, but every resulting transition is confined to
+the \texttt{STATIC\_ONLY} tier (or lower), and no transition can be
+promoted to \texttt{STATIC\_PLUS\_RUNTIME}. Downstream code that
+consumes the bundle can identify a purely-static run at a glance by
+checking the evidence source markers on the graph metadata rather than
+scanning individual transitions.
+
+\textbf{Incomplete coverage data.} When coverage is supplied but covers
+only a subset of the project, \texttt{\_enrich\_with\_coverage}
+annotates the matched files only. The enrichment loop walks each
+coverage span, normalizes the reported file path, looks up candidate
+nodes whose path matches, and annotates those whose
+\texttt{source\_range} overlaps the covered line; unmatched files are
+silently skipped with an informational log line, and nodes in unmatched
+files retain no coverage metadata at all. The result is a partially
+enriched graph in which some regions are eligible for tier promotion and
+others are not. Because the enrichment summary returns the number of
+annotated nodes, users can check whether the observed annotation rate
+matches their expectations for the provided coverage input.
+
+\textbf{Translation rules that do not match.} When the active rule set
+fails to produce any mapping for a node -- whether because no rule
+fires, or because all firing rules are pruned during conflict resolution
+-- that node remains outside \texttt{self.mappings} and simply does not
+appear in any \texttt{graph\_fragment\_node\_ids}. The translation
+engine's \texttt{get\_coverage\_report()} reports this directly: the
+returned dictionary contains the total node count, the covered count, a
+two-decimal \texttt{coverage\_percent}, and the sorted list of
+\texttt{uncovered\_node\_ids}. Rather than treat uncovered nodes as an
+error, the engine surfaces them as an explicit gap list so that authors
+can either extend the rule set, hand the gap list to the
+\texttt{ReviewAPI} for curation, or accept the partial mapping for
+downstream Generalized Notation Notation (GNN) export.
+
+\textbf{Fixpoint non-convergence.} The translation engine bounds its
+fixpoint loop at \texttt{max\_iterations\ =\ 10} by default. If a rule
+set is pathological enough to keep emitting new mappings past that bound
+-- for example because two rules can produce mutually triggering
+mappings -- the engine emits a
+\texttt{"Max\ iterations\ reached\ without\ convergence"} warning, stops
+the loop, and proceeds to conflict resolution with whatever mappings it
+has accumulated. The iteration cap therefore guarantees termination even
+for misconfigured rule sets, and the warning in the log gives rule
+authors a clear signal that the cap was hit. Because each iteration also
+writes an \texttt{iteration\_complete} entry into the engine's internal
+match log, the exact per-pass mapping counts are available for diagnosis
+without rerunning the pipeline.
+
+\textbf{Pipeline error tolerance.} The default pipeline configuration
+(\texttt{cogant/py/cogant/config/defaults.py}) marks the
+\texttt{dynamic}, \texttt{translate}, \texttt{state\_space}, and
+\texttt{process} stages with \texttt{skip\_on\_error=True}, while
+structural stages such as \texttt{ingest}, \texttt{static},
+\texttt{graph}, \texttt{export}, and \texttt{validate} keep the stricter
+default \texttt{skip\_on\_error=False}. When an optional stage raises,
+the runner records the error in the bundle, emits a warning, and
+continues to the next stage rather than aborting the run. Downstream
+bundle accessors (\texttt{state\_space\_model}, \texttt{process\_model})
+simply return \texttt{None} for stages that did not produce output, so a
+downstream consumer can detect a skipped stage by checking its accessor
+rather than by parsing log text. The net effect is that a partial bundle
+-- for example, a program graph and semantic mappings without a
+state-space model -- remains a first-class artifact with a clear
+provenance trail, rather than an opaque failure.
+\end{block}
+\end{block}
+
+\begin{block}{Rust layer}
+\protect\phantomsection\label{rust-layer}
+Native crates (\texttt{cogant-core}, \texttt{cogant-graph},
+\texttt{cogant-translate}, \texttt{cogant-statespace},
+\texttt{cogant-gnn}, \texttt{cogant-ffi}, and related packages)
+implement typed graph operations and export formatting. When PyO3
+bindings are active, Python delegates heavy graph work through
+\texttt{cogant-ffi}. Where bindings are not yet wired for a code path,
+Python fallbacks apply; see
+\href{../cogant/docs/reference/implementation_status.md}{\texttt{../cogant/docs/reference/implementation\_status.md}}
+for the current boundary.
+\end{block}
+\end{frame}
+
+\end{document}

@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/cli/init_cmd.py
+# hypothesis_version: 6.135.29
+
+[0.6, '.gitignore', 'DEFAULT_COGANT_TOML', 'GITIGNORE_ENTRY', 'RepoPathError', 'ScaffoldResult', 'cogant.toml', 'cogant_output/', 'scaffold_project', 'suggest_repo_path', 'validate_repo_path']

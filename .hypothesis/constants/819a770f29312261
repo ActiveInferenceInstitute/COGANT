@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/markov/blanket.py
+# hypothesis_version: 6.135.29
+
+['1.0.0', 'active', 'active_count', 'bidirectional_count', 'bidirectional_ids', 'boundary_ratio', 'external', 'external_count', 'external_ratio', 'id', 'internal', 'internal_count', 'internal_ratio', 'kind', 'metadata', 'name', 'path', 'rationale', 'roles', 'schema_version', 'seed_count', 'seeds', 'sensory', 'sensory_count', 'stats', 'total_nodes']

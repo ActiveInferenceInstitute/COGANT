@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/ingest/manifest.py
+# hypothesis_version: 6.135.29
+
+['"', '"\'', '#', "'", '\'"', ',', '-e', '.', '/', '=', '[', '[]', 'cargo.toml', 'dependencies', 'description', 'dev', 'dev-dependencies', 'devDependencies', 'develop', 'false', 'file:', 'name', 'package', 'package.json', 'project', 'pyproject.toml', 'rb', 'requirements.txt', 'setup.py', 'test', 'true', 'utf-8', 'version', '{']

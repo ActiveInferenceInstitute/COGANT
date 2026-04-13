@@ -1,0 +1,31 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "cogant-rust"
+version = "0.1.0"
+description = "Rust acceleration backend for COGANT (PyO3 bindings)"
+requires-python = ">=3.11"
+license = { text = "MIT OR Apache-2.0" }
+authors = [
+    { name = "COGANT Contributors" },
+]
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[tool.maturin]
+# Import path inside the parent `cogant` package — the native module will be
+# available as `cogant._rust`.
+module-name = "cogant._rust"
+# Compile in release mode by default; override with --profile=dev for debug.
+profile = "release"
+# Use the workspace-local `extension-module` feature from pyo3.
+features = ["pyo3/extension-module"]
+# The source `py/` layout of the parent COGANT package lives one level up.
+python-source = "../../py"

@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/export/bundle.py
+# hypothesis_version: 6.135.29
+
+[4096, 'Bundle manifest', 'MANIFEST.json', 'bundle_id', 'checksums', 'created_at', 'edge_count', 'files', 'gnn.json', 'gnn.md', 'graphml', 'html', 'index.html', 'json', 'markdown', 'metadata', 'node_count', 'parquet', 'rb', 'schema_name', 'stage_count', 'variable_count', 'w']

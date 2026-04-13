@@ -1,0 +1,23 @@
+[package]
+name = "cogant-ffi"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+cogant-core = { path = "../cogant-core" }
+cogant-graph = { path = "../cogant-graph" }
+cogant-translate = { path = "../cogant-translate" }
+cogant-statespace = { path = "../cogant-statespace" }
+cogant-gnn = { path = "../cogant-gnn" }
+pyo3 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+petgraph = { workspace = true }
+
+[lib]
+name = "_rust"
+crate-type = ["cdylib", "rlib"]

@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>COGANT Benchmarks Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-panel: #161b22;
+      --bg-panel-2: #1c2129;
+      --border: #30363d;
+      --fg: #c9d1d9;
+      --fg-dim: #8b949e;
+      --fg-bright: #f0f6fc;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --blue: #58a6ff;
+      --purple: #bc8cff;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "SF Mono", "Menlo", "Monaco", "Consolas", "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    header {
+      padding: 24px 32px 16px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+    header h1 {
+      margin: 0 0 6px 0;
+      font-size: 20px;
+      color: var(--fg-bright);
+      letter-spacing: 0.3px;
+    }
+    header .meta {
+      color: var(--fg-dim);
+      font-size: 12px;
+    }
+    header .meta span { margin-right: 18px; }
+    main {
+      padding: 24px 32px 80px 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    section {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px 24px;
+      margin-bottom: 22px;
+    }
+    section h2 {
+      margin: 0 0 4px 0;
+      font-size: 15px;
+      color: var(--fg-bright);
+      font-weight: 600;
+    }
+    section h2 .tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 6px;
+      margin-left: 8px;
+      border-radius: 3px;
+      background: var(--bg-panel-2);
+      color: var(--fg-dim);
+      border: 1px solid var(--border);
+      vertical-align: middle;
+      letter-spacing: 0.5px;
+    }
+    section p.desc {
+      margin: 0 0 16px 0;
+      color: var(--fg-dim);
+      font-size: 12px;
+    }
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 340px;
+    }
+    .chart-wrap.tall { height: 620px; }
+    .legend {
+      display: flex;
+      gap: 18px;
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--fg-dim);
+      flex-wrap: wrap;
+    }
+    .legend .sw {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin-right: 6px;
+      vertical-align: middle;
+      border-radius: 2px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      color: var(--fg-bright);
+      font-weight: 600;
+      background: var(--bg-panel-2);
+      position: sticky;
+      top: 0;
+    }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+    }
+    .status.ok { background: rgba(63, 185, 80, 0.15); color: var(--green); border: 1px solid rgba(63, 185, 80, 0.35); }
+    .status.warn { background: rgba(210, 153, 34, 0.15); color: var(--yellow); border: 1px solid rgba(210, 153, 34, 0.35); }
+    .status.bad { background: rgba(248, 81, 73, 0.15); color: var(--red); border: 1px solid rgba(248, 81, 73, 0.35); }
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--fg-dim);
+      font-size: 11px;
+      border-top: 1px solid var(--border);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>COGANT Benchmarks Dashboard</h1>
+    <div class="meta">
+      <span>version: v0.2.0 / post wave 14</span>
+      <span>data: 2026-04-09 / 2026-04-10</span>
+      <span>sources: REAL_WORLD_EVAL.md | ROUNDTRIP_EVAL.md | SCALING_ANALYSIS.md</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- SECTION 1 — Forward Pipeline Performance -->
+    <section>
+      <h2>1. Forward Pipeline Performance <span class="tag">wall-clock seconds</span></h2>
+      <p class="desc">
+        <code>cogant translate --no-dynamic</code> on 8 real Python repositories. Bars coloured by duration bucket
+        (green &lt; 10s, yellow 10-60s, red &gt; 60s). dulwich shows both the pre-fix (380s, 8.5 GB) and post-fix
+        (65.3s, ~2 GB) measurements from SCALING_ANALYSIS.md — three O(n²)/O(n&middot;e) bottlenecks eliminated.
+      </p>
+      <div class="chart-wrap">
+        <canvas id="chart-forward"></canvas>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:#3fb950"></i>&lt; 10s (fast)</span>
+        <span><i class="sw" style="background:#d29922"></i>10-60s (acceptable)</span>
+        <span><i class="sw" style="background:#f85149"></i>&gt; 60s (scaling cliff)</span>
+      </div>
+    </section>
+
+    <!-- SECTION 2 — Memory Usage -->
+    <section>
+      <h2>2. Memory Usage <span class="tag">peak RSS (MB)</span></h2>
+      <p class="desc">
+        Peak resident set size measured via <code>/usr/bin/time -l</code>. Red dashed line = 2 GB warning threshold
+        (laptop comfort ceiling). Pre-fix dulwich at 8 511 MB was the canary for the B-tensor
+        O(n_states² × n_actions) explosion and the 1.8 GB markdown emission bug.
+      </p>
+      <div class="chart-wrap">
+        <canvas id="chart-memory"></canvas>
+      </div>
+    </section>
+
+    <!-- SECTION 3 — Roundtrip Epsilon -->
+    <section>
+      <h2>3. Roundtrip &epsilon; (role-match) <span class="tag">23 targets</span></h2>
+      <p class="desc">
+        <code>cogant roundtrip</code> full forward &rarr; reverse &rarr; forward loop. &epsilon; is
+        <code>role_match_score</code> (multiset similarity over HIDDEN_STATE/OBSERVATION/ACTION/POLICY/CONSTRAINT/CONTEXT
+        populations). 14/23 ISOMORPHIC, 6/23 APPROXIMATE, 3/23 DIVERGENT. The three DIVERGENT HTTP-client libraries
+        share the CONSTRAINT-collapse failure mode (synth emits a fixed 3 constraint nodes vs 304-744 in origin).
+      </p>
+      <div class="chart-wrap tall">
+        <canvas id="chart-roundtrip"></canvas>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:#3fb950"></i>ISOMORPHIC &epsilon; &ge; 0.80</span>
+        <span><i class="sw" style="background:#d29922"></i>APPROXIMATE 0.50 &le; &epsilon; &lt; 0.80</span>
+        <span><i class="sw" style="background:#f85149"></i>DIVERGENT &epsilon; &lt; 0.50</span>
+      </div>
+    </section>
+
+    <div class="grid-2">
+      <!-- SECTION 4 — Coverage Timeline -->
+      <section>
+        <h2>4. Coverage Timeline <span class="tag">strict %</span></h2>
+        <p class="desc">
+          Line coverage over the wave campaign. Wave 14 closed the CONSTRAINT-lossy gap and pushed strict coverage to 82%; wave 15 landed at 86%.
+        </p>
+        <div class="chart-wrap">
+          <canvas id="chart-coverage"></canvas>
+        </div>
+      </section>
+
+      <!-- SECTION 5 — Test Count Timeline -->
+      <section>
+        <h2>5. Test Count Timeline <span class="tag">pytest node count</span></h2>
+        <p class="desc">
+          Total pytest-collected test count across the 15 multi-agent waves. 176 &rarr; 1 945 in 14 waves.
+        </p>
+        <div class="chart-wrap">
+          <canvas id="chart-tests"></canvas>
+        </div>
+      </section>
+    </div>
+
+    <!-- SECTION 6 — Summary Table -->
+    <section>
+      <h2>6. Summary Table <span class="tag">all metrics</span></h2>
+      <p class="desc">
+        Consolidated view: forward pipeline, roundtrip, and scaling metrics. Green = meets v1.0 readiness bar,
+        yellow = acceptable with caveat, red = blocks v1.0 without a fix.
+      </p>
+      <div style="overflow-x:auto">
+        <table id="summary-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Target / repo</th>
+              <th class="num">Value</th>
+              <th class="num">Threshold</th>
+              <th>Status</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody><!-- filled by JS --></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    COGANT &middot; benchmarks.html &middot; self-contained &middot; Chart.js 4.4.1 CDN
+  </footer>
+
+<script>
+/* ========================================================================
+ * Real data extracted from:
+ *   docs/evaluation/REAL_WORLD_EVAL.md  (2026-04-09)
+ *   docs/evaluation/ROUNDTRIP_EVAL.md   (2026-04-10)
+ *   docs/evaluation/SCALING_ANALYSIS.md (post-fix dulwich measurements)
+ * ====================================================================== */
+
+const forwardData = [
+  // repo, timeSec, nodes, edges, peakRssMB, pyFiles
+  { repo: "flask",    time: 2.9,   nodes: 978,  edges: 1136,  rss: 148,  files: 83 },
+  { repo: "requests", time: 4.8,   nodes: 706,  edges: 885,   rss: 168,  files: 36 },
+  { repo: "httpx",    time: 4.1,   nodes: 1192, edges: 1525,  rss: 236,  files: 60 },
+  { repo: "click",    time: 4.0,   nodes: 1129, edges: 1426,  rss: 221,  files: 63 },
+  { repo: "rich",     time: 8.5,   nodes: 2047, edges: 2542,  rss: 522,  files: 213 },
+  { repo: "fastapi",  time: 19.1,  nodes: 6050, edges: 5213,  rss: 447,  files: 1121 },
+  { repo: "pydantic", time: 49.4,  nodes: 8425, edges: 9318,  rss: 1308, files: 402 },
+];
+// dulwich gets two bars: before and after the O(n^2)/O(n*e) fixes
+const dulwichBefore = { repo: "dulwich (before)", time: 380.0, nodes: 8601, edges: 15441, rss: 8511, files: 233 };
+const dulwichAfter  = { repo: "dulwich (after)",  time: 65.3,  nodes: 8601, edges: 15441, rss: 2000, files: 233 };
+
+const bucketColor = t => t < 10 ? "#3fb950" : (t <= 60 ? "#d29922" : "#f85149");
+const rssColor = r => r < 500 ? "#3fb950" : (r <= 2000 ? "#d29922" : "#f85149");
+
+/* ---------- Section 1: Forward pipeline wall-clock ---------- */
+(() => {
+  const rows = [...forwardData, dulwichBefore, dulwichAfter];
+  const labels = rows.map(r => r.repo);
+  const times  = rows.map(r => r.time);
+  const colors = times.map(bucketColor);
+
+  new Chart(document.getElementById("chart-forward"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "wall-clock (s)",
+        data: times,
+        backgroundColor: colors,
+        borderColor: colors.map(c => c),
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#1c2129",
+          borderColor: "#30363d",
+          borderWidth: 1,
+          titleColor: "#f0f6fc",
+          bodyColor: "#c9d1d9",
+          callbacks: {
+            label: ctx => {
+              const row = rows[ctx.dataIndex];
+              return [
+                `wall-clock: ${row.time.toFixed(1)} s`,
+                `nodes:      ${row.nodes.toLocaleString()}`,
+                `edges:      ${row.edges.toLocaleString()}`,
+                `peak RSS:   ${row.rss.toLocaleString()} MB`,
+                `py files:   ${row.files.toLocaleString()}`,
+              ];
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: "#c9d1d9" },
+          grid: { color: "#30363d" },
+        },
+        y: {
+          type: "logarithmic",
+          title: { display: true, text: "wall-clock (s, log scale)", color: "#8b949e" },
+          ticks: { color: "#c9d1d9", callback: v => v + "s" },
+          grid: { color: "#30363d" },
+        },
+      },
+    },
+  });
+})();
+
+/* ---------- Section 2: Memory (peak RSS) ---------- */
+(() => {
+  const rows = [...forwardData, dulwichBefore, dulwichAfter];
+  const labels = rows.map(r => r.repo);
+  const rss    = rows.map(r => r.rss);
+  const colors = rss.map(rssColor);
+
+  new Chart(document.getElementById("chart-memory"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "peak RSS (MB)",
+        data: rss,
+        backgroundColor: colors,
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#1c2129",
+          borderColor: "#30363d",
+          borderWidth: 1,
+          titleColor: "#f0f6fc",
+          bodyColor: "#c9d1d9",
+          callbacks: {
+            label: ctx => {
+              const row = rows[ctx.dataIndex];
+              return [
+                `peak RSS: ${row.rss.toLocaleString()} MB`,
+                `nodes:    ${row.nodes.toLocaleString()}`,
+                `edges:    ${row.edges.toLocaleString()}`,
+              ];
+            },
+          },
+        },
+        annotation: {},
+      },
+      scales: {
+        x: {
+          ticks: { color: "#c9d1d9" },
+          grid: { color: "#30363d" },
+        },
+        y: {
+          title: { display: true, text: "peak RSS (MB)", color: "#8b949e" },
+          ticks: { color: "#c9d1d9" },
+          grid: { color: "#30363d" },
+        },
+      },
+    },
+    // Plugin-less reference line: draw via afterDraw
+    plugins: [{
+      id: "thresholdLine",
+      afterDraw(chart) {
+        const { ctx, chartArea: { left, right }, scales: { y } } = chart;
+        if (!y) return;
+        const yPos = y.getPixelForValue(2000);
+        if (yPos < y.top || yPos > y.bottom) return;
+        ctx.save();
+        ctx.strokeStyle = "#f85149";
+        ctx.setLineDash([6, 4]);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(left, yPos);
+        ctx.lineTo(right, yPos);
+        ctx.stroke();
+        ctx.fillStyle = "#f85149";
+        ctx.font = "11px monospace";
+        ctx.textAlign = "right";
+        ctx.fillText("2 GB warning", right - 6, yPos - 4);
+        ctx.restore();
+      },
+    }],
+  });
+})();
+
+/* ---------- Section 3: Roundtrip epsilon (horizontal bar) ---------- */
+const roundtrip = [
+  { name: "zoo/01_simple_state",  eps: 1.0000, cls: "ISOMORPHIC",  group: "zoo",  ns: 1,  no: 1,    na: 2 },
+  { name: "zoo/02_observer",      eps: 1.0000, cls: "ISOMORPHIC",  group: "zoo",  ns: 1,  no: 3,    na: 1 },
+  { name: "zoo/03_actor",         eps: 1.0000, cls: "ISOMORPHIC",  group: "zoo",  ns: 1,  no: 1,    na: 3 },
+  { name: "zoo/04_pomdp_minimal", eps: 1.0000, cls: "ISOMORPHIC",  group: "zoo",  ns: 1,  no: 3,    na: 2 },
+  { name: "zoo/05_multi_factor",  eps: 1.0000, cls: "ISOMORPHIC",  group: "zoo",  ns: 1,  no: 2,    na: 3 },
+  { name: "zoo/06_hierarchical",  eps: 1.0000, cls: "ISOMORPHIC",  group: "zoo",  ns: 2,  no: 2,    na: 4 },
+  { name: "zoo/08_preferences",   eps: 1.0000, cls: "ISOMORPHIC",  group: "zoo",  ns: 0,  no: 1,    na: 1 },
+  { name: "zoo/11_sensor_fusion", eps: 1.0000, cls: "ISOMORPHIC",  group: "zoo",  ns: 3,  no: 3,    na: 6 },
+  { name: "rwex/json_stdlib",     eps: 1.0000, cls: "ISOMORPHIC",  group: "rwex", ns: 3,  no: 1,    na: 15 },
+  { name: "rwex/requests_lib",    eps: 1.0000, cls: "ISOMORPHIC",  group: "rwex", ns: 8,  no: 35,   na: 16 },
+  { name: "zoo/12_full_pomdp",    eps: 0.9474, cls: "ISOMORPHIC",  group: "zoo",  ns: 3,  no: 4,    na: 8 },
+  { name: "rw/dateutil",          eps: 0.8638, cls: "ISOMORPHIC",  group: "rw",   ns: 33, no: 788,  na: 172 },
+  { name: "rw/pyyaml",            eps: 0.8520, cls: "ISOMORPHIC",  group: "rw",   ns: 46, no: 164,  na: 167 },
+  { name: "rwex/flask_app",       eps: 0.8429, cls: "ISOMORPHIC",  group: "rwex", ns: 9,  no: 24,   na: 25 },
+  { name: "zoo/07_event_driven",  eps: 0.7778, cls: "APPROXIMATE", group: "zoo",  ns: 0,  no: 4,    na: 3 },
+  { name: "zoo/10_constraint",    eps: 0.7143, cls: "APPROXIMATE", group: "zoo",  ns: 0,  no: 1,    na: 1 },
+  { name: "zoo/09_policy",        eps: 0.6667, cls: "APPROXIMATE", group: "zoo",  ns: 0,  no: 1,    na: 3 },
+  { name: "rw/tqdm",              eps: 0.5749, cls: "APPROXIMATE", group: "rw",   ns: 29, no: 82,   na: 78 },
+  { name: "rw/fastapi",           eps: 0.5402, cls: "APPROXIMATE", group: "rw",   ns: 59, no: 1706, na: 266 },
+  { name: "rw/click",             eps: 0.5134, cls: "APPROXIMATE", group: "rw",   ns: 50, no: 257,  na: 91 },
+  { name: "rw/httpx",             eps: 0.4777, cls: "DIVERGENT",   group: "rw",   ns: 50, no: 251,  na: 136 },
+  { name: "rw/urllib3",           eps: 0.4252, cls: "DIVERGENT",   group: "rw",   ns: 70, no: 323,  na: 167 },
+  { name: "rw/requests",          eps: 0.4147, cls: "DIVERGENT",   group: "rw",   ns: 24, no: 130,  na: 57 },
+];
+
+// CONSTRAINT-fix context annotations: describes the before/after story for
+// the three DIVERGENT HTTP client repos and the key APPROXIMATE ones.
+// (Pre-fix all three DIVERGENT repos had the CONSTRAINT collapse failure
+// mode; planning notes in docs/evaluation note a projected post-fix uplift. The
+// tooltip documents the pre-fix ε and the failure mode.)
+const constraintAnnotations = {
+  "rw/requests":  { before: 0.4147, after: "pending synth CONSTRAINT emission", note: "origin CONSTRAINT=304 → synth CONSTRAINT=3" },
+  "rw/urllib3":   { before: 0.4252, after: "pending synth CONSTRAINT emission", note: "origin CONSTRAINT=744 → synth CONSTRAINT=3" },
+  "rw/httpx":     { before: 0.4777, after: "pending synth CONSTRAINT emission", note: "origin CONSTRAINT=483 → synth CONSTRAINT=3" },
+  "rw/click":     { before: 0.5134, after: "pending synth CONSTRAINT emission", note: "origin CONSTRAINT=381 → synth CONSTRAINT=3" },
+  "rw/fastapi":   { before: 0.5402, after: "pending synth CONSTRAINT emission", note: "origin CONSTRAINT=1648 → synth CONSTRAINT=3" },
+  "rw/tqdm":      { before: 0.5749, after: "pending synth CONSTRAINT emission", note: "origin CONSTRAINT=141 → synth CONSTRAINT=3" },
+};
+
+const epsColor = cls => cls === "ISOMORPHIC" ? "#3fb950" : (cls === "APPROXIMATE" ? "#d29922" : "#f85149");
+
+(() => {
+  // sorted descending by eps (already sorted above)
+  const rows = roundtrip.slice().sort((a, b) => b.eps - a.eps);
+  const labels = rows.map(r => r.name);
+  const data   = rows.map(r => r.eps);
+  const colors = rows.map(r => epsColor(r.cls));
+
+  new Chart(document.getElementById("chart-roundtrip"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "ε (role_match)",
+        data,
+        backgroundColor: colors,
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#1c2129",
+          borderColor: "#30363d",
+          borderWidth: 1,
+          titleColor: "#f0f6fc",
+          bodyColor: "#c9d1d9",
+          callbacks: {
+            label: ctx => {
+              const row = rows[ctx.dataIndex];
+              const lines = [
+                `ε:             ${row.eps.toFixed(4)}`,
+                `classification: ${row.cls}`,
+                `group:          ${row.group}`,
+                `n_s/n_o/n_a:    ${row.ns} / ${row.no} / ${row.na}`,
+              ];
+              const ann = constraintAnnotations[row.name];
+              if (ann) {
+                lines.push("");
+                lines.push(`before CONSTRAINT fix: ε = ${ann.before.toFixed(4)}`);
+                lines.push(`after CONSTRAINT fix:  ${ann.after}`);
+                lines.push(ann.note);
+              }
+              return lines;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          min: 0, max: 1.0,
+          title: { display: true, text: "ε (role_match_score)", color: "#8b949e" },
+          ticks: { color: "#c9d1d9" },
+          grid: { color: "#30363d" },
+        },
+        y: {
+          ticks: { color: "#c9d1d9", font: { size: 11 } },
+          grid: { color: "#30363d" },
+        },
+      },
+    },
+    plugins: [{
+      id: "epsBands",
+      beforeDraw(chart) {
+        const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+        if (!x) return;
+        ctx.save();
+        // red band 0 - 0.5
+        ctx.fillStyle = "rgba(248, 81, 73, 0.06)";
+        ctx.fillRect(x.getPixelForValue(0.0), top, x.getPixelForValue(0.5) - x.getPixelForValue(0.0), bottom - top);
+        // yellow band 0.5 - 0.8
+        ctx.fillStyle = "rgba(210, 153, 34, 0.07)";
+        ctx.fillRect(x.getPixelForValue(0.5), top, x.getPixelForValue(0.8) - x.getPixelForValue(0.5), bottom - top);
+        // green band 0.8 - 1.0
+        ctx.fillStyle = "rgba(63, 185, 80, 0.06)";
+        ctx.fillRect(x.getPixelForValue(0.8), top, x.getPixelForValue(1.0) - x.getPixelForValue(0.8), bottom - top);
+        ctx.restore();
+      },
+    }],
+  });
+})();
+
+/* ---------- Section 4: Coverage timeline ---------- */
+(() => {
+  // explicit data points; interpolate linearly between waves to get a smooth line
+  const known = { 1: 54, 9: 77, 14: 82, 15: 86 };
+  const labels = Array.from({length: 15}, (_, i) => i + 1);
+  const data = labels.map(w => {
+    if (known[w] !== undefined) return known[w];
+    // linear interpolation between nearest known waves
+    const below = Math.max(...Object.keys(known).map(Number).filter(k => k < w));
+    const above = Math.min(...Object.keys(known).map(Number).filter(k => k > w));
+    const frac = (w - below) / (above - below);
+    return +(known[below] + frac * (known[above] - known[below])).toFixed(1);
+  });
+
+  new Chart(document.getElementById("chart-coverage"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "coverage %",
+        data,
+        borderColor: "#58a6ff",
+        backgroundColor: "rgba(88, 166, 255, 0.15)",
+        fill: true,
+        tension: 0.25,
+        pointBackgroundColor: labels.map(w => known[w] !== undefined ? "#58a6ff" : "#30363d"),
+        pointBorderColor: "#0d1117",
+        pointRadius: labels.map(w => known[w] !== undefined ? 5 : 3),
+        pointHoverRadius: 7,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#1c2129",
+          borderColor: "#30363d",
+          borderWidth: 1,
+          titleColor: "#f0f6fc",
+          bodyColor: "#c9d1d9",
+          callbacks: {
+            title: ctx => `wave ${ctx[0].label}`,
+            label: ctx => {
+              const w = Number(ctx.label);
+              const v = ctx.raw;
+              return known[w] !== undefined ? `measured: ${v}%` : `interpolated: ${v}%`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          title: { display: true, text: "wave #", color: "#8b949e" },
+          ticks: { color: "#c9d1d9" },
+          grid: { color: "#30363d" },
+        },
+        y: {
+          min: 40, max: 100,
+          title: { display: true, text: "strict coverage %", color: "#8b949e" },
+          ticks: { color: "#c9d1d9", callback: v => v + "%" },
+          grid: { color: "#30363d" },
+        },
+      },
+    },
+  });
+})();
+
+/* ---------- Section 5: Test count timeline ---------- */
+(() => {
+  const known = { 1: 176, 9: 1232, 14: 1792, 15: 1945 };
+  const labels = Array.from({length: 15}, (_, i) => i + 1);
+  const data = labels.map(w => {
+    if (known[w] !== undefined) return known[w];
+    const below = Math.max(...Object.keys(known).map(Number).filter(k => k < w));
+    const above = Math.min(...Object.keys(known).map(Number).filter(k => k > w));
+    const frac = (w - below) / (above - below);
+    return Math.round(known[below] + frac * (known[above] - known[below]));
+  });
+
+  new Chart(document.getElementById("chart-tests"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "test count",
+        data,
+        borderColor: "#bc8cff",
+        backgroundColor: "rgba(188, 140, 255, 0.15)",
+        fill: true,
+        tension: 0.25,
+        pointBackgroundColor: labels.map(w => known[w] !== undefined ? "#bc8cff" : "#30363d"),
+        pointBorderColor: "#0d1117",
+        pointRadius: labels.map(w => known[w] !== undefined ? 5 : 3),
+        pointHoverRadius: 7,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#1c2129",
+          borderColor: "#30363d",
+          borderWidth: 1,
+          titleColor: "#f0f6fc",
+          bodyColor: "#c9d1d9",
+          callbacks: {
+            title: ctx => `wave ${ctx[0].label}`,
+            label: ctx => {
+              const w = Number(ctx.label);
+              const v = ctx.raw;
+              return known[w] !== undefined ? `measured: ${v} tests` : `interpolated: ${v} tests`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          title: { display: true, text: "wave #", color: "#8b949e" },
+          ticks: { color: "#c9d1d9" },
+          grid: { color: "#30363d" },
+        },
+        y: {
+          title: { display: true, text: "pytest-collected tests", color: "#8b949e" },
+          ticks: { color: "#c9d1d9" },
+          grid: { color: "#30363d" },
+        },
+      },
+    },
+  });
+})();
+
+/* ---------- Section 6: Summary table ---------- */
+(() => {
+  const rows = [
+    // Forward pipeline
+    { m: "Forward pipeline pass rate", t: "8 repos",            v: "8 / 8",       th: "8 / 8",      s: "ok",   src: "REAL_WORLD_EVAL.md" },
+    { m: "Fastest forward run",        t: "flask",              v: "2.9 s",       th: "< 10 s",     s: "ok",   src: "REAL_WORLD_EVAL.md" },
+    { m: "Median forward time",        t: "8 repos",            v: "~6.5 s",      th: "< 10 s",     s: "ok",   src: "REAL_WORLD_EVAL.md" },
+    { m: "Slowest forward (pre-fix)",  t: "dulwich",            v: "380.0 s",     th: "< 120 s",    s: "bad",  src: "REAL_WORLD_EVAL.md" },
+    { m: "Slowest forward (post-fix)", t: "dulwich",            v: "65.3 s",      th: "< 120 s",    s: "ok",   src: "SCALING_ANALYSIS.md" },
+    { m: "GNN validator quality",      t: "every bundle",       v: "100.0 %",     th: "≥ 95 %",     s: "ok",   src: "REAL_WORLD_EVAL.md" },
+
+    // Memory
+    { m: "Peak RSS (pre-fix)",         t: "dulwich",            v: "8 511 MB",    th: "< 2 000 MB", s: "bad",  src: "REAL_WORLD_EVAL.md" },
+    { m: "Peak RSS (post-fix est.)",   t: "dulwich",            v: "~2 000 MB",   th: "< 2 000 MB", s: "warn", src: "SCALING_ANALYSIS.md" },
+    { m: "Peak RSS (median)",          t: "7 other repos",      v: "236 MB",      th: "< 2 000 MB", s: "ok",   src: "REAL_WORLD_EVAL.md" },
+    { m: "GNN markdown (pre-fix)",     t: "dulwich",            v: "1.8 GB / 498 k lines", th: "< 100 MB", s: "bad",  src: "SCALING_ANALYSIS.md" },
+    { m: "GNN markdown (post-fix)",    t: "dulwich",            v: "206 MB",      th: "< 500 MB",   s: "ok",   src: "SCALING_ANALYSIS.md" },
+
+    // Roundtrip
+    { m: "Roundtrip runtime failures", t: "23 targets",         v: "0",           th: "0",          s: "ok",   src: "ROUNDTRIP_EVAL.md" },
+    { m: "ISOMORPHIC (ε ≥ 0.80)",     t: "23 targets",         v: "14 (61 %)",   th: "≥ 50 %",     s: "ok",   src: "ROUNDTRIP_EVAL.md" },
+    { m: "APPROXIMATE (0.5 ≤ ε < 0.8)", t: "23 targets",       v: "6 (26 %)",    th: "—",          s: "warn", src: "ROUNDTRIP_EVAL.md" },
+    { m: "DIVERGENT (ε < 0.5)",       t: "23 targets",         v: "3 (13 %)",    th: "0",          s: "bad",  src: "ROUNDTRIP_EVAL.md" },
+    { m: "Best ε",                     t: "zoo/01_simple_state",v: "1.0000",      th: "≥ 0.9",      s: "ok",   src: "ROUNDTRIP_EVAL.md" },
+    { m: "Worst ε",                    t: "rw/requests",        v: "0.4147",      th: "≥ 0.5",      s: "bad",  src: "ROUNDTRIP_EVAL.md" },
+    { m: "Shape match rate",           t: "23 targets",         v: "21 / 23",     th: "≥ 20 / 23",  s: "ok",   src: "ROUNDTRIP_EVAL.md" },
+
+    // Coverage / tests
+    { m: "Coverage (wave 1)",          t: "baseline",           v: "54 %",        th: "—",          s: "warn", src: "MEMORY.md" },
+    { m: "Coverage (wave 15)",         t: "latest",             v: "86 %",        th: "≥ 90 %",     s: "warn", src: "MEMORY.md" },
+    { m: "Test count (wave 1)",        t: "baseline",           v: "176",         th: "—",          s: "warn", src: "MEMORY.md" },
+    { m: "Test count (wave 15)",       t: "latest",             v: "1 945",       th: "≥ 1 500",    s: "ok",   src: "MEMORY.md" },
+  ];
+  const tbody = document.querySelector("#summary-table tbody");
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td>${r.m}</td>` +
+      `<td><code>${r.t}</code></td>` +
+      `<td class="num">${r.v}</td>` +
+      `<td class="num">${r.th}</td>` +
+      `<td><span class="status ${r.s}">${r.s.toUpperCase()}</span></td>` +
+      `<td><code>${r.src}</code></td>`;
+    tbody.appendChild(tr);
+  }
+})();
+</script>
+</body>
+</html>

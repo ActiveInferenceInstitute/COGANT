@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/reverse/idempotency.py
+# hypothesis_version: 6.135.29
+
+[0.0, 0.5, 1.0, 'A', 'ACTION', 'Action', 'B', 'C', 'CONSTRAINT', 'CONTEXT', 'Constraint', 'Context', 'D', 'DRIFT', 'ExpectedFreeEnergy', 'HIDDEN_STATE', 'HiddenState', 'ISO', 'LikelihoodMatrix', 'OBSERVATION', 'Observation', 'POLICY', 'PREFERENCE', 'Policy', 'Preference', 'PreferenceVector', 'PriorBelief', 'ROLE_MATCH_THRESHOLD', 'RoundtripResult', 'Time', 'TransitionMatrix', '_process_model', '_program_graph', '_semantic_mappings', '_state_space_model', 'actions', 'cogant-roundtrip-', 'error', 'forward', 'kind', 'mappings', 'model.gnn.md', 'n_actions', 'n_obs', 'n_states', 'name', 'observations', 'reverse', 'role', 'state_space', 'utf-8', 'value', 'variables', 'verify_roundtrip']

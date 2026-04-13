@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/export/parquet.py
+# hypothesis_version: 6.135.29
+
+['edges.parquet', 'id', 'kind', 'language', 'name', 'nodes.parquet', 'path', 'qualified_name', 'source_id', 'source_range', 'target_id', 'weight']

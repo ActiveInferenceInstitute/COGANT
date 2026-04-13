@@ -1,0 +1,330 @@
+{
+  "target": "/private/tmp/pytest-of-4d/pytest-1/test_translate_with_trace_path0",
+  "artifacts": {
+    "repo_snapshot": {
+      "metadata": {
+        "name": "test_translate_with_trace_path0",
+        "url": "/private/tmp/pytest-of-4d/pytest-1/test_translate_with_trace_path0",
+        "commit_hash": null,
+        "commit_message": null,
+        "timestamp": "2026-04-13 02:11:34.011429+00:00",
+        "author": null,
+        "language": null,
+        "description": null
+      },
+      "files": [],
+      "dependencies": [],
+      "root_path": "/private/tmp/pytest-of-4d/pytest-1/test_translate_with_trace_path0"
+    },
+    "parsed_modules_detail": [],
+    "normalized_facts": [],
+    "_program_graph": {
+      "metadata": {
+        "repo_uri": "file:///private/tmp/pytest-of-4d/pytest-1/test_translate_with_trace_path0",
+        "languages": [],
+        "version": "1.0",
+        "created_at": "2026-04-13 02:11:34.270044+00:00",
+        "updated_at": "2026-04-13 02:11:34.270068+00:00",
+        "evidence_sources": [],
+        "custom_metadata": {}
+      },
+      "nodes": {},
+      "edges": {}
+    },
+    "_translation_engine": {
+      "rules": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "mappings": {},
+      "max_iterations": 10
+    },
+    "_semantic_mappings": {},
+    "_state_space_model": {
+      "id": "model_test_translate_with_trace_path0",
+      "schema_name": "test_translate_with_trace_path0",
+      "variables": {},
+      "observations": {},
+      "actions": {},
+      "transitions": {},
+      "likelihoods": {},
+      "preferences": {},
+      "time_regime": "synchronous",
+      "metadata": {
+        "step_unit": "continuous",
+        "is_async": false,
+        "max_steps": 1000,
+        "variable_count": 0,
+        "observation_count": 0,
+        "action_count": 0,
+        "transition_count": 0
+      }
+    },
+    "_process_model": {
+      "id": "process_test_translate_with_trace_path0",
+      "schema_name": "test_translate_with_trace_path0",
+      "stages": {},
+      "connections": {},
+      "entry_stage_id": null,
+      "exit_stage_ids": [],
+      "metadata": {
+        "patterns": {
+          "sequential": [],
+          "fan_out": [],
+          "fan_in": [],
+          "loop": []
+        }
+      }
+    },
+    "_gnn_package_dir": "output/gnn_package",
+    "_gnn_package_manifest": {
+      "version": "1.0.0",
+      "timestamp": "2026-04-13T02:11:34.271565+00:00",
+      "package_path": "output/gnn_package",
+      "checksums": {
+        "model.gnn.md": "c0f66796114d8646d5b01a2b8412d77ddfaa57a125e8ae328ff33e6e1c3862d4",
+        "model.gnn.json": "022c57ce8d22a326a1136dab482faae161005956120d533343d0b6033732d060",
+        "state_space.json": "c23476807cdf0c1de0b606a1a0485d5cce494d8e40ee41570ed3bb8dfa7096ac",
+        "observations.json": "7a659eb972dd32d604c3196eca5798639d875c1bf2675f6d7e40a2dfa8851955",
+        "actions.json": "a0804f1b1a1b0768feb01785a982011de89ef66e74e6ded4462214890f72af06",
+        "transitions.json": "38d5e8c1f06de8c9421c84faf805e3853f0c990ea06e2148ad3b8df990f4a92e",
+        "preferences.json": "7e33627a460af25bf108387382ad4a7906e393af255de98220da41b779ca74ca",
+        "factors.json": "2daf8871909a7a2ccb9c35e1dc5c0b54c493c5f23f78d81f6ef9cd922a92f11c",
+        "provenance.json": "0a4d332c8666faa909bf46e2b6f98bf8a3e446fb5a0c53add3a4f414ce16a3fe",
+        "ontology.json": "a0667d0375fb31ed02ed322ff369862e8733f9b20b0829c2c9ad0a62ebab2d0f",
+        "actions_policies.json": "a0804f1b1a1b0768feb01785a982011de89ef66e74e6ded4462214890f72af06",
+        "connections.json": "dc8bb037b4e62e2889879af564f026911a772db13350f5259621eec69e1cda64",
+        "preferences_constraints.json": "7e33627a460af25bf108387382ad4a7906e393af255de98220da41b779ca74ca",
+        "markov_blanket.json": "7f216e73575295fa73651d598174eda687159317f75fa0eb81c0281636ab3fb0",
+        "markov_network.json": "ac662fe34091d928de05d6dd83cd91e2732e336cb815383e40863d0c0c28c8b8",
+        "program_graph.json": "6cf963b9ffb22b3a4ec6a2551d871e4c6138bb6b37dae011b251214d97781551",
+        "process_model.json": "0d94db65eb9a02214d2d49d8f6d676fe223f007d2653b666a8b233b75d1eb5a0",
+        "diagrams/class_diagram.mermaid": "417505ab8c45275b4cc90eba0216e14698bfc9b3d27c19b32ee7b322d99a7867",
+        "diagrams/state_diagram.mermaid": "b4a65dfdd9dede1028b6508b01f1a713bec8364051282b3732d26929b2b76113",
+        "diagrams/sequence_diagram.mermaid": "df125994dada96588e8be3e0d96de71a41415ce5221f4de7bdb16b8f386d1a3d",
+        "diagrams/dependency_diagram.mermaid": "ad6586f310d87461d57fd5c1bebe54ed34dca130032e2d1cccdde24c2d68210e",
+        "diagrams/active_inference_diagram.mermaid": "82879f08b721cc6fc6a4547efb5400505ebe813bc568e4a51a97ed7c628d96ad",
+        "visualizations/dashboard.html": "d227f64cb81792b3f9e2bd9048e8a5d6ce316c15c8eed28c8ad63876387b517e",
+        "visualizations/charts/node_dist.html": "421da56f543a036dbf33abe5b1b0cd967eeec4b3d15a778c337160fa8e3cba0b",
+        "visualizations/charts/edge_dist.html": "d59053942f11e334699900a6cb735dee792510f74254f3b254e8ba57bda929e1",
+        "visualizations/charts/confidence.html": "6e0fee60ef41e7825e91a86ecf87f9cf3b1380f634e6e25a6a601a0f402b56aa"
+      },
+      "files": [
+        "model.gnn.md",
+        "model.gnn.json",
+        "state_space.json",
+        "observations.json",
+        "actions.json",
+        "transitions.json",
+        "preferences.json",
+        "factors.json",
+        "provenance.json",
+        "ontology.json",
+        "actions_policies.json",
+        "connections.json",
+        "preferences_constraints.json",
+        "markov_blanket.json",
+        "markov_network.json",
+        "program_graph.json",
+        "process_model.json",
+        "diagrams/class_diagram.mermaid",
+        "diagrams/state_diagram.mermaid",
+        "diagrams/sequence_diagram.mermaid",
+        "diagrams/dependency_diagram.mermaid",
+        "diagrams/active_inference_diagram.mermaid",
+        "visualizations/dashboard.html",
+        "visualizations/charts/node_dist.html",
+        "visualizations/charts/edge_dist.html",
+        "visualizations/charts/confidence.html"
+      ],
+      "graph_stats": {
+        "nodes": 0,
+        "edges": 0
+      },
+      "state_space_stats": {
+        "variables": 0,
+        "observations": 0,
+        "actions": 0
+      },
+      "semantic_mappings_count": 0
+    },
+    "png_paths": {
+      "program_graph": [],
+      "mermaid": [
+        "output/gnn_package/diagrams/active_inference_diagram.png",
+        "output/gnn_package/diagrams/sequence_diagram.png"
+      ],
+      "svg": [],
+      "dot": [],
+      "state_space": [],
+      "connections": [
+        "output/connections_matrix.png"
+      ],
+      "process": [],
+      "markov_blanket": [],
+      "gnn_markdown": [
+        "output/gnn_package/model_gnn.png",
+        "output/gnn_package/model_gnn_p2.png",
+        "output/gnn_package/model_gnn_p3.png",
+        "output/gnn_package/model_gnn_p4.png",
+        "output/gnn_package/model_gnn_p5.png",
+        "output/gnn_package/model_gnn_p6.png",
+        "output/gnn_package/model_gnn_p7.png",
+        "output/gnn_package/model_gnn_p8.png"
+      ],
+      "summary_cover": [
+        "output/summary_cover.png"
+      ]
+    },
+    "export_paths": [
+      "output/program_graph.json",
+      "output/state_space.json",
+      "output/process_model.json",
+      "output/gnn_model.json",
+      "output/gnn_package"
+    ]
+  },
+  "stage_results": {
+    "ingest": {
+      "type": "ingest",
+      "target": "/private/tmp/pytest-of-4d/pytest-1/test_translate_with_trace_path0",
+      "file_count": 0,
+      "language_distribution": {},
+      "root": "/private/tmp/pytest-of-4d/pytest-1/test_translate_with_trace_path0"
+    },
+    "static": {
+      "type": "static_analysis",
+      "nodes": [],
+      "edges": [],
+      "symbols": {
+        "python_modules_parsed": 0
+      },
+      "modules": []
+    },
+    "normalize": {
+      "type": "normalized",
+      "nodes": [],
+      "edges": [],
+      "fact_count": 0
+    },
+    "graph": {
+      "type": "program_graph",
+      "metadata": {
+        "repo_uri": "file:///private/tmp/pytest-of-4d/pytest-1/test_translate_with_trace_path0",
+        "languages": [],
+        "version": "1.0"
+      },
+      "nodes": {},
+      "edges": {},
+      "statistics": {
+        "total_nodes": 0,
+        "total_edges": 0,
+        "languages": [],
+        "connected_components": 0,
+        "nodes_by_kind": {},
+        "edges_by_kind": {}
+      }
+    },
+    "dynamic": {
+      "type": "dynamic_enrichment",
+      "skipped": true,
+      "reason": "skip_dynamic=True"
+    },
+    "translate": {
+      "type": "gnn_model",
+      "node_features": [],
+      "edge_indices": [],
+      "embeddings": {},
+      "mapping_count": 0,
+      "mapping_ids": []
+    },
+    "statespace": {
+      "type": "state_space_model",
+      "states": [],
+      "observations": [],
+      "actions": [],
+      "policies": [],
+      "schema_name": "test_translate_with_trace_path0"
+    },
+    "process": {
+      "type": "process_model",
+      "stages": [],
+      "dependencies": [],
+      "timeline": [],
+      "stage_count": 0
+    },
+    "export": {
+      "type": "export",
+      "output_dir": "output",
+      "artifacts": [
+        "output/program_graph.json",
+        "output/state_space.json",
+        "output/process_model.json",
+        "output/gnn_model.json",
+        "output/gnn_package"
+      ]
+    },
+    "validate": {
+      "type": "validation",
+      "passed": true,
+      "checks": {
+        "issue_count": 0,
+        "error_count": 0
+      },
+      "warnings": [],
+      "issues": [],
+      "gnn_validation": {
+        "valid": true,
+        "score": 100.0,
+        "error_count": 0,
+        "warning_count": 0,
+        "package_dir": "output/gnn_package"
+      }
+    }
+  },
+  "errors": [],
+  "metadata": {
+    "config": {
+      "stages": [
+        "ingest",
+        "static",
+        "normalize",
+        "graph",
+        "dynamic",
+        "translate",
+        "statespace",
+        "process",
+        "export",
+        "validate"
+      ],
+      "skip_stages": [],
+      "plugins": {},
+      "output_dir": "output",
+      "verbose": false,
+      "dry_run": false,
+      "layout_output": false,
+      "skip_dynamic": true,
+      "coverage_path": null,
+      "trace_path": "/private/tmp/pytest-of-4d/pytest-1/test_translate_with_trace_path0/trace.json",
+      "incremental_since": null,
+      "cache_dir": null
+    }
+  }
+}

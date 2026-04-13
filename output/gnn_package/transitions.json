@@ -1,0 +1,11 @@
+{
+  "structure": {
+    "type": "state_transitions",
+    "transition_count": 0,
+    "deterministic": true,
+    "markovian": true,
+    "time_regime": "synchronous"
+  },
+  "deterministic": true,
+  "markovian": true
+}

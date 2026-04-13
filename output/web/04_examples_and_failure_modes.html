@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>04_examples_and_failure_modes</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<h1 id="examples-and-failure-modes">Examples and Failure Modes</h1>
+<p>This section walks through a concrete example run of the pipeline on
+a small Flask application, shows representative fragments of the
+artifacts it produces (semantic mappings and state-space transitions),
+and then documents the degradation behavior that users should expect
+when inputs are missing or partial. Together these illustrate both what
+a successful run looks like and how the system communicates partial
+success.</p>
+<h2 id="example-outputs">Example outputs</h2>
+<p>The package tree includes runnable examples under <a
+href="../cogant/examples/"><code>../cogant/examples/</code></a> (for
+example <code>control_positive/</code>, <code>python-service/</code>,
+<code>workflow-engine/</code>, and <code>thin_orchestrated/</code>) and
+generated sample outputs under <a
+href="../cogant/output/"><code>../cogant/output/</code></a> (for example
+<code>roundtrip_calculator/</code> with <code>model.gnn.md</code>,
+diagrams, and rendered charts). Use
+<code>cogant translate --layout-output</code> or
+<code>PipelineConfig(layout_output=True)</code> to place pipeline JSON
+under <code>data/</code> automatically; run
+<code>python -m cogant.tools.render_output_figures</code> on the output
+root for PNGs. Regenerate these trees by running the packaged pipeline
+against the example sources when validating releases.</p>
+<h3 id="concrete-walkthrough-flask-rest-api">Concrete walkthrough: Flask
+REST API</h3>
+<p>To make the pipeline’s behavior tangible, consider the
+<code>flask_app</code> fixture distributed under
+<code>../cogant/examples/real_world/flask_app/</code>: a small
+six-module Flask application (<code>__init__.py</code>,
+<code>app.py</code>, <code>config.py</code>, <code>models.py</code>,
+<code>services.py</code>, <code>utils.py</code>) totalling 853 lines of
+Python analyzed end-to-end by the pipeline. Running
+<code>RoundtripOrchestrator</code> on this repository via
+<code>../cogant/examples/orchestrate_roundtrip.py</code> produces a
+program graph with the characteristics recorded in the canonical
+<code>../cogant/evaluation/figures/metrics.json</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source files discovered</td>
+<td>6</td>
+</tr>
+<tr>
+<td>Lines analyzed</td>
+<td>853</td>
+</tr>
+<tr>
+<td><strong>Nodes</strong></td>
+<td><strong>98</strong></td>
+</tr>
+<tr>
+<td><strong>Edges</strong></td>
+<td><strong>597</strong></td>
+</tr>
+<tr>
+<td>Total semantic mappings</td>
+<td>51</td>
+</tr>
+<tr>
+<td>GNN package files</td>
+<td>19</td>
+</tr>
+<tr>
+<td>GNN validation</td>
+<td>PASS (score 100.0, 0 errors, 0 warnings)</td>
+</tr>
+</tbody>
+</table>
+<p>The node and edge populations distribute across the kinds the v0.5.x
+Python front end actually extracts (structural core: MODULE / CLASS /
+METHOD / FUNCTION plus CONTAINS / WRITES / READS / CALLS / IMPORTS /
+INHERITS), rather than the richer taxonomy that is declared in
+<code>cogant.schemas.core.NodeKind</code> and <code>EdgeKind</code> but
+remains roadmap for the Python parser.</p>
+<p><strong>Table 1. Node kind distribution (Flask API
+example).</strong></p>
+<table>
+<thead>
+<tr>
+<th>Node kind</th>
+<th>Count</th>
+<th>Percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MODULE</td>
+<td>6</td>
+<td>6.1%</td>
+</tr>
+<tr>
+<td>CLASS</td>
+<td>25</td>
+<td>25.5%</td>
+</tr>
+<tr>
+<td>METHOD</td>
+<td>57</td>
+<td>58.2%</td>
+</tr>
+<tr>
+<td>FUNCTION</td>
+<td>10</td>
+<td>10.2%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 2. Edge kind distribution (Flask API
+example).</strong></p>
+<table>
+<thead>
+<tr>
+<th>Edge kind</th>
+<th>Count</th>
+<th>Percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CALLS</td>
+<td>433</td>
+<td>72.5%</td>
+</tr>
+<tr>
+<td>CONTAINS</td>
+<td>92</td>
+<td>15.4%</td>
+</tr>
+<tr>
+<td>READS</td>
+<td>38</td>
+<td>6.4%</td>
+</tr>
+<tr>
+<td>WRITES</td>
+<td>15</td>
+<td>2.5%</td>
+</tr>
+<tr>
+<td>IMPORTS</td>
+<td>10</td>
+<td>1.7%</td>
+</tr>
+<tr>
+<td>INHERITS</td>
+<td>9</td>
+<td>1.5%</td>
+</tr>
+</tbody>
+</table>
+<p>The CALLS-heavy distribution reflects the call-graph step in
+<code>CallGraphBuilder</code>, which traverses every
+<code>ast.Call</code> node in the module and attaches an edge between
+the enclosing function or method and its callee when the callee resolves
+inside the project. Control-flow nodes, anonymous data-flow nodes, and
+typed variable nodes are not yet emitted by the Python front end;
+broadening the node taxonomy is tracked as P1-2 and P1-3 in the R&amp;D
+backlog (<code>../cogant/docs/evaluation/SCOPING_REPORT.md</code>).</p>
+<h3 id="example-semantic-mapping-output">Example semantic mapping
+output</h3>
+<p>During the translation stage, each program-graph node is matched
+against the active rule set and assigned a <code>SemanticMapping</code>
+with a <code>MappingKind</code> and confidence fields defined in <a
+href="../cogant/py/cogant/schemas/semantic.py"><code>../cogant/py/cogant/schemas/semantic.py</code></a>.
+The following excerpt uses <strong>real field names</strong>; node IDs
+and file paths are <strong>representative</strong> of the
+<code>flask_app</code> fixture, not a verbatim
+<code>semantic_mappings.json</code> dump:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Illustrative SemanticMapping-shaped records (see semantic.SemanticMapping)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> sm_get_users_obs</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> OBSERVATION</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">graph_fragment_node_ids</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">fn_get_users</span><span class="kw">]</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">semantic_label</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;GET /users handler&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">confidence_score</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.98</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">confidence_tier</span><span class="kw">:</span><span class="at"> STATIC_ONLY</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">parser_certainty</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.0</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">provenance</span><span class="kw">:</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">source</span><span class="kw">:</span><span class="at"> static_analysis</span><span class="kw">,</span><span class="at"> </span><span class="fu">confidence</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.0</span><span class="kw">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> sm_query_action</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> ACTION</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">graph_fragment_node_ids</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">call_db_session_query</span><span class="kw">]</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">semantic_label</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;database query&quot;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">confidence_score</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.82</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">confidence_tier</span><span class="kw">:</span><span class="at"> STATIC_ONLY</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">parser_certainty</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.90</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">provenance</span><span class="kw">:</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">source</span><span class="kw">:</span><span class="at"> static_analysis</span><span class="kw">,</span><span class="at"> </span><span class="fu">confidence</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.90</span><span class="kw">,</span><span class="at"> </span><span class="fu">metadata</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="fu">note</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;receiver type partly heuristic&quot;</span><span class="kw">}}</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> sm_user_model_hidden</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> HIDDEN_STATE</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">graph_fragment_node_ids</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">class_user</span><span class="kw">]</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">semantic_label</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;User model state&quot;</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">confidence_score</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.0</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">confidence_tier</span><span class="kw">:</span><span class="at"> STATIC_ONLY</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">provenance</span><span class="kw">:</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="kw">{</span><span class="fu">source</span><span class="kw">:</span><span class="at"> static_analysis</span><span class="kw">,</span><span class="at"> </span><span class="fu">confidence</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.0</span><span class="kw">}</span></span></code></pre></div>
+<p>The middle row illustrates how the confidence model (Equation <span
+class="math inline">\(\ref{eq:confidence-core}\)</span> in §2) responds
+when parser certainty drops: import-traced receivers lower
+<code>parser_certainty</code>, which feeds Equation <span
+class="math inline">\(\ref{eq:confidence-core}\)</span> and yields a
+sub-1.0 <code>confidence_score</code> even before dynamic evidence is
+available.</p>
+<h3 id="example-state-space-excerpt">Example state-space excerpt</h3>
+<p>When dynamic traces are available, the state-space compiler produces
+a behavioral model alongside the static graph. The following excerpt
+shows a fragment of the state-space IR for the <code>/users</code>
+endpoint:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;variables&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;request.method&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;str&quot;</span><span class="fu">,</span> <span class="dt">&quot;domain&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;GET&quot;</span><span class="ot">,</span> <span class="st">&quot;POST&quot;</span><span class="ot">]</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;db_connected&quot;</span><span class="fu">,</span>   <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;bool&quot;</span><span class="fu">,</span> <span class="dt">&quot;domain&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="kw">true</span><span class="ot">,</span> <span class="kw">false</span><span class="ot">]</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;response_code&quot;</span><span class="fu">,</span>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span><span class="fu">,</span>  <span class="dt">&quot;domain&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">200</span><span class="ot">,</span> <span class="dv">400</span><span class="ot">,</span> <span class="dv">500</span><span class="ot">]</span><span class="fu">}</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;actions&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;validate_input&quot;</span><span class="fu">,</span> <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;routes/users.py:18&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;query_database&quot;</span><span class="fu">,</span>  <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;routes/users.py:22&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;format_response&quot;</span><span class="fu">,</span> <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;routes/users.py:30&quot;</span><span class="fu">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;transitions&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;from_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;request.method&quot;</span><span class="fu">:</span> <span class="st">&quot;GET&quot;</span><span class="fu">,</span> <span class="dt">&quot;db_connected&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;query_database&quot;</span><span class="fu">,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;to_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;response_code&quot;</span><span class="fu">:</span> <span class="dv">200</span><span class="fu">},</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.94</span><span class="fu">,</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;tier&quot;</span><span class="fu">:</span> <span class="st">&quot;STATIC_PLUS_RUNTIME&quot;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;from_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;request.method&quot;</span><span class="fu">:</span> <span class="st">&quot;POST&quot;</span><span class="fu">,</span> <span class="dt">&quot;db_connected&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;validate_input&quot;</span><span class="fu">,</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;to_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;response_code&quot;</span><span class="fu">:</span> <span class="dv">400</span><span class="fu">},</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.71</span><span class="fu">,</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;tier&quot;</span><span class="fu">:</span> <span class="st">&quot;STATIC_ONLY&quot;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;from_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;db_connected&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">},</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;query_database&quot;</span><span class="fu">,</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;to_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;response_code&quot;</span><span class="fu">:</span> <span class="dv">500</span><span class="fu">},</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.58</span><span class="fu">,</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;tier&quot;</span><span class="fu">:</span> <span class="st">&quot;RUNTIME_ONLY&quot;</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Confidence tiers follow the thresholds defined in
+<code>determine_confidence_tier</code>:
+<strong>STATIC_PLUS_RUNTIME</strong> (<span class="math inline">\(c \geq
+0.65\)</span>, with both static and dynamic evidence) indicates
+corroboration from AST analysis and execution traces;
+<strong>STATIC_ONLY</strong> (<span class="math inline">\(c \geq
+0.5\)</span>, static evidence only) reflects assertions grounded in
+source structure alone; <strong>RUNTIME_ONLY</strong> (<span
+class="math inline">\(c \geq 0.4\)</span>, dynamic evidence only) flags
+inferences from runtime data without static corroboration. A fourth
+tier, <strong>HUMAN_REVIEWED</strong> (<span class="math inline">\(c
+\geq 0.9\)</span>, with human review evidence), is available for
+manually curated mappings.</p>
+<h3 id="dynamically-enriched-excerpt">Dynamically enriched excerpt</h3>
+<p>The previous excerpt shows a purely-static run. When
+<code>.coverage</code> / Cobertura XML and Chrome DevTools trace inputs
+are supplied to the <code>dynamic</code> stage,
+<code>enrich_graph()</code> annotates the affected nodes with
+<code>coverage_hits</code>, <code>branch_coverage</code>,
+<code>call_count</code>, <code>avg_duration_ms</code>, and
+<code>is_hot_path</code> metadata, and appends
+<code>dynamic_coverage</code> / <code>dynamic_trace</code> markers to
+the program graph’s <code>evidence_sources</code> list. The downstream
+state-space compiler then becomes eligible to promote individual
+transitions from <code>STATIC_ONLY</code> to
+<code>STATIC_PLUS_RUNTIME</code> whenever the diversity bonus in
+Equation <span class="math inline">\(\ref{eq:confidence-core}\)</span>
+clears the 0.65 boundary. The following excerpt shows the same Flask
+<code>/users</code> endpoint after re-running the pipeline with the
+application’s <code>.coverage</code> file and a captured Chrome DevTools
+trace attached:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;variables&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;request.method&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;str&quot;</span><span class="fu">,</span> <span class="dt">&quot;domain&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;GET&quot;</span><span class="ot">,</span> <span class="st">&quot;POST&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;evidence_sources&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;static_ast&quot;</span><span class="ot">,</span> <span class="st">&quot;dynamic_coverage&quot;</span><span class="ot">,</span> <span class="st">&quot;dynamic_trace&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;coverage_hits&quot;</span><span class="fu">:</span> <span class="dv">47</span><span class="fu">,</span> <span class="dt">&quot;call_count&quot;</span><span class="fu">:</span> <span class="dv">47</span><span class="fu">,</span> <span class="dt">&quot;is_hot_path&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;db_connected&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;bool&quot;</span><span class="fu">,</span> <span class="dt">&quot;domain&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="kw">true</span><span class="ot">,</span> <span class="kw">false</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;evidence_sources&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;static_ast&quot;</span><span class="ot">,</span> <span class="st">&quot;dynamic_coverage&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;coverage_hits&quot;</span><span class="fu">:</span> <span class="dv">47</span><span class="fu">,</span> <span class="dt">&quot;branch_coverage&quot;</span><span class="fu">:</span> <span class="fl">0.92</span><span class="fu">,</span> <span class="dt">&quot;is_hot_path&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;transitions&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;from_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;request.method&quot;</span><span class="fu">:</span> <span class="st">&quot;GET&quot;</span><span class="fu">,</span> <span class="dt">&quot;db_connected&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;query_database&quot;</span><span class="fu">,</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;to_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;response_code&quot;</span><span class="fu">:</span> <span class="dv">200</span><span class="fu">},</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.94</span><span class="fu">,</span> <span class="dt">&quot;tier&quot;</span><span class="fu">:</span> <span class="st">&quot;STATIC_PLUS_RUNTIME&quot;</span><span class="fu">,</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;evidence&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;static&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;rule_id&quot;</span><span class="fu">:</span> <span class="st">&quot;rule_method_call_001&quot;</span><span class="fu">,</span> <span class="dt">&quot;parser_certainty&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">},</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;dynamic&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;coverage_hits&quot;</span><span class="fu">:</span> <span class="dv">47</span><span class="fu">,</span> <span class="dt">&quot;call_count&quot;</span><span class="fu">:</span> <span class="dv">47</span><span class="fu">,</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;avg_duration_ms&quot;</span><span class="fu">:</span> <span class="fl">12.4</span><span class="fu">,</span> <span class="dt">&quot;is_hot_path&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">}</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;from_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;db_connected&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">},</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;query_database&quot;</span><span class="fu">,</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;to_state&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;response_code&quot;</span><span class="fu">:</span> <span class="dv">500</span><span class="fu">},</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.58</span><span class="fu">,</span> <span class="dt">&quot;tier&quot;</span><span class="fu">:</span> <span class="st">&quot;RUNTIME_ONLY&quot;</span><span class="fu">,</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;evidence&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;dynamic&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;coverage_hits&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span> <span class="dt">&quot;call_count&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;avg_duration_ms&quot;</span><span class="fu">:</span> <span class="fl">3.1</span><span class="fu">,</span> <span class="dt">&quot;is_hot_path&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">}</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Two consequences of the enrichment are visible above. First, the
+<code>request.method</code> state variable’s
+<code>is_hot_path: true</code> annotation, combined with the
+<code>dynamic_coverage</code> and <code>dynamic_trace</code> markers in
+its <code>evidence_sources</code>, carried enough diversity mass through
+the confidence formula to lift the previously-static <code>GET</code>
+transition from the MEDIUM tier into <code>STATIC_PLUS_RUNTIME</code>,
+and the transition’s <code>evidence</code> field now records both the
+<code>rule_id</code> that fired statically and the
+<code>avg_duration_ms</code> measured dynamically. Second, the
+previously-<code>RUNTIME_ONLY</code> <code>db_connected=false</code>
+transition remains in its lower tier because it has only dynamic
+evidence (the error branch fired twice in the captured trace but has no
+corroborating static rule match) — a concrete illustration of the
+degradation behaviour documented in the “Incomplete coverage data” and
+“No dynamic traces available” subsections below.</p>
+<h3 id="failure-modes-and-graceful-degradation">Failure modes and
+graceful degradation</h3>
+<p>COGANT is designed so that missing or partial inputs degrade the
+output bundle rather than halt it, and the manuscript records these
+degradation paths explicitly so that downstream consumers can interpret
+a partial run without guessing what was skipped <span class="citation"
+data-cites="peng2011reproducible">[@peng2011reproducible]</span>. Five
+failure modes are worth naming because each has a visible signature in
+the emitted artifacts.</p>
+<p><strong>No dynamic traces available.</strong> When neither coverage
+data nor execution traces are supplied, <code>enrich_graph()</code> is a
+no-op: no <code>coverage_hits</code>, <code>branch_coverage</code>,
+<code>call_count</code>, <code>avg_duration_ms</code>, or
+<code>is_hot_path</code> metadata is attached, and the graph’s
+<code>evidence_sources</code> list never acquires
+<code>dynamic_coverage</code> or <code>dynamic_trace</code> markers. The
+state-space compiler still runs end-to-end using the semantic mappings
+and static graph alone, but every resulting transition is confined to
+the <code>STATIC_ONLY</code> tier (or lower), and no transition can be
+promoted to <code>STATIC_PLUS_RUNTIME</code>. Downstream code that
+consumes the bundle can identify a purely-static run at a glance by
+checking the evidence source markers on the graph metadata rather than
+scanning individual transitions.</p>
+<p><strong>Incomplete coverage data.</strong> When coverage is supplied
+but covers only a subset of the project,
+<code>_enrich_with_coverage</code> annotates the matched files only. The
+enrichment loop walks each coverage span, normalizes the reported file
+path, looks up candidate nodes whose path matches, and annotates those
+whose <code>source_range</code> overlaps the covered line; unmatched
+files are silently skipped with an informational log line, and nodes in
+unmatched files retain no coverage metadata at all. The result is a
+partially enriched graph in which some regions are eligible for tier
+promotion and others are not. Because the enrichment summary returns the
+number of annotated nodes, users can check whether the observed
+annotation rate matches their expectations for the provided coverage
+input.</p>
+<p><strong>Translation rules that do not match.</strong> When the active
+rule set fails to produce any mapping for a node – whether because no
+rule fires, or because all firing rules are pruned during conflict
+resolution – that node remains outside <code>self.mappings</code> and
+simply does not appear in any <code>graph_fragment_node_ids</code>. The
+translation engine’s <code>get_coverage_report()</code> reports this
+directly: the returned dictionary contains the total node count, the
+covered count, a two-decimal <code>coverage_percent</code>, and the
+sorted list of <code>uncovered_node_ids</code>. Rather than treat
+uncovered nodes as an error, the engine surfaces them as an explicit gap
+list so that authors can either extend the rule set, hand the gap list
+to the <code>ReviewAPI</code> for curation, or accept the partial
+mapping for downstream Generalized Notation Notation (GNN) export.</p>
+<p><strong>Fixpoint non-convergence.</strong> The translation engine
+bounds its fixpoint loop at <code>max_iterations = 10</code> by default.
+If a rule set is pathological enough to keep emitting new mappings past
+that bound – for example because two rules can produce mutually
+triggering mappings – the engine emits a
+<code>"Max iterations reached without convergence"</code> warning, stops
+the loop, and proceeds to conflict resolution with whatever mappings it
+has accumulated. The iteration cap therefore guarantees termination even
+for misconfigured rule sets, and the warning in the log gives rule
+authors a clear signal that the cap was hit. Because each iteration also
+writes an <code>iteration_complete</code> entry into the engine’s
+internal match log, the exact per-pass mapping counts are available for
+diagnosis without rerunning the pipeline.</p>
+<p><strong>Pipeline error tolerance.</strong> The default pipeline
+configuration (<code>cogant/py/cogant/config/defaults.py</code>) marks
+the <code>dynamic</code>, <code>translate</code>,
+<code>state_space</code>, and <code>process</code> stages with
+<code>skip_on_error=True</code>, while structural stages such as
+<code>ingest</code>, <code>static</code>, <code>graph</code>,
+<code>export</code>, and <code>validate</code> keep the stricter default
+<code>skip_on_error=False</code>. When an optional stage raises, the
+runner records the error in the bundle, emits a warning, and continues
+to the next stage rather than aborting the run. Downstream bundle
+accessors (<code>state_space_model</code>, <code>process_model</code>)
+simply return <code>None</code> for stages that did not produce output,
+so a downstream consumer can detect a skipped stage by checking its
+accessor rather than by parsing log text. The net effect is that a
+partial bundle – for example, a program graph and semantic mappings
+without a state-space model – remains a first-class artifact with a
+clear provenance trail, rather than an opaque failure.</p>
+<h2 id="rust-layer">Rust layer</h2>
+<p>Native crates (<code>cogant-core</code>, <code>cogant-graph</code>,
+<code>cogant-translate</code>, <code>cogant-statespace</code>,
+<code>cogant-gnn</code>, <code>cogant-ffi</code>, and related packages)
+implement typed graph operations and export formatting. When PyO3
+bindings are active, Python delegates heavy graph work through
+<code>cogant-ffi</code>. Where bindings are not yet wired for a code
+path, Python fallbacks apply; see <a
+href="../cogant/docs/reference/implementation_status.md"><code>../cogant/docs/reference/implementation_status.md</code></a>
+for the current boundary.</p>
+</body>
+</html>

@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/parsers/tree_sitter_base.py
+# hypothesis_version: 6.135.29
+
+[',', '.cjs', '.go', '.js', '.jsx', '.mjs', '.py', '.pyi', '.pyx', '.rs', '.ts', '.tsx', '<anonymous>', '@', 'arrow_function', 'async', 'bases', 'body', 'call', 'call_expression', 'callee', 'class', 'class_declaration', 'class_definition', 'class_heritage', 'decorator', 'decorators', 'extends', 'function', 'function_declaration', 'function_definition', 'function_expression', 'generator_function', 'go', 'identifier', 'import_clause', 'import_statement', 'interface', 'is_async', 'javascript', 'language', 'language_tsx', 'language_typescript', 'left', 'line', 'method', 'method_definition', 'name', 'python', 'raw', 'replace', 'rust', 'tree_sitter_go', 'tree_sitter_python', 'tree_sitter_rust', 'tsx', 'type_parameter', 'type_parameters', 'type_params', 'typescript', 'utf-8', 'variable_declarator']

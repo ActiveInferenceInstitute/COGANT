@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/reverse/synthesizer.py
+# hypothesis_version: 6.135.29
+
+['            else:', '        )', '        new = State(', '        return 0', '        return new', '    """', '    _ = B', '    _ = state', '    best_action = 0', '    else:', '    main()', '    return 0', '    return 0.0', '    return False', '    return True', '    return state', '    state = State()', ', ', 'Settings', 'Wrote %s (%d bytes)', '_', '__init__.py', 'act.py', 'bool', 'check', 'class State:', 'cnst_', 'constraints.py', 'context.py', 'context_', 'get_', 'int', 'main.py', 'matrices.py', 'observe.py', 'pi_', 'policy.py', 'state.py', 'synthesize_package', 'test_smoke.py', 'tests', 'update_', 'utf-8']

@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/cli/migrate.py
+# hypothesis_version: 6.135.29
+
+['--dry-run', '--target', 'migrate', 'utf-8']

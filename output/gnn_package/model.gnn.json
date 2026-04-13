@@ -1,0 +1,223 @@
+{
+  "model_id": "model_test_run_none_config_uses_defa0",
+  "schema_name": "test_run_none_config_uses_defa0",
+  "model_metadata": {
+    "generated_at": "2026-04-12T19:11:50.276585",
+    "schema_version": "1.0",
+    "cogant_version": "0.1.0",
+    "model_id": "model_test_run_none_config_uses_defa0",
+    "schema_name": "test_run_none_config_uses_defa0",
+    "repository": {
+      "uri": "file:///private/tmp/pytest-of-4d/pytest-1/test_run_none_config_uses_defa0",
+      "languages": [],
+      "version": "1.0",
+      "created_at": "2026-04-13T02:11:50.274336+00:00",
+      "updated_at": "2026-04-13T02:11:50.274361+00:00",
+      "evidence_sources": []
+    },
+    "metrics": {
+      "node_count": 0,
+      "edge_count": 0,
+      "state_variables": 0,
+      "observations": 0,
+      "actions": 0,
+      "transitions": 0,
+      "processes": 0,
+      "mappings": 0
+    }
+  },
+  "repository_metadata": {
+    "uri": "file:///private/tmp/pytest-of-4d/pytest-1/test_run_none_config_uses_defa0",
+    "languages": [],
+    "version": "1.0",
+    "created_at": "2026-04-13T02:11:50.274336+00:00",
+    "updated_at": "2026-04-13T02:11:50.274361+00:00",
+    "evidence_sources": [],
+    "custom": {}
+  },
+  "source_coverage": {
+    "nodes": 0,
+    "edges": 0,
+    "evidence_sources": [],
+    "coverage_percentage": 0.0
+  },
+  "state_space": {
+    "summary": {
+      "time_regime": "synchronous",
+      "variable_count": 0,
+      "observation_count": 0,
+      "action_count": 0,
+      "transition_count": 0,
+      "likelihood_count": 0,
+      "preference_count": 0,
+      "factorization": {}
+    },
+    "variables": {},
+    "observations": {},
+    "actions": {},
+    "transitions": {},
+    "likelihoods": {},
+    "preferences": {}
+  },
+  "observation_modalities": {
+    "modalities": [
+      "symbolic"
+    ],
+    "count": 0,
+    "observations": {}
+  },
+  "actions_policies": {
+    "actions": {},
+    "policies": [
+      {
+        "type": "deterministic",
+        "coverage": 1.0,
+        "actions": 0
+      }
+    ],
+    "count": 0
+  },
+  "connections": {
+    "edges": {},
+    "count": 0,
+    "by_kind": {}
+  },
+  "factors": {
+    "factorization": {},
+    "factors": [],
+    "count": 0
+  },
+  "transition_structure": {
+    "transitions": {},
+    "deterministic": true,
+    "markovian": true,
+    "count": 0
+  },
+  "likelihood_structure": {
+    "likelihoods": {},
+    "count": 0
+  },
+  "preferences_constraints": {
+    "preferences": {},
+    "constraints": [],
+    "count": 0
+  },
+  "time_settings": {
+    "time_regime": "synchronous",
+    "time_scale": "discrete",
+    "synchronous": true
+  },
+  "parameterization": {
+    "parameters": {},
+    "hyperparameters": {},
+    "configuration": {
+      "step_unit": "continuous",
+      "is_async": false,
+      "max_steps": 1000,
+      "variable_count": 0,
+      "observation_count": 0,
+      "action_count": 0,
+      "transition_count": 0
+    }
+  },
+  "ontology_mapping": {
+    "mappings": {},
+    "count": 0
+  },
+  "provenance": {
+    "timestamp": "2026-04-12T19:11:50.276632",
+    "graph_nodes": 0,
+    "graph_edges": 0,
+    "state_space_elements": {
+      "variables": 0,
+      "observations": 0,
+      "actions": 0
+    },
+    "sources": []
+  },
+  "confidence": {
+    "overall_confidence": 0.5,
+    "by_component": {
+      "variables": 0.5,
+      "observations": 0.5,
+      "actions": 0.5,
+      "transitions": 0.5
+    }
+  },
+  "rendering_hints": {
+    "layout": "force-directed",
+    "colors": {
+      "nodes": "by_kind",
+      "edges": "by_kind"
+    },
+    "features": [
+      "interactive",
+      "zoomable",
+      "searchable"
+    ]
+  },
+  "validation_notes": {
+    "schema_version": "1.0",
+    "cogant_version": "0.1.0",
+    "last_validated": "2026-04-12T19:11:50.276653",
+    "validation_status": "valid"
+  },
+  "matrices": {
+    "A": [],
+    "B": [],
+    "C": [],
+    "D": [],
+    "shapes": {
+      "A": [
+        0,
+        0
+      ],
+      "B": [
+        0,
+        0,
+        0
+      ],
+      "C": [
+        0
+      ],
+      "D": [
+        0
+      ]
+    },
+    "dimensions": {
+      "n_states": 0,
+      "n_obs": 0,
+      "n_actions": 1
+    },
+    "truncation": null
+  },
+  "program_graph": {
+    "summary": {
+      "node_count": 0,
+      "edge_count": 0,
+      "node_kinds": {},
+      "edge_kinds": {}
+    },
+    "nodes": {},
+    "edges": {}
+  },
+  "process_model": {
+    "summary": {
+      "stage_count": 0,
+      "connection_count": 0,
+      "entry_stage_id": null,
+      "exit_stage_ids": []
+    },
+    "stages": {},
+    "connections": {}
+  },
+  "mappings": {
+    "summary": {
+      "total_mappings": 0,
+      "mapping_kinds": {},
+      "confidence_tiers": {},
+      "status_distribution": {}
+    },
+    "mappings": {}
+  }
+}

@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/scoring/metrics.py
+# hypothesis_version: 6.135.29
+
+[0.0, 0.4, 0.6, 1.0, 1000, '## Coverage Metrics', '## Graph Structure', 'actions', 'affects_state_vars', 'attributes', 'cohesion_score', 'complexity_score', 'coupling_score', 'density', 'edge_count', 'edges', 'graph_structure', 'id', 'module', 'node_count', 'nodes', 'observability_score', 'observations', 'observes_state_vars', 'parent_id', 'root', 'semantic_coverage', 'source', 'state_variables', 'states', 'target', 'var_id']

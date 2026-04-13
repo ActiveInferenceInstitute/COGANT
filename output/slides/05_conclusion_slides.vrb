@@ -1,0 +1,280 @@
+\frametitle{Conclusion}
+\protect\phantomsection\label{conclusion}
+COGANT frames codebase analysis as a pipeline from ingestion through a
+program graph IR to \textbf{Generalized Notation Notation (GNN)}
+exports, with explicit confidence and provenance so that learning
+systems can treat analysis noise as data rather than as hidden failure
+modes. The Python layer provides session and pipeline APIs, a bundle
+abstraction, CLI, review tooling, and HTML reporting; the Rust layer
+concentrates graph mechanics and export formatting under crate
+boundaries described in \texttt{../cogant/docs/architecture/README.md}.
+
+\begin{block}{Shipped Capabilities}
+\protect\phantomsection\label{shipped-capabilities}
+Several capabilities ship in the current v0.5.0 release and together
+define the behaviour that downstream users can rely on:
+
+\begin{enumerate}
+\tightlist
+\item
+  \textbf{Fixpoint translation engine with 19 real rules.} The shipped
+  \texttt{TranslationEngine} re-applies every registered rule on each
+  pass, terminates as soon as a pass produces zero new mappings, and
+  bounds pathological rule sets with a configurable iteration cap. Each
+  iteration boundary is recorded in the internal match log, so
+  convergence can be audited after the fact. The packaged rule set under
+  \texttt{../cogant/py/cogant/translate/rules/} contains 19 concrete
+  \texttt{TranslationRule} subclasses: five structural rules
+  (\texttt{ReadOnlyInput}, \texttt{MutatingSubsystem},
+  \texttt{Inheritance}, \texttt{Containment}, \texttt{DataPipeline}),
+  five semantic rules (\texttt{Observation}, \texttt{Action},
+  \texttt{Policy}, \texttt{Preference}, \texttt{Context}), two control
+  rules (\texttt{Config}, \texttt{FeatureFlag}), three behavioural rules
+  (\texttt{Orchestrator}, \texttt{TestAssertion}, \texttt{EventBus}),
+  and four resilience rules (\texttt{RetryPattern},
+  \texttt{ErrorBoundary}, \texttt{SingletonAccess},
+  \texttt{CircuitBreaker}) --- each a real implementation with
+  \texttt{matches()} and \texttt{apply()} bodies rather than a
+  placeholder stub.
+\item
+  \textbf{Rule priority and conflict resolution.} Overlapping mappings
+  are reconciled by lexicographic
+  \texttt{(rule\_priority,\ confidence\_score)}: when two mappings cover
+  overlapping \texttt{graph\_fragment\_node\_ids}, the engine retains
+  the larger tuple and records a \texttt{conflict\_resolved} event
+  naming the winner, the loser, and the overlap. Most shipped rules use
+  the default \texttt{TranslationRule.priority} of \texttt{0};
+  \texttt{MutatingSubsystemRule} overrides to \texttt{1} so hidden-state
+  evidence wins class-level ties against aggregate \texttt{POLICY} from
+  \texttt{InheritanceRule} unless rescoring changes the ordering.
+  \texttt{translate\_with\_confidence()} re-scores and re-resolves so
+  that confidence-model updates are honoured.
+\item
+  \textbf{Dynamic enrichment from coverage and traces, wired into the
+  default pipeline.} When \texttt{.coverage} SQLite or Cobertura XML
+  inputs and Chrome DevTools traces are supplied,
+  \texttt{enrich\_graph()} annotates nodes with \texttt{coverage\_hits},
+  \texttt{branch\_coverage}, \texttt{call\_count},
+  \texttt{avg\_duration\_ms}, and \texttt{is\_hot\_path} metadata, and
+  appends \texttt{dynamic\_coverage} and \texttt{dynamic\_trace} markers
+  to the program graph's evidence sources. The \texttt{dynamic} stage is
+  part of the default pipeline stage list in
+  \texttt{cogant/py/cogant/api/pipeline.py}, and the shipped CLI exposes
+  a \texttt{-\/-no-dynamic} flag (handled by
+  \texttt{PipelineConfig.skip\_dynamic}) for scripted runs that must
+  force a purely-static bundle.
+\item
+  \textbf{Confidence tier promotion.} Mappings whose evidence set
+  acquires dynamic markers become eligible for promotion from
+  \texttt{STATIC\_ONLY} to \texttt{STATIC\_PLUS\_RUNTIME}, and hot-path
+  and branch-coverage metadata raise the underlying score through the
+  diversity bonus in Equation \ref{eq:confidence-core}. A purely-static
+  run remains a first-class bundle; it is simply marked as such on the
+  graph metadata.
+\item
+  \textbf{Ten-stage pipeline architecture.} The runner executes an
+  ordered stage list (\texttt{ingest}, \texttt{static},
+  \texttt{normalize}, \texttt{graph}, \texttt{dynamic},
+  \texttt{translate}, \texttt{statespace}, \texttt{process},
+  \texttt{export}, \texttt{validate}). Stage handlers run inside
+  per-stage \texttt{try/except} blocks in \texttt{PipelineRunner.run()}:
+  if one stage fails, the error is appended to the bundle and execution
+  continues to remaining stages. This produces partial but inspectable
+  outputs instead of an immediate pipeline abort.
+\item
+  \textbf{Complete state-space compilation.} The
+  \texttt{StateSpaceCompiler} in
+  \texttt{../cogant/py/cogant/statespace/compiler.py} emits
+  \texttt{StateVariable}, \texttt{ObservationModality}, \texttt{Action},
+  and \texttt{Transition} records directly from the program graph and
+  semantic mappings. On the \textbf{6} packaged fixtures every run
+  produces a non-empty state-space model, which the
+  \texttt{GNNPackageBuilder} then writes out as
+  \texttt{state\_space.json}, \texttt{observations.json},
+  \texttt{actions.json}, and \texttt{transitions.json} inside the
+  canonical \texttt{gnn\_package/} directory.
+\item
+  \textbf{A/B/C/D matrix derivation.} The \texttt{GNNMatrices} class in
+  \texttt{../cogant/py/cogant/gnn/matrices.py} derives the likelihood
+  matrix \texttt{A{[}n\_obs\ x\ n\_states{]}}, the transition matrix
+  \texttt{B{[}n\_states\ x\ n\_states\ x\ n\_actions{]}}, the preference
+  vector \texttt{C} over observations, and the prior \texttt{D} over
+  hidden states directly from the compiled state-space and the
+  underlying program graph edges. Rows and vectors are normalized to
+  valid probability distributions, so the emitted bundle is directly
+  compliant with the Active Inference Institute's upstream GNN
+  validator.
+\item
+  \textbf{Principled variational and expected free energy.} The
+  functions \texttt{variational\_free\_energy} and
+  \texttt{expected\_free\_energy} in
+  \texttt{../cogant/py/cogant/simulate/free\_energy.py} operate on the
+  derived \texttt{A}/\texttt{B}/\texttt{C}/\texttt{D} matrices and
+  implement the canonical Active Inference formulation ---
+  \texttt{VFE\ =\ KL{[}Q(s)\ \textbar{}\textbar{}\ P(s){]}\ -\ E\_Q{[}log\ P(o\textbar{}s){]}}
+  and
+  \texttt{EFE\ =\ sum\ over\ policies\ of\ epistemic\_value\ -\ pragmatic\_value}
+  --- rather than the hard-coded scalars used in earlier iterations. The
+  \texttt{GNNModelRunner} exercises these functions on every compiled
+  bundle during pipeline execution.
+\item
+  \textbf{Markov blanket extraction with five seed strategies.}
+  \texttt{../cogant/py/cogant/markov/blanket.py} partitions nodes into
+  internal, sensory, active, and external roles, and
+  \texttt{extractor.py} selects seeds via five strategies
+  (\texttt{explicit}, \texttt{module}, \texttt{kind}, \texttt{auto} via
+  cohesion heuristic, and \texttt{mapping\_kind}). The resulting
+  \texttt{markov\_blanket.json} file travels inside every
+  \texttt{gnn\_package/} directory and is consumed by the downstream
+  Active Inference runner.
+\item
+  \textbf{Real-world fixture validation.} Beyond the synthetic
+  \texttt{control\_positive/} fixtures, the packaged
+  \texttt{examples/real\_world/} tree now holds three reductions of
+  third-party Python projects (\texttt{flask\_app},
+  \texttt{requests\_lib}, and \texttt{json\_stdlib}). The pipeline runs
+  end-to-end on all \textbf{6} repositories in under seven seconds each
+  on a single macOS workstation (representative wall-clock measurements
+  in Section 6), producing a complete 19-file GNN package and a
+  100.0/100 validator score on every run; concrete measurements are
+  recorded in Section 6.
+\item
+  \textbf{Forward-reverse-forward round-trip (canonical evaluation
+  set).} The v0.5.0 reverse synthesizer now emits POLICY / CONTEXT /
+  CONSTRAINT scaffolds proportional to the origin GNN's role counts,
+  closing the multiset loss that had kept several uncurated real-world
+  targets in the APPROXIMATE or DIVERGENT buckets at v0.4.0. Current
+  \texttt{METRICS.yaml} reports \textbf{14} isomorphic, \textbf{6}
+  approximate, and \textbf{3} divergent targets (of \textbf{23} total).
+  The canonical
+  \texttt{cogant/docs/evaluation/ROUNDTRIP\_IMPROVEMENT.md} documents
+  the POLICY/CONTEXT fix trajectory; see §9, S01, S02 for tables.
+\item
+  \textbf{Incremental analysis mode.} The shipped
+  \texttt{cogant\ analyze\ -\/-incremental\ \textless{}git-ref\textgreater{}}
+  command (and its library form
+  \texttt{PipelineConfig.incremental\_since}) re-uses the previous run's
+  program graph for unchanged source paths, re-running only the affected
+  subgraph. On the Flask benchmark the measured speedups are
+  19.6\(\times\) for a no-change invocation and 5.6\(\times\) for a
+  single-file change, making COGANT tractable inside per-commit CI loops
+  without giving up the rule-based pipeline.
+\item
+  \textbf{Multi-episode Bayesian learning.}
+  \texttt{AgentRuntime.run\_multi\_episode} and \texttt{run\_episode}
+  drive Active Inference rollouts over the compiled
+  \texttt{gnn\_package/}; the companion
+  \texttt{update\_D\_from\_posterior} and
+  \texttt{update\_A\_from\_counts} helpers implement Dirichlet /
+  count-based posterior updates that let downstream consumers refine the
+  prior and likelihood matrices from observed episodes without leaving
+  the COGANT runtime.
+\item
+  \textbf{Production FastAPI server.} \texttt{cogant.server.app} exposes
+  \texttt{/health} and \texttt{/translate} endpoints with an integration
+  test suite. A packaged \texttt{Dockerfile} (python:3.12-slim + uv,
+  \texttt{EXPOSE\ 8080}, curl healthcheck) and
+  \texttt{docker-compose.yml} turn the translation pipeline into a
+  deployable microservice; this unblocks the P2 target of running COGANT
+  as a background service in research-group infrastructure.
+\item
+  \textbf{Cross-language roundtrip demonstration.} The
+  \texttt{examples/zoo/13\_js\_observer} fixture exercises a JavaScript
+  observer implementation (with optional \texttt{cogant{[}multilang{]}}
+  and an installed grammar) through the forward pipeline, the reverse
+  synthesizer, and a full AI cycle, recording a
+  \texttt{role\_match\_score} of 1.0 on the forward-reverse-forward
+  comparison when that path is enabled. This demonstrates that the
+  tree-sitter-backed JavaScript parser plus the language-agnostic
+  translation and statespace layers can round-trip a non-Python source
+  language on the zoo regression set.
+\end{enumerate}
+
+\textbf{Limitations} follow the honest scope in
+\texttt{../cogant/docs/reference/implementation\_status.md}: Python is
+first-class; JavaScript/TypeScript require optional
+\texttt{cogant{[}multilang{]}} and grammars; additional languages are
+largely roadmap; translation rules and state-space extraction remain
+\textbf{partial} and repository-dependent (with a long-tail of
+domain-specific idioms unaddressed by the 19 shipped rules); native
+acceleration is wired only for \texttt{connected\_components} on graph
+construction; and the roundtrip result is measured on a
+\textbf{23}-target canonical set that is weighted toward curated
+fixtures. Users should validate exports on their own corpora before
+trusting downstream model metrics.
+
+\textbf{Intended users} include researchers building datasets from
+open-source repositories, teams prototyping Active Inference models or
+graph neural network training pipelines over program-graph data who need
+a single export contract, and engineers extending the system via
+\texttt{../cogant/docs/plugins/README.md}.
+
+\textbf{Validation} in the software-engineering sense is split: the
+repository's verification report enumerates implemented modules and
+entry points; scientific validation of model quality remains the
+responsibility of downstream training and evaluation code.
+\end{block}
+
+\begin{block}{Roadmap and Future Extensions}
+\protect\phantomsection\label{roadmap-and-future-extensions}
+Several concrete directions extend the current system. Items already
+shipped in v0.2.0 -- v0.5.0 (JavaScript/TypeScript parsing via
+\texttt{tree-sitter}, partial Rust acceleration of
+\texttt{connected\_components}, incremental re-analysis via
+\texttt{cogant\ analyze\ -\/-incremental}) have been removed from this
+list and moved into the Shipped Capabilities section above.
+
+\begin{enumerate}
+\item
+  \textbf{Additional language parsers.} Python ships first-class in
+  v0.5.0; JavaScript/TypeScript are available behind optional
+  \texttt{cogant{[}multilang{]}} plus grammars. Adding parsers for Java,
+  Go, Rust, and C/C++ would cover the majority of remaining open-source
+  ML-relevant repositories. Each parser implements the plugin interface
+  documented in \texttt{../cogant/docs/plugins/README.md}, so language
+  additions do not require changes to the core IR or export pipeline.
+  The cross-language round-trip demonstration on
+  \texttt{examples/zoo/13\_js\_observer} establishes the template for
+  validating new parsers before release.
+\item
+  \textbf{Broader Rust acceleration.} The v0.5.0 PyO3
+  \texttt{connected\_components} FFI demonstrates the template but
+  touches only a single graph algorithm. Wiring bindings for the
+  remaining hot paths --- rule matching on large
+  \texttt{CallGraphBuilder} outputs, Generalized Notation Notation
+  section/tensor packing in \texttt{cogant-gnn}, and the
+  \texttt{B}-tensor normalisation loops --- would reduce end-to-end
+  latency on the largest real-world targets (\texttt{fastapi},
+  \texttt{urllib3}) from the current \(\approx 30\,\text{s}\) to
+  sub-second timings, based on the Python-vs-Rust microbenchmarks
+  committed under \texttt{../cogant/benchmarks/results/}.
+\item
+  \textbf{LLM-assisted rule discovery.} Translation rules are currently
+  hand-authored. A semi-automated workflow could present a large
+  language model with unannotated graph fragments and ask it to propose
+  candidate rules, which a human reviewer then accepts, edits, or
+  rejects via the existing \texttt{ReviewAPI}. This combines the
+  pattern-recognition strength of LLMs with the auditability of
+  declarative rules; the confidence-tier and provenance-record
+  infrastructure already in place gives each LLM-proposed rule a natural
+  quarantine state until a human upgrades it.
+\item
+  \textbf{Cross-repository graph linking.} When multiple repositories
+  share interfaces (for example, a library and its consumers), linking
+  their program graphs at call boundaries produces a richer training
+  signal for tasks such as API misuse detection and cross-project code
+  search. The graph homomorphism property defined in Section 2 provides
+  the formal basis for identifying shared interface nodes across
+  independently analyzed repositories.
+\item
+  \textbf{Long-tail rule coverage and calibration.} The 19 shipped
+  translation rules carry deliberate \texttt{TODO(calibration)} markers
+  for confidence-threshold tuning (see
+  \texttt{cogant/py/cogant/translate/confidence.py} and
+  \texttt{cogant/py/cogant/statespace/variables.py}). A 20+ repository
+  gold-standard corpus, annotated by human reviewers through the
+  \texttt{ReviewAPI}, would turn those principled defaults into
+  empirically validated thresholds and surface the long-tail idioms that
+  the current rule families miss.
+\end{enumerate}
+\end{block}

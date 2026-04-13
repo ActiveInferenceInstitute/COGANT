@@ -1,0 +1,8 @@
+# Legacy pin file. Prefer: uv sync / uv pip install -e ".[dev,viz]"
+# See pyproject.toml [project] and [project.optional-dependencies].
+typer>=0.9.0
+rich>=13.0.0
+pydantic>=2.0.0
+networkx>=3.0
+pyarrow>=14.0
+duckdb>=0.9

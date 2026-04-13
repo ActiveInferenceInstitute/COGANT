@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/parsers/go/parser.py
+# hypothesis_version: 6.135.29
+
+['(\\w+)\\s+([^\\n;]+)', ',', '.go', '//', '0.1.0', '<string>', 'COGANT', 'FuncDecl', 'Import', 'InterfaceType', 'MethodDecl', 'Package', 'StructType', 'TypeDecl', '\\{', 'alias', 'errors', 'fields', 'function', 'functions', 'go', 'import\\s*\\((.*?)\\)', 'import\\s+"([^"]+)"', 'imports', 'interface', 'interfaces', 'line', 'method', 'methods', 'name', 'package', 'package\\s+(\\w+)', 'params', 'path', 'py', 'r', 'receiver', 'return_type', 'struct', 'structs', 'type', 'utf-8', '{', '}']

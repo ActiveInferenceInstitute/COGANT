@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/translate/rules/structural.py
+# hypothesis_version: 6.135.29
+
+[0.7, 0.75, 0.8, 'Abstract', 'Base', 'ContainmentRule', 'DataPipelineRule', 'InheritanceRule', 'ReadOnlyInputRule', 'action_methods', 'base_count', 'base_ids', 'containment', 'controller', 'create', 'data_pipeline', 'delete', 'dispatch', 'display', 'execute', 'fetch', 'get', 'handle', 'handler', 'info', 'inheritance', 'list', 'method_count', 'method_ids', 'mutating_subsystem', 'mutation_count', 'mutation_edges', 'node_id', 'observation_methods', 'policy_methods', 'process', 'push', 'query', 'read', 'read_count', 'read_only_input', 'read_targets', 'route', 'run', 'send', 'set', 'show', 'static_analysis', 'status', 'update', 'write_count', 'write_targets']

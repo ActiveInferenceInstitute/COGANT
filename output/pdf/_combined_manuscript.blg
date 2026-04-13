@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99e (TeX Live 2026)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: _combined_manuscript.aux
+The style file: plainnat.bst
+Database file #1: references.bib
+Warning--can't use both volume and number fields in alon2019code2vec
+You've used 38 entries,
+            2773 wiz_defined-function locations,
+            834 strings with 14078 characters,
+and the built_in function-call counts, 22620 in all, are:
+= -- 1949
+> -- 1632
+< -- 31
++ -- 549
+- -- 510
+* -- 1933
+:= -- 3442
+add.period$ -- 148
+call.type$ -- 38
+change.case$ -- 280
+chr.to.int$ -- 37
+cite$ -- 77
+duplicate$ -- 943
+empty$ -- 1635
+format.name$ -- 560
+if$ -- 4768
+int.to.chr$ -- 2
+int.to.str$ -- 1
+missing$ -- 36
+newline$ -- 232
+num.names$ -- 152
+pop$ -- 602
+preamble$ -- 1
+purify$ -- 246
+quote$ -- 0
+skip$ -- 800
+stack$ -- 0
+substring$ -- 673
+swap$ -- 184
+text.length$ -- 19
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 403
+warning$ -- 1
+while$ -- 173
+width$ -- 0
+write$ -- 563
+(There was 1 warning)

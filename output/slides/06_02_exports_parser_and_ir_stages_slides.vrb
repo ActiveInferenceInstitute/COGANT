@@ -1,0 +1,56 @@
+\frametitle{Python AST parser capabilities}
+\protect\phantomsection\label{python-ast-parser-capabilities}
+The v0.5.x front end relies on
+\texttt{cogant.static.parser.PythonASTParser}, which processes Python
+source through the standard-library \texttt{ast} module at the CPython
+version available in the runtime (3.11+ required, consistent with the
+\texttt{requires-python\ =\ "\textgreater{}=3.11"} declared in
+\texttt{../cogant/pyproject.toml}). The parser extracts the following
+construct categories:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Module-level entities}: module docstrings,
+  \texttt{\_\_all\_\_} exports, top-level assignments.
+\item
+  \textbf{Functions and methods}: \texttt{def} and \texttt{async\ def},
+  including signatures with positional, keyword, variadic
+  (\texttt{*args}, \texttt{**kwargs}), and positional-only parameters.
+  Default values are recorded as constant expressions where statically
+  evaluable.
+\item
+  \textbf{Classes}: class definitions, base classes, metaclasses, and
+  the \texttt{\_\_init\_\_} / \texttt{\_\_new\_\_} boundary.
+\item
+  \textbf{Decorators}: \texttt{@staticmethod}, \texttt{@classmethod},
+  \texttt{@property}, \texttt{@dataclass}, and arbitrary user-defined
+  decorators. Decorator arguments are captured as attribute metadata.
+\item
+  \textbf{Type annotations}: PEP 484 / 526 / 604 annotations on function
+  parameters, return types, and variable assignments. Generic subscripts
+  (\texttt{List{[}int{]}}, \texttt{Dict{[}str,\ Any{]}}) are preserved
+  as type strings.
+\item
+  \textbf{Comprehensions and generators}: list, set, dict comprehensions
+  and generator expressions are represented as anonymous FUNCTION nodes
+  with DATA\_FLOW edges to their enclosing scope.
+\item
+  \textbf{Control flow}: \texttt{if}/\texttt{elif}/\texttt{else},
+  \texttt{for}/\texttt{while}/\texttt{else},
+  \texttt{try}/\texttt{except}/\texttt{finally},
+  \texttt{with}/\texttt{async\ with}, and \texttt{match}/\texttt{case}
+  (Python 3.10+) are mapped to CONTROLFLOW\_NODE entities.
+\item
+  \textbf{Imports}: \texttt{import} and \texttt{from\ ...\ import}
+  statements produce MODULE\_IMPORT roles with edges to the resolved
+  module when discoverable on the file system.
+\item
+  \textbf{Constants}: module-level and class-level assignments to
+  \texttt{Final} or ALL\_CAPS names are classified as CONSTANT nodes.
+\end{itemize}
+
+Constructs that require runtime evaluation (for example \texttt{exec},
+\texttt{importlib.import\_module}, or dynamic \texttt{\_\_getattr\_\_})
+are recorded as EXTERNAL nodes with HEURISTIC provenance and
+correspondingly lower confidence.

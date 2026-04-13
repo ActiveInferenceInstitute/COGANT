@@ -1,0 +1,8 @@
+{
+  "type": "gnn_model",
+  "node_features": [],
+  "edge_indices": [],
+  "embeddings": {},
+  "mapping_count": 0,
+  "mapping_ids": []
+}

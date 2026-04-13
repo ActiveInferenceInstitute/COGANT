@@ -1,0 +1,33 @@
+# COGANT production server — docker-compose deployment.
+#
+# Usage:
+#   docker compose up --build        # build + run in foreground
+#   docker compose up -d             # detached
+#   docker compose logs -f cogant    # tail server logs
+#   docker compose down              # stop + remove
+#
+# The single `cogant` service wraps the Dockerfile next to this file and
+# publishes port 8080 on the host. Structured logs are emitted to stdout
+# so `docker logs` / k8s log drivers pick them up automatically.
+
+services:
+  cogant:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cogant:latest
+    container_name: cogant-server
+    ports:
+      - "8080:8080"
+    environment:
+      LOG_LEVEL: "1"
+      PYTHONUNBUFFERED: "1"
+    # Curl-based healthcheck mirrors the Dockerfile HEALTHCHECK so compose
+    # can surface unhealthy states in `docker compose ps`.
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped

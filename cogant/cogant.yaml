@@ -1,0 +1,438 @@
+# COGANT Configuration File
+# =======================
+# Comprehensive configuration for the COGANT codebase analysis framework.
+#
+# This file controls the entire pipeline behavior through multiple subsystems:
+# - Pipeline: which analysis stages run and their configuration
+# - Parser: language-specific parsing and import resolution
+# - Translation: semantic mapping rules and thresholds
+# - Validation: strictness levels and coverage requirements
+# - Export: output formats and visualization options
+#
+# PRESETS: Use predefined configurations with --config or in code:
+#   minimal: fast scan, core output (recommended for quick tests)
+#   standard: balanced analysis (default)
+#   comprehensive: all features enabled (slow, full analysis)
+#   gnn-focused: optimize for graph neural network export
+#   security: boundary and control flow analysis
+
+version: 1
+
+# ============================================================================
+# SYSTEM CONFIGURATION
+# ============================================================================
+# Controls system-wide resource limits, logging, and caching behavior.
+system:
+  # Logging verbosity: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_level: INFO
+
+  # Log output destination (null = stdout only)
+  log_file: null
+
+  # Number of parallel worker threads (0 = auto-detect)
+  workers: 0
+
+  # Memory limit in MB (0 = unlimited)
+  memory_limit: 0
+
+  # Enable result caching for faster re-runs
+  caching: true
+
+  # Cache directory
+  cache_dir: .cogant/cache
+
+  # Cache validity in hours
+  cache_ttl: 24
+
+# ============================================================================
+# PIPELINE CONFIGURATION
+# ============================================================================
+# Controls which pipeline stages execute and in what order.
+pipeline:
+  # Stages to run in order. Choose from:
+  #   ingest - load source files from disk
+  #   normalize - standardize symbol references
+  #   graph - build call/type/data flow graphs
+  #   semantic_mapping - map code to semantic patterns
+  #   state_space - compile state machines and transitions
+  #   process_model - extract workflow/pipeline patterns
+  #   validate - run integrity and coverage checks
+  #   export - generate output files and visualizations
+  stages:
+    - ingest
+    - normalize
+    - graph
+    - semantic_mapping
+    - state_space
+    - process_model
+    - validate
+    - export
+
+  # Limit on graph size (max nodes to process)
+  max_nodes: 100000
+
+  # Limit on graph edges (controls memory usage)
+  max_edges: 500000
+
+# ============================================================================
+# INGEST CONFIGURATION
+# ============================================================================
+# Controls how source code is discovered and loaded from disk.
+ingest:
+  # Source directories to analyze (relative to repo root)
+  source_dirs:
+    - .
+
+  # File patterns to include (if empty, use language defaults)
+  include_patterns:
+    - "**/*.py"
+
+  # File patterns to exclude
+  exclude_patterns:
+    - "*.pyc"
+    - "__pycache__"
+    - ".git"
+    - ".venv"
+    - "venv"
+    - "node_modules"
+    - ".pytest_cache"
+    - ".mypy_cache"
+    - "target"
+    - "dist"
+    - "build"
+    - "**/test_*"
+    - "**/*_test.py"
+    - "**/tests/**"
+
+  # Maximum file size to process (MB)
+  max_file_size_mb: 50
+
+  # Follow symbolic links
+  follow_symlinks: false
+
+# ============================================================================
+# PARSER CONFIGURATION
+# ============================================================================
+# Controls language-specific parsing and import resolution.
+parser:
+  # Languages to parse: python, rust, javascript, java, etc.
+  languages:
+    - python
+
+  # Follow import/include statements to resolve external code
+  follow_imports: true
+
+  # Try to resolve external dependencies (slower, requires internet)
+  resolve_external: false
+
+  # Maximum depth when following import chains
+  max_import_depth: 5
+
+  # Timeout per file (seconds)
+  parse_timeout: 30
+
+  # Python-specific parsing options
+  python:
+    # Include type hints in analysis
+    extract_type_hints: true
+    # Resolve type references
+    resolve_type_hints: true
+    # Extract docstrings as metadata
+    extract_docstrings: true
+    # Resolve deferred/forward references
+    resolve_deferred: true
+
+  # Rust-specific parsing options (if enabled)
+  rust:
+    # Include trait definitions
+    extract_traits: true
+    # Include macro definitions
+    extract_macros: true
+
+# ============================================================================
+# NORMALIZATION CONFIGURATION
+# ============================================================================
+# Controls how symbols are normalized and cross-referenced.
+normalize:
+  # Fully qualify all symbols to their module
+  qualify_symbols: true
+
+  # Resolve symbol references across modules
+  resolve_references: true
+
+  # Build cross-language reference maps
+  cross_language: true
+
+# ============================================================================
+# GRAPH CONFIGURATION
+# ============================================================================
+# Controls which graphs are built and how they're constructed.
+graph:
+  # Build call graph (function/method invocations)
+  build_call_graph: true
+
+  # Build type hierarchy graph (classes, inheritance)
+  build_type_graph: true
+
+  # Build data flow graph (variable dependencies)
+  build_data_flow: true
+
+  # Build control flow graph (expensive, rarely needed)
+  build_control_flow: false
+
+  # Include implicit nodes from type inference
+  infer_implicit_nodes: true
+
+  # Maximum call depth to track
+  max_call_depth: 10
+
+# ============================================================================
+# TRANSLATION/SEMANTIC MAPPING CONFIGURATION
+# ============================================================================
+# Controls semantic pattern recognition and rule-based translation.
+translation:
+  # File containing custom translation rules (YAML)
+  rules_file: null
+
+  # Confidence threshold for semantic edges (0.0-1.0)
+  # Lower = more edges, higher = only high-confidence mappings
+  confidence_threshold: 0.7
+
+  # Translation rules to apply (others are skipped)
+  rules_enabled:
+    - read_only_input
+    - mutating_subsystem
+    - event_bus
+    - retry_pattern
+    - test_assertion
+    - observation
+    - action
+    - policy
+    - preference
+    - context
+    - inheritance
+    - containment
+
+  # Thresholds for specific translation rules
+
+  # Minimum mutations for hidden_state pattern
+  mutating_subsystem_threshold: 3
+
+  # Minimum calls for orchestrator pattern
+  orchestrator_threshold: 5
+
+  # Include internal function calls in graph
+  include_internal_calls: true
+
+  # Include external library calls
+  include_external_calls: false
+
+  # Include type information in edges
+  include_types: true
+
+  # Include control flow edges
+  include_control_flow: true
+
+  # Include data flow edges
+  include_data_flow: false
+
+# ============================================================================
+# STATE SPACE CONFIGURATION
+# ============================================================================
+# Controls state machine inference and transition analysis.
+statespace:
+  # Enable state space compilation
+  enabled: true
+
+  # Maximum states to enumerate per function
+  max_states: 10000
+
+  # Include implicit states from loops
+  include_implicit_states: true
+
+  # Include error/exception states
+  include_error_states: true
+
+  # Inference timeout per function (seconds)
+  inference_timeout: 30
+
+# ============================================================================
+# PROCESS MODEL CONFIGURATION
+# ============================================================================
+# Controls workflow and pipeline pattern extraction.
+process:
+  # Extract pipeline/workflow patterns
+  extract_pipelines: true
+
+  # Extract event flow patterns
+  extract_event_flows: true
+
+  # Minimum stages for pipeline detection
+  min_stages: 3
+
+  # Minimum events for flow detection
+  min_events: 2
+
+# ============================================================================
+# VALIDATION CONFIGURATION
+# ============================================================================
+# Controls validation checks and strictness levels.
+validate:
+  # Validation level: lenient, moderate, strict, paranoid
+  level: moderate
+
+  # Run schema compliance checks
+  validate_schema: true
+
+  # Check referential integrity
+  validate_references: true
+
+  # Validate graph structure (cycles, connectivity)
+  validate_graph_structure: true
+
+  # Minimum provenance coverage (0.0-1.0)
+  # Nodes with <this% provenance are flagged
+  min_provenance_coverage: 0.8
+
+  # Minimum mean confidence score (0.0-1.0)
+  min_mean_confidence: 0.7
+
+  # Warn about unmapped code elements
+  check_missing_mappings: true
+
+  # Warn about unobservable state variables
+  check_unobservable_state: true
+
+  # Detect unreachable code sections
+  check_unreachable_code: false
+
+  # Graph size warning threshold (nodes)
+  large_graph_threshold: 50000
+
+  # Fail bundle if validation errors found
+  fail_on_error: false
+
+  # Generate validation report
+  generate_report: true
+
+  # Automatically fix fixable issues
+  auto_fix_warnings: false
+
+# ============================================================================
+# EXPORT CONFIGURATION
+# ============================================================================
+# Controls output formats, compression, and visualization.
+export:
+  # Primary output format: json, markdown, parquet, protobuf
+  format: json
+
+  # Additional formats to generate simultaneously
+  formats:
+    - json
+    - markdown
+
+  # Output directory for exports
+  output_dir: output
+
+  # Create bundled archive of all outputs
+  create_bundle: true
+
+  # Bundle name/prefix
+  bundle_name: cogant_bundle
+
+  # Compression: none, gzip, zstd
+  compression: gzip
+
+  # Compression level (1-9, higher = better compression but slower)
+  compression_level: 6
+
+  # Include provenance/lineage data
+  include_provenance: true
+
+  # Include metadata (timestamps, versions, etc.)
+  include_metadata: true
+
+  # Include summary statistics
+  include_statistics: true
+
+  # Minify JSON (smaller files, not human-readable)
+  pretty_print: true
+
+  # ========== GNN Export Options ==========
+  # Target GNN framework: pytorch_geometric, dgl, spektral, none
+  gnn_format: none
+
+  # Include node/edge features in GNN export
+  gnn_include_features: true
+
+  # Split graph for train/test evaluation
+  gnn_split_train_test: false
+
+  # Train/test split ratio (0.0-1.0)
+  gnn_train_test_split: 0.8
+
+# ============================================================================
+# VISUALIZATION CONFIGURATION
+# ============================================================================
+# Controls diagram generation and interactive visualizations.
+visualization:
+  # Enable visualization generation
+  enabled: true
+
+  # Mermaid diagrams to generate
+  mermaid_diagrams:
+    - class
+    - dependency
+    - state
+    - sequence
+    - semantic
+    - boundary
+
+  # Chart format: svg, html, png
+  chart_format: svg
+
+  # Interactive visualization theme: dark, light
+  dashboard_theme: dark
+
+  # Maximum nodes for interactive visualizations
+  max_interactive_nodes: 500
+
+  # Include graph statistics
+  include_stats: true
+
+# ============================================================================
+# PROVENANCE CONFIGURATION
+# ============================================================================
+# Controls how data lineage and source tracking works.
+provenance:
+  # Enable provenance tracking
+  enabled: true
+
+  # Include source file locations (file:line:col)
+  include_locations: true
+
+  # Include transformation history
+  include_history: true
+
+  # Storage method: inline (in JSON), separate (external files)
+  storage: inline
+
+# ============================================================================
+# ADVANCED OPTIONS
+# ============================================================================
+# Use with caution. These options enable experimental or risky features.
+advanced:
+  # Enable experimental features
+  experimental: false
+
+  # Skip safety validation checks
+  skip_validation: false
+
+  # Store intermediate results for debugging
+  debug_mode: false
+
+  # Include internal implementation details in exports
+  internal_details: false
+
+  # Strict schema validation (recommended)
+  strict_schema_validation: true
