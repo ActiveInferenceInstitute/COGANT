@@ -1,6 +1,6 @@
 # API Reference
 
-> Public Python API surface for COGANT. Use this section if you are embedding COGANT in another tool, scripting custom pipelines, or building plugins. For CLI usage see [../cli_reference.md](../cli_reference.md); for narrative tutorials see [../tutorials/](../tutorials/).
+> Public Python API surface for COGANT. Use this section if you are embedding COGANT in another tool, scripting custom pipelines, or building plugins. For CLI usage see [../cli_reference.md](../cli_reference.md); for narrative tutorials see [../tutorials/](../tutorials/README.md).
 
 ## Contents
 

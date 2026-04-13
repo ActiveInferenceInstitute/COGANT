@@ -1,9 +1,5 @@
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
-
 class CoverageIngester:
     coverage_data: dict[str, Any]
     def __init__(self) -> None: ...

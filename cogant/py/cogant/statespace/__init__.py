@@ -7,6 +7,7 @@ and semantic mappings.
 
 from cogant.statespace.compiler import (
     Action,
+    DegradedOutput,
     Likelihood,
     ObservationModality,
     Preference,
@@ -24,14 +25,17 @@ from cogant.statespace.temporal import (
 from cogant.statespace.variables import (
     ConfidenceLevel,
     FactorizationInfo,
+    ObservationVar,
     StateVariable,
     StateVariableExtractor,
     StateVariableType,
+    VariableRegistry,
 )
 
 __all__ = [
     "StateSpaceCompiler",
     "StateSpaceModel",
+    "DegradedOutput",
     "ObservationModality",
     "Action",
     "Transition",
@@ -42,6 +46,8 @@ __all__ = [
     "StateVariableType",
     "ConfidenceLevel",
     "FactorizationInfo",
+    "ObservationVar",
+    "VariableRegistry",
     "TemporalAnalyzer",
     "TimeRegime",
     "TemporalOrdering",

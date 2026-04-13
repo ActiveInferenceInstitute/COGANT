@@ -1,4 +1,6 @@
-## PyTorch Geometric Export
+## PyTorch Geometric export
+
+> **Status:** The attribute layout below matches the intended `torch_geometric.data.Data` contract. A first-party `Session.export_pytorch_geometric()` helper is still **planned**; use typed JSON / bundle exports today, or build `Data` objects yourself from bundle JSON.
 
 ### Format
 

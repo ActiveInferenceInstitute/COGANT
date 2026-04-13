@@ -4,7 +4,7 @@
 
 **Requirements**: Python 3.11 or newer (enforced in `pyproject.toml`), plus an optional Rust toolchain (`cargo`, stable 1.70+) when building native acceleration crates under `../cogant/rust/`.
 
-From the COGANT package root [`../cogant/`](../cogant/) (where `pyproject.toml` and `py/cogant/` live), install with `uv sync --all-extras`, or `pip install -e ".[dev,viz]"` / `pip install -e ".[all]"` as in [GETTING_STARTED.md](../cogant/GETTING_STARTED.md). Run those commands from that directory when working inside this monorepo layout. Python sources live under [`../cogant/py/cogant/`](../cogant/py/cogant/); see the package [README.md](../cogant/README.md).
+From the COGANT package root [`../cogant/`](../cogant/) (where `pyproject.toml` and `py/cogant/` live), install with `uv sync --all-extras`, or `pip install -e ".[dev,viz]"` / `pip install -e ".[all]"` as in the MkDocs guides [`../cogant/docs/getting-started/installation.md`](../cogant/docs/getting-started/installation.md) and [`../cogant/docs/getting-started/quickstart.md`](../cogant/docs/getting-started/quickstart.md). Run those commands from that directory when working inside this monorepo layout. Python sources live under [`../cogant/py/cogant/`](../cogant/py/cogant/); see the package [README.md](../cogant/README.md).
 
 ## Running the API
 
@@ -189,7 +189,7 @@ These numbers were collected by the reproducible script `../cogant/evaluation/fi
 
 ## Test matrix and coverage
 
-The v0.5.0 Python implementation ships a test suite of **2129 passing tests** with **86 skips** for optional dependencies (Rust toolchain, `matplotlib`, `tree-sitter` language grammars, PNG rasterization) plus **2** expected `xfail` and **1** `xpass`. The suite executes in approximately four minutes on a 2024-class Apple-silicon workstation (**238** s in the canonical run recorded in `METRICS.yaml`), and the overall line coverage of `py/cogant/` is **83.42%**, measured against executable statements reported by `coverage.py` on the canonical run (**2026-04-10T21:03:18.504378Z**).
+The v0.5.0 Python implementation ships a test suite of **0 passing tests** with **0 skips** for optional dependencies (Rust toolchain, `matplotlib`, `tree-sitter` language grammars, PNG rasterization) plus **0** expected `xfail` and **0** `xpass`. The suite executes in approximately four minutes on a 2024-class Apple-silicon workstation (**0.0** s in the canonical run recorded in `METRICS.yaml`), and the overall line coverage of `py/cogant/` is **91.25%**, measured against executable statements reported by `coverage.py` on the canonical run (**2026-04-11T20:31:43.442193Z**).
 
 **Table 8. Python interpreter matrix.**
 
@@ -220,7 +220,7 @@ Module-level coverage is concentrated in the layers that the six packaged fixtur
 | `cogant.simulate.runner` | 250 | 67% |
 | `cogant.simulate.distributions` | 119 | 34% |
 
-The aggregate project-level coverage reported at the end of the run is **83.42%**; the modules that drag the average down are the visualisation layer (`cogant.viz.png_export`, `cogant.viz.plots`, `cogant.viz.mermaid`, where optional `matplotlib` and `plotly` code paths are skipped under the default CI configuration) and the scaffolded plugin and provenance trackers. The algorithmic core --- everything that participates in the round-trip theorem of §9 --- remains the focus of the high-coverage modules in Table 9.
+The aggregate project-level coverage reported at the end of the run is **91.25%**; the modules that drag the average down are the visualisation layer (`cogant.viz.png_export`, `cogant.viz.plots`, `cogant.viz.mermaid`, where optional `matplotlib` and `plotly` code paths are skipped under the default CI configuration) and the scaffolded plugin and provenance trackers. The algorithmic core --- everything that participates in the round-trip theorem of §9 --- remains the focus of the high-coverage modules in Table 9.
 
 ## Mutation testing
 

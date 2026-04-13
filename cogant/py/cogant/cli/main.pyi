@@ -1,10 +1,9 @@
+from typing import Any
+
 from pathlib import Path
 
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
-console: Incomplete
-app: Incomplete
+console: Any
+app: Any
 
 def init(path: str = ..., quiet: bool = ..., check_env: bool = ..., run: bool = ..., yes: bool = ...) -> None: ...
 def doctor() -> None: ...

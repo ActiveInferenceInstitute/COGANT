@@ -1,17 +1,13 @@
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
 
-logger: Incomplete
-
 class ModelRunner:
-    model: Incomplete
-    A: Incomplete
-    B: Incomplete
-    C: Incomplete
-    D: Incomplete
+    model: Any
+    A: Any
+    B: Any
+    C: Any
+    D: Any
     def __init__(self, seed: int | None = None, model: StateSpaceModel | None = None, A: list[list[float]] | None = None, B: list[list[list[float]]] | None = None, C: list[float] | None = None, D: list[float] | None = None) -> None: ...
     @property
     def has_generative_model(self) -> bool: ...

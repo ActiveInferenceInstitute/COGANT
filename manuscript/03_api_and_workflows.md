@@ -37,7 +37,7 @@ For canonical 18-section Generalized Notation Notation artifacts (`model.gnn.md`
 
 ## Command-line interface
 
-The CLI entry point (`cogant.cli.main`) implements commands such as `init`, `scan`, `extract-static`, `extract-dynamic`, `graph`, `translate`, `statespace`, `validate`, and visualization/export helpers. Exact flags live in `../cogant/docs/cli/README.md`; the manuscript does not duplicate them to avoid drift.
+The CLI entry point (`cogant.cli.main`) registers 22 subcommands. The high-traffic paths are `cogant translate` (full pipeline, equivalent to `cogant analyze`; accepts `--incremental <git-ref>` for per-commit CI re-runs over a Git diff), `cogant validate`, `cogant reverse`, `cogant roundtrip`, and `cogant doctor` (environment diagnostics). Additional commands cover scanning (`scan`, `extract-static`, `extract-dynamic`, `graph`), visualization (`render`, `viz`, `diff`), review (`explain`), and lifecycle management (`init`, `plugin`, `migrate`, `benchmark`, `changed`). Exact flags live in `../cogant/docs/cli/README.md`; the manuscript does not duplicate them to avoid drift.
 
 ## Review API
 

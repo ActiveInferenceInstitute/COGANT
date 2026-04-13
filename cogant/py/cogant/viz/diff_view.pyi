@@ -1,12 +1,10 @@
+from __future__ import annotations
+
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
-
 class DiffVisualizer:
-    bundle1: Incomplete
-    bundle2: Incomplete
+    bundle1: Any
+    bundle2: Any
     added: list[dict[str, Any]]
     removed: list[dict[str, Any]]
     changed: list[dict[str, Any]]

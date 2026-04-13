@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/dynamic/coverage.py
+# hypothesis_version: 6.135.29
+
+[0.0, 100.0, '0', 'branch', 'branch-rate', 'branch_hits', 'branch_rate', 'branches', 'branches-covered', 'branches-valid', 'branches_covered', 'branches_valid', 'class', 'class_name', 'cobertura', 'condition-coverage', 'condition_coverage', 'coverage', 'coverage_py', 'covered', 'covered_lines', 'end_line', 'false', 'file', 'filename', 'files', 'format', 'hits', 'is_branch', 'line', 'line-rate', 'line_bits', 'line_count', 'line_rate', 'lines', 'lines-covered', 'lines-valid', 'lines_covered', 'lines_valid', 'name', 'number', 'package', 'percent_covered', 'start_line', 'summary', 'total_lines', 'true', 'type', 'uncovered_lines']

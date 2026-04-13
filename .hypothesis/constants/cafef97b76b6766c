@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/translate/rules/__init__.py
+# hypothesis_version: 6.135.29
+
+['ActionRule', 'CircuitBreakerRule', 'ConfigRule', 'ContainmentRule', 'ContextRule', 'DataPipelineRule', 'ErrorBoundaryRule', 'EventBusRule', 'FeatureFlagRule', 'InheritanceRule', 'ObservationRule', 'OrchestratorRule', 'PolicyRule', 'PreferenceRule', 'ReadOnlyInputRule', 'RetryPatternRule', 'SingletonAccessRule', 'TestAssertionRule', 'TranslationRule']

@@ -796,6 +796,110 @@ class GNNModelRunner:
 
         return assessment
 
+    def run_with_profiling(
+        self, num_steps: int = 10, num_trials: int = 1
+    ) -> tuple[list[dict[str, Any]], dict[str, float]]:
+        """Run the model and collect timing information per stage.
+
+        Executes the GNN model and measures the time spent in each phase
+        (belief update, policy evaluation, action selection, state update).
+
+        Args:
+            num_steps: Number of steps to run in each trial.
+            num_trials: Number of trials to run.
+
+        Returns:
+            A tuple of (traces, timing_dict) where:
+            - traces: List of execution trace dicts from all trials.
+            - timing_dict: Dict with keys like "belief_update_ms",
+              "policy_eval_ms", "action_select_ms", "state_update_ms",
+              and "total_ms" showing cumulative milliseconds for each phase.
+        """
+        import time
+
+        timing: dict[str, float] = {
+            "belief_update_ms": 0.0,
+            "policy_eval_ms": 0.0,
+            "action_select_ms": 0.0,
+            "state_update_ms": 0.0,
+            "observation_ms": 0.0,
+            "total_ms": 0.0,
+        }
+        all_traces: list[dict[str, Any]] = []
+
+        total_start = time.perf_counter()
+
+        for trial in range(num_trials):
+            state = self._initialize_state()
+            beliefs = self._initialize_beliefs()
+            beliefs_prior = beliefs.copy()
+
+            for step in range(num_steps):
+                # Observe
+                obs_start = time.perf_counter()
+                obs = self._generate_observation(state)
+                timing["observation_ms"] += (time.perf_counter() - obs_start) * 1000
+
+                # Update beliefs
+                upd_start = time.perf_counter()
+                beliefs_prior = beliefs.copy()
+                beliefs = self._update_beliefs(beliefs, obs)
+                timing["belief_update_ms"] += (time.perf_counter() - upd_start) * 1000
+
+                # Evaluate policies
+                pol_start = time.perf_counter()
+                policy_scores = self._evaluate_policies(beliefs)
+                timing["policy_eval_ms"] += (
+                    time.perf_counter() - pol_start
+                ) * 1000
+
+                # Select action
+                act_start = time.perf_counter()
+                action = self._select_action_active_inference(
+                    beliefs, policy_scores
+                )
+                timing["action_select_ms"] += (
+                    time.perf_counter() - act_start
+                ) * 1000
+
+                # Update state
+                st_start = time.perf_counter()
+                state = self._compute_transition(state, action)
+                timing["state_update_ms"] += (time.perf_counter() - st_start) * 1000
+
+                # Collect trace
+                trace = ExecutionTrace(
+                    step=step + trial * num_steps,
+                    state=state,
+                    action=action,
+                    observation=obs,
+                    beliefs=beliefs,
+                    beliefs_prior=beliefs_prior,
+                ).to_dict()
+                all_traces.append(trace)
+
+        timing["total_ms"] = (time.perf_counter() - total_start) * 1000
+
+        logger.info(
+            "Profiled run: %d trials × %d steps = %d steps total",
+            num_trials,
+            num_steps,
+            num_trials * num_steps,
+        )
+        logger.info(
+            "Timing: belief_update=%.1f ms, policy_eval=%.1f ms, "
+            "action_select=%.1f ms, state_update=%.1f ms, "
+            "observation=%.1f ms, total=%.1f ms",
+            timing["belief_update_ms"],
+            timing["policy_eval_ms"],
+            timing["action_select_ms"],
+            timing["state_update_ms"],
+            timing["observation_ms"],
+            timing["total_ms"],
+        )
+
+        return all_traces, timing
+
 
 # Module-level convenience alias — mirrors :meth:`GNNModelRunner.load_package`
 # as a free function so tutorials and doctests can call

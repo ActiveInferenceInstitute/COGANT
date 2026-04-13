@@ -13,7 +13,7 @@ When the Python API, CLI, export schema, or implementation status changes, updat
 
 Implementation status: [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md).
 
-When updating quantitative claims, refresh [`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml) (`uv run python ../tools/regenerate_metrics.py` from [`../cogant/`](../cogant/)), then run [`../scripts/z_generate_manuscript_variables.py`](../scripts/z_generate_manuscript_variables.py) from the repo root so `{{PLACEHOLDER}}` tokens in `*.md` resolve consistently. Registry: [`../tools/manuscript_vars.py`](../tools/manuscript_vars.py).
+When updating quantitative claims, refresh [`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml) (`uv run python ../tools/regenerate_metrics.py` from [`../cogant/`](../cogant/)), then run [`../scripts/z_generate_manuscript_variables.py`](../scripts/z_generate_manuscript_variables.py) from the repo root so `{{PLACEHOLDER}}` tokens in `*.md` resolve consistently. Registry: [`../tools/manuscript_vars.py`](../tools/manuscript_vars.py). After link edits, run [`../cogant/docs/verify_manuscript_links.py`](../cogant/docs/verify_manuscript_links.py) from the package root.
 
 ## Files excluded from combined PDF body
 

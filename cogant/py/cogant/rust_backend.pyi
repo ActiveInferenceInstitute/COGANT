@@ -1,7 +1,5 @@
 from typing import Any
 
-from _typeshed import Incomplete
-
 from cogant.schemas.core import Edge, Node
 
 __all__ = ['RUST_AVAILABLE', 'RustProgramGraphAdapter', 'build_program_graph', 'create_example_graph', 'get_program_graph_impl', 'rust_version']
@@ -13,7 +11,7 @@ def rust_version() -> str | None: ...
 def create_example_graph() -> Any: ...
 
 class RustProgramGraphAdapter:
-    repo_uri: Incomplete
+    repo_uri: Any
     def __init__(self, repo_uri: str) -> None: ...
     def add_node(self, kind: Any, name: str, qualified_name: str, path: str | None = None, language: str | None = None, source_range: dict[str, Any] | None = None, metadata: dict[str, Any] | None = None) -> Node: ...
     def add_edge(self, source_id: str, target_id: str, kind: Any, weight: float = 1.0, metadata: dict[str, Any] | None = None, evidence_sources: list[str] | None = None) -> Edge | None: ...

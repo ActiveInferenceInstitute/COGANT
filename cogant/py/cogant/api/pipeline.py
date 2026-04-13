@@ -1,10 +1,13 @@
 """PipelineRunner: Orchestrates all analysis stages in sequence."""
 
 import logging
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from cogant.api import orchestration
 from cogant.api.bundle import Bundle
@@ -103,8 +106,143 @@ class PipelineConfig:
     this lets tests and benchmarks isolate cache state to a tmp dir.
     """
 
+    profiling_enabled: bool = False
+    """Enable per-stage profiling (timing + memory tracking).
 
-__all__ = ["PipelineConfig", "PipelineRunner"]
+    When ``True``, each stage's execution is timed and memory usage
+    is estimated, and the results are recorded on the returned
+    ``PipelineResult.timing`` dict.
+    """
+
+    def validate(self) -> list[str]:
+        """Validate pipeline configuration pre-flight.
+
+        Returns:
+            A list of validation errors (empty if config is valid).
+        """
+        errors: list[str] = []
+
+        # Check that all stages are known
+        known_stages = {
+            "ingest", "static", "normalize", "graph", "dynamic",
+            "translate", "statespace", "process", "export", "validate"
+        }
+        for stage in self.stages:
+            if stage not in known_stages:
+                errors.append(f"Unknown stage: {stage}")
+
+        for stage in self.skip_stages:
+            if stage not in known_stages:
+                errors.append(f"Unknown skip_stage: {stage}")
+
+        # Check output directory path
+        if self.output_dir:
+            output_path = Path(self.output_dir)
+            if output_path.exists() and not output_path.is_dir():
+                errors.append(f"output_dir exists but is not a directory: {self.output_dir}")
+
+        # Check coverage/trace paths if provided
+        if self.coverage_path:
+            coverage_path = Path(self.coverage_path)
+            if not coverage_path.exists():
+                errors.append(f"coverage_path does not exist: {self.coverage_path}")
+
+        if self.trace_path:
+            trace_path = Path(self.trace_path)
+            if not trace_path.exists():
+                errors.append(f"trace_path does not exist: {self.trace_path}")
+
+        return errors
+
+    def with_profiling(self) -> "PipelineConfig":
+        """Return a copy of this config with profiling enabled."""
+        import copy
+        config_copy = copy.deepcopy(self)
+        config_copy.profiling_enabled = True
+        return config_copy
+
+    def to_yaml(self, path: str | Path) -> None:
+        """Persist this config to a YAML file.
+
+        Args:
+            path: Target file path.
+        """
+        data = {
+            "stages": self.stages,
+            "skip_stages": self.skip_stages,
+            "plugins": self.plugins,
+            "output_dir": self.output_dir,
+            "verbose": self.verbose,
+            "dry_run": self.dry_run,
+            "layout_output": self.layout_output,
+            "skip_dynamic": self.skip_dynamic,
+            "coverage_path": self.coverage_path,
+            "trace_path": self.trace_path,
+            "incremental_since": self.incremental_since,
+            "cache_dir": self.cache_dir,
+            "profiling_enabled": self.profiling_enabled,
+        }
+        path_obj = Path(path)
+        path_obj.parent.mkdir(parents=True, exist_ok=True)
+        path_obj.write_text(yaml.dump(data, default_flow_style=False), encoding="utf-8")
+
+    @classmethod
+    def from_yaml(cls, path: str | Path) -> "PipelineConfig":
+        """Load config from a YAML file.
+
+        Args:
+            path: Source file path.
+
+        Returns:
+            A new PipelineConfig instance.
+        """
+        path_obj = Path(path)
+        if not path_obj.exists():
+            raise FileNotFoundError(f"Config file not found: {path}")
+
+        with open(path_obj, encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+
+        return cls(
+            stages=data.get("stages") or cls().stages,
+            skip_stages=data.get("skip_stages", []),
+            plugins=data.get("plugins", {}),
+            output_dir=data.get("output_dir", "output"),
+            verbose=data.get("verbose", False),
+            dry_run=data.get("dry_run", False),
+            layout_output=data.get("layout_output", False),
+            skip_dynamic=data.get("skip_dynamic", False),
+            coverage_path=data.get("coverage_path"),
+            trace_path=data.get("trace_path"),
+            incremental_since=data.get("incremental_since"),
+            cache_dir=data.get("cache_dir"),
+            profiling_enabled=data.get("profiling_enabled", False),
+        )
+
+
+@dataclass
+class PipelineResult:
+    """Result of a full pipeline run.
+
+    Wraps the output of a complete pipeline execution with timing,
+    stage outputs, warnings, and the final bundle.
+
+    Attributes:
+        bundle: The final artifact bundle.
+        timing: Per-stage timing breakdown in milliseconds.
+        stage_outputs: Raw outputs from each executed stage.
+        warnings: Non-fatal warnings collected during execution.
+        total_duration_ms: Total pipeline duration in milliseconds.
+    """
+
+    bundle: Bundle
+    timing: dict[str, float] = field(default_factory=dict)
+    stage_outputs: dict[str, Any] = field(default_factory=dict)
+    warnings: list[str] = field(default_factory=list)
+    total_duration_ms: float = 0.0
+
+
+__all__ = ["PipelineConfig", "PipelineResult", "PipelineRunner"]
 
 
 class PipelineRunner:
@@ -184,6 +322,9 @@ class PipelineRunner:
         if config.skip_dynamic:
             effective_skip.add("dynamic")
 
+        timing: dict[str, float] = {}
+        total_start = time.perf_counter()
+
         # Execute each stage in order
         for stage in config.stages:
             if stage in effective_skip:
@@ -194,24 +335,31 @@ class PipelineRunner:
                         "skipped": True,
                         "reason": "skip_dynamic=True",
                     }
+                timing[stage] = 0.0
                 continue
 
             if stage not in self.stage_handlers:
                 error = f"Unknown stage: {stage}"
                 logger.error(error)
                 bundle.errors.append(error)
+                timing[stage] = 0.0
                 continue
 
             try:
                 logger.info(f"Running stage: {stage}")
+                stage_start = time.perf_counter()
                 handler = self.stage_handlers[stage]
                 result = handler(bundle, config)
+                stage_duration = time.perf_counter() - stage_start
+                timing[stage] = round(stage_duration * 1000, 3)
                 bundle.stage_results[stage] = result
-                logger.info(f"Stage {stage} completed successfully")
+                logger.info(f"Stage {stage} completed in {timing[stage]:.1f}ms")
             except Exception as e:
                 error = f"Stage {stage} failed: {str(e)}"
                 logger.error(error)
                 bundle.errors.append(error)
+                stage_duration = time.perf_counter() - stage_start
+                timing[stage] = round(stage_duration * 1000, 3)
                 # Continue to next stage even if one fails
                 continue
 
@@ -238,7 +386,11 @@ class PipelineRunner:
             except Exception as e:  # pragma: no cover - defensive
                 logger.warning("Incremental cache save failed: %s", e)
 
-        logger.info(f"Pipeline completed with {len(bundle.errors)} errors")
+        total_duration = time.perf_counter() - total_start
+        timing["total"] = round(total_duration * 1000, 3)
+        bundle.metadata["timing"] = timing
+
+        logger.info(f"Pipeline completed with {len(bundle.errors)} errors in {timing['total']:.1f}ms")
         return bundle
 
     # ------------------------------------------------------------------

@@ -58,16 +58,27 @@ Code patterns that become `POLICY`:
 
 Rules: `PolicyRule`, `RetryPatternRule`, and `InheritanceRule` (when bases look like handlers/controllers) → `MappingKind.POLICY`.
 
-### Secondary roles
+### The seven Active Inference roles
 
-Not part of the canonical Markov blanket but useful for GNN bundles and downstream analysis:
+COGANT's semantic mapping system assigns every node exactly one role from this set of **seven core + six supplementary roles**:
 
-- `CONSTRAINT` — `assert_*`, `test_*`, `validate_*`, `Validator` / `Checker` classes (`PreferenceRule`, `TestAssertionRule`).
-- `CONTEXT` — configuration, feature flags, singleton / global state (`ConfigRule`, `FeatureFlagRule`, `ContextRule`, `SingletonAccessRule`).
-- `DATA_FLOW` — reader-writer pipelines whose read sources differ from their write targets (`DataPipelineRule`).
-- `ERROR_HANDLING` — functions with `CATCHES` / `THROWS` edges (`ErrorBoundaryRule`).
-- `CIRCUIT_BREAKER` — `GUARDS` edge plus retry / fallback keywords (`CircuitBreakerRule`).
-- `ORCHESTRATION` — high-fan-out controllers (`OrchestratorRule`).
+#### Core seven (mandatory for Active Inference state spaces)
+
+1. **HIDDEN_STATE (μ)** — internal state variables written and read by the system. Encode the agent's beliefs and model of itself.
+2. **OBSERVATION (s)** — sensory inputs and read-only getters that make internal state observable to external systems. Represent what the agent can measure.
+3. **ACTION (a)** — actuators and side-effect emitters that mutate internal state or affect the environment. Encode the agent's control surface.
+4. **POLICY (π)** — decision makers, controllers, orchestrators, and retry/backoff logic that select actions based on hidden state. Encode the agent's decision strategy.
+5. **PREFERENCE** — preference and cost functions that define what observations the agent seeks (C matrix). Encode the agent's reward signal.
+6. **CONTEXT** — configuration, feature flags, global state that modulates policies. Encode static or slowly-changing parameters (D matrix priors).
+7. **PARAMETER** — learned parameters, weights, and hyperparameters (reserved for future use).
+
+#### Supplementary roles (for GNN annotation and downstream analysis)
+
+- **CONSTRAINT** — assertions, test predicates, validators. Carry implicit preferences (negative cost when violated).
+- **DATA_FLOW** — reader-writer pipelines where read sources differ from write targets. Encode data transformation.
+- **ERROR_HANDLING** — exception boundaries and error recovery paths. Encode resilience patterns.
+- **CIRCUIT_BREAKER** — timeout, fallback, and breach-response patterns. Encode fault tolerance.
+- **ORCHESTRATION** — high-fan-out controllers that manage multiple subsystems. Encode hierarchical control.
 
 ## Markov blanket partitioning
 
@@ -87,14 +98,16 @@ The partition is complete, mutually exclusive, and deterministic for a given gra
 
 ## A / B / C / D matrix derivation
 
-| Matrix | Shape | Source edges | Semantics |
-| --- | --- | --- | --- |
-| **A** (likelihood) | `[n_obs x n_states]` | `READS`, `OBSERVES` | `P(observation \| hidden_state)` |
-| **B** (transition) | `[n_states x n_states x n_actions]` | `WRITES`, `MUTATES`, `CALLS` | `P(next_state \| current_state, action)` |
-| **C** (preference) | `[n_obs]` | `CONSTRAINT` confidence scores | `log P(preferred observations)` |
-| **D** (prior) | `[n_states]` | `CONFIGURATION` nodes + domain defaults | `P(initial hidden state)` |
+COGANT derives the four Active Inference generative-model matrices from the program graph edges and semantic mappings:
 
-`StateSpaceCompiler` (`py/cogant/statespace/compiler.py`) consumes the rule output, projects it onto the hidden-state set, and hands the result to the GNN matrix builder.
+| Matrix | Shape | Source | Semantics | COGANT derivation |
+| --- | --- | --- | --- | --- |
+| **A** (likelihood) | `[n_obs × n_states]` | OBSERVATION mappings + READS/OBSERVES edges | `P(observation \| hidden_state)` — probability of observing a particular external state given an internal state | One row per OBSERVATION role; heuristic fill: 0.9 on diagonal (strong likelihood), 0.1 off-diagonal (weak) |
+| **B** (transition) | `[n_states × n_states × n_actions]` | ACTION mappings + WRITES/MUTATES/CALLS edges | `P(next_state \| current_state, action)` — probability of transitioning between states under a given action | One matrix slice per ACTION role; identity fill (no change) when action has no outgoing WRITES edge, otherwise transition from source to target WRITES edge |
+| **C** (preference) | `[n_obs]` | CONSTRAINT/PREFERENCE mappings + confidence scores | `log P(preferred observations)` — preference/cost over observations | Weighted by confidence score of CONSTRAINT mappings; uniform when no constraints exist |
+| **D** (prior) | `[n_states]` | CONTEXT/CONFIGURATION nodes + defaults | `P(initial hidden_state)` — prior belief over hidden states at t=0 | Derived from nodes tagged CONTEXT; uniform default when none found |
+
+The `StateSpaceCompiler` (`py/cogant/statespace/compiler.py`) consumes the translation rules' semantic mappings, projects them onto the hidden-state set via Markov blanket extraction, and constructs these four matrices for downstream GNN export and Active Inference simulation.
 
 ## Known limitations
 

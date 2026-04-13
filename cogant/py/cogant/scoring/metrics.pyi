@@ -1,10 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
-
 @dataclass
 class MetricsReport:
     complexity_score: float
@@ -20,14 +16,14 @@ class MetricsReport:
     action_count: int
 
 class CodebaseMetrics:
-    graph: Incomplete
-    state_space: Incomplete
-    mappings: Incomplete
-    nodes: Incomplete
-    edges: Incomplete
-    state_vars: Incomplete
-    observations: Incomplete
-    actions: Incomplete
+    graph: Any
+    state_space: Any
+    mappings: Any
+    nodes: Any
+    edges: Any
+    state_vars: Any
+    observations: Any
+    actions: Any
     def __init__(self, graph: dict[str, Any], state_space: dict[str, Any], mappings: dict[str, Any]) -> None: ...
     def complexity_score(self) -> float: ...
     def coupling_score(self) -> float: ...

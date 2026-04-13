@@ -1,11 +1,9 @@
-from typing import Any
+from __future__ import annotations
 
-from _typeshed import Incomplete as Incomplete
+from typing import Any
 
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
-
-logger: Incomplete
 
 class StaticPlotter:
     def __init__(self) -> None: ...

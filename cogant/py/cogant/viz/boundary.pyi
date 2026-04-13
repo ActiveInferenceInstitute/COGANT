@@ -1,10 +1,8 @@
+from __future__ import annotations
+
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
-
-logger: Incomplete
 
 class BoundaryMapper:
     def __init__(self) -> None: ...

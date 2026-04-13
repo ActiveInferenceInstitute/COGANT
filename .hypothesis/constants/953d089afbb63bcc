@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/statespace/compiler.py
+# hypothesis_version: 6.135.29
+
+[0.0, 0.5, 1.0, 1000, 'Action', 'Likelihood', 'OBSERVES', 'ObservationModality', 'Preference', 'StateSpaceCompiler', 'StateSpaceModel', 'Transition', '__init__', 'action_count', 'alpha', 'array', 'assertion', 'bernoulli', 'bool', 'boolean', 'cardinality', 'categorical', 'condition', 'continuous', 'discrete', 'docstring', 'double', 'event', 'expect', 'expression', 'float', 'gaussian', 'generic', 'int', 'integer', 'is_async', 'list', 'log', 'max_steps', 'mean', 'metric', 'must', 'n_classes', 'name', 'observation_count', 'p', 'parameters', 'post', 'pre', 'preconditions', 'reads', 'real', 'require', 'rule', 'self', 'sensor', 'step_unit', 'str', 'string', 'transition_count', 'type', 'type_hint', 'unknown', 'variable_count', 'variance', 'vector', 'writes']

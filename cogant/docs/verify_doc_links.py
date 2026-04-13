@@ -1,8 +1,25 @@
 """Verify relative markdown links under ``docs/`` resolve to existing paths.
 
-Run from the package root (directory containing ``docs/``):
+Walks every ``docs/**/*.md`` file, extracts inline markdown link targets,
+and checks that each relative path (after resolution from the containing
+file's directory) lives inside the package root and points to an existing
+file or directory. External links (``http``/``https``/``mailto``/``tel``),
+pure fragments (``#foo``), and angle-bracket wrapped paths are handled.
 
-    uv run python docs/verify_doc_links.py
+Invocation is directory-independent — all paths are anchored on
+``__file__``. Run from anywhere::
+
+    uv run python cogant/docs/verify_doc_links.py
+    cd cogant && uv run python docs/verify_doc_links.py
+
+Exit codes
+----------
+* ``0`` — all links resolved.
+* ``1`` — at least one broken or escaping link was reported.
+
+The summary line ("N files scanned, M links checked, K broken") is
+printed to stdout even on success so the tool is self-documenting
+in CI logs.
 """
 
 from __future__ import annotations
@@ -26,11 +43,19 @@ def _split_target(raw: str) -> tuple[str, str]:
 
 
 def verify_docs() -> list[str]:
-    """Return human-readable errors for any broken relative links in ``docs/``."""
+    """Return human-readable errors for any broken relative links in ``docs/``.
+
+    Also populates the module-level counters :data:`_LAST_FILES_SCANNED` and
+    :data:`_LAST_LINKS_CHECKED` so :func:`main` can print a summary.
+    """
+    global _LAST_FILES_SCANNED, _LAST_LINKS_CHECKED
+    _LAST_FILES_SCANNED = 0
+    _LAST_LINKS_CHECKED = 0
     errors: list[str] = []
     for md_path in sorted(_DOCS_DIR.rglob("*.md")):
         if "__pycache__" in md_path.parts:
             continue
+        _LAST_FILES_SCANNED += 1
         text = md_path.read_text(encoding="utf-8")
         base = md_path.parent
         for match in _LINK_RE.finditer(text):
@@ -45,6 +70,7 @@ def verify_docs() -> list[str]:
             # Angle-bracket wrapped paths: <path>
             if path_part.startswith("<") and path_part.endswith(">"):
                 path_part = path_part[1:-1]
+            _LAST_LINKS_CHECKED += 1
             resolved = (base / path_part).resolve()
             try:
                 resolved.relative_to(_REPO_ROOT)
@@ -64,11 +90,24 @@ def verify_docs() -> list[str]:
     return errors
 
 
+# Summary counters populated by :func:`verify_docs` for :func:`main` to print.
+_LAST_FILES_SCANNED: int = 0
+_LAST_LINKS_CHECKED: int = 0
+
+
 def main() -> int:
     errs = verify_docs()
     if errs:
         print("\n".join(errs))
+        print(
+            f"\nverify_doc_links: {_LAST_FILES_SCANNED} file(s) scanned, "
+            f"{_LAST_LINKS_CHECKED} link(s) checked, {len(errs)} broken"
+        )
         return 1
+    print(
+        f"verify_doc_links: {_LAST_FILES_SCANNED} file(s) scanned, "
+        f"{_LAST_LINKS_CHECKED} link(s) checked, 0 broken"
+    )
     return 0
 
 

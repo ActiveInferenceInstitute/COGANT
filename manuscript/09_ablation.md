@@ -8,7 +8,7 @@ The question answered by this ablation is: *if one family of translation rules i
 
 Rather than re-run the benchmark harness with each family removed, the per-family deltas in Table 10 are reconstructed directly from the mapping-kind breakdown reported in `../cogant/benchmarks/results/suite_20260409.md` and the rule-to-`MappingKind` assignment recorded in `../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md`. This is a conservative analysis: each rule in a family is responsible for emitting a specific `MappingKind`, the conflict resolver uses priority and confidence (tuple `(priority, confidence_score)`) to pick a unique winner per node, and the confidence band for each rule is fixed in `../cogant/docs/evaluation/CALIBRATION.md` §2.1. Removing a whole family therefore removes exactly the mappings whose `MappingKind` is sourced by that family, with a small residual coming from the two secondary rules that also emit the same kind (for example `OrchestratorRule` and `PolicyRule` both emit POLICY, so removing the semantic family still leaves behavioural-family POLICY mappings behind).
 
-**Table 10. Rule-family ablation on `flask_app` and `calculator` (baseline values from the benchmark suite `suite_20260409.md`; deltas derived from the per-family `MappingKind` breakdown).**
+**Table 12. Rule-family ablation on `flask_app` and `calculator` (baseline values from the benchmark suite `suite_20260409.md`; deltas derived from the per-family `MappingKind` breakdown).**
 
 | Rule family | Rules removed | Rule count | Roles primarily affected | `flask_app` $\Delta$ mappings (of 68) | `calculator` $\Delta$ mappings (of 11) | Primary quality signal |
 |---|---|---:|---|:---:|:---:|---|
@@ -28,7 +28,7 @@ The interaction between `InheritanceRule` and `MutatingSubsystemRule` is summari
 
 The translation engine's default iteration cap is `max_iterations = 10`; this ablation studies how the output depends on that cap. The expected behaviour from Theorem 1 is that the engine converges in a single pass on every packaged fixture, because the shipped rules are disjoint on the node kinds they target and each mapping id is stable across iterations. The ablation verifies this empirically by rerunning the pipeline with the cap set to $K \in \{1, 2, 5, 10\}$ and recording the total mapping count at each setting.
 
-**Table 11. Fixpoint iteration ablation (planned; baseline row reports the canonical $K = 10$ run from Table 4).**
+**Table 13. Fixpoint iteration ablation (planned; baseline row reports the canonical $K = 10$ run from Table 4).**
 
 | $K$ (max iterations) | `calculator` mappings | `event_pipeline` mappings | `flask_mini` mappings | `flask_app` mappings | `requests_lib` mappings | `json_stdlib` mappings | Convergence |
 |---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
@@ -37,7 +37,7 @@ The translation engine's default iteration cap is `max_iterations = 10`; this ab
 | 5 | planned | planned | planned | planned | planned | planned | Expected identical. |
 | 10 (default) | 5 | 20 | 19 | 51 | 46 | 8 | Canonical; matches Table 4. |
 
-The single-pass-convergence prediction is testable directly from the engine's internal match log: `TranslationEngine._log_match("iteration_complete", ...)` writes one entry per iteration containing the per-pass new-mapping count, and a converged run on the first pass writes exactly one `iteration_complete` entry with a nonzero count followed by at most one more with `new_mappings=0`. The harness populating Table 9 will assert that the log length at $K = 10$ is between 1 and 2 iteration-complete entries on every fixture.
+The single-pass-convergence prediction is testable directly from the engine's internal match log: `TranslationEngine._log_match("iteration_complete", ...)` writes one entry per iteration containing the per-pass new-mapping count, and a converged run on the first pass writes exactly one `iteration_complete` entry with a nonzero count followed by at most one more with `new_mappings=0`. The harness populating Table 13 will assert that the log length at $K = 10$ is between 1 and 2 iteration-complete entries on every fixture.
 
 The purpose of keeping the cap at $K = 10$ despite the single-pass prediction is a safety valve: if a user registers a pathological rule set --- for example two rules that mutually trigger each other via the confidence model's rescoring pass in `translate_with_confidence()` --- the engine bounds the cost at ten full passes over the rule list rather than looping indefinitely. Section 4 ("Fixpoint non-convergence") already documents the warning message the engine emits when the cap is exceeded; this ablation simply confirms that the warning is never triggered on the shipped fixtures.
 
@@ -50,7 +50,7 @@ A third ablation of interest is the effect of the identity-fallback and uniform-
 - `compute_C` falls back to the zero vector when no CONSTRAINT or PREFERENCE mapping touches the observation (the implicit initialisation at line 371).
 - `compute_D` falls back to a uniform prior when no CONFIGURATION neighbour exists (lines 416--417).
 
-**Table 12. Fallback frequency on the six packaged fixtures (planned).**
+**Table 14. Fallback frequency on the six packaged fixtures (planned).**
 
 | Fixture | $A$ rows uniform | $B$ actions identity | $C$ entries zero | $D$ uniform | Validator result |
 |---|:---:|:---:|:---:|:---:|:---:|
@@ -65,4 +65,4 @@ The `json_stdlib` row is populated directly from the canonical baseline and `../
 
 ## Summary
 
-The ablation study answers three questions. First, **which rule families are necessary for which roles?** (Table 10: structural rules drive HIDDEN\_STATE; semantic rules drive OBSERVATION/ACTION/POLICY/PREFERENCE; control rules drive CONTEXT; behavioural rules drive orchestration POLICY and CONSTRAINT; resilience rules drive resilience-flavoured POLICY.) Second, **how many iterations does the fixpoint actually need?** (Table 11: one pass on every shipped fixture, with the $K = 10$ cap serving as a pathological-rule safety valve.) Third, **what do the A/B/C/D fallbacks produce when no edge evidence is available?** (Table 12: maximum-entropy uniform distributions and identity transitions that still validate at 100.0 and remain valid active-inference generative models.) Several entries remain marked "planned" pending the P3 validation harness; filling them in is a single-file addition that reruns the pipeline with the appropriate rule-list restriction and writes the deltas into the same `metrics.json` format used by `../cogant/evaluation/figures/generate_figures.py`.
+The ablation study answers three questions. First, **which rule families are necessary for which roles?** (Table 12: structural rules drive HIDDEN\_STATE; semantic rules drive OBSERVATION/ACTION/POLICY/PREFERENCE; control rules drive CONTEXT; behavioural rules drive orchestration POLICY and CONSTRAINT; resilience rules drive resilience-flavoured POLICY.) Second, **how many iterations does the fixpoint actually need?** (Table 13: one pass on every shipped fixture, with the $K = 10$ cap serving as a pathological-rule safety valve.) Third, **what do the A/B/C/D fallbacks produce when no edge evidence is available?** (Table 14: maximum-entropy uniform distributions and identity transitions that still validate at 100.0 and remain valid active-inference generative models.) Several entries remain marked "planned" pending the P3 validation harness; filling them in is a single-file addition that reruns the pipeline with the appropriate rule-list restriction and writes the deltas into the same `metrics.json` format used by `../cogant/evaluation/figures/generate_figures.py`.

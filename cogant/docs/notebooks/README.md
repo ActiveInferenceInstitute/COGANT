@@ -36,4 +36,28 @@ pip install "cogant[notebooks]"
 jupyter lab docs/notebooks/
 ```
 
-See [related docs](../index.md) for theory background and the rest of the documentation tree.
+## `.ipynb` / `.md` pairing
+
+Every notebook is checked in as both an `.ipynb` (executable source) and a
+matching `.md` (rendered export for the MkDocs site). The `.md` is a
+derived artifact — do not hand-edit it. To regenerate after changing a
+notebook:
+
+```bash
+uv run jupyter nbconvert --to markdown docs/notebooks/NN_slug.ipynb
+```
+
+Commit both files together so the MkDocs site and the executable source
+stay in sync.
+
+## Related modules
+
+- [../tutorials/README.md](../tutorials/README.md) — prose walkthroughs of
+  many of the same workflows covered by these notebooks.
+- [../cookbook/README.md](../cookbook/README.md) — shorter, outcome-first
+  recipes.
+- [../concepts/README.md](../concepts/README.md) — background theory
+  referenced by the notebooks.
+- [../api/README.md](../api/README.md) — canonical API reference.
+
+Agent notes: [AGENTS.md](AGENTS.md) - Hub: [../index.md](../index.md)

@@ -3,10 +3,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
-
 @dataclass
 class PluginMetadata:
     name: str
@@ -15,7 +11,7 @@ class PluginMetadata:
     description: str = ...
 
 class Plugin(ABC, metaclass=abc.ABCMeta):
-    metadata: Incomplete
+    metadata: Any
     def __init__(self, metadata: PluginMetadata) -> None: ...
     @abstractmethod
     def initialize(self, config: dict[str, Any]) -> None: ...

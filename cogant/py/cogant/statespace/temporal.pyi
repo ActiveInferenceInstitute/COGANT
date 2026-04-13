@@ -1,11 +1,9 @@
+from typing import Any
+
 from dataclasses import dataclass
 from enum import StrEnum
 
-from _typeshed import Incomplete as Incomplete
-
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
-
-logger: Incomplete
 
 class TimeRegime(StrEnum):
     SYNCHRONOUS = 'synchronous'
@@ -40,8 +38,8 @@ class TemporalMetrics:
     is_discrete: bool = ...
 
 class TemporalAnalyzer:
-    graph: Incomplete
-    time_regime: Incomplete
+    graph: Any
+    time_regime: Any
     orderings: list[TemporalOrdering]
     event_patterns: list[EventPattern]
     metrics: TemporalMetrics | None
@@ -51,3 +49,7 @@ class TemporalAnalyzer:
     def get_event_patterns(self) -> list[EventPattern]: ...
     def get_metrics(self) -> TemporalMetrics | None: ...
     def get_critical_path(self) -> list[str]: ...
+    def compute_critical_path(self) -> list[str]: ...
+    def get_markov_order(self) -> int: ...
+    def find_feedback_loops(self) -> list[list[str]]: ...
+    def to_mermaid(self) -> str: ...

@@ -2,8 +2,8 @@
 # Consumed by infrastructure rendering and publishing helpers when this project is under projects/
 
 paper:
-  title: "COGANT: Codebase-to-GNN Translation"
-  subtitle: "Theory of the Program Graph IR and Practice of the Python Pipeline"
+  title: "COGANT: Codebase-to-GNN Translator"
+  subtitle: "Program Graphs, Intermediate Representations, and Practice of the Python Pipeline"
   version: "0.5.0"
   date: "2026-04-10"
 

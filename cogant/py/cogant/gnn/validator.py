@@ -39,6 +39,7 @@ class ValidationResult:
         self.warnings: list[str] = warnings or []
         self.score = score
         self.details: dict[str, Any] = {}
+        self.section_scores: dict[str, float] = {}
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -48,7 +49,60 @@ class ValidationResult:
             "errors": self.errors,
             "warnings": self.warnings,
             "details": self.details,
+            "section_scores": self.section_scores,
         }
+
+    def to_markdown(self) -> str:
+        """Generate a human-readable markdown report.
+
+        Returns:
+            A markdown string containing a formatted report of the
+            validation result, including scores, errors, warnings,
+            and section breakdowns.
+        """
+        lines: list[str] = []
+
+        # Header
+        status = "✓ VALID" if self.valid else "✗ INVALID"
+        lines.append("# GNN Validation Report\n")
+        lines.append(f"**Status**: {status}\n")
+        lines.append(f"**Overall Score**: {self.score:.1f}/100\n")
+
+        # Section scores
+        if self.section_scores:
+            lines.append("## Section Scores\n")
+            for section, score in sorted(self.section_scores.items()):
+                bar = "█" * int(score / 10) + "░" * (10 - int(score / 10))
+                lines.append(f"- **{section}**: {score:.1f}/100 [{bar}]")
+            lines.append("")
+
+        # Errors
+        if self.errors:
+            lines.append("## Errors\n")
+            for err in self.errors:
+                lines.append(f"- ❌ {err}")
+            lines.append("")
+
+        # Warnings
+        if self.warnings:
+            lines.append("## Warnings\n")
+            for warn in self.warnings:
+                lines.append(f"- ⚠ {warn}")
+            lines.append("")
+
+        # Details
+        if self.details:
+            lines.append("## Details\n")
+            for key, val in self.details.items():
+                if isinstance(val, dict):
+                    lines.append(f"### {key}")
+                    for k, v in val.items():
+                        lines.append(f"- {k}: {v}")
+                else:
+                    lines.append(f"- **{key}**: {val}")
+            lines.append("")
+
+        return "\n".join(lines)
 
     def badge_svg(self) -> str:
         """Generate SVG badge."""

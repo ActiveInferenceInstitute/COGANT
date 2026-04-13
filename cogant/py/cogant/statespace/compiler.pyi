@@ -1,7 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any
-
-from _typeshed import Incomplete as Incomplete
+from typing import Any, NamedTuple
 
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from cogant.schemas.semantic import SemanticMapping as SemanticMapping
@@ -9,7 +7,9 @@ from cogant.statespace.temporal import TimeRegime as TimeRegime
 from cogant.statespace.variables import ConfidenceLevel as ConfidenceLevel
 from cogant.statespace.variables import StateVariable as StateVariable
 
-logger: Incomplete
+class DegradedOutput(NamedTuple):
+    reason: str
+    affected_matrices: list[str]
 
 @dataclass
 class ObservationModality:
@@ -73,11 +73,18 @@ class StateSpaceModel:
     preferences: dict[str, Preference]
     time_regime: TimeRegime
     metadata: dict[str, Any] = field(default_factory=dict)
+    degraded_output: DegradedOutput | None = None
+    def validate(self) -> list[str]: ...
+    def to_summary(self) -> dict[str, Any]: ...
 
 class StateSpaceCompiler:
-    graph: Incomplete
-    schema_name: Incomplete
-    var_extractor: Incomplete
-    temporal_analyzer: Incomplete
+    graph: Any
+    schema_name: Any
+    var_extractor: Any
+    temporal_analyzer: Any
     def __init__(self, program_graph: ProgramGraph, schema_name: str) -> None: ...
     def compile(self, semantic_mappings: dict[str, SemanticMapping]) -> StateSpaceModel: ...
+    def compile_incremental(
+        self, semantic_mappings: dict[str, SemanticMapping], prev_result: StateSpaceModel | None = None
+    ) -> StateSpaceModel: ...
+    def explain(self) -> str: ...

@@ -1470,6 +1470,89 @@ def benchmark(
 
 
 # ---------------------------------------------------------------------------
+# New analysis and visualization commands
+# ---------------------------------------------------------------------------
+
+
+@app.command("analyze-static")
+def analyze_static(
+    path: Path = typer.Argument(..., help="Path to Python source file or directory"),
+    output: Path | None = typer.Option(None, "--output", "-o", help="Output JSON path"),
+    hotspot_threshold: int = typer.Option(
+        10, "--threshold", "-t", help="Complexity hotspot threshold"
+    ),
+) -> None:
+    """Run static analysis (complexity, coupling, dead code, metrics) on source code.
+
+    Performs lexical analysis without execution: extracts symbols, measures cyclomatic
+    complexity, detects module coupling, identifies unreachable code, and computes
+    Halstead metrics. Results are written to JSON if ``--output`` is specified.
+    """
+    console.print("[bold blue]Running static analysis[/bold blue]")
+    console.print("[dim]→ Not yet fully implemented — use the Python API directly[/dim]")
+    console.print("  from cogant.static import ComplexityAnalyzer, CouplingAnalyzer")
+    console.print("  from cogant.static import DeadCodeAnalyzer, MetricsAnalyzer")
+
+
+@app.command("analyze-graph")
+def analyze_graph(
+    gnn_path: Path = typer.Argument(..., help="Path to GNN bundle or ProgramGraph"),
+    output: Path | None = typer.Option(None, "--output", "-o", help="Output JSON path"),
+) -> None:
+    """Run network analysis (centrality, communities, cycles) on a ProgramGraph.
+
+    Computes graph-theoretic properties: node centrality (degree, betweenness, closeness),
+    cycle detection, path analysis, and hotspot identification. Works on any serialized
+    ProgramGraph or GNN bundle.
+    """
+    console.print("[bold blue]Running graph analysis[/bold blue]")
+    console.print("[dim]→ Not yet fully implemented — use the Python API directly[/dim]")
+    console.print("  from cogant.graph import GraphAnalyzer")
+    console.print("  analyzer = GraphAnalyzer(graph)")
+    console.print("  metrics = analyzer.compute_metrics()")
+
+
+@app.command("visualize")
+def visualize(
+    path: Path = typer.Argument(..., help="Path to GNN bundle, ProgramGraph, or source"),
+    format: str = typer.Option(
+        "mermaid", "--format", "-f", help="Output format: mermaid|png|pdf|svg"
+    ),
+    output: Path | None = typer.Option(None, "--output", "-o", help="Output path"),
+) -> None:
+    """Generate a visualization (Mermaid/PNG/PDF/SVG) from a COGANT artifact.
+
+    Converts program graphs, state-space models, and semantic structures into
+    viewable diagrams. Supports multiple output formats with customizable layout
+    and styling options.
+    """
+    console.print("[bold blue]Generating visualization[/bold blue]")
+    console.print("[dim]→ Not yet fully implemented — use the Python API directly[/dim]")
+    console.print("  from cogant.viz import GraphVisualizer, MermaidGenerator")
+    console.print("  from cogant.viz.png_export import render_program_graph_png")
+
+
+@app.command("export")
+def export_cmd(
+    path: Path = typer.Argument(..., help="Path to GNN bundle or ProgramGraph"),
+    formats: str = typer.Option(
+        "json,graphml", "--formats", "-f", help="Comma-separated export formats"
+    ),
+    output_dir: Path = typer.Option(Path("."), "--output-dir", "-o", help="Output directory"),
+) -> None:
+    """Export a COGANT artifact to multiple formats (JSON, GraphML, Parquet, SVG, etc.).
+
+    Serializes a program graph or GNN model to multiple interchange formats for use in
+    downstream tools, databases, and visualization systems. Supports JSON, GraphML,
+    Parquet, SVG, and custom schema exports.
+    """
+    console.print("[bold blue]Exporting artifact[/bold blue]")
+    console.print("[dim]→ Not yet fully implemented — use the Python API directly[/dim]")
+    console.print("  from cogant.export import MultiFormatExporter, ExportFormat")
+    console.print("  exporter = MultiFormatExporter(output_dir)")
+
+
+# ---------------------------------------------------------------------------
 # Reverse synthesis subcommands
 #
 # These are registered via ``app.command`` after the reverse_command /

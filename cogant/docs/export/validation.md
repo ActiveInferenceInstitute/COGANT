@@ -17,3 +17,10 @@ Exported graphs are validated for:
    - Timestamps valid
    - Checksums match
 
+CLI and policy details: [Validation module](../validation/README.md), [`cogant validate`](../cli/README.md).
+
+### See also
+
+- [Overview](overview.md)
+- [Reproducibility](reproducibility.md)
+

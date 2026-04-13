@@ -1,10 +1,28 @@
 #!/usr/bin/env python3
 """Inject manuscript variables from METRICS.yaml into markdown files.
 
+This CLI walks a Markdown file or directory, replaces every registered
+``{{VAR}}`` placeholder with the corresponding value from
+``cogant/evaluation/METRICS.yaml``, and writes the result either in place,
+into a staging directory, or to a single named output file.
+
+Exit codes
+----------
+* ``0`` — success (all placeholders resolved or ``--report`` completed).
+* ``1`` — METRICS.yaml missing, parse error, usage error, or (with
+  ``--strict``) at least one unresolved ``{{VAR}}`` token remained in the
+  output.
+
+Invocation is directory-independent: paths are resolved relative to
+``__file__``, so the tool works identically from the repo root, from
+``tools/``, or via ``uv run``.
+
 Usage:
     python tools/inject_manuscript_vars.py <input.md> [--dry-run] [--output out.md]
     python tools/inject_manuscript_vars.py manuscript/ --all [--dry-run]
     python tools/inject_manuscript_vars.py manuscript/ --all --output-dir staging/
+    python tools/inject_manuscript_vars.py manuscript/ --all --strict   # CI gate
+    python tools/inject_manuscript_vars.py --report                     # show resolved table
 """
 import argparse
 import difflib
@@ -13,13 +31,15 @@ from pathlib import Path
 
 import yaml
 
-# Allow running from repo root or from tools/ directory
-_TOOLS_DIR = Path(__file__).parent
+# Allow running from repo root or from tools/ directory. All paths below are
+# anchored on ``__file__``; we never rely on the caller's cwd.
+_TOOLS_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TOOLS_DIR.parent
 sys.path.insert(0, str(_TOOLS_DIR))
 
-from manuscript_vars import (
+from manuscript_vars import (  # noqa: E402
     MANUSCRIPT_VARS,
+    find_unresolved_placeholders,
     format_value_for_path,
     resolve_path,
     substitute_text,
@@ -29,8 +49,19 @@ METRICS_PATH = _REPO_ROOT / "cogant" / "evaluation" / "METRICS.yaml"
 
 
 def load_metrics() -> dict:
-    with open(METRICS_PATH) as f:
-        return yaml.safe_load(f)
+    """Load METRICS.yaml as a plain ``dict``; raise with context on failure."""
+    try:
+        with open(METRICS_PATH, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+    except OSError as exc:
+        raise SystemExit(f"ERROR: could not read {METRICS_PATH}: {exc}") from exc
+    except yaml.YAMLError as exc:
+        raise SystemExit(f"ERROR: could not parse {METRICS_PATH}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise SystemExit(
+            f"ERROR: {METRICS_PATH} did not parse to a mapping (got {type(data).__name__})"
+        )
+    return data
 
 
 def inject(text: str, metrics: dict, dry_run: bool = False) -> tuple[str, list[str]]:
@@ -105,6 +136,15 @@ def main():
         action="store_true",
         help="Print a compact table of all registered vars and their current METRICS.yaml values, then exit.",
     )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help=(
+            "Exit non-zero if any {{PLACEHOLDER}} remains unresolved after "
+            "substitution (unknown token, or METRICS.yaml missing that entry). "
+            "Use this in CI to guard against silent drift."
+        ),
+    )
     args = parser.parse_args()
 
     if not METRICS_PATH.exists():
@@ -142,12 +182,21 @@ def main():
 
     total_subs = 0
     files_changed = 0
+    unresolved_by_file: dict[str, list[str]] = {}
     for f in files:
         text = f.read_text(encoding="utf-8")
         new_text, subs = inject(text, metrics, dry_run=False)
         if subs:
             total_subs += len(subs)
             files_changed += 1
+
+        remaining = find_unresolved_placeholders(new_text)
+        if remaining:
+            try:
+                label = str(f.relative_to(_REPO_ROOT))
+            except ValueError:
+                label = str(f)
+            unresolved_by_file[label] = remaining
 
         if args.dry_run:
             # Show a unified diff instead of listing substitutions.
@@ -192,6 +241,22 @@ def main():
     else:
         target = f"staging dir {output_dir}" if output_dir is not None else "in-place"
         print(f"\n{total_subs} substitution(s) applied ({target}).")
+
+    if unresolved_by_file:
+        header = "\nUnresolved {{PLACEHOLDER}} tokens remaining after substitution:"
+        print(header, file=sys.stderr)
+        for label, tokens in sorted(unresolved_by_file.items()):
+            print(f"  {label}:", file=sys.stderr)
+            for tok in tokens:
+                print(f"    - {tok}", file=sys.stderr)
+        if args.strict:
+            print(
+                "ERROR (--strict): unresolved placeholders present; "
+                "register them in tools/manuscript_vars.py::MANUSCRIPT_VARS "
+                "or add the missing entry to METRICS.yaml.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
 
 if __name__ == "__main__":

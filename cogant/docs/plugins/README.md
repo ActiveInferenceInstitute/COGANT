@@ -28,4 +28,11 @@
 5. [Plugin Development Tips](plugin_development_tips.md) and [Best Practices](best_practices.md) — harden the implementation.
 6. [Plugin Publishing](plugin_publishing.md) — ship it.
 
+## Related modules
+
+- [../rules/README.md](../rules/README.md) — translation rule authoring (the most commonly extended surface).
+- [../api/README.md](../api/README.md) — canonical API reference for the plugin base classes.
+- [../tutorials/README.md](../tutorials/README.md) — hands-on plugin tutorial (`07_plugin_authoring.md`).
+- [../notebooks/README.md](../notebooks/README.md) — notebook walkthroughs of plugin authoring.
+
 Agent notes: [AGENTS.md](AGENTS.md) - Hub: [../index.md](../index.md)

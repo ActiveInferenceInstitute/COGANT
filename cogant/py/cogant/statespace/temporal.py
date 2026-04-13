@@ -421,3 +421,113 @@ class TemporalAnalyzer:
                 critical_path = path
 
         return critical_path
+
+    def get_markov_order(self) -> int:
+        """Compute the Markov order of the temporal process.
+
+        The Markov order is the minimum history length required to predict
+        future states given past observations. Estimated by analyzing the
+        longest dependency chain in the graph (critical path length).
+
+        Returns:
+            Integer Markov order (1 = Markovian, 2+ = k-th order process).
+            Returns 1 if no dependencies detected.
+
+        Example:
+            >>> analyzer = TemporalAnalyzer(graph)
+            >>> order = analyzer.get_markov_order()
+            >>> print(f"Process has Markov order {order}")
+        """
+        critical_path = self.compute_critical_path()
+        # Markov order approximated by longest dependency chain
+        # A linear chain of length N implies N-1 history depth
+        markov_order = max(1, len(critical_path) - 1)
+        logger.debug(f"Estimated Markov order: {markov_order}")
+        return markov_order
+
+    def find_feedback_loops(self) -> list[list[str]]:
+        """Find all feedback loops in the temporal dependency graph.
+
+        Identifies cycles among CALLS, TRIGGERS, READS, WRITES edges
+        that indicate iterative or recursive execution patterns.
+
+        Returns:
+            List of cycles, each represented as a list of node ids forming a loop.
+
+        Example:
+            >>> analyzer = TemporalAnalyzer(graph)
+            >>> loops = analyzer.find_feedback_loops()
+            >>> for loop in loops:
+            ...     print(f"Cycle: {' -> '.join(loop)}")
+        """
+        visited: set[str] = set()
+        rec_stack: set[str] = set()
+        loops: list[list[str]] = []
+
+        def dfs(node_id: str, path: list[str]) -> None:
+            """DFS to detect cycles in the graph."""
+            visited.add(node_id)
+            rec_stack.add(node_id)
+            path.append(node_id)
+
+            # Follow edges that indicate temporal dependency
+            for edge in self.graph.get_edges_from(node_id):
+                if edge.kind in (EdgeKind.CALLS, EdgeKind.TRIGGERS,
+                                EdgeKind.READS, EdgeKind.WRITES):
+                    target = edge.target_id
+                    if target not in visited:
+                        dfs(target, path[:])
+                    elif target in rec_stack:
+                        # Found a cycle
+                        cycle_start = path.index(target) if target in path else 0
+                        cycle = path[cycle_start:] + [target]
+                        loops.append(cycle)
+
+            rec_stack.discard(node_id)
+
+        # Start DFS from all unvisited nodes
+        for node_id in self.graph.nodes:
+            if node_id not in visited:
+                dfs(node_id, [])
+
+        logger.debug(f"Found {len(loops)} feedback loop(s)")
+        return loops
+
+    def to_mermaid(self) -> str:
+        """Export the temporal dependency graph as a Mermaid diagram.
+
+        Generates a Mermaid flowchart representation of temporal dependencies,
+        useful for visualization and documentation.
+
+        Returns:
+            String containing valid Mermaid diagram syntax.
+
+        Example:
+            >>> analyzer = TemporalAnalyzer(graph)
+            >>> diagram = analyzer.to_mermaid()
+            >>> print(diagram)
+            graph TD
+                A[Node A] --> B[Node B]
+                ...
+        """
+        lines = ["graph TD"]
+
+        # Add all nodes
+        for node_id, node in list(self.graph.nodes.items())[:20]:  # Limit to 20 for readability
+            label = node.name or node_id
+            lines.append(f"    {node_id}[{label}]")
+
+        # Add edges (temporal dependencies)
+        edge_count = 0
+        for edge in list(self.graph.edges.values())[:30]:  # Limit to 30 edges
+            if edge.kind in (EdgeKind.CALLS, EdgeKind.TRIGGERS):
+                src = edge.source_id
+                tgt = edge.target_id
+                label = edge.kind.value
+                lines.append(f"    {src} -->|{label}| {tgt}")
+                edge_count += 1
+
+        if edge_count == 0:
+            lines.append("    A[No dependencies detected]")
+
+        return "\n".join(lines)

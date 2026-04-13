@@ -177,7 +177,7 @@ By this point you have seen:
 
 1. The `scan` stage emits provenance without touching AST semantics.
 2. The `graph` stage produces a typed property graph with strictly four node kinds in v0.1.0.
-3. The `translate` stage runs the 19-rule fixpoint engine and keeps the decision trace.
+3. The `translate` stage runs the 22-rule fixpoint engine and keeps the decision trace.
 4. Each semantic mapping is anchored in at least one rule evidence snippet.
 5. The Markov blanket partition is deterministic for a fixed graph and seed set.
 

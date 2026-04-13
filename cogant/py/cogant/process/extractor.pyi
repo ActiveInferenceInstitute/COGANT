@@ -1,10 +1,8 @@
+from typing import Any
+
 from dataclasses import dataclass, field
 
-from _typeshed import Incomplete as Incomplete
-
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
-
-logger: Incomplete
 
 @dataclass
 class Stage:
@@ -39,8 +37,8 @@ class ProcessModel:
     metadata: dict[str, object] = field(default_factory=dict)
 
 class ProcessExtractor:
-    graph: Incomplete
-    schema_name: Incomplete
+    graph: Any
+    schema_name: Any
     stages: dict[str, Stage]
     connections: dict[str, ProcessConnection]
     def __init__(self, program_graph: ProgramGraph, schema_name: str) -> None: ...

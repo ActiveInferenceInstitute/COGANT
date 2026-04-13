@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/tools/render_output_figures.py
+# hypothesis_version: 6.135.29
+
+['%(message)s', '.', 'Path not found: %s', 'Wrote %s', '__main__', 'control_positive', 'data', 'examples', 'figures', 'path', 'program_graph.json', 'program_graph.png']

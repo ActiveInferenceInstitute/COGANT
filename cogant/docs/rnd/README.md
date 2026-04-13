@@ -1,6 +1,6 @@
 # R&D Notes
 
-> Exploratory, work-in-progress documentation for the COGANT research track. Notes here are intentionally less polished than the [evaluation/](../evaluation/) reports: they are scratchpads for active experiments and design discussions. Treat anything in this section as provisional.
+> Exploratory, work-in-progress documentation for the COGANT research track. Notes here are intentionally less polished than the [evaluation/](../evaluation/README.md) reports: they are scratchpads for active experiments and design discussions. Treat anything in this section as provisional.
 
 ## Contents
 
@@ -14,6 +14,6 @@
 1. [Active Inference Mapping](active_inference_mapping.md) — start here for the conceptual scaffolding the rest of the R&D notes assume.
 2. [Calibration](calibration.md) — open work items on the confidence and rule calibration front.
 
-For dated, formal reports rather than working notes, see [../evaluation/](../evaluation/).
+For dated, formal reports rather than working notes, see [../evaluation/](../evaluation/README.md).
 
 Agent notes: [AGENTS.md](AGENTS.md) - Hub: [../index.md](../index.md)

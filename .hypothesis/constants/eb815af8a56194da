@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/reverse/parser.py
+# hypothesis_version: 6.135.29
+
+[0.0, 1.0, 4096, '#', '([A-Za-z_]+?)(\\d+)$', ',', '/', '=', 'A', 'A[[', 'A_', 'B', 'B[[', 'B_', 'C', 'C[[', 'C_', 'Connections', 'D', 'D[[', 'D_', 'GNNSection', 'ModelName', 'Name', 'ReverseGNNModel', 'State Space', 'StateSpaceBlock', '[^A-Za-z0-9_]', '\\(([^()]+)\\)', '^##\\s+(.+?)\\s*$', '_', 'a_c', 'action', 'c_f', 'cogant_model', 'constraint', 'constraint_', 'hidden', 'hiddenstate', 'name', 'o', 'o_m', 'observation', 'parse_gnn', 'pi', 'pi_c', 'policy', 'policy_', 'preference', 's', 's_f', 'type=', 'u', 'u_c', 'utf-8', '|', '| ID', '| ID ', '|---', '|ID']

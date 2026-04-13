@@ -1,14 +1,15 @@
-from _typeshed import Incomplete
+
+from typing import Any
 
 from cogant.reverse.parser import ReverseGNNModel
 
 __all__ = ['MatrixFunctions', 'make_matrix_functions']
 
 class MatrixFunctions:
-    A: Incomplete
-    B: Incomplete
-    C: Incomplete
-    D: Incomplete
+    A: Any
+    B: Any
+    C: Any
+    D: Any
     def __init__(self, model: ReverseGNNModel) -> None: ...
     def likelihood(self, state_dist: list[float]) -> list[float]: ...
     def transition(self, state_dist: list[float], action: int = 0) -> list[float]: ...

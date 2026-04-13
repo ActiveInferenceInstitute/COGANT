@@ -18,3 +18,10 @@ bundle = runner.run("./my_project", config)
 #     torch.save(pyg_data, f"graphs/{module_name}.pt")
 ```
 
+For repository-level incremental **analysis** (skip unchanged files), see CLI `cogant translate --incremental` and [CLI — commands](../cli/commands.md).
+
+### See also
+
+- [Compression and size](compression_size.md)
+- [Overview](overview.md)
+

@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/gnn/formatter/upstream.py
+# hypothesis_version: 6.135.29
+
+[1.0, '## Connections', '## Footer', '## GNNSection', '## ModelAnnotation', '## ModelName', '## ModelParameters', '## Signature', '## StateSpaceBlock', '## Time', '(', ')', ', ', '0.0', '1.0', 'CogantModel', 'Cogant_', 'Connections', 'Discrete', 'Dynamic', 'Equations', 'Footer', 'G=ExpectedFreeEnergy', 'G>u_c0', 'GNN v1', 'GNNSection', 'GNNVersionAndFlags', 'ModelAnnotation', 'ModelName', 'ModelParameters', 'Signature', 'StateSpaceBlock', 'Static', 'Time', 'Time=t', '_', 'bool', 'boolean', 'categorical', 'composite', 'continuous', 'discrete', 'float', 'int', 'repo_uri', 't=Time', 't[1,1,type=int]', 'unknown source', 'value', 'vector']

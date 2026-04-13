@@ -1,10 +1,6 @@
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
-
-logger: Incomplete
 
 def program_graph_to_dict(pg: ProgramGraph, statistics: dict[str, Any] | None = None) -> dict[str, Any]: ...
 def run_ingest(bundle_target: str, bundle: Any) -> dict[str, Any]: ...

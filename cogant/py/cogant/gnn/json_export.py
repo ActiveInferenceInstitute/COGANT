@@ -730,3 +730,81 @@ class GNNJSONExporter:
             },
             "mappings": mappings,
         }
+
+
+def export_for_pymdp(bundle: dict[str, Any]) -> dict[str, Any]:
+    """Export matrices in pymdp-compatible format.
+
+    Takes a GNN bundle containing A, B, C, D matrices and exports them
+    in a format compatible with the PyMDP library, with matrices
+    as JSON-serializable lists.
+
+    Args:
+        bundle: The GNN bundle dict containing matrices and metadata.
+
+    Returns:
+        A dict with keys "A", "B", "C", "D" containing the matrices
+        in pymdp format, plus metadata about shapes and truncation.
+    """
+    matrices = bundle.get("matrices", {})
+
+    result: dict[str, Any] = {
+        "A": matrices.get("A", []),
+        "B": matrices.get("B", []),
+        "C": matrices.get("C", []),
+        "D": matrices.get("D", []),
+        "metadata": {
+            "n_states": matrices.get("n_states", 0),
+            "n_obs": matrices.get("n_obs", 0),
+            "n_actions": matrices.get("n_actions", 0),
+            "exported_at": datetime.utcnow().isoformat(),
+        }
+    }
+
+    # Include truncation info if present
+    if matrices.get("b_truncated"):
+        result["metadata"]["b_truncation"] = {
+            "truncated": True,
+            "n_states_full": matrices.get("b_n_states_full"),
+            "n_states_kept": matrices.get("b_n_states_kept"),
+        }
+
+    return result
+
+
+def export_summary(bundle: dict[str, Any]) -> dict[str, Any]:
+    """Export a compact summary of the GNN bundle.
+
+    Args:
+        bundle: The GNN bundle dict.
+
+    Returns:
+        A compact dict with key metadata and matrix shapes suitable
+        for quick inspection.
+    """
+    matrices = bundle.get("matrices", {})
+    state_space = bundle.get("state_space", {})
+
+    summary: dict[str, Any] = {
+        "model_id": bundle.get("model_id"),
+        "model_name": state_space.get("model_name", "unknown"),
+        "schema_version": bundle.get("schema_name", "unknown"),
+        "dimensions": {
+            "n_states": matrices.get("n_states", 0),
+            "n_obs": matrices.get("n_obs", 0),
+            "n_actions": matrices.get("n_actions", 0),
+        },
+        "matrix_shapes": {
+            "A": f"({matrices.get('n_obs', 0)}, {matrices.get('n_states', 0)})",
+            "B": f"({matrices.get('n_states', 0)}, {matrices.get('n_states', 0)}, {matrices.get('n_actions', 0)})",
+            "C": f"({matrices.get('n_obs', 0)},)",
+            "D": f"({matrices.get('n_states', 0)},)",
+        },
+        "coverage": {
+            "total_nodes": len(bundle.get("program_graph", {}).get("nodes", {})),
+            "total_mappings": len(bundle.get("mappings", {}).get("mappings", [])),
+        },
+        "timestamp": bundle.get("provenance", {}).get("timestamp", "unknown"),
+    }
+
+    return summary

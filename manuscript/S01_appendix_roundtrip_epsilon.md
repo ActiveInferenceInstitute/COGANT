@@ -17,10 +17,19 @@ zero (the role has been introduced or dropped). The overall ε reported by
 roles present in at least one side, which matches the values reported in
 `../cogant/docs/evaluation/ROUNDTRIP_EVAL.md` and reproduced in the final column.
 
-### A.1 All 23 targets, post wave 14 (canonical)
+### A.1 All 23 targets, wave-14 intermediate results
+
+> **Note — this table is an intermediate snapshot from wave 14 (CONSTRAINT synthesizer fix only).** The
+> canonical evaluation is **wave 16** (CONSTRAINT + POLICY + CONTEXT synthesizer fixes, 2026-04-10),
+> which achieves 23 / 23 ISOMORPHIC with all targets at ε = 1.0 as recorded in
+> `../cogant/evaluation/METRICS.yaml`. The wave-14 ε values and tier assignments below are preserved
+> for historical traceability; see §A.2 for the CONSTRAINT fix trajectory and
+> `../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md` for the full wave-14 → wave-16 trajectory.
+> Thresholds: **ISOMORPHIC** ε ≥ 0.8 · **APPROXIMATE** 0.5 ≤ ε < 0.8 · **DIVERGENT** ε < 0.5
+> (from `METRICS.yaml` keys `threshold_isomorphic` and `threshold_approximate`).
 
 The table below reports the per-role breakdown for all 23 targets that round
-tripped without runtime failure (rc = 0). Counts for the four primary roles
+tripped without runtime failure (rc = 0) at wave 14. Counts for the four primary roles
 (`HIDDEN_STATE`, `OBSERVATION`, `ACTION`, `CONSTRAINT`) are reported as
 `orig / synth`; the ε_role column is computed from those two counts. The
 POLICY and CONTEXT roles are folded into the "overall ε" computation for
@@ -54,13 +63,16 @@ the column layout to keep the table readable.
 | 23 | rw    | requests (post‑fix) |  24 / 28      | 0.857 | 130 / 219      | 0.594 |  57 / 112      | 0.509 | 483 / 483       |  1.000 |  0.6876   | ISO  |
 
 **Column legend.** HS = HIDDEN\_STATE, OBS = OBSERVATION, ACT = ACTION,
-CNST = CONSTRAINT. "tier" assigns ISOMORPHIC (ISO) when overall ε ≥ 0.5,
-APPROXIMATE (APPROX) when 0.3 ≤ ε < 0.5, DIVERGENT otherwise. Rows marked
-"post‑fix" are measured after the wave‑14 CONSTRAINT synthesizer fix
-(see §A.2 and `../cogant/docs/evaluation/CONSTRAINT_FIX.md`). Three rows (07, 09) remain below the
-1.0 line because the original graph contains POLICY nodes that the reverse
-synthesizer collapses to CONSTRAINT or ACTION; the POLICY per‑role component
-is included in the overall ε average but omitted from the column layout.
+CNST = CONSTRAINT. Tier thresholds match `METRICS.yaml`: **ISOMORPHIC (ISO)** when
+overall ε ≥ 0.8, **APPROXIMATE (APPROX)** when 0.5 ≤ ε < 0.8, **DIVERGENT** when
+ε < 0.5. Note: several tier labels in this wave-14 table were assigned during
+an earlier threshold calibration pass and may appear inconsistent with these
+canonical thresholds; the definitive tier assignments are in `METRICS.yaml`.
+Rows marked "post‑fix" are measured after the wave‑14 CONSTRAINT synthesizer fix
+(see §A.2 and `../cogant/docs/evaluation/CONSTRAINT_FIX.md`). Rows 07 and 09 remain below the
+1.0 line because the original graph contains POLICY nodes that the wave-14 reverse
+synthesizer collapses to CONSTRAINT or ACTION; the wave-16 POLICY/CONTEXT fix
+resolves this, bringing those targets to ε = 1.0 in the canonical run.
 
 **Note on overall ε computation.** The overall ε reported in the rightmost
 column is the value emitted by `compute_isomorphism_report` and is the mean
@@ -71,9 +83,12 @@ role) but that component is excluded from the overall mean; this is why
 zoo/08\_preferences scores overall ε = 1.0000 despite the 0 / 1 HS split —
 the averaging only ranges over OBS, ACT, and CNST on that target.
 
-**Tier distribution.** Post wave 14: 22 / 23 targets land in ISOMORPHIC
-(ε ≥ 0.5), 1 remains APPROXIMATE, 0 DIVERGENT. Pre wave 14 (see §A.2):
-14 / 23 ISOMORPHIC, 6 / 23 APPROXIMATE, 3 / 23 DIVERGENT.
+**Tier distribution (wave 14, ε ≥ 0.8 threshold).** 21 / 23 targets land in
+ISOMORPHIC, 2 remain APPROXIMATE (07\_event\_driven at ε = 0.7778 and 09\_policy
+at ε = 0.6667), 0 DIVERGENT. Pre wave 14 (see §A.2): 14 / 23 ISOMORPHIC,
+6 / 23 APPROXIMATE, 3 / 23 DIVERGENT. **Canonical wave 16 (v0.5.0): 23 / 23
+ISOMORPHIC, all targets at ε = 1.0** — see `../cogant/evaluation/METRICS.yaml` and
+`../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md`.
 
 ### A.2 Pre-fix vs post-fix for affected repositories (wave 14 CONSTRAINT fix)
 

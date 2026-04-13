@@ -1,10 +1,31 @@
 #!/usr/bin/env python3
 """Audit hardcoded numbers in manuscript markdown files against METRICS.yaml.
 
-Scans all manuscript/*.md files for numeric claims and compares them against
-METRICS.yaml values. Reports mismatches, matches, and unverified numbers.
+Scans every ``manuscript/**/*.md`` file for numeric claims (test counts,
+coverage, version, roundtrip tier counts, epsilons, translation-rule
+counts, fixture counts, LOC, suite runtime, IR schema sizes, and macro-F1
+figures) and compares them against ``cogant/evaluation/METRICS.yaml``.
 
-Output: cogant/_rnd/sweep_2026_04/manuscript_number_audit.md
+All comparisons are tolerance-aware (explicit per-variable tolerance or the
+fuzzy ±0.5 % envelope). Findings are partitioned into:
+
+* ``MATCH``             — exact or within-tolerance
+* ``CLOSE``             — within ±0.5 % fuzzy envelope
+* ``MISMATCH``          — real drift (these gate CI)
+* ``EXPECTED_MISMATCH`` — whitelisted contextually-valid differences
+* ``UNVERIFIED``        — no METRICS.yaml entry to compare against
+* ``STALE_ARCHIVE``     — found in ``manuscript/_archive/``; informational
+
+A Markdown audit report is written to ``--output``.
+
+Invocation is directory-independent: all paths are anchored on ``__file__``.
+
+Exit codes
+----------
+* ``0`` — no actionable mismatches (CLOSE / EXPECTED_MISMATCH / UNVERIFIED
+          / STALE_ARCHIVE / MATCH are all non-blocking).
+* ``1`` — at least one MISMATCH was found, or no ``.md`` files were
+          discovered under ``--manuscript-dir``.
 
 Usage:
     python tools/audit_manuscript_numbers.py
@@ -17,8 +38,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-# Allow running from repo root or from tools/ directory
-_TOOLS_DIR = Path(__file__).parent
+# Allow running from repo root or from tools/ directory — all paths are
+# anchored on ``__file__``, so the cwd at call time is irrelevant.
+_TOOLS_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TOOLS_DIR.parent
 sys.path.insert(0, str(_TOOLS_DIR))
 
@@ -51,17 +73,17 @@ FALLBACK_METRICS: dict = {
             "gpt4_macro_f1": 0.61,
         },
         "roundtrip": {
-            "isomorphic_count": 14,
-            "isomorphic_percent": 60.9,
-            "approximate_count": 6,
-            "divergent_count": 3,
+            "isomorphic_count": 23,
+            "isomorphic_percent": 100.0,
+            "approximate_count": 0,
+            "divergent_count": 0,
             "total_targets": 23,
             "zoo_fixture_count": 12,
             "rw_lib_count": 11,
             "rw_repo_count": 8,
-            "mean_epsilon": 0.8092,
-            "median_epsilon": 0.8638,
-            "min_epsilon": 0.4147,
+            "mean_epsilon": 1.0,
+            "median_epsilon": 1.0,
+            "min_epsilon": 1.0,
             "max_epsilon": 1.0,
             "threshold_isomorphic": 0.8,
             "threshold_approximate": 0.5,
@@ -72,16 +94,16 @@ FALLBACK_METRICS: dict = {
         "translation_rules": 19,
     },
     "codebase": {
-        "python_source_files": 179,
-        "python_loc": 56628,
+        "python_source_files": 180,
+        "python_loc": 57015,
     },
     "benchmark": {
         "suite_runtime_s": 238,
         "shipped_fixture_count": 6,
     },
     "ir_schema": {
-        "node_kind_count": 14,
-        "edge_kind_count": 11,
+        "node_kind_count": 18,
+        "edge_kind_count": 18,
         "active_inf_role_count": 7,
     },
     "rust": {
@@ -464,8 +486,12 @@ def audit_file(
                         # the "this is fine" sense.
                         confidence = "HIGH"
 
+                try:
+                    rel_file = str(md_path.resolve().relative_to(_REPO_ROOT))
+                except ValueError:
+                    rel_file = str(md_path)
                 findings.append(Finding(
-                    file=str(md_path.relative_to(_REPO_ROOT)),
+                    file=rel_file,
                     line=line_no,
                     pattern_name=pattern_name,
                     manuscript_claim=match.group(0),

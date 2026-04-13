@@ -6,6 +6,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +16,17 @@ from cogant.api.bundle import Bundle
 logger = logging.getLogger(__name__)
 
 
-__all__ = ["Session"]
+class SessionStatus(StrEnum):
+    """Enumeration of session lifecycle states."""
+
+    CREATED = "created"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    EXPIRED = "expired"
+
+
+__all__ = ["Session", "SessionStatus", "SessionManager"]
 
 
 @dataclass
@@ -55,6 +66,8 @@ class Session:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     _bundle: Bundle | None = field(default=None, repr=False, compare=False)
+    status: SessionStatus = field(default=SessionStatus.CREATED)
+    """Current session lifecycle state."""
 
     def __post_init__(self) -> None:
         """Resolve repo_path to an absolute target and validate that a target exists."""
@@ -186,3 +199,211 @@ class Session:
             organize_run_dir(output_path, dry_run=False)
 
         return self
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the session to a JSON-compatible dict.
+
+        Returns:
+            Dictionary with all session state. Large nested structures
+            (like the internal bundle) are excluded; only the session's
+            summary data is included.
+        """
+        return {
+            "target": self.target,
+            "workspace": self.workspace,
+            "repo_path": str(self.repo_path) if self.repo_path else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "status": self.status.value if isinstance(self.status, SessionStatus) else str(self.status),
+            "syntax_tree": self.syntax_tree,
+            "trace_bundle": self.trace_bundle,
+            "program_graph": self.program_graph,
+            "gnn_model": self.gnn_model,
+            "state_space": self.state_space,
+            "process_model": self.process_model,
+            "export_artifacts": {k: str(v) for k, v in self.export_artifacts.items()},
+            "metadata": self.metadata,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Session:
+        """Reconstruct a session from a serialized dict.
+
+        Args:
+            data: Dictionary produced by :func:`to_dict`.
+
+        Returns:
+            A new Session instance with the persisted state.
+        """
+        created_at_str = data.get("created_at")
+        created_at = (
+            datetime.fromisoformat(created_at_str)
+            if created_at_str
+            else datetime.now()
+        )
+
+        repo_path_str = data.get("repo_path")
+        repo_path = Path(repo_path_str) if repo_path_str else None
+
+        session = cls(
+            target=data.get("target", ""),
+            workspace=data.get("workspace"),
+            repo_path=repo_path,
+        )
+        object.__setattr__(session, "created_at", created_at)
+        session.syntax_tree = data.get("syntax_tree")
+        session.trace_bundle = data.get("trace_bundle")
+        session.program_graph = data.get("program_graph")
+        session.gnn_model = data.get("gnn_model")
+        session.state_space = data.get("state_space")
+        session.process_model = data.get("process_model")
+
+        export_artifacts_data = data.get("export_artifacts", {})
+        session.export_artifacts = {k: Path(v) for k, v in export_artifacts_data.items()}
+
+        session.metadata = data.get("metadata", {})
+
+        status_str = data.get("status", "created")
+        try:
+            session.status = SessionStatus(status_str)
+        except ValueError:
+            session.status = SessionStatus.CREATED
+
+        return session
+
+
+@dataclass
+class SessionManager:
+    """Manages a collection of sessions with lifecycle tracking.
+
+    Handles session creation, expiration, and basic statistics collection.
+
+    Attributes:
+        ttl_seconds: Time-to-live for sessions in seconds. Sessions older
+            than this are considered expired.
+    """
+
+    ttl_seconds: int = 3600  # 1 hour default
+    _sessions: dict[str, Session] = field(default_factory=dict)
+
+    def create(self, target: str, workspace: str | None = None) -> tuple[str, Session]:
+        """Create a new session.
+
+        Args:
+            target: Repository path or URL.
+            workspace: Optional working directory.
+
+        Returns:
+            A tuple of ``(session_id, session)`` where ``session_id`` is a
+            UUID string suitable for use as a key.
+        """
+        import uuid
+        session_id = str(uuid.uuid4())
+        session = Session(target=target, workspace=workspace)
+        session.status = SessionStatus.CREATED
+        self._sessions[session_id] = session
+        logger.info(f"Created session {session_id} for target {target}")
+        return session_id, session
+
+    def get(self, session_id: str) -> Session | None:
+        """Retrieve a session by ID.
+
+        Args:
+            session_id: Session identifier.
+
+        Returns:
+            The session, or ``None`` if not found or expired.
+        """
+        if session_id not in self._sessions:
+            return None
+
+        session = self._sessions[session_id]
+        if self._is_expired(session):
+            session.status = SessionStatus.EXPIRED
+            return None
+
+        return session
+
+    def update_status(self, session_id: str, status: SessionStatus) -> bool:
+        """Update a session's status.
+
+        Args:
+            session_id: Session identifier.
+            status: New status.
+
+        Returns:
+            ``True`` if the update succeeded, ``False`` if session not found.
+        """
+        session = self._sessions.get(session_id)
+        if session is None:
+            return False
+
+        session.status = status
+        logger.info(f"Session {session_id} status -> {status.value}")
+        return True
+
+    def cleanup_expired(self) -> int:
+        """Remove all expired sessions from the manager.
+
+        Returns:
+            Number of sessions removed.
+        """
+        expired_ids = [
+            sid for sid, session in self._sessions.items()
+            if self._is_expired(session)
+        ]
+
+        for sid in expired_ids:
+            del self._sessions[sid]
+            logger.info(f"Cleaned up expired session {sid}")
+
+        return len(expired_ids)
+
+    def get_stats(self) -> dict[str, Any]:
+        """Collect statistics about managed sessions.
+
+        Returns:
+            Dictionary with keys:
+            - ``count_by_status``: Histogram of sessions by status.
+            - ``avg_age_seconds``: Average session age in seconds.
+            - ``memory_estimate_mb``: Rough memory footprint estimate.
+            - ``total_sessions``: Total number of sessions (including expired).
+        """
+        now = datetime.now()
+        status_counts = {status.value: 0 for status in SessionStatus}
+        ages: list[float] = []
+
+        for session in self._sessions.values():
+            status_str = session.status.value if isinstance(session.status, SessionStatus) else str(session.status)
+            status_counts[status_str] = status_counts.get(status_str, 0) + 1
+
+            age_seconds = (now - session.created_at).total_seconds()
+            ages.append(age_seconds)
+
+        avg_age = sum(ages) / len(ages) if ages else 0.0
+
+        # Rough memory estimate: ~1KB per session + graph data
+        memory_estimate = len(self._sessions) * 1.0  # Rough KB estimate
+        for session in self._sessions.values():
+            if session.program_graph:
+                memory_estimate += 10.0  # Rough KB per graph
+            if session.gnn_model:
+                memory_estimate += 5.0  # Rough KB per GNN
+
+        return {
+            "count_by_status": status_counts,
+            "avg_age_seconds": round(avg_age, 1),
+            "memory_estimate_mb": round(memory_estimate / 1024.0, 2),
+            "total_sessions": len(self._sessions),
+        }
+
+    def _is_expired(self, session: Session) -> bool:
+        """Check if a session has exceeded its TTL.
+
+        Args:
+            session: Session to check.
+
+        Returns:
+            ``True`` if the session is expired.
+        """
+        age = (datetime.now() - session.created_at).total_seconds()
+        return age > self.ttl_seconds

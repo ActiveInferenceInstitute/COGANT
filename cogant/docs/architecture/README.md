@@ -1,6 +1,27 @@
 # Architecture
 
-> Internal architecture of COGANT: the layered pipeline (ingest -> normalize -> graph -> translate -> score -> review -> export), the data model, and the cross-cutting concerns (concurrency, memory, performance, error handling, security). Read this section if you are modifying COGANT itself, integrating it deeply, or auditing how a result was produced. End users should usually start in [../api/](../api/), [../tutorials/](../tutorials/), or [../concepts/](../concepts/) instead.
+> Internal architecture of COGANT: the 10-stage pipeline (ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate), the data model, and the cross-cutting concerns (concurrency, memory, performance, error handling, security). Read this section if you are modifying COGANT itself, integrating it deeply, or auditing how a result was produced. End users should usually start in [../api/](../api/README.md), [../tutorials/](../tutorials/README.md), or [../concepts/](../concepts/README.md) instead.
+
+## The 10-stage pipeline
+
+COGANT executes a deterministic, topologically-ordered sequence of 10 stages to transform source code into an Active Inference model:
+
+1. **ingest** — Load and enumerate source files from the target repository
+2. **static** — Extract static analysis: AST nodes, type information, symbol tables (Python via CPython `ast`, JS/TS via `tree-sitter`)
+3. **normalize** — Canonicalize language-specific representations into a unified fact language
+4. **graph** — Build the typed `ProgramGraph` with nodes (functions, classes, modules) and edges (READS, WRITES, CALLS, CONTAINS, etc.)
+5. **dynamic** — Optional enrichment: merge coverage databases and runtime traces into the graph
+6. **translate** — Fixpoint application of 22 declarative translation rules to assign Active Inference roles (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, etc.)
+7. **statespace** — Compile `SemanticMappings` into a state-space model with hidden states, observations, actions, and transitions
+8. **process** — Extract the process/execution model and control-flow topology
+9. **export** — Emit the final GNN markdown bundle (18 canonical sections), JSON artifacts, and validation report
+10. **validate** — Run integrity and schema checks; score the bundle 0–100
+
+Each stage is **optional**: the `stages` list in `PipelineConfig` can be reordered or truncated to skip stages. Conversely, the `skip_stages` list lets callers skip individual stages without rebuilding the config.
+
+## Documentation map
+
+The tables below group the architecture pages by topic: **Orientation** for first-time readers, **Cross-cutting concerns** for system-wide properties, **Pipeline stages** mapped to the 10-runner model, the **Pipeline stage → API reference** crosswalk, and **Stage-by-stage step references** for fine-grained debugging. Implementation snapshots of the engine live under the stage tables.
 
 ## Contents
 
@@ -31,43 +52,53 @@
 | [Extensibility](extensibility.md) | Where extension points live in the architecture | Intermediate |
 | [Security Considerations](security_considerations.md) | Architectural security posture | Intermediate |
 
-### Pipeline stages (canonical 6 + ingest)
+### Pipeline stages (10-runner model)
+
+| Runner Stage | Page | Description | Level |
+|--------------|------|-------------|-------|
+| 1. ingest | [Step 1: Ingest Repository](step_1_ingest_repository.md), [COGANT Ingest and Static Analysis Pipeline](cogant_ingest_and_static_analysis_pipeline.md) | Load repository files and directory structure | Intermediate |
+| 2. static | [Step 2: Analyze Each Python File](step_2_analyze_each_python_file.md), [COGANT Ingest and Static Analysis Pipeline](cogant_ingest_and_static_analysis_pipeline.md) | Extract AST, symbols, type information | Intermediate |
+| 3. normalize | [1. Normalize](1_normalize.md), [Step 1: Normalize Language-Specific Facts](step_1_normalize_language_specific_facts.md) | Canonicalize language-specific facts | Intermediate |
+| 4. graph | [2. Build Graph](2_build_graph.md), [Step 3: Build Program Graph from Extracted Information](step_3_build_program_graph_from_extracted_information.md) | Build typed program graph with nodes and edges | Intermediate |
+| 5. dynamic | [Step 3: Merge with Dynamic Analysis](step_3_merge_with_dynamic_analysis_results_if_available.md) | Optional: merge coverage and trace data | Intermediate |
+| 6. translate | [3. Translate](3_translate.md), [Step 4: Translate Using Rules](step_4_translate_using_rules.md) | Apply 22 declarative rules; assign Active Inference roles | Intermediate |
+| 7. statespace | [Detailed Pipeline Guide](detailed_pipeline_guide.md), [State-space compilation](../api/statespace.md) | Compile state-space model from semantic mappings | Intermediate |
+| 8. process | [Process/execution model extraction](detailed_pipeline_guide.md) | Extract process model and control-flow topology | Intermediate |
+| 9. export | [6. Export](6_export.md), [Step 7: Export Final Mappings](step_7_export_final_mappings.md) | Emit GNN markdown, JSON, and companion artifacts | Intermediate |
+| 10. validate | [Audit](audit.md), [Identify Issues](identify_issues.md), [Report](report.md) | Validate schema; score bundle 0–100 | Intermediate |
+| — (Markov) | [Detailed Graph Engine](detailed_graph_engine.md) | Markov blanket extraction (runs during translate/statespace) | Advanced |
+| — (Reverse) | [COGANT Graph Construction, Normalization, and Translation Engine](cogant_graph_construction_normalization_and_translation_engine.md) | Reverse synthesizer: GNN → Python code | Advanced |
+
+### Implementation snapshots
 
 | Page | Description | Level |
 |------|-------------|-------|
-| [1. Normalize](1_normalize.md) | Stage 1: normalize language-specific facts to canonical form | Intermediate |
-| [2. Build Graph](2_build_graph.md) | Stage 2: build the program graph from normalized facts | Intermediate |
-| [3. Translate](3_translate.md) | Stage 3: rule-based translation to Active Inference roles | Intermediate |
-| [4. Score](4_score.md) | Stage 4: confidence scoring of translated nodes | Intermediate |
-| [5. Review](5_review.md) | Stage 5: human-in-the-loop review and curation | Intermediate |
-| [6. Export](6_export.md) | Stage 6: emit the final GNN package and audit trail | Intermediate |
-| [Detailed Graph Engine](detailed_graph_engine.md) | Internals of the graph engine that powers stages 2-3 | Advanced |
+| [Detailed Graph Engine](detailed_graph_engine.md) | Internals of the graph engine that powers stages 3-4 | Advanced |
 | [Graph Engine Summary](graph_engine_summary.md) | Compressed reference for the graph engine | Reference |
-| [COGANT Engine Implementation Summary](cogant_engine_implementation_summary.md) | Implementation snapshot of the engine | Reference |
+| [COGANT Engine Implementation Summary](cogant_engine_implementation_summary.md) | Implementation snapshot of the translate engine | Reference |
 | [COGANT Graph Construction, Normalization, and Translation Engine](cogant_graph_construction_normalization_and_translation_engine.md) | Long-form engine description | Advanced |
-| [COGANT Ingest and Static Analysis Pipeline](cogant_ingest_and_static_analysis_pipeline.md) | Long-form ingest + static analysis description | Advanced |
 
 ### Pipeline stage → API reference
 
-Each stage on this page maps directly onto a `cogant` Python package. Use this table when you have an architecture stage in mind and want to jump straight to the implementing module's API docs:
+Each runner stage maps to one or more `cogant` Python packages. Use this table when you have a runner stage in mind and want to jump straight to the implementing module's API docs:
 
-| Stage | Architecture page | API reference | Implementing package |
-|-------|-------------------|---------------|----------------------|
-| Ingest | [Step 1: Ingest Repository](step_1_ingest_repository.md), [COGANT Ingest and Static Analysis Pipeline](cogant_ingest_and_static_analysis_pipeline.md) | [`cogant.static`](../api/static.md) | `cogant.ingest`, `cogant.static.parser` |
-| 1. Normalize | [1. Normalize](1_normalize.md), [Step 1: Normalize Language-Specific Facts](step_1_normalize_language_specific_facts.md) | [`cogant.static` → Symbols](../api/static.md#symbols), [`cogant.static` → Types](../api/static.md#types) | `cogant.static.symbols`, `cogant.static.types` |
-| 2. Build Graph | [2. Build Graph](2_build_graph.md), [Step 2: Build Graph from Normalized Facts](step_2_build_graph_from_normalized_facts.md), [Step 3: Build Program Graph from Extracted Information](step_3_build_program_graph_from_extracted_information.md) | [`cogant.static` → Calls](../api/static.md#calls), [`cogant.static` → Dataflow](../api/static.md#dataflow), [`cogant.static` → Imports](../api/static.md#imports) | `cogant.static.calls`, `cogant.static.dataflow`, `cogant.static.imports`, `cogant.graph.builder` |
-| 2a. Markov blanket | [Detailed Graph Engine](detailed_graph_engine.md) | [`cogant.markov`](../api/markov.md), [`cogant.markov` → Blanket](../api/markov.md#blanket), [`cogant.markov` → Extractor](../api/markov.md#extractor) | `cogant.markov.blanket`, `cogant.markov.extractor` |
-| 2b. State-space compilation | [Detailed Pipeline Guide](detailed_pipeline_guide.md) | [`cogant.statespace` → Compiler](../api/statespace.md#compiler) | `cogant.statespace.compiler` |
-| 3. Translate | [3. Translate](3_translate.md), [Step 4: Translate Using Rules](step_4_translate_using_rules.md), [Register Rules](register_rules.md) | [`cogant.translate` → Engine](../api/translate.md#engine), [`cogant.translate` → Rules](../api/translate.md#rules), [Translation rules reference](../reference/translation_rules.md) | `cogant.translate.engine`, `cogant.translate.rules.*` |
-| 4. Score | [4. Score](4_score.md), [Step 5: Score by Confidence](step_5_score_by_confidence.md), [Score Mappings](score_mappings.md) | [`cogant.translate` → Confidence](../api/translate.md#confidence), [scoring API](../api/scoring_api.md), [confidence model](../api/confidence_model_api.md) | `cogant.translate.confidence`, `cogant.scoring` |
-| 5. Review | [5. Review](5_review.md), [Step 6: Human Review and Curation](step_6_human_review_and_curation.md), [Review Process (Interactive)](review_process_interactive.md) | [`cogant.translate` → Review](../api/translate.md#review), [review API](../api/reviewapi.md) | `cogant.translate.review` |
-| 6a. Build A/B/C/D matrices | [Detailed Pipeline Guide](detailed_pipeline_guide.md) | [`cogant.gnn` → Matrix builder](../api/gnn.md#matrix-builder) | `cogant.gnn.matrices` |
-| 6b. Format & emit GNN package | [6. Export](6_export.md), [Export](export.md), [Step 7: Export Final Mappings](step_7_export_final_mappings.md), [Use final_mappings for GNN Training](use_finalmappings_for_gnn_training.md) | [`cogant.gnn`](../api/gnn.md), [`cogant.gnn` → Package builder](../api/gnn.md#package-builder), [export stage and GNN package](../api/export_stage_and_gnn_package.md) | `cogant.gnn.formatter`, `cogant.gnn.package`, `cogant.gnn.json_export` |
-| 6c. Validate GNN package | [Audit](audit.md), [Identify Issues](identify_issues.md), [Report](report.md) | [`cogant.gnn` → Validator](../api/gnn.md#validator) | `cogant.gnn.validator` |
-| Reverse — synthesize code from a GNN | (forward stages run in reverse) | [`cogant.reverse`](../api/reverse.md), [`cogant.reverse` → Parser](../api/reverse.md#parser), [`cogant.reverse` → Synthesizer](../api/reverse.md#synthesizer) | `cogant.reverse.parser`, `cogant.reverse.planner`, `cogant.reverse.synthesizer`, `cogant.reverse.callable` |
-| Runtime — Active Inference agent loop | [Concurrency and Parallelism](concurrency_parallelism.md) | [`cogant.runtime`](../api/runtime.md), [`cogant.runtime` → Loop](../api/runtime.md#loop), [`cogant.runtime` → Metrics](../api/runtime.md#metrics) | `cogant.runtime.loop`, `cogant.runtime.metrics`, `cogant.runtime.config` |
+| Runner Stage | Architecture page | API reference | Implementing package |
+|--------------|-------------------|---------------|----------------------|
+| **1. ingest** | [Step 1: Ingest Repository](step_1_ingest_repository.md) | `cogant.ingest` (module docs in source) | `cogant.ingest` |
+| **2. static** | [Step 2: Analyze Each Python File](step_2_analyze_each_python_file.md) | [`cogant.static`](../api/static.md) | `cogant.static`, `cogant.parsers` |
+| **3. normalize** | [1. Normalize](1_normalize.md) | [`cogant.static` → Symbols/Types](../api/static.md) | `cogant.static.symbols`, `cogant.static.types` |
+| **4. graph** | [2. Build Graph](2_build_graph.md), [Step 3: Build Program Graph](step_3_build_program_graph_from_extracted_information.md) | `cogant.graph` (module docs in source) | `cogant.graph.builder` |
+| **5. dynamic** | [Step 3: Merge Dynamic Analysis](step_3_merge_with_dynamic_analysis_results_if_available.md) | [`cogant.dynamic` API](../api/dynamic_analysis_api.md), [`cogant.dynamic` enrichment](../api/dynamic_enrichment_api.md) | `cogant.dynamic` |
+| **6. translate** | [3. Translate](3_translate.md), [Step 4: Translate Using Rules](step_4_translate_using_rules.md) | [`cogant.translate`](../api/translate.md), [`cogant.translate.confidence`](../api/confidence_model_api.md), [Translation rules reference](../reference/translation_rules.md) | `cogant.translate.engine`, `cogant.translate.rules.*` |
+| **6a. (Markov)** | [Detailed Graph Engine](detailed_graph_engine.md) | [`cogant.markov`](../api/markov.md) | `cogant.markov.blanket`, `cogant.markov.extractor` |
+| **7. statespace** | [Detailed Pipeline Guide](detailed_pipeline_guide.md) | [`cogant.statespace`](../api/statespace.md) | `cogant.statespace.compiler` |
+| **8. process** | [Concurrency and Parallelism](concurrency_parallelism.md) | `cogant.process` (module docs in source) | `cogant.process` |
+| **9. export** | [6. Export](6_export.md), [Step 7: Export Final Mappings](step_7_export_final_mappings.md) | [`cogant.gnn`](../api/gnn.md), [`export stage & GNN package`](../api/export_stage_and_gnn_package.md) | `cogant.gnn.formatter`, `cogant.gnn.package`, `cogant.gnn.json_export` |
+| **10. validate** | [Audit](audit.md), [Identify Issues](identify_issues.md) | `cogant.validate` (module docs in source), [`cogant.gnn` → Validator](../api/gnn.md#validator) | `cogant.validate`, `cogant.gnn.validator` |
+| **Reverse** | — | [`cogant.reverse`](../api/reverse.md) | `cogant.reverse.parser`, `cogant.reverse.synthesizer` |
+| **Runtime** | [Concurrency and Parallelism](concurrency_parallelism.md) | [`cogant.runtime`](../api/runtime.md) | `cogant.runtime.loop`, `cogant.runtime.metrics` |
 
-For a conceptual walkthrough of each stage, see the [concepts](../concepts/README.md) pages — every concept page now links back to its implementing module under its own **Implementation** section.
+For a conceptual walkthrough of each stage, see the [concepts](../concepts/README.md) pages — every concept page links back to its implementing module.
 
 ### Stage-by-stage step references
 
@@ -103,9 +134,6 @@ These finer-grained pages document individual operations inside each stage. Usef
 | [Normalize to Canonical Form](normalize_to_canonical_form.md) | Normalize | Canonicalization |
 | [Generate Stable IDs](generate_stable_ids.md) | Normalize | Stable identifier scheme |
 | [Same Inputs = Same ID (Deterministic)](same_inputs_same_id_deterministic.md) | Normalize | Determinism guarantee |
-| [Hash Statistics](totalidentities_n_uniquehashinputs_m_typemodule_x.md) | Normalize | Hash-input statistics example |
-| [NodeKind == CLASS](normalizednodekind_nodekindclass.md) | Normalize | NodeKind enumeration example |
-| [Normalized Metadata](normalizedmetadata_contains_visibility_decorators_etc.md) | Normalize | Metadata payload example |
 | [Step 2: Build Graph from Normalized Facts](step_2_build_graph_from_normalized_facts.md) | Build Graph | Build-graph entry |
 | [Step 3: Build Program Graph from Extracted Information](step_3_build_program_graph_from_extracted_information.md) | Build Graph | Program-graph construction |
 | [Convert to Node](convert_to_node.md) | Build Graph | Fact-to-node conversion |
@@ -115,7 +143,6 @@ These finer-grained pages document individual operations inside each stage. Usef
 | [Step 3: Merge with Dynamic Analysis Results](step_3_merge_with_dynamic_analysis_results_if_available.md) | Build Graph | Static + dynamic merge |
 | [Merge Static and Dynamic Graphs](merge_static_and_dynamic_graphs.md) | Build Graph | Merge details |
 | [Query](query.md) | Build Graph | Graph query API |
-| [Graph Statistics](totalnodes_2_totaledges_1_connectedcomponents_1.md) | Build Graph | Graph statistics example |
 | [Finalize](finalize.md) | Build Graph | Finalization step |
 | [Filter](filter.md) | Build Graph | Graph filtering |
 | [Centrality](centrality.md) | Build Graph | Centrality metrics |
@@ -132,9 +159,6 @@ These finer-grained pages document individual operations inside each stage. Usef
 | [Filter by Confidence](filter_by_confidence.md) | Score | Confidence filtering |
 | [Identify Issues](identify_issues.md) | Score | Issue identification |
 | [Report](report.md) | Score | Score-stage report |
-| [Total Scored](totalscored_n.md) | Score | Score statistic example |
-| [Average Confidence](averageconfidence_xxx.md) | Score | Score statistic example |
-| [Tier Distribution](tierdistribution.md) | Score | Tier statistic example |
 | [Step 6: Human Review and Curation](step_6_human_review_and_curation.md) | Review | Review entry |
 | [Review Process (Interactive)](review_process_interactive.md) | Review | Interactive review flow |
 | [Add for Review](add_for_review.md) | Review | Queue an item for review |

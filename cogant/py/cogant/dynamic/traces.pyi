@@ -1,9 +1,5 @@
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
-
 class TraceIngester:
     traces: list[dict[str, Any]]
     call_graph: dict[str, list[str]]

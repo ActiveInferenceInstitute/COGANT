@@ -22,4 +22,11 @@
 5. [Role Assignment](role_assignment.md) — how individual nodes get tagged with semantic roles.
 6. [Roundtrip / Isomorphism](roundtrip.md) — closes the loop and explains the isomorphism criterion used by the evaluation suite.
 
+## Related modules
+
+- [../theory/README.md](../theory/README.md) — formal statements of the same ideas covered informally here.
+- [../evaluation/README.md](../evaluation/README.md) — empirical evidence for the claims introduced here.
+- [../tutorials/README.md](../tutorials/README.md) — hands-on walkthroughs that exercise these concepts.
+- [../rules/README.md](../rules/README.md) — how role assignment is implemented in the rule engine.
+
 Agent notes: [AGENTS.md](AGENTS.md) - Hub: [../index.md](../index.md)

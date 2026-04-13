@@ -48,10 +48,10 @@ Methods implemented:
 
 **File**: `py/cogant/api/pipeline.py` (267 lines)
 
-- ✓ `PipelineConfig` - 8-stage configuration (`ingest → parse → graph → translate → statespace → markov → gnn → reverse`; canonical source `cogant/evaluation/METRICS.yaml`)
+- ✓ `PipelineConfig` - 10-stage default (`ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate`; canonical source `cogant/evaluation/METRICS.yaml` `pipeline.runner_stages`)
 - ✓ `Bundle` - Result container
 - ✓ `PipelineRunner` - Orchestration engine
-- ✓ All 8 stages implemented with handlers
+- ✓ All default runner stages implemented with handlers
 - ✓ Error recovery and continuation
 - ✓ Config-driven stage selection
 

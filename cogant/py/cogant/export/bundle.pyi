@@ -1,15 +1,13 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
 from cogant.process.extractor import ProcessModel as ProcessModel
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
-
-logger: Incomplete
 
 @dataclass
 class BundleManifest:
@@ -21,11 +19,15 @@ class BundleManifest:
     metadata: dict[str, Any]
 
 class BundleExporter:
-    FORMATS: Incomplete
-    graph: Incomplete
-    state_space: Incomplete
-    process: Incomplete
-    mappings: Incomplete
-    output_dir: Incomplete
+    FORMATS: list[str]
+    graph: ProgramGraph
+    state_space: StateSpaceModel
+    process: ProcessModel
+    mappings: dict[str, Any]
+    output_dir: Path
     def __init__(self, program_graph: ProgramGraph, state_space_model: StateSpaceModel, process_model: ProcessModel, semantic_mappings: dict[str, Any], output_dir: Path) -> None: ...
     def export(self, formats: list[str] | None = None) -> Path: ...
+    def export_zip(self, output_path: str) -> str: ...
+    def export_with_provenance(
+        self, bundle: dict[str, Any], pipeline_config: dict[str, Any], output_path: str
+    ) -> str: ...

@@ -8,4 +8,4 @@
 - [Validation](../validation/README.md)
 - [Pipeline orchestration (source)](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/api/orchestration.py)
 - [Pipeline contract (specs)](https://github.com/cogant-contributors/cogant/blob/main/cogant/specs/architecture/pipeline.md)
-- [Examples: example_pipeline.py](https://github.com/cogant-contributors/cogant/blob/main/cogant/examples/example_pipeline.py), [orchestrate_roundtrip.py](https://github.com/cogant-contributors/cogant/blob/main/cogant/examples/orchestrate_roundtrip.py), [python-service](../../examples/python-service/)
+- [Examples: example_pipeline.py](https://github.com/cogant-contributors/cogant/blob/main/cogant/examples/example_pipeline.py), [orchestrate_roundtrip.py](https://github.com/cogant-contributors/cogant/blob/main/cogant/examples/orchestrate_roundtrip.py), [python-service](https://github.com/cogant-contributors/cogant/tree/main/cogant/examples/python-service)

@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 from typing import Any, ClassVar
 
-from _typeshed import Incomplete as Incomplete
 from pydantic import ValidationInfo as ValidationInfo
 
 from cogant.schemas.core import EdgeKind as EdgeKind

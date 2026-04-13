@@ -22,7 +22,7 @@
 
 Translation rules are the pluggable units of COGANT's fixpoint engine. Each rule inspects the
 program graph and, if its pattern matches, produces one or more `SemanticMapping`s. COGANT ships
-with 19 rules across five families; this tutorial walks through how one of them
+with 22 rules across five families; this tutorial walks through how one of them
 (`ObservationRule`) is structured so you can author a 20th in the same shape.
 
 ## 1. Pick the pattern
@@ -136,7 +136,7 @@ Three required methods (plus two `@property`s for rule metadata):
 ## 3. Register the rule
 
 Rules are registered via `TranslationEngine.register_rule()`. COGANT's bootstrap code in
-`py/cogant/translate/__init__.py` wires the default 19; add your new rule there. As an
+`py/cogant/translate/__init__.py` wires the default 22; add your new rule there. As an
 example, here is how the shipped `ObservationRule` is wired:
 
 ```python

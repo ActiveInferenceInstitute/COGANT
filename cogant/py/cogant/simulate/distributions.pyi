@@ -1,12 +1,13 @@
-from _typeshed import Incomplete as Incomplete
+
+from typing import Any
 
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
 
 class CategoricalDistribution:
-    categories: Incomplete
-    n: Incomplete
-    probabilities: Incomplete
-    dist: Incomplete
+    categories: Any
+    n: Any
+    probabilities: Any
+    dist: Any
     def __init__(self, categories: list[str], probabilities: list[float] | None = None) -> None: ...
     def sample(self) -> str: ...
     def log_prob(self, category: str) -> float: ...
@@ -15,8 +16,8 @@ class CategoricalDistribution:
     def update(self, observation: str, likelihood: CategoricalDistribution) -> CategoricalDistribution: ...
 
 class TransitionMatrix:
-    states: Incomplete
-    actions: Incomplete
+    states: Any
+    actions: Any
     transitions: dict[str, dict[str, CategoricalDistribution]]
     def __init__(self, states: list[str], actions: list[str]) -> None: ...
     def set_transition(self, state: str, action: str, next_state: str, prob: float) -> None: ...

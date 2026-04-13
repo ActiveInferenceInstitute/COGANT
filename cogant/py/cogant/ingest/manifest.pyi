@@ -2,13 +2,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
 class _TomlLib:
     @staticmethod
     def load(f: Any) -> dict[str, Any]: ...
-
-logger: Incomplete
 
 @dataclass
 class Dependency:

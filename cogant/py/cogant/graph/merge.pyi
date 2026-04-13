@@ -1,8 +1,18 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
+
+@dataclass
+class GraphDiff:
+    added_nodes: list[str]
+    removed_nodes: list[str]
+    changed_nodes: dict[str, dict[str, Any]]
+    added_edges: list[tuple[str, str]]
+    removed_edges: list[tuple[str, str]]
 
 @dataclass
 class MergeConflict:
@@ -28,3 +38,5 @@ class GraphMerger:
     def merge_graphs(self, static_graph: ProgramGraph, dynamic_graph: ProgramGraph, conflict_resolution: str = 'union') -> tuple[ProgramGraph, MergeProvenance]: ...
     def merge_multiple_graphs(self, graphs: list[tuple[str, ProgramGraph]]) -> ProgramGraph: ...
     def get_merge_statistics(self) -> dict[str, Any]: ...
+    def merge_incremental(self, base: ProgramGraph, delta: ProgramGraph) -> ProgramGraph: ...
+    def diff(self, g1: ProgramGraph, g2: ProgramGraph) -> GraphDiff: ...

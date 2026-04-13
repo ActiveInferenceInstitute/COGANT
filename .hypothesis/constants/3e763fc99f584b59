@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/schemas/provenance.py
+# hypothesis_version: 6.135.29
+
+[0.0, 1.0, '42:8-42:35', 'Commit author', 'Commit message', 'Configuration key', 'Configuration value', 'Event payload/data', 'Git commit hash', 'Name of trace event', 'Type of evidence', 'User-defined tags', 'ast_fact', 'ast_visitor', 'commit_event', 'confidence', 'config_entry', 'control_flow', 'dataflow', 'documentation', 'element_id', 'end_col', 'end_line', 'ev_abc123def456', 'evidence_id', 'example', 'excerpt', 'func_authenticate', 'generated_by', 'kind', 'locator', 'semantic_annotation', 'source_span', 'span', 'src/auth.py', 'start_col', 'start_line', 'static_analysis', 'test_assertion', 'trace_event', 'type_signature', 'uri']

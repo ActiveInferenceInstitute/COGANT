@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/reverse/cli.py
+# hypothesis_version: 6.135.29
+
+['--json', '--keep-tmp', '--output', '--threshold', '-o', './reverse_output', 'Actions', 'Constraints', 'DRIFT', 'Hidden states', 'ISOMORPHIC', 'Observations', 'Original', 'Output package', 'Policies', 'Property', 'Role', 'Shape match: ', 'Source GNN', 'Synthesized', 'Value', 'actions', 'constraints', 'cyan', 'errors', 'green', 'has_A_matrix', 'has_B_tensor', 'has_C_vector', 'has_D_vector', 'hidden_states', 'is_isomorphic', 'magenta', 'observations', 'original_roles', 'package_name', 'package_path', 'policies', 'reverse_command', 'right', 'role_match_score', 'roundtrip_command', 'shape_match', 'source_gnn', 'synthesized_roles', 'threshold', 'yellow']

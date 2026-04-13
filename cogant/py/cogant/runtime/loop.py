@@ -18,6 +18,7 @@ observation, chosen action, and variational free energy at that timestep.
 
 from __future__ import annotations
 
+import logging
 import types
 from dataclasses import dataclass
 from typing import Any
@@ -25,6 +26,8 @@ from typing import Any
 from cogant.runtime.config import AgentConfig
 from cogant.runtime.metrics import free_energy as compute_free_energy
 from cogant.runtime.metrics import kl_divergence
+
+logger = logging.getLogger(__name__)
 
 _EPS = 1e-10
 
@@ -663,6 +666,188 @@ class AgentRuntime:
             D_trajectory=D_traj,
             learning_rate=learning_rate,
         )
+
+    def run_episode_with_logging(
+        self,
+        obs_sequence: list[int],
+    ) -> tuple[EpisodeResult, list[dict[str, Any]]]:
+        """Run an episode with detailed per-step logging.
+
+        Args:
+            obs_sequence: List of observation indices to present in order.
+
+        Returns:
+            Tuple of (EpisodeResult, step_logs) where step_logs is a list of
+            dictionaries, each with keys: step, observation, action, free_energy.
+
+        Example:
+            >>> rt = AgentRuntime.from_matrices_dict({
+            ...     "A": [[0.9, 0.1], [0.1, 0.9]],
+            ...     "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+            ...     "C": [1.0, 0.0],
+            ...     "D": [0.5, 0.5],
+            ... })
+            >>> result, logs = rt.run_episode_with_logging([0, 1, 0])
+            >>> for log in logs:
+            ...     print(f"Step {log['step']}: obs={log['observation']}, "
+            ...           f"action={log['action']}, fe={log['free_energy']:.4f}")
+        """
+        n_obs = max(self._n_obs, 1)
+        n_states = max(self._n_states, 1)
+        obs_counts = [0.0] * n_obs
+        obs_state_counts = [[0.0] * n_states for _ in range(n_obs)]
+
+        state = list(self.D)
+        state = _normalize(state)
+        steps: list[AgentStep] = []
+        step_logs: list[dict[str, Any]] = []
+
+        for t, obs_idx in enumerate(obs_sequence):
+            agent_step = self.step(state, obs_idx, t=t)
+            steps.append(agent_step)
+
+            # Accumulate observation counts and joint counts
+            if obs_idx < len(obs_counts):
+                obs_counts[obs_idx] += 1.0
+            for s in range(n_states):
+                if obs_idx < len(obs_state_counts):
+                    obs_state_counts[obs_idx][s] += agent_step.state_dist[s]
+
+            # Log this step
+            step_logs.append({
+                "step": t,
+                "observation": obs_idx,
+                "action": agent_step.action,
+                "free_energy": agent_step.free_energy,
+            })
+
+            state = list(agent_step.state_dist)
+
+        # Compute episode metrics
+        mean_fe = sum(step.free_energy for step in steps) / len(steps) \
+            if steps else float("nan")
+        final_fe = steps[-1].free_energy if steps else float("nan")
+
+        episode_result = EpisodeResult(
+            steps=steps,
+            final_posterior=state,
+            obs_counts=obs_counts,
+            obs_state_counts=obs_state_counts,
+            mean_free_energy=mean_fe,
+            final_free_energy=final_fe,
+        )
+
+        return episode_result, step_logs
+
+    def benchmark(self, n_episodes: int = 10) -> dict[str, float]:
+        """Run n_episodes and return timing statistics.
+
+        Args:
+            n_episodes: Number of episodes to benchmark (default 10).
+
+        Returns:
+            Dictionary with keys:
+            * ``mean_ms``: Mean episode runtime in milliseconds.
+            * ``std_ms``: Standard deviation.
+            * ``min_ms``: Minimum episode time.
+            * ``max_ms``: Maximum episode time.
+
+        Example:
+            >>> rt = AgentRuntime.from_matrices_dict({...})
+            >>> stats = rt.benchmark(n_episodes=20)
+            >>> print(f"Mean: {stats['mean_ms']:.2f} ms")
+        """
+        import time
+
+        times_ms: list[float] = []
+
+        for _ in range(max(1, n_episodes)):
+            start = time.perf_counter()
+            self.run_episode(n_steps=5)
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            times_ms.append(elapsed_ms)
+
+        if not times_ms:
+            return {
+                "mean_ms": 0.0,
+                "std_ms": 0.0,
+                "min_ms": 0.0,
+                "max_ms": 0.0,
+            }
+
+        mean = sum(times_ms) / len(times_ms)
+        variance = sum((t - mean) ** 2 for t in times_ms) / len(times_ms)
+        std = variance ** 0.5
+
+        return {
+            "mean_ms": mean,
+            "std_ms": std,
+            "min_ms": min(times_ms),
+            "max_ms": max(times_ms),
+        }
+
+    def reset(self) -> None:
+        """Reset the runtime to initial conditions.
+
+        Resets episode count and clears any learning-related state, but
+        preserves the A/B/C/D matrices.
+        """
+        self._episode_count = 0
+        logger.info("Runtime reset to initial conditions")
+
+    def get_free_energy(self) -> float:
+        """Return the current variational free energy estimate.
+
+        Returns:
+            Float VFE value, or NaN if no steps have been executed.
+        """
+        # This is a placeholder; in a full implementation, track the
+        # last computed VFE from the most recent step.
+        return float("nan")
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the runtime state to a dictionary.
+
+        Returns:
+            Dictionary with keys:
+            * ``A``, ``B``, ``C``, ``D``: The matrices.
+            * ``n_states``, ``n_obs``, ``n_actions``: Dimensions.
+            * ``episode_count``: Number of completed episodes.
+
+        Example:
+            >>> rt = AgentRuntime.from_matrices_dict({...})
+            >>> data = rt.to_dict()
+            >>> json.dump(data, f)
+        """
+        return {
+            "A": self.A,
+            "B": self.B,
+            "C": self.C,
+            "D": self.D,
+            "n_states": self._n_states,
+            "n_obs": self._n_obs,
+            "n_actions": self._n_actions,
+            "episode_count": self._episode_count,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> AgentRuntime:
+        """Deserialize a runtime from a dictionary.
+
+        Args:
+            d: Dictionary with A, B, C, D keys (and optionally n_states, etc.).
+
+        Returns:
+            Reconstructed AgentRuntime.
+
+        Example:
+            >>> data = {"A": [...], "B": [...], "C": [...], "D": [...]}
+            >>> rt = AgentRuntime.from_dict(data)
+        """
+        rt = cls.from_matrices_dict(d)
+        if "episode_count" in d:
+            rt._episode_count = d["episode_count"]
+        return rt
 
 
 def run_n_steps(

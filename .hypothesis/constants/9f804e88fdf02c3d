@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/gnn/formatter/dynamics.py
+# hypothesis_version: 6.135.29
+
+[0.0, 0.3, 0.7, 1.0, '## Parameterization', '## Time Settings', '### Preferences', '### Rule Weights', ', ', 'asynchronous', 'calls', 'clock_frequency', 'confidence_score', 'confidence_threshold', 'derived', 'fan_out', 'global', 'high', 'is_async', 'kind', 'low', 'max_steps', 'medium', 'none', 'sequential', 'source', 'spontaneous', 'status', 'step_unit', 'synchronous', 'temporal_patterns', 'terminal', 'writes', '|----|----|', '|----|----|------|']

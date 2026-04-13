@@ -1,21 +1,33 @@
 #!/usr/bin/env python3
-"""Check if evaluation/METRICS.yaml is stale vs. coverage.json.
+"""Check whether ``cogant/evaluation/METRICS.yaml`` is fresh.
 
-Exits 0 if METRICS.yaml is in sync with the cached coverage.json and
-current git HEAD. Exits 1 with a helpful message if it's stale.
+"Fresh" here means two things, both of which must hold:
 
-This is a FAST check — no pytest run. It verifies:
+1. **Coverage drift** — ``testing.coverage_percent`` in METRICS.yaml agrees
+   with ``cogant/coverage.json`` to within ``COVERAGE_TOLERANCE`` (±0.1 pp
+   by default). This catches the common case of "tests ran again, coverage
+   shifted, nobody re-ran ``regenerate_metrics.py``".
 
-  1. ``testing.coverage_percent`` in METRICS.yaml matches the percent
-     in ``coverage.json`` (within +/- 0.1%).
-  2. ``generator_git_sha`` matches the current git HEAD sha.
+2. **Git SHA drift** — ``generator_git_sha`` equals the current
+   ``git rev-parse HEAD``. This catches every change that edits code or
+   docs after the last metrics refresh.
 
-``testing.ruff_violations`` is intentionally NOT checked here — running
-ruff on every pre-commit invocation would be too slow. The full
-``tools/regenerate_metrics.py`` run (invoked by the metrics-refresh
-GitHub Action) is the source of truth for ruff drift.
+Anything NOT checked here (ruff, mypy, test counts, roundtrip results) is
+deliberately out of scope: this is a *fast* pre-commit / pre-PR guard. The
+full refresh, run by ``tools/regenerate_metrics.py`` from CI on every merge,
+is still the authoritative source of truth.
+
+Exit codes
+----------
+* ``0`` — METRICS.yaml is in sync OR a prerequisite (coverage.json,
+          git) is missing and cannot be checked.
+* ``1`` — detected drift OR the YAML is missing / malformed.
+
+Invocation is directory-independent (paths anchored on ``__file__``); you
+may call the script from any cwd.
 
 Usage:
+    uv run python tools/check_metrics_fresh.py           # from staging root
     cd cogant && uv run python ../tools/check_metrics_fresh.py
 """
 from __future__ import annotations
@@ -30,7 +42,7 @@ import yaml
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-REPO_ROOT = Path(__file__).parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent
 COGANT_DIR = REPO_ROOT / "cogant"
 METRICS_PATH = COGANT_DIR / "evaluation" / "METRICS.yaml"
 COVERAGE_JSON = COGANT_DIR / "coverage.json"

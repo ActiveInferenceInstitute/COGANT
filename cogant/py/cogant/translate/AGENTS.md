@@ -27,7 +27,7 @@ Add new TranslationRule subclasses to rules.py. Each rule must implement:
 Register rules via engine.register_rule(). Fixpoint iteration applies all rules until convergence.
 
 ## Files
-- rules.py — 19 TranslationRule subclasses (ReadOnlyInputRule, MutatingSubsystemRule, OrchestratorRule, TestAssertionRule, RetryPatternRule, EventBusRule, ConfigRule, FeatureFlagRule, ObservationRule, ActionRule, PolicyRule, PreferenceRule, ContextRule, InheritanceRule, ContainmentRule, DataPipelineRule, ErrorBoundaryRule, SingletonAccessRule, CircuitBreakerRule)
+- rules.py — 22 TranslationRule subclasses across 5 families (5 structural: ReadOnlyInputRule, MutatingSubsystemRule, InheritanceRule, ContainmentRule, DataPipelineRule; 5 semantic: ObservationRule, ActionRule, PolicyRule, PreferenceRule, ContextRule; 3 control: ConfigRule, FeatureFlagRule, ParameterRule; 4 behavioral: OrchestratorRule, TestAssertionRule, EventBusRule, StateMachineRule; 5 resilience: RetryPatternRule, ErrorBoundaryRule, SingletonAccessRule, CircuitBreakerRule, RateLimiterRule)
 - engine.py — TranslationRule (ABC), TranslationEngine (register_rule, translate, fixpoint iteration)
 - confidence.py — ConfidenceModel (compute_confidence_score, determine_confidence_tier, score_batch)
 - review.py — ReviewManager (accept_mapping, reject_mapping, edit_mapping, split_mapping, merge_mappings)

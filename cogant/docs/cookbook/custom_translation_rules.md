@@ -1,7 +1,7 @@
 # Recipe: Custom Translation Rules
 
 **Goal:** Write, register, test, and ship a new `TranslationRule` so the
-fixpoint engine emits your role assignment alongside the 19 built-in rules.
+fixpoint engine emits your role assignment alongside the 22 built-in rules.
 
 > This is the short, copy-pasteable recipe. For the rationale, the
 > precedence rules, and a fully-explained example (the read-only-cache

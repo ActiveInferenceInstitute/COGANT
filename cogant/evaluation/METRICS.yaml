@@ -3,45 +3,47 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-04-11T14:42:49.000000Z'
-generator_git_sha: 6d83c8b5fe5b817cc9320478983d9ff2e40f3d8e
+generated_at: '2026-04-11T20:31:43.442193Z'
+generator_git_sha: eca7da5077e22ba8152d065a29e4e89d0853b47a
 cogant_version: 0.5.0
 package:
   name: cogant
   version: 0.5.0
-  python_min: '3.10'
+  python_min: '3.11'
 testing:
-  test_count_total: 6955
-  test_count_passing: 6884
-  test_count_failing: 0
-  test_count_skipped: 68
+  test_count_total: 2230
+  test_count_passing: 2129
+  test_count_failing: 12
+  test_count_skipped: 86
   test_count_xfailed: 2
   test_count_xpassed: 1
-  test_files_unit: 201
+  test_files_unit: 205
   test_files_integration: 22
   test_files_property: 9
   test_files_fuzz: 1
-  coverage_percent: 90.77
+  coverage_percent: 83.42
   mypy_strict_errors: 0
   ruff_violations: 0
 codebase:
   python_source_files: 180
-  python_loc: 56788
+  python_loc: 57015
   public_modules: 145
   public_classes: 303
-  public_functions: 758
+  public_functions: 759
 pipeline:
-  stage_count: 8
+  stage_count: 10
   translation_rules: 19
-  stages:
+  runner_stages:
   - ingest
-  - parse
+  - static
+  - normalize
   - graph
+  - dynamic
   - translate
   - statespace
-  - markov
-  - gnn
-  - reverse
+  - process
+  - export
+  - validate
 evaluation:
   roundtrip:
     data_source: cogant/evaluation/dataset/roundtrip_results.jsonl
@@ -175,7 +177,14 @@ evaluation:
       elapsed_s: 1.444
 literature:
   source: cogant/docs/evaluation/LITERATURE.md
-  bibliography_entries: 86
+  bibliography_entries: 100
+benchmark:
+  suite_runtime_s: 240.0  # placeholder; regenerate_metrics.py must capture real timing
+  shipped_fixture_count: 6
+ir_schema:
+  node_kind_count: 18
+  edge_kind_count: 18
+  active_inf_role_count: 7
 rust:
   crates_total: 8
   ffi_available: true

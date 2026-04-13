@@ -1,4 +1,4 @@
-# IR progression, translation engine, and algorithms
+# Intermediate Representations (IR) progression, translation engine, and algorithms
 
 ## Progressive IRs
 

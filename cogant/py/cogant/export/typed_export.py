@@ -1,10 +1,13 @@
 """
 Typed export formats for program graphs and models.
 
-Supports JSON, DOT, Cytoscape.js, and adjacency matrix formats with full type information.
+Supports JSON, DOT, Cytoscape.js, adjacency matrix, JSONL, and Arrow IPC formats
+with full type information.
 """
 
+import json
 import logging
+from pathlib import Path
 from typing import Any
 
 from cogant.schemas.core import NodeKind
@@ -204,6 +207,133 @@ class TypedExporter:
             "edge_types": edge_type_map,
             "dimensions": [n, n],
         }
+
+    def to_jsonlines(self, items: list[Any], output_path: str) -> str:
+        """
+        Export items as newline-delimited JSON (JSONL).
+
+        Each item is written as a separate JSON object on its own line.
+        Useful for streaming large datasets or multiple independent records.
+
+        Args:
+            items: List of items to export.
+            output_path: Path where JSONL file should be written.
+
+        Returns:
+            Path to the written JSONL file.
+        """
+        logger.info(f"Exporting {len(items)} items to JSONL: {output_path}")
+
+        output_file = Path(output_path)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(output_file, "w") as f:
+            for item in items:
+                json_line = json.dumps(item, default=str)
+                f.write(json_line + "\n")
+
+        logger.info(f"Exported {len(items)} lines to {output_path}")
+        return str(output_file)
+
+    def to_arrow_ipc(self, items: list[Any], output_path: str) -> str:
+        """
+        Export items as Apache Arrow IPC (Inter-Process Communication) format.
+
+        Requires pyarrow to be installed. IPC format is efficient for binary
+        interchange between processes and can be memory-mapped.
+
+        Args:
+            items: List of items to export.
+            output_path: Path where Arrow IPC file should be written.
+
+        Returns:
+            Path to the written Arrow IPC file.
+
+        Raises:
+            ImportError: If pyarrow is not installed.
+        """
+        try:
+            import pyarrow as pa
+        except ImportError:
+            logger.error("pyarrow not installed; cannot export Arrow IPC format")
+            raise ImportError("pyarrow required for Arrow IPC export") from None
+
+        logger.info(f"Exporting {len(items)} items to Arrow IPC: {output_path}")
+
+        output_file = Path(output_path)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        # Convert items to Arrow table
+        # For now, assume items are dicts (node/edge exports)
+        if items and isinstance(items[0], dict):
+            table = pa.Table.from_pylist(items)
+            with pa.ipc.new_file(str(output_file)) as writer:
+                writer.write_table(table)
+        else:
+            logger.warning("Cannot convert items to Arrow table; skipping export")
+            return output_path
+
+        logger.info(f"Exported Arrow IPC: {output_path}")
+        return str(output_file)
+
+    def export_summary(self, pipeline_result: dict[str, Any]) -> dict[str, Any]:
+        """
+        Export a compact summary of pipeline result suitable for logging/monitoring.
+
+        Returns key metrics and status without full data, suitable for
+        dashboards, logs, or API responses.
+
+        Args:
+            pipeline_result: Complete pipeline execution result.
+
+        Returns:
+            Summary dict with essential information.
+        """
+        summary: dict[str, Any] = {}
+
+        # Core status
+        summary["status"] = pipeline_result.get("status", "unknown")
+        summary["timestamp"] = pipeline_result.get("timestamp", None)
+        summary["duration_seconds"] = pipeline_result.get("duration_seconds", 0)
+
+        # Graph stats
+        if "program_graph" in pipeline_result:
+            graph_data = pipeline_result["program_graph"]
+            summary["graph_stats"] = {
+                "node_count": graph_data.get("metadata", {}).get("node_count", 0),
+                "edge_count": graph_data.get("metadata", {}).get("edge_count", 0),
+                "languages": graph_data.get("metadata", {}).get("languages", []),
+            }
+
+        # Semantic mappings stats
+        if "semantic_mappings" in pipeline_result:
+            mappings = pipeline_result["semantic_mappings"]
+            if "mappings" in mappings:
+                role_counts: dict[str, int] = {}
+                for mapping in mappings["mappings"].values():
+                    role = mapping.get("role", "unknown")
+                    role_counts[role] = role_counts.get(role, 0) + 1
+                summary["semantic_mapping_stats"] = role_counts
+
+        # State space stats
+        if "state_space_model" in pipeline_result:
+            state_space = pipeline_result["state_space_model"]
+            summary["state_space_stats"] = {
+                "hidden_states": len(state_space.get("hidden_states", [])),
+                "observations": len(state_space.get("observations", [])),
+                "actions": len(state_space.get("actions", [])),
+            }
+
+        # Validation results
+        if "validation_results" in pipeline_result:
+            val_results = pipeline_result["validation_results"]
+            summary["validation"] = {
+                "passed": val_results.get("passed", False),
+                "score": val_results.get("score", 0),
+                "finding_count": len(val_results.get("findings", [])),
+            }
+
+        return summary
 
     def _get_node_color(self, kind: NodeKind) -> str:
         """Map node kind to a color for visualization."""

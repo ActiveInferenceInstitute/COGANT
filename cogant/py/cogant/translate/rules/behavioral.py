@@ -24,6 +24,13 @@ from cogant.schemas.semantic import (
 )
 from cogant.translate.engine import TranslationRule
 
+__all__ = [
+    "OrchestratorRule",
+    "TestAssertionRule",
+    "EventBusRule",
+    "StateMachineRule",
+]
+
 
 class OrchestratorRule(TranslationRule):
     """Maps schedulers and controllers to policy/action structure.
@@ -319,3 +326,121 @@ class EventBusRule(TranslationRule):
     def mapping_kind(self) -> MappingKind:
         """GNN mapping kind produced by this rule."""
         return MappingKind.OBSERVATION
+
+
+class StateMachineRule(TranslationRule):
+    """Maps finite state machine patterns to policy/hidden-state modality.
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.80)``. **Upper-mid band** (0.80),
+        tied with ``ActionRule``/``PolicyRule``/``ContextRule``/
+        ``OrchestratorRule``/``CircuitBreakerRule``. Rationale: state
+        machines with explicit state enums + transition methods are a
+        strong structural signal for policy/control logic, but depend
+        on the upstream parser recognizing STATE node kinds and
+        transition patterns. Patterns: state enums, ``on_enter_*``/
+        ``on_exit_*`` methods, ``transitions`` library usage, explicit
+        state attributes (self.state, self._state).
+        TODO(calibration): measure STATE-node coverage on the 20-repo
+        corpus; if <40%, demote to 0.75 or add heuristics for
+        transitions-library imports.
+    """
+
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
+        """Find finite state machine patterns.
+
+        Args:
+            graph: Program graph.
+            query: Graph query engine.
+
+        Returns:
+            List of matched state machine nodes.
+        """
+        matches = []
+
+        state_keywords = ["state", "fsm", "stateful", "transitions"]
+
+        # Look for classes with state-like structure
+        classes = graph.get_nodes_by_kind(NodeKind.CLASS)
+        for cls in classes:
+            name_lower = cls.name.lower()
+            has_state_keyword = any(kw in name_lower for kw in state_keywords)
+
+            # Check for on_enter/on_exit methods (state machine pattern)
+            out_edges = graph.get_edges_from(cls.id)
+            methods = [graph.get_node(e.target_id) for e in out_edges if e.kind == EdgeKind.CONTAINS]
+            transition_methods = sum(
+                1 for m in methods
+                if m and ("on_enter" in m.name.lower() or "on_exit" in m.name.lower())
+            )
+
+            # Also check for explicit state variable
+            has_state_var = any(
+                "state" in m.name.lower()
+                for m in methods
+                if m and m.kind == NodeKind.VARIABLE
+            )
+
+            if has_state_keyword or transition_methods >= 1 or has_state_var:
+                matches.append({
+                    "node_id": cls.id,
+                    "transition_count": transition_methods,
+                    "has_state_var": has_state_var,
+                })
+
+        return matches
+
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
+        """Create state machine mapping.
+
+        Args:
+            graph: Program graph.
+            match: Matched pattern.
+
+        Returns:
+            SemanticMapping for state machine.
+        """
+        node_id = match["node_id"]
+        node = graph.get_node(node_id)
+
+        if not node:
+            return None
+
+        mapping_id = f"fsm_{node_id}_{hashlib.sha256(b'state_machine').hexdigest()[:8]}"
+
+        # Confidence 0.80 — principled default (upper-mid band).
+        # Explicit state enums + transition methods are a strong
+        # structural signal, but depend on upstream STATE-node
+        # classification. Parser certainty 0.85 for method detection
+        # (tree-sitter handles method names reliably).
+        return SemanticMapping(
+            id=mapping_id,
+            kind=MappingKind.POLICY,
+            graph_fragment_node_ids=[node_id],
+            semantic_label=f"{node.name} - State Machine",
+            description=f"Class '{node.name}' implements a finite state machine ({match.get('transition_count', 0)} transition method(s))",
+            confidence_score=0.80,  # principled default (upper-mid band)
+            confidence_tier=ConfidenceTier.STATIC_ONLY,
+            provenance=[
+                ProvenanceRecord(
+                    source="static_analysis",
+                    confidence=0.80,
+                    metadata={
+                        "transition_count": match.get("transition_count", 0),
+                        "has_state_var": match.get("has_state_var", False),
+                    },
+                )
+            ],
+            evidence_count=1,
+            parser_certainty=0.85,  # method name/structure detection
+        )
+
+    @property
+    def name(self) -> str:
+        """Stable identifier for this rule."""
+        return "state_machine"
+
+    @property
+    def mapping_kind(self) -> MappingKind:
+        """GNN mapping kind produced by this rule."""
+        return MappingKind.POLICY

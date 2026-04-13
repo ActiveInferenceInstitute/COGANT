@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/tools/organize_example_outputs.py
+# hypothesis_version: 6.135.29
+
+['%(message)s', '*', '--dry-run', '--examples', '--organize-only', '--suite', '.', '..', '.mermaid', '/', '?', 'DRY: %s -> %s', 'Moved %s -> %s/', 'Moved tree %s -> %s', 'Not a directory: %s', 'Overwrite: %s', 'Patched links in %s', 'Skip missing: %s', '__main__', 'bundle.json', 'calculator', 'control_positive', 'cytoscape.json', 'data', 'diagrams', 'event_pipeline', 'examples', 'figures', 'flask_mini', 'gnn_model.json', 'graph.dot', 'http', 'index.html', 'model.gnn.json', 'model.gnn.md', 'output', 'output_root', 'process_model.json', 'program_graph.json', 'reports', 'site', 'state_space.json', 'store_true', 'summary.md', 'syntax_tree.json', 'typed_graph.json', 'utf-8']

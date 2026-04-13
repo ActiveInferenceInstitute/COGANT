@@ -2,7 +2,7 @@
 
 ## Test matrix and coverage
 
-The v0.5.0 Python implementation ships a test suite that, on the canonical `uv run pytest tests/ --cov=py/cogant` run, reports **2129 passing** tests with **86 skips** for optional dependencies (Rust toolchain, `matplotlib`, `tree-sitter` language grammars, PNG rasterization), plus **2 expected `xfail`** and **1 `xpass`** case. End-to-end runtime is on the order of four minutes on a 2024-class Apple-silicon workstation (**238** s in the canonical run); the overall line coverage of `py/cogant/` is **83.42%** on that run, measured across **56628** lines in **179** source files (see `METRICS.yaml`).
+The v0.5.0 Python implementation ships a test suite that, on the canonical `uv run pytest tests/ --cov=py/cogant` run, reports **0 passing** tests with **0 skips** for optional dependencies (Rust toolchain, `matplotlib`, `tree-sitter` language grammars, PNG rasterization), plus **0 expected `xfail`** and **0 `xpass`** case. End-to-end runtime is on the order of four minutes on a 2024-class Apple-silicon workstation (**0.0** s in the canonical run); the overall line coverage of `py/cogant/` is **91.25%** on that run, measured across **57015** lines in **180** source files (see `METRICS.yaml`).
 
 **Table 8. Python interpreter matrix.**
 
@@ -14,7 +14,7 @@ The v0.5.0 Python implementation ships a test suite that, on the canonical `uv r
 
 All three interpreters are listed in the `classifiers` block of [`../cogant/pyproject.toml`](../cogant/pyproject.toml). The declared minimum is Python 3.11 so that the pattern-matching front end in `cogant.static.parser.PythonASTParser` can use `match`/`case` statements without a compatibility shim, and the benchmark suite recorded in `benchmarks/results/suite_20260409.md` was executed on CPython 3.12.11 under macOS arm64.
 
-Module-level coverage is concentrated in the layers that the **6** packaged fixtures exercise end-to-end. Table 9 records the coverage of the algorithmic core (translation, state-space compilation, Markov blanket extraction, GNN matrix construction, and the reverse synthesizer) --- the modules whose correctness is load-bearing for every claim in the manuscript. Numbers are taken from the `TOTAL`-line breakdown of the `uv run pytest --cov` run that produced the 2129/86 pass/skip summary.
+Module-level coverage is concentrated in the layers that the **6** packaged fixtures exercise end-to-end. Table 9 records the coverage of the algorithmic core (translation, state-space compilation, Markov blanket extraction, GNN matrix construction, and the reverse synthesizer) --- the modules whose correctness is load-bearing for every claim in the manuscript. Numbers are taken from the `TOTAL`-line breakdown of the `uv run pytest --cov` run that produced the 0/0 pass/skip summary.
 
 **Table 9. Line coverage of load-bearing modules (canonical v0.5.0 run, 2026-04-10).**
 
@@ -44,7 +44,7 @@ Module-level coverage is concentrated in the layers that the **6** packaged fixt
 | `cogant.validate.schema_check` | 115 | 95% |
 | `cogant.validate.provenance_check` | 73 | 97% |
 
-The aggregate project-level coverage reported at the end of the run is **83.42%**; the modules that drag the average down are the visualisation layer (`cogant.viz.png_export`, `cogant.viz.plots`, `cogant.viz.mermaid`, with residual gaps where optional `matplotlib` and `plotly` code paths are skipped) plus a small number of scaffolded plugin or provenance helpers (for example `cogant.viz.bundle_site`, an HTML site generator that requires the `jinja2` extra and therefore may not execute under the default `uv sync` environment). The algorithmic core --- everything that participates in the round-trip theorem of §9 --- remains at high coverage on the exercised modules in Table 9. The `simulate.distributions` and `simulate.free_energy` modules are reported in that table for the canonical v0.5.0 run; see `../cogant/CHANGELOG.md` for release-cycle deltas.
+The aggregate project-level coverage reported at the end of the run is **91.25%**; the modules that drag the average down are the visualisation layer (`cogant.viz.png_export`, `cogant.viz.plots`, `cogant.viz.mermaid`, with residual gaps where optional `matplotlib` and `plotly` code paths are skipped) plus a small number of scaffolded plugin or provenance helpers (for example `cogant.viz.bundle_site`, an HTML site generator that requires the `jinja2` extra and therefore may not execute under the default `uv sync` environment). The algorithmic core --- everything that participates in the round-trip theorem of §9 --- remains at high coverage on the exercised modules in Table 9. The `simulate.distributions` and `simulate.free_energy` modules are reported in that table for the canonical v0.5.0 run; see `../cogant/CHANGELOG.md` for release-cycle deltas.
 
 ## Mutation testing
 

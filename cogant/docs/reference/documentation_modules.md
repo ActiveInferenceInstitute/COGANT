@@ -12,7 +12,7 @@ This directory contains the modular technical documentation for the Codebase-to-
 | **Evaluation** | R&D log, empirical reports, calibration notes | [`evaluation/`](../evaluation/README.md) |
 | **Export** | Outputs, PyG/DGL interop, tensor payloads | [`export/`](../export/README.md) |
 | **Plugins** | Extension points, languages, and custom exporters | [`plugins/`](../plugins/README.md) |
-| **Reference** | Implement status, schema references, project milestones | [`reference/`](README.md) |
+| **Reference** | Implementation status, [`pipeline_stages.md`](pipeline_stages.md) (runner order), schema references | [`reference/`](README.md) |
 | **Roadmap** | Releases, backlog, and changelog | [`roadmap/`](../roadmap/README.md) |
 | **Rules** | Translation rules framework and mapping definitions | [`rules/`](../rules/README.md) |
 | **Security** | Threat modeling, sandboxing, package audits | [`security/`](../security/README.md) |

@@ -404,3 +404,134 @@ class GraphQuery:
             "connected_components": len(self.find_connected_components()),
             "cycles": len(self.find_cycles()),
         }
+
+    def find_by_role(self, role: str) -> list[Node]:
+        """Find nodes by AII semantic role.
+
+        Args:
+            role: Semantic role to filter by (from metadata or convention).
+
+        Returns:
+            List of nodes matching the role.
+        """
+        return [
+            n for n in self.graph.nodes.values()
+            if n.metadata.get("role") == role or n.metadata.get("semantic_role") == role
+        ]
+
+    def find_paths_between(self, source_role: str, target_role: str) -> list[list[str]]:
+        """Find paths between nodes of two semantic roles.
+
+        Args:
+            source_role: Source semantic role.
+            target_role: Target semantic role.
+
+        Returns:
+            List of paths (each path is a list of node IDs).
+        """
+        paths = []
+
+        source_nodes = self.find_by_role(source_role)
+        target_nodes = self.find_by_role(target_role)
+
+        for source in source_nodes:
+            for target in target_nodes:
+                path = self.find_shortest_path(source.id, target.id)
+                if path:
+                    paths.append(path)
+
+        return paths
+
+    def get_neighborhood(self, node_id: str, depth: int = 2) -> set[str]:
+        """Get all nodes within N hops of a given node.
+
+        Args:
+            node_id: ID of center node.
+            depth: Maximum hop distance.
+
+        Returns:
+            Set of node IDs within the neighborhood.
+        """
+        neighborhood: set[str] = {node_id}
+        current_level = {node_id}
+        visited = {node_id}
+
+        for _ in range(depth):
+            next_level: set[str] = set()
+
+            for nid in current_level:
+                neighbors = self.graph.get_neighbors(nid)
+                for neighbor in neighbors:
+                    if neighbor.id not in visited:
+                        visited.add(neighbor.id)
+                        next_level.add(neighbor.id)
+                        neighborhood.add(neighbor.id)
+
+            current_level = next_level
+            if not current_level:
+                break
+
+        return neighborhood
+
+    def filter_by_edge_type(self, edge_type: str) -> ProgramGraph:
+        """Extract subgraph containing only edges of a specific type.
+
+        Args:
+            edge_type: Edge type to filter by (e.g., "calls", "reads").
+
+        Returns:
+            New ProgramGraph with only edges of specified type.
+        """
+        # Convert string to EdgeKind if needed
+        try:
+            edge_kind = EdgeKind(edge_type)
+        except ValueError:
+            # If not a valid EdgeKind, return empty graph
+            return ProgramGraph(metadata=self.graph.metadata)
+
+        subgraph = ProgramGraph(metadata=self.graph.metadata)
+
+        # Find all edges of this kind
+        edges = self.filter_edges(kind=edge_kind)
+
+        # Add nodes involved in these edges
+        node_ids: set[str] = set()
+        for edge in edges:
+            node_ids.add(edge.source_id)
+            node_ids.add(edge.target_id)
+
+        for node_id in node_ids:
+            node = self.graph.get_node(node_id)
+            if node:
+                subgraph.add_node(node)
+
+        # Add the edges
+        for edge in edges:
+            subgraph.add_edge(edge)
+
+        return subgraph
+
+    def get_interface_nodes(self) -> list[Node]:
+        """Find nodes that bridge components (high betweenness).
+
+        Nodes with high betweenness are critical for connecting different parts
+        of the graph and represent interface or gateway nodes.
+
+        Returns:
+            List of high-centrality nodes sorted by betweenness.
+        """
+        centrality = self.compute_betweenness_centrality()
+
+        # Find nodes in top quartile
+        if not centrality:
+            return []
+
+        sorted_nodes = sorted(centrality.items(), key=lambda x: x[1], reverse=True)
+        threshold_idx = max(1, len(sorted_nodes) // 4)
+
+        interface_node_ids = [nid for nid, _ in sorted_nodes[:threshold_idx]]
+
+        return [
+            self.graph.get_node(nid) for nid in interface_node_ids
+            if self.graph.get_node(nid) is not None
+        ]

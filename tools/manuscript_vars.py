@@ -1,8 +1,26 @@
 """Registry of manuscript template variables and their METRICS.yaml paths.
 
-Usage:
-    from tools.manuscript_vars import MANUSCRIPT_VARS
-    # MANUSCRIPT_VARS["{{TEST_COUNT}}"] == "testing.test_count_passing"
+This module is the authoritative mapping from ``{{PLACEHOLDER}}`` tokens used
+in ``manuscript/*.md`` to dotted paths inside ``cogant/evaluation/METRICS.yaml``.
+It also provides the shared helpers used by every downstream consumer:
+
+* :func:`resolve_path` — walk a nested mapping by dotted path.
+* :func:`format_value_for_path` — render a metric value as the exact string
+  that should appear in prose (precision rules live here so every consumer
+  agrees on how ``0.86`` becomes ``"86"`` vs ``"86.0"`` vs ``"0.86"``).
+* :func:`build_flat_variables` — emit ``{NAME: formatted_str}`` for
+  ``output/data/manuscript_variables.json`` (consumed by ``scripts/
+  z_generate_manuscript_variables.py``).
+* :func:`substitute_text` — replace every registered placeholder in a text
+  blob (the workhorse used by both the injector and the generator).
+
+Usage::
+
+    from tools.manuscript_vars import MANUSCRIPT_VARS, substitute_text
+    assert MANUSCRIPT_VARS["{{TEST_COUNT}}"] == "testing.test_count_passing"
+
+This module has **no side effects** and performs no I/O — it is safe to import
+from unit tests. The callers are responsible for reading ``METRICS.yaml``.
 """
 
 from __future__ import annotations
@@ -12,9 +30,19 @@ from typing import Any
 
 _PLACEHOLDER_INNER = re.compile(r"^\{\{([A-Za-z0-9_]+)\}\}$")
 
+# Matches any ``{{IDENT}}`` token (used by strict unresolved-placeholder checks).
+PLACEHOLDER_RE = re.compile(r"\{\{([A-Za-z0-9_]+)\}\}")
+
 
 def resolve_path(data: dict[str, Any] | Any, dotpath: str) -> Any:
-    """Traverse a nested mapping using dotted path segments."""
+    """Traverse a nested mapping using dotted path segments.
+
+    Returns ``None`` if any segment is missing, if a non-mapping is hit before
+    the final segment, or if the final value is literally ``None``. Accepts an
+    empty dotpath (returns *data* unchanged — useful for corner cases).
+    """
+    if not dotpath:
+        return data
     cur: Any = data
     for part in dotpath.split("."):
         if not isinstance(cur, dict):
@@ -68,7 +96,13 @@ def build_flat_variables(metrics: dict[str, Any]) -> dict[str, str]:
 
 
 def substitute_text(text: str, metrics: dict[str, Any]) -> tuple[str, list[str]]:
-    """Replace every registered ``{{VAR}}`` in *text*; return (new_text, log lines)."""
+    """Replace every registered ``{{VAR}}`` in *text*; return (new_text, log lines).
+
+    Only tokens that appear in :data:`MANUSCRIPT_VARS` AND resolve to a
+    non-``None`` value in *metrics* are substituted. Unknown tokens and
+    tokens whose path is missing from *metrics* are left untouched so that
+    :func:`find_unresolved_placeholders` can flag them for the caller.
+    """
     substitutions: list[str] = []
     for var, path in MANUSCRIPT_VARS.items():
         value = resolve_path(metrics, path)
@@ -79,6 +113,23 @@ def substitute_text(text: str, metrics: dict[str, Any]) -> tuple[str, list[str]]
             substitutions.append(f"  {var} → {formatted} (from {path})")
             text = text.replace(var, formatted)
     return text, substitutions
+
+
+def find_unresolved_placeholders(text: str) -> list[str]:
+    """Return any ``{{IDENT}}`` tokens still present in *text*, de-duplicated.
+
+    Call after :func:`substitute_text` to detect placeholders that were not
+    resolved — typically because they aren't registered in
+    :data:`MANUSCRIPT_VARS`, or because the corresponding METRICS.yaml entry
+    is missing. Strict CLI modes should treat a non-empty return value as a
+    hard error.
+    """
+    seen: list[str] = []
+    for match in PLACEHOLDER_RE.finditer(text):
+        tok = "{{" + match.group(1) + "}}"
+        if tok not in seen:
+            seen.append(tok)
+    return seen
 
 
 MANUSCRIPT_VARS: dict[str, str] = {

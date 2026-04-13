@@ -3,7 +3,7 @@
 This appendix gives the formal statement and proof sketch of the ε-approximate
 Galois connection between the category of Python program graphs and the
 category of GNN generative models. The informal version appears in Section
-6.2 of the main text.
+8.3 of the main text.
 
 ### C.1 Categories
 
@@ -47,13 +47,15 @@ synthesized code artefacts.
 Define the role-multiset functor **ρ : Prog → Mset(Roles)** that sends a
 program graph `G` to the multiset of Active Inference roles assigned to its
 nodes by the translate engine, where
-`Roles = {HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT}`.
+`Roles = {HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE, CONSTRAINT, CONTEXT}`.
 Extend `ρ` to **GNN → Mset(Roles)** by counting the declarations in each
 role-tagged section of a GNN bundle (`StateSpaceBlock` → HIDDEN\_STATE,
 observation modalities → OBSERVATION, control states → ACTION, etc.).
 Both extensions agree on the image of `F`: `ρ(F(G)) = ρ_GNN(F(G))` for every
 `G ∈ Prog`, because the forward pipeline emits one section entry per
-mapping in the translate output.
+mapping in the translate output. The PREFERENCE role is included in `Roles`
+because `PreferenceRule` emits PREFERENCE mappings that are recorded in the
+GNN `Preferences/Constraints` section; Definition 2 in §2 lists all seven roles.
 
 ### C.4 Adjunction (approximate)
 
@@ -70,7 +72,7 @@ the role multiset", i.e. for every `G ∈ Prog` and `M ∈ GNN`:
 where `ε_worst` depends only on the rule table and the synthesizer.
 
 **Proof sketch.** The forward pipeline is the composition of a finite
-sequence of monotone rule applications (the 19 translation rules in the
+sequence of monotone rule applications (the {{TRANSLATION_RULES}} translation rules in the
 translate engine plus the A/B/C/D derivation in `statespace`), each of which
 emits exactly one mapping per triggering graph pattern. The reverse pipeline
 is the composition of `parse_gnn` (which is a right inverse of the GNN
@@ -133,27 +135,28 @@ distribution, which is equal on both sides, so ε → 0 again. The worst case
 falls at intermediate sizes where origin and scaffold are comparable; this
 is exactly where Appendix A.1 shows overall ε ≈ 0.85–0.95.  ∎
 
-### C.6 ISOMORPHIC threshold corresponds to majority role preservation
+### C.6 ISOMORPHIC threshold and role preservation
 
-**Proposition C.3.** The threshold `ε ≥ 0.5` used throughout the paper to
-classify a target as ISOMORPHIC is equivalent to "a majority of the origin
-role multiset is preserved in the roundtrip".
+**Proposition C.3.** The threshold `ε ≥ 0.8` (as defined in `METRICS.yaml`
+`threshold_isomorphic`) to classify a target as ISOMORPHIC corresponds to
+"at least 80% multiset similarity of the origin role distribution is
+preserved in the roundtrip".
 
 **Proof.** The multiset similarity per role is
 `min(a,b) / max(a,b)`. Averaging over the `k` roles present on either side
-and requiring the mean ≥ 0.5 is equivalent to requiring that at least `k/2`
-of the per-role ratios are ≥ 0.5 (or a weighted combination of more and
-fewer). For a single role, `min(a,b) / max(a,b) ≥ 0.5` iff
-`max(a,b) ≤ 2·min(a,b)` iff each count is at most twice the other. When the
-reverse synthesizer only adds scaffolding, this is equivalent to requiring
-`count_origin ≥ scaffold / 2`, i.e. that the origin population is at least
-half of the synth population. Summing over roles, the ISOMORPHIC threshold
-corresponds to "the majority of the origin role multiset survives to the
-roundtrip without being drowned out by scaffolding". The CONSTRAINT fix
-(§A.2) is exactly the transformation that makes this true for
-constraint-heavy real-world libraries: it raises the CONSTRAINT component
-of `count_synth` from 3 (scaffolding) to `count_origin` (proportional), so
-`min = count_origin` and the per-role ratio jumps to 1.0.  ∎
+and requiring the mean ≥ 0.8 means that the weighted-average per-role ratio
+is at least 0.8. For a single role, `min(a,b) / max(a,b) ≥ 0.8` iff
+`max(a,b) ≤ 1.25·min(a,b)` iff the counts are within 25% of each other.
+When the reverse synthesizer only adds scaffolding, this is equivalent to
+requiring `count_origin ≥ 0.8 · count_synth`, i.e. that the origin
+population is at least 80% of the synth population. Summing over roles, the
+ISOMORPHIC threshold corresponds to "at least 80% of the origin role multiset
+survives the roundtrip without being drowned out by scaffolding". The
+CONSTRAINT fix (§A.2) and the wave-16 POLICY/CONTEXT fix are exactly the
+transformations that make this true for constraint-heavy and policy-bearing
+real-world libraries: each raises the CONSTRAINT (or POLICY/CONTEXT) component
+of `count_synth` from a small scaffold constant to `count_origin` (proportional),
+so `min = count_origin` and the per-role ratio jumps to 1.0.  ∎
 
 ---
 

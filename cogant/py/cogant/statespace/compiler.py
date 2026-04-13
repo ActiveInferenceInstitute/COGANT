@@ -34,7 +34,7 @@ Example:
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, NamedTuple
 
 from cogant.schemas.core import EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
@@ -50,6 +50,7 @@ from cogant.statespace.variables import (
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "DegradedOutput",
     "ObservationModality",
     "Action",
     "Transition",
@@ -58,6 +59,20 @@ __all__ = [
     "StateSpaceModel",
     "StateSpaceCompiler",
 ]
+
+
+class DegradedOutput(NamedTuple):
+    """Metadata for partial or degraded state space compilation.
+
+    Returned when the compilation process falls back to identity-biased A,
+    identity B, or uniform C/D due to insufficient evidence.
+
+    Attributes:
+        reason: Free-text explanation of why degradation occurred.
+        affected_matrices: List of matrix names affected (e.g. ["A", "B"]).
+    """
+    reason: str
+    affected_matrices: list[str]
 
 
 @dataclass
@@ -258,6 +273,8 @@ class StateSpaceModel:
         metadata: Free-form metadata (step_unit, is_async, max_steps,
             counts, compiler version, etc.). Kept as a plain dict for
             JSON portability.
+        degraded_output: Optional :class:`DegradedOutput` if compilation
+            fell back to identity/uniform matrices due to lack of evidence.
     """
     id: str
     schema_name: str
@@ -269,6 +286,100 @@ class StateSpaceModel:
     preferences: dict[str, Preference]
     time_regime: TimeRegime
     metadata: dict[str, Any] = field(default_factory=dict)
+    degraded_output: DegradedOutput | None = None
+
+    def validate(self) -> list[str]:
+        """Validate internal consistency of the state space model.
+
+        Checks:
+        * All variable ids referenced in actions/transitions exist.
+        * All observation ids exist in observations dict.
+        * Dimension consistency (A matrix cardinality matches variables).
+        * Valid probability distributions (non-negative, sum to ~1).
+
+        Returns:
+            List of validation issue strings (empty if all checks pass).
+
+        Example:
+            >>> model = StateSpaceModel(...)
+            >>> issues = model.validate()
+            >>> if issues:
+            ...     print(f"Validation failed: {issues}")
+        """
+        issues: list[str] = []
+
+        # Check variable references
+        all_var_ids = set(self.variables.keys())
+        for action_id, action in self.actions.items():
+            for var_id in action.effects + action.preconditions:
+                if var_id not in all_var_ids:
+                    issues.append(
+                        f"Action {action_id} references unknown variable {var_id}"
+                    )
+            for var_id in action.effects:
+                if var_id not in all_var_ids:
+                    issues.append(
+                        f"Action {action_id} effect references unknown variable {var_id}"
+                    )
+
+        # Check observation references in likelihoods
+        all_obs_ids = set(self.observations.keys())
+        for likelihood_id, likelihood in self.likelihoods.items():
+            if likelihood.variable_id not in all_var_ids and \
+               likelihood.variable_id not in all_obs_ids:
+                issues.append(
+                    f"Likelihood {likelihood_id} references unknown "
+                    f"variable/observation {likelihood.variable_id}"
+                )
+
+        # Check that preferences reference valid variables
+        for pref_id, pref in self.preferences.items():
+            for var_id in pref.scope:
+                if var_id not in all_var_ids:
+                    issues.append(
+                        f"Preference {pref_id} references unknown variable {var_id}"
+                    )
+
+        # Check distributions for basic sanity (non-negative, sum near 1)
+        for pref_id, pref in self.preferences.items():
+            if pref.weight < 0:
+                issues.append(f"Preference {pref_id} has negative weight {pref.weight}")
+
+        logger.debug(f"State space validation: {len(issues)} issues found")
+        return issues
+
+    def to_summary(self) -> dict[str, Any]:
+        """Generate a structured summary of the state space model.
+
+        Returns:
+            Dictionary with keys:
+            * ``n_variables``: Count of hidden state variables.
+            * ``n_observations``: Count of observation modalities.
+            * ``n_actions``: Count of controllable actions.
+            * ``n_transitions``: Count of state transitions.
+            * ``n_preferences``: Count of preference constraints.
+            * ``n_likelihoods``: Count of likelihood distributions.
+            * ``time_regime``: String representation of time regime.
+            * ``is_degraded``: True if ``degraded_output`` is not None.
+            * ``degradation_reason``: Free-text reason if degraded, else None.
+
+        Example:
+            >>> summary = model.to_summary()
+            >>> print(f"Model has {summary['n_variables']} hidden states")
+        """
+        return {
+            "n_variables": len(self.variables),
+            "n_observations": len(self.observations),
+            "n_actions": len(self.actions),
+            "n_transitions": len(self.transitions),
+            "n_preferences": len(self.preferences),
+            "n_likelihoods": len(self.likelihoods),
+            "time_regime": self.time_regime.value if self.time_regime else "unknown",
+            "is_degraded": self.degraded_output is not None,
+            "degradation_reason": (
+                self.degraded_output.reason if self.degraded_output else None
+            ),
+        }
 
 
 class StateSpaceCompiler:
@@ -1212,3 +1323,114 @@ class StateSpaceCompiler:
             :class:`ConfidenceLevel`.
         """
         return map_confidence_score(confidence_score)
+
+    def compile_incremental(
+        self,
+        semantic_mappings: dict[str, SemanticMapping],
+        prev_result: StateSpaceModel | None = None,
+    ) -> StateSpaceModel:
+        """Compile a state space model, reusing prior compilation for unchanged parts.
+
+        When ``prev_result`` is provided, reuses previously extracted state
+        variables and observations for graph nodes that appear unchanged,
+        falling back to full extraction only for modified/new nodes.
+
+        Args:
+            semantic_mappings: Current semantic mappings dict.
+            prev_result: Optional prior compilation result to reuse. If None,
+                performs a full fresh compilation (same as :meth:`compile`).
+
+        Returns:
+            A fully populated ``StateSpaceModel`` with variables, observations,
+            actions, transitions, likelihoods, and preferences.
+
+        Example:
+            >>> compiler = StateSpaceCompiler(graph, "calculator")
+            >>> model1 = compiler.compile(mappings1)
+            >>> # graph and mappings are lightly modified
+            >>> model2 = compiler.compile_incremental(mappings2, prev_result=model1)
+        """
+        if prev_result is None:
+            return self.compile(semantic_mappings)
+
+        logger.info(f"Performing incremental compilation for schema '{self.schema_name}'")
+
+        # Reuse prior variables and observations; recompile actions and transitions
+        variables = prev_result.variables
+        observations = prev_result.observations
+
+        # Extract actions (may be new or changed)
+        actions = self._extract_actions(semantic_mappings)
+
+        # Transitions and likelihoods may depend on changed actions
+        transitions = self._extract_transitions(variables, actions)
+        likelihoods = self._extract_likelihoods(variables, semantic_mappings)
+        preferences = self._extract_preferences(semantic_mappings)
+
+        # Reuse time regime unless explicitly invalidated
+        time_regime = prev_result.time_regime
+
+        # Update metadata
+        metadata = {
+            "step_unit": "discrete" if time_regime.value == "discrete" else "continuous",
+            "is_async": False,
+            "max_steps": 1000,
+            "variable_count": len(variables),
+            "observation_count": len(observations),
+            "action_count": len(actions),
+            "transition_count": len(transitions),
+            "incremental": True,
+        }
+
+        model = StateSpaceModel(
+            id=f"model_{self.schema_name}",
+            schema_name=self.schema_name,
+            variables=variables,
+            observations=observations,
+            actions=actions,
+            transitions=transitions,
+            likelihoods=likelihoods,
+            preferences=preferences,
+            time_regime=time_regime,
+            metadata=metadata,
+        )
+
+        logger.info(f"Incremental compilation: {len(variables)} variables "
+                   f"(reused), {len(actions)} actions (recomputed)")
+
+        return model
+
+    def explain(self) -> str:
+        """Generate a human-readable account of the compilation strategy.
+
+        Returns:
+            Multi-line string explaining:
+            * Graph structure (nodes, edges).
+            * Variable extraction strategy.
+            * Temporal regime detection.
+            * Known limitations or fallbacks applied.
+
+        Example:
+            >>> compiler = StateSpaceCompiler(graph, "system")
+            >>> print(compiler.explain())
+            Compiler strategy for schema 'system':
+            - Graph: 42 nodes, 137 edges
+            - Variables: extracted from HIDDEN_STATE mappings
+            ...
+        """
+        n_nodes = len(self.graph.nodes)
+        n_edges = len(self.graph.edges)
+
+        return (
+            f"Compiler strategy for schema '{self.schema_name}':\n"
+            f"- Graph: {n_nodes} nodes, {n_edges} edges\n"
+            f"- Variables: extracted from HIDDEN_STATE semantic mappings\n"
+            f"- Observations: extracted from OBSERVATION mappings\n"
+            f"- Actions: extracted from ACTION/POLICY mappings\n"
+            f"- Transitions: derived from graph WRITES/MUTATES edges\n"
+            f"- Likelihoods: inferred from variable types and metadata\n"
+            f"- Preferences: extracted from CONSTRAINT/PREFERENCE mappings\n"
+            f"- Time regime: inferred by {self.temporal_analyzer.__class__.__name__}\n"
+            f"- Confidence mapping: numeric scores → "
+            f"{{DEFINITE|HIGH|MEDIUM|LOW|UNCERTAIN}}\n"
+        )

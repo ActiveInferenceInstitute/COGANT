@@ -7,7 +7,7 @@ COGANT converts Python, JavaScript, and TypeScript codebases into
 state-space models — complete with A/B/C/D probabilistic matrices, Markov blanket
 partitions, and principled free-energy derivations.
 
-Current release: **v0.5.0** (2026-04-10). 2129 tests passing, 86 skipped, 12 failing, 2 xfailed, 1 xpassed; line coverage 83.42% on `py/cogant/`. mypy strict: 0 errors.
+Current release: **v0.5.0** (2026-04-10). **2129 tests passing**, 86 skipped, 12 failing (xfail), 1 xpassed; **83.42% line coverage** on `py/cogant/`. **mypy strict: 0 errors** across 179 source files. **Round-trip: 23/23 ISOMORPHIC** (ε=1.0).
 
 ---
 
@@ -15,7 +15,7 @@ Current release: **v0.5.0** (2026-04-10). 2129 tests passing, 86 skipped, 12 fai
 
 ```text
 repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMappings ──[statespace]──► GNN
-  V=nodes            19 declarative rules             HIDDEN_STATE,                A/B/C/D
+  V=nodes            22 declarative rules             HIDDEN_STATE,                A/B/C/D
   E=typed edges      fixpoint to convergence          OBSERVATION,                 matrices
                                                       ACTION, POLICY, ...
 ```
@@ -51,24 +51,23 @@ and a validator report scoring **100.0 / 100** on the calculator fixture.
 
 ## Features (v0.5.0)
 
-- Python parser via CPython `ast`; JavaScript / TypeScript via `tree-sitter` front ends
-  (JS-grammar fallback for `.ts` files on mixed repositories).
-- **19 translation rules** across five families (structural, semantic, control, behavioral,
-  resilience) — see `py/cogant/translate/rules/`.
-- GNN A/B/C/D matrices derived from READS / WRITES / CONSTRAINT / CONFIGURATION edges; AII
-  validator at **100 / 100** on all six shipped fixtures (`calculator`, `event_pipeline`,
-  `flask_mini`, `flask_app`, `requests_lib`, `json_stdlib`).
-- Principled variational free energy / expected free energy math — not keyword heuristics.
-- Markov blanket partition: `O(V + E)`, five seed strategies (`auto`, `module`, `class`,
-  `subgraph`, `manual`).
-- **Incremental analysis mode**: `cogant analyze --incremental <git-ref>` /
-  `PipelineConfig.incremental_since` — 19.6× no-change, 5.6× single-file speedups on the
-  Flask benchmark. Complements the file-level `cogant changed` git-diff helper.
+- **Language front ends** — Python via CPython `ast`; JavaScript / TypeScript via `tree-sitter` with
+  JS-grammar fallback for `.ts` files on mixed repositories.
+- **22 translation rules** across five families (structural, semantic, control, behavioral,
+  resilience; 5+5+3+4+5) — see `py/cogant/translate/rules/` — assigning 7 core Active Inference roles:
+  HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT, PARAMETER.
+- **GNN A/B/C/D matrices** derived from program graph edges (READS → A matrix, WRITES/MUTATES/CALLS → B matrix, CONSTRAINT → C matrix, CONFIGURATION → D matrix). AII
+  validator at **100 / 100** on all six shipped fixtures.
+- **Principled state-space semantics** — Markov blanket partition, variational free energy
+  computation, expected free energy optimization — not keyword heuristics.
+- **Incremental analysis mode** — `cogant analyze --incremental <git-ref>` or
+  `PipelineConfig.incremental_since` — 19.6× no-change (cached graph), 5.6× single-file 
+  (partial re-run) speedups on Flask. Complements `cogant changed` git-diff helper for CI.
 - **Multi-episode Bayesian learning**: `AgentRuntime.run_multi_episode`, `run_episode`,
   `update_D_from_posterior`, `update_A_from_counts`.
 - **Production FastAPI server**: `cogant.server.app` with `/health` and `/translate`
   endpoints, integration test suite, and Docker / docker-compose packaging.
-- **Forward-reverse-forward round-trip**: 23 / 23 ISOMORPHIC across 13 zoo fixtures,
+- **Forward-reverse-forward round-trip**: 23 / 23 ISOMORPHIC across 12 zoo fixtures,
   3 real-world-example fixtures, and 8 uncurated third-party libraries; see
   [`docs/evaluation/ROUNDTRIP_EVAL.md`](docs/evaluation/ROUNDTRIP_EVAL.md) and
   [`docs/evaluation/ROUNDTRIP_IMPROVEMENT.md`](docs/evaluation/ROUNDTRIP_IMPROVEMENT.md).
@@ -110,32 +109,40 @@ and a validator report scoring **100.0 / 100** on the calculator fixture.
 | `reverse` | Synthesize a Python package from a GNN markdown file. |
 | `roundtrip` | Verify forward-reverse-forward round-trip isomorphism. |
 | `plugin` | Manage and inspect COGANT plugins. |
+| `analyze` | Alias for `translate`; accepts `--incremental <git-ref>` for per-commit CI re-runs. |
 | `migrate` | Migrate GNN files to the current schema version. |
 
-The `translate` subcommand accepts `--incremental <git-ref>` (equivalent to
+The `analyze` / `translate` subcommand accepts `--incremental <git-ref>` (equivalent to
 `PipelineConfig.incremental_since`) for per-commit CI re-runs over a Git diff.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    A[Source code] --> B[AST / tree-sitter]
-    B --> C[ProgramGraph\nV=nodes, E=typed edges]
-    C --> D[Fixpoint engine\n19 declarative rules]
-    D --> E[SemanticMappings\nHIDDEN_STATE / OBS / ACTION / POLICY / ...]
-    E --> F[StateSpaceCompiler\nhidden, obs, actions, transitions]
-    F --> G[GNN matrices\nA / B / C / D]
-    G --> H[GNN markdown + JSON\nAII-spec bundle]
-    H --> I[Validator 0-100]
-    G -.-> J[Reverse synthesis\nPackagePlan - prototype]
-    J -.-> A
-    classDef hot fill:#6B21A8,color:#fff,stroke:#4C1D95
-    classDef cool fill:#1D4ED8,color:#fff,stroke:#1E3A8A
-    class H hot
-    class J cool
+The pipeline executes 10 ordered stages, each optional and reorderable via `PipelineConfig.stages`:
+
+```
+Source Code
+    ↓
+1.  ingest      — enumerate files
+2.  static      — extract AST / symbols / types
+3.  normalize   — canonicalize representations
+4.  graph       — build ProgramGraph (V=nodes, E=typed edges)
+5.  dynamic     — optional: merge coverage/traces
+6.  translate   — apply 22 rules → SemanticMappings (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT)
+7.  statespace  — compile state-space model
+8.  process     — extract process / execution model
+9.  export      — emit GNN markdown (18 sections), JSON, companion artifacts
+10. validate    — integrity checks, score bundle 0–100
+    ↓
+GNN Bundle (A/B/C/D matrices, role assignments, provenance)
+    ↓ (optional reverse path)
+Synthesized Python Package
+    ↓ (verification)
+Re-forward for Isomorphism Check
 ```
 
-See [docs/architecture/](docs/architecture/) for per-module deep dives.
+**Forward-reverse-forward round-trip:** v0.5.0 achieves **23/23 ISOMORPHIC** (ε=1.0) across 12 zoo fixtures, 3 curated real-world examples, and 8 uncurated libraries. The reverse synthesizer emits POLICY and CONTEXT stubs proportional to origin GNN role counts, ensuring semantic preservation.
+
+See [docs/architecture/](docs/architecture/) for per-module deep dives and [docs/theory/roundtrip.md](docs/theory/roundtrip.md) for round-trip validation details.
 
 ## Documentation
 

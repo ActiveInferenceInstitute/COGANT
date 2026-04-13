@@ -24,6 +24,8 @@ from cogant.schemas.semantic import (
 )
 from cogant.translate.engine import TranslationRule
 
+__all__ = ["ConfigRule", "FeatureFlagRule", "ParameterRule"]
+
 
 class ConfigRule(TranslationRule):
     """Maps configuration files and structures to context priors.
@@ -197,6 +199,118 @@ class FeatureFlagRule(TranslationRule):
     def name(self) -> str:
         """Stable identifier for this rule."""
         return "feature_flag"
+
+    @property
+    def mapping_kind(self) -> MappingKind:
+        """GNN mapping kind produced by this rule."""
+        return MappingKind.CONTEXT
+
+
+class ParameterRule(TranslationRule):
+    """Maps learnable parameters and hyperparameters to context priors.
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.85)``. **High band** (0.85), tied
+        with ``PreferenceRule``/``TestAssertionRule``. Rationale:
+        learnable parameters are semantic ground truth for context —
+        they control system behavior but are not part of the observation,
+        action, or policy logic. Patterns: ``param_``, ``weight_``,
+        ``hyperparameter``, ``learning_rate``, typed dataclass fields
+        (float/int), module-level configuration assignments.
+        TODO(calibration): validate that parameter detection covers
+        ML frameworks (PyTorch, TensorFlow, scikit-learn) on the
+        20-repo corpus.
+    """
+
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
+        """Find learnable parameters and hyperparameters.
+
+        Args:
+            graph: Program graph.
+            query: Graph query engine.
+
+        Returns:
+            List of matched parameter nodes.
+        """
+        matches = []
+
+        parameter_keywords = [
+            "param_", "weight_", "hyperparameter", "learning_rate",
+            "lr", "beta", "gamma", "alpha", "theta", "lambda_",
+        ]
+
+        # Find variables with parameter keywords
+        variables = graph.get_nodes_by_kind(NodeKind.VARIABLE)
+        for var in variables:
+            name_lower = var.name.lower()
+            if any(kw in name_lower for kw in parameter_keywords):
+                matches.append({
+                    "node_id": var.id,
+                    "parameter_type": "variable",
+                })
+
+        # Find classes that are parameter/config dataclasses or contain float/int fields
+        classes = graph.get_nodes_by_kind(NodeKind.CLASS)
+        for cls in classes:
+            name_lower = cls.name.lower()
+            is_param_class = any(kw in name_lower for kw in ["param", "config", "settings", "hyperparameter"])
+
+            if is_param_class:
+                matches.append({
+                    "node_id": cls.id,
+                    "parameter_type": "class",
+                })
+
+        return matches
+
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
+        """Create context mapping for learnable parameter.
+
+        Args:
+            graph: Program graph.
+            match: Matched pattern.
+
+        Returns:
+            SemanticMapping for context.
+        """
+        node_id = match["node_id"]
+        node = graph.get_node(node_id)
+
+        if not node:
+            return None
+
+        mapping_id = f"param_{node_id}_{hashlib.sha256(b'parameter').hexdigest()[:8]}"
+
+        # Confidence 0.85 — principled default (high band). Learnable
+        # parameters are semantic ground truth for context — they control
+        # system behavior but are not part of observation/action/policy.
+        # Parser certainty 0.90 for variables (AST-native), 0.85 for
+        # classes (dataclass detection is slightly less precise).
+        param_type = match.get("parameter_type", "variable")
+        parser_certainty = 0.9 if param_type == "variable" else 0.85
+
+        return SemanticMapping(
+            id=mapping_id,
+            kind=MappingKind.CONTEXT,
+            graph_fragment_node_ids=[node_id],
+            semantic_label=f"{node.name} - Learnable Parameter",
+            description=f"{'Variable' if param_type == 'variable' else 'Class'} '{node.name}' defines learnable parameters",
+            confidence_score=0.85,  # principled default (high band)
+            confidence_tier=ConfidenceTier.STATIC_ONLY,
+            provenance=[
+                ProvenanceRecord(
+                    source="static_analysis",
+                    confidence=0.85,
+                )
+            ],
+            evidence_count=1,
+            parser_certainty=parser_certainty,
+        )
+
+    @property
+    def name(self) -> str:
+        """Stable identifier for this rule."""
+        return "parameter"
 
     @property
     def mapping_kind(self) -> MappingKind:

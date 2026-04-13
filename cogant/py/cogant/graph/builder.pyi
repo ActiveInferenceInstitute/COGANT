@@ -1,6 +1,6 @@
-from typing import Any
+from __future__ import annotations
 
-from _typeshed import Incomplete as Incomplete
+from typing import Any
 
 from cogant.schemas.core import Edge as Edge
 from cogant.schemas.core import EdgeKind as EdgeKind
@@ -9,9 +9,9 @@ from cogant.schemas.core import NodeKind as NodeKind
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 class ProgramGraphBuilder:
-    repo_uri: Incomplete
-    identity_resolver: Incomplete
-    graph: Incomplete
+    repo_uri: str
+    identity_resolver: Any
+    graph: ProgramGraph
     def __init__(self, repo_uri: str) -> None: ...
     def add_node(self, kind: NodeKind, name: str, qualified_name: str, path: str | None = None, language: str | None = None, source_range: dict[str, Any] | None = None, metadata: dict[str, Any] | None = None) -> Node: ...
     def add_edge(self, source_id: str, target_id: str, kind: EdgeKind, weight: float = 1.0, metadata: dict[str, Any] | None = None, evidence_sources: list[str] | None = None) -> Edge | None: ...

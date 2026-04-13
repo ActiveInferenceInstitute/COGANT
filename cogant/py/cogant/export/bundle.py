@@ -2,11 +2,13 @@
 Bundle exporter - orchestrates full export to multiple formats.
 
 Writes GNN markdown, JSON, GraphML, Parquet, HTML, and provenance bundle
-to output directory with manifest.
+to output directory with manifest. Supports ZIP archive and provenance metadata.
 """
 
+import hashlib
 import json
 import logging
+import zipfile
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -278,9 +280,124 @@ class BundleExporter:
             "metadata": manifest.metadata,
         }
 
+    def export_zip(self, output_path: str) -> str:
+        """
+        Export GNN bundle and artifacts as a ZIP archive.
+
+        Creates a portable ZIP file containing all exported formats,
+        manifest, and metadata in a single file suitable for distribution
+        or archival.
+
+        Args:
+            output_path: Path where ZIP archive should be written.
+
+        Returns:
+            Path to the created ZIP archive.
+        """
+        logger.info(f"Exporting bundle as ZIP: {output_path}")
+
+        zip_path = Path(output_path)
+        zip_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Export all formats first
+        temp_dir = self.output_dir / ".temp_zip"
+        temp_dir.mkdir(parents=True, exist_ok=True)
+
+        # Re-export to temp directory
+        temp_exporter = BundleExporter(
+            self.graph,
+            self.state_space,
+            self.process,
+            self.mappings,
+            temp_dir,
+        )
+        temp_exporter.export()
+
+        # Create ZIP archive
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+            for file_path in temp_dir.rglob("*"):
+                if file_path.is_file():
+                    arcname = file_path.relative_to(temp_dir)
+                    zf.write(file_path, arcname)
+
+        # Clean up temp directory
+        import shutil
+
+        shutil.rmtree(temp_dir)
+
+        logger.info(f"Created ZIP archive: {output_path}")
+        return str(zip_path)
+
+    def export_with_provenance(
+        self,
+        bundle: dict[str, Any],
+        pipeline_config: dict[str, Any],
+        output_path: str,
+    ) -> str:
+        """
+        Export GNN bundle with complete provenance metadata.
+
+        Includes source hash, timestamp, COGANT version, and full configuration
+        to enable reproducibility and traceability of the analysis.
+
+        Args:
+            bundle: GNN bundle dictionary to export.
+            pipeline_config: Pipeline configuration used to generate bundle.
+            output_path: Path where JSON bundle with provenance should be written.
+
+        Returns:
+            Path to the written bundle file.
+        """
+        logger.info(f"Exporting bundle with provenance: {output_path}")
+
+        output_file = Path(output_path)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        # Get COGANT version
+        try:
+            from cogant import __version__
+
+            cogant_version = __version__
+        except (ImportError, AttributeError):
+            cogant_version = "unknown"
+
+        # Create provenance metadata
+        provenance: dict[str, Any] = {
+            "timestamp": datetime.now().isoformat(),
+            "cogant_version": cogant_version,
+            "config": pipeline_config,
+            "source_metadata": {
+                "repo_uri": self.graph.metadata.repo_uri,
+                "languages": list(self.graph.metadata.languages),
+                "node_count": len(self.graph.nodes),
+                "edge_count": len(self.graph.edges),
+            },
+        }
+
+        # Compute source content hash
+        source_hash = self._compute_bundle_hash(bundle)
+        provenance["content_hash"] = source_hash
+
+        # Create bundle with provenance
+        bundle_with_provenance: dict[str, Any] = {
+            "provenance": provenance,
+            "bundle": bundle,
+        }
+
+        # Write to file
+        with open(output_file, "w") as f:
+            json.dump(bundle_with_provenance, f, indent=2, default=str)
+
+        logger.info(f"Exported bundle with provenance: {output_path}")
+        return str(output_file)
+
+    def _compute_bundle_hash(self, bundle: dict[str, Any]) -> str:
+        """Compute SHA256 hash of bundle content."""
+        bundle_json = json.dumps(bundle, sort_keys=True, default=str)
+        return hashlib.sha256(bundle_json.encode()).hexdigest()
+
     def _compute_checksum(self, file_path: Path) -> str:
         """Compute SHA256 checksum of a file."""
-        import hashlib
         sha256_hash = hashlib.sha256()
         with open(file_path, "rb") as f:
             for byte_block in iter(lambda: f.read(4096), b""):

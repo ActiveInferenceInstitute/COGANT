@@ -1,10 +1,8 @@
+from typing import Any
+
 from dataclasses import dataclass, field
 
-from _typeshed import Incomplete as Incomplete
-
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
-
-logger: Incomplete
 
 @dataclass
 class RetryPolicy:
@@ -32,7 +30,7 @@ class CircuitBreakerPolicy:
     timeout: float = ...
 
 class PolicyExtractor:
-    graph: Incomplete
+    graph: Any
     retry_policies: dict[str, RetryPolicy]
     branching_policies: dict[str, BranchingPolicy]
     circuit_breaker_policies: dict[str, CircuitBreakerPolicy]

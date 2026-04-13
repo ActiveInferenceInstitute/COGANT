@@ -18,7 +18,8 @@ The hub listing all module areas is [`reference/documentation_modules.md`](refer
 
 ## Tooling
 
-*   [`fix_links.py`](fix_links.py) — rewrites legacy monolith filenames to `../<module>/README.md`. `DOCS_DIR` is `Path(__file__).resolve().parent`.
+*   [`fix_links.py`](fix_links.py) — rewrites legacy monolith filenames to `../<module>/README.md`. `DOCS_DIR` is `Path(__file__).resolve().parent`. If a module folder lacks `AGENTS.md`, the script writes a **minimal stub**; replace that stub with a real module index the first time you edit that directory.
 *   `split_docs.py` — splits a monolithic guide into section files; empty heading slugs become `_unnamed_section_<n>.md` (never `.md` alone). Lives next to `fix_links.py` in this directory when present in the checkout; it is not part of the MkDocs-published page set.
-*   `verify_doc_links.py` — checks relative links from Markdown under `docs/` against the package root (parent of `docs/`). Run after editing cross-links to `py/`, `specs/`, or `examples/` (same directory as `fix_links.py` when checked in).
+*   [`verify_doc_links.py`](verify_doc_links.py) — checks relative links from Markdown under `docs/` against the package root (parent of `docs/`). Run after editing cross-links to `py/`, `specs/`, or `examples/` (same directory as `fix_links.py` when checked in).
+*   [`verify_manuscript_links.py`](verify_manuscript_links.py) — checks relative links from `manuscript/*.md` (sibling of this package root) that resolve inside the git work tree; links beginning with `../../../` are skipped (they target the parent template checkout). Run from the package root: `uv run python docs/verify_manuscript_links.py`.
 *   **Changelog** — [`changelog.md`](changelog.md) mirrors the root `CHANGELOG.md` for MkDocs. Edit **`CHANGELOG.md`** at the repository root, then `cp CHANGELOG.md docs/changelog.md`. The **Changelog** section in root **`CONTRIBUTING.md`** describes the workflow.

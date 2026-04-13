@@ -1,11 +1,9 @@
+from __future__ import annotations
+
 import ast
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
 
 @dataclass
 class DataFlowEdge:
@@ -18,18 +16,30 @@ class DataFlowEdge:
     context: str = ...
     metadata: dict[str, Any] = field(default_factory=dict)
 
+@dataclass
+class DataFlowGraph:
+    edges: list[DataFlowEdge] = field(default_factory=list)
+    nodes: set[str] = field(default_factory=set)
+    def add_edge(self, edge: DataFlowEdge) -> None: ...
+    def find_sources(self) -> list[str]: ...
+    def find_sinks(self) -> list[str]: ...
+    def get_taint_paths(self, source: str, sink: str) -> list[list[str]]: ...
+    def to_dict(self) -> dict[str, Any]: ...
+
 class DataFlowAnalyzer:
-    repo_root: Incomplete
-    parser: Incomplete
-    symbol_extractor: Incomplete
+    repo_root: Path | None
+    parser: Any
+    symbol_extractor: Any
     def __init__(self, repo_root: Path | None = None) -> None: ...
     def analyze_file(self, file_path: Path) -> list[DataFlowEdge]: ...
     def analyze_source(self, source: str, file_path: Path) -> list[DataFlowEdge]: ...
+    def build_flow_graph(self, file_path: Path) -> DataFlowGraph: ...
+    def build_flow_graph_from_source(self, source: str, file_path: Path) -> DataFlowGraph: ...
 
 class DataFlowVisitor(ast.NodeVisitor):
-    file_path: Incomplete
-    context: Incomplete
-    symbol_extractor: Incomplete
+    file_path: Path
+    context: str
+    symbol_extractor: Any
     flows: list[DataFlowEdge]
     def __init__(self, file_path: Path, context: str, body: list[ast.stmt], symbol_extractor: Any | None = None) -> None: ...
     def visit_Assign(self, node: ast.Assign) -> None: ...

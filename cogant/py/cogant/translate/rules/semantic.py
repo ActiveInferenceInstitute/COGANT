@@ -36,6 +36,8 @@ __all__ = [
 
 OBSERVATION_KEYWORDS = [
     "get", "read", "fetch", "query", "display", "show", "status", "info", "list",
+    "sensor_", "read_", "get_", "fetch_", "receive_", "sense_", "peek", "sample",
+    "inspect", "view", "describe",
 ]
 """Lexical keywords that signal an observation-role function or method.
 
@@ -43,25 +45,29 @@ Chosen from PEP 8 naming conventions and the CPython stdlib corpus (audit
 2026-04-09): ``get_``/``read_``/``fetch_``/``query_`` are the canonical
 accessor prefixes; ``display``/``show``/``status``/``info``/``list`` round
 out the set with UI/introspection verbs commonly attached to observers in
-Python web frameworks (Flask, Django). TODO(calibration): expand the list
-against a frequency analysis of observation methods in the 20-repo corpus
-(see ``docs/evaluation/CALIBRATION.md``). Known gaps: ``peek``, ``sample``,
-``inspect`` — add if they appear.
+Python web frameworks (Flask, Django). Additional prefixes ``sensor_``,
+``receive_``, ``sense_`` capture IoT/event patterns. TODO(calibration): expand
+the list against a frequency analysis of observation methods in the 20-repo
+corpus (see ``docs/evaluation/CALIBRATION.md``). Known gaps: ``peek``, ``sample``,
+``inspect`` — now added.
 """
 
 ACTION_KEYWORDS = [
     "set", "update", "create", "delete", "send", "push", "execute", "run",
     "process", "handle", "dispatch", "encode", "decode", "dump", "load",
+    "act_", "send_", "write_", "execute_", "command_", "emit_", "commit",
+    "rollback", "flush", "apply", "perform", "invoke",
 ]
 """Lexical keywords that signal an action-role function or method.
 
-Chosen from PEP 8 naming conventions plus the CRUD/IO verb set. Note:
-``handle``/``dispatch`` also appear in the POLICY keyword list — this
-is intentional (they genuinely straddle action and policy roles) and is
-resolved by confidence tie-breaking in ``_resolve_conflicts``. Principled
-default. TODO(calibration): measure the action→policy conflict rate on
-``handle``/``dispatch`` matches in the 20-repo corpus. Known gaps:
-``commit``, ``rollback``, ``flush``, ``emit`` — add if frequent.
+Chosen from PEP 8 naming conventions plus the CRUD/IO verb set. Added prefixes
+``act_``, ``send_``, ``write_``, ``execute_``, ``command_``, ``emit_`` to
+capture action-specific patterns. Note: ``handle``/``dispatch`` also appear
+in the POLICY keyword list — this is intentional (they genuinely straddle
+action and policy roles) and is resolved by confidence tie-breaking in
+``_resolve_conflicts``. Principled default. TODO(calibration): measure the
+action→policy conflict rate on ``handle``/``dispatch`` matches in the 20-repo
+corpus. Known gaps: ``commit``, ``rollback``, ``flush``, ``emit`` — now added.
 """
 
 
@@ -260,6 +266,14 @@ class ObservationRule(TranslationRule):
     def mapping_kind(self) -> MappingKind:
         """GNN mapping kind produced by this rule."""
         return MappingKind.OBSERVATION
+
+    def to_gnn_role(self) -> str:
+        """Return the GNN role string for observation mappings.
+
+        Returns:
+            GNN role identifier.
+        """
+        return "OBSERVATION"
 
 
 class ActionRule(TranslationRule):
@@ -465,6 +479,14 @@ class ActionRule(TranslationRule):
         """GNN mapping kind produced by this rule."""
         return MappingKind.ACTION
 
+    def to_gnn_role(self) -> str:
+        """Return the GNN role string for action mappings.
+
+        Returns:
+            GNN role identifier.
+        """
+        return "ACTION"
+
 
 class PolicyRule(TranslationRule):
     """Maps controllers, handlers, and routers to policy modality.
@@ -499,20 +521,34 @@ class PolicyRule(TranslationRule):
         # on ``handle``/``dispatch`` is intentional; conflict resolution
         # in ``_resolve_conflicts`` will pick whichever rule produces
         # higher confidence on that specific match.
-        policy_keywords = ["middleware", "handler", "controller", "manager", "router", "dispatcher", "scheduler", "route", "dispatch", "handle"]
+        policy_keywords = [
+            "middleware", "handler", "controller", "manager", "router", "dispatcher",
+            "scheduler", "route", "dispatch", "handle", "select_", "choose_",
+            "decide_", "plan_", "strategy", "orchestrator", "coordinator", "supervisor"
+        ]
 
         # Find classes
         classes = graph.get_nodes_by_kind(NodeKind.CLASS)
         for cls in classes:
             name_lower = cls.name.lower()
-            if any(kw in name_lower for kw in policy_keywords):
-                out_edges = graph.get_edges_from(cls.id)
-                call_count = sum(1 for e in out_edges if e.kind == EdgeKind.CALLS)
+            has_keyword = any(kw in name_lower for kw in policy_keywords)
 
+            # Check for __call__ method (callable class = decision logic)
+            has_call_method = False
+            out_edges = graph.get_edges_from(cls.id)
+            methods = [graph.get_node(e.target_id) for e in out_edges if e.kind == EdgeKind.CONTAINS]
+            for method in methods:
+                if method and method.name == "__call__":
+                    has_call_method = True
+                    break
+
+            if has_keyword or has_call_method:
+                call_count = sum(1 for e in out_edges if e.kind == EdgeKind.CALLS)
                 matches.append({
                     "node_id": cls.id,
                     "call_count": call_count,
                     "node_type": "class",
+                    "has_call_method": has_call_method,
                 })
 
         # Find functions with policy keywords
@@ -521,7 +557,7 @@ class PolicyRule(TranslationRule):
 
         for node in functions + methods:
             name_lower = node.name.lower()
-            if any(kw in name_lower for kw in ["route", "dispatch", "handle"]):
+            if any(kw in name_lower for kw in policy_keywords):
                 out_edges = graph.get_edges_from(node.id)
                 call_count = sum(1 for e in out_edges if e.kind == EdgeKind.CALLS)
 
@@ -583,6 +619,14 @@ class PolicyRule(TranslationRule):
         """GNN mapping kind produced by this rule."""
         return MappingKind.POLICY
 
+    def to_gnn_role(self) -> str:
+        """Return the GNN role string for policy mappings.
+
+        Returns:
+            GNN role identifier.
+        """
+        return "POLICY"
+
 
 class PreferenceRule(TranslationRule):
     """Maps validators and test functions to preference/constraint modality.
@@ -611,27 +655,29 @@ class PreferenceRule(TranslationRule):
         """
         matches = []
 
-        # Find classes with Validator/Checker in name
+        # Preference/constraint keywords covering cost, reward, objective, loss, utility
+        constraint_keywords = [
+            "validator", "checker", "test_", "assert_", "validate", "check",
+            "cost_", "reward_", "objective_", "loss_", "utility_", "metric",
+        ]
+
+        # Find classes with Validator/Checker/etc in name
         classes = graph.get_nodes_by_kind(NodeKind.CLASS)
         for cls in classes:
             name_lower = cls.name.lower()
-            if "validator" in name_lower or "checker" in name_lower:
+            if any(kw in name_lower for kw in constraint_keywords):
                 matches.append({
                     "node_id": cls.id,
                     "constraint_type": "class",
                 })
 
-        # Find functions/methods with test_, assert_, validate, check
+        # Find functions/methods with constraint keywords
         functions = graph.get_nodes_by_kind(NodeKind.FUNCTION)
         methods = graph.get_nodes_by_kind(NodeKind.METHOD)
 
         for node in functions + methods:
             name_lower = node.name.lower()
-            if (name_lower.startswith("test_") or
-                name_lower.startswith("assert_") or
-                "validate" in name_lower or
-                "check" in name_lower):
-
+            if any(kw in name_lower for kw in constraint_keywords):
                 matches.append({
                     "node_id": node.id,
                     "constraint_type": "function",
@@ -692,6 +738,14 @@ class PreferenceRule(TranslationRule):
         """GNN mapping kind produced by this rule."""
         return MappingKind.CONSTRAINT
 
+    def to_gnn_role(self) -> str:
+        """Return the GNN role string for preference/constraint mappings.
+
+        Returns:
+            GNN role identifier.
+        """
+        return "PREFERENCE"
+
 
 class ContextRule(TranslationRule):
     """Maps configuration and parameter classes to context modality.
@@ -720,7 +774,10 @@ class ContextRule(TranslationRule):
             List of matched context nodes.
         """
         matches = []
-        context_keywords = ["config", "settings", "env", "options", "params"]
+        context_keywords = [
+            "config", "settings", "env", "options", "params",
+            "env_", "world_", "state_", "context_"
+        ]
 
         # Find classes and functions with context keywords
         classes = graph.get_nodes_by_kind(NodeKind.CLASS)
@@ -735,13 +792,16 @@ class ContextRule(TranslationRule):
         # Find functions that only read and return values (read-only + returns)
         functions = graph.get_nodes_by_kind(NodeKind.FUNCTION)
         for func in functions:
+            name_lower = func.name.lower()
             out_edges = graph.get_edges_from(func.id)
             reads = sum(1 for e in out_edges if e.kind == EdgeKind.READS)
             writes = sum(1 for e in out_edges if e.kind == EdgeKind.WRITES)
             returns = sum(1 for e in out_edges if e.kind == EdgeKind.RETURNS)
 
-            # Context function: reads config/state and returns it
-            if reads > 0 and writes == 0 and returns > 0:
+            # Context function: reads config/state and returns it,
+            # OR has context keyword in name
+            has_context_keyword = any(kw in name_lower for kw in context_keywords)
+            if has_context_keyword or (reads > 0 and writes == 0 and returns > 0):
                 matches.append({
                     "node_id": func.id,
                     "context_type": "function",
@@ -798,3 +858,11 @@ class ContextRule(TranslationRule):
     def mapping_kind(self) -> MappingKind:
         """GNN mapping kind produced by this rule."""
         return MappingKind.CONTEXT
+
+    def to_gnn_role(self) -> str:
+        """Return the GNN role string for context mappings.
+
+        Returns:
+            GNN role identifier.
+        """
+        return "CONTEXT"

@@ -23,6 +23,8 @@ __all__ = [
     "StateVariable",
     "FactorizationInfo",
     "StateVariableExtractor",
+    "ObservationVar",
+    "VariableRegistry",
 ]
 
 
@@ -126,6 +128,78 @@ class StateVariable:
     whether this hidden-state variable should expose an observation channel
     in the generated A/B/C/D matrices.
     """
+
+    def __repr__(self) -> str:
+        """Return a detailed string representation of the variable."""
+        return (
+            f"StateVariable(id={self.id!r}, name={self.name!r}, "
+            f"var_type={self.var_type}, cardinality={self.cardinality}, "
+            f"is_discrete={self.is_discrete}, confidence={self.confidence})"
+        )
+
+    def merge(self, other: "StateVariable") -> "StateVariable":
+        """Merge two StateVariable instances into a single combined variable.
+
+        Combines metadata from both variables, preferring non-None values
+        from ``self`` when both are set. Concatenates lists (mutations, reads).
+
+        Args:
+            other: Another StateVariable to merge with this one.
+
+        Returns:
+            A new StateVariable with merged attributes.
+
+        Raises:
+            ValueError: If the variables have conflicting core attributes
+                (e.g., different var_type or node_id).
+
+        Example:
+            >>> v1 = StateVariable(id="var_x", name="x", ...)
+            >>> v2 = StateVariable(id="var_y", name="x_alt", ...)
+            >>> merged = v1.merge(v2)
+        """
+        if self.var_type != other.var_type:
+            raise ValueError(
+                f"Cannot merge variables with different types: "
+                f"{self.var_type} vs {other.var_type}"
+            )
+
+        # Merge confidence, preferring higher confidence
+        merged_confidence = (
+            self.confidence if self.confidence != ConfidenceLevel.MEDIUM
+            else other.confidence
+        )
+
+        # Merge lists
+        merged_mutations = list(set(self.mutations) | set(other.mutations))
+        merged_reads = list(set(self.reads) | set(other.reads))
+
+        # Merge domain if both are set
+        merged_domain = self.domain if self.domain else other.domain
+
+        # Merge factors
+        merged_factors = self.factors if self.factors else other.factors
+        if other.factors:
+            merged_factors = (
+                list(set(self.factors) | set(other.factors))
+                if merged_factors else other.factors
+            )
+
+        return StateVariable(
+            id=self.id,
+            name=self.name,
+            var_type=self.var_type,
+            node_id=self.node_id,
+            cardinality=self.cardinality if self.cardinality else other.cardinality,
+            domain=merged_domain,
+            factors=merged_factors,
+            is_discrete=self.is_discrete and other.is_discrete,
+            confidence=merged_confidence,
+            description=self.description or other.description,
+            mutations=merged_mutations,
+            reads=merged_reads,
+            observable=self.observable or other.observable,
+        )
 
 
 @dataclass
@@ -475,3 +549,195 @@ class StateVariableExtractor:
         # Estimate: each continuous variable adds one dimension
         total_dim = cardinality_product * (2 ** continuous_count) if continuous_count else cardinality_product
         return total_dim
+
+
+@dataclass
+class ObservationVar:
+    """An observable variable in the system.
+
+    Represents one observation modality (sensor, log, metric, event, etc.)
+    that the system can sense. May or may not correspond to a hidden state
+    variable (observable vs hidden state distinction in Active Inference).
+
+    Attributes:
+        id: Stable identifier (``obs_<node_id>``).
+        name: Human-readable name.
+        source_node_id: Graph node id that emits this observation.
+        modality_type: Channel classification (sensor, log, metric, event, other).
+        cardinality: Number of discrete observation outcomes (None if continuous).
+        confidence: Confidence level of the extraction.
+        description: Optional free-text description.
+    """
+    id: str
+    name: str
+    source_node_id: str
+    modality_type: str
+    cardinality: int | None = None
+    confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
+    description: str | None = None
+
+    def __repr__(self) -> str:
+        """Return a detailed string representation of the variable."""
+        return (
+            f"ObservationVar(id={self.id!r}, name={self.name!r}, "
+            f"modality_type={self.modality_type}, cardinality={self.cardinality}, "
+            f"confidence={self.confidence})"
+        )
+
+    def is_compatible_with(self, hidden: StateVariable) -> bool:
+        """Check dimension compatibility between this observation and a hidden state.
+
+        Two variables are compatible if:
+        * Both are discrete with matching cardinality, OR
+        * Both are continuous, OR
+        * One has unknown cardinality (None).
+
+        Args:
+            hidden: A StateVariable to check compatibility with.
+
+        Returns:
+            True if the observation and hidden state can be paired in A matrix.
+
+        Example:
+            >>> obs = ObservationVar(id="obs_x", ..., cardinality=3)
+            >>> hidden = StateVariable(..., cardinality=3)
+            >>> obs.is_compatible_with(hidden)
+            True
+        """
+        # If either has unknown cardinality, assume compatible
+        if self.cardinality is None or hidden.cardinality is None:
+            return True
+
+        # Both discrete: cardinality must match
+        if hidden.is_discrete and self.cardinality == hidden.cardinality:
+            return True
+
+        # Both continuous: compatible
+        if not hidden.is_discrete and self.cardinality is None:
+            return True
+
+        return False
+
+
+class VariableRegistry:
+    """Registry of all variables (hidden and observed) in a state space.
+
+    Provides convenient lookup and filtering methods for upstream and
+    downstream stages that need to query variables by role, type, or
+    other metadata.
+
+    Example:
+        >>> registry = VariableRegistry()
+        >>> registry.add_hidden(var1)
+        >>> registry.add_observation(obs1)
+        >>> hidden_vars = registry.find_by_role("hidden_state")
+    """
+
+    def __init__(self) -> None:
+        """Initialize an empty registry."""
+        self.hidden_vars: dict[str, StateVariable] = {}
+        self.observation_vars: dict[str, ObservationVar] = {}
+
+    def add_hidden(self, var: StateVariable) -> None:
+        """Add a hidden state variable to the registry.
+
+        Args:
+            var: StateVariable to add.
+        """
+        self.hidden_vars[var.id] = var
+
+    def add_observation(self, obs: ObservationVar) -> None:
+        """Add an observation variable to the registry.
+
+        Args:
+            obs: ObservationVar to add.
+        """
+        self.observation_vars[obs.id] = obs
+
+    def get_hidden(self, var_id: str) -> StateVariable | None:
+        """Retrieve a hidden variable by id.
+
+        Args:
+            var_id: Variable id.
+
+        Returns:
+            StateVariable if found, None otherwise.
+        """
+        return self.hidden_vars.get(var_id)
+
+    def get_observation(self, obs_id: str) -> ObservationVar | None:
+        """Retrieve an observation variable by id.
+
+        Args:
+            obs_id: Observation id.
+
+        Returns:
+            ObservationVar if found, None otherwise.
+        """
+        return self.observation_vars.get(obs_id)
+
+    def find_by_role(self, role: str) -> list[StateVariable | ObservationVar]:
+        """Find variables by AII role string.
+
+        Supported roles: ``"hidden_state"``, ``"observation"``.
+
+        Args:
+            role: Role string to filter by.
+
+        Returns:
+            List of matching variables.
+
+        Example:
+            >>> hidden = registry.find_by_role("hidden_state")
+        """
+        if role == "hidden_state":
+            return list(self.hidden_vars.values())
+        elif role == "observation":
+            return list(self.observation_vars.values())
+        else:
+            logger.warning(f"Unknown role: {role}")
+            return []
+
+    def to_list(self) -> list[dict[str, Any]]:
+        """Convert registry to tabular output as list of dicts.
+
+        Each dict represents one variable with keys:
+        * ``id``, ``name``, ``type``, ``role`` (hidden_state or observation)
+        * ``cardinality``, ``confidence``, ``description``
+
+        Returns:
+            List of dictionaries suitable for CSV/tabular export.
+
+        Example:
+            >>> rows = registry.to_list()
+            >>> import csv
+            >>> csv.DictWriter(f, fieldnames=rows[0].keys()).writerows(rows)
+        """
+        rows: list[dict[str, Any]] = []
+
+        for var in self.hidden_vars.values():
+            rows.append({
+                "id": var.id,
+                "name": var.name,
+                "type": var.var_type.value,
+                "role": "hidden_state",
+                "cardinality": var.cardinality,
+                "confidence": var.confidence.value,
+                "description": var.description or "",
+                "is_discrete": var.is_discrete,
+                "observable": var.observable,
+            })
+
+        for obs in self.observation_vars.values():
+            rows.append({
+                "id": obs.id,
+                "name": obs.name,
+                "type": "observation",
+                "role": "observation",
+                "cardinality": obs.cardinality,
+                "confidence": obs.confidence.value,
+                "description": obs.description or "",
+                "modality_type": obs.modality_type,
+            })
+
+        return rows

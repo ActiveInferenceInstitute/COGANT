@@ -1,25 +1,36 @@
-## Compression & Size
+## Compression and size
 
-### Compression Options
+### Compression options
+
+Bundle and export serialization honor `ExportConfig` in `cogant.yaml` / pipeline config:
 
 ```yaml
 export:
-  compression: gzip  # or deflate, bz2, lz4, none
+  compression: gzip   # none | gzip | zstd
+  compression_level: 6  # 1–9 when applicable
 ```
 
-### Size Estimates
+Values outside this set are not accepted by the current schema; extend `ExportConfig` in code before documenting new algorithms here.
 
-| Format | 1K Functions | 10K Functions | 100K Functions |
-|--------|-------------|---------------|----------------|
-| JSON (uncompressed) | 2MB | 20MB | 200MB |
-| JSON (gzip) | 0.3MB | 3MB | 30MB |
-| PyG (no embeddings) | 1MB | 10MB | 100MB |
-| PyG (with embeddings) | 300MB | 3GB | 30GB |
-| HDF5 | 0.5MB | 5MB | 50MB |
+### Size estimates
+
+The table below is **illustrative** — measure on your own corpora (`du`, bundle manifests) before relying on numbers for capacity planning.
+
+| Format | 1K nodes (order of magnitude) | 10K nodes | 100K nodes |
+|--------|------------------------------|-----------|------------|
+| JSON (uncompressed) | ~2 MB | ~20 MB | ~200 MB |
+| JSON (gzip) | ~0.3 MB | ~3 MB | ~30 MB |
+| PyG tensor bundle (no embeddings) | ~1 MB | ~10 MB | ~100 MB |
+| PyG (with name/doc embeddings) | much larger | much larger | much larger |
+
+Embeddings dominate when enabled; keep them off unless you need them.
 
 ### Recommendations
 
-- **Small projects** (<10K funcs): JSON uncompressed
-- **Medium projects** (10-100K funcs): JSON gzip or PyG
-- **Large projects** (>100K funcs): HDF5 or split format
+- **Small graphs:** JSON with defaults is usually enough.
+- **Large graphs:** prefer `gzip` or `zstd`, split work across [incremental export](incremental_export.md) patterns, and use Parquet/GraphML from the main bundle when columnar or tool interop matters.
 
+### See also
+
+- [Overview](overview.md) — full artifact list.
+- [Reproducibility](reproducibility.md) — checksums and manifest fields.

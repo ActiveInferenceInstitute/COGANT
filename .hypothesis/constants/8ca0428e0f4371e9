@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/markov/extractor.py
+# hypothesis_version: 6.135.29
+
+[-1.0, 'auto', 'auto_reason', 'auto_tier', 'candidate_classes', 'candidate_modules', 'chosen_class_id', 'chosen_closure_size', 'chosen_module_id', 'chosen_score', 'class', 'class_aggregate', 'closure_size', 'cohesion', 'coupling', 'empty', 'explicit', 'hidden_state', 'kind', 'kinds', 'mapping_kind', 'mapping_kinds', 'module', 'module_id', 'module_name', 'module_names', 'module_scoreboard', 'no modules present', 'requested_seed_count', 'score', 'scoreboard', 'strategy', 'value']

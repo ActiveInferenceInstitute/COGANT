@@ -22,7 +22,7 @@ The forward pipeline is a six-stage content-preserving transformation:
 
 1. **Source to graph.** Tree-sitter parses the source code into an AST, then COGANT's graph builder extracts a typed [program graph](program_graph.md) with nodes (MODULE, CLASS, FUNCTION, METHOD, VARIABLE) and edges (CALLS, READS, WRITES, IMPORTS, CONTAINS). Information is re-indexed, not discarded -- the graph preserves every structural relationship in the AST except whitespace and comments.
 
-2. **Graph to semantic mappings.** The [rule engine](role_assignment.md) runs 19 translation rules against the graph. Each rule that fires produces a `SemanticMapping` with a confidence score. Conflicts are resolved by `(priority, confidence)` ordering.
+2. **Graph to semantic mappings.** The [rule engine](role_assignment.md) runs 22 translation rules against the graph. Each rule that fires produces a `SemanticMapping` with a confidence score. Conflicts are resolved by `(priority, confidence)` ordering.
 
 3. **Mappings to state space.** The state-space compiler projects the role assignments onto an ordered basis of hidden states, observations, and actions. Each basis element corresponds to a node in the graph.
 

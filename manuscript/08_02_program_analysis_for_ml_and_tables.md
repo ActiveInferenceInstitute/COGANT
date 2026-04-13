@@ -20,7 +20,7 @@ Several systems address the intersection of program analysis and machine learnin
 
 The following matrix contrasts COGANT's capabilities with the related tools discussed in this section. Entries marked "yes" indicate first-class support; "partial" indicates limited or indirect support; "no" indicates the feature is out of scope for that tool.
 
-**Table 8. Feature comparison of program-to-model toolchains.**
+**Table 15. Feature comparison of program-to-model toolchains.**
 
 | Feature | COGANT | code2vec | GGNN | CodeQL | CodeBERT |
 |---------|:------:|:--------:|:----:|:------:|:--------:|
@@ -41,9 +41,9 @@ COGANT is distinct from the other toolchains in three ways: first, it explicitly
 
 ### Input/output comparison vs prior art
 
-Table 8 contrasts fine-grained feature flags; Table 9 expands the frame to include the *input/output contract* of each approach, because the most consequential difference between COGANT and its neighbours is what a user has to supply (training data, hand-written queries, manual modelling) and what they get back (vector, query table, simulator-ready model). The comparison covers code-representation learning (code2vec), learned graph models for programs (GGNN, Typilus, LambdaNet), code-property-graph-based analysers (CodeQL, the original Joern/CPG line), compiler IRs (PDG, LLVM IR, MLIR), and Active Inference tooling (hand-authored GNN with PyMDP as the downstream runtime).
+Table 15 contrasts fine-grained feature flags; Table 16 expands the frame to include the *input/output contract* of each approach, because the most consequential difference between COGANT and its neighbours is what a user has to supply (training data, hand-written queries, manual modelling) and what they get back (vector, query table, simulator-ready model). The comparison covers code-representation learning (code2vec), learned graph models for programs (GGNN, Typilus, LambdaNet), code-property-graph-based analysers (CodeQL, the original Joern/CPG line), compiler IRs (PDG, LLVM IR, MLIR), and Active Inference tooling (hand-authored GNN with PyMDP as the downstream runtime).
 
-**Table 9. Input/output comparison of COGANT and prior approaches.**
+**Table 16. Input/output comparison of COGANT and prior approaches.**
 
 | Approach | Primary input | Primary output | Requires training | Languages (as shipped) | Produces Active Inference model |
 |---|---|---|:---:|---|:---:|

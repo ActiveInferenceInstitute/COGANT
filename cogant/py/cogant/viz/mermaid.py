@@ -605,3 +605,109 @@ class MermaidGenerator:
             result["flowchart"] = self.generate_flowchart(graph, mappings)
 
         return result
+
+    def render_active_inference_diagram(self, state_space: StateSpaceModel) -> str:
+        """
+        Render the full Active Inference model as a Mermaid state diagram.
+
+        Shows the complete feedback loop with:
+        - Hidden state factorization
+        - Observation distribution (A matrix)
+        - Transition model (B matrix)
+        - Policy and preference integration
+        - Full agent loop visualization
+
+        Args:
+            state_space: StateSpaceModel to visualize.
+
+        Returns:
+            Mermaid diagram syntax (graph or stateDiagram-v2).
+        """
+        return self.generate_active_inference_diagram(state_space)
+
+    def render_rule_firing_trace(self, explanations: list[Any]) -> str:
+        """
+        Render which semantic translation rules fired as a sequence diagram.
+
+        Shows the order and dependencies of rule firings in the translation engine.
+
+        Args:
+            explanations: List of rule explanations/trace entries.
+
+        Returns:
+            Mermaid sequence diagram syntax as string.
+        """
+        lines = ["sequenceDiagram"]
+
+        # Add Rule Engine as a participant
+        lines.append("    participant Rules as Translation Rules")
+        lines.append("    participant Engine as Rule Engine")
+        lines.append("    participant Graph as Program Graph")
+
+        # Track which rules have been added
+        added_rules: set[str] = set()
+
+        # Process explanations in order
+        for i, expl in enumerate(explanations):
+            rule_name = expl.get("rule", f"Rule {i}") if isinstance(expl, dict) else str(expl)
+            rule_safe = rule_name.replace(" ", "_")[:20]
+
+            if rule_safe not in added_rules:
+                lines.append(f"    Engine->>Rules: Fire {rule_safe}")
+                lines.append("    Rules->>Graph: Apply transformation")
+                lines.append("    Graph-->>Rules: Graph updated")
+                lines.append("    Rules-->>Engine: Rule complete")
+                added_rules.add(rule_safe)
+
+        return "\n".join(lines) if len(lines) > 1 else "sequenceDiagram\n    participant None"
+
+    def render_markov_blanket(self, blanket: Any) -> str:
+        """
+        Render a Markov blanket partition as Mermaid subgraph clusters.
+
+        Shows internal nodes, boundary nodes, and external nodes with color coding.
+
+        Args:
+            blanket: Markov blanket partition object with internal/boundary/external nodes.
+
+        Returns:
+            Mermaid graph TD syntax with colored subgraphs.
+        """
+        lines = ["graph TD"]
+
+        # Extract blanket components
+        internal_nodes = blanket.get("internal", []) if isinstance(blanket, dict) else getattr(blanket, "internal", [])
+        boundary_nodes = blanket.get("boundary", []) if isinstance(blanket, dict) else getattr(blanket, "boundary", [])
+        external_nodes = blanket.get("external", []) if isinstance(blanket, dict) else getattr(blanket, "external", [])
+
+        # Add internal nodes in blue subgraph
+        if internal_nodes:
+            lines.append("    subgraph internal['Internal (Focus)']")
+            for node in internal_nodes[:10]:
+                node_id = str(node).replace("-", "_").replace(".", "_")
+                lines.append(f"        {node_id}['{str(node)[:20]}']")
+            lines.append("    end")
+
+        # Add boundary nodes in yellow subgraph
+        if boundary_nodes:
+            lines.append("    subgraph boundary['Markov Blanket (Boundary)']")
+            for node in boundary_nodes[:10]:
+                node_id = str(node).replace("-", "_").replace(".", "_")
+                lines.append(f"        {node_id}['{str(node)[:20]}']")
+            lines.append("    end")
+
+        # Add external nodes in gray subgraph
+        if external_nodes:
+            lines.append("    subgraph external['External (Context)']")
+            for node in external_nodes[:10]:
+                node_id = str(node).replace("-", "_").replace(".", "_")
+                lines.append(f"        {node_id}['{str(node)[:20]}']")
+            lines.append("    end")
+
+        # Add styling
+        lines.append("")
+        lines.append("    style internal fill:#C8E6C9,stroke:#00AA00,stroke-width:2px")
+        lines.append("    style boundary fill:#FFF9C4,stroke:#FBC02D,stroke-width:2px")
+        lines.append("    style external fill:#F5F5F5,stroke:#999999,stroke-width:2px")
+
+        return "\n".join(lines)

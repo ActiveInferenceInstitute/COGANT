@@ -1,8 +1,10 @@
 # Appendix D — Inference Loop Mathematics
 
 This appendix formalizes the discrete-time active inference loop executed
-by `cogant process` on the extracted A/B/C/D matrices and reported in
-Section 5 (Table of VFE traces) and `../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`. The
+by `cogant process` on the extracted A/B/C/D matrices and reported
+empirically in [`../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`](../cogant/docs/evaluation/EMPIRICAL_CLAIM.md)
+(VFE trace tables per zoo fixture). The variational free-energy discussion in
+[`05_conclusion.md`](05_conclusion.md) ties the same functions to shipped capabilities. The
 formalism follows Da Costa et al. (2020) and the pymdp reference
 (Heins et al., 2022); we restate it here in notation consistent with
 COGANT's `cogant.process` module.

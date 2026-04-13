@@ -6,7 +6,7 @@ Template-aligned Markdown for **COGANT** (Codebase-to-GNN Translation): theory o
 
 ## Section files
 
-Stem order follows [`../../../infrastructure/rendering/manuscript_discovery.py`](../../../infrastructure/rendering/manuscript_discovery.py): digit-prefixed names sort lexicographically, so `02_01_…` fragments appear before `03_…`, and `06_01_…` before `07_…`.
+Stem order follows [`../../../infrastructure/rendering/manuscript_discovery.py`](../../../infrastructure/rendering/manuscript_discovery.py): digit-prefixed names sort lexicographically, so `02_01_…` fragments appear before `03_…`, and `06_01_…` before `07_…`. Discovery concatenates main sections (`00_`–`09_`), then supplemental appendices (`S01_`–`S06_`), then glossary files (`98_`), yielding 36 files in the full publication tree.
 
 | Files | Contents |
 |------|-----------|
@@ -19,21 +19,25 @@ Stem order follows [`../../../infrastructure/rendering/manuscript_discovery.py`]
 | `03_api_and_workflows.md` | Session, pipeline, bundle, CLI, Review API |
 | `04_examples_and_failure_modes.md` | End-to-end examples and degradation behavior |
 | `05_conclusion.md` | Capabilities, limitations, roadmap |
+| `06_experimental_setup.md` | **Section aggregator** — chapter heading and forward pointers to `06_01_`–`06_05_` subsections; contains no standalone prose |
 | `06_01_environment_api_and_config.md` | Environment, Session/Pipeline snippets, YAML config, CLI |
 | `06_02_exports_parser_and_ir_stages.md` | Export targets, Python parser, IR stage table |
 | `06_03_performance_and_fixture_metrics.md` | Performance targets, fixture tables |
 | `06_04_tests_mutation_and_benchmarks.md` | Test matrix, mutation notes, benchmark harness |
 | `06_05_reproducible_recording.md` | What to record for reproducibility |
 | `07_reproducibility.md` | Versioning, determinism, validation gates |
+| `08_scope_and_related_work.md` | **Section aggregator** — chapter heading, scope statement, and forward pointers to `08_01_`–`08_04_` subsections |
 | `08_01_landscape_and_tool_categories.md` | Landscape and tool categories |
 | `08_02_program_analysis_for_ml_and_tables.md` | ML-related work and feature / I/O tables |
 | `08_03_lenses_and_synthesis.md` | Lenses, synthesis, categorical framing |
 | `08_04_world_models_boundaries_and_compatibility.md` | World models, active inference, boundaries |
 | `09_ablation.md` | Rule-family and matrix ablations |
 
-**Supplemental appendices** (`S01_`–`S06_`): see [`supplementary.md`](supplementary.md) for the index.
+**Supplemental appendices** (`S01_`–`S06_`): see [`supplementary.md`](supplementary.md) for the index. Currently six appendices — A (roundtrip ε), B (ablation), C (Galois sketch), D (inference math), E (extended related work), F (source references).
 
-Supporting files: `config.yaml`, `preamble.md`, `references.bib`, `SYNTAX.md`.
+**Glossary / notation** (`98_`): `98_notation_supplement.md` — canonical reference for every mathematical symbol, acronym, and formal object used across the manuscript (Groups G.1–G.9). Discovery places this after the appendices and before the `99_` references.
+
+Supporting files (not concatenated into PDF): `config.yaml`, `config.yaml.example`, `preamble.md`, `references.bib`, `SYNTAX.md`, `AGENTS.md`, `README.md`, `supplementary.md`.
 
 **Volatile metrics.** Quantitative claims use `{{PLACEHOLDER}}` tokens filled from [`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml). Regenerate metrics, then build the injected manuscript:
 
@@ -49,7 +53,7 @@ Outputs: `../output/data/manuscript_variables.json` and `../output/manuscript/*.
 
 Optional spot-check: `uv run python ../tools/inject_manuscript_vars.py ../manuscript/00_abstract.md --dry-run`
 
-Retired monoliths (not concatenated into the PDF) may live under [`_archive/`](_archive/) — for example `cogant_paper_monolith.md` or `02_methodology_monolith.md` if present.
+Retired monoliths (not concatenated into the PDF) may live under an `_archive/` subdirectory — for example `cogant_paper_monolith.md` or `02_methodology_monolith.md` — if and when they are brought back. No such archive ships with the current tree; see [`AGENTS.md`](AGENTS.md) for the archival convention.
 
 ## Pipeline discovery
 
@@ -62,6 +66,9 @@ Run from the **repository root** (the directory that contains `infrastructure/` 
 ```bash
 uv run python -m infrastructure.validation.cli markdown ./projects_in_progress/cogant/manuscript/
 uv run python -m infrastructure.validation.cli markdown ./projects_in_progress/cogant/output/manuscript/
+
+# From ../cogant/ (package root): relative links in manuscript/*.md
+uv run python docs/verify_manuscript_links.py
 ```
 
 ## COGANT package tests

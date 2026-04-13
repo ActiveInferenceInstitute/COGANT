@@ -220,7 +220,8 @@ def figure_graph_sizes(results: Dict[str, Dict[str, Any]]) -> Path:
     ax.set_xticks(x)
     ax.set_xticklabels(names, rotation=30, ha="right")
     ax.set_ylabel("Count")
-    ax.set_title("Program graph size by fixture (COGANT v0.1.0)")
+    import cogant as _cogant_pkg
+    ax.set_title(f"Program graph size by fixture (COGANT v{_cogant_pkg.__version__})")
     ax.grid(axis="y", linestyle="--", alpha=0.3)
     ax.legend()
     for xi, (n, e) in enumerate(zip(nodes, edges)):

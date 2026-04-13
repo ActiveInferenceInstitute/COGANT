@@ -1,11 +1,38 @@
 """Graph merging for combining static and dynamic evidence graphs."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
 from cogant.schemas.core import Edge
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
+__all__ = [
+    "MergeConflict",
+    "MergeProvenance",
+    "GraphDiff",
+    "GraphMerger",
+]
+
+
+@dataclass
+class GraphDiff:
+    """Record of differences between two graphs."""
+
+    added_nodes: list[str] = field(default_factory=list)
+    """Node IDs added in the new graph."""
+
+    removed_nodes: list[str] = field(default_factory=list)
+    """Node IDs removed from the old graph."""
+
+    changed_nodes: dict[str, dict[str, Any]] = field(default_factory=dict)
+    """Node IDs with changes mapped to old/new values."""
+
+    added_edges: list[tuple[str, str]] = field(default_factory=list)
+    """Edge source/target pairs added in the new graph."""
+
+    removed_edges: list[tuple[str, str]] = field(default_factory=list)
+    """Edge source/target pairs removed from the old graph."""
 
 
 @dataclass
@@ -339,3 +366,127 @@ class GraphMerger:
             "total_edges_updated": total_edges_updated,
             "total_nodes_added": total_nodes_added,
         }
+
+    def merge_incremental(
+        self,
+        base: ProgramGraph,
+        delta: ProgramGraph,
+    ) -> ProgramGraph:
+        """Merge a delta (incremental changes) into a base graph.
+
+        This is useful for integrating changes detected since the last analysis
+        (e.g., via git diff or file tracking).
+
+        Args:
+            base: Base/previous graph.
+            delta: Incremental changes (typically smaller).
+
+        Returns:
+            Merged graph with delta integrated.
+        """
+        merged = ProgramGraph(metadata=self._merge_metadata(base, delta))
+
+        # Add all nodes from base
+        for node in base.nodes.values():
+            merged.add_node(node)
+
+        # Add/update nodes from delta
+        for node in delta.nodes.values():
+            if node.id in merged.nodes:
+                # Update existing node metadata
+                existing = merged.nodes[node.id]
+                existing.metadata.update(node.metadata)
+            else:
+                # Add new node
+                merged.add_node(node)
+
+        # Add all edges from base
+        for edge in base.edges.values():
+            if edge.source_id in merged.nodes and edge.target_id in merged.nodes:
+                merged.add_edge(edge)
+
+        # Add/update edges from delta
+        for delta_edge in delta.edges.values():
+            if delta_edge.source_id not in merged.nodes or delta_edge.target_id not in merged.nodes:
+                continue
+
+            existing_edge = None
+            for merged_edge in merged.edges.values():
+                if (merged_edge.source_id == delta_edge.source_id and
+                    merged_edge.target_id == delta_edge.target_id and
+                    merged_edge.kind == delta_edge.kind):
+                    existing_edge = merged_edge
+                    break
+
+            if existing_edge:
+                # Update weight and evidence
+                existing_edge.weight = max(existing_edge.weight, delta_edge.weight)
+                if delta_edge.evidence_sources:
+                    for source in delta_edge.evidence_sources:
+                        if source not in existing_edge.evidence_sources:
+                            existing_edge.evidence_sources.append(source)
+            else:
+                # Add new edge
+                merged.add_edge(delta_edge)
+
+        return merged
+
+    def diff(self, g1: ProgramGraph, g2: ProgramGraph) -> GraphDiff:
+        """Compute differences between two graphs.
+
+        Args:
+            g1: First graph (considered the "old" state).
+            g2: Second graph (considered the "new" state).
+
+        Returns:
+            GraphDiff with added/removed/changed nodes and edges.
+        """
+        diff = GraphDiff()
+
+        # Find added and removed nodes
+        g1_node_ids = set(g1.nodes.keys())
+        g2_node_ids = set(g2.nodes.keys())
+
+        diff.added_nodes = sorted(g2_node_ids - g1_node_ids)
+        diff.removed_nodes = sorted(g1_node_ids - g2_node_ids)
+
+        # Find changed nodes
+        for node_id in g1_node_ids & g2_node_ids:
+            n1 = g1.nodes[node_id]
+            n2 = g2.nodes[node_id]
+
+            changes: dict[str, Any] = {}
+
+            if n1.name != n2.name:
+                changes["name"] = {"old": n1.name, "new": n2.name}
+
+            if n1.qualified_name != n2.qualified_name:
+                changes["qualified_name"] = {"old": n1.qualified_name, "new": n2.qualified_name}
+
+            if n1.path != n2.path:
+                changes["path"] = {"old": n1.path, "new": n2.path}
+
+            if n1.metadata != n2.metadata:
+                changes["metadata"] = {"old": n1.metadata, "new": n2.metadata}
+
+            if changes:
+                diff.changed_nodes[node_id] = changes
+
+        # Find added and removed edges
+        g1_edges = {
+            (e.source_id, e.target_id, e.kind.value)
+            for e in g1.edges.values()
+        }
+        g2_edges = {
+            (e.source_id, e.target_id, e.kind.value)
+            for e in g2.edges.values()
+        }
+
+        diff.added_edges = sorted(
+            [(s, t) for s, t, _ in (g2_edges - g1_edges)]
+        )
+        diff.removed_edges = sorted(
+            [(s, t) for s, t, _ in (g1_edges - g2_edges)]
+        )
+
+        return diff

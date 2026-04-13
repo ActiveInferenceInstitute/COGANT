@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from cogant.export.bundle import BundleExporter as BundleExporter
 from cogant.export.bundle import BundleManifest as BundleManifest
 from cogant.export.graphml import GraphMLExporter as GraphMLExporter

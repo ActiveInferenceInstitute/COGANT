@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/cache/store.py
+# hypothesis_version: 6.135.29
+
+[0.0, '*.json', '.cache', '.tmp', 'cogant', 'created_at', 'entries', 'hit_rate', 'hits', 'key', 'misses', 'stage_results', 'total_size_bytes', 'w']

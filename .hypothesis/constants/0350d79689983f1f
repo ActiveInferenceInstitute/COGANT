@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/gnn/formatter/metadata.py
+# hypothesis_version: 6.135.29
+
+[0.0, 0.5, 0.8, 100, 500, '# GNN Model: ', '## Confidence Scores', '## Model Metadata', '## Provenance', '## Rendering Hints', '## Source Coverage', '## Validation Notes', '### Confidence Tiers', '### Edges by Kind', '### Nodes by Kind', '_', 'actions_defined', 'confidence', 'confidence_score', 'confidence_tier', 'edges_exist', 'extraction_time_ms', 'id', 'kind', 'nodes_exist', 'observations_defined', 'pipeline_stages', 'provenance', 'source', 'source_state', 'target_state', 'total_lines', 'transitions_defined', 'unknown', 'var_id', 'variables_defined', '| Check | Status |', '| Kind | Count |', '| Source | Count |', '| Tier | Count |', '|------|-------|', '|----|----|', '|----|----|------|', '█', '░', '✓ PASS', '✗ FAIL']

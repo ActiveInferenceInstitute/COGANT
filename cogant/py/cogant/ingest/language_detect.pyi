@@ -1,13 +1,11 @@
 from pathlib import Path
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
-parsers_root: Incomplete
+parsers_root: Any
 
 class LanguageDetector:
-    EXTENSION_MAP: Incomplete
-    PARSER_CLASSES: Incomplete
+    EXTENSION_MAP: Any
+    PARSER_CLASSES: Any
     @staticmethod
     def detect_language(file_path: Path) -> str | None: ...
     @staticmethod

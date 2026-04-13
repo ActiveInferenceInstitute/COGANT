@@ -31,4 +31,11 @@
 7. [Language-Specific Variants](language_specific_variants.md), [Heuristic Rules](heuristic_rules.md) — handle edge cases.
 8. [Performance](performance.md) and [Debugging](debugging.md) — operational concerns once your rule set grows.
 
+## Related modules
+
+- [../concepts/role_assignment.md](../concepts/role_assignment.md) — conceptual background for what rules do.
+- [../plugins/README.md](../plugins/README.md) — shipping rule packs as plugins.
+- [../reference/README.md](../reference/README.md) — canonical rule schema.
+- [../cookbook/README.md](../cookbook/README.md) — short recipes for common rule-authoring tasks.
+
 Agent notes: [AGENTS.md](AGENTS.md) - Hub: [../index.md](../index.md)

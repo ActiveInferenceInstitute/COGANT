@@ -17,11 +17,17 @@ exactly as they did when this was a single flat file.
 """
 
 from cogant.translate.engine import TranslationRule
-from cogant.translate.rules.behavioral import EventBusRule, OrchestratorRule, TestAssertionRule
-from cogant.translate.rules.control import ConfigRule, FeatureFlagRule
+from cogant.translate.rules.behavioral import (
+    EventBusRule,
+    OrchestratorRule,
+    StateMachineRule,
+    TestAssertionRule,
+)
+from cogant.translate.rules.control import ConfigRule, FeatureFlagRule, ParameterRule
 from cogant.translate.rules.resilience import (
     CircuitBreakerRule,
     ErrorBoundaryRule,
+    RateLimiterRule,
     RetryPatternRule,
     SingletonAccessRule,
 )
@@ -49,9 +55,11 @@ __all__ = [
     "ReadOnlyInputRule",
     "EventBusRule",
     "OrchestratorRule",
+    "StateMachineRule",
     "TestAssertionRule",
     "ConfigRule",
     "FeatureFlagRule",
+    "ParameterRule",
     "ActionRule",
     "ContextRule",
     "ObservationRule",
@@ -59,6 +67,7 @@ __all__ = [
     "PreferenceRule",
     "CircuitBreakerRule",
     "ErrorBoundaryRule",
+    "RateLimiterRule",
     "RetryPatternRule",
     "SingletonAccessRule",
 ]

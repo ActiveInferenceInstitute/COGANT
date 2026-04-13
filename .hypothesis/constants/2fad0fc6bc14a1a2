@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/static/treesitter_parser.py
+# hypothesis_version: 6.135.29
+
+['.cjs', '.js', '.jsx', '.mjs', '.py', '.pyi', '.pyx', '.ts', '.tsx', '<relative>', 'HAS_TREESITTER', 'auto', 'bases', 'class', 'end_line', 'function', 'import_raw', 'interface', 'is_async', 'is_relative', 'javascript', 'line', 'method', 'names', 'parse_js_file', 'parse_python_file', 'parse_ts_file', 'python', 'raw', 'replace', 'start_line', 'static/ast', 'static/treesitter', 'ts_kind', 'tsx', 'typescript', 'utf-8']

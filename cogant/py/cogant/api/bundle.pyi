@@ -3,10 +3,6 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
-
 class ArtifactKey(StrEnum):
     REPO_SNAPSHOT = 'repo_snapshot'
     PARSED_MODULES = 'parsed_modules_detail'

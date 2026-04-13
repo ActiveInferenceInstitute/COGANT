@@ -1,6 +1,6 @@
 # COGANT Cookbook
 
-> Practical recipes for common COGANT workflows. Each recipe is self-contained, takes 2-15 minutes to complete, and ships with copy-pasteable commands. Use the cookbook when you have a specific outcome in mind; use [../tutorials/](../tutorials/) when you want a guided walkthrough and [../concepts/](../concepts/) when you want background theory.
+> Practical recipes for common COGANT workflows. Each recipe is self-contained, takes 2-15 minutes to complete, and ships with copy-pasteable commands. Use the cookbook when you have a specific outcome in mind; use [../tutorials/](../tutorials/README.md) when you want a guided walkthrough and [../concepts/](../concepts/README.md) when you want background theory.
 
 ## Contents
 
@@ -26,6 +26,26 @@
 | 18 | [Role filtering](18_role_filter.md) | Filter results by semantic role using `jq` | Intermediate |
 | 19 | [Custom translation rules](19_extend_rules.md) | Add a new rule to the translation engine | Advanced |
 | 20 | [Dataset export](20_dataset.md) | Export a training dataset for ML from COGANT output | Advanced |
+
+## Numbering scheme
+
+Recipes are numbered `NN_slug.md` roughly in the order a new user is likely
+to encounter them: basics first (01-05), then integration and workflow
+(06-13), then the more advanced workflows (14-20). Numbers are editorial
+only — they do not encode dependencies, and you can jump to any recipe
+directly.
+
+## Non-numbered recipes
+
+Three older recipes predate the numbering scheme and are kept under their
+original slugs so external links do not break. They remain valid but new
+content should go into a new numbered recipe rather than extending these.
+
+| Recipe | Description | Status |
+|--------|-------------|--------|
+| [Analyze a Flask app](analyze_a_flask_app.md) | End-to-end Flask analysis walkthrough | Stable; overlaps with `../tutorials/03_flask_walkthrough.md` |
+| [Custom translation rules](custom_translation_rules.md) | Author a new translation rule for the engine | Stable; overlaps with `19_extend_rules.md` |
+| [Interpret GNN output](interpret_gnn_output.md) | Read and interpret a generated GNN package | Stable; overlaps with `03_explain_node.md` |
 
 ## Recommended Reading Order
 

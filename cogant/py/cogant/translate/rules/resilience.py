@@ -24,6 +24,14 @@ from cogant.schemas.semantic import (
 )
 from cogant.translate.engine import TranslationRule
 
+__all__ = [
+    "RetryPatternRule",
+    "ErrorBoundaryRule",
+    "SingletonAccessRule",
+    "CircuitBreakerRule",
+    "RateLimiterRule",
+]
+
 
 class RetryPatternRule(TranslationRule):
     """Maps retry/backoff/circuit breaker patterns to policy under uncertainty.
@@ -501,3 +509,128 @@ class CircuitBreakerRule(TranslationRule):
     def mapping_kind(self) -> MappingKind:
         """GNN mapping kind produced by this rule."""
         return MappingKind.CIRCUIT_BREAKER
+
+
+class RateLimiterRule(TranslationRule):
+    """Maps rate-limiting patterns to throttling modality.
+
+    Rule priority (audit 2026-04-09):
+        Effective priority = ``(0, 0.75)``. **Mid band** (0.75), tied
+        with ``MutatingSubsystemRule``/``ContainmentRule``/
+        ``DataPipelineRule``/``EventBusRule``. Rationale: rate-limiting
+        detection depends on keyword matching (``rate_limit``,
+        ``throttle_``) or structural patterns (sleep/backoff loops with
+        rate checks). Patterns: decorator-based rate limiters (``@rate_limit``),
+        token-bucket implementations, leaky-bucket algorithms, sleep-based
+        backoff with rate calculations. TODO(calibration): measure
+        rate-limiter coverage on the 20-repo corpus; if <30%, promote to 0.80
+        as the pattern is becoming more common in microservices.
+    """
+
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
+        """Find rate-limiting patterns.
+
+        Args:
+            graph: Program graph.
+            query: Graph query engine.
+
+        Returns:
+            List of matched rate limiter nodes.
+        """
+        matches = []
+
+        rate_keywords = [
+            "rate_limit", "throttle_", "token_bucket", "leaky_bucket",
+            "ratelimit", "rate_limit", "quota", "throttle", "backoff"
+        ]
+
+        # Find functions and methods with rate-limiting keywords
+        functions = graph.get_nodes_by_kind(NodeKind.FUNCTION)
+        methods = graph.get_nodes_by_kind(NodeKind.METHOD)
+
+        for node in functions + methods:
+            name_lower = node.name.lower()
+            has_rate_keyword = any(kw in name_lower for kw in rate_keywords)
+
+            # Check for sleep/backoff pattern with rate logic
+            out_edges = graph.get_edges_from(node.id)
+            calls = [e for e in out_edges if e.kind == EdgeKind.CALLS]
+            has_sleep_or_backoff = any(
+                "sleep" in e.target_id.lower() or "backoff" in e.target_id.lower()
+                for e in calls
+            )
+
+            if has_rate_keyword or has_sleep_or_backoff:
+                matches.append({
+                    "node_id": node.id,
+                    "rate_keyword": has_rate_keyword,
+                    "has_backoff": has_sleep_or_backoff,
+                })
+
+        # Find classes that implement rate limiting
+        classes = graph.get_nodes_by_kind(NodeKind.CLASS)
+        for cls in classes:
+            name_lower = cls.name.lower()
+            if any(kw in name_lower for kw in rate_keywords):
+                matches.append({
+                    "node_id": cls.id,
+                    "rate_keyword": True,
+                    "has_backoff": False,
+                })
+
+        return matches
+
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
+        """Create rate-limiter mapping.
+
+        Args:
+            graph: Program graph.
+            match: Matched pattern.
+
+        Returns:
+            SemanticMapping for rate limiter.
+        """
+        node_id = match["node_id"]
+        node = graph.get_node(node_id)
+
+        if not node:
+            return None
+
+        mapping_id = f"ratelim_{node_id}_{hashlib.sha256(b'rate_limiter').hexdigest()[:8]}"
+
+        # Confidence 0.75 — principled default (mid band). Rate-limiting
+        # patterns are identifiable but depend on keyword matching or
+        # structural patterns that can have false positives (e.g., any
+        # sleep call isn't necessarily rate-limiting). Parser certainty
+        # 0.80 for keyword-based detection (AST-native).
+        return SemanticMapping(
+            id=mapping_id,
+            kind=MappingKind.POLICY,
+            graph_fragment_node_ids=[node_id],
+            semantic_label=f"{node.name} - Rate Limiter",
+            description=f"Function/class '{node.name}' implements rate limiting or throttling",
+            confidence_score=0.75,  # principled default (mid band)
+            confidence_tier=ConfidenceTier.STATIC_ONLY,
+            provenance=[
+                ProvenanceRecord(
+                    source="static_analysis",
+                    confidence=0.75,
+                    metadata={
+                        "rate_keyword": match.get("rate_keyword", False),
+                        "has_backoff": match.get("has_backoff", False),
+                    },
+                )
+            ],
+            evidence_count=1,
+            parser_certainty=0.8,  # keyword detection + call graph
+        )
+
+    @property
+    def name(self) -> str:
+        """Stable identifier for this rule."""
+        return "rate_limiter"
+
+    @property
+    def mapping_kind(self) -> MappingKind:
+        """GNN mapping kind produced by this rule."""
+        return MappingKind.POLICY

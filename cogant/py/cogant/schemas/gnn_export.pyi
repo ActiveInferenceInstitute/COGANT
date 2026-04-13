@@ -1,7 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any, ClassVar, Literal
-
-from _typeshed import Incomplete as Incomplete
 
 from .base import CogantBaseModel as CogantBaseModel
 

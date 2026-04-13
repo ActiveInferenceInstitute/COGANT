@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/rust_backend.py
+# hypothesis_version: 6.135.29
+
+[1.0, '0', '1', 'COGANT_USE_RUST', 'RUST_AVAILABLE', 'build_program_graph', 'create_example_graph', 'false', 'line_end', 'line_start', 'no', 'off', 'on', 'repo://unknown', 'rust_version', 'true', 'yes']

@@ -1,8 +1,74 @@
-# AGENTS.md — Roadmap Module
+# AGENTS.md — Roadmap module
 
-This directory houses the deeply modularized documentation for the **Roadmap** aspects of the COGANT translation engine.
+Version plans, feature backlog, performance and coverage targets,
+deprecation policy, community milestones, and the mirrored changelog. The
+roadmap module is the canonical place to find out *when* something is
+expected to happen and *what* the quality bar for each release is.
 
-## Maintenance Rules
+## Purpose and ownership
 
-*   **Granularity**: Keep articles focused. Do not reintroduce monolithic, multi-context files.
-*   **Cross-Linking**: When referencing other modules, link to their respective `../module_name/README.md` indexes.
+Everything here is forward-looking planning except `changelog.md`, which
+is retrospective. The roadmap is read by contributors, users, and AI
+agents who need to know whether a feature is in scope, scheduled, or
+ruled out. Owned by whoever is driving the current release train.
+
+## File map
+
+| File | Purpose | Update trigger |
+|------|---------|----------------|
+| `README.md` | TOC grouped by strategy / version / targets / process | Any time a file is added, removed, or renamed |
+| `AGENTS.md` | This file — maintenance rules | When grouping, ownership, or the append-only changelog policy changes |
+| `overview.md` | One-page roadmap summary | At every release train kickoff |
+| `version_strategy.md` | Semver intent and version bucket definitions | When semver policy changes |
+| `version_010_current.md` | Components and capabilities of 0.1.0 | When 0.1.x patches add capabilities worth documenting |
+| `version_020_planned.md` | 0.2.0 plan | When 0.2.0 scope changes |
+| `version_030_planned.md` | 0.3.0 plan | When 0.3.0 scope changes |
+| `version_100_planned.md` | 1.0.0 stability/hardening plan | When 1.0 scope changes |
+| `known_limitations_010.md` | Known limitations of the current release | Whenever a new limitation is discovered or an old one is fixed |
+| `deprecation_policy.md` | Breaking-change announcement and staging policy | When the policy changes |
+| `performance_targets.md` | Wall-clock and memory targets | When targets are renegotiated |
+| `test_coverage_goals.md` | Per-component coverage goals | When coverage targets are renegotiated |
+| `benchmarks_and_performance.md` | Benchmark methodology and headline numbers | When benchmarks are re-run |
+| `cogant_benchmarks.md` | Detailed benchmark reference and protocol | When the protocol changes |
+| `success_metrics_post_10.md` | Post-1.0 adoption and quality metrics | When post-1.0 metrics are defined |
+| `feature_backlog.md` | Prioritized unshipped features | Continuously as features are proposed, ranked, or landed |
+| `documentation_roadmap.md` | Per-release docs coverage targets | When docs scope for a release changes |
+| `community_milestones.md` | Launch and community milestones | When a milestone lands or is rescheduled |
+| `budget_resources.md` | Development time and resource estimates | When estimates change materially |
+| `contingencies.md` | Slip and scope-cut fallbacks | When a contingency is triggered or added |
+| `related_work.md` | Adjacent tools and research tracked for comparison | When a new comparable tool ships |
+| `changelog.md` | Mirrored from root `CHANGELOG.md` | After every release (see below) |
+| `see_also.md` | Cross-links to related modules | When link targets move |
+
+## Changelog mirroring
+
+`changelog.md` is a literal copy of the root `CHANGELOG.md`. Edit the root
+file, then:
+
+```bash
+cp CHANGELOG.md docs/roadmap/changelog.md
+```
+
+Do **not** edit `docs/roadmap/changelog.md` directly; the two will drift
+and the root is the source of truth.
+
+## Adding a new doc
+
+1. Decide which of the four groupings (strategy, version, targets,
+   process) the new page belongs to and place it near its siblings in
+   `README.md`.
+2. Use a short, lower-case, underscore-separated slug.
+3. Every version-plan file follows the same skeleton: Scope, Goals,
+   Scheduled work, Out of scope, Risks. Stick to the skeleton so readers
+   can diff versions at a glance.
+4. Add a row to the matching group table in `README.md`.
+
+## Known gotchas
+
+- `changelog.md` is a mirror — editing it in place is a common mistake.
+  When the root changelog changes, re-run the `cp` command above in the
+  same commit.
+- The version-plan files have a cross-file invariant: the "current"
+  marker moves. When 0.2.0 ships, rename `version_010_current.md` to
+  something like `version_010_shipped.md`, update the README, and promote
+  the next file in line.

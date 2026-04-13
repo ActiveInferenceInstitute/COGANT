@@ -6,6 +6,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **3 new translation rules** (19 → 22 total): `ParameterRule` (control family — detects learnable parameters/hyperparameters → CONTEXT), `StateMachineRule` (behavioral family — detects FSM patterns → POLICY), `RateLimiterRule` (resilience family — detects rate-limiting patterns → POLICY). Rule breakdown: 5 structural + 5 semantic + 3 control + 4 behavioral + 5 resilience.
+- **Static analysis module** (`cogant.static`): `ComplexityAnalyzer` (cyclomatic + cognitive complexity), `CouplingAnalyzer` (Martin metrics: Ca/Ce/instability/distance-from-main-sequence), `DeadCodeDetector` (unused imports/functions/unreachable code with confidence scores), `MetricsAnalyzer` (LOC, Halstead metrics).
+- **Network/graph analysis** (`cogant.graph.analysis`): `GraphAnalyzer` with centrality (betweenness, PageRank, closeness, degree), community detection (Louvain/component fallback), Tarjan SCC cycle detection, hotspot/source/sink identification. `GraphDiff` for incremental diffing.
+- **Visualization suite** (`cogant.viz`): `PDFExporter` (8-page analysis reports), `MatrixVisualizer` (A/B/C/D heatmaps), `PipelineVisualizer` (10-stage timing + Mermaid), `FlowDiagrammer` (CFG/call graph/dependency graph → PNG/PDF/Mermaid), `StaticAnalysisView`, `NetworkView`, `ExportView`.
+- **Export formats** (`cogant.export`): `SVGExporter` (graphviz DOT), `JSONSchemaExporter` (draft-7 schemas for all output types), `MultiFormatExporter` with `ExportFormat` enum (9 formats: JSON, GRAPHML, PARQUET, SVG, PNG, PDF, MERMAID, DOT, JSONLINES).
+- **Type infrastructure**: 9 `@runtime_checkable` Protocol classes (`Translatable`, `Analyzable`, `Serializable`, `Visualizable`, `Validatable`, `Exportable`, `PipelineStage`, `TranslationRule`, `GraphBackend`), 7 `TypedDict`s, `SemanticRole`/`RuleFamily`/`FixpointStatus` Literal types. 49 `.pyi` stubs covering all new modules.
+- **API improvements** (`cogant.server`, `cogant.api`): 5 new REST endpoints (`GET /api/v1/rules`, `POST /api/v1/analyze`, `POST /api/v1/roundtrip`, `POST /api/v1/visualize`, `GET /api/v1/metrics`), WebSocket streaming (`WS /ws/translate`), `PipelineResult` dataclass, `SessionManager`, `translate_batch()`.
+- **Translation engine enhancements**: `TranslationEngine.explain()`, `validate()`, `get_convergence_info()`; `RuleExplanation.confidence: float` and `contradictions: list[str]`; improved heuristics for all 5 rule families; `to_gnn_role()` on semantic rules.
+- **Round-trip enhancements**: `PackagePlan.validate()`, `diff()`, `to_json()`/`from_json()`; `synthesize_with_validation()` with `ast.parse` check; `IdempotencyReport` dataclass; `MatrixSet.validate()`.
+- **Runtime/statespace/markov enhancements**: `AgentRuntime.run_episode_with_logging()`, `benchmark()`, `reset()`, `get_free_energy()`, serialization; `DegradedOutput` namedtuple; `MarkovBlanket.validate()`, `to_mermaid()`, `merge()`, `get_sensory_states()`, `get_active_states()`.
+- **4 new CLI subcommands**: `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export`.
+- **Comprehensive test suite expansion**: 14 new test files (10 unit + 4 integration), ~6,600 lines covering all new modules. Property tests for rule determinism, roundtrip stability, matrix dimension consistency.
 - `cogant.metrics` public API: `get_metrics()` / `get_metric(key)` backed by `evaluation/METRICS.yaml` (41f96de)
 - `.pyi` type stubs for all public API modules + `py.typed` marker (58c5fe1)
 - Complete JS/TS tree-sitter parser: arrow functions, async, generics, interfaces, decorators (25640ae)

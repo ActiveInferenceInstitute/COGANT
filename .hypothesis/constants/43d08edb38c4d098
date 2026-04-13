@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/translate/review.py
+# hypothesis_version: 6.135.29
+
+[0.0, 0.15, 1.0, ',', 'Merged Mapping', 'accept', 'accepted', 'action', 'auto_proposed', 'by_status', 'description', 'detail', 'edge_ids', 'edit', 'edited', 'kind', 'label', 'mapping_id', 'merge', 'merged', 'merged_id', 'new_mappings', 'new_values', 'node_ids', 'old_values', 'reject', 'rejected', 'reviewer', 'split', 'timestamp', 'total_mappings', 'total_review_actions', 'unreviewed_count']

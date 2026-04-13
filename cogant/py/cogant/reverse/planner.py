@@ -34,6 +34,7 @@ identifiers are sanitized to valid Python identifiers.
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 from dataclasses import dataclass, field
@@ -138,6 +139,284 @@ class PackagePlan:
     has_B_tensor: bool = False
     has_C_vector: bool = False
     has_D_vector: bool = False
+
+    def validate(self) -> list[str]:
+        """Validate the package plan for structural consistency.
+
+        Checks that the plan is internally coherent and can be synthesized.
+        Does not validate the plan against external sources (e.g., the
+        original GNN).
+
+        Returns:
+            A list of validation issues. Empty list means the plan is valid.
+            Issues describe problems but do not necessarily prevent synthesis
+            from succeeding.
+        """
+        issues: list[str] = []
+
+        # Check: no duplicate names across all roles
+        all_names = [n.name for n in self.nodes]
+        seen: dict[str, int] = {}
+        for name in all_names:
+            seen[name] = seen.get(name, 0) + 1
+        duplicates = [name for name, count in seen.items() if count > 1]
+        if duplicates:
+            issues.append(f"Duplicate node names found: {duplicates}")
+
+        # Check: each node's role is recognized
+        valid_roles = {
+            "HIDDEN_STATE",
+            "OBSERVATION",
+            "ACTION",
+            "POLICY",
+            "CONSTRAINT",
+            "CONTEXT",
+        }
+        for node in self.nodes:
+            if node.role not in valid_roles:
+                issues.append(
+                    f"Node {node.name!r} has unrecognized role {node.role!r}"
+                )
+
+        # Check: nodes in subsets appear in main nodes list
+        all_subsets = (
+            self.state_vars
+            + self.obs_functions
+            + self.action_methods
+            + self.policy_functions
+            + self.constraint_checks
+            + self.context_functions
+            + self.scaffold_constraint_checks
+            + self.scaffold_policy_functions
+            + self.scaffold_context_classes
+        )
+        nodes_set = {id(n) for n in self.nodes}
+        for node in all_subsets:
+            if id(node) not in nodes_set:
+                issues.append(
+                    f"Node {node.name!r} in a role subset but not in main "
+                    "nodes list"
+                )
+
+        # Check: consistent role classification in subsets
+        for node in self.state_vars:
+            if node.role != "HIDDEN_STATE":
+                issues.append(
+                    f"state_vars node {node.name!r} has role {node.role!r}, "
+                    "expected HIDDEN_STATE"
+                )
+        for node in self.obs_functions:
+            if node.role != "OBSERVATION":
+                issues.append(
+                    f"obs_functions node {node.name!r} has role {node.role!r}, "
+                    "expected OBSERVATION"
+                )
+        for node in self.action_methods:
+            if node.role != "ACTION":
+                issues.append(
+                    f"action_methods node {node.name!r} has role {node.role!r}, "
+                    "expected ACTION"
+                )
+
+        # Check: package_name is a valid Python identifier
+        import keyword
+
+        if not self.package_name.isidentifier() or keyword.iskeyword(
+            self.package_name
+        ):
+            issues.append(
+                f"package_name {self.package_name!r} is not a valid Python "
+                "identifier"
+            )
+
+        return issues
+
+    def diff(self, other: PackagePlan) -> str:
+        """Return a human-readable diff between this plan and another.
+
+        Compares the role distributions, node counts, and key attributes.
+
+        Args:
+            other: Another PackagePlan to compare against.
+
+        Returns:
+            A human-readable diff string. Empty string if the plans are
+            identical.
+        """
+        diffs: list[str] = []
+
+        if self.package_name != other.package_name:
+            diffs.append(f"  package_name: {self.package_name!r} vs "
+                        f"{other.package_name!r}")
+
+        # Compare role populations
+        roles_self = {
+            "HIDDEN_STATE": len(self.state_vars),
+            "OBSERVATION": len(self.obs_functions),
+            "ACTION": len(self.action_methods),
+            "POLICY": len(self.policy_functions),
+            "CONSTRAINT": len(self.constraint_checks),
+            "CONTEXT": len(self.context_functions),
+        }
+        roles_other = {
+            "HIDDEN_STATE": len(other.state_vars),
+            "OBSERVATION": len(other.obs_functions),
+            "ACTION": len(other.action_methods),
+            "POLICY": len(other.policy_functions),
+            "CONSTRAINT": len(other.constraint_checks),
+            "CONTEXT": len(other.context_functions),
+        }
+
+        for role in roles_self:
+            if roles_self[role] != roles_other[role]:
+                diffs.append(
+                    f"  {role}: {roles_self[role]} vs {roles_other[role]}"
+                )
+
+        # Compare scaffold populations
+        if len(self.scaffold_constraint_checks) != len(
+            other.scaffold_constraint_checks
+        ):
+            diffs.append(
+                f"  scaffold_constraint_checks: "
+                f"{len(self.scaffold_constraint_checks)} vs "
+                f"{len(other.scaffold_constraint_checks)}"
+            )
+
+        if len(self.scaffold_policy_functions) != len(
+            other.scaffold_policy_functions
+        ):
+            diffs.append(
+                f"  scaffold_policy_functions: "
+                f"{len(self.scaffold_policy_functions)} vs "
+                f"{len(other.scaffold_policy_functions)}"
+            )
+
+        # Compare matrix presence flags
+        matrix_flags = ["has_A_matrix", "has_B_tensor", "has_C_vector",
+                       "has_D_vector"]
+        for flag in matrix_flags:
+            self_val = getattr(self, flag)
+            other_val = getattr(other, flag)
+            if self_val != other_val:
+                diffs.append(f"  {flag}: {self_val} vs {other_val}")
+
+        if not diffs:
+            return ""
+
+        return "PackagePlan differences:\n" + "\n".join(diffs)
+
+    def to_json(self) -> str:
+        """Serialize the PackagePlan to JSON.
+
+        Returns:
+            A JSON string representation of the plan suitable for
+            serialization and round-trip recovery.
+        """
+        data = {
+            "package_name": self.package_name,
+            "raw_model_name": self.raw_model_name,
+            "nodes": [self._node_to_dict(n) for n in self.nodes],
+            "state_vars": [n.name for n in self.state_vars],
+            "obs_functions": [n.name for n in self.obs_functions],
+            "action_methods": [n.name for n in self.action_methods],
+            "policy_functions": [n.name for n in self.policy_functions],
+            "constraint_checks": [n.name for n in self.constraint_checks],
+            "context_functions": [n.name for n in self.context_functions],
+            "scaffold_constraint_checks": [
+                n.name for n in self.scaffold_constraint_checks
+            ],
+            "scaffold_policy_functions": [
+                n.name for n in self.scaffold_policy_functions
+            ],
+            "scaffold_context_classes": [
+                n.name for n in self.scaffold_context_classes
+            ],
+            "has_A_matrix": self.has_A_matrix,
+            "has_B_tensor": self.has_B_tensor,
+            "has_C_vector": self.has_C_vector,
+            "has_D_vector": self.has_D_vector,
+        }
+        return json.dumps(data, indent=2)
+
+    @classmethod
+    def from_json(cls, data: str) -> PackagePlan:
+        """Deserialize a PackagePlan from JSON.
+
+        Args:
+            data: A JSON string representation of a PackagePlan.
+
+        Returns:
+            A reconstructed PackagePlan instance.
+
+        Raises:
+            json.JSONDecodeError: If the JSON is malformed.
+            KeyError: If required fields are missing.
+        """
+        parsed = json.loads(data)
+        nodes_data = parsed.get("nodes", [])
+
+        # Reconstruct all nodes
+        all_nodes: dict[str, NodePlan] = {}
+        for node_dict in nodes_data:
+            node = cls._dict_to_node(node_dict)
+            all_nodes[node.name] = node
+
+        # Retrieve nodes by name for each subset
+        def get_nodes(names: list[str]) -> list[NodePlan]:
+            return [all_nodes[name] for name in names if name in all_nodes]
+
+        plan = cls(
+            package_name=parsed.get("package_name", "cogant_model"),
+            raw_model_name=parsed.get("raw_model_name", "cogant_model"),
+            nodes=list(all_nodes.values()),
+            state_vars=get_nodes(parsed.get("state_vars", [])),
+            obs_functions=get_nodes(parsed.get("obs_functions", [])),
+            action_methods=get_nodes(parsed.get("action_methods", [])),
+            policy_functions=get_nodes(parsed.get("policy_functions", [])),
+            constraint_checks=get_nodes(parsed.get("constraint_checks", [])),
+            context_functions=get_nodes(parsed.get("context_functions", [])),
+            scaffold_constraint_checks=get_nodes(
+                parsed.get("scaffold_constraint_checks", [])
+            ),
+            scaffold_policy_functions=get_nodes(
+                parsed.get("scaffold_policy_functions", [])
+            ),
+            scaffold_context_classes=get_nodes(
+                parsed.get("scaffold_context_classes", [])
+            ),
+            has_A_matrix=parsed.get("has_A_matrix", False),
+            has_B_tensor=parsed.get("has_B_tensor", False),
+            has_C_vector=parsed.get("has_C_vector", False),
+            has_D_vector=parsed.get("has_D_vector", False),
+        )
+        return plan
+
+    @staticmethod
+    def _node_to_dict(node: NodePlan) -> dict:
+        """Convert a NodePlan to a dict for JSON serialization."""
+        return {
+            "slot": node.slot,
+            "name": node.name,
+            "role": node.role,
+            "python_type": node.python_type,
+            "module": node.module,
+            "cardinality": node.cardinality,
+            "initial_value": node.initial_value,
+        }
+
+    @staticmethod
+    def _dict_to_node(data: dict) -> NodePlan:
+        """Convert a dict from JSON deserialization to a NodePlan."""
+        return NodePlan(
+            slot=data.get("slot", ""),
+            name=data.get("name", ""),
+            role=data.get("role", ""),
+            python_type=data.get("python_type", "float"),
+            module=data.get("module", ""),
+            cardinality=data.get("cardinality", 0),
+            initial_value=data.get("initial_value", "0.0"),
+        )
 
 
 # ---------------------------------------------------------------------------

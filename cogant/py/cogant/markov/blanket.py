@@ -128,6 +128,207 @@ class MarkovBlanket:
             return self.active_ids
         return self.external_ids
 
+    def get_sensory_states(self) -> list[str]:
+        """Return all sensory boundary states (information flowing IN).
+
+        Returns:
+            Sorted list of sensory node ids.
+
+        Example:
+            >>> sensory = blanket.get_sensory_states()
+            >>> print(f"{len(sensory)} sensory nodes")
+        """
+        return sorted(self.sensory_ids)
+
+    def get_active_states(self) -> list[str]:
+        """Return all active boundary states (information flowing OUT).
+
+        Returns:
+            Sorted list of active node ids.
+
+        Example:
+            >>> active = blanket.get_active_states()
+            >>> print(f"{len(active)} active nodes")
+        """
+        return sorted(self.active_ids)
+
+    def visualize(self) -> dict[str, Any]:
+        """Export a visualization-friendly dictionary of the partition.
+
+        Returns:
+            Dictionary with keys:
+            * ``internal``: List of internal node ids.
+            * ``sensory``: List of sensory boundary node ids.
+            * ``active``: List of active boundary node ids.
+            * ``external``: List of external node ids.
+            * ``edges``: List of ``(source, target, kind)`` tuples for
+              cross-boundary edges.
+
+        Example:
+            >>> vis = blanket.visualize()
+            >>> print(f"{len(vis['internal'])} internal nodes")
+        """
+        return {
+            "internal": sorted(self.internal_ids),
+            "sensory": sorted(self.sensory_ids),
+            "active": sorted(self.active_ids),
+            "external": sorted(self.external_ids),
+            "edges": [],  # Placeholder; full edge list would require graph
+        }
+
+    def validate(self) -> list[str]:
+        """Validate partition consistency.
+
+        Checks:
+        * All nodes appear exactly once across all role sets.
+        * No overlap between role sets.
+        * Seeds are a subset of internal + boundary nodes.
+
+        Returns:
+            List of validation issue strings (empty if all checks pass).
+
+        Example:
+            >>> issues = blanket.validate()
+            >>> if issues:
+            ...     for issue in issues:
+            ...         print(f"Error: {issue}")
+        """
+        issues: list[str] = []
+
+        all_ids = (
+            self.internal_ids | self.sensory_ids | self.active_ids | self.external_ids
+        )
+
+        # Check roles are in dict
+        role_nodes = set(self.roles.keys())
+        if role_nodes != all_ids:
+            issues.append(
+                f"Role dict size {len(role_nodes)} doesn't match union {len(all_ids)}"
+            )
+
+        # Check for overlaps
+        pairs = [
+            (self.internal_ids, self.sensory_ids, "internal/sensory"),
+            (self.internal_ids, self.active_ids, "internal/active"),
+            (self.internal_ids, self.external_ids, "internal/external"),
+            (self.sensory_ids, self.active_ids, "sensory/active"),
+            (self.sensory_ids, self.external_ids, "sensory/external"),
+            (self.active_ids, self.external_ids, "active/external"),
+        ]
+        for s1, s2, name in pairs:
+            if s1 & s2:
+                issues.append(f"Overlap between {name}: {len(s1 & s2)} nodes")
+
+        # Check seeds are within system
+        system_ids = self.internal_ids | self.sensory_ids | self.active_ids
+        if not self.seeds.issubset(system_ids):
+            external_seeds = self.seeds - system_ids
+            issues.append(f"{len(external_seeds)} seed(s) are external: {external_seeds}")
+
+        return issues
+
+    def to_mermaid(self) -> str:
+        """Export the Markov blanket partition as a Mermaid diagram.
+
+        Returns:
+            String containing valid Mermaid graph syntax.
+
+        Example:
+            >>> blanket = partition_by_seeds(graph, seeds=[...])
+            >>> diagram = blanket.to_mermaid()
+            >>> print(diagram)
+            graph LR
+                subgraph Internal
+                    ...
+        """
+        lines = ["graph LR"]
+
+        # Define subgraphs for each role
+        if self.internal_ids:
+            lines.append("    subgraph internal [Internal (μ)]")
+            for node_id in sorted(self.internal_ids)[:5]:  # Limit for readability
+                lines.append(f"        {node_id}[{node_id}]")
+            lines.append("    end")
+
+        if self.sensory_ids:
+            lines.append("    subgraph sensory [Sensory (s)]")
+            for node_id in sorted(self.sensory_ids)[:5]:
+                lines.append(f"        {node_id}[{node_id}]")
+            lines.append("    end")
+
+        if self.active_ids:
+            lines.append("    subgraph active [Active (a)]")
+            for node_id in sorted(self.active_ids)[:5]:
+                lines.append(f"        {node_id}[{node_id}]")
+            lines.append("    end")
+
+        if self.external_ids:
+            lines.append("    subgraph external [External (η)]")
+            for node_id in sorted(self.external_ids)[:5]:
+                lines.append(f"        {node_id}[{node_id}]")
+            lines.append("    end")
+
+        return "\n".join(lines)
+
+    def merge(self, other: MarkovBlanket) -> MarkovBlanket:
+        """Merge two Markov blanket partitions.
+
+        Combines the seed sets (union) and recomputes partition boundaries
+        by taking the union of internal/sensory/active/external nodes.
+
+        Args:
+            other: Another MarkovBlanket to merge with this one.
+
+        Returns:
+            A new MarkovBlanket with merged partitions.
+
+        Example:
+            >>> b1 = partition_by_seeds(graph, seeds=[n1])
+            >>> b2 = partition_by_seeds(graph, seeds=[n2])
+            >>> merged = b1.merge(b2)
+        """
+        merged_seeds = self.seeds | other.seeds
+
+        return MarkovBlanket(
+            roles={**self.roles, **other.roles},
+            seeds=merged_seeds,
+            internal_ids=self.internal_ids | other.internal_ids,
+            sensory_ids=self.sensory_ids | other.sensory_ids,
+            active_ids=self.active_ids | other.active_ids,
+            external_ids=self.external_ids | other.external_ids,
+            rationale={**self.rationale, **other.rationale},
+            stats={**self.stats, **other.stats},
+            metadata={**self.metadata, **other.metadata},
+        )
+
+    def blanket_summary(self) -> dict[str, Any]:
+        """Return a summary of blanket node counts and key statistics.
+
+        Returns:
+            Dictionary with keys:
+            * ``n_internal``, ``n_sensory``, ``n_active``, ``n_external``: Counts.
+            * ``blanket_size``: Size of boundary (sensory + active).
+            * ``system_size``: Total system size (internal + boundary).
+            * ``key_nodes``: List of prominent node ids (up to 5).
+
+        Example:
+            >>> summary = blanket.blanket_summary()
+            >>> print(f"System size: {summary['system_size']}")
+        """
+        internal_list = sorted(self.internal_ids)
+        boundary_list = sorted(self.sensory_ids | self.active_ids)
+        key_nodes = (internal_list[:2] + boundary_list[:3])[:5]
+
+        return {
+            "n_internal": len(self.internal_ids),
+            "n_sensory": len(self.sensory_ids),
+            "n_active": len(self.active_ids),
+            "n_external": len(self.external_ids),
+            "blanket_size": len(self.sensory_ids) + len(self.active_ids),
+            "system_size": len(self.internal_ids) + len(self.sensory_ids) + len(self.active_ids),
+            "key_nodes": key_nodes,
+        }
+
 
 def _bidirectional_adjacency(
     graph: ProgramGraph,

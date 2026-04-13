@@ -31,7 +31,9 @@ round-trip verifier, which caches synthesized packages by GNN hash.
 
 from __future__ import annotations
 
+import ast
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
 
@@ -40,6 +42,39 @@ from cogant.reverse.parser import ReverseGNNModel
 from cogant.reverse.planner import PackagePlan
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Data model
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class SynthesisResult:
+    """Result of synthesizing code from a PackagePlan.
+
+    Attributes:
+        code: The synthesized Python code as a string.
+        parse_ok: True if the code parses successfully with ast.parse().
+        issues: List of validation issues encountered (empty = valid).
+        role_counts: Dict mapping role names to counts of synthesized
+            functions/classes for that role (e.g., {"HIDDEN_STATE": 5,
+            "ACTION": 3}). Useful for debugging role distribution.
+        filename: Optional filename for error reporting.
+    """
+
+    code: str = ""
+    parse_ok: bool = False
+    issues: list[str] = None  # type: ignore[assignment]
+    role_counts: dict[str, int] = None  # type: ignore[assignment]
+    filename: str = ""
+
+    def __post_init__(self) -> None:
+        """Initialize mutable defaults."""
+        if self.issues is None:
+            self.issues = []
+        if self.role_counts is None:
+            self.role_counts = {}
 
 
 # ---------------------------------------------------------------------------
@@ -833,4 +868,64 @@ def synthesize_package(
     return package_path
 
 
-__all__ = ["synthesize_package"]
+def synthesize_with_validation(
+    plan: PackagePlan,
+    model: ReverseGNNModel,
+    output_dir: str | Path,
+) -> tuple[str, list[str]]:
+    """Synthesize code and validate that it parses as valid Python.
+
+    Args:
+        plan: Package plan produced by :func:`plan_package`.
+        model: Parsed GNN model (provides matrix values).
+        output_dir: Directory where the package is created.
+
+    Returns:
+        A tuple of (package_path_str, issues_list). The path is the string
+        representation of the synthesized package directory. issues_list
+        contains zero or more validation warnings/errors. An empty list
+        means all files synthesized and parsed successfully.
+    """
+    pkg_path = synthesize_package(plan, model, output_dir)
+    issues: list[str] = []
+
+    # Check that all generated Python files parse
+    py_files = [
+        pkg_path / "__init__.py",
+        pkg_path / "state.py",
+        pkg_path / "observe.py",
+        pkg_path / "act.py",
+        pkg_path / "policy.py",
+        pkg_path / "constraints.py",
+        pkg_path / "context.py",
+        pkg_path / "matrices.py",
+        pkg_path / "main.py",
+        pkg_path / "tests" / "test_smoke.py",
+    ]
+
+    for py_file in py_files:
+        if py_file.exists():
+            try:
+                content = py_file.read_text(encoding="utf-8")
+                ast.parse(content)
+            except SyntaxError as e:
+                issues.append(
+                    f"Syntax error in {py_file.name}: line {e.lineno}: "
+                    f"{e.msg}"
+                )
+            except Exception as e:
+                issues.append(
+                    f"Error parsing {py_file.name}: {type(e).__name__}: {e}"
+                )
+
+    if issues:
+        logger.warning(
+            "Validation found %d issue(s) in synthesized package", len(issues)
+        )
+    else:
+        logger.info("All synthesized files validated successfully")
+
+    return str(pkg_path), issues
+
+
+__all__ = ["synthesize_package", "synthesize_with_validation", "SynthesisResult"]

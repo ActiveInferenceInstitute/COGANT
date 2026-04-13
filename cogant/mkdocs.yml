@@ -211,7 +211,6 @@ nav:
           - Analyze File: architecture/analyze_file.md
           - Analyze Imports: architecture/analyze_imports.md
           - Audit: architecture/audit.md
-          - Average Confidence: architecture/averageconfidence_xxx.md
           - Build Call Graph: architecture/build_call_graph.md
           - Centrality: architecture/centrality.md
           - Components and Cycles: architecture/components_and_cycles.md
@@ -231,8 +230,6 @@ nav:
           - Ingest a Local Repository: architecture/ingest_a_local_repository.md
           - Language-Specific Fact: architecture/language_specific_fact.md
           - Normalize to Canonical Form: architecture/normalize_to_canonical_form.md
-          - NormalizedMetadata Fields: architecture/normalizedmetadata_contains_visibility_decorators_etc.md
-          - NormalizedNodeKind / NodeKindClass: architecture/normalizednodekind_nodekindclass.md
           - On This Page: architecture/on_this_page.md
           - Parse from File: architecture/parse_from_file.md
           - Parse package.json: architecture/parse_packagejson.md
@@ -258,10 +255,6 @@ nav:
           - Step 5 — Score by Confidence: architecture/step_5_score_by_confidence.md
           - Step 6 — Human Review and Curation: architecture/step_6_human_review_and_curation.md
           - Step 7 — Export Final Mappings: architecture/step_7_export_final_mappings.md
-          - Tier Distribution: architecture/tierdistribution.md
-          - Total Identities Hash Inputs: architecture/totalidentities_n_uniquehashinputs_m_typemodule_x.md
-          - Total Nodes / Edges / Components: architecture/totalnodes_2_totaledges_1_connectedcomponents_1.md
-          - Total Scored: architecture/totalscored_n.md
           - Translate: architecture/translate.md
   - Theory:
       - Overview: theory/README.md
@@ -350,46 +343,21 @@ nav:
   - Reference:
       - Section Index: reference/README.md
       - Overview: reference/overview.md
-      - Introduction: reference/introduction.md
-      - Table of Contents: reference/table_of_contents.md
-      - Documentation modules: reference/documentation_modules.md
-      - Core Concepts: reference/core_concepts.md
-      - Architecture Overview: reference/architecture_overview.md
-      - API Overview: reference/api_overview.md
-      - Python API Usage: reference/python_api_usage.md
-      - CLI Usage: reference/cli_usage.md
-      - Schemas Reference: reference/schemas_reference.md
-      - Schemas Reference (legacy): reference/cogant_schemas_reference.md
-      - Semantic Roles: reference/semantic_roles.md
-      - Translation Rules: reference/translation_rules.md
-      - Configuration: reference/configuration.md
-      - Data Representations: reference/data_representations.md
-      - Pipeline Stages: reference/pipeline_stages.md
-      - Glossary: reference/glossary.md
-      - Examples: reference/examples.md
-      - References (Bibliography): reference/references.md
-      - File & Module Inventory: reference/file_and_module_inventory.md
+      - Documentation Modules: reference/documentation_modules.md
       - Implementation Status: reference/implementation_status.md
-      - Implementation Summary: reference/cogant_implementation_summary.md
-      - Implementation — Complete Project Setup: reference/cogant_implementation_complete_project_setup.md
-      - Ingest & Static Pipeline — Implementation Summary: reference/cogant_ingest_and_static_analysis_pipeline_implementation_summary.md
-      - Ingest & Static Pipeline — Milestone: reference/ingest_and_static_pipeline_milestone.md
-      - How-To — Initialize a Project: reference/initialize_a_project.md
-      - How-To — Install Dependencies: reference/install_dependencies.md
-      - How-To — Install Package (Dev Mode): reference/install_package_in_development_mode.md
-      - How-To — Installation: reference/installation.md
-      - How-To — Navigate to Python Package Directory: reference/navigate_to_python_package_directory.md
-      - How-To — Project Setup & Component Inventory: reference/project_setup_and_component_inventory.md
-      - How-To — Method 1 (Simple Session): reference/method_1_simple_session.md
-      - How-To — Method 2 (Orchestrated Pipeline): reference/method_2_orchestrated_pipeline.md
-      - How-To — Scan a Repository: reference/scan_a_repository.md
-      - How-To — Run Full Analysis: reference/run_full_analysis.md
-      - How-To — Compare Two Analyses: reference/compare_two_analyses.md
-      - How-To — Access Results: reference/access_results.md
-      - How-To — Validate Results: reference/validate_results.md
-      - How-To — Render Site: reference/render_site.md
-      - How-To — Render Interactive HTML Site: reference/render_interactive_html_site.md
-      - Next Steps: reference/next_steps.md
+      - Core Reference:
+          - Core Concepts: reference/core_concepts.md
+          - Pipeline Stages: reference/pipeline_stages.md
+          - Data Representations: reference/data_representations.md
+          - Semantic Roles: reference/semantic_roles.md
+          - Translation Rules: reference/translation_rules.md
+          - Glossary: reference/glossary.md
+      - Schemas & APIs:
+          - Schemas Reference: reference/schemas_reference.md
+          - Configuration: reference/configuration.md
+          - API Overview: reference/api_overview.md
+          - Examples: reference/examples.md
+      - References (Bibliography): reference/references.md
   - R&D:
       - Section Index: rnd/README.md
       - Calibration: rnd/calibration.md

@@ -20,9 +20,9 @@ The static site is written to `site/` (git-ignored).
 
 `mkdocs build --strict` currently fails on legacy anchor and cross-reference warnings across split docs; use the non-strict command above unless you are fixing those warnings deliberately.
 
-## GitHub Pages Deployment
+## GitHub Pages deployment
 
-Add this workflow at `.github/workflows/docs.yml` in the repository root:
+Example workflow at `.github/workflows/docs.yml` (repository root). Uses **uv** to match local development; drop `--strict` until anchor warnings are cleared project-wide (see [Building Locally](#building-locally)).
 
 ```yaml
 name: Deploy docs
@@ -42,15 +42,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install mkdocs-material 'mkdocstrings[python]'
-      - run: mkdocs build --strict
+      - uses: astral-sh/setup-uv@v5
+      - name: Build site
+        working-directory: cogant
+        run: uv run --with mkdocs-material --with 'mkdocstrings[python]' mkdocs build
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: cogant/site
       - uses: actions/deploy-pages@v4
 ```
 
-Then enable GitHub Pages in the repository settings (Source: GitHub Actions).
+Set **working-directory** to the directory that contains `mkdocs.yml` (here `cogant/`). Enable GitHub Pages (Source: GitHub Actions) in repository settings.

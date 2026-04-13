@@ -1,11 +1,9 @@
-from dataclasses import dataclass
+from typing import Any
 
-from _typeshed import Incomplete as Incomplete
+from dataclasses import dataclass
 
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel
-
-logger: Incomplete
 
 @dataclass
 class ProvenanceGap:
@@ -15,7 +13,7 @@ class ProvenanceGap:
     severity: str
 
 class ProvenanceChecker:
-    provenance_records: Incomplete
+    provenance_records: Any
     gaps: list[ProvenanceGap]
     def __init__(self, provenance_records: dict[str, list[object]] | None = None) -> None: ...
     def check_graph_provenance(self, graph: ProgramGraph) -> list[ProvenanceGap]: ...

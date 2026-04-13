@@ -16,7 +16,7 @@ All three interpreters are listed in the `classifiers` block of [`../cogant/pypr
 
 Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE_COUNT}}** packaged fixtures exercise end-to-end. Table 9 records the coverage of the algorithmic core (translation, state-space compilation, Markov blanket extraction, GNN matrix construction, and the reverse synthesizer) --- the modules whose correctness is load-bearing for every claim in the manuscript. Numbers are taken from the `TOTAL`-line breakdown of the `uv run pytest --cov` run that produced the {{TEST_COUNT}}/{{TEST_COUNT_SKIPPED}} pass/skip summary.
 
-**Table 9. Line coverage of load-bearing modules (canonical v0.5.0 run, 2026-04-10).**
+**Table 9. Line coverage of load-bearing modules (canonical v{{VERSION}} run, 2026-04-10).**
 
 | Module | Lines | Coverage |
 |---|---:|---:|
@@ -50,7 +50,7 @@ The aggregate project-level coverage reported at the end of the run is **{{COVER
 
 Mutation testing was performed on the algorithmic core modules (`gnn/matrices.py`, `translate/engine.py`, `markov/blanket.py`, `statespace/compiler.py`, `static/dataflow.py`). The canonical `mutmut` 3.5.0 runner was evaluated but rejected: on COGANT's test layout `mutmut` reported every one of the 403 auto-generated mutants on `matrices.py` as "no tests" because its v3 trampoline requires tests to import the mutated module through the `mutants/<path>` shadow tree, and the project's `pytest` configuration does not. Rather than ship a "no tests" score, the mutation analysis in `../cogant/docs/evaluation/MUTATION_REPORT.md` is based on a **hand-picked set of fifteen semantic mutations** that target the algorithmic predicates, constants, and loop bounds of the above modules; each mutation was applied, the relevant `pytest` subset was rerun, and the mutation was reverted immediately. This is a more informative experiment than a green `mutmut` run because it documents exactly *which* invariants the tests enforce.
 
-**Table 10. Hand-curated mutation results on COGANT algorithmic core.**
+**Table 10. Hand-curated mutation results on COGANT algorithmic core (§Mutation testing).**
 
 | Module | Mutants tested | Killed | Survived | Mutation score |
 |---|---:|---:|---:|---:|

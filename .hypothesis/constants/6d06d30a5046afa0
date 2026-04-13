@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/translate/engine.py
+# hypothesis_version: 6.135.29
+
+[0.0, 100.0, 'RuleExplanation', 'TranslationEngine', 'TranslationRule', 'apply_error', 'conflict_resolved', 'coverage_percent', 'covered_nodes', 'detail', 'engine', 'event_type', 'evidence', 'fired', 'iteration_complete', 'mapping_created', 'mapping_kind', 'mappings_by_kind', 'node_id', 'node_ids', 'priority', 'reason', 'rule_error', 'rule_name', 'rules_registered', 'total_mappings', 'total_nodes', 'uncovered_node_ids', 'uncovered_nodes']

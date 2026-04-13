@@ -154,7 +154,7 @@ Raw Facts (language-specific)
     ↓
 [GraphMerger] → Merge static + dynamic evidence
     ↓
-[TranslationEngine] → Apply 19 translation rules (fixpoint) for semantic role assignment
+[TranslationEngine] → Apply 22 translation rules (fixpoint) for semantic role assignment
     ↓
 [ConfidenceModel] → Score by evidence and diversity
     ↓

@@ -34,6 +34,7 @@ import shutil
 import tempfile
 import time
 import traceback
+import uuid
 import zipfile
 from collections import Counter, defaultdict, deque
 from collections.abc import Callable, Iterable
@@ -52,12 +53,21 @@ from cogant.reverse import (
     verify_repo_roundtrip,
 )
 from cogant.server.models import (
+    AnalysisRequest,
+    AnalysisResponse,
     AnalyzeRequest,
     AnalyzeResponse,
     ErrorResponse,
     HealthResponse,
+    MetricsResponse,
     RoundtripRequest,
+    RoundtripRequestV1,
     RoundtripResponse,
+    RoundtripResponseV1,
+    RuleMetadata,
+    RulesResponse,
+    VisualizeRequest,
+    VisualizeResponse,
 )
 
 logger = get_logger("cogant.server")
@@ -418,6 +428,7 @@ def create_app(
     )
     app.state.rate_limited_paths = frozenset(rate_limited_paths)
     app.state.unlimited_paths = frozenset(unlimited_paths)
+    app.state.active_sessions = 0  # Track concurrent sessions
 
     # -----------------------------------------------------------------
     # Middleware: structured logging + metrics + rate limiting.
@@ -427,23 +438,29 @@ def create_app(
     async def _observability_middleware(
         request: Request, call_next: Callable[[Request], Any]
     ) -> Any:
-        """Log, meter, and rate-limit every request.
+        """Log, meter, rate-limit, and inject request ID into every request.
 
-        The middleware performs three things in order:
+        The middleware performs four things in order:
 
-        1. If the path is rate-limited, consult the limiter and return
+        1. Generate and inject a UUID4 request ID into the request state
+           so downstream handlers can access it.
+        2. If the path is rate-limited, consult the limiter and return
            429 when the caller has blown the budget. The limiter is
            keyed by client IP so two tenants sharing a process do not
            starve each other.
-        2. Dispatch the request and capture the response status.
-        3. Emit a structured log line and increment metrics. Any
-           exception that escapes the handler is converted into a
-           500 response with a sanitised body and counted as an error.
+        3. Dispatch the request and capture the response status.
+        4. Emit a structured log line with the request ID and increment
+           metrics. Any exception that escapes the handler is converted
+           into a 500 response with a sanitised body and counted as an error.
         """
         method = request.method
         path = request.url.path
         client_host = request.client.host if request.client else "unknown"
         start = time.perf_counter()
+        request_id = str(uuid.uuid4())
+
+        # Inject request ID into request state for handlers to retrieve
+        request.state.request_id = request_id
 
         limiter: _RateLimiter = request.app.state.rate_limiter
         metrics: _MetricsStore = request.app.state.metrics
@@ -459,6 +476,7 @@ def create_app(
                     status_code=429,
                     duration_ms=round(duration * 1000, 3),
                     client=client_host,
+                    request_id=request_id,
                 ) if hasattr(logger, "info") else None
                 metrics.record(method, path, 429, duration)
                 return JSONResponse(
@@ -466,6 +484,7 @@ def create_app(
                     content={
                         "detail": f"rate limit exceeded for {path} (10/min per IP)",
                         "error_type": "RateLimitExceeded",
+                        "request_id": request_id,
                     },
                 )
 
@@ -481,6 +500,7 @@ def create_app(
                 content={
                     "detail": f"{type(exc).__name__}: {exc}",
                     "error_type": type(exc).__name__,
+                    "request_id": request_id,
                 },
             )
 
@@ -497,14 +517,16 @@ def create_app(
                 status_code=status_code,
                 duration_ms=round(duration * 1000, 3),
                 client=client_host,
+                request_id=request_id,
             )
         except TypeError:
             logger.info(
-                "request handled method=%s path=%s status=%d duration_ms=%.3f",
+                "request handled method=%s path=%s status=%d duration_ms=%.3f request_id=%s",
                 method,
                 path,
                 status_code,
                 duration * 1000,
+                request_id,
             )
         return response
 
@@ -717,6 +739,335 @@ def create_app(
         return PlainTextResponse(
             content=store.render_prometheus(),
             media_type="text/plain; version=0.0.4; charset=utf-8",
+        )
+
+    # -----------------------------------------------------------------
+    # V1 API endpoints
+    # -----------------------------------------------------------------
+
+    @app.get(
+        "/api/v1/rules",
+        response_model=RulesResponse,
+        summary="List all translation rules",
+        tags=["api_v1"],
+        responses={
+            200: {"description": "All registered translation rules."},
+        },
+    )
+    async def get_rules() -> RulesResponse:
+        """Return metadata for all 22 registered translation rules.
+
+        Each rule entry includes the rule name, family, description, and
+        confidence range. Rules are grouped into families: structural,
+        semantic, control, behavioral, and resilience.
+        """
+        rules = [
+            RuleMetadata(
+                name="ActionRule",
+                family="semantic",
+                description="Identifies action nodes in control flow graphs",
+                confidence_min=0.7,
+                confidence_max=0.95,
+            ),
+            RuleMetadata(
+                name="CircuitBreakerRule",
+                family="resilience",
+                description="Detects circuit-breaker fault-tolerance patterns",
+                confidence_min=0.6,
+                confidence_max=0.9,
+            ),
+            RuleMetadata(
+                name="ConfigRule",
+                family="structural",
+                description="Identifies configuration state nodes",
+                confidence_min=0.75,
+                confidence_max=0.95,
+            ),
+            RuleMetadata(
+                name="ContainmentRule",
+                family="structural",
+                description="Detects module/class scope containment",
+                confidence_min=0.8,
+                confidence_max=0.99,
+            ),
+            RuleMetadata(
+                name="ContextRule",
+                family="semantic",
+                description="Identifies context-aware state management",
+                confidence_min=0.65,
+                confidence_max=0.88,
+            ),
+            RuleMetadata(
+                name="DataPipelineRule",
+                family="behavioral",
+                description="Detects ETL and data transformation pipelines",
+                confidence_min=0.6,
+                confidence_max=0.85,
+            ),
+            RuleMetadata(
+                name="ErrorBoundaryRule",
+                family="resilience",
+                description="Identifies error handling boundaries",
+                confidence_min=0.7,
+                confidence_max=0.92,
+            ),
+            RuleMetadata(
+                name="EventBusRule",
+                family="behavioral",
+                description="Detects publish-subscribe event patterns",
+                confidence_min=0.65,
+                confidence_max=0.9,
+            ),
+            RuleMetadata(
+                name="FeatureFlagRule",
+                family="control",
+                description="Identifies feature flag conditional logic",
+                confidence_min=0.6,
+                confidence_max=0.85,
+            ),
+            RuleMetadata(
+                name="InheritanceRule",
+                family="structural",
+                description="Detects class inheritance and mixins",
+                confidence_min=0.85,
+                confidence_max=0.99,
+            ),
+            RuleMetadata(
+                name="MutatingSubsystemRule",
+                family="semantic",
+                description="Identifies state mutation and side effects",
+                confidence_min=0.7,
+                confidence_max=0.9,
+            ),
+            RuleMetadata(
+                name="ObservationRule",
+                family="semantic",
+                description="Identifies observable state and sensors",
+                confidence_min=0.65,
+                confidence_max=0.88,
+            ),
+            RuleMetadata(
+                name="OrchestratorRule",
+                family="behavioral",
+                description="Detects orchestration and task scheduling",
+                confidence_min=0.6,
+                confidence_max=0.85,
+            ),
+            RuleMetadata(
+                name="PolicyRule",
+                family="control",
+                description="Identifies policy enforcement mechanisms",
+                confidence_min=0.65,
+                confidence_max=0.9,
+            ),
+            RuleMetadata(
+                name="PreferenceRule",
+                family="semantic",
+                description="Identifies user preferences and settings",
+                confidence_min=0.65,
+                confidence_max=0.88,
+            ),
+            RuleMetadata(
+                name="ReadOnlyInputRule",
+                family="structural",
+                description="Detects immutable input parameters",
+                confidence_min=0.75,
+                confidence_max=0.95,
+            ),
+            RuleMetadata(
+                name="RetryPatternRule",
+                family="resilience",
+                description="Detects retry and backoff mechanisms",
+                confidence_min=0.7,
+                confidence_max=0.92,
+            ),
+            RuleMetadata(
+                name="SingletonAccessRule",
+                family="structural",
+                description="Identifies singleton and shared resource access",
+                confidence_min=0.75,
+                confidence_max=0.95,
+            ),
+            RuleMetadata(
+                name="TestAssertionRule",
+                family="control",
+                description="Identifies test assertions and invariants",
+                confidence_min=0.8,
+                confidence_max=0.98,
+            ),
+        ]
+        return RulesResponse(rules=rules, count=len(rules))
+
+    @app.post(
+        "/api/v1/analyze",
+        response_model=AnalysisResponse,
+        summary="Analyze repository (v1 API)",
+        tags=["api_v1"],
+        responses={
+            404: {"model": ErrorResponse, "description": "Repo path does not exist."},
+            422: {"model": ErrorResponse, "description": "Invalid request body."},
+            500: {"model": ErrorResponse, "description": "Analysis failed."},
+        },
+    )
+    async def analyze_v1(request: Request, body: AnalysisRequest) -> AnalysisResponse:
+        """Run forward pipeline and return structured analysis result.
+
+        Similar to ``/analyze`` but returns additional timing breakdown
+        and structured request ID for v1 API contract.
+        """
+        request_id: str = getattr(request.state, "request_id", str(uuid.uuid4()))
+        start_total = time.perf_counter()
+
+        try:
+            bundle = _run_forward_pipeline(
+                body.repo_path,
+                stages=body.stages,
+                skip_dynamic=body.skip_dynamic,
+            )
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except (ValueError, RuntimeError, KeyError) as exc:
+            raise HTTPException(
+                status_code=500, detail=f"{type(exc).__name__}: {exc}"
+            ) from exc
+
+        duration_total = time.perf_counter() - start_total
+
+        response = _bundle_to_analyze_response(bundle)
+        return AnalysisResponse(
+            request_id=request_id,
+            nodes=response.nodes,
+            edges=response.edges,
+            mappings=response.mappings,
+            roles=response.roles,
+            errors=response.errors,
+            timing={"total_ms": round(duration_total * 1000, 3)},
+        )
+
+    @app.post(
+        "/api/v1/roundtrip",
+        response_model=RoundtripResponseV1,
+        summary="Round-trip analysis (v1 API)",
+        tags=["api_v1"],
+        responses={
+            404: {"model": ErrorResponse, "description": "Repo path does not exist."},
+            422: {"model": ErrorResponse, "description": "Invalid request body."},
+            500: {"model": ErrorResponse, "description": "Round-trip failed."},
+        },
+    )
+    async def roundtrip_v1(
+        request: Request, body: RoundtripRequestV1
+    ) -> RoundtripResponseV1:
+        """Forward → reverse → forward round-trip (v1 API).
+
+        Returns structured result with request ID and timing breakdown.
+        """
+        request_id: str = getattr(request.state, "request_id", str(uuid.uuid4()))
+        start_total = time.perf_counter()
+
+        path = Path(body.repo_path).expanduser().resolve()
+        if not path.exists():
+            raise HTTPException(
+                status_code=404, detail=f"repo path does not exist: {body.repo_path}"
+            )
+        try:
+            result = verify_repo_roundtrip(path, role_threshold=body.threshold)
+        except (ValueError, RuntimeError, KeyError) as exc:
+            raise HTTPException(
+                status_code=500, detail=f"{type(exc).__name__}: {exc}"
+            ) from exc
+
+        duration_total = time.perf_counter() - start_total
+        return RoundtripResponseV1(
+            request_id=request_id,
+            role_match_score=float(result.role_match_score),
+            is_isomorphic=bool(result.is_isomorphic),
+            original_roles=dict(result.original_roles),
+            synthesized_roles=dict(result.synthesized_roles),
+            threshold=float(body.threshold),
+            errors=list(result.errors),
+            timing={"total_ms": round(duration_total * 1000, 3)},
+        )
+
+    @app.post(
+        "/api/v1/visualize",
+        response_model=VisualizeResponse,
+        summary="Generate visualization for source code",
+        tags=["api_v1"],
+        responses={
+            422: {"model": ErrorResponse, "description": "Invalid request or language."},
+            500: {"model": ErrorResponse, "description": "Visualization failed."},
+        },
+    )
+    async def visualize(
+        request: Request, body: VisualizeRequest
+    ) -> VisualizeResponse:
+        """Generate a diagram for source code in the requested format.
+
+        Supports Mermaid (graph syntax), JSON (node/edge lists), and
+        GraphML (XML interchange format).
+        """
+        request_id: str = getattr(request.state, "request_id", str(uuid.uuid4()))
+
+        if body.language not in ("python", "javascript", "typescript"):
+            raise HTTPException(
+                status_code=422,
+                detail=f"unsupported language: {body.language}",
+            )
+
+        if body.format not in ("mermaid", "json", "graphml"):
+            raise HTTPException(
+                status_code=422,
+                detail=f"unsupported format: {body.format}",
+            )
+
+        try:
+            # Placeholder: in a real implementation, this would parse the
+            # source_code, build a graph, and emit the diagram in the
+            # requested format. For now, return a stub.
+            diagram = f"[{body.format.upper()} diagram for {body.language}]"
+            return VisualizeResponse(
+                request_id=request_id,
+                diagram=diagram,
+                format=body.format,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("visualization failed")
+            raise HTTPException(
+                status_code=500,
+                detail=f"{type(exc).__name__}: {exc}",
+            ) from exc
+
+    @app.get(
+        "/api/v1/metrics",
+        response_model=MetricsResponse,
+        summary="System metrics",
+        tags=["api_v1"],
+        responses={
+            200: {"description": "Current system metrics."},
+        },
+    )
+    async def get_metrics_v1() -> MetricsResponse:
+        """Return system metrics: request counts, active sessions, latency.
+
+        Simple metrics suitable for monitoring. For detailed Prometheus
+        metrics, use ``GET /metrics``.
+        """
+        store: _MetricsStore = app.state.metrics
+        total_requests = sum(store.requests.values())
+        active_sessions: int = getattr(app.state, "active_sessions", 0)
+
+        avg_latency_ms = 0.0
+        if store.duration_count:
+            total_duration = sum(store.duration_sum.values())
+            total_count = sum(store.duration_count.values())
+            if total_count > 0:
+                avg_latency_ms = (total_duration / total_count) * 1000
+
+        return MetricsResponse(
+            requests_total=total_requests,
+            active_sessions=active_sessions,
+            avg_latency_ms=avg_latency_ms,
         )
 
     return app

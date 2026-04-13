@@ -420,4 +420,4 @@ attribute. The primary evidence for `MutatingSubsystemRule` and the B matrix.
 - [Active Inference primer](../theory/active_inference_primer.md)
 - [Code as a generative model](../theory/code_as_generative_model.md)
 - [GNN format reference](../theory/gnn_format_reference.md)
-- [`py/cogant/schemas/`](../../py/cogant/schemas/) — the authoritative type definitions.
+- [`py/cogant/schemas/`](https://github.com/cogant-contributors/cogant/tree/main/cogant/py/cogant/schemas) — the authoritative type definitions.

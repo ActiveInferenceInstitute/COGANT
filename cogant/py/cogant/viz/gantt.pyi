@@ -1,10 +1,8 @@
+from __future__ import annotations
+
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
 from cogant.process.timeline import Timeline as Timeline
-
-logger: Incomplete
 
 class GanttRenderer:
     stages: list[dict[str, Any]]

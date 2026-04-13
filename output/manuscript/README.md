@@ -19,12 +19,14 @@ Stem order follows [`../../../infrastructure/rendering/manuscript_discovery.py`]
 | `03_api_and_workflows.md` | Session, pipeline, bundle, CLI, Review API |
 | `04_examples_and_failure_modes.md` | End-to-end examples and degradation behavior |
 | `05_conclusion.md` | Capabilities, limitations, roadmap |
+| `06_experimental_setup.md` | Environment, install, commands, hardware notes |
 | `06_01_environment_api_and_config.md` | Environment, Session/Pipeline snippets, YAML config, CLI |
 | `06_02_exports_parser_and_ir_stages.md` | Export targets, Python parser, IR stage table |
 | `06_03_performance_and_fixture_metrics.md` | Performance targets, fixture tables |
 | `06_04_tests_mutation_and_benchmarks.md` | Test matrix, mutation notes, benchmark harness |
 | `06_05_reproducible_recording.md` | What to record for reproducibility |
 | `07_reproducibility.md` | Versioning, determinism, validation gates |
+| `08_scope_and_related_work.md` | Scope, related-work hub, pointers to §8 fragments |
 | `08_01_landscape_and_tool_categories.md` | Landscape and tool categories |
 | `08_02_program_analysis_for_ml_and_tables.md` | ML-related work and feature / I/O tables |
 | `08_03_lenses_and_synthesis.md` | Lenses, synthesis, categorical framing |
@@ -49,7 +51,7 @@ Outputs: `../output/data/manuscript_variables.json` and `../output/manuscript/*.
 
 Optional spot-check: `uv run python ../tools/inject_manuscript_vars.py ../manuscript/00_abstract.md --dry-run`
 
-Retired monoliths (not concatenated into the PDF) may live under [`_archive/`](_archive/) — for example `cogant_paper_monolith.md` or `02_methodology_monolith.md` if present.
+Retired monoliths (not concatenated into the PDF) may live under an `_archive/` subdirectory — for example `cogant_paper_monolith.md` or `02_methodology_monolith.md` — if and when they are brought back. No such archive ships with the current tree; see [`AGENTS.md`](AGENTS.md) for the archival convention.
 
 ## Pipeline discovery
 
@@ -62,6 +64,9 @@ Run from the **repository root** (the directory that contains `infrastructure/` 
 ```bash
 uv run python -m infrastructure.validation.cli markdown ./projects_in_progress/cogant/manuscript/
 uv run python -m infrastructure.validation.cli markdown ./projects_in_progress/cogant/output/manuscript/
+
+# From ../cogant/ (package root): relative links in manuscript/*.md
+uv run python docs/verify_manuscript_links.py
 ```
 
 ## COGANT package tests

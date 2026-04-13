@@ -66,6 +66,30 @@ ROLE_MATCH_THRESHOLD = 0.5
 
 
 @dataclass
+class IdempotencyReport:
+    """Detailed structural and semantic idempotency analysis.
+
+    Attributes:
+        is_idempotent: True if the round-trip preserved structural and
+            semantic properties above their respective thresholds.
+        forward_roles: Role multiset from the original forward pipeline
+            run on the source code (before synthesis).
+        reverse_roles: Role multiset from the re-run of forward on
+            the synthesized code.
+        differences: List of human-readable differences found between
+            forward_roles and reverse_roles.
+        score: A composite score in [0.0, 1.0] combining role match,
+            structural match, and semantic match. Higher is better.
+    """
+
+    is_idempotent: bool = False
+    forward_roles: dict[str, int] = field(default_factory=dict)
+    reverse_roles: dict[str, int] = field(default_factory=dict)
+    differences: list[str] = field(default_factory=list)
+    score: float = 0.0
+
+
+@dataclass
 class RoundtripResult:
     """Outcome of a single round-trip verification run.
 
@@ -280,6 +304,121 @@ def _run_forward(repo_path: Path) -> dict[str, Any]:
         logger.exception("Forward pipeline failed on %s", repo_path)
         result["error"] = f"{type(exc).__name__}: {exc}"
     return result
+
+
+# ---------------------------------------------------------------------------
+# Idempotency checkers
+# ---------------------------------------------------------------------------
+
+
+def check_structural_idempotency(
+    original_graph: Any, roundtrip_graph: Any
+) -> IdempotencyReport:
+    """Check structural idempotency of two program graphs.
+
+    Compares the node and edge populations of two graphs to determine
+    if they have the same structural shape.
+
+    Args:
+        original_graph: The original ProgramGraph or compatible structure.
+        roundtrip_graph: The ProgramGraph from the re-run.
+
+    Returns:
+        An IdempotencyReport describing structural similarities and
+        differences.
+    """
+    report = IdempotencyReport()
+
+    # Extract node/edge information from both graphs
+    orig_nodes, orig_edges = _nodes_edges_from_mappings(original_graph)
+    rt_nodes, rt_edges = _nodes_edges_from_mappings(roundtrip_graph)
+
+    # Compare node role multisets
+    orig_role_counts = Counter(
+        node.get("role", "UNKNOWN") for node in orig_nodes
+    )
+    rt_role_counts = Counter(
+        node.get("role", "UNKNOWN") for node in rt_nodes
+    )
+
+    report.forward_roles = dict(orig_role_counts)
+    report.reverse_roles = dict(rt_role_counts)
+
+    # Find differences
+    all_roles = set(orig_role_counts.keys()) | set(rt_role_counts.keys())
+    for role in sorted(all_roles):
+        orig_count = orig_role_counts.get(role, 0)
+        rt_count = rt_role_counts.get(role, 0)
+        if orig_count != rt_count:
+            report.differences.append(
+                f"Role {role}: {orig_count} → {rt_count}"
+            )
+
+    # Compute a simple structural score
+    if orig_role_counts and rt_role_counts:
+        intersection = sum(
+            min(orig_role_counts.get(r, 0), rt_role_counts.get(r, 0))
+            for r in all_roles
+        )
+        union = sum(max(orig_role_counts.get(r, 0), rt_role_counts.get(r, 0))
+                    for r in all_roles)
+        report.score = intersection / union if union > 0 else 0.0
+    else:
+        report.score = 0.0
+
+    report.is_idempotent = len(report.differences) == 0
+
+    return report
+
+
+def check_semantic_idempotency(
+    original_mappings: dict[str, Any], roundtrip_mappings: dict[str, Any]
+) -> IdempotencyReport:
+    """Check semantic idempotency of two semantic-mapping dicts.
+
+    Compares the role populations and distributions of two sets of
+    semantic mappings.
+
+    Args:
+        original_mappings: Semantic mappings from the original forward run.
+        roundtrip_mappings: Semantic mappings from the re-run.
+
+    Returns:
+        An IdempotencyReport describing semantic similarities and
+        differences.
+    """
+    report = IdempotencyReport()
+
+    orig_roles = _role_multiset_from_mappings(original_mappings)
+    rt_roles = _role_multiset_from_mappings(roundtrip_mappings)
+
+    report.forward_roles = dict(orig_roles)
+    report.reverse_roles = dict(rt_roles)
+
+    # Find differences
+    all_roles = set(orig_roles.keys()) | set(rt_roles.keys())
+    for role in sorted(all_roles):
+        orig_count = orig_roles.get(role, 0)
+        rt_count = rt_roles.get(role, 0)
+        if orig_count != rt_count:
+            report.differences.append(
+                f"Role {role}: {orig_count} → {rt_count}"
+            )
+
+    # Compute Jensen-Shannon-like score
+    if orig_roles and rt_roles:
+        intersection = sum(
+            min(orig_roles.get(r, 0), rt_roles.get(r, 0)) for r in all_roles
+        )
+        union = sum(max(orig_roles.get(r, 0), rt_roles.get(r, 0))
+                    for r in all_roles)
+        report.score = intersection / union if union > 0 else 0.0
+    else:
+        report.score = 0.0
+
+    report.is_idempotent = len(report.differences) == 0
+
+    return report
 
 
 # ---------------------------------------------------------------------------
@@ -553,8 +692,11 @@ def verify_repo_roundtrip(
 
 
 __all__ = [
+    "IdempotencyReport",
     "RoundtripResult",
     "verify_roundtrip",
     "verify_repo_roundtrip",
     "ROLE_MATCH_THRESHOLD",
+    "check_structural_idempotency",
+    "check_semantic_idempotency",
 ]

@@ -1,27 +1,24 @@
 from pathlib import Path
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
 from cogant.simulate.free_energy import FreeEnergyCalculator as FreeEnergyCalculator
 
-logger: Incomplete
 ACTIVE_INFERENCE_AVAILABLE: bool
 
 class ExecutionTrace:
-    step: Incomplete
-    state: Incomplete
-    action: Incomplete
-    observation: Incomplete
-    reward: Incomplete
-    timestamp: Incomplete
-    beliefs: Incomplete
-    beliefs_prior: Incomplete
-    free_energy_before: Incomplete
-    free_energy_after: Incomplete
-    policy_scores: Incomplete
-    action_rationale: Incomplete
-    predicted_state: Incomplete
+    step: Any
+    state: Any
+    action: Any
+    observation: Any
+    reward: Any
+    timestamp: Any
+    beliefs: Any
+    beliefs_prior: Any
+    free_energy_before: Any
+    free_energy_after: Any
+    policy_scores: Any
+    action_rationale: Any
+    predicted_state: Any
     def __init__(self, step: int, state: dict[str, Any], action: str | None = None, observation: str | None = None, reward: float = 0.0, beliefs: dict[str, float] | None = None, beliefs_prior: dict[str, float] | None = None, free_energy_before: float = 0.0, free_energy_after: float = 0.0, policy_scores: list[tuple[str, float]] | None = None, action_rationale: str | None = None, predicted_state: dict[str, Any] | None = None) -> None: ...
     def to_dict(self) -> dict[str, Any]: ...
 
@@ -38,6 +35,7 @@ class GNNModelRunner:
     def __init__(self) -> None: ...
     def load_package(self, package_dir: str) -> dict[str, Any]: ...
     def run(self, steps: int = 10) -> dict[str, Any]: ...
+    def run_with_profiling(self, num_steps: int = 10, num_trials: int = 1) -> tuple[list[dict[str, Any]], dict[str, float]]: ...
     def generate_execution_report(self, trace: dict[str, Any] | None = None) -> str: ...
 
 def load_gnn_package(package_dir: str) -> dict[str, Any]: ...

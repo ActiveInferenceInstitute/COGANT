@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/simulate/visualization.py
+# hypothesis_version: 6.135.29
+
+[0.0, 1.0, 100, 150, 360, 400, 800, 900, '    </div>', '  </div>', '  </style>', '  <style>', '  participant Agent', '#45B7D1', '#4ECDC4', '#85C1E2', '#98D8C8', '#BB8FCE', '#F7DC6F', '#FF6B6B', '#FFA07A', '<!DOCTYPE html>', '</body>', '</head>', '</html>', '</style>', '</svg>', '<body>', '<head>', '<html>', '<style>', 'No action data', 'No belief data', 'No free energy data', 'No trace data', 'Z', 'action', 'beliefs', 'free_energy', 'sequenceDiagram', 'state', 'wait']

@@ -10,7 +10,7 @@ Orchestrates rule application via fixpoint iteration until convergence. Provides
 ### TranslationRule (engine.py)
 Abstract base class. Subclasses implement matches() (find patterns) and apply() (generate SemanticMapping).
 
-### 19 Concrete Rules (rules.py)
+### 22 Concrete Rules (rules.py)
 1. ReadOnlyInputRule — read-only modules → OBSERVATION (prefix: `obs_`)
 2. MutatingSubsystemRule — mutating state holders → HIDDEN_STATE (prefix: `hs_`)
 3. OrchestratorRule — schedulers, controllers → ORCHESTRATION (prefix: `orch_`)

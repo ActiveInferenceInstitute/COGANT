@@ -1,10 +1,8 @@
+from typing import Any
+
 from dataclasses import dataclass, field
 
-from _typeshed import Incomplete as Incomplete
-
 from cogant.process.extractor import ProcessModel as ProcessModel
-
-logger: Incomplete
 
 @dataclass
 class GanttStage:
@@ -23,7 +21,7 @@ class Timeline:
     parallel_groups: list[list[str]]
 
 class TimelineBuilder:
-    process_model: Incomplete
+    process_model: Any
     gantt_stages: dict[str, GanttStage]
     timeline: Timeline | None
     def __init__(self, process_model: ProcessModel) -> None: ...

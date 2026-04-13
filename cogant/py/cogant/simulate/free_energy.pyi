@@ -1,6 +1,6 @@
-from collections.abc import Sequence
+from typing import Any
 
-from _typeshed import Incomplete
+from collections.abc import Sequence
 
 from cogant.simulate.distributions import CategoricalDistribution
 from cogant.statespace.compiler import StateSpaceModel
@@ -13,10 +13,10 @@ def expected_free_energy(policy_action_sequence: Sequence[int], beliefs: Sequenc
 def uniform_distribution(n: int) -> list[float]: ...
 
 class FreeEnergyCalculator:
-    state_space: Incomplete
-    states: Incomplete
-    actions: Incomplete
-    transition_matrix: Incomplete
+    state_space: Any
+    states: Any
+    actions: Any
+    transition_matrix: Any
     def __init__(self, state_space: StateSpaceModel) -> None: ...
     def variational_free_energy(self, beliefs: CategoricalDistribution, observation: str, likelihood_model: dict[str, CategoricalDistribution] | None = None) -> float: ...
     def expected_free_energy(self, beliefs: CategoricalDistribution, policy: list[str], horizon: int = 3, likelihood_model: dict[str, CategoricalDistribution] | None = None) -> float: ...

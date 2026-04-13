@@ -60,6 +60,111 @@ class DataFlowEdge:
     """Additional metadata."""
 
 
+@dataclass
+class DataFlowGraph:
+    """Directed graph of data flow relationships."""
+
+    edges: list[DataFlowEdge] = field(default_factory=list)
+    """List of data flow edges."""
+
+    nodes: set[str] = field(default_factory=set)
+    """Set of all node names."""
+
+    def add_edge(self, edge: DataFlowEdge) -> None:
+        """Add an edge to the graph.
+
+        Args:
+            edge: DataFlowEdge to add.
+        """
+        self.edges.append(edge)
+        self.nodes.add(edge.source_symbol)
+        self.nodes.add(edge.target_symbol)
+
+    def find_sources(self) -> list[str]:
+        """Find nodes with no incoming data flow (entry points).
+
+        Returns:
+            List of source node names.
+        """
+        sources_with_incoming = {e.target_symbol for e in self.edges}
+        return sorted([n for n in self.nodes if n not in sources_with_incoming])
+
+    def find_sinks(self) -> list[str]:
+        """Find nodes with no outgoing data flow (final consumers).
+
+        Returns:
+            List of sink node names.
+        """
+        sinks_with_outgoing = {e.source_symbol for e in self.edges}
+        return sorted([n for n in self.nodes if n not in sinks_with_outgoing])
+
+    def get_taint_paths(self, source: str, sink: str) -> list[list[str]]:
+        """Find all paths from source to sink node.
+
+        Args:
+            source: Source node name.
+            sink: Sink node name.
+
+        Returns:
+            List of paths (each path is a list of node names).
+        """
+        # Build adjacency list
+        adj: dict[str, set[str]] = {}
+        for node in self.nodes:
+            adj[node] = set()
+        for edge in self.edges:
+            adj[edge.source_symbol].add(edge.target_symbol)
+
+        # DFS to find all paths
+        all_paths: list[list[str]] = []
+
+        def dfs(current: str, target: str, path: list[str]) -> None:
+            """Depth-first search for paths.
+
+            Args:
+                current: Current node.
+                target: Target node.
+                path: Current path.
+            """
+            if current == target:
+                all_paths.append(path[:])
+                return
+            if current not in adj:
+                return
+            for neighbor in adj[current]:
+                if neighbor not in path:  # Prevent cycles
+                    path.append(neighbor)
+                    dfs(neighbor, target, path)
+                    path.pop()
+
+        if source in self.nodes:
+            dfs(source, sink, [source])
+
+        return all_paths
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize graph to dictionary.
+
+        Returns:
+            Dictionary representation of the graph.
+        """
+        return {
+            "nodes": sorted(self.nodes),
+            "edges": [
+                {
+                    "id": e.id,
+                    "source": e.source_symbol,
+                    "target": e.target_symbol,
+                    "type": e.edge_type,
+                    "file": str(e.file_path),
+                    "line": e.line_num,
+                    "context": e.context,
+                }
+                for e in self.edges
+            ],
+        }
+
+
 class DataFlowAnalyzer:
     """Analyze data flow: track variable reads, writes, and mutations."""
 
@@ -157,6 +262,39 @@ class DataFlowAnalyzer:
                         flows.extend(visitor.flows)
 
         return flows
+
+    def build_flow_graph(self, file_path: Path) -> DataFlowGraph:
+        """Build a data flow graph from a Python file.
+
+        Args:
+            file_path: Path to Python file.
+
+        Returns:
+            DataFlowGraph instance.
+        """
+        edges = self.analyze_file(file_path)
+        graph = DataFlowGraph()
+        for edge in edges:
+            graph.add_edge(edge)
+        return graph
+
+    def build_flow_graph_from_source(
+        self, source: str, file_path: Path
+    ) -> DataFlowGraph:
+        """Build a data flow graph from source code.
+
+        Args:
+            source: Python source code.
+            file_path: Path for reference.
+
+        Returns:
+            DataFlowGraph instance.
+        """
+        edges = self.analyze_source(source, file_path)
+        graph = DataFlowGraph()
+        for edge in edges:
+            graph.add_edge(edge)
+        return graph
 
 
 class DataFlowVisitor(ast.NodeVisitor):

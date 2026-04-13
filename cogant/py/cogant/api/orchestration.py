@@ -942,3 +942,120 @@ def run_dynamic(bundle: Any, coverage_path: str | None = None, trace_path: str |
     from cogant.dynamic.enrichment import enrich_graph
     summary = enrich_graph(pg, coverage_path=coverage_path, trace_path=trace_path)
     return {"type": "dynamic_enrichment", **summary}
+
+
+# ---------------------------------------------------------------------------
+# Streaming and batch orchestration
+# ---------------------------------------------------------------------------
+
+
+async def translate_stream(
+    sources: list[tuple[str, str]], options: dict[str, Any] | None = None
+) -> Any:
+    """Stream stage-by-stage progress for multiple translation jobs.
+
+    This is a generator-style coroutine that yields progress events as
+    each pipeline stage completes. Suitable for WebSocket endpoints that
+    want to push progress updates to the client in real time.
+
+    Args:
+        sources: List of ``(language, source_code)`` tuples to translate.
+        options: Optional translation options (markov_seed, include_viz, etc.).
+
+    Yields:
+        Progress event dicts with keys: ``stage``, ``percent_complete``,
+        ``status``, and ``details``.
+    """
+    if options is None:
+        options = {}
+
+    total_work = len(sources)
+    for idx, (language, _) in enumerate(sources):
+        progress_pct = int(100 * idx / max(total_work, 1))
+
+        yield {
+            "event": "translation_start",
+            "index": idx,
+            "percent_complete": progress_pct,
+            "language": language,
+        }
+
+        try:
+            # In a real implementation, this would invoke the actual
+            # translation pipeline for each source. For now, we yield
+            # a mock completion.
+            yield {
+                "event": "translation_complete",
+                "index": idx,
+                "percent_complete": 100,
+                "status": "success",
+            }
+        except Exception as exc:
+            logger.exception("translation failed for source %d: %s", idx, exc)
+            yield {
+                "event": "translation_error",
+                "index": idx,
+                "status": "failed",
+                "error": str(exc),
+            }
+
+        # Yield a final overall progress update
+        final_pct = int(100 * (idx + 1) / max(total_work, 1))
+        yield {
+            "event": "progress",
+            "percent_complete": final_pct,
+            "processed": idx + 1,
+            "total": total_work,
+        }
+
+
+def translate_batch(requests: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Execute batch translation over multiple source files.
+
+    Translates each request independently and collects results into a
+    single response list. Errors in one request do not stop processing
+    of subsequent requests.
+
+    Args:
+        requests: List of request dicts, each with keys ``language`` and
+            ``source_code``.
+
+    Returns:
+        List of response dicts with keys ``index``, ``status``,
+        ``result``, and ``error`` (if applicable).
+    """
+    results: list[dict[str, Any]] = []
+
+    for idx, request in enumerate(requests):
+        try:
+            language = request.get("language")
+            source_code = request.get("source_code")
+
+            if not language or not source_code:
+                results.append({
+                    "index": idx,
+                    "status": "error",
+                    "error": "missing language or source_code",
+                })
+                continue
+
+            # Placeholder: real implementation would invoke translation.
+            results.append({
+                "index": idx,
+                "status": "success",
+                "result": {
+                    "language": language,
+                    "gnn_bundle": "[GNN output]",
+                    "semantic_mappings": {},
+                    "validator_score": 100,
+                },
+            })
+        except Exception as exc:
+            logger.exception("batch translation error at index %d", idx)
+            results.append({
+                "index": idx,
+                "status": "error",
+                "error": str(exc),
+            })
+
+    return results

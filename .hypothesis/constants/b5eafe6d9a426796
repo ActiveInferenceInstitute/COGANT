@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/viz/cytoscape_view.py
+# hypothesis_version: 6.135.29
+
+[0.0, 1.0, '#2ecc71', '#3498db', '#95a5a6', '#9b59b6', '#e67e22', '#e74c3c', ',', ':', 'ACTION', 'CONSTRAINT', 'HIDDEN_STATE', 'OBSERVATION', 'POLICY', 'UNKNOWN', '__AI_ROLE_COLORS__', '__CYTOSCAPE_CDN__', '__DEFAULT_COLOR__', '__GRAPH_JSON__', 'color', 'confidence', 'confidence_score', 'degree', 'edges', 'id', 'kind', 'label', 'name', 'nodes', 'qualified_name', 'role', 'size', 'source', 'source_id', 'target', 'target_id', 'type', 'utf-8']

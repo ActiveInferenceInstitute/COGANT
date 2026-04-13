@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 from typing import ClassVar
 
-from _typeshed import Incomplete as Incomplete
 from pydantic import BaseModel
 
 class GraphConfig(BaseModel):

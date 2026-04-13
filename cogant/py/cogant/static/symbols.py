@@ -68,6 +68,56 @@ class SymbolTable:
     errors: list[str] = field(default_factory=list)
     """Errors encountered during extraction."""
 
+    def get_public_api(self) -> list[SymbolInfo]:
+        """Get all public (non-underscore) symbols.
+
+        Returns:
+            List of public symbols.
+        """
+        return [s for s in self.symbols if not s.name.startswith("_")]
+
+    def get_entry_points(self) -> list[SymbolInfo]:
+        """Get symbols callable from outside (public functions and public methods).
+
+        Returns:
+            List of public functions and methods.
+        """
+        return [
+            s
+            for s in self.get_public_api()
+            if s.kind in ("function", "method") or (s.kind == "class")
+        ]
+
+    def to_json(self) -> str:
+        """Serialize symbol table to JSON.
+
+        Returns:
+            JSON string representation.
+        """
+        import json
+
+        data = {
+            "file_path": str(self.file_path),
+            "symbols": [
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "qualified_name": s.qualified_name,
+                    "kind": s.kind,
+                    "line_start": s.line_start,
+                    "line_end": s.line_end,
+                    "scope": s.scope,
+                    "parent_id": s.parent_id,
+                    "doc": s.doc,
+                    "decorators": s.decorators,
+                    "metadata": s.metadata,
+                }
+                for s in self.symbols
+            ],
+            "errors": self.errors,
+        }
+        return json.dumps(data, indent=2)
+
 
 class SymbolExtractor:
     """Extract symbols from parsed Python modules."""

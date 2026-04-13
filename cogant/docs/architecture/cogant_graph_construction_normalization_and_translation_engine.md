@@ -65,4 +65,27 @@ This document describes the complete engine for COGANT - the **Codebase-to-GNN T
 from cogant.normalize.identities import IdentityResolver
 
 resolver = IdentityResolver()
+# Generate a stable ID for a module entity. Same inputs always yield the
+# same ID (SHA256 of repo_uri | path | qualified_name).
+module_id = resolver.get_id(
+    entity_type="module",
+    repo_uri="https://github.com/example/repo",
+    path="src/mymodule.py",
+    qualified_name="myapp.core",
+)
+```
 
+#### 1.2 CanonicalNormalizer (`cogant/normalize/canonical.py`)
+
+**Purpose:** Convert language-specific facts into canonical NodeKind objects.
+
+**Mapping Examples:**
+- `python:class` → `NodeKind.CLASS`
+- `javascript:async_function` → `NodeKind.FUNCTION`
+- `java:interface` → `NodeKind.CLASS`
+
+**Key Methods:**
+- `normalize()` - Convert single LanguageFact to NormalizedFact
+- `normalize_batch()` - Convert multiple facts
+- `to_node()` - Create Node object from normalized fact
+- `get_normalization_stats()` - Track unmapped facts

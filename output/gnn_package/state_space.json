@@ -1,0 +1,17 @@
+{
+  "variables": [],
+  "observations": [],
+  "actions": [],
+  "transitions": {
+    "type": "state_transitions",
+    "transition_count": 0,
+    "deterministic": true,
+    "markovian": true,
+    "time_regime": "synchronous"
+  },
+  "metadata": {
+    "num_variables": 0,
+    "num_observations": 0,
+    "num_actions": 0
+  }
+}

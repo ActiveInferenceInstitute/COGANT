@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/statespace/variables.py
+# hypothesis_version: 6.135.29
+
+[0.4, 0.5, 0.6, 0.8, 0.95, 'ConfidenceLevel', 'FactorizationInfo', 'StateVariable', 'StateVariableType', 'active', 'array', 'body', 'bool', 'boolean', 'cardinality', 'categorical', 'complete', 'composite', 'config', 'continuous', 'count', 'definite', 'dict', 'discrete', 'done', 'enabled', 'enum_values', 'flag', 'float', 'headers', 'high', 'index', 'init', 'int', 'integer', 'list', 'low', 'map_confidence_score', 'medium', 'metadata', 'middleware', 'num', 'object', 'paused', 'pending', 'prob', 'rate', 'real', 'request', 'response', 'state', 'status', 'str', 'string', 'type_hint', 'uncertain', 'value', 'vector']

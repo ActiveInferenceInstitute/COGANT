@@ -78,7 +78,7 @@ Each arrow is **content-preserving**:
 
 - **source → graph**: AST is the syntactic form; graph is the semantic form. Information is
   re-indexed, not thrown away (except whitespace and comments).
-- **graph → mappings**: the 19 translation rules assign each node a role in the generative
+- **graph → mappings**: the 22 translation rules assign each node a role in the generative
   model. A rule fires only when the graph carries enough evidence to justify the assignment.
 - **mappings → state space**: the compiler projects the role assignments onto an ordered
   state / observation / action basis.

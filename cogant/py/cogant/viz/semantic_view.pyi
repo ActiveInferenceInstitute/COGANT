@@ -1,8 +1,6 @@
+from __future__ import annotations
+
 from typing import Any
-
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
 
 class SemanticVisualizer:
     states: list[dict[str, Any]]
@@ -14,3 +12,5 @@ class SemanticVisualizer:
     def from_state_space(self, state_space: dict[str, Any]) -> SemanticVisualizer: ...
     def render_html(self, output_path: str) -> str: ...
     def render_json(self) -> str: ...
+    def render_role_distribution(self, mappings: list[dict[str, Any]] | None = None) -> Any: ...
+    def render_confidence_heatmap(self, mappings: list[dict[str, Any]] | None = None) -> Any: ...

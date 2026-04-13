@@ -1,0 +1,15 @@
+{
+  "actions": [],
+  "policies": [
+    {
+      "id": "policy:default",
+      "label": "deterministic-default",
+      "kind": "policy",
+      "description": "No POLICY mappings extracted; using deterministic default.",
+      "controller_node_ids": [],
+      "confidence": 0.0,
+      "tier": "static_only"
+    }
+  ],
+  "count": 0
+}

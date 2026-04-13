@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/graph/merge.py
+# hypothesis_version: 6.135.29
+
+[0.1, 'No graphs to merge', 'dynamic', 'dynamic_priority', 'dynamic_weight', 'edge_weight_mismatch', 'mixed', 'static', 'static_priority', 'static_weight', 'total_conflicts', 'total_edges_added', 'total_edges_updated', 'total_merges', 'total_nodes_added', 'union']

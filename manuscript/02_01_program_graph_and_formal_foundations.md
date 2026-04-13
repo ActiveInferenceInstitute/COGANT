@@ -25,7 +25,7 @@ Equation \ref{eq:typed-iso} formalizes the structural invariant we check during 
 
 ## Formal definitions
 
-This subsection makes the objects manipulated by the pipeline mathematically explicit. The definitions are stated for the shipped v0.5.x engine; where the implementation differs from the general form (for example because an edge kind is not yet emitted by the Python front end), the difference is noted with a forward reference to Section 6.
+This subsection makes the objects manipulated by the pipeline mathematically explicit. The definitions are stated for the shipped v{{VERSION}} engine; where the implementation differs from the general form (for example because an edge kind is not yet emitted by the Python front end), the difference is noted with a forward reference to Section 6. A complete index of all symbols, equation labels, theorems, and acronyms introduced in this section and throughout the manuscript is in the Notation Supplement (`98_notation_supplement.md`, Groups G.1–G.9).
 
 **Definition 1 (Program graph).** A **program graph** is a tuple $G = (V, E, \lambda_V, \lambda_E, \tau)$ where
 

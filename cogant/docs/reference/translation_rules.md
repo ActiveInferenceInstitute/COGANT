@@ -25,7 +25,7 @@ See [Translation Rules](https://github.com/cogant-contributors/cogant/blob/main/
 
 ## Rule families and their implementing modules
 
-The 19 active translation rules are organized into five families. Each family lives in its own module under `py/cogant/translate/rules/` and is documented in [`cogant.translate` → Rules](../api/translate.md#rules). The rule engine that drives them — including the priority/confidence conflict-resolution loop — lives in [`cogant.translate.engine`](../api/translate.md#engine).
+The 22 active translation rules are organized into five families. Each family lives in its own module under `py/cogant/translate/rules/` and is documented in [`cogant.translate` → Rules](../api/translate.md#rules). The rule engine that drives them — including the priority/confidence conflict-resolution loop — lives in [`cogant.translate.engine`](../api/translate.md#engine).
 
 | Rule | Family | Fires when | Produces | Confidence | Implementing module | API reference |
 |------|--------|------------|----------|------------|---------------------|---------------|

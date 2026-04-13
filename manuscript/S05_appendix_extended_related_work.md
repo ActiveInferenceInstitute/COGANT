@@ -1,13 +1,18 @@
 # Appendix E — Extended Related Work
 
 This appendix consolidates the related-work references cited in the main
-text (Section 6) and the annotated bibliography in `../cogant/docs/evaluation/LITERATURE.md`
-(which contains 83 entries across 14 sections). The list below is organized
-into 10 topical clusters spanning program analysis → GNN, active inference
-tooling, code understanding, formal methods, POMDP solvers, and the
-categorical foundations of the forward/reverse pair. References are
-numbered consecutively across clusters so that the in-text citations in
-other appendices can use `[N]` format.
+text (Section 8) and the annotated bibliography in `../cogant/docs/evaluation/LITERATURE.md`
+(which contains {{BIB_ENTRIES}} entries across 14 sections). The list below is organized
+into **9 topical clusters** spanning program analysis → GNN (E.1), active inference
+tooling (E.2), code understanding and learned code models (E.3), graph kernels and
+structural similarity (E.4), formal methods and abstract interpretation (E.5), POMDP
+solvers and planning (E.6), program synthesis and reverse engineering (E.7),
+bidirectional transformations and lenses (E.8), and Markov blankets and active
+inference foundations (E.9). References are numbered consecutively across clusters;
+in-text citations in other appendices use `[N]` format. Consult
+[`../cogant/docs/evaluation/LITERATURE.md`](../cogant/docs/evaluation/LITERATURE.md) for
+the full annotated pool; this appendix lists the curated subset most directly relevant
+to COGANT's design and evaluation.
 
 ### E.1 Program analysis → GNN (learned and symbolic)
 

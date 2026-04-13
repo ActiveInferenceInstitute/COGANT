@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from cogant.static.calls import CallEdge as CallEdge
 from cogant.static.calls import CallGraphBuilder as CallGraphBuilder
 from cogant.static.dataflow import DataFlowAnalyzer as DataFlowAnalyzer

@@ -2,18 +2,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
-
 @dataclass
 class ChangedFile:
     path: Path
     change_type: str
 
 class IncrementalIngester:
-    repo_path: Incomplete
-    git_timeout: Incomplete
+    repo_path: Any
+    git_timeout: Any
     def __init__(self, repo_path: Path, git_timeout: float = 30.0) -> None: ...
     def is_git_repo(self) -> bool: ...
     def changed_since(self, ref: str = 'HEAD~1') -> list[ChangedFile]: ...

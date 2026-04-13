@@ -755,5 +755,57 @@ class GNNMatrices:
 
         return (len(errors) == 0, errors)
 
+    def validate(self) -> list[str]:
+        """Validate dimensional consistency across A/B/C/D matrices.
+
+        Checks that all four matrices have the expected shapes and that
+        stochastic constraints are satisfied (row sums for A, column
+        sums for B slices, sum for D).
+
+        Returns:
+            A list of validation issues. Empty list means all matrices
+            are dimensionally consistent and satisfy stochastic constraints.
+        """
+        _, errors = self.validate_shapes()
+        return errors
+
+    def to_plain_dict(self) -> dict[str, Any]:
+        """Export matrices as plain Python lists for JSON serialization.
+
+        Unlike :meth:`to_dict`, this method guarantees all values are plain
+        Python lists/floats with no numpy arrays or other special types.
+
+        Returns:
+            A dict with keys "A", "B", "C", "D" containing the matrices
+            as plain Python lists.  Additional keys include "n_states",
+            "n_obs", "n_actions" for shape information, and metadata like
+            "b_truncated" if the B tensor was truncated.
+        """
+        A = self.compute_A()
+        B = self.compute_B()
+        C = self.compute_C()
+        D = self.compute_D()
+
+        result: dict[str, Any] = {
+            "A": [list(row) if hasattr(row, '__iter__') else row
+                  for row in A],
+            "B": [[list(cell) if hasattr(cell, '__iter__') else cell
+                   for cell in row]
+                  for row in B],
+            "C": list(C) if C else [],
+            "D": list(D) if D else [],
+            "n_states": self.n_states,
+            "n_obs": self.n_obs,
+            "n_actions": self.n_actions,
+        }
+
+        # Include truncation metadata if B was truncated.
+        if self._b_truncated:
+            result["b_truncated"] = True
+            result["b_n_states_full"] = self._b_n_states_full
+            result["b_n_states_kept"] = self._b_n_states_kept
+
+        return result
+
 
 __all__ = ["GNNMatrices"]

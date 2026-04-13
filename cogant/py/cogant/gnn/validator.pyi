@@ -1,24 +1,22 @@
 from pathlib import Path
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
-
 class ValidationResult:
-    valid: Incomplete
+    valid: Any
     errors: list[str]
     warnings: list[str]
-    score: Incomplete
+    score: Any
     details: dict[str, Any]
+    section_scores: dict[str, float]
     def __init__(self, valid: bool = False, errors: list[str] | None = None, warnings: list[str] | None = None, score: float = 0.0) -> None: ...
     def to_dict(self) -> dict[str, Any]: ...
+    def to_markdown(self) -> str: ...
     def badge_svg(self) -> str: ...
 
 class GNNValidator:
-    REQUIRED_FILES: Incomplete
-    CANONICAL_SECTIONS: Incomplete
-    UPSTREAM_SECTIONS: Incomplete
+    REQUIRED_FILES: Any
+    CANONICAL_SECTIONS: Any
+    UPSTREAM_SECTIONS: Any
     result: ValidationResult
     package_dir: Path
     def __init__(self) -> None: ...

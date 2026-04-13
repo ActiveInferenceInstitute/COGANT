@@ -1,10 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
 
-from _typeshed import Incomplete as Incomplete
-
-logger: Incomplete
-
 @dataclass
 class DriftScore:
     total_score: float
@@ -13,14 +9,14 @@ class DriftScore:
     details: dict[str, Any]
 
 class DriftAnalyzer:
-    bundle_a: Incomplete
-    bundle_b: Incomplete
-    graph_a: Incomplete
-    graph_b: Incomplete
-    ss_a: Incomplete
-    ss_b: Incomplete
-    mappings_a: Incomplete
-    mappings_b: Incomplete
+    bundle_a: Any
+    bundle_b: Any
+    graph_a: Any
+    graph_b: Any
+    ss_a: Any
+    ss_b: Any
+    mappings_a: Any
+    mappings_b: Any
     def __init__(self, bundle_a: dict[str, Any], bundle_b: dict[str, Any]) -> None: ...
     def analyze(self, bundle_a: dict[str, Any], bundle_b: dict[str, Any]) -> DriftScore: ...
     def compute_structural_drift(self) -> dict[str, Any]: ...

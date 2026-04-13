@@ -1,4 +1,6 @@
-## DGL Export
+## DGL export
+
+> **Status:** First-party `bundle.export_dgl()` is **planned**. The sketch below matches the intended `dgl` feature layout once wired to the pipeline.
 
 ### Format
 

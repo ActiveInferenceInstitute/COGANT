@@ -9,3 +9,8 @@ COGANT emits artifacts in the formats expected by the GNN ecosystem plus a handf
 - **GraphML / Parquet**: Interop exports for Gephi/yEd analysis and columnar querying in DuckDB.
 - **Execution trace / report**: Produced when the GNN runner is exercised against the compiled model.
 
+### See also
+
+- [JSON export format](json_export_format.md) — typed program-graph JSON vs GNN companions.
+- [Artifact ownership](artifact_ownership.md) — which module writes which file.
+- [Validation](validation.md) · [See also](see_also.md)

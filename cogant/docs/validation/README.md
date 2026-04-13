@@ -20,6 +20,10 @@
 | [Archival Note](archival_note.md) | Provenance of historical validation artifacts | Reference |
 | [See Also](see_also.md) | Cross-links to related documentation | Beginner |
 
+## Getting started
+
+New to the validation layer? Read [Overview](overview.md) for what it does, then run [Validation via CLI](validation_via_cli.md) to generate your first report. The **Recommended Reading Order** below links these steps in sequence.
+
 ## Recommended Reading Order
 
 1. [Overview](overview.md) — understand what is being validated and why.

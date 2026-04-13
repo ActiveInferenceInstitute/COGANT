@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from cogant.viz.boundary import BoundaryMapper as BoundaryMapper
 from cogant.viz.dashboard import DashboardGenerator as DashboardGenerator
 from cogant.viz.diff_view import DiffVisualizer as DiffVisualizer

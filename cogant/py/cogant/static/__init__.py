@@ -4,9 +4,15 @@ Provides tools for parsing Python source code, extracting symbols, resolving imp
 building call graphs, inferring types, and analyzing data flow.
 """
 
+from __future__ import annotations
+
 from cogant.static.calls import CallEdge, CallGraphBuilder
-from cogant.static.dataflow import DataFlowAnalyzer, DataFlowEdge
+from cogant.static.complexity import ComplexityAnalyzer, ComplexityEntry, ComplexityReport
+from cogant.static.coupling import CouplingAnalyzer, CouplingReport, ModuleCouplingMetrics
+from cogant.static.dataflow import DataFlowAnalyzer, DataFlowEdge, DataFlowGraph
+from cogant.static.dead_code import DeadCodeAnalyzer, DeadCodeEntry, DeadCodeReport
 from cogant.static.imports import ImportAnalyzer, ImportEdge
+from cogant.static.metrics import CodeMetrics, HalsteadMetrics, MetricsAnalyzer
 from cogant.static.parser import (
     AssignmentDef,
     ClassDef,
@@ -36,4 +42,17 @@ __all__ = [
     "TypeInfo",
     "DataFlowAnalyzer",
     "DataFlowEdge",
+    "DataFlowGraph",
+    "ComplexityAnalyzer",
+    "ComplexityEntry",
+    "ComplexityReport",
+    "CouplingAnalyzer",
+    "CouplingReport",
+    "ModuleCouplingMetrics",
+    "DeadCodeAnalyzer",
+    "DeadCodeEntry",
+    "DeadCodeReport",
+    "CodeMetrics",
+    "HalsteadMetrics",
+    "MetricsAnalyzer",
 ]

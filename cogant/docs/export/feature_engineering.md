@@ -1,6 +1,8 @@
-## Feature Engineering
+## Feature engineering
 
-### Default Features
+Default and optional **tensor** features for PyTorch Geometric / DGL-style consumers are described here. The shipped `ExportConfig.gnn_*` fields (`py/cogant/config/schema.py`) align with this policy; native `Data` / `DGLGraph` helpers remain on the [roadmap](../roadmap/README.md) where examples say “planned”.
+
+### Default features
 
 **Node Features**:
 1. One-hot NodeKind (13 dims)
@@ -33,39 +35,34 @@
 - Motif counts (triangles, common patterns)
 - Expensive to compute
 
-### Custom Features
+### Custom features
 
-Users can define custom features:
+Implement an [`ExportPlugin`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/plugins/base.py) (see [Plugins](../plugins/README.md)):
 
 ```python
 from cogant.plugins import ExportPlugin, PluginMetadata
 
 class MyFeatureExporter(ExportPlugin):
     """Custom exporter with custom feature extraction."""
-    
-    def __init__(self):
-        super().__init__(PluginMetadata(name="CustomFeatures", version="1.0.0"))
+
+    def __init__(self) -> None:
+        super().__init__(PluginMetadata(name="CustomFeatures", version="1.0.0", author="you"))
         self.supported_formats = {"custom_features"}
 
-    def initialize(self, config): pass
-    def shutdown(self): pass
+    def initialize(self, config): ...
+    def shutdown(self) -> None: ...
 
-    def export(self, bundle, output_path, fmt):
-        graph = bundle.get("program_graph", {})
-        nodes = graph.get("nodes", [])
-        edges = graph.get("edges", [])
-        # Extract custom feature vectors per node
-        node_features = [
-            [len(n.get("name", "")), n.get("confidence", 0.0)]
-            for n in nodes
-        ]
-        edge_features = [
-            [e.get("confidence", 0.0), 1.0 if e.get("label") else 0.0]
-            for e in edges
-        ]
-        # ... write to output_path ...
+    def export(self, bundle, output_path: str, format: str) -> None:
+        # Implement: read bundle["program_graph"], compute features, write under output_path.
+        pass
 
-    def get_format_info(self, fmt):
+    def get_format_info(self, format: str):
         return {"name": "custom_features", "extension": ".pt"}
 ```
+
+### See also
+
+- [PyTorch Geometric export](pytorch_geometric_export.md) · [DGL export](dgl_export.md)
+- [Plugins](../plugins/README.md)
+
 

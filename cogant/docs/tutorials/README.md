@@ -13,8 +13,19 @@
 | [05 GNN Interpretation](05_gnn_interpretation.md) | Read, debug, and visualize a generated GNN package | Intermediate |
 | [06 Reverse Mode](06_reverse_mode.md) | Synthesize runnable code from a GNN markdown file | Advanced |
 | [07 Plugin Authoring](07_plugin_authoring.md) | Build a parser, translator, validator, or exporter plugin | Advanced |
-| [Calculator Example](calculator.md) | Tiny calculator project used by several other tutorials | Beginner |
-| [Flask Example](flask.md) | Auxiliary Flask example sources and notes | Intermediate |
+
+## Legacy examples
+
+These pages predate the `NN_slug.md` numbering scheme and are kept as
+compact worked examples that some of the numbered tutorials link to.
+They are stable but should not be extended in place — new content goes
+into a new numbered tutorial. See [AGENTS.md](AGENTS.md#legacy-files) for
+the retention policy.
+
+| Page | Description | Status |
+|------|-------------|--------|
+| [Calculator Example](calculator.md) | Tiny calculator project referenced by `02_small_repo_walkthrough.md` | Stable, kept for inbound links |
+| [Flask Example](flask.md) | Auxiliary Flask example sources and notes referenced by `03_flask_walkthrough.md` | Stable, kept for inbound links |
 
 ## Recommended Reading Order
 
@@ -25,5 +36,12 @@
 5. [04 Custom Rules](04_custom_rules.md) — start customizing the translation engine.
 6. [06 Reverse Mode](06_reverse_mode.md) — close the roundtrip by going from GNN back to code.
 7. [07 Plugin Authoring](07_plugin_authoring.md) — extend COGANT with your own components.
+
+## Related modules
+
+- [../getting-started/README.md](../getting-started/README.md) — shorter onboarding before the tutorials.
+- [../cookbook/README.md](../cookbook/README.md) — outcome-first recipes once you know the basics.
+- [../notebooks/README.md](../notebooks/README.md) — runnable notebook versions of several tutorials.
+- [../concepts/README.md](../concepts/README.md) — background theory the tutorials assume.
 
 Agent notes: [AGENTS.md](AGENTS.md) - Hub: [../index.md](../index.md)

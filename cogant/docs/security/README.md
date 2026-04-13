@@ -34,4 +34,11 @@
 7. [Responsible Disclosure](responsible_disclosure.md) — required reading before reporting an issue.
 8. [Security Release Process](security_release_process.md) and [Compliance](compliance.md) — operational and audit context.
 
+## Related modules
+
+- [../architecture/README.md](../architecture/README.md) — architecture against which the threat model is stated.
+- [../validation/README.md](../validation/README.md) — validators backing several security claims.
+- [../roadmap/deprecation_policy.md](../roadmap/deprecation_policy.md) — how security-driven deprecations are staged.
+- [../reference/README.md](../reference/README.md) — public Python package surface audited here.
+
 Agent notes: [AGENTS.md](AGENTS.md) - Hub: [../index.md](../index.md)

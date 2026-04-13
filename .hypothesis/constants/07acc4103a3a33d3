@@ -1,0 +1,4 @@
+# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/static/types.py
+# hypothesis_version: 6.135.29
+
+[0.0, 0.6, 0.7, 1.0, '"', "'", '(', '-', '.', '/', ':', 'Any', 'False', 'Iterator', 'None', 'True', '[', '__init__', 'attribute', 'bool', 'bool(', 'bytes', 'class', 'dict', 'dict(', 'float', 'float(', 'frozenset', 'function', 'has_value', 'int', 'int(', 'is_async', 'kwonlyargs', 'list', 'list(', 'method', 'module', 'parameter', 'parent', 'posonlyargs', 'property', 'qualified_name', 'return', 'role', 'scope', 'self', 'self-annotation', 'self-assignment', 'set', 'set(', 'source', 'str', 'str(', 'tuple', 'tuple(', 'utf-8', 'value', 'variable', '{']

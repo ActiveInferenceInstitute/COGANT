@@ -76,6 +76,65 @@ except (ImportError, ModuleNotFoundError):
     except (ImportError, ModuleNotFoundError):
         ProgramGraph = None  # type: ignore[assignment,misc]
 
+# Type infrastructure (always available).
+try:
+    from cogant.protocols import (
+        Analyzable,
+        Exportable,
+        GraphBackend,
+        PipelineStage,
+        Serializable,
+        Translatable,
+        TranslationRule,
+        Validatable,
+        Visualizable,
+    )
+except (ImportError, ModuleNotFoundError):
+    Analyzable = None  # type: ignore[assignment,misc]
+    Exportable = None  # type: ignore[assignment,misc]
+    GraphBackend = None  # type: ignore[assignment,misc]
+    PipelineStage = None  # type: ignore[assignment,misc]
+    Serializable = None  # type: ignore[assignment,misc]
+    TranslationRule = None  # type: ignore[assignment,misc]
+    Translatable = None  # type: ignore[assignment,misc]
+    Validatable = None  # type: ignore[assignment,misc]
+    Visualizable = None  # type: ignore[assignment,misc]
+
+try:
+    from cogant.types import (
+        AMatrix,
+        BMatrix,
+        ConfidenceScore,
+        CVector,
+        DotStr,
+        DVector,
+        EdgeAttrs,
+        EdgeKind,
+        FilePath,
+        GNNBundle,
+        JsonStr,
+        MermaidStr,
+        NodeAttrs,
+        NodeId,
+        RoleName,
+    )
+except (ImportError, ModuleNotFoundError):
+    AMatrix = None  # type: ignore[assignment,misc]
+    BMatrix = None  # type: ignore[assignment,misc]
+    CVector = None  # type: ignore[assignment,misc]
+    ConfidenceScore = None  # type: ignore[assignment,misc]
+    DVector = None  # type: ignore[assignment,misc]
+    DotStr = None  # type: ignore[assignment,misc]
+    EdgeAttrs = None  # type: ignore[assignment,misc]
+    EdgeKind = None  # type: ignore[assignment,misc]
+    FilePath = None  # type: ignore[assignment,misc]
+    GNNBundle = None  # type: ignore[assignment,misc]
+    JsonStr = None  # type: ignore[assignment,misc]
+    MermaidStr = None  # type: ignore[assignment,misc]
+    NodeAttrs = None  # type: ignore[assignment,misc]
+    NodeId = None  # type: ignore[assignment,misc]
+    RoleName = None  # type: ignore[assignment,misc]
+
 # Convenience aliases for the public API.
 # Users can write:
 #   from cogant import CogantSession, run_pipeline, GNNBundle, ProgramGraph
@@ -126,6 +185,32 @@ __all__ = [
     "CogantSession",
     "GNNBundle",
     "run_pipeline",
+    # Type infrastructure: Protocols
+    "Translatable",
+    "Analyzable",
+    "Serializable",
+    "Visualizable",
+    "Validatable",
+    "Exportable",
+    "PipelineStage",
+    "TranslationRule",
+    "GraphBackend",
+    # Type infrastructure: Shared TypedDicts and aliases
+    "NodeAttrs",
+    "EdgeAttrs",
+    "GNNBundle",
+    "NodeId",
+    "EdgeKind",
+    "RoleName",
+    "FilePath",
+    "ConfidenceScore",
+    "AMatrix",
+    "BMatrix",
+    "CVector",
+    "DVector",
+    "MermaidStr",
+    "DotStr",
+    "JsonStr",
     # Version info
     "__version__",
     "__rust_version__",

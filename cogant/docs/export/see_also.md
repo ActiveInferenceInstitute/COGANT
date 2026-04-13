@@ -1,7 +1,7 @@
 ## See also
 
 - [Documentation hub](./README.md)
-- [SPEC](../reference/README.md)
+- [Reference section](../reference/README.md) — schemas, glossary, configuration
 - [CLI guide](../cli/README.md) (`export-gnn`, `validate`)
 - [Validation](../validation/README.md)
 - [Plugin API](../plugins/README.md)
