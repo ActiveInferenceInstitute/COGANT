@@ -117,7 +117,7 @@ def test_explain_returns_explanation_for_known_node(tmp_path: Path) -> None:
     )
 
     # Some rules must have been considered-but-not-fired too; the engine
-    # ships ~19 rules and only a couple can fire on a single node.
+    # ships 22 rules and only a couple can fire on a single node.
     assert len(result.rules_considered) >= 5
 
 

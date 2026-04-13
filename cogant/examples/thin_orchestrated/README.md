@@ -39,7 +39,7 @@ All scripts share `_common.py`, which provides `banner`, `configure_logging`, `p
 |---|---|---|
 | `13_full_roundtrip.py` | ingest → static → normalize → graph → translate → statespace → process → export → validate | Per-stage timing table, full GNN package on disk, one-shot round-trip demo (~40-100 ms total) |
 | `14_cross_fixture_compare.py` | Full pipeline across all 3 control-positive fixtures | Side-by-side table: nodes / edges / mappings / states / observations / actions / validator score |
-| `15_confidence_stratification.py` | Registers **all 19 translation rules** via `inspect`, runs `ConfidenceModel.score_batch`, groups by `ConfidenceTier` | Per-tier histograms, per-rule-prefix mean-confidence breakdown, overall mean confidence |
+| `15_confidence_stratification.py` | Registers **all 22 translation rules** via `inspect`, runs `ConfidenceModel.score_batch`, groups by `ConfidenceTier` | Per-tier histograms, per-rule-prefix mean-confidence breakdown, overall mean confidence |
 | `16_review_workflow.py` | Synthesises a human review policy over auto-mappings with `ReviewManager` | Accept top-3 by confidence, reject <0.70, edit all `hs_*` entries, show status distribution and `HUMAN_REVIEWED` promotions |
 | `17_gnn_sections_walk.py` | Builds a GNN package then walks every `GNNValidator.CANONICAL_SECTIONS` entry | One-line summary per canonical section (state_space, observation_modalities, transition_structure, likelihood_structure, ontology, provenance, confidence, rendering_hints, validation_notes, ...) |
 | `18_viz_export_only.py` | GraphVisualizer + MermaidGenerator + SemanticVisualizer + GanttRenderer | D3 HTML, SVG, JSON; 5 Mermaid diagrams (class, dependency, state, sequence, active inference); semantic HTML; Gantt HTML |

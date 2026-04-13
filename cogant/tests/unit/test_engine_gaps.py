@@ -291,12 +291,13 @@ class TestRuleExplanationEvidence:
 
 
 # ============================================================================
-# TESTS: All 19 rules fire at least once on complex graph
+# TESTS: Core 19 rules (pre-wave-21 set) fire at least once on complex graph
+# (wave-21 added ParameterRule, StateMachineRule, RateLimiterRule — tested separately)
 # ============================================================================
 
 
 class TestAllRulesFire:
-    """Tests that all 19 rules fire on appropriate graph patterns."""
+    """Tests that the 19 pre-wave-21 rules fire on appropriate graph patterns."""
 
     def test_readonly_input_fires(self):
         """ReadOnlyInputRule fires on module with READS-only edges."""
