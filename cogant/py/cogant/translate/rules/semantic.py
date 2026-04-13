@@ -23,6 +23,12 @@ from cogant.schemas.semantic import (
     SemanticMapping,
 )
 from cogant.translate.engine import RuleExplanation, TranslationRule
+from cogant.translate.rules.keywords import (
+    ACTION_KEYWORDS as ACTION_KEYWORDS,
+)
+from cogant.translate.rules.keywords import (
+    OBSERVATION_KEYWORDS as OBSERVATION_KEYWORDS,
+)
 
 __all__ = [
     "OBSERVATION_KEYWORDS",
@@ -34,41 +40,7 @@ __all__ = [
     "ContextRule",
 ]
 
-OBSERVATION_KEYWORDS = [
-    "get", "read", "fetch", "query", "display", "show", "status", "info", "list",
-    "sensor_", "read_", "get_", "fetch_", "receive_", "sense_", "peek", "sample",
-    "inspect", "view", "describe",
-]
-"""Lexical keywords that signal an observation-role function or method.
 
-Chosen from PEP 8 naming conventions and the CPython stdlib corpus (audit
-2026-04-09): ``get_``/``read_``/``fetch_``/``query_`` are the canonical
-accessor prefixes; ``display``/``show``/``status``/``info``/``list`` round
-out the set with UI/introspection verbs commonly attached to observers in
-Python web frameworks (Flask, Django). Additional prefixes ``sensor_``,
-``receive_``, ``sense_`` capture IoT/event patterns. TODO(calibration): expand
-the list against a frequency analysis of observation methods in the 20-repo
-corpus (see ``docs/evaluation/CALIBRATION.md``). Known gaps: ``peek``, ``sample``,
-``inspect`` — now added.
-"""
-
-ACTION_KEYWORDS = [
-    "set", "update", "create", "delete", "send", "push", "execute", "run",
-    "process", "handle", "dispatch", "encode", "decode", "dump", "load",
-    "act_", "send_", "write_", "execute_", "command_", "emit_", "commit",
-    "rollback", "flush", "apply", "perform", "invoke",
-]
-"""Lexical keywords that signal an action-role function or method.
-
-Chosen from PEP 8 naming conventions plus the CRUD/IO verb set. Added prefixes
-``act_``, ``send_``, ``write_``, ``execute_``, ``command_``, ``emit_`` to
-capture action-specific patterns. Note: ``handle``/``dispatch`` also appear
-in the POLICY keyword list — this is intentional (they genuinely straddle
-action and policy roles) and is resolved by confidence tie-breaking in
-``_resolve_conflicts``. Principled default. TODO(calibration): measure the
-action→policy conflict rate on ``handle``/``dispatch`` matches in the 20-repo
-corpus. Known gaps: ``commit``, ``rollback``, ``flush``, ``emit`` — now added.
-"""
 
 
 class ObservationRule(TranslationRule):

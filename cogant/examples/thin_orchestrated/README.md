@@ -1,10 +1,11 @@
 # Thin Orchestrated Examples
 
-This folder holds **21 minimal, runnable scripts** that exercise COGANT from three angles:
+This folder holds **25 minimal, runnable scripts** that exercise COGANT from three angles:
 
 1. **Stage-isolation scripts (01-12)** — each drives *one* pipeline stage and nothing else, so you can see exactly what `ingest`, `static`, `normalize`, `graph`, `translate`, `statespace`, `process`, `export`, `validate`, or `simulate` produces on its own.
 2. **Higher-order scripts (13-20)** — each stitches multiple stages together to demonstrate a real workflow: end-to-end round-trips, cross-fixture comparison, confidence stratification, human-review layering, GNN-section walks, visualization dumps, drift analysis, and the high-level `Session` API.
-3. **Cross-cutting analysis (21)** — Markov blanket extraction, the Active Inference partition that underpins the GNN `markov_blanket` section.
+3. **Cross-cutting analysis (21-22)** — Markov blanket extraction, the Active Inference partition that underpins the GNN `markov_blanket` section; GNN self-analysis.
+4. **Specialized demonstrations (23-26)** — Wave-21 translation rules, Chrome DevTools trace ingestion, incremental analysis and benchmarking, multi-episode Active Inference runtime with learning.
 
 > COGANT translates source code into the Active Inference Institute's **Generalized Notation Notation** (GNN) — a structured notation for state-space and process models, *not* graph neural networks.
 
@@ -46,11 +47,21 @@ All scripts share `_common.py`, which provides `banner`, `configure_logging`, `p
 | `19_drift_between_fixtures.py` | `DriftAnalyzer` over two compiled bundles (calculator vs event_pipeline) | Total / architectural / semantic-churn drift scores plus per-component node/edge/mapping/state-space deltas |
 | `20_session_api.py` | High-level `cogant.api.Session` | `extract_static` → `extract_dynamic` → `build_graph` → `translate_to_gnn` → `compile_state_space` → `export_all`, each call returning a summary dict and the final bundle hitting disk |
 
-## Cross-cutting analysis (21)
+## Cross-cutting analysis (21-22)
 
 | Script | What it exercises | Output highlights |
 |---|---|---|
 | `21_markov_blanket_only.py` | `MarkovBlanketExtractor` across every seed strategy (`auto`, `kind`, `module`, `explicit`) | (μ, s, a, η) counts and boundary ratio per strategy; auto-tier rationale; writes `markov_blanket.json`, `markov_blanket_network.json`, plus collapsed and detailed Mermaid diagrams (role-colored: μ blue, s yellow, a green, η red) |
+| `22_gnn_self_analysis.py` | Full end-to-end pipeline on the GNN codebase itself (reflexive analysis); all 17 translation rules; GNN validator; simulation | Per-stage timing table; GNN package on disk; validation score (100/100 on canonical fixtures); free-energy trajectory under Active Inference; PNG rasterization |
+
+## Specialized demonstrations (23-26)
+
+| Script | What it demonstrates | Output highlights |
+|---|---|---|
+| `23_wave21_rules.py` | Three "wave-21" translation rules: `ParameterRule`, `StateMachineRule`, `RateLimiterRule` on synthetic graph | Synthetic ProgramGraph with parameter/state/rate-limit patterns; per-rule mapping counts; per-node summary table; confidence scores |
+| `24_trace_ingester.py` | Chrome DevTools trace ingestion and dynamic enrichment | Synthetic Chrome trace with function entry/exit events; extracted call sequences and call graph; before/after edge counts; runtime evidence tagging |
+| `25_changed_and_benchmark.py` | Incremental analysis (`cogant changed`) and benchmark-style performance measurement | CLI help output; full vs incremental pipeline config; timing comparison on calculator fixture; wall-time overhead analysis |
+| `26_multi_episode_runtime.py` | `AgentRuntime.run_multi_episode` with VFE tracking and Bayesian learning | 5 episodes × 4 steps; per-episode VFE (mean and final); D prior trajectory (running average); A likelihood updates (frequency-based); ASCII-style VFE plot; learning delta |
 
 ## Running
 

@@ -23,6 +23,11 @@ from cogant.schemas.semantic import (
     SemanticMapping,
 )
 from cogant.translate.engine import RuleExplanation, TranslationRule
+from cogant.translate.rules.keywords import (
+    ACTION_KEYWORDS,
+    OBSERVATION_KEYWORDS,
+    POLICY_KEYWORDS,
+)
 
 __all__ = [
     "ReadOnlyInputRule",
@@ -531,9 +536,10 @@ class ContainmentRule(TranslationRule):
         action_methods = []
         policy_methods = []
 
-        observation_keywords = ["get", "read", "fetch", "query", "display", "show", "status", "info", "list"]
-        action_keywords = ["set", "update", "create", "delete", "send", "push", "execute", "run", "process", "handle", "dispatch"]
-        policy_keywords = ["route", "dispatch", "handle"]
+        # Keyword lists are maintained centrally in cogant.translate.rules.keywords
+        observation_keywords = OBSERVATION_KEYWORDS
+        action_keywords = ACTION_KEYWORDS
+        policy_keywords = POLICY_KEYWORDS
 
         for method_id in method_ids:
             method = graph.get_node(method_id)

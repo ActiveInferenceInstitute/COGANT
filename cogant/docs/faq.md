@@ -286,3 +286,37 @@ COGANT aims to be a bridge between software engineering and Active Inference res
 The theoretical goal is to make the Galois connection practical: any codebase can be lifted to a formal generative model, and any generative model can be lowered to a working implementation, with bounded information loss in both directions.
 
 See [Roadmap — Overview](roadmap/overview.md) and [Roadmap — v1.0.0](roadmap/version_100_planned.md).
+
+### 36. How do I add a custom translation rule?
+
+Subclass `TranslationRule` from `cogant.translate.engine`, implement three methods:
+
+- `name` (str property) — unique rule identifier
+- `priority` (int property) — lower = higher priority (0–100)
+- `apply(graph, query) → list[SemanticMapping]` — return mappings or empty list
+
+Then register it: `engine.register_rule(MyRule())` before calling `engine.translate(graph)`. For a full worked example see `examples/thin_orchestrated/04_custom_rules__00.py` (or equivalent in the `_rnd/` cookbook). The `keywords.py` module at `cogant/translate/rules/keywords.py` contains shared keyword lists for lexical heuristics.
+
+### 37. What do the A, B, C, D matrices in the GNN output mean?
+
+These are the standard Active Inference matrices:
+
+- **A** (likelihood): maps hidden states → observation probabilities (obs × states)
+- **B** (transition): maps (state, action) → next state (states × states × actions)
+- **C** (preference): preferred observation distribution (obs-dim vector, log-probabilities)
+- **D** (prior): prior over hidden states (states-dim vector, initial beliefs)
+
+COGANT derives these from program graph edge kinds: READS edges populate A, WRITES/CALLS populate B, CONFIGURATION edges populate C, and the Markov blanket partition seeds D. See `docs/theory/active_inference.md` for the full derivation.
+
+### 38. How do I run the FastAPI server?
+
+`cogant serve` is planned for v0.6.x. In v0.5.0, start the server directly:
+
+```python
+from cogant.server.app import create_app
+import uvicorn
+app = create_app()
+uvicorn.run(app, host="0.0.0.0", port=8080)
+```
+
+Or via Docker: `docker-compose up` (uses `cogant/Dockerfile`, exposes port 8080). Key endpoints: `GET /health`, `POST /analyze` (body: `{"repo_path": "..."}`, returns GNN bundle JSON), `GET /api/v1/rules` (returns all 22 active rule names). See `examples/demo_server.py` for a standalone example.

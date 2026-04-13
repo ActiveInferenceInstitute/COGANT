@@ -211,6 +211,8 @@ class AgentRuntime:
         )
         # Number of episodes completed — drives the running-average D update.
         self._episode_count = 0
+        # Tracks the most recent VFE for introspection via get_free_energy().
+        self._last_free_energy: float = float("nan")
 
     @classmethod
     def from_matrices_dict(cls, d: dict[str, Any]) -> AgentRuntime:
@@ -306,6 +308,7 @@ class AgentRuntime:
 
         # 5. Free energy
         fe = compute_free_energy(new_state, obs_idx, self.A, self.C, self.D)
+        self._last_free_energy = fe  # expose via get_free_energy()
 
         return AgentStep(
             t=t,
@@ -793,17 +796,22 @@ class AgentRuntime:
         preserves the A/B/C/D matrices.
         """
         self._episode_count = 0
+        self._last_free_energy = float("nan")
         logger.info("Runtime reset to initial conditions")
 
     def get_free_energy(self) -> float:
-        """Return the current variational free energy estimate.
+        """Return the variational free energy from the most recent step.
 
         Returns:
-            Float VFE value, or NaN if no steps have been executed.
+            Float VFE value from the last ``step()`` / ``run_n_steps()`` call,
+            or ``nan`` if no steps have been executed yet or after :meth:`reset`.
+
+        Example:
+            >>> rt = AgentRuntime.from_matrices_dict({...})
+            >>> rt.run_n_steps(3)
+            >>> vfe = rt.get_free_energy()   # last-step VFE, finite value
         """
-        # This is a placeholder; in a full implementation, track the
-        # last computed VFE from the most recent step.
-        return float("nan")
+        return self._last_free_energy
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize the runtime state to a dictionary.
