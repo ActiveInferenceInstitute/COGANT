@@ -78,14 +78,14 @@ and a validator report scoring **100.0 / 100** on the calculator fixture.
 - Reverse synthesis: `cogant reverse` and `cogant roundtrip` subcommands synthesize a
   runnable Python package from any GNN bundle and verify forward-reverse-forward
   isomorphism.
-- **2230 tests** across unit, integration, property, golden, and fuzz suites (2129 passing, 86 skipped for optional toolchains); line coverage **83.42%** on `py/cogant/`. Type stubs (`.pyi`) and `py.typed` marker ship with the package.
+- **2129 passing tests** across unit, integration, property, golden, and fuzz suites (86 skipped for optional toolchains, 12 expected failures); line coverage **83.42%** on `py/cogant/`. Type stubs (`.pyi`) and `py.typed` marker ship with the package.
 - `cogant doctor` — environment diagnostics extended in v0.5.0 with tree-sitter grammar
   checks, uv lockfile parity, and optional-dependency audit.
 
 ## CLI surface
 
 `cogant --help` is ground truth. The Typer app in
-[`py/cogant/cli/main.py`](py/cogant/cli/main.py) currently registers **22** subcommands:
+[`py/cogant/cli/main.py`](py/cogant/cli/main.py) currently registers **24** subcommands (22 `@app.command()` + 2 `app.command(name=...)`):
 
 | Command | Purpose |
 | --- | --- |
@@ -96,6 +96,7 @@ and a validator report scoring **100.0 / 100** on the calculator fixture.
 | `extract-dynamic` | Run dynamic analysis (coverage databases, runtime traces). |
 | `graph` | Build and summarise the program dependency graph. |
 | `translate` | Full pipeline: ingest → graph → translate → statespace → export. |
+| `analyze` | Alias for `translate`; accepts `--incremental <git-ref>` for per-commit CI re-runs. |
 | `statespace` | Compile an Active Inference state-space model (S, O, A, π). |
 | `process` | Extract the pipeline / execution process model from a repository. |
 | `export-gnn` | Re-export a previously generated GNN bundle in a different format. |
@@ -106,11 +107,12 @@ and a validator report scoring **100.0 / 100** on the calculator fixture.
 | `changed` | List files changed since a git ref (incremental analysis helper). |
 | `explain` | Explain why a node was assigned its Active Inference role. |
 | `benchmark` | Benchmark pipeline wall-clock performance over several runs. |
+| `analyze-static` | Run only the static-analysis stages and report findings. |
+| `analyze-graph` | Run the graph-construction stage and print adjacency summary. |
+| `visualize` | Render interactive SVG/HTML visualizations of program graph and matrices. |
+| `export` | Export GNN bundle to a specified format (json, jsonl, parquet, graphml). |
 | `reverse` | Synthesize a Python package from a GNN markdown file. |
 | `roundtrip` | Verify forward-reverse-forward round-trip isomorphism. |
-| `plugin` | Manage and inspect COGANT plugins. |
-| `analyze` | Alias for `translate`; accepts `--incremental <git-ref>` for per-commit CI re-runs. |
-| `migrate` | Migrate GNN files to the current schema version. |
 
 The `analyze` / `translate` subcommand accepts `--incremental <git-ref>` (equivalent to
 `PipelineConfig.incremental_since`) for per-commit CI re-runs over a Git diff.

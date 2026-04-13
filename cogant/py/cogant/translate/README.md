@@ -1,6 +1,6 @@
 # Translate — Semantic Mapping via Pattern-Driven Rules
 
-Applies 19 concrete TranslationRule subclasses to program graphs, discovering semantic concepts (observations, actions, policies, constraints, etc.) and scoring confidence via evidence combination.
+Applies 22 concrete TranslationRule subclasses to program graphs, discovering semantic concepts (observations, actions, policies, constraints, etc.) and scoring confidence via evidence combination. Three rules were added in wave-21: `ParameterRule` (control family), `StateMachineRule` (behavioural family), and `RateLimiterRule` (resilience family).
 
 ## Core Classes
 
@@ -10,26 +10,39 @@ Orchestrates rule application via fixpoint iteration until convergence. Provides
 ### TranslationRule (engine.py)
 Abstract base class. Subclasses implement matches() (find patterns) and apply() (generate SemanticMapping).
 
-### 22 Concrete Rules (rules.py)
+### 22 Concrete Rules (rules/*.py) — 5 families
+
+**Structural (5 rules)**
 1. ReadOnlyInputRule — read-only modules → OBSERVATION (prefix: `obs_`)
 2. MutatingSubsystemRule — mutating state holders → HIDDEN_STATE (prefix: `hs_`)
-3. OrchestratorRule — schedulers, controllers → ORCHESTRATION (prefix: `orch_`)
-4. TestAssertionRule — test assertions → CONSTRAINT (prefix: `const_`)
-5. RetryPatternRule — retry loops / backoff → POLICY (prefix: `policy_`)
-6. EventBusRule — publish/subscribe systems → DATA_FLOW (prefix: `event_`)
-7. ConfigRule — configuration files → CONTEXT (prefix: `ctx_`)
-8. FeatureFlagRule — feature toggles → FEATURE_FLAG (prefix: `fflag_`)
-9. ObservationRule — sensors / external inputs → OBSERVATION (prefix: `obs_`)
-10. ActionRule — actuators / side-effect emitters → ACTION (prefix: `act_`)
-11. PolicyRule — decision policies / strategies → POLICY (prefix: `pol_`)
-12. PreferenceRule — goal and preference declarations → PREFERENCE (prefix: `pref_`)
-13. ContextRule — contextual state holders → CONTEXT (prefix: `ctx_`)
-14. InheritanceRule — class hierarchies → CONTROL_FLOW (prefix: `inh_`)
-15. ContainmentRule — composition and nesting → CONTROL_FLOW (prefix: `cont_`)
-16. DataPipelineRule — data transformation pipelines → DATA_FLOW (prefix: `dpipe_`)
-17. ErrorBoundaryRule — error handling scopes → ERROR_HANDLING (prefix: `errbnd_`)
-18. SingletonAccessRule — singleton access patterns → HIDDEN_STATE (prefix: `single_`)
-19. CircuitBreakerRule — resilience / circuit breakers → CIRCUIT_BREAKER (prefix: `cb_`)
+3. InheritanceRule — class hierarchies → CONTROL_FLOW (prefix: `inh_`)
+4. ContainmentRule — composition and nesting → CONTROL_FLOW (prefix: `cont_`)
+5. DataPipelineRule — data transformation pipelines → DATA_FLOW (prefix: `dpipe_`)
+
+**Semantic (5 rules)**
+6. ObservationRule — sensors / external inputs → OBSERVATION (prefix: `obs_`)
+7. ActionRule — actuators / side-effect emitters → ACTION (prefix: `act_`)
+8. PolicyRule — decision policies / strategies → POLICY (prefix: `pol_`)
+9. PreferenceRule — goal and preference declarations → PREFERENCE (prefix: `pref_`)
+10. ContextRule — contextual state holders → CONTEXT (prefix: `ctx_`)
+
+**Control (3 rules)**
+11. ConfigRule — configuration files → CONTEXT (prefix: `ctx_`)
+12. FeatureFlagRule — feature toggles → FEATURE_FLAG (prefix: `fflag_`)
+13. ParameterRule — tunable hyperparameters → PARAMETER (prefix: `param_`) *(wave-21)*
+
+**Behavioural (4 rules)**
+14. OrchestratorRule — schedulers, controllers → ORCHESTRATION (prefix: `orch_`)
+15. TestAssertionRule — test assertions → CONSTRAINT (prefix: `const_`)
+16. EventBusRule — publish/subscribe systems → DATA_FLOW (prefix: `event_`)
+17. StateMachineRule — finite-state-machine workflows → HIDDEN_STATE (prefix: `sm_`) *(wave-21)*
+
+**Resilience (5 rules)**
+18. RetryPatternRule — retry loops / backoff → POLICY (prefix: `policy_`)
+19. ErrorBoundaryRule — error handling scopes → ERROR_HANDLING (prefix: `errbnd_`)
+20. SingletonAccessRule — singleton access patterns → HIDDEN_STATE (prefix: `single_`)
+21. CircuitBreakerRule — resilience / circuit breakers → CIRCUIT_BREAKER (prefix: `cb_`)
+22. RateLimiterRule — rate-limiting policies → POLICY (prefix: `rl_`) *(wave-21)*
 
 Note that ReadOnlyInputRule and ObservationRule share the `obs_` prefix because both produce OBSERVATION-kind mappings from different structural evidence; the tail hash disambiguates them.
 
@@ -71,7 +84,8 @@ from cogant.translate.rules import (
     FeatureFlagRule, ObservationRule, ActionRule, PolicyRule,
     PreferenceRule, ContextRule, InheritanceRule, ContainmentRule,
     DataPipelineRule, ErrorBoundaryRule, SingletonAccessRule,
-    CircuitBreakerRule
+    CircuitBreakerRule,
+    ParameterRule, StateMachineRule, RateLimiterRule,  # wave-21
 )
 from cogant.translate.confidence import ConfidenceModel
 from cogant.translate.review import ReviewManager

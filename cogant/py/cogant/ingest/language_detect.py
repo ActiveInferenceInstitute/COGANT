@@ -1,9 +1,12 @@
 """Language detection and parser loading."""
 
+import logging
 import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Add parsers to path
 parsers_root = Path(__file__).parent.parent.parent.parent / "parsers"
@@ -53,8 +56,8 @@ class LanguageDetector:
                 PythonLanguageParser,  # type: ignore[import-not-found,unused-ignore]
             )
             cls.PARSER_CLASSES["python"] = PythonLanguageParser
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Python tree-sitter parser unavailable; CPython ast fallback active: %s", exc)
 
         # Prefer tree-sitter for JavaScript; fall back to the TS regex parser.
         js_loaded = False
@@ -64,8 +67,8 @@ class LanguageDetector:
             )
             cls.PARSER_CLASSES["javascript"] = JavaScriptLanguageParser
             js_loaded = True
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("JavaScript tree-sitter parser unavailable: %s", exc)
 
         # Prefer tree-sitter for TypeScript when available.
         ts_loaded = False
@@ -76,8 +79,8 @@ class LanguageDetector:
             if TypeScriptTreeSitterParser is not None:
                 cls.PARSER_CLASSES["typescript"] = TypeScriptTreeSitterParser
                 ts_loaded = True
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("TypeScript tree-sitter parser unavailable: %s", exc)
 
         # Regex fallback for either JS or TS that didn't get a tree-sitter plugin.
         try:
@@ -86,24 +89,26 @@ class LanguageDetector:
             )
             if not ts_loaded:
                 cls.PARSER_CLASSES["typescript"] = TypeScriptLanguageParser
+                logger.debug("TypeScript using regex fallback parser")
             if not js_loaded:
                 cls.PARSER_CLASSES["javascript"] = TypeScriptLanguageParser
-        except Exception:
-            pass
+                logger.debug("JavaScript using TypeScript regex fallback parser")
+        except Exception as exc:
+            logger.debug("TypeScript/JavaScript regex fallback parser unavailable: %s", exc)
 
         try:
             from rust.parser import (
                 RustLanguageParser,  # type: ignore[import-not-found,unused-ignore]
             )
             cls.PARSER_CLASSES["rust"] = RustLanguageParser
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Rust parser unavailable: %s", exc)
 
         try:
             from go.parser import GoLanguageParser  # type: ignore[import-not-found,unused-ignore]
             cls.PARSER_CLASSES["go"] = GoLanguageParser
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Go parser unavailable: %s", exc)
 
     @staticmethod
     def detect_language(file_path: Path) -> str | None:

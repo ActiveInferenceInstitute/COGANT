@@ -1,11 +1,11 @@
 # Thin Orchestrated Examples
 
-This folder holds **25 minimal, runnable scripts** that exercise COGANT from three angles:
+This folder holds **30 minimal, runnable scripts** that exercise COGANT from four angles:
 
 1. **Stage-isolation scripts (01-12)** — each drives *one* pipeline stage and nothing else, so you can see exactly what `ingest`, `static`, `normalize`, `graph`, `translate`, `statespace`, `process`, `export`, `validate`, or `simulate` produces on its own.
 2. **Higher-order scripts (13-20)** — each stitches multiple stages together to demonstrate a real workflow: end-to-end round-trips, cross-fixture comparison, confidence stratification, human-review layering, GNN-section walks, visualization dumps, drift analysis, and the high-level `Session` API.
 3. **Cross-cutting analysis (21-22)** — Markov blanket extraction, the Active Inference partition that underpins the GNN `markov_blanket` section; GNN self-analysis.
-4. **Specialized demonstrations (23-26)** — Wave-21 translation rules, Chrome DevTools trace ingestion, incremental analysis and benchmarking, multi-episode Active Inference runtime with learning.
+4. **Specialized demonstrations (23-30)** — Wave-21 translation rules, Chrome DevTools trace ingestion, incremental analysis and benchmarking, multi-episode Active Inference runtime with learning, custom TranslationRule subclass, all-format export comparison, programmatic bundle validation, and graph diff via DriftAnalyzer API.
 
 > COGANT translates source code into the Active Inference Institute's **Generalized Notation Notation** (GNN) — a structured notation for state-space and process models, *not* graph neural networks.
 
@@ -62,6 +62,10 @@ All scripts share `_common.py`, which provides `banner`, `configure_logging`, `p
 | `24_trace_ingester.py` | Chrome DevTools trace ingestion and dynamic enrichment | Synthetic Chrome trace with function entry/exit events; extracted call sequences and call graph; before/after edge counts; runtime evidence tagging |
 | `25_changed_and_benchmark.py` | Incremental analysis (`cogant changed`) and benchmark-style performance measurement | CLI help output; full vs incremental pipeline config; timing comparison on calculator fixture; wall-time overhead analysis |
 | `26_multi_episode_runtime.py` | `AgentRuntime.run_multi_episode` with VFE tracking and Bayesian learning | 5 episodes × 4 steps; per-episode VFE (mean and final); D prior trajectory (running average); A likelihood updates (frequency-based); ASCII-style VFE plot; learning delta |
+| `27_custom_translation_rule.py` | Complete `TranslationRule` subclass (`FactoryMethodRule`) — `matches()`, `apply()`, `explain()` | Custom rule detecting factory methods (`create_*`, `from_*`, `build_*`); registered alongside standard rules; per-match explanations; JSON results |
+| `28_export_formats.py` | All supported export formats: GNN Markdown, GNN JSON, GraphML, Parquet | Format × (size, time) comparison table; round-trip validation; `export_comparison.json` |
+| `29_bundle_validation_api.py` | `GNNValidator` Python API — per-section scores, errors, warnings, CI gate | Programmatic validation without CLI; threshold-based pass/warn/block decision; degraded-bundle demo |
+| `30_graph_diff_api.py` | `DriftAnalyzer` API — architectural + semantic drift between two graph versions | Baseline vs. modified graph; structural drift (Jaccard); architectural drift score; semantic churn; Markdown drift report; CI gate |
 
 ## Running
 

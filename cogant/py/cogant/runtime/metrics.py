@@ -155,8 +155,22 @@ class RunMetrics:
             >>> print(f"Mean VFE: {stats['mean_free_energy_mean']:.4f}")
         """
         if not self.episodes:
-            logger.warning("No episodes in RunMetrics; returning empty stats")
-            return {}
+            logger.warning("No episodes in RunMetrics; returning NaN-filled stats")
+            nan = float("nan")
+            return {
+                "n_episodes": 0,
+                "total_steps": 0,
+                "mean_free_energy_mean": nan,
+                "mean_free_energy_std": nan,
+                "mean_free_energy_min": nan,
+                "mean_free_energy_max": nan,
+                "final_free_energy_mean": nan,
+                "final_free_energy_std": nan,
+                "final_free_energy_min": nan,
+                "final_free_energy_max": nan,
+                "steps_per_episode_mean": nan,
+                "steps_per_episode_std": nan,
+            }
 
         mean_fes = [e.mean_free_energy for e in self.episodes]
         final_fes = [e.final_free_energy for e in self.episodes]

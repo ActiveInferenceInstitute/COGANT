@@ -30,6 +30,24 @@ cogant validate: Run validation checks on bundle.json, or on a directory contain
 
 cogant diff: Compare two bundle.json files showing differences in errors and stages. Supports baseline vs current analysis.
 
+cogant changed: List source files that changed since a given git ref (used for incremental analysis scoping).
+
+cogant explain: Show fixpoint engine rule-match explanations for a given output bundle — which rules fired and why.
+
+cogant analyze: Full pipeline alias (translate + statespace + export); convenience shorthand for the common workflow.
+
+cogant analyze-static: Run only the static-analysis stages (ingest + parse + symbol extract) and report findings.
+
+cogant analyze-graph: Run the graph-construction stage on a pre-ingested source tree and print adjacency summary.
+
+cogant visualize: Render interactive SVG/HTML visualizations of the program graph and GNN matrices.
+
+cogant export: Export the GNN bundle to a specified format (json, jsonl, parquet, protobuf, graphml).
+
+cogant reverse: Synthesize a runnable Python package from a GNN markdown file.
+
+cogant roundtrip: Verify forward-reverse-forward round-trip isomorphism (all 6 fixtures score 23/23 ISOMORPHIC).
+
 cogant benchmark: Time pipeline performance across multiple runs, reporting average, min, and max execution times.
 
 ## Usage Examples
@@ -46,7 +64,7 @@ cogant benchmark ./my_repo --iterations 5
 
 ## Implementation
 
-main.py: Typer app instance with 14 subcommands. Each command uses Session, PipelineRunner, or ReviewAPI from cogant.api. Rich Console for styled table and panel output. Typer.Argument and Typer.Option for parameter handling.
+main.py: Typer app instance with 24 subcommands (22 `@app.command()` decorators + 2 `app.command(name=...)` registrations for `reverse` and `roundtrip`). Each command uses Session, PipelineRunner, or ReviewAPI from cogant.api. Rich Console for styled table and panel output. Typer.Argument and Typer.Option for parameter handling.
 
 diff.py: Helper functions load_bundle and diff_command for comparing two output directories using DriftAnalyzer and CodebaseMetrics.
 
