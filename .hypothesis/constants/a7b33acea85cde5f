@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/viz/boundary.py
-# hypothesis_version: 6.135.29
-
-['        end', '    end', '    subgraph Classes', '    subgraph Modules', '"', "'", ',', '-', '.', '/', ':', 'SeedStrategy', 'Unknown', '_', 'a active', 'active', 'auto', 'class', 'evidence_sources', 'external', 'function', 'graph LR', 'graph TD', 'internal', 'module', 'n_', 's sensory', 'sensory', 'type_coupling_score', 'value', 'weight', 'η external', 'μ internal']

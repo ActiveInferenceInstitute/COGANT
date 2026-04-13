@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/parsers/rust/parser.py
-# hypothesis_version: 6.135.29
-
-['(\\w+)\\s*:\\s*([^,;]+)', ',', '.rs', '0.1.0', '<string>', 'COGANT', 'EnumDef', 'FnDef', 'ImplBlock', 'ModDef', 'StructDef', 'TraitDef', 'UseDeclaration', 'alias', 'bounds', 'data', 'enum', 'enums', 'errors', 'fields', 'function', 'functions', 'generics', 'impls', 'line', 'modules', 'name', 'params', 'path', 'py', 'r', 'return_type', 'rust', 'struct', 'structs', 'trait', 'traits', 'type', 'uses', 'utf-8', 'variants']

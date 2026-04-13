@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/simulate/runner.py
-# hypothesis_version: 6.135.29
-
-[0.0, 0.1, 0.2, 0.8, 0.9, 1.0, 3.0, '## Actions Taken', '## Summary', '- No actions taken', 'action', 'action_applied', 'action_count', 'actions', 'beliefs', 'boolean', 'continuous', 'discrete', 'efe_ranking', 'effects', 'effects_applied', 'error', 'errors', 'float', 'free_energy', 'id', 'integer', 'metadata', 'modality_type', 'name', 'new_beliefs', 'next_state', 'node_id', 'observation', 'observations', 'preconditions', 'predicted_next_state', 'predicted_state', 'schema_name', 'selected_action', 'source_node_id', 'state', 'state_space_id', 'step', 'success', 'time_regime', 'trace', 'trace_length', 'transition_count', 'valid', 'var_type', 'variable_count', 'variables', 'warnings']

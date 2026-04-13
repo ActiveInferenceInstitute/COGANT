@@ -1,6 +1,0 @@
-from pathlib import Path
-
-__all__ = ['reverse_command', 'roundtrip_command']
-
-def reverse_command(gnn_file: Path = ..., output_dir: Path = ..., json_output: bool = ...) -> None: ...
-def roundtrip_command(target: Path = ..., output_dir: Path | None = ..., role_threshold: float = ..., json_output: bool = ..., keep_tmp: bool = ...) -> None: ...

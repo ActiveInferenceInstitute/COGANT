@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/schemas/program_graph.py
-# hypothesis_version: 6.135.29
-
-[0.0, 1.0, '1.0.0', 'Schema version', 'Source node ID', 'Target node ID', 'Type of code element', 'Type of relationship', 'children_ids', 'description', 'edges', 'id', 'nodes', 'version']

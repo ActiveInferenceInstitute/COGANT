@@ -1,5 +1,0 @@
-\frametitle{CLI}
-\protect\phantomsection\label{cli}
-Use the \texttt{cogant} CLI for scripted batch runs---see
-\texttt{../cogant/docs/cli/README.md} for the command list that matches
-the installed version.

@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/schemas/semantic.py
-# hypothesis_version: 6.135.29
-
-[0.0, 0.05, 0.1, 0.5, 1.0, 'ConfidenceTier', 'MappingKind', 'ProvenanceRecord', 'SemanticMapping', 'action', 'auto_proposed', 'circuit_breaker', 'constraint', 'context', 'control_flow', 'data_flow', 'error_handling', 'feature_flag', 'hidden_state', 'human_reviewed', 'observation', 'orchestration', 'policy', 'preference', 'retry_pattern', 'runtime_only', 'static_only', 'static_plus_runtime']

@@ -1,2 +1,0 @@
-## Detailed pipeline guide
-

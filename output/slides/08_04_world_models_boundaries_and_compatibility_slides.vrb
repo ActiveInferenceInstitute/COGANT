@@ -1,9 +1,0 @@
-\frametitle{Forward compatibility}
-\protect\phantomsection\label{forward-compatibility}
-Promoting COGANT into
-\href{../../../projects/}{\texttt{../../../projects/}} integrates
-manuscript PDF rendering with the template's validation gates.
-Cross-references in this folder use paths \textbf{relative to these
-Markdown files} (for example
-\href{../cogant/docs/}{\texttt{../cogant/docs/}}) so links stay stable
-when the tree moves.

@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/process/policies.py
-# hypothesis_version: 6.135.29
-
-[1.0, 2.0, 60.0, 'backoff', 'backoff_base', 'backoff_multiplier', 'backoff_strategy', 'branch', 'branches', 'branching', 'branching_policies', 'breaker', 'case_', 'choose', 'circuit', 'circuit_breaker', 'condition', 'decision', 'default_branch', 'dispatch', 'exponential', 'failure_threshold', 'fuse', 'half_open', 'has_retry', 'if_', 'is_branch', 'is_circuit_breaker', 'is_decision', 'max_attempts', 'max_retries', 'open_circuit', 'predicate', 'reattempt', 'retries', 'retry', 'retry_policies', 'retry_policy', 'route', 'router', 'select', 'success_threshold', 'switch', 'timeout', 'tripped', 'when_']

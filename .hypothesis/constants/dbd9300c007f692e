@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/schemas/process_model.py
-# hypothesis_version: 6.135.29
-
-['Detailed description', 'Evidence for stage', 'Human-readable name', 'Parse HTTP Request', 'Policy parameters', 'Route to Handler', 'Serialize Response', 'Type of deadline', 'Type of process', 'Unique identifier', 'User-defined tags', 'automatic', 'condition', 'conditional', 'event', 'event_driven', 'example', 'execute_handler', 'firm', 'hard', 'kind', 'loop', 'manual', 'message', 'milliseconds', 'name', 'parallel', 'parse_request', 'pipeline', 'predecessors', 'process_id', 'recursive', 'route_request', 'sequential', 'serialize_response', 'soft', 'stage_id', 'stages', 'state_machine', 'successors', 'time_based']

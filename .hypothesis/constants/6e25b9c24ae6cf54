@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/dynamic/enrichment.py
-# hypothesis_version: 6.135.29
-
-[0.0, './', '.xml', '/', '\\', 'avg_duration_ms', 'branch_coverage', 'branch_hits', 'call_count', 'count', 'coverage_hits', 'covered', 'dynamic_coverage', 'dynamic_trace', 'end', 'end_line', 'evidence_sources', 'file', 'graph', 'is_branch', 'is_hot_path', 'line', 'mean', 'source', 'start', 'start_line', 'trace_nodes_enriched']

@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/runtime/loop.py
-# hypothesis_version: 6.135.29
-
-[0.0, 1e-10, 0.1, 1.0, '-inf', 'A', 'AgentRuntime', 'AgentStep', 'B', 'C', 'D', 'EpisodeResult', 'MultiEpisodeResult', 'likelihood', 'nan', 'preference_score', 'run_n_steps', 'transition']

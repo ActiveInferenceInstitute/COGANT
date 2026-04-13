@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/parsers/javascript/parser.py
-# hypothesis_version: 6.135.29
-
-['.cjs', '.js', '.jsx', '.mjs', '0.2.0', 'ArrowFunction', 'COGANT', 'CallExpression', 'ClassDeclaration', 'FunctionDeclaration', 'ImportStatement', 'MethodDefinition', 'calls', 'error', 'errors', 'file_path', 'imports', 'javascript', 'py', 'symbols']

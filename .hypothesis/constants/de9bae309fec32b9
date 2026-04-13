@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/gnn/formatter/semantic.py
-# hypothesis_version: 6.135.29
-
-[0.0, '## Markov Blanket', '## Ontology Mapping', '### Role Counts', '### Role Members', ', ', 'Active (a)', 'External (η)', 'Internal (μ)', 'Sensory (s)', '_(none)_', 'active', 'auto', 'chosen_module', 'external', 'internal', 'kind', 'label', 'mapping_kinds', 'module_name', 'module_names', 'name', 'score', 'semantic_mappings', 'sensory', 'strategy', 'value', '|----|----|', '|----|----|----:|', '|----|:----:|----:|']

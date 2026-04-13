@@ -1,2 +1,0 @@
-\beamer@sectionintoc {1}{Program graph and formal foundations}{1}{0}{1}
-\beamer@sectionintoc {2}{Methodology: Program Graphs and Intermediate Representations}{2}{0}{2}

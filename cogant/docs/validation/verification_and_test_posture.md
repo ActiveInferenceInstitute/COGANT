@@ -1,2 +1,0 @@
-## Verification and test posture
-

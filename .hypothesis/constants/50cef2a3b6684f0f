@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/static/symbols.py
-# hypothesis_version: 6.135.29
-
-['.', '/', 'annotation', 'attributes', 'bases', 'class', 'cogant', 'function', 'is_async', 'lib', 'method', 'module', 'parameters', 'return_annotation', 'src', 'value', 'variable']

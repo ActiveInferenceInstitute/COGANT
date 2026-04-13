@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/parsers/python/parser.py
-# hypothesis_version: 6.135.29
-
-[260, '.', '.py', '.pyi', '.pyx', '0.1.0', 'AnnAssign', 'Assign', 'AsyncFunctionDef', 'COGANT', 'ClassDef', 'FunctionDef', 'Import', 'ImportFrom', 'annotation', 'args', 'assignments', 'attributes', 'bases', 'callee', 'callee_id', 'caller', 'caller_id', 'class', 'classes', 'decorators', 'docstring', 'errors', 'file_path', 'function', 'functions', 'id', 'imports', 'is_async', 'is_method', 'is_relative', 'line', 'line_end', 'line_num', 'line_start', 'methods', 'module_name', 'name', 'names', 'parent', 'parent_scope', 'py', 'python', 'receiver', 'return_annotation', 'return_type', 'scope', 'source_file', 'target_name', 'type', 'value', 'variables']

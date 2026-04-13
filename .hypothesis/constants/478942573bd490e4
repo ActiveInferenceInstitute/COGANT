@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/viz/semantic_view.py
-# hypothesis_version: 6.135.29
-
-['SemanticVisualizer', '__dict__', 'actions', 'description', 'name', 'observations', 'policies', 'states', 'transitions', 'w']

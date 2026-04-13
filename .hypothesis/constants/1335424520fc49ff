@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/ingest/repo_sniff.py
-# hypothesis_version: 6.135.29
-
-[0.0, 0.05, 1.0, 2.0, 60.0, 5000, '*', '.cjs', '.git', '.js', '.jsx', '.mjs', '.mypy_cache', '.py', '.pyi', '.pytest_cache', '.tox', '.ts', '.tsx', '.venv', '<1s', 'SKIP_DIRS', 'SOURCE_EXTENSIONS', '__pycache__', 'build', 'count_source_files', 'dist', 'format_duration', 'node_modules', 'target', 'venv']

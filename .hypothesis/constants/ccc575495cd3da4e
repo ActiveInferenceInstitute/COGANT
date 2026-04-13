@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/schemas/bundle.py
-# hypothesis_version: 6.135.29
-
-['1.0.0', '2.0.0', '2.1.0', '2024-01-15T10:30:00Z', 'Project version', 'Version of analyzer', 'abc1234def5678', 'analyzer_name', 'analyzer_version', 'bundle_id', 'cogant-cli', 'cogant_version', 'commit_hash', 'cpp', 'created_at', 'csharp', 'example', 'fastapi-auth-service', 'go', 'ingest_timestamp', 'java', 'javascript', 'metadata.json', 'name', 'php', 'primary_language', 'provenance', 'python', 'repository_url', 'ruby', 'rust', 'schema_version', 'target', 'title', 'typescript', 'version']

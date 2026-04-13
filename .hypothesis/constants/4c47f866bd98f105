@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/provenance/tracker.py
-# hypothesis_version: 6.135.29
-
-[0.0, 0.02, 0.1, 0.5, 1.0, 'ProvenanceTracker', 'avg_confidence', 'by_evidence_type', 'by_method', 'by_target_type', 'total_records', 'total_targets']
