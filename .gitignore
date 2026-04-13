@@ -1,0 +1,13 @@
+# Coverage artifacts — all transient, regenerate via pytest
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+coverage.json
+
+# pytest / hypothesis
+.pytest_cache/
+.hypothesis/
+
+# Output artifacts
+output/
