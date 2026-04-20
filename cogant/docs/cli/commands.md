@@ -1,6 +1,6 @@
 ## Commands
 
-The Typer app in [`py/cogant/cli/main.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/cli/main.py) registers **26 top-level subcommands** as of v0.5.0. `cogant --help` is ground truth; the entries below are kept in sync by the doc-link verifier.
+The Typer app in [`py/cogant/cli/main.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/cli/main.py) registers **28 top-level subcommands** as of v0.5.0. `cogant --help` is ground truth; the entries below are kept in sync by the doc-link verifier.
 
 ### init
 
@@ -406,4 +406,30 @@ cogant migrate migrate output/model.gnn.md --dry-run
 - `path`: Path to GNN markdown file to migrate. Required.
 - `--dry-run`: Print diff without modifying the file.
 - `--target`: Target schema version. Default: `1.1`.
+
+### upstream-gnn
+
+Drive the upstream GNN 25-step pipeline (`generalized-notation-notation`) against an existing COGANT-emitted `gnn_package/`. Network- and LLM-bound steps (12 LLM, 14 ML integration, 18 audio, 23 website) are skipped by default to keep CI offline-safe.
+
+```bash
+cogant upstream-gnn output/gnn_package
+cogant upstream-gnn output/gnn_package --output-dir output/upstream
+cogant upstream-gnn output/gnn_package --only-steps 1,3,8 --frameworks pymdp,rxinfer
+cogant upstream-gnn output/gnn_package --skip-steps 12,14,18,23 --verbose
+```
+
+**Arguments:**
+- `package_dir`: Path to a `gnn_package/` directory (typically produced by `cogant translate`). Required.
+
+**Options:**
+- `--output-dir, -o`: Where upstream artifacts are written. Default: `<package_dir>/upstream_gnn/`.
+- `--only-steps`: Comma-separated 1-based step numbers to run (subset of the 25-step catalog).
+- `--skip-steps`: Comma-separated 1-based step numbers to skip. Defaults to network-bound steps when neither `--only-steps` nor `--skip-steps` is given.
+- `--frameworks`: Comma-separated render targets for upstream step 11 (e.g. `pymdp,rxinfer`).
+- `--llm-model`: Model identifier passed to upstream step 13 (only used when step 13 is enabled).
+- `--verbose, -v`: Forward `-v` to the upstream subprocess.
+
+The same wiring is also exposed as opt-in flags on `cogant translate`, `cogant analyze`, and `cogant validate` via `--upstream-gnn-pipeline` (and the matching `--upstream-gnn-only-steps` / `--upstream-gnn-skip-steps` / `--upstream-gnn-frameworks` / `--upstream-gnn-llm-model` knobs); see `cogant translate --help` for the full surface.
+
+**Exit codes:** `0` on success; `1` if the upstream subprocess exits non-zero on any executed step.
 

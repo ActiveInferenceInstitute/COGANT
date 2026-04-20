@@ -1,6 +1,6 @@
 # CLI Reference
 
-COGANT ships a Typer-based CLI (entry point `cogant`, defined in `py/cogant/cli/main.py`) that registers **26 top-level subcommands** as of v0.5.0. Every subcommand supports `--help`; the list below covers the ones most commonly used day-to-day.
+COGANT ships a Typer-based CLI (entry point `cogant`, defined in `py/cogant/cli/main.py`) that registers **28 top-level subcommands** as of v0.5.0. Every subcommand supports `--help`; the list below covers the ones most commonly used day-to-day.
 
 Run `cogant --help` to see the authoritative, in-tree list (counts change when new commands ship).
 
@@ -26,6 +26,11 @@ cogant translate <repo> [--output DIR] [--layout-output] [--no-dynamic]
 | `--skip` | Comma-separated list of stage names to skip. |
 | `--incremental` | Git ref (e.g. `HEAD~1`, commit hash, tag) to use as the incremental baseline; only changed files are re-parsed. |
 | `--cache-dir` | Override the incremental cache directory (default: `~/.cache/cogant`). |
+| `--upstream-gnn-pipeline` / `--no-upstream-gnn-pipeline` | Enable/disable the upstream GNN 25-step pipeline pass after `validate` (default: disabled). |
+| `--upstream-gnn-only-steps` | Comma-separated 1-based step numbers to run (e.g. `1,3,4,8`); subset of the upstream catalog. |
+| `--upstream-gnn-skip-steps` | Comma-separated 1-based step numbers to skip; default skips network-bound steps (LLM, audio, website). |
+| `--upstream-gnn-frameworks` | Comma-separated render targets for upstream step 11 (e.g. `pymdp,rxinfer`). |
+| `--upstream-gnn-llm-model` | Override LLM model identifier for upstream step 13 (only relevant when step 13 is enabled). |
 
 Writes `bundle.json` under the output directory and prints a per-stage status table.
 
@@ -111,6 +116,17 @@ Defaults to 3 iterations. Each iteration runs the pipeline with `export` and `va
 | `cogant roundtrip <target>` | Verify forward-reverse-forward round-trip isomorphism (`--threshold FLOAT`, `--keep-tmp`, `--json`). |
 | `cogant plugin list` / `cogant plugin info <name>` | Manage and inspect COGANT plugins. |
 | `cogant migrate migrate <path>` | Migrate GNN files to the current schema version (`--target`, `--dry-run`). |
+| `cogant upstream-gnn <package_dir>` | Drive the upstream GNN 25-step pipeline (`generalized-notation-notation`) against an existing `gnn_package/` (`--only-steps`, `--skip-steps`, `--output-dir`, `--frameworks`, `--llm-model`, `--verbose`). |
+
+## Upstream GNN 25-step pipeline
+
+`cogant upstream-gnn` shells out to the upstream `generalized-notation-notation` repo (under `cogant/_extensions/generalized-notation-notation/src/main.py`) to run the canonical 25-step pipeline against an existing COGANT-emitted `gnn_package/`. Network- and LLM-dependent steps (12 LLM, 14 ML integration, 18 audio, 23 website) are skipped by default. The same wiring is also exposed as opt-in flags on `cogant translate`, `cogant analyze`, and `cogant validate` (see `--upstream-gnn-pipeline` above) so a single pipeline run can produce both the COGANT bundle and the upstream artifacts.
+
+```bash
+cogant upstream-gnn output/gnn_package
+cogant upstream-gnn output/gnn_package --only-steps 1,3,8 --output-dir output/upstream
+cogant upstream-gnn output/gnn_package --frameworks pymdp,rxinfer --verbose
+```
 
 ## Exit codes
 

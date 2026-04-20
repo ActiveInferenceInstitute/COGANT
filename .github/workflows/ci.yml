@@ -11,6 +11,10 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    working-directory: cogant
+
 jobs:
   lint:
     name: Lint (ruff)
@@ -116,8 +120,8 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            rust/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('rust/Cargo.lock') }}
+            cogant/rust/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('cogant/rust/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
 
@@ -139,3 +143,5 @@ jobs:
 
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
+        with:
+          extra_args: --config cogant/.pre-commit-config.yaml --all-files
