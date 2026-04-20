@@ -6,12 +6,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Configurable upstream GNN 25-step pipeline pass** — new
+  `cogant.gnn.upstream_bridge.pipeline` module drives `src.main.execute_pipeline_step`
+  over the produced `gnn_package/`. Surfaces: `UPSTREAM_STEP_SCRIPTS` (canonical
+  ordering of `0_template.py`…`24_intelligent_analysis.py`), `DEFAULT_SKIP_STEPS = {11, 12}`,
+  `resolve_steps()`, `UpstreamPipelineConfig` / `UpstreamStepResult` /
+  `UpstreamPipelineResult` dataclasses, and `run_upstream_pipeline()`. Wired
+  through `PipelineConfig.upstream_gnn_pipeline` and exposed on `analyze`,
+  `translate`, `validate` via `--upstream-gnn-pipeline` plus
+  `--upstream-gnn-only-steps`, `--upstream-gnn-skip-steps`,
+  `--upstream-gnn-frameworks`, `--upstream-gnn-llm-model`, and
+  `--upstream-gnn-output-dir`. New top-level `cogant upstream-gnn <package_dir>`
+  command re-runs the pass against an existing bundle. **Render (step 11)** and
+  **Execute (step 12)** are skipped by default — those are framework-specific
+  PyMDP/RxInfer/JAX/DisCoPy code-gen and simulation steps; opt in by clearing
+  `--upstream-gnn-skip-steps ""` or by listing them in `--upstream-gnn-only-steps`.
+  Per-step results are recorded under `bundle.artifacts['upstream_pipeline_steps']`
+  / `['upstream_pipeline_summary']` and serialized to
+  `<output_dir>/upstream_pipeline/upstream_pipeline_summary.json`. Failures are
+  **advisory** — they append warnings to the validate stage but never fail it.
+  Includes 14 unit tests (`tests/unit/test_upstream_pipeline_resolution.py`)
+  and 5 integration tests (`tests/integration/test_upstream_gnn_pipeline.py`),
+  with a slow full-pass test gated by `COGANT_RUN_UPSTREAM_PIPELINE=1`.
 - **3 new translation rules** (19 → 22 total): `ParameterRule` (control family — detects learnable parameters/hyperparameters → CONTEXT), `StateMachineRule` (behavioral family — detects FSM patterns → POLICY), `RateLimiterRule` (resilience family — detects rate-limiting patterns → POLICY). Rule breakdown: 5 structural + 5 semantic + 3 control + 4 behavioral + 5 resilience.
 - **Static analysis module** (`cogant.static`): `ComplexityAnalyzer` (cyclomatic + cognitive complexity), `CouplingAnalyzer` (Martin metrics: Ca/Ce/instability/distance-from-main-sequence), `DeadCodeDetector` (unused imports/functions/unreachable code with confidence scores), `MetricsAnalyzer` (LOC, Halstead metrics).
 - **Network/graph analysis** (`cogant.graph.analysis`): `GraphAnalyzer` with centrality (betweenness, PageRank, closeness, degree), community detection (Louvain/component fallback), Tarjan SCC cycle detection, hotspot/source/sink identification. `GraphDiff` for incremental diffing.
 - **Visualization suite** (`cogant.viz`): `PDFExporter` (8-page analysis reports), `MatrixVisualizer` (A/B/C/D heatmaps), `PipelineVisualizer` (10-stage timing + Mermaid), `FlowDiagrammer` (CFG/call graph/dependency graph → PNG/PDF/Mermaid), `StaticAnalysisView`, `NetworkView`, `ExportView`.
 - **Export formats** (`cogant.export`): `SVGExporter` (graphviz DOT), `JSONSchemaExporter` (draft-7 schemas for all output types), `MultiFormatExporter` with `ExportFormat` enum (9 formats: JSON, GRAPHML, PARQUET, SVG, PNG, PDF, MERMAID, DOT, JSONLINES).
-- **Type infrastructure**: 9 `@runtime_checkable` Protocol classes (`Translatable`, `Analyzable`, `Serializable`, `Visualizable`, `Validatable`, `Exportable`, `PipelineStage`, `TranslationRule`, `GraphBackend`), 7 `TypedDict`s, `SemanticRole`/`RuleFamily`/`FixpointStatus` Literal types. 49 `.pyi` stubs covering all new modules.
+- **Type infrastructure**: 14 `@runtime_checkable` Protocol classes (`Translatable`, `Analyzable`, `Serializable`, `Visualizable`, `Validatable`, `Exportable`, `PipelineStage`, `TranslationRule`, `GraphBackend`, `Exportable2`, `DiagramRenderer`, `NetworkAnalyzer`, `ReportGenerator`, `StaticAnalyzer`), 15 `TypedDict`s, `SemanticRole`/`RuleFamily`/`FixpointStatus` Literal types. 231 `.pyi` stubs covering all public modules.
 - **API improvements** (`cogant.server`, `cogant.api`): 5 new REST endpoints (`GET /api/v1/rules`, `POST /api/v1/analyze`, `POST /api/v1/roundtrip`, `POST /api/v1/visualize`, `GET /api/v1/metrics`), WebSocket streaming (`WS /ws/translate`), `PipelineResult` dataclass, `SessionManager`, `translate_batch()`.
 - **Translation engine enhancements**: `TranslationEngine.explain()`, `validate()`, `get_convergence_info()`; `RuleExplanation.confidence: float` and `contradictions: list[str]`; improved heuristics for all 5 rule families; `to_gnn_role()` on semantic rules.
 - **Round-trip enhancements**: `PackagePlan.validate()`, `diff()`, `to_json()`/`from_json()`; `synthesize_with_validation()` with `ast.parse` check; `IdempotencyReport` dataclass; `MatrixSet.validate()`.
@@ -167,4 +189,4 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.1.0] - 2026-04-08
 
-Initial R&D release: forward pipeline (ingest -> static -> normalize -> graph -> translate -> export), 19 translation rules, 7 semantic roles, Markov blanket partition.
+Initial R&D release: forward pipeline (ingest -> static -> normalize -> graph -> translate -> export), 12 translation rules, 7 semantic roles, Markov blanket partition.

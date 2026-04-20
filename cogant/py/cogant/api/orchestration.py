@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+import tempfile
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
@@ -62,7 +63,30 @@ __all__ = [
     "run_validate",
     "run_dynamic",
     "program_graph_to_dict",
+    "translate_source",
+    "translate_stream",
+    "translate_batch",
 ]
+
+
+# ---------------------------------------------------------------------------
+# Language extension mapping for in-memory source translation
+# ---------------------------------------------------------------------------
+
+_LANGUAGE_EXTENSIONS: dict[str, str] = {
+    "python": "py",
+    "javascript": "js",
+    "typescript": "ts",
+}
+
+_DEFAULT_TRANSLATE_STAGES: tuple[str, ...] = (
+    "ingest",
+    "static",
+    "normalize",
+    "graph",
+    "translate",
+    "statespace",
+)
 
 
 def _repo_uri(target: str) -> str:
@@ -865,7 +889,17 @@ def run_export(bundle: Any, output_dir: str) -> dict[str, Any]:
     return {"type": "export", "output_dir": output_dir, "artifacts": written}
 
 
-def run_validate(bundle: Any) -> dict[str, Any]:
+def run_validate(
+    bundle: Any,
+    *,
+    upstream_gnn: bool | None = None,
+    upstream_pipeline: bool = False,
+    upstream_pipeline_output_dir: Path | None = None,
+    upstream_pipeline_only_steps: list[int] | None = None,
+    upstream_pipeline_skip_steps: list[int] | None = None,
+    upstream_pipeline_frameworks: str = "lite",
+    upstream_pipeline_llm_model: str | None = None,
+) -> dict[str, Any]:
     """Run the validate stage: schema-check the program graph.
 
     Runs ``SchemaValidator.validate_program_graph`` and partitions issues
@@ -873,12 +907,32 @@ def run_validate(bundle: Any) -> dict[str, Any]:
     "no graph" validation result rather than raising, so this stage is
     always safe to call.
 
+    When ``upstream_pipeline`` is ``True`` and a GNN package directory is
+    present at ``bundle.artifacts['_gnn_package_dir']``, the upstream 25-step
+    pipeline (Active Inference Institute ``src.main.execute_pipeline_step``)
+    is driven over that directory; results are recorded as
+    ``bundle.artifacts['upstream_pipeline_steps']`` /
+    ``['upstream_pipeline_summary']`` and surfaced as ``warnings`` only —
+    upstream failures never fail the validate stage.
+
     Args:
         bundle: Pipeline bundle; ``_program_graph`` is optional.
+        upstream_gnn: Passed to :meth:`cogant.gnn.validator.GNNValidator.validate_package`
+            when a GNN package is present (``None`` = default: upstream on unless
+            ``COGANT_DISABLE_UPSTREAM_GNN`` is set).
+        upstream_pipeline: Master switch for the 25-step pass.
+        upstream_pipeline_output_dir: Where upstream writes per-step output.
+            Defaults to ``<gnn_package_dir>/../upstream_pipeline``.
+        upstream_pipeline_only_steps: Restrict to these step indices.
+        upstream_pipeline_skip_steps: Drop these step indices (defaults to
+            ``[11, 12]`` when ``None``).
+        upstream_pipeline_frameworks: Forwarded to upstream render/execute.
+        upstream_pipeline_llm_model: Override ``OLLAMA_MODEL`` for step 13.
 
     Returns:
         Stage result dict with ``passed`` boolean, issue counts, warnings,
-        and up to the first 50 issues as structured dicts.
+        and up to the first 50 issues as structured dicts. When the upstream
+        pass ran, ``upstream_pipeline`` carries its summary.
     """
     pg: ProgramGraph | None = bundle.artifacts.get("_program_graph")
     if pg is None:
@@ -900,18 +954,78 @@ def run_validate(bundle: Any) -> dict[str, Any]:
     gnn_result: dict[str, Any] | None = None
     if gnn_pkg:
         try:
+            from cogant.gnn.upstream_bridge import parse_upstream_model_gnn_md
             from cogant.gnn.validator import GNNValidator
 
-            result = GNNValidator().validate_package(str(gnn_pkg))
+            result = GNNValidator().validate_package(
+                str(gnn_pkg), upstream_gnn=upstream_gnn
+            )
+            parse_summary: dict[str, Any] | None = None
+            try:
+                parse_summary = parse_upstream_model_gnn_md(str(gnn_pkg))
+            except Exception as parse_exc:  # pragma: no cover - defensive
+                parse_summary = {"error": str(parse_exc)}
             gnn_result = {
                 "valid": result.valid,
                 "score": result.score,
                 "error_count": len(result.errors),
                 "warning_count": len(result.warnings),
                 "package_dir": str(gnn_pkg),
+                "details": result.to_dict().get("details", {}),
+                "upstream_parse_summary": parse_summary,
             }
         except Exception as e:  # pragma: no cover - defensive
             gnn_result = {"error": str(e), "package_dir": str(gnn_pkg)}
+
+    upstream_pipeline_summary: dict[str, Any] | None = None
+    if upstream_pipeline and gnn_pkg:
+        try:
+            from cogant.gnn.upstream_bridge.pipeline import (
+                UpstreamPipelineConfig,
+                run_upstream_pipeline,
+            )
+
+            target_pkg = Path(gnn_pkg).resolve()
+            out_dir = (
+                upstream_pipeline_output_dir
+                if upstream_pipeline_output_dir is not None
+                else target_pkg.parent / "upstream_pipeline"
+            )
+            cfg = UpstreamPipelineConfig(
+                target_dir=target_pkg,
+                output_dir=out_dir,
+                only_steps=upstream_pipeline_only_steps,
+                skip_steps=(
+                    list(upstream_pipeline_skip_steps)
+                    if upstream_pipeline_skip_steps is not None
+                    else [11, 12]
+                ),
+                frameworks=upstream_pipeline_frameworks,
+                llm_model=upstream_pipeline_llm_model,
+            )
+            pipeline_result = run_upstream_pipeline(cfg)
+            upstream_pipeline_summary = pipeline_result.to_dict()
+            bundle.artifacts["upstream_pipeline_steps"] = [
+                s.to_dict() for s in pipeline_result.steps
+            ]
+            bundle.artifacts["upstream_pipeline_summary"] = (
+                upstream_pipeline_summary
+            )
+            for step in pipeline_result.steps:
+                if not step.success:
+                    msg = (
+                        f"upstream step {step.step_index:02d} "
+                        f"{step.script}: {step.status}"
+                    )
+                    if step.error:
+                        msg += f" — {step.error}"
+                    warnings.append(msg)
+            if not pipeline_result.available and pipeline_result.error:
+                warnings.append(
+                    f"upstream pipeline unavailable: {pipeline_result.error}"
+                )
+        except Exception as exc:  # pragma: no cover - defensive
+            warnings.append(f"upstream pipeline pass failed: {exc}")
 
     payload: dict[str, Any] = {
         "type": "validation",
@@ -922,6 +1036,8 @@ def run_validate(bundle: Any) -> dict[str, Any]:
     }
     if gnn_result is not None:
         payload["gnn_validation"] = gnn_result
+    if upstream_pipeline_summary is not None:
+        payload["upstream_pipeline"] = upstream_pipeline_summary
     return payload
 
 
@@ -949,113 +1065,242 @@ def run_dynamic(bundle: Any, coverage_path: str | None = None, trace_path: str |
 # ---------------------------------------------------------------------------
 
 
+def _materialize_source_dir(language: str, source_code: str) -> tempfile.TemporaryDirectory:  # type: ignore[type-arg]
+    """Write ``source_code`` to a temp directory matching ``language``.
+
+    The pipeline operates on directory paths (the ingest stage walks a
+    repository tree). For in-memory translation we materialize the
+    snippet into a single file under a fresh temp directory whose
+    extension matches the language. Caller is responsible for calling
+    ``.cleanup()`` on the returned ``TemporaryDirectory``.
+
+    Args:
+        language: One of ``"python"``, ``"javascript"``, ``"typescript"``.
+        source_code: Non-empty source text.
+
+    Returns:
+        A ``tempfile.TemporaryDirectory`` containing one source file.
+
+    Raises:
+        ValueError: If ``language`` is unsupported or ``source_code`` is empty.
+    """
+    if not source_code or not source_code.strip():
+        raise ValueError("source_code must be a non-empty string")
+    ext = _LANGUAGE_EXTENSIONS.get(language)
+    if ext is None:
+        supported = ", ".join(sorted(_LANGUAGE_EXTENSIONS))
+        raise ValueError(
+            f"unsupported language: {language!r} (supported: {supported})"
+        )
+    tmpdir = tempfile.TemporaryDirectory(prefix="cogant_translate_")
+    (Path(tmpdir.name) / f"main.{ext}").write_text(source_code, encoding="utf-8")
+    return tmpdir
+
+
+def _summarize_bundle(bundle: Any, language: str) -> dict[str, Any]:
+    """Reduce a :class:`Bundle` to a compact JSON-safe response dict.
+
+    Pulls the validator score, mapping role distribution, GNN markdown
+    payload, and stage-completion list off the bundle. Used by both
+    :func:`translate_stream` and :func:`translate_batch` to return real
+    pipeline output rather than stub strings.
+    """
+    semantic_mappings = bundle.get_artifact("_semantic_mappings") or {}
+    role_counts: dict[str, int] = {}
+    for mapping in semantic_mappings.values():
+        kind = getattr(getattr(mapping, "kind", None), "value", None) or str(
+            getattr(mapping, "kind", "UNKNOWN")
+        )
+        role_counts[str(kind)] = role_counts.get(str(kind), 0) + 1
+    validate_result = bundle.stage_results.get("validate", {})
+    score = validate_result.get("score") or validate_result.get("validator_score")
+    return {
+        "language": language,
+        "gnn_bundle": bundle.gnn_markdown(),
+        "semantic_mappings_count": len(semantic_mappings),
+        "roles": role_counts,
+        "validator_score": score,
+        "stages_completed": sorted(bundle.stage_results.keys()),
+        "errors": list(bundle.errors),
+    }
+
+
+def translate_source(
+    language: str,
+    source_code: str,
+    *,
+    stages: list[str] | None = None,
+) -> Any:
+    """Run the COGANT pipeline on an in-memory source string.
+
+    Materializes ``source_code`` to a temp directory and delegates to
+    :class:`cogant.api.pipeline.PipelineRunner`. Returns the populated
+    :class:`Bundle` so callers can inspect any artifact (program graph,
+    semantic mappings, state-space model, GNN markdown, validation
+    report). The temp directory is cleaned up before returning.
+
+    Args:
+        language: ``"python"``, ``"javascript"``, or ``"typescript"``.
+        source_code: Source text to translate.
+        stages: Optional explicit pipeline stages. Defaults to the
+            hermetic analyse stages (no dynamic, no export, no validate)
+            so the function is fast and side-effect free.
+
+    Returns:
+        A populated :class:`cogant.api.bundle.Bundle`.
+
+    Raises:
+        ValueError: If ``language`` or ``source_code`` is invalid.
+    """
+    # Lazy import to avoid the orchestration↔pipeline import cycle at module load.
+    from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
+    tmpdir = _materialize_source_dir(language, source_code)
+    try:
+        runner = PipelineRunner()
+        config = PipelineConfig(
+            stages=list(stages) if stages else list(_DEFAULT_TRANSLATE_STAGES),
+            skip_dynamic=True,
+        )
+        return runner.run(tmpdir.name, config)
+    finally:
+        tmpdir.cleanup()
+
+
 async def translate_stream(
     sources: list[tuple[str, str]], options: dict[str, Any] | None = None
 ) -> Any:
     """Stream stage-by-stage progress for multiple translation jobs.
 
-    This is a generator-style coroutine that yields progress events as
-    each pipeline stage completes. Suitable for WebSocket endpoints that
-    want to push progress updates to the client in real time.
+    Async generator suitable for WebSocket / Server-Sent-Event endpoints.
+    For each ``(language, source_code)`` pair, runs the COGANT pipeline
+    in a worker thread (so the event loop stays responsive) and yields:
+
+    * ``translation_start`` — before each job, with overall percent.
+    * ``stage_complete`` — once per pipeline stage, with the stage name
+      and the new overall percent.
+    * ``translation_complete`` — after a successful run, carrying the
+      summary dict from :func:`_summarize_bundle`.
+    * ``translation_error`` — when a job raises; processing continues
+      with the next source.
+    * ``progress`` — final overall percent after each job.
 
     Args:
-        sources: List of ``(language, source_code)`` tuples to translate.
-        options: Optional translation options (markov_seed, include_viz, etc.).
+        sources: List of ``(language, source_code)`` tuples.
+        options: Optional knobs. Recognised keys:
+
+            ``stages``
+                Override the per-job stage list (default = hermetic
+                analyse stages).
 
     Yields:
-        Progress event dicts with keys: ``stage``, ``percent_complete``,
-        ``status``, and ``details``.
+        Progress event dicts as described above.
     """
-    if options is None:
-        options = {}
+    import asyncio
 
+    options = options or {}
+    job_stages: list[str] = list(options.get("stages") or _DEFAULT_TRANSLATE_STAGES)
     total_work = len(sources)
-    for idx, (language, _) in enumerate(sources):
-        progress_pct = int(100 * idx / max(total_work, 1))
+    if total_work == 0:
+        yield {"event": "progress", "percent_complete": 100, "processed": 0, "total": 0}
+        return
 
+    for idx, (language, source_code) in enumerate(sources):
+        start_pct = int(100 * idx / total_work)
         yield {
             "event": "translation_start",
             "index": idx,
-            "percent_complete": progress_pct,
+            "percent_complete": start_pct,
             "language": language,
         }
 
         try:
-            # In a real implementation, this would invoke the actual
-            # translation pipeline for each source. For now, we yield
-            # a mock completion.
-            yield {
-                "event": "translation_complete",
-                "index": idx,
-                "percent_complete": 100,
-                "status": "success",
-            }
+            bundle = await asyncio.to_thread(
+                translate_source, language, source_code, stages=job_stages
+            )
         except Exception as exc:
-            logger.exception("translation failed for source %d: %s", idx, exc)
+            logger.exception("translation failed for source %d", idx)
             yield {
                 "event": "translation_error",
                 "index": idx,
                 "status": "failed",
-                "error": str(exc),
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+        else:
+            for stage_idx, stage in enumerate(job_stages, start=1):
+                if stage in bundle.stage_results:
+                    sub_pct = start_pct + int(
+                        (100 / total_work) * (stage_idx / len(job_stages))
+                    )
+                    yield {
+                        "event": "stage_complete",
+                        "index": idx,
+                        "stage": stage,
+                        "percent_complete": min(sub_pct, 100),
+                    }
+            yield {
+                "event": "translation_complete",
+                "index": idx,
+                "percent_complete": int(100 * (idx + 1) / total_work),
+                "status": "success",
+                "result": _summarize_bundle(bundle, language),
             }
 
-        # Yield a final overall progress update
-        final_pct = int(100 * (idx + 1) / max(total_work, 1))
         yield {
             "event": "progress",
-            "percent_complete": final_pct,
+            "percent_complete": int(100 * (idx + 1) / total_work),
             "processed": idx + 1,
             "total": total_work,
         }
 
 
 def translate_batch(requests: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Execute batch translation over multiple source files.
+    """Execute batch translation over multiple source snippets.
 
-    Translates each request independently and collects results into a
-    single response list. Errors in one request do not stop processing
-    of subsequent requests.
+    Each request is run independently through :func:`translate_source`
+    and reduced via :func:`_summarize_bundle`. Errors in one request do
+    not stop processing of the rest.
 
     Args:
-        requests: List of request dicts, each with keys ``language`` and
-            ``source_code``.
+        requests: List of request dicts, each with keys ``"language"``
+            and ``"source_code"``. An optional ``"stages"`` list may
+            override the default analyse stages for that request.
 
     Returns:
-        List of response dicts with keys ``index``, ``status``,
-        ``result``, and ``error`` (if applicable).
+        List of response dicts with keys ``"index"``, ``"status"`` (one
+        of ``"success"``, ``"error"``), and either ``"result"`` (the
+        :func:`_summarize_bundle` dict) or ``"error"`` (string message).
     """
     results: list[dict[str, Any]] = []
 
     for idx, request in enumerate(requests):
-        try:
-            language = request.get("language")
-            source_code = request.get("source_code")
-
-            if not language or not source_code:
-                results.append({
-                    "index": idx,
-                    "status": "error",
-                    "error": "missing language or source_code",
-                })
-                continue
-
-            # Placeholder: real implementation would invoke translation.
+        language = request.get("language")
+        source_code = request.get("source_code")
+        if not isinstance(language, str) or not isinstance(source_code, str):
             results.append({
                 "index": idx,
-                "status": "success",
-                "result": {
-                    "language": language,
-                    "gnn_bundle": "[GNN output]",
-                    "semantic_mappings": {},
-                    "validator_score": 100,
-                },
+                "status": "error",
+                "error": "missing or non-string language / source_code",
             })
+            continue
+        try:
+            bundle = translate_source(
+                language,
+                source_code,
+                stages=request.get("stages"),
+            )
         except Exception as exc:
             logger.exception("batch translation error at index %d", idx)
             results.append({
                 "index": idx,
                 "status": "error",
-                "error": str(exc),
+                "error": f"{type(exc).__name__}: {exc}",
+            })
+        else:
+            results.append({
+                "index": idx,
+                "status": "success",
+                "result": _summarize_bundle(bundle, language),
             })
 
     return results

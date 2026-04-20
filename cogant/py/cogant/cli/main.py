@@ -17,6 +17,7 @@ friendly message instead of a Python traceback.
 """
 
 import logging
+import sys
 from pathlib import Path
 
 import typer
@@ -67,6 +68,99 @@ app = typer.Typer(
 
 
 # ------------------------------------------------------- error helpers ----
+
+
+def _parse_step_csv(
+    value: str | None,
+    *,
+    label: str,
+    empty_means: list[int] | None = None,
+) -> list[int] | None:
+    """Parse a ``"3,5,7"``-style CSV of upstream step indices.
+
+    * ``None`` (flag not given) → ``None`` (caller keeps its default).
+    * ``""`` (flag given with empty value) → ``empty_means`` (defaults to
+      ``None``). Use ``empty_means=[]`` for ``--skip-steps`` to mean
+      "do not skip anything".
+    * Otherwise parses comma-separated integers and validates the
+      ``0..24`` range, raising :class:`typer.BadParameter` on invalid input.
+    """
+    if value is None:
+        return None
+    cleaned = value.strip()
+    if not cleaned:
+        return empty_means
+    try:
+        result = [int(v) for v in cleaned.split(",") if v.strip()]
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"{label} expects a comma-separated list of integers (got {value!r})"
+        ) from exc
+    out_of_range = [v for v in result if v < 0 or v > 24]
+    if out_of_range:
+        raise typer.BadParameter(
+            f"{label} contains out-of-range step(s) {out_of_range}; must be 0..24"
+        )
+    return result
+
+
+def _apply_upstream_pipeline_flags(
+    config: PipelineConfig,
+    *,
+    enable: bool,
+    only: str | None,
+    skip: str | None,
+    frameworks: str | None,
+    llm_model: str | None,
+) -> None:
+    """Mutate ``config`` to honour the ``--upstream-gnn-*`` flag family."""
+    config.upstream_gnn_pipeline = enable
+    only_list = _parse_step_csv(only, label="--upstream-gnn-only-steps")
+    skip_list = _parse_step_csv(
+        skip, label="--upstream-gnn-skip-steps", empty_means=[]
+    )
+    if only_list is not None:
+        config.upstream_gnn_only_steps = only_list
+    if skip_list is not None:
+        config.upstream_gnn_skip_steps = skip_list
+    if frameworks:
+        config.upstream_gnn_frameworks = frameworks
+    if llm_model:
+        config.upstream_gnn_llm_model = llm_model
+
+
+def _render_upstream_pipeline_table(result: object) -> None:
+    """Print a Rich table summarising an :class:`UpstreamPipelineResult`."""
+    if not getattr(result, "available", False):
+        console.print(
+            "[yellow]Upstream pipeline unavailable:[/yellow] "
+            f"{getattr(result, 'error', None) or 'src.main not importable'}"
+        )
+        return
+    table = Table(title="Upstream GNN pipeline")
+    table.add_column("Step", justify="right", style="cyan")
+    table.add_column("Script", style="magenta")
+    table.add_column("Status", style="green")
+    table.add_column("Time (s)", justify="right")
+    table.add_column("Notes", style="yellow")
+    for step in getattr(result, "steps", []) or []:
+        notes = step.error or ""
+        if len(notes) > 60:
+            notes = notes[:57] + "..."
+        status_style = "green" if step.success else "red"
+        table.add_row(
+            f"{step.step_index:02d}",
+            step.script,
+            f"[{status_style}]{step.status}[/{status_style}]",
+            f"{step.duration_s:.2f}",
+            notes,
+        )
+    console.print(table)
+    console.print(
+        f"[dim]executed={len(result.executed)} skipped={len(result.skipped)} "
+        f"success={result.success_count} fail={result.failure_count} "
+        f"total={result.total_duration_s:.2f}s output={result.output_dir}[/dim]"
+    )
 
 
 def _friendly_pipeline_error(exc: BaseException, target: Path | None = None) -> None:
@@ -568,6 +662,38 @@ def translate(
             "an isolated cache state."
         ),
     ),
+    upstream_gnn_pipeline: bool = typer.Option(
+        False,
+        "--upstream-gnn-pipeline/--no-upstream-gnn-pipeline",
+        help=(
+            "After validate, drive the upstream GNN 25-step pipeline "
+            "over the produced gnn_package/. Render (11) and Execute (12) "
+            "are skipped by default."
+        ),
+    ),
+    upstream_gnn_only_steps: str | None = typer.Option(
+        None,
+        "--upstream-gnn-only-steps",
+        help="Restrict the upstream pass to these step indices, e.g. '3,5,7'.",
+    ),
+    upstream_gnn_skip_steps: str | None = typer.Option(
+        None,
+        "--upstream-gnn-skip-steps",
+        help=(
+            "Override the upstream skip list (default '11,12'). "
+            "Pass '' to run all 25 steps."
+        ),
+    ),
+    upstream_gnn_frameworks: str | None = typer.Option(
+        None,
+        "--upstream-gnn-frameworks",
+        help="Frameworks for upstream render/execute (e.g. 'lite', 'all').",
+    ),
+    upstream_gnn_llm_model: str | None = typer.Option(
+        None,
+        "--upstream-gnn-llm-model",
+        help="Override OLLAMA_MODEL for upstream step 13 (LLM).",
+    ),
 ) -> None:
     """Translate a repository into an Active Inference GNN state-space model.
 
@@ -647,6 +773,14 @@ def translate(
         )
     if cache_dir:
         config.cache_dir = cache_dir
+    _apply_upstream_pipeline_flags(
+        config,
+        enable=upstream_gnn_pipeline,
+        only=upstream_gnn_only_steps,
+        skip=upstream_gnn_skip_steps,
+        frameworks=upstream_gnn_frameworks,
+        llm_model=upstream_gnn_llm_model,
+    )
 
     runner = PipelineRunner()
     try:
@@ -765,6 +899,44 @@ def analyze(
         "-q",
         help="Suppress per-stage progress output (still prints summary).",
     ),
+    upstream_gnn_pipeline: bool = typer.Option(
+        False,
+        "--upstream-gnn-pipeline/--no-upstream-gnn-pipeline",
+        help=(
+            "After validate, drive the upstream Active Inference Institute "
+            "GNN 25-step pipeline over the produced gnn_package/. "
+            "Render (step 11) and Execute (step 12) are skipped by default."
+        ),
+    ),
+    upstream_gnn_only_steps: str | None = typer.Option(
+        None,
+        "--upstream-gnn-only-steps",
+        help=(
+            "Restrict the upstream pass to these step indices, e.g. '3,5,7'. "
+            "Ignored when --upstream-gnn-pipeline is off."
+        ),
+    ),
+    upstream_gnn_skip_steps: str | None = typer.Option(
+        None,
+        "--upstream-gnn-skip-steps",
+        help=(
+            "Override the upstream pass skip list (default '11,12'). "
+            "Pass '' to run all 25 steps."
+        ),
+    ),
+    upstream_gnn_frameworks: str | None = typer.Option(
+        None,
+        "--upstream-gnn-frameworks",
+        help=(
+            "Frameworks for upstream render/execute (e.g. 'lite', 'all', "
+            "'pymdp,jax'). Only consulted when those steps are enabled."
+        ),
+    ),
+    upstream_gnn_llm_model: str | None = typer.Option(
+        None,
+        "--upstream-gnn-llm-model",
+        help="Override OLLAMA_MODEL for upstream step 13 (LLM).",
+    ),
 ) -> None:
     """Analyze a repository, optionally in incremental mode.
 
@@ -821,6 +993,14 @@ def analyze(
         config.incremental_since = incremental
     if cache_dir:
         config.cache_dir = cache_dir
+    _apply_upstream_pipeline_flags(
+        config,
+        enable=upstream_gnn_pipeline,
+        only=upstream_gnn_only_steps,
+        skip=upstream_gnn_skip_steps,
+        frameworks=upstream_gnn_frameworks,
+        llm_model=upstream_gnn_llm_model,
+    )
 
     runner = PipelineRunner()
     try:
@@ -1097,6 +1277,54 @@ def validate(
         ...,
         help="Bundle JSON path, run directory, or gnn_package directory",
     ),
+    no_upstream_gnn: bool = typer.Option(
+        False,
+        "--no-upstream-gnn",
+        help=(
+            "Skip Active Inference Institute src.gnn validation on model.gnn.md "
+            "(COGANT structural checks still run). Default is to run upstream. "
+            "Or set COGANT_DISABLE_UPSTREAM_GNN=1."
+        ),
+    ),
+    upstream_gnn_pipeline: bool = typer.Option(
+        False,
+        "--upstream-gnn-pipeline/--no-upstream-gnn-pipeline",
+        help=(
+            "Drive the upstream GNN 25-step pipeline over the package "
+            "directory. Render (11) and Execute (12) are skipped by default."
+        ),
+    ),
+    upstream_gnn_only_steps: str | None = typer.Option(
+        None,
+        "--upstream-gnn-only-steps",
+        help="Restrict the upstream pass to these step indices, e.g. '3,5,7'.",
+    ),
+    upstream_gnn_skip_steps: str | None = typer.Option(
+        None,
+        "--upstream-gnn-skip-steps",
+        help=(
+            "Override the upstream skip list (default '11,12'). "
+            "Pass '' to run all 25 steps."
+        ),
+    ),
+    upstream_gnn_frameworks: str | None = typer.Option(
+        None,
+        "--upstream-gnn-frameworks",
+        help="Frameworks for upstream render/execute (e.g. 'lite', 'all').",
+    ),
+    upstream_gnn_llm_model: str | None = typer.Option(
+        None,
+        "--upstream-gnn-llm-model",
+        help="Override OLLAMA_MODEL for upstream step 13 (LLM).",
+    ),
+    upstream_gnn_output_dir: str | None = typer.Option(
+        None,
+        "--upstream-gnn-output-dir",
+        help=(
+            "Where the upstream pass writes per-step outputs. Defaults to "
+            "<package_dir>/../upstream_pipeline/."
+        ),
+    ),
 ) -> None:
     """Run validation checks.
 
@@ -1124,7 +1352,9 @@ def validate(
     if gnn_dir is not None:
         from cogant.gnn.validator import GNNValidator
 
-        result = GNNValidator().validate_package(str(gnn_dir))
+        result = GNNValidator().validate_package(
+            str(gnn_dir), upstream_gnn=False if no_upstream_gnn else None
+        )
         status = "[green bold]VALID[/green bold]" if result.valid else "[red bold]INVALID[/red bold]"
         console.print(
             Panel(
@@ -1141,6 +1371,42 @@ def validate(
             console.print("[yellow]Warnings:[/yellow]")
             for warn in result.warnings[:10]:
                 console.print(f"  • {warn}")
+
+        if upstream_gnn_pipeline:
+            from cogant.gnn.upstream_bridge.pipeline import (
+                UpstreamPipelineConfig,
+                run_upstream_pipeline,
+            )
+
+            only = _parse_step_csv(
+                upstream_gnn_only_steps,
+                label="--upstream-gnn-only-steps",
+            )
+            skip = _parse_step_csv(
+                upstream_gnn_skip_steps,
+                label="--upstream-gnn-skip-steps",
+            )
+            out_dir = (
+                Path(upstream_gnn_output_dir)
+                if upstream_gnn_output_dir
+                else gnn_dir.parent / "upstream_pipeline"
+            )
+            cfg = UpstreamPipelineConfig(
+                target_dir=gnn_dir,
+                output_dir=out_dir,
+                only_steps=only,
+                skip_steps=skip if skip is not None else [11, 12],
+                frameworks=upstream_gnn_frameworks or "lite",
+                llm_model=upstream_gnn_llm_model,
+            )
+            console.print(
+                "\n[bold]Upstream GNN 25-step pipeline:[/bold] "
+                f"target=[cyan]{cfg.target_dir}[/cyan] "
+                f"output=[cyan]{cfg.output_dir}[/cyan]"
+            )
+            pipeline_result = run_upstream_pipeline(cfg)
+            _render_upstream_pipeline_table(pipeline_result)
+
         raise typer.Exit(code=0 if result.valid else 1)
 
     # Route 2: lightweight bundle-JSON structure check (file or run dir with bundle.json)
@@ -1568,6 +1834,123 @@ app.command(name="reverse", help="Synthesize a Python package from a GNN markdow
 app.command(name="roundtrip", help="Verify forward-reverse-forward round-trip isomorphism.")(
     roundtrip_command
 )
+
+
+@app.command(name="version")
+def version_command() -> None:
+    """Print the COGANT version (semver) and key runtime info as JSON."""
+
+    import json as _json
+
+    from cogant import __rust_version__, __version__
+
+    payload = {
+        "cogant": __version__,
+        "python": sys.version.split()[0],
+        "rust_extension": __rust_version__,
+    }
+    print(_json.dumps(payload, indent=2))
+
+
+@app.command("upstream-gnn")
+def upstream_gnn_command(
+    package_dir: Path = typer.Argument(
+        ...,
+        help=(
+            "Path to a GNN package directory (containing model.gnn.md and "
+            "the 16 JSON sidecars) or to a parent directory containing one."
+        ),
+    ),
+    output_dir: Path = typer.Option(
+        Path("output/upstream_pipeline"),
+        "--output-dir",
+        "-o",
+        help="Where the upstream pipeline writes per-step output sub-directories.",
+    ),
+    only_steps: str | None = typer.Option(
+        None,
+        "--only-steps",
+        help="Restrict to these step indices, e.g. '3,5,7'.",
+    ),
+    skip_steps: str | None = typer.Option(
+        None,
+        "--skip-steps",
+        help=(
+            "Override the skip list (default '11,12'). "
+            "Pass an empty string to skip nothing and run all 25 steps."
+        ),
+    ),
+    frameworks: str = typer.Option(
+        "lite",
+        "--frameworks",
+        help="Forwarded to upstream render/execute (e.g. 'lite', 'all').",
+    ),
+    llm_model: str | None = typer.Option(
+        None,
+        "--llm-model",
+        help="Override OLLAMA_MODEL for upstream step 13 (LLM).",
+    ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help="Enable verbose upstream logging.",
+    ),
+) -> None:
+    """Drive the upstream GNN 25-step pipeline against an existing package.
+
+    The COGANT ``analyze`` / ``translate`` / ``validate`` commands accept
+    ``--upstream-gnn-pipeline`` to run this pass as part of a normal
+    pipeline run. Use ``cogant upstream-gnn`` when you already have a
+    ``gnn_package/`` directory on disk and want to re-execute one or more
+    upstream steps without re-analysing the source repository.
+    """
+    from cogant.gnn.upstream_bridge.pipeline import (
+        UpstreamPipelineConfig,
+        run_upstream_pipeline,
+    )
+
+    pkg = package_dir.resolve()
+    if not pkg.exists():
+        console.print(f"[red]Package directory not found:[/red] {pkg}")
+        raise typer.Exit(code=2)
+    if pkg.is_dir() and not (pkg / "model.gnn.md").exists():
+        candidate = pkg / "gnn_package"
+        if (candidate / "model.gnn.md").exists():
+            pkg = candidate
+        else:
+            console.print(
+                f"[red]No model.gnn.md found at {pkg} or {pkg}/gnn_package[/red]"
+            )
+            raise typer.Exit(code=2)
+
+    only = _parse_step_csv(only_steps, label="--only-steps")
+    skip = _parse_step_csv(
+        skip_steps, label="--skip-steps", empty_means=[]
+    )
+
+    cfg = UpstreamPipelineConfig(
+        target_dir=pkg,
+        output_dir=output_dir.resolve(),
+        only_steps=only,
+        skip_steps=skip if skip is not None else sorted({11, 12}),
+        frameworks=frameworks,
+        llm_model=llm_model,
+        verbose=verbose,
+    )
+    console.print(
+        Panel(
+            f"[bold]Upstream GNN 25-step pass[/bold]\n"
+            f"target: [cyan]{cfg.target_dir}[/cyan]\n"
+            f"output: [cyan]{cfg.output_dir}[/cyan]",
+            expand=False,
+        )
+    )
+    result = run_upstream_pipeline(cfg)
+    _render_upstream_pipeline_table(result)
+    if not result.available or result.failure_count:
+        raise typer.Exit(code=1)
+
 
 # Plugin management subcommands (cogant plugin list / cogant plugin info)
 app.add_typer(plugin_app, name="plugin")

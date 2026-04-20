@@ -5,30 +5,100 @@ GNN Bundle & Model Execution
 
 ## What Is the GNN Module
 
-The `gnn/` module produces **complete, self-contained Active Inference model bundles** and executes them. It is stages 7–9 of the 10-stage COGANT pipeline. Given a `ProgramGraph`, `StateSpaceModel`, `ProcessModel`, and semantic mappings, this module:
+The `gnn/` module produces self-contained Active Inference model bundles and executes them. It is **post-pipeline** infrastructure consumed by the `export/` (stage 9) and `validate/` (stage 10) stages. Given a `ProgramGraph`, `StateSpaceModel`, `ProcessModel`, and semantic mappings, this module:
 
-1. **Builds GNN Package** — writes 17+ files to disk (manifest, markdown, JSON, visualizations)
-2. **Validates Bundle** — checks all 18 canonical sections present and well-formed; scores 0–100
-3. **Executes Models** — runs Active Inference with Variational Free Energy (VFE) and Expected Free Energy (EFE)
-4. **Exports Results** — markdown (human-readable) and JSON (machine-readable)
+1. **Builds GNN Package** — writes 16 required files plus diagrams/ and visualizations/ directories.
+2. **Validates Bundle** — checks all 19 canonical sections present and well-formed; scores 0–100.
+3. **Executes Models** — runs Active Inference with Variational Free Energy (VFE) and Expected Free Energy (EFE).
+4. **Exports Results** — markdown (human-readable) and JSON (machine-readable).
 
-A GNN bundle is a **portable, reproducible artifact**: it contains all information needed to understand, validate, or instantiate the learned agent model — no external dependencies on the original source code.
+A GNN bundle is a portable, reproducible artifact: it contains all information needed to understand, validate, or instantiate the learned agent model — no external dependencies on the original source code.
 
 ## Pipeline Integration
 
+The 10 real pipeline stages (per `cogant.api.pipeline.PipelineConfig.stages`) are
+``ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate``.
+``gnn/``, ``viz/``, and ``scoring/`` are **post-pipeline** modules consumed by
+``export`` and ``validate`` rather than being stages of their own:
+
 ```
-stage 6: process/           → ProcessModel (factor graph + causal structure)
+stage 8 process/           → ProcessModel (factor graph + causal structure)
     ↓
-stage 7: gnn/               → GNN Package (17+ files: model.gnn.md, matrices, state space, etc.)
+gnn/  (post-pipeline)      → GNN Package (16 required files + diagrams/ + visualizations/)
     ↓
-stage 8: validate/          → ValidationReport (structural correctness + confidence)
+stage 9 export/            → Final artifacts (PDFs, summaries, deployment bundles)
     ↓
-stage 9: export/            → Final artifacts (PDFs, summaries, deployment bundles)
+stage 10 validate/         → ValidationReport (structural correctness + confidence)
     ↓
-stage 10: scoring/          → Drift detection + quality metrics
+scoring/  (post-pipeline)  → Drift detection + quality metrics
 ```
 
-The GNN module is the **boundary between symbolic analysis and Active Inference simulation**. All model execution depends on the correctness of the GNN bundle.
+The GNN module is the boundary between symbolic analysis and Active Inference simulation. All model execution depends on the correctness of the GNN bundle.
+
+### Upstream reference toolkit (`generalized-notation-notation`, **core**)
+
+The Active Inference Institute **generalized-notation-notation** package is a
+**required** dependency (git-pinned in ``pyproject.toml``; Python import
+``src.gnn``). Bridge: ``cogant.gnn.upstream_bridge`` (re-exported from
+``cogant.gnn``).
+
+By default, ``GNNValidator.validate_package`` runs upstream ``validate_gnn`` on
+``model.gnn.md`` after COGANT checks. Disable with ``upstream_gnn=False``, the
+``cogant validate --no-upstream-gnn`` CLI flag, the env flag
+``COGANT_DISABLE_UPSTREAM_GNN=1``, or ``PipelineConfig.upstream_gnn_validation=False``.
+Legacy env ``COGANT_GNN_UPSTREAM`` is **not** read (it used to opt-in; upstream
+is now on by default).
+
+Upstream is **CC-BY-NC-SA-4.0**; see ``LICENSES.md`` in the package root. Results
+are merged as warnings and stored under ``ValidationResult.details["upstream_gnn"]``.
+
+#### Upstream 25-step pipeline pass (opt-in)
+
+Beyond the markdown validator, COGANT can drive the upstream **25-step
+pipeline** (``src.main.execute_pipeline_step``) over the produced
+``gnn_package/``. The driver lives at ``cogant.gnn.upstream_bridge.pipeline``;
+see ``upstream_bridge/AGENTS.md`` for the per-step catalogue.
+
+* Master switch: ``PipelineConfig.upstream_gnn_pipeline = True`` (default
+  ``False``) or CLI ``--upstream-gnn-pipeline`` on
+  ``analyze`` / ``translate`` / ``validate``.
+* Default-skip list: ``[11, 12]`` (``11_render`` and ``12_execute`` are
+  framework-specific code generation + simulation; opt in with
+  ``--upstream-gnn-skip-steps ""`` or by listing them in ``--upstream-gnn-only-steps``).
+* Refine: ``--upstream-gnn-only-steps "3,5,7"``,
+  ``--upstream-gnn-skip-steps "11,12,13"``,
+  ``--upstream-gnn-frameworks "lite|all|pymdp,jax"``,
+  ``--upstream-gnn-llm-model <ollama-tag>``.
+* Standalone: ``cogant upstream-gnn <package_dir>`` runs the same pass
+  against an existing package without re-analysing the source repo.
+* Output: per-step results in ``bundle.artifacts['upstream_pipeline_steps']``
+  and ``['upstream_pipeline_summary']``, plus a JSON summary at
+  ``<output_dir>/upstream_pipeline/upstream_pipeline_summary.json``.
+* Failure model: **advisory only** — a failing upstream step appends a
+  warning to the validate stage but never fails it. Promote to fatal in
+  application code by inspecting ``UpstreamPipelineResult.failure_count``.
+
+#### Facades only on ``cogant.gnn.upstream_bridge``
+
+``cogant.gnn`` re-exports the bridge entry points listed in ``gnn/__init__.py`` ``__all__``.
+For programmatic access to the rest of ``src.gnn``, import the submodule directly. These
+are thin wrappers (no COGANT-specific behavior beyond path coercion and ``json_safe``):
+
+| Name | Upstream target (typical) |
+|------|---------------------------|
+| ``upstream_discover_files`` | ``discover_gnn_files`` |
+| ``upstream_process_directory`` | ``process_gnn_directory`` |
+| ``upstream_process_directory_lightweight`` | ``process_gnn_directory_lightweight`` |
+| ``upstream_process_multi_format`` | ``process_gnn_multi_format`` |
+| ``upstream_generate_report`` | ``generate_gnn_report`` |
+| ``upstream_validate_structure`` | ``validate_gnn_structure`` |
+| ``upstream_validate_file_content`` | ``validate_gnn_file`` |
+| ``upstream_validate_syntax_formal`` | ``validate_gnn_syntax_formal`` |
+| ``upstream_parse_formal`` | ``parse_gnn_formal`` |
+| ``upstream_module_info`` | ``get_module_info`` |
+
+Heavy directory pipelines are not duplicated in COGANT tests; call upstream with small
+fixtures if you need to debug imports.
 
 ## Core Components
 
@@ -36,9 +106,9 @@ The GNN module is the **boundary between symbolic analysis and Active Inference 
 
 Orchestrates creation of a complete GNN package on disk.
 
-**REQUIRED_FILES** — list of 17 canonical output files:
+**REQUIRED_FILES** — 16 required files (from `package.py` / `validator.py`):
 1. `manifest.json` — package metadata (version, timestamp, checksums)
-2. `model.gnn.md` — human-readable canonical markdown
+2. `model.gnn.md` — human-readable canonical markdown (19 sections)
 3. `model.gnn.json` — machine-readable metadata
 4. `state_space.json` — variable definitions, cardinalities, factorization
 5. `observations.json` — observation modalities (A matrix metadata)
@@ -48,12 +118,11 @@ Orchestrates creation of a complete GNN package on disk.
 9. `factors.json` — factor graph from ProcessModel
 10. `provenance.json` — evidence tracking and attribution
 11. `ontology.json` — semantic mappings and symbol dictionary
-12. `diagrams/` — directory with Mermaid diagrams
-13. `visualizations/` — directory with PNG/SVG renders
-14. `README.md` — package-level documentation
-15. `METADATA.yaml` — full configuration snapshot
-16. `checksums.json` — SHA256 hashes for integrity checking
-17. `INDEX.json` — file inventory and cross-references
+12. `actions_policies.json` — canonical actions and policies
+13. `connections.json` — factor graph connections
+14. `preferences_constraints.json` — detailed constraints
+15. `markov_blanket.json` — Active Inference Markov blanket partition
+16. `markov_network.json` — collapsed four-role aggregate network
 
 **Key Methods:**
 - `__init__(graph, state_space, process_model, mappings, config)` — initialize builder
@@ -69,7 +138,7 @@ Orchestrates creation of a complete GNN package on disk.
 1. Validate inputs (graph, state_space, process_model all non-empty)
 2. Create output directory
 3. Compute A, B, C, D matrices from state space
-4. Generate 18 canonical markdown sections (see GNNValidator.CANONICAL_SECTIONS)
+4. Generate 19 canonical markdown sections (see GNNValidator.CANONICAL_SECTIONS)
 5. Export matrices as JSON with precision metadata
 6. Render diagrams (state machine, factor graph, temporal ordering)
 7. Compute SHA256 checksums for all files
@@ -80,14 +149,14 @@ Orchestrates creation of a complete GNN package on disk.
 
 Scores GNN bundles 0–100 by checking structural completeness, consistency, and confidence.
 
-**CANONICAL_SECTIONS** — 18 required markdown sections:
+**CANONICAL_SECTIONS** — 19 required markdown sections (from `validator.py`):
 1. Model Metadata (title, version, author, timestamp)
 2. Repository Metadata (source file, commit hash, branch)
 3. Source Coverage (% of code analyzed, symbol count)
 4. State Space (variable definitions, cardinality, factorization)
 5. Observation Modalities (A matrix, likelihood structure)
 6. Actions/Policies (controllable transitions, preconditions)
-7. Connections (coupling matrix, information flow)
+7. Program Graph Connections (coupling matrix, information flow)
 8. Factors (factor graph, message-passing structure)
 9. Transition Structure (B matrix, state evolution)
 10. Likelihood Structure (observation model, probability densities)
@@ -95,16 +164,17 @@ Scores GNN bundles 0–100 by checking structural completeness, consistency, and
 12. Time Settings (synchrony regime, temporal ordering)
 13. Parameterization (distribution parameters, learning rates)
 14. Ontology Mapping (semantic roles, symbol dictionary)
-15. Provenance (evidence tracking, confidence scores)
-16. Confidence Scores (per-variable, per-matrix extraction confidence)
-17. Rendering Hints (visualization preferences, layout hints)
-18. Validation Notes (degraded outputs, known limitations)
+15. Markov Blanket (Active Inference boundary partition)
+16. Provenance (evidence tracking, confidence scores)
+17. Confidence Scores (per-variable, per-matrix extraction confidence)
+18. Rendering Hints (visualization preferences, layout hints)
+19. Validation Notes (degraded outputs, known limitations)
 
-**REQUIRED_FILES** — JSON/metadata files that must be present:
-- manifest.json, state_space.json, observations.json, actions.json, transitions.json, preferences.json, factors.json, provenance.json, ontology.json, diagrams/*, visualizations/*
+**REQUIRED_FILES** — same 16 files as GNNPackageBuilder.REQUIRED_FILES:
+- manifest.json, model.gnn.md, model.gnn.json, state_space.json, observations.json, actions.json, transitions.json, preferences.json, factors.json, provenance.json, ontology.json, actions_policies.json, connections.json, preferences_constraints.json, markov_blanket.json, markov_network.json
 
 **ValidationResult** — NamedTuple holding validation outcome:
-- `valid` — boolean; True iff no errors and all 18 sections present
+- `valid` — boolean; True iff no errors and all 19 sections present
 - `errors` — `list[str]` of blocking issues (e.g., "Missing observations.json")
 - `warnings` — `list[str]` of non-blocking issues (e.g., "Low confidence on variable X")
 - `score` — [0.0, 100.0] composite score
@@ -120,7 +190,7 @@ Scores GNN bundles 0–100 by checking structural completeness, consistency, and
 - `generate_validation_badge(result) -> str` — create SVG badge (e.g., "valid · 98/100")
 
 **Scoring Algorithm:**
-- Section presence: 18 points if all sections present (1 point each)
+- Section presence: 19 points if all sections present (1 point each)
 - JSON validity: 10 points if all required JSON files parse
 - Matrix consistency: 20 points if A/B/C/D are internally consistent
 - Confidence average: 20 points based on avg extraction confidence
@@ -132,7 +202,7 @@ All 6 shipped fixtures (control_positive, flask_app, event_pipeline, etc.) score
 
 ### GNNMarkdownFormatter (formatter.py)
 
-Formats the 18 canonical sections into human-readable markdown.
+Formats the 19 canonical sections into human-readable markdown.
 
 **Key Methods:**
 - `format_section(section_name, data) -> str` — format one section
@@ -327,8 +397,8 @@ print(f"Timing stats: {stats}")
 
 ### Core Responsibilities
 - Extract A, B, C, D matrices from state space and process model
-- Write 17+ canonical files (manifest, markdown, JSON, visualizations)
-- Format as human-readable markdown (18 sections) and machine-readable JSON
+- Write 16 required files plus diagrams/ and visualizations/ directories
+- Format as human-readable markdown (19 sections) and machine-readable JSON
 - Validate bundles against schema (0–100 scoring)
 - Execute Active Inference update loops with Free Energy calculation
 - Generate execution traces and reports
@@ -336,16 +406,22 @@ print(f"Timing stats: {stats}")
 
 ### Coordination
 - **Input**: ProgramGraph, StateSpaceModel (from statespace/), ProcessModel (from process/), SemanticMappings (from translate/)
-- **Output**: GNN Package (17+ files), ExecutionTrace (from runner), ValidationResult (from validator)
+- **Output**: GNN Package (16 required files + diagrams/ + visualizations/), ExecutionTrace (from runner), ValidationResult (from validator)
 - **Consumed by**: ValidationReport (stage 8), Export (stage 9), Scoring (stage 10), downstream simulators
 - **Configuration**: schema_name, package_version, config dict (custom metadata)
 - **No mutable state**: Packages are write-once; bundles are immutable after creation
+
+### Additional (non-required) generated files
+- `diagrams/` — Mermaid diagrams (class, state, sequence, dependency, active-inference)
+- `visualizations/` — HTML charts (dashboard, node/edge distribution, confidence)
+- `program_graph.json` — typed graph sidecar for downstream rasterizers
+- `process_model.json` — process model sidecar for Gantt rendering
 
 ## How to Extend
 
 ### Add New Matrix Type
 1. Extend `GNNMatrices` with new `compute_X_matrix()` method
-2. Update `GNNValidator.CANONICAL_SECTIONS` to require new section
+2. Update `GNNValidator.CANONICAL_SECTIONS` (currently 19 sections) to require new section
 3. Add JSON export format in `GNNJSONExporter`
 4. Document in markdown formatter
 
@@ -357,7 +433,7 @@ print(f"Timing stats: {stats}")
 
 ### Extend Validation Rules
 1. Add new check method to `GNNValidator`
-2. Update `CANONICAL_SECTIONS` or `REQUIRED_FILES`
+2. Update `CANONICAL_SECTIONS` (19 sections) or `REQUIRED_FILES` (16 files)
 3. Adjust scoring weights if needed
 4. Test on fixtures to ensure all pass 100/100
 

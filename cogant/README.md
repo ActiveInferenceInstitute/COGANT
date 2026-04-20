@@ -7,7 +7,7 @@ COGANT converts Python, JavaScript, and TypeScript codebases into
 state-space models — complete with A/B/C/D probabilistic matrices, Markov blanket
 partitions, and principled free-energy derivations.
 
-Current release: **v0.5.0** (2026-04-10). **2129 tests passing**, 86 skipped, 12 failing (xfail), 1 xpassed; **83.42% line coverage** on `py/cogant/`. **mypy strict: 0 errors** across 179 source files. **Round-trip: 23/23 ISOMORPHIC** (ε=1.0).
+Current release: **v0.5.0** (2026-04-10). **Tests:** run `uv run pytest tests/ -q` from this directory for the live count (thousands of tests; skips/xfails vary by environment). **Coverage:** line gate in `pyproject.toml` (`--cov-fail-under=89`, `branch = false`, `omit` for `tools/` and `static/treesitter_parser.py`); reported total is typically ~90% on measured lines. **`cogant/evaluation/METRICS.yaml`** (regenerated via `../tools/regenerate_metrics.py`) holds manuscript-facing numbers and may lag the live suite — see `mypy_strict_errors`, `ruff_violations`, and `python_source_files` there for current counts; run `uv run mypy py/cogant/` and `uv run ruff check py/cogant/` for a live read. **Round-trip: 23/23 ISOMORPHIC** on the canonical eval set (see `docs/evaluation/`).
 
 ---
 
@@ -36,6 +36,25 @@ repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMa
   packaged `Dockerfile` (python:3.12-slim + uv, `EXPOSE 8080`) and `docker-compose.yml` turn
   the pipeline into a deployable microservice.
 
+## Third-party GNN reference implementation
+
+COGANT depends on the Active Inference Institute **generalized-notation-notation**
+package (Python import `src.gnn`) as a **core** dependency for parsing and validating
+against the upstream GNN toolchain. That package is licensed **CC-BY-NC-SA-4.0**;
+see [`LICENSES.md`](LICENSES.md). COGANT itself remains MIT.
+
+In addition to single-file `validate_gnn` checks, COGANT can drive the upstream
+**25-step pipeline** (`src.main.execute_pipeline_step`, scripts `0_template.py`
+through `24_intelligent_analysis.py`) over the produced `gnn_package/`. The pass
+is opt-in (`--upstream-gnn-pipeline` on `analyze` / `translate` / `validate`,
+or the standalone `cogant upstream-gnn <package_dir>` command) and skips
+`11_render` and `12_execute` by default — those are framework-specific
+(PyMDP / RxInfer / JAX / DisCoPy) code-generation and simulation steps that
+typically require additional optional dependencies. See
+[`py/cogant/gnn/upstream_bridge/AGENTS.md`](py/cogant/gnn/upstream_bridge/AGENTS.md)
+for the full step catalogue, `UpstreamPipelineConfig` surface, and
+`COGANT_RUN_UPSTREAM_PIPELINE=1` slow-test gate.
+
 ## Quick start
 
 ```bash
@@ -48,6 +67,13 @@ uv run cogant validate output/calculator/gnn_package
 
 Expected: a populated `output/calculator/` tree with `bundle.json`, `gnn_package/model.gnn.md`,
 and a validator report scoring **100.0 / 100** on the calculator fixture.
+
+**Batch / all formats (staging tree):** from the parent `projects_in_progress/cogant/` directory,
+[`run_all.sh`](../run_all.sh) runs `translate`, `scan`, `graph`, `export-gnn`, `render`, `viz`, and
+`validate` for each target in `run_all.json` (see [`run_all.example.json`](../run_all.example.json)).
+Each target has its own folder under `output/runs/<id>/`; defaults include all `control_positive`
+examples plus shallow-cloned public repos (`git_url`). You can run `../run_all.sh` from this
+directory (inner package) or from the staging root.
 
 ## Features (v0.5.0)
 
@@ -78,14 +104,14 @@ and a validator report scoring **100.0 / 100** on the calculator fixture.
 - Reverse synthesis: `cogant reverse` and `cogant roundtrip` subcommands synthesize a
   runnable Python package from any GNN bundle and verify forward-reverse-forward
   isomorphism.
-- **2129 passing tests** across unit, integration, property, golden, and fuzz suites (86 skipped for optional toolchains, 12 expected failures); line coverage **83.42%** on `py/cogant/`. Type stubs (`.pyi`) and `py.typed` marker ship with the package.
+- **Large test suite** (unit, integration, property, golden, fuzz); run `uv run pytest tests/ -q` for counts. Coverage policy is in **`pyproject.toml`** (line gate; optional paths omitted from measurement). Type stubs (`.pyi`) and `py.typed` ship with the package.
 - `cogant doctor` — environment diagnostics extended in v0.5.0 with tree-sitter grammar
   checks, uv lockfile parity, and optional-dependency audit.
 
 ## CLI surface
 
 `cogant --help` is ground truth. The Typer app in
-[`py/cogant/cli/main.py`](py/cogant/cli/main.py) currently registers **24** subcommands (22 `@app.command()` + 2 `app.command(name=...)`):
+[`py/cogant/cli/main.py`](py/cogant/cli/main.py) currently registers **26 help rows / 27 leaf commands** (22 `@app.command()` + 2 `app.command(name=...)` + `plugin` + `migrate` sub-typers — `plugin` exposes one extra leaf via `add_typer`):
 
 | Command | Purpose |
 | --- | --- |
@@ -132,7 +158,7 @@ Source Code
 6.  translate   — apply 22 rules → SemanticMappings (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT)
 7.  statespace  — compile state-space model
 8.  process     — extract process / execution model
-9.  export      — emit GNN markdown (18 sections), JSON, companion artifacts
+9.  export      — emit GNN markdown (19 sections), JSON, companion artifacts
 10. validate    — integrity checks, score bundle 0–100
     ↓
 GNN Bundle (A/B/C/D matrices, role assignments, provenance)
@@ -175,9 +201,9 @@ See [docs/architecture/](docs/architecture/) for per-module deep dives and [docs
 ```bash
 uv sync --extra all            # install everything (python + viz + tree-sitter + rust bindings)
 uv run cogant doctor            # verify the environment
-uv run pytest tests/ -q         # 2129 passing tests; expect ~83.42% line coverage
-uv run mypy py/cogant/          # type check (strict; 0 errors on 179 source files)
-uv run ruff check py/cogant/    # lint (0 errors on v0.5.0)
+uv run pytest tests/ -q         # full suite; coverage gate per pyproject.toml (~90% on measured lines)
+uv run mypy py/cogant/          # strict type check; see `evaluation/METRICS.yaml` (`mypy_strict_errors`, `python_source_files`)
+uv run ruff check py/cogant/    # lint; see `evaluation/METRICS.yaml` (`ruff_violations`)
 make build-rust                 # optional: compile the rust backend
 ```
 

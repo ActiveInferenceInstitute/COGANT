@@ -27,32 +27,41 @@ cogant/                         ← package root (this directory)
 ├── py/cogant/                  ← installable Python package (import cogant)
 │   ├── ingest/                 ← stage 1: file discovery, language detection
 │   ├── static/                 ← stage 2: AST facts (symbols, imports, calls, complexity)
-│   ├── graph/                  ← stage 3: ProgramGraph construction + analysis
-│   ├── translate/              ← stage 4: fixpoint engine + 22 declarative rules
-│   ├── statespace/             ← stage 5: A/B/C/D matrix compilation
-│   ├── markov/                 ← stage 6: Markov blanket partition (5 seed strategies)
-│   ├── gnn/                    ← stage 7: AII-spec GNN bundle emission
-│   ├── validate/               ← stage 8: AII validator (0–100 score)
+│   ├── normalize/              ← stage 3: language-agnostic canonical normalization
+│   ├── graph/                  ← stage 4: ProgramGraph construction + analysis
+│   ├── dynamic/                ← stage 5: coverage / trace enrichment (skippable)
+│   ├── translate/              ← stage 6: fixpoint engine + 22 declarative rules
+│   ├── statespace/             ← stage 7: A/B/C/D matrix compilation
+│   ├── process/                ← stage 8: process / execution model extraction
 │   ├── export/                 ← stage 9: 9 output formats (JSON, GraphML, Parquet, …)
-│   ├── viz/                    ← stage 10: PNG/PDF/SVG/Mermaid/HTML visualization
+│   ├── validate/               ← stage 10: schema + AII validator (0–100 score)
+│   ├── markov/                 ← (post-pipeline) Markov blanket (`explicit`/`module`/`kind`/`auto`/`mapping_kind`)
+│   ├── gnn/                    ← (post-pipeline) AII-spec GNN bundle emission, used by export + validate
+│   ├── viz/                    ← (post-pipeline) PNG/PDF/SVG/Mermaid/HTML visualization
+│   ├── scoring/                ← (post-pipeline) confidence + roundtrip scorers
 │   ├── reverse/                ← reverse path: GNN → Python package synthesis
 │   ├── runtime/                ← AgentRuntime: multi-episode Bayesian learning
 │   ├── api/                    ← PipelineConfig, orchestration, session management
 │   ├── server/                 ← FastAPI app (REST + WebSocket)
-│   ├── cli/                    ← 24 Typer subcommands
-│   ├── protocols.py            ← 9 @runtime_checkable Protocols
-│   └── types.py                ← 15+ TypedDicts, type aliases
-├── rust/                       ← PyO3 Rust workspace (optional acceleration)
+│   ├── cli/                    ← 26 Typer commands (24 on `app` + `plugin`/`migrate` sub-typers); 27 leaf commands
+│   ├── protocols.py            ← 14 @runtime_checkable Protocols
+│   └── types.py                ← 15 TypedDicts, type aliases
+├── rust/                       ← PyO3 Rust workspace (8 crates; optional acceleration)
 │   ├── cogant-core/            ← StableId, NodeKind, SemanticRole types
 │   ├── cogant-graph/           ← connected_components (FFI)
+│   ├── cogant-translate/       ← Rule engine and graph transformations
+│   ├── cogant-statespace/       ← State space compilation
+│   ├── cogant-store/           ← Persistent storage and indexing
+│   ├── cogant-trace/           ← Trace collection and processing
+│   ├── cogant-gnn/             ← GNN tensor generation
 │   └── cogant-ffi/             ← Python bindings (COGANT_USE_RUST=1)
 ├── parsers/                    ← tree-sitter grammar files (JS, TS, Go, Python, Rust)
 ├── specs/                      ← RFCs and IR schema contracts
-├── examples/                   ← 14+ runnable sample repos (ground-truth fixtures)
-│   └── zoo/                    ← 23 roundtrip evaluation fixtures
+├── examples/                   ← 20+ runnable sample repos / fixtures (3 control_positive + 13 zoo + standalone)
+│   └── zoo/                    ← 13 Active Inference fixtures (01–13); 23 total roundtrip evaluation targets across all fixture sources
 ├── evaluation/                 ← benchmark corpora, METRICS.yaml, dashboards
-├── docs/                       ← MkDocs documentation site (100+ pages, 16 sections)
-├── tests/                      ← 2,129 passing tests (83.42% coverage)
+├── docs/                       ← MkDocs documentation site (350+ pages, 20 sections)
+├── tests/                      ← full pytest suite (run from package root; coverage policy in pyproject.toml)
 ├── benchmarks/                 ← performance benchmark scripts
 ├── scripts/                    ← manuscript pipeline scripts
 └── pyproject.toml              ← uv/pip install config
@@ -67,10 +76,10 @@ cogant/                         ← package root (this directory)
 | Translation rules | 22 (5 structural + 5 semantic + 3 control + 4 behavioral + 5 resilience) |
 | Languages supported | Python (full AST), JS/TS (tree-sitter) |
 | Roundtrip ε | 1.0 — 23/23 ISOMORPHIC fixtures |
-| Test suite | 2,129 passing, 83.42% coverage (gate: 75%) |
+| Test suite | Large and growing; `uv run pytest tests/ -q`. Coverage: line gate, `--cov-fail-under=89`, omits in `pyproject.toml` |
 | Export formats | 9 (JSON, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT, JSONLINES) |
-| CLI subcommands | 22 |
-| Protocols / TypedDicts | 9 Protocols, 15+ TypedDicts, 49 .pyi stubs |
+| CLI subcommands | 26 help rows / 27 leaf commands (24 top-level Typer commands on `app` + `plugin` + `migrate` sub-typers) |
+| Protocols / TypedDicts | 14 Protocols, 15 TypedDicts, 231 .pyi stubs |
 
 ---
 
@@ -85,6 +94,8 @@ uv run cogant analyze-static <repo>          # static analysis report
 uv run cogant analyze-graph <repo>           # network/graph analysis
 uv run cogant visualize <repo>               # generate PDF/PNG/Mermaid outputs
 uv run cogant export <repo> --format all     # export in all 9 formats
+uv run cogant analyze <repo> --upstream-gnn-pipeline   # forward pipeline + AII 25-step pass (Render/Execute off)
+uv run cogant upstream-gnn <package_dir>     # re-run the AII 25-step pass on an existing gnn_package/
 uv run pytest tests/ -q                      # full test suite
 uv run mypy py/cogant/                       # strict type check (0 errors target)
 uv run ruff check py/cogant/                 # linting (0 violations target)

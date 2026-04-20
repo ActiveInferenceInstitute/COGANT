@@ -114,6 +114,60 @@ class PipelineConfig:
     ``PipelineResult.timing`` dict.
     """
 
+    upstream_gnn_validation: bool = True
+    """When ``True``, run Active Inference Institute ``src.gnn`` validation on
+    ``gnn_package/`` during the validate stage (unless overridden per-call).
+    Set ``False`` to skip upstream checks while keeping COGANT's own GNN checks."""
+
+    upstream_gnn_pipeline: bool = False
+    """Master opt-in for the upstream GNN 25-step pipeline pass.
+
+    When ``True``, after the ``validate`` stage runs successfully and a
+    ``gnn_package/`` directory exists, COGANT drives upstream
+    :func:`src.main.execute_pipeline_step` for every step in
+    ``UPSTREAM_STEP_SCRIPTS`` minus :data:`upstream_gnn_skip_steps` (and,
+    optionally, restricted to :data:`upstream_gnn_only_steps`). Results are
+    recorded as ``bundle.artifacts['upstream_pipeline_steps']`` /
+    ``['upstream_pipeline_summary']`` and never raise — failing upstream
+    steps are advisory warnings only.
+    """
+
+    upstream_gnn_only_steps: list[int] | None = None
+    """Restrict the upstream pipeline pass to these step indices.
+
+    ``None`` means "every step that is not in :data:`upstream_gnn_skip_steps`".
+    """
+
+    upstream_gnn_skip_steps: list[int] = field(
+        default_factory=lambda: [11, 12]
+    )
+    """Step indices to drop from the upstream pipeline pass.
+
+    Defaults to ``[11, 12]`` (``11_render`` and ``12_execute``): they emit
+    framework-specific simulation code and run it, which is rarely meaningful
+    for codebase-derived bundles. Set to ``[]`` to opt back in.
+    """
+
+    upstream_gnn_output_dir: str | None = None
+    """Where the upstream pipeline pass writes per-step outputs.
+
+    When ``None``, defaults to ``<output_dir>/upstream_pipeline/``.
+    """
+
+    upstream_gnn_frameworks: str = "lite"
+    """Forwarded to upstream ``11_render`` / ``12_execute``.
+
+    Common values: ``"lite"`` (PyMDP only), ``"all"``, or a CSV list like
+    ``"pymdp,jax"``. Has no effect when both render and execute are skipped.
+    """
+
+    upstream_gnn_llm_model: str | None = None
+    """Override ``OLLAMA_MODEL`` for upstream ``13_llm``.
+
+    When ``None``, the existing environment variable (or upstream's default)
+    is used unchanged.
+    """
+
     def validate(self) -> list[str]:
         """Validate pipeline configuration pre-flight.
 
@@ -152,6 +206,17 @@ class PipelineConfig:
             if not trace_path.exists():
                 errors.append(f"trace_path does not exist: {self.trace_path}")
 
+        upstream_step_range = range(25)
+        for label, values in (
+            ("upstream_gnn_only_steps", self.upstream_gnn_only_steps or []),
+            ("upstream_gnn_skip_steps", self.upstream_gnn_skip_steps or []),
+        ):
+            for v in values:
+                if not isinstance(v, int) or v not in upstream_step_range:
+                    errors.append(
+                        f"{label} contains invalid step {v!r}; must be int in 0..24"
+                    )
+
         return errors
 
     def with_profiling(self) -> "PipelineConfig":
@@ -181,6 +246,13 @@ class PipelineConfig:
             "incremental_since": self.incremental_since,
             "cache_dir": self.cache_dir,
             "profiling_enabled": self.profiling_enabled,
+            "upstream_gnn_validation": self.upstream_gnn_validation,
+            "upstream_gnn_pipeline": self.upstream_gnn_pipeline,
+            "upstream_gnn_only_steps": self.upstream_gnn_only_steps,
+            "upstream_gnn_skip_steps": list(self.upstream_gnn_skip_steps),
+            "upstream_gnn_output_dir": self.upstream_gnn_output_dir,
+            "upstream_gnn_frameworks": self.upstream_gnn_frameworks,
+            "upstream_gnn_llm_model": self.upstream_gnn_llm_model,
         }
         path_obj = Path(path)
         path_obj.parent.mkdir(parents=True, exist_ok=True)
@@ -217,6 +289,17 @@ class PipelineConfig:
             incremental_since=data.get("incremental_since"),
             cache_dir=data.get("cache_dir"),
             profiling_enabled=data.get("profiling_enabled", False),
+            upstream_gnn_validation=data.get("upstream_gnn_validation", True),
+            upstream_gnn_pipeline=data.get("upstream_gnn_pipeline", False),
+            upstream_gnn_only_steps=data.get("upstream_gnn_only_steps"),
+            upstream_gnn_skip_steps=(
+                list(data["upstream_gnn_skip_steps"])
+                if "upstream_gnn_skip_steps" in data
+                else [11, 12]
+            ),
+            upstream_gnn_output_dir=data.get("upstream_gnn_output_dir"),
+            upstream_gnn_frameworks=data.get("upstream_gnn_frameworks", "lite"),
+            upstream_gnn_llm_model=data.get("upstream_gnn_llm_model"),
         )
 
 
@@ -297,7 +380,10 @@ class PipelineRunner:
         if config is None:
             config = PipelineConfig()
 
-        logger.info(f"Starting pipeline for target: {target}")
+        logger.info(
+            "Starting pipeline for target: %s (%d stages, %d skipped)",
+            target, len(config.stages), len(config.skip_stages),
+        )
 
         bundle = Bundle(target=target, metadata={"config": vars(config)})
 
@@ -328,7 +414,7 @@ class PipelineRunner:
         # Execute each stage in order
         for stage in config.stages:
             if stage in effective_skip:
-                logger.info(f"Skipping stage: {stage}")
+                logger.info("Skipping stage: %s", stage)
                 if stage == "dynamic" and config.skip_dynamic:
                     bundle.stage_results[stage] = {
                         "type": "dynamic_enrichment",
@@ -346,14 +432,17 @@ class PipelineRunner:
                 continue
 
             try:
-                logger.info(f"Running stage: {stage}")
+                logger.info("Running stage: %s", stage)
                 stage_start = time.perf_counter()
                 handler = self.stage_handlers[stage]
                 result = handler(bundle, config)
                 stage_duration = time.perf_counter() - stage_start
                 timing[stage] = round(stage_duration * 1000, 3)
                 bundle.stage_results[stage] = result
-                logger.info(f"Stage {stage} completed in {timing[stage]:.1f}ms")
+                logger.info(
+                    "Stage %s completed in %.1fms",
+                    stage, timing[stage],
+                )
             except Exception as e:
                 error = f"Stage {stage} failed: {str(e)}"
                 logger.error(error)
@@ -390,7 +479,12 @@ class PipelineRunner:
         timing["total"] = round(total_duration * 1000, 3)
         bundle.metadata["timing"] = timing
 
-        logger.info(f"Pipeline completed with {len(bundle.errors)} errors in {timing['total']:.1f}ms")
+        ran_stages = [s for s in config.stages if s in timing and timing[s] > 0]
+        logger.info(
+            "Pipeline completed: %d/%d stages ran (incl. failures), %d errors, %.1fms total",
+            len(ran_stages), len(config.stages),
+            len(bundle.errors), timing["total"],
+        )
         return bundle
 
     # ------------------------------------------------------------------
@@ -686,4 +780,20 @@ class PipelineRunner:
         """Validate: Run validation checks."""
         if config.dry_run:
             return {"type": "validation", "dry_run": True, "passed": True}
-        return orchestration.run_validate(bundle)
+        upstream_pipeline_dir: Path | None = None
+        if config.upstream_gnn_pipeline:
+            upstream_pipeline_dir = (
+                Path(config.upstream_gnn_output_dir).resolve()
+                if config.upstream_gnn_output_dir
+                else Path(config.output_dir).resolve() / "upstream_pipeline"
+            )
+        return orchestration.run_validate(
+            bundle,
+            upstream_gnn=config.upstream_gnn_validation,
+            upstream_pipeline=config.upstream_gnn_pipeline,
+            upstream_pipeline_output_dir=upstream_pipeline_dir,
+            upstream_pipeline_only_steps=config.upstream_gnn_only_steps,
+            upstream_pipeline_skip_steps=list(config.upstream_gnn_skip_steps),
+            upstream_pipeline_frameworks=config.upstream_gnn_frameworks,
+            upstream_pipeline_llm_model=config.upstream_gnn_llm_model,
+        )
