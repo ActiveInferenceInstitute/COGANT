@@ -3,36 +3,36 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-04-13T20:29:40.068269Z'
-generator_git_sha: 11f0fcad867015c1e1d8a2bab16e595047a4ab95
+generated_at: '2026-04-20T18:31:15.359906Z'
+generator_git_sha: f610bf73f11dc2f390e62b66759a658adc68d00e
 cogant_version: 0.5.0
 package:
   name: cogant
   version: 0.5.0
   python_min: '3.11'
 testing:
-  test_count_total: 2230
-  test_count_passing: 2129
-  test_count_failing: 12
-  test_count_skipped: 86
-  test_count_xfailed: 2
+  test_count_total: 7803
+  test_count_passing: 7768
+  test_count_failing: 0
+  test_count_skipped: 31
+  test_count_xfailed: 3
   test_count_xpassed: 1
-  test_files_unit: 205
-  test_files_integration: 22
-  test_files_property: 9
+  test_files_unit: 241
+  test_files_integration: 27
+  test_files_property: 10
   test_files_fuzz: 1
-  coverage_percent: 83.42
+  coverage_percent: 90.03
   mypy_strict_errors: 0
   ruff_violations: 0
 codebase:
-  python_source_files: 200
-  python_loc: 69221
-  public_modules: 145
-  public_classes: 303
-  public_functions: 759
+  python_source_files: 202
+  python_loc: 70944
+  public_modules: 165
+  public_classes: 398
+  public_functions: 1038
 pipeline:
   stage_count: 10
-  translation_rules: 22  # 19 original + 3 wave-21 additions (ParameterRule, StateMachineRule, RateLimiterRule)
+  translation_rules: 22
   runner_stages:
   - ingest
   - static
@@ -179,7 +179,7 @@ literature:
   source: cogant/docs/evaluation/LITERATURE.md
   bibliography_entries: 100
 benchmark:
-  suite_runtime_s: 240.0  # placeholder; regenerate_metrics.py must capture real timing
+  suite_runtime_s: 1301.46
   shipped_fixture_count: 6
 ir_schema:
   node_kind_count: 18

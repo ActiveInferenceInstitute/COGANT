@@ -1,0 +1,24 @@
+{
+  "fixture": "12_full_pomdp",
+  "fixture_path": "examples/zoo/12_full_pomdp",
+  "min_role_match_score": 0.99,
+  "must_be_isomorphic": true,
+  "expected_original_roles": {
+    "HIDDEN_STATE": 5,
+    "OBSERVATION": 4,
+    "ACTION": 8,
+    "CONSTRAINT": 2
+  },
+  "expected_shape_match": {
+    "n_states": true,
+    "n_obs": true,
+    "n_actions": true
+  },
+  "expected_min_synthesized_roles": {
+    "HIDDEN_STATE": 5,
+    "OBSERVATION": 4,
+    "ACTION": 8,
+    "CONSTRAINT": 2
+  },
+  "notes": "Largest zoo POMDP — 5 hidden-state factors, 4 observation modalities, 8 actions, 2 declared constraints. Stress test for shape preservation."
+}

@@ -15,11 +15,24 @@ from cogant.api.review import ReviewAPI, ReviewableMapping
 
 
 def _write_bundle(tmp_path: Path, node_count: int = 5) -> Path:
-    """Create a bundle JSON on disk with `node_count` reviewable mappings."""
+    """Create a bundle JSON on disk with ``node_count`` reviewable mappings.
+
+    Uses the canonical ``artifacts._semantic_mappings`` shape emitted by the
+    translate stage so that ``ReviewAPI._extract_mappings`` exercises its
+    real (non-fallback) code path.
+    """
     bundle = {
-        "stage_results": {
-            "translate": {
-                "node_features": [{"idx": i} for i in range(node_count)],
+        "artifacts": {
+            "_semantic_mappings": {
+                f"mapping_{i}": {
+                    "id": f"mapping_{i}",
+                    "kind": "OBSERVATION",
+                    "graph_fragment_node_ids": [f"node_{i}"],
+                    "confidence_score": 0.8,
+                    "description": f"Test mapping {i}",
+                    "status": "auto_proposed",
+                }
+                for i in range(node_count)
             }
         },
     }
@@ -42,17 +55,17 @@ def test_load_bundle_populates_mappings(tmp_path):
     assert api.mappings[0].status == "pending"
 
 
-def test_load_bundle_caps_at_first_five_mappings(tmp_path):
-    """Even when the bundle has 10 node features, only 5 mappings are loaded."""
+def test_load_bundle_extracts_all_mappings(tmp_path):
+    """All ``_semantic_mappings`` entries are extracted (no synthetic cap)."""
     api = ReviewAPI()
     api.load_bundle(str(_write_bundle(tmp_path, node_count=10)))
-    assert len(api.mappings) == 5
+    assert len(api.mappings) == 10
 
 
-def test_load_bundle_empty_translate_results(tmp_path):
-    """Bundle without translate stage yields no mappings."""
+def test_load_bundle_empty_artifacts(tmp_path):
+    """Bundle without ``_semantic_mappings`` artifact yields no mappings."""
     path = tmp_path / "empty.json"
-    path.write_text(json.dumps({"stage_results": {}}))
+    path.write_text(json.dumps({"artifacts": {}, "stage_results": {}}))
     api = ReviewAPI()
     api.load_bundle(str(path))
     assert api.mappings == []

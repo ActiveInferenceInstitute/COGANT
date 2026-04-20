@@ -139,6 +139,11 @@ class MarkovBlanketExtractor:
         else:
             raise ValueError(f"Unknown strategy: {strategy!r}")
 
+        logger.info(
+            "Markov blanket extraction: strategy=%s, %d seeds from %d graph nodes",
+            strategy, len(seed_set), len(self.graph.nodes),
+        )
+
         blanket = partition_by_seeds(
             self.graph, seed_set, adjacency=self._adjacency
         )
@@ -154,6 +159,14 @@ class MarkovBlanketExtractor:
             blanket.metadata["mapping_kinds"] = list(mapping_kinds or [])
         if strategy == "auto":
             blanket.metadata.update(auto_meta)
+
+        logger.info(
+            "Markov blanket partitioned: internal=%d, sensory=%d, active=%d, external=%d",
+            blanket.stats.get("internal_count", 0),
+            blanket.stats.get("sensory_count", 0),
+            blanket.stats.get("active_count", 0),
+            blanket.stats.get("external_count", 0),
+        )
         return blanket
 
     # ---------------------- Seed strategy helpers ---------------------- #

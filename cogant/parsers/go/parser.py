@@ -6,10 +6,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Set
 from dataclasses import dataclass, field
 
-# Add py directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "py"))
-
-from cogant.plugins.base import LanguagePlugin, PluginMetadata
+from parsers._base import CogantLanguagePlugin  # noqa: E402
 
 
 @dataclass
@@ -26,28 +23,13 @@ class ParseResult:
     errors: List[str] = field(default_factory=list)
 
 
-class GoLanguageParser(LanguagePlugin):
+class GoLanguageParser(CogantLanguagePlugin):
     """Parser for Go source files."""
 
-    def __init__(self):
-        """Initialize Go parser."""
-        metadata = PluginMetadata(
-            name="go",
-            version="0.1.0",
-            author="COGANT",
-            description="Regex-based parser for Go code structure"
-        )
-        super().__init__(metadata)
-        self.supported_languages = {"go"}
-        self.supported_extensions = {".go"}
-
-    def initialize(self, config: Dict[str, Any]) -> None:
-        """Initialize parser with configuration."""
-        pass
-
-    def shutdown(self) -> None:
-        """Shutdown parser gracefully."""
-        pass
+    PLUGIN_NAME = "go"
+    PLUGIN_DESCRIPTION = "Regex-based parser for Go code structure"
+    SUPPORTED_LANGUAGES = {"go"}
+    SUPPORTED_EXTENSIONS = {".go"}
 
     def parse(self, source_code: str) -> Dict[str, Any]:
         """Parse Go source code and return AST.

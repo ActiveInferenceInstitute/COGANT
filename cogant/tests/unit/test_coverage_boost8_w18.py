@@ -239,134 +239,76 @@ class TestSimulationVisualizer:
 # Additional __init__ modules (imports exercise 0% modules)
 # ---------------------------------------------------------------------------
 
-class TestInitModules:
-    def test_cogant_init(self):
-        import cogant
-        assert cogant is not None
+# Each entry is (dotted_module, expected_exports). ``expected_exports``
+# is a tuple of attribute names that must exist on the imported module
+# *after* its ``__init__`` has run. Picking 1-3 well-known public symbols
+# per package gives us a real behavioural assertion (not a smoke
+# `is not None`) that flags any breakage in re-exports / lazy imports.
+_INIT_MODULE_CONTRACTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("cogant", ("__version__", "PipelineRunner", "Bundle")),
+    ("cogant.api", ()),
+    ("cogant.cache", ("CacheStore", "CacheKey", "CacheEntry", "get_cache_dir")),
+    ("cogant.cli", ()),
+    ("cogant.dynamic", ()),
+    ("cogant.export", ()),
+    ("cogant.gnn", ()),
+    ("cogant.gnn.formatter", ("GNNMarkdownFormatter",)),
+    ("cogant.graph", ()),
+    ("cogant.ingest", ()),
+    ("cogant.markov", ()),
+    ("cogant.normalize", ()),
+    ("cogant.observability", ()),
+    ("cogant.parsers", ()),
+    ("cogant.pipeline", ("PipelineDAG", "Stage", "StageResult", "StageStatus")),
+    ("cogant.plugins", ()),
+    ("cogant.process", ()),
+    ("cogant.provenance", ()),
+    ("cogant.reverse", ("RoundtripResult", "verify_repo_roundtrip")),
+    ("cogant.runtime", ("AgentRuntime", "AgentConfig", "run_n_steps")),
+    ("cogant.scoring", ()),
+    ("cogant.server", ("create_app", "run_server")),
+    ("cogant.simulate", ()),
+    ("cogant.static", ()),
+    ("cogant.statespace", ()),
+    ("cogant.tools", ("organize_run_dir", "migrate_output_tree")),
+    ("cogant.translate", ()),
+    ("cogant.translate.dsl", ()),
+    ("cogant.translate.rules", ("TranslationRule", "ReadOnlyInputRule", "ObservationRule")),
+    ("cogant.validate", ()),
+    ("cogant.viz", ()),
+    ("cogant.schema", ()),
+)
 
-    def test_api_init(self):
-        import cogant.api
-        assert cogant.api is not None
 
-    def test_cache_init(self):
-        import cogant.cache
-        assert cogant.cache is not None
+@pytest.mark.parametrize(
+    ("module_path", "expected_exports"),
+    _INIT_MODULE_CONTRACTS,
+    ids=[m for m, _ in _INIT_MODULE_CONTRACTS],
+)
+def test_init_module_contract(module_path: str, expected_exports: tuple[str, ...]) -> None:
+    """Every COGANT subpackage imports cleanly and re-exports its documented surface.
 
-    def test_cli_init(self):
-        import cogant.cli
-        assert cogant.cli is not None
+    Replaces the previous batch of ``import x; assert x is not None``
+    smoke tests with a contract check: the module imports, has the
+    correct dotted name, and (where applicable) re-exports the
+    documented public symbols listed in ``_INIT_MODULE_CONTRACTS``.
+    """
+    import importlib
 
-    def test_dynamic_init(self):
-        import cogant.dynamic
-        assert cogant.dynamic is not None
+    module = importlib.import_module(module_path)
+    assert module.__name__ == module_path
 
-    def test_export_init(self):
-        import cogant.export
-        assert cogant.export is not None
+    # Every COGANT package has a docstring (we lint for this elsewhere).
+    assert (module.__doc__ or "").strip() != "", (
+        f"{module_path} is missing a module docstring"
+    )
 
-    def test_gnn_init(self):
-        import cogant.gnn
-        assert cogant.gnn is not None
-
-    def test_gnn_formatter_init(self):
-        import cogant.gnn.formatter
-        assert cogant.gnn.formatter is not None
-
-    def test_graph_init(self):
-        import cogant.graph
-        assert cogant.graph is not None
-
-    def test_ingest_init(self):
-        import cogant.ingest
-        assert cogant.ingest is not None
-
-    def test_markov_init(self):
-        import cogant.markov
-        assert cogant.markov is not None
-
-    def test_normalize_init(self):
-        import cogant.normalize
-        assert cogant.normalize is not None
-
-    def test_observability_init(self):
-        import cogant.observability
-        assert cogant.observability is not None
-
-    def test_parsers_init(self):
-        import cogant.parsers
-        assert cogant.parsers is not None
-
-    def test_pipeline_init(self):
-        import cogant.pipeline
-        assert cogant.pipeline is not None
-
-    def test_plugins_init(self):
-        import cogant.plugins
-        assert cogant.plugins is not None
-
-    def test_process_init(self):
-        import cogant.process
-        assert cogant.process is not None
-
-    def test_provenance_init(self):
-        import cogant.provenance
-        assert cogant.provenance is not None
-
-    def test_reverse_init(self):
-        import cogant.reverse
-        assert cogant.reverse is not None
-
-    def test_runtime_init(self):
-        import cogant.runtime
-        assert cogant.runtime is not None
-
-    def test_scoring_init(self):
-        import cogant.scoring
-        assert cogant.scoring is not None
-
-    def test_server_init(self):
-        import cogant.server
-        assert cogant.server is not None
-
-    def test_simulate_init(self):
-        import cogant.simulate
-        assert cogant.simulate is not None
-
-    def test_static_init(self):
-        import cogant.static
-        assert cogant.static is not None
-
-    def test_statespace_init(self):
-        import cogant.statespace
-        assert cogant.statespace is not None
-
-    def test_tools_init(self):
-        import cogant.tools
-        assert cogant.tools is not None
-
-    def test_translate_init(self):
-        import cogant.translate
-        assert cogant.translate is not None
-
-    def test_translate_dsl_init(self):
-        import cogant.translate.dsl
-        assert cogant.translate.dsl is not None
-
-    def test_translate_rules_init(self):
-        import cogant.translate.rules
-        assert cogant.translate.rules is not None
-
-    def test_validate_init(self):
-        import cogant.validate
-        assert cogant.validate is not None
-
-    def test_viz_init(self):
-        import cogant.viz
-        assert cogant.viz is not None
-
-    def test_schema_init_full(self):
-        import cogant.schema
-        assert cogant.schema is not None
+    for name in expected_exports:
+        assert hasattr(module, name), (
+            f"{module_path} no longer re-exports {name!r}; "
+            f"existing attributes: "
+            f"{[a for a in dir(module) if not a.startswith('_')][:20]}"
+        )
 
 
 # ---------------------------------------------------------------------------

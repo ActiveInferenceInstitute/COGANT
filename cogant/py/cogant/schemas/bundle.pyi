@@ -2,6 +2,8 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any, ClassVar
 
+from _typeshed import Incomplete
+
 from .base import CogantBaseModel as CogantBaseModel
 from .base import EvidenceRef as EvidenceRef
 from .base import SemanticVersion as SemanticVersion

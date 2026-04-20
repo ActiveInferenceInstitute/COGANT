@@ -34,6 +34,16 @@ from cogant.statespace.compiler import StateSpaceModel
 logger = logging.getLogger(__name__)
 
 
+def _fmt_count_table(title: str, counts: dict[str, int], total: int) -> list[str]:
+    """Return markdown lines for a titled two-column Kind/Count table."""
+    lines = [f"### {title}", "", "| Kind | Count |", "|------|-------|"]
+    for key in sorted(counts.keys()):
+        lines.append(f"| {key} | {counts[key]} |")
+    lines.append(f"| **Total** | **{total}** |")
+    lines.append("")
+    return lines
+
+
 class _MetadataSectionsMixin:
     # Attributes populated by the concrete formatter (see base.py).
     # Declared here so that type checkers can resolve references in
@@ -117,25 +127,8 @@ class _MetadataSectionsMixin:
         for edge in self.graph.edges.values():
             edge_counts[edge.kind.value] += 1
 
-        # Node breakdown table
-        lines.append("### Nodes by Kind")
-        lines.append("")
-        lines.append("| Kind | Count |")
-        lines.append("|------|-------|")
-        for kind in sorted(node_counts.keys()):
-            lines.append(f"| {kind} | {node_counts[kind]} |")
-        lines.append(f"| **Total** | **{len(self.graph.nodes)}** |")
-        lines.append("")
-
-        # Edge breakdown table
-        lines.append("### Edges by Kind")
-        lines.append("")
-        lines.append("| Kind | Count |")
-        lines.append("|------|-------|")
-        for kind in sorted(edge_counts.keys()):
-            lines.append(f"| {kind} | {edge_counts[kind]} |")
-        lines.append(f"| **Total** | **{len(self.graph.edges)}** |")
-        lines.append("")
+        lines.extend(_fmt_count_table("Nodes by Kind", node_counts, len(self.graph.nodes)))
+        lines.extend(_fmt_count_table("Edges by Kind", edge_counts, len(self.graph.edges)))
 
         # Semantic coverage: count nodes that appear in at least one mapping
         covered_nodes = set()

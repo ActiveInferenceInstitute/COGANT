@@ -112,12 +112,23 @@ class PipelineVisualizer:
 
     def render_stage_outputs(self, pipeline_result: Any) -> Any:
         """
-        Render stage outputs as a multi-panel figure showing key statistics.
+        Render stage outputs as a 2×2 multi-panel figure showing key statistics.
 
-        Shows metrics like node count, edge count, rule firings, etc. per stage.
+        Extracts four metric series from ``pipeline_result`` and plots them:
+        - Top-left: node count per stage (from ``node_counts`` / ``node_count_by_stage``)
+        - Top-right: edge count per stage (from ``edge_counts`` / ``edge_count_by_stage``)
+        - Bottom-left: rule firings per stage (from ``rule_firings``)
+        - Bottom-right: validation finding counts (from ``validation_findings`` / ``findings``)
+
+        If a metric series is absent in ``pipeline_result``, the panel shows
+        a "No data" label rather than a placeholder title.
 
         Args:
             pipeline_result: Pipeline result dict or object with stage metrics.
+                Recognised keys: ``node_counts``, ``node_count_by_stage``,
+                ``edge_counts``, ``edge_count_by_stage``, ``rule_firings``,
+                ``validation_findings``, ``findings``, ``stage_results``,
+                ``stage_timings``, ``timing``.
 
         Returns:
             Matplotlib Figure object, or None if matplotlib unavailable.
@@ -129,35 +140,88 @@ class PipelineVisualizer:
             return None
 
         try:
+            # Normalise to dict
+            if isinstance(pipeline_result, dict):
+                res = pipeline_result
+            else:
+                res = {
+                    attr: getattr(pipeline_result, attr, None)
+                    for attr in (
+                        "node_counts", "node_count_by_stage",
+                        "edge_counts", "edge_count_by_stage",
+                        "rule_firings", "validation_findings", "findings",
+                        "stage_results", "stage_timings", "timing",
+                    )
+                }
+
+            # Extract per-stage metric dicts (fall back to stage_results internals)
+            def _metric_series(primary: str, alt: str, sub_key: str) -> dict[str, float]:
+                data = res.get(primary) or res.get(alt)
+                if isinstance(data, dict):
+                    return {k: float(v) for k, v in data.items()}
+                # Try to pull from nested stage_results
+                stage_results: dict[str, Any] = res.get("stage_results") or {}
+                out: dict[str, float] = {}
+                for stage, sr in stage_results.items():
+                    if isinstance(sr, dict) and sub_key in sr:
+                        try:
+                            out[stage] = float(sr[sub_key])
+                        except (TypeError, ValueError):
+                            pass
+                return out
+
+            def _finding_series() -> dict[str, float]:
+                findings = res.get("validation_findings") or res.get("findings")
+                if isinstance(findings, dict):
+                    return {k: float(v if not isinstance(v, list) else len(v))
+                            for k, v in findings.items()}
+                if isinstance(findings, list):
+                    return {"total": float(len(findings))}
+                stage_results: dict[str, Any] = res.get("stage_results") or {}
+                out: dict[str, float] = {}
+                for stage, sr in stage_results.items():
+                    if isinstance(sr, dict):
+                        f = sr.get("findings") or sr.get("validation_findings")
+                        if isinstance(f, list):
+                            out[stage] = float(len(f))
+                        elif isinstance(f, (int, float)):
+                            out[stage] = float(f)
+                return out
+
+            node_data = _metric_series("node_counts", "node_count_by_stage", "node_count")
+            edge_data = _metric_series("edge_counts", "edge_count_by_stage", "edge_count")
+            rule_data = _metric_series("rule_firings", "rule_firings", "rule_firings")
+            find_data = _finding_series()
+
+            def _bar_panel(ax: Any, data: dict[str, float], title: str, color: str) -> None:
+                if data:
+                    stages = list(data.keys())
+                    values = [data[s] for s in stages]
+                    ax.barh(stages, values, color=color, alpha=0.8)
+                    for idx, v in enumerate(values):
+                        ax.text(v, idx, f"  {int(v)}", va="center", fontsize=8)
+                    ax.set_xlabel("Count")
+                    ax.grid(axis="x", alpha=0.3)
+                else:
+                    ax.text(0.5, 0.5, "No data", ha="center", va="center",
+                            fontsize=11, color="#AAAAAA")
+                    ax.set_xlim(0, 1)
+                    ax.set_ylim(0, 1)
+                    ax.axis("off")
+                ax.set_title(title, fontsize=11, weight="bold")
+
             fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-
-            # Placeholder subplots
-            axes[0, 0].text(0.5, 0.5, "Node Count by Stage", ha="center", va="center", fontsize=12)
-            axes[0, 0].set_xlim(0, 1)
-            axes[0, 0].set_ylim(0, 1)
-            axes[0, 0].axis("off")
-
-            axes[0, 1].text(0.5, 0.5, "Edge Count by Stage", ha="center", va="center", fontsize=12)
-            axes[0, 1].set_xlim(0, 1)
-            axes[0, 1].set_ylim(0, 1)
-            axes[0, 1].axis("off")
-
-            axes[1, 0].text(0.5, 0.5, "Rule Firings", ha="center", va="center", fontsize=12)
-            axes[1, 0].set_xlim(0, 1)
-            axes[1, 0].set_ylim(0, 1)
-            axes[1, 0].axis("off")
-
-            axes[1, 1].text(0.5, 0.5, "Validation Findings", ha="center", va="center", fontsize=12)
-            axes[1, 1].set_xlim(0, 1)
-            axes[1, 1].set_ylim(0, 1)
-            axes[1, 1].axis("off")
+            _bar_panel(axes[0, 0], node_data, "Node Count by Stage", "#4C72B0")
+            _bar_panel(axes[0, 1], edge_data, "Edge Count by Stage", "#55A868")
+            _bar_panel(axes[1, 0], rule_data, "Rule Firings", "#DD8452")
+            _bar_panel(axes[1, 1], find_data, "Validation Findings", "#C44E52")
 
             fig.suptitle("Pipeline Stage Outputs", fontsize=16, weight="bold")
             fig.tight_layout()
             return fig
 
         except Exception as e:
-            logger.error(f"Error rendering stage outputs: {e}")
+            logger.error("Error rendering stage outputs: %s", e)
             return None
 
     def to_mermaid_pipeline(self) -> str:

@@ -494,11 +494,14 @@ class _JavaScriptExtractor(_BaseExtractor):
                 qname = f"{scope}.{name}" if scope else name
                 bases = self._bases_of_class(node, source)
                 decorators = self._collect_decorators(node, source)
+                type_params = self._type_params_of(node, source)
                 meta: dict[str, Any] = {}
                 if bases:
                     meta["bases"] = bases
                 if decorators:
                     meta["decorators"] = decorators
+                if type_params:
+                    meta["type_params"] = type_params
                 symbols.append(
                     ParsedSymbol(
                         name=name,

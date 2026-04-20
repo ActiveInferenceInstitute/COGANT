@@ -118,29 +118,182 @@ class TraceIngester:
 
         return self.traces
 
-    def ingest_custom_trace(self, trace_path: str, format: str) -> list[dict[str, Any]]:
-        """
-        Parse custom trace format.
+    def ingest_custom_trace(
+        self, trace_path: str, format: str
+    ) -> list[dict[str, Any]]:
+        """Parse a non-Chrome runtime trace file.
+
+        Dispatches on ``format``:
+
+        * ``"chrome"`` — delegates to :meth:`ingest_chrome_trace`.
+        * ``"perf"`` — Linux ``perf script`` text output, where each
+          sample is an indented stack of ``address symbol+offset (dso)``
+          lines separated by blank lines (see ``man perf-script``).
+          Every leaf-frame symbol becomes one ``"X"`` (complete) event
+          with synthetic timestamps.
+        * ``"flamegraph"`` — Brendan Gregg "folded stack" format, where
+          each line is ``"frame1;frame2;…;leaf <count>"``. Each line
+          becomes ``count`` ``"X"`` events for the leaf frame.
 
         Args:
-            trace_path: Path to trace file.
-            format: Format identifier (e.g., 'perf', 'flamegraph').
+            trace_path: Filesystem path to the trace file.
+            format: One of the formats above.
 
         Returns:
-            List of trace events.
+            ``self.traces``, a single-element list with the parsed
+            events normalised to the same shape used by
+            :meth:`ingest_chrome_trace`.
+
+        Raises:
+            FileNotFoundError: If ``trace_path`` does not exist.
+            ValueError: If ``format`` is unknown.
         """
         logger.info(f"Parsing {format} trace from {trace_path}")
 
-        # Placeholder: real implementation would handle various formats
+        format_key = format.lower().strip()
+        if format_key == "chrome":
+            return self.ingest_chrome_trace(trace_path)
+
+        path = Path(trace_path)
+        if not path.exists():
+            raise FileNotFoundError(f"trace file not found: {trace_path}")
+
+        if format_key == "perf":
+            events = self._parse_perf_script(path)
+        elif format_key == "flamegraph":
+            events = self._parse_folded_stacks(path)
+        else:
+            raise ValueError(
+                f"unsupported trace format: {format!r} "
+                "(supported: chrome, perf, flamegraph)"
+            )
+
+        if events:
+            duration_ms = (
+                max(e["ts"] + e.get("dur", 0) for e in events)
+                - min(e["ts"] for e in events)
+            ) / 1000.0
+        else:
+            duration_ms = 0.0
+
         self.traces = [
             {
                 "type": "trace",
-                "format": format,
-                "events": [],
+                "format": format_key,
+                "events": events,
+                "duration_ms": duration_ms,
             }
         ]
-
+        logger.info(
+            f"Parsed {len(events)} {format_key} events from {trace_path}"
+        )
         return self.traces
+
+    @staticmethod
+    def _parse_perf_script(path: Path) -> list[dict[str, Any]]:
+        """Parse ``perf script`` text output into Chrome-style ``X`` events.
+
+        ``perf script`` separates samples with a blank line. The first
+        line of each sample carries the comm/pid/tid/timestamp; the
+        following lines are indented stack frames whose symbol is the
+        second whitespace-separated token. We emit one event per
+        sample using the leaf (top) frame's symbol with a 1µs duration
+        so downstream timing extraction has stable values.
+        """
+        events: list[dict[str, Any]] = []
+        text = path.read_text(encoding="utf-8", errors="replace")
+        ts_counter = 0
+        for raw_sample in text.split("\n\n"):
+            sample = raw_sample.strip("\n")
+            if not sample.strip():
+                continue
+            lines = sample.splitlines()
+            header = lines[0].split()
+            pid = tid = 0
+            for tok in header:
+                if "/" in tok and tok.replace("/", "").isdigit():
+                    p, t = tok.split("/", 1)
+                    pid, tid = int(p), int(t)
+                    break
+            stack_symbols: list[str] = []
+            for line in lines[1:]:
+                stripped = line.strip()
+                if not stripped:
+                    continue
+                parts = stripped.split()
+                # Skip leading hex-address tokens; the symbol+offset is
+                # the first token containing "+0x" (or, failing that,
+                # the first non-pure-hex token after the leading addr).
+                sym: str | None = None
+                for tok in parts:
+                    if "+0x" in tok:
+                        sym = tok.split("+", 1)[0]
+                        break
+                if sym is None:
+                    for tok in parts[1:]:
+                        if not all(c in "0123456789abcdefABCDEF" for c in tok):
+                            sym = tok.split("+", 1)[0].lstrip("(").rstrip(")")
+                            break
+                if sym:
+                    stack_symbols.append(sym)
+            if not stack_symbols:
+                continue
+            leaf = stack_symbols[0]
+            ts_counter += 1
+            events.append(
+                {
+                    "name": leaf,
+                    "cat": "perf",
+                    "ph": "X",
+                    "ts": ts_counter,
+                    "dur": 1,
+                    "pid": pid,
+                    "tid": tid,
+                    "args": {"stack": stack_symbols},
+                }
+            )
+        return events
+
+    @staticmethod
+    def _parse_folded_stacks(path: Path) -> list[dict[str, Any]]:
+        """Parse Brendan Gregg folded-stack format into ``X`` events.
+
+        Each non-empty, non-comment line has the shape
+        ``frame1;frame2;...;leaf <count>``. We emit ``count`` events
+        for the leaf with synthetic ascending timestamps so multiple
+        samples of the same leaf show up as multiple calls in
+        :meth:`extract_timing`.
+        """
+        events: list[dict[str, Any]] = []
+        ts_counter = 0
+        for raw_line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            try:
+                stack_part, count_part = line.rsplit(" ", 1)
+                count = int(count_part)
+            except ValueError:
+                continue
+            frames = [f for f in stack_part.split(";") if f]
+            if not frames or count <= 0:
+                continue
+            leaf = frames[-1]
+            for _ in range(count):
+                ts_counter += 1
+                events.append(
+                    {
+                        "name": leaf,
+                        "cat": "flamegraph",
+                        "ph": "X",
+                        "ts": ts_counter,
+                        "dur": 1,
+                        "pid": 0,
+                        "tid": 0,
+                        "args": {"stack": frames},
+                    }
+                )
+        return events
 
     def _all_events(self) -> list[dict[str, Any]]:
         """Collect all events from all ingested traces."""

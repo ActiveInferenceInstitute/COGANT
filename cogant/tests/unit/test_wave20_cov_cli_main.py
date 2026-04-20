@@ -18,11 +18,12 @@ from typer.testing import CliRunner
 
 from cogant.cli.main import app
 from cogant.gnn.package import GNNPackageBuilder
+from cogant.gnn.upstream_bridge import is_upstream_gnn_available
+from cogant.gnn.validator import GNNValidator
 from cogant.process.extractor import ProcessModel
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
 from cogant.statespace.temporal import TimeRegime
-
 
 # ---------------------------------------------------------------------------
 # fixtures
@@ -272,6 +273,32 @@ class TestValidateCommand:
         assert result.exit_code == 0, result.stdout
         assert "VALID" in result.stdout
         assert "score" in result.stdout
+
+    def test_validate_no_upstream_gnn_flag(
+        self,
+        runner: CliRunner,
+        gnn_package_dir: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """``--no-upstream-gnn`` matches ``validate_package(..., upstream_gnn=False)``."""
+        cli = runner.invoke(
+            app, ["validate", str(gnn_package_dir), "--no-upstream-gnn"]
+        )
+        assert cli.exit_code == 0, cli.stdout
+        assert "VALID" in cli.stdout
+
+        monkeypatch.delenv("COGANT_DISABLE_UPSTREAM_GNN", raising=False)
+        r_off = GNNValidator().validate_package(
+            str(gnn_package_dir), upstream_gnn=False
+        )
+        assert "upstream_gnn" not in r_off.details
+
+        if not is_upstream_gnn_available():
+            return
+        r_on = GNNValidator().validate_package(
+            str(gnn_package_dir), upstream_gnn=True
+        )
+        assert "upstream_gnn" in r_on.details
 
     def test_validate_directory_with_gnn_package_subdir(
         self, runner: CliRunner, tmp_path: Path

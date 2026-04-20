@@ -458,37 +458,71 @@ class StateVariableExtractor:
     def _analyze_factorization(self) -> None:
         """
         Analyze factorization of state variables.
-        Variables are independent if they don't share mutations or reads.
+
+        Two variables are considered dependent when they write to (or read
+        from) a common set of graph nodes — i.e. when their mutation or read
+        target sets overlap.
+
+        The independence score is ``1 - shared_targets / total_targets``
+        where *total_targets* is the union of both variables' target-node
+        sets and *shared_targets* is the intersection. Score 1.0 means
+        fully independent; 0.0 means identical write/read frontiers.
+        When a variable has no edge evidence the score falls back to 0.5
+        (maximum entropy).
         """
+        def _mutation_targets(var: StateVariable) -> set[str]:
+            """Return the target-node IDs of all WRITES edges for ``var``."""
+            targets: set[str] = set()
+            for edge_id in var.mutations:
+                edge = self.graph.edges.get(edge_id)
+                if edge is not None:
+                    targets.add(edge.target_id)
+            return targets
+
+        def _read_targets(var: StateVariable) -> set[str]:
+            """Return the source-node IDs of all READS edges for ``var``."""
+            targets: set[str] = set()
+            for edge_id in var.reads:
+                edge = self.graph.edges.get(edge_id)
+                if edge is not None:
+                    targets.add(edge.source_id)
+            return targets
+
         var_list = list(self.state_variables.values())
 
         for i, var in enumerate(var_list):
-            var_mutations = set(var.mutations)
-            var_reads = set(var.reads)
+            var_mut_targets = _mutation_targets(var)
+            var_read_targets = _read_targets(var)
+            var_all_targets = var_mut_targets | var_read_targets
 
-            # Find dependent variables
             dependencies = []
             for other_var in var_list[i + 1:]:
-                other_mutations = set(other_var.mutations)
-                set(other_var.reads)
-
-                # Check for shared mutations or data dependencies
-                if var_mutations & other_mutations or var_reads & other_mutations:
+                other_mut_targets = _mutation_targets(other_var)
+                # Dependent when mutation frontiers overlap, or when var reads
+                # nodes that other_var mutates (data-dependency).
+                if var_mut_targets & other_mut_targets or var_read_targets & other_mut_targets:
                     dependencies.append(other_var.id)
 
             if dependencies:
-                # independence_score = 0.5 — principled default
-                # ("moderately dependent"). Our current dependency
-                # check is binary (shared-edge overlap), so we cannot
-                # yet produce a graded score; 0.5 is the maximum-
-                # entropy placeholder. TODO(calibration): replace
-                # with a proper score derived from the fraction of
-                # overlapping mutation/read edges, calibrated against
-                # a human-labelled factorization gold standard on
-                # the 20-repo corpus.
+                shared_targets: set[str] = set()
+                for other_id in dependencies:
+                    other_var = next((v for v in var_list if v.id == other_id), None)
+                    if other_var is not None:
+                        other_mut_targets = _mutation_targets(other_var)
+                        shared_targets |= var_mut_targets & other_mut_targets
+                        shared_targets |= var_read_targets & other_mut_targets
+
+                total_targets = len(var_all_targets)
+                if total_targets > 0:
+                    independence_score = max(
+                        0.0, 1.0 - len(shared_targets) / total_targets
+                    )
+                else:
+                    independence_score = 0.5  # no edge evidence → maximum entropy
+
                 self.factorization_map[var.id] = FactorizationInfo(
                     factors=[var.id] + dependencies,
-                    independence_score=0.5,  # placeholder (see above)
+                    independence_score=independence_score,
                     dependencies={var.id: dependencies}
                 )
 

@@ -100,6 +100,11 @@ class Session:
             "ingest": ingest_summary,
             **st,
         }
+        n_modules = len(st.get("modules", [])) if isinstance(st, dict) else 0
+        logger.info(
+            "Static analysis complete: %d modules extracted from %s",
+            n_modules, self.target,
+        )
         return self.syntax_tree
 
     def extract_dynamic(
@@ -139,6 +144,12 @@ class Session:
             orchestration.run_static(b)
         orchestration.run_normalize(b)
         self.program_graph = orchestration.run_graph(b, self.target)
+        n_nodes = len(self.program_graph.get("nodes", {})) if isinstance(self.program_graph, dict) else 0
+        n_edges = len(self.program_graph.get("edges", {})) if isinstance(self.program_graph, dict) else 0
+        logger.info(
+            "Program graph built: %d nodes, %d edges",
+            n_nodes, n_edges,
+        )
         if self.syntax_tree is None:
             self.syntax_tree = {
                 "type": "syntax_tree",
@@ -154,6 +165,11 @@ class Session:
         if "_program_graph" not in b.artifacts:
             self.build_graph()
         self.gnn_model = orchestration.run_translate(b)
+        n_mappings = len(self.gnn_model.get("mappings", {})) if isinstance(self.gnn_model, dict) else 0
+        logger.info(
+            "Translation complete: %d semantic mappings",
+            n_mappings,
+        )
         return self.gnn_model
 
     def compile_state_space(self) -> dict[str, Any]:
@@ -165,6 +181,13 @@ class Session:
         self.state_space = orchestration.run_statespace(b, self.target)
         pm = orchestration.run_process(b, self.target)
         self.process_model = pm
+        n_vars = len(self.state_space.get("variables", {})) if isinstance(self.state_space, dict) else 0
+        n_obs = len(self.state_space.get("observations", {})) if isinstance(self.state_space, dict) else 0
+        n_actions = len(self.state_space.get("actions", {})) if isinstance(self.state_space, dict) else 0
+        logger.info(
+            "State space compiled: %d vars, %d obs, %d actions",
+            n_vars, n_obs, n_actions,
+        )
         return self.state_space
 
     def export_all(self, output_dir: str, layout: bool = False) -> Session:
@@ -181,6 +204,11 @@ class Session:
         if "_state_space_model" not in b.artifacts:
             self.compile_state_space()
         orchestration.run_export(b, output_dir)
+        n_artifacts = len(self.export_artifacts)
+        logger.info(
+            "Export complete: %d artifacts written to %s",
+            n_artifacts, output_dir,
+        )
 
         for p in b.artifacts.get("export_paths", []):
             path = Path(p)
@@ -301,7 +329,10 @@ class SessionManager:
         session = Session(target=target, workspace=workspace)
         session.status = SessionStatus.CREATED
         self._sessions[session_id] = session
-        logger.info(f"Created session {session_id} for target {target}")
+        logger.info(
+            "Created session %s for target %s (total_sessions=%d)",
+            session_id, target, len(self._sessions),
+        )
         return session_id, session
 
     def get(self, session_id: str) -> Session | None:
@@ -338,7 +369,10 @@ class SessionManager:
             return False
 
         session.status = status
-        logger.info(f"Session {session_id} status -> {status.value}")
+        logger.info(
+            "Session %s status -> %s",
+            session_id, status.value if hasattr(status, 'value') else status,
+        )
         return True
 
     def cleanup_expired(self) -> int:
@@ -354,7 +388,7 @@ class SessionManager:
 
         for sid in expired_ids:
             del self._sessions[sid]
-            logger.info(f"Cleaned up expired session {sid}")
+            logger.info("Cleaned up expired session %s (ttl=%ds)", sid, self.ttl_seconds)
 
         return len(expired_ids)
 

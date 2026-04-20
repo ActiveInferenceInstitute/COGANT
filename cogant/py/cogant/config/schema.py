@@ -433,6 +433,13 @@ class ValidationConfig(CogantBaseConfig):
         default=False,
         description="Fail bundle if validation errors found",
     )
+    use_upstream_gnn_validator: bool = Field(
+        default=True,
+        description=(
+            "Run Active Inference Institute src.gnn checks in addition to COGANT "
+            "validators (mirrors pipeline ``upstream_gnn_validation`` when wired)"
+        ),
+    )
     auto_fix_warnings: bool = Field(
         default=False,
         description="Automatically fix fixable issues",

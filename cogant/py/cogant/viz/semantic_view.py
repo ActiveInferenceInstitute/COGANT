@@ -304,7 +304,7 @@ class SemanticVisualizer:
                     "policy": len(self.policies),
                 }
 
-            if not role_counts:
+            if not role_counts or not any(role_counts.values()):
                 return None
 
             # Create figure with two subplots

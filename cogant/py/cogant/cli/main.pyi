@@ -1,6 +1,5 @@
-from typing import Any
-
 from pathlib import Path
+from typing import Any
 
 console: Any
 app: Any

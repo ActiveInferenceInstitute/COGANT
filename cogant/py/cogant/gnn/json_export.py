@@ -12,6 +12,8 @@ from datetime import datetime
 from typing import Any
 
 from cogant.gnn.matrices import GNNMatrices
+from cogant.markov.blanket import serialize_blanket
+from cogant.markov.extractor import MarkovBlanketExtractor
 from cogant.process.extractor import ProcessModel
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
@@ -52,7 +54,12 @@ class GNNJSONExporter:
         Returns:
             Dictionary ready for JSON serialization.
         """
-        logger.info("Exporting GNN model to JSON...")
+        logger.info(
+            "Exporting GNN model to JSON: %d nodes, %d edges, %d vars, %d obs, %d actions",
+            len(self.graph.nodes), len(self.graph.edges),
+            len(self.state_space.variables), len(self.state_space.observations),
+            len(self.state_space.actions),
+        )
 
         # Debug: check mappings type - ensure it's always a dict
         if not isinstance(self.mappings, dict):
@@ -62,13 +69,13 @@ class GNNJSONExporter:
             else:
                 self.mappings = {}
 
-        # Build all 18 canonical sections
+        # Build all 19 canonical sections
         output = {
             # Core identifiers and metadata
             "model_id": self.state_space.id,
             "schema_name": self.state_space.schema_name,
 
-            # Canonical sections (18 total)
+            # Canonical sections (19 total)
             "model_metadata": self._export_metadata(),
             "repository_metadata": self._export_repository_metadata(),
             "source_coverage": self._export_source_coverage(),
@@ -83,6 +90,7 @@ class GNNJSONExporter:
             "time_settings": self._export_time_settings(),
             "parameterization": self._export_parameterization(),
             "ontology_mapping": self._export_ontology_mapping(),
+            "markov_blanket": self._export_markov_blanket(),
             "provenance": self._export_provenance_section(),
             "confidence": self._export_confidence(),
             "rendering_hints": self._export_rendering_hints(),
@@ -96,6 +104,20 @@ class GNNJSONExporter:
             "process_model": self._export_process_model(),
             "mappings": self._export_mappings(),
         }
+
+        # Log matrix shapes and section summary at INFO level
+        matrices = output.get("matrices", {})
+        shapes = matrices.get("shapes", {})
+        n_sections = len(output)
+        logger.info(
+            "GNN JSON export complete: %d sections + matrices "
+            "(A=%s, B=%s, C=%s, D=%s)",
+            n_sections,
+            shapes.get("A", [0, 0]),
+            shapes.get("B", [0, 0, 0]),
+            shapes.get("C", [0]),
+            shapes.get("D", [0]),
+        )
 
         return output
 
@@ -119,6 +141,7 @@ class GNNJSONExporter:
                 type(exc).__name__,
                 exc,
             )
+            logger.info("Matrix export failed; returning empty A/B/C/D structures")
             return {
                 "A": [],
                 "B": [],
@@ -399,6 +422,48 @@ class GNNJSONExporter:
             "mappings": mappings_data,
             "count": len(mappings_data),
         }
+
+    def _export_markov_blanket(self) -> dict[str, Any]:
+        """Export Markov blanket partition as canonical section.
+
+        Extracts a real Markov blanket from the program graph using
+        :class:`cogant.markov.extractor.MarkovBlanketExtractor` with the
+        ``"auto"`` strategy, then serializes it via
+        :func:`cogant.markov.blanket.serialize_blanket`.  If extraction
+        fails (e.g. empty graph), a safe empty structure is returned so
+        the downstream validator can cleanly skip the check.
+        """
+        try:
+            extractor = MarkovBlanketExtractor(self.graph)
+            blanket = extractor.extract(strategy="auto")
+            serialized = serialize_blanket(
+                blanket, self.graph, include_rationale=False,
+            )
+            # Merge the serialized blanket with partition-level
+            # summary fields expected by the GNN validator.
+            stats = dict(blanket.stats)
+            return {
+                "partition": serialized["roles"],
+                "seed_strategy": blanket.metadata.get("strategy", "auto"),
+                "boundary_ratio": stats.get("boundary_ratio", 0.0),
+                "stats": stats,
+                "metadata": serialized.get("metadata", {}),
+            }
+        except (ValueError, KeyError, AttributeError) as exc:
+            logger.warning(
+                "Failed to extract Markov blanket for export: %s: %s",
+                type(exc).__name__, exc,
+            )
+            return {
+                "partition": {
+                    "internal": [],
+                    "sensory": [],
+                    "active": [],
+                    "external": [],
+                },
+                "seed_strategy": "auto",
+                "boundary_ratio": 0.0,
+            }
 
     def _export_provenance_section(self) -> dict[str, Any]:
         """Export provenance as canonical section."""

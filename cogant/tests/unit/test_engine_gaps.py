@@ -72,7 +72,7 @@ def small_complex_graph() -> ProgramGraph:
     # Classes + inheritance
     service = builder.add_node(NodeKind.CLASS, "Service", "core.Service", path="core.py")
     base = builder.add_node(NodeKind.CLASS, "BaseService", "util.BaseService", path="util.py")
-    builder.add_edge("e_inherit_1", service.id, base.id, EdgeKind.INHERITS)
+    builder.add_edge(service.id, base.id, EdgeKind.INHERITS)
 
     # Hidden state (mutable service fields)
     state = builder.add_node(NodeKind.VARIABLE, "state", "core.Service.state", path="core.py")
@@ -93,28 +93,28 @@ def small_complex_graph() -> ProgramGraph:
     assertion = builder.add_node(NodeKind.ASSERTION, "assert_valid", "tests.test_core.assert_valid", path="tests/test_core.py")
 
     # Containment
-    builder.add_edge("e_c1", core.id, service.id, EdgeKind.CONTAINS)
-    builder.add_edge("e_c2", service.id, state.id, EdgeKind.CONTAINS)
-    builder.add_edge("e_c3", service.id, counter.id, EdgeKind.CONTAINS)
-    builder.add_edge("e_c4", service.id, init.id, EdgeKind.CONTAINS)
-    builder.add_edge("e_c5", service.id, process.id, EdgeKind.CONTAINS)
-    builder.add_edge("e_c6", service.id, get_status.id, EdgeKind.CONTAINS)
-    builder.add_edge("e_c7", service.id, handle_event.id, EdgeKind.CONTAINS)
-    builder.add_edge("e_c8", util.id, logger.id, EdgeKind.CONTAINS)
-    builder.add_edge("e_c9", config.id, config_var.id, EdgeKind.CONTAINS)
+    builder.add_edge(core.id, service.id, EdgeKind.CONTAINS)
+    builder.add_edge(service.id, state.id, EdgeKind.CONTAINS)
+    builder.add_edge(service.id, counter.id, EdgeKind.CONTAINS)
+    builder.add_edge(service.id, init.id, EdgeKind.CONTAINS)
+    builder.add_edge(service.id, process.id, EdgeKind.CONTAINS)
+    builder.add_edge(service.id, get_status.id, EdgeKind.CONTAINS)
+    builder.add_edge(service.id, handle_event.id, EdgeKind.CONTAINS)
+    builder.add_edge(util.id, logger.id, EdgeKind.CONTAINS)
+    builder.add_edge(config.id, config_var.id, EdgeKind.CONTAINS)
 
     # Hidden state writes (mutable subsystem)
-    builder.add_edge("e_w1", init.id, state.id, EdgeKind.WRITES)
-    builder.add_edge("e_w2", process.id, counter.id, EdgeKind.WRITES)
+    builder.add_edge(init.id, state.id, EdgeKind.WRITES)
+    builder.add_edge(process.id, counter.id, EdgeKind.WRITES)
 
     # Observations (read-only)
-    builder.add_edge("e_r1", get_status.id, state.id, EdgeKind.READS)
-    builder.add_edge("e_r2", get_status.id, config_var.id, EdgeKind.READS)
+    builder.add_edge(get_status.id, state.id, EdgeKind.READS)
+    builder.add_edge(get_status.id, config_var.id, EdgeKind.READS)
 
     # Call graph
-    builder.add_edge("e_call1", init.id, process.id, EdgeKind.CALLS)
-    builder.add_edge("e_call2", process.id, retry_op.id, EdgeKind.CALLS)
-    builder.add_edge("e_call3", handle_event.id, process.id, EdgeKind.CALLS)
+    builder.add_edge(init.id, process.id, EdgeKind.CALLS)
+    builder.add_edge(process.id, retry_op.id, EdgeKind.CALLS)
+    builder.add_edge(handle_event.id, process.id, EdgeKind.CALLS)
 
     return builder.finalize()
 
@@ -259,7 +259,7 @@ class TestRuleExplanationEvidence:
         builder = ProgramGraphBuilder(repo_uri="test://evidence")
         mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py")
         var = builder.add_node(NodeKind.VARIABLE, "v", "m.v", path="m.py")
-        builder.add_edge("e1", mod.id, var.id, EdgeKind.READS)
+        builder.add_edge(mod.id, var.id, EdgeKind.READS)
         graph = builder.finalize()
 
         rule = ReadOnlyInputRule()
@@ -305,7 +305,7 @@ class TestAllRulesFire:
         builder = ProgramGraphBuilder(repo_uri="test://ro")
         mod = builder.add_node(NodeKind.MODULE, "sensor", "sensor", path="sensor.py")
         data = builder.add_node(NodeKind.VARIABLE, "data", "sensor.data", path="sensor.py")
-        builder.add_edge("e1", mod.id, data.id, EdgeKind.READS)
+        builder.add_edge(mod.id, data.id, EdgeKind.READS)
         graph = builder.finalize()
 
         rule = ReadOnlyInputRule()
@@ -317,14 +317,15 @@ class TestAllRulesFire:
         assert mapping.kind == MappingKind.OBSERVATION
 
     def test_mutating_subsystem_fires(self):
-        """MutatingSubsystemRule fires on class with WRITES edges."""
+        """MutatingSubsystemRule fires when WRITES/MUTATES touches the class node."""
         builder = ProgramGraphBuilder(repo_uri="test://mut")
         cls = builder.add_node(NodeKind.CLASS, "State", "State", path="state.py")
         field = builder.add_node(NodeKind.VARIABLE, "value", "State.value", path="state.py")
         method = builder.add_node(NodeKind.METHOD, "update", "State.update", path="state.py")
-        builder.add_edge("e1", cls.id, field.id, EdgeKind.CONTAINS)
-        builder.add_edge("e2", cls.id, method.id, EdgeKind.CONTAINS)
-        builder.add_edge("e3", method.id, field.id, EdgeKind.WRITES)
+        builder.add_edge(cls.id, field.id, EdgeKind.CONTAINS)
+        builder.add_edge(cls.id, method.id, EdgeKind.CONTAINS)
+        builder.add_edge(method.id, field.id, EdgeKind.WRITES)
+        builder.add_edge(cls.id, field.id, EdgeKind.WRITES)
         graph = builder.finalize()
 
         rule = MutatingSubsystemRule()
@@ -337,7 +338,7 @@ class TestAllRulesFire:
         builder = ProgramGraphBuilder(repo_uri="test://inh")
         base = builder.add_node(NodeKind.CLASS, "Base", "Base", path="base.py")
         child = builder.add_node(NodeKind.CLASS, "Child", "Child", path="child.py")
-        builder.add_edge("e1", child.id, base.id, EdgeKind.INHERITS)
+        builder.add_edge(child.id, base.id, EdgeKind.INHERITS)
         graph = builder.finalize()
 
         rule = InheritanceRule()
@@ -346,11 +347,16 @@ class TestAllRulesFire:
         assert len(matches) > 0
 
     def test_containment_rule_fires(self):
-        """ContainmentRule fires on CONTAINS edges."""
+        """ContainmentRule fires when a class CONTAINS >=5 methods (majority-vote path)."""
         builder = ProgramGraphBuilder(repo_uri="test://cont")
         mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py")
         cls = builder.add_node(NodeKind.CLASS, "C", "C", path="m.py")
-        builder.add_edge("e1", mod.id, cls.id, EdgeKind.CONTAINS)
+        builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
+        for i in range(5):
+            meth = builder.add_node(
+                NodeKind.METHOD, f"m{i}", f"C.m{i}", path="m.py"
+            )
+            builder.add_edge(cls.id, meth.id, EdgeKind.CONTAINS)
         graph = builder.finalize()
 
         rule = ContainmentRule()
@@ -363,7 +369,7 @@ class TestAllRulesFire:
         builder = ProgramGraphBuilder(repo_uri="test://obs")
         func = builder.add_node(NodeKind.FUNCTION, "get_x", "get_x", path="mod.py")
         var = builder.add_node(NodeKind.VARIABLE, "x", "x", path="mod.py")
-        builder.add_edge("e1", func.id, var.id, EdgeKind.READS)
+        builder.add_edge(func.id, var.id, EdgeKind.READS)
         graph = builder.finalize()
 
         rule = ObservationRule()
@@ -376,7 +382,7 @@ class TestAllRulesFire:
         builder = ProgramGraphBuilder(repo_uri="test://act")
         method = builder.add_node(NodeKind.METHOD, "set_x", "set_x", path="mod.py")
         var = builder.add_node(NodeKind.VARIABLE, "x", "x", path="mod.py")
-        builder.add_edge("e1", method.id, var.id, EdgeKind.WRITES)
+        builder.add_edge(method.id, var.id, EdgeKind.WRITES)
         graph = builder.finalize()
 
         rule = ActionRule()
@@ -385,9 +391,18 @@ class TestAllRulesFire:
         assert len(matches) > 0
 
     def test_test_assertion_rule_fires(self):
-        """TestAssertionRule fires on ASSERTION nodes."""
+        """TestAssertionRule fires on FUNCTIONS with 'test' in the name and a CALLS edge."""
         builder = ProgramGraphBuilder(repo_uri="test://tst")
-        assertion = builder.add_node(NodeKind.ASSERTION, "assert_x", "assert_x", path="test.py")
+        mod = builder.add_node(NodeKind.MODULE, "tests", "tests", path="tests/conftest.py")
+        test_fn = builder.add_node(
+            NodeKind.FUNCTION, "test_foo", "tests.test_foo", path="tests/test_x.py"
+        )
+        callee = builder.add_node(
+            NodeKind.FUNCTION, "assert_helper", "tests.assert_helper", path="tests/test_x.py"
+        )
+        builder.add_edge(mod.id, test_fn.id, EdgeKind.CONTAINS)
+        builder.add_edge(mod.id, callee.id, EdgeKind.CONTAINS)
+        builder.add_edge(test_fn.id, callee.id, EdgeKind.CALLS)
         graph = builder.finalize()
 
         rule = TestAssertionRule()
@@ -451,77 +466,26 @@ class TestRuleDependencies:
 
 
 class TestStateSpaceDimensionConsistency:
-    """Tests that compiled state space matrices have consistent dimensions."""
+    """Compiled :class:`StateSpaceModel` lines up counts and validation."""
 
-    def test_a_matrix_dimension_consistency(self, small_complex_graph, all_19_rules_engine):
-        """A matrix rows = n_observations, cols = n_hidden_states."""
+    def test_compile_summary_and_validate(self, small_complex_graph, all_19_rules_engine):
+        """``to_summary`` matches collection sizes; ``validate`` returns a list."""
         from cogant.statespace.compiler import StateSpaceCompiler
 
         engine = all_19_rules_engine
-        mappings = engine.translate(small_complex_graph)
+        mappings_list = engine.translate(small_complex_graph)
+        mapping_by_id = {m.id: m for m in mappings_list}
 
-        compiler = StateSpaceCompiler()
-        try:
-            state_space = compiler.compile(small_complex_graph, mappings)
-            if state_space and state_space.A:
-                n_obs = len(state_space.A)
-                n_states = len(state_space.A[0]) if n_obs > 0 else 0
-                # Verify all rows have same length
-                for row in state_space.A:
-                    assert len(row) == n_states
-        except Exception:
-            # State space compilation may not be available
-            pytest.skip("StateSpaceCompiler not available")
+        compiler = StateSpaceCompiler(small_complex_graph, schema_name="gaps_test")
+        model = compiler.compile(mapping_by_id)
 
-    def test_b_matrix_dimension_consistency(self, small_complex_graph, all_19_rules_engine):
-        """B matrix dims: [n_states, n_states, n_actions]."""
-        from cogant.statespace.compiler import StateSpaceCompiler
+        summary = model.to_summary()
+        assert summary["n_variables"] == len(model.variables)
+        assert summary["n_observations"] == len(model.observations)
+        assert summary["n_actions"] == len(model.actions)
+        assert summary["n_transitions"] == len(model.transitions)
+        assert summary["n_likelihoods"] == len(model.likelihoods)
+        assert summary["n_preferences"] == len(model.preferences)
 
-        engine = all_19_rules_engine
-        mappings = engine.translate(small_complex_graph)
-
-        compiler = StateSpaceCompiler()
-        try:
-            state_space = compiler.compile(small_complex_graph, mappings)
-            if state_space and state_space.B:
-                n_states = len(state_space.B)
-                n_actions = len(state_space.B[0][0]) if n_states > 0 and len(state_space.B[0]) > 0 else 0
-                for i in range(n_states):
-                    assert len(state_space.B[i]) == n_states
-                    for j in range(n_states):
-                        assert len(state_space.B[i][j]) == n_actions
-        except Exception:
-            pytest.skip("StateSpaceCompiler not available")
-
-    def test_c_vector_length_matches_observations(self, small_complex_graph, all_19_rules_engine):
-        """C vector length = n_observations."""
-        from cogant.statespace.compiler import StateSpaceCompiler
-
-        engine = all_19_rules_engine
-        mappings = engine.translate(small_complex_graph)
-
-        compiler = StateSpaceCompiler()
-        try:
-            state_space = compiler.compile(small_complex_graph, mappings)
-            if state_space and state_space.C:
-                # C should have one entry per observation
-                assert len(state_space.C) == (len(state_space.A) if state_space.A else 0)
-        except Exception:
-            pytest.skip("StateSpaceCompiler not available")
-
-    def test_d_vector_length_matches_hidden_states(self, small_complex_graph, all_19_rules_engine):
-        """D vector length = n_hidden_states."""
-        from cogant.statespace.compiler import StateSpaceCompiler
-
-        engine = all_19_rules_engine
-        mappings = engine.translate(small_complex_graph)
-
-        compiler = StateSpaceCompiler()
-        try:
-            state_space = compiler.compile(small_complex_graph, mappings)
-            if state_space and state_space.D:
-                # D should have one entry per hidden state
-                n_states = len(state_space.A[0]) if state_space.A and len(state_space.A) > 0 else 0
-                assert len(state_space.D) == n_states
-        except Exception:
-            pytest.skip("StateSpaceCompiler not available")
+        issues = model.validate()
+        assert isinstance(issues, list)

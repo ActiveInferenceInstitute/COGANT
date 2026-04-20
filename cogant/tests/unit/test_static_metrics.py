@@ -353,7 +353,8 @@ def func():
         analyzer = MetricsAnalyzer()
         metrics = analyzer.compute(source)
         assert metrics.comment_lines == 3
-        assert metrics.blank_lines == 1
+        # Leading newline after ``"""`` and the blank line before ``# End`` are both blank.
+        assert metrics.blank_lines == 2
         assert metrics.lines_of_code >= 2
 
     def test_compute_async_functions(self) -> None:

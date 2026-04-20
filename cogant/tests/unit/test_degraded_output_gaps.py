@@ -52,8 +52,8 @@ def sparse_graph_no_observations() -> ProgramGraph:
     action_method = builder.add_node(NodeKind.METHOD, "act", "sys.act", path="sys.py")
 
     # WRITES to state (action) but NO READS from state (observation)
-    builder.add_edge("e1", mod.id, state.id, EdgeKind.CONTAINS)
-    builder.add_edge("e2", action_method.id, state.id, EdgeKind.WRITES)
+    builder.add_edge(mod.id, state.id, EdgeKind.CONTAINS)
+    builder.add_edge(action_method.id, state.id, EdgeKind.WRITES)
 
     return builder.finalize()
 
@@ -71,8 +71,8 @@ def sparse_graph_no_actions() -> ProgramGraph:
     read_method = builder.add_node(NodeKind.METHOD, "read", "sensor.read", path="sensor.py")
 
     # READS from data (observation) but NO WRITES (no action)
-    builder.add_edge("e1", mod.id, data.id, EdgeKind.CONTAINS)
-    builder.add_edge("e2", read_method.id, data.id, EdgeKind.READS)
+    builder.add_edge(mod.id, data.id, EdgeKind.CONTAINS)
+    builder.add_edge(read_method.id, data.id, EdgeKind.READS)
 
     return builder.finalize()
 
@@ -99,26 +99,17 @@ class TestDegradedOutputDetection:
     def test_sparse_graph_no_observations_compile_with_flag(self, sparse_graph_no_observations):
         """Compiling sparse graph should flag missing observations."""
         from cogant.statespace.compiler import StateSpaceCompiler
-        from cogant.validate.validator import GNNValidator
 
         engine = TranslationEngine()
         engine.register_rule(MutatingSubsystemRule())
         mappings = engine.translate(sparse_graph_no_observations)
+        mapping_by_id = {m.id: m for m in mappings}
 
-        # Try to compile state space
-        compiler = StateSpaceCompiler()
-        try:
-            state_space = compiler.compile(sparse_graph_no_observations, mappings)
-            # Validation should flag degraded state
-            validator = GNNValidator()
-            findings = validator.validate(state_space)
-            # Check if any finding mentions missing observations or degradation
-            finding_texts = [f.description for f in findings] if findings else []
-            # May not have findings if validation is lenient, but shouldn't crash
-            assert isinstance(findings, list) or findings is None
-        except Exception as e:
-            # Degradation might raise an exception with a helpful message
-            assert "observation" in str(e).lower() or "degrad" in str(e).lower() or True
+        compiler = StateSpaceCompiler(sparse_graph_no_observations, schema_name="sparse_no_obs")
+        state_space = compiler.compile(mapping_by_id)
+        assert state_space.validate() is not None
+        summary = state_space.to_summary()
+        assert "n_observations" in summary
 
     def test_sparse_graph_no_actions_compile_with_flag(self, sparse_graph_no_actions):
         """Compiling sparse graph with no actions should flag issue."""
@@ -127,16 +118,11 @@ class TestDegradedOutputDetection:
         engine = TranslationEngine()
         engine.register_rule(ReadOnlyInputRule())
         mappings = engine.translate(sparse_graph_no_actions)
+        mapping_by_id = {m.id: m for m in mappings}
 
-        compiler = StateSpaceCompiler()
-        try:
-            state_space = compiler.compile(sparse_graph_no_actions, mappings)
-            # Should either flag degradation or handle gracefully
-            # Verify no crash
-            assert state_space is not None or state_space is None
-        except Exception:
-            # Acceptable to raise if insufficient evidence
-            pass
+        compiler = StateSpaceCompiler(sparse_graph_no_actions, schema_name="sparse_no_act")
+        state_space = compiler.compile(mapping_by_id)
+        assert state_space is not None
 
     def test_single_node_graph_minimal_compilation(self, single_node_graph):
         """Single-node graph should compile to minimal (degraded) state space."""
@@ -144,17 +130,12 @@ class TestDegradedOutputDetection:
 
         engine = TranslationEngine()
         mappings = engine.translate(single_node_graph)
+        mapping_by_id = {m.id: m for m in mappings}
 
-        compiler = StateSpaceCompiler()
-        try:
-            state_space = compiler.compile(single_node_graph, mappings)
-            # Should produce a valid (minimal) state space
-            if state_space:
-                # Verify matrices exist and are non-empty
-                assert state_space.A or state_space.B or state_space.C or state_space.D
-        except Exception:
-            # Acceptable to fail on degenerate input
-            pass
+        compiler = StateSpaceCompiler(single_node_graph, schema_name="single_node")
+        state_space = compiler.compile(mapping_by_id)
+        summary = state_space.to_summary()
+        assert summary["n_variables"] >= 0
 
 
 class TestFallbackMatrices:
@@ -195,70 +176,47 @@ class TestFallbackMatrices:
 
 
 class TestValidationFindingsForDegradation:
-    """Tests that validation explicitly lists degradation findings."""
+    """Degradation is recorded on the compiled model, not a removed ``GNNValidator`` stub."""
 
-    def test_validation_report_includes_degradation_findings(self):
-        """Validation should produce findings when degradation occurs."""
-        from cogant.validate.validator import GNNValidator
+    def test_degraded_output_surfaces_in_summary(self) -> None:
+        """``StateSpaceModel.degraded_output`` and ``to_summary()['is_degraded']`` align."""
+        from cogant.statespace.compiler import DegradedOutput, StateSpaceModel
+        from cogant.statespace.temporal import TimeRegime
 
-        # Build a minimal valid state space first
-        import types
-
-        ns = types.SimpleNamespace(
-            A=[[1.0, 0.0], [0.0, 1.0]],  # Identity-biased (fallback)
-            B=[[[1.0], [0.0]], [[0.0], [1.0]]],  # Identity transition
-            C=[0.0, 0.0],  # Zero preference (fallback)
-            D=[0.5, 0.5],  # Uniform prior
+        deg = DegradedOutput(reason="insufficient evidence", affected_matrices=["A", "B"])
+        model = StateSpaceModel(
+            id="ss",
+            schema_name="t",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
+            time_regime=TimeRegime.SYNCHRONOUS,
+            degraded_output=deg,
         )
+        assert model.to_summary()["is_degraded"] is True
+        assert model.degraded_output is not None
+        assert "A" in model.degraded_output.affected_matrices
 
-        validator = GNNValidator()
-        try:
-            findings = validator.validate(ns)
-            # Validation should return a list (possibly empty or with findings)
-            if findings:
-                assert isinstance(findings, list)
-                # Any findings about degradation should be explicit
-                for finding in findings:
-                    # Finding should have a description field
-                    if hasattr(finding, 'description'):
-                        assert isinstance(finding.description, str)
-        except Exception:
-            # Validation may not be fully implemented
-            pass
+    def test_validate_returns_list(self) -> None:
+        """``StateSpaceModel.validate`` always returns a list (possibly empty)."""
+        from cogant.statespace.compiler import StateSpaceModel
+        from cogant.statespace.temporal import TimeRegime
 
-    def test_degradation_score_penalty(self):
-        """Degraded state spaces should score lower on validation."""
-        from cogant.validate.validator import GNNValidator
-
-        # Create two state spaces: one with evidence, one degraded
-        import types
-
-        fully_specified = types.SimpleNamespace(
-            A=[[0.9, 0.1], [0.1, 0.9]],  # Non-identity (evidence-backed)
-            B=[[[0.8, 0.2], [0.2, 0.8]], [[0.3, 0.7], [0.7, 0.3]]],  # Non-identity
-            C=[0.5, -0.5],  # Non-zero preferences
-            D=[0.6, 0.4],  # Non-uniform prior
+        model = StateSpaceModel(
+            id="ss",
+            schema_name="t",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
+            time_regime=TimeRegime.SYNCHRONOUS,
         )
-
-        degraded = types.SimpleNamespace(
-            A=[[1.0, 0.0], [0.0, 1.0]],  # Identity (fallback)
-            B=[[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]],  # Identity
-            C=[0.0, 0.0],  # Zero (fallback)
-            D=[0.5, 0.5],  # Uniform (fallback)
-        )
-
-        validator = GNNValidator()
-        try:
-            score_full = validator.score(fully_specified) if hasattr(validator, 'score') else 100
-            score_degraded = validator.score(degraded) if hasattr(validator, 'score') else 50
-
-            # Fully specified should score >= degraded
-            # (This is aspirational; may not be implemented yet)
-            if isinstance(score_full, (int, float)) and isinstance(score_degraded, (int, float)):
-                assert score_full >= score_degraded * 0.8  # Allow some tolerance
-        except Exception:
-            # Scoring may not be implemented
-            pass
+        assert isinstance(model.validate(), list)
 
 
 class TestMappingConfidenceReflectsDegradation:
@@ -274,8 +232,8 @@ class TestMappingConfidenceReflectsDegradation:
         builder = ProgramGraphBuilder(repo_uri="test://strong")
         mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py")
         var = builder.add_node(NodeKind.VARIABLE, "v", "m.v", path="m.py")
-        builder.add_edge("e1", mod.id, var.id, EdgeKind.READS)
-        builder.add_edge("e2", mod.id, var.id, EdgeKind.READS)  # Duplicate = more evidence
+        builder.add_edge(mod.id, var.id, EdgeKind.READS)
+        builder.add_edge(mod.id, var.id, EdgeKind.READS)  # Duplicate = more evidence
         strong_graph = builder.finalize()
 
         mappings_strong = engine.translate(strong_graph)
@@ -284,7 +242,7 @@ class TestMappingConfidenceReflectsDegradation:
         builder2 = ProgramGraphBuilder(repo_uri="test://weak")
         mod2 = builder2.add_node(NodeKind.MODULE, "m2", "m2", path="m2.py")
         var2 = builder2.add_node(NodeKind.VARIABLE, "v2", "m2.v2", path="m2.py")
-        builder2.add_edge("e1", mod2.id, var2.id, EdgeKind.READS)  # Single edge
+        builder2.add_edge(mod2.id, var2.id, EdgeKind.READS)  # Single edge
         weak_graph = builder2.finalize()
 
         mappings_weak = engine.translate(weak_graph)

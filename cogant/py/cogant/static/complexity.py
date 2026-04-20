@@ -154,8 +154,11 @@ class ComplexityVisitor(ast.NodeVisitor):
         """
         complexity = 1
         for node in ast.walk(ast.Module(body=body, type_ignores=[])):
+            # try adds one decision unit (paired with except handlers)
+            if isinstance(node, ast.Try):
+                complexity += 1
             # if/elif adds complexity
-            if isinstance(node, ast.If):
+            elif isinstance(node, ast.If):
                 complexity += 1
             # for/while adds complexity
             elif isinstance(node, (ast.For, ast.While, ast.AsyncFor)):

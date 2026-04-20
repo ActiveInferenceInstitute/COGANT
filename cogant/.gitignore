@@ -150,6 +150,15 @@ output/
 workspace/
 .cogant/
 
+# Generated coverage and benchmark data (not source of truth — regenerate via pytest/bench suite)
+coverage.json
+coverage.json.*
+benchmarks/results/*.json
+!benchmarks/perf_baseline.json
+
+# Transient R&D sweep artifacts (audit/validation runs — regenerate with _rnd/sweep scripts)
+_rnd/
+
 # Temporary files
 .tmp/
 *.tmp

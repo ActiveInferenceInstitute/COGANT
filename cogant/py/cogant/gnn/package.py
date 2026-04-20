@@ -106,7 +106,11 @@ class GNNPackageBuilder:
         """
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Building GNN package in {output_path}")
+        logger.info(
+            "Building GNN package in %s (%d nodes, %d edges, %d mappings)",
+            output_path, len(self.graph.nodes), len(self.graph.edges),
+            len(self.mappings) if isinstance(self.mappings, dict) else 0,
+        )
 
         try:
             # 1. Generate core model files
@@ -146,7 +150,26 @@ class GNNPackageBuilder:
             # 5. Create manifest
             manifest = self._create_manifest(output_path)
 
-            logger.info(f"GNN package built successfully with {len(self.checksums)} files")
+            # Summarize role distribution across semantic mappings
+            role_dist: dict[str, int] = {}
+            if isinstance(self.mappings, dict):
+                for m in self.mappings.values():
+                    kind = getattr(m, 'kind', None)
+                    label = kind.value if hasattr(kind, 'value') else str(kind or 'unknown')
+                    role_dist[label] = role_dist.get(label, 0) + 1
+
+            role_summary = (
+                f" | roles={', '.join(f'{k}={v}' for k, v in sorted(role_dist.items()))}"
+                if role_dist else ""
+            )
+            n_vars = len(self.state_space.variables) if hasattr(self.state_space, 'variables') else 0
+            n_obs = len(self.state_space.observations) if hasattr(self.state_space, 'observations') else 0
+            n_actions = len(self.state_space.actions) if hasattr(self.state_space, 'actions') else 0
+
+            logger.info(
+                "GNN package built: %d files | state_space=%d vars, %d obs, %d actions%s",
+                len(self.checksums), n_vars, n_obs, n_actions, role_summary,
+            )
             return manifest
 
         except Exception as e:

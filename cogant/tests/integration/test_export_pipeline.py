@@ -11,7 +11,10 @@ import pytest
 
 from cogant.export.formats import ExportConfig, ExportFormat, MultiFormatExporter
 from cogant.export.json_schema import JSONSchemaExporter
-from cogant.schemas.graph import ProgramGraph, ProgramNode, ProgramEdge, EdgeType
+from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
+from cogant.schemas.graph import ProgramGraph, GraphMetadata
+from datetime import datetime
+from pathlib import Path
 
 
 pytestmark = pytest.mark.integration
@@ -156,12 +159,14 @@ class TestMultiformatExportToTempdir:
         - File contains graph structure
         """
         # Create a simple graph
-        graph = ProgramGraph()
-        node = ProgramNode(
+        metadata = GraphMetadata(repo_uri="test://repo")
+        graph = ProgramGraph(metadata=metadata)
+        node = Node(
             id="test_func",
+            kind=NodeKind.FUNCTION,
             name="test_function",
-            kind="function",
-            source_file=Path("test.py"),
+            qualified_name="test_function",
+            path="test.py",
         )
         graph.add_node(node)
 
@@ -195,22 +200,26 @@ class TestGraphMLWithMetadata:
         - File is parseable as XML
         """
         # Create a simple graph
-        graph = ProgramGraph()
+        metadata = GraphMetadata(repo_uri="test://repo")
+        graph = ProgramGraph(metadata=metadata)
 
         for i in range(3):
-            node = ProgramNode(
+            node = Node(
                 id=f"node_{i}",
+                kind=NodeKind.FUNCTION,
                 name=f"func_{i}",
-                kind="function",
-                source_file=Path(f"test_{i}.py"),
+                qualified_name=f"func_{i}",
+                path=f"test_{i}.py",
             )
             graph.add_node(node)
 
-        graph.add_edge(ProgramEdge(
+        edge = Edge(
+            id="edge_0_1",
             source_id="node_0",
             target_id="node_1",
-            kind=EdgeType.CALLS,
-        ))
+            kind=EdgeKind.CALLS,
+        )
+        graph.add_edge(edge)
 
         exporter = MultiFormatExporter()
         config = ExportConfig(

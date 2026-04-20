@@ -322,6 +322,7 @@ class GNNMatrices:
         direct_kinds = {EdgeKind.READS, EdgeKind.OBSERVES, EdgeKind.DEPENDS_ON}
 
         A: list[list[float]] = [[0.0] * n_states for _ in range(n_obs)]
+        n_uniform = 0  # count of rows with no direct evidence
 
         for i in range(n_obs):
             obs_node_id = obs_ids[i] if i < len(obs_ids) else ""
@@ -346,6 +347,7 @@ class GNNMatrices:
             if n_direct == 0:
                 # Uniform likelihood if no edges found — safer than zero.
                 A[i] = [1.0 / n_states] * n_states
+                n_uniform += 1
                 continue
             direct_share = _DEFAULT_DIRECT_MASS / n_direct
             indirect_share = (
@@ -354,6 +356,14 @@ class GNNMatrices:
             for j in range(n_states):
                 A[i][j] = direct_share if j in direct else indirect_share
             A[i] = _normalize_row(A[i])
+
+        # Log A matrix computation details
+        n_informed = n_obs - n_uniform
+        logger.info(
+            "A matrix computed: shape [%d x %d], %d/%d rows with direct evidence, "
+            "%d uniform (no READS/OBSERVES edges)",
+            n_obs, n_states, n_informed, n_obs, n_uniform,
+        )
 
         return A
 
@@ -413,6 +423,13 @@ class GNNMatrices:
                 full_b_entries, n_states, n_states, n_actions,
                 _MAX_B_ENTRIES, max_k,
             )
+            logger.info(
+                "B tensor truncated: %d → %d state nodes (%.1f%% reduction, "
+                "%d → %d entries)",
+                n_states, max_k,
+                (1 - max_k / n_states) * 100 if n_states > 0 else 0.0,
+                full_b_entries, max_k * max_k * n_actions,
+            )
             state_ids = self._top_k_state_ids(state_ids, max_k)
             n_states = len(state_ids)
         else:
@@ -432,6 +449,9 @@ class GNNMatrices:
             for k in range(n_actions):
                 B[cur][cur][k] = 1.0
 
+        n_identity_actions = 0  # actions with no WRITES/MUTATES edges
+        n_writing_actions = 0
+
         for k in range(n_actions):
             act_node_id = action_ids[k] if k < len(action_ids) else ""
             written: list[int] = []
@@ -444,7 +464,9 @@ class GNNMatrices:
 
             if not written:
                 # Already identity — nothing to update for this action.
+                n_identity_actions += 1
                 continue
+            n_writing_actions += 1
 
             # For every current state ``cur``, redistribute mass so the
             # written destinations receive _DEFAULT_DIRECT_MASS and the
@@ -465,6 +487,15 @@ class GNNMatrices:
                 column = _normalize_row(column)
                 for nxt in range(n_states):
                     B[nxt][cur][k] = column[nxt]
+
+        # Log B tensor computation details
+        logger.info(
+            "B tensor computed: shape [%d x %d x %d], %d/%d writing actions "
+            "(%d identity/stay), direct_mass=%.2f",
+            n_states, n_states, n_actions,
+            n_writing_actions, n_actions, n_identity_actions,
+            _DEFAULT_DIRECT_MASS,
+        )
 
         return B
 
@@ -489,6 +520,8 @@ class GNNMatrices:
         obs_node_ids = self._obs_node_ids()
         C: list[float] = [0.0] * n_obs
 
+        n_preferred = 0  # observations with nonzero preference
+        n_aversive = 0   # observations with negative preference
         for i in range(n_obs):
             obs_nid = obs_node_ids[i] if i < len(obs_node_ids) else ""
             if not obs_nid:
@@ -512,6 +545,17 @@ class GNNMatrices:
                             sign = -1.0
                     total += sign * float(mapping.confidence_score or 0.0)
             C[i] = total
+            if total > 0:
+                n_preferred += 1
+            elif total < 0:
+                n_aversive += 1
+
+        # Log C vector computation details
+        n_neutral = n_obs - n_preferred - n_aversive
+        logger.info(
+            "C vector computed: length %d, %d preferred, %d aversive, %d neutral",
+            n_obs, n_preferred, n_aversive, n_neutral,
+        )
 
         return C
 
@@ -574,6 +618,16 @@ class GNNMatrices:
                 for m in self._hidden_states
             ]
             D = _normalize_vector(weights)
+
+        # Log D vector computation details
+        peak_idx = max(range(len(D)), key=lambda j: D[j]) if D else -1
+        peak_val = D[peak_idx] if peak_idx >= 0 else 0.0
+        logger.info(
+            "D vector computed: length %d, peak at index %d (%.4f), "
+            "source=%s",
+            len(D), peak_idx, peak_val,
+            "state_space_vars" if self._use_state_space_vars else "hidden_state_mappings",
+        )
 
         return D
 

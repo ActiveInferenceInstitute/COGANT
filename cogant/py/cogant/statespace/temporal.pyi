@@ -1,7 +1,6 @@
-from typing import Any
-
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 

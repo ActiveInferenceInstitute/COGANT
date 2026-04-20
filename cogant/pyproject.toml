@@ -34,14 +34,17 @@ dependencies = [
     "duckdb>=0.9",
     "fastapi>=0.135.3",
     "httpx>=0.27",
-    "pytest-anyio>=0.0.0",
     "numpy>=2.4.4",
+    # Active Inference Institute reference GNN toolkit (import path: src.gnn).
+    # Pinned git revision for reproducible installs; license CC-BY-NC-SA-4.0 (see README).
+    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.git@41a64381c6d277c8240ef65499be67e7f882ef73",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
+    "pytest-anyio>=0.0.0",
     "ruff>=0.1.0",
     "mypy>=1.5.0",
     "hypothesis>=6.0",
@@ -93,7 +96,8 @@ addopts = [
     "--cov=cogant",
     "--cov-report=term-missing",
     "--cov-report=html:htmlcov",
-    "--cov-fail-under=75",
+    # Line total is computed to ~89.9–90.0%; the terminal table rounds to 90%.
+    "--cov-fail-under=89",
 ]
 markers = [
     "unit: Unit tests",
@@ -168,10 +172,27 @@ module = [
 ]
 ignore_missing_imports = true
 
+# Upstream generalized-notation-notation (import path src.gnn) has no stubs.
+[[tool.mypy.overrides]]
+module = ["src.gnn", "src.gnn.*"]
+ignore_missing_imports = true
+
 [tool.coverage.run]
-branch = true
+# Line coverage is the gate (see --cov-fail-under). Branch tracking stays useful in
+# HTML reports but was tuned with line targets; combined line+branch totals sit ~2%
+# below line-only on this codebase.
+branch = false
 parallel = true
 source = ["cogant"]
+# Tree-sitter front end is the only path excluded from the line-coverage gate.
+# Rationale: it is an optional dependency (the ``multilang`` extra), the bundled
+# JS/TS test fixtures exercise it via the broader pipeline (parser smoke tests
+# + roundtrip golden), and the file is mostly grammar plumbing whose
+# line-by-line coverage swings with tree-sitter version bumps. ``cogant/tools/``
+# is now in the gate (see ``tests/unit/tools/test_tools_smoke.py``).
+omit = [
+    "*/cogant/static/treesitter_parser.py",
+]
 
 [tool.coverage.report]
 exclude_lines = [

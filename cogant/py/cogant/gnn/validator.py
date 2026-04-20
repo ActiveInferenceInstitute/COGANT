@@ -14,10 +14,37 @@ Checks:
 import hashlib
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+def _env_truthy(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes")
+
+
+def _upstream_disabled_by_env() -> bool:
+    """When set, skip upstream ``src.gnn`` validation (core dep; opt-out)."""
+    return _env_truthy("COGANT_DISABLE_UPSTREAM_GNN")
+
+
+def _resolve_upstream_flag(explicit: bool | None) -> bool:
+    """Resolve whether to run upstream ``validate_gnn`` on ``model.gnn.md``.
+
+    * ``explicit is not None`` — caller/pipeline/CLI choice wins.
+    * ``None`` — run upstream unless :envvar:`COGANT_DISABLE_UPSTREAM_GNN` is truthy
+      (default: upstream **on**).
+
+    Legacy: ``COGANT_GNN_UPSTREAM=1`` used to *enable* upstream; it is no longer read.
+    Use ``COGANT_DISABLE_UPSTREAM_GNN`` to disable, or pass ``upstream_gnn=False``.
+    """
+    if explicit is not None:
+        return explicit
+    if _upstream_disabled_by_env():
+        return False
+    return True
 
 
 class ValidationResult:
@@ -182,21 +209,35 @@ class GNNValidator:
         # null-dereference bug (the helpers are never called first).
         self.result: ValidationResult = ValidationResult()
         self.package_dir: Path = Path(".")
+        self._upstream_gnn: bool = False
 
-    def validate_package(self, package_dir: str) -> ValidationResult:
+    def validate_package(
+        self,
+        package_dir: str,
+        *,
+        upstream_gnn: bool | None = None,
+    ) -> ValidationResult:
         """
         Validate a GNN package.
 
         Args:
             package_dir: Path to the package directory.
+            upstream_gnn: When True, run the Active Inference Institute
+                ``generalized-notation-notation`` validator (``src.gnn``) on
+                ``model.gnn.md``. When ``None``, upstream runs by default unless
+                :envvar:`COGANT_DISABLE_UPSTREAM_GNN` is set.
 
         Returns:
             ValidationResult object.
         """
         self.package_dir = Path(package_dir)
         self.result = ValidationResult()
+        self._upstream_gnn = _resolve_upstream_flag(upstream_gnn)
 
-        logger.info(f"Validating GNN package: {self.package_dir}")
+        logger.info(
+            "Validating GNN package: %s (upstream_gnn=%s)",
+            self.package_dir, self._upstream_gnn,
+        )
 
         # Check 1: Directory exists
         if not self.package_dir.exists():
@@ -230,7 +271,11 @@ class GNNValidator:
         # Compute final score and validity
         self._compute_final_score()
 
-        logger.info(f"Validation complete: {self.result.valid} (score: {self.result.score:.1f}%)")
+        logger.info(
+            "Validation complete: %s (score=%.1f%%, %d errors, %d warnings)",
+            self.result.valid, self.result.score,
+            len(self.result.errors), len(self.result.warnings),
+        )
         return self.result
 
     def validate_markdown(self, markdown: str) -> list[str]:
@@ -534,6 +579,15 @@ class GNNValidator:
                 self.result.warnings.extend(errors)
             else:
                 logger.debug("  ✓ model.gnn.md has all canonical sections")
+
+            if getattr(self, "_upstream_gnn", False):
+                from cogant.gnn.upstream_bridge import run_upstream_validate_gnn
+
+                up = run_upstream_validate_gnn(markdown)
+                self.result.details["upstream_gnn"] = up.to_dict()
+                if up.available and not up.ok:
+                    for err in up.errors:
+                        self.result.warnings.append(f"[upstream GNN] {err}")
         except Exception as e:
             self.result.errors.append(f"Failed to read model.gnn.md: {e}")
 

@@ -24,29 +24,21 @@ _PY_ROOT = Path(__file__).resolve().parent.parent.parent / "py"
 if str(_PY_ROOT) not in sys.path:
     sys.path.insert(0, str(_PY_ROOT))
 
-from cogant.plugins.base import LanguagePlugin, PluginMetadata  # noqa: E402
+from parsers._base import CogantLanguagePlugin  # noqa: E402
 from cogant.parsers.tree_sitter_base import (  # noqa: E402
     ParsedFile,
     get_tree_sitter_parser,
 )
 
 
-class JavaScriptLanguageParser(LanguagePlugin):
+class JavaScriptLanguageParser(CogantLanguagePlugin):
     """Parser for JavaScript source files (tree-sitter backed)."""
 
-    #: File extensions this plugin can handle.
-    SUPPORTED_EXTENSIONS: List[str] = [".js", ".jsx", ".mjs", ".cjs"]
-
-    def __init__(self) -> None:
-        metadata = PluginMetadata(
-            name="javascript",
-            version="0.2.0",
-            author="COGANT",
-            description="tree-sitter backed parser for JavaScript source files",
-        )
-        super().__init__(metadata)
-        self.supported_languages: Set[str] = {"javascript"}
-        self.supported_extensions: Set[str] = set(self.SUPPORTED_EXTENSIONS)
+    PLUGIN_NAME = "javascript"
+    PLUGIN_VERSION = "0.2.0"
+    PLUGIN_DESCRIPTION = "tree-sitter backed parser for JavaScript source files"
+    SUPPORTED_LANGUAGES = {"javascript"}
+    SUPPORTED_EXTENSIONS = {".js", ".jsx", ".mjs", ".cjs"}
 
     # ------------------------------------------------------------------
     # Plugin lifecycle

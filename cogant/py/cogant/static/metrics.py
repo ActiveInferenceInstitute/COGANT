@@ -217,7 +217,18 @@ class MetricsAnalyzer:
         Returns:
             CodeMetrics instance.
         """
-        lines = source.split("\n")
+        if source == "":
+            return CodeMetrics(
+                lines_of_code=0,
+                logical_lines=0,
+                comment_lines=0,
+                blank_lines=0,
+                docstring_coverage=0.0,
+                public_symbols=0,
+                documented_symbols=0,
+            )
+
+        lines = source.splitlines()
 
         blank_count = 0
         comment_count = 0
@@ -333,10 +344,12 @@ class DocstringVisitor(ast.NodeVisitor):
         self.public_symbols = 0
         self.documented_symbols = 0
         self.current_class: str | None = None
+        self._class_depth = 0
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         """Visit function definition."""
-        if not node.name.startswith("_"):
+        # Count only module-level callables; methods are not separate "symbols" here.
+        if self._class_depth == 0 and not node.name.startswith("_"):
             self.public_symbols += 1
             if ast.get_docstring(node) is not None:
                 self.documented_symbols += 1
@@ -344,7 +357,7 @@ class DocstringVisitor(ast.NodeVisitor):
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         """Visit async function definition."""
-        if not node.name.startswith("_"):
+        if self._class_depth == 0 and not node.name.startswith("_"):
             self.public_symbols += 1
             if ast.get_docstring(node) is not None:
                 self.documented_symbols += 1
@@ -356,4 +369,6 @@ class DocstringVisitor(ast.NodeVisitor):
             self.public_symbols += 1
             if ast.get_docstring(node) is not None:
                 self.documented_symbols += 1
+        self._class_depth += 1
         self.generic_visit(node)
+        self._class_depth -= 1

@@ -284,8 +284,8 @@ class TestCouplingAnalyzer:
         analyzer = CouplingAnalyzer()
         report = analyzer.analyze(import_graph)
 
-        # Average should be (1.0 + 1.0 + 0.0) / 3 = 0.667
-        assert abs(report.average_instability - 0.667) < 0.01
+        # I = Ce/(Ca+Ce): A and B each 0.5; C isolated (Ca=Ce=0) → 0. Mean = 1/3.
+        assert abs(report.average_instability - (1.0 / 3.0)) < 0.01
         assert report.average_abstractness == 0.0
         assert report.average_distance >= 0.0
 

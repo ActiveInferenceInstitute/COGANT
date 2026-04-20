@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn test_translation_engine() {
-        let engine = TranslationEngine::default_engine();
+        let mut engine = TranslationEngine::default_engine();
         engine.register_rule(Box::new(TestRule));
         assert_eq!(engine.rules().len(), 1);
     }

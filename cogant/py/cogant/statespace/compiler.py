@@ -451,7 +451,10 @@ class StateSpaceCompiler:
             >>> len(model.variables)
             3
         """
-        logger.info(f"Compiling state space model for schema '{self.schema_name}'")
+        logger.info(
+            "Compiling state space model for schema '%s' (%d nodes, %d edges)",
+            self.schema_name, len(self.graph.nodes), len(self.graph.edges),
+        )
 
         # Extract state variables
         variables = self.var_extractor.extract(semantic_mappings)
@@ -498,8 +501,21 @@ class StateSpaceCompiler:
             metadata=metadata,
         )
 
-        logger.info(f"Compiled model with {len(variables)} variables, "
-                   f"{len(observations)} observations, {len(actions)} actions")
+        # Build a per-kind confidence summary at INFO level
+        confidence_dist: dict[str, int] = {}
+        for var in variables.values():
+            tier = var.confidence.value if hasattr(var.confidence, 'value') else str(var.confidence)
+            confidence_dist[tier] = confidence_dist.get(tier, 0) + 1
+
+        logger.info(
+            "State space compiled: %d vars, %d obs, %d actions, %d transitions, "
+            "%d likelihoods, %d prefs | time_regime=%s | confidence=%s",
+            len(variables), len(observations), len(actions), len(transitions),
+            len(likelihoods), len(preferences),
+            time_regime.value if hasattr(time_regime, 'value') else time_regime,
+            ', '.join(f'{k}={v}' for k, v in sorted(confidence_dist.items()))
+            if confidence_dist else "none",
+        )
 
         return model
 
@@ -1353,7 +1369,10 @@ class StateSpaceCompiler:
         if prev_result is None:
             return self.compile(semantic_mappings)
 
-        logger.info(f"Performing incremental compilation for schema '{self.schema_name}'")
+        logger.info(
+            "Incremental compilation for schema '%s': reusing %d vars, %d obs from prior",
+            self.schema_name, len(prev_result.variables), len(prev_result.observations),
+        )
 
         # Reuse prior variables and observations; recompile actions and transitions
         variables = prev_result.variables
@@ -1395,8 +1414,10 @@ class StateSpaceCompiler:
             metadata=metadata,
         )
 
-        logger.info(f"Incremental compilation: {len(variables)} variables "
-                   f"(reused), {len(actions)} actions (recomputed)")
+        logger.info(
+            "Incremental compilation: %d variables (reused), %d actions (recomputed)",
+            len(variables), len(actions),
+        )
 
         return model
 

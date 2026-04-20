@@ -1,6 +1,5 @@
-from typing import Any
-
 from dataclasses import dataclass, field
+from typing import Any
 
 from cogant.process.extractor import ProcessModel as ProcessModel
 

@@ -54,7 +54,7 @@ def small_graph():
 
     # Chain connectivity: 0->1->2->...->9
     for i in range(9):
-        builder.add_edge(f"e{i}", nodes[i].id, nodes[i + 1].id, EdgeKind.CALLS)
+        builder.add_edge(nodes[i].id, nodes[i + 1].id, EdgeKind.CALLS)
 
     return builder.finalize()
 
@@ -78,7 +78,7 @@ def medium_graph():
     for i in range(100):
         for j in [i + 1, i + 10, i - 1]:
             if 0 <= j < 100 and j != i:
-                builder.add_edge(f"e{i}_{j}", nodes[i].id, nodes[j].id, EdgeKind.CALLS)
+                builder.add_edge(nodes[i].id, nodes[j].id, EdgeKind.CALLS)
 
     return builder.finalize()
 
@@ -105,7 +105,7 @@ def large_synthetic_graph():
         for offset in [1, 7, 13]:
             j = (i + offset) % 1000
             if j != i and edge_count < 3000:  # Limit total edges
-                builder.add_edge(f"e{edge_count}", nodes[i].id, nodes[j].id, EdgeKind.CALLS)
+                builder.add_edge(nodes[i].id, nodes[j].id, EdgeKind.CALLS)
                 edge_count += 1
 
     return builder.finalize()
@@ -266,35 +266,34 @@ class TestMarkovPerformance:
 
 
 class TestAllSeedStrategies:
-    """Tests that all 5 Markov seed strategies produce valid partitions."""
+    """Tests that all documented Markov seed strategies produce valid partitions."""
 
-    STRATEGIES = ["auto", "module", "class", "subgraph", "manual"]
-
-    @pytest.mark.parametrize("strategy", STRATEGIES)
-    def test_strategy_produces_valid_partition(self, small_graph, strategy):
+    @pytest.mark.parametrize(
+        "strategy,kwargs",
+        [
+            ("auto", {}),
+            # No MODULE nodes in ``small_graph`` — seeds may be empty but partition is total.
+            ("module", {"module_names": ["module_0"]}),
+            ("kind", {"kinds": [NodeKind.FUNCTION]}),
+            ("explicit", {"seeds": None}),  # filled below
+            ("mapping_kind", {"semantic_mappings": {}}),
+        ],
+    )
+    def test_strategy_produces_valid_partition(self, small_graph, strategy, kwargs):
         """Each seed strategy produces a valid partition."""
         extractor = MarkovBlanketExtractor(graph=small_graph)
+        call_kw = {k: v for k, v in kwargs.items() if v is not None}
+        if strategy == "explicit":
+            call_kw["seeds"] = list(small_graph.nodes)[:3]
+        blanket = extractor.extract(strategy=strategy, **call_kw)
 
-        try:
-            if strategy == "manual":
-                # Manual requires explicit seeds
-                seeds = set(list(small_graph.nodes)[:3])
-                blanket = partition_by_seeds(small_graph, seeds)
-            else:
-                blanket = extractor.extract(strategy=strategy)
-
-            # Verify partition validity
-            all_nodes = (
-                blanket.internal_ids
-                | blanket.sensory_ids
-                | blanket.active_ids
-                | blanket.external_ids
-            )
-            assert all_nodes == set(small_graph.nodes), f"Strategy {strategy} missing nodes"
-
-        except NotImplementedError:
-            # Strategy may not be implemented yet
-            pytest.skip(f"Strategy '{strategy}' not yet implemented")
+        all_nodes = (
+            blanket.internal_ids
+            | blanket.sensory_ids
+            | blanket.active_ids
+            | blanket.external_ids
+        )
+        assert all_nodes == set(small_graph.nodes), f"Strategy {strategy} missing nodes"
 
     def test_auto_strategy_is_default(self, small_graph):
         """Auto strategy is the default and produces output."""
@@ -315,22 +314,17 @@ class TestAllSeedStrategies:
         extractor1 = MarkovBlanketExtractor(graph=small_graph)
         extractor2 = MarkovBlanketExtractor(graph=small_graph)
 
-        try:
-            blanket1 = extractor1.extract(strategy="module")
-            blanket2 = extractor2.extract(strategy="class")
+        blanket1 = extractor1.extract(strategy="module", module_names=["module_0"])
+        blanket2 = extractor2.extract(strategy="kind", kinds=[NodeKind.FUNCTION])
 
-            # Both valid
-            for b in [blanket1, blanket2]:
-                all_nodes = (
-                    b.internal_ids
-                    | b.sensory_ids
-                    | b.active_ids
-                    | b.external_ids
-                )
-                assert all_nodes == set(small_graph.nodes)
-
-        except NotImplementedError:
-            pytest.skip("Not all strategies implemented")
+        for b in (blanket1, blanket2):
+            all_nodes = (
+                b.internal_ids
+                | b.sensory_ids
+                | b.active_ids
+                | b.external_ids
+            )
+            assert all_nodes == set(small_graph.nodes)
 
 
 # ============================================================================

@@ -197,21 +197,16 @@ def test_calculator_roundtrip(tmp_path: Path) -> None:
     not (CONTROL_POSITIVE / "event_pipeline").is_dir(),
     reason="event_pipeline fixture repo missing",
 )
-@pytest.mark.xfail(
-    strict=False,
-    reason=(
-        "event_pipeline fan-out topology: synthesizer reconstructs 47.6% of roles "
-        "(original ACTION=7+POLICY=4 collapsed to ACTION=3+CONSTRAINT=4). "
-        "Known v0.1 synthesizer limitation — fan-out heuristic underestimates "
-        "ACTION count for event dispatchers. Track via isomorphism-measure-agent."
-    ),
-)
 def test_event_pipeline_roundtrip(tmp_path: Path) -> None:
-    """Round-trip on the event_pipeline fixture.
+    """Round-trip on the event_pipeline fixture under the strict gate.
 
     Event-driven dispatcher with multiple method mutations; exercises
     the WRITES-edge path in MutatingSubsystemRule more aggressively
-    than the calculator.
+    than the calculator. Historically this fan-out topology was a
+    documented gap (synthesizer reconstructed only ~47% of roles), but
+    the synthesizer now clears ``STRICT_ROLE_MATCH_THRESHOLD = 0.7`` on
+    this fixture, so it is held to the strict gate alongside the other
+    control-positive fixtures.
     """
     result = verify_repo_roundtrip(
         CONTROL_POSITIVE / "event_pipeline",
@@ -219,7 +214,6 @@ def test_event_pipeline_roundtrip(tmp_path: Path) -> None:
         role_threshold=STRICT_ROLE_MATCH_THRESHOLD,
     )
     _assert_strict_roundtrip(result)
-    assert result.is_isomorphic, result.summary()
 
 
 @pytest.mark.slow

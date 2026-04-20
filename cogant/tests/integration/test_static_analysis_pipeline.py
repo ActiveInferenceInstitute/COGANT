@@ -147,9 +147,11 @@ class TestCouplingFullPipeline:
         assert api_metrics.afferent_coupling == 0, "api should have no dependents"
         assert api_metrics.instability == 1.0, f"api instability should be 1.0, got {api_metrics.instability}"
 
-        # myapp.main: intermediate (Ce=1, Ca=1)
-        # I = 1 / (1 + 1) = 0.5
-        assert main_metrics.instability == 0.5, f"main instability should be 0.5, got {main_metrics.instability}"
+        # myapp.main: Ce=2 (utils, models), Ca=1 (api → main)
+        # I = Ce / (Ca + Ce) = 2/3
+        assert abs(main_metrics.instability - (2.0 / 3.0)) < 1e-9, (
+            f"main instability should be 2/3, got {main_metrics.instability}"
+        )
 
         # Verify all instability values are in valid range
         for m in report.modules:

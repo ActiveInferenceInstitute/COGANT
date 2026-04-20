@@ -1,7 +1,6 @@
-from typing import Any
-
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 LANGUAGE_EXTENSIONS: Any
 TEST_PATTERNS: Any

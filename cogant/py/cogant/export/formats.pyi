@@ -11,15 +11,15 @@ from cogant.schemas.graph import ProgramGraph as ProgramGraph
 logger: Any
 
 class ExportFormat(Enum):
-    JSON: str
-    GRAPHML: str
-    PARQUET: str
-    SVG: str
-    PNG: str
-    PDF: str
-    MERMAID: str
-    DOT: str
-    JSONLINES: str
+    JSON = "json"
+    GRAPHML = "graphml"
+    PARQUET = "parquet"
+    SVG = "svg"
+    PNG = "png"
+    PDF = "pdf"
+    MERMAID = "mermaid"
+    DOT = "dot"
+    JSONLINES = "jsonlines"
 
 @dataclass
 class ExportConfig:

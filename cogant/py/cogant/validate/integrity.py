@@ -10,12 +10,12 @@ import logging
 from cogant.process.extractor import ProcessModel
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
-from cogant.validate.schema_check import ValidationIssue
+from cogant.validate._mixin import ValidationIssue, _ValidatorMixin
 
 logger = logging.getLogger(__name__)
 
 
-class IntegrityChecker:
+class IntegrityChecker(_ValidatorMixin):
     """
     Checks structural integrity of IR models:
     - Node ID uniqueness
@@ -27,7 +27,7 @@ class IntegrityChecker:
 
     def __init__(self) -> None:
         """Initialize the checker."""
-        self.issues: list[ValidationIssue] = []
+        super().__init__()
 
     def check_program_graph(self, graph: ProgramGraph) -> list[ValidationIssue]:
         """
@@ -278,27 +278,3 @@ class IntegrityChecker:
                                f"Exit stage not in stages: {exit_id}",
                                [exit_id])
 
-    def _add_issue(
-        self,
-        severity: str,
-        category: str,
-        message: str,
-        affected_ids: list[str],
-    ) -> None:
-        """Add an integrity issue."""
-        issue = ValidationIssue(
-            id=f"issue_{len(self.issues)}",
-            severity=severity,
-            category=category,
-            message=message,
-            affected_ids=affected_ids,
-        )
-        self.issues.append(issue)
-
-    def get_issues(self) -> list[ValidationIssue]:
-        """Get all integrity issues."""
-        return self.issues
-
-    def is_valid(self) -> bool:
-        """Check if there are no errors."""
-        return all(i.severity != "error" for i in self.issues)

@@ -157,12 +157,12 @@ class MarkovBlanket:
 
         Returns:
             Dictionary with keys:
+
             * ``internal``: List of internal node ids.
             * ``sensory``: List of sensory boundary node ids.
             * ``active``: List of active boundary node ids.
             * ``external``: List of external node ids.
-            * ``edges``: List of ``(source, target, kind)`` tuples for
-              cross-boundary edges.
+            * ``edges``: List of (source, target, kind) tuples for cross-boundary edges; placeholder until full edge export.
 
         Example:
             >>> vis = blanket.visualize()

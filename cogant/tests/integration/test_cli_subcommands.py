@@ -26,7 +26,6 @@ from pathlib import Path
 
 import pytest
 
-
 # Absolute path to the cogant project root and calculator fixture.
 _COGANT_ROOT = Path(__file__).resolve().parents[2]
 _CALCULATOR_FIXTURE = (
@@ -214,41 +213,33 @@ def test_cli_explain_json_format(calculator_repo: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# xfail — subcommands previewed by the prompt that are not yet wired up.
+# `cogant analyze` and `cogant version` — wired in cogant.cli.main.
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.integration
-@pytest.mark.xfail(
-    strict=False,
-    reason=(
-        "`cogant analyze` subcommand is not yet wired into cogant.cli.main. "
-        "The current analogue is `cogant scan` / `cogant translate`. "
-        "This test will flip to passing once the `analyze` alias lands."
-    ),
-)
 def test_cli_analyze_json_format(calculator_repo: Path) -> None:
-    """Placeholder for the future ``cogant analyze --format json`` command."""
+    """``cogant analyze <repo> --format json`` prints a JSON summary."""
     result = _run_cli("analyze", str(calculator_repo), "--format", "json")
-    assert result.returncode == 0
+    assert result.returncode == 0, result.stderr
     stdout = result.stdout.strip()
     start = stdout.find("{")
     end = stdout.rfind("}")
     assert start != -1 and end > start
-    json.loads(stdout[start : end + 1])
+    payload = json.loads(stdout[start : end + 1])
+    for key in ("target", "stages_run", "node_count", "edge_count", "mapping_count"):
+        assert key in payload, f"analyze JSON missing {key!r}; keys={list(payload)}"
+    assert isinstance(payload["stages_run"], list)
 
 
 @pytest.mark.integration
-@pytest.mark.xfail(
-    strict=False,
-    reason=(
-        "`cogant version` subcommand is not yet wired into cogant.cli.main. "
-        "Use `cogant --help` or `python -c 'import cogant; cogant.__version__'` "
-        "until the dedicated subcommand is added."
-    ),
-)
 def test_cli_version_prints_semver() -> None:
-    """Placeholder for the future ``cogant version`` command."""
+    """``cogant version`` prints the current cogant version (semver)."""
+    import re
+
+    from cogant import __version__
+
     result = _run_cli("version")
-    assert result.returncode == 0
-    assert "0.1.0" in result.stdout
+    assert result.returncode == 0, result.stderr
+    assert __version__ in result.stdout
+    assert re.search(r"\b\d+\.\d+\.\d+\b", result.stdout)

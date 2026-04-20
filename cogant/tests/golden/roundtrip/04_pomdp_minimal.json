@@ -1,0 +1,22 @@
+{
+  "fixture": "04_pomdp_minimal",
+  "fixture_path": "examples/zoo/04_pomdp_minimal",
+  "min_role_match_score": 0.99,
+  "must_be_isomorphic": true,
+  "expected_original_roles": {
+    "HIDDEN_STATE": 1,
+    "OBSERVATION": 2,
+    "ACTION": 2
+  },
+  "expected_shape_match": {
+    "n_states": true,
+    "n_obs": true,
+    "n_actions": true
+  },
+  "expected_min_synthesized_roles": {
+    "HIDDEN_STATE": 1,
+    "OBSERVATION": 2,
+    "ACTION": 2
+  },
+  "notes": "Single hidden-state POMDP. Synthesizer over-emits OBS/ACTION/CONSTRAINT mappings; the assertion only requires the source GNN's roles to be present (multiset subset)."
+}

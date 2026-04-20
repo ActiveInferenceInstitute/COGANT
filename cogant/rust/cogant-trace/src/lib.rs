@@ -354,7 +354,7 @@ mod tests {
     fn test_duration() {
         let mut session = TraceSession::new("session1", "test_trace");
         session.end();
-        assert!(session.duration_us() >= 0);
+        let _ = session.duration_us();
     }
 
     #[test]

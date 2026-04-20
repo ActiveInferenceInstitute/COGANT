@@ -26,7 +26,6 @@ from cogant.api.orchestration import (
     run_validate,
 )
 
-
 # ---------------------------------------------------------------------------
 # fixtures
 # ---------------------------------------------------------------------------
@@ -327,6 +326,8 @@ class TestRunValidate:
         assert "gnn_validation" in result
         assert "valid" in result["gnn_validation"]
         assert "score" in result["gnn_validation"]
+        assert "upstream_parse_summary" in result["gnn_validation"]
+        assert isinstance(result["gnn_validation"]["upstream_parse_summary"], dict)
 
 
 class TestRunDynamic:

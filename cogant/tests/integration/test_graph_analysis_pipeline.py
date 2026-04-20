@@ -3,15 +3,18 @@
 Tests the full pipeline: ProgramGraph → network analysis → visualization.
 """
 
-from pathlib import Path
-
 import pytest
 
 from cogant.graph.analysis import GraphAnalyzer
-from cogant.schemas.graph import ProgramGraph, ProgramNode, EdgeType, ProgramEdge
+from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
+from cogant.schemas.graph import ProgramGraph, GraphMetadata
 
 
 pytestmark = pytest.mark.integration
+
+
+def _empty_graph(repo: str = "test://integration") -> ProgramGraph:
+    return ProgramGraph(metadata=GraphMetadata(repo_uri=repo, languages={"python"}))
 
 
 class TestGraphAnalysisOnSynthetic:
@@ -27,24 +30,27 @@ class TestGraphAnalysisOnSynthetic:
         Returns:
             ProgramGraph with linear chain structure.
         """
-        graph = ProgramGraph()
+        metadata = GraphMetadata(repo_uri="test://repo")
+        graph = ProgramGraph(metadata=metadata)
 
         # Create nodes
         for i in range(node_count):
-            node = ProgramNode(
+            node = Node(
                 id=f"node_{i}",
+                kind=NodeKind.FUNCTION,
                 name=f"func_{i}",
-                kind="function",
-                source_file=Path(f"test_{i}.py"),
+                qualified_name=f"func_{i}",
+                path=f"test_{i}.py",
             )
             graph.add_node(node)
 
         # Create edges (linear chain: 0 -> 1 -> 2 -> ... )
         for i in range(node_count - 1):
-            edge = ProgramEdge(
+            edge = Edge(
+                id=f"edge_{i}_{i+1}",
                 source_id=f"node_{i}",
                 target_id=f"node_{i+1}",
-                kind=EdgeType.CALLS,
+                kind=EdgeKind.CALLS,
             )
             graph.add_edge(edge)
 
@@ -162,18 +168,20 @@ class TestGraphDiffPipeline:
 
         # Create modified graph (add one node and one edge)
         modified = self.create_test_graph(5)
-        new_node = ProgramNode(
+        new_node = Node(
             id="node_new",
+            kind=NodeKind.FUNCTION,
             name="new_func",
-            kind="function",
-            source_file=Path("new.py"),
+            qualified_name="new_func",
+            path="new.py",
         )
         modified.add_node(new_node)
 
-        new_edge = ProgramEdge(
+        new_edge = Edge(
+            id="edge_4_new",
             source_id="node_4",
             target_id="node_new",
-            kind=EdgeType.CALLS,
+            kind=EdgeKind.CALLS,
         )
         modified.add_edge(new_edge)
 
@@ -187,21 +195,23 @@ class TestGraphDiffPipeline:
     @staticmethod
     def create_test_graph(node_count: int = 5) -> ProgramGraph:
         """Helper to create test graph."""
-        graph = ProgramGraph()
+        graph = _empty_graph("test://diff")
         for i in range(node_count):
-            node = ProgramNode(
+            node = Node(
                 id=f"node_{i}",
+                kind=NodeKind.FUNCTION,
                 name=f"func_{i}",
-                kind="function",
-                source_file=Path(f"test_{i}.py"),
+                qualified_name=f"func_{i}",
+                path=f"test_{i}.py",
             )
             graph.add_node(node)
 
         for i in range(node_count - 1):
-            edge = ProgramEdge(
+            edge = Edge(
+                id=f"edge_{i}_{i + 1}",
                 source_id=f"node_{i}",
-                target_id=f"node_{i+1}",
-                kind=EdgeType.CALLS,
+                target_id=f"node_{i + 1}",
+                kind=EdgeKind.CALLS,
             )
             graph.add_edge(edge)
 
@@ -220,32 +230,35 @@ class TestHotspotIdentification:
         - find_hotspots() returns HotspotAnalysis with valid structure
         """
         # Create a star graph: center node connected to many others
-        graph = ProgramGraph()
+        graph = _empty_graph("test://hotspot")
 
         # Central hub node
-        hub = ProgramNode(
+        hub = Node(
             id="hub",
+            kind=NodeKind.FUNCTION,
             name="main_func",
-            kind="function",
-            source_file=Path("main.py"),
+            qualified_name="main_func",
+            path="main.py",
         )
         graph.add_node(hub)
 
         # Peripheral nodes
         for i in range(5):
-            node = ProgramNode(
+            node = Node(
                 id=f"peripheral_{i}",
+                kind=NodeKind.FUNCTION,
                 name=f"helper_{i}",
-                kind="function",
-                source_file=Path(f"helpers_{i}.py"),
+                qualified_name=f"helper_{i}",
+                path=f"helpers_{i}.py",
             )
             graph.add_node(node)
 
             # Hub -> peripheral
-            edge = ProgramEdge(
+            edge = Edge(
+                id=f"edge_hub_p{i}",
                 source_id="hub",
                 target_id=f"peripheral_{i}",
-                kind=EdgeType.CALLS,
+                kind=EdgeKind.CALLS,
             )
             graph.add_edge(edge)
 
@@ -268,25 +281,28 @@ class TestHotspotIdentification:
         - Sink nodes (no outgoing edges) are identified
         """
         # Create a simple pipeline: source -> middle -> sink
-        graph = ProgramGraph()
+        graph = _empty_graph("test://pipeline")
 
-        source = ProgramNode(
+        source = Node(
             id="source",
+            kind=NodeKind.FUNCTION,
             name="entry",
-            kind="function",
-            source_file=Path("entry.py"),
+            qualified_name="entry",
+            path="entry.py",
         )
-        middle = ProgramNode(
+        middle = Node(
             id="middle",
+            kind=NodeKind.FUNCTION,
             name="process",
-            kind="function",
-            source_file=Path("process.py"),
+            qualified_name="process",
+            path="process.py",
         )
-        sink = ProgramNode(
+        sink = Node(
             id="sink",
+            kind=NodeKind.FUNCTION,
             name="exit",
-            kind="function",
-            source_file=Path("exit.py"),
+            qualified_name="exit",
+            path="exit.py",
         )
 
         graph.add_node(source)
@@ -294,8 +310,12 @@ class TestHotspotIdentification:
         graph.add_node(sink)
 
         # Create pipeline edges
-        graph.add_edge(ProgramEdge(source_id="source", target_id="middle", kind=EdgeType.CALLS))
-        graph.add_edge(ProgramEdge(source_id="middle", target_id="sink", kind=EdgeType.CALLS))
+        graph.add_edge(
+            Edge(id="e_sm", source_id="source", target_id="middle", kind=EdgeKind.CALLS)
+        )
+        graph.add_edge(
+            Edge(id="e_ms", source_id="middle", target_id="sink", kind=EdgeKind.CALLS)
+        )
 
         analyzer = GraphAnalyzer(graph)
         hotspots = analyzer.find_hotspots()
@@ -319,21 +339,23 @@ class TestSubgraphExtraction:
         - No edges to nodes outside the subgraph
         """
         # Create a 10-node graph (linear chain)
-        graph = ProgramGraph()
+        graph = _empty_graph("test://subgraph")
         for i in range(10):
-            node = ProgramNode(
+            node = Node(
                 id=f"node_{i}",
+                kind=NodeKind.FUNCTION,
                 name=f"func_{i}",
-                kind="function",
-                source_file=Path(f"test_{i}.py"),
+                qualified_name=f"func_{i}",
+                path=f"test_{i}.py",
             )
             graph.add_node(node)
 
         for i in range(9):
-            edge = ProgramEdge(
+            edge = Edge(
+                id=f"edge_{i}_{i + 1}",
                 source_id=f"node_{i}",
-                target_id=f"node_{i+1}",
-                kind=EdgeType.CALLS,
+                target_id=f"node_{i + 1}",
+                kind=EdgeKind.CALLS,
             )
             graph.add_edge(edge)
 
@@ -367,20 +389,21 @@ class TestAdjacencyMatrix:
         - Matrix reflects graph edges
         """
         # Create a simple 3-node graph: 0 -> 1 -> 2
-        graph = ProgramGraph()
+        graph = _empty_graph("test://adjacency")
 
         for i in range(3):
-            node = ProgramNode(
+            node = Node(
                 id=f"node_{i}",
+                kind=NodeKind.FUNCTION,
                 name=f"func_{i}",
-                kind="function",
-                source_file=Path(f"test_{i}.py"),
+                qualified_name=f"func_{i}",
+                path=f"test_{i}.py",
             )
             graph.add_node(node)
 
         # Add edges
-        graph.add_edge(ProgramEdge(source_id="node_0", target_id="node_1", kind=EdgeType.CALLS))
-        graph.add_edge(ProgramEdge(source_id="node_1", target_id="node_2", kind=EdgeType.CALLS))
+        graph.add_edge(Edge(id="e01", source_id="node_0", target_id="node_1", kind=EdgeKind.CALLS))
+        graph.add_edge(Edge(id="e12", source_id="node_1", target_id="node_2", kind=EdgeKind.CALLS))
 
         analyzer = GraphAnalyzer(graph)
         matrix = analyzer.to_adjacency_matrix()
@@ -406,22 +429,26 @@ class TestAdjacencyMatrix:
 
         Verifies that the matrix correctly represents self-loops if they exist.
         """
-        graph = ProgramGraph()
+        graph = _empty_graph("test://selfloop")
 
-        node = ProgramNode(
+        node = Node(
             id="recursive",
+            kind=NodeKind.FUNCTION,
             name="recursive_func",
-            kind="function",
-            source_file=Path("recursive.py"),
+            qualified_name="recursive_func",
+            path="recursive.py",
         )
         graph.add_node(node)
 
         # Add self-loop
-        graph.add_edge(ProgramEdge(
-            source_id="recursive",
-            target_id="recursive",
-            kind=EdgeType.CALLS,
-        ))
+        graph.add_edge(
+            Edge(
+                id="e_self",
+                source_id="recursive",
+                target_id="recursive",
+                kind=EdgeKind.CALLS,
+            )
+        )
 
         analyzer = GraphAnalyzer(graph)
         matrix = analyzer.to_adjacency_matrix()

@@ -4,11 +4,11 @@ This package exposes every concrete :class:`TranslationRule`
 implementation shipped with COGANT. Rules are organised into
 five families, each in its own module:
 
-  - :mod:`cogant.translate.rules.structural` — read/write, containment, inheritance, pipelines
-  - :mod:`cogant.translate.rules.behavioral` — orchestration, event bus, test assertions
-  - :mod:`cogant.translate.rules.control`    — configuration, feature flags
-  - :mod:`cogant.translate.rules.semantic`   — observation/action/policy/preference/context
-  - :mod:`cogant.translate.rules.resilience` — retry, error boundary, singleton, circuit breaker
+  - :mod:`cogant.translate.rules.structural` — read/write, containment, inheritance, mutating-subsystem, data pipelines (5 rules)
+  - :mod:`cogant.translate.rules.behavioral` — orchestration, event bus, test assertions, state machines (4 rules)
+  - :mod:`cogant.translate.rules.control`    — configuration, feature flags, parameters (3 rules)
+  - :mod:`cogant.translate.rules.semantic`   — observation/action/policy/preference/context (5 rules)
+  - :mod:`cogant.translate.rules.resilience` — retry, error boundary, singleton, circuit breaker, rate limiter (5 rules)
 
 The umbrella package re-exports every rule class, so
 ``from cogant.translate.rules import ReadOnlyInputRule`` and

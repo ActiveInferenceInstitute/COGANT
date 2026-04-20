@@ -10,8 +10,8 @@ These tests verify that the full forward→reverse→forward pipeline is stable:
 from __future__ import annotations
 
 import ast
+import json
 import sys
-import time
 from pathlib import Path
 
 import pytest
@@ -39,9 +39,9 @@ class TestForwardPipelineConsistency:
         from cogant.schemas.core import EdgeKind, NodeKind
         from cogant.translate.engine import TranslationEngine
         from cogant.translate.rules import (
-            ReadOnlyInputRule,
-            MutatingSubsystemRule,
             ContainmentRule,
+            MutatingSubsystemRule,
+            ReadOnlyInputRule,
         )
 
         # Build a fixed graph
@@ -51,10 +51,10 @@ class TestForwardPipelineConsistency:
         var = builder.add_node(NodeKind.VARIABLE, "v", "C.v", path="m.py")
         method = builder.add_node(NodeKind.METHOD, "get", "C.get", path="m.py")
 
-        builder.add_edge("e1", mod.id, cls.id, EdgeKind.CONTAINS)
-        builder.add_edge("e2", cls.id, var.id, EdgeKind.CONTAINS)
-        builder.add_edge("e3", cls.id, method.id, EdgeKind.CONTAINS)
-        builder.add_edge("e4", method.id, var.id, EdgeKind.READS)
+        builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
+        builder.add_edge(cls.id, var.id, EdgeKind.CONTAINS)
+        builder.add_edge(cls.id, method.id, EdgeKind.CONTAINS)
+        builder.add_edge(method.id, var.id, EdgeKind.READS)
 
         graph = builder.finalize()
 
@@ -85,13 +85,14 @@ class TestForwardPipelineConsistency:
 class TestSynthesizedCodeValidity:
     """Tests that synthesized code from reverse pipeline is valid Python."""
 
-    def test_synthesized_code_parses_as_valid_python(self):
+    def test_synthesized_code_parses_as_valid_python(self, tmp_path: Path):
         """Synthesized Python code from reverse pass should be ast.parse-able."""
         # This test is aspirational; we verify that if reverse synthesis produces
         # code, it's valid Python
         try:
-            from cogant.reverse.synthesizer import synthesize_package
             from cogant.reverse.parser import parse_gnn
+            from cogant.reverse.planner import plan_package
+            from cogant.reverse.synthesizer import synthesize_package
 
             # Use a minimal valid GNN
             gnn_text = """\
@@ -135,16 +136,11 @@ B_f0 = TransitionMatrix
 D_f0 = PriorBelief
 """
             model = parse_gnn(gnn_text)
-            # Synthesize code
-            package = synthesize_package(model)
+            plan = plan_package(model)
+            package_dir = synthesize_package(plan, model, tmp_path)
 
-            # Try to parse the generated code
-            if hasattr(package, 'source_code'):
-                source = package.source_code
-                ast.parse(source)  # Should not raise SyntaxError
-            elif hasattr(package, 'modules'):
-                for mod_name, mod_code in package.modules.items():
-                    ast.parse(mod_code)  # Should not raise SyntaxError
+            for py_file in sorted(package_dir.rglob("*.py")):
+                ast.parse(py_file.read_text(encoding="utf-8"))
         except ImportError:
             pytest.skip("cogant.reverse not available yet")
         except Exception as e:
@@ -155,7 +151,6 @@ D_f0 = PriorBelief
     def test_synthesized_functions_have_correct_signatures(self):
         """Synthesized functions should have expected parameter names."""
         try:
-            from cogant.reverse.synthesizer import synthesize_package
             from cogant.reverse.parser import parse_gnn
             from cogant.reverse.planner import plan_package
 
@@ -221,9 +216,10 @@ class TestIncrementalTranslatePerformance:
     def test_incremental_mode_faster_on_unchanged_files(self):
         """Incremental translate on unchanged files should be 2x+ faster."""
         try:
-            from cogant.pipeline import PipelineConfig
-            from pathlib import Path
             import tempfile
+            from pathlib import Path
+
+            from cogant.pipeline import PipelineConfig
 
             with tempfile.TemporaryDirectory() as tmpdir:
                 tmppath = Path(tmpdir)
@@ -250,11 +246,9 @@ class TestIncrementalTranslatePerformance:
 class TestRoundtripIsomorphism:
     """Tests that round-trip results are isomorphic."""
 
-    def test_roundtrip_minimal_gnn_isomorphic(self):
+    def test_roundtrip_minimal_gnn_isomorphic(self, tmp_path: Path):
         """Forward → reverse → forward should produce isomorphic outputs."""
         try:
-            from cogant.reverse.parser import parse_gnn
-            from cogant.reverse.planner import plan_package
             from cogant.reverse.idempotency import verify_roundtrip
 
             minimal_gnn = """\
@@ -297,12 +291,12 @@ A_m0 = LikelihoodMatrix
 B_f0 = TransitionMatrix
 D_f0 = PriorBelief
 """
-            model = parse_gnn(minimal_gnn)
-
-            # If verify_roundtrip is available, use it
-            if verify_roundtrip:
-                result = verify_roundtrip(model)
-                assert result.is_isomorphic or result.epsilon >= 0.7
+            gnn_file = tmp_path / "minimal.gnn.md"
+            gnn_file.write_text(minimal_gnn, encoding="utf-8")
+            syn_dir = tmp_path / "synth_out"
+            syn_dir.mkdir(parents=True, exist_ok=True)
+            result = verify_roundtrip(gnn_file, tmp_dir=syn_dir)
+            assert result.is_isomorphic or result.role_match_score >= 0.7
 
         except ImportError:
             pytest.skip("cogant.reverse not available yet")
@@ -317,15 +311,95 @@ D_f0 = PriorBelief
 # ============================================================================
 
 
-class TestGoldenRoundtripOutputs:
-    """Tests that match against golden/snapshot outputs."""
+_GOLDEN_DIR = _REPO_ROOT / "tests" / "golden" / "roundtrip"
 
-    def test_roundtrip_result_matches_golden(self):
-        """Roundtrip result should match saved golden output."""
-        # This is a placeholder for golden tests
-        # Actual implementation would load golden snapshot from tests/golden/
-        # and compare against current output
-        pytest.skip("Golden roundtrip tests to be populated from examples/zoo/")
+
+def _load_goldens() -> list[dict]:
+    """Load all golden roundtrip snapshots under ``tests/golden/roundtrip/``."""
+    if not _GOLDEN_DIR.is_dir():
+        return []
+    out: list[dict] = []
+    for p in sorted(_GOLDEN_DIR.glob("*.json")):
+        out.append(json.loads(p.read_text(encoding="utf-8")))
+    return out
+
+
+_GOLDENS = _load_goldens()
+
+
+@pytest.mark.integration
+class TestGoldenRoundtripOutputs:
+    """Compare round-trip output against snapshots under ``tests/golden/roundtrip/``."""
+
+    @pytest.mark.parametrize(
+        "golden",
+        _GOLDENS,
+        ids=[g["fixture"] for g in _GOLDENS] if _GOLDENS else ["NO_GOLDENS"],
+    )
+    def test_roundtrip_result_matches_golden(self, tmp_path: Path, golden: dict) -> None:
+        """Each golden asserts: original roles, shape match, role-match floor."""
+        try:
+            from cogant.reverse.idempotency import verify_repo_roundtrip
+        except ImportError:
+            pytest.skip("cogant.reverse not available")
+
+        if not _GOLDENS:
+            pytest.skip("no goldens populated yet")
+
+        fixture = _REPO_ROOT / golden["fixture_path"]
+        if not fixture.is_dir():
+            pytest.skip(f"fixture missing: {fixture}")
+
+        result = verify_repo_roundtrip(
+            fixture,
+            output_dir=tmp_path / golden["fixture"],
+            role_threshold=golden["min_role_match_score"],
+        )
+
+        # Source-side role multiset must include at least the documented
+        # minimum. ``verify_repo_roundtrip`` derives ``original_roles``
+        # from the forward pipeline run on the *repo source* (not the
+        # source GNN), so the count for some role kinds (e.g. OBSERVATION
+        # in a fixture that aliases observations) can over-count without
+        # being a regression. We therefore assert subset semantics.
+        for role, n in golden["expected_original_roles"].items():
+            got = result.original_roles.get(role, 0)
+            assert got >= n, (
+                f"{golden['fixture']}: original role {role} dropped below "
+                f"golden floor ({got} < {n}).\n"
+                f"  full multiset: {dict(result.original_roles)}"
+            )
+
+        # The synthesized side may legitimately over-emit roles (the
+        # synthesizer adds CONSTRAINT/POLICY/CONTEXT mappings that the
+        # source GNN didn't declare). We only require the documented
+        # minimum role multiset to be present.
+        for role, n in golden["expected_min_synthesized_roles"].items():
+            got = result.synthesized_roles.get(role, 0)
+            assert got >= n, (
+                f"{golden['fixture']}: synthesized role {role} dropped below floor "
+                f"({got} < {n}).\n  full multiset: {dict(result.synthesized_roles)}"
+            )
+
+        # Shape preservation (n_states / n_obs / n_actions).
+        for key, expected in golden["expected_shape_match"].items():
+            got = result.shape_match.get(key)
+            assert got == expected, (
+                f"{golden['fixture']}: shape_match[{key}] = {got!r}, "
+                f"expected {expected!r}.\n  shape_match: {result.shape_match}"
+            )
+
+        assert result.role_match_score >= golden["min_role_match_score"], (
+            f"{golden['fixture']}: role_match_score regressed below golden floor "
+            f"({result.role_match_score:.3f} < {golden['min_role_match_score']}).\n"
+            f"{result.summary()}"
+        )
+
+        if golden.get("must_be_isomorphic", False):
+            assert result.is_isomorphic, (
+                f"{golden['fixture']}: golden requires isomorphic round-trip but "
+                f"got DRIFT.\n{result.summary()}"
+            )
 
 
 # ============================================================================
@@ -336,11 +410,12 @@ class TestGoldenRoundtripOutputs:
 class TestRoundtripRegressions:
     """Tests for known roundtrip issues that should stay fixed."""
 
-    def test_policy_context_stub_emission_fixed(self):
+    def test_policy_context_stub_emission_fixed(self, tmp_path: Path):
         """Wave-16 fix: POLICY/CONTEXT stubs emitted correctly."""
         try:
-            from cogant.reverse.synthesizer import synthesize_package
             from cogant.reverse.parser import parse_gnn
+            from cogant.reverse.planner import plan_package
+            from cogant.reverse.synthesizer import synthesize_package
 
             # GNN with explicit POLICY and CONTEXT mappings
             gnn_with_policy = """\
@@ -386,9 +461,9 @@ B_f0 = TransitionMatrix
 D_f0 = PriorBelief
 """
             model = parse_gnn(gnn_with_policy)
-            # Should not crash when synthesizing POLICY
-            package = synthesize_package(model)
-            assert package is not None
+            plan = plan_package(model)
+            package_dir = synthesize_package(plan, model, tmp_path)
+            assert package_dir.is_dir()
 
         except ImportError:
             pytest.skip("cogant.reverse not available")

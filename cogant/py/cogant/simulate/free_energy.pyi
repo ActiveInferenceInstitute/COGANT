@@ -1,6 +1,5 @@
-from typing import Any
-
 from collections.abc import Sequence
+from typing import Any
 
 from cogant.simulate.distributions import CategoricalDistribution
 from cogant.statespace.compiler import StateSpaceModel

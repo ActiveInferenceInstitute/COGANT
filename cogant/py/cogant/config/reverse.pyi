@@ -1,5 +1,6 @@
 from typing import ClassVar, Literal
 
+from _typeshed import Incomplete
 from pydantic import BaseModel
 
 class ReverseConfig(BaseModel):

@@ -13,7 +13,6 @@ from pathlib import Path
 
 from cogant.gnn.validator import GNNValidator, ValidationResult
 
-
 # --------------------------- ValidationResult --------------------------- #
 
 
@@ -37,6 +36,7 @@ def test_validation_result_to_dict_round_trip():
         "errors": ["e"],
         "warnings": ["w"],
         "details": {},
+        "section_scores": {},
     }
 
 

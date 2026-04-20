@@ -6,10 +6,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Set
 from dataclasses import dataclass, field
 
-# Add py directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "py"))
-
-from cogant.plugins.base import LanguagePlugin, PluginMetadata
+from parsers._base import CogantLanguagePlugin  # noqa: E402
 
 
 @dataclass
@@ -25,28 +22,13 @@ class ParseResult:
     errors: List[str] = field(default_factory=list)
 
 
-class TypeScriptLanguageParser(LanguagePlugin):
+class TypeScriptLanguageParser(CogantLanguagePlugin):
     """Parser for TypeScript and JavaScript source files."""
 
-    def __init__(self):
-        """Initialize TypeScript parser."""
-        metadata = PluginMetadata(
-            name="typescript",
-            version="0.1.0",
-            author="COGANT",
-            description="Regex-based parser for TypeScript/JavaScript code structure"
-        )
-        super().__init__(metadata)
-        self.supported_languages = {"typescript", "javascript"}
-        self.supported_extensions = {".ts", ".tsx", ".js", ".jsx"}
-
-    def initialize(self, config: Dict[str, Any]) -> None:
-        """Initialize parser with configuration."""
-        pass
-
-    def shutdown(self) -> None:
-        """Shutdown parser gracefully."""
-        pass
+    PLUGIN_NAME = "typescript"
+    PLUGIN_DESCRIPTION = "Regex-based parser for TypeScript/JavaScript code structure"
+    SUPPORTED_LANGUAGES = {"typescript", "javascript"}
+    SUPPORTED_EXTENSIONS = {".ts", ".tsx", ".js", ".jsx"}
 
     def parse(self, source_code: str) -> Dict[str, Any]:
         """Parse TypeScript/JavaScript source code and return AST.

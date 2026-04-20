@@ -496,8 +496,22 @@ class GraphAnalyzer:
         return components
 
     def _compute_betweenness_centrality(self) -> dict[str, float]:
-        """Compute betweenness centrality for all nodes."""
-        centrality: dict[str, float] = defaultdict(float)
+        """Compute betweenness centrality for all nodes.
+
+        Uses NetworkX (normalized, in ``[0, 1]``) when available. The pure
+        Python fallback scales by the maximum score so results stay in
+        ``[0, 1]`` (the pairwise BFS shortcut is not standard Brandes).
+        """
+        if self.nx:
+            try:
+                bc = self.nx.betweenness_centrality(
+                    self.to_networkx(), normalized=True
+                )
+                return {nid: float(bc.get(nid, 0.0)) for nid in self.graph.nodes}
+            except Exception:
+                pass
+
+        centrality: dict[str, float] = dict.fromkeys(self.graph.nodes, 0.0)
         nodes = list(self.graph.nodes.keys())
 
         for source in nodes:
@@ -506,15 +520,14 @@ class GraphAnalyzer:
                     continue
 
                 path = self._find_shortest_path_bfs(source, target)
-                if path:
+                if path and len(path) > 2:
                     for node_id in path[1:-1]:  # Exclude source and target
                         centrality[node_id] += 1.0
 
-        # Normalize
-        max_paths = (len(nodes) - 1) * (len(nodes) - 2) / 2 if len(nodes) > 1 else 1
-        if max_paths > 0:
+        peak = max(centrality.values()) if centrality else 0.0
+        if peak > 0:
             for node_id in centrality:
-                centrality[node_id] /= max_paths
+                centrality[node_id] /= peak
 
         return dict(centrality)
 
@@ -674,13 +687,13 @@ class GraphAnalyzer:
             if len(path) > max_depth:
                 return
 
-            if cid == tgt and len(path) > 1:
-                paths.append(path)
-                return
-
             outgoing = self.graph.get_edges_from(cid)
             for edge in outgoing:
                 nid = edge.target_id
+                # Close a directed cycle back to the search start (tgt).
+                if nid == tgt and len(path) >= 2:
+                    paths.append(path + [nid])
+                    continue
                 if nid not in visited:
                     new_visited = visited | {nid}
                     dfs(nid, tgt, path + [nid], new_visited)

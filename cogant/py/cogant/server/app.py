@@ -42,6 +42,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+try:
+    # Module-level import so OpenAPI schema generation resolves ``Request``
+    # (nested imports inside ``create_app`` leave a ForwardRef and break Pydantic v2).
+    from starlette.requests import Request
+except ImportError:  # pragma: no cover - FastAPI extra not installed
+    Request = Any  # type: ignore[misc, assignment]
+
 import cogant
 from cogant.api.bundle import ArtifactKey, Bundle
 from cogant.api.pipeline import PipelineConfig, PipelineRunner
@@ -399,7 +406,7 @@ def create_app(
             ``examples/demo_server.py`` instead.
     """
     try:
-        from fastapi import FastAPI, HTTPException, Request
+        from fastapi import FastAPI, HTTPException
         from fastapi.exceptions import RequestValidationError
         from fastapi.responses import JSONResponse, PlainTextResponse
     except ImportError as exc:  # pragma: no cover - exercised in fallback path
@@ -436,7 +443,7 @@ def create_app(
 
     @app.middleware("http")
     async def _observability_middleware(
-        request: Request, call_next: Callable[[Request], Any]
+        request: Request, call_next: Callable[..., Any]
     ) -> Any:
         """Log, meter, rate-limit, and inject request ID into every request.
 
@@ -1004,39 +1011,85 @@ def create_app(
     ) -> VisualizeResponse:
         """Generate a diagram for source code in the requested format.
 
-        Supports Mermaid (graph syntax), JSON (node/edge lists), and
-        GraphML (XML interchange format).
+        Translates ``body.source_code`` through the ingest → graph
+        stages of the COGANT pipeline, then renders the resulting
+        program graph in one of:
+
+        * ``"mermaid"`` — Mermaid ``classDiagram`` syntax via
+          :class:`cogant.viz.mermaid.MermaidGenerator`.
+        * ``"json"`` — Node/edge list via
+          :func:`cogant.api.orchestration.program_graph_to_dict`.
+        * ``"graphml"`` — GraphML XML via
+          :class:`cogant.export.graphml.GraphMLExporter`.
         """
+        import asyncio
+        import json as _json
+
+        from cogant.api.bundle import ArtifactKey, _json_default
+        from cogant.api.orchestration import (
+            program_graph_to_dict,
+            translate_source,
+        )
+
         request_id: str = getattr(request.state, "request_id", str(uuid.uuid4()))
 
-        if body.language not in ("python", "javascript", "typescript"):
-            raise HTTPException(
-                status_code=422,
-                detail=f"unsupported language: {body.language}",
-            )
-
-        if body.format not in ("mermaid", "json", "graphml"):
-            raise HTTPException(
-                status_code=422,
-                detail=f"unsupported format: {body.format}",
-            )
-
         try:
-            # Placeholder: in a real implementation, this would parse the
-            # source_code, build a graph, and emit the diagram in the
-            # requested format. For now, return a stub.
-            diagram = f"[{body.format.upper()} diagram for {body.language}]"
-            return VisualizeResponse(
-                request_id=request_id,
-                diagram=diagram,
-                format=body.format,
+            bundle = await asyncio.to_thread(
+                translate_source,
+                body.language,
+                body.source_code,
+                stages=["ingest", "static", "normalize", "graph"],
             )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
         except Exception as exc:  # noqa: BLE001
-            logger.exception("visualization failed")
+            logger.exception("visualization pipeline failed")
             raise HTTPException(
                 status_code=500,
                 detail=f"{type(exc).__name__}: {exc}",
             ) from exc
+
+        program_graph = bundle.get_artifact(ArtifactKey.PROGRAM_GRAPH)
+        if program_graph is None:
+            raise HTTPException(
+                status_code=500,
+                detail="pipeline produced no program graph",
+            )
+
+        try:
+            if body.format == "mermaid":
+                from cogant.viz.mermaid import MermaidGenerator
+
+                diagram = MermaidGenerator().generate_class_diagram(program_graph)
+            elif body.format == "json":
+                diagram = _json.dumps(
+                    program_graph_to_dict(program_graph),
+                    sort_keys=True,
+                    default=_json_default,
+                )
+            elif body.format == "graphml":
+                from cogant.export.graphml import GraphMLExporter
+
+                diagram = GraphMLExporter(program_graph).export()
+            else:  # pragma: no cover - VisualizeRequest constrains the literal
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"unsupported format: {body.format}",
+                )
+        except HTTPException:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("visualization rendering failed")
+            raise HTTPException(
+                status_code=500,
+                detail=f"{type(exc).__name__}: {exc}",
+            ) from exc
+
+        return VisualizeResponse(
+            request_id=request_id,
+            diagram=diagram,
+            format=body.format,
+        )
 
     @app.get(
         "/api/v1/metrics",

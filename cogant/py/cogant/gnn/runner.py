@@ -810,10 +810,9 @@ class GNNModelRunner:
 
         Returns:
             A tuple of (traces, timing_dict) where:
+
             - traces: List of execution trace dicts from all trials.
-            - timing_dict: Dict with keys like "belief_update_ms",
-              "policy_eval_ms", "action_select_ms", "state_update_ms",
-              and "total_ms" showing cumulative milliseconds for each phase.
+            - timing_dict: Per-phase cumulative milliseconds (belief_update_ms, policy_eval_ms, action_select_ms, state_update_ms, total_ms).
         """
         import time
 

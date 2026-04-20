@@ -212,8 +212,12 @@ class StaticAnalysisView:
             # Build directed graph
             G = nx.DiGraph()
 
-            for module_name, _ in modules.items():
-                G.add_node(module_name)
+            _mod_instability: dict[str, float] = {}
+            for m in modules:
+                mname = m.get("module_name", m.get("name", "")) if isinstance(m, dict) else getattr(m, "module_name", str(m))
+                minst = m.get("instability", 0.5) if isinstance(m, dict) else getattr(m, "instability", 0.5)
+                _mod_instability[mname] = minst
+                G.add_node(mname)
 
             # Add edges based on dependencies
             coupling_matrix = report.coupling_matrix if hasattr(report, "coupling_matrix") else {}
@@ -231,7 +235,7 @@ class StaticAnalysisView:
             # Node sizes based on instability
             node_sizes = []
             for node in G.nodes():
-                instability = modules.get(node, {}).get("instability", 0.5)
+                instability = _mod_instability.get(node, 0.5)
                 node_sizes.append(3000 * max(0.1, instability))
 
             # Draw graph
@@ -289,10 +293,11 @@ class StaticAnalysisView:
             abstractness = []
             instability = []
 
-            for name, md in modules.items():
-                names.append(name)
-                abstractness.append(md.get("abstractness", 0.5) if isinstance(md, dict) else 0.5)
-                instability.append(md.get("instability", 0.5) if isinstance(md, dict) else 0.5)
+            for m in modules:
+                mname = m.get("module_name", m.get("name", "")) if isinstance(m, dict) else getattr(m, "module_name", str(m))
+                names.append(mname)
+                abstractness.append(m.get("abstractness", 0.5) if isinstance(m, dict) else getattr(m, "abstractness", 0.5))
+                instability.append(m.get("instability", 0.5) if isinstance(m, dict) else getattr(m, "instability", 0.5))
 
             # Scatter plot
             ax.scatter(abstractness, instability, s=100, alpha=0.6, color="steelblue")
@@ -497,8 +502,13 @@ class StaticAnalysisView:
         lines = ["graph TD"]
 
         # Add nodes with styling based on instability
-        for module_name, module_data in modules.items():
-            instability = module_data.get("instability", 0.5)
+        for module in modules:
+            if isinstance(module, dict):
+                module_name = module.get("module_name", module.get("name", "unknown"))
+                instability = module.get("instability", 0.5)
+            else:
+                module_name = getattr(module, "module_name", str(module))
+                instability = getattr(module, "instability", 0.5)
             safe_name = module_name.replace("-", "_").replace(".", "_")
 
             if instability < 0.3:

@@ -120,16 +120,77 @@ class FlowDiagrammer:
         """
         cfg = ControlFlowGraph(function_node=function_node)
 
-        # For now, create a simple single-block CFG
-        # In a full implementation, this would parse AST and extract basic blocks
-        block_id = f"{function_node.id}_entry"
-        cfg.nodes[block_id] = {
-            "id": block_id,
-            "name": f"Entry: {function_node.name}",
+        # Entry block — always present
+        entry_id = f"{function_node.id}_entry"
+        cfg.nodes[entry_id] = {
+            "id": entry_id,
+            "name": f"entry: {function_node.name}",
             "kind": "basic_block",
         }
-        cfg.entry_node_id = block_id
-        cfg.exit_node_ids = [block_id]
+        cfg.entry_node_id = entry_id
+
+        if graph is None:
+            # No graph context: trivial single-block CFG (entry = exit)
+            cfg.exit_node_ids = [entry_id]
+            return cfg
+
+        # Build richer CFG from the program-graph edge structure:
+        #   CALLS edges → "call" basic blocks (one per distinct callee).
+        #   GUARDS edges → conditional branch to a "guard" block.
+        #   All other outgoing edges from the function → folded into entry.
+        # The exit block is always added; conditional branches point to it
+        # via an "unconditional" fall-through edge.
+
+        prev_block_id = entry_id
+        call_blocks: list[str] = []
+
+        for edge in graph.get_edges_from(function_node.id):
+            callee = graph.nodes.get(edge.target_id)
+            if callee is None:
+                continue
+
+            if edge.kind == EdgeKind.CALLS:
+                block_id = f"{function_node.id}_call_{callee.id}"
+                cfg.nodes[block_id] = {
+                    "id": block_id,
+                    "name": f"call: {callee.name}",
+                    "kind": "call_block",
+                    "callee_id": callee.id,
+                }
+                cfg.edges.append((prev_block_id, block_id, "unconditional"))
+                call_blocks.append(block_id)
+                prev_block_id = block_id
+
+            elif edge.kind == EdgeKind.GUARDS:
+                # Conditional guard: true branch calls the guarded node,
+                # false branch skips directly to the next block
+                guard_id = f"{function_node.id}_guard_{callee.id}"
+                skip_id = f"{function_node.id}_skip_{callee.id}"
+                cfg.nodes[guard_id] = {
+                    "id": guard_id,
+                    "name": f"guard: {callee.name}",
+                    "kind": "condition_block",
+                    "guard_id": callee.id,
+                }
+                cfg.nodes[skip_id] = {
+                    "id": skip_id,
+                    "name": "skip",
+                    "kind": "basic_block",
+                }
+                cfg.edges.append((prev_block_id, guard_id, "conditional"))
+                cfg.edges.append((prev_block_id, skip_id, "conditional"))
+                call_blocks.append(guard_id)
+                prev_block_id = skip_id
+
+        # Exit block
+        exit_id = f"{function_node.id}_exit"
+        cfg.nodes[exit_id] = {
+            "id": exit_id,
+            "name": "exit",
+            "kind": "exit_block",
+        }
+        cfg.edges.append((prev_block_id, exit_id, "unconditional"))
+        cfg.exit_node_ids = [exit_id]
 
         return cfg
 
@@ -305,16 +366,21 @@ class FlowDiagrammer:
                     participants.add(target)
                     call_pairs.append((entry_id, target))
 
+        def _node_name(node_id: str) -> str:
+            n = call_graph.nodes.get(node_id)
+            if n is None:
+                return node_id
+            return n.name if hasattr(n, "name") else n.get("name", node_id)
+
         # Add participant declarations
         for participant_id in sorted(participants):
-            participant_name = call_graph.nodes[participant_id]["name"]
-            safe_name = participant_name.replace('"', '\\"')
+            safe_name = _node_name(participant_id).replace('"', '\\"')
             lines.append(f'    participant {safe_name}')
 
         # Add call sequences
         for source_id, target_id in call_pairs:
-            source_name = call_graph.nodes[source_id]["name"].replace('"', '\\"')
-            target_name = call_graph.nodes[target_id]["name"].replace('"', '\\"')
+            source_name = _node_name(source_id).replace('"', '\\"')
+            target_name = _node_name(target_id).replace('"', '\\"')
             lines.append(f'    {source_name}->>+{target_name}: call')
             lines.append(f'    {target_name}-->>-{source_name}: return')
 

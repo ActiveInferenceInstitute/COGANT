@@ -250,10 +250,19 @@ mod tests {
     use super::*;
     use tempfile::TempDir;
 
+    fn test_timestamp() -> String {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let secs = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+        format!("1970-01-01T00:00:{:02}Z", secs % 60)
+    }
+
     #[test]
     fn test_file_store_create() {
         let temp_dir = TempDir::new().unwrap();
-        let store = FileStore::new(temp_dir.path()).unwrap();
+        let _store = FileStore::new(temp_dir.path()).unwrap();
         assert!(temp_dir.path().exists());
     }
 
@@ -265,7 +274,7 @@ mod tests {
         let bundle = Bundle {
             id: "test_bundle".to_string(),
             version: "1.0.0".to_string(),
-            created_at: chrono::Utc::now().to_rfc3339(),
+            created_at: test_timestamp(),
             metadata: HashMap::new(),
             artifacts: HashMap::new(),
         };
@@ -283,7 +292,7 @@ mod tests {
         let bundle1 = Bundle {
             id: "bundle1".to_string(),
             version: "1.0.0".to_string(),
-            created_at: chrono::Utc::now().to_rfc3339(),
+            created_at: test_timestamp(),
             metadata: HashMap::new(),
             artifacts: HashMap::new(),
         };
@@ -291,7 +300,7 @@ mod tests {
         let bundle2 = Bundle {
             id: "bundle2".to_string(),
             version: "1.0.0".to_string(),
-            created_at: chrono::Utc::now().to_rfc3339(),
+            created_at: test_timestamp(),
             metadata: HashMap::new(),
             artifacts: HashMap::new(),
         };
@@ -311,7 +320,7 @@ mod tests {
         let bundle = Bundle {
             id: "test_bundle".to_string(),
             version: "1.0.0".to_string(),
-            created_at: chrono::Utc::now().to_rfc3339(),
+            created_at: test_timestamp(),
             metadata: HashMap::new(),
             artifacts: HashMap::new(),
         };

@@ -1,5 +1,6 @@
 """Translation engine orchestrating rule application over program graphs."""
 
+import dataclasses
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -58,16 +59,7 @@ class RuleExplanation:
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain JSON-ready dict."""
-        return {
-            "rule_name": self.rule_name,
-            "priority": self.priority,
-            "fired": self.fired,
-            "reason": self.reason,
-            "evidence": list(self.evidence),
-            "mapping_kind": self.mapping_kind,
-            "confidence": self.confidence,
-            "contradictions": list(self.contradictions),
-        }
+        return dataclasses.asdict(self)
 
 
 class TranslationRule(ABC):
@@ -224,35 +216,24 @@ class TranslationEngine:
     conflicts when multiple mappings target overlapping node sets.
     """
 
-    def __init__(self, max_iterations: int = 100):
+    def __init__(self, max_iterations: int = 10):
         """Initialize the translation engine.
 
         Args:
-            max_iterations: Maximum fixpoint iterations (default 100).
+            max_iterations: Maximum fixpoint iterations (default 10).
 
-        Rationale for default ``max_iterations=100``:
-            Conservative safety bound over the observed convergence
-            depth on COGANT's three control-positive fixtures
-            (``calculator``, ``event_pipeline``, ``flask_mini``, P3
-            qualitative validation, R&D_LOG 2026-04-09). Empirically the
-            fixpoint settles in <=5 iterations on all three fixtures and
-            on the ``cpython/Lib/json`` real-world corpus (~1.2k LoC),
-            so 10 was a ~2x safety margin. Raised to 100 to provide
-            stronger safety for complex graphs while still catching
-            pathological infinite loops. The choice is consistent with
-            the Kleene-iteration fixpoint framing of Cousot & Cousot
-            (POPL '77, ``docs/evaluation/LITERATURE.md`` §1), which guarantees
-            termination on a finite role-assignment lattice. See
-            ``docs/evaluation/CALIBRATION.md`` for the calibration plan.
-            TODO(calibration): log observed iteration counts on a larger
-            corpus (target: 20+ repos) and revise if the empirical
-            maximum exceeds 50.
+        Rationale for default ``max_iterations=10``:
+            Empirically the fixpoint settles in <=5 iterations on
+            control-positive fixtures and typical corpora; 10 is a small
+            safety margin. Callers with very large graphs may pass a
+            higher bound. See ``docs/evaluation/CALIBRATION.md``.
         """
         self.rules: list[TranslationRule] = []
         self.mappings: dict[str, SemanticMapping] = {}
         self._match_log: list[dict[str, Any]] = []
         self._rule_priority: dict[str, int] = {}
         self.max_iterations = max_iterations
+        self.iterations: list[dict[str, Any]] = []
         self._convergence_iteration: int | None = None
         self._rule_dependency_graph: dict[str, set[str]] = {}
 
@@ -308,10 +289,23 @@ class TranslationEngine:
         self._rule_priority.clear()
         self._convergence_iteration = None
         self._rule_dependency_graph.clear()
+        self.iterations = []
 
         # Initialize rule dependency graph for cycle detection
         for rule in self.rules:
             self._rule_dependency_graph[rule.name] = set()
+
+        n_nodes = len(graph.nodes)
+        n_edges = len(graph.edges)
+        active_rules = (
+            [r for r in self.rules if r.name in rule_filter]
+            if rule_filter else self.rules
+        )
+        logger.info(
+            "Starting translation: %d rules active, %d nodes, %d edges%s",
+            len(active_rules), n_nodes, n_edges,
+            f" (filtered to {rule_filter})" if rule_filter else "",
+        )
 
         query = GraphQuery(graph)
 
@@ -321,6 +315,14 @@ class TranslationEngine:
 
             new_mappings_this_pass = self._apply_single_pass(
                 graph, query, rule_filter=rule_filter, iteration=iteration
+            )
+
+            self.iterations.append(
+                {
+                    "iteration": iteration,
+                    "new_mappings": new_mappings_this_pass,
+                    "mappings_added": new_mappings_this_pass,
+                }
             )
 
             self._log_match(
@@ -341,7 +343,36 @@ class TranslationEngine:
             )
 
         # Resolve conflicts among overlapping mappings
+        conflicts_before = len(self.mappings)
         self._resolve_conflicts()
+        conflicts_removed = conflicts_before - len(self.mappings)
+        if conflicts_removed > 0:
+            logger.info(
+                "Conflict resolution: removed %d overlapping mappings (%d → %d)",
+                conflicts_removed, conflicts_before, len(self.mappings),
+            )
+
+        # Log per-kind role distribution
+        by_kind: dict[str, int] = {}
+        for mapping in self.mappings.values():
+            kind = mapping.kind.value
+            by_kind[kind] = by_kind.get(kind, 0) + 1
+        logger.info(
+            "Translation complete: %d mappings across %d roles%s",
+            len(self.mappings), len(by_kind),
+            f" ({', '.join(f'{k}={v}' for k, v in sorted(by_kind.items()))})"
+            if by_kind else "",
+        )
+
+        # Log coverage summary
+        coverage = self.get_coverage_report(graph)
+        logger.info(
+            "Node coverage: %.1f%% (%d/%d covered, %d uncovered)",
+            coverage["coverage_percent"],
+            coverage["covered_nodes"],
+            coverage["total_nodes"],
+            coverage["uncovered_nodes"],
+        )
 
         return list(self.mappings.values())
 
@@ -365,11 +396,16 @@ class TranslationEngine:
         """
         new_mappings = 0
         sorted_rules = sorted(self.rules, key=lambda r: r.priority, reverse=True)
+        per_rule_counts: dict[str, int] = {}
+        per_rule_errors: dict[str, int] = {}
 
         for rule in sorted_rules:
             # Skip if filtered out
             if rule_filter and rule.name not in rule_filter:
                 continue
+
+            rule_new = 0
+            rule_errors = 0
 
             # Find matches
             try:
@@ -384,6 +420,9 @@ class TranslationEngine:
                     rule.name,
                     f"iteration={iteration} error={e}",
                 )
+                rule_errors += 1
+                per_rule_counts[rule.name] = 0
+                per_rule_errors[rule.name] = rule_errors
                 continue
 
             # Apply rule to each match
@@ -395,6 +434,7 @@ class TranslationEngine:
                         self._rule_priority[mapping.id] = rule.priority
                         self._log_match("mapping_created", rule.name, mapping.id)
                         new_mappings += 1
+                        rule_new += 1
                 except (TypeError, ValueError, KeyError, AttributeError) as e:
                     logger.warning(
                         "Rule %r failed during apply (iteration=%d, match=%r): %s",
@@ -405,6 +445,38 @@ class TranslationEngine:
                         rule.name,
                         f"iteration={iteration} match={match} error={e}",
                     )
+                    rule_errors += 1
+
+            per_rule_counts[rule.name] = rule_new
+            if rule_errors:
+                per_rule_errors[rule.name] = rule_errors
+
+            if rule_new > 0 or rule_errors > 0:
+                logger.debug(
+                    "Rule %r: %d new mappings, %d errors (iteration=%d, "
+                    "priority=%d, family=%s)",
+                    rule.name, rule_new, rule_errors, iteration,
+                    rule.priority, rule.mapping_kind.value,
+                )
+
+        # Log per-rule summary for this pass when there are new mappings
+        if new_mappings > 0:
+            active = ", ".join(
+                f"{name}={cnt}"
+                for name, cnt in sorted(
+                    per_rule_counts.items(), key=lambda kv: -kv[1]
+                )
+                if cnt > 0
+            )
+            logger.debug(
+                "Pass %d rule breakdown: %d new total [%s]",
+                iteration, new_mappings, active,
+            )
+            if per_rule_errors:
+                err_summary = ", ".join(
+                    f"{name}={cnt}" for name, cnt in per_rule_errors.items()
+                )
+                logger.debug("Pass %d rule errors: [%s]", iteration, err_summary)
 
         return new_mappings
 

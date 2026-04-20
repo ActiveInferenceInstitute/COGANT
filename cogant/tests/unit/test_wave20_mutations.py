@@ -475,6 +475,8 @@ def test_rule_explanation_to_dict_preserves_all_fields() -> None:
         "reason": "because",
         "evidence": ["e1", "e2"],
         "mapping_kind": "observation",
+        "confidence": 0.0,
+        "contradictions": [],
     }
     # evidence must be a copy, not the live list
     doc["evidence"].append("e3")

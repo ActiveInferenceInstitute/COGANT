@@ -1,8 +1,7 @@
-from typing import Any
-
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from cogant.ingest.files import FileInfo as FileInfo
 from cogant.ingest.manifest import Dependency as Dependency

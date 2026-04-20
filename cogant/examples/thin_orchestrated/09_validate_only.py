@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Thin example: GNN package validation only.
 
-Validates an existing GNN package against the 18 canonical sections,
+Validates an existing GNN package against the 19 canonical sections,
 checks required files, manifest checksums, JSON validity, and provenance
 coverage. Reports a score 0-100.
 
@@ -92,7 +92,7 @@ def main() -> int:
         for warn in result.warnings[:10]:
             print(f"    - {warn}")
 
-    print("\n  canonical 18 sections expected:")
+    print("\n  canonical 19 sections expected:")
     for sec in validator.CANONICAL_SECTIONS:
         print(f"    - {sec}")
 

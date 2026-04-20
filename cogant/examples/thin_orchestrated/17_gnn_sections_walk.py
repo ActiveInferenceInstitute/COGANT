@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Thin example: walk the 18 canonical GNN sections.
+"""Thin example: walk the 19 canonical GNN sections.
 
 Loads an existing GNN package (building one if necessary) and walks
 through every section the ``GNNValidator`` expects, printing a one-line
@@ -108,7 +108,7 @@ def _summarize(content: object) -> str:
 def main() -> int:
     args = parse_args("gnn_sections_walk")
     configure_logging()
-    banner("Higher-order: walk the 18 canonical GNN sections")
+    banner("Higher-order: walk the 19 canonical GNN sections")
 
     target = args.target.expanduser().resolve()
     args.output_dir.mkdir(parents=True, exist_ok=True)

@@ -5,28 +5,20 @@ Validates all IR objects against Pydantic schemas.
 """
 
 import logging
-from dataclasses import dataclass
 from typing import Any
 
 from cogant.process.extractor import ProcessModel
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
+from cogant.validate._mixin import ValidationIssue, _ValidatorMixin
 
 logger = logging.getLogger(__name__)
 
-
-@dataclass
-class ValidationIssue:
-    """A validation issue found in the model."""
-    id: str
-    severity: str  # "error", "warning", "info"
-    category: str  # "schema", "integrity", "provenance", "coverage"
-    message: str
-    affected_ids: list[str]
-    recommendation: str | None = None
+# Re-export ValidationIssue so existing callers keep working.
+__all__ = ["SchemaValidator", "ValidationIssue"]
 
 
-class SchemaValidator:
+class SchemaValidator(_ValidatorMixin):
     """
     Validates IR objects against Pydantic schemas.
     Checks type consistency, required fields, and value ranges.
@@ -34,7 +26,7 @@ class SchemaValidator:
 
     def __init__(self) -> None:
         """Initialize the validator."""
-        self.issues: list[ValidationIssue] = []
+        super().__init__()
 
     def validate_program_graph(self, graph: ProgramGraph) -> list[ValidationIssue]:
         """
@@ -46,7 +38,10 @@ class SchemaValidator:
         Returns:
             List of validation issues found.
         """
-        logger.info("Validating program graph...")
+        logger.info(
+            "Validating program graph: %d nodes, %d edges",
+            len(graph.nodes), len(graph.edges),
+        )
         self.issues = []
 
         # Check nodes
@@ -61,7 +56,12 @@ class SchemaValidator:
         if graph.metadata:
             self._validate_graph_metadata(graph.metadata)
 
-        logger.info(f"Found {len(self.issues)} issues in program graph")
+        n_errors = sum(1 for i in self.issues if i.severity == "error")
+        n_warnings = len(self.issues) - n_errors
+        logger.info(
+            "Program graph validation: %d issues (%d errors, %d warnings)",
+            len(self.issues), n_errors, n_warnings,
+        )
         return self.issues
 
     def validate_state_space(self, state_space: StateSpaceModel) -> list[ValidationIssue]:
@@ -74,7 +74,11 @@ class SchemaValidator:
         Returns:
             List of validation issues found.
         """
-        logger.info("Validating state space model...")
+        logger.info(
+            "Validating state space model: %d vars, %d obs, %d actions, %d transitions",
+            len(state_space.variables), len(state_space.observations),
+            len(state_space.actions), len(state_space.transitions),
+        )
         self.issues = []
 
         # Check variables
@@ -93,7 +97,12 @@ class SchemaValidator:
         for trans_id, trans in state_space.transitions.items():
             self._validate_transition(trans_id, trans)
 
-        logger.info(f"Found {len(self.issues)} issues in state space model")
+        n_errors = sum(1 for i in self.issues if i.severity == "error")
+        n_warnings = len(self.issues) - n_errors
+        logger.info(
+            "State space validation: %d issues (%d errors, %d warnings)",
+            len(self.issues), n_errors, n_warnings,
+        )
         return self.issues
 
     def validate_process_model(self, process: ProcessModel) -> list[ValidationIssue]:
@@ -106,7 +115,10 @@ class SchemaValidator:
         Returns:
             List of validation issues found.
         """
-        logger.info("Validating process model...")
+        logger.info(
+            "Validating process model: %d stages, %d connections",
+            len(process.stages), len(process.connections),
+        )
         self.issues = []
 
         # Check stages
@@ -117,7 +129,12 @@ class SchemaValidator:
         for conn_id, conn in process.connections.items():
             self._validate_connection(conn_id, conn, process)
 
-        logger.info(f"Found {len(self.issues)} issues in process model")
+        n_errors = sum(1 for i in self.issues if i.severity == "error")
+        n_warnings = len(self.issues) - n_errors
+        logger.info(
+            "Process model validation: %d issues (%d errors, %d warnings)",
+            len(self.issues), n_errors, n_warnings,
+        )
         return self.issues
 
     # Private validation methods
@@ -211,35 +228,3 @@ class SchemaValidator:
                            f"Connection {conn_id} references non-existent target stage {conn.target_stage_id}",
                            [conn_id, conn.target_stage_id])
 
-    def _add_issue(
-        self,
-        severity: str,
-        category: str,
-        message: str,
-        affected_ids: list[str],
-    ) -> None:
-        """Add a validation issue."""
-        issue = ValidationIssue(
-            id=f"issue_{len(self.issues)}",
-            severity=severity,
-            category=category,
-            message=message,
-            affected_ids=affected_ids,
-        )
-        self.issues.append(issue)
-
-    def get_issues(self) -> list[ValidationIssue]:
-        """Get all validation issues."""
-        return self.issues
-
-    def get_errors(self) -> list[ValidationIssue]:
-        """Get only error issues."""
-        return [i for i in self.issues if i.severity == "error"]
-
-    def get_warnings(self) -> list[ValidationIssue]:
-        """Get only warning issues."""
-        return [i for i in self.issues if i.severity == "warning"]
-
-    def is_valid(self) -> bool:
-        """Check if there are no errors."""
-        return len(self.get_errors()) == 0

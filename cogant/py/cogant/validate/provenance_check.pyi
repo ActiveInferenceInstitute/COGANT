@@ -1,6 +1,5 @@
-from typing import Any
-
 from dataclasses import dataclass
+from typing import Any
 
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel as StateSpaceModel

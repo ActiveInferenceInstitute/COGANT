@@ -5,11 +5,14 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Set
 from dataclasses import dataclass, field
 
-# Add py directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "py"))
+from parsers._base import CogantLanguagePlugin  # noqa: E402
 
-from cogant.plugins.base import LanguagePlugin, PluginMetadata
-from cogant.static.parser import PythonASTParser, PythonModule, FunctionDef, ClassDef, ImportDef
+# Add py directory to path for imports (needed for cogant.static.parser)
+_PY_ROOT = str(Path(__file__).parent.parent.parent / "py")
+if _PY_ROOT not in sys.path:
+    sys.path.insert(0, _PY_ROOT)
+
+from cogant.static.parser import PythonASTParser, PythonModule, FunctionDef, ClassDef, ImportDef  # noqa: E402
 
 
 @dataclass
@@ -25,29 +28,17 @@ class ParseResult:
     errors: List[str] = field(default_factory=list)
 
 
-class PythonLanguageParser(LanguagePlugin):
+class PythonLanguageParser(CogantLanguagePlugin):
     """Parser for Python source files."""
 
-    def __init__(self):
-        """Initialize Python parser."""
-        metadata = PluginMetadata(
-            name="python",
-            version="0.1.0",
-            author="COGANT",
-            description="Python AST-based parser for extracting code structure"
-        )
-        super().__init__(metadata)
+    PLUGIN_NAME = "python"
+    PLUGIN_DESCRIPTION = "Python AST-based parser for extracting code structure"
+    SUPPORTED_LANGUAGES = {"python"}
+    SUPPORTED_EXTENSIONS = {".py", ".pyx", ".pyi"}
+
+    def __init__(self) -> None:
+        super().__init__()
         self.ast_parser = PythonASTParser()
-        self.supported_languages = {"python"}
-        self.supported_extensions = {".py", ".pyx", ".pyi"}
-
-    def initialize(self, config: Dict[str, Any]) -> None:
-        """Initialize parser with configuration."""
-        pass
-
-    def shutdown(self) -> None:
-        """Shutdown parser gracefully."""
-        pass
 
     def parse(self, source_code: str) -> Dict[str, Any]:
         """Parse Python source code and return AST.

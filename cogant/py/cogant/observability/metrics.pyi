@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Any
 
+from _typeshed import Incomplete
+
 @dataclass
 class Counter:
     name: str

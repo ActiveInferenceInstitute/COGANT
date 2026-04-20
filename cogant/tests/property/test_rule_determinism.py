@@ -12,7 +12,8 @@ import sys
 from pathlib import Path
 
 import pytest
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 # Ensure cogant imports work
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -21,19 +22,19 @@ if str(_PY_ROOT) not in sys.path:
     sys.path.insert(0, str(_PY_ROOT))
 
 from cogant.graph.builder import ProgramGraphBuilder
+from cogant.graph.queries import GraphQuery
 from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.translate.engine import TranslationEngine
 from cogant.translate.rules import (
-    ReadOnlyInputRule,
-    MutatingSubsystemRule,
-    InheritanceRule,
-    ContainmentRule,
-    ObservationRule,
     ActionRule,
+    ContainmentRule,
+    InheritanceRule,
+    MutatingSubsystemRule,
+    ObservationRule,
     OrchestratorRule,
+    ReadOnlyInputRule,
 )
-from cogant.graph.queries import GraphQuery
 
 pytestmark = pytest.mark.property
 
@@ -86,7 +87,7 @@ def small_graph(draw, min_nodes: int = 2, max_nodes: int = 15) -> ProgramGraph:
         tgt = draw(st.sampled_from(nodes))
         if src.id != tgt.id:  # No self-loops
             kind = draw(st.sampled_from(_EDGE_KINDS))
-            builder.add_edge(f"e_{src.id}_{tgt.id}", src.id, tgt.id, kind)
+            builder.add_edge(src.id, tgt.id, kind)
 
     return builder.finalize()
 
@@ -222,11 +223,21 @@ class TestAllRulesDeterminism:
             ActionRule,
             OrchestratorRule,
         ],
+        ids=lambda c: c.__name__,
     )
-    @given(small_graph())
-    @settings(max_examples=10, deadline=None)
-    def test_rule_is_deterministic(self, graph: ProgramGraph, rule_class):
-        """Each rule produces same matches on repeated runs."""
+    @given(graph=small_graph())
+    @settings(
+        max_examples=10,
+        deadline=None,
+        suppress_health_check=[HealthCheck.function_scoped_fixture],
+    )
+    def test_rule_is_deterministic(self, rule_class, graph: ProgramGraph):
+        """Each rule produces the same matches on repeated runs.
+
+        Hypothesis is composed with ``pytest.mark.parametrize`` here: the
+        rule class varies across pytest collection, while the graph varies
+        across Hypothesis examples.
+        """
         rule1 = rule_class()
         rule2 = rule_class()
 
@@ -236,12 +247,15 @@ class TestAllRulesDeterminism:
         matches1 = rule1.matches(graph, query1)
         matches2 = rule2.matches(graph, query2)
 
-        # Convert to canonical form
+        def _freeze(value):
+            if isinstance(value, dict):
+                return tuple(sorted((k, _freeze(v)) for k, v in value.items()))
+            if isinstance(value, list | tuple):
+                return tuple(_freeze(v) for v in value)
+            return value
+
         def canonical(matches):
-            return frozenset(
-                (tuple(sorted(m.items())) if isinstance(m, dict) else m)
-                for m in matches
-            )
+            return frozenset(_freeze(m) for m in matches)
 
         assert canonical(matches1) == canonical(matches2)
 
@@ -290,13 +304,13 @@ class TestEngineDeterminism:
         engine.register_rule(ReadOnlyInputRule())
         engine.register_rule(MutatingSubsystemRule())
 
-        mappings1 = engine.translate(graph)
+        engine.translate(graph)
         iter_count1 = len(engine.iterations)
 
         engine2 = TranslationEngine(max_iterations=10)
         engine2.register_rule(ReadOnlyInputRule())
         engine2.register_rule(MutatingSubsystemRule())
-        mappings2 = engine2.translate(graph)
+        engine2.translate(graph)
         iter_count2 = len(engine2.iterations)
 
         # Same number of iterations

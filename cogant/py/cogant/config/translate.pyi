@@ -1,5 +1,6 @@
 from typing import ClassVar
 
+from _typeshed import Incomplete
 from pydantic import BaseModel
 
 class TranslateConfig(BaseModel):

@@ -1,6 +1,7 @@
 from enum import StrEnum
 from typing import Any, ClassVar, Literal
 
+from _typeshed import Incomplete
 from pydantic import BaseModel
 
 class CogantBaseConfig(BaseModel):

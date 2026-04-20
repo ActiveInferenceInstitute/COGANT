@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any, ClassVar
 
+from _typeshed import Incomplete
 from pydantic import BaseModel
 
 from .gnn import GNNConfig as GNNConfig

@@ -47,14 +47,17 @@ class Translatable(Protocol):
     (assignments of hidden states, observations, actions, etc.).
     """
 
-    def translate(self, graph: ProgramGraph) -> SemanticMapping:
+    def translate(self, graph: ProgramGraph) -> list[SemanticMapping]:
         """Translate a program graph to semantic mappings.
 
         Args:
             graph: The program graph to translate.
 
         Returns:
-            SemanticMapping representing the translation result.
+            A list of :class:`~cogant.schemas.semantic.SemanticMapping`
+            records — one per rule firing. The canonical implementation
+            is :meth:`cogant.translate.engine.TranslationEngine.translate`,
+            which returns the deduplicated, conflict-resolved set.
         """
         ...
 

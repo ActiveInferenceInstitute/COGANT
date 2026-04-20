@@ -64,6 +64,7 @@ from cogant.translate.rules import (
     PolicyRule,
     ReadOnlyInputRule,
 )
+from cogant.translate.rules.keywords import ACTION_KEYWORDS
 
 pytestmark = pytest.mark.unit
 
@@ -246,30 +247,6 @@ def test_hidden_state_and_observation_are_disjoint(graph: ProgramGraph) -> None:
 # ---------------------------------------------------------------------------
 
 
-# Keywords that ``ActionRule`` / ``ContainmentRule`` use to flag a node as
-# an action by name alone. If any of these appear in a node's lowercased
-# name, the rule will emit an ACTION mapping even without outgoing
-# WRITES/MUTATES edges. The invariant therefore accepts "name keyword"
-# as a valid grounding signal alongside structural evidence.
-_ACTION_NAME_KEYWORDS: Tuple[str, ...] = (
-    "set",
-    "update",
-    "create",
-    "delete",
-    "send",
-    "push",
-    "execute",
-    "run",
-    "process",
-    "handle",
-    "dispatch",
-    "encode",
-    "decode",
-    "dump",
-    "load",
-)
-
-
 def _has_outgoing_mutation(graph: ProgramGraph, node_id: str) -> bool:
     """Return True if ``node_id`` has an outgoing WRITES or MUTATES edge."""
     return any(
@@ -308,12 +285,12 @@ def _reachable_from_policy(
 
 
 def _has_action_keyword(graph: ProgramGraph, node_id: str) -> bool:
-    """Return True if the node's name contains an action-family keyword."""
+    """Return True if the node's name matches :data:`ACTION_KEYWORDS` (same as ActionRule)."""
     node = graph.get_node(node_id)
     if node is None:
         return False
-    name_lower = node.name.lower()
-    return any(kw in name_lower for kw in _ACTION_NAME_KEYWORDS)
+    name_lower = (node.name or "").lower()
+    return any(kw in name_lower for kw in ACTION_KEYWORDS)
 
 
 @given(graph=program_graphs())
