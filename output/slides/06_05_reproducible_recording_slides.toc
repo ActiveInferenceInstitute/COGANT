@@ -1,1 +1,0 @@
-\beamer@sectionintoc {1}{What to record for reproducible experiments}{1}{0}{1}

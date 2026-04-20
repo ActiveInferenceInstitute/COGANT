@@ -188,7 +188,7 @@ def get_test_count_total() -> int:
     """Run pytest --collect-only and parse 'N selected'."""
     try:
         rc, out = _run(
-            "uv run pytest --collect-only -q 2>&1",
+            "uv run pytest tests/ --collect-only -q --no-cov 2>&1",
             cwd=COGANT_DIR,
             timeout=120,
         )
@@ -235,7 +235,7 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float, float]:
     suite_runtime_s: float = 0.0
     try:
         rc, out = _run(
-            "uv run pytest -q --tb=no -p no:warnings --no-header 2>&1",
+            "uv run pytest tests/ -q --tb=no -p no:warnings --no-header --no-cov 2>&1",
             cwd=COGANT_DIR,
             timeout=1800,
         )

@@ -1,0 +1,58 @@
+{
+  "package_root": "cogant",
+  "output_root": "output/runs",
+  "remote": {
+    "shallow_clone": true,
+    "refresh": false
+  },
+  "targets": [
+    {
+      "id": "calculator",
+      "path": "examples/control_positive/calculator",
+      "explain": null
+    },
+    {
+      "id": "event_pipeline",
+      "path": "examples/control_positive/event_pipeline",
+      "explain": null
+    },
+    {
+      "id": "flask_mini",
+      "path": "examples/control_positive/flask_mini",
+      "explain": null
+    },
+    {
+      "id": "remote_itsdangerous",
+      "path": null,
+      "git_url": "https://github.com/pallets/itsdangerous.git",
+      "git_ref": null,
+      "explain": null
+    },
+    {
+      "id": "remote_markupsafe",
+      "path": null,
+      "git_url": "https://github.com/pallets/markupsafe.git",
+      "git_ref": null,
+      "explain": null
+    }
+  ],
+  "steps": {
+    "doctor": false,
+    "translate": true,
+    "layout_output": true,
+    "no_dynamic": true,
+    "scan_json": true,
+    "graph_stdout": true,
+    "export_gnn": true,
+    "export_gnn_format": "all",
+    "render_site": true,
+    "viz_png": true,
+    "validate_run_dir": true,
+    "validate_no_upstream_gnn": false
+  },
+  "manuscript": {
+    "enabled": false,
+    "regenerate_metrics": false,
+    "strict": false
+  }
+}

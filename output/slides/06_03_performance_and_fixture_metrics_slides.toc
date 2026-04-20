@@ -1,1 +1,0 @@
-\beamer@sectionintoc {1}{Performance targets and measured runs on packaged fixtures}{1}{0}{1}

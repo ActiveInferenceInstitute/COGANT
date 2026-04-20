@@ -8,9 +8,10 @@
 | [`manuscript/`](manuscript/) | PDF/HTML manuscript templates with `{{PLACEHOLDER}}` substitution syntax. Source of truth for prose; never edit by hand any number that has a `{{...}}` token. |
 | [`tools/`](tools/) | `MANUSCRIPT_VARS` registry, metrics regeneration CLI, inject CLI, audit helpers. |
 | [`scripts/`](scripts/) | Thin orchestrators (`z_generate_manuscript_variables.py`). |
-| [`output/`](output/) | Generated outputs — `data/manuscript_variables.json`, `output/manuscript/` injected copy (both disposable and regeneratable). |
+| [`run_all.py`](run_all.py), [`run_all.sh`](run_all.sh), [`run_all.example.json`](run_all.example.json) | Configurable batch run: `translate` + GNN exports + `render` + `viz` + `validate` per target. Targets are either `path` (under inner `cogant/`) or `git_url` (shallow clone to `output/runs/<id>/_git_source/`). Defaults: all three `examples/control_positive/*` fixtures plus two small Pallets repos. Copy `run_all.example.json` → `run_all.json`. Each target writes only under `output/runs/<id>/`. Stderr + optional `--log`: per-target banner, per-step wall time / exit status, batch `summary` in `run_manifest.json`. |
+| [`output/`](output/) | Generated outputs — `data/manuscript_variables.json`, `output/manuscript/` injected copy (both disposable and regeneratable); `output/runs/` when using `run_all`. |
 | [`src/`](src/) | Compatibility stub only; real package lives at `cogant/py/cogant/`. |
-| [`tests/`](tests/) | Compatibility stub only; real suite lives at `cogant/tests/`. |
+| [`tests/`](tests/) | Compatibility stub only; real suite lives at `cogant/tests/`. See [`tests/AGENTS.md`](tests/AGENTS.md). |
 | [`PROMOTION.md`](PROMOTION.md) | Authoritative checklist: steps to `git mv` this tree into `projects/cogant/`. |
 | [`CLAUDE.md`](CLAUDE.md) | Claude Code guidance: two-directory layout, commands, architecture landmarks, non-obvious conventions. |
 
@@ -56,7 +57,8 @@ cd projects_in_progress/cogant/cogant && uv run python ../tools/regenerate_metri
 # 2. Build manuscript_variables.json + output/manuscript/ (run from REPO root)
 uv run python projects_in_progress/cogant/scripts/z_generate_manuscript_variables.py
 
-# 3. Validate the injected copy (run from REPO root)
+# 3. Validate templates + injected copy (run from REPO root)
+uv run python -m infrastructure.validation.cli markdown projects_in_progress/cogant/manuscript/
 uv run python -m infrastructure.validation.cli markdown projects_in_progress/cogant/output/manuscript/
 ```
 
@@ -69,7 +71,7 @@ token** — fix the METRICS.yaml source instead.
 ```bash
 uv sync --extra all                                  # install everything
 uv run cogant doctor                                 # verify environment
-uv run pytest tests/ -q                              # full suite (~2129 passing)
+uv run pytest tests/ -q                              # full suite (see live count; coverage gate in cogant/pyproject.toml)
 uv run pytest tests/unit/test_engine.py -v           # single test file
 uv run pytest -m property                            # Hypothesis law tests
 uv run mypy py/cogant/                               # strict mypy (target: 0 errors)
@@ -84,11 +86,15 @@ Test markers: `unit`, `integration`, `slow`, `requires_rust`, `fuzz`, `property`
 `cogant/evaluation/METRICS.yaml` is the single source of truth for every numeric claim in the
 manuscript. If a prose number looks stale, regenerate and re-inject; never hand-edit.
 
-Key figures (v0.5.0, 2026-04-10 canonical run):
-- Tests: **2129 passing**, 12 failing, 86 skipped, 2 xfailed, 1 xpassed
-- Coverage: **83.42%** line coverage on `py/cogant/`
-- Roundtrip: **23 / 23 ISOMORPHIC** (12 zoo + 3 rwex + 8 real-world libs)
-- mypy strict: **0 errors** across 179 source files
+**Live suite:** run `cd cogant && uv run pytest tests/ -q` from the inner package root; counts are
+not duplicated here (they drift every commit).
+
+**Coverage (package `pyproject.toml`):** `pytest-cov` measures `cogant` with `branch = false`
+(line gate), `omit` for `py/cogant/tools/` and `py/cogant/static/treesitter_parser.py`,
+and `--cov-fail-under=89` (computed total is typically ~89.9%; the text report rounds to 90%).
+
+Canonical benchmark-style figures still in `METRICS.yaml` (roundtrip, etc.) — refresh via
+`regenerate_metrics.py` when changing fixtures or thresholds.
 
 ## Promotion checklist
 

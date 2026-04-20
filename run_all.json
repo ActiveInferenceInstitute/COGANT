@@ -1,0 +1,75 @@
+{
+  "$comment": "Batch-analysis config for run_all.sh / run_all.py. Outputs land in cogant/output/<id>/. Extend the 'targets' list to add more codebases; add entries to 'extra_remote_targets_example' by moving them up.",
+  "package_root": "cogant",
+  "output_root": "cogant/output",
+  "remote": {
+    "shallow_clone": true,
+    "refresh": false
+  },
+  "steps": {
+    "doctor": false,
+    "translate": true,
+    "layout_output": true,
+    "no_dynamic": true,
+    "scan_json": true,
+    "graph_stdout": true,
+    "export_gnn": true,
+    "export_gnn_format": "all",
+    "render_site": true,
+    "viz_png": true,
+    "validate_run_dir": true,
+    "validate_no_upstream_gnn": false,
+    "roundtrip": true,
+    "_py_api_comment": "analyze_graph / analyze_static / export_multi / visualize_diagrams bypass the v0.5.0 CLI stubs and invoke the Python APIs via tools/batch_api.py, so real artifacts land under analysis/, exports/, and diagrams/.",
+    "analyze_graph": true,
+    "analyze_static": true,
+    "export_multi": true,
+    "export_multi_formats": "json,graphml",
+    "visualize_diagrams": true,
+    "visualize_format": "mermaid"
+  },
+  "manuscript": {
+    "enabled": false,
+    "regenerate_metrics": false,
+    "strict": false
+  },
+  "targets": [
+    { "id": "calculator",       "path": "examples/control_positive/calculator" },
+    { "id": "event_pipeline",   "path": "examples/control_positive/event_pipeline" },
+    { "id": "flask_mini",       "path": "examples/control_positive/flask_mini" },
+
+    { "id": "flask_app",        "path": "examples/real_world/flask_app" },
+    { "id": "json_stdlib",      "path": "examples/real_world/json_stdlib" },
+    { "id": "requests_lib",     "path": "examples/real_world/requests_lib" },
+
+    { "id": "zoo_01_simple_state",  "path": "examples/zoo/01_simple_state" },
+    { "id": "zoo_02_observer",      "path": "examples/zoo/02_observer" },
+    { "id": "zoo_03_actor",         "path": "examples/zoo/03_actor" },
+    { "id": "zoo_04_pomdp_minimal", "path": "examples/zoo/04_pomdp_minimal" },
+    { "id": "zoo_05_multi_factor",  "path": "examples/zoo/05_multi_factor" },
+    { "id": "zoo_06_hierarchical",  "path": "examples/zoo/06_hierarchical" },
+    { "id": "zoo_07_event_driven",  "path": "examples/zoo/07_event_driven" },
+    { "id": "zoo_08_preferences",   "path": "examples/zoo/08_preferences" },
+    { "id": "zoo_09_policy",        "path": "examples/zoo/09_policy" },
+    { "id": "zoo_10_constraint",    "path": "examples/zoo/10_constraint" },
+    { "id": "zoo_11_sensor_fusion", "path": "examples/zoo/11_sensor_fusion" },
+    { "id": "zoo_12_full_pomdp",    "path": "examples/zoo/12_full_pomdp" },
+    { "id": "zoo_13_js_observer",   "path": "examples/zoo/13_js_observer" },
+
+    { "id": "python_service",   "path": "examples/python-service" },
+    { "id": "workflow_engine",  "path": "examples/workflow-engine" },
+
+    { "id": "remote_itsdangerous", "path": null, "git_url": "https://github.com/pallets/itsdangerous.git", "git_ref": null },
+    { "id": "remote_markupsafe",   "path": null, "git_url": "https://github.com/pallets/markupsafe.git",   "git_ref": null }
+  ],
+  "extra_remote_targets_example": [
+    { "id": "remote_click",     "path": null, "git_url": "https://github.com/pallets/click.git"       },
+    { "id": "remote_pyyaml",    "path": null, "git_url": "https://github.com/yaml/pyyaml.git"         },
+    { "id": "remote_requests",  "path": null, "git_url": "https://github.com/psf/requests.git"        },
+    { "id": "remote_tqdm",      "path": null, "git_url": "https://github.com/tqdm/tqdm.git"           },
+    { "id": "remote_dateutil",  "path": null, "git_url": "https://github.com/dateutil/dateutil.git"   },
+    { "id": "remote_urllib3",   "path": null, "git_url": "https://github.com/urllib3/urllib3.git"     },
+    { "id": "remote_httpx",     "path": null, "git_url": "https://github.com/encode/httpx.git"        },
+    { "id": "remote_fastapi",   "path": null, "git_url": "https://github.com/tiangolo/fastapi.git"    }
+  ]
+}

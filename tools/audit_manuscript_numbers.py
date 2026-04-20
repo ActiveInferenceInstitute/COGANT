@@ -196,6 +196,10 @@ EXPECTED_MISMATCHES = [
     # Per-target epsilon values extracted from S01 table rows (individual targets, not mean)
     ("mean_epsilon", "0.8638", "Per-target value: dateutil ε=0.8638 (individual target, matches METRICS.yaml median_epsilon)"),
     ("mean_epsilon", "0.852", "Per-target value: pyyaml ε=0.8520 (individual target)"),
+    # S01 wave-14 historical tier narrative (pre wave-16 canonical 23/23)
+    ("mean_epsilon", "0.7778", "Historical wave-14 appendix row: per-target ε, not METRICS mean_epsilon"),
+    ("mean_epsilon", "0.6667", "Historical wave-14 appendix row: per-target ε, not METRICS mean_epsilon"),
+    ("isomorphic_count", "14", "Historical wave-14 S01 appendix: 14/23 ISOMORPHIC before wave-16; METRICS canonical is 23/23"),
     # LOC mismatch: manuscript says "20,307 statements in 179 source files" which refers to
     # py/cogant/ subtree only; METRICS.yaml python_loc counts full repo python LOC
     ("python_loc", "20307", "Scope difference: manuscript counts py/cogant/ statements (20,307); METRICS.yaml python_loc counts full-repo Python LOC (56,628)"),

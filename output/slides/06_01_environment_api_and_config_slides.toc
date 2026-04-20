@@ -1,2 +1,0 @@
-\beamer@sectionintoc {1}{Experimental setup: environment, API, and configuration}{1}{0}{1}
-\beamer@sectionintoc {2}{Experimental setup}{2}{0}{2}

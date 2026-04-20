@@ -11,3 +11,13 @@ coverage.json
 
 # Output artifacts
 output/
+
+# OS / editor cruft
+.DS_Store
+**/.DS_Store
+
+# Cursor / IDE state (shell hook artifacts, project metadata)
+.cursor/
+
+# Accidental literal-tilde directory created by misquoted shell expansions
+/~/
