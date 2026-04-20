@@ -267,7 +267,7 @@ See `py/cogant/schemas/gnn_export.py` for the Pydantic model. The on-disk shape 
 ```
 gnn_package/
 ├── manifest.json
-├── model.gnn.md              # canonical 18-section Markdown
+├── model.gnn.md              # canonical 19-section Markdown
 ├── model.gnn.json            # machine-readable equivalent
 ├── state_space.json
 ├── observations.json
@@ -284,7 +284,7 @@ gnn_package/
 └── diagrams/
 ```
 
-The 18 canonical Markdown sections, in order:
+The 19 canonical Markdown sections, in order:
 
 1. Model Metadata
 2. Repository Metadata
@@ -292,7 +292,7 @@ The 18 canonical Markdown sections, in order:
 4. State Space
 5. Observation Modalities
 6. Actions / Policies
-7. Connections
+7. Program Graph Connections
 8. Factors
 9. Transition Structure
 10. Likelihood Structure
@@ -300,16 +300,17 @@ The 18 canonical Markdown sections, in order:
 12. Time Settings
 13. Parameterization
 14. Ontology Mapping
-15. Provenance
-16. Confidence Scores
-17. Rendering Hints
-18. Validation Notes
+15. Markov Blanket
+16. Provenance
+17. Confidence Scores
+18. Rendering Hints
+19. Validation Notes
 
 ### Stability guarantees
 
 - **Core schemas** (`Node`, `Edge`, `ProgramGraph`, `SemanticMapping`): stable since v0.1.0.
 - **State-space schema**: stable since v0.1.0.
-- **GNN export contract (18 sections)**: locked in `gnn.validator.GNNValidator.CANONICAL_SECTIONS`. Do not add or remove sections without a major-version bump.
+- **GNN export contract (19 sections)**: locked in `gnn.validator.GNNValidator.CANONICAL_SECTIONS`. Do not add or remove sections without a major-version bump.
 - **Provenance schema**: stable since v0.1.0. New `EvidenceKind` values may be added in minor versions but existing values must never be renamed.
 
 ### Cross-references

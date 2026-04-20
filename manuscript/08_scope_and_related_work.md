@@ -1,4 +1,6 @@
-# Scope and related work
+# Scope and related work {#sec:08-scope-and-related-work}
+
+The fragments `08_01`–`08_04` split the related-work discussion so tables and proofs do not live in this file: **`08_01`** maps tool categories and compiler-adjacent landscapes; **`08_02`** positions COGANT against ML-for-code and tabulates feature / I/O contracts; **`08_03`** treats bidirectional lenses, synthesis, and categorical framings; **`08_04`** connects world models, active inference, and compatibility boundaries. Read this page for scope, then follow the numbered files for depth.
 
 ## COGANT in the program-analysis landscape
 
@@ -26,3 +28,7 @@ The numbered fragments that follow this file (lexicographic order under Section 
 - [`08_04_world_models_boundaries_and_compatibility.md`](08_04_world_models_boundaries_and_compatibility.md) — world models from code, active inference, boundaries, forward compatibility.
 
 Authoritative **implementation scope** (languages, parsers, Rust acceleration) is always [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md).
+
+## See also (MkDocs)
+
+Bibliography-style related work (long): [`../cogant/docs/evaluation/LITERATURE.md`](../cogant/docs/evaluation/LITERATURE.md). Module map for all doc areas: [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md).

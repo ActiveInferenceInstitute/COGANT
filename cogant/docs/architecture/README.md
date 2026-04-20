@@ -14,7 +14,7 @@ COGANT executes a deterministic, topologically-ordered sequence of 10 stages to 
 6. **translate** — Fixpoint application of 22 declarative translation rules to assign Active Inference roles (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, etc.)
 7. **statespace** — Compile `SemanticMappings` into a state-space model with hidden states, observations, actions, and transitions
 8. **process** — Extract the process/execution model and control-flow topology
-9. **export** — Emit the final GNN markdown bundle (18 canonical sections), JSON artifacts, and validation report
+9. **export** — Emit the final GNN markdown bundle (19 canonical sections), JSON artifacts, and validation report
 10. **validate** — Run integrity and schema checks; score the bundle 0–100
 
 Each stage is **optional**: the `stages` list in `PipelineConfig` can be reordered or truncated to skip stages. Conversely, the `skip_stages` list lets callers skip individual stages without rebuilding the config.

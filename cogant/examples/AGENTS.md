@@ -10,7 +10,7 @@ Frontend Lead
 - Community-facing showcase
 
 ## Coordination
-- Example READMEs and shell snippets must match `cogant --help` (see [docs/cli/README.md](../docs/cli/README.md)); avoid documenting removed commands (`analyze`, `visualize`) unless they exist in the CLI.
+- Example READMEs and shell snippets must match `cogant --help` (see [docs/cli/README.md](../docs/cli/README.md)); all 26 CLI entries (`analyze`, `visualize`, `export`, etc.) are live — reference them freely.
 - Examples must be runnable and up-to-date
 - Updated when API changes
 - Double as test fixtures for integration tests

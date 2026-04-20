@@ -63,7 +63,7 @@ The full Python API and CLI walkthrough live in [Quick Start](getting-started/qu
 - **[Evaluation index](evaluation/README.md)** — R&D reports, dated gate log ([R&D log](evaluation/R&D_LOG.md)), calibration and roundtrip studies. Machine-readable corpora and dashboards live in the `evaluation/` directory at the repository root (sibling of `docs/`; not shipped in the installable wheel).
 - **[Small repo walkthrough](tutorials/calculator.md)** — step through the `calculator` fixture: 6 mappings, 12 nodes, one clean Markov blanket.
 - **[Flask app walkthrough](tutorials/flask.md)** — a 98-node / 597-edge real-world example with role counts and GNN output excerpts.
-- **[Active Inference mapping](theory/active_inference.md)** — the 22 translation rules and 7 core semantic roles (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT, PARAMETER).
+- **[Active Inference mapping](theory/active_inference.md)** — the 22 translation rules and the seven **Active Inference** `MappingKind` labels counted in `METRICS.yaml` (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE, CONSTRAINT, CONTEXT). `SemanticRole` and rule outputs also use values such as PARAMETER separately; see the mapping page.
 - **[Round-trip verification](theory/roundtrip.md)** — what ISOMORPHIC/APPROXIMATE/DIVERGENT mean; why v0.5.0 achieved 23/23 ISOMORPHIC with ε=1.0.
 - **[GNN format](theory/gnn_format.md)** — bracket notation, A/B/C/D matrices, and an example export block.
 - **[CLI Reference](cli_reference.md)** — every subcommand, flag, and output artifact.

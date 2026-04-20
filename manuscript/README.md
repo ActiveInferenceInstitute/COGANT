@@ -2,11 +2,11 @@
 
 Template-aligned Markdown for **COGANT** (Codebase-to-GNN Translation): theory of the program graph IR and practice of the Python/Rust pipeline. Authoritative API, CLI, export schema, and plugin docs remain in the package tree:
 
-[`../cogant/docs/index.md`](../cogant/docs/index.md) (MkDocs site home; narrative entry) and [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md) (module map). Implementation scope: [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md).
+**Documentation map:** [`../cogant/docs/index.md`](../cogant/docs/index.md) (MkDocs site home; narrative entry) and [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md) (every `docs/<module>/` area). Consolidated CLI flags: [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md). Implementation scope: [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md).
 
 ## Section files
 
-Stem order follows [`../../../infrastructure/rendering/manuscript_discovery.py`](../../../infrastructure/rendering/manuscript_discovery.py): digit-prefixed names sort lexicographically, so `02_01_…` fragments appear before `03_…`, and `06_01_…` before `07_…`. Discovery concatenates main sections (`00_`–`09_`), then supplemental appendices (`S01_`–`S06_`), then glossary files (`98_`), yielding 36 files in the full publication tree.
+Stem order follows [`../../../infrastructure/rendering/manuscript_discovery.py`](../../../infrastructure/rendering/manuscript_discovery.py): digit-prefixed names sort lexicographically, so `02_01_…` fragments appear before `03_…`, and `06_01_…` before `07_…`. Discovery concatenates main sections (`00_`–`09_`), then supplemental appendices (`S01_`–`S06_`), then glossary files (`98_`), then the **other** bucket (for example `SYNTAX.md`), then optional `99_*.md` references last. The current tree has **23** digit-prefixed section files (`00_`–`09_*` and `98_*`) + **6** appendices + **`SYNTAX.md`** = **30** Markdown files in the concatenated PDF body; there is **no** `99_*.md` wrapper (citations use `references.bib` directly). **34** `*.md` files exist in this directory including non-body files (`AGENTS.md`, `README.md`, `supplementary.md`, `preamble.md`).
 
 | Files | Contents |
 |------|-----------|
@@ -19,7 +19,7 @@ Stem order follows [`../../../infrastructure/rendering/manuscript_discovery.py`]
 | `03_api_and_workflows.md` | Session, pipeline, bundle, CLI, Review API |
 | `04_examples_and_failure_modes.md` | End-to-end examples and degradation behavior |
 | `05_conclusion.md` | Capabilities, limitations, roadmap |
-| `06_experimental_setup.md` | **Section aggregator** — chapter heading and forward pointers to `06_01_`–`06_05_` subsections; contains no standalone prose |
+| `06_experimental_setup.md` | Performance targets and experiment framing; detailed install/config/export/IR are in `06_01` / `06_02`; captioned fixture and test/benchmark tables are in `06_03` / `06_04` (avoids duplicate `{#tbl:…}` bodies) |
 | `06_01_environment_api_and_config.md` | Environment, Session/Pipeline snippets, YAML config, CLI |
 | `06_02_exports_parser_and_ir_stages.md` | Export targets, Python parser, IR stage table |
 | `06_03_performance_and_fixture_metrics.md` | Performance targets, fixture tables |
@@ -39,7 +39,7 @@ Stem order follows [`../../../infrastructure/rendering/manuscript_discovery.py`]
 
 Supporting files (not concatenated into PDF): `config.yaml`, `config.yaml.example`, `preamble.md`, `references.bib`, `SYNTAX.md`, `AGENTS.md`, `README.md`, `supplementary.md`.
 
-**Volatile metrics.** Quantitative claims use `{{PLACEHOLDER}}` tokens filled from [`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml). Regenerate metrics, then build the injected manuscript:
+**Volatile metrics.** Quantitative claims use `{{ PLACEHOLDER }}` tokens (no spaces in real keys; see registry) filled from [`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml). Regenerate metrics, then build the injected manuscript:
 
 ```bash
 # From ../cogant/ (package root)
@@ -50,6 +50,10 @@ uv run python projects_in_progress/cogant/scripts/z_generate_manuscript_variable
 ```
 
 Outputs: `../output/data/manuscript_variables.json` and `../output/manuscript/*.md` (plus copied `config.yaml`, `references.bib`, `preamble.md`). The renderer prefers `output/manuscript/` when those files exist.
+
+**Table 9 (per-module statement coverage).** The `Stmts` / `Cover` rows in [`06_04_tests_mutation_and_benchmarks.md`](06_04_tests_mutation_and_benchmarks.md) (referenced from [`06_experimental_setup.md`](06_experimental_setup.md) via `@tbl:`) are **not** generated from `METRICS.yaml`. They must be updated manually from the same canonical `uv run pytest tests/ --cov=cogant` run (for example `htmlcov/` or `coverage report -m`) whenever the suite or instrumentation changes, so they stay aligned with the aggregate **{{COVERAGE_PCT}}%** and **{{METRICS_GENERATED_AT}}** fields that *are* injected.
+
+**pandoc-crossref:** install `pandoc-crossref` on your `PATH` (for example `brew install pandoc-crossref` on macOS) so `@sec:` / `@tbl:` references in the manuscript expand in the combined PDF. See [`SYNTAX.md`](SYNTAX.md).
 
 Optional spot-check: `uv run python ../tools/inject_manuscript_vars.py ../manuscript/00_abstract.md --dry-run`
 
@@ -77,6 +81,8 @@ The implementation and integration tests for the translator live under [`../coga
 
 ```bash
 uv run pytest tests/ -q
+# Coverage gate (matches pyproject.toml addopts):
+uv run pytest tests/ -q --cov=cogant
 ```
 
 Unit coverage for GNN action fields (`effects` vs `affects_state_vars`) lives in [`../cogant/tests/unit/test_gnn_formatter_action_effects.py`](../cogant/tests/unit/test_gnn_formatter_action_effects.py).

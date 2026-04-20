@@ -1,6 +1,6 @@
 ## Commands
 
-The Typer app in [`py/cogant/cli/main.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/cli/main.py) registers **22 top-level subcommands**. `cogant --help` is ground truth; the entries below are kept in sync by the doc-link verifier.
+The Typer app in [`py/cogant/cli/main.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/cli/main.py) registers **26 top-level subcommands** as of v0.5.0. `cogant --help` is ground truth; the entries below are kept in sync by the doc-link verifier.
 
 ### init
 

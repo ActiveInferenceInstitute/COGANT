@@ -1,6 +1,33 @@
-# API and Workflows
+# API and Workflows {#sec:03-api-and-workflows}
 
 This section describes the programmatic surface that the shipped Python package exposes in practice, aligned with `../cogant/docs/api/README.md` and the inventory-style notes under `../cogant/docs/reference/`. It is **not** an empirical benchmark section; COGANT does not ship comparative timing claims in the manuscript layer. Instead, it records the **surface area** users can rely on: two complementary entry points (a Session for stepwise work and a Pipeline for batch runs), the Bundle accessors that expose their artifacts, a command-line interface, and a Review API for human-in-the-loop curation.
+
+## End-to-end data flow
+
+```mermaid
+flowchart LR
+  subgraph entryPoints [Entry_points]
+    SE[Session]
+    PR[PipelineRunner]
+  end
+  subgraph cfg [Configuration]
+    PC[PipelineConfig]
+  end
+  subgraph stages [Stages]
+    DAG[ingest_to_validate_DAG]
+  end
+  subgraph artifacts [Artifacts]
+    BU[Bundle]
+    GP[gnn_package]
+  end
+  SE --> PC
+  PR --> PC
+  PC --> DAG
+  DAG --> BU
+  BU --> GP
+```
+
+`Session` exposes stepwise methods (`extract_static`, `build_graph`, …); `PipelineRunner` executes the full DAG under one `PipelineConfig`. Exported files (`model.gnn.md`, JSON companions, `manifest.json`) materialize under the configured output tree. Authoritative command and flag list: [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md).
 
 ## Session-oriented workflow
 
@@ -21,7 +48,7 @@ This path suits interactive notebooks and incremental debugging.
 
 Use `PipelineRunner` for scripted, reproducible batch runs where all stages are configured up front and the end-state is a single `Bundle`. It is the right choice when a user wants to process many repositories with a fixed configuration, wire COGANT into CI, or guarantee that every run executes the same ordered stages with the same plugin settings. Because the whole run is described by a single `PipelineConfig`, it can be checked into version control and replayed without manual intervention.
 
-`PipelineRunner` with `PipelineConfig` runs an ordered list of stages (ingest, static, normalize, graph, translate, state space, process, export, validate). Configuration can skip stages (for example dynamic analysis), attach **plugin** settings per language, set `output_dir`, verbosity, and dry-run mode. Results aggregate into a **Bundle** with `stage_results`, error lists, and accessors described below.
+`PipelineRunner` with `PipelineConfig` runs an ordered list of 10 stages (`ingest`, `static`, `normalize`, `graph`, `dynamic`, `translate`, `statespace`, `process`, `export`, `validate`). The `dynamic` stage is optional (`PipelineConfig.skip_dynamic` or `--no-dynamic` CLI flag) and merges coverage/traces to enrich confidence and mappings. Configuration can skip stages, attach plugin settings per language, set `output_dir`, verbosity, and dry-run mode. Results aggregate into a **Bundle** with `stage_results`, error lists, and accessors described below.
 
 ## Bundle accessors
 
@@ -37,7 +64,7 @@ For canonical 18-section Generalized Notation Notation artifacts (`model.gnn.md`
 
 ## Command-line interface
 
-The CLI entry point (`cogant.cli.main`) registers 22 subcommands. The high-traffic paths are `cogant translate` (full pipeline, equivalent to `cogant analyze`; accepts `--incremental <git-ref>` for per-commit CI re-runs over a Git diff), `cogant validate`, `cogant reverse`, `cogant roundtrip`, and `cogant doctor` (environment diagnostics). Additional commands cover scanning (`scan`, `extract-static`, `extract-dynamic`, `graph`), visualization (`render`, `viz`, `diff`), review (`explain`), and lifecycle management (`init`, `plugin`, `migrate`, `benchmark`, `changed`). Exact flags live in `../cogant/docs/cli/README.md`; the manuscript does not duplicate them to avoid drift.
+The CLI entry point (`cogant.cli.main`) registers **26** top-level subcommands (`cogant --help`). The high-traffic paths are `cogant translate` (full pipeline, equivalent to `cogant analyze`; accepts `--incremental <git-ref>` for per-commit CI re-runs over a Git diff), `cogant validate`, `cogant reverse`, `cogant roundtrip`, and `cogant doctor` (environment diagnostics). Other commands cover scanning (`scan`, `extract-static`, `extract-dynamic`, `graph`), compilation (`statespace`, `process`), re-export (`export-gnn`, `export`), static/graph analytics (`analyze-static`, `analyze-graph`), visualization (`render`, `viz`, `visualize`, `diff`), review (`explain`), and lifecycle management (`init`, `plugin`, `migrate`, `benchmark`, `changed`). Exact flags live in `../cogant/docs/cli/README.md` and the single-page [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md); the manuscript does not duplicate them to avoid drift.
 
 ## Review API
 

@@ -18,7 +18,7 @@ Delegates all analysis work to cogant.api; CLI is purely a shell. Commands shoul
 
 ## Files
 
-main.py: Typer app instance with 14 subcommands. Each command function imports from cogant.api, creates Session/PipelineRunner/ReviewAPI objects, delegates work, and renders results using Rich (Table, Panel, Syntax for code blocks). console = Console() instance used throughout for styled output. All commands support --help.
+main.py: Typer app instance with 26 user-facing entries: 22 `@app.command()` decorators + 2 `app.command(name=...)` registrations for `reverse` and `roundtrip` (24 on `app` directly), plus `app.add_typer` groups `plugin` (`list`, `info`) and `migrate` (`migrate`). Each command delegates to `cogant.api` and renders with Rich. All commands support `--help`.
 
 diff.py: Helper module with load_bundle (reads output directory and loads graph, mappings, state_space) and diff_command (compares two bundles using DriftAnalyzer and CodebaseMetrics, generates markdown diff report).
 

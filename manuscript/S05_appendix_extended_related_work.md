@@ -1,9 +1,9 @@
-# Appendix E — Extended Related Work
+# Appendix E — Extended Related Work {#sec:S05-appendix-extended-related-work}
 
 This appendix consolidates the related-work references cited in the main
 text (Section 8) and the annotated bibliography in `../cogant/docs/evaluation/LITERATURE.md`
-(which contains {{BIB_ENTRIES}} entries across 14 sections). The list below is organized
-into **9 topical clusters** spanning program analysis → GNN (E.1), active inference
+(which contains {{BIB_ENTRIES}} entries organized into **14 sections** in that file’s outline). The list below is organized
+into **9 topical clusters** (E.1--E.9) spanning program analysis → GNN (E.1), active inference
 tooling (E.2), code understanding and learned code models (E.3), graph kernels and
 structural similarity (E.4), formal methods and abstract interpretation (E.5), POMDP
 solvers and planning (E.6), program synthesis and reverse engineering (E.7),
@@ -19,7 +19,7 @@ to COGANT's design and evaluation.
 [1] Allamanis, M., Brockschmidt, M., Khademi, M. (2018). **Learning to
 Represent Programs with Graphs.** *Proceedings of the International
 Conference on Learning Representations (ICLR).* The canonical multi-edge
-typed program graph reference; COGANT's 14 node kinds and 11 edge kinds
+typed program graph reference; COGANT's {{NODE_KIND_COUNT}} node kinds and {{EDGE_KIND_COUNT}} edge kinds
 extend this taxonomy with ActInf roles.
 
 [2] Cummins, C., Fisches, Z. V., Ben-Nun, T., Hoefler, T., O'Boyle, M. F.,
@@ -133,7 +133,7 @@ graph-structured role assignment.
 [22] Wang, Y., Wang, W., Joty, S., Hoi, S. C. H. (2021). **CodeT5:
 Identifier-Aware Unified Pre-trained Encoder-Decoder Model for Code
 Understanding and Generation.** *EMNLP.* Identifier-aware T5 for code;
-node-kind classification parallels COGANT's 14 node kinds.
+node-kind classification parallels COGANT's {{NODE_KIND_COUNT}} node kinds.
 
 [23] Alon, U., Zilberstein, M., Levy, O., Yahav, E. (2019). **code2vec:
 Learning Distributed Representations of Code.** *POPL.* AST-path aggregation
@@ -344,6 +344,10 @@ examination of Markov blanket usage; informs COGANT's cautious framing
 Some Parts of the Free Energy Principle.** *Entropy, 23(3).* Conditions
 under which FEP's Markov blanket claims hold rigorously vs break down;
 COGANT's discrete-graph setting sidesteps the continuous-dynamics concerns.
+
+## See also (MkDocs)
+
+Machine-readable bibliography hub: [`../cogant/docs/evaluation/LITERATURE.md`](../cogant/docs/evaluation/LITERATURE.md).
 
 ---
 

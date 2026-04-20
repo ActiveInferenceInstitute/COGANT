@@ -71,13 +71,13 @@ Canonical Pydantic and dataclass definitions for all data structures: program gr
 - ArtifactPaths — paths to artifacts (graph_file, mappings_file, state_space_file, etc.)
 - CoreBundleSchema — exported bundle (graph, semantic_mappings, state_space, process_model, target_info, artifact_paths)
 
-### gnn_export.py (18 canonical GNN sections)
+### gnn_export.py (19 canonical GNN sections)
 - GNNMetadata, RepositoryMetadata, SourceCoverage
 - GraphSection, ObservationModalitySection, ActionPolicySection, ConnectionSection, FactorSection
 - TransitionStructureSection, LikelihoodStructureSection, PreferenceConstraintSection
 - TimeSettingSection, ParameterizationSection, OntologyMappingSection
 - ProvenanceSection, ConfidenceSection, RenderingHints, ValidationNotes
-- GNNExportBundle — complete GNN package (all 18 sections)
+- GNNExportBundle — complete GNN package (all 19 sections)
 
 ## Provenance Types (provenance.py)
 - EvidenceKind — enum (STATIC_ANALYSIS, DYNAMIC_TRACE, HUMAN_REVIEW, TEST_CASE, DOCUMENTATION)

@@ -22,7 +22,7 @@ These items were previously in the backlog and are now implemented and tested.
 | Network/graph analysis: `GraphAnalyzer` with centrality, community detection, Tarjan SCC | wave-21 | Louvain + component fallback |
 | Visualization suite: `PDFExporter`, `MatrixVisualizer`, `PipelineVisualizer`, `FlowDiagrammer` | wave-21 | 8-page PDF report |
 | Export formats: `SVGExporter`, `JSONSchemaExporter`, `MultiFormatExporter` (9 formats) | wave-21 | Graceful dep fallback |
-| 9 `@runtime_checkable` Protocol classes; 15+ TypedDicts; Literal type aliases | wave-21 | 49 .pyi stubs |
+| 14 `@runtime_checkable` Protocol classes; 15 TypedDicts; Literal type aliases | wave-21 | 231 .pyi stubs |
 | 5 new REST endpoints + WebSocket streaming; `SessionManager`; `translate_batch()` | wave-21 | |
 | `AgentRuntime`: `run_episode_with_logging()`, `benchmark()`, `reset()`, `get_free_energy()` | wave-21 | |
 | `MarkovBlanket`: `validate()`, `to_mermaid()`, `merge()`, `get_sensory_states()` | wave-21 | |
@@ -33,7 +33,7 @@ These items were previously in the backlog and are now implemented and tested.
 | Hypothesis property tests (7 COGANT correctness laws) | v0.2.0 | |
 | YAML rule DSL compiled to Python matchers | v0.2.0 | |
 | Tutorial Jupyter notebooks 01–12 | v0.4.0–v0.5.0 | |
-| mkdocs-material docs site with 16 sections | v0.2.0 | |
+| mkdocs-material docs site with 20 sections | v0.2.0 | |
 
 ---
 
@@ -240,7 +240,7 @@ Python 3.11+ `__slots__` on dataclasses reduces memory significantly for large g
 
 ### R7. Converge `.pyi` stub generation to `stubgen` + CI check
 **Priority:** Medium | **Effort:** M
-49 `.pyi` stubs are hand-maintained and drift on refactors. Auto-generating them via `mypy --stubgen` and checking in a CI diff would prevent silent type regressions.
+231 `.pyi` stubs are hand-maintained and drift on refactors. Auto-generating them via `mypy --stubgen` and checking in a CI diff would prevent silent type regressions.
 - [ ] `make gen-stubs` target: `mypy.stubgen --package cogant -o stubs/`
 - [ ] CI job: run `gen-stubs`, diff against checked-in stubs, fail on unexpected delta
 - [ ] Decide: hand-curated stubs (more precise) vs. generated (less drift)

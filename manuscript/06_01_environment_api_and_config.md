@@ -1,4 +1,4 @@
-# Experimental setup: environment, API, and configuration
+# Experimental setup: environment, API, and configuration {#sec:06-01-environment-api-and-config}
 
 ## Environment
 
@@ -74,4 +74,8 @@ Each stage key corresponds to a handler in `cogant.api.pipeline.PipelineRunner.s
 
 ## CLI
 
-Use the `cogant` CLI for scripted batch runs—see `../cogant/docs/cli/README.md` for the command list that matches the installed version.
+Use the `cogant` CLI for scripted batch runs—see `../cogant/docs/cli/README.md` and [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md) for the command list that matches the installed version.
+
+## See also (MkDocs)
+
+Installation and environment: [`../cogant/docs/getting-started/installation.md`](../cogant/docs/getting-started/installation.md). Pipeline stage order (runner): [`../cogant/docs/reference/pipeline_stages.md`](../cogant/docs/reference/pipeline_stages.md).

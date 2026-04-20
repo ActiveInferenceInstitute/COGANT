@@ -47,7 +47,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - State-space compiler producing hidden states, observation modalities, actions, transitions, likelihoods, and preferences, with cardinalities inferred from class attributes and method names.
 - Process extractor producing workflow stages, connections, and policies with trigger inference.
 - GNN package emission: `GNNPackageBuilder` writes 14+ files matching the Active Inference Institute's canonical layout.
-- GNN validator scoring packages 0–100% against the 18 canonical sections.
+- GNN validator scoring packages 0–100% against the 19 canonical sections.
 - GNN runner (`GNNModelRunner`) executing the compiled model under Active Inference (VFE and EFE computed per step, Bayesian belief updating, policy selection).
 - Simulation runner (`simulate.runner`) with variational free energy (`VFE = KL(Q||P) - E_Q[log P(o|s)]`) and expected free energy (`EFE = epistemic - pragmatic`) using a 3-step planning horizon.
 - Visualizations: dependency / class / state / sequence / flowchart / boundary / timeline / active-inference Mermaid diagrams; factor graph, ontology sunburst, confidence radar, and state-space matrix SVGs; free-energy trajectory HTML; Gantt CSS timeline.

@@ -1,6 +1,6 @@
-# Confidence scoring, evidence tiers, and state-space compilation
+# Confidence scoring, evidence tiers, and state-space compilation {#sec:02-03-confidence-state-space-and-behavior}
 
-## Confidence Scoring and Evidence Tiers
+## Confidence scoring and evidence tiers {#sec:02-03-confidence-scoring}
 
 The shipped `ConfidenceModel` in `../cogant/py/cogant/translate/confidence.py` computes a scalar score in $[0,1]$ from:
 
@@ -16,7 +16,7 @@ c = \max\left(0,\ \min\left(1,\ (\bar{e} + \delta_d)\cdot \kappa - \pi\right)\ri
 
 Here $\bar{e}$ is the mean evidence confidence, $\delta_d$ is the diversity bonus (bounded), $\kappa$ is parser certainty, and $\pi$ aggregates conflict penalties. **Tiers** (for example static-only versus static-plus-runtime) are assigned from score thresholds and evidence source tags (`determine_confidence_tier`); see the same module for named thresholds and enum values. The manuscript does not duplicate those literals so they cannot drift from code.
 
-## State space and behavior
+## State space and behavior {#sec:02-03-state-space-and-behavior}
 
 Where traces or coverage are available, **dynamic** extraction feeds the state-space compiler. The goal is a compact behavioral model: states, actions, transitions, and observations that sit alongside the static graph for tasks that require execution-sensitive features. The tuple $(S, A, T, O)$ of variables, actions, transitions, and observation modalities mirrors the structure of a partially observed Markov decision process as used in discrete active inference [@parr2022active; @dacosta2020active; @smith2022stepbystep], and at the level of reachable state/transition graphs it also resembles the Kripke structures traditionally used in model checking [@clarke1999model], without attempting to discharge temporal-logic obligations. PyMDP [@heins2022pymdp] is one such downstream consumer that executes the compiled state-spaces as discrete active inference simulations over the exported Generalized Notation Notation bundles.
 
@@ -67,4 +67,8 @@ class TemperatureController:
 `StateVariableExtractor` identifies three **state variables** from WRITES edges on `__init__` and the three methods: `current_temp` (float, cardinality continuous), `target_temp` (float), and `heater_on` (bool, cardinality 2). Three **actions** are extracted from `ACTION`-kind mappings: `set_target` (writes `target_temp`), `read_sensor` (writes `current_temp`), and `actuate_heater` (reads `current_temp`, `target_temp`; writes `heater_on`). All three actions are attributed to `TemperatureController` via CONTAINS edges.
 
 The cross-reference pass yields three **transitions**. For `actuate_heater` the `source_state` records `{current_temp: "pre", target_temp: "pre", heater_on: "pre"}` and the `target_state` records `{current_temp: "pre", target_temp: "pre", heater_on: "post"}`, capturing that only `heater_on` advances while the read-only variables remain pinned. Because no node carries async flags or event-kind markers and no CALLS or TRIGGERS edges cross into async endpoints, the `TemporalAnalyzer` classifies the model as `SYNCHRONOUS` and attaches that regime to the `StateSpaceModel` metadata.
+
+## See also (MkDocs)
+
+API surfaces for `Session` / `PipelineRunner` / state-space compilation: [`../cogant/docs/api/README.md`](../cogant/docs/api/README.md). Matrix semantics and Markov blanket narrative: [`../cogant/docs/theory/active_inference.md`](../cogant/docs/theory/active_inference.md).
 

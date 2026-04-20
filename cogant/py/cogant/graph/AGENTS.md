@@ -51,7 +51,9 @@ ProgramGraphBuilder accumulates nodes and edges, assigns stable IDs via Identity
 
 **analysis.py** — `GraphAnalyzer`
 - Computes network metrics: density, avg degree, clustering coefficient, diameter, connectivity
-- Centrality analysis: betweenness, degree, PageRank, closeness (9 methods)
+- Centrality analysis: betweenness, degree, PageRank, closeness (9 methods). Betweenness uses
+  NetworkX `betweenness_centrality(..., normalized=True)` when NetworkX is available; otherwise
+  a pure-Python fallback scales by the maximum score so values stay in **[0, 1]**.
 - Community detection: Louvain algorithm (optional NetworkX), modularity scoring
 - Cycle detection: Tarjan's strongly connected components (SCC), cycle listing
 - Path analysis: shortest paths, all paths (up to max_depth), critical paths in DAGs

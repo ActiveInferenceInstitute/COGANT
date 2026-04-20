@@ -1,15 +1,15 @@
-# Appendix C — Galois Connection Proof Sketch
+# Appendix C — Galois Connection Proof Sketch {#sec:S03-appendix-galois-sketch}
 
 This appendix gives the formal statement and proof sketch of the ε-approximate
 Galois connection between the category of Python program graphs and the
-category of GNN generative models. The informal version appears in Section
+category whose objects are **GNN** bundles in the **Generalized Notation Notation** sense (Active Inference Institute structured notation; not graph neural networks). The informal version appears in Section
 8.3 of the main text.
 
 ### C.1 Categories
 
 Let **Prog** be the category whose objects are typed Python program graphs
-`G = (V, E, λ_V, λ_E, τ)` in the sense of Section 2.2 (14 node kinds, 11
-edge kinds) and whose morphisms are graph homomorphisms that preserve node
+`G = (V, E, λ_V, λ_E, τ)` in the sense of Section 2.2 ({{NODE_KIND_COUNT}} node kinds, {{EDGE_KIND_COUNT}}
+edge kinds in the shipped schema; the Python front end emits a subset) and whose morphisms are graph homomorphisms that preserve node
 and edge labels. Let **GNN** be the category whose objects are GNN v1.1
 bundles (the Markdown sections `StateSpaceBlock`, `Connections`,
 `InitialParameterization`, `ActInfOntologyAnnotation`, plus the
@@ -55,7 +55,7 @@ Both extensions agree on the image of `F`: `ρ(F(G)) = ρ_GNN(F(G))` for every
 `G ∈ Prog`, because the forward pipeline emits one section entry per
 mapping in the translate output. The PREFERENCE role is included in `Roles`
 because `PreferenceRule` emits PREFERENCE mappings that are recorded in the
-GNN `Preferences/Constraints` section; Definition 2 in §2 lists all seven roles.
+GNN `Preferences/Constraints` section; Definition 2 in @sec:02-01-formal-definitions lists all seven roles.
 
 ### C.4 Adjunction (approximate)
 
@@ -152,11 +152,15 @@ requiring `count_origin ≥ 0.8 · count_synth`, i.e. that the origin
 population is at least 80% of the synth population. Summing over roles, the
 ISOMORPHIC threshold corresponds to "at least 80% of the origin role multiset
 survives the roundtrip without being drowned out by scaffolding". The
-CONSTRAINT fix (§A.2) and the wave-16 POLICY/CONTEXT fix are exactly the
+CONSTRAINT fix (@sec:S01-appendix-a2-constraint) and the wave-16 POLICY/CONTEXT fix are exactly the
 transformations that make this true for constraint-heavy and policy-bearing
 real-world libraries: each raises the CONSTRAINT (or POLICY/CONTEXT) component
 of `count_synth` from a small scaffold constant to `count_origin` (proportional),
 so `min = count_origin` and the per-role ratio jumps to 1.0.  ∎
+
+## See also (MkDocs)
+
+Formal statement: [`../cogant/docs/theory/isomorphism.md`](../cogant/docs/theory/isomorphism.md), [`../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md`](../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md).
 
 ---
 

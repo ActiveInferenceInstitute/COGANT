@@ -1,4 +1,4 @@
-# World models, active inference, boundaries, and forward compatibility
+# World models, active inference, boundaries, and forward compatibility {#sec:08-04-world-models-boundaries-and-compatibility}
 
 ## World models from code
 
@@ -17,3 +17,7 @@ COGANT does not subsume formal verification, interactive theorem proving, or ful
 ## Forward compatibility
 
 Promoting COGANT into [`../../../projects/`](../../../projects/) integrates manuscript PDF rendering with the template’s validation gates. Cross-references in this folder use paths **relative to these Markdown files** (for example [`../cogant/docs/`](../cogant/docs/)) so links stay stable when the tree moves.
+
+## See also (MkDocs)
+
+Security posture and sandboxing notes: [`../cogant/docs/security/README.md`](../cogant/docs/security/README.md). Concepts primer: [`../cogant/docs/concepts/active_inference.md`](../cogant/docs/concepts/active_inference.md).

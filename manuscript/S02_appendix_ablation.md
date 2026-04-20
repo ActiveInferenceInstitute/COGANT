@@ -1,6 +1,6 @@
-# Appendix B — Full Ablation Table
+# Appendix B — Full Ablation Table {#sec:S02-appendix-ablation}
 
-This appendix complements the rule-family ablation reported in Section 9 of
+This appendix complements the rule-family ablation reported in @sec:09-ablation of
 the main text (which uses `flask_app` and `calculator` as ablation targets)
 by reconstructing the same analysis on `zoo/01_simple_state` — the
 smallest non-trivial fixture in the evaluation set and the one used to
@@ -81,6 +81,10 @@ reports mapping-count deltas; the Appendix B ablation is role-level
 minimum-complexity fixture that still round-trips perfectly. The two
 ablations are complementary: together they bracket the failure surface from
 "largest real-world fixture" down to "smallest runnable POMDP".
+
+## See also (MkDocs)
+
+Rule reference: [`../cogant/docs/reference/translation_rules.md`](../cogant/docs/reference/translation_rules.md).
 
 ---
 

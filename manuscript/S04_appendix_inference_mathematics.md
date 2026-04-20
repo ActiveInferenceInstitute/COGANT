@@ -1,4 +1,4 @@
-# Appendix D — Inference Loop Mathematics
+# Appendix D — Inference Loop Mathematics {#sec:S04-appendix-inference-mathematics}
 
 This appendix formalizes the discrete-time active inference loop executed
 by `cogant process` on the extracted A/B/C/D matrices and reported
@@ -172,6 +172,10 @@ the deterministic default). On zoo/01\_simple\_state with `C_mat = [0.0]`,
 both `u_c0` and `u_c1` score `G = 0.0` identically; the argmin tie-break
 returns `u_c0` every step, which is the behaviour observed in
 `../cogant/docs/evaluation/EMPIRICAL_CLAIM.md` §3.
+
+## See also (MkDocs)
+
+Active inference primer (package): [`../cogant/docs/theory/active_inference_primer.md`](../cogant/docs/theory/active_inference_primer.md).
 
 ---
 

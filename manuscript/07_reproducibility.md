@@ -1,6 +1,21 @@
-# Reproducibility
+# Reproducibility {#sec:07-reproducibility}
 
 Reproducible computational research requires version-pinned tools, fixed inputs, and documented outputs [@peng2011reproducible]. COGANT contributes the **graph-generation** slice of that story: identical source trees and identical pipeline configuration should yield identical exported bundles modulo declared nondeterminism (for example optional neural embeddings if enabled).
+
+## Publication checklist
+
+When citing or redistributing a COGANT run, archive together:
+
+1. **COGANT version and Git SHA** — `cogant doctor`; `__version__` matches `pyproject.toml`.
+2. **Python interpreter** — `python --version` and platform (`uname -a` or equivalent).
+3. **Dependency lock** — `uv.lock` from the package root with the same `uv sync --extra …` extras as the run.
+4. **Input snapshot** — Git commit of each analyzed repository; for fixtures under `examples/`, record the COGANT monorepo SHA.
+5. **Pipeline configuration** — `cogant.yaml` or `PipelineConfig` serialization (secrets redacted).
+6. **Stages executed** — full ten-stage DAG vs `skip_stages`, `--no-dynamic`, `--skip-validate`, etc.
+7. **Downstream seeds** — only if a learned model consumes exports (COGANT’s default pipeline is deterministic).
+8. **Output hashes** — SHA-256 of `gnn_package/` and `bundle.json` for verification.
+
+Worked commands, manifest semantics, and a full `flask_app` re-run recipe: [`06_05_reproducible_recording.md`](06_05_reproducible_recording.md).
 
 ## Version pinning
 
@@ -74,4 +89,8 @@ If COGANT is promoted into the template project workflow under `projects/`, repo
 
 ## Data ethics and licensing
 
-Exported graphs can contain identifiers and comments from source code. Redistribution of derived graphs must respect the licenses of input repositories and organizational data policies. For a **checklist** (version pins, lockfiles, input hashes, manifest verification) when publishing or citing a run, see [`06_05_reproducible_recording.md`](06_05_reproducible_recording.md).
+Exported graphs can contain identifiers and comments from source code. Redistribution of derived graphs must respect the licenses of input repositories and organizational data policies. The **Publication checklist** above is the short form; [`06_05_reproducible_recording.md`](06_05_reproducible_recording.md) expands each item with paths, regeneration scripts, and a worked `flask_app` example.
+
+## See also (MkDocs)
+
+MkDocs site build and GitHub Pages workflow: [`../cogant/docs/CI.md`](../cogant/docs/CI.md). Common questions: [`../cogant/docs/faq.md`](../cogant/docs/faq.md). Changelog mirror (source: root `CHANGELOG.md`): [`../cogant/docs/changelog.md`](../cogant/docs/changelog.md).

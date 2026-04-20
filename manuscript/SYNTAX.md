@@ -12,13 +12,39 @@ Use Pandoc cite syntax; keys must exist in `references.bib`.
 [@allamanis2018survey; @wu2020comprehensive]
 ```
 
+## Cross-references (pandoc-crossref)
+
+Combined PDF/LaTeX is built with Pandoc. When **`pandoc-crossref`** is on `PATH`, `infrastructure/rendering/_pdf_combined_renderer.py` adds `--filter` so native syntax resolves to numbered references in the PDF.
+
+**Install:** e.g. `brew install pandoc-crossref` (macOS). Without the filter, the build still runs; `@sec:` / `@tbl:` / `@fig:` tokens remain literal until the filter is available.
+
+**Section labels:** on headings that you cite elsewhere, use stable ids derived from the file stem, hyphenated:
+
+```markdown
+## Formal definitions {#sec:02-01-formal-definitions}
+```
+
+Reference in prose: `… see @sec:02-01-formal-definitions …`
+
+**Tables:** put the caption line **after** the pipe table:
+
+```markdown
+| a | b |
+|---|---|
+| 1 | 2 |
+
+: Short caption text. {#tbl:example-id}
+```
+
+Reference: `@tbl:example-id`
+
 ## Equations
 
-Use LaTeX `equation` with `\label` / `\ref` as documented in the code_project SYNTAX, or pandoc-crossref attributes where the pipeline enables them.
+Use LaTeX `equation` with `\label` / `\ref`, or ` {#eq:…}` with `@eq:…` when pandoc-crossref is enabled (see code_project SYNTAX).
 
 ## Figures
 
-If you add figures, place assets where the future project `output/` layout can resolve them (typically `output/figures/` after promotion to `projects/cogant/`). Use explicit relative paths from the rendering contract described in `infrastructure/rendering/AGENTS.md`.
+Follow the code_project SYNTAX for image markdown plus `{#fig:…}` when you add figures. Place assets where the future project `output/` layout can resolve them (typically `output/figures/` after promotion to `projects/cogant/`). Use explicit relative paths from the rendering contract described in `infrastructure/rendering/AGENTS.md`.
 
 ## Section files
 

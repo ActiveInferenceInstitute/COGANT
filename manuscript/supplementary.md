@@ -1,11 +1,12 @@
-# Supplementary Materials
+# Supplementary materials {#sec:supplementary-materials}
 
 This appendix collects the detailed artifacts supporting the main text: per-role
 roundtrip ε-isomorphism across all 23 evaluation targets (Appendix A), rule-family
 ablation reconstructed from empirical data (Appendix B), a Galois-connection proof
 sketch and ε-isomorphism theorem for the forward/reverse pair (Appendix C), the
-discrete-POMDP active-inference mathematics underlying the runnable cycle of Section 5
-(Appendix D), a curated {{BIB_ENTRIES}}-entry bibliography across 9 research areas (Appendix E),
+discrete-POMDP active-inference mathematics of Appendix D (the inference loop summarized in
+[`05_conclusion.md`](05_conclusion.md) and formalized in [`S04_appendix_inference_mathematics.md`](S04_appendix_inference_mathematics.md)),
+a curated {{BIB_ENTRIES}}-entry bibliography across 9 research areas (Appendix E),
 and a source-material cross-reference index (Appendix F).
 
 Numerical data in Appendices A and B derive verbatim from four package evaluation
@@ -15,6 +16,8 @@ artefacts: `../cogant/docs/evaluation/ROUNDTRIP_EVAL.md`,
 `../cogant/docs/evaluation/CONSTRAINT_FIX.md`. Where the same measurement appears in
 more than one source the value in `ROUNDTRIP_EVAL.md` (canonical post-wave-16 roundtrip
 artefact, 23/23 ISOMORPHIC) takes precedence.
+
+**MkDocs documentation map.** Tutorials, API/CLI reference, theory pages, and module indexes live under [`../cogant/docs/`](../cogant/docs/); start at [`../cogant/docs/index.md`](../cogant/docs/index.md) or the area listing in [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md).
 
 **Recommended reading order:** Appendix A establishes the empirical ground truth
 (per-fixture ε-scores and tier assignments); Appendix B decomposes those scores into

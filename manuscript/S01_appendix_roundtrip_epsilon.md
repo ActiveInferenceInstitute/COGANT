@@ -1,4 +1,4 @@
-# Appendix A — Full Roundtrip ε Table (per-role breakdown)
+# Appendix A — Full Roundtrip ε Table (per-role breakdown) {#sec:S01-appendix-roundtrip-epsilon}
 
 The ε metric used throughout the paper is the `role_match_score` returned by
 `cogant.reverse.idempotency.compute_isomorphism_report(orig_gnn, synth_gnn)`.
@@ -23,7 +23,7 @@ roles present in at least one side, which matches the values reported in
 > canonical evaluation is **wave 16** (CONSTRAINT + POLICY + CONTEXT synthesizer fixes, 2026-04-10),
 > which achieves 23 / 23 ISOMORPHIC with all targets at ε = 1.0 as recorded in
 > `../cogant/evaluation/METRICS.yaml`. The wave-14 ε values and tier assignments below are preserved
-> for historical traceability; see §A.2 for the CONSTRAINT fix trajectory and
+> for historical traceability; see @sec:S01-appendix-a2-constraint for the CONSTRAINT fix trajectory and
 > `../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md` for the full wave-14 → wave-16 trajectory.
 > Thresholds: **ISOMORPHIC** ε ≥ 0.8 · **APPROXIMATE** 0.5 ≤ ε < 0.8 · **DIVERGENT** ε < 0.5
 > (from `METRICS.yaml` keys `threshold_isomorphic` and `threshold_approximate`).
@@ -69,7 +69,7 @@ overall ε ≥ 0.8, **APPROXIMATE (APPROX)** when 0.5 ≤ ε < 0.8, **DIVERGENT*
 an earlier threshold calibration pass and may appear inconsistent with these
 canonical thresholds; the definitive tier assignments are in `METRICS.yaml`.
 Rows marked "post‑fix" are measured after the wave‑14 CONSTRAINT synthesizer fix
-(see §A.2 and `../cogant/docs/evaluation/CONSTRAINT_FIX.md`). Rows 07 and 09 remain below the
+(see @sec:S01-appendix-a2-constraint and `../cogant/docs/evaluation/CONSTRAINT_FIX.md`). Rows 07 and 09 remain below the
 1.0 line because the original graph contains POLICY nodes that the wave-14 reverse
 synthesizer collapses to CONSTRAINT or ACTION; the wave-16 POLICY/CONTEXT fix
 resolves this, bringing those targets to ε = 1.0 in the canonical run.
@@ -85,12 +85,12 @@ the averaging only ranges over OBS, ACT, and CNST on that target.
 
 **Tier distribution (wave 14, ε ≥ 0.8 threshold).** 21 / 23 targets land in
 ISOMORPHIC, 2 remain APPROXIMATE (07\_event\_driven at ε = 0.7778 and 09\_policy
-at ε = 0.6667), 0 DIVERGENT. Pre wave 14 (see §A.2): 14 / 23 ISOMORPHIC,
+at ε = 0.6667), 0 DIVERGENT. Pre wave 14 (see @sec:S01-appendix-a2-constraint): 14 / 23 ISOMORPHIC,
 6 / 23 APPROXIMATE, 3 / 23 DIVERGENT. **Canonical wave 16 (v0.5.0): 23 / 23
 ISOMORPHIC, all targets at ε = 1.0** — see `../cogant/evaluation/METRICS.yaml` and
 `../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md`.
 
-### A.2 Pre-fix vs post-fix for affected repositories (wave 14 CONSTRAINT fix)
+### A.2 Pre-fix vs post-fix for affected repositories (wave 14 CONSTRAINT fix) {#sec:S01-appendix-a2-constraint}
 
 The wave‑14 CONSTRAINT synthesizer fix (`../cogant/docs/evaluation/CONSTRAINT_FIX.md`) strips the
 planner `cnst_` prefix from synthesized constraint function names and emits
@@ -135,6 +135,10 @@ and `n_actions`. Across all 23 targets, shape match is TRUE on every axis
 for which the origin had ≥ 1 entry; the zoo fixtures 07–10 have
 `n_states = 0` on the origin and `n_states = 1` on the synth because the
 synthesizer always emits at least one hidden-state factor.
+
+## See also (MkDocs)
+
+Round-trip tiers and ε definitions: [`../cogant/docs/theory/roundtrip.md`](../cogant/docs/theory/roundtrip.md). Empirical run log: [`../cogant/docs/evaluation/ROUNDTRIP_EVAL.md`](../cogant/docs/evaluation/ROUNDTRIP_EVAL.md).
 
 ---
 

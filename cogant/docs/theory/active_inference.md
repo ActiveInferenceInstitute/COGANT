@@ -58,27 +58,23 @@ Code patterns that become `POLICY`:
 
 Rules: `PolicyRule`, `RetryPatternRule`, and `InheritanceRule` (when bases look like handlers/controllers) → `MappingKind.POLICY`.
 
-### The seven Active Inference roles
+### The seven Active Inference `MappingKind` roles (METRICS-aligned)
 
-COGANT's semantic mapping system assigns every node exactly one role from this set of **seven core + six supplementary roles**:
+`evaluation/METRICS.yaml` counts **`ir_schema.active_inf_role_count` = 7** by verifying these names in `MappingKind` (`cogant/schemas/semantic.py`): **HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE, CONSTRAINT, CONTEXT**. That is the same seven-name list the manuscript and roundtrip tooling refer to. **`SemanticRole`** (`semantic_mapping.py`) is a larger vocabulary and includes **PARAMETER**, **UTILITY**, **CONFIGURATION**, and others used in graph annotations and some rules—not part of that seven-name METRICS tally.
 
-#### Core seven (mandatory for Active Inference state spaces)
+#### The seven (with intuition)
 
-1. **HIDDEN_STATE (μ)** — internal state variables written and read by the system. Encode the agent's beliefs and model of itself.
-2. **OBSERVATION (s)** — sensory inputs and read-only getters that make internal state observable to external systems. Represent what the agent can measure.
-3. **ACTION (a)** — actuators and side-effect emitters that mutate internal state or affect the environment. Encode the agent's control surface.
-4. **POLICY (π)** — decision makers, controllers, orchestrators, and retry/backoff logic that select actions based on hidden state. Encode the agent's decision strategy.
-5. **PREFERENCE** — preference and cost functions that define what observations the agent seeks (C matrix). Encode the agent's reward signal.
-6. **CONTEXT** — configuration, feature flags, global state that modulates policies. Encode static or slowly-changing parameters (D matrix priors).
-7. **PARAMETER** — learned parameters, weights, and hyperparameters (reserved for future use).
+1. **HIDDEN_STATE (μ)** — internal state variables written and read by the system.
+2. **OBSERVATION (s)** — sensory inputs and read-only getters.
+3. **ACTION (a)** — actuators and side-effect emitters.
+4. **POLICY (π)** — controllers, orchestrators, retry/backoff logic.
+5. **PREFERENCE** — cost/preference signals (C matrix).
+6. **CONSTRAINT** — assertions, validators, test predicates (negative preference when violated).
+7. **CONTEXT** — configuration, feature flags, slow-changing priors (D matrix).
 
-#### Supplementary roles (for GNN annotation and downstream analysis)
+#### Other `MappingKind` values (not in the seven-name count)
 
-- **CONSTRAINT** — assertions, test predicates, validators. Carry implicit preferences (negative cost when violated).
-- **DATA_FLOW** — reader-writer pipelines where read sources differ from write targets. Encode data transformation.
-- **ERROR_HANDLING** — exception boundaries and error recovery paths. Encode resilience patterns.
-- **CIRCUIT_BREAKER** — timeout, fallback, and breach-response patterns. Encode fault tolerance.
-- **ORCHESTRATION** — high-fan-out controllers that manage multiple subsystems. Encode hierarchical control.
+- **DATA_FLOW**, **CONTROL_FLOW**, **ERROR_HANDLING**, **ORCHESTRATION**, **CIRCUIT_BREAKER**, **RETRY_PATTERN**, **FEATURE_FLAG** — structural / flow patterns in `MappingKind` beyond the AI role set above.
 
 ## Markov blanket partitioning
 

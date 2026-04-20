@@ -23,7 +23,7 @@ manuscript or running the formal proof track.
 | `active_inference.md` | Theoretical justification for the code-to-role mapping | When the mapping, the rule rationale, or the matrices change |
 | `code_as_generative_model.md` | The "code is a generative model" thesis | When the thesis is refined or extended |
 | `gnn_format.md` | Short narrative on the GNN format as COGANT uses it | When the headline story about GNN changes |
-| `gnn_format_reference.md` | Exhaustive reference for the 18-section GNN package | When a section is added, removed, or renamed in the AII GNN spec or the COGANT emitter |
+| `gnn_format_reference.md` | Exhaustive reference for the 19-section GNN package | When a section is added, removed, or renamed in the AII GNN spec or the COGANT emitter |
 | `isomorphism.md` | Formal statement and proof sketch of the isomorphism theorem | When the theorem statement, assumptions, or proof outline changes |
 
 ## Notation and consistency
@@ -55,5 +55,5 @@ manuscript or running the formal proof track.
   roundtrip study, and `../concepts/roundtrip.md` in the same PR.
 - `gnn_format.md` and `gnn_format_reference.md` overlap deliberately: the
   short page orients a first-time reader, the reference page enumerates
-  the 18 sections. When the upstream GNN spec changes, update the
+  the 19 sections. When the upstream GNN spec changes, update the
   reference first and then the short page.

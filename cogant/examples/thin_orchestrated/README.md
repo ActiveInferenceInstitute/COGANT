@@ -29,7 +29,7 @@ All scripts share `_common.py`, which provides `banner`, `configure_logging`, `p
 | `06_statespace_only.py` | statespace | Compile a `StateSpaceModel` via `StateSpaceCompiler` |
 | `07_process_only.py` | process | Extract a `ProcessModel` via `ProcessExtractor` |
 | `08_gnn_export_only.py` | export | Build a complete GNN package with `GNNPackageBuilder` |
-| `09_validate_only.py` | validate | Score a GNN package against the 18 canonical sections |
+| `09_validate_only.py` | validate | Score a GNN package against the 19 canonical sections |
 | `10_simulate_only.py` | simulate | Run a `GNNModelRunner` for N steps under Active Inference |
 | `11_translate_rules_only.py` | translate (deep) | Register a single rule at a time and inspect its matches per fixture |
 | `12_provenance_only.py` | cross-cutting | Walk the provenance records attached to every mapping |
@@ -52,7 +52,7 @@ All scripts share `_common.py`, which provides `banner`, `configure_logging`, `p
 | Script | What it exercises | Output highlights |
 |---|---|---|
 | `21_markov_blanket_only.py` | `MarkovBlanketExtractor` across every seed strategy (`auto`, `kind`, `module`, `explicit`) | (μ, s, a, η) counts and boundary ratio per strategy; auto-tier rationale; writes `markov_blanket.json`, `markov_blanket_network.json`, plus collapsed and detailed Mermaid diagrams (role-colored: μ blue, s yellow, a green, η red) |
-| `22_gnn_self_analysis.py` | Full end-to-end pipeline on the GNN codebase itself (reflexive analysis); all 17 translation rules; GNN validator; simulation | Per-stage timing table; GNN package on disk; validation score (100/100 on canonical fixtures); free-energy trajectory under Active Inference; PNG rasterization |
+| `22_gnn_self_analysis.py` | Full end-to-end pipeline on the GNN codebase itself (reflexive analysis); all 22 translation rules; GNN validator; simulation | Per-stage timing table; GNN package on disk; validation score (100/100 on canonical fixtures); free-energy trajectory under Active Inference; PNG rasterization |
 
 ## Specialized demonstrations (23-26)
 

@@ -102,7 +102,7 @@ These are environment constraints, not COGANT bugs.
 
 If `regenerate_metrics.py` is run from the wrong directory or without optional deps,
 `test_count_passing` can land at 0. Always verify the value is non-zero before trusting
-the generated file. Canonical v0.5.0 values: 2,129 passing, 83.42% coverage.
+the generated file. Historical v0.5.0 snapshot: 2,129 passing, 83.42% coverage; the live suite is larger — confirm with `uv run pytest tests/ -q` from the package root.
 
 ---
 
@@ -117,6 +117,6 @@ the generated file. Canonical v0.5.0 values: 2,129 passing, 83.42% coverage.
 | No static analysis | wave-21 | `cogant.static` module: complexity, coupling, dead code, Halstead |
 | No visualization beyond HTML | wave-21 | `cogant.viz`: PDF, PNG, Mermaid, SVG, 8-page report |
 | Basic export only (JSON, GraphML) | wave-21 | 9 formats: JSON, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT, JSONLINES |
-| No type system for protocols | wave-21 | 9 `@runtime_checkable` Protocols, 49 .pyi stubs |
+| No type system for protocols | wave-21 | 14 `@runtime_checkable` Protocols, 231 .pyi stubs |
 | No network/graph analysis | wave-21 | `GraphAnalyzer`: centrality, community, SCC |
 | No streaming / WebSocket API | wave-21 | `WS /ws/translate` + `translate_batch()` |

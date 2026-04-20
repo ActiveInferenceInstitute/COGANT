@@ -11,4 +11,4 @@ Minimal POMDP / Active Inference “zoo” fixtures: numbered scenarios from sim
 ## Coordination
 
 - Parent: [`../AGENTS.md`](../AGENTS.md).
-- CLI snippets must match current `cogant` help (see [`docs/CLI_GUIDE.md`](../../docs/CLI_GUIDE.md)).
+- CLI snippets must match current `cogant` help (see [`docs/cli_reference.md`](../../docs/cli_reference.md) or the `docs/cli/` area).

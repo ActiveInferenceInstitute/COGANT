@@ -2,7 +2,7 @@
 
 Complete Python service demonstrating COGANT analysis on real code.
 
-CLI reference: [docs/CLI_GUIDE.md](../../docs/CLI_GUIDE.md).
+CLI reference: [docs/cli_reference.md](../../docs/cli_reference.md).
 
 ## Structure
 

@@ -13,7 +13,7 @@
 - **P4-3 Flask example:** `manuscript/04_examples_and_failure_modes.md` previously cited hand-crafted Flask numbers (147 nodes, 389 edges, FUNCTION/VARIABLE/TYPE-heavy distribution). Rewritten to cite the packaged `flask_app` fixture (98 nodes, 597 edges, MODULE/CLASS/METHOD/FUNCTION structural core) with the real node-kind and edge-kind distributions from the canonical run.
 - **P4-4 Reproducible figures:** `../../evaluation/figures/generate_figures.py` re-runs the orchestrator over every fixture and writes `metrics.json`, `metrics_table.md`, and four PNGs (`fig1_graph_sizes.png`, `fig2_node_kinds.png`, `fig3_state_space.png`, `fig4_pipeline_latency.png`). The manuscript cross-references the script as its single source of truth for numbers.
 - **P4-5 GNN spec validation:** Every fixture reports `gnn_score = 100.0` with zero errors and zero warnings from the packaged `GNNValidator`, so the emitted GNN packages are compliant with the Active Inference Institute's validator at the structural level. Full section-by-section comparison against upstream GNN spec v1.1 remains open.
-- **Shipped capabilities list:** `manuscript/05_conclusion.md` expanded from five items to ten, now covering: 19-rule fixpoint engine, conflict resolution, dynamic enrichment wired into default pipeline (including `--no-dynamic` CLI flag), confidence tier promotion, ten-stage pipeline, complete state-space compilation, A/B/C/D matrix derivation, principled VFE/EFE, Markov blanket extraction with five seed strategies, and real-world fixture validation.
+- **Shipped capabilities list:** `manuscript/05_conclusion.md` expanded from five items to ten, now covering: 22-rule fixpoint engine, conflict resolution, dynamic enrichment wired into default pipeline (including `--no-dynamic` CLI flag), confidence tier promotion, ten-stage pipeline, complete state-space compilation, A/B/C/D matrix derivation, principled VFE/EFE, Markov blanket extraction with five seed strategies, and real-world fixture validation.
 
 ---
 
@@ -96,8 +96,8 @@ Converts software repositories into **Generalized Notation Notation (GNN)** arti
         │
         ▼
 [Translate]       cogant.translate    ✅ PRODUCTION-READY
-  19 real rules: structural(5), semantic(5),
-  control(2), behavioral(4), resilience(3)
+  22 real rules: structural(5), semantic(5),
+  control(3), behavioral(4), resilience(5)
   Fixpoint engine, confidence tiers, conflict resolution
         │
         ▼
@@ -128,7 +128,7 @@ Converts software repositories into **Generalized Notation Notation (GNN)** arti
 
 ### 2c. Translation engine (key algorithm — PRODUCTION-READY)
 
-**Fixpoint loop** with 19 real rules:
+**Fixpoint loop** with 22 real rules:
 1. Sort all `TranslationRule` objects by priority
 2. Each iteration: `matches(node/edge)` → `apply()` → new `SemanticMapping`
 3. Track coverage; loop until convergence or `max_iterations` (default 10)
@@ -143,10 +143,10 @@ Converts software repositories into **Generalized Notation Notation (GNN)** arti
 |------|-------|-------|
 | structural.py | 5 | ReadOnlyInput, MutatingSubsystem, Inheritance, Containment, DataPipeline |
 | semantic.py | 5 | Observation, Action, Policy, Preference, Context |
-| control.py | 2 | Config, FeatureFlag |
-| behavioral.py | 4 | Orchestrator, TestAssertion, EventBus (×2) |
-| resilience.py | 4 | Retry, ErrorBoundary, Singleton, CircuitBreaker |
-| **Total** | **19** | All real implementations, not stubs |
+| control.py | 3 | Config, FeatureFlag, Parameter |
+| behavioral.py | 4 | Orchestrator, TestAssertion, EventBus, StateMachine |
+| resilience.py | 5 | Retry, ErrorBoundary, Singleton, CircuitBreaker, RateLimiter |
+| **Total** | **22** | All real implementations, not stubs |
 
 **Confidence ranges:** 0.65 (SingletonAccess, keyword heuristic) to 0.95 (parser certainty for TestAssertion, Config)
 
@@ -178,7 +178,7 @@ All 8 crates are **real working Rust code**, not scaffolding stubs:
 
 | Format | Module | Status |
 |--------|--------|--------|
-| GNN Markdown (18+ sections) | `cogant.gnn.formatter` | ✅ |
+| GNN Markdown (19 sections) | `cogant.gnn.formatter` | ✅ |
 | GNN JSON | `cogant.gnn.json_export` | ✅ |
 | GNN Package (directory bundle) | `cogant.gnn.package` | ✅ |
 | program_graph.json | `cogant.export` | ✅ |
@@ -356,7 +356,7 @@ Rust, JS, TS, Go parser directories exist with scaffolding. No actual parsing lo
 |----|------|------------|
 | P0-1 | Replace hollow unit tests: `test_graph_builder.py` → real `ProgramGraphBuilder` tests | Tests import and call cogant classes |
 | P0-2 | Replace hollow unit tests: all 17 `unit/` files → real class-level tests | Every unit file imports the module under test |
-| P0-3 | Add `--cov-fail-under=75` to pyproject.toml | CI fails below 75% |
+| P0-3 | Add `--cov-fail-under` gate to pyproject.toml | **Done** — CI uses `--cov-fail-under=75`; local dev uses 89 from `pyproject.toml` (see `[tool.pytest.ini_options]`). |
 | P0-4 | Wire LanguagePlugin.extract_calls() to delegate to CallGraphBuilder (currently stub) | Plugin adapter calls same extraction as orchestrator |
 | P0-5 | Add pre-commit hooks (ruff + mypy) | `.pre-commit-config.yaml` committed |
 
@@ -370,7 +370,7 @@ Rust, JS, TS, Go parser directories exist with scaffolding. No actual parsing lo
 | P1-4 | Complete `statespace/compiler.py` action/transition/likelihood extraction | StateSpaceModel populated for all 3 control-positive repos | **DONE** — variables, actions, observations, transitions populated for every fixture that yields them (see Table 6 in §6). |
 | P1-5 | Complete `process/timeline.py` (16%) temporal analysis | Timeline events extracted for event_pipeline fixture | Pending |
 | P1-6 | Wire dynamic analysis into default pipeline with opt-out flag | `--no-dynamic` flag; coverage paths enrich confidence tiers | **DONE** — `PipelineConfig.skip_dynamic` wired to `--no-dynamic` in `cogant/cli/main.py`. |
-| P1-7 | Validate GNN output section completeness for all fixtures | Document which of 18 sections populate, which are empty | **DONE** — `gnn_package/` validates at 100.0 on every fixture; 19-file layout documented in §6 Table 7. |
+| P1-7 | Validate GNN output section completeness for all fixtures | Document which of 19 sections populate, which are empty | **DONE** — `gnn_package/` validates at 100.0 on every fixture; 19-file layout documented in §6 Table 7. |
 | P1-8 | Implement A/B/C/D matrices in `cogant/gnn/matrices.py` | Normalized A, B, C, D matrices emitted in `model.gnn.json` | **DONE** — `GNNMatrices` class with `compute_A/B/C/D()` shipped; see §5 shipped capability 7. |
 | P1-9 | Principled VFE/EFE in `cogant/simulate/free_energy.py` | `variational_free_energy` / `expected_free_energy` use KL + log likelihood on matrices | **DONE** — canonical Active Inference formulation shipped; see §5 shipped capability 8. |
 | P1-10 | Markov blanket extraction with multiple seed strategies | Explicit, module, kind, auto-cohesion, mapping_kind strategies supported | **DONE** — see `cogant/markov/extractor.py`; five strategies live. |
@@ -426,7 +426,7 @@ All 5 open questions from v1 of this report have been answered:
 | Question | Decision |
 |----------|---------|
 | End goal | All four: working tool + paper + ML dataset + demo |
-| Translation rules | Audit and make best (19 real rules confirmed; gaps identified above) |
+| Translation rules | Audit and make best (22 real rules confirmed; gaps identified above) |
 | Rust | Yes, build and wire it |
 | Testing standard | 100% real — no hollow tests, real class instantiation |
 | Manuscript vs. implementation | Co-evolve both to completeness and accuracy |
@@ -474,7 +474,7 @@ cogant/
 │   │   ├── engine.py            # Fixpoint engine ✅ (87%)
 │   │   ├── confidence.py        # Confidence model ⚠️ (52%)
 │   │   ├── review.py            # Human curation ❌ (17%)
-│   │   └── rules/               # 22 rules ✅ (54-86%)
+│   │   └── rules/               # 22 rules ✅ (54-86%)  [5 structural + 5 semantic + 3 control + 4 behavioral + 5 resilience]
 │   ├── statespace/
 │   │   ├── compiler.py          # StateSpaceCompiler ⚠️ (75%)
 │   │   ├── variables.py         # Variable extraction ⚠️ (59%)

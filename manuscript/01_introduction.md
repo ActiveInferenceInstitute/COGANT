@@ -1,4 +1,4 @@
-# Introduction and Scope
+# Introduction and Scope {#sec:01-introduction}
 
 Machine learning on source code has matured alongside static analysis: both need structured representations of programs, but learning pipelines additionally need fixed feature layouts, batchable graphs, and reproducible exports [@allamanis2018survey]. COGANT addresses that gap by making the path from repository checkout to **Generalized Notation Notation (GNN) bundles** explicit, inspectable, and configurable.
 
@@ -32,6 +32,7 @@ The canonical API and CLI details live in:
 
 - `../cogant/docs/api/README.md` — Session, `PipelineRunner`, `Bundle`, `ReviewAPI`
 - `../cogant/docs/cli/README.md` — commands and flags
+- `../cogant/docs/cli_reference.md` — consolidated CLI reference (flags and common workflows)
 - `../cogant/docs/export/README.md` — Generalized Notation Notation schema, section ordering, and companion interop field contracts (including optional PyG/DGL tensor views)
 - `../cogant/docs/plugins/README.md` — parsers, rules, validators, exporters
 - `../cogant/docs/architecture/README.md` — layers, crates, data flow
@@ -51,7 +52,7 @@ The modular docs tree under [`../cogant/docs/`](../cogant/docs/) is the authorit
 
 ## Dual Python/Rust architecture
 
-COGANT employs a dual-language architecture. The **Python orchestration layer** handles session management, pipeline coordination, configuration, file discovery, AST parsing, and the plugin interface -- tasks where developer ergonomics and extensibility matter more than raw throughput. The **Rust core**, organized as a workspace of eight crates (`cogant-core`, `cogant-graph`, `cogant-translate`, `cogant-statespace`, `cogant-store`, `cogant-trace`, `cogant-gnn`, `cogant-ffi`), implements typed graph operations, translation internals, trace-oriented plumbing, state-space structures, and Generalized Notation Notation (GNN) formatting -- tasks where memory layout and cache locality dominate wall-clock time. Communication between layers flows through PyO3 bindings (`cogant-ffi`), which release the Python GIL during Rust execution to permit concurrent stage processing. Where Rust bindings are not yet wired for a code path (see the implementation-status table in `../cogant/docs/reference/implementation_status.md`), Python fallback implementations ensure the pipeline remains functional at the cost of higher latency on large repositories.
+COGANT employs a dual-language architecture. The **Python orchestration layer** handles session management, pipeline coordination, configuration, file discovery, AST parsing, and the plugin interface -- tasks where developer ergonomics and extensibility matter more than raw throughput. The **Rust core**, organized as a workspace of eight crates (`cogant-core`, `cogant-graph`, `cogant-translate`, `cogant-statespace`, `cogant-store`, `cogant-trace`, `cogant-gnn`, `cogant-ffi`), implements typed graph operations, translation internals, trace-oriented plumbing, state-space structures, and Generalized Notation Notation (GNN) formatting -- tasks where memory layout and cache locality dominate wall-clock time. Communication between layers flows through PyO3 bindings (`cogant-ffi`), which release the Python GIL during Rust execution to permit concurrent stage processing. The current Rust-wired paths (`connected_components`, graph traversal) are enumerated in `../cogant/docs/reference/implementation_status.md`; remaining Python-only paths are gated behind `COGANT_USE_RUST=0` (the default), enabling benchmarking on both execution paths without changing pipeline results.
 
 ## Roadmap of the following sections
 

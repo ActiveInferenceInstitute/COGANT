@@ -8,7 +8,7 @@ Semantic Lead
 
 **GNN → Python synthesis and round-trip validation:**
 
-1. **Parse GNN markdown** (`parser.py`) — read the 18-section GNN format, validate structure, extract matrices (A/B/C/D), state variables, and role counts.
+1. **Parse GNN markdown** (`parser.py`) — read the 19-section GNN format (see `cogant.gnn.validator.GNNValidator.CANONICAL_SECTIONS`), validate structure, extract matrices (A/B/C/D), state variables, and role counts.
 2. **Plan package structure** (`planner.py`) — generate a `PackagePlan` that maps GNN roles to Python classes and functions (HIDDEN_STATE → class attributes, OBSERVATION → @property getters, ACTION → methods, POLICY → decision logic, CONSTRAINT → assertions, CONTEXT → config).
 3. **Synthesize Python package** (`synthesizer.py`) — emit runnable Python code with matrix functions (`likelihood`, `transition`, `expected_free_energy`, `best_action`), an `AgentRuntime`, and stubs for each role.
 4. **Verify round-trip isomorphism** (`idempotency.py`) — run the forward pipeline on the synthesized package and compare role distributions. v0.5.0 achieves **23/23 ISOMORPHIC** (ε ≥ 0.8, with mean ε = 1.0).
@@ -16,7 +16,7 @@ Semantic Lead
 
 ## Coordination
 
-- **Input:** GNN markdown bundle from export stage (18 sections, A/B/C/D matrices, semantic mappings).
+- **Input:** GNN markdown bundle from export stage (19 sections, A/B/C/D matrices, semantic mappings).
 - **Output:** Synthesized Python package with matrix functions and `AgentRuntime` ready for simulation.
 - **Downstream:** `runtime/` executes the synthesized matrices in an active inference agent loop.
 - **Validation:** `idempotency.py` feeds the synthesized package back through the forward pipeline to verify semantic fidelity.

@@ -1,8 +1,8 @@
 # CLI Reference
 
-COGANT ships a Typer-based CLI (entry point `cogant`, defined in `py/cogant/cli/main.py`) that registers **22 top-level subcommands**. Every subcommand supports `--help`; the list below covers the ones most commonly used day-to-day.
+COGANT ships a Typer-based CLI (entry point `cogant`, defined in `py/cogant/cli/main.py`) that registers **26 top-level subcommands** as of v0.5.0. Every subcommand supports `--help`; the list below covers the ones most commonly used day-to-day.
 
-Run `cogant --help` to see the authoritative, in-tree list.
+Run `cogant --help` to see the authoritative, in-tree list (counts change when new commands ship).
 
 ## `cogant translate`
 

@@ -13,7 +13,13 @@ When the Python API, CLI, export schema, or implementation status changes, updat
 
 Implementation status: [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md).
 
-When updating quantitative claims, refresh [`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml) (`uv run python ../tools/regenerate_metrics.py` from [`../cogant/`](../cogant/)), then run [`../scripts/z_generate_manuscript_variables.py`](../scripts/z_generate_manuscript_variables.py) from the repo root so `{{PLACEHOLDER}}` tokens in `*.md` resolve consistently. Registry: [`../tools/manuscript_vars.py`](../tools/manuscript_vars.py). After link edits, run [`../cogant/docs/verify_manuscript_links.py`](../cogant/docs/verify_manuscript_links.py) from the package root.
+When updating quantitative claims, refresh [`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml) (`uv run python ../tools/regenerate_metrics.py` from [`../cogant/`](../cogant/)), then run [`../scripts/z_generate_manuscript_variables.py`](../scripts/z_generate_manuscript_variables.py) from the repo root so `{{ TOKEN }}` tokens in `*.md` resolve consistently (registered names in [`../tools/manuscript_vars.py`](../tools/manuscript_vars.py); no spaces inside real keys). Use `--strict` on that script in CI only when no stray placeholder tokens remain in prose (documentation may use spaced `{{ TOKEN }}` forms that the injector ignores). After link edits, run [`../cogant/docs/verify_manuscript_links.py`](../cogant/docs/verify_manuscript_links.py) from the package root.
+
+**Table 9 (per-module coverage).** The statement-count and per-module percentage rows are canonical in [`06_04_tests_mutation_and_benchmarks.md`](06_04_tests_mutation_and_benchmarks.md) (`{#tbl:coverage-stmt-modules}`). [`06_experimental_setup.md`](06_experimental_setup.md) references that table with `@tbl:` / `@sec:` pointers only — it does **not** duplicate the table body (duplicate table labels break pandoc-crossref). These rows are **not** in `METRICS.yaml`. Refresh them from the canonical `coverage.py` report whenever the test suite or omit rules change, so they match the injected aggregate coverage and timestamp fields.
+
+## Cross-references (pandoc-crossref)
+
+Section and table identifiers use `{#sec:…}` / `{#tbl:…}` on headings and table captions; prose references use `@sec:…` and `@tbl:…`. See [`SYNTAX.md`](SYNTAX.md). The combined PDF renderer runs Pandoc with `--filter pandoc-crossref` when the `pandoc-crossref` binary is on `PATH`; install it locally for resolved references in PDF output.
 
 ## Files excluded from combined PDF body
 
@@ -29,7 +35,7 @@ Per `infrastructure/rendering/manuscript_discovery.py`, these names are **not** 
 
 Keep numbering aligned with [`../../../infrastructure/rendering/manuscript_discovery.py`](../../../infrastructure/rendering/manuscript_discovery.py).
 
-**Appendix status (as of v{{VERSION}}):**
+**Appendix status (as of v0.5.0):**
 - S01 (Appendix A — Roundtrip ε): complete
 - S02 (Appendix B — Ablation): complete
 - S03 (Appendix C — Galois sketch): complete (ε-isomorphism theorem and threshold proposition added)
@@ -42,8 +48,8 @@ Do **not** place full duplicate papers in the flat manuscript directory if they 
 
 Canonical technical hubs to sync when the implementation changes:
 
+- [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md) (full map of `docs/` modules and `docs/<module>/` areas)
 - [`../cogant/docs/index.md`](../cogant/docs/index.md) (published docs entry)
-- [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md) (map of `docs/<module>/` areas)
 - [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md)
 - [`../cogant/docs/api/README.md`](../cogant/docs/api/README.md)
 - [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md)
@@ -71,8 +77,7 @@ is authoritative for the narrative framing and pedagogical presentation. When re
 a conflict, update the manuscript to match the package docs — never the reverse.
 
 **Breaking changes:** when an API is removed or renamed, cite the old form in the
-manuscript with a note: "(deprecated since v{{VERSION}}; see `CHANGELOG.md` for the
-replacement)". Update the prose to the new form once the new form ships and is tested.
+manuscript with a note: "(deprecated; see `CHANGELOG.md` for the replacement)". Update the prose to the new form once the new form ships and is tested.
 
 ## Citations
 

@@ -10,6 +10,10 @@ The `server/` module provides **HTTP/REST API access** to COGANT. It wraps the e
 Primary backend: FastAPI + uvicorn (production-grade, OpenAPI docs auto-generated)
 Fallback: stdlib `http.server` (for testing in minimal environments; same contract)
 
+**OpenAPI:** `starlette.requests.Request` is imported at **module** scope in `app.py` (not inside
+`create_app`) so Pydantic v2 can resolve the type for `GET /openapi.json` without a broken
+`ForwardRef('Request')`.
+
 ## Pipeline Integration
 
 ```

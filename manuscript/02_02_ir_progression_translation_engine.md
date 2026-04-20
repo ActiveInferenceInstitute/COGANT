@@ -1,4 +1,4 @@
-# Intermediate Representations (IR) progression, translation engine, and algorithms
+# Intermediate Representations (IR) progression, translation engine, and algorithms {#sec:02-02-ir-progression-translation-engine}
 
 ## Progressive IRs
 
@@ -74,4 +74,8 @@ $\mathcal{R} \leftarrow \emptyset$ \tcp*{removal set}
 \end{algorithm}
 
 Algorithm \ref{alg:conflict} detects conflicts via an inverted index in $O(\sum_v |\mathcal{I}(v)|^2)$ worst-case time, which is substantially faster than the naive all-pairs scan for graphs where most nodes carry at most one mapping.
+
+## See also (MkDocs)
+
+Rule framework and per-family reference: [`../cogant/docs/rules/README.md`](../cogant/docs/rules/README.md). Role-to-code mapping narrative: [`../cogant/docs/theory/active_inference.md`](../cogant/docs/theory/active_inference.md).
 

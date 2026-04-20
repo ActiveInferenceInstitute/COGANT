@@ -58,7 +58,7 @@ unifying theory that motivates COGANT's entire pipeline.
 **Active Inference Institute (AII)** — The upstream maintainer of the GNN reference
 specification COGANT targets. <https://activeinference.org/>.
 
-**`ActInfOntologyAnnotation`** — One of the 18 sections in a GNN markdown file. Maps each
+**`ActInfOntologyAnnotation`** — One of the 19 sections in a GNN markdown file. Maps each
 declared variable to an Active Inference ontology term (e.g. `HiddenStateFactor0`,
 `PolicyVector`).
 
@@ -116,7 +116,7 @@ a class contains its methods, and so on.
 **`ContainmentRule`** — A translation rule that emits `CONTAINMENT` mappings for pairs of
 nodes joined by a `CONTAINS` edge.
 
-**Control rules** — The `control.py` rule family. Contains `ConfigRule` and `FeatureFlagRule`.
+**Control rules** — The `control.py` rule family. Contains `ConfigRule`, `FeatureFlagRule`, and `ParameterRule`.
 
 ## D
 
@@ -343,7 +343,7 @@ Recorded as file:line:col spans and stored in `provenance.json` in the GNN packa
 `POLICY` and `CIRCUIT_BREAKER` mappings.
 
 **Resilience rules** — The `resilience.py` rule family. Includes `RetryPatternRule`,
-`ErrorBoundaryRule`, `SingletonAccessRule`, `CircuitBreakerRule`.
+`ErrorBoundaryRule`, `SingletonAccessRule`, `CircuitBreakerRule`, `RateLimiterRule`.
 
 **Reverse mode** — Synonym for **reverse pipeline**. Prefer "reverse pipeline" in operational
 documentation.

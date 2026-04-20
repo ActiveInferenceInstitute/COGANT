@@ -21,7 +21,7 @@ uv run pytest tests/unit -v
 uv run pytest tests/integration -v
 ```
 
-Default `addopts` in `pyproject.toml` enable coverage with `--cov-fail-under=75`. When you run **a single test file** that does not execute enough of `cogant`, coverage can drop below the threshold and fail. Use:
+Default `addopts` in `pyproject.toml` enable coverage with `--cov-fail-under=89` (line gate; reported total is typically ~90% on measured lines, omits `tools/` and `static/treesitter_parser.py`). When you run **a single test file** that does not execute enough of `cogant`, coverage can drop below the threshold and fail. Use:
 
 ```bash
 uv run pytest tests/unit/test_foo.py --no-cov
@@ -40,10 +40,13 @@ Golden tests compare output against saved "golden" expectations:
 Location: tests/golden/
 Files: *.json, *.yaml, *.md (golden expectations)
 
-## Coverage targets
-- Unit test coverage: ≥ 80%
-- Integration test coverage: ≥ 60%
-- Critical paths: ≥ 90%
+## Coverage policy
+
+Configured in `pyproject.toml` (`[tool.coverage.run]`, `[tool.coverage.report]`):
+- **Line gate**: `--cov-fail-under=89` (computed total is typically ~89.9–90.0%)
+- **Branch**: `branch = false` (line-only gate)
+- **Omit**: `cogant/tools/`, `cogant/static/treesitter_parser.py`
+- Run `uv run pytest tests/ --cov=cogant --cov-report=term-missing` for a full report
 
 ## Dependencies
 - pytest — test runner

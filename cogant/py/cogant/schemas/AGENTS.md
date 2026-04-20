@@ -30,6 +30,6 @@ Add new types to appropriate module files (state_space.py for state concepts, se
 - state_space.py — StateSpaceKind, StateVariable, ObservationModality, Action, Transition, Likelihood, StateSpaceModel
 - process_model.py — ProcessKind, TriggerKind, SideEffect, ProcessStage, ProcessPolicy, ProcessTimeline, ProcessModel
 - provenance.py — EvidenceKind enum; ProvenanceRecord, ProvenanceStore (Pydantic models)
-- gnn_export.py — 18 canonical section schemas: GNNMetadata, RepositoryMetadata, SourceCoverage, GraphSection, ObservationModalitySection, ActionPolicySection, ConnectionSection, FactorSection, TransitionStructureSection, LikelihoodStructureSection, PreferenceConstraintSection, TimeSettingSection, ParameterizationSection, OntologyMappingSection, ProvenanceSection, ConfidenceSection, RenderingHints, ValidationNotes, GNNExportBundle
+- gnn_export.py — 19 canonical sections (13 Section classes + RenderingHints + ValidationNotes + GNNMetadata + RepositoryMetadata + SourceCoverage + GNNExportBundle): GNNMetadata, RepositoryMetadata, SourceCoverage, GraphSection, ObservationModalitySection, ActionPolicySection, ConnectionSection, FactorSection, TransitionStructureSection, LikelihoodStructureSection, PreferenceConstraintSection, TimeSettingSection, ParameterizationSection, OntologyMappingSection, ProvenanceSection, ConfidenceSection, RenderingHints, ValidationNotes, GNNExportBundle
 - validation.py — CheckLevel, CheckStatus, ValidationCheck, ValidationMetrics, ValidationRecommendation, ValidationReport
 - __init__.py — Public type aliases and exports

@@ -1,8 +1,6 @@
-# Program graph and formal foundations
+# Program graph and formal foundations {#sec:02-01-program-graph-and-formal-foundations}
 
-# Methodology: Program Graphs and Intermediate Representations
-
-## Program graph
+## Program graph {#sec:02-01-program-graph}
 
 Let $G = (V, E)$ denote a directed graph whose vertices $V$ represent program entities and whose edges $E$ represent relationships. COGANT assigns each node a **kind** (for example function, variable, type) and a **semantic role** (for example definition versus use). Each node and edge may carry:
 
@@ -23,9 +21,9 @@ Two program graphs $G_1 = (V_1, E_1)$ and $G_2 = (V_2, E_2)$ are usefully compar
 
 Equation \ref{eq:typed-iso} formalizes the structural invariant we check during deduplication and cross-repository linking: a candidate bijection $\phi$ is accepted only when every edge in $G_1$ has a corresponding edge between the images of its endpoints in $G_2$ (and vice versa), so that label-preserving matches strictly preserve the adjacency structure of both program graphs.
 
-## Formal definitions
+## Formal definitions {#sec:02-01-formal-definitions}
 
-This subsection makes the objects manipulated by the pipeline mathematically explicit. The definitions are stated for the shipped v{{VERSION}} engine; where the implementation differs from the general form (for example because an edge kind is not yet emitted by the Python front end), the difference is noted with a forward reference to Section 6. A complete index of all symbols, equation labels, theorems, and acronyms introduced in this section and throughout the manuscript is in the Notation Supplement (`98_notation_supplement.md`, Groups G.1–G.9).
+This subsection makes the objects manipulated by the pipeline mathematically explicit. The definitions are stated for the shipped v{{VERSION}} engine; where the AST front end targets a structural subset of the full edge taxonomy, the scope is noted with a forward reference to @sec:06-experimental-setup. A complete index of all symbols, equation labels, theorems, and acronyms introduced in this section and throughout the manuscript is in the Notation Supplement (`98_notation_supplement.md`, Groups G.1–G.9).
 
 **Definition 1 (Program graph).** A **program graph** is a tuple $G = (V, E, \lambda_V, \lambda_E, \tau)$ where
 
@@ -35,7 +33,9 @@ This subsection makes the objects manipulated by the pipeline mathematically exp
 - $\lambda_E : E \to K$ is the (trivial) projection onto the edge kind;
 - $\tau : V \to (T \cup \{\bot\})$ maps each node to a type annotation recovered from the front end or to $\bot$ when no annotation is available.
 
-The shipped Python front end populates the kinds $\{\text{MODULE}, \text{CLASS}, \text{METHOD}, \text{FUNCTION}\}$ and the edge kinds $\{\text{CALLS}, \text{CONTAINS}, \text{READS}, \text{WRITES}, \text{IMPORTS}, \text{INHERITS}\}$; the remaining kinds in $\mathcal{N}$ and $K$ are declared in `cogant.schemas.core` but currently emitted only when other parsers or dynamic enrichment stages fire. The empirical distribution on the six packaged fixtures is recorded in Tables 4 and 5 of Section 6.
+The shipped Python front end populates the kinds $\{\text{MODULE}, \text{CLASS}, \text{METHOD}, \text{FUNCTION}\}$ and the edge kinds $\{\text{CALLS}, \text{CONTAINS}, \text{READS}, \text{WRITES}, \text{IMPORTS}, \text{INHERITS}\}$; the remaining kinds in $\mathcal{N}$ and $K$ are declared in `cogant.schemas.core` but currently emitted only when other parsers or dynamic enrichment stages fire. The empirical distribution on the six packaged fixtures is recorded in @tbl:repo-pipeline-metrics and @tbl:fixture-graph-metrics in @sec:06-experimental-setup.
+
+**Mapping kinds vs graph roles.** Translation rules emit `SemanticMapping` records whose `kind` field uses `MappingKind` from `cogant.schemas.semantic`. The seven names highlighted in the abstract are the Active Inference subset of that enum; additional `MappingKind` members (`DATA_FLOW`, `CONTROL_FLOW`, `ORCHESTRATION`, …) cover non-AI structural patterns. Separately, `SemanticRole` in `cogant.schemas.semantic_mapping` enumerates a broader set of graph-level role labels (for example `PARAMETER`, `CONFIGURATION`); `METRICS.yaml` `ir_schema.active_inf_role_count` tracks the seven-name AI subset verified against `MappingKind`.
 
 **Definition 2 (Translation rule).** A **translation rule** is a quadruple $r = (\varphi_r, \kappa_r, w_r, p_r)$ where
 
@@ -81,7 +81,7 @@ C &\in \mathbb{R}^{|\mathbf{O}|}, & C_i &= \log \tilde{P}(o_i), & \\
 D &\in \mathbb{R}^{|\mathbf{V}|}, & D_j &= P(s_j \mid t = 0), & \sum_j D_j &= 1.
 \end{align}
 
-$A$ is derived from $\{\text{READS}, \text{OBSERVES}, \text{DEPENDS\_ON}\}$ edges between observation and hidden-state nodes; $B$ is derived from $\{\text{WRITES}, \text{MUTATES}\}$ edges from action to hidden-state nodes, with identity fallback when an action writes nothing; $C$ is derived from the signed confidence scores of CONSTRAINT/PREFERENCE mappings adjacent to each observation; and $D$ is derived from CONFIGURATION-neighbour bias on hidden-state variables or falls back to a uniform prior. The derivation is performed by `GNNMatrices` in `../cogant/py/cogant/gnn/matrices.py` and uses no numerical dependencies beyond the Python standard library. Rows (for $A$) and columns (for $B$) and the vectors $D$ are normalised to valid probability distributions using the high-direct / low-indirect mass defaults $(0.9, 0.1)$ imported from the upstream PyMDP placeholder convention; the $C$ vector is a log-preference and is not normalised.
+$A$ is derived from $\{\text{READS}, \text{OBSERVES}, \text{DEPENDS\_ON}\}$ edges between observation and hidden-state nodes; $B$ is derived from $\{\text{WRITES}, \text{MUTATES}\}$ edges from action to hidden-state nodes, with identity fallback when an action writes nothing; $C$ is derived from the signed confidence scores of CONSTRAINT/PREFERENCE mappings adjacent to each observation; and $D$ is derived from CONFIGURATION-neighbour bias on hidden-state variables or falls back to a uniform prior. The derivation is performed by `GNNMatrices` in `../cogant/py/cogant/gnn/matrices.py` and uses no numerical dependencies beyond the Python standard library. Rows (for $A$) and columns (for $B$) and the vectors $D$ are normalised to valid probability distributions using the high-direct / low-indirect mass defaults $(0.9, 0.1)$ defined in `GNNMatrices._normalize`; the $C$ vector is a log-preference and is not normalised.
 
 ### Theorems
 
@@ -101,4 +101,8 @@ stabilises in at most $|\mathcal{M}|$ iterations, where $|\mathcal{M}| \leq n \c
 **Theorem 3 (Matrix validity).** If $|\mathbf{O}| \geq 1$, $|\mathbf{V}| \geq 1$, and $|\mathbf{A}| \geq 1$, then the matrices $(A, B, C, D)$ produced by `GNNMatrices.compute_A/B/C/D` satisfy the stochastic conditions of Definition 5 within a numerical tolerance of $10^{-6}$.
 
 *Proof sketch.* Rows of $A$ are produced in Equation (\ref{eq:matrices-defn}) with explicit normalisation (`_normalize_row()` at `matrices.py` line 277), which divides by the row sum when it exceeds $\varepsilon = 10^{-9}$ and returns a uniform row otherwise. Columns of each action slice $B[:,:,k]$ are produced by the same helper on lines 334--348, with an identity fallback ensuring the resulting column is never all-zero. The prior $D$ is built as a weighted vector of confidence scores and passed through `_normalize_vector()`, again with a uniform fallback when all weights are below $\varepsilon$. The implementation therefore establishes the sum-to-one invariant by construction, and `validate_shapes()` (lines 554--603) enforces a tolerance of $10^{-6}$ on every computed matrix before the pipeline accepts the bundle; all six packaged fixtures pass `GNNValidator` with zero errors (Table 7), which is observationally the same statement as Theorem 3 on those fixtures. The $C$ vector is a log-preference and is exempt from the sum-to-one requirement. $\blacksquare$
+
+## See also (MkDocs)
+
+System layers and pipeline data flow: [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md). Formal isomorphism / round-trip theory: [`../cogant/docs/theory/isomorphism.md`](../cogant/docs/theory/isomorphism.md), [`../cogant/docs/theory/roundtrip.md`](../cogant/docs/theory/roundtrip.md).
 

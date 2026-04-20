@@ -1,4 +1,4 @@
-# Scope and related work: landscape and tool categories
+# Scope and related work: landscape and tool categories {#sec:08-01-landscape-and-tool-categories}
 
 ## COGANT in the program-analysis landscape
 
@@ -15,4 +15,8 @@ COGANT sits at the intersection of three established research areas: machine lea
 - **Compiler and LLVM IRs** — richer semantics, heavier toolchain; COGANT favors lightweight extraction for dataset building.
 - **SCA and linters** — rule enforcement focus; COGANT focuses on graph generation for downstream learning.
 - **Neural code models** (code2vec, CodeBERT, etc.) — often consume tokens or AST paths; COGANT supplies **explicit program graphs** that graph-neural-network-centric research can ingest directly.
+
+## See also (MkDocs)
+
+Long-form evaluation-related work survey: [`../cogant/docs/evaluation/RELATED_WORK.md`](../cogant/docs/evaluation/RELATED_WORK.md).
 

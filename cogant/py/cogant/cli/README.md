@@ -26,7 +26,7 @@ cogant render: Generate interactive HTML site from bundle.json, creating index.h
 
 cogant viz: Walk a run/output directory and rasterize Mermaid, SVG, dot, and related artifacts to PNG (see `cogant.viz.png_export`).
 
-cogant validate: Run validation checks on bundle.json, or on a directory containing `gnn_package/` (full GNN package validation when applicable).
+cogant validate: Run validation checks on bundle.json, or on a directory containing `gnn_package/` (full GNN package validation when applicable). For a `gnn_package` directory, Active Inference Institute `src.gnn` checks on `model.gnn.md` run by default; pass `--no-upstream-gnn` to skip them while keeping COGANT structural validation, or set `COGANT_DISABLE_UPSTREAM_GNN=1`.
 
 cogant diff: Compare two bundle.json files showing differences in errors and stages. Supports baseline vs current analysis.
 
@@ -64,7 +64,7 @@ cogant benchmark ./my_repo --iterations 5
 
 ## Implementation
 
-main.py: Typer app instance with 24 subcommands (22 `@app.command()` decorators + 2 `app.command(name=...)` registrations for `reverse` and `roundtrip`). Each command uses Session, PipelineRunner, or ReviewAPI from cogant.api. Rich Console for styled table and panel output. Typer.Argument and Typer.Option for parameter handling.
+main.py: Typer app instance surfacing 26 user-facing entries in `cogant --help`: 22 `@app.command()` decorators, plus 2 `app.command(name=...)` registrations for `reverse` and `roundtrip` (24 on `app` directly), plus the `plugin` and `migrate` sub-typer groups attached via `app.add_typer`. Each command delegates to Session, PipelineRunner, or ReviewAPI from `cogant.api`. Rich Console for styled table and panel output. Typer.Argument and Typer.Option for parameter handling.
 
 diff.py: Helper functions load_bundle and diff_command for comparing two output directories using DriftAnalyzer and CodebaseMetrics.
 

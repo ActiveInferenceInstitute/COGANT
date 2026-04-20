@@ -30,7 +30,7 @@ Entries marked with "(details need verification)" have authors and approximate y
 ### [nielson2005principles] Nielson, Nielson, Hankin (2005, 2nd printing) — "Principles of Program Analysis"
 **Relevance**: The standard textbook reference for data-flow analysis, abstract interpretation, and type-and-effect systems. COGANT's translate stage is a worklist fixpoint computation that owes its correctness arguments to the framework laid out in this book.
 **Key contribution**: A unified treatment of four main analysis styles (data-flow, control-flow, abstract interpretation, type-and-effect), including the lattice-theoretic framework that guarantees termination and soundness of fixpoint iterations.
-**Connection**: The 19-rule fixpoint engine in `cogant.translate.engine` is a direct instance of the monotone framework; its conflict-resolution ordering and confidence-tier promotion reuse the priority-queue worklist pattern described in Chapter 2.
+**Connection**: The 22-rule fixpoint engine in `cogant.translate.engine` is a direct instance of the monotone framework; its conflict-resolution ordering and confidence-tier promotion reuse the priority-queue worklist pattern described in Chapter 2.
 
 ### [BRAVENBOER_2009] Bravenboer, Smaragdakis (2009) — "Strictly Declarative Specification of Sophisticated Points-to Analyses"
 **Relevance**: Introduces the Doop framework, which encodes points-to analysis as Datalog rules over a relational representation of Java bytecode. Demonstrates that even complex interprocedural analyses can be expressed declaratively.

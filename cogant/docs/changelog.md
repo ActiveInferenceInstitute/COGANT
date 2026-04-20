@@ -1,4 +1,4 @@
-<!-- Canonical source: `CHANGELOG.md` at repository root. Edit that file first, then copy here so MkDocs stays aligned: `cp CHANGELOG.md docs/changelog.md` -->
+<!-- Canonical source: `CHANGELOG.md` at repository root. Edit that file first, then copy here: `cp CHANGELOG.md docs/changelog.md`. The v0.5.0 "Test and Type Safety" / Markov strategy lines below may be amended for accuracy between full syncs. -->
 
 # CHANGELOG
 
@@ -37,15 +37,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Pipeline runner** — Default stages now explicitly list all 10 (ingest, static, normalize, graph, dynamic, translate, statespace, process, export, validate).
 
 ### Test and Type Safety
-- **2129 tests passing** with 86 skipped (optional toolchains), 12 failing (known xfails), 1 xpassed. Line coverage: **83.42%** on `py/cogant/`.
+- **v0.5.0 release snapshot:** 2129 tests passing with 86 skipped (optional toolchains), 12 xfailed, 1 xpassed; line coverage **83.42%** on `py/cogant/` before later suite expansion. Current counts and coverage policy: run `uv run pytest tests/ -q` and see `pyproject.toml` (`--cov-fail-under=89`, line gate, `omit` paths).
 - **mypy strict: 0 errors** across 179 source files.
 - **ruff check: 0 violations** on v0.5.0 codebase.
 
 ### Measurement
 - **Incremental mode speedups:** 19.6× no-change (cached graph), 5.6× single-file (partial re-run) on Flask.
 - **Roundtrip metric:** 23/23 ISOMORPHIC, mean ε = 1.0000, min ε = 1.0000, max ε = 1.0000 (perfect match on all targets).
-- **Semantic roles discovered:** 22 translation rules assigned HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT roles; 7 total role kinds.
-- **Markov blanket strategies:** 5 seed strategies (auto, module, class, subgraph, manual) for blanket extraction; auto strategy deterministic with O(V+E) complexity.
+- **Semantic roles discovered:** 22 translation rules emit `MappingKind` labels; the seven-name **Active Inference** subset counted in metrics is HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE, CONSTRAINT, CONTEXT (see `METRICS.yaml` `ir_schema.active_inf_role_count`).
+- **Markov blanket strategies:** `MarkovBlanketExtractor` supports `explicit`, `module`, `kind`, `auto`, `mapping_kind`; partitioning via `partition_by_seeds` is O(V+E).
 
 ## [0.4.0] - 2026-04-10
 

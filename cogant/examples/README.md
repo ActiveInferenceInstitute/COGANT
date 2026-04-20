@@ -2,12 +2,12 @@
 
 Example repositories and scripts demonstrating COGANT usage.
 
-Authoritative CLI list: [docs/CLI_GUIDE.md](../docs/CLI_GUIDE.md) (same as `cogant --help`).
+Authoritative CLI list: [docs/cli_reference.md](../docs/cli_reference.md) (same as `cogant --help`).
 
 ## Contents
 
 - **control_positive/** — Three hand-crafted fixtures (`calculator/`, `flask_mini/`, `event_pipeline/`) that are known to produce non-empty mappings, state spaces, and GNN packages. These are the canonical "does the pipeline still work end-to-end" targets used by tests and examples.
-- **thin_orchestrated/** — 20 minimal scripts demonstrating each pipeline stage in isolation (01-12) and higher-order workflows that stitch stages together (13-20). See `thin_orchestrated/README.md` for the full index.
+- **thin_orchestrated/** — 30 numbered scripts (`01_*.py`–`30_*.py`): each pipeline stage in isolation (01–12) and higher-order workflows that stitch stages together (13–30). See `thin_orchestrated/README.md` for the full index.
 - **python-service/** — Larger Python service fixture with tests (demo).
 - **workflow-engine/** — Workflow engine fixture with complex control flow (demo).
 - `example_pipeline.py` — Standalone script showing full pipeline usage via the public API.

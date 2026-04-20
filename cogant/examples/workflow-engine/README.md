@@ -2,7 +2,7 @@
 
 Workflow execution engine demonstrating complex control flow and state management.
 
-CLI reference: [docs/CLI_GUIDE.md](../../docs/CLI_GUIDE.md).
+CLI reference: [docs/cli_reference.md](../../docs/cli_reference.md).
 
 ## Structure
 
@@ -26,7 +26,7 @@ From the repository root:
 cogant translate examples/workflow-engine --output output/workflow-engine
 ```
 
-Interactive HTML (`cogant render`) expects a **bundle-shaped JSON** (see [docs/CLI_GUIDE.md](../../docs/CLI_GUIDE.md)). Save one via `Bundle.save_json(...)` after a pipeline run, or use [example_pipeline.py](../example_pipeline.py).
+Interactive HTML (`cogant render`) expects a **bundle-shaped JSON** (see [docs/cli_reference.md](../../docs/cli_reference.md)). Save one via `Bundle.save_json(...)` after a pipeline run, or use [example_pipeline.py](../example_pipeline.py).
 
 Expected output: complex control flow, state transitions, variable tracking
 

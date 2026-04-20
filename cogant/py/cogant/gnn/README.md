@@ -1,13 +1,13 @@
 # GNN — Model Package Building, Validation, and Active Inference Execution
 
-Builds complete GNN model packages from program graphs, validates against 18 canonical sections, and executes Active Inference simulation with belief dynamics and policy evaluation.
+Builds complete GNN model packages from program graphs, validates against 19 canonical sections, and executes Active Inference simulation with belief dynamics and policy evaluation.
 
 ## Core Classes
 
 ### GNNPackageBuilder (package.py)
-Builds on-disk GNN package with 13+ required files:
+Builds on-disk GNN package with 16 required files:
 1. manifest.json — metadata, checksums, package version
-2. model.gnn.md — canonical markdown with all 18 sections
+2. model.gnn.md — canonical markdown with all 19 sections
 3. model.gnn.json — machine-readable model representation
 4. state_space.json — state variables, observations, actions, transitions
 5. observations.json — observation modalities and likelihoods
@@ -20,21 +20,23 @@ Builds on-disk GNN package with 13+ required files:
 12. actions_policies.json — policy definitions
 13. connections.json — factor graph connections
 14. preferences_constraints.json — detailed constraints
+15. markov_blanket.json — Active Inference Markov blanket partition
+16. markov_network.json — collapsed four-role aggregate network
 
 Constructor takes graph: ProgramGraph, state_space: StateSpaceModel, process_model: ProcessModel, mappings: Dict, optional config. build(output_dir: str) -> dict generates all files and returns manifest.
 
 ### GNNValidator (validator.py)
 Validates GNN packages and scores 0-100. Checks:
-- All 11 required files present
+- All 16 required files present
 - JSON valid and well-formed
-- Markdown has all 18 canonical sections in order:
+- Markdown has all 19 canonical sections in order:
   1. model_metadata — name, version, author, description
   2. repository_metadata — url, branch, last_commit, documentation
   3. source_coverage — lines analyzed, files covered, test coverage
   4. state_space — state variables and structure
   5. observation_modalities — sensor types and distributions
   6. actions_policies — action space and policies
-  7. connections — graph structure and dependencies
+  7. program_graph_connections — graph structure and dependencies
   8. factors — factorization and conditional independence
   9. transition_structure — state dynamics
   10. likelihood_structure — observation model
@@ -42,10 +44,11 @@ Validates GNN packages and scores 0-100. Checks:
   12. time_settings — discrete/continuous time, step size
   13. parameterization — learned vs. fixed parameters
   14. ontology_mapping — semantic alignments
-  15. provenance — evidence sources and confidence
-  16. confidence — confidence tiers and scores
-  17. rendering_hints — visualization preferences
-  18. validation_notes — known issues, caveats, recommendations
+  15. markov_blanket — Active Inference boundary partition
+  16. provenance — evidence sources and confidence
+  17. confidence — confidence tiers and scores
+  18. rendering_hints — visualization preferences
+  19. validation_notes — known issues, caveats, recommendations
 - No orphan references, checksums match, provenance complete
 
 Method validate_package(package_dir: str) -> ValidationResult. ValidationResult has valid: bool, score: float (0-100), errors: List[str], warnings: List[str].
@@ -66,33 +69,34 @@ ExecutionTrace records each step with:
 GNNModelRunner(package_dir: str) loads package. run(observations: List, num_steps: int, policies: Optional[List]) -> List[ExecutionTrace] executes simulation and returns trace.
 
 ### GNNMarkdownFormatter (formatter.py)
-Formats GNN markdown with all 18 canonical sections in order. Outputs human-readable GNN markdown suitable for documentation and review.
+Formats GNN markdown with all 19 canonical sections in order. Outputs human-readable GNN markdown suitable for documentation and review.
 
 ### GNNJSONExporter (json_export.py)
 Exports to machine-readable JSON. Produces JSON files for state_space, observations, actions, transitions, preferences, factors, provenance, ontology for programmatic access and downstream tools.
 
 ## Data Model
 
-### 18 Canonical Sections
-All GNN packages must include these sections in order (gnn_export.py):
-1. GNNMetadata — name, version, author, created_at, updated_at
-2. RepositoryMetadata — repository_url, branch, commit_hash, documentation_url
-3. SourceCoverage — lines_analyzed, files_covered, test_coverage_percent
-4. GraphSection — nodes, edges, adjacency structure
-5. ObservationModalitySection — observation_variables, modality_types, likelihood_parameters
-6. ActionPolicySection — action_variables, policy_rules, policy_parameters
-7. ConnectionSection — factor graph structure, conditional dependencies
-8. FactorSection — factor types, scope (which variables), parameterization
-9. TransitionStructureSection — state dynamics, generative model
-10. LikelihoodStructureSection — P(obs|state), observation model
-11. PreferenceConstraintSection — utility functions, hard constraints
-12. TimeSettingSection — time_model, step_size, horizon
-13. ParameterizationSection — learned_parameters, fixed_parameters, priors
-14. OntologyMappingSection — semantic_mappings, ontology_references
-15. ProvenanceSection — evidence_sources, confidence_metadata, provenance_records
-16. ConfidenceSection — confidence_scores, confidence_tiers
-17. RenderingHints — visualization_hints, diagram_types
-18. ValidationNotes — known_issues, caveats, recommendations
+### 19 Canonical Sections
+All GNN packages must include these sections in order (validator.py CANONICAL_SECTIONS):
+1. model_metadata — name, version, author, created_at, updated_at
+2. repository_metadata — repository_url, branch, commit_hash, documentation_url
+3. source_coverage — lines_analyzed, files_covered, test_coverage_percent
+4. state_space — state variables and structure
+5. observation_modalities — observation_variables, modality_types, likelihood_parameters
+6. actions_policies — action_variables, policy_rules, policy_parameters
+7. program_graph_connections — factor graph structure, conditional dependencies
+8. factors — factor types, scope (which variables), parameterization
+9. transition_structure — state dynamics, generative model
+10. likelihood_structure — P(obs|state), observation model
+11. preferences_constraints — utility functions, hard constraints
+12. time_settings — time_model, step_size, horizon
+13. parameterization — learned_parameters, fixed_parameters, priors
+14. ontology_mapping — semantic_mappings, ontology_references
+15. markov_blanket — Active Inference boundary partition (internal/sensory/active/external)
+16. provenance — evidence_sources, confidence_metadata, provenance_records
+17. confidence — confidence_scores, confidence_tiers
+18. rendering_hints — visualization_hints, diagram_types
+19. validation_notes — known_issues, caveats, recommendations
 
 ## Usage
 
@@ -126,5 +130,5 @@ for trace in traces:
 
 ## Dependencies
 - schemas/ — ProgramGraph, StateSpaceModel, ProcessModel, SemanticMapping
-- gnn_export (internal) — 18 canonical section schemas
+- gnn_export (internal) — 19 canonical section schemas
 - simulate/ — CategoricalDistribution, FreeEnergyCalculator (Active Inference)

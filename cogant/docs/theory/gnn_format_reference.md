@@ -1,6 +1,6 @@
 # GNN format reference
 
-> **Status.** COGANT targets the [Active Inference Institute GNN](https://github.com/ActiveInferenceInstitute/) reference format. This page is a working reference for the 18 sections emitted by `cogant translate --layout-output`. For the short version see [`gnn_format.md`](gnn_format.md). The canonical upstream spec lives in the AII GNN repo.
+> **Status.** COGANT targets the [Active Inference Institute GNN](https://github.com/ActiveInferenceInstitute/) reference format. This page is a working reference for the 19 sections emitted by `cogant translate --layout-output`. For the short version see [`gnn_format.md`](gnn_format.md). The canonical upstream spec lives in the AII GNN repo.
 
 ## File layout
 
@@ -9,7 +9,7 @@ A `cogant translate ... --layout-output` run produces a `gnn_package/` directory
 ```text
 gnn_package/
 ├── manifest.json             # package metadata, file inventory, SHA256 checksums
-├── model.gnn.md              # bracket-notation model (human-readable, 18 sections)
+├── model.gnn.md              # bracket-notation model (human-readable, 19 sections)
 ├── model.gnn.json            # machine-readable twin of model.gnn.md
 ├── A.json                    # likelihood matrix
 ├── B.json                    # transition tensor
@@ -28,7 +28,7 @@ gnn_package/
 
 All files are canonical JSON or UTF-8 markdown; no binary formats except the rendered PNGs.
 
-## The 18 sections
+## The 19 sections
 
 `model.gnn.md` contains these sections in order. The validator
 (`py/cogant/gnn/validator.py`) checks that every section is present and well-formed; missing
@@ -50,10 +50,11 @@ sections count against the 0 – 100 score.
 | 12 | `ObservationModalities` | no | Rich metadata for each observation channel |
 | 13 | `ControlFactors` | no | Rich metadata for each action factor |
 | 14 | `MarkovBlanket` | no | Internal / sensory / active / external node lists |
-| 15 | `Evidence` | no | Rule-firing evidence for each mapping |
-| 16 | `Provenance` | no | Per-variable source span references |
-| 17 | `Footer` | yes | Generation timestamp, tool version |
-| 18 | `Signature` | no | Optional cryptographic hash of the model |
+| 15 | `MarkovBlanketNetwork` | no | Collapsed four-role aggregate network |
+| 16 | `Evidence` | no | Rule-firing evidence for each mapping |
+| 17 | `Provenance` | no | Per-variable source span references |
+| 18 | `Footer` | yes | Generation timestamp, tool version |
+| 19 | `Signature` | no | Optional cryptographic hash of the model |
 
 COGANT's v0.1.0 emitter populates sections 1–5, 7–8, 10, and 14–17 unconditionally, and
 attempts sections 6, 11, 12, 13 when the corresponding evidence exists.

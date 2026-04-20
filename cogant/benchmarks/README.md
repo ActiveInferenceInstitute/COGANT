@@ -6,18 +6,28 @@ Performance benchmarks for COGANT critical path and components.
 
 ```
 benchmarks/
-├── AGENTS.md            # Lane ownership and benchmark strategy
-├── README.md            # This file
-└── bench_ingest.py      # File discovery and ingestion
+├── AGENTS.md                   # Lane ownership and benchmark strategy
+├── README.md                   # This file
+├── bench_ingest.py             # File discovery and ingestion
+├── bench_graph_build.py        # ProgramGraph construction throughput
+├── bench_suite.py              # End-to-end pipeline benchmark suite
+├── bench_perf_regression.py    # Regression guard against `perf_baseline.json`
+├── rust_vs_python.py           # Rust FFI vs pure-Python backend comparison
+├── perf_baseline.json          # Recorded performance baseline
+└── results/                    # Run artefacts (gitignored)
 ```
 
-Only `bench_ingest.py` is implemented so far. The other stages (parse, graph, translate, export) have performance targets listed below and are planned but not yet wired. Add each missing `bench_*.py` as the corresponding pipeline stage stabilizes — see the targets table for the expected budget.
+Stage coverage is partial — parse, translate, and export benchmarks are not yet wired; add each
+missing `bench_*.py` as the corresponding pipeline stage stabilizes. See the targets table below
+for the expected budget per stage.
 
 ## Running benchmarks
 
 ```bash
-python benchmarks/bench_ingest.py            # Direct execution
-pytest benchmarks/ --benchmark-only          # Once pytest-benchmark is added to dev deps
+uv run python benchmarks/bench_ingest.py           # direct execution
+uv run python benchmarks/bench_suite.py            # end-to-end suite
+uv run python benchmarks/bench_perf_regression.py  # regression guard vs perf_baseline.json
+uv run pytest benchmarks/ --benchmark-only         # once pytest-benchmark is a dev dep
 ```
 
 ## Performance targets

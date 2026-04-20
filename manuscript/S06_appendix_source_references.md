@@ -1,4 +1,4 @@
-# Appendix F — Source References and Cross-Links
+# Appendix F — Source References and Cross-Links {#sec:S06-appendix-source-references}
 
 This appendix indexes the external COGANT package documentation, evaluation artefacts,
 and manuscript tooling referenced in the main text and other appendices. All paths are
@@ -12,14 +12,14 @@ staging-tree paths (before promotion to `projects/cogant/`), replace
 
 | Artefact | Path | Referenced in |
 |---|---|---|
-| Canonical roundtrip results (post-wave-16) | [`../cogant/docs/evaluation/ROUNDTRIP_EVAL.md`](../cogant/docs/evaluation/ROUNDTRIP_EVAL.md) | Appendix A, §5, §9 |
-| Real-world library evaluation | [`../cogant/docs/evaluation/REAL_WORLD_EVAL.md`](../cogant/docs/evaluation/REAL_WORLD_EVAL.md) | Appendix A |
-| Per-fixture empirical claim runs | [`../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`](../cogant/docs/evaluation/EMPIRICAL_CLAIM.md) | Appendices A, D |
-| POLICY/CONTEXT synthesizer fix (wave-16) | [`../cogant/docs/evaluation/CONSTRAINT_FIX.md`](../cogant/docs/evaluation/CONSTRAINT_FIX.md) | Appendix A.2 |
-| Roundtrip improvement log (wave-13 → 16) | [`../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md`](../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md) | §5, abstract |
-| Active Inference role mapping per rule | [`../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md`](../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md) | §9 (ablation) |
-| Confidence calibration table | [`../cogant/docs/evaluation/CALIBRATION.md`](../cogant/docs/evaluation/CALIBRATION.md) | §9 |
-| Mutation testing report | [`../cogant/docs/evaluation/MUTATION_REPORT.md`](../cogant/docs/evaluation/MUTATION_REPORT.md) | §6.4 |
+| Canonical roundtrip results (post-wave-16) | [`../cogant/docs/evaluation/ROUNDTRIP_EVAL.md`](../cogant/docs/evaluation/ROUNDTRIP_EVAL.md) | @sec:S01-appendix-roundtrip-epsilon, @sec:05-conclusion, @sec:09-ablation |
+| Real-world library evaluation | [`../cogant/docs/evaluation/REAL_WORLD_EVAL.md`](../cogant/docs/evaluation/REAL_WORLD_EVAL.md) | @sec:S01-appendix-roundtrip-epsilon |
+| Per-fixture empirical claim runs | [`../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`](../cogant/docs/evaluation/EMPIRICAL_CLAIM.md) | @sec:S01-appendix-roundtrip-epsilon, @sec:S04-appendix-inference-mathematics |
+| POLICY/CONTEXT synthesizer fix (wave-16) | [`../cogant/docs/evaluation/CONSTRAINT_FIX.md`](../cogant/docs/evaluation/CONSTRAINT_FIX.md) | @sec:S01-appendix-a2-constraint |
+| Roundtrip improvement log (wave-13 → 16) | [`../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md`](../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md) | @sec:05-conclusion, @sec:00-abstract |
+| Active Inference role mapping per rule | [`../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md`](../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md) | @sec:09-ablation |
+| Confidence calibration table | [`../cogant/docs/evaluation/CALIBRATION.md`](../cogant/docs/evaluation/CALIBRATION.md) | @sec:09-ablation |
+| Mutation testing report | [`../cogant/docs/evaluation/MUTATION_REPORT.md`](../cogant/docs/evaluation/MUTATION_REPORT.md) | @sec:06-04-tests-mutation-and-benchmarks |
 | ε-Isomorphism theorem (machine-readable) | [`../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md`](../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md) | Appendix C |
 | Annotated bibliography ({{BIB_ENTRIES}} entries) | [`../cogant/docs/evaluation/LITERATURE.md`](../cogant/docs/evaluation/LITERATURE.md) | Appendix E |
 
@@ -27,9 +27,9 @@ staging-tree paths (before promotion to `projects/cogant/`), replace
 
 | Tool | Path | Purpose |
 |---|---|---|
-| Metric token registry | [`../tools/manuscript_vars.py`](../tools/manuscript_vars.py) | `{{PLACEHOLDER}}` → METRICS.yaml path mapping |
+| Metric token registry | [`../tools/manuscript_vars.py`](../tools/manuscript_vars.py) | `MANUSCRIPT_VARS` keys → dotted paths in `METRICS.yaml` |
 | METRICS.yaml regeneration | [`../tools/regenerate_metrics.py`](../tools/regenerate_metrics.py) | Rebuilds canonical numeric ground truth |
-| Manuscript variable injection | [`../tools/inject_manuscript_vars.py`](../tools/inject_manuscript_vars.py) | Substitutes `{{PLACEHOLDER}}` tokens in `.md` files |
+| Manuscript variable injection | [`../tools/inject_manuscript_vars.py`](../tools/inject_manuscript_vars.py) | Substitutes registered tokens in `.md` files |
 | Metrics freshness check | [`../tools/check_metrics_fresh.py`](../tools/check_metrics_fresh.py) | Detects drift between METRICS.yaml and coverage.json |
 | Manuscript number audit | [`../tools/audit_manuscript_numbers.py`](../tools/audit_manuscript_numbers.py) | Cross-checks prose numbers against METRICS.yaml |
 | Canonical metrics | [`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml) | Single source of truth for all manuscript numbers |
@@ -39,9 +39,9 @@ staging-tree paths (before promotion to `projects/cogant/`), replace
 
 | Section | File | Description |
 |---|---|---|
-| Main text §9 (ablation) | [`09_ablation.md`](09_ablation.md) | Rule-family and matrix ablation (Tables 12–14) |
+| Main text @sec:09-ablation | [`09_ablation.md`](09_ablation.md) | Rule-family and matrix ablation (Tables 12–14) |
 | Appendix B | [`S02_appendix_ablation.md`](S02_appendix_ablation.md) | Per-role ablation on `zoo/01_simple_state` |
-| §2 definitions and theorems | [`02_01_program_graph_and_formal_foundations.md`](02_01_program_graph_and_formal_foundations.md) | Formal program-graph and fixpoint definitions |
+| @sec:02-01-program-graph-and-formal-foundations | [`02_01_program_graph_and_formal_foundations.md`](02_01_program_graph_and_formal_foundations.md) | Formal program-graph and fixpoint definitions |
 | Appendix C | [`S03_appendix_galois_sketch.md`](S03_appendix_galois_sketch.md) | ε-approximate Galois connection proof sketch |
 
 ## Editorial and validation tooling
@@ -52,3 +52,7 @@ staging-tree paths (before promotion to `projects/cogant/`), replace
 | Manuscript structure index | [`README.md`](README.md) | Section ordering, discovery, validation commands |
 | Link verification | [`../cogant/docs/verify_manuscript_links.py`](../cogant/docs/verify_manuscript_links.py) | Checks relative links in `manuscript/*.md` against the package tree |
 | Markdown validation | `uv run python -m infrastructure.validation.cli markdown ./projects_in_progress/cogant/manuscript/` | Template-level Markdown integrity checks |
+
+## See also (MkDocs)
+
+Published documentation home: [`../cogant/docs/index.md`](../cogant/docs/index.md); module map: [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md). In-tree doc links: [`../cogant/docs/verify_doc_links.py`](../cogant/docs/verify_doc_links.py).

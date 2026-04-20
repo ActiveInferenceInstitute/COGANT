@@ -13,15 +13,15 @@ Established the forward pipeline and basic tooling.
 - [x] Forward pipeline: ingest → static → normalize → graph → translate → export
 - [x] Python AST parser (`cogant.parsers.python`)
 - [x] `ProgramGraph` with typed nodes and edges
-- [x] 19 translation rules in 5 families (5 structural + 5 semantic + 3 control + 4 behavioral + 2 resilience) — grew to 22 in wave-21
+- [x] 12+ translation rules in 5 families (grew to 22 by wave-21: 5 structural + 5 semantic + 3 control + 4 behavioral + 5 resilience)
 - [x] Markov blanket partition (`cogant.markov`), O(V+E), 5 seed strategies
 - [x] State space compiler (A/B/C/D matrices from SemanticMappings)
 - [x] GNN markdown bundle emission (AII-spec-compliant)
 - [x] AII validator scoring 0–100 (all 6 fixtures score 100/100)
-- [x] Typer CLI with 18 subcommands — grew to 22 in wave-21
+- [x] Typer CLI (grew to 26 subcommands by v0.5.0; `cogant --help`)
 - [x] `cogant.server.app` FastAPI `/health` + `/translate`
 - [x] Dockerfile + docker-compose (EXPOSE 8080)
-- [x] mkdocs-material docs site with 16 sections
+- [x] mkdocs-material docs site with 20 sections
 - [x] 6 Jupyter tutorial notebooks (01–06)
 - [x] Hypothesis property tests for 7 correctness laws
 
@@ -132,10 +132,10 @@ The largest single improvement batch since the initial release.
 
 ### Type infrastructure — all new
 
-- [x] `protocols.py`: 9 `@runtime_checkable` Protocol classes (Translatable, Analyzable, Serializable, Visualizable, Validatable, Exportable, PipelineStage, TranslationRule, GraphBackend) + 5 more
-- [x] `types.py`: 15+ TypedDicts, 11+ type aliases
+- [x] `protocols.py`: 14 `@runtime_checkable` Protocol classes (Translatable, Analyzable, Serializable, Visualizable, Validatable, Exportable, PipelineStage, TranslationRule, GraphBackend, Exportable2, DiagramRenderer, NetworkAnalyzer, ReportGenerator, StaticAnalyzer)
+- [x] `types.py`: 15 TypedDicts, 11+ type aliases
 - [x] `translate/types.py`: `SemanticRole` Literal (11 values), `RuleFamily` (5), `FixpointStatus` (3), `TranslationTier` (3)
-- [x] 49 `.pyi` stubs covering all new modules
+- [x] 231 `.pyi` stubs covering all public modules
 
 ### API/Server
 

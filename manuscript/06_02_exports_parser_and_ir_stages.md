@@ -1,4 +1,4 @@
-# Exports, parser capabilities, and progressive IR stages
+# Exports, parser capabilities, and progressive IR stages {#sec:06-02-exports-parser-and-ir-stages}
 
 
 ## Export targets
@@ -23,9 +23,7 @@ Constructs that require runtime evaluation (for example `exec`, `importlib.impor
 
 ## Progressive IR stages
 
-Processing advances through six intermediate representations, each adding semantic detail atop its predecessor. Table 3 summarizes what each stage contributes.
-
-**Table 3. Progressive IR stages and their contributions.**
+Processing advances through six intermediate representations, each adding semantic detail atop its predecessor. The pipe table below is the canonical Table 3.
 
 | Stage | IR name | Key additions | Typical output size (10K-function repo) |
 |-------|---------|---------------|----------------------------------------|
@@ -36,5 +34,11 @@ Processing advances through six intermediate representations, each adding semant
 | 5 | Process Model IR | Higher-level control patterns (request--response, producer--consumer, state machines) | ~2 MB JSON |
 | 6 | Validation IR | Coverage metrics, confidence distribution, schema compliance, consistency checks, reproducibility hashes | ~1 MB JSON (report) |
 
+: Table 3 — Progressive IR stages and their contributions. {#tbl:progressive-ir-stages}
+
 Stages 4 and 5 are **partial** for many repositories: the state-space compiler requires either execution traces or sufficient static structure (for example annotated state machines) to produce meaningful output. Where dynamic evidence is available, COGANT's ingestion pipeline follows the established pattern of attaching runtime observations (coverage, call frequencies, traces) to static program elements --- dynamic instrumentation frameworks such as Pin [@luk2005pin] and invariant detectors such as Daikon [@ernst2007daikon] established this general approach of augmenting static program structure with execution-time evidence. The pipeline tolerates missing stages gracefully; the Validation IR records which stages completed and which were skipped.
+
+## See also (MkDocs)
+
+Python front end and parsers: [`../cogant/docs/plugins/README.md`](../cogant/docs/plugins/README.md). Export targets: [`../cogant/docs/export/README.md`](../cogant/docs/export/README.md).
 
