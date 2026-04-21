@@ -29,7 +29,12 @@ major tags for that action:
 | `astral-sh/setup-uv` | `@v8.1.0` | Pinned (immutable tag); `@v8` floating tag is intentionally unpublished. |
 | `dtolnay/rust-toolchain` | `@stable` | Replacement for the archived `actions-rs/toolchain`. |
 | `peaceiris/actions-gh-pages` | `@v4` | Node 24 / current major. |
-| `pre-commit/action` | `@v3.0.1` | Maintenance-only but Node 20 → 24 compatible. |
+
+The `pre-commit` job intentionally **does not** use
+`pre-commit/action` — that action transitively bundles
+`actions/cache@v4` (Node 20). The job pip-installs `pre-commit`
+itself, primes a Node-24 `actions/cache@v5`, and runs
+`pre-commit run --all-files --show-diff-on-failure` directly.
 
 When bumping any of these, update this table and the dependent
 `docs/CI.md` reference.
