@@ -20,7 +20,7 @@ cogant statespace: Compile state space model showing states, observations, actio
 
 cogant process: Extract process/execution model showing stages and dependencies.
 
-cogant export-gnn: Export GNN bundle in JSON or Markdown format. Reads bundle.json and writes to output directory.
+cogant export-gnn: Re-export an existing bundle JSON as JSON and/or a Markdown report covering target, repo, static analysis, per-stage counts (graph/translate/statespace/validate/…), errors and source commit. Reads `bundle.json`, writes `bundle.json` and/or `bundle.md` to the output directory.
 
 cogant render: Generate interactive HTML site from bundle.json, creating index.html, graph/, models/, provenance/, and assets/ with CSS styling.
 

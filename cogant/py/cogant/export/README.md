@@ -12,6 +12,8 @@ GraphMLExporter exports graphs in GraphML format for visualization tools (Gephi,
 
 ParquetExporter exports graphs as columnar PyArrow tables for ML training and data analysis.
 
+`render_bundle_markdown(data)` renders a bundle dict to a Markdown report (target, repo, static analysis, per-stage counts, validation, source commit). Backs `cogant export-gnn --format markdown` and is safe to run over partially-populated bundles.
+
 ## Usage
 
 ```python

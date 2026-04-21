@@ -1211,9 +1211,10 @@ def export_gnn(
         console.print(f"[green]✓ JSON[/green] → {json_file}")
 
     if format in ["all", "markdown"]:
+        from cogant.export.markdown import render_bundle_markdown
+
         md_file = output_path / "bundle.md"
-        with open(md_file, "w") as f:
-            f.write(f"# COGANT Export\n\nTarget: {data['target']}\n")
+        md_file.write_text(render_bundle_markdown(data), encoding="utf-8")
         console.print(f"[green]✓ Markdown[/green] → {md_file}")
 
     console.print("\n[green]✓ Export complete[/green]")

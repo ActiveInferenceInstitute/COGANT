@@ -418,10 +418,11 @@ class TestExportGnnCommand:
         assert (out / "bundle.md").exists()
         # JSON payload is parseable
         json.loads((out / "bundle.json").read_text())
-        # Markdown has the target header
+        # Markdown carries the target header and a real per-stage table
         md = (out / "bundle.md").read_text()
-        assert "COGANT Export" in md
-        assert "Target:" in md
+        assert "# COGANT Export" in md
+        assert "- target: `" in md
+        assert "## Stages" in md
 
     def test_export_gnn_markdown_only(
         self, runner: CliRunner, bundle_json: Path, tmp_path: Path

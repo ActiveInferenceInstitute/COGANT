@@ -111,6 +111,15 @@ class MultiFormatExporter:
 - Document ProgramGraph and SemanticMappings structure
 - Methods: `export_schema()`, `with_examples()`, `with_validation_rules()`
 
+**markdown.py** — `render_bundle_markdown(data) -> str`
+- Render an export bundle dict (or `Bundle.to_dict()`) to a self-contained
+  Markdown report covering ingest, static analysis, per-stage counts,
+  validation, and source-commit metadata
+- Backs the `cogant export-gnn --format markdown` CLI flag and is reused
+  for `output/<target>/export_gnn/bundle.md`
+- Tolerant of partially-populated bundles: unknown stage shapes degrade
+  to `-` rather than raising
+
 ## Data Representations
 
 ### Bundle Structure

@@ -181,7 +181,11 @@ cogant process ./my_repo --no-dynamic
 
 ### export-gnn
 
-Export GNN bundle in various formats.
+Re-export an existing bundle as JSON, Markdown, or both. The Markdown
+report (`bundle.md`) summarises target, repository, static analysis, and
+per-stage counts (graph, translate, statespace, validate, …) plus
+source-commit metadata. The JSON output (`bundle.json`) is the verbatim
+input bundle.
 
 ```bash
 cogant export-gnn <bundle_path>
