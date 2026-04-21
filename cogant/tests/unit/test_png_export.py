@@ -202,8 +202,12 @@ def test_render_state_space_factor_png_handles_huge_layers(tmp_path: Path) -> No
     assert out.is_file()
     # Without the layer cap the ~240k-edge networkx graph takes >60s to
     # render; with the cap each layer is ~80 nodes and the full render
-    # (including mpl import cold-start on first call) completes in ~15s.
-    assert elapsed < 25.0, f"render took {elapsed:.2f}s — layer cap not active"
+    # (including mpl import cold-start on first call) completes in ~15s
+    # locally and up to ~30s on the slowest GitHub Actions runner. The
+    # gate is intentionally generous: we only want to catch the
+    # uncapped-edge regression (which would never finish), not measure
+    # absolute wall time.
+    assert elapsed < 45.0, f"render took {elapsed:.2f}s — layer cap not active"
 
 
 @_needs_matplotlib

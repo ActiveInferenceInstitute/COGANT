@@ -50,20 +50,35 @@ def test_typer_app_imports_cleanly() -> None:
     assert isinstance(app, typer.Typer)
 
 
+def _option_names(name: str) -> set[str]:
+    """Return the set of long option flags (e.g. ``--output``) registered on
+    the named subcommand. Introspecting Click's parameter list avoids the
+    line-wrapping fragility of parsing ``--help`` output (which depends on
+    ``$COLUMNS`` and Rich's terminal-width detection)."""
+    click_cmd = get_command(app)
+    sub = click_cmd.commands[name]  # type: ignore[attr-defined]
+    flags: set[str] = set()
+    for param in sub.params:
+        for opt in getattr(param, "opts", []) or []:
+            if opt.startswith("--"):
+                flags.add(opt)
+    return flags
+
+
 def test_reverse_subcommand_signature_preserved() -> None:
     """The ``reverse`` command must expose its real options after the
     decorator-form rewrite (regression test for typer + functools.wraps)."""
     runner = CliRunner()
     result = runner.invoke(app, ["reverse", "--help"])
     assert result.exit_code == 0
-    assert "GNN_FILE" in result.output
-    assert "--output" in result.output
-    assert "--json" in result.output
+    flags = _option_names("reverse")
+    assert "--output" in flags, f"reverse missing --output; got {sorted(flags)}"
+    assert "--json" in flags, f"reverse missing --json; got {sorted(flags)}"
 
 
 def test_roundtrip_subcommand_signature_preserved() -> None:
     runner = CliRunner()
     result = runner.invoke(app, ["roundtrip", "--help"])
     assert result.exit_code == 0
-    assert "TARGET" in result.output
-    assert "--threshold" in result.output
+    flags = _option_names("roundtrip")
+    assert "--threshold" in flags, f"roundtrip missing --threshold; got {sorted(flags)}"

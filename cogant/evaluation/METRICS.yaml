@@ -3,33 +3,33 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-04-20T18:31:15.359906Z'
-generator_git_sha: f610bf73f11dc2f390e62b66759a658adc68d00e
+generated_at: '2026-04-21T02:35:08.868575Z'
+generator_git_sha: 2f58ce33e9fd35118a725ea0ab9bba0d7a5d7e7c
 cogant_version: 0.5.0
 package:
   name: cogant
   version: 0.5.0
   python_min: '3.11'
 testing:
-  test_count_total: 7803
-  test_count_passing: 7768
-  test_count_failing: 0
+  test_count_total: 7850
+  test_count_passing: 7818
+  test_count_failing: 1
   test_count_skipped: 31
-  test_count_xfailed: 3
-  test_count_xpassed: 1
-  test_files_unit: 241
-  test_files_integration: 27
+  test_count_xfailed: 0
+  test_count_xpassed: 0
+  test_files_unit: 244
+  test_files_integration: 28
   test_files_property: 10
   test_files_fuzz: 1
   coverage_percent: 90.03
   mypy_strict_errors: 0
   ruff_violations: 0
 codebase:
-  python_source_files: 202
-  python_loc: 70944
-  public_modules: 165
-  public_classes: 398
-  public_functions: 1038
+  python_source_files: 203
+  python_loc: 72748
+  public_modules: 166
+  public_classes: 401
+  public_functions: 1047
 pipeline:
   stage_count: 10
   translation_rules: 22
@@ -179,7 +179,7 @@ literature:
   source: cogant/docs/evaluation/LITERATURE.md
   bibliography_entries: 100
 benchmark:
-  suite_runtime_s: 1301.46
+  suite_runtime_s: 995.89
   shipped_fixture_count: 6
 ir_schema:
   node_kind_count: 18
