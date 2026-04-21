@@ -31,9 +31,32 @@ jobs:
         run: uv run python ../tools/regenerate_metrics.py
 
       - name: Check metrics not stale
+        # Compare regenerated METRICS.yaml to the committed copy while
+        # ignoring fields that are inherently environment-dependent and
+        # therefore drift between developer machines and the GHA runner:
+        #   * generated_at / generator_git_sha — change every regen
+        #   * test_count_{passing,failing,skipped} — depend on which
+        #     optional extras the runner has installed (some tests
+        #     pytest.skip when matplotlib/cairo/etc. are missing)
+        #   * suite_runtime_s — wall-clock noise
+        # Structural fields (codebase counts, mypy_strict_errors,
+        # ruff_violations, coverage_percent, isomorphism counts, schema
+        # versions, etc.) MUST match exactly.
         run: |
-          if ! git diff --quiet evaluation/METRICS.yaml; then
-            echo "METRICS.yaml is stale — run tools/regenerate_metrics.py and commit"
-            git diff evaluation/METRICS.yaml
+          set -euo pipefail
+          ignore=(
+            -I '^generated_at:'
+            -I '^generator_git_sha:'
+            -I '^  test_count_passing:'
+            -I '^  test_count_failing:'
+            -I '^  test_count_skipped:'
+            -I '^  test_count_xfailed:'
+            -I '^  test_count_xpassed:'
+            -I '^  suite_runtime_s:'
+          )
+          if ! git diff --quiet "${ignore[@]}" -- evaluation/METRICS.yaml; then
+            echo "METRICS.yaml is stale on a structural field — run tools/regenerate_metrics.py and commit"
+            git diff "${ignore[@]}" -- evaluation/METRICS.yaml
             exit 1
           fi
+          echo "METRICS.yaml structural fields match committed copy (env-dependent counters allowed to drift)."
