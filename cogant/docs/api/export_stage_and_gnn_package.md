@@ -7,4 +7,3 @@ When all of the following are present on the in-memory bundle—**program graph*
 On failure, package build is non-fatal: warnings may appear under export-related artifact keys; see [GNN export](../export/README.md) and [SPEC § Implementation status](../reference/README.md).
 
 To validate a package from the CLI or disk layout, use [`cogant validate`](../cli/README.md). The **`validate`** stage in `run_validate` can run [`GNNValidator`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/gnn/validator.py) when `_gnn_package_dir` was set during export.
-

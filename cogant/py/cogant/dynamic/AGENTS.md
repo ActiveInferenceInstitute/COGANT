@@ -120,12 +120,12 @@ def enrich_graph(
     trace_path: str | None = None,
 ) -> EnrichmentResult:
     """Enrich graph with runtime data.
-    
+
     Mutates graph in-place:
     - Adds coverage_hits, branch_coverage metadata to matching nodes
     - Adds dynamic CALLS edges from trace call-graph
     - Sets confidence tier to RUNTIME_DYNAMIC for enriched nodes
-    
+
     Returns:
         EnrichmentResult with stats and error list
     """
@@ -404,7 +404,7 @@ Dynamic enrichment is **completely optional**:
        """Parse OpenTelemetry JSON trace."""
        with open(json_path) as f:
            otel = json.load(f)
-       
+
        normalized = []
        for span in otel.get("resourceSpans", []):
            for event in span.get("instrumentationLibrarySpans", []):
@@ -430,7 +430,7 @@ Dynamic enrichment is **completely optional**:
        """Parse Istanbul (JS/TS) coverage JSON."""
        with open(json_path) as f:
            data = json.load(f)
-       
+
        files = []
        for file_key, file_data in data.items():
            lines_covered = set()
@@ -442,7 +442,7 @@ Dynamic enrichment is **completely optional**:
                "lines_covered": list(lines_covered),
                ...
            })
-       
+
        return {"type": "coverage", "format": "istanbul", "files": files}
    ```
 

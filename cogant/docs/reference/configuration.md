@@ -44,4 +44,3 @@ export:
 3. Project config (`cogant.yaml`)
 4. Stage-specific config (`cogant.{stage}.yaml`)
 5. CLI arguments
-

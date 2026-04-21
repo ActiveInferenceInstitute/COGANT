@@ -78,4 +78,3 @@ Algorithm \ref{alg:conflict} detects conflicts via an inverted index in $O(\sum_
 ## See also (MkDocs)
 
 Rule framework and per-family reference: [`../cogant/docs/rules/README.md`](../cogant/docs/rules/README.md). Role-to-code mapping narrative: [`../cogant/docs/theory/active_inference.md`](../cogant/docs/theory/active_inference.md).
-

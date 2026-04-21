@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any
 
 # Ensure ``py/cogant`` is importable when this module is loaded via the
 # sibling ``parsers/`` sys.path entry the rest of the plugin suite uses.
@@ -24,11 +24,11 @@ _PY_ROOT = Path(__file__).resolve().parent.parent.parent / "py"
 if str(_PY_ROOT) not in sys.path:
     sys.path.insert(0, str(_PY_ROOT))
 
-from parsers._base import CogantLanguagePlugin  # noqa: E402
 from cogant.parsers.tree_sitter_base import (  # noqa: E402
     ParsedFile,
     get_tree_sitter_parser,
 )
+from parsers._base import CogantLanguagePlugin  # noqa: E402
 
 
 class JavaScriptLanguageParser(CogantLanguagePlugin):
@@ -44,7 +44,7 @@ class JavaScriptLanguageParser(CogantLanguagePlugin):
     # Plugin lifecycle
     # ------------------------------------------------------------------
 
-    def initialize(self, config: Dict[str, Any]) -> None:
+    def initialize(self, config: dict[str, Any]) -> None:
         """Warm up the underlying tree-sitter parser."""
         get_tree_sitter_parser()
 
@@ -55,12 +55,10 @@ class JavaScriptLanguageParser(CogantLanguagePlugin):
     # LanguagePlugin API
     # ------------------------------------------------------------------
 
-    def parse(self, source_code: str, file_path: str = "") -> Dict[str, Any]:
+    def parse(self, source_code: str, file_path: str = "") -> dict[str, Any]:
         """Parse JavaScript source code into a serializable dict."""
         parser = get_tree_sitter_parser()
-        result: ParsedFile | None = parser.parse_source(
-            source_code, "javascript", file_path
-        )
+        result: ParsedFile | None = parser.parse_source(source_code, "javascript", file_path)
         if result is None:
             return {
                 "symbols": [],
@@ -76,15 +74,15 @@ class JavaScriptLanguageParser(CogantLanguagePlugin):
             "errors": result.errors,
         }
 
-    def extract_symbols(self, ast: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def extract_symbols(self, ast: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract symbols from a previously produced AST dict."""
         return list(ast.get("symbols", []))
 
-    def extract_types(self, ast: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_types(self, ast: dict[str, Any]) -> dict[str, Any]:
         """JavaScript has no static type system; return empty type map."""
         return {}
 
-    def resolve_imports(self, ast: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def resolve_imports(self, ast: dict[str, Any]) -> list[dict[str, Any]]:
         """Return the import descriptors from a parsed AST dict."""
         return list(ast.get("imports", []))
 
@@ -92,7 +90,7 @@ class JavaScriptLanguageParser(CogantLanguagePlugin):
     # Convenience helpers (consistent with PythonLanguageParser)
     # ------------------------------------------------------------------
 
-    def parse_file(self, file_path: Path) -> Dict[str, Any]:
+    def parse_file(self, file_path: Path) -> dict[str, Any]:
         """Parse a JavaScript file on disk."""
         parser = get_tree_sitter_parser()
         if isinstance(file_path, str):
@@ -114,15 +112,13 @@ class JavaScriptLanguageParser(CogantLanguagePlugin):
             "errors": result.errors,
         }
 
-    def extract_calls(
-        self, source_code: str = "", file_path: str = ""
-    ) -> List[Dict[str, Any]]:
+    def extract_calls(self, source_code: str = "", file_path: str = "") -> list[dict[str, Any]]:
         """Return call sites from a JavaScript source string."""
         parser = get_tree_sitter_parser()
         result = parser.parse_source(source_code, "javascript", file_path)
         return list(result.calls) if result else []
 
-    def get_node_kinds(self) -> Set[str]:
+    def get_node_kinds(self) -> set[str]:
         """Supported NodeKind values for JavaScript."""
         return {
             "ClassDeclaration",

@@ -33,4 +33,3 @@ The seven Active Inference semantic roles emitted into a [GNN](../concepts/gnn.m
 | DATA_FLOW | `DataPipelineRule` | structural — `py/cogant/translate/rules/structural.py` | [`cogant.translate` → Structural rules](../api/translate.md#structural-rules), [translation rules reference](translation_rules.md) |
 
 For the conceptual narrative, see [How COGANT assigns roles](../concepts/role_assignment.md). For the engine that runs every rule against every node, see [`cogant.translate` → Engine](../api/translate.md#engine).
-

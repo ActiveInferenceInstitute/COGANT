@@ -1,10 +1,9 @@
 """TypeScript/JavaScript parser plugin using regex."""
 
 import re
-import sys
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Set
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 from parsers._base import CogantLanguagePlugin  # noqa: E402
 
@@ -14,12 +13,12 @@ class ParseResult:
     """Result from parsing a file."""
 
     file_path: Path
-    classes: List[Dict[str, Any]] = field(default_factory=list)
-    functions: List[Dict[str, Any]] = field(default_factory=list)
-    imports: List[Dict[str, Any]] = field(default_factory=list)
-    interfaces: List[Dict[str, Any]] = field(default_factory=list)
-    exports: List[Dict[str, Any]] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    classes: list[dict[str, Any]] = field(default_factory=list)
+    functions: list[dict[str, Any]] = field(default_factory=list)
+    imports: list[dict[str, Any]] = field(default_factory=list)
+    interfaces: list[dict[str, Any]] = field(default_factory=list)
+    exports: list[dict[str, Any]] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
 
 class TypeScriptLanguageParser(CogantLanguagePlugin):
@@ -30,7 +29,7 @@ class TypeScriptLanguageParser(CogantLanguagePlugin):
     SUPPORTED_LANGUAGES = {"typescript", "javascript"}
     SUPPORTED_EXTENSIONS = {".ts", ".tsx", ".js", ".jsx"}
 
-    def parse(self, source_code: str) -> Dict[str, Any]:
+    def parse(self, source_code: str) -> dict[str, Any]:
         """Parse TypeScript/JavaScript source code and return AST.
 
         Args:
@@ -49,7 +48,7 @@ class TypeScriptLanguageParser(CogantLanguagePlugin):
             "errors": result.errors,
         }
 
-    def extract_symbols(self, ast: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def extract_symbols(self, ast: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract symbols from AST.
 
         Args:
@@ -61,29 +60,35 @@ class TypeScriptLanguageParser(CogantLanguagePlugin):
         symbols = []
 
         for cls in ast.get("classes", []):
-            symbols.append({
-                "type": "class",
-                "name": cls["name"],
-                "line": cls.get("line"),
-            })
+            symbols.append(
+                {
+                    "type": "class",
+                    "name": cls["name"],
+                    "line": cls.get("line"),
+                }
+            )
 
         for func in ast.get("functions", []):
-            symbols.append({
-                "type": "function",
-                "name": func["name"],
-                "line": func.get("line"),
-            })
+            symbols.append(
+                {
+                    "type": "function",
+                    "name": func["name"],
+                    "line": func.get("line"),
+                }
+            )
 
         for iface in ast.get("interfaces", []):
-            symbols.append({
-                "type": "interface",
-                "name": iface["name"],
-                "line": iface.get("line"),
-            })
+            symbols.append(
+                {
+                    "type": "interface",
+                    "name": iface["name"],
+                    "line": iface.get("line"),
+                }
+            )
 
         return symbols
 
-    def extract_types(self, ast: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_types(self, ast: dict[str, Any]) -> dict[str, Any]:
         """Extract type information from AST.
 
         Args:
@@ -92,35 +97,32 @@ class TypeScriptLanguageParser(CogantLanguagePlugin):
         Returns:
             Type information dictionary.
         """
-        types = {
-            "classes": [],
-            "functions": [],
-            "interfaces": []
-        }
+        types = {"classes": [], "functions": [], "interfaces": []}
 
         for cls in ast.get("classes", []):
-            types["classes"].append({
-                "name": cls["name"],
-                "extends": cls.get("extends"),
-                "implements": cls.get("implements", [])
-            })
+            types["classes"].append(
+                {
+                    "name": cls["name"],
+                    "extends": cls.get("extends"),
+                    "implements": cls.get("implements", []),
+                }
+            )
 
         for func in ast.get("functions", []):
-            types["functions"].append({
-                "name": func["name"],
-                "return_type": func.get("return_type"),
-                "params": func.get("params", [])
-            })
+            types["functions"].append(
+                {
+                    "name": func["name"],
+                    "return_type": func.get("return_type"),
+                    "params": func.get("params", []),
+                }
+            )
 
         for iface in ast.get("interfaces", []):
-            types["interfaces"].append({
-                "name": iface["name"],
-                "extends": iface.get("extends", [])
-            })
+            types["interfaces"].append({"name": iface["name"], "extends": iface.get("extends", [])})
 
         return types
 
-    def resolve_imports(self, ast: Dict[str, Any]) -> List[str]:
+    def resolve_imports(self, ast: dict[str, Any]) -> list[str]:
         """Resolve import dependencies from AST.
 
         Args:
@@ -149,19 +151,16 @@ class TypeScriptLanguageParser(CogantLanguagePlugin):
             file_path = Path(file_path)
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 source = f.read()
         except Exception as e:
-            return ParseResult(
-                file_path=file_path,
-                errors=[f"Failed to read file: {e}"]
-            )
+            return ParseResult(file_path=file_path, errors=[f"Failed to read file: {e}"])
 
         result = self._parse_source(source)
         result.file_path = file_path
         return result
 
-    def get_node_kinds(self) -> Set[str]:
+    def get_node_kinds(self) -> set[str]:
         """Get supported node kinds.
 
         Returns:
@@ -208,7 +207,7 @@ class TypeScriptLanguageParser(CogantLanguagePlugin):
 
         return result
 
-    def _extract_imports(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_imports(self, source: str) -> list[dict[str, Any]]:
         """Extract import statements.
 
         Args:
@@ -223,36 +222,42 @@ class TypeScriptLanguageParser(CogantLanguagePlugin):
         # Pattern: import { x, y } from "module"
         pattern1 = r'import\s+{([^}]+)}\s+from\s+["\']([^"\']+)["\']'
         for match in re.finditer(pattern1, source):
-            imports.append({
-                "type": "named",
-                "module": match.group(2),
-                "names": [n.strip() for n in match.group(1).split(",")],
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            imports.append(
+                {
+                    "type": "named",
+                    "module": match.group(2),
+                    "names": [n.strip() for n in match.group(1).split(",")],
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         # Pattern: import x from "module"
         pattern2 = r'import\s+(\w+)\s+from\s+["\']([^"\']+)["\']'
         for match in re.finditer(pattern2, source):
-            imports.append({
-                "type": "default",
-                "module": match.group(2),
-                "name": match.group(1),
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            imports.append(
+                {
+                    "type": "default",
+                    "module": match.group(2),
+                    "name": match.group(1),
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         # Pattern: import * as x from "module"
         pattern3 = r'import\s+\*\s+as\s+(\w+)\s+from\s+["\']([^"\']+)["\']'
         for match in re.finditer(pattern3, source):
-            imports.append({
-                "type": "namespace",
-                "module": match.group(2),
-                "name": match.group(1),
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            imports.append(
+                {
+                    "type": "namespace",
+                    "module": match.group(2),
+                    "name": match.group(1),
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return imports
 
-    def _extract_classes(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_classes(self, source: str) -> list[dict[str, Any]]:
         """Extract class declarations.
 
         Args:
@@ -264,23 +269,25 @@ class TypeScriptLanguageParser(CogantLanguagePlugin):
         classes = []
 
         # Pattern: class ClassName extends Base implements Interface
-        pattern = r'class\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([^{]+))?'
+        pattern = r"class\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([^{]+))?"
 
         for match in re.finditer(pattern, source):
             class_name = match.group(1)
             extends = match.group(2) if match.group(2) else None
-            implements = [x.strip() for x in match.group(3).split(',')] if match.group(3) else []
+            implements = [x.strip() for x in match.group(3).split(",")] if match.group(3) else []
 
-            classes.append({
-                "name": class_name,
-                "extends": extends,
-                "implements": implements,
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            classes.append(
+                {
+                    "name": class_name,
+                    "extends": extends,
+                    "implements": implements,
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return classes
 
-    def _extract_interfaces(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_interfaces(self, source: str) -> list[dict[str, Any]]:
         """Extract interface declarations.
 
         Args:
@@ -292,21 +299,23 @@ class TypeScriptLanguageParser(CogantLanguagePlugin):
         interfaces = []
 
         # Pattern: interface InterfaceName extends Base
-        pattern = r'interface\s+(\w+)(?:\s+extends\s+([^{]+))?'
+        pattern = r"interface\s+(\w+)(?:\s+extends\s+([^{]+))?"
 
         for match in re.finditer(pattern, source):
             name = match.group(1)
-            extends = [x.strip() for x in match.group(2).split(',')] if match.group(2) else []
+            extends = [x.strip() for x in match.group(2).split(",")] if match.group(2) else []
 
-            interfaces.append({
-                "name": name,
-                "extends": extends,
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            interfaces.append(
+                {
+                    "name": name,
+                    "extends": extends,
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return interfaces
 
-    def _extract_functions(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_functions(self, source: str) -> list[dict[str, Any]]:
         """Extract function declarations.
 
         Args:
@@ -318,25 +327,27 @@ class TypeScriptLanguageParser(CogantLanguagePlugin):
         functions = []
 
         # Pattern: function name(params): return_type
-        pattern = r'(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)(?:\s*:\s*([^{]+))?'
+        pattern = r"(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)(?:\s*:\s*([^{]+))?"
 
         for match in re.finditer(pattern, source):
             name = match.group(1)
             params_str = match.group(2) if match.group(2) else ""
             return_type = match.group(3).strip() if match.group(3) else None
 
-            params = [p.strip() for p in params_str.split(',')] if params_str else []
+            params = [p.strip() for p in params_str.split(",")] if params_str else []
 
-            functions.append({
-                "name": name,
-                "params": params,
-                "return_type": return_type,
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            functions.append(
+                {
+                    "name": name,
+                    "params": params,
+                    "return_type": return_type,
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return functions
 
-    def _extract_exports(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_exports(self, source: str) -> list[dict[str, Any]]:
         """Extract export statements.
 
         Args:
@@ -348,16 +359,18 @@ class TypeScriptLanguageParser(CogantLanguagePlugin):
         exports = []
 
         # Pattern: export class/interface/function/const name
-        pattern = r'export\s+(?:default\s+)?(?:(class|interface|function|const)\s+(\w+))'
+        pattern = r"export\s+(?:default\s+)?(?:(class|interface|function|const)\s+(\w+))"
 
         for match in re.finditer(pattern, source):
             export_type = match.group(1)
             name = match.group(2)
 
-            exports.append({
-                "type": export_type,
-                "name": name,
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            exports.append(
+                {
+                    "type": export_type,
+                    "name": name,
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return exports

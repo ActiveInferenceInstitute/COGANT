@@ -81,4 +81,3 @@ These numbers were collected by the reproducible script `../cogant/evaluation/fi
 ## See also (MkDocs)
 
 Empirical reports index: [`../cogant/docs/evaluation/README.md`](../cogant/docs/evaluation/README.md).
-

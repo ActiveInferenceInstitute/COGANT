@@ -64,4 +64,3 @@ for warning in report.get("warnings", []):
 # Save bundle (includes validation) as JSON
 bundle.save_json("output/bundle.json")
 ```
-

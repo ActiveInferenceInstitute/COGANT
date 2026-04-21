@@ -12,11 +12,11 @@ from cogant.graph.queries import GraphQuery
 
 def test_my_rule():
     rule = MyTranslationRule()
-    
+
     node = Node(id="fn_special", name="special_function", kind=NodeKind.FUNCTION)
     graph = ProgramGraph(nodes=[node], edges=[], metadata=GraphMetadata())
     query = GraphQuery(graph)
-    
+
     matches = rule.matches(graph, query)
     assert len(matches) == 1
     mapping = rule.apply(matches[0], graph, query)
@@ -52,4 +52,3 @@ class MyParserPlugin(LanguagePlugin):
         except Exception as e:
             return {"ast": [], "errors": [str(e)], "warnings": []}
 ```
-

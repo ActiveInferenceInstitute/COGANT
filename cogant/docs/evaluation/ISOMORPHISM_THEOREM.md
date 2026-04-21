@@ -1,8 +1,8 @@
 # COGANT Isomorphism Theorem: Program Graphs and Generative Models as Dual Views of Causal Structure
 
-**Author:** COGANT R&D  
-**Date:** 2026-04-09  
-**Status:** Theory (pre-proof)  
+**Author:** COGANT R&D
+**Date:** 2026-04-09
+**Status:** Theory (pre-proof)
 **Related:** `ROUNDTRIP_VALIDATION.md`, `SCOPING_REPORT.md`
 
 ---
@@ -297,12 +297,12 @@ which reflects that the role-level ε(G) is a small fraction of the total round-
 
 The bidirectional transformation literature provides the closest formal precedent for COGANT's forward/reverse pair. Foster, Greenwald, Moore, Pierce, and Schmitt (2007) define a *lens* between a source set S and a view set V as a pair of functions:
 
-> get : S → V  
+> get : S → V
 > put : V × S → S
 
 Subject to well-behavedness laws that govern how edits to the view propagate back to the source:
 
-> **GetPut:** put(get(s), s) = s   (a trivial view edit produces no source change)  
+> **GetPut:** put(get(s), s) = s   (a trivial view edit produces no source change)
 > **PutGet:** get(put(v, s)) = v   (a view edit is reflected exactly in the re-derived view)
 
 A lens satisfying both laws is *well-behaved*; one satisfying only GetPut is *asymmetric* and still useful.
@@ -361,7 +361,7 @@ COGANT is therefore a *well-behaved asymmetric lens on the role-quotient of 𝒫
 
 Hofmann, Pierce, and Wagner (2011) and Diskin, Xiong, Czarnecki (2011) extend the lens framework to *symmetric lenses*, in which both directions of the bidirectional transformation may carry their own *complement* — a hidden state that preserves information the other side cannot encode. For COGANT, a symmetric-lens upgrade would take the form:
 
-> F̂ : 𝒫 → 𝒢 × C_P  
+> F̂ : 𝒫 → 𝒢 × C_P
 > R̂ : 𝒢 × C_G → 𝒫
 
 where C_P is a carrier for P-side information (bodies, types, docstrings, call metadata, ordering — everything from §5) and C_G is a carrier for G-side information (numerical A/B/C/D values, prior distributions). The symmetric lens laws require that the two carriers be synchronized by a *correspondence relation* R ⊆ C_P × C_G.
@@ -486,16 +486,16 @@ where |·| denotes the L1 norm of the difference vector and ε(G) is the role-di
 
 The following four cases enumerate the primary failure modes of round-trip fidelity and document why they do or do not affect the role isomorphism.
 
-**Case 1: Name-only keyword rules.**  
+**Case 1: Name-only keyword rules.**
 An ACTION node was assigned its role because its function name contains the token "dispatch." The synthesized code uses the name "act_dispatch" (R's naming template). This still contains "dispatch," so the keyword rule fires again on the synthesized code. **Role preserved.**
 
-**Case 2: Complex dataflow rules.**  
+**Case 2: Complex dataflow rules.**
 A HIDDEN_STATE node was assigned because it receives WRITES edges from exactly 3 other nodes (a threshold rule). R generates exactly 3 WRITES edges pointing to the synthesized hidden-state node (the matrix B encodes which action nodes write to which state nodes). Running F on the synthesized code counts 3 incoming WRITES edges and fires the HIDDEN_STATE rule. **Role preserved.**
 
-**Case 3: Ambiguous nodes.**  
+**Case 3: Ambiguous nodes.**
 A function reads from an observation and writes to a state — matching both OBSERVATION (has READS) and ACTION (has WRITES). The original rule table assigns ACTION by priority. R synthesizes code that has both a READS and a WRITES edge. Running F again: the same priority table picks ACTION. **Role preserved, provided priority table is stable.** If the priority table version changes between runs, this case contributes to ε(G).
 
-**Case 4: Zero-edge (isolated) nodes.**  
+**Case 4: Zero-edge (isolated) nodes.**
 An isolated function has no structural evidence for any role. F assigns it OBSERVATION by a fallback rule (the default role when no predicate fires). R generates an isolated function with no edges. Running F on the synthesized code: no predicate fires, fallback assigns OBSERVATION again. **Role preserved** — both the original and synthesized isolated nodes get the default role.
 
 **Conclusion.** Empirically, ε(G) ≈ 0 for well-structured codebases in which rule priorities are unambiguous. The measured ε values for control-positive test repos are documented in `ROUNDTRIP_VALIDATION.md`.

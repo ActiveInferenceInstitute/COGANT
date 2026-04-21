@@ -140,4 +140,3 @@ Regressions require either (a) an accompanying optimization, (b) a raised target
 - [AGENTS.md](./AGENTS.md) — module maintenance rules and cross-linking expectations for roadmap docs
 
 ---
-

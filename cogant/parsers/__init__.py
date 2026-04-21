@@ -1,10 +1,10 @@
 """Language parsers for COGANT."""
 
-from parsers.python.parser import PythonLanguageParser
-from parsers.typescript.parser import TypeScriptLanguageParser
-from parsers.rust.parser import RustLanguageParser
 from parsers.go.parser import GoLanguageParser
 from parsers.javascript.parser import JavaScriptLanguageParser
+from parsers.python.parser import PythonLanguageParser
+from parsers.rust.parser import RustLanguageParser
+from parsers.typescript.parser import TypeScriptLanguageParser
 
 try:
     from parsers.typescript.tree_sitter_parser import TypeScriptTreeSitterParser

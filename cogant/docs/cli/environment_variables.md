@@ -8,4 +8,3 @@ logging.basicConfig(level=logging.DEBUG)
 ```
 
 There is no separate `COGANT_*` log-level environment variable wired in the library today; set the standard library root logger or configure handlers in application code.
-

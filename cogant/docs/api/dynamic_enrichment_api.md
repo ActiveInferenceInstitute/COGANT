@@ -65,4 +65,3 @@ bundle = runner.run("./my-repo", config)
 | `source` / `target` | `str` | Node identifiers for caller and callee |
 | `frequency` | `int` | Number of times this call was observed |
 | `weight` | `float` | Normalized frequency relative to the hottest edge |
-

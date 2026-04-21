@@ -64,5 +64,3 @@ class MyFeatureExporter(ExportPlugin):
 
 - [PyTorch Geometric export](pytorch_geometric_export.md) · [DGL export](dgl_export.md)
 - [Plugins](../plugins/README.md)
-
-

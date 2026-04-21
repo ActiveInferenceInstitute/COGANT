@@ -24,4 +24,3 @@ Halts pipeline:
 - Missing configuration
 - Schema violation
 - Critical parse failure
-

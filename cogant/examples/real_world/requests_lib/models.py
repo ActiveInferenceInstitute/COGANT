@@ -6,15 +6,16 @@ __repr__, and a lightweight header container.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Union
+from typing import Any
 
 
 class CaseInsensitiveDict(Mapping[str, str]):
     """A headers container that hashes keys case-insensitively."""
 
-    def __init__(self, initial: Optional[Mapping[str, str]] = None) -> None:
-        self._store: Dict[str, Tuple[str, str]] = {}
+    def __init__(self, initial: Mapping[str, str] | None = None) -> None:
+        self._store: dict[str, tuple[str, str]] = {}
         if initial:
             for key, value in initial.items():
                 self[key] = value  # type: ignore[index]
@@ -47,10 +48,10 @@ class CaseInsensitiveDict(Mapping[str, str]):
         for key, value in other.items():
             self[key] = value  # type: ignore[index]
 
-    def items(self) -> Iterable[Tuple[str, str]]:
+    def items(self) -> Iterable[tuple[str, str]]:
         return [(original, value) for original, value in self._store.values()]
 
-    def copy(self) -> "CaseInsensitiveDict":
+    def copy(self) -> CaseInsensitiveDict:
         new = CaseInsensitiveDict()
         new._store = dict(self._store)
         return new
@@ -63,8 +64,8 @@ class PreparedRequest:
     method: str
     url: str
     headers: CaseInsensitiveDict = field(default_factory=CaseInsensitiveDict)
-    body: Optional[Union[str, bytes]] = None
-    hooks: Dict[str, List[Any]] = field(default_factory=dict)
+    body: str | bytes | None = None
+    hooks: dict[str, list[Any]] = field(default_factory=dict)
 
     def register_hook(self, event: str, hook: Any) -> None:
         self.hooks.setdefault(event, []).append(hook)
@@ -84,11 +85,11 @@ class Request:
 
     method: str
     url: str
-    headers: Optional[Dict[str, str]] = None
-    params: Optional[Dict[str, str]] = None
-    data: Optional[Union[str, bytes, Dict[str, Any]]] = None
-    json: Optional[Any] = None
-    timeout: Optional[float] = None
+    headers: dict[str, str] | None = None
+    params: dict[str, str] | None = None
+    data: str | bytes | dict[str, Any] | None = None
+    json: Any | None = None
+    timeout: float | None = None
 
     def prepare(self) -> PreparedRequest:
         prepared = PreparedRequest(
@@ -104,9 +105,7 @@ class Request:
         elif isinstance(self.data, (bytes, str)):
             prepared.body = self.data
         elif isinstance(self.data, dict):
-            prepared.headers.setdefault(
-                "Content-Type", "application/x-www-form-urlencoded"
-            )
+            prepared.headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
             prepared.body = _urlencode(self.data)
         return prepared
 
@@ -119,9 +118,9 @@ class Response:
     headers: CaseInsensitiveDict = field(default_factory=CaseInsensitiveDict)
     content: bytes = b""
     url: str = ""
-    encoding: Optional[str] = None
-    history: List["Response"] = field(default_factory=list)
-    request: Optional[PreparedRequest] = None
+    encoding: str | None = None
+    history: list[Response] = field(default_factory=list)
+    request: PreparedRequest | None = None
 
     @property
     def ok(self) -> bool:
@@ -163,15 +162,15 @@ class Timeout(RequestException):
     """Raised when a request exceeds its configured timeout."""
 
 
-def _apply_params(url: str, params: Dict[str, str]) -> str:
+def _apply_params(url: str, params: dict[str, str]) -> str:
     if not params:
         return url
     sep = "&" if "?" in url else "?"
     return url + sep + _urlencode(params)
 
 
-def _urlencode(data: Dict[str, Any]) -> str:
-    parts: List[str] = []
+def _urlencode(data: dict[str, Any]) -> str:
+    parts: list[str] = []
     for key, value in data.items():
         parts.append(f"{key}={value}")
     return "&".join(parts)

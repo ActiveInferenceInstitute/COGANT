@@ -138,7 +138,7 @@ def main() -> int:
 
     # Build synthetic graph
     pg = _build_synthetic_graph()
-    print(f"  synthetic graph:")
+    print("  synthetic graph:")
     print(f"    nodes={pg.node_count()}  edges={pg.edge_count()}")
 
     # Register only the three wave-21 rules
@@ -188,9 +188,7 @@ def main() -> int:
             group = kind_groups[kind]
             count = len(group)
             # Extract confidence; use getattr with default
-            confidences = [
-                getattr(m, "confidence", 0.5) for m in group
-            ]
+            confidences = [getattr(m, "confidence", 0.5) for m in group]
             avg_conf = sum(confidences) / count if confidences else 0.0
             print(f"  {rule_name:<25} {kind:<20} {count:<6} {avg_conf:.3f}")
 

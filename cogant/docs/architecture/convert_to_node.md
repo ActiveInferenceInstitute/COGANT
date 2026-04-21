@@ -30,4 +30,3 @@ from cogant.graph.builder import ProgramGraphBuilder
 from cogant.schemas.core import NodeKind, EdgeKind
 
 builder = ProgramGraphBuilder(repo_uri="https://github.com/example/repo")
-

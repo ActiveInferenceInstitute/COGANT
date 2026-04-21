@@ -56,10 +56,7 @@ def _bundle_for(fixture: str) -> dict:
 
     return {
         "graph": {
-            "nodes": [
-                {"id": n.id, "kind": str(n.kind), "name": n.name}
-                for n in pg.nodes.values()
-            ],
+            "nodes": [{"id": n.id, "kind": str(n.kind), "name": n.name} for n in pg.nodes.values()],
             "edges": [
                 {"source": e.source_id, "target": e.target_id, "kind": str(e.kind)}
                 for e in pg.edges.values()

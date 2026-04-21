@@ -64,4 +64,3 @@ Public classes documented above (`Session`, `PipelineRunner`, `Bundle`, `ReviewA
 - **Cookbook:** [Recipe 1: Scan your first Python project](../cookbook/01_scan_basic.md) — uses the same `Session`/`PipelineRunner` surface from the CLI.
 - **Cookbook:** [Recipe 2: JSON output](../cookbook/02_json_output.md) — `Bundle.save_json` round-trip used by automation.
 - **Tutorial:** [Tutorial 1: Quickstart — end-to-end in five minutes](../tutorials/01_quickstart.md) — narrative walkthrough of every method in the index above.
-

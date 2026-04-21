@@ -6,4 +6,3 @@ See `examples/example_pipeline.py` for a comprehensive working example that demo
 cd cogant
 python examples/example_pipeline.py
 ```
-

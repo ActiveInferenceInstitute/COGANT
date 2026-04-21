@@ -63,6 +63,7 @@ def _shape_to_ints(shape: list[int] | None, idx: int) -> int:
 # Per-group runners
 # ---------------------------------------------------------------------------
 
+
 def run_zoo_fixture(fixture_path: Path) -> dict[str, Any]:
     """Run roundtrip via cogant Python API on a zoo fixture directory.
 
@@ -161,29 +162,29 @@ def run_subprocess_roundtrip(target_path: Path) -> dict[str, Any]:
 # path_resolver is a callable that returns the Path to evaluate.
 TARGETS: list[tuple[int, str, str, str]] = [
     # rank, group, repo, subdir (relative to its group directory)
-    (1,  "zoo",  "01_simple_state",  "01_simple_state"),
-    (2,  "zoo",  "02_observer",      "02_observer"),
-    (3,  "zoo",  "03_actor",         "03_actor"),
-    (4,  "zoo",  "04_pomdp_minimal", "04_pomdp_minimal"),
-    (5,  "zoo",  "05_multi_factor",  "05_multi_factor"),
-    (6,  "zoo",  "06_hierarchical",  "06_hierarchical"),
-    (7,  "zoo",  "08_preferences",   "08_preferences"),
-    (8,  "zoo",  "11_sensor_fusion", "11_sensor_fusion"),
-    (9,  "rwex", "json_stdlib",      "json_stdlib"),
-    (10, "rwex", "requests_lib",     "requests_lib"),
-    (11, "zoo",  "12_full_pomdp",    "12_full_pomdp"),
-    (12, "rw",   "dateutil",         "dateutil"),
-    (13, "rw",   "pyyaml",           "pyyaml"),
-    (14, "rwex", "flask_app",        "flask_app"),
-    (15, "zoo",  "07_event_driven",  "07_event_driven"),
-    (16, "zoo",  "10_constraint",    "10_constraint"),
-    (17, "zoo",  "09_policy",        "09_policy"),
-    (18, "rw",   "tqdm",             "tqdm"),
-    (19, "rw",   "fastapi",          "fastapi"),
-    (20, "rw",   "click",            "click"),
-    (21, "rw",   "httpx",            "httpx"),
-    (22, "rw",   "urllib3",          "urllib3"),
-    (23, "rw",   "requests",         "requests"),
+    (1, "zoo", "01_simple_state", "01_simple_state"),
+    (2, "zoo", "02_observer", "02_observer"),
+    (3, "zoo", "03_actor", "03_actor"),
+    (4, "zoo", "04_pomdp_minimal", "04_pomdp_minimal"),
+    (5, "zoo", "05_multi_factor", "05_multi_factor"),
+    (6, "zoo", "06_hierarchical", "06_hierarchical"),
+    (7, "zoo", "08_preferences", "08_preferences"),
+    (8, "zoo", "11_sensor_fusion", "11_sensor_fusion"),
+    (9, "rwex", "json_stdlib", "json_stdlib"),
+    (10, "rwex", "requests_lib", "requests_lib"),
+    (11, "zoo", "12_full_pomdp", "12_full_pomdp"),
+    (12, "rw", "dateutil", "dateutil"),
+    (13, "rw", "pyyaml", "pyyaml"),
+    (14, "rwex", "flask_app", "flask_app"),
+    (15, "zoo", "07_event_driven", "07_event_driven"),
+    (16, "zoo", "10_constraint", "10_constraint"),
+    (17, "zoo", "09_policy", "09_policy"),
+    (18, "rw", "tqdm", "tqdm"),
+    (19, "rw", "fastapi", "fastapi"),
+    (20, "rw", "click", "click"),
+    (21, "rw", "httpx", "httpx"),
+    (22, "rw", "urllib3", "urllib3"),
+    (23, "rw", "requests", "requests"),
 ]
 
 
@@ -200,6 +201,7 @@ def resolve_path(group: str, subdir: str) -> Path:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -276,11 +278,12 @@ def main(argv: list[str] | None = None) -> None:
 
     # Distribution summary
     from collections import Counter
+
     dist = Counter(r["tier"] for r in rows)
     total = len(rows)
     for tier in ("ISOMORPHIC", "APPROXIMATE", "DIVERGENT"):
         n = dist.get(tier, 0)
-        print(f"  {tier}: {n}/{total} ({100*n/total:.0f}%)" if total else f"  {tier}: 0")
+        print(f"  {tier}: {n}/{total} ({100 * n / total:.0f}%)" if total else f"  {tier}: 0")
 
 
 if __name__ == "__main__":

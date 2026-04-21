@@ -123,10 +123,13 @@ def main() -> int:
 
     # Upgraded confidence check
     human = [
-        m for m in reviewer.mappings.values()
+        m
+        for m in reviewer.mappings.values()
         if getattr(m, "confidence_tier", None)
         and (
-            m.confidence_tier.value if hasattr(m.confidence_tier, "value") else str(m.confidence_tier)
+            m.confidence_tier.value
+            if hasattr(m.confidence_tier, "value")
+            else str(m.confidence_tier)
         )
         == "human_reviewed"
     ]

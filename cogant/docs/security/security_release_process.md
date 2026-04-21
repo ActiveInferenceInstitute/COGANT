@@ -28,4 +28,3 @@ If you discover a vulnerability:
 | 0.x | < Q1 2025 | Q4 2025 |
 
 Security patches provided for latest version + previous major.
-

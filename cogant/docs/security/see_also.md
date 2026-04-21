@@ -5,4 +5,3 @@
 - [ROADMAP](../roadmap/README.md)
 - [Validation](../validation/README.md)
 - [CLI guide — validate](../cli/README.md)
-

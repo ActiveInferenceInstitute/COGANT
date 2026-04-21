@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/server/app.py
-# hypothesis_version: 6.135.29
-
-[60.0, 200, 404, 422, 429, 500, 503, 1000, 8080, '*', '/analyze', '/docs', '/health', '/metrics', '/openapi.json', '/ready', '/reverse', '/roundtrip', '0.0.0.0', '; ', 'Liveness probe', 'Prometheus metrics', 'Rate limit exceeded.', 'RateLimitExceeded', 'Readiness probe', 'Synthesis failed.', 'app', 'ascii', 'checks', 'cogant-reverse-', 'cogant.api.pipeline', 'cogant.reverse', 'cogant.server', 'cogant_version', 'create_app', 'description', 'detail', 'error_type', 'file_count', 'gnn_text', 'graph', 'http', 'info', 'ingest', 'meta', 'model', 'model.gnn.md', 'networkx', 'normalize', 'not_ready', 'ok', 'out', 'package_zip_b64', 'pipeline', 'pydantic', 'ready', 'request handled', 'request rate-limited', 'run_server', 'statespace', 'static', 'status', 'translate', 'unknown', 'utf-8', 'value', 'version', 'w']

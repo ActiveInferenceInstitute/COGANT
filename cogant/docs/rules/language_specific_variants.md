@@ -72,4 +72,3 @@
 - **Pattern**: `unsafe { ... }`
 - **Transformation**: Mark SECURITY_CRITICAL
 - **Confidence**: 0.9
-

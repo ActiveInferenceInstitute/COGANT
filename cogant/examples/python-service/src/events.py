@@ -1,9 +1,10 @@
 """Event system for the example service."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Optional
+from typing import Any
 
 
 @dataclass
@@ -13,7 +14,7 @@ class Event:
     event_type: str
     timestamp: datetime = field(default_factory=datetime.utcnow)
     data: dict[str, Any] = field(default_factory=dict)
-    source: Optional[str] = None
+    source: str | None = None
 
 
 @dataclass

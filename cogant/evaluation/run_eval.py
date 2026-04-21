@@ -7,6 +7,7 @@ Usage (from repository root):
 
     PYTHONPATH=py python evaluation/run_eval.py
 """
+
 from __future__ import annotations
 
 import json
@@ -62,9 +63,7 @@ def _matrix_nonempty(matrix: Any) -> bool:
             return False
         # For lists: non-empty with non-empty inner
         if isinstance(matrix, list):
-            return len(matrix) > 0 and (
-                not isinstance(matrix[0], list) or len(matrix[0]) > 0
-            )
+            return len(matrix) > 0 and (not isinstance(matrix[0], list) or len(matrix[0]) > 0)
         return True
     except Exception:
         return False
@@ -143,9 +142,7 @@ def run_one(repo_name: str) -> dict[str, Any]:
             result["matrix_D_nonempty"] = _matrix_nonempty(D)
             md_block = gnn.to_gnn_markdown_block()
         except Exception as exc:  # noqa: BLE001
-            result["bundle_errors"].append(
-                f"GNNMatrices error: {type(exc).__name__}: {exc}"
-            )
+            result["bundle_errors"].append(f"GNNMatrices error: {type(exc).__name__}: {exc}")
 
     result["gnn_section_count"] = _count_gnn_sections(md_block)
 

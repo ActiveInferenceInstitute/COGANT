@@ -432,4 +432,3 @@ cogant upstream-gnn output/gnn_package --skip-steps 12,14,18,23 --verbose
 The same wiring is also exposed as opt-in flags on `cogant translate`, `cogant analyze`, and `cogant validate` via `--upstream-gnn-pipeline` (and the matching `--upstream-gnn-only-steps` / `--upstream-gnn-skip-steps` / `--upstream-gnn-frameworks` / `--upstream-gnn-llm-model` knobs); see `cogant translate --help` for the full surface.
 
 **Exit codes:** `0` on success; `1` if the upstream subprocess exits non-zero on any executed step.
-

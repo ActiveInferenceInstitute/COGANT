@@ -19,4 +19,3 @@ COGANT sits at the intersection of three established research areas: machine lea
 ## See also (MkDocs)
 
 Long-form evaluation-related work survey: [`../cogant/docs/evaluation/RELATED_WORK.md`](../cogant/docs/evaluation/RELATED_WORK.md).
-

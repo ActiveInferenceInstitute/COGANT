@@ -11,19 +11,19 @@ Steps:
   6. Save diff report
 """
 
-import sys
 import json
-import tempfile
-import shutil
 import logging
+import shutil
+import sys
+import tempfile
 from pathlib import Path
 
 # Add py/ to path for cogant imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "py"))
 
+from cogant.cli.diff import load_bundle
 from cogant.scoring.drift import DriftAnalyzer
 from cogant.scoring.metrics import CodebaseMetrics
-from cogant.cli.diff import load_bundle
 
 logging.basicConfig(
     level=logging.INFO,
@@ -84,9 +84,9 @@ def modify_codebase(repo_path: Path) -> None:
                         if next_line.strip() and not next_line.startswith(" " * (indent + 1)):
                             # End of method found
                             new_method = (
-                                f"\n    def new_method_added(self):\n"
-                                f'        """New method added during drift analysis."""\n'
-                                f"        return None\n"
+                                "\n    def new_method_added(self):\n"
+                                '        """New method added during drift analysis."""\n'
+                                "        return None\n"
                             )
                             new_lines.append(new_method)
                             added = True
@@ -176,27 +176,29 @@ def main():
 
         # Save markdown diff report
         diff_report_path = output_base / "diff_report.md"
-        full_report = "\n".join([
-            "# Flask Mini Drift Analysis Example",
-            "",
-            drift_report,
-            "",
-            "## Metrics Comparison",
-            "",
-            "### Baseline",
-            "",
-            metrics_a.format_report(),
-            "",
-            "### Modified",
-            "",
-            metrics_b.format_report(),
-            "",
-            "## Drift Diagram",
-            "",
-            "```mermaid",
-            drift_mermaid,
-            "```",
-        ])
+        full_report = "\n".join(
+            [
+                "# Flask Mini Drift Analysis Example",
+                "",
+                drift_report,
+                "",
+                "## Metrics Comparison",
+                "",
+                "### Baseline",
+                "",
+                metrics_a.format_report(),
+                "",
+                "### Modified",
+                "",
+                metrics_b.format_report(),
+                "",
+                "## Drift Diagram",
+                "",
+                "```mermaid",
+                drift_mermaid,
+                "```",
+            ]
+        )
 
         diff_report_path.write_text(full_report)
         logger.info(f"Diff report saved to {diff_report_path}")

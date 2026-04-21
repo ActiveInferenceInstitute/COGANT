@@ -178,4 +178,3 @@ returns `u_c0` every step, which is the behaviour observed in
 Active inference primer (package): [`../cogant/docs/theory/active_inference_primer.md`](../cogant/docs/theory/active_inference_primer.md).
 
 ---
-

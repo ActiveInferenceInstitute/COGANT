@@ -35,4 +35,3 @@ External API used without explicit import.
 - API method called directly: +0.2
 - Module referenced: +0.15
 - Type from external package: +0.15
-

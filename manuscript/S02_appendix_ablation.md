@@ -87,4 +87,3 @@ ablations are complementary: together they bracket the failure surface from
 Rule reference: [`../cogant/docs/reference/translation_rules.md`](../cogant/docs/reference/translation_rules.md).
 
 ---
-

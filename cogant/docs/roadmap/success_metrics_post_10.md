@@ -5,4 +5,3 @@
 3. **Performance**: Consistent with published benchmarks
 4. **Community**: >50 external contributions
 5. **Ecosystem**: >20 published plugins
-

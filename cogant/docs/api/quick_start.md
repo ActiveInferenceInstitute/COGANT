@@ -41,4 +41,3 @@ The two snippets above are run end-to-end against real targets in:
 - **Cookbook:** [Recipe 2: JSON output](../cookbook/02_json_output.md) — Method 2 (PipelineRunner + `bundle.save_json`).
 - **Tutorial:** [Tutorial 1: Quickstart](../tutorials/01_quickstart.md) — five-minute walkthrough that maps directly onto Method 1.
 - **Tutorial:** [Tutorial 3: Flask walkthrough](../tutorials/03_flask_walkthrough.md) — same API on a real-world six-module Flask app.
-

@@ -51,4 +51,3 @@ from cogant.static import DataFlowAnalyzer
 from pathlib import Path
 
 analyzer = DataFlowAnalyzer(repo_root=Path("."))
-

@@ -20,9 +20,9 @@ Measures what percentage of code was analyzed.
 }
 ```
 
-**Target**: ≥95% coverage  
-**Warning**: <90% coverage  
-**Error**: <70% coverage  
+**Target**: ≥95% coverage
+**Warning**: <90% coverage
+**Error**: <70% coverage
 
 ### Confidence Validation
 
@@ -53,8 +53,8 @@ Analyzes distribution of confidence scores.
 }
 ```
 
-**Target**: Mean ≥0.85  
-**Flags**: Confidence <0.6  
+**Target**: Mean ≥0.85
+**Flags**: Confidence <0.6
 
 ### Consistency Validation
 
@@ -109,4 +109,3 @@ Verifies that the same input produces the same output.
   }
 }
 ```
-

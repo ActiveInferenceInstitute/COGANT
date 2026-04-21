@@ -105,4 +105,3 @@ stabilises in at most $|\mathcal{M}|$ iterations, where $|\mathcal{M}| \leq n \c
 ## See also (MkDocs)
 
 System layers and pipeline data flow: [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md). Formal isomorphism / round-trip theory: [`../cogant/docs/theory/isomorphism.md`](../cogant/docs/theory/isomorphism.md), [`../cogant/docs/theory/roundtrip.md`](../cogant/docs/theory/roundtrip.md).
-

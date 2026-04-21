@@ -1,7 +1,7 @@
 """Benchmark: File discovery and ingestion."""
 
 import pytest
-from pathlib import Path
+
 from cogant.ingest import Repository
 
 

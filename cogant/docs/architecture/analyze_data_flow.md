@@ -223,4 +223,3 @@ The pipeline outputs are ready to be fed into:
 For detailed information, see [Detailed pipeline guide](detailed_pipeline_guide.md#detailed-pipeline-guide) or [Reference index](../reference/README.md).
 
 ---
-

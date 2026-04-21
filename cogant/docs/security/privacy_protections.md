@@ -9,7 +9,7 @@ Optional mode to strip personally identifiable information:
 privacy:
   anonymize: true
   anonymize_names: true      # fn_001, fn_002, ...
-  anonymize_paths: true      # /dev/null/... 
+  anonymize_paths: true      # /dev/null/...
   strip_documentation: true
   strip_comments: true
   hash_type_names: true
@@ -43,4 +43,3 @@ Logged events:
 - Rule application decisions
 - Export operations
 - Time, duration, file paths
-

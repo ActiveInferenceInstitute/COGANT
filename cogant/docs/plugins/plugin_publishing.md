@@ -24,4 +24,3 @@ my-cogant-plugin/
 └── examples/
     └── cogant.yaml
 ```
-

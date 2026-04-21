@@ -30,4 +30,3 @@ html_site/
     ├── graph-vis.js        # D3.js visualizations
     └── data.json           # Embedded bundle data
 ```
-

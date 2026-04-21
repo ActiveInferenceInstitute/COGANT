@@ -33,4 +33,3 @@ bundle = runner.run("./my_project", config)
 translate_result = bundle.stage_results.get("translate", {})
 print(f"Mappings: {len(translate_result.get('mappings', []))}")
 ```
-

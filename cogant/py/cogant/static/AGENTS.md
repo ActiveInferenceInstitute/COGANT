@@ -169,7 +169,7 @@ class ComplexityReport:
     max_cyclomatic: int
     max_cognitive: int
     errors: list[str]
-    
+
     def get_hotspots(threshold: int = 10) -> list[ComplexityEntry]
 
 @dataclass
@@ -195,7 +195,7 @@ class CouplingReport:
     average_abstractness: float
     average_distance: float
     errors: list[str]
-    
+
     def get_unstable_modules(threshold: float = 0.8) -> list[ModuleCouplingMetrics]
     def get_zone_of_pain() -> list[ModuleCouplingMetrics]
     def get_zone_of_uselessness() -> list[ModuleCouplingMetrics]
@@ -219,7 +219,7 @@ class DeadCodeReport:
     unused_variables: int
     unreachable_statements: int
     errors: list[str]
-    
+
     def get_certain_entries() -> list[DeadCodeEntry]
 
 @dataclass

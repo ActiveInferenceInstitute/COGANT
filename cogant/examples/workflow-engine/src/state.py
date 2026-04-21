@@ -1,8 +1,9 @@
 """State machine implementation for workflow engine."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Optional, TypeVar, Generic
+from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
@@ -24,8 +25,8 @@ class Transition:
 
     from_state: WorkflowState
     to_state: WorkflowState
-    condition: Optional[Callable] = None
-    on_transition: Optional[Callable] = None
+    condition: Callable | None = None
+    on_transition: Callable | None = None
 
 
 class StateMachine(Generic[T]):
@@ -41,8 +42,8 @@ class StateMachine(Generic[T]):
         self,
         from_state: WorkflowState,
         to_state: WorkflowState,
-        condition: Optional[Callable] = None,
-        on_transition: Optional[Callable] = None,
+        condition: Callable | None = None,
+        on_transition: Callable | None = None,
     ) -> None:
         """Register a state transition."""
         key = (from_state, to_state)
@@ -58,7 +59,7 @@ class StateMachine(Generic[T]):
         self.state_handlers[state] = handler
 
     def can_transition(
-        self, from_state: WorkflowState, to_state: WorkflowState, context: Optional[T] = None
+        self, from_state: WorkflowState, to_state: WorkflowState, context: T | None = None
     ) -> bool:
         """Check if a transition is allowed."""
         key = (from_state, to_state)
@@ -71,9 +72,7 @@ class StateMachine(Generic[T]):
 
         return transition.condition(context)
 
-    def transition(
-        self, to_state: WorkflowState, context: Optional[T] = None
-    ) -> bool:
+    def transition(self, to_state: WorkflowState, context: T | None = None) -> bool:
         """Perform a state transition."""
         if not self.can_transition(self.current_state, to_state, context):
             return False
@@ -91,7 +90,7 @@ class StateMachine(Generic[T]):
 
         return True
 
-    def handle_state(self, context: Optional[T] = None) -> None:
+    def handle_state(self, context: T | None = None) -> None:
         """Execute the handler for the current state."""
         if self.current_state in self.state_handlers:
             handler = self.state_handlers[self.current_state]
@@ -101,7 +100,7 @@ class StateMachine(Generic[T]):
         """Get transition history."""
         return self.history.copy()
 
-    def reset(self, initial_state: Optional[WorkflowState] = None) -> None:
+    def reset(self, initial_state: WorkflowState | None = None) -> None:
         """Reset state machine."""
         if initial_state:
             self.current_state = initial_state

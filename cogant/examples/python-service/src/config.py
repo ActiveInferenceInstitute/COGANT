@@ -1,8 +1,5 @@
 """Configuration management for the example service."""
 
-import os
-from typing import Optional
-
 from pydantic import BaseSettings
 
 

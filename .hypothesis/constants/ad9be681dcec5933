@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/validate/report.py
-# hypothesis_version: 6.135.29
-
-[0.0, 0.001, 0.02, 0.1, 1.0, 100.0, 'INVALID', 'VALID', 'affected_ids', 'category', 'confidence_score', 'coverage_score', 'details', 'error', 'graph_edges', 'graph_nodes', 'id', 'info', 'integrity_issues', 'is_valid', 'issues', 'message', 'model_id', 'process_connections', 'process_stages', 'provenance', 'provenance_gaps', 'recommendation', 'schema_issues', 'schema_name', 'severity', 'state_variables', 'summary', 'validated_at', 'warning']

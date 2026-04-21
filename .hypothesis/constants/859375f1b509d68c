@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/export/typed_export.py
-# hypothesis_version: 6.135.29
-
-[0.5, 3.0, '    rankdir=LR;', '-', '.', '_', 'created_at', 'custom_metadata', 'data', 'dimensions', 'edge_count', 'edge_types', 'edges', 'elements', 'evidence_sources', 'id', 'index', 'khaki', 'kind', 'label', 'language', 'languages', 'lightblue', 'lightcoral', 'lightcyan', 'lightgray', 'lightgreen', 'lightsalmon', 'lightsteelblue', 'lightyellow', 'matrix', 'metadata', 'name', 'node_count', 'node_labels', 'nodes', 'path', 'qualified_name', 'repo_uri', 'source', 'source_id', 'source_range', 'target', 'target_id', 'thistle', 'updated_at', 'version', 'weight', 'white', '}']

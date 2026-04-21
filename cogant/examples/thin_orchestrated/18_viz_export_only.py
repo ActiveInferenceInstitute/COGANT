@@ -95,9 +95,7 @@ def main() -> int:
     mg = MermaidGenerator()
     _try(
         "mermaid.class_diagram",
-        lambda: (args.output_dir / "class_diagram.mmd").write_text(
-            mg.generate_class_diagram(pg)
-        ),
+        lambda: (args.output_dir / "class_diagram.mmd").write_text(mg.generate_class_diagram(pg)),
         results,
     )
     _try(

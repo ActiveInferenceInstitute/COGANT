@@ -1,7 +1,7 @@
 # Round-Trip Validation Report
 
-**Date:** 2026-04-09 (template — updated by `test_roundtrip.py` empirically)  
-**Status:** Protocol defined; results PENDING  
+**Date:** 2026-04-09 (template — updated by `test_roundtrip.py` empirically)
+**Status:** Protocol defined; results PENDING
 **Related:** `ISOMORPHISM_THEOREM.md`, `SCOPING_REPORT.md`
 
 ---

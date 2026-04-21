@@ -7,6 +7,7 @@ wall-clock timings.
 Thin-orchestrator: all pipeline logic lives in cogant.api.orchestration;
 this script only drives timing and reporting.
 """
+
 from __future__ import annotations
 
 import os

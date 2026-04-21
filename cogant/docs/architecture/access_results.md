@@ -45,4 +45,3 @@ from pathlib import Path
 
 file_path = Path("example.py")
 repo_root = Path(".")
-

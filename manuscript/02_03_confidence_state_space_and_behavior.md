@@ -71,4 +71,3 @@ The cross-reference pass yields three **transitions**. For `actuate_heater` the 
 ## See also (MkDocs)
 
 API surfaces for `Session` / `PipelineRunner` / state-space compilation: [`../cogant/docs/api/README.md`](../cogant/docs/api/README.md). Matrix semantics and Markov blanket narrative: [`../cogant/docs/theory/active_inference.md`](../cogant/docs/theory/active_inference.md).
-

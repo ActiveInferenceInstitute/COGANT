@@ -14,4 +14,3 @@ func_node = builder.add_node(
     path="src/app/processing.py",
     language="python"
 )
-

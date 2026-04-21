@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/cli/explain.py
-# hypothesis_version: 6.135.29
-
-['; ', 'Evidence', 'Mapping Kind', 'Priority', 'Reason', 'Rule', 'assigned_role', 'auto', 'blanket_role', 'blue', 'bold green', 'cogant explain', 'considered_count', 'dim', 'fired_count', 'graph', 'green', 'ingest', 'language', 'mapping_description', 'mapping_kind', 'mapping_label', 'metadata', 'module', 'name', 'node_id', 'node_kind', 'node_name', 'normalize', 'path', 'priority', 'qualified_name', 'right', 'rules_considered', 'rules_fired', 'static', 'target', 'total_rules', 'translate', 'unknown', 'unknown error', 'value']

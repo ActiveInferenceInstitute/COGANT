@@ -87,7 +87,7 @@ directory (inner package) or from the staging root.
 - **Principled state-space semantics** — Markov blanket partition, variational free energy
   computation, expected free energy optimization — not keyword heuristics.
 - **Incremental analysis mode** — `cogant analyze --incremental <git-ref>` or
-  `PipelineConfig.incremental_since` — 19.6× no-change (cached graph), 5.6× single-file 
+  `PipelineConfig.incremental_since` — 19.6× no-change (cached graph), 5.6× single-file
   (partial re-run) speedups on Flask. Complements `cogant changed` git-diff helper for CI.
 - **Multi-episode Bayesian learning**: `AgentRuntime.run_multi_episode`, `run_episode`,
   `update_D_from_posterior`, `update_A_from_counts`.

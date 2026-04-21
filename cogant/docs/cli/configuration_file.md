@@ -21,4 +21,3 @@ Create `.cogant/config.json` in your project:
   ]
 }
 ```
-

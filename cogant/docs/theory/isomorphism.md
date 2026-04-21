@@ -1,8 +1,8 @@
 # COGANT Isomorphism Theorem: Program Graphs and Generative Models as Dual Views of Causal Structure
 
-**Author:** COGANT R&D  
-**Date:** 2026-04-09  
-**Status:** Theory (pre-proof)  
+**Author:** COGANT R&D
+**Date:** 2026-04-09
+**Status:** Theory (pre-proof)
 **Related:** `ROUNDTRIP_VALIDATION.md`, `SCOPING_REPORT.md`
 
 ---

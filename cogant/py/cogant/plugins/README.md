@@ -39,17 +39,17 @@ class RustPlugin(LanguagePlugin):
             author="COGANT Team"
         ))
         self.supported_languages = {"rust"}
-    
+
     def initialize(self, config):
         pass
-    
+
     def shutdown(self):
         pass
-    
+
     def parse(self, source_code):
         # Parse Rust code to AST
         return {"ast": "..."}
-    
+
     # ... implement other abstract methods
 ```
 

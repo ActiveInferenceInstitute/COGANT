@@ -9,4 +9,3 @@ python_class = LanguageFact(
         "decorators": ["@dataclass"],
     }
 )
-

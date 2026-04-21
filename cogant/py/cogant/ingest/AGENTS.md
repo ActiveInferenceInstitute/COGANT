@@ -503,20 +503,20 @@ Ingest **never modifies the repository**:
    def parse_deps_yaml(self, path: Path) -> tuple[dict, list[Dependency]]:
        """Parse custom deps.yaml format."""
        import yaml
-       
+
        with open(path) as f:
            data = yaml.safe_load(f) or {}
-       
+
        metadata = {"name": data.get("name")}
        dependencies = []
-       
+
        for dep_name, dep_spec in data.get("dependencies", {}).items():
            dependencies.append(Dependency(
                name=dep_name,
                version=dep_spec.get("version"),
                is_dev=dep_spec.get("dev", False),
            ))
-       
+
        return metadata, dependencies
    ```
 

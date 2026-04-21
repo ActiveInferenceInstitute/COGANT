@@ -45,4 +45,3 @@ from cogant.static import (
     TypeInferencer,
     DataFlowAnalyzer,
 )
-

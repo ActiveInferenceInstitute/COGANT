@@ -26,6 +26,7 @@ Test/mypy/ruff timeouts degrade to warning messages with ``-1``
 sentinel values for the affected metric so the YAML still writes; CI
 should then flag the negative value downstream.
 """
+
 from __future__ import annotations
 
 import ast
@@ -56,6 +57,7 @@ DOCS_EVAL = COGANT_DIR / "docs" / "evaluation"
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _run(cmd: str, cwd: Path | None = None, timeout: int = 180) -> tuple[int, str]:
     """Run a shell command, return (returncode, combined stdout+stderr)."""
     result = subprocess.run(
@@ -78,6 +80,7 @@ def _count_files(directory: Path, pattern: str) -> int:
 # ---------------------------------------------------------------------------
 # 1. Package version
 # ---------------------------------------------------------------------------
+
 
 def get_cogant_version() -> str:
     init_path = PY_PKG / "__init__.py"
@@ -157,6 +160,7 @@ def get_default_runner_stages() -> list[str]:
 # 2. Git SHA
 # ---------------------------------------------------------------------------
 
+
 def get_git_sha() -> str:
     rc, out = _run("git rev-parse HEAD", cwd=REPO_ROOT)
     return out.strip() if rc == 0 else "unknown"
@@ -165,6 +169,7 @@ def get_git_sha() -> str:
 # ---------------------------------------------------------------------------
 # 3. Test file counts
 # ---------------------------------------------------------------------------
+
 
 def get_test_file_counts() -> dict[str, int]:
     unit_dir = TESTS_DIR / "unit"
@@ -183,6 +188,7 @@ def get_test_file_counts() -> dict[str, int]:
 # ---------------------------------------------------------------------------
 # 4. Pytest collection count
 # ---------------------------------------------------------------------------
+
 
 def get_test_count_total() -> int:
     """Run pytest --collect-only and parse 'N selected'."""
@@ -209,6 +215,7 @@ def get_test_count_total() -> int:
 # ---------------------------------------------------------------------------
 # 5+6. Pytest run results + coverage (single combined invocation)
 # ---------------------------------------------------------------------------
+
 
 def get_test_results_and_coverage() -> tuple[dict[str, int], float, float]:
     """Read test results, suite runtime, and coverage from pytest + coverage.json.
@@ -294,6 +301,7 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float, float]:
 # 7. mypy strict errors
 # ---------------------------------------------------------------------------
 
+
 def get_mypy_errors() -> int:
     """Run mypy --strict and count ``error:`` lines in the combined output.
 
@@ -316,6 +324,7 @@ def get_mypy_errors() -> int:
 # ---------------------------------------------------------------------------
 # 8. Ruff violations
 # ---------------------------------------------------------------------------
+
 
 def get_ruff_violations() -> int:
     """Run ``ruff check`` and return the violation count.
@@ -352,6 +361,7 @@ def get_ruff_violations() -> int:
 # ---------------------------------------------------------------------------
 # 9. Codebase AST walk
 # ---------------------------------------------------------------------------
+
 
 def analyze_python_source() -> dict[str, int]:
     """Walk cogant/py/cogant/ and count files, LOC, classes, functions."""
@@ -405,6 +415,7 @@ def analyze_python_source() -> dict[str, int]:
 # ---------------------------------------------------------------------------
 # 10. Roundtrip evaluation data
 # ---------------------------------------------------------------------------
+
 
 def parse_roundtrip_results() -> dict:
     jsonl_path = EVAL_DIR / "dataset" / "roundtrip_results.jsonl"
@@ -461,6 +472,7 @@ def parse_roundtrip_results() -> dict:
 # 11. Literature bibliography count
 # ---------------------------------------------------------------------------
 
+
 def count_bibliography_entries() -> int:
     lit_path = DOCS_EVAL / "LITERATURE.md"
     if not lit_path.exists():
@@ -475,19 +487,18 @@ def count_bibliography_entries() -> int:
 # 12. Rust crates
 # ---------------------------------------------------------------------------
 
+
 def count_rust_crates() -> int:
     if not RUST_DIR.exists():
         return 0
-    crates = [
-        d for d in RUST_DIR.iterdir()
-        if d.is_dir() and (d / "Cargo.toml").exists()
-    ]
+    crates = [d for d in RUST_DIR.iterdir() if d.is_dir() and (d / "Cargo.toml").exists()]
     return len(crates)
 
 
 # ---------------------------------------------------------------------------
 # 13. Rust FFI availability
 # ---------------------------------------------------------------------------
+
 
 def rust_ffi_available() -> bool:
     pyi_path = PY_PKG / "rust_backend.pyi"
@@ -498,6 +509,7 @@ def rust_ffi_available() -> bool:
 # ---------------------------------------------------------------------------
 # 13b. Shipped benchmark fixtures
 # ---------------------------------------------------------------------------
+
 
 def count_shipped_fixtures() -> int:
     """Count packaged benchmark fixtures exercised by the suite harness.
@@ -529,6 +541,7 @@ def count_shipped_fixtures() -> int:
 # ---------------------------------------------------------------------------
 # 13c. IR schema counts (node kinds, edge kinds, Active-Inference roles)
 # ---------------------------------------------------------------------------
+
 
 def count_node_kinds() -> int:
     """Count concrete ``NodeKind`` enum members from ``cogant.schemas.core``."""
@@ -598,6 +611,7 @@ def count_active_inf_roles() -> int:
 # 14. Translation rules count
 # ---------------------------------------------------------------------------
 
+
 def count_translation_rules() -> int:
     rules_init = PY_PKG / "translate" / "rules" / "__init__.py"
     if not rules_init.exists():
@@ -616,6 +630,7 @@ def count_translation_rules() -> int:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     print("Regenerating METRICS.yaml...", file=sys.stderr)
@@ -771,10 +786,12 @@ def main() -> None:
 
     out_path.write_text(header + yaml_str)
     print(f"Written: {out_path}", file=sys.stderr)
-    print(f"  test_count_total={test_count_total}, passing={test_results['passing']}, "
-          f"coverage={coverage_pct}%, mypy_errors={mypy_errors}, "
-          f"roundtrip={roundtrip['isomorphic_count']}/{roundtrip['total_targets']} ISOMORPHIC",
-          file=sys.stderr)
+    print(
+        f"  test_count_total={test_count_total}, passing={test_results['passing']}, "
+        f"coverage={coverage_pct}%, mypy_errors={mypy_errors}, "
+        f"roundtrip={roundtrip['isomorphic_count']}/{roundtrip['total_targets']} ISOMORPHIC",
+        file=sys.stderr,
+    )
 
 
 if __name__ == "__main__":

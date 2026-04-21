@@ -43,4 +43,3 @@ dgl_graph = bundle.export_dgl()  # planned
 print(f"Nodes: {dgl_graph.num_nodes()}")
 print(f"Edges: {dgl_graph.num_edges()}")
 ```
-

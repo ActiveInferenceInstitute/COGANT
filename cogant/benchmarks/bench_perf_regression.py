@@ -29,7 +29,7 @@ import tempfile
 import time
 from datetime import date
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 
@@ -46,7 +46,7 @@ from cogant.api.pipeline import PipelineConfig, PipelineRunner  # noqa: E402
 
 # Fixtures are resolved relative to the repo root. Keys are the stable fixture
 # names recorded in the baseline; values are the filesystem paths.
-FIXTURES: Dict[str, Path] = {
+FIXTURES: dict[str, Path] = {
     "calculator": _REPO_ROOT / "examples" / "control_positive" / "calculator",
     "event_pipeline": _REPO_ROOT / "examples" / "control_positive" / "event_pipeline",
     "flask_app": _REPO_ROOT / "examples" / "real_world" / "flask_app",
@@ -88,7 +88,7 @@ def _run_pipeline_once(fixture_path: Path) -> None:
         runner.run(str(fixture_path), config)
 
 
-def measure(fixture_path: Path, iterations: int) -> Dict[str, float]:
+def measure(fixture_path: Path, iterations: int) -> dict[str, float]:
     """Measure median / p95 wall-clock milliseconds for ``iterations`` runs.
 
     The first run is used as a warm-up (results discarded) when enough
@@ -98,7 +98,7 @@ def measure(fixture_path: Path, iterations: int) -> Dict[str, float]:
     if iterations < 1:
         raise ValueError(f"iterations must be >= 1, got {iterations}")
 
-    samples_ms: List[float] = []
+    samples_ms: list[float] = []
     total = iterations + (1 if iterations >= 2 else 0)
     for idx in range(total):
         start = time.perf_counter()
@@ -123,7 +123,7 @@ def measure(fixture_path: Path, iterations: int) -> Dict[str, float]:
 # --- Baseline generation ----------------------------------------------------
 
 
-def generate_baseline(output_path: Path = BASELINE_FILE) -> Dict[str, Any]:
+def generate_baseline(output_path: Path = BASELINE_FILE) -> dict[str, Any]:
     """Run every fixture ``BASELINE_ITERATIONS`` times and write the baseline."""
     logging.basicConfig(
         level=logging.INFO,
@@ -131,7 +131,7 @@ def generate_baseline(output_path: Path = BASELINE_FILE) -> Dict[str, Any]:
     )
     logger.info("Generating perf baseline (%d iterations per fixture)", BASELINE_ITERATIONS)
 
-    fixtures_data: Dict[str, Dict[str, float]] = {}
+    fixtures_data: dict[str, dict[str, float]] = {}
     for name, path in FIXTURES.items():
         if not path.exists():
             logger.warning("Skipping missing fixture %s: %s", name, path)
@@ -183,7 +183,7 @@ def test_no_perf_regression() -> None:
     if not fixtures:
         pytest.skip("Baseline has no fixture data")
 
-    regressions: List[str] = []
+    regressions: list[str] = []
     for name, path in FIXTURES.items():
         if name not in fixtures:
             logger.info("No baseline entry for %s; skipping", name)

@@ -5,4 +5,3 @@
 - [Plugin API](../plugins/README.md): Plugin security model
 - [Validation](../validation/README.md): Integrity checks
 - This document: Security practices
-

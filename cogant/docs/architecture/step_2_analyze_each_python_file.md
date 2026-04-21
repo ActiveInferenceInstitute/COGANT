@@ -34,4 +34,3 @@ for file_info in snapshot.files:
     # Analyze data flow
     flows = dataflow_analyzer.analyze_file(file_info.path)
     all_flows.extend(flows)
-

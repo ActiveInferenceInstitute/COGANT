@@ -100,10 +100,7 @@ def main() -> int:
         lambda: ProcessExtractor(pg, schema_name=target.name).extract(),
         stats,
     )
-    print(
-        f"    stages={len(process_model.stages)} "
-        f"connections={len(process_model.connections)}"
-    )
+    print(f"    stages={len(process_model.stages)} connections={len(process_model.connections)}")
 
     def _export():
         builder = GNNPackageBuilder(

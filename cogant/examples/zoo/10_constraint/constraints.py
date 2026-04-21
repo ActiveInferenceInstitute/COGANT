@@ -53,9 +53,7 @@ class ModelChecker:
         for col in range(num_cols):
             col_sum = sum(matrix[row][col] for row in range(num_rows))
             if abs(col_sum - 1.0) > self.tolerance:
-                self._violations.append(
-                    f"{name}: column {col} sums to {col_sum}"
-                )
+                self._violations.append(f"{name}: column {col} sums to {col_sum}")
 
         return len(self._violations) == 0
 

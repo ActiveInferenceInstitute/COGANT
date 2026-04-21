@@ -38,4 +38,3 @@ validation:
       class_name: "MyValidator"
       enabled: true
 ```
-

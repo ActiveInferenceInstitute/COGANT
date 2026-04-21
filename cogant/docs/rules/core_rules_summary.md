@@ -42,4 +42,3 @@
 | rule_implements_001 | Interface implementation | IMPLEMENTS | 1.0 |
 | rule_has_type_001 | Type annotation | HAS_TYPE | 0.95 |
 | rule_member_of_001 | Module membership | MEMBER_OF | 1.0 |
-

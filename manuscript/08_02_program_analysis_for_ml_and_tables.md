@@ -63,4 +63,3 @@ Three things are visible in this table that the fine-grained feature matrix does
 ## See also (MkDocs)
 
 Export / tensor interop details: [`../cogant/docs/export/README.md`](../cogant/docs/export/README.md).
-

@@ -8,13 +8,12 @@ pipeline (prepare -> auth -> middleware -> send -> response hooks).
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .adapters import BaseAdapter, HTTPAdapter, MountTable
 from .auth import AuthBase, NoAuth
 from .models import (
     CaseInsensitiveDict,
-    PreparedRequest,
     Request,
     Response,
     Timeout,
@@ -27,15 +26,15 @@ class CookieJar:
     """A trivial cookie jar keyed on (domain, name)."""
 
     def __init__(self) -> None:
-        self._cookies: Dict[str, Dict[str, str]] = {}
+        self._cookies: dict[str, dict[str, str]] = {}
 
     def set(self, domain: str, name: str, value: str) -> None:
         self._cookies.setdefault(domain, {})[name] = value
 
-    def get(self, domain: str, name: str) -> Optional[str]:
+    def get(self, domain: str, name: str) -> str | None:
         return self._cookies.get(domain, {}).get(name)
 
-    def for_url(self, url: str) -> Dict[str, str]:
+    def for_url(self, url: str) -> dict[str, str]:
         domain = _domain_of(url)
         return dict(self._cookies.get(domain, {}))
 
@@ -70,7 +69,7 @@ class Session:
         self.adapters = MountTable()
         self.adapters.mount("http://", HTTPAdapter())
         self.adapters.mount("https://", HTTPAdapter())
-        self.hooks: Dict[str, List[Any]] = {"response": []}
+        self.hooks: dict[str, list[Any]] = {"response": []}
         self.max_redirects: int = 30
         self.verify: bool = True
 
@@ -78,7 +77,7 @@ class Session:
     # Context manager protocol
     # ------------------------------------------------------------------
 
-    def __enter__(self) -> "Session":
+    def __enter__(self) -> Session:
         return self
 
     def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
@@ -129,14 +128,14 @@ class Session:
         method: str,
         url: str,
         *,
-        headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, str]] = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, str] | None = None,
         data: Any = None,
         json: Any = None,
-        timeout: Optional[float] = None,
-        auth: Optional[AuthBase] = None,
+        timeout: float | None = None,
+        auth: AuthBase | None = None,
     ) -> Response:
-        merged_headers: Dict[str, str] = dict(self.headers)
+        merged_headers: dict[str, str] = dict(self.headers)
         if headers:
             merged_headers.update(headers)
         req = Request(

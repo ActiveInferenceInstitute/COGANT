@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/parsers/typescript/parser.py
-# hypothesis_version: 6.135.29
-
-[',', '.js', '.jsx', '.ts', '.tsx', '0.1.0', '<string>', 'COGANT', 'ClassDeclaration', 'ExportDeclaration', 'FunctionDeclaration', 'ImportDeclaration', 'InterfaceDeclaration', 'MethodDeclaration', 'class', 'classes', 'default', 'errors', 'exports', 'extends', 'function', 'functions', 'implements', 'imports', 'interface', 'interfaces', 'javascript', 'line', 'module', 'name', 'named', 'names', 'namespace', 'params', 'py', 'r', 'return_type', 'type', 'typescript', 'utf-8']

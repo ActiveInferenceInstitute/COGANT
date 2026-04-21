@@ -86,4 +86,3 @@ state_space = bundle.stage_results.get("statespace", {})
 - **Cookbook:** [Recipe: Analyze a Flask app](../cookbook/analyze_a_flask_app.md) — `PipelineRunner` against the canonical 98-node fixture.
 - **Tutorial:** [Tutorial 1: Quickstart](../tutorials/01_quickstart.md) — Method 2 (orchestrated pipeline) walkthrough.
 - **Tutorial:** [Tutorial 3: Flask walkthrough](../tutorials/03_flask_walkthrough.md) — full `stages` list against a real-world repo.
-

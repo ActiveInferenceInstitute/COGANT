@@ -11,8 +11,8 @@ This example demonstrates the full COGANT workflow:
 6. Export and visualize results
 """
 
-import sys
 import json
+import sys
 from pathlib import Path
 
 # Add py directory to path when running as a script without editable install
@@ -21,11 +21,11 @@ sys.path.insert(0, str(_REPO_ROOT / "py"))
 
 EXAMPLE_REPO = _REPO_ROOT / "examples" / "python-service"
 
-from cogant import Session, PipelineRunner, Bundle
+from cogant import Bundle, PipelineRunner, Session
 from cogant.api.pipeline import PipelineConfig
 from cogant.api.review import ReviewAPI
-from cogant.viz import GraphVisualizer, SemanticVisualizer, HTMLSiteRenderer
 from cogant.scoring import DriftAnalyzer
+from cogant.viz import GraphVisualizer, HTMLSiteRenderer, SemanticVisualizer
 
 
 def example_session_api():
@@ -101,7 +101,7 @@ def example_pipeline_runner():
     run_target = str(EXAMPLE_REPO.resolve()) if EXAMPLE_REPO.is_dir() else str(_REPO_ROOT)
     bundle = runner.run(run_target, config)
 
-    print(f"\nPipeline Results:")
+    print("\nPipeline Results:")
     print(f"  Target: {bundle.target}")
     print(f"  Completed stages: {len(bundle.stage_results)}")
     print(f"  Errors: {len(bundle.errors)}")
@@ -282,24 +282,24 @@ def example_drift_analysis(bundle1: Bundle, bundle2: Bundle):
     data1 = json.loads(bundle1.to_json()) if isinstance(bundle1, Bundle) else bundle1
     data2 = json.loads(bundle2.to_json()) if isinstance(bundle2, Bundle) else bundle2
 
-    print(f"\nComparing bundles...")
+    print("\nComparing bundles...")
     print(f"  Bundle 1: {data1['target']}")
     print(f"  Bundle 2: {data2['target']}")
 
     # Analyze drift
     score = analyzer.analyze(data1, data2)
 
-    print(f"\nDrift Scores:")
+    print("\nDrift Scores:")
     print(f"  Overall: {score.total_score:.2%}")
     print(f"  Architectural: {score.architectural_score:.2%}")
     print(f"  Semantic Churn: {score.semantic_churn_score:.2%}")
 
-    print(f"\nDetails:")
+    print("\nDetails:")
     for key, value in score.details.items():
         print(f"  {key}: {value}")
 
     # Print full report
-    print(f"\nFull Report:")
+    print("\nFull Report:")
     print(analyzer.report(score))
 
 

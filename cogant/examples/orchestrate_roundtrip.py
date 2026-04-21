@@ -17,57 +17,56 @@ Outputs to output/{repo_name}/ with comprehensive analysis:
   - HTML index and markdown summary
 """
 
-import sys
+import argparse
+import html
 import json
 import logging
 import re
-import argparse
-from pathlib import Path
+import sys
 from datetime import datetime
-import base64
-import html
+from pathlib import Path
 
 # Add py/ to path for cogant imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "py"))
 
-from cogant.config import ConfigLoader, ConfigLoadError
-from cogant.ingest.repo import RepoIngester
-from cogant.ingest.files import FileEnumerator
-from cogant.static.parser import PythonASTParser
-from cogant.static.symbols import SymbolExtractor
-from cogant.static.imports import ImportAnalyzer
-from cogant.static.calls import CallGraphBuilder
-from cogant.graph.builder import ProgramGraphBuilder
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.translate.engine import TranslationEngine
-from cogant.translate.rules import (
-    ReadOnlyInputRule,
-    MutatingSubsystemRule,
-    EventBusRule,
-    RetryPatternRule,
-    TestAssertionRule,
-    ObservationRule,
-    ActionRule,
-    PolicyRule,
-    PreferenceRule,
-    ContextRule,
-    InheritanceRule,
-    ContainmentRule,
-)
-from cogant.statespace.compiler import StateSpaceCompiler
+from cogant.config import ConfigLoader
 from cogant.gnn.formatter import GNNMarkdownFormatter
 from cogant.gnn.json_export import GNNJSONExporter
 from cogant.gnn.package import GNNPackageBuilder
-from cogant.gnn.validator import GNNValidator
 from cogant.gnn.runner import GNNModelRunner
-from cogant.process.extractor import ProcessModel, ProcessExtractor, Stage, ProcessConnection
-from cogant.validate.report import ReportGenerator
+from cogant.gnn.validator import GNNValidator
+from cogant.graph.builder import ProgramGraphBuilder
+from cogant.ingest.repo import RepoIngester
+from cogant.process.extractor import ProcessExtractor, ProcessModel
+from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.scoring.drift import DriftAnalyzer
 from cogant.scoring.metrics import CodebaseMetrics
+from cogant.statespace.compiler import StateSpaceCompiler
+from cogant.static.calls import CallGraphBuilder
+from cogant.static.imports import ImportAnalyzer
+from cogant.static.parser import PythonASTParser
+from cogant.static.symbols import SymbolExtractor
+from cogant.translate.engine import TranslationEngine
+from cogant.translate.rules import (
+    ActionRule,
+    ContainmentRule,
+    ContextRule,
+    EventBusRule,
+    InheritanceRule,
+    MutatingSubsystemRule,
+    ObservationRule,
+    PolicyRule,
+    PreferenceRule,
+    ReadOnlyInputRule,
+    RetryPatternRule,
+    TestAssertionRule,
+)
+from cogant.validate.report import ReportGenerator
 
 # Optional imports for rich outputs
 try:
     from cogant.viz.mermaid import MermaidGenerator
+
     HAS_MERMAID = True
 except ImportError:
     HAS_MERMAID = False
@@ -75,6 +74,7 @@ except ImportError:
 
 try:
     from cogant.export.bundle import GraphBundle
+
     HAS_EXPORT = True
 except ImportError:
     HAS_EXPORT = False
@@ -83,30 +83,35 @@ from cogant.viz.dashboard import DashboardGenerator
 
 try:
     from cogant.viz.graph_view import GraphVisualizer
+
     HAS_GRAPH_VIZ = True
 except ImportError:
     HAS_GRAPH_VIZ = False
 
 try:
     from cogant.viz.semantic_view import SemanticVisualizer
+
     HAS_SEMANTIC_VIZ = True
 except ImportError:
     HAS_SEMANTIC_VIZ = False
 
 try:
     from cogant.viz.gantt import GanttRenderer
+
     HAS_GANTT = True
 except ImportError:
     HAS_GANTT = False
 
 try:
     from cogant.viz.html_renderer import HTMLSiteRenderer
+
     HAS_HTML_RENDERER = True
 except ImportError:
     HAS_HTML_RENDERER = False
 
 try:
     from cogant.viz.plots import StaticPlotter
+
     HAS_STATIC_PLOTTER = True
 except ImportError:
     HAS_STATIC_PLOTTER = False
@@ -121,7 +126,9 @@ logger = logging.getLogger(__name__)
 class RoundtripOrchestrator:
     """Orchestrates a complete roundtrip through the COGANT pipeline."""
 
-    def __init__(self, repo_path: Path, output_dir: Path, config: dict = None, compare_repo_path: Path = None):
+    def __init__(
+        self, repo_path: Path, output_dir: Path, config: dict = None, compare_repo_path: Path = None
+    ):
         """Initialize orchestrator.
 
         Args:
@@ -198,9 +205,7 @@ class RoundtripOrchestrator:
 
             # Step 9: Format GNN output and validate
             logger.info("\n[9/9] Formatting GNN output and validating...")
-            success = self._format_and_validate(
-                graph, state_space, semantic_mappings
-            )
+            success = self._format_and_validate(graph, state_space, semantic_mappings)
 
             # Additional analysis: Compute metrics and self-drift
             logger.info("\n[Metrics] Computing codebase metrics and baseline drift...")
@@ -210,7 +215,9 @@ class RoundtripOrchestrator:
             # Optional: Compare with second repo if --compare flag is set
             if self.compare_repo_path:
                 logger.info(f"\n[Compare] Analyzing second repository: {self.compare_repo_path}")
-                compare_output_dir = self.output_dir.parent / f"{self.compare_repo_path.name}_comparison"
+                compare_output_dir = (
+                    self.output_dir.parent / f"{self.compare_repo_path.name}_comparison"
+                )
                 compare_output_dir.mkdir(parents=True, exist_ok=True)
                 compare_orchestrator = RoundtripOrchestrator(
                     self.compare_repo_path, compare_output_dir, self.config
@@ -316,23 +323,23 @@ class RoundtripOrchestrator:
                 call_edges.extend(edges)
                 logger.debug(f"    Found {len(edges)} calls in {file_info.relative_path}")
             except Exception as e:
-                logger.warning(f"    Call graph extraction failed for {file_info.relative_path}: {e}")
+                logger.warning(
+                    f"    Call graph extraction failed for {file_info.relative_path}: {e}"
+                )
 
         logger.info(f"  Built call graph with {len(call_edges)} edges")
         return call_edges
 
-    def _build_program_graph(
-        self, snapshot, parsed_files, symbol_tables, import_edges, call_edges
-    ):
+    def _build_program_graph(self, snapshot, parsed_files, symbol_tables, import_edges, call_edges):
         """Step 6: Build program graph."""
         try:
             builder = ProgramGraphBuilder(str(self.repo_path))
 
             # Track node references for edge building
             module_nodes = {}  # module_name -> node
-            class_nodes = {}   # qualified_name -> node
+            class_nodes = {}  # qualified_name -> node
             method_nodes = {}  # qualified_name -> node
-            func_nodes = {}    # qualified_name -> node
+            func_nodes = {}  # qualified_name -> node
 
             # Add nodes for files and symbols
             for file_path, module in parsed_files.items():
@@ -364,7 +371,9 @@ class RoundtripOrchestrator:
 
                     # CONTAINMENT: module contains class
                     builder.add_edge(
-                        module_node.id, class_node.id, EdgeKind.CONTAINS,
+                        module_node.id,
+                        class_node.id,
+                        EdgeKind.CONTAINS,
                         metadata={"relationship": "module_contains_class"},
                     )
 
@@ -372,7 +381,9 @@ class RoundtripOrchestrator:
                     for method in cls.methods:
                         method_qname = f"{module_name}.{cls.name}.{method.name}"
                         method_node = builder.add_node(
-                            kind=NodeKind.METHOD if hasattr(NodeKind, 'METHOD') else NodeKind.FUNCTION,
+                            kind=NodeKind.METHOD
+                            if hasattr(NodeKind, "METHOD")
+                            else NodeKind.FUNCTION,
                             name=method.name,
                             qualified_name=method_qname,
                             path=str(file_rel),
@@ -383,7 +394,9 @@ class RoundtripOrchestrator:
 
                         # CONTAINMENT: class contains method
                         builder.add_edge(
-                            class_node.id, method_node.id, EdgeKind.CONTAINS,
+                            class_node.id,
+                            method_node.id,
+                            EdgeKind.CONTAINS,
                             metadata={"relationship": "class_contains_method"},
                         )
 
@@ -408,7 +421,9 @@ class RoundtripOrchestrator:
 
                     # CONTAINMENT: module contains function
                     builder.add_edge(
-                        module_node.id, func_node.id, EdgeKind.CONTAINS,
+                        module_node.id,
+                        func_node.id,
+                        EdgeKind.CONTAINS,
                         metadata={"relationship": "module_contains_function"},
                     )
 
@@ -418,8 +433,9 @@ class RoundtripOrchestrator:
                 for node in source_mods:
                     if edge.source_file.name == node.name + ".py":
                         target_name = edge.module_name.split(".")[0]
-                        target_nodes = [n for n in builder.graph.nodes.values()
-                                       if n.name == target_name]
+                        target_nodes = [
+                            n for n in builder.graph.nodes.values() if n.name == target_name
+                        ]
                         if target_nodes:
                             builder.add_edge(
                                 node.id,
@@ -432,12 +448,10 @@ class RoundtripOrchestrator:
             # Add call edges
             for edge in call_edges:
                 caller_nodes = [
-                    n for n in builder.graph.nodes.values()
-                    if n.name == edge.caller_name
+                    n for n in builder.graph.nodes.values() if n.name == edge.caller_name
                 ]
                 callee_nodes = [
-                    n for n in builder.graph.nodes.values()
-                    if n.name == edge.callee_name
+                    n for n in builder.graph.nodes.values() if n.name == edge.callee_name
                 ]
                 if caller_nodes and callee_nodes:
                     for caller in caller_nodes:
@@ -453,17 +467,24 @@ class RoundtripOrchestrator:
             for qname, class_node in class_nodes.items():
                 bases = class_node.metadata.get("bases", []) if class_node.metadata else []
                 for base in bases:
-                    base_nodes = [n for n in builder.graph.nodes.values()
-                                  if n.name == base and n.kind == NodeKind.CLASS]
+                    base_nodes = [
+                        n
+                        for n in builder.graph.nodes.values()
+                        if n.name == base and n.kind == NodeKind.CLASS
+                    ]
                     if base_nodes:
                         builder.add_edge(
-                            class_node.id, base_nodes[0].id, EdgeKind.INHERITS,
+                            class_node.id,
+                            base_nodes[0].id,
+                            EdgeKind.INHERITS,
                             metadata={"base_class": base},
                         )
 
             graph = builder.finalize()
             stats = builder.get_statistics()
-            logger.info(f"  Built program graph: {stats['total_nodes']} nodes, {stats['total_edges']} edges")
+            logger.info(
+                f"  Built program graph: {stats['total_nodes']} nodes, {stats['total_edges']} edges"
+            )
 
             # Save program graph for inspection
             self._save_program_graph(graph)
@@ -482,6 +503,7 @@ class RoundtripOrchestrator:
         and their containing class.
         """
         import ast as ast_mod
+
         try:
             source = file_path.read_text()
             tree = ast_mod.parse(source)
@@ -498,30 +520,40 @@ class RoundtripOrchestrator:
                         # self.attr = value → WRITES
                         if isinstance(child, ast_mod.Assign):
                             for target in child.targets:
-                                if (isinstance(target, ast_mod.Attribute) and
-                                    isinstance(target.value, ast_mod.Name) and
-                                    target.value.id == "self"):
+                                if (
+                                    isinstance(target, ast_mod.Attribute)
+                                    and isinstance(target.value, ast_mod.Name)
+                                    and target.value.id == "self"
+                                ):
                                     writes += 1
                         # AugAssign: self.attr += value → MUTATES
                         if isinstance(child, ast_mod.AugAssign):
-                            if (isinstance(child.target, ast_mod.Attribute) and
-                                isinstance(child.target.value, ast_mod.Name) and
-                                child.target.value.id == "self"):
+                            if (
+                                isinstance(child.target, ast_mod.Attribute)
+                                and isinstance(child.target.value, ast_mod.Name)
+                                and child.target.value.id == "self"
+                            ):
                                 writes += 1
                         # self.attr as expression (read)
                         if isinstance(child, ast_mod.Attribute):
-                            if (isinstance(child.value, ast_mod.Name) and
-                                child.value.id == "self"):
+                            if isinstance(child.value, ast_mod.Name) and child.value.id == "self":
                                 reads += 1
 
                     if writes > 0:
                         builder.add_edge(
-                            method_node.id, class_node.id, EdgeKind.WRITES,
-                            metadata={"write_count": writes, "pattern": "self_attribute_assignment"},
+                            method_node.id,
+                            class_node.id,
+                            EdgeKind.WRITES,
+                            metadata={
+                                "write_count": writes,
+                                "pattern": "self_attribute_assignment",
+                            },
                         )
                     if reads > writes:  # net reads after accounting for writes
                         builder.add_edge(
-                            method_node.id, class_node.id, EdgeKind.READS,
+                            method_node.id,
+                            class_node.id,
+                            EdgeKind.READS,
                             metadata={"read_count": reads, "pattern": "self_attribute_access"},
                         )
                     break
@@ -574,8 +606,9 @@ class RoundtripOrchestrator:
         except Exception as e:
             logger.error(f"State space compilation failed: {e}", exc_info=True)
             # Return a minimal state space to continue
-            from cogant.statespace.temporal import TimeRegime
             from cogant.statespace.compiler import StateSpaceModel
+            from cogant.statespace.temporal import TimeRegime
+
             return StateSpaceModel(
                 id=f"minimal_state_space_{self.repo_path.name}",
                 schema_name=self.repo_path.name,
@@ -602,7 +635,9 @@ class RoundtripOrchestrator:
 
             # Format markdown (with graceful fallback)
             try:
-                logger.info(f"  Creating formatter: semantic_mappings type = {type(semantic_mappings).__name__}, len = {len(semantic_mappings) if hasattr(semantic_mappings, '__len__') else 'N/A'}")
+                logger.info(
+                    f"  Creating formatter: semantic_mappings type = {type(semantic_mappings).__name__}, len = {len(semantic_mappings) if hasattr(semantic_mappings, '__len__') else 'N/A'}"
+                )
                 formatter = GNNMarkdownFormatter(
                     graph, state_space, process_model, semantic_mappings
                 )
@@ -614,9 +649,7 @@ class RoundtripOrchestrator:
 
             # Export JSON (with graceful fallback)
             try:
-                exporter = GNNJSONExporter(
-                    graph, state_space, process_model, semantic_mappings
-                )
+                exporter = GNNJSONExporter(graph, state_space, process_model, semantic_mappings)
                 json_data = exporter.export()
                 logger.info(f"  Exported JSON with {len(json_data)} top-level keys")
             except Exception as e:
@@ -627,9 +660,12 @@ class RoundtripOrchestrator:
             try:
                 reporter = ReportGenerator(graph, state_space, process_model, self.repo_path.name)
                 report = reporter.generate()
-                logger.info(f"  Generated validation report: {'VALID' if report.is_valid else 'ISSUES FOUND'}")
+                logger.info(
+                    f"  Generated validation report: {'VALID' if report.is_valid else 'ISSUES FOUND'}"
+                )
             except Exception as e:
                 logger.warning(f"Validation report generation failed: {e}")
+
                 # Create minimal report object
                 class MinimalReport:
                     is_valid = False
@@ -638,6 +674,7 @@ class RoundtripOrchestrator:
                     issues = []
                     id = f"report_{self.repo_path.name}"
                     summary = f"Report generation failed: {e}"
+
                 report = MinimalReport()
 
             # Save core outputs
@@ -683,7 +720,9 @@ class RoundtripOrchestrator:
             self._wire_graph_view(graph)
             self._wire_semantic_view(state_space)
             self._wire_gantt_chart(process_model)
-            self._wire_html_site_renderer(graph, state_space, process_model, semantic_mappings, report)
+            self._wire_html_site_renderer(
+                graph, state_space, process_model, semantic_mappings, report
+            )
             self._wire_diff_view(graph, state_space)
             self._wire_boundary_map(graph)
 
@@ -699,9 +738,13 @@ class RoundtripOrchestrator:
 
             # Generate interactive dashboard (replaces basic HTML index)
             if markdown and report:
-                self._generate_dashboard(graph, state_space, process_model, semantic_mappings, report)
+                self._generate_dashboard(
+                    graph, state_space, process_model, semantic_mappings, report
+                )
 
-            logger.info(f"  Generated rich outputs: Mermaid diagrams, charts, semantic mappings, summary, dashboard, timeline, heatmap, trace")
+            logger.info(
+                "  Generated rich outputs: Mermaid diagrams, charts, semantic mappings, summary, dashboard, timeline, heatmap, trace"
+            )
 
             # Task 6: Build GNN package
             logger.info("  [Task 6] Building GNN package...")
@@ -740,7 +783,7 @@ class RoundtripOrchestrator:
         """Save program graph as JSON with metadata and provenance."""
         try:
             data = {
-                "id": getattr(graph, 'id', f"program_graph_{self.repo_path.name}"),
+                "id": getattr(graph, "id", f"program_graph_{self.repo_path.name}"),
                 "metadata": {
                     "repo": self.repo_path.name,
                     "generated_at": datetime.now().isoformat(),
@@ -756,7 +799,7 @@ class RoundtripOrchestrator:
                         "path": node.path or "",
                         "language": node.language or "unknown",
                         "metadata": node.metadata or {},
-                        "source_range": getattr(node, 'source_range', None),
+                        "source_range": getattr(node, "source_range", None),
                     }
                     for nid, node in graph.nodes.items()
                 },
@@ -766,9 +809,9 @@ class RoundtripOrchestrator:
                         "source": edge.source_id,
                         "target": edge.target_id,
                         "kind": str(edge.kind),
-                        "weight": edge.weight if hasattr(edge, 'weight') else 1,
+                        "weight": edge.weight if hasattr(edge, "weight") else 1,
                         "metadata": edge.metadata or {},
-                        "provenance": getattr(edge, 'provenance', None),
+                        "provenance": getattr(edge, "provenance", None),
                     }
                     for eid, edge in graph.edges.items()
                 },
@@ -893,9 +936,15 @@ class RoundtripOrchestrator:
             role_groups = {}
             for mapping_id, mapping in semantic_mappings.items():
                 # Handle both dict-style (role string) and SemanticMapping objects
-                if hasattr(mapping, 'kind'):
-                    role = mapping.kind.value if hasattr(mapping.kind, 'value') else str(mapping.kind)
-                    node_ids = mapping.graph_fragment_node_ids if hasattr(mapping, 'graph_fragment_node_ids') else []
+                if hasattr(mapping, "kind"):
+                    role = (
+                        mapping.kind.value if hasattr(mapping.kind, "value") else str(mapping.kind)
+                    )
+                    node_ids = (
+                        mapping.graph_fragment_node_ids
+                        if hasattr(mapping, "graph_fragment_node_ids")
+                        else []
+                    )
                 else:
                     role = str(mapping)
                     node_ids = []
@@ -956,9 +1005,9 @@ class RoundtripOrchestrator:
 
             svg_lines = [
                 f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">',
-                '<style>text { font-family: Arial, sans-serif; font-size: 12px; }</style>',
+                "<style>text { font-family: Arial, sans-serif; font-size: 12px; }</style>",
                 f'<rect width="{width}" height="{height}" fill="white"/>',
-                f'<text x="{width/2}" y="30" text-anchor="middle" font-size="18" font-weight="bold">{html.escape(title)}</text>',
+                f'<text x="{width / 2}" y="30" text-anchor="middle" font-size="18" font-weight="bold">{html.escape(title)}</text>',
             ]
 
             # Y-axis
@@ -1007,12 +1056,14 @@ class RoundtripOrchestrator:
 </head>
 <body>
     <h1>{html.escape(title)}</h1>
-    {''.join(svg_lines)}
+    {"".join(svg_lines)}
     <table border="1" style="margin-top: 20px; border-collapse: collapse;">
         <tr><th>Type</th><th>Count</th></tr>
 """
             for label, value in sorted(zip(labels, values), key=lambda x: x[1], reverse=True):
-                html_content += f"        <tr><td>{html.escape(str(label))}</td><td>{value}</td></tr>\n"
+                html_content += (
+                    f"        <tr><td>{html.escape(str(label))}</td><td>{value}</td></tr>\n"
+                )
 
             html_content += """    </table>
 </body>
@@ -1050,7 +1101,7 @@ class RoundtripOrchestrator:
         """Save full typed graph export with all metadata."""
         try:
             data = {
-                "id": getattr(graph, 'id', f"typed_graph_{self.repo_path.name}"),
+                "id": getattr(graph, "id", f"typed_graph_{self.repo_path.name}"),
                 "type": "program_graph",
                 "metadata": {
                     "generated_at": datetime.now().isoformat(),
@@ -1076,7 +1127,7 @@ class RoundtripOrchestrator:
                         "source": edge.source_id,
                         "target": edge.target_id,
                         "kind": str(edge.kind),
-                        "weight": getattr(edge, 'weight', 1),
+                        "weight": getattr(edge, "weight", 1),
                         "metadata": edge.metadata or {},
                     }
                     for eid, edge in graph.edges.items()
@@ -1098,32 +1149,39 @@ class RoundtripOrchestrator:
 
             # Add nodes
             for nid, node in graph.nodes.items():
-                elements.append({
-                    "data": {
-                        "id": nid,
-                        "label": node.name,
-                        "kind": str(node.kind),
-                        "qualified_name": node.qualified_name,
-                    },
-                    "classes": str(node.kind).replace("NodeKind.", "").lower(),
-                })
+                elements.append(
+                    {
+                        "data": {
+                            "id": nid,
+                            "label": node.name,
+                            "kind": str(node.kind),
+                            "qualified_name": node.qualified_name,
+                        },
+                        "classes": str(node.kind).replace("NodeKind.", "").lower(),
+                    }
+                )
 
             # Add edges
             for eid, edge in graph.edges.items():
-                elements.append({
-                    "data": {
-                        "id": eid,
-                        "source": edge.source_id,
-                        "target": edge.target_id,
-                        "label": str(edge.kind).replace("EdgeKind.", ""),
-                    },
-                    "classes": str(edge.kind).replace("EdgeKind.", "").lower(),
-                })
+                elements.append(
+                    {
+                        "data": {
+                            "id": eid,
+                            "source": edge.source_id,
+                            "target": edge.target_id,
+                            "label": str(edge.kind).replace("EdgeKind.", ""),
+                        },
+                        "classes": str(edge.kind).replace("EdgeKind.", "").lower(),
+                    }
+                )
 
             data = {
                 "elements": elements,
                 "style": [
-                    {"selector": "node", "style": {"content": "data(label)", "text-valign": "center"}},
+                    {
+                        "selector": "node",
+                        "style": {"content": "data(label)", "text-valign": "center"},
+                    },
                     {"selector": "edge", "style": {"target-arrow-shape": "triangle"}},
                 ],
             }
@@ -1152,7 +1210,7 @@ class RoundtripOrchestrator:
                 src_idx = node_to_idx.get(edge.source_id)
                 tgt_idx = node_to_idx.get(edge.target_id)
                 if src_idx is not None and tgt_idx is not None:
-                    matrix[src_idx][tgt_idx] = getattr(edge, 'weight', 1)
+                    matrix[src_idx][tgt_idx] = getattr(edge, "weight", 1)
 
             data = {
                 "node_ids": node_ids,
@@ -1176,8 +1234,8 @@ class RoundtripOrchestrator:
         """Save graph in GraphViz DOT format."""
         try:
             lines = ["digraph G {"]
-            lines.append('    rankdir=LR;')
-            lines.append('    node [shape=box];')
+            lines.append("    rankdir=LR;")
+            lines.append("    node [shape=box];")
 
             # Add nodes
             for nid, node in graph.nodes.items():
@@ -1214,18 +1272,18 @@ class RoundtripOrchestrator:
             # Group by semantic role
             by_role = {}
             for mapping_id, mapping in semantic_mappings.items():
-                kind = getattr(mapping, 'kind', None)
-                role = kind.value if kind is not None else 'unknown'
+                kind = getattr(mapping, "kind", None)
+                role = kind.value if kind is not None else "unknown"
                 if role not in by_role:
                     by_role[role] = []
 
                 mapping_dict = {
                     "id": mapping_id,
                     "semantic_role": role,
-                    "confidence": getattr(mapping, 'confidence', 0.0),
-                    "source": getattr(mapping, 'source', 'unknown'),
-                    "target": getattr(mapping, 'target', 'unknown'),
-                    "metadata": getattr(mapping, 'metadata', {}),
+                    "confidence": getattr(mapping, "confidence", 0.0),
+                    "source": getattr(mapping, "source", "unknown"),
+                    "target": getattr(mapping, "target", "unknown"),
+                    "metadata": getattr(mapping, "metadata", {}),
                 }
                 by_role[role].append(mapping_dict)
 
@@ -1251,12 +1309,12 @@ class RoundtripOrchestrator:
             summary_file = self.output_dir / "summary.md"
             if summary_file.exists():
                 try:
-                    with open(summary_file, "r") as f:
+                    with open(summary_file) as f:
                         content = f.read()
                     # Extract from summary
-                    nodes_match = re.search(r'Total Nodes[^:]*:\s*(\d+)', content)
-                    edges_match = re.search(r'Total Edges[^:]*:\s*(\d+)', content)
-                    mappings_match = re.search(r'Total Mappings[^:]*:\s*(\d+)', content)
+                    nodes_match = re.search(r"Total Nodes[^:]*:\s*(\d+)", content)
+                    edges_match = re.search(r"Total Edges[^:]*:\s*(\d+)", content)
+                    mappings_match = re.search(r"Total Mappings[^:]*:\s*(\d+)", content)
                     if nodes_match:
                         num_nodes = int(nodes_match.group(1))
                     if edges_match:
@@ -1272,11 +1330,11 @@ class RoundtripOrchestrator:
                 diag_file = self.output_dir / f"{diag_name}.mermaid"
                 if diag_file.exists():
                     try:
-                        with open(diag_file, "r") as f:
+                        with open(diag_file) as f:
                             content = f.read()
                         diagrams_html += f"""
 <div class="diagram-section">
-    <h2>{diag_name.replace('_', ' ').title()}</h2>
+    <h2>{diag_name.replace("_", " ").title()}</h2>
     <pre class="mermaid">
 {html.escape(content)}
     </pre>
@@ -1290,13 +1348,13 @@ class RoundtripOrchestrator:
                 chart_file = self.output_dir / f"{chart_name}.html"
                 if chart_file.exists():
                     try:
-                        with open(chart_file, "r") as f:
+                        with open(chart_file) as f:
                             content = f.read()
                         # Extract SVG from the HTML file
-                        svg_match = re.search(r'<svg[^>]*>.*?</svg>', content, re.DOTALL)
+                        svg_match = re.search(r"<svg[^>]*>.*?</svg>", content, re.DOTALL)
                         if svg_match:
                             svg_content = svg_match.group(0)
-                            title = chart_name.replace('_', ' ').title()
+                            title = chart_name.replace("_", " ").title()
                             diagrams_html += f"""
 <div class="diagram-section">
     <h2>{title}</h2>
@@ -1310,7 +1368,7 @@ class RoundtripOrchestrator:
             summary_html = ""
             if summary_file.exists():
                 try:
-                    with open(summary_file, "r") as f:
+                    with open(summary_file) as f:
                         summary_content = f.read()
                     # Escape HTML and preserve formatting
                     summary_escaped = html.escape(summary_content)
@@ -1333,9 +1391,9 @@ class RoundtripOrchestrator:
                     files_html += f"<li><a href='{output_file.name}'>{output_file.name}</a> ({size:,} bytes)</li>"
             files_html += "</ul>"
 
-            is_valid = getattr(report, 'is_valid', False)
-            coverage = getattr(report, 'coverage_score', 0.0)
-            confidence = getattr(report, 'confidence_score', 0.0)
+            is_valid = getattr(report, "is_valid", False)
+            coverage = getattr(report, "coverage_score", 0.0)
+            confidence = getattr(report, "confidence_score", 0.0)
 
             html_content = f"""<!DOCTYPE html>
 <html>
@@ -1428,14 +1486,14 @@ class RoundtripOrchestrator:
             text-decoration: underline;
         }}
         .validation {{
-            background: #{'e8f5e9' if is_valid else 'ffebee'};
-            border-left: 4px solid #{'4caf50' if is_valid else 'f44336'};
+            background: #{"e8f5e9" if is_valid else "ffebee"};
+            border-left: 4px solid #{"4caf50" if is_valid else "f44336"};
             padding: 15px;
             border-radius: 4px;
             margin: 20px 0;
         }}
         .validation-status {{
-            color: #{'2e7d32' if is_valid else 'c62828'};
+            color: #{"2e7d32" if is_valid else "c62828"};
             font-weight: bold;
         }}
     </style>
@@ -1447,7 +1505,7 @@ class RoundtripOrchestrator:
     <div class="container">
         <header>
             <h1>COGANT Analysis: {html.escape(self.repo_path.name)}</h1>
-            <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            <p>Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
         </header>
 
         <div class="stats">
@@ -1465,14 +1523,14 @@ class RoundtripOrchestrator:
             </div>
             <div class="stat-card">
                 <h3>Validation</h3>
-                <div class="stat-value" style="color: #{'4caf50' if is_valid else 'f44336'};">
-                    {'✓ Valid' if is_valid else '✗ Issues'}
+                <div class="stat-value" style="color: #{"4caf50" if is_valid else "f44336"};">
+                    {"✓ Valid" if is_valid else "✗ Issues"}
                 </div>
             </div>
         </div>
 
         <div class="validation">
-            <div class="validation-status">Validation Status: {'VALID' if is_valid else 'ISSUES FOUND'}</div>
+            <div class="validation-status">Validation Status: {"VALID" if is_valid else "ISSUES FOUND"}</div>
             <p>Coverage: {coverage:.1%} | Confidence: {confidence:.1%}</p>
         </div>
 
@@ -1497,7 +1555,7 @@ class RoundtripOrchestrator:
             with open(output_file, "w") as f:
                 f.write(html_content)
 
-            logger.info(f"  Saved index.html")
+            logger.info("  Saved index.html")
         except Exception as e:
             logger.warning(f"Failed to save HTML index: {e}")
 
@@ -1506,12 +1564,20 @@ class RoundtripOrchestrator:
         try:
             # Load mermaid diagrams from files
             mermaid_diagrams = {}
-            for diag_name in ["class_diagram", "dependency_graph", "state_diagram", "sequence_diagram",
-                              "flowchart", "boundary_map", "process_timeline", "semantic_flow"]:
+            for diag_name in [
+                "class_diagram",
+                "dependency_graph",
+                "state_diagram",
+                "sequence_diagram",
+                "flowchart",
+                "boundary_map",
+                "process_timeline",
+                "semantic_flow",
+            ]:
                 diag_file = self.output_dir / f"{diag_name}.mermaid"
                 if diag_file.exists():
                     try:
-                        with open(diag_file, "r") as f:
+                        with open(diag_file) as f:
                             mermaid_diagrams[diag_name] = f.read()
                     except Exception:
                         pass
@@ -1599,29 +1665,33 @@ class RoundtripOrchestrator:
 
             # Convert graph nodes to dict format
             graph_nodes = []
-            if hasattr(graph, 'nodes'):
+            if hasattr(graph, "nodes"):
                 for n in graph.nodes:
-                    if hasattr(n, 'id'):
+                    if hasattr(n, "id"):
                         # It's a Node object
-                        graph_nodes.append({
-                            "id": n.id,
-                            "kind": str(n.kind) if hasattr(n, 'kind') else "unknown",
-                            "attributes": n.attributes if hasattr(n, 'attributes') else {},
-                        })
+                        graph_nodes.append(
+                            {
+                                "id": n.id,
+                                "kind": str(n.kind) if hasattr(n, "kind") else "unknown",
+                                "attributes": n.attributes if hasattr(n, "attributes") else {},
+                            }
+                        )
                     else:
                         # It might be a dict-like object or string
                         graph_nodes.append({"id": str(n), "kind": "unknown", "attributes": {}})
 
             # Convert edges
             graph_edges = []
-            if hasattr(graph, 'edges'):
+            if hasattr(graph, "edges"):
                 for e in graph.edges:
-                    if hasattr(e, 'source') and hasattr(e, 'target'):
-                        graph_edges.append({
-                            "source": e.source,
-                            "target": e.target,
-                            "kind": str(e.kind) if hasattr(e, 'kind') else "unknown",
-                        })
+                    if hasattr(e, "source") and hasattr(e, "target"):
+                        graph_edges.append(
+                            {
+                                "source": e.source,
+                                "target": e.target,
+                                "kind": str(e.kind) if hasattr(e, "kind") else "unknown",
+                            }
+                        )
 
             # Create current bundle
             current_bundle = {
@@ -1635,7 +1705,12 @@ class RoundtripOrchestrator:
                     "actions": [],
                     "policies": [],
                 },
-                "mappings": {str(m_id): {"kind": "mapped"} for m_id in (semantic_mappings.keys() if isinstance(semantic_mappings, dict) else [])},
+                "mappings": {
+                    str(m_id): {"kind": "mapped"}
+                    for m_id in (
+                        semantic_mappings.keys() if isinstance(semantic_mappings, dict) else []
+                    )
+                },
             }
 
             # Compute drift
@@ -1720,12 +1795,17 @@ class RoundtripOrchestrator:
             # Save JSON
             drift_json_file = self.output_dir / "drift_report.json"
             with open(drift_json_file, "w") as f:
-                json.dump({
-                    "total_score": drift_result["total_score"],
-                    "architectural_score": drift_result["architectural_score"],
-                    "semantic_churn_score": drift_result["semantic_churn_score"],
-                    "details": drift_result["details"],
-                }, f, indent=2, default=str)
+                json.dump(
+                    {
+                        "total_score": drift_result["total_score"],
+                        "architectural_score": drift_result["architectural_score"],
+                        "semantic_churn_score": drift_result["semantic_churn_score"],
+                        "details": drift_result["details"],
+                    },
+                    f,
+                    indent=2,
+                    default=str,
+                )
             logger.info(f"  Saved drift JSON to {drift_json_file}")
 
             logger.info(f"  Drift score: {drift.total_score:.2%}")
@@ -1741,26 +1821,30 @@ class RoundtripOrchestrator:
 
             # Convert graph nodes to dict format
             graph_nodes = []
-            if hasattr(graph, 'nodes'):
+            if hasattr(graph, "nodes"):
                 for n in graph.nodes:
-                    if hasattr(n, 'id'):
-                        graph_nodes.append({
-                            "id": n.id,
-                            "kind": str(n.kind) if hasattr(n, 'kind') else "unknown",
-                            "attributes": n.attributes if hasattr(n, 'attributes') else {},
-                            "parent_id": getattr(n, 'parent_id', None),
-                        })
+                    if hasattr(n, "id"):
+                        graph_nodes.append(
+                            {
+                                "id": n.id,
+                                "kind": str(n.kind) if hasattr(n, "kind") else "unknown",
+                                "attributes": n.attributes if hasattr(n, "attributes") else {},
+                                "parent_id": getattr(n, "parent_id", None),
+                            }
+                        )
 
             # Convert edges
             graph_edges = []
-            if hasattr(graph, 'edges'):
+            if hasattr(graph, "edges"):
                 for e in graph.edges:
-                    if hasattr(e, 'source') and hasattr(e, 'target'):
-                        graph_edges.append({
-                            "source": e.source,
-                            "target": e.target,
-                            "kind": str(e.kind) if hasattr(e, 'kind') else "unknown",
-                        })
+                    if hasattr(e, "source") and hasattr(e, "target"):
+                        graph_edges.append(
+                            {
+                                "source": e.source,
+                                "target": e.target,
+                                "kind": str(e.kind) if hasattr(e, "kind") else "unknown",
+                            }
+                        )
 
             graph_dict = {
                 "nodes": graph_nodes,
@@ -1799,7 +1883,9 @@ class RoundtripOrchestrator:
         try:
             extractor = ProcessExtractor(graph, self.repo_path.name)
             process_model = extractor.extract()
-            logger.info(f"  Built process model: {len(process_model.stages)} stages, {len(process_model.connections)} connections")
+            logger.info(
+                f"  Built process model: {len(process_model.stages)} stages, {len(process_model.connections)} connections"
+            )
             return process_model
         except Exception as e:
             logger.warning(f"Process model extraction failed, using minimal model: {e}")
@@ -1851,17 +1937,16 @@ class RoundtripOrchestrator:
             # Convert trace to serializable format
             ai_trace_serialized = []
             for step in ai_trace:
-                ai_trace_serialized.append({
-                    "step": step.get("step", 0),
-                    "observation": str(step.get("observation", "")),
-                    "action": str(step.get("action", "")),
-                    "free_energy": float(step.get("free_energy", 0.0)),
-                    "beliefs": {
-                        str(k): float(v)
-                        for k, v in step.get("beliefs", {}).items()
-                    },
-                    "predicted_state_keys": list(step.get("predicted_state", {}).keys())[:5],
-                })
+                ai_trace_serialized.append(
+                    {
+                        "step": step.get("step", 0),
+                        "observation": str(step.get("observation", "")),
+                        "action": str(step.get("action", "")),
+                        "free_energy": float(step.get("free_energy", 0.0)),
+                        "beliefs": {str(k): float(v) for k, v in step.get("beliefs", {}).items()},
+                        "predicted_state_keys": list(step.get("predicted_state", {}).keys())[:5],
+                    }
+                )
 
             ai_trace_file = self.output_dir / "active_inference_trace.json"
             with open(ai_trace_file, "w") as f:
@@ -1896,25 +1981,27 @@ class RoundtripOrchestrator:
             # Extract confidence data from mappings
             mapping_list = []
             for mapping_id, mapping in semantic_mappings.items():
-                confidence = getattr(mapping, 'confidence_score', 0.5)
-                mapping_list.append({
-                    'id': mapping_id,
-                    'kind': getattr(mapping, 'kind', 'unknown'),
-                    'confidence': confidence,
-                    'label': getattr(mapping, 'semantic_label', 'unknown'),
-                })
+                confidence = getattr(mapping, "confidence_score", 0.5)
+                mapping_list.append(
+                    {
+                        "id": mapping_id,
+                        "kind": getattr(mapping, "kind", "unknown"),
+                        "confidence": confidence,
+                        "label": getattr(mapping, "semantic_label", "unknown"),
+                    }
+                )
 
             # Sort by confidence
-            mapping_list.sort(key=lambda x: x['confidence'], reverse=True)
+            mapping_list.sort(key=lambda x: x["confidence"], reverse=True)
 
             # Generate color for confidence level
             def confidence_to_color(conf):
                 if conf < 0.5:
-                    return '#ff6b6b'  # Red
+                    return "#ff6b6b"  # Red
                 elif conf < 0.8:
-                    return '#ffd93d'  # Yellow
+                    return "#ffd93d"  # Yellow
                 else:
-                    return '#51cf66'  # Green
+                    return "#51cf66"  # Green
 
             # Generate HTML
             html_content = """<!DOCTYPE html>
@@ -1947,10 +2034,10 @@ class RoundtripOrchestrator:
 """
 
             for mapping in mapping_list[:100]:  # Limit to first 100
-                color = confidence_to_color(mapping['confidence'])
-                label = mapping['label'][:15] if mapping['label'] else mapping['kind']
-                html_content += f"""        <div class="cell" style="background-color: {color};" title="{mapping['id']}: {mapping['confidence']:.2%}">
-            {label}<br/>{mapping['confidence']:.0%}
+                color = confidence_to_color(mapping["confidence"])
+                label = mapping["label"][:15] if mapping["label"] else mapping["kind"]
+                html_content += f"""        <div class="cell" style="background-color: {color};" title="{mapping["id"]}: {mapping["confidence"]:.2%}">
+            {label}<br/>{mapping["confidence"]:.0%}
         </div>
 """
 
@@ -2002,10 +2089,10 @@ class RoundtripOrchestrator:
             for idx, stage in enumerate(stage_list[:30]):  # Limit to 30 stages
                 safe_id = stage.name.replace(" ", "_").replace("-", "_")[:20]
                 if idx == 0:
-                    lines.append(f"    section Process")
+                    lines.append("    section Process")
                     lines.append(f"    {safe_id}: a{idx}, {start_date}, 1d")
                 else:
-                    lines.append(f"    {safe_id}: a{idx}, after a{idx-1}, 1d")
+                    lines.append(f"    {safe_id}: a{idx}, after a{idx - 1}, 1d")
 
             timeline_content = "\n".join(lines)
 
@@ -2058,7 +2145,7 @@ Generated: {datetime.now().isoformat()}
             if state_space.variables:
                 summary += "### State Variables\n"
                 for var_id, var in list(state_space.variables.items())[:10]:
-                    var_name = getattr(var, 'name', var_id)
+                    var_name = getattr(var, "name", var_id)
                     summary += f"- {var_name}\n"
                 if len(state_space.variables) > 10:
                     summary += f"- ... and {len(state_space.variables) - 10} more\n"
@@ -2073,11 +2160,11 @@ Generated: {datetime.now().isoformat()}
             # Group by mapping kind (using kind.value for string representation)
             by_kind = {}
             for mapping_id, mapping in semantic_mappings.items():
-                kind = getattr(mapping, 'kind', None)
+                kind = getattr(mapping, "kind", None)
                 if kind:
-                    kind_str = kind.value if hasattr(kind, 'value') else str(kind)
+                    kind_str = kind.value if hasattr(kind, "value") else str(kind)
                 else:
-                    kind_str = 'unknown'
+                    kind_str = "unknown"
                 by_kind[kind_str] = by_kind.get(kind_str, 0) + 1
 
             if by_kind:
@@ -2088,7 +2175,7 @@ Generated: {datetime.now().isoformat()}
             summary += f"""
 ## Validation Results
 
-- **Valid**: {'Yes' if report.is_valid else 'No'}
+- **Valid**: {"Yes" if report.is_valid else "No"}
 - **Coverage Score**: {report.coverage_score:.2%}
 - **Confidence Score**: {report.confidence_score:.2%}
 - **Issues Found**: {len(report.issues)}
@@ -2098,7 +2185,7 @@ Generated: {datetime.now().isoformat()}
             if report.issues:
                 summary += "### Issues\n"
                 for issue in report.issues[:10]:
-                    issue_msg = getattr(issue, 'message', str(issue))
+                    issue_msg = getattr(issue, "message", str(issue))
                     summary += f"- {issue_msg}\n"
                 if len(report.issues) > 10:
                     summary += f"- ... and {len(report.issues) - 10} more\n"
@@ -2173,7 +2260,7 @@ Generated: {datetime.now().isoformat()}
             if isinstance(graph, dict):
                 graph_dict = graph
             else:
-                graph_dict = {'nodes': [], 'edges': []}
+                graph_dict = {"nodes": [], "edges": []}
 
             if isinstance(state_space, dict):
                 ss_dict = state_space
@@ -2205,16 +2292,13 @@ Generated: {datetime.now().isoformat()}
         except Exception as e:
             logger.warning(f"Failed to save metrics report: {e}")
 
-
     def _build_gnn_package(self, graph, state_space, process_model, semantic_mappings):
         """Build a complete, self-contained GNN model package."""
         try:
             package_dir = self.output_dir / "gnn_package"
             logger.info(f"    Building GNN package in {package_dir}")
 
-            builder = GNNPackageBuilder(
-                graph, state_space, process_model, semantic_mappings
-            )
+            builder = GNNPackageBuilder(graph, state_space, process_model, semantic_mappings)
             manifest = builder.build(str(package_dir))
 
             logger.info(f"    GNN package built with {len(manifest.get('files', []))} files")
@@ -2234,7 +2318,9 @@ Generated: {datetime.now().isoformat()}
             validator = GNNValidator()
             result = validator.validate_package(str(package_dir))
 
-            logger.info(f"    Validation result: {'VALID' if result.valid else 'INVALID'} (score: {result.score:.1f}%)")
+            logger.info(
+                f"    Validation result: {'VALID' if result.valid else 'INVALID'} (score: {result.score:.1f}%)"
+            )
 
             if result.errors:
                 for error in result.errors[:5]:
@@ -2269,7 +2355,7 @@ Generated: {datetime.now().isoformat()}
             runner = GNNModelRunner()
             runner.load_package(str(package_dir))
 
-            logger.info(f"    Running GNN model for 10 steps...")
+            logger.info("    Running GNN model for 10 steps...")
             execution = runner.run(steps=10)
 
             logger.info(
@@ -2307,35 +2393,43 @@ Generated: {datetime.now().isoformat()}
             # Convert program graph to dict
             if isinstance(graph, dict):
                 graph_dict = graph
-            elif hasattr(graph, 'model_dump'):
+            elif hasattr(graph, "model_dump"):
                 graph_dict = graph.model_dump()
-            elif hasattr(graph, '__dict__'):
+            elif hasattr(graph, "__dict__"):
                 # Build dict from ProgramGraph object (non-Pydantic dataclass)
                 nodes_data = []
-                if hasattr(graph, 'nodes'):
+                if hasattr(graph, "nodes"):
                     # If nodes is a dict, get values; if it's a list, use as-is
-                    nodes_iter = graph.nodes.values() if isinstance(graph.nodes, dict) else graph.nodes
+                    nodes_iter = (
+                        graph.nodes.values() if isinstance(graph.nodes, dict) else graph.nodes
+                    )
                     for node in nodes_iter:
-                        node_id = getattr(node, 'id', '')
+                        node_id = getattr(node, "id", "")
                         # Try both 'label' and 'name'
-                        node_label = getattr(node, 'label', getattr(node, 'name', ''))
-                        node_kind = str(getattr(node, 'kind', 'unknown'))
-                        nodes_data.append({
-                            "id": node_id,
-                            "name": node_label,
-                            "type": node_kind,
-                        })
+                        node_label = getattr(node, "label", getattr(node, "name", ""))
+                        node_kind = str(getattr(node, "kind", "unknown"))
+                        nodes_data.append(
+                            {
+                                "id": node_id,
+                                "name": node_label,
+                                "type": node_kind,
+                            }
+                        )
 
                 edges_data = []
-                if hasattr(graph, 'edges'):
+                if hasattr(graph, "edges"):
                     # If edges is a dict, get values; if it's a list, use as-is
-                    edges_iter = graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
+                    edges_iter = (
+                        graph.edges.values() if isinstance(graph.edges, dict) else graph.edges
+                    )
                     for edge in edges_iter:
-                        edges_data.append({
-                            "source": getattr(edge, 'source_id', ''),
-                            "target": getattr(edge, 'target_id', ''),
-                            "type": str(getattr(edge, 'kind', 'unknown')),
-                        })
+                        edges_data.append(
+                            {
+                                "source": getattr(edge, "source_id", ""),
+                                "target": getattr(edge, "target_id", ""),
+                                "type": str(getattr(edge, "kind", "unknown")),
+                            }
+                        )
 
                 graph_dict = {
                     "nodes": nodes_data,
@@ -2343,7 +2437,7 @@ Generated: {datetime.now().isoformat()}
                     "metadata": {
                         "node_count": len(nodes_data),
                         "edge_count": len(edges_data),
-                    }
+                    },
                 }
             else:
                 logger.warning("Cannot convert graph to dict, skipping graph_view visualization")
@@ -2353,7 +2447,11 @@ Generated: {datetime.now().isoformat()}
             if isinstance(graph_dict.get("nodes"), dict):
                 nodes_dict = graph_dict["nodes"]
                 graph_dict["nodes"] = [
-                    {"id": node_id, "name": node.get("name", node.get("label", "")), "type": node.get("kind", "unknown")}
+                    {
+                        "id": node_id,
+                        "name": node.get("name", node.get("label", "")),
+                        "type": node.get("kind", "unknown"),
+                    }
                     for node_id, node in nodes_dict.items()
                 ]
             elif isinstance(graph_dict.get("nodes"), list):
@@ -2361,24 +2459,32 @@ Generated: {datetime.now().isoformat()}
                 normalized_nodes = []
                 for node in graph_dict["nodes"]:
                     if isinstance(node, dict):
-                        normalized_nodes.append({
-                            "id": node.get("id", ""),
-                            "name": node.get("name", node.get("label", "")),
-                            "type": node.get("type", node.get("kind", "unknown"))
-                        })
+                        normalized_nodes.append(
+                            {
+                                "id": node.get("id", ""),
+                                "name": node.get("name", node.get("label", "")),
+                                "type": node.get("type", node.get("kind", "unknown")),
+                            }
+                        )
                     else:
                         # Try to extract from object
-                        normalized_nodes.append({
-                            "id": getattr(node, "id", ""),
-                            "name": getattr(node, "label", getattr(node, "name", "")),
-                            "type": str(getattr(node, "kind", "unknown"))
-                        })
+                        normalized_nodes.append(
+                            {
+                                "id": getattr(node, "id", ""),
+                                "name": getattr(node, "label", getattr(node, "name", "")),
+                                "type": str(getattr(node, "kind", "unknown")),
+                            }
+                        )
                 graph_dict["nodes"] = normalized_nodes
 
             if isinstance(graph_dict.get("edges"), dict):
                 edges_dict = graph_dict["edges"]
                 graph_dict["edges"] = [
-                    {"source": edge.get("source_id", ""), "target": edge.get("target_id", ""), "type": edge.get("kind", "unknown")}
+                    {
+                        "source": edge.get("source_id", ""),
+                        "target": edge.get("target_id", ""),
+                        "type": edge.get("kind", "unknown"),
+                    }
                     for edge_id, edge in edges_dict.items()
                 ]
             elif isinstance(graph_dict.get("edges"), list):
@@ -2386,17 +2492,21 @@ Generated: {datetime.now().isoformat()}
                 normalized_edges = []
                 for edge in graph_dict["edges"]:
                     if isinstance(edge, dict):
-                        normalized_edges.append({
-                            "source": edge.get("source", edge.get("source_id", "")),
-                            "target": edge.get("target", edge.get("target_id", "")),
-                            "type": edge.get("type", edge.get("kind", "unknown"))
-                        })
+                        normalized_edges.append(
+                            {
+                                "source": edge.get("source", edge.get("source_id", "")),
+                                "target": edge.get("target", edge.get("target_id", "")),
+                                "type": edge.get("type", edge.get("kind", "unknown")),
+                            }
+                        )
                     else:
-                        normalized_edges.append({
-                            "source": getattr(edge, "source_id", ""),
-                            "target": getattr(edge, "target_id", ""),
-                            "type": str(getattr(edge, "kind", "unknown"))
-                        })
+                        normalized_edges.append(
+                            {
+                                "source": getattr(edge, "source_id", ""),
+                                "target": getattr(edge, "target_id", ""),
+                                "type": str(getattr(edge, "kind", "unknown")),
+                            }
+                        )
                 graph_dict["edges"] = normalized_edges
 
             # Create visualizer and load graph
@@ -2431,23 +2541,33 @@ Generated: {datetime.now().isoformat()}
             logger.info("    Rendering semantic_view visualizations...")
 
             # Convert state space to dict if needed
-            if hasattr(state_space, 'to_dict'):
+            if hasattr(state_space, "to_dict"):
                 state_space_dict = state_space.to_dict()
             elif isinstance(state_space, dict):
                 state_space_dict = state_space
             else:
                 # Try to extract key components
-                states_val = getattr(state_space, 'states', {})
-                observations_val = getattr(state_space, 'observations', {})
-                actions_val = getattr(state_space, 'actions', {})
-                policies_val = getattr(state_space, 'policies', {})
-                transitions_val = getattr(state_space, 'transitions', [])
+                states_val = getattr(state_space, "states", {})
+                observations_val = getattr(state_space, "observations", {})
+                actions_val = getattr(state_space, "actions", {})
+                policies_val = getattr(state_space, "policies", {})
+                transitions_val = getattr(state_space, "transitions", [])
 
                 # Convert dicts to lists if needed
-                states_list = list(states_val.values()) if isinstance(states_val, dict) else states_val
-                observations_list = list(observations_val.values()) if isinstance(observations_val, dict) else observations_val
-                actions_list = list(actions_val.values()) if isinstance(actions_val, dict) else actions_val
-                policies_list = list(policies_val.values()) if isinstance(policies_val, dict) else policies_val
+                states_list = (
+                    list(states_val.values()) if isinstance(states_val, dict) else states_val
+                )
+                observations_list = (
+                    list(observations_val.values())
+                    if isinstance(observations_val, dict)
+                    else observations_val
+                )
+                actions_list = (
+                    list(actions_val.values()) if isinstance(actions_val, dict) else actions_val
+                )
+                policies_list = (
+                    list(policies_val.values()) if isinstance(policies_val, dict) else policies_val
+                )
 
                 state_space_dict = {
                     "states": states_list,
@@ -2484,16 +2604,16 @@ Generated: {datetime.now().isoformat()}
             logger.info("    Rendering Gantt chart visualization...")
 
             # Convert process model to dict if needed
-            if hasattr(process_model, 'to_dict'):
+            if hasattr(process_model, "to_dict"):
                 process_dict = process_model.to_dict()
             elif isinstance(process_model, dict):
                 process_dict = process_model
             else:
                 # Try to extract key components
                 process_dict = {
-                    "stages": getattr(process_model, 'stages', []),
-                    "dependencies": getattr(process_model, 'dependencies', []),
-                    "connections": getattr(process_model, 'connections', []),
+                    "stages": getattr(process_model, "stages", []),
+                    "dependencies": getattr(process_model, "dependencies", []),
+                    "connections": getattr(process_model, "connections", []),
                 }
                 # Convert stage dict to list of dicts if needed
                 if isinstance(process_dict["stages"], dict):
@@ -2501,12 +2621,14 @@ Generated: {datetime.now().isoformat()}
                     for k, v in process_dict["stages"].items():
                         stage_dict = {
                             "id": k,
-                            "name": v.name if hasattr(v, 'name') else str(k),
+                            "name": v.name if hasattr(v, "name") else str(k),
                             "start": 0,
                             "duration": 10,
                         }
-                        if hasattr(v, '__dict__'):
-                            stage_dict.update({kk: vv for kk, vv in vars(v).items() if kk not in stage_dict})
+                        if hasattr(v, "__dict__"):
+                            stage_dict.update(
+                                {kk: vv for kk, vv in vars(v).items() if kk not in stage_dict}
+                            )
                         stages_list.append(stage_dict)
                     process_dict["stages"] = stages_list
                 # Convert connections to dependencies
@@ -2528,7 +2650,9 @@ Generated: {datetime.now().isoformat()}
         except Exception as e:
             logger.warning(f"Gantt chart visualization failed: {e}", exc_info=True)
 
-    def _wire_html_site_renderer(self, graph, state_space, process_model, semantic_mappings, report):
+    def _wire_html_site_renderer(
+        self, graph, state_space, process_model, semantic_mappings, report
+    ):
         """Wire in html_renderer.py visualization module."""
         if not HAS_HTML_RENDERER:
             logger.warning("HTMLSiteRenderer not available, skipping html_renderer visualization")
@@ -2542,8 +2666,16 @@ Generated: {datetime.now().isoformat()}
                 "target": self.repo_path.name,
                 "timestamp": datetime.now().isoformat(),
                 "artifacts": {
-                    "nodes": len(graph.get("nodes", {}) if isinstance(graph, dict) else getattr(graph, 'nodes', [])),
-                    "edges": len(graph.get("edges", {}) if isinstance(graph, dict) else getattr(graph, 'edges', [])),
+                    "nodes": len(
+                        graph.get("nodes", {})
+                        if isinstance(graph, dict)
+                        else getattr(graph, "nodes", [])
+                    ),
+                    "edges": len(
+                        graph.get("edges", {})
+                        if isinstance(graph, dict)
+                        else getattr(graph, "edges", [])
+                    ),
                 },
                 "stage_results": {
                     "ingest": True,
@@ -2621,8 +2753,8 @@ Generated: {datetime.now().isoformat()}
         contexts and coupling between them.
         """
         try:
-            from cogant.viz.boundary import BoundaryMapper
             from cogant.schemas.graph import ProgramGraph
+            from cogant.viz.boundary import BoundaryMapper
         except ImportError:
             logger.warning("BoundaryMapper not available, skipping boundary map")
             return
@@ -2635,7 +2767,8 @@ Generated: {datetime.now().isoformat()}
                 # Reconstruct a minimal ProgramGraph for boundary analysis.
                 try:
                     from cogant.graph.builder import ProgramGraphBuilder
-                    from cogant.schemas.core import NodeKind, EdgeKind
+                    from cogant.schemas.core import EdgeKind, NodeKind
+
                     builder = ProgramGraphBuilder(repo_uri=self.repo_path.as_uri())
                     id_map = {}
                     for nid, n in graph.get("nodes", {}).items():
@@ -2707,7 +2840,8 @@ Generated: {datetime.now().isoformat()}
             if isinstance(graph, dict):
                 try:
                     from cogant.graph.builder import ProgramGraphBuilder
-                    from cogant.schemas.core import NodeKind, EdgeKind
+                    from cogant.schemas.core import EdgeKind, NodeKind
+
                     builder = ProgramGraphBuilder(repo_uri=self.repo_path.as_uri())
                     id_map = {}
                     for nid, n in graph.get("nodes", {}).items():
@@ -2816,8 +2950,8 @@ Generated: {datetime.now().isoformat()}
         """
         try:
             from cogant.gnn.package import GNNPackageBuilder
-            from cogant.gnn.validator import GNNValidator
             from cogant.gnn.runner import GNNModelRunner
+            from cogant.gnn.validator import GNNValidator
         except ImportError as e:
             logger.warning(f"GNN pipeline modules unavailable: {e}")
             return
@@ -2831,7 +2965,8 @@ Generated: {datetime.now().isoformat()}
             if isinstance(graph, dict):
                 try:
                     from cogant.graph.builder import ProgramGraphBuilder
-                    from cogant.schemas.core import NodeKind, EdgeKind
+                    from cogant.schemas.core import EdgeKind, NodeKind
+
                     builder = ProgramGraphBuilder(repo_uri=self.repo_path.as_uri())
                     id_map = {}
                     for nid, n in graph.get("nodes", {}).items():
@@ -2881,7 +3016,8 @@ Generated: {datetime.now().isoformat()}
             validator = GNNValidator()
             validation = validator.validate_package(str(gnn_dir))
             validation_dict = (
-                validation.to_dict() if hasattr(validation, "to_dict")
+                validation.to_dict()
+                if hasattr(validation, "to_dict")
                 else {
                     "valid": getattr(validation, "valid", False),
                     "score": getattr(validation, "score", 0),
@@ -2907,8 +3043,10 @@ Generated: {datetime.now().isoformat()}
                 report_md = runner.generate_execution_report(trace)
                 (gnn_dir / "execution_report.md").write_text(report_md)
                 steps = (
-                    trace.get("steps_completed") if isinstance(trace, dict) else None
-                ) or (trace.get("steps") if isinstance(trace, dict) else None) or 0
+                    (trace.get("steps_completed") if isinstance(trace, dict) else None)
+                    or (trace.get("steps") if isinstance(trace, dict) else None)
+                    or 0
+                )
                 logger.info(f"    [GNN pipeline] Execution complete: {steps} steps")
             except Exception as e:
                 logger.warning(f"    [GNN pipeline] Execution failed: {e}")
@@ -2993,40 +3131,37 @@ def main():
     parser = argparse.ArgumentParser(
         description="COGANT roundtrip orchestrator: Run the full analysis pipeline on a codebase."
     )
-    parser.add_argument(
-        "repo_path",
-        help="Path to repository to analyze"
-    )
+    parser.add_argument("repo_path", help="Path to repository to analyze")
     parser.add_argument(
         "--config",
         type=str,
         default=None,
-        help="Path to YAML configuration file (or preset name: minimal, standard, comprehensive, gnn-focused, security)"
+        help="Path to YAML configuration file (or preset name: minimal, standard, comprehensive, gnn-focused, security)",
     )
     parser.add_argument(
         "--preset",
         type=str,
         default=None,
-        help="Use a named preset configuration (overrides --config)"
+        help="Use a named preset configuration (overrides --config)",
     )
     parser.add_argument(
         "--output-dir",
         type=str,
         default=None,
-        help="Output directory (default: output/{repo_name}/)"
+        help="Output directory (default: output/{repo_name}/)",
     )
     parser.add_argument(
         "--log-level",
         type=str,
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging verbosity level"
+        help="Logging verbosity level",
     )
     parser.add_argument(
         "--compare",
         type=str,
         default=None,
-        help="Path to second repository for drift analysis comparison"
+        help="Path to second repository for drift analysis comparison",
     )
 
     args = parser.parse_args()
@@ -3056,9 +3191,10 @@ def main():
     if args.preset:
         try:
             from cogant.config.presets import get_preset
+
             logger.info(f"Loading preset: {args.preset}")
             config = get_preset(args.preset)
-            logger.info(f"Preset loaded successfully")
+            logger.info("Preset loaded successfully")
         except Exception as e:
             logger.error(f"Failed to load preset '{args.preset}': {e}")
             sys.exit(1)
@@ -3066,6 +3202,7 @@ def main():
         # Check if it's a preset name
         try:
             from cogant.config.presets import get_preset
+
             try:
                 config = get_preset(args.config)
                 logger.info(f"Loaded preset: {args.config}")
@@ -3077,7 +3214,7 @@ def main():
                     sys.exit(1)
                 logger.info(f"Loading configuration from: {config_path}")
                 config = ConfigLoader.load_all_configs(str(config_path))
-                logger.info(f"Configuration loaded successfully")
+                logger.info("Configuration loaded successfully")
         except Exception as e:
             logger.error(f"Failed to load configuration: {e}")
             sys.exit(1)

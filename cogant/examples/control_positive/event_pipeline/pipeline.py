@@ -4,16 +4,17 @@ Pub/Sub event pipeline with retry logic and logging.
 Exercises: event rules, retry/policy rules, observation channels.
 """
 
-from typing import Callable, List, Dict, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 
 @dataclass
 class Event:
     """An event in the system."""
+
     event_type: str
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
     timestamp: datetime = None
 
     def __post_init__(self):
@@ -37,17 +38,19 @@ class LoggingEventHandler(EventHandler):
     """Logs all events (observation channel)."""
 
     def __init__(self):
-        self.logs: List[Dict[str, Any]] = []
+        self.logs: list[dict[str, Any]] = []
 
     def handle(self, event: Event) -> bool:
-        self.logs.append({
-            "event_type": event.event_type,
-            "timestamp": str(event.timestamp),
-            "payload": event.payload,
-        })
+        self.logs.append(
+            {
+                "event_type": event.event_type,
+                "timestamp": str(event.timestamp),
+                "payload": event.payload,
+            }
+        )
         return True
 
-    def get_logs(self) -> List[Dict[str, Any]]:
+    def get_logs(self) -> list[dict[str, Any]]:
         """Observation: access logs."""
         return self.logs.copy()
 
@@ -59,7 +62,7 @@ class RetryableEventHandler(EventHandler):
         self.handler = handler
         self.max_retries = max_retries
         self.retry_count = 0
-        self.failed_events: List[Event] = []
+        self.failed_events: list[Event] = []
 
     def handle(self, event: Event) -> bool:
         """Handle with retries."""
@@ -76,7 +79,7 @@ class RetryableEventHandler(EventHandler):
         self.failed_events.append(event)
         return False
 
-    def get_failed_events(self) -> List[Event]:
+    def get_failed_events(self) -> list[Event]:
         """Observation: failed events."""
         return self.failed_events.copy()
 
@@ -101,8 +104,8 @@ class EventBus:
     """Central event bus with multiple handlers."""
 
     def __init__(self):
-        self.handlers: List[EventHandler] = []
-        self.event_history: List[Event] = []
+        self.handlers: list[EventHandler] = []
+        self.event_history: list[Event] = []
 
     def subscribe(self, handler: EventHandler) -> None:
         """Register a handler."""
@@ -119,7 +122,7 @@ class EventBus:
 
         return True
 
-    def get_event_history(self) -> List[Event]:
+    def get_event_history(self) -> list[Event]:
         """Observation: event history."""
         return self.event_history.copy()
 

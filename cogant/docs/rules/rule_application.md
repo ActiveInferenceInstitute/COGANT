@@ -22,4 +22,3 @@ final_confidence = base_confidence
 ```
 
 Result clamped to [0.0, 1.0].
-

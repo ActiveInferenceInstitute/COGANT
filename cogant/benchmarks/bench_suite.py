@@ -48,10 +48,11 @@ import resource
 import statistics
 import sys
 import time
-from dataclasses import asdict, dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 # Mirror the ``sys.path`` tweak used by ``bench_perf_regression.py`` and
 # ``tests/conftest.py`` so the pure-Python package under ``py/`` is
@@ -73,7 +74,7 @@ logger = logging.getLogger(__name__)
 # intentionally mixed: three control-positive micro-fixtures and three
 # real-world-shaped fixtures so regressions on one class don't hide
 # wins on the other.
-_FIXTURE_CORPUS: Dict[str, Path] = {
+_FIXTURE_CORPUS: dict[str, Path] = {
     "calculator": _REPO_ROOT / "examples" / "control_positive" / "calculator",
     "event_pipeline": _REPO_ROOT / "examples" / "control_positive" / "event_pipeline",
     "flask_mini": _REPO_ROOT / "examples" / "control_positive" / "flask_mini",
@@ -84,8 +85,8 @@ _FIXTURE_CORPUS: Dict[str, Path] = {
 
 
 def _discover_fixtures(
-    requested: Optional[List[str]] = None,
-) -> Dict[str, Path]:
+    requested: list[str] | None = None,
+) -> dict[str, Path]:
     """Filter the fixture corpus to those that exist on disk.
 
     Args:
@@ -109,11 +110,7 @@ def _discover_fixtures(
             selected[name] = path
         return selected
 
-    return {
-        name: path
-        for name, path in _FIXTURE_CORPUS.items()
-        if path.exists()
-    }
+    return {name: path for name, path in _FIXTURE_CORPUS.items() if path.exists()}
 
 
 # --- Memory helpers ---------------------------------------------------------
@@ -177,8 +174,8 @@ class RunResult:
     graph_nodes: int
     graph_edges: int
     graph_avg_degree: float
-    mapping_counts: Dict[str, int]
-    gnn_shapes: Dict[str, Any]
+    mapping_counts: dict[str, int]
+    gnn_shapes: dict[str, Any]
 
 
 def _time_stage(fn: Callable[[], Any]) -> tuple[Any, float]:
@@ -206,7 +203,7 @@ def _graph_stats(bundle: Bundle) -> tuple[int, int, float]:
     return n, e, avg
 
 
-def _mapping_counts(bundle: Bundle) -> Dict[str, int]:
+def _mapping_counts(bundle: Bundle) -> dict[str, int]:
     """Count semantic mappings by ``MappingKind`` name.
 
     Missing artifact -> empty dict. The count is keyed by the enum
@@ -214,14 +211,14 @@ def _mapping_counts(bundle: Bundle) -> Dict[str, int]:
     output is stable across enum value renames.
     """
     mappings = bundle.get_artifact(ArtifactKey.SEMANTIC_MAPPINGS) or {}
-    counts: Dict[str, int] = {}
+    counts: dict[str, int] = {}
     for m in mappings.values():
         key = m.kind.name if hasattr(m.kind, "name") else str(m.kind)
         counts[key] = counts.get(key, 0) + 1
     return counts
 
 
-def _gnn_shapes(bundle: Bundle) -> Dict[str, Any]:
+def _gnn_shapes(bundle: Bundle) -> dict[str, Any]:
     """Extract A/B/C/D matrix dimensions from the bundle.
 
     Uses :class:`cogant.gnn.matrices.GNNMatrices` directly against the
@@ -244,9 +241,7 @@ def _gnn_shapes(bundle: Bundle) -> Dict[str, Any]:
         n_obs = int(gnn.n_obs)
         # Number of actions isn't always exposed as a property; fall
         # back to the private list count if needed.
-        n_actions = int(getattr(gnn, "n_actions", 0)) or len(
-            getattr(gnn, "_actions", [])
-        )
+        n_actions = int(getattr(gnn, "n_actions", 0)) or len(getattr(gnn, "_actions", []))
         return {
             "available": True,
             "n_states": n_states,
@@ -288,14 +283,10 @@ def _run_once(target: Path) -> RunResult:
     )
     bundle.stage_results["ingest"] = ingest_result
 
-    static_result, stages.static_ms = _time_stage(
-        lambda: orchestration.run_static(bundle)
-    )
+    static_result, stages.static_ms = _time_stage(lambda: orchestration.run_static(bundle))
     bundle.stage_results["static"] = static_result
 
-    normalize_result, stages.normalize_ms = _time_stage(
-        lambda: orchestration.run_normalize(bundle)
-    )
+    normalize_result, stages.normalize_ms = _time_stage(lambda: orchestration.run_normalize(bundle))
     bundle.stage_results["normalize"] = normalize_result
 
     graph_result, stages.graph_ms = _time_stage(
@@ -303,9 +294,7 @@ def _run_once(target: Path) -> RunResult:
     )
     bundle.stage_results["graph"] = graph_result
 
-    translate_result, stages.translate_ms = _time_stage(
-        lambda: orchestration.run_translate(bundle)
-    )
+    translate_result, stages.translate_ms = _time_stage(lambda: orchestration.run_translate(bundle))
     bundle.stage_results["translate"] = translate_result
 
     statespace_result, stages.statespace_ms = _time_stage(
@@ -336,7 +325,7 @@ def _run_once(target: Path) -> RunResult:
 # --- Aggregation ------------------------------------------------------------
 
 
-def _percentile(sorted_samples: List[float], pct: float) -> float:
+def _percentile(sorted_samples: list[float], pct: float) -> float:
     """Nearest-rank percentile on an already-sorted list.
 
     Mirrors the approach used in ``bench_perf_regression.measure``: the
@@ -351,7 +340,7 @@ def _percentile(sorted_samples: List[float], pct: float) -> float:
     return sorted_samples[idx]
 
 
-def _summarize(values: List[float]) -> Dict[str, float]:
+def _summarize(values: list[float]) -> dict[str, float]:
     """Median / p95 / min summary for a list of float samples."""
     if not values:
         return {"median": 0.0, "p95": 0.0, "min": 0.0}
@@ -363,7 +352,7 @@ def _summarize(values: List[float]) -> Dict[str, float]:
     }
 
 
-def _aggregate(runs: List[RunResult]) -> Dict[str, Any]:
+def _aggregate(runs: list[RunResult]) -> dict[str, Any]:
     """Fold a list of ``RunResult`` into a single report dict.
 
     Timings collapse to median/p95/min summaries, while structural
@@ -380,7 +369,7 @@ def _aggregate(runs: List[RunResult]) -> Dict[str, Any]:
     wall = [r.wall_ms for r in runs]
     memory = [r.memory_delta_mb for r in runs]
 
-    stage_samples: Dict[str, List[float]] = {
+    stage_samples: dict[str, list[float]] = {
         "ingest": [r.stages.ingest_ms for r in runs],
         "static": [r.stages.static_ms for r in runs],
         "normalize": [r.stages.normalize_ms for r in runs],
@@ -389,7 +378,7 @@ def _aggregate(runs: List[RunResult]) -> Dict[str, Any]:
         "statespace": [r.stages.statespace_ms for r in runs],
     }
 
-    drift: List[str] = []
+    drift: list[str] = []
     for r in runs[1:]:
         if r.graph_nodes != first.graph_nodes or r.graph_edges != first.graph_edges:
             drift.append(
@@ -399,7 +388,7 @@ def _aggregate(runs: List[RunResult]) -> Dict[str, Any]:
         if r.mapping_counts != first.mapping_counts:
             drift.append("mapping_counts diverged")
 
-    report: Dict[str, Any] = {
+    report: dict[str, Any] = {
         "runs": len(runs),
         "wall_ms": _summarize(wall),
         "stage_ms": {name: _summarize(vals) for name, vals in stage_samples.items()},
@@ -424,9 +413,7 @@ def _aggregate(runs: List[RunResult]) -> Dict[str, Any]:
 # --- Driver -----------------------------------------------------------------
 
 
-def run_fixture(
-    name: str, path: Path, iterations: int
-) -> Dict[str, Any]:
+def run_fixture(name: str, path: Path, iterations: int) -> dict[str, Any]:
     """Measure a single fixture ``iterations`` times and aggregate.
 
     When ``iterations >= 2`` we run one extra warm-up iteration whose
@@ -440,7 +427,7 @@ def run_fixture(
 
     logger.info("[%s] %s", name, path)
 
-    runs: List[RunResult] = []
+    runs: list[RunResult] = []
     total = iterations + (1 if iterations >= 2 else 0)
     for idx in range(total):
         run = _run_once(path)
@@ -449,8 +436,7 @@ def run_fixture(
             continue
         runs.append(run)
         logger.info(
-            "[%s] run %d/%d: %.1fms  "
-            "nodes=%d edges=%d mappings=%d",
+            "[%s] run %d/%d: %.1fms  nodes=%d edges=%d mappings=%d",
             name,
             len(runs),
             iterations,
@@ -465,9 +451,7 @@ def run_fixture(
     return report
 
 
-def run_suite(
-    fixtures: Dict[str, Path], iterations: int
-) -> Dict[str, Any]:
+def run_suite(fixtures: dict[str, Path], iterations: int) -> dict[str, Any]:
     """Run the suite against every fixture and return a full report dict."""
     cogant_version = "unknown"
     try:
@@ -475,7 +459,7 @@ def run_suite(
     except Exception:
         pass
 
-    suite: Dict[str, Any] = {
+    suite: dict[str, Any] = {
         "date": date.today().isoformat(),
         "cogant_version": cogant_version,
         "python_version": platform.python_version(),
@@ -500,12 +484,12 @@ def run_suite(
 # --- Reporting --------------------------------------------------------------
 
 
-def _fmt_ms(summary: Dict[str, float]) -> str:
+def _fmt_ms(summary: dict[str, float]) -> str:
     """Render a median/p95 summary in a compact, column-friendly form."""
     return f"{summary.get('median', 0):.0f} / {summary.get('p95', 0):.0f}"
 
 
-def render_markdown(suite: Dict[str, Any]) -> str:
+def render_markdown(suite: dict[str, Any]) -> str:
     """Render the suite report as a human-readable Markdown document.
 
     The top-level table gives a one-row-per-fixture summary (wall
@@ -515,12 +499,10 @@ def render_markdown(suite: Dict[str, Any]) -> str:
     shape ``bench_perf_regression.py`` uses in its CI comment
     template, so both harnesses can share a downstream renderer.
     """
-    lines: List[str] = []
+    lines: list[str] = []
     lines.append(f"# COGANT Benchmark Suite -- {suite.get('date', '?')}")
     lines.append("")
-    lines.append(
-        f"- cogant version: `{suite.get('cogant_version', '?')}`"
-    )
+    lines.append(f"- cogant version: `{suite.get('cogant_version', '?')}`")
     lines.append(f"- python: `{suite.get('python_version', '?')}`")
     lines.append(f"- platform: `{suite.get('platform', '?')}`")
     lines.append(f"- iterations per fixture: `{suite.get('iterations', '?')}`")
@@ -534,17 +516,11 @@ def render_markdown(suite: Dict[str, Any]) -> str:
     # Summary table.
     lines.append("## Summary")
     lines.append("")
-    lines.append(
-        "| Fixture | Wall ms (median/p95) | Nodes | Edges | Mappings | Memory MB |"
-    )
-    lines.append(
-        "|---|---:|---:|---:|---:|---:|"
-    )
+    lines.append("| Fixture | Wall ms (median/p95) | Nodes | Edges | Mappings | Memory MB |")
+    lines.append("|---|---:|---:|---:|---:|---:|")
     for name, report in fixtures.items():
         if "error" in report:
-            lines.append(
-                f"| {name} | ERROR: {report['error']} | - | - | - | - |"
-            )
+            lines.append(f"| {name} | ERROR: {report['error']} | - | - | - | - |")
             continue
         graph = report.get("graph", {})
         mem = report.get("memory_mb", {})
@@ -561,9 +537,7 @@ def render_markdown(suite: Dict[str, Any]) -> str:
     # Per-stage breakdown.
     lines.append("## Stage Breakdown (median ms)")
     lines.append("")
-    lines.append(
-        "| Fixture | ingest | static | normalize | graph | translate | statespace |"
-    )
+    lines.append("| Fixture | ingest | static | normalize | graph | translate | statespace |")
     lines.append("|---|---:|---:|---:|---:|---:|---:|")
     for name, report in fixtures.items():
         if "error" in report:
@@ -606,9 +580,7 @@ def render_markdown(suite: Dict[str, Any]) -> str:
                 f"C=[{gnn.get('C_len', 0)}], D=[{gnn.get('D_len', 0)}]"
             )
         else:
-            lines.append(
-                f"**GNN shapes:** unavailable ({gnn.get('reason', 'n/a')})"
-            )
+            lines.append(f"**GNN shapes:** unavailable ({gnn.get('reason', 'n/a')})")
         lines.append("")
 
     return "\n".join(lines)
@@ -628,7 +600,7 @@ def _default_output_paths() -> tuple[Path, Path]:
 # --- CLI --------------------------------------------------------------------
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     """Entry point for the ``bench_suite`` CLI.
 
     Flags:

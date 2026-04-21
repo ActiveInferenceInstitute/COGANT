@@ -78,7 +78,7 @@ class GraphQuery:
     all_paths(source_id: str, target_id: str, max_depth: int = 5) -> List[List[str]]
     is_reachable(source_id: str, target_id: str) -> bool
     transitive_closure(node_id: str) -> Set[str]
-    
+
     # New in v0.5.0+
     find_by_role(role: str) -> List[Node]  # HIDDEN_STATE, OBSERVATION, ACTION, POLICY, etc.
     get_neighborhood(node_id: str, depth: int = 1, direction: str = 'both') -> Set[str]
@@ -209,7 +209,7 @@ reachable = query.transitive_closure("main")
 print(f"From main, can reach {len(reachable)} nodes")
 
 # Find all nodes with high complexity (metadata filtering)
-complex_nodes = [n for n in graph.nodes.values() 
+complex_nodes = [n for n in graph.nodes.values()
                  if n.metadata.get('cyclomatic_complexity', 0) > 10]
 print(f"High-complexity functions: {[n.name for n in complex_nodes]}")
 ```

@@ -38,8 +38,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import banner, configure_logging, parse_args  # noqa: E402
 
 # CI thresholds for drift gating
-DRIFT_WARN_THRESHOLD = 20.0     # architectural drift score
-CHURN_WARN_THRESHOLD = 30.0     # semantic churn score
+DRIFT_WARN_THRESHOLD = 20.0  # architectural drift score
+CHURN_WARN_THRESHOLD = 30.0  # semantic churn score
 
 
 def main() -> None:
@@ -110,17 +110,22 @@ def main() -> None:
 
     m_nodes = len(modified_graph.nodes)
     m_edges = len(modified_graph.edges)
-    print(f"  Modified: {m_nodes} nodes (+{m_nodes - b_nodes}), "
-          f"{m_edges} edges (+{m_edges - b_edges})")
+    print(
+        f"  Modified: {m_nodes} nodes (+{m_nodes - b_nodes}), "
+        f"{m_edges} edges (+{m_edges - b_edges})"
+    )
 
     # ---- 3. Re-run translate + statespace + gnn on modified graph ------
     print("\n  Re-running translate → statespace → gnn on modified graph…")
+    from cogant.gnn.bundle import GNNBundle  # noqa: E402
+    from cogant.statespace.compiler import StateSpaceCompiler  # noqa: E402
     from cogant.translate.engine import TranslationEngine  # noqa: E402
     from cogant.translate.rules import (  # noqa: E402
-        ActionRule, MutatingSubsystemRule, ObservationRule, ReadOnlyInputRule,
+        ActionRule,
+        MutatingSubsystemRule,
+        ObservationRule,
+        ReadOnlyInputRule,
     )
-    from cogant.statespace.compiler import StateSpaceCompiler  # noqa: E402
-    from cogant.gnn.bundle import GNNBundle  # noqa: E402
 
     engine = TranslationEngine()
     for rule in [ReadOnlyInputRule(), MutatingSubsystemRule(), ObservationRule(), ActionRule()]:

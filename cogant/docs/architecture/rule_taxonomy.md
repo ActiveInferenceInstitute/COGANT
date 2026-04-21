@@ -88,7 +88,7 @@ from cogant.semantics import SemanticRole
 
 class MyCustomRule(TranslationRule):
     """Short docstring."""
-    
+
     name = "MyCustomRule"
     priority = 50  # 0–100; lower fires earlier
     family = "semantic"  # or "structural", "behavioral", "control", "resilience"

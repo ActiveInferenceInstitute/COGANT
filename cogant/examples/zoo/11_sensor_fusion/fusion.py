@@ -61,8 +61,8 @@ class SensorFusionAgent:
         obs_t = self.tactile.observe_tactile(true_position)
 
         # Inverse-variance weighting
-        w_v = 1.0 / (self.visual.noise ** 2)
-        w_t = 1.0 / (self.tactile.noise ** 2)
+        w_v = 1.0 / (self.visual.noise**2)
+        w_t = 1.0 / (self.tactile.noise**2)
         total_w = w_v + w_t
 
         self.state = (w_v * obs_v + w_t * obs_t) / total_w

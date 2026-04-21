@@ -13,4 +13,3 @@ The categorical account of lenses via polynomial functors [@spivak2020poly; @niu
 ## See also (MkDocs)
 
 Stable theory-page statement of round-trip / isomorphism: [`../cogant/docs/theory/isomorphism.md`](../cogant/docs/theory/isomorphism.md), [`../cogant/docs/theory/roundtrip.md`](../cogant/docs/theory/roundtrip.md).
-

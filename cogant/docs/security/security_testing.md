@@ -2,14 +2,14 @@
 
 ### SAST (Static Analysis)
 
-**Rust**: `cargo clippy --all-targets --all-features`  
+**Rust**: `cargo clippy --all-targets --all-features`
 **Python**: `bandit`, `pylint`, `mypy`
 
 **CI**: Fail on HIGH severity issues
 
 ### Dependency Scanning
 
-**Tool**: `cargo audit`  
+**Tool**: `cargo audit`
 **CI**: Block on known vulnerabilities
 
 ### DAST (Dynamic Analysis - Future)
@@ -25,4 +25,3 @@ Plan for v1.0:
 - External security audit
 - Bug bounty program
 - Threat model refinement
-

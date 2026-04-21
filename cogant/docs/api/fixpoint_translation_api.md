@@ -37,4 +37,3 @@ print(f"{report['coverage_percent']:.1f}% of nodes mapped")
 ### Conflict Resolution
 
 When multiple rules emit overlapping mappings for the same source fragment, the engine retains the mapping with the highest confidence score and discards the others. This ensures the final mapping set is consistent: every source fragment maps to at most one target, chosen by evidence strength rather than rule registration order.
-

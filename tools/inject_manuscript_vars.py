@@ -24,6 +24,7 @@ Usage:
     python tools/inject_manuscript_vars.py manuscript/ --all --strict   # CI gate
     python tools/inject_manuscript_vars.py --report                     # show resolved table
 """
+
 import argparse
 import difflib
 import sys
@@ -112,7 +113,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="Inject METRICS.yaml values into manuscript {{VAR}} placeholders."
     )
-    parser.add_argument("input", nargs="?", help="Input markdown file or directory (omit when using --report)")
+    parser.add_argument(
+        "input", nargs="?", help="Input markdown file or directory (omit when using --report)"
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -130,7 +133,9 @@ def main():
             "relative to the input path."
         ),
     )
-    parser.add_argument("--all", dest="all_files", action="store_true", help="Process all .md files in directory")
+    parser.add_argument(
+        "--all", dest="all_files", action="store_true", help="Process all .md files in directory"
+    )
     parser.add_argument(
         "--report",
         action="store_true",

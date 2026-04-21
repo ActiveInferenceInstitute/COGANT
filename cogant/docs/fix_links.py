@@ -80,11 +80,7 @@ def update_links(filepath: Path, *, at_docs_root: bool, check_only: bool = False
     original = content
     for old_file, new_folder in FILE_TO_FOLDER.items():
         pattern = r"\(\.?/?" + re.escape(old_file) + r"(#[^\)]*)?\)"
-        repl = (
-            f"({new_folder}/README.md)"
-            if at_docs_root
-            else f"(../{new_folder}/README.md)"
-        )
+        repl = f"({new_folder}/README.md)" if at_docs_root else f"(../{new_folder}/README.md)"
         content = re.sub(pattern, repl, content)
     if content == original:
         return False
@@ -104,10 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--check",
         action="store_true",
-        help=(
-            "Do not modify any files. Exit 1 if legacy links or stub "
-            "AGENTS.md files are found."
-        ),
+        help=("Do not modify any files. Exit 1 if legacy links or stub AGENTS.md files are found."),
     )
     args = parser.parse_args(argv)
     check_only = args.check

@@ -78,7 +78,11 @@ def main() -> int:
     print("\n  by confidence tier (count / mean / min / max):")
     tier_summary: dict[str, dict] = {}
     for tier, ms in sorted(by_tier.items(), key=lambda kv: -len(kv[1])):
-        scores = [float(m.confidence_score) for m in ms if getattr(m, "confidence_score", None) is not None]
+        scores = [
+            float(m.confidence_score)
+            for m in ms
+            if getattr(m, "confidence_score", None) is not None
+        ]
         mean = sum(scores) / len(scores) if scores else 0.0
         lo = min(scores) if scores else 0.0
         hi = max(scores) if scores else 0.0
@@ -106,9 +110,7 @@ def main() -> int:
         )
 
     # Per-rule family breakdown
-    family = Counter(
-        (m.id.split("_", 1)[0] if "_" in m.id else m.id) for m in mappings
-    )
+    family = Counter((m.id.split("_", 1)[0] if "_" in m.id else m.id) for m in mappings)
     print("\n  rule family distribution (by id prefix):")
     for prefix, count in family.most_common():
         print(f"    {prefix:<10} {count}")

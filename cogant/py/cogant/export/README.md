@@ -19,7 +19,7 @@ from cogant.export import BundleExporter
 from pathlib import Path
 
 exporter = BundleExporter(
-    graph, state_space, process_model, 
+    graph, state_space, process_model,
     mappings, output_dir=Path("output")
 )
 

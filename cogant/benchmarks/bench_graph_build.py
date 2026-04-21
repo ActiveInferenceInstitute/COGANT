@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import random
 import time
-from typing import Callable, Tuple
+from collections.abc import Callable
 
 from cogant.rust_backend import RUST_AVAILABLE, RustProgramGraphAdapter
 from cogant.schemas.core import EdgeKind, NodeKind
@@ -65,7 +65,7 @@ def _populate(builder, n_nodes: int, n_edges: int, seed: int) -> None:
         )
 
 
-def _time_it(factory: Callable[[], object]) -> Tuple[float, int, int]:
+def _time_it(factory: Callable[[], object]) -> tuple[float, int, int]:
     builder = factory()
     start = time.perf_counter()
     _populate(builder, N_NODES, N_EDGES, SEED)
@@ -74,17 +74,17 @@ def _time_it(factory: Callable[[], object]) -> Tuple[float, int, int]:
     return elapsed, graph.node_count(), graph.edge_count()
 
 
-def bench_python() -> Tuple[float, int, int]:
+def bench_python() -> tuple[float, int, int]:
     from cogant.graph.builder import ProgramGraphBuilder
 
     return _time_it(lambda: ProgramGraphBuilder(repo_uri="repo://bench"))
 
 
-def bench_rust() -> Tuple[float, int, int]:
+def bench_rust() -> tuple[float, int, int]:
     return _time_it(lambda: RustProgramGraphAdapter(repo_uri="repo://bench"))
 
 
-def bench_rust_raw() -> Tuple[float, int, int]:
+def bench_rust_raw() -> tuple[float, int, int]:
     """Time the Rust core without the Python shadow store / ID resolver."""
     from cogant._rust import PyProgramGraph
 
@@ -126,14 +126,10 @@ def main() -> None:
         return
 
     rust_time, rust_nodes, rust_edges = bench_rust()
-    print(
-        f"Rust adapter : {rust_time:.4f}s  ({rust_nodes} nodes, {rust_edges} edges)"
-    )
+    print(f"Rust adapter : {rust_time:.4f}s  ({rust_nodes} nodes, {rust_edges} edges)")
 
     rust_raw_time, raw_nodes, _ = bench_rust_raw()
-    print(
-        f"Rust raw     : {rust_raw_time:.4f}s  ({raw_nodes} nodes, node-only path)"
-    )
+    print(f"Rust raw     : {rust_raw_time:.4f}s  ({raw_nodes} nodes, node-only path)")
 
     print("-" * 60)
     if rust_time > 0:

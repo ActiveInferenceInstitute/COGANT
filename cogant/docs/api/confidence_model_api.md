@@ -14,4 +14,3 @@ Mappings produced by the translation engine carry a `confidence` score in `[0.0,
 ### Tier Determination
 
 A mapping's tier is the highest tier whose threshold is satisfied *and* whose evidence requirement is met. Mappings whose score falls below `0.4` or whose evidence does not match any tier are flagged for review and excluded from the curated bundle by default. Human-reviewed mappings always promote to `HUMAN_REVIEWED` regardless of the underlying numeric score, so accepting a mapping via `ReviewAPI.accept_mapping()` pins it at the highest tier.
-

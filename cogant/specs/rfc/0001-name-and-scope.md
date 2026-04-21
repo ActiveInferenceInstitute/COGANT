@@ -1,7 +1,7 @@
 # RFC 0001: COGANT - Naming, Scope, and Architecture
 
-**Status**: Accepted  
-**Date**: 2024-2026  
+**Status**: Accepted
+**Date**: 2024-2026
 **Author**: COGANT Development Team
 
 ## Summary

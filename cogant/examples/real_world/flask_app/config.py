@@ -7,7 +7,8 @@ dictionary-backed value stores, and a dependency-injection entry point.
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, Iterable, Optional
+from collections.abc import Iterable
+from typing import Any
 
 
 class ConfigError(Exception):
@@ -32,8 +33,8 @@ class BaseConfig:
     SESSION_COOKIE_SECURE: bool = False
     PERMANENT_SESSION_LIFETIME: int = 3600  # seconds
 
-    def __init__(self, overrides: Optional[Dict[str, Any]] = None) -> None:
-        self._values: Dict[str, Any] = {}
+    def __init__(self, overrides: dict[str, Any] | None = None) -> None:
+        self._values: dict[str, Any] = {}
         for key in self._own_keys():
             self._values[key] = getattr(type(self), key)
         if overrides:
@@ -73,7 +74,7 @@ class BaseConfig:
             raise ConfigError(f"Missing required config key: {key}")
         return self._values[key.upper()]
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return dict(self._values)
 
     def __getitem__(self, key: str) -> Any:
@@ -109,7 +110,7 @@ class ProductionConfig(BaseConfig):
     TESTING = False
     SESSION_COOKIE_SECURE = True
 
-    def __init__(self, overrides: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, overrides: dict[str, Any] | None = None) -> None:
         super().__init__(overrides)
         if self._values["SECRET_KEY"] == BaseConfig.SECRET_KEY:
             raise ConfigError("SECRET_KEY must be overridden in production")
@@ -122,7 +123,7 @@ _CONFIG_MAP = {
 }
 
 
-def load_config(name: str, overrides: Optional[Dict[str, Any]] = None) -> BaseConfig:
+def load_config(name: str, overrides: dict[str, Any] | None = None) -> BaseConfig:
     """Resolve a config name into an instantiated configuration object."""
     try:
         klass = _CONFIG_MAP[name.lower()]

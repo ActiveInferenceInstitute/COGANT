@@ -7,10 +7,11 @@ and a chain-of-responsibility style mount table keyed on URL scheme.
 from __future__ import annotations
 
 import logging
-from typing import Dict, Optional
 
 from .models import (
     ConnectionError as TransportConnectionError,
+)
+from .models import (
     PreparedRequest,
     Response,
     Timeout,
@@ -27,7 +28,7 @@ class BaseAdapter:
         request: PreparedRequest,
         *,
         stream: bool = False,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
         verify: bool = True,
     ) -> Response:
         raise NotImplementedError("subclasses must implement send()")
@@ -47,7 +48,7 @@ class HTTPAdapter(BaseAdapter):
     def __init__(self, pool_connections: int = 10, pool_maxsize: int = 10) -> None:
         self.pool_connections = pool_connections
         self.pool_maxsize = pool_maxsize
-        self._routes: Dict[str, Response] = {}
+        self._routes: dict[str, Response] = {}
         self._closed = False
 
     def register(self, url: str, response: Response) -> None:
@@ -58,7 +59,7 @@ class HTTPAdapter(BaseAdapter):
         request: PreparedRequest,
         *,
         stream: bool = False,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
         verify: bool = True,
     ) -> Response:
         if self._closed:
@@ -88,7 +89,7 @@ class MockAdapter(BaseAdapter):
         request: PreparedRequest,
         *,
         stream: bool = False,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
         verify: bool = True,
     ) -> Response:
         self.sent.append(request)
@@ -103,16 +104,14 @@ class MountTable:
     """Resolves a URL prefix to an adapter, longest-prefix first."""
 
     def __init__(self) -> None:
-        self._mounts: Dict[str, BaseAdapter] = {}
+        self._mounts: dict[str, BaseAdapter] = {}
 
     def mount(self, prefix: str, adapter: BaseAdapter) -> None:
         self._mounts[prefix] = adapter
 
     def resolve(self, url: str) -> BaseAdapter:
         candidates = [
-            (prefix, adapter)
-            for prefix, adapter in self._mounts.items()
-            if url.startswith(prefix)
+            (prefix, adapter) for prefix, adapter in self._mounts.items() if url.startswith(prefix)
         ]
         if not candidates:
             raise TransportConnectionError(f"no adapter mounted for {url}")

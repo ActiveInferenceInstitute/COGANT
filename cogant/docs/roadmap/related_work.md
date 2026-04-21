@@ -9,4 +9,3 @@ Compare against:
 COGANT's unique value: **Unified pipeline from code → GNN-ready graph**
 
 ---
-

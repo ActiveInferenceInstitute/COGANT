@@ -37,7 +37,7 @@ The role-match score is a multiset-based similarity metric over the six semantic
 
 ```
 role_match_score = (
-    sum of min(count_original[role], count_resynthesized[role]) 
+    sum of min(count_original[role], count_resynthesized[role])
     for role in {HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT}
 ) / max(
     sum(count_original[role] for all roles),

@@ -8,4 +8,3 @@
 | Schema | Invalid field values | ERROR/FATAL |
 | Reproducibility | Hash mismatch | WARNING |
 | Performance | Excessive memory, timeout | ERROR/FATAL |
-

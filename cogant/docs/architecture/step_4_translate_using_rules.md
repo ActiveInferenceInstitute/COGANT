@@ -10,4 +10,3 @@ engine.register_rule(ConfigRule())
 engine.register_rule(FeatureFlagRule())
 
 auto_mappings = engine.translate(merged_graph)
-

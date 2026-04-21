@@ -43,7 +43,15 @@ def _build_synthetic_trace() -> dict:
         {"name": "add", "ph": "B", "ts": 1100, "pid": 1, "tid": 1, "cat": "function"},
         {"name": "add", "ph": "E", "ts": 1150, "dur": 50, "pid": 1, "tid": 1, "cat": "function"},
         {"name": "multiply", "ph": "B", "ts": 1200, "pid": 1, "tid": 1, "cat": "function"},
-        {"name": "multiply", "ph": "E", "ts": 1250, "dur": 50, "pid": 1, "tid": 1, "cat": "function"},
+        {
+            "name": "multiply",
+            "ph": "E",
+            "ts": 1250,
+            "dur": 50,
+            "pid": 1,
+            "tid": 1,
+            "cat": "function",
+        },
         {"name": "main", "ph": "E", "ts": 1300, "dur": 300, "pid": 1, "tid": 1, "cat": "function"},
         # Second call sequence
         {"name": "add", "ph": "X", "ts": 2000, "dur": 75, "pid": 1, "tid": 1, "cat": "function"},
@@ -60,7 +68,7 @@ def main() -> int:
     # Build the calculator graph
     target = args.target.expanduser().resolve()
     pg = build_rich_graph(target)
-    print(f"  static graph (calculator):")
+    print("  static graph (calculator):")
     print(f"    nodes={pg.node_count()}  edges={pg.edge_count()}")
 
     # Create a synthetic trace in a temp file
@@ -83,7 +91,7 @@ def main() -> int:
         # Extract call sequences and call graph
         call_sequences = ingester.extract_call_sequences()
         call_graph = ingester.extract_call_graph()
-        print(f"\n  extracted patterns:")
+        print("\n  extracted patterns:")
         print(f"    call sequences: {len(call_sequences)}")
         for i, seq in enumerate(call_sequences[:3]):
             print(f"      seq {i}: {' → '.join(seq)}")
@@ -96,7 +104,7 @@ def main() -> int:
         # Attempt to enrich the graph with traces
         # Note: the enrichment function tries to match trace function names
         # with graph nodes by name
-        print(f"\n  enriching graph with dynamic evidence...")
+        print("\n  enriching graph with dynamic evidence...")
         try:
             # enrich_graph layers traces onto a graph
             result = enrich_graph(pg, trace_path=trace_path)
@@ -108,7 +116,7 @@ def main() -> int:
             enriched_count = 0
 
         # Print summary
-        print(f"\n  summary:")
+        print("\n  summary:")
         print(f"    nodes before enrichment: {pg.node_count()}")
         print(f"    edges before enrichment: {pg.edge_count()}")
         print(f"    nodes with runtime evidence: {enriched_count}")

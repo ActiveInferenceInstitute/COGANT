@@ -2,4 +2,3 @@
 reviewer = ReviewManager()
 for mapping in auto_mappings:
     reviewer.add_mapping(mapping)
-

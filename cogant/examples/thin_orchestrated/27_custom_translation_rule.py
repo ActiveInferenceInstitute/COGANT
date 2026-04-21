@@ -42,7 +42,6 @@ from cogant.translate.rules import (  # noqa: E402
     ReadOnlyInputRule,
 )
 
-
 # ---------------------------------------------------------------------------
 # Custom rule implementation
 # ---------------------------------------------------------------------------
@@ -174,8 +173,8 @@ def main() -> None:  # noqa: C901
     banner("Custom TranslationRule — FactoryMethodRule")
 
     # ---- 1. Build program graph from target fixture ----------------------
-    from cogant.pipeline.runner import PipelineRunner  # noqa: E402
     from cogant.config.pipeline import PipelineConfig  # noqa: E402
+    from cogant.pipeline.runner import PipelineRunner  # noqa: E402
 
     config = PipelineConfig(target=Path(args.target), output_dir=output_dir)
     runner = PipelineRunner(config)

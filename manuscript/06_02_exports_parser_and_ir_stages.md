@@ -41,4 +41,3 @@ Stages 4 and 5 are **partial** for many repositories: the state-space compiler r
 ## See also (MkDocs)
 
 Python front end and parsers: [`../cogant/docs/plugins/README.md`](../cogant/docs/plugins/README.md). Export targets: [`../cogant/docs/export/README.md`](../cogant/docs/export/README.md).
-

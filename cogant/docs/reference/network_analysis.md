@@ -99,25 +99,25 @@ def compute_centrality(self) -> CentralityScores:
 class CentralityScores:
     betweenness_centrality: dict[str, float] = field(default_factory=dict)
     """How often a node lies on shortest paths. Range [0, 1].
-    
+
     High score = node is a critical bridge/bottleneck.
     """
 
     degree_centrality: dict[str, float] = field(default_factory=dict)
     """Degree normalized by max possible. Range [0, 1].
-    
+
     High score = node is a hub (many connections).
     """
 
     pagerank: dict[str, float] = field(default_factory=dict)
     """PageRank score (importance based on incoming edges). Range [0, 1].
-    
+
     High score = node is important in the graph structure.
     """
 
     closeness_centrality: dict[str, float] = field(default_factory=dict)
     """Inverse of average distance to all other nodes. Range [0, 1].
-    
+
     High score = node is central (few hops to reach others).
     """
 ```
@@ -155,13 +155,13 @@ class CycleDetection:
 
     cycles: list[list[str]] = field(default_factory=list)
     """List of cycles (each cycle is a list of node IDs).
-    
+
     Example: [['A', 'B', 'C', 'A'], ['D', 'E', 'D']]
     """
 
     strongly_connected_components: list[frozenset[str]] = field(default_factory=list)
     """Strongly connected components (Tarjan's algorithm).
-    
+
     Each component is a set of nodes reachable from each other.
     """
 ```
@@ -230,19 +230,19 @@ def analyze_paths(
 class PathAnalysis:
     shortest_path: list[str] | None
     """Shortest path from source to target, or None if no path.
-    
+
     Example: ['main', 'process', 'validate', 'error_handler']
     """
 
     all_paths: list[list[str]] = field(default_factory=list)
     """All paths from source to target (up to max_depth).
-    
+
     Limited to prevent exponential blowup.
     """
 
     critical_path: list[str] = field(default_factory=list)
     """Longest path in a DAG (if graph is acyclic).
-    
+
     Indicates critical path in project (longest chain of dependencies).
     """
 ```
@@ -277,25 +277,25 @@ def find_hotspots(self) -> HotspotAnalysis:
 class HotspotAnalysis:
     hubs: list[tuple[str, int]] = field(default_factory=list)
     """Highest-degree nodes: (node_id, degree).
-    
+
     Hubs are central coordination points; changes here affect many others.
     """
 
     bottlenecks: list[tuple[str, float]] = field(default_factory=list)
     """Highest betweenness nodes: (node_id, centrality).
-    
+
     Bottlenecks are critical paths; many dependencies flow through.
     """
 
     sinks: list[str] = field(default_factory=list)
     """Nodes with no outgoing edges.
-    
+
     Sinks are leaf modules; low-level utilities or endpoints.
     """
 
     sources: list[str] = field(default_factory=list)
     """Nodes with no incoming edges.
-    
+
     Sources are entry points; top-level drivers or main functions.
     """
 ```

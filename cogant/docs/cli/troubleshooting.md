@@ -25,4 +25,3 @@ Or use benchmarking to identify bottlenecks:
 ```bash
 cogant benchmark ./repo --iterations 1
 ```
-

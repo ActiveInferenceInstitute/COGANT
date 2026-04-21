@@ -40,12 +40,11 @@ from cogant.markov.network import build_blanket_network  # noqa: E402
 from cogant.schemas.core import NodeKind  # noqa: E402
 from cogant.viz.boundary import BoundaryMapper  # noqa: E402
 
-
 ROLE_ORDER = ("internal", "sensory", "active", "external")
 
 
 def _role_counts(blanket) -> dict[str, int]:
-    counts = {r: 0 for r in ROLE_ORDER}
+    counts = dict.fromkeys(ROLE_ORDER, 0)
     for role in blanket.roles.values():
         key = role.value if hasattr(role, "value") else str(role)
         counts[key] = counts.get(key, 0) + 1
@@ -60,8 +59,8 @@ def _print_partition(label: str, blanket) -> None:
     ratio = (boundary / internal_plus_boundary) if internal_plus_boundary else 0.0
     print(f"\n  {label}")
     print(
-        "    internal={0[internal]:>3}  sensory={0[sensory]:>3}  "
-        "active={0[active]:>3}  external={0[external]:>3}  total={1}".format(counts, total)
+        f"    internal={counts['internal']:>3}  sensory={counts['sensory']:>3}  "
+        f"active={counts['active']:>3}  external={counts['external']:>3}  total={total}"
     )
     print(f"    boundary ratio (s+a)/(μ+s+a) = {ratio:.3f}")
     meta = dict(blanket.metadata or {})
@@ -98,15 +97,13 @@ def main() -> int:
     modules = pg.get_nodes_by_kind(NodeKind.MODULE)
     if modules:
         target_module = modules[0].name or modules[0].qualified_name
-        module_blanket = extractor.extract(
-            strategy="module", module_names=[target_module]
-        )
+        module_blanket = extractor.extract(strategy="module", module_names=[target_module])
         _print_partition(f"module={target_module!r} strategy", module_blanket)
     else:
         module_blanket = None
 
     # Strategy 4 — explicit (top node ids from the auto seed set, if any)
-    auto_internal_ids = list(sorted(auto_blanket.internal_ids))[:3]
+    auto_internal_ids = sorted(auto_blanket.internal_ids)[:3]
     if auto_internal_ids:
         explicit_blanket = extractor.extract(strategy="explicit", seeds=auto_internal_ids)
         _print_partition("explicit (first 3 internal nodes)", explicit_blanket)
@@ -127,9 +124,7 @@ def main() -> int:
     mapper = BoundaryMapper()
     collapsed_path = args.output_dir / "markov_blanket_collapsed.mmd"
     collapsed_path.write_text(
-        mapper.markov_blanket_collapsed_mermaid(
-            pg, blanket=auto_blanket, strategy="auto"
-        ),
+        mapper.markov_blanket_collapsed_mermaid(pg, blanket=auto_blanket, strategy="auto"),
         encoding="utf-8",
     )
     detailed_path = args.output_dir / "markov_blanket_detail.mmd"

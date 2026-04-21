@@ -32,7 +32,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import matplotlib
 
@@ -65,7 +65,7 @@ from orchestrate_roundtrip import RoundtripOrchestrator  # noqa: E402
 # Fixture inventory
 # ---------------------------------------------------------------------------
 
-FIXTURES: List[Tuple[str, Path, str]] = [
+FIXTURES: list[tuple[str, Path, str]] = [
     ("calculator", EXAMPLES_ROOT / "control_positive" / "calculator", "control_positive"),
     (
         "event_pipeline",
@@ -84,7 +84,7 @@ FIXTURES: List[Tuple[str, Path, str]] = [
 # ---------------------------------------------------------------------------
 
 
-def _count_source(repo: Path) -> Tuple[int, int]:
+def _count_source(repo: Path) -> tuple[int, int]:
     """Count ``.py`` files and non-empty lines under ``repo``."""
     files = [f for f in repo.rglob("*.py") if "__pycache__" not in f.parts]
     loc = 0
@@ -96,7 +96,7 @@ def _count_source(repo: Path) -> Tuple[int, int]:
     return len(files), loc
 
 
-def _run_pipeline(repo: Path) -> Tuple[Dict[str, Any], float, bool]:
+def _run_pipeline(repo: Path) -> tuple[dict[str, Any], float, bool]:
     """Run ``RoundtripOrchestrator`` once and return (metrics, elapsed, ok)."""
     t0 = time.perf_counter()
     with tempfile.TemporaryDirectory() as tmp:
@@ -105,7 +105,7 @@ def _run_pipeline(repo: Path) -> Tuple[Dict[str, Any], float, bool]:
         ok = orch.run()
         elapsed = time.perf_counter() - t0
 
-        metrics: Dict[str, Any] = {"ok": ok}
+        metrics: dict[str, Any] = {"ok": ok}
 
         # Program graph ------------------------------------------------------
         pg_file = out / "program_graph.json"
@@ -135,9 +135,7 @@ def _run_pipeline(repo: Path) -> Tuple[Dict[str, Any], float, bool]:
         if gnn_md.exists():
             text = gnn_md.read_text()
             metrics["gnn_md_bytes"] = len(text)
-            metrics["gnn_sections"] = sum(
-                1 for line in text.splitlines() if line.startswith("## ")
-            )
+            metrics["gnn_sections"] = sum(1 for line in text.splitlines() if line.startswith("## "))
 
         # GNN validation ----------------------------------------------------
         gvr = out / "gnn_validation_report.json"
@@ -155,9 +153,7 @@ def _run_pipeline(repo: Path) -> Tuple[Dict[str, Any], float, bool]:
             metrics["state_variables"] = len(s.get("variables", []) or [])
             metrics["observations"] = len(s.get("observations", []) or [])
             t = s.get("transitions", {})
-            metrics["transitions"] = (
-                t.get("transition_count", 0) if isinstance(t, dict) else len(t)
-            )
+            metrics["transitions"] = t.get("transition_count", 0) if isinstance(t, dict) else len(t)
 
         ac_file = out / "gnn_package" / "actions.json"
         if ac_file.exists():
@@ -168,16 +164,14 @@ def _run_pipeline(repo: Path) -> Tuple[Dict[str, Any], float, bool]:
         # GNN package files -------------------------------------------------
         gp = out / "gnn_package"
         if gp.exists():
-            metrics["gnn_package_files"] = len(
-                [f for f in gp.iterdir() if f.is_file()]
-            )
+            metrics["gnn_package_files"] = len([f for f in gp.iterdir() if f.is_file()])
 
     return metrics, elapsed, ok
 
 
-def run_all() -> Dict[str, Dict[str, Any]]:
+def run_all() -> dict[str, dict[str, Any]]:
     """Run every fixture and collect metrics."""
-    results: Dict[str, Dict[str, Any]] = {}
+    results: dict[str, dict[str, Any]] = {}
     for name, repo, group in FIXTURES:
         if not repo.exists():
             print(f"[SKIP] {name}: {repo} does not exist")
@@ -202,12 +196,12 @@ def run_all() -> Dict[str, Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
-def _order(results: Dict[str, Dict[str, Any]]) -> List[str]:
+def _order(results: dict[str, dict[str, Any]]) -> list[str]:
     """Return fixture names in the order of the FIXTURES table."""
     return [name for name, _, _ in FIXTURES if name in results]
 
 
-def figure_graph_sizes(results: Dict[str, Dict[str, Any]]) -> Path:
+def figure_graph_sizes(results: dict[str, dict[str, Any]]) -> Path:
     names = _order(results)
     nodes = [results[n].get("nodes", 0) for n in names]
     edges = [results[n].get("edges", 0) for n in names]
@@ -221,6 +215,7 @@ def figure_graph_sizes(results: Dict[str, Dict[str, Any]]) -> Path:
     ax.set_xticklabels(names, rotation=30, ha="right")
     ax.set_ylabel("Count")
     import cogant as _cogant_pkg
+
     ax.set_title(f"Program graph size by fixture (COGANT v{_cogant_pkg.__version__})")
     ax.grid(axis="y", linestyle="--", alpha=0.3)
     ax.legend()
@@ -234,10 +229,10 @@ def figure_graph_sizes(results: Dict[str, Dict[str, Any]]) -> Path:
     return out
 
 
-def figure_node_kinds(results: Dict[str, Dict[str, Any]]) -> Path:
+def figure_node_kinds(results: dict[str, dict[str, Any]]) -> Path:
     names = _order(results)
     kinds = ["MODULE", "CLASS", "METHOD", "FUNCTION"]
-    counts: Dict[str, List[int]] = {k: [] for k in kinds}
+    counts: dict[str, list[int]] = {k: [] for k in kinds}
     for name in names:
         by_kind = results[name].get("nodes_by_kind", {}) or {}
         for k in kinds:
@@ -268,7 +263,7 @@ def figure_node_kinds(results: Dict[str, Dict[str, Any]]) -> Path:
     return out
 
 
-def figure_state_space(results: Dict[str, Dict[str, Any]]) -> Path:
+def figure_state_space(results: dict[str, dict[str, Any]]) -> Path:
     names = _order(results)
     fields = ["state_variables", "observations", "actions", "transitions"]
     labels = ["State vars", "Observations", "Actions", "Transitions"]
@@ -293,12 +288,11 @@ def figure_state_space(results: Dict[str, Dict[str, Any]]) -> Path:
     return out
 
 
-def figure_pipeline_latency(results: Dict[str, Dict[str, Any]]) -> Path:
+def figure_pipeline_latency(results: dict[str, dict[str, Any]]) -> Path:
     names = _order(results)
     elapsed = [results[n].get("elapsed_s", 0) for n in names]
     colors = [
-        "#4c72b0" if results[n].get("group") == "control_positive" else "#dd8452"
-        for n in names
+        "#4c72b0" if results[n].get("group") == "control_positive" else "#dd8452" for n in names
     ]
 
     fig, ax = plt.subplots(figsize=(9, 4.5))
@@ -331,13 +325,13 @@ def figure_pipeline_latency(results: Dict[str, Dict[str, Any]]) -> Path:
 # ---------------------------------------------------------------------------
 
 
-def write_metrics_json(results: Dict[str, Dict[str, Any]]) -> Path:
+def write_metrics_json(results: dict[str, dict[str, Any]]) -> Path:
     out = FIGURES_DIR / "metrics.json"
     out.write_text(json.dumps(results, indent=2, sort_keys=True, default=str))
     return out
 
 
-def write_metrics_table(results: Dict[str, Dict[str, Any]]) -> Path:
+def write_metrics_table(results: dict[str, dict[str, Any]]) -> Path:
     names = _order(results)
     lines = [
         "# Generated metrics (do not edit by hand — re-run generate_figures.py)",

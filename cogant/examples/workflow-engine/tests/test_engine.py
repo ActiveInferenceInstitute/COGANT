@@ -1,12 +1,9 @@
 """Tests for the workflow engine."""
 
-import pytest
-from datetime import datetime
-
 from engine import Workflow, WorkflowConfig, WorkflowDefinition
+from scheduler import RetryStrategy, ScheduleConfig, TaskScheduler
 from state import WorkflowState
-from tasks import SimpleTask, TaskConfig, TaskResult
-from scheduler import TaskScheduler, ScheduleConfig, RetryStrategy
+from tasks import SimpleTask, TaskConfig
 
 
 class TestStateMachine:

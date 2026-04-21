@@ -91,4 +91,3 @@ where:
 from cogant.translate.confidence import ConfidenceModel
 
 model = ConfidenceModel()
-

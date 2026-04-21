@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/process/extractor.py
-# hypothesis_version: 6.135.29
-
-[0.5, 0.6, '/', 'CONTROL_FLOW', 'data_access', 'event', 'exception', 'fan_in', 'fan_out', 'function_call', 'generator_yield', 'loop', 'loop_member', 'patterns', 'return_value', 'root', 'sequential', 'state_mutation', 'value']

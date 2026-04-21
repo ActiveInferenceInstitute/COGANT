@@ -31,8 +31,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import banner, configure_logging, parse_args  # noqa: E402
 
 # CI thresholds — mirrors cogant/docs/evaluation/CALIBRATION.md
-BLOCK_THRESHOLD = 70.0   # Score below this blocks publication
-WARN_THRESHOLD = 85.0    # Score below this triggers a warning
+BLOCK_THRESHOLD = 70.0  # Score below this blocks publication
+WARN_THRESHOLD = 85.0  # Score below this triggers a warning
 
 
 def gate_decision(score: float) -> tuple[str, int]:

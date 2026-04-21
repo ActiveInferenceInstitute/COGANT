@@ -24,4 +24,3 @@ For repository-level incremental **analysis** (skip unchanged files), see CLI `c
 
 - [Compression and size](compression_size.md)
 - [Overview](overview.md)
-

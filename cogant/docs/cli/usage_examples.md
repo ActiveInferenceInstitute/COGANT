@@ -51,4 +51,3 @@ cogant diff output/v1/bundle.json output/v2/bundle.json
 # Run 10 benchmarks to test stability
 cogant benchmark ./repo --iterations 10
 ```
-

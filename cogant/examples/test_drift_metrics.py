@@ -4,8 +4,8 @@ Test script for drift analyzer and metrics system.
 Creates minimal test bundles and computes drift.
 """
 
-import sys
 import json
+import sys
 from pathlib import Path
 
 # Add py/ to path
@@ -89,20 +89,24 @@ def main():
     bundle_b = create_minimal_bundle("modified", num_nodes=12, num_edges=18)
 
     # Simulate drift: add a few nodes and change some edges
-    bundle_b["graph"]["nodes"].extend([
+    bundle_b["graph"]["nodes"].extend(
+        [
+            {
+                "id": "node_new_1",
+                "kind": "class",
+                "label": "NewClass",
+                "language": "python",
+                "location": {"file": "new.py", "line": 1},
+            }
+        ]
+    )
+    bundle_b["graph"]["edges"].append(
         {
-            "id": "node_new_1",
-            "kind": "class",
-            "label": "NewClass",
-            "language": "python",
-            "location": {"file": "new.py", "line": 1},
+            "source": "node_0",
+            "target": "node_new_1",
+            "kind": "instantiates",
         }
-    ])
-    bundle_b["graph"]["edges"].append({
-        "source": "node_0",
-        "target": "node_new_1",
-        "kind": "instantiates",
-    })
+    )
 
     # Compute drift
     print("Computing drift...")
@@ -117,15 +121,21 @@ def main():
     print("\n--- Structural Drift ---")
     print(f"  Nodes added: {structural_drift['nodes_added_count']}")
     print(f"  Nodes removed: {structural_drift['nodes_removed_count']}")
-    print(f"  Edges changed: {structural_drift['edges_added_count'] + structural_drift['edges_removed_count']}")
+    print(
+        f"  Edges changed: {structural_drift['edges_added_count'] + structural_drift['edges_removed_count']}"
+    )
 
     print("\n--- Semantic Drift ---")
     print(f"  New mappings: {semantic_drift['new_count']}")
     print(f"  Lost mappings: {semantic_drift['lost_count']}")
 
     print("\n--- State Space Drift ---")
-    print(f"  State vars changed: {state_space_drift['state_vars_added'] + state_space_drift['state_vars_removed']}")
-    print(f"  Observations changed: {state_space_drift['observations_added'] + state_space_drift['observations_removed']}")
+    print(
+        f"  State vars changed: {state_space_drift['state_vars_added'] + state_space_drift['state_vars_removed']}"
+    )
+    print(
+        f"  Observations changed: {state_space_drift['observations_added'] + state_space_drift['observations_removed']}"
+    )
 
     print("\n--- Scores ---")
     print(f"  Architectural Drift: {arch_score:.1%}")

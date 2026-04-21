@@ -94,12 +94,27 @@ def main() -> None:
         markdown = exporter.to_markdown()
         md_path.write_text(markdown)
         elapsed = (time.perf_counter() - t0) * 1000
-        results.append({"format": "GNN Markdown", "file": md_path.name,
-                        "size": md_path.stat().st_size, "ms": elapsed, "ok": True})
+        results.append(
+            {
+                "format": "GNN Markdown",
+                "file": md_path.name,
+                "size": md_path.stat().st_size,
+                "ms": elapsed,
+                "ok": True,
+            }
+        )
         print(f"  ✓ GNN Markdown  → {md_path.name} ({_fmt_bytes(md_path.stat().st_size)})")
     except Exception as exc:
-        results.append({"format": "GNN Markdown", "file": "—", "size": 0, "ms": 0,
-                        "ok": False, "error": str(exc)})
+        results.append(
+            {
+                "format": "GNN Markdown",
+                "file": "—",
+                "size": 0,
+                "ms": 0,
+                "ok": False,
+                "error": str(exc),
+            }
+        )
         print(f"  ✗ GNN Markdown  → {exc}")
 
     # ---- 3. GNN JSON export --------------------------------------------
@@ -112,12 +127,20 @@ def main() -> None:
         json_data = json_exporter.export()
         json_path.write_text(json.dumps(json_data, indent=2))
         elapsed = (time.perf_counter() - t0) * 1000
-        results.append({"format": "GNN JSON", "file": json_path.name,
-                        "size": json_path.stat().st_size, "ms": elapsed, "ok": True})
+        results.append(
+            {
+                "format": "GNN JSON",
+                "file": json_path.name,
+                "size": json_path.stat().st_size,
+                "ms": elapsed,
+                "ok": True,
+            }
+        )
         print(f"  ✓ GNN JSON      → {json_path.name} ({_fmt_bytes(json_path.stat().st_size)})")
     except Exception as exc:
-        results.append({"format": "GNN JSON", "file": "—", "size": 0, "ms": 0,
-                        "ok": False, "error": str(exc)})
+        results.append(
+            {"format": "GNN JSON", "file": "—", "size": 0, "ms": 0, "ok": False, "error": str(exc)}
+        )
         print(f"  ✗ GNN JSON      → {exc}")
 
     # ---- 4. GraphML export ----------------------------------------------
@@ -130,12 +153,20 @@ def main() -> None:
         gml_exporter.export(graphml_path)
         elapsed = (time.perf_counter() - t0) * 1000
         size = graphml_path.stat().st_size
-        results.append({"format": "GraphML", "file": graphml_path.name,
-                        "size": size, "ms": elapsed, "ok": True})
+        results.append(
+            {
+                "format": "GraphML",
+                "file": graphml_path.name,
+                "size": size,
+                "ms": elapsed,
+                "ok": True,
+            }
+        )
         print(f"  ✓ GraphML       → {graphml_path.name} ({_fmt_bytes(size)})")
     except Exception as exc:
-        results.append({"format": "GraphML", "file": "—", "size": 0, "ms": 0,
-                        "ok": False, "error": str(exc)})
+        results.append(
+            {"format": "GraphML", "file": "—", "size": 0, "ms": 0, "ok": False, "error": str(exc)}
+        )
         print(f"  ✗ GraphML       → {exc}")
 
     # ---- 5. Parquet export (columnar node/edge tables) ------------------
@@ -149,12 +180,20 @@ def main() -> None:
         pq_exporter.export(parquet_dir)
         elapsed = (time.perf_counter() - t0) * 1000
         total_size = sum(f.stat().st_size for f in parquet_dir.glob("*.parquet"))
-        results.append({"format": "Parquet", "file": "parquet/*.parquet",
-                        "size": total_size, "ms": elapsed, "ok": True})
+        results.append(
+            {
+                "format": "Parquet",
+                "file": "parquet/*.parquet",
+                "size": total_size,
+                "ms": elapsed,
+                "ok": True,
+            }
+        )
         print(f"  ✓ Parquet       → parquet/ ({_fmt_bytes(total_size)})")
     except Exception as exc:
-        results.append({"format": "Parquet", "file": "—", "size": 0, "ms": 0,
-                        "ok": False, "error": str(exc)})
+        results.append(
+            {"format": "Parquet", "file": "—", "size": 0, "ms": 0, "ok": False, "error": str(exc)}
+        )
         print(f"  ✗ Parquet       → {exc}")
 
     # ---- 6. Summary table ----------------------------------------------

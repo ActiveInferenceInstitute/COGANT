@@ -53,4 +53,3 @@ The 22 active translation rules are organized into five families. Each family li
 | `RateLimiterRule` | resilience | Name matches `rate`, `limit`, `throttle`, `quota`, or decorator pattern | ACTION | 0.80 | `py/cogant/translate/rules/resilience.py` | [`cogant.translate` → Resilience rules](../api/translate.md#resilience-rules) |
 
 For the conceptual walkthrough of how these rules fire in priority order, see [How COGANT assigns roles](../concepts/role_assignment.md). For the seven-role taxonomy that the rules emit, see [Semantic roles](semantic_roles.md). For the engine itself — the priority/confidence conflict-resolution loop and the per-rule `.explain()` API — see [`cogant.translate` → Engine](../api/translate.md#engine).
-

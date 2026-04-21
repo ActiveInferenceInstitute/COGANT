@@ -42,4 +42,3 @@ timing = ingester.extract_timing()
 # Get hot paths
 hot_paths = ingester.extract_hot_paths(count=10)
 ```
-

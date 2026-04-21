@@ -41,4 +41,3 @@ from cogant.ingest import ManifestParser
 from pathlib import Path
 
 parser = ManifestParser()
-

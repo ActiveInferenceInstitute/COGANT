@@ -9,4 +9,3 @@ for edge_fact in edge_facts:
     )
 
 static_graph = builder.finalize()
-

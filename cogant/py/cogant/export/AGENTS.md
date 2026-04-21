@@ -148,18 +148,18 @@ class BundleManifest:
     cogant_version: str
     source_language: str
     repo_root: Path
-    
+
     files: dict[str, FileMetadata]  # Path -> metadata
-    
+
     # Integrity
     total_size: int
     file_count: int
     checksums: dict[str, str]   # Path -> SHA256
-    
+
     # Provenance
     pipeline_stages: list[StageMetadata]
     provenance: dict[str, Any]
-    
+
     # Quality
     validation_score: float     # 0.0-100.0
     error_count: int

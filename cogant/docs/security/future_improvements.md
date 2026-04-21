@@ -5,4 +5,3 @@
 3. **Role-Based Access**: Control per analysis result
 4. **Encrypted Export**: Optionally encrypt bundles
 5. **Hardware Security**: Support for HSMs (future)
-

@@ -34,4 +34,3 @@ from cogant.static import PythonASTParser
 from pathlib import Path
 
 parser = PythonASTParser()
-

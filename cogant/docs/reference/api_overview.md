@@ -45,4 +45,3 @@ let translated = engine.translate_graph(&graph)?;
 let json = format_json(&translated, "MyProject");
 println!("{}", json);
 ```
-

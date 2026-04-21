@@ -72,4 +72,3 @@
 - **Immutability**: Config read-only after validation
 
 **Risk Level**: Low
-

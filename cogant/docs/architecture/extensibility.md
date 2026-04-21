@@ -12,7 +12,7 @@ class MyCustomRule(TranslationRule):
     def matches(self, graph, query):
         # Return list of match dicts
         return [...]
-    
+
     def apply(self, match, graph, query):
         return SemanticMapping(...)
 ```
@@ -54,4 +54,3 @@ class MyFormat(ExportPlugin):
     def export(self, bundle, output_path, fmt): ...
     def get_format_info(self, fmt): ...
 ```
-

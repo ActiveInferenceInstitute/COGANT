@@ -37,4 +37,3 @@ def test_my_custom_rule_no_match():
     matches = rule.matches(graph, query)
     assert len(matches) == 0
 ```
-

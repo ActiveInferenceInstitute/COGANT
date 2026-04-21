@@ -1,10 +1,9 @@
 """Rust parser plugin using regex."""
 
 import re
-import sys
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Set
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 from parsers._base import CogantLanguagePlugin  # noqa: E402
 
@@ -14,14 +13,14 @@ class ParseResult:
     """Result from parsing a file."""
 
     file_path: Path
-    structs: List[Dict[str, Any]] = field(default_factory=list)
-    enums: List[Dict[str, Any]] = field(default_factory=list)
-    functions: List[Dict[str, Any]] = field(default_factory=list)
-    traits: List[Dict[str, Any]] = field(default_factory=list)
-    impls: List[Dict[str, Any]] = field(default_factory=list)
-    modules: List[Dict[str, Any]] = field(default_factory=list)
-    uses: List[Dict[str, Any]] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    structs: list[dict[str, Any]] = field(default_factory=list)
+    enums: list[dict[str, Any]] = field(default_factory=list)
+    functions: list[dict[str, Any]] = field(default_factory=list)
+    traits: list[dict[str, Any]] = field(default_factory=list)
+    impls: list[dict[str, Any]] = field(default_factory=list)
+    modules: list[dict[str, Any]] = field(default_factory=list)
+    uses: list[dict[str, Any]] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
 
 class RustLanguageParser(CogantLanguagePlugin):
@@ -32,7 +31,7 @@ class RustLanguageParser(CogantLanguagePlugin):
     SUPPORTED_LANGUAGES = {"rust"}
     SUPPORTED_EXTENSIONS = {".rs"}
 
-    def parse(self, source_code: str) -> Dict[str, Any]:
+    def parse(self, source_code: str) -> dict[str, Any]:
         """Parse Rust source code and return AST.
 
         Args:
@@ -53,7 +52,7 @@ class RustLanguageParser(CogantLanguagePlugin):
             "errors": result.errors,
         }
 
-    def extract_symbols(self, ast: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def extract_symbols(self, ast: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract symbols from AST.
 
         Args:
@@ -65,36 +64,44 @@ class RustLanguageParser(CogantLanguagePlugin):
         symbols = []
 
         for struct in ast.get("structs", []):
-            symbols.append({
-                "type": "struct",
-                "name": struct["name"],
-                "line": struct.get("line"),
-            })
+            symbols.append(
+                {
+                    "type": "struct",
+                    "name": struct["name"],
+                    "line": struct.get("line"),
+                }
+            )
 
         for enum in ast.get("enums", []):
-            symbols.append({
-                "type": "enum",
-                "name": enum["name"],
-                "line": enum.get("line"),
-            })
+            symbols.append(
+                {
+                    "type": "enum",
+                    "name": enum["name"],
+                    "line": enum.get("line"),
+                }
+            )
 
         for func in ast.get("functions", []):
-            symbols.append({
-                "type": "function",
-                "name": func["name"],
-                "line": func.get("line"),
-            })
+            symbols.append(
+                {
+                    "type": "function",
+                    "name": func["name"],
+                    "line": func.get("line"),
+                }
+            )
 
         for trait in ast.get("traits", []):
-            symbols.append({
-                "type": "trait",
-                "name": trait["name"],
-                "line": trait.get("line"),
-            })
+            symbols.append(
+                {
+                    "type": "trait",
+                    "name": trait["name"],
+                    "line": trait.get("line"),
+                }
+            )
 
         return symbols
 
-    def extract_types(self, ast: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_types(self, ast: dict[str, Any]) -> dict[str, Any]:
         """Extract type information from AST.
 
         Args:
@@ -103,40 +110,33 @@ class RustLanguageParser(CogantLanguagePlugin):
         Returns:
             Type information dictionary.
         """
-        types = {
-            "structs": [],
-            "enums": [],
-            "functions": [],
-            "traits": []
-        }
+        types = {"structs": [], "enums": [], "functions": [], "traits": []}
 
         for struct in ast.get("structs", []):
-            types["structs"].append({
-                "name": struct["name"],
-                "fields": struct.get("fields", [])
-            })
+            types["structs"].append({"name": struct["name"], "fields": struct.get("fields", [])})
 
         for enum in ast.get("enums", []):
-            types["enums"].append({
-                "name": enum["name"],
-                "variants": enum.get("variants", [])
-            })
+            types["enums"].append({"name": enum["name"], "variants": enum.get("variants", [])})
 
         for func in ast.get("functions", []):
-            types["functions"].append({
-                "name": func["name"],
-                "return_type": func.get("return_type"),
-                "params": func.get("params", [])
-            })
+            types["functions"].append(
+                {
+                    "name": func["name"],
+                    "return_type": func.get("return_type"),
+                    "params": func.get("params", []),
+                }
+            )
 
         for trait in ast.get("traits", []):
-            types["traits"].append({
-                "name": trait["name"],
-            })
+            types["traits"].append(
+                {
+                    "name": trait["name"],
+                }
+            )
 
         return types
 
-    def resolve_imports(self, ast: Dict[str, Any]) -> List[str]:
+    def resolve_imports(self, ast: dict[str, Any]) -> list[str]:
         """Resolve import dependencies from AST.
 
         Args:
@@ -165,19 +165,16 @@ class RustLanguageParser(CogantLanguagePlugin):
             file_path = Path(file_path)
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 source = f.read()
         except Exception as e:
-            return ParseResult(
-                file_path=file_path,
-                errors=[f"Failed to read file: {e}"]
-            )
+            return ParseResult(file_path=file_path, errors=[f"Failed to read file: {e}"])
 
         result = self._parse_source(source)
         result.file_path = file_path
         return result
 
-    def get_node_kinds(self) -> Set[str]:
+    def get_node_kinds(self) -> set[str]:
         """Get supported node kinds.
 
         Returns:
@@ -231,7 +228,7 @@ class RustLanguageParser(CogantLanguagePlugin):
 
         return result
 
-    def _extract_uses(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_uses(self, source: str) -> list[dict[str, Any]]:
         """Extract use statements.
 
         Args:
@@ -243,21 +240,23 @@ class RustLanguageParser(CogantLanguagePlugin):
         uses = []
 
         # Pattern: use path::to::module
-        pattern = r'use\s+([a-zA-Z0-9_:*{}]+)(?:\s+as\s+(\w+))?;'
+        pattern = r"use\s+([a-zA-Z0-9_:*{}]+)(?:\s+as\s+(\w+))?;"
 
         for match in re.finditer(pattern, source):
             path = match.group(1)
             alias = match.group(2)
 
-            uses.append({
-                "path": path,
-                "alias": alias,
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            uses.append(
+                {
+                    "path": path,
+                    "alias": alias,
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return uses
 
-    def _extract_structs(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_structs(self, source: str) -> list[dict[str, Any]]:
         """Extract struct definitions.
 
         Args:
@@ -269,7 +268,7 @@ class RustLanguageParser(CogantLanguagePlugin):
         structs = []
 
         # Pattern: struct Name { fields }
-        pattern = r'(?:pub\s+)?struct\s+(\w+)(?:\s*<([^>]+)>)?(?:\s*{([^}]*)})?'
+        pattern = r"(?:pub\s+)?struct\s+(\w+)(?:\s*<([^>]+)>)?(?:\s*{([^}]*)})?"
 
         for match in re.finditer(pattern, source):
             name = match.group(1)
@@ -279,22 +278,23 @@ class RustLanguageParser(CogantLanguagePlugin):
             # Extract fields
             fields = []
             if fields_str:
-                for field_match in re.finditer(r'(\w+)\s*:\s*([^,;]+)', fields_str):
-                    fields.append({
-                        "name": field_match.group(1),
-                        "type": field_match.group(2).strip()
-                    })
+                for field_match in re.finditer(r"(\w+)\s*:\s*([^,;]+)", fields_str):
+                    fields.append(
+                        {"name": field_match.group(1), "type": field_match.group(2).strip()}
+                    )
 
-            structs.append({
-                "name": name,
-                "generics": generics,
-                "fields": fields,
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            structs.append(
+                {
+                    "name": name,
+                    "generics": generics,
+                    "fields": fields,
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return structs
 
-    def _extract_enums(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_enums(self, source: str) -> list[dict[str, Any]]:
         """Extract enum definitions.
 
         Args:
@@ -306,7 +306,7 @@ class RustLanguageParser(CogantLanguagePlugin):
         enums = []
 
         # Pattern: enum Name { variants }
-        pattern = r'(?:pub\s+)?enum\s+(\w+)(?:\s*<([^>]+)>)?(?:\s*{([^}]*)})?'
+        pattern = r"(?:pub\s+)?enum\s+(\w+)(?:\s*<([^>]+)>)?(?:\s*{([^}]*)})?"
 
         for match in re.finditer(pattern, source):
             name = match.group(1)
@@ -316,22 +316,28 @@ class RustLanguageParser(CogantLanguagePlugin):
             # Extract variants
             variants = []
             if variants_str:
-                for variant_match in re.finditer(r'(\w+)(?:\s*\(([^)]*)\))?(?:\s*{([^}]*)})?', variants_str):
-                    variants.append({
-                        "name": variant_match.group(1),
-                        "data": variant_match.group(2) or variant_match.group(3)
-                    })
+                for variant_match in re.finditer(
+                    r"(\w+)(?:\s*\(([^)]*)\))?(?:\s*{([^}]*)})?", variants_str
+                ):
+                    variants.append(
+                        {
+                            "name": variant_match.group(1),
+                            "data": variant_match.group(2) or variant_match.group(3),
+                        }
+                    )
 
-            enums.append({
-                "name": name,
-                "generics": generics,
-                "variants": variants,
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            enums.append(
+                {
+                    "name": name,
+                    "generics": generics,
+                    "variants": variants,
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return enums
 
-    def _extract_traits(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_traits(self, source: str) -> list[dict[str, Any]]:
         """Extract trait definitions.
 
         Args:
@@ -343,21 +349,23 @@ class RustLanguageParser(CogantLanguagePlugin):
         traits = []
 
         # Pattern: trait Name + optional bounds
-        pattern = r'(?:pub\s+)?trait\s+(\w+)(?:\s*:\s*([^{]+))?'
+        pattern = r"(?:pub\s+)?trait\s+(\w+)(?:\s*:\s*([^{]+))?"
 
         for match in re.finditer(pattern, source):
             name = match.group(1)
             bounds = match.group(2).strip() if match.group(2) else None
 
-            traits.append({
-                "name": name,
-                "bounds": bounds,
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            traits.append(
+                {
+                    "name": name,
+                    "bounds": bounds,
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return traits
 
-    def _extract_impls(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_impls(self, source: str) -> list[dict[str, Any]]:
         """Extract impl blocks.
 
         Args:
@@ -369,21 +377,23 @@ class RustLanguageParser(CogantLanguagePlugin):
         impls = []
 
         # Pattern: impl Name or impl Trait for Type
-        pattern = r'impl\s+(?:<?([^>}]+)>?\s+for\s+)?(\w+)'
+        pattern = r"impl\s+(?:<?([^>}]+)>?\s+for\s+)?(\w+)"
 
         for match in re.finditer(pattern, source):
             trait_name = match.group(1)
             type_name = match.group(2)
 
-            impls.append({
-                "trait": trait_name,
-                "type": type_name,
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            impls.append(
+                {
+                    "trait": trait_name,
+                    "type": type_name,
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return impls
 
-    def _extract_functions(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_functions(self, source: str) -> list[dict[str, Any]]:
         """Extract function definitions.
 
         Args:
@@ -395,25 +405,29 @@ class RustLanguageParser(CogantLanguagePlugin):
         functions = []
 
         # Pattern: fn name(params) -> return_type
-        pattern = r'(?:pub\s+)?(?:async\s+)?(?:unsafe\s+)?fn\s+(\w+)\s*\(([^)]*)\)(?:\s*->\s*([^{]+))?'
+        pattern = (
+            r"(?:pub\s+)?(?:async\s+)?(?:unsafe\s+)?fn\s+(\w+)\s*\(([^)]*)\)(?:\s*->\s*([^{]+))?"
+        )
 
         for match in re.finditer(pattern, source):
             name = match.group(1)
             params_str = match.group(2) if match.group(2) else ""
             return_type = match.group(3).strip() if match.group(3) else None
 
-            params = [p.strip() for p in params_str.split(',')] if params_str else []
+            params = [p.strip() for p in params_str.split(",")] if params_str else []
 
-            functions.append({
-                "name": name,
-                "params": params,
-                "return_type": return_type,
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            functions.append(
+                {
+                    "name": name,
+                    "params": params,
+                    "return_type": return_type,
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return functions
 
-    def _extract_modules(self, source: str) -> List[Dict[str, Any]]:
+    def _extract_modules(self, source: str) -> list[dict[str, Any]]:
         """Extract module definitions.
 
         Args:
@@ -425,14 +439,16 @@ class RustLanguageParser(CogantLanguagePlugin):
         modules = []
 
         # Pattern: mod name or mod name { ... }
-        pattern = r'(?:pub\s+)?mod\s+(\w+)'
+        pattern = r"(?:pub\s+)?mod\s+(\w+)"
 
         for match in re.finditer(pattern, source):
             name = match.group(1)
 
-            modules.append({
-                "name": name,
-                "line": source[:match.start()].count('\n') + 1,
-            })
+            modules.append(
+                {
+                    "name": name,
+                    "line": source[: match.start()].count("\n") + 1,
+                }
+            )
 
         return modules

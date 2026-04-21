@@ -75,9 +75,7 @@ def verify_docs() -> list[str]:
             try:
                 resolved.relative_to(_REPO_ROOT)
             except ValueError:
-                errors.append(
-                    f"{md_path.relative_to(_REPO_ROOT)}: link escapes repo root: {raw!r}"
-                )
+                errors.append(f"{md_path.relative_to(_REPO_ROOT)}: link escapes repo root: {raw!r}")
                 continue
             if resolved.is_file():
                 continue

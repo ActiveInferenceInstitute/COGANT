@@ -350,4 +350,3 @@ COGANT's discrete-graph setting sidesteps the continuous-dynamics concerns.
 Machine-readable bibliography hub: [`../cogant/docs/evaluation/LITERATURE.md`](../cogant/docs/evaluation/LITERATURE.md).
 
 ---
-

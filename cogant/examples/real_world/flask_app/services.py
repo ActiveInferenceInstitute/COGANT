@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .config import BaseConfig
 from .models import InMemorySession, Post, User, ValidationError
@@ -57,7 +57,7 @@ class UserService:
             raise
         return user
 
-    def authenticate(self, username: str, password: str) -> Optional[User]:
+    def authenticate(self, username: str, password: str) -> User | None:
         for candidate in self.session.all(User):
             if candidate.username != username:
                 continue
@@ -97,7 +97,7 @@ class PostService:
         self.session = session
         self.config = config
 
-    def create(self, author: User, title: str, body: str, tags: Optional[List[str]] = None) -> Post:
+    def create(self, author: User, title: str, body: str, tags: list[str] | None = None) -> Post:
         if not author.is_active:
             raise AuthorizationError("inactive users may not create posts")
         post = Post(
@@ -128,7 +128,7 @@ class PostService:
             raise
         return post
 
-    def list_published(self) -> List[Post]:
+    def list_published(self) -> list[Post]:
         return [p for p in self.session.all(Post) if p.published]
 
     def delete(self, actor: User, post_id: str) -> None:
@@ -150,7 +150,7 @@ class ServiceContainer:
         self.users = UserService(self.session, config)
         self.posts = PostService(self.session, config)
 
-    def snapshot(self) -> Dict[str, Any]:
+    def snapshot(self) -> dict[str, Any]:
         return {
             "users": [u.to_dict() for u in self.session.all(User)],
             "posts": [p.to_dict() for p in self.session.all(Post)],

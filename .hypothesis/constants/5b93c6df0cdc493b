@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/schemas/base.py
-# hypothesis_version: 6.135.29
-
-[0.0, 1.0, '.', '1-indexed start line', '1.0', 'SemanticVersion', 'Type of evidence', 'after', 'ast_fact', 'commit_event', 'config_entry', 'end_col', 'end_line', 'source_span', 'start_col', 'start_line', 'test_assertion', 'trace_event', 'utf-8', 'version']

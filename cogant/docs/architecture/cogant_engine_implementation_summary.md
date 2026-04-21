@@ -15,7 +15,7 @@ Successfully implemented the complete graph construction, normalization, and tra
    - Generates stable, deterministic IDs using SHA256
    - Supports idempotent ID generation and lookup
    - Deduplication and caching
-   
+
 3. **py/cogant/normalize/canonical.py** - CanonicalNormalizer
    - 337 lines of implementation
    - Maps 20+ language-specific constructs to canonical NodeKind
@@ -110,7 +110,7 @@ Successfully implemented the complete graph construction, normalization, and tra
   - Complete usage examples
   - Data structure specifications
   - End-to-end workflow example
-  
+
 - **Graph engine summary** (this doc) — short inventory
 
 ### Total Implementation
@@ -128,11 +128,11 @@ Successfully implemented the complete graph construction, normalization, and tra
 
 #### 2. Graph Construction
 - **Incremental Building**: Add nodes/edges incrementally with ID management
-- **Query Capabilities**: 
+- **Query Capabilities**:
   - Neighbor queries, path finding, component analysis
   - Centrality metrics (degree, betweenness, closeness)
   - Cycle detection and subgraph extraction
-  
+
 - **Merging**: Static + dynamic graph merging with conflict resolution
 
 #### 3. Semantic Translation

@@ -34,4 +34,3 @@
 - [x] Specs: Pipeline, Mappings, Ontology, Reference
 - [x] Top-level docs: SPEC, ARCHITECTURE, RULES, EXPORT, VALIDATION, PLUGIN_API
 - Narrative docs track CLI subcommands, `validate` routing, and export/`gnn_package` behavior in [CLI_GUIDE](../cli/README.md), [API_GUIDE](../api/README.md), and [VALIDATION](../validation/README.md) (see [SPEC § Implementation status](../reference/README.md)).
-

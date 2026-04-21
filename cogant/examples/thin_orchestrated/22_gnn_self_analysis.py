@@ -61,7 +61,6 @@ from cogant.translate.rules import (  # noqa: E402
 )
 from cogant.viz.png_export import RenderConfig, render_all_pngs  # noqa: E402
 
-
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _GNN_DEFAULT = _REPO_ROOT.parent / "work" / "GNN" / "src"
 
@@ -152,10 +151,7 @@ def main() -> int:
         lambda: ProcessExtractor(pg, schema_name=target.name).extract(),
         stats,
     )
-    print(
-        f"    stages={len(process_model.stages)} "
-        f"connections={len(process_model.connections)}"
-    )
+    print(f"    stages={len(process_model.stages)} connections={len(process_model.connections)}")
 
     def _export():
         builder = GNNPackageBuilder(

@@ -110,7 +110,7 @@ class GCN(torch.nn.Module):
         super().__init__()
         self.conv1 = GCNConv(in_channels, 64)
         self.conv2 = GCNConv(64, out_channels)
-    
+
     def forward(self, x, edge_index):
         x = self.conv1(x, edge_index).relu()
         x = F.dropout(x, p=0.5, training=self.training)
@@ -139,4 +139,3 @@ pred = out.argmax(dim=1)
 acc = (pred[pyg_data.test_mask] == pyg_data.y[pyg_data.test_mask]).float().mean()
 print(f"Test Accuracy: {acc:.4f}")
 ```
-

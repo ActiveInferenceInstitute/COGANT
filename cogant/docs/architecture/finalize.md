@@ -25,4 +25,3 @@ from cogant.graph.queries import GraphQuery
 from cogant.schemas.core import NodeKind, EdgeKind
 
 query = GraphQuery(graph)
-

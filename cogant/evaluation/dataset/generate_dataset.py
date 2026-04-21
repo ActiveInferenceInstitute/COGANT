@@ -33,7 +33,7 @@ import logging
 import re
 import sys
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -43,10 +43,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_ROOT = PROJECT_ROOT / "py"
 sys.path.insert(0, str(PACKAGE_ROOT))
 
-from cogant.api.bundle import Bundle  # noqa: E402
 from cogant.api import orchestration  # noqa: E402
+from cogant.api.bundle import Bundle  # noqa: E402
 from cogant.gnn.matrices import GNNMatrices  # noqa: E402
-from cogant.schemas.core import EdgeKind, NodeKind  # noqa: E402
+from cogant.schemas.core import EdgeKind  # noqa: E402
 from cogant.schemas.semantic import MappingKind  # noqa: E402
 
 logger = logging.getLogger("cogant.dataset")
@@ -256,10 +256,8 @@ def _build_node_to_mapping(mappings: dict[str, Any]) -> dict[str, Any]:
     for mapping in mappings.values():
         for nid in mapping.graph_fragment_node_ids:
             existing = index.get(nid)
-            if (
-                existing is None
-                or (mapping.confidence_score or 0.0)
-                > (existing.confidence_score or 0.0)
+            if existing is None or (mapping.confidence_score or 0.0) > (
+                existing.confidence_score or 0.0
             ):
                 index[nid] = mapping
     return index
@@ -352,8 +350,7 @@ def build_instance(
         feats = graph_features.get(nid, {})
         node_name_lower = (node.name or "").lower()
         name_has_action_keyword = any(
-            node_name_lower.startswith(kw) or f"_{kw}" in node_name_lower
-            for kw in ACTION_KEYWORDS
+            node_name_lower.startswith(kw) or f"_{kw}" in node_name_lower for kw in ACTION_KEYWORDS
         )
 
         # Lines-of-code proxy from source_range if present, else 0.
@@ -418,7 +415,7 @@ def build_instance(
         "repo_path": str(fixture_path.relative_to(PROJECT_ROOT))
         if fixture_path.is_absolute()
         else str(fixture_path),
-        "date_processed": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "date_processed": datetime.now(UTC).strftime("%Y-%m-%d"),
         "cogant_version": "0.1.0",
         "split": split,
         "graph": {
@@ -432,8 +429,7 @@ def build_instance(
             "count": len(mappings),
             "kinds": dict(Counter(m.kind.value for m in mappings.values())),
             "mean_confidence": round(
-                sum((m.confidence_score or 0.0) for m in mappings.values())
-                / max(len(mappings), 1),
+                sum((m.confidence_score or 0.0) for m in mappings.values()) / max(len(mappings), 1),
                 6,
             ),
         },
@@ -540,14 +536,12 @@ def main() -> int:
     # ----- Dataset metadata summary -----
     summary = {
         "version": "0.1.0",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "cogant_version": "0.1.0",
         "instance_count": len(all_instances),
         "node_count": len(all_node_rows),
         "edge_count": sum(i["graph"]["edge_count"] for i in all_instances),
-        "split_counts": {
-            split: split_totals.get(split, 0) for split in ("train", "val", "test")
-        },
+        "split_counts": {split: split_totals.get(split, 0) for split in ("train", "val", "test")},
         "role_distribution": dict(role_totals),
         "files": {
             "instances_jsonl": str(instances_jsonl.relative_to(PROJECT_ROOT)),
@@ -567,7 +561,7 @@ def main() -> int:
     print(f"  {nodes_jsonl.relative_to(PROJECT_ROOT)}")
     print(f"  {instances_jsonl.relative_to(PROJECT_ROOT)}")
     print(f"  {instances_dir.relative_to(PROJECT_ROOT)}/ ({len(all_instances)} files)")
-    print(f"  evaluation/dataset/dataset_summary.json")
+    print("  evaluation/dataset/dataset_summary.json")
     print()
     print(f"Instances : {len(all_instances)}")
     print(f"Nodes     : {len(all_node_rows)}")

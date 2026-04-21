@@ -63,7 +63,7 @@ import traceback
 from collections import Counter
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import cogant
@@ -120,7 +120,7 @@ def _run_forward(repo_path: str) -> Bundle:
     return runner.run(str(path), config)
 
 
-def analyze_repo(repo_path: str) -> Dict[str, Any]:
+def analyze_repo(repo_path: str) -> dict[str, Any]:
     """Return a JSON-ready summary of the forward pipeline on ``repo_path``.
 
     This is the core of the ``/analyze`` endpoint. We compute:
@@ -150,7 +150,7 @@ def analyze_repo(repo_path: str) -> Dict[str, Any]:
     # Markov blanket partition. The extractor can raise on very small or
     # degenerate graphs, so we catch and surface the error rather than
     # failing the whole request.
-    blanket_summary: Dict[str, Any]
+    blanket_summary: dict[str, Any]
     try:
         if program_graph is None:
             raise ValueError("program graph was not produced")
@@ -184,7 +184,7 @@ def analyze_repo(repo_path: str) -> Dict[str, Any]:
     }
 
 
-def explain_for_api(repo_path: str, node_query: str) -> Dict[str, Any]:
+def explain_for_api(repo_path: str, node_query: str) -> dict[str, Any]:
     """Wrap :func:`cogant.cli.explain.explain_node` and return its dict form.
 
     Args:
@@ -233,11 +233,11 @@ def _build_fastapi_app():  # pragma: no cover - exercised only when fastapi pres
     )
 
     @app.get("/health")
-    def health() -> Dict[str, str]:
+    def health() -> dict[str, str]:
         return {"status": "ok", "version": cogant.__version__}
 
     @app.post("/analyze")
-    def analyze(body: AnalyzeBody) -> Dict[str, Any]:
+    def analyze(body: AnalyzeBody) -> dict[str, Any]:
         try:
             return analyze_repo(body.repo_path)
         except FileNotFoundError as exc:
@@ -246,7 +246,7 @@ def _build_fastapi_app():  # pragma: no cover - exercised only when fastapi pres
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/explain/{node}")
-    def explain(node: str, repo_path: str) -> Dict[str, Any]:
+    def explain(node: str, repo_path: str) -> dict[str, Any]:
         try:
             return explain_for_api(repo_path, node)
         except FileNotFoundError as exc:
@@ -288,7 +288,7 @@ def _run_fastapi(host: str, port: int) -> int:  # pragma: no cover - runtime pat
 # ---------------------------------------------------------------------------
 
 
-def _send_json(handler, status: int, payload: Dict[str, Any]) -> None:
+def _send_json(handler, status: int, payload: dict[str, Any]) -> None:
     """Serialise ``payload`` as JSON and write it to the response stream."""
     body = json.dumps(payload, indent=2, default=str).encode("utf-8")
     handler.send_response(status)
@@ -474,7 +474,7 @@ def _run_stdlib(host: str, port: int) -> int:
 # ---------------------------------------------------------------------------
 
 
-def _parse_args(argv: Optional[list] = None) -> argparse.Namespace:
+def _parse_args(argv: list | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="cogant-demo-server",
         description="Run the COGANT demo REST server (FastAPI if available).",
@@ -498,7 +498,7 @@ def _parse_args(argv: Optional[list] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: Optional[list] = None) -> int:
+def main(argv: list | None = None) -> int:
     """Start the demo server. Returns process exit code."""
     logging.basicConfig(
         level=logging.INFO,

@@ -320,4 +320,3 @@ The 19 canonical Markdown sections, in order:
 - `docs/GNN_EXPORT.md` — GNN export contract detail
 - `docs/VALIDATION.md` — validation check list
 - `specs/schemas/` — machine-readable schema fragments
-

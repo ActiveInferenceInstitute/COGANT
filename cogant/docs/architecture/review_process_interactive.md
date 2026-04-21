@@ -6,4 +6,3 @@ for mapping in reviewer.get_unreviewed_mappings():
         reviewer.split_mapping(mapping.id, "human_reviewer", split_defs)
     else:
         reviewer.reject_mapping(mapping.id, "human_reviewer", reason)
-

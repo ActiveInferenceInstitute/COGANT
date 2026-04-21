@@ -49,4 +49,3 @@ Given execution traces, state space identifies:
 - Initial and accepting states
 
 This enables GNN training for behavioral prediction.
-

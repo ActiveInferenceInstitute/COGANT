@@ -54,7 +54,9 @@ def main() -> int:
 
     nodes_total = pg.node_count()
     nodes_with_prov = sum(
-        1 for n in pg.nodes.values() if getattr(n, "provenance", None) or getattr(n, "metadata", None)
+        1
+        for n in pg.nodes.values()
+        if getattr(n, "provenance", None) or getattr(n, "metadata", None)
     )
     edges_total = pg.edge_count()
     edges_with_prov = sum(
@@ -63,9 +65,7 @@ def main() -> int:
         if getattr(e, "evidence_sources", None) or getattr(e, "metadata", None)
     )
     mappings_total = len(mappings)
-    mappings_with_provenance = sum(
-        1 for m in mappings.values() if getattr(m, "provenance", None)
-    )
+    mappings_with_provenance = sum(1 for m in mappings.values() if getattr(m, "provenance", None))
 
     print("  coverage:")
     print(f"    nodes    : {nodes_with_prov}/{nodes_total} have metadata or provenance")

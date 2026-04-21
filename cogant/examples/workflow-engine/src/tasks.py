@@ -2,8 +2,8 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Optional
+from datetime import datetime
+from typing import Any
 
 
 @dataclass
@@ -12,7 +12,7 @@ class TaskResult:
 
     success: bool
     output: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     duration_seconds: float = 0.0
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
@@ -34,18 +34,18 @@ class Task(ABC):
 
     def __init__(self, config: TaskConfig):
         self.config = config
-        self.result: Optional[TaskResult] = None
+        self.result: TaskResult | None = None
         self.retry_count = 0
         self.created_at = datetime.utcnow()
-        self.started_at: Optional[datetime] = None
-        self.completed_at: Optional[datetime] = None
+        self.started_at: datetime | None = None
+        self.completed_at: datetime | None = None
 
     @abstractmethod
     def execute(self) -> TaskResult:
         """Execute the task."""
         pass
 
-    def get_duration(self) -> Optional[float]:
+    def get_duration(self) -> float | None:
         """Get task execution duration in seconds."""
         if self.started_at and self.completed_at:
             return (self.completed_at - self.started_at).total_seconds()
@@ -57,7 +57,7 @@ class Task(ABC):
 
     def get_retry_delay(self) -> int:
         """Get delay before next retry in seconds."""
-        return self.config.retry_delay_seconds * (2 ** self.retry_count)
+        return self.config.retry_delay_seconds * (2**self.retry_count)
 
 
 class SimpleTask(Task):
@@ -92,7 +92,7 @@ class SimpleTask(Task):
 class DatabaseTask(Task):
     """Task that performs database operations."""
 
-    def __init__(self, config: TaskConfig, query: str, params: Optional[dict] = None):
+    def __init__(self, config: TaskConfig, query: str, params: dict | None = None):
         super().__init__(config)
         self.query = query
         self.params = params or {}
@@ -128,8 +128,8 @@ class HttpTask(Task):
         config: TaskConfig,
         url: str,
         method: str = "GET",
-        headers: Optional[dict] = None,
-        data: Optional[dict] = None,
+        headers: dict | None = None,
+        data: dict | None = None,
     ):
         super().__init__(config)
         self.url = url

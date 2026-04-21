@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/dynamic/traces.py
-# hypothesis_version: 6.135.29
-
-[0.0, 1000.0, 'B', 'E', 'X', 'args', 'call_graph_size', 'cat', 'chrome', 'count', 'dur', 'duration_ms', 'events', 'format', 'max', 'mean', 'min', 'name', 'ph', 'pid', 'tid', 'total_events', 'trace', 'traceEvents', 'trace_count', 'ts', 'type', 'utf-8']

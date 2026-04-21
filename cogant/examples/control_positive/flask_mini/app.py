@@ -5,19 +5,19 @@ Exercises: class hierarchy, decorators as policies, request/response as observat
 middleware as hidden state transforms.
 """
 
-from typing import Callable, Dict, List, Any, Optional
+from collections.abc import Callable
 
 
 class Request:
     """HTTP request observation."""
 
-    def __init__(self, method: str, path: str, body: Optional[str] = None):
+    def __init__(self, method: str, path: str, body: str | None = None):
         self.method = method
         self.path = path
         self.body = body
         self.headers = {}
 
-    def get_header(self, name: str) -> Optional[str]:
+    def get_header(self, name: str) -> str | None:
         return self.headers.get(name)
 
 
@@ -88,29 +88,33 @@ class Application:
     """Mini HTTP application with state, routes, and middleware."""
 
     def __init__(self):
-        self.routes: List[Route] = []
-        self.middlewares: List[Middleware] = []
-        self.error_handlers: Dict[int, Callable] = {}
+        self.routes: list[Route] = []
+        self.middlewares: list[Middleware] = []
+        self.error_handlers: dict[int, Callable] = {}
 
     def route(self, path: str, method: str = "GET") -> Callable:
         """Decorator to register a route."""
+
         def decorator(func: Callable) -> Callable:
             self.routes.append(Route(path, method, func))
             return func
+
         return decorator
 
     def error_handler(self, status_code: int) -> Callable:
         """Decorator to register error handler."""
+
         def decorator(func: Callable) -> Callable:
             self.error_handlers[status_code] = func
             return func
+
         return decorator
 
     def use_middleware(self, middleware: Middleware) -> None:
         """Register a middleware."""
         self.middlewares.append(middleware)
 
-    def match_route(self, req: Request) -> Optional[Route]:
+    def match_route(self, req: Request) -> Route | None:
         """Find matching route for request."""
         for route in self.routes:
             if route.path == req.path and route.method == req.method:

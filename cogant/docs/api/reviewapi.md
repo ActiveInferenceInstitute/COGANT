@@ -50,4 +50,3 @@ review.edit_mapping("mapping_789", target="new_target", confidence=0.95)
 # Save curated bundle with review decisions
 review.save_curated_bundle("curated_bundle.json")
 ```
-

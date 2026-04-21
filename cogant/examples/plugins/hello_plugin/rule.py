@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 
 class HelloRule:
@@ -15,6 +15,6 @@ class HelloRule:
     name = "hello"
     version = "0.1.0"
 
-    def classify(self, node: Dict[str, Any]) -> str:
+    def classify(self, node: dict[str, Any]) -> str:
         """Classify a graph node -- always returns ``'hello'``."""
         return "hello"

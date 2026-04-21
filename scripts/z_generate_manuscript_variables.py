@@ -93,8 +93,7 @@ def load_metrics() -> dict:
         raise SystemExit(f"ERROR: could not parse {METRICS_PATH}: {exc}") from exc
     if not isinstance(data, dict):
         raise SystemExit(
-            f"ERROR: {METRICS_PATH} did not parse to a mapping "
-            f"(got {type(data).__name__})"
+            f"ERROR: {METRICS_PATH} did not parse to a mapping (got {type(data).__name__})"
         )
     return data
 

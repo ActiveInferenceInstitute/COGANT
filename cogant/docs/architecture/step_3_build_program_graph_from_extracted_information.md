@@ -50,4 +50,3 @@ All pipeline components are tested with:
 - Integration tests with real code samples
 - Error condition handling
 - Edge case coverage
-

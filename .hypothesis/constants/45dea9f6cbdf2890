@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/translate/rules/behavioral.py
-# hypothesis_version: 6.135.29
-
-[0.75, 0.8, 0.85, 0.9, 0.95, 'assertion_count', 'call_count', 'called_node_ids', 'event_bus', 'node_id', 'orchestrator', 'static_analysis', 'subscriber_count', 'test', 'test_assertion']

@@ -54,4 +54,3 @@ config = PipelineConfig(output_dir="output/")
 # Custom rules are loaded via config; see cogant.yaml plugins section
 bundle = runner.run("./my_project", config)
 ```
-

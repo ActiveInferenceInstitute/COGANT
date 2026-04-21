@@ -385,7 +385,7 @@ quality_gates:
     max_architectural_score: 40.0
     max_semantic_churn_score: 30.0
     action: fail  # or warn
-  
+
   metrics:
     min_complexity_score: 70.0
     min_coupling_score: 60.0

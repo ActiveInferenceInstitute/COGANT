@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/statespace/temporal.py
-# hypothesis_version: 6.135.29
-
-[0.0, 0.3, 0.7, 0.95, 'ASYNC_HANDLER', 'async', 'asynchronous', 'callback', 'event', 'event_driven', 'future', 'handler', 'hybrid', 'is_async', 'is_event', 'listener', 'parallel', 'promise', 'sequential', 'synchronous', 'trigger']

@@ -16,4 +16,3 @@ cogant render output/bundle.json --output output/site/
 # Validate results
 cogant validate output/bundle.json
 ```
-

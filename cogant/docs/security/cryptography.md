@@ -23,4 +23,3 @@ Future improvements:
 - [ ] Encrypted storage for sensitive data
 
 **No encryption of data at rest** (user responsible for disk encryption).
-

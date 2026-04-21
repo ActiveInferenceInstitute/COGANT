@@ -5,4 +5,3 @@ module_id = resolver.get_id(
     path="src/mymodule.py",
     qualified_name="myapp.core"
 )
-

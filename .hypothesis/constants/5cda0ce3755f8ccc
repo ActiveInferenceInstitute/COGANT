@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/api/bundle.py
-# hypothesis_version: 6.135.29
-
-['# GNN Model', '## Edge Indices', '## Node Features', 'ArtifactKey', 'Bundle', '_', '__dict__', '_json_default', '_process_model', '_program_graph', '_semantic_mappings', '_state_space_model', '_translation_engine', 'artifacts', 'errors', 'export_paths', 'file_count', 'graph', 'ingest', 'metadata', 'model_dump', 'normalized_facts', 'process', 'repo_snapshot', 'stage_results', 'statespace', 'target', 'to_dict', 'total_errors', 'translate', 'validate', 'w']

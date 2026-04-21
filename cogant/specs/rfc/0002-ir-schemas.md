@@ -1,7 +1,7 @@
 # RFC 0002: Internal Representation Schemas
 
-**Status**: Accepted  
-**Date**: 2024-2026  
+**Status**: Accepted
+**Date**: 2024-2026
 **Author**: COGANT Development Team
 
 ## Summary

@@ -5,8 +5,6 @@ Exercises: state machine patterns, operations as actions, display as observation
 history as hidden state, assertions as preferences.
 """
 
-from typing import List, Optional
-
 
 class Calculator:
     """A calculator with state machine semantics."""
@@ -16,7 +14,7 @@ class Calculator:
         self.display = "0"
         self.accumulator = 0
         self.operation = None
-        self.history: List[str] = []
+        self.history: list[str] = []
         self.new_input = True
 
     def input_digit(self, digit: int) -> str:
@@ -91,7 +89,7 @@ class Calculator:
         """Observation: current display value."""
         return self.display
 
-    def get_history(self) -> List[str]:
+    def get_history(self) -> list[str]:
         """Observation: operation history."""
         return self.history.copy()
 

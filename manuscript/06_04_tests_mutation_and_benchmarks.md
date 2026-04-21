@@ -87,4 +87,3 @@ Approximate stage breakdown from the same run: `ingest` 25--30 ms across all fix
 ## See also (MkDocs)
 
 Mutation-testing report (dated): [`../cogant/docs/evaluation/MUTATION_REPORT.md`](../cogant/docs/evaluation/MUTATION_REPORT.md). CI / docs build notes: [`../cogant/docs/CI.md`](../cogant/docs/CI.md).
-

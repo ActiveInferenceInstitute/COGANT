@@ -169,4 +169,3 @@ curl -s 'localhost:8080/explain/input_digit?repo_path=examples/control_positive/
 - No network access is required at runtime — the server's `/docs` endpoint
   redirects to the COGANT documentation URL but the engine itself is
   fully in-process.
-

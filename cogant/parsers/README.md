@@ -18,13 +18,13 @@ Each parser implements the `LanguagePlugin` protocol from `cogant.plugins.base`:
 class LanguagePlugin(Plugin):
     def parse(self, source_code: str) -> Dict[str, Any]:
         """Parse source code and return AST."""
-    
+
     def extract_symbols(self, ast: Dict) -> List[Dict]:
         """Extract symbols from AST."""
-    
+
     def extract_types(self, ast: Dict) -> Dict:
         """Extract type information."""
-    
+
     def resolve_imports(self, ast: Dict) -> List[str]:
         """Resolve import dependencies."""
 ```

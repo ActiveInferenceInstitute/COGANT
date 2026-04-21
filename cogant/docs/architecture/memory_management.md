@@ -14,4 +14,3 @@
 ### Memory Limits
 
 Target: <2GB for 1M function projects on 4GB machine
-

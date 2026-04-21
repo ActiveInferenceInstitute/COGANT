@@ -16,4 +16,3 @@ from cogant.translate.engine import TranslationEngine
 from cogant.translate.rules import *
 from cogant.translate.confidence import ConfidenceModel
 from cogant.translate.review import ReviewManager
-

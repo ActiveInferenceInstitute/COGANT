@@ -82,8 +82,8 @@ def main() -> int:
     n_actions = 2
 
     A = [
-        [0.9, 0.1, 0.2],    # obs 0: likely in state 0
-        [0.1, 0.9, 0.8],    # obs 1: likely in states 1 or 2
+        [0.9, 0.1, 0.2],  # obs 0: likely in state 0
+        [0.1, 0.9, 0.8],  # obs 1: likely in states 1 or 2
     ]
 
     B = [
@@ -102,9 +102,9 @@ def main() -> int:
         ],
     ]
 
-    C = [0.0, 1.0]        # Preference: prefer obs 1 (reward)
+    C = [0.0, 1.0]  # Preference: prefer obs 1 (reward)
 
-    D = [0.5, 0.3, 0.2]   # Prior belief: mostly state 0, less state 2
+    D = [0.5, 0.3, 0.2]  # Prior belief: mostly state 0, less state 2
 
     matrices_dict = {
         "A": A,
@@ -113,13 +113,13 @@ def main() -> int:
         "D": D,
     }
 
-    print(f"  matrices:")
+    print("  matrices:")
     print(f"    n_states={n_states}  n_obs={n_obs}  n_actions={n_actions}")
 
     # 2. Create runtime
-    print(f"\n  creating AgentRuntime...")
+    print("\n  creating AgentRuntime...")
     rt = AgentRuntime.from_matrices_dict(matrices_dict)
-    print(f"    ✓ runtime initialized")
+    print("    ✓ runtime initialized")
     print(f"    internal state: {len(rt.D)} states, {len(rt.A)} observations")
 
     # 3. Run multi-episode with learning
@@ -129,7 +129,7 @@ def main() -> int:
 
     print(f"\n  running {n_episodes} episodes × {steps_per_episode} steps:")
     print(f"    learning_rate={learning_rate}")
-    print(f"    " + "-" * 50)
+    print("    " + "-" * 50)
 
     result = rt.run_multi_episode(
         n_episodes=n_episodes,
@@ -138,34 +138,36 @@ def main() -> int:
     )
 
     # 4. Print per-episode summary
-    print(f"\n  episode results:")
+    print("\n  episode results:")
     for i, episode in enumerate(result.episodes):
         mean_vfe = episode.mean_free_energy
         final_vfe = episode.final_free_energy
-        print(f"    episode {i}: steps={len(episode.steps):2d}  "
-              f"mean_vfe={mean_vfe:+.4f}  final_vfe={final_vfe:+.4f}")
+        print(
+            f"    episode {i}: steps={len(episode.steps):2d}  "
+            f"mean_vfe={mean_vfe:+.4f}  final_vfe={final_vfe:+.4f}"
+        )
 
     # 5. Show D prior trajectory (learning)
-    print(f"\n  D prior trajectory (learning over episodes):")
+    print("\n  D prior trajectory (learning over episodes):")
     for i, D_snap in enumerate(result.D_trajectory):
         D_str = " ".join(f"{d:.3f}" for d in D_snap)
         print(f"    after ep {i}: D = [{D_str}]")
 
     # 6. Show A likelihood trajectory (sample first row)
-    print(f"\n  A matrix trajectory (first row only):")
+    print("\n  A matrix trajectory (first row only):")
     print(f"    initial:  {rt.A[0]}")
     # Note: A updates happen in-place during run_multi_episode, so
     # the current rt.A reflects the final learned state
     print(f"    final:    {rt.A[0]}")
 
     # 7. Print VFE trajectory and ASCII plot
-    print(f"\n  variational free energy trajectory:")
+    print("\n  variational free energy trajectory:")
     _plot_ascii_trajectory(result.vfe_trajectory)
 
     # 8. Summary stats
     if result.vfe_trajectory:
         vfe_delta = result.vfe_trajectory[-1] - result.vfe_trajectory[0]
-        print(f"\n  learning summary:")
+        print("\n  learning summary:")
         print(f"    vfe_delta (final - initial): {vfe_delta:+.4f}")
         print(f"    episode_count: {len(result.episodes)}")
         print(f"    learning_rate: {result.learning_rate}")

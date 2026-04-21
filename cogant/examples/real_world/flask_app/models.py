@@ -11,9 +11,10 @@ a typical Flask + SQLAlchemy application.
 from __future__ import annotations
 
 import uuid
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any
 
 
 class ValidationError(Exception):
@@ -81,8 +82,8 @@ class Model:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def to_dict(self) -> Dict[str, Any]:
-        out: Dict[str, Any] = {}
+    def to_dict(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
         for klass in type(self).__mro__:
             for key, value in vars(klass).items():
                 if isinstance(value, Field):
@@ -90,12 +91,10 @@ class Model:
         return out
 
     @classmethod
-    def validate(cls, data: Dict[str, Any]) -> None:
+    def validate(cls, data: dict[str, Any]) -> None:
         metadata = cls.__metadata__
         if metadata.primary_key not in data:
-            raise ValidationError(
-                f"{cls.__name__} requires primary key {metadata.primary_key!r}"
-            )
+            raise ValidationError(f"{cls.__name__} requires primary key {metadata.primary_key!r}")
 
 
 class User(Model):
@@ -142,15 +141,15 @@ class InMemorySession:
     """A toy stand-in for ``sqlalchemy.orm.Session``."""
 
     def __init__(self) -> None:
-        self._store: Dict[str, Dict[str, Model]] = {}
-        self._dirty: List[Model] = []
+        self._store: dict[str, dict[str, Model]] = {}
+        self._dirty: list[Model] = []
 
     def add(self, instance: Model) -> None:
         table = instance.__metadata__.tablename
         self._store.setdefault(table, {})[instance.id] = instance
         self._dirty.append(instance)
 
-    def get(self, model_cls: type, id_: str) -> Optional[Model]:
+    def get(self, model_cls: type, id_: str) -> Model | None:
         table = model_cls.__metadata__.tablename
         return self._store.get(table, {}).get(id_)
 

@@ -42,7 +42,7 @@ state_diagram = mermaid_gen.generate_state_diagram(state_space)
 
 # Dashboard
 dashboard = DashboardGenerator(
-    graph, state_space, process_model, 
+    graph, state_space, process_model,
     mappings, mermaid_diagrams, validation_report,
     repo_name="my_repo"
 )

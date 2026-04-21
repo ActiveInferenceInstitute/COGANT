@@ -36,4 +36,3 @@ Six progressive IRs, each adding semantic detail:
 4. **State Space IR**: Behavioral model
 5. **Process Model IR**: High-level control structures
 6. **Validation IR**: Quality metrics
-

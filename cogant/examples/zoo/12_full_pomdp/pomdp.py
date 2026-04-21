@@ -18,8 +18,8 @@ from __future__ import annotations
 import math
 import random
 
-
 # --- Hidden State ---
+
 
 class HiddenStateModel:
     """Discrete hidden state with Bayesian belief updates."""
@@ -45,6 +45,7 @@ class HiddenStateModel:
 
 
 # --- Observation ---
+
 
 class ObservationModel:
     """Generates noisy observations of hidden state."""
@@ -74,6 +75,7 @@ class ObservationModel:
 
 # --- Policy ---
 
+
 class PolicyHandler:
     """Selects actions based on expected free energy minimisation."""
 
@@ -100,6 +102,7 @@ class PolicyHandler:
 
 # --- Constraint ---
 
+
 class ConstraintChecker:
     """Validates that actions and states satisfy safety constraints."""
 
@@ -119,6 +122,7 @@ class ConstraintChecker:
 
 
 # --- Full Agent ---
+
 
 class FullPOMDPAgent:
     """Complete POMDP agent wiring all components together."""
@@ -170,4 +174,6 @@ if __name__ == "__main__":
         true_state = (t + 1) % 5
         result = agent.step(true_state)
         beliefs_str = [round(b, 3) for b in result["beliefs"]]
-        print(f"t={t} obs={result['observation']} act={result['action']} safe={result['safe']} beliefs={beliefs_str}")
+        print(
+            f"t={t} obs={result['observation']} act={result['action']} safe={result['safe']} beliefs={beliefs_str}"
+        )

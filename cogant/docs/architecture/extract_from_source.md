@@ -57,4 +57,3 @@ from cogant.static import TypeInferencer
 from pathlib import Path
 
 inferencer = TypeInferencer(repo_root=Path("."))
-

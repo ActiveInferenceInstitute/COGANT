@@ -6,4 +6,3 @@ edge = builder.add_edge(
     weight=1.0,
     evidence_sources=["static"]
 )
-

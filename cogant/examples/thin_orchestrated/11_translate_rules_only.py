@@ -72,12 +72,8 @@ def main() -> int:
     confidence_model = ConfidenceModel()
     confidence_model.score_batch(mappings)
 
-    by_role = Counter(
-        m.kind.value if hasattr(m.kind, "value") else str(m.kind) for m in mappings
-    )
-    by_prefix = Counter(
-        (m.id.split("_", 1)[0] if "_" in m.id else m.id) for m in mappings
-    )
+    by_role = Counter(m.kind.value if hasattr(m.kind, "value") else str(m.kind) for m in mappings)
+    by_prefix = Counter((m.id.split("_", 1)[0] if "_" in m.id else m.id) for m in mappings)
 
     print(f"\n  total mappings : {len(mappings)}")
     print("\n  by id prefix (rule family, descending):")

@@ -33,4 +33,3 @@ Validation creates immutable audit log:
 ```
 
 ---
-

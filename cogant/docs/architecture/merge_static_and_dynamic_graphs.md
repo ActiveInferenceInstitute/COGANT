@@ -35,4 +35,3 @@ from cogant.translate.rules import (
 )
 
 engine = TranslationEngine()
-

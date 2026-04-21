@@ -42,4 +42,3 @@ rule_sets:
 translation:
   rule_set: strict  # Use high-confidence rules only
 ```
-

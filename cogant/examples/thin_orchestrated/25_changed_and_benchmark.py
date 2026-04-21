@@ -82,7 +82,7 @@ def main() -> int:
 
     # 3. Demonstrate incremental config (without actually running a cached
     # version, since we're in a fresh checkout)
-    print(f"\n  incremental mode (python API):")
+    print("\n  incremental mode (python API):")
     print("  " + "-" * 56)
 
     incremental_config = PipelineConfig(
@@ -98,7 +98,7 @@ def main() -> int:
     print(f"    skip_stages: {incremental_config.skip_stages}")
 
     # 4. Show the difference using pure-Python graph building
-    print(f"\n  direct graph building (no pipeline):")
+    print("\n  direct graph building (no pipeline):")
     print("  " + "-" * 56)
 
     t0 = time.perf_counter()
@@ -110,11 +110,13 @@ def main() -> int:
     print(f"    graph edges: {pg.edge_count()}")
 
     # 5. Summary table
-    print(f"\n  timing summary:")
+    print("\n  timing summary:")
     print(f"  {'Method':<35} {'Time (ms)':<12} {'Speedup':<10}")
     print(f"  {'-' * 35} {'-' * 12} {'-' * 10}")
     print(f"  {'full pipeline run':<35} {dt_full:<12.1f} {'1.0x':<10}")
-    print(f"  {'direct graph building':<35} {dt_build:<12.1f} {f'{dt_full / dt_build:.1f}x' if dt_build > 0 else '?':<10}")
+    print(
+        f"  {'direct graph building':<35} {dt_build:<12.1f} {f'{dt_full / dt_build:.1f}x' if dt_build > 0 else '?':<10}"
+    )
 
     if dt_build > 0:
         ratio = dt_full / dt_build

@@ -19,4 +19,3 @@
 
 - Core rules: <5s (4 cores)
 - With heuristics: <10s (4 cores)
-

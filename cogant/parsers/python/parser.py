@@ -1,9 +1,9 @@
 """Python language parser plugin."""
 
 import sys
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Set
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 from parsers._base import CogantLanguagePlugin  # noqa: E402
 
@@ -12,7 +12,13 @@ _PY_ROOT = str(Path(__file__).parent.parent.parent / "py")
 if _PY_ROOT not in sys.path:
     sys.path.insert(0, _PY_ROOT)
 
-from cogant.static.parser import PythonASTParser, PythonModule, FunctionDef, ClassDef, ImportDef  # noqa: E402
+from cogant.static.parser import (  # noqa: E402
+    ClassDef,
+    FunctionDef,
+    ImportDef,
+    PythonASTParser,
+    PythonModule,
+)
 
 
 @dataclass
@@ -20,12 +26,12 @@ class ParseResult:
     """Result from parsing a file."""
 
     file_path: Path
-    classes: List[Dict[str, Any]] = field(default_factory=list)
-    functions: List[Dict[str, Any]] = field(default_factory=list)
-    imports: List[Dict[str, Any]] = field(default_factory=list)
-    assignments: List[Dict[str, Any]] = field(default_factory=list)
-    docstring: Optional[str] = None
-    errors: List[str] = field(default_factory=list)
+    classes: list[dict[str, Any]] = field(default_factory=list)
+    functions: list[dict[str, Any]] = field(default_factory=list)
+    imports: list[dict[str, Any]] = field(default_factory=list)
+    assignments: list[dict[str, Any]] = field(default_factory=list)
+    docstring: str | None = None
+    errors: list[str] = field(default_factory=list)
 
 
 class PythonLanguageParser(CogantLanguagePlugin):
@@ -40,7 +46,7 @@ class PythonLanguageParser(CogantLanguagePlugin):
         super().__init__()
         self.ast_parser = PythonASTParser()
 
-    def parse(self, source_code: str) -> Dict[str, Any]:
+    def parse(self, source_code: str) -> dict[str, Any]:
         """Parse Python source code and return AST.
 
         Args:
@@ -52,7 +58,7 @@ class PythonLanguageParser(CogantLanguagePlugin):
         module = self.ast_parser.parse_string(source_code)
         return self._module_to_dict(module)
 
-    def extract_symbols(self, ast: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def extract_symbols(self, ast: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract symbols from AST.
 
         Args:
@@ -65,29 +71,33 @@ class PythonLanguageParser(CogantLanguagePlugin):
 
         # Extract classes
         for cls in ast.get("classes", []):
-            symbols.append({
-                "type": "class",
-                "name": cls["name"],
-                "line_start": cls["line_start"],
-                "line_end": cls["line_end"],
-                "bases": cls.get("bases", []),
-                "methods": [m["name"] for m in cls.get("methods", [])],
-            })
+            symbols.append(
+                {
+                    "type": "class",
+                    "name": cls["name"],
+                    "line_start": cls["line_start"],
+                    "line_end": cls["line_end"],
+                    "bases": cls.get("bases", []),
+                    "methods": [m["name"] for m in cls.get("methods", [])],
+                }
+            )
 
         # Extract functions
         for func in ast.get("functions", []):
-            symbols.append({
-                "type": "function",
-                "name": func["name"],
-                "line_start": func["line_start"],
-                "line_end": func["line_end"],
-                "args": func.get("args", []),
-                "parent": func.get("parent"),
-            })
+            symbols.append(
+                {
+                    "type": "function",
+                    "name": func["name"],
+                    "line_start": func["line_start"],
+                    "line_end": func["line_end"],
+                    "args": func.get("args", []),
+                    "parent": func.get("parent"),
+                }
+            )
 
         return symbols
 
-    def extract_types(self, ast: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_types(self, ast: dict[str, Any]) -> dict[str, Any]:
         """Extract type information from AST.
 
         Args:
@@ -96,46 +106,48 @@ class PythonLanguageParser(CogantLanguagePlugin):
         Returns:
             Type information dictionary.
         """
-        types = {
-            "classes": [],
-            "functions": [],
-            "variables": []
-        }
+        types = {"classes": [], "functions": [], "variables": []}
 
         # Class type info
         for cls in ast.get("classes", []):
-            types["classes"].append({
-                "name": cls["name"],
-                "bases": cls.get("bases", []),
-                "methods": [
-                    {
-                        "name": m["name"],
-                        "return_type": m.get("return_annotation"),
-                        "args": m.get("args", [])
-                    }
-                    for m in cls.get("methods", [])
-                ]
-            })
+            types["classes"].append(
+                {
+                    "name": cls["name"],
+                    "bases": cls.get("bases", []),
+                    "methods": [
+                        {
+                            "name": m["name"],
+                            "return_type": m.get("return_annotation"),
+                            "args": m.get("args", []),
+                        }
+                        for m in cls.get("methods", [])
+                    ],
+                }
+            )
 
         # Function type info
         for func in ast.get("functions", []):
-            types["functions"].append({
-                "name": func["name"],
-                "return_type": func.get("return_annotation"),
-                "args": func.get("args", [])
-            })
+            types["functions"].append(
+                {
+                    "name": func["name"],
+                    "return_type": func.get("return_annotation"),
+                    "args": func.get("args", []),
+                }
+            )
 
         # Variable type info
         for assign in ast.get("assignments", []):
-            types["variables"].append({
-                "name": assign["target_name"],
-                "type": assign.get("annotation"),
-                "scope": assign.get("parent_scope")
-            })
+            types["variables"].append(
+                {
+                    "name": assign["target_name"],
+                    "type": assign.get("annotation"),
+                    "scope": assign.get("parent_scope"),
+                }
+            )
 
         return types
 
-    def resolve_imports(self, ast: Dict[str, Any]) -> List[str]:
+    def resolve_imports(self, ast: dict[str, Any]) -> list[str]:
         """Resolve import dependencies from AST.
 
         Args:
@@ -166,7 +178,7 @@ class PythonLanguageParser(CogantLanguagePlugin):
         module = self.ast_parser.parse_file(file_path)
         return self._module_to_parse_result(module)
 
-    def extract_symbols_from_file(self, file_path: Path) -> List[Dict[str, Any]]:
+    def extract_symbols_from_file(self, file_path: Path) -> list[dict[str, Any]]:
         """Extract symbols from a Python file.
 
         Args:
@@ -179,28 +191,32 @@ class PythonLanguageParser(CogantLanguagePlugin):
 
         symbols = []
         for cls in parse_result.classes:
-            symbols.append({
-                "type": "class",
-                "name": cls["name"],
-                "line_start": cls["line_start"],
-                "line_end": cls["line_end"],
-            })
+            symbols.append(
+                {
+                    "type": "class",
+                    "name": cls["name"],
+                    "line_start": cls["line_start"],
+                    "line_end": cls["line_end"],
+                }
+            )
 
         for func in parse_result.functions:
-            symbols.append({
-                "type": "function",
-                "name": func["name"],
-                "line_start": func["line_start"],
-                "line_end": func["line_end"],
-            })
+            symbols.append(
+                {
+                    "type": "function",
+                    "name": func["name"],
+                    "line_start": func["line_start"],
+                    "line_end": func["line_end"],
+                }
+            )
 
         return symbols
 
     def extract_calls(
         self,
         source_or_path: Any,
-        file_path: Optional[Path] = None,
-    ) -> List[Dict[str, Any]]:
+        file_path: Path | None = None,
+    ) -> list[dict[str, Any]]:
         """Extract function/method calls from a file or source string.
 
         Delegates to :class:`cogant.static.calls.CallGraphBuilder` and
@@ -224,7 +240,7 @@ class PythonLanguageParser(CogantLanguagePlugin):
         from cogant.static.calls import CallEdge, CallGraphBuilder
 
         # Figure out whether we were handed a path or source.
-        source: Optional[str] = None
+        source: str | None = None
         resolved_path: Path
 
         if isinstance(source_or_path, (str, Path)):
@@ -232,9 +248,8 @@ class PythonLanguageParser(CogantLanguagePlugin):
             # Heuristic: if the string looks like a path that exists, treat
             # it as a file; if it contains newlines or Python keywords, treat
             # it as source; otherwise fall back to path semantics.
-            looks_like_source = (
-                isinstance(source_or_path, str)
-                and ("\n" in source_or_path or len(source_or_path) > 260)
+            looks_like_source = isinstance(source_or_path, str) and (
+                "\n" in source_or_path or len(source_or_path) > 260
             )
             if looks_like_source and file_path is not None:
                 source = source_or_path  # type: ignore[assignment]
@@ -254,9 +269,7 @@ class PythonLanguageParser(CogantLanguagePlugin):
 
         try:
             if source is not None:
-                edges: List[CallEdge] = builder.extract_calls_from_source(
-                    source, resolved_path
-                )
+                edges: list[CallEdge] = builder.extract_calls_from_source(source, resolved_path)
             elif resolved_path.exists():
                 edges = builder.extract_calls_from_file(resolved_path)
             else:
@@ -281,7 +294,7 @@ class PythonLanguageParser(CogantLanguagePlugin):
             for edge in edges
         ]
 
-    def get_node_kinds(self) -> Set[str]:
+    def get_node_kinds(self) -> set[str]:
         """Get supported node kinds.
 
         Returns:
@@ -297,7 +310,7 @@ class PythonLanguageParser(CogantLanguagePlugin):
             "AnnAssign",
         }
 
-    def _module_to_dict(self, module: PythonModule) -> Dict[str, Any]:
+    def _module_to_dict(self, module: PythonModule) -> dict[str, Any]:
         """Convert PythonModule to dictionary.
 
         Args:
@@ -335,7 +348,7 @@ class PythonLanguageParser(CogantLanguagePlugin):
             errors=module.errors,
         )
 
-    def _class_to_dict(self, cls: ClassDef) -> Dict[str, Any]:
+    def _class_to_dict(self, cls: ClassDef) -> dict[str, Any]:
         """Convert ClassDef to dictionary.
 
         Args:
@@ -355,7 +368,7 @@ class PythonLanguageParser(CogantLanguagePlugin):
             "attributes": cls.attributes,
         }
 
-    def _function_to_dict(self, func: FunctionDef) -> Dict[str, Any]:
+    def _function_to_dict(self, func: FunctionDef) -> dict[str, Any]:
         """Convert FunctionDef to dictionary.
 
         Args:
@@ -376,7 +389,7 @@ class PythonLanguageParser(CogantLanguagePlugin):
             "is_async": func.is_async,
         }
 
-    def _import_to_dict(self, imp: ImportDef) -> Dict[str, Any]:
+    def _import_to_dict(self, imp: ImportDef) -> dict[str, Any]:
         """Convert ImportDef to dictionary.
 
         Args:
@@ -392,7 +405,7 @@ class PythonLanguageParser(CogantLanguagePlugin):
             "line_num": imp.line_num,
         }
 
-    def _assignment_to_dict(self, assign) -> Dict[str, Any]:
+    def _assignment_to_dict(self, assign) -> dict[str, Any]:
         """Convert AssignmentDef to dictionary.
 
         Args:

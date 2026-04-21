@@ -39,4 +39,3 @@ All IRs enforced with:
 - Schema validation (JSON schema)
 - Field bounds checking
 - Enum validation (no unknown variants)
-

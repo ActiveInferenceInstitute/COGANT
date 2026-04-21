@@ -28,7 +28,7 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Run COGANT
         run: |
           cogant translate ./src \
@@ -41,4 +41,3 @@ jobs:
       #   with:
       #     sarif_file: results.sarif
 ```
-

@@ -163,4 +163,3 @@ so `min = count_origin` and the per-role ratio jumps to 1.0.  ∎
 Formal statement: [`../cogant/docs/theory/isomorphism.md`](../cogant/docs/theory/isomorphism.md), [`../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md`](../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md).
 
 ---
-

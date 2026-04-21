@@ -66,4 +66,3 @@ class CustomExportPlugin(ExportPlugin):
         # Return format info
         return {}
 ```
-

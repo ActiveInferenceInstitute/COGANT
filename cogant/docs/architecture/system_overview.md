@@ -42,4 +42,3 @@ COGANT is a layered system with clear separation of concerns:
 │ - Index structures                          │
 └─────────────────────────────────────────────┘
 ```
-

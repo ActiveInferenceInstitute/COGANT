@@ -24,7 +24,6 @@ from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.static.parser import PythonASTParser
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_TARGET = REPO_ROOT / "examples" / "control_positive" / "event_pipeline"
 
@@ -93,9 +92,7 @@ def build_rich_graph(repo_path: Path) -> ProgramGraph:
     primitive.
     """
     ingester = RepoIngester()
-    snapshot = ingester.ingest_local(
-        repo_path, include_test_files=True, compute_checksums=False
-    )
+    snapshot = ingester.ingest_local(repo_path, include_test_files=True, compute_checksums=False)
     parser = PythonASTParser()
     parsed: dict[Path, object] = {}
     for finfo in snapshot.files:
@@ -135,9 +132,7 @@ def build_rich_graph(repo_path: Path) -> ProgramGraph:
 
             for method in getattr(cls, "methods", []) or []:
                 method_qname = f"{class_qname}.{method.name}"
-                method_kind = (
-                    NodeKind.METHOD if hasattr(NodeKind, "METHOD") else NodeKind.FUNCTION
-                )
+                method_kind = NodeKind.METHOD if hasattr(NodeKind, "METHOD") else NodeKind.FUNCTION
                 method_node = builder.add_node(
                     kind=method_kind,
                     name=method.name,

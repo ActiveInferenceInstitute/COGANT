@@ -10,4 +10,3 @@
 | Case Studies | | ✓ | ✓ |
 | Video Tutorials | | | ✓ |
 | Academic Papers | | | ✓ |
-

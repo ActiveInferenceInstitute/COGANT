@@ -4,6 +4,7 @@
 Each target writes under ``output_root/<id>/`` (bundle, ``gnn_package/``, scans, site,
 PNGs, validation). Local targets use ``path``; remote targets use ``git_url`` (clone to
 ``<id>/_git_source/``). See staging README.md (Batch outputs)."""
+
 from __future__ import annotations
 
 import argparse
@@ -257,19 +258,28 @@ def _write_cross_target_summary(
             gnn_val = (sr.get("validate", {}) or {}).get("gnn_validation", {}) or {}
             graph_stage = sr.get("graph", {}) or {}
             translate_stage = sr.get("translate", {}) or {}
-            row.update({
-                "score": gnn_val.get("score"),
-                "valid": gnn_val.get("valid"),
-                "node_count": graph_stage.get("node_count") or graph_stage.get("nodes"),
-                "edge_count": graph_stage.get("edge_count") or graph_stage.get("edges"),
-                "mapping_count": translate_stage.get("mapping_count"),
-                "gnn_package_files": len(list((run_dir / "gnn_package").glob("*"))) if (run_dir / "gnn_package").is_dir() else 0,
-                "has_site": (run_dir / "site" / "index.html").is_file(),
-                "has_reverse": any((run_dir / "roundtrip" / "reverse").glob("*")) if (run_dir / "roundtrip" / "reverse").is_dir() else False,
-                "has_analysis": (run_dir / "analysis").is_dir() and any((run_dir / "analysis").iterdir()),
-                "has_exports": (run_dir / "exports").is_dir() and any((run_dir / "exports").iterdir()),
-                "has_diagrams": (run_dir / "diagrams").is_dir() and any((run_dir / "diagrams").iterdir()),
-            })
+            row.update(
+                {
+                    "score": gnn_val.get("score"),
+                    "valid": gnn_val.get("valid"),
+                    "node_count": graph_stage.get("node_count") or graph_stage.get("nodes"),
+                    "edge_count": graph_stage.get("edge_count") or graph_stage.get("edges"),
+                    "mapping_count": translate_stage.get("mapping_count"),
+                    "gnn_package_files": len(list((run_dir / "gnn_package").glob("*")))
+                    if (run_dir / "gnn_package").is_dir()
+                    else 0,
+                    "has_site": (run_dir / "site" / "index.html").is_file(),
+                    "has_reverse": any((run_dir / "roundtrip" / "reverse").glob("*"))
+                    if (run_dir / "roundtrip" / "reverse").is_dir()
+                    else False,
+                    "has_analysis": (run_dir / "analysis").is_dir()
+                    and any((run_dir / "analysis").iterdir()),
+                    "has_exports": (run_dir / "exports").is_dir()
+                    and any((run_dir / "exports").iterdir()),
+                    "has_diagrams": (run_dir / "diagrams").is_dir()
+                    and any((run_dir / "diagrams").iterdir()),
+                }
+            )
         else:
             row["score"] = None
             row["valid"] = None
@@ -277,13 +287,16 @@ def _write_cross_target_summary(
 
     summary_json = output_root / "summary.json"
     summary_json.write_text(
-        json.dumps({
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-            "target_count": len(rows),
-            "total_wall_time_s": manifest.get("summary", {}).get("total_wall_time_s"),
-            "failed_steps": manifest.get("summary", {}).get("failed_steps", []),
-            "rows": rows,
-        }, indent=2),
+        json.dumps(
+            {
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "target_count": len(rows),
+                "total_wall_time_s": manifest.get("summary", {}).get("total_wall_time_s"),
+                "failed_steps": manifest.get("summary", {}).get("failed_steps", []),
+                "rows": rows,
+            },
+            indent=2,
+        ),
         encoding="utf-8",
     )
 
@@ -294,7 +307,9 @@ def _write_cross_target_summary(
     lines.append(f"- Total wall time: **{manifest.get('summary', {}).get('total_wall_time_s')}s**")
     lines.append(f"- Failed steps: **{len(manifest.get('summary', {}).get('failed_steps', []))}**")
     lines.append("")
-    lines.append("| id | kind | score | nodes | edges | mappings | gnn_pkg | site | reverse | analysis | exports | diagrams |")
+    lines.append(
+        "| id | kind | score | nodes | edges | mappings | gnn_pkg | site | reverse | analysis | exports | diagrams |"
+    )
     lines.append("|---|---|---:|---:|---:|---:|---:|:---:|:---:|:---:|:---:|:---:|")
     for r in rows:
         chk = lambda b: "✓" if b else "-"  # noqa: E731
@@ -392,7 +407,13 @@ def main() -> int:
             if manuscript.get("strict"):
                 margv.append("--strict")
             template_root = STAGING_ROOT.parent.parent
-            code = run_cmd(margv, cwd=template_root, dry_run=args.dry_run, log_fp=log_fp, step="manuscript_variables")
+            code = run_cmd(
+                margv,
+                cwd=template_root,
+                dry_run=args.dry_run,
+                log_fp=log_fp,
+                step="manuscript_variables",
+            )
             if check(code, "manuscript_variables"):
                 return code
 
@@ -497,7 +518,13 @@ def main() -> int:
                     tr.append("--layout-output")
                 if steps.get("no_dynamic"):
                     tr.append("--no-dynamic")
-                code = run_cmd(tr, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"translate:{tid}")
+                code = run_cmd(
+                    tr,
+                    cwd=package_root,
+                    dry_run=args.dry_run,
+                    log_fp=log_fp,
+                    step=f"translate:{tid}",
+                )
                 entry["commands"].append({"cmd": tr, "exit": code})
                 if check(code, f"translate:{tid}"):
                     return code
@@ -549,7 +576,13 @@ def main() -> int:
                     "--format",
                     fmt,
                 ]
-                code = run_cmd(ex, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"export_gnn:{tid}")
+                code = run_cmd(
+                    ex,
+                    cwd=package_root,
+                    dry_run=args.dry_run,
+                    log_fp=log_fp,
+                    step=f"export_gnn:{tid}",
+                )
                 entry["commands"].append({"cmd": ex, "exit": code})
                 if check(code, f"export-gnn:{tid}"):
                     return code
@@ -565,14 +598,18 @@ def main() -> int:
                     "--output",
                     str(site_dir),
                 ]
-                code = run_cmd(rv, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"render:{tid}")
+                code = run_cmd(
+                    rv, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"render:{tid}"
+                )
                 entry["commands"].append({"cmd": rv, "exit": code})
                 if check(code, f"render:{tid}"):
                     return code
 
             if steps.get("viz_png") and (args.dry_run or run_dir.is_dir()):
                 vz = ["uv", "run", "cogant", "viz", str(run_dir)]
-                code = run_cmd(vz, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"viz:{tid}")
+                code = run_cmd(
+                    vz, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"viz:{tid}"
+                )
                 entry["commands"].append({"cmd": vz, "exit": code})
                 if check(code, f"viz:{tid}"):
                     return code
@@ -646,44 +683,92 @@ def main() -> int:
 
             if steps.get("analyze_graph") and (args.dry_run or target_path.exists()):
                 ag = [
-                    "uv", "run", "python", str(batch_api), "graph-analysis",
-                    "--run-dir", str(run_dir),
-                    "--target", str(target_path),
+                    "uv",
+                    "run",
+                    "python",
+                    str(batch_api),
+                    "graph-analysis",
+                    "--run-dir",
+                    str(run_dir),
+                    "--target",
+                    str(target_path),
                 ]
-                code = run_cmd(ag, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"analyze_graph:{tid}")
+                code = run_cmd(
+                    ag,
+                    cwd=package_root,
+                    dry_run=args.dry_run,
+                    log_fp=log_fp,
+                    step=f"analyze_graph:{tid}",
+                )
                 entry["commands"].append({"cmd": ag, "exit": code})
                 if check(code, f"analyze_graph:{tid}"):
                     return code
 
             if steps.get("analyze_static") and (args.dry_run or target_path.exists()):
                 asta = [
-                    "uv", "run", "python", str(batch_api), "static-analysis",
-                    "--run-dir", str(run_dir),
-                    "--target", str(target_path),
+                    "uv",
+                    "run",
+                    "python",
+                    str(batch_api),
+                    "static-analysis",
+                    "--run-dir",
+                    str(run_dir),
+                    "--target",
+                    str(target_path),
                 ]
-                code = run_cmd(asta, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"analyze_static:{tid}")
+                code = run_cmd(
+                    asta,
+                    cwd=package_root,
+                    dry_run=args.dry_run,
+                    log_fp=log_fp,
+                    step=f"analyze_static:{tid}",
+                )
                 entry["commands"].append({"cmd": asta, "exit": code})
                 if check(code, f"analyze_static:{tid}"):
                     return code
 
             if steps.get("export_multi") and (args.dry_run or bundle_json.is_file()):
                 exm = [
-                    "uv", "run", "python", str(batch_api), "multi-export",
-                    "--run-dir", str(run_dir),
-                    "--bundle", str(bundle_json),
+                    "uv",
+                    "run",
+                    "python",
+                    str(batch_api),
+                    "multi-export",
+                    "--run-dir",
+                    str(run_dir),
+                    "--bundle",
+                    str(bundle_json),
                 ]
-                code = run_cmd(exm, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"export_multi:{tid}")
+                code = run_cmd(
+                    exm,
+                    cwd=package_root,
+                    dry_run=args.dry_run,
+                    log_fp=log_fp,
+                    step=f"export_multi:{tid}",
+                )
                 entry["commands"].append({"cmd": exm, "exit": code})
                 if check(code, f"export_multi:{tid}"):
                     return code
 
             if steps.get("visualize_diagrams") and (args.dry_run or target_path.exists()):
                 vzd = [
-                    "uv", "run", "python", str(batch_api), "visualize",
-                    "--run-dir", str(run_dir),
-                    "--target", str(target_path),
+                    "uv",
+                    "run",
+                    "python",
+                    str(batch_api),
+                    "visualize",
+                    "--run-dir",
+                    str(run_dir),
+                    "--target",
+                    str(target_path),
                 ]
-                code = run_cmd(vzd, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"visualize:{tid}")
+                code = run_cmd(
+                    vzd,
+                    cwd=package_root,
+                    dry_run=args.dry_run,
+                    log_fp=log_fp,
+                    step=f"visualize:{tid}",
+                )
                 entry["commands"].append({"cmd": vzd, "exit": code})
                 if check(code, f"visualize:{tid}"):
                     return code

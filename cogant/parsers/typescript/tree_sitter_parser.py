@@ -13,23 +13,23 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any
 
 _PY_ROOT = Path(__file__).resolve().parent.parent.parent / "py"
 if str(_PY_ROOT) not in sys.path:
     sys.path.insert(0, str(_PY_ROOT))
 
-from cogant.plugins.base import LanguagePlugin, PluginMetadata  # noqa: E402
 from cogant.parsers.tree_sitter_base import (  # noqa: E402
     ParsedFile,
     get_tree_sitter_parser,
 )
+from cogant.plugins.base import LanguagePlugin, PluginMetadata  # noqa: E402
 
 
 class TypeScriptTreeSitterParser(LanguagePlugin):
     """Tree-sitter backed TypeScript / TSX parser."""
 
-    SUPPORTED_EXTENSIONS: List[str] = [".ts", ".tsx"]
+    SUPPORTED_EXTENSIONS: list[str] = [".ts", ".tsx"]
 
     def __init__(self) -> None:
         metadata = PluginMetadata(
@@ -39,14 +39,14 @@ class TypeScriptTreeSitterParser(LanguagePlugin):
             description="tree-sitter backed parser for TypeScript / TSX",
         )
         super().__init__(metadata)
-        self.supported_languages: Set[str] = {"typescript", "tsx"}
-        self.supported_extensions: Set[str] = set(self.SUPPORTED_EXTENSIONS)
+        self.supported_languages: set[str] = {"typescript", "tsx"}
+        self.supported_extensions: set[str] = set(self.SUPPORTED_EXTENSIONS)
 
     # ------------------------------------------------------------------
     # Plugin lifecycle
     # ------------------------------------------------------------------
 
-    def initialize(self, config: Dict[str, Any]) -> None:
+    def initialize(self, config: dict[str, Any]) -> None:
         get_tree_sitter_parser()
 
     def shutdown(self) -> None:
@@ -56,13 +56,11 @@ class TypeScriptTreeSitterParser(LanguagePlugin):
     # LanguagePlugin API
     # ------------------------------------------------------------------
 
-    def parse(self, source_code: str, file_path: str = "") -> Dict[str, Any]:
+    def parse(self, source_code: str, file_path: str = "") -> dict[str, Any]:
         """Parse TypeScript source; switches to TSX grammar for ``.tsx``."""
         language = "tsx" if file_path.lower().endswith(".tsx") else "typescript"
         parser = get_tree_sitter_parser()
-        result: ParsedFile | None = parser.parse_source(
-            source_code, language, file_path
-        )
+        result: ParsedFile | None = parser.parse_source(source_code, language, file_path)
         if result is None:
             return {
                 "symbols": [],
@@ -79,10 +77,10 @@ class TypeScriptTreeSitterParser(LanguagePlugin):
             "errors": result.errors,
         }
 
-    def extract_symbols(self, ast: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def extract_symbols(self, ast: dict[str, Any]) -> list[dict[str, Any]]:
         return list(ast.get("symbols", []))
 
-    def extract_types(self, ast: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_types(self, ast: dict[str, Any]) -> dict[str, Any]:
         """Return a lightweight type map: interfaces and class names.
 
         Tree-sitter does not resolve type annotations, so this is a
@@ -93,23 +91,21 @@ class TypeScriptTreeSitterParser(LanguagePlugin):
         classes = [s for s in ast.get("symbols", []) if s.get("kind") == "class"]
         return {
             "interfaces": [
-                {"name": s["name"], "qualified_name": s["qualified_name"]}
-                for s in interfaces
+                {"name": s["name"], "qualified_name": s["qualified_name"]} for s in interfaces
             ],
             "classes": [
-                {"name": s["name"], "qualified_name": s["qualified_name"]}
-                for s in classes
+                {"name": s["name"], "qualified_name": s["qualified_name"]} for s in classes
             ],
         }
 
-    def resolve_imports(self, ast: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def resolve_imports(self, ast: dict[str, Any]) -> list[dict[str, Any]]:
         return list(ast.get("imports", []))
 
     # ------------------------------------------------------------------
     # Convenience helpers
     # ------------------------------------------------------------------
 
-    def parse_file(self, file_path: Path) -> Dict[str, Any]:
+    def parse_file(self, file_path: Path) -> dict[str, Any]:
         if isinstance(file_path, str):
             file_path = Path(file_path)
         parser = get_tree_sitter_parser()
@@ -131,15 +127,13 @@ class TypeScriptTreeSitterParser(LanguagePlugin):
             "errors": result.errors,
         }
 
-    def extract_calls(
-        self, source_code: str = "", file_path: str = ""
-    ) -> List[Dict[str, Any]]:
+    def extract_calls(self, source_code: str = "", file_path: str = "") -> list[dict[str, Any]]:
         language = "tsx" if file_path.lower().endswith(".tsx") else "typescript"
         parser = get_tree_sitter_parser()
         result = parser.parse_source(source_code, language, file_path)
         return list(result.calls) if result else []
 
-    def get_node_kinds(self) -> Set[str]:
+    def get_node_kinds(self) -> set[str]:
         return {
             "ClassDeclaration",
             "InterfaceDeclaration",

@@ -65,4 +65,6 @@ if __name__ == "__main__":
     for t in range(5):
         true_state = t % 3
         action = agent.step(true_state)
-        print(f"t={t} true={true_state} action={action} beliefs={[round(s, 2) for s in agent.state]}")
+        print(
+            f"t={t} true={true_state} action={action} beliefs={[round(s, 2) for s in agent.state]}"
+        )

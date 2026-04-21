@@ -6,16 +6,16 @@ The `PipelineRunner` executes an ordered list of **runner stages** (currently **
 
 Default order:
 
-1. **ingest** — snapshot repository, enumerate files  
-2. **static** — AST / symbols / per-file extraction  
-3. **normalize** — canonicalize representations before graph build  
-4. **graph** — build the typed program graph  
-5. **dynamic** — optional coverage/trace enrichment  
-6. **translate** — fixpoint translation rules and semantic roles  
-7. **statespace** — compile state-space model  
-8. **process** — process / execution sketch  
-9. **export** — GNN bundle and companion artifacts  
-10. **validate** — integrity and schema checks  
+1. **ingest** — snapshot repository, enumerate files
+2. **static** — AST / symbols / per-file extraction
+3. **normalize** — canonicalize representations before graph build
+4. **graph** — build the typed program graph
+5. **dynamic** — optional coverage/trace enrichment
+6. **translate** — fixpoint translation rules and semantic roles
+7. **statespace** — compile state-space model
+8. **process** — process / execution sketch
+9. **export** — GNN bundle and companion artifacts
+10. **validate** — integrity and schema checks
 
 Markov blanket extraction and GNN matrix formatting run inside the orchestrated pipeline where the implementation wires them (typically around state-space, process, and export). The **reverse** synthesizer (`cogant.reverse`) is a separate workflow from a completed bundle, not a `PipelineRunner` stage in the default list.
 

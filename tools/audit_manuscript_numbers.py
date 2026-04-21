@@ -31,12 +31,12 @@ Usage:
     python tools/audit_manuscript_numbers.py
     python tools/audit_manuscript_numbers.py --manuscript-dir manuscript/ --output path/to/audit.md
 """
+
 import argparse
 import re
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 # Allow running from repo root or from tools/ directory — all paths are
 # anchored on ``__file__``, so the cwd at call time is irrelevant.
@@ -87,7 +87,7 @@ FALLBACK_METRICS: dict = {
             "max_epsilon": 1.0,
             "threshold_isomorphic": 0.8,
             "threshold_approximate": 0.5,
-        }
+        },
     },
     "pipeline": {
         "stage_count": 10,
@@ -118,6 +118,7 @@ def load_metrics() -> tuple[dict, bool]:
     if METRICS_PATH.exists():
         try:
             import yaml
+
             with open(METRICS_PATH) as f:
                 return yaml.safe_load(f), False
         except Exception as e:
@@ -145,7 +146,7 @@ KNOWN_VALUES = [
     ("test_count_passing", "testing.test_count_passing", None),
     ("test_count_total", "testing.test_count_total", None),
     ("test_count_skipped", "testing.test_count_skipped", None),
-    ("coverage_percent", "testing.coverage_percent", 0.5),   # within 0.5 pp
+    ("coverage_percent", "testing.coverage_percent", 0.5),  # within 0.5 pp
     # Package version
     ("version", "package.version", None),
     # Roundtrip evaluation
@@ -191,22 +192,58 @@ EXPECTED_MISMATCHES = [
     ("version", "0.2.0", "Historical reference: describes items shipped in v0.2.0"),
     ("version", "0.1.0", "Historical reference: describes v0.1.0 behaviour or table label"),
     # Epsilon threshold definitions (ε ≥ 0.5 is APPROXIMATE; ε ≥ 0.8 is ISOMORPHIC tier boundary)
-    ("mean_epsilon", "0.5", "Threshold definition: ε ≥ 0.5 defines APPROXIMATE tier boundary, not a data claim"),
-    ("mean_epsilon", "0.8", "Threshold definition: ε ≥ 0.8 defines ISOMORPHIC tier boundary, not a data claim"),
+    (
+        "mean_epsilon",
+        "0.5",
+        "Threshold definition: ε ≥ 0.5 defines APPROXIMATE tier boundary, not a data claim",
+    ),
+    (
+        "mean_epsilon",
+        "0.8",
+        "Threshold definition: ε ≥ 0.8 defines ISOMORPHIC tier boundary, not a data claim",
+    ),
     # Per-target epsilon values extracted from S01 table rows (individual targets, not mean)
-    ("mean_epsilon", "0.8638", "Per-target value: dateutil ε=0.8638 (individual target, matches METRICS.yaml median_epsilon)"),
+    (
+        "mean_epsilon",
+        "0.8638",
+        "Per-target value: dateutil ε=0.8638 (individual target, matches METRICS.yaml median_epsilon)",
+    ),
     ("mean_epsilon", "0.852", "Per-target value: pyyaml ε=0.8520 (individual target)"),
     # S01 wave-14 historical tier narrative (pre wave-16 canonical 23/23)
-    ("mean_epsilon", "0.7778", "Historical wave-14 appendix row: per-target ε, not METRICS mean_epsilon"),
-    ("mean_epsilon", "0.6667", "Historical wave-14 appendix row: per-target ε, not METRICS mean_epsilon"),
-    ("isomorphic_count", "14", "Historical wave-14 S01 appendix: 14/23 ISOMORPHIC before wave-16; METRICS canonical is 23/23"),
+    (
+        "mean_epsilon",
+        "0.7778",
+        "Historical wave-14 appendix row: per-target ε, not METRICS mean_epsilon",
+    ),
+    (
+        "mean_epsilon",
+        "0.6667",
+        "Historical wave-14 appendix row: per-target ε, not METRICS mean_epsilon",
+    ),
+    (
+        "isomorphic_count",
+        "14",
+        "Historical wave-14 S01 appendix: 14/23 ISOMORPHIC before wave-16; METRICS canonical is 23/23",
+    ),
     # LOC mismatch: manuscript says "20,307 statements in 179 source files" which refers to
     # py/cogant/ subtree only; METRICS.yaml python_loc counts full repo python LOC
-    ("python_loc", "20307", "Scope difference: manuscript counts py/cogant/ statements (20,307); METRICS.yaml python_loc counts full-repo Python LOC (56,628)"),
+    (
+        "python_loc",
+        "20307",
+        "Scope difference: manuscript counts py/cogant/ statements (20,307); METRICS.yaml python_loc counts full-repo Python LOC (56,628)",
+    ),
     # Coverage 100% in a table cell refers to a specific module, not overall coverage
-    ("coverage_percent", "100.0", "Module-level coverage: 100% for cogant.gnn.matrices in Table 9, not overall"),
+    (
+        "coverage_percent",
+        "100.0",
+        "Module-level coverage: 100% for cogant.gnn.matrices in Table 9, not overall",
+    ),
     # Ablation paper uses 80% as a precision/recall figure, not line coverage
-    ("coverage_percent", "80.0", "Ablation metric: 80% is semantic coverage (role precision/recall), not line coverage"),
+    (
+        "coverage_percent",
+        "80.0",
+        "Ablation metric: 80% is semantic coverage (role precision/recall), not line coverage",
+    ),
 ]
 
 
@@ -214,6 +251,7 @@ EXPECTED_MISMATCHES = [
 # Regex patterns for extracting numeric claims from text
 # Each entry: (pattern_name, compiled_regex, extractor_fn -> float|str|None)
 # ---------------------------------------------------------------------------
+
 
 def _mk_patterns():
     return [
@@ -232,7 +270,10 @@ def _mk_patterns():
         # Coverage percent: "86.45%", "86.5%", "86% line coverage", "coverage.*86"
         (
             "coverage_percent",
-            re.compile(r"\b(\d{2,3}(?:\.\d+)?)\s*%\s*(?:line\s+)?coverage|coverage[^.]{0,30}?\b(\d{2,3}(?:\.\d+)?)\s*%", re.IGNORECASE),
+            re.compile(
+                r"\b(\d{2,3}(?:\.\d+)?)\s*%\s*(?:line\s+)?coverage|coverage[^.]{0,30}?\b(\d{2,3}(?:\.\d+)?)\s*%",
+                re.IGNORECASE,
+            ),
             lambda m: float(m.group(1) or m.group(2)),
         ),
         # Coverage percent alternate: "~86.45%", "about 86.5%"
@@ -345,13 +386,13 @@ class Finding:
     file: str
     line: int
     pattern_name: str
-    manuscript_claim: str     # the raw matched text
-    extracted_value: object   # numeric or string extracted
-    metrics_value: object     # what METRICS.yaml says
-    status: str               # MATCH | CLOSE | MISMATCH | EXPECTED_MISMATCH | UNVERIFIED | STALE_ARCHIVE
-    context: str              # surrounding text (~80 chars)
+    manuscript_claim: str  # the raw matched text
+    extracted_value: object  # numeric or string extracted
+    metrics_value: object  # what METRICS.yaml says
+    status: str  # MATCH | CLOSE | MISMATCH | EXPECTED_MISMATCH | UNVERIFIED | STALE_ARCHIVE
+    context: str  # surrounding text (~80 chars)
     note: str = ""
-    confidence: str = "LOW"   # HIGH | MEDIUM | LOW
+    confidence: str = "LOW"  # HIGH | MEDIUM | LOW
     delta_percent: float | None = None  # |was - should| / |should| * 100, when numeric
 
 
@@ -476,7 +517,10 @@ def audit_file(
                 metrics_val, tolerance = kv_lookup.get(pattern_name, (None, None))
 
                 status, confidence, delta_percent = classify(
-                    extracted, metrics_val, tolerance, is_archive,
+                    extracted,
+                    metrics_val,
+                    tolerance,
+                    is_archive,
                 )
 
                 # Upgrade MISMATCH to EXPECTED_MISMATCH if it's in our whitelist
@@ -494,19 +538,21 @@ def audit_file(
                     rel_file = str(md_path.resolve().relative_to(_REPO_ROOT))
                 except ValueError:
                     rel_file = str(md_path)
-                findings.append(Finding(
-                    file=rel_file,
-                    line=line_no,
-                    pattern_name=pattern_name,
-                    manuscript_claim=match.group(0),
-                    extracted_value=extracted,
-                    metrics_value=metrics_val,
-                    status=status,
-                    context=context,
-                    note=note,
-                    confidence=confidence,
-                    delta_percent=delta_percent,
-                ))
+                findings.append(
+                    Finding(
+                        file=rel_file,
+                        line=line_no,
+                        pattern_name=pattern_name,
+                        manuscript_claim=match.group(0),
+                        extracted_value=extracted,
+                        metrics_value=metrics_val,
+                        status=status,
+                        context=context,
+                        note=note,
+                        confidence=confidence,
+                        delta_percent=delta_percent,
+                    )
+                )
 
     return findings
 
@@ -706,8 +752,7 @@ def render_report(
         for f in sorted(unverified, key=lambda x: (x.file, x.line)):
             ctx = f.context.replace("|", "\\|").replace("\n", " ")
             lines.append(
-                f"| `{f.file}` | {f.line} | {f.pattern_name} "
-                f"| {f.extracted_value} | {ctx} |"
+                f"| `{f.file}` | {f.line} | {f.pattern_name} | {f.extracted_value} | {ctx} |"
             )
     else:
         lines.append("_No unverified claims._")
@@ -783,7 +828,9 @@ def render_report(
         lines.append("")
         unverified_patterns = sorted({f.pattern_name for f in unverified})
         for p in unverified_patterns:
-            lines.append(f"- Add `{p}` to METRICS.yaml so future audits can verify it automatically")
+            lines.append(
+                f"- Add `{p}` to METRICS.yaml so future audits can verify it automatically"
+            )
         lines.append("")
 
     if expected_mismatches:
@@ -795,11 +842,15 @@ def render_report(
             if key in seen_em:
                 continue
             seen_em.add(key)
-            lines.append(f"- **{f.pattern_name}** = `{f.extracted_value}` in `{f.file}` line {f.line}: {f.note}")
+            lines.append(
+                f"- **{f.pattern_name}** = `{f.extracted_value}` in `{f.file}` line {f.line}: {f.note}"
+            )
         lines.append("")
 
     if not mismatches and not unverified:
-        lines.append("_All extracted numbers are verified. Manuscript is consistent with METRICS.yaml._")
+        lines.append(
+            "_All extracted numbers are verified. Manuscript is consistent with METRICS.yaml._"
+        )
         lines.append("")
 
     # -----------------------------------------------------------------------
@@ -823,13 +874,13 @@ def render_report(
             manuscript_raw = str(f.extracted_value)
             metrics_raw = str(f.metrics_value)
             lines += [
-                f"```bash",
+                "```bash",
                 f"# File: {f.file}  line {f.line}",
                 f"# Manuscript says: {f.manuscript_claim!r}  (extracted: {manuscript_raw})",
                 f"# Metrics says:    {metrics_raw}",
-                f"# Fix: (user decision — update metric or keep prose explanation)",
+                "# Fix: (user decision — update metric or keep prose explanation)",
                 f"sed -i '' 's/{re.escape(manuscript_raw)}/{re.escape(metrics_raw)}/g' {f.file}",
-                f"```",
+                "```",
                 "",
             ]
     else:

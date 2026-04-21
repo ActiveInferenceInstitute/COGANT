@@ -20,12 +20,12 @@ Typical usage::
 
 Exit 0 on success. Non-zero if an API is unavailable or inputs are bad.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import logging
-import sys
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any
@@ -36,6 +36,7 @@ logger = logging.getLogger("batch_api")
 # ---------------------------------------------------------------------------
 # JSON helpers
 # ---------------------------------------------------------------------------
+
 
 def _to_jsonable(obj: Any) -> Any:
     """Recursively coerce dataclasses / sets / Paths to JSON-native types."""
@@ -70,6 +71,7 @@ def _write_json(out: Path, data: Any) -> None:
 # ---------------------------------------------------------------------------
 # Graph analysis (cogant.graph.GraphAnalyzer)
 # ---------------------------------------------------------------------------
+
 
 def _load_program_graph(target: Path) -> Any:
     """Build a fresh ProgramGraph from a source directory via the orchestration
@@ -112,6 +114,7 @@ def run_graph_analysis(run_dir: Path, target: Path) -> int:
 # Static analysis (cogant.static.*)
 # ---------------------------------------------------------------------------
 
+
 def run_static_analysis(run_dir: Path, target: Path) -> int:
     from cogant.static import (
         ComplexityAnalyzer,
@@ -152,30 +155,36 @@ def run_static_analysis(run_dir: Path, target: Path) -> int:
         total_complexity += getattr(cxr, "max_cyclomatic", 0) or 0
         total_dead += len(getattr(dcr, "entries", []))
         total_loc += getattr(code_metrics, "lines_of_code", 0) or 0
-        per_file.append({
-            "path": str(p.relative_to(target)),
-            "complexity": _to_jsonable(cxr),
-            "dead_code": _to_jsonable(dcr),
-            "metrics": _to_jsonable(code_metrics),
-            "halstead": _to_jsonable(halstead),
-            "hotspot_count": len(hotspots),
-        })
+        per_file.append(
+            {
+                "path": str(p.relative_to(target)),
+                "complexity": _to_jsonable(cxr),
+                "dead_code": _to_jsonable(dcr),
+                "metrics": _to_jsonable(code_metrics),
+                "halstead": _to_jsonable(halstead),
+                "hotspot_count": len(hotspots),
+            }
+        )
 
     out = run_dir / "analysis" / "static_report.json"
-    _write_json(out, {
-        "target": str(target),
-        "file_count": len(per_file),
-        "total_lines_of_code": total_loc,
-        "cumulative_max_cyclomatic": total_complexity,
-        "total_dead_entries": total_dead,
-        "per_file": per_file,
-    })
+    _write_json(
+        out,
+        {
+            "target": str(target),
+            "file_count": len(per_file),
+            "total_lines_of_code": total_loc,
+            "cumulative_max_cyclomatic": total_complexity,
+            "total_dead_entries": total_dead,
+            "per_file": per_file,
+        },
+    )
     return 0
 
 
 # ---------------------------------------------------------------------------
 # Multi-format export (cogant.export.MultiFormatExporter)
 # ---------------------------------------------------------------------------
+
 
 def run_multi_export(run_dir: Path, bundle_path: Path) -> int:
     from cogant.export import ExportConfig, ExportFormat, MultiFormatExporter
@@ -200,6 +209,7 @@ def run_multi_export(run_dir: Path, bundle_path: Path) -> int:
 # ---------------------------------------------------------------------------
 # Visualization (cogant.viz.MermaidGenerator + png_export)
 # ---------------------------------------------------------------------------
+
 
 def run_visualize(run_dir: Path, target: Path) -> int:
     from cogant.viz import MermaidGenerator
@@ -233,6 +243,7 @@ def run_visualize(run_dir: Path, target: Path) -> int:
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def _cli() -> int:
     parser = argparse.ArgumentParser(description=__doc__)

@@ -36,10 +36,10 @@ Transform = {
 
 ### Rule 1: Function Definition → Function Node
 
-**ID**: `rule_fn_def_001`  
-**Match**: NodeKind=FUNCTION, SemanticRole=FUNCTION_DEF  
-**Target**: SemanticRole.FUNCTION_DEF  
-**Base Confidence**: 1.0 (CERTAIN)  
+**ID**: `rule_fn_def_001`
+**Match**: NodeKind=FUNCTION, SemanticRole=FUNCTION_DEF
+**Target**: SemanticRole.FUNCTION_DEF
+**Base Confidence**: 1.0 (CERTAIN)
 **Conditions**:
 - Node.type_name is not None
 - Node.provenance.type == "SourceCode"
@@ -59,10 +59,10 @@ def process_data(data: list, timeout: int) -> dict:
 
 ### Rule 2: Function Call → Call Edge
 
-**ID**: `rule_fn_call_001`  
-**Match**: EdgeKind=CALLS with confidence >= 0.8  
-**Target**: EdgeKind.Calls  
-**Base Confidence**: 0.85 (HIGH)  
+**ID**: `rule_fn_call_001`
+**Match**: EdgeKind=CALLS with confidence >= 0.8
+**Target**: EdgeKind.Calls
+**Base Confidence**: 0.85 (HIGH)
 **Conditions**:
 - source.kind == FUNCTION or METHOD
 - target.kind == FUNCTION or METHOD
@@ -81,10 +81,10 @@ def foo():
 
 ### Rule 3: Variable Definition → Variable Node
 
-**ID**: `rule_var_def_001`  
-**Match**: NodeKind=VARIABLE, SemanticRole=VARIABLE_DEF  
-**Target**: SemanticRole.VARIABLE_DEF  
-**Base Confidence**: 0.9 (HIGH)  
+**ID**: `rule_var_def_001`
+**Match**: NodeKind=VARIABLE, SemanticRole=VARIABLE_DEF
+**Target**: SemanticRole.VARIABLE_DEF
+**Base Confidence**: 0.9 (HIGH)
 **Conditions**:
 - Node has assignment in source
 - type_name is provided or inferrable
@@ -96,10 +96,10 @@ def foo():
 
 ### Rule 4: Type Definition → Type Node
 
-**ID**: `rule_type_def_001`  
-**Match**: NodeKind=TYPE, SemanticRole=TYPE_DEF  
-**Target**: SemanticRole.TYPE_DEF  
-**Base Confidence**: 1.0 (CERTAIN)  
+**ID**: `rule_type_def_001`
+**Match**: NodeKind=TYPE, SemanticRole=TYPE_DEF
+**Target**: SemanticRole.TYPE_DEF
+**Base Confidence**: 1.0 (CERTAIN)
 **Conditions**:
 - Node is class, struct, interface, or type alias
 - Provenance.type == "SourceCode"
@@ -111,10 +111,10 @@ def foo():
 
 ### Rule 5: Control Flow Edge
 
-**ID**: `rule_control_flow_001`  
-**Match**: EdgeKind=CONTROL_DEPENDENCY  
-**Target**: EdgeKind.ControlDependency  
-**Base Confidence**: 0.7 (MEDIUM)  
+**ID**: `rule_control_flow_001`
+**Match**: EdgeKind=CONTROL_DEPENDENCY
+**Target**: EdgeKind.ControlDependency
+**Base Confidence**: 0.7 (MEDIUM)
 **Conditions**:
 - source.kind in [CONTROL_FLOW_NODE, FUNCTION]
 - target.kind in [CONTROL_FLOW_NODE, FUNCTION]
@@ -134,10 +134,10 @@ else:
 
 ### Rule 6: Data Flow Edge
 
-**ID**: `rule_data_flow_001`  
-**Match**: EdgeKind=DATA_FLOW  
-**Target**: EdgeKind.DataFlow  
-**Base Confidence**: 0.6 (MEDIUM)  
+**ID**: `rule_data_flow_001`
+**Match**: EdgeKind=DATA_FLOW
+**Target**: EdgeKind.DataFlow
+**Base Confidence**: 0.6 (MEDIUM)
 **Conditions**:
 - Edge connects output to input variables
 - One node defines, other uses
@@ -148,10 +148,10 @@ else:
 
 ### Rule 7: Type Reference → HasType Edge
 
-**ID**: `rule_has_type_001`  
-**Match**: EdgeKind=HAS_TYPE  
-**Target**: EdgeKind.HasType  
-**Base Confidence**: 0.95 (HIGH)  
+**ID**: `rule_has_type_001`
+**Match**: EdgeKind=HAS_TYPE
+**Target**: EdgeKind.HasType
+**Base Confidence**: 0.95 (HIGH)
 **Conditions**:
 - source is VARIABLE, FUNCTION (for returns), or FIELD
 - target is TYPE
@@ -162,10 +162,10 @@ else:
 
 ### Rule 8: Inheritance Edge
 
-**ID**: `rule_inherits_001`  
-**Match**: EdgeKind=INHERITS  
-**Target**: EdgeKind.Inherits  
-**Base Confidence**: 1.0 (CERTAIN)  
+**ID**: `rule_inherits_001`
+**Match**: EdgeKind=INHERITS
+**Target**: EdgeKind.Inherits
+**Base Confidence**: 1.0 (CERTAIN)
 **Conditions**:
 - source.kind == TYPE
 - target.kind == TYPE
@@ -177,10 +177,10 @@ else:
 
 ### Rule 9: Module Membership
 
-**ID**: `rule_member_of_001`  
-**Match**: EdgeKind=MEMBER_OF  
-**Target**: EdgeKind.MemberOf  
-**Base Confidence**: 1.0 (CERTAIN)  
+**ID**: `rule_member_of_001`
+**Match**: EdgeKind=MEMBER_OF
+**Target**: EdgeKind.MemberOf
+**Base Confidence**: 1.0 (CERTAIN)
 **Conditions**:
 - target.kind == MODULE
 - source not in [UNKNOWN]
@@ -190,10 +190,10 @@ else:
 
 ### Rule 10: External Reference
 
-**ID**: `rule_external_001`  
-**Match**: EdgeKind=EXTERNAL_REF  
-**Target**: EdgeKind.ExternalRef  
-**Base Confidence**: 0.8 (HIGH)  
+**ID**: `rule_external_001`
+**Match**: EdgeKind=EXTERNAL_REF
+**Target**: EdgeKind.ExternalRef
+**Base Confidence**: 0.8 (HIGH)
 **Conditions**:
 - target.kind == EXTERNAL
 - source references external library
@@ -206,10 +206,10 @@ else:
 
 ### Heuristic 1: Implicit Calls (Reflection, Dynamic Dispatch)
 
-**ID**: `heuristic_implicit_call_001`  
-**Pattern**: Function called via string name or dynamic reference  
-**Target Role**: FUNCTION_CALL  
-**Base Confidence**: 0.4 (LOW)  
+**ID**: `heuristic_implicit_call_001`
+**Pattern**: Function called via string name or dynamic reference
+**Target Role**: FUNCTION_CALL
+**Base Confidence**: 0.4 (LOW)
 **Heuristics**:
 - String contains function name? +0.2
 - Function name appears in context? +0.1
@@ -217,10 +217,10 @@ else:
 
 ### Heuristic 2: Inferred Dependencies
 
-**ID**: `heuristic_inferred_dep_001`  
-**Pattern**: No explicit import, but code uses external API  
-**Target Role**: EXTERNAL_REF  
-**Base Confidence**: 0.5 (MEDIUM)  
+**ID**: `heuristic_inferred_dep_001`
+**Pattern**: No explicit import, but code uses external API
+**Target Role**: EXTERNAL_REF
+**Base Confidence**: 0.5 (MEDIUM)
 **Heuristics**:
 - API method called directly? +0.2
 - Module referenced? +0.15
@@ -342,10 +342,10 @@ from cogant.translate import TranslationRule, SemanticMapping
 class MyCustomRule(TranslationRule):
     def id(self) -> str:
         return "custom_my_pattern"
-    
+
     def matches(self, node) -> bool:
         return "special_" in node.name
-    
+
     def apply(self, node) -> SemanticMapping:
         return SemanticMapping(
             id=self.id(),

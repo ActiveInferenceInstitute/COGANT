@@ -445,7 +445,7 @@ and context compaction; fixed 6 test failures before committing 96 new tests.
 
 **New tests committed across waves 8-9:**
 - `test_dsl_extended.py` — 13 DSL behavioral tests
-- `test_observability_extended.py` — 14 observability tests  
+- `test_observability_extended.py` — 14 observability tests
 - `test_pipeline_dag_extended.py` — 14 DAG topology + cycle detection tests
 - `test_plugins_extended.py` — 12 plugin registry tests
 - `test_runtime_extended.py` — 12 AgentRuntime behavioral tests
@@ -1092,4 +1092,3 @@ COGANT is solid alpha/beta. The empirical claim (Active Inference cycle on real 
 - **Live metrics (source of truth):** [`evaluation/METRICS.yaml`](https://github.com/cogant-contributors/cogant/blob/main/evaluation/METRICS.yaml)
 - **Implementing modules (forward):** [`py/cogant/translate/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/), [`py/cogant/statespace/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/statespace/), [`py/cogant/gnn/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/gnn/), [`py/cogant/markov/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/markov/), [`py/cogant/static/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/static/)
 - **Implementing modules (reverse):** [`py/cogant/reverse/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/reverse/)
-

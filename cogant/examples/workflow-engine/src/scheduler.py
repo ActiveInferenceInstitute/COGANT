@@ -1,10 +1,8 @@
 """Task scheduler with retry and backoff logic."""
 
-import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from tasks import Task, TaskResult
 
@@ -32,7 +30,7 @@ class ScheduleConfig:
 class TaskScheduler:
     """Schedules and executes tasks with retry logic."""
 
-    def __init__(self, config: Optional[ScheduleConfig] = None):
+    def __init__(self, config: ScheduleConfig | None = None):
         self.config = config or ScheduleConfig()
         self.scheduled_tasks: dict[str, Task] = {}
         self.execution_history: list[tuple[str, TaskResult, datetime]] = []
@@ -55,7 +53,7 @@ class TaskScheduler:
         elif self.config.strategy == RetryStrategy.LINEAR_BACKOFF:
             delay = self.config.initial_delay * (retry_count + 1)
         elif self.config.strategy == RetryStrategy.EXPONENTIAL_BACKOFF:
-            delay = self.config.initial_delay * (2 ** retry_count)
+            delay = self.config.initial_delay * (2**retry_count)
         elif self.config.strategy == RetryStrategy.FIBONACCI_BACKOFF:
             delay = self._fibonacci(retry_count + 1) * self.config.initial_delay
         else:
@@ -127,7 +125,7 @@ class TaskScheduler:
             results[task_id] = self.execute(task_id, task)
         return results
 
-    def get_execution_history(self, task_id: Optional[str] = None):
+    def get_execution_history(self, task_id: str | None = None):
         """Get execution history for a task or all tasks."""
         if task_id:
             return [

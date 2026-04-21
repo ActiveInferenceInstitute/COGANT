@@ -16,4 +16,3 @@
 - Domain/SSL: $50/month
 - Monitoring: $100/month
 - **Total**: ~$4,200/year
-

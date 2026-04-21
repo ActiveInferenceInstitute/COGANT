@@ -35,4 +35,3 @@ Walks repository filesystem, detects programming languages, filters files.
 from cogant.ingest import FileEnumerator
 
 enumerator = FileEnumerator("/path/to/repo", respect_gitignore=True)
-

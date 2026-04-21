@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/cli/doctor.py
-# hypothesis_version: 6.135.29
-
-['-', '--version', '?', 'Detail', 'NOT READY', 'Name', 'Python', 'READY', 'Rust backend', 'Status', '_', '__main__', '__version__', 'blue', 'cogant', 'cogant._rust', 'core', 'coverage', 'cyan', 'dim', 'duckdb', 'fail', 'git', 'git version ', 'green', 'loaded', 'matplotlib', 'mermaid CLI (mmdc)', 'mmdc', 'multilang', 'mypy', 'mypy ', 'networkx', 'node-types.json', 'not installed', 'ok', 'optional', 'pyarrow', 'red', 'ruff', 'ruff ', 'tree_sitter', 'tree_sitter_python', 'unknown', 'viz', 'warn', '⚠️', '✅', '❌']

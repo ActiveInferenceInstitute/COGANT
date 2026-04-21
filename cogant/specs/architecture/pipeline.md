@@ -8,8 +8,8 @@ The COGANT pipeline transforms source code into Generalized Notation Notation (G
 
 ### Stage 1: Input & Discovery
 
-**Input**: Directory of source files  
-**Output**: File manifest with metadata  
+**Input**: Directory of source files
+**Output**: File manifest with metadata
 **Owned by**: Python `cogant.discovery`
 
 **Operations**:
@@ -43,8 +43,8 @@ The COGANT pipeline transforms source code into Generalized Notation Notation (G
 
 ### Stage 2: Parsing & AST Extraction
 
-**Input**: File manifest + source files  
-**Output**: Syntax trees + type information  
+**Input**: File manifest + source files
+**Output**: Syntax trees + type information
 **Owned by**: Language-specific parsers (Python, Rust, JavaScript)
 
 **Operations**:
@@ -86,8 +86,8 @@ The COGANT pipeline transforms source code into Generalized Notation Notation (G
 
 ### Stage 3: Repo IR Construction
 
-**Input**: Parsed syntax trees  
-**Output**: Repo IR (raw entities and relationships)  
+**Input**: Parsed syntax trees
+**Output**: Repo IR (raw entities and relationships)
 **Owned by**: Python `cogant.extraction`
 
 **Operations**:
@@ -115,8 +115,8 @@ RepoIR = {
 
 ### Stage 4: Program Graph Construction
 
-**Input**: Repo IR  
-**Output**: Program Graph IR (semantic graph)  
+**Input**: Repo IR
+**Output**: Program Graph IR (semantic graph)
 **Owned by**: Rust `cogant-graph`
 
 **Operations** (via Rust):
@@ -144,8 +144,8 @@ RepoIR = {
 
 ### Stage 5: Translation & Role Assignment
 
-**Input**: Program Graph IR  
-**Output**: Translated graph with semantic roles  
+**Input**: Program Graph IR
+**Output**: Translated graph with semantic roles
 **Owned by**: Rust `cogant-translate`
 
 **Operations** (via Rust FFI):
@@ -178,8 +178,8 @@ RepoIR = {
 
 ### Stage 6: State Space Analysis
 
-**Input**: Translated graph + (optional) execution traces  
-**Output**: State Space Model (behavioral model)  
+**Input**: Translated graph + (optional) execution traces
+**Output**: State Space Model (behavioral model)
 **Owned by**: Python `cogant.statespace`
 
 **Operations**:
@@ -207,8 +207,8 @@ StateSpaceModel = {
 
 ### Stage 7: Validation
 
-**Input**: All IRs + State Space Model  
-**Output**: Validation IR (metrics, issues, health)  
+**Input**: All IRs + State Space Model
+**Output**: Validation IR (metrics, issues, health)
 **Owned by**: Python `cogant.validation`
 
 **Operations**:
@@ -235,8 +235,8 @@ ValidationIR = {
 
 ### Stage 8: Export
 
-**Input**: Program Graph + Validation IR  
-**Output**: GNN bundles (JSON, PyTorch Geometric, DGL, etc.)  
+**Input**: Program Graph + Validation IR
+**Output**: GNN bundles (JSON, PyTorch Geometric, DGL, etc.)
 **Owned by**: Rust `cogant-gnn`
 
 **Operations** (via Rust):
@@ -286,7 +286,7 @@ Each stage reads from `config.yaml`:
 discovery:
   include_patterns: ["**/*.py", "**/*.java"]
   exclude_patterns: ["**/test_*.py"]
-  
+
 parsing:
   language_versions:
     python: "3.9+"
@@ -375,20 +375,20 @@ discovery:
 
 parsing:
   python_version: "3.11"
-  
+
 translation:
   rule_set: "default"
   custom_rules:
     - path: "my_rules.py"
       enabled: true
-      
+
 statespace:
   trace_file: "execution_trace.json"
-  
+
 validation:
   min_coverage: 0.95
   max_warnings: 10
-  
+
 export:
   formats: [json, pytorch_geometric, dgl]
   compression: gzip

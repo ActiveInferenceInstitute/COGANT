@@ -1,12 +1,5 @@
 """Main FastAPI application for the example service."""
 
-from typing import Optional
-
-from fastapi import Depends, FastAPI, HTTPException, Query, status
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-
 from config import get_settings
 from events import (
     ItemCreatedEvent,
@@ -14,8 +7,18 @@ from events import (
     UserUpdatedEvent,
     event_emitter,
 )
-from models import Base, Item, ItemDB, ItemCreatedEvent, User, UserDB
-from models import ErrorResponse, PaginationParams
+from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi.middleware.cors import CORSMiddleware
+from models import (
+    Base,
+    Item,
+    ItemCreatedEvent,
+    ItemDB,
+    User,
+    UserDB,
+)
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
 app = FastAPI(
     title="Example Python Service",
@@ -175,9 +178,7 @@ async def create_item(item: Item, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
 
     # Create item
-    db_item = ItemDB(
-        name=item.name, description=item.description, owner_id=item.owner_id
-    )
+    db_item = ItemDB(name=item.name, description=item.description, owner_id=item.owner_id)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
@@ -196,7 +197,7 @@ async def create_item(item: Item, db: Session = Depends(get_db)):
 async def list_items(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
-    owner_id: Optional[int] = None,
+    owner_id: int | None = None,
     db: Session = Depends(get_db),
 ):
     """List items with optional filtering by owner."""

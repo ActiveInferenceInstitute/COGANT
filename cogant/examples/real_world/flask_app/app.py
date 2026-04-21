@@ -9,8 +9,9 @@ together without requiring Flask to be installed.
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 from .config import BaseConfig, load_config
 from .models import User, ValidationError
@@ -33,12 +34,12 @@ class Request:
 
     method: str
     path: str
-    headers: Dict[str, str] = field(default_factory=dict)
-    query: Dict[str, str] = field(default_factory=dict)
-    body: Optional[Dict[str, Any]] = None
-    principal: Optional[User] = None
+    headers: dict[str, str] = field(default_factory=dict)
+    query: dict[str, str] = field(default_factory=dict)
+    body: dict[str, Any] | None = None
+    principal: User | None = None
 
-    def get_header(self, name: str) -> Optional[str]:
+    def get_header(self, name: str) -> str | None:
         return self.headers.get(name.lower())
 
 
@@ -47,7 +48,7 @@ class Response:
     """HTTP response action."""
 
     status: int = 200
-    headers: Dict[str, str] = field(default_factory=dict)
+    headers: dict[str, str] = field(default_factory=dict)
     body: Any = None
 
     def json(self) -> str:
@@ -57,7 +58,7 @@ class Response:
 class Route:
     """A registered URL pattern + method + handler."""
 
-    def __init__(self, pattern: str, methods: Tuple[str, ...], handler: Handler) -> None:
+    def __init__(self, pattern: str, methods: tuple[str, ...], handler: Handler) -> None:
         self.pattern = pattern
         self.methods = tuple(m.upper() for m in methods)
         self.handler = handler
@@ -69,7 +70,7 @@ class Route:
 class Middleware:
     """Base class for request/response transforms."""
 
-    def before_request(self, request: Request) -> Optional[Response]:
+    def before_request(self, request: Request) -> Response | None:
         return None
 
     def after_request(self, request: Request, response: Response) -> Response:
@@ -82,7 +83,7 @@ class AuthMiddleware(Middleware):
     def __init__(self, container: ServiceContainer) -> None:
         self.container = container
 
-    def before_request(self, request: Request) -> Optional[Response]:
+    def before_request(self, request: Request) -> Response | None:
         auth = request.get_header("authorization")
         if not auth or not auth.lower().startswith("bearer "):
             return None
@@ -98,9 +99,9 @@ class LoggingMiddleware(Middleware):
     """Logs every request/response pair; also tracks per-path counters."""
 
     def __init__(self) -> None:
-        self.counters: Dict[str, int] = {}
+        self.counters: dict[str, int] = {}
 
-    def before_request(self, request: Request) -> Optional[Response]:
+    def before_request(self, request: Request) -> Response | None:
         self.counters[request.path] = self.counters.get(request.path, 0) + 1
         logger.info("%s %s", request.method, request.path)
         return None
@@ -116,23 +117,27 @@ class Application:
     def __init__(self, config: BaseConfig) -> None:
         self.config = config
         self.container = ServiceContainer(config)
-        self.routes: List[Route] = []
-        self.middlewares: List[Middleware] = [
+        self.routes: list[Route] = []
+        self.middlewares: list[Middleware] = [
             LoggingMiddleware(),
             AuthMiddleware(self.container),
         ]
-        self.error_handlers: Dict[type, Handler] = {}
+        self.error_handlers: dict[type, Handler] = {}
 
-    def route(self, pattern: str, methods: Tuple[str, ...] = ("GET",)) -> Callable[[Handler], Handler]:
+    def route(
+        self, pattern: str, methods: tuple[str, ...] = ("GET",)
+    ) -> Callable[[Handler], Handler]:
         def decorator(handler: Handler) -> Handler:
             self.routes.append(Route(pattern, methods, handler))
             return handler
+
         return decorator
 
     def errorhandler(self, exc_type: type) -> Callable[[Handler], Handler]:
         def decorator(handler: Handler) -> Handler:
             self.error_handlers[exc_type] = handler
             return handler
+
         return decorator
 
     def dispatch(self, request: Request) -> Response:
@@ -174,7 +179,9 @@ class Application:
         return Response(status=500, body={"error": "internal_server_error"})
 
 
-def create_app(profile: str = "development", overrides: Optional[Dict[str, Any]] = None) -> Application:
+def create_app(
+    profile: str = "development", overrides: dict[str, Any] | None = None
+) -> Application:
     """Application factory, Flask-style."""
     config = load_config(profile, overrides)
     app = Application(config)

@@ -2,9 +2,8 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 
-from scheduler import TaskScheduler, ScheduleConfig
+from scheduler import ScheduleConfig, TaskScheduler
 from state import StateMachine, WorkflowState
 from tasks import Task
 
@@ -14,7 +13,7 @@ class WorkflowConfig:
     """Configuration for a workflow."""
 
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     timeout_seconds: int = 3600
     allow_concurrent_tasks: bool = False
 
@@ -32,7 +31,7 @@ class WorkflowDefinition:
 class Workflow:
     """Orchestrates task execution through defined stages."""
 
-    def __init__(self, config: WorkflowConfig, definition: Optional[WorkflowDefinition] = None):
+    def __init__(self, config: WorkflowConfig, definition: WorkflowDefinition | None = None):
         self.config = config
         self.definition = definition or WorkflowDefinition(name=config.name)
 
@@ -45,38 +44,22 @@ class Workflow:
 
         # Metadata
         self.created_at = datetime.utcnow()
-        self.started_at: Optional[datetime] = None
-        self.completed_at: Optional[datetime] = None
+        self.started_at: datetime | None = None
+        self.completed_at: datetime | None = None
         self.current_stage: int = 0
         self.results: dict[str, any] = {}
 
     def _setup_state_machine(self) -> None:
         """Setup state machine transitions."""
         # Define all possible transitions
-        self.state_machine.add_transition(
-            WorkflowState.PENDING, WorkflowState.RUNNING
-        )
-        self.state_machine.add_transition(
-            WorkflowState.RUNNING, WorkflowState.PAUSED
-        )
-        self.state_machine.add_transition(
-            WorkflowState.PAUSED, WorkflowState.RUNNING
-        )
-        self.state_machine.add_transition(
-            WorkflowState.RUNNING, WorkflowState.COMPLETED
-        )
-        self.state_machine.add_transition(
-            WorkflowState.RUNNING, WorkflowState.FAILED
-        )
-        self.state_machine.add_transition(
-            WorkflowState.PENDING, WorkflowState.CANCELLED
-        )
-        self.state_machine.add_transition(
-            WorkflowState.RUNNING, WorkflowState.CANCELLED
-        )
-        self.state_machine.add_transition(
-            WorkflowState.PAUSED, WorkflowState.CANCELLED
-        )
+        self.state_machine.add_transition(WorkflowState.PENDING, WorkflowState.RUNNING)
+        self.state_machine.add_transition(WorkflowState.RUNNING, WorkflowState.PAUSED)
+        self.state_machine.add_transition(WorkflowState.PAUSED, WorkflowState.RUNNING)
+        self.state_machine.add_transition(WorkflowState.RUNNING, WorkflowState.COMPLETED)
+        self.state_machine.add_transition(WorkflowState.RUNNING, WorkflowState.FAILED)
+        self.state_machine.add_transition(WorkflowState.PENDING, WorkflowState.CANCELLED)
+        self.state_machine.add_transition(WorkflowState.RUNNING, WorkflowState.CANCELLED)
+        self.state_machine.add_transition(WorkflowState.PAUSED, WorkflowState.CANCELLED)
 
     def add_stage(self, stage_name: str) -> None:
         """Add a stage to the workflow."""
@@ -88,9 +71,7 @@ class Workflow:
         key = f"{stage}:{task_id}"
         self.definition.tasks[key] = task
 
-    def add_transition_condition(
-        self, from_stage: str, to_stage: str, condition: callable
-    ) -> None:
+    def add_transition_condition(self, from_stage: str, to_stage: str, condition: callable) -> None:
         """Add a conditional transition between stages."""
         key = (from_stage, to_stage)
         self.definition.transitions[key] = condition
@@ -168,7 +149,7 @@ class Workflow:
             self.completed_at = datetime.utcnow()
             return True
 
-        except Exception as e:
+        except Exception:
             self.state_machine.transition(WorkflowState.FAILED)
             self.completed_at = datetime.utcnow()
             return False

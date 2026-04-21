@@ -5,4 +5,3 @@ The COGANT Python API is currently in `0.1.0` (alpha). Breaking changes may occu
 ```
 cogant==0.1.0
 ```
-

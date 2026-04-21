@@ -27,4 +27,3 @@ Concrete keys vary by bundle stage; treat `manifest.json` and any `export_metada
 
 - [Validation](validation.md) — checks applied before artifacts are trusted.
 - [Overview](overview.md) — manifest and package layout.
-

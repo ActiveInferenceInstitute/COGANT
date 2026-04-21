@@ -15,4 +15,3 @@ Authoritative for **what is wired in the Python package today** (see `py/cogant/
 | CLI `validate` | Implemented | Bundle file, `gnn_package` directory, run dir with `gnn_package/` or `bundle.json`; see [CLI_GUIDE § validate](../cli/README.md) |
 | Rust crates / native acceleration | Planned / staged | `rust/` |
 | Additional language front-ends | Partial | **Python** is first-class. **JS/TS** (and other tree-sitter grammars) are **optional**: install `cogant[multilang]` and an available grammar; parity is exercised in integration tests when those pieces are present. Further front-ends (e.g. Java) remain **planned** — see `parsers/*`, roadmap. |
-

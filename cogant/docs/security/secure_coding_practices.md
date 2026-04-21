@@ -33,19 +33,18 @@ import os
 
 def load_config(config_path: str) -> Dict:
     path = Path(config_path)
-    
+
     # Prevent directory traversal
     if ".." in path.parts:
         raise ValueError("Path traversal not allowed")
-    
+
     # Prevent absolute paths
     if path.is_absolute():
         raise ValueError("Absolute paths not allowed")
-    
+
     # Prevent symlink attacks
     if path.is_symlink():
         raise ValueError("Symlinks not allowed")
-    
+
     return yaml.safe_load(path.read_text())
 ```
-

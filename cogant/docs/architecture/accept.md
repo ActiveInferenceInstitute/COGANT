@@ -4,4 +4,3 @@ manager.accept_mapping(
     reviewer="alice@example.com",
     feedback="Looks good!"
 )
-

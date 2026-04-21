@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/export/graphml.py
-# hypothesis_version: 6.135.29
-
-['attr.name', 'attr.type', 'data', 'directed', 'edge', 'edgedefault', 'for', 'graph', 'graphml', 'id', 'key', 'kind', 'labels', 'language', 'node', 'path', 'qualified_name', 'source', 'string', 'target', 'unicode', 'weight', 'xmlns', 'xmlns:xsi', 'xsi:schemaLocation']

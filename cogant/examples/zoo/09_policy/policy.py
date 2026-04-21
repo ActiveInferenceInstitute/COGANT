@@ -20,9 +20,7 @@ class PolicyRouter:
         self.num_states = num_states
         self.num_actions = num_actions
         # Simple policy table: state -> preferred action
-        self.policy_table: list[int] = [
-            i % num_actions for i in range(num_states)
-        ]
+        self.policy_table: list[int] = [i % num_actions for i in range(num_states)]
         self.last_action: int | None = None
 
     def route(self, beliefs: list[float]) -> int:
@@ -36,13 +34,11 @@ class PolicyRouter:
     def dispatch_action(self, beliefs: list[float], temperature: float = 0.1) -> int:
         """Softmax action selection with exploration temperature."""
         import math
+
         weights = []
         for i in range(self.num_actions):
             # Sum belief mass that maps to this action
-            mass = sum(
-                beliefs[s] for s in range(self.num_states)
-                if self.policy_table[s] == i
-            )
+            mass = sum(beliefs[s] for s in range(self.num_states) if self.policy_table[s] == i)
             weights.append(math.exp(mass / max(temperature, 1e-8)))
 
         total = sum(weights)

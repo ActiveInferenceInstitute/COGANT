@@ -30,6 +30,7 @@ Usage:
     uv run python tools/check_metrics_fresh.py           # from staging root
     cd cogant && uv run python ../tools/check_metrics_fresh.py
 """
+
 from __future__ import annotations
 
 import json
@@ -153,9 +154,7 @@ def check_git_sha(metrics: dict) -> None:
     if not recorded:
         _fail("METRICS.yaml missing generator_git_sha")
     if recorded != live_sha:
-        _fail(
-            f"generator_git_sha drift: METRICS.yaml={recorded} vs HEAD={live_sha}"
-        )
+        _fail(f"generator_git_sha drift: METRICS.yaml={recorded} vs HEAD={live_sha}")
 
 
 # ---------------------------------------------------------------------------

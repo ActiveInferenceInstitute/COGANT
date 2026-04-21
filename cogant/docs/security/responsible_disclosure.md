@@ -5,4 +5,3 @@ Security researchers are encouraged to report vulnerabilities privately before p
 Operational validation of analysis outputs (bundle checks, GNN package scoring) is documented under [VALIDATION](../validation/README.md) and the [`cogant validate`](../cli/README.md) command.
 
 ---
-

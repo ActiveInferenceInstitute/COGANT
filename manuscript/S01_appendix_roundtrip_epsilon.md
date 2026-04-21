@@ -141,4 +141,3 @@ synthesizer always emits at least one hidden-state factor.
 Round-trip tiers and ε definitions: [`../cogant/docs/theory/roundtrip.md`](../cogant/docs/theory/roundtrip.md). Empirical run log: [`../cogant/docs/evaluation/ROUNDTRIP_EVAL.md`](../cogant/docs/evaluation/ROUNDTRIP_EVAL.md).
 
 ---
-

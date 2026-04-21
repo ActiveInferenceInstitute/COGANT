@@ -53,4 +53,3 @@ Main entry point for repository ingestion. Supports both local and remote reposi
 ```python
 from cogant.ingest import RepoIngester
 from pathlib import Path
-

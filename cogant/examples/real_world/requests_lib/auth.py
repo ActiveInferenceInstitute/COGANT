@@ -10,7 +10,7 @@ import base64
 import hashlib
 import hmac
 import time
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from .models import PreparedRequest
 
@@ -80,7 +80,7 @@ class RotatingTokenAuth(AuthBase):
             raise ValueError("at least one token is required")
         self.tokens = list(tokens)
         self.ttl = ttl
-        self._issued_at: dict[str, float] = {t: 0.0 for t in self.tokens}
+        self._issued_at: dict[str, float] = dict.fromkeys(self.tokens, 0.0)
         self._index = 0
 
     def _next_token(self) -> str:
@@ -102,7 +102,7 @@ class RotatingTokenAuth(AuthBase):
         return request
 
 
-def build_auth(name: str, **kwargs: object) -> Optional[AuthBase]:
+def build_auth(name: str, **kwargs: object) -> AuthBase | None:
     """Factory: resolve a config-friendly name into an auth handler."""
     name_lower = name.lower()
     if name_lower in {"", "none", "noauth"}:

@@ -11,7 +11,8 @@ import itertools
 import json
 import logging
 import time
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tuple, TypeVar
+from collections.abc import Callable, Iterable, Iterator
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ def slugify(value: str) -> str:
     return result.strip("-")
 
 
-def paginate(items: List[Any], *, page: int, per_page: int) -> Dict[str, Any]:
+def paginate(items: list[Any], *, page: int, per_page: int) -> dict[str, Any]:
     """Return a standard paginated envelope around ``items``."""
     if page < 1:
         page = 1
@@ -53,7 +54,7 @@ def paginate(items: List[Any], *, page: int, per_page: int) -> Dict[str, Any]:
     }
 
 
-def chunked(iterable: Iterable[Any], size: int) -> Iterator[List[Any]]:
+def chunked(iterable: Iterable[Any], size: int) -> Iterator[list[Any]]:
     """Yield successive ``size``-sized lists from ``iterable``."""
     if size < 1:
         raise ValueError("size must be >= 1")
@@ -65,7 +66,7 @@ def chunked(iterable: Iterable[Any], size: int) -> Iterator[List[Any]]:
         yield batch
 
 
-def jsonify(data: Any, *, sort_keys: bool = True, indent: Optional[int] = None) -> str:
+def jsonify(data: Any, *, sort_keys: bool = True, indent: int | None = None) -> str:
     """Serialise ``data`` to JSON, preferring str over bytes."""
     try:
         return json.dumps(data, sort_keys=sort_keys, indent=indent, default=str)
@@ -79,13 +80,14 @@ def retry(
     attempts: int = 3,
     initial_backoff: float = 0.1,
     max_backoff: float = 2.0,
-    exceptions: Tuple[type, ...] = (Exception,),
+    exceptions: tuple[type, ...] = (Exception,),
 ) -> Callable[[F], F]:
     """Decorator: retry the wrapped callable on transient failures."""
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapped(*args: Any, **kwargs: Any) -> Any:
-            last_error: Optional[BaseException] = None
+            last_error: BaseException | None = None
             backoff = initial_backoff
             for attempt in range(1, attempts + 1):
                 try:
@@ -105,12 +107,15 @@ def retry(
                     backoff *= 2
             assert last_error is not None
             raise last_error
+
         return wrapped  # type: ignore[return-value]
+
     return decorator
 
 
 def timed(func: F) -> F:
     """Decorator: log how long the wrapped callable takes to run."""
+
     @functools.wraps(func)
     def wrapped(*args: Any, **kwargs: Any) -> Any:
         start = time.perf_counter()
@@ -119,12 +124,13 @@ def timed(func: F) -> F:
         finally:
             elapsed = time.perf_counter() - start
             logger.debug("%s took %.4fs", func.__name__, elapsed)
+
     return wrapped  # type: ignore[return-value]
 
 
-def merge_dicts(*dicts: Dict[str, Any]) -> Dict[str, Any]:
+def merge_dicts(*dicts: dict[str, Any]) -> dict[str, Any]:
     """Deep-merge ``dicts`` left-to-right, preferring later values."""
-    out: Dict[str, Any] = {}
+    out: dict[str, Any] = {}
     for d in dicts:
         for key, value in d.items():
             if isinstance(value, dict) and isinstance(out.get(key), dict):

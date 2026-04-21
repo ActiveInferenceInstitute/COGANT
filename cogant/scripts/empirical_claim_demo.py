@@ -25,7 +25,6 @@ from cogant.reverse.callable import MatrixFunctions
 from cogant.reverse.parser import parse_gnn
 from cogant.runtime.loop import AgentRuntime, run_n_steps
 
-
 # ---------------------------------------------------------------------------
 # 1. Forward pass: Code -> GNN
 # ---------------------------------------------------------------------------
@@ -52,7 +51,16 @@ def run_forward_pipeline(target: Path, output_dir: Path) -> Path:
     if result.returncode != 0:
         # Try via uv
         result = subprocess.run(
-            ["uv", "run", "cogant", "translate", str(target), "--no-dynamic", "--output", str(output_dir)],
+            [
+                "uv",
+                "run",
+                "cogant",
+                "translate",
+                str(target),
+                "--no-dynamic",
+                "--output",
+                str(output_dir),
+            ],
             capture_output=True,
             text=True,
             cwd=str(Path(__file__).parent.parent),
@@ -69,6 +77,7 @@ def run_forward_pipeline(target: Path, output_dir: Path) -> Path:
 # ---------------------------------------------------------------------------
 # 2. Roundtrip isomorphism check
 # ---------------------------------------------------------------------------
+
 
 def run_roundtrip(target: Path) -> dict:
     """Run cogant roundtrip --json and return parsed result dict."""
@@ -101,6 +110,7 @@ def run_roundtrip(target: Path) -> dict:
 # 3. Parse GNN and build runtime
 # ---------------------------------------------------------------------------
 
+
 def build_runtime(gnn_path: Path) -> tuple[AgentRuntime, object]:
     """Parse GNN and return (AgentRuntime, parsed_model)."""
     model = parse_gnn(gnn_path)
@@ -113,9 +123,10 @@ def build_runtime(gnn_path: Path) -> tuple[AgentRuntime, object]:
 # 4. Print one complete cycle detail
 # ---------------------------------------------------------------------------
 
+
 def print_one_cycle(runtime: AgentRuntime, model) -> None:
     """Print a detailed trace of one complete perception-action cycle."""
-    from cogant.runtime.loop import _normalize, _argmax, _default_likelihood, _default_transition
+    from cogant.runtime.loop import _argmax, _normalize
 
     print("\n" + "=" * 72)
     print("  ONE COMPLETE ACTIVE INFERENCE CYCLE (t=0 detail)")
@@ -124,8 +135,8 @@ def print_one_cycle(runtime: AgentRuntime, model) -> None:
     # Prior (D)
     state_dist = list(runtime.D)
     state_dist = _normalize(state_dist)
-    print(f"\n  Prior D (initial belief over hidden states):")
-    labels = getattr(model, 'hidden_states', [f"s_f{i}" for i in range(len(state_dist))])
+    print("\n  Prior D (initial belief over hidden states):")
+    labels = getattr(model, "hidden_states", [f"s_f{i}" for i in range(len(state_dist))])
     for i, (label, p) in enumerate(zip(labels, state_dist)):
         bar = "#" * int(p * 30)
         print(f"    {label:8s} [{bar:<30s}]  {p:.4f}")
@@ -133,8 +144,8 @@ def print_one_cycle(runtime: AgentRuntime, model) -> None:
     # Observation prediction
     pred_obs = runtime._likelihood(state_dist)
     obs_idx = _argmax(pred_obs) if pred_obs else 0
-    obs_labels = getattr(model, 'observations', [f"o_m{i}" for i in range(len(pred_obs))])
-    print(f"\n  Predicted obs P(o|s) via A . state_dist:")
+    obs_labels = getattr(model, "observations", [f"o_m{i}" for i in range(len(pred_obs))])
+    print("\n  Predicted obs P(o|s) via A . state_dist:")
     for i, (label, p) in enumerate(zip(obs_labels, pred_obs)):
         mark = " <-- observed" if i == obs_idx else ""
         print(f"    {label:8s}  {p:.4f}{mark}")
@@ -157,8 +168,8 @@ def print_one_cycle(runtime: AgentRuntime, model) -> None:
 
     # Policy evaluation
     n_actions = runtime._n_actions
-    action_labels = getattr(model, 'actions', [f"u_c{i}" for i in range(n_actions)])
-    print(f"\n  Policy evaluation (preference score per action):")
+    action_labels = getattr(model, "actions", [f"u_c{i}" for i in range(n_actions)])
+    print("\n  Policy evaluation (preference score per action):")
     scores = []
     for a in range(n_actions):
         next_state = runtime._transition(list(posterior), a)
@@ -187,13 +198,14 @@ def print_one_cycle(runtime: AgentRuntime, model) -> None:
 # 5. Main
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     print("=" * 72)
     print("  COGANT EMPIRICAL CLAIM: Full Active Inference Cycle on Real Code")
     print("=" * 72)
 
     # --- Forward pass ---
-    print(f"\n[1] Forward pass: Code -> GNN")
+    print("\n[1] Forward pass: Code -> GNN")
     print(f"    Source: {ZOO_01}")
 
     with tempfile.TemporaryDirectory(prefix="cogant_demo_") as tmp:
@@ -207,46 +219,58 @@ def main() -> None:
     # Pull matrix shapes from GNN
     model_for_report = parse_gnn(gnn_text)
     print(f"    Files: {n_files}  |  Functions: {n_funcs}")
-    print(f"    GNN sections: StateSpaceBlock, Connections, ActInfOntologyAnnotation, InitialParameterization")
-    print(f"    Hidden states (s_f0 cardinality): {model_for_report.cardinalities.get('s_f0', '?')}")
+    print(
+        "    GNN sections: StateSpaceBlock, Connections, ActInfOntologyAnnotation, InitialParameterization"
+    )
+    print(
+        f"    Hidden states (s_f0 cardinality): {model_for_report.cardinalities.get('s_f0', '?')}"
+    )
     print(f"    Observation modalities: {model_for_report.n_obs}")
     print(f"    Actions: {model_for_report.n_actions}")
     A = model_for_report.A
     B = model_for_report.B
     print(f"    A shape: {len(A)}x{len(A[0]) if A else 0}  (likelihood P(o|s))")
-    print(f"    B shape: {len(B)}x{len(B[0]) if B else 0}x{len(B[0][0]) if B and B[0] else 0}  (transition P(s'|s,a))")
+    print(
+        f"    B shape: {len(B)}x{len(B[0]) if B else 0}x{len(B[0][0]) if B and B[0] else 0}  (transition P(s'|s,a))"
+    )
     print(f"    C (preferences): {model_for_report.C}")
     print(f"    D (prior):       {[round(v, 4) for v in model_for_report.D]}")
 
     # --- Roundtrip ---
-    print(f"\n[2] Roundtrip isomorphism check")
+    print("\n[2] Roundtrip isomorphism check")
     rt_result = run_roundtrip(ZOO_01)
     print(f"    role_match_score: {rt_result.get('role_match_score', '?')}")
     print(f"    is_isomorphic:    {rt_result.get('is_isomorphic', '?')}")
     print(f"    original_roles:   {rt_result.get('original_roles', {})}")
-    print(f"    Galois connection: confirmed (GNN -> Python -> GNN preserves structure)")
+    print("    Galois connection: confirmed (GNN -> Python -> GNN preserves structure)")
 
     # --- Build runtime ---
-    print(f"\n[3] Building AgentRuntime from parsed GNN")
+    print("\n[3] Building AgentRuntime from parsed GNN")
     model = parse_gnn(gnn_text)
     mf = MatrixFunctions(model)
     runtime = AgentRuntime(mf)
-    print(f"    n_states={runtime._n_states}  n_obs={runtime._n_obs}  n_actions={runtime._n_actions}")
+    print(
+        f"    n_states={runtime._n_states}  n_obs={runtime._n_obs}  n_actions={runtime._n_actions}"
+    )
 
     # --- One cycle detail ---
     print_one_cycle(runtime, model)
 
     # --- 10-step run ---
-    print(f"[4] Running 10 Active Inference steps (run_n_steps(10))")
+    print("[4] Running 10 Active Inference steps (run_n_steps(10))")
     print()
     print(f"  {'t':>3}  {'obs':>4}  {'action':>6}  {'state_dist':>36}  {'free_energy':>12}")
-    print(f"  {'-'*3}  {'-'*4}  {'-'*6}  {'-'*36}  {'-'*12}")
+    print(f"  {'-' * 3}  {'-' * 4}  {'-' * 6}  {'-' * 36}  {'-' * 12}")
 
     steps = run_n_steps(runtime, 10)
     for step in steps:
         sd_str = "[" + ", ".join(f"{v:.3f}" for v in step.state_dist) + "]"
-        obs_lbl = model.observations[step.obs] if step.obs < len(model.observations) else f"o{step.obs}"
-        act_lbl = model.actions[step.action] if step.action < len(model.actions) else f"a{step.action}"
+        obs_lbl = (
+            model.observations[step.obs] if step.obs < len(model.observations) else f"o{step.obs}"
+        )
+        act_lbl = (
+            model.actions[step.action] if step.action < len(model.actions) else f"a{step.action}"
+        )
         print(f"  {step.t:>3}  {obs_lbl:>4}  {act_lbl:>6}  {sd_str:>36}  {step.free_energy:>12.6f}")
 
     print()

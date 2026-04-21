@@ -40,4 +40,3 @@ from pathlib import Path
 
 ingester = RepoIngester()
 snapshot = ingester.ingest_local(Path("/path/to/repo"))
-

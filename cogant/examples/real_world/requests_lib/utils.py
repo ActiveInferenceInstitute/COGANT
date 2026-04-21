@@ -6,11 +6,9 @@ registry (classic requests-library shape).
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Tuple
 from urllib.parse import urlparse, urlunparse
 
-
-STATUS_CODES: Dict[int, str] = {
+STATUS_CODES: dict[int, str] = {
     200: "ok",
     201: "created",
     202: "accepted",
@@ -54,19 +52,19 @@ def is_server_error(code: int) -> bool:
     return 500 <= code < 600
 
 
-def parse_url(url: str) -> Tuple[str, str, str, Optional[int]]:
+def parse_url(url: str) -> tuple[str, str, str, int | None]:
     """Return ``(scheme, host, path, port)`` for ``url``."""
     parsed = urlparse(url)
     return parsed.scheme, parsed.hostname or "", parsed.path or "/", parsed.port
 
 
-def rebuild_url(scheme: str, host: str, path: str, port: Optional[int] = None) -> str:
+def rebuild_url(scheme: str, host: str, path: str, port: int | None = None) -> str:
     """Recombine a URL from its parts."""
     netloc = host if port is None else f"{host}:{port}"
     return urlunparse((scheme, netloc, path, "", "", ""))
 
 
-def default_headers(user_agent: str) -> Dict[str, str]:
+def default_headers(user_agent: str) -> dict[str, str]:
     """Return the default header set used by a fresh session."""
     return {
         "User-Agent": user_agent,

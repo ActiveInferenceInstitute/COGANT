@@ -1,11 +1,10 @@
 """Data models for the example service."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
-from sqlalchemy import Column, DateTime, Integer, String, create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
@@ -27,12 +26,12 @@ class UserDB(Base):
 class User(BaseModel):
     """Pydantic model for User data (request/response)."""
 
-    id: Optional[int] = None
+    id: int | None = None
     username: str = Field(..., min_length=3, max_length=50)
     email: str = Field(..., regex=r"^[\w\.-]+@[\w\.-]+\.\w+$")
-    full_name: Optional[str] = None
+    full_name: str | None = None
     is_active: bool = True
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
     class Config:
         from_attributes = True
@@ -53,9 +52,9 @@ class ItemDB(Base):
 class Item(BaseModel):
     """Pydantic model for Item data."""
 
-    id: Optional[int] = None
+    id: int | None = None
     name: str = Field(..., min_length=1, max_length=100)
-    description: Optional[str] = None
+    description: str | None = None
     owner_id: int
 
     class Config:
@@ -66,7 +65,7 @@ class ErrorResponse(BaseModel):
     """Standard error response."""
 
     error: str
-    detail: Optional[str] = None
+    detail: str | None = None
     status_code: int
 
 

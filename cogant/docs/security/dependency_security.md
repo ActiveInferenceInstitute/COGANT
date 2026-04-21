@@ -29,4 +29,3 @@ Core dependencies with security significance:
 2. **Critical updates**: Evaluate, apply in next release
 3. **Regular updates**: Monthly dependency review
 4. **Deprecation**: Phase out unsupported versions
-

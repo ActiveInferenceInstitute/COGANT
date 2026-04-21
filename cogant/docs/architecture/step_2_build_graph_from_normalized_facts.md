@@ -17,4 +17,3 @@ for norm_fact in normalized_facts:
         language=norm_fact.language,
         metadata=norm_fact.metadata
     )
-

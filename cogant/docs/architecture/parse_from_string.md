@@ -56,4 +56,3 @@ from cogant.static import SymbolExtractor
 from pathlib import Path
 
 extractor = SymbolExtractor(repo_root=Path("."))
-

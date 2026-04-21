@@ -1,4 +1,0 @@
-# file: /Users/4d/Documents/GitHub/template/projects_in_progress/cogant/cogant/py/cogant/schemas/core.py
-# hypothesis_version: 6.135.29
-
-[1.0, 'Edge', 'EdgeKind', 'Node', 'NodeKind', 'action', 'assertion', 'calls', 'catches', 'class', 'configuration', 'contains', 'data_structure', 'depends_on', 'endpoint', 'event', 'evidence_from_static', 'feature_flag', 'file', 'function', 'guards', 'implements', 'imports', 'inherits', 'method', 'module', 'mutates', 'observes', 'parameter', 'policy', 'reads', 'repo', 'return_value', 'returns', 'test', 'throws', 'triggers', 'variable', 'writes', 'yields']

@@ -4,4 +4,3 @@ normalized_facts = [
     normalizer.normalize(fact)
     for fact in raw_facts
 ]
-

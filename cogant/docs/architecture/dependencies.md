@@ -21,4 +21,3 @@ deps = query.get_dependency_chain(node_id, max_depth=5)
 from cogant.graph.merge import GraphMerger
 
 merger = GraphMerger()
-

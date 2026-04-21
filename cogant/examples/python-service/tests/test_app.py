@@ -1,12 +1,11 @@
 """Tests for the example service application."""
 
 import pytest
+from app import app, get_db
 from fastapi.testclient import TestClient
+from models import Base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from app import app, get_db
-from models import Base, UserDB, ItemDB
 
 # Test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_test.db"

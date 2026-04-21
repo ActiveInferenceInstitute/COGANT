@@ -12,9 +12,19 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.10
     hooks:
+      # Lint+format only the package and test trees so the hook matches the
+      # CI ratchet (.github/workflows/ci.yml :: Lint (ruff)). Auxiliary
+      # scripts under tools/, scripts/, manuscript/, etc. are intentionally
+      # not policed by pre-commit yet — see CONTRIBUTING.md "Lint scope".
+      # NOTE: pre-commit is invoked from the repo root by both
+      # ``pre-commit run --config cogant/.pre-commit-config.yaml`` (CI) and
+      # ``pre-commit install`` from inside ``cogant/`` (local), so we
+      # accept either prefix.
       - id: ruff
         args: [--fix]
+        files: ^(cogant/)?(py/cogant/|tests/)
       - id: ruff-format
+        files: ^(cogant/)?(py/cogant/|tests/)
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

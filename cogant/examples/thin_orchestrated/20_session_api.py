@@ -27,7 +27,10 @@ from cogant.api import Session  # noqa: E402
 
 def _show(label: str, result) -> None:
     if isinstance(result, dict):
-        short = {k: (v if not isinstance(v, (list, dict)) else f"<{type(v).__name__}:{len(v)}>") for k, v in result.items()}
+        short = {
+            k: (v if not isinstance(v, (list, dict)) else f"<{type(v).__name__}:{len(v)}>")
+            for k, v in result.items()
+        }
         print(f"  {label}: {short}")
     else:
         print(f"  {label}: {result}")
