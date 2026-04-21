@@ -14,8 +14,9 @@ Covers:
 - statespace/compiler.py: StateSpaceCompiler.compile extended (with nodes in graph)
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 pytestmark = pytest.mark.unit
 
@@ -24,19 +25,26 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_class_hierarchy():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n_mod = builder.add_node(NodeKind.MODULE, "mymod", "mymod", path="mymod.py")
-    n_base = builder.add_node(NodeKind.CLASS, "BaseController", "mymod.BaseController", path="mymod.py")
+    n_base = builder.add_node(
+        NodeKind.CLASS, "BaseController", "mymod.BaseController", path="mymod.py"
+    )
     n_child = builder.add_node(NodeKind.CLASS, "UserModel", "mymod.UserModel", path="mymod.py")
-    n_middleware = builder.add_node(NodeKind.CLASS, "AuthMiddleware", "mymod.AuthMiddleware", path="mymod.py")
+    n_middleware = builder.add_node(
+        NodeKind.CLASS, "AuthMiddleware", "mymod.AuthMiddleware", path="mymod.py"
+    )
     n_fn = builder.add_node(NodeKind.FUNCTION, "handle", "mymod.handle", path="mymod.py")
     builder.add_edge(n_mod.id, n_base.id, EdgeKind.CONTAINS)
     builder.add_edge(n_mod.id, n_child.id, EdgeKind.CONTAINS)
@@ -50,25 +58,34 @@ def _make_graph_with_class_hierarchy():
 def _make_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
-        id="ss1", schema_name="test",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="ss1",
+        schema_name="test",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
 
 
 def _make_process_model_with_stages():
-    from cogant.process.extractor import ProcessModel, Stage, ProcessConnection
+    from cogant.process.extractor import ProcessConnection, ProcessModel, Stage
+
     stage1 = Stage(id="s1", name="Ingest")
     stage2 = Stage(id="s2", name="Process")
     conn = ProcessConnection(
         id="c1",
-        source_stage_id="s1", target_stage_id="s2",
+        source_stage_id="s1",
+        target_stage_id="s2",
         trigger="next",
     )
     return ProcessModel(
-        id="pm1", schema_name="test",
+        id="pm1",
+        schema_name="test",
         stages={"s1": stage1, "s2": stage2},
         connections={"c1": conn},
     )
@@ -76,6 +93,7 @@ def _make_process_model_with_stages():
 
 def _make_reverse_model(name="test_model"):
     from cogant.reverse.parser import ReverseGNNModel
+
     return ReverseGNNModel(
         model_name=name,
         hidden_states=["state_a", "state_b"],
@@ -88,6 +106,7 @@ def _make_reverse_model(name="test_model"):
 
 def _make_package_plan(name="test_model"):
     from cogant.reverse.idempotency import plan_package
+
     model = _make_reverse_model(name)
     return plan_package(model), model
 
@@ -96,41 +115,53 @@ def _make_package_plan(name="test_model"):
 # viz/mermaid.py — _infer_class_stereotype module-level function
 # ---------------------------------------------------------------------------
 
+
 class TestMermaidStereotype:
     def _make_node(self, name, metadata=None):
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
-        node = builder.add_node(NodeKind.CLASS, name, f"mod.{name}", path="mod.py",
-                                metadata=metadata or {"some": "data"})
+        node = builder.add_node(
+            NodeKind.CLASS,
+            name,
+            f"mod.{name}",
+            path="mod.py",
+            metadata=metadata or {"some": "data"},
+        )
         return node, builder.finalize()
 
     def test_stereotype_controller(self):
         from cogant.viz.mermaid import _infer_class_stereotype
+
         node, graph = self._make_node("UserController")
         result = _infer_class_stereotype(node, graph)
         assert result == "<<controller>>"
 
     def test_stereotype_model(self):
         from cogant.viz.mermaid import _infer_class_stereotype
+
         node, graph = self._make_node("UserModel")
         result = _infer_class_stereotype(node, graph)
         assert result == "<<model>>"
 
     def test_stereotype_middleware(self):
         from cogant.viz.mermaid import _infer_class_stereotype
+
         node, graph = self._make_node("AuthMiddleware")
         result = _infer_class_stereotype(node, graph)
         assert result == "<<middleware>>"
 
     def test_stereotype_none_empty_metadata(self):
         from cogant.viz.mermaid import _infer_class_stereotype
+
         node, graph = self._make_node("RandomClass", metadata=None)
         result = _infer_class_stereotype(node, graph)
         assert result is None
 
     def test_stereotype_entity(self):
         from cogant.viz.mermaid import _infer_class_stereotype
+
         node, graph = self._make_node("UserEntity")
         result = _infer_class_stereotype(node, graph)
         assert result == "<<model>>"
@@ -140,9 +171,11 @@ class TestMermaidStereotype:
 # viz/mermaid.py — MermaidGenerator extended diagrams
 # ---------------------------------------------------------------------------
 
+
 class TestMermaidGeneratorDiagrams:
     def _make_gen(self):
         from cogant.viz import MermaidGenerator
+
         return MermaidGenerator()
 
     def test_generate_class_diagram_with_inheritance(self):
@@ -206,15 +239,18 @@ class TestMermaidGeneratorDiagrams:
 # reverse/synthesizer.py — private rendering functions
 # ---------------------------------------------------------------------------
 
+
 class TestSynthesizerRenderModules:
     def test_render_package_init(self):
         from cogant.reverse.synthesizer import _render_package_init
+
         plan, _ = _make_package_plan()
         result = _render_package_init(plan)
         assert isinstance(result, str)
 
     def test_render_state_module(self):
         from cogant.reverse.synthesizer import _render_state_module
+
         plan, _ = _make_package_plan()
         result = _render_state_module(plan)
         assert isinstance(result, str)
@@ -222,30 +258,35 @@ class TestSynthesizerRenderModules:
 
     def test_render_observe_module(self):
         from cogant.reverse.synthesizer import _render_observe_module
+
         plan, _model = _make_package_plan()
         result = _render_observe_module(plan)
         assert isinstance(result, str)
 
     def test_render_act_module(self):
         from cogant.reverse.synthesizer import _render_act_module
+
         plan, _ = _make_package_plan()
         result = _render_act_module(plan)
         assert isinstance(result, str)
 
     def test_render_policy_module(self):
         from cogant.reverse.synthesizer import _render_policy_module
+
         plan, _ = _make_package_plan()
         result = _render_policy_module(plan)
         assert isinstance(result, str)
 
     def test_render_constraints_module(self):
         from cogant.reverse.synthesizer import _render_constraints_module
+
         plan, _ = _make_package_plan()
         result = _render_constraints_module(plan)
         assert isinstance(result, str)
 
     def test_render_context_module_empty(self):
         from cogant.reverse.synthesizer import _render_context_module
+
         plan, _ = _make_package_plan()
         result = _render_context_module(plan)
         assert isinstance(result, str)
@@ -254,18 +295,21 @@ class TestSynthesizerRenderModules:
 
     def test_render_main_module(self):
         from cogant.reverse.synthesizer import _render_main_module
+
         plan, _ = _make_package_plan()
         result = _render_main_module(plan)
         assert isinstance(result, str)
 
     def test_render_test_smoke(self):
         from cogant.reverse.synthesizer import _render_test_smoke
+
         plan, _ = _make_package_plan()
         result = _render_test_smoke(plan)
         assert isinstance(result, str)
 
     def test_synthesize_package_creates_files(self, tmp_path):
         from cogant.reverse.synthesizer import synthesize_package
+
         plan, model = _make_package_plan("synth_test")
         result = synthesize_package(plan, model, tmp_path)
         assert isinstance(result, Path)
@@ -275,7 +319,8 @@ class TestSynthesizerRenderModules:
         assert len(py_files) >= 1
 
     def test_render_act_module_no_actions(self):
-        from cogant.reverse.synthesizer import _render_act_module, PackagePlan
+        from cogant.reverse.synthesizer import PackagePlan, _render_act_module
+
         plan = PackagePlan(
             package_name="test_pkg",
             raw_model_name="test",
@@ -303,9 +348,11 @@ class TestSynthesizerRenderModules:
 # statespace/compiler.py — StateSpaceCompiler extended
 # ---------------------------------------------------------------------------
 
+
 class TestStateSpaceCompilerExtended:
     def test_compile_with_rich_graph(self):
         from cogant.statespace import StateSpaceCompiler, StateSpaceModel
+
         graph = _make_graph_with_class_hierarchy()
         compiler = StateSpaceCompiler(graph, schema_name="test")
         model = compiler.compile(semantic_mappings={})
@@ -314,6 +361,7 @@ class TestStateSpaceCompilerExtended:
     def test_compile_returns_valid_time_regime(self):
         from cogant.statespace import StateSpaceCompiler
         from cogant.statespace.temporal import TimeRegime
+
         graph = _make_graph_with_class_hierarchy()
         compiler = StateSpaceCompiler(graph, schema_name="test")
         model = compiler.compile(semantic_mappings={})
@@ -321,6 +369,7 @@ class TestStateSpaceCompilerExtended:
 
     def test_compile_variables_is_dict_or_list(self):
         from cogant.statespace import StateSpaceCompiler
+
         graph = _make_graph_with_class_hierarchy()
         compiler = StateSpaceCompiler(graph, schema_name="test")
         model = compiler.compile(semantic_mappings={})
@@ -328,6 +377,7 @@ class TestStateSpaceCompilerExtended:
 
     def test_compile_actions_is_dict_or_list(self):
         from cogant.statespace import StateSpaceCompiler
+
         graph = _make_graph_with_class_hierarchy()
         compiler = StateSpaceCompiler(graph, schema_name="test")
         model = compiler.compile(semantic_mappings={})
@@ -335,6 +385,7 @@ class TestStateSpaceCompilerExtended:
 
     def test_compile_observations_is_dict_or_list(self):
         from cogant.statespace import StateSpaceCompiler
+
         graph = _make_graph_with_class_hierarchy()
         compiler = StateSpaceCompiler(graph, schema_name="test")
         model = compiler.compile(semantic_mappings={})

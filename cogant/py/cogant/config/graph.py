@@ -19,17 +19,9 @@ class GraphConfig(BaseModel):
         include_builtins: Retain language/runtime builtins in the graph.
     """
 
-    max_nodes: int = Field(
-        default=10_000, ge=1, description="Maximum nodes in the graph"
-    )
-    max_edges: int = Field(
-        default=50_000, ge=1, description="Maximum edges in the graph"
-    )
-    prune_isolated: bool = Field(
-        default=True, description="Drop nodes with no edges"
-    )
-    include_builtins: bool = Field(
-        default=False, description="Keep language builtins in the graph"
-    )
+    max_nodes: int = Field(default=10_000, ge=1, description="Maximum nodes in the graph")
+    max_edges: int = Field(default=50_000, ge=1, description="Maximum edges in the graph")
+    prune_isolated: bool = Field(default=True, description="Drop nodes with no edges")
+    include_builtins: bool = Field(default=False, description="Keep language builtins in the graph")
 
     model_config = ConfigDict(frozen=True)

@@ -50,10 +50,10 @@ Each test is marked ``pytest.mark.fuzz`` (registered in
 from __future__ import annotations
 
 import math
-from typing import List, Set, Tuple
 
 import pytest
-from hypothesis import HealthCheck, example, given, settings, strategies as st
+from hypothesis import HealthCheck, example, given, settings
+from hypothesis import strategies as st
 
 from cogant.gnn.matrices import GNNMatrices
 from cogant.graph.builder import ProgramGraphBuilder
@@ -65,7 +65,6 @@ from cogant.markov.blanket import (
 from cogant.markov.extractor import MarkovBlanketExtractor
 from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.semantic import MappingKind, SemanticMapping
 from cogant.statespace.compiler import StateSpaceCompiler
 from cogant.translate.engine import TranslationEngine
 from cogant.translate.rules import (
@@ -108,7 +107,7 @@ _ROLE_COVERAGE_FLOOR = 0  # "at least one mapping" is the currently safe floor
 # shipping rule (Observation/Action/Containment/Policy/Inheritance) will
 # match against. Using this pool biases random graphs toward actually
 # producing mappings, which is what we want for the role coverage test.
-_RULE_FRIENDLY_NAMES: Tuple[str, ...] = (
+_RULE_FRIENDLY_NAMES: tuple[str, ...] = (
     "get_value",
     "set_value",
     "read_data",
@@ -131,7 +130,7 @@ _RULE_FRIENDLY_NAMES: Tuple[str, ...] = (
     "AbstractBase",
 )
 
-_NODE_KINDS: Tuple[NodeKind, ...] = (
+_NODE_KINDS: tuple[NodeKind, ...] = (
     NodeKind.MODULE,
     NodeKind.CLASS,
     NodeKind.METHOD,
@@ -139,7 +138,7 @@ _NODE_KINDS: Tuple[NodeKind, ...] = (
     NodeKind.VARIABLE,
 )
 
-_EDGE_KINDS: Tuple[EdgeKind, ...] = (
+_EDGE_KINDS: tuple[EdgeKind, ...] = (
     EdgeKind.CONTAINS,
     EdgeKind.READS,
     EdgeKind.WRITES,
@@ -176,9 +175,9 @@ def _make_engine() -> TranslationEngine:
 
 def _build_graph(
     n_nodes: int,
-    node_kinds: List[NodeKind],
-    node_names: List[str],
-    edge_tuples: List[Tuple[int, int, EdgeKind]],
+    node_kinds: list[NodeKind],
+    node_names: list[str],
+    edge_tuples: list[tuple[int, int, EdgeKind]],
     *,
     repo_uri: str = "fuzz://harness",
 ) -> ProgramGraph:
@@ -288,9 +287,7 @@ def _fuzz_graphs(
         names = draw(
             st.lists(
                 st.text(
-                    alphabet=st.characters(
-                        min_codepoint=ord("a"), max_codepoint=ord("z")
-                    ),
+                    alphabet=st.characters(min_codepoint=ord("a"), max_codepoint=ord("z")),
                     min_size=1,
                     max_size=20,
                 ),
@@ -358,7 +355,7 @@ def test_role_completeness_soft_floor(n: int) -> None:
     kinds = [_NODE_KINDS[i % len(_NODE_KINDS)] for i in range(max(0, n - 1))]
     names = [_RULE_FRIENDLY_NAMES[i % len(_RULE_FRIENDLY_NAMES)] for i in range(max(0, n - 1))]
     # A couple of edges guarantee the rules have something to match.
-    edges: List[Tuple[int, int, EdgeKind]] = []
+    edges: list[tuple[int, int, EdgeKind]] = []
     for i in range(max(0, n - 1)):
         edges.append((0, i + 1, EdgeKind.CONTAINS))
         if i + 1 < n:
@@ -422,9 +419,7 @@ def test_role_completeness_rule_coverage(graph: ProgramGraph) -> None:
 @given(
     node_names=st.lists(
         st.text(
-            alphabet=st.characters(
-                min_codepoint=ord("a"), max_codepoint=ord("z")
-            ),
+            alphabet=st.characters(min_codepoint=ord("a"), max_codepoint=ord("z")),
             min_size=1,
             max_size=20,
         ),
@@ -433,7 +428,7 @@ def test_role_completeness_rule_coverage(graph: ProgramGraph) -> None:
     )
 )
 @_FUZZ_SETTINGS
-def test_no_orphan_mappings(node_names: List[str]) -> None:
+def test_no_orphan_mappings(node_names: list[str]) -> None:
     """Every ``SemanticMapping`` must reference node IDs that exist in
     the source graph.
 
@@ -448,7 +443,7 @@ def test_no_orphan_mappings(node_names: List[str]) -> None:
     n_nodes = len(node_names) + 1
     kinds = [_NODE_KINDS[i % len(_NODE_KINDS)] for i in range(len(node_names))]
     # Build a small set of edges to give rules something to match on.
-    edges: List[Tuple[int, int, EdgeKind]] = []
+    edges: list[tuple[int, int, EdgeKind]] = []
     for i, _name in enumerate(node_names):
         edges.append((0, i + 1, EdgeKind.CONTAINS))
     for i in range(len(node_names) - 1):
@@ -464,30 +459,21 @@ def test_no_orphan_mappings(node_names: List[str]) -> None:
     engine = _make_engine()
     mappings = engine.translate(graph)
 
-    valid_node_ids: Set[str] = set(graph.nodes.keys())
+    valid_node_ids: set[str] = set(graph.nodes.keys())
     assert valid_node_ids, "builder must have produced at least the root module"
 
     for mapping in mappings:
-        assert mapping.graph_fragment_node_ids, (
-            f"mapping {mapping.id} has empty fragment node list"
-        )
+        assert mapping.graph_fragment_node_ids, f"mapping {mapping.id} has empty fragment node list"
         # Every node id referenced by the mapping must exist in the graph.
-        stray = [
-            nid
-            for nid in mapping.graph_fragment_node_ids
-            if nid not in valid_node_ids
-        ]
+        stray = [nid for nid in mapping.graph_fragment_node_ids if nid not in valid_node_ids]
         assert not stray, (
             f"mapping {mapping.id} (kind={mapping.kind.value}) references "
             f"non-existent node ids {stray}; valid ids are a set of size "
             f"{len(valid_node_ids)}"
         )
         # At least one referenced id must exist — this is the orphan check.
-        assert any(
-            nid in valid_node_ids for nid in mapping.graph_fragment_node_ids
-        ), (
-            f"mapping {mapping.id} is an orphan: no fragment id matches "
-            f"any graph node"
+        assert any(nid in valid_node_ids for nid in mapping.graph_fragment_node_ids), (
+            f"mapping {mapping.id} is an orphan: no fragment id matches any graph node"
         )
 
 
@@ -516,7 +502,7 @@ def test_markov_blanket_totality(n: int, seed_frac: float) -> None:
     # blanket has a non-trivial topology to partition.
     kinds = [_NODE_KINDS[i % len(_NODE_KINDS)] for i in range(n - 1)]
     names = [_RULE_FRIENDLY_NAMES[i % len(_RULE_FRIENDLY_NAMES)] for i in range(n - 1)]
-    edges: List[Tuple[int, int, EdgeKind]] = []
+    edges: list[tuple[int, int, EdgeKind]] = []
     for i in range(n - 1):
         edges.append((0, i + 1, EdgeKind.CONTAINS))
     # Add a few cross-links so sensory/active boundaries can exist.
@@ -543,9 +529,7 @@ def test_markov_blanket_totality(n: int, seed_frac: float) -> None:
     _assert_blanket_is_a_partition(blanket2, all_ids)
 
 
-def _assert_blanket_is_a_partition(
-    blanket: MarkovBlanket, all_ids: Set[str]
-) -> None:
+def _assert_blanket_is_a_partition(blanket: MarkovBlanket, all_ids: set[str]) -> None:
     """Assert totality and mutual exclusivity of a MarkovBlanket."""
     roles = (
         blanket.internal_ids,
@@ -557,14 +541,11 @@ def _assert_blanket_is_a_partition(
     for i in range(len(roles)):
         for j in range(i + 1, len(roles)):
             overlap = roles[i] & roles[j]
-            assert not overlap, (
-                f"blanket roles {i}/{j} overlap on {overlap}"
-            )
+            assert not overlap, f"blanket roles {i}/{j} overlap on {overlap}"
     # Totality.
     union = set().union(*roles)
     assert union == all_ids, (
-        f"blanket does not partition the graph: missing {all_ids - union}, "
-        f"extra {union - all_ids}"
+        f"blanket does not partition the graph: missing {all_ids - union}, extra {union - all_ids}"
     )
     # Per-node role_of() must agree with the per-set membership.
     for nid in all_ids:
@@ -576,8 +557,7 @@ def _assert_blanket_is_a_partition(
             BlanketRole.EXTERNAL,
         )
         assert nid in blanket.ids_by_role(role), (
-            f"node {nid} has role {role.value} but is not in the "
-            f"corresponding per-role set"
+            f"node {nid} has role {role.value} but is not in the corresponding per-role set"
         )
 
 
@@ -607,8 +587,8 @@ def test_matrix_stochasticity(n_hidden: int, n_obs: int, n_actions: int) -> None
     # Extra slots for the root module + one anchor class. Names are
     # chosen so the rules fire reliably.
     total_nodes = 1 + n_hidden + n_obs + n_actions  # +1 root module
-    kinds: List[NodeKind] = []
-    names: List[str] = []
+    kinds: list[NodeKind] = []
+    names: list[str] = []
     # Hidden-state nodes: VARIABLE kind with mutatable-looking names.
     for i in range(n_hidden):
         kinds.append(NodeKind.VARIABLE)
@@ -630,7 +610,7 @@ def test_matrix_stochasticity(n_hidden: int, n_obs: int, n_actions: int) -> None
     obs_start = 1 + n_hidden
     act_start = 1 + n_hidden + n_obs
 
-    edges: List[Tuple[int, int, EdgeKind]] = []
+    edges: list[tuple[int, int, EdgeKind]] = []
     # Module CONTAINS everything for basic structure.
     for i in range(1, total_nodes):
         edges.append((0, i, EdgeKind.CONTAINS))
@@ -666,12 +646,9 @@ def test_matrix_stochasticity(n_hidden: int, n_obs: int, n_actions: int) -> None
                 continue
             row_sum = sum(row)
             assert math.isclose(row_sum, 1.0, abs_tol=1e-4), (
-                f"A row {i} does not sum to 1 (sum={row_sum!r}); "
-                f"row={row!r}"
+                f"A row {i} does not sum to 1 (sum={row_sum!r}); row={row!r}"
             )
-            assert all(v >= 0.0 for v in row), (
-                f"A row {i} has negative entries: {row!r}"
-            )
+            assert all(v >= 0.0 for v in row), f"A row {i} has negative entries: {row!r}"
 
     # B: column-stochastic over next-state for each (cur, action). The
     # engine shape is ``B[next][cur][action]`` per compute_B's docstring.
@@ -684,8 +661,7 @@ def test_matrix_stochasticity(n_hidden: int, n_obs: int, n_actions: int) -> None
                 for k in range(n_act):
                     col_sum = sum(B[nxt][cur][k] for nxt in range(n_states_actual))
                     assert math.isclose(col_sum, 1.0, abs_tol=1e-4), (
-                        f"B column (cur={cur}, action={k}) sums to "
-                        f"{col_sum!r}, expected 1.0 ± 1e-4"
+                        f"B column (cur={cur}, action={k}) sums to {col_sum!r}, expected 1.0 ± 1e-4"
                     )
                     for nxt in range(n_states_actual):
                         assert B[nxt][cur][k] >= 0.0, (
@@ -714,7 +690,7 @@ def test_rule_determinism(n: int) -> None:
     """
     kinds = [_NODE_KINDS[i % len(_NODE_KINDS)] for i in range(max(0, n - 1))]
     names = [_RULE_FRIENDLY_NAMES[i % len(_RULE_FRIENDLY_NAMES)] for i in range(max(0, n - 1))]
-    edges: List[Tuple[int, int, EdgeKind]] = []
+    edges: list[tuple[int, int, EdgeKind]] = []
     for i in range(max(0, n - 1)):
         edges.append((0, i + 1, EdgeKind.CONTAINS))
         if i + 1 < n:
@@ -740,12 +716,8 @@ def test_rule_determinism(n: int) -> None:
     for mid in ids_a:
         ma = by_id_a[mid]
         mb = by_id_b[mid]
-        assert ma.kind == mb.kind, (
-            f"mapping {mid} kind differs: {ma.kind} vs {mb.kind}"
-        )
-        assert sorted(ma.graph_fragment_node_ids) == sorted(
-            mb.graph_fragment_node_ids
-        ), (
+        assert ma.kind == mb.kind, f"mapping {mid} kind differs: {ma.kind} vs {mb.kind}"
+        assert sorted(ma.graph_fragment_node_ids) == sorted(mb.graph_fragment_node_ids), (
             f"mapping {mid} fragment differs across runs: "
             f"{ma.graph_fragment_node_ids} vs {mb.graph_fragment_node_ids}"
         )

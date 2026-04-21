@@ -1,11 +1,15 @@
 """Unit tests for viz/mermaid.py — MermaidGenerator."""
-import os, sys
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 import pytest
-from cogant.viz.mermaid import MermaidGenerator
+
 from cogant.graph.builder import ProgramGraphBuilder
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.schemas.graph import ProgramGraph, GraphMetadata
+from cogant.schemas.core import EdgeKind, NodeKind
+from cogant.schemas.graph import GraphMetadata, ProgramGraph
+from cogant.viz.mermaid import MermaidGenerator
 
 
 def _graph() -> ProgramGraph:
@@ -24,6 +28,7 @@ def _graph() -> ProgramGraph:
 def _state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
         id="ss:mermaid",
         schema_name="mermaid_test",

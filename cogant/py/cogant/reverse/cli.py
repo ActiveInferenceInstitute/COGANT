@@ -85,9 +85,7 @@ def _render_roundtrip_result(result: RoundtripResult, threshold: float) -> None:
     table.add_column("Original", style="magenta", justify="right")
     table.add_column("Synthesized", style="green", justify="right")
 
-    all_roles = sorted(
-        set(result.original_roles) | set(result.synthesized_roles)
-    )
+    all_roles = sorted(set(result.original_roles) | set(result.synthesized_roles))
     for role in all_roles:
         table.add_row(
             role,

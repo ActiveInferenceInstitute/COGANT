@@ -28,7 +28,6 @@ from cogant.statespace.compiler import (
 from cogant.statespace.temporal import TimeRegime
 from cogant.statespace.variables import StateVariable, StateVariableType
 
-
 # --------------------------- variational_free_energy ------------------- #
 
 
@@ -76,16 +75,16 @@ def test_vfe_likelihood_row_shape_mismatch_raises():
     """A row in the A matrix with wrong width raises ValueError."""
     with pytest.raises(ValueError, match="likelihood_matrix rows"):
         variational_free_energy(
-            [0.5, 0.5], [0.5, 0.5], [[1.0]]  # row should have 2 entries
+            [0.5, 0.5],
+            [0.5, 0.5],
+            [[1.0]],  # row should have 2 entries
         )
 
 
 def test_vfe_observation_length_mismatch_raises():
     """An observation vector of the wrong length raises ValueError."""
     with pytest.raises(ValueError, match="observation length"):
-        variational_free_energy(
-            [0.5, 0.5], [0.5, 0.5], [[1.0, 0.0], [0.0, 1.0]], observation=[1.0]
-        )
+        variational_free_energy([0.5, 0.5], [0.5, 0.5], [[1.0, 0.0], [0.0, 1.0]], observation=[1.0])
 
 
 # --------------------------- bayesian_belief_update -------------------- #
@@ -152,7 +151,7 @@ def test_efe_log_preferences_length_mismatch_raises():
 
 def test_efe_returns_float_for_well_formed_inputs():
     """A well-formed call returns a finite float."""
-    n_states, n_obs, n_actions = 2, 2, 1
+    _n_states, _n_obs, _n_actions = 2, 2, 1
     beliefs = [0.5, 0.5]
     A = [[0.9, 0.1], [0.1, 0.9]]
     # B[s_next][s][a]

@@ -71,7 +71,9 @@ class NetworkView:
             logger.error(f"Error plotting degree distribution: {e}")
             return None
 
-    def plot_centrality_ranking(self, centrality: dict[str, float], top_n: int = 15) -> Figure | None:
+    def plot_centrality_ranking(
+        self, centrality: dict[str, float], top_n: int = 15
+    ) -> Figure | None:
         """
         Horizontal bar chart of top-N nodes by centrality score.
 
@@ -109,8 +111,13 @@ class NetworkView:
             # Add value labels
             for bar, score in zip(bars, scores, strict=False):
                 width = bar.get_width()
-                ax.text(width, bar.get_y() + bar.get_height() / 2, f" {score:.3f}",
-                       va="center", fontsize=9)
+                ax.text(
+                    width,
+                    bar.get_y() + bar.get_height() / 2,
+                    f" {score:.3f}",
+                    va="center",
+                    fontsize=9,
+                )
 
             fig.tight_layout()
             return fig
@@ -151,6 +158,7 @@ class NetworkView:
 
             # Assign colors to communities
             import matplotlib.colors as mcolors
+
             colors_list = list(mcolors.TABLEAU_COLORS.values())
             node_color_map = {}
 
@@ -160,13 +168,12 @@ class NetworkView:
                     node_color_map[node] = color
 
             # Default color for nodes not in any community
-            node_colors = [
-                node_color_map.get(node, "lightgray")
-                for node in graph.nodes()
-            ]
+            node_colors = [node_color_map.get(node, "lightgray") for node in graph.nodes()]
 
             # Draw graph
-            nx.draw_networkx_nodes(graph, pos, node_color=node_colors, node_size=300, alpha=0.9, ax=ax)
+            nx.draw_networkx_nodes(
+                graph, pos, node_color=node_colors, node_size=300, alpha=0.9, ax=ax
+            )
             nx.draw_networkx_labels(graph, pos, font_size=7, ax=ax)
             nx.draw_networkx_edges(graph, pos, alpha=0.3, ax=ax, width=0.5)
 
@@ -175,8 +182,15 @@ class NetworkView:
 
             # Add legend
             legend_elements = [
-                plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=colors_list[i % len(colors_list)],
-                          markersize=8, label=f"Community {i + 1}")
+                plt.Line2D(
+                    [0],
+                    [0],
+                    marker="o",
+                    color="w",
+                    markerfacecolor=colors_list[i % len(colors_list)],
+                    markersize=8,
+                    label=f"Community {i + 1}",
+                )
                 for i in range(len(communities))
             ]
             ax.legend(handles=legend_elements, loc="upper left", fontsize=9)
@@ -188,7 +202,9 @@ class NetworkView:
             logger.error(f"Error plotting community graph: {e}")
             return None
 
-    def plot_adjacency_heatmap(self, matrix: list[list[int]], labels: list[str] | None = None) -> Figure | None:
+    def plot_adjacency_heatmap(
+        self, matrix: list[list[int]], labels: list[str] | None = None
+    ) -> Figure | None:
         """
         Adjacency matrix as heatmap.
 
@@ -230,7 +246,9 @@ class NetworkView:
                 step = max(1, n_labels // 20)  # Show at most 20 labels
                 label_positions = list(range(0, n_labels, step))
                 ax.set_xticks(label_positions)
-                ax.set_xticklabels([labels[i] for i in label_positions], rotation=45, ha="right", fontsize=8)
+                ax.set_xticklabels(
+                    [labels[i] for i in label_positions], rotation=45, ha="right", fontsize=8
+                )
                 ax.set_yticks(label_positions)
                 ax.set_yticklabels([labels[i] for i in label_positions], fontsize=8)
 
@@ -275,7 +293,15 @@ class NetworkView:
             # Create treemap
             colors = plt.cm.RdYlGn_r([(s - min(sizes)) / (max(sizes) - min(sizes)) for s in sizes])
 
-            squarify.plot(sizes=sizes, label=labels, ax=ax, color=colors, alpha=0.8, edgecolor="white", linewidth=2)
+            squarify.plot(
+                sizes=sizes,
+                label=labels,
+                ax=ax,
+                color=colors,
+                alpha=0.8,
+                edgecolor="white",
+                linewidth=2,
+            )
 
             ax.set_title("Hotspot Treemap: Node Importance (Area = Score)")
             ax.axis("off")
@@ -309,7 +335,7 @@ class NetworkView:
         # Add subgraphs for each community
         for cidx, community in enumerate(communities):
             safe_id = f"community_{cidx}"
-            lines.append(f"    subgraph {safe_id}[\"Community {cidx + 1}\"]")
+            lines.append(f'    subgraph {safe_id}["Community {cidx + 1}"]')
 
             for node_id in list(community)[:10]:  # Limit nodes per subgraph for readability
                 safe_node = str(node_id).replace("-", "_").replace(".", "_")

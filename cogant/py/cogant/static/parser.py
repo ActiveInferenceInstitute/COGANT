@@ -186,9 +186,7 @@ class PythonASTParser:
 
         # Visit all nodes
         for node in tree.body:
-            if isinstance(node, ast.FunctionDef) or isinstance(
-                node, ast.AsyncFunctionDef
-            ):
+            if isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
                 func = self._extract_function(node)
                 if func:
                     module.functions.append(func)
@@ -241,9 +239,7 @@ class PythonASTParser:
 
         # Visit all nodes
         for node in tree.body:
-            if isinstance(node, ast.FunctionDef) or isinstance(
-                node, ast.AsyncFunctionDef
-            ):
+            if isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
                 func = self._extract_function(node)
                 if func:
                     module.functions.append(func)
@@ -261,9 +257,7 @@ class PythonASTParser:
 
         return module
 
-    def _extract_function(
-        self, node: ast.FunctionDef | ast.AsyncFunctionDef
-    ) -> FunctionDef | None:
+    def _extract_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> FunctionDef | None:
         """Extract function definition from AST node.
 
         Args:
@@ -274,9 +268,7 @@ class PythonASTParser:
         """
         try:
             # Extract decorators
-            decorators = [
-                self._ast_to_str(dec) for dec in node.decorator_list
-            ]
+            decorators = [self._ast_to_str(dec) for dec in node.decorator_list]
 
             # Extract argument names
             args = []
@@ -327,9 +319,7 @@ class PythonASTParser:
             bases = [self._ast_to_str(base) for base in node.bases]
 
             # Extract decorators
-            decorators = [
-                self._ast_to_str(dec) for dec in node.decorator_list
-            ]
+            decorators = [self._ast_to_str(dec) for dec in node.decorator_list]
 
             # Extract docstring
             docstring = None
@@ -344,9 +334,7 @@ class PythonASTParser:
             # Extract methods
             methods = []
             for item in node.body:
-                if isinstance(item, ast.FunctionDef) or isinstance(
-                    item, ast.AsyncFunctionDef
-                ):
+                if isinstance(item, ast.FunctionDef) or isinstance(item, ast.AsyncFunctionDef):
                     method = self._extract_function(item)
                     if method:
                         method.parent = node.name
@@ -413,9 +401,7 @@ class PythonASTParser:
 
         return imports
 
-    def _extract_assignment(
-        self, node: ast.Assign | ast.AnnAssign
-    ) -> AssignmentDef | None:
+    def _extract_assignment(self, node: ast.Assign | ast.AnnAssign) -> AssignmentDef | None:
         """Extract assignment from AST node.
 
         Args:
@@ -439,11 +425,7 @@ class PythonASTParser:
 
             elif isinstance(node, ast.AnnAssign):
                 if isinstance(node.target, ast.Name):
-                    annotation_str = (
-                        self._ast_to_str(node.annotation)
-                        if node.annotation
-                        else None
-                    )
+                    annotation_str = self._ast_to_str(node.annotation) if node.annotation else None
                     value_str = self._ast_to_str(node.value) if node.value else None
 
                     return AssignmentDef(

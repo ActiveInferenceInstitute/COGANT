@@ -7,14 +7,14 @@ Tests cover:
 """
 
 import json
+
 import pytest
 
 from cogant.dynamic.coverage import CoverageIngester
-from cogant.dynamic.traces import TraceIngester
 from cogant.dynamic.enrichment import enrich_graph
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
-from cogant.schemas.graph import ProgramGraph, GraphMetadata
-
+from cogant.dynamic.traces import TraceIngester
+from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
 # -- Sample data constants ---------------------------------------------------
 
@@ -52,6 +52,7 @@ MINIMAL_CHROME_TRACE = {
 
 # -- Helper -------------------------------------------------------------------
 
+
 def _make_graph(nodes, edges=None):
     """Build a ProgramGraph from lists of Node and Edge objects.
 
@@ -69,12 +70,13 @@ def _make_graph(nodes, edges=None):
     graph = ProgramGraph(metadata=metadata)
     for node in nodes:
         graph.add_node(node)
-    for edge in (edges or []):
+    for edge in edges or []:
         graph.add_edge(edge)
     return graph
 
 
 # -- Fixtures -----------------------------------------------------------------
+
 
 @pytest.fixture()
 def cobertura_xml_path(tmp_path):
@@ -95,6 +97,7 @@ def chrome_trace_path(tmp_path):
 # =============================================================================
 # CoverageIngester tests
 # =============================================================================
+
 
 class TestCoverageIngester:
     """Tests for CoverageIngester."""
@@ -171,6 +174,7 @@ class TestCoverageIngester:
 # TraceIngester tests
 # =============================================================================
 
+
 class TestTraceIngester:
     """Tests for TraceIngester."""
 
@@ -214,9 +218,7 @@ class TestTraceIngester:
         assert foo_stats["count"] == 2.0
         assert foo_stats["min"] > 0
         assert foo_stats["max"] >= foo_stats["min"]
-        assert foo_stats["mean"] == pytest.approx(
-            (foo_stats["min"] + foo_stats["max"]) / 2.0
-        )
+        assert foo_stats["mean"] == pytest.approx((foo_stats["min"] + foo_stats["max"]) / 2.0)
 
         bar_stats = timing["bar"]
         assert bar_stats["count"] == 1.0
@@ -258,6 +260,7 @@ class TestTraceIngester:
 # =============================================================================
 # enrich_graph tests
 # =============================================================================
+
 
 class TestEnrichGraph:
     """Tests for enrich_graph integration."""

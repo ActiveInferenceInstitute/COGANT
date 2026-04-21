@@ -7,15 +7,14 @@ from __future__ import annotations
 
 import pytest
 
-from cogant.translate.dsl import DSLRule, DSLRuleSet, load_rules_from_dict, compile_ruleset
-from cogant.translate.dsl.schema import DSLCondition
-from cogant.schemas.core import Node, NodeKind, EdgeKind, Edge
+from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
-
+from cogant.translate.dsl import DSLRuleSet, compile_ruleset, load_rules_from_dict
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_graph_with_node(
     node_id: str = "n1",
@@ -44,7 +43,9 @@ def _make_graph_with_node(
     if outgoing_edge_kinds:
         for i, ek in enumerate(outgoing_edge_kinds):
             target_id = f"target_{i}"
-            target = Node(id=target_id, kind=NodeKind.VARIABLE, name=f"var_{i}", qualified_name=f"var_{i}")
+            target = Node(
+                id=target_id, kind=NodeKind.VARIABLE, name=f"var_{i}", qualified_name=f"var_{i}"
+            )
             graph.add_node(target)
             edge = Edge(
                 id=f"e_{node_id}_{target_id}",

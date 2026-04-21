@@ -48,8 +48,6 @@ def test_program_graph_dict_to_networkx_list_and_dict() -> None:
     assert g2.number_of_edges() >= 1
 
 
-
-
 def test_find_graph_dot_prefers_diagrams_subdir(tmp_path: Path) -> None:
     run = tmp_path / "run"
     (run / "diagrams").mkdir(parents=True)
@@ -150,9 +148,7 @@ def test_downsample_graph_caps_edge_count() -> None:
     """Edge-count cap must kick in even when nodes already fit."""
     nodes = [(f"n{i}", f"N{i}") for i in range(4)]
     # Densely connect all 4 nodes → 12 directed edges.
-    edges = [
-        (f"n{i}", f"n{j}", "x") for i in range(4) for j in range(4) if i != j
-    ]
+    edges = [(f"n{i}", f"n{j}", "x") for i in range(4) for j in range(4) if i != j]
     sn, se, stats = _downsample_graph(nodes, edges, max_nodes=4, max_edges=4)
     assert len(sn) == 4
     assert len(se) == 4
@@ -168,16 +164,13 @@ def test_downsample_graph_caps_edge_count() -> None:
 def _make_state_space(n_vars: int, n_obs: int, n_acts: int) -> SimpleNamespace:
     return SimpleNamespace(
         variables=[
-            SimpleNamespace(id=f"s{i}", name=f"state_{i}", cardinality=2)
-            for i in range(n_vars)
+            SimpleNamespace(id=f"s{i}", name=f"state_{i}", cardinality=2) for i in range(n_vars)
         ],
         observations=[
-            SimpleNamespace(id=f"o{i}", name=f"obs_{i}", cardinality=2)
-            for i in range(n_obs)
+            SimpleNamespace(id=f"o{i}", name=f"obs_{i}", cardinality=2) for i in range(n_obs)
         ],
         actions=[
-            SimpleNamespace(id=f"u{i}", name=f"act_{i}", cardinality=2)
-            for i in range(n_acts)
+            SimpleNamespace(id=f"u{i}", name=f"act_{i}", cardinality=2) for i in range(n_acts)
         ],
     )
 

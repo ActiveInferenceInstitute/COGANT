@@ -95,16 +95,14 @@ class TypedExporter:
         Returns:
             DOT format string.
         """
-        lines = ["digraph program_graph {", '    rankdir=LR;', '    node [shape=box];']
+        lines = ["digraph program_graph {", "    rankdir=LR;", "    node [shape=box];"]
 
         # Add nodes with labels
         for node in graph.nodes.values():
             safe_id = node.id.replace("-", "_").replace(".", "_")
             label = node.name
             color = self._get_node_color(node.kind)
-            lines.append(
-                f'    {safe_id} [label="{label}", shape=box, color="{color}"];'
-            )
+            lines.append(f'    {safe_id} [label="{label}", shape=box, color="{color}"];')
 
         # Add edges
         for edge in graph.edges.values():

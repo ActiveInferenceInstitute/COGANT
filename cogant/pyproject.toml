@@ -111,6 +111,10 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+extend-exclude = [
+    "examples/real_world/json_stdlib",
+    "_extensions",
+]
 
 [tool.ruff.lint]
 extend-select = [

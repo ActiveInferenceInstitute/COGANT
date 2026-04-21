@@ -42,8 +42,7 @@ class GraphMLExporter:
         graphml = ET.Element("graphml")
         graphml.set("xmlns", "http://graphml.graphdrawing.org/xmlns")
         graphml.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
-        graphml.set("xsi:schemaLocation",
-                   "http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd")
+        graphml.set("xsi:schemaLocation", "http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd")
 
         # Add key definitions
         self._add_key_definitions(graphml)
@@ -222,5 +221,6 @@ class GraphMLExporter:
         """Pretty-print XML string."""
         # Simple prettification
         import xml.dom.minidom
+
         dom = xml.dom.minidom.parseString(xml_string)
         return dom.toprettyxml(indent="  ")

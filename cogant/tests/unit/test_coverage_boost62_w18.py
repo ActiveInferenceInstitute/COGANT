@@ -10,7 +10,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -19,9 +18,11 @@ pytestmark = pytest.mark.unit
 # normalize/canonical.py — LanguageFact and NormalizedFact
 # ---------------------------------------------------------------------------
 
+
 class TestLanguageFact:
     def test_language_fact_init(self):
         from cogant.normalize.canonical import LanguageFact
+
         fact = LanguageFact(
             fact_type="function_definition",
             language="python",
@@ -33,6 +34,7 @@ class TestLanguageFact:
 
     def test_language_fact_with_data(self):
         from cogant.normalize.canonical import LanguageFact
+
         fact = LanguageFact(
             fact_type="class_definition",
             language="python",
@@ -45,13 +47,16 @@ class TestLanguageFact:
 # normalize/canonical.py — CanonicalNormalizer
 # ---------------------------------------------------------------------------
 
+
 class TestCanonicalNormalizer:
     def _make_normalizer(self):
         from cogant.normalize.canonical import CanonicalNormalizer
+
         return CanonicalNormalizer()
 
     def _make_python_fact(self, fact_type="function_definition"):
         from cogant.normalize.canonical import LanguageFact
+
         return LanguageFact(
             fact_type=fact_type,
             language="python",
@@ -60,6 +65,7 @@ class TestCanonicalNormalizer:
 
     def test_normalize_python_function(self):
         from cogant.normalize.canonical import NormalizedFact
+
         normalizer = self._make_normalizer()
         fact = self._make_python_fact("function_definition")
         result = normalizer.normalize(fact)
@@ -79,6 +85,7 @@ class TestCanonicalNormalizer:
 
     def test_normalize_batch_multiple(self):
         from cogant.normalize.canonical import LanguageFact
+
         normalizer = self._make_normalizer()
         facts = [
             LanguageFact("function_definition", "python", {"name": "f1", "qualified_name": "m.f1"}),
@@ -106,7 +113,6 @@ class TestCanonicalNormalizer:
         assert isinstance(stats, dict)
 
     def test_to_node_returns_none_or_dict(self):
-        from cogant.normalize.canonical import NormalizedFact
         normalizer = self._make_normalizer()
         fact = self._make_python_fact()
         normalized = normalizer.normalize(fact)
@@ -119,9 +125,11 @@ class TestCanonicalNormalizer:
 # normalize/identities.py — IdentityRecord and IdentityResolver
 # ---------------------------------------------------------------------------
 
+
 class TestIdentityRecord:
     def test_identity_record_init(self):
         from cogant.normalize.identities import IdentityRecord
+
         record = IdentityRecord(
             id="abcdef1234567890",
             entity_type="function",
@@ -138,6 +146,7 @@ class TestIdentityRecord:
 class TestIdentityResolver:
     def _make_resolver(self):
         from cogant.normalize.identities import IdentityResolver
+
         return IdentityResolver()
 
     def test_init(self):
@@ -191,6 +200,7 @@ class TestIdentityResolver:
 
     def test_get_record_after_generate(self):
         from cogant.normalize.identities import IdentityRecord
+
         resolver = self._make_resolver()
         identity_id = resolver.generate_id("function", "file:///repo", "mod.py", "mod.fn")
         record = resolver.get_record(identity_id)

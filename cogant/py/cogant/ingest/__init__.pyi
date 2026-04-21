@@ -6,4 +6,12 @@ from cogant.ingest.repo import RepoIngester as RepoIngester
 from cogant.ingest.repo import RepoMetadata as RepoMetadata
 from cogant.ingest.repo import RepoSnapshot as RepoSnapshot
 
-__all__ = ['RepoIngester', 'RepoSnapshot', 'RepoMetadata', 'ManifestParser', 'Dependency', 'FileEnumerator', 'FileInfo']
+__all__ = [
+    "RepoIngester",
+    "RepoSnapshot",
+    "RepoMetadata",
+    "ManifestParser",
+    "Dependency",
+    "FileEnumerator",
+    "FileInfo",
+]

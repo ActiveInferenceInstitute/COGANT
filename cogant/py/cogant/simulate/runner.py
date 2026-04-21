@@ -125,7 +125,9 @@ class ModelRunner:
         # Check likelihoods reference valid variables
         for like_id, like in state_space.likelihoods.items():
             if like.variable_id not in state_space.variables:
-                errors.append(f"Likelihood {like_id} references unknown variable {like.variable_id}")
+                errors.append(
+                    f"Likelihood {like_id} references unknown variable {like.variable_id}"
+                )
                 valid = False
 
         # Check preferences reference valid variables
@@ -198,9 +200,7 @@ class ModelRunner:
             "effects_applied": action.effects,
         }
 
-    def run_simulation(
-        self, state_space: StateSpaceModel, steps: int = 10
-    ) -> list[dict[str, Any]]:
+    def run_simulation(self, state_space: StateSpaceModel, steps: int = 10) -> list[dict[str, Any]]:
         """
         Run N steps of random walk simulation.
 
@@ -280,9 +280,7 @@ class ModelRunner:
             Variational free energy (nats). Lower is better.
         """
         if self.A is None:
-            raise RuntimeError(
-                "vfe_from_beliefs requires A (likelihood matrix) on the runner"
-            )
+            raise RuntimeError("vfe_from_beliefs requires A (likelihood matrix) on the runner")
         effective_prior = prior if prior is not None else self.D
         if effective_prior is None:
             effective_prior = uniform_distribution(len(beliefs))
@@ -311,9 +309,7 @@ class ModelRunner:
             Expected free energy (nats). Lower is better.
         """
         if self.A is None or self.B is None or self.C is None:
-            raise RuntimeError(
-                "efe_for_policy requires A, B, and C on the runner"
-            )
+            raise RuntimeError("efe_for_policy requires A, B, and C on the runner")
         start = beliefs if beliefs is not None else self.D
         if start is None:
             raise RuntimeError("No initial beliefs and D is None")
@@ -340,18 +336,14 @@ class ModelRunner:
             Posterior Q(s | o).
         """
         if self.A is None:
-            raise RuntimeError(
-                "update_beliefs_from_observation requires A on the runner"
-            )
+            raise RuntimeError("update_beliefs_from_observation requires A on the runner")
         return bayesian_belief_update(prior, self.A, observation_index)
 
     # ------------------------------------------------------------------
     # Back-compat state-dict VFE (used when no generative model matrices).
     # ------------------------------------------------------------------
 
-    def compute_free_energy(
-        self, state: dict[str, Any], observation: str
-    ) -> float:
+    def compute_free_energy(self, state: dict[str, Any], observation: str) -> float:
         """
         Compute variational free energy for a state-observation pair.
 
@@ -390,9 +382,7 @@ class ModelRunner:
         if self.A is not None and self.D is not None:
             categories = list(state.keys())
             n_states = len(categories)
-            if n_states == len(self.D) and all(
-                len(row) == n_states for row in self.A
-            ):
+            if n_states == len(self.D) and all(len(row) == n_states for row in self.A):
                 # Build a one-hot belief focused on the matching variable.
                 if observation in categories:
                     idx = categories.index(observation)
@@ -445,9 +435,7 @@ class ModelRunner:
         vfe = complexity - accuracy
         return float(vfe)
 
-    def belief_update(
-        self, prior_beliefs: dict[str, float], observation: str
-    ) -> dict[str, float]:
+    def belief_update(self, prior_beliefs: dict[str, float], observation: str) -> dict[str, float]:
         """
         Bayesian belief update using observation.
 
@@ -464,9 +452,7 @@ class ModelRunner:
             return {}
 
         states = list(prior_beliefs.keys())
-        prior_dist = CategoricalDistribution(
-            states, [prior_beliefs[s] for s in states]
-        )
+        prior_dist = CategoricalDistribution(states, [prior_beliefs[s] for s in states])
 
         # Create likelihood model: obs == state gives high likelihood
         likelihood_probs = []
@@ -507,9 +493,7 @@ class ModelRunner:
             return [(action, 0.0) for action in available_actions]
 
         states = list(beliefs.keys())
-        beliefs_dist = CategoricalDistribution(
-            states, [beliefs[s] for s in states]
-        )
+        beliefs_dist = CategoricalDistribution(states, [beliefs[s] for s in states])
 
         rankings = []
         for action in available_actions:
@@ -593,8 +577,10 @@ class ModelRunner:
 
         # Compute free energy for the observation
         # Use the beliefs-derived state for more accurate VFE computation
-        observation_state = {var_id: 1.0 if var_id == most_likely_state_id else 0.0
-                            for var_id in state_space.variables.keys()}
+        observation_state = {
+            var_id: 1.0 if var_id == most_likely_state_id else 0.0
+            for var_id in state_space.variables.keys()
+        }
         free_energy = self.compute_free_energy(observation_state, observation)
 
         return {
@@ -662,9 +648,7 @@ class ModelRunner:
             observation = max_state
 
             # Run Active Inference step
-            ai_result = self.active_inference_step(
-                current_beliefs, observation, state_space
-            )
+            ai_result = self.active_inference_step(current_beliefs, observation, state_space)
 
             current_beliefs = ai_result["new_beliefs"]
 
@@ -708,12 +692,14 @@ class ModelRunner:
             mean_fe = sum(fe_values) / len(fe_values)
             min_fe = min(fe_values)
             max_fe = max(fe_values)
-            lines.extend([
-                f"- Mean VFE: {mean_fe:.4f}",
-                f"- Min VFE: {min_fe:.4f}",
-                f"- Max VFE: {max_fe:.4f}",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"- Mean VFE: {mean_fe:.4f}",
+                    f"- Min VFE: {min_fe:.4f}",
+                    f"- Max VFE: {max_fe:.4f}",
+                    "",
+                ]
+            )
 
         # Action distribution
         lines.append("## Actions Taken")
@@ -733,12 +719,20 @@ class ModelRunner:
         lines.append("")
 
         # Belief trajectory sample
-        lines.extend([
-            "## Belief Evolution (Sample)",
-            "",
-        ])
+        lines.extend(
+            [
+                "## Belief Evolution (Sample)",
+                "",
+            ]
+        )
 
-        sample_indices = [0, len(trace) // 4, len(trace) // 2, (3 * len(trace)) // 4, len(trace) - 1]
+        sample_indices = [
+            0,
+            len(trace) // 4,
+            len(trace) // 2,
+            (3 * len(trace)) // 4,
+            len(trace) - 1,
+        ]
         sample_indices = [i for i in sample_indices if i < len(trace)]
 
         for idx in sample_indices:

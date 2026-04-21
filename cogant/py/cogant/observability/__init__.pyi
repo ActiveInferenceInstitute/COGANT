@@ -5,4 +5,4 @@ from cogant.observability.metrics import Histogram as Histogram
 from cogant.observability.metrics import MetricsRegistry as MetricsRegistry
 from cogant.observability.metrics import registry as registry
 
-__all__ = ['get_logger', 'setup_logging', 'Counter', 'Histogram', 'MetricsRegistry', 'registry']
+__all__ = ["get_logger", "setup_logging", "Counter", "Histogram", "MetricsRegistry", "registry"]

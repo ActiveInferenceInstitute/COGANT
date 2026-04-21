@@ -22,8 +22,8 @@ Covers:
 
 import ast
 import json
+
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -32,14 +32,17 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_class_hierarchy():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n_mod = builder.add_node(NodeKind.MODULE, "mymod", "mymod", path="mymod.py")
     n_base = builder.add_node(NodeKind.CLASS, "BaseClass", "mymod.BaseClass", path="mymod.py")
@@ -55,16 +58,23 @@ def _make_graph_with_class_hierarchy():
 def _make_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
-        id="ss1", schema_name="test",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="ss1",
+        schema_name="test",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
 
 
 def _make_process_model():
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
 
 
@@ -72,9 +82,11 @@ def _make_process_model():
 # viz/boundary.py — BoundaryMapper
 # ---------------------------------------------------------------------------
 
+
 class TestBoundaryMapperExtended:
     def _make_mapper(self):
         from cogant.viz.boundary import BoundaryMapper
+
         return BoundaryMapper()
 
     def test_map_module_boundaries_with_classes(self):
@@ -138,7 +150,8 @@ class TestBoundaryMapperExtended:
     def test_map_module_boundaries_with_functions(self):
         """Module with functions (not just classes) also generates valid output."""
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n_mod = builder.add_node(NodeKind.MODULE, "utils", "utils", path="utils.py")
         n_fn1 = builder.add_node(NodeKind.FUNCTION, "helper", "utils.helper", path="utils.py")
@@ -157,9 +170,11 @@ class TestBoundaryMapperExtended:
 # gnn/matrices.py — validate_shapes with errors
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatricesValidation:
     def _make_matrices(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph_with_class_hierarchy()
         state_space = _make_state_space()
         return GNNMatrices(graph, mappings={}, state_space=state_space)
@@ -219,9 +234,11 @@ class TestGNNMatricesValidation:
 # static/calls.py — extract_calls_from_file with class/method extraction
 # ---------------------------------------------------------------------------
 
+
 class TestCallGraphFromFileWithClasses:
     def _make_builder(self):
         from cogant.static.calls import CallGraphBuilder
+
         return CallGraphBuilder()
 
     def test_extract_from_file_with_class_and_methods(self, tmp_path):
@@ -248,18 +265,21 @@ class Service:
 
     def test_extract_call_visitor_ast_to_str_name(self):
         from cogant.static.calls import CallExtractorVisitor
+
         node = ast.Name(id="my_var", ctx=ast.Load())
         result = CallExtractorVisitor._ast_to_str(node)
         assert "my_var" in result
 
     def test_extract_call_visitor_ast_to_str_constant(self):
         from cogant.static.calls import CallExtractorVisitor
+
         node = ast.Constant(value=42)
         result = CallExtractorVisitor._ast_to_str(node)
         assert result is not None
 
     def test_extract_call_visitor_ast_to_str_attribute(self):
         from cogant.static.calls import CallExtractorVisitor
+
         value = ast.Name(id="self", ctx=ast.Load())
         node = ast.Attribute(value=value, attr="method", ctx=ast.Load())
         result = CallExtractorVisitor._ast_to_str(node)
@@ -267,6 +287,7 @@ class Service:
 
     def test_extract_call_visitor_ast_to_str_unknown(self):
         from cogant.static.calls import CallExtractorVisitor
+
         # Using a raw module node (not Name/Constant/Attribute)
         node = ast.Module(body=[], type_ignores=[])
         result = CallExtractorVisitor._ast_to_str(node)
@@ -284,9 +305,11 @@ class Service:
 # static/dataflow.py — DataFlowVisitor helper coverage
 # ---------------------------------------------------------------------------
 
+
 class TestDataFlowVisitorHelpers:
     def test_analyze_source_with_attribute_chains(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "result = self.data.process()\nself.result = result\n"
         fp = tmp_path / "attr.py"
@@ -295,6 +318,7 @@ class TestDataFlowVisitorHelpers:
 
     def test_analyze_source_with_subscript_target(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "d = {}\nd['key'] = 'value'\nresult = d['key']\n"
         fp = tmp_path / "sub.py"
@@ -303,6 +327,7 @@ class TestDataFlowVisitorHelpers:
 
     def test_analyze_source_with_complex_tuple_unpack(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "(a, (b, c)) = (1, (2, 3))\n"
         fp = tmp_path / "tuple.py"
@@ -311,6 +336,7 @@ class TestDataFlowVisitorHelpers:
 
     def test_analyze_source_global_and_nonlocal(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = """
 x = 0
@@ -333,6 +359,7 @@ def modify():
 
     def test_analyze_source_with_starred_assignment(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "first, *rest = [1, 2, 3, 4]\n"
         fp = tmp_path / "star.py"
@@ -344,11 +371,13 @@ def modify():
 # gnn/json_export.py — with list mappings (conversion) and exception paths
 # ---------------------------------------------------------------------------
 
+
 class TestGNNJSONExporterListMappings:
     def test_export_with_list_mappings(self):
         """When mappings is a list, export should convert and work."""
         from cogant.gnn.json_export import GNNJSONExporter
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
         ss = _make_state_space()
         pm = _make_process_model()
@@ -365,7 +394,8 @@ class TestGNNJSONExporterListMappings:
     def test_export_with_none_mappings(self):
         """When mappings is None, export should handle gracefully."""
         from cogant.gnn.json_export import GNNJSONExporter
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
         ss = _make_state_space()
         pm = _make_process_model()
@@ -381,7 +411,8 @@ class TestGNNJSONExporterListMappings:
     def test_export_to_string_valid_json(self):
         """export_to_string should return valid JSON."""
         from cogant.gnn.json_export import GNNJSONExporter
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
         ss = _make_state_space()
         pm = _make_process_model()
@@ -400,22 +431,24 @@ class TestGNNJSONExporterListMappings:
 # ingest/manifest.py — parse_cargo_toml
 # ---------------------------------------------------------------------------
 
+
 class TestManifestParserCargo:
     def test_parse_cargo_toml_basic(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         parser = ManifestParser()
         cargo = tmp_path / "Cargo.toml"
         cargo.write_text(
-            '[package]\n'
+            "[package]\n"
             'name = "mylib"\n'
             'version = "0.1.0"\n'
             'edition = "2021"\n'
-            '\n'
-            '[dependencies]\n'
+            "\n"
+            "[dependencies]\n"
             'serde = "1.0"\n'
             'tokio = "1.0"\n'
-            '\n'
-            '[dev-dependencies]\n'
+            "\n"
+            "[dev-dependencies]\n"
             'criterion = "0.4"\n'
         )
         meta, deps = parser.parse_cargo_toml(cargo)
@@ -424,6 +457,7 @@ class TestManifestParserCargo:
 
     def test_parse_cargo_toml_nonexistent(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         parser = ManifestParser()
         meta, deps = parser.parse_cargo_toml(tmp_path / "missing.toml")
         assert isinstance(meta, dict)
@@ -431,6 +465,7 @@ class TestManifestParserCargo:
 
     def test_parse_via_dispatch_cargo(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         parser = ManifestParser()
         cargo = tmp_path / "Cargo.toml"
         cargo.write_text('[package]\nname = "test"\nversion = "0.1.0"\n')

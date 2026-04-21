@@ -19,7 +19,6 @@ from cogant.graph.builder import ProgramGraphBuilder
 from cogant.markov import (
     BlanketNetwork,
     BlanketRole,
-    MarkovBlanket,
     MarkovBlanketExtractor,
     build_blanket_network,
     partition_by_seeds,
@@ -27,8 +26,8 @@ from cogant.markov import (
 )
 from cogant.schemas.core import EdgeKind, NodeKind
 
-
 # ---------------------------------------------------------------- fixtures --
+
 
 def _two_module_graph():
     """Build a deterministic two-module graph with a known boundary.
@@ -128,6 +127,7 @@ def _single_module_graph():
 
 # ------------------------------------------------- partition_by_seeds tests --
 
+
 class TestPartitionBySeeds:
     def test_every_node_gets_exactly_one_role(self):
         graph, ids = _two_module_graph()
@@ -136,10 +136,7 @@ class TestPartitionBySeeds:
 
         # Partition is exhaustive and mutually exclusive.
         all_ids = (
-            blanket.internal_ids
-            | blanket.sensory_ids
-            | blanket.active_ids
-            | blanket.external_ids
+            blanket.internal_ids | blanket.sensory_ids | blanket.active_ids | blanket.external_ids
         )
         assert all_ids == set(graph.nodes)
         assert len(all_ids) == len(blanket.roles)
@@ -170,10 +167,7 @@ class TestPartitionBySeeds:
         blanket = partition_by_seeds(graph, seeds)
         s = blanket.stats
         assert (
-            s["internal_count"]
-            + s["sensory_count"]
-            + s["active_count"]
-            + s["external_count"]
+            s["internal_count"] + s["sensory_count"] + s["active_count"] + s["external_count"]
             == s["total_nodes"]
         )
         assert 0.0 <= s["internal_ratio"] <= 1.0
@@ -207,6 +201,7 @@ class TestPartitionBySeeds:
 
 # ---------------------------------------------- MarkovBlanketExtractor tests --
 
+
 class TestExtractorExplicitStrategy:
     def test_explicit_seeds_respected(self):
         graph, ids = _two_module_graph()
@@ -231,8 +226,7 @@ class TestExtractorModuleStrategy:
         ex = MarkovBlanketExtractor(graph)
         blanket = ex.extract(strategy="module", module_names=["core"])
         # Every contains-closure member of "core" must be in the seed set.
-        expected = {ids["core"], ids["engine"], ids["helper"],
-                    ids["run"], ids["step"]}
+        expected = {ids["core"], ids["engine"], ids["helper"], ids["run"], ids["step"]}
         assert expected <= blanket.seeds
         assert blanket.metadata["module_names"] == ["core"]
 
@@ -275,8 +269,10 @@ class TestExtractorAutoStrategy:
         ex = MarkovBlanketExtractor(graph)
         blanket = ex.extract(strategy="auto")
         assert blanket.metadata["auto_tier"] in {"class", "class_aggregate"}
-        assert "fell back" in blanket.metadata["auto_reason"].lower() or \
-               blanket.metadata["auto_tier"] == "class_aggregate"
+        assert (
+            "fell back" in blanket.metadata["auto_reason"].lower()
+            or blanket.metadata["auto_tier"] == "class_aggregate"
+        )
 
     def test_auto_on_empty_graph(self):
         b = ProgramGraphBuilder(repo_uri="test://empty")
@@ -310,6 +306,7 @@ class TestExtractorDeterminism:
 
 # ------------------------------------------------------- BlanketNetwork tests --
 
+
 class TestBlanketNetwork:
     def test_build_and_serialize(self):
         graph, ids = _two_module_graph()
@@ -318,9 +315,7 @@ class TestBlanketNetwork:
         net = build_blanket_network(graph, blanket)
         assert isinstance(net, BlanketNetwork)
         data = net.to_dict()
-        assert set(data["role_counts"].keys()) == {
-            "internal", "sensory", "active", "external"
-        }
+        assert set(data["role_counts"].keys()) == {"internal", "sensory", "active", "external"}
         # Sum of role counts equals total nodes.
         assert sum(data["role_counts"].values()) == len(graph.nodes)
 
@@ -347,6 +342,7 @@ class TestBlanketNetwork:
 
 # ----------------------------------------------------- serialize_blanket tests --
 
+
 class TestSerializeBlanket:
     def test_default_payload_shape(self):
         graph, ids = _two_module_graph()
@@ -355,9 +351,7 @@ class TestSerializeBlanket:
         payload = serialize_blanket(blanket, graph)
 
         assert payload["schema_version"] == "1.0.0"
-        assert set(payload["roles"].keys()) == {
-            "internal", "sensory", "active", "external"
-        }
+        assert set(payload["roles"].keys()) == {"internal", "sensory", "active", "external"}
         assert "stats" in payload and "metadata" in payload
         # Every node in every role has the four canonical fields.
         for role_members in payload["roles"].values():

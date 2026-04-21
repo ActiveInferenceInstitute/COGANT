@@ -11,10 +11,7 @@ Covers:
 - gnn/package.py: GNNPackageBuilder.build with empty data
 """
 
-import json
 import pytest
-from pathlib import Path
-from io import StringIO
 
 pytestmark = pytest.mark.unit
 
@@ -23,33 +20,39 @@ pytestmark = pytest.mark.unit
 # gnn/matrices.py — module-level helpers
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatricesHelpers:
     def test_normalize_row_basic(self):
         from cogant.gnn.matrices import _normalize_row
+
         result = _normalize_row([1.0, 1.0, 2.0])
         assert abs(sum(result) - 1.0) < 1e-9
         assert len(result) == 3
 
     def test_normalize_row_uniform(self):
         from cogant.gnn.matrices import _normalize_row
+
         result = _normalize_row([1.0, 1.0])
         assert abs(result[0] - 0.5) < 1e-9
         assert abs(result[1] - 0.5) < 1e-9
 
     def test_normalize_row_zero_sum(self):
         from cogant.gnn.matrices import _normalize_row
+
         # Zero row → uniform fallback
         result = _normalize_row([0.0, 0.0, 0.0])
         assert abs(sum(result) - 1.0) < 1e-9
 
     def test_normalize_vector_basic(self):
         from cogant.gnn.matrices import _normalize_vector
+
         result = _normalize_vector([3.0, 1.0])
         assert abs(sum(result) - 1.0) < 1e-9
         assert abs(result[0] - 0.75) < 1e-9
 
     def test_normalize_vector_zero(self):
         from cogant.gnn.matrices import _normalize_vector
+
         result = _normalize_vector([0.0, 0.0])
         assert abs(sum(result) - 1.0) < 1e-9
 
@@ -57,14 +60,20 @@ class TestGNNMatricesHelpers:
 class TestGNNMatricesAdditional:
     def _make_matrices(self):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
+
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
         state_space = StateSpaceModel(
-            id="ss1", schema_name="test",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ss1",
+            schema_name="test",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         return GNNMatrices(graph, mappings={}, state_space=state_space)
@@ -135,9 +144,11 @@ class TestGNNMatricesAdditional:
 # reverse/cli.py — rendering helpers (test via output capture)
 # ---------------------------------------------------------------------------
 
+
 class TestReverseCLIRenderHelpers:
     def test_render_plan_summary_produces_output(self, tmp_path, capsys):
         from cogant.reverse.cli import _render_plan_summary
+
         gnn_path = tmp_path / "model.gnn.md"
         pkg_path = tmp_path / "pkg"
         # Should not raise; produces Rich table output
@@ -155,6 +166,7 @@ class TestReverseCLIRenderHelpers:
     def test_render_roundtrip_result_isomorphic(self, capsys):
         from cogant.reverse.cli import _render_roundtrip_result
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=True,
             role_match_score=0.95,
@@ -169,6 +181,7 @@ class TestReverseCLIRenderHelpers:
     def test_render_roundtrip_result_not_isomorphic(self, capsys):
         from cogant.reverse.cli import _render_roundtrip_result
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=False,
             role_match_score=0.55,
@@ -183,6 +196,7 @@ class TestReverseCLIRenderHelpers:
     def test_render_roundtrip_result_with_package_path(self, tmp_path, capsys):
         from cogant.reverse.cli import _render_roundtrip_result
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=True,
             role_match_score=1.0,
@@ -199,19 +213,25 @@ class TestReverseCLIRenderHelpers:
 # gnn/package.py — build method with empty components
 # ---------------------------------------------------------------------------
 
+
 class TestGNNPackageBuilderBuild:
     def test_build_creates_output_files(self, tmp_path):
         from cogant.gnn.package import GNNPackageBuilder
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.process.extractor import ProcessModel
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
-        from cogant.process.extractor import ProcessModel
 
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
         state_space = StateSpaceModel(
-            id="ss1", schema_name="test",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ss1",
+            schema_name="test",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         process_model = ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
@@ -230,16 +250,21 @@ class TestGNNPackageBuilderBuild:
 
     def test_build_manifest_has_version(self, tmp_path):
         from cogant.gnn.package import GNNPackageBuilder
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.process.extractor import ProcessModel
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
-        from cogant.process.extractor import ProcessModel
 
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
         state_space = StateSpaceModel(
-            id="ss1", schema_name="test",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ss1",
+            schema_name="test",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         pm = ProcessModel(id="pm1", schema_name="test", stages={}, connections={})

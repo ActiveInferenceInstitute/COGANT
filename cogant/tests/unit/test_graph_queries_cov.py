@@ -11,7 +11,6 @@ from cogant.graph.queries import GraphQuery
 from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
-
 # --------------------------- builders ----------------------------------- #
 
 

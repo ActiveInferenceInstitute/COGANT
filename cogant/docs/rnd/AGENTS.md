@@ -1,10 +1,15 @@
-# AGENTS.md — R&D notes module
+# AGENTS.md — research notes archive
 
-Exploratory, work-in-progress research notes for the COGANT program.
+Exploratory, work-in-progress research notes for the COGANT program. This
+module is the long-form research-notes archive: every page lives here for
+its full lifetime. There is no transient sweep namespace — when a note is
+ready for citation it is promoted to `../evaluation/`, `../theory/`, or
+`../concepts/`, and a stub remains here pointing to the new home.
+
 Everything here is deliberately less polished than `../evaluation/`: notes
 are scratchpads for active experiments, not dated gate reports. Treat any
-content in this module as provisional unless it has been promoted to
-`../evaluation/`, `../theory/`, or `../concepts/`.
+content in this module as provisional unless it has been promoted to a
+formal home.
 
 ## Purpose and ownership
 

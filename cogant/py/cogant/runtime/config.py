@@ -74,7 +74,9 @@ class AgentConfig:
         try:
             import yaml
         except ImportError as exc:
-            raise ImportError("pyyaml is required for from_yaml(); install it with: pip install pyyaml") from exc
+            raise ImportError(
+                "pyyaml is required for from_yaml(); install it with: pip install pyyaml"
+            ) from exc
 
         with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
@@ -102,7 +104,9 @@ class AgentConfig:
         try:
             import yaml
         except ImportError as exc:
-            raise ImportError("pyyaml is required for to_yaml(); install it with: pip install pyyaml") from exc
+            raise ImportError(
+                "pyyaml is required for to_yaml(); install it with: pip install pyyaml"
+            ) from exc
 
         data = {
             "max_steps": self.max_steps,

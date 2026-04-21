@@ -34,8 +34,7 @@ def load_rules_from_yaml(path: Path | str) -> DSLRuleSet:
         import yaml  # type: ignore[import-untyped]
     except ImportError as exc:
         raise ImportError(
-            "PyYAML is required to load YAML rule files. "
-            "Install it with: pip install pyyaml"
+            "PyYAML is required to load YAML rule files. Install it with: pip install pyyaml"
         ) from exc
 
     path = Path(path)
@@ -81,6 +80,7 @@ def load_rules_from_dict(data: dict[str, Any]) -> DSLRuleSet:
 # ------------------------------------------------------------------
 # Internal helpers
 # ------------------------------------------------------------------
+
 
 def _parse_conditions(
     raw_conditions: list[dict[str, Any]],

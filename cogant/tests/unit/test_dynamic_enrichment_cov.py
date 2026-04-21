@@ -11,8 +11,6 @@ import json
 import textwrap
 from pathlib import Path
 
-import pytest
-
 from cogant.dynamic.enrichment import (
     _build_function_index,
     _node_spans_line,
@@ -20,9 +18,8 @@ from cogant.dynamic.enrichment import (
     _stable_edge_id,
     enrich_graph,
 )
-from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+from cogant.schemas.core import Node, NodeKind
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
-
 
 # ------------------------------------------------------------------ #
 # Graph-building helpers
@@ -154,7 +151,9 @@ def test_stable_edge_id_length_16() -> None:
 
 def test_build_function_index_only_callables() -> None:
     func = _func_node("f1", "run")
-    module = Node(id="m1", kind=NodeKind.MODULE, name="mymod", qualified_name="pkg.mymod", path="pkg/mymod.py")
+    module = Node(
+        id="m1", kind=NodeKind.MODULE, name="mymod", qualified_name="pkg.mymod", path="pkg/mymod.py"
+    )
     g = _graph_with_funcs(func, module)
 
     index = _build_function_index(g)
@@ -215,9 +214,7 @@ def test_enrich_graph_returns_same_graph_instance() -> None:
 
 def _write_cobertura(tmp_path: Path, file_rel: str, lines: list[int]) -> Path:
     """Write a minimal Cobertura-compatible coverage.xml."""
-    line_items = "".join(
-        f'<line number="{ln}" hits="1" branch="false"/>' for ln in lines
-    )
+    line_items = "".join(f'<line number="{ln}" hits="1" branch="false"/>' for ln in lines)
     xml = textwrap.dedent(f"""\
         <?xml version="1.0" ?>
         <coverage>
@@ -338,7 +335,7 @@ def test_enrich_graph_both_paths_populate_both_sources(tmp_path: Path) -> None:
     trace_path = _write_chrome_trace(tmp_path, events)
     g = _empty_graph()
 
-    result = enrich_graph(g, coverage_path=str(cov_path), trace_path=str(trace_path))
+    enrich_graph(g, coverage_path=str(cov_path), trace_path=str(trace_path))
     sources = g.metadata.evidence_sources
     assert "dynamic_coverage" in sources
     assert "dynamic_trace" in sources

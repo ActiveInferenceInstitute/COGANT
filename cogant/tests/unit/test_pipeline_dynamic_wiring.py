@@ -22,7 +22,6 @@ import pytest
 
 from cogant.api.pipeline import PipelineConfig, PipelineRunner
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_CALCULATOR = REPO_ROOT / "examples" / "control_positive" / "calculator"
 FIXTURE_FLASK_MINI = REPO_ROOT / "examples" / "control_positive" / "flask_mini"
@@ -69,9 +68,7 @@ def test_skip_dynamic_does_not_mutate_caller_config():
     runner.run(str(FIXTURE_CALCULATOR), config)
 
     # The original skip_stages list should be untouched by the runner.
-    assert "dynamic" not in skip, (
-        "skip_stages list provided by the caller must not be mutated"
-    )
+    assert "dynamic" not in skip, "skip_stages list provided by the caller must not be mutated"
     assert config.skip_stages == skip
 
 

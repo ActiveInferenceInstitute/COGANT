@@ -87,7 +87,9 @@ def organize_run_dir(flat_dir: Path, *, dry_run: bool = False) -> Path | None:
     if not flat_dir.is_dir():
         logger.error("Not a directory: %s", flat_dir)
         return None
-    if (flat_dir / "data" / "program_graph.json").exists() and (flat_dir / "site" / "index.html").exists():
+    if (flat_dir / "data" / "program_graph.json").exists() and (
+        flat_dir / "site" / "index.html"
+    ).exists():
         logger.info("Already organized: %s", flat_dir)
         return flat_dir
 
@@ -152,7 +154,9 @@ def migrate_output_tree(
                 shutil.move(str(flat), str(target))
                 logger.info("Moved tree %s -> %s", name, target.relative_to(output_root))
         root = target if target.exists() else flat
-        has_pg = (root / "program_graph.json").exists() or (root / "data" / "program_graph.json").exists()
+        has_pg = (root / "program_graph.json").exists() or (
+            root / "data" / "program_graph.json"
+        ).exists()
         if root.is_dir() and has_pg:
             organize_run_dir(root, dry_run=dry_run)
             count += 1

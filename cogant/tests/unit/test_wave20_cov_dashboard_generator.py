@@ -12,8 +12,6 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-import pytest
-
 from cogant.process.extractor import ProcessModel
 from cogant.schemas.graph import (
     Edge,

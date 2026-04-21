@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -24,10 +23,11 @@ if str(_PY_ROOT) not in sys.path:
     sys.path.insert(0, str(_PY_ROOT))
 
 from cogant.graph.builder import ProgramGraphBuilder
+from cogant.graph.queries import GraphQuery
 from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import MappingKind
-from cogant.translate.engine import RuleExplanation, TranslationEngine, TranslationRule
+from cogant.translate.engine import RuleExplanation, TranslationEngine
 from cogant.translate.rules import (
     ActionRule,
     CircuitBreakerRule,
@@ -49,7 +49,6 @@ from cogant.translate.rules import (
     SingletonAccessRule,
     TestAssertionRule,
 )
-from cogant.graph.queries import GraphQuery
 
 pytestmark = pytest.mark.unit
 
@@ -85,12 +84,21 @@ def small_complex_graph() -> ProgramGraph:
     # Methods/functions
     init = builder.add_node(NodeKind.METHOD, "__init__", "core.Service.__init__", path="core.py")
     process = builder.add_node(NodeKind.METHOD, "process", "core.Service.process", path="core.py")
-    get_status = builder.add_node(NodeKind.METHOD, "get_status", "core.Service.get_status", path="core.py")
-    handle_event = builder.add_node(NodeKind.METHOD, "handle_event", "core.Service.handle_event", path="core.py")
+    get_status = builder.add_node(
+        NodeKind.METHOD, "get_status", "core.Service.get_status", path="core.py"
+    )
+    handle_event = builder.add_node(
+        NodeKind.METHOD, "handle_event", "core.Service.handle_event", path="core.py"
+    )
     retry_op = builder.add_node(NodeKind.FUNCTION, "retry_op", "util.retry_op", path="util.py")
 
     # Test assertion
-    assertion = builder.add_node(NodeKind.ASSERTION, "assert_valid", "tests.test_core.assert_valid", path="tests/test_core.py")
+    builder.add_node(
+        NodeKind.ASSERTION,
+        "assert_valid",
+        "tests.test_core.assert_valid",
+        path="tests/test_core.py",
+    )
 
     # Containment
     builder.add_edge(core.id, service.id, EdgeKind.CONTAINS)
@@ -173,7 +181,7 @@ class TestEngineIterationBounds:
         engine = all_19_rules_engine
         assert engine.max_iterations == 10
 
-        mappings = engine.translate(small_complex_graph)
+        engine.translate(small_complex_graph)
 
         # Should not exceed max_iterations even if not converged
         assert len(engine.iterations) <= engine.max_iterations
@@ -184,33 +192,35 @@ class TestEngineIterationBounds:
         engine.register_rule(ReadOnlyInputRule())
         engine.register_rule(MutatingSubsystemRule())
 
-        mappings = engine.translate(small_complex_graph)
+        engine.translate(small_complex_graph)
 
         assert len(engine.iterations) <= 3
 
-    def test_engine_iteration_list_has_convergence_info(self, small_complex_graph, all_19_rules_engine):
+    def test_engine_iteration_list_has_convergence_info(
+        self, small_complex_graph, all_19_rules_engine
+    ):
         """Each iteration in engine.iterations records number of new mappings."""
         engine = all_19_rules_engine
-        mappings = engine.translate(small_complex_graph)
+        engine.translate(small_complex_graph)
 
-        assert hasattr(engine, 'iterations')
+        assert hasattr(engine, "iterations")
         assert isinstance(engine.iterations, list)
         # Each iteration should produce >= 0 mappings
         for iteration in engine.iterations:
             assert isinstance(iteration, dict)
-            assert 'new_mappings' in iteration or 'mappings_added' in iteration
+            assert "new_mappings" in iteration or "mappings_added" in iteration
 
     def test_fixpoint_convergence_detectable(self, small_complex_graph, all_19_rules_engine):
         """Iteration count indicates whether fixpoint was reached (zero new mappings)."""
         engine = all_19_rules_engine
-        mappings = engine.translate(small_complex_graph)
+        engine.translate(small_complex_graph)
 
         # After convergence, the iteration list should show diminishing returns
         iteration_counts = []
-        for i, iteration in enumerate(engine.iterations):
+        for _i, iteration in enumerate(engine.iterations):
             # Count new mappings in iteration
             if isinstance(iteration, dict):
-                new_count = iteration.get('new_mappings', iteration.get('mappings_added', 0))
+                new_count = iteration.get("new_mappings", iteration.get("mappings_added", 0))
                 iteration_counts.append(new_count)
 
         # Later iterations should have <= earlier iterations (monotonic decrease to fixpoint)
@@ -251,7 +261,7 @@ class TestRuleExplanationEvidence:
             evidence=["edge: WRITES x", "keyword: 'set'", "heuristic: class-level"],
         )
         d = expl.to_dict()
-        assert d['evidence'] == ["edge: WRITES x", "keyword: 'set'", "heuristic: class-level"]
+        assert d["evidence"] == ["edge: WRITES x", "keyword: 'set'", "heuristic: class-level"]
 
     def test_rule_evidence_non_empty_when_fired(self, small_complex_graph):
         """When a rule fires, evidence should be non-empty (not just [])."""
@@ -288,7 +298,7 @@ class TestRuleExplanationEvidence:
         )
         assert len(expl.contradictions) > 0
         d = expl.to_dict()
-        assert 'contradictions' in d
+        assert "contradictions" in d
 
 
 # ============================================================================
@@ -353,9 +363,7 @@ class TestAllRulesFire:
         cls = builder.add_node(NodeKind.CLASS, "C", "C", path="m.py")
         builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
         for i in range(5):
-            meth = builder.add_node(
-                NodeKind.METHOD, f"m{i}", f"C.m{i}", path="m.py"
-            )
+            meth = builder.add_node(NodeKind.METHOD, f"m{i}", f"C.m{i}", path="m.py")
             builder.add_edge(cls.id, meth.id, EdgeKind.CONTAINS)
         graph = builder.finalize()
 
@@ -413,7 +421,7 @@ class TestAllRulesFire:
     def test_config_rule_fires(self):
         """ConfigRule fires on CONFIG/config variables."""
         builder = ProgramGraphBuilder(repo_uri="test://cfg")
-        cfg = builder.add_node(NodeKind.VARIABLE, "CONFIG", "CONFIG", path="cfg.py")
+        builder.add_node(NodeKind.VARIABLE, "CONFIG", "CONFIG", path="cfg.py")
         graph = builder.finalize()
 
         rule = ConfigRule()
@@ -426,7 +434,7 @@ class TestAllRulesFire:
     def test_retry_pattern_rule_fires(self):
         """RetryPatternRule fires on functions matching retry patterns."""
         builder = ProgramGraphBuilder(repo_uri="test://retry")
-        retry_func = builder.add_node(NodeKind.FUNCTION, "with_retry", "with_retry", path="util.py")
+        builder.add_node(NodeKind.FUNCTION, "with_retry", "with_retry", path="util.py")
         graph = builder.finalize()
 
         rule = RetryPatternRule()

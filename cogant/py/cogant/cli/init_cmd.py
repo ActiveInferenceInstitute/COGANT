@@ -207,9 +207,7 @@ def render_repo_path_error(console: Console, error: RepoPathError) -> None:
 # --------------------------------------------------------------- scaffolding --
 
 
-def _ensure_gitignore(
-    gitignore_path: Path, entry: str = GITIGNORE_ENTRY
-) -> tuple[bool, bool]:
+def _ensure_gitignore(gitignore_path: Path, entry: str = GITIGNORE_ENTRY) -> tuple[bool, bool]:
     """Guarantee ``entry`` appears in ``gitignore_path``.
 
     Returns a ``(created, updated)`` tuple:
@@ -272,9 +270,7 @@ def scaffold_project(project_dir: str | Path) -> ScaffoldResult:
 
     gitignore_created, gitignore_updated = _ensure_gitignore(gitignore_path)
     if not (gitignore_created or gitignore_updated):
-        notes.append(
-            f"{_GITIGNORE_NAME} already lists {GITIGNORE_ENTRY!r}"
-        )
+        notes.append(f"{_GITIGNORE_NAME} already lists {GITIGNORE_ENTRY!r}")
 
     return ScaffoldResult(
         project_dir=project_dir,
@@ -295,9 +291,7 @@ def render_scaffold_summary(console: Console, result: ScaffoldResult) -> None:
     so this helper is kept intentionally thin.
     """
 
-    console.print(
-        f"[green]Scaffold complete[/green] at [cyan]{result.project_dir}[/cyan]"
-    )
+    console.print(f"[green]Scaffold complete[/green] at [cyan]{result.project_dir}[/cyan]")
 
     if result.toml_created:
         console.print(f"  [green]+[/green] created {result.toml_path.name}")
@@ -308,13 +302,11 @@ def render_scaffold_summary(console: Console, result: ScaffoldResult) -> None:
         console.print(f"  [green]+[/green] created {result.gitignore_path.name}")
     elif result.gitignore_updated:
         console.print(
-            f"  [green]~[/green] appended {GITIGNORE_ENTRY!r} to "
-            f"{result.gitignore_path.name}"
+            f"  [green]~[/green] appended {GITIGNORE_ENTRY!r} to {result.gitignore_path.name}"
         )
     else:
         console.print(
-            f"  [dim]=[/dim] {result.gitignore_path.name} already had "
-            f"{GITIGNORE_ENTRY!r}"
+            f"  [dim]=[/dim] {result.gitignore_path.name} already had {GITIGNORE_ENTRY!r}"
         )
 
     for note in result.notes:

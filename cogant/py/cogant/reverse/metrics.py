@@ -328,9 +328,7 @@ def compare_matrices(
     for key in MATRIX_KEYS:
         if key in matrices_a and key in matrices_b:
             shared_keys.append(key)
-    extras = sorted(
-        (set(matrices_a.keys()) & set(matrices_b.keys())) - set(MATRIX_KEYS)
-    )
+    extras = sorted((set(matrices_a.keys()) & set(matrices_b.keys())) - set(MATRIX_KEYS))
     shared_keys.extend(extras)
 
     if not shared_keys:

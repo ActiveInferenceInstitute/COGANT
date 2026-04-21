@@ -12,8 +12,9 @@ Covers:
 - viz/html_site: HTMLSiteRenderer (render)
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 pytestmark = pytest.mark.unit
 
@@ -22,14 +23,17 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
     n2 = builder.add_node(NodeKind.CLASS, "Cls", "mod.Cls", path="mod.py")
@@ -42,21 +46,29 @@ def _make_graph_with_nodes():
 def _make_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
-        id="ss1", schema_name="test",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="ss1",
+        schema_name="test",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
 
 
 def _make_process_model():
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
 
 
 def _make_timeline():
     from cogant.process.timeline import Timeline
+
     return Timeline(stages=[], total_duration=0.0, critical_path=[], parallel_groups=[])
 
 
@@ -64,9 +76,11 @@ def _make_timeline():
 # viz/mermaid.py — MermaidGenerator extended
 # ---------------------------------------------------------------------------
 
+
 class TestMermaidGeneratorExtended:
     def _make_gen(self):
         from cogant.viz import MermaidGenerator
+
         return MermaidGenerator()
 
     def test_generate_active_inference_diagram_empty_ss(self):
@@ -127,14 +141,17 @@ class TestMermaidGeneratorExtended:
 # viz — GanttRenderer
 # ---------------------------------------------------------------------------
 
+
 class TestGanttRenderer:
     def test_init(self):
         from cogant.viz import GanttRenderer
+
         renderer = GanttRenderer()
         assert renderer is not None
 
     def test_from_timeline_mutates_and_returns_self(self):
         from cogant.viz import GanttRenderer
+
         timeline = _make_timeline()
         renderer = GanttRenderer()
         result = renderer.from_timeline(timeline)
@@ -142,12 +159,14 @@ class TestGanttRenderer:
 
     def test_from_process_model_mutates_and_returns_self(self):
         from cogant.viz import GanttRenderer
+
         renderer = GanttRenderer()
         result = renderer.from_process_model({})
         assert result is renderer
 
     def test_render_json(self):
         from cogant.viz import GanttRenderer
+
         renderer = GanttRenderer()
         renderer.from_timeline(_make_timeline())
         result = renderer.render_json()
@@ -155,6 +174,7 @@ class TestGanttRenderer:
 
     def test_render_html(self, tmp_path):
         from cogant.viz import GanttRenderer
+
         renderer = GanttRenderer()
         renderer.from_timeline(_make_timeline())
         output = str(tmp_path / "gantt.html")
@@ -166,14 +186,17 @@ class TestGanttRenderer:
 # viz — SemanticVisualizer
 # ---------------------------------------------------------------------------
 
+
 class TestSemanticVisualizer:
     def test_init(self):
         from cogant.viz import SemanticVisualizer
+
         visualizer = SemanticVisualizer()
         assert visualizer is not None
 
     def test_from_state_space_dict(self):
         from cogant.viz import SemanticVisualizer
+
         ss_dict = {
             "id": "ss1",
             "variables": {},
@@ -186,12 +209,14 @@ class TestSemanticVisualizer:
 
     def test_render_json(self):
         from cogant.viz import SemanticVisualizer
+
         visualizer = SemanticVisualizer()
         result = visualizer.render_json()
         assert isinstance(result, str)
 
     def test_render_html(self, tmp_path):
         from cogant.viz import SemanticVisualizer
+
         visualizer = SemanticVisualizer()
         output = str(tmp_path / "semantic.html")
         result = visualizer.render_html(output)
@@ -202,14 +227,17 @@ class TestSemanticVisualizer:
 # viz — StaticPlotter
 # ---------------------------------------------------------------------------
 
+
 class TestStaticPlotter:
     def test_init(self):
         from cogant.viz import StaticPlotter
+
         plotter = StaticPlotter()
         assert plotter is not None
 
     def test_plot_node_type_distribution_with_nodes(self):
         from cogant.viz import StaticPlotter
+
         plotter = StaticPlotter()
         graph = _make_graph_with_nodes()
         result = plotter.plot_node_type_distribution(graph)
@@ -217,6 +245,7 @@ class TestStaticPlotter:
 
     def test_plot_edge_type_distribution_with_edges(self):
         from cogant.viz import StaticPlotter
+
         plotter = StaticPlotter()
         graph = _make_graph_with_nodes()
         result = plotter.plot_edge_type_distribution(graph)
@@ -224,12 +253,14 @@ class TestStaticPlotter:
 
     def test_plot_confidence_distribution_empty(self):
         from cogant.viz import StaticPlotter
+
         plotter = StaticPlotter()
         result = plotter.plot_confidence_distribution(mappings={})
         assert isinstance(result, str)
 
     def test_plot_state_space_matrix(self):
         from cogant.viz import StaticPlotter
+
         plotter = StaticPlotter()
         ss = _make_state_space()
         result = plotter.plot_state_space_matrix(ss)
@@ -239,6 +270,7 @@ class TestStaticPlotter:
 # ---------------------------------------------------------------------------
 # viz — HTMLSiteRenderer
 # ---------------------------------------------------------------------------
+
 
 class TestHTMLSiteRenderer:
     def _make_bundle(self):
@@ -250,17 +282,20 @@ class TestHTMLSiteRenderer:
 
     def test_init(self):
         from cogant.viz import HTMLSiteRenderer
+
         renderer = HTMLSiteRenderer(self._make_bundle())
         assert renderer is not None
 
     def test_render_returns_path(self, tmp_path):
         from cogant.viz import HTMLSiteRenderer
+
         renderer = HTMLSiteRenderer(self._make_bundle())
         result = renderer.render(str(tmp_path))
         assert isinstance(result, Path)
 
     def test_render_creates_output(self, tmp_path):
         from cogant.viz import HTMLSiteRenderer
+
         renderer = HTMLSiteRenderer(self._make_bundle())
         result = renderer.render(str(tmp_path))
         assert isinstance(result, Path)

@@ -89,7 +89,9 @@ class CouplingReport:
         Returns:
             Modules where distance > 0.3 and instability > 0.8.
         """
-        return [m for m in self.modules if m.distance_from_main_sequence > 0.3 and m.instability > 0.8]
+        return [
+            m for m in self.modules if m.distance_from_main_sequence > 0.3 and m.instability > 0.8
+        ]
 
     def get_zone_of_uselessness(self) -> list[ModuleCouplingMetrics]:
         """Get modules in zone of uselessness (high abstract + low use).
@@ -97,7 +99,9 @@ class CouplingReport:
         Returns:
             Modules where distance > 0.3 and instability < 0.2.
         """
-        return [m for m in self.modules if m.distance_from_main_sequence > 0.3 and m.instability < 0.2]
+        return [
+            m for m in self.modules if m.distance_from_main_sequence > 0.3 and m.instability < 0.2
+        ]
 
 
 class CouplingAnalyzer:

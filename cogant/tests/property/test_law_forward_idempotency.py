@@ -23,7 +23,8 @@ would disprove forward idempotency on that graph.
 from __future__ import annotations
 
 import pytest
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from cogant.graph.builder import ProgramGraphBuilder
 from cogant.schemas.core import EdgeKind, NodeKind
@@ -179,9 +180,7 @@ def test_forward_is_idempotent_on_synthetic_graph(graph: ProgramGraph) -> None:
 def test_forward_idempotent_on_three_runs(graph: ProgramGraph) -> None:
     """A third forward run must also agree — no cumulative drift."""
     sigs = [_mapping_signature(_fresh_engine().translate(graph)) for _ in range(3)]
-    assert sigs[0] == sigs[1] == sigs[2], (
-        f"forward run drift across 3 invocations: {sigs}"
-    )
+    assert sigs[0] == sigs[1] == sigs[2], f"forward run drift across 3 invocations: {sigs}"
 
 
 @given(graph=synthetic_graph(min_nodes=3, max_nodes=8))

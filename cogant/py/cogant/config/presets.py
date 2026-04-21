@@ -522,9 +522,7 @@ def get_preset(name: str) -> dict[str, Any]:
     """
     if name not in PRESETS:
         available = ", ".join(PRESETS.keys())
-        raise ValueError(
-            f"Unknown preset '{name}'. Available presets: {available}"
-        )
+        raise ValueError(f"Unknown preset '{name}'. Available presets: {available}")
     return PRESETS[name]
 
 

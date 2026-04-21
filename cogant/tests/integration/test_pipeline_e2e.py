@@ -24,12 +24,9 @@ import pytest
 from cogant.api.bundle import ArtifactKey, Bundle
 from cogant.api.pipeline import PipelineConfig, PipelineRunner
 
-
 # Absolute path to the cogant project root and calculator fixture.
 _COGANT_ROOT = Path(__file__).resolve().parents[2]
-_CALCULATOR_FIXTURE = (
-    _COGANT_ROOT / "examples" / "control_positive" / "calculator"
-)
+_CALCULATOR_FIXTURE = _COGANT_ROOT / "examples" / "control_positive" / "calculator"
 
 
 @pytest.fixture()
@@ -90,9 +87,7 @@ def pipeline_bundle(calculator_repo: Path, tmp_path: Path) -> Bundle:
 @pytest.mark.integration
 def test_pipeline_runs_all_stages_without_errors(pipeline_bundle: Bundle) -> None:
     """The full pipeline completes every canonical stage without fatal errors."""
-    assert pipeline_bundle.errors == [], (
-        f"Pipeline reported errors: {pipeline_bundle.errors}"
-    )
+    assert pipeline_bundle.errors == [], f"Pipeline reported errors: {pipeline_bundle.errors}"
     # Every canonical stage except ``dynamic`` (explicitly skipped) should
     # have recorded a result. ``dynamic`` may or may not appear depending
     # on how the skip is recorded.
@@ -118,17 +113,14 @@ def test_pipeline_program_graph_has_nodes(pipeline_bundle: Bundle) -> None:
     stats = graph_result.get("statistics", {})
     total_nodes = stats.get("total_nodes", 0)
     assert total_nodes >= 3, (
-        f"Expected >= 3 program graph nodes, got {total_nodes}; "
-        f"graph stats: {stats}"
+        f"Expected >= 3 program graph nodes, got {total_nodes}; graph stats: {stats}"
     )
 
     # Also verify via the artifact-level accessor which is the
     # supported programmatic entry point.
     pg = pipeline_bundle.get_artifact(ArtifactKey.PROGRAM_GRAPH)
     assert pg is not None, "Program graph artifact missing from bundle"
-    assert len(pg.nodes) >= 3, (
-        f"ProgramGraph artifact reports {len(pg.nodes)} nodes; expected >= 3"
-    )
+    assert len(pg.nodes) >= 3, f"ProgramGraph artifact reports {len(pg.nodes)} nodes; expected >= 3"
 
 
 @pytest.mark.integration
@@ -142,9 +134,7 @@ def test_pipeline_produces_semantic_mappings(pipeline_bundle: Bundle) -> None:
 
 
 @pytest.mark.integration
-def test_pipeline_exports_valid_gnn_markdown(
-    pipeline_bundle: Bundle, tmp_path: Path
-) -> None:
+def test_pipeline_exports_valid_gnn_markdown(pipeline_bundle: Bundle, tmp_path: Path) -> None:
     """Export stage writes a GNN markdown file that is readable and non-empty."""
     export_result = pipeline_bundle.stage_results.get("export", {})
     assert export_result, "export stage produced no result"
@@ -171,8 +161,7 @@ def test_pipeline_exports_valid_gnn_markdown(
     text = gnn_md.read_text(encoding="utf-8")
     assert text.strip(), "model.gnn.md is empty"
     assert "GNN" in text or "StateSpaceBlock" in text or "## " in text, (
-        "model.gnn.md does not look like GNN markdown; first 200 chars: "
-        f"{text[:200]!r}"
+        f"model.gnn.md does not look like GNN markdown; first 200 chars: {text[:200]!r}"
     )
 
 

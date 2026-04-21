@@ -14,9 +14,8 @@ from cogant.statespace.compiler import (
     StateSpaceModel,
 )
 from cogant.statespace.temporal import TimeRegime
-from cogant.statespace.variables import ConfidenceLevel, StateVariable, StateVariableType
-from cogant.validate.provenance_check import ProvenanceChecker, ProvenanceGap
-
+from cogant.statespace.variables import StateVariable, StateVariableType
+from cogant.validate.provenance_check import ProvenanceChecker
 
 # ---------------------------- builders ----------------------------------- #
 

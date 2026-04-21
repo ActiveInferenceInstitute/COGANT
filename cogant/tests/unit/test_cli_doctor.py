@@ -18,7 +18,6 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from cogant.cli.main import app
 from cogant.cli.doctor import (
     DoctorCheck,
     DoctorReport,
@@ -30,6 +29,7 @@ from cogant.cli.doctor import (
     doctor_command,
     run_doctor,
 )
+from cogant.cli.main import app
 
 
 @pytest.fixture()
@@ -55,9 +55,7 @@ class TestDoctorCommand:
         assert result.exit_code == 0
         assert "Python" in result.stdout
 
-    def test_doctor_output_contains_overall_verdict(
-        self, runner: CliRunner
-    ) -> None:
+    def test_doctor_output_contains_overall_verdict(self, runner: CliRunner) -> None:
         """The panel's subtitle always includes an Overall verdict."""
         result = runner.invoke(app, ["doctor"])
         assert result.exit_code == 0
@@ -119,9 +117,7 @@ class TestInitCommand:
         cfg = json.loads((repo / ".cogant" / "config.json").read_text())
         assert "translate" in cfg["stages"]
 
-    def test_init_warns_when_no_source_files(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_warns_when_no_source_files(self, runner: CliRunner, tmp_path: Path) -> None:
         """Empty repos trigger a friendly warning rather than an error."""
         empty = tmp_path / "empty_repo"
         empty.mkdir()
@@ -131,9 +127,7 @@ class TestInitCommand:
         assert result.exit_code == 0
         assert "No .py/.js/.ts files found" in result.stdout
 
-    def test_init_with_check_runs_doctor(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_with_check_runs_doctor(self, runner: CliRunner, tmp_path: Path) -> None:
         """``--check`` runs doctor before scaffolding."""
         repo = tmp_path / "checked_repo"
         repo.mkdir()
@@ -144,9 +138,7 @@ class TestInitCommand:
         assert "Environment diagnostics" in result.stdout
         assert "COGANT Environment Diagnostics" in result.stdout
 
-    def test_init_idempotent_on_existing_config(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_idempotent_on_existing_config(self, runner: CliRunner, tmp_path: Path) -> None:
         """Running init twice does not clobber an existing config."""
         repo = tmp_path / "rerun_repo"
         repo.mkdir()
@@ -164,9 +156,7 @@ class TestInitCommand:
         assert second.exit_code == 0
         assert "custom-name" in cfg_path.read_text()
 
-    def test_init_shows_estimated_duration(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_shows_estimated_duration(self, runner: CliRunner, tmp_path: Path) -> None:
         """Init prints a wall-clock estimate when source files exist."""
         repo = tmp_path / "estimated_repo"
         repo.mkdir()
@@ -279,9 +269,7 @@ class TestExtendedDoctorChecks:
         assert any("mmdc" in n or "mermaid" in n.lower() for n in names)
         assert any("tree-sitter" in n for n in names)
 
-    def test_extended_checks_do_not_downgrade_healthy_env(
-        self, runner: CliRunner
-    ) -> None:
+    def test_extended_checks_do_not_downgrade_healthy_env(self, runner: CliRunner) -> None:
         """Adding warn-level checks must not turn a green run into red."""
         result = runner.invoke(app, ["doctor"])
         # ``cogant doctor`` only fails when a *required* check fails.
@@ -302,9 +290,7 @@ class TestHelpSurface:
         "subcommand",
         ["doctor", "init", "translate", "scan", "process", "benchmark"],
     )
-    def test_subcommand_help_has_description(
-        self, runner: CliRunner, subcommand: str
-    ) -> None:
+    def test_subcommand_help_has_description(self, runner: CliRunner, subcommand: str) -> None:
         """Each subcommand exposes a non-trivial ``--help``."""
         result = runner.invoke(app, [subcommand, "--help"])
         assert result.exit_code == 0, result.stdout

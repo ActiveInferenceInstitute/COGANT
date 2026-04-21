@@ -26,8 +26,7 @@ from cogant.statespace.compiler import (
     Transition,
 )
 from cogant.statespace.temporal import TimeRegime
-from cogant.statespace.variables import ConfidenceLevel, StateVariable, StateVariableType
-
+from cogant.statespace.variables import StateVariable, StateVariableType
 
 # --------------------------- builders ----------------------------------- #
 

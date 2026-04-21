@@ -123,7 +123,12 @@ class MermaidGenerator:
             if edge.kind == EdgeKind.INHERITS:
                 source = graph.get_node(edge.source_id)
                 target = graph.get_node(edge.target_id)
-                if source and target and source.kind == NodeKind.CLASS and target.kind == NodeKind.CLASS:
+                if (
+                    source
+                    and target
+                    and source.kind == NodeKind.CLASS
+                    and target.kind == NodeKind.CLASS
+                ):
                     source_name = source.name.replace(" ", "_").replace("-", "_")
                     target_name = target.name.replace(" ", "_").replace("-", "_")
                     lines.append(f"    {source_name} --|> {target_name}")
@@ -165,12 +170,12 @@ class MermaidGenerator:
 
         # Color mapping for edge types
         edge_colors = {
-            EdgeKind.CALLS: "#0066CC",      # blue
-            EdgeKind.READS: "#00AA00",       # green
-            EdgeKind.WRITES: "#CC0000",      # red
-            EdgeKind.CONTAINS: "#CCCCCC",    # gray
-            EdgeKind.IMPORTS: "#FF9900",     # orange
-            EdgeKind.INHERITS: "#9900FF",    # purple
+            EdgeKind.CALLS: "#0066CC",  # blue
+            EdgeKind.READS: "#00AA00",  # green
+            EdgeKind.WRITES: "#CC0000",  # red
+            EdgeKind.CONTAINS: "#CCCCCC",  # gray
+            EdgeKind.IMPORTS: "#FF9900",  # orange
+            EdgeKind.INHERITS: "#9900FF",  # purple
         }
 
         # Get modules and their contents
@@ -216,9 +221,17 @@ class MermaidGenerator:
 
         # Add key edges with color coding and labels
         key_edges = [
-            e for e in graph.edges.values()
-            if e.kind in (EdgeKind.IMPORTS, EdgeKind.CALLS, EdgeKind.INHERITS,
-                         EdgeKind.DEPENDS_ON, EdgeKind.READS, EdgeKind.WRITES)
+            e
+            for e in graph.edges.values()
+            if e.kind
+            in (
+                EdgeKind.IMPORTS,
+                EdgeKind.CALLS,
+                EdgeKind.INHERITS,
+                EdgeKind.DEPENDS_ON,
+                EdgeKind.READS,
+                EdgeKind.WRITES,
+            )
         ]
 
         # Limit to first 40 key edges to avoid clutter
@@ -229,11 +242,15 @@ class MermaidGenerator:
                 source_safe = source.id.replace("-", "_").replace(".", "_")
                 target_safe = target.id.replace("-", "_").replace(".", "_")
                 edge_label = edge.kind.value
-                weight = f" |{int(edge.weight)}|" if hasattr(edge, 'weight') and edge.weight > 1 else ""
+                weight = (
+                    f" |{int(edge.weight)}|" if hasattr(edge, "weight") and edge.weight > 1 else ""
+                )
                 edge_color = edge_colors.get(edge.kind, "#666666")
                 lines.append(f"    {source_safe} -->|{edge_label}{weight}| {target_safe}")
                 # Apply color via style
-                lines.append(f"    linkStyle {len([e for e in lines if '---' in e or '-->' in e]) - 1} stroke:{edge_color},stroke-width:2px")
+                lines.append(
+                    f"    linkStyle {len([e for e in lines if '---' in e or '-->' in e]) - 1} stroke:{edge_color},stroke-width:2px"
+                )
 
         return "\n".join(lines)
 
@@ -268,7 +285,7 @@ class MermaidGenerator:
 
             # Add state with description
             var_label = variable.name
-            if hasattr(variable, 'description') and variable.description:
+            if hasattr(variable, "description") and variable.description:
                 lines.append(f"    {state_id}: {var_label}")
                 lines.append(f"    note right of {state_id}")
                 lines.append(f"        {variable.description[:60]}")
@@ -283,19 +300,15 @@ class MermaidGenerator:
             target_state = transition.target_state
 
             # Create human-readable state labels
-            source_label = ",".join(
-                [f"{k}={v}" for k, v in sorted(source_state.items())[:2]]
-            )
-            target_label = ",".join(
-                [f"{k}={v}" for k, v in sorted(target_state.items())[:2]]
-            )
+            source_label = ",".join([f"{k}={v}" for k, v in sorted(source_state.items())[:2]])
+            target_label = ",".join([f"{k}={v}" for k, v in sorted(target_state.items())[:2]])
 
             # Build transition label with action and optional observation
             action_label = transition.action_id or "transition"
             obs_label = ""
 
             # Add observation emission if available
-            if hasattr(transition, 'observations') and transition.observations:
+            if hasattr(transition, "observations") and transition.observations:
                 obs_names = list(transition.observations)[:2]
                 obs_label = f"\\n[obs: {', '.join(obs_names)}]"
 
@@ -304,7 +317,9 @@ class MermaidGenerator:
 
         return "\n".join(lines)
 
-    def generate_sequence_diagram(self, process_model: ProcessModel | None = None, graph: ProgramGraph | None = None) -> str:
+    def generate_sequence_diagram(
+        self, process_model: ProcessModel | None = None, graph: ProgramGraph | None = None
+    ) -> str:
         """
         Generate an enhanced Mermaid sequenceDiagram showing request flow through middleware chain.
 
@@ -343,18 +358,16 @@ class MermaidGenerator:
                 if source_stage and target_stage:
                     # Build label with method and parameters if available
                     label = conn.trigger or "proceed"
-                    if hasattr(conn, 'method_name') and conn.method_name:
+                    if hasattr(conn, "method_name") and conn.method_name:
                         label = f"{conn.method_name}"
-                    if hasattr(conn, 'parameters') and conn.parameters:
+                    if hasattr(conn, "parameters") and conn.parameters:
                         param_str = ", ".join([f"{k}={v}" for k, v in conn.parameters.items()][:2])
                         label = f"{label}({param_str})"
                     if conn.condition:
                         label = f"{label}\\n[{conn.condition}]"
 
                     # Use activation boxes for process stages
-                    lines.append(
-                        f"    {conn.source_stage_id}->>+{conn.target_stage_id}: {label}"
-                    )
+                    lines.append(f"    {conn.source_stage_id}->>+{conn.target_stage_id}: {label}")
                     lines.append(f"    {conn.target_stage_id}-->>-{conn.source_stage_id}: done")
 
         elif graph:
@@ -372,7 +385,7 @@ class MermaidGenerator:
 
                     # Try to extract module from node ID
                     src_node = graph.get_node(edge.source_id)
-                    if src_node and hasattr(src_node, 'module_id'):
+                    if src_node and hasattr(src_node, "module_id"):
                         module_id = src_node.module_id
                         if module_id not in module_map:
                             module_map[module_id] = []
@@ -441,7 +454,15 @@ class MermaidGenerator:
                 var = state_space.variables[var_id]
                 safe_name = var.name.replace(" ", "_")
                 lines.append(f"    HS__{safe_name}['{var.name}']")
-            lines.append("    HS --> " + " --> ".join([f"HS__{var_id.replace('-', '_').replace('.', '_')}" for var_id in var_names[:3]]))
+            lines.append(
+                "    HS --> "
+                + " --> ".join(
+                    [
+                        f"HS__{var_id.replace('-', '_').replace('.', '_')}"
+                        for var_id in var_names[:3]
+                    ]
+                )
+            )
 
         # Add specific observations
         if state_space.observations:
@@ -450,7 +471,15 @@ class MermaidGenerator:
                 obs = state_space.observations[obs_id]
                 safe_name = obs.name.replace(" ", "_")
                 lines.append(f"    OBS__{safe_name}['{obs.name}']")
-            lines.append("    OBS --> " + " --> ".join([f"OBS__{obs_id.replace('-', '_').replace('.', '_')}" for obs_id in obs_names[:3]]))
+            lines.append(
+                "    OBS --> "
+                + " --> ".join(
+                    [
+                        f"OBS__{obs_id.replace('-', '_').replace('.', '_')}"
+                        for obs_id in obs_names[:3]
+                    ]
+                )
+            )
 
         # Add specific actions
         if state_space.actions:
@@ -459,7 +488,15 @@ class MermaidGenerator:
                 action = state_space.actions[action_id]
                 safe_name = action.name.replace(" ", "_")
                 lines.append(f"    ACT__{safe_name}['{action.name}']")
-            lines.append("    ACTIONS --> " + " --> ".join([f"ACT__{action_id.replace('-', '_').replace('.', '_')}" for action_id in action_names[:3]]))
+            lines.append(
+                "    ACTIONS --> "
+                + " --> ".join(
+                    [
+                        f"ACT__{action_id.replace('-', '_').replace('.', '_')}"
+                        for action_id in action_names[:3]
+                    ]
+                )
+            )
 
         # Core Active Inference loop with labels
         lines.append("")
@@ -483,9 +520,7 @@ class MermaidGenerator:
 
         return "\n".join(lines)
 
-    def generate_flowchart(
-        self, graph: ProgramGraph, semantic_mappings: dict[str, Any]
-    ) -> str:
+    def generate_flowchart(self, graph: ProgramGraph, semantic_mappings: dict[str, Any]) -> str:
         """
         Generate a Mermaid flowchart showing the translation from code elements
         to semantic roles (OBSERVATION, ACTION, HIDDEN_STATE, POLICY, CONTEXT, CONSTRAINT).
@@ -512,16 +547,15 @@ class MermaidGenerator:
 
         # Group mappings by semantic kind (sorting by mapping.id for deterministic order)
         sorted_mappings = sorted(
-            semantic_mappings.values(),
-            key=lambda m: m.id if hasattr(m, 'id') else str(m)
+            semantic_mappings.values(), key=lambda m: m.id if hasattr(m, "id") else str(m)
         )
 
         # Build semantic role to source nodes mapping
         role_to_nodes: dict[str, list[tuple[Any, Any]]] = {}
         for mapping in sorted_mappings:
-            if not hasattr(mapping, 'kind'):
+            if not hasattr(mapping, "kind"):
                 continue
-            role_name = mapping.kind.value if hasattr(mapping.kind, 'value') else str(mapping.kind)
+            role_name = mapping.kind.value if hasattr(mapping.kind, "value") else str(mapping.kind)
             if role_name not in role_to_nodes:
                 role_to_nodes[role_name] = []
             role_to_nodes[role_name].append((mapping, mapping.graph_fragment_node_ids))
@@ -541,7 +575,11 @@ class MermaidGenerator:
 
             # Add edges from source nodes to semantic role
             for mapping, node_ids in mapping_list:
-                label = mapping.semantic_label if hasattr(mapping, 'semantic_label') and mapping.semantic_label else role_name
+                label = (
+                    mapping.semantic_label
+                    if hasattr(mapping, "semantic_label") and mapping.semantic_label
+                    else role_name
+                )
                 for src_node_id in node_ids[:3]:  # Limit to first 3 source nodes per mapping
                     src_node = graph.get_node(src_node_id)
                     if src_node:
@@ -676,9 +714,21 @@ class MermaidGenerator:
         lines = ["graph TD"]
 
         # Extract blanket components
-        internal_nodes = blanket.get("internal", []) if isinstance(blanket, dict) else getattr(blanket, "internal", [])
-        boundary_nodes = blanket.get("boundary", []) if isinstance(blanket, dict) else getattr(blanket, "boundary", [])
-        external_nodes = blanket.get("external", []) if isinstance(blanket, dict) else getattr(blanket, "external", [])
+        internal_nodes = (
+            blanket.get("internal", [])
+            if isinstance(blanket, dict)
+            else getattr(blanket, "internal", [])
+        )
+        boundary_nodes = (
+            blanket.get("boundary", [])
+            if isinstance(blanket, dict)
+            else getattr(blanket, "boundary", [])
+        )
+        external_nodes = (
+            blanket.get("external", [])
+            if isinstance(blanket, dict)
+            else getattr(blanket, "external", [])
+        )
 
         # Add internal nodes in blue subgraph
         if internal_nodes:

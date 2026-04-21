@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 
-__all__ = ['ReverseGNNModel', 'parse_gnn']
+__all__ = ["ReverseGNNModel", "parse_gnn"]
 
 @dataclass
 class ReverseGNNModel:

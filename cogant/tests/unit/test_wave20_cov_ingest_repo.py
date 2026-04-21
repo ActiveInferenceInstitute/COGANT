@@ -8,7 +8,6 @@ needing network access.
 
 from __future__ import annotations
 
-import os
 import subprocess
 from pathlib import Path
 
@@ -20,14 +19,10 @@ from cogant.ingest.repo import RepoIngester
 def _make_local_git_repo(dst: Path) -> Path:
     """Initialise a tiny real git repository at ``dst`` and return it."""
     dst.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        ["git", "init"], cwd=dst, check=True, capture_output=True
-    )
+    subprocess.run(["git", "init"], cwd=dst, check=True, capture_output=True)
     (dst / "README.md").write_text("# hello\n")
     (dst / "main.py").write_text("def main() -> None:\n    return None\n")
-    subprocess.run(
-        ["git", "add", "."], cwd=dst, check=True, capture_output=True
-    )
+    subprocess.run(["git", "add", "."], cwd=dst, check=True, capture_output=True)
     subprocess.run(
         [
             "git",
@@ -49,9 +44,7 @@ def _make_local_git_repo(dst: Path) -> Path:
 class TestRepoIngesterCloneRemote:
     """Drive RepoIngester.ingest_git_remote against a local file:// URL."""
 
-    def test_ingest_git_remote_clones_local_file_url(
-        self, tmp_path: Path
-    ) -> None:
+    def test_ingest_git_remote_clones_local_file_url(self, tmp_path: Path) -> None:
         src_repo = _make_local_git_repo(tmp_path / "src_repo")
         work_dir = tmp_path / "work"
         ingester = RepoIngester(work_dir=work_dir)
@@ -72,9 +65,7 @@ class TestRepoIngesterCloneRemote:
         cloned = work_dir / "src_repo"
         assert not cloned.exists()
 
-    def test_ingest_git_remote_without_cleanup_keeps_clone(
-        self, tmp_path: Path
-    ) -> None:
+    def test_ingest_git_remote_without_cleanup_keeps_clone(self, tmp_path: Path) -> None:
         src_repo = _make_local_git_repo(tmp_path / "src_repo2")
         work_dir = tmp_path / "work2"
         ingester = RepoIngester(work_dir=work_dir)
@@ -88,9 +79,7 @@ class TestRepoIngesterCloneRemote:
         # Clone is preserved on disk
         assert cloned.exists() and cloned.is_dir()
 
-    def test_ingest_git_remote_reclones_over_existing_dir(
-        self, tmp_path: Path
-    ) -> None:
+    def test_ingest_git_remote_reclones_over_existing_dir(self, tmp_path: Path) -> None:
         """If the target clone dir already exists it must be wiped first."""
         src_repo = _make_local_git_repo(tmp_path / "src_repo3")
         work_dir = tmp_path / "work3"
@@ -112,9 +101,7 @@ class TestRepoIngesterCloneRemote:
         # And the cloned README must now be in place
         assert (existing / "README.md").exists()
 
-    def test_ingest_git_remote_on_invalid_url_raises(
-        self, tmp_path: Path
-    ) -> None:
+    def test_ingest_git_remote_on_invalid_url_raises(self, tmp_path: Path) -> None:
         """A non-existent remote URL surfaces as RuntimeError from subprocess."""
         ingester = RepoIngester(work_dir=tmp_path / "work4")
         with pytest.raises(RuntimeError):

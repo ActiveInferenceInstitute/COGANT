@@ -33,7 +33,9 @@ class Node(CogantBaseModel):
     tags: list[str]
     provenance: list[EvidenceRef]
     @classmethod
-    def validate_no_self_children(cls, v: list[StableID], info: ValidationInfo) -> list[StableID]: ...
+    def validate_no_self_children(
+        cls, v: list[StableID], info: ValidationInfo
+    ) -> list[StableID]: ...
 
 class Edge(CogantBaseModel):
     id: StableID

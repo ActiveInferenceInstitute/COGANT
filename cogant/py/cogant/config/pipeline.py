@@ -80,12 +80,8 @@ class PipelineConfig(BaseModel):
     )
 
     # --- Runtime flags --------------------------------------------------
-    verbose: bool = Field(
-        default=False, description="Verbose logging"
-    )
-    dry_run: bool = Field(
-        default=False, description="Do not produce side effects"
-    )
+    verbose: bool = Field(default=False, description="Verbose logging")
+    dry_run: bool = Field(default=False, description="Do not produce side effects")
 
     # --- Dynamic-stage inputs ------------------------------------------
     coverage_path: str | None = Field(
@@ -136,17 +132,14 @@ class PipelineConfig(BaseModel):
             import yaml  # type: ignore[import-not-found,import-untyped,unused-ignore]
         except ImportError as exc:  # pragma: no cover - exercised via skipif
             raise ImportError(
-                "PipelineConfig.from_yaml requires pyyaml; "
-                "install with `pip install pyyaml`"
+                "PipelineConfig.from_yaml requires pyyaml; install with `pip install pyyaml`"
             ) from exc
 
         data = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
         if data is None:
             data = {}
         if not isinstance(data, dict):
-            raise ValueError(
-                f"YAML config at {path} must be a mapping, got {type(data).__name__}"
-            )
+            raise ValueError(f"YAML config at {path} must be a mapping, got {type(data).__name__}")
         return cls.from_dict(data)
 
     @classmethod
@@ -154,9 +147,7 @@ class PipelineConfig(BaseModel):
         """Build a :class:`PipelineConfig` from a JSON file."""
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         if not isinstance(data, dict):
-            raise ValueError(
-                f"JSON config at {path} must be an object, got {type(data).__name__}"
-            )
+            raise ValueError(f"JSON config at {path} must be an object, got {type(data).__name__}")
         return cls.from_dict(data)
 
     # ------------------------------------------------------------------
@@ -177,8 +168,7 @@ class PipelineConfig(BaseModel):
             import yaml  # type: ignore[import-not-found,import-untyped,unused-ignore]
         except ImportError as exc:  # pragma: no cover
             raise ImportError(
-                "PipelineConfig.to_yaml requires pyyaml; "
-                "install with `pip install pyyaml`"
+                "PipelineConfig.to_yaml requires pyyaml; install with `pip install pyyaml`"
             ) from exc
 
         Path(path).write_text(
@@ -205,7 +195,5 @@ class PipelineConfig(BaseModel):
         """
         unknown = set(kwargs) - set(type(self).model_fields)
         if unknown:
-            raise ValueError(
-                f"Unknown PipelineConfig fields: {sorted(unknown)}"
-            )
+            raise ValueError(f"Unknown PipelineConfig fields: {sorted(unknown)}")
         return self.model_copy(update=kwargs)

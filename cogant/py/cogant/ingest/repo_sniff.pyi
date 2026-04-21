@@ -1,6 +1,12 @@
 from pathlib import Path
 
-__all__ = ['SOURCE_EXTENSIONS', 'SKIP_DIRS', 'count_source_files', 'estimate_pipeline_seconds', 'format_duration']
+__all__ = [
+    "SOURCE_EXTENSIONS",
+    "SKIP_DIRS",
+    "count_source_files",
+    "estimate_pipeline_seconds",
+    "format_duration",
+]
 
 SOURCE_EXTENSIONS: frozenset[str]
 SKIP_DIRS: frozenset[str]

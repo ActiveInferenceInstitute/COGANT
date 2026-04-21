@@ -135,7 +135,9 @@ def _serialize_edge(e: Any) -> dict[str, Any]:
     return d
 
 
-def program_graph_to_dict(pg: ProgramGraph, statistics: dict[str, Any] | None = None) -> dict[str, Any]:
+def program_graph_to_dict(
+    pg: ProgramGraph, statistics: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """Serialize a ProgramGraph to a JSON-friendly summary dict.
 
     Converts all node and edge dataclasses to plain dicts with enum
@@ -229,13 +231,13 @@ def run_ingest(bundle_target: str, bundle: Any) -> dict[str, Any]:
     # subset. We preserve the snapshot's metadata and dependency info,
     # so downstream stages still see a complete-looking RepoSnapshot
     # object, just with fewer ``files`` entries to iterate.
-    incremental = getattr(bundle, "metadata", {}).get("_incremental") if hasattr(bundle, "metadata") else None
+    incremental = (
+        getattr(bundle, "metadata", {}).get("_incremental") if hasattr(bundle, "metadata") else None
+    )
     total_files = len(snapshot.files)
     if incremental and incremental.get("changed_files"):
         changed_set = {str(Path(p).resolve()) for p in incremental["changed_files"]}
-        filtered = [
-            f for f in snapshot.files if str(Path(f.path).resolve()) in changed_set
-        ]
+        filtered = [f for f in snapshot.files if str(Path(f.path).resolve()) in changed_set]
         snapshot.files = filtered
 
     bundle.artifacts["repo_snapshot"] = snapshot
@@ -355,7 +357,9 @@ def run_normalize(bundle: Any) -> dict[str, Any]:
         )
         nf = normalizer.normalize(lf_mod)
         if nf:
-            facts_out.append({"kind": nf.node_kind.value, "qualified_name": nf.qualified_name, "path": rel})
+            facts_out.append(
+                {"kind": nf.node_kind.value, "qualified_name": nf.qualified_name, "path": rel}
+            )
 
         for cls in mod.classes:
             lf = LanguageFact(
@@ -398,14 +402,20 @@ def run_normalize(bundle: Any) -> dict[str, Any]:
                     language="python",
                     data={
                         "name": meth.name,
-                        "qualified_name": f"{mod_qn}.{cls.name}.{meth.name}" if mod_qn else f"{cls.name}.{meth.name}",
+                        "qualified_name": f"{mod_qn}.{cls.name}.{meth.name}"
+                        if mod_qn
+                        else f"{cls.name}.{meth.name}",
                         "path": rel,
                     },
                 )
                 nfx = normalizer.normalize(lf)
                 if nfx:
                     facts_out.append(
-                        {"kind": nfx.node_kind.value, "qualified_name": nfx.qualified_name, "path": rel}
+                        {
+                            "kind": nfx.node_kind.value,
+                            "qualified_name": nfx.qualified_name,
+                            "path": rel,
+                        }
                     )
 
     bundle.artifacts["normalized_facts"] = facts_out
@@ -513,9 +523,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
 
             for method in getattr(cls, "methods", []) or []:
                 method_qname = f"{class_qname}.{method.name}"
-                method_kind = (
-                    NodeKind.METHOD if hasattr(NodeKind, "METHOD") else NodeKind.FUNCTION
-                )
+                method_kind = NodeKind.METHOD if hasattr(NodeKind, "METHOD") else NodeKind.FUNCTION
                 method_node = builder.add_node(
                     kind=method_kind,
                     name=method.name,
@@ -526,7 +534,12 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                 )
                 builder.add_edge(class_node.id, method_node.id, EdgeKind.CONTAINS)
                 _emit_dataflow_edges(
-                    builder, method_node, class_node, method.name, file_path, _ast,
+                    builder,
+                    method_node,
+                    class_node,
+                    method.name,
+                    file_path,
+                    _ast,
                     ast_cache=_ast_cache,
                 )
 
@@ -548,9 +561,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                 continue
             head = str(target_name).split(".")[0]
             if head in module_nodes and head != module_name:
-                builder.add_edge(
-                    module_node.id, module_nodes[head].id, EdgeKind.IMPORTS
-                )
+                builder.add_edge(module_node.id, module_nodes[head].id, EdgeKind.IMPORTS)
 
     # INHERITS edges.
     # Build a name→node index first so lookup is O(1) instead of O(|classes|)
@@ -567,9 +578,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
         for base in bases:
             other_node = class_by_name.get(base)
             if other_node is not None and other_node.id != class_node.id:
-                builder.add_edge(
-                    class_node.id, other_node.id, EdgeKind.INHERITS
-                )
+                builder.add_edge(class_node.id, other_node.id, EdgeKind.INHERITS)
 
     pg = builder.finalize()
     bundle.artifacts["_program_graph"] = pg
@@ -615,9 +624,7 @@ def _emit_dataflow_edges(
             ast_cache[file_path] = tree
 
     for node in ast_mod.walk(tree):
-        if not isinstance(
-            node, ast_mod.FunctionDef | ast_mod.AsyncFunctionDef
-        ):
+        if not isinstance(node, ast_mod.FunctionDef | ast_mod.AsyncFunctionDef):
             continue
         if node.name != method_name:
             continue
@@ -881,9 +888,7 @@ def run_export(bundle: Any, output_dir: str) -> dict[str, Any]:
                 "render_all_pngs wrote 0 files"
             )
     except Exception as e:  # pragma: no cover - defensive
-        bundle.artifacts.setdefault("export_warnings", []).append(
-            f"PNG rendering failed: {e}"
-        )
+        bundle.artifacts.setdefault("export_warnings", []).append(f"PNG rendering failed: {e}")
 
     bundle.artifacts["export_paths"] = written
     return {"type": "export", "output_dir": output_dir, "artifacts": written}
@@ -957,9 +962,7 @@ def run_validate(
             from cogant.gnn.upstream_bridge import parse_upstream_model_gnn_md
             from cogant.gnn.validator import GNNValidator
 
-            result = GNNValidator().validate_package(
-                str(gnn_pkg), upstream_gnn=upstream_gnn
-            )
+            result = GNNValidator().validate_package(str(gnn_pkg), upstream_gnn=upstream_gnn)
             parse_summary: dict[str, Any] | None = None
             try:
                 parse_summary = parse_upstream_model_gnn_md(str(gnn_pkg))
@@ -1008,22 +1011,15 @@ def run_validate(
             bundle.artifacts["upstream_pipeline_steps"] = [
                 s.to_dict() for s in pipeline_result.steps
             ]
-            bundle.artifacts["upstream_pipeline_summary"] = (
-                upstream_pipeline_summary
-            )
+            bundle.artifacts["upstream_pipeline_summary"] = upstream_pipeline_summary
             for step in pipeline_result.steps:
                 if not step.success:
-                    msg = (
-                        f"upstream step {step.step_index:02d} "
-                        f"{step.script}: {step.status}"
-                    )
+                    msg = f"upstream step {step.step_index:02d} {step.script}: {step.status}"
                     if step.error:
                         msg += f" — {step.error}"
                     warnings.append(msg)
             if not pipeline_result.available and pipeline_result.error:
-                warnings.append(
-                    f"upstream pipeline unavailable: {pipeline_result.error}"
-                )
+                warnings.append(f"upstream pipeline unavailable: {pipeline_result.error}")
         except Exception as exc:  # pragma: no cover - defensive
             warnings.append(f"upstream pipeline pass failed: {exc}")
 
@@ -1041,7 +1037,9 @@ def run_validate(
     return payload
 
 
-def run_dynamic(bundle: Any, coverage_path: str | None = None, trace_path: str | None = None) -> dict[str, Any]:
+def run_dynamic(
+    bundle: Any, coverage_path: str | None = None, trace_path: str | None = None
+) -> dict[str, Any]:
     """Enrich the program graph with coverage and trace data.
 
     Args:
@@ -1056,6 +1054,7 @@ def run_dynamic(bundle: Any, coverage_path: str | None = None, trace_path: str |
     if pg is None:
         return {"type": "dynamic_enrichment", "skipped": True, "reason": "no program graph"}
     from cogant.dynamic.enrichment import enrich_graph
+
     summary = enrich_graph(pg, coverage_path=coverage_path, trace_path=trace_path)
     return {"type": "dynamic_enrichment", **summary}
 
@@ -1089,9 +1088,7 @@ def _materialize_source_dir(language: str, source_code: str) -> tempfile.Tempora
     ext = _LANGUAGE_EXTENSIONS.get(language)
     if ext is None:
         supported = ", ".join(sorted(_LANGUAGE_EXTENSIONS))
-        raise ValueError(
-            f"unsupported language: {language!r} (supported: {supported})"
-        )
+        raise ValueError(f"unsupported language: {language!r} (supported: {supported})")
     tmpdir = tempfile.TemporaryDirectory(prefix="cogant_translate_")
     (Path(tmpdir.name) / f"main.{ext}").write_text(source_code, encoding="utf-8")
     return tmpdir
@@ -1229,9 +1226,7 @@ async def translate_stream(
         else:
             for stage_idx, stage in enumerate(job_stages, start=1):
                 if stage in bundle.stage_results:
-                    sub_pct = start_pct + int(
-                        (100 / total_work) * (stage_idx / len(job_stages))
-                    )
+                    sub_pct = start_pct + int((100 / total_work) * (stage_idx / len(job_stages)))
                     yield {
                         "event": "stage_complete",
                         "index": idx,
@@ -1277,11 +1272,13 @@ def translate_batch(requests: list[dict[str, Any]]) -> list[dict[str, Any]]:
         language = request.get("language")
         source_code = request.get("source_code")
         if not isinstance(language, str) or not isinstance(source_code, str):
-            results.append({
-                "index": idx,
-                "status": "error",
-                "error": "missing or non-string language / source_code",
-            })
+            results.append(
+                {
+                    "index": idx,
+                    "status": "error",
+                    "error": "missing or non-string language / source_code",
+                }
+            )
             continue
         try:
             bundle = translate_source(
@@ -1291,16 +1288,20 @@ def translate_batch(requests: list[dict[str, Any]]) -> list[dict[str, Any]]:
             )
         except Exception as exc:
             logger.exception("batch translation error at index %d", idx)
-            results.append({
-                "index": idx,
-                "status": "error",
-                "error": f"{type(exc).__name__}: {exc}",
-            })
+            results.append(
+                {
+                    "index": idx,
+                    "status": "error",
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+            )
         else:
-            results.append({
-                "index": idx,
-                "status": "success",
-                "result": _summarize_bundle(bundle, language),
-            })
+            results.append(
+                {
+                    "index": idx,
+                    "status": "success",
+                    "result": _summarize_bundle(bundle, language),
+                }
+            )
 
     return results

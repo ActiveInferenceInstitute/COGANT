@@ -85,23 +85,27 @@ class SemanticVisualizer:
 
     def _generate_html(self) -> str:
         """Generate HTML for semantic view."""
+
         # Pre-compute slices to avoid f-string slicing issues
         # Also convert all items to dicts if they're objects
         def to_dict(item: Any) -> dict[str, Any]:
             """Coerce an arbitrary state/observation/action record into a dict."""
             if isinstance(item, dict):
                 return dict(item)
-            elif hasattr(item, '__dict__'):
+            elif hasattr(item, "__dict__"):
                 return dict(vars(item))
             else:
                 return {"name": str(item), "description": str(item)}
 
         states_list = [to_dict(s) for s in (self.states[:6] if self.states else [])]
-        observations_list = [to_dict(o) for o in (self.observations[:6] if self.observations else [])]
+        observations_list = [
+            to_dict(o) for o in (self.observations[:6] if self.observations else [])
+        ]
         actions_list = [to_dict(a) for a in (self.actions[:6] if self.actions else [])]
         policies_list = [to_dict(p) for p in (self.policies[:6] if self.policies else [])]
 
-        states_cards = "".join(f'''
+        states_cards = "".join(
+            f"""
                 <div class="card state">
                     <h3>{s.get("name", "Unknown")}</h3>
                     <ul>
@@ -109,9 +113,12 @@ class SemanticVisualizer:
                         <li class="mapping">Type: {s.get("type", "generic")}</li>
                     </ul>
                 </div>
-                ''' for s in states_list)
+                """
+            for s in states_list
+        )
 
-        observations_cards = "".join(f'''
+        observations_cards = "".join(
+            f"""
                 <div class="card observation">
                     <h3>{o.get("name", "Unknown")}</h3>
                     <ul>
@@ -119,9 +126,12 @@ class SemanticVisualizer:
                         <li class="mapping">Source: {o.get("source", "unknown")}</li>
                     </ul>
                 </div>
-                ''' for o in observations_list)
+                """
+            for o in observations_list
+        )
 
-        actions_cards = "".join(f'''
+        actions_cards = "".join(
+            f"""
                 <div class="card action">
                     <h3>{a.get("name", "Unknown")}</h3>
                     <ul>
@@ -129,9 +139,12 @@ class SemanticVisualizer:
                         <li class="mapping">Target: {a.get("target", "unknown")}</li>
                     </ul>
                 </div>
-                ''' for a in actions_list)
+                """
+            for a in actions_list
+        )
 
-        policies_cards = "".join(f'''
+        policies_cards = "".join(
+            f"""
                 <div class="card policy">
                     <h3>{p.get("name", "Unknown")}</h3>
                     <ul>
@@ -139,7 +152,9 @@ class SemanticVisualizer:
                         <li class="mapping">Confidence: {p.get("confidence", 0):.2f}</li>
                     </ul>
                 </div>
-                ''' for p in policies_list)
+                """
+            for p in policies_list
+        )
 
         return f"""<!DOCTYPE html>
 <html>
@@ -268,7 +283,9 @@ class SemanticVisualizer:
 </html>
 """
 
-    def render_role_distribution(self, mappings: list[dict[str, Any]] | None = None) -> "Figure | None":
+    def render_role_distribution(
+        self, mappings: list[dict[str, Any]] | None = None
+    ) -> "Figure | None":
         """
         Render semantic role distribution as pie/bar chart.
 
@@ -315,11 +332,11 @@ class SemanticVisualizer:
 
             # Pie chart
             colors = ["#667eea", "#f093fb", "#4facfe", "#43e97b", "#f5576c"]
-            ax1.pie(counts, labels=roles, autopct="%1.1f%%", colors=colors[:len(roles)])
+            ax1.pie(counts, labels=roles, autopct="%1.1f%%", colors=colors[: len(roles)])
             ax1.set_title("Semantic Role Distribution (Pie)")
 
             # Bar chart
-            ax2.bar(roles, counts, color=colors[:len(roles)], alpha=0.8)
+            ax2.bar(roles, counts, color=colors[: len(roles)], alpha=0.8)
             ax2.set_ylabel("Count")
             ax2.set_xlabel("Semantic Role")
             ax2.set_title("Semantic Role Distribution (Bar)")
@@ -334,7 +351,9 @@ class SemanticVisualizer:
             logger.error(f"Error rendering role distribution: {e}")
             return None
 
-    def render_confidence_heatmap(self, mappings: list[dict[str, Any]] | None = None) -> "Figure | None":
+    def render_confidence_heatmap(
+        self, mappings: list[dict[str, Any]] | None = None
+    ) -> "Figure | None":
         """
         Render confidence scores per semantic node as heatmap.
 
@@ -377,10 +396,19 @@ class SemanticVisualizer:
                         confidences["policies"].append(conf)
             else:
                 # Use placeholder values
-                confidences["states"] = [0.8 + 0.2 * i / max(len(self.states), 1) for i in range(len(self.states))]
-                confidences["observations"] = [0.75 + 0.2 * i / max(len(self.observations), 1) for i in range(len(self.observations))]
-                confidences["actions"] = [0.9 + 0.1 * i / max(len(self.actions), 1) for i in range(len(self.actions))]
-                confidences["policies"] = [0.85 + 0.15 * i / max(len(self.policies), 1) for i in range(len(self.policies))]
+                confidences["states"] = [
+                    0.8 + 0.2 * i / max(len(self.states), 1) for i in range(len(self.states))
+                ]
+                confidences["observations"] = [
+                    0.75 + 0.2 * i / max(len(self.observations), 1)
+                    for i in range(len(self.observations))
+                ]
+                confidences["actions"] = [
+                    0.9 + 0.1 * i / max(len(self.actions), 1) for i in range(len(self.actions))
+                ]
+                confidences["policies"] = [
+                    0.85 + 0.15 * i / max(len(self.policies), 1) for i in range(len(self.policies))
+                ]
 
             # Create heatmap data (role x confidence bins)
             fig, ax = plt.subplots(figsize=(12, 6))

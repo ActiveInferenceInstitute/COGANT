@@ -13,7 +13,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -22,14 +21,17 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.FUNCTION, "process", "mymod.process", path="mymod.py")
     n2 = builder.add_node(NodeKind.CLASS, "MyClass", "mymod.MyClass", path="mymod.py")
@@ -41,26 +43,31 @@ def _make_graph_with_nodes():
 # api/orchestration.py — pure helper functions
 # ---------------------------------------------------------------------------
 
+
 class TestOrchestrationHelpers:
     def test_repo_uri_with_existing_path(self, tmp_path):
         from cogant.api.orchestration import _repo_uri
+
         result = _repo_uri(str(tmp_path))
         assert result.startswith("file://")
         assert str(tmp_path) in result or result.endswith(tmp_path.name)
 
     def test_repo_uri_with_nonexistent_path(self):
         from cogant.api.orchestration import _repo_uri
+
         result = _repo_uri("https://github.com/example/repo")
         assert result == "https://github.com/example/repo"
 
     def test_repo_uri_returns_string(self, tmp_path):
         from cogant.api.orchestration import _repo_uri
+
         result = _repo_uri(str(tmp_path))
         assert isinstance(result, str)
 
     def test_serialize_node_basic(self):
         from cogant.api.orchestration import _serialize_node
         from cogant.schemas.core import Node, NodeKind
+
         node = Node(
             id="n001",
             kind=NodeKind.FUNCTION,
@@ -76,6 +83,7 @@ class TestOrchestrationHelpers:
     def test_serialize_edge_basic(self):
         from cogant.api.orchestration import _serialize_edge
         from cogant.schemas.core import Edge, EdgeKind
+
         edge = Edge(
             id="e001",
             source_id="n001",
@@ -88,6 +96,7 @@ class TestOrchestrationHelpers:
 
     def test_program_graph_to_dict_empty(self):
         from cogant.api.orchestration import program_graph_to_dict
+
         graph = _make_empty_graph()
         result = program_graph_to_dict(graph)
         assert isinstance(result, dict)
@@ -98,6 +107,7 @@ class TestOrchestrationHelpers:
 
     def test_program_graph_to_dict_with_nodes(self):
         from cogant.api.orchestration import program_graph_to_dict
+
         graph = _make_graph_with_nodes()
         result = program_graph_to_dict(graph)
         assert len(result["nodes"]) == 2
@@ -105,6 +115,7 @@ class TestOrchestrationHelpers:
 
     def test_program_graph_to_dict_with_statistics(self):
         from cogant.api.orchestration import program_graph_to_dict
+
         graph = _make_empty_graph()
         stats = {"node_count": 0, "edge_count": 0}
         result = program_graph_to_dict(graph, statistics=stats)
@@ -112,12 +123,14 @@ class TestOrchestrationHelpers:
 
     def test_program_graph_to_dict_no_statistics(self):
         from cogant.api.orchestration import program_graph_to_dict
+
         graph = _make_empty_graph()
         result = program_graph_to_dict(graph)
         assert result["statistics"] == {}
 
     def test_default_translation_engine_returns_engine(self):
         from cogant.api.orchestration import _default_translation_engine
+
         engine = _default_translation_engine()
         assert engine is not None
         assert hasattr(engine, "rules")
@@ -128,9 +141,11 @@ class TestOrchestrationHelpers:
 # reverse/parser.py — ReverseGNNModel additional paths
 # ---------------------------------------------------------------------------
 
+
 class TestReverseGNNModelAdditional:
     def _make_model(self):
         from cogant.reverse.parser import ReverseGNNModel
+
         return ReverseGNNModel(
             model_name="test_model",
             hidden_states=["state_a", "state_b"],
@@ -161,6 +176,7 @@ class TestReverseGNNModelAdditional:
 
     def test_model_with_annotations(self):
         from cogant.reverse.parser import ReverseGNNModel
+
         model = ReverseGNNModel(
             model_name="annotated",
             hidden_states=["s0"],
@@ -175,6 +191,7 @@ class TestReverseGNNModelAdditional:
 
     def test_model_with_extra_metadata(self):
         from cogant.reverse.parser import ReverseGNNModel
+
         model = ReverseGNNModel(
             model_name="meta_model",
             hidden_states=["s1", "s2", "s3"],
@@ -188,6 +205,7 @@ class TestReverseGNNModelAdditional:
 
     def test_parse_gnn_minimal(self):
         from cogant.reverse.parser import parse_gnn
+
         gnn_text = """## ModelName\n**MyModel**\n\n## StateSpaceBlock\n- s0 [2]\n- s1 [3]\n"""
         try:
             model = parse_gnn(gnn_text)
@@ -197,6 +215,7 @@ class TestReverseGNNModelAdditional:
 
     def test_parse_gnn_empty_string(self):
         from cogant.reverse.parser import parse_gnn
+
         try:
             model = parse_gnn("")
             # May return a model with empty fields or raise
@@ -209,18 +228,21 @@ class TestReverseGNNModelAdditional:
 # translate/rules/semantic.py — semantic rule additional paths
 # ---------------------------------------------------------------------------
 
+
 class TestSemanticRulesAdditional:
     def _make_graph_with_function(self, func_name="observe_state"):
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n = builder.add_node(NodeKind.FUNCTION, func_name, f"mymod.{func_name}", path="mymod.py")
         return builder.finalize(), n.id
 
     def test_observation_rule_explain_on_non_match(self):
         """ObservationRule.explain should not fire on non-observation nodes."""
-        from cogant.translate.rules.semantic import ObservationRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.semantic import ObservationRule
+
         graph, nid = self._make_graph_with_function("process_data")
         rule = ObservationRule()
         node = graph.get_node(nid)
@@ -232,8 +254,9 @@ class TestSemanticRulesAdditional:
 
     def test_action_rule_explain_on_non_match(self):
         """ActionRule.explain should not fire on non-action nodes."""
-        from cogant.translate.rules.semantic import ActionRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.semantic import ActionRule
+
         graph, nid = self._make_graph_with_function("calculate")
         rule = ActionRule()
         node = graph.get_node(nid)
@@ -244,8 +267,9 @@ class TestSemanticRulesAdditional:
 
     def test_preference_rule_explain(self):
         """PreferenceRule.explain should produce a result."""
-        from cogant.translate.rules.semantic import PreferenceRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.semantic import PreferenceRule
+
         graph, nid = self._make_graph_with_function("maximize_reward")
         rule = PreferenceRule()
         node = graph.get_node(nid)
@@ -255,8 +279,9 @@ class TestSemanticRulesAdditional:
 
     def test_policy_rule_explain(self):
         """PolicyRule.explain should produce a result."""
-        from cogant.translate.rules.semantic import PolicyRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.semantic import PolicyRule
+
         graph, nid = self._make_graph_with_function("select_action")
         rule = PolicyRule()
         node = graph.get_node(nid)
@@ -269,12 +294,13 @@ class TestSemanticRulesAdditional:
 # gnn/formatter/semantic.py — _format_markov_blanket with non-empty graph
 # ---------------------------------------------------------------------------
 
+
 class TestSemanticFormatterAdditional:
     def test_format_markov_blanket_with_nodes(self):
         from cogant.gnn.formatter.semantic import _SemanticSectionsMixin
+        from cogant.process.extractor import ProcessModel
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
-        from cogant.process.extractor import ProcessModel
 
         class FakeFormatter(_SemanticSectionsMixin):
             pass
@@ -282,9 +308,14 @@ class TestSemanticFormatterAdditional:
         fmt = FakeFormatter()
         fmt.graph = _make_graph_with_nodes()
         fmt.state_space = StateSpaceModel(
-            id="ss", schema_name="test",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ss",
+            schema_name="test",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         fmt.process = ProcessModel(id="pm", schema_name="test", stages={}, connections={})

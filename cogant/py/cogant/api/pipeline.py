@@ -19,18 +19,20 @@ logger = logging.getLogger(__name__)
 class PipelineConfig:
     """Configuration for pipeline execution."""
 
-    stages: list[str] = field(default_factory=lambda: [
-        "ingest",
-        "static",
-        "normalize",
-        "graph",
-        "dynamic",
-        "translate",
-        "statespace",
-        "process",
-        "export",
-        "validate",
-    ])
+    stages: list[str] = field(
+        default_factory=lambda: [
+            "ingest",
+            "static",
+            "normalize",
+            "graph",
+            "dynamic",
+            "translate",
+            "statespace",
+            "process",
+            "export",
+            "validate",
+        ]
+    )
     """Stages to execute in order."""
 
     skip_stages: list[str] = field(default_factory=list)
@@ -138,9 +140,7 @@ class PipelineConfig:
     ``None`` means "every step that is not in :data:`upstream_gnn_skip_steps`".
     """
 
-    upstream_gnn_skip_steps: list[int] = field(
-        default_factory=lambda: [11, 12]
-    )
+    upstream_gnn_skip_steps: list[int] = field(default_factory=lambda: [11, 12])
     """Step indices to drop from the upstream pipeline pass.
 
     Defaults to ``[11, 12]`` (``11_render`` and ``12_execute``): they emit
@@ -178,8 +178,16 @@ class PipelineConfig:
 
         # Check that all stages are known
         known_stages = {
-            "ingest", "static", "normalize", "graph", "dynamic",
-            "translate", "statespace", "process", "export", "validate"
+            "ingest",
+            "static",
+            "normalize",
+            "graph",
+            "dynamic",
+            "translate",
+            "statespace",
+            "process",
+            "export",
+            "validate",
         }
         for stage in self.stages:
             if stage not in known_stages:
@@ -213,15 +221,14 @@ class PipelineConfig:
         ):
             for v in values:
                 if not isinstance(v, int) or v not in upstream_step_range:
-                    errors.append(
-                        f"{label} contains invalid step {v!r}; must be int in 0..24"
-                    )
+                    errors.append(f"{label} contains invalid step {v!r}; must be int in 0..24")
 
         return errors
 
     def with_profiling(self) -> "PipelineConfig":
         """Return a copy of this config with profiling enabled."""
         import copy
+
         config_copy = copy.deepcopy(self)
         config_copy.profiling_enabled = True
         return config_copy
@@ -364,9 +371,7 @@ class PipelineRunner:
             "validate": self._stage_validate,
         }
 
-    def run(
-        self, target: str, config: PipelineConfig | None = None
-    ) -> Bundle:
+    def run(self, target: str, config: PipelineConfig | None = None) -> Bundle:
         """
         Execute the full pipeline.
 
@@ -382,7 +387,9 @@ class PipelineRunner:
 
         logger.info(
             "Starting pipeline for target: %s (%d stages, %d skipped)",
-            target, len(config.stages), len(config.skip_stages),
+            target,
+            len(config.stages),
+            len(config.skip_stages),
         )
 
         bundle = Bundle(target=target, metadata={"config": vars(config)})
@@ -396,9 +403,7 @@ class PipelineRunner:
         if config.incremental_since:
             cache_outcome = self._incremental_preflight(target, bundle, config)
             if cache_outcome == "full_hit":
-                logger.info(
-                    "Incremental mode: full cache hit, returning cached bundle"
-                )
+                logger.info("Incremental mode: full cache hit, returning cached bundle")
                 return bundle
 
         # Build the effective skip set. ``skip_dynamic`` acts as a shorthand
@@ -441,7 +446,8 @@ class PipelineRunner:
                 bundle.stage_results[stage] = result
                 logger.info(
                     "Stage %s completed in %.1fms",
-                    stage, timing[stage],
+                    stage,
+                    timing[stage],
                 )
             except Exception as e:
                 error = f"Stage {stage} failed: {str(e)}"
@@ -482,8 +488,10 @@ class PipelineRunner:
         ran_stages = [s for s in config.stages if s in timing and timing[s] > 0]
         logger.info(
             "Pipeline completed: %d/%d stages ran (incl. failures), %d errors, %.1fms total",
-            len(ran_stages), len(config.stages),
-            len(bundle.errors), timing["total"],
+            len(ran_stages),
+            len(config.stages),
+            len(bundle.errors),
+            timing["total"],
         )
         return bundle
 
@@ -491,9 +499,7 @@ class PipelineRunner:
     # Incremental-mode helpers
     # ------------------------------------------------------------------
 
-    def _incremental_preflight(
-        self, target: str, bundle: Bundle, config: PipelineConfig
-    ) -> str:
+    def _incremental_preflight(self, target: str, bundle: Bundle, config: PipelineConfig) -> str:
         """Inspect the cache and prepare a restricted run.
 
         Returns one of:
@@ -537,10 +543,7 @@ class PipelineRunner:
         all_py = [
             p
             for p in repo_path.rglob("*.py")
-            if not any(
-                part in {".git", ".venv", "__pycache__", "node_modules"}
-                for part in p.parts
-            )
+            if not any(part in {".git", ".venv", "__pycache__", "node_modules"} for part in p.parts)
         ]
         stats["files_total"] = len(all_py)
 
@@ -601,9 +604,7 @@ class PipelineRunner:
         stats["reason"] = f"{len(changed)} file(s) changed"
         return "partial"
 
-    def _incremental_cache_save(
-        self, target: str, bundle: Bundle, config: PipelineConfig
-    ) -> None:
+    def _incremental_cache_save(self, target: str, bundle: Bundle, config: PipelineConfig) -> None:
         """Persist the bundle's stage_results into the incremental cache.
 
         Only JSON-serialisable content is stored (``stage_results`` +
@@ -636,9 +637,7 @@ class PipelineRunner:
         cache_dir = Path(config.cache_dir) if config.cache_dir else None
         store = CacheStore(cache_dir=cache_dir)
 
-        safe_results = _json.loads(
-            _json.dumps(bundle.stage_results, default=_json_default)
-        )
+        safe_results = _json.loads(_json.dumps(bundle.stage_results, default=_json_default))
         safe_errors = list(bundle.errors)
         store.put(
             key,
@@ -648,41 +647,31 @@ class PipelineRunner:
             },
         )
 
-    def _stage_ingest(
-        self, bundle: Bundle, config: PipelineConfig
-    ) -> dict[str, Any]:
+    def _stage_ingest(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Ingest: Load and parse target codebase."""
         if config.dry_run:
             return {"type": "ingest", "dry_run": True, "target": bundle.target}
         return orchestration.run_ingest(bundle.target, bundle)
 
-    def _stage_static(
-        self, bundle: Bundle, config: PipelineConfig
-    ) -> dict[str, Any]:
+    def _stage_static(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Static analysis: Extract AST, types, symbols."""
         if config.dry_run:
             return {"type": "static_analysis", "dry_run": True}
         return orchestration.run_static(bundle)
 
-    def _stage_normalize(
-        self, bundle: Bundle, config: PipelineConfig
-    ) -> dict[str, Any]:
+    def _stage_normalize(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Normalize: Unify representations."""
         if config.dry_run:
             return {"type": "normalized", "dry_run": True}
         return orchestration.run_normalize(bundle)
 
-    def _stage_graph(
-        self, bundle: Bundle, config: PipelineConfig
-    ) -> dict[str, Any]:
+    def _stage_graph(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Graph: Build program dependency graph."""
         if config.dry_run:
             return {"type": "program_graph", "dry_run": True}
         return orchestration.run_graph(bundle, bundle.target)
 
-    def _stage_dynamic(
-        self, bundle: Bundle, config: PipelineConfig
-    ) -> dict[str, Any]:
+    def _stage_dynamic(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Run dynamic analysis enrichment.
 
         Resolution order for coverage / trace paths:
@@ -713,16 +702,12 @@ class PipelineRunner:
                     candidate = target_path / ".coverage"
                     if candidate.exists() and candidate.is_file():
                         coverage_path = str(candidate)
-                        logger.info(
-                            "Dynamic stage auto-detected coverage at %s", coverage_path
-                        )
+                        logger.info("Dynamic stage auto-detected coverage at %s", coverage_path)
             except Exception:  # noqa: BLE001
                 logger.debug("Coverage auto-detection skipped", exc_info=True)
 
         if coverage_path is None and trace_path is None:
-            logger.info(
-                "Dynamic stage: no coverage or trace data found; skipping enrichment"
-            )
+            logger.info("Dynamic stage: no coverage or trace data found; skipping enrichment")
             return {
                 "type": "dynamic_enrichment",
                 "skipped": True,
@@ -742,41 +727,31 @@ class PipelineRunner:
             result["trace_path"] = trace_path
         return result
 
-    def _stage_translate(
-        self, bundle: Bundle, config: PipelineConfig
-    ) -> dict[str, Any]:
+    def _stage_translate(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Translate: Convert to GNN representation."""
         if config.dry_run:
             return {"type": "gnn_model", "dry_run": True}
         return orchestration.run_translate(bundle)
 
-    def _stage_statespace(
-        self, bundle: Bundle, config: PipelineConfig
-    ) -> dict[str, Any]:
+    def _stage_statespace(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Statespace: Compile semantic state space."""
         if config.dry_run:
             return {"type": "state_space_model", "dry_run": True}
         return orchestration.run_statespace(bundle, bundle.target)
 
-    def _stage_process(
-        self, bundle: Bundle, config: PipelineConfig
-    ) -> dict[str, Any]:
+    def _stage_process(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Process: Extract execution model."""
         if config.dry_run:
             return {"type": "process_model", "dry_run": True}
         return orchestration.run_process(bundle, bundle.target)
 
-    def _stage_export(
-        self, bundle: Bundle, config: PipelineConfig
-    ) -> dict[str, Any]:
+    def _stage_export(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Export: Write all artifacts to disk."""
         if config.dry_run:
             return {"type": "export", "dry_run": True, "output_dir": config.output_dir}
         return orchestration.run_export(bundle, config.output_dir)
 
-    def _stage_validate(
-        self, bundle: Bundle, config: PipelineConfig
-    ) -> dict[str, Any]:
+    def _stage_validate(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Validate: Run validation checks."""
         if config.dry_run:
             return {"type": "validation", "dry_run": True, "passed": True}

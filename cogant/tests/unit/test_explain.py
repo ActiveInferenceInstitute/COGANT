@@ -25,9 +25,7 @@ from cogant.cli.explain import (
     explain_node,
     format_json,
     format_text,
-    resolve_node,
 )
-
 
 CALCULATOR_SOURCE = '''
 """Minimal stateful calculator used by test_explain.py."""
@@ -104,13 +102,13 @@ def test_explain_returns_explanation_for_known_node(tmp_path: Path) -> None:
     # the observation rule should NOT fire for this mutator. We assert
     # that either the action or mutating_subsystem pathway fires, and
     # that the reason mentions WRITES.
-    assert ("action" in fired_names) or ("mutating_subsystem" in fired_names) or (
-        "data_pipeline" in fired_names
+    assert (
+        ("action" in fired_names)
+        or ("mutating_subsystem" in fired_names)
+        or ("data_pipeline" in fired_names)
     )
     joined_reasons = " | ".join(rx.reason for rx in result.rules_fired)
-    joined_evidence = " | ".join(
-        ev for rx in result.rules_fired for ev in rx.evidence
-    )
+    joined_evidence = " | ".join(ev for rx in result.rules_fired for ev in rx.evidence)
     assert ("WRITES" in joined_reasons) or ("WRITES" in joined_evidence), (
         f"expected WRITES evidence in fired rules, got reasons={joined_reasons!r} "
         f"evidence={joined_evidence!r}"
@@ -136,9 +134,7 @@ def test_explain_json_output_has_required_keys(tmp_path: Path) -> None:
         "rules_considered",
         "blanket_role",
     }
-    assert required_keys.issubset(blob.keys()), (
-        f"missing keys: {required_keys - set(blob.keys())}"
-    )
+    assert required_keys.issubset(blob.keys()), f"missing keys: {required_keys - set(blob.keys())}"
 
     # rules_fired must be a list of dicts with the RuleExplanation schema.
     assert isinstance(blob["rules_fired"], list)
@@ -210,6 +206,4 @@ def test_resolve_node_prefers_exact_match(tmp_path: Path) -> None:
     # Run the pipeline once so we can reuse the graph for a pure
     # resolver test without re-running the full pipeline.
     result = explain_node(str(repo), "clear")
-    assert result.node_name == "clear", (
-        f"expected exact match on 'clear', got {result.node_name!r}"
-    )
+    assert result.node_name == "clear", f"expected exact match on 'clear', got {result.node_name!r}"

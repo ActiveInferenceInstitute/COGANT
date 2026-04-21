@@ -22,15 +22,9 @@ class GNNConfig(BaseModel):
             out every entry; ``"sparse"`` writes only non-zero entries.
     """
 
-    include_metadata: bool = Field(
-        default=True, description="Emit ModelMetadata section"
-    )
-    include_connections: bool = Field(
-        default=True, description="Emit Connections section"
-    )
-    include_matrices: bool = Field(
-        default=True, description="Emit A/B/C/D matrix blocks"
-    )
+    include_metadata: bool = Field(default=True, description="Emit ModelMetadata section")
+    include_connections: bool = Field(default=True, description="Emit Connections section")
+    include_matrices: bool = Field(default=True, description="Emit A/B/C/D matrix blocks")
     matrix_format: Literal["dense", "sparse"] = Field(
         default="dense", description="Matrix serialization format"
     )

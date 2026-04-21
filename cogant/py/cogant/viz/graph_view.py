@@ -315,7 +315,12 @@ class GraphVisualizer:
                 for n in self.nodes
             ],
             "links": [
-                {"source": link.source, "target": link.target, "label": link.label, "weight": link.weight}
+                {
+                    "source": link.source,
+                    "target": link.target,
+                    "label": link.label,
+                    "weight": link.weight,
+                }
                 for link in self.links
             ],
             "clusters": clusters,
@@ -520,12 +525,12 @@ class GraphVisualizer:
 
     <!-- Links -->
     <g class="links">
-        {''.join('<line class="link" x1="0" y1="0" x2="100" y2="100" />' for _ in self.links[:10])}
+        {"".join('<line class="link" x1="0" y1="0" x2="100" y2="100" />' for _ in self.links[:10])}
     </g>
 
     <!-- Nodes -->
     <g class="nodes">
-        {''.join(f'<circle class="node" cx="{i*100}" cy="50" r="15" /><text class="label" x="{i*100}" y="80">{n.label}</text>' for i, n in enumerate(self.nodes[:10]))}
+        {"".join(f'<circle class="node" cx="{i * 100}" cy="50" r="15" /><text class="label" x="{i * 100}" y="80">{n.label}</text>' for i, n in enumerate(self.nodes[:10]))}
     </g>
 </svg>
 """

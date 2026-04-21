@@ -11,11 +11,8 @@ import pytest
 
 from cogant.export.formats import ExportConfig, ExportFormat, MultiFormatExporter
 from cogant.export.json_schema import JSONSchemaExporter
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
-from cogant.schemas.graph import ProgramGraph, GraphMetadata
-from datetime import datetime
-from pathlib import Path
-
+from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
 pytestmark = pytest.mark.integration
 
@@ -71,8 +68,9 @@ class TestJSONSchemaValidity:
 
         # Verify all have schema indicators
         for schema in [gnn_schema, graph_schema, mapping_schema, result_schema]:
-            assert "$schema" in schema or "type" in schema, \
+            assert "$schema" in schema or "type" in schema, (
                 "Schema should have $schema or type field"
+            )
             assert isinstance(schema, dict)
 
             # Verify JSON serializable

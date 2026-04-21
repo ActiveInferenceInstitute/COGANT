@@ -18,8 +18,18 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 import pytest
 
-matplotlib = pytest.importorskip("matplotlib", reason="cogant[viz] not installed — skip PNG export tests")
+matplotlib = pytest.importorskip(
+    "matplotlib", reason="cogant[viz] not installed — skip PNG export tests"
+)
 
+from cogant.statespace.compiler import (
+    Action,
+    ObservationModality,
+    StateSpaceModel,
+    Transition,
+)
+from cogant.statespace.temporal import TimeRegime
+from cogant.statespace.variables import StateVariable, StateVariableType
 from cogant.viz.png_export import (
     RenderConfig,
     _build_kind_legend,
@@ -39,15 +49,6 @@ from cogant.viz.png_export import (
     render_state_space_factor_png,
     render_summary_cover_png,
 )
-from cogant.statespace.compiler import (
-    Action,
-    ObservationModality,
-    StateSpaceModel,
-    Transition,
-)
-from cogant.statespace.temporal import TimeRegime
-from cogant.statespace.variables import StateVariable, StateVariableType
-
 
 # --------------------------- helpers / fixtures ------------------------ #
 
@@ -76,9 +77,7 @@ def _state_space_fixture() -> StateSpaceModel:
                 id="o1", name="event", source_node_id="n1", modality_type="event"
             )
         },
-        actions={
-            "a1": Action(id="a1", name="act", controller_id="n1", effects=["v1"])
-        },
+        actions={"a1": Action(id="a1", name="act", controller_id="n1", effects=["v1"])},
         transitions={
             "t1": Transition(
                 id="t1",
@@ -431,9 +430,7 @@ def test_render_summary_cover_png_with_full_run_dir(tmp_path):
 def test_render_gnn_markdown_png_writes_at_least_one_page(tmp_path):
     """A GNN markdown with sections produces at least one page PNG."""
     md = tmp_path / "model.gnn.md"
-    md.write_text(
-        "# Model\nintro\n## Section1\nbody one\n## Section2\nbody two\n"
-    )
+    md.write_text("# Model\nintro\n## Section1\nbody one\n## Section2\nbody two\n")
     out = tmp_path / "model.gnn.png"
     pages = render_gnn_markdown_png(md, out)
     assert len(pages) >= 1

@@ -7,14 +7,10 @@ These tests drive the dataflow analyzer with real Python source snippets
 
 from pathlib import Path
 
-import pytest
-
 from cogant.static.dataflow import (
     DataFlowAnalyzer,
     DataFlowEdge,
-    DataFlowVisitor,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -61,25 +57,16 @@ class TestSimpleAssignments:
     """Plain ``x = y`` assignments."""
 
     def test_write_edge_from_simple_assign(self):
-        edges = _analyze(
-            "def f():\n"
-            "    x = 1\n"
-        )
+        edges = _analyze("def f():\n    x = 1\n")
         assert _has(edges, source="f", target="x", edge_type="writes", context="f")
 
     def test_multiple_targets_each_get_write_edge(self):
-        edges = _analyze(
-            "def f():\n"
-            "    a, b = 1, 2\n"
-        )
+        edges = _analyze("def f():\n    a, b = 1, 2\n")
         assert _has(edges, target="a", edge_type="writes")
         assert _has(edges, target="b", edge_type="writes")
 
     def test_rhs_names_produce_reads(self):
-        edges = _analyze(
-            "def f(x, y):\n"
-            "    z = x + y\n"
-        )
+        edges = _analyze("def f(x, y):\n    z = x + y\n")
         assert _has(edges, source="x", edge_type="reads", context="f")
         assert _has(edges, source="y", edge_type="reads", context="f")
         assert _has(edges, source="x", target="z", edge_type="depends_on")
@@ -96,24 +83,15 @@ class TestAnnotatedAssignments:
     """``ast.AnnAssign`` nodes: ``x: int = 5`` and ``x: int``."""
 
     def test_annotated_with_value_emits_write(self):
-        edges = _analyze(
-            "def f():\n"
-            "    count: int = 0\n"
-        )
+        edges = _analyze("def f():\n    count: int = 0\n")
         assert _has(edges, target="count", edge_type="writes", context="f")
 
     def test_annotated_without_value_still_emits_write(self):
-        edges = _analyze(
-            "def f():\n"
-            "    count: int\n"
-        )
+        edges = _analyze("def f():\n    count: int\n")
         assert _has(edges, target="count", edge_type="writes", context="f")
 
     def test_annotated_rhs_reads(self):
-        edges = _analyze(
-            "def f(n):\n"
-            "    total: int = n * 2\n"
-        )
+        edges = _analyze("def f(n):\n    total: int = n * 2\n")
         assert _has(edges, source="n", target="total", edge_type="depends_on")
 
 
@@ -121,20 +99,13 @@ class TestAugmentedAssignments:
     """``x += y`` — should emit read, mutate, and write."""
 
     def test_aug_assign_emits_read_and_mutate(self):
-        edges = _analyze(
-            "def f(x):\n"
-            "    x += 1\n"
-        )
+        edges = _analyze("def f(x):\n    x += 1\n")
         assert _has(edges, source="x", edge_type="reads", context="f")
         assert _has(edges, target="x", edge_type="mutates", context="f")
         assert _has(edges, target="x", edge_type="writes", context="f")
 
     def test_aug_assign_on_attribute(self):
-        edges = _analyze(
-            "class C:\n"
-            "    def step(self):\n"
-            "        self.count += 1\n"
-        )
+        edges = _analyze("class C:\n    def step(self):\n        self.count += 1\n")
         assert _has(
             edges,
             source="self.count",
@@ -153,11 +124,7 @@ class TestAttributeAccess:
     """Attribute loads/stores and method calls."""
 
     def test_attribute_write_produces_write_edge(self):
-        edges = _analyze(
-            "class C:\n"
-            "    def __init__(self, x):\n"
-            "        self.x = x\n"
-        )
+        edges = _analyze("class C:\n    def __init__(self, x):\n        self.x = x\n")
         assert _has(
             edges,
             target="self.x",
@@ -167,11 +134,7 @@ class TestAttributeAccess:
         assert _has(edges, source="x", edge_type="reads", context="C.__init__")
 
     def test_attribute_read_produces_read_edge(self):
-        edges = _analyze(
-            "class C:\n"
-            "    def get(self):\n"
-            "        return self.value\n"
-        )
+        edges = _analyze("class C:\n    def get(self):\n        return self.value\n")
         assert _has(
             edges,
             source="self.value",
@@ -180,10 +143,7 @@ class TestAttributeAccess:
         )
 
     def test_method_call_marks_receiver_mutated(self):
-        edges = _analyze(
-            "def f(lst):\n"
-            "    lst.append(1)\n"
-        )
+        edges = _analyze("def f(lst):\n    lst.append(1)\n")
         assert _has(edges, source="f", target="lst", edge_type="mutates")
 
 
@@ -191,17 +151,11 @@ class TestCallArguments:
     """Function calls: arguments are reads, kwargs are reads."""
 
     def test_positional_arg_is_read(self):
-        edges = _analyze(
-            "def f(x):\n"
-            "    print(x)\n"
-        )
+        edges = _analyze("def f(x):\n    print(x)\n")
         assert _has(edges, source="x", target="<call>", edge_type="reads")
 
     def test_keyword_arg_is_read(self):
-        edges = _analyze(
-            "def f(user):\n"
-            "    log('hi', name=user)\n"
-        )
+        edges = _analyze("def f(user):\n    log('hi', name=user)\n")
         assert _has(edges, source="user", target="<call>", edge_type="reads")
 
 
@@ -209,17 +163,11 @@ class TestReturnStatements:
     """``return x`` emits a read against <return>."""
 
     def test_return_name_emits_read(self):
-        edges = _analyze(
-            "def f(x):\n"
-            "    return x\n"
-        )
+        edges = _analyze("def f(x):\n    return x\n")
         assert _has(edges, source="x", target="<return>", edge_type="reads")
 
     def test_return_expression_emits_reads(self):
-        edges = _analyze(
-            "def f(a, b):\n"
-            "    return a + b\n"
-        )
+        edges = _analyze("def f(a, b):\n    return a + b\n")
         assert _has(edges, source="a", target="<return>", edge_type="reads")
         assert _has(edges, source="b", target="<return>", edge_type="reads")
 
@@ -236,26 +184,13 @@ class TestScopeTracking:
         assert any(e.context == "foo" for e in edges)
 
     def test_method_scope(self):
-        edges = _analyze(
-            "class Bar:\n"
-            "    def baz(self):\n"
-            "        y = 1\n"
-        )
+        edges = _analyze("class Bar:\n    def baz(self):\n        y = 1\n")
         assert any(e.context == "Bar.baz" for e in edges)
 
     def test_scopes_do_not_leak_between_functions(self):
-        edges = _analyze(
-            "def a():\n"
-            "    x = 1\n"
-            "def b():\n"
-            "    y = 2\n"
-        )
-        a_writes = [
-            e for e in edges if e.context == "a" and e.edge_type == "writes"
-        ]
-        b_writes = [
-            e for e in edges if e.context == "b" and e.edge_type == "writes"
-        ]
+        edges = _analyze("def a():\n    x = 1\ndef b():\n    y = 2\n")
+        a_writes = [e for e in edges if e.context == "a" and e.edge_type == "writes"]
+        b_writes = [e for e in edges if e.context == "b" and e.edge_type == "writes"]
         assert any(e.target_symbol == "x" for e in a_writes)
         assert any(e.target_symbol == "y" for e in b_writes)
         assert not any(e.target_symbol == "y" for e in a_writes)
@@ -301,11 +236,7 @@ class TestDataFlowEdgeDataclass:
         assert all(isinstance(i, str) and len(i) == 16 for i in ids)
 
     def test_ids_unique_across_distinct_edges(self):
-        edges = _analyze(
-            "def f(a, b):\n"
-            "    x = a\n"
-            "    y = b\n"
-        )
+        edges = _analyze("def f(a, b):\n    x = a\n    y = b\n")
         assert len({e.id for e in edges}) == len(edges) or len(edges) > 0
 
 
@@ -316,18 +247,10 @@ class TestDataFlowEdgeDataclass:
 
 class TestVisitorDirect:
     def test_visitor_handles_subscript_target(self):
-        edges = _analyze(
-            "def f(d):\n"
-            "    d[0] = 1\n"
-        )
+        edges = _analyze("def f(d):\n    d[0] = 1\n")
         # Subscript target → treated as write on the root name
         assert _has(edges, target="d", edge_type="writes")
 
     def test_visitor_handles_if_condition_read(self):
-        edges = _analyze(
-            "def f(flag):\n"
-            "    if flag:\n"
-            "        return 1\n"
-            "    return 0\n"
-        )
+        edges = _analyze("def f(flag):\n    if flag:\n        return 1\n    return 0\n")
         assert _has(edges, source="flag", edge_type="reads", context="f")

@@ -7,5 +7,5 @@ class GNNConfig(BaseModel):
     include_metadata: bool
     include_connections: bool
     include_matrices: bool
-    matrix_format: Literal['dense', 'sparse']
+    matrix_format: Literal["dense", "sparse"]
     model_config: ClassVar[Incomplete]

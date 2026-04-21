@@ -19,6 +19,7 @@ pytestmark = pytest.mark.unit
 # Helpers — build a real StateSpaceModel and formatter
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
@@ -38,15 +39,14 @@ def _make_empty_state_space():
 
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule",
-                           path="mymodule.py", language="python")
-    cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass",
-                           path="mymodule.py")
-    func = builder.add_node(NodeKind.FUNCTION, "my_func", "mymodule.my_func",
-                            path="mymodule.py")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
+    cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass", path="mymodule.py")
+    func = builder.add_node(NodeKind.FUNCTION, "my_func", "mymodule.my_func", path="mymodule.py")
     builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
     builder.add_edge(cls.id, func.id, EdgeKind.CONTAINS)
     return builder.finalize()
@@ -75,6 +75,7 @@ def _make_formatter(state_space=None, graph=None, mappings=None):
 # _format_transition_structure
 # ---------------------------------------------------------------------------
 
+
 class TestFormatTransitionStructure:
     def test_empty_transitions(self):
         fmt = _make_formatter()
@@ -84,7 +85,7 @@ class TestFormatTransitionStructure:
 
     def test_with_calls_edges_no_writes(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         f1 = builder.add_node(NodeKind.FUNCTION, "caller", "m.caller")
@@ -98,7 +99,7 @@ class TestFormatTransitionStructure:
 
     def test_with_calls_and_writes_edges(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         f1 = builder.add_node(NodeKind.FUNCTION, "updater", "m.updater")
@@ -115,9 +116,7 @@ class TestFormatTransitionStructure:
         assert "updater" in result or "Transition" in result
 
     def test_with_real_transitions(self):
-        from cogant.statespace.compiler import (
-            StateSpaceModel, Transition
-        )
+        from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
         from cogant.translate.confidence import ConfidenceTier
 
@@ -127,10 +126,14 @@ class TestFormatTransitionStructure:
             confidence = ConfidenceTier.STATIC_ONLY
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={}, actions={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={},
+            actions={},
             transitions={"t1": FakeTrans()},
-            likelihoods={}, preferences={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         fmt = _make_formatter(state_space=ss)
@@ -142,6 +145,7 @@ class TestFormatTransitionStructure:
 # ---------------------------------------------------------------------------
 # _format_likelihood_structure
 # ---------------------------------------------------------------------------
+
 
 class TestFormatLikelihoodStructure:
     def test_empty_likelihoods(self):
@@ -163,10 +167,15 @@ class TestFormatLikelihoodStructure:
             observations = []
 
         ss = StateSpaceModel(
-            id="ls", schema_name="LS",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={"l1": FakeLike()},
-            preferences={}, time_regime=TimeRegime.SYNCHRONOUS,
+            id="ls",
+            schema_name="LS",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={"l1": FakeLike()},
+            preferences={},
+            time_regime=TimeRegime.SYNCHRONOUS,
         )
         fmt = _make_formatter(state_space=ss)
         result = fmt._format_likelihood_structure()
@@ -187,10 +196,15 @@ class TestFormatLikelihoodStructure:
             observations = []
 
         ss = StateSpaceModel(
-            id="ls2", schema_name="LS2",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={"l1": FakeLike()},
-            preferences={}, time_regime=TimeRegime.SYNCHRONOUS,
+            id="ls2",
+            schema_name="LS2",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={"l1": FakeLike()},
+            preferences={},
+            time_regime=TimeRegime.SYNCHRONOUS,
         )
         fmt = _make_formatter(state_space=ss)
         result = fmt._format_likelihood_structure()
@@ -209,10 +223,15 @@ class TestFormatLikelihoodStructure:
             observations = []
 
         ss = StateSpaceModel(
-            id="ls3", schema_name="LS3",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={"l1": FakeLike()},
-            preferences={}, time_regime=TimeRegime.SYNCHRONOUS,
+            id="ls3",
+            schema_name="LS3",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={"l1": FakeLike()},
+            preferences={},
+            time_regime=TimeRegime.SYNCHRONOUS,
         )
         fmt = _make_formatter(state_space=ss)
         result = fmt._format_likelihood_structure()
@@ -223,6 +242,7 @@ class TestFormatLikelihoodStructure:
 # _format_preferences
 # ---------------------------------------------------------------------------
 
+
 class TestFormatPreferences:
     def test_empty_preferences_no_constraints(self):
         fmt = _make_formatter()
@@ -231,7 +251,7 @@ class TestFormatPreferences:
         assert "No preferences" in result
 
     def test_with_preferences(self):
-        from cogant.statespace.compiler import StateSpaceModel, Preference
+        from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
         from cogant.translate.confidence import ConfidenceTier
 
@@ -246,9 +266,13 @@ class TestFormatPreferences:
             description = "minimize free energy"
 
         ss = StateSpaceModel(
-            id="ps", schema_name="PS",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={},
+            id="ps",
+            schema_name="PS",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
             preferences={"p1": FakePref()},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
@@ -278,6 +302,7 @@ class TestFormatPreferences:
 # _format_time_settings
 # ---------------------------------------------------------------------------
 
+
 class TestFormatTimeSettings:
     def test_empty_metadata(self):
         fmt = _make_formatter()
@@ -290,9 +315,14 @@ class TestFormatTimeSettings:
         from cogant.statespace.temporal import TimeRegime
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
             metadata={"step_unit": "seconds"},
         )
@@ -305,9 +335,14 @@ class TestFormatTimeSettings:
         from cogant.statespace.temporal import TimeRegime
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.ASYNCHRONOUS,
             metadata={"is_async": True},
         )
@@ -320,9 +355,14 @@ class TestFormatTimeSettings:
         from cogant.statespace.temporal import TimeRegime
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
             metadata={"max_steps": 100},
         )
@@ -335,9 +375,14 @@ class TestFormatTimeSettings:
         from cogant.statespace.temporal import TimeRegime
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
             metadata={"temporal_patterns": ["periodic", "event-driven"]},
         )
@@ -350,9 +395,14 @@ class TestFormatTimeSettings:
         from cogant.statespace.temporal import TimeRegime
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
             metadata={"clock_frequency": "60Hz"},
         )
@@ -365,9 +415,14 @@ class TestFormatTimeSettings:
         from cogant.statespace.temporal import TimeRegime
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
             metadata={"is_async": False},
         )
@@ -379,6 +434,7 @@ class TestFormatTimeSettings:
 # ---------------------------------------------------------------------------
 # _format_parameterization
 # ---------------------------------------------------------------------------
+
 
 class TestFormatParameterization:
     def test_empty_mappings(self):
@@ -401,14 +457,19 @@ class TestFormatParameterization:
         assert "Confidence" in result
 
     def test_with_confidence_threshold_metadata(self):
+        from cogant.schemas.semantic import MappingKind
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
-        from cogant.schemas.semantic import MappingKind
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
             metadata={"confidence_threshold": 0.6},
         )
@@ -423,9 +484,9 @@ class TestFormatParameterization:
         assert "0.6" in result
 
     def test_with_preferences_shows_rule_weights(self):
+        from cogant.schemas.semantic import MappingKind
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
-        from cogant.schemas.semantic import MappingKind
 
         class FakePref:
             name = "high_weight_rule"
@@ -442,9 +503,13 @@ class TestFormatParameterization:
             status = "active"
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
             preferences={"p1": FakePref()},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
@@ -457,6 +522,7 @@ class TestFormatParameterization:
 # ---------------------------------------------------------------------------
 # GNNMarkdownFormatter.format() — happy path (minimal model)
 # ---------------------------------------------------------------------------
+
 
 class TestGNNMarkdownFormatterFormat:
     def test_format_returns_string(self):
@@ -484,18 +550,22 @@ class TestGNNMarkdownFormatterFormat:
 # gnn/matrices.py — accessible parts
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatrices:
     def test_import_matrices_module(self):
         try:
             import cogant.gnn.matrices as mat
-            assert hasattr(mat, '__file__')
+
+            assert hasattr(mat, "__file__")
         except ImportError:
             pytest.skip("matrices module not importable")
 
     def test_matrices_module_has_classes(self):
         try:
-            import cogant.gnn.matrices as mat
             import inspect
+
+            import cogant.gnn.matrices as mat
+
             classes = [name for name, obj in inspect.getmembers(mat, inspect.isclass)]
             assert len(classes) >= 1
         except ImportError:
@@ -506,10 +576,12 @@ class TestGNNMatrices:
 # gnn/json_export.py — accessible parts
 # ---------------------------------------------------------------------------
 
+
 class TestGNNJSONExport:
     def test_import_json_exporter(self):
         try:
             from cogant.gnn.json_export import GNNJSONExporter
+
             assert GNNJSONExporter is not None
         except ImportError:
             pytest.skip("GNNJSONExporter not importable")
@@ -517,6 +589,7 @@ class TestGNNJSONExport:
     def test_exporter_instantiation(self):
         try:
             from cogant.gnn.json_export import GNNJSONExporter
+
             ss = _make_empty_state_space()
             graph = _make_graph()
             exporter = GNNJSONExporter(graph, ss, _FakeProcess(), {})
@@ -527,6 +600,7 @@ class TestGNNJSONExport:
     def test_exporter_export_returns_dict(self):
         try:
             from cogant.gnn.json_export import GNNJSONExporter
+
             ss = _make_empty_state_space()
             graph = _make_graph()
             exporter = GNNJSONExporter(graph, ss, _FakeProcess(), {})
@@ -540,10 +614,12 @@ class TestGNNJSONExport:
 # gnn/validator.py — accessible parts
 # ---------------------------------------------------------------------------
 
+
 class TestGNNValidator:
     def test_import_validator(self):
         try:
             from cogant.gnn.validator import GNNValidator
+
             assert GNNValidator is not None
         except ImportError:
             pytest.skip("GNNValidator not importable")
@@ -551,6 +627,7 @@ class TestGNNValidator:
     def test_validator_validate_returns_something(self):
         try:
             from cogant.gnn.validator import GNNValidator
+
             ss = _make_empty_state_space()
             graph = _make_graph()
             validator = GNNValidator(graph, ss, {})
@@ -564,18 +641,22 @@ class TestGNNValidator:
 # api/session.py — accessible public surface
 # ---------------------------------------------------------------------------
 
+
 class TestAPISession:
     def test_import_session_module(self):
         try:
             import cogant.api.session as sess
-            assert hasattr(sess, '__file__')
+
+            assert hasattr(sess, "__file__")
         except ImportError:
             pytest.skip("api.session not importable")
 
     def test_session_has_class(self):
         try:
-            import cogant.api.session as sess
             import inspect
+
+            import cogant.api.session as sess
+
             classes = [n for n, o in inspect.getmembers(sess, inspect.isclass)]
             assert len(classes) >= 1
         except ImportError:
@@ -586,10 +667,12 @@ class TestAPISession:
 # api/review.py — accessible public surface
 # ---------------------------------------------------------------------------
 
+
 class TestAPIReview:
     def test_import_review_module(self):
         try:
             import cogant.api.review as rev
-            assert hasattr(rev, '__file__')
+
+            assert hasattr(rev, "__file__")
         except ImportError:
             pytest.skip("api.review not importable")

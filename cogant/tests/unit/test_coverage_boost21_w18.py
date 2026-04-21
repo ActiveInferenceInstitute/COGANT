@@ -25,11 +25,13 @@ pytestmark = pytest.mark.unit
 # static/types.py — TypeInferencer internal helpers
 # ---------------------------------------------------------------------------
 
+
 class TestInferLiteralType:
     """Test TypeInferencer._infer_literal_type with real AST nodes."""
 
     def _inferencer(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer(tmp_path)
 
     def test_none_value(self, tmp_path):
@@ -124,6 +126,7 @@ class TestCallName:
 
     def _inferencer(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer(tmp_path)
 
     def test_name_node(self, tmp_path):
@@ -135,9 +138,7 @@ class TestCallName:
     def test_attribute_node(self, tmp_path):
         inf = self._inferencer(tmp_path)
         node = ast.Attribute(
-            value=ast.Name(id="obj", ctx=ast.Load()),
-            attr="method",
-            ctx=ast.Load()
+            value=ast.Name(id="obj", ctx=ast.Load()), attr="method", ctx=ast.Load()
         )
         result = inf._call_name(node)
         assert result == "method"
@@ -154,6 +155,7 @@ class TestInferTypeFromValue:
 
     def _inferencer(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer(tmp_path)
 
     def test_none_value(self, tmp_path):
@@ -238,6 +240,7 @@ class TestAnnotationToStr:
 
     def _inferencer(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer(tmp_path)
 
     def test_none_annotation(self, tmp_path):
@@ -260,7 +263,7 @@ class TestAnnotationToStr:
     def test_complex_annotation(self, tmp_path):
         inf = self._inferencer(tmp_path)
         # Parse "list[int]" annotation
-        tree = ast.parse("x: list[int]", mode='single')
+        tree = ast.parse("x: list[int]", mode="single")
         # Navigate to the annotation node
         ann_node = tree.body[0].annotation  # type: ignore
         result = inf._annotation_to_str(ann_node)
@@ -273,6 +276,7 @@ class TestInferReturnFromBody:
 
     def _inferencer(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer(tmp_path)
 
     def test_property_decorator(self, tmp_path):
@@ -305,6 +309,7 @@ class TestInferFromAnnAssign:
 
     def _inferencer(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer(tmp_path)
 
     def test_simple_annassign(self, tmp_path):
@@ -342,6 +347,7 @@ class TestInferFromAssign:
 
     def _inferencer(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer(tmp_path)
 
     def test_int_assignment(self, tmp_path):
@@ -374,12 +380,14 @@ class TestInferFromAssign:
 # reverse/cli.py — _render_plan_summary, _render_roundtrip_result
 # ---------------------------------------------------------------------------
 
+
 class TestReverseCliRenderFunctions:
     """Test the Rich-rendering helper functions in reverse/cli.py."""
 
     def test_render_plan_summary_does_not_raise(self, tmp_path):
         """_render_plan_summary should print without raising."""
         from cogant.reverse.cli import _render_plan_summary
+
         gnn_path = tmp_path / "model.gnn.md"
         gnn_path.touch()
         package_path = tmp_path / "package"
@@ -399,6 +407,7 @@ class TestReverseCliRenderFunctions:
         """_render_roundtrip_result with isomorphic result should not raise."""
         from cogant.reverse.cli import _render_roundtrip_result
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=True,
             role_match_score=0.9,
@@ -412,6 +421,7 @@ class TestReverseCliRenderFunctions:
         """_render_roundtrip_result with drift result should not raise."""
         from cogant.reverse.cli import _render_roundtrip_result
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=False,
             role_match_score=0.3,
@@ -425,6 +435,7 @@ class TestReverseCliRenderFunctions:
         """_render_roundtrip_result with package_path set should not raise."""
         from cogant.reverse.cli import _render_roundtrip_result
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=True,
             role_match_score=0.8,
@@ -437,46 +448,55 @@ class TestReverseCliRenderFunctions:
 # ingest/language_detect.py — LanguageDetector
 # ---------------------------------------------------------------------------
 
+
 class TestLanguageDetector:
     """Test LanguageDetector pure static methods."""
 
     def test_detect_python(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("main.py"))
         assert lang == "python"
 
     def test_detect_javascript(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("app.js"))
         assert lang == "javascript"
 
     def test_detect_typescript(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("index.ts"))
         assert lang is not None  # may be "typescript"
 
     def test_detect_rust(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("main.rs"))
         assert lang == "rust"
 
     def test_detect_go(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("main.go"))
         assert lang == "go"
 
     def test_detect_unknown(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("file.xyz"))
         assert lang is None
 
     def test_detect_string_path(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language("myfile.py")  # type: ignore
         assert lang == "python"
 
     def test_detect_repo_languages(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         # Create some Python files
         (tmp_path / "a.py").write_text("x = 1")
         (tmp_path / "b.py").write_text("y = 2")
@@ -488,32 +508,38 @@ class TestLanguageDetector:
 
     def test_detect_repo_languages_empty(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         langs = LanguageDetector.detect_repo_languages(tmp_path)
         assert langs == {}
 
     def test_detect_repo_languages_string_path(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "main.py").write_text("pass")
         langs = LanguageDetector.detect_repo_languages(str(tmp_path))  # type: ignore
         assert "python" in langs
 
     def test_get_supported_languages_returns_list(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         supported = LanguageDetector.get_supported_languages()
         assert isinstance(supported, list)
 
     def test_get_parser_unknown_raises_import_error(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         with pytest.raises(ImportError):
             LanguageDetector.get_parser("cobol")
 
     def test_get_parser_for_extension_unknown(self):
         from cogant.ingest.language_detect import get_parser_for_extension
+
         result = get_parser_for_extension(".xyz")
         assert result is None
 
     def test_get_parser_for_extension_without_dot(self):
         from cogant.ingest.language_detect import get_parser_for_extension
+
         # Should accept extension without leading dot
         result = get_parser_for_extension("py")
         # May return None or a parser depending on available plugins
@@ -525,11 +551,13 @@ class TestLanguageDetector:
 # ingest/manifest.py — ManifestParser deeper paths
 # ---------------------------------------------------------------------------
 
+
 class TestManifestParserDeeper:
     """Test ManifestParser with real files for branch coverage."""
 
     def test_parse_requirements_txt_with_extras(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         req = tmp_path / "requirements.txt"
         req.write_text("flask==2.0.1\nrequests>=2.28.0\nnumpy[extras]>=1.23\n")
         parser = ManifestParser()
@@ -541,6 +569,7 @@ class TestManifestParserDeeper:
 
     def test_parse_requirements_txt_with_comments(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         req = tmp_path / "requirements.txt"
         req.write_text("# This is a comment\npandas>=1.0\n\npytest==7.0.0\n")
         parser = ManifestParser()
@@ -551,6 +580,7 @@ class TestManifestParserDeeper:
 
     def test_parse_requirements_txt_with_urls(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         req = tmp_path / "requirements.txt"
         req.write_text("-r base.txt\nhttps://example.com/package.tar.gz\nflask\n")
         parser = ManifestParser()
@@ -560,14 +590,20 @@ class TestManifestParserDeeper:
 
     def test_parse_package_json_basic(self, tmp_path):
         import json
+
         from cogant.ingest.manifest import ManifestParser
+
         pkg = tmp_path / "package.json"
-        pkg.write_text(json.dumps({
-            "name": "my-app",
-            "version": "1.0.0",
-            "dependencies": {"express": "^4.18.2", "lodash": "^4.17.21"},
-            "devDependencies": {"jest": "^29.0.0"},
-        }))
+        pkg.write_text(
+            json.dumps(
+                {
+                    "name": "my-app",
+                    "version": "1.0.0",
+                    "dependencies": {"express": "^4.18.2", "lodash": "^4.17.21"},
+                    "devDependencies": {"jest": "^29.0.0"},
+                }
+            )
+        )
         parser = ManifestParser()
         meta, deps = parser.parse_package_json(pkg)
         assert isinstance(deps, list)
@@ -576,7 +612,9 @@ class TestManifestParserDeeper:
 
     def test_parse_package_json_minimal(self, tmp_path):
         import json
+
         from cogant.ingest.manifest import ManifestParser
+
         pkg = tmp_path / "package.json"
         pkg.write_text(json.dumps({"name": "minimal"}))
         parser = ManifestParser()
@@ -585,10 +623,11 @@ class TestManifestParserDeeper:
 
     def test_parse_pyproject_toml_basic(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         toml = tmp_path / "pyproject.toml"
         toml.write_text(
             '[project]\nname = "myproj"\nversion = "0.1.0"\n'
-            '[project.dependencies]\n'
+            "[project.dependencies]\n"
             'dependencies = ["click>=8.0", "rich>=10.0"]\n'
         )
         parser = ManifestParser()
@@ -597,10 +636,11 @@ class TestManifestParserDeeper:
 
     def test_parse_pyproject_toml_poetry(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         toml = tmp_path / "pyproject.toml"
         toml.write_text(
             '[tool.poetry]\nname = "myproj"\nversion = "1.0"\n'
-            '[tool.poetry.dependencies]\n'
+            "[tool.poetry.dependencies]\n"
             'python = "^3.11"\n'
             'click = "^8.0"\n'
         )
@@ -610,13 +650,14 @@ class TestManifestParserDeeper:
 
     def test_parse_setup_py_basic(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         setup = tmp_path / "setup.py"
         setup.write_text(
-            'from setuptools import setup\n'
-            'setup(\n'
+            "from setuptools import setup\n"
+            "setup(\n"
             '    name="myproj",\n'
             '    install_requires=["flask>=2.0", "click"],\n'
-            ')\n'
+            ")\n"
         )
         parser = ManifestParser()
         meta, deps = parser.parse_setup_py(setup)

@@ -5,12 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 # Keys that a condition dict is allowed to contain.
-KNOWN_CONDITION_KEYS = frozenset({
-    "node_kind",
-    "name_pattern",
-    "has_method",
-    "edge_type",
-})
+KNOWN_CONDITION_KEYS = frozenset(
+    {
+        "node_kind",
+        "name_pattern",
+        "has_method",
+        "edge_type",
+    }
+)
 
 
 @dataclass(frozen=True)

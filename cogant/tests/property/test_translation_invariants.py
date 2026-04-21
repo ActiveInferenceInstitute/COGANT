@@ -42,13 +42,13 @@ syntactically valid graph the translation engine can process.
 from __future__ import annotations
 
 import math
-from typing import List, Tuple
 
 import pytest
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
-from cogant.graph.builder import ProgramGraphBuilder
 from cogant.gnn.matrices import GNNMatrices
+from cogant.graph.builder import ProgramGraphBuilder
 from cogant.markov.blanket import BlanketRole, partition_by_seeds
 from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
@@ -77,7 +77,7 @@ pytestmark = pytest.mark.unit
 # Node kinds we generate. We stick to the structural kinds that the
 # shipping translation rules actually pattern-match on, so the engine
 # has real work to do on every generated graph.
-_GEN_NODE_KINDS: Tuple[NodeKind, ...] = (
+_GEN_NODE_KINDS: tuple[NodeKind, ...] = (
     NodeKind.MODULE,
     NodeKind.CLASS,
     NodeKind.METHOD,
@@ -87,7 +87,7 @@ _GEN_NODE_KINDS: Tuple[NodeKind, ...] = (
 
 # Edge kinds we generate. All of these are referenced by at least one
 # structural/semantic rule in ``cogant.translate.rules``.
-_GEN_EDGE_KINDS: Tuple[EdgeKind, ...] = (
+_GEN_EDGE_KINDS: tuple[EdgeKind, ...] = (
     EdgeKind.CONTAINS,
     EdgeKind.READS,
     EdgeKind.WRITES,
@@ -99,7 +99,7 @@ _GEN_EDGE_KINDS: Tuple[EdgeKind, ...] = (
 
 # Name pool: deliberately biased toward words the rule keyword matchers
 # recognise (get/set/handle/...) so we exercise keyword-based rules too.
-_GEN_NAMES: Tuple[str, ...] = (
+_GEN_NAMES: tuple[str, ...] = (
     "get_value",
     "set_value",
     "read_data",
@@ -249,15 +249,10 @@ def test_hidden_state_and_observation_are_disjoint(graph: ProgramGraph) -> None:
 
 def _has_outgoing_mutation(graph: ProgramGraph, node_id: str) -> bool:
     """Return True if ``node_id`` has an outgoing WRITES or MUTATES edge."""
-    return any(
-        e.kind in (EdgeKind.WRITES, EdgeKind.MUTATES)
-        for e in graph.get_edges_from(node_id)
-    )
+    return any(e.kind in (EdgeKind.WRITES, EdgeKind.MUTATES) for e in graph.get_edges_from(node_id))
 
 
-def _reachable_from_policy(
-    graph: ProgramGraph, node_id: str, policy_ids: set
-) -> bool:
+def _reachable_from_policy(graph: ProgramGraph, node_id: str, policy_ids: set) -> bool:
     """Return True if ``node_id`` is reachable from any node in ``policy_ids``.
 
     Reachability uses ``CALLS`` and ``DEPENDS_ON`` edges exclusively,
@@ -267,7 +262,7 @@ def _reachable_from_policy(
     if node_id in policy_ids:
         return True
     visited: set = set()
-    stack: List[str] = list(policy_ids)
+    stack: list[str] = list(policy_ids)
     allowed = (EdgeKind.CALLS, EdgeKind.DEPENDS_ON)
     while stack:
         cur = stack.pop()
@@ -320,16 +315,10 @@ def test_action_has_policy_ancestor_or_mutation_or_keyword(
     mappings = engine.translate(graph)
 
     policy_ids = {
-        nid
-        for m in mappings
-        if m.kind == MappingKind.POLICY
-        for nid in m.graph_fragment_node_ids
+        nid for m in mappings if m.kind == MappingKind.POLICY for nid in m.graph_fragment_node_ids
     }
     action_ids = {
-        nid
-        for m in mappings
-        if m.kind == MappingKind.ACTION
-        for nid in m.graph_fragment_node_ids
+        nid for m in mappings if m.kind == MappingKind.ACTION for nid in m.graph_fragment_node_ids
     }
 
     for act_id in action_ids:
@@ -417,9 +406,7 @@ def test_translate_fixpoint_is_stable_and_bounded(graph: ProgramGraph) -> None:
     assert iter_events, "engine must record at least one iteration_complete event"
     last = iter_events[-1]["detail"]
     # Detail string format: "iteration=<n> new_mappings=<k>"
-    assert "new_mappings=0" in last, (
-        f"engine did not converge — last iteration detail: {last}"
-    )
+    assert "new_mappings=0" in last, f"engine did not converge — last iteration detail: {last}"
     assert len(iter_events) <= 10, (
         f"engine ran {len(iter_events)} > 10 iterations without convergence"
     )
@@ -479,9 +466,7 @@ def test_markov_blanket_partitions_every_node_exactly_once(
 
     # Completeness: union equals the full node set.
     covered = set().union(*roles)
-    assert covered == set(all_ids), (
-        f"unclassified nodes: {set(all_ids) - covered}"
-    )
+    assert covered == set(all_ids), f"unclassified nodes: {set(all_ids) - covered}"
 
     # Every node id in the roles dict agrees with the per-role sets.
     for nid in all_ids:
@@ -493,6 +478,5 @@ def test_markov_blanket_partitions_every_node_exactly_once(
             BlanketRole.EXTERNAL,
         )
         assert nid in blanket.ids_by_role(role), (
-            f"node {nid} has role {role.value} but is not in the "
-            f"corresponding per-role id set"
+            f"node {nid} has role {role.value} but is not in the corresponding per-role id set"
         )

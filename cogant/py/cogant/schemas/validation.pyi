@@ -8,15 +8,15 @@ from .base import CogantBaseModel as CogantBaseModel
 from .base import StableID as StableID
 
 class CheckLevel(StrEnum):
-    INFO = 'info'
-    WARNING = 'warning'
-    ERROR = 'error'
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
 
 class CheckStatus(StrEnum):
-    PASSED = 'passed'
-    FAILED = 'failed'
-    SKIPPED = 'skipped'
-    INCONCLUSIVE = 'inconclusive'
+    PASSED = "passed"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+    INCONCLUSIVE = "inconclusive"
 
 class ValidationCheck(CogantBaseModel):
     check_id: str
@@ -55,7 +55,7 @@ class ValidationMetrics(CogantBaseModel):
 class ValidationRecommendation(CogantBaseModel):
     recommendation_id: str
     category: str
-    priority: Literal['low', 'medium', 'high', 'critical']
+    priority: Literal["low", "medium", "high", "critical"]
     title: str
     description: str
     affected_elements: list[str]

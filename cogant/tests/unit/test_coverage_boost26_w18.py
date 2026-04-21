@@ -20,21 +20,25 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_base_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule",
-                           path="mymodule.py", language="python")
-    func1 = builder.add_node(NodeKind.FUNCTION, "main_func", "mymodule.main_func",
-                             path="mymodule.py")
-    func2 = builder.add_node(NodeKind.FUNCTION, "helper_func", "mymodule.helper_func",
-                             path="mymodule.py")
-    var1 = builder.add_node(NodeKind.VARIABLE, "state_var", "mymodule.state_var",
-                            path="mymodule.py")
-    cls = builder.add_node(NodeKind.CLASS, "Agent", "mymodule.Agent",
-                           path="mymodule.py")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
+    func1 = builder.add_node(
+        NodeKind.FUNCTION, "main_func", "mymodule.main_func", path="mymodule.py"
+    )
+    func2 = builder.add_node(
+        NodeKind.FUNCTION, "helper_func", "mymodule.helper_func", path="mymodule.py"
+    )
+    var1 = builder.add_node(
+        NodeKind.VARIABLE, "state_var", "mymodule.state_var", path="mymodule.py"
+    )
+    cls = builder.add_node(NodeKind.CLASS, "Agent", "mymodule.Agent", path="mymodule.py")
     builder.add_edge(mod.id, func1.id, EdgeKind.CONTAINS)
     builder.add_edge(mod.id, func2.id, EdgeKind.CONTAINS)
     builder.add_edge(mod.id, var1.id, EdgeKind.CONTAINS)
@@ -44,7 +48,8 @@ def _make_base_graph():
 
 
 def _make_semantic_mapping(kind, node_ids=None, score=0.8, label=""):
-    from cogant.schemas.semantic import SemanticMapping, MappingKind
+    from cogant.schemas.semantic import SemanticMapping
+
     return SemanticMapping(
         id=f"m_{kind.value}_{hash(label) % 10000}",
         kind=kind,
@@ -59,9 +64,11 @@ def _make_semantic_mapping(kind, node_ids=None, score=0.8, label=""):
 # statespace/compiler.py — compile() with various mapping configurations
 # ---------------------------------------------------------------------------
 
+
 class TestStateSpaceCompiler:
     def test_compile_empty_mappings(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "TestSchema")
         ss = compiler.compile({})
@@ -70,14 +77,16 @@ class TestStateSpaceCompiler:
 
     def test_compile_returns_state_space_model(self):
         from cogant.statespace.compiler import StateSpaceCompiler, StateSpaceModel
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "MyModel")
         ss = compiler.compile({})
         assert isinstance(ss, StateSpaceModel)
 
     def test_compile_with_hidden_state_mapping(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         mappings = {
             "m1": _make_semantic_mapping(MappingKind.HIDDEN_STATE, [var1.id], label="state"),
@@ -87,8 +96,9 @@ class TestStateSpaceCompiler:
         assert len(ss.variables) == 1
 
     def test_compile_with_observation_mapping(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         mappings = {
             "m1": _make_semantic_mapping(MappingKind.OBSERVATION, [func1.id], label="sensor"),
@@ -98,8 +108,9 @@ class TestStateSpaceCompiler:
         assert len(ss.observations) == 1
 
     def test_compile_with_action_mapping(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         mappings = {
             "m1": _make_semantic_mapping(MappingKind.ACTION, [func2.id], label="act"),
@@ -109,8 +120,9 @@ class TestStateSpaceCompiler:
         assert len(ss.actions) == 1
 
     def test_compile_with_multiple_mapping_types(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         mappings = {
             "m1": _make_semantic_mapping(MappingKind.HIDDEN_STATE, [var1.id], label="state"),
@@ -124,8 +136,9 @@ class TestStateSpaceCompiler:
         assert len(ss.actions) >= 1
 
     def test_compile_generates_transitions(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         mappings = {
             "m1": _make_semantic_mapping(MappingKind.HIDDEN_STATE, [var1.id], label="state"),
@@ -138,6 +151,7 @@ class TestStateSpaceCompiler:
 
     def test_compile_time_regime_default(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "TestSchema")
         ss = compiler.compile({})
@@ -145,14 +159,16 @@ class TestStateSpaceCompiler:
 
     def test_compile_metadata_dict(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "TestSchema")
         ss = compiler.compile({})
         assert isinstance(ss.metadata, dict)
 
     def test_compile_with_preference_mapping(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         mappings = {
             "m1": _make_semantic_mapping(MappingKind.PREFERENCE, [func1.id], label="prefer"),
@@ -163,8 +179,9 @@ class TestStateSpaceCompiler:
         assert ss is not None
 
     def test_compile_with_constraint_mapping(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         mappings = {
             "m1": _make_semantic_mapping(MappingKind.CONSTRAINT, [func1.id], label="constraint"),
@@ -175,25 +192,30 @@ class TestStateSpaceCompiler:
 
     def test_compile_schema_name_reflected_in_id(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "MySpecialModel")
         ss = compiler.compile({})
         assert "MySpecialModel" in ss.id or "MySpecialModel" in ss.schema_name
 
     def test_compile_with_high_confidence_mapping(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         mappings = {
-            "m1": _make_semantic_mapping(MappingKind.HIDDEN_STATE, [var1.id], score=0.95, label="s"),
+            "m1": _make_semantic_mapping(
+                MappingKind.HIDDEN_STATE, [var1.id], score=0.95, label="s"
+            ),
         }
         compiler = StateSpaceCompiler(graph, "TestSchema")
         ss = compiler.compile(mappings)
         assert len(ss.variables) >= 1
 
     def test_compile_with_low_confidence_mapping(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         mappings = {
             "m1": _make_semantic_mapping(MappingKind.HIDDEN_STATE, [var1.id], score=0.3, label="s"),
@@ -204,9 +226,9 @@ class TestStateSpaceCompiler:
 
     def test_compile_multiple_hidden_states(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
-        from cogant.statespace.compiler import StateSpaceCompiler
+        from cogant.schemas.core import EdgeKind, NodeKind
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
 
         builder = ProgramGraphBuilder(repo_uri="file:///test2")
         mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py", language="python")
@@ -232,9 +254,11 @@ class TestStateSpaceCompiler:
 # process/extractor.py — ProcessExtractor with various graph structures
 # ---------------------------------------------------------------------------
 
+
 class TestProcessExtractor:
     def test_extract_returns_process_model(self):
         from cogant.process.extractor import ProcessExtractor, ProcessModel
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         extractor = ProcessExtractor(graph, "TestSchema")
         pm = extractor.extract()
@@ -242,6 +266,7 @@ class TestProcessExtractor:
 
     def test_extract_creates_stages_from_functions(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         extractor = ProcessExtractor(graph, "TestSchema")
         pm = extractor.extract()
@@ -250,6 +275,7 @@ class TestProcessExtractor:
 
     def test_extract_builds_connections_from_calls(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         extractor = ProcessExtractor(graph, "TestSchema")
         pm = extractor.extract()
@@ -258,12 +284,11 @@ class TestProcessExtractor:
 
     def test_extract_empty_graph(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind
         from cogant.process.extractor import ProcessExtractor
+        from cogant.schemas.core import NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///empty")
-        mod = builder.add_node(NodeKind.MODULE, "empty", "empty",
-                               path="empty.py", language="python")
+        builder.add_node(NodeKind.MODULE, "empty", "empty", path="empty.py", language="python")
         graph = builder.finalize()
 
         extractor = ProcessExtractor(graph, "Empty")
@@ -272,8 +297,8 @@ class TestProcessExtractor:
 
     def test_extract_with_multiple_calls(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
         from cogant.process.extractor import ProcessExtractor
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py", language="python")
@@ -297,14 +322,16 @@ class TestProcessExtractor:
 
     def test_extract_process_model_has_connections_attr(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         extractor = ProcessExtractor(graph, "TestSchema")
         pm = extractor.extract()
-        assert hasattr(pm, 'connections')
-        assert hasattr(pm, 'stages')
+        assert hasattr(pm, "connections")
+        assert hasattr(pm, "stages")
 
     def test_add_stage_dependency(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         extractor = ProcessExtractor(graph, "TestSchema")
         pm = extractor.extract()
@@ -319,6 +346,7 @@ class TestProcessExtractor:
 
     def test_set_entry_stage(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         extractor = ProcessExtractor(graph, "TestSchema")
         pm = extractor.extract()
@@ -331,8 +359,8 @@ class TestProcessExtractor:
 
     def test_extract_with_classes(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
         from cogant.process.extractor import ProcessExtractor
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py", language="python")
@@ -351,10 +379,12 @@ class TestProcessExtractor:
 # statespace/compiler.py — private methods directly
 # ---------------------------------------------------------------------------
 
+
 class TestStateSpaceCompilerInternals:
     def _make_compiler_with_mappings(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         mappings = {
             "m1": _make_semantic_mapping(MappingKind.HIDDEN_STATE, [var1.id], label="s"),
@@ -366,6 +396,7 @@ class TestStateSpaceCompilerInternals:
 
     def test_map_confidence_high(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "T")
         # _map_confidence converts float to ConfidenceLevel
@@ -374,6 +405,7 @@ class TestStateSpaceCompilerInternals:
 
     def test_map_confidence_low(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "T")
         result = compiler._map_confidence(0.2)
@@ -381,6 +413,7 @@ class TestStateSpaceCompilerInternals:
 
     def test_map_confidence_medium(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "T")
         result = compiler._map_confidence(0.5)
@@ -388,7 +421,7 @@ class TestStateSpaceCompilerInternals:
 
     def test_infer_modality_type_from_function(self):
         from cogant.statespace.compiler import StateSpaceCompiler
-        from cogant.schemas.core import NodeKind
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "T")
         try:
@@ -399,6 +432,7 @@ class TestStateSpaceCompilerInternals:
 
     def test_infer_distribution_type(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "T")
         try:
@@ -409,6 +443,7 @@ class TestStateSpaceCompilerInternals:
 
     def test_default_distribution_parameters(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "T")
         try:
@@ -418,8 +453,9 @@ class TestStateSpaceCompilerInternals:
             pytest.skip("_default_distribution_parameters signature differs")
 
     def test_extract_actions_produces_dict(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "T")
         mappings = {"m1": _make_semantic_mapping(MappingKind.ACTION, [func1.id], label="a")}
@@ -430,8 +466,9 @@ class TestStateSpaceCompilerInternals:
             pytest.skip("_extract_actions signature differs")
 
     def test_extract_observations_produces_dict(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.schemas.semantic import MappingKind
+        from cogant.statespace.compiler import StateSpaceCompiler
+
         graph, mod, func1, func2, var1, cls = _make_base_graph()
         compiler = StateSpaceCompiler(graph, "T")
         mappings = {"m1": _make_semantic_mapping(MappingKind.OBSERVATION, [func1.id], label="o")}

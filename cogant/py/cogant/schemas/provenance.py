@@ -44,9 +44,7 @@ class ProvenanceRecord(CogantBaseModel):
         default_factory=lambda: str(uuid4()),
         description="Unique identifier for this evidence",
     )
-    kind: EvidenceKind = Field(
-        ..., description="Type of evidence"
-    )
+    kind: EvidenceKind = Field(..., description="Type of evidence")
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         description="When evidence was collected",

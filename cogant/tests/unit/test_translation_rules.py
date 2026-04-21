@@ -8,7 +8,7 @@ assertion touches concrete cogant classes.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 
@@ -89,14 +89,10 @@ class _StubRule(TranslationRule):
         self._priority = priority
         self._kind = kind
 
-    def matches(
-        self, graph: ProgramGraph, query: GraphQuery
-    ) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict[str, Any]]:
         return [{"node_id": n.id} for n in graph.get_nodes_by_kind(NodeKind.MODULE)]
 
-    def apply(
-        self, graph: ProgramGraph, match: Dict[str, Any]
-    ) -> Optional[SemanticMapping]:
+    def apply(self, graph: ProgramGraph, match: dict[str, Any]) -> SemanticMapping | None:
         node_id = match["node_id"]
         return SemanticMapping(
             id=f"mapping:{self._name}:{node_id}",
@@ -149,17 +145,13 @@ class TestTranslationEngineConstruction:
 class TestTranslationEngineTranslate:
     """Tests for :meth:`TranslationEngine.translate`."""
 
-    def test_translate_empty_graph_returns_empty(
-        self, empty_graph: ProgramGraph
-    ) -> None:
+    def test_translate_empty_graph_returns_empty(self, empty_graph: ProgramGraph) -> None:
         engine = TranslationEngine()
         engine.register_rule(_StubRule())
         mappings = engine.translate(empty_graph)
         assert mappings == []
 
-    def test_translate_with_stub_rule_produces_mapping(
-        self, read_only_graph: ProgramGraph
-    ) -> None:
+    def test_translate_with_stub_rule_produces_mapping(self, read_only_graph: ProgramGraph) -> None:
         engine = TranslationEngine()
         engine.register_rule(_StubRule(name="s1"))
         mappings = engine.translate(read_only_graph)
@@ -168,9 +160,7 @@ class TestTranslationEngineTranslate:
         assert mappings[0].kind is MappingKind.HIDDEN_STATE
         assert mappings[0].id == f"mapping:s1:{mappings[0].graph_fragment_node_ids[0]}"
 
-    def test_translate_with_real_read_only_input_rule(
-        self, read_only_graph: ProgramGraph
-    ) -> None:
+    def test_translate_with_real_read_only_input_rule(self, read_only_graph: ProgramGraph) -> None:
         engine = TranslationEngine()
         engine.register_rule(ReadOnlyInputRule())
         mappings = engine.translate(read_only_graph)
@@ -180,9 +170,7 @@ class TestTranslationEngineTranslate:
         assert mapping.confidence_tier is ConfidenceTier.STATIC_ONLY
         assert mapping.semantic_label.endswith("Read-Only Input")
 
-    def test_translate_rule_filter_applies_only_named(
-        self, read_only_graph: ProgramGraph
-    ) -> None:
+    def test_translate_rule_filter_applies_only_named(self, read_only_graph: ProgramGraph) -> None:
         engine = TranslationEngine()
         engine.register_rule(_StubRule(name="keep"))
         engine.register_rule(_StubRule(name="skip"))
@@ -207,9 +195,7 @@ class TestTranslationEngineTranslate:
 class TestTranslationEngineConflictResolution:
     """Tests for conflict resolution between overlapping mappings."""
 
-    def test_priority_wins_over_lower_priority(
-        self, read_only_graph: ProgramGraph
-    ) -> None:
+    def test_priority_wins_over_lower_priority(self, read_only_graph: ProgramGraph) -> None:
         engine = TranslationEngine()
         engine.register_rule(_StubRule(name="low", priority=1))
         engine.register_rule(_StubRule(name="high", priority=10))
@@ -223,18 +209,14 @@ class TestTranslationEngineConflictResolution:
 class TestCoverageReport:
     """Tests for :meth:`TranslationEngine.get_coverage_report`."""
 
-    def test_coverage_report_empty_graph(
-        self, empty_graph: ProgramGraph
-    ) -> None:
+    def test_coverage_report_empty_graph(self, empty_graph: ProgramGraph) -> None:
         engine = TranslationEngine()
         report = engine.get_coverage_report(empty_graph)
         assert report["total_nodes"] == 0
         assert report["covered_nodes"] == 0
         assert report["coverage_percent"] == 0.0
 
-    def test_coverage_report_after_translation(
-        self, read_only_graph: ProgramGraph
-    ) -> None:
+    def test_coverage_report_after_translation(self, read_only_graph: ProgramGraph) -> None:
         engine = TranslationEngine()
         engine.register_rule(ReadOnlyInputRule())
         engine.translate(read_only_graph)
@@ -257,9 +239,7 @@ class TestEngineQueries:
         assert len(obs) == 1
         assert hidden == []
 
-    def test_get_statistics_reports_rule_count(
-        self, read_only_graph: ProgramGraph
-    ) -> None:
+    def test_get_statistics_reports_rule_count(self, read_only_graph: ProgramGraph) -> None:
         engine = TranslationEngine()
         engine.register_rule(ReadOnlyInputRule())
         engine.register_rule(_StubRule(name="extra"))

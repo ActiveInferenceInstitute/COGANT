@@ -1,10 +1,9 @@
 """Comprehensive tests for COGANT schema validation."""
 
-import pytest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
-from cogant.schemas.graph import ProgramGraph, GraphMetadata
+from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
 
 class TestNodeSchema:
@@ -13,10 +12,7 @@ class TestNodeSchema:
     def test_node_creation_with_minimal_fields(self):
         """Test creating a node with minimal required fields."""
         node = Node(
-            id="test:node1",
-            kind=NodeKind.MODULE,
-            name="module1",
-            qualified_name="test.module1"
+            id="test:node1", kind=NodeKind.MODULE, name="module1", qualified_name="test.module1"
         )
 
         assert node.id == "test:node1"
@@ -34,7 +30,7 @@ class TestNodeSchema:
             path="test.py",
             language="python",
             source_range={"start": 10, "end": 20, "column": 0},
-            metadata={"is_public": True, "decorators": ["@decorator"]}
+            metadata={"is_public": True, "decorators": ["@decorator"]},
         )
 
         assert node.id == "test:func1"
@@ -48,12 +44,24 @@ class TestNodeSchema:
     def test_node_kinds_enumeration(self):
         """Test all NodeKind enumeration values."""
         expected_kinds = {
-            NodeKind.REPO, NodeKind.MODULE, NodeKind.FILE, NodeKind.CLASS,
-            NodeKind.FUNCTION, NodeKind.METHOD, NodeKind.VARIABLE,
-            NodeKind.ENDPOINT, NodeKind.EVENT, NodeKind.PARAMETER,
-            NodeKind.RETURN_VALUE, NodeKind.DATA_STRUCTURE,
-            NodeKind.CONFIGURATION, NodeKind.FEATURE_FLAG, NodeKind.TEST,
-            NodeKind.ASSERTION, NodeKind.POLICY, NodeKind.ACTION
+            NodeKind.REPO,
+            NodeKind.MODULE,
+            NodeKind.FILE,
+            NodeKind.CLASS,
+            NodeKind.FUNCTION,
+            NodeKind.METHOD,
+            NodeKind.VARIABLE,
+            NodeKind.ENDPOINT,
+            NodeKind.EVENT,
+            NodeKind.PARAMETER,
+            NodeKind.RETURN_VALUE,
+            NodeKind.DATA_STRUCTURE,
+            NodeKind.CONFIGURATION,
+            NodeKind.FEATURE_FLAG,
+            NodeKind.TEST,
+            NodeKind.ASSERTION,
+            NodeKind.POLICY,
+            NodeKind.ACTION,
         }
 
         actual_kinds = set(NodeKind)
@@ -63,22 +71,16 @@ class TestNodeSchema:
     def test_node_equality(self):
         """Test node equality based on ID."""
         node1 = Node(
-            id="test:node1",
-            kind=NodeKind.CLASS,
-            name="MyClass",
-            qualified_name="test.MyClass"
+            id="test:node1", kind=NodeKind.CLASS, name="MyClass", qualified_name="test.MyClass"
         )
         node2 = Node(
-            id="test:node1",
-            kind=NodeKind.CLASS,
-            name="MyClass",
-            qualified_name="test.MyClass"
+            id="test:node1", kind=NodeKind.CLASS, name="MyClass", qualified_name="test.MyClass"
         )
         node3 = Node(
             id="test:node2",
             kind=NodeKind.CLASS,
             name="OtherClass",
-            qualified_name="test.OtherClass"
+            qualified_name="test.OtherClass",
         )
 
         assert node1 == node2
@@ -87,16 +89,10 @@ class TestNodeSchema:
     def test_node_hashing(self):
         """Test node can be used in sets/dicts."""
         node1 = Node(
-            id="test:node1",
-            kind=NodeKind.FUNCTION,
-            name="func",
-            qualified_name="test.func"
+            id="test:node1", kind=NodeKind.FUNCTION, name="func", qualified_name="test.func"
         )
         node2 = Node(
-            id="test:node2",
-            kind=NodeKind.FUNCTION,
-            name="func2",
-            qualified_name="test.func2"
+            id="test:node2", kind=NodeKind.FUNCTION, name="func2", qualified_name="test.func2"
         )
 
         node_set = {node1, node2}
@@ -105,14 +101,9 @@ class TestNodeSchema:
 
     def test_node_created_at_timestamp(self):
         """Test node has creation timestamp."""
-        before = datetime.now(timezone.utc)
-        node = Node(
-            id="test:node1",
-            kind=NodeKind.MODULE,
-            name="test",
-            qualified_name="test"
-        )
-        after = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
+        node = Node(id="test:node1", kind=NodeKind.MODULE, name="test", qualified_name="test")
+        after = datetime.now(UTC)
 
         assert before <= node.created_at <= after
 
@@ -121,14 +112,14 @@ class TestNodeSchema:
         metadata = {
             "visibility": "public",
             "decorators": ["@cached", "@property"],
-            "custom": {"level": 5}
+            "custom": {"level": 5},
         }
         node = Node(
             id="test:node1",
             kind=NodeKind.FUNCTION,
             name="func",
             qualified_name="test.func",
-            metadata=metadata
+            metadata=metadata,
         )
 
         assert node.metadata["visibility"] == "public"
@@ -141,12 +132,7 @@ class TestEdgeSchema:
 
     def test_edge_creation_with_minimal_fields(self):
         """Test creating an edge with minimal required fields."""
-        edge = Edge(
-            id="edge1",
-            source_id="node1",
-            target_id="node2",
-            kind=EdgeKind.CALLS
-        )
+        edge = Edge(id="edge1", source_id="node1", target_id="node2", kind=EdgeKind.CALLS)
 
         assert edge.id == "edge1"
         assert edge.source_id == "node1"
@@ -163,7 +149,7 @@ class TestEdgeSchema:
             kind=EdgeKind.CALLS,
             weight=0.85,
             metadata={"call_count": 5},
-            evidence_sources=["static_analysis", "dynamic_trace"]
+            evidence_sources=["static_analysis", "dynamic_trace"],
         )
 
         assert edge.weight == 0.85
@@ -173,13 +159,24 @@ class TestEdgeSchema:
     def test_edge_kinds_enumeration(self):
         """Test all EdgeKind enumeration values."""
         expected_kinds = {
-            EdgeKind.CONTAINS, EdgeKind.IMPORTS, EdgeKind.INHERITS,
-            EdgeKind.IMPLEMENTS, EdgeKind.DEPENDS_ON, EdgeKind.READS,
-            EdgeKind.WRITES, EdgeKind.RETURNS, EdgeKind.CALLS,
-            EdgeKind.THROWS, EdgeKind.CATCHES, EdgeKind.YIELDS,
-            EdgeKind.OBSERVES, EdgeKind.MUTATES, EdgeKind.GUARDS,
-            EdgeKind.TRIGGERS, EdgeKind.EVIDENCE_FROM_STATIC,
-            EdgeKind.EVIDENCE_FROM_DYNAMIC
+            EdgeKind.CONTAINS,
+            EdgeKind.IMPORTS,
+            EdgeKind.INHERITS,
+            EdgeKind.IMPLEMENTS,
+            EdgeKind.DEPENDS_ON,
+            EdgeKind.READS,
+            EdgeKind.WRITES,
+            EdgeKind.RETURNS,
+            EdgeKind.CALLS,
+            EdgeKind.THROWS,
+            EdgeKind.CATCHES,
+            EdgeKind.YIELDS,
+            EdgeKind.OBSERVES,
+            EdgeKind.MUTATES,
+            EdgeKind.GUARDS,
+            EdgeKind.TRIGGERS,
+            EdgeKind.EVIDENCE_FROM_STATIC,
+            EdgeKind.EVIDENCE_FROM_DYNAMIC,
         }
 
         actual_kinds = set(EdgeKind)
@@ -188,42 +185,17 @@ class TestEdgeSchema:
 
     def test_edge_equality(self):
         """Test edge equality based on ID."""
-        edge1 = Edge(
-            id="edge1",
-            source_id="n1",
-            target_id="n2",
-            kind=EdgeKind.CALLS
-        )
-        edge2 = Edge(
-            id="edge1",
-            source_id="n1",
-            target_id="n2",
-            kind=EdgeKind.CALLS
-        )
-        edge3 = Edge(
-            id="edge2",
-            source_id="n1",
-            target_id="n2",
-            kind=EdgeKind.CALLS
-        )
+        edge1 = Edge(id="edge1", source_id="n1", target_id="n2", kind=EdgeKind.CALLS)
+        edge2 = Edge(id="edge1", source_id="n1", target_id="n2", kind=EdgeKind.CALLS)
+        edge3 = Edge(id="edge2", source_id="n1", target_id="n2", kind=EdgeKind.CALLS)
 
         assert edge1 == edge2
         assert edge1 != edge3
 
     def test_edge_hashing(self):
         """Test edge can be used in sets/dicts."""
-        edge1 = Edge(
-            id="edge1",
-            source_id="n1",
-            target_id="n2",
-            kind=EdgeKind.CALLS
-        )
-        edge2 = Edge(
-            id="edge2",
-            source_id="n2",
-            target_id="n3",
-            kind=EdgeKind.CALLS
-        )
+        edge1 = Edge(id="edge1", source_id="n1", target_id="n2", kind=EdgeKind.CALLS)
+        edge2 = Edge(id="edge2", source_id="n2", target_id="n3", kind=EdgeKind.CALLS)
 
         edge_set = {edge1, edge2}
         assert len(edge_set) == 2
@@ -231,25 +203,15 @@ class TestEdgeSchema:
 
     def test_edge_created_at_timestamp(self):
         """Test edge has creation timestamp."""
-        before = datetime.now(timezone.utc)
-        edge = Edge(
-            id="edge1",
-            source_id="n1",
-            target_id="n2",
-            kind=EdgeKind.CONTAINS
-        )
-        after = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
+        edge = Edge(id="edge1", source_id="n1", target_id="n2", kind=EdgeKind.CONTAINS)
+        after = datetime.now(UTC)
 
         assert before <= edge.created_at <= after
 
     def test_edge_weight_default(self):
         """Test edge weight defaults to 1.0."""
-        edge = Edge(
-            id="e1",
-            source_id="n1",
-            target_id="n2",
-            kind=EdgeKind.CALLS
-        )
+        edge = Edge(id="e1", source_id="n1", target_id="n2", kind=EdgeKind.CALLS)
         assert edge.weight == 1.0
 
     def test_edge_evidence_sources(self):
@@ -259,7 +221,7 @@ class TestEdgeSchema:
             source_id="n1",
             target_id="n2",
             kind=EdgeKind.CALLS,
-            evidence_sources=["static", "dynamic"]
+            evidence_sources=["static", "dynamic"],
         )
         assert len(edge.evidence_sources) == 2
         assert "static" in edge.evidence_sources
@@ -282,12 +244,7 @@ class TestProgramGraph:
         metadata = GraphMetadata(repo_uri="test://repo")
         graph = ProgramGraph(metadata=metadata)
 
-        node = Node(
-            id="n1",
-            kind=NodeKind.MODULE,
-            name="mod",
-            qualified_name="test.mod"
-        )
+        node = Node(id="n1", kind=NodeKind.MODULE, name="mod", qualified_name="test.mod")
         graph.add_node(node)
 
         assert graph.node_count() == 1
@@ -300,10 +257,7 @@ class TestProgramGraph:
 
         for i in range(5):
             node = Node(
-                id=f"n{i}",
-                kind=NodeKind.FUNCTION,
-                name=f"func{i}",
-                qualified_name=f"test.func{i}"
+                id=f"n{i}", kind=NodeKind.FUNCTION, name=f"func{i}", qualified_name=f"test.func{i}"
             )
             graph.add_node(node)
 
@@ -315,10 +269,7 @@ class TestProgramGraph:
         graph = ProgramGraph(metadata=metadata)
 
         node = Node(
-            id="test_node",
-            kind=NodeKind.CLASS,
-            name="TestClass",
-            qualified_name="test.TestClass"
+            id="test_node", kind=NodeKind.CLASS, name="TestClass", qualified_name="test.TestClass"
         )
         graph.add_node(node)
 
@@ -344,7 +295,7 @@ class TestProgramGraph:
                 id=f"node_{kind.value}_{i}",
                 kind=kind,
                 name=f"name_{kind.value}_{i}",
-                qualified_name=f"test.name_{kind.value}_{i}"
+                qualified_name=f"test.name_{kind.value}_{i}",
             )
             graph.add_node(node)
 
@@ -360,20 +311,12 @@ class TestProgramGraph:
         # Add nodes first
         for i in range(2):
             node = Node(
-                id=f"n{i}",
-                kind=NodeKind.FUNCTION,
-                name=f"func{i}",
-                qualified_name=f"test.func{i}"
+                id=f"n{i}", kind=NodeKind.FUNCTION, name=f"func{i}", qualified_name=f"test.func{i}"
             )
             graph.add_node(node)
 
         # Add edge
-        edge = Edge(
-            id="e1",
-            source_id="n0",
-            target_id="n1",
-            kind=EdgeKind.CALLS
-        )
+        edge = Edge(id="e1", source_id="n0", target_id="n1", kind=EdgeKind.CALLS)
         graph.add_edge(edge)
 
         assert graph.edge_count() == 1
@@ -384,10 +327,7 @@ class TestProgramGraph:
         graph = ProgramGraph(metadata=metadata)
 
         edge = Edge(
-            id="e1",
-            source_id="nonexistent1",
-            target_id="nonexistent2",
-            kind=EdgeKind.CALLS
+            id="e1", source_id="nonexistent1", target_id="nonexistent2", kind=EdgeKind.CALLS
         )
         graph.add_edge(edge)
 
@@ -401,26 +341,13 @@ class TestProgramGraph:
 
         # Setup nodes
         for i in range(3):
-            graph.add_node(Node(
-                id=f"n{i}",
-                kind=NodeKind.FUNCTION,
-                name=f"f{i}",
-                qualified_name=f"test.f{i}"
-            ))
+            graph.add_node(
+                Node(id=f"n{i}", kind=NodeKind.FUNCTION, name=f"f{i}", qualified_name=f"test.f{i}")
+            )
 
         # Add edges from n0
-        graph.add_edge(Edge(
-            id="e1",
-            source_id="n0",
-            target_id="n1",
-            kind=EdgeKind.CALLS
-        ))
-        graph.add_edge(Edge(
-            id="e2",
-            source_id="n0",
-            target_id="n2",
-            kind=EdgeKind.CALLS
-        ))
+        graph.add_edge(Edge(id="e1", source_id="n0", target_id="n1", kind=EdgeKind.CALLS))
+        graph.add_edge(Edge(id="e2", source_id="n0", target_id="n2", kind=EdgeKind.CALLS))
 
         outgoing = graph.get_edges_from("n0")
         assert len(outgoing) == 2
@@ -433,26 +360,13 @@ class TestProgramGraph:
 
         # Setup nodes
         for i in range(3):
-            graph.add_node(Node(
-                id=f"n{i}",
-                kind=NodeKind.FUNCTION,
-                name=f"f{i}",
-                qualified_name=f"test.f{i}"
-            ))
+            graph.add_node(
+                Node(id=f"n{i}", kind=NodeKind.FUNCTION, name=f"f{i}", qualified_name=f"test.f{i}")
+            )
 
         # Add edges to n2
-        graph.add_edge(Edge(
-            id="e1",
-            source_id="n0",
-            target_id="n2",
-            kind=EdgeKind.CALLS
-        ))
-        graph.add_edge(Edge(
-            id="e2",
-            source_id="n1",
-            target_id="n2",
-            kind=EdgeKind.CALLS
-        ))
+        graph.add_edge(Edge(id="e1", source_id="n0", target_id="n2", kind=EdgeKind.CALLS))
+        graph.add_edge(Edge(id="e2", source_id="n1", target_id="n2", kind=EdgeKind.CALLS))
 
         incoming = graph.get_edges_to("n2")
         assert len(incoming) == 2
@@ -465,32 +379,14 @@ class TestProgramGraph:
 
         # Setup
         for i in range(3):
-            graph.add_node(Node(
-                id=f"n{i}",
-                kind=NodeKind.FUNCTION,
-                name=f"f{i}",
-                qualified_name=f"test.f{i}"
-            ))
+            graph.add_node(
+                Node(id=f"n{i}", kind=NodeKind.FUNCTION, name=f"f{i}", qualified_name=f"test.f{i}")
+            )
 
         # Add different edge types
-        graph.add_edge(Edge(
-            id="e1",
-            source_id="n0",
-            target_id="n1",
-            kind=EdgeKind.CALLS
-        ))
-        graph.add_edge(Edge(
-            id="e2",
-            source_id="n1",
-            target_id="n2",
-            kind=EdgeKind.CALLS
-        ))
-        graph.add_edge(Edge(
-            id="e3",
-            source_id="n0",
-            target_id="n2",
-            kind=EdgeKind.READS
-        ))
+        graph.add_edge(Edge(id="e1", source_id="n0", target_id="n1", kind=EdgeKind.CALLS))
+        graph.add_edge(Edge(id="e2", source_id="n1", target_id="n2", kind=EdgeKind.CALLS))
+        graph.add_edge(Edge(id="e3", source_id="n0", target_id="n2", kind=EdgeKind.READS))
 
         call_edges = graph.get_edges_by_kind(EdgeKind.CALLS)
         assert len(call_edges) == 2
@@ -503,26 +399,13 @@ class TestProgramGraph:
 
         # Setup
         for i in range(3):
-            graph.add_node(Node(
-                id=f"n{i}",
-                kind=NodeKind.FUNCTION,
-                name=f"f{i}",
-                qualified_name=f"test.f{i}"
-            ))
+            graph.add_node(
+                Node(id=f"n{i}", kind=NodeKind.FUNCTION, name=f"f{i}", qualified_name=f"test.f{i}")
+            )
 
         # Add edges
-        graph.add_edge(Edge(
-            id="e1",
-            source_id="n0",
-            target_id="n1",
-            kind=EdgeKind.CALLS
-        ))
-        graph.add_edge(Edge(
-            id="e2",
-            source_id="n1",
-            target_id="n2",
-            kind=EdgeKind.CALLS
-        ))
+        graph.add_edge(Edge(id="e1", source_id="n0", target_id="n1", kind=EdgeKind.CALLS))
+        graph.add_edge(Edge(id="e2", source_id="n1", target_id="n2", kind=EdgeKind.CALLS))
 
         # Remove node
         graph.remove_node("n1")
@@ -537,20 +420,19 @@ class TestProgramGraph:
 
         # Add multiple nodes and edges
         for i in range(5):
-            graph.add_node(Node(
-                id=f"n{i}",
-                kind=NodeKind.FUNCTION if i % 2 == 0 else NodeKind.CLASS,
-                name=f"item{i}",
-                qualified_name=f"test.item{i}"
-            ))
+            graph.add_node(
+                Node(
+                    id=f"n{i}",
+                    kind=NodeKind.FUNCTION if i % 2 == 0 else NodeKind.CLASS,
+                    name=f"item{i}",
+                    qualified_name=f"test.item{i}",
+                )
+            )
 
         for i in range(4):
-            graph.add_edge(Edge(
-                id=f"e{i}",
-                source_id=f"n{i}",
-                target_id=f"n{i+1}",
-                kind=EdgeKind.CALLS
-            ))
+            graph.add_edge(
+                Edge(id=f"e{i}", source_id=f"n{i}", target_id=f"n{i + 1}", kind=EdgeKind.CALLS)
+            )
 
         assert graph.node_count() == 5
         assert graph.edge_count() == 4

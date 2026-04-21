@@ -18,8 +18,9 @@ Covers:
 """
 
 import json
-import pytest
 from pathlib import Path
+
+import pytest
 
 pytestmark = pytest.mark.unit
 
@@ -28,8 +29,10 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_reverse_model(name="test_model"):
     from cogant.reverse.parser import ReverseGNNModel
+
     return ReverseGNNModel(
         model_name=name,
         hidden_states=["state_a", "state_b"],
@@ -43,6 +46,7 @@ def _make_reverse_model(name="test_model"):
 
 def _make_empty_reverse_model():
     from cogant.reverse.parser import ReverseGNNModel
+
     return ReverseGNNModel(
         model_name="empty",
         hidden_states=[],
@@ -55,9 +59,11 @@ def _make_empty_reverse_model():
 # reverse/idempotency.py — RoundtripResult
 # ---------------------------------------------------------------------------
 
+
 class TestRoundtripResult:
     def test_summary_isomorphic(self):
         from cogant.reverse.idempotency import RoundtripResult
+
         r = RoundtripResult(
             is_isomorphic=True,
             role_match_score=0.8,
@@ -72,6 +78,7 @@ class TestRoundtripResult:
 
     def test_summary_drift(self):
         from cogant.reverse.idempotency import RoundtripResult
+
         r = RoundtripResult(
             is_isomorphic=False,
             role_match_score=0.2,
@@ -85,6 +92,7 @@ class TestRoundtripResult:
 
     def test_summary_contains_scores(self):
         from cogant.reverse.idempotency import RoundtripResult
+
         r = RoundtripResult(
             is_isomorphic=True,
             role_match_score=1.0,
@@ -98,6 +106,7 @@ class TestRoundtripResult:
 
     def test_default_fields(self):
         from cogant.reverse.idempotency import RoundtripResult
+
         r = RoundtripResult()
         assert r.is_isomorphic is False
         assert r.role_match_score == 0.0
@@ -109,9 +118,11 @@ class TestRoundtripResult:
 # reverse/idempotency.py — helper functions
 # ---------------------------------------------------------------------------
 
+
 class TestIdempotencyHelpers:
     def test_role_multiset_from_model_counts(self):
         from cogant.reverse.idempotency import _role_multiset_from_model
+
         model = _make_reverse_model()
         roles = _role_multiset_from_model(model)
         assert roles["HIDDEN_STATE"] == 2
@@ -122,6 +133,7 @@ class TestIdempotencyHelpers:
 
     def test_role_multiset_from_model_empty(self):
         from cogant.reverse.idempotency import _role_multiset_from_model
+
         model = _make_empty_reverse_model()
         roles = _role_multiset_from_model(model)
         # All zeros → should be empty (zero counts removed)
@@ -130,6 +142,7 @@ class TestIdempotencyHelpers:
     def test_role_multiset_from_model_gef_annotation(self):
         from cogant.reverse.idempotency import _role_multiset_from_model
         from cogant.reverse.parser import ReverseGNNModel
+
         model = ReverseGNNModel(
             model_name="test",
             hidden_states=["s"],
@@ -145,11 +158,13 @@ class TestIdempotencyHelpers:
 
     def test_role_multiset_from_mappings_none(self):
         from cogant.reverse.idempotency import _role_multiset_from_mappings
+
         roles = _role_multiset_from_mappings(None)
         assert sum(roles.values()) == 0
 
     def test_role_multiset_from_mappings_empty_dict(self):
         from cogant.reverse.idempotency import _role_multiset_from_mappings
+
         roles = _role_multiset_from_mappings({})
         assert sum(roles.values()) == 0
 
@@ -180,6 +195,7 @@ class TestIdempotencyHelpers:
 
     def test_model_matrices_empty(self):
         from cogant.reverse.idempotency import _model_matrices
+
         model = _make_empty_reverse_model()
         result = _model_matrices(model)
         assert isinstance(result, dict)
@@ -187,6 +203,7 @@ class TestIdempotencyHelpers:
     def test_model_matrices_with_values(self):
         from cogant.reverse.idempotency import _model_matrices
         from cogant.reverse.parser import ReverseGNNModel
+
         model = ReverseGNNModel(
             model_name="test",
             hidden_states=["s"],
@@ -201,6 +218,7 @@ class TestIdempotencyHelpers:
 
     def test_state_space_matrices_none(self):
         from cogant.reverse.idempotency import _state_space_matrices
+
         result = _state_space_matrices(None)
         assert result == {}
 
@@ -216,6 +234,7 @@ class TestIdempotencyHelpers:
 
     def test_nodes_edges_from_mappings_none(self):
         from cogant.reverse.idempotency import _nodes_edges_from_mappings
+
         nodes, edges = _nodes_edges_from_mappings(None)
         assert nodes == []
         assert edges == []
@@ -236,6 +255,7 @@ class TestIdempotencyHelpers:
 
     def test_role_match_threshold_is_float(self):
         from cogant.reverse.idempotency import ROLE_MATCH_THRESHOLD
+
         assert isinstance(ROLE_MATCH_THRESHOLD, float)
         assert 0.0 <= ROLE_MATCH_THRESHOLD <= 1.0
 
@@ -244,9 +264,11 @@ class TestIdempotencyHelpers:
 # ingest/manifest.py — ManifestParser
 # ---------------------------------------------------------------------------
 
+
 class TestManifestParser:
     def _make_parser(self):
         from cogant.ingest.manifest import ManifestParser
+
         return ManifestParser()
 
     def test_parse_requirements_txt_simple(self, tmp_path):
@@ -265,13 +287,17 @@ class TestManifestParser:
     def test_parse_package_json_basic(self, tmp_path):
         parser = self._make_parser()
         pkg = tmp_path / "package.json"
-        pkg.write_text(json.dumps({
-            "name": "my-app",
-            "version": "1.0.0",
-            "description": "Test app",
-            "dependencies": {"react": "^18.0.0", "axios": "^1.0.0"},
-            "devDependencies": {"jest": "^29.0.0"},
-        }))
+        pkg.write_text(
+            json.dumps(
+                {
+                    "name": "my-app",
+                    "version": "1.0.0",
+                    "description": "Test app",
+                    "dependencies": {"react": "^18.0.0", "axios": "^1.0.0"},
+                    "devDependencies": {"jest": "^29.0.0"},
+                }
+            )
+        )
         meta, deps = parser.parse_package_json(pkg)
         assert meta.get("name") == "my-app"
         assert isinstance(deps, list)
@@ -290,13 +316,13 @@ class TestManifestParser:
         parser = self._make_parser()
         pyproj = tmp_path / "pyproject.toml"
         pyproj.write_text(
-            '[project]\n'
+            "[project]\n"
             'name = "mylib"\n'
             'version = "0.1.0"\n'
             'description = "A library"\n'
             'dependencies = ["requests>=2.0", "click"]\n'
-            '\n'
-            '[project.optional-dependencies]\n'
+            "\n"
+            "[project.optional-dependencies]\n"
             'dev = ["pytest>=7.0", "mypy"]\n'
         )
         meta, deps = parser.parse_pyproject_toml(pyproj)
@@ -313,12 +339,12 @@ class TestManifestParser:
         parser = self._make_parser()
         setup = tmp_path / "setup.py"
         setup.write_text(
-            'from setuptools import setup\n'
-            'setup(\n'
+            "from setuptools import setup\n"
+            "setup(\n"
             '    name="mypackage",\n'
             '    version="1.0.0",\n'
             '    install_requires=["numpy>=1.0", "scipy"],\n'
-            ')\n'
+            ")\n"
         )
         meta, deps = parser.parse_setup_py(setup)
         assert isinstance(meta, dict)
@@ -354,6 +380,7 @@ class TestManifestParser:
 
     def test_dependency_dataclass(self):
         from cogant.ingest.manifest import Dependency
+
         dep = Dependency(name="numpy", version=">=1.20", is_dev=False)
         assert dep.name == "numpy"
         assert dep.version == ">=1.20"
@@ -364,44 +391,53 @@ class TestManifestParser:
 # ingest/language_detect.py — LanguageDetector
 # ---------------------------------------------------------------------------
 
+
 class TestLanguageDetector:
     def test_detect_language_python(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("module.py"))
         assert lang == "python"
 
     def test_detect_language_typescript(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("app.ts"))
         assert lang == "typescript"
 
     def test_detect_language_javascript(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("index.js"))
         assert lang == "javascript"
 
     def test_detect_language_rust(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("main.rs"))
         assert lang == "rust"
 
     def test_detect_language_go(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("main.go"))
         assert lang == "go"
 
     def test_detect_language_unknown(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(Path("README.md"))
         assert lang is None
 
     def test_detect_language_string_input(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language("myfile.py")
         assert lang == "python"
 
     def test_detect_repo_languages(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "a.py").write_text("x = 1")
         (tmp_path / "b.py").write_text("y = 2")
         (tmp_path / "index.js").write_text("var x = 1;")
@@ -412,12 +448,14 @@ class TestLanguageDetector:
 
     def test_detect_repo_languages_empty_dir(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         result = LanguageDetector.detect_repo_languages(tmp_path)
         assert isinstance(result, dict)
         assert len(result) == 0
 
     def test_get_supported_languages_returns_list(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         langs = LanguageDetector.get_supported_languages()
         assert isinstance(langs, list)
         # python parser should be available
@@ -425,11 +463,13 @@ class TestLanguageDetector:
 
     def test_get_parser_unknown_raises(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         with pytest.raises(ImportError):
             LanguageDetector.get_parser("cobol")
 
     def test_get_parser_for_extension_py(self):
         from cogant.ingest.language_detect import get_parser_for_extension
+
         parser = get_parser_for_extension(".py")
         # Should return a parser instance or None
         # (depends on whether python.parser is installed)
@@ -437,11 +477,13 @@ class TestLanguageDetector:
 
     def test_get_parser_for_extension_unknown(self):
         from cogant.ingest.language_detect import get_parser_for_extension
+
         result = get_parser_for_extension(".xyz")
         assert result is None
 
     def test_get_parser_for_extension_no_dot(self):
         from cogant.ingest.language_detect import get_parser_for_extension
+
         # Should handle missing dot
         result = get_parser_for_extension("py")
         assert result is None or True  # either way, no crash
@@ -451,9 +493,11 @@ class TestLanguageDetector:
 # ingest/repo.py — RepoIngester.ingest_local
 # ---------------------------------------------------------------------------
 
+
 class TestRepoIngester:
     def test_ingest_local_basic(self, tmp_path):
         from cogant.ingest.repo import RepoIngester, RepoSnapshot
+
         # Create a minimal "repo"
         (tmp_path / "main.py").write_text("x = 1\n")
         (tmp_path / "README.md").write_text("# Test\n")
@@ -468,12 +512,14 @@ class TestRepoIngester:
 
     def test_ingest_local_nonexistent_raises(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         ingester = RepoIngester(work_dir=tmp_path / "work")
         with pytest.raises(ValueError):
             ingester.ingest_local(tmp_path / "does_not_exist")
 
     def test_ingest_local_file_raises(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         f = tmp_path / "file.py"
         f.write_text("x=1")
         ingester = RepoIngester(work_dir=tmp_path / "work")
@@ -482,10 +528,10 @@ class TestRepoIngester:
 
     def test_ingest_local_with_pyproject_toml(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "main.py").write_text("x = 1\n")
         (tmp_path / "pyproject.toml").write_text(
-            '[project]\nname = "testpkg"\nversion = "0.1.0"\n'
-            'dependencies = ["numpy"]\n'
+            '[project]\nname = "testpkg"\nversion = "0.1.0"\ndependencies = ["numpy"]\n'
         )
         ingester = RepoIngester(work_dir=tmp_path / "work")
         snapshot = ingester.ingest_local(tmp_path)
@@ -495,6 +541,7 @@ class TestRepoIngester:
 
     def test_ingest_local_detects_language(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "a.py").write_text("x = 1\n")
         (tmp_path / "b.py").write_text("y = 2\n")
         ingester = RepoIngester(work_dir=tmp_path / "work")
@@ -504,13 +551,15 @@ class TestRepoIngester:
 
     def test_repometadata_dataclass(self):
         from cogant.ingest.repo import RepoMetadata
+
         m = RepoMetadata(name="test", url="file:///test")
         assert m.name == "test"
         assert m.url == "file:///test"
         assert m.commit_hash is None
 
     def test_reposnapshot_dataclass(self, tmp_path):
-        from cogant.ingest.repo import RepoSnapshot, RepoMetadata
+        from cogant.ingest.repo import RepoMetadata, RepoSnapshot
+
         m = RepoMetadata(name="test", url="file:///test")
         s = RepoSnapshot(metadata=m, files=[], dependencies=[], root_path=tmp_path)
         assert s.metadata is m

@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from cogant.reverse.parser import ReverseGNNModel
 
-__all__ = ['NodePlan', 'PackagePlan', 'plan_package']
+__all__ = ["NodePlan", "PackagePlan", "plan_package"]
 
 @dataclass
 class NodePlan:

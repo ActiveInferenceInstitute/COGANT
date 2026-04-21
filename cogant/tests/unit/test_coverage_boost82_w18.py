@@ -15,8 +15,9 @@ Covers:
 """
 
 import json
-import pytest
 from pathlib import Path
+
+import pytest
 
 pytestmark = pytest.mark.unit
 
@@ -25,22 +26,25 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_reverse_model_with_all(**kwargs):
     from cogant.reverse.parser import ReverseGNNModel
-    defaults = dict(
-        model_name="test_model",
-        hidden_states=["state_a", "state_b"],
-        observations=["obs_x"],
-        actions=["act_1"],
-        policies=["pi_0"],
-        constraints=["c_0"],
-    )
+
+    defaults = {
+        "model_name": "test_model",
+        "hidden_states": ["state_a", "state_b"],
+        "observations": ["obs_x"],
+        "actions": ["act_1"],
+        "policies": ["pi_0"],
+        "constraints": ["c_0"],
+    }
     defaults.update(kwargs)
     return ReverseGNNModel(**defaults)
 
 
 def _make_package_plan(name="test_model", **model_kwargs):
     from cogant.reverse.idempotency import plan_package
+
     model = _make_reverse_model_with_all(model_name=name, **model_kwargs)
     return plan_package(model), model
 
@@ -49,9 +53,11 @@ def _make_package_plan(name="test_model", **model_kwargs):
 # plugins/registry.py — PluginRegistry
 # ---------------------------------------------------------------------------
 
+
 class TestPluginRegistry:
     def _make_registry(self):
         from cogant.plugins.registry import PluginRegistry
+
         return PluginRegistry()
 
     def test_init(self):
@@ -86,6 +92,7 @@ class TestPluginRegistry:
 
     def test_get_entry_points_returns_list(self):
         from cogant.plugins.registry import PluginRegistry
+
         eps = PluginRegistry._get_entry_points()
         assert isinstance(eps, list)
 
@@ -101,9 +108,11 @@ class TestPluginRegistry:
 # ingest/incremental.py — IncrementalIngester (non-git repo path)
 # ---------------------------------------------------------------------------
 
+
 class TestIncrementalIngester:
     def test_init_non_git_repo(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         assert ingester is not None
         # tmp_path is not a git repo
@@ -111,36 +120,42 @@ class TestIncrementalIngester:
 
     def test_is_git_repo_returns_bool(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         result = ingester.is_git_repo()
         assert isinstance(result, bool)
 
     def test_changed_since_non_git_returns_empty(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         result = ingester.changed_since("HEAD~1")
         assert result == []
 
     def test_working_tree_changes_non_git_returns_empty(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         result = ingester.working_tree_changes()
         assert result == []
 
     def test_python_files_changed_since_non_git_returns_empty(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         result = ingester.python_files_changed_since("HEAD~1")
         assert result == []
 
     def test_changed_since_commit_non_git_returns_empty(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         result = ingester.changed_since_commit("abc123")
         assert result == []
 
     def test_parse_name_status_basic(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         stdout = "M\tpath/to/file.py\nA\tnew_file.py\nD\told_file.py\n"
         result = ingester._parse_name_status(stdout)
@@ -149,6 +164,7 @@ class TestIncrementalIngester:
 
     def test_parse_name_status_with_rename(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         stdout = "R100\told.py\tnew.py\n"
         result = ingester._parse_name_status(stdout)
@@ -156,17 +172,20 @@ class TestIncrementalIngester:
 
     def test_parse_name_status_empty(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         result = ingester._parse_name_status("")
         assert result == []
 
     def test_init_nonexistent_path(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path / "does_not_exist")
         assert ingester.is_git_repo() is False
 
     def test_changed_file_dataclass(self):
         from cogant.ingest.incremental import ChangedFile
+
         cf = ChangedFile(path=Path("test.py"), change_type="M")
         assert cf.change_type == "M"
         assert cf.path == Path("test.py")
@@ -176,11 +195,12 @@ class TestIncrementalIngester:
 # reverse/synthesizer.py — extended paths
 # ---------------------------------------------------------------------------
 
+
 class TestSynthesizerExtendedPaths:
     def test_render_policy_module_with_policy_functions(self):
         """When plan has policy_functions, they are rendered."""
-        from cogant.reverse.synthesizer import _render_policy_module, PackagePlan
         from cogant.reverse.planner import NodePlan
+        from cogant.reverse.synthesizer import PackagePlan, _render_policy_module
 
         pf = NodePlan(name="pi_main", slot="policy.main", python_type="int")
         plan = PackagePlan(
@@ -208,8 +228,8 @@ class TestSynthesizerExtendedPaths:
 
     def test_render_context_module_with_scaffold_classes(self):
         """When plan has scaffold_context_classes, they are rendered."""
-        from cogant.reverse.synthesizer import _render_context_module, PackagePlan
         from cogant.reverse.planner import NodePlan
+        from cogant.reverse.synthesizer import PackagePlan, _render_context_module
 
         ctx = NodePlan(name="UserSettings", slot="context.user", python_type="int")
         plan = PackagePlan(
@@ -236,8 +256,8 @@ class TestSynthesizerExtendedPaths:
 
     def test_render_context_module_with_context_functions(self):
         """When plan has context_functions, they are rendered as Settings classes."""
-        from cogant.reverse.synthesizer import _render_context_module, PackagePlan
         from cogant.reverse.planner import NodePlan
+        from cogant.reverse.synthesizer import PackagePlan, _render_context_module
 
         ctx_fn = NodePlan(name="context_database", slot="context.db", python_type="int")
         plan = PackagePlan(
@@ -264,8 +284,8 @@ class TestSynthesizerExtendedPaths:
 
     def test_render_observe_module_with_bool_type(self):
         """Observations with bool type should render bool return."""
-        from cogant.reverse.synthesizer import _render_observe_module, PackagePlan
         from cogant.reverse.planner import NodePlan
+        from cogant.reverse.synthesizer import PackagePlan, _render_observe_module
 
         obs = NodePlan(name="observe_active", slot="obs.active", python_type="bool")
         plan = PackagePlan(
@@ -292,8 +312,8 @@ class TestSynthesizerExtendedPaths:
 
     def test_render_observe_module_with_int_type(self):
         """Observations with int type should render int return."""
-        from cogant.reverse.synthesizer import _render_observe_module, PackagePlan
         from cogant.reverse.planner import NodePlan
+        from cogant.reverse.synthesizer import PackagePlan, _render_observe_module
 
         obs = NodePlan(name="observe_count", slot="obs.count", python_type="int")
         plan = PackagePlan(
@@ -320,8 +340,8 @@ class TestSynthesizerExtendedPaths:
 
     def test_render_policy_module_with_scaffold_policies(self):
         """scaffold_policy_functions also rendered."""
-        from cogant.reverse.synthesizer import _render_policy_module, PackagePlan
         from cogant.reverse.planner import NodePlan
+        from cogant.reverse.synthesizer import PackagePlan, _render_policy_module
 
         spf = NodePlan(name="route_state_a", slot="scaffold.policy.0", python_type="int")
         plan = PackagePlan(
@@ -351,6 +371,7 @@ class TestSynthesizerExtendedPaths:
 # gnn/runner.py — additional method coverage
 # ---------------------------------------------------------------------------
 
+
 class TestGNNModelRunnerAdditional:
     def _make_gnn_package(self, tmp_path):
         manifest = {
@@ -361,13 +382,21 @@ class TestGNNModelRunnerAdditional:
         }
         (tmp_path / "manifest.json").write_text(json.dumps(manifest))
         (tmp_path / "model.gnn.json").write_text(json.dumps({"model_name": "test"}))
-        (tmp_path / "state_space.json").write_text(json.dumps({
-            "variables": [], "observations": [], "actions": [], "transitions": {},
-        }))
+        (tmp_path / "state_space.json").write_text(
+            json.dumps(
+                {
+                    "variables": [],
+                    "observations": [],
+                    "actions": [],
+                    "transitions": {},
+                }
+            )
+        )
         return tmp_path
 
     def test_execution_trace_basic(self):
         from cogant.gnn.runner import ExecutionTrace
+
         trace = ExecutionTrace(
             step=0,
             state={"s": 0.5},
@@ -379,6 +408,7 @@ class TestGNNModelRunnerAdditional:
 
     def test_execution_trace_with_beliefs(self):
         from cogant.gnn.runner import ExecutionTrace
+
         trace = ExecutionTrace(
             step=1,
             state={"s": 0.3},
@@ -391,12 +421,14 @@ class TestGNNModelRunnerAdditional:
 
     def test_runner_init(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         assert runner is not None
         assert hasattr(runner, "load_package")
 
     def test_runner_load_package(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         self._make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         runner.load_package(str(tmp_path))
@@ -404,6 +436,7 @@ class TestGNNModelRunnerAdditional:
 
     def test_runner_run_after_load(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         self._make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         runner.load_package(str(tmp_path))

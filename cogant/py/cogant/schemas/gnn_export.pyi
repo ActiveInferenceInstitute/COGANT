@@ -75,7 +75,7 @@ class TransitionStructureSection(CogantBaseModel):
     transition_probability: float | None
 
 class LikelihoodStructureSection(CogantBaseModel):
-    kind: Literal['observation_likelihood', 'transition_probability']
+    kind: Literal["observation_likelihood", "transition_probability"]
     distribution_type: str
     parameters: dict[str, float]
     conditioned_on: list[str]
@@ -85,7 +85,7 @@ class PreferenceConstraintSection(CogantBaseModel):
     constraint_type: str
     expression: str
     variables: list[str]
-    priority: Literal['low', 'medium', 'high', 'critical']
+    priority: Literal["low", "medium", "high", "critical"]
 
 class TimeSettingSection(CogantBaseModel):
     is_continuous_time: bool

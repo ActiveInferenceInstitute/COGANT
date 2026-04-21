@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class TimeRegime(StrEnum):
     """Temporal execution model."""
+
     SYNCHRONOUS = "synchronous"
     ASYNCHRONOUS = "asynchronous"
     EVENT_DRIVEN = "event_driven"
@@ -26,6 +27,7 @@ class TimeRegime(StrEnum):
 @dataclass
 class TemporalOrdering:
     """Temporal ordering constraint between nodes."""
+
     predecessor_id: str
     successor_id: str
     constraint_type: str  # "sequential", "parallel", "conditional"
@@ -35,6 +37,7 @@ class TemporalOrdering:
 @dataclass
 class EventPattern:
     """Pattern of event-driven execution."""
+
     event_node_id: str
     trigger_nodes: list[str]
     handler_nodes: list[str]
@@ -44,6 +47,7 @@ class EventPattern:
 @dataclass
 class TemporalMetrics:
     """Metrics about temporal characteristics."""
+
     async_fraction: float  # Fraction of async nodes
     event_driven_fraction: float  # Fraction of event-driven nodes
     parallel_edges_count: int
@@ -189,16 +193,16 @@ class TemporalAnalyzer:
             # runtime trace evidence from the 20-repo corpus.
             if edge.source_id in async_nodes or edge.target_id in async_nodes:
                 constraint_type = "parallel"
-                confidence = 0.7    # bottom band (async ambiguity)
+                confidence = 0.7  # bottom band (async ambiguity)
             else:
                 constraint_type = "sequential"
-                confidence = 0.95   # near-DEFINITE (sync Python semantics)
+                confidence = 0.95  # near-DEFINITE (sync Python semantics)
 
             ordering = TemporalOrdering(
                 predecessor_id=edge.source_id,
                 successor_id=edge.target_id,
                 constraint_type=constraint_type,
-                confidence=confidence
+                confidence=confidence,
             )
             self.orderings.append(ordering)
 
@@ -221,15 +225,20 @@ class TemporalAnalyzer:
             if trigger_nodes or handler_nodes:
                 # Determine if async
                 _async_kind = getattr(NodeKind, "ASYNC_HANDLER", None)
-                is_async = any(nid in self.graph.nodes and
-                             self.graph.nodes[nid].kind == _async_kind
-                             for nid in handler_nodes) if _async_kind is not None else False
+                is_async = (
+                    any(
+                        nid in self.graph.nodes and self.graph.nodes[nid].kind == _async_kind
+                        for nid in handler_nodes
+                    )
+                    if _async_kind is not None
+                    else False
+                )
 
                 pattern = EventPattern(
                     event_node_id=event_id,
                     trigger_nodes=trigger_nodes,
                     handler_nodes=handler_nodes,
-                    is_async=is_async
+                    is_async=is_async,
                 )
                 self.event_patterns.append(pattern)
 
@@ -391,8 +400,9 @@ class TemporalAnalyzer:
         """
         # Simple topological sort based on orderings
         # Find path from entry points to exit nodes
-        entry_points = [n.id for n in self.graph.nodes.values()
-                       if len(self.graph.get_edges_to(n.id)) == 0]
+        entry_points = [
+            n.id for n in self.graph.nodes.values() if len(self.graph.get_edges_to(n.id)) == 0
+        ]
 
         critical_path: list[str] = []
         visited: set[str] = set()
@@ -472,8 +482,12 @@ class TemporalAnalyzer:
 
             # Follow edges that indicate temporal dependency
             for edge in self.graph.get_edges_from(node_id):
-                if edge.kind in (EdgeKind.CALLS, EdgeKind.TRIGGERS,
-                                EdgeKind.READS, EdgeKind.WRITES):
+                if edge.kind in (
+                    EdgeKind.CALLS,
+                    EdgeKind.TRIGGERS,
+                    EdgeKind.READS,
+                    EdgeKind.WRITES,
+                ):
                     target = edge.target_id
                     if target not in visited:
                         dfs(target, path[:])

@@ -311,9 +311,7 @@ def _run_forward(repo_path: Path) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def check_structural_idempotency(
-    original_graph: Any, roundtrip_graph: Any
-) -> IdempotencyReport:
+def check_structural_idempotency(original_graph: Any, roundtrip_graph: Any) -> IdempotencyReport:
     """Check structural idempotency of two program graphs.
 
     Compares the node and edge populations of two graphs to determine
@@ -334,12 +332,8 @@ def check_structural_idempotency(
     rt_nodes, rt_edges = _nodes_edges_from_mappings(roundtrip_graph)
 
     # Compare node role multisets
-    orig_role_counts = Counter(
-        node.get("role", "UNKNOWN") for node in orig_nodes
-    )
-    rt_role_counts = Counter(
-        node.get("role", "UNKNOWN") for node in rt_nodes
-    )
+    orig_role_counts = Counter(node.get("role", "UNKNOWN") for node in orig_nodes)
+    rt_role_counts = Counter(node.get("role", "UNKNOWN") for node in rt_nodes)
 
     report.forward_roles = dict(orig_role_counts)
     report.reverse_roles = dict(rt_role_counts)
@@ -350,18 +344,14 @@ def check_structural_idempotency(
         orig_count = orig_role_counts.get(role, 0)
         rt_count = rt_role_counts.get(role, 0)
         if orig_count != rt_count:
-            report.differences.append(
-                f"Role {role}: {orig_count} → {rt_count}"
-            )
+            report.differences.append(f"Role {role}: {orig_count} → {rt_count}")
 
     # Compute a simple structural score
     if orig_role_counts and rt_role_counts:
         intersection = sum(
-            min(orig_role_counts.get(r, 0), rt_role_counts.get(r, 0))
-            for r in all_roles
+            min(orig_role_counts.get(r, 0), rt_role_counts.get(r, 0)) for r in all_roles
         )
-        union = sum(max(orig_role_counts.get(r, 0), rt_role_counts.get(r, 0))
-                    for r in all_roles)
+        union = sum(max(orig_role_counts.get(r, 0), rt_role_counts.get(r, 0)) for r in all_roles)
         report.score = intersection / union if union > 0 else 0.0
     else:
         report.score = 0.0
@@ -401,17 +391,12 @@ def check_semantic_idempotency(
         orig_count = orig_roles.get(role, 0)
         rt_count = rt_roles.get(role, 0)
         if orig_count != rt_count:
-            report.differences.append(
-                f"Role {role}: {orig_count} → {rt_count}"
-            )
+            report.differences.append(f"Role {role}: {orig_count} → {rt_count}")
 
     # Compute Jensen-Shannon-like score
     if orig_roles and rt_roles:
-        intersection = sum(
-            min(orig_roles.get(r, 0), rt_roles.get(r, 0)) for r in all_roles
-        )
-        union = sum(max(orig_roles.get(r, 0), rt_roles.get(r, 0))
-                    for r in all_roles)
+        intersection = sum(min(orig_roles.get(r, 0), rt_roles.get(r, 0)) for r in all_roles)
+        union = sum(max(orig_roles.get(r, 0), rt_roles.get(r, 0)) for r in all_roles)
         report.score = intersection / union if union > 0 else 0.0
     else:
         report.score = 0.0
@@ -511,13 +496,9 @@ def verify_roundtrip(
     # For the orig side we lack a real semantic-mapping view, so
     # synthesise node dicts directly from the role multiset derived
     # from the parsed GNN. The synth side uses the real mappings.
-    orig_nodes = [
-        {"role": role} for role, count in original_roles.items() for _ in range(count)
-    ]
+    orig_nodes = [{"role": role} for role, count in original_roles.items() for _ in range(count)]
     synth_nodes, _synth_edges = _nodes_edges_from_mappings(forward.get("mappings"))
-    structural_score = compare_graph_structure(
-        orig_nodes, [], synth_nodes, []
-    )
+    structural_score = compare_graph_structure(orig_nodes, [], synth_nodes, [])
 
     result = RoundtripResult(
         is_isomorphic=score >= role_threshold,
@@ -665,12 +646,8 @@ def verify_repo_roundtrip(
             _state_space_matrices(new_ss),
         )
         orig_nodes, orig_edges = _nodes_edges_from_mappings(original_mappings)
-        synth_nodes, synth_edges = _nodes_edges_from_mappings(
-            forward.get("mappings")
-        )
-        structural_score = compare_graph_structure(
-            orig_nodes, orig_edges, synth_nodes, synth_edges
-        )
+        synth_nodes, synth_edges = _nodes_edges_from_mappings(forward.get("mappings"))
+        structural_score = compare_graph_structure(orig_nodes, orig_edges, synth_nodes, synth_edges)
 
         result = RoundtripResult(
             is_isomorphic=score >= role_threshold,

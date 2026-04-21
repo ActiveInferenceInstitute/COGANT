@@ -1,11 +1,15 @@
 """Unit tests for viz/graph_view.py — GraphVisualizer."""
-import os, sys
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 import pytest
-from cogant.viz.graph_view import GraphVisualizer
+
 from cogant.graph.builder import ProgramGraphBuilder
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.schemas.graph import ProgramGraph, GraphMetadata
+from cogant.schemas.core import EdgeKind, NodeKind
+from cogant.schemas.graph import ProgramGraph
+from cogant.viz.graph_view import GraphVisualizer
 
 
 def _typed_graph() -> ProgramGraph:

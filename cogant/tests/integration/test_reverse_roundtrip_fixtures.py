@@ -157,8 +157,7 @@ def _assert_strict_roundtrip(result: RoundtripResult) -> None:
             continue
         assert count > 0, f"original core role {role} has count 0"
         assert result.synthesized_roles.get(role, 0) > 0, (
-            f"core role {role} absent from synthesized multiset "
-            f"{result.synthesized_roles}"
+            f"core role {role} absent from synthesized multiset {result.synthesized_roles}"
         )
     for dim, ok in result.shape_match.items():
         assert ok, f"shape dimension {dim} did not survive round-trip: {result.shape_match}"
@@ -260,9 +259,7 @@ def test_roundtrip_result_has_expected_fields(tmp_path: Path) -> None:
     """
     gnn_file = tmp_path / "minimal.gnn.md"
     gnn_file.write_text(HAND_WRITTEN_GNN, encoding="utf-8")
-    result = verify_roundtrip(
-        gnn_file, tmp_dir=tmp_path / "fields", role_threshold=0.5
-    )
+    result = verify_roundtrip(gnn_file, tmp_dir=tmp_path / "fields", role_threshold=0.5)
 
     assert isinstance(result, RoundtripResult)
     assert isinstance(result.is_isomorphic, bool)

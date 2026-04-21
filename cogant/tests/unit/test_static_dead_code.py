@@ -1,11 +1,11 @@
 """Unit tests for dead code detection module."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from cogant.static.dead_code import (
     DeadCodeAnalyzer,
-    DeadCodeDetector,
     DeadCodeEntry,
     DeadCodeReport,
 )

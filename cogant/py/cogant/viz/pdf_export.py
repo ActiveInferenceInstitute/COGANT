@@ -69,7 +69,11 @@ def _role_counts_from_mappings(mappings: Any) -> dict[str, int]:
     else:
         return counts
     for m in items:
-        role = str(getattr(m, "kind", None) or m.get("kind", "unknown") if isinstance(m, dict) else "unknown")
+        role = str(
+            getattr(m, "kind", None) or m.get("kind", "unknown")
+            if isinstance(m, dict)
+            else "unknown"
+        )
         counts[role] = counts.get(role, 0) + 1
     return counts
 
@@ -118,8 +122,11 @@ class PDFExporter:
             # Build networkx DiGraph for layout
             G: Any = nx.DiGraph()
             for nid, node in nodes_dict.items():
-                G.add_node(nid, kind=str(getattr(node, "kind", "unknown")),
-                           name=str(getattr(node, "name", nid)))
+                G.add_node(
+                    nid,
+                    kind=str(getattr(node, "kind", "unknown")),
+                    name=str(getattr(node, "name", nid)),
+                )
             for edge in edges_dict.values():
                 src = getattr(edge, "source_id", None)
                 tgt = getattr(edge, "target_id", None)
@@ -136,7 +143,9 @@ class PDFExporter:
 
                 if G.number_of_nodes() > 0:
                     nx.draw_networkx(
-                        G, pos=pos, ax=ax,
+                        G,
+                        pos=pos,
+                        ax=ax,
                         node_color=node_colors,
                         labels=node_labels,
                         font_size=6,
@@ -158,7 +167,8 @@ class PDFExporter:
 
                 ax.set_title(
                     f"Program Graph — {G.number_of_nodes()} nodes, {G.number_of_edges()} edges",
-                    fontsize=13, weight="bold",
+                    fontsize=13,
+                    weight="bold",
                 )
                 ax.axis("off")
 
@@ -176,8 +186,13 @@ class PDFExporter:
                     bars = ax2.barh(kinds, counts, color=colors, edgecolor="white")
                     for bar in bars:
                         w = bar.get_width()
-                        ax2.text(w, bar.get_y() + bar.get_height() / 2,
-                                 f" {int(w)}", va="center", fontsize=9)
+                        ax2.text(
+                            w,
+                            bar.get_y() + bar.get_height() / 2,
+                            f" {int(w)}",
+                            va="center",
+                            fontsize=9,
+                        )
                     ax2.set_xlabel("Count")
                     ax2.set_title("Node Kind Distribution", fontsize=13, weight="bold")
                     ax2.grid(axis="x", alpha=0.3)
@@ -246,8 +261,15 @@ class PDFExporter:
             with PdfPages(str(output_file)) as pdf:
                 # PAGE 1 — Metadata summary
                 fig, ax = plt.subplots(figsize=(8.5, 11))
-                ax.text(0.5, 0.88, "GNN Bundle Report", ha="center", va="center",
-                        fontsize=22, weight="bold")
+                ax.text(
+                    0.5,
+                    0.88,
+                    "GNN Bundle Report",
+                    ha="center",
+                    va="center",
+                    fontsize=22,
+                    weight="bold",
+                )
                 ax.text(0.5, 0.82, target, ha="center", va="center", fontsize=14, color="#555555")
 
                 lines = []
@@ -260,9 +282,20 @@ class PDFExporter:
                 if errors := getattr(bundle, "errors", []):
                     lines.append(f"Errors: {len(errors)}")
 
-                ax.text(0.5, 0.65, "\n".join(lines),
-                        ha="center", va="top", fontsize=11, family="monospace",
-                        bbox={"boxstyle": "round,pad=0.5", "facecolor": "#F0F4FF", "edgecolor": "#CCCCCC"})
+                ax.text(
+                    0.5,
+                    0.65,
+                    "\n".join(lines),
+                    ha="center",
+                    va="top",
+                    fontsize=11,
+                    family="monospace",
+                    bbox={
+                        "boxstyle": "round,pad=0.5",
+                        "facecolor": "#F0F4FF",
+                        "edgecolor": "#CCCCCC",
+                    },
+                )
                 ax.set_xlim(0, 1)
                 ax.set_ylim(0, 1)
                 ax.axis("off")
@@ -276,15 +309,19 @@ class PDFExporter:
                     counts = [role_counts[r] for r in roles]
                     colors = plt.cm.Set2(np.linspace(0, 1, len(roles)))
                     wedges, texts, autotexts = ax2.pie(
-                        counts, labels=roles, autopct="%1.0f%%",
-                        colors=colors, startangle=90,
+                        counts,
+                        labels=roles,
+                        autopct="%1.0f%%",
+                        colors=colors,
+                        startangle=90,
                         wedgeprops={"width": 0.6},
                     )
                     for t in autotexts:
                         t.set_fontsize(9)
                     ax2.set_title(
                         f"Semantic Role Distribution ({sum(counts)} mappings)",
-                        fontsize=13, weight="bold",
+                        fontsize=13,
+                        weight="bold",
                     )
                     fig2.tight_layout()
                     pdf.savefig(fig2, bbox_inches="tight")
@@ -295,7 +332,9 @@ class PDFExporter:
                     fig3, ax3 = plt.subplots(figsize=(10, 6))
                     stages = list(timing.keys())
                     times = list(timing.values())
-                    sorted_pairs = sorted(zip(stages, times, strict=False), key=lambda x: x[1], reverse=True)
+                    sorted_pairs = sorted(
+                        zip(stages, times, strict=False), key=lambda x: x[1], reverse=True
+                    )
                     s_stages, s_times = zip(*sorted_pairs, strict=False)
                     ax3.barh(s_stages, s_times, color="steelblue", alpha=0.8)
                     for idx, t in enumerate(s_times):
@@ -369,15 +408,27 @@ class PDFExporter:
                     data = matrices.get(mname)
                     arr = _to_2d(data, mname) if data is not None else None
                     if arr is not None:
-                        im = ax.imshow(arr, cmap="YlOrRd", aspect="auto", origin="lower",
-                                       interpolation="nearest")
+                        im = ax.imshow(
+                            arr,
+                            cmap="YlOrRd",
+                            aspect="auto",
+                            origin="lower",
+                            interpolation="nearest",
+                        )
                         plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
                         ax.set_title(f"{mname} matrix  {arr.shape}", fontsize=10, weight="bold")
                         ax.set_xlabel("columns")
                         ax.set_ylabel("rows")
                     else:
-                        ax.text(0.5, 0.5, f"{mname}\n(no data)", ha="center", va="center",
-                                fontsize=11, color="#888888")
+                        ax.text(
+                            0.5,
+                            0.5,
+                            f"{mname}\n(no data)",
+                            ha="center",
+                            va="center",
+                            fontsize=11,
+                            color="#888888",
+                        )
                         ax.axis("off")
                 fig.suptitle("Active Inference Matrices (A/B/C/D)", fontsize=14, weight="bold")
                 fig.tight_layout()
@@ -391,13 +442,15 @@ class PDFExporter:
                     if arr is None:
                         continue
                     fig2, ax2 = plt.subplots(figsize=(9, 7))
-                    im2 = ax2.imshow(arr, cmap="YlOrRd", aspect="auto", origin="lower",
-                                     interpolation="nearest")
+                    im2 = ax2.imshow(
+                        arr, cmap="YlOrRd", aspect="auto", origin="lower", interpolation="nearest"
+                    )
                     plt.colorbar(im2, ax=ax2)
                     ax2.set_title(
                         f"{mname} matrix — shape {arr.shape}  "
                         f"min={arr.min():.3f}  max={arr.max():.3f}",
-                        fontsize=12, weight="bold",
+                        fontsize=12,
+                        weight="bold",
                     )
                     ax2.set_xlabel("Columns")
                     ax2.set_ylabel("Rows")
@@ -464,8 +517,15 @@ class PDFExporter:
                 bars = ax.bar(categories, counts, color=colors, edgecolor="white", linewidth=1.5)
                 for bar in bars:
                     h = bar.get_height()
-                    ax.text(bar.get_x() + bar.get_width() / 2, h + 0.2,
-                            str(int(h)), ha="center", va="bottom", fontsize=11, weight="bold")
+                    ax.text(
+                        bar.get_x() + bar.get_width() / 2,
+                        h + 0.2,
+                        str(int(h)),
+                        ha="center",
+                        va="bottom",
+                        fontsize=11,
+                        weight="bold",
+                    )
                 ax.set_ylabel("Node count")
                 ax.set_title("Markov Blanket Partition", fontsize=14, weight="bold")
                 ax.grid(axis="y", alpha=0.3)
@@ -481,22 +541,28 @@ class PDFExporter:
                     pie_colors = [colors[categories.index(c)] for c in labels]
                     fig2, ax2 = plt.subplots(figsize=(8, 7))
                     wedges, texts, autotexts = ax2.pie(
-                        vals, labels=labels, autopct="%1.1f%%",
-                        colors=pie_colors, startangle=90,
+                        vals,
+                        labels=labels,
+                        autopct="%1.1f%%",
+                        colors=pie_colors,
+                        startangle=90,
                         wedgeprops={"width": 0.55},
                     )
                     for t in autotexts:
                         t.set_fontsize(10)
                     ax2.set_title(
                         f"Partition Coverage  ({sum(counts)} total nodes)",
-                        fontsize=13, weight="bold",
+                        fontsize=13,
+                        weight="bold",
                     )
                     fig2.tight_layout()
                     pdf.savefig(fig2, bbox_inches="tight")
                     plt.close(fig2)
 
                 # PAGE 3: stats table if available
-                stats = getattr(blanket, "stats", None) or (blanket.get("stats") if isinstance(blanket, dict) else None)
+                stats = getattr(blanket, "stats", None) or (
+                    blanket.get("stats") if isinstance(blanket, dict) else None
+                )
                 if stats and isinstance(stats, dict):
                     fig3, ax3 = plt.subplots(figsize=(8, 5))
                     ax3.axis("off")
@@ -559,33 +625,51 @@ class PDFExporter:
             else:
                 result_dict = {
                     k: getattr(pipeline_result, k, None)
-                    for k in ("stage_timings", "timing", "stage_metrics", "metrics",
-                              "target", "errors", "stage_results")
+                    for k in (
+                        "stage_timings",
+                        "timing",
+                        "stage_metrics",
+                        "metrics",
+                        "target",
+                        "errors",
+                        "stage_results",
+                    )
                 }
 
             timing: dict[str, float] = (
-                result_dict.get("stage_timings")
-                or result_dict.get("timing")
-                or {}
+                result_dict.get("stage_timings") or result_dict.get("timing") or {}
             )
             metrics: dict[str, Any] = (
-                result_dict.get("stage_metrics")
-                or result_dict.get("metrics")
-                or {}
+                result_dict.get("stage_metrics") or result_dict.get("metrics") or {}
             )
             target = str(result_dict.get("target", "unknown"))
 
             with PdfPages(str(output_file)) as pdf:
                 # PAGE 1: Cover
                 fig, ax = plt.subplots(figsize=(8.5, 11))
-                ax.text(0.5, 0.80, "Pipeline Report", ha="center", va="center",
-                        fontsize=26, weight="bold")
-                ax.text(0.5, 0.73, target, ha="center", va="center",
-                        fontsize=14, color="#555555")
-                ax.text(0.5, 0.65,
-                        f"Stages: {len(timing)}\nTotal time: {sum(timing.values()):.3f}s",
-                        ha="center", va="center", fontsize=12,
-                        bbox={"boxstyle": "round,pad=0.4", "facecolor": "#EEF4FF", "edgecolor": "#AAAACC"})
+                ax.text(
+                    0.5,
+                    0.80,
+                    "Pipeline Report",
+                    ha="center",
+                    va="center",
+                    fontsize=26,
+                    weight="bold",
+                )
+                ax.text(0.5, 0.73, target, ha="center", va="center", fontsize=14, color="#555555")
+                ax.text(
+                    0.5,
+                    0.65,
+                    f"Stages: {len(timing)}\nTotal time: {sum(timing.values()):.3f}s",
+                    ha="center",
+                    va="center",
+                    fontsize=12,
+                    bbox={
+                        "boxstyle": "round,pad=0.4",
+                        "facecolor": "#EEF4FF",
+                        "edgecolor": "#AAAACC",
+                    },
+                )
                 ax.set_xlim(0, 1)
                 ax.set_ylim(0, 1)
                 ax.axis("off")
@@ -688,21 +772,61 @@ class PDFExporter:
             with PdfPages(str(output_file)) as pdf:
                 # PAGE 1: Cover + score
                 fig, ax = plt.subplots(figsize=(8.5, 11))
-                ax.text(0.5, 0.82, "Roundtrip Analysis", ha="center", va="center",
-                        fontsize=26, weight="bold")
-                ax.text(0.5, 0.75, "Forward-Reverse-Forward Evaluation",
-                        ha="center", va="center", fontsize=13, color="#555555")
+                ax.text(
+                    0.5,
+                    0.82,
+                    "Roundtrip Analysis",
+                    ha="center",
+                    va="center",
+                    fontsize=26,
+                    weight="bold",
+                )
+                ax.text(
+                    0.5,
+                    0.75,
+                    "Forward-Reverse-Forward Evaluation",
+                    ha="center",
+                    va="center",
+                    fontsize=13,
+                    color="#555555",
+                )
 
                 score_pct = score * 100
-                score_color = "#27AE60" if score >= 0.8 else "#F39C12" if score >= 0.5 else "#E74C3C"
-                ax.text(0.5, 0.60, f"Role-match score: {score_pct:.1f}%",
-                        ha="center", va="center", fontsize=22, weight="bold", color=score_color)
-                ax.text(0.5, 0.52, f"Tier: {tier}",
-                        ha="center", va="center", fontsize=16,
-                        bbox={"boxstyle": "round,pad=0.3",
-                                  "facecolor": score_color + "33", "edgecolor": score_color})
-                ax.text(0.5, 0.44, f"Elapsed: {elapsed:.3f}s",
-                        ha="center", va="center", fontsize=11, color="#777777")
+                score_color = (
+                    "#27AE60" if score >= 0.8 else "#F39C12" if score >= 0.5 else "#E74C3C"
+                )
+                ax.text(
+                    0.5,
+                    0.60,
+                    f"Role-match score: {score_pct:.1f}%",
+                    ha="center",
+                    va="center",
+                    fontsize=22,
+                    weight="bold",
+                    color=score_color,
+                )
+                ax.text(
+                    0.5,
+                    0.52,
+                    f"Tier: {tier}",
+                    ha="center",
+                    va="center",
+                    fontsize=16,
+                    bbox={
+                        "boxstyle": "round,pad=0.3",
+                        "facecolor": score_color + "33",
+                        "edgecolor": score_color,
+                    },
+                )
+                ax.text(
+                    0.5,
+                    0.44,
+                    f"Elapsed: {elapsed:.3f}s",
+                    ha="center",
+                    va="center",
+                    fontsize=11,
+                    color="#777777",
+                )
                 ax.set_xlim(0, 1)
                 ax.set_ylim(0, 1)
                 ax.axis("off")
@@ -717,22 +841,41 @@ class PDFExporter:
                     rev_vals = [reverse_roles.get(r, 0) for r in all_roles]
 
                     fig2, ax2 = plt.subplots(figsize=(10, 6))
-                    bars1 = ax2.bar(x - width / 2, fwd_vals, width,
-                                    label="Forward (original)", color="#3498DB", alpha=0.85)
-                    bars2 = ax2.bar(x + width / 2, rev_vals, width,
-                                    label="Synthesised (re-forward)", color="#E67E22", alpha=0.85)
+                    bars1 = ax2.bar(
+                        x - width / 2,
+                        fwd_vals,
+                        width,
+                        label="Forward (original)",
+                        color="#3498DB",
+                        alpha=0.85,
+                    )
+                    bars2 = ax2.bar(
+                        x + width / 2,
+                        rev_vals,
+                        width,
+                        label="Synthesised (re-forward)",
+                        color="#E67E22",
+                        alpha=0.85,
+                    )
 
                     for bar in (*bars1, *bars2):
                         h = bar.get_height()
                         if h > 0:
-                            ax2.text(bar.get_x() + bar.get_width() / 2, h + 0.05,
-                                     str(int(h)), ha="center", va="bottom", fontsize=8)
+                            ax2.text(
+                                bar.get_x() + bar.get_width() / 2,
+                                h + 0.05,
+                                str(int(h)),
+                                ha="center",
+                                va="bottom",
+                                fontsize=8,
+                            )
 
                     ax2.set_xticks(x)
                     ax2.set_xticklabels(all_roles, rotation=30, ha="right", fontsize=9)
                     ax2.set_ylabel("Node count")
-                    ax2.set_title("Role Distribution: Forward vs Synthesised",
-                                  fontsize=13, weight="bold")
+                    ax2.set_title(
+                        "Role Distribution: Forward vs Synthesised", fontsize=13, weight="bold"
+                    )
                     ax2.legend(fontsize=10)
                     ax2.grid(axis="y", alpha=0.3)
                     fig2.tight_layout()
@@ -842,12 +985,21 @@ class PDFExporter:
                 version = analysis_bundle.get("version", "")
                 summary_stats = analysis_bundle.get("summary_stats", {})
 
-                ax.text(0.5, 0.85, project_name, ha="center", va="center", fontsize=26, weight="bold")
+                ax.text(
+                    0.5, 0.85, project_name, ha="center", va="center", fontsize=26, weight="bold"
+                )
                 ax.text(0.5, 0.78, "COGANT Analysis Report", ha="center", va="center", fontsize=16)
 
                 stats_y = 0.70
                 ax.text(0.5, stats_y, f"Generated: {timestamp}", ha="center", va="top", fontsize=10)
-                ax.text(0.5, stats_y - 0.04, f"COGANT Version: {version}", ha="center", va="top", fontsize=10)
+                ax.text(
+                    0.5,
+                    stats_y - 0.04,
+                    f"COGANT Version: {version}",
+                    ha="center",
+                    va="top",
+                    fontsize=10,
+                )
 
                 # Summary stats
                 stats_text = "Summary Statistics:\n"
@@ -855,7 +1007,9 @@ class PDFExporter:
                     for key, value in list(summary_stats.items())[:5]:
                         stats_text += f"  {key}: {value}\n"
 
-                ax.text(0.5, 0.50, stats_text, ha="center", va="center", fontsize=10, family="monospace")
+                ax.text(
+                    0.5, 0.50, stats_text, ha="center", va="center", fontsize=10, family="monospace"
+                )
 
                 ax.set_xlim(0, 1)
                 ax.set_ylim(0, 1)
@@ -902,8 +1056,12 @@ class PDFExporter:
                 if complexity_hotspots:
                     fig, ax = plt.subplots(figsize=(8.5, 11))
 
-                    sorted_hotspots = sorted(complexity_hotspots.items(), key=lambda x: x[1], reverse=True)[:10]
-                    names, scores = zip(*sorted_hotspots, strict=False) if sorted_hotspots else ([], [])
+                    sorted_hotspots = sorted(
+                        complexity_hotspots.items(), key=lambda x: x[1], reverse=True
+                    )[:10]
+                    names, scores = (
+                        zip(*sorted_hotspots, strict=False) if sorted_hotspots else ([], [])
+                    )
 
                     ax.barh(names, scores, color="coral", alpha=0.7)
                     ax.set_xlabel("Complexity Score")
@@ -935,16 +1093,24 @@ class PDFExporter:
                         ax.scatter(abstractness, instability, s=100, alpha=0.6, color="steelblue")
 
                         for name, a, i in zip(names, abstractness, instability, strict=False):
-                            ax.annotate(name, (a, i), fontsize=7, xytext=(2, 2), textcoords="offset points")
+                            ax.annotate(
+                                name, (a, i), fontsize=7, xytext=(2, 2), textcoords="offset points"
+                            )
 
                         # Main sequence line
                         x_line = np.linspace(0, 1, 100)
                         y_line = 1 - x_line
-                        ax.plot(x_line, y_line, "r--", linewidth=2, label="Main Sequence (I + A = 1)")
+                        ax.plot(
+                            x_line, y_line, "r--", linewidth=2, label="Main Sequence (I + A = 1)"
+                        )
 
                         ax.set_xlabel("Abstractness (A)")
                         ax.set_ylabel("Instability (I)")
-                        ax.set_title("Module Coupling: Abstractness vs Instability", fontsize=14, weight="bold")
+                        ax.set_title(
+                            "Module Coupling: Abstractness vs Instability",
+                            fontsize=14,
+                            weight="bold",
+                        )
                         ax.set_xlim(-0.05, 1.05)
                         ax.set_ylim(-0.05, 1.05)
                         ax.grid(alpha=0.3)
@@ -959,8 +1125,12 @@ class PDFExporter:
                     fig, axes = plt.subplots(2, 2, figsize=(8.5, 11))
 
                     for idx, (matrix_name, matrix_data) in enumerate(
-                        [("A", matrices.get("A")), ("B", matrices.get("B")),
-                         ("C", matrices.get("C")), ("D", matrices.get("D"))]
+                        [
+                            ("A", matrices.get("A")),
+                            ("B", matrices.get("B")),
+                            ("C", matrices.get("C")),
+                            ("D", matrices.get("D")),
+                        ]
                     ):
                         ax = axes[idx // 2, idx % 2]
 
@@ -970,14 +1140,28 @@ class PDFExporter:
                                 if matrix_array.ndim == 3 and matrix_name == "B":
                                     matrix_array = matrix_array[0]  # First action
 
-                                im = ax.imshow(matrix_array, cmap="YlOrRd", aspect="auto", origin="lower")
+                                im = ax.imshow(
+                                    matrix_array, cmap="YlOrRd", aspect="auto", origin="lower"
+                                )
                                 ax.set_title(f"{matrix_name} Matrix", fontsize=11, weight="bold")
                                 plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
                             except Exception as e:
                                 logger.debug("Could not visualize %s matrix: %s", matrix_name, e)
-                                ax.text(0.5, 0.5, f"{matrix_name} Matrix\n(unavailable)", ha="center", va="center")
+                                ax.text(
+                                    0.5,
+                                    0.5,
+                                    f"{matrix_name} Matrix\n(unavailable)",
+                                    ha="center",
+                                    va="center",
+                                )
                         else:
-                            ax.text(0.5, 0.5, f"{matrix_name} Matrix\n(no data)", ha="center", va="center")
+                            ax.text(
+                                0.5,
+                                0.5,
+                                f"{matrix_name} Matrix\n(no data)",
+                                ha="center",
+                                va="center",
+                            )
 
                         ax.set_xticks([])
                         ax.set_yticks([])
@@ -1006,8 +1190,14 @@ class PDFExporter:
 
                     for bar in bars:
                         height = bar.get_height()
-                        ax.text(bar.get_x() + bar.get_width() / 2, height, f" {int(height)}",
-                               ha="center", va="bottom", fontsize=10)
+                        ax.text(
+                            bar.get_x() + bar.get_width() / 2,
+                            height,
+                            f" {int(height)}",
+                            ha="center",
+                            va="bottom",
+                            fontsize=10,
+                        )
 
                     pdf.savefig(fig, bbox_inches="tight")
                     plt.close(fig)
@@ -1018,13 +1208,34 @@ class PDFExporter:
                 validator_score = analysis_bundle.get("validator_score", 0)
                 validation_findings = analysis_bundle.get("validation_findings", [])
 
-                ax.text(0.5, 0.85, "GNN Validator Report", ha="center", va="center",
-                       fontsize=14, weight="bold")
+                ax.text(
+                    0.5,
+                    0.85,
+                    "GNN Validator Report",
+                    ha="center",
+                    va="center",
+                    fontsize=14,
+                    weight="bold",
+                )
 
                 # Score display
-                score_color = "green" if validator_score >= 75 else "orange" if validator_score >= 50 else "red"
-                ax.text(0.5, 0.72, f"Validator Score: {validator_score}/100",
-                       ha="center", va="center", fontsize=20, weight="bold", color=score_color)
+                score_color = (
+                    "green"
+                    if validator_score >= 75
+                    else "orange"
+                    if validator_score >= 50
+                    else "red"
+                )
+                ax.text(
+                    0.5,
+                    0.72,
+                    f"Validator Score: {validator_score}/100",
+                    ha="center",
+                    va="center",
+                    fontsize=20,
+                    weight="bold",
+                    color=score_color,
+                )
 
                 # Findings
                 findings_text = "Findings:\n"
@@ -1034,7 +1245,9 @@ class PDFExporter:
                     else:
                         findings_text += f"  • {finding}\n"
 
-                ax.text(0.05, 0.60, findings_text, ha="left", va="top", fontsize=9, family="monospace")
+                ax.text(
+                    0.05, 0.60, findings_text, ha="left", va="top", fontsize=9, family="monospace"
+                )
 
                 ax.set_xlim(0, 1)
                 ax.set_ylim(0, 1)

@@ -38,10 +38,10 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 AI_ROLE_COLORS: dict[str, str] = {
     "HIDDEN_STATE": "#9b59b6",  # purple
-    "OBSERVATION": "#3498db",   # blue
-    "ACTION": "#e67e22",        # orange
-    "POLICY": "#2ecc71",        # green
-    "CONSTRAINT": "#e74c3c",    # red
+    "OBSERVATION": "#3498db",  # blue
+    "ACTION": "#e67e22",  # orange
+    "POLICY": "#2ecc71",  # green
+    "CONSTRAINT": "#e74c3c",  # red
 }
 
 DEFAULT_NODE_COLOR: str = "#95a5a6"
@@ -53,9 +53,7 @@ MIN_NODE_SIZE: int = 20
 MAX_NODE_SIZE: int = 60
 """Maximum cytoscape node diameter (px) -- used for the highest-degree node."""
 
-CYTOSCAPE_CDN: str = (
-    "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"
-)
+CYTOSCAPE_CDN: str = "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"
 """CDN URL for cytoscape.js. Pinned to a specific version for reproducibility."""
 
 

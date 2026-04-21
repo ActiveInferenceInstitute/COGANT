@@ -47,7 +47,6 @@ from cogant.reverse.parser import parse_gnn
 from cogant.reverse.planner import PackagePlan, plan_package
 from cogant.reverse.synthesizer import synthesize_package
 
-
 # ---------------------------------------------------------------------------
 # GNN fixtures
 # ---------------------------------------------------------------------------
@@ -127,13 +126,32 @@ def empty_plan(tmp_path: Path) -> PackagePlan:
 
 
 ACTION_KEYWORDS = {
-    "set", "update", "create", "delete", "send", "push", "execute",
-    "run", "process", "handle", "dispatch", "encode", "decode", "dump",
+    "set",
+    "update",
+    "create",
+    "delete",
+    "send",
+    "push",
+    "execute",
+    "run",
+    "process",
+    "handle",
+    "dispatch",
+    "encode",
+    "decode",
+    "dump",
     "load",
 }
 OBSERVATION_KEYWORDS = {
-    "get", "read", "fetch", "query", "display", "show", "status",
-    "info", "list",
+    "get",
+    "read",
+    "fetch",
+    "query",
+    "display",
+    "show",
+    "status",
+    "info",
+    "list",
 }
 POLICY_FUNCTION_KEYWORDS = {"route", "dispatch", "handle"}
 CONTEXT_KEYWORDS = {"config", "settings", "env", "options", "params"}
@@ -276,9 +294,7 @@ def test_scaffold_names_avoid_keyword_collisions(sample_plan: PackagePlan) -> No
 # ---------------------------------------------------------------------------
 
 
-def test_synthesize_writes_context_module(
-    tmp_path: Path, sample_plan: PackagePlan
-) -> None:
+def test_synthesize_writes_context_module(tmp_path: Path, sample_plan: PackagePlan) -> None:
     """``synthesize_package`` must write ``context.py`` containing valid Settings classes."""
     model_path = tmp_path / "sample.gnn.md"
     model_path.write_text(SAMPLE_GNN, encoding="utf-8")
@@ -291,13 +307,9 @@ def test_synthesize_writes_context_module(
 
     # Module compiles as Python (catches syntax errors in the renderer).
     tree = ast.parse(src)
-    class_names = {
-        node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
-    }
+    class_names = {node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)}
     expected = {s.name for s in sample_plan.scaffold_context_classes}
-    assert expected.issubset(class_names), (
-        f"expected {expected}, got {class_names}"
-    )
+    assert expected.issubset(class_names), f"expected {expected}, got {class_names}"
 
 
 # ---------------------------------------------------------------------------
@@ -328,12 +340,8 @@ def test_synthesize_writes_valid_constraints_and_policy(
     expected_checks = {s.name for s in sample_plan.scaffold_constraint_checks}
     expected_routes = {s.name for s in sample_plan.scaffold_policy_functions}
 
-    assert expected_checks.issubset(c_fns), (
-        f"missing scaffold checks: {expected_checks - c_fns}"
-    )
-    assert expected_routes.issubset(p_fns), (
-        f"missing scaffold routes: {expected_routes - p_fns}"
-    )
+    assert expected_checks.issubset(c_fns), f"missing scaffold checks: {expected_checks - c_fns}"
+    assert expected_routes.issubset(p_fns), f"missing scaffold routes: {expected_routes - p_fns}"
 
     # Every scaffold check has the ``check_`` prefix so PreferenceRule
     # fires; every scaffold route has the ``route_`` prefix so

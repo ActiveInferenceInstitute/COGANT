@@ -10,25 +10,25 @@ from .base import EvidenceRef as EvidenceRef
 from .base import StableID as StableID
 
 class SemanticRole(StrEnum):
-    HIDDEN_STATE = 'hidden_state'
-    OBSERVATION = 'observation'
-    ACTION = 'action'
-    POLICY = 'policy'
-    PREFERENCE = 'preference'
-    UTILITY = 'utility'
-    OBJECTIVE = 'objective'
-    CONTEXT = 'context'
-    FACTOR = 'factor'
-    PARAMETER = 'parameter'
-    PRECISION = 'precision'
-    TEMPORAL_INDEX = 'temporal_index'
-    PROCESS_STAGE = 'process_stage'
-    TRANSITION = 'transition'
-    OUTCOME = 'outcome'
-    COMPONENT = 'component'
-    INTERFACE = 'interface'
-    CONFIGURATION = 'configuration'
-    CONSTRAINT = 'constraint'
+    HIDDEN_STATE = "hidden_state"
+    OBSERVATION = "observation"
+    ACTION = "action"
+    POLICY = "policy"
+    PREFERENCE = "preference"
+    UTILITY = "utility"
+    OBJECTIVE = "objective"
+    CONTEXT = "context"
+    FACTOR = "factor"
+    PARAMETER = "parameter"
+    PRECISION = "precision"
+    TEMPORAL_INDEX = "temporal_index"
+    PROCESS_STAGE = "process_stage"
+    TRANSITION = "transition"
+    OUTCOME = "outcome"
+    COMPONENT = "component"
+    INTERFACE = "interface"
+    CONFIGURATION = "configuration"
+    CONSTRAINT = "constraint"
 
 class MappingRule(CogantBaseModel):
     rule_type: str
@@ -51,11 +51,11 @@ class TargetSemanticElement(CogantBaseModel):
     domain_specific_properties: dict[str, Any]
 
 class ReviewStatus(StrEnum):
-    UNREVIEWED = 'unreviewed'
-    REVIEWED = 'reviewed'
-    APPROVED = 'approved'
-    REJECTED = 'rejected'
-    FLAGGED = 'flagged'
+    UNREVIEWED = "unreviewed"
+    REVIEWED = "reviewed"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    FLAGGED = "flagged"
 
 class SemanticMapping(CogantBaseModel):
     mapping_id: StableID

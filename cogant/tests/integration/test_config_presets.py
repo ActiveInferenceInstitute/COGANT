@@ -11,7 +11,7 @@ Tests that each config preset loads without error and runs the pipeline:
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -21,23 +21,23 @@ _PY_ROOT = _REPO_ROOT / "py"
 if str(_PY_ROOT) not in sys.path:
     sys.path.insert(0, str(_PY_ROOT))
 
-from cogant.config.presets import PRESETS, get_preset
 from cogant.api.orchestration import (
-    run_ingest,
-    run_static,
-    run_normalize,
     run_graph,
-    run_translate,
-    run_statespace,
+    run_ingest,
+    run_normalize,
     run_process,
+    run_statespace,
+    run_static,
+    run_translate,
 )
+from cogant.config.presets import PRESETS, get_preset
 
 
 class MockBundle:
     """Mock bundle to track artifacts across pipeline stages."""
 
     def __init__(self):
-        self.artifacts: Dict[str, Any] = {}
+        self.artifacts: dict[str, Any] = {}
 
 
 @pytest.fixture
@@ -99,23 +99,22 @@ class TestConfigPresetsLoading:
 
             # Presets should have pipeline or stages configuration
             has_config = any(
-                key in preset
-                for key in ["stages", "pipeline", "features", "analysis", "config"]
+                key in preset for key in ["stages", "pipeline", "features", "analysis", "config"]
             )
-            assert has_config, (
-                f"Preset '{preset_name}' missing expected configuration keys"
-            )
+            assert has_config, f"Preset '{preset_name}' missing expected configuration keys"
 
 
 class TestPresetsWithPipeline:
     """Test that presets work with the pipeline."""
 
-    @pytest.mark.parametrize("preset_name", ["minimal", "standard", "comprehensive", "gnn-focused", "security"])
+    @pytest.mark.parametrize(
+        "preset_name", ["minimal", "standard", "comprehensive", "gnn-focused", "security"]
+    )
     def test_preset_with_flask_mini(self, preset_name: str, temp_output_dir: Path):
         """Test preset with flask_mini control-positive repo."""
         repo_path = _REPO_ROOT / "examples" / "control_positive" / "flask_mini"
         if not repo_path.exists():
-            pytest.skip(f"flask_mini repo not found")
+            pytest.skip("flask_mini repo not found")
 
         preset = get_preset(preset_name)
         assert preset is not None
@@ -150,12 +149,14 @@ class TestPresetsWithPipeline:
         except Exception as e:
             pytest.fail(f"Preset '{preset_name}' failed during pipeline execution: {e}")
 
-    @pytest.mark.parametrize("preset_name", ["minimal", "standard", "comprehensive", "gnn-focused", "security"])
+    @pytest.mark.parametrize(
+        "preset_name", ["minimal", "standard", "comprehensive", "gnn-focused", "security"]
+    )
     def test_preset_with_calculator(self, preset_name: str, temp_output_dir: Path):
         """Test preset with calculator control-positive repo."""
         repo_path = _REPO_ROOT / "examples" / "control_positive" / "calculator"
         if not repo_path.exists():
-            pytest.skip(f"calculator repo not found")
+            pytest.skip("calculator repo not found")
 
         preset = get_preset(preset_name)
         assert preset is not None
@@ -190,12 +191,14 @@ class TestPresetsWithPipeline:
         except Exception as e:
             pytest.fail(f"Preset '{preset_name}' failed during pipeline execution: {e}")
 
-    @pytest.mark.parametrize("preset_name", ["minimal", "standard", "comprehensive", "gnn-focused", "security"])
+    @pytest.mark.parametrize(
+        "preset_name", ["minimal", "standard", "comprehensive", "gnn-focused", "security"]
+    )
     def test_preset_with_event_pipeline(self, preset_name: str, temp_output_dir: Path):
         """Test preset with event_pipeline control-positive repo."""
         repo_path = _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"
         if not repo_path.exists():
-            pytest.skip(f"event_pipeline repo not found")
+            pytest.skip("event_pipeline repo not found")
 
         preset = get_preset(preset_name)
         assert preset is not None
@@ -292,7 +295,7 @@ class TestGNNFocusedPreset:
         preset = get_preset("gnn-focused")
         assert preset is not None
         # Should contain something related to GNN
-        preset_str = str(preset).lower()
+        str(preset).lower()
         # Check that it has some meaningful configuration
         assert len(preset) > 0
 
@@ -311,7 +314,7 @@ class TestSecurityPreset:
         preset = get_preset("security")
         assert preset is not None
         # Should contain something related to security
-        preset_str = str(preset).lower()
+        str(preset).lower()
         # Check that it has some meaningful configuration
         assert len(preset) > 0
 
@@ -322,9 +325,7 @@ class TestPresetConsistency:
     def test_all_presets_are_dicts(self):
         """Test that all presets are dictionaries."""
         for preset_name, preset in PRESETS.items():
-            assert isinstance(preset, dict), (
-                f"Preset '{preset_name}' is not a dict: {type(preset)}"
-            )
+            assert isinstance(preset, dict), f"Preset '{preset_name}' is not a dict: {type(preset)}"
 
     def test_all_presets_non_empty(self):
         """Test that all presets have content."""
@@ -344,7 +345,9 @@ class TestPresetConsistency:
 class TestPresetIntegration:
     """Integration tests for all presets."""
 
-    @pytest.mark.parametrize("preset_name", ["minimal", "standard", "comprehensive", "gnn-focused", "security"])
+    @pytest.mark.parametrize(
+        "preset_name", ["minimal", "standard", "comprehensive", "gnn-focused", "security"]
+    )
     def test_preset_can_be_loaded_and_used(self, preset_name: str):
         """Test that preset can be loaded and used in configuration."""
         preset = get_preset(preset_name)
@@ -355,7 +358,9 @@ class TestPresetIntegration:
         # (i.e., should contain configuration keys and values)
         assert len(preset) > 0
 
-    @pytest.mark.parametrize("preset_name", ["minimal", "standard", "comprehensive", "gnn-focused", "security"])
+    @pytest.mark.parametrize(
+        "preset_name", ["minimal", "standard", "comprehensive", "gnn-focused", "security"]
+    )
     def test_preset_immutability(self, preset_name: str):
         """Test that presets are consistent across calls."""
         preset1 = get_preset(preset_name)

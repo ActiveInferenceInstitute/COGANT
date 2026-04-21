@@ -28,5 +28,14 @@ class RepoIngester:
     work_dir: Any
     manifest_parser: Any
     def __init__(self, work_dir: Path | None = None) -> None: ...
-    def ingest_local(self, repo_path: Path, include_test_files: bool = True, compute_checksums: bool = False) -> RepoSnapshot: ...
-    def ingest_git_remote(self, url: str, branch: str | None = None, include_test_files: bool = True, compute_checksums: bool = False, cleanup: bool = True) -> RepoSnapshot: ...
+    def ingest_local(
+        self, repo_path: Path, include_test_files: bool = True, compute_checksums: bool = False
+    ) -> RepoSnapshot: ...
+    def ingest_git_remote(
+        self,
+        url: str,
+        branch: str | None = None,
+        include_test_files: bool = True,
+        compute_checksums: bool = False,
+        cleanup: bool = True,
+    ) -> RepoSnapshot: ...

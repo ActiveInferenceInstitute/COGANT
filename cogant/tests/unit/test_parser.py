@@ -86,16 +86,12 @@ CONSTANT: int = 42
 class TestParseString:
     """Tests for ``PythonASTParser.parse_string``."""
 
-    def test_returns_python_module(
-        self, parser: PythonASTParser, simple_source: str
-    ) -> None:
+    def test_returns_python_module(self, parser: PythonASTParser, simple_source: str) -> None:
         module = parser.parse_string(simple_source)
         assert isinstance(module, PythonModule)
         assert module.errors == []
 
-    def test_extracts_module_docstring(
-        self, parser: PythonASTParser, simple_source: str
-    ) -> None:
+    def test_extracts_module_docstring(self, parser: PythonASTParser, simple_source: str) -> None:
         module = parser.parse_string(simple_source)
         assert module.docstring == "A test module."
 
@@ -130,9 +126,7 @@ class TestParseString:
         assert "__init__" in method_names
         assert "greet" in method_names
 
-    def test_extracts_imports(
-        self, parser: PythonASTParser, simple_source: str
-    ) -> None:
+    def test_extracts_imports(self, parser: PythonASTParser, simple_source: str) -> None:
         module = parser.parse_string(simple_source)
         assert len(module.imports) >= 2
         for imp in module.imports:
@@ -159,15 +153,9 @@ class TestParseString:
 class TestParseFile:
     """Tests for ``PythonASTParser.parse_file``."""
 
-    def test_parse_real_file_on_disk(
-        self, parser: PythonASTParser, tmp_path: Path
-    ) -> None:
+    def test_parse_real_file_on_disk(self, parser: PythonASTParser, tmp_path: Path) -> None:
         path = tmp_path / "sample.py"
-        path.write_text(
-            '"""On-disk module."""\n'
-            "def hello() -> str:\n"
-            '    return "hi"\n'
-        )
+        path.write_text('"""On-disk module."""\ndef hello() -> str:\n    return "hi"\n')
         module = parser.parse_file(path)
         assert module.file_path == path
         assert module.docstring == "On-disk module."
@@ -198,17 +186,13 @@ class TestParseFile:
 class TestParserEdgeCases:
     """Tests for empty / trivial / nested sources."""
 
-    def test_empty_source_produces_empty_module(
-        self, parser: PythonASTParser
-    ) -> None:
+    def test_empty_source_produces_empty_module(self, parser: PythonASTParser) -> None:
         module = parser.parse_string("")
         assert module.functions == []
         assert module.classes == []
         assert module.imports == []
 
-    def test_nested_class_extracted_as_method(
-        self, parser: PythonASTParser
-    ) -> None:
+    def test_nested_class_extracted_as_method(self, parser: PythonASTParser) -> None:
         source = (
             "class Outer:\n"
             "    class Inner:\n"
@@ -235,28 +219,14 @@ class TestPythonLanguageParserExtractCalls:
 
     def test_simple_function_call_from_source(self) -> None:
         plp = PythonLanguageParser()
-        source = (
-            "def foo():\n"
-            "    bar()\n"
-            "\n"
-            "def bar():\n"
-            "    pass\n"
-        )
+        source = "def foo():\n    bar()\n\ndef bar():\n    pass\n"
         calls = plp.extract_calls(source, file_path=Path("t.py"))
         assert calls, "Expected at least one call edge"
-        assert any(
-            c["caller"] == "foo" and c["callee"] == "bar" for c in calls
-        )
+        assert any(c["caller"] == "foo" and c["callee"] == "bar" for c in calls)
 
     def test_method_call_extracted_with_receiver(self) -> None:
         plp = PythonLanguageParser()
-        source = (
-            "class C:\n"
-            "    def a(self):\n"
-            "        self.b()\n"
-            "    def b(self):\n"
-            "        pass\n"
-        )
+        source = "class C:\n    def a(self):\n        self.b()\n    def b(self):\n        pass\n"
         calls = plp.extract_calls(source, file_path=Path("t.py"))
         method_calls = [c for c in calls if c["is_method"]]
         assert method_calls, "Expected a method call"
@@ -265,20 +235,14 @@ class TestPythonLanguageParserExtractCalls:
 
     def test_call_includes_line_number(self) -> None:
         plp = PythonLanguageParser()
-        source = (
-            "def f():\n"
-            "    print('hi')\n"
-        )
+        source = "def f():\n    print('hi')\n"
         calls = plp.extract_calls(source, file_path=Path("t.py"))
         assert calls
         assert all(isinstance(c["line"], int) and c["line"] > 0 for c in calls)
 
     def test_call_arguments_serialized(self) -> None:
         plp = PythonLanguageParser()
-        source = (
-            "def f(x):\n"
-            "    print(x, 42)\n"
-        )
+        source = "def f(x):\n    print(x, 42)\n"
         calls = plp.extract_calls(source, file_path=Path("t.py"))
         print_call = next((c for c in calls if c["callee"] == "print"), None)
         assert print_call is not None
@@ -287,12 +251,7 @@ class TestPythonLanguageParserExtractCalls:
 
     def test_multiple_calls_in_one_function(self) -> None:
         plp = PythonLanguageParser()
-        source = (
-            "def f():\n"
-            "    a()\n"
-            "    b()\n"
-            "    c()\n"
-        )
+        source = "def f():\n    a()\n    b()\n    c()\n"
         calls = plp.extract_calls(source, file_path=Path("t.py"))
         callees = {c["callee"] for c in calls}
         assert {"a", "b", "c"}.issubset(callees)
@@ -300,10 +259,7 @@ class TestPythonLanguageParserExtractCalls:
     def test_extract_calls_from_real_file(self, tmp_path: Path) -> None:
         plp = PythonLanguageParser()
         f = tmp_path / "m.py"
-        f.write_text(
-            "def f():\n"
-            "    print('hi')\n"
-        )
+        f.write_text("def f():\n    print('hi')\n")
         calls = plp.extract_calls(f)
         assert calls
         assert any(c["callee"] == "print" for c in calls)

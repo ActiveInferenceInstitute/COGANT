@@ -11,10 +11,10 @@ import pytest
 
 from cogant.pipeline.dag import DAGResult, PipelineDAG, Stage, StageStatus
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _identity_stage(name: str, deps: list[str] | None = None) -> Stage:
     """Stage that does nothing and returns an empty dict."""
@@ -28,14 +28,17 @@ def _stage_that_sets(name: str, key: str, value: object, deps: list[str] | None 
 
 def _failing_stage(name: str, deps: list[str] | None = None) -> Stage:
     """Stage that always raises RuntimeError."""
+
     def _boom(ctx: dict) -> dict:
         raise RuntimeError("stage exploded")
+
     return Stage(name=name, fn=_boom, deps=deps or [])
 
 
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestPipelineDAG:
     """Test suite for PipelineDAG."""
@@ -58,6 +61,7 @@ class TestPipelineDAG:
             def _fn(ctx: dict) -> dict:
                 execution_order.append(name)
                 return {}
+
             return _fn
 
         dag = PipelineDAG()
@@ -68,10 +72,7 @@ class TestPipelineDAG:
         result = dag.run({})
 
         assert execution_order == ["A", "B", "C"]
-        assert all(
-            result.stage_results[s].status == StageStatus.SUCCESS
-            for s in ("A", "B", "C")
-        )
+        assert all(result.stage_results[s].status == StageStatus.SUCCESS for s in ("A", "B", "C"))
 
     def test_dag_parallel_stages(self) -> None:
         """A and B with no deps both run (order is deterministic via sort)."""
@@ -82,20 +83,19 @@ class TestPipelineDAG:
         result = dag.run({})
 
         assert set(result.stage_results.keys()) == {"A", "B"}
-        assert all(
-            sr.status == StageStatus.SUCCESS
-            for sr in result.stage_results.values()
-        )
+        assert all(sr.status == StageStatus.SUCCESS for sr in result.stage_results.values())
 
     def test_dag_dependency_propagation(self) -> None:
         """Context produced by A is visible to B."""
         dag = PipelineDAG()
         dag.add_stage(_stage_that_sets("A", "x", 42))
-        dag.add_stage(Stage(
-            name="B",
-            fn=lambda ctx: {"y": ctx["x"] + 1},
-            deps=["A"],
-        ))
+        dag.add_stage(
+            Stage(
+                name="B",
+                fn=lambda ctx: {"y": ctx["x"] + 1},
+                deps=["A"],
+            )
+        )
 
         result = dag.run({})
 
@@ -168,11 +168,13 @@ class TestPipelineDAG:
         dag.add_stage(_stage_that_sets("A", "a", 1))
         dag.add_stage(_stage_that_sets("B", "b", 2, deps=["A"]))
         dag.add_stage(_stage_that_sets("C", "c", 3, deps=["A"]))
-        dag.add_stage(Stage(
-            name="D",
-            fn=lambda ctx: {"d": ctx["a"] + ctx["b"] + ctx["c"]},
-            deps=["B", "C"],
-        ))
+        dag.add_stage(
+            Stage(
+                name="D",
+                fn=lambda ctx: {"d": ctx["a"] + ctx["b"] + ctx["c"]},
+                deps=["B", "C"],
+            )
+        )
 
         result = dag.run({})
 

@@ -4,7 +4,6 @@ Tests drift analysis between two slightly different program graphs,
 verifying structural, semantic, and state-space drift computation.
 """
 
-import pytest
 from cogant.scoring.drift import DriftAnalyzer, DriftScore
 from cogant.scoring.metrics import CodebaseMetrics
 
@@ -15,11 +14,10 @@ class TestDriftAnalyzer:
     def create_minimal_bundle(self, num_nodes=3, num_edges=2, num_states=2):
         """Create a minimal bundle with graph and state space."""
         nodes = [
-            {"id": f"node_{i}", "kind": "function", "attributes": {}}
-            for i in range(num_nodes)
+            {"id": f"node_{i}", "kind": "function", "attributes": {}} for i in range(num_nodes)
         ]
         edges = [
-            {"source": f"node_{i}", "target": f"node_{i+1}", "kind": "CALLS"}
+            {"source": f"node_{i}", "target": f"node_{i + 1}", "kind": "CALLS"}
             for i in range(min(num_edges, num_nodes - 1))
         ]
         states = [
@@ -122,9 +120,7 @@ class TestDriftAnalyzer:
     def test_semantic_drift_mapping_added(self):
         """Adding semantic mappings should increase semantic churn."""
         bundle_a = self.create_minimal_bundle(num_nodes=2)
-        bundle_a["mappings"] = {
-            "node_0": {"kind": "function", "semantic_label": "func_0"}
-        }
+        bundle_a["mappings"] = {"node_0": {"kind": "function", "semantic_label": "func_0"}}
 
         bundle_b = self.create_minimal_bundle(num_nodes=2)
         bundle_b["mappings"] = {
@@ -256,10 +252,18 @@ class TestDriftAnalyzer:
                     {"var_id": "session", "name": "session_token", "kind": "scalar"},
                 ],
                 "observations": [
-                    {"modality_id": "obs_user", "modality": "sensor", "observes_state_vars": ["user"]},
+                    {
+                        "modality_id": "obs_user",
+                        "modality": "sensor",
+                        "observes_state_vars": ["user"],
+                    },
                 ],
                 "actions": [
-                    {"action_id": "login", "action_type": "control", "affects_state_vars": ["user"]},
+                    {
+                        "action_id": "login",
+                        "action_type": "control",
+                        "affects_state_vars": ["user"],
+                    },
                 ],
                 "policies": [],
             },
@@ -292,12 +296,28 @@ class TestDriftAnalyzer:
                     {"var_id": "cache_state", "name": "cache_status", "kind": "scalar"},
                 ],
                 "observations": [
-                    {"modality_id": "obs_user", "modality": "sensor", "observes_state_vars": ["user"]},
-                    {"modality_id": "obs_cache", "modality": "sensor", "observes_state_vars": ["cache_state"]},
+                    {
+                        "modality_id": "obs_user",
+                        "modality": "sensor",
+                        "observes_state_vars": ["user"],
+                    },
+                    {
+                        "modality_id": "obs_cache",
+                        "modality": "sensor",
+                        "observes_state_vars": ["cache_state"],
+                    },
                 ],
                 "actions": [
-                    {"action_id": "login", "action_type": "control", "affects_state_vars": ["user"]},
-                    {"action_id": "invalidate_cache", "action_type": "control", "affects_state_vars": ["cache_state"]},
+                    {
+                        "action_id": "login",
+                        "action_type": "control",
+                        "affects_state_vars": ["user"],
+                    },
+                    {
+                        "action_id": "invalidate_cache",
+                        "action_type": "control",
+                        "affects_state_vars": ["cache_state"],
+                    },
                 ],
                 "policies": [],
             },
@@ -386,13 +406,15 @@ class TestMetricsIntegration:
     def create_test_bundle(self):
         """Create a test bundle for metrics testing."""
         nodes = [
-            {"id": f"func_{i}", "kind": "function", "parent_id": f"module_0", "attributes": {}}
+            {"id": f"func_{i}", "kind": "function", "parent_id": "module_0", "attributes": {}}
             for i in range(5)
         ]
-        nodes.extend([
-            {"id": f"class_{i}", "kind": "class", "parent_id": f"module_1", "attributes": {}}
-            for i in range(3)
-        ])
+        nodes.extend(
+            [
+                {"id": f"class_{i}", "kind": "class", "parent_id": "module_1", "attributes": {}}
+                for i in range(3)
+            ]
+        )
 
         # Create edges to test coupling and cohesion
         edges = [
@@ -409,8 +431,7 @@ class TestMetricsIntegration:
             "graph": {"nodes": nodes, "edges": edges},
             "state_space": {
                 "states": [
-                    {"var_id": f"state_{i}", "name": f"var_{i}", "kind": "scalar"}
-                    for i in range(3)
+                    {"var_id": f"state_{i}", "name": f"var_{i}", "kind": "scalar"} for i in range(3)
                 ],
                 "observations": [
                     {
@@ -430,9 +451,7 @@ class TestMetricsIntegration:
                 ],
                 "policies": [],
             },
-            "mappings": {
-                f"func_{i}": {"kind": "function"} for i in range(5)
-            },
+            "mappings": {f"func_{i}": {"kind": "function"} for i in range(5)},
         }
 
     def test_complexity_score_range(self):

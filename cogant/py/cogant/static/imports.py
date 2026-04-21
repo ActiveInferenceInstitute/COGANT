@@ -77,9 +77,7 @@ class ImportAnalyzer:
         module = self.parser.parse_file(file_path)
         return self._build_import_edges(file_path, module.imports)
 
-    def analyze_source(
-        self, source: str, file_path: Path
-    ) -> list[ImportEdge]:
+    def analyze_source(self, source: str, file_path: Path) -> list[ImportEdge]:
         """Analyze imports in Python source code.
 
         Args:
@@ -92,9 +90,7 @@ class ImportAnalyzer:
         module = self.parser.parse_string(source, file_path)
         return self._build_import_edges(file_path, module.imports)
 
-    def _build_import_edges(
-        self, file_path: Path, import_defs: Any
-    ) -> list[ImportEdge]:
+    def _build_import_edges(self, file_path: Path, import_defs: Any) -> list[ImportEdge]:
         """Build import edges from import definitions.
 
         Args:
@@ -114,9 +110,7 @@ class ImportAnalyzer:
 
             # Try to resolve local import
             resolved_file = None
-            if imp.is_relative or (
-                not is_stdlib and not is_third_party
-            ):
+            if imp.is_relative or (not is_stdlib and not is_third_party):
                 resolved_file = self._resolve_local_import(
                     file_path, imp.module_name, imp.is_relative
                 )

@@ -59,7 +59,12 @@ class StateSpacePlugin(Plugin, metaclass=abc.ABCMeta):
     @abstractmethod
     def extract_actions(self, gnn_model: dict[str, Any]) -> list[dict[str, Any]]: ...
     @abstractmethod
-    def learn_policies(self, states: list[dict[str, Any]], observations: list[dict[str, Any]], actions: list[dict[str, Any]]) -> list[dict[str, Any]]: ...
+    def learn_policies(
+        self,
+        states: list[dict[str, Any]],
+        observations: list[dict[str, Any]],
+        actions: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]: ...
 
 class ProcessModelPlugin(Plugin, metaclass=abc.ABCMeta):
     @abstractmethod
@@ -67,7 +72,9 @@ class ProcessModelPlugin(Plugin, metaclass=abc.ABCMeta):
     @abstractmethod
     def extract_dependencies(self, stages: list[dict[str, Any]]) -> list[dict[str, Any]]: ...
     @abstractmethod
-    def compute_ordering(self, stages: list[dict[str, Any]], dependencies: list[dict[str, Any]]) -> list[str]: ...
+    def compute_ordering(
+        self, stages: list[dict[str, Any]], dependencies: list[dict[str, Any]]
+    ) -> list[str]: ...
 
 class ExportPlugin(Plugin, metaclass=abc.ABCMeta):
     supported_formats: set[str]

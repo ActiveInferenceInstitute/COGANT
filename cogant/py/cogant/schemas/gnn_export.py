@@ -49,12 +49,8 @@ class GNNMetadata(CogantBaseModel):
         default_factory=lambda: datetime.now(UTC),
         description="When export was created",
     )
-    export_version: str = Field(
-        default="1.0.0", description="GNN export format version"
-    )
-    source_graph_version: str = Field(
-        default="1.0.0", description="Program graph schema version"
-    )
+    export_version: str = Field(default="1.0.0", description="GNN export format version")
+    source_graph_version: str = Field(default="1.0.0", description="Program graph schema version")
     gnn_framework: str | None = Field(
         default=None,
         description="Target GNN framework (e.g., 'pytorch_geometric', 'dgl', 'spektral')",
@@ -65,12 +61,8 @@ class RepositoryMetadata(CogantBaseModel):
     """Metadata about the analyzed repository."""
 
     repository_name: str = Field(..., description="Name of repository")
-    repository_url: str | None = Field(
-        default=None, description="URL of repository"
-    )
-    commit_hash: str | None = Field(
-        default=None, description="Commit hash analyzed"
-    )
+    repository_url: str | None = Field(default=None, description="URL of repository")
+    commit_hash: str | None = Field(default=None, description="Commit hash analyzed")
     primary_language: str = Field(..., description="Primary programming language")
     supported_languages: list[str] = Field(
         default_factory=list, description="All languages in repository"
@@ -86,12 +78,8 @@ class SourceCoverage(CogantBaseModel):
 
     total_files: int = Field(default=0, description="Total files analyzed")
     total_lines: int = Field(default=0, description="Total lines of code")
-    analyzed_files: int = Field(
-        default=0, description="Files included in analysis"
-    )
-    analyzed_lines: int = Field(
-        default=0, description="Lines included in analysis"
-    )
+    analyzed_files: int = Field(default=0, description="Files included in analysis")
+    analyzed_lines: int = Field(default=0, description="Lines included in analysis")
     coverage_percentage: float = Field(
         default=0.0, ge=0.0, le=100.0, description="Coverage percentage"
     )
@@ -151,16 +139,12 @@ class ActionPolicySection(CogantBaseModel):
 
     action_id: str = Field(..., description="Action identifier")
     action_name: str = Field(..., description="Human-readable name")
-    action_space_size: int | None = Field(
-        default=None, description="Dimension of action space"
-    )
+    action_space_size: int | None = Field(default=None, description="Dimension of action space")
     action_space_type: str = Field(
         default="discrete",
         description="Type of action space",
     )
-    action_cost: float | None = Field(
-        default=None, description="Cost of action execution"
-    )
+    action_cost: float | None = Field(default=None, description="Cost of action execution")
 
 
 class ConnectionSection(CogantBaseModel):
@@ -184,12 +168,8 @@ class FactorSection(CogantBaseModel):
         ...,
         description="Type of factor (e.g., 'unary', 'pairwise', 'higher_order')",
     )
-    variables: list[str] = Field(
-        ..., description="Variable IDs in factor"
-    )
-    cardinalities: list[int] = Field(
-        ..., description="Cardinality of each variable"
-    )
+    variables: list[str] = Field(..., description="Variable IDs in factor")
+    cardinalities: list[int] = Field(..., description="Cardinality of each variable")
     potentials: list[float] | None = Field(
         default=None,
         description="Factor potential values",
@@ -231,9 +211,7 @@ class PreferenceConstraintSection(CogantBaseModel):
         ...,
         description="Type (e.g., 'reward', 'safety', 'liveness')",
     )
-    expression: str = Field(
-        ..., description="Constraint expression"
-    )
+    expression: str = Field(..., description="Constraint expression")
     variables: list[str] = Field(
         default_factory=list,
         description="Variables involved",
@@ -247,19 +225,13 @@ class PreferenceConstraintSection(CogantBaseModel):
 class TimeSettingSection(CogantBaseModel):
     """Time model and temporal structure."""
 
-    is_continuous_time: bool = Field(
-        default=False, description="Continuous or discrete time"
-    )
+    is_continuous_time: bool = Field(default=False, description="Continuous or discrete time")
     time_unit: str | None = Field(
         default=None,
         description="Unit of time (seconds, steps, etc.)",
     )
-    time_step: float | None = Field(
-        default=None, description="Time step size"
-    )
-    max_episode_length: int | None = Field(
-        default=None, description="Maximum steps per episode"
-    )
+    time_step: float | None = Field(default=None, description="Time step size")
+    max_episode_length: int | None = Field(default=None, description="Maximum steps per episode")
 
 
 class ParameterizationSection(CogantBaseModel):
@@ -280,12 +252,8 @@ class OntologyMappingSection(CogantBaseModel):
 
     mapping_id: str = Field(..., description="Mapping identifier")
     source_element_id: str = Field(..., description="Code element ID")
-    target_semantic_role: str = Field(
-        ..., description="Target semantic role"
-    )
-    confidence_score: float = Field(
-        default=1.0, ge=0.0, le=1.0, description="Confidence [0, 1]"
-    )
+    target_semantic_role: str = Field(..., description="Target semantic role")
+    confidence_score: float = Field(default=1.0, ge=0.0, le=1.0, description="Confidence [0, 1]")
     justification: str | None = Field(default=None)
 
 
@@ -308,12 +276,8 @@ class ProvenanceSection(CogantBaseModel):
 class ConfidenceSection(CogantBaseModel):
     """Confidence metrics and uncertainty quantification."""
 
-    mean_confidence: float = Field(
-        default=0.0, ge=0.0, le=1.0, description="Mean confidence"
-    )
-    min_confidence: float = Field(
-        default=0.0, ge=0.0, le=1.0, description="Minimum confidence"
-    )
+    mean_confidence: float = Field(default=0.0, ge=0.0, le=1.0, description="Mean confidence")
+    min_confidence: float = Field(default=0.0, ge=0.0, le=1.0, description="Minimum confidence")
     confidence_distribution: dict[str, int] = Field(
         default_factory=dict,
         description="Histogram of confidence scores",
@@ -331,19 +295,13 @@ class RenderingHints(CogantBaseModel):
         default=None,
         description="Recommended graph layout (force-directed, hierarchical, etc.)",
     )
-    node_color_scheme: str | None = Field(
-        default=None, description="Color scheme by node type"
-    )
-    edge_color_scheme: str | None = Field(
-        default=None, description="Color scheme by edge type"
-    )
+    node_color_scheme: str | None = Field(default=None, description="Color scheme by node type")
+    edge_color_scheme: str | None = Field(default=None, description="Color scheme by edge type")
     node_size_metric: str | None = Field(
         default=None,
         description="Metric for sizing nodes (degree, betweenness, etc.)",
     )
-    edge_width_metric: str | None = Field(
-        default=None, description="Metric for edge widths"
-    )
+    edge_width_metric: str | None = Field(default=None, description="Metric for edge widths")
 
 
 class ValidationNotes(CogantBaseModel):
@@ -354,12 +312,8 @@ class ValidationNotes(CogantBaseModel):
         default_factory=lambda: datetime.now(UTC),
         description="When validation was performed",
     )
-    issues: list[str] = Field(
-        default_factory=list, description="Any issues found"
-    )
-    warnings: list[str] = Field(
-        default_factory=list, description="Non-fatal warnings"
-    )
+    issues: list[str] = Field(default_factory=list, description="Any issues found")
+    warnings: list[str] = Field(default_factory=list, description="Non-fatal warnings")
     recommendations: list[str] = Field(
         default_factory=list,
         description="Recommendations for improvement",
@@ -377,9 +331,7 @@ class GNNExportBundle(CogantBaseModel):
 
     # Metadata
     metadata: GNNMetadata = Field(..., description="Export metadata")
-    repository_metadata: RepositoryMetadata = Field(
-        ..., description="Repository information"
-    )
+    repository_metadata: RepositoryMetadata = Field(..., description="Repository information")
     source_coverage: SourceCoverage = Field(
         default_factory=SourceCoverage,
         description="Source code coverage metrics",

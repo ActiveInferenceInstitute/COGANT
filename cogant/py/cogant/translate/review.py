@@ -120,7 +120,9 @@ class ReviewManager:
         mapping.reviewed_by = reviewer
         mapping.reviewed_at = datetime.now(UTC)
 
-        self._log_review("edit", mapping_id, reviewer, {"old_values": old_values, "new_values": updates})
+        self._log_review(
+            "edit", mapping_id, reviewer, {"old_values": old_values, "new_values": updates}
+        )
         return True
 
     def split_mapping(
@@ -289,13 +291,15 @@ class ReviewManager:
             reviewer: Name of reviewer.
             detail: Action details.
         """
-        self.review_history.append({
-            "timestamp": datetime.now(UTC),
-            "action": action,
-            "mapping_id": mapping_id,
-            "reviewer": reviewer,
-            "detail": detail,
-        })
+        self.review_history.append(
+            {
+                "timestamp": datetime.now(UTC),
+                "action": action,
+                "mapping_id": mapping_id,
+                "reviewer": reviewer,
+                "detail": detail,
+            }
+        )
 
     def get_review_history(self) -> list[dict[str, Any]]:
         """Get the complete review history.
@@ -311,7 +315,4 @@ class ReviewManager:
         Returns:
             List of reviewed and approved mappings.
         """
-        return [
-            m for m in self.mappings.values()
-            if m.status in ("accepted", "edited", "merged")
-        ]
+        return [m for m in self.mappings.values() if m.status in ("accepted", "edited", "merged")]

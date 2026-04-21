@@ -36,8 +36,7 @@ def test_upstream_step_scripts_indices_match_filename_prefix() -> None:
         match = pattern.match(script)
         assert match is not None, f"unexpected script name: {script!r}"
         assert int(match.group(1)) == index, (
-            f"script {script!r} at index {index} reports prefix "
-            f"{match.group(1)}; ordering broken"
+            f"script {script!r} at index {index} reports prefix {match.group(1)}; ordering broken"
         )
 
 

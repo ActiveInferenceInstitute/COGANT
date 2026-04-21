@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Stage:
     """A workflow stage."""
+
     id: str
     name: str
     description: str | None = None
@@ -33,6 +34,7 @@ class Stage:
 @dataclass
 class ProcessConnection:
     """Connection between workflow stages."""
+
     id: str
     source_stage_id: str
     target_stage_id: str
@@ -44,6 +46,7 @@ class ProcessConnection:
 @dataclass
 class ProcessModel:
     """Workflow model extracted from call graph."""
+
     id: str
     schema_name: str
     stages: dict[str, Stage]
@@ -385,11 +388,7 @@ class ProcessExtractor:
         for sid in self.stages:
             targets = out_targets.get(sid, set())
             sources = in_sources.get(sid, set())
-            if (
-                len(targets) == 1
-                and len(sources) <= 1
-                and sid not in loop_members
-            ):
+            if len(targets) == 1 and len(sources) <= 1 and sid not in loop_members:
                 target = next(iter(targets))
                 if len(in_sources.get(target, set())) == 1 and target not in loop_members:
                     if self.stages[sid].pattern_type is None:
@@ -540,7 +539,7 @@ class ProcessExtractor:
         }
 
         # Check if the edge kind is in the map
-        if hasattr(edge.kind, 'value'):
+        if hasattr(edge.kind, "value"):
             kind_val = edge.kind.value
             for ek, trigger in trigger_map.items():
                 if ek.value == kind_val:
@@ -562,10 +561,7 @@ class ProcessExtractor:
                 logger.info(f"Changing entry stage from {current_entry} to {stage_id}")
 
     def add_stage_dependency(
-        self,
-        source_stage_id: str,
-        target_stage_id: str,
-        trigger: str | None = None
+        self, source_stage_id: str, target_stage_id: str, trigger: str | None = None
     ) -> None:
         """
         Manually add a dependency between stages.
@@ -576,7 +572,9 @@ class ProcessExtractor:
             trigger: Optional trigger description.
         """
         if source_stage_id not in self.stages or target_stage_id not in self.stages:
-            logger.warning(f"Invalid stage IDs for dependency: {source_stage_id} -> {target_stage_id}")
+            logger.warning(
+                f"Invalid stage IDs for dependency: {source_stage_id} -> {target_stage_id}"
+            )
             return
 
         conn_id = f"conn_{source_stage_id}_{target_stage_id}"

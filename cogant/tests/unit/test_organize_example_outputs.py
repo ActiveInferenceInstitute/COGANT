@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from cogant.tools import organize_example_outputs as oeo
 from cogant.tools.organize_example_outputs import (
+    _rewrite_index_html,
     migrate_output_tree,
     organize_run_dir,
 )
-from cogant.tools.organize_example_outputs import _rewrite_index_html
-from cogant.tools import organize_example_outputs as oeo
 
 
 def test_organize_run_dir_moves_known_files(tmp_path: Path) -> None:

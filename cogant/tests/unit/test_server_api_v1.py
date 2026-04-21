@@ -1,9 +1,12 @@
 """Unit tests for server /api/v1/ routes — rules, analyze, roundtrip, visualize, metrics."""
+
 from __future__ import annotations
+
 import pytest
 
 fastapi = pytest.importorskip("fastapi")
 from fastapi.testclient import TestClient  # noqa: E402
+
 from cogant.server.app import create_app  # noqa: E402
 
 
@@ -17,9 +20,7 @@ def client() -> TestClient:
 def tiny_repo(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
-    (repo / "main.py").write_text(
-        "x: int = 0\n\ndef increment(n: int) -> int:\n    return n + 1\n"
-    )
+    (repo / "main.py").write_text("x: int = 0\n\ndef increment(n: int) -> int:\n    return n + 1\n")
     return repo
 
 

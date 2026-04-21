@@ -23,6 +23,7 @@ import textwrap
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 pytestmark = pytest.mark.unit
 
@@ -37,67 +38,82 @@ class TestCogantInit:
 
     def test_version_is_string(self) -> None:
         import cogant
+
         assert isinstance(cogant.__version__, str)
         assert len(cogant.__version__) > 0
 
     def test_rust_available_is_bool(self) -> None:
         import cogant
+
         assert isinstance(cogant._RUST_AVAILABLE, bool)
 
     def test_rust_version_is_none_or_str(self) -> None:
         import cogant
+
         assert cogant.__rust_version__ is None or isinstance(cogant.__rust_version__, str)
 
     def test_session_importable_or_none(self) -> None:
         import cogant
+
         # Session is either a real class or None
         assert cogant.Session is None or callable(cogant.Session)
 
     def test_pipeline_runner_importable_or_none(self) -> None:
         import cogant
+
         assert cogant.PipelineRunner is None or callable(cogant.PipelineRunner)
 
     def test_bundle_importable_or_none(self) -> None:
         import cogant
+
         assert cogant.Bundle is None or callable(cogant.Bundle)
 
     def test_program_graph_builder_importable_or_none(self) -> None:
         import cogant
+
         assert cogant.ProgramGraphBuilder is None or callable(cogant.ProgramGraphBuilder)
 
     def test_translation_engine_importable_or_none(self) -> None:
         import cogant
+
         assert cogant.TranslationEngine is None or callable(cogant.TranslationEngine)
 
     def test_state_space_compiler_importable_or_none(self) -> None:
         import cogant
+
         assert cogant.StateSpaceCompiler is None or callable(cogant.StateSpaceCompiler)
 
     def test_gnn_formatter_importable_or_none(self) -> None:
         import cogant
+
         assert cogant.GNNMarkdownFormatter is None or callable(cogant.GNNMarkdownFormatter)
 
     def test_program_graph_importable_or_none(self) -> None:
         import cogant
+
         assert cogant.ProgramGraph is None or callable(cogant.ProgramGraph)
 
     def test_aliases_match_originals(self) -> None:
         import cogant
+
         assert cogant.CogantSession is cogant.Session
         assert cogant.GNNBundle is cogant.Bundle
 
     def test_run_pipeline_raises_import_error_when_session_none(self) -> None:
         import cogant
+
         if cogant.Session is None:
             with pytest.raises(ImportError, match="cogant.api.session"):
                 cogant.run_pipeline("some/path")
 
     def test_all_contains_version(self) -> None:
         import cogant
+
         assert "__version__" in cogant.__all__
 
     def test_all_contains_rust_flag(self) -> None:
         import cogant
+
         assert "_RUST_AVAILABLE" in cogant.__all__
 
 
@@ -111,35 +127,42 @@ class TestObservabilityLogging:
 
     def test_setup_logging_default(self) -> None:
         from cogant.observability.logging import setup_logging
+
         # Should not raise
         setup_logging()
 
     def test_setup_logging_debug_level(self) -> None:
         from cogant.observability.logging import setup_logging
+
         setup_logging(level="DEBUG")
         assert logging.root.level == logging.DEBUG
 
     def test_setup_logging_warning_level(self) -> None:
         from cogant.observability.logging import setup_logging
+
         setup_logging(level="WARNING")
         assert logging.root.level == logging.WARNING
 
     def test_setup_logging_console_format(self) -> None:
         from cogant.observability.logging import setup_logging
+
         # Should not raise even if structlog not installed
         setup_logging(format="console")
 
     def test_setup_logging_json_format(self) -> None:
         from cogant.observability.logging import setup_logging
+
         setup_logging(format="json")
 
     def test_get_logger_returns_logger(self) -> None:
         from cogant.observability.logging import get_logger
+
         logger = get_logger("test.module")
         assert logger is not None
 
     def test_get_logger_different_names_different_loggers(self) -> None:
         from cogant.observability.logging import get_logger
+
         a = get_logger("module.a")
         b = get_logger("module.b")
         # They should be different loggers
@@ -147,6 +170,7 @@ class TestObservabilityLogging:
 
     def test_structlog_flag(self) -> None:
         from cogant.observability import logging as obs_logging
+
         assert isinstance(obs_logging._STRUCTLOG_AVAILABLE, bool)
 
 
@@ -160,10 +184,12 @@ class TestCanonicalNormalizer:
 
     def _make_normalizer(self):
         from cogant.normalize.canonical import CanonicalNormalizer
+
         return CanonicalNormalizer()
 
     def _make_fact(self, lang: str, fact_type: str, **data):
         from cogant.normalize.canonical import LanguageFact
+
         return LanguageFact(fact_type=fact_type, language=lang, data=data)
 
     def test_normalize_python_class(self) -> None:
@@ -383,6 +409,7 @@ class TestFileEnumerator:
 
     def test_enumerate_finds_python_files(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "main.py").write_text("x = 1")
         (tmp_path / "utils.py").write_text("def f(): pass")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
@@ -393,6 +420,7 @@ class TestFileEnumerator:
 
     def test_enumerate_excludes_non_source_files(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "README.md").write_text("docs")
         (tmp_path / "app.py").write_text("pass")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
@@ -403,6 +431,7 @@ class TestFileEnumerator:
 
     def test_enumerate_detects_language(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "app.ts").write_text("const x = 1;")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         files = enumerator.enumerate()
@@ -412,6 +441,7 @@ class TestFileEnumerator:
 
     def test_enumerate_marks_test_files(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "test_app.py").write_text("def test_x(): pass")
         (tmp_path / "app.py").write_text("def main(): pass")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
@@ -422,6 +452,7 @@ class TestFileEnumerator:
 
     def test_enumerate_excludes_test_files_when_requested(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "test_app.py").write_text("def test_x(): pass")
         (tmp_path / "app.py").write_text("def main(): pass")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
@@ -432,6 +463,7 @@ class TestFileEnumerator:
 
     def test_enumerate_computes_checksums(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "main.py").write_text("x = 1")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         files = enumerator.enumerate(compute_checksums=True)
@@ -441,6 +473,7 @@ class TestFileEnumerator:
 
     def test_enumerate_provides_file_size(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         content = "x = 1\n"
         (tmp_path / "main.py").write_text(content)
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
@@ -450,6 +483,7 @@ class TestFileEnumerator:
 
     def test_enumerate_provides_relative_path(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         sub = tmp_path / "src"
         sub.mkdir()
         (sub / "main.py").write_text("pass")
@@ -460,6 +494,7 @@ class TestFileEnumerator:
 
     def test_should_ignore_pycache(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         pycache = tmp_path / "__pycache__"
         pycache.mkdir()
         (pycache / "main.cpython-311.pyc").write_bytes(b"\x00" * 10)
@@ -471,6 +506,7 @@ class TestFileEnumerator:
 
     def test_should_ignore_node_modules(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         nm = tmp_path / "node_modules"
         nm.mkdir()
         (nm / "lodash.js").write_text("module.exports = {};")
@@ -482,6 +518,7 @@ class TestFileEnumerator:
 
     def test_load_gitignore_reads_patterns(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / ".gitignore").write_text("*.pyc\nbuild/\n# comment\n")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=True)
         patterns = enumerator._load_gitignore()
@@ -491,6 +528,7 @@ class TestFileEnumerator:
 
     def test_load_gitignore_returns_empty_when_missing(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         enumerator = FileEnumerator(tmp_path, respect_gitignore=True)
         patterns = enumerator._load_gitignore()
         assert isinstance(patterns, set)
@@ -498,6 +536,7 @@ class TestFileEnumerator:
 
     def test_load_gitignore_caches_result(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / ".gitignore").write_text("*.tmp\n")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=True)
         p1 = enumerator._load_gitignore()
@@ -506,6 +545,7 @@ class TestFileEnumerator:
 
     def test_gitignore_wildcard_suffix_ignored(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / ".gitignore").write_text("*.min.js\n")
         (tmp_path / "app.min.js").write_text("x=1;")
         (tmp_path / "main.js").write_text("x=1;")
@@ -518,34 +558,40 @@ class TestFileEnumerator:
 
     def test_detect_language_rust(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         lang = enumerator._detect_language(Path("lib.rs"))
         assert lang == "rust"
 
     def test_detect_language_go(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         lang = enumerator._detect_language(Path("main.go"))
         assert lang == "go"
 
     def test_detect_language_unknown(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         lang = enumerator._detect_language(Path("notes.txt"))
         assert lang is None
 
     def test_is_test_file_spec_pattern(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         assert enumerator._is_test_file("src/_spec.py") is True
 
     def test_is_test_file_negative(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         assert enumerator._is_test_file("src/main.py") is False
 
     def test_compute_checksum_consistency(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         f = tmp_path / "data.py"
         f.write_text("content = 42")
@@ -556,6 +602,7 @@ class TestFileEnumerator:
 
     def test_enumerate_multiple_languages(self, tmp_path: Path) -> None:
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "app.py").write_text("pass")
         (tmp_path / "app.ts").write_text("const x = 1;")
         (tmp_path / "main.go").write_text("package main")
@@ -577,6 +624,7 @@ class TestRepoIngester:
 
     def test_ingest_local_basic(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "main.py").write_text("def main(): pass")
         ingester = RepoIngester(work_dir=tmp_path / "work")
         snapshot = ingester.ingest_local(tmp_path)
@@ -585,6 +633,7 @@ class TestRepoIngester:
 
     def test_ingest_local_detects_primary_language(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
+
         for i in range(3):
             (tmp_path / f"mod{i}.py").write_text("pass")
         (tmp_path / "main.go").write_text("package main")
@@ -594,6 +643,7 @@ class TestRepoIngester:
 
     def test_ingest_local_with_checksums(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "main.py").write_text("x = 1")
         ingester = RepoIngester(work_dir=tmp_path / "work")
         snapshot = ingester.ingest_local(tmp_path, compute_checksums=True)
@@ -601,6 +651,7 @@ class TestRepoIngester:
 
     def test_ingest_local_exclude_tests(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "main.py").write_text("def main(): pass")
         (tmp_path / "test_main.py").write_text("def test_x(): pass")
         ingester = RepoIngester(work_dir=tmp_path / "work")
@@ -610,12 +661,14 @@ class TestRepoIngester:
 
     def test_ingest_local_nonexistent_raises_value_error(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
+
         ingester = RepoIngester(work_dir=tmp_path / "work")
         with pytest.raises(ValueError, match="does not exist"):
             ingester.ingest_local(tmp_path / "nonexistent")
 
     def test_ingest_local_file_path_raises_value_error(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
+
         f = tmp_path / "main.py"
         f.write_text("pass")
         ingester = RepoIngester(work_dir=tmp_path / "work")
@@ -624,6 +677,7 @@ class TestRepoIngester:
 
     def test_ingest_local_extracts_git_metadata(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "main.py").write_text("pass")
         ingester = RepoIngester(work_dir=tmp_path / "work")
         snapshot = ingester.ingest_local(tmp_path)
@@ -633,6 +687,7 @@ class TestRepoIngester:
 
     def test_extract_dependencies_with_requirements_txt(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "requirements.txt").write_text("requests>=2.0\nclick\n")
         ingester = RepoIngester(work_dir=tmp_path / "work")
         deps = ingester._extract_dependencies(tmp_path)
@@ -642,12 +697,15 @@ class TestRepoIngester:
 
     def test_extract_dependencies_with_pyproject_toml(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
-        (tmp_path / "pyproject.toml").write_text(textwrap.dedent("""\
+
+        (tmp_path / "pyproject.toml").write_text(
+            textwrap.dedent("""\
             [project]
             name = "myapp"
             version = "1.0.0"
             dependencies = ["fastapi>=0.100", "pydantic>=2.0"]
-        """))
+        """)
+        )
         ingester = RepoIngester(work_dir=tmp_path / "work")
         deps = ingester._extract_dependencies(tmp_path)
         names = {d.name for d in deps}
@@ -656,14 +714,17 @@ class TestRepoIngester:
 
     def test_extract_dependencies_deduplicates(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
+
         # Both files mention 'requests'
         (tmp_path / "requirements.txt").write_text("requests\n")
-        (tmp_path / "pyproject.toml").write_text(textwrap.dedent("""\
+        (tmp_path / "pyproject.toml").write_text(
+            textwrap.dedent("""\
             [project]
             name = "app"
             version = "1.0.0"
             dependencies = ["requests"]
-        """))
+        """)
+        )
         ingester = RepoIngester(work_dir=tmp_path / "work")
         deps = ingester._extract_dependencies(tmp_path)
         request_deps = [d for d in deps if d.name == "requests"]
@@ -671,13 +732,19 @@ class TestRepoIngester:
 
     def test_extract_dependencies_with_package_json(self, tmp_path: Path) -> None:
         import json
+
         from cogant.ingest.repo import RepoIngester
-        (tmp_path / "package.json").write_text(json.dumps({
-            "name": "my-app",
-            "version": "1.0.0",
-            "dependencies": {"lodash": "^4.17.21"},
-            "devDependencies": {"jest": "^29.0.0"},
-        }))
+
+        (tmp_path / "package.json").write_text(
+            json.dumps(
+                {
+                    "name": "my-app",
+                    "version": "1.0.0",
+                    "dependencies": {"lodash": "^4.17.21"},
+                    "devDependencies": {"jest": "^29.0.0"},
+                }
+            )
+        )
         ingester = RepoIngester(work_dir=tmp_path / "work")
         deps = ingester._extract_dependencies(tmp_path)
         names = {d.name for d in deps}
@@ -685,14 +752,17 @@ class TestRepoIngester:
 
     def test_ingest_local_with_cargo_toml(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
-        (tmp_path / "Cargo.toml").write_text(textwrap.dedent("""\
+
+        (tmp_path / "Cargo.toml").write_text(
+            textwrap.dedent("""\
             [package]
             name = "myapp"
             version = "0.1.0"
 
             [dependencies]
             serde = "1.0"
-        """))
+        """)
+        )
         (tmp_path / "main.rs").write_text("fn main() {}")
         ingester = RepoIngester(work_dir=tmp_path / "work")
         snapshot = ingester.ingest_local(tmp_path)
@@ -700,6 +770,7 @@ class TestRepoIngester:
 
     def test_repo_snapshot_dataclass(self, tmp_path: Path) -> None:
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "app.py").write_text("pass")
         ingester = RepoIngester(work_dir=tmp_path / "work")
         snapshot = ingester.ingest_local(tmp_path)
@@ -719,52 +790,64 @@ class TestLanguageDetector:
 
     def test_detect_language_python(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         assert LanguageDetector.detect_language(Path("main.py")) == "python"
 
     def test_detect_language_pyx(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         assert LanguageDetector.detect_language(Path("ext.pyx")) == "python"
 
     def test_detect_language_pyi(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         assert LanguageDetector.detect_language(Path("stubs.pyi")) == "python"
 
     def test_detect_language_typescript(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         assert LanguageDetector.detect_language(Path("app.ts")) == "typescript"
 
     def test_detect_language_tsx(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         assert LanguageDetector.detect_language(Path("comp.tsx")) == "typescript"
 
     def test_detect_language_javascript(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         assert LanguageDetector.detect_language(Path("app.js")) == "javascript"
 
     def test_detect_language_jsx(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         assert LanguageDetector.detect_language(Path("comp.jsx")) == "javascript"
 
     def test_detect_language_rust(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         assert LanguageDetector.detect_language(Path("lib.rs")) == "rust"
 
     def test_detect_language_go(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         assert LanguageDetector.detect_language(Path("main.go")) == "go"
 
     def test_detect_language_unknown(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         assert LanguageDetector.detect_language(Path("README.md")) is None
 
     def test_detect_language_from_string_path(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         # Accepts string paths
         result = LanguageDetector.detect_language("app.py")  # type: ignore[arg-type]
         assert result == "python"
 
     def test_detect_repo_languages(self, tmp_path: Path) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "a.py").write_text("pass")
         (tmp_path / "b.py").write_text("pass")
         (tmp_path / "c.ts").write_text("const x = 1;")
@@ -774,28 +857,33 @@ class TestLanguageDetector:
 
     def test_detect_repo_languages_string_path(self, tmp_path: Path) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "main.py").write_text("pass")
         counts = LanguageDetector.detect_repo_languages(str(tmp_path))  # type: ignore[arg-type]
         assert counts.get("python") == 1
 
     def test_detect_repo_languages_empty_dir(self, tmp_path: Path) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         counts = LanguageDetector.detect_repo_languages(tmp_path)
         assert isinstance(counts, dict)
         assert len(counts) == 0
 
     def test_get_supported_languages_returns_list(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         supported = LanguageDetector.get_supported_languages()
         assert isinstance(supported, list)
 
     def test_get_parser_unknown_language_raises(self) -> None:
         from cogant.ingest.language_detect import LanguageDetector
+
         with pytest.raises((ImportError, Exception)):
             LanguageDetector.get_parser("cobol")
 
     def test_get_parser_for_extension_py(self) -> None:
         from cogant.ingest.language_detect import get_parser_for_extension
+
         # .py extension should either return a parser or None gracefully
         result = get_parser_for_extension(".py")
         # Either a parser object or None (if python parser not installed)
@@ -803,12 +891,14 @@ class TestLanguageDetector:
 
     def test_get_parser_for_extension_without_dot(self) -> None:
         from cogant.ingest.language_detect import get_parser_for_extension
+
         # Without leading dot should still work
         result = get_parser_for_extension("py")
         assert result is None or hasattr(result, "__class__")
 
     def test_get_parser_for_extension_unknown(self) -> None:
         from cogant.ingest.language_detect import get_parser_for_extension
+
         result = get_parser_for_extension(".xyz")
         assert result is None
 
@@ -823,16 +913,19 @@ class TestProgramGraphSchemas:
 
     def _sid(self, s: str):
         from cogant.schemas.base import StableID
+
         return StableID(s)
 
     def _make_location(self):
         from cogant.schemas.base import LocationInfo, Span
+
         span = Span(start_line=1, start_col=0, end_line=5, end_col=10)
         return LocationInfo(path="src/main.py", span=span, language="python")
 
     def _make_node(self, node_id: str = "n1", label: str = "MyClass"):
-        from cogant.schemas.program_graph import Node
         from cogant.schemas.core import NodeKind
+        from cogant.schemas.program_graph import Node
+
         return Node(
             id=self._sid(node_id),
             kind=NodeKind.CLASS,
@@ -842,8 +935,9 @@ class TestProgramGraphSchemas:
         )
 
     def _make_edge(self, edge_id: str = "e1", src: str = "n1", dst: str = "n2"):
-        from cogant.schemas.program_graph import Edge
         from cogant.schemas.core import EdgeKind
+        from cogant.schemas.program_graph import Edge
+
         return Edge(
             id=self._sid(edge_id),
             source_id=self._sid(src),
@@ -864,10 +958,10 @@ class TestProgramGraphSchemas:
         assert node.is_exported is False
 
     def test_node_validate_no_self_children(self) -> None:
-        from cogant.schemas.program_graph import Node
         from cogant.schemas.core import NodeKind
-        from cogant.schemas.base import StableID
-        with pytest.raises(Exception):
+        from cogant.schemas.program_graph import Node
+
+        with pytest.raises(ValidationError):
             Node(
                 id=self._sid("n1"),
                 kind=NodeKind.CLASS,
@@ -888,8 +982,9 @@ class TestProgramGraphSchemas:
         assert edge.weight == 1.0
 
     def test_program_graph_add_and_get_node(self) -> None:
-        from cogant.schemas.program_graph import ProgramGraph
         from cogant.schemas.base import StableID
+        from cogant.schemas.program_graph import ProgramGraph
+
         g = ProgramGraph(graph_id=StableID("g1"), language="python")
         node = self._make_node("n1")
         g.add_node(node)
@@ -898,14 +993,16 @@ class TestProgramGraphSchemas:
         assert retrieved.id == "n1"
 
     def test_program_graph_get_nonexistent_node_returns_none(self) -> None:
-        from cogant.schemas.program_graph import ProgramGraph
         from cogant.schemas.base import StableID
+        from cogant.schemas.program_graph import ProgramGraph
+
         g = ProgramGraph(graph_id=StableID("g1"), language="python")
         assert g.get_node("missing") is None
 
     def test_program_graph_add_and_get_edge(self) -> None:
-        from cogant.schemas.program_graph import ProgramGraph
         from cogant.schemas.base import StableID
+        from cogant.schemas.program_graph import ProgramGraph
+
         g = ProgramGraph(graph_id=StableID("g1"), language="python")
         # Add nodes first
         g.add_node(self._make_node("n1"))
@@ -917,15 +1014,17 @@ class TestProgramGraphSchemas:
         assert retrieved.id == "e1"
 
     def test_program_graph_get_nonexistent_edge_returns_none(self) -> None:
-        from cogant.schemas.program_graph import ProgramGraph
         from cogant.schemas.base import StableID
+        from cogant.schemas.program_graph import ProgramGraph
+
         g = ProgramGraph(graph_id=StableID("g1"), language="python")
         assert g.get_edge("missing") is None
 
     def test_program_graph_validates_edge_endpoints(self) -> None:
-        from cogant.schemas.program_graph import ProgramGraph, Edge
-        from cogant.schemas.core import EdgeKind
         from cogant.schemas.base import StableID
+        from cogant.schemas.core import EdgeKind
+        from cogant.schemas.program_graph import Edge, ProgramGraph
+
         node = self._make_node("n1")
         edge = Edge(
             id=self._sid("e1"),
@@ -933,12 +1032,13 @@ class TestProgramGraphSchemas:
             target_id=self._sid("n99"),
             kind=EdgeKind.CALLS,
         )
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             ProgramGraph(graph_id=StableID("g1"), language="python", nodes=[node], edges=[edge])
 
     def test_program_graph_node_index_updates(self) -> None:
-        from cogant.schemas.program_graph import ProgramGraph
         from cogant.schemas.base import StableID
+        from cogant.schemas.program_graph import ProgramGraph
+
         g = ProgramGraph(graph_id=StableID("g1"), language="python")
         g.add_node(self._make_node("n1"))
         g.add_node(self._make_node("n2", label="Other"))
@@ -957,7 +1057,8 @@ class TestProvenanceStore:
     """Tests for ProvenanceStore add/get/query methods."""
 
     def _make_record(self, evidence_id: str, uri: str = "file://src/main.py"):
-        from cogant.schemas.provenance import ProvenanceRecord, EvidenceKind
+        from cogant.schemas.provenance import EvidenceKind, ProvenanceRecord
+
         return ProvenanceRecord(
             evidence_id=evidence_id,
             uri=uri,
@@ -967,6 +1068,7 @@ class TestProvenanceStore:
 
     def test_add_and_get_record(self) -> None:
         from cogant.schemas.provenance import ProvenanceStore
+
         store = ProvenanceStore()
         record = self._make_record("ev1")
         store.add_record(record)
@@ -976,11 +1078,13 @@ class TestProvenanceStore:
 
     def test_get_nonexistent_record_returns_none(self) -> None:
         from cogant.schemas.provenance import ProvenanceStore
+
         store = ProvenanceStore()
         assert store.get_record("missing") is None
 
     def test_get_by_uri_returns_matching_records(self) -> None:
         from cogant.schemas.provenance import ProvenanceStore
+
         store = ProvenanceStore()
         store.add_record(self._make_record("ev1", uri="file://src/a.py"))
         store.add_record(self._make_record("ev2", uri="file://src/b.py"))
@@ -992,19 +1096,22 @@ class TestProvenanceStore:
 
     def test_get_by_uri_missing_returns_empty(self) -> None:
         from cogant.schemas.provenance import ProvenanceStore
+
         store = ProvenanceStore()
         assert store.get_by_uri("file://missing.py") == []
 
     def test_get_by_kind_returns_matching_records(self) -> None:
-        from cogant.schemas.provenance import ProvenanceStore, ProvenanceRecord, EvidenceKind
+        from cogant.schemas.provenance import EvidenceKind, ProvenanceRecord, ProvenanceStore
+
         store = ProvenanceStore()
         r1 = ProvenanceRecord(
-            evidence_id="ev1", uri="file://a.py",
-            kind=EvidenceKind.SOURCE_SPAN, content="x=1"
+            evidence_id="ev1", uri="file://a.py", kind=EvidenceKind.SOURCE_SPAN, content="x=1"
         )
         r2 = ProvenanceRecord(
-            evidence_id="ev2", uri="file://b.py",
-            kind=EvidenceKind.TEST_ASSERTION, content="assert x==1"
+            evidence_id="ev2",
+            uri="file://b.py",
+            kind=EvidenceKind.TEST_ASSERTION,
+            content="assert x==1",
         )
         store.add_record(r1)
         store.add_record(r2)
@@ -1013,12 +1120,14 @@ class TestProvenanceStore:
         assert span_records[0].evidence_id == "ev1"
 
     def test_get_by_kind_missing_returns_empty(self) -> None:
-        from cogant.schemas.provenance import ProvenanceStore, EvidenceKind
+        from cogant.schemas.provenance import EvidenceKind, ProvenanceStore
+
         store = ProvenanceStore()
         assert store.get_by_kind(EvidenceKind.COMMIT_EVENT) == []
 
     def test_uri_index_updated_correctly(self) -> None:
         from cogant.schemas.provenance import ProvenanceStore
+
         store = ProvenanceStore()
         store.add_record(self._make_record("ev1", "file://x.py"))
         store.add_record(self._make_record("ev2", "file://y.py"))
@@ -1028,10 +1137,12 @@ class TestProvenanceStore:
 
     def test_kind_index_updated_correctly(self) -> None:
         from cogant.schemas.provenance import ProvenanceStore
+
         store = ProvenanceStore()
         store.add_record(self._make_record("ev1"))
         store.add_record(self._make_record("ev2"))
         from cogant.schemas.provenance import EvidenceKind
+
         kind_key = EvidenceKind.SOURCE_SPAN.value
         assert kind_key in store.kind_index
         assert len(store.kind_index[kind_key]) == 2
@@ -1047,71 +1158,84 @@ class TestSchemasBase:
 
     def test_semantic_version_valid(self) -> None:
         from cogant.schemas.base import SemanticVersion
+
         v = SemanticVersion("1.2.3")
         assert str(v) == "1.2.3"
 
     def test_semantic_version_invalid_format(self) -> None:
         from cogant.schemas.base import SemanticVersion
+
         with pytest.raises(ValueError, match="Invalid semantic version"):
             SemanticVersion("1.2")
 
     def test_semantic_version_non_numeric(self) -> None:
         from cogant.schemas.base import SemanticVersion
+
         with pytest.raises(ValueError, match="Invalid semantic version"):
             SemanticVersion("1.2.alpha")
 
     def test_span_validates_non_negative(self) -> None:
         from cogant.schemas.base import Span
-        with pytest.raises(Exception):
+
+        with pytest.raises(ValidationError):
             Span(start_line=-1, start_col=0, end_line=5, end_col=10)
 
     def test_span_validates_end_after_start(self) -> None:
         from cogant.schemas.base import Span
-        with pytest.raises(Exception):
+
+        with pytest.raises(ValidationError):
             Span(start_line=10, start_col=0, end_line=5, end_col=10)
 
     def test_span_valid_creation(self) -> None:
         from cogant.schemas.base import Span
+
         span = Span(start_line=1, start_col=0, end_line=5, end_col=10)
         assert span.start_line == 1
         assert span.end_line == 5
 
     def test_generate_stable_id_is_deterministic(self) -> None:
         from cogant.schemas.base import generate_stable_id
+
         id1 = generate_stable_id("module:src/main.py")
         id2 = generate_stable_id("module:src/main.py")
         assert id1 == id2
 
     def test_generate_stable_id_with_prefix(self) -> None:
         from cogant.schemas.base import generate_stable_id
+
         sid = generate_stable_id("content", prefix="node_")
         assert str(sid).startswith("node_")
 
     def test_generate_stable_id_different_content(self) -> None:
         from cogant.schemas.base import generate_stable_id
+
         id1 = generate_stable_id("content_a")
         id2 = generate_stable_id("content_b")
         assert id1 != id2
 
     def test_location_info_minimal(self) -> None:
         from cogant.schemas.base import LocationInfo
+
         loc = LocationInfo(path="src/main.py")
         assert loc.path == "src/main.py"
         assert loc.span is None
 
     def test_evidence_ref_creation(self) -> None:
         from cogant.schemas.base import EvidenceRef
+
         ref = EvidenceRef(evidence_id="ev1", kind="source_span", confidence=0.9)
         assert ref.evidence_id == "ev1"
         assert ref.confidence == 0.9
 
     def test_type_info_creation(self) -> None:
         from cogant.schemas.base import TypeInfo
+
         ti = TypeInfo(base_type="List[str]")
         assert ti.base_type == "List[str]"
 
     def test_confidence_metric_creation(self) -> None:
         from cogant.schemas.base import ConfidenceMetric
+
         cm = ConfidenceMetric(score=0.75, method="static_analysis")
         assert cm.score == 0.75
 
@@ -1126,29 +1250,36 @@ class TestSchemasInit:
 
     def test_extended_types_available(self) -> None:
         import cogant.schemas as schemas
+
         # Check at least some key types available
         assert hasattr(schemas, "Node") or hasattr(schemas, "ProgramGraph")
 
     def test_program_graph_accessible(self) -> None:
         from cogant import schemas
+
         assert schemas.ProgramGraph is not None
 
     def test_node_accessible(self) -> None:
         from cogant import schemas
+
         assert schemas.Node is not None
 
     def test_edge_accessible(self) -> None:
         from cogant import schemas
+
         assert schemas.Edge is not None
 
     def test_mapping_kind_accessible(self) -> None:
         from cogant import schemas
+
         assert schemas.MappingKind is not None
 
     def test_all_is_list(self) -> None:
         import cogant.schemas as schemas
+
         assert isinstance(schemas.__all__, list)
 
     def test_extended_available_flag(self) -> None:
         import cogant.schemas as schemas
+
         assert isinstance(schemas._extended_available, bool)

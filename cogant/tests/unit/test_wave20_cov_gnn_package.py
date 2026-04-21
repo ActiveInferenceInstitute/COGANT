@@ -38,9 +38,7 @@ def _empty_process_model() -> ProcessModel:
 
 
 def _empty_graph() -> ProgramGraph:
-    return ProgramGraph(
-        metadata=GraphMetadata(repo_uri="test", languages={"python"})
-    )
+    return ProgramGraph(metadata=GraphMetadata(repo_uri="test", languages={"python"}))
 
 
 class TestGNNPackageBuilderEndToEnd:
@@ -104,7 +102,9 @@ class TestGNNPackageBuilderEndToEnd:
             state_space=_empty_state_space(),
             process_model=_empty_process_model(),
             mappings={},
-            config={"markov_blanket": {"strategy": "mapping_kind", "mapping_kinds": ["hidden_state"]}},
+            config={
+                "markov_blanket": {"strategy": "mapping_kind", "mapping_kinds": ["hidden_state"]}
+            },
         )
         builder.build(str(tmp_path))
         assert (tmp_path / "markov_blanket.json").exists()
@@ -154,9 +154,7 @@ class TestGNNPackageBuilderEndToEnd:
             assert isinstance(builder.checksums[name], str)
             assert len(builder.checksums[name]) >= 16  # hex digest
 
-    def test_markov_blanket_falls_back_to_stub_when_graph_is_none(
-        self, tmp_path: Path
-    ) -> None:
+    def test_markov_blanket_falls_back_to_stub_when_graph_is_none(self, tmp_path: Path) -> None:
         """Forcing graph=None makes _generate_markov_blanket hit its stub path."""
         builder = GNNPackageBuilder(
             graph=_empty_graph(),
@@ -172,9 +170,7 @@ class TestGNNPackageBuilderEndToEnd:
         assert blanket.get("metadata", {}).get("error") is True
         assert "error" in blanket
 
-    def test_process_model_json_skips_when_process_model_is_none(
-        self, tmp_path: Path
-    ) -> None:
+    def test_process_model_json_skips_when_process_model_is_none(self, tmp_path: Path) -> None:
         builder = GNNPackageBuilder(
             graph=_empty_graph(),
             state_space=_empty_state_space(),

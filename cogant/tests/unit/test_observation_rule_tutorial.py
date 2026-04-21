@@ -14,9 +14,7 @@ from cogant.translate.rules.semantic import ObservationRule
 
 def _read_only_method_graph() -> ProgramGraph:
     graph = ProgramGraph(metadata=GraphMetadata(repo_uri="test://tutorial04"))
-    cls = Node(
-        id="n:Cache", kind=NodeKind.CLASS, name="Cache", qualified_name="Cache"
-    )
+    cls = Node(id="n:Cache", kind=NodeKind.CLASS, name="Cache", qualified_name="Cache")
     method = Node(
         id="n:get_value",
         kind=NodeKind.METHOD,

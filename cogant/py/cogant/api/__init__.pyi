@@ -5,4 +5,11 @@ from cogant.api.review import ReviewableMapping as ReviewableMapping
 from cogant.api.review import ReviewAPI as ReviewAPI
 from cogant.api.session import Session as Session
 
-__all__ = ['Session', 'PipelineRunner', 'PipelineConfig', 'Bundle', 'ReviewAPI', 'ReviewableMapping']
+__all__ = [
+    "Session",
+    "PipelineRunner",
+    "PipelineConfig",
+    "Bundle",
+    "ReviewAPI",
+    "ReviewableMapping",
+]

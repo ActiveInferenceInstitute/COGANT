@@ -17,7 +17,6 @@ from cogant.statespace.compiler import Action, StateSpaceModel, Transition
 from cogant.statespace.temporal import TimeRegime
 from cogant.statespace.variables import StateVariable, StateVariableType
 
-
 # --------------------------- CategoricalDistribution -------------------- #
 
 

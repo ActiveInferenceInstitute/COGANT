@@ -11,18 +11,20 @@ import time
 
 import pytest
 
-from cogant.pipeline.dag import DAGResult, PipelineDAG, Stage, StageResult, StageStatus
-
+from cogant.pipeline.dag import PipelineDAG, Stage, StageStatus
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _counter_stage(name: str, execution_log: list[str], deps: list[str] | None = None) -> Stage:
     """Stage that appends its name to execution_log."""
+
     def _fn(ctx: dict) -> dict:
         execution_log.append(name)
         return {}
+
     return Stage(name=name, fn=_fn, deps=deps or [])
 
 
@@ -63,8 +65,12 @@ class TestPipelineDAGExtended:
     def test_multi_failure_cascading(self) -> None:
         """Multiple independent failures each skip their dependents."""
         dag = PipelineDAG()
-        dag.add_stage(Stage(name="a", fn=lambda ctx: (_ for _ in ()).throw(RuntimeError("a fails")), deps=[]))
-        dag.add_stage(Stage(name="b", fn=lambda ctx: (_ for _ in ()).throw(RuntimeError("b fails")), deps=[]))
+        dag.add_stage(
+            Stage(name="a", fn=lambda ctx: (_ for _ in ()).throw(RuntimeError("a fails")), deps=[])
+        )
+        dag.add_stage(
+            Stage(name="b", fn=lambda ctx: (_ for _ in ()).throw(RuntimeError("b fails")), deps=[])
+        )
         dag.add_stage(Stage(name="c", fn=lambda ctx: {}, deps=["a"]))
         dag.add_stage(Stage(name="d", fn=lambda ctx: {}, deps=["b"]))
 
@@ -92,7 +98,7 @@ class TestPipelineDAGExtended:
     def test_stage_elapsed_time_recorded(self) -> None:
         """Each stage result records non-negative elapsed time."""
         dag = PipelineDAG()
-        dag.add_stage(Stage(name="slow", fn=lambda ctx: (time.sleep(0.01) or {})))
+        dag.add_stage(Stage(name="slow", fn=lambda ctx: time.sleep(0.01) or {}))
 
         result = dag.run({})
         assert result.stage_results["slow"].elapsed >= 0.01
@@ -113,11 +119,13 @@ class TestPipelineDAGExtended:
         dag = PipelineDAG()
         dag.add_stage(Stage(name="a", fn=lambda ctx: {"x": 10}))
         dag.add_stage(Stage(name="b", fn=lambda ctx: {"y": 20}))
-        dag.add_stage(Stage(
-            name="c",
-            fn=lambda ctx: {"sum": ctx.get("x", 0) + ctx.get("y", 0)},
-            deps=["a", "b"],
-        ))
+        dag.add_stage(
+            Stage(
+                name="c",
+                fn=lambda ctx: {"sum": ctx.get("x", 0) + ctx.get("y", 0)},
+                deps=["a", "b"],
+            )
+        )
 
         result = dag.run({})
         assert result.stage_results["c"].output["sum"] == 30
@@ -125,10 +133,12 @@ class TestPipelineDAGExtended:
     def test_initial_context_passed_to_first_stage(self) -> None:
         """Initial context dict is available to the first stage."""
         dag = PipelineDAG()
-        dag.add_stage(Stage(
-            name="check",
-            fn=lambda ctx: {"got_seed": ctx.get("seed")},
-        ))
+        dag.add_stage(
+            Stage(
+                name="check",
+                fn=lambda ctx: {"got_seed": ctx.get("seed")},
+            )
+        )
 
         result = dag.run({"seed": 42})
         assert result.stage_results["check"].output["got_seed"] == 42

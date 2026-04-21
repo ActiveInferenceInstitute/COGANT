@@ -34,8 +34,6 @@ import time
 from pathlib import Path
 from typing import Any
 
-import pytest
-
 # Ensure ``py/cogant`` is importable regardless of invocation directory.
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _PY_ROOT = _REPO_ROOT / "py"
@@ -44,7 +42,7 @@ if str(_PY_ROOT) not in sys.path:
 
 from cogant.api.orchestration import _emit_dataflow_edges, run_graph  # noqa: E402
 from cogant.gnn.formatter.structural import _StructuralSectionsMixin  # noqa: E402
-from cogant.gnn.matrices import GNNMatrices, _MAX_B_ENTRIES  # noqa: E402
+from cogant.gnn.matrices import _MAX_B_ENTRIES, GNNMatrices  # noqa: E402
 from cogant.graph.builder import ProgramGraphBuilder  # noqa: E402
 from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind  # noqa: E402
 from cogant.schemas.graph import GraphMetadata, ProgramGraph  # noqa: E402
@@ -56,7 +54,6 @@ from cogant.statespace.variables import (  # noqa: E402
     StateVariable,
     StateVariableType,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -134,9 +131,7 @@ def _build_hidden_state_graph(
     for idx in range(min(extra_edges_on_top_states, n_states)):
         src = state_ids[idx]
         tgt = state_ids[(idx + 1) % n_states]
-        graph.add_edge(
-            _make_edge(f"boost_{idx}", src, tgt, EdgeKind.DEPENDS_ON)
-        )
+        graph.add_edge(_make_edge(f"boost_{idx}", src, tgt, EdgeKind.DEPENDS_ON))
 
     return graph, mappings
 
@@ -172,9 +167,7 @@ class _StructuralHarness(_StructuralSectionsMixin):
         self.process = None  # not read by _format_state_space
 
 
-def _make_state_variable(
-    var_id: str, domain: list[Any] | None
-) -> StateVariable:
+def _make_state_variable(var_id: str, domain: list[Any] | None) -> StateVariable:
     return StateVariable(
         id=var_id,
         name=var_id,
@@ -262,9 +255,7 @@ class TestBTensorTruncation:
         )
         gm = GNNMatrices(graph, mappings, _empty_state_space())
         gm.compute_B()
-        kept_ids = set(gm._top_k_state_ids(
-            gm._state_node_ids(), gm._b_n_states_kept
-        ))
+        kept_ids = set(gm._top_k_state_ids(gm._state_node_ids(), gm._b_n_states_kept))
         # The three boosted nodes must be in the kept set; if the selection
         # were random they would appear at p = (158/200)³ ≈ 0.49.
         assert "state_0000" in kept_ids
@@ -563,7 +554,7 @@ class TestInheritsLookup:
             if i == 0:
                 body = f"class C{i}:\n    pass\n"
             else:
-                body = f"from c{i-1} import C{i-1}\n\nclass C{i}(C{i-1}):\n    pass\n"
+                body = f"from c{i - 1} import C{i - 1}\n\nclass C{i}(C{i - 1}):\n    pass\n"
             (tmp_path / f"c{i}.py").write_text(body)
 
     class _Bundle:
@@ -584,9 +575,7 @@ class TestInheritsLookup:
         run_graph(bundle, str(tmp_path))
 
         pg: ProgramGraph = bundle.artifacts["_program_graph"]
-        inherits = [
-            e for e in pg.edges.values() if e.kind == EdgeKind.INHERITS
-        ]
+        inherits = [e for e in pg.edges.values() if e.kind == EdgeKind.INHERITS]
         assert len(inherits) == 9
 
     def test_inherits_100_classes_under_tight_budget(self, tmp_path: Path) -> None:
@@ -614,9 +603,7 @@ class TestInheritsLookup:
         )
 
         pg: ProgramGraph = bundle.artifacts["_program_graph"]
-        inherits = [
-            e for e in pg.edges.values() if e.kind == EdgeKind.INHERITS
-        ]
+        inherits = [e for e in pg.edges.values() if e.kind == EdgeKind.INHERITS]
         assert len(inherits) == 99
 
     def test_inherits_index_does_not_self_link(self, tmp_path: Path) -> None:
@@ -626,9 +613,7 @@ class TestInheritsLookup:
         ``other_node.id != class_node.id`` in ``run_graph``; this test
         pins that guard.
         """
-        (tmp_path / "self_ref.py").write_text(
-            "class C:\n    pass\n\nclass D(C):\n    pass\n"
-        )
+        (tmp_path / "self_ref.py").write_text("class C:\n    pass\n\nclass D(C):\n    pass\n")
         bundle = self._Bundle()
         from cogant.api.orchestration import run_ingest
 
@@ -636,9 +621,7 @@ class TestInheritsLookup:
         run_graph(bundle, str(tmp_path))
 
         pg: ProgramGraph = bundle.artifacts["_program_graph"]
-        inherits = [
-            e for e in pg.edges.values() if e.kind == EdgeKind.INHERITS
-        ]
+        inherits = [e for e in pg.edges.values() if e.kind == EdgeKind.INHERITS]
         # D → C exactly once, no self-edges.
         assert len(inherits) == 1
         assert inherits[0].source_id != inherits[0].target_id

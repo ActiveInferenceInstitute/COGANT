@@ -12,7 +12,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -21,9 +20,11 @@ pytestmark = pytest.mark.unit
 # scoring/metrics.py — MetricsReport and CodebaseMetrics
 # ---------------------------------------------------------------------------
 
+
 class TestMetricsReport:
     def test_metrics_report_init(self):
         from cogant.scoring.metrics import MetricsReport
+
         report = MetricsReport(
             complexity_score=0.3,
             coupling_score=0.4,
@@ -43,6 +44,7 @@ class TestMetricsReport:
 
     def test_metrics_report_fields(self):
         from cogant.scoring.metrics import MetricsReport
+
         report = MetricsReport(
             complexity_score=0.0,
             coupling_score=0.0,
@@ -63,6 +65,7 @@ class TestMetricsReport:
 class TestCodebaseMetrics:
     def _make_metrics(self, nodes=None, edges=None, states=None, observations=None, actions=None):
         from cogant.scoring.metrics import CodebaseMetrics
+
         graph = {
             "nodes": nodes or [],
             "edges": edges or [],
@@ -137,6 +140,7 @@ class TestCodebaseMetrics:
 
     def test_summary_returns_metrics_report(self):
         from cogant.scoring.metrics import MetricsReport
+
         metrics = self._make_metrics()
         report = metrics.summary()
         assert isinstance(report, MetricsReport)
@@ -158,9 +162,11 @@ class TestCodebaseMetrics:
 # scoring/drift.py — DriftScore and DriftAnalyzer
 # ---------------------------------------------------------------------------
 
+
 class TestDriftScore:
     def test_drift_score_init(self):
         from cogant.scoring.drift import DriftScore
+
         score = DriftScore(
             total_score=0.15,
             architectural_score=0.1,
@@ -173,6 +179,7 @@ class TestDriftScore:
 
     def test_drift_score_zero(self):
         from cogant.scoring.drift import DriftScore
+
         score = DriftScore(
             total_score=0.0,
             architectural_score=0.0,
@@ -197,6 +204,7 @@ class TestDriftAnalyzer:
 
     def test_init(self):
         from cogant.scoring.drift import DriftAnalyzer
+
         bundle_a = self._make_bundle()
         bundle_b = self._make_bundle()
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -204,6 +212,7 @@ class TestDriftAnalyzer:
 
     def test_analyze_returns_drift_score(self):
         from cogant.scoring.drift import DriftAnalyzer, DriftScore
+
         bundle_a = self._make_bundle()
         bundle_b = self._make_bundle()
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -212,6 +221,7 @@ class TestDriftAnalyzer:
 
     def test_compute_structural_drift(self):
         from cogant.scoring.drift import DriftAnalyzer
+
         bundle_a = self._make_bundle()
         bundle_b = self._make_bundle()
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -220,6 +230,7 @@ class TestDriftAnalyzer:
 
     def test_compute_semantic_drift(self):
         from cogant.scoring.drift import DriftAnalyzer
+
         bundle_a = self._make_bundle()
         bundle_b = self._make_bundle()
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -228,6 +239,7 @@ class TestDriftAnalyzer:
 
     def test_compute_state_space_drift(self):
         from cogant.scoring.drift import DriftAnalyzer
+
         bundle_a = self._make_bundle()
         bundle_b = self._make_bundle()
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -236,6 +248,7 @@ class TestDriftAnalyzer:
 
     def test_generate_diff_report_returns_str(self):
         from cogant.scoring.drift import DriftAnalyzer
+
         bundle_a = self._make_bundle()
         bundle_b = self._make_bundle()
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -244,6 +257,7 @@ class TestDriftAnalyzer:
 
     def test_compute_count_drift_zero(self):
         from cogant.scoring.drift import DriftAnalyzer
+
         bundle_a = self._make_bundle()
         bundle_b = self._make_bundle()
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -252,6 +266,7 @@ class TestDriftAnalyzer:
 
     def test_compute_count_drift_positive(self):
         from cogant.scoring.drift import DriftAnalyzer
+
         bundle_a = self._make_bundle()
         bundle_b = self._make_bundle()
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -260,6 +275,7 @@ class TestDriftAnalyzer:
 
     def test_compute_collection_drift_same(self):
         from cogant.scoring.drift import DriftAnalyzer
+
         bundle_a = self._make_bundle()
         bundle_b = self._make_bundle()
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -268,6 +284,7 @@ class TestDriftAnalyzer:
 
     def test_compute_collection_drift_different(self):
         from cogant.scoring.drift import DriftAnalyzer
+
         bundle_a = self._make_bundle()
         bundle_b = self._make_bundle()
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -276,6 +293,7 @@ class TestDriftAnalyzer:
 
     def test_identical_bundles_low_drift(self):
         from cogant.scoring.drift import DriftAnalyzer, DriftScore
+
         bundle = self._make_bundle()
         analyzer = DriftAnalyzer(bundle, bundle)
         score = analyzer.analyze(bundle, bundle)

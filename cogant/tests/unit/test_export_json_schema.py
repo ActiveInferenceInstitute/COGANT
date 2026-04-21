@@ -1,6 +1,7 @@
 """Unit tests for JSON schema export module."""
 
 import pytest
+
 from cogant.export.json_schema import JSONSchemaExporter
 
 

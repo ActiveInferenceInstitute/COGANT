@@ -101,6 +101,7 @@ class EpisodeMetrics:
         n_unique_obs: Number of unique observations seen.
         action_entropy: Shannon entropy of action distribution.
     """
+
     episode_id: int
     n_steps: int
     mean_free_energy: float
@@ -138,6 +139,7 @@ class RunMetrics:
         episodes: List of per-episode metrics.
         total_steps: Total inference steps across all episodes.
     """
+
     episodes: list[EpisodeMetrics]
     total_steps: int = 0
 
@@ -182,7 +184,7 @@ class RunMetrics:
                 return 0.0, 0.0, 0.0, 0.0
             mean = sum(values) / len(values)
             variance = sum((v - mean) ** 2 for v in values) / len(values)
-            std = variance ** 0.5
+            std = variance**0.5
             return mean, std, min(values), max(values)
 
         mean_fe_mean, mean_fe_std, mean_fe_min, mean_fe_max = _stats(mean_fes)

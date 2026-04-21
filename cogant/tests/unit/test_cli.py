@@ -22,7 +22,6 @@ from typer.testing import CliRunner
 
 from cogant.cli.main import app
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = REPO_ROOT / "examples" / "control_positive" / "calculator"
 
@@ -159,9 +158,7 @@ class TestValidateCommand:
     def test_validate_on_bundle(self, runner, tmp_path):
         # Need a bundle to validate, so run translate first.
         out = tmp_path / "validate_out"
-        run1 = runner.invoke(
-            app, ["translate", str(FIXTURE), "--output", str(out)]
-        )
+        run1 = runner.invoke(app, ["translate", str(FIXTURE), "--output", str(out)])
         assert run1.exit_code == 0, run1.stdout
 
         # Now validate the produced bundle.
@@ -175,9 +172,7 @@ class TestValidateCommand:
         """`validate <dir>` should auto-discover the gnn_package/ subdir
         and route to the full :class:`GNNValidator`."""
         out = tmp_path / "pkg_validate"
-        run1 = runner.invoke(
-            app, ["translate", str(FIXTURE), "--output", str(out)]
-        )
+        run1 = runner.invoke(app, ["translate", str(FIXTURE), "--output", str(out)])
         assert run1.exit_code == 0, run1.stdout
 
         # The translate pipeline emits output/gnn_package/*. Point at the

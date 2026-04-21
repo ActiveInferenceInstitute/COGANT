@@ -15,7 +15,6 @@ import pytest
 
 from cogant.plugins.registry import PluginInfo, PluginRegistry
 
-
 # --------------------------- fixtures ----------------------------------- #
 
 

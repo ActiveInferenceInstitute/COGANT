@@ -83,9 +83,7 @@ class MultiFormatExporter:
 
         results: dict[ExportFormat, str] = {}
 
-        logger.info(
-            f"Exporting pipeline result to {len(config.formats)} formats in {output_dir}"
-        )
+        logger.info(f"Exporting pipeline result to {len(config.formats)} formats in {output_dir}")
 
         for fmt in config.formats:
             try:

@@ -32,9 +32,7 @@ Targets:
   - config/loaders.py — ConfigLoader methods
 """
 
-import json
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -43,10 +41,11 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
-    from cogant.schemas.core import Node, NodeKind, Edge, EdgeKind
     from cogant.schemas.base import StableID
+    from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
     graph = ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test/repo"))
     for i in range(3):
@@ -71,11 +70,13 @@ def _make_graph():
 
 def _make_ssm():
     from cogant.statespace.compiler import StateSpaceCompiler
+
     return StateSpaceCompiler(_make_graph(), "test").compile({})
 
 
 def _make_process():
     from cogant.process.extractor import ProcessExtractor
+
     return ProcessExtractor(_make_graph(), "test").extract()
 
 
@@ -83,9 +84,11 @@ def _make_process():
 # static/imports.py — ImportAnalyzer
 # ---------------------------------------------------------------------------
 
+
 class TestImportAnalyzer:
     def test_analyze_stdlib_imports(self, tmp_path):
         from cogant.static.imports import ImportAnalyzer
+
         code = "import os\nimport sys\nfrom pathlib import Path\n"
         f = tmp_path / "test.py"
         f.write_text(code)
@@ -97,6 +100,7 @@ class TestImportAnalyzer:
 
     def test_analyze_source_imports(self, tmp_path):
         from cogant.static.imports import ImportAnalyzer
+
         code = "import os\nfrom typing import Any, List\n"
         f = tmp_path / "src.py"
         f.write_text(code)
@@ -107,6 +111,7 @@ class TestImportAnalyzer:
 
     def test_analyze_third_party_import(self, tmp_path):
         from cogant.static.imports import ImportAnalyzer
+
         code = "import requests\nimport numpy as np\n"
         f = tmp_path / "tp.py"
         f.write_text(code)
@@ -118,6 +123,7 @@ class TestImportAnalyzer:
 
     def test_analyze_relative_imports(self, tmp_path):
         from cogant.static.imports import ImportAnalyzer
+
         pkg = tmp_path / "mypkg"
         pkg.mkdir()
         code = "from . import utils\nfrom ..base import BaseClass\n"
@@ -131,6 +137,7 @@ class TestImportAnalyzer:
 
     def test_import_edge_attributes(self, tmp_path):
         from cogant.static.imports import ImportAnalyzer
+
         code = "import os\n"
         f = tmp_path / "a.py"
         f.write_text(code)
@@ -145,6 +152,7 @@ class TestImportAnalyzer:
 
     def test_stdlib_modules_set(self):
         from cogant.static.imports import ImportAnalyzer
+
         stdlib = ImportAnalyzer._load_stdlib_modules()
         assert isinstance(stdlib, set)
         assert "os" in stdlib
@@ -153,6 +161,7 @@ class TestImportAnalyzer:
 
     def test_analyze_from_imports_with_names(self, tmp_path):
         from cogant.static.imports import ImportAnalyzer
+
         code = "from typing import Any, List, Optional\n"
         f = tmp_path / "typing_test.py"
         f.write_text(code)
@@ -166,14 +175,17 @@ class TestImportAnalyzer:
 # ingest/incremental.py — IncrementalIngester
 # ---------------------------------------------------------------------------
 
+
 class TestIncrementalIngester:
     def test_init(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         assert ingester is not None
 
     def test_is_git_repo_false(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         result = ingester.is_git_repo()
         # Not a git repo
@@ -181,6 +193,7 @@ class TestIncrementalIngester:
 
     def test_working_tree_changes_non_git(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         # Should return empty list or raise for non-git repos
         try:
@@ -191,6 +204,7 @@ class TestIncrementalIngester:
 
     def test_get_changed_files_function(self, tmp_path):
         from cogant.ingest.incremental import get_changed_files
+
         try:
             result = get_changed_files(tmp_path, "HEAD~1")
             assert isinstance(result, list)
@@ -202,15 +216,18 @@ class TestIncrementalIngester:
 # ingest/repo_sniff.py — count_source_files, format_duration
 # ---------------------------------------------------------------------------
 
+
 class TestRepoSniff:
     def test_count_source_files_empty(self, tmp_path):
         from cogant.ingest.repo_sniff import count_source_files
+
         result = count_source_files(tmp_path)
         assert isinstance(result, int)
         assert result == 0
 
     def test_count_source_files_with_python(self, tmp_path):
         from cogant.ingest.repo_sniff import count_source_files
+
         (tmp_path / "a.py").write_text("x = 1")
         (tmp_path / "b.py").write_text("y = 2")
         (tmp_path / "readme.md").write_text("# readme")
@@ -219,24 +236,28 @@ class TestRepoSniff:
 
     def test_estimate_pipeline_seconds(self):
         from cogant.ingest.repo_sniff import estimate_pipeline_seconds
+
         result = estimate_pipeline_seconds(100)
         assert isinstance(result, float)
         assert result > 0
 
     def test_format_duration_seconds(self):
         from cogant.ingest.repo_sniff import format_duration
+
         result = format_duration(45.0)
         assert isinstance(result, str)
         assert len(result) > 0
 
     def test_format_duration_minutes(self):
         from cogant.ingest.repo_sniff import format_duration
+
         result = format_duration(130.0)
         assert isinstance(result, str)
         assert "m" in result or "min" in result or "2" in result
 
     def test_format_duration_zero(self):
         from cogant.ingest.repo_sniff import format_duration
+
         result = format_duration(0.0)
         assert isinstance(result, str)
 
@@ -245,29 +266,35 @@ class TestRepoSniff:
 # observability/logging.py — setup_logging, get_logger
 # ---------------------------------------------------------------------------
 
+
 class TestObservabilityLogging:
     def test_get_logger(self):
         from cogant.observability.logging import get_logger
+
         logger = get_logger("test.module")
         assert logger is not None
 
     def test_get_logger_returns_bound_logger(self):
         from cogant.observability.logging import get_logger
+
         logger = get_logger("cogant.test")
         # Should be usable
         assert hasattr(logger, "info") or hasattr(logger, "debug") or callable(logger)
 
     def test_setup_logging(self):
         from cogant.observability.logging import setup_logging
+
         # Should not raise
         setup_logging(level="INFO", format="json")
 
     def test_setup_logging_text_format(self):
         from cogant.observability.logging import setup_logging
+
         setup_logging(level="DEBUG", format="text")
 
     def test_setup_logging_warn_level(self):
         from cogant.observability.logging import setup_logging
+
         setup_logging(level="WARNING")
 
 
@@ -275,29 +302,35 @@ class TestObservabilityLogging:
 # rust_backend.py — RustBackend functions
 # ---------------------------------------------------------------------------
 
+
 class TestRustBackend:
     def test_rust_available(self):
         from cogant.rust_backend import RUST_AVAILABLE
+
         # Just verify it's a bool
         assert isinstance(RUST_AVAILABLE, bool)
 
     def test_rust_version_returns_none_or_str(self):
         from cogant.rust_backend import rust_version
+
         result = rust_version()
         assert result is None or isinstance(result, str)
 
     def test_get_program_graph_impl(self):
         from cogant.rust_backend import get_program_graph_impl
+
         impl = get_program_graph_impl()
         assert impl is not None
 
     def test_env_prefers_rust(self):
         from cogant.rust_backend import _env_prefers_rust
+
         result = _env_prefers_rust()
         assert result is None or isinstance(result, bool)
 
     def test_build_program_graph(self):
         from cogant.rust_backend import build_program_graph
+
         result = build_program_graph()
         assert result is not None
 
@@ -306,9 +339,11 @@ class TestRustBackend:
 # gnn/formatter/semantic.py — Semantic sections
 # ---------------------------------------------------------------------------
 
+
 class TestGNNFormatterSemantic:
     def _make_formatter(self):
         from cogant.gnn.formatter.base import GNNMarkdownFormatter
+
         return GNNMarkdownFormatter(_make_graph(), _make_ssm(), _make_process(), {})
 
     def test_format_includes_semantic_sections(self):
@@ -329,9 +364,11 @@ class TestGNNFormatterSemantic:
 # gnn/formatter/structural.py — Structural sections
 # ---------------------------------------------------------------------------
 
+
 class TestGNNFormatterStructural:
     def _make_formatter(self):
         from cogant.gnn.formatter.base import GNNMarkdownFormatter
+
         return GNNMarkdownFormatter(_make_graph(), _make_ssm(), _make_process(), {})
 
     def test_format_structural_sections(self):
@@ -355,9 +392,11 @@ class TestGNNFormatterStructural:
 # gnn/matrices.py — GNNMatrices computation
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatricesComputation:
     def _make_matrices(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_ssm()
         return GNNMatrices(graph, {}, ssm)
@@ -393,13 +432,16 @@ class TestGNNMatricesComputation:
 # reverse/metrics.py — RoundtripMetrics
 # ---------------------------------------------------------------------------
 
+
 class TestReverseMetrics:
     def test_import(self):
         import cogant.reverse.metrics as rm
+
         assert rm is not None
 
     def test_compare_role_distributions_equal(self):
         from cogant.reverse.metrics import compare_role_distributions
+
         roles1 = {"HiddenState": 2, "Observation": 1}
         roles2 = {"HiddenState": 2, "Observation": 1}
         score = compare_role_distributions(roles1, roles2)
@@ -408,6 +450,7 @@ class TestReverseMetrics:
 
     def test_compare_role_distributions_different(self):
         from cogant.reverse.metrics import compare_role_distributions
+
         roles1 = {"HiddenState": 2}
         roles2 = {"HiddenState": 1, "Observation": 1}
         score = compare_role_distributions(roles1, roles2)
@@ -415,21 +458,25 @@ class TestReverseMetrics:
 
     def test_compare_role_distributions_empty(self):
         from cogant.reverse.metrics import compare_role_distributions
+
         score = compare_role_distributions({}, {})
         assert isinstance(score, (float, int))
 
     def test_compare_matrices_empty(self):
         from cogant.reverse.metrics import compare_matrices
+
         result = compare_matrices({}, {})
         assert result is not None
 
     def test_compare_graph_structure_empty(self):
         from cogant.reverse.metrics import compare_graph_structure
+
         score = compare_graph_structure([], [], [], [])
         assert isinstance(score, (float, int))
 
     def test_compute_isomorphism_report(self):
         from cogant.reverse.metrics import compute_isomorphism_report
+
         gnn_a = {"roles": {"HiddenState": 1, "Observation": 1}}
         gnn_b = {"roles": {"HiddenState": 1, "Observation": 1}}
         result = compute_isomorphism_report(gnn_a, gnn_b)
@@ -441,9 +488,11 @@ class TestReverseMetrics:
 # reverse/planner.py — ReversePlanner
 # ---------------------------------------------------------------------------
 
+
 class TestReversePlanner:
     def _make_model(self):
         from cogant.reverse.parser import parse_gnn
+
         return parse_gnn("""## ModelName
 PlanModel
 
@@ -463,24 +512,28 @@ u_c0 = Action
 """)
 
     def test_import(self):
-        from cogant.reverse.planner import plan_package, PackagePlan
+        from cogant.reverse.planner import PackagePlan, plan_package
+
         assert plan_package is not None
         assert PackagePlan is not None
 
     def test_plan_package(self):
         from cogant.reverse.planner import plan_package
+
         model = self._make_model()
         plan = plan_package(model)
         assert plan is not None
 
     def test_plan_package_has_nodes(self):
         from cogant.reverse.planner import plan_package
+
         model = self._make_model()
         plan = plan_package(model)
         assert hasattr(plan, "nodes") or hasattr(plan, "schema_name") or hasattr(plan, "model_name")
 
     def test_node_plan_attributes(self):
-        from cogant.reverse.planner import plan_package, NodePlan
+        from cogant.reverse.planner import NodePlan, plan_package
+
         model = self._make_model()
         plan = plan_package(model)
         if hasattr(plan, "nodes") and plan.nodes:
@@ -492,9 +545,11 @@ u_c0 = Action
 # reverse/synthesizer.py — ReverseSynthesizer
 # ---------------------------------------------------------------------------
 
+
 class TestReverseSynthesizer:
     def _make_model(self):
         from cogant.reverse.parser import parse_gnn
+
         return parse_gnn("""## ModelName
 SimpleModel
 
@@ -515,19 +570,22 @@ u_c0 = Action
 
     def test_import(self):
         from cogant.reverse.synthesizer import synthesize_package
+
         assert synthesize_package is not None
 
     def test_synthesize_package_returns_files(self, tmp_path):
-        from cogant.reverse.synthesizer import synthesize_package
         from cogant.reverse.planner import plan_package
+        from cogant.reverse.synthesizer import synthesize_package
+
         model = self._make_model()
         plan = plan_package(model)
         result = synthesize_package(plan, model, str(tmp_path))
         assert result is not None
 
     def test_synthesize_package_creates_files(self, tmp_path):
-        from cogant.reverse.synthesizer import synthesize_package
         from cogant.reverse.planner import plan_package
+        from cogant.reverse.synthesizer import synthesize_package
+
         model = self._make_model()
         plan = plan_package(model)
         synthesize_package(plan, model, str(tmp_path))
@@ -540,9 +598,11 @@ u_c0 = Action
 # reverse/parser.py — more parse scenarios
 # ---------------------------------------------------------------------------
 
+
 class TestReverseParserEdgeCases:
     def test_parse_with_matrix_block(self):
         from cogant.reverse.parser import parse_gnn
+
         gnn_text = """## ModelName
 MatrixModel
 
@@ -573,6 +633,7 @@ u_c0 = Action
 
     def test_parse_cardinalities(self):
         from cogant.reverse.parser import parse_gnn
+
         gnn_text = """## ModelName
 CardModel
 
@@ -594,6 +655,7 @@ o_m0 = Observation
 
     def test_parse_constraints(self):
         from cogant.reverse.parser import parse_gnn
+
         gnn_text = """## ModelName
 ConstraintModel
 
@@ -612,6 +674,7 @@ s_f0 = HiddenState
 
     def test_parse_n_states(self):
         from cogant.reverse.parser import parse_gnn
+
         gnn_text = """## ModelName
 CountModel
 
@@ -641,9 +704,11 @@ u_c0 = Action
 # api/session.py — Session
 # ---------------------------------------------------------------------------
 
+
 class TestSessionExtra:
     def test_session_init_with_config(self, tmp_path):
         from cogant.api.session import Session
+
         try:
             sess = Session(target=str(tmp_path))
             assert sess is not None
@@ -652,6 +717,7 @@ class TestSessionExtra:
 
     def test_session_has_methods(self):
         from cogant.api.session import Session
+
         assert hasattr(Session, "extract_static") or hasattr(Session, "run")
 
 
@@ -659,9 +725,11 @@ class TestSessionExtra:
 # api/bundle.py — Bundle
 # ---------------------------------------------------------------------------
 
+
 class TestBundleExtra:
     def test_bundle_to_dict(self):
         from cogant.api.bundle import Bundle
+
         try:
             b = Bundle()
             if hasattr(b, "to_dict"):
@@ -672,6 +740,7 @@ class TestBundleExtra:
 
     def test_bundle_import(self):
         from cogant.api.bundle import Bundle
+
         assert Bundle is not None
 
 
@@ -679,10 +748,12 @@ class TestBundleExtra:
 # translate/engine.py — TranslationEngine edge cases
 # ---------------------------------------------------------------------------
 
+
 class TestTranslationEngineExtra:
     def test_translate_empty_graph(self):
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
         from cogant.translate.engine import TranslationEngine
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="x"))
         engine = TranslationEngine()
         result = engine.translate(graph)
@@ -690,6 +761,7 @@ class TestTranslationEngineExtra:
 
     def test_translate_rules_applied(self):
         from cogant.translate.engine import TranslationEngine
+
         graph = _make_graph()
         engine = TranslationEngine()
         result = engine.translate(graph)
@@ -700,6 +772,7 @@ class TestTranslationEngineExtra:
 # ---------------------------------------------------------------------------
 # runtime/loop.py — AgentRuntime additional paths
 # ---------------------------------------------------------------------------
+
 
 class TestAgentRuntimeExtra:
     def _make_matrices(self):
@@ -713,12 +786,14 @@ class TestAgentRuntimeExtra:
 
     def test_from_matrices_dict(self):
         from cogant.runtime.loop import AgentRuntime
+
         mats = self._make_matrices()
         runtime = AgentRuntime.from_matrices_dict(mats)
         assert runtime is not None
 
     def test_step_forward(self):
         from cogant.runtime.loop import AgentRuntime
+
         mats = self._make_matrices()
         runtime = AgentRuntime.from_matrices_dict(mats)
         state_dist = [0.5, 0.5]
@@ -727,6 +802,7 @@ class TestAgentRuntimeExtra:
 
     def test_run_n_steps(self):
         from cogant.runtime.loop import AgentRuntime
+
         mats = self._make_matrices()
         runtime = AgentRuntime.from_matrices_dict(mats)
         initial = [0.5, 0.5]
@@ -739,15 +815,18 @@ class TestAgentRuntimeExtra:
 # graph/builder.py — ProgramGraphBuilder additional paths
 # ---------------------------------------------------------------------------
 
+
 class TestGraphBuilderExtra:
     def test_builder_init(self):
         from cogant.graph.builder import ProgramGraphBuilder
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         assert builder is not None
 
     def test_builder_add_custom_node(self):
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         node = builder.add_node(
             kind=NodeKind.FUNCTION,
@@ -761,6 +840,7 @@ class TestGraphBuilderExtra:
     def test_builder_get_statistics(self):
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         builder.add_node(kind=NodeKind.MODULE, name="stats", qualified_name="stats")
         stats = builder.get_statistics()
@@ -768,6 +848,7 @@ class TestGraphBuilderExtra:
 
     def test_builder_find_cycles(self):
         from cogant.graph.builder import ProgramGraphBuilder
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         cycles = builder.find_cycles()
         assert isinstance(cycles, list)
@@ -775,6 +856,7 @@ class TestGraphBuilderExtra:
     def test_builder_get_connected_components(self):
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         for i in range(3):
             builder.add_node(kind=NodeKind.FUNCTION, name=f"f{i}", qualified_name=f"f{i}")
@@ -786,16 +868,21 @@ class TestGraphBuilderExtra:
 # statespace/temporal.py — TimeRegime additional coverage
 # ---------------------------------------------------------------------------
 
+
 class TestTimeRegimeExtra:
     def test_all_regimes(self):
         from cogant.statespace.temporal import TimeRegime
+
         regimes = list(TimeRegime)
         assert len(regimes) >= 3
         names = [r.value for r in regimes]
-        assert "synchronous" in names or "SYNCHRONOUS" in names.copy().__class__(r.name for r in regimes)
+        assert "synchronous" in names or "SYNCHRONOUS" in names.copy().__class__(
+            r.name for r in regimes
+        )
 
     def test_regime_comparison(self):
         from cogant.statespace.temporal import TimeRegime
+
         r1 = TimeRegime.SYNCHRONOUS
         r2 = TimeRegime.ASYNCHRONOUS
         assert r1 != r2
@@ -803,6 +890,7 @@ class TestTimeRegimeExtra:
 
     def test_regime_values(self):
         from cogant.statespace.temporal import TimeRegime
+
         assert TimeRegime.SYNCHRONOUS.value == "synchronous"
         assert TimeRegime.ASYNCHRONOUS.value == "asynchronous"
 
@@ -811,21 +899,25 @@ class TestTimeRegimeExtra:
 # validate/integrity.py — integrity checks
 # ---------------------------------------------------------------------------
 
+
 class TestValidateIntegrity:
     def test_import(self):
         from cogant.validate.integrity import IntegrityChecker
+
         assert IntegrityChecker is not None
 
     def test_check_program_graph(self):
         from cogant.validate.integrity import IntegrityChecker
+
         checker = IntegrityChecker()
         graph = _make_graph()
         issues = checker.check_program_graph(graph)
         assert isinstance(issues, list)
 
     def test_check_program_graph_empty(self):
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
         from cogant.validate.integrity import IntegrityChecker
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+
         checker = IntegrityChecker()
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="x"))
         issues = checker.check_program_graph(graph)
@@ -833,6 +925,7 @@ class TestValidateIntegrity:
 
     def test_check_state_space(self):
         from cogant.validate.integrity import IntegrityChecker
+
         checker = IntegrityChecker()
         ssm = _make_ssm()
         issues = checker.check_state_space(ssm)
@@ -840,11 +933,13 @@ class TestValidateIntegrity:
 
     def test_is_valid_empty(self):
         from cogant.validate.integrity import IntegrityChecker
+
         checker = IntegrityChecker()
         assert checker.is_valid() is True  # no issues initially
 
     def test_get_issues_empty(self):
         from cogant.validate.integrity import IntegrityChecker
+
         checker = IntegrityChecker()
         issues = checker.get_issues()
         assert isinstance(issues, list)
@@ -854,24 +949,29 @@ class TestValidateIntegrity:
 # plugins/registry.py — PluginRegistry
 # ---------------------------------------------------------------------------
 
+
 class TestPluginRegistry:
     def test_import(self):
         from cogant.plugins.registry import PluginRegistry
+
         assert PluginRegistry is not None
 
     def test_init(self):
         from cogant.plugins.registry import PluginRegistry
+
         reg = PluginRegistry()
         assert reg is not None
 
     def test_list_plugins_empty(self):
         from cogant.plugins.registry import PluginRegistry
+
         reg = PluginRegistry()
         plugins = reg.list_plugins()
         assert isinstance(plugins, list)
 
     def test_register_and_get(self):
         from cogant.plugins.registry import PluginRegistry
+
         reg = PluginRegistry()
         # Try basic operations
         if hasattr(reg, "register"):
@@ -887,19 +987,23 @@ class TestPluginRegistry:
 # export/parquet.py — ParquetExporter
 # ---------------------------------------------------------------------------
 
+
 class TestParquetExporter:
     def test_import(self):
         from cogant.export.parquet import ParquetExporter
+
         assert ParquetExporter is not None
 
     def test_init(self):
         from cogant.export.parquet import ParquetExporter
+
         graph = _make_graph()
         exporter = ParquetExporter(graph)
         assert exporter is not None
 
     def test_export_creates_files(self, tmp_path):
         from cogant.export.parquet import ParquetExporter
+
         graph = _make_graph()
         exporter = ParquetExporter(graph)
         try:
@@ -913,9 +1017,11 @@ class TestParquetExporter:
 # viz/mermaid.py — MermaidGenerator
 # ---------------------------------------------------------------------------
 
+
 class TestMermaidGeneratorExtra:
     def test_generate_class_diagram(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         graph = _make_graph()
         gen = MermaidGenerator()
         result = gen.generate_class_diagram(graph)
@@ -923,6 +1029,7 @@ class TestMermaidGeneratorExtra:
 
     def test_generate_dependency_graph(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         graph = _make_graph()
         gen = MermaidGenerator()
         result = gen.generate_dependency_graph(graph)
@@ -930,6 +1037,7 @@ class TestMermaidGeneratorExtra:
 
     def test_generate_state_diagram(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         gen = MermaidGenerator()
         ssm = _make_ssm()
         result = gen.generate_state_diagram(ssm)
@@ -937,6 +1045,7 @@ class TestMermaidGeneratorExtra:
 
     def test_generate_flowchart(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         graph = _make_graph()
         gen = MermaidGenerator()
         result = gen.generate_flowchart(graph, semantic_mappings={})
@@ -944,6 +1053,7 @@ class TestMermaidGeneratorExtra:
 
     def test_generate_active_inference_diagram(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         gen = MermaidGenerator()
         ssm = _make_ssm()
         result = gen.generate_active_inference_diagram(ssm)
@@ -951,6 +1061,7 @@ class TestMermaidGeneratorExtra:
 
     def test_generate_sequence_diagram(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         gen = MermaidGenerator()
         result = gen.generate_sequence_diagram(graph=_make_graph())
         assert isinstance(result, str)
@@ -960,18 +1071,22 @@ class TestMermaidGeneratorExtra:
 # viz/html_renderer.py — HtmlRenderer
 # ---------------------------------------------------------------------------
 
+
 class TestHtmlRendererExtra:
     def test_import(self):
         from cogant.viz.html_renderer import HTMLSiteRenderer
+
         assert HTMLSiteRenderer is not None
 
     def test_init(self):
         from cogant.viz.html_renderer import HTMLSiteRenderer
+
         renderer = HTMLSiteRenderer(bundle={})
         assert renderer is not None
 
     def test_render_creates_output(self, tmp_path):
         from cogant.viz.html_renderer import HTMLSiteRenderer
+
         bundle = {
             "model_id": "test_model",
             "schema_name": "test_schema",
@@ -984,6 +1099,7 @@ class TestHtmlRendererExtra:
 
     def test_render_with_graph_data(self, tmp_path):
         from cogant.viz.html_renderer import HTMLSiteRenderer
+
         bundle = {
             "model_id": "test_model",
             "schema_name": "test_schema",
@@ -999,9 +1115,11 @@ class TestHtmlRendererExtra:
 # config/loaders.py — more ConfigLoader methods
 # ---------------------------------------------------------------------------
 
+
 class TestConfigLoadersExtra:
     def test_load_preset_default(self):
         from cogant.config.loaders import ConfigLoader
+
         try:
             config = ConfigLoader.load_preset("default")
             assert config is not None
@@ -1010,6 +1128,7 @@ class TestConfigLoadersExtra:
 
     def test_load_preset_minimal(self):
         from cogant.config.loaders import ConfigLoader
+
         try:
             config = ConfigLoader.load_preset("minimal")
             assert config is not None
@@ -1018,6 +1137,7 @@ class TestConfigLoadersExtra:
 
     def test_load_from_yaml_missing_file(self, tmp_path):
         from cogant.config.loaders import ConfigLoader, ConfigLoadError
+
         bad_path = tmp_path / "nonexistent.yaml"
         with pytest.raises((FileNotFoundError, ConfigLoadError, Exception)):
             ConfigLoader.load_from_yaml(bad_path)
@@ -1027,9 +1147,11 @@ class TestConfigLoadersExtra:
 # gnn/json_export.py — GNNJSONExporter edge cases
 # ---------------------------------------------------------------------------
 
+
 class TestGNNJSONExporterExtra:
     def test_export_with_populated_graph(self):
         from cogant.gnn.json_export import GNNJSONExporter
+
         graph = _make_graph()
         ssm = _make_ssm()
         proc = _make_process()
@@ -1041,6 +1163,7 @@ class TestGNNJSONExporterExtra:
 
     def test_export_has_provenance(self):
         from cogant.gnn.json_export import GNNJSONExporter
+
         graph = _make_graph()
         ssm = _make_ssm()
         proc = _make_process()
@@ -1054,9 +1177,11 @@ class TestGNNJSONExporterExtra:
 # export/bundle.py — BundleExporter edge cases
 # ---------------------------------------------------------------------------
 
+
 class TestBundleExporterExtra:
     def test_export_markdown_only(self, tmp_path):
         from cogant.export.bundle import BundleExporter
+
         graph = _make_graph()
         ssm = _make_ssm()
         proc = _make_process()
@@ -1066,6 +1191,7 @@ class TestBundleExporterExtra:
 
     def test_export_json_only(self, tmp_path):
         from cogant.export.bundle import BundleExporter
+
         graph = _make_graph()
         ssm = _make_ssm()
         proc = _make_process()

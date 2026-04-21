@@ -240,25 +240,17 @@ class DataFlowAnalyzer:
                 class_body_stmts = [
                     item
                     for item in node.body
-                    if not isinstance(
-                        item, ast.FunctionDef | ast.AsyncFunctionDef
-                    )
+                    if not isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef)
                 ]
                 if class_body_stmts:
-                    visitor = DataFlowVisitor(
-                        file_path, node.name, class_body_stmts
-                    )
+                    visitor = DataFlowVisitor(file_path, node.name, class_body_stmts)
                     flows.extend(visitor.flows)
 
                 # Analyze methods
                 for item in node.body:
-                    if isinstance(
-                        item, ast.FunctionDef | ast.AsyncFunctionDef
-                    ):
+                    if isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef):
                         context = f"{node.name}.{item.name}"
-                        visitor = DataFlowVisitor(
-                            file_path, context, item.body
-                        )
+                        visitor = DataFlowVisitor(file_path, context, item.body)
                         flows.extend(visitor.flows)
 
         return flows
@@ -278,9 +270,7 @@ class DataFlowAnalyzer:
             graph.add_edge(edge)
         return graph
 
-    def build_flow_graph_from_source(
-        self, source: str, file_path: Path
-    ) -> DataFlowGraph:
+    def build_flow_graph_from_source(self, source: str, file_path: Path) -> DataFlowGraph:
         """Build a data flow graph from source code.
 
         Args:
@@ -609,9 +599,7 @@ class DataFlowVisitor(ast.NodeVisitor):
     ) -> None:
         """Append a DataFlowEdge to the flows list."""
         edge = DataFlowEdge(
-            id=self._generate_flow_id(
-                source_symbol, target_symbol, edge_type, line_num
-            ),
+            id=self._generate_flow_id(source_symbol, target_symbol, edge_type, line_num),
             source_symbol=source_symbol,
             target_symbol=target_symbol,
             edge_type=edge_type,
@@ -722,9 +710,7 @@ class DataFlowVisitor(ast.NodeVisitor):
         return None
 
     @staticmethod
-    def _generate_flow_id(
-        source: str, target: str, flow_type: str, line_num: int
-    ) -> str:
+    def _generate_flow_id(source: str, target: str, flow_type: str, line_num: int) -> str:
         """Generate a deterministic flow edge ID.
 
         Args:

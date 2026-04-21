@@ -78,9 +78,7 @@ class PipelineDAG:
     def add_stage(self, stage: Stage) -> None:
         """Register a stage. Raises ``ValueError`` on duplicate names."""
         if stage.name in self._stages:
-            raise ValueError(
-                f"Duplicate stage name: {stage.name!r}"
-            )
+            raise ValueError(f"Duplicate stage name: {stage.name!r}")
         self._stages[stage.name] = stage
 
     def run(self, context: dict[str, Any]) -> DAGResult:
@@ -183,9 +181,7 @@ class PipelineDAG:
                 in_degree[name] += 1
 
         # Seed with zero-in-degree nodes, sorted for determinism.
-        queue: deque[str] = deque(sorted(
-            n for n, d in in_degree.items() if d == 0
-        ))
+        queue: deque[str] = deque(sorted(n for n, d in in_degree.items() if d == 0))
         order: list[str] = []
 
         while queue:
@@ -201,9 +197,7 @@ class PipelineDAG:
             # Remaining nodes form cycle(s).
             remaining = set(self._stages) - set(order)
             cycle_path = self._find_cycle(remaining)
-            raise ValueError(
-                f"Cycle detected in pipeline DAG: {' -> '.join(cycle_path)}"
-            )
+            raise ValueError(f"Cycle detected in pipeline DAG: {' -> '.join(cycle_path)}")
 
         return order
 
@@ -220,9 +214,7 @@ class PipelineDAG:
         for name, stage in self._stages.items():
             for dep in stage.deps:
                 if dep not in known:
-                    raise ValueError(
-                        f"Stage {name!r} depends on unknown stage {dep!r}"
-                    )
+                    raise ValueError(f"Stage {name!r} depends on unknown stage {dep!r}")
 
     def _find_cycle(self, nodes: set[str]) -> list[str]:
         """Find one cycle among *nodes* for a useful error message."""

@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 import cogant.tools.render_output_figures as rof
 
 _HAS_MATPLOTLIB = importlib.util.find_spec("matplotlib") is not None
@@ -44,9 +45,7 @@ def test_discover_run_dirs_multiple_flat_subdirs(tmp_path: Path) -> None:
     for name in ("r1", "r2"):
         r = parent / name
         r.mkdir()
-        (r / "program_graph.json").write_text(
-            '{"nodes":{"a":{}},"edges":{}}', encoding="utf-8"
-        )
+        (r / "program_graph.json").write_text('{"nodes":{"a":{}},"edges":{}}', encoding="utf-8")
     found = rof._discover_run_dirs(parent)
     assert len(found) == 2
 

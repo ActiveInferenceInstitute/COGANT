@@ -12,6 +12,13 @@ Technical documentation routing index for humans and AI agents.
 
 The published home page is [`index.md`](index.md). Do **not** add a second root `README.md` beside `index.md` under `docs/` — MkDocs treats both as competing home pages and `mkdocs build --strict` will warn or fail. From a nested `docs/<module>/README.md`, point the “hub” link at the site home using the relative path `../index.md` (not `../README.md`).
 
+## Deliberately-shared documentation patterns
+
+Two documentation patterns intentionally diverge from "every folder has its own AGENTS.md + README.md" — agents auditing folder coverage should treat these as features, not gaps:
+
+- **`cogant/docs/` itself has no `README.md`.** [`index.md`](index.md) is the MkDocs home page, and an extra `docs/README.md` would shadow it (see "MkDocs site root" above). A `README.md` here will fail `mkdocs build --strict`.
+- **`cogant/evaluation/eval_repos/` ships a single shared [`AGENTS.md`](../evaluation/eval_repos/AGENTS.md) + [`README.md`](../evaluation/eval_repos/README.md) at the parent level only.** The 12 entries below it are git submodules pinned to upstream commits (manifest at `/.gitmodules`, one level above this `cogant/` package); their internal contents are **read-only third-party code** and must not receive COGANT-authored AGENTS files. Per-submodule documentation lives upstream.
+
 ## Module README indexes
 
 The hub listing all module areas is [`reference/documentation_modules.md`](reference/documentation_modules.md). Each `docs/<module>/README.md` is the table of contents for that module. Link labels should be human-readable titles (for example `Overview`), not pasted heading markers (avoid leading `##` in the link text). If `split_docs.py` is used on a new monolith, empty headings (such as JSON `{` / `}` lines) must not become a filename `.md` or orphan TOC rows; merge those lines into a surrounding section or give them an explicit slug.

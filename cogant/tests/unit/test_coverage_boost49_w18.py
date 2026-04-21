@@ -10,7 +10,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -19,9 +18,11 @@ pytestmark = pytest.mark.unit
 # api/pipeline.py — all stages with dry_run=True
 # ---------------------------------------------------------------------------
 
+
 class TestPipelineRunnerDryRunStages:
     def test_dry_run_ingest_stage(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["ingest"],
             dry_run=True,
@@ -33,7 +34,8 @@ class TestPipelineRunnerDryRunStages:
         assert result.get("dry_run") is True
 
     def test_dry_run_static_stage(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["ingest", "static"],
             dry_run=True,
@@ -44,7 +46,8 @@ class TestPipelineRunnerDryRunStages:
         assert bundle.stage_results.get("static", {}).get("dry_run") is True
 
     def test_dry_run_normalize_stage(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["normalize"],
             dry_run=True,
@@ -56,7 +59,8 @@ class TestPipelineRunnerDryRunStages:
         assert result.get("dry_run") is True
 
     def test_dry_run_graph_stage(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["graph"],
             dry_run=True,
@@ -68,7 +72,8 @@ class TestPipelineRunnerDryRunStages:
         assert result.get("dry_run") is True
 
     def test_dry_run_dynamic_stage(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["dynamic"],
             dry_run=True,
@@ -80,7 +85,8 @@ class TestPipelineRunnerDryRunStages:
         assert result.get("dry_run") is True
 
     def test_dry_run_translate_stage(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["translate"],
             dry_run=True,
@@ -92,7 +98,8 @@ class TestPipelineRunnerDryRunStages:
         assert result.get("dry_run") is True
 
     def test_dry_run_statespace_stage(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["statespace"],
             dry_run=True,
@@ -104,7 +111,8 @@ class TestPipelineRunnerDryRunStages:
         assert result.get("dry_run") is True
 
     def test_dry_run_process_stage(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["process"],
             dry_run=True,
@@ -116,7 +124,8 @@ class TestPipelineRunnerDryRunStages:
         assert result.get("dry_run") is True
 
     def test_dry_run_export_stage(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["export"],
             dry_run=True,
@@ -128,7 +137,8 @@ class TestPipelineRunnerDryRunStages:
         assert result.get("dry_run") is True
 
     def test_dry_run_validate_stage(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["validate"],
             dry_run=True,
@@ -140,7 +150,8 @@ class TestPipelineRunnerDryRunStages:
         assert result.get("dry_run") is True
 
     def test_dry_run_all_stages(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             dry_run=True,
             output_dir=str(tmp_path / "output"),
@@ -153,7 +164,8 @@ class TestPipelineRunnerDryRunStages:
 
     def test_layout_output_with_export_dry_run(self, tmp_path):
         """layout_output=True path (lines 223-229) — triggered when export is in stages."""
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         out = tmp_path / "output"
         out.mkdir()
         cfg = PipelineConfig(
@@ -169,7 +181,7 @@ class TestPipelineRunnerDryRunStages:
 
     def test_dynamic_stage_with_coverage_path(self, tmp_path):
         """coverage_path provided to _stage_dynamic (lines 469-474 path)."""
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
 
         # Create a dummy coverage file
         cov = tmp_path / ".coverage"
@@ -191,18 +203,22 @@ class TestPipelineRunnerDryRunStages:
 # gnn/runner.py — GNNRunner basic coverage
 # ---------------------------------------------------------------------------
 
+
 class TestGNNRunner:
     def test_import_gnn_model_runner(self):
         from cogant.gnn.runner import GNNModelRunner
+
         assert GNNModelRunner is not None
 
     def test_gnn_model_runner_init(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         assert runner is not None
 
     def test_execution_trace_dataclass(self):
         from cogant.gnn.runner import ExecutionTrace
+
         trace = ExecutionTrace(
             step=1,
             state={"x": 1},
@@ -213,14 +229,17 @@ class TestGNNRunner:
 
     def test_free_energy_calculator_import(self):
         from cogant.gnn.runner import FreeEnergyCalculator
+
         assert FreeEnergyCalculator is not None
 
     def test_active_inference_available_bool(self):
         from cogant.gnn.runner import ACTIVE_INFERENCE_AVAILABLE
+
         assert isinstance(ACTIVE_INFERENCE_AVAILABLE, bool)
 
     def test_gnn_runner_module_importable(self):
         from cogant.gnn import runner as runner_module
+
         assert runner_module is not None
 
 
@@ -228,10 +247,12 @@ class TestGNNRunner:
 # api/pipeline.py — PipelineRunner._stage_dynamic no-data path
 # ---------------------------------------------------------------------------
 
+
 class TestPipelineDynamicNoData:
     def test_dynamic_stage_no_coverage_no_trace(self, tmp_path):
         """When no coverage or trace data is available, dynamic stage skips."""
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["dynamic"],
             coverage_path=None,
@@ -246,7 +267,8 @@ class TestPipelineDynamicNoData:
         assert isinstance(result, dict)
 
     def test_dynamic_stage_skip_dynamic_flag(self, tmp_path):
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         cfg = PipelineConfig(
             stages=["dynamic"],
             skip_dynamic=True,

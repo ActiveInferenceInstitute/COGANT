@@ -195,16 +195,12 @@ class MarkovBlanket:
         """
         issues: list[str] = []
 
-        all_ids = (
-            self.internal_ids | self.sensory_ids | self.active_ids | self.external_ids
-        )
+        all_ids = self.internal_ids | self.sensory_ids | self.active_ids | self.external_ids
 
         # Check roles are in dict
         role_nodes = set(self.roles.keys())
         if role_nodes != all_ids:
-            issues.append(
-                f"Role dict size {len(role_nodes)} doesn't match union {len(all_ids)}"
-            )
+            issues.append(f"Role dict size {len(role_nodes)} doesn't match union {len(all_ids)}")
 
         # Check for overlaps
         pairs = [
@@ -423,9 +419,7 @@ def partition_by_seeds(
 
             if ext_out and ext_in:
                 roles[node_id] = BlanketRole.ACTIVE
-                rationale[node_id] = (
-                    "active (bidirectional): edges flow in and out of the system"
-                )
+                rationale[node_id] = "active (bidirectional): edges flow in and out of the system"
                 active.add(node_id)
                 bidirectional.add(node_id)
             elif ext_out:

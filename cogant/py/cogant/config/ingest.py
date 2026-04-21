@@ -23,9 +23,7 @@ class IngestConfig(BaseModel):
         encoding: Text encoding used when reading source files.
     """
 
-    max_file_size_kb: int = Field(
-        default=512, ge=1, description="Max file size in kilobytes"
-    )
+    max_file_size_kb: int = Field(default=512, ge=1, description="Max file size in kilobytes")
     include_extensions: list[str] = Field(
         default_factory=lambda: [".py", ".js", ".ts"],
         description="File suffixes to include",
@@ -34,11 +32,7 @@ class IngestConfig(BaseModel):
         default_factory=lambda: ["__pycache__", ".git", "node_modules"],
         description="Path substrings to exclude",
     )
-    follow_symlinks: bool = Field(
-        default=False, description="Follow symlinks during traversal"
-    )
-    encoding: str = Field(
-        default="utf-8", description="Text encoding for source files"
-    )
+    follow_symlinks: bool = Field(default=False, description="Follow symlinks during traversal")
+    encoding: str = Field(default="utf-8", description="Text encoding for source files")
 
     model_config = ConfigDict(frozen=True)

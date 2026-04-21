@@ -9,20 +9,23 @@ Covers:
 - graph/builder.py: ProgramGraphBuilder.get_statistics, finalize, add_node with metadata
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 pytestmark = pytest.mark.unit
 
 
 def _make_bundle(tmp_path):
     from cogant.api.bundle import Bundle
+
     return Bundle(target=str(tmp_path))
 
 
 def _full_pipeline_bundle(tmp_path, python_src=None):
     """Run ingest+graph chain and return bundle."""
-    from cogant.api.orchestration import run_ingest, run_graph
+    from cogant.api.orchestration import run_graph, run_ingest
+
     bundle = _make_bundle(tmp_path)
     if python_src:
         (tmp_path / "mod.py").write_text(python_src)
@@ -35,9 +38,11 @@ def _full_pipeline_bundle(tmp_path, python_src=None):
 # api/orchestration.py — run_export
 # ---------------------------------------------------------------------------
 
+
 class TestRunExport:
     def test_run_export_empty_bundle(self, tmp_path):
         from cogant.api.orchestration import run_export
+
         bundle = _make_bundle(tmp_path)
         out = tmp_path / "output"
         result = run_export(bundle, str(out))
@@ -48,6 +53,7 @@ class TestRunExport:
 
     def test_run_export_creates_output_dir(self, tmp_path):
         from cogant.api.orchestration import run_export
+
         bundle = _make_bundle(tmp_path)
         out = tmp_path / "new_output"
         assert not out.exists()
@@ -56,6 +62,7 @@ class TestRunExport:
 
     def test_run_export_with_program_graph(self, tmp_path):
         from cogant.api.orchestration import run_export
+
         bundle = _full_pipeline_bundle(tmp_path)
         out = tmp_path / "output"
         result = run_export(bundle, str(out))
@@ -68,6 +75,7 @@ class TestRunExport:
 
     def test_run_export_stores_export_paths(self, tmp_path):
         from cogant.api.orchestration import run_export
+
         bundle = _make_bundle(tmp_path)
         out = tmp_path / "output"
         run_export(bundle, str(out))
@@ -75,7 +83,14 @@ class TestRunExport:
         assert isinstance(paths, list)
 
     def test_run_export_with_state_space(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph, run_translate, run_statespace, run_export
+        from cogant.api.orchestration import (
+            run_export,
+            run_graph,
+            run_ingest,
+            run_statespace,
+            run_translate,
+        )
+
         (tmp_path / "m.py").write_text("class Agent:\n    state: int = 0\n")
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
@@ -91,9 +106,11 @@ class TestRunExport:
 # api/orchestration.py — run_validate
 # ---------------------------------------------------------------------------
 
+
 class TestRunValidate:
     def test_run_validate_no_graph(self, tmp_path):
         from cogant.api.orchestration import run_validate
+
         bundle = _make_bundle(tmp_path)
         result = run_validate(bundle)
         assert isinstance(result, dict)
@@ -103,6 +120,7 @@ class TestRunValidate:
 
     def test_run_validate_with_empty_graph(self, tmp_path):
         from cogant.api.orchestration import run_validate
+
         bundle = _full_pipeline_bundle(tmp_path)
         result = run_validate(bundle)
         assert isinstance(result, dict)
@@ -112,15 +130,15 @@ class TestRunValidate:
 
     def test_run_validate_with_python_module(self, tmp_path):
         from cogant.api.orchestration import run_validate
-        bundle = _full_pipeline_bundle(
-            tmp_path, python_src="class Foo:\n    def bar(self): pass\n"
-        )
+
+        bundle = _full_pipeline_bundle(tmp_path, python_src="class Foo:\n    def bar(self): pass\n")
         result = run_validate(bundle)
         assert isinstance(result, dict)
         assert "issues" in result
 
     def test_run_validate_issues_is_list(self, tmp_path):
         from cogant.api.orchestration import run_validate
+
         bundle = _full_pipeline_bundle(tmp_path)
         result = run_validate(bundle)
         assert isinstance(result.get("issues", []), list)
@@ -130,15 +148,18 @@ class TestRunValidate:
 # api/orchestration.py — run_dynamic
 # ---------------------------------------------------------------------------
 
+
 class TestRunDynamic:
     def test_run_dynamic_no_coverage_no_trace(self, tmp_path):
         from cogant.api.orchestration import run_dynamic
+
         bundle = _full_pipeline_bundle(tmp_path)
         result = run_dynamic(bundle, coverage_path=None, trace_path=None)
         assert isinstance(result, dict)
 
     def test_run_dynamic_empty_bundle(self, tmp_path):
         from cogant.api.orchestration import run_dynamic
+
         bundle = _make_bundle(tmp_path)
         result = run_dynamic(bundle)
         assert isinstance(result, dict)
@@ -148,37 +169,52 @@ class TestRunDynamic:
 # graph/builder.py — ProgramGraphBuilder extended
 # ---------------------------------------------------------------------------
 
+
 class TestProgramGraphBuilderExtended:
     def test_get_statistics_empty(self):
         from cogant.graph.builder import ProgramGraphBuilder
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         stats = builder.get_statistics()
         assert isinstance(stats, dict)
         # Stats should have some keys about nodes/edges
-        total_nodes = sum(stats.get("nodes_by_kind", {}).values()) if "nodes_by_kind" in stats else stats.get("node_count", 0)
+        total_nodes = (
+            sum(stats.get("nodes_by_kind", {}).values())
+            if "nodes_by_kind" in stats
+            else stats.get("node_count", 0)
+        )
         assert total_nodes == 0
 
     def test_get_statistics_with_nodes(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
         n2 = builder.add_node(NodeKind.CLASS, "Cls", "mod.Cls", path="mod.py")
         builder.add_edge(n1.id, n2.id, EdgeKind.CONTAINS)
         stats = builder.get_statistics()
         # Stats format: either node_count or nodes_by_kind
-        total_nodes = sum(stats.get("nodes_by_kind", {}).values()) if "nodes_by_kind" in stats else stats.get("node_count", 0)
-        total_edges = sum(stats.get("edges_by_kind", {}).values()) if "edges_by_kind" in stats else stats.get("edge_count", 0)
+        total_nodes = (
+            sum(stats.get("nodes_by_kind", {}).values())
+            if "nodes_by_kind" in stats
+            else stats.get("node_count", 0)
+        )
+        total_edges = (
+            sum(stats.get("edges_by_kind", {}).values())
+            if "edges_by_kind" in stats
+            else stats.get("edge_count", 0)
+        )
         assert total_nodes >= 2
         assert total_edges >= 1
 
     def test_add_node_with_metadata(self):
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         node = builder.add_node(
-            NodeKind.FUNCTION, "myfunc", "mod.myfunc",
-            path="mod.py", language="python"
+            NodeKind.FUNCTION, "myfunc", "mod.myfunc", path="mod.py", language="python"
         )
         assert node is not None
         assert node.name == "myfunc"
@@ -186,6 +222,7 @@ class TestProgramGraphBuilderExtended:
     def test_finalize_returns_program_graph(self):
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         builder.add_node(NodeKind.MODULE, "m", "m", path="m.py")
         graph = builder.finalize()
@@ -194,6 +231,7 @@ class TestProgramGraphBuilderExtended:
 
     def test_repo_uri_in_metadata(self):
         from cogant.graph.builder import ProgramGraphBuilder
+
         builder = ProgramGraphBuilder(repo_uri="file:///myrepo")
         graph = builder.finalize()
         assert graph.metadata.repo_uri == "file:///myrepo"

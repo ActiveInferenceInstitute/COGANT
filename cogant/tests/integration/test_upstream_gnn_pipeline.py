@@ -65,9 +65,7 @@ def gnn_package_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
     runner.run(str(SAMPLE_REPO), cfg)
     candidate = out / "gnn_package"
     if not _has_required_files(candidate):
-        pytest.skip(
-            f"fresh analyze run did not produce a usable gnn_package at {candidate}"
-        )
+        pytest.skip(f"fresh analyze run did not produce a usable gnn_package at {candidate}")
     return candidate
 
 
@@ -88,9 +86,7 @@ def test_default_skip_excludes_render_and_execute() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_run_upstream_pipeline_only_steps_3_5(
-    gnn_package_dir: Path, tmp_path: Path
-) -> None:
+def test_run_upstream_pipeline_only_steps_3_5(gnn_package_dir: Path, tmp_path: Path) -> None:
     """``only=[3,5]`` runs exactly two steps and writes a summary JSON."""
     out = tmp_path / "upstream_only"
     cfg = UpstreamPipelineConfig(
@@ -106,9 +102,7 @@ def test_run_upstream_pipeline_only_steps_3_5(
     assert [s.step_index for s in result.steps] == [3, 5]
     assert (out / "upstream_pipeline_summary.json").is_file()
 
-    data = json.loads(
-        (out / "upstream_pipeline_summary.json").read_text(encoding="utf-8")
-    )
+    data = json.loads((out / "upstream_pipeline_summary.json").read_text(encoding="utf-8"))
     assert data["executed"] == [3, 5]
     assert len(data["steps"]) == 2
 
@@ -172,10 +166,7 @@ def test_render_execute_opt_in_runs_when_jax_available(
 
 @pytest.mark.skipif(
     os.environ.get("COGANT_RUN_UPSTREAM_PIPELINE") != "1",
-    reason=(
-        "Full 23-step upstream pass is slow; set "
-        "COGANT_RUN_UPSTREAM_PIPELINE=1 to enable."
-    ),
+    reason=("Full 23-step upstream pass is slow; set COGANT_RUN_UPSTREAM_PIPELINE=1 to enable."),
 )
 def test_run_full_upstream_pipeline_with_default_skip(
     gnn_package_dir: Path, tmp_path: Path

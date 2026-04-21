@@ -18,17 +18,17 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule",
-                           path="mymodule.py", language="python")
-    func1 = builder.add_node(NodeKind.FUNCTION, "sender", "mymodule.sender",
-                             path="mymodule.py")
-    var1 = builder.add_node(NodeKind.VARIABLE, "state", "mymodule.state",
-                            path="mymodule.py")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
+    func1 = builder.add_node(NodeKind.FUNCTION, "sender", "mymodule.sender", path="mymodule.py")
+    var1 = builder.add_node(NodeKind.VARIABLE, "state", "mymodule.state", path="mymodule.py")
     builder.add_edge(mod.id, func1.id, EdgeKind.CONTAINS)
     builder.add_edge(mod.id, var1.id, EdgeKind.CONTAINS)
     builder.add_edge(func1.id, var1.id, EdgeKind.WRITES)
@@ -39,11 +39,14 @@ def _make_graph():
 def _make_engine_with_rules():
     """Create TranslationEngine with all standard rules registered."""
     from cogant.translate.engine import TranslationEngine
-    from cogant.translate.rules.structural import (
-        ReadOnlyInputRule, MutatingSubsystemRule, InheritanceRule,
-        ContainmentRule, DataPipelineRule,
-    )
     from cogant.translate.rules.resilience import RetryPatternRule
+    from cogant.translate.rules.structural import (
+        ContainmentRule,
+        DataPipelineRule,
+        MutatingSubsystemRule,
+        ReadOnlyInputRule,
+    )
+
     engine = TranslationEngine()
     engine.register_rule(ReadOnlyInputRule())
     engine.register_rule(MutatingSubsystemRule())
@@ -57,9 +60,11 @@ def _make_engine_with_rules():
 # RuleExplanation
 # ---------------------------------------------------------------------------
 
+
 class TestRuleExplanation:
     def test_creation(self):
         from cogant.translate.engine import RuleExplanation
+
         exp = RuleExplanation(
             rule_name="test_rule",
             priority=0,
@@ -71,19 +76,26 @@ class TestRuleExplanation:
 
     def test_default_evidence_empty(self):
         from cogant.translate.engine import RuleExplanation
+
         exp = RuleExplanation(rule_name="r", priority=0, fired=False, reason="no")
         assert exp.evidence == []
 
     def test_default_mapping_kind_none(self):
         from cogant.translate.engine import RuleExplanation
+
         exp = RuleExplanation(rule_name="r", priority=0, fired=False, reason="no")
         assert exp.mapping_kind is None
 
     def test_to_dict_returns_dict(self):
         from cogant.translate.engine import RuleExplanation
+
         exp = RuleExplanation(
-            rule_name="my_rule", priority=1, fired=True,
-            reason="matches", evidence=["e1"], mapping_kind="hidden_state",
+            rule_name="my_rule",
+            priority=1,
+            fired=True,
+            reason="matches",
+            evidence=["e1"],
+            mapping_kind="hidden_state",
         )
         d = exp.to_dict()
         assert isinstance(d, dict)
@@ -93,18 +105,28 @@ class TestRuleExplanation:
 
     def test_to_dict_has_all_keys(self):
         from cogant.translate.engine import RuleExplanation
+
         exp = RuleExplanation(rule_name="r", priority=0, fired=False, reason="no")
         d = exp.to_dict()
-        assert set(d.keys()) >= {"rule_name", "priority", "fired", "reason", "evidence", "mapping_kind"}
+        assert set(d.keys()) >= {
+            "rule_name",
+            "priority",
+            "fired",
+            "reason",
+            "evidence",
+            "mapping_kind",
+        }
 
 
 # ---------------------------------------------------------------------------
 # TranslationEngine — initialization
 # ---------------------------------------------------------------------------
 
+
 class TestTranslationEngineInit:
     def test_default_init(self):
         from cogant.translate.engine import TranslationEngine
+
         engine = TranslationEngine()
         assert engine.max_iterations == 10
         assert engine.rules == []
@@ -112,19 +134,22 @@ class TestTranslationEngineInit:
 
     def test_custom_max_iterations(self):
         from cogant.translate.engine import TranslationEngine
+
         engine = TranslationEngine(max_iterations=5)
         assert engine.max_iterations == 5
 
     def test_register_rule(self):
         from cogant.translate.engine import TranslationEngine
         from cogant.translate.rules.structural import ReadOnlyInputRule
+
         engine = TranslationEngine()
         engine.register_rule(ReadOnlyInputRule())
         assert len(engine.rules) == 1
 
     def test_register_multiple_rules(self):
         from cogant.translate.engine import TranslationEngine
-        from cogant.translate.rules.structural import ReadOnlyInputRule, MutatingSubsystemRule
+        from cogant.translate.rules.structural import MutatingSubsystemRule, ReadOnlyInputRule
+
         engine = TranslationEngine()
         engine.register_rule(ReadOnlyInputRule())
         engine.register_rule(MutatingSubsystemRule())
@@ -135,10 +160,12 @@ class TestTranslationEngineInit:
 # TranslationEngine — translate
 # ---------------------------------------------------------------------------
 
+
 class TestTranslationEngineTranslate:
     def test_translate_empty_graph_returns_list(self):
-        from cogant.translate.engine import TranslationEngine
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.translate.engine import TranslationEngine
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         graph = builder.finalize()
         engine = TranslationEngine()
@@ -147,6 +174,7 @@ class TestTranslationEngineTranslate:
 
     def test_translate_with_rules_returns_mappings(self):
         from cogant.schemas.semantic import SemanticMapping
+
         graph, mod, func1, var1 = _make_graph()
         engine = _make_engine_with_rules()
         result = engine.translate(graph)
@@ -175,8 +203,9 @@ class TestTranslationEngineTranslate:
         assert isinstance(log, list)
 
     def test_translate_convergence(self):
-        from cogant.translate.engine import TranslationEngine
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.translate.engine import TranslationEngine
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         graph = builder.finalize()
         engine = TranslationEngine(max_iterations=3)
@@ -188,9 +217,11 @@ class TestTranslationEngineTranslate:
 # TranslationEngine — translate_with_confidence
 # ---------------------------------------------------------------------------
 
+
 class TestTranslationEngineTranslateWithConfidence:
     def test_translate_with_confidence_returns_list(self):
         from cogant.schemas.semantic import SemanticMapping
+
         graph, mod, func1, var1 = _make_graph()
         engine = _make_engine_with_rules()
         result = engine.translate_with_confidence(graph)
@@ -208,6 +239,7 @@ class TestTranslationEngineTranslateWithConfidence:
 # ---------------------------------------------------------------------------
 # TranslationEngine — get_coverage_report
 # ---------------------------------------------------------------------------
+
 
 class TestTranslationEngineCoverageReport:
     def test_coverage_report_structure(self):
@@ -235,8 +267,9 @@ class TestTranslationEngineCoverageReport:
         assert 0.0 <= report["coverage_percent"] <= 100.0
 
     def test_empty_graph_zero_coverage(self):
-        from cogant.translate.engine import TranslationEngine
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.translate.engine import TranslationEngine
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         graph = builder.finalize()
         engine = TranslationEngine()
@@ -250,9 +283,11 @@ class TestTranslationEngineCoverageReport:
 # TranslationEngine — get_mappings_by_kind
 # ---------------------------------------------------------------------------
 
+
 class TestGetMappingsByKind:
     def test_returns_list(self):
         from cogant.schemas.semantic import MappingKind
+
         graph, mod, func1, var1 = _make_graph()
         engine = _make_engine_with_rules()
         engine.translate(graph)
@@ -261,6 +296,7 @@ class TestGetMappingsByKind:
 
     def test_returns_only_requested_kind(self):
         from cogant.schemas.semantic import MappingKind
+
         graph, mod, func1, var1 = _make_graph()
         engine = _make_engine_with_rules()
         engine.translate(graph)
@@ -272,9 +308,11 @@ class TestGetMappingsByKind:
 # TranslationEngine — get_mappings_by_confidence
 # ---------------------------------------------------------------------------
 
+
 class TestGetMappingsByConfidence:
     def test_returns_list(self):
         from cogant.schemas.semantic import ConfidenceTier
+
         graph, mod, func1, var1 = _make_graph()
         engine = _make_engine_with_rules()
         engine.translate(graph)
@@ -283,6 +321,7 @@ class TestGetMappingsByConfidence:
 
     def test_only_requested_tier(self):
         from cogant.schemas.semantic import ConfidenceTier
+
         graph, mod, func1, var1 = _make_graph()
         engine = _make_engine_with_rules()
         engine.translate(graph)
@@ -294,15 +333,18 @@ class TestGetMappingsByConfidence:
 # TranslationEngine — get_mapping, get_match_log, get_statistics
 # ---------------------------------------------------------------------------
 
+
 class TestTranslationEngineAccessors:
     def test_get_mapping_missing_returns_none(self):
         from cogant.translate.engine import TranslationEngine
+
         engine = TranslationEngine()
         result = engine.get_mapping("nonexistent_id")
         assert result is None
 
     def test_get_match_log_empty_initially(self):
         from cogant.translate.engine import TranslationEngine
+
         engine = TranslationEngine()
         log = engine.get_match_log()
         assert log == []
@@ -326,6 +368,7 @@ class TestTranslationEngineAccessors:
     def test_get_statistics_rules_count(self):
         from cogant.translate.engine import TranslationEngine
         from cogant.translate.rules.structural import ReadOnlyInputRule
+
         engine = TranslationEngine()
         engine.register_rule(ReadOnlyInputRule())
         stats = engine.get_statistics()
@@ -343,12 +386,15 @@ class TestTranslationEngineAccessors:
 # TranslationRule.explain
 # ---------------------------------------------------------------------------
 
+
 class TestTranslationRuleExplain:
     def test_explain_matched_node(self):
-        from cogant.translate.rules.structural import ReadOnlyInputRule
         from cogant.translate.engine import RuleExplanation
+        from cogant.translate.rules.structural import ReadOnlyInputRule
+
         graph, mod, func1, var1 = _make_graph()
         from cogant.graph.queries import GraphQuery
+
         rule = ReadOnlyInputRule()
         query = GraphQuery(graph)
         exp = rule.explain(mod, graph, query)
@@ -356,10 +402,12 @@ class TestTranslationRuleExplain:
         assert exp.rule_name == "read_only_input"
 
     def test_explain_non_matched_node(self):
-        from cogant.translate.rules.structural import ReadOnlyInputRule
         from cogant.translate.engine import RuleExplanation
+        from cogant.translate.rules.structural import ReadOnlyInputRule
+
         graph, mod, func1, var1 = _make_graph()
         from cogant.graph.queries import GraphQuery
+
         rule = ReadOnlyInputRule()
         query = GraphQuery(graph)
         exp = rule.explain(func1, graph, query)

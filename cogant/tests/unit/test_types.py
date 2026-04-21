@@ -1,31 +1,30 @@
 """Unit tests for type definitions."""
 
 import pytest
-from typing import get_type_hints
 
+from cogant.translate.types import (
+    FixpointStatus,
+    RuleFamily,
+    SemanticRole,
+    TranslationTier,
+)
 from cogant.types import (
-    NodeAttrs,
-    EdgeAttrs,
-    GNNBundle,
-    MatrixDict,
-    PipelineResultDict,
-    RuleResultDict,
-    ValidationIssue,
-    NodeId,
-    EdgeKind,
-    RoleName,
-    FilePath,
-    ConfidenceScore,
     AMatrix,
     BMatrix,
+    ConfidenceScore,
     CVector,
     DVector,
-)
-from cogant.translate.types import (
-    SemanticRole,
-    RuleFamily,
-    FixpointStatus,
-    TranslationTier,
+    EdgeAttrs,
+    EdgeKind,
+    FilePath,
+    GNNBundle,
+    MatrixDict,
+    NodeAttrs,
+    NodeId,
+    PipelineResultDict,
+    RoleName,
+    RuleResultDict,
+    ValidationIssue,
 )
 
 

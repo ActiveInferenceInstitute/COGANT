@@ -22,7 +22,6 @@ from cogant.statespace.compiler import (
 from cogant.statespace.temporal import TimeRegime
 from cogant.statespace.variables import StateVariable, StateVariableType
 
-
 # --------------------------- fixtures ----------------------------------- #
 
 
@@ -48,9 +47,7 @@ def _graph() -> ProgramGraph:
             path="pkg/file.py",
         )
     )
-    g.add_edge(
-        Edge(id="e1", source_id="f1", target_id="f2", kind=EdgeKind.CALLS, weight=1.0)
-    )
+    g.add_edge(Edge(id="e1", source_id="f1", target_id="f2", kind=EdgeKind.CALLS, weight=1.0))
     return g
 
 
@@ -190,9 +187,7 @@ def test_compute_checksum_returns_sha256_hex(tmp_path):
     # SHA256 hex is 64 characters
     assert len(digest) == 64
     # sha256("hello world") is a well-known value
-    assert digest == (
-        "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
-    )
+    assert digest == ("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9")
 
 
 # --------------------------- HTML generation --------------------------- #

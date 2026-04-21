@@ -12,29 +12,36 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
 
 def _make_empty_graph():
     from cogant.graph.builder import ProgramGraphBuilder
+
     return ProgramGraphBuilder(repo_uri="file:///test").finalize()
 
 
 def _make_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
-        id="ss1", schema_name="test",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="ss1",
+        schema_name="test",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
 
 
 def _make_process_model():
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
 
 
@@ -42,9 +49,11 @@ def _make_process_model():
 # validate/schema_check.py — ValidationIssue and SchemaValidator
 # ---------------------------------------------------------------------------
 
+
 class TestValidationIssue:
     def test_validation_issue_init(self):
         from cogant.validate.schema_check import ValidationIssue
+
         issue = ValidationIssue(
             id="issue_001",
             severity="error",
@@ -58,6 +67,7 @@ class TestValidationIssue:
 
     def test_validation_issue_warning(self):
         from cogant.validate.schema_check import ValidationIssue
+
         issue = ValidationIssue(
             id="issue_002",
             severity="warning",
@@ -72,20 +82,23 @@ class TestValidationIssue:
 class TestSchemaValidator:
     def test_init(self):
         from cogant.validate.schema_check import SchemaValidator
+
         validator = SchemaValidator()
         assert validator is not None
 
     def test_validate_program_graph_empty(self):
         from cogant.validate.schema_check import SchemaValidator
+
         validator = SchemaValidator()
         graph = _make_empty_graph()
         issues = validator.validate_program_graph(graph)
         assert isinstance(issues, list)
 
     def test_validate_program_graph_with_nodes(self):
-        from cogant.validate.schema_check import SchemaValidator
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.validate.schema_check import SchemaValidator
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
         n2 = builder.add_node(NodeKind.CLASS, "Cls", "mod.Cls", path="mod.py")
@@ -97,6 +110,7 @@ class TestSchemaValidator:
 
     def test_validate_state_space_empty(self):
         from cogant.validate.schema_check import SchemaValidator
+
         validator = SchemaValidator()
         ss = _make_state_space()
         issues = validator.validate_state_space(ss)
@@ -104,6 +118,7 @@ class TestSchemaValidator:
 
     def test_validate_process_model_empty(self):
         from cogant.validate.schema_check import SchemaValidator
+
         validator = SchemaValidator()
         pm = _make_process_model()
         issues = validator.validate_process_model(pm)
@@ -114,14 +129,17 @@ class TestSchemaValidator:
 # validate/integrity.py — IntegrityChecker
 # ---------------------------------------------------------------------------
 
+
 class TestIntegrityChecker:
     def test_init(self):
         from cogant.validate.integrity import IntegrityChecker
+
         checker = IntegrityChecker()
         assert checker is not None
 
     def test_check_program_graph_empty(self):
         from cogant.validate.integrity import IntegrityChecker
+
         checker = IntegrityChecker()
         graph = _make_empty_graph()
         issues = checker.check_program_graph(graph)
@@ -129,6 +147,7 @@ class TestIntegrityChecker:
 
     def test_check_state_space_empty(self):
         from cogant.validate.integrity import IntegrityChecker
+
         checker = IntegrityChecker()
         ss = _make_state_space()
         issues = checker.check_state_space(ss)
@@ -136,6 +155,7 @@ class TestIntegrityChecker:
 
     def test_check_process_model_empty(self):
         from cogant.validate.integrity import IntegrityChecker
+
         checker = IntegrityChecker()
         pm = _make_process_model()
         issues = checker.check_process_model(pm)
@@ -143,6 +163,7 @@ class TestIntegrityChecker:
 
     def test_get_issues_initially_empty(self):
         from cogant.validate.integrity import IntegrityChecker
+
         checker = IntegrityChecker()
         issues = checker.get_issues()
         assert isinstance(issues, list)
@@ -150,11 +171,13 @@ class TestIntegrityChecker:
 
     def test_is_valid_initially_true(self):
         from cogant.validate.integrity import IntegrityChecker
+
         checker = IntegrityChecker()
         assert checker.is_valid() is True
 
     def test_is_valid_after_check(self):
         from cogant.validate.integrity import IntegrityChecker
+
         checker = IntegrityChecker()
         graph = _make_empty_graph()
         checker.check_program_graph(graph)
@@ -166,10 +189,13 @@ class TestIntegrityChecker:
 # validate/report.py — ValidationReport and ReportGenerator
 # ---------------------------------------------------------------------------
 
+
 class TestValidationReport:
     def test_report_init(self):
-        from cogant.validate.report import ValidationReport
         from datetime import datetime
+
+        from cogant.validate.report import ValidationReport
+
         report = ValidationReport(
             id="report_001",
             schema_name="test",
@@ -189,6 +215,7 @@ class TestValidationReport:
 class TestReportGenerator:
     def test_init(self):
         from cogant.validate.report import ReportGenerator
+
         graph = _make_empty_graph()
         ss = _make_state_space()
         pm = _make_process_model()
@@ -202,6 +229,7 @@ class TestReportGenerator:
 
     def test_generate_empty_graph(self):
         from cogant.validate.report import ReportGenerator, ValidationReport
+
         graph = _make_empty_graph()
         ss = _make_state_space()
         pm = _make_process_model()
@@ -217,6 +245,7 @@ class TestReportGenerator:
 
     def test_export_to_dict(self):
         from cogant.validate.report import ReportGenerator
+
         graph = _make_empty_graph()
         ss = _make_state_space()
         pm = _make_process_model()
@@ -232,7 +261,9 @@ class TestReportGenerator:
 
     def test_export_to_json_string(self):
         import json
+
         from cogant.validate.report import ReportGenerator
+
         graph = _make_empty_graph()
         ss = _make_state_space()
         pm = _make_process_model()

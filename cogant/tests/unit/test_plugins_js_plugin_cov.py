@@ -7,11 +7,8 @@ their fallback branches; when it is present they run the real parser.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from cogant.plugins.js_plugin import JsLanguagePlugin
 from cogant.static import treesitter_parser as _ts
-
 
 # --------------------------- construction ------------------------------ #
 
@@ -87,6 +84,7 @@ def test_extract_symbols_empty_for_non_dict_ast():
 
 def test_extract_symbols_from_fake_parsed_file():
     """A parsed file with symbols yields dict entries with expected keys."""
+
     class _Sym:
         def __init__(self, name, kind):
             self.name = name
@@ -138,6 +136,7 @@ def test_resolve_imports_empty_for_non_dict_ast():
 
 def test_resolve_imports_from_fake_parsed_file():
     """Import dicts with a 'raw' key are returned verbatim."""
+
     class _Parsed:
         imports = [{"raw": "import x from 'x';"}, {"raw": "import y from 'y';"}, {}]
 

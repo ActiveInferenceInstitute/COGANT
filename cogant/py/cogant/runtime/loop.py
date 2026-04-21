@@ -206,9 +206,7 @@ class AgentRuntime:
 
         self._n_states = len(self.D) if self.D else (len(self.A[0]) if self.A and self.A[0] else 1)
         self._n_obs = len(self.A) if self.A else 1
-        self._n_actions = (
-            len(self.B[0][0]) if self.B and self.B[0] and self.B[0][0] else 1
-        )
+        self._n_actions = len(self.B[0][0]) if self.B and self.B[0] and self.B[0][0] else 1
         # Number of episodes completed — drives the running-average D update.
         self._episode_count = 0
         # Tracks the most recent VFE for introspection via get_free_energy().
@@ -318,9 +316,7 @@ class AgentRuntime:
             free_energy=fe,
         )
 
-    def run_n_steps(
-        self, n: int, initial_state: list[float] | None = None
-    ) -> list[AgentStep]:
+    def run_n_steps(self, n: int, initial_state: list[float] | None = None) -> list[AgentStep]:
         """Run ``n`` inference steps from an initial state.
 
         At each step the observation is chosen as the argmax of the
@@ -717,18 +713,19 @@ class AgentRuntime:
                     obs_state_counts[obs_idx][s] += agent_step.state_dist[s]
 
             # Log this step
-            step_logs.append({
-                "step": t,
-                "observation": obs_idx,
-                "action": agent_step.action,
-                "free_energy": agent_step.free_energy,
-            })
+            step_logs.append(
+                {
+                    "step": t,
+                    "observation": obs_idx,
+                    "action": agent_step.action,
+                    "free_energy": agent_step.free_energy,
+                }
+            )
 
             state = list(agent_step.state_dist)
 
         # Compute episode metrics
-        mean_fe = sum(step.free_energy for step in steps) / len(steps) \
-            if steps else float("nan")
+        mean_fe = sum(step.free_energy for step in steps) / len(steps) if steps else float("nan")
         final_fe = steps[-1].free_energy if steps else float("nan")
 
         episode_result = EpisodeResult(
@@ -780,7 +777,7 @@ class AgentRuntime:
 
         mean = sum(times_ms) / len(times_ms)
         variance = sum((t - mean) ** 2 for t in times_ms) / len(times_ms)
-        std = variance ** 0.5
+        std = variance**0.5
 
         return {
             "mean_ms": mean,

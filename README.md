@@ -37,6 +37,18 @@ chmod +x run_all.sh
 
 Equivalent: `cd cogant && uv run python ../run_all.py --config ../run_all.json`
 
+## Setup — eval submodules
+
+Quantitative benchmarks under [`cogant/evaluation/`](cogant/evaluation/) read 12 third-party Python repositories vendored as git submodules under [`cogant/evaluation/eval_repos/`](cogant/evaluation/eval_repos/). Fresh clones leave them empty; populate them with either of:
+
+```bash
+git clone --recurse-submodules https://github.com/docxology/cogant.git
+# or, for an existing clone:
+git submodule update --init --recursive cogant/evaluation/eval_repos
+```
+
+Empty checkouts make benchmarks skip rather than fail, so this step is only required when running the evaluation pipeline. See [`cogant/evaluation/eval_repos/AGENTS.md`](cogant/evaluation/eval_repos/AGENTS.md) for per-submodule details.
+
 ## See also
 
 - [`manuscript/README.md`](manuscript/README.md) — section index and validation commands

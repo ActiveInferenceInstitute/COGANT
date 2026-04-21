@@ -13,10 +13,10 @@ from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.semantic import MappingKind, SemanticMapping
 from cogant.statespace.variables import StateVariableExtractor
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _new_graph() -> ProgramGraphBuilder:
     return ProgramGraphBuilder(repo_uri="test://independence")
@@ -33,7 +33,9 @@ def _hidden_mapping(mapping_id: str, node_id: str) -> SemanticMapping:
     )
 
 
-def _extract(builder: ProgramGraphBuilder, mappings: dict[str, SemanticMapping]) -> StateVariableExtractor:
+def _extract(
+    builder: ProgramGraphBuilder, mappings: dict[str, SemanticMapping]
+) -> StateVariableExtractor:
     graph = builder.finalize()
     ex = StateVariableExtractor(graph)
     ex.extract(mappings)
@@ -43,6 +45,7 @@ def _extract(builder: ProgramGraphBuilder, mappings: dict[str, SemanticMapping])
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_independence_score_disjoint_targets():
@@ -55,10 +58,13 @@ def test_independence_score_disjoint_targets():
     b.add_edge(source_id=va.id, target_id=nx.id, kind=EdgeKind.WRITES)
     b.add_edge(source_id=vb.id, target_id=ny.id, kind=EdgeKind.WRITES)
 
-    ex = _extract(b, {
-        "m1": _hidden_mapping("m1", va.id),
-        "m2": _hidden_mapping("m2", vb.id),
-    })
+    ex = _extract(
+        b,
+        {
+            "m1": _hidden_mapping("m1", va.id),
+            "m2": _hidden_mapping("m2", vb.id),
+        },
+    )
 
     # Disjoint write frontiers → no entry in factorization_map
     assert ex.factorization_map == {}
@@ -74,10 +80,13 @@ def test_independence_score_fully_coupled():
     b.add_edge(source_id=va.id, target_id=shared.id, kind=EdgeKind.WRITES)
     b.add_edge(source_id=vb.id, target_id=shared.id, kind=EdgeKind.WRITES)
 
-    ex = _extract(b, {
-        "m1": _hidden_mapping("m1", va.id),
-        "m2": _hidden_mapping("m2", vb.id),
-    })
+    ex = _extract(
+        b,
+        {
+            "m1": _hidden_mapping("m1", va.id),
+            "m2": _hidden_mapping("m2", vb.id),
+        },
+    )
 
     # Must detect coupling
     assert len(ex.factorization_map) >= 1
@@ -101,13 +110,16 @@ def test_independence_score_partial_overlap():
     b.add_edge(source_id=va.id, target_id=unique_a.id, kind=EdgeKind.WRITES)
     b.add_edge(source_id=vb.id, target_id=shared.id, kind=EdgeKind.WRITES)
 
-    ex = _extract(b, {
-        "m1": _hidden_mapping("m1", va.id),
-        "m2": _hidden_mapping("m2", vb.id),
-    })
+    ex = _extract(
+        b,
+        {
+            "m1": _hidden_mapping("m1", va.id),
+            "m2": _hidden_mapping("m2", vb.id),
+        },
+    )
 
     assert len(ex.factorization_map) >= 1
-    for var_id, info in ex.factorization_map.items():
+    for _var_id, info in ex.factorization_map.items():
         # var 'a' has 2 write targets, 1 shared → score = 1 - 1/2 = 0.5
         assert 0.0 < info.independence_score <= 1.0
         assert info.independence_score == pytest.approx(0.5)
@@ -124,10 +136,13 @@ def test_independence_score_no_write_edges():
     b.add_edge(source_id=shared.id, target_id=va.id, kind=EdgeKind.READS)
     b.add_edge(source_id=shared.id, target_id=vb.id, kind=EdgeKind.READS)
 
-    ex = _extract(b, {
-        "m1": _hidden_mapping("m1", va.id),
-        "m2": _hidden_mapping("m2", vb.id),
-    })
+    ex = _extract(
+        b,
+        {
+            "m1": _hidden_mapping("m1", va.id),
+            "m2": _hidden_mapping("m2", vb.id),
+        },
+    )
 
     # No mutation overlap → no dependency, factorization_map empty
     # (reads are tracked separately and don't trigger coupling detection)
@@ -139,8 +154,9 @@ def test_independence_score_no_write_edges():
 def test_independence_score_is_float_type():
     """independence_score is always a Python float."""
     b = _new_graph()
-    vars_ = [b.add_node(kind=NodeKind.VARIABLE, name=f"v{i}", qualified_name=f"m.v{i}")
-             for i in range(3)]
+    vars_ = [
+        b.add_node(kind=NodeKind.VARIABLE, name=f"v{i}", qualified_name=f"m.v{i}") for i in range(3)
+    ]
     shared_fn = b.add_node(kind=NodeKind.FUNCTION, name="fn", qualified_name="m.fn")
     for v in vars_:
         b.add_edge(source_id=v.id, target_id=shared_fn.id, kind=EdgeKind.WRITES)
@@ -155,10 +171,12 @@ def test_independence_score_is_float_type():
 def test_independence_score_range_always_0_to_1():
     """independence_score stays in [0, 1] regardless of graph structure."""
     b = _new_graph()
-    nodes = [b.add_node(kind=NodeKind.VARIABLE, name=f"v{i}", qualified_name=f"m.v{i}")
-             for i in range(4)]
-    targets = [b.add_node(kind=NodeKind.FUNCTION, name=f"f{i}", qualified_name=f"m.f{i}")
-               for i in range(3)]
+    nodes = [
+        b.add_node(kind=NodeKind.VARIABLE, name=f"v{i}", qualified_name=f"m.v{i}") for i in range(4)
+    ]
+    targets = [
+        b.add_node(kind=NodeKind.FUNCTION, name=f"f{i}", qualified_name=f"m.f{i}") for i in range(3)
+    ]
     # Complex overlap pattern
     b.add_edge(source_id=nodes[0].id, target_id=targets[0].id, kind=EdgeKind.WRITES)
     b.add_edge(source_id=nodes[0].id, target_id=targets[1].id, kind=EdgeKind.WRITES)

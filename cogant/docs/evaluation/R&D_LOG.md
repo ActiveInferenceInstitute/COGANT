@@ -1089,7 +1089,6 @@ COGANT is solid alpha/beta. The empirical claim (Active Inference cycle on real 
 - **CONSTRAINT fix details (wave 16):** [CONSTRAINT_FIX.md](CONSTRAINT_FIX.md)
 - **Mutation report (wave 18):** [MUTATION_REPORT.md](MUTATION_REPORT.md)
 - **Benchmark vs prior:** [BENCHMARK_VS_PRIOR.md](BENCHMARK_VS_PRIOR.md)
-- **Wave-19 sweep notes:** [`_rnd/sweep_2026_04/benchmark_refresh_result.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/sweep_2026_04/benchmark_refresh_result.md), [`_rnd/sweep_2026_04/mutation_testing_result.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/sweep_2026_04/mutation_testing_result.md)
 - **Live metrics (source of truth):** [`evaluation/METRICS.yaml`](https://github.com/cogant-contributors/cogant/blob/main/evaluation/METRICS.yaml)
 - **Implementing modules (forward):** [`py/cogant/translate/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/), [`py/cogant/statespace/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/statespace/), [`py/cogant/gnn/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/gnn/), [`py/cogant/markov/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/markov/), [`py/cogant/static/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/static/)
 - **Implementing modules (reverse):** [`py/cogant/reverse/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/reverse/)

@@ -41,10 +41,7 @@ def tiny_repo(tmp_path: Path) -> Path:
     """
     repo = tmp_path / "repo"
     repo.mkdir()
-    (repo / "helper.py").write_text(
-        "def compute(x):\n"
-        "    return x * 2\n"
-    )
+    (repo / "helper.py").write_text("def compute(x):\n    return x * 2\n")
     (repo / "main.py").write_text(
         "from helper import compute\n"
         "\n"
@@ -101,9 +98,7 @@ class TestRunIngest:
         # Snapshot is stashed in artifacts
         assert "repo_snapshot" in bundle.artifacts
 
-    def test_ingest_with_incremental_metadata_filters_files(
-        self, tiny_repo: Path
-    ) -> None:
+    def test_ingest_with_incremental_metadata_filters_files(self, tiny_repo: Path) -> None:
         """bundle.metadata['_incremental'] filters snapshot.files down."""
         bundle = Bundle(target=str(tiny_repo))
         # Only helper.py is "changed"
@@ -181,9 +176,7 @@ class TestRunGraph:
         with pytest.raises(RuntimeError, match="ingest stage must run before graph"):
             run_graph(bundle, str(tmp_path))
 
-    def test_graph_auto_runs_normalize_if_missing(
-        self, tiny_repo: Path
-    ) -> None:
+    def test_graph_auto_runs_normalize_if_missing(self, tiny_repo: Path) -> None:
         """graph backfills normalized_facts if normalize hasn't run yet."""
         bundle = Bundle(target=str(tiny_repo))
         run_ingest(str(tiny_repo), bundle)
@@ -195,9 +188,7 @@ class TestRunGraph:
 
 
 class TestRunTranslate:
-    def test_translate_runs_rules_against_graph(
-        self, tiny_repo: Path
-    ) -> None:
+    def test_translate_runs_rules_against_graph(self, tiny_repo: Path) -> None:
         bundle = Bundle(target=str(tiny_repo))
         run_ingest(str(tiny_repo), bundle)
         run_graph(bundle, str(tiny_repo))
@@ -258,9 +249,7 @@ class TestRunProcess:
 
 
 class TestRunExport:
-    def test_export_writes_all_artifacts(
-        self, full_bundle: tuple[Bundle, Path]
-    ) -> None:
+    def test_export_writes_all_artifacts(self, full_bundle: tuple[Bundle, Path]) -> None:
         bundle, tmp_path = full_bundle
         out = tmp_path / "export_out"
         result = run_export(bundle, str(out))
@@ -281,9 +270,7 @@ class TestRunExport:
         # export_paths cached on the bundle
         assert "export_paths" in bundle.artifacts
 
-    def test_export_with_no_artifacts_still_creates_dir(
-        self, tmp_path: Path
-    ) -> None:
+    def test_export_with_no_artifacts_still_creates_dir(self, tmp_path: Path) -> None:
         """Export on an empty bundle must not crash — it just writes nothing."""
         bundle = Bundle(target=str(tmp_path))
         out = tmp_path / "empty_out"
@@ -294,9 +281,7 @@ class TestRunExport:
 
 
 class TestRunValidate:
-    def test_validate_on_full_bundle_passes(
-        self, full_bundle: tuple[Bundle, Path]
-    ) -> None:
+    def test_validate_on_full_bundle_passes(self, full_bundle: tuple[Bundle, Path]) -> None:
         bundle, _ = full_bundle
         result = run_validate(bundle)
         assert result["type"] == "validation"
@@ -305,9 +290,7 @@ class TestRunValidate:
         # passed is True when the schema validator finds no errors
         assert isinstance(result["passed"], bool)
 
-    def test_validate_with_no_program_graph_returns_synthetic_result(
-        self, tmp_path: Path
-    ) -> None:
+    def test_validate_with_no_program_graph_returns_synthetic_result(self, tmp_path: Path) -> None:
         bundle = Bundle(target=str(tmp_path))
         result = run_validate(bundle)
         assert result["passed"] is False
@@ -338,9 +321,7 @@ class TestRunDynamic:
         assert result["skipped"] is True
         assert "no program graph" in result["reason"]
 
-    def test_dynamic_with_graph_returns_summary(
-        self, tiny_repo: Path
-    ) -> None:
+    def test_dynamic_with_graph_returns_summary(self, tiny_repo: Path) -> None:
         bundle = Bundle(target=str(tiny_repo))
         run_ingest(str(tiny_repo), bundle)
         run_graph(bundle, str(tiny_repo))

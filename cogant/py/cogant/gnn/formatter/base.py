@@ -160,7 +160,6 @@ class GNNMarkdownFormatter(
             effects = getattr(action, "affects_state_vars", None)
         return list(effects or [])
 
-
     def _derive_probability_from_edges(self, action_id: str | None) -> float | None:
         """
         Derive action transition probability from edge weights in the graph.
@@ -200,24 +199,6 @@ class GNNMarkdownFormatter(
             return min(1.0, avg_weight / 10.0) if avg_weight > 0 else 0.5
 
         return None
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     def format_section(self, section_name: str) -> str | None:
         """

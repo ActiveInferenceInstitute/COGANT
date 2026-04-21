@@ -24,7 +24,9 @@ class Span(CogantBaseModel):
 
 class EvidenceRef(CogantBaseModel):
     evidence_id: str
-    kind: Literal['source_span', 'ast_fact', 'trace_event', 'test_assertion', 'config_entry', 'commit_event']
+    kind: Literal[
+        "source_span", "ast_fact", "trace_event", "test_assertion", "config_entry", "commit_event"
+    ]
     confidence: float
     locator: str | None
 
@@ -48,4 +50,4 @@ class LocationInfo(CogantBaseModel):
     language: str | None
     repo_root: str | None
 
-def generate_stable_id(content: str, prefix: str = '') -> StableID: ...
+def generate_stable_id(content: str, prefix: str = "") -> StableID: ...

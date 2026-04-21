@@ -15,17 +15,16 @@ Follows the project no-mocks policy: all inputs are real files built
 under ``tmp_path`` and all computations run against real objects.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 
 from cogant.api.pipeline import PipelineConfig, PipelineRunner
 from cogant.dynamic.enrichment import enrich_graph
-from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+from cogant.schemas.core import Node, NodeKind
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
 from cogant.schemas.semantic import MappingKind, SemanticMapping
 from cogant.translate.engine import TranslationEngine, TranslationRule
-
 
 # -- Sample data constants ---------------------------------------------------
 
@@ -54,6 +53,7 @@ MINIMAL_COBERTURA_XML = """\
 
 
 # -- Helpers ------------------------------------------------------------------
+
 
 def _make_empty_graph() -> ProgramGraph:
     """Return a ProgramGraph with minimal but valid metadata."""
@@ -112,7 +112,7 @@ class _StubRule(TranslationRule):
     def priority(self) -> int:
         return self._priority
 
-    def matches(self, graph: ProgramGraph, query: Any) -> List[Dict[str, Any]]:
+    def matches(self, graph: ProgramGraph, query: Any) -> list[dict[str, Any]]:
         if self._node_id in graph.nodes:
             return [{"node_id": self._node_id}]
         return []
@@ -120,8 +120,8 @@ class _StubRule(TranslationRule):
     def apply(
         self,
         graph: ProgramGraph,
-        match: Dict[str, Any],
-    ) -> Optional[SemanticMapping]:
+        match: dict[str, Any],
+    ) -> SemanticMapping | None:
         return SemanticMapping(
             id=self._mapping_id,
             kind=self._mapping_kind,
@@ -137,6 +137,7 @@ class _StubRule(TranslationRule):
 # =============================================================================
 # 1. Pipeline with dynamic data flow
 # =============================================================================
+
 
 @pytest.mark.integration
 class TestPipelineDynamicStage:
@@ -210,6 +211,7 @@ class TestPipelineDynamicStage:
 # 2. Fixpoint iteration with priority-based rules
 # =============================================================================
 
+
 @pytest.mark.integration
 class TestTranslationEngineConflictResolution:
     """TranslationEngine conflict-resolution semantics: priority wins, then
@@ -246,9 +248,7 @@ class TestTranslationEngineConflictResolution:
         mappings = engine.translate(graph)
 
         mapping_ids = {m.id for m in mappings}
-        assert "m_high" in mapping_ids, (
-            f"Expected high-priority mapping to win, got {mapping_ids}"
-        )
+        assert "m_high" in mapping_ids, f"Expected high-priority mapping to win, got {mapping_ids}"
         assert "m_low" not in mapping_ids, (
             f"Low-priority mapping should have been removed, got {mapping_ids}"
         )
@@ -284,18 +284,17 @@ class TestTranslationEngineConflictResolution:
 
         mapping_ids = {m.id for m in mappings}
         assert "m_tie_high" in mapping_ids, (
-            f"Expected higher-confidence mapping to win tiebreaker, got "
-            f"{mapping_ids}"
+            f"Expected higher-confidence mapping to win tiebreaker, got {mapping_ids}"
         )
         assert "m_tie_low" not in mapping_ids, (
-            f"Lower-confidence mapping should have been removed, got "
-            f"{mapping_ids}"
+            f"Lower-confidence mapping should have been removed, got {mapping_ids}"
         )
 
 
 # =============================================================================
 # 3. Coverage report with partial mappings
 # =============================================================================
+
 
 @pytest.mark.integration
 class TestTranslationEngineCoverageReport:
@@ -352,6 +351,7 @@ class TestTranslationEngineCoverageReport:
 # =============================================================================
 # 4. enrich_graph returns graph in summary (new API contract)
 # =============================================================================
+
 
 @pytest.mark.integration
 class TestEnrichGraphSummaryContract:

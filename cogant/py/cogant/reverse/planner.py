@@ -174,9 +174,7 @@ class PackagePlan:
         }
         for node in self.nodes:
             if node.role not in valid_roles:
-                issues.append(
-                    f"Node {node.name!r} has unrecognized role {node.role!r}"
-                )
+                issues.append(f"Node {node.name!r} has unrecognized role {node.role!r}")
 
         # Check: nodes in subsets appear in main nodes list
         all_subsets = (
@@ -193,41 +191,30 @@ class PackagePlan:
         nodes_set = {id(n) for n in self.nodes}
         for node in all_subsets:
             if id(node) not in nodes_set:
-                issues.append(
-                    f"Node {node.name!r} in a role subset but not in main "
-                    "nodes list"
-                )
+                issues.append(f"Node {node.name!r} in a role subset but not in main nodes list")
 
         # Check: consistent role classification in subsets
         for node in self.state_vars:
             if node.role != "HIDDEN_STATE":
                 issues.append(
-                    f"state_vars node {node.name!r} has role {node.role!r}, "
-                    "expected HIDDEN_STATE"
+                    f"state_vars node {node.name!r} has role {node.role!r}, expected HIDDEN_STATE"
                 )
         for node in self.obs_functions:
             if node.role != "OBSERVATION":
                 issues.append(
-                    f"obs_functions node {node.name!r} has role {node.role!r}, "
-                    "expected OBSERVATION"
+                    f"obs_functions node {node.name!r} has role {node.role!r}, expected OBSERVATION"
                 )
         for node in self.action_methods:
             if node.role != "ACTION":
                 issues.append(
-                    f"action_methods node {node.name!r} has role {node.role!r}, "
-                    "expected ACTION"
+                    f"action_methods node {node.name!r} has role {node.role!r}, expected ACTION"
                 )
 
         # Check: package_name is a valid Python identifier
         import keyword
 
-        if not self.package_name.isidentifier() or keyword.iskeyword(
-            self.package_name
-        ):
-            issues.append(
-                f"package_name {self.package_name!r} is not a valid Python "
-                "identifier"
-            )
+        if not self.package_name.isidentifier() or keyword.iskeyword(self.package_name):
+            issues.append(f"package_name {self.package_name!r} is not a valid Python identifier")
 
         return issues
 
@@ -246,8 +233,7 @@ class PackagePlan:
         diffs: list[str] = []
 
         if self.package_name != other.package_name:
-            diffs.append(f"  package_name: {self.package_name!r} vs "
-                        f"{other.package_name!r}")
+            diffs.append(f"  package_name: {self.package_name!r} vs {other.package_name!r}")
 
         # Compare role populations
         roles_self = {
@@ -269,23 +255,17 @@ class PackagePlan:
 
         for role in roles_self:
             if roles_self[role] != roles_other[role]:
-                diffs.append(
-                    f"  {role}: {roles_self[role]} vs {roles_other[role]}"
-                )
+                diffs.append(f"  {role}: {roles_self[role]} vs {roles_other[role]}")
 
         # Compare scaffold populations
-        if len(self.scaffold_constraint_checks) != len(
-            other.scaffold_constraint_checks
-        ):
+        if len(self.scaffold_constraint_checks) != len(other.scaffold_constraint_checks):
             diffs.append(
                 f"  scaffold_constraint_checks: "
                 f"{len(self.scaffold_constraint_checks)} vs "
                 f"{len(other.scaffold_constraint_checks)}"
             )
 
-        if len(self.scaffold_policy_functions) != len(
-            other.scaffold_policy_functions
-        ):
+        if len(self.scaffold_policy_functions) != len(other.scaffold_policy_functions):
             diffs.append(
                 f"  scaffold_policy_functions: "
                 f"{len(self.scaffold_policy_functions)} vs "
@@ -293,8 +273,7 @@ class PackagePlan:
             )
 
         # Compare matrix presence flags
-        matrix_flags = ["has_A_matrix", "has_B_tensor", "has_C_vector",
-                       "has_D_vector"]
+        matrix_flags = ["has_A_matrix", "has_B_tensor", "has_C_vector", "has_D_vector"]
         for flag in matrix_flags:
             self_val = getattr(self, flag)
             other_val = getattr(other, flag)
@@ -323,15 +302,9 @@ class PackagePlan:
             "policy_functions": [n.name for n in self.policy_functions],
             "constraint_checks": [n.name for n in self.constraint_checks],
             "context_functions": [n.name for n in self.context_functions],
-            "scaffold_constraint_checks": [
-                n.name for n in self.scaffold_constraint_checks
-            ],
-            "scaffold_policy_functions": [
-                n.name for n in self.scaffold_policy_functions
-            ],
-            "scaffold_context_classes": [
-                n.name for n in self.scaffold_context_classes
-            ],
+            "scaffold_constraint_checks": [n.name for n in self.scaffold_constraint_checks],
+            "scaffold_policy_functions": [n.name for n in self.scaffold_policy_functions],
+            "scaffold_context_classes": [n.name for n in self.scaffold_context_classes],
             "has_A_matrix": self.has_A_matrix,
             "has_B_tensor": self.has_B_tensor,
             "has_C_vector": self.has_C_vector,
@@ -376,15 +349,9 @@ class PackagePlan:
             policy_functions=get_nodes(parsed.get("policy_functions", [])),
             constraint_checks=get_nodes(parsed.get("constraint_checks", [])),
             context_functions=get_nodes(parsed.get("context_functions", [])),
-            scaffold_constraint_checks=get_nodes(
-                parsed.get("scaffold_constraint_checks", [])
-            ),
-            scaffold_policy_functions=get_nodes(
-                parsed.get("scaffold_policy_functions", [])
-            ),
-            scaffold_context_classes=get_nodes(
-                parsed.get("scaffold_context_classes", [])
-            ),
+            scaffold_constraint_checks=get_nodes(parsed.get("scaffold_constraint_checks", [])),
+            scaffold_policy_functions=get_nodes(parsed.get("scaffold_policy_functions", [])),
+            scaffold_context_classes=get_nodes(parsed.get("scaffold_context_classes", [])),
             has_A_matrix=parsed.get("has_A_matrix", False),
             has_B_tensor=parsed.get("has_B_tensor", False),
             has_C_vector=parsed.get("has_C_vector", False),
@@ -448,7 +415,12 @@ def _to_identifier(name: str, fallback: str) -> str:
     """
     if not name:
         return fallback
-    cleaned = re.sub(r"\s*-\s*(hidden state|observation|action|policy|constraint|preference).*$", "", name, flags=re.IGNORECASE)
+    cleaned = re.sub(
+        r"\s*-\s*(hidden state|observation|action|policy|constraint|preference).*$",
+        "",
+        name,
+        flags=re.IGNORECASE,
+    )
     cleaned = _IDENTIFIER_FORBIDDEN_RE.sub("_", cleaned)
     cleaned = re.sub(r"_+", "_", cleaned).strip("_")
     if not cleaned:
@@ -594,7 +566,9 @@ def plan_package(model: ReverseGNNModel) -> PackagePlan:
     for _i, slot in enumerate(model.actions):
         human = model.human_names.get(slot, "")
         ident = _to_identifier(human, slot)
-        ident = _reserved_avoid(f"update_{ident}" if ident == slot else f"update_{ident}", used_names)
+        ident = _reserved_avoid(
+            f"update_{ident}" if ident == slot else f"update_{ident}", used_names
+        )
         gnn_type = model.types.get(slot, "int")
         py_type = _python_type_for(gnn_type)
         card = model.cardinalities.get(slot, 0)
@@ -729,9 +703,7 @@ def plan_package(model: ReverseGNNModel) -> PackagePlan:
 # ---------------------------------------------------------------------------
 
 
-def _build_scaffold_constraints(
-    plan: PackagePlan, used_names: dict[str, int]
-) -> list[NodePlan]:
+def _build_scaffold_constraints(plan: PackagePlan, used_names: dict[str, int]) -> list[NodePlan]:
     """Return one ``check_*`` predicate per OBS / ACTION / HIDDEN_STATE slot.
 
     Naming strategy — the resulting identifiers must match the
@@ -799,9 +771,7 @@ def _build_scaffold_constraints(
     return out
 
 
-def _build_scaffold_policies(
-    plan: PackagePlan, used_names: dict[str, int]
-) -> list[NodePlan]:
+def _build_scaffold_policies(plan: PackagePlan, used_names: dict[str, int]) -> list[NodePlan]:
     """Return one ``route_*`` scaffold policy per hidden-state factor.
 
     ``PolicyRule`` matches functions whose lowered name contains any
@@ -837,9 +807,7 @@ def _build_scaffold_policies(
     return out
 
 
-def _build_scaffold_contexts(
-    plan: PackagePlan, used_names: dict[str, int]
-) -> list[NodePlan]:
+def _build_scaffold_contexts(plan: PackagePlan, used_names: dict[str, int]) -> list[NodePlan]:
     """Return one ``*Settings`` scaffold context class per observation.
 
     ``ContextRule`` matches classes whose lowered name contains any

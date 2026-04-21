@@ -25,12 +25,15 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
     cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass", path="mymodule.py")
     func = builder.add_node(
         NodeKind.FUNCTION,
@@ -49,17 +52,31 @@ def _make_graph():
 # viz/graph_view.py
 # ---------------------------------------------------------------------------
 
+
 class TestGraphVisualizer:
     """Test GraphVisualizer."""
 
     def test_from_program_graph_dict(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         graph_dict = {
             "nodes": [
-                {"id": "n1", "name": "FuncA", "type": "function", "language": "python",
-                 "path": "mod.py", "qualified_name": "mod.FuncA"},
-                {"id": "n2", "name": "ClassB", "type": "class", "language": "python",
-                 "path": "mod.py", "qualified_name": "mod.ClassB"},
+                {
+                    "id": "n1",
+                    "name": "FuncA",
+                    "type": "function",
+                    "language": "python",
+                    "path": "mod.py",
+                    "qualified_name": "mod.FuncA",
+                },
+                {
+                    "id": "n2",
+                    "name": "ClassB",
+                    "type": "class",
+                    "language": "python",
+                    "path": "mod.py",
+                    "qualified_name": "mod.ClassB",
+                },
             ],
             "edges": [
                 {"source": "n1", "target": "n2", "type": "CALLS", "weight": 2.0},
@@ -74,6 +91,7 @@ class TestGraphVisualizer:
 
     def test_from_typed_graph(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         graph = _make_graph()
         viz = GraphVisualizer()
         result = viz.from_typed_graph(graph)
@@ -82,6 +100,7 @@ class TestGraphVisualizer:
 
     def test_cluster_by_package(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         graph_dict = {
             "nodes": [
                 {"id": "n1", "name": "FuncA", "type": "function", "path": "module/func.py"},
@@ -98,6 +117,7 @@ class TestGraphVisualizer:
 
     def test_cluster_by_language(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         graph_dict = {
             "nodes": [
                 {"id": "n1", "name": "A", "type": "function", "language": "python"},
@@ -116,6 +136,7 @@ class TestGraphVisualizer:
 
     def test_cluster_by_kind(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         graph_dict = {
             "nodes": [
                 {"id": "n1", "name": "A", "type": "function"},
@@ -134,6 +155,7 @@ class TestGraphVisualizer:
 
     def test_cluster_by_service(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         graph_dict = {
             "nodes": [
                 {"id": "n1", "name": "api.service.Handler", "type": "class"},
@@ -147,6 +169,7 @@ class TestGraphVisualizer:
 
     def test_get_clusters(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         graph_dict = {
             "nodes": [
                 {"id": "n1", "name": "A", "type": "function", "language": "python"},
@@ -165,6 +188,7 @@ class TestGraphVisualizer:
 
     def test_filter_by_edge_type(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         graph_dict = {
             "nodes": [
                 {"id": "n1", "name": "A", "type": "function"},
@@ -183,6 +207,7 @@ class TestGraphVisualizer:
 
     def test_to_d3_json(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         graph_dict = {
             "nodes": [{"id": "n1", "name": "FuncA", "type": "function"}],
             "edges": [{"source": "n1", "target": "n1", "type": "CALLS", "weight": 1.0}],
@@ -196,6 +221,7 @@ class TestGraphVisualizer:
 
     def test_render_html_writes_file(self, tmp_path):
         from cogant.viz.graph_view import GraphVisualizer
+
         graph_dict = {
             "nodes": [{"id": "n1", "name": "FuncA", "type": "function"}],
             "edges": [],
@@ -210,6 +236,7 @@ class TestGraphVisualizer:
 
     def test_render_svg_writes_file(self, tmp_path):
         from cogant.viz.graph_view import GraphVisualizer
+
         graph_dict = {
             "nodes": [
                 {"id": "n1", "name": "FuncA", "type": "function"},
@@ -227,6 +254,7 @@ class TestGraphVisualizer:
 
     def test_d3node_defaults(self):
         from cogant.viz.graph_view import D3Node
+
         node = D3Node(id="n1", label="FuncA", group="functions")
         assert node.size == 10
         assert node.color is None
@@ -234,6 +262,7 @@ class TestGraphVisualizer:
 
     def test_d3link_defaults(self):
         from cogant.viz.graph_view import D3Link
+
         link = D3Link(source="n1", target="n2", label="calls")
         assert link.weight == 1.0
 
@@ -242,15 +271,31 @@ class TestGraphVisualizer:
 # viz/gantt.py
 # ---------------------------------------------------------------------------
 
+
 class TestGanttRenderer:
     """Test GanttRenderer."""
 
     def test_from_process_model_basic(self):
         from cogant.viz.gantt import GanttRenderer
+
         process_model = {
             "stages": [
-                {"id": "s1", "name": "Setup", "start": 0, "duration": 2, "dependencies": [], "criticality": "high"},
-                {"id": "s2", "name": "Test", "start": 2, "duration": 3, "dependencies": ["s1"], "criticality": "normal"},
+                {
+                    "id": "s1",
+                    "name": "Setup",
+                    "start": 0,
+                    "duration": 2,
+                    "dependencies": [],
+                    "criticality": "high",
+                },
+                {
+                    "id": "s2",
+                    "name": "Test",
+                    "start": 2,
+                    "duration": 3,
+                    "dependencies": ["s1"],
+                    "criticality": "normal",
+                },
             ],
             "dependencies": [{"from": "s1", "to": "s2"}],
             "timeline": [],
@@ -265,6 +310,7 @@ class TestGanttRenderer:
 
     def test_render_json(self):
         from cogant.viz.gantt import GanttRenderer
+
         process_model = {
             "stages": [{"id": "s1", "name": "Build", "start": 0, "duration": 1}],
             "dependencies": [],
@@ -281,6 +327,7 @@ class TestGanttRenderer:
 
     def test_render_html_writes_file(self, tmp_path):
         from cogant.viz.gantt import GanttRenderer
+
         process_model = {
             "stages": [
                 {"id": "s1", "name": "Stage1", "start": 0, "duration": 2},
@@ -301,6 +348,7 @@ class TestGanttRenderer:
 
     def test_compute_total_duration(self):
         from cogant.viz.gantt import GanttRenderer
+
         renderer = GanttRenderer()
         # Empty stages
         assert renderer._compute_total_duration() == 1.0
@@ -314,21 +362,25 @@ class TestGanttRenderer:
 
     def test_stage_id_from_id(self):
         from cogant.viz.gantt import GanttRenderer
+
         renderer = GanttRenderer()
         assert renderer._stage_id({"id": "myid", "name": "myname"}, 0) == "myid"
 
     def test_stage_id_from_name(self):
         from cogant.viz.gantt import GanttRenderer
+
         renderer = GanttRenderer()
         assert renderer._stage_id({"name": "myname"}, 0) == "myname"
 
     def test_stage_id_fallback(self):
         from cogant.viz.gantt import GanttRenderer
+
         renderer = GanttRenderer()
         assert renderer._stage_id({}, 3) == "stage_3"
 
     def test_is_critical(self):
         from cogant.viz.gantt import GanttRenderer
+
         renderer = GanttRenderer()
         renderer.critical_path = ["s1", "s2"]
         assert renderer._is_critical({"id": "s1"}, 0) is True
@@ -337,12 +389,14 @@ class TestGanttRenderer:
 
     def test_is_critical_empty_path(self):
         from cogant.viz.gantt import GanttRenderer
+
         renderer = GanttRenderer()
         renderer.critical_path = []
         assert renderer._is_critical({"id": "s1"}, 0) is False
 
     def test_parallel_group_for(self):
         from cogant.viz.gantt import GanttRenderer
+
         renderer = GanttRenderer()
         renderer.parallel_groups = [["s1", "s2"], ["s3"]]
         result = renderer._parallel_group_for({"id": "s1"}, 0)
@@ -354,6 +408,7 @@ class TestGanttRenderer:
 
     def test_timeline_ticks(self):
         from cogant.viz.gantt import GanttRenderer
+
         renderer = GanttRenderer()
         ticks = renderer._timeline_ticks(10.0, num_ticks=5)
         assert len(ticks) == 5
@@ -361,6 +416,7 @@ class TestGanttRenderer:
 
     def test_timeline_ticks_edge_cases(self):
         from cogant.viz.gantt import GanttRenderer
+
         renderer = GanttRenderer()
         # Zero total
         ticks = renderer._timeline_ticks(0.0)
@@ -371,6 +427,7 @@ class TestGanttRenderer:
 
     def test_empty_gantt_render(self):
         from cogant.viz.gantt import GanttRenderer
+
         renderer = GanttRenderer()
         json_out = renderer.render_json()
         data = json.loads(json_out)
@@ -381,11 +438,13 @@ class TestGanttRenderer:
 # graph/queries.py
 # ---------------------------------------------------------------------------
 
+
 class TestGraphQueryEngine:
     """Test GraphQuery (the actual class name)."""
 
     def test_import_and_instantiate(self):
         from cogant.graph.queries import GraphQuery
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         assert engine is not None
@@ -393,6 +452,7 @@ class TestGraphQueryEngine:
     def test_find_nodes_by_kind(self):
         from cogant.graph.queries import GraphQuery
         from cogant.schemas.core import NodeKind
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         modules = engine.find_nodes_by_kind(NodeKind.MODULE)
@@ -400,6 +460,7 @@ class TestGraphQueryEngine:
 
     def test_filter_nodes_by_language(self):
         from cogant.graph.queries import GraphQuery
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         python_nodes = engine.filter_nodes(language="python")
@@ -407,6 +468,7 @@ class TestGraphQueryEngine:
 
     def test_filter_nodes_by_name_pattern(self):
         from cogant.graph.queries import GraphQuery
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         matches = engine.filter_nodes(name_pattern="func")
@@ -414,6 +476,7 @@ class TestGraphQueryEngine:
 
     def test_filter_nodes_all(self):
         from cogant.graph.queries import GraphQuery
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         all_nodes = engine.filter_nodes()
@@ -422,6 +485,7 @@ class TestGraphQueryEngine:
     def test_filter_edges_by_kind(self):
         from cogant.graph.queries import GraphQuery
         from cogant.schemas.core import EdgeKind
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         contains_edges = engine.filter_edges(kind=EdgeKind.CONTAINS)
@@ -429,6 +493,7 @@ class TestGraphQueryEngine:
 
     def test_filter_edges_by_source(self):
         from cogant.graph.queries import GraphQuery
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         nodes = list(graph.nodes.values())
@@ -441,26 +506,27 @@ class TestGraphQueryEngine:
 # graph/builder.py — additional paths
 # ---------------------------------------------------------------------------
 
+
 class TestProgramGraphBuilderExtra:
     """Test ProgramGraphBuilder edge cases."""
 
     def test_add_multiple_node_kinds(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
-        mod = builder.add_node(NodeKind.MODULE, "mod", "mod")
-        cls = builder.add_node(NodeKind.CLASS, "MyClass", "mod.MyClass")
-        func = builder.add_node(NodeKind.FUNCTION, "my_func", "mod.my_func")
-        method = builder.add_node(NodeKind.METHOD, "method", "mod.MyClass.method")
-        var = builder.add_node(NodeKind.VARIABLE, "my_var", "mod.my_var")
-        param = builder.add_node(NodeKind.PARAMETER, "param1", "mod.my_func.param1")
+        builder.add_node(NodeKind.MODULE, "mod", "mod")
+        builder.add_node(NodeKind.CLASS, "MyClass", "mod.MyClass")
+        builder.add_node(NodeKind.FUNCTION, "my_func", "mod.my_func")
+        builder.add_node(NodeKind.METHOD, "method", "mod.MyClass.method")
+        builder.add_node(NodeKind.VARIABLE, "my_var", "mod.my_var")
+        builder.add_node(NodeKind.PARAMETER, "param1", "mod.my_func.param1")
         graph = builder.finalize()
         assert len(graph.nodes) == 6
 
     def test_add_various_edge_kinds(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mod1", "mod1")
@@ -494,13 +560,14 @@ class TestProgramGraphBuilderExtra:
     def test_finalize_returns_program_graph(self):
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.graph import ProgramGraph
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         graph = builder.finalize()
         assert isinstance(graph, ProgramGraph)
 
     def test_add_edge_with_weight(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.FUNCTION, "f1", "f1")
@@ -516,15 +583,18 @@ class TestProgramGraphBuilderExtra:
 # statespace/temporal.py
 # ---------------------------------------------------------------------------
 
+
 class TestStatespaceTemporalTimeRegime:
     """Test TimeRegime and related temporal functions."""
 
     def test_time_regime_import(self):
         from cogant.statespace.temporal import TimeRegime
+
         assert TimeRegime is not None
 
     def test_time_regime_values(self):
         from cogant.statespace.temporal import TimeRegime
+
         # Should have discrete/continuous variants
         regimes = list(TimeRegime)
         assert len(regimes) >= 1
@@ -532,12 +602,14 @@ class TestStatespaceTemporalTimeRegime:
     def test_temporal_module_has_timeline(self):
         try:
             from cogant.statespace.temporal import Timeline
+
             assert Timeline is not None
         except ImportError:
             pass  # Optional
 
     def test_temporal_functions_accessible(self):
         import cogant.statespace.temporal as temporal
+
         assert hasattr(temporal, "TimeRegime")
 
 
@@ -545,19 +617,22 @@ class TestStatespaceTemporalTimeRegime:
 # validate/integrity.py — IntegrityChecker additional paths
 # ---------------------------------------------------------------------------
 
+
 class TestIntegrityCheckerExtra:
     """Additional IntegrityChecker tests."""
 
     def test_check_program_graph_with_valid_graph(self):
         from cogant.validate.integrity import IntegrityChecker
+
         graph = _make_graph()
         checker = IntegrityChecker()
         result = checker.check_program_graph(graph)
         assert result is not None
 
     def test_check_program_graph_returns_list_or_bool(self):
-        from cogant.validate.integrity import IntegrityChecker
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.validate.integrity import IntegrityChecker
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         graph = builder.finalize()
         checker = IntegrityChecker()
@@ -566,8 +641,9 @@ class TestIntegrityCheckerExtra:
         assert isinstance(result, (list, bool, dict))
 
     def test_check_state_space_basic(self):
-        from cogant.validate.integrity import IntegrityChecker
         from cogant.statespace.compiler import StateSpaceCompiler
+        from cogant.validate.integrity import IntegrityChecker
+
         graph = _make_graph()
         compiler = StateSpaceCompiler(graph, "test_schema")
         ssm = compiler.compile({})
@@ -580,11 +656,13 @@ class TestIntegrityCheckerExtra:
 # static/symbols.py — SymbolExtractor
 # ---------------------------------------------------------------------------
 
+
 class TestSymbolExtractor:
     """Test SymbolExtractor for Python source."""
 
     def test_extract_functions(self, tmp_path):
         from cogant.static.symbols import SymbolExtractor, SymbolTable
+
         code = """
 def hello(name: str) -> str:
     return f"Hello {name}"
@@ -600,6 +678,7 @@ def world() -> None:
 
     def test_extract_classes(self, tmp_path):
         from cogant.static.symbols import SymbolExtractor, SymbolTable
+
         code = """
 class MyClass:
     def __init__(self):
@@ -618,6 +697,7 @@ class MyClass:
 
     def test_extract_from_source(self, tmp_path):
         from cogant.static.symbols import SymbolExtractor, SymbolTable
+
         code = """
 CONSTANT = 42
 x: int = 5
@@ -632,6 +712,7 @@ class Foo:
 
     def test_symbol_extractor_missing_file(self, tmp_path):
         from cogant.static.symbols import SymbolExtractor, SymbolTable
+
         extractor = SymbolExtractor(tmp_path)
         result = extractor.extract_from_file(tmp_path / "nonexistent.py")
         # Should return empty SymbolTable on error
@@ -639,6 +720,7 @@ class Foo:
 
     def test_symbol_table_has_symbols_list(self, tmp_path):
         from cogant.static.symbols import SymbolExtractor
+
         code = "def foo(): pass\ndef bar(): pass\n"
         py_file = tmp_path / "funcs.py"
         py_file.write_text(code)
@@ -652,12 +734,13 @@ class Foo:
 # graph/merge.py — GraphMerger
 # ---------------------------------------------------------------------------
 
+
 class TestGraphMerger:
     """Test GraphMerger for combining graphs."""
 
     def test_merge_two_graphs(self):
-        from cogant.graph.merge import GraphMerger
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.graph.merge import GraphMerger
         from cogant.schemas.core import NodeKind
 
         builder1 = ProgramGraphBuilder(repo_uri="file:///repo1")
@@ -673,8 +756,8 @@ class TestGraphMerger:
         assert len(merged.nodes) >= 2
 
     def test_merge_empty_graphs(self):
-        from cogant.graph.merge import GraphMerger
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.graph.merge import GraphMerger
 
         builder1 = ProgramGraphBuilder(repo_uri="file:///empty1")
         g1 = builder1.finalize()
@@ -690,15 +773,18 @@ class TestGraphMerger:
 # viz/diff_view.py — DiffVisualizer
 # ---------------------------------------------------------------------------
 
+
 class TestDiffVisualizer:
     """Test DiffVisualizer for graph comparison."""
 
     def test_import_diff_visualizer(self):
         from cogant.viz.diff_view import DiffVisualizer
+
         assert DiffVisualizer is not None
 
     def test_diff_visualizer_init(self):
         from cogant.viz.diff_view import DiffVisualizer
+
         b1 = {"nodes": {"n1": {"id": "n1", "kind": "function"}}, "edges": {}}
         b2 = {"nodes": {"n2": {"id": "n2", "kind": "class"}}, "edges": {}}
         viz = DiffVisualizer(b1, b2)
@@ -706,6 +792,7 @@ class TestDiffVisualizer:
 
     def test_diff_visualizer_compute_diff(self):
         from cogant.viz.diff_view import DiffVisualizer
+
         b1 = {
             "nodes": {
                 "n1": {"id": "n1", "kind": "function", "name": "func1"},
@@ -730,11 +817,13 @@ class TestDiffVisualizer:
 # statespace/compiler.py — additional StateSpaceCompiler paths
 # ---------------------------------------------------------------------------
 
+
 class TestStateSpaceCompilerExtra:
     """Additional StateSpaceCompiler coverage."""
 
     def test_compile_with_empty_mappings_dict(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph = _make_graph()
         compiler = StateSpaceCompiler(graph, "test_schema")
         ssm = compiler.compile({})
@@ -742,6 +831,7 @@ class TestStateSpaceCompilerExtra:
 
     def test_compile_empty_mappings(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph = _make_graph()
         compiler = StateSpaceCompiler(graph, "schema1")
         ssm = compiler.compile({})
@@ -749,6 +839,7 @@ class TestStateSpaceCompilerExtra:
 
     def test_state_space_model_attributes(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph = _make_graph()
         compiler = StateSpaceCompiler(graph, "test")
         ssm = compiler.compile({})
@@ -760,13 +851,14 @@ class TestStateSpaceCompilerExtra:
 # process/extractor.py — ProcessExtractor additional paths
 # ---------------------------------------------------------------------------
 
+
 class TestProcessExtractorExtra:
     """Additional ProcessExtractor coverage."""
 
     def test_extract_with_complex_graph(self):
-        from cogant.process.extractor import ProcessExtractor
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.process.extractor import ProcessExtractor
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///complex")
         mod = builder.add_node(NodeKind.MODULE, "api", "api")
@@ -787,8 +879,11 @@ class TestProcessExtractorExtra:
 
     def test_process_model_has_stages(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph = _make_graph()
         extractor = ProcessExtractor(graph, "test_schema")
         model = extractor.extract()
         # ProcessModel should have some structure
-        assert hasattr(model, "stages") or hasattr(model, "processes") or hasattr(model, "schema_name")
+        assert (
+            hasattr(model, "stages") or hasattr(model, "processes") or hasattr(model, "schema_name")
+        )

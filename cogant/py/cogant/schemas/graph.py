@@ -66,7 +66,8 @@ class ProgramGraph:
             del self.nodes[node_id]
             # Remove associated edges
             edges_to_remove = [
-                eid for eid, e in self.edges.items()
+                eid
+                for eid, e in self.edges.items()
                 if e.source_id == node_id or e.target_id == node_id
             ]
             for eid in edges_to_remove:

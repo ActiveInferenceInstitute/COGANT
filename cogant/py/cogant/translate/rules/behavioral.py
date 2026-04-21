@@ -73,11 +73,13 @@ class OrchestratorRule(TranslationRule):
             # orchestration (setup/work/cleanup triad or larger).
             # TODO(calibration): sweep {2, 3, 5, 8} on 20-repo corpus.
             if len(call_edges) >= 3:
-                matches.append({
-                    "node_id": node.id,
-                    "call_count": len(call_edges),
-                    "called_node_ids": [e.target_id for e in call_edges],
-                })
+                matches.append(
+                    {
+                        "node_id": node.id,
+                        "call_count": len(call_edges),
+                        "called_node_ids": [e.target_id for e in call_edges],
+                    }
+                )
 
         return matches
 
@@ -172,10 +174,12 @@ class TestAssertionRule(TranslationRule):
             assertion_edges = [e for e in out_edges if e.kind == EdgeKind.CALLS]
 
             if assertion_edges:
-                matches.append({
-                    "node_id": func.id,
-                    "assertion_count": len(assertion_edges),
-                })
+                matches.append(
+                    {
+                        "node_id": func.id,
+                        "assertion_count": len(assertion_edges),
+                    }
+                )
 
         return matches
 
@@ -268,10 +272,14 @@ class EventBusRule(TranslationRule):
             outgoing = graph.get_edges_from(event.id)
 
             if incoming or outgoing:
-                matches.append({
-                    "node_id": event.id,
-                    "subscriber_count": len([e for e in outgoing if e.kind == EdgeKind.TRIGGERS]),
-                })
+                matches.append(
+                    {
+                        "node_id": event.id,
+                        "subscriber_count": len(
+                            [e for e in outgoing if e.kind == EdgeKind.TRIGGERS]
+                        ),
+                    }
+                )
 
         return matches
 
@@ -368,25 +376,28 @@ class StateMachineRule(TranslationRule):
 
             # Check for on_enter/on_exit methods (state machine pattern)
             out_edges = graph.get_edges_from(cls.id)
-            methods = [graph.get_node(e.target_id) for e in out_edges if e.kind == EdgeKind.CONTAINS]
+            methods = [
+                graph.get_node(e.target_id) for e in out_edges if e.kind == EdgeKind.CONTAINS
+            ]
             transition_methods = sum(
-                1 for m in methods
+                1
+                for m in methods
                 if m and ("on_enter" in m.name.lower() or "on_exit" in m.name.lower())
             )
 
             # Also check for explicit state variable
             has_state_var = any(
-                "state" in m.name.lower()
-                for m in methods
-                if m and m.kind == NodeKind.VARIABLE
+                "state" in m.name.lower() for m in methods if m and m.kind == NodeKind.VARIABLE
             )
 
             if has_state_keyword or transition_methods >= 1 or has_state_var:
-                matches.append({
-                    "node_id": cls.id,
-                    "transition_count": transition_methods,
-                    "has_state_var": has_state_var,
-                })
+                matches.append(
+                    {
+                        "node_id": cls.id,
+                        "transition_count": transition_methods,
+                        "has_state_var": has_state_var,
+                    }
+                )
 
         return matches
 

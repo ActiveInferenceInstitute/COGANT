@@ -264,9 +264,7 @@ class TestSourceFilesChangedSince:
         _git(temp_git_repo, "commit", "-q", "-m", "multi-lang")
 
         ingester = IncrementalIngester(temp_git_repo)
-        result = ingester.source_files_changed_since(
-            "HEAD~1", extensions={".ts"}
-        )
+        result = ingester.source_files_changed_since("HEAD~1", extensions={".ts"})
         names = {p.name for p in result}
         assert names == {"a.ts"}
 

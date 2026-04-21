@@ -21,10 +21,32 @@ External Python repositories used as benchmark fixtures for COGANT's quantitativ
 | `tqdm/` | `tqdm/tqdm` | Tiny utility — used as a fast smoke fixture. |
 | `urllib3/` | `urllib3/urllib3` | Lower-level HTTP plumbing for resilience-rule coverage. |
 
+## Cloning with eval submodules
+
+The 12 entries above are tracked as proper git submodules (see the
+top-level [`/.gitmodules`](../../../.gitmodules) manifest). Fresh clones
+default to *empty* checkouts — populate them with one of:
+
+```bash
+# Initial clone (one shot)
+git clone --recurse-submodules https://github.com/docxology/cogant.git
+
+# Existing clone, populate eval corpus
+git submodule update --init --recursive cogant/evaluation/eval_repos
+```
+
+To bump a single pin to its upstream `HEAD`:
+
+```bash
+git submodule update --remote cogant/evaluation/eval_repos/<name>
+git add cogant/evaluation/eval_repos/<name>
+git commit -m "chore(eval): bump <name> submodule"
+```
+
 ## Conventions for agents
 
 - Do **not** modify files inside any submodule directory; changes are not tracked at this repo level.
-- To refresh a pin, run `git submodule update --remote <path>` (when `.gitmodules` is reintroduced) or update the commit OID with `git update-index --cacheinfo`.
+- To refresh a pin, use `git submodule update --remote <path>` (see above) or update the commit OID directly with `git update-index --cacheinfo`.
 - Benchmark scripts under [`../../benchmarks/`](../../benchmarks/) reference these paths via `cogant.evaluation.eval_repos.<name>` — do not rename directories without updating the corresponding fixture loaders.
 - Empty/missing submodule checkouts make benchmarks skip (`pytest.skip(reason=…)`) rather than fail; see [`../../benchmarks/AGENTS.md`](../../benchmarks/AGENTS.md).
 

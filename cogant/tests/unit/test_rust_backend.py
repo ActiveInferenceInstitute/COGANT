@@ -61,9 +61,7 @@ def test_rust_graph_creation():
     from cogant._rust import PyProgramGraph
 
     g = PyProgramGraph()
-    idx = g.add_node(
-        "function", "my_func", "module.my_func", "module.py", "Python", 1, 10
-    )
+    idx = g.add_node("function", "my_func", "module.my_func", "module.py", "Python", 1, 10)
     assert idx == 0
     assert g.node_count() == 1
     assert g.edge_count() == 0

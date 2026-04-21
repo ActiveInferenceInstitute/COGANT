@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import time
 from pathlib import Path
 
-import pytest
-
 from cogant.cache import CacheEntry, CacheKey, CacheStore, get_cache_dir
 from cogant.cache.hasher import hash_file, hash_repo
-
 
 # ---------------------------------------------------------------------------
 # get_cache_dir

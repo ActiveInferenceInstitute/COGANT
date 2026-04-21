@@ -14,5 +14,12 @@ class GNNPackageBuilder:
     config: Any
     timestamp: Any
     checksums: dict[str, str]
-    def __init__(self, graph: ProgramGraph, state_space: StateSpaceModel, process_model: ProcessModel, mappings: dict[str, Any], config: dict[str, Any] | None = None) -> None: ...
+    def __init__(
+        self,
+        graph: ProgramGraph,
+        state_space: StateSpaceModel,
+        process_model: ProcessModel,
+        mappings: dict[str, Any],
+        config: dict[str, Any] | None = None,
+    ) -> None: ...
     def build(self, output_dir: str) -> dict[str, Any]: ...

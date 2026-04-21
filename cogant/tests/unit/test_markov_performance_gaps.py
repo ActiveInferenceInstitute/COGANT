@@ -22,12 +22,11 @@ if str(_PY_ROOT) not in sys.path:
     sys.path.insert(0, str(_PY_ROOT))
 
 from cogant.graph.builder import ProgramGraphBuilder
-from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.markov import (
     MarkovBlanketExtractor,
-    BlanketRole,
     partition_by_seeds,
 )
+from cogant.schemas.core import EdgeKind, NodeKind
 
 pytestmark = pytest.mark.unit
 
@@ -125,10 +124,7 @@ class TestMarkovPartitionValidity:
         blanket = extractor.extract(strategy="auto")
 
         all_partitioned = (
-            blanket.internal_ids
-            | blanket.sensory_ids
-            | blanket.active_ids
-            | blanket.external_ids
+            blanket.internal_ids | blanket.sensory_ids | blanket.active_ids | blanket.external_ids
         )
         assert all_partitioned == set(small_graph.nodes)
 
@@ -179,7 +175,7 @@ class TestMarkovPartitionValidity:
         blanket = extractor.extract(strategy="auto")
 
         # Access internal roles dict
-        roles = blanket.roles if hasattr(blanket, 'roles') else {}
+        roles = blanket.roles if hasattr(blanket, "roles") else {}
         assert isinstance(roles, dict)
         # Each node should have one entry in roles (or mapping is via ids)
         total_role_count = (
@@ -204,7 +200,7 @@ class TestMarkovPerformance:
         extractor = MarkovBlanketExtractor(graph=small_graph)
 
         start = time.time()
-        blanket = extractor.extract(strategy="auto")
+        extractor.extract(strategy="auto")
         elapsed = time.time() - start
 
         assert elapsed < 0.01, f"Small graph took {elapsed}s, expected <10ms"
@@ -214,7 +210,7 @@ class TestMarkovPerformance:
         extractor = MarkovBlanketExtractor(graph=medium_graph)
 
         start = time.time()
-        blanket = extractor.extract(strategy="auto")
+        extractor.extract(strategy="auto")
         elapsed = time.time() - start
 
         assert elapsed < 0.1, f"Medium graph took {elapsed}s, expected <100ms"
@@ -230,10 +226,7 @@ class TestMarkovPerformance:
         assert elapsed < 1.0, f"Large graph took {elapsed}s, expected <1s (O(V+E))"
         # Verify partition is valid
         all_nodes = (
-            blanket.internal_ids
-            | blanket.sensory_ids
-            | blanket.active_ids
-            | blanket.external_ids
+            blanket.internal_ids | blanket.sensory_ids | blanket.active_ids | blanket.external_ids
         )
         assert all_nodes == set(large_synthetic_graph.nodes)
 
@@ -288,10 +281,7 @@ class TestAllSeedStrategies:
         blanket = extractor.extract(strategy=strategy, **call_kw)
 
         all_nodes = (
-            blanket.internal_ids
-            | blanket.sensory_ids
-            | blanket.active_ids
-            | blanket.external_ids
+            blanket.internal_ids | blanket.sensory_ids | blanket.active_ids | blanket.external_ids
         )
         assert all_nodes == set(small_graph.nodes), f"Strategy {strategy} missing nodes"
 
@@ -302,10 +292,7 @@ class TestAllSeedStrategies:
 
         assert blanket is not None
         all_nodes = (
-            blanket.internal_ids
-            | blanket.sensory_ids
-            | blanket.active_ids
-            | blanket.external_ids
+            blanket.internal_ids | blanket.sensory_ids | blanket.active_ids | blanket.external_ids
         )
         assert all_nodes == set(small_graph.nodes)
 
@@ -318,12 +305,7 @@ class TestAllSeedStrategies:
         blanket2 = extractor2.extract(strategy="kind", kinds=[NodeKind.FUNCTION])
 
         for b in (blanket1, blanket2):
-            all_nodes = (
-                b.internal_ids
-                | b.sensory_ids
-                | b.active_ids
-                | b.external_ids
-            )
+            all_nodes = b.internal_ids | b.sensory_ids | b.active_ids | b.external_ids
             assert all_nodes == set(small_graph.nodes)
 
 

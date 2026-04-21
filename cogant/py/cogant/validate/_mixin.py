@@ -30,13 +30,15 @@ class _ValidatorMixin:
         message: str,
         affected_ids: list[str],
     ) -> None:
-        self.issues.append(ValidationIssue(
-            id=f"issue_{len(self.issues)}",
-            severity=severity,
-            category=category,
-            message=message,
-            affected_ids=affected_ids,
-        ))
+        self.issues.append(
+            ValidationIssue(
+                id=f"issue_{len(self.issues)}",
+                severity=severity,
+                category=category,
+                message=message,
+                affected_ids=affected_ids,
+            )
+        )
 
     def get_issues(self) -> list[ValidationIssue]:
         return self.issues

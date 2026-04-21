@@ -13,7 +13,6 @@ Covers:
 """
 
 import json
-from pathlib import Path
 
 import pytest
 
@@ -24,12 +23,15 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
     cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass", path="mymodule.py")
     func = builder.add_node(
         NodeKind.FUNCTION,
@@ -46,12 +48,14 @@ def _make_graph():
 
 def _make_state_space(graph):
     from cogant.statespace.compiler import StateSpaceCompiler
+
     compiler = StateSpaceCompiler(graph, "test_schema")
     return compiler.compile({})
 
 
 def _make_process_model(graph):
     from cogant.process.extractor import ProcessExtractor
+
     return ProcessExtractor(graph, "test_schema").extract()
 
 
@@ -59,34 +63,40 @@ def _make_process_model(graph):
 # gnn/matrices.py
 # ---------------------------------------------------------------------------
 
+
 class TestNormalizeHelpers:
     """Test _normalize_row and _normalize_vector helpers."""
 
     def test_normalize_row_basic(self):
         from cogant.gnn.matrices import _normalize_row
+
         result = _normalize_row([1.0, 1.0, 2.0])
         assert abs(sum(result) - 1.0) < 1e-9
         assert abs(result[2] - 0.5) < 1e-9
 
     def test_normalize_row_empty(self):
         from cogant.gnn.matrices import _normalize_row
+
         result = _normalize_row([])
         assert result == []
 
     def test_normalize_row_zero_sum(self):
         from cogant.gnn.matrices import _normalize_row
+
         result = _normalize_row([0.0, 0.0, 0.0])
         # Should return uniform distribution
         assert abs(sum(result) - 1.0) < 1e-9
-        assert all(abs(x - 1/3) < 1e-9 for x in result)
+        assert all(abs(x - 1 / 3) < 1e-9 for x in result)
 
     def test_normalize_row_single_element(self):
         from cogant.gnn.matrices import _normalize_row
+
         result = _normalize_row([5.0])
         assert result == [1.0]
 
     def test_normalize_vector_delegates(self):
         from cogant.gnn.matrices import _normalize_vector
+
         result = _normalize_vector([2.0, 2.0])
         assert abs(sum(result) - 1.0) < 1e-9
 
@@ -96,6 +106,7 @@ class TestGNNMatrices:
 
     def test_init_with_empty_mappings(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, {}, ssm)
@@ -103,6 +114,7 @@ class TestGNNMatrices:
 
     def test_init_with_list_mappings(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -110,6 +122,7 @@ class TestGNNMatrices:
 
     def test_init_with_none_mappings(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, None, ssm)
@@ -117,6 +130,7 @@ class TestGNNMatrices:
 
     def test_n_states_with_state_space_vars(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -127,6 +141,7 @@ class TestGNNMatrices:
 
     def test_n_obs_property(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -136,6 +151,7 @@ class TestGNNMatrices:
 
     def test_n_actions_property(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -145,6 +161,7 @@ class TestGNNMatrices:
 
     def test_compute_A(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -159,6 +176,7 @@ class TestGNNMatrices:
 
     def test_compute_D(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -169,6 +187,7 @@ class TestGNNMatrices:
 
     def test_compute_C(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -178,6 +197,7 @@ class TestGNNMatrices:
 
     def test_compute_B(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -187,6 +207,7 @@ class TestGNNMatrices:
 
     def test_validate_shapes(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -196,6 +217,7 @@ class TestGNNMatrices:
 
     def test_to_dict(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -208,6 +230,7 @@ class TestGNNMatrices:
 
     def test_edges_from_helper(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -217,6 +240,7 @@ class TestGNNMatrices:
 
     def test_edges_to_helper(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -229,11 +253,13 @@ class TestGNNMatrices:
 # gnn/json_export.py
 # ---------------------------------------------------------------------------
 
+
 class TestGNNJSONExporter:
     """Test GNNJSONExporter.export()."""
 
     def test_export_basic(self):
         from cogant.gnn.json_export import GNNJSONExporter
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         process = _make_process_model(graph)
@@ -245,6 +271,7 @@ class TestGNNJSONExporter:
 
     def test_export_has_all_sections(self):
         from cogant.gnn.json_export import GNNJSONExporter
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         process = _make_process_model(graph)
@@ -262,6 +289,7 @@ class TestGNNJSONExporter:
 
     def test_export_with_list_mappings(self):
         from cogant.gnn.json_export import GNNJSONExporter
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         process = _make_process_model(graph)
@@ -272,6 +300,7 @@ class TestGNNJSONExporter:
 
     def test_export_serializable(self):
         from cogant.gnn.json_export import GNNJSONExporter
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         process = _make_process_model(graph)
@@ -286,13 +315,14 @@ class TestGNNJSONExporter:
 # graph/queries.py — additional GraphQuery methods
 # ---------------------------------------------------------------------------
 
+
 class TestGraphQueryMethods:
     """Test additional GraphQuery methods."""
 
     def test_filter_edges_by_min_weight(self):
-        from cogant.graph.queries import GraphQuery
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.graph.queries import GraphQuery
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.FUNCTION, "f1", "f1")
@@ -307,18 +337,16 @@ class TestGraphQueryMethods:
         assert len(light) == 0
 
     def test_filter_nodes_with_metadata(self):
-        from cogant.graph.queries import GraphQuery
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.graph.queries import GraphQuery
         from cogant.schemas.core import NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         builder.add_node(
-            NodeKind.FUNCTION, "public_func", "public_func",
-            metadata={"visibility": "public"}
+            NodeKind.FUNCTION, "public_func", "public_func", metadata={"visibility": "public"}
         )
         builder.add_node(
-            NodeKind.FUNCTION, "private_func", "private_func",
-            metadata={"visibility": "private"}
+            NodeKind.FUNCTION, "private_func", "private_func", metadata={"visibility": "private"}
         )
         graph = builder.finalize()
         engine = GraphQuery(graph)
@@ -328,6 +356,7 @@ class TestGraphQueryMethods:
 
     def test_find_paths_if_available(self):
         from cogant.graph.queries import GraphQuery
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         nodes = list(graph.nodes.values())
@@ -337,6 +366,7 @@ class TestGraphQueryMethods:
 
     def test_get_subgraph_if_available(self):
         from cogant.graph.queries import GraphQuery
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         node_ids = list(graph.nodes.keys())[:2]
@@ -346,6 +376,7 @@ class TestGraphQueryMethods:
 
     def test_compute_centrality_if_available(self):
         from cogant.graph.queries import GraphQuery
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         if hasattr(engine, "compute_centrality"):
@@ -354,6 +385,7 @@ class TestGraphQueryMethods:
 
     def test_find_cycles_if_available(self):
         from cogant.graph.queries import GraphQuery
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         if hasattr(engine, "find_cycles"):
@@ -362,6 +394,7 @@ class TestGraphQueryMethods:
 
     def test_get_neighbors_if_available(self):
         from cogant.graph.queries import GraphQuery
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         nodes = list(graph.nodes.values())
@@ -374,12 +407,13 @@ class TestGraphQueryMethods:
 # graph/builder.py — more edge and node coverage
 # ---------------------------------------------------------------------------
 
+
 class TestProgramGraphBuilderDeep:
     """Deep coverage of ProgramGraphBuilder."""
 
     def test_add_edge_with_metadata(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.FUNCTION, "f1", "f1")
@@ -392,7 +426,7 @@ class TestProgramGraphBuilderDeep:
 
     def test_add_edge_with_evidence_sources(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mod", "mod")
@@ -427,22 +461,32 @@ class TestProgramGraphBuilderDeep:
 
     def test_graph_metadata(self):
         from cogant.graph.builder import ProgramGraphBuilder
+
         builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
         graph = builder.finalize()
         assert graph.metadata.repo_uri == "file:///test_repo"
 
     def test_add_all_edge_kinds(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
-        n1 = builder.add_node(NodeKind.FUNCTION, "f1", "f1")
-        n2 = builder.add_node(NodeKind.FUNCTION, "f2", "f2")
+        builder.add_node(NodeKind.FUNCTION, "f1", "f1")
+        builder.add_node(NodeKind.FUNCTION, "f2", "f2")
         edge_kinds = [
-            EdgeKind.READS, EdgeKind.WRITES, EdgeKind.RETURNS, EdgeKind.CALLS,
-            EdgeKind.THROWS, EdgeKind.CATCHES, EdgeKind.YIELDS,
-            EdgeKind.OBSERVES, EdgeKind.MUTATES, EdgeKind.GUARDS, EdgeKind.TRIGGERS,
-            EdgeKind.EVIDENCE_FROM_STATIC, EdgeKind.EVIDENCE_FROM_DYNAMIC,
+            EdgeKind.READS,
+            EdgeKind.WRITES,
+            EdgeKind.RETURNS,
+            EdgeKind.CALLS,
+            EdgeKind.THROWS,
+            EdgeKind.CATCHES,
+            EdgeKind.YIELDS,
+            EdgeKind.OBSERVES,
+            EdgeKind.MUTATES,
+            EdgeKind.GUARDS,
+            EdgeKind.TRIGGERS,
+            EdgeKind.EVIDENCE_FROM_STATIC,
+            EdgeKind.EVIDENCE_FROM_DYNAMIC,
         ]
         for i, kind in enumerate(edge_kinds):
             # Create unique nodes to avoid duplicate edges
@@ -457,12 +501,13 @@ class TestProgramGraphBuilderDeep:
 # graph/merge.py — additional GraphMerger paths
 # ---------------------------------------------------------------------------
 
+
 class TestGraphMergerExtra:
     """Additional GraphMerger tests."""
 
     def test_merge_single_graph(self):
-        from cogant.graph.merge import GraphMerger
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.graph.merge import GraphMerger
         from cogant.schemas.core import NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///single")
@@ -473,8 +518,8 @@ class TestGraphMergerExtra:
         assert len(merged.nodes) == 1
 
     def test_merge_with_conflict_resolution_union(self):
-        from cogant.graph.merge import GraphMerger
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.graph.merge import GraphMerger
         from cogant.schemas.core import NodeKind
 
         builder1 = ProgramGraphBuilder(repo_uri="file:///r1")
@@ -491,9 +536,9 @@ class TestGraphMergerExtra:
         assert len(merged.nodes) >= 1
 
     def test_merge_preserves_edges(self):
-        from cogant.graph.merge import GraphMerger
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.graph.merge import GraphMerger
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///repo")
         mod = builder.add_node(NodeKind.MODULE, "mymod", "mymod")
@@ -510,11 +555,13 @@ class TestGraphMergerExtra:
 # translate/engine.py — TranslationEngine additional paths
 # ---------------------------------------------------------------------------
 
+
 class TestTranslationEngineExtra:
     """Additional TranslationEngine tests."""
 
     def test_translate_returns_mappings(self):
         from cogant.translate.engine import TranslationEngine
+
         graph = _make_graph()
         engine = TranslationEngine()
         result = engine.translate(graph)
@@ -522,9 +569,9 @@ class TestTranslationEngineExtra:
 
     def test_translate_multiple_graphs(self):
         """Translate different graph configurations."""
-        from cogant.translate.engine import TranslationEngine
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.translate.engine import TranslationEngine
 
         builder = ProgramGraphBuilder(repo_uri="file:///complex")
         # Add various node types to trigger more translation paths
@@ -532,8 +579,8 @@ class TestTranslationEngineExtra:
         cls = builder.add_node(NodeKind.CLASS, "Handler", "api.Handler")
         endpoint = builder.add_node(NodeKind.ENDPOINT, "/api/v1", "api.endpoint")
         event = builder.add_node(NodeKind.EVENT, "RequestEvent", "api.RequestEvent")
-        cfg = builder.add_node(NodeKind.CONFIGURATION, "config", "api.config")
-        test_node = builder.add_node(NodeKind.TEST, "test_handler", "tests.test_handler")
+        builder.add_node(NodeKind.CONFIGURATION, "config", "api.config")
+        builder.add_node(NodeKind.TEST, "test_handler", "tests.test_handler")
         builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
         builder.add_edge(cls.id, endpoint.id, EdgeKind.TRIGGERS)
         builder.add_edge(endpoint.id, event.id, EdgeKind.OBSERVES)
@@ -544,8 +591,8 @@ class TestTranslationEngineExtra:
         assert result is not None
 
     def test_translate_empty_graph(self):
-        from cogant.translate.engine import TranslationEngine
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.translate.engine import TranslationEngine
 
         builder = ProgramGraphBuilder(repo_uri="file:///empty")
         graph = builder.finalize()
@@ -558,12 +605,14 @@ class TestTranslationEngineExtra:
 # ingest/repo_sniff.py
 # ---------------------------------------------------------------------------
 
+
 class TestRepoSniffer:
     """Test RepoSniffer or equivalent in repo_sniff."""
 
     def test_import_repo_sniff(self):
         try:
             import cogant.ingest.repo_sniff as rs
+
             assert rs is not None
         except ImportError:
             pytest.skip("repo_sniff not available")
@@ -571,6 +620,7 @@ class TestRepoSniffer:
     def test_sniff_local_repo(self, tmp_path):
         try:
             from cogant.ingest.repo_sniff import RepoSniffer
+
             (tmp_path / "main.py").write_text("x = 1")
             (tmp_path / "util.ts").write_text("const x = 1;")
             sniffer = RepoSniffer(tmp_path)
@@ -582,6 +632,7 @@ class TestRepoSniffer:
     def test_detect_languages_in_repo(self, tmp_path):
         try:
             from cogant.ingest.repo_sniff import RepoSniffer
+
             (tmp_path / "app.py").write_text("x = 1")
             (tmp_path / "app.ts").write_text("const x = 1;")
             sniffer = RepoSniffer(tmp_path)
@@ -594,6 +645,7 @@ class TestRepoSniffer:
     def test_sniff_functions_accessible(self, tmp_path):
         try:
             import cogant.ingest.repo_sniff as rs
+
             # Try to call module-level functions if any
             if hasattr(rs, "sniff_repo"):
                 (tmp_path / "main.py").write_text("x = 1")
@@ -607,14 +659,15 @@ class TestRepoSniffer:
 # validate/integrity.py — more IntegrityChecker paths
 # ---------------------------------------------------------------------------
 
+
 class TestIntegrityCheckerDeep:
     """Deep IntegrityChecker tests."""
 
     def test_check_graph_with_orphan_edges(self):
         """Graph with edges pointing to nonexistent nodes."""
-        from cogant.validate.integrity import IntegrityChecker
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.validate.integrity import IntegrityChecker
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.FUNCTION, "f1", "f1")
@@ -629,10 +682,12 @@ class TestIntegrityCheckerDeep:
     def test_check_graph_multiple_times(self):
         """IntegrityChecker can be used multiple times."""
         from cogant.validate.integrity import IntegrityChecker
+
         graph1 = _make_graph()
 
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///g2")
         builder.add_node(NodeKind.CLASS, "SomeClass", "SomeClass")
         graph2 = builder.finalize()
@@ -648,11 +703,13 @@ class TestIntegrityCheckerDeep:
 # gnn/matrices.py — to_gnn_markdown_block and top_k_state_ids
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatricesExtra:
     """Additional GNNMatrices tests."""
 
     def test_to_gnn_markdown_block(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -662,6 +719,7 @@ class TestGNNMatricesExtra:
 
     def test_top_k_state_ids(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -672,6 +730,7 @@ class TestGNNMatricesExtra:
 
     def test_state_node_ids(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -680,6 +739,7 @@ class TestGNNMatricesExtra:
 
     def test_obs_node_ids(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -688,6 +748,7 @@ class TestGNNMatricesExtra:
 
     def test_action_node_ids(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph()
         ssm = _make_state_space(graph)
         matrices = GNNMatrices(graph, [], ssm)
@@ -699,12 +760,13 @@ class TestGNNMatricesExtra:
 # graph/queries.py — find_paths, topological_sort, get_subgraph
 # ---------------------------------------------------------------------------
 
+
 class TestGraphQueryDeep:
     """Deep GraphQuery coverage."""
 
     def _make_connected_graph(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mod1", "mod1")
@@ -718,6 +780,7 @@ class TestGraphQueryDeep:
 
     def test_find_paths_basic(self):
         from cogant.graph.queries import GraphQuery
+
         graph, nodes = self._make_connected_graph()
         engine = GraphQuery(graph)
         if hasattr(engine, "find_paths"):
@@ -726,6 +789,7 @@ class TestGraphQueryDeep:
 
     def test_topological_sort(self):
         from cogant.graph.queries import GraphQuery
+
         graph, nodes = self._make_connected_graph()
         engine = GraphQuery(graph)
         if hasattr(engine, "topological_sort"):
@@ -734,6 +798,7 @@ class TestGraphQueryDeep:
 
     def test_get_subgraph(self):
         from cogant.graph.queries import GraphQuery
+
         graph, nodes = self._make_connected_graph()
         engine = GraphQuery(graph)
         if hasattr(engine, "get_subgraph"):
@@ -743,6 +808,7 @@ class TestGraphQueryDeep:
 
     def test_compute_metrics(self):
         from cogant.graph.queries import GraphQuery
+
         graph = _make_graph()
         engine = GraphQuery(graph)
         if hasattr(engine, "compute_metrics"):
@@ -751,6 +817,7 @@ class TestGraphQueryDeep:
 
     def test_filter_edges_by_target(self):
         from cogant.graph.queries import GraphQuery
+
         graph, nodes = self._make_connected_graph()
         engine = GraphQuery(graph)
         # Filter by target_id

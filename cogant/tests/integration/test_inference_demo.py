@@ -12,11 +12,8 @@ finite free energy, and discrete actions at each timestep.
 from __future__ import annotations
 
 import math
-import sys
 import types
 from pathlib import Path
-
-import pytest
 
 from cogant.reverse.callable import MatrixFunctions
 from cogant.reverse.parser import parse_gnn
@@ -134,9 +131,7 @@ def test_inference_demo(tmp_path: Path) -> None:
 
         # State distribution is normalized (sums to ~1.0).
         total = sum(step.state_dist)
-        assert abs(total - 1.0) < 1e-6, (
-            f"Step {i}: state_dist sums to {total}, expected ~1.0"
-        )
+        assert abs(total - 1.0) < 1e-6, f"Step {i}: state_dist sums to {total}, expected ~1.0"
 
         # Free energy is finite.
         assert math.isfinite(step.free_energy), (
@@ -200,12 +195,8 @@ def test_inference_demo_no_exec() -> None:
 
     for i, step in enumerate(steps):
         total = sum(step.state_dist)
-        assert abs(total - 1.0) < 1e-6, (
-            f"Step {i}: state_dist sums to {total}"
-        )
-        assert math.isfinite(step.free_energy), (
-            f"Step {i}: free_energy={step.free_energy}"
-        )
+        assert abs(total - 1.0) < 1e-6, f"Step {i}: state_dist sums to {total}"
+        assert math.isfinite(step.free_energy), f"Step {i}: free_energy={step.free_energy}"
         assert isinstance(step.action, int)
         assert step.action >= 0
         assert step.t == i

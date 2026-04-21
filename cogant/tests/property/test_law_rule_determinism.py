@@ -23,7 +23,8 @@ for the rest.
 from __future__ import annotations
 
 import pytest
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from cogant.graph.builder import ProgramGraphBuilder
 from cogant.graph.queries import GraphQuery
@@ -183,8 +184,7 @@ def test_rule_matches_are_deterministic(graph: ProgramGraph) -> None:
         first = _match_signature(rule.matches(graph, query))
         second = _match_signature(rule.matches(graph, query))
         assert first == second, (
-            f"{rule_cls.__name__} produced drifting matches: "
-            f"diff={set(first) ^ set(second)}"
+            f"{rule_cls.__name__} produced drifting matches: diff={set(first) ^ set(second)}"
         )
 
 
@@ -209,8 +209,7 @@ def test_rule_apply_is_deterministic(graph: ProgramGraph) -> None:
             first = _apply_signature(rule.apply(graph, match))
             second = _apply_signature(rule.apply(graph, match))
             assert first == second, (
-                f"{rule_cls.__name__}.apply drifted on {match}: "
-                f"first={first} second={second}"
+                f"{rule_cls.__name__}.apply drifted on {match}: first={first} second={second}"
             )
 
 

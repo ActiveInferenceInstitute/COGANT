@@ -1,7 +1,8 @@
 """Unit tests for static coupling analysis module."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from cogant.static.coupling import (
     CouplingAnalyzer,

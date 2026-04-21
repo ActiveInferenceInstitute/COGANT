@@ -12,6 +12,21 @@ from cogant.plugins.base import VisualizationPlugin as VisualizationPlugin
 from cogant.plugins.registry import PluginInfo as PluginInfo
 from cogant.plugins.registry import PluginRegistry as PluginRegistry
 
-__all__ = ['Plugin', 'PluginMetadata', 'LanguagePlugin', 'TracePlugin', 'NormalizerPlugin', 'TranslationRulePlugin', 'StateSpacePlugin', 'ProcessModelPlugin', 'ExportPlugin', 'ValidationPlugin', 'VisualizationPlugin', 'PluginInfo', 'PluginRegistry', 'discover_plugins']
+__all__ = [
+    "Plugin",
+    "PluginMetadata",
+    "LanguagePlugin",
+    "TracePlugin",
+    "NormalizerPlugin",
+    "TranslationRulePlugin",
+    "StateSpacePlugin",
+    "ProcessModelPlugin",
+    "ExportPlugin",
+    "ValidationPlugin",
+    "VisualizationPlugin",
+    "PluginInfo",
+    "PluginRegistry",
+    "discover_plugins",
+]
 
 def discover_plugins() -> list[PluginInfo]: ...

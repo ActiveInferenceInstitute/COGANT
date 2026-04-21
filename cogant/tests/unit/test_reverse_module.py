@@ -32,7 +32,6 @@ from cogant.reverse.planner import (
 )
 from cogant.reverse.synthesizer import synthesize_package
 
-
 # ---------------------------------------------------------------------------
 # Canonical GNN markdown fixtures
 # ---------------------------------------------------------------------------
@@ -843,8 +842,10 @@ def test_compare_graph_structure_edges_only_asymmetry() -> None:
     """Edge asymmetry is captured even if nodes match."""
     nodes = [{"role": "A"}, {"role": "B"}]
     score = compare_graph_structure(
-        nodes, [{"source": "A", "target": "B"}],
-        nodes, [{"source": "B", "target": "A"}],
+        nodes,
+        [{"source": "A", "target": "B"}],
+        nodes,
+        [{"source": "B", "target": "A"}],
     )
     assert score < 1.0
 
@@ -872,7 +873,12 @@ def test_compute_isomorphism_report_identical_gnns() -> None:
 
 def test_compute_isomorphism_report_disjoint_gnns() -> None:
     """Disjoint inputs fall well below the default threshold."""
-    a = {"roles": {"HIDDEN_STATE": 3}, "matrices": {"A": [[1.0]]}, "nodes": [{"role": "X"}], "edges": []}
+    a = {
+        "roles": {"HIDDEN_STATE": 3},
+        "matrices": {"A": [[1.0]]},
+        "nodes": [{"role": "X"}],
+        "edges": [],
+    }
     b = {"roles": {"ACTION": 3}, "matrices": {"B": [[1.0]]}, "nodes": [{"role": "Y"}], "edges": []}
     report = compute_isomorphism_report(a, b)
     assert report.is_isomorphic is False
@@ -927,8 +933,11 @@ def test_isomorphism_report_summary_format() -> None:
 def test_isomorphism_report_summary_drift() -> None:
     """is_isomorphic=False surfaces as 'DRIFT' in summary()."""
     report = IsomorphismReport(
-        role_score=0.1, matrix_score=0.1, structural_score=0.1,
-        total_score=0.1, is_isomorphic=False,
+        role_score=0.1,
+        matrix_score=0.1,
+        structural_score=0.1,
+        total_score=0.1,
+        is_isomorphic=False,
     )
     assert "DRIFT" in report.summary()
 

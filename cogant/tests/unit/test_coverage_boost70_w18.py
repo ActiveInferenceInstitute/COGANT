@@ -12,7 +12,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -21,15 +20,16 @@ pytestmark = pytest.mark.unit
 # ingest/manifest.py — ManifestParser with various file formats
 # ---------------------------------------------------------------------------
 
+
 class TestManifestParserAllFormats:
     def _make_parser(self):
         from cogant.ingest.manifest import ManifestParser
+
         return ManifestParser()
 
     # --- parse_requirements_txt ---
 
     def test_requirements_txt_simple(self, tmp_path):
-        from cogant.ingest.manifest import Dependency
         req = tmp_path / "requirements.txt"
         req.write_text("requests==2.28.0\nnumpy>=1.21.0\npytest\nflask\n")
         parser = self._make_parser()
@@ -117,19 +117,24 @@ dev = ["pytest>=7.0", "black"]
 
     def test_package_json_basic(self, tmp_path):
         import json
+
         pkg = tmp_path / "package.json"
-        pkg.write_text(json.dumps({
-            "name": "my-app",
-            "version": "1.0.0",
-            "dependencies": {
-                "react": "^18.0.0",
-                "axios": "^1.0.0",
-            },
-            "devDependencies": {
-                "jest": "^29.0.0",
-                "eslint": "^8.0.0",
-            }
-        }))
+        pkg.write_text(
+            json.dumps(
+                {
+                    "name": "my-app",
+                    "version": "1.0.0",
+                    "dependencies": {
+                        "react": "^18.0.0",
+                        "axios": "^1.0.0",
+                    },
+                    "devDependencies": {
+                        "jest": "^29.0.0",
+                        "eslint": "^8.0.0",
+                    },
+                }
+            )
+        )
         parser = self._make_parser()
         meta, deps = parser.parse_package_json(pkg)
         assert isinstance(meta, dict)
@@ -138,6 +143,7 @@ dev = ["pytest>=7.0", "black"]
 
     def test_package_json_no_deps(self, tmp_path):
         import json
+
         pkg = tmp_path / "package.json"
         pkg.write_text(json.dumps({"name": "empty-app", "version": "0.0.1"}))
         parser = self._make_parser()
@@ -147,8 +153,11 @@ dev = ["pytest>=7.0", "black"]
 
     def test_package_json_via_parse(self, tmp_path):
         import json
+
         pkg = tmp_path / "package.json"
-        pkg.write_text(json.dumps({"name": "x", "version": "1.0.0", "dependencies": {"lodash": "^4.0"}}))
+        pkg.write_text(
+            json.dumps({"name": "x", "version": "1.0.0", "dependencies": {"lodash": "^4.0"}})
+        )
         parser = self._make_parser()
         meta, deps = parser.parse(pkg)
         assert isinstance(meta, dict)
@@ -178,7 +187,7 @@ criterion = "0.5"
 
     def test_cargo_toml_via_parse(self, tmp_path):
         cargo = tmp_path / "Cargo.toml"
-        cargo.write_text("[package]\nname = \"x\"\nversion = \"0.1.0\"\n")
+        cargo.write_text('[package]\nname = "x"\nversion = "0.1.0"\n')
         parser = self._make_parser()
         meta, deps = parser.parse(cargo)
         assert isinstance(meta, dict)
@@ -186,7 +195,7 @@ criterion = "0.5"
 
     def test_cargo_toml_empty_deps(self, tmp_path):
         cargo = tmp_path / "Cargo.toml"
-        cargo.write_text("[package]\nname = \"x\"\nversion = \"0.1.0\"\n\n[dependencies]\n")
+        cargo.write_text('[package]\nname = "x"\nversion = "0.1.0"\n\n[dependencies]\n')
         parser = self._make_parser()
         meta, deps = parser.parse_cargo_toml(cargo)
         assert isinstance(meta, dict)
@@ -229,15 +238,18 @@ setup(
 # ingest/language_detect.py — LanguageDetector (get_parser, more extensions)
 # ---------------------------------------------------------------------------
 
+
 class TestLanguageDetectorExtended:
     def test_get_parser_for_python(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         parser = LanguageDetector.get_parser("python")
         # May return None if tree-sitter not available
         assert parser is None or parser is not None
 
     def test_get_parser_unknown_language_raises_or_none(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         try:
             parser = LanguageDetector.get_parser("nonexistent_lang_xyz")
             assert parser is None
@@ -246,6 +258,7 @@ class TestLanguageDetectorExtended:
 
     def test_detect_language_js(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         p = tmp_path / "app.js"
         p.write_text("const x = 1;\n")
         lang = LanguageDetector.detect_language(p)
@@ -253,6 +266,7 @@ class TestLanguageDetectorExtended:
 
     def test_detect_language_ts(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         p = tmp_path / "app.ts"
         p.write_text("const x: number = 1;\n")
         lang = LanguageDetector.detect_language(p)
@@ -260,6 +274,7 @@ class TestLanguageDetectorExtended:
 
     def test_detect_language_java(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         p = tmp_path / "Main.java"
         p.write_text("class Main {}\n")
         lang = LanguageDetector.detect_language(p)
@@ -267,6 +282,7 @@ class TestLanguageDetectorExtended:
 
     def test_detect_language_rust(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         p = tmp_path / "main.rs"
         p.write_text("fn main() {}\n")
         lang = LanguageDetector.detect_language(p)
@@ -274,6 +290,7 @@ class TestLanguageDetectorExtended:
 
     def test_detect_language_go(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         p = tmp_path / "main.go"
         p.write_text("package main\nfunc main() {}\n")
         lang = LanguageDetector.detect_language(p)
@@ -281,6 +298,7 @@ class TestLanguageDetectorExtended:
 
     def test_detect_language_cpp(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         p = tmp_path / "main.cpp"
         p.write_text("int main() { return 0; }\n")
         lang = LanguageDetector.detect_language(p)
@@ -288,6 +306,7 @@ class TestLanguageDetectorExtended:
 
     def test_detect_language_ruby(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         p = tmp_path / "app.rb"
         p.write_text("puts 'hello'\n")
         lang = LanguageDetector.detect_language(p)
@@ -295,6 +314,7 @@ class TestLanguageDetectorExtended:
 
     def test_detect_language_markdown(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         p = tmp_path / "README.md"
         p.write_text("# Hello\n")
         lang = LanguageDetector.detect_language(p)
@@ -302,6 +322,7 @@ class TestLanguageDetectorExtended:
 
     def test_detect_repo_with_multiple_types(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "a.py").write_text("x = 1\n")
         (tmp_path / "b.py").write_text("y = 2\n")
         (tmp_path / "main.js").write_text("const z = 3;\n")
@@ -312,6 +333,7 @@ class TestLanguageDetectorExtended:
 
     def test_detect_repo_nested_dirs(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         sub = tmp_path / "src"
         sub.mkdir()
         (sub / "mod.py").write_text("x = 1\n")
@@ -324,9 +346,11 @@ class TestLanguageDetectorExtended:
 # ingest/repo.py — RepoIngester with more scenarios
 # ---------------------------------------------------------------------------
 
+
 class TestRepoIngesterExtended:
     def test_ingest_local_with_checksums(self, tmp_path):
         from cogant.ingest.repo import RepoIngester, RepoSnapshot
+
         (tmp_path / "main.py").write_text("x = 1\n")
         ingester = RepoIngester()
         snapshot = ingester.ingest_local(tmp_path, compute_checksums=True)
@@ -339,6 +363,7 @@ class TestRepoIngesterExtended:
 
     def test_ingest_local_no_test_files(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "main.py").write_text("x = 1\n")
         (tmp_path / "test_main.py").write_text("def test(): pass\n")
         ingester = RepoIngester()
@@ -350,6 +375,7 @@ class TestRepoIngesterExtended:
 
     def test_ingest_local_multiple_file_types(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "app.py").write_text("x = 1\n")
         (tmp_path / "util.py").write_text("y = 2\n")
         (tmp_path / "app.js").write_text("const z = 3;\n")
@@ -361,6 +387,7 @@ class TestRepoIngesterExtended:
 
     def test_ingest_local_nested_directories(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         src = tmp_path / "src"
         src.mkdir()
         (src / "core.py").write_text("class Core: pass\n")
@@ -373,6 +400,7 @@ class TestRepoIngesterExtended:
 
     def test_snapshot_has_dependencies(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "requirements.txt").write_text("requests==2.28.0\n")
         (tmp_path / "main.py").write_text("import requests\n")
         ingester = RepoIngester()

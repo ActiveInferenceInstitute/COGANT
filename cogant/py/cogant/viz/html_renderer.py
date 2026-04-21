@@ -80,8 +80,15 @@ class HTMLSiteRenderer:
         stage_list_html = "".join(
             self._render_stage_item(stage)
             for stage in [
-                "ingest", "static", "normalize", "graph", "translate",
-                "statespace", "process", "export", "validate",
+                "ingest",
+                "static",
+                "normalize",
+                "graph",
+                "translate",
+                "statespace",
+                "process",
+                "export",
+                "validate",
             ]
         )
         errors_style = "" if errors > 0 else "display: none;"
@@ -261,9 +268,7 @@ class HTMLSiteRenderer:
             (self.bundle.get("artifacts", {}) or {}).get("program_graph"),
         ]
         for candidate in candidates:
-            if isinstance(candidate, dict) and (
-                "nodes" in candidate or "edges" in candidate
-            ):
+            if isinstance(candidate, dict) and ("nodes" in candidate or "edges" in candidate):
                 return {
                     "nodes": candidate.get("nodes", []),
                     "edges": candidate.get("edges", []),
@@ -285,9 +290,7 @@ class HTMLSiteRenderer:
         for candidate in candidates:
             if isinstance(candidate, dict):
                 return {
-                    "states": candidate.get("states")
-                    or candidate.get("variables")
-                    or [],
+                    "states": candidate.get("states") or candidate.get("variables") or [],
                     "observations": candidate.get("observations") or [],
                     "actions": candidate.get("actions") or [],
                 }
@@ -303,9 +306,7 @@ class HTMLSiteRenderer:
         for candidate in candidates:
             if isinstance(candidate, dict):
                 return {
-                    "stages": candidate.get("stages")
-                    or candidate.get("steps")
-                    or [],
+                    "stages": candidate.get("stages") or candidate.get("steps") or [],
                     "dependencies": candidate.get("dependencies") or [],
                 }
         return {"stages": [], "dependencies": []}
@@ -315,9 +316,7 @@ class HTMLSiteRenderer:
         return {
             "target": self.bundle.get("target", ""),
             "metadata": self.bundle.get("metadata", {}),
-            "stages_completed": sorted(
-                (self.bundle.get("stage_results", {}) or {}).keys()
-            ),
+            "stages_completed": sorted((self.bundle.get("stage_results", {}) or {}).keys()),
             "errors": list(self.bundle.get("errors", []) or []),
         }
 

@@ -107,7 +107,9 @@ class FlowDiagrammer:
         """Initialize the FlowDiagrammer."""
         pass
 
-    def generate_cfg(self, function_node: Node, graph: ProgramGraph | None = None) -> ControlFlowGraph:
+    def generate_cfg(
+        self, function_node: Node, graph: ProgramGraph | None = None
+    ) -> ControlFlowGraph:
         """
         Generate a control flow graph for a single function.
 
@@ -266,9 +268,9 @@ class FlowDiagrammer:
         dep_graph = DependencyGraph()
 
         # Extract modules and files
-        modules = program_graph.get_nodes_by_kind(NodeKind.MODULE) + program_graph.get_nodes_by_kind(
-            NodeKind.FILE
-        )
+        modules = program_graph.get_nodes_by_kind(
+            NodeKind.MODULE
+        ) + program_graph.get_nodes_by_kind(NodeKind.FILE)
 
         for mod in modules:
             dep_graph.nodes[mod.id] = {
@@ -375,18 +377,23 @@ class FlowDiagrammer:
         # Add participant declarations
         for participant_id in sorted(participants):
             safe_name = _node_name(participant_id).replace('"', '\\"')
-            lines.append(f'    participant {safe_name}')
+            lines.append(f"    participant {safe_name}")
 
         # Add call sequences
         for source_id, target_id in call_pairs:
             source_name = _node_name(source_id).replace('"', '\\"')
             target_name = _node_name(target_id).replace('"', '\\"')
-            lines.append(f'    {source_name}->>+{target_name}: call')
-            lines.append(f'    {target_name}-->>-{source_name}: return')
+            lines.append(f"    {source_name}->>+{target_name}: call")
+            lines.append(f"    {target_name}-->>-{source_name}: return")
 
         return "\n".join(lines) if len(lines) > 1 else "sequenceDiagram\n    participant None"
 
-    def to_png(self, graph: ControlFlowGraph | CallGraph | DependencyGraph, output_path: str, dpi: int = 150) -> str:
+    def to_png(
+        self,
+        graph: ControlFlowGraph | CallGraph | DependencyGraph,
+        output_path: str,
+        dpi: int = 150,
+    ) -> str:
         """
         Render a flow diagram to PNG.
 
@@ -453,7 +460,9 @@ class FlowDiagrammer:
             logger.error(f"Error rendering PNG: {e}")
             return ""
 
-    def to_pdf(self, graph: ControlFlowGraph | CallGraph | DependencyGraph, output_path: str) -> str:
+    def to_pdf(
+        self, graph: ControlFlowGraph | CallGraph | DependencyGraph, output_path: str
+    ) -> str:
         """
         Render a flow diagram to PDF.
 

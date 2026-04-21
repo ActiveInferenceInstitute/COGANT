@@ -1,11 +1,10 @@
 """Tests for cogant.schema — versioned GNN schema detection and migration."""
 
-from cogant.schema import SchemaVersion, migrate_gnn, detect_version
+from cogant.schema import SchemaVersion, detect_version, migrate_gnn
 from cogant.schema.versions import (
     GNN_V1_0_REQUIRED_SECTIONS,
     GNN_V1_1_REQUIRED_SECTIONS,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures — minimal GNN texts
@@ -47,6 +46,7 @@ Ontology details here.
 # Detection tests
 # ---------------------------------------------------------------------------
 
+
 def test_detect_version_v1_0():
     """GNN without GNNVersionAndFlags section is detected as V1_0."""
     assert detect_version(GNN_V1_0_TEXT) == SchemaVersion.V1_0
@@ -60,6 +60,7 @@ def test_detect_version_v1_1():
 # ---------------------------------------------------------------------------
 # Migration tests
 # ---------------------------------------------------------------------------
+
 
 def test_migrate_v1_0_to_v1_1_adds_header():
     """Migrating v1.0 GNN adds a GNNVersionAndFlags section."""

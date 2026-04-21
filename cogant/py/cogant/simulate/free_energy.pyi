@@ -4,11 +4,30 @@ from typing import Any
 from cogant.simulate.distributions import CategoricalDistribution
 from cogant.statespace.compiler import StateSpaceModel
 
-__all__ = ['variational_free_energy', 'expected_free_energy', 'bayesian_belief_update', 'uniform_distribution', 'FreeEnergyCalculator']
+__all__ = [
+    "variational_free_energy",
+    "expected_free_energy",
+    "bayesian_belief_update",
+    "uniform_distribution",
+    "FreeEnergyCalculator",
+]
 
-def variational_free_energy(beliefs: Sequence[float], prior: Sequence[float], likelihood_matrix: Sequence[Sequence[float]], observation: Sequence[float] | None = None) -> float: ...
-def bayesian_belief_update(prior: Sequence[float], likelihood_matrix: Sequence[Sequence[float]], observation_index: int) -> list[float]: ...
-def expected_free_energy(policy_action_sequence: Sequence[int], beliefs: Sequence[float], likelihood_matrix: Sequence[Sequence[float]], transition_tensor: Sequence[Sequence[Sequence[float]]], log_preferences: Sequence[float]) -> float: ...
+def variational_free_energy(
+    beliefs: Sequence[float],
+    prior: Sequence[float],
+    likelihood_matrix: Sequence[Sequence[float]],
+    observation: Sequence[float] | None = None,
+) -> float: ...
+def bayesian_belief_update(
+    prior: Sequence[float], likelihood_matrix: Sequence[Sequence[float]], observation_index: int
+) -> list[float]: ...
+def expected_free_energy(
+    policy_action_sequence: Sequence[int],
+    beliefs: Sequence[float],
+    likelihood_matrix: Sequence[Sequence[float]],
+    transition_tensor: Sequence[Sequence[Sequence[float]]],
+    log_preferences: Sequence[float],
+) -> float: ...
 def uniform_distribution(n: int) -> list[float]: ...
 
 class FreeEnergyCalculator:
@@ -17,9 +36,38 @@ class FreeEnergyCalculator:
     actions: Any
     transition_matrix: Any
     def __init__(self, state_space: StateSpaceModel) -> None: ...
-    def variational_free_energy(self, beliefs: CategoricalDistribution, observation: str, likelihood_model: dict[str, CategoricalDistribution] | None = None) -> float: ...
-    def expected_free_energy(self, beliefs: CategoricalDistribution, policy: list[str], horizon: int = 3, likelihood_model: dict[str, CategoricalDistribution] | None = None) -> float: ...
-    def surprisal(self, observation: str, beliefs: CategoricalDistribution, likelihood_model: dict[str, CategoricalDistribution] | None = None) -> float: ...
-    def complexity(self, posterior: CategoricalDistribution, prior: CategoricalDistribution | None = None) -> float: ...
-    def accuracy(self, observation: str, beliefs: CategoricalDistribution, likelihood_model: dict[str, CategoricalDistribution] | None = None) -> float: ...
-    def policy_ranking(self, beliefs: CategoricalDistribution, available_actions: list[str], horizon: int = 3, likelihood_model: dict[str, CategoricalDistribution] | None = None) -> list[tuple[str, float]]: ...
+    def variational_free_energy(
+        self,
+        beliefs: CategoricalDistribution,
+        observation: str,
+        likelihood_model: dict[str, CategoricalDistribution] | None = None,
+    ) -> float: ...
+    def expected_free_energy(
+        self,
+        beliefs: CategoricalDistribution,
+        policy: list[str],
+        horizon: int = 3,
+        likelihood_model: dict[str, CategoricalDistribution] | None = None,
+    ) -> float: ...
+    def surprisal(
+        self,
+        observation: str,
+        beliefs: CategoricalDistribution,
+        likelihood_model: dict[str, CategoricalDistribution] | None = None,
+    ) -> float: ...
+    def complexity(
+        self, posterior: CategoricalDistribution, prior: CategoricalDistribution | None = None
+    ) -> float: ...
+    def accuracy(
+        self,
+        observation: str,
+        beliefs: CategoricalDistribution,
+        likelihood_model: dict[str, CategoricalDistribution] | None = None,
+    ) -> float: ...
+    def policy_ranking(
+        self,
+        beliefs: CategoricalDistribution,
+        available_actions: list[str],
+        horizon: int = 3,
+        likelihood_model: dict[str, CategoricalDistribution] | None = None,
+    ) -> list[tuple[str, float]]: ...

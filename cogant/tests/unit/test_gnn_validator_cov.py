@@ -223,9 +223,9 @@ def test_validate_matrices_dimension_mismatches():
     """Wrong A row count, C length and B dims are all reported."""
     block = {
         "A": [[1.0, 0.0]],  # 1 row instead of 2
-        "B": [[[1.0]]],     # wrong shape
-        "C": [0.0],         # wrong length
-        "D": [1.0],         # wrong length
+        "B": [[[1.0]]],  # wrong shape
+        "C": [0.0],  # wrong length
+        "D": [1.0],  # wrong length
         "dimensions": {"n_states": 2, "n_obs": 2, "n_actions": 1},
     }
     errors = GNNValidator().validate_matrices(block)
@@ -240,9 +240,7 @@ def test_validate_matrices_dimension_mismatches():
 
 def test_validate_provenance_complete_dict_passes():
     """A provenance with timestamp + sources dict passes."""
-    errors = GNNValidator().validate_provenance(
-        {"timestamp": "now", "sources": {"a": "b"}}
-    )
+    errors = GNNValidator().validate_provenance({"timestamp": "now", "sources": {"a": "b"}})
     assert errors == []
 
 

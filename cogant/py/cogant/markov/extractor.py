@@ -141,12 +141,12 @@ class MarkovBlanketExtractor:
 
         logger.info(
             "Markov blanket extraction: strategy=%s, %d seeds from %d graph nodes",
-            strategy, len(seed_set), len(self.graph.nodes),
+            strategy,
+            len(seed_set),
+            len(self.graph.nodes),
         )
 
-        blanket = partition_by_seeds(
-            self.graph, seed_set, adjacency=self._adjacency
-        )
+        blanket = partition_by_seeds(self.graph, seed_set, adjacency=self._adjacency)
         blanket.metadata["strategy"] = strategy
         blanket.metadata["requested_seed_count"] = len(list(seed_set))
         if strategy == "module":
@@ -317,7 +317,9 @@ class MarkovBlanketExtractor:
         }
         logger.info(
             "Markov blanket auto-seed chose module %s (score=%.3f, nodes=%d)",
-            best_id, best_score, best_size,
+            best_id,
+            best_score,
+            best_size,
         )
         return seeds, meta
 

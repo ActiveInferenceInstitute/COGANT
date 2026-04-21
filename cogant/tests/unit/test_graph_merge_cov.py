@@ -8,10 +8,9 @@ from __future__ import annotations
 
 import pytest
 
-from cogant.graph.merge import GraphMerger, MergeConflict, MergeProvenance
+from cogant.graph.merge import GraphMerger, MergeProvenance
 from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
-
 
 # --------------------------- builders ----------------------------------- #
 
@@ -99,12 +98,8 @@ def test_merge_graphs_adds_nodes_and_edges_from_both():
 
 def test_merge_graphs_combines_metadata_languages_and_evidence():
     """Merged metadata is the union of languages and evidence sources."""
-    static_g = _graph(
-        "file:///tmp/repo", languages={"python"}, evidence=["static"]
-    )
-    dynamic_g = _graph(
-        "file:///tmp/repo", languages={"javascript"}, evidence=["dynamic"]
-    )
+    static_g = _graph("file:///tmp/repo", languages={"python"}, evidence=["static"])
+    dynamic_g = _graph("file:///tmp/repo", languages={"javascript"}, evidence=["dynamic"])
 
     merged, _ = GraphMerger().merge_graphs(static_g, dynamic_g)
 
@@ -135,9 +130,7 @@ def _conflicting_pair() -> tuple[ProgramGraph, ProgramGraph]:
     dynamic_g = _graph("file:///tmp/repo")
     dynamic_g.add_node(_node("a"))
     dynamic_g.add_node(_node("b"))
-    dynamic_g.add_edge(
-        _edge("e_dynamic", "a", "b", weight=1.0, evidence_sources=["dynamic"])
-    )
+    dynamic_g.add_edge(_edge("e_dynamic", "a", "b", weight=1.0, evidence_sources=["dynamic"]))
     return static_g, dynamic_g
 
 

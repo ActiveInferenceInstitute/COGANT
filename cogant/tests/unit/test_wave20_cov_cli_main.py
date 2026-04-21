@@ -41,11 +41,7 @@ def tiny_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "tiny_repo"
     repo.mkdir()
     (repo / "main.py").write_text(
-        "def main() -> int:\n"
-        "    return 1\n"
-        "\n"
-        "def helper(x: int) -> int:\n"
-        "    return x + 1\n"
+        "def main() -> int:\n    return 1\n\ndef helper(x: int) -> int:\n    return x + 1\n"
     )
     (repo / "README.md").write_text("# tiny\n")
     return repo
@@ -87,9 +83,7 @@ def gnn_package_dir(tmp_path: Path) -> Path:
     g = ProgramGraph(metadata=GraphMetadata(repo_uri="test", languages={"python"}))
     pkg = tmp_path / "gnn_package"
     pkg.mkdir()
-    GNNPackageBuilder(graph=g, state_space=ss, process_model=pm, mappings={}).build(
-        str(pkg)
-    )
+    GNNPackageBuilder(graph=g, state_space=ss, process_model=pm, mappings={}).build(str(pkg))
     return pkg
 
 
@@ -120,9 +114,7 @@ class TestTopLevelHelp:
 
 
 class TestInitCommand:
-    def test_init_creates_cogant_config(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_creates_cogant_config(self, runner: CliRunner, tmp_path: Path) -> None:
         proj = tmp_path / "new_proj"
         result = runner.invoke(app, ["init", str(proj)])
         assert result.exit_code == 0, result.stdout
@@ -147,9 +139,7 @@ class TestInitCommand:
         # init did NOT clobber user edits
         assert cfg_path.read_text() == mutated
 
-    def test_init_quiet_suppresses_summary(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_quiet_suppresses_summary(self, runner: CliRunner, tmp_path: Path) -> None:
         proj = tmp_path / "quiet_proj"
         result = runner.invoke(app, ["init", str(proj), "--quiet"])
         assert result.exit_code == 0
@@ -163,9 +153,7 @@ class TestInitCommand:
         proj = tmp_path / "run_proj"
         proj.mkdir()
         (proj / "main.py").write_text("def main(): return 1\n")
-        result = runner.invoke(
-            app, ["init", str(proj), "--run", "--yes", "--quiet"]
-        )
+        result = runner.invoke(app, ["init", str(proj), "--run", "--yes", "--quiet"])
         assert result.exit_code == 0, result.stdout
         # Translate complete message must appear in non-quiet section
         assert "Translate complete" in result.stdout
@@ -192,9 +180,7 @@ class TestInitCommand:
 class TestAnalyzeErrorBranches:
     """_friendly_pipeline_error is routed here via Session/PipelineRunner."""
 
-    def test_analyze_missing_path_exits_nonzero(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_analyze_missing_path_exits_nonzero(self, runner: CliRunner, tmp_path: Path) -> None:
         result = runner.invoke(
             app,
             ["analyze", str(tmp_path / "definitely_missing")],
@@ -211,10 +197,7 @@ class TestAnalyzeErrorBranches:
         result = runner.invoke(app, ["analyze", str(f)])
         assert result.exit_code != 0
         # NotADirectoryError branch of _friendly_pipeline_error
-        assert (
-            "directory" in result.stdout.lower()
-            or "Error" in result.stdout
-        )
+        assert "directory" in result.stdout.lower() or "Error" in result.stdout
 
 
 # ---------------------------------------------------------------------------
@@ -265,9 +248,7 @@ class TestAnalyzeHappyPath:
 
 
 class TestValidateCommand:
-    def test_validate_gnn_package_directory(
-        self, runner: CliRunner, gnn_package_dir: Path
-    ) -> None:
+    def test_validate_gnn_package_directory(self, runner: CliRunner, gnn_package_dir: Path) -> None:
         """Route 1: directory IS a gnn_package — hits the GNNValidator path."""
         result = runner.invoke(app, ["validate", str(gnn_package_dir)])
         assert result.exit_code == 0, result.stdout
@@ -281,23 +262,17 @@ class TestValidateCommand:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """``--no-upstream-gnn`` matches ``validate_package(..., upstream_gnn=False)``."""
-        cli = runner.invoke(
-            app, ["validate", str(gnn_package_dir), "--no-upstream-gnn"]
-        )
+        cli = runner.invoke(app, ["validate", str(gnn_package_dir), "--no-upstream-gnn"])
         assert cli.exit_code == 0, cli.stdout
         assert "VALID" in cli.stdout
 
         monkeypatch.delenv("COGANT_DISABLE_UPSTREAM_GNN", raising=False)
-        r_off = GNNValidator().validate_package(
-            str(gnn_package_dir), upstream_gnn=False
-        )
+        r_off = GNNValidator().validate_package(str(gnn_package_dir), upstream_gnn=False)
         assert "upstream_gnn" not in r_off.details
 
         if not is_upstream_gnn_available():
             return
-        r_on = GNNValidator().validate_package(
-            str(gnn_package_dir), upstream_gnn=True
-        )
+        r_on = GNNValidator().validate_package(str(gnn_package_dir), upstream_gnn=True)
         assert "upstream_gnn" in r_on.details
 
     def test_validate_directory_with_gnn_package_subdir(
@@ -319,23 +294,15 @@ class TestValidateCommand:
             preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
-        pm = ProcessModel(
-            id="pm", schema_name="v0.1.0", stages={}, connections={}
-        )
-        g = ProgramGraph(
-            metadata=GraphMetadata(repo_uri="test", languages={"python"})
-        )
-        GNNPackageBuilder(
-            graph=g, state_space=ss, process_model=pm, mappings={}
-        ).build(str(sub))
+        pm = ProcessModel(id="pm", schema_name="v0.1.0", stages={}, connections={})
+        g = ProgramGraph(metadata=GraphMetadata(repo_uri="test", languages={"python"}))
+        GNNPackageBuilder(graph=g, state_space=ss, process_model=pm, mappings={}).build(str(sub))
 
         result = runner.invoke(app, ["validate", str(parent)])
         assert result.exit_code == 0, result.stdout
         assert "VALID" in result.stdout
 
-    def test_validate_bundle_json_file(
-        self, runner: CliRunner, bundle_json: Path
-    ) -> None:
+    def test_validate_bundle_json_file(self, runner: CliRunner, bundle_json: Path) -> None:
         """Route 2: plain bundle.json file — lightweight structural checks."""
         result = runner.invoke(app, ["validate", str(bundle_json)])
         assert result.exit_code == 0, result.stdout
@@ -363,25 +330,19 @@ class TestValidateCommand:
         assert result.exit_code == 0, result.stdout
         assert "Bundle Validation" in result.stdout
 
-    def test_validate_missing_path_exits_2(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_validate_missing_path_exits_2(self, runner: CliRunner, tmp_path: Path) -> None:
         result = runner.invoke(app, ["validate", str(tmp_path / "nothing_here")])
         assert result.exit_code == 2
         assert "Not found" in result.stdout or "not found" in result.stdout.lower()
 
-    def test_validate_empty_directory_exits_2(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_validate_empty_directory_exits_2(self, runner: CliRunner, tmp_path: Path) -> None:
         """Empty dir (no gnn_package, no bundle.json) is an error."""
         empty = tmp_path / "empty_dir"
         empty.mkdir()
         result = runner.invoke(app, ["validate", str(empty)])
         assert result.exit_code == 2
 
-    def test_validate_bundle_with_errors_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_validate_bundle_with_errors_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
         """A bundle with non-empty errors list must fail validation."""
         bundle = tmp_path / "broken.json"
         bundle.write_text(
@@ -416,16 +377,12 @@ class TestVizCommand:
         assert "Category" in result.stdout
         assert "Count" in result.stdout
 
-    def test_viz_on_missing_path_exits_2(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_viz_on_missing_path_exits_2(self, runner: CliRunner, tmp_path: Path) -> None:
         result = runner.invoke(app, ["viz", str(tmp_path / "nope")])
         assert result.exit_code == 2
         assert "does not exist" in result.stdout.lower()
 
-    def test_viz_on_file_exits_2(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_viz_on_file_exits_2(self, runner: CliRunner, tmp_path: Path) -> None:
         """Passing a file (not dir) is an error."""
         f = tmp_path / "a.txt"
         f.write_text("hello")
@@ -502,9 +459,7 @@ class TestRenderCommand:
         self, runner: CliRunner, bundle_json: Path, tmp_path: Path
     ) -> None:
         out = tmp_path / "site"
-        result = runner.invoke(
-            app, ["render", str(bundle_json), "--output", str(out)]
-        )
+        result = runner.invoke(app, ["render", str(bundle_json), "--output", str(out)])
         assert result.exit_code == 0, result.stdout
         assert out.exists() and out.is_dir()
         # render_site writes at least an index.html
@@ -520,50 +475,36 @@ class TestRenderCommand:
 class TestSessionBackedCommands:
     """scan, extract_static, graph, statespace, process — all use Session."""
 
-    def test_scan_table_output(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_scan_table_output(self, runner: CliRunner, tiny_repo: Path) -> None:
         result = runner.invoke(app, ["scan", str(tiny_repo)])
         assert result.exit_code == 0, result.stdout
         assert "Repository Summary" in result.stdout
         assert "Target" in result.stdout
 
-    def test_scan_json_output(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_scan_json_output(self, runner: CliRunner, tiny_repo: Path) -> None:
         result = runner.invoke(app, ["scan", str(tiny_repo), "--format", "json"])
         assert result.exit_code == 0, result.stdout
 
-    def test_scan_missing_path_exits_nonzero(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_scan_missing_path_exits_nonzero(self, runner: CliRunner, tmp_path: Path) -> None:
         result = runner.invoke(app, ["scan", str(tmp_path / "nope")])
         assert result.exit_code != 0
 
-    def test_graph_command_on_tiny_repo(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_graph_command_on_tiny_repo(self, runner: CliRunner, tiny_repo: Path) -> None:
         result = runner.invoke(app, ["graph", str(tiny_repo)])
         assert result.exit_code == 0, result.stdout
         assert "Graph:" in result.stdout
 
-    def test_statespace_command_on_tiny_repo(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_statespace_command_on_tiny_repo(self, runner: CliRunner, tiny_repo: Path) -> None:
         result = runner.invoke(app, ["statespace", str(tiny_repo)])
         assert result.exit_code == 0, result.stdout
         assert "State Space" in result.stdout
 
-    def test_process_command_on_tiny_repo(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_process_command_on_tiny_repo(self, runner: CliRunner, tiny_repo: Path) -> None:
         result = runner.invoke(app, ["process", str(tiny_repo), "--no-dynamic"])
         assert result.exit_code == 0, result.stdout
         assert "Process Model" in result.stdout
 
-    def test_extract_static_prints_panel(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_extract_static_prints_panel(self, runner: CliRunner, tiny_repo: Path) -> None:
         result = runner.invoke(app, ["extract-static", str(tiny_repo)])
         assert result.exit_code == 0, result.stdout
         assert "Static analysis" in result.stdout
@@ -572,9 +513,7 @@ class TestSessionBackedCommands:
         self, runner: CliRunner, tiny_repo: Path, tmp_path: Path
     ) -> None:
         out = tmp_path / "static_out"
-        result = runner.invoke(
-            app, ["extract-static", str(tiny_repo), "--output", str(out)]
-        )
+        result = runner.invoke(app, ["extract-static", str(tiny_repo), "--output", str(out)])
         assert result.exit_code == 0, result.stdout
         assert out.exists()
 
@@ -601,18 +540,12 @@ class TestTranslateCommand:
         # Translate-specific summary message
         assert "Translation complete" in result.stdout
 
-    def test_translate_missing_path_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
-        result = runner.invoke(
-            app, ["translate", str(tmp_path / "nope")]
-        )
+    def test_translate_missing_path_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
+        result = runner.invoke(app, ["translate", str(tmp_path / "nope")])
         assert result.exit_code == 1
         assert "not found" in result.stdout.lower() or "Error" in result.stdout
 
-    def test_translate_file_path_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_translate_file_path_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
         f = tmp_path / "file.py"
         f.write_text("pass")
         result = runner.invoke(app, ["translate", str(f)])
@@ -668,9 +601,7 @@ class TestTranslateCommand:
 
 
 class TestDiffCommand:
-    def test_diff_between_two_bundle_files(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_diff_between_two_bundle_files(self, runner: CliRunner, tmp_path: Path) -> None:
         a = tmp_path / "a.json"
         b = tmp_path / "b.json"
         a.write_text(
@@ -703,9 +634,7 @@ class TestDiffCommand:
         assert "translate" in result.stdout  # added stage
         assert "Diff complete" in result.stdout
 
-    def test_diff_missing_path_exits_2(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_diff_missing_path_exits_2(self, runner: CliRunner, tmp_path: Path) -> None:
         a = tmp_path / "a.json"
         a.write_text("{}")
         result = runner.invoke(app, ["diff", str(a), str(tmp_path / "missing.json")])

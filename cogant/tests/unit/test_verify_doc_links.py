@@ -51,9 +51,7 @@ def test_verify_doc_links_summary_counters_populated() -> None:
 # ---------------------------------------------------------------------------
 
 
-_VERIFIER_SOURCE = (_REPO_ROOT / "docs" / "verify_doc_links.py").read_text(
-    encoding="utf-8"
-)
+_VERIFIER_SOURCE = (_REPO_ROOT / "docs" / "verify_doc_links.py").read_text(encoding="utf-8")
 
 
 def _write_fake_verifier(tmp_path: Path) -> Path:
@@ -130,9 +128,7 @@ def test_fake_tree_escaping_link_is_reported(tmp_path: Path) -> None:
     fake = _write_fake_verifier(tmp_path)
     docs_dir = tmp_path / "docs"
     # Link pointing outside the fake repo root → escape error.
-    (docs_dir / "a.md").write_text(
-        "[escape](../../../etc/passwd)\n", encoding="utf-8"
-    )
+    (docs_dir / "a.md").write_text("[escape](../../../etc/passwd)\n", encoding="utf-8")
     result = _run_fake(fake)
     assert result.returncode == 1
     assert "escapes repo root" in result.stdout

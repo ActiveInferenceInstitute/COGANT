@@ -1,7 +1,11 @@
 """Unit tests for viz/gantt.py — GanttRenderer."""
-import os, sys
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 import pytest
+
 from cogant.viz.gantt import GanttRenderer
 
 
@@ -29,6 +33,7 @@ def test_render_json_after_process_model():
     gr.from_process_model(_process_model())
     j = gr.render_json()
     import json
+
     data = json.loads(j)
     assert isinstance(data, (dict, list))
 
@@ -41,6 +46,7 @@ def test_render_html_creates_file(tmp_path):
     result = gr.render_html(out)
     assert result == out
     import os
+
     assert os.path.exists(out)
 
 

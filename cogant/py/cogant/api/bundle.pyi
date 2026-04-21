@@ -4,15 +4,15 @@ from pathlib import Path
 from typing import Any
 
 class ArtifactKey(StrEnum):
-    REPO_SNAPSHOT = 'repo_snapshot'
-    PARSED_MODULES = 'parsed_modules_detail'
-    NORMALIZED_FACTS = 'normalized_facts'
-    PROGRAM_GRAPH = '_program_graph'
-    SEMANTIC_MAPPINGS = '_semantic_mappings'
-    TRANSLATION_ENGINE = '_translation_engine'
-    STATE_SPACE_MODEL = '_state_space_model'
-    PROCESS_MODEL = '_process_model'
-    EXPORT_PATHS = 'export_paths'
+    REPO_SNAPSHOT = "repo_snapshot"
+    PARSED_MODULES = "parsed_modules_detail"
+    NORMALIZED_FACTS = "normalized_facts"
+    PROGRAM_GRAPH = "_program_graph"
+    SEMANTIC_MAPPINGS = "_semantic_mappings"
+    TRANSLATION_ENGINE = "_translation_engine"
+    STATE_SPACE_MODEL = "_state_space_model"
+    PROCESS_MODEL = "_process_model"
+    EXPORT_PATHS = "export_paths"
 
 @dataclass
 class Bundle:

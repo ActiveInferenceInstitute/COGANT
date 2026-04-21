@@ -14,22 +14,22 @@ from pathlib import Path
 
 def test_every_module_importable_and_instantiable() -> None:
     """Every major cogant module can be imported and its key class accessed."""
-    from cogant.cache.store import CacheStore, get_cache_dir
     from cogant.cache.hasher import hash_file
-    from cogant.pipeline.dag import PipelineDAG, Stage
-    from cogant.schema.versions import SchemaVersion
-    from cogant.schema.detector import detect_version
-    from cogant.schema.migrations import migrate_gnn
-    from cogant.plugins.registry import PluginRegistry
-    from cogant.translate.dsl import load_rules_from_dict, compile_ruleset
-    from cogant.observability.metrics import MetricsRegistry
+    from cogant.cache.store import CacheStore, get_cache_dir
     from cogant.observability.logging import get_logger
-    from cogant.reverse.parser import parse_gnn, ReverseGNNModel
+    from cogant.observability.metrics import MetricsRegistry
+    from cogant.pipeline.dag import PipelineDAG, Stage
+    from cogant.plugins.registry import PluginRegistry
+    from cogant.reverse.callable import MatrixFunctions
+    from cogant.reverse.parser import ReverseGNNModel, parse_gnn
     from cogant.reverse.planner import plan_package
     from cogant.reverse.synthesizer import synthesize_package
-    from cogant.reverse.callable import MatrixFunctions
-    from cogant.runtime.loop import AgentRuntime
     from cogant.runtime.config import AgentConfig
+    from cogant.runtime.loop import AgentRuntime
+    from cogant.schema.detector import detect_version
+    from cogant.schema.migrations import migrate_gnn
+    from cogant.schema.versions import SchemaVersion
+    from cogant.translate.dsl import compile_ruleset, load_rules_from_dict
 
     # Each class/function is a real object, not None
     assert CacheStore is not None
@@ -74,11 +74,11 @@ def test_standalone_gnn_to_agent() -> None:
           runtime.loop, runtime.config
     Does NOT use: ingest, graph, translate, statespace, markov
     """
+    from cogant.reverse.callable import MatrixFunctions
     from cogant.reverse.parser import ReverseGNNModel
     from cogant.reverse.planner import plan_package
-    from cogant.reverse.callable import MatrixFunctions
-    from cogant.runtime.loop import AgentRuntime
     from cogant.runtime.config import AgentConfig
+    from cogant.runtime.loop import AgentRuntime
 
     # 1. Construct a 3-state POMDP model directly
     model = ReverseGNNModel(
@@ -118,7 +118,10 @@ def test_standalone_gnn_to_agent() -> None:
     # 4. Create runtime -- MatrixFunctions stores matrices as private attrs
     #    so we wrap with a namespace exposing public A, B, C, D + callables
     ns = types.SimpleNamespace(
-        A=mf._A, B=mf._B, C=mf._C, D=mf._D,
+        A=mf._A,
+        B=mf._B,
+        C=mf._C,
+        D=mf._D,
         likelihood=mf.likelihood,
         transition=mf.transition,
         preference_score=mf.preference_score,
@@ -153,8 +156,9 @@ def test_cache_and_runtime_roundtrip(tmp_path: Path) -> None:
     Uses: cache.store, cache.hasher, runtime.loop (no reverse, no pipeline).
     """
     import json
-    from cogant.cache.store import CacheStore, CacheKey
+
     from cogant.cache.hasher import hash_file
+    from cogant.cache.store import CacheKey, CacheStore
     from cogant.runtime.loop import AgentRuntime
 
     # Build a minimal matrices dict
@@ -196,15 +200,11 @@ def test_schema_detect_and_parse_compose() -> None:
 
     Uses: schema.detector, reverse.parser (no translate, no pipeline).
     """
-    from cogant.schema.detector import detect_version
     from cogant.reverse.parser import parse_gnn
+    from cogant.schema.detector import detect_version
 
     gnn_path = (
-        Path(__file__).resolve().parents[2]
-        / "examples"
-        / "zoo"
-        / "12_full_pomdp"
-        / "model.gnn.md"
+        Path(__file__).resolve().parents[2] / "examples" / "zoo" / "12_full_pomdp" / "model.gnn.md"
     )
     gnn_text = gnn_path.read_text()
 

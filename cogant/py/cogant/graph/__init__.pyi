@@ -24,14 +24,14 @@ from cogant.graph.merge import GraphMerger as GraphMerger
 from cogant.graph.queries import GraphQuery as GraphQuery
 
 __all__ = [
-    'ProgramGraphBuilder',
-    'GraphQuery',
-    'GraphMerger',
-    'GraphAnalyzer',
-    'GraphMetrics',
-    'CentralityScores',
-    'CycleDetection',
-    'PathAnalysis',
-    'HotspotAnalysis',
-    'GraphDiff',
+    "ProgramGraphBuilder",
+    "GraphQuery",
+    "GraphMerger",
+    "GraphAnalyzer",
+    "GraphMetrics",
+    "CentralityScores",
+    "CycleDetection",
+    "PathAnalysis",
+    "HotspotAnalysis",
+    "GraphDiff",
 ]

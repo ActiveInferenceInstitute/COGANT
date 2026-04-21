@@ -109,8 +109,7 @@ def render_index_html(*, target: str, repo_summary: dict[str, Any]) -> str:
         Complete HTML document as a string.
     """
     languages_html = "".join(
-        f"<li>{lang}: {count}</li>"
-        for lang, count in repo_summary["language_distribution"].items()
+        f"<li>{lang}: {count}</li>" for lang, count in repo_summary["language_distribution"].items()
     )
     return f"""<!DOCTYPE html>
 <html>
@@ -140,11 +139,11 @@ def render_index_html(*, target: str, repo_summary: dict[str, Any]) -> str:
             <h2>Analysis Summary</h2>
             <dl>
                 <dt>Target</dt>
-                <dd>{repo_summary['target']}</dd>
+                <dd>{repo_summary["target"]}</dd>
                 <dt>Files</dt>
-                <dd>{repo_summary['file_count']}</dd>
+                <dd>{repo_summary["file_count"]}</dd>
                 <dt>Errors</dt>
-                <dd>{repo_summary['total_errors']}</dd>
+                <dd>{repo_summary["total_errors"]}</dd>
             </dl>
         </section>
 

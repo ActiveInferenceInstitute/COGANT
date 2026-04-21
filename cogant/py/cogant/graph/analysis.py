@@ -20,6 +20,7 @@ def _try_import_networkx() -> Any:
     """Attempt to import networkx, returning None if unavailable."""
     try:
         import networkx as nx
+
         return nx
     except ImportError:
         return None
@@ -261,14 +262,12 @@ class GraphAnalyzer:
 
         # Sinks: no outgoing edges
         sinks = [
-            node_id for node_id in self.graph.nodes
-            if len(self.graph.get_edges_from(node_id)) == 0
+            node_id for node_id in self.graph.nodes if len(self.graph.get_edges_from(node_id)) == 0
         ]
 
         # Sources: no incoming edges
         sources = [
-            node_id for node_id in self.graph.nodes
-            if len(self.graph.get_edges_to(node_id)) == 0
+            node_id for node_id in self.graph.nodes if len(self.graph.get_edges_to(node_id)) == 0
         ]
 
         return HotspotAnalysis(
@@ -401,10 +400,7 @@ class GraphAnalyzer:
 
     def _compute_all_out_degrees(self) -> dict[str, int]:
         """Compute out-degree for each node."""
-        return {
-            nid: len(self.graph.get_edges_from(nid))
-            for nid in self.graph.nodes
-        }
+        return {nid: len(self.graph.get_edges_from(nid)) for nid in self.graph.nodes}
 
     def _compute_density(self) -> float:
         """Compute graph density."""
@@ -449,11 +445,12 @@ class GraphAnalyzer:
             # Count edges among neighbors
             edges_among_neighbors = 0
             for i, n1 in enumerate(neighbors):
-                for n2 in neighbors[i + 1:]:
+                for n2 in neighbors[i + 1 :]:
                     # Check if there's an edge between n1 and n2
                     for edge in self.graph.edges.values():
-                        if (edge.source_id == n1.id and edge.target_id == n2.id) or \
-                           (edge.source_id == n2.id and edge.target_id == n1.id):
+                        if (edge.source_id == n1.id and edge.target_id == n2.id) or (
+                            edge.source_id == n2.id and edge.target_id == n1.id
+                        ):
                             edges_among_neighbors += 1
                             break
 
@@ -504,9 +501,7 @@ class GraphAnalyzer:
         """
         if self.nx:
             try:
-                bc = self.nx.betweenness_centrality(
-                    self.to_networkx(), normalized=True
-                )
+                bc = self.nx.betweenness_centrality(self.to_networkx(), normalized=True)
                 return {nid: float(bc.get(nid, 0.0)) for nid in self.graph.nodes}
             except Exception:
                 pass
@@ -585,10 +580,7 @@ class GraphAnalyzer:
 
         # Initialize
         rank = dict.fromkeys(nodes, 1.0 / n)
-        out_degrees = {
-            nid: max(1, len(self.graph.get_edges_from(nid)))
-            for nid in nodes
-        }
+        out_degrees = {nid: max(1, len(self.graph.get_edges_from(nid))) for nid in nodes}
 
         # Iterate
         for _ in range(iterations):

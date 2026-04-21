@@ -14,7 +14,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -23,14 +22,17 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
     n2 = builder.add_node(NodeKind.FUNCTION, "fn", "mod.fn", path="mod.py")
@@ -41,21 +43,29 @@ def _make_graph_with_nodes():
 def _make_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
-        id="ss1", schema_name="test",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="ss1",
+        schema_name="test",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
 
 
 def _make_process_model():
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
 
 
 def _make_reverse_model(name="test_model"):
     from cogant.reverse.parser import ReverseGNNModel
+
     return ReverseGNNModel(
         model_name=name,
         hidden_states=["state_a", "state_b"],
@@ -70,9 +80,11 @@ def _make_reverse_model(name="test_model"):
 # gnn/matrices.py — GNNMatrices
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatrices:
     def _make_matrices(self):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph_with_nodes()
         state_space = _make_state_space()
         return GNNMatrices(graph, mappings={}, state_space=state_space)
@@ -122,9 +134,11 @@ class TestGNNMatrices:
 # gnn/package.py — GNNMarkdownFormatter, GNNJSONExporter, GNNPackageBuilder
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMarkdownFormatter:
     def _make_formatter(self):
         from cogant.gnn.package import GNNMarkdownFormatter
+
         return GNNMarkdownFormatter(
             program_graph=_make_empty_graph(),
             state_space_model=_make_state_space(),
@@ -143,6 +157,7 @@ class TestGNNMarkdownFormatter:
 
     def test_format_with_nodes(self):
         from cogant.gnn.package import GNNMarkdownFormatter
+
         formatter = GNNMarkdownFormatter(
             program_graph=_make_graph_with_nodes(),
             state_space_model=_make_state_space(),
@@ -162,6 +177,7 @@ class TestGNNMarkdownFormatter:
 class TestGNNJSONExporter:
     def _make_exporter(self):
         from cogant.gnn.package import GNNJSONExporter
+
         return GNNJSONExporter(
             program_graph=_make_empty_graph(),
             state_space_model=_make_state_space(),
@@ -180,6 +196,7 @@ class TestGNNJSONExporter:
 
     def test_export_to_string_returns_str(self):
         import json
+
         exporter = self._make_exporter()
         result = exporter.export_to_string()
         assert isinstance(result, str)
@@ -188,6 +205,7 @@ class TestGNNJSONExporter:
 
     def test_export_with_nodes(self):
         from cogant.gnn.package import GNNJSONExporter
+
         exporter = GNNJSONExporter(
             program_graph=_make_graph_with_nodes(),
             state_space_model=_make_state_space(),
@@ -201,6 +219,7 @@ class TestGNNJSONExporter:
 class TestGNNPackageBuilder:
     def test_init(self):
         from cogant.gnn.package import GNNPackageBuilder
+
         builder = GNNPackageBuilder(
             graph=_make_empty_graph(),
             state_space=_make_state_space(),
@@ -211,6 +230,7 @@ class TestGNNPackageBuilder:
 
     def test_build_returns_dict(self, tmp_path):
         from cogant.gnn.package import GNNPackageBuilder
+
         builder = GNNPackageBuilder(
             graph=_make_empty_graph(),
             state_space=_make_state_space(),
@@ -222,6 +242,7 @@ class TestGNNPackageBuilder:
 
     def test_build_with_nodes(self, tmp_path):
         from cogant.gnn.package import GNNPackageBuilder
+
         builder = GNNPackageBuilder(
             graph=_make_graph_with_nodes(),
             state_space=_make_state_space(),
@@ -237,35 +258,46 @@ class TestGNNPackageBuilder:
 #                           plan_package
 # ---------------------------------------------------------------------------
 
+
 class TestCompareGraphStructure:
     def test_identical_structures(self):
         from cogant.reverse.idempotency import compare_graph_structure
+
         score = compare_graph_structure(
-            nodes_a=["n1", "n2"], edges_a=[("n1", "n2")],
-            nodes_b=["n1", "n2"], edges_b=[("n1", "n2")],
+            nodes_a=["n1", "n2"],
+            edges_a=[("n1", "n2")],
+            nodes_b=["n1", "n2"],
+            edges_b=[("n1", "n2")],
         )
         assert isinstance(score, float)
         assert 0.0 <= score <= 1.0
 
     def test_empty_structures(self):
         from cogant.reverse.idempotency import compare_graph_structure
+
         score = compare_graph_structure([], [], [], [])
         assert isinstance(score, float)
 
     def test_different_structures(self):
         from cogant.reverse.idempotency import compare_graph_structure
+
         score = compare_graph_structure(
-            nodes_a=["n1", "n2", "n3"], edges_a=[("n1", "n2")],
-            nodes_b=["n1"], edges_b=[],
+            nodes_a=["n1", "n2", "n3"],
+            edges_a=[("n1", "n2")],
+            nodes_b=["n1"],
+            edges_b=[],
         )
         assert isinstance(score, float)
         assert score <= 1.0
 
     def test_score_is_normalized(self):
         from cogant.reverse.idempotency import compare_graph_structure
+
         score = compare_graph_structure(
-            ["a", "b"], [("a", "b")],
-            ["c", "d", "e"], [("c", "d"), ("d", "e")],
+            ["a", "b"],
+            [("a", "b")],
+            ["c", "d", "e"],
+            [("c", "d"), ("d", "e")],
         )
         assert 0.0 <= score <= 1.0
 
@@ -273,6 +305,7 @@ class TestCompareGraphStructure:
 class TestCompareMatrices:
     def test_identical_matrices(self):
         from cogant.reverse.idempotency import compare_matrices
+
         A = {"A": [[0.9, 0.1], [0.1, 0.9]], "B": [[[1.0, 0.0]]]}
         score = compare_matrices(A, A)
         assert isinstance(score, float)
@@ -280,11 +313,13 @@ class TestCompareMatrices:
 
     def test_empty_matrices(self):
         from cogant.reverse.idempotency import compare_matrices
+
         score = compare_matrices({}, {})
         assert isinstance(score, float)
 
     def test_different_matrices(self):
         from cogant.reverse.idempotency import compare_matrices
+
         A = {"A": [[0.9, 0.1]]}
         B = {"A": [[0.1, 0.9]]}
         score = compare_matrices(A, B)
@@ -293,6 +328,7 @@ class TestCompareMatrices:
 
     def test_missing_key_in_one(self):
         from cogant.reverse.idempotency import compare_matrices
+
         A = {"A": [[0.9, 0.1]], "B": [[[1.0]]]}
         B = {"A": [[0.9, 0.1]]}
         score = compare_matrices(A, B)
@@ -303,12 +339,14 @@ class TestPlanPackage:
     def test_plan_package_basic(self):
         from cogant.reverse.idempotency import plan_package
         from cogant.reverse.synthesizer import PackagePlan
+
         model = _make_reverse_model()
         plan = plan_package(model)
         assert isinstance(plan, PackagePlan)
 
     def test_plan_package_has_package_name(self):
         from cogant.reverse.idempotency import plan_package
+
         model = _make_reverse_model("my_model")
         plan = plan_package(model)
         assert isinstance(plan.package_name, str)
@@ -317,6 +355,7 @@ class TestPlanPackage:
     def test_plan_package_matrix_flags(self):
         from cogant.reverse.idempotency import plan_package
         from cogant.reverse.parser import ReverseGNNModel
+
         model = ReverseGNNModel(
             model_name="test",
             hidden_states=["s1"],
@@ -335,16 +374,19 @@ class TestPlanPackage:
 # reverse/synthesizer.py — render_matrices_module, PackagePlan
 # ---------------------------------------------------------------------------
 
+
 class TestRenderMatricesModule:
     def test_render_returns_str(self):
         from cogant.reverse.synthesizer import render_matrices_module
+
         model = _make_reverse_model()
         result = render_matrices_module(model)
         assert isinstance(result, str)
 
     def test_render_with_matrices(self):
-        from cogant.reverse.synthesizer import render_matrices_module
         from cogant.reverse.parser import ReverseGNNModel
+        from cogant.reverse.synthesizer import render_matrices_module
+
         model = ReverseGNNModel(
             model_name="test",
             hidden_states=["s1", "s2"],
@@ -361,6 +403,7 @@ class TestRenderMatricesModule:
 
     def test_render_contains_python_code(self):
         from cogant.reverse.synthesizer import render_matrices_module
+
         model = _make_reverse_model()
         result = render_matrices_module(model)
         # Should contain some Python constructs
@@ -370,6 +413,7 @@ class TestRenderMatricesModule:
 class TestPackagePlan:
     def test_init_minimal(self):
         from cogant.reverse.synthesizer import PackagePlan
+
         plan = PackagePlan(
             package_name="my_pkg",
             raw_model_name="my_model",
@@ -393,6 +437,7 @@ class TestPackagePlan:
 
     def test_init_with_matrices(self):
         from cogant.reverse.synthesizer import PackagePlan
+
         plan = PackagePlan(
             package_name="pkg",
             raw_model_name="mdl",

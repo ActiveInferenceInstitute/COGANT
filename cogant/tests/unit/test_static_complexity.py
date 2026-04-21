@@ -1,13 +1,13 @@
 """Unit tests for static complexity analysis module."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from cogant.static.complexity import (
     ComplexityAnalyzer,
     ComplexityEntry,
     ComplexityReport,
-    ComplexityVisitor,
 )
 
 

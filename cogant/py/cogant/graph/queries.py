@@ -415,7 +415,8 @@ class GraphQuery:
             List of nodes matching the role.
         """
         return [
-            n for n in self.graph.nodes.values()
+            n
+            for n in self.graph.nodes.values()
             if n.metadata.get("role") == role or n.metadata.get("semantic_role") == role
         ]
 
@@ -532,6 +533,7 @@ class GraphQuery:
         interface_node_ids = [nid for nid, _ in sorted_nodes[:threshold_idx]]
 
         return [
-            self.graph.get_node(nid) for nid in interface_node_ids
+            self.graph.get_node(nid)
+            for nid in interface_node_ids
             if self.graph.get_node(nid) is not None
         ]

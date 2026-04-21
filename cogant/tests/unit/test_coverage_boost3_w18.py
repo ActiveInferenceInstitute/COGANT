@@ -5,12 +5,6 @@ translate/engine, translate/dsl/loader, markov/extractor, and dynamic/enrichment
 All tests use real objects and real data.  No mocks.
 """
 
-import json
-import math
-import tempfile
-from pathlib import Path
-from typing import Any
-
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -20,33 +14,42 @@ pytestmark = pytest.mark.unit
 # Helpers shared across tests
 # ---------------------------------------------------------------------------
 
+
 def _make_graph(nodes=None, edges=None):
     """Build a minimal ProgramGraph (schemas.graph) with optional nodes/edges."""
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     g = ProgramGraph(metadata=GraphMetadata(repo_uri="test://repo"))
-    for n in (nodes or []):
+    for n in nodes or []:
         g.add_node(n)
-    for e in (edges or []):
+    for e in edges or []:
         g.add_edge(e)
     return g
 
 
 def _make_node(node_id: str, kind, name: str = "node", path: str | None = None):
     from cogant.schemas.core import Node
+
     return Node(id=node_id, kind=kind, name=name, qualified_name=name, path=path)
 
 
 def _make_edge(edge_id: str, src: str, tgt: str, kind):
     from cogant.schemas.core import Edge
+
     return Edge(id=edge_id, source_id=src, target_id=tgt, kind=kind)
 
 
 def _make_state_space(
-    variables=None, observations=None, actions=None,
-    transitions=None, likelihoods=None, preferences=None,
+    variables=None,
+    observations=None,
+    actions=None,
+    transitions=None,
+    likelihoods=None,
+    preferences=None,
 ):
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
         id="ss1",
         schema_name="test",
@@ -62,6 +65,7 @@ def _make_state_space(
 
 def _make_variable(vid: str, vtype=None, node_id: str | None = None):
     from cogant.statespace.variables import StateVariable, StateVariableType
+
     return StateVariable(
         id=vid,
         name=vid,
@@ -72,6 +76,7 @@ def _make_variable(vid: str, vtype=None, node_id: str | None = None):
 
 def _make_action(aid: str, effects=None, preconditions=None, controller_id: str = "ctrl"):
     from cogant.statespace.compiler import Action
+
     return Action(
         id=aid,
         name=aid,
@@ -83,6 +88,7 @@ def _make_action(aid: str, effects=None, preconditions=None, controller_id: str 
 
 def _make_transition(tid: str, action_id: str | None = None):
     from cogant.statespace.compiler import Transition
+
     return Transition(
         id=tid,
         source_state={"v1": "pre"},
@@ -93,6 +99,7 @@ def _make_transition(tid: str, action_id: str | None = None):
 
 def _make_observation(oid: str, source_node_id: str = ""):
     from cogant.statespace.compiler import ObservationModality
+
     return ObservationModality(
         id=oid,
         name=oid,
@@ -103,6 +110,7 @@ def _make_observation(oid: str, source_node_id: str = ""):
 
 def _make_likelihood(lid: str, variable_id: str):
     from cogant.statespace.compiler import Likelihood
+
     return Likelihood(
         id=lid,
         variable_id=variable_id,
@@ -112,6 +120,7 @@ def _make_likelihood(lid: str, variable_id: str):
 
 def _make_preference(pid: str, scope=None, weight: float = 1.0):
     from cogant.statespace.compiler import Preference
+
     return Preference(
         id=pid,
         name=pid,
@@ -126,12 +135,14 @@ def _make_preference(pid: str, scope=None, weight: float = 1.0):
 # simulate/runner.py — observations/likelihoods/preferences in validate_model
 # ---------------------------------------------------------------------------
 
+
 class TestModelRunnerValidateObservationsLikelihoodsPreferences:
     """Cover lines 122-136: observations with no source_node_id,
     likelihoods with unknown variable, preferences with unknown variable."""
 
     def setup_method(self):
         from cogant.simulate.runner import ModelRunner
+
         self.runner = ModelRunner()
 
     def test_validate_model_observation_no_source_node_id_produces_warning(self):
@@ -198,11 +209,13 @@ class TestModelRunnerValidateObservationsLikelihoodsPreferences:
 # simulate/runner.py — simulate_step with string effect (line 191-192)
 # ---------------------------------------------------------------------------
 
+
 class TestModelRunnerSimulateStepStringEffect:
     """Cover lines 191-192: string state values get '_modified' appended."""
 
     def setup_method(self):
         from cogant.simulate.runner import ModelRunner
+
         self.runner = ModelRunner()
 
     def test_simulate_step_string_effect_appends_modified(self):
@@ -240,15 +253,18 @@ class TestModelRunnerSimulateStepStringEffect:
 # simulate/runner.py — run_simulation state initialization (lines 219-225)
 # ---------------------------------------------------------------------------
 
+
 class TestModelRunnerRunSimulation:
     """Cover lines 219-225: run_simulation initializes state from variable types."""
 
     def setup_method(self):
         from cogant.simulate.runner import ModelRunner
+
         self.runner = ModelRunner()
 
     def test_run_simulation_boolean_variable_initializes_false(self):
         from cogant.statespace.variables import StateVariableType
+
         v = _make_variable("v1", vtype=StateVariableType.BOOLEAN)
         action = _make_action("a1", effects=["v1"])
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
@@ -257,6 +273,7 @@ class TestModelRunnerRunSimulation:
 
     def test_run_simulation_discrete_variable_initializes_zero(self):
         from cogant.statespace.variables import StateVariableType
+
         v = _make_variable("v1", vtype=StateVariableType.DISCRETE)
         action = _make_action("a1")
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
@@ -265,6 +282,7 @@ class TestModelRunnerRunSimulation:
 
     def test_run_simulation_continuous_variable_initializes_zero_float(self):
         from cogant.statespace.variables import StateVariableType
+
         v = _make_variable("v1", vtype=StateVariableType.CONTINUOUS)
         action = _make_action("a1")
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
@@ -273,6 +291,7 @@ class TestModelRunnerRunSimulation:
 
     def test_run_simulation_categorical_variable_initializes_none(self):
         from cogant.statespace.variables import StateVariableType
+
         v = _make_variable("v1", vtype=StateVariableType.CATEGORICAL)
         action = _make_action("a1")
         ss = _make_state_space(variables={"v1": v}, actions={"a1": action})
@@ -301,12 +320,13 @@ class TestModelRunnerRunSimulation:
 # gnn/matrices.py — mappings=None, list, extra branches
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatricesMappingBranches:
     """Cover lines 149-152 (mappings is not dict/list/None), and fallback paths."""
 
     def test_gnn_matrices_accepts_none_mappings(self):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+
         g = _make_graph()
         ss = _make_state_space()
         m = GNNMatrices(g, None, ss)
@@ -314,7 +334,8 @@ class TestGNNMatricesMappingBranches:
 
     def test_gnn_matrices_accepts_list_mappings(self):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
+
         g = _make_graph()
         ss = _make_state_space()
         sm = SemanticMapping(id="m1", kind=MappingKind.HIDDEN_STATE)
@@ -323,7 +344,8 @@ class TestGNNMatricesMappingBranches:
 
     def test_gnn_matrices_accepts_dict_mappings(self):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
+
         g = _make_graph()
         ss = _make_state_space()
         sm = SemanticMapping(id="m1", kind=MappingKind.HIDDEN_STATE)
@@ -333,7 +355,8 @@ class TestGNNMatricesMappingBranches:
     def test_gnn_matrices_unknown_iterable_mappings(self):
         """Cover line 152: mapping_list = list(mappings) for other iterables."""
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
+
         g = _make_graph()
         ss = _make_state_space()
         sm = SemanticMapping(id="m1", kind=MappingKind.HIDDEN_STATE)
@@ -344,6 +367,7 @@ class TestGNNMatricesMappingBranches:
     def test_gnn_matrices_n_actions_fallback_to_1_when_state_space_empty(self):
         """n_actions returns at least 1 (line 211)."""
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         ss = _make_state_space()  # no actions
         m = GNNMatrices(g, [], ss)
@@ -352,6 +376,7 @@ class TestGNNMatricesMappingBranches:
     def test_gnn_matrices_n_obs_fallback_to_state_space(self):
         """n_obs falls back to state_space.observations when no semantic obs."""
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         obs = _make_observation("obs1", source_node_id="n1")
         ss = _make_state_space(observations={"obs1": obs})
@@ -361,6 +386,7 @@ class TestGNNMatricesMappingBranches:
     def test_gnn_matrices_obs_node_ids_fallback_to_state_space(self):
         """_obs_node_ids() returns source_node_id from state_space when no semantic obs."""
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         obs = _make_observation("obs1", source_node_id="n42")
         ss = _make_state_space(observations={"obs1": obs})
@@ -371,6 +397,7 @@ class TestGNNMatricesMappingBranches:
     def test_gnn_matrices_action_node_ids_fallback_to_state_space(self):
         """_action_node_ids() returns controller_id when no semantic actions."""
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         action = _make_action("a1", controller_id="ctrl99")
         ss = _make_state_space(actions={"a1": action})
@@ -381,6 +408,7 @@ class TestGNNMatricesMappingBranches:
     def test_gnn_matrices_state_node_ids_use_state_space_vars(self):
         """When _use_state_space_vars, _state_node_ids uses variable.node_id."""
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         v = _make_variable("v1", node_id="special_node")
         ss = _make_state_space(variables={"v1": v})
@@ -391,6 +419,7 @@ class TestGNNMatricesMappingBranches:
     def test_gnn_matrices_edges_from_empty_node_id(self):
         """_edges_from('') returns empty list (line 254-255)."""
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         ss = _make_state_space()
         m = GNNMatrices(g, [], ss)
@@ -399,6 +428,7 @@ class TestGNNMatricesMappingBranches:
     def test_gnn_matrices_edges_to_empty_node_id(self):
         """_edges_to('') returns empty list."""
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         ss = _make_state_space()
         m = GNNMatrices(g, [], ss)
@@ -409,11 +439,13 @@ class TestGNNMatricesMappingBranches:
 # gnn/matrices.py — A matrix with READS/OBSERVES edges
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatricesAMatrix:
     """Cover A matrix computation with real edges."""
 
     def test_compute_A_uniform_when_no_obs(self):
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         ss = _make_state_space()
         m = GNNMatrices(g, [], ss)
@@ -421,8 +453,8 @@ class TestGNNMatricesAMatrix:
 
     def test_compute_A_with_obs_and_state_via_reads_edge(self):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.core import NodeKind, EdgeKind
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
 
         obs_node = _make_node("obs_n1", NodeKind.ENDPOINT)
         state_node = _make_node("state_n1", NodeKind.VARIABLE)
@@ -431,11 +463,13 @@ class TestGNNMatricesAMatrix:
         g = _make_graph(nodes=[obs_node, state_node], edges=[edge])
 
         sm_obs = SemanticMapping(
-            id="m_obs", kind=MappingKind.OBSERVATION,
+            id="m_obs",
+            kind=MappingKind.OBSERVATION,
             graph_fragment_node_ids=["obs_n1"],
         )
         sm_state = SemanticMapping(
-            id="m_state", kind=MappingKind.HIDDEN_STATE,
+            id="m_state",
+            kind=MappingKind.HIDDEN_STATE,
             graph_fragment_node_ids=["state_n1"],
         )
         ss = _make_state_space()
@@ -449,13 +483,17 @@ class TestGNNMatricesAMatrix:
     def test_compute_A_uniform_fallback_when_no_edges(self):
         """When obs node has no matching edges → uniform row."""
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
 
         g = _make_graph()
-        sm_obs = SemanticMapping(id="m_obs", kind=MappingKind.OBSERVATION,
-                                 graph_fragment_node_ids=["nonexistent"])
-        sm_state = SemanticMapping(id="m_state", kind=MappingKind.HIDDEN_STATE,
-                                   graph_fragment_node_ids=["also_nonexistent"])
+        sm_obs = SemanticMapping(
+            id="m_obs", kind=MappingKind.OBSERVATION, graph_fragment_node_ids=["nonexistent"]
+        )
+        sm_state = SemanticMapping(
+            id="m_state",
+            kind=MappingKind.HIDDEN_STATE,
+            graph_fragment_node_ids=["also_nonexistent"],
+        )
         ss = _make_state_space()
         m = GNNMatrices(g, [sm_obs, sm_state], ss)
         A = m.compute_A()
@@ -468,20 +506,23 @@ class TestGNNMatricesAMatrix:
 # gnn/matrices.py — C vector with PREFERENCE/CONSTRAINT mappings
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatricesCVector:
     """Cover C vector logic including 'avoid'/'reject' prefix."""
 
     def test_compute_C_prefer_positive_mapping(self):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
 
         g = _make_graph()
         sm_obs = SemanticMapping(
-            id="m_obs", kind=MappingKind.OBSERVATION,
+            id="m_obs",
+            kind=MappingKind.OBSERVATION,
             graph_fragment_node_ids=["obs_n"],
         )
         sm_pref = SemanticMapping(
-            id="m_pref", kind=MappingKind.PREFERENCE,
+            id="m_pref",
+            kind=MappingKind.PREFERENCE,
             graph_fragment_node_ids=["obs_n"],
             confidence_score=0.8,
             semantic_label="prefer_high",
@@ -494,15 +535,17 @@ class TestGNNMatricesCVector:
 
     def test_compute_C_aversive_preference_negative(self):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
 
         g = _make_graph()
         sm_obs = SemanticMapping(
-            id="m_obs", kind=MappingKind.OBSERVATION,
+            id="m_obs",
+            kind=MappingKind.OBSERVATION,
             graph_fragment_node_ids=["obs_n"],
         )
         sm_pref = SemanticMapping(
-            id="m_pref", kind=MappingKind.PREFERENCE,
+            id="m_pref",
+            kind=MappingKind.PREFERENCE,
             graph_fragment_node_ids=["obs_n"],
             confidence_score=0.9,
             semantic_label="avoid_failure",
@@ -514,15 +557,17 @@ class TestGNNMatricesCVector:
 
     def test_compute_C_reject_prefix_is_aversive(self):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
 
         g = _make_graph()
         sm_obs = SemanticMapping(
-            id="m_obs", kind=MappingKind.OBSERVATION,
+            id="m_obs",
+            kind=MappingKind.OBSERVATION,
             graph_fragment_node_ids=["obs_n"],
         )
         sm_pref = SemanticMapping(
-            id="m_pref", kind=MappingKind.PREFERENCE,
+            id="m_pref",
+            kind=MappingKind.PREFERENCE,
             graph_fragment_node_ids=["obs_n"],
             confidence_score=0.7,
             semantic_label="reject_bad_state",
@@ -534,6 +579,7 @@ class TestGNNMatricesCVector:
 
     def test_compute_C_no_obs_returns_empty(self):
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         ss = _make_state_space()
         m = GNNMatrices(g, [], ss)
@@ -541,15 +587,17 @@ class TestGNNMatricesCVector:
 
     def test_compute_C_constraint_mapping_always_positive(self):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
 
         g = _make_graph()
         sm_obs = SemanticMapping(
-            id="m_obs", kind=MappingKind.OBSERVATION,
+            id="m_obs",
+            kind=MappingKind.OBSERVATION,
             graph_fragment_node_ids=["obs_n"],
         )
         sm_const = SemanticMapping(
-            id="m_const", kind=MappingKind.CONSTRAINT,
+            id="m_const",
+            kind=MappingKind.CONSTRAINT,
             graph_fragment_node_ids=["obs_n"],
             confidence_score=0.75,
         )
@@ -563,11 +611,13 @@ class TestGNNMatricesCVector:
 # gnn/matrices.py — D vector with bias paths
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatricesDVector:
     """Cover D vector with domain bias and CONFIGURATION neighbor."""
 
     def test_compute_D_empty_returns_empty(self):
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         ss = _make_state_space()
         m = GNNMatrices(g, [], ss)
@@ -575,6 +625,7 @@ class TestGNNMatricesDVector:
 
     def test_compute_D_uniform_when_no_bias(self):
         from cogant.gnn.matrices import GNNMatrices
+
         v1 = _make_variable("v1")
         v2 = _make_variable("v2")
         g = _make_graph()
@@ -587,7 +638,7 @@ class TestGNNMatricesDVector:
     def test_compute_D_biased_by_configuration_neighbor(self):
         """Variable with CONFIGURATION neighbor gets extra prior mass."""
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         config_node = _make_node("cfg1", NodeKind.CONFIGURATION)
         var_node = _make_node("v1", NodeKind.VARIABLE)
@@ -608,15 +659,21 @@ class TestGNNMatricesDVector:
     def test_compute_D_semantic_mappings_use_confidence_weights(self):
         """Hidden-state mappings use confidence as prior weight."""
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
 
         g = _make_graph()
-        sm1 = SemanticMapping(id="m1", kind=MappingKind.HIDDEN_STATE,
-                               graph_fragment_node_ids=["n1"],
-                               confidence_score=0.9)
-        sm2 = SemanticMapping(id="m2", kind=MappingKind.HIDDEN_STATE,
-                               graph_fragment_node_ids=["n2"],
-                               confidence_score=0.1)
+        sm1 = SemanticMapping(
+            id="m1",
+            kind=MappingKind.HIDDEN_STATE,
+            graph_fragment_node_ids=["n1"],
+            confidence_score=0.9,
+        )
+        sm2 = SemanticMapping(
+            id="m2",
+            kind=MappingKind.HIDDEN_STATE,
+            graph_fragment_node_ids=["n2"],
+            confidence_score=0.1,
+        )
         ss = _make_state_space()
         m = GNNMatrices(g, [sm1, sm2], ss)
         D = m.compute_D()
@@ -629,11 +686,13 @@ class TestGNNMatricesDVector:
 # gnn/matrices.py — top_k_state_ids for B truncation
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatricesTopKStateIds:
     """Cover _top_k_state_ids and B truncation path."""
 
     def test_top_k_returns_all_when_k_ge_len(self):
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         ss = _make_state_space()
         m = GNNMatrices(g, [], ss)
@@ -646,8 +705,12 @@ class TestGNNMatricesTopKStateIds:
         from cogant.schemas.core import EdgeKind
 
         # n1 has 2 edges, n2 has 0 → n1 should be kept
-        n1 = _make_node("n1", __import__("cogant.schemas.core", fromlist=["NodeKind"]).NodeKind.FUNCTION)
-        n2 = _make_node("n2", __import__("cogant.schemas.core", fromlist=["NodeKind"]).NodeKind.FUNCTION)
+        n1 = _make_node(
+            "n1", __import__("cogant.schemas.core", fromlist=["NodeKind"]).NodeKind.FUNCTION
+        )
+        n2 = _make_node(
+            "n2", __import__("cogant.schemas.core", fromlist=["NodeKind"]).NodeKind.FUNCTION
+        )
         e1 = _make_edge("e1", "n1", "n2", EdgeKind.CALLS)
         e2 = _make_edge("e2", "n1", "n2", EdgeKind.READS)
         g = _make_graph(nodes=[n1, n2], edges=[e1, e2])
@@ -661,11 +724,13 @@ class TestGNNMatricesTopKStateIds:
 # gnn/matrices.py — validate_shapes
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatricesValidateShapes:
     """Cover validate_shapes with non-trivial matrices."""
 
     def test_validate_shapes_empty_model_ok(self):
         from cogant.gnn.matrices import GNNMatrices
+
         g = _make_graph()
         ss = _make_state_space()
         m = GNNMatrices(g, [], ss)
@@ -675,14 +740,18 @@ class TestGNNMatricesValidateShapes:
 
     def test_validate_shapes_with_real_model_passes(self):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
 
         g = _make_graph()
-        sm_state = SemanticMapping(id="m_s", kind=MappingKind.HIDDEN_STATE,
-                                   graph_fragment_node_ids=["n1"],
-                                   confidence_score=0.8)
-        sm_obs = SemanticMapping(id="m_o", kind=MappingKind.OBSERVATION,
-                                 graph_fragment_node_ids=["obs_n"])
+        sm_state = SemanticMapping(
+            id="m_s",
+            kind=MappingKind.HIDDEN_STATE,
+            graph_fragment_node_ids=["n1"],
+            confidence_score=0.8,
+        )
+        sm_obs = SemanticMapping(
+            id="m_o", kind=MappingKind.OBSERVATION, graph_fragment_node_ids=["obs_n"]
+        )
         ss = _make_state_space()
         m = GNNMatrices(g, [sm_state, sm_obs], ss)
         ok, errors = m.validate_shapes()
@@ -690,12 +759,15 @@ class TestGNNMatricesValidateShapes:
 
     def test_to_gnn_markdown_block_returns_string(self):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
 
         g = _make_graph()
-        sm_state = SemanticMapping(id="m_s", kind=MappingKind.HIDDEN_STATE,
-                                   graph_fragment_node_ids=["n1"],
-                                   confidence_score=0.8)
+        sm_state = SemanticMapping(
+            id="m_s",
+            kind=MappingKind.HIDDEN_STATE,
+            graph_fragment_node_ids=["n1"],
+            confidence_score=0.8,
+        )
         ss = _make_state_space()
         m = GNNMatrices(g, [sm_state], ss)
         block = m.to_gnn_markdown_block()
@@ -705,6 +777,7 @@ class TestGNNMatricesValidateShapes:
 # ---------------------------------------------------------------------------
 # translate/dsl/loader.py — load_rules_from_dict and load_rules_from_yaml
 # ---------------------------------------------------------------------------
+
 
 class TestDSLLoader:
     """Cover translate/dsl/loader.py lines 33-45."""
@@ -730,11 +803,13 @@ class TestDSLLoader:
 
     def test_load_rules_from_dict_empty(self):
         from cogant.translate.dsl.loader import load_rules_from_dict
+
         ruleset = load_rules_from_dict({})
         assert ruleset.rules == []
 
     def test_load_rules_from_dict_unknown_condition_key_raises(self):
         from cogant.translate.dsl.loader import load_rules_from_dict
+
         data = {
             "rules": [
                 {
@@ -770,7 +845,6 @@ class TestDSLLoader:
 
     def test_load_rules_from_yaml_missing_pyyaml_raises_importerror(self, tmp_path):
         """Cover ImportError branch in load_rules_from_yaml."""
-        import sys
         import builtins
 
         orig_import = builtins.__import__
@@ -785,8 +859,10 @@ class TestDSLLoader:
 
         builtins.__import__ = mock_import
         try:
-            from cogant.translate.dsl import loader as dsl_loader
             import importlib
+
+            from cogant.translate.dsl import loader as dsl_loader
+
             importlib.reload(dsl_loader)
             with pytest.raises(ImportError, match="PyYAML"):
                 dsl_loader.load_rules_from_yaml(yaml_file)
@@ -798,12 +874,13 @@ class TestDSLLoader:
 # translate/engine.py — translate_with_confidence, coverage_report
 # ---------------------------------------------------------------------------
 
+
 class TestTranslationEngineExtras:
     """Cover translate_with_confidence and get_coverage_report."""
 
     def _make_engine_with_rule(self):
-        from cogant.translate.engine import TranslationEngine, TranslationRule
         from cogant.schemas.semantic import MappingKind, SemanticMapping
+        from cogant.translate.engine import TranslationEngine, TranslationRule
 
         class AlwaysFireRule(TranslationRule):
             @property
@@ -820,10 +897,8 @@ class TestTranslationEngineExtras:
 
             def matches(self, graph, query):
                 from cogant.schemas.core import NodeKind
-                return [
-                    {"node_id": n.id}
-                    for n in graph.get_nodes_by_kind(NodeKind.FUNCTION)
-                ]
+
+                return [{"node_id": n.id} for n in graph.get_nodes_by_kind(NodeKind.FUNCTION)]
 
             def apply(self, graph, match):
                 nid = match["node_id"]
@@ -849,7 +924,6 @@ class TestTranslationEngineExtras:
         assert len(mappings) >= 1
 
     def test_get_coverage_report_basic(self):
-        from cogant.translate.engine import TranslationEngine
         from cogant.schemas.core import NodeKind
 
         func_node = _make_node("fn1", NodeKind.FUNCTION)
@@ -867,28 +941,43 @@ class TestTranslationEngineExtras:
 # translate/engine.py — max_iterations warning, rule_filter, explain_node
 # ---------------------------------------------------------------------------
 
+
 class TestTranslationEngineIterations:
     """Cover lines 316: max_iterations warning and rule_filter."""
 
     def test_translate_with_rule_filter(self):
+        from cogant.schemas.semantic import MappingKind
         from cogant.translate.engine import TranslationEngine, TranslationRule
-        from cogant.schemas.semantic import MappingKind, SemanticMapping
 
         class RuleA(TranslationRule):
             @property
-            def name(self): return "rule_a"
+            def name(self):
+                return "rule_a"
+
             @property
-            def mapping_kind(self): return MappingKind.OBSERVATION
-            def matches(self, graph, query): return []
-            def apply(self, graph, match): return None
+            def mapping_kind(self):
+                return MappingKind.OBSERVATION
+
+            def matches(self, graph, query):
+                return []
+
+            def apply(self, graph, match):
+                return None
 
         class RuleB(TranslationRule):
             @property
-            def name(self): return "rule_b"
+            def name(self):
+                return "rule_b"
+
             @property
-            def mapping_kind(self): return MappingKind.OBSERVATION
-            def matches(self, graph, query): return []
-            def apply(self, graph, match): return None
+            def mapping_kind(self):
+                return MappingKind.OBSERVATION
+
+            def matches(self, graph, query):
+                return []
+
+            def apply(self, graph, match):
+                return None
 
         engine = TranslationEngine()
         engine.register_rule(RuleA())
@@ -901,18 +990,24 @@ class TestTranslationEngineIterations:
 
     def test_translate_engine_rule_match_error_logged(self):
         """Cover lines 354-364: rule match error is logged, translate continues."""
-        from cogant.translate.engine import TranslationEngine, TranslationRule
-        from cogant.schemas.semantic import MappingKind
         from cogant.schemas.core import NodeKind
+        from cogant.schemas.semantic import MappingKind
+        from cogant.translate.engine import TranslationEngine, TranslationRule
 
         class ErrorRule(TranslationRule):
             @property
-            def name(self): return "error_rule"
+            def name(self):
+                return "error_rule"
+
             @property
-            def mapping_kind(self): return MappingKind.OBSERVATION
+            def mapping_kind(self):
+                return MappingKind.OBSERVATION
+
             def matches(self, graph, query):
                 raise TypeError("deliberate match error")
-            def apply(self, graph, match): return None
+
+            def apply(self, graph, match):
+                return None
 
         engine = TranslationEngine()
         engine.register_rule(ErrorRule())
@@ -924,17 +1019,22 @@ class TestTranslationEngineIterations:
 
     def test_translate_engine_rule_apply_error_logged(self):
         """Cover lines 375-384: apply error is logged, translate continues."""
-        from cogant.translate.engine import TranslationEngine, TranslationRule
-        from cogant.schemas.semantic import MappingKind
         from cogant.schemas.core import NodeKind
+        from cogant.schemas.semantic import MappingKind
+        from cogant.translate.engine import TranslationEngine, TranslationRule
 
         class ErrorApplyRule(TranslationRule):
             @property
-            def name(self): return "error_apply"
+            def name(self):
+                return "error_apply"
+
             @property
-            def mapping_kind(self): return MappingKind.OBSERVATION
+            def mapping_kind(self):
+                return MappingKind.OBSERVATION
+
             def matches(self, graph, query):
                 return [{"node_id": n.id} for n in graph.nodes.values()]
+
             def apply(self, graph, match):
                 raise ValueError("deliberate apply error")
 
@@ -948,21 +1048,29 @@ class TestTranslationEngineIterations:
 
     def test_translate_engine_rule_explain_on_rule_directly(self):
         """Cover TranslationRule.explain() method directly."""
-        from cogant.translate.engine import TranslationRule
-        from cogant.schemas.semantic import MappingKind
-        from cogant.schemas.core import NodeKind
         from cogant.graph.queries import GraphQuery
+        from cogant.schemas.core import NodeKind
+        from cogant.schemas.semantic import MappingKind
+        from cogant.translate.engine import TranslationRule
 
         class AlwaysFireRule(TranslationRule):
             @property
-            def name(self): return "always_fire"
+            def name(self):
+                return "always_fire"
+
             @property
-            def mapping_kind(self): return MappingKind.OBSERVATION
+            def mapping_kind(self):
+                return MappingKind.OBSERVATION
+
             @property
-            def priority(self): return 5
+            def priority(self):
+                return 5
+
             def matches(self, graph, query):
                 return [{"node_id": n.id, "some_key": "val"} for n in graph.nodes.values()]
-            def apply(self, graph, match): return None
+
+            def apply(self, graph, match):
+                return None
 
         rule = AlwaysFireRule()
         fn = _make_node("fn1", NodeKind.FUNCTION, name="my_func")
@@ -977,21 +1085,27 @@ class TestTranslationEngineIterations:
 # translate/engine.py — conflict resolution with overlapping nodes
 # ---------------------------------------------------------------------------
 
+
 class TestTranslationEngineConflicts:
     """Cover conflict resolution when two rules target the same node."""
 
     def test_conflict_resolution_removes_lower_priority_mapping(self):
-        from cogant.translate.engine import TranslationEngine, TranslationRule
-        from cogant.schemas.semantic import MappingKind, SemanticMapping
         from cogant.schemas.core import NodeKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
+        from cogant.translate.engine import TranslationEngine, TranslationRule
 
         class HighPriorityRule(TranslationRule):
             @property
-            def name(self): return "high_prio"
+            def name(self):
+                return "high_prio"
+
             @property
-            def mapping_kind(self): return MappingKind.HIDDEN_STATE
+            def mapping_kind(self):
+                return MappingKind.HIDDEN_STATE
+
             @property
-            def priority(self): return 100
+            def priority(self):
+                return 100
 
             def matches(self, graph, query):
                 return [{"node_id": n.id} for n in graph.nodes.values()]
@@ -1006,11 +1120,16 @@ class TestTranslationEngineConflicts:
 
         class LowPriorityRule(TranslationRule):
             @property
-            def name(self): return "low_prio"
+            def name(self):
+                return "low_prio"
+
             @property
-            def mapping_kind(self): return MappingKind.OBSERVATION
+            def mapping_kind(self):
+                return MappingKind.OBSERVATION
+
             @property
-            def priority(self): return 1
+            def priority(self):
+                return 1
 
             def matches(self, graph, query):
                 return [{"node_id": n.id} for n in graph.nodes.values()]
@@ -1040,11 +1159,13 @@ class TestTranslationEngineConflicts:
 # markov/extractor.py — strategy='module', 'kind', 'mapping_kind', 'auto'
 # ---------------------------------------------------------------------------
 
+
 class TestMarkovBlanketExtractor:
     """Cover markov/extractor.py line 133, 154, 198-211, 282, 338-339."""
 
     def _make_extractor(self, graph):
         from cogant.markov.extractor import MarkovBlanketExtractor
+
         return MarkovBlanketExtractor(graph)
 
     def test_strategy_kind_no_kinds_raises(self):
@@ -1068,18 +1189,21 @@ class TestMarkovBlanketExtractor:
     def test_strategy_mapping_kind_no_mappings(self):
         g = _make_graph()
         ext = self._make_extractor(g)
-        blanket = ext.extract(strategy="mapping_kind", semantic_mappings={}, mapping_kinds=["hidden_state"])
+        blanket = ext.extract(
+            strategy="mapping_kind", semantic_mappings={}, mapping_kinds=["hidden_state"]
+        )
         assert blanket is not None
 
     def test_strategy_mapping_kind_with_mapping(self):
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
         from cogant.schemas.core import NodeKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
 
         fn_node = _make_node("fn1", NodeKind.FUNCTION)
         g = _make_graph(nodes=[fn_node])
 
         sm = SemanticMapping(
-            id="sm1", kind=MappingKind.HIDDEN_STATE,
+            id="sm1",
+            kind=MappingKind.HIDDEN_STATE,
             graph_fragment_node_ids=["fn1"],
         )
         ext = self._make_extractor(g)
@@ -1092,6 +1216,7 @@ class TestMarkovBlanketExtractor:
 
     def test_strategy_kind_with_function_kind(self):
         from cogant.schemas.core import NodeKind
+
         fn_node = _make_node("fn1", NodeKind.FUNCTION)
         g = _make_graph(nodes=[fn_node])
         ext = self._make_extractor(g)
@@ -1100,6 +1225,7 @@ class TestMarkovBlanketExtractor:
 
     def test_strategy_module_with_matching_module(self):
         from cogant.schemas.core import NodeKind
+
         mod_node = _make_node("mod1", NodeKind.MODULE, name="mymodule")
         fn_node = _make_node("fn1", NodeKind.FUNCTION)
         g = _make_graph(nodes=[mod_node, fn_node])
@@ -1114,7 +1240,8 @@ class TestMarkovBlanketExtractor:
         assert blanket is not None
 
     def test_strategy_auto_with_module_nodes(self):
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         mod_node = _make_node("mod1", NodeKind.MODULE, name="utils")
         fn1 = _make_node("fn1", NodeKind.FUNCTION)
         fn2 = _make_node("fn2", NodeKind.FUNCTION)
@@ -1128,6 +1255,7 @@ class TestMarkovBlanketExtractor:
     def test_strategy_auto_class_fallback_no_classes(self):
         """Cover _auto_class_fallback with no classes → empty seeds."""
         from cogant.schemas.core import NodeKind
+
         fn_node = _make_node("fn1", NodeKind.FUNCTION)
         g = _make_graph(nodes=[fn_node])
         ext = self._make_extractor(g)
@@ -1137,7 +1265,8 @@ class TestMarkovBlanketExtractor:
 
     def test_strategy_auto_class_fallback_with_class(self):
         """Cover _auto_class_fallback when module spans whole graph."""
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         mod = _make_node("mod1", NodeKind.MODULE, name="mymod")
         cls1 = _make_node("cls1", NodeKind.CLASS, name="MyClass")
         fn1 = _make_node("fn1", NodeKind.FUNCTION)
@@ -1154,11 +1283,13 @@ class TestMarkovBlanketExtractor:
 # dynamic/enrichment.py — _node_spans_line, _stable_edge_id, enrich_graph
 # ---------------------------------------------------------------------------
 
+
 class TestDynamicEnrichmentHelpers:
     """Cover dynamic/enrichment.py lines 93, 97-98, 111, 131-138, 225."""
 
     def test_enrich_graph_with_no_paths_returns_zero_counts(self):
         from cogant.dynamic.enrichment import enrich_graph
+
         g = _make_graph()
         result = enrich_graph(g, coverage_path=None, trace_path=None)
         assert result["coverage_nodes_enriched"] == 0
@@ -1168,6 +1299,7 @@ class TestDynamicEnrichmentHelpers:
     def test_enrich_graph_with_coverage_xml_nonexistent_file(self):
         """Passing .xml suffix hits the xml branch (line 89-90). File won't exist → 0."""
         from cogant.dynamic.enrichment import enrich_graph
+
         g = _make_graph()
         # Non-existent file → ingester returns empty; spans = [] → returns 0
         try:
@@ -1178,6 +1310,7 @@ class TestDynamicEnrichmentHelpers:
 
     def test_enrich_graph_records_evidence_sources(self):
         from cogant.dynamic.enrichment import enrich_graph
+
         g = _make_graph()
         # With a real coverage path we don't have, but we can trigger the
         # evidence_sources recording without coverage by using a non-None path
@@ -1193,6 +1326,7 @@ class TestDynamicEnrichmentHelpers:
     def test_stable_edge_id_deterministic(self):
         """_stable_edge_id produces consistent hash."""
         from cogant.dynamic.enrichment import _stable_edge_id
+
         e1 = _stable_edge_id("src1", "tgt1", "CALLS")
         e2 = _stable_edge_id("src1", "tgt1", "CALLS")
         e3 = _stable_edge_id("src1", "tgt2", "CALLS")
@@ -1205,8 +1339,10 @@ class TestDynamicEnrichmentHelpers:
         from cogant.schemas.core import Node, NodeKind
 
         node = Node(
-            id="n1", kind=NodeKind.FUNCTION,
-            name="f", qualified_name="f",
+            id="n1",
+            kind=NodeKind.FUNCTION,
+            name="f",
+            qualified_name="f",
             source_range={"start_line": 10, "end_line": 20},
         )
         assert _node_spans_line(node, 10) is True
@@ -1228,12 +1364,14 @@ class TestDynamicEnrichmentHelpers:
 # statespace/compiler.py — ObservationModality, Action, Transition, Likelihood, Preference
 # ---------------------------------------------------------------------------
 
+
 class TestStateSpaceCompilerDataclasses:
     """Cover compiler dataclass defaults and simple compile paths."""
 
     def test_observation_modality_defaults(self):
         from cogant.statespace.compiler import ObservationModality
         from cogant.statespace.variables import ConfidenceLevel
+
         obs = ObservationModality(
             id="obs1", name="sensor", source_node_id="n1", modality_type="sensor"
         )
@@ -1244,6 +1382,7 @@ class TestStateSpaceCompilerDataclasses:
     def test_action_defaults(self):
         from cogant.statespace.compiler import Action
         from cogant.statespace.variables import ConfidenceLevel
+
         act = Action(id="a1", name="jump", controller_id="ctrl")
         assert act.parameters == {}
         assert act.effects == []
@@ -1254,6 +1393,7 @@ class TestStateSpaceCompilerDataclasses:
     def test_transition_defaults(self):
         from cogant.statespace.compiler import Transition
         from cogant.statespace.variables import ConfidenceLevel
+
         t = Transition(id="t1", source_state={"v": "pre"}, target_state={"v": "post"})
         assert t.action_id is None
         assert t.probability is None
@@ -1263,6 +1403,7 @@ class TestStateSpaceCompilerDataclasses:
     def test_likelihood_defaults(self):
         from cogant.statespace.compiler import Likelihood
         from cogant.statespace.variables import ConfidenceLevel
+
         like = Likelihood(id="l1", variable_id="v1", distribution_type="gaussian")
         assert like.parameters == {}
         assert like.confidence == ConfidenceLevel.MEDIUM
@@ -1270,9 +1411,13 @@ class TestStateSpaceCompilerDataclasses:
     def test_preference_defaults(self):
         from cogant.statespace.compiler import Preference
         from cogant.statespace.variables import ConfidenceLevel
+
         pref = Preference(
-            id="p1", name="safety", description="keep safe",
-            scope=["v1"], expression="v1 > 0",
+            id="p1",
+            name="safety",
+            description="keep safe",
+            scope=["v1"],
+            expression="v1 > 0",
         )
         assert pref.weight == 1.0
         assert pref.source is None
@@ -1287,6 +1432,7 @@ class TestStateSpaceCompilerDataclasses:
 
     def test_compiler_init_and_compile_empty_mappings(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         g = _make_graph()
         compiler = StateSpaceCompiler(g, schema_name="test")
         model = compiler.compile({})
@@ -1294,15 +1440,16 @@ class TestStateSpaceCompilerDataclasses:
         assert model.schema_name == "test"
 
     def test_compiler_compile_with_hidden_state_mapping(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
         from cogant.schemas.core import NodeKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
+        from cogant.statespace.compiler import StateSpaceCompiler
 
         fn_node = _make_node("fn1", NodeKind.VARIABLE, name="counter")
         g = _make_graph(nodes=[fn_node])
 
         sm = SemanticMapping(
-            id="sm1", kind=MappingKind.HIDDEN_STATE,
+            id="sm1",
+            kind=MappingKind.HIDDEN_STATE,
             graph_fragment_node_ids=["fn1"],
             semantic_label="counter",
             confidence_score=0.8,
@@ -1313,14 +1460,15 @@ class TestStateSpaceCompilerDataclasses:
         assert len(model.variables) >= 1
 
     def test_compiler_compile_with_observation_mapping(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
         from cogant.schemas.core import NodeKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
+        from cogant.statespace.compiler import StateSpaceCompiler
 
         obs_node = _make_node("obs1", NodeKind.ENDPOINT, name="sensor")
         g = _make_graph(nodes=[obs_node])
         sm = SemanticMapping(
-            id="sm_obs", kind=MappingKind.OBSERVATION,
+            id="sm_obs",
+            kind=MappingKind.OBSERVATION,
             graph_fragment_node_ids=["obs1"],
             semantic_label="sensor_reading",
             confidence_score=0.7,
@@ -1330,14 +1478,15 @@ class TestStateSpaceCompilerDataclasses:
         assert len(model.observations) >= 1
 
     def test_compiler_compile_with_action_mapping(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
         from cogant.schemas.core import NodeKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
+        from cogant.statespace.compiler import StateSpaceCompiler
 
         fn_node = _make_node("fn1", NodeKind.FUNCTION, name="do_something")
         g = _make_graph(nodes=[fn_node])
         sm = SemanticMapping(
-            id="sm_act", kind=MappingKind.ACTION,
+            id="sm_act",
+            kind=MappingKind.ACTION,
             graph_fragment_node_ids=["fn1"],
             semantic_label="do_something",
             confidence_score=0.75,
@@ -1347,14 +1496,15 @@ class TestStateSpaceCompilerDataclasses:
         assert len(model.actions) >= 1
 
     def test_compiler_compile_with_constraint_mapping(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
         from cogant.schemas.core import NodeKind
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
+        from cogant.statespace.compiler import StateSpaceCompiler
 
         test_node = _make_node("t1", NodeKind.TEST, name="test_safety")
         g = _make_graph(nodes=[test_node])
         sm = SemanticMapping(
-            id="sm_const", kind=MappingKind.CONSTRAINT,
+            id="sm_const",
+            kind=MappingKind.CONSTRAINT,
             graph_fragment_node_ids=["t1"],
             semantic_label="safety_constraint",
             confidence_score=0.85,

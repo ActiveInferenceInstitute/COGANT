@@ -30,7 +30,9 @@ def _discover_run_dirs(path: Path) -> list[Path]:
     ex_cp = path / "examples" / "control_positive"
     if ex_cp.is_dir():
         runs = sorted(
-            d for d in ex_cp.iterdir() if d.is_dir() and not d.name.startswith(".") and _has_program_graph(d)
+            d
+            for d in ex_cp.iterdir()
+            if d.is_dir() and not d.name.startswith(".") and _has_program_graph(d)
         )
         if runs:
             return runs

@@ -23,9 +23,7 @@ class TranslateConfig(BaseModel):
             ``enable_rules``.
     """
 
-    max_iterations: int = Field(
-        default=10, ge=1, description="Maximum translation iterations"
-    )
+    max_iterations: int = Field(default=10, ge=1, description="Maximum translation iterations")
     confidence_threshold: float = Field(
         default=0.5,
         ge=0.0,

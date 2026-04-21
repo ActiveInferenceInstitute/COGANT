@@ -118,9 +118,7 @@ class ProcessStage(CogantBaseModel):
     typical_duration: float | None = Field(
         default=None, description="Typical execution time (seconds)"
     )
-    timeout: float | None = Field(
-        default=None, description="Timeout for stage execution (seconds)"
-    )
+    timeout: float | None = Field(default=None, description="Timeout for stage execution (seconds)")
 
     # Error handling
     error_handlers: dict[str, str] = Field(
@@ -199,24 +197,16 @@ class ProcessTimeline(CogantBaseModel):
     start_time: float | None = Field(
         default=None, description="Start time relative to process begin"
     )
-    end_time: float | None = Field(
-        default=None, description="End time relative to process begin"
-    )
-    deadline: float | None = Field(
-        default=None, description="Deadline for process completion"
-    )
+    end_time: float | None = Field(default=None, description="End time relative to process begin")
+    deadline: float | None = Field(default=None, description="Deadline for process completion")
     deadline_type: Literal["hard", "soft", "firm"] = Field(
         default="soft",
         description="Type of deadline",
     )
 
     # Scheduling
-    period: float | None = Field(
-        default=None, description="If periodic, the period"
-    )
-    jitter: float | None = Field(
-        default=None, description="Allowed jitter/variance in timing"
-    )
+    period: float | None = Field(default=None, description="If periodic, the period")
+    jitter: float | None = Field(default=None, description="Allowed jitter/variance in timing")
 
     # Stage timings
     stage_timings: dict[str, float] = Field(
@@ -236,21 +226,15 @@ class ProcessModel(CogantBaseModel):
 
     process_id: StableID = Field(..., description="Unique identifier")
     name: str = Field(..., description="Human-readable name")
-    description: str | None = Field(
-        default=None, description="Detailed description"
-    )
+    description: str | None = Field(default=None, description="Detailed description")
 
     # Process structure
-    kind: ProcessKind = Field(
-        ..., description="Type of process"
-    )
+    kind: ProcessKind = Field(..., description="Type of process")
     stages: list[ProcessStage] = Field(
         ...,
         description="All stages in process",
     )
-    root_stage_id: str | None = Field(
-        default=None, description="ID of root/entry stage"
-    )
+    root_stage_id: str | None = Field(default=None, description="ID of root/entry stage")
     leaf_stage_ids: list[str] = Field(
         default_factory=list,
         description="IDs of terminal/exit stages",
@@ -285,16 +269,12 @@ class ProcessModel(CogantBaseModel):
     )
 
     # Metadata
-    source_graph_id: StableID | None = Field(
-        default=None, description="ID of source program graph"
-    )
+    source_graph_id: StableID | None = Field(default=None, description="ID of source program graph")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         description="When model was created",
     )
-    tags: list[str] = Field(
-        default_factory=list, description="User-defined tags"
-    )
+    tags: list[str] = Field(default_factory=list, description="User-defined tags")
 
     model_config = ConfigDict(
         json_schema_extra={

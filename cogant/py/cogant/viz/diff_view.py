@@ -48,9 +48,7 @@ class DiffVisualizer:
         errors1 = len(self.bundle1.get("errors", []))
         errors2 = len(self.bundle2.get("errors", []))
         if errors1 != errors2:
-            self.changed.append(
-                {"type": "errors", "before": errors1, "after": errors2}
-            )
+            self.changed.append({"type": "errors", "before": errors1, "after": errors2})
 
     def render_html(self, output_path: str) -> str:
         """
@@ -188,31 +186,31 @@ class DiffVisualizer:
         <div class="comparison">
             <div class="bundle left">
                 <h3>Bundle 1</h3>
-                <p><strong>Target:</strong> {self.bundle1.get('target', 'unknown')}</p>
-                <p><strong>Errors:</strong> {len(self.bundle1.get('errors', []))}</p>
-                <p><strong>Stages:</strong> {len(self.bundle1.get('stage_results', {}))}</p>
+                <p><strong>Target:</strong> {self.bundle1.get("target", "unknown")}</p>
+                <p><strong>Errors:</strong> {len(self.bundle1.get("errors", []))}</p>
+                <p><strong>Stages:</strong> {len(self.bundle1.get("stage_results", {}))}</p>
             </div>
             <div class="bundle right">
                 <h3>Bundle 2</h3>
-                <p><strong>Target:</strong> {self.bundle2.get('target', 'unknown')}</p>
-                <p><strong>Errors:</strong> {len(self.bundle2.get('errors', []))}</p>
-                <p><strong>Stages:</strong> {len(self.bundle2.get('stage_results', {}))}</p>
+                <p><strong>Target:</strong> {self.bundle2.get("target", "unknown")}</p>
+                <p><strong>Errors:</strong> {len(self.bundle2.get("errors", []))}</p>
+                <p><strong>Stages:</strong> {len(self.bundle2.get("stage_results", {}))}</p>
             </div>
         </div>
 
         <div class="diff-section added">
             <h3>Added <span class="badge added">+{len(self.added)}</span></h3>
-            {''.join(f'<div class="diff-item">{item.get("name", item)}</div>' for item in self.added) or '<p style="color: #999;">No additions</p>'}
+            {"".join(f'<div class="diff-item">{item.get("name", item)}</div>' for item in self.added) or '<p style="color: #999;">No additions</p>'}
         </div>
 
         <div class="diff-section removed">
             <h3>Removed <span class="badge removed">-{len(self.removed)}</span></h3>
-            {''.join(f'<div class="diff-item">{item.get("name", item)}</div>' for item in self.removed) or '<p style="color: #999;">No removals</p>'}
+            {"".join(f'<div class="diff-item">{item.get("name", item)}</div>' for item in self.removed) or '<p style="color: #999;">No removals</p>'}
         </div>
 
         <div class="diff-section changed">
             <h3>Changed <span class="badge changed">~{len(self.changed)}</span></h3>
-            {''.join(f'<div class="diff-item"><strong>{item.get("type")}</strong>: {item.get("before")} → {item.get("after")}</div>' for item in self.changed) or '<p style="color: #999;">No changes</p>'}
+            {"".join(f'<div class="diff-item"><strong>{item.get("type")}</strong>: {item.get("before")} → {item.get("after")}</div>' for item in self.changed) or '<p style="color: #999;">No changes</p>'}
         </div>
 
         <footer style="text-align: center; color: #999; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">

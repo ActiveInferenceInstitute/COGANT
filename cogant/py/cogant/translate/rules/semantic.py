@@ -41,8 +41,6 @@ __all__ = [
 ]
 
 
-
-
 class ObservationRule(TranslationRule):
     """Maps getter/query functions and read-only methods to observation modality.
 
@@ -94,12 +92,14 @@ class ObservationRule(TranslationRule):
 
             # Match if keyword match OR (has reads and no writes)
             if keyword_match or (reads > 0 and writes == 0):
-                matches.append({
-                    "node_id": node.id,
-                    "read_count": reads,
-                    "write_count": writes,
-                    "keyword_match": keyword_match,
-                })
+                matches.append(
+                    {
+                        "node_id": node.id,
+                        "read_count": reads,
+                        "write_count": writes,
+                        "keyword_match": keyword_match,
+                    }
+                )
 
         return matches
 
@@ -141,7 +141,10 @@ class ObservationRule(TranslationRule):
                 ProvenanceRecord(
                     source="static_analysis",
                     confidence=confidence,
-                    metadata={"read_count": match["read_count"], "write_count": match["write_count"]},
+                    metadata={
+                        "read_count": match["read_count"],
+                        "write_count": match["write_count"],
+                    },
                 )
             ],
             evidence_count=1,
@@ -200,9 +203,7 @@ class ObservationRule(TranslationRule):
                     f"WRITES=0)"
                 )
             elif keyword_match:
-                reason = (
-                    f"name contains observation keyword(s) {matched_keywords}"
-                )
+                reason = f"name contains observation keyword(s) {matched_keywords}"
             else:
                 reason = (
                     f"read-only access pattern (READS={len(read_targets)}, "
@@ -305,11 +306,13 @@ class ActionRule(TranslationRule):
             # TODO(calibration): sweep {1, 2, 3} on the 20-repo corpus if
             # false-positive rate on functional codebases exceeds ~5%.
             if keyword_match or writes >= 1:
-                matches.append({
-                    "node_id": node.id,
-                    "write_count": writes,
-                    "call_count": calls,
-                })
+                matches.append(
+                    {
+                        "node_id": node.id,
+                        "write_count": writes,
+                        "call_count": calls,
+                    }
+                )
 
         return matches
 
@@ -349,7 +352,10 @@ class ActionRule(TranslationRule):
                 ProvenanceRecord(
                     source="static_analysis",
                     confidence=0.8,
-                    metadata={"write_count": match["write_count"], "call_count": match["call_count"]},
+                    metadata={
+                        "write_count": match["write_count"],
+                        "call_count": match["call_count"],
+                    },
                 )
             ],
             evidence_count=1,
@@ -376,8 +382,7 @@ class ActionRule(TranslationRule):
                 priority=self.priority,
                 fired=False,
                 reason=(
-                    f"action rule only applies to functions/methods; "
-                    f"node kind is {node.kind.value}"
+                    f"action rule only applies to functions/methods; node kind is {node.kind.value}"
                 ),
                 evidence=[],
                 mapping_kind=self.mapping_kind.value,
@@ -494,9 +499,24 @@ class PolicyRule(TranslationRule):
         # in ``_resolve_conflicts`` will pick whichever rule produces
         # higher confidence on that specific match.
         policy_keywords = [
-            "middleware", "handler", "controller", "manager", "router", "dispatcher",
-            "scheduler", "route", "dispatch", "handle", "select_", "choose_",
-            "decide_", "plan_", "strategy", "orchestrator", "coordinator", "supervisor"
+            "middleware",
+            "handler",
+            "controller",
+            "manager",
+            "router",
+            "dispatcher",
+            "scheduler",
+            "route",
+            "dispatch",
+            "handle",
+            "select_",
+            "choose_",
+            "decide_",
+            "plan_",
+            "strategy",
+            "orchestrator",
+            "coordinator",
+            "supervisor",
         ]
 
         # Find classes
@@ -508,7 +528,9 @@ class PolicyRule(TranslationRule):
             # Check for __call__ method (callable class = decision logic)
             has_call_method = False
             out_edges = graph.get_edges_from(cls.id)
-            methods = [graph.get_node(e.target_id) for e in out_edges if e.kind == EdgeKind.CONTAINS]
+            methods = [
+                graph.get_node(e.target_id) for e in out_edges if e.kind == EdgeKind.CONTAINS
+            ]
             for method in methods:
                 if method and method.name == "__call__":
                     has_call_method = True
@@ -516,12 +538,14 @@ class PolicyRule(TranslationRule):
 
             if has_keyword or has_call_method:
                 call_count = sum(1 for e in out_edges if e.kind == EdgeKind.CALLS)
-                matches.append({
-                    "node_id": cls.id,
-                    "call_count": call_count,
-                    "node_type": "class",
-                    "has_call_method": has_call_method,
-                })
+                matches.append(
+                    {
+                        "node_id": cls.id,
+                        "call_count": call_count,
+                        "node_type": "class",
+                        "has_call_method": has_call_method,
+                    }
+                )
 
         # Find functions with policy keywords
         functions = graph.get_nodes_by_kind(NodeKind.FUNCTION)
@@ -533,11 +557,13 @@ class PolicyRule(TranslationRule):
                 out_edges = graph.get_edges_from(node.id)
                 call_count = sum(1 for e in out_edges if e.kind == EdgeKind.CALLS)
 
-                matches.append({
-                    "node_id": node.id,
-                    "call_count": call_count,
-                    "node_type": "function",
-                })
+                matches.append(
+                    {
+                        "node_id": node.id,
+                        "call_count": call_count,
+                        "node_type": "function",
+                    }
+                )
 
         return matches
 
@@ -629,8 +655,18 @@ class PreferenceRule(TranslationRule):
 
         # Preference/constraint keywords covering cost, reward, objective, loss, utility
         constraint_keywords = [
-            "validator", "checker", "test_", "assert_", "validate", "check",
-            "cost_", "reward_", "objective_", "loss_", "utility_", "metric",
+            "validator",
+            "checker",
+            "test_",
+            "assert_",
+            "validate",
+            "check",
+            "cost_",
+            "reward_",
+            "objective_",
+            "loss_",
+            "utility_",
+            "metric",
         ]
 
         # Find classes with Validator/Checker/etc in name
@@ -638,10 +674,12 @@ class PreferenceRule(TranslationRule):
         for cls in classes:
             name_lower = cls.name.lower()
             if any(kw in name_lower for kw in constraint_keywords):
-                matches.append({
-                    "node_id": cls.id,
-                    "constraint_type": "class",
-                })
+                matches.append(
+                    {
+                        "node_id": cls.id,
+                        "constraint_type": "class",
+                    }
+                )
 
         # Find functions/methods with constraint keywords
         functions = graph.get_nodes_by_kind(NodeKind.FUNCTION)
@@ -650,10 +688,12 @@ class PreferenceRule(TranslationRule):
         for node in functions + methods:
             name_lower = node.name.lower()
             if any(kw in name_lower for kw in constraint_keywords):
-                matches.append({
-                    "node_id": node.id,
-                    "constraint_type": "function",
-                })
+                matches.append(
+                    {
+                        "node_id": node.id,
+                        "constraint_type": "function",
+                    }
+                )
 
         return matches
 
@@ -747,8 +787,15 @@ class ContextRule(TranslationRule):
         """
         matches = []
         context_keywords = [
-            "config", "settings", "env", "options", "params",
-            "env_", "world_", "state_", "context_"
+            "config",
+            "settings",
+            "env",
+            "options",
+            "params",
+            "env_",
+            "world_",
+            "state_",
+            "context_",
         ]
 
         # Find classes and functions with context keywords
@@ -756,10 +803,12 @@ class ContextRule(TranslationRule):
         for cls in classes:
             name_lower = cls.name.lower()
             if any(kw in name_lower for kw in context_keywords):
-                matches.append({
-                    "node_id": cls.id,
-                    "context_type": "class",
-                })
+                matches.append(
+                    {
+                        "node_id": cls.id,
+                        "context_type": "class",
+                    }
+                )
 
         # Find functions that only read and return values (read-only + returns)
         functions = graph.get_nodes_by_kind(NodeKind.FUNCTION)
@@ -774,10 +823,12 @@ class ContextRule(TranslationRule):
             # OR has context keyword in name
             has_context_keyword = any(kw in name_lower for kw in context_keywords)
             if has_context_keyword or (reads > 0 and writes == 0 and returns > 0):
-                matches.append({
-                    "node_id": func.id,
-                    "context_type": "function",
-                })
+                matches.append(
+                    {
+                        "node_id": func.id,
+                        "context_type": "function",
+                    }
+                )
 
         return matches
 

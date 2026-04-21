@@ -16,4 +16,22 @@ from cogant.statespace.variables import StateVariable as StateVariable
 from cogant.statespace.variables import StateVariableExtractor as StateVariableExtractor
 from cogant.statespace.variables import StateVariableType as StateVariableType
 
-__all__ = ['StateSpaceCompiler', 'StateSpaceModel', 'ObservationModality', 'Action', 'Transition', 'Likelihood', 'Preference', 'StateVariableExtractor', 'StateVariable', 'StateVariableType', 'ConfidenceLevel', 'FactorizationInfo', 'TemporalAnalyzer', 'TimeRegime', 'TemporalOrdering', 'EventPattern', 'TemporalMetrics']
+__all__ = [
+    "StateSpaceCompiler",
+    "StateSpaceModel",
+    "ObservationModality",
+    "Action",
+    "Transition",
+    "Likelihood",
+    "Preference",
+    "StateVariableExtractor",
+    "StateVariable",
+    "StateVariableType",
+    "ConfidenceLevel",
+    "FactorizationInfo",
+    "TemporalAnalyzer",
+    "TimeRegime",
+    "TemporalOrdering",
+    "EventPattern",
+    "TemporalMetrics",
+]

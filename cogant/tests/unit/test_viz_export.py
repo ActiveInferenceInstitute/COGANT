@@ -1,9 +1,14 @@
 """Unit tests for viz/export_view.py — ExportView."""
-import os, sys
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 import matplotlib
+
 matplotlib.use("Agg")
 import pytest
+
 from cogant.viz.export_view import ExportView
 
 
@@ -39,14 +44,18 @@ def test_init():
 def test_plot_export_formats_basic(ev):
     fig = ev.plot_export_formats(_export_results())
     assert fig is not None
-    import matplotlib.pyplot as plt; plt.close("all")
+    import matplotlib.pyplot as plt
+
+    plt.close("all")
 
 
 @pytest.mark.unit
 def test_plot_export_formats_empty(ev):
     # empty dict returns None (no data to plot) — graceful
     ev.plot_export_formats({})
-    import matplotlib.pyplot as plt; plt.close("all")
+    import matplotlib.pyplot as plt
+
+    plt.close("all")
 
 
 @pytest.mark.unit
@@ -59,18 +68,23 @@ def test_to_mermaid_export_pipeline_returns_str(ev):
 def test_plot_bundle_composition_basic(ev):
     fig = ev.plot_bundle_composition(_bundle())
     assert fig is not None
-    import matplotlib.pyplot as plt; plt.close("all")
+    import matplotlib.pyplot as plt
+
+    plt.close("all")
 
 
 @pytest.mark.unit
 def test_plot_bundle_composition_empty(ev):
     ev.plot_bundle_composition({})
-    import matplotlib.pyplot as plt; plt.close("all")
+    import matplotlib.pyplot as plt
+
+    plt.close("all")
 
 
 @pytest.mark.unit
 def test_to_png_round_trip(ev, tmp_path):
     import matplotlib.pyplot as plt
+
     fig, _ = plt.subplots()
     out = ev.to_png(fig, str(tmp_path / "ev.png"))
     assert isinstance(out, str)
@@ -80,6 +94,7 @@ def test_to_png_round_trip(ev, tmp_path):
 @pytest.mark.unit
 def test_to_pdf_round_trip(ev, tmp_path):
     import matplotlib.pyplot as plt
+
     fig, _ = plt.subplots()
     out = ev.to_pdf(fig, str(tmp_path / "ev.pdf"))
     assert isinstance(out, str)

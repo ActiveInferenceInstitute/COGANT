@@ -154,15 +154,11 @@ def _downsample_graph(
     keep_ids = {nid for nid, _ in ranked[:max_nodes]}
     label_by_id = dict(nodes)
     sampled_nodes = [(nid, label_by_id.get(nid, nid)) for nid in keep_ids]
-    sampled_edges = [
-        (s, t, el) for (s, t, el) in edges if s in keep_ids and t in keep_ids
-    ]
+    sampled_edges = [(s, t, el) for (s, t, el) in edges if s in keep_ids and t in keep_ids]
     if len(sampled_edges) > max_edges:
         # Keep edges touching the top nodes first.
         rank_of = {nid: i for i, (nid, _) in enumerate(ranked)}
-        sampled_edges.sort(
-            key=lambda e: rank_of.get(e[0], 1e9) + rank_of.get(e[1], 1e9)
-        )
+        sampled_edges.sort(key=lambda e: rank_of.get(e[0], 1e9) + rank_of.get(e[1], 1e9))
         sampled_edges = sampled_edges[:max_edges]
 
     return (
@@ -281,6 +277,7 @@ def _draw_color_legend(
 # --------------------------------------------------------------------------- #
 # Program graph PNG (NetworkX + matplotlib).                                   #
 # --------------------------------------------------------------------------- #
+
 
 def program_graph_dict_to_networkx(graph: dict[str, Any]) -> Any:
     """Build a NetworkX DiGraph from exported ``program_graph.json`` structure."""
@@ -411,16 +408,15 @@ def render_program_graph_png(
     n_nodes = g.number_of_nodes()
     n_edges = g.number_of_edges()
     try:
-        pos = nx.kamada_kawai_layout(g) if n_nodes <= 120 else nx.spring_layout(
-            g, seed=42, k=2.2 / max(n_nodes, 1) ** 0.5, iterations=80
+        pos = (
+            nx.kamada_kawai_layout(g)
+            if n_nodes <= 120
+            else nx.spring_layout(g, seed=42, k=2.2 / max(n_nodes, 1) ** 0.5, iterations=80)
         )
     except Exception:
         pos = nx.spring_layout(g, seed=42, k=2.2 / max(n_nodes, 1) ** 0.5, iterations=60)
 
-    labels = {
-        n: _truncate(g.nodes[n].get("label", n) or n, cfg.max_label_len)
-        for n in g.nodes()
-    }
+    labels = {n: _truncate(g.nodes[n].get("label", n) or n, cfg.max_label_len) for n in g.nodes()}
     colors = [_kind_color(g.nodes[n].get("kind", "")) for n in g.nodes()]
     edge_labels = {
         (u, v): _truncate(str(d.get("kind", "")), 14)
@@ -504,6 +500,7 @@ def render_program_graph_png(
 # --------------------------------------------------------------------------- #
 # Mermaid rendering: mmdc preferred, native Python fallback.                   #
 # --------------------------------------------------------------------------- #
+
 
 def _mmdc_command() -> list[str] | None:
     if shutil.which("mmdc"):
@@ -847,7 +844,11 @@ def _parse_mermaid_state_diagram(
         ln = raw.strip()
         if not ln:
             continue
-        if ln.startswith("note ") or ln.lower().startswith("note right of") or ln.lower().startswith("note left of"):
+        if (
+            ln.startswith("note ")
+            or ln.lower().startswith("note right of")
+            or ln.lower().startswith("note left of")
+        ):
             in_note = True
             continue
         if in_note:
@@ -990,9 +991,7 @@ def render_mermaid_text_to_png(
             tasks = _parse_mermaid_gantt(text)
             if not tasks:
                 return False
-            return _render_gantt_png(
-                tasks, output_png, title, cfg=cfg, source_label=source_label
-            )
+            return _render_gantt_png(tasks, output_png, title, cfg=cfg, source_label=source_label)
 
         clusters: dict[str, str] = {}
         if kind == "class":
@@ -1034,11 +1033,13 @@ def render_mermaid_text_to_png(
 
         n = max(g.number_of_nodes(), 1)
         try:
-            pos = nx.kamada_kawai_layout(g) if n <= 80 else nx.spring_layout(
-                g, seed=17, k=2.4 / (n ** 0.5), iterations=200
+            pos = (
+                nx.kamada_kawai_layout(g)
+                if n <= 80
+                else nx.spring_layout(g, seed=17, k=2.4 / (n**0.5), iterations=200)
             )
         except Exception:
-            pos = nx.spring_layout(g, seed=17, k=2.0 / (n ** 0.5), iterations=120)
+            pos = nx.spring_layout(g, seed=17, k=2.0 / (n**0.5), iterations=120)
 
         fig, ax = plt.subplots(figsize=figsize)
 
@@ -1070,8 +1071,7 @@ def render_mermaid_text_to_png(
             ax=ax,
         )
         labels = {
-            n_: _truncate(g.nodes[n_].get("label", n_) or n_, cfg.max_label_len)
-            for n_ in g.nodes()
+            n_: _truncate(g.nodes[n_].get("label", n_) or n_, cfg.max_label_len) for n_ in g.nodes()
         }
         nx.draw_networkx_labels(
             g,
@@ -1094,7 +1094,11 @@ def render_mermaid_text_to_png(
                 edge_labels=edge_labels,
                 font_size=cfg.edge_fontsize,
                 font_color="#222222",
-                bbox={"boxstyle": "round,pad=0.2", "facecolor": cfg.edge_label_bg, "edgecolor": "none"},
+                bbox={
+                    "boxstyle": "round,pad=0.2",
+                    "facecolor": cfg.edge_label_bg,
+                    "edgecolor": "none",
+                },
                 ax=ax,
             )
 
@@ -1210,7 +1214,12 @@ def _render_sequence_png(
                 "",
                 xy=(xs[s] + 0.25, y - 0.1),
                 xytext=(xs[s], y + 0.1),
-                arrowprops={"arrowstyle": "->", "color": "#8e44ad", "lw": 1.6, "connectionstyle": "arc3,rad=-0.5"},
+                arrowprops={
+                    "arrowstyle": "->",
+                    "color": "#8e44ad",
+                    "lw": 1.6,
+                    "connectionstyle": "arc3,rad=-0.5",
+                },
             )
         else:
             ax.annotate(
@@ -1228,7 +1237,11 @@ def _render_sequence_png(
                 ha="center",
                 va="bottom",
                 fontsize=cfg.edge_fontsize,
-                bbox={"boxstyle": "round,pad=0.25", "facecolor": cfg.edge_label_bg, "edgecolor": "none"},
+                bbox={
+                    "boxstyle": "round,pad=0.25",
+                    "facecolor": cfg.edge_label_bg,
+                    "edgecolor": "none",
+                },
             )
 
     ax.set_xlim(-0.7, max(len(participants) - 0.3, 1.0))
@@ -1239,9 +1252,7 @@ def _render_sequence_png(
         "messages": len(messages),
     }
     if original_participants > len(participants):
-        seq_stats["sampled_participants"] = (
-            f"{len(participants)}/{original_participants}"
-        )
+        seq_stats["sampled_participants"] = f"{len(participants)}/{original_participants}"
     if original_messages > len(messages):
         seq_stats["sampled_messages"] = f"{len(messages)}/{original_messages}"
     _draw_metadata_banner(
@@ -1334,6 +1345,7 @@ def _render_gantt_png(
 # --------------------------------------------------------------------------- #
 # SVG → PNG                                                                    #
 # --------------------------------------------------------------------------- #
+
 
 def render_svg_file_to_png(svg_file: Path, output_png: Path, *, timeout: int = 60) -> bool:
     """Convert an SVG file to PNG.
@@ -1475,6 +1487,7 @@ def _render_svg_placeholder_png(
 # Graphviz DOT → PNG                                                           #
 # --------------------------------------------------------------------------- #
 
+
 def render_graphviz_dot_to_png(dot_file: Path, output_png: Path, *, timeout: int = 120) -> bool:
     """Render a Graphviz ``.dot`` file to PNG using the ``dot`` binary if available."""
     dot_bin = shutil.which("dot")
@@ -1540,9 +1553,13 @@ def _state_space_entities(
         or {}
     )
     actions_raw = getattr(state_space, "actions", None) or {}
-    variables = list(variables_raw.values()) if isinstance(variables_raw, dict) else list(variables_raw)
+    variables = (
+        list(variables_raw.values()) if isinstance(variables_raw, dict) else list(variables_raw)
+    )
     observations = (
-        list(observations_raw.values()) if isinstance(observations_raw, dict) else list(observations_raw)
+        list(observations_raw.values())
+        if isinstance(observations_raw, dict)
+        else list(observations_raw)
     )
     actions = list(actions_raw.values()) if isinstance(actions_raw, dict) else list(actions_raw)
     return variables, observations, actions
@@ -1606,9 +1623,7 @@ def render_state_space_factor_png(
         act_ids: list[str] = []
 
         def _display_name(obj: Any, fallback: str) -> str:
-            return (
-                str(getattr(obj, "name", None) or getattr(obj, "id", None) or fallback)
-            )
+            return str(getattr(obj, "name", None) or getattr(obj, "id", None) or fallback)
 
         def _cardinality(obj: Any) -> int | None:
             return getattr(obj, "cardinality", None) or getattr(obj, "size", None)
@@ -1620,8 +1635,7 @@ def render_state_space_factor_png(
             var_ids.append(vid)
             g.add_node(
                 vid,
-                label=f"s\n{_truncate(name, 16)}"
-                + (f"\n|{card}|" if card else ""),
+                label=f"s\n{_truncate(name, 16)}" + (f"\n|{card}|" if card else ""),
                 kind="state",
             )
         for i, o in enumerate(observations):
@@ -1631,8 +1645,7 @@ def render_state_space_factor_png(
             obs_ids.append(oid)
             g.add_node(
                 oid,
-                label=f"o\n{_truncate(name, 16)}"
-                + (f"\n|{card}|" if card else ""),
+                label=f"o\n{_truncate(name, 16)}" + (f"\n|{card}|" if card else ""),
                 kind="obs",
             )
         for i, a in enumerate(actions):
@@ -1704,9 +1717,7 @@ def render_state_space_factor_png(
             font_weight="bold",
             ax=ax,
         )
-        edge_kind_labels = {
-            (u, v): d.get("kind", "") for u, v, d in g.edges(data=True)
-        }
+        edge_kind_labels = {(u, v): d.get("kind", "") for u, v, d in g.edges(data=True)}
         # Only label a subset to avoid clutter: label the first control/likelihood edge only.
         seen_kinds: set[str] = set()
         minimal_labels: dict[tuple[str, str], str] = {}
@@ -1720,13 +1731,18 @@ def render_state_space_factor_png(
                 pos,
                 edge_labels=minimal_labels,
                 font_size=cfg.edge_fontsize,
-                bbox={"boxstyle": "round,pad=0.25", "facecolor": cfg.edge_label_bg, "edgecolor": "none"},
+                bbox={
+                    "boxstyle": "round,pad=0.25",
+                    "facecolor": cfg.edge_label_bg,
+                    "edgecolor": "none",
+                },
                 ax=ax,
             )
 
         ax.set_xlim(-0.05, 1.05)
         ax.set_ylim(-0.1, 1.15)
         ax.set_axis_off()
+
         def _fmt_count(displayed: int, real: int) -> str:
             return f"{displayed}" if displayed == real else f"{displayed}/{real}"
 
@@ -1799,10 +1815,10 @@ def render_connections_matrix_png(
             m = m / max(m.sum(axis=0, keepdims=True).max(), 1e-9)
             return m
 
-        A = _mat(n_o, n_s, 11)       # likelihood
-        B = _mat(n_s, n_s, 13)       # transition
-        C = _mat(n_o, 1, 17)         # preference
-        D = _mat(n_s, 1, 19)         # prior
+        A = _mat(n_o, n_s, 11)  # likelihood
+        B = _mat(n_s, n_s, 13)  # transition
+        C = _mat(n_o, 1, 17)  # preference
+        D = _mat(n_s, 1, 19)  # prior
 
         fig, axes = plt.subplots(2, 2, figsize=cfg.figsize)
         cmaps = ["Blues", "Greens", "Oranges", "Purples"]
@@ -1810,10 +1826,7 @@ def render_connections_matrix_png(
         def _shape_label(name: str, displayed: tuple[int, int], real: tuple[int, int]) -> str:
             if displayed == real:
                 return f"{name}  {displayed[0]}×{displayed[1]}"
-            return (
-                f"{name}  {displayed[0]}×{displayed[1]}  "
-                f"(of {real[0]}×{real[1]})"
-            )
+            return f"{name}  {displayed[0]}×{displayed[1]}  (of {real[0]}×{real[1]})"
 
         mats = [
             ("A — likelihood (o | s)", A, cmaps[0], (n_o, n_s), (original_n_o, original_n_s)),
@@ -1867,6 +1880,7 @@ def render_connections_matrix_png(
 # --------------------------------------------------------------------------- #
 # Process Gantt PNG (for ProcessModel)                                         #
 # --------------------------------------------------------------------------- #
+
 
 def render_process_gantt_png(
     process_model: Any,
@@ -2057,9 +2071,7 @@ def render_markov_blanket_png(
             # Two valid shapes:
             #   A) {"node_id": "role_name"}        (flat mapping)
             #   B) {"role_name": [{"id": ..., "name": ...}, ...]}  (grouped)
-            if raw_roles and all(
-                isinstance(v, list) for v in raw_roles.values()
-            ):
+            if raw_roles and all(isinstance(v, list) for v in raw_roles.values()):
                 for role_name, members in raw_roles.items():
                     for m in members or []:
                         if isinstance(m, dict):
@@ -2084,12 +2096,7 @@ def render_markov_blanket_png(
                 for nid in data.get(f"{role}_ids", []) or []:
                     id_to_role[str(nid)] = (role, str(nid))
 
-        edges_in = (
-            data.get("edges")
-            or data.get("links")
-            or data.get("connections")
-            or []
-        )
+        edges_in = data.get("edges") or data.get("links") or data.get("connections") or []
 
         # Downsample very large blankets before building the graph. We keep
         # every internal/sensory/active node (they're usually few) plus a
@@ -2108,9 +2115,7 @@ def render_markov_blanket_png(
                     incidence[s] += 1
                 if t in incidence:
                     incidence[t] += 1
-            non_external = {
-                nid for nid, (role, _) in id_to_role.items() if role != "external"
-            }
+            non_external = {nid for nid, (role, _) in id_to_role.items() if role != "external"}
             budget = max(cfg.max_render_nodes - len(non_external), 40)
             externals = sorted(
                 (
@@ -2148,11 +2153,9 @@ def render_markov_blanket_png(
             if n <= 80:
                 pos = nx.kamada_kawai_layout(g)
             else:
-                pos = nx.spring_layout(
-                    g, seed=23, k=2.2 / n ** 0.5, iterations=60
-                )
+                pos = nx.spring_layout(g, seed=23, k=2.2 / n**0.5, iterations=60)
         except Exception:
-            pos = nx.spring_layout(g, seed=23, k=2.0 / n ** 0.5, iterations=40)
+            pos = nx.spring_layout(g, seed=23, k=2.0 / n**0.5, iterations=40)
 
         fig, ax = plt.subplots(figsize=cfg.figsize)
         for role, color in _BLANKET_ROLE_COLOR.items():
@@ -2283,7 +2286,9 @@ def render_summary_cover_png(
 
         score = validation.get("score") or validation.get("gnn_score")
         is_valid = validation.get("valid")
-        n_checks = len(validation.get("checks", [])) if isinstance(validation.get("checks"), list) else 0
+        n_checks = (
+            len(validation.get("checks", [])) if isinstance(validation.get("checks"), list) else 0
+        )
 
         run_name = run_dir.name
         generated_at = _timestamp()
@@ -2319,7 +2324,11 @@ def render_summary_cover_png(
             ("Nodes", n_nodes, "#4A76D8"),
             ("Edges", n_edges, "#16a085"),
             ("Mappings", n_mappings, "#e67e22"),
-            ("Validation", f"{score}" if score is not None else ("VALID" if is_valid else "N/A"), "#8e44ad"),
+            (
+                "Validation",
+                f"{score}" if score is not None else ("VALID" if is_valid else "N/A"),
+                "#8e44ad",
+            ),
         ]
         for col, (label, value, color) in enumerate(kpi_specs):
             kpi_ax = fig.add_subplot(gs[1, col])
@@ -2516,7 +2525,9 @@ def render_gnn_markdown_png(
             max_lines = 18
             body_lines = body.splitlines()
             if len(body_lines) > max_lines:
-                body_lines = body_lines[:max_lines] + [f"… ({len(body.splitlines()) - max_lines} more lines)"]
+                body_lines = body_lines[:max_lines] + [
+                    f"… ({len(body.splitlines()) - max_lines} more lines)"
+                ]
             wrapped = []
             for raw in body_lines:
                 if len(raw) > 110:
@@ -2558,6 +2569,7 @@ def render_gnn_markdown_png(
 # --------------------------------------------------------------------------- #
 # One-shot orchestrator entrypoint                                             #
 # --------------------------------------------------------------------------- #
+
 
 def _load_state_space_from_json(p: Path) -> Any | None:
     """Load a state_space JSON into an object that ``_state_space_entities``
@@ -2687,9 +2699,7 @@ def render_all_pngs(
                 if render_program_graph_png(pg_json, pg_png, cfg=cfg):
                     out["program_graph"].append(pg_png)
                 root_png = run_dir / "program_graph.png"
-                if not root_png.exists() and render_program_graph_png(
-                    pg_json, root_png, cfg=cfg
-                ):
+                if not root_png.exists() and render_program_graph_png(pg_json, root_png, cfg=cfg):
                     out["program_graph"].append(root_png)
             except Exception as e:  # noqa: BLE001
                 logger.warning("program_graph PNG failed: %s", e)
@@ -2748,9 +2758,7 @@ def render_all_pngs(
                 if render_markov_blanket_png(mb_json, mb_png, cfg=cfg):
                     out["markov_blanket"].append(mb_png)
                 root_png = run_dir / "markov_blanket.png"
-                if not root_png.exists() and render_markov_blanket_png(
-                    mb_json, root_png, cfg=cfg
-                ):
+                if not root_png.exists() and render_markov_blanket_png(mb_json, root_png, cfg=cfg):
                     out["markov_blanket"].append(root_png)
             except Exception as e:  # noqa: BLE001
                 logger.warning("markov blanket PNG failed for %s: %s", mb_json, e)

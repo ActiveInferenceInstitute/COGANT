@@ -78,9 +78,7 @@ class CallGraphBuilder:
 
         calls = []
         for func in module.functions:
-            call_visitor = CallExtractorVisitor(
-                file_path, func.name, "module", symbol_table
-            )
+            call_visitor = CallExtractorVisitor(file_path, func.name, "module", symbol_table)
             # Parse again to visit AST
             try:
                 with open(file_path) as f:
@@ -94,9 +92,7 @@ class CallGraphBuilder:
 
         for cls in module.classes:
             for method in cls.methods:
-                call_visitor = CallExtractorVisitor(
-                    file_path, method.name, cls.name, symbol_table
-                )
+                call_visitor = CallExtractorVisitor(file_path, method.name, cls.name, symbol_table)
                 try:
                     with open(file_path) as f:
                         tree = ast.parse(f.read())
@@ -111,9 +107,7 @@ class CallGraphBuilder:
 
         return calls
 
-    def extract_calls_from_source(
-        self, source: str, file_path: Path
-    ) -> list[CallEdge]:
+    def extract_calls_from_source(self, source: str, file_path: Path) -> list[CallEdge]:
         """Extract function/method calls from Python source code.
 
         Args:
@@ -130,9 +124,7 @@ class CallGraphBuilder:
         try:
             tree = ast.parse(source)
             for func in module.functions:
-                call_visitor = CallExtractorVisitor(
-                    file_path, func.name, "module", symbol_table
-                )
+                call_visitor = CallExtractorVisitor(file_path, func.name, "module", symbol_table)
                 for node in tree.body:
                     if isinstance(node, ast.FunctionDef) and node.name == func.name:
                         call_visitor.visit(node)
@@ -291,9 +283,7 @@ class CallExtractorVisitor(ast.NodeVisitor):
         return hash_obj.hexdigest()[:16]
 
     @staticmethod
-    def _generate_call_id(
-        file_path: Path, caller: str, callee: str, line_num: int
-    ) -> str:
+    def _generate_call_id(file_path: Path, caller: str, callee: str, line_num: int) -> str:
         """Generate call edge ID.
 
         Args:

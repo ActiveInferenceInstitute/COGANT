@@ -95,7 +95,9 @@ class BoundaryMapper:
                 source_class = self._find_containing_class(source.id, graph)
                 target_class = self._find_containing_class(target.id, graph)
                 if (
-                    source_class and target_class and source_class != target_class
+                    source_class
+                    and target_class
+                    and source_class != target_class
                     and edge.kind == EdgeKind.CALLS
                 ):
                     cross_class_edges.append(edge)
@@ -134,14 +136,14 @@ class BoundaryMapper:
                 source_safe = source.id.replace("-", "_").replace(".", "_")
                 target_safe = target.id.replace("-", "_").replace(".", "_")
                 edge_label = edge.kind.value
-                weight = f" |{int(edge.weight)}|" if hasattr(edge, 'weight') and edge.weight > 1 else ""
+                weight = (
+                    f" |{int(edge.weight)}|" if hasattr(edge, "weight") and edge.weight > 1 else ""
+                )
                 lines.append(f"    {source_safe} -->|{edge_label}{weight}| {target_safe}")
 
         return "\n".join(lines)
 
-    def _find_containing_class(
-        self, node_id: str, graph: ProgramGraph
-    ) -> str | None:
+    def _find_containing_class(self, node_id: str, graph: ProgramGraph) -> str | None:
         """
         Find the class that contains a given node.
 
@@ -268,9 +270,7 @@ class BoundaryMapper:
 
         # Type coupling score (0-1): ratio of inter-type edges to total edges
         type_edges = self._find_inter_type_edges(graph)
-        type_coupling_score = (
-            len(type_edges) / len(graph.edges) if graph.edges else 0
-        )
+        type_coupling_score = len(type_edges) / len(graph.edges) if graph.edges else 0
         report["type_coupling_score"] = round(type_coupling_score, 3)
 
         # External dependencies (edges going out of repo)
@@ -287,9 +287,7 @@ class BoundaryMapper:
 
         return report
 
-    def _find_containing_module(
-        self, node_id: str, graph: ProgramGraph
-    ) -> str | None:
+    def _find_containing_module(self, node_id: str, graph: ProgramGraph) -> str | None:
         """
         Find the module that contains a given node.
 
@@ -302,10 +300,7 @@ class BoundaryMapper:
         """
         # Check if node has a "contained by" edge pointing to a module
         for edge in graph.edges.values():
-            if (
-                edge.target_id == node_id
-                and edge.kind == EdgeKind.CONTAINS
-            ):
+            if edge.target_id == node_id and edge.kind == EdgeKind.CONTAINS:
                 target = graph.get_node(edge.source_id)
                 if target and target.kind == NodeKind.MODULE:
                     return edge.source_id
@@ -391,9 +386,7 @@ class BoundaryMapper:
 
         if blanket is None:
             extractor = MarkovBlanketExtractor(graph)
-            blanket = extractor.extract(
-                strategy=cast("SeedStrategy", strategy), **extract_kwargs
-            )
+            blanket = extractor.extract(strategy=cast("SeedStrategy", strategy), **extract_kwargs)
         network = build_blanket_network(graph, blanket)
         return network.to_mermaid()
 
@@ -434,9 +427,7 @@ class BoundaryMapper:
 
         if blanket is None:
             extractor = MarkovBlanketExtractor(graph)
-            blanket = extractor.extract(
-                strategy=cast("SeedStrategy", strategy), **extract_kwargs
-            )
+            blanket = extractor.extract(strategy=cast("SeedStrategy", strategy), **extract_kwargs)
 
         def _safe(nid: str) -> str:
             return "n_" + nid.replace("-", "_").replace(".", "_").replace(":", "_")
@@ -467,16 +458,14 @@ class BoundaryMapper:
         for role, members in role_members.items():
             total = len(members)
             shown = members[:max_per_role]
-            lines.append(f"    subgraph {role}[\"{role_titles[role]} ({total})\"]")
+            lines.append(f'    subgraph {role}["{role_titles[role]} ({total})"]')
             for nid in shown:
                 node_id = _safe(nid)
-                lines.append(f"        {node_id}[\"{_label(nid)}\"]")
+                lines.append(f'        {node_id}["{_label(nid)}"]')
                 drawn.add(nid)
             if total > max_per_role:
                 placeholder = f"more_{role}"
-                lines.append(
-                    f"        {placeholder}([\"+{total - max_per_role} more\"])"
-                )
+                lines.append(f'        {placeholder}(["+{total - max_per_role} more"])')
             lines.append("    end")
 
         # Draw edges between drawn members.

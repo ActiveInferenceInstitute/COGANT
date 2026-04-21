@@ -6,19 +6,19 @@ from cogant.schemas.graph import ProgramGraph as ProgramGraph
 from cogant.schemas.semantic import SemanticMapping as SemanticMapping
 
 class StateVariableType(StrEnum):
-    BOOLEAN = 'boolean'
-    DISCRETE = 'discrete'
-    CONTINUOUS = 'continuous'
-    CATEGORICAL = 'categorical'
-    VECTOR = 'vector'
-    COMPOSITE = 'composite'
+    BOOLEAN = "boolean"
+    DISCRETE = "discrete"
+    CONTINUOUS = "continuous"
+    CATEGORICAL = "categorical"
+    VECTOR = "vector"
+    COMPOSITE = "composite"
 
 class ConfidenceLevel(StrEnum):
-    DEFINITE = 'definite'
-    HIGH = 'high'
-    MEDIUM = 'medium'
-    LOW = 'low'
-    UNCERTAIN = 'uncertain'
+    DEFINITE = "definite"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+    UNCERTAIN = "uncertain"
 
 @dataclass
 class StateVariable:
@@ -61,7 +61,9 @@ class StateVariableExtractor:
     state_variables: dict[str, StateVariable]
     factorization_map: dict[str, FactorizationInfo]
     def __init__(self, program_graph: ProgramGraph) -> None: ...
-    def extract(self, semantic_mappings: dict[str, SemanticMapping]) -> dict[str, StateVariable]: ...
+    def extract(
+        self, semantic_mappings: dict[str, SemanticMapping]
+    ) -> dict[str, StateVariable]: ...
     def get_state_variables(self) -> dict[str, StateVariable]: ...
     def get_factorization(self, var_id: str) -> FactorizationInfo | None: ...
     def compute_dimensionality(self) -> int: ...

@@ -141,8 +141,7 @@ class TestRuleDeterminism:
         # Extract stable signatures (ignore ids and timestamps)
         def sig(mappings):
             return frozenset(
-                (m.kind.value, tuple(sorted(m.graph_fragment_node_ids)))
-                for m in mappings
+                (m.kind.value, tuple(sorted(m.graph_fragment_node_ids))) for m in mappings
             )
 
         assert sig(mappings1) == sig(mappings2)
@@ -194,12 +193,8 @@ class TestRuleDeterminism:
         matches2 = rule.matches(graph, query2)
 
         # Signatures should match
-        sig1 = frozenset(
-            (m.get("source_id"), m.get("target_id")) for m in matches1
-        )
-        sig2 = frozenset(
-            (m.get("source_id"), m.get("target_id")) for m in matches2
-        )
+        sig1 = frozenset((m.get("source_id"), m.get("target_id")) for m in matches1)
+        sig2 = frozenset((m.get("source_id"), m.get("target_id")) for m in matches2)
 
         assert sig1 == sig2
 
@@ -290,8 +285,7 @@ class TestEngineDeterminism:
         # Signatures match
         def sig(mappings):
             return frozenset(
-                (m.kind.value, tuple(sorted(m.graph_fragment_node_ids)))
-                for m in mappings
+                (m.kind.value, tuple(sorted(m.graph_fragment_node_ids))) for m in mappings
             )
 
         assert sig(mappings1) == sig(mappings2)

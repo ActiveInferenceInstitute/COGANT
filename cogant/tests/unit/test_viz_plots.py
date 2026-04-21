@@ -1,11 +1,15 @@
 """Unit tests for viz/plots.py — StaticPlotter."""
-import os, sys
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 import pytest
-from cogant.viz.plots import StaticPlotter
+
 from cogant.graph.builder import ProgramGraphBuilder
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.schemas.graph import ProgramGraph, GraphMetadata
+from cogant.schemas.core import EdgeKind, NodeKind
+from cogant.schemas.graph import GraphMetadata, ProgramGraph
+from cogant.viz.plots import StaticPlotter
 
 
 def _small_graph() -> ProgramGraph:
@@ -24,6 +28,7 @@ def _small_graph() -> ProgramGraph:
 def _state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
         id="ss:test",
         schema_name="test",

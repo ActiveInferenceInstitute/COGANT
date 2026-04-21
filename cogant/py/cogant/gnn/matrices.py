@@ -70,7 +70,7 @@ logger = logging.getLogger(__name__)
 # {0.80/0.20, 0.85/0.15, 0.90/0.10, 0.95/0.05} on the 20-repo
 # fixture set and compare against hand-labeled likelihood matrices
 # (see ``docs/evaluation/CALIBRATION.md``).
-_DEFAULT_DIRECT_MASS = 0.9   # principled default (PyMDP convention)
+_DEFAULT_DIRECT_MASS = 0.9  # principled default (PyMDP convention)
 _DEFAULT_INDIRECT_MASS = 0.1  # principled default (1.0 - direct)
 
 # Numerical stability constant. 1e-9 is the canonical
@@ -160,29 +160,23 @@ class GNNMatrices:
             m for m in self._mappings if m.kind == MappingKind.OBSERVATION
         ]
         self._actions: list[SemanticMapping] = [
-            m
-            for m in self._mappings
-            if m.kind in (MappingKind.ACTION, MappingKind.POLICY)
+            m for m in self._mappings if m.kind in (MappingKind.ACTION, MappingKind.POLICY)
         ]
         self._constraints: list[SemanticMapping] = [
-            m
-            for m in self._mappings
-            if m.kind in (MappingKind.CONSTRAINT, MappingKind.PREFERENCE)
+            m for m in self._mappings if m.kind in (MappingKind.CONSTRAINT, MappingKind.PREFERENCE)
         ]
 
         # Fallback: if no HIDDEN_STATE semantic mappings are present but
         # the state space has variables, use those as the hidden-state
         # dimension so the matrices are always non-empty for real models.
-        self._use_state_space_vars = (
-            not self._hidden_states and bool(self.state_space.variables)
-        )
+        self._use_state_space_vars = not self._hidden_states and bool(self.state_space.variables)
 
         # Populated by compute_B() when the full B tensor would exceed
         # _MAX_B_ENTRIES.  Callers can inspect these to understand the
         # approximation that was applied.
         self._b_truncated: bool = False
-        self._b_n_states_full: int = 0   # untruncated n_states
-        self._b_n_states_kept: int = 0   # n_states after truncation
+        self._b_n_states_full: int = 0  # untruncated n_states
+        self._b_n_states_kept: int = 0  # n_states after truncation
 
     # ------------------------------------------------------------------
     # Dimensions
@@ -350,9 +344,7 @@ class GNNMatrices:
                 n_uniform += 1
                 continue
             direct_share = _DEFAULT_DIRECT_MASS / n_direct
-            indirect_share = (
-                _DEFAULT_INDIRECT_MASS / n_indirect if n_indirect > 0 else 0.0
-            )
+            indirect_share = _DEFAULT_INDIRECT_MASS / n_indirect if n_indirect > 0 else 0.0
             for j in range(n_states):
                 A[i][j] = direct_share if j in direct else indirect_share
             A[i] = _normalize_row(A[i])
@@ -362,7 +354,11 @@ class GNNMatrices:
         logger.info(
             "A matrix computed: shape [%d x %d], %d/%d rows with direct evidence, "
             "%d uniform (no READS/OBSERVES edges)",
-            n_obs, n_states, n_informed, n_obs, n_uniform,
+            n_obs,
+            n_states,
+            n_informed,
+            n_obs,
+            n_uniform,
         )
 
         return A
@@ -413,6 +409,7 @@ class GNNMatrices:
         if full_b_entries > _MAX_B_ENTRIES and n_actions > 0:
             # Solve for max_k: k² × n_actions ≤ _MAX_B_ENTRIES
             import math
+
             max_k = max(1, int(math.isqrt(_MAX_B_ENTRIES // n_actions)))
             self._b_truncated = True
             self._b_n_states_kept = max_k
@@ -420,15 +417,20 @@ class GNNMatrices:
                 "B tensor would be %d entries (%d states × %d states × %d actions) "
                 "which exceeds _MAX_B_ENTRIES=%d. Truncating to top-%d state nodes "
                 "by graph degree. Set _MAX_B_ENTRIES higher to disable truncation.",
-                full_b_entries, n_states, n_states, n_actions,
-                _MAX_B_ENTRIES, max_k,
+                full_b_entries,
+                n_states,
+                n_states,
+                n_actions,
+                _MAX_B_ENTRIES,
+                max_k,
             )
             logger.info(
-                "B tensor truncated: %d → %d state nodes (%.1f%% reduction, "
-                "%d → %d entries)",
-                n_states, max_k,
+                "B tensor truncated: %d → %d state nodes (%.1f%% reduction, %d → %d entries)",
+                n_states,
+                max_k,
                 (1 - max_k / n_states) * 100 if n_states > 0 else 0.0,
-                full_b_entries, max_k * max_k * n_actions,
+                full_b_entries,
+                max_k * max_k * n_actions,
             )
             state_ids = self._top_k_state_ids(state_ids, max_k)
             n_states = len(state_ids)
@@ -492,8 +494,12 @@ class GNNMatrices:
         logger.info(
             "B tensor computed: shape [%d x %d x %d], %d/%d writing actions "
             "(%d identity/stay), direct_mass=%.2f",
-            n_states, n_states, n_actions,
-            n_writing_actions, n_actions, n_identity_actions,
+            n_states,
+            n_states,
+            n_actions,
+            n_writing_actions,
+            n_actions,
+            n_identity_actions,
             _DEFAULT_DIRECT_MASS,
         )
 
@@ -521,7 +527,7 @@ class GNNMatrices:
         C: list[float] = [0.0] * n_obs
 
         n_preferred = 0  # observations with nonzero preference
-        n_aversive = 0   # observations with negative preference
+        n_aversive = 0  # observations with negative preference
         for i in range(n_obs):
             obs_nid = obs_node_ids[i] if i < len(obs_node_ids) else ""
             if not obs_nid:
@@ -554,7 +560,10 @@ class GNNMatrices:
         n_neutral = n_obs - n_preferred - n_aversive
         logger.info(
             "C vector computed: length %d, %d preferred, %d aversive, %d neutral",
-            n_obs, n_preferred, n_aversive, n_neutral,
+            n_obs,
+            n_preferred,
+            n_aversive,
+            n_neutral,
         )
 
         return C
@@ -594,11 +603,7 @@ class GNNMatrices:
                 node_id = getattr(var, "node_id", "")
                 if node_id and node_id in self.graph.nodes:
                     for edge in self._edges_to(node_id) + self._edges_from(node_id):
-                        other_id = (
-                            edge.source_id
-                            if edge.target_id == node_id
-                            else edge.target_id
-                        )
+                        other_id = edge.source_id if edge.target_id == node_id else edge.target_id
                         other = self.graph.nodes.get(other_id)
                         if other and other.kind == NodeKind.CONFIGURATION:
                             any_bias = True
@@ -613,19 +618,17 @@ class GNNMatrices:
             # Hidden-state semantic mappings: use mapping confidence as
             # a soft prior weight so that high-confidence hidden states
             # receive more prior mass.
-            weights = [
-                max(float(m.confidence_score or 0.0), _EPSILON)
-                for m in self._hidden_states
-            ]
+            weights = [max(float(m.confidence_score or 0.0), _EPSILON) for m in self._hidden_states]
             D = _normalize_vector(weights)
 
         # Log D vector computation details
         peak_idx = max(range(len(D)), key=lambda j: D[j]) if D else -1
         peak_val = D[peak_idx] if peak_idx >= 0 else 0.0
         logger.info(
-            "D vector computed: length %d, peak at index %d (%.4f), "
-            "source=%s",
-            len(D), peak_idx, peak_val,
+            "D vector computed: length %d, peak at index %d (%.4f), source=%s",
+            len(D),
+            peak_idx,
+            peak_val,
             "state_space_vars" if self._use_state_space_vars else "hidden_state_mappings",
         )
 
@@ -664,7 +667,7 @@ class GNNMatrices:
                 "max_b_entries": _MAX_B_ENTRIES,
                 "reason": (
                     f"B tensor ({self._b_n_states_full}² × {self.n_actions} = "
-                    f"{self._b_n_states_full ** 2 * self.n_actions:,} entries) "
+                    f"{self._b_n_states_full**2 * self.n_actions:,} entries) "
                     f"exceeded _MAX_B_ENTRIES={_MAX_B_ENTRIES:,}; "
                     f"kept top-{self._b_n_states_kept} state nodes by degree."
                 ),
@@ -722,9 +725,7 @@ class GNNMatrices:
             n_rows = len(B)
             n_cols = len(B[0]) if B else 0
             n_depth = len(B[0][0]) if (B and B[0]) else 0
-            lines.append(
-                f"B[[rows={n_rows}][cols={n_cols}][depth={n_depth}]]"
-            )
+            lines.append(f"B[[rows={n_rows}][cols={n_cols}][depth={n_depth}]]")
             for k in range(n_depth):
                 lines.append(f"  # action={k}")
                 for r in range(n_rows):
@@ -783,9 +784,7 @@ class GNNMatrices:
             else:
                 for i, row in enumerate(A):
                     if abs(sum(row) - 1.0) > 1e-6:  # row-norm tolerance
-                        errors.append(
-                            f"A row {i} does not sum to 1 (sum={sum(row):.6f})"
-                        )
+                        errors.append(f"A row {i} does not sum to 1 (sum={sum(row):.6f})")
 
         # B: n_states x n_states x n_actions
         if n_s > 0:
@@ -841,11 +840,8 @@ class GNNMatrices:
         D = self.compute_D()
 
         result: dict[str, Any] = {
-            "A": [list(row) if hasattr(row, '__iter__') else row
-                  for row in A],
-            "B": [[list(cell) if hasattr(cell, '__iter__') else cell
-                   for cell in row]
-                  for row in B],
+            "A": [list(row) if hasattr(row, "__iter__") else row for row in A],
+            "B": [[list(cell) if hasattr(cell, "__iter__") else cell for cell in row] for row in B],
             "C": list(C) if C else [],
             "D": list(D) if D else [],
             "n_states": self.n_states,

@@ -25,7 +25,6 @@ import pytest
 from cogant.scoring.drift import DriftAnalyzer, DriftScore
 from cogant.scoring.metrics import CodebaseMetrics, MetricsReport
 
-
 # --------------------------------------------------------------------- helpers
 
 
@@ -46,18 +45,12 @@ def make_bundle(
     """
     graph = {
         "nodes": [{"id": nid, "kind": "function", "attributes": {}} for nid in node_ids],
-        "edges": [
-            {"source": src, "target": tgt, "kind": "CALLS"} for src, tgt in edges
-        ],
+        "edges": [{"source": src, "target": tgt, "kind": "CALLS"} for src, tgt in edges],
     }
     state_space = {
         "states": [{"var_id": s} for s in states],
-        "observations": [
-            {"modality_id": o, "observes_state_vars": []} for o in observations
-        ],
-        "actions": [
-            {"action_id": a, "affects_state_vars": []} for a in actions
-        ],
+        "observations": [{"modality_id": o, "observes_state_vars": []} for o in observations],
+        "actions": [{"action_id": a, "affects_state_vars": []} for a in actions],
         "policies": [{"policy_id": p} for p in policies],
     }
     mappings = mappings or {}
@@ -120,9 +113,7 @@ class TestDriftAnalyzerLegacyHelpers:
         assert analyzer._count_removed_nodes(a, b) == 2
 
     def test_legacy_count_edge_changes(self):
-        a = make_bundle(
-            node_ids=("n1", "n2"), edges=(("n1", "n2"),), legacy=True
-        )
+        a = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),), legacy=True)
         b = make_bundle(
             node_ids=("n1", "n2", "n3"),
             edges=(("n1", "n2"), ("n2", "n3"), ("n1", "n3")),
@@ -339,6 +330,7 @@ class TestDriftAnalyzerAnalyzeAndReports:
 
 # =============================================================== Metrics
 
+
 class TestCodebaseMetricsReport:
     """Exercise CodebaseMetrics edge cases + format_report / to_dict."""
 
@@ -357,10 +349,7 @@ class TestCodebaseMetricsReport:
 
     def test_complexity_score_many_nodes(self):
         nodes = [{"id": f"n{i}"} for i in range(10)]
-        edges = [
-            {"source": f"n{i}", "target": f"n{i+1}", "kind": "CALLS"}
-            for i in range(9)
-        ]
+        edges = [{"source": f"n{i}", "target": f"n{i + 1}", "kind": "CALLS"} for i in range(9)]
         metrics = CodebaseMetrics({"nodes": nodes, "edges": edges}, {}, {})
         score = metrics.complexity_score()
         assert 0.0 < score < 1.0
@@ -506,9 +495,7 @@ class TestCodebaseMetricsReport:
             {},
             {
                 "states": [{"var_id": "v1"}, {"var_id": "v2"}],
-                "observations": [
-                    {"modality_id": "o1", "observes_state_vars": ["v1"]}
-                ],
+                "observations": [{"modality_id": "o1", "observes_state_vars": ["v1"]}],
                 "actions": [],
             },
             {},
@@ -525,9 +512,7 @@ class TestCodebaseMetricsReport:
             {
                 "states": [{"var_id": "v1"}, {"var_id": "v2"}],
                 "observations": [],
-                "actions": [
-                    {"action_id": "a1", "affects_state_vars": ["v2"]}
-                ],
+                "actions": [{"action_id": "a1", "affects_state_vars": ["v2"]}],
             },
             {},
         )
@@ -567,12 +552,8 @@ class TestCodebaseMetricsReport:
             },
             {
                 "states": [{"var_id": "v1"}],
-                "observations": [
-                    {"modality_id": "o1", "observes_state_vars": ["v1"]}
-                ],
-                "actions": [
-                    {"action_id": "a1", "affects_state_vars": ["v1"]}
-                ],
+                "observations": [{"modality_id": "o1", "observes_state_vars": ["v1"]}],
+                "actions": [{"action_id": "a1", "affects_state_vars": ["v1"]}],
             },
             {"n1": {}},
         )

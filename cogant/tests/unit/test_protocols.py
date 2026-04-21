@@ -1,18 +1,19 @@
 """Unit tests for protocol definitions."""
 
+from typing import Any
+
 import pytest
-from typing import Any, Protocol
 
 from cogant.protocols import (
-    Translatable,
     Analyzable,
-    Serializable,
-    Visualizable,
-    Validatable,
     Exportable,
-    PipelineStage,
-    TranslationRule,
     GraphBackend,
+    PipelineStage,
+    Serializable,
+    Translatable,
+    TranslationRule,
+    Validatable,
+    Visualizable,
 )
 
 

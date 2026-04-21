@@ -98,9 +98,7 @@ class ComplexityVisitor(ast.NodeVisitor):
         """Visit async function definition."""
         self._visit_function_like(node)
 
-    def _visit_function_like(
-        self, node: ast.FunctionDef | ast.AsyncFunctionDef
-    ) -> None:
+    def _visit_function_like(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
         """Process a function or method node.
 
         Args:
@@ -174,9 +172,7 @@ class ComplexityVisitor(ast.NodeVisitor):
                 complexity += 1
         return complexity
 
-    def _compute_cognitive_complexity(
-        self, body: list[ast.stmt], base_depth: int = 0
-    ) -> int:
+    def _compute_cognitive_complexity(self, body: list[ast.stmt], base_depth: int = 0) -> int:
         """Compute cognitive complexity for a code block.
 
         Penalizes nesting depth and decision points.

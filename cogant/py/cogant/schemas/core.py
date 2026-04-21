@@ -10,6 +10,7 @@ __all__ = ["NodeKind", "EdgeKind", "Node", "Edge"]
 
 class NodeKind(StrEnum):
     """Types of nodes in a program graph."""
+
     # Code structure
     REPO = "repo"
     MODULE = "module"
@@ -39,6 +40,7 @@ class NodeKind(StrEnum):
 
 class EdgeKind(StrEnum):
     """Types of edges in a program graph."""
+
     # Structural
     CONTAINS = "contains"
     IMPORTS = "imports"

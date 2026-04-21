@@ -100,8 +100,7 @@ class MetricsRegistry:
         with self._lock:
             return {
                 "counters": {
-                    n: {"value": c.value, "labels": c.labels}
-                    for n, c in self._counters.items()
+                    n: {"value": c.value, "labels": c.labels} for n, c in self._counters.items()
                 },
                 "histograms": {
                     n: {

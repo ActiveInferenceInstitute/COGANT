@@ -50,8 +50,13 @@ def _resolve_upstream_flag(explicit: bool | None) -> bool:
 class ValidationResult:
     """Result of a GNN package validation."""
 
-    def __init__(self, valid: bool = False, errors: list[str] | None = None,
-                 warnings: list[str] | None = None, score: float = 0.0):
+    def __init__(
+        self,
+        valid: bool = False,
+        errors: list[str] | None = None,
+        warnings: list[str] | None = None,
+        score: float = 0.0,
+    ):
         """
         Initialize validation result.
 
@@ -236,7 +241,8 @@ class GNNValidator:
 
         logger.info(
             "Validating GNN package: %s (upstream_gnn=%s)",
-            self.package_dir, self._upstream_gnn,
+            self.package_dir,
+            self._upstream_gnn,
         )
 
         # Check 1: Directory exists
@@ -273,8 +279,10 @@ class GNNValidator:
 
         logger.info(
             "Validation complete: %s (score=%.1f%%, %d errors, %d warnings)",
-            self.result.valid, self.result.score,
-            len(self.result.errors), len(self.result.warnings),
+            self.result.valid,
+            self.result.score,
+            len(self.result.errors),
+            len(self.result.warnings),
         )
         return self.result
 
@@ -410,13 +418,9 @@ class GNNValidator:
         # A: rows == n_obs, cols == n_states, rows sum to 1.
         if n_obs > 0 and n_states > 0:
             if len(A) != n_obs:
-                errors.append(
-                    f"A row count {len(A)} != n_obs {n_obs}"
-                )
+                errors.append(f"A row count {len(A)} != n_obs {n_obs}")
             elif A and any(len(row) != n_states for row in A):
-                errors.append(
-                    f"A column count mismatch; expected {n_states}"
-                )
+                errors.append(f"A column count mismatch; expected {n_states}")
             else:
                 for i, row in enumerate(A):
                     # Tolerance 1e-6 — stability constant. A-matrix rows
@@ -427,25 +431,16 @@ class GNNValidator:
                     # headroom and matches the pymdp / scipy convention
                     # for stochastic matrix row-normalization checks.
                     if abs(sum(row) - 1.0) > 1e-6:
-                        errors.append(
-                            f"A row {i} does not sum to 1 "
-                            f"(sum={sum(row):.6f})"
-                        )
+                        errors.append(f"A row {i} does not sum to 1 (sum={sum(row):.6f})")
 
         # B: shape n_states x n_states x n_actions.
         if n_states > 0:
             if len(B) != n_states:
-                errors.append(
-                    f"B first dim {len(B)} != n_states {n_states}"
-                )
+                errors.append(f"B first dim {len(B)} != n_states {n_states}")
             elif any(len(row) != n_states for row in B):
-                errors.append(
-                    f"B second dim mismatch; expected {n_states}"
-                )
+                errors.append(f"B second dim mismatch; expected {n_states}")
             elif any(len(cell) != n_actions for row in B for cell in row):
-                errors.append(
-                    f"B third dim mismatch; expected {n_actions}"
-                )
+                errors.append(f"B third dim mismatch; expected {n_actions}")
 
         # C: length n_obs.
         if n_obs > 0 and len(C) != n_obs:
@@ -454,17 +449,13 @@ class GNNValidator:
         # D: length n_states, sums to 1.
         if n_states > 0:
             if len(D) != n_states:
-                errors.append(
-                    f"D length {len(D)} != n_states {n_states}"
-                )
+                errors.append(f"D length {len(D)} != n_states {n_states}")
             elif D and abs(sum(D) - 1.0) > 1e-6:
                 # Tolerance 1e-6 — stability constant, same rationale as
                 # A-row tolerance above (pymdp/scipy convention for
                 # probability-simplex sum checks; ~8 orders of magnitude
                 # headroom over float64 accumulation drift).
-                errors.append(
-                    f"D does not sum to 1 (sum={sum(D):.6f})"
-                )
+                errors.append(f"D does not sum to 1 (sum={sum(D):.6f})")
 
         return errors
 
@@ -689,9 +680,9 @@ class GNNValidator:
         """
         # Score based on errors and warnings.
         # See the docstring above for per-constant justification.
-        max_points = 100              # percentage scale
-        points_per_error = 10         # 10 errors → zero score
-        points_per_warning = 2        # 5:1 severity ratio vs. errors
+        max_points = 100  # percentage scale
+        points_per_error = 10  # 10 errors → zero score
+        points_per_warning = 2  # 5:1 severity ratio vs. errors
 
         score = max_points
         score -= len(self.result.errors) * points_per_error
@@ -703,4 +694,6 @@ class GNNValidator:
         # see docstring — TODO(calibration) on 20-repo corpus).
         self.result.valid = len(self.result.errors) == 0 and score >= 80
 
-        logger.debug(f"  Final score: {self.result.score:.1f}% - {'VALID' if self.result.valid else 'INVALID'}")
+        logger.debug(
+            f"  Final score: {self.result.score:.1f}% - {'VALID' if self.result.valid else 'INVALID'}"
+        )

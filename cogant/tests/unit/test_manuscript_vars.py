@@ -225,6 +225,6 @@ def test_every_registered_path_is_non_empty_string(mv):
     for placeholder, path in mv.MANUSCRIPT_VARS.items():
         assert isinstance(path, str) and path, f"empty path for {placeholder!r}"
         # Must contain only identifier / dot characters.
-        assert all(
-            part.replace("_", "").isalnum() for part in path.split(".")
-        ), f"invalid dotted path for {placeholder!r}: {path!r}"
+        assert all(part.replace("_", "").isalnum() for part in path.split(".")), (
+            f"invalid dotted path for {placeholder!r}: {path!r}"
+        )

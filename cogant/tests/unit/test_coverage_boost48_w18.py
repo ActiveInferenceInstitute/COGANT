@@ -14,7 +14,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -23,20 +22,24 @@ pytestmark = pytest.mark.unit
 # config/presets.py — get_preset and list_presets
 # ---------------------------------------------------------------------------
 
+
 class TestConfigPresets:
     def test_get_preset_unknown_raises(self):
         from cogant.config.presets import get_preset
+
         with pytest.raises(ValueError, match="Unknown preset"):
             get_preset("nonexistent_preset_xyz")
 
     def test_list_presets_returns_list(self):
         from cogant.config.presets import list_presets
+
         result = list_presets()
         assert isinstance(result, list)
         assert len(result) >= 1
 
     def test_get_preset_valid(self):
         from cogant.config.presets import get_preset, list_presets
+
         preset_name = list_presets()[0]
         result = get_preset(preset_name)
         assert isinstance(result, dict)
@@ -46,9 +49,11 @@ class TestConfigPresets:
 # ingest/files.py — FileEnumerator with gitignore and checksums
 # ---------------------------------------------------------------------------
 
+
 class TestFileEnumeratorWithGitignore:
     def test_gitignore_loads_patterns(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         # Create a .gitignore
         (tmp_path / ".gitignore").write_text("*.pyc\nbuild/\n# comment\n\n")
         (tmp_path / "module.py").write_text("x = 1")
@@ -64,6 +69,7 @@ class TestFileEnumeratorWithGitignore:
 
     def test_gitignore_wildcard_prefix_ignores_file(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / ".gitignore").write_text("*.pyc\n")
         (tmp_path / "module.py").write_text("x = 1")
         (tmp_path / "compiled.pyc").write_bytes(b"bytecode")
@@ -75,6 +81,7 @@ class TestFileEnumeratorWithGitignore:
 
     def test_gitignore_no_file_returns_empty_patterns(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         enumerator = FileEnumerator(repo_root=tmp_path)
         patterns = enumerator._load_gitignore()
         assert isinstance(patterns, set)
@@ -82,6 +89,7 @@ class TestFileEnumeratorWithGitignore:
 
     def test_include_test_files_false(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "module.py").write_text("x = 1")
         (tmp_path / "test_module.py").write_text("import pytest")
         enumerator = FileEnumerator(repo_root=tmp_path)
@@ -92,6 +100,7 @@ class TestFileEnumeratorWithGitignore:
 
     def test_include_test_files_true(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "module.py").write_text("x = 1")
         (tmp_path / "test_module.py").write_text("import pytest")
         enumerator = FileEnumerator(repo_root=tmp_path)
@@ -101,6 +110,7 @@ class TestFileEnumeratorWithGitignore:
 
     def test_compute_checksums_option(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "module.py").write_text("x = 1")
         enumerator = FileEnumerator(repo_root=tmp_path)
         files = enumerator.enumerate(compute_checksums=True)
@@ -115,6 +125,7 @@ class TestFileEnumeratorWithGitignore:
 # static/parser.py — parse_string Exception path (line 229-231), _ast_to_str
 # ---------------------------------------------------------------------------
 
+
 class TestPythonASTParserExtraFallbacks:
     def test_parse_string_generic_exception_path(self):
         """The 'except Exception' branch on line 229-231 catches non-SyntaxErrors.
@@ -122,6 +133,7 @@ class TestPythonASTParserExtraFallbacks:
         We test it by checking that the module captures errors properly.
         """
         from cogant.static.parser import PythonASTParser
+
         parser = PythonASTParser()
         # This will hit the SyntaxError branch (already covered), just verify behavior
         module = parser.parse_string("def bad(:\n")
@@ -129,6 +141,7 @@ class TestPythonASTParserExtraFallbacks:
 
     def test_parse_file_exception_path(self, tmp_path):
         from cogant.static.parser import PythonASTParser
+
         parser = PythonASTParser()
         broken = tmp_path / "broken.py"
         broken.write_text("def bad(:\n    pass\n")
@@ -137,28 +150,36 @@ class TestPythonASTParserExtraFallbacks:
 
     def test_ast_to_str_on_name(self):
         import ast
+
         from cogant.static.parser import PythonASTParser
+
         node = ast.Name(id="foo", ctx=ast.Load())
         result = PythonASTParser._ast_to_str(node)
         assert result == "foo"
 
     def test_ast_to_str_on_constant_int(self):
         import ast
+
         from cogant.static.parser import PythonASTParser
+
         node = ast.Constant(value=42)
         result = PythonASTParser._ast_to_str(node)
         assert "42" in result
 
     def test_ast_to_str_on_constant_str(self):
         import ast
+
         from cogant.static.parser import PythonASTParser
+
         node = ast.Constant(value="hello")
         result = PythonASTParser._ast_to_str(node)
         assert "hello" in result
 
     def test_ast_to_str_on_attribute(self):
         import ast
+
         from cogant.static.parser import PythonASTParser
+
         node = ast.Attribute(
             value=ast.Name(id="os", ctx=ast.Load()),
             attr="path",
@@ -169,12 +190,14 @@ class TestPythonASTParserExtraFallbacks:
 
     def test_parse_string_with_async_function(self):
         from cogant.static.parser import PythonASTParser, PythonModule
+
         parser = PythonASTParser()
         module = parser.parse_string("async def fetch():\n    pass\n")
         assert isinstance(module, PythonModule)
 
     def test_parse_string_with_class_and_methods(self):
         from cogant.static.parser import PythonASTParser
+
         parser = PythonASTParser()
         source = (
             "class Foo:\n"
@@ -189,6 +212,7 @@ class TestPythonASTParserExtraFallbacks:
 
     def test_parse_string_with_imports(self):
         from cogant.static.parser import PythonASTParser
+
         parser = PythonASTParser()
         source = "import os\nfrom pathlib import Path\n"
         module = parser.parse_string(source)
@@ -196,6 +220,7 @@ class TestPythonASTParserExtraFallbacks:
 
     def test_parse_string_with_assignments(self):
         from cogant.static.parser import PythonASTParser
+
         parser = PythonASTParser()
         source = "x: int = 1\ny = 'hello'\n"
         module = parser.parse_string(source)
@@ -206,18 +231,24 @@ class TestPythonASTParserExtraFallbacks:
 # gnn/json_export.py — GNNJSONExporter (empty state space/process)
 # ---------------------------------------------------------------------------
 
+
 def _make_json_exporter():
     from cogant.gnn.json_export import GNNJSONExporter
     from cogant.graph.builder import ProgramGraphBuilder
+    from cogant.process.extractor import ProcessModel
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
-    from cogant.process.extractor import ProcessModel
 
     graph = ProgramGraphBuilder(repo_uri="file:///test").finalize()
     ss = StateSpaceModel(
-        id="ss1", schema_name="test",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="ss1",
+        schema_name="test",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
     proc = ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
@@ -236,6 +267,7 @@ class TestGNNJSONExporter:
         assert isinstance(result, str)
         # Should be valid JSON
         import json
+
         data = json.loads(result)
         assert isinstance(data, dict)
 
@@ -253,10 +285,10 @@ class TestGNNJSONExporter:
     def test_export_with_nodes_in_graph(self):
         from cogant.gnn.json_export import GNNJSONExporter
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.process.extractor import ProcessModel
+        from cogant.schemas.core import EdgeKind, NodeKind
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
-        from cogant.process.extractor import ProcessModel
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
@@ -265,9 +297,14 @@ class TestGNNJSONExporter:
         graph = builder.finalize()
 
         ss = StateSpaceModel(
-            id="ss1", schema_name="test",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ss1",
+            schema_name="test",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         proc = ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
@@ -279,6 +316,7 @@ class TestGNNJSONExporter:
 # ---------------------------------------------------------------------------
 # api/orchestration.py — program_graph_to_dict (light coverage)
 # ---------------------------------------------------------------------------
+
 
 class TestOrchestrationProgramGraphToDict:
     def test_empty_graph_to_dict(self):
@@ -292,7 +330,7 @@ class TestOrchestrationProgramGraphToDict:
     def test_graph_with_nodes_to_dict(self):
         from cogant.api.orchestration import program_graph_to_dict
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mymod", "mymod", path="mymod.py")

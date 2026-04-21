@@ -8,18 +8,18 @@ from .base import CogantBaseModel as CogantBaseModel
 from .base import Span as Span
 
 class EvidenceKind(StrEnum):
-    SOURCE_SPAN = 'source_span'
-    AST_FACT = 'ast_fact'
-    TRACE_EVENT = 'trace_event'
-    TEST_ASSERTION = 'test_assertion'
-    CONFIG_ENTRY = 'config_entry'
-    COMMIT_EVENT = 'commit_event'
-    TYPE_SIGNATURE = 'type_signature'
-    STATIC_ANALYSIS = 'static_analysis'
-    DATAFLOW = 'dataflow'
-    CONTROL_FLOW = 'control_flow'
-    SEMANTIC_ANNOTATION = 'semantic_annotation'
-    DOCUMENTATION = 'documentation'
+    SOURCE_SPAN = "source_span"
+    AST_FACT = "ast_fact"
+    TRACE_EVENT = "trace_event"
+    TEST_ASSERTION = "test_assertion"
+    CONFIG_ENTRY = "config_entry"
+    COMMIT_EVENT = "commit_event"
+    TYPE_SIGNATURE = "type_signature"
+    STATIC_ANALYSIS = "static_analysis"
+    DATAFLOW = "dataflow"
+    CONTROL_FLOW = "control_flow"
+    SEMANTIC_ANNOTATION = "semantic_annotation"
+    DOCUMENTATION = "documentation"
 
 class ProvenanceRecord(CogantBaseModel):
     evidence_id: str

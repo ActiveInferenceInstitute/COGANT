@@ -10,7 +10,7 @@ from __future__ import annotations
 import math
 import types
 
-from cogant.runtime import AgentConfig, AgentStep, AgentRuntime, run_until_convergence, run_n_steps
+from cogant.runtime import AgentConfig, AgentRuntime, AgentStep, run_n_steps, run_until_convergence
 from cogant.runtime.metrics import free_energy, kl_divergence
 
 
@@ -25,14 +25,12 @@ def _make_simple_matrices_ns() -> types.SimpleNamespace:
         C=[1.0, -1.0],
         D=[0.5, 0.5],
         likelihood=lambda state_dist: [
-            sum(a * s for a, s in zip(row, state_dist))
+            sum(a * s for a, s in zip(row, state_dist, strict=False))
             for row in [[0.9, 0.1], [0.1, 0.9]]
         ],
-        transition=lambda state_dist, action=0: (
-            _transition_helper(state_dist, action)
-        ),
+        transition=lambda state_dist, action=0: _transition_helper(state_dist, action),
         preference_score=lambda obs_dist: sum(
-            c * o for c, o in zip([1.0, -1.0], obs_dist)
+            c * o for c, o in zip([1.0, -1.0], obs_dist, strict=False)
         ),
     )
 
@@ -110,8 +108,7 @@ def test_convergence_halts() -> None:
         C=[0.0, 0.0],
         D=[0.5, 0.5],
         likelihood=lambda s: [
-            sum(a * x for a, x in zip(row, s))
-            for row in [[1.0, 0.0], [0.0, 1.0]]
+            sum(a * x for a, x in zip(row, s, strict=False)) for row in [[1.0, 0.0], [0.0, 1.0]]
         ],
         transition=lambda s, action=0: list(s),
         preference_score=lambda o: 0.0,
@@ -145,7 +142,7 @@ def test_single_state_agent() -> None:
         B=[[[1.0]]],
         C=[0.0],
         D=[1.0],
-        likelihood=lambda s: [sum(a * x for a, x in zip([1.0], s))],
+        likelihood=lambda s: [sum(a * x for a, x in zip([1.0], s, strict=False))],
         transition=lambda s, action=0: [1.0],
         preference_score=lambda o: 0.0,
     )
@@ -158,8 +155,8 @@ def test_single_state_agent() -> None:
 
 def test_runtime_with_rendered_matrices() -> None:
     """Create a ReverseGNNModel, render_matrices_module, exec it, pass to AgentRuntime."""
-    from cogant.reverse.parser import ReverseGNNModel
     from cogant.reverse.matrices import render_matrices_module
+    from cogant.reverse.parser import ReverseGNNModel
 
     model = ReverseGNNModel(
         model_name="test_model",
@@ -211,7 +208,9 @@ def test_module_level_run_functions() -> None:
         B=[[[1.0], [0.0]], [[0.0], [1.0]]],
         C=[0.0, 0.0],
         D=[0.5, 0.5],
-        likelihood=lambda s: [sum(a * x for a, x in zip(row, s)) for row in [[1.0, 0.0], [0.0, 1.0]]],
+        likelihood=lambda s: [
+            sum(a * x for a, x in zip(row, s, strict=False)) for row in [[1.0, 0.0], [0.0, 1.0]]
+        ],
         transition=lambda s, action=0: list(s),
         preference_score=lambda o: 0.0,
     )

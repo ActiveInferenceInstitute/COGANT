@@ -130,9 +130,7 @@ class CoverageIngester:
                             uncovered_lines.append(line_num)
 
                         if is_branch:
-                            condition_coverage = line_el.get(
-                                "condition-coverage", ""
-                            )
+                            condition_coverage = line_el.get("condition-coverage", "")
                             branches.append(
                                 {
                                     "line": line_num,
@@ -155,8 +153,7 @@ class CoverageIngester:
                 )
 
         logger.info(
-            f"Parsed {len(files)} classes, line_rate={line_rate:.2%}, "
-            f"branch_rate={branch_rate:.2%}"
+            f"Parsed {len(files)} classes, line_rate={line_rate:.2%}, branch_rate={branch_rate:.2%}"
         )
 
         self.coverage_data = {
@@ -216,15 +213,12 @@ class CoverageIngester:
             # numbits is a binary blob encoding which lines were executed.
 
             # Check which tables exist to handle schema variations.
-            cursor.execute(
-                "SELECT name FROM sqlite_master WHERE type='table'"
-            )
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
             tables = {row[0] for row in cursor.fetchall()}
 
             if "file" not in tables:
                 logger.warning(
-                    f"No 'file' table in {coverage_file}; "
-                    "may not be a coverage.py database"
+                    f"No 'file' table in {coverage_file}; may not be a coverage.py database"
                 )
                 conn.close()
                 self.coverage_data = {
@@ -242,9 +236,7 @@ class CoverageIngester:
             if "line_bits" in tables:
                 # coverage.py >= 5.x schema with line_bits blob
                 cursor.execute(
-                    "SELECT f.path, lb.numbits "
-                    "FROM file f "
-                    "JOIN line_bits lb ON f.id = lb.file_id"
+                    "SELECT f.path, lb.numbits FROM file f JOIN line_bits lb ON f.id = lb.file_id"
                 )
                 for filepath, numbits_blob in cursor.fetchall():
                     line_numbers = _decode_numbits(numbits_blob)
@@ -303,9 +295,7 @@ class CoverageIngester:
             }
             return self.coverage_data
 
-        percent = (
-            (covered_lines_total / total_lines * 100.0) if total_lines > 0 else 0.0
-        )
+        percent = (covered_lines_total / total_lines * 100.0) if total_lines > 0 else 0.0
 
         logger.info(
             f"Parsed {len(files)} files, {covered_lines_total}/{total_lines} "

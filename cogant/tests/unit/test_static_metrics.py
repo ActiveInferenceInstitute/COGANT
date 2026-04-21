@@ -1,14 +1,14 @@
 """Unit tests for static metrics module."""
 
-import pytest
 import math
 from pathlib import Path
+
+import pytest
 
 from cogant.static.metrics import (
     CodeMetrics,
     HalsteadMetrics,
     MetricsAnalyzer,
-    HalsteadVisitor,
 )
 
 
@@ -325,9 +325,7 @@ class Calculator:
     def test_analyze_file_not_found(self, tmp_path: Path) -> None:
         """Test analyze_file with nonexistent file."""
         analyzer = MetricsAnalyzer()
-        code_metrics, halstead_metrics = analyzer.analyze_file(
-            tmp_path / "nonexistent.py"
-        )
+        code_metrics, halstead_metrics = analyzer.analyze_file(tmp_path / "nonexistent.py")
         assert code_metrics.lines_of_code == 0
         assert halstead_metrics.vocabulary == 0
 

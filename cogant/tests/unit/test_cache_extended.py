@@ -8,14 +8,12 @@ hash_file on binary content, and hash_repo with custom extensions.
 from __future__ import annotations
 
 import json
-import time
 from pathlib import Path
 
 import pytest
 
-from cogant.cache import CacheEntry, CacheKey, CacheStore
+from cogant.cache import CacheKey, CacheStore
 from cogant.cache.hasher import hash_file, hash_repo
-
 
 # ---------------------------------------------------------------------------
 # CacheStore — extended behavioral tests
@@ -97,6 +95,7 @@ def test_cache_store_ttl_boundary(tmp_path: Path) -> None:
 def test_cache_entry_created_at_is_iso8601(tmp_path: Path) -> None:
     """CacheEntry.created_at is a valid ISO 8601 timestamp."""
     from datetime import datetime
+
     store = CacheStore(cache_dir=tmp_path)
     key = CacheKey(repo_path="/r", content_hash="timestamp01", cogant_version="0.1")
     entry = store.put(key, {"ts": True})
@@ -146,6 +145,7 @@ def test_hash_repo_ignores_git_directory(tmp_path: Path) -> None:
 
     hash_with_git = hash_repo(tmp_path)
     import shutil
+
     shutil.rmtree(git_dir)
     hash_without_git = hash_repo(tmp_path)
     assert hash_with_git == hash_without_git
@@ -160,6 +160,7 @@ def test_hash_repo_ignores_node_modules(tmp_path: Path) -> None:
 
     hash_with_nm = hash_repo(tmp_path, extensions=[".js"])
     import shutil
+
     shutil.rmtree(nm)
     hash_without_nm = hash_repo(tmp_path, extensions=[".js"])
     assert hash_with_nm == hash_without_nm

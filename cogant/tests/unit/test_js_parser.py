@@ -47,10 +47,7 @@ def test_js_parser_extracts_class_and_method():
 
     parser = JavaScriptLanguageParser()
     source = (
-        "class Foo {\n"
-        "  bar(x) { return x + 1; }\n"
-        "}\n"
-        "function baz() { return new Foo().bar(2); }\n"
+        "class Foo {\n  bar(x) { return x + 1; }\n}\nfunction baz() { return new Foo().bar(2); }\n"
     )
     ast = parser.parse(source, "foo.js")
     if ast.get("error"):
@@ -125,11 +122,7 @@ def test_ts_tree_sitter_parser_routes_tsx(tmp_path):
 
     parser = TypeScriptTreeSitterParser()
     # TSX uses JSX syntax alongside TS types.
-    source = (
-        "function App(): JSX.Element {\n"
-        "  return <div>hi</div>;\n"
-        "}\n"
-    )
+    source = "function App(): JSX.Element {\n  return <div>hi</div>;\n}\n"
     ast = parser.parse(source, "App.tsx")
     if ast.get("error"):
         pytest.skip(ast["error"])

@@ -278,12 +278,14 @@ class CanonicalNormalizer:
             language: Source language.
             fact_type: Type of fact.
         """
-        self._normalization_log.append({
-            "status": status,
-            "fact_key": fact_key,
-            "language": language,
-            "fact_type": fact_type,
-        })
+        self._normalization_log.append(
+            {
+                "status": status,
+                "fact_key": fact_key,
+                "language": language,
+                "fact_type": fact_type,
+            }
+        )
 
     def get_normalization_log(self) -> list[dict[str, Any]]:
         """Get the normalization log.

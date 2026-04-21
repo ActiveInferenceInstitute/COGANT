@@ -21,7 +21,6 @@ from cogant.schemas.semantic import (
 )
 from cogant.translate.confidence import ConfidenceModel
 
-
 # ----------------------------------------------------------------- fixtures --
 
 
@@ -71,9 +70,7 @@ class TestComputeConfidenceScore:
         assert score == pytest.approx(0.7)
 
     def test_parser_certainty_multiplier(self):
-        m = _mapping(
-            provenance=[_pr("static_analysis", 0.8)], parser_certainty=0.5
-        )
+        m = _mapping(provenance=[_pr("static_analysis", 0.8)], parser_certainty=0.5)
         assert ConfidenceModel().compute_confidence_score(m) == pytest.approx(0.4)
 
     def test_diversity_bonus(self):
@@ -118,24 +115,18 @@ class TestComputeConfidenceScore:
 
 class TestDetermineConfidenceTier:
     def test_human_beats_everything(self):
-        m = _mapping(
-            provenance=[_pr("static_analysis", 0.3), _pr("human_review", 0.9)]
-        )
+        m = _mapping(provenance=[_pr("static_analysis", 0.3), _pr("human_review", 0.9)])
         tier = ConfidenceModel().determine_confidence_tier(m)
         assert tier == ConfidenceTier.HUMAN_REVIEWED
 
     def test_static_plus_runtime_meets_threshold(self):
-        m = _mapping(
-            provenance=[_pr("static_analysis", 0.9), _pr("runtime_trace", 0.9)]
-        )
+        m = _mapping(provenance=[_pr("static_analysis", 0.9), _pr("runtime_trace", 0.9)])
         cm = ConfidenceModel()
         tier = cm.determine_confidence_tier(m, score=0.9)
         assert tier == ConfidenceTier.STATIC_PLUS_RUNTIME
 
     def test_static_plus_runtime_falls_back_to_static_only(self):
-        m = _mapping(
-            provenance=[_pr("static_analysis", 0.6), _pr("runtime_trace", 0.6)]
-        )
+        m = _mapping(provenance=[_pr("static_analysis", 0.6), _pr("runtime_trace", 0.6)])
         cm = ConfidenceModel()
         # score below STATIC_PLUS_RUNTIME_THRESHOLD (0.65) but ≥ STATIC_ONLY (0.5)
         tier = cm.determine_confidence_tier(m, score=0.55)
@@ -157,9 +148,7 @@ class TestDetermineConfidenceTier:
         assert tier == ConfidenceTier.STATIC_ONLY  # default fallback
 
     def test_score_recomputed_when_none(self):
-        m = _mapping(
-            provenance=[_pr("static_analysis", 0.9)], parser_certainty=1.0
-        )
+        m = _mapping(provenance=[_pr("static_analysis", 0.9)], parser_certainty=1.0)
         tier = ConfidenceModel().determine_confidence_tier(m)
         assert tier == ConfidenceTier.STATIC_ONLY
 
@@ -176,9 +165,7 @@ class TestScoreEvidenceDiversity:
         assert ConfidenceModel().score_evidence_diversity(m) == pytest.approx(1.0)
 
     def test_two_distinct_sources(self):
-        m = _mapping(
-            provenance=[_pr("static_analysis", 0.5), _pr("runtime_trace", 0.5)]
-        )
+        m = _mapping(provenance=[_pr("static_analysis", 0.5), _pr("runtime_trace", 0.5)])
         # unique=2, max_unique=min(2,5)=2 → 1.0
         assert ConfidenceModel().score_evidence_diversity(m) == pytest.approx(1.0)
 
@@ -266,10 +253,7 @@ class TestUpdateAndReport:
 
     def test_score_batch(self):
         cm = ConfidenceModel()
-        ms = [
-            _mapping(mid=f"m{i}", provenance=[_pr("static_analysis", 0.8)])
-            for i in range(3)
-        ]
+        ms = [_mapping(mid=f"m{i}", provenance=[_pr("static_analysis", 0.8)]) for i in range(3)]
         cm.score_batch(ms)
         assert len(cm._scoring_log) == 3
         assert all(m.confidence_score > 0 for m in ms)

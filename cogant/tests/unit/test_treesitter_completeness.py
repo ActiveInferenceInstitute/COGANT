@@ -154,9 +154,7 @@ def test_sync_function_not_marked_async() -> None:
     syms = _parse(src)
     plain_syms = [s for s in syms if s["name"] == "plain"]
     assert plain_syms, "No symbol 'plain' found"
-    assert not plain_syms[0]["metadata"].get("is_async"), (
-        "Sync function should not be marked async"
-    )
+    assert not plain_syms[0]["metadata"].get("is_async"), "Sync function should not be marked async"
 
 
 @_skip_no_js
@@ -288,9 +286,7 @@ def test_ts_generic_function_type_params() -> None:
     fn_syms = [s for s in syms if s["name"] == "identity"]
     assert fn_syms, f"No 'identity' symbol; got {syms}"
     type_params = fn_syms[0]["metadata"].get("type_params", [])
-    assert type_params, (
-        f"Expected type_params in metadata, got {fn_syms[0]['metadata']}"
-    )
+    assert type_params, f"Expected type_params in metadata, got {fn_syms[0]['metadata']}"
     assert "T" in type_params, f"Expected 'T' in type_params, got {type_params}"
 
 

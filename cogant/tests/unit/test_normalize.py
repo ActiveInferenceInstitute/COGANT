@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
-
-from cogant.normalize.canonical import CanonicalNormalizer, LanguageFact, NormalizedFact
+from cogant.normalize.canonical import CanonicalNormalizer, LanguageFact
 from cogant.normalize.identities import IdentityRecord, IdentityResolver
 from cogant.schemas.core import NodeKind
-
 
 # ---------------------------------------------------------------------------
 # CanonicalNormalizer — normalize()

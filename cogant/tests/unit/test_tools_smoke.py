@@ -96,15 +96,15 @@ def test_migrate_output_tree_moves_and_organizes(tmp_path: Path) -> None:
 def test_migrate_output_tree_dry_run_skips_move(tmp_path: Path) -> None:
     output = tmp_path / "output"
     _seed_flat_run(output / "calculator")
-    n = migrate_output_tree(
-        output, examples=["calculator"], suite="control_positive", dry_run=True
-    )
+    n = migrate_output_tree(output, examples=["calculator"], suite="control_positive", dry_run=True)
     assert n == 1
     assert (output / "calculator" / "program_graph.json").exists()
     assert not (output / "examples").exists()
 
 
-def test_migrate_output_tree_skips_missing(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+def test_migrate_output_tree_skips_missing(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     output = tmp_path / "output"
     output.mkdir()
     n = migrate_output_tree(output, examples=["nope"])

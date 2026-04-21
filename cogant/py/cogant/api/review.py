@@ -15,12 +15,8 @@ __all__ = ["ReviewableMapping", "ReviewAPI"]
 # in the review API. ``auto_proposed`` is the default emitted by
 # ``cogant.translate.engine`` for any rule firing that has not yet been
 # touched by a human curator.
-_PENDING_BUNDLE_STATUSES: frozenset[str] = frozenset(
-    {"", "auto_proposed", "in_review", "pending"}
-)
-_REVIEW_STATUSES: frozenset[str] = frozenset(
-    {"pending", "accepted", "rejected", "edited"}
-)
+_PENDING_BUNDLE_STATUSES: frozenset[str] = frozenset({"", "auto_proposed", "in_review", "pending"})
+_REVIEW_STATUSES: frozenset[str] = frozenset({"pending", "accepted", "rejected", "edited"})
 
 
 @dataclass
@@ -151,9 +147,7 @@ class ReviewAPI:
                     target=str(kind or ""),
                     confidence=float(data.get("confidence_score", 0.0) or 0.0),
                     evidence=str(
-                        data.get("description")
-                        or data.get("semantic_label")
-                        or "Static analysis"
+                        data.get("description") or data.get("semantic_label") or "Static analysis"
                     ),
                     status=self._normalise_status(data.get("status")),
                 )
@@ -231,9 +225,7 @@ class ReviewAPI:
                 return
         raise KeyError(f"Mapping not found: {mapping_id}")
 
-    def edit_mapping(
-        self, mapping_id: str, **changes: Any
-    ) -> ReviewableMapping:
+    def edit_mapping(self, mapping_id: str, **changes: Any) -> ReviewableMapping:
         """
         Edit a mapping.
 

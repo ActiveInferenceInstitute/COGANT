@@ -71,7 +71,9 @@ class StaticAnalysisView:
             ]
 
             # Sort by complexity descending
-            sorted_pairs = sorted(zip(names, complexities, strict=False), key=lambda x: x[1], reverse=True)
+            sorted_pairs = sorted(
+                zip(names, complexities, strict=False), key=lambda x: x[1], reverse=True
+            )
             names_sorted, complexities_sorted = (
                 zip(*sorted_pairs, strict=False) if sorted_pairs else ([], [])
             )
@@ -91,7 +93,13 @@ class StaticAnalysisView:
                     colors.append("red")
 
             bars = ax.barh(names_sorted, complexities_sorted, color=colors, alpha=0.7)
-            ax.axvline(x=threshold, color="red", linestyle="--", linewidth=2, label=f"Threshold ({threshold})")
+            ax.axvline(
+                x=threshold,
+                color="red",
+                linestyle="--",
+                linewidth=2,
+                label=f"Threshold ({threshold})",
+            )
             ax.set_xlabel("Cyclomatic Complexity")
             ax.set_title("Complexity Heatmap: Cyclomatic Complexity per Function")
             ax.legend()
@@ -100,8 +108,13 @@ class StaticAnalysisView:
             # Add value labels
             for bar in bars:
                 width = bar.get_width()
-                ax.text(width, bar.get_y() + bar.get_height() / 2, f" {int(width)}",
-                        va="center", fontsize=9)
+                ax.text(
+                    width,
+                    bar.get_y() + bar.get_height() / 2,
+                    f" {int(width)}",
+                    va="center",
+                    fontsize=9,
+                )
 
             fig.tight_layout()
             return fig
@@ -143,7 +156,9 @@ class StaticAnalysisView:
 
             fig, ax = plt.subplots(figsize=(12, 6))
 
-            counts, bins, patches = ax.hist(complexities, bins=15, color="steelblue", alpha=0.7, edgecolor="black")
+            counts, bins, patches = ax.hist(
+                complexities, bins=15, color="steelblue", alpha=0.7, edgecolor="black"
+            )
 
             # Color bins by severity
             for i, patch in enumerate(patches):
@@ -165,9 +180,19 @@ class StaticAnalysisView:
             # Add statistics
             mean_complexity = np.mean(complexities)
             median_complexity = np.median(complexities)
-            ax.axvline(x=mean_complexity, color="red", linestyle="-", linewidth=2, label=f"Mean: {mean_complexity:.2f}")
             ax.axvline(
-                x=median_complexity, color="blue", linestyle="--", linewidth=2, label=f"Median: {median_complexity:.2f}"
+                x=mean_complexity,
+                color="red",
+                linestyle="-",
+                linewidth=2,
+                label=f"Mean: {mean_complexity:.2f}",
+            )
+            ax.axvline(
+                x=median_complexity,
+                color="blue",
+                linestyle="--",
+                linewidth=2,
+                label=f"Median: {median_complexity:.2f}",
             )
             ax.legend()
 
@@ -214,8 +239,16 @@ class StaticAnalysisView:
 
             _mod_instability: dict[str, float] = {}
             for m in modules:
-                mname = m.get("module_name", m.get("name", "")) if isinstance(m, dict) else getattr(m, "module_name", str(m))
-                minst = m.get("instability", 0.5) if isinstance(m, dict) else getattr(m, "instability", 0.5)
+                mname = (
+                    m.get("module_name", m.get("name", ""))
+                    if isinstance(m, dict)
+                    else getattr(m, "module_name", str(m))
+                )
+                minst = (
+                    m.get("instability", 0.5)
+                    if isinstance(m, dict)
+                    else getattr(m, "instability", 0.5)
+                )
                 _mod_instability[mname] = minst
                 G.add_node(mname)
 
@@ -239,7 +272,9 @@ class StaticAnalysisView:
                 node_sizes.append(3000 * max(0.1, instability))
 
             # Draw graph
-            nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color="lightblue", alpha=0.9, ax=ax)
+            nx.draw_networkx_nodes(
+                G, pos, node_size=node_sizes, node_color="lightblue", alpha=0.9, ax=ax
+            )
             nx.draw_networkx_labels(G, pos, font_size=8, ax=ax)
 
             # Draw edges with varying width
@@ -248,8 +283,16 @@ class StaticAnalysisView:
             max_weight = max(weights) if weights else 1
             widths = [3 * w / max_weight for w in weights]
 
-            nx.draw_networkx_edges(G, pos, width=widths, edge_color="gray", alpha=0.6,
-                                  connectionstyle="arc3,rad=0.1", ax=ax, arrowsize=15)
+            nx.draw_networkx_edges(
+                G,
+                pos,
+                width=widths,
+                edge_color="gray",
+                alpha=0.6,
+                connectionstyle="arc3,rad=0.1",
+                ax=ax,
+                arrowsize=15,
+            )
 
             ax.set_title("Module Coupling Graph: Instability-Based Layout")
             ax.axis("off")
@@ -294,10 +337,22 @@ class StaticAnalysisView:
             instability = []
 
             for m in modules:
-                mname = m.get("module_name", m.get("name", "")) if isinstance(m, dict) else getattr(m, "module_name", str(m))
+                mname = (
+                    m.get("module_name", m.get("name", ""))
+                    if isinstance(m, dict)
+                    else getattr(m, "module_name", str(m))
+                )
                 names.append(mname)
-                abstractness.append(m.get("abstractness", 0.5) if isinstance(m, dict) else getattr(m, "abstractness", 0.5))
-                instability.append(m.get("instability", 0.5) if isinstance(m, dict) else getattr(m, "instability", 0.5))
+                abstractness.append(
+                    m.get("abstractness", 0.5)
+                    if isinstance(m, dict)
+                    else getattr(m, "abstractness", 0.5)
+                )
+                instability.append(
+                    m.get("instability", 0.5)
+                    if isinstance(m, dict)
+                    else getattr(m, "instability", 0.5)
+                )
 
             # Scatter plot
             ax.scatter(abstractness, instability, s=100, alpha=0.6, color="steelblue")
@@ -312,7 +367,9 @@ class StaticAnalysisView:
             ax.plot(x_line, y_line, "r--", linewidth=2, label="Main Sequence (I + A = 1)")
 
             # Zone labels
-            ax.fill_between(x_line, y_line - 0.1, y_line + 0.1, alpha=0.1, color="green", label="Balanced Zone")
+            ax.fill_between(
+                x_line, y_line - 0.1, y_line + 0.1, alpha=0.1, color="green", label="Balanced Zone"
+            )
 
             ax.set_xlabel("Abstractness (A)")
             ax.set_ylabel("Instability (I)")
@@ -374,8 +431,14 @@ class StaticAnalysisView:
             # Add value labels
             for bar in bars:
                 height = bar.get_height()
-                ax.text(bar.get_x() + bar.get_width() / 2, height, f" {int(height)}",
-                       ha="center", va="bottom", fontsize=10)
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    height,
+                    f" {int(height)}",
+                    ha="center",
+                    va="bottom",
+                    fontsize=10,
+                )
 
             plt.xticks(rotation=45, ha="right")
             fig.tight_layout()
@@ -519,7 +582,7 @@ class StaticAnalysisView:
                 style = "fill:#FF6B6B"  # Red
 
             lines.append(f'    {safe_name}["{module_name}<br/>(I={instability:.2f})"]')
-            lines.append(f'    style {safe_name} {style}')
+            lines.append(f"    style {safe_name} {style}")
 
         # Add edges from coupling matrix
         coupling_matrix = report.coupling_matrix if hasattr(report, "coupling_matrix") else {}

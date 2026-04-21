@@ -16,9 +16,11 @@ into the pipeline with :func:`_handle_pipeline_errors` so users get a
 friendly message instead of a Python traceback.
 """
 
+import functools
 import logging
 import sys
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -116,9 +118,7 @@ def _apply_upstream_pipeline_flags(
     """Mutate ``config`` to honour the ``--upstream-gnn-*`` flag family."""
     config.upstream_gnn_pipeline = enable
     only_list = _parse_step_csv(only, label="--upstream-gnn-only-steps")
-    skip_list = _parse_step_csv(
-        skip, label="--upstream-gnn-skip-steps", empty_means=[]
-    )
+    skip_list = _parse_step_csv(skip, label="--upstream-gnn-skip-steps", empty_means=[])
     if only_list is not None:
         config.upstream_gnn_only_steps = only_list
     if skip_list is not None:
@@ -175,20 +175,15 @@ def _friendly_pipeline_error(exc: BaseException, target: Path | None = None) -> 
 
     if isinstance(exc, FileNotFoundError):
         console.print(f"[red]Error:[/red] Repository not found: {target or exc}")
-        console.print(
-            "  [dim]→ Check the path exists and contains Python/JS/TS files[/dim]"
-        )
+        console.print("  [dim]→ Check the path exists and contains Python/JS/TS files[/dim]")
         return
     if isinstance(exc, PermissionError):
         console.print(f"[red]Error:[/red] Permission denied: {target or exc}")
-        console.print(
-            "  [dim]→ Check read permissions on the repository and its files[/dim]"
-        )
+        console.print("  [dim]→ Check read permissions on the repository and its files[/dim]")
         return
     if isinstance(exc, NotADirectoryError):
         console.print(
-            f"[red]Error:[/red] Expected a repository directory but got a file: "
-            f"{target or exc}"
+            f"[red]Error:[/red] Expected a repository directory but got a file: {target or exc}"
         )
         return
 
@@ -196,8 +191,7 @@ def _friendly_pipeline_error(exc: BaseException, target: Path | None = None) -> 
     console.print(f"[red]Unexpected error:[/red] {type(exc).__name__}: {exc}")
     console.print("  [dim]→ Run [bold]cogant doctor[/bold] to check your environment[/dim]")
     console.print(
-        "  [dim]→ File a bug at "
-        "https://github.com/cogant-contributors/cogant/issues[/dim]"
+        "  [dim]→ File a bug at https://github.com/cogant-contributors/cogant/issues[/dim]"
     )
 
 
@@ -306,7 +300,10 @@ def init(
 
     if not quiet:
         console.print("[green]✓ Project initialized successfully[/green]")
-        console.print(f"  Config: {config_file}" + (" [dim](created)[/dim]" if config_created else " [dim](existing)[/dim]"))
+        console.print(
+            f"  Config: {config_file}"
+            + (" [dim](created)[/dim]" if config_created else " [dim](existing)[/dim]")
+        )
         console.print(f"  Source files detected: [cyan]{file_count}[/cyan]")
         if file_count == 0:
             console.print(
@@ -323,9 +320,7 @@ def init(
     # --------- Step 3: optional translate run --------------------------
     if run:
         if file_count == 0:
-            console.print(
-                "[yellow]--run requested but no source files found; skipping.[/yellow]"
-            )
+            console.print("[yellow]--run requested but no source files found; skipping.[/yellow]")
             return
         if not yes:
             confirm = typer.confirm(
@@ -473,7 +468,6 @@ def scan(
 
         console.print(table)
     elif format == "json":
-
         console.print_json(data=result)
 
 
@@ -557,9 +551,7 @@ def extract_dynamic(
     session = Session.from_target(target)
     result = session.extract_dynamic()
 
-    console.print(
-        Panel(f"Extracted {len(result['traces'])} traces and coverage data")
-    )
+    console.print(Panel(f"Extracted {len(result['traces'])} traces and coverage data"))
 
 
 @app.command()
@@ -679,10 +671,7 @@ def translate(
     upstream_gnn_skip_steps: str | None = typer.Option(
         None,
         "--upstream-gnn-skip-steps",
-        help=(
-            "Override the upstream skip list (default '11,12'). "
-            "Pass '' to run all 25 steps."
-        ),
+        help=("Override the upstream skip list (default '11,12'). Pass '' to run all 25 steps."),
     ),
     upstream_gnn_frameworks: str | None = typer.Option(
         None,
@@ -784,9 +773,7 @@ def translate(
 
     runner = PipelineRunner()
     try:
-        bundle = _run_pipeline_with_progress(
-            runner, target, config, description_prefix="translate"
-        )
+        bundle = _run_pipeline_with_progress(runner, target, config, description_prefix="translate")
     except FileNotFoundError as exc:
         _friendly_pipeline_error(exc, Path(target))
         raise typer.Exit(code=1) from exc
@@ -899,6 +886,15 @@ def analyze(
         "-q",
         help="Suppress per-stage progress output (still prints summary).",
     ),
+    output_format: str = typer.Option(
+        "rich",
+        "--format",
+        help=(
+            "Output format for the post-run summary: 'rich' (default, "
+            "Rich tables and panels) or 'json' (machine-readable summary "
+            "with target, stages_run, node_count, edge_count, mapping_count)."
+        ),
+    ),
     upstream_gnn_pipeline: bool = typer.Option(
         False,
         "--upstream-gnn-pipeline/--no-upstream-gnn-pipeline",
@@ -920,8 +916,7 @@ def analyze(
         None,
         "--upstream-gnn-skip-steps",
         help=(
-            "Override the upstream pass skip list (default '11,12'). "
-            "Pass '' to run all 25 steps."
+            "Override the upstream pass skip list (default '11,12'). Pass '' to run all 25 steps."
         ),
     ),
     upstream_gnn_frameworks: str | None = typer.Option(
@@ -965,6 +960,9 @@ def analyze(
     ``reason``) are reported after the run and are also persisted on
     ``bundle.metadata['incremental_stats']``.
     """
+    json_mode = output_format.lower() == "json"
+    if json_mode:
+        quiet = True
     if not quiet:
         title = "[bold]COGANT Analyze[/bold]"
         if incremental:
@@ -1029,6 +1027,34 @@ def analyze(
     bundle.save_json(str(bundle_path))
 
     inc_stats = bundle.metadata.get("incremental_stats") if bundle.metadata else None
+    if json_mode:
+        graph = bundle.stage_results.get("graph") or {}
+        translate = bundle.stage_results.get("translate") or {}
+        node_count = (
+            graph.get("node_count") if isinstance(graph, dict) else getattr(graph, "node_count", 0)
+        ) or 0
+        edge_count = (
+            graph.get("edge_count") if isinstance(graph, dict) else getattr(graph, "edge_count", 0)
+        ) or 0
+        mapping_count = (
+            translate.get("mapping_count")
+            if isinstance(translate, dict)
+            else getattr(translate, "mapping_count", 0)
+        ) or 0
+        payload = {
+            "target": str(target),
+            "stages_run": [s for s in config.stages if s in bundle.stage_results],
+            "node_count": int(node_count),
+            "edge_count": int(edge_count),
+            "mapping_count": int(mapping_count),
+            "bundle_path": str(bundle_path),
+            "errors": list(bundle.errors or []),
+            "incremental_stats": inc_stats,
+        }
+        import json as _json
+
+        print(_json.dumps(payload, indent=2, default=str))
+        return
     if not quiet:
         console.print("\n[bold green]Analyze Results[/bold green]")
         results_table = Table()
@@ -1037,9 +1063,7 @@ def analyze(
         for stage in config.stages:
             if stage in bundle.stage_results:
                 results_table.add_row(stage, "[green]✓ Success[/green]")
-            elif stage in config.skip_stages or (
-                stage == "dynamic" and config.skip_dynamic
-            ):
+            elif stage in config.skip_stages or (stage == "dynamic" and config.skip_dynamic):
                 results_table.add_row(stage, "[yellow]⊘ Skipped[/yellow]")
             else:
                 results_table.add_row(stage, "[red]✗ Failed[/red]")
@@ -1131,9 +1155,7 @@ def process(
         skip_dynamic=no_dynamic,
     )
     try:
-        bundle = _run_pipeline_with_progress(
-            runner, target, config, description_prefix="process"
-        )
+        bundle = _run_pipeline_with_progress(runner, target, config, description_prefix="process")
     except Exception as exc:  # noqa: BLE001 — CLI boundary
         _friendly_pipeline_error(exc, Path(target))
         raise typer.Exit(code=1) from exc
@@ -1302,10 +1324,7 @@ def validate(
     upstream_gnn_skip_steps: str | None = typer.Option(
         None,
         "--upstream-gnn-skip-steps",
-        help=(
-            "Override the upstream skip list (default '11,12'). "
-            "Pass '' to run all 25 steps."
-        ),
+        help=("Override the upstream skip list (default '11,12'). Pass '' to run all 25 steps."),
     ),
     upstream_gnn_frameworks: str | None = typer.Option(
         None,
@@ -1355,7 +1374,9 @@ def validate(
         result = GNNValidator().validate_package(
             str(gnn_dir), upstream_gnn=False if no_upstream_gnn else None
         )
-        status = "[green bold]VALID[/green bold]" if result.valid else "[red bold]INVALID[/red bold]"
+        status = (
+            "[green bold]VALID[/green bold]" if result.valid else "[red bold]INVALID[/red bold]"
+        )
         console.print(
             Panel(
                 f"{status}  score=[magenta]{result.score:.1f}/100[/magenta]\n"
@@ -1423,9 +1444,7 @@ def validate(
             json_path = bundle_candidate
             console.print(f"[dim]Validating {json_path}[/dim]")
         else:
-            console.print(
-                f"[red]✗ Directory has no gnn_package/ and no bundle.json:[/red] {p}"
-            )
+            console.print(f"[red]✗ Directory has no gnn_package/ and no bundle.json:[/red] {p}")
             raise typer.Exit(code=2)
     else:
         console.print(f"[red]✗ Not a file or directory:[/red] {bundle_path}")
@@ -1495,9 +1514,7 @@ def diff(
     if p_a.is_dir() and p_b.is_dir():
         from cogant.cli.diff import diff_command
 
-        console.print(
-            f"[bold blue]Comparing output bundles[/bold blue] {p_a.name} ↔ {p_b.name}"
-        )
+        console.print(f"[bold blue]Comparing output bundles[/bold blue] {p_a.name} ↔ {p_b.name}")
         report = diff_command(str(p_a), str(p_b))
         if output:
             out_path = Path(output)
@@ -1524,9 +1541,7 @@ def diff(
     errors2 = len(data2.get("errors", []))
 
     if errors1 != errors2:
-        console.print(
-            f"  Errors: {errors1} → {errors2} ([yellow]{errors2-errors1:+d}[/yellow])"
-        )
+        console.print(f"  Errors: {errors1} → {errors2} ([yellow]{errors2 - errors1:+d}[/yellow])")
 
     stages1 = set(data1.get("stage_results", {}).keys())
     stages2 = set(data2.get("stage_results", {}).keys())
@@ -1583,8 +1598,7 @@ def changed(
     ingester = IncrementalIngester(path)
     if not ingester.is_git_repo():
         console.print(
-            f"[yellow]Not a git repository: {path}. "
-            f"Incremental mode is unavailable.[/yellow]"
+            f"[yellow]Not a git repository: {path}. Incremental mode is unavailable.[/yellow]"
         )
         raise typer.Exit(code=1)
 
@@ -1614,9 +1628,7 @@ def changed(
 @app.command()
 def explain(
     repo_path: str = typer.Argument(..., help="Path to the repository to analyze"),
-    node_name: str = typer.Argument(
-        ..., help="Node name (or substring) to explain"
-    ),
+    node_name: str = typer.Argument(..., help="Node name (or substring) to explain"),
     output_format: str = typer.Option(
         "text",
         "--format",
@@ -1664,10 +1676,7 @@ def explain(
     elif fmt == "text":
         format_text(result, console=console)
     else:
-        console.print(
-            f"[red]Unknown --format {output_format!r}; "
-            f"use 'text' or 'json'.[/red]"
-        )
+        console.print(f"[red]Unknown --format {output_format!r}; use 'text' or 'json'.[/red]")
         raise typer.Exit(code=1)
 
 
@@ -1704,7 +1713,7 @@ def benchmark(
 
     times = []
     for i in range(iterations):
-        console.print(f"\nRun {i+1}/{iterations}...", end=" ")
+        console.print(f"\nRun {i + 1}/{iterations}...", end=" ")
 
         start = time.time()
         runner = PipelineRunner()
@@ -1821,19 +1830,24 @@ def export_cmd(
 # ---------------------------------------------------------------------------
 # Reverse synthesis subcommands
 #
-# These are registered via ``app.command`` after the reverse_command /
-# roundtrip_command callables are imported from ``cogant.reverse.cli``.
-# Keeping the implementation in ``cogant.reverse.cli`` means the reverse
-# module can be tested and imported independently of the global Typer
-# app — the registration here is purely glue.
+# Decorator-form wrappers so AST-based audits (and future doc generators)
+# enumerate every Typer command without special-casing the
+# ``app.command(...)(callable)`` glue form. Implementation lives in
+# ``cogant.reverse.cli`` so the reverse module remains independently
+# importable and testable.
 # ---------------------------------------------------------------------------
 
-app.command(name="reverse", help="Synthesize a Python package from a GNN markdown file.")(
-    reverse_command
-)
-app.command(name="roundtrip", help="Verify forward-reverse-forward round-trip isomorphism.")(
-    roundtrip_command
-)
+
+@app.command(name="reverse", help="Synthesize a Python package from a GNN markdown file.")
+@functools.wraps(reverse_command)
+def _reverse(*args: Any, **kwargs: Any) -> None:
+    return reverse_command(*args, **kwargs)
+
+
+@app.command(name="roundtrip", help="Verify forward-reverse-forward round-trip isomorphism.")
+@functools.wraps(roundtrip_command)
+def _roundtrip(*args: Any, **kwargs: Any) -> None:
+    return roundtrip_command(*args, **kwargs)
 
 
 @app.command(name="version")
@@ -1919,15 +1933,11 @@ def upstream_gnn_command(
         if (candidate / "model.gnn.md").exists():
             pkg = candidate
         else:
-            console.print(
-                f"[red]No model.gnn.md found at {pkg} or {pkg}/gnn_package[/red]"
-            )
+            console.print(f"[red]No model.gnn.md found at {pkg} or {pkg}/gnn_package[/red]")
             raise typer.Exit(code=2)
 
     only = _parse_step_csv(only_steps, label="--only-steps")
-    skip = _parse_step_csv(
-        skip_steps, label="--skip-steps", empty_means=[]
-    )
+    skip = _parse_step_csv(skip_steps, label="--skip-steps", empty_means=[])
 
     cfg = UpstreamPipelineConfig(
         target_dir=pkg,

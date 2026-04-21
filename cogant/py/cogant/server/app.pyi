@@ -4,7 +4,7 @@ from typing import Any
 
 from _typeshed import Incomplete
 
-__all__ = ['app', 'create_app', 'run_server']
+__all__ = ["app", "create_app", "run_server"]
 
 @dataclass
 class _MetricsStore:
@@ -23,8 +23,14 @@ class _RateLimiter:
     window_s: float = ...
     def check(self, key: str) -> bool: ...
 
-def create_app(*, rate_limit_requests: int = 10, rate_limit_window_s: float = 60.0, rate_limited_paths: Iterable[str] = ('/analyze',), unlimited_paths: Iterable[str] = ('/health', '/ready', '/metrics', '/openapi.json', '/docs')) -> Any: ...
+def create_app(
+    *,
+    rate_limit_requests: int = 10,
+    rate_limit_window_s: float = 60.0,
+    rate_limited_paths: Iterable[str] = ("/analyze",),
+    unlimited_paths: Iterable[str] = ("/health", "/ready", "/metrics", "/openapi.json", "/docs"),
+) -> Any: ...
 
 app: Any
 
-def run_server(host: str = '0.0.0.0', port: int = 8080) -> int: ...
+def run_server(host: str = "0.0.0.0", port: int = 8080) -> int: ...

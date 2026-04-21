@@ -265,10 +265,7 @@ class ProgramGraphBuilder:
                 )
 
                 node_ids = list(self.graph.nodes.keys())
-                edge_pairs = [
-                    (e.source_id, e.target_id)
-                    for e in self.graph.edges.values()
-                ]
+                edge_pairs = [(e.source_id, e.target_id) for e in self.graph.edges.values()]
                 return _rust_cc(node_ids, edge_pairs)
             except (ImportError, ModuleNotFoundError):
                 pass  # fall through to Python BFS

@@ -55,6 +55,7 @@ from cogant.viz.png_export import (
 # Mermaid kind detection + parsers                                             #
 # --------------------------------------------------------------------------- #
 
+
 class TestMermaidKindDetection:
     def test_detects_flowchart(self) -> None:
         assert _detect_mermaid_kind("flowchart TD\n    A-->B") == "graph"
@@ -89,12 +90,7 @@ def _edge_pairs(edges: list[tuple[str, str, str]] | list[tuple[str, str]]) -> se
 
 class TestMermaidFlowchartParser:
     def test_extracts_edges_and_labels(self) -> None:
-        text = (
-            "graph TD\n"
-            "    A[Start] --> B{Decide}\n"
-            "    B -->|yes| C[Done]\n"
-            "    B -->|no| A\n"
-        )
+        text = "graph TD\n    A[Start] --> B{Decide}\n    B -->|yes| C[Done]\n    B -->|no| A\n"
         result = _parse_mermaid_flowchart(text)
         # Flowchart parser returns (nodes, edges, clusters) as 3-tuple.
         nodes, edges, _clusters = result
@@ -137,12 +133,7 @@ class TestMermaidFlowchartParser:
         assert label_map.get(("30c03bc2cff0e4f8", "a376d1875e845c15")) == "writes"
 
     def test_captures_subgraph_cluster_label(self) -> None:
-        text = (
-            "graph TD\n"
-            "    subgraph pkg_abc123['mypackage']\n"
-            "        foo[Foo]\n"
-            "    end\n"
-        )
+        text = "graph TD\n    subgraph pkg_abc123['mypackage']\n        foo[Foo]\n    end\n"
         nodes, _edges, clusters = _parse_mermaid_flowchart(text)
         assert "pkg_abc123" in clusters
         # cluster id itself must not appear as a node
@@ -169,12 +160,7 @@ class TestMermaidClassDiagramParser:
 
 class TestMermaidStateDiagramParser:
     def test_transitions_and_aliases(self) -> None:
-        text = (
-            "stateDiagram-v2\n"
-            "    s0: Calculator state\n"
-            "    [*] --> s0\n"
-            "    s0 --> s1: tick\n"
-        )
+        text = "stateDiagram-v2\n    s0: Calculator state\n    [*] --> s0\n    s0 --> s1: tick\n"
         result = _parse_mermaid_state_diagram(text)
         nodes, edges = result[0], result[1]
         labels = dict(nodes)
@@ -241,6 +227,7 @@ class TestMermaidGanttParser:
 # Native mermaid-to-PNG renderer for every diagram kind                        #
 # --------------------------------------------------------------------------- #
 
+
 @_needs_matplotlib
 class TestRenderMermaidTextToPng:
     def test_graph_render(self, tmp_path: Path) -> None:
@@ -302,9 +289,7 @@ class TestRenderMermaidFileFallback:
         assert ok is True
         assert dst.is_file()
 
-    def test_native_fallback_disabled_returns_false_when_mmdc_missing(
-        self, tmp_path: Path
-    ) -> None:
+    def test_native_fallback_disabled_returns_false_when_mmdc_missing(self, tmp_path: Path) -> None:
         # mmdc is not installed in the test environment, so disabling the
         # fallback must cause a graceful ``False`` return.
         if shutil.which("mmdc"):
@@ -335,6 +320,7 @@ class TestRenderAllMermaidInRun:
 # --------------------------------------------------------------------------- #
 # SVG → PNG                                                                    #
 # --------------------------------------------------------------------------- #
+
 
 def _importable(module_name: str) -> bool:
     try:
@@ -397,6 +383,7 @@ class TestSvgRendering:
 # State-space factor and process Gantt PNG renderers                           #
 # --------------------------------------------------------------------------- #
 
+
 @_needs_matplotlib
 class TestStateSpaceFactorPng:
     def test_renders_factor_graph(self, tmp_path: Path) -> None:
@@ -439,6 +426,7 @@ class TestProcessGanttPng:
 # --------------------------------------------------------------------------- #
 # One-shot entrypoint: render_all_pngs                                         #
 # --------------------------------------------------------------------------- #
+
 
 @_needs_matplotlib
 class TestRenderAllPngs:
@@ -516,6 +504,7 @@ class TestRenderAllPngs:
 # dot → PNG discovery helper                                                   #
 # --------------------------------------------------------------------------- #
 
+
 @pytest.mark.skipif(not shutil.which("dot"), reason="Graphviz dot not installed")
 class TestRenderAllDotInRun:
     def test_renders_every_dot(self, tmp_path: Path) -> None:
@@ -531,6 +520,7 @@ class TestRenderAllDotInRun:
 # --------------------------------------------------------------------------- #
 # Connections matrix renderer (A/B/C/D quadrants)                              #
 # --------------------------------------------------------------------------- #
+
 
 @_needs_matplotlib
 class TestRenderConnectionsMatrixPng:
@@ -566,6 +556,7 @@ class TestRenderConnectionsMatrixPng:
 # --------------------------------------------------------------------------- #
 # Markov blanket renderer                                                      #
 # --------------------------------------------------------------------------- #
+
 
 @_needs_matplotlib
 class TestRenderMarkovBlanketPng:
@@ -641,16 +632,14 @@ class TestRenderMarkovBlanketPng:
 # GNN markdown → multi-page PNG                                                #
 # --------------------------------------------------------------------------- #
 
+
 @_needs_matplotlib
 class TestRenderGnnMarkdownPng:
     def _sample_gnn(self) -> str:
         sections = []
         for i in range(6):
             sections.append(
-                f"## Section {i}\n"
-                f"This is body of section {i}.\n"
-                f"Line two.\n"
-                f"Line three.\n"
+                f"## Section {i}\nThis is body of section {i}.\nLine two.\nLine three.\n"
             )
         return "# Top\nintroductory text\n" + "\n".join(sections)
 
@@ -682,13 +671,16 @@ class TestRenderGnnMarkdownPng:
 # Summary cover renderer                                                       #
 # --------------------------------------------------------------------------- #
 
+
 @_needs_matplotlib
 class TestRenderSummaryCoverPng:
     def test_renders_with_minimal_inputs(self, tmp_path: Path) -> None:
         run = tmp_path / "run"
         run.mkdir()
         (run / "program_graph.json").write_text(
-            json.dumps({"nodes": {"a": {}, "b": {}}, "edges": {"e": {"source": "a", "target": "b"}}})
+            json.dumps(
+                {"nodes": {"a": {}, "b": {}}, "edges": {"e": {"source": "a", "target": "b"}}}
+            )
         )
         (run / "semantic_mappings.json").write_text(json.dumps({"mappings": [1, 2, 3]}))
         (run / "validation_report.json").write_text(
@@ -714,13 +706,16 @@ class TestRenderSummaryCoverPng:
 # render_all_pngs auto-discovery + full coverage                               #
 # --------------------------------------------------------------------------- #
 
+
 @_needs_matplotlib
 class TestRenderAllPngsAutoDiscovery:
     def test_auto_loads_state_space_and_process_model(self, tmp_path: Path) -> None:
         run = tmp_path / "run"
         (run / "gnn_package").mkdir(parents=True)
         (run / "program_graph.json").write_text(
-            json.dumps({"nodes": {"a": {}, "b": {}}, "edges": {"e": {"source": "a", "target": "b"}}})
+            json.dumps(
+                {"nodes": {"a": {}, "b": {}}, "edges": {"e": {"source": "a", "target": "b"}}}
+            )
         )
         (run / "gnn_package" / "state_space.json").write_text(
             json.dumps(

@@ -11,7 +11,7 @@ import json
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -22,13 +22,13 @@ if str(_PY_ROOT) not in sys.path:
     sys.path.insert(0, str(_PY_ROOT))
 
 from cogant.api.orchestration import (
-    run_ingest,
-    run_static,
-    run_normalize,
     run_graph,
-    run_translate,
-    run_statespace,
+    run_ingest,
+    run_normalize,
     run_process,
+    run_statespace,
+    run_static,
+    run_translate,
 )
 from cogant.gnn.package import GNNPackageBuilder
 from cogant.gnn.runner import GNNModelRunner
@@ -39,7 +39,7 @@ class PipelineArtifactsBundle:
     """Lightweight artifact container across pipeline stages."""
 
     def __init__(self):
-        self.artifacts: Dict[str, Any] = {}
+        self.artifacts: dict[str, Any] = {}
 
 
 @pytest.fixture
@@ -70,11 +70,14 @@ def full_pipeline_bundle():
 class TestGNNPackageDirectory:
     """Test GNN package directory creation and structure."""
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_package_directory_created(
         self,
         repo_name: str,
@@ -104,11 +107,14 @@ class TestGNNPackageDirectory:
         assert pkg_path.exists()
         assert pkg_path.is_dir()
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_manifest_json_created(
         self,
         repo_name: str,
@@ -146,11 +152,14 @@ class TestGNNPackageDirectory:
 class TestGNNPackageRequiredFiles:
     """Test that all required JSON files are present in GNN package."""
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_required_json_files_present(
         self,
         repo_name: str,
@@ -195,11 +204,14 @@ class TestGNNPackageRequiredFiles:
             except json.JSONDecodeError as e:
                 pytest.fail(f"Invalid JSON in {json_file.name}: {e}")
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_state_space_json_file_exists(
         self,
         repo_name: str,
@@ -230,11 +242,14 @@ class TestGNNPackageRequiredFiles:
             matches = list(pkg_path.glob("**/state_space.json"))
             assert len(matches) > 0, "state_space.json not found in package"
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_process_model_json_file_exists(
         self,
         repo_name: str,
@@ -267,11 +282,14 @@ class TestGNNPackageRequiredFiles:
 class TestGNNPackageValidation:
     """Test GNN package validation."""
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_validation_passes(
         self,
         repo_name: str,
@@ -299,11 +317,14 @@ class TestGNNPackageValidation:
 
         assert result.valid, f"Package validation failed: {result.errors}"
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_validation_score_high(
         self,
         repo_name: str,
@@ -329,15 +350,16 @@ class TestGNNPackageValidation:
         validator = GNNValidator()
         result = validator.validate_package(package_dir)
 
-        assert result.score >= 90.0, (
-            f"Validation score {result.score}% is below 90% threshold"
-        )
+        assert result.score >= 90.0, f"Validation score {result.score}% is below 90% threshold"
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_validation_no_critical_errors(
         self,
         repo_name: str,
@@ -371,11 +393,14 @@ class TestGNNPackageValidation:
 class TestGNNModelRunner:
     """Test GNN model runner execution."""
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_runner_loads_package(
         self,
         repo_name: str,
@@ -405,11 +430,14 @@ class TestGNNModelRunner:
         assert isinstance(package, dict)
         assert len(package) > 0
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_runner_executes_simulation(
         self,
         repo_name: str,
@@ -439,11 +467,14 @@ class TestGNNModelRunner:
         assert result is not None
         assert isinstance(result, dict)
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_runner_produces_execution_trace(
         self,
         repo_name: str,
@@ -478,11 +509,14 @@ class TestGNNModelRunner:
         traces = result.get("traces", result.get("trace", []))
         assert len(traces) > 0, "Execution trace is empty"
 
-    @pytest.mark.parametrize("repo_name,repo_path", [
-        ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
-        ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
-        ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
-    ])
+    @pytest.mark.parametrize(
+        "repo_name,repo_path",
+        [
+            ("flask_mini", _REPO_ROOT / "examples" / "control_positive" / "flask_mini"),
+            ("calculator", _REPO_ROOT / "examples" / "control_positive" / "calculator"),
+            ("event_pipeline", _REPO_ROOT / "examples" / "control_positive" / "event_pipeline"),
+        ],
+    )
     def test_runner_trace_contains_states_and_actions(
         self,
         repo_name: str,

@@ -11,7 +11,6 @@ import importlib.metadata
 import sys
 import types
 
-import pytest
 from typer.testing import CliRunner
 
 from cogant.cli.plugin import plugin_app
@@ -34,9 +33,7 @@ def _install_fake_module(mod_name: str = "_fake_plugin_mod_cli") -> str:
 
 
 def _make_ep(name: str, value: str) -> importlib.metadata.EntryPoint:
-    return importlib.metadata.EntryPoint(
-        name=name, value=value, group="cogant.plugins"
-    )
+    return importlib.metadata.EntryPoint(name=name, value=value, group="cogant.plugins")
 
 
 def _inject_eps(monkeypatch, eps: list) -> None:

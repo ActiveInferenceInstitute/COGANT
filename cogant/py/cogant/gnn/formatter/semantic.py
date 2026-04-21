@@ -48,7 +48,7 @@ class _SemanticSectionsMixin:
         node_to_role: dict[str, list[str]] = defaultdict(list)
 
         for mapping in self.mappings.values():
-            if hasattr(mapping, 'kind'):
+            if hasattr(mapping, "kind"):
                 mapping_by_kind[mapping.kind.value] += 1
                 # Track which program node kinds map to which roles
                 for node_id in mapping.graph_fragment_node_ids:
@@ -79,6 +79,7 @@ class _SemanticSectionsMixin:
         lines.append("")
 
         return "\n".join(lines)
+
     def _format_markov_blanket(self) -> str:
         """
         Format Markov Blanket section.

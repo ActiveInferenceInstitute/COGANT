@@ -3,6 +3,7 @@
 Verifies that the metrics module loads METRICS.yaml and exposes
 correct types and values for all public accessor functions.
 """
+
 from __future__ import annotations
 
 import cogant.metrics as m

@@ -95,17 +95,12 @@ class TraceIngester:
         # Compute total duration from event timestamps
         if normalized:
             min_ts = min(e["ts"] for e in normalized)
-            max_ts = max(
-                e["ts"] + e.get("dur", 0) for e in normalized
-            )
+            max_ts = max(e["ts"] + e.get("dur", 0) for e in normalized)
             duration_ms = (max_ts - min_ts) / 1000.0
         else:
             duration_ms = 0.0
 
-        logger.info(
-            f"Parsed {len(normalized)} trace events, "
-            f"duration={duration_ms:.1f}ms"
-        )
+        logger.info(f"Parsed {len(normalized)} trace events, duration={duration_ms:.1f}ms")
 
         self.traces = [
             {
@@ -118,9 +113,7 @@ class TraceIngester:
 
         return self.traces
 
-    def ingest_custom_trace(
-        self, trace_path: str, format: str
-    ) -> list[dict[str, Any]]:
+    def ingest_custom_trace(self, trace_path: str, format: str) -> list[dict[str, Any]]:
         """Parse a non-Chrome runtime trace file.
 
         Dispatches on ``format``:
@@ -164,14 +157,12 @@ class TraceIngester:
             events = self._parse_folded_stacks(path)
         else:
             raise ValueError(
-                f"unsupported trace format: {format!r} "
-                "(supported: chrome, perf, flamegraph)"
+                f"unsupported trace format: {format!r} (supported: chrome, perf, flamegraph)"
             )
 
         if events:
             duration_ms = (
-                max(e["ts"] + e.get("dur", 0) for e in events)
-                - min(e["ts"] for e in events)
+                max(e["ts"] + e.get("dur", 0) for e in events) - min(e["ts"] for e in events)
             ) / 1000.0
         else:
             duration_ms = 0.0
@@ -184,9 +175,7 @@ class TraceIngester:
                 "duration_ms": duration_ms,
             }
         ]
-        logger.info(
-            f"Parsed {len(events)} {format_key} events from {trace_path}"
-        )
+        logger.info(f"Parsed {len(events)} {format_key} events from {trace_path}")
         return self.traces
 
     @staticmethod
@@ -324,9 +313,7 @@ class TraceIngester:
         for _thread_key, events in thread_events.items():
             # Sort by timestamp, then B before E for same timestamp
             phase_order = {"B": 0, "X": 1, "E": 2}
-            events.sort(
-                key=lambda e: (e["ts"], phase_order.get(e.get("ph", ""), 1))
-            )
+            events.sort(key=lambda e: (e["ts"], phase_order.get(e.get("ph", ""), 1)))
 
             stack: list[str] = []
             sequence: list[str] = []
@@ -373,9 +360,7 @@ class TraceIngester:
 
         for _thread_key, events in thread_events.items():
             phase_order = {"B": 0, "X": 1, "E": 2}
-            events.sort(
-                key=lambda e: (e["ts"], phase_order.get(e.get("ph", ""), 1))
-            )
+            events.sort(key=lambda e: (e["ts"], phase_order.get(e.get("ph", ""), 1)))
 
             stack: list[str] = []
 
@@ -394,13 +379,9 @@ class TraceIngester:
                     if stack:
                         adjacency[stack[-1]].add(name)
 
-        self.call_graph = {
-            caller: sorted(callees) for caller, callees in adjacency.items()
-        }
+        self.call_graph = {caller: sorted(callees) for caller, callees in adjacency.items()}
 
-        logger.debug(
-            f"Built call graph with {len(self.call_graph)} callers"
-        )
+        logger.debug(f"Built call graph with {len(self.call_graph)} callers")
         return self.call_graph
 
     def extract_timing(self) -> dict[str, dict[str, float]]:
@@ -487,9 +468,7 @@ class TraceIngester:
                     path_counts[sub] += 1
 
         # Sort by frequency descending
-        sorted_paths = sorted(
-            path_counts.items(), key=lambda x: x[1], reverse=True
-        )
+        sorted_paths = sorted(path_counts.items(), key=lambda x: x[1], reverse=True)
 
         result = [(list(path), freq) for path, freq in sorted_paths[:count]]
 

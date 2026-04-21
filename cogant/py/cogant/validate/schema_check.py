@@ -40,7 +40,8 @@ class SchemaValidator(_ValidatorMixin):
         """
         logger.info(
             "Validating program graph: %d nodes, %d edges",
-            len(graph.nodes), len(graph.edges),
+            len(graph.nodes),
+            len(graph.edges),
         )
         self.issues = []
 
@@ -60,7 +61,9 @@ class SchemaValidator(_ValidatorMixin):
         n_warnings = len(self.issues) - n_errors
         logger.info(
             "Program graph validation: %d issues (%d errors, %d warnings)",
-            len(self.issues), n_errors, n_warnings,
+            len(self.issues),
+            n_errors,
+            n_warnings,
         )
         return self.issues
 
@@ -76,8 +79,10 @@ class SchemaValidator(_ValidatorMixin):
         """
         logger.info(
             "Validating state space model: %d vars, %d obs, %d actions, %d transitions",
-            len(state_space.variables), len(state_space.observations),
-            len(state_space.actions), len(state_space.transitions),
+            len(state_space.variables),
+            len(state_space.observations),
+            len(state_space.actions),
+            len(state_space.transitions),
         )
         self.issues = []
 
@@ -101,7 +106,9 @@ class SchemaValidator(_ValidatorMixin):
         n_warnings = len(self.issues) - n_errors
         logger.info(
             "State space validation: %d issues (%d errors, %d warnings)",
-            len(self.issues), n_errors, n_warnings,
+            len(self.issues),
+            n_errors,
+            n_warnings,
         )
         return self.issues
 
@@ -117,7 +124,8 @@ class SchemaValidator(_ValidatorMixin):
         """
         logger.info(
             "Validating process model: %d stages, %d connections",
-            len(process.stages), len(process.connections),
+            len(process.stages),
+            len(process.connections),
         )
         self.issues = []
 
@@ -133,7 +141,9 @@ class SchemaValidator(_ValidatorMixin):
         n_warnings = len(self.issues) - n_errors
         logger.info(
             "Process model validation: %d issues (%d errors, %d warnings)",
-            len(self.issues), n_errors, n_warnings,
+            len(self.issues),
+            n_errors,
+            n_warnings,
         )
         return self.issues
 
@@ -147,7 +157,9 @@ class SchemaValidator(_ValidatorMixin):
         if not node.name:
             self._add_issue("warning", "schema", f"Node {node_id} missing name", [node_id])
         if not node.qualified_name:
-            self._add_issue("warning", "schema", f"Node {node_id} missing qualified_name", [node_id])
+            self._add_issue(
+                "warning", "schema", f"Node {node_id} missing qualified_name", [node_id]
+            )
 
     def _validate_edge(self, edge_id: str, edge: Any, graph: ProgramGraph) -> None:
         """Validate a single edge."""
@@ -161,19 +173,25 @@ class SchemaValidator(_ValidatorMixin):
 
         # Check that endpoints exist
         if edge.source_id not in graph.nodes:
-            self._add_issue("error", "integrity",
-                           f"Edge {edge_id} references non-existent source {edge.source_id}",
-                           [edge_id, edge.source_id])
+            self._add_issue(
+                "error",
+                "integrity",
+                f"Edge {edge_id} references non-existent source {edge.source_id}",
+                [edge_id, edge.source_id],
+            )
         if edge.target_id not in graph.nodes:
-            self._add_issue("error", "integrity",
-                           f"Edge {edge_id} references non-existent target {edge.target_id}",
-                           [edge_id, edge.target_id])
+            self._add_issue(
+                "error",
+                "integrity",
+                f"Edge {edge_id} references non-existent target {edge.target_id}",
+                [edge_id, edge.target_id],
+            )
 
         # Check weight
         if edge.weight < 0:
-            self._add_issue("warning", "schema",
-                           f"Edge {edge_id} has negative weight: {edge.weight}",
-                           [edge_id])
+            self._add_issue(
+                "warning", "schema", f"Edge {edge_id} has negative weight: {edge.weight}", [edge_id]
+            )
 
     def _validate_graph_metadata(self, metadata: Any) -> None:
         """Validate graph metadata."""
@@ -220,11 +238,16 @@ class SchemaValidator(_ValidatorMixin):
 
         # Check that stages exist
         if conn.source_stage_id not in process.stages:
-            self._add_issue("error", "integrity",
-                           f"Connection {conn_id} references non-existent source stage {conn.source_stage_id}",
-                           [conn_id, conn.source_stage_id])
+            self._add_issue(
+                "error",
+                "integrity",
+                f"Connection {conn_id} references non-existent source stage {conn.source_stage_id}",
+                [conn_id, conn.source_stage_id],
+            )
         if conn.target_stage_id not in process.stages:
-            self._add_issue("error", "integrity",
-                           f"Connection {conn_id} references non-existent target stage {conn.target_stage_id}",
-                           [conn_id, conn.target_stage_id])
-
+            self._add_issue(
+                "error",
+                "integrity",
+                f"Connection {conn_id} references non-existent target stage {conn.target_stage_id}",
+                [conn_id, conn.target_stage_id],
+            )

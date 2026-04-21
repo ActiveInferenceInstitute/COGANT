@@ -13,7 +13,6 @@ from pathlib import Path
 from cogant.process.timeline import GanttStage, Timeline
 from cogant.viz.gantt import GanttRenderer
 
-
 # ---------------------------- fixtures ----------------------------------- #
 
 

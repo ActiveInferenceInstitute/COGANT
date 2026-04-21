@@ -18,14 +18,16 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph_with_module_reads():
     """Graph where module has READS but no WRITES edges."""
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test")
-    mod = builder.add_node(NodeKind.MODULE, "reader_mod", "reader_mod",
-                           path="r.py", language="python")
+    mod = builder.add_node(
+        NodeKind.MODULE, "reader_mod", "reader_mod", path="r.py", language="python"
+    )
     var1 = builder.add_node(NodeKind.VARIABLE, "config", "reader_mod.config", path="r.py")
     var2 = builder.add_node(NodeKind.VARIABLE, "data", "reader_mod.data", path="r.py")
     builder.add_edge(mod.id, var1.id, EdgeKind.READS)
@@ -36,7 +38,7 @@ def _make_graph_with_module_reads():
 def _make_graph_with_mutation():
     """Graph with a class that has WRITES edges."""
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py", language="python")
@@ -53,7 +55,7 @@ def _make_graph_with_mutation():
 def _make_graph_with_inheritance():
     """Graph with class having INHERITS edge."""
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py", language="python")
@@ -68,7 +70,7 @@ def _make_graph_with_inheritance():
 def _make_graph_with_pipeline():
     """Graph with a chain of CALLS forming a pipeline."""
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     mod = builder.add_node(NodeKind.MODULE, "pipeline", "pipeline", path="p.py", language="python")
@@ -86,7 +88,7 @@ def _make_graph_with_pipeline():
 def _make_graph_with_retry():
     """Graph with a function named retry_operation."""
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py", language="python")
@@ -99,12 +101,14 @@ def _make_graph_with_retry():
 
 def _make_empty_graph():
     from cogant.graph.builder import ProgramGraphBuilder
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     return builder.finalize()
 
 
 def _make_query(graph):
     from cogant.graph.queries import GraphQuery
+
     return GraphQuery(graph)
 
 
@@ -112,20 +116,24 @@ def _make_query(graph):
 # ReadOnlyInputRule
 # ---------------------------------------------------------------------------
 
+
 class TestReadOnlyInputRule:
     def test_name_property(self):
         from cogant.translate.rules.structural import ReadOnlyInputRule
+
         rule = ReadOnlyInputRule()
         assert rule.name == "read_only_input"
 
     def test_mapping_kind_property(self):
-        from cogant.translate.rules.structural import ReadOnlyInputRule
         from cogant.schemas.semantic import MappingKind
+        from cogant.translate.rules.structural import ReadOnlyInputRule
+
         rule = ReadOnlyInputRule()
         assert rule.mapping_kind == MappingKind.OBSERVATION
 
     def test_matches_read_only_module(self):
         from cogant.translate.rules.structural import ReadOnlyInputRule
+
         graph, mod, var1, var2 = _make_graph_with_module_reads()
         rule = ReadOnlyInputRule()
         results = rule.matches(graph, _make_query(graph))
@@ -133,14 +141,16 @@ class TestReadOnlyInputRule:
 
     def test_matches_returns_list(self):
         from cogant.translate.rules.structural import ReadOnlyInputRule
+
         graph = _make_empty_graph()
         rule = ReadOnlyInputRule()
         results = rule.matches(graph, _make_query(graph))
         assert isinstance(results, list)
 
     def test_apply_returns_semantic_mapping(self):
-        from cogant.translate.rules.structural import ReadOnlyInputRule
         from cogant.schemas.semantic import SemanticMapping
+        from cogant.translate.rules.structural import ReadOnlyInputRule
+
         graph, mod, var1, var2 = _make_graph_with_module_reads()
         rule = ReadOnlyInputRule()
         results = rule.matches(graph, _make_query(graph))
@@ -150,6 +160,7 @@ class TestReadOnlyInputRule:
 
     def test_apply_missing_node_returns_none(self):
         from cogant.translate.rules.structural import ReadOnlyInputRule
+
         graph = _make_empty_graph()
         rule = ReadOnlyInputRule()
         result = rule.apply(graph, {"node_id": "nonexistent", "read_count": 1, "write_count": 0})
@@ -157,6 +168,7 @@ class TestReadOnlyInputRule:
 
     def test_apply_confidence_score(self):
         from cogant.translate.rules.structural import ReadOnlyInputRule
+
         graph, mod, var1, var2 = _make_graph_with_module_reads()
         rule = ReadOnlyInputRule()
         results = rule.matches(graph, _make_query(graph))
@@ -170,22 +182,26 @@ class TestReadOnlyInputRule:
 # MutatingSubsystemRule
 # ---------------------------------------------------------------------------
 
+
 class TestMutatingSubsystemRule:
     def test_name_property(self):
         from cogant.translate.rules.structural import MutatingSubsystemRule
+
         rule = MutatingSubsystemRule()
         assert rule.name == "mutating_subsystem"
 
     def test_mapping_kind_property(self):
-        from cogant.translate.rules.structural import MutatingSubsystemRule
         from cogant.schemas.semantic import MappingKind
+        from cogant.translate.rules.structural import MutatingSubsystemRule
+
         rule = MutatingSubsystemRule()
         assert rule.mapping_kind == MappingKind.HIDDEN_STATE
 
     def test_matches_class_with_writes(self):
-        from cogant.translate.rules.structural import MutatingSubsystemRule
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.translate.rules.structural import MutatingSubsystemRule
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py", language="python")
         cls = builder.add_node(NodeKind.CLASS, "Agent", "m.Agent", path="m.py")
@@ -200,14 +216,16 @@ class TestMutatingSubsystemRule:
 
     def test_matches_no_class_returns_empty(self):
         from cogant.translate.rules.structural import MutatingSubsystemRule
+
         graph = _make_empty_graph()
         rule = MutatingSubsystemRule()
         results = rule.matches(graph, _make_query(graph))
         assert results == []
 
     def test_apply_returns_hidden_state_mapping(self):
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
         from cogant.translate.rules.structural import MutatingSubsystemRule
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+
         graph, mod, cls, func1, var1 = _make_graph_with_mutation()
         rule = MutatingSubsystemRule()
         results = rule.matches(graph, _make_query(graph))
@@ -218,13 +236,17 @@ class TestMutatingSubsystemRule:
 
     def test_apply_missing_node_returns_none(self):
         from cogant.translate.rules.structural import MutatingSubsystemRule
+
         graph = _make_empty_graph()
         rule = MutatingSubsystemRule()
-        result = rule.apply(graph, {"node_id": "nonexistent", "mutation_count": 1, "mutation_edges": []})
+        result = rule.apply(
+            graph, {"node_id": "nonexistent", "mutation_count": 1, "mutation_edges": []}
+        )
         assert result is None
 
     def test_priority_is_one(self):
         from cogant.translate.rules.structural import MutatingSubsystemRule
+
         rule = MutatingSubsystemRule()
         assert rule.priority == 1
 
@@ -233,21 +255,25 @@ class TestMutatingSubsystemRule:
 # InheritanceRule
 # ---------------------------------------------------------------------------
 
+
 class TestInheritanceRule:
     def test_name_property(self):
         from cogant.translate.rules.structural import InheritanceRule
+
         rule = InheritanceRule()
         assert rule.name == "inheritance"
 
     def test_mapping_kind_property(self):
-        from cogant.translate.rules.structural import InheritanceRule
         from cogant.schemas.semantic import MappingKind
+        from cogant.translate.rules.structural import InheritanceRule
+
         rule = InheritanceRule()
         # InheritanceRule produces HIDDEN_STATE (class hierarchy maps to state)
         assert rule.mapping_kind in (MappingKind.HIDDEN_STATE, MappingKind.POLICY)
 
     def test_matches_inheriting_class(self):
         from cogant.translate.rules.structural import InheritanceRule
+
         graph, mod, base, child = _make_graph_with_inheritance()
         rule = InheritanceRule()
         results = rule.matches(graph, _make_query(graph))
@@ -255,14 +281,16 @@ class TestInheritanceRule:
 
     def test_matches_no_inheritance_empty(self):
         from cogant.translate.rules.structural import InheritanceRule
+
         graph = _make_empty_graph()
         rule = InheritanceRule()
         results = rule.matches(graph, _make_query(graph))
         assert results == []
 
     def test_apply_returns_policy_or_hidden_state_mapping(self):
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
         from cogant.translate.rules.structural import InheritanceRule
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+
         graph, mod, base, child = _make_graph_with_inheritance()
         rule = InheritanceRule()
         results = rule.matches(graph, _make_query(graph))
@@ -273,6 +301,7 @@ class TestInheritanceRule:
 
     def test_apply_missing_node_returns_none(self):
         from cogant.translate.rules.structural import InheritanceRule
+
         graph = _make_empty_graph()
         rule = InheritanceRule()
         result = rule.apply(graph, {"node_id": "none", "parent_id": "none", "depth": 1})
@@ -283,20 +312,24 @@ class TestInheritanceRule:
 # ContainmentRule
 # ---------------------------------------------------------------------------
 
+
 class TestContainmentRule:
     def test_name_property(self):
         from cogant.translate.rules.structural import ContainmentRule
+
         rule = ContainmentRule()
         assert isinstance(rule.name, str)
 
     def test_mapping_kind_property(self):
-        from cogant.translate.rules.structural import ContainmentRule
         from cogant.schemas.semantic import MappingKind
+        from cogant.translate.rules.structural import ContainmentRule
+
         rule = ContainmentRule()
         assert isinstance(rule.mapping_kind, MappingKind)
 
     def test_matches_returns_list(self):
         from cogant.translate.rules.structural import ContainmentRule
+
         graph, mod, cls, func1, var1 = _make_graph_with_mutation()
         rule = ContainmentRule()
         results = rule.matches(graph, _make_query(graph))
@@ -304,6 +337,7 @@ class TestContainmentRule:
 
     def test_apply_missing_node_returns_none(self):
         from cogant.translate.rules.structural import ContainmentRule
+
         graph = _make_empty_graph()
         rule = ContainmentRule()
         result = rule.apply(graph, {"node_id": "none", "contained_count": 0})
@@ -314,20 +348,24 @@ class TestContainmentRule:
 # DataPipelineRule
 # ---------------------------------------------------------------------------
 
+
 class TestDataPipelineRule:
     def test_name_property(self):
         from cogant.translate.rules.structural import DataPipelineRule
+
         rule = DataPipelineRule()
         assert isinstance(rule.name, str)
 
     def test_mapping_kind_property(self):
-        from cogant.translate.rules.structural import DataPipelineRule
         from cogant.schemas.semantic import MappingKind
+        from cogant.translate.rules.structural import DataPipelineRule
+
         rule = DataPipelineRule()
         assert isinstance(rule.mapping_kind, MappingKind)
 
     def test_matches_pipeline_returns_list(self):
         from cogant.translate.rules.structural import DataPipelineRule
+
         graph, mod, s1, s2, s3 = _make_graph_with_pipeline()
         rule = DataPipelineRule()
         results = rule.matches(graph, _make_query(graph))
@@ -335,6 +373,7 @@ class TestDataPipelineRule:
 
     def test_apply_missing_node_returns_none(self):
         from cogant.translate.rules.structural import DataPipelineRule
+
         graph = _make_empty_graph()
         rule = DataPipelineRule()
         result = rule.apply(graph, {"node_id": "none", "pipeline_length": 0, "pipeline_nodes": []})
@@ -345,20 +384,24 @@ class TestDataPipelineRule:
 # RetryPatternRule
 # ---------------------------------------------------------------------------
 
+
 class TestRetryPatternRule:
     def test_name_property(self):
         from cogant.translate.rules.resilience import RetryPatternRule
+
         rule = RetryPatternRule()
         assert isinstance(rule.name, str)
 
     def test_mapping_kind_property(self):
-        from cogant.translate.rules.resilience import RetryPatternRule
         from cogant.schemas.semantic import MappingKind
+        from cogant.translate.rules.resilience import RetryPatternRule
+
         rule = RetryPatternRule()
         assert isinstance(rule.mapping_kind, MappingKind)
 
     def test_matches_retry_function(self):
         from cogant.translate.rules.resilience import RetryPatternRule
+
         graph, mod, retry_fn, normal_fn = _make_graph_with_retry()
         rule = RetryPatternRule()
         results = rule.matches(graph, _make_query(graph))
@@ -366,14 +409,16 @@ class TestRetryPatternRule:
 
     def test_matches_returns_list(self):
         from cogant.translate.rules.resilience import RetryPatternRule
+
         graph = _make_empty_graph()
         rule = RetryPatternRule()
         results = rule.matches(graph, _make_query(graph))
         assert isinstance(results, list)
 
     def test_apply_returns_mapping(self):
-        from cogant.translate.rules.resilience import RetryPatternRule
         from cogant.schemas.semantic import SemanticMapping
+        from cogant.translate.rules.resilience import RetryPatternRule
+
         graph, mod, retry_fn, normal_fn = _make_graph_with_retry()
         rule = RetryPatternRule()
         results = rule.matches(graph, _make_query(graph))
@@ -383,6 +428,7 @@ class TestRetryPatternRule:
 
     def test_apply_missing_node_returns_none(self):
         from cogant.translate.rules.resilience import RetryPatternRule
+
         graph = _make_empty_graph()
         rule = RetryPatternRule()
         result = rule.apply(graph, {"node_id": "none", "pattern_type": "retry_or_circuit_breaker"})
@@ -393,10 +439,12 @@ class TestRetryPatternRule:
 # ErrorBoundaryRule
 # ---------------------------------------------------------------------------
 
+
 class TestErrorBoundaryRule:
     def test_name_property(self):
         try:
             from cogant.translate.rules.resilience import ErrorBoundaryRule
+
             rule = ErrorBoundaryRule()
             assert isinstance(rule.name, str)
         except (ImportError, AttributeError):
@@ -404,8 +452,9 @@ class TestErrorBoundaryRule:
 
     def test_mapping_kind_property(self):
         try:
-            from cogant.translate.rules.resilience import ErrorBoundaryRule
             from cogant.schemas.semantic import MappingKind
+            from cogant.translate.rules.resilience import ErrorBoundaryRule
+
             rule = ErrorBoundaryRule()
             assert isinstance(rule.mapping_kind, MappingKind)
         except (ImportError, AttributeError):
@@ -414,6 +463,7 @@ class TestErrorBoundaryRule:
     def test_matches_returns_list(self):
         try:
             from cogant.translate.rules.resilience import ErrorBoundaryRule
+
             graph = _make_empty_graph()
             rule = ErrorBoundaryRule()
             results = rule.matches(graph, _make_query(graph))
@@ -426,10 +476,12 @@ class TestErrorBoundaryRule:
 # SingletonRule
 # ---------------------------------------------------------------------------
 
+
 class TestSingletonRule:
     def test_name_property(self):
         try:
             from cogant.translate.rules.resilience import SingletonRule
+
             rule = SingletonRule()
             assert isinstance(rule.name, str)
         except (ImportError, AttributeError):
@@ -438,6 +490,7 @@ class TestSingletonRule:
     def test_matches_returns_list(self):
         try:
             from cogant.translate.rules.resilience import SingletonRule
+
             graph = _make_empty_graph()
             rule = SingletonRule()
             results = rule.matches(graph, _make_query(graph))
@@ -450,10 +503,12 @@ class TestSingletonRule:
 # CircuitBreakerRule
 # ---------------------------------------------------------------------------
 
+
 class TestCircuitBreakerRule:
     def test_name_property(self):
         try:
             from cogant.translate.rules.resilience import CircuitBreakerRule
+
             rule = CircuitBreakerRule()
             assert isinstance(rule.name, str)
         except (ImportError, AttributeError):
@@ -461,9 +516,10 @@ class TestCircuitBreakerRule:
 
     def test_matches_circuit_breaker(self):
         try:
-            from cogant.translate.rules.resilience import CircuitBreakerRule
             from cogant.graph.builder import ProgramGraphBuilder
-            from cogant.schemas.core import NodeKind, EdgeKind
+            from cogant.schemas.core import EdgeKind, NodeKind
+            from cogant.translate.rules.resilience import CircuitBreakerRule
+
             builder = ProgramGraphBuilder(repo_uri="file:///test")
             mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py", language="python")
             cb_fn = builder.add_node(NodeKind.FUNCTION, "circuit_breaker_open", "m.cb", path="m.py")

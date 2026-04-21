@@ -72,9 +72,7 @@ class MatrixFunctions:
             ]
 
         C = model.C if model.C else [0.0] * n_obs
-        D = model.D if model.D else (
-            [1.0 / n_states] * n_states if n_states else []
-        )
+        D = model.D if model.D else ([1.0 / n_states] * n_states if n_states else [])
 
         self._A = A
         self._B = B
@@ -146,9 +144,7 @@ class MatrixFunctions:
         """Return D vector (initial state prior)."""
         return list(self._D)
 
-    def expected_free_energy(
-        self, state_dist: list[float], action: int
-    ) -> float:
+    def expected_free_energy(self, state_dist: list[float], action: int) -> float:
         """Simplified EFE: -preference_score(likelihood(transition(s, a))).
 
         Returns ``float("inf")`` for invalid or empty distributions.

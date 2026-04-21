@@ -28,7 +28,8 @@ import math
 import types
 
 import pytest
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from cogant.reverse.matrices import render_matrices_module
 from cogant.reverse.parser import ReverseGNNModel
@@ -176,8 +177,7 @@ def test_generated_transition_preserves_distribution(
     for a in range(n_actions):
         out = mod.transition(uniform, a)
         assert len(out) == n_states, (
-            f"transition(uniform, {a}) returned {len(out)} entries, "
-            f"expected {n_states}"
+            f"transition(uniform, {a}) returned {len(out)} entries, expected {n_states}"
         )
         s = sum(out)
         assert math.isclose(s, 1.0, abs_tol=_STOCHASTIC_TOL), (

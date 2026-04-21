@@ -185,7 +185,6 @@ left as follow-ups.
 
 ## See also
 
-- **Wave-18 mutation testing notes:** [`_rnd/sweep_2026_04/mutation_testing_result.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/sweep_2026_04/mutation_testing_result.md)
 - **Calibration registry (boundary thresholds):** [CALIBRATION.md](CALIBRATION.md)
 - **Active Inference mapping:** [ACTIVE_INFERENCE_MAPPING.md](ACTIVE_INFERENCE_MAPPING.md)
 - **v1.0 readiness:** [V1.0_READINESS.md](V1.0_READINESS.md)

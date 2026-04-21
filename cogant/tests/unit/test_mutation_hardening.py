@@ -129,9 +129,7 @@ class TestCVectorAversivePreference:
         matrices = self._build(label="avoid_crash", confidence=0.7)
         C = matrices.compute_C()
         assert len(C) == 1
-        assert C[0] < 0.0, (
-            f"'avoid_' PREFERENCE should yield negative log-pref, got C[0]={C[0]}"
-        )
+        assert C[0] < 0.0, f"'avoid_' PREFERENCE should yield negative log-pref, got C[0]={C[0]}"
         assert C[0] == pytest.approx(-0.7, abs=1e-9)
 
     def test_reject_prefix_produces_negative_log_preference(self) -> None:
@@ -199,9 +197,7 @@ class TestMarkovBoundaryDirection:
         assert inner_id in blanket.active_ids, (
             "node with outgoing-to-external edge should be ACTIVE"
         )
-        assert inner_id not in blanket.sensory_ids, (
-            "ACTIVE node must not also be SENSORY"
-        )
+        assert inner_id not in blanket.sensory_ids, "ACTIVE node must not also be SENSORY"
         assert blanket.role_of(inner_id) is BlanketRole.ACTIVE
         assert outer_id in blanket.external_ids
 
@@ -211,9 +207,7 @@ class TestMarkovBoundaryDirection:
         assert inner_id in blanket.sensory_ids, (
             "node with incoming-from-external edge should be SENSORY"
         )
-        assert inner_id not in blanket.active_ids, (
-            "SENSORY node must not also be ACTIVE"
-        )
+        assert inner_id not in blanket.active_ids, "SENSORY node must not also be ACTIVE"
         assert blanket.role_of(inner_id) is BlanketRole.SENSORY
         assert outer_id in blanket.external_ids
 
@@ -276,14 +270,10 @@ class TestMapConfidenceExactBoundaries:
     def test_exact_low_boundary(self, compiler: StateSpaceCompiler) -> None:
         assert compiler._map_confidence(0.40) is ConfidenceLevel.LOW
 
-    def test_just_below_definite_is_high(
-        self, compiler: StateSpaceCompiler
-    ) -> None:
+    def test_just_below_definite_is_high(self, compiler: StateSpaceCompiler) -> None:
         """Complementary assertion: 0.949999... must be HIGH, not
         DEFINITE. This kills a mutation that widens the DEFINITE tier."""
         assert compiler._map_confidence(0.9499) is ConfidenceLevel.HIGH
 
-    def test_just_below_high_is_medium(
-        self, compiler: StateSpaceCompiler
-    ) -> None:
+    def test_just_below_high_is_medium(self, compiler: StateSpaceCompiler) -> None:
         assert compiler._map_confidence(0.7999) is ConfidenceLevel.MEDIUM

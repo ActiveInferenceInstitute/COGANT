@@ -81,7 +81,7 @@ Changed: `cogant/py/cogant/reverse/synthesizer.py`, function `_render_constraint
 
 - **Translation rules reference (PreferenceRule, etc.):** [`docs/reference/translation_rules.md`](../reference/translation_rules.md)
 - **Roundtrip evaluation report (post-fix benchmark):** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md)
-- **Benchmark refresh notes:** [`_rnd/sweep_2026_04/benchmark_refresh_result.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/sweep_2026_04/benchmark_refresh_result.md)
+- **Benchmark calibration snapshot:** [CALIBRATION.md](CALIBRATION.md)
 - **v1.0 readiness:** [V1.0_READINESS.md](V1.0_READINESS.md)
 - **Implementing modules:**
   [`py/cogant/reverse/synthesizer.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/reverse/synthesizer.py) (`_render_constraints_module`),

@@ -17,8 +17,8 @@ Covers:
 
 import ast
 import json
+
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -27,14 +27,17 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
     n2 = builder.add_node(NodeKind.FUNCTION, "fn", "mod.fn", path="mod.py")
@@ -46,9 +49,11 @@ def _make_graph_with_nodes():
 # static/parser.py — PythonASTParser extended paths
 # ---------------------------------------------------------------------------
 
+
 class TestPythonASTParserExtended:
     def _make_parser(self):
         from cogant.static.parser import PythonASTParser
+
         return PythonASTParser()
 
     def test_parse_string_basic(self):
@@ -128,18 +133,21 @@ class MyClass(Base):
 
     def test_ast_to_str_name_node(self):
         from cogant.static.parser import PythonASTParser
+
         node = ast.Name(id="MyClass", ctx=ast.Load())
         result = PythonASTParser._ast_to_str(node)
         assert "MyClass" in result
 
     def test_ast_to_str_constant_node(self):
         from cogant.static.parser import PythonASTParser
+
         node = ast.Constant(value=42)
         result = PythonASTParser._ast_to_str(node)
         assert result is not None
 
     def test_ast_to_str_attribute_node(self):
         from cogant.static.parser import PythonASTParser
+
         # Build ast.Attribute for "os.path"
         value = ast.Name(id="os", ctx=ast.Load())
         node = ast.Attribute(value=value, attr="path", ctx=ast.Load())
@@ -158,9 +166,11 @@ class MyClass(Base):
 # static/dataflow.py — DataFlowAnalyzer
 # ---------------------------------------------------------------------------
 
+
 class TestDataFlowAnalyzer:
     def _make_analyzer(self):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         return DataFlowAnalyzer()
 
     def test_init(self):
@@ -169,6 +179,7 @@ class TestDataFlowAnalyzer:
 
     def test_analyze_source_simple_assignment(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "x = 1\ny = x + 2\n"
         fp = tmp_path / "test.py"
@@ -177,20 +188,22 @@ class TestDataFlowAnalyzer:
 
     def test_analyze_source_function_with_reads_writes(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
-        src = '''
+        src = """
 def process(data):
     result = data
     return result
-'''
+"""
         fp = tmp_path / "proc.py"
         flows = analyzer.analyze_source(src, fp)
         assert isinstance(flows, list)
 
     def test_analyze_source_class_with_self_attrs(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
-        src = '''
+        src = """
 class Counter:
     def __init__(self):
         self.count = 0
@@ -198,13 +211,14 @@ class Counter:
     def inc(self):
         self.count += 1
         return self.count
-'''
+"""
         fp = tmp_path / "counter.py"
         flows = analyzer.analyze_source(src, fp)
         assert isinstance(flows, list)
 
     def test_analyze_source_syntax_error(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         flows = analyzer.analyze_source("def foo(: pass", tmp_path / "bad.py")
         assert isinstance(flows, list)
@@ -212,12 +226,14 @@ class Counter:
 
     def test_analyze_file_nonexistent(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         flows = analyzer.analyze_file(tmp_path / "does_not_exist.py")
         assert isinstance(flows, list)
 
     def test_analyze_file_valid(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         p = tmp_path / "sample.py"
         p.write_text("x = 1\ny = x + 1\n")
@@ -226,6 +242,7 @@ class Counter:
 
     def test_analyze_source_with_tuple_unpacking(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "a, b = 1, 2\n"
         fp = tmp_path / "unpack.py"
@@ -234,6 +251,7 @@ class Counter:
 
     def test_analyze_source_aug_assign(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "count = 0\ncount += 1\n"
         fp = tmp_path / "aug.py"
@@ -242,6 +260,7 @@ class Counter:
 
     def test_analyze_source_annotated_assign(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "x: int = 5\n"
         fp = tmp_path / "ann.py"
@@ -250,14 +269,15 @@ class Counter:
 
     def test_analyze_source_nested_class_methods(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
-        src = '''
+        src = """
 class A:
     class B:
         def method(self):
             self.x = 1
             return self.x
-'''
+"""
         fp = tmp_path / "nested.py"
         flows = analyzer.analyze_source(src, fp)
         assert isinstance(flows, list)
@@ -267,9 +287,11 @@ class A:
 # dynamic/enrichment.py — enrich_graph
 # ---------------------------------------------------------------------------
 
+
 class TestEnrichGraph:
     def test_enrich_graph_no_sources(self):
         from cogant.dynamic.enrichment import enrich_graph
+
         graph = _make_graph_with_nodes()
         result = enrich_graph(graph)
         assert isinstance(result, dict)
@@ -277,30 +299,35 @@ class TestEnrichGraph:
 
     def test_enrich_graph_with_nonexistent_coverage(self):
         from cogant.dynamic.enrichment import enrich_graph
+
         graph = _make_graph_with_nodes()
         result = enrich_graph(graph, coverage_path="/nonexistent/coverage.json")
         assert isinstance(result, dict)
 
     def test_enrich_graph_with_nonexistent_trace(self):
         from cogant.dynamic.enrichment import enrich_graph
+
         graph = _make_graph_with_nodes()
         result = enrich_graph(graph, trace_path="/nonexistent/trace.json")
         assert isinstance(result, dict)
 
     def test_enrich_graph_empty_graph(self):
         from cogant.dynamic.enrichment import enrich_graph
+
         graph = _make_empty_graph()
         result = enrich_graph(graph)
         assert isinstance(result, dict)
 
     def test_build_function_index_empty(self):
         from cogant.dynamic.enrichment import _build_function_index
+
         graph = _make_empty_graph()
         index = _build_function_index(graph)
         assert isinstance(index, dict)
 
     def test_build_function_index_with_functions(self):
         from cogant.dynamic.enrichment import _build_function_index
+
         graph = _make_graph_with_nodes()
         index = _build_function_index(graph)
         assert isinstance(index, dict)
@@ -310,11 +337,13 @@ class TestEnrichGraph:
 # api/orchestration.py — program_graph_to_dict, _serialize_node/edge
 # ---------------------------------------------------------------------------
 
+
 class TestOrchestrationHelpers:
     def test_serialize_node_returns_dict(self):
         from cogant.api.orchestration import _serialize_node
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         node = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
         result = _serialize_node(node)
@@ -324,7 +353,8 @@ class TestOrchestrationHelpers:
     def test_serialize_edge_returns_dict(self):
         from cogant.api.orchestration import _serialize_edge
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mod", "mod")
         n2 = builder.add_node(NodeKind.FUNCTION, "fn", "mod.fn")
@@ -335,6 +365,7 @@ class TestOrchestrationHelpers:
 
     def test_program_graph_to_dict_empty(self):
         from cogant.api.orchestration import program_graph_to_dict
+
         graph = _make_empty_graph()
         result = program_graph_to_dict(graph)
         assert isinstance(result, dict)
@@ -345,6 +376,7 @@ class TestOrchestrationHelpers:
 
     def test_program_graph_to_dict_with_nodes(self):
         from cogant.api.orchestration import program_graph_to_dict
+
         graph = _make_graph_with_nodes()
         result = program_graph_to_dict(graph)
         assert isinstance(result, dict)
@@ -352,6 +384,7 @@ class TestOrchestrationHelpers:
 
     def test_program_graph_to_dict_with_statistics(self):
         from cogant.api.orchestration import program_graph_to_dict
+
         graph = _make_empty_graph()
         stats = {"node_count": 0, "edge_count": 0}
         result = program_graph_to_dict(graph, statistics=stats)
@@ -360,6 +393,7 @@ class TestOrchestrationHelpers:
 
     def test_program_graph_to_dict_json_serializable(self):
         from cogant.api.orchestration import program_graph_to_dict
+
         graph = _make_graph_with_nodes()
         result = program_graph_to_dict(graph)
         # Should be JSON-serializable

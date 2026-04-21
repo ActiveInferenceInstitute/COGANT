@@ -14,7 +14,6 @@ Covers:
 """
 
 import json
-import time
 from pathlib import Path
 
 import pytest
@@ -26,9 +25,10 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
     mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py")
@@ -49,11 +49,13 @@ def _make_graph():
 # cache/hasher.py
 # ---------------------------------------------------------------------------
 
+
 class TestCacheHasher:
     """Test hash_file and hash_repo functions."""
 
     def test_hash_file_basic(self, tmp_path):
         from cogant.cache.hasher import hash_file
+
         f = tmp_path / "test.py"
         f.write_bytes(b"x = 1\n")
         h = hash_file(f)
@@ -62,6 +64,7 @@ class TestCacheHasher:
 
     def test_hash_file_deterministic(self, tmp_path):
         from cogant.cache.hasher import hash_file
+
         f = tmp_path / "code.py"
         f.write_bytes(b"def foo(): pass\n")
         h1 = hash_file(f)
@@ -70,6 +73,7 @@ class TestCacheHasher:
 
     def test_hash_file_different_content(self, tmp_path):
         from cogant.cache.hasher import hash_file
+
         f1 = tmp_path / "a.py"
         f2 = tmp_path / "b.py"
         f1.write_bytes(b"x = 1")
@@ -78,6 +82,7 @@ class TestCacheHasher:
 
     def test_hash_repo_basic(self, tmp_path):
         from cogant.cache.hasher import hash_repo
+
         (tmp_path / "main.py").write_bytes(b"def main(): pass\n")
         (tmp_path / "util.py").write_bytes(b"def util(): pass\n")
         h = hash_repo(tmp_path)
@@ -86,6 +91,7 @@ class TestCacheHasher:
 
     def test_hash_repo_deterministic(self, tmp_path):
         from cogant.cache.hasher import hash_repo
+
         (tmp_path / "code.py").write_bytes(b"x = 42\n")
         h1 = hash_repo(tmp_path)
         h2 = hash_repo(tmp_path)
@@ -93,6 +99,7 @@ class TestCacheHasher:
 
     def test_hash_repo_changes_with_content(self, tmp_path):
         from cogant.cache.hasher import hash_repo
+
         f = tmp_path / "script.py"
         f.write_bytes(b"version = 1\n")
         h1 = hash_repo(tmp_path)
@@ -102,6 +109,7 @@ class TestCacheHasher:
 
     def test_hash_repo_custom_extensions(self, tmp_path):
         from cogant.cache.hasher import hash_repo
+
         (tmp_path / "app.ts").write_bytes(b"const x = 1;\n")
         (tmp_path / "app.py").write_bytes(b"x = 1\n")
         # Only hash .ts files
@@ -110,6 +118,7 @@ class TestCacheHasher:
 
     def test_hash_repo_empty_directory(self, tmp_path):
         from cogant.cache.hasher import hash_repo
+
         empty = tmp_path / "empty"
         empty.mkdir()
         h = hash_repo(empty)
@@ -117,6 +126,7 @@ class TestCacheHasher:
 
     def test_hash_repo_ignores_git_dir(self, tmp_path):
         from cogant.cache.hasher import hash_repo
+
         (tmp_path / "main.py").write_bytes(b"x = 1\n")
         git_dir = tmp_path / ".git"
         git_dir.mkdir()
@@ -129,11 +139,13 @@ class TestCacheHasher:
 # cache/store.py
 # ---------------------------------------------------------------------------
 
+
 class TestCacheStore:
     """Test CacheStore operations."""
 
     def test_put_and_get(self, tmp_path):
-        from cogant.cache.store import CacheStore, CacheKey
+        from cogant.cache.store import CacheKey, CacheStore
+
         store = CacheStore(cache_dir=tmp_path / "cache")
         key = CacheKey(repo_path="/tmp/repo", content_hash="a" * 64, cogant_version="0.5.0")
         results = {"stage1": {"nodes": 5}, "stage2": {"edges": 10}}
@@ -146,14 +158,16 @@ class TestCacheStore:
         assert retrieved.hit is True
 
     def test_get_miss(self, tmp_path):
-        from cogant.cache.store import CacheStore, CacheKey
+        from cogant.cache.store import CacheKey, CacheStore
+
         store = CacheStore(cache_dir=tmp_path / "cache")
         key = CacheKey(repo_path="/nonexistent", content_hash="b" * 64, cogant_version="0.5.0")
         result = store.get(key)
         assert result is None
 
     def test_invalidate(self, tmp_path):
-        from cogant.cache.store import CacheStore, CacheKey
+        from cogant.cache.store import CacheKey, CacheStore
+
         store = CacheStore(cache_dir=tmp_path / "cache")
         key = CacheKey(repo_path="/tmp/repo2", content_hash="c" * 64, cogant_version="0.5.0")
         store.put(key, {"data": 1})
@@ -161,13 +175,15 @@ class TestCacheStore:
         assert store.get(key) is None
 
     def test_invalidate_missing_returns_false(self, tmp_path):
-        from cogant.cache.store import CacheStore, CacheKey
+        from cogant.cache.store import CacheKey, CacheStore
+
         store = CacheStore(cache_dir=tmp_path / "cache")
         key = CacheKey(repo_path="/x", content_hash="d" * 64, cogant_version="0.5.0")
         assert store.invalidate(key) is False
 
     def test_clear(self, tmp_path):
-        from cogant.cache.store import CacheStore, CacheKey
+        from cogant.cache.store import CacheKey, CacheStore
+
         store = CacheStore(cache_dir=tmp_path / "cache")
         key1 = CacheKey(repo_path="/r1", content_hash="e" * 64, cogant_version="0.5.0")
         key2 = CacheKey(repo_path="/r2", content_hash="f" * 64, cogant_version="0.5.0")
@@ -178,12 +194,14 @@ class TestCacheStore:
 
     def test_clear_empty_store(self, tmp_path):
         from cogant.cache.store import CacheStore
+
         store = CacheStore(cache_dir=tmp_path / "empty_cache")
         count = store.clear()
         assert count == 0
 
     def test_stats_empty(self, tmp_path):
         from cogant.cache.store import CacheStore
+
         store = CacheStore(cache_dir=tmp_path / "stats_cache")
         stats = store.stats()
         assert "entries" in stats
@@ -193,7 +211,8 @@ class TestCacheStore:
         assert stats["entries"] == 0
 
     def test_stats_with_hits_and_misses(self, tmp_path):
-        from cogant.cache.store import CacheStore, CacheKey
+        from cogant.cache.store import CacheKey, CacheStore
+
         store = CacheStore(cache_dir=tmp_path / "cache2")
         key = CacheKey(repo_path="/repo", content_hash="1" * 64, cogant_version="0.5.0")
         # Miss
@@ -207,7 +226,8 @@ class TestCacheStore:
         assert stats["hit_rate"] == 0.5
 
     def test_expired_entry_returns_none(self, tmp_path):
-        from cogant.cache.store import CacheStore, CacheKey
+        from cogant.cache.store import CacheKey, CacheStore
+
         # Very short TTL
         store = CacheStore(cache_dir=tmp_path / "cache3", ttl_seconds=0)
         key = CacheKey(repo_path="/expired", content_hash="2" * 64, cogant_version="0.5.0")
@@ -218,18 +238,23 @@ class TestCacheStore:
 
     def test_get_cache_dir(self):
         from cogant.cache.store import get_cache_dir
+
         d = get_cache_dir()
         assert isinstance(d, Path)
         assert "cogant" in str(d)
 
     def test_cache_key_frozen(self):
+        import dataclasses
+
         from cogant.cache.store import CacheKey
+
         key = CacheKey(repo_path="/r", content_hash="0" * 64, cogant_version="0.1")
-        with pytest.raises(Exception):
+        with pytest.raises(dataclasses.FrozenInstanceError):
             key.repo_path = "/other"  # type: ignore[misc]
 
     def test_put_concurrent_keys(self, tmp_path):
-        from cogant.cache.store import CacheStore, CacheKey
+        from cogant.cache.store import CacheKey, CacheStore
+
         store = CacheStore(cache_dir=tmp_path / "cache4")
         keys = [
             CacheKey(repo_path=f"/r{i}", content_hash=str(i) * 64, cogant_version="0.5")
@@ -247,12 +272,14 @@ class TestCacheStore:
 # viz/boundary.py — additional methods
 # ---------------------------------------------------------------------------
 
+
 class TestBoundaryMapperExtra:
     """Test BoundaryMapper additional methods."""
 
     def test_map_type_boundaries_empty(self):
-        from cogant.viz.boundary import BoundaryMapper
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.viz.boundary import BoundaryMapper
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         graph = builder.finalize()
         mapper = BoundaryMapper()
@@ -261,9 +288,9 @@ class TestBoundaryMapperExtra:
         assert "graph TD" in result
 
     def test_map_type_boundaries_with_classes_funcs(self):
-        from cogant.viz.boundary import BoundaryMapper
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.viz.boundary import BoundaryMapper
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         mod = builder.add_node(NodeKind.MODULE, "mod", "mod")
@@ -280,9 +307,9 @@ class TestBoundaryMapperExtra:
 
     def test_map_type_boundaries_many_classes(self):
         """More than 5 classes should add '... more' line."""
-        from cogant.viz.boundary import BoundaryMapper
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+        from cogant.viz.boundary import BoundaryMapper
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         for i in range(8):
@@ -293,8 +320,9 @@ class TestBoundaryMapperExtra:
         assert "more" in result
 
     def test_generate_boundary_report_empty(self):
-        from cogant.viz.boundary import BoundaryMapper
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.viz.boundary import BoundaryMapper
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         graph = builder.finalize()
         mapper = BoundaryMapper()
@@ -303,9 +331,9 @@ class TestBoundaryMapperExtra:
         assert report["total_boundary_crossings"] == 0
 
     def test_generate_boundary_report_with_cross_module_edges(self):
-        from cogant.viz.boundary import BoundaryMapper
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.viz.boundary import BoundaryMapper
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         mod1 = builder.add_node(NodeKind.MODULE, "mod1", "mod1")
@@ -331,11 +359,13 @@ class TestBoundaryMapperExtra:
 # viz/semantic_view.py
 # ---------------------------------------------------------------------------
 
+
 class TestSemanticVisualizer:
     """Test SemanticVisualizer."""
 
     def test_from_state_space_and_render_json(self):
         from cogant.viz.semantic_view import SemanticVisualizer
+
         state_space = {
             "states": [{"name": "s0", "description": "initial state", "type": "discrete"}],
             "observations": [{"name": "o0", "source": "sensor"}],
@@ -357,6 +387,7 @@ class TestSemanticVisualizer:
 
     def test_semantic_visualizer_empty(self):
         from cogant.viz.semantic_view import SemanticVisualizer
+
         viz = SemanticVisualizer()
         json_out = viz.render_json()
         data = json.loads(json_out)
@@ -365,6 +396,7 @@ class TestSemanticVisualizer:
 
     def test_render_html_writes_file(self, tmp_path):
         from cogant.viz.semantic_view import SemanticVisualizer
+
         state_space = {
             "states": [{"name": "ready", "description": "System is ready", "type": "discrete"}],
             "observations": [],
@@ -384,6 +416,7 @@ class TestSemanticVisualizer:
     def test_semantic_visualizer_with_many_items(self):
         """Test with >6 items per category (should truncate)."""
         from cogant.viz.semantic_view import SemanticVisualizer
+
         state_space = {
             "states": [{"name": f"s{i}", "description": f"State {i}"} for i in range(10)],
             "observations": [{"name": f"o{i}"} for i in range(10)],
@@ -403,17 +436,20 @@ class TestSemanticVisualizer:
 # viz/cytoscape_view.py
 # ---------------------------------------------------------------------------
 
+
 class TestCytoscapeView:
     """Test cytoscape view functions."""
 
     def test_build_graph_data_empty(self):
         from cogant.viz.cytoscape_view import build_cytoscape_graph_data
+
         data = build_cytoscape_graph_data({"nodes": [], "edges": []})
         assert data["nodes"] == []
         assert data["edges"] == []
 
     def test_build_graph_data_with_nodes(self):
         from cogant.viz.cytoscape_view import build_cytoscape_graph_data
+
         graph = {
             "nodes": [
                 {"id": "n1", "name": "FunctionA", "qualified_name": "mod.FunctionA"},
@@ -435,6 +471,7 @@ class TestCytoscapeView:
 
     def test_build_graph_data_with_mappings(self):
         from cogant.viz.cytoscape_view import build_cytoscape_graph_data
+
         graph = {
             "nodes": [{"id": "n1", "name": "StateA"}],
             "edges": [],
@@ -452,11 +489,13 @@ class TestCytoscapeView:
 
     def test_build_role_index_empty(self):
         from cogant.viz.cytoscape_view import _build_role_index
+
         index = _build_role_index(None)
         assert index == {}
 
     def test_build_role_index_dict_mappings(self):
         from cogant.viz.cytoscape_view import _build_role_index
+
         mappings = [
             {"kind": "OBSERVATION", "graph_fragment_node_ids": ["a", "b"], "confidence_score": 0.7},
             {"kind": "HIDDEN_STATE", "graph_fragment_node_ids": ["a"], "confidence_score": 0.9},
@@ -468,6 +507,7 @@ class TestCytoscapeView:
 
     def test_compute_degrees(self):
         from cogant.viz.cytoscape_view import _compute_degrees
+
         edges = [
             {"source_id": "n1", "target_id": "n2"},
             {"source_id": "n1", "target_id": "n3"},
@@ -479,7 +519,8 @@ class TestCytoscapeView:
         assert degrees["n3"] == 2  # twice as target
 
     def test_scale_degree_to_size(self):
-        from cogant.viz.cytoscape_view import _scale_degree_to_size, MIN_NODE_SIZE, MAX_NODE_SIZE
+        from cogant.viz.cytoscape_view import MAX_NODE_SIZE, MIN_NODE_SIZE, _scale_degree_to_size
+
         # Zero max_degree → MIN_NODE_SIZE
         assert _scale_degree_to_size(0, 0) == MIN_NODE_SIZE
         # degree == max_degree → MAX_NODE_SIZE
@@ -491,18 +532,21 @@ class TestCytoscapeView:
 
     def test_node_list_from_dict(self):
         from cogant.viz.cytoscape_view import _node_list
+
         graph = {"nodes": {"n1": {"id": "n1"}, "n2": {"id": "n2"}}}
         nodes = _node_list(graph)
         assert len(nodes) == 2
 
     def test_edge_list_from_list(self):
         from cogant.viz.cytoscape_view import _edge_list
+
         graph = {"edges": [{"source_id": "n1", "target_id": "n2"}]}
         edges = _edge_list(graph)
         assert len(edges) == 1
 
     def test_build_cytoscape_html(self):
         from cogant.viz.cytoscape_view import build_cytoscape_html
+
         graph_data = {
             "nodes": [{"id": "n1", "name": "FuncA"}],
             "edges": [],
@@ -513,6 +557,7 @@ class TestCytoscapeView:
 
     def test_ai_role_colors_constants(self):
         from cogant.viz.cytoscape_view import AI_ROLE_COLORS, DEFAULT_NODE_COLOR
+
         assert "HIDDEN_STATE" in AI_ROLE_COLORS
         assert "OBSERVATION" in AI_ROLE_COLORS
         assert "ACTION" in AI_ROLE_COLORS
@@ -523,14 +568,16 @@ class TestCytoscapeView:
 # ingest/incremental.py
 # ---------------------------------------------------------------------------
 
+
 class TestIncrementalIngester:
     """Test IncrementalIngester."""
 
     def test_is_git_repo_for_cogant_dir(self):
         """The COGANT repo itself is a git repo."""
-        from cogant.ingest.incremental import IncrementalIngester
         # Use the actual cogant directory (which is in a git repo)
         import cogant
+        from cogant.ingest.incremental import IncrementalIngester
+
         cogant_path = Path(cogant.__file__).parent.parent.parent
         ingester = IncrementalIngester(cogant_path)
         # Should not raise; result depends on whether git is available
@@ -539,42 +586,49 @@ class TestIncrementalIngester:
 
     def test_not_git_repo_for_tmp(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         # A fresh temp dir is not a git repo
         ingester = IncrementalIngester(tmp_path)
         assert ingester.is_git_repo() is False
 
     def test_changed_since_non_git(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         result = ingester.changed_since()
         assert result == []
 
     def test_working_tree_changes_non_git(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         result = ingester.working_tree_changes()
         assert result == []
 
     def test_python_files_changed_non_git(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         result = ingester.python_files_changed_since()
         assert result == []
 
     def test_source_files_changed_non_git(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         result = ingester.source_files_changed_since()
         assert result == []
 
     def test_changed_file_dataclass(self, tmp_path):
         from cogant.ingest.incremental import ChangedFile
+
         cf = ChangedFile(path=tmp_path / "main.py", change_type="M")
         assert cf.path == tmp_path / "main.py"
         assert cf.change_type == "M"
 
     def test_parse_name_status(self, tmp_path):
-        from cogant.ingest.incremental import IncrementalIngester, ChangedFile
+        from cogant.ingest.incremental import ChangedFile, IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         stdout = "M\tsrc/main.py\nA\tsrc/new.ts\nD\told.js\n"
         result = ingester._parse_name_status(stdout)
@@ -585,6 +639,7 @@ class TestIncrementalIngester:
 
     def test_parse_name_status_rename(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         stdout = "R100\told/path.py\tnew/path.py\n"
         result = ingester._parse_name_status(stdout)
@@ -594,6 +649,7 @@ class TestIncrementalIngester:
 
     def test_source_files_changed_custom_extensions(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         # Non-git: always empty
         result = ingester.source_files_changed_since(extensions={".py"})
@@ -601,6 +657,7 @@ class TestIncrementalIngester:
 
     def test_changed_since_commit_delegates(self, tmp_path):
         from cogant.ingest.incremental import IncrementalIngester
+
         ingester = IncrementalIngester(tmp_path)
         # Non-git: returns empty list
         result = ingester.changed_since_commit("abc123")
@@ -611,20 +668,24 @@ class TestIncrementalIngester:
 # dynamic/enrichment.py — internal helpers
 # ---------------------------------------------------------------------------
 
+
 class TestDynamicEnrichmentHelpers:
     """Test internal helper functions in dynamic/enrichment.py."""
 
     def test_normalize_path_strips_leading_dot_slash(self):
         from cogant.dynamic.enrichment import _normalize_path
+
         assert _normalize_path("./foo/bar.py") == "foo/bar.py"
         assert _normalize_path("././baz.py") == "baz.py"
 
     def test_normalize_path_backslash_to_slash(self):
         from cogant.dynamic.enrichment import _normalize_path
+
         assert _normalize_path("src\\module.py") == "src/module.py"
 
     def test_normalize_path_no_change(self):
         from cogant.dynamic.enrichment import _normalize_path
+
         assert _normalize_path("src/module.py") == "src/module.py"
 
     def test_node_spans_line_no_source_range(self):
@@ -643,8 +704,7 @@ class TestDynamicEnrichmentHelpers:
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         node = builder.add_node(
-            NodeKind.FUNCTION, "g", "g",
-            source_range={"start_line": 10, "end_line": 20}
+            NodeKind.FUNCTION, "g", "g", source_range={"start_line": 10, "end_line": 20}
         )
         assert _node_spans_line(node, 10) is True
         assert _node_spans_line(node, 15) is True
@@ -659,8 +719,7 @@ class TestDynamicEnrichmentHelpers:
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         node = builder.add_node(
-            NodeKind.FUNCTION, "h", "h",
-            source_range={"start": {"line": 5}, "end": {"line": 15}}
+            NodeKind.FUNCTION, "h", "h", source_range={"start": {"line": 5}, "end": {"line": 15}}
         )
         assert _node_spans_line(node, 5) is True
         assert _node_spans_line(node, 15) is True
@@ -668,6 +727,7 @@ class TestDynamicEnrichmentHelpers:
 
     def test_stable_edge_id_deterministic(self):
         from cogant.dynamic.enrichment import _stable_edge_id
+
         id1 = _stable_edge_id("src", "tgt", "CALLS")
         id2 = _stable_edge_id("src", "tgt", "CALLS")
         assert id1 == id2
@@ -675,6 +735,7 @@ class TestDynamicEnrichmentHelpers:
 
     def test_stable_edge_id_different_inputs(self):
         from cogant.dynamic.enrichment import _stable_edge_id
+
         id1 = _stable_edge_id("src1", "tgt1", "CALLS")
         id2 = _stable_edge_id("src2", "tgt2", "CALLS")
         assert id1 != id2
@@ -683,6 +744,7 @@ class TestDynamicEnrichmentHelpers:
 # ---------------------------------------------------------------------------
 # gnn/runner.py — additional GNNModelRunner paths
 # ---------------------------------------------------------------------------
+
 
 class TestGNNModelRunnerExtra:
     """Additional GNNModelRunner tests."""
@@ -714,6 +776,7 @@ class TestGNNModelRunnerExtra:
 
     def test_run_returns_result_dict(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         pkg_dir = tmp_path / "full_pkg"
         pkg_dir.mkdir()
         self._make_full_package(pkg_dir)
@@ -724,6 +787,7 @@ class TestGNNModelRunnerExtra:
 
     def test_beliefs_history_populated(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         pkg_dir = tmp_path / "pkg_hist"
         pkg_dir.mkdir()
         self._make_full_package(pkg_dir)
@@ -734,6 +798,7 @@ class TestGNNModelRunnerExtra:
 
     def test_execution_trace_fields_in_run(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         pkg_dir = tmp_path / "pkg_trace"
         pkg_dir.mkdir()
         self._make_full_package(pkg_dir)
@@ -751,13 +816,14 @@ class TestGNNModelRunnerExtra:
 # viz/boundary.py — _find_containing_module and cross-module edges
 # ---------------------------------------------------------------------------
 
+
 class TestBoundaryMapperModuleMethods:
     """Test _find_containing_module and related path in BoundaryMapper."""
 
     def test_find_containing_module_not_found(self):
-        from cogant.viz.boundary import BoundaryMapper
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+        from cogant.viz.boundary import BoundaryMapper
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         func = builder.add_node(NodeKind.FUNCTION, "orphan_func", "orphan_func")
@@ -768,9 +834,9 @@ class TestBoundaryMapperModuleMethods:
         assert result is None
 
     def test_find_containing_module_found(self):
-        from cogant.viz.boundary import BoundaryMapper
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.viz.boundary import BoundaryMapper
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         mod = builder.add_node(NodeKind.MODULE, "mymod", "mymod")
@@ -782,9 +848,9 @@ class TestBoundaryMapperModuleMethods:
         assert result == mod.id
 
     def test_map_module_boundaries_with_imports_edges(self):
-        from cogant.viz.boundary import BoundaryMapper
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.viz.boundary import BoundaryMapper
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         mod1 = builder.add_node(NodeKind.MODULE, "mod1", "mod1")
@@ -804,23 +870,27 @@ class TestBoundaryMapperModuleMethods:
 # dynamic/coverage.py — decode numbits
 # ---------------------------------------------------------------------------
 
+
 class TestCoverageDecodeNumbits:
     """Test _decode_numbits internal function."""
 
     def test_decode_numbits_basic(self):
         from cogant.dynamic.coverage import _decode_numbits
+
         # byte 0b00000001 → line 0
         result = _decode_numbits(bytes([0b00000001]))
         assert 0 in result
 
     def test_decode_numbits_multiple_bits(self):
         from cogant.dynamic.coverage import _decode_numbits
+
         # byte 0b00001111 → lines 0,1,2,3
         result = _decode_numbits(bytes([0b00001111]))
         assert result == [0, 1, 2, 3]
 
     def test_decode_numbits_multiple_bytes(self):
         from cogant.dynamic.coverage import _decode_numbits
+
         # 2 bytes: first byte all 1s → lines 0-7; second byte 0b00000001 → line 8
         result = _decode_numbits(bytes([0xFF, 0x01]))
         assert 0 in result
@@ -829,5 +899,6 @@ class TestCoverageDecodeNumbits:
 
     def test_decode_numbits_empty(self):
         from cogant.dynamic.coverage import _decode_numbits
+
         result = _decode_numbits(b"")
         assert result == []

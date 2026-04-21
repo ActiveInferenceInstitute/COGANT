@@ -14,7 +14,6 @@ import pytest
 
 from cogant.ingest.manifest import Dependency, ManifestParser
 
-
 # --------------------------- pyproject.toml ----------------------------- #
 
 
@@ -75,7 +74,7 @@ def test_parse_setup_py_extracts_name_version_and_install_requires(tmp_path):
     setup_py = _write(
         tmp_path,
         "setup.py",
-        '''
+        """
 from setuptools import setup
 
 setup(
@@ -91,7 +90,7 @@ setup(
         "test": ["coverage"],
     },
 )
-''',
+""",
     )
     meta, deps = ManifestParser().parse_setup_py(setup_py)
     assert meta["name"] == "my-pkg"

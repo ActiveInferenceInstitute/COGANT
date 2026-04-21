@@ -25,7 +25,14 @@ class BundleExporter:
     process: ProcessModel
     mappings: dict[str, Any]
     output_dir: Path
-    def __init__(self, program_graph: ProgramGraph, state_space_model: StateSpaceModel, process_model: ProcessModel, semantic_mappings: dict[str, Any], output_dir: Path) -> None: ...
+    def __init__(
+        self,
+        program_graph: ProgramGraph,
+        state_space_model: StateSpaceModel,
+        process_model: ProcessModel,
+        semantic_mappings: dict[str, Any],
+        output_dir: Path,
+    ) -> None: ...
     def export(self, formats: list[str] | None = None) -> Path: ...
     def export_zip(self, output_path: str) -> str: ...
     def export_with_provenance(

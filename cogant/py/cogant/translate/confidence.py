@@ -39,10 +39,10 @@ class ConfidenceModel:
     # See ``docs/evaluation/CALIBRATION.md`` for the full sweep plan.
     # TODO(calibration): sweep {0.4, 0.5, 0.55, 0.6, 0.65, 0.7} over a
     # 20+ repo fixture set and pick the precision/recall sweet spot.
-    STATIC_ONLY_THRESHOLD = 0.5            # principled default
-    STATIC_PLUS_RUNTIME_THRESHOLD = 0.65   # principled default (+0.15 corroboration bonus)
-    RUNTIME_ONLY_THRESHOLD = 0.4           # principled default (-0.1 dynamic-noise discount)
-    HUMAN_REVIEWED_THRESHOLD = 0.9         # principled default (strong-consensus band)
+    STATIC_ONLY_THRESHOLD = 0.5  # principled default
+    STATIC_PLUS_RUNTIME_THRESHOLD = 0.65  # principled default (+0.15 corroboration bonus)
+    RUNTIME_ONLY_THRESHOLD = 0.4  # principled default (-0.1 dynamic-noise discount)
+    HUMAN_REVIEWED_THRESHOLD = 0.9  # principled default (strong-consensus band)
 
     def __init__(self) -> None:
         """Initialize the confidence model."""
@@ -219,7 +219,11 @@ class ConfidenceModel:
             if static_count > 0 and dynamic_count > 0:
                 # Both static and dynamic - check for agreement
                 static_conf = sum(p.confidence for p in mapping.provenance if "static" in p.source)
-                dynamic_conf = sum(p.confidence for p in mapping.provenance if "dynamic" in p.source or "runtime" in p.source)
+                dynamic_conf = sum(
+                    p.confidence
+                    for p in mapping.provenance
+                    if "dynamic" in p.source or "runtime" in p.source
+                )
 
                 static_avg = static_conf / max(1, static_count)
                 dynamic_avg = dynamic_conf / max(1, dynamic_count)
@@ -261,12 +265,14 @@ class ConfidenceModel:
         mapping.confidence_tier = self.determine_confidence_tier(mapping, mapping.confidence_score)
 
         # Log
-        self._scoring_log.append({
-            "mapping_id": mapping.id,
-            "confidence_score": mapping.confidence_score,
-            "confidence_tier": mapping.confidence_tier.value,
-            "evidence_count": mapping.evidence_count,
-        })
+        self._scoring_log.append(
+            {
+                "mapping_id": mapping.id,
+                "confidence_score": mapping.confidence_score,
+                "confidence_tier": mapping.confidence_tier.value,
+                "evidence_count": mapping.evidence_count,
+            }
+        )
 
     def score_batch(self, mappings: list[SemanticMapping]) -> None:
         """Update confidence for a batch of mappings.
@@ -353,7 +359,9 @@ class ConfidenceModel:
             "average_confidence": sum(scores) / len(scores) if scores else 0.0,
             "min_confidence": min(scores) if scores else 0.0,
             "max_confidence": max(scores) if scores else 0.0,
-            "average_evidence_count": sum(evidence_counts) / len(evidence_counts) if evidence_counts else 0,
+            "average_evidence_count": sum(evidence_counts) / len(evidence_counts)
+            if evidence_counts
+            else 0,
             "tier_distribution": dict(tiers),
         }
 

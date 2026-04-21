@@ -14,9 +14,6 @@ Covers:
 """
 
 import json
-import sys
-import tempfile
-from io import StringIO
 from pathlib import Path
 
 import pytest
@@ -27,6 +24,7 @@ pytestmark = pytest.mark.unit
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_graph():
     """Create a minimal ProgramGraph for tests."""
@@ -52,12 +50,14 @@ def _make_graph():
 
 def _make_state_space(graph):
     from cogant.statespace.compiler import StateSpaceCompiler
+
     compiler = StateSpaceCompiler(graph, "test_schema")
     return compiler.compile({})
 
 
 def _make_process_model(graph):
     from cogant.process.extractor import ProcessExtractor
+
     return ProcessExtractor(graph, "test_schema").extract()
 
 
@@ -65,11 +65,13 @@ def _make_process_model(graph):
 # dynamic/enrichment.py
 # ---------------------------------------------------------------------------
 
+
 class TestDynamicEnrichmentWithCoverage:
     """Test enrich_graph with a real coverage XML file."""
 
     def test_enrich_graph_no_paths(self):
         from cogant.dynamic.enrichment import enrich_graph
+
         graph = _make_graph()
         result = enrich_graph(graph)
         assert result["coverage_nodes_enriched"] == 0
@@ -79,6 +81,7 @@ class TestDynamicEnrichmentWithCoverage:
     def test_enrich_graph_coverage_xml_empty(self, tmp_path):
         """Pass a minimal Cobertura XML — covers the xml branch."""
         from cogant.dynamic.enrichment import enrich_graph
+
         # Minimal valid Cobertura XML with no data
         xml_content = """<?xml version="1.0" ?>
 <coverage branch-rate="0" branches-covered="0" branches-valid="0" complexity="0" line-rate="0" lines-covered="0" lines-valid="0" timestamp="1700000000" version="7.0">
@@ -107,6 +110,7 @@ class TestDynamicEnrichmentWithCoverage:
     def test_enrich_graph_coverage_xml_second_call_idempotent(self, tmp_path):
         """Second call with same coverage should not double-add evidence_sources."""
         from cogant.dynamic.enrichment import enrich_graph
+
         xml_content = """<?xml version="1.0" ?>
 <coverage branch-rate="0" branches-covered="0" branches-valid="0" complexity="0" line-rate="0" lines-covered="0" lines-valid="0" timestamp="1700000000" version="7.0">
     <packages/>
@@ -122,6 +126,7 @@ class TestDynamicEnrichmentWithCoverage:
     def test_enrich_graph_trace_path_nonexistent(self, tmp_path):
         """Passing trace_path that doesn't exist is handled gracefully."""
         from cogant.dynamic.enrichment import enrich_graph
+
         graph = _make_graph()
         # Should not raise — returns summary with 0 enriched
         fake_trace = tmp_path / "trace.json"
@@ -131,6 +136,7 @@ class TestDynamicEnrichmentWithCoverage:
 
     def test_enrich_graph_returns_graph_reference(self):
         from cogant.dynamic.enrichment import enrich_graph
+
         graph = _make_graph()
         result = enrich_graph(graph)
         assert result["graph"] is graph
@@ -140,11 +146,13 @@ class TestDynamicEnrichmentWithCoverage:
 # reverse/cli.py helpers
 # ---------------------------------------------------------------------------
 
+
 class TestReverseCLIRenderHelpers:
     """Test rendering helpers in reverse/cli.py directly."""
 
     def test_render_plan_summary(self, tmp_path):
         from cogant.reverse.cli import _render_plan_summary
+
         # Should not raise; just prints to Rich console
         _render_plan_summary(
             gnn_path=Path("/fake/model.gnn.md"),
@@ -158,7 +166,7 @@ class TestReverseCLIRenderHelpers:
 
     def test_render_roundtrip_result_isomorphic(self):
         from cogant.reverse.cli import _render_roundtrip_result
-        from cogant.reverse.idempotency import RoundtripResult, ROLE_MATCH_THRESHOLD
+        from cogant.reverse.idempotency import ROLE_MATCH_THRESHOLD, RoundtripResult
 
         result = RoundtripResult(
             is_isomorphic=True,
@@ -173,7 +181,7 @@ class TestReverseCLIRenderHelpers:
 
     def test_render_roundtrip_result_drift(self):
         from cogant.reverse.cli import _render_roundtrip_result
-        from cogant.reverse.idempotency import RoundtripResult, ROLE_MATCH_THRESHOLD
+        from cogant.reverse.idempotency import ROLE_MATCH_THRESHOLD, RoundtripResult
 
         result = RoundtripResult(
             is_isomorphic=False,
@@ -188,7 +196,7 @@ class TestReverseCLIRenderHelpers:
 
     def test_render_roundtrip_result_no_shape_match(self):
         from cogant.reverse.cli import _render_roundtrip_result
-        from cogant.reverse.idempotency import RoundtripResult, ROLE_MATCH_THRESHOLD
+        from cogant.reverse.idempotency import ROLE_MATCH_THRESHOLD, RoundtripResult
 
         result = RoundtripResult(
             is_isomorphic=False,
@@ -206,11 +214,13 @@ class TestReverseCLIRenderHelpers:
 # ingest/manifest.py
 # ---------------------------------------------------------------------------
 
+
 class TestManifestParserFormats:
     """Test all manifest format parsers."""
 
     def test_parse_requirements_txt(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         req_path = tmp_path / "requirements.txt"
         req_path.write_text("requests>=2.0\nnumpy==1.24\n# comment\n\nflask\n")
         parser = ManifestParser()
@@ -223,6 +233,7 @@ class TestManifestParserFormats:
 
     def test_parse_requirements_txt_editable(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         req_path = tmp_path / "requirements.txt"
         req_path.write_text("-e file:./local_pkg\n-e ./another\n")
         parser = ManifestParser()
@@ -231,6 +242,7 @@ class TestManifestParserFormats:
 
     def test_parse_package_json(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         pkg = {
             "name": "my-app",
             "version": "1.0.0",
@@ -251,6 +263,7 @@ class TestManifestParserFormats:
 
     def test_parse_cargo_toml(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         cargo_content = """[package]
 name = "my-crate"
 version = "0.1.0"
@@ -275,6 +288,7 @@ criterion = "0.5"
 
     def test_parse_setup_py(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         setup_content = """from setuptools import setup
 setup(
     name='mypackage',
@@ -295,6 +309,7 @@ setup(
 
     def test_parse_unknown_type_raises(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         unknown_path = tmp_path / "unknown.yaml"
         unknown_path.write_text("name: test")
         parser = ManifestParser()
@@ -303,6 +318,7 @@ setup(
 
     def test_parse_pyproject_toml(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         pyproject_content = """[project]
 name = "cogant-test"
 version = "0.5.0"
@@ -327,6 +343,7 @@ test = ["coverage"]
 
     def test_parse_requirement_line_with_version(self):
         from cogant.ingest.manifest import ManifestParser
+
         dep = ManifestParser._parse_requirement_line("requests>=2.0,<3.0")
         assert dep is not None
         assert dep.name == "requests"
@@ -334,27 +351,32 @@ test = ["coverage"]
 
     def test_parse_requirement_line_plain(self):
         from cogant.ingest.manifest import ManifestParser
+
         dep = ManifestParser._parse_requirement_line("flask")
         assert dep is not None
         assert dep.name == "flask"
 
     def test_parse_requirement_line_empty(self):
         from cogant.ingest.manifest import ManifestParser
+
         dep = ManifestParser._parse_requirement_line("")
         assert dep is None
 
     def test_parse_requirements_string(self):
         from cogant.ingest.manifest import ManifestParser
+
         deps = ManifestParser._parse_requirements_string('"requests>=2.0", "numpy"')
         assert len(deps) >= 1
 
     def test_parse_requirement_list(self):
         from cogant.ingest.manifest import ManifestParser
+
         deps = ManifestParser._parse_requirement_list(["requests>=2.0", "numpy<2.0"])
         assert len(deps) == 2
 
     def test_package_json_missing_fields(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         pkg_path = tmp_path / "package.json"
         pkg_path.write_text('{"name": "minimal"}')
         parser = ManifestParser()
@@ -364,6 +386,7 @@ test = ["coverage"]
 
     def test_parse_setup_py_no_extras(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         setup_content = """from setuptools import setup
 setup(name='simple', version='1.0', install_requires=['requests'])
 """
@@ -378,57 +401,68 @@ setup(name='simple', version='1.0', install_requires=['requests'])
 # ingest/language_detect.py
 # ---------------------------------------------------------------------------
 
+
 class TestLanguageDetector:
     """Test LanguageDetector methods."""
 
     def test_detect_language_python(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(tmp_path / "module.py")
         assert lang == "python"
 
     def test_detect_language_typescript(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(tmp_path / "app.ts")
         assert lang == "typescript"
 
     def test_detect_language_javascript(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(tmp_path / "script.js")
         assert lang == "javascript"
 
     def test_detect_language_rust(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(tmp_path / "main.rs")
         assert lang == "rust"
 
     def test_detect_language_go(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(tmp_path / "main.go")
         assert lang == "go"
 
     def test_detect_language_pyi(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(tmp_path / "stubs.pyi")
         assert lang == "python"
 
     def test_detect_language_tsx(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(tmp_path / "component.tsx")
         assert lang == "typescript"
 
     def test_detect_language_unknown(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         lang = LanguageDetector.detect_language(tmp_path / "file.xyz")
         assert lang is None
 
     def test_detect_language_string_path(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         # Should accept string
         lang = LanguageDetector.detect_language(str(tmp_path / "script.py"))
         assert lang == "python"
 
     def test_detect_repo_languages(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         # Create some test files
         (tmp_path / "main.py").write_text("x = 1")
         (tmp_path / "helper.py").write_text("y = 2")
@@ -440,12 +474,14 @@ class TestLanguageDetector:
 
     def test_detect_repo_languages_string(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "main.rs").write_text("fn main() {}")
         result = LanguageDetector.detect_repo_languages(str(tmp_path))
         assert result.get("rust") == 1
 
     def test_detect_repo_languages_empty(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         empty_dir = tmp_path / "empty"
         empty_dir.mkdir()
         result = LanguageDetector.detect_repo_languages(empty_dir)
@@ -453,28 +489,33 @@ class TestLanguageDetector:
 
     def test_get_parser_unknown_raises(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         with pytest.raises(ImportError):
             LanguageDetector.get_parser("cobol")
 
     def test_get_supported_languages(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         langs = LanguageDetector.get_supported_languages()
         assert isinstance(langs, list)
 
     def test_get_parser_for_extension_unknown(self):
         from cogant.ingest.language_detect import get_parser_for_extension
+
         result = get_parser_for_extension(".xyz")
         assert result is None
 
     def test_get_parser_for_extension_py(self):
         from cogant.ingest.language_detect import get_parser_for_extension
+
         # May return None if parser not loaded; just check no exception
-        result = get_parser_for_extension(".py")
+        get_parser_for_extension(".py")
         # result could be None or a parser instance
 
     def test_get_parser_for_extension_no_dot(self):
         from cogant.ingest.language_detect import get_parser_for_extension
-        result = get_parser_for_extension("py")
+
+        get_parser_for_extension("py")
         # Should handle no-dot prefix
 
 
@@ -482,11 +523,13 @@ class TestLanguageDetector:
 # ingest/files.py
 # ---------------------------------------------------------------------------
 
+
 class TestFileEnumerator:
     """Test FileEnumerator and FileInfo."""
 
     def test_enumerate_basic(self, tmp_path):
         from cogant.ingest.files import FileEnumerator, FileInfo
+
         (tmp_path / "main.py").write_text("x = 1")
         (tmp_path / "util.py").write_text("y = 2")
         (tmp_path / "test_util.py").write_text("assert True")
@@ -498,6 +541,7 @@ class TestFileEnumerator:
 
     def test_enumerate_exclude_tests(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "main.py").write_text("x = 1")
         (tmp_path / "test_main.py").write_text("assert True")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
@@ -509,6 +553,7 @@ class TestFileEnumerator:
 
     def test_enumerate_with_checksums(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "script.py").write_text("print('hello')")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         files = enumerator.enumerate(compute_checksums=True)
@@ -518,6 +563,7 @@ class TestFileEnumerator:
 
     def test_enumerate_language_detection(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "app.ts").write_text("const x = 1;")
         (tmp_path / "main.py").write_text("x = 1")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
@@ -529,7 +575,8 @@ class TestFileEnumerator:
             assert by_name["main.py"].language == "python"
 
     def test_fileinfo_attributes(self, tmp_path):
-        from cogant.ingest.files import FileEnumerator, FileInfo
+        from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "code.py").write_text("x = 1")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         files = enumerator.enumerate()
@@ -546,11 +593,13 @@ class TestFileEnumerator:
 # ingest/repo.py
 # ---------------------------------------------------------------------------
 
+
 class TestRepoIngester:
     """Test RepoIngester for local repositories."""
 
     def test_ingest_local_basic(self, tmp_path):
         from cogant.ingest.repo import RepoIngester, RepoSnapshot
+
         # Create a minimal repo directory
         (tmp_path / "main.py").write_text("def hello(): pass")
         ingester = RepoIngester(work_dir=tmp_path / "work")
@@ -560,6 +609,7 @@ class TestRepoIngester:
 
     def test_ingest_local_with_pyproject(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "main.py").write_text("x = 1")
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_bytes(b"[project]\nname = 'test'\nversion = '1.0'\n")
@@ -569,12 +619,14 @@ class TestRepoIngester:
 
     def test_ingest_local_nonexistent_raises(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         ingester = RepoIngester(work_dir=tmp_path / "work")
         with pytest.raises(ValueError, match="does not exist"):
             ingester.ingest_local(tmp_path / "nonexistent")
 
     def test_ingest_local_file_not_dir_raises(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         f = tmp_path / "afile.py"
         f.write_text("x = 1")
         ingester = RepoIngester(work_dir=tmp_path / "work")
@@ -583,6 +635,7 @@ class TestRepoIngester:
 
     def test_repo_metadata_fields(self, tmp_path):
         from cogant.ingest.repo import RepoIngester, RepoMetadata
+
         (tmp_path / "x.py").write_text("x = 1")
         ingester = RepoIngester(work_dir=tmp_path / "work")
         snapshot = ingester.ingest_local(tmp_path)
@@ -592,6 +645,7 @@ class TestRepoIngester:
 
     def test_ingest_local_includes_dependencies(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "main.py").write_text("x = 1")
         req = tmp_path / "requirements.txt"
         req.write_text("requests>=2.0\nnumpy\n")
@@ -602,6 +656,7 @@ class TestRepoIngester:
 
     def test_ingest_local_language_detection(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "app.py").write_text("x = 1")
         (tmp_path / "helper.py").write_text("y = 2")
         ingester = RepoIngester(work_dir=tmp_path / "work")
@@ -611,6 +666,7 @@ class TestRepoIngester:
 
     def test_ingest_local_no_test_files(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "main.py").write_text("x = 1")
         (tmp_path / "test_main.py").write_text("assert True")
         ingester = RepoIngester(work_dir=tmp_path / "work")
@@ -620,6 +676,7 @@ class TestRepoIngester:
 
     def test_ingest_local_compute_checksums(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "main.py").write_text("x = 1")
         ingester = RepoIngester(work_dir=tmp_path / "work")
         snapshot = ingester.ingest_local(tmp_path, compute_checksums=True)
@@ -632,11 +689,13 @@ class TestRepoIngester:
 # gnn/runner.py
 # ---------------------------------------------------------------------------
 
+
 class TestExecutionTrace:
     """Test ExecutionTrace dataclass."""
 
     def test_execution_trace_basic(self):
         from cogant.gnn.runner import ExecutionTrace
+
         trace = ExecutionTrace(
             step=0,
             state={"x": 1},
@@ -651,6 +710,7 @@ class TestExecutionTrace:
 
     def test_execution_trace_to_dict(self):
         from cogant.gnn.runner import ExecutionTrace
+
         trace = ExecutionTrace(
             step=1,
             state={"y": 2},
@@ -667,6 +727,7 @@ class TestExecutionTrace:
 
     def test_execution_trace_defaults(self):
         from cogant.gnn.runner import ExecutionTrace
+
         trace = ExecutionTrace(step=0, state={})
         assert trace.beliefs == {}
         assert trace.beliefs_prior == {}
@@ -676,6 +737,7 @@ class TestExecutionTrace:
 
     def test_execution_trace_with_all_fields(self):
         from cogant.gnn.runner import ExecutionTrace
+
         trace = ExecutionTrace(
             step=5,
             state={"hidden": "A"},
@@ -721,6 +783,7 @@ class TestGNNModelRunner:
 
     def test_load_package(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         pkg_dir = tmp_path / "pkg"
         pkg_dir.mkdir()
         self._create_minimal_package(pkg_dir)
@@ -730,18 +793,21 @@ class TestGNNModelRunner:
 
     def test_load_package_missing_manifest_raises(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         with pytest.raises(FileNotFoundError):
             runner.load_package(str(tmp_path / "empty_pkg"))
 
     def test_run_without_load_raises(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         with pytest.raises(RuntimeError, match="not loaded"):
             runner.run(steps=1)
 
     def test_run_basic(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         pkg_dir = tmp_path / "pkg2"
         pkg_dir.mkdir()
         self._create_minimal_package(pkg_dir)
@@ -753,6 +819,7 @@ class TestGNNModelRunner:
 
     def test_runner_has_traces_after_run(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         pkg_dir = tmp_path / "pkg3"
         pkg_dir.mkdir()
         self._create_minimal_package(pkg_dir)
@@ -764,6 +831,7 @@ class TestGNNModelRunner:
     def test_load_package_no_model_json(self, tmp_path):
         """Package with only manifest.json should still load."""
         from cogant.gnn.runner import GNNModelRunner
+
         pkg_dir = tmp_path / "pkg4"
         pkg_dir.mkdir()
         manifest = {"version": "1.0.0"}
@@ -777,11 +845,13 @@ class TestGNNModelRunner:
 # viz/boundary.py
 # ---------------------------------------------------------------------------
 
+
 class TestBoundaryMapper:
     """Test BoundaryMapper module and type boundary analysis."""
 
     def test_map_module_boundaries_empty_graph(self):
         from cogant.viz.boundary import BoundaryMapper
+
         graph = _make_graph()
         mapper = BoundaryMapper()
         result = mapper.map_module_boundaries(graph)
@@ -789,14 +859,16 @@ class TestBoundaryMapper:
         assert "graph TD" in result
 
     def test_map_module_boundaries_with_classes(self):
-        from cogant.viz.boundary import BoundaryMapper
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.viz.boundary import BoundaryMapper
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         mod = builder.add_node(NodeKind.MODULE, "mymod", "mymod", path="mymod.py")
         cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymod.MyClass", path="mymod.py")
-        func = builder.add_node(NodeKind.FUNCTION, "my_func", "mymod.MyClass.my_func", path="mymod.py")
+        func = builder.add_node(
+            NodeKind.FUNCTION, "my_func", "mymod.MyClass.my_func", path="mymod.py"
+        )
         builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
         builder.add_edge(cls.id, func.id, EdgeKind.CONTAINS)
         graph = builder.finalize()
@@ -806,6 +878,7 @@ class TestBoundaryMapper:
 
     def test_map_type_boundaries(self):
         from cogant.viz.boundary import BoundaryMapper
+
         graph = _make_graph()
         mapper = BoundaryMapper()
         # Some BoundaryMapper may have map_type_boundaries
@@ -815,6 +888,7 @@ class TestBoundaryMapper:
 
     def test_analyze_coupling(self):
         from cogant.viz.boundary import BoundaryMapper
+
         graph = _make_graph()
         mapper = BoundaryMapper()
         if hasattr(mapper, "analyze_coupling"):
@@ -823,13 +897,14 @@ class TestBoundaryMapper:
 
     def test_boundary_mapper_init(self):
         from cogant.viz.boundary import BoundaryMapper
+
         mapper = BoundaryMapper()
         assert mapper is not None
 
     def test_map_module_boundaries_with_calls(self):
-        from cogant.viz.boundary import BoundaryMapper
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.viz.boundary import BoundaryMapper
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         mod1 = builder.add_node(NodeKind.MODULE, "mod1", "mod1", path="mod1.py")
@@ -853,12 +928,14 @@ class TestBoundaryMapper:
 # static/types.py TypeInferencer
 # ---------------------------------------------------------------------------
 
+
 class TestTypeInferencer:
     """Test TypeInferencer for Python source type analysis."""
 
     def test_infer_types_from_source_basic(self, tmp_path):
         from cogant.static.types import TypeInferencer
-        code = '''
+
+        code = """
 def add(x: int, y: int) -> int:
     return x + y
 
@@ -868,29 +945,31 @@ class MyClass:
 
     def process(self, data: list) -> None:
         pass
-'''
+"""
         inferencer = TypeInferencer(repo_root=tmp_path)
         result = inferencer.infer_types_from_source(code, tmp_path / "test.py")
         assert isinstance(result, list)
 
     def test_infer_types_from_source_no_annotations(self, tmp_path):
         from cogant.static.types import TypeInferencer
-        code = '''
+
+        code = """
 def helper(x, y):
     return x + y
 
 result = 42
-'''
+"""
         inferencer = TypeInferencer(repo_root=tmp_path)
         result = inferencer.infer_types_from_source(code, tmp_path / "test.py")
         assert isinstance(result, list)
 
     def test_infer_types_from_file(self, tmp_path):
         from cogant.static.types import TypeInferencer
-        code = '''
+
+        code = """
 def greet(name: str) -> str:
     return f"Hello {name}"
-'''
+"""
         py_file = tmp_path / "greet.py"
         py_file.write_text(code)
         inferencer = TypeInferencer(repo_root=tmp_path)
@@ -899,15 +978,17 @@ def greet(name: str) -> str:
 
     def test_infer_types_from_file_missing(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         inferencer = TypeInferencer(repo_root=tmp_path)
         result = inferencer.infer_types_from_file(tmp_path / "nonexistent.py")
         assert result == []
 
     def test_typeinfo_attributes(self, tmp_path):
         from cogant.static.types import TypeInferencer, TypeInfo
-        code = '''
+
+        code = """
 x: int = 5
-'''
+"""
         inferencer = TypeInferencer(repo_root=tmp_path)
         infos = inferencer.infer_types_from_source(code, tmp_path / "x.py")
         for info in infos:
@@ -918,7 +999,8 @@ x: int = 5
 
     def test_infer_types_complex_annotations(self, tmp_path):
         from cogant.static.types import TypeInferencer
-        code = '''
+
+        code = """
 from typing import Optional, List, Dict
 
 def process(
@@ -935,13 +1017,14 @@ class Handler:
     def __init__(self, name: str) -> None:
         self.name: str = name
         self.count: int = 0
-'''
+"""
         inferencer = TypeInferencer(repo_root=tmp_path)
         result = inferencer.infer_types_from_source(code, tmp_path / "complex.py")
         assert isinstance(result, list)
 
     def test_type_inferencer_init_no_root(self):
         from cogant.static.types import TypeInferencer
+
         # Should default to "/"
         inferencer = TypeInferencer()
         assert inferencer.repo_root == Path("/")
@@ -951,11 +1034,13 @@ class Handler:
 # dynamic/coverage.py — additional coverage for CoverageIngester XML path
 # ---------------------------------------------------------------------------
 
+
 class TestCoverageIngesterXML:
     """Test CoverageIngester with XML coverage files."""
 
     def test_ingest_coverage_xml_basic(self, tmp_path):
         from cogant.dynamic.coverage import CoverageIngester
+
         xml_content = """<?xml version="1.0" ?>
 <coverage branch-rate="0.5" branches-covered="2" branches-valid="4" line-rate="0.8" lines-covered="8" lines-valid="10" timestamp="1700000000" version="7.0">
     <packages>
@@ -981,6 +1066,7 @@ class TestCoverageIngesterXML:
 
     def test_map_coverage_to_spans(self, tmp_path):
         from cogant.dynamic.coverage import CoverageIngester
+
         xml_content = """<?xml version="1.0" ?>
 <coverage branch-rate="0" branches-covered="0" branches-valid="0" line-rate="1.0" lines-covered="3" lines-valid="3" timestamp="1700000000" version="7.0">
     <packages>
@@ -1006,6 +1092,7 @@ class TestCoverageIngesterXML:
 
     def test_ingest_coverage_xml_missing_file(self, tmp_path):
         from cogant.dynamic.coverage import CoverageIngester
+
         ingester = CoverageIngester()
         result = ingester.ingest_coverage_xml(str(tmp_path / "nonexistent.xml"))
         # Should return empty dict or raise gracefully
@@ -1016,11 +1103,13 @@ class TestCoverageIngesterXML:
 # Additional manifest tests for edge cases in ingest/manifest.py
 # ---------------------------------------------------------------------------
 
+
 class TestManifestParserEdgeCases:
     """Extra edge case tests for ManifestParser."""
 
     def test_parse_cargo_toml_with_dict_dep(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         cargo_content = """[package]
 name = "complex-crate"
 version = "0.2.0"
@@ -1041,6 +1130,7 @@ mockall = { version = "0.11" }
 
     def test_parse_package_json_with_no_dev_deps(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         pkg = {"name": "simple-app", "version": "2.0.0", "dependencies": {"react": "18.0"}}
         pkg_path = tmp_path / "package.json"
         pkg_path.write_text(json.dumps(pkg))
@@ -1051,6 +1141,7 @@ mockall = { version = "0.11" }
 
     def test_parse_requirements_txt_comments_and_blank_lines(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         req_content = """# This is a comment
 requests>=2.28.0
 
@@ -1066,12 +1157,14 @@ numpy<2.0
 
     def test_dependency_is_local_flag(self):
         from cogant.ingest.manifest import ManifestParser
+
         dep = ManifestParser._parse_requirement_line("-e file:./local_pkg")
         assert dep is not None
         assert dep.is_local is True
 
     def test_parse_requirement_line_pin(self):
         from cogant.ingest.manifest import ManifestParser
+
         dep = ManifestParser._parse_requirement_line("django==4.2.0")
         assert dep is not None
         assert dep.name == "django"

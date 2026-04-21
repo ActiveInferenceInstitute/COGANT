@@ -97,17 +97,13 @@ def hidden_state_mappings(graph_with_hidden_state):
 class TestStateVariableExtractor:
     """Tests for :class:`StateVariableExtractor`."""
 
-    def test_extract_empty_mappings_returns_empty(
-        self, graph_with_hidden_state
-    ) -> None:
+    def test_extract_empty_mappings_returns_empty(self, graph_with_hidden_state) -> None:
         graph, *_ = graph_with_hidden_state
         extractor = StateVariableExtractor(graph)
         result = extractor.extract({})
         assert result == {}
 
-    def test_extract_ignores_non_hidden_state_mappings(
-        self, graph_with_hidden_state
-    ) -> None:
+    def test_extract_ignores_non_hidden_state_mappings(self, graph_with_hidden_state) -> None:
         graph, counter_id, _ = graph_with_hidden_state
         extractor = StateVariableExtractor(graph)
         mapping = SemanticMapping(
@@ -143,9 +139,7 @@ class TestStateVariableExtractor:
         assert counter_var.cardinality == 10  # from metadata
         assert counter_var.name == "counter"
 
-    def test_extract_skips_missing_node_ids(
-        self, graph_with_hidden_state
-    ) -> None:
+    def test_extract_skips_missing_node_ids(self, graph_with_hidden_state) -> None:
         graph, *_ = graph_with_hidden_state
         extractor = StateVariableExtractor(graph)
         orphan_mapping = SemanticMapping(
@@ -164,9 +158,7 @@ class TestStateVariableExtractor:
 class TestStateSpaceCompiler:
     """Tests for :class:`StateSpaceCompiler`."""
 
-    def test_compiler_constructs_with_graph(
-        self, graph_with_hidden_state
-    ) -> None:
+    def test_compiler_constructs_with_graph(self, graph_with_hidden_state) -> None:
         graph, *_ = graph_with_hidden_state
         compiler = StateSpaceCompiler(graph, schema_name="test_schema")
         assert compiler.graph is graph

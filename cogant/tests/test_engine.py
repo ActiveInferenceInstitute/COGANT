@@ -8,21 +8,21 @@ import pytest
 # Add the py directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "py"))
 
-from cogant.normalize.identities import IdentityResolver
-from cogant.normalize.canonical import CanonicalNormalizer, LanguageFact
 from cogant.graph.builder import ProgramGraphBuilder
-from cogant.graph.queries import GraphQuery
 from cogant.graph.merge import GraphMerger
+from cogant.graph.queries import GraphQuery
+from cogant.normalize.canonical import CanonicalNormalizer, LanguageFact
+from cogant.normalize.identities import IdentityResolver
+from cogant.schemas.core import EdgeKind, NodeKind
+from cogant.translate.confidence import ConfidenceModel
 from cogant.translate.engine import TranslationEngine
+from cogant.translate.review import ReviewManager
 from cogant.translate.rules import (
-    ReadOnlyInputRule,
     MutatingSubsystemRule,
     OrchestratorRule,
+    ReadOnlyInputRule,
     TestAssertionRule,
 )
-from cogant.translate.confidence import ConfidenceModel
-from cogant.translate.review import ReviewManager
-from cogant.schemas.core import NodeKind, EdgeKind
 
 
 def _sample_graph_builder() -> ProgramGraphBuilder:
@@ -304,7 +304,9 @@ def test_graph_merge():
     merged, provenance = merger.merge_graphs(graph1, graph2)
 
     print(f"Merged graphs: {merged.node_count()} nodes, {merged.edge_count()} edges")
-    print(f"Merge provenance: {provenance.nodes_added} nodes added, {provenance.edges_added} edges added")
+    print(
+        f"Merge provenance: {provenance.nodes_added} nodes added, {provenance.edges_added} edges added"
+    )
 
     stats = merger.get_merge_statistics()
     print(f"Merge statistics: {stats}")

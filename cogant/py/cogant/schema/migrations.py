@@ -1,4 +1,5 @@
 """GNN schema migration functions."""
+
 from __future__ import annotations
 
 import re
@@ -18,9 +19,13 @@ def migrate_v1_0_to_v1_1(gnn_text: str) -> tuple[str, list[str]]:
     if match:
         # Insert after the GNNSection line and its model name value.
         lines = gnn_text.splitlines(keepends=True)
-        insert_idx = gnn_text[:match.end()].count('\n')
+        insert_idx = gnn_text[: match.end()].count("\n")
         # skip the section name line + blank + model name
-        out_lines = lines[:insert_idx + 3] + ["\n## GNNVersionAndFlags\nGNN v1\n"] + lines[insert_idx + 3:]
+        out_lines = (
+            lines[: insert_idx + 3]
+            + ["\n## GNNVersionAndFlags\nGNN v1\n"]
+            + lines[insert_idx + 3 :]
+        )
         migrated = "".join(out_lines)
         changes.append("Added ## GNNVersionAndFlags section (v1.0 → v1.1)")
     else:

@@ -10,7 +10,6 @@ import pytest
 from cogant.validate._mixin import ValidationIssue
 from cogant.validate.report import ReportGenerator, ValidationReport
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -36,7 +35,9 @@ def _make_report(
     )
 
 
-def _make_issue(severity: str = "error", category: str = "schema", msg: str = "bad") -> ValidationIssue:
+def _make_issue(
+    severity: str = "error", category: str = "schema", msg: str = "bad"
+) -> ValidationIssue:
     return ValidationIssue(
         id="i0", severity=severity, category=category, message=msg, affected_ids=["node_1"]
     )
@@ -60,9 +61,15 @@ def test_validation_report_fields() -> None:
 
 def test_validation_report_default_details() -> None:
     report = ValidationReport(
-        id="r", schema_name="s", validated_at=datetime.now(),
-        model_id="m", issues=[], is_valid=True,
-        coverage_score=1.0, confidence_score=1.0, summary="ok",
+        id="r",
+        schema_name="s",
+        validated_at=datetime.now(),
+        model_id="m",
+        issues=[],
+        is_valid=True,
+        coverage_score=1.0,
+        confidence_score=1.0,
+        summary="ok",
     )
     assert report.details == {}
 
@@ -161,8 +168,18 @@ def test_export_to_dict_required_keys() -> None:
     gen = _make_generator()
     report = _make_report()
     d = gen.export_to_dict(report)
-    required = {"id", "schema_name", "model_id", "is_valid", "coverage_score",
-                "confidence_score", "summary", "issues", "details", "validated_at"}
+    required = {
+        "id",
+        "schema_name",
+        "model_id",
+        "is_valid",
+        "coverage_score",
+        "confidence_score",
+        "summary",
+        "issues",
+        "details",
+        "validated_at",
+    }
     assert required <= d.keys()
 
 

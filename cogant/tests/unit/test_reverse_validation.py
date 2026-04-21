@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import ast
 import math
-import tempfile
 from pathlib import Path
 from textwrap import dedent
 
@@ -24,10 +23,9 @@ from cogant.reverse.metrics import (
     compare_role_distributions,
     compute_isomorphism_report,
 )
-from cogant.reverse.parser import ReverseGNNModel, parse_gnn
-from cogant.reverse.planner import PackagePlan, plan_package
+from cogant.reverse.parser import parse_gnn
+from cogant.reverse.planner import plan_package
 from cogant.reverse.synthesizer import synthesize_package
-
 
 # ---------------------------------------------------------------------------
 # Shared GNN markdown fixtures

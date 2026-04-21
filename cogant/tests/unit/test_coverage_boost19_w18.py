@@ -11,8 +11,6 @@ Covers:
   InheritanceRule, ContainmentRule
 """
 
-from pathlib import Path
-
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -22,12 +20,15 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
     cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass", path="mymodule.py")
     func = builder.add_node(NodeKind.FUNCTION, "my_func", "mymodule.my_func", path="mymodule.py")
     builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
@@ -37,6 +38,7 @@ def _make_graph():
 
 def _make_state_space(graph=None):
     from cogant.statespace.compiler import StateSpaceCompiler
+
     if graph is None:
         graph = _make_graph()
     compiler = StateSpaceCompiler(graph, "test_schema")
@@ -44,15 +46,17 @@ def _make_state_space(graph=None):
 
 
 def _make_semantic_mapping(kind_name="HIDDEN_STATE", n_provenance=1, sources=None):
-    from cogant.schemas.semantic import SemanticMapping, ProvenanceRecord, MappingKind
-    from cogant.schemas.semantic import ConfidenceTier
+    from cogant.schemas.semantic import (
+        MappingKind,
+        ProvenanceRecord,
+        SemanticMapping,
+    )
 
-    kind = MappingKind[kind_name] if kind_name in MappingKind.__members__ else MappingKind.HIDDEN_STATE
+    kind = (
+        MappingKind[kind_name] if kind_name in MappingKind.__members__ else MappingKind.HIDDEN_STATE
+    )
     sources = sources or ["static_analysis"] * n_provenance
-    provenance = [
-        ProvenanceRecord(source=src, confidence=0.7)
-        for src in sources
-    ]
+    provenance = [ProvenanceRecord(source=src, confidence=0.7) for src in sources]
     return SemanticMapping(
         id=f"map_{kind_name}",
         kind=kind,
@@ -67,12 +71,14 @@ def _make_semantic_mapping(kind_name="HIDDEN_STATE", n_provenance=1, sources=Non
 # translate/confidence.py — ConfidenceModel
 # ---------------------------------------------------------------------------
 
+
 class TestConfidenceModelCompute:
     """Test ConfidenceModel.compute_confidence_score."""
 
     def test_compute_no_provenance(self):
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+
         model = ConfidenceModel()
         mapping = SemanticMapping(
             id="test",
@@ -83,6 +89,7 @@ class TestConfidenceModelCompute:
 
     def test_compute_with_single_provenance(self):
         from cogant.translate.confidence import ConfidenceModel
+
         mapping = _make_semantic_mapping("HIDDEN_STATE", n_provenance=1)
         model = ConfidenceModel()
         score = model.compute_confidence_score(mapping)
@@ -90,13 +97,15 @@ class TestConfidenceModelCompute:
 
     def test_compute_alias_works(self):
         from cogant.translate.confidence import ConfidenceModel
+
         mapping = _make_semantic_mapping("HIDDEN_STATE", n_provenance=1)
         model = ConfidenceModel()
         assert model.compute(mapping) == model.compute_confidence_score(mapping)
 
     def test_compute_high_confidence(self):
+        from cogant.schemas.semantic import MappingKind, ProvenanceRecord, SemanticMapping
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import SemanticMapping, ProvenanceRecord, MappingKind
+
         model = ConfidenceModel()
         mapping = SemanticMapping(
             id="test_high",
@@ -110,8 +119,9 @@ class TestConfidenceModelCompute:
         assert score > 0.5
 
     def test_compute_clamped_to_1(self):
+        from cogant.schemas.semantic import MappingKind, ProvenanceRecord, SemanticMapping
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import SemanticMapping, ProvenanceRecord, MappingKind
+
         model = ConfidenceModel()
         # Very high values should be clamped
         mapping = SemanticMapping(
@@ -126,8 +136,9 @@ class TestConfidenceModelCompute:
         assert score <= 1.0
 
     def test_compute_clamped_to_0(self):
+        from cogant.schemas.semantic import MappingKind, ProvenanceRecord, SemanticMapping
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import SemanticMapping, ProvenanceRecord, MappingKind
+
         model = ConfidenceModel()
         # Conflict penalties should reduce score but not below 0
         mapping = SemanticMapping(
@@ -146,8 +157,14 @@ class TestConfidenceModelTier:
     """Test determine_confidence_tier."""
 
     def test_static_only_tier(self):
+        from cogant.schemas.semantic import (
+            ConfidenceTier,
+            MappingKind,
+            ProvenanceRecord,
+            SemanticMapping,
+        )
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import ConfidenceTier, SemanticMapping, ProvenanceRecord, MappingKind
+
         model = ConfidenceModel()
         mapping = SemanticMapping(
             id="static",
@@ -161,8 +178,14 @@ class TestConfidenceModelTier:
         assert tier == ConfidenceTier.STATIC_ONLY
 
     def test_human_reviewed_tier(self):
+        from cogant.schemas.semantic import (
+            ConfidenceTier,
+            MappingKind,
+            ProvenanceRecord,
+            SemanticMapping,
+        )
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import ConfidenceTier, SemanticMapping, ProvenanceRecord, MappingKind
+
         model = ConfidenceModel()
         mapping = SemanticMapping(
             id="human",
@@ -176,8 +199,14 @@ class TestConfidenceModelTier:
         assert tier == ConfidenceTier.HUMAN_REVIEWED
 
     def test_runtime_only_tier(self):
+        from cogant.schemas.semantic import (
+            ConfidenceTier,
+            MappingKind,
+            ProvenanceRecord,
+            SemanticMapping,
+        )
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import ConfidenceTier, SemanticMapping, ProvenanceRecord, MappingKind
+
         model = ConfidenceModel()
         mapping = SemanticMapping(
             id="runtime",
@@ -191,8 +220,14 @@ class TestConfidenceModelTier:
         assert tier == ConfidenceTier.RUNTIME_ONLY
 
     def test_static_plus_runtime_tier(self):
+        from cogant.schemas.semantic import (
+            ConfidenceTier,
+            MappingKind,
+            ProvenanceRecord,
+            SemanticMapping,
+        )
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import ConfidenceTier, SemanticMapping, ProvenanceRecord, MappingKind
+
         model = ConfidenceModel()
         mapping = SemanticMapping(
             id="both",
@@ -210,6 +245,7 @@ class TestConfidenceModelTier:
 
     def test_precomputed_score_used(self):
         from cogant.translate.confidence import ConfidenceModel
+
         mapping = _make_semantic_mapping()
         model = ConfidenceModel()
         # Pass a custom score so compute is not called
@@ -222,8 +258,9 @@ class TestConfidenceModelDiversity:
     """Test score_evidence_diversity."""
 
     def test_no_provenance(self):
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+
         model = ConfidenceModel()
         mapping = SemanticMapping(id="empty", kind=MappingKind.HIDDEN_STATE)
         score = model.score_evidence_diversity(mapping)
@@ -231,6 +268,7 @@ class TestConfidenceModelDiversity:
 
     def test_single_source(self):
         from cogant.translate.confidence import ConfidenceModel
+
         mapping = _make_semantic_mapping(n_provenance=1, sources=["static_analysis"])
         model = ConfidenceModel()
         score = model.score_evidence_diversity(mapping)
@@ -238,6 +276,7 @@ class TestConfidenceModelDiversity:
 
     def test_two_different_sources(self):
         from cogant.translate.confidence import ConfidenceModel
+
         mapping = _make_semantic_mapping(
             n_provenance=2, sources=["static_analysis", "dynamic_trace"]
         )
@@ -247,6 +286,7 @@ class TestConfidenceModelDiversity:
 
     def test_same_sources_no_diversity(self):
         from cogant.translate.confidence import ConfidenceModel
+
         mapping = _make_semantic_mapping(
             n_provenance=3, sources=["static_analysis", "static_analysis", "static_analysis"]
         )
@@ -259,8 +299,9 @@ class TestConfidenceModelConflicts:
     """Test detect_conflicts."""
 
     def test_no_provenance(self):
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+
         model = ConfidenceModel()
         mapping = SemanticMapping(id="empty", kind=MappingKind.HIDDEN_STATE)
         penalties = model.detect_conflicts(mapping)
@@ -268,14 +309,16 @@ class TestConfidenceModelConflicts:
 
     def test_single_provenance_no_conflict(self):
         from cogant.translate.confidence import ConfidenceModel
+
         mapping = _make_semantic_mapping(n_provenance=1)
         model = ConfidenceModel()
         penalties = model.detect_conflicts(mapping)
         assert penalties == []
 
     def test_high_confidence_divergence(self):
+        from cogant.schemas.semantic import MappingKind, ProvenanceRecord, SemanticMapping
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import SemanticMapping, ProvenanceRecord, MappingKind
+
         model = ConfidenceModel()
         mapping = SemanticMapping(
             id="divergent",
@@ -290,8 +333,9 @@ class TestConfidenceModelConflicts:
         assert len(penalties) >= 1
 
     def test_static_dynamic_disagreement(self):
+        from cogant.schemas.semantic import MappingKind, ProvenanceRecord, SemanticMapping
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import SemanticMapping, ProvenanceRecord, MappingKind
+
         model = ConfidenceModel()
         mapping = SemanticMapping(
             id="static_vs_dynamic",
@@ -310,8 +354,9 @@ class TestConfidenceModelBatch:
     """Test update_mapping_confidence and score_batch."""
 
     def test_update_mapping_in_place(self):
+        from cogant.schemas.semantic import MappingKind, ProvenanceRecord, SemanticMapping
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import SemanticMapping, ProvenanceRecord, MappingKind
+
         model = ConfidenceModel()
         mapping = SemanticMapping(
             id="upd",
@@ -327,12 +372,14 @@ class TestConfidenceModelBatch:
 
     def test_score_batch_empty(self):
         from cogant.translate.confidence import ConfidenceModel
+
         model = ConfidenceModel()
         model.score_batch([])  # Should not raise
 
     def test_score_batch_multiple(self):
+        from cogant.schemas.semantic import MappingKind, ProvenanceRecord, SemanticMapping
         from cogant.translate.confidence import ConfidenceModel
-        from cogant.schemas.semantic import SemanticMapping, ProvenanceRecord, MappingKind
+
         model = ConfidenceModel()
         mappings = [
             SemanticMapping(
@@ -353,11 +400,13 @@ class TestConfidenceModelBatch:
 # validate/schema_check.py — SchemaValidator
 # ---------------------------------------------------------------------------
 
+
 class TestSchemaValidator:
     """Test SchemaValidator on real graphs and state spaces."""
 
     def test_validate_program_graph_returns_list(self):
         from cogant.validate.schema_check import SchemaValidator
+
         graph = _make_graph()
         validator = SchemaValidator()
         issues = validator.validate_program_graph(graph)
@@ -365,6 +414,7 @@ class TestSchemaValidator:
 
     def test_validate_clean_graph_no_errors(self):
         from cogant.validate.schema_check import SchemaValidator
+
         graph = _make_graph()
         validator = SchemaValidator()
         issues = validator.validate_program_graph(graph)
@@ -373,6 +423,7 @@ class TestSchemaValidator:
 
     def test_validate_state_space_returns_list(self):
         from cogant.validate.schema_check import SchemaValidator
+
         ssm = _make_state_space()
         validator = SchemaValidator()
         issues = validator.validate_state_space(ssm)
@@ -380,11 +431,13 @@ class TestSchemaValidator:
 
     def test_schema_validator_init(self):
         from cogant.validate.schema_check import SchemaValidator
+
         validator = SchemaValidator()
         assert validator.issues == []
 
     def test_validation_issue_creation(self):
         from cogant.validate.schema_check import ValidationIssue
+
         issue = ValidationIssue(
             id="ISS-001",
             severity="error",
@@ -399,6 +452,7 @@ class TestSchemaValidator:
 
     def test_validation_issue_no_recommendation(self):
         from cogant.validate.schema_check import ValidationIssue
+
         issue = ValidationIssue(
             id="ISS-002",
             severity="warning",
@@ -409,9 +463,10 @@ class TestSchemaValidator:
         assert issue.recommendation is None
 
     def test_validate_graph_with_nodes(self):
-        from cogant.validate.schema_check import SchemaValidator
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import NodeKind
+        from cogant.validate.schema_check import SchemaValidator
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         for i in range(5):
             builder.add_node(NodeKind.FUNCTION, f"func_{i}", f"mod.func_{i}")
@@ -425,13 +480,15 @@ class TestSchemaValidator:
 # validate/report.py — ValidationReport dataclass
 # ---------------------------------------------------------------------------
 
+
 class TestValidationReport:
     """Test ValidationReport dataclass."""
 
     def test_validation_report_creation(self):
-        from cogant.validate.report import ValidationReport
-        from cogant.validate.schema_check import ValidationIssue
         from datetime import datetime
+
+        from cogant.validate.report import ValidationReport
+
         report = ValidationReport(
             id="report_001",
             schema_name="test_schema",
@@ -449,12 +506,13 @@ class TestValidationReport:
         assert report.details == {}
 
     def test_validation_report_with_issues(self):
+        from datetime import datetime
+
         from cogant.validate.report import ValidationReport
         from cogant.validate.schema_check import ValidationIssue
-        from datetime import datetime
+
         issue = ValidationIssue(
-            id="I001", severity="warning", category="schema",
-            message="Minor", affected_ids=[]
+            id="I001", severity="warning", category="schema", message="Minor", affected_ids=[]
         )
         report = ValidationReport(
             id="report_002",
@@ -475,18 +533,19 @@ class TestValidationReport:
 # translate/rules/behavioral.py — OrchestratorRule
 # ---------------------------------------------------------------------------
 
+
 class TestOrchestratorRule:
     """Test OrchestratorRule matches and apply."""
 
     def _make_orchestrator_graph(self):
         """Build a graph where a function calls 3+ others (orchestrator pattern)."""
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         orch = builder.add_node(NodeKind.FUNCTION, "orchestrate", "mod.orchestrate")
         targets = [
-            builder.add_node(NodeKind.FUNCTION, f"sub_{i}", f"mod.sub_{i}")
-            for i in range(4)
+            builder.add_node(NodeKind.FUNCTION, f"sub_{i}", f"mod.sub_{i}") for i in range(4)
         ]
         for t in targets:
             builder.add_edge(orch.id, t.id, EdgeKind.CALLS)
@@ -494,18 +553,21 @@ class TestOrchestratorRule:
 
     def test_orchestrator_rule_name(self):
         from cogant.translate.rules.behavioral import OrchestratorRule
+
         rule = OrchestratorRule()
         assert rule.name == "orchestrator"
 
     def test_orchestrator_rule_mapping_kind(self):
-        from cogant.translate.rules.behavioral import OrchestratorRule
         from cogant.schemas.semantic import MappingKind
+        from cogant.translate.rules.behavioral import OrchestratorRule
+
         rule = OrchestratorRule()
         assert rule.mapping_kind == MappingKind.ORCHESTRATION
 
     def test_orchestrator_matches_high_fan_out(self):
-        from cogant.translate.rules.behavioral import OrchestratorRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.behavioral import OrchestratorRule
+
         graph = self._make_orchestrator_graph()
         query = GraphQuery(graph)
         rule = OrchestratorRule()
@@ -514,10 +576,11 @@ class TestOrchestratorRule:
         assert len(matches) >= 1
 
     def test_orchestrator_no_match_low_fan_out(self):
-        from cogant.translate.rules.behavioral import OrchestratorRule
-        from cogant.graph.queries import GraphQuery
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.graph.queries import GraphQuery
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.translate.rules.behavioral import OrchestratorRule
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         func = builder.add_node(NodeKind.FUNCTION, "small", "mod.small")
         target = builder.add_node(NodeKind.FUNCTION, "helper", "mod.helper")
@@ -529,8 +592,9 @@ class TestOrchestratorRule:
         assert len(matches) == 0
 
     def test_orchestrator_apply_returns_mapping(self):
-        from cogant.translate.rules.behavioral import OrchestratorRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.behavioral import OrchestratorRule
+
         graph = self._make_orchestrator_graph()
         query = GraphQuery(graph)
         rule = OrchestratorRule()
@@ -545,13 +609,15 @@ class TestOrchestratorRule:
 # translate/rules/structural.py — ReadOnlyInputRule, ContainmentRule
 # ---------------------------------------------------------------------------
 
+
 class TestReadOnlyInputRule:
     """Test ReadOnlyInputRule matches and apply."""
 
     def _make_readonly_graph(self):
         """Build a graph with a module that only has READS edges (no WRITES)."""
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         mod = builder.add_node(NodeKind.MODULE, "reader", "reader", path="reader.py")
         var = builder.add_node(NodeKind.VARIABLE, "data", "reader.data")
@@ -560,18 +626,21 @@ class TestReadOnlyInputRule:
 
     def test_read_only_rule_name(self):
         from cogant.translate.rules.structural import ReadOnlyInputRule
+
         rule = ReadOnlyInputRule()
         assert rule.name == "read_only_input"
 
     def test_read_only_rule_mapping_kind(self):
-        from cogant.translate.rules.structural import ReadOnlyInputRule
         from cogant.schemas.semantic import MappingKind
+        from cogant.translate.rules.structural import ReadOnlyInputRule
+
         rule = ReadOnlyInputRule()
         assert rule.mapping_kind == MappingKind.OBSERVATION
 
     def test_read_only_matches_readonly_module(self):
-        from cogant.translate.rules.structural import ReadOnlyInputRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.structural import ReadOnlyInputRule
+
         graph = self._make_readonly_graph()
         query = GraphQuery(graph)
         rule = ReadOnlyInputRule()
@@ -579,8 +648,9 @@ class TestReadOnlyInputRule:
         assert len(matches) >= 1
 
     def test_read_only_no_match_on_empty_graph(self):
-        from cogant.translate.rules.structural import ReadOnlyInputRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.structural import ReadOnlyInputRule
+
         graph = _make_graph()
         query = GraphQuery(graph)
         rule = ReadOnlyInputRule()
@@ -589,8 +659,9 @@ class TestReadOnlyInputRule:
         assert len(matches) == 0
 
     def test_read_only_apply_returns_mapping(self):
-        from cogant.translate.rules.structural import ReadOnlyInputRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.structural import ReadOnlyInputRule
+
         graph = self._make_readonly_graph()
         query = GraphQuery(graph)
         rule = ReadOnlyInputRule()
@@ -606,7 +677,8 @@ class TestMutatingSubsystemRule:
     def _make_mutating_graph(self):
         """Build a graph with a class that has WRITES edges."""
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         cls = builder.add_node(NodeKind.CLASS, "Tracker", "Tracker")
         var1 = builder.add_node(NodeKind.VARIABLE, "count", "Tracker.count")
@@ -618,18 +690,21 @@ class TestMutatingSubsystemRule:
 
     def test_mutating_rule_name(self):
         from cogant.translate.rules.structural import MutatingSubsystemRule
+
         rule = MutatingSubsystemRule()
         assert rule.name == "mutating_subsystem"
 
     def test_mutating_rule_mapping_kind(self):
-        from cogant.translate.rules.structural import MutatingSubsystemRule
         from cogant.schemas.semantic import MappingKind
+        from cogant.translate.rules.structural import MutatingSubsystemRule
+
         rule = MutatingSubsystemRule()
         assert rule.mapping_kind == MappingKind.HIDDEN_STATE
 
     def test_mutating_matches(self):
-        from cogant.translate.rules.structural import MutatingSubsystemRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.structural import MutatingSubsystemRule
+
         graph = self._make_mutating_graph()
         query = GraphQuery(graph)
         rule = MutatingSubsystemRule()
@@ -637,8 +712,9 @@ class TestMutatingSubsystemRule:
         assert len(matches) >= 1
 
     def test_mutating_apply(self):
-        from cogant.translate.rules.structural import MutatingSubsystemRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.structural import MutatingSubsystemRule
+
         graph = self._make_mutating_graph()
         query = GraphQuery(graph)
         rule = MutatingSubsystemRule()
@@ -653,12 +729,14 @@ class TestContainmentRule:
 
     def test_containment_rule_name(self):
         from cogant.translate.rules.structural import ContainmentRule
+
         rule = ContainmentRule()
         assert rule.name == "containment"
 
     def test_containment_rule_matches_on_standard_graph(self):
-        from cogant.translate.rules.structural import ContainmentRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.structural import ContainmentRule
+
         graph = _make_graph()
         query = GraphQuery(graph)
         rule = ContainmentRule()
@@ -666,8 +744,9 @@ class TestContainmentRule:
         assert isinstance(matches, list)
 
     def test_containment_rule_apply(self):
-        from cogant.translate.rules.structural import ContainmentRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.structural import ContainmentRule
+
         graph = _make_graph()
         query = GraphQuery(graph)
         rule = ContainmentRule()
@@ -684,7 +763,8 @@ class TestInheritanceRule:
     def _make_inheritance_graph(self):
         """Build a graph with inheritance edges."""
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         base = builder.add_node(NodeKind.CLASS, "Base", "Base")
         child = builder.add_node(NodeKind.CLASS, "Child", "Child")
@@ -693,12 +773,14 @@ class TestInheritanceRule:
 
     def test_inheritance_rule_name(self):
         from cogant.translate.rules.structural import InheritanceRule
+
         rule = InheritanceRule()
         assert rule.name == "inheritance"
 
     def test_inheritance_matches(self):
-        from cogant.translate.rules.structural import InheritanceRule
         from cogant.graph.queries import GraphQuery
+        from cogant.translate.rules.structural import InheritanceRule
+
         graph = self._make_inheritance_graph()
         query = GraphQuery(graph)
         rule = InheritanceRule()

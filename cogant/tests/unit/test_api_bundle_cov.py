@@ -16,7 +16,6 @@ import pytest
 import cogant
 from cogant.api.bundle import ArtifactKey, Bundle, _json_default
 
-
 # ------------------------------------------------------------------ #
 # cogant.__init__ package-level tests
 # ------------------------------------------------------------------ #
@@ -38,7 +37,9 @@ def test_cogant_rust_version_is_none_or_string() -> None:
 
 def test_cogant_session_importable() -> None:
     # Session is either the real class or None when unavailable
-    assert cogant.Session is not None or cogant.Session is None  # always true — just confirms no import error
+    assert (
+        cogant.Session is not None or cogant.Session is None
+    )  # always true — just confirms no import error
 
 
 def test_cogant_all_contains_expected_names() -> None:

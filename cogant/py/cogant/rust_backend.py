@@ -227,9 +227,7 @@ class RustProgramGraphAdapter:
         if target_id not in self._nodes:
             return None
 
-        edge_id = self._identity_resolver.generate_edge_id(
-            source_id, target_id, kind.value
-        )
+        edge_id = self._identity_resolver.generate_edge_id(source_id, target_id, kind.value)
 
         existing = self._edges.get(edge_id)
         if existing is not None:

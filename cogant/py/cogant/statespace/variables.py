@@ -30,6 +30,7 @@ __all__ = [
 
 class StateVariableType(StrEnum):
     """Classification of state variables."""
+
     BOOLEAN = "boolean"
     DISCRETE = "discrete"
     CONTINUOUS = "continuous"
@@ -40,6 +41,7 @@ class StateVariableType(StrEnum):
 
 class ConfidenceLevel(StrEnum):
     """Confidence in extracted information."""
+
     DEFINITE = "definite"
     HIGH = "high"
     MEDIUM = "medium"
@@ -73,11 +75,11 @@ def map_confidence_score(confidence_score: float) -> ConfidenceLevel:
     Returns:
         Corresponding :class:`ConfidenceLevel`.
     """
-    if confidence_score >= 0.95:        # matches "definite" (near-1)
+    if confidence_score >= 0.95:  # matches "definite" (near-1)
         return ConfidenceLevel.DEFINITE
-    elif confidence_score >= 0.80:      # >= upper-mid rule band
+    elif confidence_score >= 0.80:  # >= upper-mid rule band
         return ConfidenceLevel.HIGH
-    elif confidence_score >= 0.60:      # below lowest rule band
+    elif confidence_score >= 0.60:  # below lowest rule band
         return ConfidenceLevel.MEDIUM
     elif confidence_score >= 0.40:
         return ConfidenceLevel.LOW
@@ -109,6 +111,7 @@ class StateVariable:
         reads: Edge IDs of READS edges touching this variable.
         observable: True when this variable also has an OBSERVATION mapping.
     """
+
     id: str
     name: str
     var_type: StateVariableType
@@ -160,14 +163,12 @@ class StateVariable:
         """
         if self.var_type != other.var_type:
             raise ValueError(
-                f"Cannot merge variables with different types: "
-                f"{self.var_type} vs {other.var_type}"
+                f"Cannot merge variables with different types: {self.var_type} vs {other.var_type}"
             )
 
         # Merge confidence, preferring higher confidence
         merged_confidence = (
-            self.confidence if self.confidence != ConfidenceLevel.MEDIUM
-            else other.confidence
+            self.confidence if self.confidence != ConfidenceLevel.MEDIUM else other.confidence
         )
 
         # Merge lists
@@ -181,8 +182,7 @@ class StateVariable:
         merged_factors = self.factors if self.factors else other.factors
         if other.factors:
             merged_factors = (
-                list(set(self.factors) | set(other.factors))
-                if merged_factors else other.factors
+                list(set(self.factors) | set(other.factors)) if merged_factors else other.factors
             )
 
         return StateVariable(
@@ -205,6 +205,7 @@ class StateVariable:
 @dataclass
 class FactorizationInfo:
     """Information about state variable factorization."""
+
     factors: list[str]
     independence_score: float  # 0-1: how independent are factors
     dependencies: dict[str, list[str]]  # Factor ID -> list of dependent factors
@@ -245,8 +246,7 @@ class StateVariableExtractor:
         """
         # Find all hidden_state mappings
         hidden_state_mappings = {
-            mid: m for mid, m in semantic_mappings.items()
-            if m.kind == MappingKind.HIDDEN_STATE
+            mid: m for mid, m in semantic_mappings.items() if m.kind == MappingKind.HIDDEN_STATE
         }
         # Pre-compute the set of node IDs that carry an OBSERVATION mapping so
         # we can cheaply mark hidden-state variables as observable.
@@ -291,10 +291,10 @@ class StateVariableExtractor:
             is_discrete = var_type != StateVariableType.CONTINUOUS
 
             # Find mutations and reads
-            mutations = [e.id for e in self.graph.get_edges_from(node_id)
-                        if e.kind == EdgeKind.WRITES]
-            reads = [e.id for e in self.graph.get_edges_to(node_id)
-                    if e.kind == EdgeKind.READS]
+            mutations = [
+                e.id for e in self.graph.get_edges_from(node_id) if e.kind == EdgeKind.WRITES
+            ]
+            reads = [e.id for e in self.graph.get_edges_to(node_id) if e.kind == EdgeKind.READS]
 
             # Infer cardinality and domain
             cardinality, domain = self._infer_cardinality_and_domain(node, var_type, mapping)
@@ -371,10 +371,7 @@ class StateVariableExtractor:
         return StateVariableType.DISCRETE
 
     def _infer_cardinality_and_domain(
-        self,
-        node: Node,
-        var_type: StateVariableType,
-        mapping: SemanticMapping
+        self, node: Node, var_type: StateVariableType, mapping: SemanticMapping
     ) -> tuple[int | None, list[Any] | None]:
         """
         Infer cardinality and domain from node metadata, class attributes, and type.
@@ -416,7 +413,9 @@ class StateVariableExtractor:
 
         return None, None
 
-    def _extract_class_attributes_cardinality(self, class_node: Node) -> tuple[int | None, list[str] | None]:
+    def _extract_class_attributes_cardinality(
+        self, class_node: Node
+    ) -> tuple[int | None, list[str] | None]:
         """
         Extract cardinality and domain from class attributes in the graph.
 
@@ -470,6 +469,7 @@ class StateVariableExtractor:
         When a variable has no edge evidence the score falls back to 0.5
         (maximum entropy).
         """
+
         def _mutation_targets(var: StateVariable) -> set[str]:
             """Return the target-node IDs of all WRITES edges for ``var``."""
             targets: set[str] = set()
@@ -496,7 +496,7 @@ class StateVariableExtractor:
             var_all_targets = var_mut_targets | var_read_targets
 
             dependencies = []
-            for other_var in var_list[i + 1:]:
+            for other_var in var_list[i + 1 :]:
                 other_mut_targets = _mutation_targets(other_var)
                 # Dependent when mutation frontiers overlap, or when var reads
                 # nodes that other_var mutates (data-dependency).
@@ -514,16 +514,14 @@ class StateVariableExtractor:
 
                 total_targets = len(var_all_targets)
                 if total_targets > 0:
-                    independence_score = max(
-                        0.0, 1.0 - len(shared_targets) / total_targets
-                    )
+                    independence_score = max(0.0, 1.0 - len(shared_targets) / total_targets)
                 else:
                     independence_score = 0.5  # no edge evidence → maximum entropy
 
                 self.factorization_map[var.id] = FactorizationInfo(
                     factors=[var.id] + dependencies,
                     independence_score=independence_score,
-                    dependencies={var.id: dependencies}
+                    dependencies={var.id: dependencies},
                 )
 
     def _map_confidence(self, confidence_score: float) -> ConfidenceLevel:
@@ -581,7 +579,9 @@ class StateVariableExtractor:
                 continuous_count += 1
 
         # Estimate: each continuous variable adds one dimension
-        total_dim = cardinality_product * (2 ** continuous_count) if continuous_count else cardinality_product
+        total_dim = (
+            cardinality_product * (2**continuous_count) if continuous_count else cardinality_product
+        )
         return total_dim
 
 
@@ -602,6 +602,7 @@ class ObservationVar:
         confidence: Confidence level of the extraction.
         description: Optional free-text description.
     """
+
     id: str
     name: str
     source_node_id: str
@@ -750,28 +751,32 @@ class VariableRegistry:
         rows: list[dict[str, Any]] = []
 
         for var in self.hidden_vars.values():
-            rows.append({
-                "id": var.id,
-                "name": var.name,
-                "type": var.var_type.value,
-                "role": "hidden_state",
-                "cardinality": var.cardinality,
-                "confidence": var.confidence.value,
-                "description": var.description or "",
-                "is_discrete": var.is_discrete,
-                "observable": var.observable,
-            })
+            rows.append(
+                {
+                    "id": var.id,
+                    "name": var.name,
+                    "type": var.var_type.value,
+                    "role": "hidden_state",
+                    "cardinality": var.cardinality,
+                    "confidence": var.confidence.value,
+                    "description": var.description or "",
+                    "is_discrete": var.is_discrete,
+                    "observable": var.observable,
+                }
+            )
 
         for obs in self.observation_vars.values():
-            rows.append({
-                "id": obs.id,
-                "name": obs.name,
-                "type": "observation",
-                "role": "observation",
-                "cardinality": obs.cardinality,
-                "confidence": obs.confidence.value,
-                "description": obs.description or "",
-                "modality_type": obs.modality_type,
-            })
+            rows.append(
+                {
+                    "id": obs.id,
+                    "name": obs.name,
+                    "type": "observation",
+                    "role": "observation",
+                    "cardinality": obs.cardinality,
+                    "confidence": obs.confidence.value,
+                    "description": obs.description or "",
+                    "modality_type": obs.modality_type,
+                }
+            )
 
         return rows

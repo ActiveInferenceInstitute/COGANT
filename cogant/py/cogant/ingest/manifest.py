@@ -52,7 +52,7 @@ except ImportError:
                     # Dict (simplified)
                     parsed_value = raw_value
                 elif raw_value.startswith('"') or raw_value.startswith("'"):
-                    parsed_value = raw_value.strip('"\'')
+                    parsed_value = raw_value.strip("\"'")
                 elif raw_value.lower() in ("true", "false"):
                     parsed_value = raw_value.lower() == "true"
                 else:
@@ -161,24 +161,18 @@ class ManifestParser:
                 metadata["version"] = version_match.group(1)
 
             # Extract description
-            desc_match = re.search(
-                r'description\s*=\s*["\']([^"\']+)["\']', content
-            )
+            desc_match = re.search(r'description\s*=\s*["\']([^"\']+)["\']', content)
             if desc_match:
                 metadata["description"] = desc_match.group(1)
 
             # Extract install_requires
-            install_match = re.search(
-                r"install_requires\s*=\s*\[(.*?)\]", content, re.DOTALL
-            )
+            install_match = re.search(r"install_requires\s*=\s*\[(.*?)\]", content, re.DOTALL)
             if install_match:
                 deps_str = install_match.group(1)
                 dependencies.extend(self._parse_requirements_string(deps_str))
 
             # Extract extras_require (dev dependencies)
-            extras_match = re.search(
-                r"extras_require\s*=\s*\{(.*?)\}", content, re.DOTALL
-            )
+            extras_match = re.search(r"extras_require\s*=\s*\{(.*?)\}", content, re.DOTALL)
             if extras_match:
                 extras_str = extras_match.group(1)
                 # Parse dev extras (common names: dev, test, develop)
@@ -219,23 +213,21 @@ class ManifestParser:
             # Extract project metadata
             if "project" in data:
                 project = data["project"]
-                metadata.update({
-                    "name": project.get("name"),
-                    "version": project.get("version"),
-                    "description": project.get("description"),
-                })
+                metadata.update(
+                    {
+                        "name": project.get("name"),
+                        "version": project.get("version"),
+                        "description": project.get("description"),
+                    }
+                )
 
                 # Extract dependencies
                 if "dependencies" in project:
-                    dependencies.extend(
-                        self._parse_requirement_list(project["dependencies"])
-                    )
+                    dependencies.extend(self._parse_requirement_list(project["dependencies"]))
 
                 # Extract optional dependencies (dev)
                 if "optional-dependencies" in project:
-                    for extra_type, extra_deps in project[
-                        "optional-dependencies"
-                    ].items():
+                    for extra_type, extra_deps in project["optional-dependencies"].items():
                         is_dev = extra_type in ["dev", "test", "develop"]
                         for dep in self._parse_requirement_list(extra_deps):
                             dep.is_dev = is_dev
@@ -298,16 +290,12 @@ class ManifestParser:
             # Extract dependencies
             if "dependencies" in data:
                 for name, version in data["dependencies"].items():
-                    dependencies.append(
-                        Dependency(name=name, version=version, is_dev=False)
-                    )
+                    dependencies.append(Dependency(name=name, version=version, is_dev=False))
 
             # Extract devDependencies
             if "devDependencies" in data:
                 for name, version in data["devDependencies"].items():
-                    dependencies.append(
-                        Dependency(name=name, version=version, is_dev=True)
-                    )
+                    dependencies.append(Dependency(name=name, version=version, is_dev=True))
 
         except Exception as e:
             logger.warning(f"Failed to parse package.json at {path}: {e}")
@@ -347,9 +335,7 @@ class ManifestParser:
                         version = spec.get("version")
                     elif isinstance(spec, str):
                         version = spec
-                    dependencies.append(
-                        Dependency(name=name, version=version, is_dev=False)
-                    )
+                    dependencies.append(Dependency(name=name, version=version, is_dev=False))
 
             # Extract dev-dependencies
             if "dev-dependencies" in data:
@@ -359,9 +345,7 @@ class ManifestParser:
                         version = spec.get("version")
                     elif isinstance(spec, str):
                         version = spec
-                    dependencies.append(
-                        Dependency(name=name, version=version, is_dev=True)
-                    )
+                    dependencies.append(Dependency(name=name, version=version, is_dev=True))
 
         except Exception as e:
             logger.warning(f"Failed to parse Cargo.toml at {path}: {e}")
@@ -431,9 +415,7 @@ class ManifestParser:
             parts = line.split(maxsplit=1)
             if len(parts) == 2:
                 if parts[1].startswith(("file:", ".")):
-                    return Dependency(
-                        name=parts[1].split("/")[-1], is_local=True
-                    )
+                    return Dependency(name=parts[1].split("/")[-1], is_local=True)
 
         # Parse name and version specifier
         # Handle common version specifiers: ==, >=, <=, >, <, ~=, !=

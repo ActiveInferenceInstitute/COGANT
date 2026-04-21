@@ -8,7 +8,6 @@ error surfaces.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
@@ -19,7 +18,6 @@ from cogant.config.schema import (
     PipelineConfig,
     ValidationConfig,
 )
-
 
 # --------------------------- yaml loading ------------------------------- #
 
@@ -160,9 +158,7 @@ def test_build_cogant_config_with_preset_name():
 
 def test_build_cogant_config_with_dict_override_merges():
     """A cogant sub-dict in the outer config merges into the default."""
-    cfg = ConfigLoader.build_cogant_config(
-        config_dict={"cogant": {"log_level": "debug"}}
-    )
+    cfg = ConfigLoader.build_cogant_config(config_dict={"cogant": {"log_level": "debug"}})
     # Whatever the schema field is called, the log_level key should
     # round-trip without raising; we just assert construction succeeded.
     assert isinstance(cfg, CogantConfig)
@@ -182,9 +178,7 @@ def test_build_pipeline_config_without_args_returns_default():
 
 
 def test_build_export_config_with_preset_and_dict():
-    cfg = ConfigLoader.build_export_config(
-        config_dict={"export": {}}, preset="default"
-    )
+    cfg = ConfigLoader.build_export_config(config_dict={"export": {}}, preset="default")
     assert isinstance(cfg, ExportConfig)
 
 
@@ -200,9 +194,7 @@ def test_load_all_configs_from_yaml_file(tmp_path):
     """load_all_configs orchestrates the YAML -> four configs path."""
     pytest.importorskip("yaml")
     path = tmp_path / "all.yaml"
-    path.write_text(
-        "cogant:\n  log_level: info\npipeline: {}\nexport: {}\nvalidation: {}\n"
-    )
+    path.write_text("cogant:\n  log_level: info\npipeline: {}\nexport: {}\nvalidation: {}\n")
     result = ConfigLoader.load_all_configs(yaml_path=path)
     assert isinstance(result["cogant"], CogantConfig)
     assert isinstance(result["pipeline"], PipelineConfig)

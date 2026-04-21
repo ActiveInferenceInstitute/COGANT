@@ -146,9 +146,7 @@ class SymbolExtractor:
         # Extract symbols
         return self._extract_from_module(module)
 
-    def extract_from_source(
-        self, source: str, file_path: Path
-    ) -> SymbolTable:
+    def extract_from_source(self, source: str, file_path: Path) -> SymbolTable:
         """Extract symbols from Python source code.
 
         Args:
@@ -222,9 +220,7 @@ class SymbolExtractor:
 
             # Extract methods
             for method in cls.methods:
-                method_id = self._generate_symbol_id(
-                    module.file_path, f"{cls.name}.{method.name}"
-                )
+                method_id = self._generate_symbol_id(module.file_path, f"{cls.name}.{method.name}")
                 method_symbol = SymbolInfo(
                     id=method_id,
                     name=method.name,
@@ -248,9 +244,7 @@ class SymbolExtractor:
         # Extract module-level variables
         for assign in module.assignments:
             symbol = SymbolInfo(
-                id=self._generate_symbol_id(
-                    module.file_path, assign.target_name
-                ),
+                id=self._generate_symbol_id(module.file_path, assign.target_name),
                 name=assign.target_name,
                 qualified_name=f"{module_qname}.{assign.target_name}",
                 kind="variable",

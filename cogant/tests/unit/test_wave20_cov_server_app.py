@@ -29,7 +29,6 @@ from cogant.server.app import (  # noqa: E402
 from cogant.statespace.compiler import StateSpaceModel  # noqa: E402
 from cogant.statespace.temporal import TimeRegime  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # fixtures
 # ---------------------------------------------------------------------------
@@ -53,10 +52,7 @@ def throttled_client() -> TestClient:
 def tiny_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "repo"
     repo.mkdir()
-    (repo / "main.py").write_text(
-        "def main() -> int:\n"
-        "    return 1\n"
-    )
+    (repo / "main.py").write_text("def main() -> int:\n    return 1\n")
     return repo
 
 
@@ -124,9 +120,7 @@ class TestStaticRoutes:
 
 
 class TestAnalyzeEndpoint:
-    def test_analyze_happy_path(
-        self, client: TestClient, tiny_repo: Path
-    ) -> None:
+    def test_analyze_happy_path(self, client: TestClient, tiny_repo: Path) -> None:
         r = client.post(
             "/analyze",
             json={"repo_path": str(tiny_repo), "skip_dynamic": True},
@@ -159,9 +153,7 @@ class TestAnalyzeEndpoint:
 
 
 class TestReverseEndpoint:
-    def test_reverse_happy_path_returns_base64_zip(
-        self, client: TestClient, gnn_text: str
-    ) -> None:
+    def test_reverse_happy_path_returns_base64_zip(self, client: TestClient, gnn_text: str) -> None:
         r = client.post("/reverse", json={"gnn_text": gnn_text})
         assert r.status_code == 200, r.text
         body = r.json()
@@ -174,15 +166,11 @@ class TestReverseEndpoint:
         assert r.status_code == 422
         assert "gnn_text" in r.json()["detail"]
 
-    def test_reverse_blank_gnn_text_returns_422(
-        self, client: TestClient
-    ) -> None:
+    def test_reverse_blank_gnn_text_returns_422(self, client: TestClient) -> None:
         r = client.post("/reverse", json={"gnn_text": "   \n   "})
         assert r.status_code == 422
 
-    def test_reverse_tolerates_non_gnn_text(
-        self, client: TestClient
-    ) -> None:
+    def test_reverse_tolerates_non_gnn_text(self, client: TestClient) -> None:
         """parse_gnn is lenient — free-form text still produces a package.
 
         This exercises the happy path through ``_synthesize_zip_from_gnn_text``
@@ -202,9 +190,7 @@ class TestReverseEndpoint:
 
 
 class TestRoundtripEndpoint:
-    def test_roundtrip_missing_path_returns_404(
-        self, client: TestClient
-    ) -> None:
+    def test_roundtrip_missing_path_returns_404(self, client: TestClient) -> None:
         r = client.post(
             "/roundtrip",
             json={"repo_path": "/nonexistent/path", "threshold": 0.8},
@@ -240,9 +226,7 @@ class TestRateLimiting:
         body = r2.json()
         assert "rate limit" in body["detail"].lower()
 
-    def test_health_bypasses_rate_limit(
-        self, throttled_client: TestClient
-    ) -> None:
+    def test_health_bypasses_rate_limit(self, throttled_client: TestClient) -> None:
         """Health is unlimited even with a strict limiter configured."""
         for _ in range(5):
             r = throttled_client.get("/health")
@@ -263,11 +247,7 @@ class TestMetricsStoreAndRateLimiter:
         text = store.render_prometheus()
         assert isinstance(text, str)
         # Should mention at least one of the counter names we track
-        assert (
-            "requests" in text.lower()
-            or "errors" in text.lower()
-            or "cogant" in text.lower()
-        )
+        assert "requests" in text.lower() or "errors" in text.lower() or "cogant" in text.lower()
 
     def test_rate_limiter_enforces_window(self) -> None:
         limiter = _RateLimiter(max_requests=2, window_s=60.0)

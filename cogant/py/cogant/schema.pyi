@@ -4,4 +4,10 @@ from cogant.schema.versions import GNN_V1_0_REQUIRED_SECTIONS as GNN_V1_0_REQUIR
 from cogant.schema.versions import GNN_V1_1_REQUIRED_SECTIONS as GNN_V1_1_REQUIRED_SECTIONS
 from cogant.schema.versions import SchemaVersion as SchemaVersion
 
-__all__ = ['SchemaVersion', 'GNN_V1_0_REQUIRED_SECTIONS', 'GNN_V1_1_REQUIRED_SECTIONS', 'detect_version', 'migrate_gnn']
+__all__ = [
+    "SchemaVersion",
+    "GNN_V1_0_REQUIRED_SECTIONS",
+    "GNN_V1_1_REQUIRED_SECTIONS",
+    "detect_version",
+    "migrate_gnn",
+]

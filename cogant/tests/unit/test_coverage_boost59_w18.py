@@ -12,7 +12,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -21,9 +20,11 @@ pytestmark = pytest.mark.unit
 # provenance/tracker.py — ProvenanceTracker
 # ---------------------------------------------------------------------------
 
+
 class TestProvenanceTracker:
     def _make_tracker(self):
         from cogant.provenance.tracker import ProvenanceTracker
+
         return ProvenanceTracker()
 
     def _add_sample_record(self, tracker):
@@ -62,6 +63,7 @@ class TestProvenanceTracker:
 
     def test_get_records_for_target(self):
         from cogant.provenance.tracker import ProvenanceRecord
+
         tracker = self._make_tracker()
         self._add_sample_record(tracker)
         records = tracker.get_records_for_target("node_001")
@@ -75,6 +77,7 @@ class TestProvenanceTracker:
 
     def test_get_record_by_id(self):
         from cogant.provenance.tracker import ProvenanceRecord
+
         tracker = self._make_tracker()
         record_id = self._add_sample_record(tracker)
         record = tracker.get_record(record_id)
@@ -170,56 +173,67 @@ class TestProvenanceTracker:
 # metrics.py — module-level metrics functions
 # ---------------------------------------------------------------------------
 
+
 class TestMetricsModule:
     def test_load_returns_dict(self):
         from cogant import metrics
+
         result = metrics.load()
         assert isinstance(result, dict)
 
     def test_version_returns_str(self):
         from cogant import metrics
+
         v = metrics.version()
         assert isinstance(v, str)
 
     def test_test_count_returns_int(self):
         from cogant import metrics
+
         count = metrics.test_count()
         assert isinstance(count, int)
         assert count >= 0
 
     def test_coverage_returns_float(self):
         from cogant import metrics
+
         cov = metrics.coverage()
         assert isinstance(cov, float)
         assert cov >= 0.0
 
     def test_mypy_errors_returns_int(self):
         from cogant import metrics
+
         errs = metrics.mypy_errors()
         assert isinstance(errs, int)
 
     def test_isomorphic_count_returns_int(self):
         from cogant import metrics
+
         count = metrics.isomorphic_count()
         assert isinstance(count, int)
 
     def test_total_targets_returns_int(self):
         from cogant import metrics
+
         total = metrics.total_targets()
         assert isinstance(total, int)
 
     def test_mean_epsilon_returns_float(self):
         from cogant import metrics
+
         eps = metrics.mean_epsilon()
         assert isinstance(eps, float)
 
     def test_epsilon_for_known(self):
         from cogant import metrics
+
         # epsilon_for returns float or None for unknown
         result = metrics.epsilon_for("some_target")
         assert result is None or isinstance(result, float)
 
     def test_bibliography_entries_returns_int(self):
         from cogant import metrics
+
         count = metrics.bibliography_entries()
         assert isinstance(count, int)

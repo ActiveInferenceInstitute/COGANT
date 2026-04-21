@@ -109,6 +109,7 @@ class DashboardGenerator:
     def _generate_css(self) -> str:
         """Return inline CSS (externalised in :mod:`cogant.viz.dashboard.assets`)."""
         from cogant.viz.dashboard.assets import DASHBOARD_CSS
+
         return DASHBOARD_CSS
 
     def _generate_header(self, timestamp: str, version: str) -> str:
@@ -165,10 +166,10 @@ class DashboardGenerator:
             </div>
             <div class="card">
                 <h3>Confidence Score</h3>
-                <div class="card-value">{confidence*100:.1f}%</div>
+                <div class="card-value">{confidence * 100:.1f}%</div>
                 <div class="card-subtext">
-                    <span class="badge {'badge-pass' if is_valid else 'badge-fail'}">
-                        {'✓ Valid' if is_valid else '✗ Issues'}
+                    <span class="badge {"badge-pass" if is_valid else "badge-fail"}">
+                        {"✓ Valid" if is_valid else "✗ Issues"}
                     </span>
                 </div>
             </div>
@@ -214,7 +215,9 @@ class DashboardGenerator:
         if not self.output_dir:
             return
 
-        output_path = Path(self.output_dir) if not isinstance(self.output_dir, Path) else self.output_dir
+        output_path = (
+            Path(self.output_dir) if not isinstance(self.output_dir, Path) else self.output_dir
+        )
 
         # Load active inference trace
         if not self.trace_data:
@@ -312,10 +315,12 @@ class DashboardGenerator:
         chart_html = self._create_bar_chart(kinds, counts, max_count, 800, 250)
         return chart_html
 
-    def _create_bar_chart(self, labels: list[str], values: list[int], max_val: int, width: int, height: int) -> str:
+    def _create_bar_chart(
+        self, labels: list[str], values: list[int], max_val: int, width: int, height: int
+    ) -> str:
         """Create a simple SVG bar chart."""
         if not labels or not values:
-            return '<p>No data to display</p>'
+            return "<p>No data to display</p>"
 
         padding = 40
         chart_width = width - 2 * padding
@@ -324,7 +329,9 @@ class DashboardGenerator:
         svg_parts = [f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}">']
 
         # Background
-        svg_parts.append(f'<rect width="{width}" height="{height}" fill="rgba(20,20,30,0.8)" rx="4"/>')
+        svg_parts.append(
+            f'<rect width="{width}" height="{height}" fill="rgba(20,20,30,0.8)" rx="4"/>'
+        )
 
         # Bars
         bar_width = chart_width / len(labels)
@@ -335,34 +342,34 @@ class DashboardGenerator:
 
             # Bar
             svg_parts.append(
-                f'<rect x="{x+5}" y="{y}" width="{bar_width-10}" height="{bar_height}" '
+                f'<rect x="{x + 5}" y="{y}" width="{bar_width - 10}" height="{bar_height}" '
                 f'fill="url(#gradient)" rx="4"/>'
             )
 
             # Label
             svg_parts.append(
-                f'<text x="{x+bar_width/2}" y="{height-10}" text-anchor="middle" '
-                f'font-size="11" fill="#b0b0b0" transform="rotate(-15 {x+bar_width/2} {height-10})">'
-                f'{label[:10]}</text>'
+                f'<text x="{x + bar_width / 2}" y="{height - 10}" text-anchor="middle" '
+                f'font-size="11" fill="#b0b0b0" transform="rotate(-15 {x + bar_width / 2} {height - 10})">'
+                f"{label[:10]}</text>"
             )
 
             # Value
             svg_parts.append(
-                f'<text x="{x+bar_width/2}" y="{y-5}" text-anchor="middle" '
+                f'<text x="{x + bar_width / 2}" y="{y - 5}" text-anchor="middle" '
                 f'font-size="12" font-weight="bold" fill="#667eea">{value}</text>'
             )
 
         # Gradient
         svg_parts.append(
-            '<defs>'
+            "<defs>"
             '<linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">'
             '<stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />'
             '<stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />'
-            '</linearGradient>'
-            '</defs>'
+            "</linearGradient>"
+            "</defs>"
         )
 
-        svg_parts.append('</svg>')
+        svg_parts.append("</svg>")
         return "".join(svg_parts)
 
     def _generate_mapping_kind_pie_chart(self) -> str:
@@ -388,7 +395,16 @@ class DashboardGenerator:
         cx, cy = size / 2, size / 2
         radius = size / 2 - 30
 
-        colors = ["#667eea", "#764ba2", "#f093fb", "#4facfe", "#43e97b", "#fa709a", "#fee140", "#30b0fe"]
+        colors = [
+            "#667eea",
+            "#764ba2",
+            "#f093fb",
+            "#4facfe",
+            "#43e97b",
+            "#fa709a",
+            "#fee140",
+            "#30b0fe",
+        ]
         svg_parts = [f'<svg width="{size}" height="{size}" viewBox="0 0 {size} {size}">']
 
         angle = 0.0
@@ -402,7 +418,6 @@ class DashboardGenerator:
 
             cx + radius * (3.14159 / 180) * (angle + slice_angle / 2)
             cy + radius * (3.14159 / 180) * (angle + slice_angle / 2)
-
 
             # Simplified: just use circles colored by angle
             svg_parts.append(
@@ -420,14 +435,20 @@ class DashboardGenerator:
             angle += slice_angle
 
         # Legend
-        svg_parts.append('<text x="20" y="20" font-size="12" font-weight="bold" fill="#667eea">Mapping Kinds</text>')
+        svg_parts.append(
+            '<text x="20" y="20" font-size="12" font-weight="bold" fill="#667eea">Mapping Kinds</text>'
+        )
         for i, (kind, count) in enumerate(zip(kinds, counts, strict=False)):
             color = colors[i % len(colors)]
             y = 40 + i * 20
-            svg_parts.append(f'<rect x="20" y="{y-8}" width="12" height="12" fill="{color}" rx="2"/>')
-            svg_parts.append(f'<text x="40" y="{y}" font-size="11" fill="#e0e0e0">{kind} ({count})</text>')
+            svg_parts.append(
+                f'<rect x="20" y="{y - 8}" width="12" height="12" fill="{color}" rx="2"/>'
+            )
+            svg_parts.append(
+                f'<text x="40" y="{y}" font-size="11" fill="#e0e0e0">{kind} ({count})</text>'
+            )
 
-        svg_parts.append('</svg>')
+        svg_parts.append("</svg>")
         return "".join(svg_parts)
 
     def _generate_key_findings(self) -> str:
@@ -441,15 +462,17 @@ class DashboardGenerator:
         # From state space
         if self.state_space:
             findings.append(f"<li>State variables: {len(self.state_space.variables)}</li>")
-            findings.append(f"<li>Observation modalities: {len(self.state_space.observations)}</li>")
+            findings.append(
+                f"<li>Observation modalities: {len(self.state_space.observations)}</li>"
+            )
             findings.append(f"<li>Actions: {len(self.state_space.actions)}</li>")
 
         # From validation
         if self.validation_report:
             coverage = getattr(self.validation_report, "coverage_score", 0.0)
             confidence = getattr(self.validation_report, "confidence_score", 0.0)
-            findings.append(f"<li>Coverage score: {coverage*100:.1f}%</li>")
-            findings.append(f"<li>Confidence score: {confidence*100:.1f}%</li>")
+            findings.append(f"<li>Coverage score: {coverage * 100:.1f}%</li>")
+            findings.append(f"<li>Confidence score: {confidence * 100:.1f}%</li>")
 
         return f"<ul style='list-style-position: inside;'>{''.join(findings)}</ul>"
 
@@ -658,18 +681,34 @@ class DashboardGenerator:
         # Build stages table
         stages_rows = ""
         for _stage_id, stage in self.process_model.stages.items():
-            preds = ", ".join(self.process_model.stages[p].name for p in stage.entry_points if p in self.process_model.stages) if stage.entry_points else "-"
-            succs = ", ".join(self.process_model.stages[s].name for s in stage.exit_points if s in self.process_model.stages) if stage.exit_points else "-"
+            preds = (
+                ", ".join(
+                    self.process_model.stages[p].name
+                    for p in stage.entry_points
+                    if p in self.process_model.stages
+                )
+                if stage.entry_points
+                else "-"
+            )
+            succs = (
+                ", ".join(
+                    self.process_model.stages[s].name
+                    for s in stage.exit_points
+                    if s in self.process_model.stages
+                )
+                if stage.exit_points
+                else "-"
+            )
 
             stages_rows += f"""
             <tr>
                 <td><code>{html.escape(stage.name[:20])}</code></td>
-                <td>{html.escape(stage.description or '-')[:40]}</td>
+                <td>{html.escape(stage.description or "-")[:40]}</td>
                 <td>{len(stage.node_ids)}</td>
                 <td>{preds[:30]}</td>
                 <td>{succs[:30]}</td>
-                <td>{stage.pattern_type or '-'}</td>
-                <td><span class="badge badge-info">{stage.confidence*100:.0f}%</span></td>
+                <td>{stage.pattern_type or "-"}</td>
+                <td><span class="badge badge-info">{stage.confidence * 100:.0f}%</span></td>
             </tr>
 """
 
@@ -722,16 +761,16 @@ class DashboardGenerator:
 
         for i, stage in enumerate(stages):
             width_pct = 95 / total_stages if total_stages > 0 else 0
-            left_pct = (5 + i * width_pct)
+            left_pct = 5 + i * width_pct
             color = ["#667eea", "#764ba2", "#f093fb", "#4facfe"][i % 4]
 
-            gantt_html += f'''
+            gantt_html += f"""
             <div class="gantt-bar" style="left: {left_pct}%; width: {width_pct}%; background: {color};">
                 <span class="gantt-label">{html.escape(stage.name[:15])}</span>
             </div>
-'''
+"""
 
-        gantt_html += '</div>'
+        gantt_html += "</div>"
 
         gantt_css = """
         <style>
@@ -823,54 +862,78 @@ class DashboardGenerator:
         svg_parts = [f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}">']
 
         # Background
-        svg_parts.append(f'<rect width="{width}" height="{height}" fill="rgba(20,20,30,0.5)" rx="4"/>')
+        svg_parts.append(
+            f'<rect width="{width}" height="{height}" fill="rgba(20,20,30,0.5)" rx="4"/>'
+        )
 
         # Draw three columns: States (left), Observations (middle), Actions (right)
         col_width = width / 3
 
         # Column headers
-        svg_parts.append(f'<text x="{col_width/2}" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#667eea">State Variables</text>')
-        svg_parts.append(f'<text x="{col_width + col_width/2}" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#764ba2">Observations</text>')
-        svg_parts.append(f'<text x="{col_width*2 + col_width/2}" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#f093fb">Actions</text>')
+        svg_parts.append(
+            f'<text x="{col_width / 2}" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#667eea">State Variables</text>'
+        )
+        svg_parts.append(
+            f'<text x="{col_width + col_width / 2}" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#764ba2">Observations</text>'
+        )
+        svg_parts.append(
+            f'<text x="{col_width * 2 + col_width / 2}" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#f093fb">Actions</text>'
+        )
 
         # Draw state variables as circles
         var_y_start = 80
         var_spacing = (height - 100) / max(num_vars, 1)
         for i in range(min(num_vars, 8)):
             y = var_y_start + i * var_spacing
-            svg_parts.append(f'<circle cx="60" cy="{y}" r="30" fill="rgba(102, 126, 234, 0.3)" stroke="#667eea" stroke-width="2"/>')
-            svg_parts.append(f'<text x="60" y="{y+5}" text-anchor="middle" font-size="12" fill="#e0e0e0">Var {i+1}</text>')
+            svg_parts.append(
+                f'<circle cx="60" cy="{y}" r="30" fill="rgba(102, 126, 234, 0.3)" stroke="#667eea" stroke-width="2"/>'
+            )
+            svg_parts.append(
+                f'<text x="60" y="{y + 5}" text-anchor="middle" font-size="12" fill="#e0e0e0">Var {i + 1}</text>'
+            )
 
         # Draw observations as squares
         obs_y_start = 80
         obs_spacing = (height - 100) / max(num_obs, 1)
         for i in range(min(num_obs, 8)):
             y = obs_y_start + i * obs_spacing
-            svg_parts.append(f'<rect x="{col_width + 30}" y="{y - 25}" width="60" height="50" fill="rgba(118, 75, 162, 0.3)" stroke="#764ba2" stroke-width="2" rx="4"/>')
-            svg_parts.append(f'<text x="{col_width + 60}" y="{y+5}" text-anchor="middle" font-size="12" fill="#e0e0e0">Obs {i+1}</text>')
+            svg_parts.append(
+                f'<rect x="{col_width + 30}" y="{y - 25}" width="60" height="50" fill="rgba(118, 75, 162, 0.3)" stroke="#764ba2" stroke-width="2" rx="4"/>'
+            )
+            svg_parts.append(
+                f'<text x="{col_width + 60}" y="{y + 5}" text-anchor="middle" font-size="12" fill="#e0e0e0">Obs {i + 1}</text>'
+            )
 
         # Draw actions as diamonds (rectangles rotated)
         act_y_start = 80
         act_spacing = (height - 100) / max(num_actions, 1)
         for i in range(min(num_actions, 8)):
             y = act_y_start + i * act_spacing
-            svg_parts.append(f'<polygon points="{col_width*2 + 60},{y} {col_width*2 + 90},{y + 25} {col_width*2 + 60},{y + 50} {col_width*2 + 30},{y + 25}" fill="rgba(240, 147, 251, 0.3)" stroke="#f093fb" stroke-width="2"/>')
-            svg_parts.append(f'<text x="{col_width*2 + 60}" y="{y+18}" text-anchor="middle" font-size="11" fill="#e0e0e0">Act {i+1}</text>')
+            svg_parts.append(
+                f'<polygon points="{col_width * 2 + 60},{y} {col_width * 2 + 90},{y + 25} {col_width * 2 + 60},{y + 50} {col_width * 2 + 30},{y + 25}" fill="rgba(240, 147, 251, 0.3)" stroke="#f093fb" stroke-width="2"/>'
+            )
+            svg_parts.append(
+                f'<text x="{col_width * 2 + 60}" y="{y + 18}" text-anchor="middle" font-size="11" fill="#e0e0e0">Act {i + 1}</text>'
+            )
 
         # Draw connections
         for i in range(min(num_vars, 3)):
             for j in range(min(num_obs, 3)):
                 var_y = var_y_start + i * var_spacing
                 obs_y = obs_y_start + j * obs_spacing
-                svg_parts.append(f'<line x1="90" y1="{var_y}" x2="{col_width + 30}" y2="{obs_y}" stroke="rgba(102, 126, 234, 0.3)" stroke-width="1" stroke-dasharray="5,5"/>')
+                svg_parts.append(
+                    f'<line x1="90" y1="{var_y}" x2="{col_width + 30}" y2="{obs_y}" stroke="rgba(102, 126, 234, 0.3)" stroke-width="1" stroke-dasharray="5,5"/>'
+                )
 
         for j in range(min(num_obs, 3)):
             for k in range(min(num_actions, 3)):
                 obs_y = obs_y_start + j * obs_spacing
                 act_y = act_y_start + k * act_spacing
-                svg_parts.append(f'<line x1="{col_width + 90}" y1="{obs_y}" x2="{col_width*2 + 30}" y2="{act_y}" stroke="rgba(118, 75, 162, 0.3)" stroke-width="1" stroke-dasharray="5,5"/>')
+                svg_parts.append(
+                    f'<line x1="{col_width + 90}" y1="{obs_y}" x2="{col_width * 2 + 30}" y2="{act_y}" stroke="rgba(118, 75, 162, 0.3)" stroke-width="1" stroke-dasharray="5,5"/>'
+                )
 
-        svg_parts.append('</svg>')
+        svg_parts.append("</svg>")
         return "".join(svg_parts)
 
     def _generate_active_inference_tab(self) -> str:
@@ -931,33 +994,61 @@ class DashboardGenerator:
         chart_height = height - 2 * padding
 
         svg_parts = [f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}">']
-        svg_parts.append(f'<rect width="{width}" height="{height}" fill="rgba(20,20,30,0.8)" rx="4"/>')
+        svg_parts.append(
+            f'<rect width="{width}" height="{height}" fill="rgba(20,20,30,0.8)" rx="4"/>'
+        )
 
         # Axes
-        svg_parts.append(f'<line x1="{padding}" y1="{padding}" x2="{padding}" y2="{height - padding}" stroke="#667eea" stroke-width="2"/>')
-        svg_parts.append(f'<line x1="{padding}" y1="{height - padding}" x2="{width - padding}" y2="{height - padding}" stroke="#667eea" stroke-width="2"/>')
+        svg_parts.append(
+            f'<line x1="{padding}" y1="{padding}" x2="{padding}" y2="{height - padding}" stroke="#667eea" stroke-width="2"/>'
+        )
+        svg_parts.append(
+            f'<line x1="{padding}" y1="{height - padding}" x2="{width - padding}" y2="{height - padding}" stroke="#667eea" stroke-width="2"/>'
+        )
 
         # Plot line
         if len(free_energies) > 1:
             points = []
             for i, fe in enumerate(free_energies):
-                x = padding + (i / (len(free_energies) - 1)) * chart_width if len(free_energies) > 1 else padding
-                y = height - padding - ((fe - min_fe) / fe_range) * chart_height if fe_range > 0 else height - padding
+                x = (
+                    padding + (i / (len(free_energies) - 1)) * chart_width
+                    if len(free_energies) > 1
+                    else padding
+                )
+                y = (
+                    height - padding - ((fe - min_fe) / fe_range) * chart_height
+                    if fe_range > 0
+                    else height - padding
+                )
                 points.append(f"{x},{y}")
 
-            svg_parts.append(f'<polyline points="{" ".join(points)}" fill="none" stroke="#667eea" stroke-width="2" stroke-linejoin="round"/>')
+            svg_parts.append(
+                f'<polyline points="{" ".join(points)}" fill="none" stroke="#667eea" stroke-width="2" stroke-linejoin="round"/>'
+            )
 
             # Add points
             for i, fe in enumerate(free_energies):
-                x = padding + (i / (len(free_energies) - 1)) * chart_width if len(free_energies) > 1 else padding
-                y = height - padding - ((fe - min_fe) / fe_range) * chart_height if fe_range > 0 else height - padding
+                x = (
+                    padding + (i / (len(free_energies) - 1)) * chart_width
+                    if len(free_energies) > 1
+                    else padding
+                )
+                y = (
+                    height - padding - ((fe - min_fe) / fe_range) * chart_height
+                    if fe_range > 0
+                    else height - padding
+                )
                 svg_parts.append(f'<circle cx="{x}" cy="{y}" r="3" fill="#764ba2" opacity="0.6"/>')
 
         # Labels
-        svg_parts.append(f'<text x="{width/2}" y="{height - 10}" text-anchor="middle" font-size="12" fill="#b0b0b0">Simulation Steps</text>')
-        svg_parts.append(f'<text x="20" y="{height/2}" text-anchor="middle" font-size="12" fill="#b0b0b0" transform="rotate(-90 20 {height/2})">Free Energy</text>')
+        svg_parts.append(
+            f'<text x="{width / 2}" y="{height - 10}" text-anchor="middle" font-size="12" fill="#b0b0b0">Simulation Steps</text>'
+        )
+        svg_parts.append(
+            f'<text x="20" y="{height / 2}" text-anchor="middle" font-size="12" fill="#b0b0b0" transform="rotate(-90 20 {height / 2})">Free Energy</text>'
+        )
 
-        svg_parts.append('</svg>')
+        svg_parts.append("</svg>")
         return "".join(svg_parts)
 
     def _generate_belief_evolution_table(self, trace_list: list[dict[str, Any]]) -> str:
@@ -1055,7 +1146,10 @@ class DashboardGenerator:
         # Errors/Warnings
         error_html = ""
         if errors:
-            error_rows = "".join(f'<tr><td><span class="badge badge-fail">ERROR</span></td><td>{html.escape(str(e)[:80])}</td></tr>' for e in errors[:10])
+            error_rows = "".join(
+                f'<tr><td><span class="badge badge-fail">ERROR</span></td><td>{html.escape(str(e)[:80])}</td></tr>'
+                for e in errors[:10]
+            )
             error_html = f"""
             <h3>Errors</h3>
             <table>
@@ -1068,7 +1162,10 @@ class DashboardGenerator:
 
         warning_html = ""
         if warnings:
-            warning_rows = "".join(f'<tr><td><span class="badge" style="background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.3);">WARN</span></td><td>{html.escape(str(w)[:80])}</td></tr>' for w in warnings[:10])
+            warning_rows = "".join(
+                f'<tr><td><span class="badge" style="background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.3);">WARN</span></td><td>{html.escape(str(w)[:80])}</td></tr>'
+                for w in warnings[:10]
+            )
             warning_html = f"""
             <h3>Warnings</h3>
             <table>
@@ -1154,7 +1251,7 @@ class DashboardGenerator:
                 <td><code>{html.escape(mapping_id[:20])}</code></td>
                 <td>{html.escape(str(kind))}</td>
                 <td>{html.escape(str(label)[:30])}</td>
-                <td><span class="badge badge-info">{confidence*100:.0f}%</span></td>
+                <td><span class="badge badge-info">{confidence * 100:.0f}%</span></td>
                 <td>{num_nodes}</td>
                 <td>{html.escape(str(description)[:50])}</td>
             </tr>
@@ -1218,9 +1315,9 @@ class DashboardGenerator:
         checks_html = ""
         checks_html += f"""
             <div class="validation-check">
-                <div class="validation-icon">{'✓' if is_valid else '✗'}</div>
+                <div class="validation-icon">{"✓" if is_valid else "✗"}</div>
                 <div>
-                    <strong>Overall Status: {'VALID' if is_valid else 'ISSUES FOUND'}</strong>
+                    <strong>Overall Status: {"VALID" if is_valid else "ISSUES FOUND"}</strong>
                     <p>{len(issues)} issue(s) found</p>
                 </div>
             </div>
@@ -1231,8 +1328,8 @@ class DashboardGenerator:
                 <div class="validation-icon">📊</div>
                 <div>
                     <strong>Coverage Score</strong>
-                    <p>{coverage*100:.1f}%</p>
-                    <div class="confidence-bar" style="width: {coverage*100}%;"></div>
+                    <p>{coverage * 100:.1f}%</p>
+                    <div class="confidence-bar" style="width: {coverage * 100}%;"></div>
                 </div>
             </div>
 """
@@ -1242,8 +1339,8 @@ class DashboardGenerator:
                 <div class="validation-icon">🎯</div>
                 <div>
                     <strong>Confidence Score</strong>
-                    <p>{confidence*100:.1f}%</p>
-                    <div class="confidence-bar" style="width: {confidence*100}%;"></div>
+                    <p>{confidence * 100:.1f}%</p>
+                    <div class="confidence-bar" style="width: {confidence * 100}%;"></div>
                 </div>
             </div>
 """
@@ -1290,5 +1387,5 @@ class DashboardGenerator:
     def _generate_javascript(self) -> str:
         """Return inline JavaScript (externalised in :mod:`cogant.viz.dashboard.assets`)."""
         from cogant.viz.dashboard.assets import DASHBOARD_JS
-        return DASHBOARD_JS
 
+        return DASHBOARD_JS

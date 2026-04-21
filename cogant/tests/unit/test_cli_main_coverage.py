@@ -220,8 +220,7 @@ def test_translate_with_coverage_path(tmp_path: Path):
     """--coverage flag is wired into config even if file is absent."""
     result = runner.invoke(
         app,
-        ["translate", str(tmp_path), "--coverage", str(tmp_path / ".coverage"),
-         "--no-dynamic"],
+        ["translate", str(tmp_path), "--coverage", str(tmp_path / ".coverage"), "--no-dynamic"],
     )
     assert result.exit_code in {0, 1}
 
@@ -245,9 +244,7 @@ def test_extract_static_default(tmp_path: Path):
 
 def test_extract_static_with_output(tmp_path: Path):
     out = tmp_path / "static_out"
-    result = runner.invoke(
-        app, ["extract-static", str(tmp_path), "--output", str(out)]
-    )
+    result = runner.invoke(app, ["extract-static", str(tmp_path), "--output", str(out)])
     assert result.exit_code == 0
     assert out.is_dir()
 
@@ -274,9 +271,7 @@ def test_extract_dynamic_default(tmp_path: Path):
 def test_extract_dynamic_with_traces(tmp_path: Path):
     trace_file = tmp_path / "trace.json"
     trace_file.write_text("{}")
-    result = runner.invoke(
-        app, ["extract-dynamic", str(tmp_path), "--traces", str(trace_file)]
-    )
+    result = runner.invoke(app, ["extract-dynamic", str(tmp_path), "--traces", str(trace_file)])
     # Exit 0 on success or 1 if session.extract_dynamic has a bug (API, not CLI)
     assert result.exit_code in {0, 1}
 
@@ -440,8 +435,20 @@ def test_diff_bundles_with_different_errors(tmp_path: Path):
 
 
 def test_diff_bundles_with_different_stages(tmp_path: Path):
-    data1 = {"target": ".", "artifacts": {}, "stage_results": {"ingest": {}}, "errors": [], "metadata": {}}
-    data2 = {"target": ".", "artifacts": {}, "stage_results": {"ingest": {}, "static": {}}, "errors": [], "metadata": {}}
+    data1 = {
+        "target": ".",
+        "artifacts": {},
+        "stage_results": {"ingest": {}},
+        "errors": [],
+        "metadata": {},
+    }
+    data2 = {
+        "target": ".",
+        "artifacts": {},
+        "stage_results": {"ingest": {}, "static": {}},
+        "errors": [],
+        "metadata": {},
+    }
     b1 = tmp_path / "b1.json"
     b2 = tmp_path / "b2.json"
     b1.write_text(json.dumps(data1))
@@ -472,9 +479,7 @@ def test_diff_two_directories_with_output(tmp_path: Path):
     d1.mkdir()
     d2.mkdir()
     report = tmp_path / "report.md"
-    result = runner.invoke(
-        app, ["diff", str(d1), str(d2), "--output", str(report)]
-    )
+    result = runner.invoke(app, ["diff", str(d1), str(d2), "--output", str(report)])
     assert result.exit_code in {0, 1, 2}
 
 
@@ -510,9 +515,7 @@ def test_changed_source_only_flag():
 def test_changed_with_output_file(tmp_path: Path):
     cogant_root = Path(__file__).parents[2]
     out = tmp_path / "changed.txt"
-    result = runner.invoke(
-        app, ["changed", str(cogant_root), "--output", str(out)]
-    )
+    result = runner.invoke(app, ["changed", str(cogant_root), "--output", str(out)])
     assert result.exit_code in {0, 1}
 
 
@@ -531,9 +534,7 @@ def test_explain_node_not_found(tmp_path: Path):
 
 
 def test_explain_invalid_format(tmp_path: Path):
-    result = runner.invoke(
-        app, ["explain", str(tmp_path), "SomeNode", "--format", "xml"]
-    )
+    result = runner.invoke(app, ["explain", str(tmp_path), "SomeNode", "--format", "xml"])
     assert result.exit_code in {1, 2}
 
 
@@ -673,18 +674,14 @@ def test_diff_help_exits_zero():
 
 def test_benchmark_single_iteration(tmp_path: Path):
     """benchmark with 1 iteration runs the pipeline once and prints stats."""
-    result = runner.invoke(
-        app, ["benchmark", str(tmp_path), "--iterations", "1", "--no-dynamic"]
-    )
+    result = runner.invoke(app, ["benchmark", str(tmp_path), "--iterations", "1", "--no-dynamic"])
     assert result.exit_code in {0, 1}
     # Should output timing statistics
     assert "benchmark" in result.output.lower() or "run" in result.output.lower()
 
 
 def test_benchmark_no_dynamic(tmp_path: Path):
-    result = runner.invoke(
-        app, ["benchmark", str(tmp_path), "-n", "1", "--no-dynamic"]
-    )
+    result = runner.invoke(app, ["benchmark", str(tmp_path), "-n", "1", "--no-dynamic"])
     assert result.exit_code in {0, 1}
 
 
@@ -694,12 +691,16 @@ def test_benchmark_no_dynamic(tmp_path: Path):
 def test_translate_with_json_config_file(tmp_path: Path):
     """--config with a JSON file exercises the config loader path."""
     cfg = tmp_path / "cogant.json"
-    cfg.write_text(json.dumps({
-        "pipeline": {
-            "skip_stages": ["validate"],
-            "verbose": False,
-        }
-    }))
+    cfg.write_text(
+        json.dumps(
+            {
+                "pipeline": {
+                    "skip_stages": ["validate"],
+                    "verbose": False,
+                }
+            }
+        )
+    )
     result = runner.invoke(
         app,
         ["translate", str(tmp_path), "--config", str(cfg), "--no-dynamic"],
@@ -733,12 +734,16 @@ def test_translate_with_bad_config_file(tmp_path: Path):
 def test_translate_config_with_stages_key(tmp_path: Path):
     """Config file with 'stages' key inside pipeline section."""
     cfg = tmp_path / "cogant.json"
-    cfg.write_text(json.dumps({
-        "pipeline": {
-            "stages": ["ingest", "static"],
-            "output_dir": str(tmp_path / "out"),
-        }
-    }))
+    cfg.write_text(
+        json.dumps(
+            {
+                "pipeline": {
+                    "stages": ["ingest", "static"],
+                    "output_dir": str(tmp_path / "out"),
+                }
+            }
+        )
+    )
     result = runner.invoke(
         app,
         ["translate", str(tmp_path), "--config", str(cfg), "--no-dynamic"],
@@ -853,16 +858,12 @@ def test_process_nonexistent_target():
 
 def test_explain_node_with_text_format(tmp_path: Path):
     """explain with --format text exercises format_text branch (or errors gracefully)."""
-    result = runner.invoke(
-        app, ["explain", str(tmp_path), "SomeNode", "--format", "text"]
-    )
+    result = runner.invoke(app, ["explain", str(tmp_path), "SomeNode", "--format", "text"])
     # Should exit 1 (pipeline err) or 2 (node not found) - either is fine
     assert result.exit_code in {1, 2}
 
 
 def test_explain_node_with_json_format(tmp_path: Path):
     """explain with --format json exercises format_json branch (or errors gracefully)."""
-    result = runner.invoke(
-        app, ["explain", str(tmp_path), "SomeNode", "--format", "json"]
-    )
+    result = runner.invoke(app, ["explain", str(tmp_path), "SomeNode", "--format", "json"])
     assert result.exit_code in {1, 2}

@@ -1,8 +1,8 @@
 """Integration tests for the full COGANT pipeline."""
 
 import json
+
 import pytest
-from pathlib import Path
 
 
 class TestEndToEndPipeline:
@@ -57,14 +57,8 @@ class TestEndToEndPipeline:
 
                 # Extract functions and classes
                 file_symbols = {
-                    "functions": [
-                        n.name for n in ast.walk(tree)
-                        if isinstance(n, ast.FunctionDef)
-                    ],
-                    "classes": [
-                        n.name for n in ast.walk(tree)
-                        if isinstance(n, ast.ClassDef)
-                    ],
+                    "functions": [n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)],
+                    "classes": [n.name for n in ast.walk(tree) if isinstance(n, ast.ClassDef)],
                 }
 
                 if file_symbols["functions"] or file_symbols["classes"]:
@@ -209,10 +203,8 @@ class TestPipelineWithExampleService:
                 tree = ast.parse(f.read())
 
             # Should find FastAPI app and route definitions
-            classes = [n.name for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]
-            functions = [
-                n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)
-            ]
+            [n.name for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]
+            functions = [n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)]
 
             # Verify expected symbols
             assert len(functions) > 0
@@ -320,11 +312,10 @@ class TestPipelinePerformance:
 
         graph = {
             "nodes": [
-                {"id": f"n{i}", "type": "Function", "name": f"func_{i}"}
-                for i in range(node_count)
+                {"id": f"n{i}", "type": "Function", "name": f"func_{i}"} for i in range(node_count)
             ],
             "edges": [
-                {"source": f"n{i}", "target": f"n{(i+1) % node_count}", "type": "calls"}
+                {"source": f"n{i}", "target": f"n{(i + 1) % node_count}", "type": "calls"}
                 for i in range(edge_count)
             ],
         }

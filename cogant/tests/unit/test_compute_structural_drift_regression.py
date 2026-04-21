@@ -81,9 +81,7 @@ def test_compute_structural_drift_handles_dict_shaped_nodes_and_edges(
     run_b.mkdir()
 
     (run_a / "program_graph.json").write_text(json.dumps(_dict_shape_graph()))
-    (run_b / "program_graph.json").write_text(
-        json.dumps(_dict_shape_graph_modified())
-    )
+    (run_b / "program_graph.json").write_text(json.dumps(_dict_shape_graph_modified()))
 
     bundle_a = load_bundle(run_a)
     bundle_b = load_bundle(run_b)
@@ -121,9 +119,7 @@ def test_compute_drift_score_end_to_end_on_run_dir_bundles(
     run_b.mkdir()
 
     (run_a / "program_graph.json").write_text(json.dumps(_dict_shape_graph()))
-    (run_b / "program_graph.json").write_text(
-        json.dumps(_dict_shape_graph_modified())
-    )
+    (run_b / "program_graph.json").write_text(json.dumps(_dict_shape_graph_modified()))
 
     bundle_a = load_bundle(run_a)
     bundle_b = load_bundle(run_b)

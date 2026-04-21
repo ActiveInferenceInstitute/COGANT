@@ -30,7 +30,6 @@ from pathlib import Path
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Import guards — each reverse sub-module may or may not be available yet.
 # ---------------------------------------------------------------------------
@@ -369,9 +368,7 @@ def test_synthesize_creates_files(minimal_gnn_file: Path, tmp_path: Path) -> Non
     not (HAS_PARSER and HAS_PLANNER and HAS_SYNTHESIZER),
     reason="cogant.reverse.synthesizer not yet available",
 )
-def test_synthesized_state_is_importable(
-    minimal_gnn_file: Path, tmp_path: Path
-) -> None:
+def test_synthesized_state_is_importable(minimal_gnn_file: Path, tmp_path: Path) -> None:
     """The emitted ``state.py`` module imports and exposes a ``State`` class."""
     model = parse_gnn(str(minimal_gnn_file))
     plan = plan_package(model)
@@ -432,13 +429,9 @@ def test_synthesis_is_deterministic(minimal_gnn_file: Path, tmp_path: Path) -> N
 
 @pytest.mark.slow
 @pytest.mark.skipif(not HAS_IDEMPOTENCY, reason="idempotency verifier not available")
-def test_roundtrip_result_structure(
-    minimal_gnn_file: Path, tmp_path: Path
-) -> None:
+def test_roundtrip_result_structure(minimal_gnn_file: Path, tmp_path: Path) -> None:
     """``verify_roundtrip`` returns a populated ``RoundtripResult``."""
-    result = verify_roundtrip(
-        str(minimal_gnn_file), str(tmp_path / "roundtrip")
-    )
+    result = verify_roundtrip(str(minimal_gnn_file), str(tmp_path / "roundtrip"))
     assert isinstance(result, RoundtripResult)
     assert hasattr(result, "is_isomorphic")
     assert hasattr(result, "role_match_score")
@@ -457,13 +450,9 @@ def test_roundtrip_result_structure(
 
 @pytest.mark.slow
 @pytest.mark.skipif(not HAS_IDEMPOTENCY, reason="idempotency verifier not available")
-def test_roundtrip_role_match_score_bounds(
-    minimal_gnn_file: Path, tmp_path: Path
-) -> None:
+def test_roundtrip_role_match_score_bounds(minimal_gnn_file: Path, tmp_path: Path) -> None:
     """Role-match score is always a valid probability in ``[0, 1]``."""
-    result = verify_roundtrip(
-        str(minimal_gnn_file), str(tmp_path / "roundtrip-bounds")
-    )
+    result = verify_roundtrip(str(minimal_gnn_file), str(tmp_path / "roundtrip-bounds"))
     assert 0.0 <= result.role_match_score <= 1.0
 
 
@@ -482,22 +471,15 @@ def test_roundtrip_role_match_meets_lenient_threshold(
     fail — the test naturally activates once the pipeline runs cleanly
     on synthesized packages.
     """
-    result = verify_roundtrip(
-        str(minimal_gnn_file), str(tmp_path / "roundtrip-threshold")
-    )
+    result = verify_roundtrip(str(minimal_gnn_file), str(tmp_path / "roundtrip-threshold"))
     if not result.synthesized_roles and result.errors:
-        pytest.skip(
-            f"forward pipeline not yet runnable on synthesized package: "
-            f"{result.errors[0]}"
-        )
+        pytest.skip(f"forward pipeline not yet runnable on synthesized package: {result.errors[0]}")
     assert result.role_match_score >= 0.5
 
 
 @pytest.mark.slow
 @pytest.mark.skipif(not HAS_IDEMPOTENCY, reason="idempotency verifier not available")
-def test_roundtrip_shape_match_populated(
-    minimal_gnn_file: Path, tmp_path: Path
-) -> None:
+def test_roundtrip_shape_match_populated(minimal_gnn_file: Path, tmp_path: Path) -> None:
     """``shape_match`` is populated with the three state-space dimensions.
 
     The canonical fixture declares non-zero hidden states, observations,
@@ -507,9 +489,7 @@ def test_roundtrip_shape_match_populated(
     once ``state.py`` is rich enough for the forward pipeline to
     recover hidden-state fields from the synthesized package.
     """
-    result = verify_roundtrip(
-        str(minimal_gnn_file), str(tmp_path / "roundtrip-shape")
-    )
+    result = verify_roundtrip(str(minimal_gnn_file), str(tmp_path / "roundtrip-shape"))
     if not result.shape_match:
         pytest.skip("verifier did not populate shape_match for this fixture")
     assert set(result.shape_match.keys()) == {"n_states", "n_obs", "n_actions"}

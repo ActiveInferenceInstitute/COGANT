@@ -104,12 +104,8 @@ class _MetricsStore:
     requests: dict[tuple[str, str, int], int] = field(default_factory=lambda: defaultdict(int))
     errors: dict[tuple[str, str], int] = field(default_factory=lambda: defaultdict(int))
     rate_limited: dict[tuple[str, str], int] = field(default_factory=lambda: defaultdict(int))
-    duration_sum: dict[tuple[str, str], float] = field(
-        default_factory=lambda: defaultdict(float)
-    )
-    duration_count: dict[tuple[str, str], int] = field(
-        default_factory=lambda: defaultdict(int)
-    )
+    duration_sum: dict[tuple[str, str], float] = field(default_factory=lambda: defaultdict(float))
+    duration_count: dict[tuple[str, str], int] = field(default_factory=lambda: defaultdict(int))
 
     def record(self, method: str, path: str, status: int, duration_s: float) -> None:
         """Increment counters for a finished request.
@@ -151,9 +147,7 @@ class _MetricsStore:
         lines.append("# HELP cogant_http_errors_total Total 5xx responses by method/path.")
         lines.append("# TYPE cogant_http_errors_total counter")
         for (method, path), count in sorted(self.errors.items()):
-            lines.append(
-                f'cogant_http_errors_total{{method="{method}",path="{path}"}} {count}'
-            )
+            lines.append(f'cogant_http_errors_total{{method="{method}",path="{path}"}} {count}')
 
         lines.append("# HELP cogant_http_rate_limited_total Rate-limited requests by method/path.")
         lines.append("# TYPE cogant_http_rate_limited_total counter")
@@ -442,9 +436,7 @@ def create_app(
     # -----------------------------------------------------------------
 
     @app.middleware("http")
-    async def _observability_middleware(
-        request: Request, call_next: Callable[..., Any]
-    ) -> Any:
+    async def _observability_middleware(request: Request, call_next: Callable[..., Any]) -> Any:
         """Log, meter, rate-limit, and inject request ID into every request.
 
         The middleware performs four things in order:
@@ -542,9 +534,7 @@ def create_app(
     # -----------------------------------------------------------------
 
     @app.exception_handler(RequestValidationError)
-    async def _validation_handler(
-        request: Request, exc: RequestValidationError
-    ) -> JSONResponse:
+    async def _validation_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
         """Return a 422 with the uniform error payload shape.
 
         FastAPI's default body is a list of validation errors under
@@ -563,9 +553,7 @@ def create_app(
         return JSONResponse(status_code=422, content=payload)
 
     @app.exception_handler(HTTPException)
-    async def _http_exception_handler(
-        request: Request, exc: HTTPException
-    ) -> JSONResponse:
+    async def _http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
         """Normalise FastAPI ``HTTPException`` into the uniform shape."""
         payload = ErrorResponse(
             detail=str(exc.detail),
@@ -646,9 +634,7 @@ def create_app(
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except (ValueError, RuntimeError, KeyError) as exc:
-            raise HTTPException(
-                status_code=500, detail=f"{type(exc).__name__}: {exc}"
-            ) from exc
+            raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
         return _bundle_to_analyze_response(bundle)
 
     @app.post(
@@ -678,9 +664,7 @@ def create_app(
         try:
             zip_b64, file_count = _synthesize_zip_from_gnn_text(gnn_text)
         except (ValueError, KeyError) as exc:
-            raise HTTPException(
-                status_code=422, detail=f"invalid GNN text: {exc}"
-            ) from exc
+            raise HTTPException(status_code=422, detail=f"invalid GNN text: {exc}") from exc
         except Exception as exc:  # noqa: BLE001 - surface as 500
             logger.exception("reverse synthesis failed")
             raise HTTPException(
@@ -721,9 +705,7 @@ def create_app(
         try:
             result = verify_repo_roundtrip(path, role_threshold=body.threshold)
         except (ValueError, RuntimeError, KeyError) as exc:
-            raise HTTPException(
-                status_code=500, detail=f"{type(exc).__name__}: {exc}"
-            ) from exc
+            raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
         return RoundtripResponse(
             role_match_score=float(result.role_match_score),
             is_isomorphic=bool(result.is_isomorphic),
@@ -934,9 +916,7 @@ def create_app(
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except (ValueError, RuntimeError, KeyError) as exc:
-            raise HTTPException(
-                status_code=500, detail=f"{type(exc).__name__}: {exc}"
-            ) from exc
+            raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
 
         duration_total = time.perf_counter() - start_total
 
@@ -962,9 +942,7 @@ def create_app(
             500: {"model": ErrorResponse, "description": "Round-trip failed."},
         },
     )
-    async def roundtrip_v1(
-        request: Request, body: RoundtripRequestV1
-    ) -> RoundtripResponseV1:
+    async def roundtrip_v1(request: Request, body: RoundtripRequestV1) -> RoundtripResponseV1:
         """Forward → reverse → forward round-trip (v1 API).
 
         Returns structured result with request ID and timing breakdown.
@@ -980,9 +958,7 @@ def create_app(
         try:
             result = verify_repo_roundtrip(path, role_threshold=body.threshold)
         except (ValueError, RuntimeError, KeyError) as exc:
-            raise HTTPException(
-                status_code=500, detail=f"{type(exc).__name__}: {exc}"
-            ) from exc
+            raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
 
         duration_total = time.perf_counter() - start_total
         return RoundtripResponseV1(
@@ -1006,9 +982,7 @@ def create_app(
             500: {"model": ErrorResponse, "description": "Visualization failed."},
         },
     )
-    async def visualize(
-        request: Request, body: VisualizeRequest
-    ) -> VisualizeResponse:
+    async def visualize(request: Request, body: VisualizeRequest) -> VisualizeResponse:
         """Generate a diagram for source code in the requested format.
 
         Translates ``body.source_code`` through the ingest → graph

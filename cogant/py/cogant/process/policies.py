@@ -16,17 +16,33 @@ logger = logging.getLogger(__name__)
 # behaviour. Lower-cased on input, matched as substrings.
 _RETRY_NAME_HINTS: set[str] = {"retry", "retries", "backoff", "reattempt"}
 _BRANCH_NAME_HINTS: set[str] = {
-    "decision", "branch", "dispatch", "route", "router", "choose", "select",
-    "switch", "if_", "when_", "case_", "predicate",
+    "decision",
+    "branch",
+    "dispatch",
+    "route",
+    "router",
+    "choose",
+    "select",
+    "switch",
+    "if_",
+    "when_",
+    "case_",
+    "predicate",
 }
 _CIRCUIT_NAME_HINTS: set[str] = {
-    "circuit", "breaker", "fuse", "tripped", "open_circuit", "half_open",
+    "circuit",
+    "breaker",
+    "fuse",
+    "tripped",
+    "open_circuit",
+    "half_open",
 }
 
 
 @dataclass
 class RetryPolicy:
     """Retry logic for a stage."""
+
     id: str
     stage_id: str
     max_attempts: int = 3
@@ -38,6 +54,7 @@ class RetryPolicy:
 @dataclass
 class BranchingPolicy:
     """Branching decision point."""
+
     id: str
     stage_id: str
     decision_point: str  # Node ID making the decision
@@ -48,6 +65,7 @@ class BranchingPolicy:
 @dataclass
 class CircuitBreakerPolicy:
     """Circuit breaker pattern for fault tolerance."""
+
     id: str
     stage_id: str
     failure_threshold: int = 5
@@ -138,7 +156,10 @@ class PolicyExtractor:
             self.retry_policies[policy_id] = policy
             logger.debug(
                 "Extracted retry policy %s (name_hit=%s, flag=%s, structural=%s)",
-                policy_id, name_hit, has_retry_flag, structural_hit,
+                policy_id,
+                name_hit,
+                has_retry_flag,
+                structural_hit,
             )
 
     def _has_retry_structure(self, node_id: str) -> bool:
@@ -192,9 +213,7 @@ class PolicyExtractor:
 
             name_hit = any(hint in name_lc for hint in _BRANCH_NAME_HINTS)
             metadata_hit = bool(
-                metadata.get("is_decision")
-                or metadata.get("is_branch")
-                or metadata.get("branches")
+                metadata.get("is_decision") or metadata.get("is_branch") or metadata.get("branches")
             )
             structural_hit = self._has_fanout_structure(node.id)
 
@@ -218,7 +237,10 @@ class PolicyExtractor:
             self.branching_policies[policy_id] = policy
             logger.debug(
                 "Extracted branching policy %s (name_hit=%s, metadata=%s, structural=%s)",
-                policy_id, name_hit, metadata_hit, structural_hit,
+                policy_id,
+                name_hit,
+                metadata_hit,
+                structural_hit,
             )
 
     def _has_fanout_structure(self, node_id: str) -> bool:
@@ -301,7 +323,9 @@ class PolicyExtractor:
             self.circuit_breaker_policies[policy_id] = policy
             logger.debug(
                 "Extracted circuit breaker policy %s (metadata=%s, name=%s)",
-                policy_id, metadata_hit, name_hit,
+                policy_id,
+                metadata_hit,
+                name_hit,
             )
 
     def get_retry_policy(self, policy_id: str) -> RetryPolicy | None:
@@ -353,7 +377,9 @@ class PolicyExtractor:
         return {
             "retry": [p for p in self.retry_policies.values() if p.stage_id == stage_id],
             "branching": [p for p in self.branching_policies.values() if p.stage_id == stage_id],
-            "circuit_breaker": [p for p in self.circuit_breaker_policies.values() if p.stage_id == stage_id],
+            "circuit_breaker": [
+                p for p in self.circuit_breaker_policies.values() if p.stage_id == stage_id
+            ],
         }
 
     def policy_count(self) -> int:

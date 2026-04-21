@@ -11,7 +11,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -20,9 +19,11 @@ pytestmark = pytest.mark.unit
 # api/bundle.py — Bundle accessors and errors
 # ---------------------------------------------------------------------------
 
+
 class TestBundle:
     def test_bundle_init(self, tmp_path):
         from cogant.api.bundle import Bundle
+
         bundle = Bundle(target=str(tmp_path))
         assert bundle.target == str(tmp_path)
         assert isinstance(bundle.artifacts, dict)
@@ -32,12 +33,14 @@ class TestBundle:
 
     def test_get_artifact_missing_not_required(self, tmp_path):
         from cogant.api.bundle import Bundle
+
         bundle = Bundle(target=str(tmp_path))
         result = bundle.get_artifact("nonexistent_key")
         assert result is None
 
     def test_get_artifact_present(self, tmp_path):
         from cogant.api.bundle import Bundle
+
         bundle = Bundle(target=str(tmp_path))
         bundle.artifacts["my_key"] = {"data": 42}
         result = bundle.get_artifact("my_key")
@@ -45,6 +48,7 @@ class TestBundle:
 
     def test_get_artifact_required_raises(self, tmp_path):
         from cogant.api.bundle import Bundle
+
         bundle = Bundle(target=str(tmp_path))
         with pytest.raises((KeyError, RuntimeError)):
             bundle.get_artifact("missing_key", required=True)
@@ -53,6 +57,7 @@ class TestBundle:
 # ---------------------------------------------------------------------------
 # api/orchestration.py — _serialize_node, _serialize_edge
 # ---------------------------------------------------------------------------
+
 
 class TestSerializeNodeAndEdge:
     def test_serialize_node_basic(self):
@@ -70,7 +75,7 @@ class TestSerializeNodeAndEdge:
     def test_serialize_edge_basic(self):
         from cogant.api.orchestration import _serialize_edge
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
@@ -86,14 +91,17 @@ class TestSerializeNodeAndEdge:
 # api/orchestration.py — run_ingest and run_static
 # ---------------------------------------------------------------------------
 
+
 def _make_bundle(tmp_path):
     from cogant.api.bundle import Bundle
+
     return Bundle(target=str(tmp_path))
 
 
 class TestRunIngest:
     def test_run_ingest_empty_dir(self, tmp_path):
         from cogant.api.orchestration import run_ingest
+
         bundle = _make_bundle(tmp_path)
         result = run_ingest(str(tmp_path), bundle)
         assert isinstance(result, dict)
@@ -103,6 +111,7 @@ class TestRunIngest:
 
     def test_run_ingest_with_python_file(self, tmp_path):
         from cogant.api.orchestration import run_ingest
+
         (tmp_path / "module.py").write_text("x = 1\n")
         bundle = _make_bundle(tmp_path)
         result = run_ingest(str(tmp_path), bundle)
@@ -111,6 +120,7 @@ class TestRunIngest:
 
     def test_run_ingest_stores_snapshot_in_bundle(self, tmp_path):
         from cogant.api.orchestration import run_ingest
+
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         snapshot = bundle.artifacts.get("repo_snapshot")
@@ -118,6 +128,7 @@ class TestRunIngest:
 
     def test_run_ingest_returns_target(self, tmp_path):
         from cogant.api.orchestration import run_ingest
+
         bundle = _make_bundle(tmp_path)
         result = run_ingest(str(tmp_path), bundle)
         assert result["target"] == str(tmp_path)
@@ -126,12 +137,14 @@ class TestRunIngest:
 class TestRunStatic:
     def test_run_static_requires_snapshot(self, tmp_path):
         from cogant.api.orchestration import run_static
+
         bundle = _make_bundle(tmp_path)
         with pytest.raises(RuntimeError, match="ingest"):
             run_static(bundle)
 
     def test_run_static_with_empty_snapshot(self, tmp_path):
         from cogant.api.orchestration import run_ingest, run_static
+
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         result = run_static(bundle)
@@ -141,6 +154,7 @@ class TestRunStatic:
 
     def test_run_static_with_python_file(self, tmp_path):
         from cogant.api.orchestration import run_ingest, run_static
+
         (tmp_path / "mymod.py").write_text("def foo():\n    return 1\n")
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
@@ -149,6 +163,7 @@ class TestRunStatic:
 
     def test_run_static_stores_modules_in_bundle(self, tmp_path):
         from cogant.api.orchestration import run_ingest, run_static
+
         (tmp_path / "m.py").write_text("class Foo:\n    pass\n")
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
@@ -161,9 +176,11 @@ class TestRunStatic:
 # api/orchestration.py — run_normalize
 # ---------------------------------------------------------------------------
 
+
 class TestRunNormalize:
     def test_run_normalize_with_empty_snapshot(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_static, run_normalize
+        from cogant.api.orchestration import run_ingest, run_normalize, run_static
+
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         run_static(bundle)
@@ -172,7 +189,8 @@ class TestRunNormalize:
         assert "type" in result
 
     def test_run_normalize_with_python_file(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_static, run_normalize
+        from cogant.api.orchestration import run_ingest, run_normalize, run_static
+
         (tmp_path / "mod.py").write_text("def bar(x: int) -> int:\n    return x\n")
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
@@ -186,9 +204,11 @@ class TestRunNormalize:
 # RoundtripResult.summary
 # ---------------------------------------------------------------------------
 
+
 class TestReverseIdempotencyHelpers:
     def test_state_space_matrices_none(self):
         from cogant.reverse.idempotency import _state_space_matrices
+
         result = _state_space_matrices(None)
         assert result == {}
 
@@ -196,10 +216,16 @@ class TestReverseIdempotencyHelpers:
         from cogant.reverse.idempotency import _state_space_matrices
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
+
         ss = StateSpaceModel(
-            id="ss1", schema_name="test",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ss1",
+            schema_name="test",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         result = _state_space_matrices(ss)
@@ -207,18 +233,21 @@ class TestReverseIdempotencyHelpers:
 
     def test_nodes_edges_from_mappings_none(self):
         from cogant.reverse.idempotency import _nodes_edges_from_mappings
+
         nodes, edges = _nodes_edges_from_mappings(None)
         assert nodes == []
         assert edges == []
 
     def test_nodes_edges_from_mappings_empty_dict(self):
         from cogant.reverse.idempotency import _nodes_edges_from_mappings
+
         nodes, edges = _nodes_edges_from_mappings({})
         assert nodes == []
         assert edges == []
 
     def test_roundtrip_result_summary(self):
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=True,
             role_match_score=0.9,
@@ -232,6 +261,7 @@ class TestReverseIdempotencyHelpers:
 
     def test_roundtrip_result_summary_drift(self):
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=False,
             role_match_score=0.5,
@@ -241,6 +271,7 @@ class TestReverseIdempotencyHelpers:
 
     def test_role_multiset_from_mappings_none(self):
         from cogant.reverse.idempotency import _role_multiset_from_mappings
+
         result = _role_multiset_from_mappings(None)
         assert isinstance(result, dict)
         assert len(result) == 0

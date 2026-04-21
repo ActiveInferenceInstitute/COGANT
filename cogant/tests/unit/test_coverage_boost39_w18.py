@@ -15,8 +15,6 @@ Covers:
 """
 
 import ast
-import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -27,9 +25,11 @@ pytestmark = pytest.mark.unit
 # TypeInfo
 # ---------------------------------------------------------------------------
 
+
 class TestTypeInfoDataclass:
     def test_creation(self):
         from cogant.static.types import TypeInfo
+
         ti = TypeInfo(symbol_id="s1", symbol_name="myvar", symbol_kind="variable")
         assert ti.symbol_id == "s1"
         assert ti.symbol_name == "myvar"
@@ -37,6 +37,7 @@ class TestTypeInfoDataclass:
 
     def test_defaults(self):
         from cogant.static.types import TypeInfo
+
         ti = TypeInfo(symbol_id="", symbol_name="x", symbol_kind="variable")
         assert ti.inferred_type is None
         assert ti.annotation is None
@@ -46,6 +47,7 @@ class TestTypeInfoDataclass:
 
     def test_custom_values(self):
         from cogant.static.types import TypeInfo
+
         ti = TypeInfo(
             symbol_id="x",
             symbol_name="y",
@@ -66,19 +68,23 @@ class TestTypeInfoDataclass:
 # TypeInferencer — static helpers
 # ---------------------------------------------------------------------------
 
+
 class TestAnnotationToStr:
     def test_none_returns_none(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._annotation_to_str(None) is None
 
     def test_name_node(self):
         from cogant.static.types import TypeInferencer
+
         ann = ast.Name(id="int", ctx=ast.Load())
         result = TypeInferencer._annotation_to_str(ann)
         assert result == "int"
 
     def test_constant_node(self):
         from cogant.static.types import TypeInferencer
+
         # "str" literal as annotation
         ann = ast.parse('"str"', mode="eval").body
         result = TypeInferencer._annotation_to_str(ann)
@@ -88,16 +94,19 @@ class TestAnnotationToStr:
 class TestSafeUnparse:
     def test_none_returns_none(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._safe_unparse(None) is None
 
     def test_constant(self):
         from cogant.static.types import TypeInferencer
+
         node = ast.Constant(value=42)
         result = TypeInferencer._safe_unparse(node)
         assert result == "42"
 
     def test_name(self):
         from cogant.static.types import TypeInferencer
+
         node = ast.Name(id="foo", ctx=ast.Load())
         result = TypeInferencer._safe_unparse(node)
         assert result == "foo"
@@ -106,16 +115,19 @@ class TestSafeUnparse:
 class TestCallName:
     def test_simple_name(self):
         from cogant.static.types import TypeInferencer
+
         node = ast.Name(id="dict", ctx=ast.Load())
         assert TypeInferencer._call_name(node) == "dict"
 
     def test_attribute(self):
         from cogant.static.types import TypeInferencer
+
         node = ast.Attribute(value=ast.Name(id="os"), attr="path", ctx=ast.Load())
         assert TypeInferencer._call_name(node) == "path"
 
     def test_other_returns_none(self):
         from cogant.static.types import TypeInferencer
+
         node = ast.Constant(value=1)
         assert TypeInferencer._call_name(node) is None
 
@@ -123,64 +135,79 @@ class TestCallName:
 class TestInferTypeFromValue:
     def test_none_string(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("None") == "None"
 
     def test_true_false(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("True") == "bool"
         assert TypeInferencer._infer_type_from_value("False") == "bool"
 
     def test_list_literal(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("[1, 2]") == "list"
 
     def test_dict_literal(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value('{"k": "v"}') == "dict"
 
     def test_set_literal(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("{1, 2}") == "set"
 
     def test_tuple_literal(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("(1, 2)") == "tuple"
 
     def test_string_literal(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value('"hello"') == "str"
         assert TypeInferencer._infer_type_from_value("'world'") == "str"
 
     def test_integer(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("42") == "int"
 
     def test_negative_integer(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("-5") == "int"
 
     def test_float(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("3.14") == "float"
 
     def test_constructor_call_dict(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("dict()") == "dict"
 
     def test_constructor_call_list(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("list()") == "list"
 
     def test_empty_string_returns_none(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("") is None
 
     def test_none_input_returns_none(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value(None) is None
 
     def test_unrecognized_returns_none(self):
         from cogant.static.types import TypeInferencer
+
         assert TypeInferencer._infer_type_from_value("some_variable") is None
 
 
@@ -188,9 +215,11 @@ class TestInferTypeFromValue:
 # TypeInferencer — _infer_literal_type (via AST nodes)
 # ---------------------------------------------------------------------------
 
+
 class TestInferLiteralType:
     def _inferencer(self):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer()
 
     def test_int_constant(self):
@@ -267,9 +296,11 @@ class TestInferLiteralType:
 # TypeInferencer — _infer_return_from_body
 # ---------------------------------------------------------------------------
 
+
 class TestInferReturnFromBody:
     def _inferencer(self):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer()
 
     def test_property_decorator(self):
@@ -308,9 +339,11 @@ def foo():
 # TypeInferencer — infer_types_from_source
 # ---------------------------------------------------------------------------
 
+
 class TestInferTypesFromSource:
     def _inferencer(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer(repo_root=tmp_path)
 
     def test_empty_source(self, tmp_path):
@@ -400,6 +433,7 @@ def gen():
 
     def test_infer_from_file(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         py_file = tmp_path / "sample.py"
         py_file.write_text("x: int = 1\ny: str = 'hello'\n")
         inf = TypeInferencer(repo_root=tmp_path)
@@ -408,6 +442,7 @@ def gen():
 
     def test_infer_from_missing_file_returns_empty(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         inf = TypeInferencer(repo_root=tmp_path)
         result = inf.infer_types_from_file(tmp_path / "nonexistent.py")
         assert result == []
@@ -417,15 +452,18 @@ def gen():
 # ingest/repo.py — RepoMetadata, RepoSnapshot, RepoIngester
 # ---------------------------------------------------------------------------
 
+
 class TestRepoMetadataDataclass:
     def test_creation(self):
         from cogant.ingest.repo import RepoMetadata
+
         meta = RepoMetadata(name="myrepo", url="https://github.com/org/myrepo")
         assert meta.name == "myrepo"
         assert meta.url == "https://github.com/org/myrepo"
 
     def test_defaults(self):
         from cogant.ingest.repo import RepoMetadata
+
         meta = RepoMetadata(name="x", url="y")
         assert meta.commit_hash is None
         assert meta.commit_message is None
@@ -438,7 +476,7 @@ class TestRepoMetadataDataclass:
 class TestRepoSnapshotDataclass:
     def test_creation(self, tmp_path):
         from cogant.ingest.repo import RepoMetadata, RepoSnapshot
-        from cogant.ingest.manifest import Dependency
+
         meta = RepoMetadata(name="test", url="file:///test")
         snap = RepoSnapshot(
             metadata=meta,
@@ -455,11 +493,13 @@ class TestRepoSnapshotDataclass:
 class TestRepoIngesterInit:
     def test_default_work_dir(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         ingester = RepoIngester(work_dir=tmp_path)
         assert ingester.work_dir == tmp_path
 
     def test_creates_work_dir(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         new_dir = tmp_path / "new_work"
         RepoIngester(work_dir=new_dir)
         assert new_dir.exists()
@@ -468,12 +508,14 @@ class TestRepoIngesterInit:
 class TestRepoIngesterIngestLocal:
     def test_nonexistent_path_raises(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         ingester = RepoIngester(work_dir=tmp_path)
         with pytest.raises(ValueError, match="does not exist"):
             ingester.ingest_local(tmp_path / "nonexistent")
 
     def test_file_path_raises(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         f = tmp_path / "file.txt"
         f.write_text("hello")
         ingester = RepoIngester(work_dir=tmp_path)
@@ -482,6 +524,7 @@ class TestRepoIngesterIngestLocal:
 
     def test_empty_dir_returns_snapshot(self, tmp_path):
         from cogant.ingest.repo import RepoIngester, RepoSnapshot
+
         ingester = RepoIngester(work_dir=tmp_path)
         snapshot = ingester.ingest_local(tmp_path)
         assert isinstance(snapshot, RepoSnapshot)
@@ -489,6 +532,7 @@ class TestRepoIngesterIngestLocal:
 
     def test_detects_primary_language(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "a.py").write_text("x = 1")
         (tmp_path / "b.py").write_text("y = 2")
         ingester = RepoIngester(work_dir=tmp_path)
@@ -497,6 +541,7 @@ class TestRepoIngesterIngestLocal:
 
     def test_extracts_requirements(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "requirements.txt").write_text("requests>=2.0\nflask\n")
         ingester = RepoIngester(work_dir=tmp_path)
         snapshot = ingester.ingest_local(tmp_path)
@@ -508,6 +553,7 @@ class TestRepoIngesterIngestLocal:
 class TestRepoIngesterExtractMetadata:
     def test_extract_metadata_name_from_dir(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         mydir = tmp_path / "myrepo"
         mydir.mkdir()
         ingester = RepoIngester(work_dir=tmp_path)
@@ -516,12 +562,14 @@ class TestRepoIngesterExtractMetadata:
 
     def test_extract_metadata_url_is_path(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         ingester = RepoIngester(work_dir=tmp_path)
         meta = ingester._extract_metadata(tmp_path)
         assert str(tmp_path) in meta.url
 
     def test_extract_metadata_timestamp_set(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         ingester = RepoIngester(work_dir=tmp_path)
         meta = ingester._extract_metadata(tmp_path)
         assert meta.timestamp is not None
@@ -530,12 +578,14 @@ class TestRepoIngesterExtractMetadata:
 class TestRepoIngesterExtractDependencies:
     def test_empty_repo_no_deps(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         ingester = RepoIngester(work_dir=tmp_path)
         deps = ingester._extract_dependencies(tmp_path)
         assert deps == []
 
     def test_requirements_txt_found(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "requirements.txt").write_text("numpy\npandas\n")
         ingester = RepoIngester(work_dir=tmp_path)
         deps = ingester._extract_dependencies(tmp_path)
@@ -545,7 +595,9 @@ class TestRepoIngesterExtractDependencies:
 
     def test_package_json_found(self, tmp_path):
         import json
+
         from cogant.ingest.repo import RepoIngester
+
         pkg = {"name": "app", "dependencies": {"react": "^18.0.0"}}
         (tmp_path / "package.json").write_text(json.dumps(pkg))
         ingester = RepoIngester(work_dir=tmp_path)
@@ -555,6 +607,7 @@ class TestRepoIngesterExtractDependencies:
 
     def test_deduplicates_deps(self, tmp_path):
         from cogant.ingest.repo import RepoIngester
+
         (tmp_path / "requirements.txt").write_text("requests>=2.0\nrequests>=2.0\n")
         ingester = RepoIngester(work_dir=tmp_path)
         deps = ingester._extract_dependencies(tmp_path)

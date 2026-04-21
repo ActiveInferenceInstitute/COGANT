@@ -44,8 +44,7 @@ class SVGExporter:
             return self._render_dot_to_svg(dot_string, output_path)
         else:
             logger.warning(
-                "graphviz not available; returning DOT format. "
-                "Install graphviz to render as SVG."
+                "graphviz not available; returning DOT format. Install graphviz to render as SVG."
             )
             dot_path = output_path.replace(".svg", ".dot")
             Path(dot_path).write_text(dot_string)
@@ -73,8 +72,7 @@ class SVGExporter:
             return self._render_dot_to_svg(dot_string, output_path)
         else:
             logger.warning(
-                "graphviz not available; returning DOT format. "
-                "Install graphviz to render as SVG."
+                "graphviz not available; returning DOT format. Install graphviz to render as SVG."
             )
             dot_path = output_path.replace(".svg", ".dot")
             Path(dot_path).write_text(dot_string)
@@ -93,7 +91,7 @@ class SVGExporter:
         Returns:
             DOT format string representation of the graph.
         """
-        lines = ["digraph program_graph {", '    rankdir=LR;', '    node [shape=box];']
+        lines = ["digraph program_graph {", "    rankdir=LR;", "    node [shape=box];"]
 
         # Add nodes with colors and labels
         for node in graph.nodes.values():
@@ -110,10 +108,7 @@ class SVGExporter:
             target_safe = self._safe_id(edge.target_id)
             label = edge.kind.value
             width = max(0.5, min(3.0, edge.weight))
-            lines.append(
-                f'    {source_safe} -> {target_safe} '
-                f'[label="{label}", penwidth={width}];'
-            )
+            lines.append(f'    {source_safe} -> {target_safe} [label="{label}", penwidth={width}];')
 
         lines.append("}")
         return "\n".join(lines)
@@ -131,8 +126,8 @@ class SVGExporter:
         Returns:
             DOT format string representation with subgraph clusters.
         """
-        lines = ["digraph markov_blanket {", '    rankdir=LR;']
-        lines.append('    graph [bgcolor=white];')
+        lines = ["digraph markov_blanket {", "    rankdir=LR;"]
+        lines.append("    graph [bgcolor=white];")
 
         # Define cluster colors
         cluster_colors = {
@@ -153,7 +148,7 @@ class SVGExporter:
 
             for node_id in nodes:
                 safe_id = self._safe_id(node_id)
-                lines.append(f'        {safe_id};')
+                lines.append(f"        {safe_id};")
 
             lines.append("    }")
             cluster_id += 1
@@ -163,7 +158,7 @@ class SVGExporter:
             for edge in blanket.edges:  # type: ignore
                 source_safe = self._safe_id(edge.source_id)
                 target_safe = self._safe_id(edge.target_id)
-                lines.append(f'    {source_safe} -> {target_safe};')
+                lines.append(f"    {source_safe} -> {target_safe};")
 
         lines.append("}")
         return "\n".join(lines)

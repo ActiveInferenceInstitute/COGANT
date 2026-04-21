@@ -99,6 +99,7 @@ try:
         ValidationRecommendation,
         ValidationReport,
     )
+
     _extended_available = True
 except (ImportError, ModuleNotFoundError):
     # Fall back to basic implementations. The fallback types are

@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class GanttStage:
     """A stage in a Gantt timeline visualization."""
+
     stage_id: str
     name: str
     start_time: float = 0.0  # Relative time in seconds
@@ -26,6 +27,7 @@ class GanttStage:
 @dataclass
 class Timeline:
     """Complete timeline for process execution."""
+
     stages: list[GanttStage]
     total_duration: float
     critical_path: list[str]
@@ -111,7 +113,9 @@ class TimelineBuilder:
                     derived_deps[conn.target_stage_id].append(conn.source_stage_id)
 
         for stage_id, stage in self.process_model.stages.items():
-            deps = list(stage.entry_points) if stage.entry_points else derived_deps.get(stage_id, [])
+            deps = (
+                list(stage.entry_points) if stage.entry_points else derived_deps.get(stage_id, [])
+            )
             gantt_stage = GanttStage(
                 stage_id=stage_id,
                 name=stage.name,
@@ -186,7 +190,9 @@ class TimelineBuilder:
             visited.add(stage_id)
 
             # Get this stage's duration
-            stage_duration = self.gantt_stages[stage_id].duration if stage_id in self.gantt_stages else 1.0
+            stage_duration = (
+                self.gantt_stages[stage_id].duration if stage_id in self.gantt_stages else 1.0
+            )
 
             # Find longest path through successors
             max_length = stage_duration
@@ -221,10 +227,7 @@ class TimelineBuilder:
         assigned = set()
 
         # Sort stages by start time
-        sorted_stages = sorted(
-            self.gantt_stages.values(),
-            key=lambda s: s.start_time
-        )
+        sorted_stages = sorted(self.gantt_stages.values(), key=lambda s: s.start_time)
 
         for stage in sorted_stages:
             if stage.stage_id in assigned:

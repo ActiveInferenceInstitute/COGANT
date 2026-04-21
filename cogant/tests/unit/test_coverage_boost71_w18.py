@@ -13,8 +13,9 @@ Covers:
 - cogant/__init__.py: run_pipeline (basic invocation)
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 pytestmark = pytest.mark.unit
 
@@ -23,14 +24,17 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
     n2 = builder.add_node(NodeKind.FUNCTION, "fn", "mod.fn", path="mod.py")
@@ -41,16 +45,23 @@ def _make_graph_with_nodes():
 def _make_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
-        id="ss1", schema_name="test",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="ss1",
+        schema_name="test",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
 
 
 def _make_process_model():
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
 
 
@@ -58,9 +69,11 @@ def _make_process_model():
 # export/bundle.py — BundleExporter
 # ---------------------------------------------------------------------------
 
+
 class TestBundleExporter:
     def test_init(self, tmp_path):
         from cogant.export.bundle import BundleExporter
+
         exporter = BundleExporter(
             program_graph=_make_empty_graph(),
             state_space_model=_make_state_space(),
@@ -72,6 +85,7 @@ class TestBundleExporter:
 
     def test_export_returns_path(self, tmp_path):
         from cogant.export.bundle import BundleExporter
+
         exporter = BundleExporter(
             program_graph=_make_empty_graph(),
             state_space_model=_make_state_space(),
@@ -84,6 +98,7 @@ class TestBundleExporter:
 
     def test_export_creates_output(self, tmp_path):
         from cogant.export.bundle import BundleExporter
+
         exporter = BundleExporter(
             program_graph=_make_graph_with_nodes(),
             state_space_model=_make_state_space(),
@@ -96,6 +111,7 @@ class TestBundleExporter:
 
     def test_export_with_formats(self, tmp_path):
         from cogant.export.bundle import BundleExporter
+
         exporter = BundleExporter(
             program_graph=_make_empty_graph(),
             state_space_model=_make_state_space(),
@@ -111,40 +127,47 @@ class TestBundleExporter:
 # config/loaders.py — ConfigLoader build methods
 # ---------------------------------------------------------------------------
 
+
 class TestConfigLoaderBuildMethods:
     def test_build_export_config_default(self):
         from cogant.config.loaders import ConfigLoader
         from cogant.config.schema import ExportConfig
+
         cfg = ConfigLoader.build_export_config()
         assert isinstance(cfg, ExportConfig)
 
     def test_build_export_config_with_dict(self):
         from cogant.config.loaders import ConfigLoader
         from cogant.config.schema import ExportConfig
+
         cfg = ConfigLoader.build_export_config({})
         assert isinstance(cfg, ExportConfig)
 
     def test_build_pipeline_config_default(self):
         from cogant.config.loaders import ConfigLoader
         from cogant.config.schema import PipelineConfig
+
         cfg = ConfigLoader.build_pipeline_config()
         assert isinstance(cfg, PipelineConfig)
 
     def test_build_pipeline_config_with_preset(self):
         from cogant.config.loaders import ConfigLoader
         from cogant.config.schema import PipelineConfig
+
         cfg = ConfigLoader.build_pipeline_config(preset="minimal")
         assert isinstance(cfg, PipelineConfig)
 
     def test_build_validation_config_default(self):
         from cogant.config.loaders import ConfigLoader
         from cogant.config.schema import ValidationConfig
+
         cfg = ConfigLoader.build_validation_config()
         assert isinstance(cfg, ValidationConfig)
 
     def test_build_validation_config_with_dict(self):
         from cogant.config.loaders import ConfigLoader
         from cogant.config.schema import ValidationConfig
+
         cfg = ConfigLoader.build_validation_config({})
         assert isinstance(cfg, ValidationConfig)
 
@@ -152,21 +175,25 @@ class TestConfigLoaderBuildMethods:
 class TestConfigSubclasses:
     def test_export_config_default(self):
         from cogant.config.schema import ExportConfig
+
         cfg = ExportConfig()
         assert cfg is not None
 
     def test_pipeline_config_default(self):
         from cogant.config.schema import PipelineConfig
+
         cfg = PipelineConfig()
         assert cfg is not None
 
     def test_validation_config_default(self):
         from cogant.config.schema import ValidationConfig
+
         cfg = ValidationConfig()
         assert cfg is not None
 
     def test_config_load_error(self):
         from cogant.config.loaders import ConfigLoadError
+
         err = ConfigLoadError("config file not found")
         assert isinstance(err, Exception)
         assert "config file not found" in str(err)
@@ -176,9 +203,11 @@ class TestConfigSubclasses:
 # gnn/formatter/base.py — GNNMarkdownFormatter extended
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMarkdownFormatterExtended:
     def _make_formatter(self, with_nodes=False):
         from cogant.gnn.formatter.base import GNNMarkdownFormatter
+
         graph = _make_graph_with_nodes() if with_nodes else _make_empty_graph()
         return GNNMarkdownFormatter(
             program_graph=graph,
@@ -216,10 +245,11 @@ class TestGNNMarkdownFormatterExtended:
 # statespace dataclasses — StateVariable, ObservationModality, Action, etc.
 # ---------------------------------------------------------------------------
 
+
 class TestStatespaceDataclasses:
     def test_state_variable_init(self):
-        from cogant.statespace.variables import StateVariable
-        from cogant.statespace.variables import StateVariableType
+        from cogant.statespace.variables import StateVariable, StateVariableType
+
         sv = StateVariable(
             id="sv1",
             name="my_state",
@@ -232,6 +262,7 @@ class TestStatespaceDataclasses:
 
     def test_observation_modality_init(self):
         from cogant.statespace.compiler import ObservationModality
+
         om = ObservationModality(
             id="obs1",
             name="visual_obs",
@@ -244,6 +275,7 @@ class TestStatespaceDataclasses:
 
     def test_action_init(self):
         from cogant.statespace.compiler import Action
+
         act = Action(
             id="act1",
             name="move_forward",
@@ -256,6 +288,7 @@ class TestStatespaceDataclasses:
 
     def test_transition_init(self):
         from cogant.statespace.compiler import Transition
+
         tr = Transition(
             id="tr1",
             source_state="s1",
@@ -268,6 +301,7 @@ class TestStatespaceDataclasses:
 
     def test_likelihood_init(self):
         from cogant.statespace.compiler import Likelihood
+
         lk = Likelihood(
             id="lk1",
             variable_id="sv1",
@@ -280,6 +314,7 @@ class TestStatespaceDataclasses:
 
     def test_preference_init(self):
         from cogant.statespace.compiler import Preference
+
         pref = Preference(
             id="pref1",
             name="goal_state",
@@ -292,6 +327,7 @@ class TestStatespaceDataclasses:
 
     def test_temporal_metrics_init(self):
         from cogant.statespace.temporal import TemporalMetrics
+
         metrics = TemporalMetrics(
             async_fraction=0.3,
             event_driven_fraction=0.5,
@@ -307,6 +343,7 @@ class TestStatespaceDataclasses:
 
     def test_temporal_ordering_init(self):
         from cogant.statespace.temporal import TemporalOrdering
+
         ordering = TemporalOrdering(
             predecessor_id="n1",
             successor_id="n2",
@@ -321,9 +358,11 @@ class TestStatespaceDataclasses:
 # statespace — get_factorization from StateVariableExtractor
 # ---------------------------------------------------------------------------
 
+
 class TestStateVariableExtractorFactorization:
     def test_get_factorization_unknown_var(self):
         from cogant.statespace import StateVariableExtractor
+
         graph = _make_graph_with_nodes()
         extractor = StateVariableExtractor(graph)
         extractor.extract(semantic_mappings={})
@@ -333,6 +372,7 @@ class TestStateVariableExtractorFactorization:
 
     def test_compute_dimensionality(self):
         from cogant.statespace import StateVariableExtractor
+
         graph = _make_empty_graph()
         extractor = StateVariableExtractor(graph)
         extractor.extract(semantic_mappings={})
@@ -343,6 +383,7 @@ class TestStateVariableExtractorFactorization:
 # ---------------------------------------------------------------------------
 # viz/boundary extended — DiffVisualizer, SemanticVisualizer
 # ---------------------------------------------------------------------------
+
 
 class TestDiffVisualizer:
     def _make_bundle(self, label="bundle"):
@@ -356,17 +397,20 @@ class TestDiffVisualizer:
 
     def test_init(self):
         from cogant.viz import DiffVisualizer
+
         visualizer = DiffVisualizer(self._make_bundle("v1"), self._make_bundle("v2"))
         assert visualizer is not None
 
     def test_render_json(self):
         from cogant.viz import DiffVisualizer
+
         visualizer = DiffVisualizer(self._make_bundle("v1"), self._make_bundle("v2"))
         result = visualizer.render_json()
         assert isinstance(result, (str, dict))
 
     def test_render_html(self, tmp_path):
         from cogant.viz import DiffVisualizer
+
         visualizer = DiffVisualizer(self._make_bundle("v1"), self._make_bundle("v2"))
         output = str(tmp_path / "diff.html")
         result = visualizer.render_html(output)

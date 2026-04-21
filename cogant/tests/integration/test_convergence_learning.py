@@ -45,7 +45,7 @@ def _biased_system() -> types.SimpleNamespace:
     D = [0.5, 0.5]
 
     def likelihood(s: list[float]) -> list[float]:
-        return [sum(a * x for a, x in zip(row, s)) for row in A]
+        return [sum(a * x for a, x in zip(row, s, strict=False)) for row in A]
 
     def transition(s: list[float], action: int = 0) -> list[float]:
         n = len(s)
@@ -57,7 +57,7 @@ def _biased_system() -> types.SimpleNamespace:
         return [v / tot for v in out] if tot > 0 else list(s)
 
     def preference_score(o: list[float]) -> float:
-        return sum(c * x for c, x in zip(C, o))
+        return sum(c * x for c, x in zip(C, o, strict=False))
 
     return types.SimpleNamespace(
         A=[row[:] for row in A],
@@ -91,13 +91,13 @@ def _three_state_system() -> types.SimpleNamespace:
     D = [1.0 / 3, 1.0 / 3, 1.0 / 3]
 
     def likelihood(s: list[float]) -> list[float]:
-        return [sum(a * x for a, x in zip(row, s)) for row in A]
+        return [sum(a * x for a, x in zip(row, s, strict=False)) for row in A]
 
     def transition(s: list[float], action: int = 0) -> list[float]:
         return list(s)
 
     def preference_score(o: list[float]) -> float:
-        return sum(c * x for c, x in zip(C, o))
+        return sum(c * x for c, x in zip(C, o, strict=False))
 
     return types.SimpleNamespace(
         A=[row[:] for row in A],
@@ -280,9 +280,7 @@ def test_multi_episode_vfe_decreases_for_learning_agent() -> None:
     first_vfe = result.vfe_trajectory[0]
     last_vfe = result.vfe_trajectory[-1]
     assert math.isfinite(first_vfe) and math.isfinite(last_vfe)
-    assert last_vfe <= first_vfe + 1e-6, (
-        f"VFE increased during learning: {first_vfe} -> {last_vfe}"
-    )
+    assert last_vfe <= first_vfe + 1e-6, f"VFE increased during learning: {first_vfe} -> {last_vfe}"
 
 
 def test_multi_episode_updates_D_toward_visited_states() -> None:

@@ -57,11 +57,7 @@ def test_python_parse_class_and_method():
     parser = get_tree_sitter_parser()
     if "python" not in parser.available_languages():
         pytest.skip("tree_sitter_python grammar not available")
-    source = (
-        "class MyClass:\n"
-        "    def method(self):\n"
-        "        return helper()\n"
-    )
+    source = "class MyClass:\n    def method(self):\n        return helper()\n"
     result = parser.parse_source(source, "python", "m.py")
     kinds = {s.kind for s in result.symbols}
     assert "class" in kinds
@@ -77,12 +73,7 @@ def test_python_extract_imports_and_calls():
     parser = get_tree_sitter_parser()
     if "python" not in parser.available_languages():
         pytest.skip("tree_sitter_python grammar not available")
-    source = (
-        "import os\n"
-        "from typing import List\n"
-        "def f():\n"
-        "    return os.path.join('a', 'b')\n"
-    )
+    source = "import os\nfrom typing import List\ndef f():\n    return os.path.join('a', 'b')\n"
     result = parser.parse_source(source, "python", "f.py")
     assert any("import os" in imp["raw"] for imp in result.imports)
     assert any("typing" in imp["raw"] for imp in result.imports)
@@ -176,9 +167,7 @@ def _git(*args: str, cwd: Path) -> None:
 
 def _have_git() -> bool:
     try:
-        subprocess.run(
-            ["git", "--version"], capture_output=True, text=True, check=True
-        )
+        subprocess.run(["git", "--version"], capture_output=True, text=True, check=True)
         return True
     except (FileNotFoundError, subprocess.CalledProcessError):
         return False

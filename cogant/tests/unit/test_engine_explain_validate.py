@@ -1,12 +1,16 @@
 """Tests for TranslationEngine.explain(), validate(), get_convergence_info()."""
-import os, sys
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 import pytest
-from cogant.translate.engine import TranslationEngine
+
 from cogant.graph.builder import ProgramGraphBuilder
-from cogant.schemas.core import NodeKind, EdgeKind
-from cogant.translate.rules.structural import ContainmentRule, ReadOnlyInputRule
+from cogant.schemas.core import EdgeKind, NodeKind
+from cogant.translate.engine import TranslationEngine
 from cogant.translate.rules.semantic import ActionRule, ObservationRule
+from cogant.translate.rules.structural import ContainmentRule, ReadOnlyInputRule
 
 
 def _graph_with_calls():
@@ -99,7 +103,8 @@ def test_get_convergence_info_before_translation():
 
 @pytest.mark.unit
 def test_validate_with_real_mappings():
-    from cogant.schemas.semantic import MappingKind, SemanticMapping, ConfidenceTier
+    from cogant.schemas.semantic import ConfidenceTier, MappingKind, SemanticMapping
+
     e = TranslationEngine()
     e.rules = []
     # Inject a valid mapping directly
@@ -119,7 +124,8 @@ def test_validate_with_real_mappings():
 
 @pytest.mark.unit
 def test_validate_detects_empty_node_ids():
-    from cogant.schemas.semantic import MappingKind, SemanticMapping, ConfidenceTier
+    from cogant.schemas.semantic import ConfidenceTier, MappingKind, SemanticMapping
+
     e = TranslationEngine()
     e.rules = []
     m = SemanticMapping(
@@ -137,7 +143,6 @@ def test_validate_detects_empty_node_ids():
 
 @pytest.mark.unit
 def test_explain_with_match_log_entries():
-    from cogant.schemas.semantic import MappingKind, SemanticMapping, ConfidenceTier
     e = TranslationEngine()
     e.rules = []
     # Inject match log entries to exercise explain() body

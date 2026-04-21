@@ -26,7 +26,6 @@ from cogant.viz.cytoscape_view import (
 )
 from cogant.viz.html_renderer import HTMLSiteRenderer
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -109,9 +108,7 @@ def test_build_cytoscape_graph_data_shape(small_graph) -> None:
         assert {"id", "label", "role", "confidence", "degree", "color", "size"} <= node.keys()
 
 
-def test_build_cytoscape_graph_data_assigns_role_colours(
-    small_graph, semantic_mappings
-) -> None:
+def test_build_cytoscape_graph_data_assigns_role_colours(small_graph, semantic_mappings) -> None:
     data = build_cytoscape_graph_data(small_graph, semantic_mappings)
     nodes_by_id = {n["id"]: n for n in data["nodes"]}
     assert nodes_by_id["n1"]["role"] == "HIDDEN_STATE"

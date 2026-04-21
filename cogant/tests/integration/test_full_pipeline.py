@@ -42,10 +42,7 @@ def _has_gnn_package(files: dict) -> bool:
 
 
 REPO_NAMES = ["flask_mini", "calculator", "event_pipeline"]
-REPO_PARAMS = [
-    (name, _REPO_ROOT / "examples" / "control_positive" / name)
-    for name in REPO_NAMES
-]
+REPO_PARAMS = [(name, _REPO_ROOT / "examples" / "control_positive" / name) for name in REPO_NAMES]
 
 
 @pytest.fixture(scope="module")
@@ -105,7 +102,7 @@ class TestProgramGraph:
         if repo_name not in pipeline_outputs:
             pytest.skip(f"Repo {repo_name} not available")
         data = json.loads(pipeline_outputs[repo_name]["files"]["program_graph.json"])
-        for nid, node in data["nodes"].items():
+        for _nid, node in data["nodes"].items():
             assert "id" in node
             assert "kind" in node
             assert "name" in node
@@ -116,7 +113,7 @@ class TestProgramGraph:
             pytest.skip(f"Repo {repo_name} not available")
         data = json.loads(pipeline_outputs[repo_name]["files"]["program_graph.json"])
         edge_kinds = set()
-        for eid, edge in data["edges"].items():
+        for _eid, edge in data["edges"].items():
             edge_kinds.add(edge["kind"])
         assert len(edge_kinds) >= 2, f"Expected multiple edge kinds, got {edge_kinds}"
 

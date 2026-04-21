@@ -1,7 +1,11 @@
 """Unit tests for viz/diff_view.py — DiffVisualizer."""
-import os, sys
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 import pytest
+
 from cogant.viz.diff_view import DiffVisualizer
 
 
@@ -56,6 +60,7 @@ def test_init_empty_bundles():
 @pytest.mark.unit
 def test_render_json_returns_valid_json(dv):
     import json
+
     j = dv.render_json()
     assert isinstance(j, str)
     data = json.loads(j)
@@ -66,6 +71,7 @@ def test_render_json_returns_valid_json(dv):
 def test_render_json_empty():
     dv = DiffVisualizer({}, {})
     import json
+
     j = dv.render_json()
     assert isinstance(j, str)
     json.loads(j)
@@ -77,6 +83,7 @@ def test_render_html_creates_file(dv, tmp_path):
     result = dv.render_html(out)
     assert result == out
     import os
+
     assert os.path.exists(out)
 
 

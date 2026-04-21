@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BundleManifest:
     """Manifest for an export bundle."""
+
     bundle_id: str
     schema_name: str
     created_at: datetime
@@ -197,10 +198,7 @@ class BundleExporter:
             exporter = ParquetExporter(self.graph)
             files = exporter.export(self.output_dir)
 
-            checksums = {
-                f: self._compute_checksum(self.output_dir / f)
-                for f in files
-            }
+            checksums = {f: self._compute_checksum(self.output_dir / f) for f in files}
             logger.info(f"Exported Parquet: {len(files)} files")
             return files, checksums
         except Exception as e:

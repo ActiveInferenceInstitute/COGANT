@@ -138,7 +138,7 @@ For a first demonstration of the Active Inference cycle (forward → GNN → pol
 
 - JSONL results: `cogant/evaluation/dataset/roundtrip_results.jsonl` (23 rows, one per target)
 - Driver script: `cogant/evaluation/dataset/regenerate.py`
-- Benchmark summary: `cogant/_rnd/sweep_2026_04/benchmark_refresh_result.md`
+- Benchmark thresholds and calibration constants: [CALIBRATION.md](CALIBRATION.md)
 
 ---
 
@@ -146,7 +146,7 @@ For a first demonstration of the Active Inference cycle (forward → GNN → pol
 
 - **Conceptual roundtrip explainer (published docs):** [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md)
 - **Wave-16 CONSTRAINT fix details:** [CONSTRAINT_FIX.md](CONSTRAINT_FIX.md)
-- **Benchmark refresh notes:** [`_rnd/sweep_2026_04/benchmark_refresh_result.md`](https://github.com/cogant-contributors/cogant/blob/main/_rnd/sweep_2026_04/benchmark_refresh_result.md)
+- **Benchmark calibration snapshot:** [CALIBRATION.md](CALIBRATION.md)
 - **v1.0 readiness assessment:** [V1.0_READINESS.md](V1.0_READINESS.md)
 - **Live metrics (source of truth):** [`evaluation/METRICS.yaml`](https://github.com/cogant-contributors/cogant/blob/main/evaluation/METRICS.yaml)
 - **Dataset (HuggingFace/Kaggle layout):** [`evaluation/dataset/`](https://github.com/cogant-contributors/cogant/blob/main/evaluation/dataset/)

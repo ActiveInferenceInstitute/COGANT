@@ -1,6 +1,6 @@
-# R&D Notes
+# Research Notes Archive
 
-> Exploratory, work-in-progress documentation for the COGANT research track. Notes here are intentionally less polished than the [evaluation/](../evaluation/README.md) reports: they are scratchpads for active experiments and design discussions. Treat anything in this section as provisional.
+> Long-form, exploratory research notes for the COGANT research track. Notes here are intentionally less polished than the [evaluation/](../evaluation/README.md) reports: they are scratchpads for active experiments and design discussions, kept under a single durable namespace rather than dated sweep folders. Treat anything in this section as provisional until it is promoted to `evaluation/`, `theory/`, or `concepts/`.
 
 ## Contents
 

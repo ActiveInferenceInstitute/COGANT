@@ -4,11 +4,17 @@ from pathlib import Path
 
 from cogant.schemas.graph import ProgramGraph
 
-__all__ = ['HAS_TREESITTER', 'parse_file_treesitter', 'parse_python_file', 'parse_js_file', 'parse_ts_file']
+__all__ = [
+    "HAS_TREESITTER",
+    "parse_file_treesitter",
+    "parse_python_file",
+    "parse_js_file",
+    "parse_ts_file",
+]
 
 HAS_TREESITTER: bool
 
-def parse_file_treesitter(path: Path, language: str = 'auto') -> ProgramGraph | None: ...
+def parse_file_treesitter(path: Path, language: str = "auto") -> ProgramGraph | None: ...
 def parse_python_file(path: Path) -> ProgramGraph | None: ...
 def parse_js_file(path: Path) -> ProgramGraph | None: ...
 def parse_ts_file(path: Path) -> ProgramGraph | None: ...

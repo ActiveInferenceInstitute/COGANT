@@ -27,17 +27,11 @@ _PY_ROOT = _REPO_ROOT / "py"
 if str(_PY_ROOT) not in sys.path:
     sys.path.insert(0, str(_PY_ROOT))
 
-from cogant.graph.builder import ProgramGraphBuilder
 from cogant.gnn.formatter.base import GNNMarkdownFormatter
 from cogant.gnn.validator import GNNValidator
+from cogant.graph.builder import ProgramGraphBuilder
 from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.semantic import (
-    ConfidenceTier,
-    MappingKind,
-    ProvenanceRecord,
-    SemanticMapping,
-)
 from cogant.statespace.compiler import (
     Action,
     ObservationModality,
@@ -182,12 +176,10 @@ class TestTimeSection:
             time_block = time_block[:next_section]
 
         assert "Discrete" in time_block, (
-            "Dynamic Time section must contain 'Discrete' per upstream spec. "
-            f"Got:\n{time_block}"
+            f"Dynamic Time section must contain 'Discrete' per upstream spec. Got:\n{time_block}"
         )
         assert "Time=t" in time_block, (
-            "Dynamic Time section must contain 'Time=t' per upstream spec. "
-            f"Got:\n{time_block}"
+            f"Dynamic Time section must contain 'Time=t' per upstream spec. Got:\n{time_block}"
         )
 
     def test_dynamic_time_does_not_emit_fused_discretttime(self):
@@ -316,9 +308,7 @@ class TestUpstreamSectionOrder:
         fmt = _build_formatter()
         md = fmt.format()
         for section in self.UPSTREAM_REQUIRED:
-            assert f"## {section}" in md, (
-                f"Required upstream section missing: ## {section}"
-            )
+            assert f"## {section}" in md, f"Required upstream section missing: ## {section}"
 
     def test_upstream_sections_in_canonical_order(self):
         """Required upstream sections must appear in the spec-mandated order."""
@@ -342,6 +332,7 @@ class TestStateSpaceBlockSyntax:
         The upstream type-checker regex is: r'(\\w+)\\s*\\[([^\\]]+)\\]'
         """
         import re
+
         pattern = re.compile(r"(\w+)\s*\[([^\]]+)\]")
 
         fmt = _build_formatter()

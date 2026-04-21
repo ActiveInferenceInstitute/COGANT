@@ -20,7 +20,6 @@ from cogant.schemas.core import Edge, EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import (
     Action,
-    Preference,
     StateSpaceModel,
 )
 from cogant.statespace.temporal import TimeRegime
@@ -190,9 +189,7 @@ class TestIntegrityCheckerConstruction:
 class TestProgramGraphIntegrity:
     """Tests for :meth:`check_program_graph`."""
 
-    def test_clean_graph_has_no_error_issues(
-        self, connected_graph: ProgramGraph
-    ) -> None:
+    def test_clean_graph_has_no_error_issues(self, connected_graph: ProgramGraph) -> None:
         checker = IntegrityChecker()
         issues = checker.check_program_graph(connected_graph)
         errors = [i for i in issues if i.severity == "error"]
@@ -204,10 +201,7 @@ class TestProgramGraphIntegrity:
         checker = IntegrityChecker()
         issues = checker.check_program_graph(graph_with_dangling_edge)
         # At least one error about the missing target
-        assert any(
-            i.severity == "error" and "ghost_target" in i.message
-            for i in issues
-        )
+        assert any(i.severity == "error" and "ghost_target" in i.message for i in issues)
         assert checker.is_valid() is False
 
     def test_issues_are_validation_issue_instances(
@@ -227,9 +221,7 @@ class TestProgramGraphIntegrity:
 class TestStateSpaceIntegrity:
     """Tests for :meth:`check_state_space`."""
 
-    def test_clean_state_space_has_no_errors(
-        self, clean_state_space: StateSpaceModel
-    ) -> None:
+    def test_clean_state_space_has_no_errors(self, clean_state_space: StateSpaceModel) -> None:
         checker = IntegrityChecker()
         issues = checker.check_state_space(clean_state_space)
         errors = [i for i in issues if i.severity == "error"]
@@ -241,10 +233,7 @@ class TestStateSpaceIntegrity:
     ) -> None:
         checker = IntegrityChecker()
         issues = checker.check_state_space(state_space_with_bad_action_reference)
-        assert any(
-            i.severity == "error" and "nonexistent" in i.message
-            for i in issues
-        )
+        assert any(i.severity == "error" and "nonexistent" in i.message for i in issues)
 
 
 # ---------------------------------------------------- process model checks
@@ -253,33 +242,21 @@ class TestStateSpaceIntegrity:
 class TestProcessModelIntegrity:
     """Tests for :meth:`check_process_model`."""
 
-    def test_valid_process_model_no_errors(
-        self, process_model_valid: ProcessModel
-    ) -> None:
+    def test_valid_process_model_no_errors(self, process_model_valid: ProcessModel) -> None:
         checker = IntegrityChecker()
         issues = checker.check_process_model(process_model_valid)
         errors = [i for i in issues if i.severity == "error"]
         assert errors == []
 
-    def test_dangling_entry_stage_reports_error(
-        self, process_model_dangling: ProcessModel
-    ) -> None:
+    def test_dangling_entry_stage_reports_error(self, process_model_dangling: ProcessModel) -> None:
         checker = IntegrityChecker()
         issues = checker.check_process_model(process_model_dangling)
-        assert any(
-            i.severity == "error" and "stage:missing" in i.message
-            for i in issues
-        )
+        assert any(i.severity == "error" and "stage:missing" in i.message for i in issues)
 
-    def test_dangling_exit_stage_reports_error(
-        self, process_model_dangling: ProcessModel
-    ) -> None:
+    def test_dangling_exit_stage_reports_error(self, process_model_dangling: ProcessModel) -> None:
         checker = IntegrityChecker()
         issues = checker.check_process_model(process_model_dangling)
-        assert any(
-            i.severity == "error" and "stage:also_missing" in i.message
-            for i in issues
-        )
+        assert any(i.severity == "error" and "stage:also_missing" in i.message for i in issues)
 
 
 # ----------------------------------------------------- get_issues / reset

@@ -56,8 +56,10 @@ class GNNJSONExporter:
         """
         logger.info(
             "Exporting GNN model to JSON: %d nodes, %d edges, %d vars, %d obs, %d actions",
-            len(self.graph.nodes), len(self.graph.edges),
-            len(self.state_space.variables), len(self.state_space.observations),
+            len(self.graph.nodes),
+            len(self.graph.edges),
+            len(self.state_space.variables),
+            len(self.state_space.observations),
             len(self.state_space.actions),
         )
 
@@ -74,7 +76,6 @@ class GNNJSONExporter:
             # Core identifiers and metadata
             "model_id": self.state_space.id,
             "schema_name": self.state_space.schema_name,
-
             # Canonical sections (19 total)
             "model_metadata": self._export_metadata(),
             "repository_metadata": self._export_repository_metadata(),
@@ -95,10 +96,8 @@ class GNNJSONExporter:
             "confidence": self._export_confidence(),
             "rendering_hints": self._export_rendering_hints(),
             "validation_notes": self._export_validation_notes(),
-
             # AII Active Inference matrices (A, B, C, D)
             "matrices": self._export_matrices(),
-
             # Additional cross-reference sections
             "program_graph": self._export_program_graph(),
             "process_model": self._export_process_model(),
@@ -110,8 +109,7 @@ class GNNJSONExporter:
         shapes = matrices.get("shapes", {})
         n_sections = len(output)
         logger.info(
-            "GNN JSON export complete: %d sections + matrices "
-            "(A=%s, B=%s, C=%s, D=%s)",
+            "GNN JSON export complete: %d sections + matrices (A=%s, B=%s, C=%s, D=%s)",
             n_sections,
             shapes.get("A", [0, 0]),
             shapes.get("B", [0, 0, 0]),
@@ -252,7 +250,7 @@ class GNNJSONExporter:
         """Extract list of observation modalities."""
         modalities = set()
         for obs in self.state_space.observations.values():
-            if hasattr(obs, 'modality_type') and obs.modality_type:
+            if hasattr(obs, "modality_type") and obs.modality_type:
                 modalities.add(obs.modality_type)
         return sorted(modalities) if modalities else ["symbolic"]
 
@@ -267,7 +265,9 @@ class GNNJSONExporter:
                 "modality_type": obs.modality_type,
                 "cardinality": obs.cardinality or [],
                 "description": obs.description,
-                "confidence": obs.confidence.value if hasattr(obs.confidence, 'value') else str(obs.confidence),
+                "confidence": obs.confidence.value
+                if hasattr(obs.confidence, "value")
+                else str(obs.confidence),
             }
         return observations
 
@@ -292,7 +292,9 @@ class GNNJSONExporter:
 
     def _extract_policy_details(self) -> list[dict[str, Any]]:
         """Extract policy details."""
-        return [{"type": "deterministic", "coverage": 1.0, "actions": len(self.state_space.actions)}]
+        return [
+            {"type": "deterministic", "coverage": 1.0, "actions": len(self.state_space.actions)}
+        ]
 
     def _export_connections(self) -> dict[str, Any]:
         """Export connections (edges) as canonical section."""
@@ -339,7 +341,9 @@ class GNNJSONExporter:
                 "action_id": trans.action_id,
                 "triggered_by": trans.triggered_by,
                 "probability": trans.probability or 0.0,
-                "confidence": trans.confidence.value if hasattr(trans.confidence, 'value') else str(trans.confidence),
+                "confidence": trans.confidence.value
+                if hasattr(trans.confidence, "value")
+                else str(trans.confidence),
             }
         return {
             "transitions": transitions,
@@ -365,7 +369,9 @@ class GNNJSONExporter:
                 "variable_id": like.variable_id,
                 "distribution_type": like.distribution_type,
                 "parameters": like.parameters or {},
-                "confidence": like.confidence.value if hasattr(like.confidence, 'value') else str(like.confidence),
+                "confidence": like.confidence.value
+                if hasattr(like.confidence, "value")
+                else str(like.confidence),
             }
         return {
             "likelihoods": likelihoods,
@@ -384,7 +390,9 @@ class GNNJSONExporter:
                 "expression": pref.expression,
                 "weight": pref.weight,
                 "source": pref.source,
-                "confidence": pref.confidence.value if hasattr(pref.confidence, 'value') else str(pref.confidence),
+                "confidence": pref.confidence.value
+                if hasattr(pref.confidence, "value")
+                else str(pref.confidence),
             }
         return {
             "preferences": preferences,
@@ -395,7 +403,9 @@ class GNNJSONExporter:
     def _export_time_settings(self) -> dict[str, Any]:
         """Export time regime and settings."""
         return {
-            "time_regime": self.state_space.time_regime.value if hasattr(self.state_space.time_regime, 'value') else str(self.state_space.time_regime),
+            "time_regime": self.state_space.time_regime.value
+            if hasattr(self.state_space.time_regime, "value")
+            else str(self.state_space.time_regime),
             "time_scale": "discrete",
             "synchronous": True,
         }
@@ -414,9 +424,15 @@ class GNNJSONExporter:
         for mapping_id, mapping in self.mappings.items():
             mappings_data[mapping_id] = {
                 "id": mapping_id,
-                "semantic_label": mapping.semantic_label if hasattr(mapping, 'semantic_label') else "",
-                "graph_nodes": mapping.graph_fragment_node_ids if hasattr(mapping, 'graph_fragment_node_ids') else [],
-                "graph_edges": mapping.graph_fragment_edge_ids if hasattr(mapping, 'graph_fragment_edge_ids') else [],
+                "semantic_label": mapping.semantic_label
+                if hasattr(mapping, "semantic_label")
+                else "",
+                "graph_nodes": mapping.graph_fragment_node_ids
+                if hasattr(mapping, "graph_fragment_node_ids")
+                else [],
+                "graph_edges": mapping.graph_fragment_edge_ids
+                if hasattr(mapping, "graph_fragment_edge_ids")
+                else [],
             }
         return {
             "mappings": mappings_data,
@@ -437,7 +453,9 @@ class GNNJSONExporter:
             extractor = MarkovBlanketExtractor(self.graph)
             blanket = extractor.extract(strategy="auto")
             serialized = serialize_blanket(
-                blanket, self.graph, include_rationale=False,
+                blanket,
+                self.graph,
+                include_rationale=False,
             )
             # Merge the serialized blanket with partition-level
             # summary fields expected by the GNN validator.
@@ -452,7 +470,8 @@ class GNNJSONExporter:
         except (ValueError, KeyError, AttributeError) as exc:
             logger.warning(
                 "Failed to extract Markov blanket for export: %s: %s",
-                type(exc).__name__, exc,
+                type(exc).__name__,
+                exc,
             )
             return {
                 "partition": {
@@ -497,14 +516,18 @@ class GNNJSONExporter:
         for var in self.state_space.variables.values():
             if var.confidence:
                 try:
-                    val = float(var.confidence.value if hasattr(var.confidence, 'value') else var.confidence)
+                    val = float(
+                        var.confidence.value if hasattr(var.confidence, "value") else var.confidence
+                    )
                     confidences.append(val)
                 except (TypeError, ValueError):
                     logger.debug("Skipping non-numeric confidence value for variable: %r", var)
         for obs in self.state_space.observations.values():
             if obs.confidence:
                 try:
-                    val = float(obs.confidence.value if hasattr(obs.confidence, 'value') else obs.confidence)
+                    val = float(
+                        obs.confidence.value if hasattr(obs.confidence, "value") else obs.confidence
+                    )
                     confidences.append(val)
                 except (TypeError, ValueError):
                     logger.debug("Skipping non-numeric confidence value for observation: %r", obs)
@@ -526,12 +549,18 @@ class GNNJSONExporter:
 
         confidences: list[float] = []
         for comp in components:
-            if hasattr(comp, 'confidence') and comp.confidence:
+            if hasattr(comp, "confidence") and comp.confidence:
                 try:
-                    val = float(comp.confidence.value if hasattr(comp.confidence, 'value') else comp.confidence)
+                    val = float(
+                        comp.confidence.value
+                        if hasattr(comp.confidence, "value")
+                        else comp.confidence
+                    )
                     confidences.append(val)
                 except (TypeError, ValueError):
-                    logger.debug("Skipping non-numeric confidence value in component %r: %r", component, comp)
+                    logger.debug(
+                        "Skipping non-numeric confidence value in component %r: %r", component, comp
+                    )
         return sum(confidences) / len(confidences) if confidences else 0.5
 
     def _export_rendering_hints(self) -> dict[str, Any]:
@@ -609,13 +638,15 @@ class GNNJSONExporter:
             variables[var_id] = {
                 "id": var.id,
                 "name": var.name,
-                "type": var.var_type.value if hasattr(var.var_type, 'value') else str(var.var_type),
+                "type": var.var_type.value if hasattr(var.var_type, "value") else str(var.var_type),
                 "node_id": var.node_id,
                 "cardinality": var.cardinality or [],
                 "domain": var.domain or [],
                 "factors": var.factors or [],
                 "is_discrete": var.is_discrete,
-                "confidence": var.confidence.value if hasattr(var.confidence, 'value') else str(var.confidence),
+                "confidence": var.confidence.value
+                if hasattr(var.confidence, "value")
+                else str(var.confidence),
                 "description": var.description,
             }
             if var.factors:
@@ -631,7 +662,9 @@ class GNNJSONExporter:
                 "modality_type": obs.modality_type,
                 "cardinality": obs.cardinality or [],
                 "description": obs.description,
-                "confidence": obs.confidence.value if hasattr(obs.confidence, 'value') else str(obs.confidence),
+                "confidence": obs.confidence.value
+                if hasattr(obs.confidence, "value")
+                else str(obs.confidence),
             }
 
         actions: dict[str, dict[str, Any]] = {}
@@ -644,7 +677,9 @@ class GNNJSONExporter:
                 "effects": action.effects or {},
                 "preconditions": action.preconditions or {},
                 "description": action.description,
-                "confidence": action.confidence.value if hasattr(action.confidence, 'value') else str(action.confidence),
+                "confidence": action.confidence.value
+                if hasattr(action.confidence, "value")
+                else str(action.confidence),
             }
 
         transitions = {}
@@ -656,7 +691,9 @@ class GNNJSONExporter:
                 "action_id": trans.action_id,
                 "triggered_by": trans.triggered_by,
                 "probability": trans.probability or 0.0,
-                "confidence": trans.confidence.value if hasattr(trans.confidence, 'value') else str(trans.confidence),
+                "confidence": trans.confidence.value
+                if hasattr(trans.confidence, "value")
+                else str(trans.confidence),
             }
 
         likelihoods = {}
@@ -666,7 +703,9 @@ class GNNJSONExporter:
                 "variable_id": like.variable_id,
                 "distribution_type": like.distribution_type,
                 "parameters": like.parameters or {},
-                "confidence": like.confidence.value if hasattr(like.confidence, 'value') else str(like.confidence),
+                "confidence": like.confidence.value
+                if hasattr(like.confidence, "value")
+                else str(like.confidence),
             }
 
         preferences = {}
@@ -679,12 +718,16 @@ class GNNJSONExporter:
                 "expression": pref.expression,
                 "weight": pref.weight,
                 "source": pref.source,
-                "confidence": pref.confidence.value if hasattr(pref.confidence, 'value') else str(pref.confidence),
+                "confidence": pref.confidence.value
+                if hasattr(pref.confidence, "value")
+                else str(pref.confidence),
             }
 
         return {
             "summary": {
-                "time_regime": self.state_space.time_regime.value if hasattr(self.state_space.time_regime, 'value') else str(self.state_space.time_regime),
+                "time_regime": self.state_space.time_regime.value
+                if hasattr(self.state_space.time_regime, "value")
+                else str(self.state_space.time_regime),
                 "variable_count": len(variables),
                 "observation_count": len(observations),
                 "action_count": len(actions),
@@ -734,8 +777,12 @@ class GNNJSONExporter:
             "summary": {
                 "stage_count": len(stages),
                 "connection_count": len(connections),
-                "entry_stage_id": self.process.entry_stage_id if hasattr(self.process, 'entry_stage_id') else None,
-                "exit_stage_ids": self.process.exit_stage_ids if hasattr(self.process, 'exit_stage_ids') else [],
+                "entry_stage_id": self.process.entry_stage_id
+                if hasattr(self.process, "entry_stage_id")
+                else None,
+                "exit_stage_ids": self.process.exit_stage_ids
+                if hasattr(self.process, "exit_stage_ids")
+                else [],
             },
             "stages": stages,
             "connections": connections,
@@ -749,34 +796,54 @@ class GNNJSONExporter:
         status_counts: dict[str, int] = defaultdict(int)
 
         for mapping_id, mapping in self.mappings.items():
-            kind = mapping.kind.value if hasattr(mapping, 'kind') else "unknown"
+            kind = mapping.kind.value if hasattr(mapping, "kind") else "unknown"
             kind_counts[kind] += 1
 
-            if hasattr(mapping, 'confidence_tier'):
+            if hasattr(mapping, "confidence_tier"):
                 tier_counts[mapping.confidence_tier.value] += 1
-            if hasattr(mapping, 'status'):
+            if hasattr(mapping, "status"):
                 status_counts[mapping.status] += 1
 
             mappings[mapping_id] = {
                 "id": mapping_id,
                 "kind": kind,
-                "semantic_label": mapping.semantic_label if hasattr(mapping, 'semantic_label') else "",
-                "description": mapping.description if hasattr(mapping, 'description') else "",
-                "graph_fragment_node_ids": mapping.graph_fragment_node_ids if hasattr(mapping, 'graph_fragment_node_ids') else [],
-                "graph_fragment_edge_ids": mapping.graph_fragment_edge_ids if hasattr(mapping, 'graph_fragment_edge_ids') else [],
-                "confidence_score": mapping.confidence_score if hasattr(mapping, 'confidence_score') else 0.0,
-                "confidence_tier": mapping.confidence_tier.value if hasattr(mapping, 'confidence_tier') else "unknown",
-                "evidence_count": mapping.evidence_count if hasattr(mapping, 'evidence_count') else 0,
-                "evidence_diversity": mapping.evidence_diversity if hasattr(mapping, 'evidence_diversity') else 0.0,
-                "parser_certainty": mapping.parser_certainty if hasattr(mapping, 'parser_certainty') else 0.0,
-                "status": mapping.status if hasattr(mapping, 'status') else "unknown",
-                "reviewed_by": mapping.reviewed_by if hasattr(mapping, 'reviewed_by') else None,
-                "reviewed_at": mapping.reviewed_at.isoformat() if hasattr(mapping, 'reviewed_at') and mapping.reviewed_at else None,
-                "created_at": mapping.created_at.isoformat() if hasattr(mapping, 'created_at') else None,
+                "semantic_label": mapping.semantic_label
+                if hasattr(mapping, "semantic_label")
+                else "",
+                "description": mapping.description if hasattr(mapping, "description") else "",
+                "graph_fragment_node_ids": mapping.graph_fragment_node_ids
+                if hasattr(mapping, "graph_fragment_node_ids")
+                else [],
+                "graph_fragment_edge_ids": mapping.graph_fragment_edge_ids
+                if hasattr(mapping, "graph_fragment_edge_ids")
+                else [],
+                "confidence_score": mapping.confidence_score
+                if hasattr(mapping, "confidence_score")
+                else 0.0,
+                "confidence_tier": mapping.confidence_tier.value
+                if hasattr(mapping, "confidence_tier")
+                else "unknown",
+                "evidence_count": mapping.evidence_count
+                if hasattr(mapping, "evidence_count")
+                else 0,
+                "evidence_diversity": mapping.evidence_diversity
+                if hasattr(mapping, "evidence_diversity")
+                else 0.0,
+                "parser_certainty": mapping.parser_certainty
+                if hasattr(mapping, "parser_certainty")
+                else 0.0,
+                "status": mapping.status if hasattr(mapping, "status") else "unknown",
+                "reviewed_by": mapping.reviewed_by if hasattr(mapping, "reviewed_by") else None,
+                "reviewed_at": mapping.reviewed_at.isoformat()
+                if hasattr(mapping, "reviewed_at") and mapping.reviewed_at
+                else None,
+                "created_at": mapping.created_at.isoformat()
+                if hasattr(mapping, "created_at")
+                else None,
             }
 
             # Include provenance if available
-            if hasattr(mapping, 'provenance') and mapping.provenance:
+            if hasattr(mapping, "provenance") and mapping.provenance:
                 mappings[mapping_id]["provenance"] = [
                     {
                         "source": p.source,
@@ -823,7 +890,7 @@ def export_for_pymdp(bundle: dict[str, Any]) -> dict[str, Any]:
             "n_obs": matrices.get("n_obs", 0),
             "n_actions": matrices.get("n_actions", 0),
             "exported_at": datetime.utcnow().isoformat(),
-        }
+        },
     }
 
     # Include truncation info if present

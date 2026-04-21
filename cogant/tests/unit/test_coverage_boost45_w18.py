@@ -14,8 +14,9 @@ Covers:
   arrays, booleans, integers, floats, dict values)
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 pytestmark = pytest.mark.unit
 
@@ -24,22 +25,30 @@ pytestmark = pytest.mark.unit
 # Helpers shared across formatter tests
 # ---------------------------------------------------------------------------
 
+
 def _make_state_space(**kwargs):
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
-    defaults = dict(
-        id="ss1", schema_name="test",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
-        time_regime=TimeRegime.SYNCHRONOUS,
-    )
+
+    defaults = {
+        "id": "ss1",
+        "schema_name": "test",
+        "variables": {},
+        "observations": {},
+        "actions": {},
+        "transitions": {},
+        "likelihoods": {},
+        "preferences": {},
+        "time_regime": TimeRegime.SYNCHRONOUS,
+    }
     defaults.update(kwargs)
     return StateSpaceModel(**defaults)
 
 
 def _make_process_model(**kwargs):
     from cogant.process.extractor import ProcessModel
-    defaults = dict(id="pm1", schema_name="test", stages={}, connections={})
+
+    defaults = {"id": "pm1", "schema_name": "test", "stages": {}, "connections": {}}
     defaults.update(kwargs)
     return ProcessModel(**defaults)
 
@@ -69,6 +78,7 @@ def _make_formatter(graph=None, state_space=None, process_model=None, mappings=N
 # gnn/formatter/structural.py — _format_state_space
 # ---------------------------------------------------------------------------
 
+
 class TestFormatStateSpace:
     def test_no_variables_returns_fallback_text(self):
         fmt = _make_formatter()
@@ -78,7 +88,8 @@ class TestFormatStateSpace:
 
     def test_with_variables_returns_table(self):
         from cogant.statespace.compiler import StateVariable
-        from cogant.statespace.variables import StateVariableType, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, StateVariableType
+
         var = StateVariable(
             id="v1",
             name="my_var",
@@ -96,7 +107,8 @@ class TestFormatStateSpace:
 
     def test_variable_with_long_domain_truncated(self):
         from cogant.statespace.compiler import StateVariable
-        from cogant.statespace.variables import StateVariableType, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, StateVariableType
+
         var = StateVariable(
             id="v2",
             name="big_var",
@@ -113,7 +125,8 @@ class TestFormatStateSpace:
 
     def test_variable_with_string_domain(self):
         from cogant.statespace.compiler import StateVariable
-        from cogant.statespace.variables import StateVariableType, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, StateVariableType
+
         var = StateVariable(
             id="v3",
             name="str_var",
@@ -129,10 +142,10 @@ class TestFormatStateSpace:
         assert "str_var" in result
 
     def test_variable_with_node_id_in_graph(self):
-        from cogant.statespace.compiler import StateVariable
-        from cogant.statespace.variables import StateVariableType, ConfidenceLevel
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+        from cogant.statespace.compiler import StateVariable
+        from cogant.statespace.variables import ConfidenceLevel, StateVariableType
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         node = builder.add_node(NodeKind.FUNCTION, "my_func", "my_func", path="f.py")
@@ -154,7 +167,8 @@ class TestFormatStateSpace:
 
     def test_variable_with_node_id_not_in_graph(self):
         from cogant.statespace.compiler import StateVariable
-        from cogant.statespace.variables import StateVariableType, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, StateVariableType
+
         var = StateVariable(
             id="v5",
             name="orphan_var",
@@ -171,7 +185,8 @@ class TestFormatStateSpace:
 
     def test_variable_with_factors(self):
         from cogant.statespace.compiler import StateVariable
-        from cogant.statespace.variables import StateVariableType, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, StateVariableType
+
         var = StateVariable(
             id="v6",
             name="factored_var",
@@ -192,6 +207,7 @@ class TestFormatStateSpace:
 # gnn/formatter/structural.py — _format_connections
 # ---------------------------------------------------------------------------
 
+
 class TestFormatConnections:
     def test_no_edges_returns_header(self):
         fmt = _make_formatter()
@@ -200,7 +216,7 @@ class TestFormatConnections:
 
     def test_with_edges_returns_table(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
@@ -213,7 +229,7 @@ class TestFormatConnections:
 
     def test_with_edge_evidence_sources(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
@@ -227,7 +243,7 @@ class TestFormatConnections:
 
     def test_with_edge_metadata_keys(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "a", "a", path="a.py")
@@ -246,6 +262,7 @@ class TestFormatConnections:
 # gnn/formatter/structural.py — _format_factors
 # ---------------------------------------------------------------------------
 
+
 class TestFormatFactors:
     def test_no_variables_uses_graph_structure(self):
         from cogant.graph.builder import ProgramGraphBuilder
@@ -261,17 +278,27 @@ class TestFormatFactors:
 
     def test_with_variables_and_factors(self):
         from cogant.statespace.compiler import StateVariable
-        from cogant.statespace.variables import StateVariableType, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, StateVariableType
 
         v1 = StateVariable(
-            id="v1", name="v1", var_type=StateVariableType.DISCRETE,
-            node_id="n1", domain=["a"], cardinality=1,
-            confidence=ConfidenceLevel.HIGH, factors=["perception"],
+            id="v1",
+            name="v1",
+            var_type=StateVariableType.DISCRETE,
+            node_id="n1",
+            domain=["a"],
+            cardinality=1,
+            confidence=ConfidenceLevel.HIGH,
+            factors=["perception"],
         )
         v2 = StateVariable(
-            id="v2", name="v2", var_type=StateVariableType.DISCRETE,
-            node_id="n2", domain=["b"], cardinality=1,
-            confidence=ConfidenceLevel.HIGH, factors=["action"],
+            id="v2",
+            name="v2",
+            var_type=StateVariableType.DISCRETE,
+            node_id="n2",
+            domain=["b"],
+            cardinality=1,
+            confidence=ConfidenceLevel.HIGH,
+            factors=["action"],
         )
         ss = _make_state_space(variables={"v1": v1, "v2": v2})
         fmt = _make_formatter(state_space=ss)
@@ -281,11 +308,15 @@ class TestFormatFactors:
 
     def test_with_variables_no_factors(self):
         from cogant.statespace.compiler import StateVariable
-        from cogant.statespace.variables import StateVariableType, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, StateVariableType
 
         v1 = StateVariable(
-            id="v1", name="v1", var_type=StateVariableType.DISCRETE,
-            node_id="n1", domain=["a"], cardinality=1,
+            id="v1",
+            name="v1",
+            var_type=StateVariableType.DISCRETE,
+            node_id="n1",
+            domain=["a"],
+            cardinality=1,
             confidence=ConfidenceLevel.HIGH,
         )
         ss = _make_state_space(variables={"v1": v1})
@@ -304,50 +335,60 @@ class TestFormatFactors:
 # ingest/language_detect.py — LanguageDetector
 # ---------------------------------------------------------------------------
 
+
 class TestLanguageDetector:
     def test_detect_python(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         result = LanguageDetector.detect_language(Path("foo.py"))
         assert result == "python"
 
     def test_detect_javascript(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         result = LanguageDetector.detect_language(Path("foo.js"))
         assert result == "javascript"
 
     def test_detect_typescript(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         result = LanguageDetector.detect_language(Path("foo.ts"))
         assert result == "typescript"
 
     def test_detect_rust(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         result = LanguageDetector.detect_language(Path("foo.rs"))
         assert result == "rust"
 
     def test_detect_go(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         result = LanguageDetector.detect_language(Path("foo.go"))
         assert result == "go"
 
     def test_detect_unknown_extension(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         result = LanguageDetector.detect_language(Path("foo.xyz"))
         assert result is None
 
     def test_detect_string_input(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         result = LanguageDetector.detect_language("script.py")  # type: ignore
         assert result == "python"
 
     def test_detect_repo_languages_empty_dir(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         result = LanguageDetector.detect_repo_languages(tmp_path)
         assert isinstance(result, dict)
         assert len(result) == 0
 
     def test_detect_repo_languages_with_files(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "a.py").write_text("x = 1")
         (tmp_path / "b.py").write_text("y = 2")
         (tmp_path / "c.js").write_text("var z = 3;")
@@ -357,17 +398,20 @@ class TestLanguageDetector:
 
     def test_detect_repo_languages_string_path(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "a.py").write_text("x = 1")
         result = LanguageDetector.detect_repo_languages(str(tmp_path))
         assert result.get("python", 0) >= 1
 
     def test_get_parser_raises_for_unknown(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         with pytest.raises(ImportError):
             LanguageDetector.get_parser("totally_unknown_language_xyz")
 
     def test_get_supported_languages_returns_list(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         result = LanguageDetector.get_supported_languages()
         assert isinstance(result, list)
         # python should always be supported
@@ -377,6 +421,7 @@ class TestLanguageDetector:
 class TestGetParserForExtension:
     def test_dot_py_returns_something_or_none(self):
         from cogant.ingest.language_detect import get_parser_for_extension
+
         # Should return a parser or None; never raise
         result = get_parser_for_extension(".py")
         # Python is supported, so should return a parser
@@ -384,17 +429,20 @@ class TestGetParserForExtension:
 
     def test_no_dot_prefix_works(self):
         from cogant.ingest.language_detect import get_parser_for_extension
+
         result = get_parser_for_extension("py")
         # Same as .py
         assert result is not None or result is None
 
     def test_unknown_extension_returns_none(self):
         from cogant.ingest.language_detect import get_parser_for_extension
+
         result = get_parser_for_extension(".zzzunknown")
         assert result is None
 
     def test_empty_extension_returns_none(self):
         from cogant.ingest.language_detect import get_parser_for_extension
+
         result = get_parser_for_extension("")
         assert result is None
 
@@ -402,6 +450,7 @@ class TestGetParserForExtension:
 # ---------------------------------------------------------------------------
 # ingest/manifest.py — fallback _parse_toml (exercises the ImportError branch)
 # ---------------------------------------------------------------------------
+
 
 class TestManifestFallbackToml:
     """These tests are only meaningful when tomllib is NOT available (Python < 3.11).
@@ -418,6 +467,7 @@ class TestManifestFallbackToml:
 
     def test_parse_pyproject_with_dependencies(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         content = b"""
 [project]
 name = "myproject"
@@ -434,6 +484,7 @@ dependencies = ["requests>=2.0", "flask"]
 
     def test_parse_pyproject_poetry_format(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         content = b"""
 [tool.poetry]
 name = "mypoetry"
@@ -453,6 +504,7 @@ click = ">=8.0"
 
     def test_parse_cargo_toml(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         content = b"""
 [package]
 name = "myapp"
@@ -469,19 +521,23 @@ serde = "1.0"
         assert "serde" in names
 
     def test_parse_package_json(self, tmp_path):
-        from cogant.ingest.manifest import ManifestParser
         import json
-        content = json.dumps({
-            "name": "myapp",
-            "version": "1.0.0",
-            "dependencies": {
-                "express": "^4.18.0",
-                "lodash": "4.17.21",
-            },
-            "devDependencies": {
-                "jest": "^29.0.0",
-            },
-        })
+
+        from cogant.ingest.manifest import ManifestParser
+
+        content = json.dumps(
+            {
+                "name": "myapp",
+                "version": "1.0.0",
+                "dependencies": {
+                    "express": "^4.18.0",
+                    "lodash": "4.17.21",
+                },
+                "devDependencies": {
+                    "jest": "^29.0.0",
+                },
+            }
+        )
         f = tmp_path / "package.json"
         f.write_text(content)
         parser = ManifestParser()
@@ -492,6 +548,7 @@ serde = "1.0"
 
     def test_parse_requirements_txt(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         content = "requests>=2.0\nflask==2.0.1\n# a comment\nnumpy\n"
         f = tmp_path / "requirements.txt"
         f.write_text(content)
@@ -504,6 +561,7 @@ serde = "1.0"
 
     def test_parse_requirements_txt_with_extras(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         content = "requests[security]>=2.0\n-r other.txt\n"
         f = tmp_path / "requirements.txt"
         f.write_text(content)
@@ -514,6 +572,7 @@ serde = "1.0"
 
     def test_parse_setup_py(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         content = """
 from setuptools import setup
 setup(
@@ -531,6 +590,7 @@ setup(
 
     def test_parse_dispatch_requirements(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         content = "pandas>=1.0\n"
         f = tmp_path / "requirements.txt"
         f.write_text(content)
@@ -541,6 +601,7 @@ setup(
 
     def test_parse_dispatch_pyproject(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         content = b'[project]\nname = "x"\ndependencies = ["scipy"]\n'
         f = tmp_path / "pyproject.toml"
         f.write_bytes(content)
@@ -551,6 +612,7 @@ setup(
 
     def test_parse_dispatch_cargo(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         content = b'[package]\nname = "c"\n\n[dependencies]\nlog = "0.4"\n'
         f = tmp_path / "Cargo.toml"
         f.write_bytes(content)
@@ -561,6 +623,7 @@ setup(
 
     def test_parse_unknown_file_raises_or_empty(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         f = tmp_path / "random.yaml"
         f.write_text("key: value\n")
         parser = ManifestParser()

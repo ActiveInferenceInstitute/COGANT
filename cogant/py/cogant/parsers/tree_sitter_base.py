@@ -140,9 +140,7 @@ class TreeSitterParser:
             mod = importlib.import_module(module_name)
             language_fn = getattr(mod, fn_name, None)
             if language_fn is None:
-                logger.debug(
-                    "tree-sitter grammar %s has no %s()", module_name, fn_name
-                )
+                logger.debug("tree-sitter grammar %s has no %s()", module_name, fn_name)
                 return
             language = tree_sitter.Language(language_fn())
             parser = tree_sitter.Parser(language)
@@ -210,9 +208,7 @@ class TreeSitterParser:
             logger.warning("Failed to parse %s: %s", path, exc)
             return ParsedFile(path=str(path), language=lang, errors=[str(exc)])
 
-    def parse_source(
-        self, source: str, language: str, path: str = ""
-    ) -> ParsedFile | None:
+    def parse_source(self, source: str, language: str, path: str = "") -> ParsedFile | None:
         """Parse a source string in the given language."""
         if language not in self._parsers:
             return None
@@ -246,9 +242,7 @@ class _BaseExtractor:
     @staticmethod
     def _slice(source: bytes, node: Any) -> str:
         try:
-            return source[node.start_byte:node.end_byte].decode(
-                "utf-8", errors="replace"
-            )
+            return source[node.start_byte : node.end_byte].decode("utf-8", errors="replace")
         except (AttributeError, UnicodeDecodeError):
             return ""
 
@@ -270,9 +264,7 @@ class _BaseExtractor:
 class _PythonExtractor(_BaseExtractor):
     """Extract symbols from a Python tree-sitter AST."""
 
-    def extract_symbols(
-        self, tree: Any, source: bytes, path: str
-    ) -> list[ParsedSymbol]:
+    def extract_symbols(self, tree: Any, source: bytes, path: str) -> list[ParsedSymbol]:
         """Walk the Python tree-sitter tree and collect class/function symbols."""
         symbols: list[ParsedSymbol] = []
 
@@ -461,9 +453,7 @@ class _JavaScriptExtractor(_BaseExtractor):
                 return params
         return []
 
-    def extract_symbols(
-        self, tree: Any, source: bytes, path: str
-    ) -> list[ParsedSymbol]:
+    def extract_symbols(self, tree: Any, source: bytes, path: str) -> list[ParsedSymbol]:
         """Walk the JS/TS tree-sitter tree and collect class/interface/function symbols.
 
         Advanced patterns handled:

@@ -45,9 +45,7 @@ class TargetInfo(CogantBaseModel):
     repository_url: str | None = Field(
         default=None, description="URL of source repository (e.g., GitHub)"
     )
-    commit_hash: str | None = Field(
-        default=None, description="Git commit hash of analyzed version"
-    )
+    commit_hash: str | None = Field(default=None, description="Git commit hash of analyzed version")
     analysis_scope: str | None = Field(
         default=None,
         description="Scope of analysis (e.g., 'full', 'public_api', 'main_branch')",
@@ -65,15 +63,9 @@ class ProvenanceOrigin(CogantBaseModel):
         default_factory=lambda: datetime.now(UTC),
         description="When analysis was performed",
     )
-    ingest_host: str | None = Field(
-        default=None, description="Hostname of analysis environment"
-    )
-    ingest_user: str | None = Field(
-        default=None, description="User who initiated analysis"
-    )
-    command_line: str | None = Field(
-        default=None, description="Command used to invoke analyzer"
-    )
+    ingest_host: str | None = Field(default=None, description="Hostname of analysis environment")
+    ingest_user: str | None = Field(default=None, description="User who initiated analysis")
+    command_line: str | None = Field(default=None, description="Command used to invoke analyzer")
     parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Analysis configuration parameters",
@@ -148,9 +140,7 @@ class CoreBundleSchema(CogantBaseModel):
         default=None,
         description="ISO 8601 timestamp of last update",
     )
-    title: str | None = Field(
-        default=None, description="Human-readable bundle title"
-    )
+    title: str | None = Field(default=None, description="Human-readable bundle title")
     description: str | None = Field(
         default=None, description="Detailed description of bundle contents"
     )

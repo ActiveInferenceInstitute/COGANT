@@ -20,5 +20,17 @@ class DashboardGenerator:
     output_dir: Any
     trace_data: Any
     gnn_validation: Any
-    def __init__(self, graph: ProgramGraph, state_space: StateSpaceModel, process_model: ProcessModel, semantic_mappings: dict[str, SemanticMapping], mermaid_diagrams: dict[str, str], validation_report: ValidationReport, repo_name: str, output_dir: Path | None = None, trace_data: dict[str, Any] | None = None, gnn_validation: dict[str, Any] | None = None) -> None: ...
+    def __init__(
+        self,
+        graph: ProgramGraph,
+        state_space: StateSpaceModel,
+        process_model: ProcessModel,
+        semantic_mappings: dict[str, SemanticMapping],
+        mermaid_diagrams: dict[str, str],
+        validation_report: ValidationReport,
+        repo_name: str,
+        output_dir: Path | None = None,
+        trace_data: dict[str, Any] | None = None,
+        gnn_validation: dict[str, Any] | None = None,
+    ) -> None: ...
     def generate(self) -> str: ...

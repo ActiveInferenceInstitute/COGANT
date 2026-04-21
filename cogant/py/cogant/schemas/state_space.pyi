@@ -11,9 +11,9 @@ from .base import StableID as StableID
 from .base import TypeInfo as TypeInfo
 
 class StateSpaceKind(StrEnum):
-    DISCRETE = 'discrete'
-    CONTINUOUS = 'continuous'
-    HYBRID = 'hybrid'
+    DISCRETE = "discrete"
+    CONTINUOUS = "continuous"
+    HYBRID = "hybrid"
 
 class StateVariable(CogantBaseModel):
     var_id: str
@@ -66,7 +66,7 @@ class Transition(CogantBaseModel):
 
 class Likelihood(CogantBaseModel):
     likelihood_id: str
-    kind: Literal['observation_likelihood', 'transition_probability']
+    kind: Literal["observation_likelihood", "transition_probability"]
     conditioned_on: list[str]
     distribution_type: str
     parameters: dict[str, Any]

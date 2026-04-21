@@ -9,11 +9,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
 from typer.testing import CliRunner
 
-from cogant.schema import SchemaVersion, detect_version, migrate_gnn
 from cogant.cli.migrate import migrate_app
+from cogant.schema import SchemaVersion, detect_version, migrate_gnn
 
 runner = CliRunner()
 

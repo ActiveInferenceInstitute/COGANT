@@ -33,8 +33,8 @@ from cogant.translate.rules.resilience import (
     SingletonAccessRule,
 )
 
-
 # ------------------------------------------------------------------ helpers --
+
 
 def _make_builder(repo: str = "test://rule_classes") -> ProgramGraphBuilder:
     return ProgramGraphBuilder(repo_uri=repo)
@@ -54,9 +54,7 @@ class TestOrchestratorRule:
         b = _make_builder()
         hub = b.add_node(NodeKind.FUNCTION, "hub", "m.hub", path="m.py")
         for i in range(4):
-            leaf = b.add_node(
-                NodeKind.FUNCTION, f"leaf{i}", f"m.leaf{i}", path="m.py"
-            )
+            leaf = b.add_node(NodeKind.FUNCTION, f"leaf{i}", f"m.leaf{i}", path="m.py")
             b.add_edge(hub.id, leaf.id, EdgeKind.CALLS)
 
         rule = OrchestratorRule()
@@ -116,9 +114,7 @@ class TestTestAssertionRule:
 
     def test_matches_test_function_with_assertions(self):
         b = _make_builder()
-        test_func = b.add_node(
-            NodeKind.FUNCTION, "test_add", "tests.test_add", path="tests/t.py"
-        )
+        test_func = b.add_node(NodeKind.FUNCTION, "test_add", "tests.test_add", path="tests/t.py")
         helper = b.add_node(NodeKind.FUNCTION, "assert_eq", "std.assert_eq")
         b.add_edge(test_func.id, helper.id, EdgeKind.CALLS)
 
@@ -277,7 +273,7 @@ class TestRetryPatternRule:
 
     def test_apply_produces_policy_mapping(self):
         b = _make_builder()
-        fn = b.add_node(NodeKind.METHOD, "do_retry", "m.C.do_retry", path="m.py")
+        b.add_node(NodeKind.METHOD, "do_retry", "m.C.do_retry", path="m.py")
         rule = RetryPatternRule()
         mapping = rule.apply(b.graph, rule.matches(b.graph, _query(b))[0])
         assert mapping is not None
@@ -341,9 +337,7 @@ class TestSingletonAccessRule:
 
     def test_matches_cross_module_readers(self):
         b = _make_builder()
-        target = b.add_node(
-            NodeKind.VARIABLE, "GLOBAL", "core.GLOBAL", path="core/state.py"
-        )
+        target = b.add_node(NodeKind.VARIABLE, "GLOBAL", "core.GLOBAL", path="core/state.py")
         for i, mod in enumerate(["a", "b", "c"]):
             reader = b.add_node(
                 NodeKind.FUNCTION,
@@ -374,9 +368,7 @@ class TestSingletonAccessRule:
         b = _make_builder()
         tgt = b.add_node(NodeKind.CLASS, "Registry", "core.Registry", path="core/r.py")
         for i, mod in enumerate(["a", "b", "c"]):
-            reader = b.add_node(
-                NodeKind.FUNCTION, f"f{i}", f"{mod}.f{i}", path=f"{mod}/x.py"
-            )
+            reader = b.add_node(NodeKind.FUNCTION, f"f{i}", f"{mod}.f{i}", path=f"{mod}/x.py")
             b.add_edge(reader.id, tgt.id, EdgeKind.READS)
 
         rule = SingletonAccessRule()
@@ -392,9 +384,7 @@ class TestCircuitBreakerRule:
 
     def test_matches_keyword_and_guards(self):
         b = _make_builder()
-        cb = b.add_node(
-            NodeKind.FUNCTION, "retry_guard", "m.retry_guard", path="m.py"
-        )
+        cb = b.add_node(NodeKind.FUNCTION, "retry_guard", "m.retry_guard", path="m.py")
         tgt = b.add_node(NodeKind.FUNCTION, "leaf", "m.leaf", path="m.py")
         b.add_edge(cb.id, tgt.id, EdgeKind.GUARDS)
 

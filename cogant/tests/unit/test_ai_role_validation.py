@@ -28,7 +28,6 @@ for _p in (_PY, _EX):
         sys.path.insert(0, str(_p))
 
 from cogant.graph.builder import ProgramGraphBuilder
-from cogant.graph.queries import GraphQuery
 from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.semantic import MappingKind
 from cogant.translate.engine import TranslationEngine
@@ -43,7 +42,6 @@ from cogant.translate.rules.structural import (
     MutatingSubsystemRule,
     ReadOnlyInputRule,
 )
-
 
 # ---------------------------------------------------------------------------
 # Micro-fixture helpers
@@ -292,6 +290,7 @@ def calculator_pipeline():
     """
     logging.disable(logging.CRITICAL)
     from orchestrate_roundtrip import RoundtripOrchestrator  # type: ignore
+
     from cogant.markov.extractor import MarkovBlanketExtractor
 
     repo = _EX / "control_positive" / "calculator"
@@ -302,9 +301,7 @@ def calculator_pipeline():
         symtabs = orch._extract_symbols(parsed)
         imports = orch._analyze_imports(snapshot)
         calls = orch._build_call_graph(snapshot)
-        graph = orch._build_program_graph(
-            snapshot, parsed, symtabs, imports, calls
-        )
+        graph = orch._build_program_graph(snapshot, parsed, symtabs, imports, calls)
         mappings = orch._apply_translation_rules(graph)
         blanket = MarkovBlanketExtractor(graph).extract(strategy="auto")
     return graph, mappings, blanket
@@ -317,10 +314,7 @@ def test_calculator_produces_multiple_role_kinds(calculator_pipeline) -> None:
     # At minimum we expect observation + some state/action presence
     assert MappingKind.OBSERVATION in kinds
     # Either class-level HIDDEN_STATE or method-level ACTION must appear
-    assert (
-        MappingKind.HIDDEN_STATE in kinds
-        or MappingKind.ACTION in kinds
-    )
+    assert MappingKind.HIDDEN_STATE in kinds or MappingKind.ACTION in kinds
 
 
 def test_calculator_getters_are_observations(calculator_pipeline) -> None:
@@ -360,9 +354,7 @@ def test_calculator_markov_blanket_partitions_graph(calculator_pipeline) -> None
         + stats["active_count"]
         + stats["external_count"]
     )
-    assert covered == total, (
-        f"blanket must partition all nodes, got {covered}/{total}"
-    )
+    assert covered == total, f"blanket must partition all nodes, got {covered}/{total}"
     # Calculator is a small, cohesive class -> most nodes should be internal
     assert stats["internal_count"] >= 1
     # At least one boundary node (the class or its methods) must exist
@@ -373,10 +365,7 @@ def test_calculator_blanket_roles_are_consistent(calculator_pipeline) -> None:
     """Every node id in the graph must map to exactly one BlanketRole."""
     graph, _, blanket = calculator_pipeline
     role_ids = (
-        blanket.internal_ids
-        | blanket.sensory_ids
-        | blanket.active_ids
-        | blanket.external_ids
+        blanket.internal_ids | blanket.sensory_ids | blanket.active_ids | blanket.external_ids
     )
     assert role_ids == set(graph.nodes.keys())
     # Mutually exclusive
@@ -405,9 +394,7 @@ def test_other_fixtures_produce_policy_mappings(fixture_name: str) -> None:
         symtabs = orch._extract_symbols(parsed)
         imports = orch._analyze_imports(snapshot)
         calls = orch._build_call_graph(snapshot)
-        graph = orch._build_program_graph(
-            snapshot, parsed, symtabs, imports, calls
-        )
+        graph = orch._build_program_graph(snapshot, parsed, symtabs, imports, calls)
         mappings = orch._apply_translation_rules(graph)
 
     kinds = {m.kind for m in mappings.values()}

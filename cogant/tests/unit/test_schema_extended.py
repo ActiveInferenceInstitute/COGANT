@@ -7,12 +7,9 @@ and GNNVersionAndFlags without GNN v1 marker.
 
 from __future__ import annotations
 
-import pytest
-
 from cogant.schema import SchemaVersion, detect_version, migrate_gnn
 from cogant.schema.migrations import migrate_v1_0_to_v1_1
 from cogant.schema.versions import GNN_V1_0_REQUIRED_SECTIONS, GNN_V1_1_REQUIRED_SECTIONS
-
 
 # ---------------------------------------------------------------------------
 # Detection edge cases

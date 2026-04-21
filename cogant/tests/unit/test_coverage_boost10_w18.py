@@ -4,7 +4,6 @@ export/bundle.py, gnn/json_export.py, gnn/formatter/structural.py,
 process/extractor.py, reverse/parser.py, static/calls.py, static/dataflow.py."""
 
 import json
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -16,18 +15,44 @@ pytestmark = pytest.mark.unit
 # Shared helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
-    from cogant.schemas.core import Node, NodeKind, Edge, EdgeKind
+    from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     meta = GraphMetadata(repo_uri="test://repo", languages={"python"})
     graph = ProgramGraph(metadata=meta)
-    m1 = Node(id="m1", kind=NodeKind.MODULE, name="module_a", qualified_name="module_a", language="python", path="/repo/module_a.py")
-    c1 = Node(id="c1", kind=NodeKind.CLASS, name="ClassA", qualified_name="module_a.ClassA", path="/repo/module_a.py")
-    f1 = Node(id="f1", kind=NodeKind.FUNCTION, name="func_a", qualified_name="module_a.ClassA.func_a", path="/repo/module_a.py")
-    f2 = Node(id="f2", kind=NodeKind.FUNCTION, name="helper", qualified_name="module_a.helper", path="/repo/module_a.py")
+    m1 = Node(
+        id="m1",
+        kind=NodeKind.MODULE,
+        name="module_a",
+        qualified_name="module_a",
+        language="python",
+        path="/repo/module_a.py",
+    )
+    c1 = Node(
+        id="c1",
+        kind=NodeKind.CLASS,
+        name="ClassA",
+        qualified_name="module_a.ClassA",
+        path="/repo/module_a.py",
+    )
+    f1 = Node(
+        id="f1",
+        kind=NodeKind.FUNCTION,
+        name="func_a",
+        qualified_name="module_a.ClassA.func_a",
+        path="/repo/module_a.py",
+    )
+    f2 = Node(
+        id="f2",
+        kind=NodeKind.FUNCTION,
+        name="helper",
+        qualified_name="module_a.helper",
+        path="/repo/module_a.py",
+    )
     for n in [m1, c1, f1, f2]:
         graph.add_node(n)
-    from cogant.schemas.core import Edge, EdgeKind
     edges = [
         Edge(id="e1", source_id="m1", target_id="c1", kind=EdgeKind.CONTAINS),
         Edge(id="e2", source_id="c1", target_id="f1", kind=EdgeKind.CONTAINS),
@@ -40,16 +65,26 @@ def _make_graph():
 
 
 def _make_ssm():
-    from cogant.statespace.compiler import StateSpaceModel, ObservationModality, Action, Transition
+    from cogant.statespace.compiler import Action, ObservationModality, StateSpaceModel, Transition
     from cogant.statespace.temporal import TimeRegime
     from cogant.statespace.variables import StateVariable, StateVariableType
-    v1 = StateVariable(id="v1", name="pos", var_type=StateVariableType.DISCRETE, node_id="m1", cardinality=3)
-    v2 = StateVariable(id="v2", name="flag", var_type=StateVariableType.BOOLEAN, node_id="c1", cardinality=2)
+
+    v1 = StateVariable(
+        id="v1", name="pos", var_type=StateVariableType.DISCRETE, node_id="m1", cardinality=3
+    )
+    v2 = StateVariable(
+        id="v2", name="flag", var_type=StateVariableType.BOOLEAN, node_id="c1", cardinality=2
+    )
     a1 = Action(id="a1", name="move", controller_id="f1", effects=["v1"])
-    obs1 = ObservationModality(id="o1", name="sensor", source_node_id="f2", modality_type="discrete")
-    t1 = Transition(id="t1", source_state={"v1": "pre"}, target_state={"v1": "post"}, action_id="a1")
+    obs1 = ObservationModality(
+        id="o1", name="sensor", source_node_id="f2", modality_type="discrete"
+    )
+    t1 = Transition(
+        id="t1", source_state={"v1": "pre"}, target_state={"v1": "post"}, action_id="a1"
+    )
     return StateSpaceModel(
-        id="ssm1", schema_name="test_schema",
+        id="ssm1",
+        schema_name="test_schema",
         variables={"v1": v1, "v2": v2},
         observations={"o1": obs1},
         actions={"a1": a1},
@@ -62,6 +97,7 @@ def _make_ssm():
 
 def _make_process():
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(id="p1", schema_name="test_schema", stages={}, connections={})
 
 
@@ -69,9 +105,11 @@ def _make_process():
 # gnn/runner.py — GNNModelRunner with richer state space
 # ---------------------------------------------------------------------------
 
+
 class TestGNNModelRunnerRich:
     def _setup_runner(self, tmp_path, with_state_space=True, with_observations=True):
         from cogant.gnn.runner import GNNModelRunner
+
         manifest = {"version": "1.0.0", "name": "rich_model", "schema_name": "test"}
         (tmp_path / "manifest.json").write_text(json.dumps(manifest))
         if with_state_space:
@@ -81,12 +119,14 @@ class TestGNNModelRunnerRich:
                     {"name": "velocity", "type": "discrete", "cardinality": 2},
                     {"name": "heading", "type": "discrete", "cardinality": 4},
                 ],
-                "observations": [
-                    {"name": "obs_pos"}, {"name": "obs_vel"}
-                ] if with_observations else [],
+                "observations": [{"name": "obs_pos"}, {"name": "obs_vel"}]
+                if with_observations
+                else [],
                 "actions": [
-                    {"name": "move_forward"}, {"name": "turn_left"},
-                    {"name": "turn_right"}, {"name": "stop"},
+                    {"name": "move_forward"},
+                    {"name": "turn_left"},
+                    {"name": "turn_right"},
+                    {"name": "stop"},
                 ],
             }
             (tmp_path / "state_space.json").write_text(json.dumps(state_space))
@@ -140,6 +180,7 @@ class TestGNNModelRunnerRich:
 
     def test_load_package_returns_manifest(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         manifest = {"version": "1.0.0", "name": "test", "schema_name": "ts"}
         (tmp_path / "manifest.json").write_text(json.dumps(manifest))
         runner = GNNModelRunner()
@@ -149,6 +190,7 @@ class TestGNNModelRunnerRich:
 
     def test_run_not_loaded_raises(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         with pytest.raises(RuntimeError, match="not loaded"):
             runner.run(steps=1)
@@ -166,10 +208,11 @@ class TestGNNModelRunnerRich:
 # gnn/matrices.py — GNNMatrices
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatrices:
     def _make_matrices(self, with_vars=True):
         from cogant.gnn.matrices import GNNMatrices
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
         from cogant.statespace.variables import StateVariable, StateVariableType
@@ -177,14 +220,34 @@ class TestGNNMatrices:
         meta = GraphMetadata(repo_uri="test")
         graph = ProgramGraph(metadata=meta)
         if with_vars:
-            v1 = StateVariable(id="v1", name="pos", var_type=StateVariableType.DISCRETE, node_id="n1", cardinality=3)
-            v2 = StateVariable(id="v2", name="vel", var_type=StateVariableType.DISCRETE, node_id="n2", cardinality=2)
+            v1 = StateVariable(
+                id="v1",
+                name="pos",
+                var_type=StateVariableType.DISCRETE,
+                node_id="n1",
+                cardinality=3,
+            )
+            v2 = StateVariable(
+                id="v2",
+                name="vel",
+                var_type=StateVariableType.DISCRETE,
+                node_id="n2",
+                cardinality=2,
+            )
             variables = {"v1": v1, "v2": v2}
         else:
             variables = {}
-        ssm = StateSpaceModel(id="m1", schema_name="test", variables=variables,
-            observations={}, actions={}, transitions={}, likelihoods={}, preferences={},
-            time_regime=TimeRegime.SYNCHRONOUS)
+        ssm = StateSpaceModel(
+            id="m1",
+            schema_name="test",
+            variables=variables,
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
+            time_regime=TimeRegime.SYNCHRONOUS,
+        )
         return GNNMatrices(graph, mappings=[], state_space=ssm)
 
     def test_compute_A(self):
@@ -252,9 +315,11 @@ class TestGNNMatrices:
 # validate/report.py — ReportGenerator
 # ---------------------------------------------------------------------------
 
+
 class TestReportGenerator:
     def _make_generator(self, schema_name="test_schema"):
         from cogant.validate.report import ReportGenerator
+
         graph = _make_graph()
         ssm = _make_ssm()
         process = _make_process()
@@ -294,6 +359,7 @@ class TestReportGenerator:
 
     def test_generate_with_provenance_records(self):
         from cogant.validate.report import ReportGenerator
+
         graph = _make_graph()
         ssm = _make_ssm()
         process = _make_process()
@@ -312,8 +378,8 @@ class TestReportGenerator:
         assert r2.schema_name == "schema_b"
 
     def test_generate_timestamp(self):
-        from cogant.validate.report import ReportGenerator
         from datetime import datetime
+
         gen = self._make_generator()
         report = gen.generate()
         assert isinstance(report.validated_at, datetime)
@@ -328,9 +394,11 @@ class TestReportGenerator:
 # export/bundle.py — BundleExporter
 # ---------------------------------------------------------------------------
 
+
 class TestBundleExporter:
     def _make_exporter(self, tmp_path):
         from cogant.export.bundle import BundleExporter
+
         graph = _make_graph()
         ssm = _make_ssm()
         process = _make_process()
@@ -338,12 +406,12 @@ class TestBundleExporter:
 
     def test_export_markdown_only(self, tmp_path):
         exporter = self._make_exporter(tmp_path)
-        result = exporter.export(formats=["markdown"])
+        exporter.export(formats=["markdown"])
         assert Path(tmp_path / "gnn.md").exists()
 
     def test_export_json_only(self, tmp_path):
         exporter = self._make_exporter(tmp_path)
-        result = exporter.export(formats=["json"])
+        exporter.export(formats=["json"])
         assert Path(tmp_path / "gnn.json").exists()
 
     def test_export_creates_manifest(self, tmp_path):
@@ -355,7 +423,12 @@ class TestBundleExporter:
         exporter = self._make_exporter(tmp_path)
         exporter.export(formats=["markdown"])
         manifest_data = json.loads((tmp_path / "MANIFEST.json").read_text())
-        assert "format" in manifest_data or "files" in manifest_data or "exports" in manifest_data or len(manifest_data) > 0
+        assert (
+            "format" in manifest_data
+            or "files" in manifest_data
+            or "exports" in manifest_data
+            or len(manifest_data) > 0
+        )
 
     def test_export_all_formats(self, tmp_path):
         exporter = self._make_exporter(tmp_path)
@@ -372,9 +445,11 @@ class TestBundleExporter:
 # gnn/json_export.py — GNNJSONExporter
 # ---------------------------------------------------------------------------
 
+
 class TestGNNJSONExporter:
     def _make_exporter(self):
         from cogant.gnn.json_export import GNNJSONExporter
+
         graph = _make_graph()
         ssm = _make_ssm()
         process = _make_process()
@@ -423,9 +498,11 @@ class TestGNNJSONExporter:
 # process/extractor.py — ProcessExtractor
 # ---------------------------------------------------------------------------
 
+
 class TestProcessExtractor:
     def test_extract_returns_process_model(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph = _make_graph()
         extractor = ProcessExtractor(graph, "test_schema")
         model = extractor.extract()
@@ -435,6 +512,7 @@ class TestProcessExtractor:
 
     def test_extract_stages_are_dict(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph = _make_graph()
         extractor = ProcessExtractor(graph, "test_schema")
         model = extractor.extract()
@@ -442,6 +520,7 @@ class TestProcessExtractor:
 
     def test_extract_connections_are_dict(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph = _make_graph()
         extractor = ProcessExtractor(graph, "test_schema")
         model = extractor.extract()
@@ -449,7 +528,8 @@ class TestProcessExtractor:
 
     def test_extract_empty_graph(self):
         from cogant.process.extractor import ProcessExtractor
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="x"))
         extractor = ProcessExtractor(graph, "empty")
         model = extractor.extract()
@@ -460,9 +540,11 @@ class TestProcessExtractor:
 # gnn/formatter/structural.py (via GNNMarkdownFormatter)
 # ---------------------------------------------------------------------------
 
+
 class TestGNNFormatterStructural:
     def _make_formatter(self):
         from cogant.gnn.formatter.base import GNNMarkdownFormatter
+
         graph = _make_graph()
         ssm = _make_ssm()
         process = _make_process()
@@ -496,6 +578,7 @@ class TestGNNFormatterStructural:
 # reverse/parser.py — GNNMarkdownParser
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMarkdownParser:
     def _basic_gnn(self):
         return """## ModelName
@@ -520,44 +603,57 @@ u_c0 = Action
 
     def test_parse_basic_gnn(self):
         from cogant.reverse.parser import parse_gnn
+
         model = parse_gnn(self._basic_gnn())
-        assert model.model_name == "TestModel" or "test" in model.model_name.lower() or "Model" in model.model_name
+        assert (
+            model.model_name == "TestModel"
+            or "test" in model.model_name.lower()
+            or "Model" in model.model_name
+        )
 
     def test_parse_hidden_states(self):
         from cogant.reverse.parser import parse_gnn
+
         model = parse_gnn(self._basic_gnn())
         assert isinstance(model.hidden_states, list)
         assert len(model.hidden_states) >= 0
 
     def test_parse_observations(self):
         from cogant.reverse.parser import parse_gnn
+
         model = parse_gnn(self._basic_gnn())
         assert isinstance(model.observations, list)
 
     def test_parse_actions(self):
         from cogant.reverse.parser import parse_gnn
+
         model = parse_gnn(self._basic_gnn())
         assert isinstance(model.actions, list)
 
     def test_parse_empty_string(self):
         from cogant.reverse.parser import parse_gnn
+
         model = parse_gnn("")
         assert hasattr(model, "model_name")
         assert hasattr(model, "hidden_states")
 
     def test_parse_annotations(self):
         from cogant.reverse.parser import parse_gnn
+
         model = parse_gnn(self._basic_gnn())
         assert isinstance(model.annotations, dict)
 
     def test_parse_cardinalities(self):
         from cogant.reverse.parser import parse_gnn
+
         model = parse_gnn(self._basic_gnn())
         assert isinstance(model.cardinalities, dict)
 
     def test_parse_from_file(self, tmp_path):
-        from cogant.reverse.parser import parse_gnn
         from pathlib import Path
+
+        from cogant.reverse.parser import parse_gnn
+
         gnn_file = tmp_path / "model.gnn.md"
         gnn_file.write_text(self._basic_gnn())
         model = parse_gnn(Path(gnn_file))
@@ -568,10 +664,12 @@ u_c0 = Action
 # static/calls.py — CallGraphBuilder
 # ---------------------------------------------------------------------------
 
+
 class TestCallExtractor:
     def test_extract_calls_basic(self, tmp_path):
+
         from cogant.static.calls import CallGraphBuilder
-        from pathlib import Path
+
         builder = CallGraphBuilder(repo_root=tmp_path)
         code = """
 def foo():
@@ -590,8 +688,9 @@ def baz(x, y):
         assert isinstance(result, list)
 
     def test_extract_calls_from_file(self, tmp_path):
+
         from cogant.static.calls import CallGraphBuilder
-        from pathlib import Path
+
         builder = CallGraphBuilder(repo_root=tmp_path)
         code = "def foo():\n    bar()\n\ndef bar():\n    pass\n"
         src_file = tmp_path / "test.py"
@@ -601,6 +700,7 @@ def baz(x, y):
 
     def test_extract_method_calls(self, tmp_path):
         from cogant.static.calls import CallGraphBuilder
+
         builder = CallGraphBuilder(repo_root=tmp_path)
         code = """
 class Foo:
@@ -615,7 +715,8 @@ class Foo:
         assert isinstance(result, list)
 
     def test_calledge_attributes(self, tmp_path):
-        from cogant.static.calls import CallGraphBuilder, CallEdge
+        from cogant.static.calls import CallGraphBuilder
+
         builder = CallGraphBuilder(repo_root=tmp_path)
         code = "def foo():\n    bar()\n"
         src_file = tmp_path / "foo.py"
@@ -631,10 +732,12 @@ class Foo:
 # static/dataflow.py — DataFlowAnalyzer
 # ---------------------------------------------------------------------------
 
+
 class TestDataFlowAnalyzer:
     def test_analyze_basic(self, tmp_path):
+
         from cogant.static.dataflow import DataFlowAnalyzer
-        from pathlib import Path
+
         code = """
 x = 1
 y = x + 2
@@ -647,8 +750,9 @@ z = y * 3
         assert isinstance(result, list)
 
     def test_analyze_function_args(self, tmp_path):
+
         from cogant.static.dataflow import DataFlowAnalyzer
-        from pathlib import Path
+
         code = """
 def compute(a, b):
     c = a + b
@@ -662,8 +766,9 @@ def compute(a, b):
         assert isinstance(result, list)
 
     def test_analyze_file(self, tmp_path):
+
         from cogant.static.dataflow import DataFlowAnalyzer
-        from pathlib import Path
+
         code = "x = 1\ny = x + 2\n"
         analyzer = DataFlowAnalyzer(repo_root=tmp_path)
         f = tmp_path / "simple.py"
@@ -672,8 +777,9 @@ def compute(a, b):
         assert isinstance(result, list)
 
     def test_dataflow_edge_attrs(self, tmp_path):
+
         from cogant.static.dataflow import DataFlowAnalyzer
-        from pathlib import Path
+
         code = "def foo(a):\n    b = a + 1\n    return b\n"
         analyzer = DataFlowAnalyzer(repo_root=tmp_path)
         f = tmp_path / "edge.py"
@@ -688,29 +794,35 @@ def compute(a, b):
 # config/loaders.py — config loading functions
 # ---------------------------------------------------------------------------
 
+
 class TestConfigLoaders:
     def test_import_module(self):
         import cogant.config.loaders as cl
+
         assert cl is not None
 
     def test_load_from_dict(self):
         from cogant.config.loaders import ConfigLoader
+
         config = ConfigLoader.load_from_dict({"debug": True, "max_depth": 5})
         assert config is not None
         assert isinstance(config, dict)
 
     def test_load_from_dict_empty(self):
         from cogant.config.loaders import ConfigLoader
+
         config = ConfigLoader.load_from_dict({})
         assert config is not None
 
     def test_load_default(self):
         from cogant.config.loaders import ConfigLoader
+
         config = ConfigLoader.load_default()
         assert isinstance(config, dict)
 
     def test_load_from_yaml(self, tmp_path):
         from cogant.config.loaders import ConfigLoader
+
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text("debug: true\ntimeout: 30\n")
         config = ConfigLoader.load_from_yaml(cfg_file)
@@ -718,6 +830,7 @@ class TestConfigLoaders:
 
     def test_load_json_from_file(self, tmp_path):
         from cogant.config.loaders import ConfigLoader
+
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({"debug": False, "timeout": 30}))
         config = ConfigLoader.load_json_from_file(cfg_file)
@@ -726,6 +839,7 @@ class TestConfigLoaders:
 
     def test_merge_configs(self):
         from cogant.config.loaders import ConfigLoader
+
         base = {"a": 1, "b": 2}
         override = {"b": 99, "c": 3}
         merged = ConfigLoader.merge_configs(base, override)
@@ -734,26 +848,31 @@ class TestConfigLoaders:
 
     def test_build_cogant_config(self):
         from cogant.config.loaders import ConfigLoader
+
         config = ConfigLoader.build_cogant_config()
         assert config is not None
 
     def test_build_pipeline_config(self):
         from cogant.config.loaders import ConfigLoader
+
         config = ConfigLoader.build_pipeline_config()
         assert config is not None
 
     def test_build_export_config(self):
         from cogant.config.loaders import ConfigLoader
+
         config = ConfigLoader.build_export_config()
         assert config is not None
 
     def test_build_validation_config(self):
         from cogant.config.loaders import ConfigLoader
+
         config = ConfigLoader.build_validation_config()
         assert config is not None
 
     def test_load_all_configs(self):
         from cogant.config.loaders import ConfigLoader
+
         configs = ConfigLoader.load_all_configs()
         assert configs is not None
 
@@ -762,14 +881,17 @@ class TestConfigLoaders:
 # gnn/validator.py — GNNValidator
 # ---------------------------------------------------------------------------
 
+
 class TestGNNValidator:
     def test_import(self):
-        from cogant.gnn.validator import GNNValidator, ValidationResult
+        from cogant.gnn.validator import GNNValidator
+
         v = GNNValidator()
         assert v is not None
 
     def test_validate_markdown(self):
         from cogant.gnn.validator import GNNValidator
+
         v = GNNValidator()
         md = "## ModelName\nTestModel\n\n## StateSpaceBlock\ns_f0[3, 1, type=int]\n"
         errors = v.validate_markdown(md)
@@ -777,6 +899,7 @@ class TestGNNValidator:
 
     def test_validate_state_space(self):
         from cogant.gnn.validator import GNNValidator
+
         v = GNNValidator()
         ss = {
             "variables": [{"name": "s_f0", "size": 3}],
@@ -788,6 +911,7 @@ class TestGNNValidator:
 
     def test_validate_matrices(self):
         from cogant.gnn.validator import GNNValidator
+
         v = GNNValidator()
         matrices = {
             "A": [[0.7, 0.3], [0.4, 0.6]],
@@ -798,6 +922,7 @@ class TestGNNValidator:
 
     def test_validate_provenance(self):
         from cogant.gnn.validator import GNNValidator
+
         v = GNNValidator()
         prov = {"source": "static_analysis", "confidence": 0.85}
         errors = v.validate_provenance(prov)
@@ -805,6 +930,7 @@ class TestGNNValidator:
 
     def test_validation_result_to_dict(self):
         from cogant.gnn.validator import ValidationResult
+
         result = ValidationResult(valid=True, errors=[], warnings=["w1"])
         d = result.to_dict()
         assert isinstance(d, dict)
@@ -812,6 +938,7 @@ class TestGNNValidator:
 
     def test_validate_package(self, tmp_path):
         from cogant.gnn.validator import GNNValidator
+
         v = GNNValidator()
         result = v.validate_package(str(tmp_path))
         assert hasattr(result, "valid") or isinstance(result, (bool, dict))
@@ -821,27 +948,32 @@ class TestGNNValidator:
 # ingest/language_detect.py — remaining gaps
 # ---------------------------------------------------------------------------
 
+
 class TestLanguageDetectorRemaining:
     def test_detect_go_file(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "main.go").write_text("package main\nfunc main() {}")
         result = LanguageDetector.detect_repo_languages(tmp_path)
         assert "go" in result
 
     def test_detect_typescript_file(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "app.ts").write_text("const x: number = 1;")
         result = LanguageDetector.detect_repo_languages(tmp_path)
         assert "typescript" in result
 
     def test_detect_rust_file(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "lib.rs").write_text("fn main() {}")
         result = LanguageDetector.detect_repo_languages(tmp_path)
         assert "rust" in result
 
     def test_detect_multiple_languages(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "main.py").write_text("x = 1")
         (tmp_path / "app.js").write_text("var x = 1;")
         (tmp_path / "lib.ts").write_text("const y = 2;")
@@ -850,12 +982,14 @@ class TestLanguageDetectorRemaining:
 
     def test_detect_single_file(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         assert LanguageDetector.detect_language(Path("test.py")) == "python"
         assert LanguageDetector.detect_language(Path("test.js")) == "javascript"
         assert LanguageDetector.detect_language(Path("test.unknown")) is None
 
     def test_extension_map_completeness(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         em = LanguageDetector.EXTENSION_MAP
         assert ".py" in em
         assert ".js" in em
@@ -865,6 +999,7 @@ class TestLanguageDetectorRemaining:
 
     def test_lazy_load_then_extension_map(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         LanguageDetector._lazy_load_parsers()
         # Still has the extension map after lazy load
         assert ".py" in LanguageDetector.EXTENSION_MAP
@@ -874,9 +1009,11 @@ class TestLanguageDetectorRemaining:
 # statespace/compiler.py — StateSpaceCompiler
 # ---------------------------------------------------------------------------
 
+
 class TestStateSpaceCompilerEdgeCases:
     def test_compile_basic(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph = _make_graph()
         compiler = StateSpaceCompiler(graph, "test_schema")
         model = compiler.compile({})
@@ -884,14 +1021,16 @@ class TestStateSpaceCompilerEdgeCases:
 
     def test_compile_time_regime(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph = _make_graph()
         compiler = StateSpaceCompiler(graph, "test_schema")
         model = compiler.compile({})
         assert model.time_regime is not None
 
     def test_compile_empty_graph(self):
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
         from cogant.statespace.compiler import StateSpaceCompiler
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="x"))
         compiler = StateSpaceCompiler(graph, "empty")
         model = compiler.compile({})

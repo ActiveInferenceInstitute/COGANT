@@ -20,8 +20,8 @@ Covers:
 """
 
 import json
+
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -30,14 +30,17 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
     n2 = builder.add_node(NodeKind.CLASS, "Cls", "mod.Cls", path="mod.py")
@@ -50,16 +53,23 @@ def _make_graph_with_nodes():
 def _make_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
-        id="ss1", schema_name="test",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="ss1",
+        schema_name="test",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
 
 
 def _make_process_model():
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
 
 
@@ -92,9 +102,11 @@ def _make_gnn_package(tmp_path):
 # gnn/runner.py — ExecutionTrace
 # ---------------------------------------------------------------------------
 
+
 class TestExecutionTrace:
     def test_init_minimal(self):
         from cogant.gnn.runner import ExecutionTrace
+
         trace = ExecutionTrace(step=0, state={"x": 1})
         assert trace.step == 0
         assert trace.state == {"x": 1}
@@ -102,6 +114,7 @@ class TestExecutionTrace:
 
     def test_init_with_all_fields(self):
         from cogant.gnn.runner import ExecutionTrace
+
         trace = ExecutionTrace(
             step=1,
             state={"x": 2},
@@ -121,6 +134,7 @@ class TestExecutionTrace:
 
     def test_to_dict_returns_dict(self):
         from cogant.gnn.runner import ExecutionTrace
+
         trace = ExecutionTrace(step=0, state={"x": 1}, action="a")
         d = trace.to_dict()
         assert isinstance(d, dict)
@@ -132,15 +146,18 @@ class TestExecutionTrace:
 # gnn/runner.py — GNNModelRunner
 # ---------------------------------------------------------------------------
 
+
 class TestGNNModelRunner:
     def test_init(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         assert runner is not None
         assert isinstance(runner.traces, list)
 
     def test_load_package_returns_manifest(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         _make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         manifest = runner.load_package(str(tmp_path))
@@ -149,12 +166,14 @@ class TestGNNModelRunner:
 
     def test_load_package_missing_manifest_raises(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         with pytest.raises(FileNotFoundError):
             runner.load_package(str(tmp_path))
 
     def test_run_returns_dict(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         _make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         runner.load_package(str(tmp_path))
@@ -165,6 +184,7 @@ class TestGNNModelRunner:
 
     def test_run_without_load_raises(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         runner.manifest = {}  # empty manifest triggers RuntimeError
         with pytest.raises(RuntimeError):
@@ -172,6 +192,7 @@ class TestGNNModelRunner:
 
     def test_generate_execution_report_no_traces(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         _make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         runner.load_package(str(tmp_path))
@@ -180,6 +201,7 @@ class TestGNNModelRunner:
 
     def test_generate_execution_report_after_run(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         _make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         runner.load_package(str(tmp_path))
@@ -190,6 +212,7 @@ class TestGNNModelRunner:
 
     def test_generate_execution_report_with_trace_dict(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         _make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         runner.load_package(str(tmp_path))
@@ -200,6 +223,7 @@ class TestGNNModelRunner:
 
     def test_initialize_beliefs_with_state_space(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         _make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         runner.load_package(str(tmp_path))
@@ -209,6 +233,7 @@ class TestGNNModelRunner:
 
     def test_initialize_beliefs_empty_state_space(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         runner.state_space = {}
         beliefs = runner._initialize_beliefs()
@@ -216,6 +241,7 @@ class TestGNNModelRunner:
 
     def test_initialize_state(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         _make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         runner.load_package(str(tmp_path))
@@ -224,6 +250,7 @@ class TestGNNModelRunner:
 
     def test_generate_observation(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         _make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         runner.load_package(str(tmp_path))
@@ -232,6 +259,7 @@ class TestGNNModelRunner:
 
     def test_generate_observation_empty_state_space(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         runner.state_space = {}
         obs = runner._generate_observation({"x": 0})
@@ -239,6 +267,7 @@ class TestGNNModelRunner:
 
     def test_update_beliefs(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         prior = {"state_a": 0.5, "state_b": 0.5}
         posterior = runner._update_beliefs(prior, "state_a")
@@ -248,12 +277,14 @@ class TestGNNModelRunner:
 
     def test_update_beliefs_empty(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         result = runner._update_beliefs({}, "obs")
         assert result == {}
 
     def test_compute_vfe(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         beliefs = {"s0": 0.7, "s1": 0.3}
         vfe = runner._compute_vfe(beliefs, "obs_s0")
@@ -261,12 +292,14 @@ class TestGNNModelRunner:
 
     def test_compute_vfe_empty(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         vfe = runner._compute_vfe({}, "obs")
         assert vfe == 0.0
 
     def test_evaluate_policies(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         _make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         runner.load_package(str(tmp_path))
@@ -276,6 +309,7 @@ class TestGNNModelRunner:
 
     def test_evaluate_policies_empty_state_space(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         runner.state_space = {}
         scores = runner._evaluate_policies({"s0": 1.0})
@@ -283,6 +317,7 @@ class TestGNNModelRunner:
 
     def test_entropy(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         dist = {"a": 0.5, "b": 0.5}
         h = runner._entropy(dist)
@@ -291,6 +326,7 @@ class TestGNNModelRunner:
 
     def test_entropy_certain(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         dist = {"a": 1.0, "b": 0.0}
         h = runner._entropy(dist)
@@ -299,6 +335,7 @@ class TestGNNModelRunner:
 
     def test_compute_statistics(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         _make_gnn_package(tmp_path)
         runner = GNNModelRunner()
         runner.load_package(str(tmp_path))
@@ -308,6 +345,7 @@ class TestGNNModelRunner:
 
     def test_compute_statistics_empty_traces(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         stats = runner._compute_statistics()
         assert isinstance(stats, dict)
@@ -315,6 +353,7 @@ class TestGNNModelRunner:
 
     def test_count_unique_states(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         traces = [{"state": {"x": 1}}, {"state": {"x": 1}}, {"state": {"x": 2}}]
         count = runner._count_unique_states(traces)
@@ -322,6 +361,7 @@ class TestGNNModelRunner:
 
     def test_count_unique_actions(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         traces = [{"action": "a"}, {"action": "b"}, {"action": "a"}]
         count = runner._count_unique_actions(traces)
@@ -329,6 +369,7 @@ class TestGNNModelRunner:
 
     def test_compute_reward(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         old_state = {"x": 1}
         new_state = {"x": 2}
@@ -337,6 +378,7 @@ class TestGNNModelRunner:
 
     def test_compute_reward_no_change(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         state = {"x": 1}
         reward = runner._compute_reward(state, "act", state)
@@ -347,9 +389,11 @@ class TestGNNModelRunner:
 # viz/boundary.py — BoundaryMapper
 # ---------------------------------------------------------------------------
 
+
 class TestBoundaryMapperExtended:
     def _make_mapper(self):
         from cogant.viz.boundary import BoundaryMapper
+
         return BoundaryMapper()
 
     def test_init(self):
@@ -420,9 +464,11 @@ class TestBoundaryMapperExtended:
 # gnn/package.py — GNNPackageBuilder private helpers
 # ---------------------------------------------------------------------------
 
+
 class TestGNNPackageBuilderHelpers:
     def _make_builder(self, with_nodes=False):
         from cogant.gnn.package import GNNPackageBuilder
+
         graph = _make_graph_with_nodes() if with_nodes else _make_empty_graph()
         return GNNPackageBuilder(
             graph=graph,
@@ -523,37 +569,45 @@ class TestGNNPackageBuilderHelpers:
 # cogant/__init__.py — top-level symbols
 # ---------------------------------------------------------------------------
 
+
 class TestCogantInit:
     def test_version_accessible(self):
         import cogant
+
         assert hasattr(cogant, "__version__")
         assert isinstance(cogant.__version__, str)
 
     def test_rust_version_accessible(self):
         import cogant
+
         assert hasattr(cogant, "__rust_version__")
         # May be None if Rust extension unavailable
         assert cogant.__rust_version__ is None or isinstance(cogant.__rust_version__, str)
 
     def test_rust_available_flag(self):
         import cogant
+
         assert hasattr(cogant, "_RUST_AVAILABLE")
         assert isinstance(cogant._RUST_AVAILABLE, bool)
 
     def test_cogant_session_alias(self):
         import cogant
+
         assert hasattr(cogant, "CogantSession")
 
     def test_gnn_bundle_alias(self):
         import cogant
+
         assert hasattr(cogant, "GNNBundle")
 
     def test_run_pipeline_callable(self):
         import cogant
+
         assert callable(cogant.run_pipeline)
 
     def test_run_pipeline_raises_on_invalid_target(self, tmp_path):
         import cogant
+
         # Should either run and fail, or raise ImportError if session unavailable
         try:
             cogant.run_pipeline(str(tmp_path / "nonexistent"), str(tmp_path / "out"))

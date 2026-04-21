@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ValidationReport:
     """Complete validation report."""
+
     id: str
     schema_name: str
     validated_at: datetime
@@ -109,9 +110,12 @@ class ReportGenerator:
 
         # Calculate scores
         is_valid = all(i.severity != "error" for i in all_issues)
-        coverage_score = provenance_checker.get_coverage_percentage(
-            len(self.graph.nodes) + len(self.state_space.variables)
-        ) / 100.0
+        coverage_score = (
+            provenance_checker.get_coverage_percentage(
+                len(self.graph.nodes) + len(self.state_space.variables)
+            )
+            / 100.0
+        )
 
         confidence_score = self._compute_confidence_score(all_issues)
 
@@ -235,5 +239,6 @@ class ReportGenerator:
             JSON string.
         """
         import json
+
         data = self.export_to_dict(report)
         return json.dumps(data, indent=2, default=str)

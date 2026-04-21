@@ -6,26 +6,26 @@ from typing import Any
 from _typeshed import Incomplete
 
 class MappingKind(StrEnum):
-    OBSERVATION = 'observation'
-    ACTION = 'action'
-    HIDDEN_STATE = 'hidden_state'
-    CONTEXT = 'context'
-    POLICY = 'policy'
-    CONSTRAINT = 'constraint'
-    PREFERENCE = 'preference'
-    DATA_FLOW = 'data_flow'
-    CONTROL_FLOW = 'control_flow'
-    ERROR_HANDLING = 'error_handling'
-    ORCHESTRATION = 'orchestration'
-    RETRY_PATTERN = 'retry_pattern'
-    CIRCUIT_BREAKER = 'circuit_breaker'
-    FEATURE_FLAG = 'feature_flag'
+    OBSERVATION = "observation"
+    ACTION = "action"
+    HIDDEN_STATE = "hidden_state"
+    CONTEXT = "context"
+    POLICY = "policy"
+    CONSTRAINT = "constraint"
+    PREFERENCE = "preference"
+    DATA_FLOW = "data_flow"
+    CONTROL_FLOW = "control_flow"
+    ERROR_HANDLING = "error_handling"
+    ORCHESTRATION = "orchestration"
+    RETRY_PATTERN = "retry_pattern"
+    CIRCUIT_BREAKER = "circuit_breaker"
+    FEATURE_FLAG = "feature_flag"
 
 class ConfidenceTier(StrEnum):
-    STATIC_ONLY = 'static_only'
-    STATIC_PLUS_RUNTIME = 'static_plus_runtime'
-    RUNTIME_ONLY = 'runtime_only'
-    HUMAN_REVIEWED = 'human_reviewed'
+    STATIC_ONLY = "static_only"
+    STATIC_PLUS_RUNTIME = "static_plus_runtime"
+    RUNTIME_ONLY = "runtime_only"
+    HUMAN_REVIEWED = "human_reviewed"
 
 @dataclass
 class ProvenanceRecord:

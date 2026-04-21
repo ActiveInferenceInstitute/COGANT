@@ -24,6 +24,7 @@ __all__ = ["ExecutionTrace", "GNNModelRunner", "load_gnn_package"]
 # Import Active Inference components
 try:
     from cogant.simulate.free_energy import FreeEnergyCalculator
+
     ACTIVE_INFERENCE_AVAILABLE = True
 except ImportError:
     ACTIVE_INFERENCE_AVAILABLE = False
@@ -235,9 +236,7 @@ class GNNModelRunner:
                 policy_scores = self._evaluate_policies(beliefs)
 
                 # Step 6: Select action with lowest EFE
-                action, rationale = self._select_action_active_inference(
-                    beliefs, policy_scores
-                )
+                action, rationale = self._select_action_active_inference(beliefs, policy_scores)
                 self.action_counts[action] += 1
 
                 # Step 7: Predict next state
@@ -320,8 +319,14 @@ class GNNModelRunner:
         trace_data: dict[str, Any] = trace if trace is not None else {}
         traces = trace_data.get("traces", []) if trace_data else [t.to_dict() for t in self.traces]
         stats = trace_data.get("statistics", {}) if trace_data else self._compute_statistics()
-        fe_trajectory = trace_data.get("free_energy_trajectory", []) if trace_data else self.free_energy_trajectory
-        action_dist = trace_data.get("action_distribution", {}) if trace_data else dict(self.action_counts)
+        fe_trajectory = (
+            trace_data.get("free_energy_trajectory", [])
+            if trace_data
+            else self.free_energy_trajectory
+        )
+        action_dist = (
+            trace_data.get("action_distribution", {}) if trace_data else dict(self.action_counts)
+        )
 
         report = "# GNN Model Execution Report (Active Inference)\n\n"
 
@@ -508,8 +513,8 @@ class GNNModelRunner:
         # Bayesian update: posterior ∝ likelihood × prior
         posterior_unnormalized = {}
         for state in states:
-            posterior_unnormalized[state] = (
-                likelihood.get(state, 0.1) * prior_beliefs.get(state, 1.0 / len(states))
+            posterior_unnormalized[state] = likelihood.get(state, 0.1) * prior_beliefs.get(
+                state, 1.0 / len(states)
             )
 
         # Normalize
@@ -673,9 +678,9 @@ class GNNModelRunner:
         if not self.state_space:
             return 0.5
 
-        total_possible_states = len(
-            self.state_space.get("variables", [])
-        ) * len(self.state_space.get("observations", []))
+        total_possible_states = len(self.state_space.get("variables", [])) * len(
+            self.state_space.get("observations", [])
+        )
         if total_possible_states == 0:
             return 0.5
 
@@ -781,7 +786,9 @@ class GNNModelRunner:
         # Check for belief convergence
         uncertainty_reduction = stats.get("uncertainty_reduction", 0.0)
         if uncertainty_reduction > 0:
-            assessment += f"✓ Beliefs converging (entropy reduced by {uncertainty_reduction:.3f} nats)\n"
+            assessment += (
+                f"✓ Beliefs converging (entropy reduced by {uncertainty_reduction:.3f} nats)\n"
+            )
         else:
             assessment += "⚠ Beliefs not converging\n"
 
@@ -792,7 +799,9 @@ class GNNModelRunner:
         elif positive_signs >= 2:
             assessment += "\n**Overall**: Model shows decent Active Inference behavior.\n"
         else:
-            assessment += "\n**Overall**: Model needs refinement for better Active Inference dynamics.\n"
+            assessment += (
+                "\n**Overall**: Model needs refinement for better Active Inference dynamics.\n"
+            )
 
         return assessment
 
@@ -848,18 +857,12 @@ class GNNModelRunner:
                 # Evaluate policies
                 pol_start = time.perf_counter()
                 policy_scores = self._evaluate_policies(beliefs)
-                timing["policy_eval_ms"] += (
-                    time.perf_counter() - pol_start
-                ) * 1000
+                timing["policy_eval_ms"] += (time.perf_counter() - pol_start) * 1000
 
                 # Select action
                 act_start = time.perf_counter()
-                action = self._select_action_active_inference(
-                    beliefs, policy_scores
-                )
-                timing["action_select_ms"] += (
-                    time.perf_counter() - act_start
-                ) * 1000
+                action = self._select_action_active_inference(beliefs, policy_scores)
+                timing["action_select_ms"] += (time.perf_counter() - act_start) * 1000
 
                 # Update state
                 st_start = time.perf_counter()

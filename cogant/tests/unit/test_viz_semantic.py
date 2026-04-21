@@ -1,17 +1,27 @@
 """Unit tests for viz/semantic_view.py — SemanticVisualizer."""
-import os, sys
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 import matplotlib
+
 matplotlib.use("Agg")
 import pytest
+
 from cogant.viz.semantic_view import SemanticVisualizer
 
 
 def _state_space_dict() -> dict:
     return {
         "state_variables": [
-            {"id": "sv1", "name": "counter", "kind": "HIDDEN_STATE",
-             "cardinality": 3, "domain": [0, 1, 2]},
+            {
+                "id": "sv1",
+                "name": "counter",
+                "kind": "HIDDEN_STATE",
+                "cardinality": 3,
+                "domain": [0, 1, 2],
+            },
         ],
         "observations": [{"id": "ob1", "name": "obs_counter", "kind": "OBSERVATION"}],
         "actions": [{"id": "ac1", "name": "increment", "kind": "ACTION"}],
@@ -44,6 +54,7 @@ def test_render_json_after_from_state_space(sv):
     sv.from_state_space(_state_space_dict())
     j = sv.render_json()
     import json
+
     data = json.loads(j)
     assert isinstance(data, (dict, list))
 
@@ -55,6 +66,7 @@ def test_render_html_creates_file(sv, tmp_path):
     result = sv.render_html(out)
     assert result == out
     import os
+
     assert os.path.exists(out)
 
 
@@ -62,36 +74,46 @@ def test_render_html_creates_file(sv, tmp_path):
 def test_render_role_distribution_with_mappings(sv):
     fig = sv.render_role_distribution(_mappings())
     assert fig is not None
-    import matplotlib.pyplot as plt; plt.close("all")
+    import matplotlib.pyplot as plt
+
+    plt.close("all")
 
 
 @pytest.mark.unit
 def test_render_role_distribution_empty(sv):
     # empty list with no internal state → returns None gracefully
     sv.render_role_distribution([])
-    import matplotlib.pyplot as plt; plt.close("all")
+    import matplotlib.pyplot as plt
+
+    plt.close("all")
 
 
 @pytest.mark.unit
 def test_render_role_distribution_none(sv):
     sv.from_state_space(_state_space_dict())
-    fig = sv.render_role_distribution(None)
+    sv.render_role_distribution(None)
     # may return None if no internal mappings; either is fine
-    import matplotlib.pyplot as plt; plt.close("all")
+    import matplotlib.pyplot as plt
+
+    plt.close("all")
 
 
 @pytest.mark.unit
 def test_render_confidence_heatmap_with_mappings(sv):
     fig = sv.render_confidence_heatmap(_mappings())
     assert fig is not None
-    import matplotlib.pyplot as plt; plt.close("all")
+    import matplotlib.pyplot as plt
+
+    plt.close("all")
 
 
 @pytest.mark.unit
 def test_render_confidence_heatmap_empty(sv):
     fig = sv.render_confidence_heatmap([])
     assert fig is not None
-    import matplotlib.pyplot as plt; plt.close("all")
+    import matplotlib.pyplot as plt
+
+    plt.close("all")
 
 
 @pytest.mark.unit

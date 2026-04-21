@@ -21,7 +21,8 @@ strict subset whose boundary touches non-seed nodes.
 from __future__ import annotations
 
 import pytest
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from cogant.graph.builder import ProgramGraphBuilder
 from cogant.markov.blanket import BlanketRole, partition_by_seeds
@@ -83,12 +84,7 @@ def program_graph_any(draw, min_nodes: int = 2, max_nodes: int = 15) -> ProgramG
 
 
 def _classified_ids(blanket) -> set[str]:
-    return (
-        blanket.internal_ids
-        | blanket.sensory_ids
-        | blanket.active_ids
-        | blanket.external_ids
-    )
+    return blanket.internal_ids | blanket.sensory_ids | blanket.active_ids | blanket.external_ids
 
 
 def _role_count_for(blanket, node_id: str) -> int:
@@ -119,9 +115,7 @@ def _role_count_for(blanket, node_id: str) -> int:
     deadline=500,
     suppress_health_check=[HealthCheck.too_slow, HealthCheck.filter_too_much],
 )
-def test_every_node_classified_exactly_once(
-    graph: ProgramGraph, seed_frac: float
-) -> None:
+def test_every_node_classified_exactly_once(graph: ProgramGraph, seed_frac: float) -> None:
     """Every node id must appear in exactly one of the four role buckets."""
     all_ids = sorted(graph.nodes.keys())
     cut = int(round(len(all_ids) * seed_frac))
@@ -131,14 +125,11 @@ def test_every_node_classified_exactly_once(
 
     classified = _classified_ids(blanket)
     assert classified == set(all_ids), (
-        f"unclassified: {set(all_ids) - classified}, "
-        f"spurious: {classified - set(all_ids)}"
+        f"unclassified: {set(all_ids) - classified}, spurious: {classified - set(all_ids)}"
     )
     for node_id in all_ids:
         count = _role_count_for(blanket, node_id)
-        assert count == 1, (
-            f"node {node_id} classified into {count} roles (expected 1)"
-        )
+        assert count == 1, f"node {node_id} classified into {count} roles (expected 1)"
 
 
 # ---------------------------------------------------------------------------

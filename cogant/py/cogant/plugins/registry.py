@@ -150,8 +150,7 @@ class PluginRegistry:
             return self._cache[name]
         except KeyError:
             raise KeyError(
-                f"Plugin '{name}' not found. "
-                f"Discovered: {list(self._cache.keys())}"
+                f"Plugin '{name}' not found. Discovered: {list(self._cache.keys())}"
             ) from None
 
     def get_loaded_object(self, name: str) -> Any:
@@ -162,9 +161,7 @@ class PluginRegistry:
         try:
             return self._loaded_objects[name]
         except KeyError:
-            raise KeyError(
-                f"Plugin '{name}' has not been loaded yet. Call load() first."
-            ) from None
+            raise KeyError(f"Plugin '{name}' has not been loaded yet. Call load() first.") from None
 
     # ------------------------------------------------------------------ #
     # Internal helpers
@@ -193,9 +190,7 @@ class PluginRegistry:
             pass
         return "unknown"
 
-    def _find_entry_point(
-        self, name: str
-    ) -> importlib.metadata.EntryPoint | None:
+    def _find_entry_point(self, name: str) -> importlib.metadata.EntryPoint | None:
         """Find a specific entry point by name."""
         for ep in self._get_entry_points():
             if ep.name == name:

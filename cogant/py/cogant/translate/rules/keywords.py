@@ -32,9 +32,26 @@ __all__ = [
 # ---------------------------------------------------------------------------
 
 OBSERVATION_KEYWORDS: list[str] = [
-    "get", "read", "fetch", "query", "display", "show", "status", "info", "list",
-    "sensor_", "read_", "get_", "fetch_", "receive_", "sense_", "peek", "sample",
-    "inspect", "view", "describe",
+    "get",
+    "read",
+    "fetch",
+    "query",
+    "display",
+    "show",
+    "status",
+    "info",
+    "list",
+    "sensor_",
+    "read_",
+    "get_",
+    "fetch_",
+    "receive_",
+    "sense_",
+    "peek",
+    "sample",
+    "inspect",
+    "view",
+    "describe",
 ]
 """Functions/methods that signal an OBSERVATION semantic role.
 
@@ -43,10 +60,33 @@ Corpus gaps closed in wave-21: ``peek``, ``sample``, ``inspect``.
 """
 
 ACTION_KEYWORDS: list[str] = [
-    "set", "update", "create", "delete", "send", "push", "execute", "run",
-    "process", "handle", "dispatch", "encode", "decode", "dump", "load",
-    "act_", "send_", "write_", "execute_", "command_", "emit_", "commit",
-    "rollback", "flush", "apply", "perform", "invoke",
+    "set",
+    "update",
+    "create",
+    "delete",
+    "send",
+    "push",
+    "execute",
+    "run",
+    "process",
+    "handle",
+    "dispatch",
+    "encode",
+    "decode",
+    "dump",
+    "load",
+    "act_",
+    "send_",
+    "write_",
+    "execute_",
+    "command_",
+    "emit_",
+    "commit",
+    "rollback",
+    "flush",
+    "apply",
+    "perform",
+    "invoke",
 ]
 """Functions/methods that signal an ACTION semantic role.
 
@@ -55,20 +95,52 @@ and are resolved by confidence tie-breaking in ``_resolve_conflicts``.
 """
 
 POLICY_KEYWORDS: list[str] = [
-    "route", "dispatch", "handle", "policy", "decide", "choose", "select",
-    "route_", "policy_", "decide_", "plan", "strategy", "schedule",
+    "route",
+    "dispatch",
+    "handle",
+    "policy",
+    "decide",
+    "choose",
+    "select",
+    "route_",
+    "policy_",
+    "decide_",
+    "plan",
+    "strategy",
+    "schedule",
 ]
 """Functions/methods that signal a POLICY semantic role."""
 
 PREFERENCE_KEYWORDS: list[str] = [
-    "prefer", "prefer_", "reward", "cost", "loss", "utility", "score", "rank",
-    "objective", "target", "goal", "priority", "weight",
+    "prefer",
+    "prefer_",
+    "reward",
+    "cost",
+    "loss",
+    "utility",
+    "score",
+    "rank",
+    "objective",
+    "target",
+    "goal",
+    "priority",
+    "weight",
 ]
 """Functions/methods that signal a PREFERENCE semantic role."""
 
 CONTEXT_KEYWORDS: list[str] = [
-    "context", "ctx", "environ", "env", "session", "state", "store", "registry",
-    "workspace", "namespace", "scope", "arena",
+    "context",
+    "ctx",
+    "environ",
+    "env",
+    "session",
+    "state",
+    "store",
+    "registry",
+    "workspace",
+    "namespace",
+    "scope",
+    "arena",
 ]
 """Variables/modules that signal a CONTEXT semantic role."""
 
@@ -77,20 +149,47 @@ CONTEXT_KEYWORDS: list[str] = [
 # ---------------------------------------------------------------------------
 
 CONFIG_KEYWORDS: list[str] = [
-    "config", "configuration", "cfg", "settings", "options", "params",
-    "toml", "yaml", "ini", "env", "dotenv",
+    "config",
+    "configuration",
+    "cfg",
+    "settings",
+    "options",
+    "params",
+    "toml",
+    "yaml",
+    "ini",
+    "env",
+    "dotenv",
 ]
 """Names that signal a configuration artifact (ConfigRule)."""
 
 FEATURE_FLAG_KEYWORDS: list[str] = [
-    "flag", "feature", "toggle", "switch", "experiment", "ab_test",
-    "enabled", "disabled", "rollout", "canary",
+    "flag",
+    "feature",
+    "toggle",
+    "switch",
+    "experiment",
+    "ab_test",
+    "enabled",
+    "disabled",
+    "rollout",
+    "canary",
 ]
 """Names that signal a feature-flag artifact (FeatureFlagRule)."""
 
 PARAMETER_KEYWORDS: list[str] = [
-    "param", "parameter", "hyper", "hyperparameter", "threshold", "alpha",
-    "beta", "gamma", "epsilon", "learning_rate", "temperature", "seed",
+    "param",
+    "parameter",
+    "hyper",
+    "hyperparameter",
+    "threshold",
+    "alpha",
+    "beta",
+    "gamma",
+    "epsilon",
+    "learning_rate",
+    "temperature",
+    "seed",
 ]
 """Names that signal a tunable parameter (ParameterRule, wave-21)."""
 
@@ -99,8 +198,16 @@ PARAMETER_KEYWORDS: list[str] = [
 # ---------------------------------------------------------------------------
 
 STATE_MACHINE_KEYWORDS: list[str] = [
-    "state", "transition", "machine", "fsm", "automaton", "workflow",
-    "status", "phase", "stage", "mode",
+    "state",
+    "transition",
+    "machine",
+    "fsm",
+    "automaton",
+    "workflow",
+    "status",
+    "phase",
+    "stage",
+    "mode",
 ]
 """Names that signal a finite-state-machine pattern (StateMachineRule, wave-21)."""
 
@@ -110,22 +217,44 @@ STATE_MACHINE_KEYWORDS: list[str] = [
 # ---------------------------------------------------------------------------
 
 CIRCUIT_BREAKER_KEYWORDS: list[str] = [
-    "circuit", "breaker", "fallback", "bulkhead", "half_open", "open_state",
+    "circuit",
+    "breaker",
+    "fallback",
+    "bulkhead",
+    "half_open",
+    "open_state",
 ]
 """Names that signal a circuit-breaker pattern (CircuitBreakerRule)."""
 
 RETRY_KEYWORDS: list[str] = [
-    "retry", "backoff", "attempt", "max_retries", "jitter", "exponential",
+    "retry",
+    "backoff",
+    "attempt",
+    "max_retries",
+    "jitter",
+    "exponential",
 ]
 """Names that signal a retry pattern (RetryPatternRule)."""
 
 SINGLETON_KEYWORDS: list[str] = [
-    "singleton", "instance", "_instance", "get_instance", "shared", "global_",
+    "singleton",
+    "instance",
+    "_instance",
+    "get_instance",
+    "shared",
+    "global_",
 ]
 """Names that signal a singleton access pattern (SingletonAccessRule)."""
 
 RATE_LIMITER_KEYWORDS: list[str] = [
-    "rate", "limit", "throttle", "quota", "burst", "leaky_bucket",
-    "token_bucket", "ratelimit", "ratelimiter",
+    "rate",
+    "limit",
+    "throttle",
+    "quota",
+    "burst",
+    "leaky_bucket",
+    "token_bucket",
+    "ratelimit",
+    "ratelimiter",
 ]
 """Names that signal a rate-limiter pattern (RateLimiterRule, wave-21)."""

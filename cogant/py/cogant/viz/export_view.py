@@ -61,6 +61,7 @@ class ExportView:
                     elif "file_path" in result_data:
                         try:
                             from pathlib import Path
+
                             size = Path(result_data["file_path"]).stat().st_size
                         except Exception:
                             size = 0
@@ -81,8 +82,14 @@ class ExportView:
             # Add value labels
             for bar, size in zip(bars, sizes_mb, strict=False):
                 height = bar.get_height()
-                ax.text(bar.get_x() + bar.get_width() / 2, height, f" {size:.2f} MB",
-                       ha="center", va="bottom", fontsize=10)
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    height,
+                    f" {size:.2f} MB",
+                    ha="center",
+                    va="bottom",
+                    fontsize=10,
+                )
 
             plt.xticks(rotation=45, ha="right")
             fig.tight_layout()
@@ -110,9 +117,9 @@ class ExportView:
             '    D["Semantic<br/>Mappings"]',
             "",
             '    A --> E["Export<br/>Engine"]',
-            '    B --> E',
-            '    C --> E',
-            '    D --> E',
+            "    B --> E",
+            "    C --> E",
+            "    D --> E",
             "",
             '    E --> F["JSON<br/>Export"]',
             '    E --> G["Markdown<br/>Export"]',
@@ -162,6 +169,7 @@ class ExportView:
                 if matrix_name in bundle:
                     try:
                         import json
+
                         if isinstance(bundle[matrix_name], str):
                             matrix_size += len(bundle[matrix_name])
                         else:
@@ -177,6 +185,7 @@ class ExportView:
             if "metadata" in bundle:
                 try:
                     import json
+
                     metadata_size = len(json.dumps(bundle["metadata"]))
                 except Exception:
                     metadata_size = 500
@@ -189,6 +198,7 @@ class ExportView:
             if "roles" in bundle:
                 try:
                     import json
+
                     roles_size = len(json.dumps(bundle["roles"]))
                 except Exception:
                     roles_size = 500
@@ -201,6 +211,7 @@ class ExportView:
             if "mappings" in bundle:
                 try:
                     import json
+
                     mappings_size = len(json.dumps(bundle["mappings"]))
                 except Exception:
                     mappings_size = 500
@@ -227,7 +238,9 @@ class ExportView:
             sizes = list(component_sizes.values())
 
             colors = ["#FF9999", "#66B2FF", "#99FF99", "#FFCC99", "#FF99CC"]
-            ax.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90, colors=colors[:len(labels)])
+            ax.pie(
+                sizes, labels=labels, autopct="%1.1f%%", startangle=90, colors=colors[: len(labels)]
+            )
             ax.set_title("GNN Bundle Composition: Component Sizes")
 
             fig.tight_layout()

@@ -68,9 +68,7 @@ class MappingRule(CogantBaseModel):
         ...,
         description="Pattern or query identifying source elements (e.g., 'functions with @action decorator')",
     )
-    target_role: SemanticRole = Field(
-        ..., description="Target semantic role"
-    )
+    target_role: SemanticRole = Field(..., description="Target semantic role")
     transformation: str | None = Field(
         default=None,
         description="Optional transformation to apply (e.g., 'extract_return_value')",
@@ -85,16 +83,10 @@ class SourceGraphElement(CogantBaseModel):
     Reference to an element in the program graph.
     """
 
-    element_id: StableID = Field(
-        ..., description="ID of node or edge in program graph"
-    )
-    element_type: str = Field(
-        ..., description="'node' or 'edge'"
-    )
+    element_id: StableID = Field(..., description="ID of node or edge in program graph")
+    element_type: str = Field(..., description="'node' or 'edge'")
     label: str = Field(..., description="Human-readable label of element")
-    element_kind: str = Field(
-        ..., description="Kind of element (e.g., 'function', 'imports')"
-    )
+    element_kind: str = Field(..., description="Kind of element (e.g., 'function', 'imports')")
 
 
 class TargetSemanticElement(CogantBaseModel):
@@ -102,12 +94,8 @@ class TargetSemanticElement(CogantBaseModel):
     Element in the target semantic model.
     """
 
-    semantic_id: str = Field(
-        ..., description="Unique identifier in semantic model"
-    )
-    role: SemanticRole = Field(
-        ..., description="Semantic role in model"
-    )
+    semantic_id: str = Field(..., description="Unique identifier in semantic model")
+    role: SemanticRole = Field(..., description="Semantic role in model")
     label: str = Field(..., description="Human-readable label")
     model_type: str = Field(
         ..., description="Type of semantic model (e.g., 'mdp', 'pomdp', 'markov_chain')"
@@ -136,16 +124,12 @@ class SemanticMapping(CogantBaseModel):
     for downstream analysis (verification, optimization, learning).
     """
 
-    mapping_id: StableID = Field(
-        ..., description="Unique identifier for this mapping"
-    )
+    mapping_id: StableID = Field(..., description="Unique identifier for this mapping")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         description="When mapping was created",
     )
-    created_by: str | None = Field(
-        default=None, description="User or tool that created mapping"
-    )
+    created_by: str | None = Field(default=None, description="User or tool that created mapping")
 
     # Graph elements
     source_graph_elements: list[SourceGraphElement] = Field(
@@ -181,15 +165,9 @@ class SemanticMapping(CogantBaseModel):
         default=ReviewStatus.UNREVIEWED,
         description="Review and approval status",
     )
-    review_notes: str | None = Field(
-        default=None, description="Notes from reviewer"
-    )
-    reviewed_by: str | None = Field(
-        default=None, description="User who reviewed mapping"
-    )
-    reviewed_at: datetime | None = Field(
-        default=None, description="When mapping was reviewed"
-    )
+    review_notes: str | None = Field(default=None, description="Notes from reviewer")
+    reviewed_by: str | None = Field(default=None, description="User who reviewed mapping")
+    reviewed_at: datetime | None = Field(default=None, description="When mapping was reviewed")
 
     # Provenance & evidence
     evidence_references: list[EvidenceRef] = Field(
@@ -198,9 +176,7 @@ class SemanticMapping(CogantBaseModel):
     )
 
     # Metadata
-    tags: list[str] = Field(
-        default_factory=list, description="User-defined tags"
-    )
+    tags: list[str] = Field(default_factory=list, description="User-defined tags")
     annotations: dict[str, Any] = Field(
         default_factory=dict,
         description="Custom annotations",
@@ -246,12 +222,8 @@ class SemanticMappingCollection(CogantBaseModel):
     Collection of all semantic mappings for a program.
     """
 
-    collection_id: StableID = Field(
-        ..., description="Unique identifier for this collection"
-    )
-    program_graph_id: StableID = Field(
-        ..., description="ID of source program graph"
-    )
+    collection_id: StableID = Field(..., description="Unique identifier for this collection")
+    program_graph_id: StableID = Field(..., description="ID of source program graph")
     mappings: list[SemanticMapping] = Field(
         default_factory=list,
         description="All mappings",

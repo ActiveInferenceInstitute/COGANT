@@ -35,23 +35,17 @@ class StateVariable(CogantBaseModel):
 
     var_id: str = Field(..., description="Unique identifier for variable")
     name: str = Field(..., description="Human-readable name")
-    description: str | None = Field(
-        default=None, description="Detailed description"
-    )
+    description: str | None = Field(default=None, description="Detailed description")
 
     # Type information
-    value_type: TypeInfo = Field(
-        ..., description="Type of state variable values"
-    )
+    value_type: TypeInfo = Field(..., description="Type of state variable values")
 
     # Domain specification
     domain: dict[str, Any] = Field(
         default_factory=dict,
         description="Domain specification (min/max for continuous, discrete values list)",
     )
-    default_value: Any | None = Field(
-        default=None, description="Default initial value"
-    )
+    default_value: Any | None = Field(default=None, description="Default initial value")
 
     # Properties
     is_observable: bool = Field(
@@ -84,9 +78,7 @@ class ObservationModality(CogantBaseModel):
     description: str | None = Field(default=None)
 
     # Observation structure
-    observation_type: TypeInfo = Field(
-        ..., description="Type of observations from this modality"
-    )
+    observation_type: TypeInfo = Field(..., description="Type of observations from this modality")
     observation_space: dict[str, Any] = Field(
         default_factory=dict,
         description="Specification of observation space (dimensions, ranges, etc.)",
@@ -105,9 +97,7 @@ class ObservationModality(CogantBaseModel):
     observation_frequency: float | None = Field(
         default=None, description="Observation frequency (Hz)"
     )
-    latency: float | None = Field(
-        default=None, description="Observation latency (seconds)"
-    )
+    latency: float | None = Field(default=None, description="Observation latency (seconds)")
 
     # Relationships
     observes_state_vars: list[str] = Field(
@@ -148,9 +138,7 @@ class Action(CogantBaseModel):
     description: str | None = Field(default=None)
 
     # Action specification
-    action_type: TypeInfo = Field(
-        ..., description="Type of action values"
-    )
+    action_type: TypeInfo = Field(..., description="Type of action values")
     action_space: dict[str, Any] = Field(
         default_factory=dict,
         description="Specification of action space (dimensions, ranges, discrete values)",
@@ -170,9 +158,7 @@ class Action(CogantBaseModel):
         default_factory=list,
         description="Conditions that must hold for action to be valid",
     )
-    cost: float | None = Field(
-        default=None, description="Action cost (e.g., energy, time)"
-    )
+    cost: float | None = Field(default=None, description="Action cost (e.g., energy, time)")
 
     # Execution properties
     is_deterministic: bool = Field(
@@ -213,9 +199,7 @@ class Transition(CogantBaseModel):
     )
 
     # Trigger
-    trigger_action: str | None = Field(
-        default=None, description="Action that triggers transition"
-    )
+    trigger_action: str | None = Field(default=None, description="Action that triggers transition")
     trigger_condition: str | None = Field(
         default=None, description="Condition expression for transition"
     )
@@ -227,12 +211,8 @@ class Transition(CogantBaseModel):
     )
 
     # Properties
-    is_deterministic: bool = Field(
-        default=True, description="Whether transition is deterministic"
-    )
-    probability: float | None = Field(
-        default=None, description="Probability if stochastic"
-    )
+    is_deterministic: bool = Field(default=True, description="Whether transition is deterministic")
+    probability: float | None = Field(default=None, description="Probability if stochastic")
 
 
 class Likelihood(CogantBaseModel):
@@ -262,9 +242,7 @@ class Likelihood(CogantBaseModel):
     )
 
     # Approximation & uncertainty
-    is_learned: bool = Field(
-        default=False, description="Whether likelihood was learned from data"
-    )
+    is_learned: bool = Field(default=False, description="Whether likelihood was learned from data")
     learning_data_count: int | None = Field(
         default=None, description="Number of samples used for learning"
     )
@@ -286,20 +264,14 @@ class StateSpaceModel(CogantBaseModel):
         ..., description="Type of state space (discrete, continuous, hybrid)"
     )
     name: str = Field(..., description="Human-readable name")
-    description: str | None = Field(
-        default=None, description="Detailed description"
-    )
+    description: str | None = Field(default=None, description="Detailed description")
 
     # Time specification
     is_continuous_time: bool = Field(
         default=False, description="Whether time is continuous (else discrete)"
     )
-    time_step: float | None = Field(
-        default=None, description="Time step size (for discrete time)"
-    )
-    max_episode_length: int | None = Field(
-        default=None, description="Maximum steps per episode"
-    )
+    time_step: float | None = Field(default=None, description="Time step size (for discrete time)")
+    max_episode_length: int | None = Field(default=None, description="Maximum steps per episode")
 
     # State definition
     state_variables: list[StateVariable] = Field(
@@ -350,16 +322,12 @@ class StateSpaceModel(CogantBaseModel):
     )
 
     # Metadata
-    source_graph_id: StableID | None = Field(
-        default=None, description="ID of source program graph"
-    )
+    source_graph_id: StableID | None = Field(default=None, description="ID of source program graph")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         description="When model was created",
     )
-    tags: list[str] = Field(
-        default_factory=list, description="User-defined tags"
-    )
+    tags: list[str] = Field(default_factory=list, description="User-defined tags")
 
     model_config = ConfigDict(
         json_schema_extra={

@@ -10,14 +10,10 @@ No mocks: all tests use real in-memory ReverseGNNModel instances.
 from __future__ import annotations
 
 import math
-from typing import Dict, List
-
-import pytest
 
 from cogant.reverse.callable import MatrixFunctions, make_matrix_functions
 from cogant.reverse.matrices import render_matrices_module
 from cogant.reverse.parser import ReverseGNNModel, parse_gnn
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -253,10 +249,10 @@ def test_make_matrix_functions_wrapper() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _exec_generated_module(model: ReverseGNNModel) -> Dict[str, object]:
+def _exec_generated_module(model: ReverseGNNModel) -> dict[str, object]:
     """Generate and exec the matrices module, returning its namespace."""
     source = render_matrices_module(model)
-    ns: Dict[str, object] = {}
+    ns: dict[str, object] = {}
     exec(source, ns)  # noqa: S102 — intentional for test comparison
     return ns
 
@@ -274,7 +270,7 @@ def test_likelihood_matches_generated_code() -> None:
     generated_result = generated_fn(state_dist)
 
     assert len(callable_result) == len(generated_result)
-    for a, b in zip(callable_result, generated_result):
+    for a, b in zip(callable_result, generated_result, strict=False):
         assert abs(a - b) < 1e-9, f"likelihood mismatch: {a} vs {b}"
 
 
@@ -292,7 +288,7 @@ def test_transition_matches_generated_code() -> None:
         generated_result = generated_fn(state_dist, action)
 
         assert len(callable_result) == len(generated_result)
-        for a, b in zip(callable_result, generated_result):
+        for a, b in zip(callable_result, generated_result, strict=False):
             assert abs(a - b) < 1e-9, f"transition(action={action}) mismatch: {a} vs {b}"
 
 

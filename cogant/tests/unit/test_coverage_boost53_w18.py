@@ -10,19 +10,20 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
 
 def _make_bundle(tmp_path):
     from cogant.api.bundle import Bundle
+
     return Bundle(target=str(tmp_path))
 
 
 def _run_ingest_static_graph(tmp_path, bundle=None):
     """Run ingest + static + graph chain, return bundle."""
-    from cogant.api.orchestration import run_ingest, run_static, run_graph
+    from cogant.api.orchestration import run_graph, run_ingest, run_static
+
     if bundle is None:
         bundle = _make_bundle(tmp_path)
     run_ingest(str(tmp_path), bundle)
@@ -35,22 +36,26 @@ def _run_ingest_static_graph(tmp_path, bundle=None):
 # api/orchestration.py — run_graph
 # ---------------------------------------------------------------------------
 
+
 class TestRunGraph:
     def test_run_graph_requires_snapshot(self, tmp_path):
         from cogant.api.orchestration import run_graph
+
         bundle = _make_bundle(tmp_path)
         with pytest.raises(RuntimeError, match="ingest"):
             run_graph(bundle, str(tmp_path))
 
     def test_run_graph_empty_dir(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph
+        from cogant.api.orchestration import run_graph, run_ingest
+
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         result = run_graph(bundle, str(tmp_path))
         assert isinstance(result, dict)
 
     def test_run_graph_stores_program_graph(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph
+        from cogant.api.orchestration import run_graph, run_ingest
+
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         run_graph(bundle, str(tmp_path))
@@ -58,10 +63,9 @@ class TestRunGraph:
         assert pg is not None
 
     def test_run_graph_with_python_module(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph
-        (tmp_path / "mymod.py").write_text(
-            "class Foo:\n    def bar(self):\n        return 1\n"
-        )
+        from cogant.api.orchestration import run_graph, run_ingest
+
+        (tmp_path / "mymod.py").write_text("class Foo:\n    def bar(self):\n        return 1\n")
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         result = run_graph(bundle, str(tmp_path))
@@ -70,7 +74,8 @@ class TestRunGraph:
         assert pg is not None
 
     def test_run_graph_with_classes_and_imports(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph
+        from cogant.api.orchestration import run_graph, run_ingest
+
         (tmp_path / "a.py").write_text("class A:\n    x: int = 0\n")
         (tmp_path / "b.py").write_text("import a\nclass B(object):\n    pass\n")
         bundle = _make_bundle(tmp_path)
@@ -83,15 +88,18 @@ class TestRunGraph:
 # api/orchestration.py — run_translate
 # ---------------------------------------------------------------------------
 
+
 class TestRunTranslate:
     def test_run_translate_requires_graph(self, tmp_path):
         from cogant.api.orchestration import run_translate
+
         bundle = _make_bundle(tmp_path)
         with pytest.raises(RuntimeError, match="graph"):
             run_translate(bundle)
 
     def test_run_translate_empty_graph(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph, run_translate
+        from cogant.api.orchestration import run_graph, run_ingest, run_translate
+
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         run_graph(bundle, str(tmp_path))
@@ -101,7 +109,8 @@ class TestRunTranslate:
         assert "mapping_count" in result
 
     def test_run_translate_stores_mappings(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph, run_translate
+        from cogant.api.orchestration import run_graph, run_ingest, run_translate
+
         (tmp_path / "mod.py").write_text("def process(x: int) -> int:\n    return x\n")
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
@@ -111,7 +120,8 @@ class TestRunTranslate:
         assert isinstance(mappings, dict)
 
     def test_run_translate_stores_engine(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph, run_translate
+        from cogant.api.orchestration import run_graph, run_ingest, run_translate
+
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         run_graph(bundle, str(tmp_path))
@@ -124,15 +134,18 @@ class TestRunTranslate:
 # api/orchestration.py — run_statespace
 # ---------------------------------------------------------------------------
 
+
 class TestRunStatespace:
     def test_run_statespace_requires_graph(self, tmp_path):
         from cogant.api.orchestration import run_statespace
+
         bundle = _make_bundle(tmp_path)
         with pytest.raises(RuntimeError, match="graph"):
             run_statespace(bundle, str(tmp_path))
 
     def test_run_statespace_empty_graph(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph, run_statespace
+        from cogant.api.orchestration import run_graph, run_ingest, run_statespace
+
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         run_graph(bundle, str(tmp_path))
@@ -144,7 +157,8 @@ class TestRunStatespace:
         assert "actions" in result
 
     def test_run_statespace_stores_model(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph, run_statespace
+        from cogant.api.orchestration import run_graph, run_ingest, run_statespace
+
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         run_graph(bundle, str(tmp_path))
@@ -153,7 +167,8 @@ class TestRunStatespace:
         assert model is not None
 
     def test_run_statespace_with_module(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph, run_translate, run_statespace
+        from cogant.api.orchestration import run_graph, run_ingest, run_statespace, run_translate
+
         (tmp_path / "m.py").write_text(
             "class Agent:\n    state: int = 0\n    def act(self) -> str:\n        return 'action'\n"
         )
@@ -169,15 +184,18 @@ class TestRunStatespace:
 # api/orchestration.py — run_process
 # ---------------------------------------------------------------------------
 
+
 class TestRunProcess:
     def test_run_process_requires_graph(self, tmp_path):
         from cogant.api.orchestration import run_process
+
         bundle = _make_bundle(tmp_path)
         with pytest.raises(RuntimeError, match="graph"):
             run_process(bundle, str(tmp_path))
 
     def test_run_process_empty_graph(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph, run_process
+        from cogant.api.orchestration import run_graph, run_ingest, run_process
+
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         run_graph(bundle, str(tmp_path))
@@ -186,7 +204,8 @@ class TestRunProcess:
         assert "type" in result
 
     def test_run_process_stores_model(self, tmp_path):
-        from cogant.api.orchestration import run_ingest, run_graph, run_process
+        from cogant.api.orchestration import run_graph, run_ingest, run_process
+
         bundle = _make_bundle(tmp_path)
         run_ingest(str(tmp_path), bundle)
         run_graph(bundle, str(tmp_path))
@@ -199,13 +218,16 @@ class TestRunProcess:
 # api/orchestration.py — _default_translation_engine
 # ---------------------------------------------------------------------------
 
+
 class TestDefaultTranslationEngine:
     def test_import_and_call(self):
         from cogant.api.orchestration import _default_translation_engine
+
         engine = _default_translation_engine()
         assert engine is not None
 
     def test_engine_has_translate(self):
         from cogant.api.orchestration import _default_translation_engine
+
         engine = _default_translation_engine()
         assert hasattr(engine, "translate")

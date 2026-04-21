@@ -28,36 +28,44 @@ pytestmark = pytest.mark.unit
 # cogant/__init__.py
 # ---------------------------------------------------------------------------
 
+
 class TestCogantInit:
     def test_version_string(self):
         import cogant
+
         assert isinstance(cogant.__version__, str)
         assert len(cogant.__version__) > 0
 
     def test_rust_available_is_bool(self):
         import cogant
+
         assert isinstance(cogant._RUST_AVAILABLE, bool)
 
     def test_rust_version_none_or_str(self):
         import cogant
+
         assert cogant.__rust_version__ is None or isinstance(cogant.__rust_version__, str)
 
     def test_cogant_session_alias(self):
         import cogant
+
         # CogantSession is either Session or None
         assert cogant.CogantSession is cogant.Session
 
     def test_gnn_bundle_alias(self):
         import cogant
+
         assert cogant.GNNBundle is cogant.Bundle
 
     def test_all_exports_accessible(self):
         import cogant
+
         for name in cogant.__all__:
             assert hasattr(cogant, name), f"Missing: {name}"
 
     def test_run_pipeline_session_none_raises(self):
         import cogant
+
         original = cogant.Session
         try:
             cogant.Session = None
@@ -71,36 +79,44 @@ class TestCogantInit:
 # observability/logging.py
 # ---------------------------------------------------------------------------
 
+
 class TestSetupLogging:
     def test_setup_logging_info(self):
         from cogant.observability.logging import setup_logging
+
         # Should not raise
         setup_logging(level="INFO", format="json")
 
     def test_setup_logging_debug(self):
         from cogant.observability.logging import setup_logging
+
         setup_logging(level="DEBUG", format="json")
 
     def test_setup_logging_console_format(self):
         from cogant.observability.logging import setup_logging
+
         setup_logging(level="WARNING", format="console")
 
     def test_setup_logging_uppercase_level(self):
         from cogant.observability.logging import setup_logging
+
         setup_logging(level="ERROR")
 
 
 class TestGetLogger:
     def test_returns_logger_object(self):
         from cogant.observability.logging import get_logger
+
         logger = get_logger("test.module")
         assert logger is not None
 
     def test_stdlib_logger_has_info(self):
-        from cogant.observability.logging import get_logger, _STRUCTLOG_AVAILABLE
+        from cogant.observability.logging import _STRUCTLOG_AVAILABLE, get_logger
+
         logger = get_logger("test")
         if not _STRUCTLOG_AVAILABLE:
             import logging
+
             assert isinstance(logger, logging.Logger)
 
 
@@ -108,13 +124,16 @@ class TestGetLogger:
 # rust_backend.py
 # ---------------------------------------------------------------------------
 
+
 class TestRustBackendConstants:
     def test_rust_available_is_bool(self):
         from cogant.rust_backend import RUST_AVAILABLE
+
         assert isinstance(RUST_AVAILABLE, bool)
 
     def test_rust_version_none_when_no_rust(self):
         from cogant.rust_backend import RUST_AVAILABLE, rust_version
+
         v = rust_version()
         if not RUST_AVAILABLE:
             assert v is None
@@ -125,19 +144,23 @@ class TestRustBackendConstants:
 class TestGetProgramGraphImpl:
     def test_returns_a_class(self):
         from cogant.rust_backend import get_program_graph_impl
+
         impl = get_program_graph_impl()
         assert isinstance(impl, type)
 
     def test_returns_python_builder_when_no_rust(self):
         from cogant.rust_backend import RUST_AVAILABLE, get_program_graph_impl
+
         if not RUST_AVAILABLE:
             from cogant.graph.builder import ProgramGraphBuilder
+
             assert get_program_graph_impl() is ProgramGraphBuilder
 
 
 class TestCreateExampleGraph:
     def test_raises_runtime_error_when_no_rust(self):
         from cogant.rust_backend import RUST_AVAILABLE, create_example_graph
+
         if not RUST_AVAILABLE:
             with pytest.raises(RuntimeError, match="Rust backend not available"):
                 create_example_graph()
@@ -146,6 +169,7 @@ class TestCreateExampleGraph:
 class TestEnvPrefersRust:
     def test_unset_returns_none(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ.pop("COGANT_USE_RUST", None)
         try:
@@ -157,6 +181,7 @@ class TestEnvPrefersRust:
 
     def test_1_returns_true(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "1"
         try:
@@ -167,6 +192,7 @@ class TestEnvPrefersRust:
 
     def test_0_returns_false(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "0"
         try:
@@ -177,6 +203,7 @@ class TestEnvPrefersRust:
 
     def test_true_string_returns_true(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "true"
         try:
@@ -187,6 +214,7 @@ class TestEnvPrefersRust:
 
     def test_false_string_returns_false(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "false"
         try:
@@ -197,6 +225,7 @@ class TestEnvPrefersRust:
 
     def test_unknown_string_returns_none(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "maybe"
         try:
@@ -209,19 +238,22 @@ class TestEnvPrefersRust:
 
 class TestBuildProgramGraph:
     def test_returns_python_builder_when_use_rust_false(self):
-        from cogant.rust_backend import build_program_graph
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.rust_backend import build_program_graph
+
         builder = build_program_graph(repo_uri="repo://test", use_rust=False)
         assert isinstance(builder, ProgramGraphBuilder)
 
     def test_builder_can_finalize(self):
         from cogant.rust_backend import build_program_graph
+
         builder = build_program_graph(repo_uri="repo://test", use_rust=False)
         graph = builder.finalize()
         assert graph is not None
 
     def test_default_call_returns_builder(self):
         from cogant.rust_backend import build_program_graph
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "0"
         try:
@@ -236,9 +268,11 @@ class TestBuildProgramGraph:
 # ingest/files.py
 # ---------------------------------------------------------------------------
 
+
 class TestFileInfoDataclass:
     def test_creation(self, tmp_path):
         from cogant.ingest.files import FileInfo
+
         f = FileInfo(
             path=tmp_path / "test.py",
             relative_path="test.py",
@@ -251,6 +285,7 @@ class TestFileInfoDataclass:
 
     def test_test_file_flag(self, tmp_path):
         from cogant.ingest.files import FileInfo
+
         f = FileInfo(
             path=tmp_path / "test_foo.py",
             relative_path="test_foo.py",
@@ -264,41 +299,49 @@ class TestFileInfoDataclass:
 class TestConstantsExist:
     def test_language_extensions_has_python(self):
         from cogant.ingest.files import LANGUAGE_EXTENSIONS
+
         assert "python" in LANGUAGE_EXTENSIONS
         assert ".py" in LANGUAGE_EXTENSIONS["python"]
 
     def test_test_patterns_exist(self):
         from cogant.ingest.files import TEST_PATTERNS
+
         assert len(TEST_PATTERNS) > 0
 
     def test_ignore_patterns_exist(self):
         from cogant.ingest.files import IGNORE_PATTERNS
+
         assert "__pycache__" in IGNORE_PATTERNS
 
 
 class TestFileEnumeratorDetectLanguage:
     def test_py_file(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         assert fe._detect_language(Path("foo.py")) == "python"
 
     def test_js_file(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         assert fe._detect_language(Path("foo.js")) == "javascript"
 
     def test_ts_file(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         assert fe._detect_language(Path("foo.ts")) == "typescript"
 
     def test_rs_file(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         assert fe._detect_language(Path("foo.rs")) == "rust"
 
     def test_unknown_extension(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         assert fe._detect_language(Path("foo.xyz")) is None
 
@@ -306,21 +349,25 @@ class TestFileEnumeratorDetectLanguage:
 class TestFileEnumeratorIsTestFile:
     def test_test_prefix(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         assert fe._is_test_file("test_foo.py") is True
 
     def test_test_suffix(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         assert fe._is_test_file("foo_test.py") is True
 
     def test_tests_directory(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         assert fe._is_test_file("tests/foo.py") is True
 
     def test_regular_file(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         assert fe._is_test_file("src/module.py") is False
 
@@ -328,6 +375,7 @@ class TestFileEnumeratorIsTestFile:
 class TestFileEnumeratorComputeChecksum:
     def test_checksums_file(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         f = tmp_path / "myfile.txt"
         f.write_text("hello world")
         fe = FileEnumerator(tmp_path)
@@ -337,6 +385,7 @@ class TestFileEnumeratorComputeChecksum:
 
     def test_missing_file_returns_empty(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         result = fe._compute_checksum(tmp_path / "nonexistent.txt")
         assert result == ""
@@ -345,12 +394,14 @@ class TestFileEnumeratorComputeChecksum:
 class TestFileEnumeratorLoadGitignore:
     def test_no_gitignore_returns_empty(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         patterns = fe._load_gitignore()
         assert patterns == set()
 
     def test_gitignore_loaded(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / ".gitignore").write_text("*.pyc\n# comment\n\nbuild/\n")
         fe = FileEnumerator(tmp_path)
         patterns = fe._load_gitignore()
@@ -360,6 +411,7 @@ class TestFileEnumeratorLoadGitignore:
 
     def test_cached_on_second_call(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / ".gitignore").write_text("*.pyc\n")
         fe = FileEnumerator(tmp_path)
         p1 = fe._load_gitignore()
@@ -370,6 +422,7 @@ class TestFileEnumeratorLoadGitignore:
 class TestFileEnumeratorShouldIgnore:
     def test_ignores_pycache(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         pycache = tmp_path / "__pycache__" / "foo.pyc"
         pycache.parent.mkdir()
@@ -377,6 +430,7 @@ class TestFileEnumeratorShouldIgnore:
 
     def test_allows_normal_file(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         normal = tmp_path / "src" / "module.py"
         normal.parent.mkdir(exist_ok=True)
@@ -386,12 +440,14 @@ class TestFileEnumeratorShouldIgnore:
 class TestFileEnumeratorEnumerate:
     def test_empty_dir_returns_empty(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         fe = FileEnumerator(tmp_path)
         files = fe.enumerate()
         assert files == []
 
     def test_finds_python_files(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "a.py").write_text("x = 1")
         (tmp_path / "b.py").write_text("y = 2")
         fe = FileEnumerator(tmp_path)
@@ -402,6 +458,7 @@ class TestFileEnumeratorEnumerate:
 
     def test_excludes_test_files(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "module.py").write_text("x = 1")
         (tmp_path / "test_module.py").write_text("def test_x(): pass")
         fe = FileEnumerator(tmp_path)
@@ -412,6 +469,7 @@ class TestFileEnumeratorEnumerate:
 
     def test_includes_test_files_by_default(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "module.py").write_text("x = 1")
         (tmp_path / "test_module.py").write_text("def test_x(): pass")
         fe = FileEnumerator(tmp_path)
@@ -421,6 +479,7 @@ class TestFileEnumeratorEnumerate:
 
     def test_computes_checksums_when_requested(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "a.py").write_text("x = 1")
         fe = FileEnumerator(tmp_path)
         files = fe.enumerate(compute_checksums=True)
@@ -429,6 +488,7 @@ class TestFileEnumeratorEnumerate:
 
     def test_no_checksums_by_default(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "a.py").write_text("x = 1")
         fe = FileEnumerator(tmp_path)
         files = fe.enumerate()
@@ -439,10 +499,12 @@ class TestFileEnumeratorEnumerate:
 # export/parquet.py
 # ---------------------------------------------------------------------------
 
+
 class TestParquetExporterPrepareData:
     def _make_graph(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
         n2 = builder.add_node(NodeKind.FUNCTION, "fn", "mod.fn", path="mod.py")
@@ -451,6 +513,7 @@ class TestParquetExporterPrepareData:
 
     def test_prepare_nodes_data_structure(self):
         from cogant.export.parquet import ParquetExporter
+
         graph = self._make_graph()
         exporter = ParquetExporter(graph)
         data = exporter._prepare_nodes_data()
@@ -462,6 +525,7 @@ class TestParquetExporterPrepareData:
 
     def test_prepare_edges_data_structure(self):
         from cogant.export.parquet import ParquetExporter
+
         graph = self._make_graph()
         exporter = ParquetExporter(graph)
         data = exporter._prepare_edges_data()
@@ -474,10 +538,12 @@ class TestParquetExporterPrepareData:
 
     def test_export_without_pyarrow_returns_empty(self, tmp_path):
         from cogant.export.parquet import ParquetExporter
+
         graph = self._make_graph()
         exporter = ParquetExporter(graph)
         # Monkeypatch by hiding pyarrow in the module
         import sys
+
         original = sys.modules.get("pyarrow")
         sys.modules["pyarrow"] = None  # type: ignore
         try:
@@ -493,6 +559,7 @@ class TestParquetExporterPrepareData:
         from cogant.export.parquet import ParquetExporter
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         builder.add_node(NodeKind.MODULE, "mod", "mod")  # no path
         graph = builder.finalize()

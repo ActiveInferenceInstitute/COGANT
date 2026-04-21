@@ -14,9 +14,7 @@ def test_render_bundle_site_writes_expected_tree(tmp_path: Path) -> None:
         "total_errors": 0,
         "language_distribution": {"python": 2, "markdown": 1},
     }
-    out = bundle_site.render_bundle_site(
-        tmp_path, target="/tmp/demo", repo_summary=repo_summary
-    )
+    out = bundle_site.render_bundle_site(tmp_path, target="/tmp/demo", repo_summary=repo_summary)
     assert out == tmp_path / "index.html"
     assert (tmp_path / "index.html").is_file()
     assert (tmp_path / "graph" / "program_graph.html").is_file()

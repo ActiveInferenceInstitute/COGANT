@@ -50,13 +50,13 @@ class StaticPlotter:
         lines = [
             '<?xml version="1.0" encoding="UTF-8"?>',
             f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">',
-            '<style>',
+            "<style>",
             ".bar { fill: #4CAF50; }",
             ".axis { font-family: Arial; font-size: 12px; }",
             ".label { font-family: Arial; font-size: 11px; }",
             ".title { font-family: Arial; font-size: 16px; font-weight: bold; }",
             "</style>",
-            f'<text x="{width/2}" y="20" class="title" text-anchor="middle">Node Type Distribution</text>',
+            f'<text x="{width / 2}" y="20" class="title" text-anchor="middle">Node Type Distribution</text>',
         ]
 
         # Draw axes
@@ -74,7 +74,9 @@ class StaticPlotter:
             bar_height = (count / max_count) * plot_height
             y = height - margin["bottom"] - bar_height
 
-            lines.append(f'<rect x="{x}" y="{y}" width="{bar_width / 2}" height="{bar_height}" class="bar"/>')
+            lines.append(
+                f'<rect x="{x}" y="{y}" width="{bar_width / 2}" height="{bar_height}" class="bar"/>'
+            )
             lines.append(
                 f'<text x="{x + bar_width / 4}" y="{y - 5}" class="label" text-anchor="middle">{count}</text>'
             )
@@ -120,13 +122,13 @@ class StaticPlotter:
         lines = [
             '<?xml version="1.0" encoding="UTF-8"?>',
             f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">',
-            '<style>',
+            "<style>",
             ".bar { fill: #2196F3; }",
             ".axis { font-family: Arial; font-size: 12px; }",
             ".label { font-family: Arial; font-size: 11px; }",
             ".title { font-family: Arial; font-size: 16px; font-weight: bold; }",
             "</style>",
-            f'<text x="{width/2}" y="20" class="title" text-anchor="middle">Edge Type Distribution</text>',
+            f'<text x="{width / 2}" y="20" class="title" text-anchor="middle">Edge Type Distribution</text>',
         ]
 
         # Draw axes
@@ -144,7 +146,9 @@ class StaticPlotter:
             bar_height = (count / max_count) * plot_height
             y = height - margin["bottom"] - bar_height
 
-            lines.append(f'<rect x="{x}" y="{y}" width="{bar_width / 2}" height="{bar_height}" class="bar"/>')
+            lines.append(
+                f'<rect x="{x}" y="{y}" width="{bar_width / 2}" height="{bar_height}" class="bar"/>'
+            )
             lines.append(
                 f'<text x="{x + bar_width / 4}" y="{y - 5}" class="label" text-anchor="middle">{count}</text>'
             )
@@ -210,13 +214,13 @@ class StaticPlotter:
         lines = [
             '<?xml version="1.0" encoding="UTF-8"?>',
             f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">',
-            '<style>',
+            "<style>",
             ".bar { fill: #FF9800; }",
             ".axis { font-family: Arial; font-size: 12px; }",
             ".label { font-family: Arial; font-size: 11px; }",
             ".title { font-family: Arial; font-size: 16px; font-weight: bold; }",
             "</style>",
-            f'<text x="{width/2}" y="20" class="title" text-anchor="middle">Confidence Score Distribution</text>',
+            f'<text x="{width / 2}" y="20" class="title" text-anchor="middle">Confidence Score Distribution</text>',
         ]
 
         # Draw axes
@@ -234,7 +238,9 @@ class StaticPlotter:
             bar_height = (count / max_count) * plot_height if max_count > 0 else 0
             y = height - margin["bottom"] - bar_height
 
-            lines.append(f'<rect x="{x}" y="{y}" width="{bar_width * 0.8}" height="{bar_height}" class="bar"/>')
+            lines.append(
+                f'<rect x="{x}" y="{y}" width="{bar_width * 0.8}" height="{bar_height}" class="bar"/>'
+            )
 
             # Label on x-axis
             bin_label = f"{idx / bins:.1f}-{(idx + 1) / bins:.1f}"
@@ -280,9 +286,7 @@ class StaticPlotter:
             # Add cells for observations
             for obs in observations:
                 # Simple heuristic: if variable name or ID appears in observation, mark as related
-                is_related = (
-                    var.id in obs.source_node_id or var.name.lower() in obs.name.lower()
-                )
+                is_related = var.id in obs.source_node_id or var.name.lower() in obs.name.lower()
                 cell_content = "✓" if is_related else "–"
                 lines.append(f"<td style='text-align: center;'>{cell_content}</td>")
 
@@ -310,9 +314,7 @@ class StaticPlotter:
             var_obs_connectivity[var.id] = {}
             for obs in observations:
                 # Check if variable is related to observation
-                is_related = (
-                    var.id in obs.source_node_id or var.name.lower() in obs.name.lower()
-                )
+                is_related = var.id in obs.source_node_id or var.name.lower() in obs.name.lower()
                 confidence = 0.8 if is_related else 0.2
                 var_obs_connectivity[var.id][obs.id] = confidence
 
@@ -322,9 +324,7 @@ class StaticPlotter:
             var_action_connectivity[var.id] = {}
             for action in actions:
                 # Check if variable is affected by action (via effects list)
-                is_affected = (
-                    var.id in action.effects or var.name.lower() in action.name.lower()
-                )
+                is_affected = var.id in action.effects or var.name.lower() in action.name.lower()
                 confidence = 0.7 if is_affected else 0.3
                 var_action_connectivity[var.id][action.id] = confidence
 
@@ -370,14 +370,16 @@ class StaticPlotter:
         ]
 
         # Variable × Observation Matrix
-        html_parts.extend([
-            "    <div class='matrix-container'>",
-            "        <h2>Variable × Observation Matrix</h2>",
-            "        <p>Shows which observations connect to which state variables.</p>",
-            "        <table>",
-            "            <tr>",
-            "                <th>Variable</th>",
-        ])
+        html_parts.extend(
+            [
+                "    <div class='matrix-container'>",
+                "        <h2>Variable × Observation Matrix</h2>",
+                "        <p>Shows which observations connect to which state variables.</p>",
+                "        <table>",
+                "            <tr>",
+                "                <th>Variable</th>",
+            ]
+        )
 
         for obs in observations:
             html_parts.append(f"                <th>{obs.name}</th>")
@@ -390,25 +392,33 @@ class StaticPlotter:
 
             for obs in observations:
                 conf = var_obs_connectivity[var.id][obs.id]
-                conf_class = "conf-high" if conf >= 0.7 else ("conf-medium" if conf >= 0.4 else "conf-low")
-                html_parts.append(f"                <td class='confidence-cell {conf_class}'>{conf:.2f}</td>")
+                conf_class = (
+                    "conf-high" if conf >= 0.7 else ("conf-medium" if conf >= 0.4 else "conf-low")
+                )
+                html_parts.append(
+                    f"                <td class='confidence-cell {conf_class}'>{conf:.2f}</td>"
+                )
 
             html_parts.append("            </tr>")
 
-        html_parts.extend([
-            "        </table>",
-            "    </div>",
-        ])
+        html_parts.extend(
+            [
+                "        </table>",
+                "    </div>",
+            ]
+        )
 
         # Variable × Action Matrix
-        html_parts.extend([
-            "    <div class='matrix-container'>",
-            "        <h2>Variable × Action Matrix</h2>",
-            "        <p>Shows which actions affect which state variables.</p>",
-            "        <table>",
-            "            <tr>",
-            "                <th>Variable</th>",
-        ])
+        html_parts.extend(
+            [
+                "    <div class='matrix-container'>",
+                "        <h2>Variable × Action Matrix</h2>",
+                "        <p>Shows which actions affect which state variables.</p>",
+                "        <table>",
+                "            <tr>",
+                "                <th>Variable</th>",
+            ]
+        )
 
         for action in actions:
             html_parts.append(f"                <th>{action.name}</th>")
@@ -421,17 +431,23 @@ class StaticPlotter:
 
             for action in actions:
                 conf = var_action_connectivity[var.id][action.id]
-                conf_class = "conf-high" if conf >= 0.7 else ("conf-medium" if conf >= 0.4 else "conf-low")
-                html_parts.append(f"                <td class='confidence-cell {conf_class}'>{conf:.2f}</td>")
+                conf_class = (
+                    "conf-high" if conf >= 0.7 else ("conf-medium" if conf >= 0.4 else "conf-low")
+                )
+                html_parts.append(
+                    f"                <td class='confidence-cell {conf_class}'>{conf:.2f}</td>"
+                )
 
             html_parts.append("            </tr>")
 
-        html_parts.extend([
-            "        </table>",
-            "    </div>",
-            "</body>",
-            "</html>",
-        ])
+        html_parts.extend(
+            [
+                "        </table>",
+                "    </div>",
+                "</body>",
+                "</html>",
+            ]
+        )
 
         # Write HTML file
         with open(output_path, "w") as f:
@@ -483,7 +499,7 @@ class StaticPlotter:
         lines = [
             '<?xml version="1.0" encoding="UTF-8"?>',
             f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">',
-            '<defs>',
+            "<defs>",
             "    <style>",
             "        .var-circle { fill: #90CAF9; stroke: #0066cc; stroke-width: 2; }",
             "        .obs-rect { fill: #A5D6A7; stroke: #2E7D32; stroke-width: 2; }",
@@ -494,7 +510,7 @@ class StaticPlotter:
             "        .factor { fill: black; }",
             "    </style>",
             "</defs>",
-            f'<text x="{width/2}" y="30" class="title" text-anchor="middle">Factor Graph Structure</text>',
+            f'<text x="{width / 2}" y="30" class="title" text-anchor="middle">Factor Graph Structure</text>',
         ]
 
         # Draw edges (factors)
@@ -536,7 +552,9 @@ class StaticPlotter:
             if obs.id not in obs_positions:
                 continue
             x, y = obs_positions[obs.id]
-            lines.append(f'<rect x="{x-20}" y="{y-20}" width="40" height="40" class="obs-rect"/>')
+            lines.append(
+                f'<rect x="{x - 20}" y="{y - 20}" width="40" height="40" class="obs-rect"/>'
+            )
             label = obs.name[:15]
             lines.append(f'<text x="{x}" y="{y}" class="label" dy="0.3em">{label}</text>')
 
@@ -545,31 +563,35 @@ class StaticPlotter:
             if action.id not in action_positions:
                 continue
             x, y = action_positions[action.id]
-            diamond_points = f"{x},{ y-20} {x+20},{y} {x},{y+20} {x-20},{y}"
+            diamond_points = f"{x},{y - 20} {x + 20},{y} {x},{y + 20} {x - 20},{y}"
             lines.append(f'<polygon points="{diamond_points}" class="action-diamond"/>')
             label = action.name[:12]
             lines.append(f'<text x="{x}" y="{y}" class="label" dy="0.3em">{label}</text>')
 
         # Add legend
         legend_y = height - 80
-        lines.extend([
-            '<g id="legend">',
-            f'  <text x="80" y="{legend_y}" class="label" text-anchor="start" font-size="12" font-weight="bold">Legend:</text>',
-            f'  <circle cx="80" cy="{legend_y + 20}" r="12" class="var-circle"/>',
-            f'  <text x="100" y="{legend_y + 25}" class="label" text-anchor="start" font-size="10">State Variable</text>',
-            f'  <rect x="235" y="{legend_y + 8}" width="24" height="24" class="obs-rect"/>',
-            f'  <text x="270" y="{legend_y + 25}" class="label" text-anchor="start" font-size="10">Observation</text>',
-            f'  <polygon points="420,{legend_y + 20} 432,{legend_y + 32} 420,{legend_y + 44} 408,{legend_y + 32}" class="action-diamond"/>',
-            f'  <text x="450" y="{legend_y + 25}" class="label" text-anchor="start" font-size="10">Action</text>',
-            '</g>',
-        ])
+        lines.extend(
+            [
+                '<g id="legend">',
+                f'  <text x="80" y="{legend_y}" class="label" text-anchor="start" font-size="12" font-weight="bold">Legend:</text>',
+                f'  <circle cx="80" cy="{legend_y + 20}" r="12" class="var-circle"/>',
+                f'  <text x="100" y="{legend_y + 25}" class="label" text-anchor="start" font-size="10">State Variable</text>',
+                f'  <rect x="235" y="{legend_y + 8}" width="24" height="24" class="obs-rect"/>',
+                f'  <text x="270" y="{legend_y + 25}" class="label" text-anchor="start" font-size="10">Observation</text>',
+                f'  <polygon points="420,{legend_y + 20} 432,{legend_y + 32} 420,{legend_y + 44} 408,{legend_y + 32}" class="action-diamond"/>',
+                f'  <text x="450" y="{legend_y + 25}" class="label" text-anchor="start" font-size="10">Action</text>',
+                "</g>",
+            ]
+        )
 
         lines.append("</svg>")
 
         with open(output_path, "w") as f:
             f.write("\n".join(lines))
 
-    def plot_ontology_sunburst(self, graph: ProgramGraph, mappings: dict[str, Any], output_path: str) -> None:
+    def plot_ontology_sunburst(
+        self, graph: ProgramGraph, mappings: dict[str, Any], output_path: str
+    ) -> None:
         """
         Generate SVG sunburst diagram showing ontology structure.
 
@@ -587,8 +609,8 @@ class StaticPlotter:
         # Count semantic roles
         role_counts: dict[str, int] = {}
         for _mapping_id, mapping in mappings.items():
-            role = getattr(mapping, 'kind', type(mapping).__name__)
-            if hasattr(role, 'value'):
+            role = getattr(mapping, "kind", type(mapping).__name__)
+            if hasattr(role, "value"):
                 role = role.value
             role_str = str(role).replace("SemanticMappingKind.", "")
             role_counts[role_str] = role_counts.get(role_str, 0) + 1
@@ -604,13 +626,13 @@ class StaticPlotter:
 
         # Get repository name from metadata or graph
         repo_name = "Repository"
-        if hasattr(graph, 'metadata') and hasattr(graph.metadata, 'repo_name'):
+        if hasattr(graph, "metadata") and hasattr(graph.metadata, "repo_name"):
             repo_name = graph.metadata.repo_name[:20]
 
         lines = [
             '<?xml version="1.0" encoding="UTF-8"?>',
             f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">',
-            '<defs>',
+            "<defs>",
             "    <style>",
             "        .center-text { font-family: Arial; font-size: 14px; font-weight: bold; text-anchor: middle; }",
             "        .ring-label { font-family: Arial; font-size: 10px; text-anchor: middle; }",
@@ -626,8 +648,12 @@ class StaticPlotter:
 
         # Draw first ring (node kinds) with colors
         kind_colors = {
-            "CLASS": "#E74C3C", "FUNCTION": "#3498DB", "METHOD": "#2ECC71",
-            "MODULE": "#F39C12", "VARIABLE": "#9B59B6", "PARAMETER": "#1ABC9C"
+            "CLASS": "#E74C3C",
+            "FUNCTION": "#3498DB",
+            "METHOD": "#2ECC71",
+            "MODULE": "#F39C12",
+            "VARIABLE": "#9B59B6",
+            "PARAMETER": "#1ABC9C",
         }
 
         total_kinds = sum(kind_counts.values())
@@ -643,26 +669,30 @@ class StaticPlotter:
             mid_rad = (angle_mid - 90) * 3.14159 / 180
 
             # Draw segment
-            center_x + inner_radius * (angle_start - 90)**0 * 0 + inner_radius * 0.707
-            center_y + inner_radius * (angle_start - 90)**0 * 0 + inner_radius * 0.707
+            center_x + inner_radius * (angle_start - 90) ** 0 * 0 + inner_radius * 0.707
+            center_y + inner_radius * (angle_start - 90) ** 0 * 0 + inner_radius * 0.707
 
             # SVG arc path
             large_arc = 1 if angle_size > 180 else 0
-            path = (f"M {center_x},{center_y} "
-                   f"L {center_x + middle_radius * __import__('math').cos(start_rad):.1f},"
-                   f"{center_y + middle_radius * __import__('math').sin(start_rad):.1f} "
-                   f"A {middle_radius},{middle_radius} 0 {large_arc},1 "
-                   f"{center_x + middle_radius * __import__('math').cos(end_rad):.1f},"
-                   f"{center_y + middle_radius * __import__('math').sin(end_rad):.1f} Z")
+            path = (
+                f"M {center_x},{center_y} "
+                f"L {center_x + middle_radius * __import__('math').cos(start_rad):.1f},"
+                f"{center_y + middle_radius * __import__('math').sin(start_rad):.1f} "
+                f"A {middle_radius},{middle_radius} 0 {large_arc},1 "
+                f"{center_x + middle_radius * __import__('math').cos(end_rad):.1f},"
+                f"{center_y + middle_radius * __import__('math').sin(end_rad):.1f} Z"
+            )
 
             color = kind_colors.get(kind_name, "#95A5A6")
             lines.append(f'<path d="{path}" class="ring1-segment" fill="{color}"/>')
 
             # Add label
             label_r = inner_radius + 40
-            label_x = center_x + label_r * __import__('math').cos(mid_rad)
-            label_y = center_y + label_r * __import__('math').sin(mid_rad)
-            lines.append(f'<text x="{label_x:.1f}" y="{label_y:.1f}" class="ring-label">{kind_name} ({count})</text>')
+            label_x = center_x + label_r * __import__("math").cos(mid_rad)
+            label_y = center_y + label_r * __import__("math").sin(mid_rad)
+            lines.append(
+                f'<text x="{label_x:.1f}" y="{label_y:.1f}" class="ring-label">{kind_name} ({count})</text>'
+            )
 
             angle_start = angle_end
 
@@ -681,23 +711,27 @@ class StaticPlotter:
 
             # SVG arc path
             large_arc = 1 if angle_size > 180 else 0
-            path = (f"M {center_x + middle_radius * __import__('math').cos(start_rad):.1f},"
-                   f"{center_y + middle_radius * __import__('math').sin(start_rad):.1f} "
-                   f"L {center_x + outer_radius * __import__('math').cos(start_rad):.1f},"
-                   f"{center_y + outer_radius * __import__('math').sin(start_rad):.1f} "
-                   f"A {outer_radius},{outer_radius} 0 {large_arc},1 "
-                   f"{center_x + outer_radius * __import__('math').cos(end_rad):.1f},"
-                   f"{center_y + outer_radius * __import__('math').sin(end_rad):.1f} "
-                   f"L {center_x + middle_radius * __import__('math').cos(end_rad):.1f},"
-                   f"{center_y + middle_radius * __import__('math').sin(end_rad):.1f} Z")
+            path = (
+                f"M {center_x + middle_radius * __import__('math').cos(start_rad):.1f},"
+                f"{center_y + middle_radius * __import__('math').sin(start_rad):.1f} "
+                f"L {center_x + outer_radius * __import__('math').cos(start_rad):.1f},"
+                f"{center_y + outer_radius * __import__('math').sin(start_rad):.1f} "
+                f"A {outer_radius},{outer_radius} 0 {large_arc},1 "
+                f"{center_x + outer_radius * __import__('math').cos(end_rad):.1f},"
+                f"{center_y + outer_radius * __import__('math').sin(end_rad):.1f} "
+                f"L {center_x + middle_radius * __import__('math').cos(end_rad):.1f},"
+                f"{center_y + middle_radius * __import__('math').sin(end_rad):.1f} Z"
+            )
 
             lines.append(f'<path d="{path}" class="ring2-segment"/>')
 
             # Add label
             label_r = (middle_radius + outer_radius) // 2
-            label_x = center_x + label_r * __import__('math').cos(mid_rad)
-            label_y = center_y + label_r * __import__('math').sin(mid_rad)
-            lines.append(f'<text x="{label_x:.1f}" y="{label_y:.1f}" class="ring-label">{role_name} ({count})</text>')
+            label_x = center_x + label_r * __import__("math").cos(mid_rad)
+            label_y = center_y + label_r * __import__("math").sin(mid_rad)
+            lines.append(
+                f'<text x="{label_x:.1f}" y="{label_y:.1f}" class="ring-label">{role_name} ({count})</text>'
+            )
 
             angle_start = angle_end
 
@@ -719,16 +753,16 @@ class StaticPlotter:
         # Group mappings by kind and calculate mean confidence
         kind_confidence: dict[str, list[float]] = {}
         for _mapping_id, mapping in mappings.items():
-            kind = getattr(mapping, 'kind', type(mapping).__name__)
-            if hasattr(kind, 'value'):
+            kind = getattr(mapping, "kind", type(mapping).__name__)
+            if hasattr(kind, "value"):
                 kind = kind.value
             kind_str = str(kind).replace("SemanticMappingKind.", "")
 
             confidence = 0.5
-            if hasattr(mapping, 'confidence'):
+            if hasattr(mapping, "confidence"):
                 confidence = mapping.confidence
-            elif isinstance(mapping, dict) and 'confidence' in mapping:
-                confidence = mapping['confidence']
+            elif isinstance(mapping, dict) and "confidence" in mapping:
+                confidence = mapping["confidence"]
 
             if kind_str not in kind_confidence:
                 kind_confidence[kind_str] = []
@@ -750,7 +784,7 @@ class StaticPlotter:
         lines = [
             '<?xml version="1.0" encoding="UTF-8"?>',
             f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">',
-            '<defs>',
+            "<defs>",
             "    <style>",
             "        .axis-line { stroke: #999; stroke-width: 1; }",
             "        .grid-circle { stroke: #ddd; stroke-width: 1; fill: none; }",

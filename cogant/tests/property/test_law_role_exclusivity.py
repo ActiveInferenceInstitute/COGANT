@@ -21,7 +21,8 @@ from __future__ import annotations
 from itertools import combinations
 
 import pytest
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from cogant.graph.builder import ProgramGraphBuilder
 from cogant.schemas.core import EdgeKind, NodeKind
@@ -171,9 +172,7 @@ def test_ai_roles_are_pairwise_disjoint(graph: ProgramGraph) -> None:
 
     for role_a, role_b in combinations(_AI_ROLES, 2):
         overlap = per_role[role_a] & per_role[role_b]
-        assert not overlap, (
-            f"nodes {overlap} carry both {role_a.value} and {role_b.value}"
-        )
+        assert not overlap, f"nodes {overlap} carry both {role_a.value} and {role_b.value}"
 
 
 @given(graph=ai_bait_graph())
@@ -195,14 +194,12 @@ def test_no_node_has_more_than_one_ai_role(graph: ProgramGraph) -> None:
     per_role = _ids_per_ai_role(mappings)
 
     role_count: dict[str, int] = {}
-    for role, ids in per_role.items():
+    for _role, ids in per_role.items():
         for nid in ids:
             role_count[nid] = role_count.get(nid, 0) + 1
 
     offenders = {nid: c for nid, c in role_count.items() if c > 1}
-    assert not offenders, (
-        f"nodes with multiple AI roles: {offenders}"
-    )
+    assert not offenders, f"nodes with multiple AI roles: {offenders}"
 
 
 @given(graph=ai_bait_graph())

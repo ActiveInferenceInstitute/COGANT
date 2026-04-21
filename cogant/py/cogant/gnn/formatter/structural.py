@@ -82,7 +82,9 @@ class _StructuralSectionsMixin:
         if self.state_space.variables:
             lines.append("### State Variables")
             lines.append("")
-            lines.append("| ID | Name | Type | Domain | Cardinality | Factors | Confidence | Source |")
+            lines.append(
+                "| ID | Name | Type | Domain | Cardinality | Factors | Confidence | Source |"
+            )
             lines.append("|----|----|------|--------|------|---------|------|-------|")
             for var_id, var in self.state_space.variables.items():
                 card = var.cardinality or "∞"
@@ -92,7 +94,7 @@ class _StructuralSectionsMixin:
                 raw_domain = var.domain or "unknown"
                 if isinstance(raw_domain, list):
                     if len(raw_domain) > 5:
-                        domain = str(raw_domain[:5])[:-1] + f", +{len(raw_domain)-5} more]"
+                        domain = str(raw_domain[:5])[:-1] + f", +{len(raw_domain) - 5} more]"
                     else:
                         domain = str(raw_domain)
                 else:
@@ -104,7 +106,9 @@ class _StructuralSectionsMixin:
                     source = self.graph.nodes[var.node_id].name
                 elif var.node_id:
                     source = var.node_id
-                lines.append(f"| {var_id[:12]} | {var.name} | {var.var_type} | {domain} | {card} | {factors} | {var.confidence.value} | {source} |")
+                lines.append(
+                    f"| {var_id[:12]} | {var.name} | {var.var_type} | {domain} | {card} | {factors} | {var.confidence.value} | {source} |"
+                )
             lines.append("")
             lines.append(f"**Total Variables**: {len(self.state_space.variables)}")
             lines.append("")
@@ -151,6 +155,7 @@ class _StructuralSectionsMixin:
             )
 
         return "\n".join(lines)
+
     def _format_observation_modalities(self) -> str:
         """Format the Observation Modalities section.
 
@@ -171,7 +176,9 @@ class _StructuralSectionsMixin:
         lines.append("")
 
         if self.state_space.observations:
-            lines.append("| ID | Name | Modality | Source Node | Channels | Confidence | Description |")
+            lines.append(
+                "| ID | Name | Modality | Source Node | Channels | Confidence | Description |"
+            )
             lines.append("|----|----|------|------|------|------|------|")
             for obs_id, obs in self.state_space.observations.items():
                 # Find source node name
@@ -181,7 +188,9 @@ class _StructuralSectionsMixin:
                 # ObservationModality cardinality used as channels indicator
                 channels_str = f"{obs.cardinality}ch" if obs.cardinality else "default"
                 desc = obs.description or ""
-                lines.append(f"| {obs_id[:12]} | {obs.name} | {obs.modality_type} | {source_name} | {channels_str} | {obs.confidence.value} | {desc} |")
+                lines.append(
+                    f"| {obs_id[:12]} | {obs.name} | {obs.modality_type} | {source_name} | {channels_str} | {obs.confidence.value} | {desc} |"
+                )
             lines.append("")
             lines.append(f"**Total Observations**: {len(self.state_space.observations)}")
             lines.append("")
@@ -190,7 +199,11 @@ class _StructuralSectionsMixin:
             lines.append("")
 
         # Also list semantic OBSERVATION mappings
-        obs_mappings = [m for m in self.mappings.values() if hasattr(m, 'kind') and m.kind == MappingKind.OBSERVATION]
+        obs_mappings = [
+            m
+            for m in self.mappings.values()
+            if hasattr(m, "kind") and m.kind == MappingKind.OBSERVATION
+        ]
         if obs_mappings:
             lines.append("### Observation Mappings from Semantic Analysis")
             lines.append("")
@@ -198,11 +211,17 @@ class _StructuralSectionsMixin:
             lines.append("|----|----|------|------|")
             for mapping in obs_mappings[:20]:  # Limit to 20
                 node_ids = mapping.graph_fragment_node_ids[:2]
-                node_names = [self.graph.nodes[nid].name if nid in self.graph.nodes else nid for nid in node_ids]
-                lines.append(f"| {mapping.id[:12]} | {mapping.semantic_label} | {', '.join(node_names)} | {mapping.confidence_score:.2f} |")
+                node_names = [
+                    self.graph.nodes[nid].name if nid in self.graph.nodes else nid
+                    for nid in node_ids
+                ]
+                lines.append(
+                    f"| {mapping.id[:12]} | {mapping.semantic_label} | {', '.join(node_names)} | {mapping.confidence_score:.2f} |"
+                )
             lines.append("")
 
         return "\n".join(lines)
+
     def _format_actions_policies(self) -> str:
         """Format the Actions and Policies section.
 
@@ -228,7 +247,9 @@ class _StructuralSectionsMixin:
         if self.state_space.actions:
             lines.append("### Actions")
             lines.append("")
-            lines.append("| ID | Name | Parameters | Effects | Preconditions | Confidence | Controller |")
+            lines.append(
+                "| ID | Name | Parameters | Effects | Preconditions | Confidence | Controller |"
+            )
             lines.append("|----|----|------|------|------|------|------|")
             for action_id, action in self.state_space.actions.items():
                 # Handle parameters - could be dict or list
@@ -247,7 +268,9 @@ class _StructuralSectionsMixin:
                 controller = action.controller_id
                 if action.controller_id in self.graph.nodes:
                     controller = self.graph.nodes[action.controller_id].name
-                lines.append(f"| {action_id[:12]} | {action.name} | {params} | {effects} | {precond} | {action.confidence.value} | {controller} |")
+                lines.append(
+                    f"| {action_id[:12]} | {action.name} | {params} | {effects} | {precond} | {action.confidence.value} | {controller} |"
+                )
             lines.append("")
             lines.append(f"**Total Actions**: {len(self.state_space.actions)}")
             lines.append("")
@@ -256,7 +279,11 @@ class _StructuralSectionsMixin:
             lines.append("")
 
         # List ACTION and POLICY mappings
-        action_mappings = [m for m in self.mappings.values() if hasattr(m, 'kind') and m.kind in (MappingKind.ACTION, MappingKind.POLICY)]
+        action_mappings = [
+            m
+            for m in self.mappings.values()
+            if hasattr(m, "kind") and m.kind in (MappingKind.ACTION, MappingKind.POLICY)
+        ]
         if action_mappings:
             lines.append("### Action and Policy Mappings")
             lines.append("")
@@ -264,13 +291,23 @@ class _StructuralSectionsMixin:
             lines.append("|----|----|------|------|------|------|")
             for mapping in action_mappings[:30]:  # Limit to 30
                 node_ids = mapping.graph_fragment_node_ids[:1]
-                node_names = [self.graph.nodes[nid].name if nid in self.graph.nodes else nid for nid in node_ids]
+                node_names = [
+                    self.graph.nodes[nid].name if nid in self.graph.nodes else nid
+                    for nid in node_ids
+                ]
                 # SemanticMapping doesn't have metadata; estimate decision points from evidence
-                dp_str = str(mapping.evidence_count) if hasattr(mapping, 'evidence_count') and mapping.evidence_count else "0"
-                lines.append(f"| {mapping.id[:12]} | {mapping.semantic_label} | {mapping.kind.value} | {', '.join(node_names)} | {mapping.confidence_score:.2f} | {dp_str} |")
+                dp_str = (
+                    str(mapping.evidence_count)
+                    if hasattr(mapping, "evidence_count") and mapping.evidence_count
+                    else "0"
+                )
+                lines.append(
+                    f"| {mapping.id[:12]} | {mapping.semantic_label} | {mapping.kind.value} | {', '.join(node_names)} | {mapping.confidence_score:.2f} | {dp_str} |"
+                )
             lines.append("")
 
         return "\n".join(lines)
+
     def _format_connections(self) -> str:
         """Format program-graph connections section (graph edges).
 
@@ -299,8 +336,16 @@ class _StructuralSectionsMixin:
             lines.append("|----|----|------|")
 
             for edge in edges:
-                source_name = self.graph.nodes[edge.source_id].name if edge.source_id in self.graph.nodes else edge.source_id
-                target_name = self.graph.nodes[edge.target_id].name if edge.target_id in self.graph.nodes else edge.target_id
+                source_name = (
+                    self.graph.nodes[edge.source_id].name
+                    if edge.source_id in self.graph.nodes
+                    else edge.source_id
+                )
+                target_name = (
+                    self.graph.nodes[edge.target_id].name
+                    if edge.target_id in self.graph.nodes
+                    else edge.target_id
+                )
 
                 # Extract evidence from edge metadata (file and line information)
                 evidence = "none"
@@ -332,12 +377,15 @@ class _StructuralSectionsMixin:
                 trigger = conn.trigger or "none"
                 condition = conn.condition or "none"
                 success = f"{conn.success_rate:.2%}" if conn.success_rate else "unknown"
-                lines.append(f"| {conn.source_stage_id} → {conn.target_stage_id} | {trigger} | {condition} | {success} |")
+                lines.append(
+                    f"| {conn.source_stage_id} → {conn.target_stage_id} | {trigger} | {condition} | {success} |"
+                )
             lines.append("")
 
         lines.append("")
 
         return "\n".join(lines)
+
     def _format_factors(self) -> str:
         """Format factorization section.
 
@@ -348,7 +396,6 @@ class _StructuralSectionsMixin:
         """
         lines = ["## Factors"]
         lines.append("")
-
 
         # Option 1: Use state space variables if present
         if self.state_space.variables:
@@ -372,7 +419,9 @@ class _StructuralSectionsMixin:
 
             # Independence structure hint
             if len(vars_by_factor) > 1:
-                lines.append("**Independence Structure**: Variables in different factors are assumed conditionally independent given parent factors.")
+                lines.append(
+                    "**Independence Structure**: Variables in different factors are assumed conditionally independent given parent factors."
+                )
                 lines.append("")
 
         else:
@@ -399,15 +448,21 @@ class _StructuralSectionsMixin:
                     members = components_by_class[comp_name]
                     member_str = ", ".join(members[:3])
                     if len(members) > 3:
-                        member_str += f", +{len(members)-3} more"
-                    independence = "Assumed independent from other factors" if len(components_by_class) > 1 else "Singleton"
+                        member_str += f", +{len(members) - 3} more"
+                    independence = (
+                        "Assumed independent from other factors"
+                        if len(components_by_class) > 1
+                        else "Singleton"
+                    )
                     lines.append(f"| {comp_name} | {member_str} | {independence} |")
                 lines.append("")
 
                 lines.append("**Factorization Notes**:")
                 lines.append(f"- Total factors (components): {len(components_by_class)}")
                 lines.append(f"- Total nodes: {len(self.graph.nodes)}")
-                lines.append("- Each factor represents a cohesive unit (class/module) with internal dependencies")
+                lines.append(
+                    "- Each factor represents a cohesive unit (class/module) with internal dependencies"
+                )
                 lines.append("- Cross-factor edges represent component coupling")
                 lines.append("")
 

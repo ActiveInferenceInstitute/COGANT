@@ -88,9 +88,7 @@ class TypeInferencer:
 
         return self.infer_types_from_source(source, file_path)
 
-    def infer_types_from_source(
-        self, source: str, file_path: Path
-    ) -> list[TypeInfo]:
+    def infer_types_from_source(self, source: str, file_path: Path) -> list[TypeInfo]:
         """Infer types from Python source code.
 
         Args:
@@ -110,9 +108,7 @@ class TypeInferencer:
             return []
 
         try:
-            symbol_table = self.symbol_extractor.extract_from_source(
-                source, file_path
-            )
+            symbol_table = self.symbol_extractor.extract_from_source(source, file_path)
         except (SyntaxError, ValueError) as e:
             logger.debug(f"Symbol extraction failed for {file_path}: {e}")
             symbol_table = None
@@ -122,9 +118,7 @@ class TypeInferencer:
         # Walk each top-level definition.
         for node in tree.body:
             if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-                type_infos.extend(
-                    self._infer_from_function(node, scope="module")
-                )
+                type_infos.extend(self._infer_from_function(node, scope="module"))
             elif isinstance(node, ast.ClassDef):
                 type_infos.extend(self._infer_from_class(node))
             elif isinstance(node, ast.Assign):
@@ -153,14 +147,10 @@ class TypeInferencer:
         """Return TypeInfos for a function/method: return type and params."""
         results: list[TypeInfo] = []
 
-        qualified = (
-            node.name if scope == "module" else f"{scope}.{node.name}"
-        )
+        qualified = node.name if scope == "module" else f"{scope}.{node.name}"
 
         # Return annotation
-        return_annotation = (
-            self._annotation_to_str(node.returns) if node.returns else None
-        )
+        return_annotation = self._annotation_to_str(node.returns) if node.returns else None
         inferred_return = return_annotation
         confidence = 1.0 if return_annotation else 0.0
 
@@ -233,16 +223,12 @@ class TypeInferencer:
                     info.metadata["class"] = node.name
                     results.append(info)
             elif isinstance(item, ast.Assign):
-                results.extend(
-                    self._infer_from_assign(item, scope=node.name, kind="attribute")
-                )
+                results.extend(self._infer_from_assign(item, scope=node.name, kind="attribute"))
 
         # Method return types and parameters
         for item in node.body:
             if isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef):
-                results.extend(
-                    self._infer_from_function(item, scope=node.name)
-                )
+                results.extend(self._infer_from_function(item, scope=node.name))
                 if item.name == "__init__":
                     results.extend(self._infer_init_attributes(item, node.name))
 
@@ -334,9 +320,7 @@ class TypeInferencer:
                 )
         return results
 
-    def _infer_from_annassign(
-        self, node: ast.AnnAssign, scope: str
-    ) -> TypeInfo | None:
+    def _infer_from_annassign(self, node: ast.AnnAssign, scope: str) -> TypeInfo | None:
         """Handle ``x: int`` or ``x: int = 5`` at module or class scope."""
         if not isinstance(node.target, ast.Name):
             return None
@@ -359,13 +343,9 @@ class TypeInferencer:
     # Deprecated single-item helpers retained for backwards compatibility
     # ------------------------------------------------------------------
 
-    def _infer_function_return_type(
-        self, func: FunctionDef, symbol_table: Any
-    ) -> TypeInfo | None:
+    def _infer_function_return_type(self, func: FunctionDef, symbol_table: Any) -> TypeInfo | None:
         """Infer return type of a function from a parser FunctionDef."""
-        symbol = next(
-            (s for s in symbol_table.symbols if s.name == func.name), None
-        )
+        symbol = next((s for s in symbol_table.symbols if s.name == func.name), None)
         if symbol is None:
             return None
 
@@ -373,9 +353,7 @@ class TypeInferencer:
         inferred_type = annotation
         confidence = 1.0 if annotation else 0.0
 
-        if inferred_type is None and any(
-            d == "property" for d in func.decorators
-        ):
+        if inferred_type is None and any(d == "property" for d in func.decorators):
             inferred_type = "Any"
             confidence = 0.6
 
@@ -392,9 +370,7 @@ class TypeInferencer:
             metadata={"is_async": func.is_async},
         )
 
-    def _infer_variable_type(
-        self, assign: AssignmentDef, symbol_table: Any
-    ) -> TypeInfo | None:
+    def _infer_variable_type(self, assign: AssignmentDef, symbol_table: Any) -> TypeInfo | None:
         """Infer type of a variable from a parser AssignmentDef."""
         symbol = next(
             (s for s in symbol_table.symbols if s.name == assign.target_name),
@@ -453,14 +429,9 @@ class TypeInferencer:
         except (AttributeError, ValueError):
             return None
 
-    def _infer_return_from_body(
-        self, func: ast.FunctionDef | ast.AsyncFunctionDef
-    ) -> str | None:
+    def _infer_return_from_body(self, func: ast.FunctionDef | ast.AsyncFunctionDef) -> str | None:
         """Very simple return-type heuristic."""
-        if any(
-            isinstance(dec, ast.Name) and dec.id == "property"
-            for dec in func.decorator_list
-        ):
+        if any(isinstance(dec, ast.Name) and dec.id == "property" for dec in func.decorator_list):
             return "Any"
         # Detect yield → Iterator
         for sub in ast.walk(func):
@@ -497,8 +468,16 @@ class TypeInferencer:
         if isinstance(node, ast.Call):
             callee = self._call_name(node.func)
             if callee in {
-                "list", "dict", "set", "tuple", "str",
-                "int", "float", "bool", "bytes", "frozenset",
+                "list",
+                "dict",
+                "set",
+                "tuple",
+                "str",
+                "int",
+                "float",
+                "bool",
+                "bytes",
+                "frozenset",
             }:
                 return callee
         return None
@@ -535,23 +514,25 @@ class TypeInferencer:
             return "tuple"
         if value.startswith('"') or value.startswith("'"):
             return "str"
-        if value.isdigit() or (
-            len(value) > 1 and value[0] == "-" and value[1:].isdigit()
-        ):
+        if value.isdigit() or (len(value) > 1 and value[0] == "-" and value[1:].isdigit()):
             return "int"
         if "." in value and all(c.isdigit() or c == "." or c == "-" for c in value):
             return "float"
         for ctor in (
-            "dict(", "list(", "set(", "tuple(", "str(",
-            "int(", "float(", "bool(",
+            "dict(",
+            "list(",
+            "set(",
+            "tuple(",
+            "str(",
+            "int(",
+            "float(",
+            "bool(",
         ):
             if value.startswith(ctor):
                 return ctor[:-1]
         return None
 
-    def _resolve_symbol_ids(
-        self, infos: list[TypeInfo], symbol_table: Any
-    ) -> None:
+    def _resolve_symbol_ids(self, infos: list[TypeInfo], symbol_table: Any) -> None:
         """Populate ``symbol_id`` from the symbol table where possible."""
         by_name: dict[str, str] = {}
         for sym in symbol_table.symbols:

@@ -13,10 +13,8 @@ Covers:
 - static/dataflow.py: DataFlowAnalyzer additional paths
 """
 
-import json
 import sys
 import time
-from pathlib import Path
 
 import pytest
 
@@ -33,7 +31,6 @@ def real_server_app():
     removes the stub before each server-internal test and restores sys.modules
     afterward so the real app.py is loaded instead.
     """
-    import importlib
     import types
 
     # Remove the stub (or the cached real module) so we get a fresh import.
@@ -55,16 +52,22 @@ def real_server_app():
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
     cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass", path="mymodule.py")
     func = builder.add_node(
-        NodeKind.FUNCTION, "my_func", "mymodule.my_func",
-        path="mymodule.py", source_range={"start_line": 1, "end_line": 10}
+        NodeKind.FUNCTION,
+        "my_func",
+        "mymodule.my_func",
+        path="mymodule.py",
+        source_range={"start_line": 1, "end_line": 10},
     )
     builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
     builder.add_edge(cls.id, func.id, EdgeKind.CONTAINS)
@@ -75,6 +78,7 @@ def _make_graph():
 # server/app.py — _MetricsStore
 # ---------------------------------------------------------------------------
 
+
 class TestMetricsStore:
     """Test _MetricsStore pure-Python internals."""
 
@@ -84,12 +88,14 @@ class TestMetricsStore:
 
     def test_record_basic(self):
         from cogant.server.app import _MetricsStore
+
         store = _MetricsStore()
         store.record("GET", "/health", 200, 0.001)
         assert store.requests[("GET", "/health", 200)] == 1
 
     def test_record_multiple_requests(self):
         from cogant.server.app import _MetricsStore
+
         store = _MetricsStore()
         for _ in range(5):
             store.record("POST", "/analyze", 200, 0.5)
@@ -97,18 +103,21 @@ class TestMetricsStore:
 
     def test_record_5xx_increments_errors(self):
         from cogant.server.app import _MetricsStore
+
         store = _MetricsStore()
         store.record("POST", "/analyze", 500, 0.1)
         assert store.errors[("POST", "/analyze")] == 1
 
     def test_record_2xx_does_not_increment_errors(self):
         from cogant.server.app import _MetricsStore
+
         store = _MetricsStore()
         store.record("GET", "/health", 200, 0.001)
         assert store.errors.get(("GET", "/health"), 0) == 0
 
     def test_record_rate_limited(self):
         from cogant.server.app import _MetricsStore
+
         store = _MetricsStore()
         store.record_rate_limited("POST", "/analyze")
         store.record_rate_limited("POST", "/analyze")
@@ -116,6 +125,7 @@ class TestMetricsStore:
 
     def test_render_prometheus_empty(self):
         from cogant.server.app import _MetricsStore
+
         store = _MetricsStore()
         output = store.render_prometheus()
         assert isinstance(output, str)
@@ -125,6 +135,7 @@ class TestMetricsStore:
 
     def test_render_prometheus_with_data(self):
         from cogant.server.app import _MetricsStore
+
         store = _MetricsStore()
         store.record("GET", "/health", 200, 0.002)
         store.record("POST", "/analyze", 200, 1.5)
@@ -140,6 +151,7 @@ class TestMetricsStore:
 
     def test_duration_tracking(self):
         from cogant.server.app import _MetricsStore
+
         store = _MetricsStore()
         store.record("GET", "/metrics", 200, 0.010)
         store.record("GET", "/metrics", 200, 0.020)
@@ -151,6 +163,7 @@ class TestMetricsStore:
 # server/app.py — _RateLimiter
 # ---------------------------------------------------------------------------
 
+
 class TestRateLimiter:
     """Test _RateLimiter token bucket."""
 
@@ -160,6 +173,7 @@ class TestRateLimiter:
 
     def test_rate_limiter_allows_initial_requests(self):
         from cogant.server.app import _RateLimiter
+
         limiter = _RateLimiter(max_requests=5, window_s=60)
         # First 5 requests should be allowed
         for _ in range(5):
@@ -167,6 +181,7 @@ class TestRateLimiter:
 
     def test_rate_limiter_blocks_over_limit(self):
         from cogant.server.app import _RateLimiter
+
         limiter = _RateLimiter(max_requests=3, window_s=60)
         ip = "10.0.0.1"
         for _ in range(3):
@@ -176,6 +191,7 @@ class TestRateLimiter:
 
     def test_rate_limiter_different_ips_independent(self):
         from cogant.server.app import _RateLimiter
+
         limiter = _RateLimiter(max_requests=2, window_s=60)
         assert limiter.check("1.1.1.1") is True
         assert limiter.check("1.1.1.1") is True
@@ -185,6 +201,7 @@ class TestRateLimiter:
 
     def test_rate_limiter_cleanup_old_entries(self):
         from cogant.server.app import _RateLimiter
+
         limiter = _RateLimiter(max_requests=3, window_s=1)
         ip = "172.16.0.1"
         for _ in range(3):
@@ -198,42 +215,50 @@ class TestRateLimiter:
 # statespace/variables.py
 # ---------------------------------------------------------------------------
 
+
 class TestStateVariables:
     """Test StateVariable and related classes."""
 
     def test_confidence_level_values(self):
         from cogant.statespace.variables import ConfidenceLevel
+
         assert ConfidenceLevel.HIGH is not None
         assert ConfidenceLevel.MEDIUM is not None
         assert ConfidenceLevel.LOW is not None
 
     def test_map_confidence_score_high(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         level = map_confidence_score(0.9)
         assert level == ConfidenceLevel.HIGH
 
     def test_map_confidence_score_medium(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         level = map_confidence_score(0.6)
         assert level == ConfidenceLevel.MEDIUM
 
     def test_map_confidence_score_low(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         level = map_confidence_score(0.45)
         assert level == ConfidenceLevel.LOW
 
     def test_map_confidence_score_uncertain(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         level = map_confidence_score(0.2)
         assert level == ConfidenceLevel.UNCERTAIN
 
     def test_map_confidence_score_definite(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         level = map_confidence_score(0.99)
         assert level == ConfidenceLevel.DEFINITE
 
     def test_state_variable_creation(self):
-        from cogant.statespace.variables import StateVariable, StateVariableType, ConfidenceLevel
+        from cogant.statespace.variables import StateVariable, StateVariableType
+
         var = StateVariable(
             id="var_001",
             name="my_var",
@@ -247,15 +272,16 @@ class TestStateVariables:
 
     def test_state_variable_extractor(self):
         from cogant.statespace.variables import StateVariableExtractor
+
         graph = _make_graph()
         extractor = StateVariableExtractor(graph)
         result = extractor.extract({})
         assert isinstance(result, dict)
 
     def test_state_variable_extractor_variables_for_functions(self):
-        from cogant.statespace.variables import StateVariableExtractor
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
+        from cogant.statespace.variables import StateVariableExtractor
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         builder.add_node(NodeKind.VARIABLE, "x", "mod.x", metadata={"type_hint": "int"})
@@ -270,17 +296,20 @@ class TestStateVariables:
 # statespace/temporal.py
 # ---------------------------------------------------------------------------
 
+
 class TestTemporalAnalyzer:
     """Test TemporalAnalyzer."""
 
     def test_temporal_analyzer_init(self):
         from cogant.statespace.temporal import TemporalAnalyzer
+
         graph = _make_graph()
         analyzer = TemporalAnalyzer(graph)
         assert analyzer is not None
 
     def test_detect_regime(self):
         from cogant.statespace.temporal import TemporalAnalyzer, TimeRegime
+
         graph = _make_graph()
         analyzer = TemporalAnalyzer(graph)
         if hasattr(analyzer, "detect_regime"):
@@ -289,6 +318,7 @@ class TestTemporalAnalyzer:
 
     def test_analyze(self):
         from cogant.statespace.temporal import TemporalAnalyzer
+
         graph = _make_graph()
         analyzer = TemporalAnalyzer(graph)
         if hasattr(analyzer, "analyze"):
@@ -300,11 +330,13 @@ class TestTemporalAnalyzer:
 # statespace/compiler.py — StateSpaceCompiler deeper
 # ---------------------------------------------------------------------------
 
+
 class TestStateSpaceCompilerDeep:
     """Deeper StateSpaceCompiler coverage."""
 
     def test_compile_returns_state_space_model(self):
         from cogant.statespace.compiler import StateSpaceCompiler, StateSpaceModel
+
         graph = _make_graph()
         compiler = StateSpaceCompiler(graph, "test")
         ssm = compiler.compile({})
@@ -312,6 +344,7 @@ class TestStateSpaceCompilerDeep:
 
     def test_state_space_model_id(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph = _make_graph()
         compiler = StateSpaceCompiler(graph, "my_schema")
         ssm = compiler.compile({})
@@ -320,6 +353,7 @@ class TestStateSpaceCompilerDeep:
 
     def test_state_space_model_variables_dict(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph = _make_graph()
         compiler = StateSpaceCompiler(graph, "test")
         ssm = compiler.compile({})
@@ -327,6 +361,7 @@ class TestStateSpaceCompilerDeep:
 
     def test_state_space_model_observations_dict(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph = _make_graph()
         compiler = StateSpaceCompiler(graph, "test")
         ssm = compiler.compile({})
@@ -334,22 +369,23 @@ class TestStateSpaceCompilerDeep:
 
     def test_state_space_model_actions_dict(self):
         from cogant.statespace.compiler import StateSpaceCompiler
+
         graph = _make_graph()
         compiler = StateSpaceCompiler(graph, "test")
         ssm = compiler.compile({})
         assert isinstance(ssm.actions, dict)
 
     def test_compile_with_complex_graph(self):
-        from cogant.statespace.compiler import StateSpaceCompiler
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+        from cogant.statespace.compiler import StateSpaceCompiler
 
         builder = ProgramGraphBuilder(repo_uri="file:///complex")
         mod = builder.add_node(NodeKind.MODULE, "app", "app")
         func1 = builder.add_node(NodeKind.FUNCTION, "process", "app.process")
         func2 = builder.add_node(NodeKind.FUNCTION, "validate", "app.validate")
         endpoint = builder.add_node(NodeKind.ENDPOINT, "/api/process", "app.endpoint")
-        event = builder.add_node(NodeKind.EVENT, "ProcessComplete", "app.event")
+        builder.add_node(NodeKind.EVENT, "ProcessComplete", "app.event")
         var = builder.add_node(NodeKind.VARIABLE, "state", "app.state")
         builder.add_edge(mod.id, func1.id, EdgeKind.CONTAINS)
         builder.add_edge(mod.id, func2.id, EdgeKind.CONTAINS)
@@ -367,11 +403,13 @@ class TestStateSpaceCompilerDeep:
 # static/parser.py — PythonASTParser additional coverage
 # ---------------------------------------------------------------------------
 
+
 class TestPythonASTParserExtra:
     """Additional PythonASTParser coverage."""
 
     def test_parse_string_with_class(self, tmp_path):
         from cogant.static.parser import PythonASTParser
+
         code = '''
 class Calculator:
     """A simple calculator."""
@@ -396,20 +434,22 @@ class Calculator:
 
     def test_parse_string_with_imports(self, tmp_path):
         from cogant.static.parser import PythonASTParser
-        code = '''
+
+        code = """
 import os
 import sys
 from pathlib import Path
 from typing import Any, Optional
 from collections import defaultdict
-'''
+"""
         parser = PythonASTParser()
         result = parser.parse_string(code, tmp_path / "imports.py")
         assert result is not None
 
     def test_parse_string_with_decorators(self, tmp_path):
         from cogant.static.parser import PythonASTParser
-        code = '''
+
+        code = """
 import functools
 
 def decorator(func):
@@ -434,14 +474,15 @@ class MyClass:
     @property
     def value(self) -> int:
         return 42
-'''
+"""
         parser = PythonASTParser()
         result = parser.parse_string(code, tmp_path / "decorators.py")
         assert result is not None
 
     def test_parse_string_with_async(self, tmp_path):
         from cogant.static.parser import PythonASTParser
-        code = '''
+
+        code = """
 import asyncio
 
 async def fetch_data(url: str) -> dict:
@@ -451,7 +492,7 @@ async def fetch_data(url: str) -> dict:
 async def process():
     data = await fetch_data("https://example.com")
     return data
-'''
+"""
         parser = PythonASTParser()
         result = parser.parse_string(code, tmp_path / "async.py")
         assert result is not None
@@ -461,12 +502,13 @@ async def process():
 
     def test_parse_string_with_assignments(self, tmp_path):
         from cogant.static.parser import PythonASTParser
-        code = '''
+
+        code = """
 CONSTANT: int = 42
 PI: float = 3.14159
 NAME: str = "cogant"
 ITEMS: list = [1, 2, 3]
-'''
+"""
         parser = PythonASTParser()
         result = parser.parse_string(code, tmp_path / "consts.py")
         assert result is not None
@@ -478,24 +520,27 @@ ITEMS: list = [1, 2, 3]
 # static/dataflow.py — DataFlowAnalyzer additional paths
 # ---------------------------------------------------------------------------
 
+
 class TestDataFlowAnalyzerExtra:
     """Additional DataFlowAnalyzer coverage."""
 
     def test_analyze_source_with_writes(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
-        code = '''
+
+        code = """
 def process(data: list) -> None:
     result = [x * 2 for x in data]
     output = sum(result)
     return output
-'''
+"""
         analyzer = DataFlowAnalyzer(repo_root=tmp_path)
         result = analyzer.analyze_source(code, tmp_path / "process.py")
         assert isinstance(result, list)
 
     def test_analyze_source_with_class_attrs(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
-        code = '''
+
+        code = """
 class State:
     def __init__(self):
         self.x = 0
@@ -505,18 +550,19 @@ class State:
         self.x += dx
         self.y += dy
         return self.x, self.y
-'''
+"""
         analyzer = DataFlowAnalyzer(repo_root=tmp_path)
         result = analyzer.analyze_source(code, tmp_path / "state.py")
         assert isinstance(result, list)
 
     def test_analyze_file(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
-        code = '''
+
+        code = """
 x = 1
 y = x + 2
 z = y * 3
-'''
+"""
         py_file = tmp_path / "simple.py"
         py_file.write_text(code)
         analyzer = DataFlowAnalyzer(repo_root=tmp_path)
@@ -525,18 +571,20 @@ z = y * 3
 
     def test_analyze_file_missing(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer(repo_root=tmp_path)
         result = analyzer.analyze_file(tmp_path / "nonexistent.py")
         assert isinstance(result, list)
 
     def test_data_flow_edge_attributes(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
-        code = '''
+
+        code = """
 def transfer(source, target):
     data = source.read()
     target.write(data)
     return data
-'''
+"""
         analyzer = DataFlowAnalyzer(repo_root=tmp_path)
         edges = analyzer.analyze_source(code, tmp_path / "transfer.py")
         for edge in edges:
@@ -548,6 +596,7 @@ def transfer(source, target):
 # ---------------------------------------------------------------------------
 # reverse/synthesizer.py — more paths
 # ---------------------------------------------------------------------------
+
 
 class TestReverseSynthesizerExtra:
     """Additional reverse synthesizer coverage."""
@@ -581,9 +630,9 @@ actions: [a0]
         return gnn_path
 
     def test_synthesize_package_basic(self, tmp_path):
-        from cogant.reverse.synthesizer import synthesize_package
-        from cogant.reverse.planner import plan_package
         from cogant.reverse.parser import parse_gnn
+        from cogant.reverse.planner import plan_package
+        from cogant.reverse.synthesizer import synthesize_package
 
         gnn_path = self._make_gnn_file(tmp_path)
         try:
@@ -596,8 +645,8 @@ actions: [a0]
             pass  # May fail with empty/simple model
 
     def test_plan_package_creates_plan(self, tmp_path):
-        from cogant.reverse.planner import plan_package
         from cogant.reverse.parser import parse_gnn
+        from cogant.reverse.planner import plan_package
 
         gnn_path = self._make_gnn_file(tmp_path)
         try:
@@ -614,15 +663,19 @@ actions: [a0]
 # gnn/formatter modules — base GNNMarkdownFormatter
 # ---------------------------------------------------------------------------
 
+
 class TestGNNFormatterBase:
     """Test GNNMarkdownFormatter base formatting."""
 
     def test_format_basic(self):
         from cogant.gnn.formatter import GNNMarkdownFormatter
+
         graph = _make_graph()
         from cogant.statespace.compiler import StateSpaceCompiler
+
         ssm = StateSpaceCompiler(graph, "test").compile({})
         from cogant.process.extractor import ProcessExtractor
+
         process = ProcessExtractor(graph, "test").extract()
         formatter = GNNMarkdownFormatter(graph, ssm, process, {})
         result = formatter.format()
@@ -631,10 +684,13 @@ class TestGNNFormatterBase:
 
     def test_format_contains_sections(self):
         from cogant.gnn.formatter import GNNMarkdownFormatter
+
         graph = _make_graph()
         from cogant.statespace.compiler import StateSpaceCompiler
+
         ssm = StateSpaceCompiler(graph, "test").compile({})
         from cogant.process.extractor import ProcessExtractor
+
         process = ProcessExtractor(graph, "test").extract()
         formatter = GNNMarkdownFormatter(graph, ssm, process, {})
         result = formatter.format()

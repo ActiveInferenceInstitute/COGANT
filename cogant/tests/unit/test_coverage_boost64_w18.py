@@ -21,7 +21,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -30,14 +29,17 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
     n2 = builder.add_node(NodeKind.FUNCTION, "fn", "mod.fn", path="mod.py")
@@ -46,7 +48,8 @@ def _make_graph_with_nodes():
 
 
 def _make_semantic_mapping(label="obs_mod"):
-    from cogant.schemas.semantic import SemanticMapping, MappingKind
+    from cogant.schemas.semantic import MappingKind, SemanticMapping
+
     return SemanticMapping(
         id=f"map_{label}",
         kind=MappingKind.OBSERVATION,
@@ -60,9 +63,11 @@ def _make_semantic_mapping(label="obs_mod"):
 # translate/confidence.py — ConfidenceModel
 # ---------------------------------------------------------------------------
 
+
 class TestConfidenceModel:
     def _make_model(self):
         from cogant.translate.confidence import ConfidenceModel
+
         return ConfidenceModel()
 
     def test_init(self):
@@ -87,6 +92,7 @@ class TestConfidenceModel:
 
     def test_determine_confidence_tier(self):
         from cogant.schemas.semantic import ConfidenceTier
+
         model = self._make_model()
         mapping = _make_semantic_mapping()
         tier = model.determine_confidence_tier(mapping, score=0.8)
@@ -155,9 +161,11 @@ class TestConfidenceModel:
 # translate/engine.py — TranslationEngine
 # ---------------------------------------------------------------------------
 
+
 class TestTranslationEngine:
     def _make_engine(self):
         from cogant.translate.engine import TranslationEngine
+
         return TranslationEngine()
 
     def test_init(self):
@@ -195,11 +203,13 @@ class TestTranslationEngine:
     def test_get_mappings_by_kind_empty(self):
         engine = self._make_engine()
         from cogant.schemas.semantic import MappingKind
+
         result = engine.get_mappings_by_kind(MappingKind.OBSERVATION)
         assert isinstance(result, list)
 
     def test_get_mappings_by_confidence_empty(self):
         from cogant.schemas.semantic import ConfidenceTier
+
         engine = self._make_engine()
         result = engine.get_mappings_by_confidence(ConfidenceTier.STATIC_ONLY)
         assert isinstance(result, list)
@@ -228,9 +238,11 @@ class TestTranslationEngine:
 # translate/review.py — ReviewManager
 # ---------------------------------------------------------------------------
 
+
 class TestReviewManager:
     def _make_manager(self):
         from cogant.translate.review import ReviewManager
+
         return ReviewManager()
 
     def test_init(self):
@@ -310,21 +322,25 @@ class TestReviewManager:
 # ingest/files.py — FileEnumerator and FileInfo
 # ---------------------------------------------------------------------------
 
+
 class TestFileEnumerator:
     def test_init(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         enumerator = FileEnumerator(tmp_path)
         assert enumerator is not None
 
     def test_enumerate_empty_dir(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         enumerator = FileEnumerator(tmp_path)
         files = enumerator.enumerate()
         assert isinstance(files, list)
         assert files == []
 
     def test_enumerate_with_python_file(self, tmp_path):
-        from cogant.ingest.files import FileEnumerator, FileInfo
+        from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "mod.py").write_text("def f(): pass\n")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         files = enumerator.enumerate()
@@ -333,6 +349,7 @@ class TestFileEnumerator:
 
     def test_enumerate_no_test_files(self, tmp_path):
         from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "main.py").write_text("x = 1\n")
         (tmp_path / "test_main.py").write_text("def test_x(): pass\n")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
@@ -341,7 +358,8 @@ class TestFileEnumerator:
         assert not any("test_" in str(n) for n in names)
 
     def test_enumerate_file_info_fields(self, tmp_path):
-        from cogant.ingest.files import FileEnumerator, FileInfo
+        from cogant.ingest.files import FileEnumerator
+
         (tmp_path / "src.py").write_text("x = 1\n")
         enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
         files = enumerator.enumerate()
@@ -355,6 +373,7 @@ class TestFileEnumerator:
 class TestFileInfo:
     def test_init(self, tmp_path):
         from cogant.ingest.files import FileInfo
+
         fi = FileInfo(
             path=tmp_path / "mod.py",
             relative_path="mod.py",
@@ -372,15 +391,18 @@ class TestFileInfo:
 # ingest/language_detect.py — LanguageDetector
 # ---------------------------------------------------------------------------
 
+
 class TestLanguageDetector:
     def test_get_supported_languages(self):
         from cogant.ingest.language_detect import LanguageDetector
+
         langs = LanguageDetector.get_supported_languages()
         assert isinstance(langs, list)
         assert len(langs) > 0
 
     def test_detect_language_python(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         p = tmp_path / "mod.py"
         p.write_text("x = 1\n")
         lang = LanguageDetector.detect_language(p)
@@ -388,6 +410,7 @@ class TestLanguageDetector:
 
     def test_detect_language_unknown_ext(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         p = tmp_path / "file.xyz123"
         p.write_text("content\n")
         lang = LanguageDetector.detect_language(p)
@@ -395,11 +418,13 @@ class TestLanguageDetector:
 
     def test_detect_repo_languages_empty(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         result = LanguageDetector.detect_repo_languages(tmp_path)
         assert isinstance(result, dict)
 
     def test_detect_repo_languages_with_py(self, tmp_path):
         from cogant.ingest.language_detect import LanguageDetector
+
         (tmp_path / "a.py").write_text("x = 1\n")
         (tmp_path / "b.py").write_text("y = 2\n")
         result = LanguageDetector.detect_repo_languages(tmp_path)
@@ -410,14 +435,17 @@ class TestLanguageDetector:
 # ingest/manifest.py — ManifestParser
 # ---------------------------------------------------------------------------
 
+
 class TestManifestParser:
     def test_init(self):
         from cogant.ingest.manifest import ManifestParser
+
         parser = ManifestParser()
         assert parser is not None
 
     def test_parse_requirements_txt(self, tmp_path):
-        from cogant.ingest.manifest import ManifestParser, Dependency
+        from cogant.ingest.manifest import ManifestParser
+
         req = tmp_path / "requirements.txt"
         req.write_text("requests==2.28.0\nnumpy>=1.21.0\npytest\n")
         parser = ManifestParser()
@@ -427,6 +455,7 @@ class TestManifestParser:
 
     def test_parse_pyproject_toml(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text("""
 [tool.poetry]
@@ -444,6 +473,7 @@ requests = "^2.28"
 
     def test_parse_unknown_file_raises(self, tmp_path):
         from cogant.ingest.manifest import ManifestParser
+
         unknown = tmp_path / "unknown.xyz"
         unknown.write_text("data\n")
         parser = ManifestParser()
@@ -454,6 +484,7 @@ requests = "^2.28"
 class TestDependency:
     def test_init(self):
         from cogant.ingest.manifest import Dependency
+
         dep = Dependency(name="requests", version="2.28.0", is_dev=False, is_local=False)
         assert dep.name == "requests"
         assert dep.version == "2.28.0"
@@ -465,15 +496,18 @@ class TestDependency:
 #                         format_duration
 # ---------------------------------------------------------------------------
 
+
 class TestRepoSniff:
     def test_count_source_files_empty(self, tmp_path):
         from cogant.ingest.repo_sniff import count_source_files
+
         count = count_source_files(tmp_path)
         assert isinstance(count, int)
         assert count == 0
 
     def test_count_source_files_with_py(self, tmp_path):
         from cogant.ingest.repo_sniff import count_source_files
+
         (tmp_path / "a.py").write_text("x = 1\n")
         (tmp_path / "b.py").write_text("y = 2\n")
         count = count_source_files(tmp_path)
@@ -481,28 +515,33 @@ class TestRepoSniff:
 
     def test_estimate_pipeline_seconds_zero(self):
         from cogant.ingest.repo_sniff import estimate_pipeline_seconds
+
         result = estimate_pipeline_seconds(0)
         assert isinstance(result, float)
         assert result >= 0.0
 
     def test_estimate_pipeline_seconds_large(self):
         from cogant.ingest.repo_sniff import estimate_pipeline_seconds
+
         result = estimate_pipeline_seconds(10000)
         assert isinstance(result, float)
         assert result > 0.0
 
     def test_format_duration_seconds(self):
         from cogant.ingest.repo_sniff import format_duration
+
         result = format_duration(45.0)
         assert isinstance(result, str)
         assert len(result) > 0
 
     def test_format_duration_minutes(self):
         from cogant.ingest.repo_sniff import format_duration
+
         result = format_duration(120.0)
         assert isinstance(result, str)
 
     def test_format_duration_zero(self):
         from cogant.ingest.repo_sniff import format_duration
+
         result = format_duration(0.0)
         assert isinstance(result, str)

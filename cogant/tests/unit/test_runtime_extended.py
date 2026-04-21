@@ -9,16 +9,15 @@ from __future__ import annotations
 
 import math
 import types
-from pathlib import Path
 
 from cogant.runtime.config import AgentConfig
-from cogant.runtime.loop import AgentRuntime, AgentStep, run_n_steps
+from cogant.runtime.loop import AgentRuntime
 from cogant.runtime.metrics import free_energy, kl_divergence
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _identity_system() -> types.SimpleNamespace:
     """2-state system with identity transitions (fixed point)."""
@@ -31,8 +30,7 @@ def _identity_system() -> types.SimpleNamespace:
         C=[0.0, 0.0],
         D=[0.5, 0.5],
         likelihood=lambda s: [
-            sum(a * x for a, x in zip(row, s))
-            for row in [[1.0, 0.0], [0.0, 1.0]]
+            sum(a * x for a, x in zip(row, s, strict=False)) for row in [[1.0, 0.0], [0.0, 1.0]]
         ],
         transition=lambda s, action=0: list(s),
         preference_score=lambda o: 0.0,
@@ -50,11 +48,10 @@ def _biased_system() -> types.SimpleNamespace:
         C=[1.0, -1.0],
         D=[0.5, 0.5],
         likelihood=lambda s: [
-            sum(a * x for a, x in zip(row, s))
-            for row in [[0.9, 0.1], [0.1, 0.9]]
+            sum(a * x for a, x in zip(row, s, strict=False)) for row in [[0.9, 0.1], [0.1, 0.9]]
         ],
         transition=lambda s, action=0: _transition_2x2(s, action),
-        preference_score=lambda o: sum(c * x for c, x in zip([1.0, -1.0], o)),
+        preference_score=lambda o: sum(c * x for c, x in zip([1.0, -1.0], o, strict=False)),
     )
 
 
@@ -174,8 +171,8 @@ def test_agent_runtime_reproducible_with_same_seed() -> None:
 
     states1 = [s.state_dist for s in steps1]
     states2 = [s.state_dist for s in steps2]
-    for s1, s2 in zip(states1, states2):
-        for a, b in zip(s1, s2):
+    for s1, s2 in zip(states1, states2, strict=False):
+        for a, b in zip(s1, s2, strict=False):
             assert abs(a - b) < 1e-12
 
 
@@ -195,9 +192,7 @@ def test_free_energy_lower_for_better_prediction() -> None:
 
     # Good predictor has higher P(obs=0|state) when state is biased to s0
     # -> lower surprise -> lower FE
-    assert fe_good < fe_bad, (
-        f"FE(good A)={fe_good} should be < FE(bad A)={fe_bad}"
-    )
+    assert fe_good < fe_bad, f"FE(good A)={fe_good} should be < FE(bad A)={fe_bad}"
 
 
 def test_convergence_metric_kl_non_negative() -> None:
@@ -229,22 +224,16 @@ def test_runtime_with_zoo_full_pomdp() -> None:
     construct the ReverseGNNModel directly using the InitialParameterization
     values from the zoo example.
     """
-    from cogant.reverse.parser import ReverseGNNModel
     from cogant.reverse.callable import MatrixFunctions
+    from cogant.reverse.parser import ReverseGNNModel
 
     # Values from zoo/12_full_pomdp/model.gnn.md InitialParameterization
     n = 5
     accuracy = 0.8
     off_diag = (1.0 - accuracy) / (n - 1)  # 0.05
-    A = [
-        [accuracy if i == j else off_diag for j in range(n)]
-        for i in range(n)
-    ]
+    A = [[accuracy if i == j else off_diag for j in range(n)] for i in range(n)]
     # Identity transition tensor (3 actions, all identity)
-    B = [
-        [[1.0 if i == j else 0.0 for _ in range(3)] for j in range(n)]
-        for i in range(n)
-    ]
+    B = [[[1.0 if i == j else 0.0 for _ in range(3)] for j in range(n)] for i in range(n)]
     C = [0.05, 0.05, 0.80, 0.05, 0.05]
     D = [0.2] * n
 
@@ -267,7 +256,10 @@ def test_runtime_with_zoo_full_pomdp() -> None:
     # but AgentRuntime expects public A, B, C, D attributes.
     # Wrap with a namespace that exposes both matrices and callables.
     ns = types.SimpleNamespace(
-        A=mf._A, B=mf._B, C=mf._C, D=mf._D,
+        A=mf._A,
+        B=mf._B,
+        C=mf._C,
+        D=mf._D,
         likelihood=mf.likelihood,
         transition=mf.transition,
         preference_score=mf.preference_score,

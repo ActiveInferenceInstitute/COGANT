@@ -26,7 +26,8 @@ promoted an action without a controlling policy.
 from __future__ import annotations
 
 import pytest
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from cogant.graph.builder import ProgramGraphBuilder
 from cogant.schemas.core import EdgeKind, NodeKind
@@ -287,6 +288,5 @@ def test_reachability_closure_is_monotone_in_edges(graph: ProgramGraph) -> None:
     any_source = set(list(clone.nodes.keys())[:1])
     closure = _reachable_from(clone, any_source, _INVOKE_EDGES)
     assert closure == any_source, (
-        f"closure on CALLS-free graph should equal the source set, "
-        f"got {closure} from {any_source}"
+        f"closure on CALLS-free graph should equal the source set, got {closure} from {any_source}"
     )

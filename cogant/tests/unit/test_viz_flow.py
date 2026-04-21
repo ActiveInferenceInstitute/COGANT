@@ -1,13 +1,18 @@
 """Unit tests for viz/flow.py — FlowDiagrammer (including generate_cfg real impl)."""
-import os, sys
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 import matplotlib
+
 matplotlib.use("Agg")
 import pytest
+
 from cogant.graph.builder import ProgramGraphBuilder
-from cogant.schemas.core import Node, NodeKind, EdgeKind
-from cogant.schemas.graph import ProgramGraph, GraphMetadata
-from cogant.viz.flow import FlowDiagrammer, ControlFlowGraph, CallGraph, DependencyGraph
+from cogant.schemas.core import EdgeKind, Node, NodeKind
+from cogant.schemas.graph import GraphMetadata, ProgramGraph
+from cogant.viz.flow import CallGraph, ControlFlowGraph, DependencyGraph, FlowDiagrammer
 
 
 def _small_graph() -> ProgramGraph:
@@ -34,6 +39,7 @@ def graph():
 
 
 # ── generate_cfg ──────────────────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 def test_generate_cfg_no_graph(fd):
@@ -72,6 +78,7 @@ def test_generate_cfg_to_dict(fd):
 
 # ── generate_call_graph ────────────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 def test_generate_call_graph(fd, graph):
     cg = fd.generate_call_graph(graph)
@@ -108,6 +115,7 @@ def test_call_graph_to_dict(fd, graph):
 
 # ── generate_dependency_graph ──────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 def test_generate_dependency_graph(fd, graph):
     dg = fd.generate_dependency_graph(graph)
@@ -122,6 +130,7 @@ def test_dependency_graph_to_dict(fd, graph):
 
 
 # ── to_mermaid_flowchart / sequence ────────────────────────────────────────────
+
 
 @pytest.mark.unit
 def test_to_mermaid_flowchart_no_graph_context(fd):
@@ -146,6 +155,7 @@ def test_to_mermaid_sequence_with_calls(fd, graph):
 
 
 # ── PNG / PDF exports ─────────────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 def test_to_png_with_cfg(fd, tmp_path):

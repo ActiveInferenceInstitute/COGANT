@@ -156,9 +156,6 @@ coverage.json.*
 benchmarks/results/*.json
 !benchmarks/perf_baseline.json
 
-# Transient R&D sweep artifacts (audit/validation runs — regenerate with _rnd/sweep scripts)
-_rnd/
-
 # Temporary files
 .tmp/
 *.tmp

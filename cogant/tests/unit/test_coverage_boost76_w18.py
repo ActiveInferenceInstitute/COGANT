@@ -14,7 +14,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -23,20 +22,28 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
-        id="ss1", schema_name="test",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="ss1",
+        schema_name="test",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
 
 
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
     n2 = builder.add_node(NodeKind.FUNCTION, "fn", "mod.fn", path="mod.py")
@@ -46,6 +53,7 @@ def _make_graph_with_nodes():
 
 def _make_process_model():
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
 
 
@@ -53,20 +61,22 @@ def _make_process_model():
 # static/types.py — TypeInferencer extended
 # ---------------------------------------------------------------------------
 
+
 class TestTypeInferencerExtended:
     def _make_inferencer(self):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer()
 
     def test_infer_types_from_source_function_return_annotation(self, tmp_path):
         inferencer = self._make_inferencer()
-        src = '''
+        src = """
 def greet(name: str) -> str:
     return f"Hello {name}"
 
 def count(items: list) -> int:
     return len(items)
-'''
+"""
         fp = tmp_path / "greet.py"
         result = inferencer.infer_types_from_source(src, fp)
         assert isinstance(result, list)
@@ -104,23 +114,23 @@ class Counter:
 
     def test_infer_types_from_source_with_property(self, tmp_path):
         inferencer = self._make_inferencer()
-        src = '''
+        src = """
 class MyClass:
     @property
     def value(self):
         return self._value
-'''
+"""
         fp = tmp_path / "prop.py"
         result = inferencer.infer_types_from_source(src, fp)
         assert isinstance(result, list)
 
     def test_infer_types_from_source_with_yield(self, tmp_path):
         inferencer = self._make_inferencer()
-        src = '''
+        src = """
 def generate():
     for i in range(10):
         yield i
-'''
+"""
         fp = tmp_path / "gen.py"
         result = inferencer.infer_types_from_source(src, fp)
         assert isinstance(result, list)
@@ -144,18 +154,22 @@ def generate():
 
     def test_annotation_to_str_none(self):
         from cogant.static.types import TypeInferencer
+
         result = TypeInferencer._annotation_to_str(None)
         assert result is None
 
     def test_annotation_to_str_name(self):
         import ast
+
         from cogant.static.types import TypeInferencer
+
         node = ast.Name(id="str", ctx=ast.Load())
         result = TypeInferencer._annotation_to_str(node)
         assert "str" in result
 
     def test_safe_unparse_none(self):
         from cogant.static.types import TypeInferencer
+
         result = TypeInferencer._safe_unparse(None)
         assert result is None
 
@@ -194,28 +208,30 @@ class DataProcessor:
 # static/calls.py — CallGraphBuilder extended
 # ---------------------------------------------------------------------------
 
+
 class TestCallGraphBuilderExtended:
     def _make_builder(self):
         from cogant.static.calls import CallGraphBuilder
+
         return CallGraphBuilder()
 
     def test_extract_calls_from_source_simple_function_call(self, tmp_path):
         builder = self._make_builder()
-        src = '''
+        src = """
 def helper():
     pass
 
 def main():
     helper()
     print("hello")
-'''
+"""
         fp = tmp_path / "calls.py"
         calls = builder.extract_calls_from_source(src, fp)
         assert isinstance(calls, list)
 
     def test_extract_calls_from_source_method_calls(self, tmp_path):
         builder = self._make_builder()
-        src = '''
+        src = """
 class Processor:
     def setup(self):
         self.data = []
@@ -224,17 +240,17 @@ class Processor:
         self.setup()
         result = self.data.append(1)
         return result
-'''
+"""
         fp = tmp_path / "proc.py"
         calls = builder.extract_calls_from_source(src, fp)
         assert isinstance(calls, list)
 
     def test_extract_calls_from_source_chained_calls(self, tmp_path):
         builder = self._make_builder()
-        src = '''
+        src = """
 def process(data):
     return sorted(data, key=lambda x: x.strip().lower())
-'''
+"""
         fp = tmp_path / "chain.py"
         calls = builder.extract_calls_from_source(src, fp)
         assert isinstance(calls, list)
@@ -266,7 +282,7 @@ def process(data):
 
     def test_extract_calls_from_source_nested_classes(self, tmp_path):
         builder = self._make_builder()
-        src = '''
+        src = """
 class Outer:
     class Inner:
         def method(self):
@@ -274,7 +290,7 @@ class Outer:
 
         def compute(self):
             return 42
-'''
+"""
         fp = tmp_path / "nested.py"
         calls = builder.extract_calls_from_source(src, fp)
         assert isinstance(calls, list)
@@ -284,11 +300,13 @@ class Outer:
 # gnn/json_export.py — GNNJSONExporter extended
 # ---------------------------------------------------------------------------
 
+
 class TestGNNJSONExporterExtended:
     def _make_exporter(self, with_nodes=False):
         from cogant.gnn.json_export import GNNJSONExporter
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         if with_nodes:
             builder = ProgramGraphBuilder(repo_uri="file:///test")
             n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
@@ -298,7 +316,8 @@ class TestGNNJSONExporterExtended:
             builder.add_edge(n2.id, n3.id, EdgeKind.CONTAINS)
             graph = builder.finalize()
         else:
-            from cogant.schemas.graph import ProgramGraph, GraphMetadata
+            from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
             graph = ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
         return GNNJSONExporter(
             program_graph=graph,
@@ -309,6 +328,7 @@ class TestGNNJSONExporterExtended:
 
     def test_export_with_nodes_is_valid_json(self):
         import json
+
         exporter = self._make_exporter(with_nodes=True)
         result_str = exporter.export_to_string()
         data = json.loads(result_str)
@@ -321,6 +341,7 @@ class TestGNNJSONExporterExtended:
 
     def test_export_from_file_if_supported(self, tmp_path):
         import json
+
         exporter = self._make_exporter()
         result = exporter.export()
         # Write to file and verify
@@ -334,9 +355,11 @@ class TestGNNJSONExporterExtended:
 # gnn/matrices.py — GNNMatrices extended
 # ---------------------------------------------------------------------------
 
+
 class TestGNNMatricesExtended:
     def _make_matrices(self, with_state_vars=False):
         from cogant.gnn.matrices import GNNMatrices
+
         graph = _make_graph_with_nodes()
         state_space = _make_state_space()
         return GNNMatrices(graph, mappings={}, state_space=state_space)

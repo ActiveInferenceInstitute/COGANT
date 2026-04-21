@@ -10,6 +10,7 @@ __all__ = ["MappingKind", "ConfidenceTier", "ProvenanceRecord", "SemanticMapping
 
 class MappingKind(StrEnum):
     """Types of semantic mappings."""
+
     # Observation and action modalities
     OBSERVATION = "observation"
     ACTION = "action"
@@ -35,6 +36,7 @@ class MappingKind(StrEnum):
 
 class ConfidenceTier(StrEnum):
     """Confidence tiers for semantic mappings."""
+
     STATIC_ONLY = "static_only"
     """Based only on static analysis."""
 

@@ -1,18 +1,15 @@
 """Unit tests for graph analysis module."""
 
 import pytest
-from pathlib import Path
-from datetime import datetime, UTC
 
 from cogant.graph.analysis import (
+    CentralityScores,
     GraphAnalyzer,
     GraphMetrics,
-    CentralityScores,
-    CycleDetection,
     HotspotAnalysis,
 )
-from cogant.schemas.graph import ProgramGraph, GraphMetadata
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
+from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
 
 @pytest.fixture
@@ -79,7 +76,9 @@ def hub_graph() -> ProgramGraph:
     graph = ProgramGraph(metadata=metadata)
 
     # Create nodes: center with 4 leaves
-    center = Node(id="center", kind=NodeKind.FUNCTION, name="center", qualified_name="module.center")
+    center = Node(
+        id="center", kind=NodeKind.FUNCTION, name="center", qualified_name="module.center"
+    )
     graph.add_node(center)
 
     for i in range(4):

@@ -52,9 +52,7 @@ def _empty_process_model() -> ProcessModel:
 
 
 def _small_graph() -> ProgramGraph:
-    g = ProgramGraph(
-        metadata=GraphMetadata(repo_uri="test", languages={"python"})
-    )
+    g = ProgramGraph(metadata=GraphMetadata(repo_uri="test", languages={"python"}))
     g.add_node(
         Node(
             id="n:file",
@@ -252,9 +250,7 @@ class TestRenderAllPngs:
         ss = _empty_state_space()
         pm = _empty_process_model()
         builder = GNNPackageBuilder(
-            graph=ProgramGraph(
-                metadata=GraphMetadata(repo_uri="empty", languages={"python"})
-            ),
+            graph=ProgramGraph(metadata=GraphMetadata(repo_uri="empty", languages={"python"})),
             state_space=ss,
             process_model=pm,
             mappings={},
@@ -264,7 +260,7 @@ class TestRenderAllPngs:
         results = render_all_pngs(tmp_path, state_space=ss, process_model=pm)
         assert isinstance(results, dict)
         # Every category is a list (possibly empty for empty inputs)
-        for category, paths in results.items():
+        for _category, paths in results.items():
             assert isinstance(paths, list)
             for p in paths:
                 assert isinstance(p, Path)

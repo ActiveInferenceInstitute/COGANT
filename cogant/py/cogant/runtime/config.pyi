@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-__all__ = ['AgentConfig']
+__all__ = ["AgentConfig"]
 
 @dataclass
 class AgentConfig:

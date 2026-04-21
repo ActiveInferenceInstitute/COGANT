@@ -55,9 +55,12 @@ class LanguageDetector:
             from python.parser import (
                 PythonLanguageParser,  # type: ignore[import-not-found,unused-ignore]
             )
+
             cls.PARSER_CLASSES["python"] = PythonLanguageParser
         except Exception as exc:
-            logger.debug("Python tree-sitter parser unavailable; CPython ast fallback active: %s", exc)
+            logger.debug(
+                "Python tree-sitter parser unavailable; CPython ast fallback active: %s", exc
+            )
 
         # Prefer tree-sitter for JavaScript; fall back to the TS regex parser.
         js_loaded = False
@@ -65,6 +68,7 @@ class LanguageDetector:
             from javascript.parser import (
                 JavaScriptLanguageParser,  # type: ignore[import-not-found,unused-ignore]
             )
+
             cls.PARSER_CLASSES["javascript"] = JavaScriptLanguageParser
             js_loaded = True
         except Exception as exc:
@@ -76,6 +80,7 @@ class LanguageDetector:
             from typescript.tree_sitter_parser import (
                 TypeScriptTreeSitterParser,  # type: ignore[import-not-found,unused-ignore]
             )
+
             if TypeScriptTreeSitterParser is not None:
                 cls.PARSER_CLASSES["typescript"] = TypeScriptTreeSitterParser
                 ts_loaded = True
@@ -87,6 +92,7 @@ class LanguageDetector:
             from typescript.parser import (
                 TypeScriptLanguageParser,  # type: ignore[import-not-found,unused-ignore]
             )
+
             if not ts_loaded:
                 cls.PARSER_CLASSES["typescript"] = TypeScriptLanguageParser
                 logger.debug("TypeScript using regex fallback parser")
@@ -100,12 +106,14 @@ class LanguageDetector:
             from rust.parser import (
                 RustLanguageParser,  # type: ignore[import-not-found,unused-ignore]
             )
+
             cls.PARSER_CLASSES["rust"] = RustLanguageParser
         except Exception as exc:
             logger.debug("Rust parser unavailable: %s", exc)
 
         try:
             from go.parser import GoLanguageParser  # type: ignore[import-not-found,unused-ignore]
+
             cls.PARSER_CLASSES["go"] = GoLanguageParser
         except Exception as exc:
             logger.debug("Go parser unavailable: %s", exc)
@@ -208,12 +216,14 @@ def get_parser_for_extension(ext: str) -> Any:
 
     try:
         from cogant.parsers.tree_sitter_base import get_tree_sitter_parser
+
         ts = get_tree_sitter_parser()
         if ext in ts.supported_extensions():
             language = ts.language_for_path(Path(f"x{ext}"))
             if language == "javascript":
                 try:
                     from javascript.parser import JavaScriptLanguageParser
+
                     return JavaScriptLanguageParser()
                 except Exception:
                     pass
@@ -222,6 +232,7 @@ def get_parser_for_extension(ext: str) -> Any:
                     from typescript.tree_sitter_parser import (
                         TypeScriptTreeSitterParser,
                     )
+
                     if TypeScriptTreeSitterParser is not None:
                         return TypeScriptTreeSitterParser()
                 except Exception:

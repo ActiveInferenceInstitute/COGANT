@@ -5,10 +5,10 @@ from typing import Any
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
 class TimeRegime(StrEnum):
-    SYNCHRONOUS = 'synchronous'
-    ASYNCHRONOUS = 'asynchronous'
-    EVENT_DRIVEN = 'event_driven'
-    HYBRID = 'hybrid'
+    SYNCHRONOUS = "synchronous"
+    ASYNCHRONOUS = "asynchronous"
+    EVENT_DRIVEN = "event_driven"
+    HYBRID = "hybrid"
 
 @dataclass
 class TemporalOrdering:

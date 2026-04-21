@@ -64,6 +64,7 @@ def compile_ruleset(ruleset: DSLRuleSet) -> list[CompiledRule]:
 # Condition evaluators
 # ---------------------------------------------------------------------- #
 
+
 def _evaluate_condition(
     cond: DSLCondition,
     node: Node,

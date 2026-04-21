@@ -13,14 +13,12 @@ from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
 from cogant.statespace.compiler import (
     Action,
-    ObservationModality,
     Preference,
     StateSpaceModel,
 )
 from cogant.statespace.temporal import TimeRegime
-from cogant.statespace.variables import ConfidenceLevel, StateVariable, StateVariableType
+from cogant.statespace.variables import StateVariable, StateVariableType
 from cogant.validate.integrity import IntegrityChecker
-
 
 # ------------------------------ builders --------------------------------- #
 
@@ -148,8 +146,7 @@ def test_state_space_action_with_dangling_effect_is_error():
     errors = [i for i in issues if i.severity == "error"]
 
     assert any(
-        "references non-existent variable" in e.message and "v_missing" in e.message
-        for e in errors
+        "references non-existent variable" in e.message and "v_missing" in e.message for e in errors
     )
 
 

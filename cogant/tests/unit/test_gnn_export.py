@@ -15,16 +15,16 @@ import json
 import pytest
 
 from cogant.gnn.json_export import GNNJSONExporter
+from cogant.graph.builder import ProgramGraphBuilder
 from cogant.process.extractor import ProcessModel, Stage
 from cogant.schemas.core import EdgeKind, NodeKind
-from cogant.schemas.graph import GraphMetadata, ProgramGraph
+from cogant.schemas.graph import ProgramGraph
 from cogant.schemas.semantic import (
     ConfidenceTier,
     MappingKind,
     ProvenanceRecord,
     SemanticMapping,
 )
-from cogant.graph.builder import ProgramGraphBuilder
 from cogant.statespace.compiler import StateSpaceModel
 from cogant.statespace.temporal import TimeRegime
 from cogant.statespace.variables import (
@@ -169,9 +169,7 @@ class TestGNNJSONExportDict:
         out = exporter.export()
         assert isinstance(out, dict)
 
-    def test_export_has_canonical_sections(
-        self, exporter: GNNJSONExporter
-    ) -> None:
+    def test_export_has_canonical_sections(self, exporter: GNNJSONExporter) -> None:
         out = exporter.export()
         expected = {
             "model_id",
@@ -201,16 +199,12 @@ class TestGNNJSONExportDict:
         missing = expected - set(out.keys())
         assert not missing, f"Missing canonical sections: {missing}"
 
-    def test_model_id_and_schema_name_roundtrip(
-        self, exporter: GNNJSONExporter
-    ) -> None:
+    def test_model_id_and_schema_name_roundtrip(self, exporter: GNNJSONExporter) -> None:
         out = exporter.export()
         assert out["model_id"] == "ss:test"
         assert out["schema_name"] == "test_schema"
 
-    def test_metrics_reflect_real_counts(
-        self, exporter: GNNJSONExporter
-    ) -> None:
+    def test_metrics_reflect_real_counts(self, exporter: GNNJSONExporter) -> None:
         out = exporter.export()
         metrics = out["model_metadata"]["metrics"]
         assert metrics["node_count"] == 2
@@ -219,9 +213,7 @@ class TestGNNJSONExportDict:
         assert metrics["processes"] == 1
         assert metrics["mappings"] == 1
 
-    def test_repository_metadata_has_uri(
-        self, exporter: GNNJSONExporter
-    ) -> None:
+    def test_repository_metadata_has_uri(self, exporter: GNNJSONExporter) -> None:
         out = exporter.export()
         repo = out["repository_metadata"]
         assert repo["uri"] == "test://gnn-export"
@@ -234,25 +226,19 @@ class TestGNNJSONExportDict:
 class TestGNNJSONExportString:
     """Tests for ``export_to_string``."""
 
-    def test_export_to_string_is_valid_json(
-        self, exporter: GNNJSONExporter
-    ) -> None:
+    def test_export_to_string_is_valid_json(self, exporter: GNNJSONExporter) -> None:
         s = exporter.export_to_string(indent=2)
         assert isinstance(s, str)
         assert "\n" in s  # pretty-printed
         parsed = json.loads(s)
         assert parsed["schema_name"] == "test_schema"
 
-    def test_export_compact_has_no_newlines_by_default(
-        self, exporter: GNNJSONExporter
-    ) -> None:
+    def test_export_compact_has_no_newlines_by_default(self, exporter: GNNJSONExporter) -> None:
         s = exporter.export_to_string(indent=None)
         parsed = json.loads(s)
         assert parsed["model_id"] == "ss:test"
 
-    def test_export_round_trips_through_json(
-        self, exporter: GNNJSONExporter
-    ) -> None:
+    def test_export_round_trips_through_json(self, exporter: GNNJSONExporter) -> None:
         s = exporter.export_to_string(indent=0)
         parsed = json.loads(s)
         # Real node from the graph must be present in connections section

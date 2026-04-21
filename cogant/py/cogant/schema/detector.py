@@ -8,12 +8,8 @@ import re
 
 from cogant.schema.versions import SchemaVersion
 
-_VERSION_AND_FLAGS_RE = re.compile(
-    r"^##\s+GNNVersionAndFlags\b", re.MULTILINE
-)
-_GNN_V1_MARKER_RE = re.compile(
-    r"GNN\s+v1\b", re.MULTILINE
-)
+_VERSION_AND_FLAGS_RE = re.compile(r"^##\s+GNNVersionAndFlags\b", re.MULTILINE)
+_GNN_V1_MARKER_RE = re.compile(r"GNN\s+v1\b", re.MULTILINE)
 
 
 def detect_version(gnn_text: str) -> str:

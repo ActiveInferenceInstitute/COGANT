@@ -13,8 +13,6 @@ import sys
 import textwrap
 from pathlib import Path
 
-import pytest
-
 _STAGING_ROOT = Path(__file__).resolve().parents[3]
 _INJECT_SCRIPT = _STAGING_ROOT / "tools" / "inject_manuscript_vars.py"
 
@@ -32,22 +30,17 @@ def _fake_repo(tmp_path: Path, metrics_yaml: str) -> Path:
     (tmp_path / "tools").mkdir(parents=True, exist_ok=True)
     (tmp_path / "cogant" / "evaluation").mkdir(parents=True, exist_ok=True)
     # Copy the real manuscript_vars.py so the imports inside the CLI still work.
-    real_vars = (_STAGING_ROOT / "tools" / "manuscript_vars.py").read_text(
-        encoding="utf-8"
-    )
+    real_vars = (_STAGING_ROOT / "tools" / "manuscript_vars.py").read_text(encoding="utf-8")
     (tmp_path / "tools" / "manuscript_vars.py").write_text(real_vars, encoding="utf-8")
     real_inject = _INJECT_SCRIPT.read_text(encoding="utf-8")
-    (tmp_path / "tools" / "inject_manuscript_vars.py").write_text(
-        real_inject, encoding="utf-8"
-    )
-    (tmp_path / "cogant" / "evaluation" / "METRICS.yaml").write_text(
-        metrics_yaml, encoding="utf-8"
-    )
+    (tmp_path / "tools" / "inject_manuscript_vars.py").write_text(real_inject, encoding="utf-8")
+    (tmp_path / "cogant" / "evaluation" / "METRICS.yaml").write_text(metrics_yaml, encoding="utf-8")
     return tmp_path / "tools" / "inject_manuscript_vars.py"
 
 
-_METRICS = textwrap.dedent(
-    """
+_METRICS = (
+    textwrap.dedent(
+        """
     schema_version: '1.0'
     package:
       name: cogant
@@ -63,7 +56,9 @@ _METRICS = textwrap.dedent(
       stage_count: 10
       translation_rules: 19
     """
-).strip() + "\n"
+    ).strip()
+    + "\n"
+)
 
 
 def _run(script: Path, *args: str) -> subprocess.CompletedProcess:

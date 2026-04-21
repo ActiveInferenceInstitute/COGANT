@@ -9,22 +9,22 @@ from .base import EvidenceRef as EvidenceRef
 from .base import StableID as StableID
 
 class ProcessKind(StrEnum):
-    SEQUENTIAL = 'sequential'
-    PARALLEL = 'parallel'
-    CONDITIONAL = 'conditional'
-    LOOP = 'loop'
-    RECURSIVE = 'recursive'
-    EVENT_DRIVEN = 'event_driven'
-    PIPELINE = 'pipeline'
-    STATE_MACHINE = 'state_machine'
+    SEQUENTIAL = "sequential"
+    PARALLEL = "parallel"
+    CONDITIONAL = "conditional"
+    LOOP = "loop"
+    RECURSIVE = "recursive"
+    EVENT_DRIVEN = "event_driven"
+    PIPELINE = "pipeline"
+    STATE_MACHINE = "state_machine"
 
 class TriggerKind(StrEnum):
-    MANUAL = 'manual'
-    AUTOMATIC = 'automatic'
-    TIME_BASED = 'time_based'
-    EVENT = 'event'
-    CONDITION = 'condition'
-    MESSAGE = 'message'
+    MANUAL = "manual"
+    AUTOMATIC = "automatic"
+    TIME_BASED = "time_based"
+    EVENT = "event"
+    CONDITION = "condition"
+    MESSAGE = "message"
 
 class SideEffect(CogantBaseModel):
     effect_id: str
@@ -70,7 +70,7 @@ class ProcessTimeline(CogantBaseModel):
     start_time: float | None
     end_time: float | None
     deadline: float | None
-    deadline_type: Literal['hard', 'soft', 'firm']
+    deadline_type: Literal["hard", "soft", "firm"]
     period: float | None
     jitter: float | None
     stage_timings: dict[str, float]

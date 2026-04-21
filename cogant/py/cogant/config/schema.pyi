@@ -8,15 +8,15 @@ class CogantBaseConfig(BaseModel):
     model_config: ClassVar[Incomplete]
 
 class LogLevel(StrEnum):
-    DEBUG = 'debug'
-    INFO = 'info'
-    WARNING = 'warning'
-    ERROR = 'error'
-    CRITICAL = 'critical'
+    DEBUG = "debug"
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
 
 class CogantConfig(CogantBaseConfig):
     version: str
-    environment: Literal['development', 'staging', 'production']
+    environment: Literal["development", "staging", "production"]
     log_level: LogLevel
     log_format: str
     log_file: str | None
@@ -67,10 +67,10 @@ class PipelineConfig(CogantBaseConfig):
     model_config: ClassVar[Incomplete]
 
 class ExportFormat(StrEnum):
-    JSON = 'json'
-    JSON_LINES = 'jsonl'
-    PARQUET = 'parquet'
-    PROTOBUF = 'protobuf'
+    JSON = "json"
+    JSON_LINES = "jsonl"
+    PARQUET = "parquet"
+    PROTOBUF = "protobuf"
 
 class ExportConfig(CogantBaseConfig):
     primary_format: ExportFormat
@@ -78,7 +78,7 @@ class ExportConfig(CogantBaseConfig):
     output_dir: str
     create_bundle: bool
     bundle_name: str
-    compression: Literal['none', 'gzip', 'zstd']
+    compression: Literal["none", "gzip", "zstd"]
     compression_level: int
     include_provenance: bool
     include_metadata: bool
@@ -91,10 +91,10 @@ class ExportConfig(CogantBaseConfig):
     model_config: ClassVar[Incomplete]
 
 class ValidationLevel(StrEnum):
-    LENIENT = 'lenient'
-    MODERATE = 'moderate'
-    STRICT = 'strict'
-    PARANOID = 'paranoid'
+    LENIENT = "lenient"
+    MODERATE = "moderate"
+    STRICT = "strict"
+    PARANOID = "paranoid"
 
 class ValidationConfig(CogantBaseConfig):
     level: ValidationLevel

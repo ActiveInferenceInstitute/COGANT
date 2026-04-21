@@ -2,7 +2,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-__all__ = ['IdempotencyReport', 'RoundtripResult', 'verify_roundtrip', 'verify_repo_roundtrip', 'ROLE_MATCH_THRESHOLD', 'check_structural_idempotency', 'check_semantic_idempotency']
+__all__ = [
+    "IdempotencyReport",
+    "RoundtripResult",
+    "verify_roundtrip",
+    "verify_repo_roundtrip",
+    "ROLE_MATCH_THRESHOLD",
+    "check_structural_idempotency",
+    "check_semantic_idempotency",
+]
 
 ROLE_MATCH_THRESHOLD: float
 
@@ -27,7 +35,19 @@ class RoundtripResult:
     errors: list[str] = field(default_factory=list)
     def summary(self) -> str: ...
 
-def check_structural_idempotency(original_graph: Any, roundtrip_graph: Any) -> IdempotencyReport: ...
-def check_semantic_idempotency(original_mappings: dict[str, Any], roundtrip_mappings: dict[str, Any]) -> IdempotencyReport: ...
-def verify_roundtrip(gnn_path: str | Path, tmp_dir: str | Path | None = None, *, role_threshold: float = ..., keep_tmp: bool = False) -> RoundtripResult: ...
-def verify_repo_roundtrip(repo_path: str | Path, output_dir: str | Path | None = None, *, role_threshold: float = ...) -> RoundtripResult: ...
+def check_structural_idempotency(
+    original_graph: Any, roundtrip_graph: Any
+) -> IdempotencyReport: ...
+def check_semantic_idempotency(
+    original_mappings: dict[str, Any], roundtrip_mappings: dict[str, Any]
+) -> IdempotencyReport: ...
+def verify_roundtrip(
+    gnn_path: str | Path,
+    tmp_dir: str | Path | None = None,
+    *,
+    role_threshold: float = ...,
+    keep_tmp: bool = False,
+) -> RoundtripResult: ...
+def verify_repo_roundtrip(
+    repo_path: str | Path, output_dir: str | Path | None = None, *, role_threshold: float = ...
+) -> RoundtripResult: ...

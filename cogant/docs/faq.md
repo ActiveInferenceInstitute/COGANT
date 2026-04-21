@@ -295,7 +295,7 @@ Subclass `TranslationRule` from `cogant.translate.engine`, implement three metho
 - `priority` (int property) — lower = higher priority (0–100)
 - `apply(graph, query) → list[SemanticMapping]` — return mappings or empty list
 
-Then register it: `engine.register_rule(MyRule())` before calling `engine.translate(graph)`. For a full worked example see `examples/thin_orchestrated/04_custom_rules__00.py` (or equivalent in the `_rnd/` cookbook). The `keywords.py` module at `cogant/translate/rules/keywords.py` contains shared keyword lists for lexical heuristics.
+Then register it: `engine.register_rule(MyRule())` before calling `engine.translate(graph)`. For a full worked example see `examples/thin_orchestrated/04_custom_rules__00.py`. The `keywords.py` module at `cogant/translate/rules/keywords.py` contains shared keyword lists for lexical heuristics.
 
 ### 37. What do the A, B, C, D matrices in the GNN output mean?
 

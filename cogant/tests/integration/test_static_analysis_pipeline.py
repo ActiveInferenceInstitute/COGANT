@@ -4,13 +4,11 @@ Tests the full pipeline: source code → static analysis → structured reports.
 """
 
 import json
-from pathlib import Path
 
 import pytest
 
 from cogant.static.complexity import ComplexityAnalyzer
 from cogant.static.coupling import CouplingAnalyzer
-
 
 pytestmark = pytest.mark.integration
 
@@ -98,10 +96,12 @@ class TestComplexityFullPipeline:
         assert process_entry is not None, "DataProcessor.process() not found in entries"
 
         # Verify complexity values
-        assert compute_entry.cyclomatic_complexity >= 4, \
+        assert compute_entry.cyclomatic_complexity >= 4, (
             f"compute() CC should be >= 4, got {compute_entry.cyclomatic_complexity}"
-        assert process_entry.cyclomatic_complexity >= 2, \
+        )
+        assert process_entry.cyclomatic_complexity >= 2, (
             f"DataProcessor.process() CC should be >= 2, got {process_entry.cyclomatic_complexity}"
+        )
 
         # Verify aggregates are computed
         assert report.max_cyclomatic >= compute_entry.cyclomatic_complexity
@@ -139,13 +139,17 @@ class TestCouplingFullPipeline:
         # I = Ce / (Ce + Ca) = 0 / (0 + 2) = 0 (stable)
         assert models_metrics.efferent_coupling == 0, "models should have no outgoing deps"
         assert models_metrics.afferent_coupling > 0, "models should have incoming deps"
-        assert models_metrics.instability == 0.0, f"models instability should be 0, got {models_metrics.instability}"
+        assert models_metrics.instability == 0.0, (
+            f"models instability should be 0, got {models_metrics.instability}"
+        )
 
         # myapp.api: has outgoing deps (Ce=2), few incoming (Ca=0)
         # I = 2 / (0 + 2) = 1.0 (unstable)
         assert api_metrics.efferent_coupling == 2, "api should depend on 2 modules"
         assert api_metrics.afferent_coupling == 0, "api should have no dependents"
-        assert api_metrics.instability == 1.0, f"api instability should be 1.0, got {api_metrics.instability}"
+        assert api_metrics.instability == 1.0, (
+            f"api instability should be 1.0, got {api_metrics.instability}"
+        )
 
         # myapp.main: Ce=2 (utils, models), Ca=1 (api → main)
         # I = Ce / (Ca + Ce) = 2/3
@@ -155,8 +159,9 @@ class TestCouplingFullPipeline:
 
         # Verify all instability values are in valid range
         for m in report.modules:
-            assert 0.0 <= m.instability <= 1.0, \
+            assert 0.0 <= m.instability <= 1.0, (
                 f"{m.module_name} has invalid instability: {m.instability}"
+            )
 
 
 class TestDeadCodeFullPipeline:
@@ -175,6 +180,7 @@ class TestDeadCodeFullPipeline:
 
         # Parse and extract all symbols
         import ast
+
         tree = ast.parse(SAMPLE_MODULE)
 
         # Get all defined names
@@ -226,11 +232,14 @@ class TestMetricsFullPipeline:
         assert len(SAMPLE_MODULE.splitlines()) > 0
 
         # Verify cognitive complexity is computed for all entries
-        assert all(e.cognitive_complexity >= 0 for e in report.entries), \
+        assert all(e.cognitive_complexity >= 0 for e in report.entries), (
             "Cognitive complexity should be >= 0"
+        )
 
         # Verify docstring coverage
-        documented = sum(1 for e in report.entries if "'''" in SAMPLE_MODULE or '"""' in SAMPLE_MODULE)
+        documented = sum(
+            1 for e in report.entries if "'''" in SAMPLE_MODULE or '"""' in SAMPLE_MODULE
+        )
         total = len(report.entries)
         coverage = documented / total if total > 0 else 0
         assert coverage > 0.5, f"Expected docstring coverage > 0.5, got {coverage}"
@@ -293,7 +302,9 @@ def run():
 
         # Verify coupling analysis
         assert len(coupling_report.modules) == 3
-        models = next((m for m in coupling_report.modules if m.module_name == "testapp.models"), None)
+        models = next(
+            (m for m in coupling_report.modules if m.module_name == "testapp.models"), None
+        )
         assert models is not None
         assert models.instability == 0.0, "models should be stable"
 

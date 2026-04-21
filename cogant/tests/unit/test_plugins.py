@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from cogant.plugins.registry import PluginInfo, PluginRegistry
 
-
 # ---------------------------------------------------------------------- #
 # 1. PluginInfo dataclass has the expected fields
 # ---------------------------------------------------------------------- #

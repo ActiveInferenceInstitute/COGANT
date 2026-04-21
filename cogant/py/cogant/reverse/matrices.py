@@ -187,7 +187,7 @@ def render_matrices_module(model: ReverseGNNModel) -> str:
         "    return score",
         "",
         "",
-        '__all__ = [',
+        "__all__ = [",
         '    "A", "B", "C", "D",',
         '    "N_HIDDEN_STATES", "N_OBSERVATIONS", "N_ACTIONS",',
         '    "INITIAL_STATE_PRIOR",',

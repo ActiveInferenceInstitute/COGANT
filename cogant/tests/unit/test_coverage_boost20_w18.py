@@ -11,8 +11,6 @@ Covers:
 - translate/rules/resilience.py: CircuitBreakerRule matches
 """
 
-from pathlib import Path
-
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -22,12 +20,15 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
     cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass", path="mymodule.py")
     func = builder.add_node(NodeKind.FUNCTION, "my_func", "mymodule.my_func", path="mymodule.py")
     builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
@@ -37,18 +38,19 @@ def _make_graph():
 
 def _make_reverse_model(**kwargs):
     from cogant.reverse.parser import ReverseGNNModel
-    defaults = dict(
-        hidden_states=[],
-        observations=[],
-        actions=[],
-        policies=[],
-        constraints=[],
-        annotations={},
-        A=None,
-        B=None,
-        C=None,
-        D=None,
-    )
+
+    defaults = {
+        "hidden_states": [],
+        "observations": [],
+        "actions": [],
+        "policies": [],
+        "constraints": [],
+        "annotations": {},
+        "A": None,
+        "B": None,
+        "C": None,
+        "D": None,
+    }
     defaults.update(kwargs)
     return ReverseGNNModel(**defaults)
 
@@ -57,23 +59,27 @@ def _make_reverse_model(**kwargs):
 # reverse/idempotency.py — _role_multiset_from_model deeper branches
 # ---------------------------------------------------------------------------
 
+
 class TestRoleMultisetFromModel:
     """Cover the annotation-loop branches of _role_multiset_from_model."""
 
     def test_empty_model(self):
         from cogant.reverse.idempotency import _role_multiset_from_model
+
         model = _make_reverse_model()
         result = _role_multiset_from_model(model)
         assert len(result) == 0
 
     def test_hidden_states_only(self):
         from cogant.reverse.idempotency import _role_multiset_from_model
+
         model = _make_reverse_model(hidden_states=["s_f0", "s_f1"])
         result = _role_multiset_from_model(model)
         assert result["HIDDEN_STATE"] == 2
 
     def test_observations(self):
         from cogant.reverse.idempotency import _role_multiset_from_model
+
         model = _make_reverse_model(observations=["o_0"], actions=["u_0"])
         result = _role_multiset_from_model(model)
         assert result["OBSERVATION"] == 1
@@ -82,6 +88,7 @@ class TestRoleMultisetFromModel:
     def test_annotation_policy_new_var(self):
         """G=ExpectedFreeEnergy should add one POLICY if G not already in any list."""
         from cogant.reverse.idempotency import _role_multiset_from_model
+
         model = _make_reverse_model(
             annotations={"G": "ExpectedFreeEnergy"},
         )
@@ -91,6 +98,7 @@ class TestRoleMultisetFromModel:
     def test_annotation_policy_var_already_in_hidden_states(self):
         """Variable already in hidden_states should NOT add extra POLICY."""
         from cogant.reverse.idempotency import _role_multiset_from_model
+
         model = _make_reverse_model(
             hidden_states=["G"],
             annotations={"G": "ExpectedFreeEnergy"},
@@ -102,6 +110,7 @@ class TestRoleMultisetFromModel:
     def test_annotation_policy_var_already_in_policies(self):
         """Variable already in policies should NOT add extra POLICY."""
         from cogant.reverse.idempotency import _role_multiset_from_model
+
         model = _make_reverse_model(
             policies=["G"],
             annotations={"G": "ExpectedFreeEnergy"},
@@ -113,6 +122,7 @@ class TestRoleMultisetFromModel:
     def test_annotation_non_policy_concept_ignored(self):
         """Non-POLICY annotation concepts are filtered out."""
         from cogant.reverse.idempotency import _role_multiset_from_model
+
         model = _make_reverse_model(
             annotations={"x": "HiddenState"},  # maps to HIDDEN_STATE, not POLICY
         )
@@ -123,6 +133,7 @@ class TestRoleMultisetFromModel:
     def test_annotation_in_observations(self):
         """Variable in observations + POLICY annotation → filtered out."""
         from cogant.reverse.idempotency import _role_multiset_from_model
+
         model = _make_reverse_model(
             observations=["G"],
             annotations={"G": "ExpectedFreeEnergy"},
@@ -134,6 +145,7 @@ class TestRoleMultisetFromModel:
     def test_annotation_in_actions(self):
         """Variable in actions + POLICY annotation → filtered out."""
         from cogant.reverse.idempotency import _role_multiset_from_model
+
         model = _make_reverse_model(
             actions=["G"],
             annotations={"G": "ExpectedFreeEnergy"},
@@ -146,23 +158,27 @@ class TestRoleMultisetFromModel:
 # reverse/idempotency.py — _model_matrices B/D branches
 # ---------------------------------------------------------------------------
 
+
 class TestModelMatricesBranches:
     """Cover the B and D matrix branches in _model_matrices."""
 
     def test_b_matrix_present(self):
         from cogant.reverse.idempotency import _model_matrices
+
         model = _make_reverse_model(B=[[1.0, 0.0], [0.0, 1.0]])
         result = _model_matrices(model)
         assert "B" in result
 
     def test_d_matrix_present(self):
         from cogant.reverse.idempotency import _model_matrices
+
         model = _make_reverse_model(D=[[0.5, 0.5]])
         result = _model_matrices(model)
         assert "D" in result
 
     def test_all_matrices_present(self):
         from cogant.reverse.idempotency import _model_matrices
+
         model = _make_reverse_model(
             A=[[1.0]],
             B=[[1.0]],
@@ -174,6 +190,7 @@ class TestModelMatricesBranches:
 
     def test_no_matrices(self):
         from cogant.reverse.idempotency import _model_matrices
+
         model = _make_reverse_model()
         result = _model_matrices(model)
         assert result == {}
@@ -183,11 +200,13 @@ class TestModelMatricesBranches:
 # reverse/idempotency.py — _state_space_matrices
 # ---------------------------------------------------------------------------
 
+
 class TestStateSpaceMatrices:
     """Cover _state_space_matrices with non-None state_space."""
 
     def test_none_state_space(self):
         from cogant.reverse.idempotency import _state_space_matrices
+
         result = _state_space_matrices(None)
         assert result == {}
 
@@ -231,6 +250,7 @@ class TestStateSpaceMatrices:
 
     def test_state_space_object_no_abcd_attrs(self):
         from cogant.reverse.idempotency import _state_space_matrices
+
         # Object with no A/B/C/D attributes at all
         result = _state_space_matrices(object())
         assert result == {}
@@ -239,6 +259,7 @@ class TestStateSpaceMatrices:
 # ---------------------------------------------------------------------------
 # reverse/idempotency.py — _nodes_edges_from_mappings kind=None branch
 # ---------------------------------------------------------------------------
+
 
 class TestNodesEdgesFromMappingsKindNone:
     """Cover the kind=None continue branch."""
@@ -260,6 +281,7 @@ class TestNodesEdgesFromMappingsKindNone:
             def __init__(self, name):
                 class FakeKind:
                     pass
+
                 FakeKind.name = name
                 self.kind = FakeKind()
 
@@ -276,40 +298,47 @@ class TestNodesEdgesFromMappingsKindNone:
 # server/app.py — _probe_dependencies (pure function, no FastAPI needed)
 # ---------------------------------------------------------------------------
 
+
 class TestProbeDependencies:
     """Test _probe_dependencies — imports real modules."""
 
     @pytest.fixture(autouse=True)
     def _reset_server_app(self):
         """Remove any stub for cogant.server.app before test."""
-        import sys, types
-        stale = sys.modules.pop("cogant.server.app", None)
+        import sys
+
+        sys.modules.pop("cogant.server.app", None)
         sys.modules.pop("cogant.server", None)
         yield
         # Allow freshly imported real module to stay
 
     def test_probe_dependencies_returns_dict(self):
         from cogant.server.app import _probe_dependencies
+
         result = _probe_dependencies()
         assert isinstance(result, dict)
 
     def test_probe_dependencies_checks_cogant_pipeline(self):
         from cogant.server.app import _probe_dependencies
+
         result = _probe_dependencies()
         assert "cogant.api.pipeline" in result
 
     def test_probe_dependencies_checks_networkx(self):
         from cogant.server.app import _probe_dependencies
+
         result = _probe_dependencies()
         assert "networkx" in result
 
     def test_probe_dependencies_checks_pydantic(self):
         from cogant.server.app import _probe_dependencies
+
         result = _probe_dependencies()
         assert "pydantic" in result
 
     def test_probe_dependencies_ok_for_available_deps(self):
         from cogant.server.app import _probe_dependencies
+
         result = _probe_dependencies()
         # cogant itself should be importable in a valid installation
         for k, v in result.items():
@@ -322,17 +351,24 @@ class TestProbeDependencies:
 # translate/rules/semantic.py — ObservationRule matches (pure structural check)
 # ---------------------------------------------------------------------------
 
+
 class TestSemanticRulesMatches:
     """Test semantic translation rules matches against real graphs."""
 
     def _make_observation_graph(self):
         """Build a graph where a module is named with 'sensor' or 'input'."""
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         # Module with observation-sounding name
-        sensor = builder.add_node(NodeKind.MODULE, "sensor_input", "sensor_input",
-                                   path="sensor_input.py", language="python")
+        sensor = builder.add_node(
+            NodeKind.MODULE,
+            "sensor_input",
+            "sensor_input",
+            path="sensor_input.py",
+            language="python",
+        )
         func = builder.add_node(NodeKind.FUNCTION, "read_sensor", "sensor_input.read_sensor")
         builder.add_edge(sensor.id, func.id, EdgeKind.CONTAINS)
         return builder.finalize()
@@ -340,6 +376,7 @@ class TestSemanticRulesMatches:
     def test_observation_rule_name(self):
         try:
             from cogant.translate.rules.semantic import ObservationRule
+
             rule = ObservationRule()
             assert isinstance(rule.name, str)
         except ImportError:
@@ -348,6 +385,7 @@ class TestSemanticRulesMatches:
     def test_hidden_state_rule_name(self):
         try:
             from cogant.translate.rules.semantic import HiddenStateRule
+
             rule = HiddenStateRule()
             assert isinstance(rule.name, str)
         except ImportError:
@@ -356,6 +394,7 @@ class TestSemanticRulesMatches:
     def test_action_rule_name(self):
         try:
             from cogant.translate.rules.semantic import ActionRule
+
             rule = ActionRule()
             assert isinstance(rule.name, str)
         except ImportError:
@@ -363,8 +402,9 @@ class TestSemanticRulesMatches:
 
     def test_observation_rule_matches_returns_list(self):
         try:
-            from cogant.translate.rules.semantic import ObservationRule
             from cogant.graph.queries import GraphQuery
+            from cogant.translate.rules.semantic import ObservationRule
+
             graph = _make_graph()
             query = GraphQuery(graph)
             rule = ObservationRule()
@@ -375,8 +415,9 @@ class TestSemanticRulesMatches:
 
     def test_hidden_state_rule_matches_returns_list(self):
         try:
-            from cogant.translate.rules.semantic import HiddenStateRule
             from cogant.graph.queries import GraphQuery
+            from cogant.translate.rules.semantic import HiddenStateRule
+
             graph = _make_graph()
             query = GraphQuery(graph)
             rule = HiddenStateRule()
@@ -387,8 +428,9 @@ class TestSemanticRulesMatches:
 
     def test_action_rule_matches_returns_list(self):
         try:
-            from cogant.translate.rules.semantic import ActionRule
             from cogant.graph.queries import GraphQuery
+            from cogant.translate.rules.semantic import ActionRule
+
             graph = _make_graph()
             query = GraphQuery(graph)
             rule = ActionRule()
@@ -399,8 +441,9 @@ class TestSemanticRulesMatches:
 
     def test_policy_rule_matches_returns_list(self):
         try:
-            from cogant.translate.rules.semantic import PolicyRule
             from cogant.graph.queries import GraphQuery
+            from cogant.translate.rules.semantic import PolicyRule
+
             graph = _make_graph()
             query = GraphQuery(graph)
             rule = PolicyRule()
@@ -411,8 +454,9 @@ class TestSemanticRulesMatches:
 
     def test_constraint_rule_matches_returns_list(self):
         try:
-            from cogant.translate.rules.semantic import ConstraintRule
             from cogant.graph.queries import GraphQuery
+            from cogant.translate.rules.semantic import ConstraintRule
+
             graph = _make_graph()
             query = GraphQuery(graph)
             rule = ConstraintRule()
@@ -426,14 +470,16 @@ class TestSemanticRulesMatches:
 # translate/rules/control.py — control rules
 # ---------------------------------------------------------------------------
 
+
 class TestControlRulesMatches:
     """Test control translation rules matches against real graphs."""
 
     def test_all_control_rules_importable(self):
         try:
             import cogant.translate.rules.control as ctrl
+
             # Check the module has classes
-            assert hasattr(ctrl, '__file__')
+            assert hasattr(ctrl, "__file__")
         except ImportError:
             pytest.skip("control rules not importable")
 
@@ -441,16 +487,15 @@ class TestControlRulesMatches:
         try:
             import cogant.translate.rules.control as ctrl
             from cogant.graph.queries import GraphQuery
-            from cogant.schemas.core import NodeKind, EdgeKind
-            from cogant.graph.builder import ProgramGraphBuilder
 
             graph = _make_graph()
             query = GraphQuery(graph)
 
             # Try all top-level classes that have matches method
             import inspect
-            for name, obj in inspect.getmembers(ctrl, inspect.isclass):
-                if hasattr(obj, 'matches') and hasattr(obj, 'apply'):
+
+            for _name, obj in inspect.getmembers(ctrl, inspect.isclass):
+                if hasattr(obj, "matches") and hasattr(obj, "apply"):
                     try:
                         rule = obj()
                         matches = rule.matches(graph, query)
@@ -465,27 +510,30 @@ class TestControlRulesMatches:
 # translate/rules/resilience.py — resilience rules
 # ---------------------------------------------------------------------------
 
+
 class TestResilienceRulesMatches:
     """Test resilience translation rules matches against real graphs."""
 
     def test_resilience_rules_importable(self):
         try:
             import cogant.translate.rules.resilience as res
-            assert hasattr(res, '__file__')
+
+            assert hasattr(res, "__file__")
         except ImportError:
             pytest.skip("resilience rules not importable")
 
     def test_resilience_rules_match_returns_list(self):
         try:
+            import inspect
+
             import cogant.translate.rules.resilience as res
             from cogant.graph.queries import GraphQuery
-            import inspect
 
             graph = _make_graph()
             query = GraphQuery(graph)
 
-            for name, obj in inspect.getmembers(res, inspect.isclass):
-                if hasattr(obj, 'matches') and hasattr(obj, 'apply'):
+            for _name, obj in inspect.getmembers(res, inspect.isclass):
+                if hasattr(obj, "matches") and hasattr(obj, "apply"):
                     try:
                         rule = obj()
                         matches = rule.matches(graph, query)

@@ -33,7 +33,6 @@ from cogant.schemas.semantic import (
 )
 from cogant.translate.engine import TranslationEngine
 
-
 # ---------------------------------------------------------------------------
 # helpers (no mocks — real graph fabrication)
 # ---------------------------------------------------------------------------
@@ -111,8 +110,7 @@ def test_resolve_conflicts_priority_dominates_confidence() -> None:
 
     survivors = set(engine.mappings.keys())
     assert survivors == {"m2"}, (
-        "High priority mapping must win regardless of confidence. "
-        f"survivors={survivors}"
+        f"High priority mapping must win regardless of confidence. survivors={survivors}"
     )
 
 
@@ -344,9 +342,15 @@ def test_get_statistics_counts_by_kind_and_tier() -> None:
     and the ``kind.value`` → ``kind.name`` / ``str(kind)`` mutations.
     """
     engine = TranslationEngine()
-    engine.mappings["m1"] = _mapping("m1", ["a"], 0.5, ConfidenceTier.HUMAN_REVIEWED, MappingKind.OBSERVATION)
-    engine.mappings["m2"] = _mapping("m2", ["b"], 0.5, ConfidenceTier.HUMAN_REVIEWED, MappingKind.OBSERVATION)
-    engine.mappings["m3"] = _mapping("m3", ["c"], 0.5, ConfidenceTier.STATIC_ONLY, MappingKind.ACTION)
+    engine.mappings["m1"] = _mapping(
+        "m1", ["a"], 0.5, ConfidenceTier.HUMAN_REVIEWED, MappingKind.OBSERVATION
+    )
+    engine.mappings["m2"] = _mapping(
+        "m2", ["b"], 0.5, ConfidenceTier.HUMAN_REVIEWED, MappingKind.OBSERVATION
+    )
+    engine.mappings["m3"] = _mapping(
+        "m3", ["c"], 0.5, ConfidenceTier.STATIC_ONLY, MappingKind.ACTION
+    )
 
     stats = engine.get_statistics()
 
@@ -706,10 +710,7 @@ def test_partition_counts_match_id_set_sizes() -> None:
     assert blanket.stats["external_count"] == len(blanket.external_ids)
     # sanity: every node classified exactly once
     all_assigned = (
-        blanket.internal_ids
-        | blanket.sensory_ids
-        | blanket.active_ids
-        | blanket.external_ids
+        blanket.internal_ids | blanket.sensory_ids | blanket.active_ids | blanket.external_ids
     )
     assert all_assigned == set(graph.nodes.keys())
 

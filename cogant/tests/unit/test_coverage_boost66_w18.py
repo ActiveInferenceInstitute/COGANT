@@ -15,7 +15,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -50,14 +49,17 @@ items: List[str] = []
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
     n2 = builder.add_node(NodeKind.CLASS, "Rect", "mod.Rect", path="mod.py")
@@ -73,9 +75,11 @@ def _make_graph_with_nodes():
 # static/parser.py — PythonASTParser and dataclasses
 # ---------------------------------------------------------------------------
 
+
 class TestPythonASTParser:
     def _make_parser(self):
         from cogant.static.parser import PythonASTParser
+
         return PythonASTParser()
 
     def test_init(self):
@@ -84,6 +88,7 @@ class TestPythonASTParser:
 
     def test_parse_string_returns_module(self):
         from cogant.static.parser import PythonModule
+
         parser = self._make_parser()
         module = parser.parse_string(_SAMPLE_PY)
         assert isinstance(module, PythonModule)
@@ -119,6 +124,7 @@ class TestPythonASTParser:
 
     def test_parse_string_empty(self):
         from cogant.static.parser import PythonModule
+
         parser = self._make_parser()
         module = parser.parse_string("")
         assert isinstance(module, PythonModule)
@@ -127,6 +133,7 @@ class TestPythonASTParser:
 
     def test_parse_file(self, tmp_path):
         from cogant.static.parser import PythonModule
+
         src = tmp_path / "sample.py"
         src.write_text(_SAMPLE_PY)
         parser = self._make_parser()
@@ -159,6 +166,7 @@ class TestPythonASTParser:
 class TestPythonModuleDataclasses:
     def test_function_def_fields(self):
         from cogant.static.parser import FunctionDef
+
         fd = FunctionDef(
             name="f",
             line_start=1,
@@ -177,6 +185,7 @@ class TestPythonModuleDataclasses:
 
     def test_class_def_fields(self):
         from cogant.static.parser import ClassDef
+
         cd = ClassDef(
             name="MyClass",
             line_start=1,
@@ -193,6 +202,7 @@ class TestPythonModuleDataclasses:
 
     def test_import_def_fields(self):
         from cogant.static.parser import ImportDef
+
         imp = ImportDef(
             module_name="os",
             is_relative=False,
@@ -205,6 +215,7 @@ class TestPythonModuleDataclasses:
 
     def test_assignment_def_fields(self):
         from cogant.static.parser import AssignmentDef
+
         asgn = AssignmentDef(
             target_name="x",
             line_num=5,
@@ -221,9 +232,11 @@ class TestPythonModuleDataclasses:
 # graph/queries.py — GraphQuery
 # ---------------------------------------------------------------------------
 
+
 class TestGraphQuery:
     def _make_query(self, empty=False):
         from cogant.graph.queries import GraphQuery
+
         if empty:
             return GraphQuery(_make_empty_graph())
         graph, _ = _make_graph_with_nodes()
@@ -249,6 +262,7 @@ class TestGraphQuery:
 
     def test_find_all_paths_same_node(self):
         from cogant.graph.queries import GraphQuery
+
         graph, node_ids = _make_graph_with_nodes()
         q = GraphQuery(graph)
         paths = q.find_all_paths(node_ids[0], node_ids[2])
@@ -282,6 +296,7 @@ class TestGraphQuery:
 
     def test_find_shortest_path_existing(self):
         from cogant.graph.queries import GraphQuery
+
         graph, node_ids = _make_graph_with_nodes()
         q = GraphQuery(graph)
         path = q.find_shortest_path(node_ids[0], node_ids[1])
@@ -289,13 +304,13 @@ class TestGraphQuery:
 
     def test_filter_nodes_no_filter(self):
         q = self._make_query()
-        from cogant.schemas.core import NodeKind
         nodes = q.filter_nodes()
         assert isinstance(nodes, list)
 
     def test_filter_nodes_by_kind(self):
-        from cogant.schemas.core import NodeKind
         from cogant.graph.queries import GraphQuery
+        from cogant.schemas.core import NodeKind
+
         graph, _ = _make_graph_with_nodes()
         q = GraphQuery(graph)
         nodes = q.filter_nodes(kind=NodeKind.FUNCTION)
@@ -309,8 +324,9 @@ class TestGraphQuery:
         assert isinstance(edges, list)
 
     def test_filter_edges_by_kind(self):
-        from cogant.schemas.core import EdgeKind
         from cogant.graph.queries import GraphQuery
+        from cogant.schemas.core import EdgeKind
+
         graph, _ = _make_graph_with_nodes()
         q = GraphQuery(graph)
         edges = q.filter_edges(kind=EdgeKind.CONTAINS)
@@ -328,6 +344,7 @@ class TestGraphQuery:
 
     def test_compute_in_degree(self):
         from cogant.graph.queries import GraphQuery
+
         graph, node_ids = _make_graph_with_nodes()
         q = GraphQuery(graph)
         in_deg = q.compute_in_degree(node_ids[0])
@@ -335,15 +352,17 @@ class TestGraphQuery:
 
     def test_compute_out_degree(self):
         from cogant.graph.queries import GraphQuery
+
         graph, node_ids = _make_graph_with_nodes()
         q = GraphQuery(graph)
         out_deg = q.compute_out_degree(node_ids[0])
         assert isinstance(out_deg, int)
 
     def test_extract_subgraph_by_kind(self):
+        from cogant.graph.queries import GraphQuery
         from cogant.schemas.core import NodeKind
         from cogant.schemas.graph import ProgramGraph
-        from cogant.graph.queries import GraphQuery
+
         graph, _ = _make_graph_with_nodes()
         q = GraphQuery(graph)
         subgraph = q.extract_subgraph_by_kind([NodeKind.FUNCTION])
@@ -351,6 +370,7 @@ class TestGraphQuery:
 
     def test_get_dependency_chain(self):
         from cogant.graph.queries import GraphQuery
+
         graph, node_ids = _make_graph_with_nodes()
         q = GraphQuery(graph)
         chain = q.get_dependency_chain(node_ids[0])
@@ -361,14 +381,17 @@ class TestGraphQuery:
 # graph/merge.py — GraphMerger
 # ---------------------------------------------------------------------------
 
+
 class TestGraphMerger:
     def test_init(self):
         from cogant.graph.merge import GraphMerger
+
         merger = GraphMerger()
         assert merger is not None
 
     def test_merge_empty_list_raises(self):
         from cogant.graph.merge import GraphMerger
+
         merger = GraphMerger()
         with pytest.raises(ValueError):
             merger.merge([])
@@ -376,6 +399,7 @@ class TestGraphMerger:
     def test_merge_single_graph(self):
         from cogant.graph.merge import GraphMerger
         from cogant.schemas.graph import ProgramGraph
+
         merger = GraphMerger()
         graph, _ = _make_graph_with_nodes()
         result = merger.merge([graph])
@@ -385,6 +409,7 @@ class TestGraphMerger:
     def test_merge_two_graphs(self):
         from cogant.graph.merge import GraphMerger
         from cogant.schemas.graph import ProgramGraph
+
         merger = GraphMerger()
         g1, _ = _make_graph_with_nodes()
         g2 = _make_empty_graph()
@@ -394,6 +419,7 @@ class TestGraphMerger:
     def test_merge_graphs(self):
         from cogant.graph.merge import GraphMerger
         from cogant.schemas.graph import ProgramGraph
+
         merger = GraphMerger()
         g1, _ = _make_graph_with_nodes()
         g2 = _make_empty_graph()
@@ -403,6 +429,7 @@ class TestGraphMerger:
     def test_merge_multiple_graphs(self):
         from cogant.graph.merge import GraphMerger
         from cogant.schemas.graph import ProgramGraph
+
         merger = GraphMerger()
         g1, _ = _make_graph_with_nodes()
         g2 = _make_empty_graph()
@@ -411,12 +438,14 @@ class TestGraphMerger:
 
     def test_get_merge_statistics_empty(self):
         from cogant.graph.merge import GraphMerger
+
         merger = GraphMerger()
         stats = merger.get_merge_statistics()
         assert isinstance(stats, dict)
 
     def test_get_merge_statistics_after_merge(self):
         from cogant.graph.merge import GraphMerger
+
         merger = GraphMerger()
         g1, _ = _make_graph_with_nodes()
         merger.merge([g1])

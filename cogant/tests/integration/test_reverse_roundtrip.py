@@ -55,9 +55,7 @@ logger = logging.getLogger(__name__)
 
 # Absolute path to the cogant project root and calculator fixture.
 _COGANT_ROOT = Path(__file__).resolve().parents[2]
-_CALCULATOR_FIXTURE = (
-    _COGANT_ROOT / "examples" / "control_positive" / "calculator"
-)
+_CALCULATOR_FIXTURE = _COGANT_ROOT / "examples" / "control_positive" / "calculator"
 
 
 @pytest.fixture()
@@ -154,8 +152,7 @@ def test_reverse_pipeline_low_level(calculator_repo: Path, tmp_path: Path) -> No
     present = {p.name for p in package_path.iterdir() if p.is_file()}
     missing = expected_files - present
     assert not missing, (
-        f"Synthesized package missing expected files {missing}. "
-        f"Present: {sorted(present)}"
+        f"Synthesized package missing expected files {missing}. Present: {sorted(present)}"
     )
 
     # Step 5: re-run forward on the synthesized package and confirm it
@@ -169,9 +166,7 @@ def test_reverse_pipeline_low_level(calculator_repo: Path, tmp_path: Path) -> No
         f"Forward pipeline on synthesized package produced no program graph. "
         f"Errors: {synth_bundle.errors}"
     )
-    assert len(pg.nodes) >= 1, (
-        f"Synthesized repo graph is empty; nodes={len(pg.nodes)}"
-    )
+    assert len(pg.nodes) >= 1, f"Synthesized repo graph is empty; nodes={len(pg.nodes)}"
 
 
 # ---------------------------------------------------------------------------
@@ -180,9 +175,7 @@ def test_reverse_pipeline_low_level(calculator_repo: Path, tmp_path: Path) -> No
 
 
 @pytest.mark.integration
-def test_verify_roundtrip_meets_lenient_threshold(
-    calculator_repo: Path, tmp_path: Path
-) -> None:
+def test_verify_roundtrip_meets_lenient_threshold(calculator_repo: Path, tmp_path: Path) -> None:
     """``verify_repo_roundtrip`` reports role_match_score >= 0.5.
 
     The default ``ROLE_MATCH_THRESHOLD`` is ``0.5`` — lenient enough to
@@ -221,9 +214,7 @@ def test_verify_roundtrip_meets_lenient_threshold(
 
 
 @pytest.mark.integration
-def test_verify_roundtrip_from_gnn_markdown(
-    calculator_repo: Path, tmp_path: Path
-) -> None:
+def test_verify_roundtrip_from_gnn_markdown(calculator_repo: Path, tmp_path: Path) -> None:
     """Lower-level entry point: ``verify_roundtrip`` on a precomputed GNN file.
 
     Produces the GNN markdown via the forward pipeline, then drives

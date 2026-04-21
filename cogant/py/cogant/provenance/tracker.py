@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProvenanceRecord:
     """Record of evidence for an extracted element."""
+
     id: str
     target_id: str  # Node/edge/variable ID
     target_type: str  # "node", "edge", "variable", "action", etc.
@@ -188,7 +189,9 @@ class ProvenanceTracker:
 
         for record in self.records.values():
             by_target_type[record.target_type] = by_target_type.get(record.target_type, 0) + 1
-            by_evidence_type[record.evidence_type] = by_evidence_type.get(record.evidence_type, 0) + 1
+            by_evidence_type[record.evidence_type] = (
+                by_evidence_type.get(record.evidence_type, 0) + 1
+            )
             by_method[record.extraction_method] = by_method.get(record.extraction_method, 0) + 1
 
         # Average confidence

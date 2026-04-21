@@ -11,7 +11,6 @@ from pathlib import Path
 
 from cogant.dynamic.traces import TraceIngester
 
-
 # --------------------------- fixtures ----------------------------------- #
 
 
@@ -24,11 +23,11 @@ def _write_chrome_trace(tmp_path: Path, events: list[dict]) -> str:
 
 def _sample_events() -> list[dict]:
     """Return a representative event stream:
-      t=0: B main (pid=1,tid=1)
-      t=100: B helper
-      t=150: E helper (helper took 50us)
-      t=200: X complete_fn dur=25
-      t=300: E main (main took 300us)
+    t=0: B main (pid=1,tid=1)
+    t=100: B helper
+    t=150: E helper (helper took 50us)
+    t=200: X complete_fn dur=25
+    t=300: E main (main took 300us)
     """
     return [
         {"name": "main", "ph": "B", "ts": 0, "pid": 1, "tid": 1},
@@ -90,9 +89,7 @@ def test_ingest_chrome_trace_unexpected_format_returns_empty(tmp_path):
 def test_ingest_chrome_trace_filters_non_dict_entries(tmp_path):
     """Non-dict entries in the events list are silently dropped."""
     path = tmp_path / "mixed.json"
-    path.write_text(
-        json.dumps({"traceEvents": [{"name": "ok", "ph": "X"}, "not-a-dict", 42]})
-    )
+    path.write_text(json.dumps({"traceEvents": [{"name": "ok", "ph": "X"}, "not-a-dict", 42]}))
     result = TraceIngester().ingest_chrome_trace(str(path))
     assert len(result[0]["events"]) == 1
     assert result[0]["events"][0]["name"] == "ok"
@@ -101,12 +98,18 @@ def test_ingest_chrome_trace_filters_non_dict_entries(tmp_path):
 # --------------------------- ingest_custom_trace ------------------------ #
 
 
-def test_ingest_custom_trace_returns_placeholder(tmp_path):
-    """Custom trace parser is currently a placeholder."""
+def test_ingest_custom_trace_missing_file_raises(tmp_path):
+    """``ingest_custom_trace`` raises ``FileNotFoundError`` for missing inputs.
+
+    The placeholder return value used in earlier prototypes was replaced with
+    an explicit ``FileNotFoundError`` once real ``perf``/``flamegraph`` parsers
+    landed (see ``ingest_custom_trace`` docstring under ``Raises``).
+    """
+    import pytest
+
     ingester = TraceIngester()
-    result = ingester.ingest_custom_trace(str(tmp_path / "foo.perf"), "perf")
-    assert result[0]["format"] == "perf"
-    assert result[0]["events"] == []
+    with pytest.raises(FileNotFoundError):
+        ingester.ingest_custom_trace(str(tmp_path / "foo.perf"), "perf")
 
 
 # --------------------------- extract_call_sequences --------------------- #

@@ -2,8 +2,8 @@
 
 import sys
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
@@ -128,11 +128,7 @@ def sample_ast_structure() -> dict:
             {
                 "type": "FunctionDef",
                 "name": "hello_world",
-                "args": {
-                    "args": [
-                        {"type": "arg", "arg": "name", "annotation": None}
-                    ]
-                },
+                "args": {"args": [{"type": "arg", "arg": "name", "annotation": None}]},
                 "body": [
                     {
                         "type": "Return",
@@ -141,7 +137,7 @@ def sample_ast_structure() -> dict:
                             "left": {"type": "Constant", "value": "Hello, "},
                             "op": "Add",
                             "right": {"type": "Name", "id": "name"},
-                        }
+                        },
                     }
                 ],
             }
@@ -249,18 +245,15 @@ def example_repo_path() -> Path:
 
 # Advanced fixtures for comprehensive unit tests
 
+
 @pytest.fixture
 def sample_graph():
     """Create a sample ProgramGraph with multiple nodes and edges."""
-    from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
-    from datetime import datetime
 
-    metadata = GraphMetadata(
-        repo_uri="test://repo",
-        languages={"python"},
-        version="1.0"
-    )
+    from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
+    metadata = GraphMetadata(repo_uri="test://repo", languages={"python"}, version="1.0")
     graph = ProgramGraph(metadata=metadata)
 
     # Add various types of nodes
@@ -270,14 +263,14 @@ def sample_graph():
             kind=NodeKind.REPO,
             name="test_repo",
             qualified_name="test_repo",
-            path="."
+            path=".",
         ),
         Node(
             id="module:test.main",
             kind=NodeKind.MODULE,
             name="main",
             qualified_name="test.main",
-            path="test/main.py"
+            path="test/main.py",
         ),
         Node(
             id="class:Calculator",
@@ -285,7 +278,7 @@ def sample_graph():
             name="Calculator",
             qualified_name="test.main.Calculator",
             path="test/main.py",
-            metadata={"bases": []}
+            metadata={"bases": []},
         ),
         Node(
             id="function:add",
@@ -293,7 +286,7 @@ def sample_graph():
             name="add",
             qualified_name="test.main.Calculator.add",
             path="test/main.py",
-            metadata={"arity": 2}
+            metadata={"arity": 2},
         ),
         Node(
             id="function:subtract",
@@ -301,14 +294,14 @@ def sample_graph():
             name="subtract",
             qualified_name="test.main.Calculator.subtract",
             path="test/main.py",
-            metadata={"arity": 2}
+            metadata={"arity": 2},
         ),
         Node(
             id="variable:RESULT",
             kind=NodeKind.VARIABLE,
             name="RESULT",
             qualified_name="test.main.RESULT",
-            path="test/main.py"
+            path="test/main.py",
         ),
     ]
 
@@ -321,37 +314,37 @@ def sample_graph():
             id="edge:repo:test->module:test.main",
             source_id="repo:test",
             target_id="module:test.main",
-            kind=EdgeKind.CONTAINS
+            kind=EdgeKind.CONTAINS,
         ),
         Edge(
             id="edge:module->class",
             source_id="module:test.main",
             target_id="class:Calculator",
-            kind=EdgeKind.CONTAINS
+            kind=EdgeKind.CONTAINS,
         ),
         Edge(
             id="edge:class->add",
             source_id="class:Calculator",
             target_id="function:add",
-            kind=EdgeKind.CONTAINS
+            kind=EdgeKind.CONTAINS,
         ),
         Edge(
             id="edge:class->subtract",
             source_id="class:Calculator",
             target_id="function:subtract",
-            kind=EdgeKind.CONTAINS
+            kind=EdgeKind.CONTAINS,
         ),
         Edge(
             id="edge:add->variable",
             source_id="function:add",
             target_id="variable:RESULT",
-            kind=EdgeKind.WRITES
+            kind=EdgeKind.WRITES,
         ),
         Edge(
             id="edge:subtract->variable",
             source_id="function:subtract",
             target_id="variable:RESULT",
-            kind=EdgeKind.WRITES
+            kind=EdgeKind.WRITES,
         ),
     ]
 
@@ -364,14 +357,14 @@ def sample_graph():
 @pytest.fixture
 def sample_mappings():
     """Create sample SemanticMappings for testing."""
-    from cogant.schemas.semantic_mapping import SemanticMapping, ObservationMapping, ActionMapping
+    from cogant.schemas.semantic_mapping import SemanticMapping
 
     obs_mapping = SemanticMapping(
         id="mapping:obs1",
         name="counter_observation",
         category="observation",
         source_node_id="variable:counter",
-        target_state_var="counter_value"
+        target_state_var="counter_value",
     )
 
     action_mapping = SemanticMapping(
@@ -379,7 +372,7 @@ def sample_mappings():
         name="increment_action",
         category="action",
         source_node_id="function:increment",
-        target_action="increment_counter"
+        target_action="increment_counter",
     )
 
     hidden_mapping = SemanticMapping(
@@ -387,58 +380,41 @@ def sample_mappings():
         name="internal_state",
         category="hidden_state",
         source_node_id="variable:internal",
-        target_state_var="internal_state"
+        target_state_var="internal_state",
     )
 
-    return {
-        "observation": obs_mapping,
-        "action": action_mapping,
-        "hidden_state": hidden_mapping
-    }
+    return {"observation": obs_mapping, "action": action_mapping, "hidden_state": hidden_mapping}
 
 
 @pytest.fixture
 def sample_state_space():
     """Create a sample StateSpaceModel for testing."""
-    from cogant.schemas.state_space import StateSpaceModel, StateVariable, Observation, Action
+    from cogant.schemas.state_space import Action, Observation, StateSpaceModel, StateVariable
 
     variables = [
         StateVariable(
-            name="counter",
-            dtype="int",
-            domain_type="discrete",
-            domain_values=[0, 1, 2, 3, 4, 5]
+            name="counter", dtype="int", domain_type="discrete", domain_values=[0, 1, 2, 3, 4, 5]
         ),
         StateVariable(
             name="status",
             dtype="str",
             domain_type="discrete",
-            domain_values=["idle", "running", "stopped"]
+            domain_values=["idle", "running", "stopped"],
         ),
     ]
 
     observations = [
-        Observation(
-            name="counter_obs",
-            variable_name="counter"
-        ),
-        Observation(
-            name="status_obs",
-            variable_name="status"
-        ),
+        Observation(name="counter_obs", variable_name="counter"),
+        Observation(name="status_obs", variable_name="status"),
     ]
 
     actions = [
         Action(
             name="increment",
             preconditions={"counter": {"type": "less_than", "value": 5}},
-            effects={"counter": {"type": "add", "value": 1}}
+            effects={"counter": {"type": "add", "value": 1}},
         ),
-        Action(
-            name="reset",
-            preconditions={},
-            effects={"counter": {"type": "set", "value": 0}}
-        ),
+        Action(name="reset", preconditions={}, effects={"counter": {"type": "set", "value": 0}}),
     ]
 
     model = StateSpaceModel(
@@ -446,7 +422,7 @@ def sample_state_space():
         variables=variables,
         observations=observations,
         actions=actions,
-        initial_state={"counter": 0, "status": "idle"}
+        initial_state={"counter": 0, "status": "idle"},
     )
 
     return model
@@ -458,26 +434,10 @@ def sample_process_model():
     from cogant.schemas.process_model import ProcessModel, ProcessStage, ProcessTransition
 
     stages = [
-        ProcessStage(
-            id="stage:init",
-            name="initialization",
-            stage_type="entry_point"
-        ),
-        ProcessStage(
-            id="stage:processing",
-            name="process_data",
-            stage_type="processing"
-        ),
-        ProcessStage(
-            id="stage:output",
-            name="generate_output",
-            stage_type="processing"
-        ),
-        ProcessStage(
-            id="stage:complete",
-            name="completion",
-            stage_type="exit_point"
-        ),
+        ProcessStage(id="stage:init", name="initialization", stage_type="entry_point"),
+        ProcessStage(id="stage:processing", name="process_data", stage_type="processing"),
+        ProcessStage(id="stage:output", name="generate_output", stage_type="processing"),
+        ProcessStage(id="stage:complete", name="completion", stage_type="exit_point"),
     ]
 
     transitions = [
@@ -485,27 +445,24 @@ def sample_process_model():
             id="trans:init->proc",
             source_id="stage:init",
             target_id="stage:processing",
-            trigger_type="automatic"
+            trigger_type="automatic",
         ),
         ProcessTransition(
             id="trans:proc->output",
             source_id="stage:processing",
             target_id="stage:output",
-            trigger_type="automatic"
+            trigger_type="automatic",
         ),
         ProcessTransition(
             id="trans:output->complete",
             source_id="stage:output",
             target_id="stage:complete",
-            trigger_type="automatic"
+            trigger_type="automatic",
         ),
     ]
 
     model = ProcessModel(
-        id="process:test",
-        name="test_process",
-        stages=stages,
-        transitions=transitions
+        id="process:test", name="test_process", stages=stages, transitions=transitions
     )
 
     return model

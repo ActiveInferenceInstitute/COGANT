@@ -72,10 +72,12 @@ class RetryPatternRule(TranslationRule):
         for func in functions:
             name_lower = func.name.lower()
             if any(keyword in name_lower for keyword in retry_keywords):
-                matches.append({
-                    "node_id": func.id,
-                    "pattern_type": "retry_or_circuit_breaker",
-                })
+                matches.append(
+                    {
+                        "node_id": func.id,
+                        "pattern_type": "retry_or_circuit_breaker",
+                    }
+                )
 
         return matches
 
@@ -178,13 +180,15 @@ class ErrorBoundaryRule(TranslationRule):
             caught_node_ids = [e.target_id for e in catches_edges]
             thrown_node_ids = [e.target_id for e in throws_edges]
 
-            matches.append({
-                "node_id": node.id,
-                "caught_node_ids": caught_node_ids,
-                "thrown_node_ids": thrown_node_ids,
-                "catches_count": len(catches_edges),
-                "throws_count": len(throws_edges),
-            })
+            matches.append(
+                {
+                    "node_id": node.id,
+                    "caught_node_ids": caught_node_ids,
+                    "thrown_node_ids": thrown_node_ids,
+                    "catches_count": len(catches_edges),
+                    "throws_count": len(throws_edges),
+                }
+            )
 
         return matches
 
@@ -205,9 +209,7 @@ class ErrorBoundaryRule(TranslationRule):
             return None
 
         fragment_node_ids = (
-            [node_id]
-            + match.get("caught_node_ids", [])
-            + match.get("thrown_node_ids", [])
+            [node_id] + match.get("caught_node_ids", []) + match.get("thrown_node_ids", [])
         )
 
         mapping_id = f"errbnd_{node_id}_{hashlib.sha256(b'error_boundary').hexdigest()[:8]}"
@@ -320,12 +322,14 @@ class SingletonAccessRule(TranslationRule):
             # threshold for symmetry. TODO(calibration): sweep {3,
             # 5, 8} in tandem with the read-count sweep.
             if len(reader_modules) >= 3:
-                matches.append({
-                    "node_id": node.id,
-                    "reader_ids": reader_ids,
-                    "reader_count": len(read_edges),
-                    "module_count": len(reader_modules),
-                })
+                matches.append(
+                    {
+                        "node_id": node.id,
+                        "reader_ids": reader_ids,
+                        "reader_count": len(read_edges),
+                        "module_count": len(reader_modules),
+                    }
+                )
 
         return matches
 
@@ -444,13 +448,15 @@ class CircuitBreakerRule(TranslationRule):
 
             if has_keyword or has_retry_metadata:
                 guarded_ids = [e.target_id for e in guards_edges]
-                matches.append({
-                    "node_id": node.id,
-                    "guarded_ids": guarded_ids,
-                    "guards_count": len(guards_edges),
-                    "keyword_match": has_keyword,
-                    "metadata_match": has_retry_metadata,
-                })
+                matches.append(
+                    {
+                        "node_id": node.id,
+                        "guarded_ids": guarded_ids,
+                        "guards_count": len(guards_edges),
+                        "keyword_match": has_keyword,
+                        "metadata_match": has_retry_metadata,
+                    }
+                )
 
         return matches
 
@@ -540,8 +546,15 @@ class RateLimiterRule(TranslationRule):
         matches = []
 
         rate_keywords = [
-            "rate_limit", "throttle_", "token_bucket", "leaky_bucket",
-            "ratelimit", "rate_limit", "quota", "throttle", "backoff"
+            "rate_limit",
+            "throttle_",
+            "token_bucket",
+            "leaky_bucket",
+            "ratelimit",
+            "rate_limit",
+            "quota",
+            "throttle",
+            "backoff",
         ]
 
         # Find functions and methods with rate-limiting keywords
@@ -556,27 +569,30 @@ class RateLimiterRule(TranslationRule):
             out_edges = graph.get_edges_from(node.id)
             calls = [e for e in out_edges if e.kind == EdgeKind.CALLS]
             has_sleep_or_backoff = any(
-                "sleep" in e.target_id.lower() or "backoff" in e.target_id.lower()
-                for e in calls
+                "sleep" in e.target_id.lower() or "backoff" in e.target_id.lower() for e in calls
             )
 
             if has_rate_keyword or has_sleep_or_backoff:
-                matches.append({
-                    "node_id": node.id,
-                    "rate_keyword": has_rate_keyword,
-                    "has_backoff": has_sleep_or_backoff,
-                })
+                matches.append(
+                    {
+                        "node_id": node.id,
+                        "rate_keyword": has_rate_keyword,
+                        "has_backoff": has_sleep_or_backoff,
+                    }
+                )
 
         # Find classes that implement rate limiting
         classes = graph.get_nodes_by_kind(NodeKind.CLASS)
         for cls in classes:
             name_lower = cls.name.lower()
             if any(kw in name_lower for kw in rate_keywords):
-                matches.append({
-                    "node_id": cls.id,
-                    "rate_keyword": True,
-                    "has_backoff": False,
-                })
+                matches.append(
+                    {
+                        "node_id": cls.id,
+                        "rate_keyword": True,
+                        "has_backoff": False,
+                    }
+                )
 
         return matches
 

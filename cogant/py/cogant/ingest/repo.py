@@ -166,14 +166,10 @@ class RepoIngester:
             cmd.extend([url, str(repo_path)])
 
             logger.info(f"Cloning repository: {url}")
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=300
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
 
             if result.returncode != 0:
-                raise RuntimeError(
-                    f"Failed to clone repository: {result.stderr}"
-                )
+                raise RuntimeError(f"Failed to clone repository: {result.stderr}")
 
         except subprocess.TimeoutExpired as exc:
             raise RuntimeError(f"Clone operation timed out for {url}") from exc

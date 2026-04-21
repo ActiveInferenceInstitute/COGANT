@@ -28,7 +28,6 @@ from pathlib import Path
 
 import pytest
 
-
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _PY_ROOT = _REPO_ROOT / "py"
 _EXAMPLES_DIR = _REPO_ROOT / "examples"
@@ -38,7 +37,6 @@ for _p in (_PY_ROOT, _EXAMPLES_DIR):
         sys.path.insert(0, str(_p))
 
 from orchestrate_roundtrip import RoundtripOrchestrator  # noqa: E402
-
 
 REAL_WORLD_REPOS = [
     ("flask_app", _REPO_ROOT / "examples" / "real_world" / "flask_app"),
@@ -94,9 +92,7 @@ def test_pipeline_completes(real_world_outputs, repo_name, _):
     if repo_name not in real_world_outputs:
         pytest.skip(f"Fixture {repo_name} not available")
     entry = real_world_outputs[repo_name]
-    assert entry["success"] is True, (
-        f"{repo_name} pipeline did not report success"
-    )
+    assert entry["success"] is True, f"{repo_name} pipeline did not report success"
     assert entry["files"], f"{repo_name} produced no output files"
 
 
@@ -171,13 +167,9 @@ def test_gnn_markdown_has_canonical_sections(real_world_outputs, repo_name, _):
     files = real_world_outputs[repo_name]["files"]
     gnn_md = files.get("model.gnn.md", "")
     assert gnn_md, f"{repo_name}: model.gnn.md missing"
-    assert len(gnn_md) > 500, (
-        f"{repo_name}: model.gnn.md too short ({len(gnn_md)} chars)"
-    )
+    assert len(gnn_md) > 500, f"{repo_name}: model.gnn.md too short ({len(gnn_md)} chars)"
     for section in CANONICAL_GNN_SECTIONS:
-        assert section in gnn_md, (
-            f"{repo_name}: model.gnn.md missing canonical section {section!r}"
-        )
+        assert section in gnn_md, f"{repo_name}: model.gnn.md missing canonical section {section!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -202,9 +194,7 @@ def test_core_artifacts_present(real_world_outputs, repo_name, _):
         pytest.skip(f"Fixture {repo_name} not available")
     files = real_world_outputs[repo_name]["files"]
     for required in _REQUIRED_CORE_FILES:
-        assert required in files, (
-            f"{repo_name}: required artifact {required!r} missing"
-        )
+        assert required in files, f"{repo_name}: required artifact {required!r} missing"
 
 
 @pytest.mark.integration
@@ -214,6 +204,4 @@ def test_model_gnn_json_parses(real_world_outputs, repo_name, _):
         pytest.skip(f"Fixture {repo_name} not available")
     files = real_world_outputs[repo_name]["files"]
     data = json.loads(files["model.gnn.json"])
-    assert isinstance(data, dict), (
-        f"{repo_name}: model.gnn.json not a dict"
-    )
+    assert isinstance(data, dict), f"{repo_name}: model.gnn.json not a dict"

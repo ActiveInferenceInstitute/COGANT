@@ -252,9 +252,7 @@ def test_scan_calculator_fixture():
     if not CALCULATOR_FIXTURE.exists():
         pytest.skip("calculator fixture not found")
     result = _run("scan", str(CALCULATOR_FIXTURE), "--format", "json")
-    assert result.returncode == 0, (
-        f"scan exited {result.returncode}; stderr: {result.stderr!r}"
-    )
+    assert result.returncode == 0, f"scan exited {result.returncode}; stderr: {result.stderr!r}"
     stdout = result.stdout.strip()
     assert stdout, "scan produced no stdout"
     # Extract JSON from potential Rich wrapping
@@ -270,12 +268,8 @@ def test_explain_calculator_fixture():
     """``cogant explain`` on Calculator class exits 0 with JSON."""
     if not CALCULATOR_FIXTURE.exists():
         pytest.skip("calculator fixture not found")
-    result = _run(
-        "explain", str(CALCULATOR_FIXTURE), "Calculator", "--format", "json"
-    )
-    assert result.returncode == 0, (
-        f"explain exited {result.returncode}; stderr: {result.stderr!r}"
-    )
+    result = _run("explain", str(CALCULATOR_FIXTURE), "Calculator", "--format", "json")
+    assert result.returncode == 0, f"explain exited {result.returncode}; stderr: {result.stderr!r}"
     stdout = result.stdout.strip()
     start = stdout.find("{")
     if start != -1:
@@ -288,9 +282,7 @@ def test_init_creates_config(tmp_path: Path):
     """``cogant init`` scaffolds a .cogant/config.json."""
     target = tmp_path / "test_project"
     result = _run("init", str(target), "--quiet")
-    assert result.returncode == 0, (
-        f"init exited {result.returncode}; stderr: {result.stderr!r}"
-    )
+    assert result.returncode == 0, f"init exited {result.returncode}; stderr: {result.stderr!r}"
     config = target / ".cogant" / "config.json"
     assert config.exists(), "init did not create .cogant/config.json"
     data = json.loads(config.read_text())

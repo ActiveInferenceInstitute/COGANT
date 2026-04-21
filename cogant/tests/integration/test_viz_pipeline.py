@@ -3,8 +3,6 @@
 Tests for converting graph and matrix data to visual formats (mermaid, PNG, PDF).
 """
 
-from pathlib import Path
-
 import pytest
 
 # Skip all tests if matplotlib is not available
@@ -46,6 +44,7 @@ class TestMatrixVisualizationBasics:
 
         # Verify return type
         import matplotlib.figure
+
         assert isinstance(fig, matplotlib.figure.Figure)
 
     def test_matrix_view_to_png(self, temp_dir):
@@ -104,8 +103,9 @@ class TestPipelineVisualization:
 
         assert isinstance(diagram, str)
         assert len(diagram) > 0
-        assert ("flowchart" in diagram.lower() or "graph" in diagram.lower()), \
+        assert "flowchart" in diagram.lower() or "graph" in diagram.lower(), (
             "Diagram should use Mermaid flowchart or graph syntax"
+        )
 
 
 class TestFlowDiagramming:
@@ -138,8 +138,9 @@ class TestFlowDiagramming:
         assert isinstance(diagram, str)
         assert len(diagram) > 0
         # Mermaid flowchart should contain directions or connections
-        assert any(x in diagram.lower() for x in ["flowchart", "graph", "-->", "->"]), \
+        assert any(x in diagram.lower() for x in ["flowchart", "graph", "-->", "->"]), (
             "Diagram should contain Mermaid syntax"
+        )
 
 
 class TestPDFExport:
@@ -154,7 +155,6 @@ class TestPDFExport:
         - File is valid PDF format (has PDF header)
         """
         pytest.importorskip("matplotlib")
-        import matplotlib.pyplot as plt
 
         try:
             from cogant.export.visualization import PDFExporter
@@ -200,6 +200,7 @@ class TestVisualizationIntegration:
 
         # Create sample data
         import numpy as np
+
         matrix_data = np.random.rand(5, 5)
 
         # Create figure

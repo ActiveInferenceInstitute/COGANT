@@ -37,9 +37,7 @@ def gnn_markdown(tmp_path: Path) -> Path:
         time_regime=TimeRegime.SYNCHRONOUS,
     )
     pm = ProcessModel(id="m", schema_name="v0.1.0", stages={}, connections={})
-    g = ProgramGraph(
-        metadata=GraphMetadata(repo_uri="test", languages={"python"})
-    )
+    g = ProgramGraph(metadata=GraphMetadata(repo_uri="test", languages={"python"}))
     formatter = GNNMarkdownFormatter(g, ss, pm, {})
     gnn_path = tmp_path / "model.gnn.md"
     gnn_path.write_text(formatter.format())

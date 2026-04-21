@@ -156,9 +156,7 @@ def test_incremental_zero_change_is_faster(tmp_path: Path) -> None:
 
     # Sanity check: cache should now contain exactly one entry.
     shard_files = list(cache_dir.rglob("*.json"))
-    assert shard_files, (
-        f"Cold run failed to populate {cache_dir}; found no JSON entries"
-    )
+    assert shard_files, f"Cold run failed to populate {cache_dir}; found no JSON entries"
 
     # Warm incremental run — same HEAD, no code changes.
     warm_elapsed, warm_bundle = _run_pipeline(
@@ -236,8 +234,7 @@ def test_incremental_after_edit_reparses_only_changed(tmp_path: Path) -> None:
 
     target = repo / "mypkg" / "multiplier.py"
     target.write_text(
-        target.read_text()
-        + "\n"
+        target.read_text() + "\n"
         "def mul_const(a: int) -> int:\n"
         '    """Multiply a by a fixed constant."""\n'
         "    return mul(a, 7)\n"
@@ -259,7 +256,5 @@ def test_incremental_after_edit_reparses_only_changed(tmp_path: Path) -> None:
         f"Partial incremental should still see a cache hit, got {stats}"
     )
     # Exactly one file changed between baseline_sha and HEAD.
-    assert stats.get("files_reparsed") == 1, (
-        f"Expected 1 file reparsed, got stats={stats}"
-    )
+    assert stats.get("files_reparsed") == 1, f"Expected 1 file reparsed, got stats={stats}"
     assert elapsed > 0.0

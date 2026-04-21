@@ -244,9 +244,7 @@ def matrices(
     state_space,
 ) -> GNNMatrices:
     graph, _ = sample_graph_and_ids
-    return GNNMatrices(
-        graph=graph, mappings=semantic_mappings, state_space=state_space
-    )
+    return GNNMatrices(graph=graph, mappings=semantic_mappings, state_space=state_space)
 
 
 # ------------------------------------------------------------------- dimensions
@@ -255,19 +253,13 @@ def matrices(
 class TestGNNMatricesDimensions:
     """Tests for dimension accessors."""
 
-    def test_n_states_reflects_hidden_state_mappings(
-        self, matrices: GNNMatrices
-    ) -> None:
+    def test_n_states_reflects_hidden_state_mappings(self, matrices: GNNMatrices) -> None:
         assert matrices.n_states == 3
 
-    def test_n_obs_reflects_observation_mappings(
-        self, matrices: GNNMatrices
-    ) -> None:
+    def test_n_obs_reflects_observation_mappings(self, matrices: GNNMatrices) -> None:
         assert matrices.n_obs == 2
 
-    def test_n_actions_reflects_action_mappings(
-        self, matrices: GNNMatrices
-    ) -> None:
+    def test_n_actions_reflects_action_mappings(self, matrices: GNNMatrices) -> None:
         assert matrices.n_actions == 2
 
 
@@ -287,13 +279,9 @@ class TestAMatrix:
         """Each row of A must be a valid probability distribution."""
         A = matrices.compute_A()
         for i, row in enumerate(A):
-            assert abs(sum(row) - 1.0) < 1e-6, (
-                f"A row {i} sums to {sum(row)}"
-            )
+            assert abs(sum(row) - 1.0) < 1e-6, f"A row {i} sums to {sum(row)}"
 
-    def test_A_concentrates_mass_on_direct_reads(
-        self, matrices: GNNMatrices
-    ) -> None:
+    def test_A_concentrates_mass_on_direct_reads(self, matrices: GNNMatrices) -> None:
         """Observation 0 reads state 0, so A[0][0] should be the largest."""
         A = matrices.compute_A()
         # A[0] is the likelihood of obs 0 over hidden states.
@@ -321,9 +309,7 @@ class TestBMatrix:
             for cell in row:
                 assert len(cell) == n_a
 
-    def test_B_columns_sum_to_one_per_action(
-        self, matrices: GNNMatrices
-    ) -> None:
+    def test_B_columns_sum_to_one_per_action(self, matrices: GNNMatrices) -> None:
         """For each (current state, action) column, sum over next states == 1."""
         B = matrices.compute_B()
         n_s = matrices.n_states
@@ -331,13 +317,9 @@ class TestBMatrix:
         for cur in range(n_s):
             for k in range(n_a):
                 col_sum = sum(B[nxt][cur][k] for nxt in range(n_s))
-                assert abs(col_sum - 1.0) < 1e-6, (
-                    f"B column (cur={cur}, k={k}) sums to {col_sum}"
-                )
+                assert abs(col_sum - 1.0) < 1e-6, f"B column (cur={cur}, k={k}) sums to {col_sum}"
 
-    def test_B_action_writes_concentrate_mass(
-        self, matrices: GNNMatrices
-    ) -> None:
+    def test_B_action_writes_concentrate_mass(self, matrices: GNNMatrices) -> None:
         """Action 0 writes state 0 → B[0][cur][0] should dominate."""
         B = matrices.compute_B()
         # From state 1, action 0 should push mass toward state 0.
@@ -390,18 +372,14 @@ class TestDVector:
 class TestMatrixOutputs:
     """Tests for the markdown and dict output formatters."""
 
-    def test_markdown_block_contains_all_sections(
-        self, matrices: GNNMatrices
-    ) -> None:
+    def test_markdown_block_contains_all_sections(self, matrices: GNNMatrices) -> None:
         block = matrices.to_gnn_markdown_block()
         assert "A[[rows=" in block
         assert "B[[rows=" in block
         assert "C[[rows=" in block
         assert "D[[rows=" in block
 
-    def test_markdown_block_has_depth_for_B(
-        self, matrices: GNNMatrices
-    ) -> None:
+    def test_markdown_block_has_depth_for_B(self, matrices: GNNMatrices) -> None:
         block = matrices.to_gnn_markdown_block()
         assert "depth=" in block
 
@@ -426,9 +404,7 @@ class TestMatrixOutputs:
 class TestValidateShapes:
     """Tests for the built-in shape validator."""
 
-    def test_validate_shapes_ok_for_fixture(
-        self, matrices: GNNMatrices
-    ) -> None:
+    def test_validate_shapes_ok_for_fixture(self, matrices: GNNMatrices) -> None:
         ok, errors = matrices.validate_shapes()
         assert ok, f"Expected valid shapes, got errors: {errors}"
 

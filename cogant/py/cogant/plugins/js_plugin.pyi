@@ -3,7 +3,7 @@ from typing import Any
 
 from cogant.plugins.base import LanguagePlugin
 
-__all__ = ['JsLanguagePlugin']
+__all__ = ["JsLanguagePlugin"]
 
 class JsLanguagePlugin(LanguagePlugin):
     supported_languages: set[str]

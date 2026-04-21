@@ -3,7 +3,17 @@ from pathlib import Path
 
 from rich.console import Console
 
-__all__ = ['DEFAULT_COGANT_TOML', 'GITIGNORE_ENTRY', 'RepoPathError', 'ScaffoldResult', 'render_repo_path_error', 'render_scaffold_summary', 'scaffold_project', 'suggest_repo_path', 'validate_repo_path']
+__all__ = [
+    "DEFAULT_COGANT_TOML",
+    "GITIGNORE_ENTRY",
+    "RepoPathError",
+    "ScaffoldResult",
+    "render_repo_path_error",
+    "render_scaffold_summary",
+    "scaffold_project",
+    "suggest_repo_path",
+    "validate_repo_path",
+]
 
 DEFAULT_COGANT_TOML: str
 GITIGNORE_ENTRY: str

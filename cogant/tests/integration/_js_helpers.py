@@ -14,7 +14,6 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
 
 import pytest
 
@@ -55,7 +54,7 @@ except ImportError:  # pragma: no cover
 # ---------------------------------------------------------------------------
 
 
-def _run_translation(graph: ProgramGraph) -> List[SemanticMapping]:
+def _run_translation(graph: ProgramGraph) -> list[SemanticMapping]:
     """Translate ``graph`` with the shipping structural + semantic rule set."""
     engine = TranslationEngine()
     engine.register_rule(ReadOnlyInputRule())
@@ -69,9 +68,9 @@ def _run_translation(graph: ProgramGraph) -> List[SemanticMapping]:
     return engine.translate(graph)
 
 
-def _role_counts(mappings: List[SemanticMapping]) -> Dict[MappingKind, int]:
+def _role_counts(mappings: list[SemanticMapping]) -> dict[MappingKind, int]:
     """Return a histogram of ``MappingKind`` → count."""
-    counts: Dict[MappingKind, int] = {}
+    counts: dict[MappingKind, int] = {}
     for m in mappings:
         counts[m.kind] = counts.get(m.kind, 0) + 1
     return counts
@@ -99,9 +98,9 @@ def _build_python_graph(source_path: Path) -> ProgramGraph:
         language="python",
     )
 
-    class_nodes: Dict[str, Node] = {}
-    method_nodes: Dict[Tuple[str, str], Node] = {}
-    attr_nodes: Dict[Tuple[str, str], Node] = {}
+    class_nodes: dict[str, Node] = {}
+    method_nodes: dict[tuple[str, str], Node] = {}
+    attr_nodes: dict[tuple[str, str], Node] = {}
 
     for stmt in tree.body:
         if not isinstance(stmt, ast.ClassDef):
@@ -206,9 +205,9 @@ def _build_javascript_graph(source_path: Path) -> ProgramGraph:
         language="javascript",
     )
 
-    class_nodes: Dict[str, Node] = {}
-    method_nodes: Dict[Tuple[str, str], Node] = {}
-    attr_nodes: Dict[Tuple[str, str], Node] = {}
+    class_nodes: dict[str, Node] = {}
+    method_nodes: dict[tuple[str, str], Node] = {}
+    attr_nodes: dict[tuple[str, str], Node] = {}
 
     # First pass: classes.
     for sym in ast_dict["symbols"]:
@@ -276,9 +275,7 @@ def _build_javascript_graph(source_path: Path) -> ProgramGraph:
             key = (cls_name, attr)
             if key not in attr_nodes:
                 attr_qname = (
-                    f"{module_name}.{cls_name}.{attr}"
-                    if cls_name
-                    else f"{module_name}.{attr}"
+                    f"{module_name}.{cls_name}.{attr}" if cls_name else f"{module_name}.{attr}"
                 )
                 attr_node = builder.add_node(
                     kind=NodeKind.VARIABLE,
@@ -290,13 +287,9 @@ def _build_javascript_graph(source_path: Path) -> ProgramGraph:
                 attr_nodes[key] = attr_node
                 builder.add_edge(parent.id, attr_node.id, EdgeKind.CONTAINS)
         for attr in writes:
-            builder.add_edge(
-                method_node.id, attr_nodes[(cls_name, attr)].id, EdgeKind.WRITES
-            )
+            builder.add_edge(method_node.id, attr_nodes[(cls_name, attr)].id, EdgeKind.WRITES)
         for attr in reads:
-            builder.add_edge(
-                method_node.id, attr_nodes[(cls_name, attr)].id, EdgeKind.READS
-            )
+            builder.add_edge(method_node.id, attr_nodes[(cls_name, attr)].id, EdgeKind.READS)
 
         if cls_name and cls_name in class_nodes:
             parent_class = class_nodes[cls_name]

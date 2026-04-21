@@ -71,6 +71,7 @@ class DegradedOutput(NamedTuple):
         reason: Free-text explanation of why degradation occurred.
         affected_matrices: List of matrix names affected (e.g. ["A", "B"]).
     """
+
     reason: str
     affected_matrices: list[str]
 
@@ -97,6 +98,7 @@ class ObservationModality:
         confidence: Confidence tier inherited from the upstream
             semantic mapping.
     """
+
     id: str
     name: str
     source_node_id: str  # Reference to read-only node
@@ -131,6 +133,7 @@ class Action:
         confidence: Confidence tier inherited from the semantic
             mapping.
     """
+
     id: str
     name: str
     controller_id: str  # Reference to controller/API node
@@ -167,6 +170,7 @@ class Transition:
             falls back to the deterministic default.
         confidence: Inherited from the driving action.
     """
+
     id: str
     source_state: dict[str, Any]
     target_state: dict[str, Any]
@@ -199,6 +203,7 @@ class Likelihood:
         confidence: Inherited from the underlying variable or
             mapping.
     """
+
     id: str
     variable_id: str
     distribution_type: str  # "bernoulli", "categorical", "gaussian", etc.
@@ -231,6 +236,7 @@ class Preference:
         confidence: Confidence tier inherited from the upstream
             mapping.
     """
+
     id: str
     name: str
     description: str
@@ -276,6 +282,7 @@ class StateSpaceModel:
         degraded_output: Optional :class:`DegradedOutput` if compilation
             fell back to identity/uniform matrices due to lack of evidence.
     """
+
     id: str
     schema_name: str
     variables: dict[str, StateVariable]
@@ -313,20 +320,18 @@ class StateSpaceModel:
         for action_id, action in self.actions.items():
             for var_id in action.effects + action.preconditions:
                 if var_id not in all_var_ids:
-                    issues.append(
-                        f"Action {action_id} references unknown variable {var_id}"
-                    )
+                    issues.append(f"Action {action_id} references unknown variable {var_id}")
             for var_id in action.effects:
                 if var_id not in all_var_ids:
-                    issues.append(
-                        f"Action {action_id} effect references unknown variable {var_id}"
-                    )
+                    issues.append(f"Action {action_id} effect references unknown variable {var_id}")
 
         # Check observation references in likelihoods
         all_obs_ids = set(self.observations.keys())
         for likelihood_id, likelihood in self.likelihoods.items():
-            if likelihood.variable_id not in all_var_ids and \
-               likelihood.variable_id not in all_obs_ids:
+            if (
+                likelihood.variable_id not in all_var_ids
+                and likelihood.variable_id not in all_obs_ids
+            ):
                 issues.append(
                     f"Likelihood {likelihood_id} references unknown "
                     f"variable/observation {likelihood.variable_id}"
@@ -336,9 +341,7 @@ class StateSpaceModel:
         for pref_id, pref in self.preferences.items():
             for var_id in pref.scope:
                 if var_id not in all_var_ids:
-                    issues.append(
-                        f"Preference {pref_id} references unknown variable {var_id}"
-                    )
+                    issues.append(f"Preference {pref_id} references unknown variable {var_id}")
 
         # Check distributions for basic sanity (non-negative, sum near 1)
         for pref_id, pref in self.preferences.items():
@@ -376,9 +379,7 @@ class StateSpaceModel:
             "n_likelihoods": len(self.likelihoods),
             "time_regime": self.time_regime.value if self.time_regime else "unknown",
             "is_degraded": self.degraded_output is not None,
-            "degradation_reason": (
-                self.degraded_output.reason if self.degraded_output else None
-            ),
+            "degradation_reason": (self.degraded_output.reason if self.degraded_output else None),
         }
 
 
@@ -453,7 +454,9 @@ class StateSpaceCompiler:
         """
         logger.info(
             "Compiling state space model for schema '%s' (%d nodes, %d edges)",
-            self.schema_name, len(self.graph.nodes), len(self.graph.edges),
+            self.schema_name,
+            len(self.graph.nodes),
+            len(self.graph.edges),
         )
 
         # Extract state variables
@@ -504,24 +507,28 @@ class StateSpaceCompiler:
         # Build a per-kind confidence summary at INFO level
         confidence_dist: dict[str, int] = {}
         for var in variables.values():
-            tier = var.confidence.value if hasattr(var.confidence, 'value') else str(var.confidence)
+            tier = var.confidence.value if hasattr(var.confidence, "value") else str(var.confidence)
             confidence_dist[tier] = confidence_dist.get(tier, 0) + 1
 
         logger.info(
             "State space compiled: %d vars, %d obs, %d actions, %d transitions, "
             "%d likelihoods, %d prefs | time_regime=%s | confidence=%s",
-            len(variables), len(observations), len(actions), len(transitions),
-            len(likelihoods), len(preferences),
-            time_regime.value if hasattr(time_regime, 'value') else time_regime,
-            ', '.join(f'{k}={v}' for k, v in sorted(confidence_dist.items()))
-            if confidence_dist else "none",
+            len(variables),
+            len(observations),
+            len(actions),
+            len(transitions),
+            len(likelihoods),
+            len(preferences),
+            time_regime.value if hasattr(time_regime, "value") else time_regime,
+            ", ".join(f"{k}={v}" for k, v in sorted(confidence_dist.items()))
+            if confidence_dist
+            else "none",
         )
 
         return model
 
     def _extract_observations(
-        self,
-        semantic_mappings: dict[str, SemanticMapping]
+        self, semantic_mappings: dict[str, SemanticMapping]
     ) -> dict[str, ObservationModality]:
         """
         Extract observation modalities from semantic mappings.
@@ -536,8 +543,7 @@ class StateSpaceCompiler:
 
         # Find OBSERVATION mappings
         obs_mappings = {
-            mid: m for mid, m in semantic_mappings.items()
-            if m.kind == MappingKind.OBSERVATION
+            mid: m for mid, m in semantic_mappings.items() if m.kind == MappingKind.OBSERVATION
         }
 
         for _i, (_mapping_id, mapping) in enumerate(obs_mappings.items()):
@@ -565,10 +571,7 @@ class StateSpaceCompiler:
         logger.debug(f"Extracted {len(observations)} observation modalities")
         return observations
 
-    def _extract_actions(
-        self,
-        semantic_mappings: dict[str, SemanticMapping]
-    ) -> dict[str, Action]:
+    def _extract_actions(self, semantic_mappings: dict[str, SemanticMapping]) -> dict[str, Action]:
         """
         Extract actions from ACTION and POLICY semantic mappings.
 
@@ -595,8 +598,7 @@ class StateSpaceCompiler:
         # that write to state). CONSTRAINT/PREFERENCE are handled separately.
         action_kinds = {MappingKind.ACTION, MappingKind.POLICY}
         action_mappings = [
-            (mid, m) for mid, m in semantic_mappings.items()
-            if m.kind in action_kinds
+            (mid, m) for mid, m in semantic_mappings.items() if m.kind in action_kinds
         ]
 
         for _mapping_id, mapping in action_mappings:
@@ -685,9 +687,7 @@ class StateSpaceCompiler:
         return xref
 
     def _extract_transitions(
-        self,
-        variables: dict[str, StateVariable],
-        actions: dict[str, Action]
+        self, variables: dict[str, StateVariable], actions: dict[str, Action]
     ) -> dict[str, Transition]:
         """
         Extract state transitions from control flow and actions.
@@ -753,7 +753,8 @@ class StateSpaceCompiler:
                 source_state=source_state,
                 target_state=target_state,
                 action_id=action_id,
-                triggered_by=triggered_by or f"{', '.join(next_actions) if next_actions else 'init'}",
+                triggered_by=triggered_by
+                or f"{', '.join(next_actions) if next_actions else 'init'}",
                 confidence=action.confidence,
             )
             transitions[trans_id] = transition
@@ -762,9 +763,7 @@ class StateSpaceCompiler:
         return transitions
 
     def _extract_likelihoods(
-        self,
-        variables: dict[str, StateVariable],
-        semantic_mappings: dict[str, SemanticMapping]
+        self, variables: dict[str, StateVariable], semantic_mappings: dict[str, SemanticMapping]
     ) -> dict[str, Likelihood]:
         """
         Build :class:`Likelihood` distributions for hidden-state variables and
@@ -804,9 +803,7 @@ class StateSpaceCompiler:
             likelihood_id = f"like_{var_id}"
 
             dist_type = self._infer_distribution_type(variable)
-            parameters = self._default_distribution_parameters(
-                dist_type, variable.cardinality
-            )
+            parameters = self._default_distribution_parameters(dist_type, variable.cardinality)
 
             likelihoods[likelihood_id] = Likelihood(
                 id=likelihood_id,
@@ -836,9 +833,7 @@ class StateSpaceCompiler:
 
                 dist_type = self._infer_observation_distribution(node)
                 cardinality = node.metadata.get("cardinality") if node.metadata else None
-                parameters = self._default_distribution_parameters(
-                    dist_type, cardinality
-                )
+                parameters = self._default_distribution_parameters(dist_type, cardinality)
 
                 likelihoods[obs_like_id] = Likelihood(
                     id=obs_like_id,
@@ -927,8 +922,7 @@ class StateSpaceCompiler:
         return {}
 
     def _extract_preferences(
-        self,
-        semantic_mappings: dict[str, SemanticMapping]
+        self, semantic_mappings: dict[str, SemanticMapping]
     ) -> dict[str, Preference]:
         """
         Extract preferences and constraints from CONSTRAINT/PREFERENCE mappings.
@@ -957,10 +951,7 @@ class StateSpaceCompiler:
         # excluded here so that policies and preferences do not double-count
         # the same underlying mapping.
         pref_kinds = {MappingKind.CONSTRAINT, MappingKind.PREFERENCE}
-        pref_mappings = [
-            (mid, m) for mid, m in semantic_mappings.items()
-            if m.kind in pref_kinds
-        ]
+        pref_mappings = [(mid, m) for mid, m in semantic_mappings.items() if m.kind in pref_kinds]
 
         for i, (mapping_id, mapping) in enumerate(pref_mappings):
             pref_id = f"pref_{i}"
@@ -1139,11 +1130,7 @@ class StateSpaceCompiler:
         # Unknown shape — return empty dict so Action.parameters stays typed.
         return {}
 
-    def _extract_action_effects(
-        self,
-        node_id: str,
-        mapping: SemanticMapping
-    ) -> list[str]:
+    def _extract_action_effects(self, node_id: str, mapping: SemanticMapping) -> list[str]:
         """
         Extract action effects on state variables from graph structure.
 
@@ -1371,7 +1358,9 @@ class StateSpaceCompiler:
 
         logger.info(
             "Incremental compilation for schema '%s': reusing %d vars, %d obs from prior",
-            self.schema_name, len(prev_result.variables), len(prev_result.observations),
+            self.schema_name,
+            len(prev_result.variables),
+            len(prev_result.observations),
         )
 
         # Reuse prior variables and observations; recompile actions and transitions
@@ -1416,7 +1405,8 @@ class StateSpaceCompiler:
 
         logger.info(
             "Incremental compilation: %d variables (reused), %d actions (recomputed)",
-            len(variables), len(actions),
+            len(variables),
+            len(actions),
         )
 
         return model

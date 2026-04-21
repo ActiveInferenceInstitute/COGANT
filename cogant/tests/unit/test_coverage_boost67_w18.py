@@ -15,7 +15,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -24,14 +23,17 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
     n2 = builder.add_node(NodeKind.CLASS, "Cls", "mod.Cls", path="mod.py")
@@ -43,16 +45,23 @@ def _make_graph_with_nodes():
 
 def _make_process_model():
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
 
 
 def _make_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
-        id="ss1", schema_name="test",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="ss1",
+        schema_name="test",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
 
@@ -61,15 +70,18 @@ def _make_state_space():
 # export — GraphMLExporter
 # ---------------------------------------------------------------------------
 
+
 class TestGraphMLExporter:
     def test_init_empty_graph(self):
         from cogant.export import GraphMLExporter
+
         graph = _make_empty_graph()
         exporter = GraphMLExporter(graph)
         assert exporter is not None
 
     def test_export_returns_str(self):
         from cogant.export import GraphMLExporter
+
         graph = _make_empty_graph()
         exporter = GraphMLExporter(graph)
         result = exporter.export()
@@ -77,6 +89,7 @@ class TestGraphMLExporter:
 
     def test_export_with_nodes(self):
         from cogant.export import GraphMLExporter
+
         graph = _make_graph_with_nodes()
         exporter = GraphMLExporter(graph)
         result = exporter.export()
@@ -88,15 +101,18 @@ class TestGraphMLExporter:
 # export — ParquetExporter
 # ---------------------------------------------------------------------------
 
+
 class TestParquetExporter:
     def test_init(self):
         from cogant.export import ParquetExporter
+
         graph = _make_empty_graph()
         exporter = ParquetExporter(graph)
         assert exporter is not None
 
     def test_export_returns_list(self, tmp_path):
         from cogant.export import ParquetExporter
+
         graph = _make_empty_graph()
         exporter = ParquetExporter(graph)
         result = exporter.export(tmp_path)
@@ -104,6 +120,7 @@ class TestParquetExporter:
 
     def test_export_with_nodes(self, tmp_path):
         from cogant.export import ParquetExporter
+
         graph = _make_graph_with_nodes()
         exporter = ParquetExporter(graph)
         result = exporter.export(tmp_path)
@@ -114,9 +131,11 @@ class TestParquetExporter:
 # export — TypedExporter
 # ---------------------------------------------------------------------------
 
+
 class TestTypedExporter:
     def _make_exporter(self):
         from cogant.export import TypedExporter
+
         return TypedExporter()
 
     def test_init(self):
@@ -165,31 +184,37 @@ class TestTypedExporter:
 # config — ConfigLoader and module-level functions
 # ---------------------------------------------------------------------------
 
+
 class TestConfigLoader:
     def test_load_default_returns_dict(self):
         from cogant.config import ConfigLoader
+
         result = ConfigLoader.load_default()
         assert isinstance(result, dict)
 
     def test_load_all_configs_no_path(self):
         from cogant.config import ConfigLoader
+
         result = ConfigLoader.load_all_configs()
         assert isinstance(result, dict)
 
     def test_load_all_configs_with_preset(self):
         from cogant.config import ConfigLoader
+
         result = ConfigLoader.load_all_configs(preset="minimal")
         assert isinstance(result, dict)
 
     def test_build_cogant_config_default(self):
         from cogant.config import ConfigLoader
         from cogant.config.schema import CogantConfig
+
         cfg = ConfigLoader.build_cogant_config()
         assert isinstance(cfg, CogantConfig)
 
     def test_build_cogant_config_with_dict(self):
         from cogant.config import ConfigLoader
         from cogant.config.schema import CogantConfig
+
         cfg = ConfigLoader.build_cogant_config({"max_workers": 4})
         assert isinstance(cfg, CogantConfig)
 
@@ -197,32 +222,38 @@ class TestConfigLoader:
 class TestConfigModuleFunctions:
     def test_list_presets_returns_list(self):
         from cogant.config import list_presets
+
         presets = list_presets()
         assert isinstance(presets, list)
         assert len(presets) > 0
 
     def test_list_presets_has_standard(self):
         from cogant.config import list_presets
+
         presets = list_presets()
         assert "standard" in presets
 
     def test_get_preset_minimal(self):
         from cogant.config import get_preset
+
         result = get_preset("minimal")
         assert isinstance(result, dict)
 
     def test_get_preset_comprehensive(self):
         from cogant.config import get_preset
+
         result = get_preset("comprehensive")
         assert isinstance(result, dict)
 
     def test_get_named_preset(self):
         from cogant.config import get_named_preset
+
         result = get_named_preset("minimal")
         assert isinstance(result, dict)
 
     def test_get_preset_unknown_raises(self):
         from cogant.config import get_preset
+
         with pytest.raises((KeyError, ValueError, Exception)):
             get_preset("nonexistent_preset_xyz")
 
@@ -230,24 +261,28 @@ class TestConfigModuleFunctions:
 class TestCogantConfig:
     def test_create_default(self):
         from cogant.config.schema import CogantConfig
+
         cfg = CogantConfig()
         assert hasattr(cfg, "max_workers")
         assert isinstance(cfg.max_workers, int)
 
     def test_version_field(self):
         from cogant.config.schema import CogantConfig
+
         cfg = CogantConfig()
         assert hasattr(cfg, "version")
         assert isinstance(cfg.version, str)
 
     def test_enable_caching_field(self):
         from cogant.config.schema import CogantConfig
+
         cfg = CogantConfig()
         assert hasattr(cfg, "enable_caching")
         assert isinstance(cfg.enable_caching, bool)
 
     def test_custom_max_workers(self):
         from cogant.config.schema import CogantConfig
+
         cfg = CogantConfig(max_workers=8)
         assert cfg.max_workers == 8
 
@@ -255,18 +290,21 @@ class TestCogantConfig:
 class TestConfigEnums:
     def test_export_format_values(self):
         from cogant.config import ExportFormat
+
         assert ExportFormat is not None
         values = list(ExportFormat)
         assert len(values) > 0
 
     def test_log_level_values(self):
         from cogant.config import LogLevel
+
         assert LogLevel is not None
         values = list(LogLevel)
         assert len(values) > 0
 
     def test_validation_level_values(self):
         from cogant.config import ValidationLevel
+
         assert ValidationLevel is not None
         values = list(ValidationLevel)
         assert len(values) > 0
@@ -276,9 +314,11 @@ class TestConfigEnums:
 # viz — MermaidGenerator
 # ---------------------------------------------------------------------------
 
+
 class TestMermaidGenerator:
     def _make_generator(self):
         from cogant.viz import MermaidGenerator
+
         return MermaidGenerator()
 
     def test_init(self):
@@ -324,6 +364,7 @@ class TestMermaidGenerator:
 
     def test_generate_all_returns_dict(self):
         from cogant.viz import MermaidGenerator
+
         gen = MermaidGenerator()
         graph = _make_graph_with_nodes()
         result = gen.generate_all(graph)
@@ -335,9 +376,11 @@ class TestMermaidGenerator:
 # viz — BoundaryMapper
 # ---------------------------------------------------------------------------
 
+
 class TestBoundaryMapper:
     def _make_mapper(self):
         from cogant.viz import BoundaryMapper
+
         return BoundaryMapper()
 
     def test_init(self):
@@ -370,6 +413,7 @@ class TestBoundaryMapper:
 
     def test_markov_blanket_collapsed_mermaid(self):
         from cogant.markov.blanket import partition_by_seeds
+
         mapper = self._make_mapper()
         graph = _make_graph_with_nodes()
         blanket = partition_by_seeds(graph, seeds=set())

@@ -38,9 +38,7 @@ class ValidationCheck(CogantBaseModel):
 
     check_id: str = Field(..., description="Unique identifier")
     name: str = Field(..., description="Human-readable name")
-    description: str | None = Field(
-        default=None, description="Detailed description of check"
-    )
+    description: str | None = Field(default=None, description="Detailed description of check")
 
     # Check properties
     check_type: str = Field(
@@ -51,14 +49,10 @@ class ValidationCheck(CogantBaseModel):
         default=CheckLevel.WARNING,
         description="Severity level if check fails",
     )
-    status: CheckStatus = Field(
-        ..., description="Outcome of check"
-    )
+    status: CheckStatus = Field(..., description="Outcome of check")
 
     # Details
-    details: str | None = Field(
-        default=None, description="Detailed results/explanation"
-    )
+    details: str | None = Field(default=None, description="Detailed results/explanation")
     issues: list[str] = Field(
         default_factory=list,
         description="Specific issues found",
@@ -88,18 +82,10 @@ class ValidationMetrics(CogantBaseModel):
     # Counts
     node_count: int = Field(default=0, description="Total nodes in graph")
     edge_count: int = Field(default=0, description="Total edges in graph")
-    mapping_count: int = Field(
-        default=0, description="Total semantic mappings"
-    )
-    state_variable_count: int = Field(
-        default=0, description="Total state variables"
-    )
-    process_stage_count: int = Field(
-        default=0, description="Total process stages"
-    )
-    provenance_record_count: int = Field(
-        default=0, description="Total provenance records"
-    )
+    mapping_count: int = Field(default=0, description="Total semantic mappings")
+    state_variable_count: int = Field(default=0, description="Total state variables")
+    process_stage_count: int = Field(default=0, description="Total process stages")
+    provenance_record_count: int = Field(default=0, description="Total provenance records")
 
     # Coverage metrics
     node_provenance_coverage: float = Field(
@@ -192,9 +178,7 @@ class ValidationRecommendation(CogantBaseModel):
         description="Priority for addressing",
     )
     title: str = Field(..., description="Short title")
-    description: str = Field(
-        ..., description="Detailed recommendation"
-    )
+    description: str = Field(..., description="Detailed recommendation")
     affected_elements: list[str] = Field(
         default_factory=list,
         description="IDs of affected elements",
@@ -213,19 +197,13 @@ class ValidationReport(CogantBaseModel):
     recommendations for improving bundle quality.
     """
 
-    report_id: StableID = Field(
-        ..., description="Unique identifier for report"
-    )
-    bundle_id: str = Field(
-        ..., description="ID of bundle being validated"
-    )
+    report_id: StableID = Field(..., description="Unique identifier for report")
+    bundle_id: str = Field(..., description="ID of bundle being validated")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         description="When report was generated",
     )
-    created_by: str | None = Field(
-        default=None, description="Tool/user that created report"
-    )
+    created_by: str | None = Field(default=None, description="Tool/user that created report")
 
     # Checks
     checks: list[ValidationCheck] = Field(

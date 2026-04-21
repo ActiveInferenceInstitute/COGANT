@@ -98,21 +98,19 @@ class BlanketNetwork:
         lines = ["graph LR"]
         label = {
             "internal": f"μ internal [{self.role_counts.get('internal', 0)}]",
-            "sensory":  f"s sensory [{self.role_counts.get('sensory', 0)}]",
-            "active":   f"a active [{self.role_counts.get('active', 0)}]",
+            "sensory": f"s sensory [{self.role_counts.get('sensory', 0)}]",
+            "active": f"a active [{self.role_counts.get('active', 0)}]",
             "external": f"η external [{self.role_counts.get('external', 0)}]",
         }
         for key, text in label.items():
-            lines.append(f"    {key}[\"{text}\"]")
+            lines.append(f'    {key}["{text}"]')
         for (src, dst), count in sorted(self.aggregate_edges.items()):
             if count > 0:
                 lines.append(f"    {src} -->|{count}| {dst}")
         return "\n".join(lines)
 
 
-def build_blanket_network(
-    graph: ProgramGraph, blanket: MarkovBlanket
-) -> BlanketNetwork:
+def build_blanket_network(graph: ProgramGraph, blanket: MarkovBlanket) -> BlanketNetwork:
     """Collapse ``graph`` into a four-role aggregate network.
 
     Every concrete edge in ``graph`` is mapped to a pair
@@ -147,9 +145,7 @@ def build_blanket_network(
         dst_role = _role_name(edge.target_id)
         key = (src_role, dst_role)
         aggregate[key] += 1
-        kind_value = (
-            edge.kind.value if isinstance(edge.kind, EdgeKind) else str(edge.kind)
-        )
+        kind_value = edge.kind.value if isinstance(edge.kind, EdgeKind) else str(edge.kind)
         kind_break[key][kind_value] += 1
 
     # Freeze inner defaultdicts so json.dumps doesn't serialize a factory.

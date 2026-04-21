@@ -16,8 +16,6 @@ examples:
 
 from __future__ import annotations
 
-from typing import Dict, Tuple
-
 import pytest
 
 from cogant.graph.builder import ProgramGraphBuilder
@@ -51,7 +49,7 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.fixture
-def calculator_graph() -> Tuple[ProgramGraph, Dict[str, str]]:
+def calculator_graph() -> tuple[ProgramGraph, dict[str, str]]:
     """Build a small calculator-shaped graph.
 
     Returns ``(graph, ids)`` where ``ids`` maps symbolic names to the
@@ -165,7 +163,7 @@ def calculator_graph() -> Tuple[ProgramGraph, Dict[str, str]]:
 
 
 @pytest.fixture
-def calculator_mappings(calculator_graph) -> Dict[str, SemanticMapping]:
+def calculator_mappings(calculator_graph) -> dict[str, SemanticMapping]:
     """Semantic mappings matching :func:`calculator_graph`."""
     _, ids = calculator_graph
     prov = [ProvenanceRecord(source="static_analysis", confidence=0.9)]
@@ -239,7 +237,7 @@ def calculator_mappings(calculator_graph) -> Dict[str, SemanticMapping]:
 
 
 @pytest.fixture
-def event_pipeline_graph() -> Tuple[ProgramGraph, Dict[str, str]]:
+def event_pipeline_graph() -> tuple[ProgramGraph, dict[str, str]]:
     """An event bus with a POLICY (retry handler) and multiple handlers."""
     builder = ProgramGraphBuilder(repo_uri="test://event-pipeline")
 
@@ -310,7 +308,7 @@ def event_pipeline_graph() -> Tuple[ProgramGraph, Dict[str, str]]:
 
 
 @pytest.fixture
-def event_pipeline_mappings(event_pipeline_graph) -> Dict[str, SemanticMapping]:
+def event_pipeline_mappings(event_pipeline_graph) -> dict[str, SemanticMapping]:
     """Mappings that exercise POLICY folding into actions and OBSERVATION likelihoods."""
     _, ids = event_pipeline_graph
     prov = [ProvenanceRecord(source="static_analysis", confidence=0.85)]
@@ -423,9 +421,7 @@ class TestCompileCalculator:
         assert obs.modality_type == "log"
         assert obs.source_node_id == ids["get_display"]
 
-    def test_actions_from_action_mappings(
-        self, calculator_graph, calculator_mappings
-    ) -> None:
+    def test_actions_from_action_mappings(self, calculator_graph, calculator_mappings) -> None:
         graph, ids = calculator_graph
         compiler = StateSpaceCompiler(graph, schema_name="calc")
         model = compiler.compile(calculator_mappings)
@@ -499,9 +495,7 @@ class TestCompileCalculator:
         # get_display has type_hint "float" -> gaussian
         assert obs_like.distribution_type == "gaussian"
 
-    def test_preferences_from_constraint(
-        self, calculator_graph, calculator_mappings
-    ) -> None:
+    def test_preferences_from_constraint(self, calculator_graph, calculator_mappings) -> None:
         graph, ids = calculator_graph
         compiler = StateSpaceCompiler(graph, schema_name="calc")
         model = compiler.compile(calculator_mappings)
@@ -788,15 +782,25 @@ class TestCompilerHelpers:
         """An __init__ method's effect should mention the parent class."""
         builder = ProgramGraphBuilder(repo_uri="test://init")
         module = builder.add_node(
-            kind=NodeKind.MODULE, name="m", qualified_name="m", path="m.py", language="python",
+            kind=NodeKind.MODULE,
+            name="m",
+            qualified_name="m",
+            path="m.py",
+            language="python",
         )
         cls = builder.add_node(
-            kind=NodeKind.CLASS, name="Widget", qualified_name="m.Widget",
-            path="m.py", language="python",
+            kind=NodeKind.CLASS,
+            name="Widget",
+            qualified_name="m.Widget",
+            path="m.py",
+            language="python",
         )
         init = builder.add_node(
-            kind=NodeKind.METHOD, name="__init__",
-            qualified_name="m.Widget.__init__", path="m.py", language="python",
+            kind=NodeKind.METHOD,
+            name="__init__",
+            qualified_name="m.Widget.__init__",
+            path="m.py",
+            language="python",
             metadata={"parameters": ["self"]},
         )
         builder.add_edge(module.id, cls.id, EdgeKind.CONTAINS)
@@ -817,15 +821,25 @@ class TestCompilerHelpers:
         """An action with only CALLS edges and no writes falls back to calls listing."""
         builder = ProgramGraphBuilder(repo_uri="test://calls")
         module = builder.add_node(
-            kind=NodeKind.MODULE, name="m", qualified_name="m", path="m.py", language="python",
+            kind=NodeKind.MODULE,
+            name="m",
+            qualified_name="m",
+            path="m.py",
+            language="python",
         )
         caller = builder.add_node(
-            kind=NodeKind.FUNCTION, name="orchestrate",
-            qualified_name="m.orchestrate", path="m.py", language="python",
+            kind=NodeKind.FUNCTION,
+            name="orchestrate",
+            qualified_name="m.orchestrate",
+            path="m.py",
+            language="python",
         )
         callee = builder.add_node(
-            kind=NodeKind.FUNCTION, name="do_work",
-            qualified_name="m.do_work", path="m.py", language="python",
+            kind=NodeKind.FUNCTION,
+            name="do_work",
+            qualified_name="m.do_work",
+            path="m.py",
+            language="python",
         )
         builder.add_edge(module.id, caller.id, EdgeKind.CONTAINS)
         builder.add_edge(module.id, callee.id, EdgeKind.CONTAINS)
@@ -846,17 +860,27 @@ class TestCompilerHelpers:
         """A method that only READS a class should fall through to the 'manages' strategy."""
         builder = ProgramGraphBuilder(repo_uri="test://reads")
         module = builder.add_node(
-            kind=NodeKind.MODULE, name="m", qualified_name="m", path="m.py", language="python",
+            kind=NodeKind.MODULE,
+            name="m",
+            qualified_name="m",
+            path="m.py",
+            language="python",
         )
         cls = builder.add_node(
-            kind=NodeKind.CLASS, name="Thing", qualified_name="m.Thing",
-            path="m.py", language="python",
+            kind=NodeKind.CLASS,
+            name="Thing",
+            qualified_name="m.Thing",
+            path="m.py",
+            language="python",
         )
         # Use a FUNCTION (not METHOD) so strategy 3 (METHOD parent-class)
         # is not triggered. Leave CALLS and WRITES absent.
         fn = builder.add_node(
-            kind=NodeKind.FUNCTION, name="report",
-            qualified_name="m.report", path="m.py", language="python",
+            kind=NodeKind.FUNCTION,
+            name="report",
+            qualified_name="m.report",
+            path="m.py",
+            language="python",
         )
         builder.add_edge(module.id, cls.id, EdgeKind.CONTAINS)
         builder.add_edge(module.id, fn.id, EdgeKind.CONTAINS)
@@ -873,9 +897,7 @@ class TestCompilerHelpers:
         effects = compiler._extract_action_effects(fn.id, mapping)
         assert any("manages" in eff for eff in effects)
 
-    def test_extract_action_effects_missing_node_returns_empty(
-        self, calculator_graph
-    ) -> None:
+    def test_extract_action_effects_missing_node_returns_empty(self, calculator_graph) -> None:
         graph, _ = calculator_graph
         compiler = StateSpaceCompiler(graph, schema_name="calc")
         mapping = SemanticMapping(
@@ -886,9 +908,7 @@ class TestCompilerHelpers:
         )
         assert compiler._extract_action_effects("missing-id", mapping) == []
 
-    def test_extract_action_preconditions_explicit_metadata(
-        self, calculator_graph
-    ) -> None:
+    def test_extract_action_preconditions_explicit_metadata(self, calculator_graph) -> None:
         graph, _ = calculator_graph
         compiler = StateSpaceCompiler(graph, schema_name="calc")
 
@@ -902,16 +922,23 @@ class TestCompilerHelpers:
 
     def test_extract_action_preconditions_docstring_hint(self, calculator_graph) -> None:
         graph, ids = calculator_graph
-        compiler = StateSpaceCompiler(graph, schema_name="calc")
+        StateSpaceCompiler(graph, schema_name="calc")
 
         # Build a node whose metadata contains a 'require' docstring
         builder = ProgramGraphBuilder(repo_uri="test://doc")
         module = builder.add_node(
-            kind=NodeKind.MODULE, name="m", qualified_name="m", path="m.py", language="python",
+            kind=NodeKind.MODULE,
+            name="m",
+            qualified_name="m",
+            path="m.py",
+            language="python",
         )
         fn = builder.add_node(
-            kind=NodeKind.FUNCTION, name="f",
-            qualified_name="m.f", path="m.py", language="python",
+            kind=NodeKind.FUNCTION,
+            name="f",
+            qualified_name="m.f",
+            path="m.py",
+            language="python",
             metadata={"docstring": "requires valid x and y"},
         )
         builder.add_edge(module.id, fn.id, EdgeKind.CONTAINS)

@@ -32,7 +32,6 @@ builder, JS parser, and translation engine are all invoked directly.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Set
 
 import pytest
 
@@ -53,9 +52,7 @@ pytestmark = pytest.mark.integration
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Paths to the Python + JS calculator fixtures we compare.
-_PY_CALCULATOR = (
-    _REPO_ROOT / "examples" / "control_positive" / "calculator" / "calculator.py"
-)
+_PY_CALCULATOR = _REPO_ROOT / "examples" / "control_positive" / "calculator" / "calculator.py"
 _JS_CALCULATOR = _REPO_ROOT / "examples" / "calculator_js" / "calculator.js"
 
 
@@ -69,7 +66,7 @@ def _normalize_name(name: str) -> str:
     return "".join(ch for ch in name.lower() if ch.isalnum())
 
 
-def _name_overlap_score(a: Set[str], b: Set[str]) -> float:
+def _name_overlap_score(a: set[str], b: set[str]) -> float:
     """Return ``|a ∩ b| / max(|a|, |b|)`` — 1.0 means perfect overlap."""
     if not a and not b:
         return 1.0
@@ -80,7 +77,7 @@ def _name_overlap_score(a: Set[str], b: Set[str]) -> float:
     return len(intersection) / denom
 
 
-def _symbol_name_set(graph: ProgramGraph) -> Set[str]:
+def _symbol_name_set(graph: ProgramGraph) -> set[str]:
     """Collect normalised method/function/variable/class names from a graph."""
     wanted_kinds = {
         NodeKind.METHOD,
@@ -88,7 +85,7 @@ def _symbol_name_set(graph: ProgramGraph) -> Set[str]:
         NodeKind.VARIABLE,
         NodeKind.CLASS,
     }
-    names: Set[str] = set()
+    names: set[str] = set()
     for node in graph.nodes.values():
         if node.kind not in wanted_kinds:
             continue
@@ -106,9 +103,7 @@ def _symbol_name_set(graph: ProgramGraph) -> Set[str]:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.skipif(
-    not _HAS_JS_PARSER, reason="tree-sitter-javascript not installed"
-)
+@pytest.mark.skipif(not _HAS_JS_PARSER, reason="tree-sitter-javascript not installed")
 def test_calculator_py_js_node_overlap() -> None:
     """≥60% normalised name overlap between the Python and JS calculators."""
     py_graph = _build_python_graph(_PY_CALCULATOR)
@@ -128,9 +123,7 @@ def test_calculator_py_js_node_overlap() -> None:
     )
 
 
-@pytest.mark.skipif(
-    not _HAS_JS_PARSER, reason="tree-sitter-javascript not installed"
-)
+@pytest.mark.skipif(not _HAS_JS_PARSER, reason="tree-sitter-javascript not installed")
 def test_calculator_role_distribution_similar() -> None:
     """Both languages produce ≥1 OBSERVATION and ACTION; Python also has HIDDEN_STATE.
 
@@ -149,7 +142,7 @@ def test_calculator_role_distribution_similar() -> None:
     for role in (MappingKind.HIDDEN_STATE, MappingKind.OBSERVATION, MappingKind.ACTION):
         assert py_counts.get(role, 0) >= 1, (
             f"python calculator missing {role.value} mappings; "
-            f"got {dict((k.value, v) for k, v in py_counts.items())}"
+            f"got { {k.value: v for k, v in py_counts.items()} }"
         )
 
     # JS: OBSERVATION and ACTION are reliably extracted; HIDDEN_STATE pending
@@ -157,13 +150,11 @@ def test_calculator_role_distribution_similar() -> None:
     for role in (MappingKind.OBSERVATION, MappingKind.ACTION):
         assert js_counts.get(role, 0) >= 1, (
             f"js calculator missing {role.value} mappings; "
-            f"got {dict((k.value, v) for k, v in js_counts.items())}"
+            f"got { {k.value: v for k, v in js_counts.items()} }"
         )
 
 
-@pytest.mark.skipif(
-    not _HAS_JS_PARSER, reason="tree-sitter-javascript not installed"
-)
+@pytest.mark.skipif(not _HAS_JS_PARSER, reason="tree-sitter-javascript not installed")
 def test_same_pattern_same_dominant_role(tmp_path: Path) -> None:
     """A pure getter ``get_x() -> self.x`` must be OBSERVATION in both langs.
 
@@ -204,9 +195,7 @@ def test_same_pattern_same_dominant_role(tmp_path: Path) -> None:
     py_mappings = _run_translation(py_graph)
     js_mappings = _run_translation(js_graph)
 
-    def _observation_method_names(
-        graph: ProgramGraph, mappings: List[SemanticMapping]
-    ) -> Set[str]:
+    def _observation_method_names(graph: ProgramGraph, mappings: list[SemanticMapping]) -> set[str]:
         observation_node_ids = {
             nid
             for m in mappings
@@ -216,8 +205,7 @@ def test_same_pattern_same_dominant_role(tmp_path: Path) -> None:
         return {
             graph.nodes[nid].name
             for nid in observation_node_ids
-            if nid in graph.nodes
-            and graph.nodes[nid].kind in (NodeKind.METHOD, NodeKind.FUNCTION)
+            if nid in graph.nodes and graph.nodes[nid].kind in (NodeKind.METHOD, NodeKind.FUNCTION)
         }
 
     py_observation_methods = _observation_method_names(py_graph, py_mappings)

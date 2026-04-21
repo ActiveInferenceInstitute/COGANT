@@ -9,16 +9,16 @@ from .base import EvidenceRef as EvidenceRef
 from .base import SemanticVersion as SemanticVersion
 
 class TargetLanguage(StrEnum):
-    PYTHON = 'python'
-    JAVASCRIPT = 'javascript'
-    TYPESCRIPT = 'typescript'
-    JAVA = 'java'
-    CPP = 'cpp'
-    CSHARP = 'csharp'
-    GO = 'go'
-    RUST = 'rust'
-    RUBY = 'ruby'
-    PHP = 'php'
+    PYTHON = "python"
+    JAVASCRIPT = "javascript"
+    TYPESCRIPT = "typescript"
+    JAVA = "java"
+    CPP = "cpp"
+    CSHARP = "csharp"
+    GO = "go"
+    RUST = "rust"
+    RUBY = "ruby"
+    PHP = "php"
 
 class TargetInfo(CogantBaseModel):
     name: str

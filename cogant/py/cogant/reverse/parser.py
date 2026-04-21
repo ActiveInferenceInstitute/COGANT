@@ -117,19 +117,13 @@ _SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 # Matches a StateSpaceBlock variable declaration like ``s_f0[10,1,type=int]``
 # or ``A_m0[2,2,type=float]``. We keep the match deliberately permissive so
 # a missing type= suffix or a trailing comment is tolerated.
-_VAR_DECL_RE = re.compile(
-    r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*\[\s*([^\]]+?)\s*\]\s*$"
-)
+_VAR_DECL_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*\[\s*([^\]]+?)\s*\]\s*$")
 
 # Matches an ontology annotation like ``s_f0=HiddenState``.
-_ONTOLOGY_RE = re.compile(
-    r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*$"
-)
+_ONTOLOGY_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*$")
 
 # Matches a ``D_f0={ (0.1, 0.2, 0.7) }`` style initial parameterization line.
-_IPARAM_VEC_RE = re.compile(
-    r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\{\s*(.+)\s*\}\s*$"
-)
+_IPARAM_VEC_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\{\s*(.+)\s*\}\s*$")
 
 # Matches ``identity(card,card,act)`` initial parameterization shorthand.
 _IPARAM_IDENTITY_RE = re.compile(
@@ -269,8 +263,11 @@ def _parse_ontology_annotation(body: str, model: ReverseGNNModel) -> None:
         # by StateSpaceBlock prefix heuristics, register it by concept type.
         lc = concept.lower()
         all_classified = (
-            model.hidden_states + model.observations + model.actions
-            + model.policies + model.constraints
+            model.hidden_states
+            + model.observations
+            + model.actions
+            + model.policies
+            + model.constraints
         )
         if "hiddenstate" in lc.replace(" ", "") or "hidden" == lc:
             if var_name not in all_classified:
@@ -287,9 +284,7 @@ def _parse_ontology_annotation(body: str, model: ReverseGNNModel) -> None:
                 model.constraints.append(var_name)
 
 
-def _parse_initial_parameterization(
-    body: str, model: ReverseGNNModel
-) -> None:
+def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
     """Populate A, B, C, D from ``## InitialParameterization``.
 
     Supports both the tuple-vector form (``D_f0={ (0.3, 0.3, 0.4) }``)
@@ -411,9 +406,7 @@ def _parse_initial_parameterization(
         model.B = B
 
 
-def _parse_state_variables_extended(
-    body: str, model: ReverseGNNModel
-) -> None:
+def _parse_state_variables_extended(body: str, model: ReverseGNNModel) -> None:
     """Parse the ``## State Space`` → ``### State Variables`` table.
 
     Extracts human-readable variable names and attaches them to the
@@ -458,9 +451,7 @@ def _parse_connections(body: str, model: ReverseGNNModel) -> None:
     # Upstream Connections syntax: optional leading ``(``, ident, optional
     # trailing ``)``, then ``>`` or ``->``, then the same. Must contain at
     # least one variable identifier on each side of the arrow.
-    arrow_re = re.compile(
-        r"^\s*\(?[A-Za-z_][\w,\s]*\)?\s*-?>\s*\(?[A-Za-z_][\w,\s]*\)?\s*$"
-    )
+    arrow_re = re.compile(r"^\s*\(?[A-Za-z_][\w,\s]*\)?\s*-?>\s*\(?[A-Za-z_][\w,\s]*\)?\s*$")
     for line in body.splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith(("#", "|")):
@@ -478,9 +469,7 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
     ``## InitialParameterization``. This gives the reverse synthesizer
     the most accurate matrix values available.
     """
-    fence_match = re.search(
-        r"```gnn-matrices\s*\n(.*?)\n```", text, re.DOTALL
-    )
+    fence_match = re.search(r"```gnn-matrices\s*\n(.*?)\n```", text, re.DOTALL)
     if not fence_match:
         return
     block = fence_match.group(1)
@@ -510,9 +499,7 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
                 model.A = A
         elif tag == "B":
             # Block format: ``# action=k`` header followed by rows rows.
-            B: list[list[list[float]]] = [
-                [[0.0] * depth for _ in range(cols)] for _ in range(rows)
-            ]
+            B: list[list[list[float]]] = [[[0.0] * depth for _ in range(cols)] for _ in range(rows)]
             current_action = -1
             row_idx = 0
             while i < len(lines):
@@ -605,9 +592,7 @@ def parse_gnn(gnn: str | Path) -> ReverseGNNModel:
         # (``Path(long_str).is_file()`` raises OSError: file name too
         # long on macOS and Linux). Only probe the filesystem when the
         # argument is short and lacks newlines.
-        looks_like_path = (
-            "\n" not in gnn and len(gnn) < 4096 and (Path(gnn).suffix or "/" in gnn)
-        )
+        looks_like_path = "\n" not in gnn and len(gnn) < 4096 and (Path(gnn).suffix or "/" in gnn)
         if looks_like_path and Path(gnn).is_file():
             text = Path(gnn).read_text(encoding="utf-8")
         else:

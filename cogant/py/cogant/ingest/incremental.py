@@ -50,9 +50,15 @@ class IncrementalIngester:
     """Detect changed files between git refs for incremental re-analysis."""
 
     _SOURCE_EXTENSIONS = {
-        ".py", ".pyx", ".pyi",
-        ".js", ".jsx", ".mjs", ".cjs",
-        ".ts", ".tsx",
+        ".py",
+        ".pyx",
+        ".pyi",
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".ts",
+        ".tsx",
         ".rs",
         ".go",
     }
@@ -99,9 +105,7 @@ class IncrementalIngester:
         should use a richer git API.
         """
         if not self._git_available:
-            logger.warning(
-                "Not a git repository, cannot do incremental analysis"
-            )
+            logger.warning("Not a git repository, cannot do incremental analysis")
             return []
 
         try:
@@ -181,9 +185,7 @@ class IncrementalIngester:
 
     def python_files_changed_since(self, ref: str = "HEAD~1") -> list[Path]:
         """Return only Python files changed between ``ref`` and ``HEAD``."""
-        return self.source_files_changed_since(
-            ref, extensions={".py", ".pyx", ".pyi"}
-        )
+        return self.source_files_changed_since(ref, extensions={".py", ".pyx", ".pyi"})
 
     def source_files_changed_since(
         self,
@@ -199,9 +201,7 @@ class IncrementalIngester:
         exts = extensions or self._SOURCE_EXTENSIONS
         changed = self.changed_since(ref)
         return [
-            cf.path
-            for cf in changed
-            if cf.change_type != "D" and cf.path.suffix.lower() in exts
+            cf.path for cf in changed if cf.change_type != "D" and cf.path.suffix.lower() in exts
         ]
 
     # ------------------------------------------------------------------

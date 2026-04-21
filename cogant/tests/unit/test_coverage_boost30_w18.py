@@ -16,8 +16,6 @@ Covers:
 - parse_gnn: full integration with string, Path, and TypeError
 """
 
-from pathlib import Path
-
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -27,8 +25,10 @@ pytestmark = pytest.mark.unit
 # Helpers: lazy import accessors
 # ---------------------------------------------------------------------------
 
+
 def _mod():
     import cogant.reverse.parser as m
+
     return m
 
 
@@ -104,6 +104,7 @@ def _model_with_states(n_s=2, n_o=1, n_a=1):
 # ReverseGNNModel — dataclass and properties
 # ---------------------------------------------------------------------------
 
+
 class TestReverseGNNModel:
     def test_default_model_name(self):
         m = _new_model()
@@ -177,6 +178,7 @@ class TestReverseGNNModel:
 # _split_sections
 # ---------------------------------------------------------------------------
 
+
 class TestSplitSections:
     def test_empty_text_returns_empty_dict(self):
         result = _split("")
@@ -229,6 +231,7 @@ class TestSplitSections:
 # _parse_cardinality_and_type
 # ---------------------------------------------------------------------------
 
+
 class TestParseCardinalityAndType:
     def test_simple_int(self):
         card, t = _card_type("2,type=int")
@@ -274,6 +277,7 @@ class TestParseCardinalityAndType:
 # _parse_tuple_vector
 # ---------------------------------------------------------------------------
 
+
 class TestParseTupleVector:
     def test_simple_triple(self):
         result = _tup_vec("(0.1, 0.2, 0.7)")
@@ -309,6 +313,7 @@ class TestParseTupleVector:
 # ---------------------------------------------------------------------------
 # _parse_state_space_block
 # ---------------------------------------------------------------------------
+
 
 class TestParseStateSpaceBlock:
     def test_hidden_state_sf_prefix(self):
@@ -375,6 +380,7 @@ class TestParseStateSpaceBlock:
 # _parse_ontology_annotation
 # ---------------------------------------------------------------------------
 
+
 class TestParseOntologyAnnotation:
     def test_basic_annotation(self):
         m = _onto("s_f0=HiddenState\n")
@@ -432,6 +438,7 @@ class TestParseOntologyAnnotation:
 # _parse_initial_parameterization
 # ---------------------------------------------------------------------------
 
+
 class TestParseInitialParameterization:
     def test_D_assembled_from_factors(self):
         m = _model_with_states(n_s=2)
@@ -487,6 +494,7 @@ class TestParseInitialParameterization:
 # _parse_state_variables_extended
 # ---------------------------------------------------------------------------
 
+
 class TestParseStateVariablesExtended:
     def test_table_with_id_name_columns(self):
         body = "| ID | Name | Type |\n|---|---|---|\n| s_f0 | location | int |\n"
@@ -519,6 +527,7 @@ class TestParseStateVariablesExtended:
 # ---------------------------------------------------------------------------
 # _parse_connections
 # ---------------------------------------------------------------------------
+
 
 class TestParseConnections:
     def test_arrow_connection_captured(self):
@@ -555,6 +564,7 @@ class TestParseConnections:
 # _parse_matrices_fenced_block
 # ---------------------------------------------------------------------------
 
+
 class TestParseMatricesFencedBlock:
     def test_no_fence_no_change(self):
         m = _mfb("no fenced block here\n")
@@ -577,14 +587,7 @@ class TestParseMatricesFencedBlock:
         assert len(m.D) == 3
 
     def test_B_matrix_parsed(self):
-        text = (
-            "```gnn-matrices\n"
-            "B[[rows=2][cols=2][depth=1]]\n"
-            "# action=0\n"
-            "1.0 0.0\n"
-            "0.0 1.0\n"
-            "```\n"
-        )
+        text = "```gnn-matrices\nB[[rows=2][cols=2][depth=1]]\n# action=0\n1.0 0.0\n0.0 1.0\n```\n"
         m = _mfb(text)
         assert len(m.B) == 2
 
@@ -603,6 +606,7 @@ class TestParseMatricesFencedBlock:
 # ---------------------------------------------------------------------------
 # _sanitize_identifier
 # ---------------------------------------------------------------------------
+
 
 class TestSanitizeIdentifier:
     def test_plain_name_lowercased(self):
@@ -637,6 +641,7 @@ class TestSanitizeIdentifier:
 # parse_gnn — integration
 # ---------------------------------------------------------------------------
 
+
 class TestParseGNN:
     def test_parse_raw_string_minimal(self):
         gnn = "## ModelName\nTestModel\n## StateSpaceBlock\ns_f0[2,type=int]\n"
@@ -666,8 +671,7 @@ class TestParseGNN:
 
     def test_parse_ontology_annotations(self):
         gnn = (
-            "## StateSpaceBlock\ns_f0[2,type=int]\n"
-            "## ActInfOntologyAnnotation\ns_f0=HiddenState\n"
+            "## StateSpaceBlock\ns_f0[2,type=int]\n## ActInfOntologyAnnotation\ns_f0=HiddenState\n"
         )
         model = _parse_gnn(gnn)
         assert model.annotations.get("s_f0") == "HiddenState"
@@ -687,9 +691,7 @@ class TestParseGNN:
 
     def test_parse_from_path(self, tmp_path):
         gnn_file = tmp_path / "test.gnn.md"
-        gnn_file.write_text(
-            "## ModelName\nFileModel\n## StateSpaceBlock\ns_f0[2,type=int]\n"
-        )
+        gnn_file.write_text("## ModelName\nFileModel\n## StateSpaceBlock\ns_f0[2,type=int]\n")
         model = _parse_gnn(gnn_file)
         assert model.raw_model_name == "FileModel"
 

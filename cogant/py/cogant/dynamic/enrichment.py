@@ -18,10 +18,12 @@ from cogant.schemas.graph import ProgramGraph
 logger = logging.getLogger(__name__)
 
 # Node kinds that represent callable entities.
-_CALLABLE_KINDS = frozenset({
-    NodeKind.FUNCTION,
-    NodeKind.METHOD,
-})
+_CALLABLE_KINDS = frozenset(
+    {
+        NodeKind.FUNCTION,
+        NodeKind.METHOD,
+    }
+)
 
 
 def _normalize_path(raw: str) -> str:
@@ -58,6 +60,7 @@ def _stable_edge_id(source_id: str, target_id: str, kind: str) -> str:
 # ------------------------------------------------------------------
 # Coverage enrichment
 # ------------------------------------------------------------------
+
 
 def _enrich_with_coverage(
     graph: ProgramGraph,
@@ -147,6 +150,7 @@ def _enrich_with_coverage(
 # ------------------------------------------------------------------
 # Trace enrichment
 # ------------------------------------------------------------------
+
 
 def _build_function_index(graph: ProgramGraph) -> dict[str, list[str]]:
     """Map unqualified and qualified function names to node IDs.
@@ -282,6 +286,7 @@ def _enrich_with_traces(
 # Public API
 # ------------------------------------------------------------------
 
+
 def enrich_graph(
     graph: ProgramGraph,
     coverage_path: str | None = None,
@@ -316,13 +321,15 @@ def enrich_graph(
     if coverage_path is not None:
         logger.info("Enriching graph with coverage data from %s", coverage_path)
         summary["coverage_nodes_enriched"] = _enrich_with_coverage(
-            graph, coverage_path,
+            graph,
+            coverage_path,
         )
 
     if trace_path is not None:
         logger.info("Enriching graph with trace data from %s", trace_path)
         summary["trace_nodes_enriched"] = _enrich_with_traces(
-            graph, trace_path,
+            graph,
+            trace_path,
         )
 
     # Record evidence sources on the graph metadata.

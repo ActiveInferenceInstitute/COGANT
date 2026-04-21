@@ -87,9 +87,7 @@ class TestProgramGraphBuilderConstruction:
 class TestAddNode:
     """Tests for the ``add_node`` happy path and idempotency."""
 
-    def test_add_node_returns_node_with_stable_id(
-        self, builder: ProgramGraphBuilder
-    ) -> None:
+    def test_add_node_returns_node_with_stable_id(self, builder: ProgramGraphBuilder) -> None:
         node = builder.add_node(
             kind=NodeKind.FUNCTION,
             name="calculate",
@@ -104,9 +102,7 @@ class TestAddNode:
         assert node.id  # non-empty stable id
         assert builder.graph.get_node(node.id) is node
 
-    def test_add_node_is_idempotent_by_identity(
-        self, builder: ProgramGraphBuilder
-    ) -> None:
+    def test_add_node_is_idempotent_by_identity(self, builder: ProgramGraphBuilder) -> None:
         first = builder.add_node(
             kind=NodeKind.CLASS,
             name="User",
@@ -147,42 +143,30 @@ class TestAddNode:
 class TestAddEdge:
     """Tests for the ``add_edge`` method."""
 
-    def test_add_edge_connects_existing_nodes(
-        self, populated_builder: ProgramGraphBuilder
-    ) -> None:
+    def test_add_edge_connects_existing_nodes(self, populated_builder: ProgramGraphBuilder) -> None:
         assert populated_builder.graph.edge_count() == 2
         # All edges must reference existing nodes
         for edge in populated_builder.graph.edges.values():
             assert populated_builder.graph.get_node(edge.source_id) is not None
             assert populated_builder.graph.get_node(edge.target_id) is not None
 
-    def test_add_edge_rejects_missing_source(
-        self, builder: ProgramGraphBuilder
-    ) -> None:
-        target = builder.add_node(
-            kind=NodeKind.CLASS, name="C", qualified_name="C"
-        )
+    def test_add_edge_rejects_missing_source(self, builder: ProgramGraphBuilder) -> None:
+        target = builder.add_node(kind=NodeKind.CLASS, name="C", qualified_name="C")
         result = builder.add_edge(
             source_id="nonexistent", target_id=target.id, kind=EdgeKind.CONTAINS
         )
         assert result is None
         assert builder.graph.edge_count() == 0
 
-    def test_add_edge_rejects_missing_target(
-        self, builder: ProgramGraphBuilder
-    ) -> None:
-        source = builder.add_node(
-            kind=NodeKind.MODULE, name="m", qualified_name="m"
-        )
+    def test_add_edge_rejects_missing_target(self, builder: ProgramGraphBuilder) -> None:
+        source = builder.add_node(kind=NodeKind.MODULE, name="m", qualified_name="m")
         result = builder.add_edge(
             source_id=source.id, target_id="nonexistent", kind=EdgeKind.CONTAINS
         )
         assert result is None
         assert builder.graph.edge_count() == 0
 
-    def test_add_edge_dedupes_and_merges_evidence(
-        self, builder: ProgramGraphBuilder
-    ) -> None:
+    def test_add_edge_dedupes_and_merges_evidence(self, builder: ProgramGraphBuilder) -> None:
         a = builder.add_node(kind=NodeKind.MODULE, name="a", qualified_name="a")
         b = builder.add_node(kind=NodeKind.MODULE, name="b", qualified_name="b")
 
@@ -225,36 +209,24 @@ class TestQueries:
     ) -> None:
         assert populated_builder.get_node("nope") is None
 
-    def test_get_neighbors_returns_connected(
-        self, populated_builder: ProgramGraphBuilder
-    ) -> None:
+    def test_get_neighbors_returns_connected(self, populated_builder: ProgramGraphBuilder) -> None:
         module_id = next(
-            n.id
-            for n in populated_builder.graph.nodes.values()
-            if n.kind is NodeKind.MODULE
+            n.id for n in populated_builder.graph.nodes.values() if n.kind is NodeKind.MODULE
         )
         neighbors = populated_builder.get_neighbors(module_id)
         names = {n.name for n in neighbors}
         assert "Service" in names
 
-    def test_find_path_same_node(
-        self, populated_builder: ProgramGraphBuilder
-    ) -> None:
+    def test_find_path_same_node(self, populated_builder: ProgramGraphBuilder) -> None:
         node_id = next(iter(populated_builder.graph.nodes))
         assert populated_builder.find_path(node_id, node_id) == [node_id]
 
-    def test_find_path_transitive(
-        self, populated_builder: ProgramGraphBuilder
-    ) -> None:
+    def test_find_path_transitive(self, populated_builder: ProgramGraphBuilder) -> None:
         module_id = next(
-            n.id
-            for n in populated_builder.graph.nodes.values()
-            if n.kind is NodeKind.MODULE
+            n.id for n in populated_builder.graph.nodes.values() if n.kind is NodeKind.MODULE
         )
         function_id = next(
-            n.id
-            for n in populated_builder.graph.nodes.values()
-            if n.kind is NodeKind.FUNCTION
+            n.id for n in populated_builder.graph.nodes.values() if n.kind is NodeKind.FUNCTION
         )
         path = populated_builder.find_path(module_id, function_id)
         assert path is not None
@@ -281,9 +253,7 @@ class TestSubgraph:
         self, populated_builder: ProgramGraphBuilder
     ) -> None:
         module_id = next(
-            n.id
-            for n in populated_builder.graph.nodes.values()
-            if n.kind is NodeKind.MODULE
+            n.id for n in populated_builder.graph.nodes.values() if n.kind is NodeKind.MODULE
         )
         sub = populated_builder.get_subgraph([module_id], include_neighbors=True)
         assert sub.node_count() >= 2  # module + at least its class
@@ -295,25 +265,15 @@ class TestSubgraph:
 class TestGraphAnalytics:
     """Tests for connected-component, cycle, and statistics helpers."""
 
-    def test_connected_components_single(
-        self, populated_builder: ProgramGraphBuilder
-    ) -> None:
+    def test_connected_components_single(self, populated_builder: ProgramGraphBuilder) -> None:
         components = populated_builder.get_connected_components()
         assert len(components) == 1
         assert len(components[0]) == 3
 
-    def test_connected_components_multiple(
-        self, builder: ProgramGraphBuilder
-    ) -> None:
-        m1 = builder.add_node(
-            kind=NodeKind.MODULE, name="m1", qualified_name="m1"
-        )
-        m2 = builder.add_node(
-            kind=NodeKind.MODULE, name="m2", qualified_name="m2"
-        )
-        m3 = builder.add_node(
-            kind=NodeKind.MODULE, name="m3", qualified_name="m3"
-        )
+    def test_connected_components_multiple(self, builder: ProgramGraphBuilder) -> None:
+        m1 = builder.add_node(kind=NodeKind.MODULE, name="m1", qualified_name="m1")
+        m2 = builder.add_node(kind=NodeKind.MODULE, name="m2", qualified_name="m2")
+        m3 = builder.add_node(kind=NodeKind.MODULE, name="m3", qualified_name="m3")
         builder.add_edge(m1.id, m2.id, EdgeKind.IMPORTS)
         # m3 isolated
         _ = m3
@@ -322,27 +282,15 @@ class TestGraphAnalytics:
         sizes = sorted(len(c) for c in components)
         assert sizes == [1, 2]
 
-    def test_find_cycles_empty_for_isolated_nodes(
-        self, builder: ProgramGraphBuilder
-    ) -> None:
+    def test_find_cycles_empty_for_isolated_nodes(self, builder: ProgramGraphBuilder) -> None:
         # No edges → no cycles regardless of undirected traversal semantics.
-        builder.add_node(
-            kind=NodeKind.FUNCTION, name="solo", qualified_name="solo"
-        )
+        builder.add_node(kind=NodeKind.FUNCTION, name="solo", qualified_name="solo")
         assert builder.find_cycles() == []
 
-    def test_find_cycles_detects_triangle(
-        self, builder: ProgramGraphBuilder
-    ) -> None:
-        a = builder.add_node(
-            kind=NodeKind.FUNCTION, name="a", qualified_name="a"
-        )
-        b = builder.add_node(
-            kind=NodeKind.FUNCTION, name="b", qualified_name="b"
-        )
-        c = builder.add_node(
-            kind=NodeKind.FUNCTION, name="c", qualified_name="c"
-        )
+    def test_find_cycles_detects_triangle(self, builder: ProgramGraphBuilder) -> None:
+        a = builder.add_node(kind=NodeKind.FUNCTION, name="a", qualified_name="a")
+        b = builder.add_node(kind=NodeKind.FUNCTION, name="b", qualified_name="b")
+        c = builder.add_node(kind=NodeKind.FUNCTION, name="c", qualified_name="c")
         builder.add_edge(a.id, b.id, EdgeKind.CALLS)
         builder.add_edge(b.id, c.id, EdgeKind.CALLS)
         builder.add_edge(c.id, a.id, EdgeKind.CALLS)
@@ -369,17 +317,13 @@ class TestGraphAnalytics:
 class TestFinalize:
     """Tests for ``finalize``."""
 
-    def test_finalize_returns_program_graph(
-        self, populated_builder: ProgramGraphBuilder
-    ) -> None:
+    def test_finalize_returns_program_graph(self, populated_builder: ProgramGraphBuilder) -> None:
         graph = populated_builder.finalize()
         assert isinstance(graph, ProgramGraph)
         assert graph.node_count() == 3
         assert graph.edge_count() == 2
 
-    def test_finalize_updates_timestamp(
-        self, populated_builder: ProgramGraphBuilder
-    ) -> None:
+    def test_finalize_updates_timestamp(self, populated_builder: ProgramGraphBuilder) -> None:
         before = populated_builder.graph.metadata.updated_at
         graph = populated_builder.finalize()
         assert graph.metadata.updated_at >= before

@@ -4,9 +4,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 class StageStatus(enum.Enum):
-    SUCCESS = 'SUCCESS'
-    FAILED = 'FAILED'
-    SKIPPED = 'SKIPPED'
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    SKIPPED = "SKIPPED"
 
 @dataclass
 class Stage:

@@ -22,29 +22,34 @@ pytestmark = pytest.mark.unit
 # Shared fixtures
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
 
     return StateSpaceModel(
-        id="test_ss", schema_name="TestModel",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="test_ss",
+        schema_name="TestModel",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
 
 
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule",
-                           path="mymodule.py", language="python")
-    cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass",
-                           path="mymodule.py")
-    func = builder.add_node(NodeKind.FUNCTION, "my_func", "mymodule.my_func",
-                            path="mymodule.py")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
+    cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass", path="mymodule.py")
+    func = builder.add_node(NodeKind.FUNCTION, "my_func", "mymodule.my_func", path="mymodule.py")
     builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
     builder.add_edge(cls.id, func.id, EdgeKind.CONTAINS)
     return builder.finalize()
@@ -72,6 +77,7 @@ def _make_formatter(state_space=None, graph=None, mappings=None):
 # ---------------------------------------------------------------------------
 # gnn/formatter/metadata.py
 # ---------------------------------------------------------------------------
+
 
 class TestMetadataSections:
     def test_format_model_metadata_returns_string(self):
@@ -150,6 +156,7 @@ class TestMetadataSections:
 # gnn/formatter/structural.py
 # ---------------------------------------------------------------------------
 
+
 class TestStructuralSections:
     def test_format_state_space_empty(self):
         fmt = _make_formatter()
@@ -161,17 +168,23 @@ class TestStructuralSections:
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
         from cogant.statespace.variables import StateVariable, StateVariableType
-        from cogant.translate.confidence import ConfidenceTier
 
         sv = StateVariable(
-            id="v1", name="myvar", node_id="n1",
+            id="v1",
+            name="myvar",
+            node_id="n1",
             var_type=StateVariableType.BOOLEAN,
             cardinality=2,
         )
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={"v1": sv}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={"v1": sv},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         fmt = _make_formatter(state_space=ss)
@@ -201,9 +214,14 @@ class TestStructuralSections:
             description = ""
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={"o1": FakeObs()}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={"o1": FakeObs()},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         fmt = _make_formatter(state_space=ss)
@@ -231,9 +249,14 @@ class TestStructuralSections:
             confidence = ConfidenceTier.STATIC_ONLY
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={}, actions={"a1": FakeAction()},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={},
+            actions={"a1": FakeAction()},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         fmt = _make_formatter(state_space=ss)
@@ -247,7 +270,7 @@ class TestStructuralSections:
 
     def test_format_connections_with_edges(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         f1 = builder.add_node(NodeKind.FUNCTION, "func_a", "m.func_a")
@@ -269,6 +292,7 @@ class TestStructuralSections:
 # ---------------------------------------------------------------------------
 # gnn/formatter/semantic.py
 # ---------------------------------------------------------------------------
+
 
 class TestSemanticSections:
     def test_format_markov_blanket_returns_string(self):
@@ -311,6 +335,7 @@ class TestSemanticSections:
 # ---------------------------------------------------------------------------
 # gnn/formatter/upstream.py
 # ---------------------------------------------------------------------------
+
 
 class TestUpstreamSections:
     def test_format_upstream_header_returns_string(self):
@@ -394,26 +419,36 @@ class TestUpstreamSections:
 # Additional structural formatter tests with richer state space
 # ---------------------------------------------------------------------------
 
+
 class TestStructuralWithRichStateSpace:
     def _make_rich_ss(self):
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
         from cogant.statespace.variables import StateVariable, StateVariableType
-        from cogant.translate.confidence import ConfidenceTier
 
         sv1 = StateVariable(
-            id="v1", name="counter", node_id="n1",
-            var_type=StateVariableType.DISCRETE, cardinality=100,
+            id="v1",
+            name="counter",
+            node_id="n1",
+            var_type=StateVariableType.DISCRETE,
+            cardinality=100,
         )
         sv2 = StateVariable(
-            id="v2", name="flag", node_id="n2",
-            var_type=StateVariableType.BOOLEAN, cardinality=2,
+            id="v2",
+            name="flag",
+            node_id="n2",
+            var_type=StateVariableType.BOOLEAN,
+            cardinality=2,
         )
         return StateSpaceModel(
-            id="rich", schema_name="RichModel",
+            id="rich",
+            schema_name="RichModel",
             variables={"v1": sv1, "v2": sv2},
-            observations={}, actions={}, transitions={},
-            likelihoods={}, preferences={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
 
@@ -435,21 +470,29 @@ class TestStructuralWithRichStateSpace:
 # gnn/formatter/upstream.py — with richer state space and variables
 # ---------------------------------------------------------------------------
 
+
 class TestUpstreamWithStateSpace:
     def test_state_space_block_with_variables(self):
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
         from cogant.statespace.variables import StateVariable, StateVariableType
-        from cogant.translate.confidence import ConfidenceTier
 
         sv = StateVariable(
-            id="v1", name="hidden_state", node_id="n1",
-            var_type=StateVariableType.CONTINUOUS, cardinality=None,
+            id="v1",
+            name="hidden_state",
+            node_id="n1",
+            var_type=StateVariableType.CONTINUOUS,
+            cardinality=None,
         )
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={"v1": sv}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={"v1": sv},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.ASYNCHRONOUS,
         )
         fmt = _make_formatter(state_space=ss)
@@ -474,9 +517,14 @@ class TestUpstreamWithStateSpace:
             description = ""
 
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={}, observations={"o1": FakeObs()}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={},
+            observations={"o1": FakeObs()},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         fmt = _make_formatter(state_space=ss)

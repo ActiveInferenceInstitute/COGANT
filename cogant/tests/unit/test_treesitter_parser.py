@@ -54,10 +54,7 @@ def test_auto_route_by_extension(tmp_path: Path) -> None:
     assert isinstance(graph, ProgramGraph)
     # Must contain at least a file node + the function node
     assert any(n.kind == NodeKind.FILE for n in graph.nodes.values())
-    assert any(
-        n.kind == NodeKind.FUNCTION and n.name == "f"
-        for n in graph.nodes.values()
-    )
+    assert any(n.kind == NodeKind.FUNCTION and n.name == "f" for n in graph.nodes.values())
 
     if HAS_TREESITTER:
         js = tmp_path / "m.js"
@@ -112,14 +109,9 @@ def test_python_fallback_when_treesitter_missing(tmp_path: Path, monkeypatch) ->
 
     graph = tsp.parse_python_file(f)
     assert isinstance(graph, ProgramGraph)
-    assert any(
-        n.kind == NodeKind.FUNCTION and n.name == "only_one"
-        for n in graph.nodes.values()
-    )
+    assert any(n.kind == NodeKind.FUNCTION and n.name == "only_one" for n in graph.nodes.values())
     # The fallback tags edges with static/ast
-    assert any(
-        "static/ast" in e.evidence_sources for e in graph.edges.values()
-    )
+    assert any("static/ast" in e.evidence_sources for e in graph.edges.values())
 
 
 # ---------------------------------------------------------------------------
@@ -130,20 +122,13 @@ def test_python_fallback_when_treesitter_missing(tmp_path: Path, monkeypatch) ->
 @pytest.mark.skipif(not HAS_TREESITTER, reason="tree-sitter not installed")
 def test_parse_js_function(tmp_path: Path) -> None:
     """A JS file with a top-level function produces a FUNCTION node."""
-    src = (
-        "function greet(name) {\n"
-        "  return 'hi ' + name;\n"
-        "}\n"
-    )
+    src = "function greet(name) {\n  return 'hi ' + name;\n}\n"
     f = tmp_path / "hello.js"
     f.write_text(src)
 
     graph = parse_js_file(f)
     assert isinstance(graph, ProgramGraph)
-    assert any(
-        n.kind == NodeKind.FUNCTION and n.name == "greet"
-        for n in graph.nodes.values()
-    )
+    assert any(n.kind == NodeKind.FUNCTION and n.name == "greet" for n in graph.nodes.values())
     # All non-file nodes should be tagged javascript
     for n in graph.nodes.values():
         if n.kind != NodeKind.FILE or n.language is not None:
@@ -177,11 +162,7 @@ def test_parse_js_class(tmp_path: Path) -> None:
 @pytest.mark.skipif(not HAS_TREESITTER, reason="tree-sitter not installed")
 def test_parse_js_imports(tmp_path: Path) -> None:
     """JS imports land as MODULE nodes connected via IMPORTS edges."""
-    src = (
-        "import fs from 'fs';\n"
-        "import { join } from 'path';\n"
-        "function run() { return fs; }\n"
-    )
+    src = "import fs from 'fs';\nimport { join } from 'path';\nfunction run() { return fs; }\n"
     f = tmp_path / "x.js"
     f.write_text(src)
 
@@ -224,12 +205,7 @@ def test_parse_ts_file(tmp_path: Path) -> None:
 @pytest.mark.skipif(not HAS_TREESITTER, reason="tree-sitter not installed")
 def test_treesitter_python_matches_ast_function_count(tmp_path: Path) -> None:
     """Function count from tree-sitter should match stdlib ast."""
-    src = (
-        "def a(): pass\n"
-        "def b(): pass\n"
-        "class C:\n"
-        "    def m(self): pass\n"
-    )
+    src = "def a(): pass\ndef b(): pass\nclass C:\n    def m(self): pass\n"
     f = tmp_path / "counts.py"
     f.write_text(src)
 
@@ -237,9 +213,7 @@ def test_treesitter_python_matches_ast_function_count(tmp_path: Path) -> None:
     ts_graph = parse_python_file(f)
     assert ts_graph is not None
     ts_funcs = sum(
-        1
-        for n in ts_graph.nodes.values()
-        if n.kind in (NodeKind.FUNCTION, NodeKind.METHOD)
+        1 for n in ts_graph.nodes.values() if n.kind in (NodeKind.FUNCTION, NodeKind.METHOD)
     )
 
     # ast fallback path

@@ -1,9 +1,8 @@
-
 from typing import Any
 
 from cogant.reverse.parser import ReverseGNNModel
 
-__all__ = ['MatrixFunctions', 'make_matrix_functions']
+__all__ = ["MatrixFunctions", "make_matrix_functions"]
 
 class MatrixFunctions:
     A: Any

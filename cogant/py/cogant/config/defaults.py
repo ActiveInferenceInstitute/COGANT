@@ -274,7 +274,8 @@ MINIMAL_PIPELINE_CONFIG = PipelineConfig(
         "export",
     ],
     stages={
-        k: v for k, v in DEFAULT_STAGES.items()
+        k: v
+        for k, v in DEFAULT_STAGES.items()
         if k in ["ingest", "static", "normalize", "graph", "validate", "export"]
     },
     languages=[DEFAULT_PYTHON_CONFIG],
@@ -464,7 +465,5 @@ def get_preset(name: str) -> dict[str, Any]:
     """
     if name not in PRESETS:
         available = ", ".join(PRESETS.keys())
-        raise ValueError(
-            f"Unknown preset '{name}'. Available presets: {available}"
-        )
+        raise ValueError(f"Unknown preset '{name}'. Available presets: {available}")
     return PRESETS[name]

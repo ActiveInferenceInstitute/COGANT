@@ -11,6 +11,7 @@ from typing import Any
 
 try:
     import yaml  # type: ignore[import-untyped]
+
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
@@ -32,6 +33,7 @@ from .schema import (
 
 class ConfigLoadError(Exception):
     """Raised when configuration loading fails."""
+
     pass
 
 
@@ -53,9 +55,7 @@ class ConfigLoader:
             ConfigLoadError: If YAML is not available or file cannot be read.
         """
         if not HAS_YAML:
-            raise ConfigLoadError(
-                "PyYAML is not installed. Install with: pip install pyyaml"
-            )
+            raise ConfigLoadError("PyYAML is not installed. Install with: pip install pyyaml")
 
         try:
             with open(path) as f:
@@ -68,9 +68,7 @@ class ConfigLoader:
         except yaml.YAMLError as e:
             raise ConfigLoadError(f"Invalid YAML in {path}: {e}") from e
         except Exception as e:
-            raise ConfigLoadError(
-                f"Error reading configuration from {path}: {e}"
-            ) from e
+            raise ConfigLoadError(f"Error reading configuration from {path}: {e}") from e
 
     @staticmethod
     def load_from_dict(data: dict[str, Any]) -> dict[str, Any]:
@@ -110,15 +108,11 @@ class ConfigLoader:
         except json.JSONDecodeError as e:
             raise ConfigLoadError(f"Invalid JSON in {path}: {e}") from e
         except Exception as e:
-            raise ConfigLoadError(
-                f"Error reading configuration from {path}: {e}"
-            ) from e
+            raise ConfigLoadError(f"Error reading configuration from {path}: {e}") from e
 
     @staticmethod
     def merge_configs(
-        base: dict[str, Any],
-        override: dict[str, Any],
-        deep: bool = True
+        base: dict[str, Any], override: dict[str, Any], deep: bool = True
     ) -> dict[str, Any]:
         """
         Merge configuration dictionaries with override semantics.
@@ -137,10 +131,13 @@ class ConfigLoader:
         result = base.copy()
 
         for key, override_value in override.items():
-            if deep and key in result and isinstance(result[key], dict) and isinstance(override_value, dict):
-                result[key] = ConfigLoader.merge_configs(
-                    result[key], override_value, deep=True
-                )
+            if (
+                deep
+                and key in result
+                and isinstance(result[key], dict)
+                and isinstance(override_value, dict)
+            ):
+                result[key] = ConfigLoader.merge_configs(result[key], override_value, deep=True)
             else:
                 result[key] = override_value
 
@@ -177,9 +174,7 @@ class ConfigLoader:
         """
         if name not in PRESETS:
             available = ", ".join(PRESETS.keys())
-            raise ConfigLoadError(
-                f"Unknown preset '{name}'. Available: {available}"
-            )
+            raise ConfigLoadError(f"Unknown preset '{name}'. Available: {available}")
         return PRESETS[name]
 
     @staticmethod

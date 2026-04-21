@@ -11,8 +11,9 @@ Covers:
 - reverse/idempotency.py: RoundtripResult, _ONTOLOGY_TO_ROLE, _role_multiset_from_model
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 pytestmark = pytest.mark.unit
 
@@ -21,31 +22,38 @@ pytestmark = pytest.mark.unit
 # cogant/__init__.py — module attributes and run_pipeline
 # ---------------------------------------------------------------------------
 
+
 class TestCogantInit:
     def test_version_defined(self):
         import cogant
+
         assert hasattr(cogant, "__version__")
         assert isinstance(cogant.__version__, str)
 
     def test_rust_available_bool(self):
         import cogant
+
         assert isinstance(cogant._RUST_AVAILABLE, bool)
 
     def test_rust_version_none_or_str(self):
         import cogant
+
         assert cogant.__rust_version__ is None or isinstance(cogant.__rust_version__, str)
 
     def test_session_alias_available(self):
         import cogant
+
         # CogantSession should be Session or None
         assert cogant.CogantSession is not None or cogant.CogantSession is None
 
     def test_gnn_bundle_alias(self):
         import cogant
+
         assert cogant.GNNBundle is not None or cogant.GNNBundle is None
 
     def test_run_pipeline_happy_path(self, tmp_path):
         from cogant import run_pipeline
+
         (tmp_path / "mymodule.py").write_text("def foo():\n    pass\n")
         out = tmp_path / "output"
         out.mkdir()
@@ -55,6 +63,7 @@ class TestCogantInit:
 
     def test_run_pipeline_with_empty_dir(self, tmp_path):
         from cogant import run_pipeline
+
         out = tmp_path / "out"
         out.mkdir()
         result = run_pipeline(str(tmp_path), output_dir=str(out))
@@ -65,9 +74,11 @@ class TestCogantInit:
 # gnn/runner.py — GNNModelRunner internal helpers
 # ---------------------------------------------------------------------------
 
+
 class TestGNNModelRunnerHelpers:
     def _make_runner(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         # Manually set up minimal package state
         runner.package_dir = Path("/nonexistent")
@@ -113,6 +124,7 @@ class TestGNNModelRunnerHelpers:
 
     def test_load_package_nonexistent(self, tmp_path):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         # load_package on a dir without manifest.json should raise or return gracefully
         nonexistent = tmp_path / "no_package"
@@ -124,12 +136,14 @@ class TestGNNModelRunnerHelpers:
 
     def test_run_raises_without_package(self):
         from cogant.gnn.runner import GNNModelRunner
+
         runner = GNNModelRunner()
         with pytest.raises(RuntimeError, match="Package not loaded"):
             runner.run(steps=1)
 
     def test_execution_trace_to_dict(self):
         from cogant.gnn.runner import ExecutionTrace
+
         trace = ExecutionTrace(
             step=0,
             state={"s": 1},
@@ -147,14 +161,17 @@ class TestGNNModelRunnerHelpers:
 # api/orchestration.py — _repo_uri helper
 # ---------------------------------------------------------------------------
 
+
 class TestOrchestrationHelpers:
     def test_repo_uri_local_path(self, tmp_path):
         from cogant.api.orchestration import _repo_uri
+
         result = _repo_uri(str(tmp_path))
         assert result.startswith("file://")
 
     def test_repo_uri_nonexistent_path(self, tmp_path):
         from cogant.api.orchestration import _repo_uri
+
         nonexistent = str(tmp_path / "no_such_dir")
         result = _repo_uri(nonexistent)
         # Returns the original string unchanged
@@ -163,6 +180,7 @@ class TestOrchestrationHelpers:
     def test_program_graph_to_dict_empty(self):
         from cogant.api.orchestration import program_graph_to_dict
         from cogant.graph.builder import ProgramGraphBuilder
+
         graph = ProgramGraphBuilder(repo_uri="file:///test").finalize()
         result = program_graph_to_dict(graph)
         assert isinstance(result, dict)
@@ -184,9 +202,11 @@ class TestOrchestrationHelpers:
 # reverse/idempotency.py — accessible public types
 # ---------------------------------------------------------------------------
 
+
 class TestReverseIdempotency:
     def test_roundtrip_result_import(self):
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=True,
             role_match_score=0.95,
@@ -198,6 +218,7 @@ class TestReverseIdempotency:
 
     def test_ontology_to_role_mapping(self):
         from cogant.reverse.idempotency import _ONTOLOGY_TO_ROLE
+
         assert isinstance(_ONTOLOGY_TO_ROLE, dict)
         assert len(_ONTOLOGY_TO_ROLE) >= 1
 
@@ -211,6 +232,7 @@ class TestReverseIdempotency:
 
     def test_role_multiset_from_mappings_empty(self):
         from cogant.reverse.idempotency import _role_multiset_from_mappings
+
         result = _role_multiset_from_mappings({})
         assert isinstance(result, dict)
 

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from cogant.api.review import ReviewAPI, ReviewableMapping
+from cogant.api.review import ReviewableMapping, ReviewAPI
 
 
 def _write_bundle(tmp_path: Path, node_count: int = 5) -> Path:

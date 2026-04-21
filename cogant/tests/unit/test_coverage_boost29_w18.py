@@ -24,21 +24,21 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule",
-                           path="mymodule.py", language="python")
-    cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass",
-                           path="mymodule.py")
-    func1 = builder.add_node(NodeKind.FUNCTION, "my_func", "mymodule.MyClass.my_func",
-                             path="mymodule.py")
-    func2 = builder.add_node(NodeKind.FUNCTION, "helper", "mymodule.helper",
-                             path="mymodule.py")
-    var1 = builder.add_node(NodeKind.VARIABLE, "state", "mymodule.state",
-                            path="mymodule.py")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
+    cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass", path="mymodule.py")
+    func1 = builder.add_node(
+        NodeKind.FUNCTION, "my_func", "mymodule.MyClass.my_func", path="mymodule.py"
+    )
+    func2 = builder.add_node(NodeKind.FUNCTION, "helper", "mymodule.helper", path="mymodule.py")
+    var1 = builder.add_node(NodeKind.VARIABLE, "state", "mymodule.state", path="mymodule.py")
     builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
     builder.add_edge(cls.id, func1.id, EdgeKind.CONTAINS)
     builder.add_edge(mod.id, func2.id, EdgeKind.CONTAINS)
@@ -53,9 +53,11 @@ def _make_graph():
 # export/graphml.py — GraphMLExporter
 # ---------------------------------------------------------------------------
 
+
 class TestGraphMLExporter:
     def test_export_returns_string(self):
         from cogant.export import GraphMLExporter
+
         graph, *_ = _make_graph()
         exporter = GraphMLExporter(graph)
         result = exporter.export()
@@ -63,6 +65,7 @@ class TestGraphMLExporter:
 
     def test_export_contains_graphml_tags(self):
         from cogant.export import GraphMLExporter
+
         graph, *_ = _make_graph()
         exporter = GraphMLExporter(graph)
         result = exporter.export()
@@ -71,6 +74,7 @@ class TestGraphMLExporter:
 
     def test_export_contains_node_info(self):
         from cogant.export import GraphMLExporter
+
         graph, mod, cls, func1, func2, var1 = _make_graph()
         exporter = GraphMLExporter(graph)
         result = exporter.export()
@@ -79,6 +83,7 @@ class TestGraphMLExporter:
 
     def test_export_is_non_empty(self):
         from cogant.export import GraphMLExporter
+
         graph, *_ = _make_graph()
         exporter = GraphMLExporter(graph)
         result = exporter.export()
@@ -89,9 +94,11 @@ class TestGraphMLExporter:
 # export/parquet.py — ParquetExporter
 # ---------------------------------------------------------------------------
 
+
 class TestParquetExporter:
     def test_export_creates_files(self, tmp_path):
         from cogant.export import ParquetExporter
+
         graph, *_ = _make_graph()
         exporter = ParquetExporter(graph)
         result = exporter.export(tmp_path)
@@ -99,6 +106,7 @@ class TestParquetExporter:
 
     def test_export_returns_list_of_paths(self, tmp_path):
         from cogant.export import ParquetExporter
+
         graph, *_ = _make_graph()
         exporter = ParquetExporter(graph)
         result = exporter.export(tmp_path)
@@ -106,6 +114,7 @@ class TestParquetExporter:
 
     def test_export_non_empty_output(self, tmp_path):
         from cogant.export import ParquetExporter
+
         graph, *_ = _make_graph()
         exporter = ParquetExporter(graph)
         result = exporter.export(tmp_path)
@@ -117,9 +126,11 @@ class TestParquetExporter:
 # export/typed_export.py — TypedExporter
 # ---------------------------------------------------------------------------
 
+
 class TestTypedExporter:
     def test_export_typed_graph_returns_dict(self):
         from cogant.export import TypedExporter
+
         graph, *_ = _make_graph()
         exporter = TypedExporter()
         result = exporter.export_typed_graph(graph)
@@ -127,6 +138,7 @@ class TestTypedExporter:
 
     def test_export_typed_graph_has_nodes(self):
         from cogant.export import TypedExporter
+
         graph, *_ = _make_graph()
         exporter = TypedExporter()
         result = exporter.export_typed_graph(graph)
@@ -135,6 +147,7 @@ class TestTypedExporter:
 
     def test_export_adjacency_matrix_returns_dict(self):
         from cogant.export import TypedExporter
+
         graph, *_ = _make_graph()
         exporter = TypedExporter()
         result = exporter.export_adjacency_matrix(graph)
@@ -142,6 +155,7 @@ class TestTypedExporter:
 
     def test_export_adjacency_matrix_has_data(self):
         from cogant.export import TypedExporter
+
         graph, *_ = _make_graph()
         exporter = TypedExporter()
         result = exporter.export_adjacency_matrix(graph)
@@ -149,6 +163,7 @@ class TestTypedExporter:
 
     def test_export_graphviz_dot_returns_string(self):
         from cogant.export import TypedExporter
+
         graph, *_ = _make_graph()
         exporter = TypedExporter()
         result = exporter.export_graphviz_dot(graph)
@@ -156,6 +171,7 @@ class TestTypedExporter:
 
     def test_export_graphviz_dot_has_content(self):
         from cogant.export import TypedExporter
+
         graph, *_ = _make_graph()
         exporter = TypedExporter()
         result = exporter.export_graphviz_dot(graph)
@@ -164,6 +180,7 @@ class TestTypedExporter:
 
     def test_export_cytoscape_json_returns_dict(self):
         from cogant.export import TypedExporter
+
         graph, *_ = _make_graph()
         exporter = TypedExporter()
         result = exporter.export_cytoscape_json(graph)
@@ -171,6 +188,7 @@ class TestTypedExporter:
 
     def test_export_cytoscape_json_has_elements(self):
         from cogant.export import TypedExporter
+
         graph, *_ = _make_graph()
         exporter = TypedExporter()
         result = exporter.export_cytoscape_json(graph)
@@ -182,10 +200,11 @@ class TestTypedExporter:
 # graph/builder.py — extended ProgramGraphBuilder usage
 # ---------------------------------------------------------------------------
 
+
 class TestProgramGraphBuilderExtended:
     def test_add_multiple_edge_kinds(self):
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         f1 = builder.add_node(NodeKind.FUNCTION, "sender", "m.sender")
@@ -211,12 +230,11 @@ class TestProgramGraphBuilderExtended:
     def test_add_node_returns_node(self):
         from cogant.graph.builder import ProgramGraphBuilder
         from cogant.schemas.core import NodeKind
-        from cogant.schemas.core import Node
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         node = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py", language="python")
-        assert hasattr(node, 'id')
-        assert hasattr(node, 'name')
+        assert hasattr(node, "id")
+        assert hasattr(node, "name")
         assert node.name == "m"
 
     def test_node_ids_are_unique(self):
@@ -243,10 +261,12 @@ class TestProgramGraphBuilderExtended:
 # viz/boundary.py — BoundaryMapper (accessible parts)
 # ---------------------------------------------------------------------------
 
+
 class TestBoundaryMapper:
     def test_import_boundary_mapper(self):
         try:
             from cogant.viz.boundary import BoundaryMapper
+
             assert BoundaryMapper is not None
         except ImportError:
             pytest.skip("BoundaryMapper not importable")
@@ -254,6 +274,7 @@ class TestBoundaryMapper:
     def test_instantiation(self):
         try:
             from cogant.viz.boundary import BoundaryMapper
+
             bm = BoundaryMapper()
             assert bm is not None
         except (ImportError, Exception) as e:
@@ -261,10 +282,10 @@ class TestBoundaryMapper:
 
     def test_markov_blanket_summary_mermaid(self):
         try:
-            from cogant.viz.boundary import BoundaryMapper
-            from cogant.markov import MarkovBlanketExtractor
             from cogant.graph.builder import ProgramGraphBuilder
-            from cogant.schemas.core import NodeKind, EdgeKind
+            from cogant.markov import MarkovBlanketExtractor
+            from cogant.schemas.core import EdgeKind, NodeKind
+            from cogant.viz.boundary import BoundaryMapper
 
             builder = ProgramGraphBuilder(repo_uri="file:///test")
             mod = builder.add_node(NodeKind.MODULE, "m", "m", path="m.py", language="python")
@@ -287,18 +308,22 @@ class TestBoundaryMapper:
 # graph/merge.py — GraphMerger accessible parts
 # ---------------------------------------------------------------------------
 
+
 class TestGraphMerger:
     def test_import_graph_merge(self):
         try:
             import cogant.graph.merge as gm
-            assert hasattr(gm, '__file__')
+
+            assert hasattr(gm, "__file__")
         except ImportError:
             pytest.skip("graph.merge not importable")
 
     def test_graph_merger_has_classes(self):
         try:
-            import cogant.graph.merge as gm
             import inspect
+
+            import cogant.graph.merge as gm
+
             classes = [n for n, o in inspect.getmembers(gm, inspect.isclass)]
             assert len(classes) >= 1
         except ImportError:
@@ -306,12 +331,14 @@ class TestGraphMerger:
 
     def test_graph_merger_merge_identical(self):
         try:
-            import cogant.graph.merge as gm
             import inspect
+
+            import cogant.graph.merge as gm
+
             # Find the merger class
             merger_class = None
             for name, obj in inspect.getmembers(gm, inspect.isclass):
-                if 'Merge' in name or 'merge' in name.lower():
+                if "Merge" in name or "merge" in name.lower():
                     merger_class = obj
                     break
 
@@ -321,7 +348,7 @@ class TestGraphMerger:
             graph, *_ = _make_graph()
             try:
                 sig = inspect.signature(merger_class.__init__)
-                params = [p for p in sig.parameters if p != 'self']
+                params = [p for p in sig.parameters if p != "self"]
                 if len(params) == 2:
                     merger = merger_class(graph, graph)
                     result = merger.merge()

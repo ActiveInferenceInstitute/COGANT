@@ -183,10 +183,7 @@ class TranslationRule(ABC):
                     rule_name=self.name,
                     priority=self.priority,
                     fired=True,
-                    reason=(
-                        f"rule '{self.name}' matched node "
-                        f"{node.qualified_name or node.name}"
-                    ),
+                    reason=(f"rule '{self.name}' matched node {node.qualified_name or node.name}"),
                     evidence=evidence,
                     mapping_kind=self.mapping_kind.value,
                     confidence=0.75,  # default reasonable confidence
@@ -298,20 +295,24 @@ class TranslationEngine:
         n_nodes = len(graph.nodes)
         n_edges = len(graph.edges)
         active_rules = (
-            [r for r in self.rules if r.name in rule_filter]
-            if rule_filter else self.rules
+            [r for r in self.rules if r.name in rule_filter] if rule_filter else self.rules
         )
         logger.info(
             "Starting translation: %d rules active, %d nodes, %d edges%s",
-            len(active_rules), n_nodes, n_edges,
+            len(active_rules),
+            n_nodes,
+            n_edges,
             f" (filtered to {rule_filter})" if rule_filter else "",
         )
 
         query = GraphQuery(graph)
 
         for iteration in range(1, self.max_iterations + 1):
-            logger.debug("Fixpoint iteration %d starting (%d existing mappings)",
-                         iteration, len(self.mappings))
+            logger.debug(
+                "Fixpoint iteration %d starting (%d existing mappings)",
+                iteration,
+                len(self.mappings),
+            )
 
             new_mappings_this_pass = self._apply_single_pass(
                 graph, query, rule_filter=rule_filter, iteration=iteration
@@ -330,17 +331,14 @@ class TranslationEngine:
                 "engine",
                 f"iteration={iteration} new_mappings={new_mappings_this_pass}",
             )
-            logger.info("Fixpoint iteration %d: %d new mappings",
-                        iteration, new_mappings_this_pass)
+            logger.info("Fixpoint iteration %d: %d new mappings", iteration, new_mappings_this_pass)
 
             if new_mappings_this_pass == 0:
                 logger.info("Fixpoint reached after %d iteration(s)", iteration)
                 self._convergence_iteration = iteration
                 break
         else:
-            logger.warning(
-                "Max iterations (%d) reached without convergence", self.max_iterations
-            )
+            logger.warning("Max iterations (%d) reached without convergence", self.max_iterations)
 
         # Resolve conflicts among overlapping mappings
         conflicts_before = len(self.mappings)
@@ -349,7 +347,9 @@ class TranslationEngine:
         if conflicts_removed > 0:
             logger.info(
                 "Conflict resolution: removed %d overlapping mappings (%d → %d)",
-                conflicts_removed, conflicts_before, len(self.mappings),
+                conflicts_removed,
+                conflicts_before,
+                len(self.mappings),
             )
 
         # Log per-kind role distribution
@@ -359,9 +359,9 @@ class TranslationEngine:
             by_kind[kind] = by_kind.get(kind, 0) + 1
         logger.info(
             "Translation complete: %d mappings across %d roles%s",
-            len(self.mappings), len(by_kind),
-            f" ({', '.join(f'{k}={v}' for k, v in sorted(by_kind.items()))})"
-            if by_kind else "",
+            len(self.mappings),
+            len(by_kind),
+            f" ({', '.join(f'{k}={v}' for k, v in sorted(by_kind.items()))})" if by_kind else "",
         )
 
         # Log coverage summary
@@ -413,7 +413,9 @@ class TranslationEngine:
             except (TypeError, ValueError, KeyError, AttributeError) as e:
                 logger.warning(
                     "Rule %r failed during matching (iteration=%d): %s",
-                    rule.name, iteration, e,
+                    rule.name,
+                    iteration,
+                    e,
                 )
                 self._log_match(
                     "rule_error",
@@ -438,7 +440,10 @@ class TranslationEngine:
                 except (TypeError, ValueError, KeyError, AttributeError) as e:
                     logger.warning(
                         "Rule %r failed during apply (iteration=%d, match=%r): %s",
-                        rule.name, iteration, match, e,
+                        rule.name,
+                        iteration,
+                        match,
+                        e,
                     )
                     self._log_match(
                         "apply_error",
@@ -453,29 +458,30 @@ class TranslationEngine:
 
             if rule_new > 0 or rule_errors > 0:
                 logger.debug(
-                    "Rule %r: %d new mappings, %d errors (iteration=%d, "
-                    "priority=%d, family=%s)",
-                    rule.name, rule_new, rule_errors, iteration,
-                    rule.priority, rule.mapping_kind.value,
+                    "Rule %r: %d new mappings, %d errors (iteration=%d, priority=%d, family=%s)",
+                    rule.name,
+                    rule_new,
+                    rule_errors,
+                    iteration,
+                    rule.priority,
+                    rule.mapping_kind.value,
                 )
 
         # Log per-rule summary for this pass when there are new mappings
         if new_mappings > 0:
             active = ", ".join(
                 f"{name}={cnt}"
-                for name, cnt in sorted(
-                    per_rule_counts.items(), key=lambda kv: -kv[1]
-                )
+                for name, cnt in sorted(per_rule_counts.items(), key=lambda kv: -kv[1])
                 if cnt > 0
             )
             logger.debug(
                 "Pass %d rule breakdown: %d new total [%s]",
-                iteration, new_mappings, active,
+                iteration,
+                new_mappings,
+                active,
             )
             if per_rule_errors:
-                err_summary = ", ".join(
-                    f"{name}={cnt}" for name, cnt in per_rule_errors.items()
-                )
+                err_summary = ", ".join(f"{name}={cnt}" for name, cnt in per_rule_errors.items())
                 logger.debug("Pass %d rule errors: [%s]", iteration, err_summary)
 
         return new_mappings
@@ -551,9 +557,8 @@ class TranslationEngine:
             else:
                 loser, winner = mapping_a, mapping_b
             to_remove.add(loser.id)
-            overlap = (
-                set(mapping_a.graph_fragment_node_ids)
-                & set(mapping_b.graph_fragment_node_ids)
+            overlap = set(mapping_a.graph_fragment_node_ids) & set(
+                mapping_b.graph_fragment_node_ids
             )
             self._log_match(
                 "conflict_resolved",
@@ -639,11 +644,13 @@ class TranslationEngine:
             rule_name: Name of rule.
             detail: Event details.
         """
-        self._match_log.append({
-            "event_type": event_type,
-            "rule_name": rule_name,
-            "detail": detail,
-        })
+        self._match_log.append(
+            {
+                "event_type": event_type,
+                "rule_name": rule_name,
+                "detail": detail,
+            }
+        )
 
     def get_match_log(self) -> list[dict[str, Any]]:
         """Get the match log.
@@ -700,14 +707,11 @@ class TranslationEngine:
         # Build human-readable summary
         for rule_name in sorted(rule_summary.keys()):
             count = rule_summary[rule_name]
-            explanations.append(
-                f"Rule '{rule_name}' fired {count} time(s)"
-            )
+            explanations.append(f"Rule '{rule_name}' fired {count} time(s)")
 
         # Add convergence summary
         iteration_events = [
-            e for e in self._match_log
-            if e.get("event_type") == "iteration_complete"
+            e for e in self._match_log if e.get("event_type") == "iteration_complete"
         ]
         if iteration_events:
             last_event = iteration_events[-1]
@@ -739,9 +743,7 @@ class TranslationEngine:
         for mapping_id, mapping in self.mappings.items():
             # Check non-empty node IDs
             if not mapping.graph_fragment_node_ids:
-                issues.append(
-                    f"Mapping '{mapping_id}' has no node IDs in fragment"
-                )
+                issues.append(f"Mapping '{mapping_id}' has no node IDs in fragment")
 
             # Check confidence score range
             if not (0.0 <= mapping.confidence_score <= 1.0):
@@ -752,9 +754,7 @@ class TranslationEngine:
 
             # Check mapping kind is valid
             if not hasattr(mapping.kind, "value"):
-                issues.append(
-                    f"Mapping '{mapping_id}' has invalid mapping kind"
-                )
+                issues.append(f"Mapping '{mapping_id}' has invalid mapping kind")
 
             # Check consistency between confidence score and tier
             tier = mapping.confidence_tier.value

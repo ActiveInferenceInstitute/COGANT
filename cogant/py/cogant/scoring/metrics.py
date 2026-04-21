@@ -97,7 +97,9 @@ class CodebaseMetrics:
         137
     """
 
-    def __init__(self, graph: dict[str, Any], state_space: dict[str, Any], mappings: dict[str, Any]):
+    def __init__(
+        self, graph: dict[str, Any], state_space: dict[str, Any], mappings: dict[str, Any]
+    ):
         """Initialize metrics calculator.
 
         Args:
@@ -166,7 +168,7 @@ class CodebaseMetrics:
         # Combine: weighted sum of density (60%) and size (40%).
         # Density-dominant split favors structural coupling over raw
         # growth. TODO(calibration): re-fit on 20-repo corpus.
-        complexity = (0.6 * density + 0.4 * min(size_factor, 1.0))
+        complexity = 0.6 * density + 0.4 * min(size_factor, 1.0)
         return min(complexity, 1.0)
 
     def coupling_score(self) -> float:

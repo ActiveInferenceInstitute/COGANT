@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-import sys
-import types
-from pathlib import Path
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Minimal stand-ins for cogant domain objects (avoid heavy pipeline deps)
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class _FakeNode:
@@ -58,9 +56,11 @@ class _FakeRoundtripResult:
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def exporter():
     from cogant.viz.pdf_export import PDFExporter
+
     return PDFExporter()
 
 
@@ -107,6 +107,7 @@ def roundtrip_result():
 @pytest.fixture
 def matrices_dict():
     import numpy as np
+
     return {
         "A": np.random.rand(4, 4),
         "B": np.random.rand(4, 4, 2),
@@ -118,6 +119,7 @@ def matrices_dict():
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_export_program_graph_creates_pdf(exporter, small_graph, tmp_path):
@@ -159,6 +161,7 @@ def test_export_matrices_creates_pdf(exporter, matrices_dict, tmp_path):
 @pytest.mark.unit
 def test_export_matrices_partial_dict(exporter, tmp_path):
     import numpy as np
+
     partial = {"A": np.eye(3)}
     out = str(tmp_path / "partial_matrices.pdf")
     result = exporter.export_matrices(partial, out)
@@ -332,6 +335,7 @@ def test_export_gnn_bundle_with_mappings(exporter, tmp_path):
 @pytest.mark.unit
 def test_exporter_init_no_state():
     from cogant.viz.pdf_export import PDFExporter
+
     e = PDFExporter()
     assert e is not None
 
@@ -339,6 +343,7 @@ def test_exporter_init_no_state():
 @pytest.mark.unit
 def test_export_program_graph_returns_empty_on_import_error(tmp_path, monkeypatch):
     import builtins
+
     real_import = builtins.__import__
 
     def _mock_import(name: str, *args: Any, **kwargs: Any) -> Any:
@@ -347,6 +352,7 @@ def test_export_program_graph_returns_empty_on_import_error(tmp_path, monkeypatc
         return real_import(name, *args, **kwargs)
 
     from cogant.viz.pdf_export import PDFExporter
+
     exporter = PDFExporter()
     out = str(tmp_path / "fail.pdf")
 
@@ -361,8 +367,10 @@ def test_export_program_graph_returns_empty_on_import_error(tmp_path, monkeypatc
 # export_full_analysis_report
 # ---------------------------------------------------------------------------
 
+
 def _full_bundle() -> dict:
     import numpy as np
+
     return {
         "project_name": "TestProject",
         "timestamp": "2026-04-16",
@@ -395,6 +403,7 @@ def _full_bundle() -> dict:
 @pytest.fixture
 def full_exporter():
     from cogant.viz.pdf_export import PDFExporter
+
     return PDFExporter()
 
 

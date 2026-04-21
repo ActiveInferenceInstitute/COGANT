@@ -45,6 +45,7 @@ logger = logging.getLogger(__name__)
 # Availability probe
 # ---------------------------------------------------------------------------
 
+
 def _treesitter_available() -> bool:
     """Return True iff the ``tree-sitter`` runtime can be imported."""
     try:
@@ -189,9 +190,7 @@ def _emit_parsed_file(path: Path, language: str, parsed: Any) -> ProgramGraph:
 # ---------------------------------------------------------------------------
 
 
-def parse_file_treesitter(
-    path: Path, language: str = "auto"
-) -> ProgramGraph | None:
+def parse_file_treesitter(path: Path, language: str = "auto") -> ProgramGraph | None:
     """Parse ``path`` through tree-sitter and return a :class:`ProgramGraph`.
 
     Args:

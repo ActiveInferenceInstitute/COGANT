@@ -3,12 +3,14 @@ from typing import Any
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
 
-__all__ = ['GNNMatrices']
+__all__ = ["GNNMatrices"]
 
 class GNNMatrices:
     graph: Any
     state_space: Any
-    def __init__(self, graph: ProgramGraph, mappings: Any, state_space: StateSpaceModel) -> None: ...
+    def __init__(
+        self, graph: ProgramGraph, mappings: Any, state_space: StateSpaceModel
+    ) -> None: ...
     @property
     def n_states(self) -> int: ...
     @property

@@ -17,13 +17,13 @@ from __future__ import annotations
 
 import math
 import re
-from typing import Dict
 
 import pytest
-from hypothesis import assume, given, settings, strategies as st
+from hypothesis import assume, given, settings
+from hypothesis import strategies as st
 
-from cogant.reverse.metrics import compare_role_distributions
 from cogant.reverse.matrices import render_matrices_module
+from cogant.reverse.metrics import compare_role_distributions
 from cogant.reverse.parser import ReverseGNNModel, parse_gnn
 
 pytestmark = pytest.mark.property
@@ -33,11 +33,22 @@ pytestmark = pytest.mark.property
 # ---------------------------------------------------------------------------
 
 # Role names: short ASCII identifiers representing Active Inference roles.
-_role_names = st.sampled_from([
-    "HIDDEN_STATE", "OBSERVATION", "ACTION", "POLICY",
-    "PREFERENCE", "TRANSITION", "PRIOR", "LIKELIHOOD",
-    "SENSORY", "ACTIVE", "INTERNAL", "EXTERNAL",
-])
+_role_names = st.sampled_from(
+    [
+        "HIDDEN_STATE",
+        "OBSERVATION",
+        "ACTION",
+        "POLICY",
+        "PREFERENCE",
+        "TRANSITION",
+        "PRIOR",
+        "LIKELIHOOD",
+        "SENSORY",
+        "ACTIVE",
+        "INTERNAL",
+        "EXTERNAL",
+    ]
+)
 
 # Non-empty role distributions with strictly positive counts.
 _role_dist = st.dictionaries(
@@ -64,7 +75,7 @@ _role_dist_any = st.dictionaries(
 
 @given(a=_role_dist_any, b=_role_dist_any)
 @settings(max_examples=200, deadline=None)
-def test_law1_role_score_bounded(a: Dict[str, float], b: Dict[str, float]) -> None:
+def test_law1_role_score_bounded(a: dict[str, float], b: dict[str, float]) -> None:
     """compare_role_distributions must return a value in [0.0, 1.0]."""
     score = compare_role_distributions(a, b)
     assert 0.0 <= score <= 1.0, f"score {score} out of [0, 1] for a={a}, b={b}"
@@ -78,14 +89,12 @@ def test_law1_role_score_bounded(a: Dict[str, float], b: Dict[str, float]) -> No
 
 @given(a=_role_dist)
 @settings(max_examples=200, deadline=None)
-def test_law2_role_self_similarity(a: Dict[str, float]) -> None:
+def test_law2_role_self_similarity(a: dict[str, float]) -> None:
     """Comparing a non-empty distribution with itself must yield 1.0."""
     # Ensure the distribution has positive total mass.
     assume(sum(a.values()) > 0.0)
     score = compare_role_distributions(a, a)
-    assert math.isclose(score, 1.0, abs_tol=1e-9), (
-        f"self-similarity score {score} != 1.0 for a={a}"
-    )
+    assert math.isclose(score, 1.0, abs_tol=1e-9), f"self-similarity score {score} != 1.0 for a={a}"
 
 
 # ---------------------------------------------------------------------------
@@ -96,7 +105,7 @@ def test_law2_role_self_similarity(a: Dict[str, float]) -> None:
 
 @given(a=_role_dist_any, b=_role_dist_any)
 @settings(max_examples=200, deadline=None)
-def test_law3_role_symmetry(a: Dict[str, float], b: Dict[str, float]) -> None:
+def test_law3_role_symmetry(a: dict[str, float], b: dict[str, float]) -> None:
     """score(a, b) and score(b, a) must differ by less than 0.01."""
     score_ab = compare_role_distributions(a, b)
     score_ba = compare_role_distributions(b, a)
@@ -133,13 +142,9 @@ def test_law4_d_vector_normalization(n_states: int, n_obs: int, n_actions: int) 
     d_match = re.search(r"^D: List\[float\] = \[(.+?)\]$", source, re.MULTILINE)
     assert d_match is not None, "D vector not found in generated source"
     d_values = [float(x.strip()) for x in d_match.group(1).split(",")]
-    assert len(d_values) == n_states, (
-        f"D has {len(d_values)} entries, expected {n_states}"
-    )
+    assert len(d_values) == n_states, f"D has {len(d_values)} entries, expected {n_states}"
     d_sum = sum(d_values)
-    assert math.isclose(d_sum, 1.0, abs_tol=1e-4), (
-        f"D vector sum={d_sum}, expected ~1.0"
-    )
+    assert math.isclose(d_sum, 1.0, abs_tol=1e-4), f"D vector sum={d_sum}, expected ~1.0"
 
 
 # ---------------------------------------------------------------------------
@@ -174,14 +179,10 @@ def test_law5_a_shape_consistency(n_states: int, n_obs: int) -> None:
     )
     assert a_block_match is not None, "A matrix block not found in generated source"
     row_matches = re.findall(r"\[([^\[\]]+)\]", a_block_match.group(1))
-    assert len(row_matches) == n_obs, (
-        f"A has {len(row_matches)} rows, expected {n_obs}"
-    )
+    assert len(row_matches) == n_obs, f"A has {len(row_matches)} rows, expected {n_obs}"
     for i, row_str in enumerate(row_matches):
         cols = [float(x.strip()) for x in row_str.split(",")]
-        assert len(cols) == n_states, (
-            f"A row {i} has {len(cols)} cols, expected {n_states}"
-        )
+        assert len(cols) == n_states, f"A row {i} has {len(cols)} cols, expected {n_states}"
 
 
 # ---------------------------------------------------------------------------
@@ -197,7 +198,9 @@ def test_law5_a_shape_consistency(n_states: int, n_obs: int) -> None:
 )
 @settings(max_examples=100, deadline=None)
 def test_law6_transition_normalization(
-    n_states: int, n_actions: int, action_idx: int,
+    n_states: int,
+    n_actions: int,
+    action_idx: int,
 ) -> None:
     """transition(uniform_dist, k) must return a distribution summing to ~1.0."""
     model = ReverseGNNModel(
@@ -255,8 +258,7 @@ def test_law7_model_name_sanitization(raw_name: str) -> None:
     gnn_md = f"## ModelName\n{raw_name}\n## StateSpaceBlock\n## Connections\n"
     model = parse_gnn(gnn_md)
     assert model.model_name.isidentifier(), (
-        f"model_name {model.model_name!r} is not a valid Python identifier "
-        f"(raw_name={raw_name!r})"
+        f"model_name {model.model_name!r} is not a valid Python identifier (raw_name={raw_name!r})"
     )
     # Additionally, verify it contains no uppercase (the sanitizer lowercases).
     assert model.model_name == model.model_name.lower(), (

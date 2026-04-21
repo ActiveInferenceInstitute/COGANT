@@ -114,8 +114,7 @@ class IntegrityChecker(_ValidatorMixin):
         node_ids = set()
         for node_id, _node in graph.nodes.items():
             if node_id in node_ids:
-                self._add_issue("error", "integrity",
-                               f"Duplicate node ID: {node_id}", [node_id])
+                self._add_issue("error", "integrity", f"Duplicate node ID: {node_id}", [node_id])
             else:
                 node_ids.add(node_id)
 
@@ -125,13 +124,19 @@ class IntegrityChecker(_ValidatorMixin):
 
         for edge_id, edge in graph.edges.items():
             if edge.source_id not in node_ids:
-                self._add_issue("error", "integrity",
-                               f"Edge {edge_id} source not in nodes: {edge.source_id}",
-                               [edge_id, edge.source_id])
+                self._add_issue(
+                    "error",
+                    "integrity",
+                    f"Edge {edge_id} source not in nodes: {edge.source_id}",
+                    [edge_id, edge.source_id],
+                )
             if edge.target_id not in node_ids:
-                self._add_issue("error", "integrity",
-                               f"Edge {edge_id} target not in nodes: {edge.target_id}",
-                               [edge_id, edge.target_id])
+                self._add_issue(
+                    "error",
+                    "integrity",
+                    f"Edge {edge_id} target not in nodes: {edge.target_id}",
+                    [edge_id, edge.target_id],
+                )
 
     def _check_orphaned_nodes(self, graph: ProgramGraph) -> None:
         """Check for orphaned (unreachable) nodes."""
@@ -164,9 +169,7 @@ class IntegrityChecker(_ValidatorMixin):
         # Check for unreachable nodes
         unreachable = set(graph.nodes.keys()) - reachable
         for node_id in unreachable:
-            self._add_issue("warning", "integrity",
-                           f"Unreachable node: {node_id}",
-                           [node_id])
+            self._add_issue("warning", "integrity", f"Unreachable node: {node_id}", [node_id])
 
     def _check_for_cycles(self, graph: ProgramGraph) -> None:
         """Check for cycles in the graph."""
@@ -191,17 +194,16 @@ class IntegrityChecker(_ValidatorMixin):
         for node_id in graph.nodes.keys():
             if node_id not in visited:
                 if has_cycle(node_id):
-                    self._add_issue("info", "integrity",
-                                   f"Cycle detected from node: {node_id}",
-                                   [node_id])
+                    self._add_issue(
+                        "info", "integrity", f"Cycle detected from node: {node_id}", [node_id]
+                    )
 
     def _check_variable_uniqueness(self, state_space: StateSpaceModel) -> None:
         """Check that all variable IDs are unique."""
         var_ids = set()
         for var_id in state_space.variables.keys():
             if var_id in var_ids:
-                self._add_issue("error", "integrity",
-                               f"Duplicate variable ID: {var_id}", [var_id])
+                self._add_issue("error", "integrity", f"Duplicate variable ID: {var_id}", [var_id])
             else:
                 var_ids.add(var_id)
 
@@ -213,17 +215,23 @@ class IntegrityChecker(_ValidatorMixin):
         for action_id, action in state_space.actions.items():
             for var_id in action.effects:
                 if var_id not in var_ids:
-                    self._add_issue("error", "integrity",
-                                   f"Action {action_id} references non-existent variable: {var_id}",
-                                   [action_id, var_id])
+                    self._add_issue(
+                        "error",
+                        "integrity",
+                        f"Action {action_id} references non-existent variable: {var_id}",
+                        [action_id, var_id],
+                    )
 
         # Check preference scopes
         for pref_id, pref in state_space.preferences.items():
             for var_id in pref.scope:
                 if var_id not in var_ids:
-                    self._add_issue("error", "integrity",
-                                   f"Preference {pref_id} references non-existent variable: {var_id}",
-                                   [pref_id, var_id])
+                    self._add_issue(
+                        "error",
+                        "integrity",
+                        f"Preference {pref_id} references non-existent variable: {var_id}",
+                        [pref_id, var_id],
+                    )
 
     def _check_confidence_values(self, state_space: StateSpaceModel) -> None:
         """Check that confidence values are in [0, 1]."""
@@ -244,8 +252,7 @@ class IntegrityChecker(_ValidatorMixin):
         stage_ids = set()
         for stage_id in process.stages.keys():
             if stage_id in stage_ids:
-                self._add_issue("error", "integrity",
-                               f"Duplicate stage ID: {stage_id}", [stage_id])
+                self._add_issue("error", "integrity", f"Duplicate stage ID: {stage_id}", [stage_id])
             else:
                 stage_ids.add(stage_id)
 
@@ -255,26 +262,34 @@ class IntegrityChecker(_ValidatorMixin):
 
         for conn_id, conn in process.connections.items():
             if conn.source_stage_id not in stage_ids:
-                self._add_issue("error", "integrity",
-                               f"Connection {conn_id} source not in stages: {conn.source_stage_id}",
-                               [conn_id, conn.source_stage_id])
+                self._add_issue(
+                    "error",
+                    "integrity",
+                    f"Connection {conn_id} source not in stages: {conn.source_stage_id}",
+                    [conn_id, conn.source_stage_id],
+                )
             if conn.target_stage_id not in stage_ids:
-                self._add_issue("error", "integrity",
-                               f"Connection {conn_id} target not in stages: {conn.target_stage_id}",
-                               [conn_id, conn.target_stage_id])
+                self._add_issue(
+                    "error",
+                    "integrity",
+                    f"Connection {conn_id} target not in stages: {conn.target_stage_id}",
+                    [conn_id, conn.target_stage_id],
+                )
 
     def _check_entry_exit_stages(self, process: ProcessModel) -> None:
         """Check that entry and exit stages are valid."""
         stage_ids = set(process.stages.keys())
 
         if process.entry_stage_id and process.entry_stage_id not in stage_ids:
-            self._add_issue("error", "integrity",
-                           f"Entry stage not in stages: {process.entry_stage_id}",
-                           [process.entry_stage_id])
+            self._add_issue(
+                "error",
+                "integrity",
+                f"Entry stage not in stages: {process.entry_stage_id}",
+                [process.entry_stage_id],
+            )
 
         for exit_id in process.exit_stage_ids:
             if exit_id not in stage_ids:
-                self._add_issue("error", "integrity",
-                               f"Exit stage not in stages: {exit_id}",
-                               [exit_id])
-
+                self._add_issue(
+                    "error", "integrity", f"Exit stage not in stages: {exit_id}", [exit_id]
+                )

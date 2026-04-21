@@ -12,8 +12,8 @@ Covers:
 """
 
 import os
+
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -22,9 +22,11 @@ pytestmark = pytest.mark.unit
 # server/app.py — _MetricsStore
 # ---------------------------------------------------------------------------
 
+
 class TestMetricsStore:
     def _make_store(self):
         from cogant.server.app import _MetricsStore
+
         return _MetricsStore()
 
     def test_init_empty(self):
@@ -93,9 +95,11 @@ class TestMetricsStore:
 # server/app.py — _RateLimiter
 # ---------------------------------------------------------------------------
 
+
 class TestRateLimiter:
     def _make_limiter(self, max_requests=3, window_s=60.0):
         from cogant.server.app import _RateLimiter
+
         return _RateLimiter(max_requests=max_requests, window_s=window_s)
 
     def test_allow_within_limit(self):
@@ -121,6 +125,7 @@ class TestRateLimiter:
 
     def test_window_expired_allows_again(self):
         import time
+
         limiter = self._make_limiter(max_requests=2, window_s=0.001)
         assert limiter.check("key") is True
         assert limiter.check("key") is True
@@ -139,27 +144,32 @@ class TestRateLimiter:
 # server/app.py — _probe_dependencies
 # ---------------------------------------------------------------------------
 
+
 class TestProbeDependencies:
     def test_returns_dict(self):
         from cogant.server.app import _probe_dependencies
+
         result = _probe_dependencies()
         assert isinstance(result, dict)
         assert len(result) >= 1
 
     def test_cogant_api_pipeline_present(self):
         from cogant.server.app import _probe_dependencies
+
         result = _probe_dependencies()
         assert "cogant.api.pipeline" in result
         assert result["cogant.api.pipeline"] == "ok"
 
     def test_networkx_present(self):
         from cogant.server.app import _probe_dependencies
+
         result = _probe_dependencies()
         # networkx is a core dep so should be "ok"
         assert result.get("networkx") == "ok"
 
     def test_values_are_strings(self):
         from cogant.server.app import _probe_dependencies
+
         result = _probe_dependencies()
         for v in result.values():
             assert isinstance(v, str)
@@ -169,9 +179,11 @@ class TestProbeDependencies:
 # rust_backend.py — _env_prefers_rust and build_program_graph
 # ---------------------------------------------------------------------------
 
+
 class TestEnvPrefersRust:
     def test_returns_none_when_unset(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ.pop("COGANT_USE_RUST", None)
         try:
@@ -183,6 +195,7 @@ class TestEnvPrefersRust:
 
     def test_returns_true_for_1(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "1"
         try:
@@ -194,6 +207,7 @@ class TestEnvPrefersRust:
 
     def test_returns_true_for_true(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "true"
         try:
@@ -205,6 +219,7 @@ class TestEnvPrefersRust:
 
     def test_returns_false_for_0(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "0"
         try:
@@ -216,6 +231,7 @@ class TestEnvPrefersRust:
 
     def test_returns_false_for_false(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "false"
         try:
@@ -227,6 +243,7 @@ class TestEnvPrefersRust:
 
     def test_returns_none_for_invalid(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "maybe"
         try:
@@ -240,6 +257,7 @@ class TestEnvPrefersRust:
 class TestBuildProgramGraph:
     def test_returns_builder_with_use_rust_false(self):
         from cogant.rust_backend import build_program_graph
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "0"
         try:
@@ -252,13 +270,15 @@ class TestBuildProgramGraph:
             os.environ.update(env)
 
     def test_explicit_use_rust_false_uses_python(self):
-        from cogant.rust_backend import build_program_graph
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.rust_backend import build_program_graph
+
         builder = build_program_graph("repo://test", use_rust=False)
         assert isinstance(builder, ProgramGraphBuilder)
 
     def test_auto_detect_returns_valid_builder(self):
         from cogant.rust_backend import build_program_graph
+
         env = os.environ.copy()
         os.environ.pop("COGANT_USE_RUST", None)
         try:
@@ -269,8 +289,9 @@ class TestBuildProgramGraph:
             os.environ.update(env)
 
     def test_env_force_python(self):
-        from cogant.rust_backend import build_program_graph
         from cogant.graph.builder import ProgramGraphBuilder
+        from cogant.rust_backend import build_program_graph
+
         env = os.environ.copy()
         os.environ["COGANT_USE_RUST"] = "0"
         try:
@@ -284,21 +305,25 @@ class TestBuildProgramGraph:
 class TestRustBackendBasics:
     def test_rust_available_is_bool(self):
         from cogant.rust_backend import RUST_AVAILABLE
+
         assert isinstance(RUST_AVAILABLE, bool)
 
     def test_rust_version_returns_str_or_none(self):
         from cogant.rust_backend import rust_version
+
         v = rust_version()
         assert v is None or isinstance(v, str)
 
     def test_get_program_graph_impl_returns_class(self):
         from cogant.rust_backend import get_program_graph_impl
+
         impl = get_program_graph_impl()
         assert impl is not None
         assert callable(impl)
 
     def test_create_example_graph_raises_without_rust(self):
         from cogant.rust_backend import RUST_AVAILABLE, create_example_graph
+
         if not RUST_AVAILABLE:
             with pytest.raises(RuntimeError):
                 create_example_graph()
@@ -312,9 +337,11 @@ class TestRustBackendBasics:
 # cogant/__init__.py — module attributes
 # ---------------------------------------------------------------------------
 
+
 class TestCogantInit:
     def test_version_is_string(self):
         import cogant
+
         assert isinstance(cogant.__version__, str)
         # Should be semver-like
         parts = cogant.__version__.split(".")
@@ -322,31 +349,37 @@ class TestCogantInit:
 
     def test_rust_version_attr(self):
         import cogant
+
         assert hasattr(cogant, "__rust_version__")
         # Either None or a string
         assert cogant.__rust_version__ is None or isinstance(cogant.__rust_version__, str)
 
     def test_rust_available_is_bool(self):
         import cogant
+
         assert hasattr(cogant, "_RUST_AVAILABLE")
         assert isinstance(cogant._RUST_AVAILABLE, bool)
 
     def test_session_alias(self):
         import cogant
+
         assert hasattr(cogant, "CogantSession")
         # Either Session or None
         assert cogant.CogantSession is None or cogant.CogantSession is not None
 
     def test_gnn_bundle_alias(self):
         import cogant
+
         assert hasattr(cogant, "GNNBundle")
 
     def test_author_attr(self):
         import cogant
+
         assert hasattr(cogant, "__author__")
         assert isinstance(cogant.__author__, str)
 
     def test_all_contains_expected(self):
         import cogant
+
         assert "__version__" in cogant.__all__
         assert "run_pipeline" in cogant.__all__

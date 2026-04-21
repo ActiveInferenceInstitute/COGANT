@@ -18,6 +18,7 @@ No mocks. Every test uses real COGANT value objects.
 from __future__ import annotations
 
 import ast
+
 import pytest
 
 from cogant.gnn.matrices import GNNMatrices, _normalize_row, _normalize_vector
@@ -32,8 +33,6 @@ from cogant.schemas.semantic import (
     SemanticMapping,
 )
 from cogant.statespace.compiler import (
-    Action,
-    ObservationModality,
     StateSpaceCompiler,
     StateSpaceModel,
 )
@@ -43,7 +42,7 @@ from cogant.statespace.variables import (
     StateVariable,
     StateVariableType,
 )
-from cogant.translate.engine import RuleExplanation, TranslationEngine, TranslationRule
+from cogant.translate.engine import RuleExplanation, TranslationEngine
 from cogant.translate.rules.semantic import ActionRule, ObservationRule
 from cogant.translate.rules.structural import MutatingSubsystemRule
 
@@ -53,6 +52,7 @@ pytestmark = pytest.mark.unit
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_graph(repo: str = "test://mutation-killers") -> ProgramGraph:
     return ProgramGraph(metadata=GraphMetadata(repo_uri=repo))
@@ -70,9 +70,7 @@ def _add_node(g: ProgramGraph, nid: str, kind: NodeKind, name: str, **kw: object
     return node
 
 
-def _add_edge(
-    g: ProgramGraph, eid: str, src: str, dst: str, kind: EdgeKind
-) -> None:
+def _add_edge(g: ProgramGraph, eid: str, src: str, dst: str, kind: EdgeKind) -> None:
     g.add_edge(Edge(id=eid, source_id=src, target_id=dst, kind=kind))
 
 
@@ -129,8 +127,7 @@ class TestFixpointConvergence:
             ev for ev in engine.get_match_log() if ev["event_type"] == "iteration_complete"
         ]
         assert len(iteration_events) == 1, (
-            "should converge after one empty pass; "
-            f"got {len(iteration_events)} iteration events"
+            f"should converge after one empty pass; got {len(iteration_events)} iteration events"
         )
         assert mappings == []
 
@@ -598,7 +595,9 @@ class TestStateSpaceCompilerEdgeCases:
       - Preference weight defaults are in [0, 1]
     """
 
-    def _make_graph_with_var(self, nid: str = "v1", name: str = "counter") -> tuple[ProgramGraph, str]:
+    def _make_graph_with_var(
+        self, nid: str = "v1", name: str = "counter"
+    ) -> tuple[ProgramGraph, str]:
         builder = ProgramGraphBuilder(repo_uri="test://compiler-edge")
         node = builder.add_node(
             kind=NodeKind.VARIABLE,

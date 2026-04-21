@@ -16,10 +16,10 @@ Covers:
 - static/parser.py: additional attribute and import patterns
 """
 
-import os
 import json
+import os
+
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -28,9 +28,11 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
     n2 = builder.add_node(NodeKind.FUNCTION, "fn", "mod.fn", path="mod.py")
@@ -40,6 +42,7 @@ def _make_graph_with_nodes():
 
 def _make_roundtrip_result(**kwargs):
     from cogant.reverse.idempotency import RoundtripResult
+
     return RoundtripResult(**kwargs)
 
 
@@ -47,9 +50,11 @@ def _make_roundtrip_result(**kwargs):
 # reverse/cli.py — _render_plan_summary and _render_roundtrip_result
 # ---------------------------------------------------------------------------
 
+
 class TestReverseCLIRendering:
     def test_render_plan_summary_basic(self, tmp_path):
         from cogant.reverse.cli import _render_plan_summary
+
         # Should run without error
         _render_plan_summary(
             gnn_path=tmp_path / "model.gnn.md",
@@ -63,6 +68,7 @@ class TestReverseCLIRendering:
 
     def test_render_plan_summary_zeros(self, tmp_path):
         from cogant.reverse.cli import _render_plan_summary
+
         _render_plan_summary(
             gnn_path=tmp_path / "empty.gnn.md",
             package_path=tmp_path / "out",
@@ -76,6 +82,7 @@ class TestReverseCLIRendering:
     def test_render_roundtrip_result_isomorphic(self):
         from cogant.reverse.cli import _render_roundtrip_result
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=True,
             role_match_score=0.9,
@@ -89,6 +96,7 @@ class TestReverseCLIRendering:
     def test_render_roundtrip_result_drift(self):
         from cogant.reverse.cli import _render_roundtrip_result
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=False,
             role_match_score=0.2,
@@ -102,6 +110,7 @@ class TestReverseCLIRendering:
     def test_render_roundtrip_result_with_package_path(self, tmp_path):
         from cogant.reverse.cli import _render_roundtrip_result
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=True,
             role_match_score=1.0,
@@ -114,6 +123,7 @@ class TestReverseCLIRendering:
     def test_render_roundtrip_result_empty_roles(self):
         from cogant.reverse.cli import _render_roundtrip_result
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=True,
             role_match_score=1.0,
@@ -125,6 +135,7 @@ class TestReverseCLIRendering:
     def test_render_roundtrip_result_no_shape_match(self):
         from cogant.reverse.cli import _render_roundtrip_result
         from cogant.reverse.idempotency import RoundtripResult
+
         result = RoundtripResult(
             is_isomorphic=False,
             role_match_score=0.3,
@@ -140,25 +151,30 @@ class TestReverseCLIRendering:
 # rust_backend.py — public API (Rust unavailable path)
 # ---------------------------------------------------------------------------
 
+
 class TestRustBackend:
     def test_rust_available_is_bool(self):
         from cogant.rust_backend import RUST_AVAILABLE
+
         assert isinstance(RUST_AVAILABLE, bool)
 
     def test_rust_version_returns_none_or_str(self):
         from cogant.rust_backend import rust_version
+
         result = rust_version()
         assert result is None or isinstance(result, str)
 
     def test_get_program_graph_impl_returns_class(self):
         from cogant.rust_backend import get_program_graph_impl
+
         cls = get_program_graph_impl()
         assert cls is not None
         # Should be callable (a class)
         assert callable(cls)
 
     def test_create_example_graph_raises_when_no_rust(self):
-        from cogant.rust_backend import create_example_graph, RUST_AVAILABLE
+        from cogant.rust_backend import RUST_AVAILABLE, create_example_graph
+
         if not RUST_AVAILABLE:
             with pytest.raises(RuntimeError):
                 create_example_graph()
@@ -168,13 +184,15 @@ class TestRustBackend:
             assert result is not None
 
     def test_rust_adapter_init_raises_when_no_rust(self):
-        from cogant.rust_backend import RustProgramGraphAdapter, RUST_AVAILABLE
+        from cogant.rust_backend import RUST_AVAILABLE, RustProgramGraphAdapter
+
         if not RUST_AVAILABLE:
             with pytest.raises(RuntimeError):
                 RustProgramGraphAdapter("repo://test")
 
     def test_build_program_graph_returns_builder(self):
         from cogant.rust_backend import build_program_graph
+
         builder = build_program_graph("repo://test", use_rust=False)
         assert builder is not None
         assert hasattr(builder, "add_node")
@@ -187,6 +205,7 @@ class TestRustBackend:
         try:
             os.environ["COGANT_USE_RUST"] = "0"
             from cogant.rust_backend import build_program_graph
+
             builder = build_program_graph("repo://test")
             assert builder is not None
         finally:
@@ -197,6 +216,7 @@ class TestRustBackend:
 
     def test_env_prefers_rust_false(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env_backup = os.environ.get("COGANT_USE_RUST")
         try:
             os.environ["COGANT_USE_RUST"] = "0"
@@ -209,6 +229,7 @@ class TestRustBackend:
 
     def test_env_prefers_rust_true(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env_backup = os.environ.get("COGANT_USE_RUST")
         try:
             os.environ["COGANT_USE_RUST"] = "1"
@@ -221,6 +242,7 @@ class TestRustBackend:
 
     def test_env_prefers_rust_none(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env_backup = os.environ.get("COGANT_USE_RUST")
         try:
             os.environ.pop("COGANT_USE_RUST", None)
@@ -232,6 +254,7 @@ class TestRustBackend:
 
     def test_env_prefers_rust_invalid_string(self):
         from cogant.rust_backend import _env_prefers_rust
+
         env_backup = os.environ.get("COGANT_USE_RUST")
         try:
             os.environ["COGANT_USE_RUST"] = "maybe"
@@ -246,7 +269,8 @@ class TestRustBackend:
     def test_build_program_graph_full_pipeline(self):
         """Build a complete graph using pure-Python backend."""
         from cogant.rust_backend import build_program_graph
-        from cogant.schemas.core import NodeKind, EdgeKind
+        from cogant.schemas.core import EdgeKind, NodeKind
+
         builder = build_program_graph("repo://test", use_rust=False)
         n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
         n2 = builder.add_node(NodeKind.FUNCTION, "fn", "mod.fn", path="mod.py")
@@ -260,14 +284,21 @@ class TestRustBackend:
 # dynamic/enrichment.py — enrich_graph with JSON files
 # ---------------------------------------------------------------------------
 
+
 class TestEnrichGraphWithFiles:
     def test_enrich_with_valid_coverage_json(self, tmp_path):
         from cogant.dynamic.enrichment import enrich_graph
+
         # Build minimal coverage.json with spans
         cov_data = {
             "spans": [
-                {"file": "mod.py", "start_line": 1, "end_line": 5,
-                 "covered": True, "is_branch": False},
+                {
+                    "file": "mod.py",
+                    "start_line": 1,
+                    "end_line": 5,
+                    "covered": True,
+                    "is_branch": False,
+                },
             ]
         }
         cov_path = tmp_path / "coverage.json"
@@ -279,6 +310,7 @@ class TestEnrichGraphWithFiles:
 
     def test_enrich_with_invalid_coverage_json(self, tmp_path):
         from cogant.dynamic.enrichment import enrich_graph
+
         cov_path = tmp_path / "bad_cov.json"
         cov_path.write_text("not json at all {{{")
         graph = _make_graph_with_nodes()
@@ -288,6 +320,7 @@ class TestEnrichGraphWithFiles:
 
     def test_enrich_with_empty_coverage_spans(self, tmp_path):
         from cogant.dynamic.enrichment import enrich_graph
+
         cov_data = {"spans": []}
         cov_path = tmp_path / "cov.json"
         cov_path.write_text(json.dumps(cov_data))
@@ -297,6 +330,7 @@ class TestEnrichGraphWithFiles:
 
     def test_build_function_index_names(self):
         from cogant.dynamic.enrichment import _build_function_index
+
         graph = _make_graph_with_nodes()
         index = _build_function_index(graph)
         assert isinstance(index, dict)
@@ -308,9 +342,11 @@ class TestEnrichGraphWithFiles:
 # static/dataflow.py — DataFlowAnalyzer edge cases
 # ---------------------------------------------------------------------------
 
+
 class TestDataFlowEdgeCases:
     def test_analyze_source_for_loop(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "for i in range(10):\n    total = i\n"
         fp = tmp_path / "for.py"
@@ -319,6 +355,7 @@ class TestDataFlowEdgeCases:
 
     def test_analyze_source_while_loop(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "n = 0\nwhile n < 10:\n    n += 1\n"
         fp = tmp_path / "while.py"
@@ -327,6 +364,7 @@ class TestDataFlowEdgeCases:
 
     def test_analyze_source_import(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "import os\nfrom pathlib import Path\n"
         fp = tmp_path / "imports.py"
@@ -335,6 +373,7 @@ class TestDataFlowEdgeCases:
 
     def test_analyze_source_with_walrus_operator(self, tmp_path):
         from cogant.static.dataflow import DataFlowAnalyzer
+
         analyzer = DataFlowAnalyzer()
         src = "data = [1, 2, 3, 4, 5]\nif n := len(data):\n    print(n)\n"
         fp = tmp_path / "walrus.py"
@@ -346,9 +385,11 @@ class TestDataFlowEdgeCases:
 # static/calls.py — CallGraphBuilder edge cases
 # ---------------------------------------------------------------------------
 
+
 class TestCallGraphEdgeCases:
     def test_extract_calls_from_source_comprehension(self, tmp_path):
         from cogant.static.calls import CallGraphBuilder
+
         builder = CallGraphBuilder()
         src = "result = [str(x) for x in range(10)]\n"
         fp = tmp_path / "comp.py"
@@ -357,6 +398,7 @@ class TestCallGraphEdgeCases:
 
     def test_extract_calls_from_source_async_call(self, tmp_path):
         from cogant.static.calls import CallGraphBuilder
+
         builder = CallGraphBuilder()
         src = "async def main():\n    result = await fetch('url')\n"
         fp = tmp_path / "async.py"
@@ -365,6 +407,7 @@ class TestCallGraphEdgeCases:
 
     def test_extract_calls_from_source_decorator(self, tmp_path):
         from cogant.static.calls import CallGraphBuilder
+
         builder = CallGraphBuilder()
         src = "@app.route('/path')\ndef view():\n    return render()\n"
         fp = tmp_path / "dec.py"
@@ -373,6 +416,7 @@ class TestCallGraphEdgeCases:
 
     def test_extract_calls_from_source_multiple_returns(self, tmp_path):
         from cogant.static.calls import CallGraphBuilder
+
         builder = CallGraphBuilder()
         src = """
 def process(x):
@@ -389,9 +433,11 @@ def process(x):
 # static/parser.py — additional patterns
 # ---------------------------------------------------------------------------
 
+
 class TestPythonASTParserAdditional:
     def _make_parser(self):
         from cogant.static.parser import PythonASTParser
+
         return PythonASTParser()
 
     def test_parse_string_multiple_classes(self, tmp_path):
@@ -407,7 +453,7 @@ class B(A):
 class C:
     x: int = 0
 """
-        fp = tmp_path / "multi.py"
+        tmp_path / "multi.py"
         module = parser.parse_string(src)
         assert len(module.classes) == 3
 
@@ -419,14 +465,14 @@ def outer():
         return 42
     return inner
 """
-        fp = tmp_path / "nested.py"
+        tmp_path / "nested.py"
         module = parser.parse_string(src)
         assert len(module.functions) >= 1
 
     def test_parse_string_walrus_in_while(self, tmp_path):
         parser = self._make_parser()
         src = "data = []\nwhile chunk := input():\n    data.append(chunk)\n"
-        fp = tmp_path / "walrus.py"
+        tmp_path / "walrus.py"
         module = parser.parse_string(src)
         assert module is not None
 
@@ -439,13 +485,13 @@ class Point:
         self.x = x
         self.y = y
 """
-        fp = tmp_path / "point.py"
+        tmp_path / "point.py"
         module = parser.parse_string(src)
         assert len(module.classes) == 1
 
     def test_parse_string_global_statement(self, tmp_path):
         parser = self._make_parser()
         src = "counter = 0\ndef inc():\n    global counter\n    counter += 1\n"
-        fp = tmp_path / "global.py"
+        tmp_path / "global.py"
         module = parser.parse_string(src)
         assert len(module.functions) == 1

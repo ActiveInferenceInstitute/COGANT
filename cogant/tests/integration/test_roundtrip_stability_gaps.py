@@ -75,8 +75,7 @@ class TestForwardPipelineConsistency:
         # Extract signatures
         def sig(mappings):
             return frozenset(
-                (m.kind.value, tuple(sorted(m.graph_fragment_node_ids)))
-                for m in mappings
+                (m.kind.value, tuple(sorted(m.graph_fragment_node_ids))) for m in mappings
             )
 
         assert sig(mappings1) == sig(mappings2)
@@ -198,9 +197,9 @@ D_f0 = PriorBelief
             plan = plan_package(model)
 
             # Verify plan has expected structure
-            assert hasattr(plan, 'state_vars') or hasattr(plan, 'hidden_states')
-            assert hasattr(plan, 'obs_functions') or hasattr(plan, 'observations')
-            assert hasattr(plan, 'action_methods') or hasattr(plan, 'actions')
+            assert hasattr(plan, "state_vars") or hasattr(plan, "hidden_states")
+            assert hasattr(plan, "obs_functions") or hasattr(plan, "observations")
+            assert hasattr(plan, "action_methods") or hasattr(plan, "actions")
 
         except ImportError:
             pytest.skip("cogant.reverse not available yet")

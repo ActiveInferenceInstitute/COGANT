@@ -11,7 +11,6 @@ from pathlib import Path
 
 from cogant.dynamic.coverage import CoverageIngester, _decode_numbits
 
-
 # --------------------------- _decode_numbits ---------------------------- #
 
 
@@ -100,9 +99,7 @@ def _make_coverage_db_line_bits(tmp_path: Path) -> Path:
     cursor.execute("CREATE TABLE line_bits (file_id INTEGER, numbits BLOB)")
     cursor.execute("INSERT INTO file (id, path) VALUES (1, 'pkg/a.py')")
     # Bit-encoded: 0xFF -> lines 0..7
-    cursor.execute(
-        "INSERT INTO line_bits (file_id, numbits) VALUES (1, ?)", (bytes([0xFF]),)
-    )
+    cursor.execute("INSERT INTO line_bits (file_id, numbits) VALUES (1, ?)", (bytes([0xFF]),))
     conn.commit()
     conn.close()
     return path
@@ -117,9 +114,7 @@ def _make_coverage_db_line_table(tmp_path: Path) -> Path:
     cursor.execute("CREATE TABLE line (file_id INTEGER, lineno INTEGER)")
     cursor.execute("INSERT INTO file (id, path) VALUES (1, 'pkg/b.py')")
     for lineno in (10, 20, 30):
-        cursor.execute(
-            "INSERT INTO line (file_id, lineno) VALUES (?, ?)", (1, lineno)
-        )
+        cursor.execute("INSERT INTO line (file_id, lineno) VALUES (?, ?)", (1, lineno))
     conn.commit()
     conn.close()
     return path

@@ -108,7 +108,9 @@ class GNNPackageBuilder:
         output_path.mkdir(parents=True, exist_ok=True)
         logger.info(
             "Building GNN package in %s (%d nodes, %d edges, %d mappings)",
-            output_path, len(self.graph.nodes), len(self.graph.edges),
+            output_path,
+            len(self.graph.nodes),
+            len(self.graph.edges),
             len(self.mappings) if isinstance(self.mappings, dict) else 0,
         )
 
@@ -154,21 +156,32 @@ class GNNPackageBuilder:
             role_dist: dict[str, int] = {}
             if isinstance(self.mappings, dict):
                 for m in self.mappings.values():
-                    kind = getattr(m, 'kind', None)
-                    label = kind.value if hasattr(kind, 'value') else str(kind or 'unknown')
+                    kind = getattr(m, "kind", None)
+                    label = kind.value if hasattr(kind, "value") else str(kind or "unknown")
                     role_dist[label] = role_dist.get(label, 0) + 1
 
             role_summary = (
                 f" | roles={', '.join(f'{k}={v}' for k, v in sorted(role_dist.items()))}"
-                if role_dist else ""
+                if role_dist
+                else ""
             )
-            n_vars = len(self.state_space.variables) if hasattr(self.state_space, 'variables') else 0
-            n_obs = len(self.state_space.observations) if hasattr(self.state_space, 'observations') else 0
-            n_actions = len(self.state_space.actions) if hasattr(self.state_space, 'actions') else 0
+            n_vars = (
+                len(self.state_space.variables) if hasattr(self.state_space, "variables") else 0
+            )
+            n_obs = (
+                len(self.state_space.observations)
+                if hasattr(self.state_space, "observations")
+                else 0
+            )
+            n_actions = len(self.state_space.actions) if hasattr(self.state_space, "actions") else 0
 
             logger.info(
                 "GNN package built: %d files | state_space=%d vars, %d obs, %d actions%s",
-                len(self.checksums), n_vars, n_obs, n_actions, role_summary,
+                len(self.checksums),
+                n_vars,
+                n_obs,
+                n_actions,
+                role_summary,
             )
             return manifest
 
@@ -199,9 +212,7 @@ class GNNPackageBuilder:
             )
             json_data = exporter.export()
             json_path = output_path / "model.gnn.json"
-            json_path.write_text(
-                json.dumps(json_data, indent=2, default=str), encoding="utf-8"
-            )
+            json_path.write_text(json.dumps(json_data, indent=2, default=str), encoding="utf-8")
             self.checksums["model.gnn.json"] = self._checksum_dict(json_data)
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
@@ -368,7 +379,9 @@ class GNNPackageBuilder:
         try:
             connections = {
                 "edges": self._extract_relationships(),
-                "count": len(self.graph.edges) if self.graph and hasattr(self.graph, "edges") else 0,
+                "count": len(self.graph.edges)
+                if self.graph and hasattr(self.graph, "edges")
+                else 0,
                 "by_kind": self._count_edges_by_kind(),
             }
             json_path = output_path / "connections.json"
@@ -388,7 +401,9 @@ class GNNPackageBuilder:
             }
             json_path = output_path / "preferences_constraints.json"
             json_path.write_text(json.dumps(preferences_constraints, indent=2), encoding="utf-8")
-            self.checksums["preferences_constraints.json"] = self._checksum_dict(preferences_constraints)
+            self.checksums["preferences_constraints.json"] = self._checksum_dict(
+                preferences_constraints
+            )
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate preferences_constraints: {e}", exc_info=True)
@@ -467,13 +482,12 @@ class GNNPackageBuilder:
 
             try:
                 from cogant.viz.boundary import BoundaryMapper
+
                 bm = BoundaryMapper()
                 detail_mmd = bm.markov_blanket_detailed_mermaid(
                     self.graph, blanket=blanket, max_per_role=12
                 )
-                (diag_dir / "markov_blanket_detail.mmd").write_text(
-                    detail_mmd, encoding="utf-8"
-                )
+                (diag_dir / "markov_blanket_detail.mmd").write_text(detail_mmd, encoding="utf-8")
             except Exception as e:  # pragma: no cover - detail view is optional
                 logger.warning(f"Failed to render detailed Markov blanket diagram: {e}")
 
@@ -542,6 +556,7 @@ class GNNPackageBuilder:
         if self.process_model is None:
             return
         try:
+
             def _to_dict(obj: Any) -> Any:
                 if obj is None:
                     return None
@@ -558,9 +573,7 @@ class GNNPackageBuilder:
             data = {
                 "process_id": getattr(self.process_model, "process_id", None)
                 or getattr(self.process_model, "id", None),
-                "stages": [
-                    _to_dict(s) for s in getattr(self.process_model, "stages", []) or []
-                ],
+                "stages": [_to_dict(s) for s in getattr(self.process_model, "stages", []) or []],
                 "policies": [
                     _to_dict(p) for p in getattr(self.process_model, "policies", []) or []
                 ],
@@ -568,8 +581,7 @@ class GNNPackageBuilder:
                     _to_dict(t) for t in getattr(self.process_model, "timelines", []) or []
                 ],
                 "connections": [
-                    _to_dict(c)
-                    for c in getattr(self.process_model, "connections", []) or []
+                    _to_dict(c) for c in getattr(self.process_model, "connections", []) or []
                 ],
             }
             path = output_path / "process_model.json"
@@ -599,9 +611,7 @@ class GNNPackageBuilder:
                 "sequence_diagram.mermaid": gen.generate_sequence_diagram(
                     process_model=self.process_model, graph=self.graph
                 ),
-                "dependency_diagram.mermaid": gen.generate_dependency_graph(
-                    self.graph
-                ),
+                "dependency_diagram.mermaid": gen.generate_dependency_graph(self.graph),
                 "active_inference_diagram.mermaid": gen.generate_active_inference_diagram(
                     self.state_space
                 ),
@@ -750,9 +760,7 @@ class GNNPackageBuilder:
                 "edges": self._count_graph_edges(),
             },
             "state_space_stats": self._count_state_space_elements(),
-            "semantic_mappings_count": len(self.mappings)
-            if isinstance(self.mappings, dict)
-            else 0,
+            "semantic_mappings_count": len(self.mappings) if isinstance(self.mappings, dict) else 0,
         }
 
         manifest_path = output_path / "manifest.json"
@@ -854,9 +862,7 @@ class GNNPackageBuilder:
                             or getattr(action, "affects_state_vars", None)
                             or []
                         ),
-                        "preconditions": list(
-                            getattr(action, "preconditions", None) or []
-                        ),
+                        "preconditions": list(getattr(action, "preconditions", None) or []),
                         "description": getattr(action, "description", ""),
                         "confidence": _enum_value(getattr(action, "confidence", None)),
                     }
@@ -881,9 +887,7 @@ class GNNPackageBuilder:
         modalities: list[str] = []
         observations = getattr(self.state_space, "observations", None)
         if observations is not None:
-            iterable = (
-                observations.values() if isinstance(observations, dict) else observations
-            )
+            iterable = observations.values() if isinstance(observations, dict) else observations
             for obs in iterable:
                 modality = getattr(obs, "modality", None)
                 if modality and modality not in modalities:
@@ -972,16 +976,20 @@ class GNNPackageBuilder:
             return []
         prefs_list = []
         for _pref_id, pref in self.state_space.preferences.items():
-            prefs_list.append({
-                "id": pref.id,
-                "name": pref.name,
-                "description": pref.description,
-                "scope": pref.scope,
-                "expression": pref.expression,
-                "weight": pref.weight,
-                "source": pref.source,
-                "confidence": pref.confidence.value if hasattr(pref.confidence, 'value') else str(pref.confidence),
-            })
+            prefs_list.append(
+                {
+                    "id": pref.id,
+                    "name": pref.name,
+                    "description": pref.description,
+                    "scope": pref.scope,
+                    "expression": pref.expression,
+                    "weight": pref.weight,
+                    "source": pref.source,
+                    "confidence": pref.confidence.value
+                    if hasattr(pref.confidence, "value")
+                    else str(pref.confidence),
+                }
+            )
         return prefs_list
 
     def _extract_constraints(self) -> list[dict[str, Any]]:
@@ -995,9 +1003,7 @@ class GNNPackageBuilder:
                             "id": mid,
                             "label": getattr(m, "semantic_label", "") or mid,
                             "description": getattr(m, "description", ""),
-                            "scope": list(
-                                getattr(m, "graph_fragment_node_ids", []) or []
-                            ),
+                            "scope": list(getattr(m, "graph_fragment_node_ids", []) or []),
                             "confidence": getattr(m, "confidence_score", 0.0),
                             "tier": _enum_value(getattr(m, "confidence_tier", None)),
                             "source": "translation_rule",
@@ -1033,9 +1039,7 @@ class GNNPackageBuilder:
                             "label": getattr(m, "semantic_label", "") or mid,
                             "description": getattr(m, "description", ""),
                             "weight": 1.0,
-                            "scope": list(
-                                getattr(m, "graph_fragment_node_ids", []) or []
-                            ),
+                            "scope": list(getattr(m, "graph_fragment_node_ids", []) or []),
                             "confidence": getattr(m, "confidence_score", 0.0),
                             "tier": _enum_value(getattr(m, "confidence_tier", None)),
                             "source": "translation_rule",
@@ -1088,10 +1092,7 @@ class GNNPackageBuilder:
             "type": "factor_partition" if groups else "none",
             "factor_count": len(groups),
             "variable_count": sum(len(v) for v in groups.values()),
-            "factors": [
-                {"id": fid, "variables": sorted(vs)}
-                for fid, vs in sorted(groups.items())
-            ],
+            "factors": [{"id": fid, "variables": sorted(vs)} for fid, vs in sorted(groups.items())],
         }
 
     def _extract_factor_list(self) -> list[dict[str, Any]]:
@@ -1111,12 +1112,8 @@ class GNNPackageBuilder:
                     "kind": _enum_value(getattr(m, "kind", None)),
                     "semantic_label": getattr(m, "semantic_label", "") or mid,
                     "description": getattr(m, "description", ""),
-                    "graph_node_ids": list(
-                        getattr(m, "graph_fragment_node_ids", []) or []
-                    ),
-                    "graph_edge_ids": list(
-                        getattr(m, "graph_fragment_edge_ids", []) or []
-                    ),
+                    "graph_node_ids": list(getattr(m, "graph_fragment_node_ids", []) or []),
+                    "graph_edge_ids": list(getattr(m, "graph_fragment_edge_ids", []) or []),
                     "confidence": getattr(m, "confidence_score", 0.0),
                     "tier": _enum_value(getattr(m, "confidence_tier", None)),
                     "evidence_count": getattr(m, "evidence_count", 0),
@@ -1136,7 +1133,9 @@ class GNNPackageBuilder:
         """Extract relationships."""
         relationships = []
         for _eid, edge in self.graph.edges.items():
-            relationships.append({"source": edge.source_id, "target": edge.target_id, "kind": str(edge.kind)})
+            relationships.append(
+                {"source": edge.source_id, "target": edge.target_id, "kind": str(edge.kind)}
+            )
         return relationships[:100]  # Limit to first 100
 
     def _extract_source_evidence(self) -> dict[str, Any]:
@@ -1158,6 +1157,7 @@ class GNNPackageBuilder:
     def _count_edges_by_kind(self) -> dict[str, int]:
         """Count edges by kind."""
         from collections import defaultdict
+
         counts: dict[str, int] = defaultdict(int)
         if self.graph and hasattr(self.graph, "edges"):
             for edge in self.graph.edges.values():
@@ -1173,9 +1173,7 @@ class GNNPackageBuilder:
             "observations": len(self.state_space.observations)
             if hasattr(self.state_space, "observations")
             else 0,
-            "actions": len(self.state_space.actions)
-            if hasattr(self.state_space, "actions")
-            else 0,
+            "actions": len(self.state_space.actions) if hasattr(self.state_space, "actions") else 0,
         }
 
     def _is_deterministic(self) -> bool:
@@ -1205,11 +1203,7 @@ class GNNPackageBuilder:
         """
         transitions = getattr(self.state_space, "transitions", None) or []
         for t in transitions:
-            from_states = (
-                getattr(t, "from_states", None)
-                or getattr(t, "predecessors", None)
-                or []
-            )
+            from_states = getattr(t, "from_states", None) or getattr(t, "predecessors", None) or []
             if hasattr(from_states, "__len__") and len(from_states) > 1:
                 return False
         return True

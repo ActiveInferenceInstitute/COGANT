@@ -31,7 +31,6 @@ from cogant.config import (
     TranslateConfig,
 )
 
-
 _HAS_YAML = importlib.util.find_spec("yaml") is not None
 
 

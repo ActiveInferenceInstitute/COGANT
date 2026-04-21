@@ -2,8 +2,6 @@
 """Batch 9 coverage boost: simulate/runner.py, viz/boundary.py, viz/graph_view.py,
 reverse/idempotency.py, static/types.py, gnn/formatter/dynamics.py."""
 
-import os
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -15,20 +13,29 @@ pytestmark = pytest.mark.unit
 # Shared helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
     """Create a ProgramGraph with modules, classes, functions, and edges."""
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
-    from cogant.schemas.core import Node, NodeKind, Edge, EdgeKind
+    from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
     meta = GraphMetadata(repo_uri="test://repo", languages={"python"})
     graph = ProgramGraph(metadata=meta)
 
-    m1 = Node(id="m1", kind=NodeKind.MODULE, name="module_a", qualified_name="module_a", language="python")
-    m2 = Node(id="m2", kind=NodeKind.MODULE, name="module_b", qualified_name="module_b", language="python")
+    m1 = Node(
+        id="m1", kind=NodeKind.MODULE, name="module_a", qualified_name="module_a", language="python"
+    )
+    m2 = Node(
+        id="m2", kind=NodeKind.MODULE, name="module_b", qualified_name="module_b", language="python"
+    )
     c1 = Node(id="c1", kind=NodeKind.CLASS, name="ClassA", qualified_name="module_a.ClassA")
     c2 = Node(id="c2", kind=NodeKind.CLASS, name="ClassB", qualified_name="module_b.ClassB")
-    f1 = Node(id="f1", kind=NodeKind.FUNCTION, name="func_a", qualified_name="module_a.ClassA.func_a")
-    f2 = Node(id="f2", kind=NodeKind.METHOD, name="method_b", qualified_name="module_b.ClassB.method_b")
+    f1 = Node(
+        id="f1", kind=NodeKind.FUNCTION, name="func_a", qualified_name="module_a.ClassA.func_a"
+    )
+    f2 = Node(
+        id="f2", kind=NodeKind.METHOD, name="method_b", qualified_name="module_b.ClassB.method_b"
+    )
 
     for n in [m1, m2, c1, c2, f1, f2]:
         graph.add_node(n)
@@ -48,14 +55,18 @@ def _make_graph():
 
 def _make_state_space():
     """Create a minimal StateSpaceModel."""
-    from cogant.statespace.compiler import StateSpaceModel, ObservationModality, Action
+    from cogant.statespace.compiler import Action, ObservationModality, StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
     from cogant.statespace.variables import StateVariable, StateVariableType
 
-    v1 = StateVariable(id="v1", name="pos", var_type=StateVariableType.DISCRETE, node_id="m1", cardinality=3)
+    v1 = StateVariable(
+        id="v1", name="pos", var_type=StateVariableType.DISCRETE, node_id="m1", cardinality=3
+    )
     v2 = StateVariable(id="v2", name="vel", var_type=StateVariableType.CONTINUOUS, node_id="m2")
     a1 = Action(id="a1", name="move", controller_id="f1", effects=["v1"], preconditions=["v2"])
-    obs1 = ObservationModality(id="o1", name="sensor", source_node_id="f1", modality_type="discrete")
+    obs1 = ObservationModality(
+        id="o1", name="sensor", source_node_id="f1", modality_type="discrete"
+    )
 
     return StateSpaceModel(
         id="ssm1",
@@ -73,6 +84,7 @@ def _make_state_space():
 def _make_process_model():
     """Create a minimal ProcessModel."""
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(id="p1", schema_name="test_schema", stages={}, connections={})
 
 
@@ -80,9 +92,11 @@ def _make_process_model():
 # simulate/runner.py — ModelRunner
 # ---------------------------------------------------------------------------
 
+
 class TestModelRunnerBeliefUpdate:
     def test_basic(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner(seed=42)
         beliefs = {"s0": 0.6, "s1": 0.4}
         posterior = runner.belief_update(beliefs, "s0")
@@ -91,12 +105,14 @@ class TestModelRunnerBeliefUpdate:
 
     def test_empty_beliefs(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         result = runner.belief_update({}, "s0")
         assert result == {}
 
     def test_single_state(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         result = runner.belief_update({"only": 1.0}, "only")
         assert "only" in result
@@ -104,6 +120,7 @@ class TestModelRunnerBeliefUpdate:
 
     def test_nonmatching_observation(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         # observation must be one of the belief states, else ValueError from underlying distribution
         beliefs = {"a": 0.5, "b": 0.5}
@@ -113,6 +130,7 @@ class TestModelRunnerBeliefUpdate:
 
     def test_skewed_beliefs(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         beliefs = {"s0": 0.9, "s1": 0.05, "s2": 0.05}
         result = runner.belief_update(beliefs, "s0")
@@ -122,6 +140,7 @@ class TestModelRunnerBeliefUpdate:
 class TestModelRunnerPolicyEvaluation:
     def test_basic(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner(seed=42)
         beliefs = {"s0": 0.7, "s1": 0.3}
         ranking = runner.policy_evaluation(beliefs, ["move_left", "move_right"])
@@ -130,12 +149,14 @@ class TestModelRunnerPolicyEvaluation:
 
     def test_empty_actions(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         result = runner.policy_evaluation({"s0": 1.0}, [])
         assert result == []
 
     def test_empty_beliefs(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         result = runner.policy_evaluation({}, ["move"])
         # empty beliefs — returns [(action, 0.0)] for each action
@@ -144,6 +165,7 @@ class TestModelRunnerPolicyEvaluation:
 
     def test_multiple_actions(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner(seed=1)
         beliefs = {"s0": 0.4, "s1": 0.4, "s2": 0.2}
         actions = ["a1", "a2", "a3", "a4"]
@@ -157,24 +179,28 @@ class TestModelRunnerPolicyEvaluation:
 class TestModelRunnerComputeFreeEnergy:
     def test_state_matching_observation(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         fe = runner.compute_free_energy({"s0": 0.8, "s1": 0.2}, "s0")
         assert isinstance(fe, float)
 
     def test_state_not_matching_observation(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         fe = runner.compute_free_energy({"s0": 0.5, "s1": 0.5}, "unknown_obs")
         assert isinstance(fe, float)
 
     def test_empty_state(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         fe = runner.compute_free_energy({}, "s0")
         assert fe == 0.0
 
     def test_single_state(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         fe = runner.compute_free_energy({"s0": 1.0}, "s0")
         assert isinstance(fe, float)
@@ -183,6 +209,7 @@ class TestModelRunnerComputeFreeEnergy:
 class TestModelRunnerVfeEfe:
     def _runner_with_matrices(self):
         from cogant.simulate.runner import ModelRunner
+
         A = [[0.9, 0.1], [0.1, 0.9]]
         B = [[[0.8, 0.2], [0.3, 0.7]], [[0.2, 0.8], [0.7, 0.3]]]
         C = [1.0, 0.0]
@@ -195,6 +222,7 @@ class TestModelRunnerVfeEfe:
 
     def test_no_generative_model(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         assert runner.has_generative_model is False
 
@@ -215,6 +243,7 @@ class TestModelRunnerVfeEfe:
 
     def test_vfe_no_A_raises(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         with pytest.raises(RuntimeError, match="requires A"):
             runner.vfe_from_beliefs([0.5, 0.5])
@@ -226,6 +255,7 @@ class TestModelRunnerVfeEfe:
 
     def test_efe_no_matrices_raises(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         with pytest.raises(RuntimeError, match="requires A, B, and C"):
             runner.efe_for_policy([0, 1])
@@ -238,6 +268,7 @@ class TestModelRunnerVfeEfe:
 
     def test_update_beliefs_no_A_raises(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
         with pytest.raises(RuntimeError, match="requires A"):
             runner.update_beliefs_from_observation([0.5, 0.5], 0)
@@ -246,6 +277,7 @@ class TestModelRunnerVfeEfe:
 class TestModelRunnerActiveInference:
     def _make_runner_and_ssm(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner(seed=42)
         ssm = _make_state_space()
         return runner, ssm
@@ -288,11 +320,17 @@ class TestModelRunnerActiveInference:
         from cogant.simulate.runner import ModelRunner
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
+
         runner = ModelRunner(seed=0)
         empty_ssm = StateSpaceModel(
-            id="empty", schema_name="empty",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="empty",
+            schema_name="empty",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         trace = runner.run_active_inference(empty_ssm, steps=3)
@@ -310,9 +348,18 @@ class TestModelRunnerActiveInference:
 
     def test_generate_report_single_step(self):
         from cogant.simulate.runner import ModelRunner
+
         runner = ModelRunner()
-        trace = [{"step": 0, "beliefs": {"s0": 1.0}, "observation": None,
-                  "action": None, "free_energy": 0.0, "predicted_state": {}}]
+        trace = [
+            {
+                "step": 0,
+                "beliefs": {"s0": 1.0},
+                "observation": None,
+                "action": None,
+                "free_energy": 0.0,
+                "predicted_state": {},
+            }
+        ]
         report = runner.generate_report(trace)
         assert "Total steps: 1" in report
 
@@ -332,13 +379,16 @@ class TestModelRunnerActiveInference:
 # viz/boundary.py — BoundaryMapper
 # ---------------------------------------------------------------------------
 
+
 class TestBoundaryMapper:
     def _bm(self):
         from cogant.viz.boundary import BoundaryMapper
+
         return BoundaryMapper()
 
     def test_map_module_boundaries_empty(self):
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
         bm = self._bm()
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="x"))
         result = bm.map_module_boundaries(graph)
@@ -359,7 +409,8 @@ class TestBoundaryMapper:
         assert len(result) > 10
 
     def test_map_type_boundaries_empty(self):
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
         bm = self._bm()
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="x"))
         result = bm.map_type_boundaries(graph)
@@ -373,7 +424,8 @@ class TestBoundaryMapper:
         assert "classDiagram" in result or "graph" in result
 
     def test_generate_boundary_report_empty(self):
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
         bm = self._bm()
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="x"))
         report = bm.generate_boundary_report(graph)
@@ -401,15 +453,23 @@ class TestBoundaryMapper:
 # viz/graph_view.py — GraphVisualizer
 # ---------------------------------------------------------------------------
 
+
 class TestGraphVisualizer:
     def _gv(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         return GraphVisualizer()
 
     def _sample_dict(self):
         return {
             "nodes": [
-                {"id": "n1", "name": "module_a", "type": "module", "path": "/a.py", "language": "python"},
+                {
+                    "id": "n1",
+                    "name": "module_a",
+                    "type": "module",
+                    "path": "/a.py",
+                    "language": "python",
+                },
                 {"id": "n2", "name": "ClassA", "type": "class", "path": "/a.py"},
                 {"id": "n3", "name": "func_b", "type": "function", "path": "/b.py"},
             ],
@@ -435,6 +495,7 @@ class TestGraphVisualizer:
 
     def test_from_typed_graph(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         gv = GraphVisualizer()
         graph = _make_graph()
         result = gv.from_typed_graph(graph)
@@ -501,6 +562,7 @@ class TestGraphVisualizer:
 
     def test_render_html_creates_file(self, tmp_path):
         from cogant.viz.graph_view import GraphVisualizer
+
         gv = GraphVisualizer()
         gv.from_program_graph(self._sample_dict())
         out = str(tmp_path / "viz.html")
@@ -510,6 +572,7 @@ class TestGraphVisualizer:
 
     def test_render_svg_creates_file(self, tmp_path):
         from cogant.viz.graph_view import GraphVisualizer
+
         gv = GraphVisualizer()
         gv.from_program_graph(self._sample_dict())
         out = str(tmp_path / "viz.svg")
@@ -525,6 +588,7 @@ class TestGraphVisualizer:
 
     def test_from_typed_graph_metadata(self):
         from cogant.viz.graph_view import GraphVisualizer
+
         gv = GraphVisualizer()
         graph = _make_graph()
         gv.from_typed_graph(graph)
@@ -536,9 +600,11 @@ class TestGraphVisualizer:
 # reverse/idempotency.py — RoundtripResult + helpers
 # ---------------------------------------------------------------------------
 
+
 class TestRoundtripResult:
     def test_summary_isomorphic(self):
         from cogant.reverse.idempotency import RoundtripResult
+
         r = RoundtripResult(
             is_isomorphic=True,
             role_match_score=0.85,
@@ -556,6 +622,7 @@ class TestRoundtripResult:
 
     def test_summary_not_isomorphic(self):
         from cogant.reverse.idempotency import RoundtripResult
+
         r = RoundtripResult(
             is_isomorphic=False,
             role_match_score=0.3,
@@ -568,6 +635,7 @@ class TestRoundtripResult:
 
     def test_summary_perfect_match(self):
         from cogant.reverse.idempotency import RoundtripResult
+
         r = RoundtripResult(
             is_isomorphic=True,
             role_match_score=1.0,
@@ -580,6 +648,7 @@ class TestRoundtripResult:
 
     def test_default_fields(self):
         from cogant.reverse.idempotency import RoundtripResult
+
         r = RoundtripResult()
         assert r.is_isomorphic is False
         assert r.role_match_score == 0.0
@@ -590,6 +659,7 @@ class TestRoleMultisetFromModel:
     def test_basic(self):
         from cogant.reverse.idempotency import _role_multiset_from_model
         from cogant.reverse.parser import ReverseGNNModel
+
         model = ReverseGNNModel(
             model_name="test",
             hidden_states=["s_f0", "s_f1"],
@@ -607,6 +677,7 @@ class TestRoleMultisetFromModel:
     def test_annotation_adds_roles(self):
         from cogant.reverse.idempotency import _role_multiset_from_model
         from cogant.reverse.parser import ReverseGNNModel
+
         model = ReverseGNNModel(
             model_name="ann_test",
             annotations={"G": "ExpectedFreeEnergy"},
@@ -618,6 +689,7 @@ class TestRoleMultisetFromModel:
     def test_empty_model(self):
         from cogant.reverse.idempotency import _role_multiset_from_model
         from cogant.reverse.parser import ReverseGNNModel
+
         model = ReverseGNNModel(model_name="empty")
         roles = _role_multiset_from_model(model)
         assert isinstance(roles, dict)
@@ -625,6 +697,7 @@ class TestRoleMultisetFromModel:
     def test_constraint_annotation(self):
         from cogant.reverse.idempotency import _role_multiset_from_model
         from cogant.reverse.parser import ReverseGNNModel
+
         model = ReverseGNNModel(
             model_name="constraint_test",
             hidden_states=["s0"],
@@ -638,6 +711,7 @@ class TestRoleMultisetFromModel:
 # static/types.py — TypeInferencer
 # ---------------------------------------------------------------------------
 
+
 class TestTypeInferencer:
     def _source_file(self, tmp_path, content):
         p = tmp_path / "src.py"
@@ -646,6 +720,7 @@ class TestTypeInferencer:
 
     def test_infer_from_annotated_variables(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         code = "x: int = 5\ny: str = 'hello'\nz: float = 3.14\n"
         p = self._source_file(tmp_path, code)
         infer = TypeInferencer()
@@ -655,6 +730,7 @@ class TestTypeInferencer:
 
     def test_infer_from_function_return(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         code = "def add(a: int, b: int) -> int:\n    return a + b\n"
         p = self._source_file(tmp_path, code)
         infer = TypeInferencer()
@@ -666,6 +742,7 @@ class TestTypeInferencer:
 
     def test_infer_from_function_params(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         code = "def greet(name: str, age: int) -> str:\n    return f'{name}:{age}'\n"
         p = self._source_file(tmp_path, code)
         infer = TypeInferencer()
@@ -675,6 +752,7 @@ class TestTypeInferencer:
 
     def test_infer_from_class_attributes(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         code = "class Foo:\n    x: int = 0\n    name: str = 'test'\n"
         p = self._source_file(tmp_path, code)
         infer = TypeInferencer()
@@ -683,6 +761,7 @@ class TestTypeInferencer:
 
     def test_infer_from_literal_types(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         code = "a = 42\nb = 'hello'\nc = 3.14\nd = True\n"
         p = self._source_file(tmp_path, code)
         infer = TypeInferencer()
@@ -691,6 +770,7 @@ class TestTypeInferencer:
 
     def test_infer_star_args(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         code = "def f(*args: str, **kwargs: int) -> None:\n    pass\n"
         p = self._source_file(tmp_path, code)
         infer = TypeInferencer()
@@ -699,6 +779,7 @@ class TestTypeInferencer:
 
     def test_infer_class_methods(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         code = "class Bar:\n    def process(self, x: float) -> bool:\n        return x > 0\n"
         p = self._source_file(tmp_path, code)
         infer = TypeInferencer()
@@ -707,6 +788,7 @@ class TestTypeInferencer:
 
     def test_empty_file(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         p = self._source_file(tmp_path, "")
         infer = TypeInferencer()
         results = infer.infer_types_from_file(p)
@@ -714,6 +796,7 @@ class TestTypeInferencer:
 
     def test_nonexistent_file(self, tmp_path):
         from cogant.static.types import TypeInferencer
+
         infer = TypeInferencer()
         # Non-existent file should return [] or raise gracefully
         result = infer.infer_types_from_file(tmp_path / "nonexistent.py")
@@ -723,6 +806,7 @@ class TestTypeInferencer:
 # ---------------------------------------------------------------------------
 # gnn/formatter/base.py — GNNMarkdownFormatter (exercises dynamics mixin)
 # ---------------------------------------------------------------------------
+
 
 class TestGNNMarkdownFormatter:
     def _make_formatter(self):
@@ -758,16 +842,21 @@ class TestGNNMarkdownFormatter:
 
     def test_format_with_empty_state_space(self):
         from cogant.gnn.formatter.base import GNNMarkdownFormatter
+        from cogant.process.extractor import ProcessModel
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
-        from cogant.process.extractor import ProcessModel
 
         empty_graph = ProgramGraph(metadata=GraphMetadata(repo_uri="x"))
         empty_ssm = StateSpaceModel(
-            id="empty", schema_name="empty_schema",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="empty",
+            schema_name="empty_schema",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         empty_process = ProcessModel(id="p0", schema_name="empty_schema", stages={}, connections={})
@@ -788,16 +877,19 @@ class TestGNNMarkdownFormatter:
 # parsers/tree_sitter_base.py — TreeSitterParser
 # ---------------------------------------------------------------------------
 
+
 class TestTreeSitterParser:
     """Tests for tree_sitter_base that work without tree-sitter installed."""
 
     def test_instantiate(self):
         from cogant.parsers.tree_sitter_base import TreeSitterParser
+
         parser = TreeSitterParser()
         assert isinstance(parser, TreeSitterParser)
 
     def test_available_languages_empty_without_pkg(self):
         from cogant.parsers.tree_sitter_base import TreeSitterParser
+
         parser = TreeSitterParser()
         langs = parser.available_languages()
         assert isinstance(langs, set)
@@ -805,6 +897,7 @@ class TestTreeSitterParser:
 
     def test_supported_extensions_subset_of_map(self):
         from cogant.parsers.tree_sitter_base import TreeSitterParser
+
         parser = TreeSitterParser()
         exts = parser.supported_extensions()
         assert isinstance(exts, set)
@@ -812,24 +905,28 @@ class TestTreeSitterParser:
 
     def test_language_for_path_python(self):
         from cogant.parsers.tree_sitter_base import TreeSitterParser
+
         parser = TreeSitterParser()
         lang = parser.language_for_path(Path("test.py"))
         assert lang == "python"
 
     def test_language_for_path_ts(self):
         from cogant.parsers.tree_sitter_base import TreeSitterParser
+
         parser = TreeSitterParser()
         lang = parser.language_for_path(Path("app.ts"))
         assert lang == "typescript"
 
     def test_language_for_path_unknown(self):
         from cogant.parsers.tree_sitter_base import TreeSitterParser
+
         parser = TreeSitterParser()
         lang = parser.language_for_path(Path("data.xyz"))
         assert lang is None
 
     def test_parse_file_unknown_extension(self, tmp_path):
         from cogant.parsers.tree_sitter_base import TreeSitterParser
+
         p = tmp_path / "test.xyz"
         p.write_text("hello world")
         parser = TreeSitterParser()
@@ -838,6 +935,7 @@ class TestTreeSitterParser:
 
     def test_parse_file_known_ext_no_grammar(self, tmp_path):
         from cogant.parsers.tree_sitter_base import TreeSitterParser
+
         p = tmp_path / "test.py"
         p.write_text("x = 1")
         parser = TreeSitterParser()
@@ -847,6 +945,7 @@ class TestTreeSitterParser:
 
     def test_parse_source_no_grammar_returns_none(self):
         from cogant.parsers.tree_sitter_base import TreeSitterParser
+
         parser = TreeSitterParser()
         result = parser.parse_source("x = 1", "python")
         # Returns None if language not loaded
@@ -854,6 +953,7 @@ class TestTreeSitterParser:
 
     def test_parse_file_string_path(self, tmp_path):
         from cogant.parsers.tree_sitter_base import TreeSitterParser
+
         p = tmp_path / "test.py"
         p.write_text("x = 1")
         parser = TreeSitterParser()
@@ -862,6 +962,7 @@ class TestTreeSitterParser:
 
     def test_language_map_has_expected_keys(self):
         from cogant.parsers.tree_sitter_base import TreeSitterParser
+
         parser = TreeSitterParser()
         assert ".py" in parser._LANGUAGE_MAP
         assert ".js" in parser._LANGUAGE_MAP
@@ -870,6 +971,7 @@ class TestTreeSitterParser:
 
     def test_parsed_symbol_dataclass(self):
         from cogant.parsers.tree_sitter_base import ParsedSymbol
+
         sym = ParsedSymbol(
             name="my_func",
             kind="function",
@@ -885,6 +987,7 @@ class TestTreeSitterParser:
 
     def test_parsed_file_dataclass(self):
         from cogant.parsers.tree_sitter_base import ParsedFile
+
         pf = ParsedFile(
             path="test.py",
             language="python",
@@ -899,6 +1002,7 @@ class TestTreeSitterParser:
 
     def test_get_tree_sitter_parser_singleton(self):
         from cogant.parsers.tree_sitter_base import get_tree_sitter_parser
+
         p1 = get_tree_sitter_parser()
         p2 = get_tree_sitter_parser()
         assert p1 is p2  # Should be singleton

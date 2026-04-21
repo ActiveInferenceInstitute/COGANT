@@ -20,7 +20,6 @@ Covers:
 """
 
 import pytest
-from pathlib import Path
 
 pytestmark = pytest.mark.unit
 
@@ -29,14 +28,17 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_graph():
-    from cogant.schemas.graph import ProgramGraph, GraphMetadata
+    from cogant.schemas.graph import GraphMetadata, ProgramGraph
+
     return ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
 
 
 def _make_graph_with_nodes():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
+
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     n1 = builder.add_node(NodeKind.MODULE, "mod", "mod", path="mod.py")
     n2 = builder.add_node(NodeKind.FUNCTION, "fn", "mod.fn", path="mod.py")
@@ -46,6 +48,7 @@ def _make_graph_with_nodes():
 
 def _make_process_model():
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
 
 
@@ -53,9 +56,11 @@ def _make_process_model():
 # dynamic/coverage.py — CoverageIngester
 # ---------------------------------------------------------------------------
 
+
 class TestCoverageIngester:
     def _make_ingester(self):
         from cogant.dynamic.coverage import CoverageIngester
+
         return CoverageIngester()
 
     def test_init(self):
@@ -118,9 +123,11 @@ class TestCoverageIngester:
 # dynamic/traces.py — TraceIngester
 # ---------------------------------------------------------------------------
 
+
 class TestTraceIngester:
     def _make_ingester(self):
         from cogant.dynamic.traces import TraceIngester
+
         return TraceIngester()
 
     def test_init(self):
@@ -174,11 +181,12 @@ class TestTraceIngester:
 
     def test_ingest_custom_trace_missing_file(self, tmp_path):
         ingester = self._make_ingester()
-        result = ingester.ingest_custom_trace(str(tmp_path / "missing.trace"), "json")
-        assert isinstance(result, list)
+        with pytest.raises(FileNotFoundError):
+            ingester.ingest_custom_trace(str(tmp_path / "missing.trace"), "perf")
 
     def test_ingest_chrome_trace_valid(self, tmp_path):
         import json
+
         trace_data = {
             "traceEvents": [
                 {"pid": 1, "tid": 1, "ph": "B", "ts": 0, "name": "func_a", "cat": "python"},
@@ -198,27 +206,32 @@ class TestTraceIngester:
 # dynamic/enrichment.py — enrich_graph
 # ---------------------------------------------------------------------------
 
+
 class TestEnrichGraph:
     def test_enrich_empty_graph_no_paths(self):
         from cogant.dynamic.enrichment import enrich_graph
+
         graph = _make_empty_graph()
         result = enrich_graph(graph)
         assert isinstance(result, dict)
 
     def test_enrich_graph_with_nodes(self):
         from cogant.dynamic.enrichment import enrich_graph
+
         graph = _make_graph_with_nodes()
         result = enrich_graph(graph)
         assert isinstance(result, dict)
 
     def test_enrich_graph_missing_coverage_path(self, tmp_path):
         from cogant.dynamic.enrichment import enrich_graph
+
         graph = _make_empty_graph()
         result = enrich_graph(graph, coverage_path=str(tmp_path / "missing.xml"))
         assert isinstance(result, dict)
 
     def test_enrich_graph_missing_trace_path(self, tmp_path):
         from cogant.dynamic.enrichment import enrich_graph
+
         graph = _make_empty_graph()
         result = enrich_graph(graph, trace_path=str(tmp_path / "missing.json"))
         assert isinstance(result, dict)
@@ -228,9 +241,11 @@ class TestEnrichGraph:
 # pipeline/dag.py — Stage, StageResult, DAGResult, StageStatus, PipelineDAG
 # ---------------------------------------------------------------------------
 
+
 class TestStageStatus:
     def test_status_values(self):
         from cogant.pipeline.dag import StageStatus
+
         assert StageStatus.SUCCESS is not None
         assert StageStatus.FAILED is not None
         assert StageStatus.SKIPPED is not None
@@ -239,6 +254,7 @@ class TestStageStatus:
 class TestStageDataclass:
     def test_stage_init(self):
         from cogant.pipeline.dag import Stage
+
         stage = Stage(name="my_stage", fn=lambda ctx: {"result": 42}, deps=[], timeout=30.0)
         assert stage.name == "my_stage"
         assert stage.deps == []
@@ -246,6 +262,7 @@ class TestStageDataclass:
 
     def test_stage_fn_callable(self):
         from cogant.pipeline.dag import Stage
+
         stage = Stage(name="s", fn=lambda ctx: ctx.get("x", 0) * 2, deps=[])
         assert callable(stage.fn)
 
@@ -253,14 +270,20 @@ class TestStageDataclass:
 class TestStageResult:
     def test_stage_result_init(self):
         from cogant.pipeline.dag import StageResult, StageStatus
-        result = StageResult(name="s1", status=StageStatus.SUCCESS, elapsed=0.1, error=None, output={"val": 1})
+
+        result = StageResult(
+            name="s1", status=StageStatus.SUCCESS, elapsed=0.1, error=None, output={"val": 1}
+        )
         assert result.status == StageStatus.SUCCESS
         assert result.elapsed == 0.1
         assert result.output == {"val": 1}
 
     def test_stage_result_failed(self):
         from cogant.pipeline.dag import StageResult, StageStatus
-        result = StageResult(name="s2", status=StageStatus.FAILED, elapsed=0.0, error="boom", output=None)
+
+        result = StageResult(
+            name="s2", status=StageStatus.FAILED, elapsed=0.0, error="boom", output=None
+        )
         assert result.status == StageStatus.FAILED
         assert result.error == "boom"
 
@@ -268,6 +291,7 @@ class TestStageResult:
 class TestDAGResult:
     def test_dag_result_init(self):
         from cogant.pipeline.dag import DAGResult
+
         result = DAGResult(stage_results={}, errors=[], elapsed=0.5)
         assert isinstance(result.stage_results, dict)
         assert result.errors == []
@@ -277,19 +301,24 @@ class TestDAGResult:
 class TestPipelineDAG:
     def test_init(self):
         from cogant.pipeline.dag import PipelineDAG
+
         dag = PipelineDAG()
         assert dag is not None
 
     def test_add_and_run_single_stage(self):
-        from cogant.pipeline.dag import PipelineDAG, Stage, DAGResult, StageStatus
+        from cogant.pipeline.dag import DAGResult, PipelineDAG, Stage
+
         dag = PipelineDAG()
         ran = []
-        dag.add_stage(Stage(name="step1", fn=lambda ctx: ran.append("step1") or {"done": True}, deps=[]))
+        dag.add_stage(
+            Stage(name="step1", fn=lambda ctx: ran.append("step1") or {"done": True}, deps=[])
+        )
         result = dag.run({})
         assert isinstance(result, DAGResult)
 
     def test_run_empty_dag(self):
-        from cogant.pipeline.dag import PipelineDAG, DAGResult
+        from cogant.pipeline.dag import DAGResult, PipelineDAG
+
         dag = PipelineDAG()
         result = dag.run({})
         assert isinstance(result, DAGResult)
@@ -297,14 +326,18 @@ class TestPipelineDAG:
 
     def test_run_with_context_passed_to_fn(self):
         from cogant.pipeline.dag import PipelineDAG, Stage
+
         results = {}
         dag = PipelineDAG()
-        dag.add_stage(Stage(name="read_ctx", fn=lambda ctx: results.update({"x": ctx.get("x")}), deps=[]))
+        dag.add_stage(
+            Stage(name="read_ctx", fn=lambda ctx: results.update({"x": ctx.get("x")}), deps=[])
+        )
         dag.run({"x": 42})
         assert results.get("x") == 42
 
     def test_run_with_deps_ordering(self):
-        from cogant.pipeline.dag import PipelineDAG, Stage, DAGResult
+        from cogant.pipeline.dag import DAGResult, PipelineDAG, Stage
+
         order = []
         dag = PipelineDAG()
         dag.add_stage(Stage(name="a", fn=lambda ctx: order.append("a"), deps=[]))
@@ -319,15 +352,18 @@ class TestPipelineDAG:
 # process/extractor.py — ProcessExtractor, ProcessModel, ProcessConnection
 # ---------------------------------------------------------------------------
 
+
 class TestProcessExtractor:
     def test_init(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph = _make_empty_graph()
         extractor = ProcessExtractor(graph, schema_name="test")
         assert extractor is not None
 
     def test_extract_returns_process_model(self):
         from cogant.process.extractor import ProcessExtractor, ProcessModel
+
         graph = _make_empty_graph()
         extractor = ProcessExtractor(graph, schema_name="test")
         model = extractor.extract()
@@ -335,6 +371,7 @@ class TestProcessExtractor:
 
     def test_extract_with_nodes(self):
         from cogant.process.extractor import ProcessExtractor, ProcessModel
+
         graph = _make_graph_with_nodes()
         extractor = ProcessExtractor(graph, schema_name="test")
         model = extractor.extract()
@@ -343,6 +380,7 @@ class TestProcessExtractor:
 
     def test_add_stage_dependency(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph = _make_empty_graph()
         extractor = ProcessExtractor(graph, schema_name="test")
         model = extractor.extract()
@@ -352,6 +390,7 @@ class TestProcessExtractor:
 
     def test_set_entry_stage(self):
         from cogant.process.extractor import ProcessExtractor
+
         graph = _make_empty_graph()
         extractor = ProcessExtractor(graph, schema_name="test")
         model = extractor.extract()
@@ -363,6 +402,7 @@ class TestProcessExtractor:
 class TestProcessModel:
     def test_init(self):
         from cogant.process.extractor import ProcessModel
+
         model = ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
         assert model.id == "pm1"
         assert model.schema_name == "test"
@@ -373,6 +413,7 @@ class TestProcessModel:
 class TestProcessConnection:
     def test_init(self):
         from cogant.process.extractor import ProcessConnection
+
         conn = ProcessConnection(
             id="conn1",
             source_stage_id="s1",
@@ -390,15 +431,18 @@ class TestProcessConnection:
 # process/policies.py — PolicyExtractor, RetryPolicy, BranchingPolicy
 # ---------------------------------------------------------------------------
 
+
 class TestPolicyExtractor:
     def test_init(self):
         from cogant.process.policies import PolicyExtractor
+
         graph = _make_empty_graph()
         extractor = PolicyExtractor(graph)
         assert extractor is not None
 
     def test_extract_returns_dict(self):
         from cogant.process.policies import PolicyExtractor
+
         graph = _make_empty_graph()
         extractor = PolicyExtractor(graph)
         result = extractor.extract()
@@ -406,6 +450,7 @@ class TestPolicyExtractor:
 
     def test_extract_with_nodes(self):
         from cogant.process.policies import PolicyExtractor
+
         graph = _make_graph_with_nodes()
         extractor = PolicyExtractor(graph)
         result = extractor.extract()
@@ -413,6 +458,7 @@ class TestPolicyExtractor:
 
     def test_get_retry_policy_unknown(self):
         from cogant.process.policies import PolicyExtractor
+
         graph = _make_empty_graph()
         extractor = PolicyExtractor(graph)
         result = extractor.get_retry_policy("nonexistent")
@@ -420,6 +466,7 @@ class TestPolicyExtractor:
 
     def test_list_policies_for_stage_unknown(self):
         from cogant.process.policies import PolicyExtractor
+
         graph = _make_empty_graph()
         extractor = PolicyExtractor(graph)
         result = extractor.list_policies_for_stage("nonexistent")
@@ -427,6 +474,7 @@ class TestPolicyExtractor:
 
     def test_policy_count(self):
         from cogant.process.policies import PolicyExtractor
+
         graph = _make_empty_graph()
         extractor = PolicyExtractor(graph)
         count = extractor.policy_count()
@@ -437,6 +485,7 @@ class TestPolicyExtractor:
 class TestRetryPolicy:
     def test_init(self):
         from cogant.process.policies import RetryPolicy
+
         policy = RetryPolicy(
             id="rp1",
             stage_id="s1",
@@ -453,6 +502,7 @@ class TestRetryPolicy:
 class TestBranchingPolicy:
     def test_init(self):
         from cogant.process.policies import BranchingPolicy
+
         policy = BranchingPolicy(
             id="bp1",
             stage_id="s1",
@@ -469,15 +519,18 @@ class TestBranchingPolicy:
 # process/timeline.py — TimelineBuilder, GanttStage, Timeline
 # ---------------------------------------------------------------------------
 
+
 class TestTimelineBuilder:
     def test_init(self):
         from cogant.process.timeline import TimelineBuilder
+
         model = _make_process_model()
         builder = TimelineBuilder(model)
         assert builder is not None
 
     def test_build_returns_timeline(self):
-        from cogant.process.timeline import TimelineBuilder, Timeline
+        from cogant.process.timeline import Timeline, TimelineBuilder
+
         model = _make_process_model()
         builder = TimelineBuilder(model)
         timeline = builder.build()
@@ -485,6 +538,7 @@ class TestTimelineBuilder:
 
     def test_get_stage_at_time_empty(self):
         from cogant.process.timeline import TimelineBuilder
+
         model = _make_process_model()
         builder = TimelineBuilder(model)
         builder.build()
@@ -493,6 +547,7 @@ class TestTimelineBuilder:
 
     def test_get_stages_in_range_empty(self):
         from cogant.process.timeline import TimelineBuilder
+
         model = _make_process_model()
         builder = TimelineBuilder(model)
         builder.build()
@@ -501,6 +556,7 @@ class TestTimelineBuilder:
 
     def test_export_gantt_data_returns_collection(self):
         from cogant.process.timeline import TimelineBuilder
+
         model = _make_process_model()
         builder = TimelineBuilder(model)
         builder.build()
@@ -508,7 +564,8 @@ class TestTimelineBuilder:
         assert isinstance(result, (list, dict))
 
     def test_get_timeline_returns_timeline(self):
-        from cogant.process.timeline import TimelineBuilder, Timeline
+        from cogant.process.timeline import Timeline, TimelineBuilder
+
         model = _make_process_model()
         builder = TimelineBuilder(model)
         builder.build()
@@ -519,6 +576,7 @@ class TestTimelineBuilder:
 class TestGanttStage:
     def test_init(self):
         from cogant.process.timeline import GanttStage
+
         gs = GanttStage(
             stage_id="s1",
             name="Stage 1",
@@ -535,6 +593,7 @@ class TestGanttStage:
 class TestTimeline:
     def test_init(self):
         from cogant.process.timeline import Timeline
+
         tl = Timeline(stages=[], total_duration=0.0, critical_path=[], parallel_groups=[])
         assert isinstance(tl.stages, list)
         assert tl.total_duration == 0.0

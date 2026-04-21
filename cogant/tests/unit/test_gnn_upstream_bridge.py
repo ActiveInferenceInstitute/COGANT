@@ -142,9 +142,7 @@ def test_parse_upstream_model_gnn_md_minimal_package() -> None:
     try:
         out = parse_upstream_model_gnn_md(pkg)
         assert "path" in out
-        assert str(pkg / "model.gnn.md") in out["path"] or out["path"].endswith(
-            "model.gnn.md"
-        )
+        assert str(pkg / "model.gnn.md") in out["path"] or out["path"].endswith("model.gnn.md")
         assert ("parse" in out and out["parse"] is not None) or "error" in out
     finally:
         import shutil

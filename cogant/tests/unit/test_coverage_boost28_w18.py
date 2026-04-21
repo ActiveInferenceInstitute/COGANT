@@ -20,31 +20,37 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_empty_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
 
     return StateSpaceModel(
-        id="test_ss", schema_name="TestModel",
-        variables={}, observations={}, actions={},
-        transitions={}, likelihoods={}, preferences={},
+        id="test_ss",
+        schema_name="TestModel",
+        variables={},
+        observations={},
+        actions={},
+        transitions={},
+        likelihoods={},
+        preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
 
 
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule",
-                           path="mymodule.py", language="python")
-    cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass",
-                           path="mymodule.py")
-    func1 = builder.add_node(NodeKind.FUNCTION, "my_func", "mymodule.MyClass.my_func",
-                             path="mymodule.py")
-    func2 = builder.add_node(NodeKind.FUNCTION, "helper", "mymodule.helper",
-                             path="mymodule.py")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
+    cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass", path="mymodule.py")
+    func1 = builder.add_node(
+        NodeKind.FUNCTION, "my_func", "mymodule.MyClass.my_func", path="mymodule.py"
+    )
+    func2 = builder.add_node(NodeKind.FUNCTION, "helper", "mymodule.helper", path="mymodule.py")
     builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
     builder.add_edge(cls.id, func1.id, EdgeKind.CONTAINS)
     builder.add_edge(mod.id, func2.id, EdgeKind.CONTAINS)
@@ -62,8 +68,10 @@ class _FakeProcess:
 def _make_bundle(num_nodes=3, num_vars=2):
     """Create a minimal bundle dict for drift analysis."""
     nodes = [{"id": f"n{i}", "kind": "function"} for i in range(num_nodes)]
-    edges = [{"id": f"e{i}", "source": f"n{i}", "target": f"n{i+1}", "kind": "CALLS"}
-             for i in range(num_nodes - 1)]
+    edges = [
+        {"id": f"e{i}", "source": f"n{i}", "target": f"n{i + 1}", "kind": "CALLS"}
+        for i in range(num_nodes - 1)
+    ]
     variables = [f"v{i}" for i in range(num_vars)]
     return {
         "graph": {"nodes": nodes, "edges": edges},
@@ -76,9 +84,11 @@ def _make_bundle(num_nodes=3, num_vars=2):
 # viz/mermaid.py — MermaidGenerator
 # ---------------------------------------------------------------------------
 
+
 class TestMermaidGenerator:
     def test_generate_class_diagram_returns_string(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         graph, mod, cls, func1, func2 = _make_graph()
         gen = MermaidGenerator()
         result = gen.generate_class_diagram(graph)
@@ -86,6 +96,7 @@ class TestMermaidGenerator:
 
     def test_generate_class_diagram_with_nodes(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         graph, mod, cls, func1, func2 = _make_graph()
         gen = MermaidGenerator()
         result = gen.generate_class_diagram(graph)
@@ -94,6 +105,7 @@ class TestMermaidGenerator:
 
     def test_generate_dependency_graph_returns_string(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         graph, mod, cls, func1, func2 = _make_graph()
         gen = MermaidGenerator()
         result = gen.generate_dependency_graph(graph)
@@ -101,6 +113,7 @@ class TestMermaidGenerator:
 
     def test_generate_dependency_graph_with_calls(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         graph, mod, cls, func1, func2 = _make_graph()
         gen = MermaidGenerator()
         result = gen.generate_dependency_graph(graph)
@@ -109,25 +122,34 @@ class TestMermaidGenerator:
 
     def test_generate_state_diagram_returns_string(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         ss = _make_empty_state_space()
         gen = MermaidGenerator()
         result = gen.generate_state_diagram(ss)
         assert isinstance(result, str)
 
     def test_generate_state_diagram_with_state_space(self):
-        from cogant.viz.mermaid import MermaidGenerator
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
         from cogant.statespace.variables import StateVariable, StateVariableType
+        from cogant.viz.mermaid import MermaidGenerator
 
         sv = StateVariable(
-            id="v1", name="myvar", node_id="n1",
-            var_type=StateVariableType.BOOLEAN, cardinality=2,
+            id="v1",
+            name="myvar",
+            node_id="n1",
+            var_type=StateVariableType.BOOLEAN,
+            cardinality=2,
         )
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
-            variables={"v1": sv}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ts",
+            schema_name="TS",
+            variables={"v1": sv},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         gen = MermaidGenerator()
@@ -136,6 +158,7 @@ class TestMermaidGenerator:
 
     def test_generate_active_inference_diagram_empty_ss(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         ss = _make_empty_state_space()
         gen = MermaidGenerator()
         result = gen.generate_active_inference_diagram(ss)
@@ -143,11 +166,11 @@ class TestMermaidGenerator:
         assert len(result) > 0
 
     def test_generate_active_inference_diagram_with_variables(self):
-        from cogant.viz.mermaid import MermaidGenerator
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
         from cogant.statespace.variables import StateVariable, StateVariableType
         from cogant.translate.confidence import ConfidenceTier
+        from cogant.viz.mermaid import MermaidGenerator
 
         class FakeObs:
             id = "o1"
@@ -160,14 +183,18 @@ class TestMermaidGenerator:
             name = "actuate"
             confidence = ConfidenceTier.STATIC_ONLY
 
-        sv = StateVariable(id="v1", name="state", node_id="n1",
-                           var_type=StateVariableType.DISCRETE, cardinality=4)
+        sv = StateVariable(
+            id="v1", name="state", node_id="n1", var_type=StateVariableType.DISCRETE, cardinality=4
+        )
         ss = StateSpaceModel(
-            id="ts", schema_name="TS",
+            id="ts",
+            schema_name="TS",
             variables={"v1": sv},
             observations={"o1": FakeObs()},
             actions={"a1": FakeAction()},
-            transitions={}, likelihoods={}, preferences={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         gen = MermaidGenerator()
@@ -176,20 +203,23 @@ class TestMermaidGenerator:
 
     def test_generate_sequence_diagram_no_args(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         gen = MermaidGenerator()
         result = gen.generate_sequence_diagram()
         assert isinstance(result, str)
 
     def test_generate_sequence_diagram_with_graph(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         graph, mod, cls, func1, func2 = _make_graph()
         gen = MermaidGenerator()
         result = gen.generate_sequence_diagram(graph=graph)
         assert isinstance(result, str)
 
     def test_generate_sequence_diagram_with_process_model(self):
-        from cogant.viz.mermaid import MermaidGenerator
         from cogant.process.extractor import ProcessExtractor
+        from cogant.viz.mermaid import MermaidGenerator
+
         graph, mod, cls, func1, func2 = _make_graph()
         gen = MermaidGenerator()
         extractor = ProcessExtractor(graph, "TestSchema")
@@ -199,21 +229,25 @@ class TestMermaidGenerator:
 
     def test_generate_flowchart_empty_mappings(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         graph, mod, cls, func1, func2 = _make_graph()
         gen = MermaidGenerator()
         result = gen.generate_flowchart(graph, {})
         assert isinstance(result, str)
 
     def test_generate_flowchart_with_mappings(self):
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
         from cogant.viz.mermaid import MermaidGenerator
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+
         graph, mod, cls, func1, func2 = _make_graph()
         gen = MermaidGenerator()
         mappings = {
             "m1": SemanticMapping(
-                id="m1", kind=MappingKind.HIDDEN_STATE,
+                id="m1",
+                kind=MappingKind.HIDDEN_STATE,
                 graph_fragment_node_ids=[func1.id],
-                semantic_label="state_var", confidence_score=0.8,
+                semantic_label="state_var",
+                confidence_score=0.8,
             )
         }
         result = gen.generate_flowchart(graph, mappings)
@@ -221,6 +255,7 @@ class TestMermaidGenerator:
 
     def test_generate_all_returns_dict(self):
         from cogant.viz.mermaid import MermaidGenerator
+
         graph, mod, cls, func1, func2 = _make_graph()
         ss = _make_empty_state_space()
         gen = MermaidGenerator()
@@ -229,8 +264,9 @@ class TestMermaidGenerator:
         assert len(result) >= 1
 
     def test_generate_all_with_all_args(self):
-        from cogant.viz.mermaid import MermaidGenerator
         from cogant.process.extractor import ProcessExtractor
+        from cogant.viz.mermaid import MermaidGenerator
+
         graph, mod, cls, func1, func2 = _make_graph()
         ss = _make_empty_state_space()
         extractor = ProcessExtractor(graph, "TestSchema")
@@ -244,9 +280,11 @@ class TestMermaidGenerator:
 # scoring/drift.py — DriftAnalyzer
 # ---------------------------------------------------------------------------
 
+
 class TestDriftAnalyzer:
     def test_initialization(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(4, 3)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -254,6 +292,7 @@ class TestDriftAnalyzer:
 
     def test_analyze_returns_drift_score(self):
         from cogant.scoring import DriftAnalyzer, DriftScore
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(4, 3)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -262,6 +301,7 @@ class TestDriftAnalyzer:
 
     def test_analyze_total_score_in_range(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(4, 3)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -270,6 +310,7 @@ class TestDriftAnalyzer:
 
     def test_analyze_identical_bundles_low_drift(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle = _make_bundle(3, 2)
         analyzer = DriftAnalyzer(bundle, bundle)
         score = analyzer.analyze(bundle, bundle)
@@ -278,6 +319,7 @@ class TestDriftAnalyzer:
 
     def test_analyze_different_bundles_nonzero(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(2, 1)
         bundle_b = _make_bundle(10, 8)  # Very different
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -286,6 +328,7 @@ class TestDriftAnalyzer:
 
     def test_compute_structural_drift(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(5, 3)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -294,6 +337,7 @@ class TestDriftAnalyzer:
 
     def test_compute_semantic_drift(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(3, 2)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -302,6 +346,7 @@ class TestDriftAnalyzer:
 
     def test_compute_state_space_drift(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(3, 4)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -310,6 +355,7 @@ class TestDriftAnalyzer:
 
     def test_compute_architectural_drift_score(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(5, 3)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -318,6 +364,7 @@ class TestDriftAnalyzer:
 
     def test_compute_semantic_churn_score(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(3, 2)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -326,6 +373,7 @@ class TestDriftAnalyzer:
 
     def test_report_returns_string(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(4, 3)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -335,6 +383,7 @@ class TestDriftAnalyzer:
 
     def test_generate_diff_mermaid_returns_string(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(4, 3)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -343,6 +392,7 @@ class TestDriftAnalyzer:
 
     def test_generate_diff_report_returns_string(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(4, 3)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -351,6 +401,7 @@ class TestDriftAnalyzer:
 
     def test_to_dict_returns_dict(self):
         from cogant.scoring import DriftAnalyzer
+
         bundle_a = _make_bundle(3, 2)
         bundle_b = _make_bundle(4, 3)
         analyzer = DriftAnalyzer(bundle_a, bundle_b)
@@ -363,9 +414,11 @@ class TestDriftAnalyzer:
 # scoring/drift.py — DriftScore
 # ---------------------------------------------------------------------------
 
+
 class TestDriftScore:
     def test_drift_score_construction(self):
         from cogant.scoring import DriftScore
+
         score = DriftScore(
             total_score=0.35,
             architectural_score=0.4,
@@ -377,6 +430,7 @@ class TestDriftScore:
 
     def test_drift_score_details_dict(self):
         from cogant.scoring import DriftScore
+
         score = DriftScore(
             total_score=0.0,
             architectural_score=0.0,

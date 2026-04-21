@@ -91,6 +91,7 @@ DEFAULT_SKIP_STEPS: frozenset[int] = frozenset({11, 12})
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 @contextlib.contextmanager
 def _preserve_cwd() -> Iterator[None]:
     """Restore ``os.getcwd()`` after the ``with`` block.
@@ -156,6 +157,7 @@ def _is_upstream_main_available() -> bool:
 # ---------------------------------------------------------------------------
 # Dataclasses
 # ---------------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class UpstreamStepResult:
@@ -285,9 +287,7 @@ class UpstreamPipelineConfig:
     target_dir: Path
     output_dir: Path
     only_steps: list[int] | None = None
-    skip_steps: list[int] = field(
-        default_factory=lambda: sorted(DEFAULT_SKIP_STEPS)
-    )
+    skip_steps: list[int] = field(default_factory=lambda: sorted(DEFAULT_SKIP_STEPS))
     frameworks: str = "lite"
     llm_model: str | None = None
     timesteps: int = 15
@@ -302,6 +302,7 @@ class UpstreamPipelineConfig:
 # ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
+
 
 def _build_pipeline_arguments(src_main: Any, cfg: UpstreamPipelineConfig) -> Any:
     """Materialise an upstream :class:`PipelineArguments` from ``cfg``.
@@ -358,10 +359,7 @@ def run_upstream_pipeline(
     if src_main is None:
         return UpstreamPipelineResult(
             available=False,
-            error=(
-                "src.main not importable; install "
-                "generalized-notation-notation"
-            ),
+            error=("src.main not importable; install generalized-notation-notation"),
             target_dir=str(cfg.target_dir),
             output_dir=str(cfg.output_dir),
         )
@@ -372,13 +370,14 @@ def run_upstream_pipeline(
         os.environ["OLLAMA_MODEL"] = cfg.llm_model
 
     chosen = resolve_steps(cfg.only_steps, cfg.skip_steps)
-    skipped = [
-        i for i in range(len(UPSTREAM_STEP_SCRIPTS)) if i not in chosen
-    ]
+    skipped = [i for i in range(len(UPSTREAM_STEP_SCRIPTS)) if i not in chosen]
 
     logger.info(
         "Upstream GNN pipeline: %d/%d steps selected (skipping %s) target=%s",
-        len(chosen), len(UPSTREAM_STEP_SCRIPTS), skipped, cfg.target_dir,
+        len(chosen),
+        len(UPSTREAM_STEP_SCRIPTS),
+        skipped,
+        cfg.target_dir,
     )
 
     step_results: list[UpstreamStepResult] = []
@@ -394,18 +393,17 @@ def run_upstream_pipeline(
         for position, step_index in enumerate(chosen, start=1):
             script = UPSTREAM_STEP_SCRIPTS[step_index]
             logger.info(
-                "Upstream step %d/%d: %s", position, len(chosen), script,
+                "Upstream step %d/%d: %s",
+                position,
+                len(chosen),
+                script,
             )
             step_start = time.perf_counter()
             try:
                 with _preserve_cwd():
-                    raw = src_main.execute_pipeline_step(
-                        script, args, step_logger
-                    )
+                    raw = src_main.execute_pipeline_step(script, args, step_logger)
             except Exception as exc:  # pragma: no cover - defensive
-                logger.warning(
-                    "Upstream step %s raised: %s", script, exc, exc_info=True
-                )
+                logger.warning("Upstream step %s raised: %s", script, exc, exc_info=True)
                 step_results.append(
                     UpstreamStepResult(
                         step_index=step_index,
@@ -414,9 +412,7 @@ def run_upstream_pipeline(
                         success=False,
                         duration_s=time.perf_counter() - step_start,
                         error=f"{type(exc).__name__}: {exc}",
-                        output_dir=str(
-                            _per_step_output_dir(cfg.output_dir, step_index)
-                        ),
+                        output_dir=str(_per_step_output_dir(cfg.output_dir, step_index)),
                     )
                 )
                 continue
@@ -433,7 +429,9 @@ def run_upstream_pipeline(
             log = logger.info if success else logger.warning
             log(
                 "Upstream step %s -> %s in %.2fs%s",
-                script, status, duration,
+                script,
+                status,
+                duration,
                 f" ({error})" if error else "",
             )
             step_results.append(
@@ -445,9 +443,7 @@ def run_upstream_pipeline(
                     duration_s=duration,
                     exit_code=int(raw.get("exit_code", -1)),
                     memory_delta_mb=float(raw.get("memory_delta_mb", 0.0)),
-                    output_dir=str(
-                        _per_step_output_dir(cfg.output_dir, step_index)
-                    ),
+                    output_dir=str(_per_step_output_dir(cfg.output_dir, step_index)),
                     error=error,
                 )
             )
@@ -473,7 +469,8 @@ def run_upstream_pipeline(
     except OSError as exc:  # pragma: no cover - defensive
         logger.warning(
             "Could not write upstream pipeline summary to %s: %s",
-            summary_path, exc,
+            summary_path,
+            exc,
         )
 
     return UpstreamPipelineResult(

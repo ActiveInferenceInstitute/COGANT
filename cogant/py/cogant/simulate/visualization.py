@@ -54,7 +54,7 @@ class SimulationVisualizer:
         # Build SVG
         svg_lines = [
             f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">',
-            '<style>',
+            "<style>",
             "  .axis { stroke: #333; stroke-width: 1; }",
             "  .grid { stroke: #ddd; stroke-width: 0.5; }",
             "  .line { stroke: #0066cc; stroke-width: 2; fill: none; }",
@@ -62,7 +62,7 @@ class SimulationVisualizer:
             "  .text { font-family: Arial; font-size: 12px; }",
             "  .title { font-family: Arial; font-size: 16px; font-weight: bold; }",
             "</style>",
-            f'<text x="{width/2}" y="25" text-anchor="middle" class="title">Free Energy Trajectory</text>',
+            f'<text x="{width / 2}" y="25" text-anchor="middle" class="title">Free Energy Trajectory</text>',
         ]
 
         # Draw axes
@@ -101,9 +101,7 @@ class SimulationVisualizer:
             for i, fe in enumerate(fe_values):
                 x = margin + (i / (n_steps - 1)) * plot_width
                 y = height - margin - ((fe - min_fe) / range_fe) * plot_height
-                svg_lines.append(
-                    f'<circle cx="{x}" cy="{y}" r="3" class="point" opacity="0.6"/>'
-                )
+                svg_lines.append(f'<circle cx="{x}" cy="{y}" r="3" class="point" opacity="0.6"/>')
 
         # Draw y-axis labels
         for i in range(5):
@@ -156,13 +154,13 @@ class SimulationVisualizer:
         # Build SVG
         svg_lines = [
             f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">',
-            '<style>',
+            "<style>",
             "  .axis { stroke: #333; stroke-width: 1; }",
             "  .text { font-family: Arial; font-size: 12px; }",
             "  .title { font-family: Arial; font-size: 16px; font-weight: bold; }",
             "  .legend { font-family: Arial; font-size: 11px; }",
             "</style>",
-            f'<text x="{width/2}" y="25" text-anchor="middle" class="title">Belief Evolution</text>',
+            f'<text x="{width / 2}" y="25" text-anchor="middle" class="title">Belief Evolution</text>',
         ]
 
         # Draw axes
@@ -179,9 +177,7 @@ class SimulationVisualizer:
             cumulative = [0.0] * n_steps
             for i in range(n_steps):
                 beliefs = belief_history[i]
-                cumulative[i] = sum(
-                    beliefs.get(s, 0.0) for s in states[:state_idx + 1]
-                )
+                cumulative[i] = sum(beliefs.get(s, 0.0) for s in states[: state_idx + 1])
 
             # Generate path for this state
             path_parts = []
@@ -199,9 +195,7 @@ class SimulationVisualizer:
                 if state_idx == 0:
                     y = height - margin
                 else:
-                    prev_cumulative = sum(
-                        belief_history[i].get(s, 0.0) for s in states[:state_idx]
-                    )
+                    prev_cumulative = sum(belief_history[i].get(s, 0.0) for s in states[:state_idx])
                     y = height - margin - (prev_cumulative * plot_height)
                 if i == n_steps - 1:
                     path_parts.append(f"L {x} {y}")
@@ -210,16 +204,16 @@ class SimulationVisualizer:
 
             path_parts.append("Z")
             color = colors[state_idx]
-            svg_lines.append(
-                f'<path d="{" ".join(path_parts)}" fill="{color}" opacity="0.7"/>'
-            )
+            svg_lines.append(f'<path d="{" ".join(path_parts)}" fill="{color}" opacity="0.7"/>')
 
         # Add legend
         legend_x = width - 150
         for state_idx, state in enumerate(states):
             y = margin + 20 + state_idx * 18
             color = colors[state_idx]
-            svg_lines.append(f'<rect x="{legend_x}" y="{y - 10}" width="12" height="12" fill="{color}"/>')
+            svg_lines.append(
+                f'<rect x="{legend_x}" y="{y - 10}" width="12" height="12" fill="{color}"/>'
+            )
             svg_lines.append(
                 f'<text x="{legend_x + 18}" y="{y}" class="legend">{state[:15]}</text>'
             )
@@ -273,13 +267,13 @@ class SimulationVisualizer:
         # Build SVG
         svg_lines = [
             f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">',
-            '<style>',
+            "<style>",
             "  .bar { fill: #0066cc; }",
             "  .axis { stroke: #333; stroke-width: 1; }",
             "  .text { font-family: Arial; font-size: 12px; }",
             "  .title { font-family: Arial; font-size: 16px; font-weight: bold; }",
             "</style>",
-            f'<text x="{width/2}" y="25" text-anchor="middle" class="title">Action Distribution</text>',
+            f'<text x="{width / 2}" y="25" text-anchor="middle" class="title">Action Distribution</text>',
         ]
 
         # Draw axes
@@ -301,10 +295,10 @@ class SimulationVisualizer:
                 f'<rect x="{x}" y="{y}" width="{bar_width}" height="{bar_height}" class="bar"/>'
             )
             svg_lines.append(
-                f'<text x="{x + bar_width/2}" y="{height - margin + 20}" text-anchor="middle" class="text">{action[:10]}</text>'
+                f'<text x="{x + bar_width / 2}" y="{height - margin + 20}" text-anchor="middle" class="text">{action[:10]}</text>'
             )
             svg_lines.append(
-                f'<text x="{x + bar_width/2}" y="{y - 5}" text-anchor="middle" class="text">{count}</text>'
+                f'<text x="{x + bar_width / 2}" y="{y - 5}" text-anchor="middle" class="text">{count}</text>'
             )
 
         svg_lines.append("</svg>")
@@ -333,7 +327,7 @@ class SimulationVisualizer:
 
             state = current.get("state", f"s{i}")
             action = next_step.get("action", "wait")
-            next_state = next_step.get("state", f"s{i+1}")
+            next_state = next_step.get("state", f"s{i + 1}")
 
             # Format state info
             state_str = str(state)[:20]
@@ -345,9 +339,7 @@ class SimulationVisualizer:
 
         return "\n".join(lines)
 
-    def generate_html_report(
-        self, trace: list[dict[str, Any]], state_space: Any
-    ) -> str:
+    def generate_html_report(self, trace: list[dict[str, Any]], state_space: Any) -> str:
         """
         Generate full HTML report of simulation.
 
@@ -390,14 +382,18 @@ class SimulationVisualizer:
         ]
 
         # Statistics
-        html_lines.extend([
-            "    <div class='section stats'>",
-            f"      <div class='stat-box'><div class='stat-value'>{len(trace)}</div><div class='stat-label'>Steps</div></div>",
-            f"      <div class='stat-box'><div class='stat-value'>{len({s.get('action') for s in trace if s.get('action')})}</div><div class='stat-label'>Unique Actions</div></div>",
-        ])
+        html_lines.extend(
+            [
+                "    <div class='section stats'>",
+                f"      <div class='stat-box'><div class='stat-value'>{len(trace)}</div><div class='stat-label'>Steps</div></div>",
+                f"      <div class='stat-box'><div class='stat-value'>{len({s.get('action') for s in trace if s.get('action')})}</div><div class='stat-label'>Unique Actions</div></div>",
+            ]
+        )
 
         # Add mean free energy if available
-        fe_values = [s.get("free_energy", 0) for s in trace if isinstance(s.get("free_energy"), int | float)]
+        fe_values = [
+            s.get("free_energy", 0) for s in trace if isinstance(s.get("free_energy"), int | float)
+        ]
         if fe_values:
             mean_fe = sum(fe_values) / len(fe_values)
             html_lines.append(
@@ -407,28 +403,30 @@ class SimulationVisualizer:
         html_lines.append("    </div>")
 
         # Plots
-        html_lines.extend([
-            "    <div class='section'>",
-            "      <h2>Free Energy Trajectory</h2>",
-            f"      <div class='plot'>{fe_plot}</div>",
-            "    </div>",
-            "    <div class='section'>",
-            "      <h2>Belief Evolution</h2>",
-            f"      <div class='plot'>{belief_plot}</div>",
-            "    </div>",
-            "    <div class='section'>",
-            "      <h2>Action Distribution</h2>",
-            f"      <div class='plot'>{action_plot}</div>",
-            "    </div>",
-            "    <div class='section'>",
-            "      <h2>State Transition Sequence</h2>",
-            f"      <div class='mermaid'>{mermaid_diagram}</div>",
-            "    </div>",
-            "  </div>",
-            "  <script>mermaid.initialize({{ startOnLoad: true }}); mermaid.contentLoaded();</script>",
-            "</body>",
-            "</html>",
-        ])
+        html_lines.extend(
+            [
+                "    <div class='section'>",
+                "      <h2>Free Energy Trajectory</h2>",
+                f"      <div class='plot'>{fe_plot}</div>",
+                "    </div>",
+                "    <div class='section'>",
+                "      <h2>Belief Evolution</h2>",
+                f"      <div class='plot'>{belief_plot}</div>",
+                "    </div>",
+                "    <div class='section'>",
+                "      <h2>Action Distribution</h2>",
+                f"      <div class='plot'>{action_plot}</div>",
+                "    </div>",
+                "    <div class='section'>",
+                "      <h2>State Transition Sequence</h2>",
+                f"      <div class='mermaid'>{mermaid_diagram}</div>",
+                "    </div>",
+                "  </div>",
+                "  <script>mermaid.initialize({{ startOnLoad: true }}); mermaid.contentLoaded();</script>",
+                "</body>",
+                "</html>",
+            ]
+        )
 
         return "\n".join(html_lines)
 

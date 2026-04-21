@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 
@@ -61,9 +61,7 @@ _SKIP_REASON = (
     f"tree-sitter JavaScript grammar unavailable ({_GRAMMAR_ERROR}); "
     f"install cogant[multilang] to run the cross-language roundtrip tests"
 )
-_requires_js = pytest.mark.skipif(
-    not _HAS_JS_PARSER or not _GRAMMAR_AVAILABLE, reason=_SKIP_REASON
-)
+_requires_js = pytest.mark.skipif(not _HAS_JS_PARSER or not _GRAMMAR_AVAILABLE, reason=_SKIP_REASON)
 
 
 # ---------------------------------------------------------------------------
@@ -73,7 +71,7 @@ _requires_js = pytest.mark.skipif(
 _JS_FIXTURE = _REPO_ROOT / "examples" / "zoo" / "13_js_observer" / "observer.js"
 
 
-def _js_pipeline() -> Dict[str, Any]:
+def _js_pipeline() -> dict[str, Any]:
     """Run the JS forward pipeline and return its intermediate artifacts.
 
     Builds a program graph from the fixture, runs the translation
@@ -86,17 +84,13 @@ def _js_pipeline() -> Dict[str, Any]:
     from cogant.statespace.compiler import StateSpaceCompiler
 
     graph = _build_javascript_graph(_JS_FIXTURE)
-    mappings: List[SemanticMapping] = _run_translation(graph)
-    mapping_dict: Dict[str, SemanticMapping] = {m.id: m for m in mappings}
+    mappings: list[SemanticMapping] = _run_translation(graph)
+    mapping_dict: dict[str, SemanticMapping] = {m.id: m for m in mappings}
 
-    compiler = StateSpaceCompiler(
-        program_graph=graph, schema_name="js_observer"
-    )
+    compiler = StateSpaceCompiler(program_graph=graph, schema_name="js_observer")
     state_space = compiler.compile(mapping_dict)
 
-    gnn_mats = GNNMatrices(
-        graph=graph, mappings=mappings, state_space=state_space
-    )
+    gnn_mats = GNNMatrices(graph=graph, mappings=mappings, state_space=state_space)
     A = gnn_mats.compute_A()
     B = gnn_mats.compute_B()
     C = gnn_mats.compute_C()
@@ -115,7 +109,7 @@ def _js_pipeline() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def js_pipeline() -> Dict[str, Any]:
+def js_pipeline() -> dict[str, Any]:
     """Fresh JS Observer forward pipeline per test (no shared mutable cache)."""
     return _js_pipeline()
 
@@ -126,7 +120,7 @@ def js_pipeline() -> Dict[str, Any]:
 
 
 @_requires_js
-def test_js_fixture_parses_without_error(js_pipeline: Dict[str, Any]) -> None:
+def test_js_fixture_parses_without_error(js_pipeline: dict[str, Any]) -> None:
     """The JS fixture must parse cleanly and produce a non-empty graph.
 
     Verifies:
@@ -147,12 +141,8 @@ def test_js_fixture_parses_without_error(js_pipeline: Dict[str, Any]) -> None:
 
     from cogant.schemas.core import NodeKind
 
-    class_nodes = [
-        n for n in graph.nodes.values() if n.kind == NodeKind.CLASS
-    ]
-    method_nodes = [
-        n for n in graph.nodes.values() if n.kind == NodeKind.METHOD
-    ]
+    class_nodes = [n for n in graph.nodes.values() if n.kind == NodeKind.CLASS]
+    method_nodes = [n for n in graph.nodes.values() if n.kind == NodeKind.METHOD]
     assert class_nodes, (
         f"JS fixture produced no CLASS nodes; got kinds "
         f"{sorted({n.kind.name for n in graph.nodes.values()})}"
@@ -167,14 +157,13 @@ def test_js_fixture_parses_without_error(js_pipeline: Dict[str, Any]) -> None:
     expected = {"constructor", "update", "getState", "checkValid"}
     missing = expected - method_names
     assert not missing, (
-        f"JS fixture is missing methods {missing}; "
-        f"parser surfaced {sorted(method_names)}"
+        f"JS fixture is missing methods {missing}; parser surfaced {sorted(method_names)}"
     )
 
 
 @_requires_js
 def test_js_translation_produces_core_active_inference_roles(
-    js_pipeline: Dict[str, Any],
+    js_pipeline: dict[str, Any],
 ) -> None:
     """At least one HIDDEN_STATE, OBSERVATION, and ACTION mapping.
 
@@ -186,7 +175,7 @@ def test_js_translation_produces_core_active_inference_roles(
     should trigger the constraint rule, but we keep the mandatory list
     aligned with the cross-language differential test.
     """
-    mappings: List[SemanticMapping] = js_pipeline["mappings"]
+    mappings: list[SemanticMapping] = js_pipeline["mappings"]
     assert mappings, "JS translation produced no mappings"
 
     kinds = {m.kind for m in mappings}
@@ -204,7 +193,7 @@ def test_js_translation_produces_core_active_inference_roles(
 
 @_requires_js
 def test_js_state_space_and_matrices_are_non_degenerate(
-    js_pipeline: Dict[str, Any],
+    js_pipeline: dict[str, Any],
 ) -> None:
     """The compiled state-space must expose matrices with sensible shapes.
 
@@ -234,19 +223,15 @@ def test_js_state_space_and_matrices_are_non_degenerate(
     # distribution (sum ~ 1). This catches uninitialised matrices early.
     for i, row in enumerate(A):
         s = sum(row)
-        assert abs(s - 1.0) < 1e-6 or s == 0.0, (
-            f"A row {i} should be normalised; sum={s}"
-        )
+        assert abs(s - 1.0) < 1e-6 or s == 0.0, f"A row {i} should be normalised; sum={s}"
     d_sum = sum(D)
-    assert abs(d_sum - 1.0) < 1e-6 or d_sum == 0.0, (
-        f"D prior should be normalised; sum={d_sum}"
-    )
+    assert abs(d_sum - 1.0) < 1e-6 or d_sum == 0.0, f"D prior should be normalised; sum={d_sum}"
 
 
 @_requires_js
 def test_js_gnn_emission_has_all_canonical_sections(
     tmp_path: Path,
-    js_pipeline: Dict[str, Any],
+    js_pipeline: dict[str, Any],
 ) -> None:
     """GNN markdown emitted from the JS-derived pipeline has every section.
 
@@ -262,9 +247,7 @@ def test_js_gnn_emission_has_all_canonical_sections(
     mapping_dict = js_pipeline["mapping_dict"]
     state_space = js_pipeline["state_space"]
 
-    process_model = ProcessExtractor(
-        program_graph=graph, schema_name="js_observer"
-    ).extract()
+    process_model = ProcessExtractor(program_graph=graph, schema_name="js_observer").extract()
 
     formatter = GNNMarkdownFormatter(
         program_graph=graph,
@@ -296,7 +279,7 @@ def test_js_gnn_emission_has_all_canonical_sections(
 @_requires_js
 def test_js_forward_reverse_forward_role_match_above_threshold(
     tmp_path: Path,
-    js_pipeline: Dict[str, Any],
+    js_pipeline: dict[str, Any],
 ) -> None:
     """JS → GNN → Python package → forward: role_match_score > 0.5.
 
@@ -323,9 +306,7 @@ def test_js_forward_reverse_forward_role_match_above_threshold(
     mapping_dict = js_pipeline["mapping_dict"]
     state_space = js_pipeline["state_space"]
 
-    process_model = ProcessExtractor(
-        program_graph=graph, schema_name="js_observer"
-    ).extract()
+    process_model = ProcessExtractor(program_graph=graph, schema_name="js_observer").extract()
     formatter = GNNMarkdownFormatter(
         program_graph=graph,
         state_space_model=state_space,
@@ -376,8 +357,7 @@ def test_js_forward_reverse_forward_role_match_above_threshold(
     score = overlap / sum(r1.values())
 
     assert ROLE_MATCH_THRESHOLD <= 0.5, (
-        "ROLE_MATCH_THRESHOLD tightened unexpectedly; "
-        "this test assumes the lenient default."
+        "ROLE_MATCH_THRESHOLD tightened unexpectedly; this test assumes the lenient default."
     )
     assert score > 0.5, (
         f"Cross-language role_match_score={score:.4f} <= 0.5. "
@@ -387,7 +367,7 @@ def test_js_forward_reverse_forward_role_match_above_threshold(
 
 @_requires_js
 def test_js_agent_runtime_runs_ten_steps_without_exception(
-    js_pipeline: Dict[str, Any],
+    js_pipeline: dict[str, Any],
 ) -> None:
     """AgentRuntime must execute ≥10 perception–action steps on JS matrices.
 
@@ -409,8 +389,7 @@ def test_js_agent_runtime_runs_ten_steps_without_exception(
 
     steps = runtime.run_n_steps(10)
     assert isinstance(steps, list) and len(steps) == 10, (
-        f"AgentRuntime.run_n_steps(10) produced {len(steps)} steps; "
-        f"expected 10"
+        f"AgentRuntime.run_n_steps(10) produced {len(steps)} steps; expected 10"
     )
     for s in steps:
         assert isinstance(s, AgentStep)

@@ -30,11 +30,7 @@ class StatespaceConfig(BaseModel):
         gt=0.0,
         description="Numerical tolerance for matrix checks",
     )
-    max_hidden_states: int = Field(
-        default=512, ge=1, description="Maximum hidden-state dimension"
-    )
-    max_observations: int = Field(
-        default=2048, ge=1, description="Maximum observation dimension"
-    )
+    max_hidden_states: int = Field(default=512, ge=1, description="Maximum hidden-state dimension")
+    max_observations: int = Field(default=2048, ge=1, description="Maximum observation dimension")
 
     model_config = ConfigDict(frozen=True)

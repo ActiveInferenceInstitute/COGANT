@@ -43,6 +43,7 @@ class _DynamicsSectionsMixin:
     # mixin is inspected in isolation without replacing the real
     # implementation at runtime.
     if TYPE_CHECKING:
+
         @staticmethod
         def _action_effects(action: Any) -> list[str]: ...
 
@@ -104,7 +105,9 @@ class _DynamicsSectionsMixin:
                     action_count = action_to_count.get(action_key, 1)
                     computed_prob = 1.0 / action_count if action_count > 0 else 1.0
                     prob = f"{computed_prob:.3f}"
-                lines.append(f"| {trans_id[:12]} | {action_key} | {prob} | {trans.confidence.value} |")
+                lines.append(
+                    f"| {trans_id[:12]} | {action_key} | {prob} | {trans.confidence.value} |"
+                )
             lines.append("")
 
         else:
@@ -135,17 +138,21 @@ class _DynamicsSectionsMixin:
                         target_node = self.graph.nodes.get(call_edge.target_id)
                         write_node = self.graph.nodes.get(write_edge.target_id)
                         if source_node and target_node and write_node:
-                            call_write_patterns.append({
-                                'source': source_node.name,
-                                'calls': target_node.name,
-                                'writes': write_node.name,
-                            })
+                            call_write_patterns.append(
+                                {
+                                    "source": source_node.name,
+                                    "calls": target_node.name,
+                                    "writes": write_node.name,
+                                }
+                            )
 
             if call_write_patterns:
                 lines.append("| Function | Calls | Modifies State |")
                 lines.append("|----|----|------|")
                 for pattern in call_write_patterns[:20]:
-                    lines.append(f"| {pattern['source']} | {pattern['calls']} | {pattern['writes']} |")
+                    lines.append(
+                        f"| {pattern['source']} | {pattern['calls']} | {pattern['writes']} |"
+                    )
                 lines.append("")
             else:
                 lines.append("No explicit call-to-write patterns detected.")
@@ -166,14 +173,21 @@ class _DynamicsSectionsMixin:
                 for src_stage in sorted(stage_transitions.keys())[:15]:
                     conns = stage_transitions[src_stage]
                     next_stages = [c.target_stage_id for c in conns]
-                    trans_pattern = "sequential" if len(next_stages) == 1 else "fan_out" if len(next_stages) > 1 else "terminal"
+                    trans_pattern = (
+                        "sequential"
+                        if len(next_stages) == 1
+                        else "fan_out"
+                        if len(next_stages) > 1
+                        else "terminal"
+                    )
                     next_str = ", ".join(next_stages[:2])
                     if len(next_stages) > 2:
-                        next_str += f", +{len(next_stages)-2} more"
+                        next_str += f", +{len(next_stages) - 2} more"
                     lines.append(f"| {src_stage} | {next_str} | {trans_pattern} |")
                 lines.append("")
 
         return "\n".join(lines)
+
     def _format_likelihood_structure(self) -> str:
         """Format likelihood structure section."""
         lines = ["## Likelihood Structure"]
@@ -196,14 +210,18 @@ class _DynamicsSectionsMixin:
             # Handle parameters - could be dict or list
             if like.parameters:
                 if isinstance(like.parameters, dict):
-                    params = ", ".join([f"{k}={v:.2f}" for k, v in list(like.parameters.items())[:2]])
+                    params = ", ".join(
+                        [f"{k}={v:.2f}" for k, v in list(like.parameters.items())[:2]]
+                    )
                 elif isinstance(like.parameters, list):
                     params = ", ".join([str(p)[:20] for p in like.parameters[:2]])
                 else:
                     params = str(like.parameters)[:30]
             else:
                 params = "none"
-            lines.append(f"| {var_name} | {like.distribution_type} | {params} | {like.confidence.value} |")
+            lines.append(
+                f"| {var_name} | {like.distribution_type} | {params} | {like.confidence.value} |"
+            )
         lines.append("")
 
         # Show observation dependencies
@@ -224,8 +242,11 @@ class _DynamicsSectionsMixin:
 
             if source_node_id and source_node_id in self.graph.nodes:
                 # Get READS edges from the observation source node
-                reads_edges = [e for e in self.graph.edges.values()
-                              if e.kind == EdgeKind.READS and e.source_id == source_node_id]
+                reads_edges = [
+                    e
+                    for e in self.graph.edges.values()
+                    if e.kind == EdgeKind.READS and e.source_id == source_node_id
+                ]
 
                 # Map READS edge targets to state variables
                 for edge in reads_edges:
@@ -235,7 +256,10 @@ class _DynamicsSectionsMixin:
                         # Match state variables by their representation in the graph
                         for var_id, var in self.state_space.variables.items():
                             # Check if this state variable represents the target node
-                            if target_node.name.lower() in var.name.lower() or var.name.lower() in target_node.name.lower():
+                            if (
+                                target_node.name.lower() in var.name.lower()
+                                or var.name.lower() in target_node.name.lower()
+                            ):
                                 var_to_obs[var_id].append(obs.name)
                                 break
                         else:
@@ -252,7 +276,9 @@ class _DynamicsSectionsMixin:
         if var_to_obs:
             for var_id, obs_list in sorted(var_to_obs.items()):
                 var_name = var_names.get(var_id, var_id)
-                obs_str = ", ".join(list(dict.fromkeys(obs_list))[:3])  # Remove duplicates, keep first 3
+                obs_str = ", ".join(
+                    list(dict.fromkeys(obs_list))[:3]
+                )  # Remove duplicates, keep first 3
                 lines.append(f"| {var_name} | {obs_str} |")
         else:
             lines.append("| (no observed dependencies detected) | |")
@@ -260,6 +286,7 @@ class _DynamicsSectionsMixin:
         lines.append("")
 
         return "\n".join(lines)
+
     def _format_preferences(self) -> str:
         """Format preferences and constraints section."""
         lines = ["## Preferences Constraints"]
@@ -274,24 +301,33 @@ class _DynamicsSectionsMixin:
             for pref_id, pref in list(self.state_space.preferences.items())[:20]:
                 scope_str = ", ".join(pref.scope[:2]) if pref.scope else "global"
                 source = pref.source or "derived"
-                lines.append(f"| {pref_id[:12]} | {pref.name} | {scope_str} | {pref.weight} | {pref.expression[:30]} | {source} |")
+                lines.append(
+                    f"| {pref_id[:12]} | {pref.name} | {scope_str} | {pref.weight} | {pref.expression[:30]} | {source} |"
+                )
             lines.append("")
         else:
             lines.append("No preferences detected in this codebase.")
             lines.append("")
 
         # Constraint mappings from semantic analysis
-        constraint_mappings = [m for m in self.mappings.values() if hasattr(m, 'kind') and m.kind == MappingKind.CONSTRAINT]
+        constraint_mappings = [
+            m
+            for m in self.mappings.values()
+            if hasattr(m, "kind") and m.kind == MappingKind.CONSTRAINT
+        ]
         if constraint_mappings:
             lines.append("### Constraint Mappings")
             lines.append("")
             lines.append("| ID | Label | Evidence Count | Confidence | Status |")
             lines.append("|----|----|------|------|------|")
             for mapping in constraint_mappings[:30]:
-                lines.append(f"| {mapping.id[:12]} | {mapping.semantic_label} | {mapping.evidence_count} | {mapping.confidence_score:.2f} | {mapping.status} |")
+                lines.append(
+                    f"| {mapping.id[:12]} | {mapping.semantic_label} | {mapping.evidence_count} | {mapping.confidence_score:.2f} | {mapping.status} |"
+                )
             lines.append("")
 
         return "\n".join(lines)
+
     def _format_time_settings(self) -> str:
         """Format time settings section."""
         lines = ["## Time Settings"]
@@ -305,11 +341,15 @@ class _DynamicsSectionsMixin:
                 lines.append(f"- **Step Unit**: {self.state_space.metadata['step_unit']}")
             else:
                 # Default based on time regime
-                lines.append(f"- **Step Unit**: {'discrete' if self.state_space.time_regime.value == 'discrete' else 'continuous'}")
+                lines.append(
+                    f"- **Step Unit**: {'discrete' if self.state_space.time_regime.value == 'discrete' else 'continuous'}"
+                )
 
             # Synchronization mode
             if "is_async" in self.state_space.metadata:
-                async_flag = "asynchronous" if self.state_space.metadata['is_async'] else "synchronous"
+                async_flag = (
+                    "asynchronous" if self.state_space.metadata["is_async"] else "synchronous"
+                )
             else:
                 async_flag = "synchronous"
             lines.append(f"- **Synchronization**: {async_flag}")
@@ -320,18 +360,21 @@ class _DynamicsSectionsMixin:
 
             # Temporal analysis results
             if "temporal_patterns" in self.state_space.metadata:
-                patterns = self.state_space.metadata['temporal_patterns']
+                patterns = self.state_space.metadata["temporal_patterns"]
                 if patterns:
                     pattern_str = ", ".join(patterns[:3])
                     lines.append(f"- **Temporal Patterns**: {pattern_str}")
 
             # Clock / event frequency
             if "clock_frequency" in self.state_space.metadata:
-                lines.append(f"- **Clock Frequency**: {self.state_space.metadata['clock_frequency']}")
+                lines.append(
+                    f"- **Clock Frequency**: {self.state_space.metadata['clock_frequency']}"
+                )
 
         lines.append("")
 
         return "\n".join(lines)
+
     def _format_parameterization(self) -> str:
         """Format parameterization section."""
         lines = ["## Parameterization"]
@@ -350,7 +393,7 @@ class _DynamicsSectionsMixin:
 
         confidence_scores = []
         for mapping in self.mappings.values():
-            if hasattr(mapping, 'confidence_score'):
+            if hasattr(mapping, "confidence_score"):
                 confidence_scores.append(mapping.confidence_score)
 
         if confidence_scores:
@@ -363,7 +406,9 @@ class _DynamicsSectionsMixin:
         # Threshold settings
         if self.state_space.metadata:
             if "confidence_threshold" in self.state_space.metadata:
-                lines.append(f"| Confidence Threshold | {self.state_space.metadata['confidence_threshold']} | configuration |")
+                lines.append(
+                    f"| Confidence Threshold | {self.state_space.metadata['confidence_threshold']} | configuration |"
+                )
 
         lines.append("")
 
@@ -379,17 +424,21 @@ class _DynamicsSectionsMixin:
         rule_status: dict[tuple[str, str], int] = defaultdict(int)
 
         for mapping in self.mappings.values():
-            if hasattr(mapping, 'kind'):
+            if hasattr(mapping, "kind"):
                 kind = mapping.kind.value
                 rule_counts[kind] += 1
-                if hasattr(mapping, 'confidence_score'):
+                if hasattr(mapping, "confidence_score"):
                     rule_confidence[kind].append(mapping.confidence_score)
-                if hasattr(mapping, 'status'):
+                if hasattr(mapping, "status"):
                     rule_status[(kind, mapping.status)] += 1
 
         for kind in sorted(rule_counts.keys()):
             count = rule_counts[kind]
-            avg_conf = sum(rule_confidence[kind]) / len(rule_confidence[kind]) if rule_confidence[kind] else 0.0
+            avg_conf = (
+                sum(rule_confidence[kind]) / len(rule_confidence[kind])
+                if rule_confidence[kind]
+                else 0.0
+            )
             status_list = [s for (k, s), cnt in rule_status.items() if k == kind]
             lines.append(f"| {kind} | {count} | {avg_conf:.3f} | {', '.join(set(status_list))} |")
 

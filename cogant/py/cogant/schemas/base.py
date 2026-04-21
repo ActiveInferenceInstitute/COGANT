@@ -86,9 +86,7 @@ class EvidenceRef(CogantBaseModel):
     back to its source (code, config, test, trace).
     """
 
-    evidence_id: str = Field(
-        ..., description="Unique identifier of evidence in provenance store"
-    )
+    evidence_id: str = Field(..., description="Unique identifier of evidence in provenance store")
     kind: Literal[
         "source_span",
         "ast_fact",
@@ -115,9 +113,7 @@ class TypeInfo(CogantBaseModel):
     """
 
     base_type: str = Field(..., description="Base type name (e.g., 'str', 'int', 'List')")
-    is_optional: bool = Field(
-        default=False, description="Whether type is Optional/Nullable"
-    )
+    is_optional: bool = Field(default=False, description="Whether type is Optional/Nullable")
     is_generic: bool = Field(default=False, description="Whether type is parameterized")
     type_parameters: list[str] = Field(
         default_factory=list,
@@ -147,9 +143,7 @@ class ConfidenceMetric(CogantBaseModel):
         le=1.0,
         description="Confidence score in range [0, 1]",
     )
-    rationale: str | None = Field(
-        default=None, description="Human-readable explanation of score"
-    )
+    rationale: str | None = Field(default=None, description="Human-readable explanation of score")
     evidence_types: list[str] = Field(
         default_factory=list,
         description="Types of evidence contributing to this score (e.g., 'static_analysis', 'test_coverage')",
@@ -163,15 +157,11 @@ class LocationInfo(CogantBaseModel):
     """
 
     path: str = Field(..., description="Absolute or relative file path")
-    span: Span | None = Field(
-        default=None, description="Source span if element is a code region"
-    )
+    span: Span | None = Field(default=None, description="Source span if element is a code region")
     language: str | None = Field(
         default=None, description="Programming language (e.g., 'python', 'javascript')"
     )
-    repo_root: str | None = Field(
-        default=None, description="Repository root path for context"
-    )
+    repo_root: str | None = Field(default=None, description="Repository root path for context")
 
 
 def generate_stable_id(content: str, prefix: str = "") -> StableID:

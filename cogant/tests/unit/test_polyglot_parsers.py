@@ -5,9 +5,7 @@ language detection functionality.
 """
 
 import sys
-import tempfile
 from pathlib import Path
-from typing import Dict, Any, List
 
 import pytest
 
@@ -19,10 +17,10 @@ if str(_PARSERS_ROOT) not in sys.path:
 
 from cogant.ingest.language_detect import LanguageDetector
 
-
 # ============================================================================
 # Python Parser Tests
 # ============================================================================
+
 
 class TestPythonParser:
     """Tests for the Python language parser."""
@@ -32,6 +30,7 @@ class TestPythonParser:
         """Setup Python parser."""
         try:
             from python.parser import PythonLanguageParser
+
             self.parser = PythonLanguageParser()
         except ImportError as e:
             pytest.skip(f"Python parser not available: {e}")
@@ -87,14 +86,14 @@ async def fetch_data(url: str) -> dict:
 
     def test_parse_imports(self):
         """Test parsing import statements."""
-        code = '''
+        code = """
 import os
 import sys
 from typing import List, Dict, Optional
 from pathlib import Path
 from . import utils
 from ..parent import config
-'''
+"""
         result = self.parser.parse(code)
 
         assert "imports" in result
@@ -130,7 +129,7 @@ class DatabaseConnection(Connection):
         class_def = result["classes"][0]
         assert class_def["name"] == "DatabaseConnection"
         # Base class should be Connection
-        assert "Connection" in [b for b in class_def.get("bases", [])]
+        assert "Connection" in list(class_def.get("bases", []))
 
     def test_parse_module_docstring(self):
         """Test parsing module-level docstring."""
@@ -150,7 +149,7 @@ def helper():
 
     def test_extract_symbols_from_parsed_ast(self):
         """Test extracting symbols from parsed AST."""
-        code = '''
+        code = """
 class User:
     def __init__(self, name: str):
         self.name = name
@@ -160,7 +159,7 @@ def create_user(name: str) -> User:
 
 async def async_helper() -> None:
     pass
-'''
+"""
         ast_dict = self.parser.parse(code)
         symbols = self.parser.extract_symbols(ast_dict)
 
@@ -191,7 +190,7 @@ def test_function():
 
     def test_parse_decorators_and_async(self):
         """Test parsing decorators and async functions."""
-        code = '''
+        code = """
 @property
 def my_property(self) -> str:
     return "value"
@@ -202,7 +201,7 @@ def static_method() -> None:
 
 async def async_function():
     pass
-'''
+"""
         result = self.parser.parse(code)
         funcs = result.get("functions", [])
         assert len(funcs) > 0
@@ -212,6 +211,7 @@ async def async_function():
 # TypeScript Parser Tests
 # ============================================================================
 
+
 class TestTypeScriptParser:
     """Tests for the TypeScript/JavaScript parser."""
 
@@ -220,6 +220,7 @@ class TestTypeScriptParser:
         """Setup TypeScript parser."""
         try:
             from typescript.parser import TypeScriptLanguageParser
+
             self.parser = TypeScriptLanguageParser()
         except ImportError as e:
             pytest.skip(f"TypeScript parser not available: {e}")
@@ -233,7 +234,7 @@ class TestTypeScriptParser:
 
     def test_parse_interface_definition(self):
         """Test parsing interface declarations."""
-        code = '''
+        code = """
 interface User {
     id: number;
     name: string;
@@ -244,7 +245,7 @@ interface Admin extends User {
     role: string;
     permissions: string[];
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "interfaces" in result
@@ -255,7 +256,7 @@ interface Admin extends User {
 
     def test_parse_class_declaration(self):
         """Test parsing class declarations with extends/implements."""
-        code = '''
+        code = """
 class MyClass extends BaseClass implements Serializable, Comparable {
     constructor(public name: string) {
         super();
@@ -269,7 +270,7 @@ class MyClass extends BaseClass implements Serializable, Comparable {
         return true;
     }
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "classes" in result
@@ -280,7 +281,7 @@ class MyClass extends BaseClass implements Serializable, Comparable {
 
     def test_parse_function_declarations(self):
         """Test parsing function declarations with type annotations."""
-        code = '''
+        code = """
 function add(x: number, y: number): number {
     return x + y;
 }
@@ -292,7 +293,7 @@ function greet(name: string, greeting: string = "Hello"): string {
 async function fetchData(url: string): Promise<any> {
     return fetch(url);
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "functions" in result
@@ -304,24 +305,24 @@ async function fetchData(url: string): Promise<any> {
 
     def test_parse_import_statements(self):
         """Test parsing various import styles."""
-        code = '''
+        code = """
 import { Component, OnInit } from '@angular/core';
 import * as React from 'react';
 import axios from 'axios';
 import { useState } from 'react';
-'''
+"""
         result = self.parser.parse(code)
 
         assert "imports" in result
         imports = result["imports"]
         assert len(imports) >= 3
         modules = [imp["module"] for imp in imports]
-        assert '@angular/core' in modules
-        assert 'react' in modules
+        assert "@angular/core" in modules
+        assert "react" in modules
 
     def test_parse_export_statements(self):
         """Test parsing export statements."""
-        code = '''
+        code = """
 export class MyService {
     constructor() {}
 }
@@ -335,7 +336,7 @@ export const VERSION = "1.0.0";
 export function helper(): void {}
 
 export default function main() {}
-'''
+"""
         result = self.parser.parse(code)
 
         assert "exports" in result
@@ -347,7 +348,7 @@ export default function main() {}
 
     def test_extract_symbols_from_typescript(self):
         """Test extracting symbols from TypeScript AST."""
-        code = '''
+        code = """
 interface IUser {
     id: number;
 }
@@ -361,7 +362,7 @@ class UserService implements IUser {
 export function createUser(name: string): IUser {
     return null;
 }
-'''
+"""
         ast_dict = self.parser.parse(code)
         symbols = self.parser.extract_symbols(ast_dict)
 
@@ -374,7 +375,7 @@ export function createUser(name: string): IUser {
     def test_parse_file_from_disk(self, temp_dir: Path):
         """Test parsing TypeScript file from disk."""
         ts_file = temp_dir / "test_module.ts"
-        ts_file.write_text('''
+        ts_file.write_text("""
 interface Config {
     debug: boolean;
 }
@@ -386,7 +387,7 @@ class ConfigService {
 export function initialize(): ConfigService {
     return new ConfigService({ debug: true });
 }
-''')
+""")
 
         result = self.parser.parse_file(ts_file)
 
@@ -396,7 +397,7 @@ export function initialize(): ConfigService {
 
     def test_parse_type_annotations(self):
         """Test parsing type annotations in declarations."""
-        code = '''
+        code = """
 function process(data: string[]): Map<string, number> {
     return new Map();
 }
@@ -404,7 +405,7 @@ function process(data: string[]): Map<string, number> {
 class Container<T> {
     items: T[] = [];
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert len(result.get("functions", [])) > 0
@@ -415,6 +416,7 @@ class Container<T> {
 # Rust Parser Tests
 # ============================================================================
 
+
 class TestRustParser:
     """Tests for the Rust language parser."""
 
@@ -423,6 +425,7 @@ class TestRustParser:
         """Setup Rust parser."""
         try:
             from rust.parser import RustLanguageParser
+
             self.parser = RustLanguageParser()
         except ImportError as e:
             pytest.skip(f"Rust parser not available: {e}")
@@ -435,7 +438,7 @@ class TestRustParser:
 
     def test_parse_struct_definition(self):
         """Test parsing struct definitions."""
-        code = '''
+        code = """
 struct User {
     id: u32,
     name: String,
@@ -446,7 +449,7 @@ struct Point<T> {
     x: T,
     y: T,
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "structs" in result
@@ -457,7 +460,7 @@ struct Point<T> {
 
     def test_parse_impl_blocks(self):
         """Test parsing impl blocks with methods."""
-        code = '''
+        code = """
 impl User {
     pub fn new(id: u32, name: String, email: String) -> Self {
         User { id, name, email }
@@ -477,7 +480,7 @@ impl Display for User {
         write!(f, "User: {}", self.name)
     }
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "impls" in result
@@ -486,13 +489,13 @@ impl Display for User {
 
     def test_parse_use_statements(self):
         """Test parsing use/import statements."""
-        code = '''
+        code = """
 use std::collections::HashMap;
 use std::io::{self, Read, Write};
 use my_crate::module::{Item1, Item2};
 use other_crate::*;
 use crate::utils::helper as my_helper;
-'''
+"""
         result = self.parser.parse(code)
 
         assert "uses" in result
@@ -503,7 +506,7 @@ use crate::utils::helper as my_helper;
 
     def test_parse_trait_definitions(self):
         """Test parsing trait definitions."""
-        code = '''
+        code = """
 trait Iterator {
     type Item;
 
@@ -518,7 +521,7 @@ pub trait Drawable {
 trait Clone: Copy {
     fn clone(&self) -> Self;
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "traits" in result
@@ -529,7 +532,7 @@ trait Clone: Copy {
 
     def test_parse_function_definitions(self):
         """Test parsing function definitions with signatures."""
-        code = '''
+        code = """
 fn main() {
     println!("Hello, world!");
 }
@@ -544,7 +547,7 @@ pub async fn fetch_data(url: &str) -> Result<String, Error> {
 
 unsafe fn raw_pointer_access(ptr: *const i32) {
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "functions" in result
@@ -557,7 +560,7 @@ unsafe fn raw_pointer_access(ptr: *const i32) {
 
     def test_parse_enum_definitions(self):
         """Test parsing enum definitions."""
-        code = '''
+        code = """
 enum Color {
     Red,
     Green,
@@ -574,7 +577,7 @@ pub enum Message {
     Move { x: i32, y: i32 },
     Write(String),
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "enums" in result
@@ -585,7 +588,7 @@ pub enum Message {
 
     def test_extract_symbols_from_rust(self):
         """Test extracting symbols from Rust AST."""
-        code = '''
+        code = """
 struct MyStruct {
     field: u32,
 }
@@ -603,7 +606,7 @@ fn my_function() {}
 enum MyEnum {
     Variant1,
 }
-'''
+"""
         ast_dict = self.parser.parse(code)
         symbols = self.parser.extract_symbols(ast_dict)
 
@@ -617,7 +620,7 @@ enum MyEnum {
     def test_parse_file_from_disk(self, temp_dir: Path):
         """Test parsing Rust file from disk."""
         rs_file = temp_dir / "lib.rs"
-        rs_file.write_text('''
+        rs_file.write_text("""
 pub struct Config {
     debug: bool,
 }
@@ -629,7 +632,7 @@ pub trait Handler {
 pub fn create_config() -> Config {
     Config { debug: true }
 }
-''')
+""")
 
         result = self.parser.parse_file(rs_file)
 
@@ -639,7 +642,7 @@ pub fn create_config() -> Config {
 
     def test_parse_module_definitions(self):
         """Test parsing module definitions."""
-        code = '''
+        code = """
 pub mod utils {
     pub fn helper() {}
 }
@@ -651,7 +654,7 @@ mod private_module {
 #[cfg(test)]
 mod tests {
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "modules" in result
@@ -662,6 +665,7 @@ mod tests {
 # Go Parser Tests
 # ============================================================================
 
+
 class TestGoParser:
     """Tests for the Go language parser."""
 
@@ -670,6 +674,7 @@ class TestGoParser:
         """Setup Go parser."""
         try:
             from go.parser import GoLanguageParser
+
             self.parser = GoLanguageParser()
         except ImportError as e:
             pytest.skip(f"Go parser not available: {e}")
@@ -682,7 +687,7 @@ class TestGoParser:
 
     def test_parse_struct_definition(self):
         """Test parsing struct definitions."""
-        code = '''
+        code = """
 type User struct {
     ID    int
     Name  string
@@ -692,7 +697,7 @@ type User struct {
 type Point struct {
     X, Y float64
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "structs" in result
@@ -703,7 +708,7 @@ type Point struct {
 
     def test_parse_function_declarations(self):
         """Test parsing function declarations."""
-        code = '''
+        code = """
 func main() {
     fmt.Println("Hello")
 }
@@ -715,7 +720,7 @@ func add(x int, y int) int {
 func fetchData(url string) (string, error) {
     return "", nil
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "functions" in result
@@ -727,7 +732,7 @@ func fetchData(url string) (string, error) {
 
     def test_parse_method_definitions(self):
         """Test parsing method definitions."""
-        code = '''
+        code = """
 func (u *User) String() string {
     return u.Name
 }
@@ -739,7 +744,7 @@ func (p Point) Distance() float64 {
 func (u User) GetEmail() string {
     return u.Email
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "methods" in result
@@ -748,7 +753,7 @@ func (u User) GetEmail() string {
 
     def test_parse_interface_definitions(self):
         """Test parsing interface definitions."""
-        code = '''
+        code = """
 type Reader interface {
     Read(p []byte) (n int, err error)
 }
@@ -761,7 +766,7 @@ type ReadWriter interface {
     Reader
     Writer
 }
-'''
+"""
         result = self.parser.parse(code)
 
         assert "interfaces" in result
@@ -772,7 +777,7 @@ type ReadWriter interface {
 
     def test_parse_import_statements(self):
         """Test parsing import statements."""
-        code = '''
+        code = """
 import "fmt"
 import "io"
 
@@ -782,7 +787,7 @@ import (
     "encoding/json"
     m "encoding/json"
 )
-'''
+"""
         result = self.parser.parse(code)
 
         assert "imports" in result
@@ -795,20 +800,20 @@ import (
 
     def test_parse_package_declaration(self):
         """Test parsing package declaration."""
-        code = '''
+        code = """
 package main
 
 import "fmt"
 
 func main() {}
-'''
+"""
         result = self.parser.parse(code)
 
         assert result.get("package") == "main"
 
     def test_extract_symbols_from_go(self):
         """Test extracting symbols from Go AST."""
-        code = '''
+        code = """
 type User struct {
     Name string
 }
@@ -823,7 +828,7 @@ func (u User) String() string {
 
 func main() {
 }
-'''
+"""
         ast_dict = self.parser.parse(code)
         symbols = self.parser.extract_symbols(ast_dict)
 
@@ -837,7 +842,7 @@ func main() {
     def test_parse_file_from_disk(self, temp_dir: Path):
         """Test parsing Go file from disk."""
         go_file = temp_dir / "main.go"
-        go_file.write_text('''
+        go_file.write_text("""
 package main
 
 import "fmt"
@@ -854,7 +859,7 @@ func main() {
     h := Handler{Name: "Test"}
     h.Handle()
 }
-''')
+""")
 
         result = self.parser.parse_file(go_file)
 
@@ -864,7 +869,7 @@ func main() {
 
     def test_parse_method_receiver_types(self):
         """Test parsing different receiver types."""
-        code = '''
+        code = """
 func (u *User) ModifyEmail(email string) {
 }
 
@@ -874,7 +879,7 @@ func (u User) GetName() string {
 
 func (p *Point) Move(x float64) {
 }
-'''
+"""
         result = self.parser.parse(code)
 
         methods = result.get("methods", [])
@@ -887,6 +892,7 @@ func (p *Point) Move(x float64) {
 # ============================================================================
 # Language Detection Tests
 # ============================================================================
+
 
 class TestLanguageDetection:
     """Tests for language detection functionality."""
@@ -1004,6 +1010,7 @@ class TestLanguageDetection:
 # Integration Tests: Multiple Languages
 # ============================================================================
 
+
 class TestPolyglotParsing:
     """Integration tests for parsing multiple languages in one workflow."""
 
@@ -1019,16 +1026,16 @@ class Service:
 ''')
 
         # Create TypeScript file
-        (temp_dir / "app.ts").write_text('''
+        (temp_dir / "app.ts").write_text("""
 class AppService {
     constructor() {}
 
     initialize(): void {}
 }
-''')
+""")
 
         # Create Rust file
-        (temp_dir / "lib.rs").write_text('''
+        (temp_dir / "lib.rs").write_text("""
 pub struct Config {
     name: String,
 }
@@ -1038,10 +1045,10 @@ impl Config {
         Config { name }
     }
 }
-''')
+""")
 
         # Create Go file
-        (temp_dir / "main.go").write_text('''
+        (temp_dir / "main.go").write_text("""
 package main
 
 type Handler struct {
@@ -1050,7 +1057,7 @@ type Handler struct {
 
 func (h Handler) Process() {
 }
-''')
+""")
 
         # Detect languages
         languages = LanguageDetector.detect_repo_languages(temp_dir)
@@ -1064,17 +1071,17 @@ func (h Handler) Process() {
     def test_parse_same_file_across_languages(self):
         """Test parsing the same logical code in different languages."""
         # Python version
-        python_code = '''
+        python_code = """
 class User:
     def __init__(self, name: str):
         self.name = name
 
     def get_name(self) -> str:
         return self.name
-'''
+"""
 
         # TypeScript version
-        ts_code = '''
+        ts_code = """
 class User {
     constructor(private name: string) {}
 
@@ -1082,10 +1089,10 @@ class User {
         return this.name;
     }
 }
-'''
+"""
 
         # Rust version
-        rust_code = '''
+        rust_code = """
 pub struct User {
     name: String,
 }
@@ -1099,10 +1106,10 @@ impl User {
         &self.name
     }
 }
-'''
+"""
 
         # Go version
-        go_code = '''
+        go_code = """
 type User struct {
     Name string
 }
@@ -1110,11 +1117,12 @@ type User struct {
 func (u *User) GetName() string {
     return u.Name
 }
-'''
+"""
 
         # Parse each
         try:
             from python.parser import PythonLanguageParser
+
             py_parser = PythonLanguageParser()
             py_ast = py_parser.parse(python_code)
             assert len(py_ast.get("classes", [])) > 0
@@ -1123,6 +1131,7 @@ func (u *User) GetName() string {
 
         try:
             from typescript.parser import TypeScriptLanguageParser
+
             ts_parser = TypeScriptLanguageParser()
             ts_ast = ts_parser.parse(ts_code)
             assert len(ts_ast.get("classes", [])) > 0
@@ -1131,6 +1140,7 @@ func (u *User) GetName() string {
 
         try:
             from rust.parser import RustLanguageParser
+
             rust_parser = RustLanguageParser()
             rust_ast = rust_parser.parse(rust_code)
             assert len(rust_ast.get("structs", [])) > 0
@@ -1139,18 +1149,22 @@ func (u *User) GetName() string {
 
         try:
             from go.parser import GoLanguageParser
+
             go_parser = GoLanguageParser()
             go_ast = go_parser.parse(go_code)
             assert len(go_ast.get("structs", [])) > 0
         except ImportError:
             pass
 
-    @pytest.mark.parametrize("language,file_ext", [
-        ("python", ".py"),
-        ("typescript", ".ts"),
-        ("rust", ".rs"),
-        ("go", ".go"),
-    ])
+    @pytest.mark.parametrize(
+        "language,file_ext",
+        [
+            ("python", ".py"),
+            ("typescript", ".ts"),
+            ("rust", ".rs"),
+            ("go", ".go"),
+        ],
+    )
     def test_parse_empty_file(self, temp_dir: Path, language: str, file_ext: str):
         """Test parsing empty files in all languages."""
         empty_file = temp_dir / f"empty{file_ext}"
@@ -1166,5 +1180,5 @@ func (u *User) GetName() string {
         except IndexError:
             # Python parser may have issues with completely empty files
             if language == "python":
-                pytest.skip(f"Python parser does not handle empty files")
+                pytest.skip("Python parser does not handle empty files")
             raise

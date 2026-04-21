@@ -1,6 +1,5 @@
 """Comprehensive tests for symbol extraction."""
 
-import pytest
 from pathlib import Path
 
 from cogant.static.symbols import SymbolExtractor
@@ -113,7 +112,7 @@ async def fetch_data():
             assert "." in method.qualified_name
         # Concrete: Database.__init__, .connect, .create_user, .get_user must exist.
         qnames = {m.qualified_name for m in methods}
-        database_methods = {q for q in qnames if q.split(".")[-2:-1] == ["Database"]}
+        {q for q in qnames if q.split(".")[-2:-1] == ["Database"]}
         # Accept either "Database.connect" or "<module>.Database.connect" suffixes.
         assert any(q.endswith("Database.connect") for q in qnames), (
             f"expected Database.connect method; got {sorted(qnames)}"
@@ -179,7 +178,7 @@ def module_func():
 
     def test_extract_scopes(self, temp_dir: Path):
         """Test extracting symbol scopes."""
-        code = '''
+        code = """
 PUBLIC_VAR = 10
 _PRIVATE_VAR = 20
 
@@ -195,7 +194,7 @@ class MyClass:
 def function():
     func_var = 70
     return func_var
-'''
+"""
         file_path = temp_dir / "scopes.py"
         file_path.write_text(code)
 
@@ -215,7 +214,7 @@ def function():
 
     def test_extract_with_decorators(self, temp_dir: Path):
         """Test extracting decorated symbols."""
-        code = '''
+        code = """
 @decorator
 def decorated_func():
     pass
@@ -230,7 +229,7 @@ class DecoratedClass:
     @staticmethod
     def static():
         pass
-'''
+"""
         file_path = temp_dir / "decorators.py"
         file_path.write_text(code)
 
@@ -251,12 +250,10 @@ class DecoratedClass:
         )
         assert "DecoratedClass" in decorated_names
         # The specific decorator strings should also survive to the symbol record.
-        decorated_class = next(
-            s for s in decorated if s.name == "DecoratedClass"
+        decorated_class = next(s for s in decorated if s.name == "DecoratedClass")
+        assert any("decorator1" in d for d in decorated_class.decorators), (
+            f"DecoratedClass decorators: {decorated_class.decorators}"
         )
-        assert any(
-            "decorator1" in d for d in decorated_class.decorators
-        ), f"DecoratedClass decorators: {decorated_class.decorators}"
 
     def test_extract_with_annotations(self, temp_dir: Path):
         """Test extracting symbols with type annotations."""
@@ -356,14 +353,14 @@ def my_function(x: int) -> str:
 
     def test_extract_from_source_string(self, temp_dir: Path):
         """Test extracting symbols from source code string."""
-        code = '''
+        code = """
 def test_func():
     pass
 
 class TestClass:
     def test_method(self):
         pass
-'''
+"""
         file_path = temp_dir / "source.py"
 
         extractor = SymbolExtractor()

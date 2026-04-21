@@ -91,8 +91,12 @@ class PipelineVisualizer:
             times = list(timing_dict.values())
 
             # Sort by time descending
-            sorted_pairs = sorted(zip(stages, times, strict=False), key=lambda x: x[1], reverse=True)
-            sorted_stages, sorted_times = zip(*sorted_pairs, strict=False) if sorted_pairs else ([], [])
+            sorted_pairs = sorted(
+                zip(stages, times, strict=False), key=lambda x: x[1], reverse=True
+            )
+            sorted_stages, sorted_times = (
+                zip(*sorted_pairs, strict=False) if sorted_pairs else ([], [])
+            )
 
             ax.barh(sorted_stages, sorted_times, color="steelblue", alpha=0.8)
             ax.set_xlabel("Time (seconds)")
@@ -147,10 +151,16 @@ class PipelineVisualizer:
                 res = {
                     attr: getattr(pipeline_result, attr, None)
                     for attr in (
-                        "node_counts", "node_count_by_stage",
-                        "edge_counts", "edge_count_by_stage",
-                        "rule_firings", "validation_findings", "findings",
-                        "stage_results", "stage_timings", "timing",
+                        "node_counts",
+                        "node_count_by_stage",
+                        "edge_counts",
+                        "edge_count_by_stage",
+                        "rule_firings",
+                        "validation_findings",
+                        "findings",
+                        "stage_results",
+                        "stage_timings",
+                        "timing",
                     )
                 }
 
@@ -173,8 +183,10 @@ class PipelineVisualizer:
             def _finding_series() -> dict[str, float]:
                 findings = res.get("validation_findings") or res.get("findings")
                 if isinstance(findings, dict):
-                    return {k: float(v if not isinstance(v, list) else len(v))
-                            for k, v in findings.items()}
+                    return {
+                        k: float(v if not isinstance(v, list) else len(v))
+                        for k, v in findings.items()
+                    }
                 if isinstance(findings, list):
                     return {"total": float(len(findings))}
                 stage_results: dict[str, Any] = res.get("stage_results") or {}
@@ -203,8 +215,9 @@ class PipelineVisualizer:
                     ax.set_xlabel("Count")
                     ax.grid(axis="x", alpha=0.3)
                 else:
-                    ax.text(0.5, 0.5, "No data", ha="center", va="center",
-                            fontsize=11, color="#AAAAAA")
+                    ax.text(
+                        0.5, 0.5, "No data", ha="center", va="center", fontsize=11, color="#AAAAAA"
+                    )
                     ax.set_xlim(0, 1)
                     ax.set_ylim(0, 1)
                     ax.axis("off")
@@ -296,14 +309,30 @@ class PipelineVisualizer:
             for i, stage in enumerate(stages):
                 color = "lightblue" if i % 2 == 0 else "lightgreen"
                 box = FancyBboxPatch(
-                    (0.1, y_pos - 0.08), 0.8, 0.07, boxstyle="round,pad=0.01",
-                    edgecolor="black", facecolor=color, linewidth=2
+                    (0.1, y_pos - 0.08),
+                    0.8,
+                    0.07,
+                    boxstyle="round,pad=0.01",
+                    edgecolor="black",
+                    facecolor=color,
+                    linewidth=2,
                 )
                 ax.add_patch(box)
-                ax.text(0.5, y_pos - 0.045, f"{i+1}. {stage}", ha="center", va="center", fontsize=11)
+                ax.text(
+                    0.5, y_pos - 0.045, f"{i + 1}. {stage}", ha="center", va="center", fontsize=11
+                )
 
                 if i < len(stages) - 1:
-                    ax.arrow(0.5, y_pos - 0.08, 0, -0.02, head_width=0.05, head_length=0.01, fc="black", ec="black")
+                    ax.arrow(
+                        0.5,
+                        y_pos - 0.08,
+                        0,
+                        -0.02,
+                        head_width=0.05,
+                        head_length=0.01,
+                        fc="black",
+                        ec="black",
+                    )
 
                 y_pos -= 0.09
 
@@ -360,14 +389,30 @@ class PipelineVisualizer:
             for i, stage in enumerate(stages):
                 color = "lightblue" if i % 2 == 0 else "lightgreen"
                 box = FancyBboxPatch(
-                    (0.1, y_pos - 0.08), 0.8, 0.07, boxstyle="round,pad=0.01",
-                    edgecolor="black", facecolor=color, linewidth=2
+                    (0.1, y_pos - 0.08),
+                    0.8,
+                    0.07,
+                    boxstyle="round,pad=0.01",
+                    edgecolor="black",
+                    facecolor=color,
+                    linewidth=2,
                 )
                 ax.add_patch(box)
-                ax.text(0.5, y_pos - 0.045, f"{i+1}. {stage}", ha="center", va="center", fontsize=11)
+                ax.text(
+                    0.5, y_pos - 0.045, f"{i + 1}. {stage}", ha="center", va="center", fontsize=11
+                )
 
                 if i < len(stages) - 1:
-                    ax.arrow(0.5, y_pos - 0.08, 0, -0.02, head_width=0.05, head_length=0.01, fc="black", ec="black")
+                    ax.arrow(
+                        0.5,
+                        y_pos - 0.08,
+                        0,
+                        -0.02,
+                        head_width=0.05,
+                        head_length=0.01,
+                        fc="black",
+                        ec="black",
+                    )
 
                 y_pos -= 0.09
 
@@ -449,8 +494,12 @@ class PipelineVisualizer:
             memory_mb = [v / (1024 * 1024) for v in memory_dict.values()]  # Convert to MB
 
             # Sort by memory descending
-            sorted_pairs = sorted(zip(stages, memory_mb, strict=False), key=lambda x: x[1], reverse=True)
-            stages_sorted, memory_sorted = zip(*sorted_pairs, strict=False) if sorted_pairs else ([], [])
+            sorted_pairs = sorted(
+                zip(stages, memory_mb, strict=False), key=lambda x: x[1], reverse=True
+            )
+            stages_sorted, memory_sorted = (
+                zip(*sorted_pairs, strict=False) if sorted_pairs else ([], [])
+            )
 
             bars = ax.barh(stages_sorted, memory_sorted, color="steelblue", alpha=0.7)
             ax.set_xlabel("Memory (MB)")
@@ -460,8 +509,13 @@ class PipelineVisualizer:
             # Add value labels
             for bar, memory in zip(bars, memory_sorted, strict=False):
                 width = bar.get_width()
-                ax.text(width, bar.get_y() + bar.get_height() / 2, f" {memory:.1f} MB",
-                       va="center", fontsize=10)
+                ax.text(
+                    width,
+                    bar.get_y() + bar.get_height() / 2,
+                    f" {memory:.1f} MB",
+                    va="center",
+                    fontsize=10,
+                )
 
             fig.tight_layout()
             return fig
@@ -515,14 +569,18 @@ class PipelineVisualizer:
                         metric_names = list(metrics.keys())[:3]  # Top 3 metrics
                         metric_values = [metrics[m] for m in metric_names]
 
-                        ax.bar(range(len(metric_names)), metric_values, color="steelblue", alpha=0.7)
+                        ax.bar(
+                            range(len(metric_names)), metric_values, color="steelblue", alpha=0.7
+                        )
                         ax.set_xticks(range(len(metric_names)))
                         ax.set_xticklabels(metric_names, rotation=45, ha="right", fontsize=8)
                         ax.set_ylabel("Value")
                         ax.set_title(f"Stage {idx + 1}: {stage}", fontsize=10, weight="bold")
                         ax.grid(axis="y", alpha=0.3)
                     else:
-                        ax.text(0.5, 0.5, f"{stage}\n(no data)", ha="center", va="center", fontsize=10)
+                        ax.text(
+                            0.5, 0.5, f"{stage}\n(no data)", ha="center", va="center", fontsize=10
+                        )
                         ax.set_xlim(0, 1)
                         ax.set_ylim(0, 1)
                 else:

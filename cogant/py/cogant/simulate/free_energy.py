@@ -76,9 +76,7 @@ def variational_free_energy(
         return 0.0
 
     if len(prior) != n_states:
-        raise ValueError(
-            f"prior length {len(prior)} does not match beliefs length {n_states}"
-        )
+        raise ValueError(f"prior length {len(prior)} does not match beliefs length {n_states}")
 
     n_obs = len(likelihood_matrix)
     if n_obs == 0:
@@ -93,16 +91,12 @@ def variational_free_energy(
 
     for row in likelihood_matrix:
         if len(row) != n_states:
-            raise ValueError(
-                "likelihood_matrix rows must have n_states entries"
-            )
+            raise ValueError("likelihood_matrix rows must have n_states entries")
 
     if observation is None:
         observation = [1.0 / n_obs] * n_obs
     elif len(observation) != n_obs:
-        raise ValueError(
-            f"observation length {len(observation)} does not match n_obs {n_obs}"
-        )
+        raise ValueError(f"observation length {len(observation)} does not match n_obs {n_obs}")
 
     # KL[Q || P]: complexity.
     kl = 0.0
@@ -198,9 +192,7 @@ def expected_free_energy(
         return 0.0
 
     if len(log_preferences) != n_obs:
-        raise ValueError(
-            f"log_preferences length {len(log_preferences)} != n_obs {n_obs}"
-        )
+        raise ValueError(f"log_preferences length {len(log_preferences)} != n_obs {n_obs}")
 
     current = list(beliefs)
     total_efe = 0.0
@@ -410,9 +402,7 @@ class FreeEnergyCalculator:
         """Rank policies by expected free energy (ascending — lower is better)."""
         rankings = []
         for action in available_actions:
-            efe = self.expected_free_energy(
-                beliefs, [action], horizon, likelihood_model
-            )
+            efe = self.expected_free_energy(beliefs, [action], horizon, likelihood_model)
             rankings.append((action, efe))
         return sorted(rankings, key=lambda x: x[1])
 

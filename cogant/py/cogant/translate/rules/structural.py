@@ -83,11 +83,13 @@ class ReadOnlyInputRule(TranslationRule):
 
             # Check if predominantly read-only
             if reads > 0 and writes == 0:
-                matches.append({
-                    "node_id": module.id,
-                    "read_count": reads,
-                    "write_count": writes,
-                })
+                matches.append(
+                    {
+                        "node_id": module.id,
+                        "read_count": reads,
+                        "write_count": writes,
+                    }
+                )
 
         return matches
 
@@ -185,7 +187,10 @@ class MutatingSubsystemRule(TranslationRule):
             # Count mutations (WRITES and MUTATES edges targeting this class)
             mutation_edges = []
             for edge in graph.edges.values():
-                if (edge.target_id == cls.id or edge.source_id == cls.id) and edge.kind in (EdgeKind.WRITES, EdgeKind.MUTATES):
+                if (edge.target_id == cls.id or edge.source_id == cls.id) and edge.kind in (
+                    EdgeKind.WRITES,
+                    EdgeKind.MUTATES,
+                ):
                     mutation_edges.append(edge)
 
             # Mutation-count threshold >=1. Principled default: any
@@ -197,11 +202,13 @@ class MutatingSubsystemRule(TranslationRule):
             # positives on incidental ``__init__`` assignments.
             # TODO(calibration): sweep {1, 2, 3} on the 20-repo corpus.
             if len(mutation_edges) >= 1:
-                matches.append({
-                    "node_id": cls.id,
-                    "mutation_count": len(mutation_edges),
-                    "mutation_edges": [e.id for e in mutation_edges],
-                })
+                matches.append(
+                    {
+                        "node_id": cls.id,
+                        "mutation_count": len(mutation_edges),
+                        "mutation_edges": [e.id for e in mutation_edges],
+                    }
+                )
 
         return matches
 
@@ -278,9 +285,9 @@ class MutatingSubsystemRule(TranslationRule):
 
         mutation_edges = []
         for edge in graph.edges.values():
-            if (
-                (edge.target_id == node.id or edge.source_id == node.id)
-                and edge.kind in (EdgeKind.WRITES, EdgeKind.MUTATES)
+            if (edge.target_id == node.id or edge.source_id == node.id) and edge.kind in (
+                EdgeKind.WRITES,
+                EdgeKind.MUTATES,
             ):
                 mutation_edges.append(edge)
 
@@ -288,10 +295,7 @@ class MutatingSubsystemRule(TranslationRule):
             f"mutation edges (WRITES|MUTATES) touching class: {len(mutation_edges)}",
         ]
         if mutation_edges:
-            sample = [
-                f"{e.kind.value}:{e.source_id}->{e.target_id}"
-                for e in mutation_edges[:5]
-            ]
+            sample = [f"{e.kind.value}:{e.source_id}->{e.target_id}" for e in mutation_edges[:5]]
             evidence.append(f"sample: {sample}")
 
         if len(mutation_edges) >= 1:
@@ -311,9 +315,7 @@ class MutatingSubsystemRule(TranslationRule):
             rule_name=self.name,
             priority=self.priority,
             fired=False,
-            reason=(
-                f"class '{node.name}' has no WRITES/MUTATES edges"
-            ),
+            reason=(f"class '{node.name}' has no WRITES/MUTATES edges"),
             evidence=evidence,
             mapping_kind=self.mapping_kind.value,
         )
@@ -380,11 +382,13 @@ class InheritanceRule(TranslationRule):
 
             if inherit_edges:
                 base_ids = [e.target_id for e in inherit_edges]
-                matches.append({
-                    "node_id": cls.id,
-                    "base_ids": base_ids,
-                    "base_count": len(base_ids),
-                })
+                matches.append(
+                    {
+                        "node_id": cls.id,
+                        "base_ids": base_ids,
+                        "base_count": len(base_ids),
+                    }
+                )
 
         return matches
 
@@ -505,11 +509,13 @@ class ContainmentRule(TranslationRule):
             # small-class/large-class boundary. TODO(calibration):
             # sweep {3, 5, 8} on the 20-repo corpus.
             if len(method_ids) >= 5:
-                matches.append({
-                    "node_id": cls.id,
-                    "method_ids": method_ids,
-                    "method_count": len(method_ids),
-                })
+                matches.append(
+                    {
+                        "node_id": cls.id,
+                        "method_ids": method_ids,
+                        "method_count": len(method_ids),
+                    }
+                )
 
         return matches
 
@@ -656,13 +662,15 @@ class DataPipelineRule(TranslationRule):
 
             # Read sources must differ from write targets (transformation, not echo)
             if read_targets != write_targets:
-                matches.append({
-                    "node_id": node.id,
-                    "read_targets": list(read_targets),
-                    "write_targets": list(write_targets),
-                    "read_count": len(read_edges),
-                    "write_count": len(write_edges),
-                })
+                matches.append(
+                    {
+                        "node_id": node.id,
+                        "read_targets": list(read_targets),
+                        "write_targets": list(write_targets),
+                        "read_count": len(read_edges),
+                        "write_count": len(write_edges),
+                    }
+                )
 
         return matches
 
@@ -683,9 +691,7 @@ class DataPipelineRule(TranslationRule):
             return None
 
         fragment_node_ids = (
-            [node_id]
-            + match.get("read_targets", [])
-            + match.get("write_targets", [])
+            [node_id] + match.get("read_targets", []) + match.get("write_targets", [])
         )
 
         mapping_id = f"dpipe_{node_id}_{hashlib.sha256(b'data_pipeline').hexdigest()[:8]}"

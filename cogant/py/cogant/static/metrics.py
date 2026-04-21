@@ -269,9 +269,7 @@ class MetricsAnalyzer:
         public_count = visitor.public_symbols
         documented_count = visitor.documented_symbols
 
-        docstring_coverage = (
-            documented_count / public_count if public_count > 0 else 0.0
-        )
+        docstring_coverage = documented_count / public_count if public_count > 0 else 0.0
 
         return CodeMetrics(
             lines_of_code=loc,

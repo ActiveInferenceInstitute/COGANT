@@ -35,7 +35,6 @@ from cogant.server.models import (  # noqa: E402
     RoundtripResponse,
 )
 
-
 # --------------------------- AnalyzeRequest ----------------------------- #
 
 

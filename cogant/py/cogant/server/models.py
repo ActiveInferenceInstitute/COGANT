@@ -241,18 +241,14 @@ class TranslateOptions(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    include_viz: bool = Field(
-        default=False, description="Include visualization in response"
-    )
+    include_viz: bool = Field(default=False, description="Include visualization in response")
     viz_format: Literal["mermaid", "json", "graphml"] = Field(
         default="json", description="Visualization format"
     )
     markov_seed: Literal["auto", "module", "class", "subgraph", "manual"] = Field(
         default="auto", description="Markov blanket partition strategy"
     )
-    incremental: bool = Field(
-        default=False, description="Enable incremental mode (use cache)"
-    )
+    incremental: bool = Field(default=False, description="Enable incremental mode (use cache)")
 
 
 class TranslateRequest(BaseModel):
@@ -267,9 +263,7 @@ class TranslateRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    source_code: str = Field(
-        ..., min_length=1, description="Source code to translate"
-    )
+    source_code: str = Field(..., min_length=1, description="Source code to translate")
     language: Literal["python", "javascript", "typescript"] = Field(
         ..., description="Programming language"
     )
@@ -297,9 +291,7 @@ class TranslateResponse(BaseModel):
     semantic_mappings: dict[str, Any] = Field(
         default_factory=dict, description="Semantic role assignments by node"
     )
-    validator_score: int = Field(
-        ..., ge=0, le=100, description="AII validator score (0-100)"
-    )
+    validator_score: int = Field(..., ge=0, le=100, description="AII validator score (0-100)")
     viz: str | None = Field(default=None, description="Optional visualization")
     timing: dict[str, float] = Field(
         default_factory=dict, description="Per-stage timing in milliseconds"
@@ -326,9 +318,7 @@ class AnalysisRequest(BaseModel):
     stages: list[str] | None = Field(
         default=None, description="Explicit pipeline stages (None = default)"
     )
-    skip_dynamic: bool = Field(
-        default=True, description="Skip dynamic analysis enrichment"
-    )
+    skip_dynamic: bool = Field(default=True, description="Skip dynamic analysis enrichment")
 
 
 class AnalysisResponse(BaseModel):
@@ -350,9 +340,7 @@ class AnalysisResponse(BaseModel):
     nodes: int = Field(..., ge=0, description="Node count")
     edges: int = Field(..., ge=0, description="Edge count")
     mappings: int = Field(..., ge=0, description="Semantic mapping count")
-    roles: dict[str, int] = Field(
-        default_factory=dict, description="Role distribution"
-    )
+    roles: dict[str, int] = Field(default_factory=dict, description="Role distribution")
     errors: list[str] = Field(default_factory=list, description="Pipeline errors")
     timing: dict[str, float] = Field(
         default_factory=dict, description="Per-stage timing in milliseconds"
@@ -402,18 +390,14 @@ class RoundtripResponseV1(BaseModel):
     role_match_score: float = Field(
         ..., ge=0.0, le=1.0, description="Forward-reverse role match score"
     )
-    is_isomorphic: bool = Field(
-        ..., description="Whether role_match_score >= threshold"
-    )
+    is_isomorphic: bool = Field(..., description="Whether role_match_score >= threshold")
     original_roles: dict[str, int] = Field(
         default_factory=dict, description="Forward pass role histogram"
     )
     synthesized_roles: dict[str, int] = Field(
         default_factory=dict, description="Reverse pass role histogram"
     )
-    threshold: float = Field(
-        ..., ge=0.0, le=1.0, description="Isomorphic threshold"
-    )
+    threshold: float = Field(..., ge=0.0, le=1.0, description="Isomorphic threshold")
     errors: list[str] = Field(default_factory=list, description="Round-trip errors")
     timing: dict[str, float] = Field(
         default_factory=dict, description="Per-stage timing in milliseconds"
@@ -441,12 +425,8 @@ class RuleMetadata(BaseModel):
     name: str = Field(..., description="Rule name")
     family: str = Field(..., description="Rule family")
     description: str = Field(..., description="Rule description")
-    confidence_min: float = Field(
-        ..., ge=0.0, le=1.0, description="Minimum confidence"
-    )
-    confidence_max: float = Field(
-        ..., ge=0.0, le=1.0, description="Maximum confidence"
-    )
+    confidence_min: float = Field(..., ge=0.0, le=1.0, description="Minimum confidence")
+    confidence_max: float = Field(..., ge=0.0, le=1.0, description="Maximum confidence")
 
 
 class RulesResponse(BaseModel):
@@ -480,9 +460,7 @@ class VisualizeRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    source_code: str = Field(
-        ..., min_length=1, description="Source code to visualize"
-    )
+    source_code: str = Field(..., min_length=1, description="Source code to visualize")
     language: Literal["python", "javascript", "typescript"] = Field(
         ..., description="Programming language"
     )

@@ -1,7 +1,11 @@
 """Unit tests for viz/html_renderer.py — HTMLSiteRenderer."""
-import os, sys
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 import pytest
+
 from cogant.viz.html_renderer import HTMLSiteRenderer
 
 
@@ -100,6 +104,5 @@ def test_render_data_json_created(renderer, tmp_path):
     out = tmp_path / "site7"
     renderer.render(str(out))
     # data.json or similar should exist in assets
-    import os
     files = list(out.rglob("*.json"))
     assert len(files) >= 1

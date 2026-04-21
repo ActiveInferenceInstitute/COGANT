@@ -220,9 +220,7 @@ def upstream_process_directory_lightweight(
 ) -> Any:
     """Call upstream ``process_gnn_directory_lightweight``."""
     mod = _require_src_gnn()
-    return mod.process_gnn_directory_lightweight(
-        Path(input_dir), Path(output_dir), **kwargs
-    )
+    return mod.process_gnn_directory_lightweight(Path(input_dir), Path(output_dir), **kwargs)
 
 
 def upstream_generate_report(*args: Any, **kwargs: Any) -> Any:
@@ -251,9 +249,7 @@ def upstream_process_multi_format(
 ) -> Any:
     """Call upstream ``process_gnn_multi_format`` (may import upstream pipeline helpers)."""
     mod = _require_src_gnn()
-    return mod.process_gnn_multi_format(
-        Path(input_dir), Path(output_dir), log or logger, **kwargs
-    )
+    return mod.process_gnn_multi_format(Path(input_dir), Path(output_dir), log or logger, **kwargs)
 
 
 def upstream_parse_formal(*args: Any, **kwargs: Any) -> Any:

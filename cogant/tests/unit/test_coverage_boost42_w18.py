@@ -20,6 +20,7 @@ pytestmark = pytest.mark.unit
 def _make_state_space():
     from cogant.statespace.compiler import StateSpaceModel
     from cogant.statespace.temporal import TimeRegime
+
     return StateSpaceModel(
         id="ss1",
         schema_name="test_schema",
@@ -35,6 +36,7 @@ def _make_state_space():
 
 def _make_process_model():
     from cogant.process.extractor import ProcessModel
+
     return ProcessModel(
         id="pm1",
         schema_name="test_process",
@@ -67,7 +69,7 @@ def _make_builder_with_nodes():
     """Create a builder whose graph has some nodes and edges."""
     from cogant.gnn.package import GNNPackageBuilder
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test")
     mod = builder.add_node(NodeKind.MODULE, "mymod", "mymod", path="mymod.py")
@@ -93,39 +95,46 @@ def _make_builder_with_nodes():
 # Static helpers
 # ---------------------------------------------------------------------------
 
+
 class TestChecksumHelpers:
     def test_checksum_returns_string(self):
         from cogant.gnn.package import GNNPackageBuilder
+
         result = GNNPackageBuilder._checksum("hello world")
         assert isinstance(result, str)
         assert len(result) == 64  # SHA256 hex
 
     def test_checksum_deterministic(self):
         from cogant.gnn.package import GNNPackageBuilder
+
         r1 = GNNPackageBuilder._checksum("data")
         r2 = GNNPackageBuilder._checksum("data")
         assert r1 == r2
 
     def test_checksum_different_inputs(self):
         from cogant.gnn.package import GNNPackageBuilder
+
         r1 = GNNPackageBuilder._checksum("hello")
         r2 = GNNPackageBuilder._checksum("world")
         assert r1 != r2
 
     def test_checksum_dict_returns_string(self):
         from cogant.gnn.package import GNNPackageBuilder
+
         result = GNNPackageBuilder._checksum_dict({"key": "value"})
         assert isinstance(result, str)
         assert len(result) == 64
 
     def test_checksum_dict_deterministic(self):
         from cogant.gnn.package import GNNPackageBuilder
+
         r1 = GNNPackageBuilder._checksum_dict({"a": 1, "b": 2})
         r2 = GNNPackageBuilder._checksum_dict({"a": 1, "b": 2})
         assert r1 == r2
 
     def test_checksum_dict_empty(self):
         from cogant.gnn.package import GNNPackageBuilder
+
         result = GNNPackageBuilder._checksum_dict({})
         assert isinstance(result, str)
 
@@ -134,10 +143,12 @@ class TestEnumValue:
     def test_enum_returns_value(self):
         from cogant.gnn.package import _enum_value
         from cogant.schemas.core import NodeKind
+
         assert _enum_value(NodeKind.FUNCTION) == NodeKind.FUNCTION.value
 
     def test_non_enum_returns_as_is(self):
         from cogant.gnn.package import _enum_value
+
         assert _enum_value("plain string") == "plain string"
         assert _enum_value(42) == 42
         assert _enum_value(None) is None
@@ -146,6 +157,7 @@ class TestEnumValue:
 # ---------------------------------------------------------------------------
 # Count helpers
 # ---------------------------------------------------------------------------
+
 
 class TestCountHelpers:
     def test_count_graph_nodes_empty(self):
@@ -203,7 +215,7 @@ class TestCountHelpers:
     def test_count_mappings_by_tier_with_mappings(self):
         from cogant.gnn.package import GNNPackageBuilder
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.schemas.semantic import MappingKind, ConfidenceTier, SemanticMapping
+        from cogant.schemas.semantic import ConfidenceTier, MappingKind, SemanticMapping
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         graph = builder.finalize()
@@ -216,8 +228,10 @@ class TestCountHelpers:
         )
         mappings = {"m1": m}
         b = GNNPackageBuilder(
-            graph=graph, state_space=_make_state_space(),
-            process_model=_make_process_model(), mappings=mappings,
+            graph=graph,
+            state_space=_make_state_space(),
+            process_model=_make_process_model(),
+            mappings=mappings,
         )
         result = b._count_mappings_by_tier()
         assert isinstance(result, dict)
@@ -226,6 +240,7 @@ class TestCountHelpers:
 # ---------------------------------------------------------------------------
 # Extract helpers
 # ---------------------------------------------------------------------------
+
 
 class TestExtractClasses:
     def test_empty_graph_returns_empty(self):
@@ -261,9 +276,7 @@ class TestExtractOntologyMappings:
     def test_with_mapping(self):
         from cogant.gnn.package import GNNPackageBuilder
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.statespace.compiler import StateSpaceModel
-        from cogant.process.extractor import ProcessModel
-        from cogant.schemas.semantic import MappingKind, ConfidenceTier, SemanticMapping
+        from cogant.schemas.semantic import ConfidenceTier, MappingKind, SemanticMapping
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         graph = builder.finalize()
@@ -333,9 +346,7 @@ class TestExtractConstraints:
     def test_with_constraint_mapping(self):
         from cogant.gnn.package import GNNPackageBuilder
         from cogant.graph.builder import ProgramGraphBuilder
-        from cogant.statespace.compiler import StateSpaceModel
-        from cogant.process.extractor import ProcessModel
-        from cogant.schemas.semantic import MappingKind, ConfidenceTier, SemanticMapping
+        from cogant.schemas.semantic import ConfidenceTier, MappingKind, SemanticMapping
 
         builder = ProgramGraphBuilder(repo_uri="file:///test")
         graph = builder.finalize()

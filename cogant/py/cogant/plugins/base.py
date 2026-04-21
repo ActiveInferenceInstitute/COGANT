@@ -162,9 +162,7 @@ class StateSpacePlugin(Plugin):
         pass
 
     @abstractmethod
-    def extract_observations(
-        self, gnn_model: dict[str, Any]
-    ) -> list[dict[str, Any]]:
+    def extract_observations(self, gnn_model: dict[str, Any]) -> list[dict[str, Any]]:
         """Define observation space."""
         pass
 
@@ -175,7 +173,10 @@ class StateSpacePlugin(Plugin):
 
     @abstractmethod
     def learn_policies(
-        self, states: list[dict[str, Any]], observations: list[dict[str, Any]], actions: list[dict[str, Any]]
+        self,
+        states: list[dict[str, Any]],
+        observations: list[dict[str, Any]],
+        actions: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         """Learn policies from model."""
         pass
@@ -222,9 +223,7 @@ class ExportPlugin(Plugin):
     supported_formats: set[str] = set()
 
     @abstractmethod
-    def export(
-        self, bundle: dict[str, Any], output_path: str, format: str
-    ) -> None:
+    def export(self, bundle: dict[str, Any], output_path: str, format: str) -> None:
         """Export bundle in specified format."""
         pass
 
@@ -268,9 +267,7 @@ class VisualizationPlugin(Plugin):
     supported_visualizations: set[str] = set()
 
     @abstractmethod
-    def render(
-        self, bundle: dict[str, Any], output_path: str, viz_type: str
-    ) -> None:
+    def render(self, bundle: dict[str, Any], output_path: str, viz_type: str) -> None:
         """Render visualization."""
         pass
 

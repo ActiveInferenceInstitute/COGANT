@@ -242,15 +242,20 @@ class GraphMerger:
 
         # Merge edges from dynamic graph
         for dynamic_edge in dynamic_graph.edges.values():
-            if dynamic_edge.source_id not in merged.nodes or dynamic_edge.target_id not in merged.nodes:
+            if (
+                dynamic_edge.source_id not in merged.nodes
+                or dynamic_edge.target_id not in merged.nodes
+            ):
                 continue
 
             # Check if edge exists in merged graph
             existing_edge = None
             for merged_edge in merged.edges.values():
-                if (merged_edge.source_id == dynamic_edge.source_id and
-                    merged_edge.target_id == dynamic_edge.target_id and
-                    merged_edge.kind == dynamic_edge.kind):
+                if (
+                    merged_edge.source_id == dynamic_edge.source_id
+                    and merged_edge.target_id == dynamic_edge.target_id
+                    and merged_edge.kind == dynamic_edge.kind
+                ):
                     existing_edge = merged_edge
                     break
 
@@ -412,9 +417,11 @@ class GraphMerger:
 
             existing_edge = None
             for merged_edge in merged.edges.values():
-                if (merged_edge.source_id == delta_edge.source_id and
-                    merged_edge.target_id == delta_edge.target_id and
-                    merged_edge.kind == delta_edge.kind):
+                if (
+                    merged_edge.source_id == delta_edge.source_id
+                    and merged_edge.target_id == delta_edge.target_id
+                    and merged_edge.kind == delta_edge.kind
+                ):
                     existing_edge = merged_edge
                     break
 
@@ -473,20 +480,10 @@ class GraphMerger:
                 diff.changed_nodes[node_id] = changes
 
         # Find added and removed edges
-        g1_edges = {
-            (e.source_id, e.target_id, e.kind.value)
-            for e in g1.edges.values()
-        }
-        g2_edges = {
-            (e.source_id, e.target_id, e.kind.value)
-            for e in g2.edges.values()
-        }
+        g1_edges = {(e.source_id, e.target_id, e.kind.value) for e in g1.edges.values()}
+        g2_edges = {(e.source_id, e.target_id, e.kind.value) for e in g2.edges.values()}
 
-        diff.added_edges = sorted(
-            [(s, t) for s, t, _ in (g2_edges - g1_edges)]
-        )
-        diff.removed_edges = sorted(
-            [(s, t) for s, t, _ in (g1_edges - g2_edges)]
-        )
+        diff.added_edges = sorted([(s, t) for s, t, _ in (g2_edges - g1_edges)])
+        diff.removed_edges = sorted([(s, t) for s, t, _ in (g1_edges - g2_edges)])
 
         return diff

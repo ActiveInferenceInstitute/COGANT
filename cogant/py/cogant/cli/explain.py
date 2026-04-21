@@ -143,10 +143,7 @@ def _run_pipeline(repo_path: str) -> Bundle:
 
     if bundle.get_artifact(ArtifactKey.PROGRAM_GRAPH) is None:
         errors = "; ".join(bundle.errors) if bundle.errors else "unknown error"
-        raise RuntimeError(
-            f"pipeline did not produce a program graph for {repo_path!r}: "
-            f"{errors}"
-        )
+        raise RuntimeError(f"pipeline did not produce a program graph for {repo_path!r}: {errors}")
     return bundle
 
 
@@ -196,24 +193,17 @@ def resolve_node(graph: ProgramGraph, query: str) -> Node:
     # Step 2: case-insensitive exact match
     q_lower = query.lower()
     for node in graph.nodes.values():
-        if (
-            (node.name or "").lower() == q_lower
-            or (node.qualified_name or "").lower() == q_lower
-        ):
+        if (node.name or "").lower() == q_lower or (node.qualified_name or "").lower() == q_lower:
             return node
 
     # Step 3: case-insensitive substring on name, prefer shortest
-    candidates = [
-        node for node in graph.nodes.values()
-        if q_lower in (node.name or "").lower()
-    ]
+    candidates = [node for node in graph.nodes.values() if q_lower in (node.name or "").lower()]
     if candidates:
         candidates.sort(key=lambda n: (len(n.name or ""), n.name or ""))
         return candidates[0]
 
     raise NodeNotFoundError(
-        f"no node matches query {query!r}. "
-        f"sample candidates: {_candidate_sample(graph)}"
+        f"no node matches query {query!r}. sample candidates: {_candidate_sample(graph)}"
     )
 
 
@@ -266,9 +256,7 @@ def _compute_blanket_role(graph: ProgramGraph, node: Node) -> str:
 
     try:
         if module_hint:
-            blanket = extractor.extract(
-                strategy="module", module_names=[module_hint]
-            )
+            blanket = extractor.extract(strategy="module", module_names=[module_hint])
         else:
             blanket = extractor.extract(strategy="auto")
     except (ValueError, KeyError):
@@ -308,18 +296,13 @@ def explain_node(repo_path: str, node_query: str) -> ExplainResult:
 
     node = resolve_node(graph, node_query)
 
-    engine: TranslationEngine | None = bundle.get_artifact(
-        ArtifactKey.TRANSLATION_ENGINE
-    )
+    engine: TranslationEngine | None = bundle.get_artifact(ArtifactKey.TRANSLATION_ENGINE)
     if engine is None:
         raise RuntimeError(
-            "translate stage did not register a translation engine; "
-            "cannot explain rule decisions"
+            "translate stage did not register a translation engine; cannot explain rule decisions"
         )
 
-    mappings: dict[str, SemanticMapping] = (
-        bundle.get_artifact(ArtifactKey.SEMANTIC_MAPPINGS) or {}
-    )
+    mappings: dict[str, SemanticMapping] = bundle.get_artifact(ArtifactKey.SEMANTIC_MAPPINGS) or {}
     query = GraphQuery(graph)
 
     rules_fired: list[RuleExplanation] = []
@@ -334,11 +317,7 @@ def explain_node(repo_path: str, node_query: str) -> ExplainResult:
                 fired=False,
                 reason=f"explain() raised: {type(exc).__name__}: {exc}",
                 evidence=[],
-                mapping_kind=(
-                    rule.mapping_kind.value
-                    if hasattr(rule, "mapping_kind")
-                    else None
-                ),
+                mapping_kind=(rule.mapping_kind.value if hasattr(rule, "mapping_kind") else None),
             )
         if rx.fired:
             rules_fired.append(rx)
@@ -349,15 +328,9 @@ def explain_node(repo_path: str, node_query: str) -> ExplainResult:
     rules_considered.sort(key=lambda r: (-r.priority, r.rule_name))
 
     assigned_mapping = _find_assigned_mapping(node.id, mappings)
-    assigned_role = (
-        assigned_mapping.kind.value if assigned_mapping is not None else None
-    )
-    mapping_label = (
-        assigned_mapping.semantic_label if assigned_mapping is not None else None
-    )
-    mapping_description = (
-        assigned_mapping.description if assigned_mapping is not None else None
-    )
+    assigned_role = assigned_mapping.kind.value if assigned_mapping is not None else None
+    mapping_label = assigned_mapping.semantic_label if assigned_mapping is not None else None
+    mapping_description = assigned_mapping.description if assigned_mapping is not None else None
 
     blanket_role = _compute_blanket_role(graph, node)
 

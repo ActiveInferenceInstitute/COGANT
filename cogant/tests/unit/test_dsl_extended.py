@@ -10,16 +10,15 @@ from __future__ import annotations
 
 import pytest
 
-from cogant.translate.dsl import DSLRuleSet, load_rules_from_dict, compile_ruleset
-from cogant.translate.dsl.schema import DSLCondition, DSLRule, KNOWN_CONDITION_KEYS
-from cogant.translate.dsl.compiler import CompiledRule, _evaluate_condition
-from cogant.schemas.core import Node, NodeKind, EdgeKind, Edge
+from cogant.schemas.core import Node, NodeKind
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
-
+from cogant.translate.dsl import DSLRuleSet, compile_ruleset, load_rules_from_dict
+from cogant.translate.dsl.schema import KNOWN_CONDITION_KEYS, DSLCondition
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _simple_graph(
     node_kind: NodeKind = NodeKind.CLASS,
@@ -53,11 +52,13 @@ def test_load_rules_missing_rules_key() -> None:
 def test_load_rule_without_conditions() -> None:
     """A rule with no conditions list is valid (matches everything)."""
     data = {
-        "rules": [{
-            "name": "CatchAll",
-            "role": "OBSERVATION",
-            "confidence": 0.5,
-        }]
+        "rules": [
+            {
+                "name": "CatchAll",
+                "role": "OBSERVATION",
+                "confidence": 0.5,
+            }
+        ]
     }
     ruleset = load_rules_from_dict(data)
     assert len(ruleset.rules) == 1
@@ -81,12 +82,14 @@ def test_load_multiple_rules() -> None:
 def test_load_rule_confidence_is_float() -> None:
     """Confidence value is coerced to float even when provided as int."""
     data = {
-        "rules": [{
-            "name": "IntConf",
-            "role": "HIDDEN_STATE",
-            "confidence": 1,
-            "conditions": [],
-        }]
+        "rules": [
+            {
+                "name": "IntConf",
+                "role": "HIDDEN_STATE",
+                "confidence": 1,
+                "conditions": [],
+            }
+        ]
     }
     ruleset = load_rules_from_dict(data)
     assert isinstance(ruleset.rules[0].confidence, float)
@@ -95,7 +98,9 @@ def test_load_rule_confidence_is_float() -> None:
 
 def test_known_condition_keys_are_exhaustive() -> None:
     """KNOWN_CONDITION_KEYS contains exactly the 4 expected keys."""
-    assert KNOWN_CONDITION_KEYS == frozenset({"node_kind", "name_pattern", "has_method", "edge_type"})
+    assert KNOWN_CONDITION_KEYS == frozenset(
+        {"node_kind", "name_pattern", "has_method", "edge_type"}
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -106,11 +111,13 @@ def test_known_condition_keys_are_exhaustive() -> None:
 def test_compile_no_conditions_matches_everything() -> None:
     """A compiled rule with no conditions matches any node."""
     data = {
-        "rules": [{
-            "name": "Universal",
-            "role": "HIDDEN_STATE",
-            "confidence": 0.6,
-        }]
+        "rules": [
+            {
+                "name": "Universal",
+                "role": "HIDDEN_STATE",
+                "confidence": 0.6,
+            }
+        ]
     }
     ruleset = load_rules_from_dict(data)
     compiled = compile_ruleset(ruleset)
@@ -122,12 +129,14 @@ def test_compile_no_conditions_matches_everything() -> None:
 def test_compile_invalid_node_kind_returns_zero() -> None:
     """A rule with an unrecognized node_kind value returns 0.0 on match."""
     data = {
-        "rules": [{
-            "name": "BadKind",
-            "role": "HIDDEN_STATE",
-            "confidence": 0.8,
-            "conditions": [{"node_kind": "NONEXISTENT_KIND"}],
-        }]
+        "rules": [
+            {
+                "name": "BadKind",
+                "role": "HIDDEN_STATE",
+                "confidence": 0.8,
+                "conditions": [{"node_kind": "NONEXISTENT_KIND"}],
+            }
+        ]
     }
     ruleset = load_rules_from_dict(data)
     compiled = compile_ruleset(ruleset)
@@ -139,12 +148,14 @@ def test_compile_invalid_node_kind_returns_zero() -> None:
 def test_compile_invalid_edge_type_returns_zero() -> None:
     """A rule with an unrecognized edge_type value returns 0.0."""
     data = {
-        "rules": [{
-            "name": "BadEdge",
-            "role": "ACTION",
-            "confidence": 0.7,
-            "conditions": [{"edge_type": "NONEXISTENT_EDGE"}],
-        }]
+        "rules": [
+            {
+                "name": "BadEdge",
+                "role": "ACTION",
+                "confidence": 0.7,
+                "conditions": [{"edge_type": "NONEXISTENT_EDGE"}],
+            }
+        ]
     }
     ruleset = load_rules_from_dict(data)
     compiled = compile_ruleset(ruleset)
@@ -156,13 +167,15 @@ def test_compile_invalid_edge_type_returns_zero() -> None:
 def test_compiled_rule_preserves_description() -> None:
     """CompiledRule.description carries the original description."""
     data = {
-        "rules": [{
-            "name": "Described",
-            "role": "HIDDEN_STATE",
-            "confidence": 0.5,
-            "conditions": [],
-            "description": "A test description",
-        }]
+        "rules": [
+            {
+                "name": "Described",
+                "role": "HIDDEN_STATE",
+                "confidence": 0.5,
+                "conditions": [],
+                "description": "A test description",
+            }
+        ]
     }
     ruleset = load_rules_from_dict(data)
     compiled = compile_ruleset(ruleset)
@@ -172,12 +185,14 @@ def test_compiled_rule_preserves_description() -> None:
 def test_name_pattern_exact_match() -> None:
     """Exact name (no glob chars) matches only that name."""
     data = {
-        "rules": [{
-            "name": "Exact",
-            "role": "HIDDEN_STATE",
-            "confidence": 0.9,
-            "conditions": [{"name_pattern": "ExactName"}],
-        }]
+        "rules": [
+            {
+                "name": "Exact",
+                "role": "HIDDEN_STATE",
+                "confidence": 0.9,
+                "conditions": [{"name_pattern": "ExactName"}],
+            }
+        ]
     }
     ruleset = load_rules_from_dict(data)
     compiled = compile_ruleset(ruleset)
@@ -192,12 +207,14 @@ def test_name_pattern_exact_match() -> None:
 def test_name_pattern_question_mark_glob() -> None:
     """The '?' glob matches exactly one character."""
     data = {
-        "rules": [{
-            "name": "QMark",
-            "role": "HIDDEN_STATE",
-            "confidence": 0.7,
-            "conditions": [{"name_pattern": "Fo?"}],
-        }]
+        "rules": [
+            {
+                "name": "QMark",
+                "role": "HIDDEN_STATE",
+                "confidence": 0.7,
+                "conditions": [{"name_pattern": "Fo?"}],
+            }
+        ]
     }
     ruleset = load_rules_from_dict(data)
     compiled = compile_ruleset(ruleset)

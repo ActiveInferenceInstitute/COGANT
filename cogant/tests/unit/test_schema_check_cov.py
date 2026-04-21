@@ -8,8 +8,6 @@ ValidationIssue objects it produces.
 
 from __future__ import annotations
 
-import pytest
-
 from cogant.process.extractor import ProcessConnection, ProcessModel, Stage
 from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
@@ -20,9 +18,8 @@ from cogant.statespace.compiler import (
     Transition,
 )
 from cogant.statespace.temporal import TimeRegime
-from cogant.statespace.variables import ConfidenceLevel, StateVariable, StateVariableType
-from cogant.validate.schema_check import SchemaValidator, ValidationIssue
-
+from cogant.statespace.variables import StateVariable, StateVariableType
+from cogant.validate.schema_check import SchemaValidator
 
 # ---------------------------- helpers / builders -------------------------- #
 
@@ -98,9 +95,7 @@ def test_validate_program_graph_flags_node_missing_name_and_qname():
     issues = SchemaValidator().validate_program_graph(graph)
 
     assert any(i.severity == "warning" and "missing name" in i.message for i in issues)
-    assert any(
-        i.severity == "warning" and "missing qualified_name" in i.message for i in issues
-    )
+    assert any(i.severity == "warning" and "missing qualified_name" in i.message for i in issues)
     assert all(i.category == "schema" for i in issues)
 
 
@@ -152,8 +147,7 @@ def test_validate_graph_metadata_warns_on_missing_repo_uri():
     issues = SchemaValidator().validate_program_graph(graph)
 
     assert any(
-        i.severity == "warning" and "repo_uri" in i.message and i.affected_ids == []
-        for i in issues
+        i.severity == "warning" and "repo_uri" in i.message and i.affected_ids == [] for i in issues
     )
 
 

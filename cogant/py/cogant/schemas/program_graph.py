@@ -34,9 +34,7 @@ class Node(CogantBaseModel):
     location: LocationInfo = Field(..., description="File path and span information")
 
     # Type system
-    type_info: TypeInfo | None = Field(
-        default=None, description="Type signature if applicable"
-    )
+    type_info: TypeInfo | None = Field(default=None, description="Type signature if applicable")
 
     # Structure
     parent_id: StableID | None = Field(
@@ -48,15 +46,9 @@ class Node(CogantBaseModel):
     )
 
     # Semantics
-    is_public: bool = Field(
-        default=False, description="Whether element is part of public API"
-    )
-    is_exported: bool = Field(
-        default=False, description="Whether element is explicitly exported"
-    )
-    is_test: bool = Field(
-        default=False, description="Whether element is test code"
-    )
+    is_public: bool = Field(default=False, description="Whether element is part of public API")
+    is_exported: bool = Field(default=False, description="Whether element is explicitly exported")
+    is_test: bool = Field(default=False, description="Whether element is test code")
     is_generated: bool = Field(
         default=False,
         description="Whether element was auto-generated",
@@ -67,12 +59,8 @@ class Node(CogantBaseModel):
         default_factory=dict,
         description="Language-specific attributes (e.g., decorators, modifiers)",
     )
-    documentation: str | None = Field(
-        default=None, description="Extracted docstring/documentation"
-    )
-    tags: list[str] = Field(
-        default_factory=list, description="User/analyzer-defined tags"
-    )
+    documentation: str | None = Field(default=None, description="Extracted docstring/documentation")
+    tags: list[str] = Field(default_factory=list, description="User/analyzer-defined tags")
 
     # Provenance
     provenance: list[EvidenceRef] = Field(
@@ -115,12 +103,8 @@ class Edge(CogantBaseModel):
         default_factory=dict,
         description="Language-specific attributes (e.g., call context, conditions)",
     )
-    label: str | None = Field(
-        default=None, description="Human-readable label for edge"
-    )
-    tags: list[str] = Field(
-        default_factory=list, description="User/analyzer-defined tags"
-    )
+    label: str | None = Field(default=None, description="Human-readable label for edge")
+    tags: list[str] = Field(default_factory=list, description="User/analyzer-defined tags")
 
     # Provenance
     provenance: list[EvidenceRef] = Field(
@@ -148,12 +132,8 @@ class ProgramGraph(CogantBaseModel):
     version: str = Field(default="1.0.0", description="Schema version")
 
     # Core graph data
-    nodes: list[Node] = Field(
-        default_factory=list, description="All semantic nodes in graph"
-    )
-    edges: list[Edge] = Field(
-        default_factory=list, description="All semantic edges in graph"
-    )
+    nodes: list[Node] = Field(default_factory=list, description="All semantic nodes in graph")
+    edges: list[Edge] = Field(default_factory=list, description="All semantic edges in graph")
 
     # Indices for fast lookup (optional but recommended)
     node_index: dict[StableID, int] = Field(
@@ -189,13 +169,9 @@ class ProgramGraph(CogantBaseModel):
             node_ids = {node.id for node in info.data["nodes"]}
             for edge in edges:
                 if edge.source_id not in node_ids:
-                    raise ValueError(
-                        f"Edge {edge.id}: source {edge.source_id} not found in nodes"
-                    )
+                    raise ValueError(f"Edge {edge.id}: source {edge.source_id} not found in nodes")
                 if edge.target_id not in node_ids:
-                    raise ValueError(
-                        f"Edge {edge.id}: target {edge.target_id} not found in nodes"
-                    )
+                    raise ValueError(f"Edge {edge.id}: target {edge.target_id} not found in nodes")
         return edges
 
     def add_node(self, node: Node) -> None:

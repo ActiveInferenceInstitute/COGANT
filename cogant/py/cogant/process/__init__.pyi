@@ -10,4 +10,16 @@ from cogant.process.timeline import GanttStage as GanttStage
 from cogant.process.timeline import Timeline as Timeline
 from cogant.process.timeline import TimelineBuilder as TimelineBuilder
 
-__all__ = ['ProcessExtractor', 'ProcessModel', 'Stage', 'ProcessConnection', 'PolicyExtractor', 'RetryPolicy', 'BranchingPolicy', 'CircuitBreakerPolicy', 'TimelineBuilder', 'Timeline', 'GanttStage']
+__all__ = [
+    "ProcessExtractor",
+    "ProcessModel",
+    "Stage",
+    "ProcessConnection",
+    "PolicyExtractor",
+    "RetryPolicy",
+    "BranchingPolicy",
+    "CircuitBreakerPolicy",
+    "TimelineBuilder",
+    "Timeline",
+    "GanttStage",
+]

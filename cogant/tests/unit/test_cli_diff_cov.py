@@ -9,10 +9,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from cogant.cli.diff import load_bundle
-
 
 # ------------------------------------------------------------------ #
 # load_bundle tests
@@ -84,9 +81,7 @@ def test_load_bundle_all_files(tmp_path: Path) -> None:
     """load_bundle populates graph, mappings, and state_space from all files."""
     (tmp_path / "program_graph.json").write_text(json.dumps({"nodes": {}, "edges": {}}))
     (tmp_path / "semantic_mappings.json").write_text(json.dumps({"k": {"id": "k"}}))
-    (tmp_path / "model.gnn.json").write_text(
-        json.dumps({"state_space": {"hidden_states": []}})
-    )
+    (tmp_path / "model.gnn.json").write_text(json.dumps({"state_space": {"hidden_states": []}}))
 
     result = load_bundle(tmp_path)
     assert "graph" in result

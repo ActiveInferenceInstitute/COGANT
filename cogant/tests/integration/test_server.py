@@ -32,7 +32,6 @@ from httpx import ASGITransport, AsyncClient  # noqa: E402
 import cogant  # noqa: E402
 from cogant.server.app import create_app  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Shared helpers.
 # ---------------------------------------------------------------------------

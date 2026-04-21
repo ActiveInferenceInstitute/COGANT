@@ -62,9 +62,11 @@ class ConfigRule(TranslationRule):
         configs = graph.get_nodes_by_kind(NodeKind.CONFIGURATION)
 
         for config in configs:
-            matches.append({
-                "node_id": config.id,
-            })
+            matches.append(
+                {
+                    "node_id": config.id,
+                }
+            )
 
         return matches
 
@@ -150,9 +152,11 @@ class FeatureFlagRule(TranslationRule):
         flags = graph.get_nodes_by_kind(NodeKind.FEATURE_FLAG)
 
         for flag in flags:
-            matches.append({
-                "node_id": flag.id,
-            })
+            matches.append(
+                {
+                    "node_id": flag.id,
+                }
+            )
 
         return matches
 
@@ -235,8 +239,16 @@ class ParameterRule(TranslationRule):
         matches = []
 
         parameter_keywords = [
-            "param_", "weight_", "hyperparameter", "learning_rate",
-            "lr", "beta", "gamma", "alpha", "theta", "lambda_",
+            "param_",
+            "weight_",
+            "hyperparameter",
+            "learning_rate",
+            "lr",
+            "beta",
+            "gamma",
+            "alpha",
+            "theta",
+            "lambda_",
         ]
 
         # Find variables with parameter keywords
@@ -244,22 +256,28 @@ class ParameterRule(TranslationRule):
         for var in variables:
             name_lower = var.name.lower()
             if any(kw in name_lower for kw in parameter_keywords):
-                matches.append({
-                    "node_id": var.id,
-                    "parameter_type": "variable",
-                })
+                matches.append(
+                    {
+                        "node_id": var.id,
+                        "parameter_type": "variable",
+                    }
+                )
 
         # Find classes that are parameter/config dataclasses or contain float/int fields
         classes = graph.get_nodes_by_kind(NodeKind.CLASS)
         for cls in classes:
             name_lower = cls.name.lower()
-            is_param_class = any(kw in name_lower for kw in ["param", "config", "settings", "hyperparameter"])
+            is_param_class = any(
+                kw in name_lower for kw in ["param", "config", "settings", "hyperparameter"]
+            )
 
             if is_param_class:
-                matches.append({
-                    "node_id": cls.id,
-                    "parameter_type": "class",
-                })
+                matches.append(
+                    {
+                        "node_id": cls.id,
+                        "parameter_type": "class",
+                    }
+                )
 
         return matches
 

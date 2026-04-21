@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -26,9 +25,8 @@ if str(_PY_ROOT) not in sys.path:
 from cogant.graph.builder import ProgramGraphBuilder
 from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import ProgramGraph
-from cogant.schemas.semantic import MappingKind
 from cogant.translate.engine import TranslationEngine
-from cogant.translate.rules import ReadOnlyInputRule, MutatingSubsystemRule
+from cogant.translate.rules import MutatingSubsystemRule, ReadOnlyInputRule
 
 pytestmark = pytest.mark.unit
 
@@ -254,7 +252,7 @@ class TestMappingConfidenceReflectsDegradation:
         # Both should have mappings, but strong should score >= weak (generally)
         if strong_confidence and weak_confidence:
             avg_strong = sum(strong_confidence) / len(strong_confidence)
-            avg_weak = sum(weak_confidence) / len(weak_confidence)
+            sum(weak_confidence) / len(weak_confidence)
             # Relaxed assertion: more evidence should correlate with confidence
             assert avg_strong >= 0.0  # Just verify sanity
 
@@ -273,7 +271,7 @@ class TestMappingConfidenceReflectsDegradation:
 
         # Check all mappings have a confidence_tier
         for mapping in mappings:
-            assert hasattr(mapping, 'confidence_tier')
+            assert hasattr(mapping, "confidence_tier")
             assert isinstance(mapping.confidence_tier, ConfidenceTier)
             # Verify score matches tier
             if mapping.confidence_score < 0.3:

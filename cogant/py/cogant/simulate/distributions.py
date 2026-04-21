@@ -161,9 +161,7 @@ class TransitionMatrix:
             action: {} for action in actions
         }
 
-    def set_transition(
-        self, state: str, action: str, next_state: str, prob: float
-    ) -> None:
+    def set_transition(self, state: str, action: str, next_state: str, prob: float) -> None:
         """Set a single transition probability.
 
         Args:
@@ -182,9 +180,7 @@ class TransitionMatrix:
         if state not in self.transitions[action]:
             # Create new distribution for this state (uniform)
             n = len(self.states)
-            self.transitions[action][state] = CategoricalDistribution(
-                self.states, [1.0 / n] * n
-            )
+            self.transitions[action][state] = CategoricalDistribution(self.states, [1.0 / n] * n)
 
         # Update the distribution
         current_dist = self.transitions[action][state]
@@ -270,7 +266,4 @@ class TransitionMatrix:
 
     def __repr__(self) -> str:
         """String representation."""
-        return (
-            f"TransitionMatrix({len(self.states)} states, "
-            f"{len(self.actions)} actions)"
-        )
+        return f"TransitionMatrix({len(self.states)} states, {len(self.actions)} actions)"

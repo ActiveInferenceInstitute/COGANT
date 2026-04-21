@@ -14,8 +14,9 @@ Covers:
 """
 
 import ast
-import pytest
 from pathlib import Path
+
+import pytest
 
 pytestmark = pytest.mark.unit
 
@@ -24,9 +25,11 @@ pytestmark = pytest.mark.unit
 # static/parser.py — additional path coverage
 # ---------------------------------------------------------------------------
 
+
 class TestPythonASTParserAdditional:
     def _make_parser(self):
         from cogant.static.parser import PythonASTParser
+
         return PythonASTParser()
 
     def test_parse_string_empty(self):
@@ -111,18 +114,21 @@ class TestPythonASTParserAdditional:
 
     def test_ast_to_str_name_node(self):
         from cogant.static.parser import PythonASTParser
+
         node = ast.Name(id="my_var", ctx=ast.Load())
         result = PythonASTParser._ast_to_str(node)
         assert "my_var" in result
 
     def test_ast_to_str_constant_node(self):
         from cogant.static.parser import PythonASTParser
+
         node = ast.Constant(value=42)
         result = PythonASTParser._ast_to_str(node)
         assert isinstance(result, str)
 
     def test_ast_to_str_attribute_node(self):
         from cogant.static.parser import PythonASTParser
+
         value = ast.Name(id="self", ctx=ast.Load())
         node = ast.Attribute(value=value, attr="data", ctx=ast.Load())
         result = PythonASTParser._ast_to_str(node)
@@ -142,7 +148,9 @@ class TestPythonASTParserAdditional:
 
     def test_parse_string_with_class(self):
         parser = self._make_parser()
-        src = "class MyClass:\n    value: int = 0\n    def method(self):\n        return self.value\n"
+        src = (
+            "class MyClass:\n    value: int = 0\n    def method(self):\n        return self.value\n"
+        )
         result = parser.parse_string(src, Path("cls.py"))
         assert result is not None
         assert len(result.classes) >= 1
@@ -152,9 +160,11 @@ class TestPythonASTParserAdditional:
 # static/types.py — TypeInfo and TypeInferencer
 # ---------------------------------------------------------------------------
 
+
 class TestTypeInfo:
     def test_type_info_basic(self):
         from cogant.static.types import TypeInfo
+
         ti = TypeInfo(
             symbol_id="sym_001",
             symbol_name="my_var",
@@ -167,6 +177,7 @@ class TestTypeInfo:
 
     def test_type_info_optional_fields(self):
         from cogant.static.types import TypeInfo
+
         ti = TypeInfo(
             symbol_id="sym_002",
             symbol_name="func",
@@ -184,6 +195,7 @@ class TestTypeInfo:
 class TestTypeInferencer:
     def _make_inferencer(self):
         from cogant.static.types import TypeInferencer
+
         return TypeInferencer()
 
     def test_init(self):
@@ -234,53 +246,63 @@ class Counter:
 
     def test_annotation_to_str_name(self):
         from cogant.static.types import TypeInferencer
+
         node = ast.Name(id="int", ctx=ast.Load())
         result = TypeInferencer._annotation_to_str(node)
         assert result == "int"
 
     def test_annotation_to_str_none(self):
         from cogant.static.types import TypeInferencer
+
         result = TypeInferencer._annotation_to_str(None)
         assert result is None
 
     def test_safe_unparse_name(self):
         from cogant.static.types import TypeInferencer
+
         node = ast.Name(id="my_var", ctx=ast.Load())
         result = TypeInferencer._safe_unparse(node)
         assert "my_var" in (result or "")
 
     def test_safe_unparse_none(self):
         from cogant.static.types import TypeInferencer
+
         result = TypeInferencer._safe_unparse(None)
         assert result is None
 
     def test_infer_type_from_value_int(self):
         from cogant.static.types import TypeInferencer
+
         result = TypeInferencer._infer_type_from_value("42")
         assert result == "int"
 
     def test_infer_type_from_value_float(self):
         from cogant.static.types import TypeInferencer
+
         result = TypeInferencer._infer_type_from_value("3.14")
         assert result == "float"
 
     def test_infer_type_from_value_string(self):
         from cogant.static.types import TypeInferencer
+
         result = TypeInferencer._infer_type_from_value("'hello'")
         assert result == "str"
 
     def test_infer_type_from_value_true(self):
         from cogant.static.types import TypeInferencer
+
         result = TypeInferencer._infer_type_from_value("True")
         assert result == "bool"
 
     def test_infer_type_from_value_none(self):
         from cogant.static.types import TypeInferencer
+
         result = TypeInferencer._infer_type_from_value(None)
         assert result is None
 
     def test_infer_type_from_value_list(self):
         from cogant.static.types import TypeInferencer
+
         result = TypeInferencer._infer_type_from_value("[1, 2, 3]")
         assert result == "list"
 
@@ -313,10 +335,13 @@ class Counter:
 # export/bundle.py — BundleManifest and helper methods
 # ---------------------------------------------------------------------------
 
+
 class TestBundleManifest:
     def test_basic_creation(self):
-        from cogant.export.bundle import BundleManifest
         from datetime import datetime
+
+        from cogant.export.bundle import BundleManifest
+
         manifest = BundleManifest(
             bundle_id="bundle_test",
             schema_name="test_schema",
@@ -333,15 +358,21 @@ class TestBundleManifest:
 class TestBundleExporterHelpers:
     def _make_exporter(self, tmp_path):
         from cogant.export.bundle import BundleExporter
-        from cogant.schemas.graph import ProgramGraph, GraphMetadata
+        from cogant.process.extractor import ProcessModel
+        from cogant.schemas.graph import GraphMetadata, ProgramGraph
         from cogant.statespace.compiler import StateSpaceModel
         from cogant.statespace.temporal import TimeRegime
-        from cogant.process.extractor import ProcessModel
+
         graph = ProgramGraph(metadata=GraphMetadata(repo_uri="file:///test"))
         ss = StateSpaceModel(
-            id="ss1", schema_name="test",
-            variables={}, observations={}, actions={},
-            transitions={}, likelihoods={}, preferences={},
+            id="ss1",
+            schema_name="test",
+            variables={},
+            observations={},
+            actions={},
+            transitions={},
+            likelihoods={},
+            preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
         pm = ProcessModel(id="pm1", schema_name="test", stages={}, connections={})
@@ -355,12 +386,15 @@ class TestBundleExporterHelpers:
 
     def test_formats_list(self):
         from cogant.export.bundle import BundleExporter
+
         assert "markdown" in BundleExporter.FORMATS
         assert "json" in BundleExporter.FORMATS
 
     def test_manifest_to_dict(self, tmp_path):
-        from cogant.export.bundle import BundleManifest
         from datetime import datetime
+
+        from cogant.export.bundle import BundleManifest
+
         exporter = self._make_exporter(tmp_path)
         manifest = BundleManifest(
             bundle_id="b1",

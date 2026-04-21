@@ -15,8 +15,6 @@ Covers:
   skip_stages / skip_dynamic logic
 """
 
-from pathlib import Path
-
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -26,17 +24,17 @@ pytestmark = pytest.mark.unit
 # Helpers — lightweight graph + state space stubs
 # ---------------------------------------------------------------------------
 
+
 def _make_graph():
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test_repo")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule",
-                           path="mymodule.py", language="python")
-    cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass",
-                           path="mymodule.py")
-    func = builder.add_node(NodeKind.FUNCTION, "my_func", "mymodule.my_func",
-                            path="mymodule.py")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
+    cls = builder.add_node(NodeKind.CLASS, "MyClass", "mymodule.MyClass", path="mymodule.py")
+    func = builder.add_node(NodeKind.FUNCTION, "my_func", "mymodule.my_func", path="mymodule.py")
     builder.add_edge(mod.id, cls.id, EdgeKind.CONTAINS)
     builder.add_edge(cls.id, func.id, EdgeKind.CONTAINS)
     return builder.finalize()
@@ -45,8 +43,15 @@ def _make_graph():
 class _FakeStateSpace:
     """Minimal duck-type substitute for StateSpaceModel."""
 
-    def __init__(self, variables=None, observations=None, actions=None,
-                 transitions=None, likelihoods=None, preferences=None):
+    def __init__(
+        self,
+        variables=None,
+        observations=None,
+        actions=None,
+        transitions=None,
+        likelihoods=None,
+        preferences=None,
+    ):
         self.variables = variables or []
         self.observations = observations or {}
         self.actions = actions or {}
@@ -85,6 +90,7 @@ def _make_builder(graph=None, state_space=None, mappings=None):
 # gnn/package.py — _enum_value module-level helper
 # ---------------------------------------------------------------------------
 
+
 class TestEnumValue:
     def test_enum_with_value(self):
         from cogant.gnn.package import _enum_value
@@ -96,20 +102,24 @@ class TestEnumValue:
 
     def test_plain_string(self):
         from cogant.gnn.package import _enum_value
+
         assert _enum_value("raw_string") == "raw_string"
 
     def test_none(self):
         from cogant.gnn.package import _enum_value
+
         assert _enum_value(None) is None
 
     def test_integer(self):
         from cogant.gnn.package import _enum_value
+
         assert _enum_value(42) == 42
 
 
 # ---------------------------------------------------------------------------
 # GNNPackageBuilder — graph counting helpers
 # ---------------------------------------------------------------------------
+
 
 class TestGraphCounting:
     def test_count_nodes(self):
@@ -170,6 +180,7 @@ class TestGraphCounting:
 # GNNPackageBuilder — _checksum helpers
 # ---------------------------------------------------------------------------
 
+
 class TestChecksumHelpers:
     def test_checksum_string(self):
         b = _make_builder()
@@ -197,6 +208,7 @@ class TestChecksumHelpers:
 # GNNPackageBuilder — _fallback_chart
 # ---------------------------------------------------------------------------
 
+
 class TestFallbackChart:
     def test_returns_html_string(self):
         b = _make_builder()
@@ -221,6 +233,7 @@ class TestFallbackChart:
 # ---------------------------------------------------------------------------
 # GNNPackageBuilder — _is_deterministic, _is_markovian
 # ---------------------------------------------------------------------------
+
 
 class TestDeterministicMarkovian:
     def test_deterministic_empty_transitions(self):
@@ -276,6 +289,7 @@ class TestDeterministicMarkovian:
 # GNNPackageBuilder — state variable / action object lookups
 # ---------------------------------------------------------------------------
 
+
 class TestObjectLookups:
     def test_state_var_object_returns_none_when_no_store(self):
         b = _make_builder()
@@ -294,6 +308,7 @@ class TestObjectLookups:
     def test_action_object_returns_from_actions_dict(self):
         class FakeAction:
             name = "my_action"
+
         ss = _FakeStateSpace(actions={"a1": FakeAction()})
         b = _make_builder(state_space=ss)
         result = b._action_object("a1")
@@ -304,6 +319,7 @@ class TestObjectLookups:
 # ---------------------------------------------------------------------------
 # GNNPackageBuilder — extraction helpers
 # ---------------------------------------------------------------------------
+
 
 class TestExtractionHelpers:
     def test_extract_state_variables_empty(self):
@@ -405,6 +421,7 @@ class TestExtractionHelpers:
     def test_extract_observation_modalities_with_obs(self):
         class FakeObs:
             modality = "continuous"
+
         ss = _FakeStateSpace(observations={"o1": FakeObs()})
         b = _make_builder(state_space=ss)
         modalities = b._extract_observation_modalities()
@@ -414,10 +431,13 @@ class TestExtractionHelpers:
         class FakeObs:
             def __init__(self, m):
                 self.modality = m
-        ss = _FakeStateSpace(observations={
-            "o1": FakeObs("symbolic"),
-            "o2": FakeObs("symbolic"),
-        })
+
+        ss = _FakeStateSpace(
+            observations={
+                "o1": FakeObs("symbolic"),
+                "o2": FakeObs("symbolic"),
+            }
+        )
         b = _make_builder(state_space=ss)
         modalities = b._extract_observation_modalities()
         assert modalities.count("symbolic") == 1
@@ -582,6 +602,7 @@ class TestExtractionHelpers:
     def test_extract_factorization_with_factor_attr(self):
         class FakeVar:
             factor = "f1"
+
         ss = _FakeStateSpace(variables=["v1"])
         ss._state_var_objects = {"v1": FakeVar()}
         b = _make_builder(state_space=ss)
@@ -606,9 +627,11 @@ class TestExtractionHelpers:
 # api/pipeline.py — PipelineConfig defaults
 # ---------------------------------------------------------------------------
 
+
 class TestPipelineConfig:
     def test_default_stages(self):
         from cogant.api.pipeline import PipelineConfig
+
         cfg = PipelineConfig()
         assert "ingest" in cfg.stages
         assert "graph" in cfg.stages
@@ -616,41 +639,49 @@ class TestPipelineConfig:
 
     def test_default_skip_stages_empty(self):
         from cogant.api.pipeline import PipelineConfig
+
         cfg = PipelineConfig()
         assert cfg.skip_stages == []
 
     def test_default_verbose_false(self):
         from cogant.api.pipeline import PipelineConfig
+
         cfg = PipelineConfig()
         assert cfg.verbose is False
 
     def test_default_dry_run_false(self):
         from cogant.api.pipeline import PipelineConfig
+
         cfg = PipelineConfig()
         assert cfg.dry_run is False
 
     def test_default_skip_dynamic_false(self):
         from cogant.api.pipeline import PipelineConfig
+
         cfg = PipelineConfig()
         assert cfg.skip_dynamic is False
 
     def test_custom_skip_stages(self):
         from cogant.api.pipeline import PipelineConfig
+
         cfg = PipelineConfig(skip_stages=["static", "dynamic"])
         assert "static" in cfg.skip_stages
 
     def test_incremental_since_default_none(self):
         from cogant.api.pipeline import PipelineConfig
+
         cfg = PipelineConfig()
         assert cfg.incremental_since is None
 
     def test_coverage_path_default_none(self):
         from cogant.api.pipeline import PipelineConfig
+
         cfg = PipelineConfig()
         assert cfg.coverage_path is None
 
     def test_cache_dir_default_none(self):
         from cogant.api.pipeline import PipelineConfig
+
         cfg = PipelineConfig()
         assert cfg.cache_dir is None
 
@@ -659,24 +690,37 @@ class TestPipelineConfig:
 # api/pipeline.py — PipelineRunner initialization
 # ---------------------------------------------------------------------------
 
+
 class TestPipelineRunner:
     def test_initialization(self):
         from cogant.api.pipeline import PipelineRunner
+
         runner = PipelineRunner()
         assert hasattr(runner, "stage_handlers")
 
     def test_has_all_expected_stage_handlers(self):
         from cogant.api.pipeline import PipelineRunner
+
         runner = PipelineRunner()
-        expected_stages = ["ingest", "static", "normalize", "graph",
-                           "dynamic", "translate", "statespace", "process",
-                           "export", "validate"]
+        expected_stages = [
+            "ingest",
+            "static",
+            "normalize",
+            "graph",
+            "dynamic",
+            "translate",
+            "statespace",
+            "process",
+            "export",
+            "validate",
+        ]
         for stage in expected_stages:
             assert stage in runner.stage_handlers
 
     def test_run_dry_all_skipped(self):
         """All stages skipped → no errors, bundle returns."""
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         runner = PipelineRunner()
         cfg = PipelineConfig(
             stages=["ingest"],
@@ -688,7 +732,8 @@ class TestPipelineRunner:
 
     def test_skip_dynamic_adds_to_effective_skip(self):
         """skip_dynamic=True should skip dynamic stage."""
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         runner = PipelineRunner()
         cfg = PipelineConfig(
             stages=["dynamic"],
@@ -701,10 +746,10 @@ class TestPipelineRunner:
 
     def test_unknown_stage_generates_error(self):
         """An unknown stage name should add an error but not raise."""
-        from cogant.api.pipeline import PipelineRunner, PipelineConfig
+        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+
         runner = PipelineRunner()
         cfg = PipelineConfig(stages=["nonexistent_stage_xyz"])
         bundle = runner.run(".", cfg)
         # Check that error was recorded
-        assert any("Unknown stage" in e or "nonexistent_stage_xyz" in e
-                   for e in bundle.errors)
+        assert any("Unknown stage" in e or "nonexistent_stage_xyz" in e for e in bundle.errors)

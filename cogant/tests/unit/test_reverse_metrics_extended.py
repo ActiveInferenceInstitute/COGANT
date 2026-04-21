@@ -22,7 +22,6 @@ from cogant.reverse.metrics import (
     compute_isomorphism_report,
 )
 
-
 # ---------------------------------------------------------------------------
 # IsomorphismReport
 # ---------------------------------------------------------------------------
@@ -31,8 +30,11 @@ from cogant.reverse.metrics import (
 def test_report_summary_drift_label() -> None:
     """Summary says DRIFT when is_isomorphic is False."""
     report = IsomorphismReport(
-        total_score=0.3, role_score=0.2, matrix_score=0.4,
-        structural_score=0.3, is_isomorphic=False,
+        total_score=0.3,
+        role_score=0.2,
+        matrix_score=0.4,
+        structural_score=0.3,
+        is_isomorphic=False,
     )
     s = report.summary()
     assert s.startswith("[DRIFT]")
@@ -41,8 +43,11 @@ def test_report_summary_drift_label() -> None:
 def test_report_summary_iso_label() -> None:
     """Summary says ISO when is_isomorphic is True."""
     report = IsomorphismReport(
-        total_score=0.9, role_score=0.95, matrix_score=0.85,
-        structural_score=0.9, is_isomorphic=True,
+        total_score=0.9,
+        role_score=0.95,
+        matrix_score=0.85,
+        structural_score=0.9,
+        is_isomorphic=True,
     )
     s = report.summary()
     assert s.startswith("[ISO]")
@@ -146,9 +151,11 @@ def test_graph_with_edges_only() -> None:
 
 def test_graph_attribute_fallback() -> None:
     """Nodes with 'kind' attribute (not 'role') are handled."""
+
     class MockNode:
         def __init__(self, kind: str):
             self.kind = kind
+
     nodes_a = [MockNode("HIDDEN_STATE"), MockNode("OBSERVATION")]
     nodes_b = [MockNode("HIDDEN_STATE"), MockNode("OBSERVATION")]
     score = compare_graph_structure(nodes_a, [], nodes_b, [])
@@ -196,7 +203,7 @@ def test_report_breakdown_has_per_matrix_detail() -> None:
     report = compute_isomorphism_report(pkg, pkg)
     assert "per_matrix_frobenius" in report.breakdown
     # All raw distances should be 0 for identical matrices
-    for key, val in report.breakdown["per_matrix_frobenius"].items():
+    for _key, val in report.breakdown["per_matrix_frobenius"].items():
         assert val == pytest.approx(0.0, abs=1e-9)
 
 

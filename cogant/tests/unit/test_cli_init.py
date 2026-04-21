@@ -35,7 +35,6 @@ from cogant.cli.init_cmd import (
     validate_repo_path,
 )
 
-
 # --------------------------------------------------------------- scaffold --
 
 
@@ -79,7 +78,7 @@ class TestScaffoldProject:
         proj = tmp_path / "proj"
         scaffold_project(proj)
 
-        custom = "# user edits\n[project]\nname = \"real-name\"\n"
+        custom = '# user edits\n[project]\nname = "real-name"\n'
         (proj / "cogant.toml").write_text(custom)
 
         result = scaffold_project(proj)
@@ -87,9 +86,7 @@ class TestScaffoldProject:
         assert (proj / "cogant.toml").read_text() == custom
         assert any("cogant.toml already exists" in n for n in result.notes)
 
-    def test_idempotent_does_not_duplicate_gitignore_entry(
-        self, tmp_path: Path
-    ) -> None:
+    def test_idempotent_does_not_duplicate_gitignore_entry(self, tmp_path: Path) -> None:
         """Re-running does not append duplicate cogant_output/ lines."""
         proj = tmp_path / "proj"
         scaffold_project(proj)
@@ -99,9 +96,7 @@ class TestScaffoldProject:
         body = (proj / ".gitignore").read_text()
         assert body.count(GITIGNORE_ENTRY) == 1
 
-    def test_appends_to_existing_gitignore_without_clobber(
-        self, tmp_path: Path
-    ) -> None:
+    def test_appends_to_existing_gitignore_without_clobber(self, tmp_path: Path) -> None:
         """Existing gitignore content is preserved; entry is appended."""
         proj = tmp_path / "proj"
         proj.mkdir()

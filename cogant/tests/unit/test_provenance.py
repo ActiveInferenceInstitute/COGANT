@@ -15,7 +15,6 @@ import pytest
 
 from cogant.provenance import ProvenanceRecord, ProvenanceTracker
 
-
 # ------------------------------- Construction ----------------------------- #
 
 

@@ -6,9 +6,8 @@ Tests the full pipeline: ProgramGraph → network analysis → visualization.
 import pytest
 
 from cogant.graph.analysis import GraphAnalyzer
-from cogant.schemas.core import Node, Edge, NodeKind, EdgeKind
-from cogant.schemas.graph import ProgramGraph, GraphMetadata
-
+from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
+from cogant.schemas.graph import GraphMetadata, ProgramGraph
 
 pytestmark = pytest.mark.integration
 
@@ -47,9 +46,9 @@ class TestGraphAnalysisOnSynthetic:
         # Create edges (linear chain: 0 -> 1 -> 2 -> ... )
         for i in range(node_count - 1):
             edge = Edge(
-                id=f"edge_{i}_{i+1}",
+                id=f"edge_{i}_{i + 1}",
                 source_id=f"node_{i}",
-                target_id=f"node_{i+1}",
+                target_id=f"node_{i + 1}",
                 kind=EdgeKind.CALLS,
             )
             graph.add_edge(edge)
@@ -310,12 +309,8 @@ class TestHotspotIdentification:
         graph.add_node(sink)
 
         # Create pipeline edges
-        graph.add_edge(
-            Edge(id="e_sm", source_id="source", target_id="middle", kind=EdgeKind.CALLS)
-        )
-        graph.add_edge(
-            Edge(id="e_ms", source_id="middle", target_id="sink", kind=EdgeKind.CALLS)
-        )
+        graph.add_edge(Edge(id="e_sm", source_id="source", target_id="middle", kind=EdgeKind.CALLS))
+        graph.add_edge(Edge(id="e_ms", source_id="middle", target_id="sink", kind=EdgeKind.CALLS))
 
         analyzer = GraphAnalyzer(graph)
         hotspots = analyzer.find_hotspots()

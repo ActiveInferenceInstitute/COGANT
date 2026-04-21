@@ -98,7 +98,9 @@ class DriftAnalyzer:
         self.mappings_a = bundle_a.get("mappings", {}) if isinstance(bundle_a, dict) else {}
         self.mappings_b = bundle_b.get("mappings", {}) if isinstance(bundle_b, dict) else {}
 
-        logger.info(f"DriftAnalyzer initialized: {len(self.graph_a.get('nodes', []))} -> {len(self.graph_b.get('nodes', []))} nodes")
+        logger.info(
+            f"DriftAnalyzer initialized: {len(self.graph_a.get('nodes', []))} -> {len(self.graph_b.get('nodes', []))} nodes"
+        )
 
     def _extract_graph(self, bundle: dict[str, Any]) -> dict[str, Any]:
         """Extract graph from bundle, handling different nesting levels."""
@@ -334,8 +336,13 @@ class DriftAnalyzer:
         return {
             "state_vars_added": len(set(states_b.keys()) - set(states_a.keys())),
             "state_vars_removed": len(set(states_a.keys()) - set(states_b.keys())),
-            "state_vars_changed": len([s for s in set(states_a.keys()) & set(states_b.keys())
-                                       if states_a[s] != states_b[s]]),
+            "state_vars_changed": len(
+                [
+                    s
+                    for s in set(states_a.keys()) & set(states_b.keys())
+                    if states_a[s] != states_b[s]
+                ]
+            ),
             "observations_added": len(set(obs_b.keys()) - set(obs_a.keys())),
             "observations_removed": len(set(obs_a.keys()) - set(obs_b.keys())),
             "actions_added": len(set(actions_b.keys()) - set(actions_a.keys())),
@@ -533,51 +540,57 @@ class DriftAnalyzer:
 
         # Structural drift
         struct = drift.details.get("structural_drift", {})
-        lines.extend([
-            "## Structural Changes",
-            "",
-            "**Nodes**:",
-            f"- Added: {struct.get('nodes_added_count', 0)}",
-            f"- Removed: {struct.get('nodes_removed_count', 0)}",
-            f"- Changed: {struct.get('nodes_changed_count', 0)}",
-            "",
-            "**Edges**:",
-            f"- Added: {struct.get('edges_added_count', 0)}",
-            f"- Removed: {struct.get('edges_removed_count', 0)}",
-            "",
-        ])
+        lines.extend(
+            [
+                "## Structural Changes",
+                "",
+                "**Nodes**:",
+                f"- Added: {struct.get('nodes_added_count', 0)}",
+                f"- Removed: {struct.get('nodes_removed_count', 0)}",
+                f"- Changed: {struct.get('nodes_changed_count', 0)}",
+                "",
+                "**Edges**:",
+                f"- Added: {struct.get('edges_added_count', 0)}",
+                f"- Removed: {struct.get('edges_removed_count', 0)}",
+                "",
+            ]
+        )
 
         # Semantic drift
         sem = drift.details.get("semantic_drift", {})
-        lines.extend([
-            "## Semantic Changes",
-            "",
-            "**Mappings**:",
-            f"- New: {sem.get('new_count', 0)}",
-            f"- Lost: {sem.get('lost_count', 0)}",
-            f"- Changed: {sem.get('changed_count', 0)}",
-            "",
-        ])
+        lines.extend(
+            [
+                "## Semantic Changes",
+                "",
+                "**Mappings**:",
+                f"- New: {sem.get('new_count', 0)}",
+                f"- Lost: {sem.get('lost_count', 0)}",
+                f"- Changed: {sem.get('changed_count', 0)}",
+                "",
+            ]
+        )
 
         # State space drift
         ss = drift.details.get("state_space_drift", {})
-        lines.extend([
-            "## State Space Changes",
-            "",
-            "**State Variables**:",
-            f"- Added: {ss.get('state_vars_added', 0)}",
-            f"- Removed: {ss.get('state_vars_removed', 0)}",
-            f"- Changed: {ss.get('state_vars_changed', 0)}",
-            "",
-            "**Observations**:",
-            f"- Added: {ss.get('observations_added', 0)}",
-            f"- Removed: {ss.get('observations_removed', 0)}",
-            "",
-            "**Actions**:",
-            f"- Added: {ss.get('actions_added', 0)}",
-            f"- Removed: {ss.get('actions_removed', 0)}",
-            "",
-        ])
+        lines.extend(
+            [
+                "## State Space Changes",
+                "",
+                "**State Variables**:",
+                f"- Added: {ss.get('state_vars_added', 0)}",
+                f"- Removed: {ss.get('state_vars_removed', 0)}",
+                f"- Changed: {ss.get('state_vars_changed', 0)}",
+                "",
+                "**Observations**:",
+                f"- Added: {ss.get('observations_added', 0)}",
+                f"- Removed: {ss.get('observations_removed', 0)}",
+                "",
+                "**Actions**:",
+                f"- Added: {ss.get('actions_added', 0)}",
+                f"- Removed: {ss.get('actions_removed', 0)}",
+                "",
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -644,16 +657,12 @@ class DriftAnalyzer:
 
         return (node_drift + edge_drift) / 2
 
-    def _compute_semantic_churn(
-        self, bundle1: dict[str, Any], bundle2: dict[str, Any]
-    ) -> float:
+    def _compute_semantic_churn(self, bundle1: dict[str, Any], bundle2: dict[str, Any]) -> float:
         """Compute semantic model churn."""
         ss1 = bundle1.get("stage_results", {}).get("statespace", {})
         ss2 = bundle2.get("stage_results", {}).get("statespace", {})
 
-        state_drift = self._compute_collection_drift(
-            ss1.get("states", []), ss2.get("states", [])
-        )
+        state_drift = self._compute_collection_drift(ss1.get("states", []), ss2.get("states", []))
         obs_drift = self._compute_collection_drift(
             ss1.get("observations", []), ss2.get("observations", [])
         )

@@ -197,9 +197,7 @@ def _check_git() -> DoctorCheck:
         )
         version = out.stdout.strip().replace("git version ", "") or "unknown"
     except (OSError, subprocess.TimeoutExpired) as exc:
-        return DoctorCheck(
-            name="git", status="warn", detail=f"found but unreadable: {exc}"
-        )
+        return DoctorCheck(name="git", status="warn", detail=f"found but unreadable: {exc}")
     return DoctorCheck(name="git", status="ok", detail=version)
 
 
@@ -242,7 +240,7 @@ def _check_external_tool(
     raw = (out.stdout or out.stderr or "").strip().splitlines()
     version = raw[0] if raw else "unknown"
     if strip_prefix and version.startswith(strip_prefix):
-        version = version[len(strip_prefix):].strip()
+        version = version[len(strip_prefix) :].strip()
     return DoctorCheck(name=label, status="ok", detail=version or "unknown")
 
 
@@ -258,9 +256,7 @@ def _check_ruff() -> DoctorCheck:
 
 def _check_mermaid_cli() -> DoctorCheck:
     """mermaid CLI (``mmdc``) renders the diagram exports."""
-    return _check_external_tool(
-        "mmdc", "mermaid CLI (mmdc)", required=False
-    )
+    return _check_external_tool("mmdc", "mermaid CLI (mmdc)", required=False)
 
 
 def _find_tree_sitter_node_types() -> Path | None:

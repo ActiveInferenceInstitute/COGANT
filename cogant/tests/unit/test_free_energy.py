@@ -27,7 +27,6 @@ from cogant.simulate.free_energy import (
 )
 from cogant.simulate.runner import ModelRunner
 
-
 # =========================================================================
 # VFE
 # =========================================================================
@@ -52,7 +51,6 @@ def test_vfe_zero_when_beliefs_equal_prior_and_observation_uniform():
 def test_vfe_is_nonnegative_kl_term_when_likelihood_neutral():
     """With a uniform likelihood matrix the accuracy term is constant,
     so VFE ordering tracks KL divergence."""
-    n_states = 3
     prior = [1 / 3, 1 / 3, 1 / 3]
     neutral_A = [[0.5, 0.5, 0.5], [0.5, 0.5, 0.5]]
 
@@ -90,9 +88,7 @@ def test_vfe_rejects_mismatched_dimensions():
     with pytest.raises(ValueError):
         variational_free_energy([0.5, 0.5], [0.5, 0.5], [[0.9]])
     with pytest.raises(ValueError):
-        variational_free_energy(
-            [0.5, 0.5], [0.5, 0.5], [[0.9, 0.1], [0.1, 0.9]], observation=[1.0]
-        )
+        variational_free_energy([0.5, 0.5], [0.5, 0.5], [[0.9, 0.1], [0.1, 0.9]], observation=[1.0])
 
 
 def test_vfe_empty_state_returns_zero():
@@ -105,9 +101,7 @@ def test_vfe_no_observation_model_reduces_to_kl():
     prior = [0.5, 0.5]
     # KL([.9, .1] || [.5, .5]) = .9*log(.9/.5) + .1*log(.1/.5)
     expected = 0.9 * math.log(0.9 / 0.5) + 0.1 * math.log(0.1 / 0.5)
-    assert variational_free_energy(beliefs, prior, []) == pytest.approx(
-        expected, rel=1e-9
-    )
+    assert variational_free_energy(beliefs, prior, []) == pytest.approx(expected, rel=1e-9)
 
 
 # =========================================================================
@@ -156,10 +150,7 @@ def test_bayesian_update_raises_on_bad_index():
 def _identity_transition(n_states: int, n_actions: int):
     """B[s'][s][a] = 1 iff s == s' (identity dynamics)."""
     return [
-        [
-            [1.0 if s_next == s else 0.0 for _ in range(n_actions)]
-            for s in range(n_states)
-        ]
+        [[1.0 if s_next == s else 0.0 for _ in range(n_actions)] for s in range(n_states)]
         for s_next in range(n_states)
     ]
 
@@ -176,7 +167,6 @@ def _deterministic_shift_transition(n_states: int):
 def test_efe_prefers_high_preference_outcomes():
     """When action 1 leads to a preferred observation, its EFE is lower."""
     n_states = 2
-    n_actions = 2
     beliefs = [1.0, 0.0]
     # Likelihood: state 0 -> obs 0, state 1 -> obs 1.
     A = [[1.0, 0.0], [0.0, 1.0]]
@@ -197,7 +187,6 @@ def test_efe_prefers_informative_actions_under_ambiguous_likelihood():
     higher in the direction of exploration). We check the directionality
     precisely rather than rely on ambiguous heuristics.
     """
-    n_states = 2
     beliefs = [0.5, 0.5]
     # Action 0: deterministic (low entropy). Action 1: ambiguous (high entropy).
     # A is shared so we model it via different B tensors.

@@ -8,25 +8,15 @@ from __future__ import annotations
 
 import pytest
 
+from cogant.graph.queries import GraphQuery
 from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
 from cogant.schemas.semantic import MappingKind
+from cogant.translate.dsl.compiler import compile_ruleset
+from cogant.translate.dsl.loader import load_rules_from_dict
 
-# -- Rule imports (all 5 families) --
-from cogant.translate.rules.structural import (
-    ContainmentRule,
-    DataPipelineRule,
-    InheritanceRule,
-    MutatingSubsystemRule,
-    ReadOnlyInputRule,
-)
-from cogant.translate.rules.semantic import (
-    ActionRule,
-    ContextRule,
-    ObservationRule,
-    PolicyRule,
-    PreferenceRule,
-)
+# -- Engine and DSL --
+from cogant.translate.engine import TranslationEngine
 from cogant.translate.rules.behavioral import (
     EventBusRule,
     OrchestratorRule,
@@ -39,24 +29,39 @@ from cogant.translate.rules.resilience import (
     RetryPatternRule,
     SingletonAccessRule,
 )
+from cogant.translate.rules.semantic import (
+    ActionRule,
+    ContextRule,
+    ObservationRule,
+    PolicyRule,
+    PreferenceRule,
+)
 
-# -- Engine and DSL --
-from cogant.translate.engine import TranslationEngine
-from cogant.translate.dsl.compiler import compile_ruleset
-from cogant.translate.dsl.loader import load_rules_from_dict
-from cogant.graph.queries import GraphQuery
-
+# -- Rule imports (all 5 families) --
+from cogant.translate.rules.structural import (
+    DataPipelineRule,
+    InheritanceRule,
+    MutatingSubsystemRule,
+    ReadOnlyInputRule,
+)
 
 # ------------------------------------------------------------------ #
 # Helpers
 # ------------------------------------------------------------------ #
+
 
 def _make_graph() -> ProgramGraph:
     return ProgramGraph(metadata=GraphMetadata(repo_uri="test://rules"))
 
 
 def _add_node(g: ProgramGraph, nid: str, kind: NodeKind, name: str, **kw) -> Node:
-    node = Node(id=nid, kind=kind, name=name, qualified_name=kw.get("qn", name), **{k: v for k, v in kw.items() if k != "qn"})
+    node = Node(
+        id=nid,
+        kind=kind,
+        name=name,
+        qualified_name=kw.get("qn", name),
+        **{k: v for k, v in kw.items() if k != "qn"},
+    )
     g.add_node(node)
     return node
 
@@ -82,6 +87,7 @@ def _run_rule(rule, graph: ProgramGraph):
 # ================================================================== #
 # 1. STRUCTURAL FAMILY
 # ================================================================== #
+
 
 class TestReadOnlyInputRule:
     """Module with READS edges and no WRITES -> observation."""
@@ -167,6 +173,7 @@ class TestDataPipelineRule:
 # ================================================================== #
 # 2. SEMANTIC FAMILY
 # ================================================================== #
+
 
 class TestObservationRule:
     """Getter / read-only function -> observation."""
@@ -273,6 +280,7 @@ class TestContextRule:
 # 3. BEHAVIORAL FAMILY
 # ================================================================== #
 
+
 class TestOrchestratorRule:
     """Function with 3+ CALLS edges -> orchestration."""
 
@@ -332,6 +340,7 @@ class TestEventBusRule:
 # 4. CONTROL FAMILY
 # ================================================================== #
 
+
 class TestConfigRule:
     """CONFIGURATION node -> context with high confidence."""
 
@@ -361,6 +370,7 @@ class TestFeatureFlagRule:
 # ================================================================== #
 # 5. RESILIENCE FAMILY
 # ================================================================== #
+
 
 class TestRetryPatternRule:
     """Function with retry/backoff keyword -> policy."""
@@ -445,6 +455,7 @@ class TestSingletonAccessRule:
 # 6. TRANSLATION ENGINE — full pipeline
 # ================================================================== #
 
+
 class TestTranslationEngine:
     """Engine with real rules on a synthetic graph."""
 
@@ -489,6 +500,7 @@ class TestTranslationEngine:
 # 7. RULE COMPOSITION — conflict resolution
 # ================================================================== #
 
+
 class TestRuleComposition:
     """Two rules matching same node; higher confidence wins."""
 
@@ -512,6 +524,7 @@ class TestRuleComposition:
 # ================================================================== #
 # 8. EDGE CASES
 # ================================================================== #
+
 
 class TestEdgeCases:
     """Empty graph, isolated nodes, MODULE-only graph."""
@@ -558,6 +571,7 @@ class TestEdgeCases:
 # ================================================================== #
 # 9. DSL INTEGRATION
 # ================================================================== #
+
 
 class TestDSLIntegration:
     """Define a YAML-like rule via dict, compile, and run alongside Python rules."""
@@ -650,6 +664,7 @@ class TestDSLIntegration:
 # ================================================================== #
 # 10. EXPLAIN API
 # ================================================================== #
+
 
 class TestExplainAPI:
     """TranslationRule.explain returns RuleExplanation."""

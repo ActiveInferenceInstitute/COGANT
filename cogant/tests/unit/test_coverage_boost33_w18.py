@@ -18,23 +18,23 @@ pytestmark = pytest.mark.unit
 # Helper: build a minimal program graph
 # ---------------------------------------------------------------------------
 
+
 def _make_graph(include_calls=True, include_async=False):
     from cogant.graph.builder import ProgramGraphBuilder
-    from cogant.schemas.core import NodeKind, EdgeKind
+    from cogant.schemas.core import EdgeKind, NodeKind
 
     builder = ProgramGraphBuilder(repo_uri="file:///test")
-    mod = builder.add_node(NodeKind.MODULE, "mymodule", "mymodule",
-                           path="mymodule.py", language="python")
-    func1 = builder.add_node(NodeKind.FUNCTION, "sender", "mymodule.sender",
-                             path="mymodule.py")
+    mod = builder.add_node(
+        NodeKind.MODULE, "mymodule", "mymodule", path="mymodule.py", language="python"
+    )
+    func1 = builder.add_node(NodeKind.FUNCTION, "sender", "mymodule.sender", path="mymodule.py")
     func2 = builder.add_node(
         NodeKind.FUNCTION,
         "async_handler" if include_async else "receiver",
         "mymodule.receiver",
         path="mymodule.py",
     )
-    var1 = builder.add_node(NodeKind.VARIABLE, "state", "mymodule.state",
-                            path="mymodule.py")
+    var1 = builder.add_node(NodeKind.VARIABLE, "state", "mymodule.state", path="mymodule.py")
     builder.add_edge(mod.id, func1.id, EdgeKind.CONTAINS)
     builder.add_edge(mod.id, func2.id, EdgeKind.CONTAINS)
     builder.add_edge(mod.id, var1.id, EdgeKind.CONTAINS)
@@ -46,17 +46,22 @@ def _make_graph(include_calls=True, include_async=False):
 
 
 def _make_mappings(func1_id, var1_id):
-    from cogant.schemas.semantic import SemanticMapping, MappingKind
+    from cogant.schemas.semantic import MappingKind, SemanticMapping
+
     return {
         "m1": SemanticMapping(
-            id="m1", kind=MappingKind.HIDDEN_STATE,
+            id="m1",
+            kind=MappingKind.HIDDEN_STATE,
             graph_fragment_node_ids=[var1_id],
-            semantic_label="state_var", confidence_score=0.9,
+            semantic_label="state_var",
+            confidence_score=0.9,
         ),
         "m2": SemanticMapping(
-            id="m2", kind=MappingKind.OBSERVATION,
+            id="m2",
+            kind=MappingKind.OBSERVATION,
             graph_fragment_node_ids=[func1_id],
-            semantic_label="obs_var", confidence_score=0.7,
+            semantic_label="obs_var",
+            confidence_score=0.7,
         ),
     }
 
@@ -65,33 +70,41 @@ def _make_mappings(func1_id, var1_id):
 # StateVariableType enum
 # ---------------------------------------------------------------------------
 
+
 class TestStateVariableType:
     def test_boolean(self):
         from cogant.statespace.variables import StateVariableType
+
         assert StateVariableType.BOOLEAN == "boolean"
 
     def test_discrete(self):
         from cogant.statespace.variables import StateVariableType
+
         assert StateVariableType.DISCRETE == "discrete"
 
     def test_continuous(self):
         from cogant.statespace.variables import StateVariableType
+
         assert StateVariableType.CONTINUOUS == "continuous"
 
     def test_categorical(self):
         from cogant.statespace.variables import StateVariableType
+
         assert StateVariableType.CATEGORICAL == "categorical"
 
     def test_vector(self):
         from cogant.statespace.variables import StateVariableType
+
         assert StateVariableType.VECTOR == "vector"
 
     def test_composite(self):
         from cogant.statespace.variables import StateVariableType
+
         assert StateVariableType.COMPOSITE == "composite"
 
     def test_all_members(self):
         from cogant.statespace.variables import StateVariableType
+
         assert len(StateVariableType) == 6
 
 
@@ -99,25 +112,31 @@ class TestStateVariableType:
 # ConfidenceLevel enum
 # ---------------------------------------------------------------------------
 
+
 class TestConfidenceLevel:
     def test_definite(self):
         from cogant.statespace.variables import ConfidenceLevel
+
         assert ConfidenceLevel.DEFINITE == "definite"
 
     def test_high(self):
         from cogant.statespace.variables import ConfidenceLevel
+
         assert ConfidenceLevel.HIGH == "high"
 
     def test_medium(self):
         from cogant.statespace.variables import ConfidenceLevel
+
         assert ConfidenceLevel.MEDIUM == "medium"
 
     def test_low(self):
         from cogant.statespace.variables import ConfidenceLevel
+
         assert ConfidenceLevel.LOW == "low"
 
     def test_uncertain(self):
         from cogant.statespace.variables import ConfidenceLevel
+
         assert ConfidenceLevel.UNCERTAIN == "uncertain"
 
 
@@ -125,49 +144,61 @@ class TestConfidenceLevel:
 # map_confidence_score
 # ---------------------------------------------------------------------------
 
+
 class TestMapConfidenceScore:
     def test_definite_at_0_99(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         assert map_confidence_score(0.99) == ConfidenceLevel.DEFINITE
 
     def test_definite_at_0_95(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         assert map_confidence_score(0.95) == ConfidenceLevel.DEFINITE
 
     def test_high_at_0_90(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         assert map_confidence_score(0.90) == ConfidenceLevel.HIGH
 
     def test_high_at_0_80(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         assert map_confidence_score(0.80) == ConfidenceLevel.HIGH
 
     def test_medium_at_0_70(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         assert map_confidence_score(0.70) == ConfidenceLevel.MEDIUM
 
     def test_medium_at_0_60(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         assert map_confidence_score(0.60) == ConfidenceLevel.MEDIUM
 
     def test_low_at_0_50(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         assert map_confidence_score(0.50) == ConfidenceLevel.LOW
 
     def test_low_at_0_40(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         assert map_confidence_score(0.40) == ConfidenceLevel.LOW
 
     def test_uncertain_at_0_20(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         assert map_confidence_score(0.20) == ConfidenceLevel.UNCERTAIN
 
     def test_uncertain_at_0_0(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         assert map_confidence_score(0.0) == ConfidenceLevel.UNCERTAIN
 
     def test_returns_confidence_level(self):
-        from cogant.statespace.variables import map_confidence_score, ConfidenceLevel
+        from cogant.statespace.variables import ConfidenceLevel, map_confidence_score
+
         result = map_confidence_score(0.85)
         assert isinstance(result, ConfidenceLevel)
 
@@ -176,23 +207,26 @@ class TestMapConfidenceScore:
 # StateVariable dataclass
 # ---------------------------------------------------------------------------
 
+
 class TestStateVariable:
     def test_basic_creation(self):
         from cogant.statespace.variables import StateVariable, StateVariableType
+
         sv = StateVariable(
-            id="var_n1", name="my_state",
+            id="var_n1",
+            name="my_state",
             var_type=StateVariableType.DISCRETE,
-            node_id="n1", cardinality=4,
+            node_id="n1",
+            cardinality=4,
         )
         assert sv.id == "var_n1"
         assert sv.name == "my_state"
         assert sv.cardinality == 4
 
     def test_defaults(self):
-        from cogant.statespace.variables import StateVariable, StateVariableType, ConfidenceLevel
-        sv = StateVariable(
-            id="v1", name="s", var_type=StateVariableType.BOOLEAN, node_id="n1"
-        )
+        from cogant.statespace.variables import ConfidenceLevel, StateVariable, StateVariableType
+
+        sv = StateVariable(id="v1", name="s", var_type=StateVariableType.BOOLEAN, node_id="n1")
         assert sv.cardinality is None
         assert sv.domain is None
         assert sv.factors is None
@@ -205,25 +239,32 @@ class TestStateVariable:
 
     def test_continuous_type(self):
         from cogant.statespace.variables import StateVariable, StateVariableType
+
         sv = StateVariable(
-            id="v1", name="pos", var_type=StateVariableType.CONTINUOUS,
-            node_id="n1", is_discrete=False
+            id="v1",
+            name="pos",
+            var_type=StateVariableType.CONTINUOUS,
+            node_id="n1",
+            is_discrete=False,
         )
         assert sv.var_type == StateVariableType.CONTINUOUS
         assert sv.is_discrete is False
 
     def test_observable_flag(self):
         from cogant.statespace.variables import StateVariable, StateVariableType
+
         sv = StateVariable(
-            id="v1", name="s", var_type=StateVariableType.DISCRETE,
-            node_id="n1", observable=True
+            id="v1", name="s", var_type=StateVariableType.DISCRETE, node_id="n1", observable=True
         )
         assert sv.observable is True
 
     def test_mutations_and_reads_lists(self):
         from cogant.statespace.variables import StateVariable, StateVariableType
+
         sv = StateVariable(
-            id="v1", name="s", var_type=StateVariableType.DISCRETE,
+            id="v1",
+            name="s",
+            var_type=StateVariableType.DISCRETE,
             node_id="n1",
             mutations=["e1", "e2"],
             reads=["e3"],
@@ -236,9 +277,11 @@ class TestStateVariable:
 # FactorizationInfo dataclass
 # ---------------------------------------------------------------------------
 
+
 class TestFactorizationInfo:
     def test_creation(self):
         from cogant.statespace.variables import FactorizationInfo
+
         fi = FactorizationInfo(
             factors=["f1", "f2"],
             independence_score=0.8,
@@ -249,9 +292,8 @@ class TestFactorizationInfo:
 
     def test_no_dependencies(self):
         from cogant.statespace.variables import FactorizationInfo
-        fi = FactorizationInfo(
-            factors=["f1"], independence_score=1.0, dependencies={}
-        )
+
+        fi = FactorizationInfo(factors=["f1"], independence_score=1.0, dependencies={})
         assert fi.dependencies == {}
 
 
@@ -259,9 +301,11 @@ class TestFactorizationInfo:
 # StateVariableExtractor
 # ---------------------------------------------------------------------------
 
+
 class TestStateVariableExtractor:
     def test_init(self):
         from cogant.statespace.variables import StateVariableExtractor
+
         graph, *_ = _make_graph()
         extractor = StateVariableExtractor(graph)
         assert extractor.state_variables == {}
@@ -269,6 +313,7 @@ class TestStateVariableExtractor:
 
     def test_extract_returns_dict(self):
         from cogant.statespace.variables import StateVariableExtractor
+
         graph, mod, func1, func2, var1 = _make_graph()
         mappings = _make_mappings(func1.id, var1.id)
         extractor = StateVariableExtractor(graph)
@@ -276,7 +321,8 @@ class TestStateVariableExtractor:
         assert isinstance(result, dict)
 
     def test_extract_hidden_state_mapping(self):
-        from cogant.statespace.variables import StateVariableExtractor, StateVariable
+        from cogant.statespace.variables import StateVariable, StateVariableExtractor
+
         graph, mod, func1, func2, var1 = _make_graph()
         mappings = _make_mappings(func1.id, var1.id)
         extractor = StateVariableExtractor(graph)
@@ -286,6 +332,7 @@ class TestStateVariableExtractor:
 
     def test_extract_empty_mappings(self):
         from cogant.statespace.variables import StateVariableExtractor
+
         graph, *_ = _make_graph()
         extractor = StateVariableExtractor(graph)
         result = extractor.extract({})
@@ -293,6 +340,7 @@ class TestStateVariableExtractor:
 
     def test_extract_populates_state_variables(self):
         from cogant.statespace.variables import StateVariableExtractor
+
         graph, mod, func1, func2, var1 = _make_graph()
         mappings = _make_mappings(func1.id, var1.id)
         extractor = StateVariableExtractor(graph)
@@ -300,20 +348,25 @@ class TestStateVariableExtractor:
         assert len(extractor.state_variables) >= 1
 
     def test_extract_observable_flag_set(self):
+        from cogant.schemas.semantic import MappingKind, SemanticMapping
         from cogant.statespace.variables import StateVariableExtractor
-        from cogant.schemas.semantic import SemanticMapping, MappingKind
+
         graph, mod, func1, func2, var1 = _make_graph()
         # Create mappings where same node is both hidden state and observation
         mappings = {
             "m1": SemanticMapping(
-                id="m1", kind=MappingKind.HIDDEN_STATE,
+                id="m1",
+                kind=MappingKind.HIDDEN_STATE,
                 graph_fragment_node_ids=[var1.id],
-                semantic_label="sv", confidence_score=0.85,
+                semantic_label="sv",
+                confidence_score=0.85,
             ),
             "m2": SemanticMapping(
-                id="m2", kind=MappingKind.OBSERVATION,
+                id="m2",
+                kind=MappingKind.OBSERVATION,
                 graph_fragment_node_ids=[var1.id],
-                semantic_label="obs", confidence_score=0.85,
+                semantic_label="obs",
+                confidence_score=0.85,
             ),
         }
         extractor = StateVariableExtractor(graph)
@@ -327,25 +380,31 @@ class TestStateVariableExtractor:
 # TimeRegime enum
 # ---------------------------------------------------------------------------
 
+
 class TestTimeRegime:
     def test_synchronous(self):
         from cogant.statespace.temporal import TimeRegime
+
         assert TimeRegime.SYNCHRONOUS == "synchronous"
 
     def test_asynchronous(self):
         from cogant.statespace.temporal import TimeRegime
+
         assert TimeRegime.ASYNCHRONOUS == "asynchronous"
 
     def test_event_driven(self):
         from cogant.statespace.temporal import TimeRegime
+
         assert TimeRegime.EVENT_DRIVEN == "event_driven"
 
     def test_hybrid(self):
         from cogant.statespace.temporal import TimeRegime
+
         assert TimeRegime.HYBRID == "hybrid"
 
     def test_all_members(self):
         from cogant.statespace.temporal import TimeRegime
+
         assert len(TimeRegime) == 4
 
 
@@ -353,9 +412,11 @@ class TestTimeRegime:
 # TemporalOrdering dataclass
 # ---------------------------------------------------------------------------
 
+
 class TestTemporalOrdering:
     def test_creation(self):
         from cogant.statespace.temporal import TemporalOrdering
+
         to = TemporalOrdering(
             predecessor_id="n1",
             successor_id="n2",
@@ -371,9 +432,11 @@ class TestTemporalOrdering:
 # EventPattern dataclass
 # ---------------------------------------------------------------------------
 
+
 class TestEventPattern:
     def test_creation(self):
         from cogant.statespace.temporal import EventPattern
+
         ep = EventPattern(
             event_node_id="e1",
             trigger_nodes=["t1"],
@@ -384,6 +447,7 @@ class TestEventPattern:
 
     def test_async_event(self):
         from cogant.statespace.temporal import EventPattern
+
         ep = EventPattern(
             event_node_id="e1",
             trigger_nodes=[],
@@ -397,9 +461,11 @@ class TestEventPattern:
 # TemporalMetrics dataclass
 # ---------------------------------------------------------------------------
 
+
 class TestTemporalMetrics:
     def test_creation(self):
         from cogant.statespace.temporal import TemporalMetrics
+
         tm = TemporalMetrics(
             async_fraction=0.0,
             event_driven_fraction=0.0,
@@ -415,6 +481,7 @@ class TestTemporalMetrics:
 
     def test_has_loops_flag(self):
         from cogant.statespace.temporal import TemporalMetrics
+
         tm = TemporalMetrics(
             async_fraction=0.0,
             event_driven_fraction=0.0,
@@ -432,9 +499,11 @@ class TestTemporalMetrics:
 # TemporalAnalyzer
 # ---------------------------------------------------------------------------
 
+
 class TestTemporalAnalyzer:
     def test_init(self):
         from cogant.statespace.temporal import TemporalAnalyzer, TimeRegime
+
         graph, *_ = _make_graph()
         analyzer = TemporalAnalyzer(graph)
         assert analyzer.time_regime == TimeRegime.SYNCHRONOUS
@@ -444,6 +513,7 @@ class TestTemporalAnalyzer:
 
     def test_analyze_returns_time_regime(self):
         from cogant.statespace.temporal import TemporalAnalyzer, TimeRegime
+
         graph, *_ = _make_graph()
         analyzer = TemporalAnalyzer(graph)
         result = analyzer.analyze()
@@ -451,6 +521,7 @@ class TestTemporalAnalyzer:
 
     def test_analyze_sync_graph(self):
         from cogant.statespace.temporal import TemporalAnalyzer, TimeRegime
+
         graph, *_ = _make_graph(include_async=False)
         analyzer = TemporalAnalyzer(graph)
         result = analyzer.analyze()
@@ -458,6 +529,7 @@ class TestTemporalAnalyzer:
 
     def test_analyze_sets_orderings(self):
         from cogant.statespace.temporal import TemporalAnalyzer
+
         graph, *_ = _make_graph(include_calls=True)
         analyzer = TemporalAnalyzer(graph)
         analyzer.analyze()
@@ -465,6 +537,7 @@ class TestTemporalAnalyzer:
 
     def test_analyze_sets_metrics(self):
         from cogant.statespace.temporal import TemporalAnalyzer, TemporalMetrics
+
         graph, *_ = _make_graph()
         analyzer = TemporalAnalyzer(graph)
         analyzer.analyze()
@@ -472,6 +545,7 @@ class TestTemporalAnalyzer:
 
     def test_analyze_no_calls_no_orderings(self):
         from cogant.statespace.temporal import TemporalAnalyzer
+
         graph, *_ = _make_graph(include_calls=False)
         analyzer = TemporalAnalyzer(graph)
         analyzer.analyze()
@@ -480,6 +554,7 @@ class TestTemporalAnalyzer:
 
     def test_detect_async_nodes_empty(self):
         from cogant.statespace.temporal import TemporalAnalyzer
+
         graph, *_ = _make_graph(include_async=False)
         analyzer = TemporalAnalyzer(graph)
         async_nodes = analyzer._detect_async_nodes()
@@ -487,6 +562,7 @@ class TestTemporalAnalyzer:
 
     def test_detect_async_nodes_with_async_name(self):
         from cogant.statespace.temporal import TemporalAnalyzer
+
         graph, *_ = _make_graph(include_async=True)
         analyzer = TemporalAnalyzer(graph)
         async_nodes = analyzer._detect_async_nodes()
@@ -495,6 +571,7 @@ class TestTemporalAnalyzer:
 
     def test_detect_event_nodes_empty(self):
         from cogant.statespace.temporal import TemporalAnalyzer
+
         graph, *_ = _make_graph()
         analyzer = TemporalAnalyzer(graph)
         event_nodes = analyzer._detect_event_nodes()

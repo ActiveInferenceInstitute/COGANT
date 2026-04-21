@@ -26,9 +26,7 @@ class ReverseConfig(BaseModel):
     synthesis_strategy: Literal["minimal", "full"] = Field(
         default="minimal", description="Synthesis strategy"
     )
-    include_tests: bool = Field(
-        default=False, description="Synthesize a companion test suite"
-    )
+    include_tests: bool = Field(default=False, description="Synthesize a companion test suite")
     role_threshold: float = Field(
         default=0.7,
         ge=0.0,

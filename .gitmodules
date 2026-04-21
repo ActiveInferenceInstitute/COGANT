@@ -1,0 +1,36 @@
+[submodule "cogant/evaluation/eval_repos/click"]
+	path = cogant/evaluation/eval_repos/click
+	url = https://github.com/pallets/click.git
+[submodule "cogant/evaluation/eval_repos/dateutil"]
+	path = cogant/evaluation/eval_repos/dateutil
+	url = https://github.com/dateutil/dateutil.git
+[submodule "cogant/evaluation/eval_repos/dulwich"]
+	path = cogant/evaluation/eval_repos/dulwich
+	url = https://github.com/jelmer/dulwich.git
+[submodule "cogant/evaluation/eval_repos/fastapi"]
+	path = cogant/evaluation/eval_repos/fastapi
+	url = https://github.com/tiangolo/fastapi.git
+[submodule "cogant/evaluation/eval_repos/flask"]
+	path = cogant/evaluation/eval_repos/flask
+	url = https://github.com/pallets/flask.git
+[submodule "cogant/evaluation/eval_repos/httpx"]
+	path = cogant/evaluation/eval_repos/httpx
+	url = https://github.com/encode/httpx.git
+[submodule "cogant/evaluation/eval_repos/pydantic"]
+	path = cogant/evaluation/eval_repos/pydantic
+	url = https://github.com/pydantic/pydantic.git
+[submodule "cogant/evaluation/eval_repos/pyyaml"]
+	path = cogant/evaluation/eval_repos/pyyaml
+	url = https://github.com/yaml/pyyaml.git
+[submodule "cogant/evaluation/eval_repos/requests"]
+	path = cogant/evaluation/eval_repos/requests
+	url = https://github.com/psf/requests.git
+[submodule "cogant/evaluation/eval_repos/rich"]
+	path = cogant/evaluation/eval_repos/rich
+	url = https://github.com/Textualize/rich.git
+[submodule "cogant/evaluation/eval_repos/tqdm"]
+	path = cogant/evaluation/eval_repos/tqdm
+	url = https://github.com/tqdm/tqdm.git
+[submodule "cogant/evaluation/eval_repos/urllib3"]
+	path = cogant/evaluation/eval_repos/urllib3
+	url = https://github.com/urllib3/urllib3.git

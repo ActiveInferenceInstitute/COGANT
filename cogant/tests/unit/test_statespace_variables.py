@@ -11,12 +11,10 @@ same code paths the compiler hits at runtime are exercised here.
 
 from __future__ import annotations
 
-from typing import Dict
-
 import pytest
 
 from cogant.graph.builder import ProgramGraphBuilder
-from cogant.schemas.core import EdgeKind, Node, NodeKind
+from cogant.schemas.core import EdgeKind, NodeKind
 from cogant.schemas.graph import GraphMetadata, ProgramGraph
 from cogant.schemas.semantic import MappingKind, SemanticMapping
 from cogant.statespace.variables import (
@@ -50,7 +48,7 @@ def _hidden_mapping(mapping_id: str, node_id: str, **kwargs) -> SemanticMapping:
     )
 
 
-def _extract(builder: ProgramGraphBuilder, mappings: Dict[str, SemanticMapping]):
+def _extract(builder: ProgramGraphBuilder, mappings: dict[str, SemanticMapping]):
     graph = builder.finalize()
     extractor = StateVariableExtractor(graph)
     extractor.extract(mappings)
@@ -393,9 +391,7 @@ class TestCardinalityAndDomain:
             qualified_name="m.task",
             metadata={"type_hint": "str"},
         )
-        m = _hidden_mapping(
-            "m1", var.id, description="status of the current task"
-        )
+        m = _hidden_mapping("m1", var.id, description="status of the current task")
         ex = _extract(builder, {"m1": m})
         [sv] = ex.state_variables.values()
         assert sv.cardinality == 3
@@ -409,9 +405,7 @@ class TestCardinalityAndDomain:
             qualified_name="m.worker",
             metadata={"type_hint": "str"},
         )
-        m = _hidden_mapping(
-            "m1", var.id, description="lifecycle state machine"
-        )
+        m = _hidden_mapping("m1", var.id, description="lifecycle state machine")
         ex = _extract(builder, {"m1": m})
         [sv] = ex.state_variables.values()
         assert sv.cardinality == 4
@@ -549,7 +543,7 @@ class TestFactorization:
         """Two variables whose mutation edges overlap should be recorded as
         dependent in the factorization map."""
         builder = _new_graph()
-        module = builder.add_node(
+        builder.add_node(
             kind=NodeKind.MODULE,
             name="m",
             qualified_name="m",

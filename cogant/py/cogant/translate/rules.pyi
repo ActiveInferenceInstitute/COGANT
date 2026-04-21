@@ -19,4 +19,25 @@ from cogant.translate.rules.structural import InheritanceRule as InheritanceRule
 from cogant.translate.rules.structural import MutatingSubsystemRule as MutatingSubsystemRule
 from cogant.translate.rules.structural import ReadOnlyInputRule as ReadOnlyInputRule
 
-__all__ = ['TranslationRule', 'ContainmentRule', 'DataPipelineRule', 'InheritanceRule', 'MutatingSubsystemRule', 'ReadOnlyInputRule', 'EventBusRule', 'OrchestratorRule', 'TestAssertionRule', 'ConfigRule', 'FeatureFlagRule', 'ActionRule', 'ContextRule', 'ObservationRule', 'PolicyRule', 'PreferenceRule', 'CircuitBreakerRule', 'ErrorBoundaryRule', 'RetryPatternRule', 'SingletonAccessRule']
+__all__ = [
+    "TranslationRule",
+    "ContainmentRule",
+    "DataPipelineRule",
+    "InheritanceRule",
+    "MutatingSubsystemRule",
+    "ReadOnlyInputRule",
+    "EventBusRule",
+    "OrchestratorRule",
+    "TestAssertionRule",
+    "ConfigRule",
+    "FeatureFlagRule",
+    "ActionRule",
+    "ContextRule",
+    "ObservationRule",
+    "PolicyRule",
+    "PreferenceRule",
+    "CircuitBreakerRule",
+    "ErrorBoundaryRule",
+    "RetryPatternRule",
+    "SingletonAccessRule",
+]

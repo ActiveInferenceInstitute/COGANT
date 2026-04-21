@@ -214,14 +214,14 @@ class GanttRenderer:
             label_rows.append(
                 f'<div class="gantt-row"{row_bg}>'
                 f'<div class="gantt-label">{name}{crit_marker}</div>'
-                f'</div>'
+                f"</div>"
             )
             bar_rows.append(
                 f'<div class="gantt-row"{row_bg}>'
                 f'<div class="{bar_class}" style="margin-left: {left_pct:.2f}%; width: {width_pct:.2f}%;">'
-                f'{name}'
-                f'</div>'
-                f'</div>'
+                f"{name}"
+                f"</div>"
+                f"</div>"
             )
 
         gantt_labels = "\n                    ".join(label_rows)
@@ -230,10 +230,10 @@ class GanttRenderer:
         # --- Dependencies (all of them) ---
         dependencies_html = "".join(
             f'<div class="dependency">'
-            f'<strong>{html_mod.escape(str(d.get("from", "?")))}'
-            f' &rarr; {html_mod.escape(str(d.get("to", "?")))}</strong>'
-            f'<br/>{html_mod.escape(str(d.get("type", "depends_on")))}'
-            f'</div>'
+            f"<strong>{html_mod.escape(str(d.get('from', '?')))}"
+            f" &rarr; {html_mod.escape(str(d.get('to', '?')))}</strong>"
+            f"<br/>{html_mod.escape(str(d.get('type', 'depends_on')))}"
+            f"</div>"
             for d in self.dependencies
         )
 
@@ -243,8 +243,8 @@ class GanttRenderer:
             pg_items = "".join(
                 f'<span class="pg-chip" style="background: {pg_colors[gi % len(pg_colors)]}; '
                 f'border: 1px solid #ccc; padding: 2px 8px; border-radius: 4px; margin-right: 6px;">'
-                f'Group {gi + 1}: {", ".join(html_mod.escape(str(s)) for s in g)}'
-                f'</span>'
+                f"Group {gi + 1}: {', '.join(html_mod.escape(str(s)) for s in g)}"
+                f"</span>"
                 for gi, g in enumerate(self.parallel_groups)
             )
             pg_legend = f'<div class="parallel-legend"><h3>Parallel Groups</h3>{pg_items}</div>'

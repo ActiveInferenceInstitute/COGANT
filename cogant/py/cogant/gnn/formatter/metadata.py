@@ -71,7 +71,9 @@ class _MetadataSectionsMixin:
 
         # Extraction time
         if self.state_space.metadata and "extraction_time_ms" in self.state_space.metadata:
-            lines.append(f"- **Extraction Time**: {self.state_space.metadata['extraction_time_ms']} ms")
+            lines.append(
+                f"- **Extraction Time**: {self.state_space.metadata['extraction_time_ms']} ms"
+            )
 
         lines.append(f"- **State Variables**: {len(self.state_space.variables)}")
         lines.append(f"- **Observations**: {len(self.state_space.observations)}")
@@ -79,6 +81,7 @@ class _MetadataSectionsMixin:
         lines.append("")
 
         return "\n".join(lines)
+
     def _format_repository_metadata(self) -> str:
         """Format repository metadata section."""
         lines = ["## Repository Metadata"]
@@ -88,7 +91,11 @@ class _MetadataSectionsMixin:
             lines.append(f"- **Repository URI**: {meta.repo_uri}")
 
             # Count files by language (includes both FILE and MODULE nodes, which may represent files)
-            file_count = sum(1 for node in self.graph.nodes.values() if node.kind in (NodeKind.FILE, NodeKind.MODULE))
+            file_count = sum(
+                1
+                for node in self.graph.nodes.values()
+                if node.kind in (NodeKind.FILE, NodeKind.MODULE)
+            )
             lines.append(f"- **File Count**: {file_count}")
 
             if meta.languages:
@@ -112,6 +119,7 @@ class _MetadataSectionsMixin:
         lines.append("")
 
         return "\n".join(lines)
+
     def _format_source_coverage(self) -> str:
         """Format source coverage section."""
         lines = ["## Source Coverage"]
@@ -133,15 +141,18 @@ class _MetadataSectionsMixin:
         # Semantic coverage: count nodes that appear in at least one mapping
         covered_nodes = set()
         for mapping in self.mappings.values():
-            if hasattr(mapping, 'graph_fragment_node_ids'):
+            if hasattr(mapping, "graph_fragment_node_ids"):
                 covered_nodes.update(mapping.graph_fragment_node_ids)
 
         if len(self.graph.nodes) > 0:
             coverage = (len(covered_nodes) / len(self.graph.nodes)) * 100
-            lines.append(f"- **Semantic Coverage**: {coverage:.1f}% ({len(covered_nodes)}/{len(self.graph.nodes)} nodes appear in semantic mappings)")
+            lines.append(
+                f"- **Semantic Coverage**: {coverage:.1f}% ({len(covered_nodes)}/{len(self.graph.nodes)} nodes appear in semantic mappings)"
+            )
         lines.append("")
 
         return "\n".join(lines)
+
     def _format_provenance(self) -> str:
         """Format provenance section."""
         lines = ["## Provenance"]
@@ -168,11 +179,11 @@ class _MetadataSectionsMixin:
             provenance_confidence: dict[str, list[float]] = defaultdict(list)
 
             for mapping in self.mappings.values():
-                if hasattr(mapping, 'provenance') and mapping.provenance:
+                if hasattr(mapping, "provenance") and mapping.provenance:
                     for prov in mapping.provenance:
-                        source = prov.source if hasattr(prov, 'source') else 'unknown'
+                        source = prov.source if hasattr(prov, "source") else "unknown"
                         provenance_sources[source] += 1
-                        confidence = prov.confidence if hasattr(prov, 'confidence') else 0.0
+                        confidence = prov.confidence if hasattr(prov, "confidence") else 0.0
                         provenance_confidence[source].append(confidence)
 
             if provenance_sources:
@@ -180,7 +191,11 @@ class _MetadataSectionsMixin:
                 lines.append("|------|-------|-----------|")
                 for source in sorted(provenance_sources.keys()):
                     count = provenance_sources[source]
-                    avg_conf = sum(provenance_confidence[source]) / len(provenance_confidence[source]) if provenance_confidence[source] else 0.0
+                    avg_conf = (
+                        sum(provenance_confidence[source]) / len(provenance_confidence[source])
+                        if provenance_confidence[source]
+                        else 0.0
+                    )
                     lines.append(f"| {source} | {count} | {avg_conf:.3f} |")
             else:
                 lines.append("No provenance chains found in mappings.")
@@ -210,13 +225,14 @@ class _MetadataSectionsMixin:
             lines.append("|----|----|")
             tier_counts: dict[str, int] = defaultdict(int)
             for mapping in self.mappings.values():
-                if hasattr(mapping, 'confidence_tier'):
+                if hasattr(mapping, "confidence_tier"):
                     tier_counts[mapping.confidence_tier.value] += 1
             for tier in sorted(tier_counts.keys()):
                 lines.append(f"| {tier} | {tier_counts[tier]} |")
             lines.append("")
 
         return "\n".join(lines)
+
     def _format_confidence(self) -> str:
         """Format confidence scores section."""
         lines = ["## Confidence Scores"]
@@ -235,7 +251,7 @@ class _MetadataSectionsMixin:
 
         kind_confidences = defaultdict(list)
         for mapping in self.mappings.values():
-            if hasattr(mapping, 'kind') and hasattr(mapping, 'confidence_score'):
+            if hasattr(mapping, "kind") and hasattr(mapping, "confidence_score"):
                 kind_confidences[mapping.kind.value].append(mapping.confidence_score)
 
         for kind in sorted(kind_confidences.keys()):
@@ -250,7 +266,9 @@ class _MetadataSectionsMixin:
         # Overall statistics with distribution
         lines.append("### Overall Statistics")
         lines.append("")
-        all_scores = [m.confidence_score for m in self.mappings.values() if hasattr(m, 'confidence_score')]
+        all_scores = [
+            m.confidence_score for m in self.mappings.values() if hasattr(m, "confidence_score")
+        ]
         if all_scores:
             overall_mean = sum(all_scores) / len(all_scores)
             overall_min = min(all_scores)
@@ -288,13 +306,20 @@ class _MetadataSectionsMixin:
             med_pct = (medium_conf / len(all_scores) * 100) if all_scores else 0
             low_pct = (low_conf / len(all_scores) * 100) if all_scores else 0
 
-            lines.append(f"| High (>0.8) | {high_conf} | {high_pct:.1f}% | {make_bar(high_conf, max_count, bar_width)} |")
-            lines.append(f"| Medium (0.5-0.8) | {medium_conf} | {med_pct:.1f}% | {make_bar(medium_conf, max_count, bar_width)} |")
-            lines.append(f"| Low (<0.5) | {low_conf} | {low_pct:.1f}% | {make_bar(low_conf, max_count, bar_width)} |")
+            lines.append(
+                f"| High (>0.8) | {high_conf} | {high_pct:.1f}% | {make_bar(high_conf, max_count, bar_width)} |"
+            )
+            lines.append(
+                f"| Medium (0.5-0.8) | {medium_conf} | {med_pct:.1f}% | {make_bar(medium_conf, max_count, bar_width)} |"
+            )
+            lines.append(
+                f"| Low (<0.5) | {low_conf} | {low_pct:.1f}% | {make_bar(low_conf, max_count, bar_width)} |"
+            )
 
         lines.append("")
 
         return "\n".join(lines)
+
     def _format_rendering_hints(self) -> str:
         """Format rendering hints section."""
         lines = ["## Rendering Hints"]
@@ -339,7 +364,9 @@ class _MetadataSectionsMixin:
         class_count = sum(1 for n in self.graph.nodes.values() if n.kind == NodeKind.CLASS)
         state_var_count = len(self.state_space.variables)
         call_edges = sum(1 for e in self.graph.edges.values() if e.kind == EdgeKind.CALLS)
-        action_mappings = sum(1 for m in self.mappings.values() if hasattr(m, 'kind') and m.kind == MappingKind.ACTION)
+        action_mappings = sum(
+            1 for m in self.mappings.values() if hasattr(m, "kind") and m.kind == MappingKind.ACTION
+        )
 
         lines.append("Based on detected elements:")
         lines.append("")
@@ -347,22 +374,31 @@ class _MetadataSectionsMixin:
         if class_count > 0:
             lines.append(f"- **class_diagram.mermaid**: {class_count} classes detected")
         if state_var_count > 0:
-            lines.append(f"- **state_diagram.mermaid**: {state_var_count} state variables ({len(self.state_space.transitions)} transitions)")
+            lines.append(
+                f"- **state_diagram.mermaid**: {state_var_count} state variables ({len(self.state_space.transitions)} transitions)"
+            )
         if call_edges > 3:
-            lines.append(f"- **sequence_diagram.mermaid**: {call_edges} call edges (ideal for call sequences)")
+            lines.append(
+                f"- **sequence_diagram.mermaid**: {call_edges} call edges (ideal for call sequences)"
+            )
         if action_mappings > 0:
-            lines.append(f"- **flowchart.mermaid**: {action_mappings} semantic action mappings found")
+            lines.append(
+                f"- **flowchart.mermaid**: {action_mappings} semantic action mappings found"
+            )
 
         lines.append("")
         lines.append("### Recommended Views")
         lines.append("")
-        lines.append("- **Data Flow Graph**: Show READS/WRITES edges to understand data dependencies")
+        lines.append(
+            "- **Data Flow Graph**: Show READS/WRITES edges to understand data dependencies"
+        )
         lines.append("- **Control Flow Graph**: Show CALLS/TRIGGERS edges to understand execution")
         lines.append("- **Semantic Graph**: Show ACTION/OBSERVATION/CONSTRAINT mappings")
         lines.append("- **State Variable Graph**: Show variable factorization and dependencies")
         lines.append("")
 
         return "\n".join(lines)
+
     def _format_validation_notes(self) -> str:
         """Format validation notes section."""
         lines = ["## Validation Notes"]
@@ -405,17 +441,21 @@ class _MetadataSectionsMixin:
 
         unmapped_nodes = set(self.graph.nodes.keys())
         for mapping in self.mappings.values():
-            if hasattr(mapping, 'graph_fragment_node_ids'):
+            if hasattr(mapping, "graph_fragment_node_ids"):
                 unmapped_nodes -= set(mapping.graph_fragment_node_ids)
 
         unmapped_edges = set(self.graph.edges.keys())
         for mapping in self.mappings.values():
-            if hasattr(mapping, 'graph_fragment_edge_ids'):
+            if hasattr(mapping, "graph_fragment_edge_ids"):
                 unmapped_edges -= set(mapping.graph_fragment_edge_ids)
 
-        lines.append(f"- **Nodes with semantic mappings**: {len(self.graph.nodes) - len(unmapped_nodes)}/{len(self.graph.nodes)}")
+        lines.append(
+            f"- **Nodes with semantic mappings**: {len(self.graph.nodes) - len(unmapped_nodes)}/{len(self.graph.nodes)}"
+        )
         lines.append(f"- **Nodes without mappings**: {len(unmapped_nodes)}")
-        lines.append(f"- **Edges with semantic mappings**: {len(self.graph.edges) - len(unmapped_edges)}/{len(self.graph.edges)}")
+        lines.append(
+            f"- **Edges with semantic mappings**: {len(self.graph.edges) - len(unmapped_edges)}/{len(self.graph.edges)}"
+        )
         lines.append(f"- **Edges without mappings**: {len(unmapped_edges)}")
         lines.append("")
 
@@ -436,13 +476,18 @@ class _MetadataSectionsMixin:
         if orphan_list:
             warnings.append(f"- {len(orphan_list)} orphaned nodes (no incoming/outgoing edges)")
             if len(orphan_list) <= 5:
-                node_names = [self.graph.nodes[nid].name if nid in self.graph.nodes else nid for nid in orphan_list[:5]]
+                node_names = [
+                    self.graph.nodes[nid].name if nid in self.graph.nodes else nid
+                    for nid in orphan_list[:5]
+                ]
                 warnings.append(f"  Examples: {', '.join(node_names)}")
 
         # Check for variables without observations
         # Since observations don't link to variables directly in the schema, count unobserved heuristically
         if len(self.state_space.variables) > 0 and len(self.state_space.observations) == 0:
-            warnings.append(f"- {len(self.state_space.variables)} state variables have no observation modalities defined")
+            warnings.append(
+                f"- {len(self.state_space.variables)} state variables have no observation modalities defined"
+            )
 
         # Check for actions with no effects
         actionless = sum(1 for a in self.state_space.actions.values() if not a.effects)
@@ -452,17 +497,17 @@ class _MetadataSectionsMixin:
         # Check for variables with no transitions
         vars_with_transitions: set[str] = set()
         for trans in self.state_space.transitions.values():
-            if hasattr(trans, 'source_state') and trans.source_state:
+            if hasattr(trans, "source_state") and trans.source_state:
                 src: Any = trans.source_state
                 # source_state could be a dict or string
                 if isinstance(src, dict):
-                    src = str(src.get('id', src.get('var_id', str(src))))
+                    src = str(src.get("id", src.get("var_id", str(src))))
                 vars_with_transitions.add(str(src))
-            if hasattr(trans, 'target_state') and trans.target_state:
+            if hasattr(trans, "target_state") and trans.target_state:
                 tgt: Any = trans.target_state
                 # target_state could be a dict or string
                 if isinstance(tgt, dict):
-                    tgt = str(tgt.get('id', tgt.get('var_id', str(tgt))))
+                    tgt = str(tgt.get("id", tgt.get("var_id", str(tgt))))
                 vars_with_transitions.add(str(tgt))
 
         static_vars = len(self.state_space.variables) - len(vars_with_transitions)

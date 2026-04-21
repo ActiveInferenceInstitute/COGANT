@@ -13,8 +13,6 @@ instances — no mocks. Two flavours of fixtures are used:
 
 from __future__ import annotations
 
-from typing import Dict
-
 import pytest
 
 from cogant.graph.builder import ProgramGraphBuilder
@@ -209,7 +207,7 @@ class TestTimelineBuilderParallel:
     def test_fanin_waits_for_longest_branch(self) -> None:
         builder = TimelineBuilder(_parallel_process_model())
         builder.build()
-        a = builder.gantt_stages["a"]
+        builder.gantt_stages["a"]
         b = builder.gantt_stages["b"]
         d = builder.gantt_stages["d"]
         # d must start at or after b's end
@@ -391,8 +389,17 @@ def _policy_graph() -> ProgramGraph:
     )
 
     # Containment
-    for child in (retry_meta, retry_struct, branch_name, branch_struct,
-                  tgt_a, tgt_b, cb_meta, cb_name, plain):
+    for child in (
+        retry_meta,
+        retry_struct,
+        branch_name,
+        branch_struct,
+        tgt_a,
+        tgt_b,
+        cb_meta,
+        cb_name,
+        plain,
+    ):
         builder.add_edge(module.id, child.id, EdgeKind.CONTAINS)
 
     return builder.finalize()
@@ -420,10 +427,8 @@ class TestPolicyExtractor:
         retry_policies = list(extractor.retry_policies.values())
         # The metadata-driven retry and the structural self-call should both appear
         assert len(retry_policies) >= 2
-        names_by_stage = {p.stage_id: p for p in retry_policies}
-        metadata_policy = next(
-            p for p in retry_policies if p.max_attempts == 4
-        )
+        {p.stage_id: p for p in retry_policies}
+        metadata_policy = next(p for p in retry_policies if p.max_attempts == 4)
         assert isinstance(metadata_policy, RetryPolicy)
         assert metadata_policy.backoff_strategy == "linear"
         assert metadata_policy.backoff_base == pytest.approx(0.5)

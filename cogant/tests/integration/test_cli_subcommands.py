@@ -28,9 +28,7 @@ import pytest
 
 # Absolute path to the cogant project root and calculator fixture.
 _COGANT_ROOT = Path(__file__).resolve().parents[2]
-_CALCULATOR_FIXTURE = (
-    _COGANT_ROOT / "examples" / "control_positive" / "calculator"
-)
+_CALCULATOR_FIXTURE = _COGANT_ROOT / "examples" / "control_positive" / "calculator"
 
 
 def _cogant_command() -> list[str]:
@@ -122,15 +120,11 @@ def test_cli_help_exits_zero_and_lists_commands() -> None:
     documented discovery surface for the CLI today.
     """
     result = _run_cli("--help")
-    assert result.returncode == 0, (
-        f"--help exited {result.returncode}. stderr: {result.stderr!r}"
-    )
+    assert result.returncode == 0, f"--help exited {result.returncode}. stderr: {result.stderr!r}"
     # The banner should enumerate the core subcommands.
     stdout = result.stdout
     for cmd in ("doctor", "translate", "explain", "scan"):
-        assert cmd in stdout, (
-            f"Expected to see {cmd!r} in --help output; got: {stdout!r}"
-        )
+        assert cmd in stdout, f"Expected to see {cmd!r} in --help output; got: {stdout!r}"
 
 
 @pytest.mark.integration
@@ -143,9 +137,7 @@ def test_cli_scan_json_format(calculator_repo: Path) -> None:
     parseable Python module.
     """
     result = _run_cli("scan", str(calculator_repo), "--format", "json")
-    assert result.returncode == 0, (
-        f"scan exited {result.returncode}. stderr: {result.stderr!r}"
-    )
+    assert result.returncode == 0, f"scan exited {result.returncode}. stderr: {result.stderr!r}"
     stdout = result.stdout.strip()
     assert stdout, "scan produced no stdout"
 
@@ -179,12 +171,9 @@ def test_cli_explain_json_format(calculator_repo: Path) -> None:
     We probe with ``Calculator`` (the top-level class on the fixture),
     which exists on both the shipped and fallback repos.
     """
-    result = _run_cli(
-        "explain", str(calculator_repo), "Calculator", "--format", "json"
-    )
+    result = _run_cli("explain", str(calculator_repo), "Calculator", "--format", "json")
     assert result.returncode == 0, (
-        f"explain exited {result.returncode}. "
-        f"stdout: {result.stdout!r} stderr: {result.stderr!r}"
+        f"explain exited {result.returncode}. stdout: {result.stdout!r} stderr: {result.stderr!r}"
     )
 
     stdout = result.stdout.strip()
@@ -199,8 +188,7 @@ def test_cli_explain_json_format(calculator_repo: Path) -> None:
         payload = json.loads(stdout[start:])
     except json.JSONDecodeError as exc:
         pytest.fail(
-            f"explain --format json output did not decode as JSON: {exc}. "
-            f"Raw: {stdout[start:]!r}"
+            f"explain --format json output did not decode as JSON: {exc}. Raw: {stdout[start:]!r}"
         )
 
     assert "node_name" in payload, (

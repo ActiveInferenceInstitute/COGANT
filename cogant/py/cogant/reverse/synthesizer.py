@@ -188,7 +188,7 @@ def _render_state_module(plan: PackagePlan) -> str:
         lines.append('        """Mutator retained so forward rules see a WRITES edge."""')
         lines.append("        self._placeholder = value")
         lines.append("")
-        lines.append("    def copy(self, **changes: Any) -> \"State\":")
+        lines.append('    def copy(self, **changes: Any) -> "State":')
         lines.append('        """Return a copy; retained for API symmetry."""')
         lines.append("        new = State()")
         lines.append("        new._placeholder = self._placeholder")
@@ -215,15 +215,15 @@ def _render_state_module(plan: PackagePlan) -> str:
         cls_name = f"Factor{i}"  # opaque, keyword-collision-free
         factor_class_names.append(cls_name)
         lines.append(f"class {cls_name}:")
-        lines.append(
-            f'    """Hidden-state factor for GNN slot {n.slot} ({n.name})."""'
-        )
+        lines.append(f'    """Hidden-state factor for GNN slot {n.slot} ({n.name})."""')
         lines.append("")
         lines.append(f"    def __init__(self, value: {n.python_type} = {n.initial_value}) -> None:")
         lines.append(
             f'        """Initialize factor {n.name} with default ``{n.initial_value}``."""'
         )
-        card_comment = f"  # slot={n.slot}, card={n.cardinality}" if n.cardinality else f"  # slot={n.slot}"
+        card_comment = (
+            f"  # slot={n.slot}, card={n.cardinality}" if n.cardinality else f"  # slot={n.slot}"
+        )
         lines.append(f"        self.value: {n.python_type} = value{card_comment}")
         lines.append("")
         lines.append(f"    def update(self, value: {n.python_type}) -> None:")
@@ -232,25 +232,19 @@ def _render_state_module(plan: PackagePlan) -> str:
         )
         lines.append("        self.value = value")
         lines.append("")
-        lines.append(f"    def copy(self) -> \"{cls_name}\":")
-        lines.append(
-            '        """Return an independent copy of this factor."""'
-        )
+        lines.append(f'    def copy(self) -> "{cls_name}":')
+        lines.append('        """Return an independent copy of this factor."""')
         lines.append(f"        return {cls_name}(value=self.value)")
         lines.append("")
         lines.append("    def __repr__(self) -> str:")
-        lines.append(f"        return f\"{cls_name}(value={{self.value!r}})\"")
+        lines.append(f'        return f"{cls_name}(value={{self.value!r}})"')
         lines.append("")
 
     # Aggregator ``State`` class — holds instances of every factor class.
     lines.append("class State:")
-    lines.append(
-        '    """Aggregator holding one instance of each hidden-state factor class."""'
-    )
+    lines.append('    """Aggregator holding one instance of each hidden-state factor class."""')
     lines.append("")
-    init_args = ", ".join(
-        f"{n.name}: {n.python_type} = {n.initial_value}" for n in plan.state_vars
-    )
+    init_args = ", ".join(f"{n.name}: {n.python_type} = {n.initial_value}" for n in plan.state_vars)
     lines.append(f"    def __init__(self, {init_args}) -> None:")
     lines.append('        """Initialize every factor with an optional override."""')
     for n, cls_name in zip(plan.state_vars, factor_class_names, strict=False):
@@ -260,19 +254,16 @@ def _render_state_module(plan: PackagePlan) -> str:
     # Mutators at the aggregator level delegate into the leaf factors.
     for n in plan.state_vars:
         lines.append(f"    def update_{n.name}(self, value: {n.python_type}) -> None:")
-        lines.append(
-            f'        """Forward ``update`` to the {n.name} factor instance."""'
-        )
+        lines.append(f'        """Forward ``update`` to the {n.name} factor instance."""')
         lines.append(f"        self.{n.name}.update(value)")
         lines.append("")
 
     # ``copy`` helper returns a new State.
-    lines.append("    def copy(self, **changes: Any) -> \"State\":")
+    lines.append('    def copy(self, **changes: Any) -> "State":')
     lines.append('        """Return a new State with the given field updates applied."""')
     lines.append("        new = State(")
     lines.append(
-        "            "
-        + ", ".join(f"{n.name}=self.{n.name}.value" for n in plan.state_vars)
+        "            " + ", ".join(f"{n.name}=self.{n.name}.value" for n in plan.state_vars)
     )
     lines.append("        )")
     lines.append("        for key, val in changes.items():")
@@ -287,7 +278,7 @@ def _render_state_module(plan: PackagePlan) -> str:
 
     lines.append("    def __repr__(self) -> str:")
     repr_fields = ", ".join(f"{n.name}={{self.{n.name}.value!r}}" for n in plan.state_vars)
-    lines.append(f"        return f\"State({repr_fields})\"")
+    lines.append(f'        return f"State({repr_fields})"')
     lines.append("")
 
     return "\n".join(lines)
@@ -485,9 +476,7 @@ def _render_policy_module(plan: PackagePlan) -> str:
     lines: list[str] = [header]
 
     lines.append("def select_policy(state: State, observations: List[float]) -> int:")
-    lines.append(
-        '    """Return the action index that maximises the preference score."""'
-    )
+    lines.append('    """Return the action index that maximises the preference score."""')
     lines.append("    if N_ACTIONS <= 0:")
     lines.append("        return 0")
     lines.append("    # Default state distribution: uniform over hidden states.")
@@ -497,7 +486,7 @@ def _render_policy_module(plan: PackagePlan) -> str:
     lines.append("    else:")
     lines.append("        state_dist = [1.0]")
     lines.append("    best_action = 0")
-    lines.append("    best_score = float(\"-inf\")")
+    lines.append('    best_score = float("-inf")')
     lines.append("    for a in range(N_ACTIONS):")
     lines.append("        pred_obs = likelihood(state_dist)")
     lines.append("        score = preference_score(pred_obs) - 0.01 * a")
@@ -591,12 +580,10 @@ def _render_constraints_module(plan: PackagePlan) -> str:
         # prefix the planner may have added for identifier uniqueness.
         base = node.name
         if base.startswith("cnst_"):
-            base = base[len("cnst_"):]
+            base = base[len("cnst_") :]
         fn_name = base if "check" in base else f"check_{base}"
         lines.append(f"def {fn_name}(state: State) -> bool:")
-        lines.append(
-            f'    """Constraint {i}: assert invariant for GNN slot {node.slot}."""'
-        )
+        lines.append(f'    """Constraint {i}: assert invariant for GNN slot {node.slot}."""')
         lines.append("    _ = state")
         lines.append("    return True")
         lines.append("")
@@ -605,9 +592,7 @@ def _render_constraints_module(plan: PackagePlan) -> str:
     for i, node in enumerate(plan.scaffold_constraint_checks):
         fn_name = node.name
         lines.append(f"def {fn_name}(state: State) -> bool:")
-        lines.append(
-            f'    """Scaffold constraint {i}: invariant over slot {node.slot}."""'
-        )
+        lines.append(f'    """Scaffold constraint {i}: invariant over slot {node.slot}."""')
         lines.append("    _ = state")
         lines.append("    return True")
         lines.append("")
@@ -671,9 +656,7 @@ def _render_context_module(plan: PackagePlan) -> str:
     for i, node in enumerate(plan.scaffold_context_classes):
         cls_name = node.name
         lines.append(f"class {cls_name}:")
-        lines.append(
-            f'    """Scaffold context {i}: settings container for slot {node.slot}."""'
-        )
+        lines.append(f'    """Scaffold context {i}: settings container for slot {node.slot}."""')
         # Single class-level integer attribute. Class-level (not
         # instance-level) so no WRITES edge is generated by the edge
         # extractor on class-body execution.
@@ -687,7 +670,7 @@ def _render_context_module(plan: PackagePlan) -> str:
         # reliably. Convert identifier to PascalCase + ``Settings``.
         base = node.name
         if base.startswith("context_"):
-            base = base[len("context_"):]
+            base = base[len("context_") :]
         cls_name = "".join(part.capitalize() for part in base.split("_")) or f"Ctx{i}"
         cls_name = cls_name + "Settings"
         lines.append(f"class {cls_name}:")
@@ -758,7 +741,7 @@ def _render_main_module(plan: PackagePlan) -> str:
     lines.append("    state = State()")
     lines.append("    for t in range(num_steps):")
     lines.append("        state = run_inference_step(state)")
-    lines.append("        print(f\"t={t}: {state}\")")
+    lines.append('        print(f"t={t}: {state}")')
     lines.append("    return state")
     lines.append("")
     lines.append("")
@@ -909,19 +892,12 @@ def synthesize_with_validation(
                 content = py_file.read_text(encoding="utf-8")
                 ast.parse(content)
             except SyntaxError as e:
-                issues.append(
-                    f"Syntax error in {py_file.name}: line {e.lineno}: "
-                    f"{e.msg}"
-                )
+                issues.append(f"Syntax error in {py_file.name}: line {e.lineno}: {e.msg}")
             except Exception as e:
-                issues.append(
-                    f"Error parsing {py_file.name}: {type(e).__name__}: {e}"
-                )
+                issues.append(f"Error parsing {py_file.name}: {type(e).__name__}: {e}")
 
     if issues:
-        logger.warning(
-            "Validation found %d issue(s) in synthesized package", len(issues)
-        )
+        logger.warning("Validation found %d issue(s) in synthesized package", len(issues))
     else:
         logger.info("All synthesized files validated successfully")
 
