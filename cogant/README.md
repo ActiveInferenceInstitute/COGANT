@@ -71,7 +71,7 @@ and a validator report scoring **100.0 / 100** on the calculator fixture.
 **Batch / all formats (staging tree):** from the parent `projects_in_progress/cogant/` directory,
 [`run_all.sh`](../run_all.sh) runs `translate`, `scan`, `graph`, `export-gnn`, `render`, `viz`, and
 `validate` for each target in `run_all.json` (see [`run_all.example.json`](../run_all.example.json)).
-Each target has its own folder under `output/runs/<id>/`; defaults include all `control_positive`
+Each target has its own folder under `output/<id>/`; defaults include all `control_positive`
 examples plus shallow-cloned public repos (`git_url`). You can run `../run_all.sh` from this
 directory (inner package) or from the staging root.
 

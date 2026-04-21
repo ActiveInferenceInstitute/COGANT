@@ -16,7 +16,7 @@ This page walks through a minimal end-to-end COGANT run: translate a repository,
 cogant translate ./my_repo --output output/ --layout-output
 ```
 
-This runs the full pipeline: **ingest → static → normalize → graph → translate → statespace → process → export → validate**. The `--layout-output` flag reorganizes the results into `data/`, `diagrams/`, `site/`, `reports/`, and `figures/` subdirectories so the output tree is easy to browse.
+This runs the full pipeline: **ingest → static → normalize → graph → translate → statespace → process → export → validate**. The `--layout-output` flag reorganizes the results into `data/`, `diagrams/`, `site/`, `reports/`, and `figures/` subdirectories so the output tree is easy to browse. The batch runner `run_all.py` (see [`../../README.md`](../../README.md)) adds `analysis/`, `exports/`, `gnn_package/`, and `roundtrip/` for the same target.
 
 Skip dynamic enrichment (coverage + trace) when you have no runtime data:
 

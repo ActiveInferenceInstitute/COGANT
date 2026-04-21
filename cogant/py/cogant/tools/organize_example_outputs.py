@@ -4,9 +4,14 @@ Layout per example (e.g. ``calculator`` under ``examples/control_positive/``)::
 
     data/       — JSON graph exports and validation
     diagrams/   — Mermaid sources and Graphviz ``.dot``
-    figures/    — Raster exports (PNG); populated by ``render_output_figures``
+    figures/    — Raster (``*.png``) and vector (``*.svg``) renders. Filled
+                  via the explicit ``_DEST`` map for canonical filenames
+                  emitted by ``render_all_pngs`` and a ``*.png``/``*.svg``
+                  fallback so future renderers do not regress.
     site/       — Static HTML (index, distribution views)
-    reports/    — Markdown summaries and human-readable model dumps
+    reports/    — Markdown summaries; ``model.gnn.md`` is copied here from
+                  ``gnn_package/`` and a ``run_summary.md`` is generated per
+                  target so the directory always exists.
 
 ``site/index.html`` file lists are rewritten to use ``../data/…``, etc.
 """
@@ -14,6 +19,7 @@ Layout per example (e.g. ``calculator`` under ``examples/control_positive/``)::
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import re
 import shutil
@@ -22,7 +28,12 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Filenames -> subdirectory under the example run root
+# Filenames -> subdirectory under the example run root.
+#
+# The PNG entries below mirror the canonical filenames written by
+# ``cogant.viz.render_all_pngs``; an additional ``*.png``/``*.svg``
+# fallback in ``_dest_for_file`` keeps the layout robust if new renderers
+# emit additional rasters.
 _DEST: dict[str, str] = {
     "adjacency_matrix.json": "data",
     "semantic_mappings.json": "data",
@@ -36,6 +47,7 @@ _DEST: dict[str, str] = {
     "gnn_model.json": "data",
     "bundle.json": "data",
     "syntax_tree.json": "data",
+    "simulation_trace.json": "data",
     "model.gnn.md": "reports",
     "summary.md": "reports",
     "graph.dot": "diagrams",
@@ -43,7 +55,20 @@ _DEST: dict[str, str] = {
     "node_distribution.html": "site",
     "edge_distribution.html": "site",
     "confidence_heatmap.html": "site",
-    "simulation_trace.json": "data",
+    "connections_matrix.png": "figures",
+    "markov_blanket.png": "figures",
+    "model_gnn.png": "figures",
+    "model_gnn_p2.png": "figures",
+    "model_gnn_p3.png": "figures",
+    "model_gnn_p4.png": "figures",
+    "model_gnn_p5.png": "figures",
+    "model_gnn_p6.png": "figures",
+    "model_gnn_p7.png": "figures",
+    "model_gnn_p8.png": "figures",
+    "process_gantt.png": "figures",
+    "program_graph.png": "figures",
+    "state_space_factor.png": "figures",
+    "summary_cover.png": "figures",
 }
 
 _MERMAID = ".mermaid"
@@ -54,6 +79,8 @@ def _dest_for_file(name: str) -> str | None:
         return _DEST[name]
     if name.endswith(_MERMAID):
         return "diagrams"
+    if name.endswith(".png") or name.endswith(".svg"):
+        return "figures"
     return None
 
 
@@ -91,6 +118,9 @@ def organize_run_dir(flat_dir: Path, *, dry_run: bool = False) -> Path | None:
         flat_dir / "site" / "index.html"
     ).exists():
         logger.info("Already organized: %s", flat_dir)
+        if not dry_run:
+            (flat_dir / "figures").mkdir(exist_ok=True)
+            _populate_reports(flat_dir)
         return flat_dir
 
     plan: list[tuple[Path, Path]] = []
@@ -123,7 +153,101 @@ def organize_run_dir(flat_dir: Path, *, dry_run: bool = False) -> Path | None:
     if site_index.is_file():
         _rewrite_index_html(site_index)
     (flat_dir / "figures").mkdir(exist_ok=True)
+    _populate_reports(flat_dir)
     return flat_dir
+
+
+def _populate_reports(run_dir: Path) -> None:
+    """Ensure ``reports/`` exists with the human-readable GNN spec and a summary.
+
+    ``model.gnn.md`` is *copied* (not moved) from ``gnn_package/`` so the
+    package directory remains self-contained for downstream upstream-GNN
+    consumers, while ``reports/`` is also a documented entry point.
+    """
+    reports = run_dir / "reports"
+    reports.mkdir(exist_ok=True)
+
+    gnn_md = run_dir / "gnn_package" / "model.gnn.md"
+    if gnn_md.is_file():
+        try:
+            shutil.copy2(str(gnn_md), str(reports / "model.gnn.md"))
+        except OSError as exc:
+            logger.warning("could not copy %s -> reports/: %s", gnn_md, exc)
+
+    summary_path = reports / "run_summary.md"
+    try:
+        summary_path.write_text(_render_run_summary(run_dir), encoding="utf-8")
+    except OSError as exc:
+        logger.warning("could not write %s: %s", summary_path, exc)
+
+
+def _render_run_summary(run_dir: Path) -> str:
+    """Render a short markdown summary of one run directory."""
+    bundle_path = run_dir / "data" / "bundle.json"
+    bundle: dict[str, object] = {}
+    if bundle_path.is_file():
+        try:
+            parsed = json.loads(bundle_path.read_text(encoding="utf-8"))
+            if isinstance(parsed, dict):
+                bundle = parsed
+        except json.JSONDecodeError:
+            bundle = {}
+
+    target = str(bundle.get("target", run_dir.name))
+    raw_stages = bundle.get("stage_results")
+    stage_results: dict[str, object] = raw_stages if isinstance(raw_stages, dict) else {}
+    raw_errors = bundle.get("errors")
+    errors: list[object] = raw_errors if isinstance(raw_errors, list) else []
+    raw_metadata = bundle.get("metadata")
+    metadata: dict[str, object] = raw_metadata if isinstance(raw_metadata, dict) else {}
+
+    lines: list[str] = []
+    lines.append(f"# Run summary — {run_dir.name}")
+    lines.append("")
+    lines.append(f"- target: `{target}`")
+    if "wall_time_ms" in metadata:
+        lines.append(f"- wall_time_ms: {metadata.get('wall_time_ms')}")
+    lines.append(f"- stages_run: {len(stage_results)}")
+    lines.append(f"- errors: {len(errors)}")
+    lines.append("")
+
+    lines.append("## Stages")
+    lines.append("")
+    lines.append("| stage | summary |")
+    lines.append("|---|---|")
+    for name, payload in stage_results.items():
+        summary = ""
+        if isinstance(payload, dict):
+            for key in ("node_count", "edge_count", "mapping_count", "states", "score"):
+                if key in payload:
+                    val = payload[key]
+                    if isinstance(val, list):
+                        summary = f"{key}={len(val)}"
+                    else:
+                        summary = f"{key}={val}"
+                    break
+        lines.append(f"| {name} | {summary or '-'} |")
+    lines.append("")
+
+    lines.append("## Key artifacts")
+    lines.append("")
+    candidates = [
+        ("bundle JSON", run_dir / "data" / "bundle.json"),
+        ("static site", run_dir / "site" / "index.html"),
+        ("figures dir", run_dir / "figures"),
+        ("GNN package", run_dir / "gnn_package" / "manifest.json"),
+        ("forward gnn", run_dir / "roundtrip" / "forward" / "model.gnn.md"),
+        ("graph metrics", run_dir / "analysis" / "graph_metrics.json"),
+    ]
+    for label, p in candidates:
+        if p.exists():
+            try:
+                rel = p.relative_to(run_dir)
+            except ValueError:
+                rel = p
+            lines.append(f"- {label}: `{rel}`")
+    lines.append("")
+    return "\n".join(lines)
 
 
 def migrate_output_tree(

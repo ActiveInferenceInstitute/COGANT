@@ -24,7 +24,7 @@
     "analyze_graph": true,
     "analyze_static": true,
     "export_multi": true,
-    "export_multi_formats": "json,graphml",
+    "export_multi_formats": "json,jsonlines",
     "visualize_diagrams": true,
     "visualize_format": "mermaid"
   },

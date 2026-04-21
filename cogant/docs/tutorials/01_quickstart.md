@@ -55,13 +55,12 @@ The `--layout-output` flag reorganizes the result into five subdirectories:
 | Subdirectory | Contents |
 | --- | --- |
 | `data/` | `bundle.json`, stage outputs, program graph JSON |
-| `diagrams/` | Mermaid + PNG renders of the graph and blanket |
+| `diagrams/` | Mermaid sources + Graphviz `.dot` renders of the graph and blanket |
 | `site/` | A minimal HTML site (navigable in a browser) |
-| `reports/` | Validator report (`gnn_score.json`), drift metrics |
-| `figures/` | Matplotlib plots of rule firing and confidence |
+| `reports/` | `model.gnn.md` (copied from `gnn_package/`) and `run_summary.md` |
+| `figures/` | Raster (`*.png`) and vector (`*.svg`) renders, including `summary_cover.png`, `connections_matrix.png`, `model_gnn*.png`, `process_gantt.png`, `program_graph.png`, `state_space_factor.png`, `markov_blanket.png` |
 
-The top-level `bundle.json` is the canonical machine-readable artifact; everything else is a
-view over it.
+The batch runner (`run_all.py`) populates four extra directories under the same target root: `analysis/` (graph metrics), `exports/` (multi-format graph exports), `gnn_package/` (full upstream-GNN spec package), and `roundtrip/` (forward + reverse GNN round-trip). The top-level `data/bundle.json` remains the canonical machine-readable artifact; everything else is a view over it.
 
 ## 3. Validate the GNN bundle
 

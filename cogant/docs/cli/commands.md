@@ -62,7 +62,7 @@ cogant extract-static ./my_repo --output ./exports
 
 **Options:**
 - `--output, -o`: Output **directory** for JSON artifacts. When set, runs the full export path (graph/GNN/state space) into that directory; omit for a short summary panel (modules parsed and symbols).
-- `--layout-output`: After export, move artifacts into `data/`, `diagrams/`, `site/`, `reports/`, `figures/` subdirectories for easier downstream consumption.
+- `--layout-output`: After export, move artifacts into `data/`, `diagrams/`, `site/`, `reports/`, `figures/` subdirectories for easier downstream consumption. The batch runner (`run_all.py`, see [`../../README.md`](../../README.md)) adds `analysis/`, `exports/`, `gnn_package/`, and `roundtrip/` alongside these.
 
 ### extract-dynamic
 

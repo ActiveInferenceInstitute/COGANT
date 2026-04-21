@@ -172,8 +172,8 @@ class Session:
             self.build_graph()
         self.gnn_model = orchestration.run_translate(b)
         n_mappings = (
-            len(self.gnn_model.get("mappings", {})) if isinstance(self.gnn_model, dict) else 0
-        )
+            self.gnn_model.get("mapping_count") if isinstance(self.gnn_model, dict) else 0
+        ) or 0
         logger.info(
             "Translation complete: %d semantic mappings",
             n_mappings,
@@ -189,17 +189,10 @@ class Session:
         self.state_space = orchestration.run_statespace(b, self.target)
         pm = orchestration.run_process(b, self.target)
         self.process_model = pm
-        n_vars = (
-            len(self.state_space.get("variables", {})) if isinstance(self.state_space, dict) else 0
-        )
-        n_obs = (
-            len(self.state_space.get("observations", {}))
-            if isinstance(self.state_space, dict)
-            else 0
-        )
-        n_actions = (
-            len(self.state_space.get("actions", {})) if isinstance(self.state_space, dict) else 0
-        )
+        ss = self.state_space if isinstance(self.state_space, dict) else {}
+        n_vars = len(ss.get("states", []) or [])
+        n_obs = len(ss.get("observations", []) or [])
+        n_actions = len(ss.get("actions", []) or [])
         logger.info(
             "State space compiled: %d vars, %d obs, %d actions",
             n_vars,

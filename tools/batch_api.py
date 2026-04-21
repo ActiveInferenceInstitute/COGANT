@@ -193,8 +193,12 @@ def run_multi_export(run_dir: Path, bundle_path: Path) -> int:
     out_dir = run_dir / "exports"
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    # GraphML is supported per-graph but ``MultiFormatExporter.export_gnn_bundle``
+    # (cogant/py/cogant/export/formats.py:_export_bundle_format) only handles
+    # JSON and JSONLINES today. Re-add ExportFormat.GRAPHML here once the
+    # bundle exporter learns to walk the embedded graphs.
     config = ExportConfig(
-        formats=[ExportFormat.JSON, ExportFormat.GRAPHML, ExportFormat.JSONLINES],
+        formats=[ExportFormat.JSON, ExportFormat.JSONLINES],
         output_dir=str(out_dir),
         prefix="cogant",
         overwrite=True,

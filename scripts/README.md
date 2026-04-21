@@ -7,7 +7,7 @@ here are glue that wires them together for end-to-end runs.
 | Script | Purpose |
 |--------|---------|
 | [`z_generate_manuscript_variables.py`](z_generate_manuscript_variables.py) | Load `METRICS.yaml`, substitute `{{VAR}}` placeholders into `manuscript/*.md`, and emit `output/data/manuscript_variables.json` plus a fully-populated `output/manuscript/` tree (including `config.yaml`, `references.bib`, and `preamble.md`). Flags: `--regenerate-metrics`, `--strict`. |
-| [`../run_all.py`](../run_all.py) | Staging-root sweep — run the full COGANT CLI chain (`translate`, `scan`, `graph`, `validate`, `export-gnn`, `render`, `viz`, optional `explain`) over every target listed in `run_all.json` (or the embedded `DEFAULT_CONFIG`). Local targets resolve via `path`; remote targets are cloned to `_git_source/` from `git_url`. Outputs land under `output/runs/<id>/`. Entry point: [`../run_all.sh`](../run_all.sh) (works from staging root or inner `cogant/`). |
+| [`../run_all.py`](../run_all.py) | Staging-root sweep — run the full COGANT CLI chain (`translate`, `scan`, `graph`, `validate`, `export-gnn`, `render`, `viz`, optional `explain`) over every target listed in `run_all.json` (or the embedded `DEFAULT_CONFIG`). Local targets resolve via `path`; remote targets are cloned to `_git_source/` from `git_url`. Outputs land under `cogant/output/<id>/`. Entry point: [`../run_all.sh`](../run_all.sh) (works from staging root or inner `cogant/`). |
 
 ## Quickstart
 

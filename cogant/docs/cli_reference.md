@@ -18,7 +18,7 @@ cogant translate <repo> [--output DIR] [--layout-output] [--no-dynamic]
 | Flag | Description |
 | --- | --- |
 | `--output`, `-o` | Output directory (default: `output`). |
-| `--layout-output` | After export, reorganize artifacts into `data/`, `diagrams/`, `site/`, `reports/`, `figures/`. |
+| `--layout-output` | After export, reorganize artifacts into `data/`, `diagrams/`, `site/`, `reports/`, `figures/`. The batch runner (`run_all.py`) adds `analysis/`, `exports/`, `gnn_package/`, `roundtrip/` alongside these. |
 | `--no-dynamic` | Skip the dynamic-analysis enrichment stage (coverage + trace). |
 | `--coverage` | Path to a `.coverage` database or Cobertura `coverage.xml`. |
 | `--trace` | Path to a Chrome DevTools trace JSON file. |

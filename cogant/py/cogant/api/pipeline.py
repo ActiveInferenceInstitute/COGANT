@@ -486,10 +486,12 @@ class PipelineRunner:
         bundle.metadata["timing"] = timing
 
         ran_stages = [s for s in config.stages if s in timing and timing[s] > 0]
+        skipped_stages = [s for s in config.stages if s in effective_skip]
         logger.info(
-            "Pipeline completed: %d/%d stages ran (incl. failures), %d errors, %.1fms total",
+            "Pipeline completed: %d/%d stages ran, %d skipped, %d errors, %.1fms total",
             len(ran_stages),
             len(config.stages),
+            len(skipped_stages),
             len(bundle.errors),
             timing["total"],
         )

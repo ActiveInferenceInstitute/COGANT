@@ -1,6 +1,6 @@
 {
   "package_root": "cogant",
-  "output_root": "output/runs",
+  "output_root": "output",
   "remote": {
     "shallow_clone": true,
     "refresh": false
