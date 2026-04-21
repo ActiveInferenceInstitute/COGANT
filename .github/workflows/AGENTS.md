@@ -28,7 +28,7 @@ major tags for that action:
 | `actions/upload-artifact` | `@v5` | Node 24. |
 | `astral-sh/setup-uv` | `@v8.1.0` | Pinned (immutable tag); `@v8` floating tag is intentionally unpublished. |
 | `dtolnay/rust-toolchain` | `@stable` | Replacement for the archived `actions-rs/toolchain`. |
-| `peaceiris/actions-gh-pages` | `@v4` | Node 24 / current major. |
+| `peaceiris/actions-gh-pages` | `@v4` | Current major; the action's own runtime is still Node 20, so the `docs` job sets `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"` to opt in early. Drop that env once the action ships a Node 24 release (or migrate to `actions/deploy-pages`). |
 
 The `pre-commit` job intentionally **does not** use
 `pre-commit/action` — that action transitively bundles
