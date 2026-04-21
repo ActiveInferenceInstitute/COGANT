@@ -148,7 +148,14 @@ known-third-party = ["pydantic", "typer", "rich", "networkx", "pyarrow", "duckdb
 python_version = "3.11"
 strict = true
 warn_return_any = true
-warn_unused_configs = true
+# The per-module overrides below are deliberately defensive — they
+# guard against optional-dependency absence on minimal installs and
+# against ``mypy .`` invocations that visit ``tests/``. When run only
+# against ``py/cogant/`` mypy will print "unused section(s)" notes for
+# overrides that did not fire; suppress that with
+# ``--no-warn-unused-configs`` (CI does this; ``strict = true`` here
+# leaves the rest of the strict bundle on).
+warn_unused_configs = false
 check_untyped_defs = true
 no_implicit_optional = true
 warn_redundant_casts = true
@@ -156,27 +163,29 @@ warn_unused_ignores = true
 warn_no_return = true
 strict_equality = true
 
+# Tests intentionally use loose typing (heavy fixture/mock idioms).
+# ``strict`` is enforced on ``py/cogant/`` only; this override stops
+# mypy from re-analysing the test tree when invoked repo-wide.
 [[tool.mypy.overrides]]
 module = "tests.*"
 ignore_errors = true
 
+# Optional / native-extension imports that mypy may not be able to
+# resolve when the dev extras are not installed. Modules listed here
+# have either no PEP 561 stubs (matplotlib, the native ``cogant._rust``
+# extension) or are guarded behind ``try: import ...`` blocks in the
+# package. Keep the list short — entries that mypy reports as "unused
+# section" should be pruned promptly to keep this file honest.
 [[tool.mypy.overrides]]
 module = [
-    "networkx.*",
-    "pyarrow.*",
-    "duckdb.*",
-    "typer.*",
     "matplotlib.*",
-    "tree_sitter.*",
-    "tree_sitter_languages.*",
-    "cairosvg.*",
     "numpy.*",
     "cogant._rust",
-    "yaml.*",
 ]
 ignore_missing_imports = true
 
-# Upstream generalized-notation-notation (import path src.gnn) has no stubs.
+# Upstream generalized-notation-notation (import path ``src.gnn``) has
+# no stubs and is loaded lazily by ``cogant.gnn.upstream_bridge``.
 [[tool.mypy.overrides]]
 module = ["src.gnn", "src.gnn.*"]
 ignore_missing_imports = true

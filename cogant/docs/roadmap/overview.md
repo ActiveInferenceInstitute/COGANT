@@ -12,7 +12,7 @@ breaking changes remain possible until v1.0.0 stabilizes the public API.
 ## Where We Are (v0.5.0 + wave-21)
 
 COGANT translates software repositories into AII-spec GNN bundles for Active Inference.
-The core pipeline is complete and battle-tested against 8+ real-world Python repos and
+The core pipeline is exercised end-to-end against 8+ real-world Python repos and
 a 23-fixture cross-language roundtrip suite (ε = 1.0, 100% ISOMORPHIC).
 
 **Shipped capability at a glance:**

@@ -104,7 +104,7 @@ Assignment aliasing (`x = y`) creates false WRITES edges. Alias tracking would r
 - [ ] "Export to GNN" command palette entry
 - [ ] Depends on: stable public API (v1.0 freeze target)
 
-### 9. Interactive web dashboard (enhanced)
+### 9. Interactive web dashboard
 **Effort:** M | **Complexity:** medium | **Value:** medium
 Current `cogant render` HTML is static. Interactive graph exploration would accelerate adoption.
 - [ ] Cytoscape.js or D3-force layout with filter controls

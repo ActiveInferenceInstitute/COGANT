@@ -14,7 +14,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Incremental analysis mode** — `cogant translate --incremental <git-ref>` / `PipelineConfig.incremental_since`. Reuses cached program graph for unchanged files; 19.6× no-change speedup, 5.6× single-file speedup on Flask benchmark.
 - **Multi-episode Bayesian learning** — `AgentRuntime.run_multi_episode`, `run_episode`, `update_D_from_posterior`, `update_A_from_counts`. Enables streaming belief updates and learned parameter adaptation.
 - **Production FastAPI server** — `cogant.server.app` with `/health` and `/translate` endpoints. Includes integration test suite, Dockerfile (python:3.12-slim + uv, `EXPOSE 8080`), and docker-compose.yml.
-- **Enhanced diagnostics** — `cogant doctor` extended with tree-sitter grammar checks, uv lockfile parity audit, optional-dependency verification.
+- **Diagnostics extension** — `cogant doctor` adds tree-sitter grammar checks, uv lockfile parity audit, and optional-dependency verification.
 - **Project scaffolding** — `cogant init <path>` guides setup: `cogant.yaml`, source structure, `pyproject.toml` template.
 - **POLICY stub emission** — Reverse synthesizer generates `decide_*` methods proportional to origin GNN POLICY role count (not fixed scaffolding).
 - **CONTEXT stub emission** — Reverse synthesizer generates `get_context_*` methods for CONTEXT/CONFIG roles.

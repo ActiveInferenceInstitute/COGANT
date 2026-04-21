@@ -1,8 +1,9 @@
 """
 GNN JSON exporter for machine-readable output.
 
-Emits machine-readable JSON with stable IDs across all sections
-and comprehensive data extraction from all model components.
+Emits machine-readable JSON with IDs that are stable across sections
+and serialises every model component (graph, state space, process
+model, semantic mappings) in a single nested document.
 """
 
 import json
@@ -163,7 +164,15 @@ class GNNJSONExporter:
         return json.dumps(data, indent=indent, default=str)
 
     def _export_metadata(self) -> dict[str, Any]:
-        """Export comprehensive metadata."""
+        """Build the ``metadata`` block.
+
+        Always populates ``generated_at``, ``schema_version``,
+        ``cogant_version``, ``model_id``, and ``schema_name``. When the
+        program graph carries ``RepositoryMetadata``, also adds a
+        ``repository`` sub-object (uri, languages, version, timestamps,
+        evidence sources, optional ``custom`` field) and the state-space
+        derived metrics block.
+        """
         metadata: dict[str, Any] = {
             "generated_at": datetime.now().isoformat(),
             "schema_version": "1.0",
@@ -630,7 +639,13 @@ class GNNJSONExporter:
         }
 
     def _export_state_space(self) -> dict[str, Any]:
-        """Export comprehensive state space model."""
+        """Build the ``state_space`` block.
+
+        Serialises every variable, observation, action, transition,
+        likelihood, and preference to plain dicts and returns them
+        alongside a ``summary`` carrying the time regime, the per-class
+        counts, and the ``factorization`` map (factor → variable ids).
+        """
         variables = {}
         var_by_factor = defaultdict(list)
 
@@ -745,7 +760,14 @@ class GNNJSONExporter:
         }
 
     def _export_process_model(self) -> dict[str, Any]:
-        """Export comprehensive process model."""
+        """Build the ``process_model`` block.
+
+        Emits each ``Stage`` (id, name, description, contained
+        ``node_ids``, entry/exit points, side effects, expected
+        duration, confidence) and each ``Connection`` (source/target
+        stages, trigger, condition, success rate) plus a ``summary``
+        with stage and connection counts and the entry/exit ids.
+        """
         stages = {}
         if self.process.stages:
             for stage_id, stage in self.process.stages.items():
@@ -789,7 +811,13 @@ class GNNJSONExporter:
         }
 
     def _export_mappings(self) -> dict[str, Any]:
-        """Export comprehensive semantic mappings."""
+        """Build the ``mappings`` block.
+
+        Walks every ``SemanticMapping``, serialising the source
+        ``node_id``, ``kind``, ``tier``, ``status``, confidence, and any
+        evidence. Returns the per-mapping dicts alongside a ``summary``
+        with tally counts grouped by ``kind``, ``tier``, and ``status``.
+        """
         mappings: dict[str, dict[str, Any]] = {}
         kind_counts: dict[str, int] = defaultdict(int)
         tier_counts: dict[str, int] = defaultdict(int)
