@@ -71,7 +71,7 @@ Active Inference processing chain as a configurable post-validate pass.
 | 6 | `6_validation.py` | on | Schema + cross-section validation. |
 | 7 | `7_export.py` | on | Multi-format export (JSON, GraphML, Mermaid). |
 | 8 | `8_visualization.py` | on | Static visualisations. |
-| 9 | `9_advanced_viz.py` | on | Interactive / advanced visualisations. |
+| 9 | `9_advanced_viz.py` | on | Interactive visualisations (Plotly / d3). Filename retained verbatim for upstream parity. |
 | 10 | `10_ontology.py` | on | Active Inference Ontology (AIO) lookup. |
 | **11** | `11_render.py` | **off** | Framework code generation (PyMDP, RxInfer, JAX). Heavy; opt-in via `skip_steps=[]` or `only_steps=[..., 11, ...]`. |
 | **12** | `12_execute.py` | **off** | Runs the rendered model. Requires JAX/PyMDP and a runnable bundle. |

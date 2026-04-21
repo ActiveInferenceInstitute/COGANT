@@ -378,10 +378,13 @@ def create_app(
     rate_limited_paths: Iterable[str] = ("/analyze",),
     unlimited_paths: Iterable[str] = ("/health", "/ready", "/metrics", "/openapi.json", "/docs"),
 ) -> Any:
-    """Build and return a production-ready FastAPI application.
+    """Build and return a configured FastAPI application.
 
-    The factory is parameterised so tests can tighten or relax the
-    rate-limit configuration without touching module state.
+    The factory wires the COGANT routes together with structured-JSON
+    logging, request-id middleware, in-memory sliding-window rate
+    limiting, and Prometheus metrics. The constructor arguments expose
+    the rate-limit configuration so tests can tighten or relax it
+    without touching module state.
 
     Args:
         rate_limit_requests: Max requests allowed inside the sliding

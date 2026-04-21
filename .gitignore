@@ -9,6 +9,11 @@ coverage.json
 .pytest_cache/
 .hypothesis/
 
+# Python build / runtime caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+
 # Output artifacts
 output/
 

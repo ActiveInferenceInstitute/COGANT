@@ -8,9 +8,10 @@ from cogant.schemas.graph import ProgramGraph
 
 
 class GraphQuery:
-    """Advanced query operations on program graphs.
+    """Query operations on program graphs.
 
-    Supports filtering, path finding, centrality computation, and analysis.
+    Supports filtering, path finding, centrality computation, and
+    composite analyses (subgraph extraction, dependency walks, …).
     """
 
     def __init__(self, graph: ProgramGraph):

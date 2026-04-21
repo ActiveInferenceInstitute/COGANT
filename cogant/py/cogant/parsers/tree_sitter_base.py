@@ -456,7 +456,7 @@ class _JavaScriptExtractor(_BaseExtractor):
     def extract_symbols(self, tree: Any, source: bytes, path: str) -> list[ParsedSymbol]:
         """Walk the JS/TS tree-sitter tree and collect class/interface/function symbols.
 
-        Advanced patterns handled:
+        Patterns handled beyond plain function/class declarations:
         * Arrow functions assigned to ``const``/``let``/``var`` → named symbol
         * ``async`` functions/arrows → ``metadata["is_async"] = True``
         * ``class … extends Base`` → ``metadata["bases"] = ["Base"]``

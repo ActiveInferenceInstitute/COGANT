@@ -1,4 +1,10 @@
-"""Network analysis and advanced graph algorithms for program graphs."""
+"""Network analysis and graph algorithms for program graphs.
+
+Implements graph metrics, centrality (degree / betweenness / closeness /
+eigenvector / PageRank), cycle detection, path analysis, hotspot
+identification, and community detection. Uses pure Python with optional
+``networkx`` acceleration when the dependency is installed.
+"""
 
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
@@ -121,11 +127,11 @@ class HotspotAnalysis:
 
 
 class GraphAnalyzer:
-    """Advanced network analysis for program graphs.
+    """Network analysis for program graphs.
 
     Provides metrics, centrality computation, community detection,
-    cycle detection, and path analysis using pure Python with optional
-    networkx acceleration.
+    cycle detection, and path analysis. Pure Python by default;
+    delegates to ``networkx`` when it is importable.
     """
 
     def __init__(self, graph: ProgramGraph) -> None:
@@ -343,10 +349,12 @@ class GraphAnalyzer:
         return matrix
 
     def summary(self) -> dict[str, Any]:
-        """Compute a comprehensive analysis summary.
+        """Compute the full analysis summary.
 
         Returns:
-            Dictionary with metrics, centrality, hotspots, and cycles.
+            Dictionary with ``metrics``, ``centrality``, ``hotspots``,
+            and ``cycles`` keys covering every category implemented by
+            this analyzer.
         """
         metrics = self.compute_metrics()
         centrality = self.compute_centrality()

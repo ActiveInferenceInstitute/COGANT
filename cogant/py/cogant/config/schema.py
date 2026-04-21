@@ -72,7 +72,7 @@ class CogantConfig(CogantBaseConfig):
         default=False, description="Use incremental analysis mode"
     )
 
-    # Advanced options
+    # Strictness knobs (off by default unless explicitly opted in).
     strict_schema_validation: bool = Field(
         default=True,
         description="Enforce strict schema validation",

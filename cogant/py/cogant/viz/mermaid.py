@@ -71,21 +71,29 @@ class MermaidGenerator:
         pass
 
     def generate_class_diagram(self, graph: ProgramGraph) -> str:
-        """
-        Generate an enhanced Mermaid class diagram showing classes, methods with visibility
-        and signatures, stereotypes, and inheritance.
+        """Emit a Mermaid ``classDiagram`` for ``graph``.
 
-        Enhanced features:
-        - Method visibility (+public, -private, #protected based on _ prefix)
-        - Method parameters and return types
-        - Class stereotypes (<<controller>>, <<model>>, <<middleware>>) based on name patterns
-        - Color-coded by semantic role (hidden_state=blue, action=red, observation=green, policy=orange)
+        Each class becomes a ``class`` block with:
+
+        - method visibility derived from the leading-underscore convention
+          (``+`` public, ``#`` protected, ``-`` private),
+        - method parameters and return type extracted from the symbol's
+          signature metadata,
+        - a stereotype (``<<controller>>`` / ``<<model>>`` /
+          ``<<middleware>>`` …) inferred from the class name pattern when
+          one is recognisable, and
+        - colour bands keyed by Active Inference semantic role
+          (``hidden_state`` = blue, ``action`` = red, ``observation`` =
+          green, ``policy`` = orange).
+
+        Inheritance edges produce ``A --|> B`` links and class-to-class
+        containment produces composition arrows.
 
         Args:
             graph: ProgramGraph to visualize.
 
         Returns:
-            Mermaid classDiagram syntax as string.
+            Mermaid ``classDiagram`` source as a single string.
         """
         lines = ["classDiagram"]
 
@@ -103,7 +111,7 @@ class MermaidGenerator:
 
             lines.append(f"    class {class_name}{stereotype_str} {{")
 
-            # Add methods (functions contained in this class) with enhanced signatures
+            # Add contained methods with full signatures.
             methods = [
                 graph.get_node(edge.target_id)
                 for edge in graph.get_edges_from(class_node.id)
@@ -151,20 +159,25 @@ class MermaidGenerator:
         return "\n".join(lines)
 
     def generate_dependency_graph(self, graph: ProgramGraph) -> str:
-        """
-        Generate an enhanced Mermaid graph TD showing hierarchical dependencies.
+        """Emit a Mermaid ``graph TD`` rendering the module/class/method
+        dependency tree of ``graph``.
 
-        Enhanced features:
-        - Color-coded by edge type (CALLS=blue, READS=green, WRITES=red, CONTAINS=gray)
-        - Edge labels showing relationship type
-        - Subgraphs for module boundaries
-        - Shows all containment relationships (module→class→method)
+        The output uses:
+
+        - per-edge stroke colours keyed by ``EdgeKind`` — CALLS = blue,
+          READS = green, WRITES = red, CONTAINS = grey, IMPORTS =
+          orange, INHERITS = purple,
+        - edge labels naming the relationship,
+        - one ``subgraph`` per module so module boundaries are visible,
+          and
+        - the full module → class → method containment chain, capped at
+          the first five methods per class to keep large graphs legible.
 
         Args:
             graph: ProgramGraph to visualize.
 
         Returns:
-            Mermaid graph TD syntax as string.
+            Mermaid ``graph TD`` source as a single string.
         """
         lines = ["graph TD"]
 
@@ -255,20 +268,22 @@ class MermaidGenerator:
         return "\n".join(lines)
 
     def generate_state_diagram(self, state_space: StateSpaceModel) -> str:
-        """
-        Generate an enhanced Mermaid stateDiagram-v2 showing state variables and transitions.
+        """Emit a Mermaid ``stateDiagram-v2`` for ``state_space``.
 
-        Enhanced features:
-        - Transition labels show actions that cause transitions
-        - Shows observation emissions on transitions
-        - Entry/exit actions for states (from metadata)
-        - Notes for state descriptions
+        Each state variable becomes a state node; each transition adds
+        an arrow with:
+
+        - the action that drives the transition as the label,
+        - a bracketed ``[obs: …]`` suffix when the transition emits
+          observations, and
+        - per-state ``note right of`` blocks carrying the variable
+          description (truncated to 60 chars) when one is present.
 
         Args:
             state_space: StateSpaceModel to visualize.
 
         Returns:
-            Mermaid stateDiagram-v2 syntax as string.
+            Mermaid ``stateDiagram-v2`` source as a single string.
         """
         lines = ["stateDiagram-v2"]
 
@@ -293,7 +308,7 @@ class MermaidGenerator:
             else:
                 lines.append(f"    {state_id}: {var_label}")
 
-        # Add transitions with enhanced labels
+        # Add transitions, including action and (when present) observation labels.
         for _trans_id, transition in state_space.transitions.items():
             # Simple representation: use state variable changes
             source_state = transition.source_state
@@ -320,21 +335,25 @@ class MermaidGenerator:
     def generate_sequence_diagram(
         self, process_model: ProcessModel | None = None, graph: ProgramGraph | None = None
     ) -> str:
-        """
-        Generate an enhanced Mermaid sequenceDiagram showing request flow through middleware chain.
+        """Emit a Mermaid ``sequenceDiagram`` for the process flow.
 
-        Enhanced features:
-        - Shows actual request flow through middleware chain
-        - Labels messages with method names AND parameters
-        - Activation boxes for long-running methods
-        - Grouped by module
+        When a ``ProcessModel`` is provided, stages map to participants
+        and ``Connection`` records become activation-boxed
+        ``->>+`` / ``-->>-`` message pairs whose label embeds the
+        method name and (when known) parameter list and condition.
+
+        When only a ``ProgramGraph`` is provided, the diagram is derived
+        from the first 20 ``CALLS`` edges; the first 10 unique
+        participants (sorted by id) become participant rows. Method
+        names and metadata-resolved parameters appear in the message
+        label.
 
         Args:
             process_model: Optional ProcessModel to visualize.
             graph: Optional ProgramGraph for deriving call chains.
 
         Returns:
-            Mermaid sequenceDiagram syntax as string.
+            Mermaid ``sequenceDiagram`` source as a single string.
         """
         lines = ["sequenceDiagram"]
 
@@ -351,7 +370,7 @@ class MermaidGenerator:
                 if stage_opt is not None:
                     lines.append(f"    participant {stage_id}")
 
-            # Add connections as sequence interactions with enhanced labels
+            # Add connections as sequence interactions, embedding method/parameter labels.
             for conn in process_model.connections.values():
                 source_stage = process_model.stages.get(conn.source_stage_id)
                 target_stage = process_model.stages.get(conn.target_stage_id)
@@ -602,7 +621,7 @@ class MermaidGenerator:
         Generate all diagrams and return as dict of name -> mermaid_content.
 
         Generates:
-        - class_diagram: Enhanced with visibility, signatures, stereotypes
+        - class_diagram: classes with visibility, signatures, stereotypes
         - dependency_graph: Color-coded by edge type with module subgraphs
         - state_diagram: With transition labels, observations, entry/exit actions
         - sequence_diagram: With method names, parameters, activation boxes

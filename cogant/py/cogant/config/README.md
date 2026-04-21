@@ -6,7 +6,7 @@ Comprehensive configuration system for COGANT with Pydantic v2 models, YAML/JSON
 
 CogantBaseConfig: Base class for all COGANT configs using Pydantic ConfigDict with use_enum_values=False and validate_assignment=True.
 
-CogantConfig: Top-level system configuration controlling logging (log_level, log_format, log_file), resource limits (max_workers, max_memory_mb, max_graph_nodes, timeout_seconds), caching (enable_caching, cache_dir, cache_ttl_hours), feature flags (enable_provenance_tracking, enable_validation, enable_gnn_export, enable_incremental_analysis), and advanced options (strict_schema_validation, fail_on_warnings, preserve_source_formatting).
+CogantConfig: Top-level system configuration controlling logging (log_level, log_format, log_file), resource limits (max_workers, max_memory_mb, max_graph_nodes, timeout_seconds), caching (enable_caching, cache_dir, cache_ttl_hours), feature flags (enable_provenance_tracking, enable_validation, enable_gnn_export, enable_incremental_analysis), and strictness knobs (strict_schema_validation, fail_on_warnings, preserve_source_formatting).
 
 LogLevel, ExportFormat, ValidationLevel: String enums for logging verbosity, export output format (JSON, Markdown, etc), and validation strictness (STRICT, LENIENT).
 

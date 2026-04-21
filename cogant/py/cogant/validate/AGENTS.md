@@ -394,7 +394,7 @@ except Exception as e:
 
 ## Validation Thresholds
 
-Bundles are considered **production-ready** when:
+Bundles are considered **publishable** (safe to ship downstream) when:
 - `is_valid == True` (no ERROR issues)
 - `coverage_score >= 95.0` (95% of elements have evidence)
 - `confidence_score >= 85.0` (average confidence is HIGH or better)

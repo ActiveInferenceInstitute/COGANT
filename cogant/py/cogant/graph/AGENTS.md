@@ -47,7 +47,7 @@ ProgramGraphBuilder accumulates nodes and edges, assigns stable IDs via Identity
 - Methods: `find_by_kind()`, `find_by_language()`, `get_neighborhood()`, `filter_by_edge_type()`, `find_by_role()` (new)
 - Optional: NetworkX acceleration (if installed)
 
-### New: Advanced Graph Analysis
+### Network analysis (`analysis.py`)
 
 **analysis.py** — `GraphAnalyzer`
 - Computes network metrics: density, avg degree, clustering coefficient, diameter, connectivity
@@ -67,7 +67,7 @@ ProgramGraphBuilder accumulates nodes and edges, assigns stable IDs via Identity
 - Records provenance (which fact came from which source)
 - Handles edge deduplication and metadata merging
 
-### Graph Queries: New Methods
+### `GraphQuery` API surface
 
 ```python
 class GraphQuery:

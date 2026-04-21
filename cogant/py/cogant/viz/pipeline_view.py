@@ -242,7 +242,8 @@ class PipelineVisualizer:
         Render the pipeline as a Mermaid diagram with stage descriptions.
 
         Returns:
-            Mermaid flowchart with enhanced labels.
+            Mermaid ``flowchart TD`` source as a string. Each stage
+            node carries a bold title and a multi-line description.
         """
         lines = [
             "flowchart TD",
