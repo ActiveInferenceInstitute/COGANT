@@ -17,7 +17,7 @@ The published home page is [`index.md`](index.md). Do **not** add a second root 
 Two documentation patterns intentionally diverge from "every folder has its own AGENTS.md + README.md" — agents auditing folder coverage should treat these as features, not gaps:
 
 - **`cogant/docs/` itself has no `README.md`.** [`index.md`](index.md) is the MkDocs home page, and an extra `docs/README.md` would shadow it (see "MkDocs site root" above). A `README.md` here will fail `mkdocs build --strict`.
-- **`cogant/evaluation/eval_repos/` ships a single shared [`AGENTS.md`](../evaluation/eval_repos/AGENTS.md) + [`README.md`](../evaluation/eval_repos/README.md) at the parent level only.** The 12 entries below it are git submodules pinned to upstream commits (manifest at `/.gitmodules`, one level above this `cogant/` package); their internal contents are **read-only third-party code** and must not receive COGANT-authored AGENTS files. Per-submodule documentation lives upstream.
+- **`cogant/evaluation/eval_repos/` ships a single shared [`AGENTS.md`](https://github.com/cogant-contributors/cogant/blob/main/cogant/evaluation/eval_repos/AGENTS.md) + [`README.md`](https://github.com/cogant-contributors/cogant/blob/main/cogant/evaluation/eval_repos/README.md) at the parent level only.** The 12 entries below it are git submodules pinned to upstream commits (manifest at `/.gitmodules`, one level above this `cogant/` package); their internal contents are **read-only third-party code** and must not receive COGANT-authored AGENTS files. Per-submodule documentation lives upstream.
 
 ## Module README indexes
 
