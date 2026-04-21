@@ -39,6 +39,10 @@ jobs:
         #     optional extras the runner has installed (some tests
         #     pytest.skip when matplotlib/cairo/etc. are missing)
         #   * suite_runtime_s — wall-clock noise
+        #   * coverage_percent — the metrics regen runs the suite
+        #     ``--no-cov`` on CI for speed, so the figure is 0.0 there
+        #     while ``regenerate_metrics.py`` records ~90 % when run
+        #     locally with the full ``--cov`` invocation
         # Structural fields (codebase counts, mypy_strict_errors,
         # ruff_violations, coverage_percent, isomorphism counts, schema
         # versions, etc.) MUST match exactly.
@@ -53,6 +57,7 @@ jobs:
             -I '^  test_count_xfailed:'
             -I '^  test_count_xpassed:'
             -I '^  suite_runtime_s:'
+            -I '^  coverage_percent:'
           )
           if ! git diff --quiet "${ignore[@]}" -- evaluation/METRICS.yaml; then
             echo "METRICS.yaml is stale on a structural field — run tools/regenerate_metrics.py and commit"
