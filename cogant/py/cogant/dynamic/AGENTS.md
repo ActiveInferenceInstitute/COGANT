@@ -5,7 +5,7 @@ Dynamic Analysis / Runtime Instrumentation
 
 ## What Is the Dynamic Module
 
-The `dynamic/` module **enriches a ProgramGraph with runtime execution data** by ingesting coverage reports and execution traces. It performs stage 1.5 (optional enrichment) of the 10-stage COGANT pipeline, augmenting static facts with dynamic observations:
+The `dynamic/` module **enriches a ProgramGraph with runtime execution data** by ingesting coverage reports and execution traces. It is stage 5 of the 10-stage COGANT pipeline (optional; skippable via `PipelineConfig.stages`), augmenting the graph built in stage 4 with dynamic observations before translation runs in stage 6:
 
 - **Coverage data**: Which lines/branches were executed during test runs
 - **Execution traces**: Call sequences, timing, performance metrics from Chrome DevTools or custom JSON
@@ -24,14 +24,18 @@ Dynamic analysis is **optional** — the pipeline works without it, producing va
 ```
 stage 1: ingest/        → SourceFile, RepoSnapshot
     ↓
-stage 2-3: static/, graph/  → ProgramGraph (nodes + static edges)
+stage 2: static/         → SymbolInfo, ImportEdge, CallEdge, TypeInfo
     ↓
-stage 1.5: dynamic/      → enrich_graph(coverage_path, trace_path) [OPTIONAL]
-           ├─ TraceIngester    → Chrome DevTools JSON or custom trace
-           ├─ CoverageIngester → coverage.py SQLite or Cobertura XML
-           └─ enrichment.py    → Match + annotate nodes with dynamic facts
+stage 3: normalize/      → Canonical facts
     ↓
-stage 4-10: translate, statespace, export, validate, ...
+stage 4: graph/          → ProgramGraph (nodes + static edges)
+    ↓
+stage 5: dynamic/        → enrich_graph(coverage_path, trace_path) [OPTIONAL]
+         ├─ TraceIngester    → Chrome DevTools JSON or custom trace
+         ├─ CoverageIngester → coverage.py SQLite or Cobertura XML
+         └─ enrichment.py    → Match + annotate nodes with dynamic facts
+    ↓
+stages 6-10: translate, statespace, process, export, validate
 ```
 
 The dynamic module is **non-invasive** — it mutates the graph in-place, adding fields without breaking downstream consumers. Nodes without coverage/trace data simply have empty or None dynamic fields.

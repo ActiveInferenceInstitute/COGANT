@@ -7,23 +7,25 @@ Export and Serialization Lead
 
 The `export/` module **serializes COGANT artifacts** to multiple formats: JSON (typed), GraphML (graph exchange), Parquet (columnar analytics), SVG (vector graphics), JSON Schema, and more. Exports preserve all metadata, provenance, and confidence scores. A single call can write to all formats simultaneously.
 
-Export happens **late in the pipeline** (stage 9), after translation, state space construction, and validation. The output is a **bundle** — a directory with organized files, a manifest, and checksums.
+Export happens **late in the pipeline** (stage 9), after translation, state-space compilation, and process extraction, and is followed by validation (stage 10). The output is a **bundle** — a directory with organized files, a manifest, and checksums.
 
 ## Pipeline Integration
 
 ```
-stage 3: graph/         → ProgramGraph
+stage 4: graph/         → ProgramGraph
     ↓
-stage 4: translate/     → SemanticMappings
+stage 6: translate/     → SemanticMappings
     ↓
-stage 5: statespace/    → StateSpaceModel (A/B/C/D matrices)
+stage 7: statespace/    → StateSpaceModel (A/B/C/D matrices)
     ↓
-stage 6-8: process, validate, ...
+stage 8: process/       → Process/execution model
     ↓
 stage 9: export/        → Bundle (JSON, GraphML, Parquet, SVG, HTML, ...)
     ↓
-stage 10: (users consume exported files)
+stage 10: validate/     → AII validator (0–100 score)
 ```
+
+(Canonical 10-stage order: ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate. See [`../../../README.md`](../../../README.md) and [`../../AGENTS.md`](../../AGENTS.md).)
 
 ## Supported Formats
 

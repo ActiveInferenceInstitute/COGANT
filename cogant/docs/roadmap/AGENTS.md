@@ -20,11 +20,13 @@ ruled out. Owned by whoever is driving the current release train.
 | `AGENTS.md` | This file — maintenance rules | When grouping, ownership, or the append-only changelog policy changes |
 | `overview.md` | One-page roadmap summary | At every release train kickoff |
 | `version_strategy.md` | Semver intent and version bucket definitions | When semver policy changes |
-| `version_010_current.md` | Components and capabilities of 0.1.0 | When 0.1.x patches add capabilities worth documenting |
-| `version_020_planned.md` | 0.2.0 plan | When 0.2.0 scope changes |
-| `version_030_planned.md` | 0.3.0 plan | When 0.3.0 scope changes |
-| `version_100_planned.md` | 1.0.0 stability/hardening plan | When 1.0 scope changes |
-| `known_limitations_010.md` | Known limitations of the current release | Whenever a new limitation is discovered or an old one is fixed |
+| `version_010_current.md` | Shipped capabilities of the 0.1.x line (retained for historical diff) | Only when a historical correction is needed |
+| `version_020_planned.md` | 0.2.x plan (superseded once a version is shipped) | When 0.2.x scope changes |
+| `version_030_planned.md` | 0.3.x plan (superseded once a version is shipped) | When 0.3.x scope changes |
+| `version_050_shipped.md` | Full arc v0.1.0 → v0.5.0 + wave-21 — canonical shipped history | After each shipped release that extends the shipped arc |
+| `version_060_planned.md` | 0.6.x plan (language breadth, streaming, type inference) | When 0.6.x scope changes |
+| `version_100_planned.md` | 1.0.0 stability / hardening / public API freeze | When 1.0 scope changes |
+| `known_limitations_010.md` | Known limitations of the **current release** (filename retained for link stability; content tracks the latest shipped version) | Whenever a new limitation is discovered or an old one is fixed |
 | `deprecation_policy.md` | Breaking-change announcement and staging policy | When the policy changes |
 | `performance_targets.md` | Wall-clock and memory targets | When targets are renegotiated |
 | `test_coverage_goals.md` | Per-component coverage goals | When coverage targets are renegotiated |
@@ -68,7 +70,13 @@ and the root is the source of truth.
 - `changelog.md` is a mirror — editing it in place is a common mistake.
   When the root changelog changes, re-run the `cp` command above in the
   same commit.
-- The version-plan files have a cross-file invariant: the "current"
-  marker moves. When 0.2.0 ships, rename `version_010_current.md` to
-  something like `version_010_shipped.md`, update the README, and promote
-  the next file in line.
+- The version-plan files use two suffixes: `_current.md` (the version whose
+  content is still authoritative for "what is shipping now"), `_planned.md`
+  (a plan that has not yet shipped), and `_shipped.md` (historical
+  arc, kept append-only). When a version ships, its `_planned.md` content is
+  folded into `version_050_shipped.md` (or the current canonical shipped
+  file) rather than renamed in place, and the README's "Version plans"
+  table is updated in the same commit.
+- `known_limitations_010.md` deliberately keeps its legacy `_010` suffix
+  to avoid breaking inbound links; the content inside always tracks the
+  latest shipped release, not 0.1.0.

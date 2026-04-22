@@ -7,20 +7,22 @@ Graph Construction
 
 The `graph/` module builds and analyzes **program graphs** — the central data structure of COGANT. A program graph is a typed, directed, acyclic graph (DAG) where **nodes represent code entities** (functions, classes, modules) and **edges represent relationships** (calls, imports, data flow, control flow). Nodes carry metadata (complexity, coupling, type info); edges carry kind labels (CALLS, IMPORTS, READS, WRITES, etc.).
 
-The graph is constructed in stage 3 from normalized facts produced by `static/` (stage 2). It feeds into translation (stage 4), state space construction (stage 5), and all downstream stages.
+The graph is constructed in stage 4 from normalized facts produced by `static/` (stage 2) and `normalize/` (stage 3). It feeds into translation (stage 6), state space construction (stage 7), and all downstream stages.
 
 ## Pipeline Integration
 
 ```
 stage 2: static/        → SymbolInfo, ImportEdge, CallEdge, ...
     ↓
-stage 2.5: normalize/   → LanguageFact (canonical form)
+stage 3: normalize/     → LanguageFact (canonical form)
     ↓
-stage 3: graph/         → ProgramGraph (nodes + edges)
+stage 4: graph/         → ProgramGraph (nodes + edges)
     ↓
-stage 4: translate/     → SemanticMappings (HIDDEN_STATE, OBSERVATION, ACTION, ...)
+(stage 5: dynamic/      → optional coverage/trace facts merged into the graph)
     ↓
-stages 5-10: statespace, process, export, validate, ...
+stage 6: translate/     → SemanticMappings (HIDDEN_STATE, OBSERVATION, ACTION, ...)
+    ↓
+stages 7-10: statespace, process, export, validate
 ```
 
 The graph is the **single point of truth** for the codebase structure. All analyses depend on graph quality and completeness.

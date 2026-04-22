@@ -20,15 +20,15 @@ The module produces a `StateSpaceModel` — a complete, self-contained IR ready 
 ## Pipeline Integration
 
 ```
-stage 4: translate/         → ProgramGraph + SemanticMappings
+stage 6: translate/         → ProgramGraph + SemanticMappings
     ↓
-stage 5: statespace/        → StateSpaceModel (A/B/C/D matrices, variables, actions)
+stage 7: statespace/        → StateSpaceModel (A/B/C/D matrices, variables, actions)
     ↓
-stage 6: process/           → ProcessModel (causal structure + factor graph)
+stage 8: process/           → ProcessModel (causal structure + factor graph)
     ↓
-stage 7: gnn/               → GNN bundle (markdown + JSON)
+stage 9: export/            → Bundle (JSON, Markdown, matrices, GNN bundle assembled by the post-pipeline `gnn/` helper)
     ↓
-stage 8-10: export, validate, scoring, ...
+stage 10: validate/         → ValidationReport (AII 0–100 score, structural checks)
 ```
 
 The statespace module is the **bridge between semantic analysis and executable Active Inference models**. All downstream simulations depend on the quality of variable extraction and factorization.

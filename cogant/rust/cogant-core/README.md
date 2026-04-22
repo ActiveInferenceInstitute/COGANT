@@ -1,11 +1,10 @@
-# cogant-core — Core Types and Algorithms
+# cogant-core — Core Types
 
-Rust core types and fundamental algorithms for COGANT.
+Shared Rust types used by the rest of the `cogant-*` workspace and exposed to Python through [`cogant-ffi`](../cogant-ffi/).
 
 ## Contents
-- src/lib.rs — Module organization and public exports
-- Core types: Node, Edge, Graph, Symbol, Span
-- Algorithms: symbol table, caching, identity resolution
+- `src/lib.rs` — Public re-exports
+- Types: `StableId`, `NodeKind`, `EdgeKind`, `Confidence`, `Provenance`, `SemanticRole`
 
 ## Build
 
@@ -15,16 +14,15 @@ cargo test
 ```
 
 ## Dependencies
-- dashmap, parking_lot — Concurrent data structures
-- serde — Serialization
-- No external system dependencies
+
+`[dependencies]` in `Cargo.toml`:
+
+- `serde`, `serde_json` — Serialization
+- `uuid` — Stable identifier generation
+- `thiserror` — Error types
+
+No concurrent data structures, no async runtime, no system dependencies. The crate is intentionally lightweight and purely synchronous.
 
 ## Python FFI
 
-Exported via cogant-ffi using PyO3.
-
-## Performance characteristics
-
-- O(1) symbol lookup (hashmap)
-- O(n) node/edge iteration
-- Zero-copy interop with Python via Arrow
+Exported via [`cogant-ffi`](../cogant-ffi/) as `PyStableId`, `PyConfidence`, and embedded fields on `PyNodeData`/`PyProgramGraph`.

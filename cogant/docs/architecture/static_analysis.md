@@ -40,11 +40,11 @@ ComplexityReport  CouplingReport        DeadCodeReport      CodeMetrics
                               ↓
                     [All facts combined]
                               ↓
-                       Stage 2.5: normalize/
+                       Stage 3: normalize/
                               ↓
                         LanguageFact (canonical)
                               ↓
-                       Stage 3: graph/
+                       Stage 4: graph/
                               ↓
                       ProgramGraph (nodes + edges)
 ```

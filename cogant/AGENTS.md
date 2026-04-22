@@ -43,7 +43,7 @@ cogant/                         ← package root (this directory)
 │   ├── runtime/                ← AgentRuntime: multi-episode Bayesian learning
 │   ├── api/                    ← PipelineConfig, orchestration, session management
 │   ├── server/                 ← FastAPI app (REST + WebSocket)
-│   ├── cli/                    ← 26 Typer commands (24 on `app` + `plugin`/`migrate` sub-typers); 27 leaf commands
+│   ├── cli/                    ← 26 top-level `@app.command` decorators on `app` + `plugin`/`migrate` sub-typers; 29 leaf commands total
 │   ├── protocols.py            ← 14 @runtime_checkable Protocols
 │   └── types.py                ← 15 TypedDicts, type aliases
 ├── rust/                       ← PyO3 Rust workspace (8 crates; optional acceleration)
@@ -60,7 +60,7 @@ cogant/                         ← package root (this directory)
 ├── examples/                   ← 20+ runnable sample repos / fixtures (3 control_positive + 13 zoo + standalone)
 │   └── zoo/                    ← 13 Active Inference fixtures (01–13); 23 total roundtrip evaluation targets across all fixture sources
 ├── evaluation/                 ← benchmark corpora, METRICS.yaml, dashboards
-├── docs/                       ← MkDocs documentation site (350+ pages, 20 sections)
+├── docs/                       ← MkDocs documentation site (~358 content pages across 19 sections + top-level hub pages)
 ├── tests/                      ← full pytest suite (run from package root; coverage policy in pyproject.toml)
 ├── benchmarks/                 ← performance benchmark scripts
 ├── scripts/                    ← manuscript pipeline scripts
@@ -78,8 +78,8 @@ cogant/                         ← package root (this directory)
 | Roundtrip ε | 1.0 — 23/23 ISOMORPHIC fixtures |
 | Test suite | Large and growing; `uv run pytest tests/ -q`. Coverage: line gate, `--cov-fail-under=89`, omits in `pyproject.toml` |
 | Export formats | 9 (JSON, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT, JSONLINES) |
-| CLI subcommands | 26 help rows / 27 leaf commands (24 top-level Typer commands on `app` + `plugin` + `migrate` sub-typers) |
-| Protocols / TypedDicts | 14 Protocols, 15 TypedDicts, 231 .pyi stubs |
+| CLI subcommands | 26 top-level `@app.command` decorators + 2 `plugin` leaves (`list`, `info`) + 1 `migrate` leaf = **29 leaf commands** |
+| Protocols / TypedDicts | 14 Protocols, 15 TypedDicts, 233 .pyi stubs |
 
 ---
 

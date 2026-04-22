@@ -9,7 +9,7 @@ Thirty subpackages. Parent [`AGENTS.md`](../../AGENTS.md) carries the stage mapp
 
 - **api/** — Stable Python entry points (`Session`, `PipelineRunner`, `Bundle`, `ReviewAPI`).
 - **cache/** — Content-addressed caches for ingest/parse results.
-- **cli/** — Typer app with 26 user-facing entries (see `cli/AGENTS.md`).
+- **cli/** — Typer app with 26 top-level `@app.command` decorators + `plugin` / `migrate` sub-typers (**29 leaf commands total**; see `cli/AGENTS.md` and `docs/cli_reference.md`).
 - **config/** — Configuration schema and defaults.
 - **dynamic/** — Hooks for execution-informed facts (coverage, traces).
 - **export/** — Writers for 9 formats (JSON, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT, JSONLINES).

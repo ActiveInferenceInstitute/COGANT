@@ -1,16 +1,9 @@
-# cogant-store — Persistent Graph Storage
+# cogant-store — In-Memory Graph Store (Rust stub)
 
-Persistent storage and indexing for large graphs (optional).
+Rust-side scaffolding for persistent graph storage.
 
 ## Contents
-- src/lib.rs — PersistentStore, indexing, snapshots
-
-## Features
-- RocksDB or SQLite backend
-- Multi-level indexing (by source, type, attribute)
-- Incremental updates and transactions
-- Snapshot/restore for reproducibility
-- Optional compression
+- `src/lib.rs` — Storage trait, in-memory backend, and snapshot placeholders
 
 ## Build
 
@@ -20,12 +13,16 @@ cargo test
 ```
 
 ## Dependencies
-- rocksdb or rusqlite — Persistent storage
-- cogant-core — Type definitions
 
-## Performance
+`[dependencies]` in `Cargo.toml`:
 
-1M-node graph:
-- Load from disk: < 5s
-- Single node lookup: < 1ms
-- Range query: < 100ms
+- `cogant-core`, `cogant-graph` — Shared types and in-memory graph storage
+- `serde`, `serde_json` — Serialization
+- `uuid`, `thiserror` — Identifier generation and error types
+- `tempfile` (dev) — Temporary directories for tests
+
+No RocksDB, no rusqlite, no on-disk backend. The crate provides an **in-memory** store today; persistent backends are aspirational and intentionally out of scope until usage patterns stabilize.
+
+## Scope and status
+
+This crate is **not** wired through [`cogant-ffi`](../cogant-ffi/); the Python pipeline writes bundles directly to disk (`py/cogant/export/`). Treat this crate as a placeholder for a future Rust persistence layer.

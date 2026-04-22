@@ -1,7 +1,9 @@
 # COGANT Example Zoo
 
-Twelve minimal Python repos, each exercising a specific Active Inference / GNN
-pattern that the COGANT forward pipeline can detect. Run any repo with
+Thirteen minimal fixtures, each exercising a specific Active Inference / GNN
+pattern that the COGANT forward pipeline can detect. Twelve are Python packages; the
+thirteenth (`13_js_observer`) is a JavaScript twin of `02_observer` used to cover
+the JS/TS parser path. Run any repo with
 `cogant scan examples/zoo/<name>` to verify non-zero semantic mappings.
 
 | # | Repo | Primary GNN Pattern | Expected Mappings |
@@ -18,13 +20,16 @@ pattern that the COGANT forward pipeline can detect. Run any repo with
 | 10 | `10_constraint` | Validation and constraint checks | CONSTRAINT |
 | 11 | `11_sensor_fusion` | Two observation modalities merged | OBSERVATION x2, ACTION |
 | 12 | `12_full_pomdp` | Complete POMDP with all roles | HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT |
+| 13 | `13_js_observer` | JavaScript observer (cross-language roundtrip) | OBSERVATION, ACTION |
 
 ## Design Principles
 
-Each repo is a standalone Python package with no external dependencies beyond
-the standard library. The code is written to trigger specific COGANT translation
-rules (see `py/cogant/translate/rules/`) through naming conventions, attribute
-patterns, and method signatures.
+Python fixtures are standalone packages with no external dependencies beyond
+the standard library. `13_js_observer` is a pure-JavaScript module parsed via
+the `parsers/javascript/` tree-sitter front end and exercises the same rule
+families through `observe()` / action naming conventions. The code is written
+to trigger specific COGANT translation rules (see `py/cogant/translate/rules/`)
+through naming conventions, attribute patterns, and method signatures.
 
 ## Usage
 

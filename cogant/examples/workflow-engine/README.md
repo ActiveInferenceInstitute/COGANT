@@ -9,13 +9,12 @@ CLI reference: [docs/cli_reference.md](../../docs/cli_reference.md).
 ```
 workflow-engine/
 ├── src/
-│   ├── __init__.py
-│   ├── executor.py      # Workflow executor
-│   ├── parser.py        # Workflow definition parser
+│   ├── engine.py        # Workflow engine core
+│   ├── scheduler.py     # Task scheduler
 │   ├── state.py         # State management
-│   └── plugins.py       # Plugin system
+│   └── tasks.py         # Task definitions and handlers
 └── tests/
-    └── test_executor.py
+    └── test_engine.py
 ```
 
 ## Analysis

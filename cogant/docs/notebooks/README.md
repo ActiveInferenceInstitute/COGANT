@@ -1,6 +1,6 @@
 # Notebooks
 
-> Executable Jupyter notebook walkthroughs of every major COGANT workflow. Each numbered notebook ships as both an `.ipynb` (executable) and an `.md` (rendered for the docs site) where applicable. Use these when you want to step interactively through a workflow with all intermediate state visible.
+> Executable Jupyter notebook walkthroughs of every major COGANT workflow. Every numbered notebook ships as both an `.ipynb` (executable source) and an `.md` (rendered export for the MkDocs site); the `.md` links below are what renders on the site, and every corresponding `.ipynb` is checked in alongside. Use these when you want to step interactively through a workflow with all intermediate state visible.
 
 ## Contents
 
@@ -12,12 +12,12 @@
 | [04 Roundtrip](04_roundtrip.md) | Full forward + reverse roundtrip verification. Background: [roundtrip](../concepts/roundtrip.md), [Markov blanket](../concepts/markov_blanket.md) | Intermediate |
 | [05 Custom Rules](05_custom_rules.md) | Writing and registering custom translation rules. Background: [translation rules reference](../reference/translation_rules.md), [rules overview](../rules/overview.md), [custom rules guide](../rules/custom_rules.md) | Intermediate |
 | [06 Plugin Authoring](06_plugin_authoring.md) | Authoring a parser/exporter plugin. Background: [plugin API](../api/plugin_api.md), [rules overview](../rules/overview.md) | Advanced |
-| [07 Real-World Flask](07_real_world_flask.ipynb) | End-to-end run against a real Flask application | Intermediate |
-| [08 Constraint Authoring](08_constraint_authoring.ipynb) | Authoring CONSTRAINT-class translation rules | Advanced |
-| [09 Plugin Authoring (Extended)](09_plugin_authoring.ipynb) | Deeper plugin authoring patterns and edge cases | Advanced |
-| [10 Rule DSL](10_rule_dsl.ipynb) | Working with the rule DSL directly | Advanced |
-| [11 Inference Learning](11_inference_learning.ipynb) | Learning from human review feedback to refine the rule set | Advanced |
-| [12 Cross Language](12_cross_language.ipynb) | Cross-language roundtrip and analysis | Advanced |
+| [07 Real-World Flask](07_real_world_flask.md) | End-to-end run against a real Flask application | Intermediate |
+| [08 Constraint Authoring](08_constraint_authoring.md) | Authoring CONSTRAINT-class translation rules | Advanced |
+| [09 Plugin Authoring (Extended)](09_plugin_authoring.md) | Deeper plugin authoring patterns and edge cases | Advanced |
+| [10 Rule DSL](10_rule_dsl.md) | Working with the rule DSL directly | Advanced |
+| [11 Inference Learning](11_inference_learning.md) | Learning from human review feedback to refine the rule set | Advanced |
+| [12 Cross Language](12_cross_language.md) | Cross-language roundtrip and analysis | Advanced |
 
 ## Recommended Reading Order
 
@@ -25,9 +25,9 @@
 2. [02 Explore GNN](02_explore_gnn.md) — learn to read the artifacts you just produced.
 3. [03 Reverse Synthesis](03_reverse_synthesis.md) and [04 Roundtrip](04_roundtrip.md) — close the loop.
 4. [05 Custom Rules](05_custom_rules.md) — your first customization.
-5. [07 Real-World Flask](07_real_world_flask.ipynb) — exercise everything on a non-trivial codebase.
-6. [06 Plugin Authoring](06_plugin_authoring.md), [09 Plugin Authoring (Extended)](09_plugin_authoring.ipynb), [10 Rule DSL](10_rule_dsl.ipynb) — extension and authoring patterns.
-7. [08 Constraint Authoring](08_constraint_authoring.ipynb), [11 Inference Learning](11_inference_learning.ipynb), [12 Cross Language](12_cross_language.ipynb) — advanced topics.
+5. [07 Real-World Flask](07_real_world_flask.md) — exercise everything on a non-trivial codebase.
+6. [06 Plugin Authoring](06_plugin_authoring.md), [09 Plugin Authoring (Extended)](09_plugin_authoring.md), [10 Rule DSL](10_rule_dsl.md) — extension and authoring patterns.
+7. [08 Constraint Authoring](08_constraint_authoring.md), [11 Inference Learning](11_inference_learning.md), [12 Cross Language](12_cross_language.md) — advanced topics.
 
 ## Running the notebooks
 

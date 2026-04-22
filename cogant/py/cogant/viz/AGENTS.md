@@ -12,18 +12,18 @@ Key principle: **graceful degradation**. If matplotlib is unavailable, visualiza
 ## Pipeline Integration
 
 ```
-stage 3: graph/         → ProgramGraph
+stage 4: graph/         → ProgramGraph
     ↓
-stage 4: translate/     → SemanticMappings
+stage 6: translate/     → SemanticMappings
     ↓
-stage 5: statespace/    → StateSpaceModel (A/B/C/D matrices)
+stage 7: statespace/    → StateSpaceModel (A/B/C/D matrices)
     ↓
-stage 6-9: process, export, validate, ...
+stages 8-10: process, export, validate
     ↓
-stage 10: viz/          → PNG, PDF, Mermaid, HTML dashboards
+(post-pipeline) viz/    → PNG, PDF, Mermaid, HTML dashboards
 ```
 
-Visualization happens **late in the pipeline** (after translation and state space construction) to leverage rich semantic information.
+Visualization is a **post-pipeline consumer** — it runs after the 10-stage forward pipeline finishes, reading from the bundle produced by `export/` and the validation report from `validate/`. It is not itself a pipeline stage (see `PipelineConfig.stages`).
 
 ## Core Components
 
@@ -34,11 +34,16 @@ Visualization happens **late in the pipeline** (after translation and state spac
 | PNG | png_export.py | Quick review, inline in reports | Yes | No | No |
 | PDF | pdf_export.py | Publication, multi-page reports | Yes | No | No |
 | Mermaid | mermaid.py | Markdown, GitHub, wiki embedding | No | No | Yes (in HTML) |
-| SVG | svg_export.py | Web embedding, scalable | No | Yes | No |
-| DOT | mermaid.py (internal) | Graphviz processing | No | Yes | No |
-| HTML Dashboard | dashboard/ | Interactive exploration | Yes (optional) | No | Yes |
+| HTML site | bundle_site.py, html_renderer.py | Full bundle browsing | No | No | Yes |
+| Interactive graph | cytoscape_view.py, graph_view.py | Web embedding, scalable | No | No | Yes |
+| DOT | flow.py | Graphviz processing | No | Optional | No |
+| HTML Dashboard | dashboard/ (generator.py, assets.py) | Interactive exploration | Yes (optional) | No | Yes |
 
-### Existing Visualization Modules (6 files)
+### Visualization Modules (18 files in `viz/` + `viz/dashboard/`)
+
+The `viz/` package currently ships `boundary.py`, `bundle_site.py`, `cytoscape_view.py`, `diff_view.py`, `export_view.py`, `flow.py`, `gantt.py`, `graph_view.py`, `html_renderer.py`, `matrix_view.py`, `mermaid.py`, `network_view.py`, `pdf_export.py`, `pipeline_view.py`, `plots.py`, `png_export.py`, `semantic_view.py`, and `static_analysis_view.py`, plus the `dashboard/` subpackage (`generator.py`, `assets.py`). The headline modules are documented below; see each file's module docstring for the full API surface.
+
+### Headline modules
 
 **png_export.py** — `PNGExporter`
 - Render program graphs as matplotlib figures
@@ -82,7 +87,7 @@ Visualization happens **late in the pipeline** (after translation and state spac
 - Task dependencies
 - Methods: `render_pipeline_timeline()`, `render_task_dependencies()`
 
-### New Visualization Modules (5 files)
+### Additional modules
 
 **pdf_export.py** — `PDFExporter`
 - Multi-page PDF export via matplotlib
@@ -122,16 +127,13 @@ Visualization happens **late in the pipeline** (after translation and state spac
 ### Dashboard Infrastructure
 
 **dashboard/generator.py** — `DashboardGenerator`
-- Combines multiple visualization modules into unified HTML dashboard
+- Combines multiple visualization modules into a unified HTML dashboard
 - Tabbed interface for different views
 - Interactive filtering and search
-- Methods: `generate_comprehensive_dashboard()`, `add_graph_view()`, `add_analysis_view()`, `add_matrices_view()`
 
-**dashboard/cytoscape_view.py** — `CytoscapeVisualizer`
-- Interactive graph visualization using Cytoscape.js
-- Node selection, edge filtering
-- Layout algorithms: force-directed, hierarchical, circular
-- Methods: `generate_cytoscape_view()`, `with_layout()`, `with_filters()`
+**dashboard/assets.py** — Inlined CSS/JS assets used by the dashboard for fully self-contained HTML output.
+
+The Cytoscape-based interactive view lives alongside the other top-level modules at `viz/cytoscape_view.py` (not under `dashboard/`).
 
 ## Common Usage Patterns
 
@@ -289,8 +291,8 @@ if fig:
 → Output is plain text; embed in Markdown with triple backticks
 
 ### "I want to embed a graph in a web app"
-→ Use `svg_export.export_to_svg()` for scalable vectors
-→ Use `dashboard.cytoscape_view.CytoscapeVisualizer` for interactive JS-based visualization
+→ Use `graph_view.GraphVisualizer` or `cytoscape_view.CytoscapeVisualizer` for interactive JS-based visualization
+→ Use `bundle_site` / `html_renderer` for full self-contained HTML bundles
 
 ### "I want to publish a report with graph visualizations"
 → Use `pdf_export.PDFExporter` to render multi-page PDF with all graphs, matrices, and metadata
@@ -351,10 +353,9 @@ if fig:
 4. Test with sample data
 
 ### Add SVG Export for a New Artifact
-1. Use graphviz or Cairo for vector generation
-2. Implement in new module or extend `svg_export.py`
-3. Document graphviz dependency (optional)
-4. Provide pure-SVG fallback if possible
+1. Extend `graph_view.py` or `cytoscape_view.py` for interactive SVG output, or add a matplotlib-based module alongside `pdf_export.py`
+2. Document any optional graphviz dependency
+3. Provide pure-SVG fallback where possible
 
 ## Performance Notes
 

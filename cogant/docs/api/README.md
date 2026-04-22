@@ -37,9 +37,18 @@
 
 | Page | Description | Level |
 |------|-------------|-------|
+| [Static Analysis (`cogant.static`)](static.md) | AST parse, symbol extraction, type inference, call graph | Intermediate |
 | [Dynamic Analysis API](dynamic_analysis_api.md) | Runtime / dynamic analysis hooks | Advanced |
 | [Dynamic Enrichment API](dynamic_enrichment_api.md) | Augment a static graph with dynamic facts | Advanced |
+| [Translate Package (`cogant.translate`)](translate.md) | Priority-ordered rule set + fixpoint, emits `SemanticMapping` records | Intermediate |
+| [State Space (`cogant.statespace`)](statespace.md) | Variables, actions, and transitions compiled from rule output | Intermediate |
+| [Markov Blanket (`cogant.markov`)](markov.md) | Partition the graph into μ / s / a / η sets | Intermediate |
+| [GNN Package (`cogant.gnn`)](gnn.md) | `GNNPackageBuilder` + `GNNValidator` (0–100 score) | Intermediate |
+| [Reverse (`cogant.reverse`)](reverse.md) | GNN → runnable Python synthesis | Advanced |
+| [Runtime (`cogant.runtime`)](runtime.md) | Active Inference agent runtime (multi-episode Bayesian learning) | Advanced |
+| [Simulate (`cogant.simulate`)](simulate.md) | Forward simulation of compiled state-space models | Advanced |
 | [Visualization API](visualization_api.md) | Render program graphs, GNNs, and Markov blanket diagrams | Intermediate |
+| [FastAPI Server (`cogant.server`)](server.md) | REST + WebSocket endpoints for a deployable pipeline | Intermediate |
 
 ### Extension points
 

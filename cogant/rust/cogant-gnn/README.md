@@ -1,17 +1,9 @@
-# cogant-gnn — GNN Tensor Generation
+# cogant-gnn — GNN Formatters (Rust)
 
-High-performance tensor generation for graph neural networks.
+Rust-side GNN bundle formatting helpers wrapped by [`cogant-ffi`](../cogant-ffi/).
 
 ## Contents
-- src/lib.rs — TensorGenerator, feature extraction, edge indexing
-
-## Features
-- Node feature matrix generation (embeddings, attributes)
-- Edge index tensor (COO format)
-- Edge weight assignment
-- Multi-relation flattening
-- PyArrow integration for zero-copy export
-- GPU-ready tensor format
+- `src/lib.rs` — Exported functions: `format_json`, `format_markdown`
 
 ## Build
 
@@ -21,13 +13,15 @@ cargo test
 ```
 
 ## Dependencies
-- cogant-core, cogant-graph — Types and storage
-- pyo3-polars — Arrow/Parquet export
-- numpy — NumPy array interop
 
-## Performance
+`[dependencies]` in `Cargo.toml`:
 
-100K nodes, 1M edges:
-- Feature matrix: < 1s
-- Edge indices: < 100ms
-- Total export: < 2s
+- `cogant-core`, `cogant-graph` — Shared types and graph input
+- `serde`, `serde_json` — JSON output
+- `uuid`, `thiserror` — Identifier generation and error types
+
+No `pyo3-polars`, no `numpy` dependency, and no GPU tensor export. The authoritative GNN bundle emitter lives in [`py/cogant/gnn/formatter/`](../../py/cogant/gnn/formatter/); this crate currently only provides the two format helpers above so the Rust FFI can produce the string forms of a bundle without Python re-entry.
+
+## Scope and status
+
+Tensor export, Arrow/Parquet interop, and numpy-facing APIs are all implemented in the Python package. Expand this crate only when there is a concrete performance reason tied to benchmarks checked into [`benchmarks/`](../../benchmarks/).

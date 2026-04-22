@@ -29,8 +29,9 @@ stage 1: ingest/
 Output: RepoSnapshot (files, dependencies, metadata)
     ↓
 stage 2: static/         → AST parsing, symbol extraction, type inference
-stage 3: graph/          → ProgramGraph construction (nodes + edges)
-... (stages 4-10 downstream)
+stage 3: normalize/      → Canonical language-agnostic facts
+stage 4: graph/          → ProgramGraph construction (nodes + edges)
+stages 5-10: dynamic, translate, statespace, process, export, validate
 ```
 
 The RepoSnapshot serves as the **contract between ingest and all downstream consumers**. Each consumer independently uses the file inventory and dependency list; ingest never re-runs during pipeline execution (files are stable once ingested).

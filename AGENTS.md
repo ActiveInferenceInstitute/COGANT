@@ -9,11 +9,8 @@
 | [`tools/`](tools/) | `MANUSCRIPT_VARS` registry, metrics regeneration CLI, inject CLI, audit helpers. |
 | [`scripts/`](scripts/) | Thin orchestrators (`z_generate_manuscript_variables.py`). |
 | [`run_all.py`](run_all.py), [`run_all.sh`](run_all.sh), [`run_all.example.json`](run_all.example.json) | Configurable batch run: `translate` + GNN exports + `render` + `viz` + `validate` per target. Targets are either `path` (under inner `cogant/`) or `git_url` (shallow clone to `cogant/output/<id>/_git_source/`). Defaults: all three `examples/control_positive/*` fixtures plus two small Pallets repos. Copy `run_all.example.json` → `run_all.json`. Each target writes under `cogant/output/<id>/` (with `data/`, `figures/`, `site/`, `reports/`, `gnn_package/`, `analysis/`, `exports/`, `roundtrip/`). Stderr + optional `--log`: per-target banner, per-step wall time / exit status, batch `summary` in `run_manifest.json` plus a cross-target `summary.md`/`summary.json`. |
-| [`output/`](output/) | Generated outputs — `data/manuscript_variables.json`, `output/manuscript/` injected copy (both disposable and regeneratable). The batch runner writes per-target directories under `cogant/output/<id>/` instead. |
-| [`src/`](src/) | Compatibility stub only; real package lives at `cogant/py/cogant/`. |
-| [`tests/`](tests/) | Compatibility stub only; real suite lives at `cogant/tests/`. See [`tests/AGENTS.md`](tests/AGENTS.md). |
+| [`output/`](output/) | Generated outputs — `data/manuscript_variables.json`, `output/manuscript/` injected copy (both disposable and regeneratable). The batch runner writes per-target directories under the configured `output_root` (the shipped `run_all.json` sets `output_root: "cogant/output"`, so results land under `cogant/output/<id>/`). |
 | [`PROMOTION.md`](PROMOTION.md) | Authoritative checklist: steps to `git mv` this tree into `projects/cogant/`. |
-| [`CLAUDE.md`](CLAUDE.md) | Claude Code guidance: two-directory layout, commands, architecture landmarks, non-obvious conventions. |
 
 ## Two-directory structure (common confusion point)
 
@@ -22,10 +19,11 @@ Two paths named `cogant/` exist and mean different things:
 ```
 projects_in_progress/cogant/          ← staging root (this file's directory)
   manuscript/                         ← manuscript templates
-  tools/                              ← manuscript tooling
-  scripts/                            ← thin orchestrators
-  output/                             ← disposable generated outputs
+  tools/                              ← manuscript tooling (MANUSCRIPT_VARS registry, inject/regenerate/audit CLIs)
+  scripts/                            ← thin orchestrators (z_generate_manuscript_variables.py)
+  output/                             ← disposable manuscript outputs (variables JSON + injected copy)
   cogant/                             ← THE ACTUAL PYTHON+RUST PACKAGE
+    output/                           ← run_all default output_root (per-target run dirs)
     py/cogant/                        ← import root (import cogant → here)
     tests/                            ← pytest suite (run from cogant/)
     rust/                             ← 8 PyO3 crates
@@ -35,7 +33,7 @@ projects_in_progress/cogant/          ← staging root (this file's directory)
     Makefile
 ```
 
-When `CLAUDE.md` or any other doc says "run from `cogant/`" it means the **inner** `cogant/` (the package root), not the staging root.
+When any doc (README, AGENTS, cookbook, CLI help) says "run from `cogant/`" it means the **inner** `cogant/` — the installable package root — not this staging root.
 
 ## Key APIs (tools layer)
 

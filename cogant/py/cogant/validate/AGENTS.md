@@ -17,13 +17,11 @@ A ValidationReport is the **quality gate before export and deployment**: it cert
 ## Pipeline Integration
 
 ```
-stage 7: gnn/               → GNN Bundle (model.gnn.md, matrices, state_space.json, etc.)
+stage 9: export/            → Bundle + GNN package (model.gnn.md, matrices, state_space.json) assembled by the post-pipeline `gnn/` helper
     ↓
-stage 8: validate/          → ValidationReport (errors, warnings, coverage_score, confidence_score)
+stage 10: validate/         → ValidationReport (errors, warnings, coverage_score, confidence_score, AII 0–100 score)
     ↓
-stage 9: export/            → Final artifacts (PDFs, deployment bundles, dashboards)
-    ↓
-stage 10: scoring/          → Drift detection + quality metrics
+(post-pipeline) scoring/    → Drift detection + quality metrics + CI gates
 ```
 
 The validate module is the **final quality checkpoint before release**. All bundles and artifacts depend on passing validation.

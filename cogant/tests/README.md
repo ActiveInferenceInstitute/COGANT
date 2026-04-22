@@ -37,8 +37,10 @@ Golden tests compare output against saved "golden" expectations:
 3. Compare against saved golden output
 4. Update golden on intentional changes (requires review)
 
-Location: tests/golden/
-Files: *.json, *.yaml, *.md (golden expectations)
+Location: `tests/golden/`
+Layout:
+- `tests/golden/roundtrip/*.json` — canonical forward-reverse-forward expectations (currently `04_pomdp_minimal.json`, `06_hierarchical.json`, `12_full_pomdp.json`)
+- `tests/golden/test_bundle_json_schema.py` — schema-level golden assertions over generated bundles
 
 ## Coverage policy
 

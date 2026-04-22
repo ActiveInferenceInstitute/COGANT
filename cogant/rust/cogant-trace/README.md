@@ -1,16 +1,9 @@
-# cogant-trace — Trace Collection and Processing
+# cogant-trace — Trace Collection (Rust stub)
 
-High-performance trace collection and privacy-preserving filtering.
+Rust-side scaffolding for runtime trace collection.
 
 ## Contents
-- src/lib.rs — TraceCollector, event filters, aggregation
-
-## Features
-- In-process and subprocess trace collection
-- PII/sensitive data filtering
-- Compression (zstd)
-- Streaming processing for large traces
-- Integration with pytest, unittest plugins
+- `src/lib.rs` — Event record types and collection entry points
 
 ## Build
 
@@ -20,9 +13,15 @@ cargo test
 ```
 
 ## Dependencies
-- zstd — Compression
-- serde — Serialization
 
-## Performance
+`[dependencies]` in `Cargo.toml`:
 
-Tracing 100K function calls: < 100ms overhead
+- `cogant-core` — Shared types
+- `serde`, `serde_json` — Event record serialization
+- `uuid` — Event identifiers
+
+No compression (`zstd`) dependency, no pytest/unittest integration shims. The authoritative trace ingest path lives in [`py/cogant/dynamic/`](../../py/cogant/dynamic/) and consumes the output of standard coverage/trace tooling (`coverage.py`, `pytest-cov`).
+
+## Scope and status
+
+This crate is **not** wired through [`cogant-ffi`](../cogant-ffi/); it exists to reserve a Rust-side trace API that can be added later without an API break.

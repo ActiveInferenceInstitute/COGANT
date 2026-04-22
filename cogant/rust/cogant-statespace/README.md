@@ -1,15 +1,9 @@
-# cogant-statespace — State Space Compilation
+# cogant-statespace — State Space Compilation (Rust stub)
 
-Fast state space extraction and compilation for control-flow models.
+Rust-side scaffolding for compiling control-flow models into state spaces, used by `cogant-ffi`.
 
 ## Contents
-- src/lib.rs — StateSpaceCompiler, temporal reasoning, abstraction
-
-## Features
-- Control-flow graph extraction (quadratic time bound)
-- Variable domain inference
-- State predicate compilation
-- Temporal causality analysis
+- `src/lib.rs` — Types for state variables, observation modalities, and control-flow graph extraction
 
 ## Build
 
@@ -19,10 +13,15 @@ cargo test
 ```
 
 ## Dependencies
-- cogant-core, cogant-graph — Types and storage
-- petgraph — Graph algorithms
-- bitvec — Bit-packed state sets
 
-## Performance
+`[dependencies]` in `Cargo.toml`:
 
-100K-node graph to state space: < 5s
+- `cogant-core` — Shared types
+- `serde`, `serde_json` — Serialization
+- `uuid`, `thiserror` — Identifier generation and error types
+
+No `petgraph` and no `bitvec` — the crate is currently a thin scaffold; the authoritative state-space compiler is in [`py/cogant/statespace/`](../../py/cogant/statespace/). Bit-packed representations and graph-algorithm imports will be added only when their pure-Python counterparts are ported.
+
+## Scope and status
+
+Rust-side state-space compilation is intentionally minimal at this stage. Reach for [`py/cogant/statespace/compiler.py`](../../py/cogant/statespace/compiler.py) for behaviour changes; sync this crate only when the Python API stabilizes.

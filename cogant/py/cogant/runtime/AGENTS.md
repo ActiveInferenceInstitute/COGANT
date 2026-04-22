@@ -18,14 +18,14 @@ The runtime is **zero-dependency** (no numpy, scipy, torch, etc.) to maximize po
 ## Pipeline Integration
 
 ```
-stage 9: reverse/synthesizer.py  → synthesized matrices module (A, B, C, D)
+(post-pipeline) reverse/synthesizer.py → synthesized matrices module (A, B, C, D)
     ↓
-stage 10: runtime/              → Agent episodes, learning trajectories, free energy
+(post-pipeline) runtime/               → Agent episodes, learning trajectories, free energy
     ↓
 output: Episode transcripts, learned matrices, metrics (CSV, JSON)
 ```
 
-The runtime is the **final stage** — everything upstream converges to matrix emission. The runtime then:
+Both `reverse/` and `runtime/` run **after** the 10-stage forward pipeline (which ends with `validate/`). They consume the exported GNN bundle rather than sitting inside `PipelineConfig.stages`. The runtime is the end of the overall workflow — everything upstream converges to matrix emission, and the runtime then:
 - Executes synthesized packages in test harnesses and benchmarks
 - Validates that matrices exhibit expected behavioral properties (convergence, entropy reduction)
 - Records multi-episode learning dynamics for evaluation in METRICS.yaml

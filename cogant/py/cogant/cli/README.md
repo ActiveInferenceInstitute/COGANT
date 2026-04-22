@@ -46,9 +46,17 @@ cogant export: Export the GNN bundle to a specified format (json, jsonl, parquet
 
 cogant reverse: Synthesize a runnable Python package from a GNN markdown file.
 
-cogant roundtrip: Verify forward-reverse-forward round-trip isomorphism (all 6 fixtures score 23/23 ISOMORPHIC).
+cogant roundtrip: Verify forward-reverse-forward round-trip isomorphism (**23/23 ISOMORPHIC** on the canonical evaluation set — 12 zoo fixtures, 3 real-world examples, and 8 uncurated libraries).
 
 cogant benchmark: Time pipeline performance across multiple runs, reporting average, min, and max execution times.
+
+cogant version: Print the package version and exit.
+
+cogant upstream-gnn: Re-run the Active Inference Institute 25-step `src.gnn` pipeline on an existing `gnn_package/` directory (skips Render/Execute by default; set `COGANT_RUN_UPSTREAM_PIPELINE=1` for the slow integration path).
+
+cogant plugin list / cogant plugin info: Enumerate discovered plugins and print details about a specific plugin.
+
+cogant migrate: Migrate on-disk artifacts to the current bundle schema version.
 
 ## Usage Examples
 
@@ -64,7 +72,7 @@ cogant benchmark ./my_repo --iterations 5
 
 ## Implementation
 
-main.py: Typer app instance surfacing 26 user-facing entries in `cogant --help`: 22 `@app.command()` decorators, plus 2 `app.command(name=...)` registrations for `reverse` and `roundtrip` (24 on `app` directly), plus the `plugin` and `migrate` sub-typer groups attached via `app.add_typer`. Each command delegates to Session, PipelineRunner, or ReviewAPI from `cogant.api`. Rich Console for styled table and panel output. Typer.Argument and Typer.Option for parameter handling.
+main.py: Typer app instance that registers **26 top-level commands** via `@app.command` (17 plain `@app.command()` calls + 9 with an explicit name — 6 positional like `@app.command("analyze-static")`, plus `name="reverse"`, `name="roundtrip"`, and `name="version"`). It also attaches the `plugin` sub-typer (2 leaves: `list`, `info`) and the `migrate` sub-typer (1 leaf) via `app.add_typer`, for **29 leaf commands total**. Each command delegates to Session, PipelineRunner, or ReviewAPI from `cogant.api`. Rich Console for styled table and panel output. Typer.Argument and Typer.Option for parameter handling.
 
 diff.py: Helper functions load_bundle and diff_command for comparing two output directories using DriftAnalyzer and CodebaseMetrics.
 

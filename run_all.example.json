@@ -1,4 +1,5 @@
 {
+  "$comment": "Minimal copy-to-tweak config for run_all.sh / run_all.py. output_root defaults to 'output' at the staging root for quick smoke tests; promote to 'cogant/output' to match the shipped run_all.json. Pass --config path/to/file.json to use a different file.",
   "package_root": "cogant",
   "output_root": "output",
   "remote": {
@@ -48,7 +49,15 @@
     "render_site": true,
     "viz_png": true,
     "validate_run_dir": true,
-    "validate_no_upstream_gnn": false
+    "validate_no_upstream_gnn": false,
+    "roundtrip": true,
+    "_py_api_comment": "analyze_graph / analyze_static / export_multi / visualize_diagrams bypass the v0.5.0 CLI stubs and invoke the Python APIs via tools/batch_api.py, so real artifacts land under analysis/, exports/, and diagrams/.",
+    "analyze_graph": true,
+    "analyze_static": true,
+    "export_multi": true,
+    "export_multi_formats": "json,jsonlines",
+    "visualize_diagrams": true,
+    "visualize_format": "mermaid"
   },
   "manuscript": {
     "enabled": false,

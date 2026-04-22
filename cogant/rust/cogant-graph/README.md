@@ -1,16 +1,9 @@
-# cogant-graph — High-Performance Graph Storage
+# cogant-graph — Program Graph Storage
 
-Fast graph storage and query engine for COGANT.
+In-memory `ProgramGraph` storage shared by the rest of the `cogant-*` workspace.
 
 ## Contents
-- src/lib.rs — GraphStorage, QueryEngine, traversal algorithms
-
-## Features
-- Compressed sparse row (CSR) representation
-- O(1) edge lookup by source and type
-- Parallel BFS and DFS
-- Shortest path (Dijkstra, A*)
-- Reachability and dominance analysis
+- `src/lib.rs` — `ProgramGraph`, `NodeData`, `EdgeData` definitions and the `connected_components` helper used by [`cogant-ffi`](../cogant-ffi/).
 
 ## Build
 
@@ -20,14 +13,14 @@ cargo test
 ```
 
 ## Dependencies
-- cogant-core — Type definitions
-- rayon — Parallel iteration
-- petgraph — Graph algorithms
 
-## Performance
+`[dependencies]` in `Cargo.toml`:
 
-Graph with 100K nodes, 1M edges:
-- Node/edge access: < 1μs
-- BFS: < 10ms
-- DFS: < 5ms
-- Shortest path: < 50ms
+- `cogant-core` — Shared type definitions (`StableId`, `NodeKind`, …)
+- `petgraph` — Underlying graph data structure and algorithms
+- `serde`, `serde_json` — Serialization of `NodeData`/`EdgeData`
+- `uuid`, `thiserror` — Identifier generation and error types
+
+## Scope and status
+
+This crate provides the minimal Rust-side representation that the FFI wraps; it is not yet a standalone "query engine". Advanced queries, shortest-path, and parallel BFS/DFS are currently handled in the Python package. Benchmark numbers that used to live here have been removed because they are not produced by this crate's tests.

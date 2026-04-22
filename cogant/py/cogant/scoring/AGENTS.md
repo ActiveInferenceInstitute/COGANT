@@ -17,11 +17,13 @@ Drift scoring is **critical for understanding program evolution** and catching r
 ## Pipeline Integration
 
 ```
-stage 9: export/            → Bundles (baseline and current)
+stage 9: export/             → Bundles (baseline and current)
     ↓
-stage 10: scoring/          → DriftScore + CodebaseMetrics + Trends
-                             → Drift reports + Mermaid diffs
-                             → Quality gates (pass/fail)
+stage 10: validate/          → ValidationReport
+    ↓
+(post-pipeline) scoring/     → DriftScore + CodebaseMetrics + Trends
+                              → Drift reports + Mermaid diffs
+                              → Quality gates (pass/fail)
 ```
 
 The scoring module is the **final quality gate before deployment and release tracking**. All metrics feed into dashboards, CI/CD gates, and historical trend databases.

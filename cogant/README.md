@@ -111,7 +111,7 @@ directory (inner package) or from the staging root.
 ## CLI surface
 
 `cogant --help` is ground truth. The Typer app in
-[`py/cogant/cli/main.py`](py/cogant/cli/main.py) currently registers **26 help rows / 27 leaf commands** (22 `@app.command()` + 2 `app.command(name=...)` + `plugin` + `migrate` sub-typers — `plugin` exposes one extra leaf via `add_typer`):
+[`py/cogant/cli/main.py`](py/cogant/cli/main.py) currently registers **26 top-level commands** directly on `app` (17 plain `@app.command()` + 9 with an explicit name — 6 positional like `@app.command("analyze-static")`, 3 via `name=`) plus the `plugin` sub-typer (2 leaves: `list`, `info`) and the `migrate` sub-typer (1 leaf), for **29 leaf commands total**:
 
 | Command | Purpose |
 | --- | --- |
@@ -139,6 +139,15 @@ directory (inner package) or from the staging root.
 | `export` | Export GNN bundle to a specified format (json, jsonl, parquet, graphml). |
 | `reverse` | Synthesize a Python package from a GNN markdown file. |
 | `roundtrip` | Verify forward-reverse-forward round-trip isomorphism. |
+| `version` | Print the COGANT version and exit. |
+| `upstream-gnn` | Re-run the Active Inference Institute 25-step `src.gnn` pipeline on an existing `gnn_package/` directory. |
+
+Plus two sub-typer groups attached via `app.add_typer`:
+
+| Group | Leaf commands |
+| --- | --- |
+| `plugin` | `plugin list`, `plugin info` |
+| `migrate` | `migrate` (single default leaf for bundle schema migrations) |
 
 The `analyze` / `translate` subcommand accepts `--incremental <git-ref>` (equivalent to
 `PipelineConfig.incremental_since`) for per-commit CI re-runs over a Git diff.
@@ -170,7 +179,7 @@ Re-forward for Isomorphism Check
 
 **Forward-reverse-forward round-trip:** v0.5.0 achieves **23/23 ISOMORPHIC** (ε=1.0) across 12 zoo fixtures, 3 curated real-world examples, and 8 uncurated libraries. The reverse synthesizer emits POLICY and CONTEXT stubs proportional to origin GNN role counts, ensuring semantic preservation.
 
-See [docs/architecture/](docs/architecture/) for per-module deep dives and [docs/theory/roundtrip.md](docs/theory/roundtrip.md) for round-trip validation details.
+See [docs/architecture/README.md](docs/architecture/README.md) for per-module deep dives and [docs/theory/roundtrip.md](docs/theory/roundtrip.md) for round-trip validation details.
 
 ## Documentation
 
@@ -191,9 +200,9 @@ See [docs/architecture/](docs/architecture/) for per-module deep dives and [docs
   - [Active Inference mapping (deep)](docs/theory/active_inference.md)
   - [GNN format reference](docs/theory/gnn_format_reference.md)
 - **Reference**
-  - [CLI reference](docs/cli.md)
+  - [CLI reference (consolidated)](docs/cli_reference.md) • [CLI section index](docs/cli/README.md)
   - [Glossary](docs/reference/glossary.md)
-  - [API reference](docs/api/)
+  - [API reference](docs/api/README.md)
 - [R&D log](docs/evaluation/R&D_LOG.md)
 
 ## Development
@@ -207,8 +216,7 @@ uv run ruff check py/cogant/    # lint; see `evaluation/METRICS.yaml` (`ruff_vio
 make build-rust                 # optional: compile the rust backend
 ```
 
-Contributing guide: [CONTRIBUTING.md](CONTRIBUTING.md). Code of conduct:
-[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Contributing guide: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Honest scope
 
@@ -221,7 +229,7 @@ are tracked in [`docs/theory/active_inference.md § Known limitations`](docs/the
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT — see [`LICENSES.md`](LICENSES.md) for the COGANT license and third-party license notes (the upstream `src.gnn` package is CC-BY-NC-SA-4.0).
 
 ## Citation
 

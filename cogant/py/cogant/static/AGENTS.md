@@ -5,7 +5,7 @@ Static Analysis
 
 ## What Is the Static Module
 
-The `static/` module performs **pre-graph code fact extraction** — the second stage of the 10-stage COGANT pipeline. It takes Python source code and derives language-specific facts: symbols (functions, classes, variables), imports, calls, types, and data flow. These facts feed into `normalize/` (stage 2) and ultimately `graph/` (stage 3), where they become nodes and edges in a `ProgramGraph`.
+The `static/` module performs **pre-graph code fact extraction** — the second stage of the 10-stage COGANT pipeline. It takes Python source code and derives language-specific facts: symbols (functions, classes, variables), imports, calls, types, and data flow. These facts feed into `normalize/` (stage 3) and ultimately `graph/` (stage 4), where they become nodes and edges in a `ProgramGraph`.
 
 Static analysis runs **without runtime information**: no trace data, no dynamic instrumentation. It relies purely on AST parsing, symbol table construction, and heuristic type inference. Results are deterministic and reproducible.
 
@@ -16,11 +16,11 @@ stage 1: ingest/        → SourceFile
     ↓
 stage 2: static/        → SymbolInfo, ImportEdge, CallEdge, TypeInfo, DataFlowEdge
     ↓
-stage 2.5: normalize/   → LanguageFact
+stage 3: normalize/     → LanguageFact (canonical, language-agnostic facts)
     ↓
-stage 3: graph/         → ProgramGraph (nodes + edges)
+stage 4: graph/         → ProgramGraph (nodes + edges)
     ↓
-stage 4-10: translate, statespace, export, validate, ...
+stages 5–10: dynamic, translate, statespace, process, export, validate
 ```
 
 The static module is the **bridge between raw source and graph representation**. All downstream analyses depend on the quality and completeness of static facts.

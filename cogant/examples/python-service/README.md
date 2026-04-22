@@ -9,15 +9,12 @@ CLI reference: [docs/cli_reference.md](../../docs/cli_reference.md).
 ```
 python-service/
 ├── src/
-│   ├── __init__.py
-│   ├── api.py           # Main API routes
-│   ├── models.py        # Data models
-│   └── services/
-│       ├── __init__.py
-│       └── auth.py      # Authentication service
+│   ├── app.py           # Service entry + route registration
+│   ├── config.py        # Environment/config loader
+│   ├── events.py        # In-process event bus
+│   └── models.py        # Data models
 └── tests/
-    ├── test_api.py
-    └── test_services.py
+    └── test_app.py      # End-to-end smoke tests
 ```
 
 ## Analysis
