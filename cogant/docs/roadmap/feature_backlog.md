@@ -61,7 +61,7 @@ Current Parquet/JSONLINES/GraphML exporters build full in-memory structures. Str
 - [ ] JSONLINES streaming with per-batch flush
 - [ ] Benchmark on 100k, 500k, 1M-node graphs
 
-### 4. Dynamic analysis integration
+### 4. Dynamic analysis integration {#4}
 **Effort:** XL | **Complexity:** high | **Value:** very high
 Static analysis alone misses runtime dispatch, monkey-patching, and probabilistic branching. Combining static + runtime traces dramatically improves confidence scores.
 - [ ] Coverage-trace ingestion (`cogant.dynamic.trace_loader`)
@@ -247,7 +247,7 @@ Python 3.11+ `__slots__` on dataclasses reduces memory significantly for large g
 
 ---
 
-## Won't Fix / Out of Scope
+## Won't Fix / Out of Scope {#wont-fix--out-of-scope}
 
 | Item | Reason |
 |------|--------|

@@ -114,7 +114,10 @@ FALLBACK_METRICS: dict = {
 
 
 def load_metrics() -> tuple[dict, bool]:
-    """Load METRICS.yaml; fall back to hardcoded defaults if missing. Returns (data, is_fallback)."""
+    """Load METRICS.yaml; fall back to hardcoded defaults if missing.
+
+    Returns (data, is_fallback).
+    """
     if METRICS_PATH.exists():
         try:
             import yaml
@@ -206,7 +209,10 @@ EXPECTED_MISMATCHES = [
     (
         "mean_epsilon",
         "0.8638",
-        "Per-target value: dateutil ε=0.8638 (individual target, matches METRICS.yaml median_epsilon)",
+        (
+            "Per-target value: dateutil ε=0.8638 (individual target, "
+            "matches METRICS.yaml median_epsilon)"
+        ),
     ),
     ("mean_epsilon", "0.852", "Per-target value: pyyaml ε=0.8520 (individual target)"),
     # S01 wave-14 historical tier narrative (pre wave-16 canonical 23/23)
@@ -223,14 +229,20 @@ EXPECTED_MISMATCHES = [
     (
         "isomorphic_count",
         "14",
-        "Historical wave-14 S01 appendix: 14/23 ISOMORPHIC before wave-16; METRICS canonical is 23/23",
+        (
+            "Historical wave-14 S01 appendix: 14/23 ISOMORPHIC before wave-16; "
+            "METRICS canonical is 23/23"
+        ),
     ),
     # LOC mismatch: manuscript says "20,307 statements in 179 source files" which refers to
     # py/cogant/ subtree only; METRICS.yaml python_loc counts full repo python LOC
     (
         "python_loc",
         "20307",
-        "Scope difference: manuscript counts py/cogant/ statements (20,307); METRICS.yaml python_loc counts full-repo Python LOC (56,628)",
+        (
+            "Scope difference: manuscript counts py/cogant/ statements (20,307); "
+            "METRICS.yaml python_loc counts full-repo Python LOC (56,628)"
+        ),
     ),
     # Coverage 100% in a table cell refers to a specific module, not overall coverage
     (
@@ -397,7 +409,7 @@ class Finding:
 
 
 def get_expected_mismatch_note(pattern_name: str, extracted) -> str:
-    """Return note string if this (pattern_name, extracted_value) is an expected mismatch, else ''."""
+    """Return note if (pattern_name, extracted_value) is an expected mismatch, else ''."""
     for em_pattern, em_value, em_reason in EXPECTED_MISMATCHES:
         if em_pattern != pattern_name:
             continue
@@ -411,7 +423,10 @@ FUZZY_RELATIVE_TOLERANCE = 0.005  # 0.5%
 
 
 def _relative_delta_percent(extracted, metrics_val) -> float | None:
-    """Return |extracted - metrics_val| / |metrics_val| * 100, or None if non-numeric / zero base."""
+    """Relative delta %: |extracted - metrics_val| / |metrics_val| * 100.
+
+    None if operands are non-numeric; if metrics_val is 0, uses absolute scale.
+    """
     try:
         e = float(extracted)
         m = float(metrics_val)
@@ -589,11 +604,16 @@ def render_report(
     n_medium = sum(1 for f in findings if f.confidence == "MEDIUM")
     n_low = sum(1 for f in findings if f.confidence == "LOW")
 
+    metrics_src = (
+        "FALLBACK DEFAULTS (METRICS.yaml not found)"
+        if is_fallback
+        else str(METRICS_PATH.relative_to(_REPO_ROOT))
+    )
     lines = [
         "# Manuscript Number Audit",
         "",
         f"**Generated:** {date.today().isoformat()}  ",
-        f"**METRICS.yaml source:** {'FALLBACK DEFAULTS (METRICS.yaml not found)' if is_fallback else str(METRICS_PATH.relative_to(_REPO_ROOT))}  ",
+        f"**METRICS.yaml source:** {metrics_src}  ",
         f"**Manuscript directory:** {str(MANUSCRIPT_DIR.relative_to(_REPO_ROOT))}  ",
         f"**Fuzzy tolerance:** ±{FUZZY_RELATIVE_TOLERANCE * 100:.1f}% relative (CLOSE tier)  ",
         "",
@@ -601,9 +621,19 @@ def render_report(
         "",
         "| Status | Count | Description |",
         "|--------|-------|-------------|",
-        f"| MISMATCH | {len(mismatches)} | Real data drift — update manuscript or METRICS.yaml |",
-        f"| CLOSE | {len(close_findings)} | Within ±0.5% of METRICS.yaml — likely rounding / stale cache |",
-        f"| EXPECTED_MISMATCH | {len(expected_mismatches)} | Contextually valid — historical refs, scope differences, threshold definitions |",
+        (
+            f"| MISMATCH | {len(mismatches)} | "
+            "Real data drift — update manuscript or METRICS.yaml |"
+        ),
+        (
+            f"| CLOSE | {len(close_findings)} | "
+            "Within ±0.5% of METRICS.yaml — likely rounding / stale cache |"
+        ),
+        (
+            f"| EXPECTED_MISMATCH | {len(expected_mismatches)} | "
+            "Contextually valid — historical refs, scope differences, "
+            "threshold definitions |"
+        ),
         f"| MATCH | {len(matches)} | Verified exact |",
         f"| UNVERIFIED | {len(unverified)} | No METRICS.yaml entry to compare against |",
         f"| STALE_ARCHIVE | {len(stale)} | In _archive/ — expected to differ |",
@@ -621,8 +651,14 @@ def render_report(
 
     if is_fallback:
         lines += [
-            "> **Note:** METRICS.yaml does not yet exist. All comparisons use hardcoded fallback values.",
-            "> Run the metrics-agent to generate METRICS.yaml, then re-run this audit for authoritative results.",
+            (
+                "> **Note:** METRICS.yaml does not yet exist. "
+                "All comparisons use hardcoded fallback values."
+            ),
+            (
+                "> Run the metrics-agent to generate METRICS.yaml, then re-run this audit "
+                "for authoritative results."
+            ),
             "",
         ]
 
@@ -647,7 +683,10 @@ def render_report(
     lines += [
         "## Mismatches (action required)",
         "",
-        "These manuscript claims do not match METRICS.yaml. Update the manuscript or fix the metrics.",
+        (
+            "These manuscript claims do not match METRICS.yaml. "
+            "Update the manuscript or fix the metrics."
+        ),
         "",
     ]
     if mismatches:
@@ -660,7 +699,8 @@ def render_report(
             delta_str = f"{f.delta_percent:.2f}%" if f.delta_percent is not None else "—"
             lines.append(
                 f"| `{f.file}` | {f.line} | `{f.manuscript_claim}` "
-                f"| {f.extracted_value} | {f.metrics_value} | {delta_str} | {f.confidence} | {ctx} |"
+                f"| {f.extracted_value} | {f.metrics_value} | {delta_str} "
+                f"| {f.confidence} | {ctx} |"
             )
     else:
         lines.append("_No mismatches found._")
@@ -669,10 +709,11 @@ def render_report(
     # -----------------------------------------------------------------------
     # Close matches — fuzzy hits within ±0.5%
     # -----------------------------------------------------------------------
+    tol_pct = FUZZY_RELATIVE_TOLERANCE * 100
     lines += [
         "## Close Matches (within tolerance)",
         "",
-        f"These manuscript claims are within ±{FUZZY_RELATIVE_TOLERANCE * 100:.1f}% of the METRICS.yaml value.",
+        f"These manuscript claims are within ±{tol_pct:.1f}% of the METRICS.yaml value.",
         "Likely a rounding artefact or a stale cache. Fixing these is typically a one-line update.",
         "",
     ]
@@ -686,7 +727,8 @@ def render_report(
             delta_str = f"{f.delta_percent:.2f}%" if f.delta_percent is not None else "—"
             lines.append(
                 f"| `{f.file}` | {f.line} | `{f.manuscript_claim}` "
-                f"| {f.extracted_value} | {f.metrics_value} | {delta_str} | {f.confidence} | {ctx} |"
+                f"| {f.extracted_value} | {f.metrics_value} | {delta_str} "
+                f"| {f.confidence} | {ctx} |"
             )
     else:
         lines.append("_No close matches within the fuzzy tolerance window._")
@@ -742,7 +784,10 @@ def render_report(
     lines += [
         "## Unverified Claims",
         "",
-        "These numbers were extracted but have no corresponding METRICS.yaml entry to compare against.",
+        (
+            "These numbers were extracted but have no corresponding METRICS.yaml entry "
+            "to compare against."
+        ),
         "Consider adding them to METRICS.yaml for future tracking.",
         "",
         "| File | Line | Pattern | Extracted | Context |",
@@ -843,7 +888,8 @@ def render_report(
                 continue
             seen_em.add(key)
             lines.append(
-                f"- **{f.pattern_name}** = `{f.extracted_value}` in `{f.file}` line {f.line}: {f.note}"
+                f"- **{f.pattern_name}** = `{f.extracted_value}` in `{f.file}` "
+                f"line {f.line}: {f.note}"
             )
         lines.append("")
 

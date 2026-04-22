@@ -19,7 +19,7 @@ Scope is subject to revision based on actual v0.5.0 usage patterns and community
 
 ## Scheduled Work
 
-### L1 — Java Parser (tree-sitter)
+### L1 — Java Parser (tree-sitter) {#l1}
 
 **Effort:** L | **Owner:** parsers team | **Blocks:** nothing; enables L3
 
@@ -77,7 +77,7 @@ building full in-memory structures.
 - [ ] Benchmark suite: 10k, 50k, 100k, 500k synthetic graphs; assert memory < 2 GB at 500k nodes
 - [ ] `cogant export --streaming` CLI flag
 
-### L4 — Intra-Procedural Type Inference
+### L4 — Intra-Procedural Type Inference {#l4}
 
 **Effort:** L | **Owner:** static analysis team | **Blocks:** L5 (alias analysis benefits from types)
 
@@ -95,7 +95,7 @@ OBSERVATION false negatives for codebases without type annotations (legacy Djang
 - [ ] `tests/unit/test_static_type_inference.py`: 50+ unit tests
 - [ ] Benchmark: annotation coverage improvement on `flask_app` fixture (measure before/after)
 
-### L5 — Alias Analysis
+### L5 — Alias Analysis {#l5}
 
 **Effort:** M | **Owner:** graph team | **Blocks:** none
 

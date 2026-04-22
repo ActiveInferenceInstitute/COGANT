@@ -75,7 +75,7 @@ Bundles created at v0.1.0 must be readable at v1.0.0. Automated migration tests 
 - [ ] `ConfidenceTier.STATIC_PLUS_RUNTIME` path fully exercised in test suite
 - [ ] `cogant translate --with-traces coverage.json` documented in CLI guide
 
-### H6 — Distributed / Parallel File Processing
+### H6 — Distributed / Parallel File Processing {#h6}
 
 **Effort:** XL | **Owner:** pipeline team
 
@@ -144,7 +144,7 @@ Upgrade static `cogant render` HTML to a fully interactive experience.
 - [ ] Export query results: `--format csv|json|table`
 - [ ] `docs/guides/sql_analysis.md`: DuckDB query guide for graph analysis
 
-### H12 — Pre-Trained GNN Node Encoder (Beta)
+### H12 — Pre-Trained GNN Node Encoder (Beta) {#h12}
 
 **Effort:** XL | **Owner:** ml team
 
