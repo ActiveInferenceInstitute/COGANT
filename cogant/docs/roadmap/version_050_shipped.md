@@ -128,7 +128,7 @@ The largest single improvement batch since the initial release.
 - [x] `MultiFormatExporter` with `ExportFormat` enum (9 formats: JSON, GRAPHML, PARQUET, SVG, PNG, PDF, MERMAID, DOT, JSONLINES)
 - [x] `bundle.py`: `export_zip()`, `export_with_provenance()` with SHA256 hash
 - [x] `typed_export.py`: `to_jsonlines()`, `to_arrow_ipc()` (pyarrow optional)
-- [x] 4 new CLI subcommands: `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export`
+- [x] 4 new CLI entry points (Typer **preview stubs**): `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export` — registered with `--help` but print API guidance until wired to `cogant.static` / `cogant.graph.analysis` / `cogant.viz` / `cogant.export`
 
 ### Type infrastructure — all new
 

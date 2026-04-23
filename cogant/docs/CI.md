@@ -2,6 +2,8 @@
 
 COGANT uses [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) for documentation.
 
+**Repository layout:** `mkdocs.yml` lives next to `docs/` at the **COGANT package root** (the directory you `cd` into for `uv sync` and `pytest`). This tree includes [`.github/workflows/docs.yml`](../.github/workflows/docs.yml) at that same root. If you embed COGANT inside a monorepo, set `defaults.run.working-directory` (or per-step `working-directory`) to the subdirectory that contains `mkdocs.yml`, and point `upload-pages-artifact` at `<that-subdir>/site`.
+
 ## Local Development
 
 ```bash
@@ -22,34 +24,29 @@ The static site is written to `site/` (git-ignored).
 
 ## GitHub Pages deployment
 
-Example workflow at `.github/workflows/docs.yml` (repository root). Uses **uv** to match local development; drop `--strict` until anchor warnings are cleared project-wide (see [Building Locally](#building-locally)).
+The workflow at [`.github/workflows/docs.yml`](../.github/workflows/docs.yml) runs `mkdocs build` from the repository root when that root **is** the package root. It uses **uv** (no `--strict`; see [Building Locally](#building-locally)). Enable **GitHub Pages** (source: GitHub Actions) and a `github-pages` environment if your org requires it.
+
+Minimal equivalent:
 
 ```yaml
 name: Deploy docs
-
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - name: Build site
-        working-directory: cogant
-        run: uv run --with mkdocs-material --with 'mkdocstrings[python]' mkdocs build
+      - run: uv run --with mkdocs-material --with 'mkdocstrings[python]' mkdocs build
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: cogant/site
+          path: site
       - uses: actions/deploy-pages@v4
 ```
-
-Set **working-directory** to the directory that contains `mkdocs.yml` (here `cogant/`). Enable GitHub Pages (Source: GitHub Actions) in repository settings.

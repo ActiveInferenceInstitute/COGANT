@@ -409,7 +409,6 @@ nav:
       - Budget & Resources: roadmap/budget_resources.md
       - Contingencies: roadmap/contingencies.md
       - Related Work: roadmap/related_work.md
-      - Changelog: roadmap/changelog.md
       - See Also: roadmap/see_also.md
   - Playground: playground.md
   - Notebooks:

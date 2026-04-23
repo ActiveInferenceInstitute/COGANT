@@ -1,0 +1,30 @@
+# Build and deploy the MkDocs site. Repository root must be the COGANT package root
+# (directory containing mkdocs.yml and docs/). For a monorepo, add working-directory.
+name: Deploy docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Build site
+        run: uv run --with mkdocs-material --with 'mkdocstrings[python]' mkdocs build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - uses: actions/deploy-pages@v4

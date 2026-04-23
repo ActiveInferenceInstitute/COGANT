@@ -38,7 +38,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Translation engine enhancements**: `TranslationEngine.explain()`, `validate()`, `get_convergence_info()`; `RuleExplanation.confidence: float` and `contradictions: list[str]`; improved heuristics for all 5 rule families; `to_gnn_role()` on semantic rules.
 - **Round-trip enhancements**: `PackagePlan.validate()`, `diff()`, `to_json()`/`from_json()`; `synthesize_with_validation()` with `ast.parse` check; `IdempotencyReport` dataclass; `MatrixSet.validate()`.
 - **Runtime/statespace/markov enhancements**: `AgentRuntime.run_episode_with_logging()`, `benchmark()`, `reset()`, `get_free_energy()`, serialization; `DegradedOutput` namedtuple; `MarkovBlanket.validate()`, `to_mermaid()`, `merge()`, `get_sensory_states()`, `get_active_states()`.
-- **4 new CLI subcommands**: `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export`.
+- **4 new CLI entry points (preview stubs)**: `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export` — registered in Typer but currently print guidance to use the Python API (`cogant.static`, `cogant.graph.analysis`, `cogant.viz`, `cogant.export`); full orchestration wiring is tracked on the roadmap.
 - **Comprehensive test suite expansion**: 14 new test files (10 unit + 4 integration), ~6,600 lines covering all new modules. Property tests for rule determinism, roundtrip stability, matrix dimension consistency.
 - `cogant.metrics` public API: `get_metrics()` / `get_metric(key)` backed by `evaluation/METRICS.yaml` (41f96de)
 - `.pyi` type stubs for all public API modules + `py.typed` marker (58c5fe1)

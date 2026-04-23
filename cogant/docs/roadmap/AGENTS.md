@@ -7,8 +7,9 @@ expected to happen and *what* the quality bar for each release is.
 
 ## Purpose and ownership
 
-Everything here is forward-looking planning except `changelog.md`, which
-is retrospective. The roadmap is read by contributors, users, and AI
+Everything here is forward-looking planning except the changelog **stub**
+(`changelog.md`), which points readers at the canonical published changelog.
+The roadmap is read by contributors, users, and AI
 agents who need to know whether a feature is in scope, scheduled, or
 ruled out. Owned by whoever is driving the current release train.
 
@@ -39,20 +40,18 @@ ruled out. Owned by whoever is driving the current release train.
 | `budget_resources.md` | Development time and resource estimates | When estimates change materially |
 | `contingencies.md` | Slip and scope-cut fallbacks | When a contingency is triggered or added |
 | `related_work.md` | Adjacent tools and research tracked for comparison | When a new comparable tool ships |
-| `changelog.md` | Mirrored from root `CHANGELOG.md` | After every release (see below) |
+| `changelog.md` | Stub linking to [`../changelog.md`](../changelog.md); keeps legacy URLs working | Only if the stub workflow text changes |
 | `see_also.md` | Cross-links to related modules | When link targets move |
 
-## Changelog mirroring
+## Changelog
 
-`changelog.md` is a literal copy of the root `CHANGELOG.md`. Edit the root
-file, then:
+Edit **`CHANGELOG.md`** at the package root, then publish:
 
 ```bash
-cp CHANGELOG.md docs/roadmap/changelog.md
+cp CHANGELOG.md docs/changelog.md
 ```
 
-Do **not** edit `docs/roadmap/changelog.md` directly; the two will drift
-and the root is the source of truth.
+[`changelog.md`](changelog.md) in this folder is a **stub** only (not a copy). The MkDocs **Changelog** nav entry is `docs/changelog.md`.
 
 ## Adding a new doc
 
@@ -67,9 +66,8 @@ and the root is the source of truth.
 
 ## Known gotchas
 
-- `changelog.md` is a mirror — editing it in place is a common mistake.
-  When the root changelog changes, re-run the `cp` command above in the
-  same commit.
+- Do not paste full release notes into `roadmap/changelog.md` — it is a stub.
+  Sync `docs/changelog.md` from the root `CHANGELOG.md` in the same commit.
 - The version-plan files use two suffixes: `_current.md` (the version whose
   content is still authoritative for "what is shipping now"), `_planned.md`
   (a plan that has not yet shipped), and `_shipped.md` (historical

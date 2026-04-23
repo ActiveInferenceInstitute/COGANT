@@ -27,7 +27,7 @@ These items were previously in the backlog and are now implemented and tested.
 | `AgentRuntime`: `run_episode_with_logging()`, `benchmark()`, `reset()`, `get_free_energy()` | wave-21 | |
 | `MarkovBlanket`: `validate()`, `to_mermaid()`, `merge()`, `get_sensory_states()` | wave-21 | |
 | 3 new translation rules: `ParameterRule`, `StateMachineRule`, `RateLimiterRule` (19 → 22 total) | wave-21 | |
-| 4 new CLI subcommands: `analyze-static`, `analyze-graph`, `visualize`, `export` | wave-21 | |
+| 4 CLI preview stubs: `analyze-static`, `analyze-graph`, `visualize`, `export` (API pointers; full wiring backlog) | wave-21 | |
 | `cogant.metrics` public API: `get_metrics()` / `get_metric(key)` from `METRICS.yaml` | wave-21 | |
 | Content-addressed result cache keyed on repo SHA256 | v0.2.0 | |
 | Hypothesis property tests (7 COGANT correctness laws) | v0.2.0 | |

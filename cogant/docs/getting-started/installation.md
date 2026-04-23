@@ -52,8 +52,8 @@ cogant --help
 ## Verify the install
 
 ```bash
-cogant --help           # Typer app registers 21 top-level subcommands
+cogant --help           # authoritative list: 28 top-level names (26 commands + plugin + migrate groups)
 cogant scan .           # run a minimal static analysis on the current directory
 ```
 
-If `cogant --help` shows subcommands you're done. If not, re-check that your active Python is 3.11+ and that the venv containing COGANT is activated.
+If `cogant --help` lists subcommands, the install is working. **Leaves:** 29 runnable subcommands in total — the two groups add `plugin list`, `plugin info`, and `migrate migrate` under the 26 `@app.command` registrations. Four commands (`analyze-static`, `analyze-graph`, `visualize`, `export`) are **preview stubs** (API pointers only) — see [CLI reference](../cli_reference.md). If the `cogant` entry point is missing or `--help` fails, re-check Python 3.11+ and that the venv containing COGANT is activated.

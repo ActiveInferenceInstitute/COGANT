@@ -60,7 +60,7 @@ app = typer.Typer(
     help=(
         "Codebase-to-GNN Translation Engine.\n\n"
         "Translate a repository into an Active Inference Generalized "
-        "Notation for Networks (GNN) state-space model. Run "
+        "Notation Notation (GNN) state-space model. Run "
         "[bold]cogant doctor[/bold] first to verify your environment, "
         "then [bold]cogant init <repo>[/bold] for a guided first run."
     ),

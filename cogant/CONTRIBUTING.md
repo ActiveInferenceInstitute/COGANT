@@ -157,9 +157,10 @@ git config --global user.signingkey <your-key-id>
 
 ## Changelog
 
-The authoritative changelog is [`CHANGELOG.md`](CHANGELOG.md) at the repository root.
-[`docs/changelog.md`](docs/changelog.md) is a **mirror** used by MkDocs; after editing the
-root file, sync it:
+The authoritative changelog is [`CHANGELOG.md`](CHANGELOG.md) at the **package root**
+(same directory as `pyproject.toml`). [`docs/changelog.md`](docs/changelog.md) is the
+**MkDocs mirror**; [`docs/roadmap/changelog.md`](docs/roadmap/changelog.md) is a short
+stub for legacy links only — do not paste release notes there. After editing `CHANGELOG.md`:
 
 ```bash
 cp CHANGELOG.md docs/changelog.md

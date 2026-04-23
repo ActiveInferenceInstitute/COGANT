@@ -1,8 +1,19 @@
 # CLI Reference
 
-COGANT ships a Typer-based CLI (entry point `cogant`, defined in `py/cogant/cli/main.py`) that, as of v0.5.0, registers **26 top-level commands** via `@app.command` plus the **`plugin`** (2 leaves: `list`, `info`) and **`migrate`** (1 leaf) sub-typers — **29 leaf commands total**. Every subcommand supports `--help`; the list below covers the ones most commonly used day-to-day.
+COGANT ships a Typer-based CLI (entry point `cogant`, defined in `py/cogant/cli/main.py`) with **26** `@app.command` registrations on the root app, plus **`plugin`** and **`migrate`** Typer groups — **28** names on `cogant --help`, and **29** leaf subcommands when counting `plugin list`, `plugin info`, and `migrate migrate`. Every subcommand supports `--help`; the list below covers the ones most commonly used day-to-day.
 
 Run `cogant --help` to see the authoritative, in-tree list (counts change when new commands ship).
+
+## Preview CLI commands (API pointers)
+
+These four top-level commands are registered and support `--help`, but currently print “not yet fully implemented” guidance and point at the Python API instead of executing a full analysis:
+
+| Command | Intended API surface |
+| --- | --- |
+| `cogant analyze-static` | `cogant.static` (`ComplexityAnalyzer`, `CouplingAnalyzer`, …) |
+| `cogant analyze-graph` | `cogant.graph.analysis.GraphAnalyzer` |
+| `cogant visualize` | `cogant.viz` |
+| `cogant export` | `cogant.export` / `MultiFormatExporter` |
 
 ## `cogant translate`
 
@@ -101,6 +112,7 @@ Defaults to 3 iterations. Each iteration runs the pipeline with `export` and `va
 | Command | Purpose |
 | --- | --- |
 | `cogant init <path>` | Initialize a new COGANT project (creates `.cogant/config.json`; supports `--check`, `--run`, `-y`). |
+| `cogant version` | Print COGANT semver, Python version, and Rust extension metadata as JSON. |
 | `cogant doctor` | Diagnose the runtime environment (Python, deps, tree-sitter, Rust, git). Exits `1` on any required check failure. |
 | `cogant scan <target>` | Scan repository and print a summary table (`--format table|json`). |
 | `cogant extract-static <target>` | Run only the static-analysis stages. `--output DIR` triggers the full export path; `--layout-output` reorganizes artifacts. |
@@ -117,10 +129,11 @@ Defaults to 3 iterations. Each iteration runs the pipeline with `export` and `va
 | `cogant plugin list` / `cogant plugin info <name>` | Manage and inspect COGANT plugins. |
 | `cogant migrate migrate <path>` | Migrate GNN files to the current schema version (`--target`, `--dry-run`). |
 | `cogant upstream-gnn <package_dir>` | Drive the upstream GNN 25-step pipeline (`generalized-notation-notation`) against an existing `gnn_package/` (`--only-steps`, `--skip-steps`, `--output-dir`, `--frameworks`, `--llm-model`, `--verbose`). |
+| `cogant analyze-static` / `analyze-graph` / `visualize` / `export` | **Preview stubs** — see [Preview CLI commands](#preview-cli-commands-api-pointers) above. |
 
 ## Upstream GNN 25-step pipeline
 
-`cogant upstream-gnn` shells out to the upstream `generalized-notation-notation` repo (under `cogant/_extensions/generalized-notation-notation/src/main.py`) to run the canonical 25-step pipeline against an existing COGANT-emitted `gnn_package/`. Network- and LLM-dependent steps (12 LLM, 14 ML integration, 18 audio, 23 website) are skipped by default. The same wiring is also exposed as opt-in flags on `cogant translate`, `cogant analyze`, and `cogant validate` (see `--upstream-gnn-pipeline` above) so a single pipeline run can produce both the COGANT bundle and the upstream artifacts.
+`cogant upstream-gnn` invokes the **git-pinned** dependency `generalized-notation-notation` (declared in `pyproject.toml`; install with `uv sync` from the package root). The bridge imports `src.main.execute_pipeline_step` from that package — there is no `cogant/_extensions/...` checkout inside the COGANT repository. Network- and LLM-dependent steps are skipped by default (configurable via flags). The same wiring is exposed as opt-in flags on `cogant translate`, `cogant analyze`, and `cogant validate` (see `--upstream-gnn-pipeline` above).
 
 ```bash
 cogant upstream-gnn output/gnn_package

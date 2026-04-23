@@ -1,51 +1,92 @@
-<!-- Canonical source: `CHANGELOG.md` at repository root. Edit that file first, then copy here: `cp CHANGELOG.md docs/changelog.md`. The v0.5.0 "Test and Type Safety" / Markov strategy lines below may be amended for accuracy between full syncs. -->
-
 # CHANGELOG
 
 All notable changes to COGANT are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.5.0] - 2026-04-10
-
-### Major Achievement
-**Roundtrip Isomorphism:** 19/23 ISOMORPHIC (v0.4.0) → **23/23 ISOMORPHIC (v0.5.0)** with mean ε = 1.0.0. All 23 targets in the canonical roundtrip evaluation set (12 zoo fixtures, 3 curated real-world examples, 8 uncurated libraries) now achieve ε ≥ 0.8 after POLICY/CONTEXT stub fixes in the reverse synthesizer.
+## [Unreleased]
 
 ### Added
-- **Incremental analysis mode** — `cogant translate --incremental <git-ref>` / `PipelineConfig.incremental_since`. Reuses cached program graph for unchanged files; 19.6× no-change speedup, 5.6× single-file speedup on Flask benchmark.
-- **Multi-episode Bayesian learning** — `AgentRuntime.run_multi_episode`, `run_episode`, `update_D_from_posterior`, `update_A_from_counts`. Enables streaming belief updates and learned parameter adaptation.
-- **Production FastAPI server** — `cogant.server.app` with `/health` and `/translate` endpoints. Includes integration test suite, Dockerfile (python:3.12-slim + uv, `EXPOSE 8080`), and docker-compose.yml.
-- **Diagnostics extension** — `cogant doctor` adds tree-sitter grammar checks, uv lockfile parity audit, and optional-dependency verification.
-- **Project scaffolding** — `cogant init <path>` guides setup: `cogant.yaml`, source structure, `pyproject.toml` template.
-- **POLICY stub emission** — Reverse synthesizer generates `decide_*` methods proportional to origin GNN POLICY role count (not fixed scaffolding).
-- **CONTEXT stub emission** — Reverse synthesizer generates `get_context_*` methods for CONTEXT/CONFIG roles.
-- **CONSTRAINT stub fix** — Reverse synthesizer scales `check_*` stub generation to match origin constraint counts.
-- **Tutorial notebooks 07–12** — Flask walkthrough, constraints, plugins, YAML DSL, multi-episode learning, cross-language roundtrip examples.
-- **Cross-language roundtrip** — JavaScript Observer (`examples/zoo/13_js_observer`) round-trips to GNN with role_match_score=1.0.
-- **Scaling regression tests** — Guards for B-tensor sparsity, BFS traversal, AST cache eviction, INHERITS edge deduplication at high edge density (dulwich benchmark).
-- **Benchmark dashboard** — `evaluation/dashboards/benchmarks.html` (Chart.js, self-contained) tracks performance over runs.
-- **Documentation overhaul** — Comprehensive docstring pass, mkdocs navigation restructure, getting-started guide, API reference updates.
-- **Manuscript appendices A–E** — Galois connection proofs, GNN spec compliance audit, ε derivation, scaling analysis, cross-language extension claims; 40+ new citations.
-- **Theory documentation** — New `docs/theory/roundtrip.md` explaining round-trip validation, epsilon classifications (ISOMORPHIC/APPROXIMATE/DIVERGENT), and the v0.5.0 23/23 achievement.
+- **Configurable upstream GNN 25-step pipeline pass** — new
+  `cogant.gnn.upstream_bridge.pipeline` module drives `src.main.execute_pipeline_step`
+  over the produced `gnn_package/`. Surfaces: `UPSTREAM_STEP_SCRIPTS` (canonical
+  ordering of `0_template.py`…`24_intelligent_analysis.py`), `DEFAULT_SKIP_STEPS = {11, 12}`,
+  `resolve_steps()`, `UpstreamPipelineConfig` / `UpstreamStepResult` /
+  `UpstreamPipelineResult` dataclasses, and `run_upstream_pipeline()`. Wired
+  through `PipelineConfig.upstream_gnn_pipeline` and exposed on `analyze`,
+  `translate`, `validate` via `--upstream-gnn-pipeline` plus
+  `--upstream-gnn-only-steps`, `--upstream-gnn-skip-steps`,
+  `--upstream-gnn-frameworks`, `--upstream-gnn-llm-model`, and
+  `--upstream-gnn-output-dir`. New top-level `cogant upstream-gnn <package_dir>`
+  command re-runs the pass against an existing bundle. **Render (step 11)** and
+  **Execute (step 12)** are skipped by default — those are framework-specific
+  PyMDP/RxInfer/JAX/DisCoPy code-gen and simulation steps; opt in by clearing
+  `--upstream-gnn-skip-steps ""` or by listing them in `--upstream-gnn-only-steps`.
+  Per-step results are recorded under `bundle.artifacts['upstream_pipeline_steps']`
+  / `['upstream_pipeline_summary']` and serialized to
+  `<output_dir>/upstream_pipeline/upstream_pipeline_summary.json`. Failures are
+  **advisory** — they append warnings to the validate stage but never fail it.
+  Includes 14 unit tests (`tests/unit/test_upstream_pipeline_resolution.py`)
+  and 5 integration tests (`tests/integration/test_upstream_gnn_pipeline.py`),
+  with a slow full-pass test gated by `COGANT_RUN_UPSTREAM_PIPELINE=1`.
+- **3 new translation rules** (19 → 22 total): `ParameterRule` (control family — detects learnable parameters/hyperparameters → CONTEXT), `StateMachineRule` (behavioral family — detects FSM patterns → POLICY), `RateLimiterRule` (resilience family — detects rate-limiting patterns → POLICY). Rule breakdown: 5 structural + 5 semantic + 3 control + 4 behavioral + 5 resilience.
+- **Static analysis module** (`cogant.static`): `ComplexityAnalyzer` (cyclomatic + cognitive complexity), `CouplingAnalyzer` (Martin metrics: Ca/Ce/instability/distance-from-main-sequence), `DeadCodeDetector` (unused imports/functions/unreachable code with confidence scores), `MetricsAnalyzer` (LOC, Halstead metrics).
+- **Network/graph analysis** (`cogant.graph.analysis`): `GraphAnalyzer` with centrality (betweenness, PageRank, closeness, degree), community detection (Louvain/component fallback), Tarjan SCC cycle detection, hotspot/source/sink identification. `GraphDiff` for incremental diffing.
+- **Visualization suite** (`cogant.viz`): `PDFExporter` (8-page analysis reports), `MatrixVisualizer` (A/B/C/D heatmaps), `PipelineVisualizer` (10-stage timing + Mermaid), `FlowDiagrammer` (CFG/call graph/dependency graph → PNG/PDF/Mermaid), `StaticAnalysisView`, `NetworkView`, `ExportView`.
+- **Export formats** (`cogant.export`): `SVGExporter` (graphviz DOT), `JSONSchemaExporter` (draft-7 schemas for all output types), `MultiFormatExporter` with `ExportFormat` enum (9 formats: JSON, GRAPHML, PARQUET, SVG, PNG, PDF, MERMAID, DOT, JSONLINES).
+- **Type infrastructure**: 14 `@runtime_checkable` Protocol classes (`Translatable`, `Analyzable`, `Serializable`, `Visualizable`, `Validatable`, `Exportable`, `PipelineStage`, `TranslationRule`, `GraphBackend`, `Exportable2`, `DiagramRenderer`, `NetworkAnalyzer`, `ReportGenerator`, `StaticAnalyzer`), 15 `TypedDict`s, `SemanticRole`/`RuleFamily`/`FixpointStatus` Literal types. 231 `.pyi` stubs covering all public modules.
+- **API improvements** (`cogant.server`, `cogant.api`): 5 new REST endpoints (`GET /api/v1/rules`, `POST /api/v1/analyze`, `POST /api/v1/roundtrip`, `POST /api/v1/visualize`, `GET /api/v1/metrics`), WebSocket streaming (`WS /ws/translate`), `PipelineResult` dataclass, `SessionManager`, `translate_batch()`.
+- **Translation engine enhancements**: `TranslationEngine.explain()`, `validate()`, `get_convergence_info()`; `RuleExplanation.confidence: float` and `contradictions: list[str]`; improved heuristics for all 5 rule families; `to_gnn_role()` on semantic rules.
+- **Round-trip enhancements**: `PackagePlan.validate()`, `diff()`, `to_json()`/`from_json()`; `synthesize_with_validation()` with `ast.parse` check; `IdempotencyReport` dataclass; `MatrixSet.validate()`.
+- **Runtime/statespace/markov enhancements**: `AgentRuntime.run_episode_with_logging()`, `benchmark()`, `reset()`, `get_free_energy()`, serialization; `DegradedOutput` namedtuple; `MarkovBlanket.validate()`, `to_mermaid()`, `merge()`, `get_sensory_states()`, `get_active_states()`.
+- **4 new CLI entry points (preview stubs)**: `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export` — registered in Typer but currently print guidance to use the Python API (`cogant.static`, `cogant.graph.analysis`, `cogant.viz`, `cogant.export`); full orchestration wiring is tracked on the roadmap.
+- **Comprehensive test suite expansion**: 14 new test files (10 unit + 4 integration), ~6,600 lines covering all new modules. Property tests for rule determinism, roundtrip stability, matrix dimension consistency.
+- `cogant.metrics` public API: `get_metrics()` / `get_metric(key)` backed by `evaluation/METRICS.yaml` (41f96de)
+- `.pyi` type stubs for all public API modules + `py.typed` marker (58c5fe1)
+- Complete JS/TS tree-sitter parser: arrow functions, async, generics, interfaces, decorators (25640ae)
+- Rust PyO3 `connected_components` FFI; `COGANT_USE_RUST=1` feature flag (598945d)
 
 ### Fixed
-- **Tree-sitter JS grammar fallback** — `.ts` files on mixed JS/TS repositories no longer fail hard; grammar fallback to JavaScript parser prevents parse errors.
-- **TypeScript parse test** — Loosened assertion to accommodate JS grammar fallback path.
-- **Roundtrip improvements** — POLICY stub + CONTEXT stub + CONSTRAINT fix resolves all pre-v0.5.0 failure modes (zoo/07, zoo/09, zoo/10, zoo/12, tqdm, fastapi, click, httpx, urllib3, requests, flask_app).
+- Viz `png_export` tests guarded behind `pytest.importorskip(matplotlib)`; add `numpy` and `pytest-cov` as dev deps (905c2da)
+- Relax JS hidden-state assertion in cross-language differential test (4aa2710)
+- Ruff UP038 autofix: union-type annotations; remove stale `xfail` mark (cea55d9)
 
 ### Changed
-- **Dependency updates** — `pyproject.toml` refreshed, `uv.lock` synchronized.
-- **Pipeline runner** — Default stages now explicitly list all 10 (ingest, static, normalize, graph, dynamic, translate, statespace, process, export, validate).
+- `evaluation/METRICS.yaml` promoted to canonical source of truth for test count, coverage, and roundtrip metrics (41f96de)
+- All public API modules receive Google-style docstrings and explicit `__all__` exports (a621b0a)
 
-### Test and Type Safety
-- **v0.5.0 release snapshot:** 2129 tests passing with 86 skipped (optional toolchains), 12 xfailed, 1 xpassed; line coverage **83.42%** on `py/cogant/` before later suite expansion. Current counts and coverage policy: run `uv run pytest tests/ -q` and see `pyproject.toml` (`--cov-fail-under=89`, line gate, `omit` paths).
-- **mypy strict: 0 errors** across 179 source files.
-- **ruff check: 0 violations** on v0.5.0 codebase.
+### Tests
+- Comprehensive CLI subcommand coverage tests for `cogant/cli/main.py` (98f7798)
 
-### Measurement
-- **Incremental mode speedups:** 19.6× no-change (cached graph), 5.6× single-file (partial re-run) on Flask.
-- **Roundtrip metric:** 23/23 ISOMORPHIC, mean ε = 1.0000, min ε = 1.0000, max ε = 1.0000 (perfect match on all targets).
-- **Semantic roles discovered:** 22 translation rules emit `MappingKind` labels; the seven-name **Active Inference** subset counted in metrics is HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE, CONSTRAINT, CONTEXT (see `METRICS.yaml` `ir_schema.active_inf_role_count`).
-- **Markov blanket strategies:** `MarkovBlanketExtractor` supports `explicit`, `module`, `kind`, `auto`, `mapping_kind`; partitioning via `partition_by_seeds` is O(V+E).
+### Internal
+- Scaffolding stubs filled in `docs/`, `examples/`, `tests/`, and `evaluation/` subdirectories (c6a5b7b)
+- Manuscript variable registry, inject and audit scripts; number audit report (c8c4749)
+
+## [0.5.0] - 2026-04-10
+
+### Added
+- Incremental analysis mode: `cogant translate --incremental <git-ref>` / `PipelineConfig.incremental_since` — 19.6× no-change speedup, 5.6× single-file speedup on Flask benchmark
+- Multi-episode Bayesian learning: `AgentRuntime.run_multi_episode`, `run_episode`, `update_D_from_posterior`, `update_A_from_counts`
+- Production FastAPI server: `cogant.server.app` with `/health` and `/translate` endpoints, integration test suite
+- Dockerfile (python:3.12-slim + uv, `EXPOSE 8080`, curl healthcheck) and docker-compose.yml
+- `cogant doctor` extended: tree-sitter grammar checks, uv lockfile parity, optional-dep audit
+- `cogant init <path>`: scaffold helpers for `cogant.yaml`, source stub, `pyproject.toml`
+- Tutorial notebooks 07–12: Flask walkthrough, constraints, plugins, YAML DSL, multi-episode learning, cross-language roundtrip
+- Cross-language roundtrip claim: JS Observer (`examples/zoo/13_js_observer`) → GNN → AI cycle, `role_match_score=1.0`
+- POLICY/CONTEXT stub emission in synthesizer: `decide_*` / `get_context_*` stubs proportional to origin GNN role counts
+- Scaling regression tests: guards for B-tensor, BFS, AST cache, INHERITS edge deduplification at dulwich edge density
+- Benchmark dashboard: `evaluation/dashboards/benchmarks.html` (Chart.js, self-contained)
+- Comprehensive docstring pass + mkdocs nav update + getting started guide
+- Manuscript appendices A–E: Galois proofs, GNN compliance audit, ε derivation, scaling analysis, cross-language extension; 40+ new citations
+
+### Fixed
+- tree-sitter JS grammar fallback for `.ts` files prevents hard parse failure on mixed JS/TS repos (`10c87ea`)
+- Loosen `parse_ts_file` test assertion to accommodate JS grammar fallback path (`bf386b5`)
+
+### Changed
+- `pyproject.toml` dep updates + uv.lock sync (`fbd8d39`)
+
+### Roundtrip ε
+- 19/23 ISOMORPHIC (83%) → **23/23 ISOMORPHIC (100%)** after POLICY/CONTEXT stub emission
 
 ## [0.4.0] - 2026-04-10
 
@@ -81,7 +122,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Reverse Pipeline (GNN to Code)**
 - `cogant.reverse` subpackage: GNN markdown parser, package planner, Python synthesizer, idempotency checker
 - Runtime-callable matrix functions (likelihood, transition, EFE, best_action) without exec
-- ISOMORPHISM_THEOREM.md: Galois connection proof + ε-bounded roundtrip error formalization
+- ISOMORPHISM_THEOREM.md: Galois connection proof + epsilon-bounded roundtrip error formalization
 
 **Active Inference Runtime**
 - Active Inference agent loop with step/convergence/VFE metrics
@@ -148,4 +189,4 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.1.0] - 2026-04-08
 
-Initial R&D release: forward pipeline (ingest -> static -> normalize -> graph -> translate -> export), 22 translation rules, 7 semantic roles, Markov blanket partition.
+Initial R&D release: forward pipeline (ingest -> static -> normalize -> graph -> translate -> export), 12 translation rules, 7 semantic roles, Markov blanket partition.

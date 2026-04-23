@@ -75,5 +75,5 @@ The full Python API and CLI walkthrough live in [Quick Start](getting-started/qu
 
 - **Agent routing and tooling:** [AGENTS.md](AGENTS.md).
 - **Module map:** [Documentation modules](reference/documentation_modules.md).
-- **Changelog mirror:** [changelog.md](changelog.md) (source of truth: repository root `CHANGELOG.md`).
+- **Changelog mirror:** [changelog.md](changelog.md) (source of truth: package root `CHANGELOG.md`; sync with `cp CHANGELOG.md docs/changelog.md`).
 - **Package README:** [repository `README.md`](https://github.com/cogant-contributors/cogant/blob/main/cogant/README.md) (install and repo overview).

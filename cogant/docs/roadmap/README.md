@@ -46,7 +46,7 @@
 | [Budget and resources](budget_resources.md) | Development time and resource estimates | Reference |
 | [Contingencies](contingencies.md) | What happens if a planned item slips or is cut | Reference |
 | [Related work](related_work.md) | Adjacent tools and research tracked for comparison | Reference |
-| [Changelog](changelog.md) | Mirrored from the root `CHANGELOG.md` | Reference |
+| [Changelog](../changelog.md) | Mirrored from the root `CHANGELOG.md` (see also [stub](changelog.md) for tooling links) | Reference |
 | [See also](see_also.md) | Cross-links to related modules | Beginner |
 
 ## Recommended Reading Order
@@ -58,7 +58,7 @@
 5. [Known limitations (v0.5.0)](known_limitations_010.md) and [Deprecation policy](deprecation_policy.md) — what is not yet supported and what will break.
 5. [Performance targets](performance_targets.md) and [Test coverage goals](test_coverage_goals.md) — quality bar.
 6. [Feature backlog](feature_backlog.md) and [Contingencies](contingencies.md) — unscheduled work and risk.
-7. [Changelog](changelog.md) — shipped history.
+7. [Changelog](../changelog.md) — shipped history.
 
 ## Related modules
 
