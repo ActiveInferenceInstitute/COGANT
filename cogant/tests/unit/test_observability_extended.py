@@ -139,12 +139,15 @@ def test_registry_reset_all_clears_observations() -> None:
 
 
 def test_span_with_default_registry() -> None:
-    """span() without explicit registry uses module-level default."""
-    # Reset global registry first
-    registry.reset_all()
+    """span() without explicit registry uses the current module-level default."""
+    import cogant.observability.metrics as _metrics_mod
+
+    # Re-import live to survive any module reload a prior test may have triggered
+    live_registry = _metrics_mod.registry
+    live_registry.reset_all()
     with span("default_reg_test"):
         pass
-    h = registry.histogram("cogant.span.default_reg_test")
+    h = live_registry.histogram("cogant.span.default_reg_test")
     assert h.count() == 1
 
 

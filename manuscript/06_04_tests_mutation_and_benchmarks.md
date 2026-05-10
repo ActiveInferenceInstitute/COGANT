@@ -12,9 +12,9 @@ The v{{VERSION}} Python implementation ships a test suite that, on the canonical
 
 : Table 8 — Python interpreter matrix. {#tbl:python-interpreter-matrix}
 
-All three interpreters are listed in the `classifiers` block of [`../cogant/pyproject.toml`](../cogant/pyproject.toml). The declared minimum is Python 3.11 so that the pattern-matching front end in `cogant.static.parser.PythonASTParser` can use `match`/`case` statements without a compatibility shim, and the benchmark suite recorded in `benchmarks/results/suite_20260409.md` was executed on CPython 3.12.11 under macOS arm64.
+All three interpreters are listed in the `classifiers` block of [`../cogant/pyproject.toml`](../cogant/pyproject.toml). The declared minimum is Python 3.11 so that the pattern-matching front end in `cogant.static.parser.PythonASTParser` can use `match`/`case` statements without a compatibility shim, and the benchmark suite recorded in `benchmarks/results/suite_20260423.md` was executed on CPython 3.12.11 under macOS arm64.
 
-Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE_COUNT}}** packaged fixtures exercise end-to-end. Table 9 records statement coverage (`coverage.py` **Stmts** / **Cover**) for the algorithmic core (translation, state-space compilation, Markov blanket extraction, GNN matrix construction, validation, simulation helpers) --- the modules whose correctness is load-bearing for the claims in this manuscript. Figures match the `uv run pytest tests/ --cov=cogant` run that produced the {{TEST_COUNT}}/{{TEST_COUNT_SKIPPED}} pass/skip summary in `METRICS.yaml` (**{{METRICS_GENERATED_AT}}**).
+Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE_COUNT}}** packaged fixtures exercise end-to-end. @tbl:coverage-stmt-modules records statement coverage (`coverage.py` **Stmts** / **Cover**) for the algorithmic core (translation, state-space compilation, Markov blanket extraction, GNN matrix construction, validation, simulation helpers) --- the modules whose correctness is load-bearing for the claims in this manuscript. Figures match the `uv run pytest tests/ --cov=cogant` run that produced the {{TEST_COUNT}}/{{TEST_COUNT_SKIPPED}} pass/skip summary in `METRICS.yaml` (**{{METRICS_GENERATED_AT}}**).
 
 | Module | Stmts | Cover |
 |---|---:|---:|
@@ -44,7 +44,7 @@ Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE
 
 : Table 9 — Statement coverage of load-bearing modules (canonical v{{VERSION}} run, {{METRICS_GENERATED_AT}}). {#tbl:coverage-stmt-modules}
 
-The aggregate **{{COVERAGE_PCT}}%** in `METRICS.yaml` is measured with `[tool.coverage.run] source = ["cogant"]` and **omits** `cogant/tools/*` and `cogant/static/treesitter_parser.py` (see [`../cogant/pyproject.toml`](../cogant/pyproject.toml)). The `viz/` package is instrumented and covered in v0.5.0 by a dedicated viz test suite. Lower rows in Table 9 (for example `markov.blanket`, `translate.rules.behavioral`) highlight residual branch gaps, not omitted packages. See `../cogant/CHANGELOG.md` for release-cycle deltas.
+The aggregate **{{COVERAGE_PCT}}%** in `METRICS.yaml` is measured with `[tool.coverage.run] source = ["cogant"]` and **omits** `cogant/tools/*` and `cogant/static/treesitter_parser.py` (see [`../cogant/pyproject.toml`](../cogant/pyproject.toml)). The `viz/` package is instrumented and covered in v0.5.0 by a dedicated viz test suite. Lower rows in @tbl:coverage-stmt-modules (for example `markov.blanket`, `translate.rules.behavioral`) highlight residual branch gaps, not omitted packages. See `../cogant/CHANGELOG.md` for release-cycle deltas.
 
 ## Mutation testing
 
@@ -67,22 +67,24 @@ The modules with the strongest mutation signal are `static/dataflow.py` (3 of 3 
 
 ## Benchmark suite (shipped)
 
-A reproducible benchmark harness lives at [`../cogant/benchmarks/bench_suite.py`](../cogant/benchmarks/bench_suite.py) and writes its canonical results to [`../cogant/benchmarks/results/`](../cogant/benchmarks/results/). The most recent run committed to the tree (`bench(p1.5): Rust build status + Python vs Rust benchmark results`, then superseded by `bench(suite): reproducible 6-fixture benchmark harness with stage timing + memory + GNN stats`) executed each fixture for three iterations on CPython 3.12.11 / macOS arm64 and recorded per-stage wall-clock time, peak memory, and the final GNN tensor shapes.
+A reproducible benchmark harness lives at [`../cogant/benchmarks/bench_suite.py`](../cogant/benchmarks/bench_suite.py) and writes its canonical results to [`../cogant/benchmarks/results/`](../cogant/benchmarks/results/). The snapshot below is from `suite_20260423.md` (three iterations per fixture, CPython 3.12.11 / macOS arm64) and should be regenerated after performance work.
 
 | Fixture | Wall-clock median (ms) | Wall-clock p95 (ms) | Nodes | Edges | Mappings | Peak memory (MB) |
 |---|---:|---:|---:|---:|---:|---:|
-| `calculator` | 32 | 35 | 12 | 25 | 11 | 0.0 |
-| `event_pipeline` | 36 | 37 | 23 | 36 | 21 | 0.1 |
-| `flask_mini` | 43 | 45 | 26 | 40 | 25 | 0.3 |
-| `flask_app` | 86 | 86 | 98 | 154 | 68 | 0.3 |
-| `requests_lib` | 76 | 77 | 98 | 152 | 55 | 0.7 |
-| `json_stdlib` | 48 | 49 | 29 | 34 | 19 | 0.0 |
+| `calculator` | 35 | 35 | 12 | 25 | 11 | 0.2 |
+| `event_pipeline` | 41 | 43 | 23 | 36 | 21 | 0.2 |
+| `flask_mini` | 38 | 38 | 26 | 40 | 25 | 0.1 |
+| `flask_app` | 59 | 62 | 98 | 154 | 72 | 0.4 |
+| `requests_lib` | 54 | 58 | 98 | 152 | 63 | 0.1 |
+| `json_stdlib` | 47 | 49 | 29 | 34 | 19 | 0.0 |
 
-: Table 11 — Benchmark suite results (`suite_20260409.md`, three iterations per fixture, CPython 3.12.11). {#tbl:benchmark-suite-results}
+: Table 11 — Benchmark suite results (`suite_20260423.md`, three iterations per fixture, CPython 3.12.11). {#tbl:benchmark-suite-results}
 
-The benchmark harness times the bare translation pipeline (`ingest`, `static`, `normalize`, `graph`, `translate`, `statespace`), so its wall-clock numbers are approximately an order of magnitude smaller than the end-to-end roundtrip times of Table 4: Tables 4 and 5 include validation, GNN package assembly, Mermaid and PNG rasterization, GraphML and Parquet serialization, and the HTML dashboard write, none of which are part of the benchmark hot path. For pure translation, every shipped fixture runs in under 100 ms and consumes less than a megabyte of peak memory; the stage breakdown in `suite_20260409.md` shows that for the smaller fixtures the dominant cost is `ingest` (repository walk + file hashing), and for the larger fixtures (`flask_app`, `requests_lib`) the dominant cost shifts to `graph` construction where `CallGraphBuilder` walks every `ast.Call` node to produce the CALLS edges recorded in Table 5.
+Node and edge columns match @tbl:repo-pipeline-metrics. The `mappings` count is from the same post-`statespace` in-memory `semantic_mappings` dict that `../cogant/evaluation/figures/metrics.json` uses (`pipeline_api_metrics` samples immediately after `run_statespace`); conflict resolution in `TranslationEngine` applies **sorted** iteration over colliding mapping pairs so this count is stable across `bench_suite` and `generate_figures` runs.
 
-Approximate stage breakdown from the same run: `ingest` 25--30 ms across all fixtures; `static` 1--4 ms; `normalize` 0--3 ms; `graph` 4--43 ms (dominated by `flask_app`); `translate` 0--3 ms; `statespace` 0--1 ms. The benchmark results file also records the per-fixture GNN tensor shapes --- for example `flask_app` produces $A \in \mathbb{R}^{21 \times 10}$, $B \in \mathbb{R}^{10 \times 10 \times 31}$, $C \in \mathbb{R}^{21}$, $D \in \mathbb{R}^{10}$ --- which match the state-space compiler outputs of Table 6 up to the benchmark's independent re-run sampling variance.
+The benchmark harness times the pipeline up through `statespace` (no `process` / `export` / `validate`), so its wall-clock medians are much smaller than the end-to-end times in @tbl:repo-pipeline-metrics, which add process model extraction, GNN package build, and validation. For pure translation, every shipped fixture in this run finishes in under 100 ms median wall time; the stage breakdown in `suite_20260423.md` shows `ingest` and `graph` as the main contributors on the larger fixtures.
+
+Approximate stage breakdown from the same file: per-fixture `ingest` is on the order of 30--35 ms; `graph` reaches roughly 7--13 ms on the larger fixtures. The benchmark file records GNN tensor shapes from `GNNMatrices` on the post-`statespace` bundle; for example `flask_app` shows $A \in \mathbb{R}^{22 \times 13}$, $B \in \mathbb{R}^{13 \times 13 \times 31}$, $C \in \mathbb{R}^{22}$, $D \in \mathbb{R}^{13}$, which line up with the Markov structure implied by the observation and hidden-state rows in the summary section of `suite_20260423.md` (exported `gnn_package/` modalities in @tbl:state-space-compilation can still differ from the post-`statespace` GNN read when `run_process` refines the bundle).
 
 ## See also (MkDocs)
 

@@ -1,25 +1,24 @@
 {
   "calculator": {
-    "actions": 1,
-    "edges": 27,
+    "actions": 6,
+    "edges": 25,
     "edges_by_kind": {
-      "CALLS": 2,
       "CONTAINS": 11,
       "READS": 9,
       "WRITES": 5
     },
-    "elapsed_s": 7.42,
+    "elapsed_s": 4.33,
     "files": 1,
     "gnn_errors": 0,
-    "gnn_md_bytes": 16019,
-    "gnn_package_files": 19,
+    "gnn_md_bytes": 17876,
+    "gnn_package_files": 27,
     "gnn_score": 100.0,
     "gnn_sections": 31,
     "gnn_valid": true,
     "gnn_warnings": 0,
     "group": "control_positive",
-    "loc": 122,
-    "mappings_total": 5,
+    "loc": 120,
+    "mappings_total": 11,
     "nodes": 12,
     "nodes_by_kind": {
       "CLASS": 1,
@@ -29,34 +28,30 @@
     "observations": 3,
     "ok": true,
     "policies": 1,
-    "role_summary": {
-      "unknown": 5
-    },
-    "state_variables": 0,
-    "transitions": 1
+    "state_variables": 1,
+    "transitions": 6
   },
   "event_pipeline": {
-    "actions": 10,
-    "edges": 66,
+    "actions": 11,
+    "edges": 36,
     "edges_by_kind": {
-      "CALLS": 30,
       "CONTAINS": 22,
       "INHERITS": 3,
       "READS": 10,
       "WRITES": 1
     },
-    "elapsed_s": 8.58,
+    "elapsed_s": 4.24,
     "files": 1,
     "gnn_errors": 0,
-    "gnn_md_bytes": 23319,
-    "gnn_package_files": 19,
+    "gnn_md_bytes": 22243,
+    "gnn_package_files": 27,
     "gnn_score": 100.0,
     "gnn_sections": 31,
     "gnn_valid": true,
     "gnn_warnings": 0,
     "group": "control_positive",
-    "loc": 147,
-    "mappings_total": 20,
+    "loc": 150,
+    "mappings_total": 21,
     "nodes": 23,
     "nodes_by_kind": {
       "CLASS": 6,
@@ -66,35 +61,30 @@
     "observations": 9,
     "ok": true,
     "policies": 4,
-    "role_summary": {
-      "unknown": 20
-    },
     "state_variables": 1,
-    "transitions": 10
+    "transitions": 11
   },
   "flask_app": {
-    "actions": 16,
-    "edges": 597,
+    "actions": 31,
+    "edges": 154,
     "edges_by_kind": {
-      "CALLS": 433,
       "CONTAINS": 92,
-      "IMPORTS": 10,
       "INHERITS": 9,
       "READS": 38,
       "WRITES": 15
     },
-    "elapsed_s": 14.58,
+    "elapsed_s": 6.85,
     "files": 6,
     "gnn_errors": 0,
-    "gnn_md_bytes": 63218,
-    "gnn_package_files": 19,
+    "gnn_md_bytes": 97761,
+    "gnn_package_files": 27,
     "gnn_score": 100.0,
     "gnn_sections": 31,
     "gnn_valid": true,
     "gnn_warnings": 0,
     "group": "real_world",
-    "loc": 853,
-    "mappings_total": 51,
+    "loc": 866,
+    "mappings_total": 72,
     "nodes": 98,
     "nodes_by_kind": {
       "CLASS": 25,
@@ -102,74 +92,65 @@
       "METHOD": 57,
       "MODULE": 6
     },
-    "observations": 19,
+    "observations": 22,
     "ok": true,
-    "policies": 6,
-    "role_summary": {
-      "unknown": 51
-    },
-    "state_variables": 16,
-    "transitions": 16
+    "policies": 3,
+    "state_variables": 14,
+    "transitions": 31
   },
   "flask_mini": {
-    "actions": 14,
-    "edges": 51,
+    "actions": 18,
+    "edges": 40,
     "edges_by_kind": {
-      "CALLS": 11,
       "CONTAINS": 25,
       "INHERITS": 2,
       "READS": 7,
       "WRITES": 6
     },
-    "elapsed_s": 8.8,
+    "elapsed_s": 4.38,
     "files": 1,
     "gnn_errors": 0,
-    "gnn_md_bytes": 24385,
-    "gnn_package_files": 19,
+    "gnn_md_bytes": 30866,
+    "gnn_package_files": 27,
     "gnn_score": 100.0,
     "gnn_sections": 31,
     "gnn_valid": true,
     "gnn_warnings": 0,
     "group": "control_positive",
-    "loc": 168,
-    "mappings_total": 19,
+    "loc": 172,
+    "mappings_total": 25,
     "nodes": 26,
     "nodes_by_kind": {
       "CLASS": 7,
       "METHOD": 18,
       "MODULE": 1
     },
-    "observations": 2,
+    "observations": 1,
     "ok": true,
-    "policies": 6,
-    "role_summary": {
-      "unknown": 19
-    },
-    "state_variables": 3,
-    "transitions": 14
+    "policies": 4,
+    "state_variables": 6,
+    "transitions": 18
   },
   "json_stdlib": {
-    "actions": 0,
-    "edges": 68,
+    "actions": 15,
+    "edges": 34,
     "edges_by_kind": {
-      "CALLS": 32,
       "CONTAINS": 25,
-      "IMPORTS": 2,
       "READS": 6,
       "WRITES": 3
     },
-    "elapsed_s": 9.08,
+    "elapsed_s": 4.29,
     "files": 4,
     "gnn_errors": 0,
-    "gnn_md_bytes": 22889,
-    "gnn_package_files": 19,
+    "gnn_md_bytes": 22061,
+    "gnn_package_files": 27,
     "gnn_score": 100.0,
     "gnn_sections": 31,
     "gnn_valid": true,
     "gnn_warnings": 0,
     "group": "real_world",
     "loc": 1231,
-    "mappings_total": 8,
+    "mappings_total": 19,
     "nodes": 29,
     "nodes_by_kind": {
       "CLASS": 3,
@@ -177,38 +158,33 @@
       "METHOD": 9,
       "MODULE": 4
     },
-    "observations": 5,
+    "observations": 1,
     "ok": true,
     "policies": 1,
-    "role_summary": {
-      "unknown": 8
-    },
     "state_variables": 3,
-    "transitions": 0
+    "transitions": 15
   },
   "requests_lib": {
-    "actions": 7,
-    "edges": 345,
+    "actions": 19,
+    "edges": 152,
     "edges_by_kind": {
-      "CALLS": 183,
       "CONTAINS": 92,
-      "IMPORTS": 10,
       "INHERITS": 10,
       "READS": 42,
       "WRITES": 8
     },
-    "elapsed_s": 12.19,
+    "elapsed_s": 6.03,
     "files": 6,
     "gnn_errors": 0,
-    "gnn_md_bytes": 45328,
-    "gnn_package_files": 19,
+    "gnn_md_bytes": 54338,
+    "gnn_package_files": 27,
     "gnn_score": 100.0,
     "gnn_sections": 31,
     "gnn_valid": true,
     "gnn_warnings": 0,
     "group": "real_world",
-    "loc": 750,
-    "mappings_total": 46,
+    "loc": 745,
+    "mappings_total": 63,
     "nodes": 98,
     "nodes_by_kind": {
       "CLASS": 20,
@@ -216,13 +192,10 @@
       "METHOD": 59,
       "MODULE": 6
     },
-    "observations": 31,
+    "observations": 36,
     "ok": true,
-    "policies": 1,
-    "role_summary": {
-      "unknown": 46
-    },
+    "policies": 2,
     "state_variables": 9,
-    "transitions": 7
+    "transitions": 19
   }
 }

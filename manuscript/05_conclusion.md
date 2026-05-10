@@ -1,5 +1,9 @@
 # Conclusion {#sec:05-conclusion}
 
+## Non-goals (recap)
+
+As in @sec:01-introduction, COGANT does not replace full compiler IRs, theorem provers, or security programmes by itself; it does not guarantee complete program semantics; comparative claims are scoped to the related-work tables. **Scope of record** remains [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md).
+
 COGANT frames codebase analysis as a pipeline from ingestion through a program graph IR to **Generalized Notation Notation (GNN)** exports, with explicit confidence and provenance so that learning systems can treat analysis noise as data rather than as hidden failure modes. The Python layer provides session and pipeline APIs, a bundle abstraction, CLI, review tooling, and HTML reporting; the Rust layer concentrates graph mechanics and export formatting under crate boundaries described in `../cogant/docs/architecture/README.md`.
 
 ## Shipped Capabilities

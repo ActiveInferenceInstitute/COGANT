@@ -7,8 +7,9 @@ standards your contribution is expected to meet, and the pull-request workflow.
 ## Code of Conduct
 
 This project adheres to the Contributor Covenant Code of Conduct. By participating,
-you agree to uphold it. Report unacceptable behavior to the project maintainers listed
-in [`.github/CODEOWNERS`](.github/CODEOWNERS).
+you agree to uphold it. Report unacceptable behavior to the project maintainers via
+a private security advisory on the GitHub repository, or by emailing the maintainers
+listed in the most recent release notes on [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Where to start
 
@@ -177,12 +178,14 @@ cp CHANGELOG.md docs/changelog.md
 ## Licensing
 
 COGANT is MIT-licensed. By submitting a contribution you agree to license your work under
-the same terms. See [`LICENSE`](LICENSE) for the full text.
+the same terms. See [`LICENSES.md`](LICENSES.md) for the full text and third-party
+license notes (the upstream `src.gnn` package is CC-BY-NC-SA-4.0).
 
 ## Questions?
 
 - Technical questions: open a GitHub Discussion.
 - Bug reports: open an issue using the GitHub issue template.
 - Feature requests: open an issue using the GitHub issue template.
-- Security issues: **do not** open a public issue. Email the maintainers listed in
-  `.github/CODEOWNERS`.
+- Security issues: **do not** open a public issue. File a private security advisory
+  via the GitHub repository or email the maintainers listed in the most recent
+  release notes on [`CHANGELOG.md`](CHANGELOG.md).

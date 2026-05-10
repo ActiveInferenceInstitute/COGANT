@@ -11,6 +11,8 @@ Codebase-to-GNN translation — **package** under [`cogant/`](cogant/), **manusc
    `uv run python -m infrastructure.validation.cli markdown projects_in_progress/cogant/manuscript/`
    `uv run python -m infrastructure.validation.cli markdown projects_in_progress/cogant/output/manuscript/`
 
+**Coverage table (Section 6.4, `{#tbl:coverage-stmt-modules}`).** Per-module `Stmts` / `Cover` rows in [`manuscript/06_04_tests_mutation_and_benchmarks.md`](manuscript/06_04_tests_mutation_and_benchmarks.md) are hand-copied from `coverage report`. After `uv run pytest tests/ --cov=cogant` in [`cogant/`](cogant/) (inner package root), run `uv run python ../tools/check_coverage_table.py` from the repo root (or `uv run python tools/check_coverage_table.py` from this staging folder) to compare the table to the report; use `--strict` to fail on drift. See [`manuscript/AGENTS.md`](manuscript/AGENTS.md) and [`PROMOTION.md`](PROMOTION.md).
+
 Rendering uses `output/manuscript/` when present (see `infrastructure/rendering/pipeline.py`). Full pipeline PDF requires promotion and `scripts/03_render_pdf.py --project cogant`.
 
 ## Batch outputs (`run_all`)

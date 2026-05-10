@@ -480,11 +480,10 @@ class GNNMatrices:
                 for j in written:
                     column[j] = direct_share
                 # Residual mass on the identity move (or uniform if the
-                # current state is itself a written destination).
-                if cur in written:
-                    # Everything was written — normalize as-is.
-                    pass
-                else:
+                # current state is itself a written destination — in that
+                # case ``column[cur]`` already received its share above and
+                # we normalize as-is below).
+                if cur not in written:
                     column[cur] += _DEFAULT_INDIRECT_MASS
                 column = _normalize_row(column)
                 for nxt in range(n_states):
@@ -839,11 +838,14 @@ class GNNMatrices:
         C = self.compute_C()
         D = self.compute_D()
 
+        # A, B, C, D are always plain Python lists — explicit ``list(...)``
+        # copies guarantee independence from the cached compute_* outputs
+        # so callers may mutate the returned dict safely.
         result: dict[str, Any] = {
-            "A": [list(row) if hasattr(row, "__iter__") else row for row in A],
-            "B": [[list(cell) if hasattr(cell, "__iter__") else cell for cell in row] for row in B],
-            "C": list(C) if C else [],
-            "D": list(D) if D else [],
+            "A": [list(row) for row in A],
+            "B": [[list(cell) for cell in row] for row in B],
+            "C": list(C),
+            "D": list(D),
             "n_states": self.n_states,
             "n_obs": self.n_obs,
             "n_actions": self.n_actions,

@@ -44,7 +44,6 @@ Python lists; they are coerced to ``float64`` on entry.
 
 from __future__ import annotations
 
-import math
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -576,8 +575,3 @@ def compute_isomorphism_report(
         is_isomorphic=bool(total_score >= threshold),
         breakdown=breakdown,
     )
-
-
-# Silence linter "unused import" warnings for ``math`` — kept as a
-# future-proofing hook if we want to swap to natural-log JS divergence.
-_ = math

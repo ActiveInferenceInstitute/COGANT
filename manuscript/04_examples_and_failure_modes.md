@@ -4,25 +4,27 @@ This section walks through a concrete example run of the pipeline on a small Fla
 
 ## Example outputs
 
+**Intent.** Use the Flask walkthrough to see end-to-end graph and mapping **counts** on a real multi-module app; use `json_stdlib` to see **partial evidence** and validator behaviour; use the YAML/JSON fragments to match **field names** in exported artifacts. The failure-mode subsections document **degradation signatures** in bundles.
+
 The package tree includes runnable examples under [`../cogant/examples/`](../cogant/examples/) (for example `control_positive/`, `python-service/`, `workflow-engine/`, and `thin_orchestrated/`) and generated sample outputs under [`../cogant/output/`](../cogant/output/) (for example `roundtrip_calculator/` with `model.gnn.md`, diagrams, and rendered charts). Use `cogant translate --layout-output` or `PipelineConfig(layout_output=True)` to place pipeline JSON under `data/` automatically; run `python -m cogant.tools.render_output_figures` on the output root for PNGs. Regenerate these trees by running the packaged pipeline against the example sources when validating releases.
 
 ### Concrete walkthrough: Flask REST API
 
-To make the pipeline's behavior tangible, consider the `flask_app` fixture distributed under `../cogant/examples/real_world/flask_app/`: a small six-module Flask application (`__init__.py`, `app.py`, `config.py`, `models.py`, `services.py`, `utils.py`) totalling 853 lines of Python analyzed end-to-end by the pipeline. Running `RoundtripOrchestrator` via `../cogant/examples/orchestrate_roundtrip.py` on this fixture produces a program graph whose canonical metrics (from `../cogant/evaluation/figures/metrics.json`) are shown below:
+**Read this for:** representative node/edge/mapping and GNN validation numbers aligned with the benchmark tables in Section 6.
+
+To make the pipeline's behavior tangible, consider the `flask_app` fixture distributed under `../cogant/examples/real_world/flask_app/`: a small six-module Flask application (`__init__.py`, `app.py`, `config.py`, `models.py`, `services.py`, `utils.py`) totalling 866 lines of Python analyzed end-to-end by the **public** pipeline (`cogant.api.orchestration`, the same code path as `cogant translate` and the benchmark harness). Canonical `flask_app` numbers in `../cogant/evaluation/figures/metrics.json` are produced by `evaluation/figures/generate_figures.py` and match graph size rows in @tbl:benchmark-suite-results. (The `examples/orchestrate_roundtrip.py` demo can emit a larger serialized graph, including a call graph, for dashboard-heavy exports; the manuscript and `metrics.json` stay on the API pipeline so one definition of \(|V|\) and \(|E|\) applies throughout.)
 
 | Metric | Value |
 |--------|-------|
 | Source files discovered | 6 |
-| Lines analyzed | 853 |
+| Lines analyzed | 866 |
 | **Nodes** | **98** |
-| **Edges** | **597** |
-| Total semantic mappings | 51 (`mappings_total` for `flask_app` in `../cogant/evaluation/figures/metrics.json`) |
-| GNN package files | 19 |
+| **Edges** | **154** |
+| Total semantic mappings | 72 (`mappings_total` for `flask_app` in `../cogant/evaluation/figures/metrics.json`; same post-`statespace` count as the `mappings` column in @tbl:benchmark-suite-results) |
+| GNN package files | 27 |
 | GNN validation | PASS (score 100.0, 0 errors, 0 warnings) |
 
-The node and edge populations reflect the subset that the v0.5.x Python front end extracts: structural kinds (MODULE, CLASS, METHOD, FUNCTION) and their edges (CONTAINS, WRITES, READS, CALLS, IMPORTS, INHERITS). The richer taxonomy declared in `cogant.schemas.core.NodeKind` and `EdgeKind` (18 kinds each; see `../cogant/docs/reference/schemas_reference.md`) includes PARAMETER, CONFIGURATION, FEATURE\_FLAG, and others emitted by dynamic enrichment and specialized parsers; the core Python AST front end targets the structural subset listed above.
-
-**Table 1. Node kind distribution (Flask API example).**
+The default graph stage in this path emits structural kinds (MODULE, CLASS, METHOD, FUNCTION) and, at v0.5.x, `CONTAINS`, `INHERITS`, and `self`-dataflow `READS` / `WRITES` edges. The richer taxonomy in `cogant.schemas.core.NodeKind` and `EdgeKind` (18 kinds each; see `../cogant/docs/reference/schemas_reference.md`) also includes `CALLS`, `IMPORTS`, and others: those appear when the call-graph pass is part of the built graph; the **API orchestration** graph used for this table omits `CALLS` and `IMPORTS` so the counts align with the bundle statistics behind @tbl:benchmark-suite-results. Dynamic enrichment (`dynamic/`) can add additional edges when traces are available.
 
 | Node kind | Count | Percentage |
 |-----------|-------|-----------|
@@ -31,24 +33,28 @@ The node and edge populations reflect the subset that the v0.5.x Python front en
 | METHOD | 57 | 58.2% |
 | FUNCTION | 10 | 10.2% |
 
-**Table 2. Edge kind distribution (Flask API example).**
+: Table 1 — Node kind distribution (Flask API example). {#tbl:flask-api-node-kinds}
 
 | Edge kind | Count | Percentage |
 |-----------|-------|-----------|
-| CALLS | 433 | 72.5% |
-| CONTAINS | 92 | 15.4% |
-| READS | 38 | 6.4% |
-| WRITES | 15 | 2.5% |
-| IMPORTS | 10 | 1.7% |
-| INHERITS | 9 | 1.5% |
+| CONTAINS | 92 | 59.7% |
+| INHERITS | 9 | 5.8% |
+| READS | 38 | 24.7% |
+| WRITES | 15 | 9.7% |
 
-The CALLS-heavy distribution reflects the call-graph step in `CallGraphBuilder`, which traverses every `ast.Call` node in the module and attaches an edge between the enclosing function or method and its callee when the callee resolves inside the project. Control-flow nodes, anonymous data-flow nodes, and typed variable nodes are emitted by the dynamic enrichment path (`dynamic/`) when the corresponding pass is enabled; the AST-only front end targets the structural call graph. Broadening coverage for these node kinds is tracked as P1-2 and P1-3 in the R&D backlog (`../cogant/docs/evaluation/SCOPING_REPORT.md`).
+: Table 2 — Edge kind distribution (Flask API example, `metrics.json`). {#tbl:flask-api-edge-kinds}
+
+`CONTAINS` and inheritance edges dominate the API-built graph. When `CALLS` and `IMPORTS` are present (for example in a full `orchestrate_roundtrip.py` run with call-graph construction), their counts appear in that output’s `program_graph.json` instead; they are not double-counted here. Broadening coverage for optional node and edge kinds is tracked as P1-2 and P1-3 in the R&D backlog (`../cogant/docs/evaluation/SCOPING_REPORT.md`).
 
 ### Walkthrough: `json_stdlib` (fallbacks and validator score)
 
-The `examples/real_world/json_stdlib/` fixture exercises **partial-evidence** paths without failing validation. In v0.5.0 the expanded `ActionRule` keyword set matches `dump`, `dumps`, `load`, `loads`, and serialisation synonyms, producing `state_variables: 3`, `observations: 1`, `actions: 15`, and `mappings_total: 24`. Of the 15 action slices of $B$, 12 default to the identity tensor (no WRITES edges link those actions to hidden states at the AST extraction granularity), and the single observation row of $A$ is uniform. The pipeline still emits a valid 19-file `gnn_package/` with **validator 100.0/100**: Validation Notes (section 18 of the bundle) list every maximum-entropy entry so downstream consumers can distinguish evidence-backed matrix rows from structural defaults (see [`02_04_gnn_export_and_error_handling.md`](02_04_gnn_export_and_error_handling.md)).
+**Read this for:** how the pipeline remains valid with sparse static evidence and identity/default matrix rows (validator notes in the bundle).
+
+The `examples/real_world/json_stdlib/` fixture exercises **partial-evidence** paths without failing validation. In v0.5.0 the expanded `ActionRule` keyword set matches `dump`, `dumps`, `load`, `loads`, and serialisation synonyms; the canonical `metrics.json` entry records `state_variables: 3`, `observations: 1`, `actions: 15`, and `mappings_total: 19`. Of the 15 action slices of $B$, 12 default to the identity tensor (no WRITES edges link those actions to hidden states at the AST extraction granularity), and the single observation row of $A$ is uniform. The pipeline still emits a valid 27-file `gnn_package/` with **validator 100.0/100**: Validation Notes (section 18 of the bundle) list every maximum-entropy entry so downstream consumers can distinguish evidence-backed matrix rows from structural defaults (see [`02_04_gnn_export_and_error_handling.md`](02_04_gnn_export_and_error_handling.md)).
 
 ### Example semantic mapping output
+
+**Read this for:** the shape of `SemanticMapping` records (`kind`, `confidence_tier`, `provenance`).
 
 During the translation stage, each program-graph node is matched against the active rule set and assigned a `SemanticMapping` with a `MappingKind` and confidence fields defined in [`../cogant/py/cogant/schemas/semantic.py`](../cogant/py/cogant/schemas/semantic.py). The following excerpt uses real COGANT field names and structure drawn from the `flask_app` fixture. Node IDs and file paths are illustrative; for verbatim output see `../cogant/output/flask_app/semantic_mappings.json` (generated by re-running the orchestrator):
 
@@ -87,6 +93,8 @@ During the translation stage, each program-graph node is matched against the act
 The second row illustrates a key property of the confidence model (Equation \ref{eq:confidence-core} in @sec:02-03-confidence-scoring): when the parser resolves a receiver type via import traces rather than a direct definition, `parser_certainty` is lower, and Equation \ref{eq:confidence-core} yields a sub-1.0 `confidence_score` even before dynamic evidence arrives.
 
 ### Example state-space excerpt
+
+**Read this for:** how variables, actions, and transitions are represented in the state-space IR and how tiers attach to transitions.
 
 When dynamic traces are available, the state-space compiler produces a behavioral model alongside the static graph. The following excerpt shows a fragment of the state-space IR for the `/users` endpoint:
 
@@ -131,6 +139,8 @@ When dynamic traces are available, the state-space compiler produces a behaviora
 Confidence tiers follow the thresholds defined in `determine_confidence_tier`: **STATIC_PLUS_RUNTIME** ($c \geq 0.65$, with both static and dynamic evidence) indicates corroboration from AST analysis and execution traces; **STATIC_ONLY** ($c \geq 0.5$, static evidence only) reflects assertions grounded in source structure alone; **RUNTIME_ONLY** ($c \geq 0.4$, dynamic evidence only) flags inferences from runtime data without static corroboration. A fourth tier, **HUMAN_REVIEWED** ($c \geq 0.9$, with human review evidence), is available for manually curated mappings.
 
 ### Dynamically enriched excerpt
+
+**Read this for:** how coverage and trace inputs change evidence on variables and transition tiers.
 
 The previous excerpt shows a purely-static run. When `.coverage` / Cobertura XML and Chrome DevTools trace inputs are supplied to the `dynamic` stage, `enrich_graph()` annotates the affected nodes with `coverage_hits`, `branch_coverage`, `call_count`, `avg_duration_ms`, and `is_hot_path` metadata, and appends `dynamic_coverage` / `dynamic_trace` markers to the program graph's `evidence_sources` list. The downstream state-space compiler then becomes eligible to promote individual transitions from `STATIC_ONLY` to `STATIC_PLUS_RUNTIME` whenever the diversity bonus in Equation \ref{eq:confidence-core} clears the 0.65 boundary. The following excerpt shows the same Flask `/users` endpoint after re-running the pipeline with the application's `.coverage` file and a captured Chrome DevTools trace attached:
 

@@ -170,6 +170,8 @@ Cross-references use the equation, definition, and theorem numbers from the main
 
 ## G.7 Active Inference roles and mapping kinds
 
+**`MappingKind` vs `SemanticRole`.** Translation rules emit `SemanticMapping.kind` values from the `MappingKind` enum in `cogant.schemas.semantic` (Active Inference subset plus structural kinds; see the table below). **`SemanticRole`** is a separate, larger vocabulary in `semantic_mapping.py` for graph-level annotations; do not conflate the two---formal definitions and the abstract appear in @sec:02-01-formal-definitions Definition 2 and @sec:00-abstract.
+
 ### Seven Active Inference roles (elements of $\text{Roles}$)
 
 | Role | Mapping kind | Typical program entity |

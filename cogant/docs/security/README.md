@@ -11,6 +11,7 @@
 | [Security Controls](security_controls.md) | Concrete controls implemented in the codebase | Intermediate |
 | [Privacy Protections](privacy_protections.md) | What data COGANT reads, retains, and emits | Intermediate |
 | [Dependency Security](dependency_security.md) | Supply-chain posture and dependency policy | Intermediate |
+| [Playground CDN notes](../playground.md#cdn-assets-supply-chain) | Playground loads cdnjs scripts/styles with Subresource Integrity | Reference |
 | [Cryptography](cryptography.md) | Crypto primitives and where they are used | Advanced |
 | [Secure Coding Practices](secure_coding_practices.md) | Coding standards enforced in the repository | Intermediate |
 | [Security Testing](security_testing.md) | Static, dynamic, and fuzzing test posture | Advanced |

@@ -18,6 +18,10 @@ COGANT does not subsume formal verification, interactive theorem proving, or ful
 
 Promoting COGANT into [`../../../projects/`](../../../projects/) integrates manuscript PDF rendering with the template’s validation gates. Cross-references in this folder use paths **relative to these Markdown files** (for example [`../cogant/docs/`](../cogant/docs/)) so links stay stable when the tree moves.
 
+## When the extraction story weakens
+
+The world-model analogy in the sections above is useful when the program graph and state-space IR are **stable** and the front end covers the repository’s language and idioms. COGANT’s bundle is a **poor fit** for a workflow (or a research question) when: behaviour is dominated by **dynamic** or **remote** effects that the static graph does not see; the project is mostly in a **language or grammar** not yet supported; or the goal is **full** soundness or security properties that require dedicated verifiers. In those cases, treat exports as partial inputs, extend parsers or rules, or pair COGANT with tools that target those properties---rather than over-interpreting matrix defaults or high validator scores as end-to-end correctness.
+
 ## See also (MkDocs)
 
 Security posture and sandboxing notes: [`../cogant/docs/security/README.md`](../cogant/docs/security/README.md). Concepts primer: [`../cogant/docs/concepts/active_inference.md`](../cogant/docs/concepts/active_inference.md).

@@ -43,11 +43,14 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_ROOT = PROJECT_ROOT / "py"
 sys.path.insert(0, str(PACKAGE_ROOT))
 
+import cogant as _cogant_pkg  # noqa: E402
 from cogant.api import orchestration  # noqa: E402
-from cogant.api.bundle import Bundle  # noqa: E402
+from cogant.api.bundle import ArtifactKey, Bundle  # noqa: E402
 from cogant.gnn.matrices import GNNMatrices  # noqa: E402
 from cogant.schemas.core import EdgeKind  # noqa: E402
 from cogant.schemas.semantic import MappingKind  # noqa: E402
+
+_COGANT_VERSION: str = getattr(_cogant_pkg, "__version__", "unknown")
 
 logger = logging.getLogger("cogant.dataset")
 
@@ -299,10 +302,15 @@ def build_instance(
     fully self-contained JSON object; the node rows are a list of flat
     dicts ready to be written to a JSON-Lines file.
     """
-    pg = bundle.artifacts["_program_graph"]
-    mappings: dict[str, Any] = bundle.artifacts.get("_semantic_mappings") or {}
-    ss = bundle.artifacts.get("_state_space_model")
-    pm = bundle.artifacts.get("_process_model")
+    pg = bundle.get_artifact(ArtifactKey.PROGRAM_GRAPH)
+    if pg is None:
+        raise RuntimeError(
+            f"Pipeline did not produce a program graph for fixture {name!r}; "
+            "cannot build dataset instance."
+        )
+    mappings: dict[str, Any] = bundle.get_artifact(ArtifactKey.SEMANTIC_MAPPINGS) or {}
+    ss = bundle.get_artifact(ArtifactKey.STATE_SPACE_MODEL)
+    pm = bundle.get_artifact(ArtifactKey.PROCESS_MODEL)
 
     # ----- GNN matrices -----
     gnn = GNNMatrices(pg, mappings, ss)
@@ -323,7 +331,7 @@ def build_instance(
     source_files = 0
     source_lines = 0
     snapshot = bundle.artifacts.get("repo_snapshot")
-    if snapshot is not None:
+    if snapshot is not None and hasattr(snapshot, "files"):
         for finfo in snapshot.files:
             if finfo.language == "python":
                 source_files += 1
@@ -416,7 +424,7 @@ def build_instance(
         if fixture_path.is_absolute()
         else str(fixture_path),
         "date_processed": datetime.now(UTC).strftime("%Y-%m-%d"),
-        "cogant_version": "0.1.0",
+        "cogant_version": _COGANT_VERSION,
         "split": split,
         "graph": {
             "node_count": len(pg.nodes),
@@ -478,6 +486,11 @@ def _write_full_instance_bundle(
 
 
 def main() -> int:
+    """Generate the full COGANT ML dataset and write all artifacts to disk.
+
+    Returns ``0`` on success. Aborts with the underlying exception on the
+    first fixture failure rather than emitting partial rows.
+    """
     logging.basicConfig(
         level=logging.WARNING,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -535,9 +548,9 @@ def main() -> int:
 
     # ----- Dataset metadata summary -----
     summary = {
-        "version": "0.1.0",
+        "version": "0.2.0",
         "generated_at": datetime.now(UTC).isoformat(),
-        "cogant_version": "0.1.0",
+        "cogant_version": _COGANT_VERSION,
         "instance_count": len(all_instances),
         "node_count": len(all_node_rows),
         "edge_count": sum(i["graph"]["edge_count"] for i in all_instances),

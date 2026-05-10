@@ -6,10 +6,13 @@ metrics for the REAL_WORLD_EVAL.md report.
 Usage (from repository root):
 
     PYTHONPATH=py python evaluation/run_eval.py
+    PYTHONPATH=py python evaluation/run_eval.py --repo click --repo httpx
+    PYTHONPATH=py python evaluation/run_eval.py --output /tmp/results.json
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 import sys
@@ -29,7 +32,9 @@ logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(mes
 from cogant.api.bundle import ArtifactKey  # noqa: E402
 from cogant.api.pipeline import PipelineConfig, PipelineRunner  # noqa: E402
 
-REPOS = [
+# Default eval corpus: external Python projects checked out under
+# ``evaluation/eval_repos/<name>``. Override via ``--repo NAME`` (repeatable).
+REPOS: list[str] = [
     "click",
     "pyyaml",
     "requests",
@@ -40,7 +45,10 @@ REPOS = [
     "fastapi",
 ]
 
-STAGES = ["ingest", "static", "normalize", "graph", "translate", "statespace"]
+# Pipeline stages exercised by the evaluation. ``dynamic`` is intentionally
+# omitted so the evaluation runs offline and deterministically without
+# requiring a live Python interpreter to import each target repo.
+STAGES: list[str] = ["ingest", "static", "normalize", "graph", "translate", "statespace"]
 
 
 def _count_gnn_sections(md_block: str) -> int:
@@ -56,6 +64,12 @@ def _count_gnn_sections(md_block: str) -> int:
 
 
 def _matrix_nonempty(matrix: Any) -> bool:
+    """Return True if ``matrix`` is a non-empty list/list-of-lists or other truthy container.
+
+    Treats ``None`` and any container whose first row is empty as empty.
+    Catches ``TypeError`` from objects with no defined truthiness so the
+    function never crashes when handed an unexpected matrix backend.
+    """
     if matrix is None:
         return False
     try:
@@ -65,11 +79,25 @@ def _matrix_nonempty(matrix: Any) -> bool:
         if isinstance(matrix, list):
             return len(matrix) > 0 and (not isinstance(matrix[0], list) or len(matrix[0]) > 0)
         return True
-    except Exception:
+    except (TypeError, ValueError):
         return False
 
 
-def run_one(repo_name: str) -> dict[str, Any]:
+def run_one(repo_name: str, *, skip_dynamic: bool = True) -> dict[str, Any]:
+    """Run the COGANT pipeline against a single eval-corpus repository.
+
+    Args:
+        repo_name: Subdirectory name under ``evaluation/eval_repos/``.
+        skip_dynamic: When True (default), the dynamic-import stage is
+            skipped so the evaluation runs offline without importing each
+            target repo.
+
+    Returns:
+        Result dict with status, timing, graph/mapping counts, GNN matrix
+        non-emptiness flags, error count, and any exception captured during
+        the run. Status is one of ``"pass"``, ``"partial"``, ``"empty"``,
+        or ``"fail"``.
+    """
     repo_path = EVAL_REPOS / repo_name
     result: dict[str, Any] = {
         "repo": repo_name,
@@ -92,7 +120,7 @@ def run_one(repo_name: str) -> dict[str, Any]:
         return result
 
     runner = PipelineRunner()
-    config = PipelineConfig(stages=STAGES, skip_dynamic=True)
+    config = PipelineConfig(stages=STAGES, skip_dynamic=skip_dynamic)
     start = time.time()
     bundle = None
     try:
@@ -116,13 +144,14 @@ def run_one(repo_name: str) -> dict[str, Any]:
         try:
             result["node_count"] = len(graph.nodes)
             result["edge_count"] = len(graph.edges)
-        except Exception as exc:  # noqa: BLE001
+        except (AttributeError, TypeError) as exc:
             result["bundle_errors"].append(f"graph inspection error: {exc}")
 
     if mappings is not None:
         try:
             result["semantic_mapping_count"] = len(mappings)
-        except Exception:
+        except TypeError:
+            # Mappings artifact is not a sized container; leave count at 0.
             pass
 
     # Matrices from GNNMatrices (needs graph + state_space + mappings).
@@ -141,7 +170,7 @@ def run_one(repo_name: str) -> dict[str, Any]:
             result["matrix_C_nonempty"] = _matrix_nonempty(C)
             result["matrix_D_nonempty"] = _matrix_nonempty(D)
             md_block = gnn.to_gnn_markdown_block()
-        except Exception as exc:  # noqa: BLE001
+        except (ValueError, TypeError, AttributeError, KeyError) as exc:
             result["bundle_errors"].append(f"GNNMatrices error: {type(exc).__name__}: {exc}")
 
     result["gnn_section_count"] = _count_gnn_sections(md_block)
@@ -156,11 +185,44 @@ def run_one(repo_name: str) -> dict[str, Any]:
     return result
 
 
-def main() -> None:
-    results = []
-    for repo in REPOS:
+def _build_arg_parser() -> argparse.ArgumentParser:
+    """Build the CLI argument parser for ``run_eval.py``."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--repo",
+        action="append",
+        default=None,
+        help="Restrict the evaluation to a specific repo name (repeatable). "
+        "Default: run all repos in REPOS.",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=THIS_DIR / "real_world_eval_results.json",
+        help="Path to write JSON results (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--include-dynamic",
+        action="store_true",
+        help="Include the ``dynamic`` stage (requires repo to be importable).",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> None:
+    """Entry point for ``run_eval.py``.
+
+    Iterates over the configured repos, runs the pipeline on each, prints a
+    one-line summary per repo, and writes the full result list as JSON.
+    """
+    args = _build_arg_parser().parse_args(argv)
+    repos = args.repo if args.repo else REPOS
+    skip_dynamic = not args.include_dynamic
+
+    results: list[dict[str, Any]] = []
+    for repo in repos:
         print(f"[eval] running {repo}...", flush=True)
-        r = run_one(repo)
+        r = run_one(repo, skip_dynamic=skip_dynamic)
         print(
             f"  -> status={r['status']} nodes={r['node_count']} "
             f"edges={r['edge_count']} mappings={r['semantic_mapping_count']} "
@@ -171,7 +233,8 @@ def main() -> None:
             print(f"  !! exception: {r['exception']}", flush=True)
         results.append(r)
 
-    out_json = THIS_DIR / "real_world_eval_results.json"
+    out_json = Path(args.output)
+    out_json.parent.mkdir(parents=True, exist_ok=True)
     out_json.write_text(json.dumps(results, indent=2, default=str))
     print(f"[eval] wrote {out_json}", flush=True)
 

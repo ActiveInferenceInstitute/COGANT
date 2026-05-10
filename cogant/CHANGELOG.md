@@ -3,6 +3,58 @@
 All notable changes to COGANT are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.1] - 2026-05-08
+
+### Added
+- ~441 new tests across 17 new test files (wave-20 sweep) targeting
+  previously thin coverage in `process/`, `statespace/`, `normalize/`,
+  `validate/`, `gnn/matrices`, and `config/loaders`.
+- `__all__` export list on `cogant.metrics` for predictable
+  `from cogant.metrics import *` behaviour and clearer public API.
+- Honoured `set_entry_stage()` override on `ProcessExtractor` —
+  the value is now stored on `_forced_entry_stage_id` and consumed by
+  `_find_entry_stage()` on the next `extract()` call. Previously the
+  setter logged but never altered the resulting `ProcessModel`.
+
+### Fixed
+- `find_cycles` directed-graph correctness in `graph/builder.py`:
+  cycle detection now walks the *directed* adjacency (out-edges only)
+  instead of the undirected neighbour set, eliminating spurious
+  "cycles" reported for every single directed edge.
+- `AttributeError` in `statespace/temporal.py`: callers that asked for
+  `compute_critical_path` now resolve to the canonical
+  `get_critical_path` (the older method was renamed and the one
+  remaining call site was missed).
+- `process/extractor.py` `_find_entry_stage` / `_find_exit_stages`:
+  the two helpers were operating on swapped sets — entry was returning
+  exit stages and vice versa. Both now use the correct
+  `target_stage_id` (incoming) / `source_stage_id` (outgoing) sets
+  matching their docstrings.
+- `process/policies.py` `_extract_branches_for_node` now restricts the
+  branch table to control-flow edge kinds (`CALLS` / `TRIGGERS`) and
+  drops self-loops, so incidental `CONTAINS` / `READS` edges no longer
+  pollute the branching policy output.
+- Broken doc link in `docs/playground.md`.
+
+### Changed
+- Performance of `validate/integrity.py` lifted from O(V³) to O(V+E) by
+  replacing the per-node scan with a precomputed adjacency view.
+- `process/extractor.py::_infer_trigger` now takes a typed `Edge`
+  parameter instead of `Any`; `Any` import dropped from the module.
+- `normalize/canonical.py::_extract_python_metadata` no longer
+  re-copies the `decorators` field; the common-field pass already
+  handles it (purely cosmetic — values were identical, just clarifies
+  intent).
+- `statespace/variables.py::compute_dimensionality` docstring now
+  documents the heuristic `2**k` continuous-variable contribution as a
+  coarse two-bin discretization rather than implying it is exact.
+
+### Internal
+- Narrowed bare `except Exception` clauses in `config/loaders.py`
+  (now `except (OSError, ValueError, yaml.YAMLError)`) and in
+  `gnn/matrices.py` (now `except (ValueError, IndexError, TypeError)`).
+- Coverage lifted from 90.0% to 90.34% on `py/cogant/`.
+
 ## [Unreleased]
 
 ### Added

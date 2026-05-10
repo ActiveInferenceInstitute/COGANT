@@ -18,8 +18,18 @@ summary = enrich_graph(
     coverage_path="coverage.xml",
     trace_path="trace.json",
 )
-# summary contains counts of enriched nodes and inserted edges
-print(f"Enriched {summary['nodes_enriched']} nodes, added {summary['edges_added']} dynamic edges")
+# Summary keys (see ``cogant.dynamic.enrichment.enrich_graph``):
+#   - coverage_nodes_enriched: int  -- nodes annotated from the coverage DB
+#   - trace_nodes_enriched:    int  -- nodes annotated from the trace JSON
+#   - evidence_sources:        list[str]  -- markers added to graph metadata
+#                                            (e.g. ``"dynamic_coverage"``,
+#                                            ``"dynamic_traces"``)
+#   - graph:                   ProgramGraph  -- the same instance, mutated
+print(
+    f"Enriched coverage={summary['coverage_nodes_enriched']} "
+    f"trace={summary['trace_nodes_enriched']} "
+    f"sources={summary['evidence_sources']}"
+)
 ```
 
 Either `coverage_path` or `trace_path` may be omitted to apply only one source of runtime data. Nodes and edges that have no matching coverage or trace data are left unchanged.
@@ -57,11 +67,12 @@ bundle = runner.run("./my-repo", config)
 | `avg_duration_ms` | `float` | Mean wall-clock duration per invocation |
 | `is_hot_path` | `bool` | `True` if the node appears in a top-N hot path |
 
-**Dynamic edges** (new edges inserted into the graph):
+**Dynamic edges** (new `Edge` records inserted into `graph.edges`; see `cogant.dynamic.enrichment._enrich_with_traces`):
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `type` | `str` | Always `"CALLS"` for dynamic call edges |
-| `source` / `target` | `str` | Node identifiers for caller and callee |
-| `frequency` | `int` | Number of times this call was observed |
-| `weight` | `float` | Normalized frequency relative to the hottest edge |
+| `kind` | `EdgeKind` | Always `EdgeKind.CALLS` for dynamic call edges |
+| `source_id` / `target_id` | `str` | Node identifiers for caller and callee |
+| `weight` | `float` | Normalized frequency relative to the hottest observed edge |
+| `metadata["source"]` | `str` | Always `"dynamic_trace"` |
+| `evidence_sources` | `list[str]` | Includes `"dynamic_trace"` (extended on edges that already existed from the static pass) |

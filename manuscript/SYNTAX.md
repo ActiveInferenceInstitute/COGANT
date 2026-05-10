@@ -36,7 +36,7 @@ Reference in prose: `… see @sec:02-01-formal-definitions …`
 : Short caption text. {#tbl:example-id}
 ```
 
-Reference: `@tbl:example-id`
+Reference: `@tbl:example-id`. In body text, cite tables only with `@tbl:…` (and sections with `@sec:…`); do not hard-code "Table 4" or "Tables 4–7" so numbering stays automatic when the build order changes.
 
 ## Equations
 
@@ -57,6 +57,10 @@ Follow the code_project SYNTAX for image markdown plus `{#fig:…}` when you add
 5. `99_*.md` references when present.
 
 Excluded from the body: `preamble.md`, `AGENTS.md`, `README.md`, `config.yaml`, `config.yaml.example`, `references.bib`.
+
+## PDF links (readers and contrast)
+
+The combined PDF uses coloured links (`preamble.md`): **internal and citation** links are red; **URL** links are blue so URL and in-text references are not distinguished by colour alone. The template may rewrite `hidelinks` drafts to red links in `infrastructure/rendering/_pdf_combined_renderer.py`; keep this manuscript’s explicit `urlcolor`/`linkcolor` split if you add `\usepackage[...]{hyperref}` in `preamble.md`. For figures, add a sentence of plain-language description in prose (not only the caption) so the takeaway is clear without the visual.
 
 ## Cross-references to the package
 

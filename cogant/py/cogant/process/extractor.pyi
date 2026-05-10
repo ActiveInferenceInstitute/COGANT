@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Any
 
 from cogant.schemas.graph import ProgramGraph as ProgramGraph
 
@@ -36,10 +35,11 @@ class ProcessModel:
     metadata: dict[str, object] = field(default_factory=dict)
 
 class ProcessExtractor:
-    graph: Any
-    schema_name: Any
+    graph: ProgramGraph
+    schema_name: str
     stages: dict[str, Stage]
     connections: dict[str, ProcessConnection]
+    _forced_entry_stage_id: str | None
     def __init__(self, program_graph: ProgramGraph, schema_name: str) -> None: ...
     def extract(self) -> ProcessModel: ...
     def set_entry_stage(self, stage_id: str) -> None: ...

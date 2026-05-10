@@ -2,6 +2,8 @@
 
 This section describes the programmatic surface that the shipped Python package exposes in practice, aligned with `../cogant/docs/api/README.md` and the inventory-style notes under `../cogant/docs/reference/`. It is **not** an empirical benchmark section; COGANT does not ship comparative timing claims in the manuscript layer. Instead, it records the **surface area** users can rely on: two complementary entry points (a Session for stepwise work and a Pipeline for batch runs), the Bundle accessors that expose their artifacts, a command-line interface, and a Review API for human-in-the-loop curation.
 
+**Scope snapshot.** For what is implemented, staged, or omitted in v{{VERSION}} (Rust paths, optional parsers, CLI flags), treat [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md) as the live boundary; if this section lags a release, follow the package table first.
+
 ## End-to-end data flow
 
 ```mermaid

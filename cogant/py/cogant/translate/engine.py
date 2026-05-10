@@ -541,7 +541,10 @@ class TranslationEngine:
                     conflict_pairs.add((a, b) if a < b else (b, a))
 
         to_remove: set[str] = set()
-        for a_id, b_id in conflict_pairs:
+        # Sets have undefined iteration order; use sorted pair order so
+        # conflict resolution is deterministic for identical inputs (benchmarks
+        # vs generate_figures, CI vs local).
+        for a_id, b_id in sorted(conflict_pairs):
             if a_id in to_remove or b_id in to_remove:
                 continue
             mapping_a = self.mappings.get(a_id)

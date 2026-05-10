@@ -5,7 +5,7 @@ paper:
   title: "COGANT: Codebase-to-GNN Translator"
   subtitle: "Program Graphs, Intermediate Representations, and Practice of the Python Pipeline"
   version: "0.5.0"
-  date: "2026-04-15"
+  date: "2026-04-23"
 
 authors:
   - name: "Daniel Ari Friedman"
@@ -23,7 +23,8 @@ publication:
 
 keywords:
   - "program analysis"
-  - "Generalized Notation Notation (GNN)"
+  - "Generalized Notation Notation"
+  - "GNN"
   - "intermediate representation"
   - "code property graph"
   - "active inference"

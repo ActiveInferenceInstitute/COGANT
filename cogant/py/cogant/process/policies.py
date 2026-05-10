@@ -261,19 +261,29 @@ class PolicyExtractor:
 
     def _extract_branches_for_node(self, node_id: str) -> dict[str, str]:
         """
-        Extract branches (outgoing edges) for a decision node.
+        Extract branches (outgoing CALLS/TRIGGERS edges) for a decision node.
+
+        Restricts attention to control-flow edge kinds (``CALLS`` and
+        ``TRIGGERS``) so that incidental edges such as ``CONTAINS`` or
+        ``READS`` do not pollute the branch table. Self-loops are dropped
+        because they do not represent decision arms.
 
         Args:
             node_id: The decision node ID.
 
         Returns:
-            Dictionary mapping condition to target node ID.
+            Dictionary mapping condition (from edge metadata, or
+            ``branch_<i>`` when absent) to target node ID.
         """
-        branches = {}
-        outgoing_edges = self.graph.get_edges_from(node_id)
+        branches: dict[str, str] = {}
+        branch_edge_kinds = (EdgeKind.CALLS, EdgeKind.TRIGGERS)
 
-        for i, edge in enumerate(outgoing_edges):
-            # Use edge metadata to infer condition, or default to edge index
+        for i, edge in enumerate(self.graph.get_edges_from(node_id)):
+            if edge.kind not in branch_edge_kinds:
+                continue
+            if edge.target_id == node_id:
+                # Self-loops are not branches.
+                continue
             condition = edge.metadata.get("condition", f"branch_{i}")
             branches[condition] = edge.target_id
 

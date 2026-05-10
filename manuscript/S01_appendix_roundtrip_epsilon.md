@@ -102,8 +102,6 @@ multiset; after the fix, exactly one `check_*` stub is emitted per
 `NodePlan` in `plan.constraint_checks`, so origin and synth CONSTRAINT
 counts match exactly for the affected repositories.
 
-**Table A.2 — Affected repositories, before and after the CONSTRAINT fix.**
-
 | Target              | ε (before) | tier (before) | ε (after) | tier (after) | Δε      | CNST orig | CNST synth (before) | CNST synth (after) |
 |---------------------|-----------:|---------------|----------:|--------------|--------:|----------:|--------------------:|-------------------:|
 | zoo/07\_event\_driven | 0.7778 | ISO (bordering APPROX) | 0.7778 | APPROX (reclassified) | 0.0000 | 0 | 3 | 4 |
@@ -115,6 +113,8 @@ counts match exactly for the affected repositories.
 | httpx               | 0.4412    | DIVERGENT     | 0.7495    | ISO          | +0.3083 | 304       | 3                   | 304                |
 | urllib3             | 0.3891    | DIVERGENT     | 0.6626    | ISO          | +0.2735 | 744       | 3                   | 744                |
 | requests            | 0.4203    | DIVERGENT     | 0.6876    | ISO          | +0.2673 | 483       | 3                   | 483                |
+
+: Table A.2 — Affected repositories, before and after the CONSTRAINT fix. {#tbl:constraint-fix-repositories}
 
 Rows zoo/07 and zoo/09 are listed for completeness: their Δε is exactly zero
 because the original graphs contain no CONSTRAINT nodes, so the fix adds a

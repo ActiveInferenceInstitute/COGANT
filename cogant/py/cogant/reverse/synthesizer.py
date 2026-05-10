@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import ast
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from textwrap import dedent
 
@@ -65,16 +65,9 @@ class SynthesisResult:
 
     code: str = ""
     parse_ok: bool = False
-    issues: list[str] = None  # type: ignore[assignment]
-    role_counts: dict[str, int] = None  # type: ignore[assignment]
+    issues: list[str] = field(default_factory=list)
+    role_counts: dict[str, int] = field(default_factory=dict)
     filename: str = ""
-
-    def __post_init__(self) -> None:
-        """Initialize mutable defaults."""
-        if self.issues is None:
-            self.issues = []
-        if self.role_counts is None:
-            self.role_counts = {}
 
 
 # ---------------------------------------------------------------------------
@@ -685,9 +678,6 @@ def _render_context_module(plan: PackagePlan) -> str:
 
 def _render_main_module(plan: PackagePlan) -> str:
     """Render ``main.py`` — a small driver loop that exercises everything."""
-    plan.obs_functions[0].name if plan.obs_functions else None
-    plan.action_methods[0].name if plan.action_methods else None
-
     header = dedent(
         f'''
         """Driver program for the synthesized model {plan.raw_model_name!r}.
@@ -893,7 +883,7 @@ def synthesize_with_validation(
                 ast.parse(content)
             except SyntaxError as e:
                 issues.append(f"Syntax error in {py_file.name}: line {e.lineno}: {e.msg}")
-            except Exception as e:
+            except (OSError, UnicodeDecodeError, ValueError) as e:
                 issues.append(f"Error parsing {py_file.name}: {type(e).__name__}: {e}")
 
     if issues:

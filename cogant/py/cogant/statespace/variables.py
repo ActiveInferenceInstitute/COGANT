@@ -564,10 +564,20 @@ class StateVariableExtractor:
 
     def compute_dimensionality(self) -> int:
         """
-        Compute the dimensionality of the state space.
+        Compute a heuristic dimensionality of the joint state space.
+
+        The exact discrete portion is the product of cardinalities of all
+        discrete variables with known cardinality. Continuous variables
+        have unbounded support, so we cannot compute their cardinality;
+        instead we apply a coarse heuristic of multiplying by ``2**k``
+        where ``k`` is the number of continuous variables. This treats
+        each continuous variable as a binary "low/high" coarse bin —
+        useful for sizing exploratory data structures, *not* for
+        statistical analysis. Discrete variables without a known
+        cardinality contribute a factor of 1 (i.e., are skipped).
 
         Returns:
-            Product of cardinalities of discrete variables (or estimate for continuous).
+            Heuristic joint-state cardinality. Always ``>= 1``.
         """
         cardinality_product = 1
         continuous_count = 0
@@ -578,11 +588,10 @@ class StateVariableExtractor:
             elif not var.is_discrete:
                 continuous_count += 1
 
-        # Estimate: each continuous variable adds one dimension
-        total_dim = (
-            cardinality_product * (2**continuous_count) if continuous_count else cardinality_product
-        )
-        return total_dim
+        # Coarse 2-bin discretization for each continuous variable.
+        if continuous_count:
+            return cardinality_product * (2**continuous_count)
+        return cardinality_product
 
 
 @dataclass

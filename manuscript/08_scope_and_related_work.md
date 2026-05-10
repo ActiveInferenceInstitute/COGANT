@@ -23,7 +23,7 @@ COGANT sits at the intersection of three established research areas: machine lea
 The numbered fragments that follow this file (lexicographic order under Section 8) carry the detailed related-work comparison so tables and proofs are not duplicated here:
 
 - [`08_01_landscape_and_tool_categories.md`](08_01_landscape_and_tool_categories.md) — landscape overview.
-- [`08_02_program_analysis_for_ml_and_tables.md`](08_02_program_analysis_for_ml_and_tables.md) — program analysis for ML, **Table 15** (feature matrix), **Table 16** (input/output contracts), and positioning vs prior art.
+- [`08_02_program_analysis_for_ml_and_tables.md`](08_02_program_analysis_for_ml_and_tables.md) — program analysis for ML, @tbl:feature-comparison-toolchains, @tbl:io-comparison-prior-art, and positioning vs prior art.
 - [`08_03_lenses_and_synthesis.md`](08_03_lenses_and_synthesis.md) — bidirectional lenses, edit lenses, incremental analysis, categorical framing, and synthesis positioning.
 - [`08_04_world_models_boundaries_and_compatibility.md`](08_04_world_models_boundaries_and_compatibility.md) — world models from code, active inference, boundaries, forward compatibility.
 

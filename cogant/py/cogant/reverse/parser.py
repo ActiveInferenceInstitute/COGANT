@@ -339,18 +339,15 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
             continue
 
     # Assemble the aggregate D vector. COGANT emits one D_fN per hidden
-    # factor; the aggregate D has one entry per factor. We take the 0-th
-    # element of each factor distribution as the factor's mass
-    # (a principled choice that matches how the forward GNNMatrices
-    # constructs D — see gnn/matrices.py:compute_D).
+    # factor; the aggregate D has one entry per factor. We use the max
+    # of each factor's distribution as that factor's aggregate mass —
+    # this preserves the "peaky" prior structure better than averaging
+    # and matches what the forward GNNMatrices.compute_D produces.
     if model.hidden_states:
         D_vec: list[float] = []
         for i, _ in enumerate(model.hidden_states):
             key = f"D_f{i}"
             if key in per_factor_D and per_factor_D[key]:
-                # Use the max of the factor distribution as its
-                # aggregate mass — this preserves the "peaky" prior
-                # structure better than averaging.
                 D_vec.append(max(per_factor_D[key]))
             else:
                 D_vec.append(1.0 / len(model.hidden_states))

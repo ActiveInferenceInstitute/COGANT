@@ -20,8 +20,6 @@ Several systems address the intersection of program analysis and machine learnin
 
 The following matrix contrasts COGANT's capabilities with the related tools discussed in this section. Entries marked "yes" indicate first-class support; "partial" indicates limited or indirect support; "no" indicates the feature is out of scope for that tool.
 
-**Table 15. Feature comparison of program-to-model toolchains.**
-
 | Feature | COGANT | code2vec | GGNN | CodeQL | CodeBERT |
 |---------|:------:|:--------:|:----:|:------:|:--------:|
 | Full program graph (AST + CFG + DFG) | yes | no | input-only | yes | no |
@@ -37,13 +35,13 @@ The following matrix contrasts COGANT's capabilities with the related tools disc
 | Human review loop | yes | no | no | partial | no |
 | Multi-language front-ends | partial (Python; JS/TS optional) | yes | no | yes | yes |
 
+: Table 15 — Feature comparison of program-to-model toolchains. {#tbl:feature-comparison-toolchains}
+
 COGANT is distinct from the other toolchains in three ways: first, it explicitly models uncertainty through confidence tiers tied to evidence provenance; second, it produces a structured Active Inference notation as its primary output rather than an opaque tensor; and third, it composes static and dynamic evidence in a single pipeline rather than specializing to one.
 
 ### Input/output comparison vs prior art
 
-Table 15 contrasts fine-grained feature flags; Table 16 expands the frame to include the *input/output contract* of each approach, because the most consequential difference between COGANT and its neighbours is what a user has to supply (training data, hand-written queries, manual modelling) and what they get back (vector, query table, simulator-ready model). The comparison covers code-representation learning (code2vec), learned graph models for programs (GGNN, Typilus, LambdaNet), code-property-graph-based analysers (CodeQL, the original Joern/CPG line), compiler IRs (PDG, LLVM IR, MLIR), and Active Inference tooling (hand-authored GNN with PyMDP as the downstream runtime).
-
-**Table 16. Input/output comparison of COGANT and prior approaches.**
+@tbl:feature-comparison-toolchains contrasts fine-grained feature flags; @tbl:io-comparison-prior-art expands the frame to include the *input/output contract* of each approach, because the most consequential difference between COGANT and its neighbours is what a user has to supply (training data, hand-written queries, manual modelling) and what they get back (vector, query table, simulator-ready model). The comparison covers code-representation learning (code2vec), learned graph models for programs (GGNN, Typilus, LambdaNet), code-property-graph-based analysers (CodeQL, the original Joern/CPG line), compiler IRs (PDG, LLVM IR, MLIR), and Active Inference tooling (hand-authored GNN with PyMDP as the downstream runtime).
 
 | Approach | Primary input | Primary output | Requires training | Languages (as shipped) | Produces Active Inference model |
 |---|---|---|:---:|---|:---:|
@@ -57,6 +55,8 @@ Table 15 contrasts fine-grained feature flags; Table 16 expands the frame to inc
 | CodeBERT / GraphCodeBERT [@feng2020codebert; @guo2021graphcodebert] | Token (and DFG) sequence for a code fragment | Contextual embeddings for downstream tasks | yes (multi-million-pair corpus) | Python, Java, JS, PHP, Ruby, Go | no |
 | PyMDP [@heins2022pymdp] | Hand-authored A/B/C/D matrices (Python objects) | Active Inference simulation trajectories | no | N/A (runtime, not extractor) | yes (consumer of hand-authored input) |
 | Generalized Notation Notation reference [@friedman2024gnn] | Hand-authored GNN Markdown or JSON | State-space/process model artifacts | no | N/A (notation + validator) | yes (format, not extractor) |
+
+: Table 16 — Input/output comparison of COGANT and prior approaches. {#tbl:io-comparison-prior-art}
 
 Three things are visible in this table that the fine-grained feature matrix does not capture. First, **COGANT is the only row whose input is a raw repository and whose output is a simulator-ready Active Inference model**: every other Active-Inference entry in the rightmost column (PyMDP, the GNN reference) requires a human to author the model by hand, and every code-modelling entry (code2vec through CodeBERT) produces either a vector, a type annotation, or a query result rather than a generative model. Second, **COGANT's rule-based pipeline does not require training**, which places it alongside the compiler-IR and code-property-graph lines rather than the learned-embedding lines in @sec:08-scope-and-related-work's "training" column. Third, **the languages column highlights that COGANT's v0.5.x front-end set (Python first-class; JavaScript / TypeScript via optional `cogant[multilang]` and `tree-sitter` when installed) is a deliberate scope choice, not a structural limitation**: the rule engine and state-space compiler consume a language-agnostic `ProgramGraph` IR, so adding a further parser (Java, Go, Rust, C/C++) is a matter of implementing the plugin interface in `../cogant/docs/plugins/README.md` and does not touch the translation, matrix, or export layers. The `examples/zoo/13_js_observer` cross-language round-trip (§5 and `cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md`) establishes the template for validating new parsers before release.
 

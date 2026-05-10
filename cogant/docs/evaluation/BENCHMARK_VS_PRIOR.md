@@ -7,7 +7,7 @@
 This document compares COGANT's automated semantic role assignment against
 four baselines: tree-sitter alone, pyan (call graph), LLM-only (GPT-4),
 and manual human annotation. All COGANT numbers reference
-`CALIBRATION.md` and `benchmarks/results/suite_20260409.md` from the
+`CALIBRATION.md` and `benchmarks/results/suite_20260423.md` from the
 same audit date.
 
 ---
@@ -171,7 +171,7 @@ missed. LLMs, by contrast, guess liberally.
 ## 4. Latency Comparison
 
 Latency is measured end-to-end: from source file input to role-annotated
-output. COGANT numbers from `benchmarks/results/suite_20260409.md`.
+output. COGANT numbers from `benchmarks/results/suite_20260423.md`.
 
 | Approach | Latency per file | Latency per repo (100 nodes) | Deterministic? |
 |---|---|---|---|
@@ -181,7 +181,7 @@ output. COGANT numbers from `benchmarks/results/suite_20260409.md`.
 | GPT-4 zero-shot | 2000-5000 ms (est.) | 10-30 s (est.) | No |
 | Manual annotation | N/A | 30-60 min (est.) | N/A |
 
-COGANT's benchmark suite (suite_20260409.md) shows median wall-clock times
+COGANT's benchmark suite (suite_20260423.md) shows median wall-clock times
 of 32 ms for a 12-node calculator fixture through 86 ms for a 98-node
 flask_app fixture. The stage breakdown reveals that ingestion (tree-sitter
 parsing) dominates at 25-30 ms; the translation engine (rule application)
@@ -209,7 +209,7 @@ C (observation), and D (prior) matrices needed for active inference?
 
 COGANT is the only approach in this comparison that produces end-to-end GNN
 output. The benchmark suite confirms valid matrix shapes across all six
-fixtures (suite_20260409.md): from A=[3x1], B=[1x1x6] for the calculator
+fixtures (suite_20260423.md): from A=[3x1], B=[1x1x6] for the calculator
 to A=[21x10], B=[10x10x31] for flask_app. The GNN validator
 (CALIBRATION.md section 2.5) enforces row-normalization with 1e-6 tolerance
 and a validity score threshold of >= 80/100.
@@ -309,7 +309,7 @@ future work.
 4. **No cross-language evaluation.** All benchmarks use Python fixtures.
    COGANT's JS/TS support is partial and not benchmarked here.
 
-5. **Small fixture corpus.** The benchmark suite (suite_20260409.md)
+5. **Small fixture corpus.** The benchmark suite (suite_20260423.md)
    covers only 6 fixtures ranging from 12 to 98 nodes. Performance on
    repositories with 1000+ nodes is untested. Latency scaling is expected
    to be roughly O(V + E) but this has not been empirically verified at
@@ -330,7 +330,7 @@ future work.
 ## References
 
 - `CALIBRATION.md` -- parameter registry and calibration backlog
-- `benchmarks/results/suite_20260409.md` -- timing and mapping counts
+- `benchmarks/results/suite_20260423.md` -- timing and mapping counts
 - `py/cogant/translate/rules/` -- 22 translation rules across 5 families
   (semantic.py, structural.py, behavioral.py, control.py, resilience.py)
 - `cogant/gnn/matrices.py` -- GNN matrix construction

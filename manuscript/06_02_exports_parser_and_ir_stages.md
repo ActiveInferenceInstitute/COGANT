@@ -23,7 +23,7 @@ Constructs that require runtime evaluation (for example `exec`, `importlib.impor
 
 ## Progressive IR stages
 
-Processing advances through six intermediate representations, each adding semantic detail atop its predecessor. The pipe table below is the canonical Table 3.
+Processing advances through six intermediate representations, each adding semantic detail atop its predecessor. The pipe table below is the canonical @tbl:progressive-ir-stages.
 
 | Stage | IR name | Key additions | Typical output size (10K-function repo) |
 |-------|---------|---------------|----------------------------------------|

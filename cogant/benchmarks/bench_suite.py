@@ -456,7 +456,8 @@ def run_suite(fixtures: dict[str, Path], iterations: int) -> dict[str, Any]:
     cogant_version = "unknown"
     try:
         from cogant import __version__ as cogant_version  # noqa: F401
-    except Exception:
+    except ImportError:
+        # Package not importable from this Python; report "unknown" version.
         pass
 
     suite: dict[str, Any] = {

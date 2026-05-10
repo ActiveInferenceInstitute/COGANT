@@ -67,7 +67,7 @@ class ConfigLoader:
             raise ConfigLoadError(f"Configuration file not found: {path}") from e
         except yaml.YAMLError as e:
             raise ConfigLoadError(f"Invalid YAML in {path}: {e}") from e
-        except Exception as e:
+        except (OSError, UnicodeDecodeError) as e:
             raise ConfigLoadError(f"Error reading configuration from {path}: {e}") from e
 
     @staticmethod
@@ -107,7 +107,7 @@ class ConfigLoader:
             raise ConfigLoadError(f"Configuration file not found: {path}") from e
         except json.JSONDecodeError as e:
             raise ConfigLoadError(f"Invalid JSON in {path}: {e}") from e
-        except Exception as e:
+        except (OSError, UnicodeDecodeError) as e:
             raise ConfigLoadError(f"Error reading configuration from {path}: {e}") from e
 
     @staticmethod
@@ -196,11 +196,8 @@ class ConfigLoader:
             ConfigLoadError: If configuration is invalid.
         """
         if preset:
-            try:
-                base_configs = ConfigLoader.load_preset(preset)
-                base = base_configs["cogant"].model_dump()
-            except ConfigLoadError:
-                raise
+            base_configs = ConfigLoader.load_preset(preset)
+            base = base_configs["cogant"].model_dump()
         else:
             base = DEFAULT_COGANT_CONFIG.model_dump()
 
@@ -209,7 +206,7 @@ class ConfigLoader:
 
         try:
             return CogantConfig(**base)
-        except Exception as e:
+        except (TypeError, ValueError) as e:
             raise ConfigLoadError(f"Invalid CogantConfig: {e}") from e
 
     @staticmethod
@@ -231,17 +228,14 @@ class ConfigLoader:
             ConfigLoadError: If configuration is invalid.
         """
         if preset:
-            try:
-                base_configs = ConfigLoader.load_preset(preset)
-                base = base_configs["pipeline"].model_dump()
-            except ConfigLoadError:
-                raise
+            base_configs = ConfigLoader.load_preset(preset)
+            base = base_configs["pipeline"].model_dump()
         else:
             base = DEFAULT_PIPELINE_CONFIG.model_dump()
 
         if config_dict:
             # Map from cogant.yaml structure to schema structure
-            pipeline_data = {}
+            pipeline_data: dict[str, Any] = {}
 
             if "pipeline" in config_dict:
                 pipeline_data = config_dict["pipeline"].copy()
@@ -256,7 +250,7 @@ class ConfigLoader:
 
         try:
             return PipelineConfig(**base)
-        except Exception as e:
+        except (TypeError, ValueError) as e:
             raise ConfigLoadError(f"Invalid PipelineConfig: {e}") from e
 
     @staticmethod
@@ -278,11 +272,8 @@ class ConfigLoader:
             ConfigLoadError: If configuration is invalid.
         """
         if preset:
-            try:
-                base_configs = ConfigLoader.load_preset(preset)
-                base = base_configs["export"].model_dump()
-            except ConfigLoadError:
-                raise
+            base_configs = ConfigLoader.load_preset(preset)
+            base = base_configs["export"].model_dump()
         else:
             base = DEFAULT_EXPORT_CONFIG.model_dump()
 
@@ -291,7 +282,7 @@ class ConfigLoader:
 
         try:
             return ExportConfig(**base)
-        except Exception as e:
+        except (TypeError, ValueError) as e:
             raise ConfigLoadError(f"Invalid ExportConfig: {e}") from e
 
     @staticmethod
@@ -313,11 +304,8 @@ class ConfigLoader:
             ConfigLoadError: If configuration is invalid.
         """
         if preset:
-            try:
-                base_configs = ConfigLoader.load_preset(preset)
-                base = base_configs["validation"].model_dump()
-            except ConfigLoadError:
-                raise
+            base_configs = ConfigLoader.load_preset(preset)
+            base = base_configs["validation"].model_dump()
         else:
             base = DEFAULT_VALIDATION_CONFIG.model_dump()
 
@@ -326,7 +314,7 @@ class ConfigLoader:
 
         try:
             return ValidationConfig(**base)
-        except Exception as e:
+        except (TypeError, ValueError) as e:
             raise ConfigLoadError(f"Invalid ValidationConfig: {e}") from e
 
     @staticmethod

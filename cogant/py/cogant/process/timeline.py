@@ -139,13 +139,17 @@ class TimelineBuilder:
 
         def assign_time(stage_id: str) -> float:
             """Return the end time (start + duration) of ``stage_id``."""
-            if stage_id in time_map:
-                return time_map[stage_id] + self.gantt_stages[stage_id].duration
             if stage_id not in self.gantt_stages:
                 return 0.0
+            if stage_id in time_map:
+                return time_map[stage_id] + self.gantt_stages[stage_id].duration
             if stage_id in visited:
-                # Cycle guard — treat the partially-assigned stage as 0
-                return time_map.get(stage_id, 0.0)
+                # Cycle guard — treat the partially-assigned stage as 0.
+                # Return the (start + duration) when a partial start has
+                # been recorded, so callers see a consistent end-time
+                # contract regardless of cycle position.
+                start = time_map.get(stage_id, 0.0)
+                return start + self.gantt_stages[stage_id].duration
             visited.add(stage_id)
 
             # Earliest start = max(end_time(dep) for dep in deps), or 0.

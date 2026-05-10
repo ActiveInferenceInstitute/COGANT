@@ -310,38 +310,56 @@ class ProgramGraphBuilder:
         return components
 
     def find_cycles(self) -> list[list[str]]:
-        """Find simple cycles in the graph.
+        """Find simple cycles in the directed graph.
+
+        Uses Tarjan-style DFS over the directed adjacency (out-edges only)
+        to detect back-edges. Each unique cycle is reported once, normalized
+        by sorted node IDs.
 
         Returns:
             List of cycles, each represented as a list of node IDs.
         """
-        cycles = []
-        visited_global = set()
+        # Build directed adjacency (out-edges only). Using
+        # ``get_neighbors()`` here would treat the graph as undirected and
+        # report a "cycle" for every single directed edge, since DFS would
+        # immediately walk back along the reverse neighbor.
+        from collections import defaultdict
 
-        def dfs_cycle(node_id: str, path: list[str], visited: set[str]) -> None:
-            """DFS helper to find cycles."""
-            if node_id in path:
-                # Found a cycle
-                cycle_start = path.index(node_id)
-                cycle = path[cycle_start:] + [node_id]
-                cycle_tuple = tuple(sorted(cycle))
-                if cycle_tuple not in visited_global:
-                    cycles.append(cycle)
-                    visited_global.add(cycle_tuple)
-                return
+        adj: dict[str, list[str]] = defaultdict(list)
+        for edge in self.graph.edges.values():
+            adj[edge.source_id].append(edge.target_id)
 
-            if node_id in visited:
-                return
+        cycles: list[list[str]] = []
+        seen_cycles: set[tuple[str, ...]] = set()
+        visited: set[str] = set()
+        on_stack: set[str] = set()
+        path: list[str] = []
 
+        def dfs(node_id: str) -> None:
             visited.add(node_id)
-            neighbors = self.graph.get_neighbors(node_id)
+            on_stack.add(node_id)
+            path.append(node_id)
 
-            for neighbor in neighbors:
-                dfs_cycle(neighbor.id, path + [node_id], visited.copy())
+            for neighbor_id in adj.get(node_id, []):
+                if neighbor_id not in self.graph.nodes:
+                    continue
+                if neighbor_id in on_stack:
+                    # Back-edge: extract the cycle from path[index:] + [neighbor]
+                    idx = path.index(neighbor_id)
+                    cycle = path[idx:] + [neighbor_id]
+                    key = tuple(sorted(set(cycle)))
+                    if key not in seen_cycles:
+                        seen_cycles.add(key)
+                        cycles.append(cycle)
+                elif neighbor_id not in visited:
+                    dfs(neighbor_id)
 
-        # Start DFS from each node
-        for node in self.graph.nodes.values():
-            dfs_cycle(node.id, [], set())
+            path.pop()
+            on_stack.discard(node_id)
+
+        for node_id in list(self.graph.nodes.keys()):
+            if node_id not in visited:
+                dfs(node_id)
 
         return cycles
 

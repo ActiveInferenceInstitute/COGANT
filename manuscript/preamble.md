@@ -33,10 +33,17 @@ This file contains LaTeX packages and commands that are automatically injected i
 \usepackage[binary-units]{siunitx}
 
 % Cross-references and citations
+% Internal and citation links: red; URLs: blue---reduces reliance on hue alone for distinction.
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
-    allcolors=red
+    linkcolor=red,
+    citecolor=red,
+    filecolor=red,
+    urlcolor=blue,
+    menucolor=red,
+    runcolor=red,
+    anchorcolor=red
 }
 \usepackage[capitalise,noabbrev]{cleveref}
 \usepackage{natbib}

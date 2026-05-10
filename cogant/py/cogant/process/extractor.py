@@ -7,9 +7,8 @@ Identifies workflow stages, predecessors/successors, triggers, and side effects.
 import logging
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Any
 
-from cogant.schemas.core import EdgeKind, Node, NodeKind
+from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
 from cogant.schemas.graph import ProgramGraph
 
 logger = logging.getLogger(__name__)
@@ -74,6 +73,9 @@ class ProcessExtractor:
         self.schema_name = schema_name
         self.stages: dict[str, Stage] = {}
         self.connections: dict[str, ProcessConnection] = {}
+        # Optional caller-supplied override for the entry stage. ``None``
+        # means "compute via _find_entry_stage()". Set via set_entry_stage().
+        self._forced_entry_stage_id: str | None = None
 
     def extract(self) -> ProcessModel:
         """
@@ -465,11 +467,21 @@ class ProcessExtractor:
         """
         Find the entry stage (stage with no incoming inter-stage edges).
 
+        Honors ``_forced_entry_stage_id`` when set via
+        :meth:`set_entry_stage`; falls back to the first stage with no
+        incoming inter-stage connections, then to the first stage in
+        insertion order.
+
         Returns:
-            Entry stage ID or None.
+            Entry stage ID or None when no stages exist.
         """
-        # Find stage with no incoming connections
-        incoming_stages = {c.source_stage_id for c in self.connections.values()}
+        # Honor caller override when valid.
+        if self._forced_entry_stage_id and self._forced_entry_stage_id in self.stages:
+            return self._forced_entry_stage_id
+
+        # Find stage with no incoming connections (the structural answer).
+        # Note: connections is small (O(stages)) so the set comprehension is cheap.
+        incoming_stages = {c.target_stage_id for c in self.connections.values()}
 
         for stage_id in self.stages.keys():
             if stage_id not in incoming_stages:
@@ -482,12 +494,14 @@ class ProcessExtractor:
         """
         Find exit stages (stages with no outgoing inter-stage edges).
 
+        A stage is an exit when no :class:`ProcessConnection` lists it as
+        ``source_stage_id`` — i.e. it does not feed any other stage.
+
         Returns:
-            List of exit stage IDs.
+            List of exit stage IDs (may be empty).
         """
-        outgoing_stages = {c.target_stage_id for c in self.connections.values()}
-        exit_stages = [sid for sid in self.stages.keys() if sid not in outgoing_stages]
-        return exit_stages if exit_stages else []
+        sources_with_outgoing = {c.source_stage_id for c in self.connections.values()}
+        return [sid for sid in self.stages.keys() if sid not in sources_with_outgoing]
 
     def _find_side_effects(self, node_ids: list[str]) -> list[str]:
         """
@@ -509,7 +523,7 @@ class ProcessExtractor:
 
         return side_effects
 
-    def _infer_trigger(self, edge: Any) -> str | None:
+    def _infer_trigger(self, edge: Edge) -> str | None:
         """
         Infer the trigger for an inter-stage connection.
 
@@ -538,27 +552,61 @@ class ProcessExtractor:
             EdgeKind.YIELDS: "generator_yield",
         }
 
-        # Check if the edge kind is in the map
-        if hasattr(edge.kind, "value"):
-            kind_val = edge.kind.value
+        # Fast path: direct enum-key lookup.
+        direct = trigger_map.get(edge.kind)
+        if direct is not None:
+            return direct
+
+        # Fallback: compare by enum value for cases where edge.kind is a
+        # different enum instance with a matching ``.value``.
+        kind_val = getattr(edge.kind, "value", None)
+        if kind_val is not None:
             for ek, trigger in trigger_map.items():
                 if ek.value == kind_val:
                     return trigger
 
-        return trigger_map.get(edge.kind, None)
+        return None
 
     def set_entry_stage(self, stage_id: str) -> None:
         """
-        Manually set the entry stage.
+        Manually pin the entry stage for the next ``extract()`` call.
+
+        ``ProcessExtractor`` itself is stateless with respect to the entry
+        stage — the value is computed during :meth:`extract` and stored on
+        the resulting :class:`ProcessModel`. This setter records an override
+        on the extractor (``self._forced_entry_stage_id``) so that the next
+        ``extract()`` call will install ``stage_id`` as the entry stage if
+        it exists in ``self.stages``. If no stages have been computed yet,
+        the override is still recorded for use after the next extraction.
 
         Args:
-            stage_id: The ID of the entry stage.
+            stage_id: The ID of the desired entry stage. Silently ignored
+                when the id is not present in ``self.stages`` *and* no
+                stages have been computed yet, with a warning logged in
+                that case once stages are populated.
         """
-        if stage_id in self.stages:
-            # Find current entry and update
-            current_entry = self._find_entry_stage()
-            if current_entry and current_entry != stage_id:
-                logger.info(f"Changing entry stage from {current_entry} to {stage_id}")
+        # Always record the override; ``extract()`` will validate it once
+        # stages are known.
+        self._forced_entry_stage_id = stage_id
+
+        if not self.stages:
+            logger.debug(
+                "set_entry_stage(%s) called before extract(); override deferred",
+                stage_id,
+            )
+            return
+
+        if stage_id not in self.stages:
+            logger.warning(
+                "set_entry_stage: %s is not a known stage id; override ignored",
+                stage_id,
+            )
+            self._forced_entry_stage_id = None
+            return
+
+        current_entry = self._find_entry_stage()
+        if current_entry and current_entry != stage_id:
+            logger.info("Changing entry stage from %s to %s", current_entry, stage_id)
 
     def add_stage_dependency(
         self, source_stage_id: str, target_stage_id: str, trigger: str | None = None

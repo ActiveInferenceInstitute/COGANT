@@ -9,7 +9,7 @@ model, semantic mappings) in a single nested document.
 import json
 import logging
 from collections import defaultdict
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from cogant.gnn.matrices import GNNMatrices
@@ -917,7 +917,7 @@ def export_for_pymdp(bundle: dict[str, Any]) -> dict[str, Any]:
             "n_states": matrices.get("n_states", 0),
             "n_obs": matrices.get("n_obs", 0),
             "n_actions": matrices.get("n_actions", 0),
-            "exported_at": datetime.utcnow().isoformat(),
+            "exported_at": datetime.now(UTC).isoformat(),
         },
     }
 

@@ -115,8 +115,7 @@ class _DynamicsSectionsMixin:
             lines.append("### State Transitions Derived from Call Graph")
             lines.append("")
 
-            # Find all CALLS edges that have corresponding WRITES edges from the same source
-            defaultdict(list)
+            # Collect CALLS and WRITES edges so we can pair them by source node.
             calls_edges = []
             writes_edges = []
 
@@ -125,9 +124,6 @@ class _DynamicsSectionsMixin:
                     calls_edges.append(edge)
                 elif edge.kind == EdgeKind.WRITES:
                     writes_edges.append(edge)
-
-            # Build map of nodes that write
-            {e.target_id for e in writes_edges}
 
             # Show top call-to-write patterns
             call_write_patterns = []

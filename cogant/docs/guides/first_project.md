@@ -138,31 +138,37 @@ uv run cogant roundtrip output/simple_state/model.gnn.md \
     --json
 ```
 
-The JSON summary looks like:
+The JSON summary looks like (shape emitted by `cogant.reverse.cli.roundtrip_command`):
 
 ```json
 {
-  "schema_version": "1.0.0",
-  "target": "output/simple_state/model.gnn.md",
-  "epsilon": 0.02,
-  "isomorphic": true,
-  "role_match_score": 0.98,
-  "dimension_match": true,
-  "package_synthesized": "output/simple_state/roundtrip/simple_state"
+  "is_isomorphic": true,
+  "role_match_score": 1.0,
+  "original_roles": {"HIDDEN_STATE": 1, "OBSERVATION": 1, "ACTION": 1},
+  "synthesized_roles": {"HIDDEN_STATE": 1, "OBSERVATION": 1, "ACTION": 1},
+  "shape_match": {"n_states": true, "n_obs": true, "n_actions": true},
+  "package_path": "/abs/path/to/output/simple_state/roundtrip/simple_state",
+  "errors": [],
+  "threshold": 0.5
 }
 ```
 
 What each field means:
 
-- **`epsilon`** — Net structural drift after forward → reverse → forward.
-  Lower is better; `0.0` is a perfect idempotent cycle.
-- **`isomorphic`** — `true` when `role_match_score >= threshold` (default
+- **`is_isomorphic`** — `true` when `role_match_score >= threshold` (default
   `0.5`, overridable with `--threshold`). This is the concrete empirical
   claim that the translation is faithful.
 - **`role_match_score`** — Fraction of Active Inference roles preserved
-  across the cycle.
-- **`dimension_match`** — Whether the `[n_states, n_obs, n_actions]`
-  triple survives unchanged.
+  across the cycle. Range `[0.0, 1.0]`; `1.0` is a perfect role-multiset
+  match. (NOTE: this is the project-wide convention — see
+  [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md#the-isomorphism-measure).
+  Earlier drafts used a complementary "epsilon = drift" formulation
+  where `0.0` was best — that form is now legacy.)
+- **`original_roles` / `synthesized_roles`** — Per-role multisets recovered
+  from the source GNN versus the forward pipeline run on the synthesized
+  package, respectively.
+- **`shape_match`** — Per-dimension booleans (`n_states`, `n_obs`,
+  `n_actions`) reporting whether each cardinality survives the round-trip.
 
 You can also run the roundtrip directly from Python using the
 `cogant.reverse.callable.MatrixFunctions` closures — no code generation,
@@ -187,20 +193,25 @@ print("final VFE:", steps[-1].free_energy)
 
 ## 5. Interpret ε
 
-The ε (epsilon) metric quantifies **how much information is lost in a
-single forward-reverse-forward cycle**. COGANT targets ε close to `0`
-for well-covered patterns; values you might observe in practice:
+The ε (epsilon) metric quantifies **how much of the original semantic
+structure survives a forward → reverse → forward cycle**. The current
+project-wide convention is the role-preservation ratio in
+[`docs/concepts/roundtrip.md`](../concepts/roundtrip.md#the-isomorphism-measure):
+ε = 1.0 means every role was preserved (idempotent cycle), and the
+ISOMORPHIC threshold for the canonical evaluation set is ε ≥ 0.8 (see
+`evaluation/METRICS.yaml`). Values you might observe in practice:
 
-| ε range      | Meaning                                            |
-|--------------|----------------------------------------------------|
-| `0.00-0.05`  | Essentially idempotent; shape and roles preserved. |
-| `0.05-0.15`  | Minor drift — usually rule priority ambiguity.     |
-| `0.15-0.30`  | Notable drift — inspect the `explain` output.      |
-| `> 0.30`     | Structural mismatch — file a bug with the bundle.  |
+| `role_match_score` (ε) | Meaning                                              |
+|------------------------|------------------------------------------------------|
+| `1.00`                 | Idempotent; every role preserved.                    |
+| `0.85 – 0.99`          | Minor drift — usually rule-priority ambiguity.       |
+| `0.50 – 0.85`          | Notable drift — inspect the `explain` output.        |
+| `< 0.50`               | Structural mismatch — file a bug with the bundle.    |
 
-A non-zero ε is **not** automatically a failure: it simply means the
-forward and reverse pipelines disagree about some aspect of the mapping.
-The `validate` subcommand reports the same ε alongside contract checks:
+A `role_match_score < 1.0` is **not** automatically a failure: it simply
+means the forward and reverse pipelines disagree about some aspect of
+the mapping. The `validate` subcommand reports the same metric alongside
+contract checks:
 
 ```bash
 uv run cogant validate output/simple_state

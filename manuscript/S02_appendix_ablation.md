@@ -26,9 +26,6 @@ zoo/01 contains 4 mappings: 1 HIDDEN\_STATE (`BeliefState` class, mutating
 declares `s_f0[3]`, `o_m0[1]`, `u_c0`, `u_c1`; semantic coverage 80.0 %,
 validator 100.0 / 100, ε = 1.0000 roundtrip.
 
-**Table B.1 — Rule-family ablation on `zoo/01_simple_state` (baseline: 4
-mappings, ε = 1.0000, GNN validator = 100.0).**
-
 | Rule family    | Mapping Δ                          | ε_role                              | Overall ε  | GNN completeness                 | Failure mode                                                                                                                               |
 |----------------|------------------------------------|-------------------------------------|------------|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
 | Baseline       | 4 (1 HS, 1 OBS, 2 ACT)             | ε_HS = 1.0, ε_OBS = 1.0, ε_ACT = 1.0 | **1.0000** | 4/4 sections, validator 100.0   | —                                                                                                                                           |
@@ -37,6 +34,8 @@ mappings, ε = 1.0000, GNN validator = 100.0).**
 | ActionRule *(semantic: `ActionRule`)* | −2 ACTION (→ 2 mappings)    | ε_HS = 1.0, ε_OBS = 1.0, ε_ACT = 0.0 | **0.6667** | 4/4 (B matrix falls back to identity per `compute_B` line 312) | Both `update_state` actions lose their ACTION mappings. The GNN emits `u_c0` only from the fallback identity transition; the synthesized package still produces ACT = 5 from scaffolding so ε_ACT = 0.0 in origin and positive in synth. Downstream VFE is unchanged (still 0.0 at each step) because B is still valid. |
 | ConstraintRule *(semantic: `PreferenceRule`)* | 0 (no CONSTRAINT in origin)  | all ε_role unchanged                 | **1.0000** | 4/4 (no change)                   | No effect — zoo/01 contains no CONSTRAINT nodes in the origin, so removing `PreferenceRule` is a no-op. Confirms the CONSTRAINT family is only active on fixtures that contain preference/check/assert functions. |
 | FallbackRule *(matrix-fallback paths in `compute_A`, `compute_B`, `compute_C`, `compute_D`)* | 0 (mapping count unchanged)  | ε_HS = 1.0, ε_OBS = 1.0, ε_ACT = 1.0 | **N/A (pipeline fails)** | **0/4** (`GNNValidator` rejects the bundle with "A row must sum to 1.0, got 0.0") | Removing the fallbacks does **not** change the mapping count but causes `compute_A` / `compute_B` / `compute_D` to emit zero matrices on the single-factor model because the origin has no `READS`/`WRITES` edges touching the `self.state` attribute at the granularity extracted by the Python front end. The validator rejects the bundle; downstream VFE computation fails with `divide by zero` in the log-likelihood step. This row demonstrates that the fallback paths are **load-bearing** for the minimal-POMDP case. |
+
+: Table B.1 — Rule-family ablation on `zoo/01_simple_state` (baseline: 4 mappings, ε = 1.0000, GNN validator = 100.0). {#tbl:zoo01-rule-family-ablation}
 
 **Interpretation.** On the minimal-POMDP fixture:
 
@@ -60,12 +59,12 @@ mappings, ε = 1.0000, GNN validator = 100.0).**
    concrete edges for `compute_A` / `compute_B` / `compute_D` to populate.
    This confirms that the fallbacks are not cosmetic but are the principled
    maximum-entropy degradations that keep the bundle valid when edge
-   evidence is absent (cf. Section 9, Table 12 of the main text).
+   evidence is absent (cf. @sec:09-ablation, @tbl:matrix-fallback-ablation).
 
 ### B.2 Cross-reference with Section 9 rule-family ablation
 
 The five rule families in the ablation above correspond to the five families
-in Section 9 / Table 10 as follows:
+in @sec:09-ablation / @tbl:rule-family-ablation as follows:
 
 | Appendix B family  | Section 9 family                    | Primary Section 9 rule(s)                                        |
 |--------------------|-------------------------------------|------------------------------------------------------------------|
@@ -73,7 +72,7 @@ in Section 9 / Table 10 as follows:
 | ObservationRule    | Semantic                            | `ObservationRule`, `PolicyRule`, `ContextRule`                    |
 | ActionRule         | Semantic                            | `ActionRule`, `OrchestratorRule`                                  |
 | ConstraintRule     | Semantic + Behavioural              | `PreferenceRule`, `TestAssertionRule`                             |
-| FallbackRule       | Matrix-fallback (Section 9 Table 12) | `compute_A`, `compute_B`, `compute_C`, `compute_D` fallback paths |
+| FallbackRule       | Matrix-fallback (@tbl:matrix-fallback-ablation) | `compute_A`, `compute_B`, `compute_C`, `compute_D` fallback paths |
 
 The Section 9 ablation is fixture-level (`flask_app`, `calculator`) and
 reports mapping-count deltas; the Appendix B ablation is role-level

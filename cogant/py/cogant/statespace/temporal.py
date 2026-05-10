@@ -448,7 +448,7 @@ class TemporalAnalyzer:
             >>> order = analyzer.get_markov_order()
             >>> print(f"Process has Markov order {order}")
         """
-        critical_path = self.compute_critical_path()
+        critical_path = self.get_critical_path()
         # Markov order approximated by longest dependency chain
         # A linear chain of length N implies N-1 history depth
         markov_order = max(1, len(critical_path) - 1)

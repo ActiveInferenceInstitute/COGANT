@@ -23,6 +23,10 @@ Core dependencies with security significance:
 
 \** Requires safe mode (no code execution)
 
+### Documentation CDN assets (Playground)
+
+The MkDocs-shipped [`playground.html`](../playground.html) loads pinned CodeMirror and Cytoscape builds from **cdnjs** with **Subresource Integrity** (`integrity` + `crossorigin="anonymous"`). Details and offline considerations: [`playground.md`](../playground.md) (`## CDN assets`).
+
 ### Update Policy
 
 1. **Security patches**: Apply immediately (patch release)

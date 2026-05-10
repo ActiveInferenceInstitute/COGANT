@@ -15,7 +15,13 @@ Implementation status: [`../cogant/docs/reference/implementation_status.md`](../
 
 When updating quantitative claims, refresh [`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml) (`uv run python ../tools/regenerate_metrics.py` from [`../cogant/`](../cogant/)), then run [`../scripts/z_generate_manuscript_variables.py`](../scripts/z_generate_manuscript_variables.py) from the repo root so `{{ TOKEN }}` tokens in `*.md` resolve consistently (registered names in [`../tools/manuscript_vars.py`](../tools/manuscript_vars.py); no spaces inside real keys). Use `--strict` on that script in CI only when no stray placeholder tokens remain in prose (documentation may use spaced `{{ TOKEN }}` forms that the injector ignores). After link edits, run [`../cogant/docs/verify_manuscript_links.py`](../cogant/docs/verify_manuscript_links.py) from the package root.
 
-**Table 9 (per-module coverage).** The statement-count and per-module percentage rows are canonical in [`06_04_tests_mutation_and_benchmarks.md`](06_04_tests_mutation_and_benchmarks.md) (`{#tbl:coverage-stmt-modules}`). [`06_experimental_setup.md`](06_experimental_setup.md) references that table with `@tbl:` / `@sec:` pointers only — it does **not** duplicate the table body (duplicate table labels break pandoc-crossref). These rows are **not** in `METRICS.yaml`. Refresh them from the canonical `coverage.py` report whenever the test suite or omit rules change, so they match the injected aggregate coverage and timestamp fields.
+**Fixture tables (Section 4, Section 6.3).** `../cogant/evaluation/figures/metrics.json` is produced by [`../cogant/evaluation/figures/generate_figures.py`](../cogant/evaluation/figures/generate_figures.py), which calls [`../cogant/evaluation/figures/pipeline_api_metrics.py`](../cogant/evaluation/figures/pipeline_api_metrics.py) so node/edge/mapping tallies use `cogant.api.orchestration` (aligned with [`../cogant/benchmarks/bench_suite.py`](../cogant/benchmarks/bench_suite.py)). `mappings_total` is taken from the in-memory `semantic_mappings` dict immediately after `run_statespace` and before `process` / `export`; the benchmark’s `mappings` column is defined the same way. `TranslationEngine._resolve_conflicts` uses **sorted** iteration over colliding mapping pairs so the same fixture yields the same `mappings_total` in `generate_figures` and `bench_suite` for a given build. GNN/validator columns still come from the full `process` + `export` + `validate` pass.
+
+**@tbl:coverage-stmt-modules (per-module coverage).** The statement-count and per-module percentage rows are canonical in [`06_04_tests_mutation_and_benchmarks.md`](06_04_tests_mutation_and_benchmarks.md) (post-table line `{#tbl:coverage-stmt-modules}`). [`06_experimental_setup.md`](06_experimental_setup.md) references that table with `@tbl:` / `@sec:` pointers only — it does **not** duplicate the table body (duplicate table labels break pandoc-crossref). These rows are **not** in `METRICS.yaml`. Refresh them from the canonical `coverage.py` report whenever the test suite or omit rules change, so they match the injected aggregate coverage and timestamp fields.
+
+**Automated drift check (optional).** After `uv run pytest tests/ --cov=cogant` in the **package** root ([`../cogant/`](../cogant/), the inner tree next to this staging folder), run:
+
+`uv run python ../tools/check_coverage_table.py` (or `--package-root ../cogant` from [`../tools/`](../tools/)) to compare @tbl:coverage-stmt-modules to `coverage report`. Use `--strict` in CI to fail on mismatch or missing data; without `--strict`, a missing `.coverage` file exits 0 with a message to stderr. See [`../PROMOTION.md`](../PROMOTION.md) post-move checklist.
 
 ## Cross-references (pandoc-crossref)
 
@@ -66,10 +72,15 @@ Update manuscript fragments **within two weeks** of any public API change, CLI a
 or rule-set modification. The authoritative check is:
 
 ```bash
+# From staging root (projects_in_progress/cogant/)
+uv run python tools/audit_manuscript_crossrefs.py       # orphan @sec/@tbl vs {#sec:}/{#tbl:}; duplicate ids
+uv run python tools/audit_manuscript_numbers.py           # numeric drift vs METRICS.yaml
+
 # From the package root (../cogant/)
-uv run python ../tools/audit_manuscript_numbers.py      # catch numeric drift
 uv run python docs/verify_manuscript_links.py           # catch broken cross-links
 ```
+
+Template `.github/workflows/` jobs do **not** invoke COGANT staging scripts today; run these locally before manuscript edits or add an optional workflow targeting `projects_in_progress/cogant/`.
 
 **Source of truth on conflicts:** if package docs and manuscript prose disagree,
 the package docs are authoritative for API names, types, and behaviour; the manuscript

@@ -178,6 +178,11 @@ class CanonicalNormalizer:
     ) -> None:
         """Extract Python-specific metadata.
 
+        Note:
+            ``decorators`` is intentionally NOT handled here because the
+            common-field pass in :meth:`_normalize_metadata` already
+            copies it. Re-copying would be a no-op but obscures intent.
+
         Args:
             fact_data: Raw fact data.
             metadata: Metadata dict to populate.
@@ -187,9 +192,6 @@ class CanonicalNormalizer:
 
         if "is_generator" in fact_data:
             metadata["is_generator"] = fact_data["is_generator"]
-
-        if "decorators" in fact_data:
-            metadata["decorators"] = fact_data["decorators"]
 
     def _extract_javascript_metadata(
         self,

@@ -322,8 +322,6 @@ class _UpstreamSectionsMixin:
         n_obs = len(self.state_space.observations)
         n_act = len(self.state_space.actions)
 
-        _A: list[Any] = []
-        _B: list[Any] = []
         C: list[Any] = []
         D: list[Any] = []
         try:
@@ -332,6 +330,9 @@ class _UpstreamSectionsMixin:
                 mappings=self.mappings,
                 state_space=self.state_space,
             )
+            # compute_A() / compute_B() are called for their cardinality
+            # bookkeeping side effects (they update internal n_states_kept
+            # state used by compute_C / compute_D for shape matching).
             matrices.compute_A()
             matrices.compute_B()
             C = matrices.compute_C()
@@ -340,17 +341,14 @@ class _UpstreamSectionsMixin:
             pass
 
         # D_f: derived prior over hidden states (or uniform fallback).
+        # The aggregate D has one entry per factor/variable; we broadcast
+        # the per-factor mass uniformly across the factor's categorical
+        # cardinality and fall back to a flat uniform when the aggregate
+        # is unavailable. (A peakier broadcast was considered and rejected
+        # because it can produce non-normalised vectors when card != 1/share.)
         for i, var in enumerate(self.state_space.variables.values()):
             card = var.cardinality or 2
             if D and i == 0 and len(D) == n_states:
-                # The aggregate D has one entry per factor/variable.
-                # Broadcast a single value across each factor's
-                # categorical cardinality.
-                share = round(D[i], 4)
-                # Build a dist that puts share on the 0-th bucket and
-                # distributes the residual uniformly. Fall back to
-                # uniform when the aggregate doesn't give us enough
-                # shape information.
                 dist = [1.0 / card] * card
                 vec = ", ".join(f"{round(v, 4)}" for v in dist)
             else:

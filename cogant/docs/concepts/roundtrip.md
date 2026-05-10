@@ -36,7 +36,7 @@ Each stage is content-preserving: the output contains at least as much semantic 
 
 ## Reverse: GNN to code
 
-The reverse pipeline reads a GNN package and synthesizes a Python package that, when analyzed by a forward run, would produce an isomorphic GNN. The current v0.1.0 implementation provides scaffolding in `py/cogant/reverse/`:
+The reverse pipeline reads a GNN package and synthesizes a Python package that, when analyzed by a forward run, would produce an isomorphic GNN. The v0.5.0 implementation in `py/cogant/reverse/` is exposed through the `cogant reverse` and `cogant roundtrip` CLI subcommands and emits POLICY / CONTEXT stubs proportional to the origin GNN's role counts (the wave-16 fix that brought the canonical evaluation set to 23 / 23 ISOMORPHIC):
 
 ```python
 # doctest: +SKIP  # requires a pre-generated GNN package on disk

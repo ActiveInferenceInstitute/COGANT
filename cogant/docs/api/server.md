@@ -1,6 +1,6 @@
 # FastAPI Server Reference
 
-> **What this page is:** Complete reference for COGANT's FastAPI application (`cogant.server.app`) and all 12 exposed HTTP routes.
+> **What this page is:** Complete reference for COGANT's FastAPI application (`cogant.server.app`) and all 11 exposed HTTP routes.
 >
 > **Prerequisites:** [Installation](installation.md) and familiarity with the [analysis pipeline](overview.md).
 >
@@ -20,14 +20,13 @@
 | GET | `/ready` | Readiness probe with dependency checks | none | `{"ready": bool, "checks": {...}}` |
 | GET | `/metrics` | Prometheus-format text metrics | none | Plain text (Prometheus format) |
 | POST | `/analyze` | Full translation pipeline | `{"repo_path": str, "config"?: {...}}` | GNN bundle JSON |
-| POST | `/reverse` | GNN-to-code synthesis | `{"gnn_markdown": str}` | `{"package_plan": {...}, "synthesized_files": [...]}` |
+| POST | `/reverse` | GNN-to-code synthesis | `{"gnn_text": str}` | `{"package_zip_b64": str, "file_count": int, "cogant_version": str}` |
 | POST | `/roundtrip` | Forward-then-reverse validation | `{"repo_path": str}` | `{"isomorphism_score": float, "result": str}` |
 | GET | `/api/v1/rules` | List all active translation rules | none | `[{"name": str, "family": str, "priority": int}, ...]` |
 | POST | `/api/v1/analyze` | Alias for `/analyze` | `{"repo_path": str, "config"?: {...}}` | GNN bundle JSON |
 | POST | `/api/v1/roundtrip` | Alias for `/roundtrip` | `{"repo_path": str}` | `{"isomorphism_score": float, "result": str}` |
 | POST | `/api/v1/visualize` | Generate graph visualizations | `{"gnn_bundle": {...}}` | `{"svg": str, "mermaid": str}` |
 | GET | `/api/v1/metrics` | Structured JSON metrics | none | `{"rule_counts": {...}, "graph_size": {...}, ...}` |
-| GET | `/gnn_text` | (Internal) streaming GNN text export | Query params: `bundle_id`, `format` | Streaming NdJSON lines |
 
 ## Request/Response Details
 
@@ -53,32 +52,32 @@
 **Request:**
 ```json
 {
-  "gnn_markdown": "# GNN\n[HIDDEN_STATE x]\n..."
+  "gnn_text": "# GNN\n[HIDDEN_STATE x]\n..."
 }
 ```
 
-**Response:**
+**Response:** The synthesized Python package returned as a base64-encoded
+zip plus a small metadata envelope.
+
 ```json
 {
-  "package_plan": {
-    "modules": [...],
-    "hidden_states": [...],
-    "observations": [...],
-    "actions": [...]
-  },
-  "synthesized_files": [
-    {"path": "src/agent.py", "content": "..."},
-    {"path": "src/state.py", "content": "..."}
-  ]
+  "package_zip_b64": "UEsDBBQAAAAIAA...",
+  "file_count": 6,
+  "cogant_version": "0.5.0"
 }
 ```
+
+`package_zip_b64` decodes to a standard zip containing the same module
+layout `cogant.reverse.synthesizer.synthesize_package` would write to
+disk. `file_count` is the number of files inside the zip (driver
+helpers + per-state / per-action / per-observation modules).
 
 ### GET /api/v1/rules
 
 **Response:**
 ```json
 [
-  {"name": "MutatingSubsystemRule", "family": "semantic", "priority": 10},
+  {"name": "MutatingSubsystemRule", "family": "structural", "priority": 10},
   {"name": "ActionRule", "family": "semantic", "priority": 15},
   ...
 ]
@@ -254,7 +253,7 @@ curl -X POST http://localhost:8080/analyze \
 ```bash
 curl -X POST http://localhost:8080/reverse \
   -H "Content-Type: application/json" \
-  -d '{"gnn_markdown": "# GNN\n[HIDDEN_STATE x]\n..."}'
+  -d '{"gnn_text": "# GNN\n[HIDDEN_STATE x]\n..."}'
 ```
 
 ### Get active rules

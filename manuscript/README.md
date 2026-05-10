@@ -6,12 +6,14 @@ Template-aligned Markdown for **COGANT** (Codebase-to-GNN Translation): theory o
 
 ## Section files
 
-Stem order follows [`../../../infrastructure/rendering/manuscript_discovery.py`](../../../infrastructure/rendering/manuscript_discovery.py): digit-prefixed names sort lexicographically, so `02_01_…` fragments appear before `03_…`, and `06_01_…` before `07_…`. Discovery concatenates main sections (`00_`–`09_`), then supplemental appendices (`S01_`–`S06_`), then glossary files (`98_`), then the **other** bucket (for example `SYNTAX.md`), then optional `99_*.md` references last. The current tree has **23** digit-prefixed section files (`00_`–`09_*` and `98_*`) + **6** appendices + **`SYNTAX.md`** = **30** Markdown files in the concatenated PDF body; there is **no** `99_*.md` wrapper (citations use `references.bib` directly). **34** `*.md` files exist in this directory including non-body files (`AGENTS.md`, `README.md`, `supplementary.md`, `preamble.md`).
+Stem order follows [`../../../infrastructure/rendering/manuscript_discovery.py`](../../../infrastructure/rendering/manuscript_discovery.py): digit-prefixed names sort lexicographically, so `02_01_…` fragments appear before `03_…`, and `06_01_…` before `07_…`. Discovery concatenates main sections (`00_`–`09_`), then supplemental appendices (`S01_`–`S06_`), then glossary files (`98_`), then the **other** bucket (for example `SYNTAX.md`), then optional `99_*.md` references last. The current tree has **23** digit-prefixed section files (`00_`–`09_*` and `98_*`) + **6** appendices + **`SYNTAX.md`** = **30** Markdown files in the concatenated PDF body; there is **no** `99_*.md` wrapper (citations use `references.bib` directly). **34** `*.md` files exist in this directory including non-body files (`AGENTS.md`, `README.md`, `supplementary.md`, `preamble.md`). Re-count with `ls -1 *.md | wc -l` after adds or splits.
+
+**Pandoc-crossref sanity** (staging root `projects_in_progress/cogant/`): `uv run python tools/audit_manuscript_crossrefs.py` — fails on duplicate `{#sec:…}` / `{#tbl:…}` ids or orphan `@sec:` / `@tbl:` references across body fragments (`SYNTAX.md` and a few helpers are skipped so example ids do not pollute the audit).
 
 | Files | Contents |
 |------|-----------|
-| `00_abstract.md` | Problem, approach, scope |
-| `01_introduction.md` | Motivation, terminology, documentation map |
+| `00_abstract.md` | Structured abstract (method / evidence / scope); metrics via `METRICS.yaml` |
+| `01_introduction.md` | Motivation, GNN terminology, reading lanes, non-goals, hub table, roadmap |
 | `02_01_program_graph_and_formal_foundations.md` | Program graph, definitions, theorems |
 | `02_02_ir_progression_translation_engine.md` | Progressive IRs, rules, fixpoint, algorithms |
 | `02_03_confidence_state_space_and_behavior.md` | Confidence model, state-space compilation, example |
@@ -51,7 +53,7 @@ uv run python projects_in_progress/cogant/scripts/z_generate_manuscript_variable
 
 Outputs: `../output/data/manuscript_variables.json` and `../output/manuscript/*.md` (plus copied `config.yaml`, `references.bib`, `preamble.md`). The renderer prefers `output/manuscript/` when those files exist.
 
-**Table 9 (per-module statement coverage).** The `Stmts` / `Cover` rows in [`06_04_tests_mutation_and_benchmarks.md`](06_04_tests_mutation_and_benchmarks.md) (referenced from [`06_experimental_setup.md`](06_experimental_setup.md) via `@tbl:`) are **not** generated from `METRICS.yaml`. They must be updated manually from the same canonical `uv run pytest tests/ --cov=cogant` run (for example `htmlcov/` or `coverage report -m`) whenever the suite or instrumentation changes, so they stay aligned with the aggregate **{{COVERAGE_PCT}}%** and **{{METRICS_GENERATED_AT}}** fields that *are* injected.
+**@tbl:coverage-stmt-modules (per-module statement coverage).** The `Stmts` / `Cover` rows in [`06_04_tests_mutation_and_benchmarks.md`](06_04_tests_mutation_and_benchmarks.md) (referenced from [`06_experimental_setup.md`](06_experimental_setup.md) via `@tbl:`) are **not** generated from `METRICS.yaml`. They must be updated manually from the same canonical `uv run pytest tests/ --cov=cogant` run (for example `htmlcov/` or `coverage report -m`) whenever the suite or instrumentation changes, so they stay aligned with the aggregate **{{COVERAGE_PCT}}%** and **{{METRICS_GENERATED_AT}}** fields that *are* injected.
 
 **pandoc-crossref:** install `pandoc-crossref` on your `PATH` (for example `brew install pandoc-crossref` on macOS) so `@sec:` / `@tbl:` references in the manuscript expand in the combined PDF. See [`SYNTAX.md`](SYNTAX.md).
 

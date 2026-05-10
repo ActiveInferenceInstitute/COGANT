@@ -21,6 +21,19 @@ from typing import Any
 
 import yaml  # pyyaml — already a dev dep
 
+__all__ = [
+    "load",
+    "version",
+    "test_count",
+    "coverage",
+    "mypy_errors",
+    "isomorphic_count",
+    "total_targets",
+    "mean_epsilon",
+    "epsilon_for",
+    "bibliography_entries",
+]
+
 _METRICS_PATH = Path(__file__).parent.parent.parent / "evaluation" / "METRICS.yaml"
 
 

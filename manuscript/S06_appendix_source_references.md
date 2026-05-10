@@ -39,7 +39,7 @@ staging-tree paths (before promotion to `projects/cogant/`), replace
 
 | Section | File | Description |
 |---|---|---|
-| Main text @sec:09-ablation | [`09_ablation.md`](09_ablation.md) | Rule-family and matrix ablation (Tables 12–14) |
+| Main text @sec:09-ablation | [`09_ablation.md`](09_ablation.md) | @tbl:rule-family-ablation, @tbl:fixpoint-iteration-ablation, @tbl:matrix-fallback-ablation |
 | Appendix B | [`S02_appendix_ablation.md`](S02_appendix_ablation.md) | Per-role ablation on `zoo/01_simple_state` |
 | @sec:02-01-program-graph-and-formal-foundations | [`02_01_program_graph_and_formal_foundations.md`](02_01_program_graph_and_formal_foundations.md) | Formal program-graph and fixpoint definitions |
 | Appendix C | [`S03_appendix_galois_sketch.md`](S03_appendix_galois_sketch.md) | ε-approximate Galois connection proof sketch |

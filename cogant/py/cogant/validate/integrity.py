@@ -140,31 +140,33 @@ class IntegrityChecker(_ValidatorMixin):
 
     def _check_orphaned_nodes(self, graph: ProgramGraph) -> None:
         """Check for orphaned (unreachable) nodes."""
-        # Find entry points (nodes with no incoming edges)
-        entry_points = set()
-        has_incoming = set()
+        from collections import defaultdict, deque
 
+        # Find entry points (nodes with no incoming edges).
+        has_incoming: set[str] = set()
         for edge in graph.edges.values():
             has_incoming.add(edge.target_id)
 
-        for node_id in graph.nodes.keys():
-            if node_id not in has_incoming:
-                entry_points.add(node_id)
+        entry_points = {nid for nid in graph.nodes if nid not in has_incoming}
 
-        # BFS from entry points to find reachable nodes
-        reachable = set()
-        queue = list(entry_points)
+        # Build out-edge adjacency once (O(|E|)) so the BFS below runs in
+        # O(|V| + |E|) rather than O(|V| * |E|) from re-scanning all edges
+        # per node via ``get_edges_from``.
+        adj: dict[str, list[str]] = defaultdict(list)
+        for edge in graph.edges.values():
+            adj[edge.source_id].append(edge.target_id)
+
+        reachable: set[str] = set()
+        queue: deque[str] = deque(entry_points)
 
         while queue:
-            node_id = queue.pop(0)
+            node_id = queue.popleft()
             if node_id in reachable:
                 continue
             reachable.add(node_id)
-
-            # Add neighbors
-            for edge in graph.get_edges_from(node_id):
-                if edge.target_id not in reachable:
-                    queue.append(edge.target_id)
+            for target_id in adj.get(node_id, []):
+                if target_id not in reachable:
+                    queue.append(target_id)
 
         # Check for unreachable nodes
         unreachable = set(graph.nodes.keys()) - reachable
@@ -172,31 +174,61 @@ class IntegrityChecker(_ValidatorMixin):
             self._add_issue("warning", "integrity", f"Unreachable node: {node_id}", [node_id])
 
     def _check_for_cycles(self, graph: ProgramGraph) -> None:
-        """Check for cycles in the graph."""
-        visited = set()
-        rec_stack = set()
+        """Check for cycles in the graph.
 
-        def has_cycle(node_id: str) -> bool:
-            """DFS that flags back-edges while walking containment."""
-            visited.add(node_id)
-            rec_stack.add(node_id)
+        Iterative DFS with an explicit stack so that very deep graphs
+        (containment chains > ~1000) do not overflow Python's default
+        recursion limit. A cycle is reported once per starting root that
+        first encounters a back-edge.
+        """
+        from collections import defaultdict
 
-            for edge in graph.get_edges_from(node_id):
-                if edge.target_id not in visited:
-                    if has_cycle(edge.target_id):
-                        return True
-                elif edge.target_id in rec_stack:
-                    return True
+        # Build out-edge adjacency once.
+        adj: dict[str, list[str]] = defaultdict(list)
+        for edge in graph.edges.values():
+            adj[edge.source_id].append(edge.target_id)
 
-            rec_stack.remove(node_id)
-            return False
+        visited: set[str] = set()
+        on_stack: set[str] = set()
 
-        for node_id in graph.nodes.keys():
-            if node_id not in visited:
-                if has_cycle(node_id):
+        for root in graph.nodes:
+            if root in visited:
+                continue
+
+            # Each frame is (node_id, iter_over_neighbors). When a frame's
+            # iterator is exhausted we pop it off and remove from on_stack.
+            stack: list[tuple[str, object]] = [(root, iter(adj.get(root, [])))]
+            visited.add(root)
+            on_stack.add(root)
+            cycle_found = False
+
+            while stack:
+                node_id, it = stack[-1]
+                next_target: str | None = next(it, None)  # type: ignore[arg-type]
+                if next_target is None:
+                    on_stack.discard(node_id)
+                    stack.pop()
+                    continue
+                if next_target in on_stack:
+                    cycle_found = True
                     self._add_issue(
-                        "info", "integrity", f"Cycle detected from node: {node_id}", [node_id]
+                        "info",
+                        "integrity",
+                        f"Cycle detected from node: {root}",
+                        [root],
                     )
+                    break
+                if next_target not in visited:
+                    visited.add(next_target)
+                    on_stack.add(next_target)
+                    stack.append((next_target, iter(adj.get(next_target, []))))
+
+            if cycle_found:
+                # Drain remaining frames so on_stack is consistent for the
+                # next root iteration.
+                for nid, _ in stack:
+                    on_stack.discard(nid)
+                stack.clear()
 
     def _check_variable_uniqueness(self, state_space: StateSpaceModel) -> None:
         """Check that all variable IDs are unique."""
@@ -234,18 +266,17 @@ class IntegrityChecker(_ValidatorMixin):
                     )
 
     def _check_confidence_values(self, state_space: StateSpaceModel) -> None:
-        """Check that confidence values are in [0, 1]."""
-        # Check variable confidences
-        for _var_id, _var in state_space.variables.items():
-            pass  # ConfidenceLevel is an enum, so this check is implicit
+        """Check that confidence values are in [0, 1].
 
-        # Check observation confidences
-        for _obs_id, _obs in state_space.observations.items():
-            pass  # Enum values are valid by definition
-
-        # Check action confidences
-        for _action_id, _action in state_space.actions.items():
-            pass  # Enum values are valid
+        Currently a no-op: variable, observation, and action confidence
+        levels are represented by the :class:`ConfidenceLevel` enum, so
+        their values are constrained at construction time. This hook is
+        kept so future schemas with raw float confidences can be
+        validated here without changing the public surface of
+        :meth:`check_state_space`.
+        """
+        # Intentionally empty — see docstring.
+        del state_space
 
     def _check_stage_uniqueness(self, process: ProcessModel) -> None:
         """Check that all stage IDs are unique."""

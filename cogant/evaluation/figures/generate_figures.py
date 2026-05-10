@@ -1,12 +1,13 @@
 """Generate reproducible manuscript figures and metrics table from live pipeline runs.
 
 This script is the single source of truth for the numbers that appear in
-``manuscript/06_experimental_setup.md``. It re-runs the packaged
-``RoundtripOrchestrator`` against every fixture under
-``../cogant/examples/control_positive/`` and ``../cogant/examples/real_world/``,
-reads the emitted ``program_graph.json``, ``semantic_mappings.json``,
-``gnn_package/state_space.json``, ``gnn_package/actions.json``, and
-``gnn_validation_report.json`` files, and writes:
+``manuscript/06_experimental_setup.md``. It runs the **public API pipeline**
+(same stages as ``benchmarks/bench_suite.py`` and ``cogant.api.orchestration``)
+against every fixture under ``../cogant/examples/control_positive/`` and
+``../cogant/examples/real_world/``, exports to a temp directory, and fills
+``metrics.json`` from the resulting ``Bundle`` and ``gnn_package/`` so graph
+counts match Table 11. (The ``examples/orchestrate_roundtrip.py`` demo may
+emit a larger serialized graph; it is not used here.) Files written:
 
     evaluation/figures/fig1_graph_sizes.png        -- bar chart of nodes/edges per fixture
     evaluation/figures/fig2_node_kinds.png         -- stacked bar of node kinds per fixture
@@ -30,7 +31,6 @@ import json
 import logging
 import sys
 import tempfile
-import time
 from pathlib import Path
 from typing import Any
 
@@ -46,20 +46,22 @@ import numpy as np
 
 THIS_FILE = Path(__file__).resolve()
 FIGURES_DIR = THIS_FILE.parent
-COGANT_ROOT = THIS_FILE.parent.parent.parent  # projects_in_progress/cogant
-PKG_ROOT = COGANT_ROOT / "cogant"
-PY_ROOT = PKG_ROOT / "py"
-EXAMPLES_ROOT = PKG_ROOT / "examples"
+# …/cogant/cogant — directory that contains ``py/``, ``examples/``, ``evaluation/``
+COGANT_ROOT = THIS_FILE.parent.parent.parent
+PY_ROOT = COGANT_ROOT / "py"
+EXAMPLES_ROOT = COGANT_ROOT / "examples"
 
 sys.path.insert(0, str(PY_ROOT))
-sys.path.insert(0, str(EXAMPLES_ROOT))
+sys.path.insert(0, str(FIGURES_DIR))
 
 # Quiet the pipeline so the script's own output is the headline.
 logging.basicConfig(level=logging.ERROR)
 for name in list(logging.Logger.manager.loggerDict):
     logging.getLogger(name).setLevel(logging.ERROR)
 
-from orchestrate_roundtrip import RoundtripOrchestrator  # noqa: E402
+from pipeline_api_metrics import run_orchestration_pipeline_metrics  # noqa: E402
+
+import cogant as _cogant_pkg  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Fixture inventory
@@ -85,92 +87,36 @@ FIXTURES: list[tuple[str, Path, str]] = [
 
 
 def _count_source(repo: Path) -> tuple[int, int]:
-    """Count ``.py`` files and non-empty lines under ``repo``."""
+    """Count ``.py`` files and non-empty lines under ``repo``.
+
+    Skips ``__pycache__`` directories and tolerates per-file read errors.
+    """
     files = [f for f in repo.rglob("*.py") if "__pycache__" not in f.parts]
     loc = 0
     for f in files:
         try:
-            loc += sum(1 for _ in open(f, encoding="utf-8", errors="ignore"))
+            with open(f, encoding="utf-8", errors="ignore") as fh:
+                loc += sum(1 for _ in fh)
         except OSError:
+            # Unreadable file (permissions, broken symlink); skip its lines.
             pass
     return len(files), loc
 
 
 def _run_pipeline(repo: Path) -> tuple[dict[str, Any], float, bool]:
-    """Run ``RoundtripOrchestrator`` once and return (metrics, elapsed, ok)."""
-    t0 = time.perf_counter()
+    """Run the API orchestration pipeline once; return (metrics, elapsed, ok)."""
     with tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp)
-        orch = RoundtripOrchestrator(repo, out)
-        ok = orch.run()
-        elapsed = time.perf_counter() - t0
-
-        metrics: dict[str, Any] = {"ok": ok}
-
-        # Program graph ------------------------------------------------------
-        pg_file = out / "program_graph.json"
-        if pg_file.exists():
-            pg = json.loads(pg_file.read_text())
-            stats = pg.get("statistics", {}) or {}
-            metrics["nodes"] = stats.get("total_nodes", 0)
-            metrics["edges"] = stats.get("total_edges", 0)
-            metrics["nodes_by_kind"] = {
-                str(k).replace("NodeKind.", ""): v
-                for k, v in (stats.get("nodes_by_kind") or {}).items()
-            }
-            metrics["edges_by_kind"] = {
-                str(k).replace("EdgeKind.", ""): v
-                for k, v in (stats.get("edges_by_kind") or {}).items()
-            }
-
-        # Semantic mappings -------------------------------------------------
-        sm_file = out / "semantic_mappings.json"
-        if sm_file.exists():
-            sm = json.loads(sm_file.read_text())
-            metrics["mappings_total"] = sm.get("total_mappings", 0)
-            metrics["role_summary"] = sm.get("role_summary", {})
-
-        # GNN markdown ------------------------------------------------------
-        gnn_md = out / "model.gnn.md"
-        if gnn_md.exists():
-            text = gnn_md.read_text()
-            metrics["gnn_md_bytes"] = len(text)
-            metrics["gnn_sections"] = sum(1 for line in text.splitlines() if line.startswith("## "))
-
-        # GNN validation ----------------------------------------------------
-        gvr = out / "gnn_validation_report.json"
-        if gvr.exists():
-            gv = json.loads(gvr.read_text())
-            metrics["gnn_valid"] = gv.get("valid")
-            metrics["gnn_score"] = gv.get("score")
-            metrics["gnn_errors"] = len(gv.get("errors", []) or [])
-            metrics["gnn_warnings"] = len(gv.get("warnings", []) or [])
-
-        # State space -------------------------------------------------------
-        ss_file = out / "gnn_package" / "state_space.json"
-        if ss_file.exists():
-            s = json.loads(ss_file.read_text())
-            metrics["state_variables"] = len(s.get("variables", []) or [])
-            metrics["observations"] = len(s.get("observations", []) or [])
-            t = s.get("transitions", {})
-            metrics["transitions"] = t.get("transition_count", 0) if isinstance(t, dict) else len(t)
-
-        ac_file = out / "gnn_package" / "actions.json"
-        if ac_file.exists():
-            a = json.loads(ac_file.read_text())
-            metrics["actions"] = a.get("count", 0)
-            metrics["policies"] = len(a.get("policies", []) or [])
-
-        # GNN package files -------------------------------------------------
-        gp = out / "gnn_package"
-        if gp.exists():
-            metrics["gnn_package_files"] = len([f for f in gp.iterdir() if f.is_file()])
-
-    return metrics, elapsed, ok
+        return run_orchestration_pipeline_metrics(repo, out)
 
 
 def run_all() -> dict[str, dict[str, Any]]:
-    """Run every fixture and collect metrics."""
+    """Run every fixture and collect metrics.
+
+    Fixtures whose ``repo`` path does not exist are skipped with a notice;
+    a single fixture failure is captured in the returned dict under the
+    ``error`` key so the rest of the suite still produces partial output.
+    """
     results: dict[str, dict[str, Any]] = {}
     for name, repo, group in FIXTURES:
         if not repo.exists():
@@ -178,7 +124,19 @@ def run_all() -> dict[str, dict[str, Any]]:
             continue
         print(f"[RUN ] {name} ({group})", flush=True)
         nfiles, loc = _count_source(repo)
-        metrics, elapsed, ok = _run_pipeline(repo)
+        try:
+            metrics, elapsed, ok = _run_pipeline(repo)
+        except (OSError, RuntimeError, ValueError, ImportError) as exc:
+            print(f"[FAIL] {name}: {type(exc).__name__}: {exc}")
+            results[name] = {
+                "files": nfiles,
+                "loc": loc,
+                "elapsed_s": 0.0,
+                "group": group,
+                "error": f"{type(exc).__name__}: {exc}",
+                "ok": False,
+            }
+            continue
         metrics.update(
             {
                 "files": nfiles,
@@ -202,6 +160,7 @@ def _order(results: dict[str, dict[str, Any]]) -> list[str]:
 
 
 def figure_graph_sizes(results: dict[str, dict[str, Any]]) -> Path:
+    """Render Figure 1: per-fixture node and edge counts as paired bars."""
     names = _order(results)
     nodes = [results[n].get("nodes", 0) for n in names]
     edges = [results[n].get("edges", 0) for n in names]
@@ -214,12 +173,10 @@ def figure_graph_sizes(results: dict[str, dict[str, Any]]) -> Path:
     ax.set_xticks(x)
     ax.set_xticklabels(names, rotation=30, ha="right")
     ax.set_ylabel("Count")
-    import cogant as _cogant_pkg
-
     ax.set_title(f"Program graph size by fixture (COGANT v{_cogant_pkg.__version__})")
     ax.grid(axis="y", linestyle="--", alpha=0.3)
     ax.legend()
-    for xi, (n, e) in enumerate(zip(nodes, edges)):
+    for xi, (n, e) in enumerate(zip(nodes, edges, strict=True)):
         ax.text(xi - width / 2, n, str(n), ha="center", va="bottom", fontsize=8)
         ax.text(xi + width / 2, e, str(e), ha="center", va="bottom", fontsize=8)
     fig.tight_layout()
@@ -230,6 +187,7 @@ def figure_graph_sizes(results: dict[str, dict[str, Any]]) -> Path:
 
 
 def figure_node_kinds(results: dict[str, dict[str, Any]]) -> Path:
+    """Render Figure 2: stacked bar of node kinds (MODULE/CLASS/METHOD/FUNCTION) per fixture."""
     names = _order(results)
     kinds = ["MODULE", "CLASS", "METHOD", "FUNCTION"]
     counts: dict[str, list[int]] = {k: [] for k in kinds}
@@ -264,6 +222,7 @@ def figure_node_kinds(results: dict[str, dict[str, Any]]) -> Path:
 
 
 def figure_state_space(results: dict[str, dict[str, Any]]) -> Path:
+    """Render Figure 3: per-fixture counts of state variables, observations, actions, transitions."""
     names = _order(results)
     fields = ["state_variables", "observations", "actions", "transitions"]
     labels = ["State vars", "Observations", "Actions", "Transitions"]
@@ -272,7 +231,7 @@ def figure_state_space(results: dict[str, dict[str, Any]]) -> Path:
     x = np.arange(len(names))
     width = 0.2
     colors = ["#4c72b0", "#dd8452", "#55a868", "#8172b3"]
-    for i, (f, lbl) in enumerate(zip(fields, labels)):
+    for i, (f, lbl) in enumerate(zip(fields, labels, strict=True)):
         vals = [results[n].get(f, 0) for n in names]
         ax.bar(x + (i - 1.5) * width, vals, width, label=lbl, color=colors[i])
     ax.set_xticks(x)
@@ -289,6 +248,7 @@ def figure_state_space(results: dict[str, dict[str, Any]]) -> Path:
 
 
 def figure_pipeline_latency(results: dict[str, dict[str, Any]]) -> Path:
+    """Render Figure 4: per-fixture wall-clock latency, color-coded by group."""
     names = _order(results)
     elapsed = [results[n].get("elapsed_s", 0) for n in names]
     colors = [
@@ -303,7 +263,7 @@ def figure_pipeline_latency(results: dict[str, dict[str, Any]]) -> Path:
     ax.set_ylabel("Wall-clock seconds")
     ax.set_title("End-to-end pipeline latency (Python fallback, no Rust)")
     ax.grid(axis="y", linestyle="--", alpha=0.3)
-    for xi, e in zip(x, elapsed):
+    for xi, e in zip(x, elapsed, strict=True):
         ax.text(xi, e, f"{e:.2f}s", ha="center", va="bottom", fontsize=8)
     # Legend
     from matplotlib.patches import Patch
@@ -326,12 +286,14 @@ def figure_pipeline_latency(results: dict[str, dict[str, Any]]) -> Path:
 
 
 def write_metrics_json(results: dict[str, dict[str, Any]]) -> Path:
+    """Persist the full metrics dict to ``evaluation/figures/metrics.json``."""
     out = FIGURES_DIR / "metrics.json"
     out.write_text(json.dumps(results, indent=2, sort_keys=True, default=str))
     return out
 
 
 def write_metrics_table(results: dict[str, dict[str, Any]]) -> Path:
+    """Write a Markdown table mirroring the manuscript metrics table."""
     names = _order(results)
     lines = [
         "# Generated metrics (do not edit by hand — re-run generate_figures.py)",
@@ -369,10 +331,11 @@ def write_metrics_table(results: dict[str, dict[str, Any]]) -> Path:
 
 
 def main() -> int:
+    """Entry point: regenerate all figures and metrics from a fresh pipeline run."""
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
     print(f"[INFO] Figures directory: {FIGURES_DIR}")
-    print(f"[INFO] COGANT package root: {PKG_ROOT}")
+    print(f"[INFO] COGANT package root: {COGANT_ROOT}")
     print(f"[INFO] Fixtures: {len(FIXTURES)}")
 
     results = run_all()

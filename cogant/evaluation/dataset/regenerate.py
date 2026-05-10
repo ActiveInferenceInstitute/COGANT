@@ -45,6 +45,7 @@ TIER_THRESHOLDS = {"ISOMORPHIC": 0.8, "APPROXIMATE": 0.5}
 
 
 def classify(epsilon: float) -> str:
+    """Classify a roundtrip ε score into ISOMORPHIC / APPROXIMATE / DIVERGENT."""
     if epsilon >= TIER_THRESHOLDS["ISOMORPHIC"]:
         return "ISOMORPHIC"
     if epsilon >= TIER_THRESHOLDS["APPROXIMATE"]:
@@ -189,6 +190,7 @@ TARGETS: list[tuple[int, str, str, str]] = [
 
 
 def resolve_path(group: str, subdir: str) -> Path:
+    """Resolve a target group + subdirectory name to an absolute fixture path."""
     if group == "zoo":
         return ZOO_DIR / subdir
     if group == "rwex":
@@ -204,6 +206,13 @@ def resolve_path(group: str, subdir: str) -> Path:
 
 
 def main(argv: list[str] | None = None) -> None:
+    """Run the roundtrip evaluation across the configured target catalogue.
+
+    Iterates over :data:`TARGETS`, optionally filtered by ``--group``,
+    runs each target through the appropriate roundtrip path (in-process
+    Python API for zoo/rwex, ``cogant roundtrip`` subprocess for ``rw``),
+    and writes the per-target result rows as newline-delimited JSON.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--output",
@@ -263,8 +272,17 @@ def main(argv: list[str] | None = None) -> None:
             }
             rows.append(row)
             print(f"ε={epsilon:.4f}  {tier}  ({metrics['elapsed_s']:.2f}s)")
-        except Exception as exc:  # noqa: BLE001
-            print(f"ERROR: {exc}", file=sys.stderr)
+        except (
+            OSError,
+            RuntimeError,
+            ValueError,
+            json.JSONDecodeError,
+            subprocess.SubprocessError,
+            ImportError,
+        ) as exc:
+            # Per-target failures are logged and skipped so a single bad
+            # fixture never aborts the whole roundtrip sweep.
+            print(f"ERROR: {type(exc).__name__}: {exc}", file=sys.stderr)
             continue
 
     if args.dry_run:

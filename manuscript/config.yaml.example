@@ -23,7 +23,8 @@ publication:
 
 keywords:
   - "program analysis"
-  - "Generalized Notation Notation (GNN)"
+  - "Generalized Notation Notation"
+  - "GNN"
   - "intermediate representation"
   - "code property graph"
   - "active inference"
