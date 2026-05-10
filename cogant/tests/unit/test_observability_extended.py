@@ -12,7 +12,7 @@ import time
 import pytest
 
 from cogant.observability.logging import get_logger, setup_logging
-from cogant.observability.metrics import Counter, Histogram, MetricsRegistry, registry
+from cogant.observability.metrics import Counter, Histogram, MetricsRegistry
 from cogant.observability.trace import span
 
 # ---------------------------------------------------------------------------
