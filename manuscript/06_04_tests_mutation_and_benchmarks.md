@@ -7,12 +7,12 @@ The v{{VERSION}} Python implementation ships a test suite that, on the canonical
 | Python version | `pyproject.toml` classifier | Status |
 |---|---|---|
 | 3.11 | `Programming Language :: Python :: 3.11` | supported (minimum version, `requires-python = ">=3.11"`) |
-| 3.12 | `Programming Language :: Python :: 3.12` | supported (canonical CI interpreter; benchmark runs use 3.12.11) |
+| 3.12 | `Programming Language :: Python :: 3.12` | supported (canonical CI interpreter; benchmark runs use {{BENCHMARK_PYTHON_VERSION}}) |
 | 3.13 | `Programming Language :: Python :: 3.13` | supported |
 
 : Table 8 — Python interpreter matrix. {#tbl:python-interpreter-matrix}
 
-All three interpreters are listed in the `classifiers` block of [`../cogant/pyproject.toml`](../cogant/pyproject.toml). The declared minimum is Python 3.11 so that the pattern-matching front end in `cogant.static.parser.PythonASTParser` can use `match`/`case` statements without a compatibility shim, and the benchmark suite recorded in `benchmarks/results/suite_20260423.md` was executed on CPython 3.12.11 under macOS arm64.
+All three interpreters are listed in the `classifiers` block of [`../cogant/pyproject.toml`](../cogant/pyproject.toml). The declared minimum is Python 3.11 so that the pattern-matching front end in `cogant.static.parser.PythonASTParser` can use `match`/`case` statements without a compatibility shim, and the benchmark suite recorded in `benchmarks/results/{{BENCHMARK_SUITE_FILE}}` was executed on CPython {{BENCHMARK_PYTHON_VERSION}} under {{BENCHMARK_OS}}.
 
 Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE_COUNT}}** packaged fixtures exercise end-to-end. @tbl:coverage-stmt-modules records statement coverage (`coverage.py` **Stmts** / **Cover**) for the algorithmic core (translation, state-space compilation, Markov blanket extraction, GNN matrix construction, validation, simulation helpers) --- the modules whose correctness is load-bearing for the claims in this manuscript. Figures match the `uv run pytest tests/ --cov=cogant` run that produced the {{TEST_COUNT}}/{{TEST_COUNT_SKIPPED}} pass/skip summary in `METRICS.yaml` (**{{METRICS_GENERATED_AT}}**).
 
@@ -44,7 +44,7 @@ Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE
 
 : Table 9 — Statement coverage of load-bearing modules (canonical v{{VERSION}} run, {{METRICS_GENERATED_AT}}). {#tbl:coverage-stmt-modules}
 
-The aggregate **{{COVERAGE_PCT}}%** in `METRICS.yaml` is measured with `[tool.coverage.run] source = ["cogant"]` and **omits** `cogant/tools/*` and `cogant/static/treesitter_parser.py` (see [`../cogant/pyproject.toml`](../cogant/pyproject.toml)). The `viz/` package is instrumented and covered in v0.5.0 by a dedicated viz test suite. Lower rows in @tbl:coverage-stmt-modules (for example `markov.blanket`, `translate.rules.behavioral`) highlight residual branch gaps, not omitted packages. See `../cogant/CHANGELOG.md` for release-cycle deltas.
+The aggregate **{{COVERAGE_PCT}}%** in `METRICS.yaml` is measured with `[tool.coverage.run] source = ["cogant"]` and **omits** `cogant/tools/*` and `cogant/static/treesitter_parser.py` (see [`../cogant/pyproject.toml`](../cogant/pyproject.toml)). The `viz/` package is instrumented and covered in v{{VERSION}} by a dedicated viz test suite. Lower rows in @tbl:coverage-stmt-modules (for example `markov.blanket`, `translate.rules.behavioral`) highlight residual branch gaps, not omitted packages. See `../cogant/CHANGELOG.md` for release-cycle deltas.
 
 ## Mutation testing
 
@@ -67,7 +67,7 @@ The modules with the strongest mutation signal are `static/dataflow.py` (3 of 3 
 
 ## Benchmark suite (shipped)
 
-A reproducible benchmark harness lives at [`../cogant/benchmarks/bench_suite.py`](../cogant/benchmarks/bench_suite.py) and writes its canonical results to [`../cogant/benchmarks/results/`](../cogant/benchmarks/results/). The snapshot below is from `suite_20260423.md` (three iterations per fixture, CPython 3.12.11 / macOS arm64) and should be regenerated after performance work.
+A reproducible benchmark harness lives at [`../cogant/benchmarks/bench_suite.py`](../cogant/benchmarks/bench_suite.py) and writes its canonical results to [`../cogant/benchmarks/results/`](../cogant/benchmarks/results/). The snapshot below is from `{{BENCHMARK_SUITE_FILE}}` (three iterations per fixture, CPython {{BENCHMARK_PYTHON_VERSION}} / {{BENCHMARK_OS}}) and should be regenerated after performance work.
 
 | Fixture | Wall-clock median (ms) | Wall-clock p95 (ms) | Nodes | Edges | Mappings | Peak memory (MB) |
 |---|---:|---:|---:|---:|---:|---:|
@@ -78,7 +78,7 @@ A reproducible benchmark harness lives at [`../cogant/benchmarks/bench_suite.py`
 | `requests_lib` | 54 | 58 | 98 | 152 | 63 | 0.1 |
 | `json_stdlib` | 47 | 49 | 29 | 34 | 19 | 0.0 |
 
-: Table 11 — Benchmark suite results (`suite_20260423.md`, three iterations per fixture, CPython 3.12.11). {#tbl:benchmark-suite-results}
+: Table 11 — Benchmark suite results (`{{BENCHMARK_SUITE_FILE}}`, three iterations per fixture, CPython {{BENCHMARK_PYTHON_VERSION}}). {#tbl:benchmark-suite-results}
 
 Node and edge columns match @tbl:repo-pipeline-metrics. The `mappings` count is from the same post-`statespace` in-memory `semantic_mappings` dict that `../cogant/evaluation/figures/metrics.json` uses (`pipeline_api_metrics` samples immediately after `run_statespace`); conflict resolution in `TranslationEngine` applies **sorted** iteration over colliding mapping pairs so this count is stable across `bench_suite` and `generate_figures` runs.
 

@@ -36,7 +36,7 @@ A research or engineering group typically has:
 
 COGANT unifies these behind a single pipeline whose intermediate artifacts are documented as a progression of IRs (repo IR, program graph, semantic mapping, state space, process model, validation), as described in `../cogant/docs/architecture/README.md` and `../cogant/docs/reference/implementation_status.md`.
 
-Language coverage and rule depth follow [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md): Python is the primary front end at v0.5.x. JavaScript/TypeScript run through optional `cogant[multilang]` plus `tree-sitter` grammars (including a JS-grammar fallback path for `.ts` on mixed repositories) when installed. Rust acceleration is partially wired — `cogant._rust` exposes a PyO3 `connected_components` FFI behind the `COGANT_USE_RUST` feature flag, with a pure-Python fallback for all other code paths as documented there.
+Language coverage and rule depth follow [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md): Python is the primary front end at v{{VERSION}}. JavaScript/TypeScript run through optional `cogant[multilang]` plus `tree-sitter` grammars (including a JS-grammar fallback path for `.ts` on mixed repositories) when installed. Rust acceleration is partially wired — `cogant._rust` exposes a PyO3 `connected_components` FFI behind the `COGANT_USE_RUST` feature flag, with a pure-Python fallback for all other code paths as documented there.
 
 ## Positioning
 

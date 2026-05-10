@@ -35,7 +35,7 @@ a 23-fixture cross-language roundtrip suite (ε = 1.0, 100% ISOMORPHIC).
 | FastAPI server + WebSocket streaming | ✅ Production |
 | CLI: 26 subcommands | ✅ Production |
 | Type system: 14 Protocols, 15 TypedDicts, 231 .pyi stubs | ✅ Production |
-| Test suite: see `evaluation/METRICS.yaml` for current counts (v0.5.0 shipped with 2,129 passing / 83.42%; the suite has since expanded — run `uv run pytest tests/ -q` for live numbers) | ✅ Production |
+| Test suite: see `evaluation/METRICS.yaml` for current counts (wave-20: 8,980 passing / 9,011 total / 95.11% coverage — run `uv run pytest tests/ -q --cov=cogant` for live numbers) | ✅ Production |
 | Rust PyO3 acceleration (optional) | ✅ Beta |
 | Java parser | ⬜ Planned (v0.6.x) |
 | Rust parser | ⬜ Planned (v0.6.x) |
@@ -108,8 +108,8 @@ See: [version_100_planned.md](version_100_planned.md)
 
 | Metric | Current | v0.6.x Target | v1.0 Target |
 |--------|---------|---------------|-------------|
-| Tests passing | see `evaluation/METRICS.yaml` (v0.5.0: 2,129; suite has since expanded) | >2,500 | >3,000 |
-| Coverage | see `evaluation/METRICS.yaml` (v0.5.0: 83.42%; live: run `uv run pytest tests/ -q`) | 85% | 90% |
+| Tests passing | see `evaluation/METRICS.yaml` (wave-20: 8,980 passing / 9,011 total) | >9,000 | >10,000 |
+| Coverage | see `evaluation/METRICS.yaml` (wave-20: 95.11%; live: run `uv run pytest tests/ -q --cov=cogant`) | 95% | 97% |
 | mypy errors | see `evaluation/METRICS.yaml` (`mypy_strict_errors`) | 0 | 0 |
 | Ruff violations | see `evaluation/METRICS.yaml` (`ruff_violations`) | 0 | 0 |
 | Roundtrip ε | 1.0 (23/23) | 1.0 (extend to Java) | 1.0 (all languages) |

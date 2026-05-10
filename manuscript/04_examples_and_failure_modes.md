@@ -24,7 +24,7 @@ To make the pipeline's behavior tangible, consider the `flask_app` fixture distr
 | GNN package files | 27 |
 | GNN validation | PASS (score 100.0, 0 errors, 0 warnings) |
 
-The default graph stage in this path emits structural kinds (MODULE, CLASS, METHOD, FUNCTION) and, at v0.5.x, `CONTAINS`, `INHERITS`, and `self`-dataflow `READS` / `WRITES` edges. The richer taxonomy in `cogant.schemas.core.NodeKind` and `EdgeKind` (18 kinds each; see `../cogant/docs/reference/schemas_reference.md`) also includes `CALLS`, `IMPORTS`, and others: those appear when the call-graph pass is part of the built graph; the **API orchestration** graph used for this table omits `CALLS` and `IMPORTS` so the counts align with the bundle statistics behind @tbl:benchmark-suite-results. Dynamic enrichment (`dynamic/`) can add additional edges when traces are available.
+The default graph stage in this path emits structural kinds (MODULE, CLASS, METHOD, FUNCTION) and, at v{{VERSION}}, `CONTAINS`, `INHERITS`, and `self`-dataflow `READS` / `WRITES` edges. The richer taxonomy in `cogant.schemas.core.NodeKind` and `EdgeKind` (18 kinds each; see `../cogant/docs/reference/schemas_reference.md`) also includes `CALLS`, `IMPORTS`, and others: those appear when the call-graph pass is part of the built graph; the **API orchestration** graph used for this table omits `CALLS` and `IMPORTS` so the counts align with the bundle statistics behind @tbl:benchmark-suite-results. Dynamic enrichment (`dynamic/`) can add additional edges when traces are available.
 
 | Node kind | Count | Percentage |
 |-----------|-------|-----------|

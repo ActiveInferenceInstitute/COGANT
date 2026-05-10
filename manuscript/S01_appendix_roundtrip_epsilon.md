@@ -25,7 +25,7 @@ roles present in at least one side, which matches the values reported in
 > `../cogant/evaluation/METRICS.yaml`. The wave-14 ε values and tier assignments below are preserved
 > for historical traceability; see @sec:S01-appendix-a2-constraint for the CONSTRAINT fix trajectory and
 > `../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md` for the full wave-14 → wave-16 trajectory.
-> Thresholds: **ISOMORPHIC** ε ≥ 0.8 · **APPROXIMATE** 0.5 ≤ ε < 0.8 · **DIVERGENT** ε < 0.5
+> Thresholds: **ISOMORPHIC** ε ≥ {{THRESHOLD_ISO}} · **APPROXIMATE** {{THRESHOLD_APPROX}} ≤ ε < {{THRESHOLD_ISO}} · **DIVERGENT** ε < {{THRESHOLD_APPROX}}
 > (from `METRICS.yaml` keys `threshold_isomorphic` and `threshold_approximate`).
 
 The table below reports the per-role breakdown for all 23 targets that round
@@ -64,8 +64,8 @@ the column layout to keep the table readable.
 
 **Column legend.** HS = HIDDEN\_STATE, OBS = OBSERVATION, ACT = ACTION,
 CNST = CONSTRAINT. Tier thresholds match `METRICS.yaml`: **ISOMORPHIC (ISO)** when
-overall ε ≥ 0.8, **APPROXIMATE (APPROX)** when 0.5 ≤ ε < 0.8, **DIVERGENT** when
-ε < 0.5. Note: several tier labels in this wave-14 table were assigned during
+overall ε ≥ {{THRESHOLD_ISO}}, **APPROXIMATE (APPROX)** when {{THRESHOLD_APPROX}} ≤ ε < {{THRESHOLD_ISO}}, **DIVERGENT** when
+ε < {{THRESHOLD_APPROX}}. Note: several tier labels in this wave-14 table were assigned during
 an earlier threshold calibration pass and may appear inconsistent with these
 canonical thresholds; the definitive tier assignments are in `METRICS.yaml`.
 Rows marked "post‑fix" are measured after the wave‑14 CONSTRAINT synthesizer fix

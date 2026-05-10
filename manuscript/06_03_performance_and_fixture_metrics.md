@@ -10,7 +10,7 @@ The architecture targets the following benchmarks on a 4-core machine, as specif
 | 100K functions | < 5 min | < 2 GB |
 | 1M functions | < 1 hr | < 2 GB (streaming) |
 
-These are architecture targets, not benchmark claims from this manuscript. They assume the Python orchestration layer with Rust acceleration on critical paths (graph construction, rule matching, and Generalized Notation Notation section/tensor packing in `cogant-gnn`). In the current v0.5.x release, Rust acceleration is partially wired — `cogant._rust` exposes a PyO3 `connected_components` FFI for graph construction behind the `COGANT_USE_RUST` feature flag — and a pure-Python fallback handles the remaining code paths.
+These are architecture targets, not benchmark claims from this manuscript. They assume the Python orchestration layer with Rust acceleration on critical paths (graph construction, rule matching, and Generalized Notation Notation section/tensor packing in `cogant-gnn`). In the current v{{VERSION}} release, Rust acceleration is partially wired — `cogant._rust` exposes a PyO3 `connected_components` FFI for graph construction behind the `COGANT_USE_RUST` feature flag — and a pure-Python fallback handles the remaining code paths.
 
 Current `PipelineRunner` behavior is stage-sequential with per-stage error capture and continuation. It does not currently expose built-in incremental checkpoint/resume in `cogant.api.pipeline`; treat checkpointing as a potential outer-orchestration feature rather than a guaranteed package-level runtime behavior.
 
@@ -61,9 +61,9 @@ For each fixture the `StateSpaceCompiler` emits a `StateSpaceModel` whose variab
 
 : Table 6 — State-space compilation outputs. {#tbl:state-space-compilation}
 
-`calculator` has one compiled hidden-state variable in the v0.5.x compiler output on the API path. `json_stdlib` compiles 15 action slots on this run; the rule engine and compiler still interleave default slices where WRITES evidence is missing. The `requests_lib` fixture has the highest observation count in the table because its session/adapter classes expose a large number of read-only attributes that the rule engine matches as `OBSERVATION` mappings.
+`calculator` has one compiled hidden-state variable in the v{{VERSION}} compiler output on the API path. `json_stdlib` compiles 15 action slots on this run; the rule engine and compiler still interleave default slices where WRITES evidence is missing. The `requests_lib` fixture has the highest observation count in the table because its session/adapter classes expose a large number of read-only attributes that the rule engine matches as `OBSERVATION` mappings.
 
-Every fixture emits the same `GNNPackageBuilder` layout: `model.gnn.md`, `model.gnn.json`, the section JSONs, `markov_blanket.json` / `markov_network.json`, and related companion files (27 on-disk files per fixture in the canonical v0.5.0 `gnn_package/`). A separate `examples/orchestrate_roundtrip.py` run can add Mermaid, GraphML, Parquet, and dashboard HTML on top; those assets are not part of the @tbl:repo-pipeline-metrics–@tbl:output-artifacts-per-run set.
+Every fixture emits the same `GNNPackageBuilder` layout: `model.gnn.md`, `model.gnn.json`, the section JSONs, `markov_blanket.json` / `markov_network.json`, and related companion files (27 on-disk files per fixture in the canonical v{{VERSION}} `gnn_package/`). A separate `examples/orchestrate_roundtrip.py` run can add Mermaid, GraphML, Parquet, and dashboard HTML on top; those assets are not part of the @tbl:repo-pipeline-metrics–@tbl:output-artifacts-per-run set.
 
 | Fixture | `gnn_package/` files | Validation errors | Validation warnings |
 |---|---:|---:|---:|

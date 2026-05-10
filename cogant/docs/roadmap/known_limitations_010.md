@@ -102,7 +102,7 @@ These are environment constraints, not COGANT bugs.
 
 If `regenerate_metrics.py` is run from the wrong directory or without optional deps,
 `test_count_passing` can land at 0. Always verify the value is non-zero before trusting
-the generated file. Historical v0.5.0 snapshot: 2,129 passing, 83.42% coverage; the live suite is larger — confirm with `uv run pytest tests/ -q` from the package root.
+the generated file. v0.5.0 wave-20 snapshot: 8,980 passing (9,011 total, 31 skipped), 95.11% coverage; confirm live with `uv run pytest tests/ -q --cov=cogant` from the package root.
 
 ---
 

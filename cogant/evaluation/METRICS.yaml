@@ -3,8 +3,8 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-05-09T00:50:00.000000Z'
-generator_git_sha: 6283277
+generated_at: '2026-05-10T01:28:32.880227Z'
+generator_git_sha: 220c5b0da1468657221889964c4656dce101ae2f
 cogant_version: 0.5.0
 package:
   name: cogant
@@ -17,16 +17,16 @@ testing:
   test_count_skipped: 31
   test_count_xfailed: 0
   test_count_xpassed: 0
-  test_files_unit: 321
+  test_files_unit: 289
   test_files_integration: 28
   test_files_property: 10
   test_files_fuzz: 1
-  coverage_percent: 95.10
+  coverage_percent: 95.11
   mypy_strict_errors: 0
   ruff_violations: 0
 codebase:
   python_source_files: 204
-  python_loc: 73240
+  python_loc: 73225
   public_modules: 167
   public_classes: 401
   public_functions: 1047
@@ -55,6 +55,10 @@ evaluation:
     isomorphic_count: 23
     approximate_count: 0
     divergent_count: 0
+    isomorphic_percent: 100.0
+    zoo_fixture_count: 12
+    rw_lib_count: 8
+    rw_repo_count: 3
     mean_epsilon: 1.0
     median_epsilon: 1.0
     min_epsilon: 1.0
@@ -179,8 +183,11 @@ literature:
   source: cogant/docs/evaluation/LITERATURE.md
   bibliography_entries: 100
 benchmark:
-  suite_runtime_s: 1099.69
+  suite_runtime_s: 454.79
   shipped_fixture_count: 6
+  benchmark_python_version: '3.12.11'
+  benchmark_suite_file: suite_20260423.md
+  benchmark_os: macOS arm64
 ir_schema:
   node_kind_count: 18
   edge_kind_count: 18

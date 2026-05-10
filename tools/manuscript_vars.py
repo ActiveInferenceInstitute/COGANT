@@ -215,6 +215,9 @@ MANUSCRIPT_VARS: dict[str, str] = {
     # ---------------------------------------------------------------
     "{{SUITE_RUNTIME_S}}": "benchmark.suite_runtime_s",  # Full suite wall-clock (s)
     "{{SHIPPED_FIXTURE_COUNT}}": "benchmark.shipped_fixture_count",  # Fixtures shipped with package
+    "{{BENCHMARK_PYTHON_VERSION}}": "benchmark.benchmark_python_version",  # CPython patch version used in benchmark run
+    "{{BENCHMARK_SUITE_FILE}}": "benchmark.benchmark_suite_file",  # Benchmark results markdown filename
+    "{{BENCHMARK_OS}}": "benchmark.benchmark_os",  # OS/arch used for benchmark run
     # ---------------------------------------------------------------
     # IR schema counts (node/edge kinds + active-inf roles)
     # ---------------------------------------------------------------

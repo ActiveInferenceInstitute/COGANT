@@ -97,6 +97,6 @@ processing reduces wall clock (v1.0).
 | Visualization (`viz/`) | ~70% | 78% | 88% |
 | Runtime (`runtime/`, `markov/`) | ~82% | 87% | 93% |
 | API/server (`server/`, `api/`) | ~72% | 80% | 88% |
-| **Overall** | **83.42%** | **85%** | **90%** |
+| **Overall** | **95.11%** | **96%** | **97%** |
 
-Canonical **v0.5.0** (2026-04-10) snapshot: **2,129 tests passing**, **83.42%** line coverage on full `py/cogant/` without the later omissions. **Current** CI gate: `pyproject.toml` uses `--cov-fail-under=89`, `branch = false`, `omit` for `viz/`, `tools/`, `static/treesitter_parser.py`, and `parallel = true` — run `uv run pytest tests/ -q` for live counts.
+**Wave-20 (2026-05-09) snapshot:** **8,980 tests passing** (9,011 total, 31 skipped), **95.11%** line coverage. **CI gate:** `pyproject.toml` uses `--cov-fail-under=89`, `branch = false`, `omit` for `tools/`, `static/treesitter_parser.py`, and `parallel = true` — run `uv run pytest tests/ -q --cov=cogant` for live counts. Historical v0.5.0 (2026-04-10) snapshot: 2,129 tests passing, 83.42% coverage.
