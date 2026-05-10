@@ -5,7 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.5.1] - 2026-05-09
 
-### Added
+### Added (wave-21, 2026-05-09)
+- 242 new tests across 4 new test files (wave-21 sweep) targeting thin
+  coverage in `viz/export_view.py`, `viz/network_view.py`,
+  `viz/flow.py`, `viz/matrix_view.py`, `observability/logging.py`,
+  `ingest/manifest.py`, `config/loaders.py`, `cli/main.py`,
+  `viz/pdf_export.py`, and `gnn/upstream_bridge`; overall coverage
+  rises from 95.11% to **96.22%** (9,222 passing, 9,253 total).
+- Comprehensive calibration guide at `docs/reference/calibration_guide.md`
+  documenting the four-tier confidence model, threshold registry across
+  all `translate/` and `statespace/` source files, calibration
+  methodology, and all 36 `TODO(calibration)` markers.
+- Expanded `translate/confidence.py` module docstring (~215 lines)
+  covering the full public API surface, threshold tables, and an
+  end-to-end walk-through of `compute_confidence_score()`.
+
+### Added (wave-20 + wave-20b, 2026-05-09)
 - ~1150 new tests across 44 new test files (wave-20 + wave-20b sweep)
   targeting previously thin coverage in `process/`, `statespace/`,
   `normalize/`, `validate/`, `gnn/`, `config/`, `viz/`, `markov/`,

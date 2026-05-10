@@ -32,6 +32,7 @@ For the high-level architecture narrative, see [../architecture/overview.md](../
 |------|-------------|-------|
 | [Schemas Reference](schemas_reference.md) | Intermediate representations and export schema index | Advanced |
 | [Configuration](configuration.md) | Reference for configuration keys and defaults | Intermediate |
+| [Calibration Guide](calibration_guide.md) | Methodology and per-threshold sweep registry for resolving `TODO(calibration)` markers in `translate/` and `statespace/` | Advanced |
 | [API Overview](api_overview.md) | Compressed Python / CLI API surface reference | Intermediate |
 | [Examples](examples.md) | Worked examples covering common reference tasks | Beginner |
 

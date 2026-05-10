@@ -1,4 +1,220 @@
-"""Confidence scoring model for semantic mappings."""
+"""Confidence scoring model for COGANT semantic mappings.
+
+Overview
+========
+
+This module implements the confidence layer that sits between
+COGANT's translation rules (``cogant.translate.rules.*``) and the
+state-space / GNN consumers downstream. Every :class:`SemanticMapping`
+emitted by a rule carries (i) a continuous **confidence score** in
+``[0, 1]`` and (ii) a discrete **confidence tier** drawn from
+:class:`ConfidenceTier`. Both are produced by :class:`ConfidenceModel`
+and form the canonical signal that downstream code (state-space
+compilation, conflict resolution, GNN matrix synthesis) uses to decide
+whether a mapping is trustworthy enough to keep, surface for review,
+or discard.
+
+The model is deliberately *parametric* and *transparent*: every
+threshold is a class-level constant or a per-method default, every
+constant has an inline rationale, and every empirically-tunable
+constant is annotated with a ``TODO(calibration)`` marker linking it
+to the 20-repo calibration plan. See
+``docs/reference/calibration_guide.md`` for the corpus, methodology,
+and per-threshold sweep ranges; see ``docs/evaluation/CALIBRATION.md``
+for the parameter registry; see ``docs/evaluation/MUTATION_REPORT.md``
+for the mutation-testing audit (item M9 covers the boundary semantics
+of this module).
+
+Confidence-tier model
+=====================
+
+COGANT distinguishes **four** tiers along an evidence-quality axis:
+
+================================  =====  ================================================
+Tier (``ConfidenceTier`` value)   Floor  Meaning
+================================  =====  ================================================
+``STATIC_ONLY``                   0.50   Static analysis only (AST / tree-sitter); the
+                                         baseline tier when no runtime evidence exists.
+``RUNTIME_ONLY``                  0.40   Runtime / dynamic-trace evidence with no static
+                                         corroboration. The floor is intentionally below
+                                         ``STATIC_ONLY`` to reflect a ``-0.10``
+                                         *dynamic-noise discount*: traces are noisier
+                                         than AST edges, so we accept them at a lower
+                                         absolute score.
+``STATIC_PLUS_RUNTIME``           0.65   Both static and runtime evidence present. The
+                                         floor is ``+0.15`` above ``STATIC_ONLY`` — a
+                                         *corroboration bonus* — so corroborated mappings
+                                         must clear a strictly higher bar than either
+                                         source on its own.
+``HUMAN_REVIEWED``                0.90   Reviewed and approved by a human; aligned with
+                                         the *strong-consensus* band from classical
+                                         meta-analysis reporting conventions.
+================================  =====  ================================================
+
+The "three-tier model" referred to in design discussions is the
+*evidence-source* sub-hierarchy (``STATIC_ONLY``, ``RUNTIME_ONLY``,
+``STATIC_PLUS_RUNTIME``); ``HUMAN_REVIEWED`` is an orthogonal override
+that always wins regardless of computed score (see
+:meth:`ConfidenceModel.determine_confidence_tier`).
+
+Threshold table
+---------------
+
+The following table summarises every numeric knob owned by this
+module. All values are *principled defaults* (motivated by convention
+or algebraic rationale, not yet empirically fit) unless otherwise
+noted.
+
+==========================================  =====  ==============================  ==========================
+Constant                                    Value  Sweep range                     Calibration marker
+==========================================  =====  ==============================  ==========================
+``STATIC_ONLY_THRESHOLD``                   0.50   ``{0.4, 0.5, 0.55, 0.6}``       line ~40 (class scope)
+``STATIC_PLUS_RUNTIME_THRESHOLD``           0.65   ``{0.55, 0.6, 0.65, 0.7}``      line ~40 (class scope)
+``RUNTIME_ONLY_THRESHOLD``                  0.40   ``{0.3, 0.35, 0.4, 0.45}``      line ~40 (class scope)
+``HUMAN_REVIEWED_THRESHOLD``                0.90   ``{0.85, 0.9, 0.95}``           line ~40 (class scope)
+``diversity_bonus`` multiplier              0.10   ``{0.05, 0.10, 0.15, 0.20}``    :meth:`compute_confidence_score`
+``conflict_penalty`` per-conflict           0.05   ``{0.02, 0.05, 0.08, 0.10}``    :meth:`compute_confidence_score`
+divergence-flag spread                      0.30   ``{0.2, 0.3, 0.4}``             :meth:`detect_conflicts`
+divergence penalty (mild)                   0.10   ``{0.05, 0.10, 0.15}``          :meth:`detect_conflicts`
+static-vs-dynamic disagreement spread       0.25   ``{0.15, 0.20, 0.25, 0.30}``    :meth:`detect_conflicts`
+static-vs-dynamic disagreement penalty      0.15   ``{0.10, 0.15, 0.20}``          :meth:`detect_conflicts`
+``get_high_confidence_mappings`` default    0.70   ``{0.65, 0.70, 0.75, 0.80}``    :meth:`get_high_confidence_mappings`
+``get_low_confidence_mappings`` default     0.60   ``{0.50, 0.55, 0.60, 0.65}``    :meth:`get_low_confidence_mappings`
+unique-source cap (diversity normaliser)    5      not calibrated (taxonomy-fixed) :meth:`score_evidence_diversity`
+==========================================  =====  ==============================  ==========================
+
+Eight of these knobs carry a ``TODO(calibration)`` marker in this
+file (see ``docs/reference/calibration_guide.md``, *Confidence
+combiner* section, for the resolution recipe).
+
+Calibration methodology (summary)
+=================================
+
+Calibration here means **threshold tuning against a labelled corpus**,
+*not* model training in the machine-learning sense. The model itself
+(linear blend of evidence terms) is held fixed; only the scalar
+constants in the table above are swept. The procedure is:
+
+1. **Corpus.** Twenty repositories under
+   ``cogant/tests/fixtures/repos/`` (Python + JS/TS, balanced
+   small/medium/large). Each repo has a hand-labelled gold-standard
+   set of correct mappings under ``evaluation/gold_standards/`` (TBD;
+   see ``CALIBRATION.md`` §4).
+2. **Sweep.** For each constant, run COGANT end-to-end across the
+   corpus with the constant pinned to each candidate value in its
+   sweep range; collect the resulting :class:`SemanticMapping`
+   population.
+3. **Score.** Compute precision / recall / F1 against the gold
+   labels, plus the tier-confusion matrix. For continuous parameters
+   (e.g. ``diversity_bonus``) report the L2 error of the score
+   distribution against an L1-normalised target.
+4. **Pick.** Choose the value at the elbow of the F1 curve. Tie-break
+   in favour of recall for ``RUNTIME_ONLY_THRESHOLD`` (we want noisy
+   traces to surface for review) and in favour of precision for
+   ``STATIC_PLUS_RUNTIME_THRESHOLD`` (we want corroborated mappings to
+   be trustworthy by default).
+5. **Document.** Replace the ``TODO(calibration)`` annotation with
+   ``empirically validated — see CALIBRATION.md §X`` and update the
+   manuscript supplement with the sweep curve.
+
+Public surface
+==============
+
+The module exports a single class, :class:`ConfidenceModel`. The
+relevant *types* are imported from :mod:`cogant.schemas.semantic`:
+
+* :class:`SemanticMapping` — the canonical mapping dataclass (graph
+  fragment + semantic label + ``provenance``, ``evidence_count``,
+  ``evidence_diversity``, ``parser_certainty``, ``conflict_penalties``,
+  ``confidence_score``, ``confidence_tier``). This is the input to
+  every public method on :class:`ConfidenceModel` and is mutated
+  in-place by :meth:`ConfidenceModel.update_mapping_confidence`.
+* :class:`ConfidenceTier` — the four-tier ``StrEnum`` described above.
+* :class:`ProvenanceRecord` — one piece of evidence (``source``,
+  ``timestamp``, ``metadata``, per-source ``confidence``). Every
+  :class:`SemanticMapping` carries a ``list[ProvenanceRecord]``.
+
+Note on naming: ``cogant.types.ConfidenceScore`` is a ``float`` type
+alias for documentation purposes (range ``[0.0, 1.0]``); it is **not**
+a separate dataclass. The actual confidence data lives on
+:class:`SemanticMapping` (fields ``confidence_score`` and
+``confidence_tier``); this module's job is to compute those fields.
+
+End-to-end flow of ``compute_confidence_score``
+===============================================
+
+For a mapping ``m`` with ``len(m.provenance) == n``:
+
+1. **Empty-evidence guard.** If ``n == 0`` the score is ``0.0`` —
+   un-evidenced mappings are not trusted at all.
+2. **Evidence base.** ``avg_evidence = mean(p.confidence for p in
+   m.provenance)``. Unweighted mean rather than max so that adding
+   weak corroborating evidence does not artificially inflate a strong
+   primary source.
+3. **Diversity bonus.** ``diversity_bonus = m.evidence_diversity *
+   0.10``. ``evidence_diversity`` is precomputed by
+   :meth:`score_evidence_diversity` as ``unique_sources /
+   min(n, 5)``, capped at the five-label evidence taxonomy. The
+   ``0.10`` multiplier is sized so that maximum diversity (1.0)
+   contributes exactly one tier-gap of lift (the
+   ``STATIC_ONLY``→``STATIC_PLUS_RUNTIME`` gap is 0.15, and a lone
+   diversity bonus must not overshoot it on its own).
+4. **Parser-certainty discount.** ``certainty_factor =
+   m.parser_certainty``. This is a multiplicative reliability discount
+   from the underlying parser (≈0.95 for full Python AST,
+   ≈0.80 for the tree-sitter fallback band). Applying it
+   *before* the conflict penalty is intentional: a noisy parser
+   should reduce both the evidence base and any diversity bonus, but
+   conflicts (which are signal, not noise) survive the discount.
+5. **Conflict penalty.** ``conflict_penalty =
+   sum(m.conflict_penalties) * 0.05``. The list is precomputed by
+   :meth:`detect_conflicts` and contains one entry per detected
+   conflict (``0.10`` for spread divergence, ``0.15`` for
+   static-vs-dynamic disagreement). The ``0.05`` multiplier means two
+   typical conflicts (~``0.10`` total before multiplication) roughly
+   cancel a full diversity bonus.
+6. **Compose and clamp.**
+   ``confidence = (avg_evidence + diversity_bonus) * certainty_factor
+   - conflict_penalty``, then clamped to ``[0, 1]``.
+
+The resulting score feeds :meth:`determine_confidence_tier`, which
+applies the four-tier decision tree:
+
+* ``has_human`` → ``HUMAN_REVIEWED`` (overrides everything).
+* ``has_static and has_dynamic`` → ``STATIC_PLUS_RUNTIME`` if
+  ``score >= STATIC_PLUS_RUNTIME_THRESHOLD``, otherwise fall through
+  to ``STATIC_ONLY`` if it meets ``STATIC_ONLY_THRESHOLD``.
+* ``has_dynamic and not has_static`` → ``RUNTIME_ONLY`` if
+  ``score >= RUNTIME_ONLY_THRESHOLD``.
+* ``has_static`` → ``STATIC_ONLY`` if ``score >=
+  STATIC_ONLY_THRESHOLD``.
+* Otherwise → ``STATIC_ONLY`` (lowest-tier fallback; the mapping is
+  retained but flagged for downstream review).
+
+:meth:`update_mapping_confidence` orchestrates all of the above:
+counts evidence, computes diversity, detects conflicts, computes the
+score, assigns the tier, and appends a record to the internal scoring
+log (which feeds :meth:`get_scoring_report`). :meth:`score_batch` is a
+trivial loop over :meth:`update_mapping_confidence` for ergonomic
+batch processing.
+
+Cross-references
+================
+
+* ``docs/reference/calibration_guide.md`` — methodology, sweep
+  recipes, and resolution checklist for every ``TODO(calibration)``
+  marker in this module.
+* ``docs/evaluation/CALIBRATION.md`` — repository-wide parameter
+  registry (§2.3 covers this module specifically).
+* ``docs/evaluation/MUTATION_REPORT.md`` — boundary-semantics audit
+  (item M9 covers the ``>=`` / ``>`` decisions in the tier
+  decision tree).
+* :mod:`cogant.translate.rules` — the rules whose mappings consume
+  this module's output.
+* :mod:`cogant.statespace.variables` — the downstream consumer that
+  collapses the four tiers into the coarser ``ConfidenceLevel``
+  categorical view.
+"""
 
 from collections import Counter
 from typing import Any
