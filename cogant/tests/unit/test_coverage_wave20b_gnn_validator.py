@@ -24,14 +24,11 @@ import os
 from pathlib import Path
 from typing import Any
 
-import pytest
-
 from cogant.gnn.validator import (
     GNNValidator,
     ValidationResult,
     _resolve_upstream_flag,
 )
-
 
 # --------------------------------------------------------------------------- #
 # _resolve_upstream_flag

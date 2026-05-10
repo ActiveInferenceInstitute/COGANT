@@ -27,10 +27,8 @@ from __future__ import annotations
 
 import builtins
 import json
-import sys
 from pathlib import Path
 from types import SimpleNamespace
-from unittest import mock as _mock  # imported but not used for stubbing
 
 import matplotlib
 

@@ -157,8 +157,8 @@ class TestPublicAPISymbols:
     def test_aliases_consistent_with_targets(self) -> None:
         # CogantSession aliases Session; GNNBundle aliases Bundle.
         # The aliases are assigned at import-time, so we check identity.
-        from cogant.api.session import Session as _RealSession
         from cogant.api.bundle import Bundle as _RealBundle
+        from cogant.api.session import Session as _RealSession
 
         assert cogant.CogantSession is _RealSession
         assert cogant.GNNBundle is _RealBundle

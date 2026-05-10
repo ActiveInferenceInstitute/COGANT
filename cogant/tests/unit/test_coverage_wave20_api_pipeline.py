@@ -317,7 +317,7 @@ def test_stage_dynamic_autodetect_coverage(tmp_path: Path) -> None:
     cov_file.write_bytes(b"")
 
     runner = PipelineRunner()
-    bundle = Bundle(target=str(target_dir))
+    Bundle(target=str(target_dir))
     cfg = PipelineConfig(stages=["dynamic"], output_dir=str(tmp_path / "out"))
 
     # The auto-detect branch should set coverage_path on the result; even
