@@ -3,12 +3,13 @@
 All notable changes to COGANT are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.5.1] - 2026-05-08
+## [0.5.1] - 2026-05-09
 
 ### Added
-- ~441 new tests across 17 new test files (wave-20 sweep) targeting
-  previously thin coverage in `process/`, `statespace/`, `normalize/`,
-  `validate/`, `gnn/matrices`, and `config/loaders`.
+- ~1150 new tests across 44 new test files (wave-20 + wave-20b sweep)
+  targeting previously thin coverage in `process/`, `statespace/`,
+  `normalize/`, `validate/`, `gnn/`, `config/`, `viz/`, `markov/`,
+  and `observability/`; overall coverage rises from 90% to **95.1%**.
 - `__all__` export list on `cogant.metrics` for predictable
   `from cogant.metrics import *` behaviour and clearer public API.
 - Honoured `set_entry_stage()` override on `ProcessExtractor` —
@@ -53,7 +54,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Narrowed bare `except Exception` clauses in `config/loaders.py`
   (now `except (OSError, ValueError, yaml.YAMLError)`) and in
   `gnn/matrices.py` (now `except (ValueError, IndexError, TypeError)`).
-- Coverage lifted from 90.0% to 90.34% on `py/cogant/`.
+- `gnn/json_export.py`: `datetime.utcnow()` → `datetime.now(UTC)` (deprecation fix).
+- Test isolation fix in `TestMarkovBlanketExceptionPath`: patch
+  `GNNJSONExporter._export_markov_blanket.__globals__["MarkovBlanketExtractor"]`
+  directly so the monkeypatch survives any prior-test module-reload ordering.
+- Coverage lifted from 90.0% to **95.1%** on `py/cogant/`.
 
 ## [Unreleased]
 
