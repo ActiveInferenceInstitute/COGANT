@@ -7,7 +7,7 @@
       "READS": 9,
       "WRITES": 5
     },
-    "elapsed_s": 4.33,
+    "elapsed_s": 3.87,
     "files": 1,
     "gnn_errors": 0,
     "gnn_md_bytes": 17876,
@@ -40,7 +40,7 @@
       "READS": 10,
       "WRITES": 1
     },
-    "elapsed_s": 4.24,
+    "elapsed_s": 3.8,
     "files": 1,
     "gnn_errors": 0,
     "gnn_md_bytes": 22243,
@@ -73,7 +73,7 @@
       "READS": 38,
       "WRITES": 15
     },
-    "elapsed_s": 6.85,
+    "elapsed_s": 5.67,
     "files": 6,
     "gnn_errors": 0,
     "gnn_md_bytes": 97761,
@@ -107,7 +107,7 @@
       "READS": 7,
       "WRITES": 6
     },
-    "elapsed_s": 4.38,
+    "elapsed_s": 3.85,
     "files": 1,
     "gnn_errors": 0,
     "gnn_md_bytes": 30866,
@@ -139,7 +139,7 @@
       "READS": 6,
       "WRITES": 3
     },
-    "elapsed_s": 4.29,
+    "elapsed_s": 3.97,
     "files": 4,
     "gnn_errors": 0,
     "gnn_md_bytes": 22061,
@@ -173,7 +173,7 @@
       "READS": 42,
       "WRITES": 8
     },
-    "elapsed_s": 6.03,
+    "elapsed_s": 5.35,
     "files": 6,
     "gnn_errors": 0,
     "gnn_md_bytes": 54338,

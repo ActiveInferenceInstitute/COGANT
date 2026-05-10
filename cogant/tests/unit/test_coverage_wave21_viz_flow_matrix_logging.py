@@ -36,15 +36,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 
 from cogant.graph.builder import ProgramGraphBuilder  # noqa: E402
 from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind  # noqa: E402
-from cogant.schemas.graph import GraphMetadata, ProgramGraph  # noqa: E402
+from cogant.schemas.graph import ProgramGraph  # noqa: E402
 from cogant.viz.flow import (  # noqa: E402
-    CallGraph,
     ControlFlowGraph,
-    DependencyGraph,
     FlowDiagrammer,
 )
 from cogant.viz.matrix_view import MatrixVisualizer  # noqa: E402
-
 
 # ── Builders ─────────────────────────────────────────────────────────────────
 
