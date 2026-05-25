@@ -20,6 +20,8 @@ class ConfidenceLevel(StrEnum):
     LOW = "low"
     UNCERTAIN = "uncertain"
 
+def map_confidence_score(confidence_score: float) -> ConfidenceLevel: ...
+
 @dataclass
 class StateVariable:
     id: str

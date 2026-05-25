@@ -57,7 +57,7 @@ Entries marked with "(details need verification)" have authors and approximate y
 
 ### [LATTNER_2004] Lattner, Adve (2004) — "LLVM: A Compilation Framework for Lifelong Program Analysis and Transformation"
 *Proceedings of the International Symposium on Code Generation and Optimization (CGO)*
-**Relevance**: Introduces the LLVM compiler infrastructure whose SSA-form intermediate representation has become the standard substrate for program analysis. ProGraML (Section 1) operates on LLVM IR.
+**Relevance**: Introduces the LLVM compiler infrastructure whose SSA-form intermediate representation has become the standard substrate for program analysis. ProGraML uses LLVM IR as its extraction substrate.
 **Key contribution**: A modular compiler framework with a typed, SSA-based IR that supports lifelong analysis and optimization across compile-time, link-time, and run-time boundaries.
 **Connection**: COGANT operates on Python AST rather than LLVM IR, but the design principle — a single typed IR as the pivot for all downstream analyses — is the same. LLVM's SSA form is the gold standard for def-use chain extraction, which COGANT approximates at the AST level.
 
@@ -161,7 +161,7 @@ Entries marked with "(details need verification)" have authors and approximate y
 ### [parr2022active] Parr, Pezzulo, Friston (2022) — "Active Inference: The Free Energy Principle in Mind, Brain, and Behavior"
 **Relevance**: The current textbook reference for discrete-time active inference. Defines the A (likelihood), B (transitions), C (preferences), D (priors) matrix formalism that COGANT's `cogant.statespace` and `cogant.process` modules derive from program graphs.
 **Key contribution**: A self-contained presentation of POMDP-style active inference with explicit equations for VFE and EFE in the discrete case, plus worked examples in perception, planning, and decision-making.
-**Connection**: COGANT's pipeline stages `statespace → process` implement the A/B/C/D derivation described in Chapters 4–5 of this book. Each derived matrix is a static abstraction of runtime behavior rather than a runtime object; the manuscript's Section 2 justifies this static reading against the textbook's dynamic one.
+**Connection**: COGANT's pipeline stages `statespace → process` implement the A/B/C/D derivation described in the book's discrete-state chapters. Each derived matrix is a static abstraction of runtime behavior rather than a runtime object; the manuscript methods sections justify this static reading against the textbook's dynamic one.
 
 ### [friston2006freeEnergy] Friston, Kilner, Harrison (2006) — "A Free Energy Principle for the Brain"
 **Relevance**: The original paper introducing variational free energy as a cost function for Bayesian brain models. Establishes the VFE decomposition into accuracy and complexity terms that COGANT's scoring module mirrors.
@@ -225,7 +225,7 @@ Entries marked with "(details need verification)" have authors and approximate y
 *Neural Networks (accepted 2022). arXiv: 2111.11107*
 **Relevance**: Develops a tree-search formulation of active inference where planning is cast as inference over a branching tree of possible futures, unifying forward and backward planning under a single variational objective. Directly relevant to COGANT's v0.2 target of emitting branching-time GNN.
 **Key contribution**: Two complementary tree-search algorithms — one propagating EFE forward (optimistic planning) and one backward (pessimistic planning) — both derived from the same variational principle. Establishes connections to sophisticated inference and proves correctness of the branching-time formulation.
-**Connection**: This paper is the primary reference for COGANT's planned branching-time extension (Section 4 mentions `champion2022branching` as the v0.2 target, but that entry cited an earlier, shorter companion paper). The full theory here makes precise what a "branching GNN specification" is: each branch corresponds to a policy-conditioned unrolling of the B matrix, a structure that COGANT's reverse module would have to synthesise back into code.
+**Connection**: This paper is the primary reference for COGANT's planned branching-time extension. The full theory here makes precise what a "branching GNN specification" is: each branch corresponds to a policy-conditioned unrolling of the B matrix, a structure that COGANT's reverse module would have to synthesise back into code.
 
 ### [FRISTON_2024] Friston, Heins, Verbelen, Da Costa, Salvatori, et al. (2024) — "From Pixels to Planning: Scale-Free Active Inference"
 *arXiv: 2407.20292*
@@ -340,7 +340,7 @@ Entries marked with "(details need verification)" have authors and approximate y
 ### [li2023starcoder] Li, Allal, Zi, Muennighoff et al. (2023) — "StarCoder: May the Source Be With You"
 **Relevance**: A large open-source code LLM whose training data and capabilities define the current state of "LLM for code" against which any symbolic tool must justify its existence.
 **Key contribution**: A 15B-parameter code model trained on The Stack (permissively licensed source), with multi-query attention and 8K context, demonstrating that LLMs can generate non-trivial programs from natural-language specs.
-**Connection**: COGANT's positioning is explicitly complementary: where LLMs are probabilistic and opaque, COGANT is deterministic and auditable. The manuscript's Section 1 argues that for active-inference research applications, an auditable symbolic extractor is required even if an LLM could generate a similar artifact.
+**Connection**: COGANT's positioning is explicitly complementary: where LLMs are probabilistic and opaque, COGANT is deterministic and auditable. The manuscript introduction argues that for active-inference research applications, an auditable symbolic extractor is required even if an LLM could generate a similar artifact.
 
 ### [GUO_2022] Guo, Lu, Duan, Wang, Yin, Ren (2022) — "UniXcoder: Unified Cross-Modal Pre-training for Code Representation"
 *Proceedings of the Annual Meeting of the Association for Computational Linguistics (ACL)*
@@ -454,12 +454,12 @@ Entries marked with "(details need verification)" have authors and approximate y
 ### [kirchhoff2018markov] Kirchhoff, Parr, Palacios, Friston, Kiverstein (2018) — "The Markov Blankets of Life: Autonomy, Active Inference and the Free Energy Principle"
 **Relevance**: Argues that Markov blankets are the formal signature of biological autonomy and hence the natural boundary between an active-inference agent and its environment.
 **Key contribution**: Lifts Markov blankets from graphical models to dynamical systems, defining them in terms of conditional independence between the time courses of internal and external variables.
-**Connection**: COGANT's "software Markov blanket" claim — that a codebase's module boundary behaves as an agent boundary — is the software analogue of Kirchhoff et al.'s biological claim. The manuscript's Section 2 cites this paper as the definitional reference.
+**Connection**: COGANT's "software Markov blanket" claim — that a codebase's module boundary behaves as an agent boundary — is the software analogue of Kirchhoff et al.'s biological claim. The manuscript formal-foundations discussion cites this paper as the definitional reference.
 
 ### [bruineberg2022emperor] Bruineberg, Dolega, Dewhurst, Baltieri (2022) — "The Emperor's New Markov Blankets"
 **Relevance**: A critical examination of how Markov blankets are used (and misused) in the FEP literature. Required reading for any work claiming to extract blankets from a new substrate (software).
 **Key contribution**: Distinguishes "Pearl blankets" (purely statistical, defined relative to a joint distribution) from "Friston blankets" (dynamical, defined relative to a system's sparse coupling structure), and argues that conflating them has led to overstated claims.
-**Connection**: COGANT's extracted blankets are Pearl blankets over the program graph. The manuscript's Section 2 explicitly adopts the Pearl reading to avoid the over-claiming critique made in this paper; the scoping report also flags this distinction as a review-risk to address.
+**Connection**: COGANT's extracted blankets are Pearl blankets over the program graph. The manuscript formal-foundations discussion explicitly adopts the Pearl reading to avoid the over-claiming critique made in this paper; the scoping report also flags this distinction as a review-risk to address.
 
 ### [palacios2020emergence] Palacios, Razi, Parr, Kirchhoff, Friston (2020) — "On Markov Blankets and Hierarchical Self-Organisation"
 **Relevance**: Demonstrates that Markov blankets can be nested, giving rise to hierarchical self-organizing systems. Relevant to COGANT's multi-scale extraction of blankets at the function, class, and module levels.
@@ -470,7 +470,7 @@ Entries marked with "(details need verification)" have authors and approximate y
 *Journal of the Royal Society Interface, 10(86)*
 **Relevance**: Applies the Markov blanket formalism to define "life" as any system that maintains a Markov blanket separating its internal states from the environment. A key paper for the philosophical extension of blankets beyond statistics.
 **Key contribution**: Shows that a system with a Markov blanket necessarily appears to minimize free energy, providing a formal criterion for distinguishing self-organizing systems from their environment.
-**Connection**: COGANT's extraction of software Markov blankets can be read through this lens: a software module that maintains a stable API boundary "appears to" minimize surprise about its internal state. This reading is explored in COGANT's manuscript Section 2.
+**Connection**: COGANT's extraction of software Markov blankets can be read through this lens: a software module that maintains a stable API boundary "appears to" minimize surprise about its internal state. The manuscript keeps this as an instrumental reading rather than an ontological claim about programs.
 
 ### [CLARK_2020] Clark, Friston (2020) — "What Is the Free-Energy Principle? A Precis" (details need verification)
 **Relevance**: A philosophical precis of the FEP that clarifies the role of Markov blankets in the principle's formulation, distinguishing instrumental from ontological readings.
@@ -505,12 +505,12 @@ Entries marked with "(details need verification)" have authors and approximate y
 **Key contribution**: Seven self-contained chapters introducing poset adjunctions, databases-as-functors, profunctors, operads, topoi, and signal-flow graphs in a way accessible to non-specialists.
 **Connection**: Chapter 1 on Galois connections is the immediate mathematical home for COGANT's confidence tiers: the tier lattice and the rule-promotion order form a Galois connection with the set of extracted assertions. Chapter 3 on databases-as-functors is the template for reading COGANT's graph schema as a category.
 
-*Note:* Spivak's **Poly** framework (Spivak 2020, 2022; Niu & Spivak 2023) is the deepest categorical setting for COGANT's functor pair and is catalogued in full in Section 14 below; it is not duplicated here.
+*Note:* Spivak's **Poly** framework (Spivak 2020, 2022; Niu & Spivak 2023) is the deepest categorical setting for COGANT's functor pair and is catalogued later in this bibliography; it is not duplicated here.
 
 ### [hedges2018lenses] Hedges (2018) — "Limits of Bidirectional Model Transformations" and related lens-categorical literature (details need verification)
 **Relevance**: Connects the lens framework of Foster et al. to the categorical machinery of optics, showing that lenses are morphisms in a particular cofree-comonoid category.
 **Key contribution**: Places lenses inside the broader optics hierarchy, clarifying which categorical structures (comonoids, dialgebras) are needed for which lens variant.
-**Connection**: COGANT's lens reading (Section 11) inherits from this line of work. Making the `extract/reverse` pair a formal optic rather than an ad-hoc functor pair is a direction scoped for "COGANT-Theory" in `R&D_LOG.md`.
+**Connection**: COGANT's lens reading inherits from this line of work. Making the `extract/reverse` pair a formal optic rather than an ad-hoc functor pair is a direction scoped for "COGANT-Theory" in `R&D_LOG.md`.
 
 ### [BAEZ_2010] Baez, Stay (2010) — "Physics, Topology, Logic and Computation: A Rosetta Stone"
 *New Structures for Physics, Lecture Notes in Physics, vol 813, Springer*
@@ -572,6 +572,24 @@ Entries marked with "(details need verification)" have authors and approximate y
 **Key contribution**: A design space for deep learning visualization tools organized along four axes: why (motivation), what (target), how (technique), and who (audience).
 **Connection**: COGANT's GNN output is itself a visual/structured artifact designed for human consumption. Hohman et al.'s design space informs the design of COGANT's output formatting: the GNN bundle should support the "what" (model structure) and "why" (role assignment rationale) axes identified in the survey.
 
+### [BREHMER_2013] Brehmer, Munzner (2013) — "A Multi-Level Typology of Abstract Visualization Tasks"
+*IEEE Transactions on Visualization and Computer Graphics, 19(12)*
+**Relevance**: Provides a vocabulary for describing visualization tasks by why the viewer acts, how they act, and what inputs/outputs are involved.
+**Key contribution**: Moves beyond chart-type labels to task contracts such as discover, lookup, compare, summarize, encode, select, and derive.
+**Connection**: COGANT's dashboard and manuscript figures should be evaluated by task: the program-graph figure supports lookup and comparison of extracted entities; rule traces support explanation and review; batch dashboards support summarize and compare across targets.
+
+### [SEDLMAIR_2012] Sedlmair, Meyer, Munzner (2012) — "Design Study Methodology: Reflections from the Trenches and the Stacks"
+*IEEE Transactions on Visualization and Computer Graphics, 18(12)*
+**Relevance**: Establishes methodology for visualization systems built with domain collaborators and evaluated through real tasks rather than only rendering quality.
+**Key contribution**: Describes design-study phases and pitfalls, including learn, winnow, cast, discover, design, implement, deploy, reflect, and write.
+**Connection**: COGANT currently has functionally grounded checks (sidecars, browser QA, manifest completeness). A user study with researchers inspecting generated GNN bundles is the next step if the manuscript claims human interpretability rather than merely auditability.
+
+### [STOREY_2005] Storey (2005) — "Theories, Methods and Tools in Program Comprehension: Past, Present and Future"
+*International Workshop on Program Comprehension*
+**Relevance**: Reviews program-comprehension theories and tools, connecting source-code views to developer tasks and cognitive support.
+**Key contribution**: Frames comprehension tools around navigation, orientation, and task support rather than raw representation fidelity alone.
+**Connection**: COGANT's visual workbench is a program-comprehension interface for generated model artifacts: source facts, role evidence, matrices, and roundtrip status must help a reviewer orient and decide what to inspect next.
+
 ### [SAMEK_2021] Samek, Montavon, Lapuschkin, Anders, Muller (2021) — "Explaining Deep Neural Networks and Beyond: A Review of Methods and Critical Appraisal"
 *Proceedings of the IEEE, 109(3)*
 **Relevance**: A comprehensive review of explanation methods (attribution, concept-based, example-based) with critical analysis of their reliability and limitations.
@@ -612,7 +630,7 @@ Entries marked with "(details need verification)" have authors and approximate y
 
 **Relevance to COGANT:** `cogant.reverse` is a program synthesizer: given a GNN specification, it must produce a Python skeleton that satisfies it. This places COGANT's reverse module in the program synthesis literature, specifically in the inductive/deductive synthesis tradition where correctness is defined relative to a formal specification.
 
-(See Section 7 for the primary synthesis references: Alur 2013, Solar-Lezama 2008, Gulwani 2011, Seshia 2015. Not duplicated here.)
+Primary synthesis references in this bibliography include Alur 2013, Solar-Lezama 2008, Gulwani 2011, and Seshia 2015; they are not duplicated in this roundtrip-specific cluster.
 
 ---
 

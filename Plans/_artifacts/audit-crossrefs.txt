@@ -1,0 +1,5 @@
+warning: `VIRTUAL_ENV=/Users/4d/Documents/GitHub/template/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+## Manuscript cross-reference audit
+
+OK: 32 source files scanned; 109 ids defined; 408 references.
+rc=0

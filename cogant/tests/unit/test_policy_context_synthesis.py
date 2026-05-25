@@ -1,22 +1,18 @@
-"""Behavior tests for POLICY / CONTEXT / CONSTRAINT scaffold synthesis.
+"""Behavior tests for target-based POLICY / CONTEXT / CONSTRAINT synthesis.
 
-These tests lock down the fix that pushed the real-world roundtrip
-ISOMORPHIC rate from 19/23 to 23/23 by emitting scaffold CONSTRAINT /
-POLICY / CONTEXT populations proportional to the state / observation /
-action cardinality of the parsed GNN. See ``docs/evaluation/ROUNDTRIP_IMPROVEMENT.md``
-for the empirical before/after table.
+These tests lock down deficit-based scaffolding: generated scaffolds are
+emitted only when a caller supplies source role counts that exceed the
+roles directly declared in the parsed GNN. Default plans must not add
+fixed POLICY / CONTEXT floors.
 
 The tests assert:
 
-1. ``plan_package`` populates ``scaffold_constraint_checks`` with one
-   ``check_obs_*`` per observation, one ``check_act_*`` per action, and
-   one ``check_hs_*`` per hidden state (no substring collision with
-   ActionRule's ``set`` keyword).
-2. ``plan_package`` populates ``scaffold_policy_functions`` with
-   ``route_factor_<i>`` entries whose count is ``max(2, len(state_vars))``.
-3. ``plan_package`` populates ``scaffold_context_classes`` with
-   ``ObservationSettings<i>`` entries whose count is
-   ``max(2, len(obs_functions))``.
+1. ``plan_package(..., expected_roles=...)`` populates
+   ``scaffold_constraint_checks`` only for target CONSTRAINT deficits.
+2. POLICY deficits are split between one semantic ``select_policy``
+   helper and ``route_factor_<i>`` scaffolds.
+3. CONTEXT deficits produce ``ObservationSettings<i>`` classes, while
+   default plans with no source CONTEXT produce none.
 4. Scaffold naming avoids substring collisions with the forward
    pipeline's ACTION / OBSERVATION / POLICY / CONTEXT keyword lexicons
    (regression guard against the ``set`` in ``state`` collision).
@@ -27,9 +23,8 @@ The tests assert:
    are syntactically valid Python (compile cleanly).
 7. Planner output is deterministic across invocations on the same
    parsed model (same identifiers, same ordering).
-8. Empty / degenerate models still receive the minimum two scaffold
-   policies and two scaffold context classes so the forward pass has
-   something to classify.
+8. Empty / degenerate default models receive no source-absent scaffold
+   populations.
 
 No mocks: every test parses real GNN markdown, plans a real package,
 synthesizes real files under ``tmp_path``, and asserts on the actual
@@ -106,7 +101,17 @@ def sample_plan(tmp_path: Path) -> PackagePlan:
     path = tmp_path / "sample.gnn.md"
     path.write_text(SAMPLE_GNN, encoding="utf-8")
     model = parse_gnn(path)
-    return plan_package(model)
+    return plan_package(
+        model,
+        expected_roles={
+            "HIDDEN_STATE": 3,
+            "OBSERVATION": 2,
+            "ACTION": 2,
+            "CONSTRAINT": 4,
+            "POLICY": 3,
+            "CONTEXT": 2,
+        },
+    )
 
 
 @pytest.fixture
@@ -164,26 +169,18 @@ def _contains_any(name: str, keywords: set[str]) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Test 1: scaffold constraint checks scale with OBS / ACT / HS cardinality
+# Test 1: scaffold constraint checks satisfy only the target deficit
 # ---------------------------------------------------------------------------
 
 
 def test_scaffold_constraints_one_per_obs_act_hs(sample_plan: PackagePlan) -> None:
-    """``_build_scaffold_constraints`` emits one check per OBS / ACT / HS slot."""
-    n_obs = len(sample_plan.obs_functions)
-    n_act = len(sample_plan.action_methods)
-    n_hs = len(sample_plan.state_vars)
+    """``_build_scaffold_constraints`` emits target CONSTRAINT deficits."""
+    target = sample_plan.target_role_counts["CONSTRAINT"]
+    authoritative = len(sample_plan.constraint_checks)
     scaffolds = sample_plan.scaffold_constraint_checks
 
-    assert len(scaffolds) == n_obs + n_act + n_hs
-
-    obs_checks = [s for s in scaffolds if s.name.startswith("check_obs_")]
-    act_checks = [s for s in scaffolds if s.name.startswith("check_act_")]
-    hs_checks = [s for s in scaffolds if s.name.startswith("check_hs_")]
-
-    assert len(obs_checks) == n_obs
-    assert len(act_checks) == n_act
-    assert len(hs_checks) == n_hs
+    assert len(scaffolds) == target - authoritative
+    assert all(s.name.startswith("check_role_") for s in scaffolds)
 
     # Every scaffold carries the CONSTRAINT role so the synthesizer
     # knows to render it as a ``check_*`` predicate.
@@ -191,16 +188,15 @@ def test_scaffold_constraints_one_per_obs_act_hs(sample_plan: PackagePlan) -> No
 
 
 # ---------------------------------------------------------------------------
-# Test 2: scaffold policy count = max(2, #hidden_state_factors)
+# Test 2: scaffold policy count equals target deficit after selector helper
 # ---------------------------------------------------------------------------
 
 
 def test_scaffold_policies_scale_with_state_factors(
     sample_plan: PackagePlan,
 ) -> None:
-    """Scaffold POLICY count is ``max(2, len(state_vars))`` and uses ``route_`` prefix."""
-    n_states = len(sample_plan.state_vars)
-    expected = max(2, n_states)
+    """Scaffold POLICY count fills the target after ``select_policy``."""
+    expected = sample_plan.target_role_counts["POLICY"] - 1
     scaffolds = sample_plan.scaffold_policy_functions
 
     assert len(scaffolds) == expected
@@ -212,16 +208,15 @@ def test_scaffold_policies_scale_with_state_factors(
 
 
 # ---------------------------------------------------------------------------
-# Test 3: scaffold context classes — naming + minimum count
+# Test 3: scaffold context classes — naming + deficit count
 # ---------------------------------------------------------------------------
 
 
 def test_scaffold_contexts_emit_settings_classes(
     sample_plan: PackagePlan,
 ) -> None:
-    """Scaffold CONTEXT entries are ``ObservationSettings*`` classes (min 2)."""
-    n_obs = len(sample_plan.obs_functions)
-    expected = max(2, n_obs)
+    """Scaffold CONTEXT entries are ``ObservationSettings*`` classes."""
+    expected = sample_plan.target_role_counts["CONTEXT"] - len(sample_plan.context_functions)
     scaffolds = sample_plan.scaffold_context_classes
 
     assert len(scaffolds) == expected
@@ -380,27 +375,18 @@ def test_plan_package_is_deterministic(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test 8: degenerate / empty models still get the minimum 2 scaffold
-# policies and 2 scaffold context classes so the forward pass has
-# non-zero POLICY and CONTEXT counts.
+# Test 8: degenerate / empty default models do not get fixed scaffolds.
 # ---------------------------------------------------------------------------
 
 
 def test_empty_model_gets_minimum_scaffold_populations(
     empty_plan: PackagePlan,
 ) -> None:
-    """Degenerate models receive at least 2 POLICY and 2 CONTEXT scaffolds."""
-    assert len(empty_plan.scaffold_policy_functions) >= 2
-    assert len(empty_plan.scaffold_context_classes) >= 2
-
-    # With zero observations and zero actions and zero hidden states,
-    # the constraint scaffold population is empty but the minimum
-    # POLICY / CONTEXT floors still kick in so forward classification
-    # always finds at least one of each.
-    for s in empty_plan.scaffold_policy_functions:
-        assert s.role == "POLICY"
-    for s in empty_plan.scaffold_context_classes:
-        assert s.role == "CONTEXT"
+    """Degenerate default models do not synthesize source-absent roles."""
+    assert empty_plan.target_role_counts == {}
+    assert empty_plan.scaffold_policy_functions == []
+    assert empty_plan.scaffold_context_classes == []
+    assert empty_plan.scaffold_constraint_checks == []
 
 
 # ---------------------------------------------------------------------------

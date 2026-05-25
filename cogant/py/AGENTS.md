@@ -1,14 +1,23 @@
-# AGENTS — py
-
-Machine-oriented index for automation and editors.
-
-- Repository root: [README.md](../README.md)
-- Docs index: [docs/index.md](../docs/index.md)
+# Agents - py/
 
 ## Scope
 
-Describe what belongs in this folder; keep orchestration thin and logic in `py/cogant/`.
+Setuptools source root for the installable COGANT package. The only authored
+subtree here should be [`cogant/`](cogant/); all pipeline, CLI, server, and API
+logic lives below that package.
 
-## Tests
+## Rules
 
-Run `uv run pytest tests/` from the repository root unless a narrower scope is documented here.
+- Do not add runnable scripts or tests directly under `py/`.
+- Keep imports package-relative to `cogant` and preserve the `package-dir = {"" = "py"}` contract in `../pyproject.toml`.
+- Generated packaging metadata such as `cogant.egg-info/` is disposable.
+
+## Verification
+
+From the inner package root (`..`):
+
+```bash
+uv run pytest tests/ -q --no-cov
+uv run mypy py/cogant/
+uv run ruff check py/cogant/
+```

@@ -1,4 +1,4 @@
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 from _typeshed import Incomplete
 from pydantic import BaseModel
@@ -41,8 +41,19 @@ class RoundtripRequest(BaseModel):
     threshold: float
 
 class RoundtripResponse(BaseModel):
-    role_match_score: float
-    is_isomorphic: bool
+    roundtrip_status: Literal[
+        "STRUCTURALLY_ISOMORPHIC",
+        "ROLE_PRESERVED",
+        "DRIFT",
+        "FAILED",
+    ]
+    role_preservation_score: float
+    role_preserved: bool
+    structurally_isomorphic: bool
+    matrix_preserved: bool
+    gnn_sections_preserved: bool
+    generated_code_ok: bool
+    invariants: dict[str, Any]
     original_roles: dict[str, int]
     synthesized_roles: dict[str, int]
     threshold: float

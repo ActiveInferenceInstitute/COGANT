@@ -1,11 +1,14 @@
 from cogant.translate.engine import TranslationRule as TranslationRule
 from cogant.translate.rules.behavioral import EventBusRule as EventBusRule
 from cogant.translate.rules.behavioral import OrchestratorRule as OrchestratorRule
+from cogant.translate.rules.behavioral import StateMachineRule as StateMachineRule
 from cogant.translate.rules.behavioral import TestAssertionRule as TestAssertionRule
 from cogant.translate.rules.control import ConfigRule as ConfigRule
 from cogant.translate.rules.control import FeatureFlagRule as FeatureFlagRule
+from cogant.translate.rules.control import ParameterRule as ParameterRule
 from cogant.translate.rules.resilience import CircuitBreakerRule as CircuitBreakerRule
 from cogant.translate.rules.resilience import ErrorBoundaryRule as ErrorBoundaryRule
+from cogant.translate.rules.resilience import RateLimiterRule as RateLimiterRule
 from cogant.translate.rules.resilience import RetryPatternRule as RetryPatternRule
 from cogant.translate.rules.resilience import SingletonAccessRule as SingletonAccessRule
 from cogant.translate.rules.semantic import ActionRule as ActionRule
@@ -28,9 +31,11 @@ __all__ = [
     "ReadOnlyInputRule",
     "EventBusRule",
     "OrchestratorRule",
+    "StateMachineRule",
     "TestAssertionRule",
     "ConfigRule",
     "FeatureFlagRule",
+    "ParameterRule",
     "ActionRule",
     "ContextRule",
     "ObservationRule",
@@ -38,6 +43,7 @@ __all__ = [
     "PreferenceRule",
     "CircuitBreakerRule",
     "ErrorBoundaryRule",
+    "RateLimiterRule",
     "RetryPatternRule",
     "SingletonAccessRule",
 ]

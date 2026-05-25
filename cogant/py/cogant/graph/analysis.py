@@ -134,6 +134,9 @@ class GraphAnalyzer:
     delegates to ``networkx`` when it is importable.
     """
 
+    exact_centrality_node_limit = 500
+    centrality_sample_size = 128
+
     def __init__(self, graph: ProgramGraph) -> None:
         """Initialize the graph analyzer.
 
@@ -186,18 +189,37 @@ class GraphAnalyzer:
             clustering_coefficient=clustering_coeff,
         )
 
-    def compute_centrality(self) -> CentralityScores:
+    def compute_centrality(
+        self,
+        *,
+        approximate_above: int | None = None,
+        sample_size: int | None = None,
+    ) -> CentralityScores:
         """Compute centrality scores for all nodes.
 
-        Uses networkx if available for PageRank; falls back to pure Python.
+        Uses networkx if available; falls back to pure Python. Exact
+        betweenness and closeness are expensive on large program graphs, so
+        graphs above ``approximate_above`` use deterministic bounded samples.
+
+        Args:
+            approximate_above: Node-count threshold for approximate
+                betweenness/closeness. Defaults to ``500``.
+            sample_size: Maximum sample size for approximate centrality.
+                Defaults to ``128``.
 
         Returns:
             CentralityScores with all centrality measures.
         """
+        threshold = self.exact_centrality_node_limit if approximate_above is None else approximate_above
+        limit = self.centrality_sample_size if sample_size is None else sample_size
+        approximate = threshold is not None and len(self.graph.nodes) > threshold
         scores = CentralityScores()
 
         # Betweenness centrality
-        scores.betweenness_centrality = self._compute_betweenness_centrality()
+        scores.betweenness_centrality = self._compute_betweenness_centrality(
+            approximate=approximate,
+            sample_size=limit,
+        )
 
         # Degree centrality
         scores.degree_centrality = self._compute_degree_centrality()
@@ -206,7 +228,10 @@ class GraphAnalyzer:
         scores.pagerank = self._compute_pagerank()
 
         # Closeness centrality
-        scores.closeness_centrality = self._compute_closeness_centrality()
+        scores.closeness_centrality = self._compute_closeness_centrality(
+            approximate=approximate,
+            sample_size=limit,
+        )
 
         return scores
 
@@ -233,15 +258,28 @@ class GraphAnalyzer:
         components = self._find_connected_components()
         return [frozenset(c) for c in components]
 
-    def find_cycles(self) -> CycleDetection:
+    def find_cycles(self, *, max_cycles: int | None = 256) -> CycleDetection:
         """Find all cycles and strongly connected components.
+
+        Exhaustive simple-cycle enumeration can explode on real program
+        graphs. The returned SCCs are complete; ``cycles`` is a bounded
+        representative sample by default.
+
+        Args:
+            max_cycles: Maximum representative cycles to return. ``None``
+                requests exhaustive enumeration for small/manual analyses.
 
         Returns:
             CycleDetection with cycles and SCCs.
         """
         has_cycles = self._has_cycle()
-        cycles = self._find_all_cycles()
         sccs = self._find_strongly_connected_components()
+        candidate_nodes = self._cycle_candidate_nodes(sccs) if has_cycles else set()
+        cycles = (
+            self._find_all_cycles(max_cycles=max_cycles, candidate_nodes=candidate_nodes)
+            if candidate_nodes
+            else []
+        )
 
         return CycleDetection(
             has_cycles=has_cycles,
@@ -263,7 +301,11 @@ class GraphAnalyzer:
         hubs = sorted(degrees.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
         # Bottlenecks: highest betweenness
-        betweenness = self._compute_betweenness_centrality()
+        approximate = len(self.graph.nodes) > self.exact_centrality_node_limit
+        betweenness = self._compute_betweenness_centrality(
+            approximate=approximate,
+            sample_size=self.centrality_sample_size,
+        )
         bottlenecks = sorted(betweenness.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
         # Sinks: no outgoing edges
@@ -410,6 +452,16 @@ class GraphAnalyzer:
         """Compute out-degree for each node."""
         return {nid: len(self.graph.get_edges_from(nid)) for nid in self.graph.nodes}
 
+    def _centrality_sample_nodes(self, sample_size: int) -> list[str]:
+        """Return a deterministic high-degree node sample for bounded analysis."""
+        degrees = self._compute_all_degrees()
+        return [
+            node_id
+            for node_id, _ in sorted(degrees.items(), key=lambda item: (-item[1], item[0]))[
+                : max(0, sample_size)
+            ]
+        ]
+
     def _compute_density(self) -> float:
         """Compute graph density."""
         n = len(self.graph.nodes)
@@ -500,7 +552,12 @@ class GraphAnalyzer:
 
         return components
 
-    def _compute_betweenness_centrality(self) -> dict[str, float]:
+    def _compute_betweenness_centrality(
+        self,
+        *,
+        approximate: bool = False,
+        sample_size: int = 128,
+    ) -> dict[str, float]:
         """Compute betweenness centrality for all nodes.
 
         Uses NetworkX (normalized, in ``[0, 1]``) when available. The pure
@@ -509,15 +566,19 @@ class GraphAnalyzer:
         """
         if self.nx:
             try:
-                bc = self.nx.betweenness_centrality(self.to_networkx(), normalized=True)
+                kwargs: dict[str, Any] = {"normalized": True}
+                if approximate and len(self.graph.nodes) > sample_size:
+                    kwargs.update({"k": sample_size, "seed": 0})
+                bc = self.nx.betweenness_centrality(self.to_networkx(), **kwargs)
                 return {nid: float(bc.get(nid, 0.0)) for nid in self.graph.nodes}
             except Exception:
                 pass
 
         centrality: dict[str, float] = dict.fromkeys(self.graph.nodes, 0.0)
         nodes = list(self.graph.nodes.keys())
+        sources = self._centrality_sample_nodes(sample_size) if approximate else nodes
 
-        for source in nodes:
+        for source in sources:
             for target in nodes:
                 if source == target:
                     continue
@@ -547,23 +608,21 @@ class GraphAnalyzer:
 
         return centrality
 
-    def _compute_closeness_centrality(self) -> dict[str, float]:
+    def _compute_closeness_centrality(
+        self,
+        *,
+        approximate: bool = False,
+        sample_size: int = 128,
+    ) -> dict[str, float]:
         """Compute closeness centrality."""
-        centrality: dict[str, float] = {}
+        centrality: dict[str, float] = dict.fromkeys(self.graph.nodes, 0.0)
         nodes = list(self.graph.nodes.keys())
+        sources = self._centrality_sample_nodes(sample_size) if approximate else nodes
 
-        for source in nodes:
-            total_distance = 0
-            reachable = 0
-
-            for target in nodes:
-                if source == target:
-                    continue
-
-                path = self._find_shortest_path_bfs(source, target)
-                if path:
-                    total_distance += len(path) - 1
-                    reachable += 1
+        for source in sources:
+            distances = self._shortest_distances_bfs(source)
+            total_distance = sum(distance for node_id, distance in distances.items() if node_id != source)
+            reachable = len(distances) - 1
 
             if reachable > 0:
                 centrality[source] = reachable / total_distance if total_distance > 0 else 0.0
@@ -631,6 +690,20 @@ class GraphAnalyzer:
 
         return None
 
+    def _shortest_distances_bfs(self, source_id: str) -> dict[str, int]:
+        """Return shortest path distances from one source."""
+        distances = {source_id: 0}
+        queue = deque([source_id])
+
+        while queue:
+            current_id = queue.popleft()
+            for neighbor in self.graph.get_neighbors(current_id):
+                if neighbor.id not in distances:
+                    distances[neighbor.id] = distances[current_id] + 1
+                    queue.append(neighbor.id)
+
+        return distances
+
     def _has_cycle(self) -> bool:
         """Check if graph has any cycle using DFS."""
         color: dict[str, str] = {}  # white, gray, black
@@ -657,20 +730,52 @@ class GraphAnalyzer:
 
         return False
 
-    def _find_all_cycles(self, max_cycle_size: int = 10) -> list[list[str]]:
+    def _cycle_candidate_nodes(self, sccs: list[frozenset[str]]) -> set[str]:
+        """Return nodes that can be in a directed cycle."""
+        candidates = {node_id for component in sccs if len(component) > 1 for node_id in component}
+        self_loop_nodes = {
+            edge.source_id
+            for edge in self.graph.edges.values()
+            if edge.source_id == edge.target_id
+        }
+        return candidates | self_loop_nodes
+
+    def _find_all_cycles(
+        self,
+        max_cycle_size: int = 10,
+        *,
+        max_cycles: int | None = 256,
+        candidate_nodes: set[str] | None = None,
+    ) -> list[list[str]]:
         """Find all cycles in the graph."""
         cycles: list[list[str]] = []
         seen_cycles: set[tuple[str, ...]] = set()
+        starts = candidate_nodes if candidate_nodes is not None else set(self.graph.nodes)
 
-        for start_id in self.graph.nodes:
-            paths = self._find_all_paths_dfs(start_id, start_id, max_cycle_size)
+        for start_id in starts:
+            if max_cycles is not None and len(cycles) >= max_cycles:
+                break
+            remaining = None if max_cycles is None else max_cycles - len(cycles)
+            paths = self._find_all_paths_dfs(
+                start_id,
+                start_id,
+                max_cycle_size,
+                max_paths=remaining,
+            )
 
             for path in paths:
-                if len(path) > 2:  # Exclude trivial self-loops
+                if max_cycles is not None and len(cycles) >= max_cycles:
+                    break
+                if len(path) > 2:
                     cycle_tuple = tuple(sorted(path[:-1]))
                     if cycle_tuple not in seen_cycles:
                         seen_cycles.add(cycle_tuple)
                         cycles.append(path[:-1])
+                elif len(path) == 2 and path[0] == path[1]:
+                    cycle_tuple = (path[0],)
+                    if cycle_tuple not in seen_cycles:
+                        seen_cycles.add(cycle_tuple)
+                        cycles.append([path[0]])
 
         return cycles
 
@@ -679,19 +784,25 @@ class GraphAnalyzer:
         current_id: str,
         target_id: str,
         max_depth: int,
+        *,
+        max_paths: int | None = None,
     ) -> list[list[str]]:
         """Find all paths from current to target using DFS."""
         paths: list[list[str]] = []
 
         def dfs(cid: str, tgt: str, path: list[str], visited: set[str]) -> None:
+            if max_paths is not None and len(paths) >= max_paths:
+                return
             if len(path) > max_depth:
                 return
 
             outgoing = self.graph.get_edges_from(cid)
             for edge in outgoing:
+                if max_paths is not None and len(paths) >= max_paths:
+                    break
                 nid = edge.target_id
                 # Close a directed cycle back to the search start (tgt).
-                if nid == tgt and len(path) >= 2:
+                if nid == tgt and len(path) >= 1:
                     paths.append(path + [nid])
                     continue
                 if nid not in visited:

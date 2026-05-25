@@ -35,7 +35,7 @@ Spring / JPA / Guice patterns map cleanly onto HIDDEN_STATE / POLICY / OBSERVATI
   - `JPAEntityRule` → HIDDEN_STATE (JPA persistent entities)
   - `RESTControllerRule` → OBSERVATION (REST endpoints as observations)
   - `EventListenerRule` → ACTION (event handler methods)
-- [ ] Cross-language roundtrip test: Java Observer pattern → GNN → Python synthesized code → GNN; assert ε ≥ 0.8
+- [ ] Cross-language roundtrip test: Java Observer pattern → GNN → Python synthesized code → GNN; assert `s_role >= 0.8`
 - [ ] `examples/zoo/14_java_spring_mini/`: minimal Spring Boot example as ground truth fixture
 - [ ] `tests/unit/test_parser_java.py`: 40+ unit tests covering all Java AST node types
 - [ ] `tests/integration/test_java_pipeline.py`: full forward pipeline on Spring Boot fixture
@@ -158,7 +158,7 @@ These non-feature improvements reduce long-term maintenance cost.
 
 ## Success Criteria
 
-- [ ] Java + Rust parsers pass their respective fixture roundtrips with ε ≥ 0.8
+- [ ] Java + Rust parsers pass their respective fixture roundtrips with `s_role >= 0.8`
 - [ ] Streaming export: 500k-node graph completes in <5 min with <2 GB peak memory
 - [ ] Type inference: annotation coverage improvement measurable on at least one unannotated fixture
 - [ ] All ruff violations: 0; mypy --strict: 0 errors

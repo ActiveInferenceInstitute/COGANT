@@ -1,6 +1,6 @@
 # Evaluation and R&D
 
-> Dated reports, calibration notes, benchmarks, and empirical analyses for COGANT. These documents are the historical and ongoing record of how COGANT's claims (isomorphism, roundtrip fidelity, real-world coverage) have been measured. Machine-readable artifacts live in the **`evaluation/`** directory at the repository root (sibling of **`docs/`**, not part of the MkDocs tree).
+> Dated reports, calibration notes, benchmarks, and empirical analyses for COGANT. These documents are the historical and ongoing record of how COGANT's roundtrip-preservation, strict-invariant, and real-world coverage claims have been measured. Machine-readable artifacts live in the **`evaluation/`** directory at the repository root (sibling of **`docs/`**, not part of the MkDocs tree).
 
 ## Contents
 
@@ -20,7 +20,7 @@
 | Page | Description | Level |
 |------|-------------|-------|
 | [Active Inference Mapping](ACTIVE_INFERENCE_MAPPING.md) | Code patterns to Active Inference roles | Intermediate |
-| [Isomorphism Theorem](ISOMORPHISM_THEOREM.md) | Roundtrip / isomorphism discussion and proof sketch | Advanced |
+| [Isomorphism Theorem](ISOMORPHISM_THEOREM.md) | Historical roundtrip/isomorphism proof sketch; not the current CLI contract | Advanced |
 | [Calibration](CALIBRATION.md) | Confidence and rule calibration backlog | Advanced |
 | [Constraint Fix](CONSTRAINT_FIX.md) | The CONSTRAINT detection fix and its evaluation impact | Advanced |
 | [First Inference](FIRST_INFERENCE.md) | First-inference experiment notes | Intermediate |

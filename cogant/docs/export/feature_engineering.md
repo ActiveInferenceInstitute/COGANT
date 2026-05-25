@@ -37,7 +37,7 @@ Default and optional **tensor** features for PyTorch Geometric / DGL-style consu
 
 ### Custom features
 
-Implement an [`ExportPlugin`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/plugins/base.py) (see [Plugins](../plugins/README.md)):
+Implement an [`ExportPlugin`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/plugins/base.py) (see [Plugins](../plugins/README.md)):
 
 ```python
 from cogant.plugins import ExportPlugin, PluginMetadata

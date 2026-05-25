@@ -1,0 +1,42 @@
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/unit/_viz_assert.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from __future__ import annotations
+ 8 | |
+ 9 | | import os
+10 | | import struct
+11 | | from pathlib import Path
+12 | | from typing import Any
+13 | |
+14 | | import numpy as np
+   | |__________________^
+   |
+help: Organize imports
+
+UP032 [*] Use f-string instead of `format` call
+  --> tests/unit/_viz_assert.py:87:13
+   |
+85 |               saw_text = True
+86 |           reasons.append(
+87 | /             "axes[{idx}]: lines={lines}, patches={patches}, images={images}, "
+88 | |             "collections={collections}, texts={texts}".format(
+89 | |                 idx=index,
+90 | |                 lines=len(ax.lines),
+91 | |                 patches=len(ax.patches),
+92 | |                 images=len(ax.images),
+93 | |                 collections=len(ax.collections),
+94 | |                 texts=len(ax.texts),
+95 | |             )
+   | |_____________^
+96 |           )
+   |
+help: Convert to f-string
+
+E902 No such file or directory (os error 2)
+--> tools:1:1
+
+Found 3 errors.
+[*] 2 fixable with the `--fix` option.
+ruff-check rc=1

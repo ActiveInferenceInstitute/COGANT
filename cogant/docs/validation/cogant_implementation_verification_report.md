@@ -3,7 +3,7 @@
 **Date**: April 8, 2026
 **Status**: ✓ COMPLETE
 
-**Navigation:** [README.md](./README.md) (documentation hub) · [SPEC.md](../reference/README.md) (normative behavior) · [README.md](https://github.com/cogant-contributors/cogant/blob/main/cogant/README.md) (install and CLI quick start)
+**Navigation:** [README.md](./README.md) (documentation hub) · [SPEC.md](../reference/README.md) (normative behavior) · [README.md](https://github.com/docxology/cogant/blob/main/cogant/README.md) (install and CLI quick start)
 
 ### Implementation Summary
 
@@ -387,20 +387,20 @@ pip install -e .
 - ✓ [CLI_GUIDE.md](../cli/README.md) — Complete CLI reference
 - ✓ [API_GUIDE.md](../api/README.md) — Complete Python API reference
 - ✓ [SPEC.md](../reference/README.md) — Architecture and implementation detail
-- ✓ [example_pipeline.py](https://github.com/cogant-contributors/cogant/blob/main/cogant/examples/example_pipeline.py) — Working examples
+- ✓ [example_pipeline.py](https://github.com/docxology/cogant/blob/main/cogant/examples/example_pipeline.py) — Working examples
 
 ### Next Steps for Development
 
 The following can be added to extend COGANT:
 
-1. **Actual parsing modules** - Replace placeholder implementations
-2. **Language-specific parsers** - Python, Java, Go, etc.
-3. **Real GNN algorithms** - Neural network implementations
-4. **Database backend** - Persistent bundle storage
-5. **Web UI** - Interactive analysis interface
-6. **CI/CD integration** - Automated analysis
-7. **Unit tests** - Comprehensive test suite
-8. **Performance optimization** - Scale to large codebases
+1. **Additional language parsers** - Extend the existing Python and JS/TS parser path to Java, Rust, Go, and other ecosystems.
+2. **Runtime evidence integration** - Populate the existing `STATIC_PLUS_RUNTIME` and `RUNTIME_ONLY` confidence paths with coverage or trace data.
+3. **Learned or fitted model parameters** - Replace maximum-entropy priors with calibrated or learned values where downstream users supply evidence.
+4. **Persistent artifact storage** - Add a database-backed bundle store for long-running deployments.
+5. **Interactive review UI** - Build a browser workbench for mapping review, figure inspection, and roundtrip triage.
+6. **CI/CD integration** - Automate translation, validation, and dashboard generation in repository pipelines.
+7. **Corpus expansion** - Add labelled fixtures for more framework families and non-Python languages.
+8. **Performance optimization** - Reduce edge-density cliffs and improve large-codebase streaming.
 
 ### Deployment Readiness
 

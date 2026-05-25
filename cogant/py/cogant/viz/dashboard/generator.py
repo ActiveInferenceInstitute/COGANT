@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """
 DashboardGenerator: Production-quality interactive HTML dashboard.
 

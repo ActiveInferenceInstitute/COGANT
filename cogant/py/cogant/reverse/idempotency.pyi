@@ -7,11 +7,23 @@ __all__ = [
     "RoundtripResult",
     "verify_roundtrip",
     "verify_repo_roundtrip",
+    "ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC",
+    "ROUNDTRIP_STATUS_ROLE_PRESERVED",
+    "ROUNDTRIP_STATUS_DRIFT",
+    "ROUNDTRIP_STATUS_FAILED",
+    "ROUNDTRIP_STATUSES",
+    "ROLE_PRESERVATION_THRESHOLD",
     "ROLE_MATCH_THRESHOLD",
     "check_structural_idempotency",
     "check_semantic_idempotency",
 ]
 
+ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC: str
+ROUNDTRIP_STATUS_ROLE_PRESERVED: str
+ROUNDTRIP_STATUS_DRIFT: str
+ROUNDTRIP_STATUS_FAILED: str
+ROUNDTRIP_STATUSES: tuple[str, ...]
+ROLE_PRESERVATION_THRESHOLD: float
 ROLE_MATCH_THRESHOLD: float
 
 @dataclass
@@ -24,15 +36,33 @@ class IdempotencyReport:
 
 @dataclass
 class RoundtripResult:
-    is_isomorphic: bool = ...
-    role_match_score: float = ...
+    roundtrip_status: str = ...
+    role_preservation_score: float = ...
+    role_preserved: bool = ...
+    structurally_isomorphic: bool = ...
+    matrix_preserved: bool = ...
+    gnn_sections_preserved: bool = ...
+    generated_code_ok: bool = ...
     matrix_score: float = ...
     structural_score: float = ...
     original_roles: dict[str, int] = field(default_factory=dict)
     synthesized_roles: dict[str, int] = field(default_factory=dict)
     shape_match: dict[str, bool] = field(default_factory=dict)
     package_path: Path | None = ...
+    original_graph_summary: dict[str, Any] = field(default_factory=dict)
+    synthesized_graph_summary: dict[str, Any] = field(default_factory=dict)
+    graph_delta: dict[str, Any] = field(default_factory=dict)
+    gnn_diff: dict[str, Any] = field(default_factory=dict)
+    matrix_delta: dict[str, Any] = field(default_factory=dict)
+    invariants: dict[str, Any] = field(default_factory=dict)
+    rule_evidence_trace: dict[str, Any] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
+    @property
+    def is_isomorphic(self) -> bool: ...
+    @property
+    def role_match_score(self) -> float: ...
+    @property
+    def roundtrip_invariants(self) -> dict[str, Any]: ...
     def summary(self) -> str: ...
 
 def check_structural_idempotency(

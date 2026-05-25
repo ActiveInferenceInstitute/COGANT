@@ -5,7 +5,7 @@
 > repository-wide [`docs/evaluation/CALIBRATION.md`](../evaluation/CALIBRATION.md)
 > parameter registry: that file enumerates *what* needs calibrating;
 > this file documents *how* to actually do it. Audience: researchers
-> and reviewers who plan to resolve `TODO(calibration)` markers in
+> and reviewers who plan to resolve explicit `TODO(calibration)` markers in
 > `py/cogant/translate/` and `py/cogant/statespace/`.
 
 ---
@@ -22,7 +22,7 @@ confidence = clip₀¹( (avg_evidence + diversity_bonus) · parser_certainty
                      − conflict_penalty )
 ```
 
-(see [`py/cogant/translate/confidence.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/confidence.py),
+(see [`py/cogant/translate/confidence.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/confidence.py),
 `compute_confidence_score`). The blend itself is held fixed; only the
 *scalar constants* — the multipliers, sweep gates, and tier
 thresholds documented in §3 — are subject to empirical revision.
@@ -37,8 +37,8 @@ This deliberate scope choice has three consequences:
    the sweep curve, the elbow argument, and the resulting choice
    without retraining anything.
 3. **The model remains transparent for downstream consumers.** The
-   state-space compiler ([`py/cogant/statespace/compiler.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/statespace/compiler.py))
-   and the GNN matrix synthesiser ([`py/cogant/gnn/matrices.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/gnn/matrices.py))
+   state-space compiler ([`py/cogant/statespace/compiler.py`](https://github.com/docxology/cogant/blob/main/py/cogant/statespace/compiler.py))
+   and the GNN matrix synthesiser ([`py/cogant/gnn/matrices.py`](https://github.com/docxology/cogant/blob/main/py/cogant/gnn/matrices.py))
    can read confidence values without knowing how they were tuned.
 
 A constant is a **calibration target** if and only if it is annotated
@@ -186,8 +186,9 @@ by the unit-test suite. Calibration must use the corpus; CI must use
 the dev fixtures. Mixing them creates an information leak from the
 calibration set into the test set.
 
-Gold standards live under `evaluation/gold_standards/` (TBD per
-[`CALIBRATION.md`](../evaluation/CALIBRATION.md) §4). Each gold-standard
+Gold standards will live under `evaluation/gold_standards/` after the
+review corpus is committed; until then, this guide defines the required
+shape rather than claiming an existing labelled dataset. Each gold-standard
 file is a CSV with columns `(repo, mapping_id, label, reviewer_a,
 reviewer_b)` where `label ∈ {correct, incorrect, partial}` and the
 two reviewer columns capture inter-annotator agreement (Cohen κ
@@ -398,7 +399,7 @@ The same recipe applies to every sweep-shape marker in §2.
 
 ## 6. Cross-references
 
-* **Module documentation:** [`py/cogant/translate/confidence.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/confidence.py)
+* **Module documentation:** [`py/cogant/translate/confidence.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/confidence.py)
   — module-level docstring contains the threshold table and an
   end-to-end walk-through of `compute_confidence_score`.
 * **Parameter registry:** [`docs/evaluation/CALIBRATION.md`](../evaluation/CALIBRATION.md)
@@ -414,7 +415,7 @@ The same recipe applies to every sweep-shape marker in §2.
   band assignments on every rule listed there.
 * **Semantic roles:** [`semantic_roles.md`](semantic_roles.md) — the
   catalogue of roles that `MappingKind` values resolve to.
-* **State-space variables:** [`py/cogant/statespace/variables.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/statespace/variables.py)
+* **State-space variables:** [`py/cogant/statespace/variables.py`](https://github.com/docxology/cogant/blob/main/py/cogant/statespace/variables.py)
   — `ConfidenceLevel` collapses the four-tier model into a coarser
   categorical view; the marker at `variables.py:67` calibrates the
   collapse points.
@@ -457,7 +458,7 @@ The same recipe applies to every sweep-shape marker in §2.
   threshold-style parameters in §2.1.
 * **Conflict-loss rate.** The fraction of cases in which a given
   rule's mapping is overridden during conflict resolution
-  ([`engine.py:_resolve_conflicts`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/engine.py)).
+  ([`engine.py:_resolve_conflicts`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/engine.py)).
   The trigger metric for several markers in §2.2 and §2.3.
 
 ---

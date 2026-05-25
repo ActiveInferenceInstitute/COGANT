@@ -1,6 +1,6 @@
 ## Command index
 
-Twenty-two top-level Typer subcommands are registered in [`py/cogant/cli/main.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/cli/main.py). `cogant --help` is the authoritative source; this table mirrors it.
+`cogant --help` is the authoritative source. [`py/cogant/cli/main.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/cli/main.py) currently registers 26 top-level commands directly on the Typer app, plus `plugin` and `migrate` sub-typers for 29 leaf commands total.
 
 | Command | Purpose |
 |---------|---------|
@@ -10,7 +10,7 @@ Twenty-two top-level Typer subcommands are registered in [`py/cogant/cli/main.py
 | `extract-static` | Run static analysis only (AST, type inference, symbol tables). |
 | `extract-dynamic` | Run dynamic analysis (coverage databases, runtime traces). |
 | `graph` | Build and summarise the program dependency graph. |
-| `translate` | Full pipeline: ingest → static → normalize → graph → translate → statespace → process → export → validate. |
+| `translate` | Full pipeline: ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate. |
 | `analyze` | Canonical pipeline entry point with first-class `--incremental <git-ref>` support and incremental cache. |
 | `statespace` | Compile an Active Inference state-space model (S, O, A, π). |
 | `process` | Extract the pipeline / execution process model from a repository. |
@@ -22,9 +22,15 @@ Twenty-two top-level Typer subcommands are registered in [`py/cogant/cli/main.py
 | `changed` | List files changed since a git ref (incremental analysis helper). |
 | `explain` | Explain *why* a node was assigned its Active Inference role. |
 | `benchmark` | Benchmark pipeline wall-clock performance over several runs. |
+| `analyze-static` | Run only the static-analysis stages and report findings. |
+| `analyze-graph` | Run the graph-construction stage and print adjacency summary. |
+| `visualize` | Render interactive SVG/HTML visualizations of program graph and matrices. |
+| `export` | Export a GNN bundle to a specified format (`json`, `jsonl`, `parquet`, `graphml`). |
 | `reverse` | Synthesize a Python package from a GNN markdown file. |
 | `roundtrip` | Verify forward-reverse-forward round-trip isomorphism. |
+| `version` | Print the COGANT version and exit. |
+| `upstream-gnn` | Re-run the Active Inference Institute 25-step `src.gnn` pipeline on an existing `gnn_package/` directory. |
 | `plugin` | Manage and inspect COGANT plugins (subcommands: `list`, `info`). |
-| `migrate` | Migrate GNN files to the current schema version (subcommand: `migrate migrate <path>`). |
+| `migrate` | Migrate GNN files to the current schema version (single default leaf under the `migrate` sub-typer). |
 
 See [Commands](commands.md) for full per-command argument and flag documentation.

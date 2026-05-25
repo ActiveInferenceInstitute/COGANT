@@ -23,7 +23,12 @@ def improve_file(path: Path) -> dict:
     # Check future import
     if "from __future__ import annotations" not in source:
         insert_line = 1
-        if tree.body and isinstance(tree.body[0], ast.Expr) and isinstance(tree.body[0].value, ast.Constant) and isinstance(tree.body[0].value.value, str):
+        if (
+            tree.body
+            and isinstance(tree.body[0], ast.Expr)
+            and isinstance(tree.body[0].value, ast.Constant)
+            and isinstance(tree.body[0].value.value, str)
+        ):
             insert_line = 2  # after docstring
         lines.insert(insert_line - 1, "from __future__ import annotations\n\n")
         changes["future"] = True

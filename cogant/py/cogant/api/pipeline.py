@@ -11,6 +11,7 @@ import yaml
 
 from cogant.api import orchestration
 from cogant.api.bundle import Bundle
+from cogant.translate.confidence import ConfidenceModel
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,15 @@ class PipelineConfig:
 
     layout_output: bool = False
     """After export, move flat artifacts into data/, diagrams/, site/, reports/, figures/."""
+
+    render_visualizations: bool = True
+    """Render PNG visualization artifacts during the export stage.
+
+    Export always writes JSON, GNN package, Mermaid, SVG, and HTML artifacts.
+    This flag controls the browser/Graphviz-backed rasterization pass so
+    machine-readable summary commands can avoid re-rendering large existing
+    output trees.
+    """
 
     skip_dynamic: bool = False
     """Explicit opt-out for the dynamic-analysis enrichment stage.
@@ -106,6 +116,17 @@ class PipelineConfig:
 
     When ``None``, incremental mode uses ``~/.cache/cogant``. Setting
     this lets tests and benchmarks isolate cache state to a tmp dir.
+    """
+
+    min_confidence: float = ConfidenceModel.RUNTIME_ONLY_THRESHOLD
+    """Minimum semantic-mapping confidence admitted past translate.
+
+    Mappings whose scored ``confidence_score`` falls below this
+    threshold are removed from ``bundle.artifacts['_semantic_mappings']``
+    before the statespace/process/export/validate stages consume them.
+    The default intentionally matches
+    :data:`cogant.translate.confidence.RUNTIME_ONLY_THRESHOLD` (0.4),
+    which is the documented "runtime-only evidence" floor.
     """
 
     profiling_enabled: bool = False
@@ -214,6 +235,9 @@ class PipelineConfig:
             if not trace_path.exists():
                 errors.append(f"trace_path does not exist: {self.trace_path}")
 
+        if not 0.0 <= self.min_confidence <= 1.0:
+            errors.append(f"min_confidence must be between 0.0 and 1.0: {self.min_confidence}")
+
         upstream_step_range = range(25)
         for label, values in (
             ("upstream_gnn_only_steps", self.upstream_gnn_only_steps or []),
@@ -252,6 +276,7 @@ class PipelineConfig:
             "trace_path": self.trace_path,
             "incremental_since": self.incremental_since,
             "cache_dir": self.cache_dir,
+            "min_confidence": self.min_confidence,
             "profiling_enabled": self.profiling_enabled,
             "upstream_gnn_validation": self.upstream_gnn_validation,
             "upstream_gnn_pipeline": self.upstream_gnn_pipeline,
@@ -295,6 +320,7 @@ class PipelineConfig:
             trace_path=data.get("trace_path"),
             incremental_since=data.get("incremental_since"),
             cache_dir=data.get("cache_dir"),
+            min_confidence=data.get("min_confidence", ConfidenceModel.RUNTIME_ONLY_THRESHOLD),
             profiling_enabled=data.get("profiling_enabled", False),
             upstream_gnn_validation=data.get("upstream_gnn_validation", True),
             upstream_gnn_pipeline=data.get("upstream_gnn_pipeline", False),
@@ -733,7 +759,7 @@ class PipelineRunner:
         """Translate: Convert to GNN representation."""
         if config.dry_run:
             return {"type": "gnn_model", "dry_run": True}
-        return orchestration.run_translate(bundle)
+        return orchestration.run_translate(bundle, min_confidence=config.min_confidence)
 
     def _stage_statespace(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Statespace: Compile semantic state space."""
@@ -751,7 +777,11 @@ class PipelineRunner:
         """Export: Write all artifacts to disk."""
         if config.dry_run:
             return {"type": "export", "dry_run": True, "output_dir": config.output_dir}
-        return orchestration.run_export(bundle, config.output_dir)
+        return orchestration.run_export(
+            bundle,
+            config.output_dir,
+            render_visualizations=config.render_visualizations,
+        )
 
     def _stage_validate(self, bundle: Bundle, config: PipelineConfig) -> dict[str, Any]:
         """Validate: Run validation checks."""

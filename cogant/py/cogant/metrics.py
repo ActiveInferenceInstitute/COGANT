@@ -6,11 +6,11 @@ manuscript injection tooling.
 
 Usage::
 
-    from cogant.metrics import version, coverage, isomorphic_count
+    from cogant.metrics import version, coverage, role_preserved_count
 
-    print(version())          # "0.4.0"
-    print(coverage())         # 83.42
-    print(isomorphic_count()) # 14
+    print(version())               # "0.6.0"
+    print(coverage())              # 90.0
+    print(role_preserved_count())  # role-preserved roundtrip targets
 """
 
 from __future__ import annotations
@@ -27,9 +27,13 @@ __all__ = [
     "test_count",
     "coverage",
     "mypy_errors",
+    "role_preserved_count",
+    "strict_isomorphism_count",
     "isomorphic_count",
     "total_targets",
+    "mean_role_preservation_score",
     "mean_epsilon",
+    "role_preservation_score_for",
     "epsilon_for",
     "bibliography_entries",
 ]
@@ -78,9 +82,33 @@ def mypy_errors() -> int:
     return int(_get("testing.mypy_strict_errors", 0))
 
 
+def role_preserved_count() -> int:
+    """Return the number of roundtrip targets that preserve GNN roles."""
+    return int(
+        _get(
+            "evaluation.roundtrip.role_preserved_count",
+            _get("evaluation.roundtrip.isomorphic_count", 0),
+        )
+    )
+
+
+def strict_isomorphism_count() -> int:
+    """Return the number of strict structurally isomorphic roundtrip targets."""
+    return int(
+        _get(
+            "evaluation.roundtrip.strict_isomorphism_count",
+            _get("evaluation.roundtrip.structural_isomorphism_count", 0),
+        )
+    )
+
+
 def isomorphic_count() -> int:
-    """Return the number of ISOMORPHIC roundtrip targets."""
-    return int(_get("evaluation.roundtrip.isomorphic_count", 0))
+    """Deprecated alias for :func:`strict_isomorphism_count`.
+
+    COGANT v0.6 reserves strict isomorphism for full structural, matrix,
+    GNN-section, generated-code, and role-invariant preservation.
+    """
+    return strict_isomorphism_count()
 
 
 def total_targets() -> int:
@@ -88,25 +116,34 @@ def total_targets() -> int:
     return int(_get("evaluation.roundtrip.total_targets", 0))
 
 
+def mean_role_preservation_score() -> float:
+    """Return the mean role-preservation score across roundtrip targets."""
+    return float(
+        _get(
+            "evaluation.roundtrip.mean_role_preservation_score",
+            _get("evaluation.roundtrip.mean_epsilon", 0.0),
+        )
+    )
+
+
 def mean_epsilon() -> float:
-    """Return the mean epsilon across all roundtrip targets."""
-    return float(_get("evaluation.roundtrip.mean_epsilon", 0.0))
+    """Deprecated alias for :func:`mean_role_preservation_score`."""
+    return mean_role_preservation_score()
+
+
+def role_preservation_score_for(name: str) -> float | None:
+    """Return the role-preservation score for a specific roundtrip target."""
+    targets = _get("evaluation.roundtrip.per_target", [])
+    for target in targets:
+        if isinstance(target, dict) and target.get("name") == name:
+            value = target.get("role_preservation_score", target.get("epsilon"))
+            return float(value) if value is not None else None
+    return None
 
 
 def epsilon_for(name: str) -> float | None:
-    """Return epsilon for a specific roundtrip target by name.
-
-    Args:
-        name: Repository/target name (e.g. "01_simple_state", "requests").
-
-    Returns:
-        Epsilon value in [0, 1] if found, else None.
-    """
-    targets = _get("evaluation.roundtrip.per_target", [])
-    for t in targets:
-        if isinstance(t, dict) and t.get("name") == name:
-            return float(t["epsilon"])
-    return None
+    """Deprecated alias for :func:`role_preservation_score_for`."""
+    return role_preservation_score_for(name)
 
 
 def bibliography_entries() -> int:

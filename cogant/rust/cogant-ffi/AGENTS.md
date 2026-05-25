@@ -1,19 +1,24 @@
-# Agents — rust/cogant-ffi
+# Agents - rust/cogant-ffi
 
 ## Owner
+
 Infra Lead
 
-## Responsibilities
-- Python FFI bindings via PyO3
-- Type conversions and memory safety
-- Async interop and GIL management
-- Version compatibility and deprecation
+## Scope
 
-## Coordination
-- Aggregates exports from all Rust crates
-- Provides Python bindings in cogant.rust module
-- Must maintain API stability
+PyO3 bindings exposing Rust graph wrappers, connected components, graph summaries, rule predicate metadata, matrix-shape summaries, GNN formatting, atomic artifact writing, and trace summaries.
 
-## Files
-- Cargo.toml — Crate manifest
-- src/lib.rs — PyO3 bindings and type conversions
+## Rules
+
+- Keep `Cargo.toml`, `README.md`, and `src/AGENTS.md` synchronized when public behavior changes.
+- Add crate-local tests for Rust behavior and Python parity tests before routing package code through the FFI.
+- Keep Python as the canonical fallback unless `COGANT_USE_RUST=1` explicitly forces Rust.
+
+## Verification
+
+From the Rust workspace root:
+
+```bash
+cargo test -p cogant-ffi
+cargo clippy -p cogant-ffi -- -D warnings
+```

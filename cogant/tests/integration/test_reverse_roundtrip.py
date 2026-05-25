@@ -5,14 +5,15 @@ Exercises the full cycle::
     repo → forward(cogant) → GNN markdown → reverse(parse/plan/synthesize)
          → synthesized package → forward(cogant) → GNN'
 
-and verifies that the role multiset of the re-emitted GNN' matches the
-original GNN above the lenient
-``cogant.reverse.idempotency.ROLE_MATCH_THRESHOLD`` (default 0.5).
+and verifies that the verifier returns a populated invariant ledger for
+the re-emitted GNN'. The calculator fixture is the default-threshold
+regression guard: generated support code must not inflate semantic role
+counts, and the result must be ``ROLE_PRESERVED`` at the public ``0.5``
+threshold.
 
-This is the canonical acceptance test for the weak-isomorphism claim
-made by the reverse module: we do not require byte-equal recovery of
-the source code (GNN is a lossy projection), only that the Active
-Inference role population survives the round-trip.
+This is the canonical acceptance test for the round-trip method surface:
+we do not require byte-equal recovery of the source code (GNN is a lossy
+projection), and we do not relabel low-score results as successful.
 
 Notes on API choice
 -------------------
@@ -39,7 +40,8 @@ from pathlib import Path
 import pytest
 
 from cogant.reverse import (
-    ROLE_MATCH_THRESHOLD,
+    ROUNDTRIP_STATUS_ROLE_PRESERVED,
+    ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC,
     RoundtripResult,
     parse_gnn,
     plan_package,
@@ -170,22 +172,13 @@ def test_reverse_pipeline_low_level(calculator_repo: Path, tmp_path: Path) -> No
 
 
 # ---------------------------------------------------------------------------
-# High-level roundtrip: role-match score must beat the lenient threshold.
+# High-level roundtrip: verifier must complete and report honest diagnostics.
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.integration
 def test_verify_roundtrip_meets_lenient_threshold(calculator_repo: Path, tmp_path: Path) -> None:
-    """``verify_repo_roundtrip`` reports role_match_score >= 0.5.
-
-    The default ``ROLE_MATCH_THRESHOLD`` is ``0.5`` — lenient enough to
-    tolerate the structural drift introduced by the lossy
-    GNN ↔ Python projection while still catching catastrophic
-    regressions (e.g. the synthesizer dropping every action).
-
-    The test passes the computed score through explicitly so an
-    eventual tightening (e.g. to 0.7) is a one-line change.
-    """
+    """``verify_repo_roundtrip`` passes the default role-preservation gate."""
     work_dir = tmp_path / "roundtrip_work"
     result: RoundtripResult = verify_repo_roundtrip(
         calculator_repo,
@@ -195,22 +188,16 @@ def test_verify_roundtrip_meets_lenient_threshold(calculator_repo: Path, tmp_pat
 
     logger.info("Roundtrip result: %s", result.summary())
 
-    # The score must be within [0, 1].
-    assert 0.0 <= result.role_match_score <= 1.0, (
-        f"role_match_score out of range: {result.role_match_score}"
-    )
-
-    # Lenient acceptance threshold (same as the prompt spec).
-    assert result.role_match_score >= 0.5, (
-        f"Roundtrip role_match_score {result.role_match_score:.2%} fell below "
-        f"lenient threshold 0.5. Original roles: {result.original_roles}; "
-        f"synthesized roles: {result.synthesized_roles}. "
-        f"Errors: {result.errors}"
-    )
-    assert result.is_isomorphic, (
-        f"Result not flagged isomorphic even though score {result.role_match_score:.2%} "
-        f">= threshold. Internal state: {result}"
-    )
+    assert result.roundtrip_status in {
+        ROUNDTRIP_STATUS_ROLE_PRESERVED,
+        ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC,
+    }
+    assert result.role_preserved is True
+    assert result.role_preservation_score >= 0.5
+    assert result.original_roles, "source-side role multiset must be populated"
+    assert result.synthesized_roles, "synthesized-side role multiset must be populated"
+    assert result.synthesized_roles == result.original_roles
+    assert "CONTEXT" not in result.synthesized_roles
 
 
 @pytest.mark.integration
@@ -242,13 +229,16 @@ def test_verify_roundtrip_from_gnn_markdown(calculator_repo: Path, tmp_path: Pat
         keep_tmp=True,
     )
 
-    # Cross-check against the module-level constant so tightening the
-    # default does not silently weaken this test.
-    assert result.role_match_score >= min(0.5, ROLE_MATCH_THRESHOLD), (
-        f"role_match_score {result.role_match_score:.2%} below lenient 0.5 "
-        f"threshold. Original: {result.original_roles}, "
-        f"synthesized: {result.synthesized_roles}, errors: {result.errors}"
-    )
+    assert result.roundtrip_status in {
+        ROUNDTRIP_STATUS_ROLE_PRESERVED,
+        ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC,
+    }
+    assert result.role_preserved is True
+    assert result.role_preservation_score >= 0.5
+    assert result.original_roles, "source-side role multiset must be populated"
+    assert result.synthesized_roles, "synthesized-side role multiset must be populated"
+    assert result.synthesized_roles == result.original_roles
+    assert "CONTEXT" not in result.synthesized_roles
     assert result.package_path is not None
     assert Path(result.package_path).exists(), (
         "Synthesized package directory should survive with keep_tmp=True"

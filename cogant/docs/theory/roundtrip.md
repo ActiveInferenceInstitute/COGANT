@@ -1,131 +1,93 @@
-# Round-trip verification: Forward → Reverse → Forward
+# Round-Trip Verification: Forward → Reverse → Forward
 
-This page explains COGANT's forward-reverse-forward loop, the meaning of ISOMORPHIC/APPROXIMATE/DIVERGENT classifications, and what epsilon (ε = 1.0) signifies.
+This page describes COGANT's v0.6 roundtrip contract. The important change is
+terminological and behavioral: **role preservation is no longer called strict
+isomorphism**. `cogant roundtrip --json` reports a `roundtrip_status` derived
+from an invariant ledger, plus the scalar `role_preservation_score` (`s_role`)
+as a weaker similarity signal.
 
-## What is a round-trip?
+## What Is A Roundtrip?
 
-A **round-trip** is a three-step verification that the forward and reverse passes are semantically dual:
+1. **Forward pass** (program code → GNN): `cogant translate` ingests source
+   code, builds a typed program graph, applies 22 translation rules, compiles
+   A/B/C/D matrices, and emits a GNN package.
+2. **Reverse pass** (GNN → program code): `cogant reverse` parses the GNN
+   markdown, plans a Python package structure, and synthesizes runnable code
+   with matrix functions and an `AgentRuntime`.
+3. **Forward-again** (synthesized code → GNN): the synthesized package is
+   re-analyzed and compared against the original bundle.
 
-1. **Forward pass** (program code → GNN): `cogant translate` — ingest source code, build a program graph, apply 22 translation rules, and emit a GNN bundle with A/B/C/D matrices.
+## Status Taxonomy
 
-2. **Reverse pass** (GNN → program code): `cogant reverse` — parse the GNN markdown, plan a Python package structure, and synthesize runnable Python code with matrix functions (`A`, `B`, `C`, `D`) and an `AgentRuntime`.
+| Status | Meaning |
+| --- | --- |
+| `STRUCTURALLY_ISOMORPHIC` | The strict tier: node/edge counts, edge kinds, role preservation, state-space shapes, matrix shapes/values, GNN sections, and generated-code compile checks all pass. |
+| `ROLE_PRESERVED` | The original Active Inference role population is preserved above the configured threshold, but at least one stricter structural, matrix, or generated-code invariant drifts. |
+| `DRIFT` | The roundtrip completed, but role preservation is below threshold or non-fatal invariants diverge. |
+| `FAILED` | The generated code, import/compile check, or re-forward run failed. |
 
-3. **Forward-again** (synthesized code → GNN): Re-run the forward pass on the synthesized package. If the two GNN bundles are semantically equivalent, the round-trip is **ISOMORPHIC**.
+The role-preservation score is:
 
-### Why round-trip?
-
-Round-tripping verifies that the two representations (program graph and GNN generative model) are not lossy. It tests whether:
-- The forward pipeline correctly extracted role semantics.
-- The reverse synthesizer faithfully reconstructed those semantics.
-- The forward pipeline on the reconstructed code recovers the original role distribution.
-
-Isomorphic round-trips indicate the forward and reverse passes are true semantic duals — a Galois connection — rather than lossy compression followed by heuristic reconstruction.
-
-## Classification thresholds
-
-COGANT classifies round-trip outcomes using **epsilon (ε)**, computed as the **role-match score**: the degree to which the original and re-forwarded role distributions match.
-
-| Classification | ε range | Meaning |
-| --- | --- | --- |
-| **ISOMORPHIC** | ε ≥ 0.8 | The original and re-forwarded bundles have equivalent or near-equivalent role counts. The semantic content is fully or nearly fully preserved. |
-| **APPROXIMATE** | 0.5 ≤ ε < 0.8 | The original and re-forwarded bundles differ but share substantial structure. Some semantic content was lost. |
-| **DIVERGENT** | ε < 0.5 | The original and re-forwarded bundles diverge significantly. Semantic content was substantially lost. |
-
-### How ε is computed
-
-The role-match score is a multiset-based similarity metric over the six semantic roles:
-
-```
-role_match_score = (
-    sum of min(count_original[role], count_resynthesized[role])
-    for role in {HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT}
-) / max(
-    sum(count_original[role] for all roles),
-    sum(count_resynthesized[role] for all roles)
-)
+```text
+s_role =
+    sum(min(count_original[role], count_resynthesized[role]) for role in roles)
+    / max(sum(count_original.values()), sum(count_resynthesized.values()))
 ```
 
-This gives the ratio of correctly-matched roles (both present in original and re-forward bundles) to the total unique roles. A score of 1.0 (epsilon = 1.0) means perfect match; a score of 0.8 means at least 80% of roles were recovered.
+The default role-preserved threshold is `s_role >= 0.5`. This is a useful
+semantic regression signal, but it is intentionally weaker than strict graph
+isomorphism, matrix equality, or textual code recovery. Historical evaluation
+notes sometimes call out a stricter high-confidence `0.8` line; that is not
+the public CLI default.
 
-**Example:** If the original bundle has `{3 HIDDEN_STATE, 1 OBSERVATION, 15 ACTION}` and the re-forwarded bundle has `{3 HIDDEN_STATE, 13 OBSERVATION, 22 ACTION}` (due to scaffolding), the role-match is:
+## JSON Contract
 
-```
-min(3,3) + min(1,13) + min(15,22) = 3 + 1 + 15 = 19
-max(3+1+15, 3+13+22) = max(19, 38) = 38
-ε = 19/38 = 0.5 (APPROXIMATE, not ISOMORPHIC)
-```
+`cogant roundtrip ./my_repo --json` returns fields such as:
 
-## What epsilon = 1.0 means
-
-When **ε = 1.0**, the original and re-forwarded role distributions are **identical**:
-
-- Every HIDDEN_STATE role in the original is present in the re-forward.
-- Every OBSERVATION role is preserved.
-- Every ACTION, POLICY, CONSTRAINT, and CONTEXT role is recovered.
-
-This does **not** mean the GNN matrices are numerically identical (the synthesizer emits heuristic fills for missing evidence), and it does **not** mean the code is textually identical (the synthesizer uses templated stubs). Rather, it means **the semantic structure — the Active Inference role assignment — is perfectly preserved**.
-
-An ε = 1.0 round-trip is strong evidence that:
-1. The forward pipeline's role rules are not lossy with respect to the source code.
-2. The reverse synthesizer correctly interprets and reconstructs the GNN's role semantics.
-3. The program graph and the GNN matrix dimensions are dual representations of the same underlying causal structure.
-
-## v0.5.0 benchmark: 23/23 ISOMORPHIC (ε = 1.0)
-
-The v0.5.0 release achieved **23/23 ISOMORPHIC** across the canonical roundtrip evaluation set:
-
-- **12 zoo fixtures** — hand-authored minimal Active Inference examples covering states, observations, actions, policies, constraints, and event systems.
-- **3 real-world examples** — curated Python libraries (`json_stdlib`, `requests_lib`, `flask_app`).
-- **8 uncurated real-world libraries** — diverse large codebases (`dateutil`, `pyyaml`, `tqdm`, `fastapi`, `click`, `httpx`, `urllib3`, `requests`).
-
-**Key v0.5.0 improvements:**
-- **POLICY stub emission** — The synthesizer now generates `decide_*` stubs proportional to the origin GNN's POLICY role count, rather than using fixed scaffolding.
-- **CONTEXT stub emission** — Similarly for CONTEXT roles and `get_context_*` stubs.
-- **CONSTRAINT fix (wave-16)** — The synthesizer scales `check_*` stub generation to match origin constraint counts.
-
-These changes resolved the primary failure modes that had held earlier versions at 14/23 or 19/23, bringing all targets to ε = 1.0.
-
-## Interpreting scaffolding and surplus nodes
-
-When a synthesized package is re-forwarded, it often has **more nodes** than the original:
-
-| Metric | Original | Re-forward | Why |
-| --- | --- | --- | --- |
-| n_states (HIDDEN_STATE) | 1 | 1 | Preserved |
-| n_obs (OBSERVATION) | 3 | 9 | Synthesis adds scaffolding (getters, logging, properties) |
-| n_actions (ACTION) | 1 | 4 | Synthesis adds `__init__`, helper methods, etc. |
-
-The role-match score **tolerates these surplus nodes** because it measures the *union* of original and synthesized roles. A synthesized package can be a **faithful superstructure** — it preserves all original roles and adds harmless scaffolding — and still achieve ε = 1.0.
-
-This is the expected and correct behavior: a reverse synthesizer cannot guarantee a textually identical reconstruction, only a **semantically isomorphic** one.
-
-## Running round-trip evaluation
-
-### Quick validation (single target)
-
-```bash
-cogant roundtrip ./my_repo --json
+```json
+{
+  "schema_version": "2.0",
+  "roundtrip_status": "ROLE_PRESERVED",
+  "role_preservation_score": 1.0,
+  "role_preserved": true,
+  "structurally_isomorphic": false,
+  "matrix_preserved": false,
+  "gnn_sections_preserved": true,
+  "generated_code_ok": true,
+  "invariants": {
+    "role_preserved": true,
+    "graph_node_edge_preserved": false,
+    "edge_kinds_preserved": true,
+    "matrix_preserved": false,
+    "gnn_sections_preserved": true,
+    "generated_code_ok": true
+  }
+}
 ```
 
-Returns a JSON record with:
-- `role_match_score` — the ε value
-- `classification` — ISOMORPHIC, APPROXIMATE, or DIVERGENT
-- `original_counts` — {role → count} from the first forward pass
-- `resynthesized_counts` — {role → count} from the re-forward pass
+The old `is_isomorphic` and `role_match_score` constructor aliases are accepted
+inside Python for compatibility, but new CLI/server JSON emits the v0.6 field
+names above.
 
-### Batch evaluation (evaluation set)
+## Interpreting Drift
 
-```bash
-cd cogant/evaluation
-python dataset/regenerate.py --target-group zoo
-```
+Synthesized packages commonly contain scaffolding absent from the original
+source: constructors, getters, policy functions, constraint checks, or matrix helper
+functions. Those extra nodes can preserve the role distribution while changing
+node/edge totals. That is why `ROLE_PRESERVED` is a real success tier but not the
+same claim as `STRUCTURALLY_ISOMORPHIC`.
 
-Runs round-trips on all fixtures in the `zoo/` example directory and outputs `roundtrip_results.jsonl` with full per-target breakdowns.
+The inspection dashboard and batch dashboard expose the same distinction:
+original vs regenerated graph counts, edge-kind deltas, role deltas, GNN-section
+diffs, matrix deltas, generated-code status, and the final status badge.
 
-## Further reading
+## Further Reading
 
-- **[Isomorphism Theorem](isomorphism.md)** — Formal mathematical proof that program graphs and generative models form a Galois connection.
-- **[ROUNDTRIP_EVAL.md](../evaluation/ROUNDTRIP_EVAL.md)** — Full benchmark report with 23/23 ISOMORPHIC results and per-target analysis.
-- **[ROUNDTRIP_IMPROVEMENT.md](../evaluation/ROUNDTRIP_IMPROVEMENT.md)** — Historical changelog of improvements from v0.2.0 (14/23) to v0.5.0 (23/23).
-- **[`cogant.reverse` API](../api/reverse.md)** — Reverse synthesizer module documentation.
-- **[GNN format reference](gnn_format.md)** — The 18-section GNN markdown spec that round-trips preserve.
+- [ROUNDTRIP_EVAL.md](../evaluation/ROUNDTRIP_EVAL.md) records the historical
+  role-preservation corpus.
+- [ROUNDTRIP_IMPROVEMENT.md](../evaluation/ROUNDTRIP_IMPROVEMENT.md) explains
+  the policy/context/constraint synthesizer improvements that made the role
+  corpus stable.
+- [`cogant.reverse` API](../api/reverse.md) documents the reverse synthesizer.
+- [GNN format reference](gnn_format.md) describes the GNN sections checked by
+  `gnn_sections_preserved`.

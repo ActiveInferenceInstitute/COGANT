@@ -27,7 +27,7 @@ cogant translate tests/fixtures/control_positive/calculator \
   --layout-output
 ```
 
-This writes `data/`, `diagrams/`, `site/`, `reports/`, and `figures/` subdirectories plus a top-level `bundle.json`. Running through `run_all.py` (see [`README.md`](https://github.com/cogant-contributors/cogant/blob/main/cogant/README.md)) adds `analysis/`, `exports/`, `gnn_package/`, and `roundtrip/` for the same target.
+This writes `data/`, `diagrams/`, `site/`, `reports/`, and `figures/` subdirectories plus a top-level `bundle.json`. Running through `run_all.py` (see [`README.md`](https://github.com/docxology/cogant/blob/main/cogant/README.md)) adds `analysis/`, `exports/`, `gnn_package/`, and `roundtrip/` for the same target.
 
 ## What the pipeline finds
 
@@ -81,7 +81,7 @@ C_m0 = 0.0                # uniform preferences (no CONSTRAINT confidence availa
 D_f0 = uniform            # no CONFIGURATION nodes
 ```
 
-The identity-biased `A` matrix and identity `B` fallback are documented limitations of the v0.1.x matrix builder — see [Active Inference mapping § Known Limitations](../theory/active_inference.md#known-limitations).
+The identity-biased `A` matrix and identity `B` fallback are documented limitations of the current static-evidence path: when the calculator source does not determine stronger likelihood or transition evidence, the exporter writes valid defaults and records that limitation in the bundle and figure sidecars. See [Active Inference mapping § Known Limitations](../theory/active_inference.md#known-limitations).
 
 ## Explain a single node
 

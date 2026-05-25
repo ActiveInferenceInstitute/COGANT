@@ -69,17 +69,17 @@ cogant/                         ← package root (this directory)
 
 ---
 
-## Current State (v0.5.0 + wave-21)
+## Current State (v0.6.0)
 
 | Metric | Value |
 |--------|-------|
 | Translation rules | 22 (5 structural + 5 semantic + 3 control + 4 behavioral + 5 resilience) |
-| Languages supported | Python (full AST), JS/TS (tree-sitter) |
-| Roundtrip ε | 1.0 — 23/23 ISOMORPHIC fixtures |
-| Test suite | Large and growing; `uv run pytest tests/ -q`. Coverage: line gate, `--cov-fail-under=89`, omits in `pyproject.toml` |
-| Export formats | 9 (JSON, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT, JSONLINES) |
-| CLI subcommands | 26 `@app.command` + `plugin`/`migrate` groups (**28** top-level names); **29** leaves incl. `plugin list|info`, `migrate migrate` |
-| Protocols / TypedDicts | 14 Protocols, 15 TypedDicts, 233 .pyi stubs |
+| Languages supported | Python (full AST), JavaScript / TypeScript (tree-sitter with fallback paths) |
+| Roundtrip reporting | `roundtrip_status` separates `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`, `DRIFT`, and `FAILED`; role-preserved fixture counts and strict structural-isomorphism counts are reported separately in `evaluation/METRICS.yaml` |
+| Test suite | Large unit / integration / property / golden / fuzz suite; run `uv run pytest tests/ -q` for the live count |
+| Export formats | JSON, JSONLines, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT |
+| CLI surface | Typer app with direct commands plus `plugin` and `migrate` groups; `cogant --help` is the live source of truth |
+| Type surface | Runtime-checkable protocols, TypedDict contracts, and `.pyi` stubs ship with `py.typed` |
 
 ---
 

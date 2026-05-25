@@ -26,7 +26,7 @@ Everything else (tree-sitter, reportlab, the rust backend) is optional for this 
 ## 1. Clone and install
 
 ```bash
-git clone https://github.com/cogant/cogant.git
+git clone https://github.com/docxology/cogant.git
 cd cogant
 uv sync --extra all
 uv run cogant doctor

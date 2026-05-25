@@ -48,7 +48,7 @@ This path suits interactive notebooks and incremental debugging.
 
 ## Pipeline-oriented workflow
 
-Use `PipelineRunner` for scripted, reproducible batch runs where all stages are configured up front and the end-state is a single `Bundle`. It is the right choice when a user wants to process many repositories with a fixed configuration, wire COGANT into CI, or guarantee that every run executes the same ordered stages with the same plugin settings. Because the whole run is described by a single `PipelineConfig`, it can be checked into version control and replayed without manual intervention.
+Use `PipelineRunner` for scripted, reproducible batch runs where all stages are configured up front and the end-state is a single `Bundle`. It is the right choice when a user wants to process many repositories with a fixed configuration, wire COGANT into CI, or make ordered stage execution and plugin settings explicit enough to review. Because the whole run is described by a single `PipelineConfig`, it can be checked into version control and replayed without manual intervention on the same inputs and environment.
 
 `PipelineRunner` with `PipelineConfig` runs an ordered list of 10 stages (`ingest`, `static`, `normalize`, `graph`, `dynamic`, `translate`, `statespace`, `process`, `export`, `validate`). The `dynamic` stage is optional (`PipelineConfig.skip_dynamic` or `--no-dynamic` CLI flag) and merges coverage/traces to enrich confidence and mappings. Configuration can skip stages, attach plugin settings per language, set `output_dir`, verbosity, and dry-run mode. Results aggregate into a **Bundle** with `stage_results`, error lists, and accessors described below.
 
@@ -62,11 +62,29 @@ The bundle API exposes stage summaries and convenience render/export helpers, in
 - `render_site` — static HTML site with graph and model views
 - `to_json` / `save_json`
 
-For canonical 18-section Generalized Notation Notation artifacts (`model.gnn.md` plus companion JSON), use the export outputs documented in `../cogant/docs/export/README.md`; `Bundle.gnn_markdown()` is intentionally a lightweight report surface.
+For canonical 19-section Generalized Notation Notation artifacts (`model.gnn.md` plus companion JSON), use the export outputs documented in `../cogant/docs/export/README.md`; `Bundle.gnn_markdown()` is intentionally a lightweight report surface.
 
 ## Command-line interface
 
 The CLI entry point (`cogant.cli.main`) registers **28** top-level subcommands (`cogant --help`). The high-traffic paths are `cogant translate` (full pipeline, equivalent to `cogant analyze`; accepts `--incremental <git-ref>` for per-commit CI re-runs over a Git diff), `cogant validate`, `cogant reverse`, `cogant roundtrip`, and `cogant doctor` (environment diagnostics). Other commands cover scanning (`scan`, `extract-static`, `extract-dynamic`, `graph`), compilation (`statespace`, `process`), re-export (`export-gnn`, `export`), static/graph analytics (`analyze-static`, `analyze-graph`), visualization (`render`, `viz`, `visualize`, `diff`), review (`explain`), upstream interop (`upstream-gnn` — drives the upstream `generalized-notation-notation` 25-step pipeline against an existing `gnn_package/`, also exposed as `--upstream-gnn-pipeline` on `translate` / `analyze` / `validate`), and lifecycle management (`init`, `plugin`, `migrate`, `benchmark`, `changed`). Exact flags live in `../cogant/docs/cli/README.md` and the single-page [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md); the manuscript does not duplicate them to avoid drift.
+
+**Per-command stage coverage (RedTeam F40 disambiguation).** Not every
+subcommand exercises all 10 runner stages. `cogant translate` and
+`cogant analyze` (default form) run the full sequence enforced by
+`cogant.pipeline.RUNNER_STAGES` (and pinned by
+`tools/audit_stage_list.py`). `cogant explain` runs the
+*minimal-pipeline* path
+`ingest → static → normalize → graph → translate` (no `dynamic`,
+`statespace`, `process`, `export`, `validate`); this is documented in
+its CLI docstring (`py/cogant/cli/main.py:1672`). `cogant statespace`
+runs `static → graph → translate → statespace` and prints a count.
+`cogant validate` runs `ingest → static → normalize → graph → validate`
+and skips the in-between translate/statespace/process stages. A
+reviewer running a non-default subcommand and observing fewer than 10
+recorded stages should consult the subcommand's docstring or
+`cli_reference.md`; the 10-stage claim refers specifically to
+`cogant translate` (the default `cogant analyze` form), not to every
+subcommand.
 
 ## Review API
 

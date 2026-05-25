@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from cogant.reverse.parser import ReverseGNNModel
@@ -25,6 +26,7 @@ class PackagePlan:
     policy_functions: list[NodePlan] = field(default_factory=list)
     constraint_checks: list[NodePlan] = field(default_factory=list)
     context_functions: list[NodePlan] = field(default_factory=list)
+    target_role_counts: dict[str, int] = field(default_factory=dict)
     scaffold_constraint_checks: list[NodePlan] = field(default_factory=list)
     scaffold_policy_functions: list[NodePlan] = field(default_factory=list)
     scaffold_context_classes: list[NodePlan] = field(default_factory=list)
@@ -38,4 +40,6 @@ class PackagePlan:
     @classmethod
     def from_json(cls, data: str) -> PackagePlan: ...
 
-def plan_package(model: ReverseGNNModel) -> PackagePlan: ...
+def plan_package(
+    model: ReverseGNNModel, *, expected_roles: Mapping[str, int] | None = None
+) -> PackagePlan: ...

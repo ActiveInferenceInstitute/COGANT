@@ -32,7 +32,7 @@ Established the forward pipeline and basic tooling.
 Added the reverse synthesis arm and closed the GNN→code→GNN loop.
 
 - [x] `cogant.reverse`: GNN markdown parser, package planner, Python synthesizer, idempotency checker
-- [x] `cogant roundtrip` CLI + `ISOMORPHISM_THEOREM.md`: Galois connection proof + ε formalization
+- [x] `cogant roundtrip` CLI + `ISOMORPHISM_THEOREM.md`: historical Galois-connection proof sketch + bounded-error formalization
 - [x] Active Inference agent runtime: `AgentRuntime`, `run_episode`, EFE/VFE metrics
 - [x] 12-repo Active Inference example zoo (`examples/zoo/`)
 - [x] DAG execution engine with topological sort and cycle detection
@@ -42,7 +42,7 @@ Added the reverse synthesis arm and closed the GNN→code→GNN loop.
 - [x] YAML rule DSL compiled to Python matchers
 - [x] Structured logging + in-process metrics (Counter, Histogram, span)
 - [x] `cogant doctor` / `cogant init` / `cogant explain` CLI additions
-- [x] Roundtrip ε: 14/23 → 19/23 ISOMORPHIC (83%) after CONSTRAINT fix
+- [x] Roundtrip role preservation: 14/23 → 19/23 ROLE_PRESERVED (83%) after CONSTRAINT fix
 
 ---
 
@@ -54,11 +54,14 @@ Added the reverse synthesis arm and closed the GNN→code→GNN loop.
 - [x] `mypy --strict`: 0 errors across 177 source files
 - [x] Coverage: 81% total (gate: 75%)
 - [x] Tutorial notebooks 01–06 + mkdocs nav update
-- [x] Cross-language roundtrip claim: JS Observer → GNN → AI cycle, `role_match_score=1.0`
-- [x] ROUNDTRIP_EVAL.md: 23-target ε evaluation
+- [x] Cross-language roundtrip claim: JS Observer → GNN → AI cycle, `role_preservation_score=1.0`
+- [x] ROUNDTRIP_EVAL.md: 23-target role-preservation evaluation
 - [x] Benchmark dashboard: `evaluation/dashboards/benchmarks.html` (Chart.js)
 - [x] CONSTRAINT synthesizer with proportional `check_*` stubs (was fixed 3-4)
-- [x] Roundtrip ε: 19/23 → 23/23 ISOMORPHIC after POLICY/CONTEXT stub emission
+- [x] Historical roundtrip role-preservation benchmark: 19/23 → 23/23
+      role-preserved targets after POLICY/CONTEXT stub emission; current v0.6
+      release metrics require a native refreshed ledger before reusing this as
+      fresh evidence
 
 ---
 
@@ -72,8 +75,10 @@ Added the reverse synthesis arm and closed the GNN→code→GNN loop.
 - [x] Tutorial notebooks 07–12: Flask walkthrough, constraints, plugins, YAML DSL, multi-episode learning, cross-language roundtrip
 - [x] Scaling regression tests: B-tensor, BFS, AST cache, INHERITS edge deduplification guards
 - [x] Comprehensive docstring pass + mkdocs nav update + getting started guide
-- [x] Manuscript appendices A–E: Galois proofs, GNN compliance audit, ε derivation, scaling analysis, cross-language extension
-- [x] Roundtrip ε: 23/23 ISOMORPHIC (100%), ε=1.0
+- [x] Manuscript appendices A–E: Galois proof sketch, GNN compliance audit, role-preservation derivation, scaling analysis, cross-language extension
+- [x] Historical roundtrip role-preservation benchmark: 23/23 role-preserved
+      targets at s_role=1.0; not current native v0.6 evidence until ledger
+      refresh
 
 ---
 
@@ -128,7 +133,7 @@ The largest single improvement batch since the initial release.
 - [x] `MultiFormatExporter` with `ExportFormat` enum (9 formats: JSON, GRAPHML, PARQUET, SVG, PNG, PDF, MERMAID, DOT, JSONLINES)
 - [x] `bundle.py`: `export_zip()`, `export_with_provenance()` with SHA256 hash
 - [x] `typed_export.py`: `to_jsonlines()`, `to_arrow_ipc()` (pyarrow optional)
-- [x] 4 new CLI entry points (Typer **preview stubs**): `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export` — registered with `--help` but print API guidance until wired to `cogant.static` / `cogant.graph.analysis` / `cogant.viz` / `cogant.export`
+- [x] 4 analysis/export CLI entry points: `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export` — registered in the v0.5 era and wired to real command paths in the v0.6 hardening pass
 
 ### Type infrastructure — all new
 

@@ -1,6 +1,6 @@
 # How COGANT assigns roles
 
-> **What this page is:** An explanation of COGANT's semantic rule engine — how rules fire on graph evidence, how conflicts are resolved, and what each of the seven Active Inference roles means.
+> **What this page is:** An explanation of COGANT's semantic rule engine — how rules fire on graph evidence, how conflicts are resolved, and what the Active Inference plus supporting evidence roles mean.
 >
 > **Prerequisites:** [Program graphs in COGANT](program_graph.md) and the role vocabulary from [Active Inference](active_inference.md).
 >
@@ -8,7 +8,7 @@
 >
 > **Next steps:** [Markov blankets in codebases](markov_blanket.md) · [Tutorial: Writing a custom translation rule](../tutorials/04_custom_rules.md) · [The forward-reverse cycle](roundtrip.md)
 
-COGANT's rule engine is the component that looks at a [program graph](program_graph.md) and decides: "This function is an observation. That class is hidden state. This validator is a constraint." This page explains the engine, the rule families, how conflicts are resolved, and what each of the seven semantic roles means.
+COGANT's rule engine is the component that looks at a [program graph](program_graph.md) and decides: "This function is an observation. That class is hidden state. This validator is a constraint." This page explains the engine, the rule families, how conflicts are resolved, and how core roles differ from supporting evidence roles.
 
 ## The rule engine
 
@@ -67,6 +67,7 @@ These rules detect configuration and feature management.
 | --- | --- | --- | --- |
 | ConfigRule | Node kind is CONFIGURATION | CONTEXT | 0.90 |
 | FeatureFlagRule | Node kind is FEATURE_FLAG | CONTEXT | 0.85 |
+| ParameterRule | Tunable numeric/string constants | CONTEXT | 0.80 |
 
 ### Resilience rules (`resilience.py`)
 
@@ -107,7 +108,7 @@ The engine produces four mappings:
 
 If `ContainmentRule` also fires on `UserService` (it has methods), the majority-vote classification at confidence 0.75 is resolved against the per-method rules which carry higher confidence. The per-method mappings win.
 
-## The seven semantic roles
+## Active Inference semantic roles
 
 ### HIDDEN_STATE
 
@@ -125,6 +126,12 @@ Functions that change hidden state. Setters, mutators, event publishers, request
 
 Control logic that selects which action to execute. Controllers, routers, schedulers, retry strategies. These map to the policy layer in Active Inference -- the mechanism that minimizes expected free energy. Detected by `PolicyRule`, `InheritanceRule`, and `RetryPatternRule` — see [translation rules reference](../reference/translation_rules.md).
 
+### PREFERENCE
+
+Explicit preference evidence over observations. The `MappingKind` exists in the schema and in
+GNN import/export vocabulary; the shipped source-code rule set usually represents validators
+and tests as `CONSTRAINT` mappings rather than emitting a standalone `PREFERENCE` mapping.
+
 ### CONSTRAINT
 
 Validators and tests that define what the system considers correct. Assertions, schema validators, type checkers. These populate the C (preference) matrix in the GNN. Detected by `PreferenceRule` and `TestAssertionRule` — see [translation rules reference](../reference/translation_rules.md).
@@ -136,6 +143,13 @@ Configuration, feature flags, and global state that parameterize the system. The
 ### DATA_FLOW
 
 Functions that read from one source and write to a different target. Transformation pipelines, ETL functions, adapters. These appear in the Connections section of the GNN. Detected by `DataPipelineRule` — see [translation rules reference](../reference/translation_rules.md).
+
+## Supporting evidence roles
+
+`DATA_FLOW`, `ERROR_HANDLING`, `ORCHESTRATION`, and `CIRCUIT_BREAKER` are supporting roles in
+the current package. They are retained in mapping JSON, provenance, dashboards, and evidence
+traces because they explain graph structure and conflict resolution, but they are not separate
+A/B/C/D state-space axes in the way `HIDDEN_STATE`, `OBSERVATION`, and `ACTION` are.
 
 ## Confidence tiers
 
@@ -160,14 +174,14 @@ The rule engine, the five rule families, and the conflict-resolution machinery a
 | **Structural rules** family (`ReadOnlyInputRule`, `MutatingSubsystemRule`, `InheritanceRule`, `ContainmentRule`, `DataPipelineRule`) | `translate/rules/structural.py` | [`cogant.translate` → Structural rules](../api/translate.md#structural-rules) | see [translation rules reference](../reference/translation_rules.md) |
 | **Semantic rules** family (`ObservationRule`, `ActionRule`, `PolicyRule`, `PreferenceRule`, `ContextRule`) | `translate/rules/semantic.py` | [`cogant.translate` → Semantic rules](../api/translate.md#semantic-rules) | see [translation rules reference](../reference/translation_rules.md) |
 | **Behavioral rules** family (`OrchestratorRule`, `TestAssertionRule`, `EventBusRule`) | `translate/rules/behavioral.py` | [`cogant.translate` → Behavioral rules](../api/translate.md#behavioral-rules) | see [translation rules reference](../reference/translation_rules.md) |
-| **Control rules** family (`ConfigRule`, `FeatureFlagRule`) | `translate/rules/control.py` | [`cogant.translate` → Control-flow rules](../api/translate.md#control-flow-rules) | see [translation rules reference](../reference/translation_rules.md) |
+| **Control rules** family (`ConfigRule`, `FeatureFlagRule`, `ParameterRule`) | `translate/rules/control.py` | [`cogant.translate` → Control-flow rules](../api/translate.md#control-flow-rules) | see [translation rules reference](../reference/translation_rules.md) |
 | **Resilience rules** family (`RetryPatternRule`, `ErrorBoundaryRule`, `SingletonAccessRule`, `CircuitBreakerRule`) | `translate/rules/resilience.py` | [`cogant.translate` → Resilience rules](../api/translate.md#resilience-rules) | see [translation rules reference](../reference/translation_rules.md) |
-| Mapping the seven semantic roles onto Active Inference ontology terms | `gnn/formatter/`, `statespace/compiler.py` | [`cogant.gnn`](../api/gnn.md), [`cogant.statespace`](../api/statespace.md) | `GNNMarkdownFormatter`, `StateSpaceCompiler` |
+| Mapping the Active Inference semantic roles onto ontology terms | `gnn/formatter/`, `statespace/compiler.py` | [`cogant.gnn`](../api/gnn.md), [`cogant.statespace`](../api/statespace.md) | `GNNMarkdownFormatter`, `StateSpaceCompiler` |
 
 ## Further reading
 
 - [What is a GNN?](gnn.md) -- how role assignments become GNN sections
-- [Active Inference from a programmer's perspective](active_inference.md) -- the theory behind the seven roles
+- [Active Inference from a programmer's perspective](active_inference.md) -- the theory behind the core roles
 - [Program graphs in COGANT](program_graph.md) -- the graph structure that rules analyze
 - [Markov blankets in codebases](markov_blanket.md) -- the complementary partitioning approach
 - [`cogant.translate` API reference](../api/translate.md) -- engine + every rule class indexed by family

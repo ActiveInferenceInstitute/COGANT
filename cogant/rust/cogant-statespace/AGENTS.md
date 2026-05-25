@@ -1,19 +1,24 @@
-# Agents — rust/cogant-statespace
+# Agents - rust/cogant-statespace
 
 ## Owner
-Semantic Lead
 
-## Responsibilities
-- High-performance state space compilation
-- Control-flow extraction and simplification
-- Variable state tracking and abstraction
-- Temporal reasoning at scale
+Infra Lead
 
-## Coordination
-- Consumes graphs from cogant-graph
-- Outputs state space representation to Python
-- Optional layer; not critical path
+## Scope
 
-## Files
-- Cargo.toml — Crate manifest
-- src/lib.rs — StateSpaceCompiler, temporal models
+Rust-side state variables, observations, actions, transitions, state-space models, cardinality helpers, and FFI shape summaries.
+
+## Rules
+
+- Keep `Cargo.toml`, `README.md`, and `src/AGENTS.md` synchronized when public behavior changes.
+- Add crate-local tests for Rust behavior and Python parity tests before routing package code through the FFI.
+- Keep Python as the canonical fallback unless `COGANT_USE_RUST=1` explicitly forces Rust.
+
+## Verification
+
+From the Rust workspace root:
+
+```bash
+cargo test -p cogant-statespace
+cargo clippy -p cogant-statespace -- -D warnings
+```

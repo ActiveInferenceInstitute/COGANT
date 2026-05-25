@@ -3,9 +3,6 @@
 //! Provides abstraction for persisting graphs, mappings, state spaces,
 //! and other artifacts to disk or cloud storage.
 
-use cogant_core::StableId;
-use cogant_graph::ProgramGraph;
-use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -138,7 +135,7 @@ impl FileStore {
         self.bundle_path(id).join("artifacts")
     }
 
-    /// Calculate SHA256 checksum of data.
+    /// Calculate a non-cryptographic SipHash checksum of data (std `DefaultHasher`).
     fn checksum(&self, data: &[u8]) -> String {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};

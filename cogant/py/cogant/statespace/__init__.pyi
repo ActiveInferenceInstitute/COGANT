@@ -1,4 +1,5 @@
 from cogant.statespace.compiler import Action as Action
+from cogant.statespace.compiler import DegradedOutput as DegradedOutput
 from cogant.statespace.compiler import Likelihood as Likelihood
 from cogant.statespace.compiler import ObservationModality as ObservationModality
 from cogant.statespace.compiler import Preference as Preference
@@ -12,13 +13,16 @@ from cogant.statespace.temporal import TemporalOrdering as TemporalOrdering
 from cogant.statespace.temporal import TimeRegime as TimeRegime
 from cogant.statespace.variables import ConfidenceLevel as ConfidenceLevel
 from cogant.statespace.variables import FactorizationInfo as FactorizationInfo
+from cogant.statespace.variables import ObservationVar as ObservationVar
 from cogant.statespace.variables import StateVariable as StateVariable
 from cogant.statespace.variables import StateVariableExtractor as StateVariableExtractor
 from cogant.statespace.variables import StateVariableType as StateVariableType
+from cogant.statespace.variables import VariableRegistry as VariableRegistry
 
 __all__ = [
     "StateSpaceCompiler",
     "StateSpaceModel",
+    "DegradedOutput",
     "ObservationModality",
     "Action",
     "Transition",
@@ -29,6 +33,8 @@ __all__ = [
     "StateVariableType",
     "ConfidenceLevel",
     "FactorizationInfo",
+    "ObservationVar",
+    "VariableRegistry",
     "TemporalAnalyzer",
     "TimeRegime",
     "TemporalOrdering",

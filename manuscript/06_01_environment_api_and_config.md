@@ -8,7 +8,7 @@ From the COGANT package root [`../cogant/`](../cogant/) (where `pyproject.toml` 
 
 ## Terminology: runner stages and conceptual IRs
 
-The **`PipelineRunner`** executes an ordered list of **runner stages** (for example ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate), recorded in `cogant/evaluation/METRICS.yaml` as `pipeline.runner_stages`. Separately, Chapter 2 and [`06_02_exports_parser_and_ir_stages.md`](06_02_exports_parser_and_ir_stages.md) describe a **six-layer conceptual IR progression** (repo snapshot through validation reports). Those layers are *artifacts* and documentation structure; they are not a 1:1 rename of the runner-stage list. Use “runner stage” when referring to `PipelineConfig.stages`, and “IR layer” when referring to the methodological table.
+The **`PipelineRunner`** executes an ordered list of **runner stages** (for example ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate), recorded in `cogant/evaluation/METRICS.yaml` as `pipeline.runner_stages`. Separately, @sec:02-01-program-graph-and-formal-foundations and [`06_02_exports_parser_and_ir_stages.md`](06_02_exports_parser_and_ir_stages.md) describe a **six-layer conceptual IR progression** (repo snapshot through validation reports). Those layers are *artifacts* and documentation structure; they are not a 1:1 rename of the runner-stage list. Use “runner stage” when referring to `PipelineConfig.stages`, and “IR layer” when referring to the methodological table.
 
 ## Running the API
 
@@ -75,7 +75,3 @@ Each stage key corresponds to a handler in `cogant.api.pipeline.PipelineRunner.s
 ## CLI
 
 Use the `cogant` CLI for scripted batch runs—see `../cogant/docs/cli/README.md` and [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md) for the command list that matches the installed version.
-
-## See also (MkDocs)
-
-Installation and environment: [`../cogant/docs/getting-started/installation.md`](../cogant/docs/getting-started/installation.md). Pipeline stage order (runner): [`../cogant/docs/reference/pipeline_stages.md`](../cogant/docs/reference/pipeline_stages.md).

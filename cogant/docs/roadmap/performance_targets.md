@@ -1,6 +1,6 @@
 # Performance Targets
 
-Last updated: 2026-04-13 (v0.5.0 + wave-21). Measured values from `evaluation/METRICS.yaml`
+Last updated: 2026-05-14 (v0.6 hardening snapshot). Measured values from `evaluation/METRICS.yaml`
 and the Flask benchmark (`cogant translate --incremental`).
 
 ---
@@ -11,7 +11,7 @@ and the Flask benchmark (`cogant translate --incremental`).
 |-----------|--------|-------|
 | Flask app — no-change incremental | **19.6× speedup** | Re-uses previous ProgramGraph |
 | Flask app — single-file change | **5.6× speedup** | Only changed paths re-analyzed |
-| Roundtrip ε (23 canonical fixtures) | **1.0 (100% ISOMORPHIC)** | |
+| Roundtrip ledger classification (23 canonical fixtures) | **23 `STALE_LEGACY` / 0 fresh v0.6 role-preserved rows** | Historical 23/23 role-preservation benchmark retained only as legacy evidence until native v0.6 ledger refresh |
 | AII validator score (all fixtures) | **100/100** | |
 | `cogant translate` on 8 real-world repos | all pass | flask, requests, dulwich, etc. |
 | Dulwich edge-density cliff | ~380s / 8.5 GB | At 1.80 e/n ratio — known limitation |
@@ -99,4 +99,4 @@ processing reduces wall clock (v1.0).
 | API/server (`server/`, `api/`) | ~72% | 80% | 88% |
 | **Overall** | **96.22%** | **96%** | **97%** |
 
-**Wave-21 (2026-05-09) snapshot:** **9,222 tests passing** (9,253 total, 31 skipped), **96.22%** line coverage. **CI gate:** `pyproject.toml` uses `--cov-fail-under=89`, `branch = false`, `omit` for `tools/`, `static/treesitter_parser.py`, and `parallel = true` — run `uv run pytest tests/ -q --cov=cogant` for live counts. Wave-20 snapshot: 8,980 passing (9,011 total), 95.11% coverage. Historical v0.5.0 (2026-04-10) snapshot: 2,129 tests passing, 83.42% coverage.
+**May 2026 package-hardening snapshot:** **9,222 tests passing** (9,253 total, 31 skipped), **96.22%** line coverage. **CI gate:** `pyproject.toml` uses `--cov-fail-under=89`, `branch = false`, `omit` for `static/treesitter_parser.py`, and `parallel = true` — run `uv run pytest tests/ -q --cov=py/cogant` for live counts. Earlier package-hardening snapshot: 8,980 passing (9,011 total), 95.11% coverage. Historical v0.5.0 (2026-04-10) snapshot: 2,129 tests passing, 83.42% coverage.

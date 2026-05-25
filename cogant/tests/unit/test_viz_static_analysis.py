@@ -17,6 +17,8 @@ from cogant.static.dead_code import DeadCodeEntry, DeadCodeReport
 from cogant.static.metrics import HalsteadMetrics
 from cogant.viz.static_analysis_view import StaticAnalysisView
 
+from ._viz_assert import assert_figure_nondegenerate
+
 
 def _complexity_report() -> ComplexityReport:
     report = ComplexityReport(file_path=Path("src/mod.py"))
@@ -116,7 +118,7 @@ def test_init():
 @pytest.mark.unit
 def test_plot_complexity_heatmap_basic(sav):
     fig = sav.plot_complexity_heatmap(_complexity_report())
-    assert fig is not None
+    assert_figure_nondegenerate(fig)
     import matplotlib.pyplot as plt
 
     plt.close("all")
@@ -133,7 +135,7 @@ def test_plot_complexity_heatmap_empty(sav):
 @pytest.mark.unit
 def test_plot_complexity_histogram_basic(sav):
     fig = sav.plot_complexity_histogram(_complexity_report())
-    assert fig is not None
+    assert_figure_nondegenerate(fig)
     import matplotlib.pyplot as plt
 
     plt.close("all")

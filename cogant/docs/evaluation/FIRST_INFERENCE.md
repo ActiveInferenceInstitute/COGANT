@@ -56,7 +56,7 @@ forward(code') ~=  gnn          # round-trip: re-analysis recovers the GNN
 run(code')     =   working agent # execution: the package runs Active Inference
 ```
 
-The round-trip is not byte-identical but role-multiset isomorphic: the same hidden-state, observation, and action roles survive the cycle. And now the synthesized code is not merely structurally correct -- it runs, infers, and acts.
+The roundtrip is not byte-identical and should not be described as strict structural isomorphism under the current taxonomy. The historical milestone is weaker and still useful: the same hidden-state, observation, and action roles survive the cycle, and the synthesized code runs, infers, and acts.
 
 ## The No-Exec Path
 

@@ -86,9 +86,9 @@ Helpers for the idempotency checks that drive the roundtrip ε metric.
 
 The full reverse surface (`parser`, `callable`, `planner`, `synthesizer`, `matrices`, `metrics`, `idempotency`) is exercised by:
 
-- **Zoo:** [`examples/zoo/01_simple_state/`](https://github.com/cogant-contributors/cogant/tree/main/cogant/examples/zoo/01_simple_state) — round-trip target with the smallest non-trivial `MatrixFunctions` closure.
-- **Zoo:** [`examples/zoo/04_pomdp_minimal/`](https://github.com/cogant-contributors/cogant/tree/main/cogant/examples/zoo/04_pomdp_minimal) — A/B/C/D round-trip used by `verify_repo_roundtrip`.
-- **Zoo:** [`examples/zoo/13_js_observer/`](https://github.com/cogant-contributors/cogant/tree/main/cogant/examples/zoo/13_js_observer) — cross-language reverse target (JS → GNN → Python package).
+- **Zoo:** [`examples/zoo/01_simple_state/`](https://github.com/docxology/cogant/tree/main/cogant/examples/zoo/01_simple_state) — round-trip target with the smallest non-trivial `MatrixFunctions` closure.
+- **Zoo:** [`examples/zoo/04_pomdp_minimal/`](https://github.com/docxology/cogant/tree/main/cogant/examples/zoo/04_pomdp_minimal) — A/B/C/D round-trip used by `verify_repo_roundtrip`.
+- **Zoo:** [`examples/zoo/13_js_observer/`](https://github.com/docxology/cogant/tree/main/cogant/examples/zoo/13_js_observer) — cross-language reverse target (JS → GNN → Python package).
 - **Cookbook:** [Recipe 6: Generating code from a GNN](../cookbook/06_reverse_basic.md) — `synthesize_package` walkthrough.
 - **Cookbook:** [Recipe 7: Reverse with custom output layout](../cookbook/07_reverse_custom.md) — planner / synthesizer customization.
 - **Tutorial:** [Tutorial 6: Reverse mode — GNN to code](../tutorials/06_reverse_mode.md) — full CLI + programmatic walkthrough including ε metric.

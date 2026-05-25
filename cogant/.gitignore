@@ -150,8 +150,12 @@ output/
 workspace/
 .cogant/
 
-# Generated coverage and benchmark data (not source of truth — regenerate via pytest/bench suite)
-coverage.json
+# Generated benchmark data and transient coverage snapshots.
+#
+# ``coverage.json`` itself is intentionally allowed: it is the committed
+# fallback consumed by ``../tools/check_coverage_table.py --strict`` when
+# a clean checkout has no local ``.coverage`` SQLite database.
+!coverage.json
 coverage.json.*
 benchmarks/results/*.json
 !benchmarks/perf_baseline.json

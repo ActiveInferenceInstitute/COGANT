@@ -1,6 +1,6 @@
-# examples/workflow-engine/tests
+# Workflow Engine Tests
 
-This directory is part of the COGANT codebase-to-GNN translation engine.
+Fixture-owned files for the parent example. Contents: test_engine.py.
 
-- Human overview: repository [README.md](../../../README.md)
-- Documentation index: [docs/index.md](../../../docs/index.md)
+These files are parsed by COGANT as example code; keep them small, executable,
+and representative of the architecture described in the parent README.

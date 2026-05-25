@@ -1,6 +1,15 @@
-# examples/control_positive/flask_mini
+# Flask Mini Fixture
 
-This directory is part of the COGANT codebase-to-GNN translation engine.
+Minimal Flask-style route handlers and request/response behavior. It is used for web-service parsing and role assignment smoke tests.
 
-- Human overview: repository [README.md](../../../README.md)
-- Documentation index: [docs/index.md](../../../docs/index.md)
+## Files
+
+- `app.py` - fixture source.
+
+## Smoke Command
+
+From the inner package root:
+
+```bash
+uv run cogant translate examples/control_positive/flask_mini --layout-output --output output/flask_mini
+```

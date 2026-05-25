@@ -1,6 +1,6 @@
 ## Environment variables
 
-The CLI configures Python `logging` with `INFO` by default in [`main.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/cli/main.py). For ad hoc debugging in your own scripts, use:
+The CLI configures Python `logging` with `INFO` by default in [`main.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/cli/main.py). For ad hoc debugging in your own scripts, use:
 
 ```python
 import logging

@@ -1,26 +1,25 @@
-# cogant-graph — Program Graph Storage
+# cogant-graph - Program Graph Storage
 
-In-memory `ProgramGraph` storage shared by the rest of the `cogant-*` workspace.
+In-memory program graph implementation with node/edge insertion, name/kind/role queries, caller/callee helpers, edge-kind filters, graph counts, and transitive callees.
 
 ## Contents
-- `src/lib.rs` — `ProgramGraph`, `NodeData`, `EdgeData` definitions and the `connected_components` helper used by [`cogant-ffi`](../cogant-ffi/).
+
+- `src/lib.rs` - public crate API and crate-local tests.
 
 ## Build
 
 ```bash
-cargo build --release
-cargo test
+cargo test -p cogant-graph
+cargo check -p cogant-graph
 ```
 
 ## Dependencies
 
-`[dependencies]` in `Cargo.toml`:
+- `cogant-core` - shared identifiers and enum types
+- `petgraph` - graph storage and traversal
+- `serde`, `serde_json` - serialization
+- `uuid`, `thiserror` - ids and errors
 
-- `cogant-core` — Shared type definitions (`StableId`, `NodeKind`, …)
-- `petgraph` — Underlying graph data structure and algorithms
-- `serde`, `serde_json` — Serialization of `NodeData`/`EdgeData`
-- `uuid`, `thiserror` — Identifier generation and error types
+## Scope And Status
 
-## Scope and status
-
-This crate provides the minimal Rust-side representation that the FFI wraps; it is not yet a standalone "query engine". Advanced queries, shortest-path, and parallel BFS/DFS are currently handled in the Python package. Benchmark numbers that used to live here have been removed because they are not produced by this crate's tests.
+Python graph construction remains canonical; this crate supplies parity-tested hot-path helpers and FFI-ready summaries.

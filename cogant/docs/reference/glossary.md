@@ -25,8 +25,8 @@ and should be normalized on sight:
   `forward pass` / `reverse pass` are reserved for the categorical / functorial framing in
   `evaluation/ISOMORPHISM_THEOREM.md`.
 - `fixpoint` is one word. Never `fix-point` or `fixed point`.
-- `ε` (epsilon) is the **role-preservation fidelity** of a roundtrip: `ε = |roles_preserved| / |roles_original|`. It is a ratio in `[0, 1]`, where `ε = 1.0` is a perfect roundtrip and `ε ≥ 0.8` is the ISOMORPHIC threshold. Canonical values live in `cogant/evaluation/METRICS.yaml`; current benchmark is 23/23 ISOMORPHIC, mean ε = 1.0.
-- Roundtrip-fidelity tiers are `ISOMORPHIC`, `APPROXIMATE`, `DIVERGENT` (all caps).
+- `s_role` is the **role-preservation fidelity** of a roundtrip: `s_role = |roles_preserved| / |roles_original|`. It is a ratio in `[0, 1]`, where `s_role = 1.0` is a perfect role-multiset match and `s_role >= 0.5` is the public ROLE_PRESERVED threshold. Canonical values live in `cogant/evaluation/METRICS.yaml`.
+- Roundtrip statuses are `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`, `DRIFT`, and `FAILED` (all caps).
 - `Markov blanket` (uppercase M, lowercase b in prose; capitalized only in headings).
 - `Galois connection` (uppercase G, lowercase c in prose; capitalized only in headings).
 - `ε-bounded adjunction` (lowercase ε, hyphen, lowercase a).
@@ -40,7 +40,7 @@ and should be normalized on sight:
 **A matrix** — Likelihood matrix `P(o | s)`, shape `[n_obs × n_states]`. Encodes how hidden
 states produce observations. The canonical spelling is `A matrix` (single capital letter,
 space, lowercase noun); do **not** write `A_matrix`, `a_matrix`, or `A-matrix`. See
-[`py/cogant/gnn/matrices.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/gnn/matrices.py).
+[`py/cogant/gnn/matrices.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/gnn/matrices.py).
 
 **ACTION** — Semantic role for code that mutates hidden state. Detected by `ActionRule`.
 The canonical capitalization is **ACTION** (all caps) when referring to the role; lowercase
@@ -138,14 +138,13 @@ stripped during validation).
 `CATCHES`, `THROWS`, `GUARDS`. These are the only relationships the graph can represent in
 v0.1.0.
 
-**ε** — Role-preservation fidelity (epsilon) of a forward → reverse → forward roundtrip on
-a program graph. Defined as `ε = |roles_preserved| / |roles_original|`, so ε ∈ [0, 1] and
-`ε = 1.0` is a perfect roundtrip (every original semantic role is recovered). The
-ISOMORPHIC threshold is `ε ≥ 0.8`; below that the tiers are APPROXIMATE
-(`0.5 ≤ ε < 0.8`) and DIVERGENT (`ε < 0.5`). Canonical current values live in
-`cogant/evaluation/METRICS.yaml` (currently 23/23 ISOMORPHIC, mean ε = 1.0). An earlier
-pre-wave-14 "error" formulation (where `ε_max = 0` meant exact recovery; see
-`evaluation/ISOMORPHISM_THEOREM.md` §4) is preserved for theoretical context only. See also
+**s_role** — Role-preservation fidelity of a forward → reverse → forward roundtrip on
+a program graph. Defined as `s_role = |roles_preserved| / |roles_original|`, so `s_role ∈ [0, 1]` and
+`s_role = 1.0` is a perfect role-multiset match (every original semantic role is recovered). The
+ROLE_PRESERVED threshold is `s_role >= 0.5`; strict `STRUCTURALLY_ISOMORPHIC` status also requires graph, matrix, GNN-section, and generated-code invariants. Canonical current values live in
+`cogant/evaluation/METRICS.yaml`. An earlier historical "error" formulation
+(where `ε_max = 0` meant exact recovery; see `evaluation/ISOMORPHISM_THEOREM.md`
+§4) is preserved for theoretical context only. See also
 ε-bounded adjunction.
 
 **ε-bounded adjunction** — The categorical-strength claim that COGANT's forward and reverse
@@ -228,21 +227,23 @@ the base class name, can assign roles like `POLICY` or `ERROR_HANDLING`.
 **Internal state** — The μ component of a Markov blanket: everything inside the system of
 interest with no direct external adjacency. Node role `BlanketRole.INTERNAL`.
 
-**ISOMORPHIC** — The strictest of the three roundtrip-fidelity tiers. A roundtrip is
-classified `ISOMORPHIC` when ε(G) = 0 — every node role is preserved exactly under the
-forward → reverse → forward composition. Compare with **APPROXIMATE** and **DIVERGENT**.
+**STRUCTURALLY_ISOMORPHIC** — The strictest v0.6 roundtrip status. It requires
+node/edge preservation, edge-kind preservation, role preservation, matrix shape/value
+preservation, GNN-section preservation, and generated-code import/compile success.
 
-**APPROXIMATE** — The middle roundtrip-fidelity tier. A roundtrip is classified
-`APPROXIMATE` when 0 < ε(G) ≤ ε_max — some node roles are ambiguous, but the role-population
-distribution is preserved within tolerance.
+**ROLE_PRESERVED** — The weaker success tier used by the canonical historical corpus.
+It means the semantic-role population survives the forward → reverse → forward loop at
+`s_role >= 0.5`; it does not imply node/edge or matrix equality.
 
-**DIVERGENT** — The weakest roundtrip-fidelity tier. A roundtrip is classified `DIVERGENT`
-when ε(G) > ε_max — the synthesized program no longer reproduces the original role
-distribution under re-ingestion. Indicates a structural failure of the rule table.
+**DRIFT** — The roundtrip completed but role preservation fell below the
+ROLE_PRESERVED threshold (`s_role < 0.5`). Inspect the invariant ledger and
+visual diff before trusting downstream metrics.
 
-**Isomorphism** — The formal claim that a program and its generative-model interpretation
-carry the same information, so the forward pipeline and reverse pipeline should be inverses
-up to whitespace and naming. See `../evaluation/ISOMORPHISM_THEOREM.md`.
+**FAILED** — The roundtrip did not complete or the generated artifact failed
+compile/import/re-forward checks.
+
+**Strict structural isomorphism** — A graph/matrix/code invariant over a roundtrip,
+not the same thing as role preservation. See `../theory/roundtrip.md`.
 
 ## K
 
@@ -302,7 +303,7 @@ Active-Inference-theoretic signal interpretation.
 any code patterning marked `OBSERVATION`. Maps to the **s** variables in the GNN export.
 
 **Ontology annotation** — The mapping from GNN variable names to Active Inference ontology
-terms. Section 8 of the GNN markdown.
+terms in the GNN markdown ontology-annotation block.
 
 ## P
 
@@ -420,4 +421,4 @@ attribute. The primary evidence for `MutatingSubsystemRule` and the B matrix.
 - [Active Inference primer](../theory/active_inference_primer.md)
 - [Code as a generative model](../theory/code_as_generative_model.md)
 - [GNN format reference](../theory/gnn_format_reference.md)
-- [`py/cogant/schemas/`](https://github.com/cogant-contributors/cogant/tree/main/cogant/py/cogant/schemas) — the authoritative type definitions.
+- [`py/cogant/schemas/`](https://github.com/docxology/cogant/tree/main/cogant/py/cogant/schemas) — the authoritative type definitions.

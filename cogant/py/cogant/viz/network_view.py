@@ -126,6 +126,39 @@ class NetworkView:
             logger.error(f"Error plotting centrality ranking: {e}")
             return None
 
+    def summarize_hotspots(
+        self,
+        hotspots: dict[str, float],
+        *,
+        top_n: int = 10,
+        role_hints: dict[str, str] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Rank network hotspots with relative scores and optional role hints."""
+        if not hotspots:
+            return []
+        ranked = sorted(hotspots.items(), key=lambda x: x[1], reverse=True)[:top_n]
+        max_score = ranked[0][1] or 1.0
+        rows: list[dict[str, Any]] = []
+        for idx, (node_name, score) in enumerate(ranked, start=1):
+            relative = float(score) / float(max_score) if max_score else 0.0
+            if relative >= 0.75:
+                tier = "critical"
+            elif relative >= 0.5:
+                tier = "important"
+            else:
+                tier = "context"
+            rows.append(
+                {
+                    "rank": idx,
+                    "node": node_name,
+                    "score": float(score),
+                    "relative_score": relative,
+                    "tier": tier,
+                    "role": (role_hints or {}).get(node_name, "unknown"),
+                }
+            )
+        return rows
+
     def plot_community_graph(self, graph: Any, communities: list[frozenset]) -> Figure | None:
         """
         Node-link diagram with communities colored differently.
@@ -369,18 +402,25 @@ class NetworkView:
             logger.warning("No hotspot data provided")
             return ""
 
-        lines = ["graph TD"]
+        lines = [
+            "graph TD",
+            '    critical["Critical hotspots"]',
+            '    important["Important hotspots"]',
+            '    context["Context nodes"]',
+        ]
 
         # Sort by score and take top 10
-        top_hotspots = sorted(hotspots.items(), key=lambda x: x[1], reverse=True)[:10]
+        top_hotspots = self.summarize_hotspots(hotspots, top_n=10)
 
-        for _, (node_name, score) in enumerate(top_hotspots):
-            safe_name = str(node_name).replace("-", "_").replace(".", "_")
+        for item in top_hotspots:
+            node_name = item["node"]
+            score = item["score"]
+            safe_name = "".join(ch if ch.isalnum() or ch == "_" else "_" for ch in str(node_name))
             lines.append(f'    {safe_name}["{node_name}<br/>(Score: {score:.3f})"]')
+            lines.append(f"    {item['tier']} --> {safe_name}")
 
             # Color based on score percentile
-            max_score = top_hotspots[0][1] if top_hotspots else 1
-            percentile = score / max_score
+            percentile = item["relative_score"]
 
             if percentile > 0.75:
                 lines.append(f"    style {safe_name} fill:#FF6B6B")  # Red - Critical

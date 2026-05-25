@@ -1,6 +1,6 @@
 ## Commands
 
-The Typer app in [`py/cogant/cli/main.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/cli/main.py) registers **28 top-level subcommands** as of v0.5.0. `cogant --help` is ground truth; the entries below are kept in sync by the doc-link verifier.
+The Typer app in [`py/cogant/cli/main.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/cli/main.py) registers the current top-level subcommands for v0.6.0. `cogant --help` is ground truth; the entries below are kept in sync by the doc-link verifier.
 
 ### init
 
@@ -62,7 +62,7 @@ cogant extract-static ./my_repo --output ./exports
 
 **Options:**
 - `--output, -o`: Output **directory** for JSON artifacts. When set, runs the full export path (graph/GNN/state space) into that directory; omit for a short summary panel (modules parsed and symbols).
-- `--layout-output`: After export, move artifacts into `data/`, `diagrams/`, `site/`, `reports/`, `figures/` subdirectories for easier downstream consumption. The batch runner (`run_all.py`, see [`README.md`](https://github.com/cogant-contributors/cogant/blob/main/cogant/README.md)) adds `analysis/`, `exports/`, `gnn_package/`, and `roundtrip/` alongside these.
+- `--layout-output`: After export, move artifacts into `data/`, `diagrams/`, `site/`, `reports/`, `figures/` subdirectories for easier downstream consumption. The batch runner (`run_all.py`, see [`README.md`](https://github.com/docxology/cogant/blob/main/cogant/README.md)) adds `analysis/`, `exports/`, `gnn_package/`, and `roundtrip/` alongside these.
 
 ### extract-dynamic
 
@@ -226,7 +226,9 @@ Creates:
 
 ### viz
 
-Rasterize diagram and graph artifacts under a pipeline output directory to PNG files.
+Render review visualizations under a pipeline output directory. This rasterizes
+diagram and graph artifacts to PNG files and also writes the artifact-first
+inspection dashboard plus graphical abstract.
 
 ```bash
 cogant viz <run_dir>
@@ -237,11 +239,11 @@ cogant viz output/my_repo_run/
 
 - `run_dir`: Directory containing `program_graph.json`, `.mermaid`, `.dot`, `.svg`, or other assets produced by analysis (walks recursively).
 
-Uses [`cogant.viz.png_export.render_all_pngs`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/viz/png_export.py). Safe to re-run; overwrites existing PNGs.
+Uses [`cogant.viz.png_export.render_all_pngs`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/viz/png_export.py). Safe to re-run; overwrites existing PNGs.
 
 ### validate
 
-Run validation checks on a bundle file or on a directory (run output, `gnn_package`, or hybrid). Implementation: [`py/cogant/cli/main.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/cli/main.py).
+Run validation checks on a bundle file or on a directory (run output, `gnn_package`, or hybrid). Implementation: [`py/cogant/cli/main.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/cli/main.py).
 
 ```bash
 cogant validate <bundle_or_dir>
@@ -255,7 +257,7 @@ cogant validate output/gnn_package/            # directory that *is* a package
 | Input | Behavior |
 |-------|----------|
 | **File** (e.g. `…/bundle.json`) | Lightweight JSON checks: `target`, `artifacts`, `stage_results`, empty `errors`. |
-| **Directory** whose path **is** a GNN package (`manifest.json` + `model.gnn.md` at that path) | Full [`GNNValidator`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/gnn/validator.py): score, errors, warnings (18-section contract). |
+| **Directory** whose path **is** a GNN package (`manifest.json` + `model.gnn.md` at that path) | Full [`GNNValidator`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/gnn/validator.py): score, errors, warnings (18-section contract). |
 | **Directory** containing `gnn_package/manifest.json` | Same GNN validator on `…/gnn_package/`. |
 | **Directory** with **`bundle.json`** but no resolvable GNN package above | Same lightweight checks on `dir/bundle.json` (run-directory fallback). |
 | **Directory** with neither `gnn_package/` nor `bundle.json` | Exit **2** with an error message. |
@@ -275,7 +277,7 @@ cogant validate output/gnn_package/            # directory that *is* a package
 
 ### diff
 
-Compare two bundles or output directories and report drift. When both arguments are directories containing COGANT output (with `program_graph.json`, `semantic_mappings.json`, and/or `model.gnn.json`), the full [`cogant.cli.diff.diff_command`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/cli/diff.py) is invoked: it runs `DriftAnalyzer` and `CodebaseMetrics` and prints / writes a full markdown drift report. When both arguments are bundle JSON files, a lightweight shallow diff is shown (legacy behavior).
+Compare two bundles or output directories and report drift. When both arguments are directories containing COGANT output (with `program_graph.json`, `semantic_mappings.json`, and/or `model.gnn.json`), the full [`cogant.cli.diff.diff_command`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/cli/diff.py) is invoked: it runs `DriftAnalyzer` and `CodebaseMetrics` and prints / writes a full markdown drift report. When both arguments are bundle JSON files, a lightweight shallow diff is shown (legacy behavior).
 
 ```bash
 cogant diff <path_a> <path_b>
@@ -366,12 +368,13 @@ cogant reverse output/model.gnn.md --json
 
 ### roundtrip
 
-Verify forward-reverse-forward round-trip isomorphism. Accepts either a GNN markdown file or a repository directory.
+Verify forward-reverse-forward roundtrip invariants. Accepts either a GNN markdown file or a repository directory.
 
 ```bash
 cogant roundtrip <target>
 cogant roundtrip ./my_repo --threshold 0.8 --keep-tmp
 cogant roundtrip output/model.gnn.md --json
+cogant roundtrip ./my_repo --output output/my_repo/roundtrip
 ```
 
 **Arguments:**
@@ -379,9 +382,19 @@ cogant roundtrip output/model.gnn.md --json
 
 **Options:**
 - `--output, -o`: Directory where intermediate GNN + synthesized package are stored.
-- `--threshold`: Minimum role-match score for the round-trip to be flagged isomorphic. Default: `0.5`.
+- `--threshold`: Minimum `role_preservation_score` for the roundtrip to be flagged `ROLE_PRESERVED`. Default: `0.5`.
 - `--json`: Print a JSON summary of the round-trip instead of the Rich table.
 - `--keep-tmp`: Preserve the synthesized package on disk for inspection.
+
+When `--output` is supplied, COGANT also writes `metrics.json` in that
+directory. The file records the same machine-readable payload as `--json`,
+including `roundtrip_status`, role preservation, matrix, structural, shape-parity, threshold, artifact
+paths, role-confusion rows, role edit distance, a dashboard-facing
+`graph_edit_distance` field, generated-code compile/test status, and warnings
+for downstream dashboards and `run_all.py` reports. The current
+`graph_edit_distance` value is a transparent role-multiset edit-distance proxy;
+structural graph/GNN side-by-side diffs are tracked separately in the visual
+inspection dashboard.
 
 ### plugin
 

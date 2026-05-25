@@ -104,7 +104,7 @@ def test_fake_tree_broken_link_exits_one(tmp_path: Path) -> None:
     assert "1 broken" in result.stdout
 
 
-def test_fake_tree_external_and_fragment_links_are_ignored(tmp_path: Path) -> None:
+def test_fake_tree_external_and_same_file_fragment_links_are_ignored(tmp_path: Path) -> None:
     fake = _write_fake_verifier(tmp_path)
     docs_dir = tmp_path / "docs"
     (docs_dir / "a.md").write_text(
@@ -122,6 +122,26 @@ def test_fake_tree_external_and_fragment_links_are_ignored(tmp_path: Path) -> No
     (docs_dir / "b.md").write_text("ok\n", encoding="utf-8")
     result = _run_fake(fake)
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_fake_tree_file_anchor_is_checked(tmp_path: Path) -> None:
+    fake = _write_fake_verifier(tmp_path)
+    docs_dir = tmp_path / "docs"
+    (docs_dir / "a.md").write_text("[anchor](b.md#good-section)\n", encoding="utf-8")
+    (docs_dir / "b.md").write_text("## Good Section\n", encoding="utf-8")
+    result = _run_fake(fake)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_fake_tree_missing_file_anchor_is_reported(tmp_path: Path) -> None:
+    fake = _write_fake_verifier(tmp_path)
+    docs_dir = tmp_path / "docs"
+    (docs_dir / "a.md").write_text("[anchor](b.md#missing-section)\n", encoding="utf-8")
+    (docs_dir / "b.md").write_text("## Good Section\n", encoding="utf-8")
+    result = _run_fake(fake)
+    assert result.returncode == 1
+    assert "missing anchor" in result.stdout
+    assert "missing-section" in result.stdout
 
 
 def test_fake_tree_escaping_link_is_reported(tmp_path: Path) -> None:

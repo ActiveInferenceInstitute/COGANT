@@ -15,60 +15,114 @@ The visualization module (`cogant.viz`) produces visual representations of COGAN
 | Mermaid | mermaid | Diagram syntax | Markdown, wikis, docs | None | Text file (.mmd) | 0.01-1 MB |
 | SVG | svg_export | Vector graphics | Web embedding, scalable | graphviz (optional) | Text file | 1-100 MB |
 | HTML | dashboard | Interactive website | Exploration, dashboards | matplotlib (optional) | HTML + CSS + JS | 1-50 MB |
+| Inspection HTML | inspection_dashboard | Artifact-first run review | Human inspection after `cogant viz` / `run_all.py` | None for HTML, SVG converter optional for PNG abstract | HTML + SVG/PNG | 0.1-20 MB |
+| Batch Markdown | batch_dashboard | Cross-target sweep report | `run_all` summaries, manuscript metrics | None | Markdown, CSV, JSON, Mermaid | 0.01-5 MB |
 | DOT | mermaid (internal) | Graph syntax | Graphviz processing | graphviz | Text file | 0.1-10 MB |
 
 ## Core Visualization Classes
 
-### PNGExporter
+### Inspection Dashboard
 
-Render program graphs and analysis results as PNG (bitmap) images.
+`cogant.viz.inspection_dashboard` reads a completed run directory from disk and
+builds the human review surface from the artifacts users actually receive. It
+does not need in-memory pipeline objects.
 
 ```python
-class PNGExporter:
-    def export_program_graph(
-        self,
-        graph: ProgramGraph,
-        output_path: str | Path
-    ) -> str | None:
-        """
-        Render a program graph as PNG.
+from cogant.viz.inspection_dashboard import (
+    build_inspection_model,
+    render_graphical_abstract_svg,
+    render_inspection_dashboard_html,
+    write_inspection_artifacts,
+)
 
-        Args:
-            graph: ProgramGraph to visualize
-            output_path: Path to write PNG file
+model = build_inspection_model("output/calculator")
+dashboard = render_inspection_dashboard_html("output/calculator")
+abstract = render_graphical_abstract_svg("output/calculator")
 
-        Returns:
-            Path to exported file, or None if matplotlib unavailable
+# Convenience wrapper: writes site/inspection_dashboard.html plus
+# figures/graphical_abstract.svg and, when an SVG rasterizer is available,
+# figures/graphical_abstract.png.
+written = write_inspection_artifacts("output/calculator")
+```
 
-        Raises:
-            OSError: If file write fails
-        """
+The dashboard summarizes program graph size and node kinds, semantic role
+counts and confidence tiers, state-space and A/B/C/D matrix shapes, Markov
+blanket partitions, graph hotspots, figure evidence, artifact presence, and
+roundtrip diagnostics. When `roundtrip/metrics.json` exists, the dashboard
+shows role-match, matrix, structural, threshold, shape-parity, role-delta,
+edit-distance, generated-code compile/test rows, graph/GNN/matrix diffs,
+roundtrip invariants, rule-evidence traces, reviewer-calibration summaries,
+and deterministic runtime inference traces. Missing reverse-roundtrip
+artifacts are shown explicitly rather than inferred. Rendering
+`site/inspection_dashboard.html` also links it from an existing generated
+`site/index.html`.
 
-    def export_complexity_analysis(
-        self,
-        report: ComplexityReport,
-        output_path: str | Path
-    ) -> str | None:
-        """Export complexity hotspot heatmap as PNG."""
+The graphical abstract's **Confidence** tile is deliberately an evidence
+completeness score for the run surface, not a replacement for per-mapping
+model confidence. It combines source coverage, validator status, roundtrip
+role preservation, and required-figure presence when those artifacts are
+available, falling back to exported model confidence only for incomplete run
+directories. This lets the abstract say whether the human-inspection artifact
+chain is complete while the GNN JSON still reports calibrated semantic
+confidence for individual mappings and model components.
 
-    def export_coupling_heatmap(
-        self,
-        report: CouplingReport,
-        output_path: str | Path
-    ) -> str | None:
-        """Export coupling instability heatmap as PNG."""
+`write_inspection_artifacts()` also writes the publication-facing companion
+figures below when the SVG rasterizer is available:
+
+| Figure | Source artifact | Purpose |
+| --- | --- | --- |
+| `figures/roundtrip_diff.png` | `roundtrip/metrics.json` | Original vs regenerated graph counts, GNN section preservation, matrix shape/value deltas, and invariant status. |
+| `figures/rule_trace.png` | `data/rule_evidence_trace.json` or `roundtrip/rule_evidence_trace.json` | Per-rule mapping contributions and conflict-resolution evidence. |
+| `figures/confidence_calibration.png` | reviewer annotations applied to the rule trace | Review coverage and precision proxies by rule. |
+| `figures/inference_trace.png` | `data/inference_trace.json` | Belief trajectory, selected actions, preference satisfaction, and free-energy curve for the deterministic runtime smoke demo. |
+
+Each publication-facing PNG may have a neighboring `.figure.json` sidecar. The
+sidecar is the evidence contract for manuscript use: it records renderer
+version, source artifact path and digest when available, layout method, displayed
+counts, a top-level `panels` list, compatibility `panel_metadata`, image
+dimensions, byte size, visual QA, reading guide, and known limitations. For
+example, the rule-trace sidecar reports mapping and conflict counts from
+`rule_evidence_trace.json`, while the state-space and matrix sidecars report
+factor counts and A/B/C/D panel shapes rather than a generic "one panel"
+placeholder.
+
+Reusable browser QA for generated dashboards lives at the staging root:
+
+```bash
+uv run python scripts/dashboard_browser_qa.py \
+  cogant/output/calculator/site/inspection_dashboard.html \
+  --output-dir cogant/output/calculator/dashboard_qa
+```
+
+The QA script uses `chrome-devtools-axi` when available, captures desktop and
+mobile screenshots, checks broken images, verifies required dashboard text, and
+reports obvious horizontal overflow.
+
+### PNG Function Renderers
+
+`cogant.viz.png_export` exposes function renderers rather than a `PNGExporter`
+class. The most common entry point for an already-written run directory is
+`render_all_pngs()`.
+
+```python
+from cogant.viz.png_export import (
+    render_all_pngs,
+    render_connections_matrix_png,
+    render_program_graph_png,
+    render_state_space_factor_png,
+)
 ```
 
 **Usage:**
 ```python
-from cogant.viz.png_export import PNGExporter
+from pathlib import Path
+from cogant.viz.png_export import render_program_graph_png
 
-exporter = PNGExporter()
-png_path = exporter.export_program_graph(graph, "output/graph.png")
-if png_path:
-    print(f"Exported: {png_path}")
-else:
-    print("Matplotlib unavailable")
+ok = render_program_graph_png(
+    Path("output/calculator/data/program_graph.json"),
+    Path("output/calculator/figures/program_graph.png"),
+)
+print("rendered" if ok else "matplotlib or graph input unavailable")
 ```
 
 ### PDFExporter
@@ -435,8 +489,8 @@ with open("dashboard.html", "w") as f:
 ### Recipe: Generate Graph PNG + Complexity Heatmap
 
 ```python
-from cogant.viz.png_export import PNGExporter
-from cogant.viz.plots import StaticPlotter
+from pathlib import Path
+from cogant.viz.png_export import render_program_graph_png
 from cogant.static.complexity import ComplexityAnalyzer
 
 # Analyze complexity
@@ -444,12 +498,10 @@ analyzer = ComplexityAnalyzer()
 complexity_report = analyzer.analyze_file(Path("my_module.py"))
 
 # Visualize
-exporter = PNGExporter()
-graph_png = exporter.export_program_graph(graph, "output/graph.png")
-complexity_png = exporter.export_complexity_analysis(complexity_report, "output/complexity.png")
+graph_png = Path("output/graph.png")
+render_program_graph_png(Path("output/program_graph.json"), graph_png)
 
 print(f"Graph: {graph_png}")
-print(f"Complexity: {complexity_png}")
 ```
 
 ### Recipe: Generate Mermaid for Markdown Documentation
@@ -485,8 +537,9 @@ with open("API.md", "w") as f:
 ### Recipe: Export Interactive Dashboard + PNG Report
 
 ```python
+from pathlib import Path
 from cogant.viz.dashboard.generator import DashboardGenerator
-from cogant.viz.png_export import PNGExporter
+from cogant.viz.png_export import render_all_pngs
 
 # Generate dashboard (interactive)
 dash_gen = DashboardGenerator()
@@ -497,12 +550,11 @@ html = dash_gen.generate_comprehensive_dashboard(
 with open("output/dashboard.html", "w") as f:
     f.write(html)
 
-# Generate PNG report (static)
-png_exp = PNGExporter()
-png_path = png_exp.export_program_graph(program_graph, "output/graph.png")
+# Generate PNG artifacts for a completed run directory
+written = render_all_pngs(Path("output/calculator"))
 
 print(f"Dashboard: output/dashboard.html (open in browser)")
-print(f"PNG Report: {png_path}")
+print(f"PNG artifacts: {written}")
 ```
 
 ### Recipe: Generate PDF Report with Matrices + Graph
@@ -535,19 +587,19 @@ print(f"Report: {pdf_path}")
 All visualization modules handle missing dependencies gracefully:
 
 ```python
-from cogant.viz.png_export import PNGExporter
+from pathlib import Path
+from cogant.viz.png_export import render_program_graph_png
 import logging
 
 logger = logging.getLogger(__name__)
 
-exporter = PNGExporter()
-result = exporter.export_program_graph(graph, "output/graph.png")
+result = render_program_graph_png(Path("output/program_graph.json"), Path("output/graph.png"))
 
-if result is None:
+if not result:
     logger.warning("Matplotlib unavailable; PNG export skipped")
     # Pipeline continues; PNG just not generated
 else:
-    logger.info(f"PNG exported: {result}")
+    logger.info("PNG exported")
 ```
 
 ## Performance Notes

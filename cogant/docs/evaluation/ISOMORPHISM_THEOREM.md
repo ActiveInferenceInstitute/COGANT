@@ -1,8 +1,14 @@
 # COGANT Isomorphism Theorem: Program Graphs and Generative Models as Dual Views of Causal Structure
 
+> **Historical theory sketch.** This document preserves the early categorical argument that
+> motivated reverse mode. It is not the current package, CLI, or manuscript contract. Current
+> COGANT distinguishes `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`, `DRIFT`, and `FAILED`,
+> and reports separate invariant booleans for graph, role, matrix, GNN-section, and generated
+> code checks. See `docs/concepts/roundtrip.md` for the live taxonomy.
+
 **Author:** COGANT R&D
 **Date:** 2026-04-09
-**Status:** Theory (pre-proof)
+**Status:** Historical theory sketch (pre-proof)
 **Related:** `ROUNDTRIP_VALIDATION.md`, `SCOPING_REPORT.md`
 
 ---

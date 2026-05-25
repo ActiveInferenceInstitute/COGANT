@@ -1,14 +1,24 @@
-# AGENTS — examples/control_positive/flask_mini
-
-Machine-oriented index for automation and editors.
-
-- Repository root: [README.md](../../../README.md)
-- Docs index: [docs/index.md](../../../docs/index.md)
+# Agents - examples/control_positive/flask_mini
 
 ## Scope
 
-Describe what belongs in this folder; keep orchestration thin and logic in `py/cogant/`.
+Flask Mini Fixture. This fixture exercises route handlers, request observation, and response actions for fast local pipeline and
+roundtrip evidence.
 
-## Tests
+## Files
 
-Run `uv run pytest tests/` from the repository root unless a narrower scope is documented here.
+- `app.py` - primary fixture source.
+
+## Rules
+
+- Keep the fixture dependency-free unless the parent README explicitly documents the dependency.
+- Preserve real executable Python; do not replace behavior with comments just to satisfy a rule.
+- If the architecture shape changes, update this file and the fixture README in the same pass.
+
+## Verification
+
+From the inner package root:
+
+```bash
+uv run cogant translate examples/control_positive/flask_mini --layout-output --output output/flask_mini
+```

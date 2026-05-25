@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cogant"
-version = "0.5.0"
+version = "0.6.0"
 description = "Codebase-to-GNN Translation Engine: translate software repositories into Generalized Notation Notation (Active Inference Institute) state-space and process-model representations"
 authors = [
     {name = "COGANT Contributors", email = "contributors@cogant.dev"}
@@ -14,15 +14,24 @@ requires-python = ">=3.11"
 license = {text = "MIT"}
 keywords = ["code analysis", "generalized notation notation", "active inference", "program synthesis", "codebase analysis", "state-space model"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    # Beta reflects v0.6.0 maturity: 211 source files, ~9.6k tests at 94.98%
+    # coverage, mypy --strict clean, a 30-section manuscript with audited
+    # claims, and a demonstration FastAPI/Docker surface. The "production"
+    # framing is intentionally NOT used in package or manuscript prose —
+    # see manuscript §10 Capability 14 and cogant/docs/security/README.md
+    # for the documented untrusted-input boundary.
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Debuggers",
+    "Typing :: Typed",
 ]
 
 dependencies = [
@@ -36,7 +45,15 @@ dependencies = [
     "httpx>=0.27",
     "numpy>=2.4.4",
     # Active Inference Institute reference GNN toolkit (import path: src.gnn).
-    # Pinned git revision for reproducible installs; license CC-BY-NC-SA-4.0 (see README).
+    #
+    # **Install-time prerequisites** (RedTeam F39, 2026-05-20):
+    # this dependency is a pinned git revision, NOT a PyPI release, so
+    # ``pip install cogant`` (or ``uv sync``) **requires git installed and
+    # network access to github.com at install time**. CI/sandbox environments
+    # without git or outbound network will fail with a fetch error. Vendoring
+    # or an upstream PyPI release is tracked as future work; meanwhile the
+    # pinned SHA gives reproducible installs and the CC-BY-NC-SA-4.0 license
+    # implications for redistribution are documented in ``cogant/README.md``.
     "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.git@41a64381c6d277c8240ef65499be67e7f882ef73",
 ]
 
@@ -93,7 +110,7 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
-    "--cov=cogant",
+    "--cov=py/cogant",
     "--cov-report=term-missing",
     "--cov-report=html:htmlcov",
     # Line total is computed to ~89.9–90.0%; the terminal table rounds to 90%.
@@ -148,6 +165,10 @@ known-third-party = ["pydantic", "typer", "rich", "networkx", "pyarrow", "duckdb
 python_version = "3.11"
 strict = true
 warn_return_any = true
+# The pydantic v2 mypy plugin gives BaseModel a real type (without it,
+# BaseModel resolves to Any and every cogant.config/*.pyi + schemas/*.pyi
+# class declaration fails strict-mode subclass checks).
+plugins = ["pydantic.mypy"]
 # The per-module overrides below are deliberately defensive — they
 # guard against optional-dependency absence on minimal installs and
 # against ``mypy .`` invocations that visit ``tests/``. When run only
@@ -181,6 +202,10 @@ module = [
     "matplotlib.*",
     "numpy.*",
     "cogant._rust",
+    # PyYAML ships no type stubs by default and pulling types-PyYAML
+    # only for one line of `ablation_view.py` is more weight than the
+    # signal. yaml usage here is dynamic-config glue, not type-load-bearing.
+    "yaml",
 ]
 ignore_missing_imports = true
 
@@ -196,7 +221,7 @@ ignore_missing_imports = true
 # below line-only on this codebase.
 branch = false
 parallel = true
-source = ["cogant"]
+source = ["py/cogant"]
 # Tree-sitter front end is the only path excluded from the line-coverage gate.
 # Rationale: it is an optional dependency (the ``multilang`` extra), the bundled
 # JS/TS test fixtures exercise it via the broader pipeline (parser smoke tests
@@ -224,13 +249,13 @@ paths_to_mutate = ["py/cogant/translate/engine.py", "py/cogant/markov/blanket.py
 tests_dir = [
     "tests/unit/test_markov.py",
     "tests/unit/test_mutation_hardening.py",
-    "tests/unit/test_mutation_killers_w18.py",
+    "tests/unit/test_mutation_regressions_engine_matrices_statespace.py",
     "tests/unit/test_observation_rule_tutorial.py",
     "tests/unit/test_rule_classes.py",
     "tests/unit/test_rule_dsl.py",
     "tests/unit/test_translate_rules_behavioral.py",
     "tests/unit/test_translation_rules.py",
-    "tests/unit/test_wave20_mutations.py",
+    "tests/unit/test_translate_markov_mutation_regression.py",
 ]
 pytest_add_cli_args = ["-x", "-q", "--no-header", "--no-cov", "-p", "no:cacheprovider", "-o", "addopts="]
 
@@ -241,4 +266,5 @@ dev = [
     "mkdocs-material>=9.7.6",
     "mkdocstrings[python]>=1.0.3",
     "pytest-cov>=7.1.0",
+    "mypy>=1.5.0",
 ]

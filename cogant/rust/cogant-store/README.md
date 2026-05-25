@@ -1,28 +1,25 @@
-# cogant-store — In-Memory Graph Store (Rust stub)
+# cogant-store - Bundle And Artifact Store
 
-Rust-side scaffolding for persistent graph storage.
+File-backed Rust storage trait and implementation for bundle manifests plus atomic artifact bytes used by crate tests and FFI helper paths.
 
 ## Contents
-- `src/lib.rs` — Storage trait, in-memory backend, and snapshot placeholders
+
+- `src/lib.rs` - public crate API and crate-local tests.
 
 ## Build
 
 ```bash
-cargo build --release
-cargo test
+cargo test -p cogant-store
+cargo check -p cogant-store
 ```
 
 ## Dependencies
 
-`[dependencies]` in `Cargo.toml`:
+- `cogant-core`, `cogant-graph` - shared bundle graph types
+- `serde`, `serde_json` - manifests and bundle serialization
+- `uuid`, `thiserror` - ids and errors
+- `tempfile` (dev) - isolated tests
 
-- `cogant-core`, `cogant-graph` — Shared types and in-memory graph storage
-- `serde`, `serde_json` — Serialization
-- `uuid`, `thiserror` — Identifier generation and error types
-- `tempfile` (dev) — Temporary directories for tests
+## Scope And Status
 
-No RocksDB, no rusqlite, no on-disk backend. The crate provides an **in-memory** store today; persistent backends are aspirational and intentionally out of scope until usage patterns stabilize.
-
-## Scope and status
-
-This crate is **not** wired through [`cogant-ffi`](../cogant-ffi/); the Python pipeline writes bundles directly to disk (`py/cogant/export/`). Treat this crate as a placeholder for a future Rust persistence layer.
+The Python export pipeline remains canonical for package bundles. Keep this crate focused on deterministic file-store primitives.

@@ -761,7 +761,7 @@ class PDFExporter:
                     v = roundtrip_result.get(attr, default)
                 return v if v is not None else default
 
-            score: float = float(_get("role_match_score", 0.0))
+            score: float = float(_get("role_preservation_score", _get("role_match_score", 0.0)))
             tier: str = str(_get("tier", "UNKNOWN"))
             forward_roles: dict[str, int] = dict(_get("forward_roles", {}))
             reverse_roles: dict[str, int] = dict(_get("reverse_roles", {}))

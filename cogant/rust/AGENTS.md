@@ -1,31 +1,27 @@
-# Agents — rust/
+# Agents - rust/
 
 ## Owner
+
 Infra Lead
 
-## Responsibilities
-- Rust performance-critical implementations
-- FFI bindings to Python via PyO3
-- Memory safety and performance optimization
-- Cross-platform compatibility
+## Scope
+
+Optional Rust acceleration workspace. Rust improves selected graph, formatting,
+store, trace, and shape-summary paths, while Python remains authoritative unless
+parity is proven and the backend is selected.
 
 ## Coordination
-- Provides fast implementations of graph, store, translate, statespace, trace, and GNN operations
-- Python via cogant-ffi (COGANT_USE_RUST=1)
-- Unified cargo workspace with 8 crates
 
-## Crates
-| Crate | Purpose |
-|-------|---------|
-| `cogant-core` | Core types: StableId, NodeKind, SemanticRole |
-| `cogant-graph` | High-performance graph storage and queries (connected_components FFI) |
-| `cogant-translate` | Rule engine and graph transformations |
-| `cogant-statespace` | State space compilation |
-| `cogant-store` | Persistent storage and indexing |
-| `cogant-trace` | Trace collection and processing |
-| `cogant-gnn` | GNN tensor generation |
-| `cogant-ffi` | Python bindings via PyO3 (extension module `_rust`) |
+- `cogant-ffi` is the only crate that exposes Python bindings.
+- `py/cogant/rust_backend.py` owns backend selection and fallback behavior.
+- Each crate owns unit tests for Rust behavior; Python parity tests own package-level routing.
 
-## Files
-- `Cargo.toml` (workspace) — Workspace manifest and shared dependencies
-- `cogant-core/` through `cogant-ffi/` — 8 crate directories
+## Verification
+
+```bash
+cargo fmt --check
+cargo check --workspace
+cargo test --workspace
+cargo clippy --workspace -- -D warnings
+cd .. && make build-rust
+```

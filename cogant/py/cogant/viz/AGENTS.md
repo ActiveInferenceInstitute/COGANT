@@ -38,18 +38,26 @@ Visualization is a **post-pipeline consumer** — it runs after the 10-stage for
 | Interactive graph | cytoscape_view.py, graph_view.py | Web embedding, scalable | No | No | Yes |
 | DOT | flow.py | Graphviz processing | No | Optional | No |
 | HTML Dashboard | dashboard/ (generator.py, assets.py) | Interactive exploration | Yes (optional) | No | Yes |
+| Inspection dashboard | inspection_dashboard.py | Artifact-first run review + graphical abstract | No | Optional for PNG abstract | Yes |
+| Batch dashboard | batch_dashboard.py | Cross-target sweep summary (CSV + Markdown + Mermaid) | No | No | No |
 
-### Visualization Modules (18 files in `viz/` + `viz/dashboard/`)
+### Single-target vs. batch dashboards
 
-The `viz/` package currently ships `boundary.py`, `bundle_site.py`, `cytoscape_view.py`, `diff_view.py`, `export_view.py`, `flow.py`, `gantt.py`, `graph_view.py`, `html_renderer.py`, `matrix_view.py`, `mermaid.py`, `network_view.py`, `pdf_export.py`, `pipeline_view.py`, `plots.py`, `png_export.py`, `semantic_view.py`, and `static_analysis_view.py`, plus the `dashboard/` subpackage (`generator.py`, `assets.py`). The headline modules are documented below; see each file's module docstring for the full API surface.
+- **`DashboardGenerator`** (`dashboard/`) renders one rich, interactive HTML page for **one** translated target when callers already have in-memory graph/state-space objects.
+- **`inspection_dashboard.py`** renders `site/inspection_dashboard.html` and `figures/graphical_abstract.*` from a completed run directory, so `cogant viz` and `run_all.py` outputs get a browsable review surface without rebuilding pipeline objects.
+- **`BatchDashboardGenerator`** (`batch_dashboard.py`) consolidates **many** targets from a staging-root `run_all` sweep into `output/dashboard/` (Markdown + CSV + JSON + four Mermaid charts). Pure-stdlib; used as the post-batch step by `run_all.py`. See [`docs/reference/batch_dashboard.md`](../../../docs/reference/batch_dashboard.md).
+
+### Visualization Modules (21 public files in `viz/` + `viz/dashboard/`)
+
+The `viz/` package currently ships `ablation_view.py`, `batch_dashboard.py`, `boundary.py`, `bundle_site.py`, `cytoscape_view.py`, `diff_view.py`, `export_view.py`, `flow.py`, `gantt.py`, `graph_view.py`, `html_renderer.py`, `inspection_dashboard.py`, `matrix_view.py`, `mermaid.py`, `network_view.py`, `pdf_export.py`, `pipeline_view.py`, `plots.py`, `png_export.py`, `semantic_view.py`, and `static_analysis_view.py`, plus the `dashboard/` subpackage (`generator.py`, `assets.py`). The headline modules are documented below; see each file's module docstring for the full API surface.
 
 ### Headline modules
 
-**png_export.py** — `PNGExporter`
-- Render program graphs as matplotlib figures
-- Exports to PNG (bitmap format)
-- Methods: `export_program_graph()`, `export_complexity_analysis()`, `export_coupling_heatmap()`
-- Graceful fallback if matplotlib unavailable
+**png_export.py** — PNG evidence renderers
+- Render program graphs, state-space factor views, matrices, and roundtrip panels as matplotlib figures
+- Exports PNG files plus `.figure.json` sidecars with source digests, displayed counts, panels, and QA metadata
+- Public helpers include `render_program_graph_png()`, `render_state_space_png()`, `render_connections_matrix_png()`, `render_roundtrip_diff_png()`, and `render_all_pngs()`
+- Graceful fallback if matplotlib is unavailable
 
 **plots.py** — `StaticPlotter`
 - Generate charts: histograms, scatter plots, heatmaps, bar charts
@@ -131,6 +139,11 @@ The `viz/` package currently ships `boundary.py`, `bundle_site.py`, `cytoscape_v
 - Tabbed interface for different views
 - Interactive filtering and search
 
+**inspection_dashboard.py** — artifact-first dashboard and graphical abstract
+- Reads completed `cogant/output/<target>/` directories directly
+- Writes `site/inspection_dashboard.html`, `figures/graphical_abstract.svg`, and a best-effort PNG abstract
+- Summarizes graph counts, semantic roles, matrix shapes, blanket roles, hotspots, figure evidence, artifact presence, and roundtrip status
+
 **dashboard/assets.py** — Inlined CSS/JS assets used by the dashboard for fully self-contained HTML output.
 
 The Cytoscape-based interactive view lives alongside the other top-level modules at `viz/cytoscape_view.py` (not under `dashboard/`).
@@ -141,13 +154,12 @@ The Cytoscape-based interactive view lives alongside the other top-level modules
 
 ```python
 from pathlib import Path
-from cogant.viz.png_export import PNGExporter
-from cogant.graph.query import GraphQuery
+from cogant.viz.png_export import render_program_graph_png
 
-exporter = PNGExporter()
-png_path = exporter.export_program_graph(
-    graph=program_graph,
-    output_path="output/graph.png"
+png_path = render_program_graph_png(
+    graph_json=Path("output/data/program_graph.json"),
+    output_path=Path("output/figures/program_graph.png"),
+    source_label="data/program_graph.json",
 )
 print(f"Graph exported to {png_path}")
 ```
@@ -235,6 +247,15 @@ with open("output/dashboard.html", "w") as f:
     f.write(html)
 
 print("Dashboard: output/dashboard.html")
+```
+
+### Generate Artifact-First Inspection Dashboard
+
+```python
+from cogant.viz.inspection_dashboard import write_inspection_artifacts
+
+written = write_inspection_artifacts("output/calculator")
+print(written["inspection_dashboard_html"])
 ```
 
 ### Export Matrices to PDF

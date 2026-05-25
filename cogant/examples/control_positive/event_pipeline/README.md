@@ -1,6 +1,15 @@
-# examples/control_positive/event_pipeline
+# Event Pipeline Fixture
 
-This directory is part of the COGANT codebase-to-GNN translation engine.
+Event ingestion, transformation, and dispatch flow. It exercises data-flow and orchestration mappings without external services.
 
-- Human overview: repository [README.md](../../../README.md)
-- Documentation index: [docs/index.md](../../../docs/index.md)
+## Files
+
+- `pipeline.py` - fixture source.
+
+## Smoke Command
+
+From the inner package root:
+
+```bash
+uv run cogant translate examples/control_positive/event_pipeline --layout-output --output output/event_pipeline
+```

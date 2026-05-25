@@ -11,11 +11,18 @@ manuscript. It performs the following steps, in order:
 3. **Build** a flat ``{NAME: formatted_str}`` dict from the registered
    placeholders in :mod:`tools.manuscript_vars` and **write**
    ``output/data/manuscript_variables.json`` with provenance metadata.
-4. **Substitute** every ``{{VAR}}`` in ``manuscript/*.md`` and write the
-   result to ``output/manuscript/*.md``.
+4. **Clean and substitute** every ``{{VAR}}`` in ``manuscript/*.md`` and write
+   the result to ``output/manuscript/*.md``. The cleanup removes stale generated
+   Markdown fragments so section renames cannot leave duplicate render inputs.
+   Links that intentionally point from source fragments into sibling project
+   files are rebased so they remain valid after the fragment is copied under
+   ``output/manuscript/``.
 5. **Copy** ``config.yaml``, ``references.bib``, ``preamble.md`` into
    ``output/manuscript/`` (renderer expects them there).
-6. **Validate** — scan every written file for surviving ``{{PLACEHOLDER}}``
+6. **Copy figures** — move curated real run PNGs from ``cogant/output`` into
+   ``output/figures/`` for template PDF/HTML rendering. With ``--strict``,
+   missing registered figures or incomplete figure metadata are fatal.
+7. **Validate** — scan every written file for surviving ``{{PLACEHOLDER}}``
    tokens. Warnings are always logged; with ``--strict`` the process also
    exits non-zero (suitable for CI on pure-template manuscripts).
 
@@ -26,11 +33,13 @@ Exit codes
 * ``0`` — everything succeeded (unresolved tokens become warnings).
 * ``1`` — METRICS.yaml missing / malformed, regenerate step failed,
           manuscript dir empty, or (with ``--strict``) unresolved
-          placeholders were written to ``output/manuscript/``.
+          placeholders / missing registered figures were written to
+          ``output/manuscript/`` or ``output/figures/``.
 
 Usage::
 
-    uv run python projects_in_progress/cogant/scripts/z_generate_manuscript_variables.py
+    uv run python scripts/z_generate_manuscript_variables.py
+    uv run python projects/cogant/scripts/z_generate_manuscript_variables.py  # parent template root
     uv run python scripts/z_generate_manuscript_variables.py --regenerate-metrics
     uv run python scripts/z_generate_manuscript_variables.py --strict
 """
@@ -39,6 +48,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -46,7 +56,7 @@ from pathlib import Path
 
 import yaml
 
-# Repository template root (parent of projects_in_progress/)
+# Repository template root (parent of projects/)
 _SCRIPT = Path(__file__).resolve()
 COGANT_STAGING_ROOT = _SCRIPT.parent.parent
 TEMPLATE_ROOT = COGANT_STAGING_ROOT.parent.parent
@@ -57,13 +67,20 @@ if str(TEMPLATE_ROOT) not in sys.path:
 if str(_TOOLS) not in sys.path:
     sys.path.insert(0, str(_TOOLS))
 
-from infrastructure.core.logging.utils import get_logger  # noqa: E402
+try:
+    from infrastructure.core.logging.utils import get_logger  # type: ignore[import-not-found]  # noqa: E402
+except ModuleNotFoundError:  # standalone passive checkout without parent template package
+
+    def get_logger(name: str) -> logging.Logger:
+        logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
+        return logging.getLogger(name)
 
 from manuscript_vars import (  # noqa: E402
     build_flat_variables,
     find_unresolved_placeholders,
     substitute_text,
 )
+from manuscript_figures import copy_manuscript_figures  # noqa: E402
 
 logger = get_logger(__name__)
 
@@ -75,6 +92,50 @@ METRICS_PATH = COGANT_STAGING_ROOT / "cogant" / "evaluation" / "METRICS.yaml"
 REGENERATE_SCRIPT = _TOOLS / "regenerate_metrics.py"
 
 AUX_COPY_NAMES = ("config.yaml", "references.bib", "preamble.md")
+
+
+def clean_injected_manuscript_dir() -> None:
+    """Remove generated Markdown from prior injections.
+
+    The renderer discovers files by walking ``output/manuscript`` directly. If a
+    source section is renamed, leaving the previous generated ``*.md`` file in
+    place produces duplicate sections and duplicate cross-reference labels. Keep
+    non-Markdown auxiliaries, then copy/write the current source set below.
+    """
+
+    if not INJECTED_MS_DIR.exists():
+        return
+    for old_md in INJECTED_MS_DIR.glob("*.md"):
+        old_md.unlink()
+
+
+def rebase_generated_links(text: str) -> str:
+    """Adjust source-relative markdown links for ``output/manuscript``.
+
+    The manuscript source lives at ``manuscript`` in this project root
+    (or ``projects/cogant/manuscript`` when vendored into the parent template);
+    generated fragments live one directory deeper at ``output/manuscript``.
+    Figure links already
+    target ``../figures`` and should stay unchanged. Links back to package,
+    tooling, template infrastructure, or project roots need one additional
+    ``..`` segment so rendered HTML/PDF sources do not contain broken paths.
+    """
+
+    replacements = {
+        "](../cogant/": "](../../cogant/",
+        "](../cogant)": "](../../cogant)",
+        "](../tools/": "](../../tools/",
+        "](../tools)": "](../../tools)",
+        "](../scripts/": "](../../scripts/",
+        "](../scripts)": "](../../scripts)",
+        "](../PROMOTION.md": "](../../PROMOTION.md",
+        "](../output/data/": "](../data/",
+        "](../../../infrastructure/": "](../../../../infrastructure/",
+        "](../../../projects/": "](../../../../projects/",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    return text
 
 
 def load_metrics() -> dict:
@@ -135,10 +196,19 @@ def main(argv: list[str] | None = None) -> int:
         default=False,
         help=(
             "Exit non-zero if any {{PLACEHOLDER}} remains unresolved in "
-            "output/manuscript/. Off by default because manuscript/README.md "
+            "output/manuscript/ or any registered manuscript figure is "
+            "missing/incompletely described. Off by default because manuscript/README.md "
             "and manuscript/AGENTS.md contain literal ``{{PLACEHOLDER}}`` "
             "tokens as documentation. Use in CI when you know the manuscript "
-            "files are pure templates."
+            "files are pure templates and the package figures have been generated."
+        ),
+    )
+    parser.add_argument(
+        "--strict-figures",
+        action="store_true",
+        help=(
+            "Fail on missing or incompletely described registered manuscript "
+            "figures even when placeholder strictness is disabled."
         ),
     )
     args = parser.parse_args(argv)
@@ -160,6 +230,7 @@ def main(argv: list[str] | None = None) -> int:
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     INJECTED_MS_DIR.mkdir(parents=True, exist_ok=True)
+    clean_injected_manuscript_dir()
 
     out_json = DATA_DIR / "manuscript_variables.json"
     out_json.write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
@@ -175,6 +246,7 @@ def main(argv: list[str] | None = None) -> int:
     for src in md_files:
         text = src.read_text(encoding="utf-8")
         new_text, subs = substitute_text(text, metrics)
+        new_text = rebase_generated_links(new_text)
         if subs:
             logger.debug("%s: %d substitution(s)", src.name, len(subs))
         dest = INJECTED_MS_DIR / src.name
@@ -191,8 +263,15 @@ def main(argv: list[str] | None = None) -> int:
         else:
             logger.warning("Optional manuscript auxiliary not found: %s", p)
 
+    figure_manifest = copy_manuscript_figures(
+        COGANT_STAGING_ROOT,
+        strict=args.strict or args.strict_figures,
+    )
+    logger.info("Prepared manuscript figures: %s", figure_manifest)
+
     print(str(out_json))
     print(str(INJECTED_MS_DIR))
+    print(str(figure_manifest))
 
     if unresolved_by_file:
         msg_lines = [

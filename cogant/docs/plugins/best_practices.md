@@ -9,7 +9,7 @@
 
 ### Compatibility
 
-- Target Python 3.11+ (see root [`pyproject.toml`](https://github.com/cogant-contributors/cogant/blob/main/cogant/pyproject.toml))
+- Target Python 3.11+ (see root [`pyproject.toml`](https://github.com/docxology/cogant/blob/main/cogant/pyproject.toml))
 - Don't assume import order
 - Handle missing optional dependencies gracefully
 - Follow COGANT's error handling patterns

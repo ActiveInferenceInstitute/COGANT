@@ -14,13 +14,14 @@ COGANT's most ambitious claim is that the mapping between source code and Active
 code --forward--> GNN --reverse--> code'
 ```
 
-This page explains both directions, the theoretical bound on roundtrip fidelity, and the Galois connection framing that makes the claim precise.
+This page explains both directions, the role-preservation score, and the stricter invariant
+ledger that determines the current v0.6 roundtrip status.
 
 ## Forward: code to GNN
 
-The forward pipeline is a six-stage content-preserving transformation:
+The forward pipeline is a six-layer evidence transformation:
 
-1. **Source to graph.** Tree-sitter parses the source code into an AST, then COGANT's graph builder extracts a typed [program graph](program_graph.md) with nodes (MODULE, CLASS, FUNCTION, METHOD, VARIABLE) and edges (CALLS, READS, WRITES, IMPORTS, CONTAINS). Information is re-indexed, not discarded -- the graph preserves every structural relationship in the AST except whitespace and comments.
+1. **Source to graph.** Tree-sitter or the Python AST front end parses source code, then COGANT's graph builder extracts a typed [program graph](program_graph.md) with nodes (MODULE, CLASS, FUNCTION, METHOD, VARIABLE) and edges (CALLS, READS, WRITES, IMPORTS, CONTAINS). The graph preserves the relationships the front end extracts; whitespace, comments, unsupported constructs, and dynamic effects remain outside the graph unless a later stage adds evidence.
 
 2. **Graph to semantic mappings.** The [rule engine](role_assignment.md) runs 22 translation rules against the graph. Each rule that fires produces a `SemanticMapping` with a confidence score. Conflicts are resolved by `(priority, confidence)` ordering.
 
@@ -32,11 +33,14 @@ The forward pipeline is a six-stage content-preserving transformation:
 
 6. **GNN package.** The `GNNPackageBuilder` writes `model.gnn.md`, `model.gnn.json`, satellite matrix files, the [Markov blanket](markov_blanket.md) partition, and provenance metadata into a self-contained directory.
 
-Each stage is content-preserving: the output contains at least as much semantic information as the input, plus the new structure imposed by that stage. The GNN file is not a summary of the code -- it is a re-encoding.
+Each stage is traceable: the output records the source artifact, rule evidence, fallback paths,
+and validation status needed to inspect what was preserved and what was approximated. The GNN
+file is not a behavioral proof of the source code; it is a structured export of the extracted
+program graph, semantic mappings, state-space model, and matrix defaults.
 
 ## Reverse: GNN to code
 
-The reverse pipeline reads a GNN package and synthesizes a Python package that, when analyzed by a forward run, would produce an isomorphic GNN. The v0.5.0 implementation in `py/cogant/reverse/` is exposed through the `cogant reverse` and `cogant roundtrip` CLI subcommands and emits POLICY / CONTEXT stubs proportional to the origin GNN's role counts (the wave-16 fix that brought the canonical evaluation set to 23 / 23 ISOMORPHIC):
+The reverse pipeline reads a GNN package and synthesizes a Python package that, when analyzed by a forward run, is compared against the original GNN through the v0.6 invariant ledger. The implementation in `py/cogant/reverse/` is exposed through the `cogant reverse` and `cogant roundtrip` CLI subcommands and emits POLICY / CONTEXT scaffolding proportional to the origin GNN's role counts:
 
 ```python
 # doctest: +SKIP  # requires a pre-generated GNN package on disk
@@ -67,26 +71,29 @@ The synthesized `code'` has:
 
 The synthesized code is not a copy of the original -- it is a **minimal implementation** that preserves the generative model structure. Variable names come from the GNN labels, not the original source.
 
-## The isomorphism measure
+## The roundtrip measure
 
 How do you know the roundtrip worked? COGANT defines the role-preservation fidelity metric as:
 
 ```
-ε = |roles_preserved| / |roles_original|
+s_role = |roles_preserved| / |roles_original|
 ```
 
-where the numerator counts semantic-role assignments preserved across the `forward → reverse → forward` roundtrip and the denominator counts the roles in the original GNN bundle. The metric compares:
+where the numerator counts semantic-role assignments preserved across the `forward → reverse → forward` roundtrip and the denominator counts the roles in the original GNN bundle. A perfect role-preservation score has **s_role = 1.0** (all roles preserved), and the public ROLE_PRESERVED threshold is **s_role >= 0.5**.
 
-1. **State space dimensionality** — same number of hidden states, observations, actions
-2. **A matrix structure** — same non-zero pattern in the likelihood matrix
-3. **B matrix structure** — same non-zero pattern in the transition matrix
-4. **C vector** — same preference ordering
-5. **D vector** — same prior distribution
-6. **Blanket partition** — same internal/sensory/active/external assignment
+The v0.6 invariant ledger separately checks stronger properties:
 
-A perfect roundtrip has **ε = 1.0** (all roles preserved), and the ISOMORPHIC threshold is **ε ≥ 0.8**. Current benchmark: **23/23 targets ISOMORPHIC, mean ε = 1.0** (canonical source `cogant/evaluation/METRICS.yaml`).
+1. **State-space shape preservation** — same hidden-state, observation, and action dimensions.
+2. **A/B/C/D matrix preservation** — same matrix shapes and value deltas within tolerance.
+3. **GNN-section preservation** — same required section coverage and comparable section content.
+4. **Program-graph preservation** — same node/edge counts and edge-kind distributions.
+5. **Generated-code health** — synthesized package imports, compiles, and passes smoke checks.
 
-> **Legacy note:** Earlier drafts (pre-wave-14, see `ISOMORPHISM_THEOREM.md` §4) used a complementary "error" formulation where ε_max = 0 meant exact recovery. The current project-wide convention is the role-preservation ratio above, where 1.0 is exact.
+Strict `STRUCTURALLY_ISOMORPHIC` status requires those ledger checks in addition to role preservation (canonical source `cogant/evaluation/METRICS.yaml`).
+
+> **Legacy note:** Earlier drafts used a complementary "error" formulation in
+> `ISOMORPHISM_THEOREM.md`, where ε_max = 0 meant exact recovery. The current project-wide
+> convention is the role-preservation ratio above, where 1.0 is exact.
 
 In practice, the forward pipeline discards information that cannot be recovered:
 
@@ -95,25 +102,25 @@ In practice, the forward pipeline discards information that cannot be recovered:
 - **Name choices** are preserved as labels but the synthesizer may normalize them
 - **Control flow ordering** within a function body is not captured by the graph
 
-These losses establish a theoretical lower bound on epsilon. The roundtrip is idempotent **up to these losses**: `forward(reverse(forward(code)))` produces the same GNN as `forward(code)`.
+These losses explain why role preservation can pass while stricter graph, matrix, or generated-code invariants fail. Treat `ROLE_PRESERVED` as a useful semantic-regression tier and `STRUCTURALLY_ISOMORPHIC` as the strict tier.
 
-## The Galois connection framing
+## Historical Galois connection framing
 
-The formal version (documented in the codebase's theory pages) frames the forward and reverse pipelines as a Galois connection between two partially ordered sets:
+The historical theory sketch frames the forward and reverse pipelines as a restricted Galois-style relation between two partially ordered sets:
 
 - **Programs**, ordered by behavioral refinement (P1 refines P2 if P1 can do everything P2 can do)
 - **Generative models**, ordered by model inclusion (M1 includes M2 if M1's state space contains M2's)
 
 The forward pipeline `F` is the **lower adjoint**: it maps a program to the smallest generative model that captures its structure. The reverse pipeline `R` is the **upper adjoint**: it maps a generative model to the largest program that is consistent with it.
 
-The Galois connection guarantees:
+Under that restricted role-quotient reading, the intended equations are:
 
 ```
 F(R(F(code))) = F(code)     -- forward is idempotent after one roundtrip
 R(F(R(gnn)))  = R(gnn)      -- reverse is idempotent after one roundtrip
 ```
 
-This is why COGANT claims the mapping is an isomorphism "up to epsilon" rather than an exact bijection. The Galois connection is the strongest claim that can be made when the forward pipeline is information-lossy (as all compilers are).
+The current package does not use "epsilon-isomorphism" as a CLI or manuscript success tier. It reports `roundtrip_status`, `role_preservation_score`, and the invariant ledger described above.
 
 ## A concrete GNN roundtrip example
 
@@ -149,11 +156,11 @@ class CalculatorModel:
         self.display = self.display          # B matrix placeholder
 ```
 
-Running `cogant translate` on this synthesized code produces a GNN with the same `StateSpaceBlock` dimensions, the same A matrix non-zero pattern, and the same blanket partition -- confirming epsilon is near zero for this fixture.
+Running `cogant translate` on this synthesized code produces a GNN whose `StateSpaceBlock` dimensions, A matrix non-zero pattern, and blanket partition can be inspected by the roundtrip invariant ledger.
 
 ## Current limitations
 
-- `cogant reverse` and `cogant roundtrip` are available CLI subcommands as of v0.5.0.
+- `cogant reverse` and `cogant roundtrip` are available CLI subcommands in v0.6.0.
 - Only Python synthesis output is supported.
 - The B matrix placeholder code does not implement real transition logic -- it preserves the structural skeleton.
 - Complex control flow (loops, conditionals, exception handling) is not synthesized.
@@ -174,7 +181,7 @@ The forward stages live across `cogant.static`, `cogant.translate`, `cogant.stat
 | Reverse — synthesis planning | `reverse/planner.py` | [`cogant.reverse` → Planner](../api/reverse.md#planner) | planner classes |
 | Reverse — Python package synthesis (`synthesize_package`) | `reverse/synthesizer.py`, `reverse/matrices.py` | [`cogant.reverse` → Synthesizer](../api/reverse.md#synthesizer) | `synthesize_package` |
 | Reverse — runtime-callable closures (`MatrixFunctions`) | `reverse/callable.py` | [`cogant.reverse` → Callable](../api/reverse.md#callable) | `MatrixFunctions` |
-| Roundtrip ε metric and idempotency checks | `reverse/metrics.py`, `reverse/idempotency.py` | [`cogant.reverse` → Metrics](../api/reverse.md#metrics), [`cogant.reverse` → Idempotency](../api/reverse.md#idempotency) | epsilon helpers |
+| Roundtrip role-preservation metric and idempotency checks | `reverse/metrics.py`, `reverse/idempotency.py` | [`cogant.reverse` → Metrics](../api/reverse.md#metrics), [`cogant.reverse` → Idempotency](../api/reverse.md#idempotency) | legacy metric helpers plus v0.6 invariant ledger |
 | Forward-pipeline orchestration consumed by `cogant roundtrip` | `pipeline/`, `cli/` | [`cogant.gnn` → Runner](../api/gnn.md#runner), [pipelinerunner_api](../api/pipelinerunner_api.md) | pipeline runner |
 
 ## Further reading

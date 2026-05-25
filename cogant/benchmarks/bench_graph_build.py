@@ -11,7 +11,7 @@ Measures the time to build a realistic graph of ``N_NODES`` nodes and
 
 Run directly:
 
-    cd projects_in_progress/cogant/cogant
+    cd projects/cogant/cogant
     uv run python benchmarks/bench_graph_build.py
 
 The benchmark prints per-backend wall times and the Rust speedup factor.

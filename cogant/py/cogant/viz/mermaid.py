@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """
 Mermaid diagram generators for various program graph visualizations.
 

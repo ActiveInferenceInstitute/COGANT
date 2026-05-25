@@ -1,5 +1,5 @@
 {
-  "$comment": "Minimal copy-to-tweak config for run_all.sh / run_all.py. output_root defaults to 'output' at the staging root for quick smoke tests; promote to 'cogant/output' to match the shipped run_all.json. Pass --config path/to/file.json to use a different file.",
+  "$comment": "Minimal copy-to-tweak config for run_all.sh / run_all.py. output_root defaults to 'output' at the project root for quick smoke tests; promote to 'cogant/output' to match the shipped run_all.json. Pass --config path/to/file.json to use a different file.",
   "package_root": "cogant",
   "output_root": "output",
   "remote": {
@@ -57,7 +57,8 @@
     "export_multi": true,
     "export_multi_formats": "json,jsonlines",
     "visualize_diagrams": true,
-    "visualize_format": "mermaid"
+    "visualize_format": "mermaid",
+    "batch_dashboard": true
   },
   "manuscript": {
     "enabled": false,

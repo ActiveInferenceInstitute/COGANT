@@ -14,6 +14,11 @@ Public API
 """
 
 from cogant.runtime.config import AgentConfig
+from cogant.runtime.inference_demo import (
+    default_demo_matrices,
+    run_deterministic_inference_demo,
+    write_inference_trace_artifact,
+)
 from cogant.runtime.loop import (
     AgentRuntime,
     AgentStep,
@@ -29,6 +34,9 @@ __all__ = [
     "AgentRuntime",
     "EpisodeResult",
     "MultiEpisodeResult",
+    "default_demo_matrices",
+    "run_deterministic_inference_demo",
     "run_n_steps",
     "run_until_convergence",
+    "write_inference_trace_artifact",
 ]

@@ -113,7 +113,7 @@ class TranslationRule(ABC):
 
         Rationale for default ``priority=0``:
             Most shipped rules keep the default ``0`` and are applied in
-            registration order within a single fixpoint pass.
+            registration order within a single translation pass.
             :class:`~cogant.translate.rules.structural.MutatingSubsystemRule`
             overrides this property to return ``1`` so class-level hidden-state
             evidence wins ties against overlapping class-scoped mappings from
@@ -208,22 +208,30 @@ class TranslationRule(ABC):
 class TranslationEngine:
     """Orchestrates translation of program graphs to semantic concepts.
 
-    Applies a series of translation rules using fixpoint iteration until
-    convergence (no new mappings) or max iterations reached. Resolves
-    conflicts when multiple mappings target overlapping node sets.
+    Applies the registered translation rules with iterative rule
+    application plus an idempotent confirmation pass. Rules do not consume
+    prior mappings (``TranslationRule.apply`` only receives the graph and
+    a single match), so a true semantic fixpoint is NOT performed: the
+    first pass produces every mapping the rules can produce, and the
+    second pass exists solely to confirm idempotence (no new mappings)
+    before conflict resolution. ``max_iterations`` bounds the loop as a
+    safety margin only. Resolves conflicts when multiple mappings target
+    overlapping node sets.
     """
 
     def __init__(self, max_iterations: int = 10):
         """Initialize the translation engine.
 
         Args:
-            max_iterations: Maximum fixpoint iterations (default 10).
+            max_iterations: Maximum rule-application passes (default 10).
 
         Rationale for default ``max_iterations=10``:
-            Empirically the fixpoint settles in <=5 iterations on
-            control-positive fixtures and typical corpora; 10 is a small
-            safety margin. Callers with very large graphs may pass a
-            higher bound. See ``docs/evaluation/CALIBRATION.md``.
+            Because rules do not consume prior mappings, the second pass
+            never produces new mappings; in practice the loop exits after
+            the first pass plus one idempotent confirmation pass (<=2
+            passes) on control-positive fixtures and typical corpora. 10
+            is a generous safety margin, not an expected iteration count.
+            See ``docs/evaluation/CALIBRATION.md``.
         """
         self.rules: list[TranslationRule] = []
         self.mappings: dict[str, SemanticMapping] = {}
@@ -247,13 +255,16 @@ class TranslationEngine:
         graph: ProgramGraph,
         rule_filter: list[str] | None = None,
     ) -> list[SemanticMapping]:
-        """Translate a program graph using registered rules with fixpoint iteration.
+        """Translate a program graph using iterative rule application.
 
-        Rules are applied repeatedly until no new mappings emerge
-        (convergence) or ``max_iterations`` is reached, whichever comes
-        first. After the fixpoint exits, conflict resolution picks a
-        single winning mapping per node set using priority then
-        confidence as the tiebreaker.
+        Rules are applied in repeated passes until a pass produces no new
+        mappings or ``max_iterations`` is reached, whichever comes first.
+        Because rules do not consume prior mappings, this is single-pass
+        rule application followed by one idempotent confirmation pass
+        (the second pass re-runs the rules and is expected to add nothing)
+        — it is NOT a semantic fixpoint. After the loop exits, conflict
+        resolution picks a single winning mapping per node set using
+        priority then confidence as the tiebreaker.
 
         Args:
             graph: Program graph to translate. Must have been built by
@@ -309,7 +320,7 @@ class TranslationEngine:
 
         for iteration in range(1, self.max_iterations + 1):
             logger.debug(
-                "Fixpoint iteration %d starting (%d existing mappings)",
+                "Translation pass %d starting (%d existing mappings)",
                 iteration,
                 len(self.mappings),
             )
@@ -331,14 +342,21 @@ class TranslationEngine:
                 "engine",
                 f"iteration={iteration} new_mappings={new_mappings_this_pass}",
             )
-            logger.info("Fixpoint iteration %d: %d new mappings", iteration, new_mappings_this_pass)
+            logger.info("Translation pass %d: %d new mappings", iteration, new_mappings_this_pass)
 
             if new_mappings_this_pass == 0:
-                logger.info("Fixpoint reached after %d iteration(s)", iteration)
+                logger.info(
+                    "Idempotence confirmed (no new mappings) after %d pass(es); "
+                    "not a semantic fixpoint",
+                    iteration,
+                )
                 self._convergence_iteration = iteration
                 break
         else:
-            logger.warning("Max iterations (%d) reached without convergence", self.max_iterations)
+            logger.warning(
+                "Max passes (%d) reached without an idempotent (zero-new-mapping) pass",
+                self.max_iterations,
+            )
 
         # Resolve conflicts among overlapping mappings
         conflicts_before = len(self.mappings)
@@ -389,7 +407,7 @@ class TranslationEngine:
             graph: Program graph to translate.
             query: Graph query engine bound to ``graph``.
             rule_filter: Optional list of rule names to restrict application.
-            iteration: Current fixpoint iteration number (for logging context).
+            iteration: Current translation-pass number (for logging context).
 
         Returns:
             Number of new mappings created during this pass.
@@ -432,6 +450,10 @@ class TranslationEngine:
                 try:
                     mapping = rule.apply(graph, match)
                     if mapping and mapping.id not in self.mappings:
+                        mapping.metadata.setdefault("rule_id", rule.name)
+                        mapping.metadata.setdefault("rule_priority", rule.priority)
+                        mapping.metadata.setdefault("match", match)
+                        mapping.metadata.setdefault("iteration", iteration)
                         self.mappings[mapping.id] = mapping
                         self._rule_priority[mapping.id] = rule.priority
                         self._log_match("mapping_created", rule.name, mapping.id)
@@ -493,7 +515,7 @@ class TranslationEngine:
     ) -> list[SemanticMapping]:
         """Translate and rescore all mappings using the ConfidenceModel.
 
-        Runs the standard fixpoint translation, then applies the
+        Runs the standard iterative-pass translation, then applies the
         ConfidenceModel to update confidence scores, tiers, and
         conflict penalties on every resulting mapping.
 
@@ -563,6 +585,18 @@ class TranslationEngine:
             overlap = set(mapping_a.graph_fragment_node_ids) & set(
                 mapping_b.graph_fragment_node_ids
             )
+            winner.metadata.setdefault("conflict_resolution", []).append(
+                {
+                    "kept": winner.id,
+                    "removed": loser.id,
+                    "overlap_node_ids": sorted(overlap),
+                    "winner_priority": self._rule_priority.get(winner.id, 0),
+                    "loser_priority": self._rule_priority.get(loser.id, 0),
+                    "winner_confidence": winner.confidence_score,
+                    "loser_confidence": loser.confidence_score,
+                }
+            )
+            loser.metadata["conflict_resolution_status"] = "removed"
             self._log_match(
                 "conflict_resolved",
                 "engine",
@@ -719,7 +753,7 @@ class TranslationEngine:
         if iteration_events:
             last_event = iteration_events[-1]
             detail = last_event.get("detail", "")
-            explanations.append(f"Fixpoint convergence: {detail}")
+            explanations.append(f"Translation-pass convergence: {detail}")
 
         return explanations
 
@@ -771,15 +805,20 @@ class TranslationEngine:
         return issues
 
     def get_convergence_info(self) -> dict[str, Any]:
-        """Get information about fixpoint convergence.
+        """Get information about translation-pass convergence.
+
+        "Converged" here means the loop reached a pass that produced no
+        new mappings (idempotent confirmation pass) — it does NOT mean a
+        semantic fixpoint was computed, since rules do not consume prior
+        mappings. The dict keys are kept stable for callers/tests.
 
         Returns a dictionary with:
-        - converged: Whether fixpoint was reached
-        - iterations: Number of iterations until convergence (or max_iterations)
+        - converged: Whether an idempotent (zero-new-mapping) pass was reached
+        - iterations: Number of passes until idempotence (or max_iterations)
         - final_mapping_count: Number of mappings in final result
 
         Returns:
-            Dictionary with convergence metadata.
+            Dictionary with pass-convergence metadata.
         """
         return {
             "converged": self._convergence_iteration is not None,

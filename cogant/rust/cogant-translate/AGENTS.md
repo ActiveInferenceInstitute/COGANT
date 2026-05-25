@@ -1,19 +1,24 @@
-# Agents — rust/cogant-translate
+# Agents - rust/cogant-translate
 
 ## Owner
+
 Semantic Lead
 
-## Responsibilities
-- High-performance rule evaluation and graph transformations
-- Parallel rule execution
-- Confidence scoring at scale
-- Memory-efficient incremental compilation
+## Scope
 
-## Coordination
-- Consumes rules from Python translate/ module
-- Operates on graphs from cogant-graph
-- Outputs confidence-scored graph to Python
+Rust-side rule registry and node-role translation helpers. It models mapping metadata and deterministic role assignment for supported structural cases.
 
-## Files
-- Cargo.toml — Crate manifest
-- src/lib.rs — RuleEngine, rule compilation, execution
+## Rules
+
+- Keep `Cargo.toml`, `README.md`, and `src/AGENTS.md` synchronized when public behavior changes.
+- Add crate-local tests for Rust behavior and Python parity tests before routing package code through the FFI.
+- Keep Python as the canonical fallback unless `COGANT_USE_RUST=1` explicitly forces Rust.
+
+## Verification
+
+From the Rust workspace root:
+
+```bash
+cargo test -p cogant-translate
+cargo clippy -p cogant-translate -- -D warnings
+```

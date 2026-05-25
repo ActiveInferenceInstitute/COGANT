@@ -24,22 +24,68 @@ in CI logs.
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
+import re
+from urllib.parse import unquote
 
 _DOCS_DIR = Path(__file__).resolve().parent
 # Package root: parent of ``docs/`` (contains ``py/``, ``tests/``, etc.).
 _REPO_ROOT = _DOCS_DIR.parent
 
 _LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+_EXPLICIT_ID_RE = re.compile(r"\{#([A-Za-z0-9_.:-]+)\}")
+_HTML_ID_RE = re.compile(r"\b(?:id|name)=['\"]([^'\"]+)['\"]")
+_HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*(?:\{#([A-Za-z0-9_.:-]+)\})?\s*$")
+_INLINE_MARKUP_RE = re.compile(r"[`*_~\[\]()]")
+_NON_SLUG_RE = re.compile(r"[^a-z0-9 _-]+")
+_WHITESPACE_RE = re.compile(r"\s+")
 
 
 def _split_target(raw: str) -> tuple[str, str]:
     """Return (path_part, fragment) for a markdown link target."""
     if "#" in raw:
         path_part, frag = raw.split("#", 1)
-        return path_part, frag
+        return path_part, unquote(frag)
     return raw, ""
+
+
+def _slugify_heading(text: str) -> str:
+    """Approximate the GitHub/MkDocs heading slug used for local anchors."""
+    text = _EXPLICIT_ID_RE.sub("", text)
+    text = _INLINE_MARKUP_RE.sub("", text)
+    text = _NON_SLUG_RE.sub("", text.lower())
+    return _WHITESPACE_RE.sub("-", text.strip())
+
+
+def _anchors_for(path: Path) -> set[str]:
+    """Return explicit and heading-derived anchors from a Markdown file."""
+    anchors: set[str] = set()
+    if path.suffix.lower() != ".md" or not path.is_file():
+        return anchors
+    text = path.read_text(encoding="utf-8")
+    anchors.update(_EXPLICIT_ID_RE.findall(text))
+    anchors.update(_HTML_ID_RE.findall(text))
+    for line in text.splitlines():
+        match = _HEADING_RE.match(line.strip())
+        if not match:
+            continue
+        explicit = match.group(3)
+        if explicit:
+            anchors.add(explicit)
+        slug = _slugify_heading(match.group(2))
+        if slug:
+            anchors.add(slug)
+    return anchors
+
+
+def _check_fragment(errors: list[str], md_path: Path, raw: str, resolved: Path, fragment: str) -> None:
+    """Append an error if ``fragment`` is absent from a resolved Markdown file."""
+    if not fragment or resolved.suffix.lower() != ".md":
+        return
+    if fragment not in _anchors_for(resolved):
+        errors.append(
+            f"{md_path.relative_to(_REPO_ROOT)}: missing anchor #{fragment!r} in {raw!r}"
+        )
 
 
 def verify_docs() -> list[str]:
@@ -64,7 +110,7 @@ def verify_docs() -> list[str]:
                 continue
             if raw.startswith(("http://", "https://")):
                 continue
-            path_part, _frag = _split_target(raw)
+            path_part, frag = _split_target(raw)
             if not path_part:
                 continue
             # Angle-bracket wrapped paths: <path>
@@ -78,6 +124,7 @@ def verify_docs() -> list[str]:
                 errors.append(f"{md_path.relative_to(_REPO_ROOT)}: link escapes repo root: {raw!r}")
                 continue
             if resolved.is_file():
+                _check_fragment(errors, md_path, raw, resolved, frag)
                 continue
             if resolved.is_dir():
                 continue

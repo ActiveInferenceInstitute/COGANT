@@ -13,6 +13,7 @@ Infra Lead (with subsystem owners responsible for their tests)
 - Each module owner maintains unit tests for their code
 - Infra Lead provides testing utilities and CI coordination
 - Tests must pass before merge
+- File names should describe the subsystem and behavior under test, not the campaign that created them. Avoid generated-era campaign numbers, dated batch tags, and opaque coverage-only suffixes.
 
 ## Files
 - test_*.py files for each module

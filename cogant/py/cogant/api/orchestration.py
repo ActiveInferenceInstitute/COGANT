@@ -8,11 +8,13 @@ from __future__ import annotations
 import json
 import logging
 import tempfile
+from collections.abc import AsyncGenerator
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from cogant.api.bundle import Bundle
 from cogant.graph.builder import ProgramGraphBuilder
 from cogant.ingest.repo import RepoIngester, RepoSnapshot
 from cogant.normalize.canonical import CanonicalNormalizer, LanguageFact
@@ -24,6 +26,7 @@ from cogant.statespace.compiler import StateSpaceCompiler
 from cogant.static.parser import PythonASTParser
 from cogant.translate.confidence import ConfidenceModel
 from cogant.translate.engine import TranslationEngine
+from cogant.translate.evidence import build_rule_evidence_trace
 from cogant.translate.review import ReviewManager
 from cogant.translate.rules import (
     ActionRule,
@@ -39,11 +42,14 @@ from cogant.translate.rules import (
     MutatingSubsystemRule,
     ObservationRule,
     OrchestratorRule,
+    ParameterRule,
     PolicyRule,
     PreferenceRule,
+    RateLimiterRule,
     ReadOnlyInputRule,
     RetryPatternRule,
     SingletonAccessRule,
+    StateMachineRule,
     TestAssertionRule,
 )
 from cogant.validate.schema_check import SchemaValidator
@@ -183,11 +189,14 @@ def _default_translation_engine() -> TranslationEngine:
     eng.register_rule(ReadOnlyInputRule())
     eng.register_rule(MutatingSubsystemRule())
     eng.register_rule(OrchestratorRule())
+    eng.register_rule(StateMachineRule())
     eng.register_rule(TestAssertionRule())
     eng.register_rule(RetryPatternRule())
+    eng.register_rule(RateLimiterRule())
     eng.register_rule(EventBusRule())
     eng.register_rule(ConfigRule())
     eng.register_rule(FeatureFlagRule())
+    eng.register_rule(ParameterRule())
     eng.register_rule(ObservationRule())
     eng.register_rule(ActionRule())
     eng.register_rule(PolicyRule())
@@ -200,6 +209,15 @@ def _default_translation_engine() -> TranslationEngine:
     eng.register_rule(SingletonAccessRule())
     eng.register_rule(CircuitBreakerRule())
     return eng
+
+
+def _filter_semantic_mappings(
+    mappings: list[SemanticMapping],
+    *,
+    min_confidence: float,
+) -> list[SemanticMapping]:
+    """Keep only mappings whose scored confidence meets ``min_confidence``."""
+    return [m for m in mappings if float(m.confidence_score) >= min_confidence]
 
 
 def run_ingest(bundle_target: str, bundle: Any) -> dict[str, Any]:
@@ -496,17 +514,50 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
         except Exception:
             return str(p)
 
-    for file_path, module in parsed.items():
+    # First pass: add MODULE nodes for every parsed file so that IMPORTS
+    # edges (processed in the second pass below) can resolve their targets
+    # regardless of the order in which files are walked. Previously the
+    # IMPORTS resolver ran inside this same loop, which silently dropped
+    # any import whose target file was visited *after* the importing
+    # module — a non-trivial fraction of dotted-import drops traced to this
+    # ordering hazard. See TODO #2 sub-fix.
+    parsed_module_meta: dict[Path, tuple[str, str]] = {}
+    for file_path, _module in parsed.items():
         rel = _rel(file_path)
         module_name = file_path.stem
+        # Build the dotted package-qualified module name (e.g.
+        # ``pkg/deep/x.py`` → ``pkg.deep.x``). When a file lives at the
+        # repo root, ``dotted_name`` collapses to the bare stem. The
+        # dotted form is what ``from pkg.deep import x`` and
+        # ``import pkg.util as u`` resolve against — see TODO #2
+        # "graph normalization around imports".
+        rel_path = Path(rel)
+        parts = list(rel_path.with_suffix("").parts)
+        if parts and parts[-1] == "__init__":
+            parts = parts[:-1]
+        dotted_name = ".".join(parts) if parts else module_name
         module_node = builder.add_node(
             kind=NodeKind.MODULE,
             name=module_name,
-            qualified_name=module_name,
+            qualified_name=dotted_name,
             path=rel,
             language="python",
         )
+        # Index under both the bare stem (legacy keying) and the dotted
+        # package-qualified name. Downstream IMPORTS resolution tries the
+        # dotted form first, then falls back to the head segment.
         module_nodes[module_name] = module_node
+        if dotted_name and dotted_name != module_name:
+            module_nodes[dotted_name] = module_node
+        parsed_module_meta[file_path] = (rel, dotted_name)
+
+    for file_path, module in parsed.items():
+        rel, dotted_name = parsed_module_meta[file_path]
+        module_name = file_path.stem
+        # Resolve module_node from the index built in the first pass.
+        module_node = (
+            module_nodes[dotted_name] if dotted_name in module_nodes else module_nodes[module_name]
+        )
 
         for cls in getattr(module, "classes", []) or []:
             class_qname = f"{module_name}.{cls.name}"
@@ -554,14 +605,57 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
             )
             builder.add_edge(module_node.id, func_node.id, EdgeKind.CONTAINS)
 
-        # IMPORTS edges by in-repo name match
+        # IMPORTS edges by in-repo name match.
+        #
+        # Python's ``from A.B import C`` semantics: ``C`` may be either an
+        # attribute *defined in* ``A.B/__init__.py`` OR a submodule at
+        # ``A/B/C.py``. Both are valid resolutions; we emit edges to whichever
+        # we have in the graph. The candidate sequence prefers the most
+        # specific match first.
+        #
+        # Resolution order:
+        #   1. Full dotted "module + imported_name":  ``from pkg.deep import x``
+        #      tried as ``pkg.deep.x`` before ``pkg.deep`` — this is the
+        #      submodule-name case.
+        #   2. Successive parent packages of the bare target:
+        #      ``pkg.deep.x`` → ``pkg.deep`` → ``pkg``
+        #   3. Bare head segment (legacy fallback).
+        #
+        # The first hit in ``module_nodes`` (excluding self) wins. This closes
+        # the dotted-import under-linking documented in TODO #2
+        # (``from pkg.deep import X`` previously missed when ``pkg.deep`` was
+        # indexed by file stem only).
         for imp in getattr(module, "imports", []) or []:
-            target_name = getattr(imp, "module", None) or getattr(imp, "name", None)
+            target_name = str(getattr(imp, "module_name", "") or "").lstrip(".")
+            import_names = [str(n).lstrip(".") for n in (getattr(imp, "names", []) or [])]
+            if not target_name and import_names:
+                target_name = import_names[0]
+                import_names = []
             if not target_name:
                 continue
-            head = str(target_name).split(".")[0]
-            if head in module_nodes and head != module_name:
-                builder.add_edge(module_node.id, module_nodes[head].id, EdgeKind.IMPORTS)
+
+            candidates: list[str] = []
+            # Candidate set 1: target + each imported name (submodule case)
+            for n in import_names:
+                if n:
+                    candidates.append(f"{target_name}.{n}")
+            # Candidate set 2: target itself + parent packages
+            parts = target_name.split(".")
+            for i in range(len(parts), 0, -1):
+                candidates.append(".".join(parts[:i]))
+            # Candidate set 3: bare head (legacy fallback)
+            head = parts[0] if parts else target_name
+            if head and head not in candidates:
+                candidates.append(head)
+
+            for candidate in candidates:
+                if candidate in module_nodes and candidate != dotted_name:
+                    builder.add_edge(
+                        module_node.id,
+                        module_nodes[candidate].id,
+                        EdgeKind.IMPORTS,
+                    )
+                    break
 
     # INHERITS edges.
     # Build a name→node index first so lookup is O(1) instead of O(|classes|)
@@ -670,7 +764,11 @@ def _emit_dataflow_edges(
         return
 
 
-def run_translate(bundle: Any) -> dict[str, Any]:
+def run_translate(
+    bundle: Any,
+    *,
+    min_confidence: float = ConfidenceModel.RUNTIME_ONLY_THRESHOLD,
+) -> dict[str, Any]:
     """Run the translate stage: apply rules to produce semantic mappings.
 
     If the bundle has not already installed a custom translation engine,
@@ -701,21 +799,29 @@ def run_translate(bundle: Any) -> dict[str, Any]:
         bundle.artifacts["_translation_engine"] = engine
 
     mappings = engine.translate(pg)
-    bundle.artifacts["_semantic_mappings"] = {m.id: m for m in mappings}
 
     model = ConfidenceModel()
     model.score_batch(mappings)
+    filtered_mappings = _filter_semantic_mappings(mappings, min_confidence=min_confidence)
+    bundle.artifacts["_semantic_mappings"] = {m.id: m for m in filtered_mappings}
     review = ReviewManager()
-    for m in mappings:
+    for m in filtered_mappings:
         review.add_mapping(m)
+    bundle.artifacts["_rule_evidence_trace"] = build_rule_evidence_trace(
+        filtered_mappings,
+        graph=pg,
+        match_log=engine.get_match_log(),
+    )
 
     return {
         "type": "gnn_model",
-        "node_features": [{"id": m.id, "kind": m.kind.value} for m in mappings],
+        "node_features": [{"id": m.id, "kind": m.kind.value} for m in filtered_mappings],
         "edge_indices": [],
         "embeddings": {},
-        "mapping_count": len(mappings),
-        "mapping_ids": [m.id for m in mappings],
+        "mapping_count": len(filtered_mappings),
+        "mapping_ids": [m.id for m in filtered_mappings],
+        "min_confidence": float(min_confidence),
+        "filtered_out_count": len(mappings) - len(filtered_mappings),
     }
 
 
@@ -792,7 +898,12 @@ def run_process(bundle: Any, target: str) -> dict[str, Any]:
     }
 
 
-def run_export(bundle: Any, output_dir: str) -> dict[str, Any]:
+def run_export(
+    bundle: Any,
+    output_dir: str,
+    *,
+    render_visualizations: bool = True,
+) -> dict[str, Any]:
     """Run the export stage: write all intermediate artifacts to disk.
 
     Writes any available program graph, state-space model, process model,
@@ -805,6 +916,10 @@ def run_export(bundle: Any, output_dir: str) -> dict[str, Any]:
         bundle: Pipeline bundle with whatever artifacts the earlier stages
             have populated.
         output_dir: Destination directory (created if missing).
+        render_visualizations: When true, rasterize Mermaid/SVG/dot/network
+            artifacts under ``output_dir`` into PNG files. Set false for
+            machine-readable summary calls that should not re-render a large
+            pre-existing output tree.
 
     Returns:
         Stage result dict with the output directory and the list of
@@ -849,6 +964,13 @@ def run_export(bundle: Any, output_dir: str) -> dict[str, Any]:
             json.dump(tr, f, indent=2, default=str)
         written.append(str(p))
 
+    trace = bundle.artifacts.get("_rule_evidence_trace")
+    if trace:
+        p = out / "rule_evidence_trace.json"
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(trace, f, indent=2, default=str)
+        written.append(str(p))
+
     # Build the full GNN package when all ingredients are available.
     # This unifies the CLI pipeline with ``examples/orchestrate_roundtrip.py``
     # so that ``cogant translate`` always produces a gnn_package/ directory
@@ -875,20 +997,31 @@ def run_export(bundle: Any, output_dir: str) -> dict[str, Any]:
     # and ``examples/orchestrate_roundtrip.py`` on the same raster contract:
     # every visualization gets a PNG. Failures are reported as warnings and
     # never abort the export stage.
-    try:
-        from cogant.viz.png_export import render_all_pngs
+    if render_visualizations:
+        try:
+            from cogant.viz.png_export import render_all_pngs
 
-        png_result = render_all_pngs(out, state_space=ss, process_model=pm)
-        png_total = sum(len(v) for v in png_result.values())
-        bundle.artifacts["png_paths"] = {
-            cat: [str(p) for p in paths] for cat, paths in png_result.items()
-        }
-        if png_total == 0:
+            png_result = render_all_pngs(out, state_space=ss, process_model=pm)
+            visualization_paths = {
+                cat: [str(p) for p in paths] for cat, paths in png_result.items()
+            }
+            bundle.artifacts["visualization_paths"] = visualization_paths
+            bundle.artifacts["png_paths"] = {
+                cat: [path for path in paths if Path(path).suffix.lower() == ".png"]
+                for cat, paths in visualization_paths.items()
+            }
+            visualization_total = sum(len(v) for v in visualization_paths.values())
+            if visualization_total == 0:
+                bundle.artifacts.setdefault("export_warnings", []).append(
+                    "render_all_pngs wrote 0 visualization files"
+                )
+        except Exception as e:  # pragma: no cover - defensive
             bundle.artifacts.setdefault("export_warnings", []).append(
-                "render_all_pngs wrote 0 files"
+                f"Visualization rendering failed: {e}"
             )
-    except Exception as e:  # pragma: no cover - defensive
-        bundle.artifacts.setdefault("export_warnings", []).append(f"PNG rendering failed: {e}")
+    else:
+        bundle.artifacts["visualization_paths"] = {}
+        bundle.artifacts["png_paths"] = {}
 
     bundle.artifacts["export_paths"] = written
     return {"type": "export", "output_dir": output_dir, "artifacts": written}
@@ -1127,7 +1260,7 @@ def translate_source(
     source_code: str,
     *,
     stages: list[str] | None = None,
-) -> Any:
+) -> Bundle:
     """Run the COGANT pipeline on an in-memory source string.
 
     Materializes ``source_code`` to a temp directory and delegates to
@@ -1166,7 +1299,7 @@ def translate_source(
 
 async def translate_stream(
     sources: list[tuple[str, str]], options: dict[str, Any] | None = None
-) -> Any:
+) -> AsyncGenerator[dict[str, Any]]:
     """Stream stage-by-stage progress for multiple translation jobs.
 
     Async generator suitable for WebSocket / Server-Sent-Event endpoints.

@@ -8,10 +8,10 @@
 >
 > **Next steps:** [Reverse API reference](../api/reverse.md) · [Tutorial 7: Plugin authoring](07_plugin_authoring.md) · [What is a GNN?](../concepts/gnn.md)
 
-> **Status.** Reverse synthesis is fully available in v0.5.0. `cogant reverse` and `cogant roundtrip` are CLI subcommands. This tutorial walks through both the CLI and the programmatic API.
+> **Status.** Reverse synthesis is available in v0.6.0. `cogant reverse` and `cogant roundtrip` are CLI subcommands. Roundtrip output now reports `roundtrip_status`, `role_preservation_score`, and explicit invariant booleans.
 
 > **Theory background:** "Forward → reverse → forward" is the COGANT
-> [roundtrip](../concepts/roundtrip.md) construction, and the ε isomorphism score reported by
+> [roundtrip](../concepts/roundtrip.md) construction, and the role-preservation / invariant ledger reported by
 > `cogant roundtrip` is defined there. The synthesis API surface used in the programmatic
 > sections lives in [api/reverse.md](../api/reverse.md). Read the roundtrip page first if you
 > want the categorical / Galois framing behind the score.
@@ -35,16 +35,20 @@ where `code'` is a new Python package with:
 - a getter per observation,
 - preference and prior metadata baked into module-level constants.
 
-This is the "isomorphism theorem" version of COGANT — the informal statement lives in
-[`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md).
+This is the roundtrip-validation version of COGANT: the regenerated package is
+checked through the current `roundtrip_status`, `role_preservation_score`, and
+invariant ledger rather than assumed to be a lossless inverse. The historical
+categorical sketch is preserved in
+[`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md),
+but the current operational contract is [the roundtrip concept page](../concepts/roundtrip.md).
 
-## Current state (v0.5.0)
+## Current state (v0.6.0)
 
 What **does** work:
 
 - `cogant reverse <gnn_package_dir> --output <out_dir>` synthesizes a Python package.
 - `cogant roundtrip <repo_dir> --output <out_dir>` runs forward → reverse → forward and
-  reports the ε isomorphism score.
+  reports the roundtrip status, role-preservation score, and invariant ledger.
 - `py/cogant/reverse/__init__.py` exposes `PackagePlan` for programmatic use.
 - `gnn/matrices.py`: given a `StateSpaceModel` and `GNNMatrices`, enumerate hidden states,
   observations, and actions in a stable order.
@@ -53,8 +57,9 @@ What **does** work:
 Known limitations:
 
 - Only Python synthesis is supported (TypeScript/Rust output is post-1.0).
-- The synthesized `code'` is **semantically equivalent** not **textually equivalent** to the
-  original — whitespace, docstrings, and comments are not recovered.
+- The synthesized `code'` is **role-preserving when the ledger says so**, not generally
+  semantically or textually equivalent to the original. Whitespace, docstrings, comments,
+  statement ordering, and many implementation details are not recovered.
 
 ## Programmatic walkthrough
 
@@ -99,7 +104,7 @@ actions selected by the identity-B fallback.
 ## Building a `PackagePlan` (prototype)
 
 The reverse module's `PackagePlan` captures the Python package structure before any files are
-written. Current API (subject to change in 0.2):
+written. Current API:
 
 ```python
 # doctest: +SKIP  # example requires runtime context or external resources
@@ -121,21 +126,21 @@ print(plan)
 > `cogant.reverse` (see `py/cogant/reverse/__init__.py`). It takes a
 > `ReverseGNNModel` and returns a `PackagePlan` describing the directory
 > layout. Earlier drafts of this tutorial referenced `build_package_plan`
-> — that name was renamed before v0.5.0 and no longer exists.
+> — that name was renamed before the current reverse API and no longer exists.
 
 ## Roadmap to full reverse mode
 
-Tracked in [`../evaluation/SCOPING_REPORT.md § reverse`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/SCOPING_REPORT.md#reverse) and
-[`../evaluation/R&D_LOG.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/R&D_LOG.md):
+Tracked in [`../evaluation/SCOPING_REPORT.md § reverse`](https://github.com/docxology/cogant/blob/main/docs/evaluation/SCOPING_REPORT.md#reverse) and
+[`../evaluation/R&D_LOG.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/R&D_LOG.md):
 
 | Milestone | Status |
 | --- | --- |
 | `PackagePlan` dataclass + directory layout | Complete |
 | GNN → `StateSpaceModel` round-trip load | Complete |
 | Python code emitter (Jinja2 templates) | Complete |
-| `cogant reverse` CLI command | Complete (v0.5.0) |
-| `cogant roundtrip` CLI command (forward + reverse verify) | Complete (v0.5.0) |
-| Idempotence tests (forward ∘ reverse ∘ forward = forward) | Complete — 23/23 ISOMORPHIC |
+| `cogant reverse` CLI command | Complete |
+| `cogant roundtrip` CLI command (forward + reverse verify) | Complete |
+| Roundtrip invariant tests (forward ∘ reverse ∘ forward) | Complete — role-preservation and strict-invariant status reported separately |
 | Language-agnostic output (TypeScript, Rust) | Post-1.0 |
 
 ## What you can experiment with today
@@ -154,5 +159,7 @@ Tracked in [`../evaluation/SCOPING_REPORT.md § reverse`](https://github.com/cog
 
 - [Tutorial 7: authoring a language plugin](07_plugin_authoring.md) — the forward direction of
   the language-agnostic roadmap.
-- [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md) — the informal theorem
-  that motivates reverse mode.
+- [The forward-reverse cycle](../concepts/roundtrip.md) — the current roundtrip taxonomy and
+  invariant ledger.
+- [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md) —
+  the historical theory sketch that originally motivated reverse mode.

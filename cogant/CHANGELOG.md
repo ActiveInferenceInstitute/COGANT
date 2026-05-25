@@ -3,6 +3,37 @@
 All notable changes to COGANT are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.0] - 2026-05-18
+
+### Changed
+- Version bumped to 0.6.0 (`cogant.__version__`); `manuscript/config.yaml` aligned to 0.6.0.
+
+### Fixed (audit-driven fidelity pass, 2026-05-18)
+- Canonical metrics regenerated from a clean full `uv run pytest tests/ --cov=py/cogant`
+  run: line coverage **94.98%** (28016/29498 statements). The previously advertised
+  97.14% was carried from a stale `coverage.json` whose statement denominator (26986)
+  predated codebase growth; it was above the 89% CI gate so no build broke, but the
+  advertised figure was inaccurate. Test counts re-verified unchanged: **9561 passing /
+  0 failing / 52 skipped** (9613 collected).
+- `GNNBundle` de-duplicated in `cogant.__all__`.
+- `scripts/empirical_claim_demo.py`: roundtrip JSON extraction rewritten to
+  `json.JSONDecoder().raw_decode` (the prior first-`}` match truncated nested JSON and
+  crashed the demo with exit 1; it now runs to completion).
+- Documentation accuracy corrections: `py/cogant/graph/AGENTS.md`
+  (`finalize()`/`queries.py`), `py/cogant/gnn/AGENTS.md` (`formatter/` package; 16
+  required files), `py/cogant/viz/AGENTS.md` (21 viz modules incl. `ablation_view.py`),
+  `py/cogant/README.md` usage imports, `cogant-store` checksum doc-comment (SipHash via
+  `DefaultHasher`, not SHA256), and the manuscript's `27 on-disk files` claim corrected
+  to the 16 required `gnn_package/` files plus generated assets.
+- Manuscript factual corrections: PyO3/GIL statement (calls are synchronous and hold
+  the GIL; no GIL release is implemented), and the matrix-mass defaults attributed to
+  the real module-level `_DEFAULT_DIRECT_MASS`/`_normalize_row` symbols.
+- Stale `projects_in_progress/cogant` path references corrected to `projects/cogant`
+  across active docs, scripts, and tooling (project is now an active,
+  pipeline-discovered project under `projects/cogant/`).
+- Generated the missing `output/claim_ledger.md` snapshot referenced by
+  `manuscript/S06_appendix_source_references.md` (manuscript link checker now clean).
+
 ## [0.5.1] - 2026-05-09
 
 ### Added (wave-21, 2026-05-09)
@@ -78,6 +109,128 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Measured-ablation visualization (`cogant.viz.ablation_view.render_ablation_png`).**
+  New deterministic two-panel figure (rule-family net deltas + fixpoint
+  convergence) rendered from the `ablation` block of
+  `evaluation/METRICS.yaml`. Exported from `cogant.viz` (with `.pyi`
+  parity), wired into `tools/manuscript_figures.py` as
+  `cogant_rule_family_ablation.png` (curated copy + synthesized
+  `.figure.json` sidecar; strict figure-copy passes at 14 figures, 0
+  missing, 0 metadata failures), and referenced from `manuscript/09_ablation.md`
+  as `@fig:cogant-rule-family-ablation`. No-mocks tests in
+  `tests/unit/test_viz_ablation.py` (valid-PNG, byte-determinism, real
+  shipped METRICS.yaml). Closes the gap where iteration-2 produced measured
+  ablation data but no figure visualized it.
+
+### Fixed
+- **`manuscript/09_ablation.md` `requests_lib` matrix-fallback A-rows was a
+  wrong hardcoded literal.** The cell read `30 / 36` while
+  `ablation.matrix_fallback.requests_lib.a_rows_uniform` in `METRICS.yaml`
+  is `32`. `requests_lib` was the only matrix-fallback row left fully
+  hand-maintained; it is now tokenized (`{{ABLATION_REQUESTS_LIB_A_ROWS_UNIFORM/_TOTAL}}`
+  registered in `tools/manuscript_vars.py`, alongside the pre-existing
+  C-entries tokens) so it can no longer drift.
+- **`manuscript/98_notation_supplement.md` undercounted `MappingKind`.** It
+  called the formal $\mathcal{K}_M$ list "Full ... (11 kinds)" while the
+  code `MappingKind` enum in `cogant.schemas.semantic` has **14** members.
+  Reworded to distinguish the 11-kind *formal* alphabet from the 14-member
+  code enum, explicitly naming the three non-formal implementation kinds
+  (`CONTROL_FLOW`, `RETRY_PATTERN`, `FEATURE_FLAG`).
+- **`cogant.yaml` `pipeline.stages` used invalid stage names.** It listed
+  `semantic_mapping`, `state_space`, `process_model` and omitted `static`
+  and `dynamic`; the pipeline runner dispatch table only recognizes
+  `ingest, static, normalize, graph, dynamic, translate, statespace,
+  process, export, validate`. A real `cogant translate --config cogant.yaml`
+  would have silently skipped translate/statespace/process with "Unknown
+  stage" errors and exited 0. Stage list and the explanatory comment block
+  corrected to the real keys/order.
+
+### Added (iteration 2)
+- **Ablation regeneration harness (`tools/regenerate_ablation.py`).** Runs
+  the live ingest→…→translate pipeline on the 6 packaged fixtures and
+  re-runs `TranslationEngine.translate(graph, rule_filter=…)` with each of
+  the 5 rule families withheld, plus a fixpoint-cap axis (K∈{1,2,5,10}) and
+  a matrix-fallback axis (uniform-A / identity-B / zero-C / uniform-D
+  counts). Merges a measured `ablation:` block into `evaluation/METRICS.yaml`
+  (additive; canonical header and all existing keys preserved) and is wired
+  as a step in `regenerate_metrics.py`. Deterministic; no-mocks test
+  (`tests/test_regenerate_ablation.py`) including a positive control that
+  proves `rule_filter` genuinely restricts the rule set. Rule-family,
+  fixpoint, and matrix-fallback tables in `manuscript/09_ablation.md` now
+  resolve from `{{ABLATION_*}}` placeholders — closes the open
+  ablation-regeneration backlog item (manuscript ablation numbers are no
+  longer hand-edited).
+
+### Erratum
+- **`manuscript/09_ablation.md` rule-family ablation numbers were
+  hand-reconstructed and materially inaccurate.** Replacing them with
+  measured values from the new harness corrected, on the `flask_app`
+  fixture: control family **−5 CONTEXT → measured net Δ 0**; behavioural
+  family **≈−2 POLICY/−1 CONSTRAINT → measured net Δ 0**; and on
+  `calculator` the semantic family **−9 → measured Δ 10**. Root cause: the
+  prior text estimated each family's standalone role count instead of the
+  *net* mapping delta under the conflict resolver (a node whose top rule is
+  withheld is re-won by a retained rule, so an emitting family can show zero
+  net delta). Impact assessed: no abstract/introduction/conclusion or other
+  section depended on the corrected figures (verified by cross-section
+  grep), so this is a numeric/finding correction local to §9. The §9 table
+  and prose were rewritten to be measurement-driven; `S02_appendix_ablation.md`
+  (still hand-reconstructed for `zoo/01`) is now explicitly flagged as
+  containing unverified estimates pending harness extension.
+
+### Fixed
+- **Graph stage emitted zero IMPORTS edges for Python modules.** In
+  `api/orchestration.py::run_graph` the IMPORTS block read
+  `imp.module`/`imp.name`, which do not exist on `static.parser.ImportDef`
+  (real fields: `module_name`, `is_relative`, `names`). The expression was
+  always `None`, so the loop always `continue`d and **no IMPORTS edge was
+  ever added** despite the docstring promising them. Now reads
+  `module_name` with a `names[0]` fallback and strips leading dots so
+  `from . import x` relative imports resolve. Added two no-mocks tests in
+  `tests/unit/test_api_orchestration_stage_functions.py` covering plain,
+  dotted, `from … import`, relative, external (no edge), and self-import
+  (no edge) shapes. (TODO §5 — graph normalization, imports.)
+- **`run_all.py` exited 0 even when every target failed.** `main()` ended
+  with an unconditional `return 0`; without `--fail-fast`, a fully-failed
+  sweep was indistinguishable from success by exit code, so CI/`run.sh`
+  callers could not detect a failed batch. `failures` is now hoisted above
+  the `try` and `main()` returns `1 if failures else 0`. Regression guarded
+  by `tests/test_run_all_exit_code.py` (no-mocks: real dry-run subprocess +
+  source-AST invariant). (TODO §7 — promotion/CI readiness.)
+- **Manuscript module references corrected to match the code.**
+  `02_04` `statespace/matrices.py`→`gnn/matrices.py` and
+  `validate/validator.py`→`gnn/validator.py`; `S04` attributed the VFE/EFE
+  loop to a non-existent `cogant.process.evaluate_policies` — now points at
+  `variational_free_energy`/`expected_free_energy` in
+  `cogant.simulate.free_energy` and `GNNModelRunner._evaluate_policies`
+  (`cogant.gnn.runner`), consistent with the conclusion. GNN canonical
+  section count corrected `18`→`19` in `03` and `06_03` to match
+  `gnn.validator.GNNValidator.CANONICAL_SECTIONS` (19 entries).
+
+### Changed
+- **Remote `run_all` targets pinned to immutable release tags for
+  reproducible shallow clones** (TODO §3, §7). `remote_itsdangerous`
+  (`2.2.0`) and `remote_markupsafe` (`2.1.5`) no longer clone a moving
+  default branch; `remote_click` (`8.1.7`, ~10 KLOC BSD-3 — a genuine
+  *medium* real repository) promoted from the example block to an active
+  target. The `extra_remote_targets_example` entries now model the
+  pinned-`git_ref` pattern instead of the non-reproducible `null` default.
+
+### Added
+- **Batch dashboard for `run_all` sweeps** — new
+  `cogant.viz.batch_dashboard.BatchDashboardGenerator` consolidates the
+  per-target outputs of a staging-root `run_all` sweep into a single
+  `output/dashboard/` directory with:
+  `summary.csv`, `metrics_per_target.json`, three Mermaid charts
+  (`node_count_bar.mmd`, `edge_count_bar.mmd`, `score_distribution.mmd`),
+  a Mermaid Gantt of recorded command timings (`run_gantt.mmd`), and a
+  cross-linked Markdown report (`dashboard.md`). Pure-stdlib; works
+  under the minimal install profile. Exposed via the staging-root
+  `scripts/batch_dashboard.py` orchestrator and wired into `run_all.py`
+  as the `steps.batch_dashboard` post-batch step (on by default).
+  `BatchDashboardGenerator`, `TargetMetrics`, and `write_batch_dashboard`
+  are re-exported from `cogant.viz`. Covered by
+  `tests/unit/test_batch_dashboard.py` (25 tests, strict no-mocks).
 - **Configurable upstream GNN 25-step pipeline pass** — new
   `cogant.gnn.upstream_bridge.pipeline` module drives `src.main.execute_pipeline_step`
   over the produced `gnn_package/`. Surfaces: `UPSTREAM_STEP_SCRIPTS` (canonical
@@ -157,8 +310,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 - `pyproject.toml` dep updates + uv.lock sync (`fbd8d39`)
 
-### Roundtrip ε
-- 19/23 ISOMORPHIC (83%) → **23/23 ISOMORPHIC (100%)** after POLICY/CONTEXT stub emission
+### Roundtrip role preservation
+- Historical v0.5 benchmark moved from 19/23 role-preserved targets (83%) to
+  23/23 role-preserved targets (100%) after POLICY/CONTEXT stub emission. The
+  current v0.6 metrics ledger classifies the checked-in 23-row JSONL as
+  `STALE_LEGACY` until a native ledger with per-row `role_preservation_score`
+  and invariant status fields is regenerated.
 
 ## [0.4.0] - 2026-04-10
 

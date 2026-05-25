@@ -26,7 +26,7 @@ the current evaluation gate and whoever last updated `R&D_LOG.md`.
 | `R&D_LOG.md` | Dated gate entries (changes, tests, coverage, decisions) | Appended at every gate; never rewritten |
 | `RELEASE_NOTES_v0.2.0.md`, `RELEASE_NOTES_v0.5.0.md` | Historical release notes | Immutable — treat as archived |
 | `ACTIVE_INFERENCE_MAPPING.md` | Code patterns to Active Inference roles (canonical source) | When the role vocabulary or mapping rules change |
-| `ISOMORPHISM_THEOREM.md` | Roundtrip / isomorphism statement and proof sketch | When the isomorphism definition changes |
+| `ISOMORPHISM_THEOREM.md` | Historical roundtrip/isomorphism proof sketch; current contract lives in `docs/concepts/roundtrip.md` | Only to correct provenance or clearly marked historical notes |
 | `CALIBRATION.md` | Confidence and rule-calibration backlog | When the calibration model or threshold defaults change |
 | `CONSTRAINT_FIX.md` | The CONSTRAINT detection fix and its impact on the metrics | Only to correct factual errors post-hoc |
 | `FIRST_INFERENCE.md` | First-inference experiment notes | Only to correct factual errors post-hoc |

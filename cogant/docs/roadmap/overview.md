@@ -1,6 +1,6 @@
 # COGANT Roadmap Overview
 
-**Current release:** v0.5.0 + wave-21 (2026-04-13). The project is in active development;
+**Current release:** v0.6 hardening snapshot (May 2026). The project is in active development;
 breaking changes remain possible until v1.0.0 stabilizes the public API.
 
 > **Ground truth:** What is implemented in the Python package is tracked in
@@ -9,11 +9,12 @@ breaking changes remain possible until v1.0.0 stabilizes the public API.
 
 ---
 
-## Where We Are (v0.5.0 + wave-21)
+## Where We Are (v0.6 Hardening Snapshot)
 
 COGANT translates software repositories into AII-spec GNN bundles for Active Inference.
-The core pipeline is exercised end-to-end against 8+ real-world Python repos and
-a 23-fixture cross-language roundtrip suite (ε = 1.0, 100% ISOMORPHIC).
+The core pipeline is exercised end-to-end against the checked-in fixture and corpus
+configuration; current counts and role-preservation metrics live in
+`evaluation/METRICS.yaml` and the latest `run_all.py` outputs.
 
 **Shipped capability at a glance:**
 
@@ -25,17 +26,17 @@ a 23-fixture cross-language roundtrip suite (ε = 1.0, 100% ISOMORPHIC).
 | Markov blanket partition (5 seed strategies, O(V+E)) | ✅ Production |
 | State space compiler (A/B/C/D matrices) | ✅ Production |
 | GNN bundle emission (AII-spec compliant) | ✅ Production |
-| Round-trip (code → GNN → code → GNN): ε=1.0 | ✅ Production |
+| Roundtrip role preservation (`code → GNN → code → GNN`): current corpus metrics in `evaluation/METRICS.yaml`; strict structural isomorphism tracked separately | ✅ Production |
 | Active Inference agent runtime (multi-episode Bayesian) | ✅ Production |
 | Incremental analysis (19.6× no-change speedup) | ✅ Production |
 | Static analysis (complexity, coupling, dead code, Halstead) | ✅ Production |
 | Network/graph analysis (centrality, community, SCC) | ✅ Production |
 | Visualization suite (PDF, PNG, Mermaid, SVG) | ✅ Production |
 | Export: 9 formats (JSON, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT, JSONLINES) | ✅ Production |
-| FastAPI server + WebSocket streaming | ✅ Production |
-| CLI: 26 subcommands | ✅ Production |
+| Packaged FastAPI demo server + WebSocket streaming; auth/reverse-proxy hardening is caller-owned | ✅ Packaged/demo |
+| CLI: 26 top-level commands, 29 leaf commands including sub-typers | ✅ Production |
 | Type system: 14 Protocols, 15 TypedDicts, 231 .pyi stubs | ✅ Production |
-| Test suite: see `evaluation/METRICS.yaml` for current counts (wave-21: 9,222 passing / 9,253 total / 96.22% coverage — run `uv run pytest tests/ -q --cov=cogant` for live numbers) | ✅ Production |
+| Test suite and coverage: see `evaluation/METRICS.yaml`, `pyproject.toml`, and live `uv run pytest tests/ -q --cov=py/cogant` output | ✅ Production |
 | Rust PyO3 acceleration (optional) | ✅ Beta |
 | Java parser | ⬜ Planned (v0.6.x) |
 | Rust parser | ⬜ Planned (v0.6.x) |
@@ -81,11 +82,11 @@ See: [version_060_planned.md](version_060_planned.md)
 **Theme: Public API freeze and production hardening**
 
 1. Stable public API freeze (semver-guaranteed stability)
-2. Promote staging tree: `projects_in_progress/cogant/` → `projects/cogant/`
+2. Keep the active template location normalized at `projects/cogant/`; `projects_in_progress/cogant/` is historical staging context
 3. Stubgen-based .pyi auto-generation with CI drift check
 4. Full schema versioning + migration harness (v0.1→v0.5→v1.0 bundle migration)
 5. Distributed / parallel file processing (Ray or ProcessPoolExecutor)
-6. Pre-trained GNN node encoder (PyG HeteroData from Parquet bundles)
+6. Native PyG/DGL adapters and a pre-trained node encoder from Parquet bundles
 
 See: [version_100_planned.md](version_100_planned.md)
 
@@ -108,10 +109,10 @@ See: [version_100_planned.md](version_100_planned.md)
 
 | Metric | Current | v0.6.x Target | v1.0 Target |
 |--------|---------|---------------|-------------|
-| Tests passing | see `evaluation/METRICS.yaml` (wave-21: 9,222 passing / 9,253 total) | >9,500 | >10,000 |
-| Coverage | see `evaluation/METRICS.yaml` (wave-21: 96.22%; live: run `uv run pytest tests/ -q --cov=cogant`) | 96% | 97% |
+| Tests passing | see `evaluation/METRICS.yaml` and live `uv run pytest tests/ -q` output | grow fixture/corpus coverage | comprehensive release suite |
+| Coverage | see `pyproject.toml`, `evaluation/METRICS.yaml`, and live `uv run pytest tests/ -q --cov=py/cogant` output | meet or raise the package gate | stable release gate |
 | mypy errors | see `evaluation/METRICS.yaml` (`mypy_strict_errors`) | 0 | 0 |
 | Ruff violations | see `evaluation/METRICS.yaml` (`ruff_violations`) | 0 | 0 |
-| Roundtrip ε | 1.0 (23/23) | 1.0 (extend to Java) | 1.0 (all languages) |
+| Fresh roundtrip role preservation | Native v0.6 ledger refresh required; checked-in 23-row legacy ledger is `STALE_LEGACY` | 1.0 on refreshed Python + Java corpus | 1.0 on refreshed all-language corpus |
 | AII validator score | 100/100 (all fixtures) | 100/100 | 100/100 |
-| Real-world repos passing | 8/8 | 15/15 | 30/30 |
+| Real-world repos passing | see latest `run_all.py` summary | expand pinned corpus | broad release corpus |

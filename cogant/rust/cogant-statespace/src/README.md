@@ -1,6 +1,16 @@
-# rust/cogant-statespace/src
+# cogant-statespace/src
 
-This directory is part of the COGANT codebase-to-GNN translation engine.
+Rust source for state-space types. The crate implements state variables, observations, actions, transitions, and model cardinality helpers.
 
-- Human overview: repository [README.md](../../../README.md)
-- Documentation index: [docs/index.md](../../../docs/index.md)
+## Files
+
+- `lib.rs` - public crate API, unit tests, and FFI-facing helpers when applicable.
+
+## Verification
+
+From [`../../`](../../):
+
+```bash
+cargo test -p cogant-statespace
+cargo check -p cogant-statespace
+```

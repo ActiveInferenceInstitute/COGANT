@@ -1,14 +1,11 @@
 # Appendix E — Extended Related Work {#sec:S05-appendix-extended-related-work}
 
 This appendix consolidates the related-work references cited in the main
-text (Section 8) and the annotated bibliography in `../cogant/docs/evaluation/LITERATURE.md`
-(which contains {{BIB_ENTRIES}} entries organized into **14 sections** in that file’s outline). The list below is organized
-into **9 topical clusters** (E.1--E.9) spanning program analysis → GNN (E.1), active inference
-tooling (E.2), code understanding and learned code models (E.3), graph kernels and
-structural similarity (E.4), formal methods and abstract interpretation (E.5), POMDP
-solvers and planning (E.6), program synthesis and reverse engineering (E.7),
-bidirectional transformations and lenses (E.8), and Markov blankets and active
-inference foundations (E.9). References are numbered consecutively across clusters;
+text (@sec:08-scope-and-related-work through @sec:08-04-world-models-boundaries-and-compatibility) and the annotated bibliography in `../cogant/docs/evaluation/LITERATURE.md`
+(which contains {{BIB_ENTRIES}} entries organized into a broader bibliography outline). The list below is organized
+into topical clusters spanning program analysis, active-inference tooling, learned code models,
+graph kernels, abstract interpretation, POMDP planning, synthesis, bidirectional transformations,
+Markov blankets, evidence provenance, reproducibility, and visual analytics. References are numbered consecutively across clusters;
 in-text citations in other appendices use `[N]` format. Consult
 [`../cogant/docs/evaluation/LITERATURE.md`](../cogant/docs/evaluation/LITERATURE.md) for
 the full annotated pool; this appendix lists the curated subset most directly relevant
@@ -69,7 +66,7 @@ COGANT's `cogant.process` module targets pymdp's matrix conventions.
 [10] Smith, R., Friston, K. J., Whyte, C. J. (2022). **A Step-by-Step
 Tutorial on Active Inference and Its Application to Empirical Data.**
 *Journal of Mathematical Psychology, 107.* The practitioner tutorial
-against which COGANT's `cogant.process` test fixtures are validated.
+against which COGANT's `cogant.process` test fixtures are checked.
 
 [11] Parr, T., Pezzulo, G., Friston, K. J. (2022). **Active Inference: The
 Free Energy Principle in Mind, Brain, and Behavior.** MIT Press. The
@@ -201,7 +198,7 @@ approximate (Galois-connection) approach to semantic role assignment.
 [36] Jones, N. D., Nielson, F. (1995). **Abstract Interpretation: A
 Semantics-Based Tool for Program Analysis.** In *Handbook of Logic in
 Computer Science.* Comprehensive reference for Galois-connection-based
-static analysis; the categorical machinery used in Appendix C.
+static analysis; the categorical machinery used in @sec:S03-appendix-galois-sketch.
 
 [37] Hoare, C. A. R. (1969). **An Axiomatic Basis for Computer Programming.**
 *Communications of the ACM, 12(10).* The foundational paper for program
@@ -316,7 +313,7 @@ reference for COGANT-Theory follow-on work.
 
 [59] Awodey, S. (2010). **Category Theory (2nd ed.).** Oxford University
 Press. The standard graduate textbook; definitions of functor, adjunction,
-and unit/counit used in Appendix C.
+and unit/counit used in @sec:S03-appendix-galois-sketch.
 
 ### E.9 Markov blankets and active inference foundations
 
@@ -345,8 +342,104 @@ Some Parts of the Free Energy Principle.** *Entropy, 23(3).* Conditions
 under which FEP's Markov blanket claims hold rigorously vs break down;
 COGANT's discrete-graph setting sidesteps the continuous-dynamics concerns.
 
-## See also (MkDocs)
+### E.10 Evidence provenance, reproducibility, and visual analytics
 
-Machine-readable bibliography hub: [`../cogant/docs/evaluation/LITERATURE.md`](../cogant/docs/evaluation/LITERATURE.md).
+[65] Green, T. J., Karvounarakis, G., Tannen, V. (2007). **Provenance
+Semirings.** *PODS.* Shows how annotations can propagate through relational
+and Datalog-style fixed points; COGANT's rule-evidence trace is a practical
+engineering analogue rather than a full semiring implementation.
 
----
+[66] Moreau, L., Missier, P. (2013). **PROV-DM: The PROV Data Model.**
+*W3C Recommendation.* Defines the entity/activity/derivation vocabulary that
+best describes COGANT's artifact chain from source files through rules,
+figures, claim ledger, and rendered manuscript.
+
+[67] Peng, R. D. (2011). **Reproducible Research in Computational Science.**
+*Science.* Establishes the requirement to publish enough computation and
+data for results to be independently rerun; COGANT's `METRICS.yaml`,
+figure registry, and claim ledger instantiate this requirement.
+
+[68] Sandve, G. K., Nekrutenko, A., Taylor, J., Hovig, E. (2013). **Ten
+Simple Rules for Reproducible Computational Research.** *PLOS Computational
+Biology.* Motivates COGANT's checklist-oriented recording of inputs,
+versions, commands, intermediate artifacts, and outputs.
+
+[69] Wilkinson, M. D. et al. (2016). **The FAIR Guiding Principles for
+scientific data management and stewardship.** *Scientific Data.* Provides
+the machine-actionable metadata framing behind COGANT's manifests, JSON
+sidecars, and script-readable figure/claim registries.
+
+[70] Shneiderman, B. (1996). **The Eyes Have It: A Task by Data Type
+Taxonomy for Information Visualizations.** *IEEE Symposium on Visual
+Languages.* The source of the overview/zoom-filter/details-on-demand mantra;
+COGANT's inspection dashboard follows this progression from graphical
+abstract to rule-level and matrix-level detail.
+
+[71] Munzner, T. (2009). **A Nested Model for Visualization Design and
+Validation.** *IEEE Transactions on Visualization and Computer Graphics.*
+Frames visualization quality as nested domain, abstraction, encoding, and
+algorithm choices; COGANT uses this to treat wrong program abstractions as
+visualization failures, not only rendering failures.
+
+[72] Hohman, F., Kahng, M., Pienta, R., Chau, D. H. (2019). **Visual
+Analytics in Deep Learning: An Interrogative Survey for the Next Frontiers.**
+*IEEE Transactions on Visualization and Computer Graphics.* Motivates the
+dashboard panels that let reviewers ask why mappings fired, where confidence
+comes from, and when generated model artifacts fail.
+
+[73] Sugiyama, K., Tagawa, S., Toda, M. (1981). **Methods for Visual
+Understanding of Hierarchical System Structures.** *IEEE Transactions on
+Systems, Man, and Cybernetics.* Provides the layered graph-drawing precedent
+behind COGANT's containment-first program-graph layout.
+
+[74] Fruchterman, T. M. J., Reingold, E. M. (1991). **Graph Drawing by
+Force-Directed Placement.** *Software: Practice and Experience.* Provides the
+force-directed fallback logic for non-hierarchical program-graph fragments.
+
+[75] Gansner, E. R., Koutsofios, E., North, S. C., Vo, K.-P. (1993). **A
+Technique for Drawing Directed Graphs.** *IEEE Transactions on Software
+Engineering.* Establishes the directed-graph drawing tradition behind
+pipeline and program-relation visualizations.
+
+[76] Heer, J., Shneiderman, B. (2012). **Interactive Dynamics for Visual
+Analysis.** *Communications of the ACM.* Connects static manuscript figures
+to the inspection dashboard's filter, inspect, and drill-down affordances.
+
+[77] Lin, J. (1991). **Divergence Measures Based on the Shannon Entropy.**
+*IEEE Transactions on Information Theory.* The reference for the
+Jensen-Shannon distance used in @sec:S03-appendix-galois-sketch's distributional restatement of
+role-preservation, separate from the shipped multiset score.
+
+[78] Brehmer, M., Munzner, T. (2013). **A Multi-Level Typology of Abstract
+Visualization Tasks.** *IEEE Transactions on Visualization and Computer
+Graphics.* Supplies the why/how/what task vocabulary now used to separate
+COGANT's lookup, compare, summarize, review, and explanation views.
+
+[79] Sedlmair, M., Meyer, M., Munzner, T. (2012). **Design Study
+Methodology: Reflections from the Trenches and the Stacks.** *IEEE
+Transactions on Visualization and Computer Graphics.* Frames the next
+validation step for COGANT's dashboard: a user-facing design study rather
+than only manifest and rendering QA.
+
+[80] Storey, M.-A. D. (2005). **Theories, Methods and Tools in Program
+Comprehension: Past, Present and Future.** *International Workshop on
+Program Comprehension.* Connects COGANT's visualization workbench to the
+software-comprehension literature on navigation, orientation, and task
+support.
+
+### E.11 Scholarship coverage checklist
+
+The main text uses this appendix as a coverage check, not as an
+exhaustive bibliography. The current manuscript should be read as satisfying
+the following reviewer-facing scholarship commitments:
+
+| Commitment | Primary anchor cluster | Where the main text answers it |
+|---|---|---|
+| Program graphs are grounded in existing AST/CFG/PDG/CPG practice. | E.1 and @sec:08-01-landscape-and-tool-categories | @sec:02-01-program-graph-and-formal-foundations, @sec:08-02-program-analysis-for-ml-and-tables |
+| Deterministic rules are positioned against learned code models without strawman comparisons. | E.1, E.3, and LLM surveys in `references.bib` | @sec:01-introduction, @sec:08-05-threats-to-validity |
+| Active-inference language is bounded by POMDP and matrix-validity evidence. | E.2, E.6, and E.9 | @sec:02-04-gnn-export-and-error-handling, @sec:08-04-world-models-boundaries-and-compatibility, @sec:09-ablation |
+| Roundtrip language is weaker than full bidirectional-transformation proof. | E.7 and E.8 | @sec:08-03-lenses-and-synthesis, @sec:S01-appendix-roundtrip-epsilon |
+| Reproducibility claims are tied to manifests, metrics, sidecars, and scripts. | E.10 | @sec:06-experimental-setup, @sec:07-reproducibility, @sec:S06-appendix-source-references |
+| Figure claims are task- and evidence-bounded. | E.10 | @sec:04-rendered-end-to-end-figures, @tbl:figure-reading-order, @tbl:figure-provenance-groups |
+
+: Scholarship coverage checklist for the COGANT manuscript. {#tbl:S05-scholarship-coverage-checklist}

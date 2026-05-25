@@ -12,7 +12,7 @@ This directory contains the modular technical documentation for the Codebase-to-
 | **Evaluation** | R&D log, empirical reports, calibration notes | [`evaluation/`](../evaluation/README.md) |
 | **Export** | Outputs, PyG/DGL interop, tensor payloads | [`export/`](../export/README.md) |
 | **Plugins** | Extension points, languages, and custom exporters | [`plugins/`](../plugins/README.md) |
-| **Reference** | Implementation status, [`pipeline_stages.md`](pipeline_stages.md) (runner order), schema references | [`reference/`](README.md) |
+| **Reference** | Implementation status, [`pipeline_stages.md`](pipeline_stages.md) (runner order), schema references, batch dashboard | [`reference/`](README.md) |
 | **Roadmap** | Releases, backlog, and changelog | [`roadmap/`](../roadmap/README.md) |
 | **Rules** | Translation rules framework and mapping definitions | [`rules/`](../rules/README.md) |
 | **Security** | Threat modeling, sandboxing, package audits | [`security/`](../security/README.md) |
@@ -20,7 +20,7 @@ This directory contains the modular technical documentation for the Codebase-to-
 
 ## MkDocs spine (onboarding, tutorials, theory)
 
-These areas match the [`mkdocs.yml`](../../mkdocs.yml) navigation: deep dives and learning paths live here; the table above indexes **subsystem** docs (API, architecture, export, …).
+These areas match the `mkdocs.yml` navigation at the package root: deep dives and learning paths live here; the table above indexes **subsystem** docs (API, architecture, export, ...).
 
 | Section | Role | Index |
 |--------|------|--------|
@@ -32,7 +32,7 @@ These areas match the [`mkdocs.yml`](../../mkdocs.yml) navigation: deep dives an
 | **Tutorials** | Step-by-step lessons + walkthroughs | [`tutorials/README.md`](../tutorials/README.md) |
 | **Cookbook** | Task-focused recipes | [`cookbook/README.md`](../cookbook/README.md) |
 | **CLI reference** | Single-page command/flag reference | [`cli_reference.md`](../cli_reference.md) |
-| **Theory** | GNN format, isomorphism, primers | [`theory/README.md`](../theory/README.md) |
+| **Theory** | GNN format, roundtrip invariants, primers | [`theory/README.md`](../theory/README.md) |
 | **Notebooks** | Jupyter narrative companions | [`notebooks/README.md`](../notebooks/README.md) |
 | **R&D** | Calibration and mapping notes | [`rnd/README.md`](../rnd/README.md) |
 | **FAQ** | Q&A | [`faq.md`](../faq.md) |

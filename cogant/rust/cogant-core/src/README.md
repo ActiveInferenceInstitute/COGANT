@@ -1,6 +1,16 @@
-# rust/cogant-core/src
+# cogant-core/src
 
-This directory is part of the COGANT codebase-to-GNN translation engine.
+Rust source for shared Rust types. The crate implements StableId, NodeKind, EdgeKind, SemanticRole, confidence, and provenance primitives.
 
-- Human overview: repository [README.md](../../../README.md)
-- Documentation index: [docs/index.md](../../../docs/index.md)
+## Files
+
+- `lib.rs` - public crate API, unit tests, and FFI-facing helpers when applicable.
+
+## Verification
+
+From [`../../`](../../):
+
+```bash
+cargo test -p cogant-core
+cargo check -p cogant-core
+```

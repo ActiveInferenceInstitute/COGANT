@@ -204,6 +204,17 @@ class TestGNNJSONExportDict:
         assert out["model_id"] == "ss:test"
         assert out["schema_name"] == "test_schema"
 
+    def test_confidence_section_uses_categorical_and_mapping_scores(
+        self,
+        exporter: GNNJSONExporter,
+    ) -> None:
+        out = exporter.export()
+        confidence = out["confidence"]
+
+        assert confidence["overall_confidence"] == pytest.approx((0.85 + 0.82) / 2)
+        assert confidence["by_component"]["variables"] == pytest.approx(0.85)
+        assert confidence["by_component"]["semantic_mappings"] == pytest.approx(0.82)
+
     def test_metrics_reflect_real_counts(self, exporter: GNNJSONExporter) -> None:
         out = exporter.export()
         metrics = out["model_metadata"]["metrics"]

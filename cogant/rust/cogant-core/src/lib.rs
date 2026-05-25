@@ -378,10 +378,13 @@ impl Confidence {
 
     /// Create a confidence value from a floating-point number (0.0 to 1.0).
     pub fn new(value: f32) -> Result<Self, String> {
-        if value >= 0.0 && value <= 1.0 {
+        if (0.0..=1.0).contains(&value) {
             Ok(Confidence(value))
         } else {
-            Err(format!("Confidence must be between 0.0 and 1.0, got {}", value))
+            Err(format!(
+                "Confidence must be between 0.0 and 1.0, got {}",
+                value
+            ))
         }
     }
 

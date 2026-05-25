@@ -4,6 +4,7 @@
 coverage.xml
 htmlcov/
 coverage.json
+!cogant/coverage.json
 
 # pytest / hypothesis
 .pytest_cache/
@@ -13,9 +14,15 @@ coverage.json
 __pycache__/
 *.py[cod]
 *.egg-info/
+.venv/
+.ruff_cache/
+.mypy_cache/
+uv.lock
 
 # Output artifacts
 output/
+cogant/_rnd/
+cogant/out/
 
 # OS / editor cruft
 .DS_Store

@@ -9,7 +9,8 @@ still works::
 
 or equivalently::
 
-    uv run python projects_in_progress/cogant/tools/regenerate_metrics.py
+    uv run python tools/regenerate_metrics.py
+    uv run python projects/cogant/tools/regenerate_metrics.py  # parent template root
 
 The script probes the live repository at call time: it runs pytest,
 mypy, and ruff against ``cogant/py/cogant/``; reads ``coverage.json``
@@ -45,12 +46,16 @@ import yaml
 # Repo root: the directory that contains both cogant/ and tools/
 # ---------------------------------------------------------------------------
 REPO_ROOT = Path(__file__).parent.parent
+TOOLS_DIR = Path(__file__).parent
 COGANT_DIR = REPO_ROOT / "cogant"
 PY_PKG = COGANT_DIR / "py" / "cogant"
 TESTS_DIR = COGANT_DIR / "tests"
 EVAL_DIR = COGANT_DIR / "evaluation"
 RUST_DIR = COGANT_DIR / "rust"
 DOCS_EVAL = COGANT_DIR / "docs" / "evaluation"
+
+if str(TOOLS_DIR.resolve()) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR.resolve()))
 
 
 # ---------------------------------------------------------------------------
@@ -422,13 +427,16 @@ def parse_roundtrip_results() -> dict:
     if not jsonl_path.exists():
         return {
             "total_targets": 0,
-            "isomorphic_count": 0,
-            "approximate_count": 0,
-            "divergent_count": 0,
-            "mean_epsilon": 0.0,
-            "median_epsilon": 0.0,
-            "min_epsilon": 0.0,
-            "max_epsilon": 0.0,
+            "role_preserved_count": 0,
+            "strict_isomorphism_count": 0,
+            "drift_count": 0,
+            "failed_count": 0,
+            "stale_legacy_count": 0,
+            "role_preservation_score_source": "empty",
+            "mean_role_preservation_score": None,
+            "median_role_preservation_score": None,
+            "min_role_preservation_score": None,
+            "max_role_preservation_score": None,
             "per_target": [],
         }
 
@@ -439,17 +447,129 @@ def parse_roundtrip_results() -> dict:
             if line:
                 entries.append(json.loads(line))
 
-    iso = sum(1 for e in entries if e.get("tier") == "ISOMORPHIC")
-    approx = sum(1 for e in entries if e.get("tier") == "APPROXIMATE")
-    div = sum(1 for e in entries if e.get("tier") == "DIVERGENT")
-    epsilons = [e["epsilon"] for e in entries]
+    def _status(entry: dict) -> str:
+        status = entry.get("roundtrip_status")
+        if status:
+            return str(status)
+        # Legacy v0.5 rows carry only `tier`/`epsilon` and NO v0.6
+        # `role_preservation_score`. Relabelling tier=ISOMORPHIC as a
+        # fresh v0.6 "ROLE_PRESERVED" verdict is laundering, not a
+        # measurement — flag it so it is NOT counted as role-preserved.
+        if "role_preservation_score" not in entry:
+            return "STALE_LEGACY"
+        tier = str(entry.get("tier") or "").upper()
+        if tier == "ISOMORPHIC":
+            return "ROLE_PRESERVED"
+        if tier == "APPROXIMATE":
+            return "DRIFT"
+        if tier == "DIVERGENT":
+            return "DRIFT"
+        return "FAILED" if entry.get("error") else "DRIFT"
+
+    def _role_score(entry: dict) -> float:
+        if "role_preservation_score" in entry:
+            return float(entry["role_preservation_score"])
+        if "epsilon" in entry:
+            return float(entry["epsilon"])
+        if "role_match_score" in entry:
+            return float(entry["role_match_score"])
+        return 0.0
+
+    def _score_source(entry: dict) -> str:
+        if "role_preservation_score" in entry:
+            return "v0.6_native"
+        if "epsilon" in entry or "role_match_score" in entry:
+            return "legacy_epsilon_proxy"
+        return "empty"
+
+    def _scaffolding_fraction(entry: dict) -> float | None:
+        """Compute the synthesizer-inflation fraction per RedTeam F23.
+
+        Sums ``synth_*`` minus ``orig_*`` over the per-role count fields
+        present on the row (``orig_n_hidden``, ``orig_n_obs``,
+        ``orig_n_actions``, ``synth_n_*``), normalised by the synth
+        total. Returns ``None`` when neither side has any counts on the
+        row (e.g. for v0.5 ε-bucket rows that carry no per-role
+        breakdown). Returns 0.0 when the synth total is also zero so
+        the fraction is undefined-but-conventionally-zero.
+        """
+        role_keys = ("hidden", "obs", "actions")
+        orig_total = 0
+        synth_total = 0
+        any_present = False
+        for k in role_keys:
+            orig_v = entry.get(f"orig_n_{k}")
+            synth_v = entry.get(f"synth_n_{k}")
+            if orig_v is not None:
+                any_present = True
+                try:
+                    orig_total += int(orig_v)
+                except (TypeError, ValueError):
+                    pass
+            if synth_v is not None:
+                any_present = True
+                try:
+                    synth_total += int(synth_v)
+                except (TypeError, ValueError):
+                    pass
+        if not any_present:
+            return None
+        if synth_total <= 0:
+            return 0.0
+        return round((synth_total - orig_total) / synth_total, 4)
+
+    statuses = [_status(e) for e in entries]
+    native_scores = [
+        float(e["role_preservation_score"]) for e in entries if "role_preservation_score" in e
+    ]
+    score_sources = {_score_source(e) for e in entries}
+    if not entries or score_sources == {"empty"}:
+        role_score_source = "empty"
+    elif score_sources <= {"legacy_epsilon_proxy", "empty"}:
+        role_score_source = "legacy_epsilon_proxy"
+    elif "v0.6_native" in score_sources and score_sources - {"v0.6_native", "empty"}:
+        role_score_source = "mixed"
+    else:
+        role_score_source = "v0.6_native"
+    role_preserved = sum(
+        1 for status in statuses if status in {"STRUCTURALLY_ISOMORPHIC", "ROLE_PRESERVED"}
+    )
+    strict = sum(1 for status in statuses if status == "STRUCTURALLY_ISOMORPHIC")
+    drift = sum(1 for status in statuses if status == "DRIFT")
+    failed = sum(1 for status in statuses if status == "FAILED")
+    stale_legacy = sum(1 for status in statuses if status == "STALE_LEGACY")
 
     per_target = [
         {
             "name": e["repo"],
             "group": e["group"],
-            "epsilon": e["epsilon"],
-            "tier": e["tier"],
+            "role_preservation_score": _role_score(e),
+            "role_preservation_score_source": _score_source(e),
+            # Synthesizer-inflation diagnostic (RedTeam F23, 2026-05-20).
+            # scaffolding_fraction = (sum(synth_*) - sum(orig_*)) / sum(synth_*)
+            # over the per-role count fields when they are present on the
+            # row. A value near 0.0 means the synthesizer emitted ≈ the same
+            # role counts the origin graph had; values near 1.0 mean the
+            # synth side is dominated by scaffolding (newly-introduced
+            # roles that did not appear in the origin multiset). Read this
+            # alongside ``role_preservation_score`` to know how much of a
+            # 1.0 RP score is faithful preservation vs scaffolding
+            # inflation that happens to clear the min/max similarity
+            # ceiling.
+            "scaffolding_fraction": _scaffolding_fraction(e),
+            "roundtrip_status": _status(e),
+            "strict_structural": _status(e) == "STRUCTURALLY_ISOMORPHIC",
+            "role_preserved": _status(e)
+            in {"STRUCTURALLY_ISOMORPHIC", "ROLE_PRESERVED"},
+            "fixture_group": e.get("fixture_group", e.get("group", "")),
+            "file_count": e.get("file_count", 0),
+            "loc": e.get("loc", 0),
+            "node_count": e.get("node_count", 0),
+            "edge_count": e.get("edge_count", 0),
+            "parser_fallback_count": e.get("parser_fallback_count", 0),
+            "skipped_file_count": e.get("skipped_file_count", 0),
+            "unsupported_construct_count": e.get("unsupported_construct_count", 0),
+            "dashboard_artifact_completeness": e.get("dashboard_artifact_completeness", 0.0),
             "elapsed_s": e.get("elapsed_s", 0.0),
         }
         for e in entries
@@ -457,13 +577,20 @@ def parse_roundtrip_results() -> dict:
 
     return {
         "total_targets": len(entries),
-        "isomorphic_count": iso,
-        "approximate_count": approx,
-        "divergent_count": div,
-        "mean_epsilon": round(statistics.mean(epsilons), 4),
-        "median_epsilon": round(statistics.median(epsilons), 4),
-        "min_epsilon": min(epsilons),
-        "max_epsilon": max(epsilons),
+        "role_preserved_count": role_preserved,
+        "strict_isomorphism_count": strict,
+        "drift_count": drift,
+        "failed_count": failed,
+        "stale_legacy_count": stale_legacy,
+        "role_preservation_score_source": role_score_source,
+        "mean_role_preservation_score": (
+            round(statistics.mean(native_scores), 4) if native_scores else None
+        ),
+        "median_role_preservation_score": (
+            round(statistics.median(native_scores), 4) if native_scores else None
+        ),
+        "min_role_preservation_score": min(native_scores) if native_scores else None,
+        "max_role_preservation_score": max(native_scores) if native_scores else None,
         "per_target": per_target,
     }
 
@@ -514,7 +641,7 @@ def rust_ffi_available() -> bool:
 def count_shipped_fixtures() -> int:
     """Count packaged benchmark fixtures exercised by the suite harness.
 
-    The manuscript's ``Table 11`` and §6 reference "six packaged fixtures"
+    The manuscript's fixture-corpus claim references "six packaged fixtures"
     drawn from ``examples/control_positive/`` (``calculator``,
     ``event_pipeline``, ``flask_mini``) and ``examples/real_world/``
     (``flask_app``, ``requests_lib``, ``json_stdlib``). We derive the number
@@ -536,6 +663,37 @@ def count_shipped_fixtures() -> int:
                 continue
             total += 1
     return total
+
+
+def get_benchmark_report_metadata() -> dict[str, str]:
+    """Return metadata for the latest committed benchmark suite report.
+
+    The manuscript references the canonical ``suite_YYYYMMDD.md`` report by
+    filename and records the interpreter/platform used for that benchmark run.
+    Keep those fields generated from the report header so the prose cannot
+    drift from the benchmark artifact.
+    """
+    results_dir = COGANT_DIR / "benchmarks" / "results"
+    reports = sorted(results_dir.glob("suite_*.md"))
+    if not reports:
+        return {
+            "benchmark_suite_file": "",
+            "benchmark_python_version": "",
+            "benchmark_os": "",
+        }
+
+    report = reports[-1]
+    text = report.read_text(encoding="utf-8")
+
+    def _header_value(name: str) -> str:
+        match = re.search(rf"^- {re.escape(name)}:\s*`([^`]+)`", text, re.MULTILINE)
+        return match.group(1) if match else ""
+
+    return {
+        "benchmark_suite_file": report.name,
+        "benchmark_python_version": _header_value("python"),
+        "benchmark_os": _header_value("platform"),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -651,31 +809,72 @@ def main() -> None:
         )
         sys.exit(1)
 
+    from regenerate_ablation import PACKAGED_FIXTURES, compute_ablation
+
     version = get_cogant_version()
     git_sha = get_git_sha()
     generated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
-    print("  [1/9] Version + SHA", file=sys.stderr)
+    print("  [1/10] Version + SHA", file=sys.stderr)
 
-    print("  [2/9] Test file counts...", file=sys.stderr)
+    print("  [2/10] Test file counts...", file=sys.stderr)
     file_counts = get_test_file_counts()
 
-    print("  [3/9] Test collection count...", file=sys.stderr)
+    print("  [3/10] Test collection count...", file=sys.stderr)
     test_count_total = get_test_count_total()
 
-    print("  [4/9] Test run results + coverage (this may take a few minutes)...", file=sys.stderr)
+    print("  [4/10] Test run results + coverage (this may take a few minutes)...", file=sys.stderr)
     test_results, coverage_pct, suite_runtime_s = get_test_results_and_coverage()
 
-    print("  [6/9] mypy strict errors...", file=sys.stderr)
+    # Durability guard (audit 2026-05-18): the pytest sub-invocation above can
+    # mis-parse in some environments (uv re-sync noise, transient editable-install
+    # breakage) and return passing=0. A multi-thousand-test suite never
+    # legitimately reports 0 passing, so treat passing==0 as a parse/run failure:
+    # preserve the prior canonical METRICS test counts + suite runtime and warn
+    # loudly, instead of silently zeroing the canonical numbers.
+    if test_results["passing"] == 0:
+        _prev_path = EVAL_DIR / "METRICS.yaml"
+        if _prev_path.exists():
+            try:
+                _prev = yaml.safe_load(_prev_path.read_text()) or {}
+                _pt = _prev.get("testing") or {}
+                test_results = {
+                    "passing": _pt.get("test_count_passing", 0),
+                    "failing": _pt.get("test_count_failing", 0),
+                    "skipped": _pt.get("test_count_skipped", 0),
+                    "xfailed": _pt.get("test_count_xfailed", 0),
+                    "xpassed": _pt.get("test_count_xpassed", 0),
+                }
+                if not test_count_total:
+                    test_count_total = _pt.get("test_count_total", 0)
+                if not suite_runtime_s:
+                    suite_runtime_s = (_prev.get("benchmark") or {}).get(
+                        "suite_runtime_s", 0.0
+                    )
+                print(
+                    "WARNING: pytest parse yielded 0 passing (environment/parse "
+                    "failure, not a real result). PRESERVED prior METRICS test "
+                    "counts/runtime. Re-run the suite manually and update only if "
+                    "the code actually changed.",
+                    file=sys.stderr,
+                )
+            except Exception as _e:  # pragma: no cover - defensive
+                print(
+                    f"WARNING: pytest parse yielded 0 passing and prior METRICS "
+                    f"could not be read to preserve counts: {_e}",
+                    file=sys.stderr,
+                )
+
+    print("  [5/10] mypy strict errors...", file=sys.stderr)
     mypy_errors = get_mypy_errors()
 
-    print("  [7/9] Ruff violations...", file=sys.stderr)
+    print("  [6/10] Ruff violations...", file=sys.stderr)
     ruff_violations = get_ruff_violations()
 
-    print("  [8/9] Python source analysis...", file=sys.stderr)
+    print("  [7/10] Python source analysis...", file=sys.stderr)
     source_stats = analyze_python_source()
 
-    print("  [9/9] Evaluation data + metadata...", file=sys.stderr)
+    print("  [8/10] Evaluation data + metadata...", file=sys.stderr)
     roundtrip = parse_roundtrip_results()
     bib_entries = count_bibliography_entries()
     rust_crates = count_rust_crates()
@@ -684,9 +883,13 @@ def main() -> None:
     python_min = get_python_min_from_pyproject()
     runner_stages = get_default_runner_stages()
     shipped_fixtures = count_shipped_fixtures()
+    benchmark_report = get_benchmark_report_metadata()
     node_kinds = count_node_kinds()
     edge_kinds = count_edge_kinds()
     active_inf_roles = count_active_inf_roles()
+
+    print("  [10/10] Ablation axes (live pipeline on 6 fixtures)...", file=sys.stderr)
+    ablation = compute_ablation(PACKAGED_FIXTURES)
 
     metrics = {
         "schema_version": "1.0",
@@ -728,17 +931,24 @@ def main() -> None:
         "evaluation": {
             "roundtrip": {
                 "data_source": "cogant/evaluation/dataset/roundtrip_results.jsonl",
-                "note": "Post-wave-16 benchmark (wave-16 CONSTRAINT/POLICY/CONTEXT synthesizer fixes; re-run 2026-04-10). 23/23 ISOMORPHIC.",
-                "threshold_isomorphic": 0.8,
-                "threshold_approximate": 0.5,
+                "note": (
+                    "Legacy benchmark rows converted to the v0.6 roundtrip taxonomy: "
+                    "role-preserved is reported separately from strict structural "
+                    "isomorphism."
+                ),
+                "threshold_role_preserved": 0.5,
+                "threshold_drift": 0.5,
                 "total_targets": roundtrip["total_targets"],
-                "isomorphic_count": roundtrip["isomorphic_count"],
-                "approximate_count": roundtrip["approximate_count"],
-                "divergent_count": roundtrip["divergent_count"],
-                "mean_epsilon": roundtrip["mean_epsilon"],
-                "median_epsilon": roundtrip["median_epsilon"],
-                "min_epsilon": roundtrip["min_epsilon"],
-                "max_epsilon": roundtrip["max_epsilon"],
+                "role_preserved_count": roundtrip["role_preserved_count"],
+                "strict_isomorphism_count": roundtrip["strict_isomorphism_count"],
+                "drift_count": roundtrip["drift_count"],
+                "failed_count": roundtrip["failed_count"],
+                "stale_legacy_count": roundtrip["stale_legacy_count"],
+                "role_preservation_score_source": roundtrip["role_preservation_score_source"],
+                "mean_role_preservation_score": roundtrip["mean_role_preservation_score"],
+                "median_role_preservation_score": roundtrip["median_role_preservation_score"],
+                "min_role_preservation_score": roundtrip["min_role_preservation_score"],
+                "max_role_preservation_score": roundtrip["max_role_preservation_score"],
                 "per_target": roundtrip["per_target"],
             },
         },
@@ -756,6 +966,11 @@ def main() -> None:
             # ``cogant/examples/control_positive`` and
             # ``cogant/examples/real_world``.
             "shipped_fixture_count": shipped_fixtures,
+            # Header metadata from the canonical benchmark report referenced
+            # by manuscript §6.4.
+            "benchmark_suite_file": benchmark_report["benchmark_suite_file"],
+            "benchmark_python_version": benchmark_report["benchmark_python_version"],
+            "benchmark_os": benchmark_report["benchmark_os"],
         },
         "ir_schema": {
             "node_kind_count": node_kinds,
@@ -766,6 +981,7 @@ def main() -> None:
             "crates_total": rust_crates,
             "ffi_available": ffi,
         },
+        "ablation": ablation,
     }
 
     out_path = EVAL_DIR / "METRICS.yaml"
@@ -789,7 +1005,8 @@ def main() -> None:
     print(
         f"  test_count_total={test_count_total}, passing={test_results['passing']}, "
         f"coverage={coverage_pct}%, mypy_errors={mypy_errors}, "
-        f"roundtrip={roundtrip['isomorphic_count']}/{roundtrip['total_targets']} ISOMORPHIC",
+        f"roundtrip_role_preserved={roundtrip['role_preserved_count']}/"
+        f"{roundtrip['total_targets']}, strict={roundtrip['strict_isomorphism_count']}",
         file=sys.stderr,
     )
 

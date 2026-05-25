@@ -10,7 +10,7 @@
 
 **Codebase-to-GNN Translation Engine** — turn software repositories into Active Inference state-space models expressed in Generalized Notation Notation (GNN).
 
-COGANT parses a repository, builds a typed program graph, assigns every node an Active Inference role (HIDDEN_STATE / OBSERVATION / ACTION / POLICY / CONSTRAINT / ...), compiles a Markov blanket, derives A/B/C/D generative-model matrices, and exports a validated GNN package plus JSON / PyArrow / HTML artifacts for downstream training pipelines and audits.
+COGANT parses a repository, builds a typed program graph, assigns semantic mappings to the nodes and fragments it can justify (HIDDEN_STATE / OBSERVATION / ACTION / POLICY / CONSTRAINT / ...), compiles a Markov blanket, derives A/B/C/D generative-model matrices, and exports a validated GNN package plus JSON / PyArrow / HTML artifacts for downstream training pipelines and audits. Unmapped nodes remain explicit in coverage reports rather than being silently forced into a role.
 
 ---
 
@@ -34,7 +34,7 @@ pip install "cogant[all]"
 From source:
 
 ```bash
-git clone https://github.com/cogant-contributors/cogant.git
+git clone https://github.com/docxology/cogant.git
 cd cogant
 uv sync --all-extras
 ```
@@ -64,7 +64,7 @@ The full Python API and CLI walkthrough live in [Quick Start](getting-started/qu
 - **[Small repo walkthrough](tutorials/calculator.md)** — step through the `calculator` fixture: 6 mappings, 12 nodes, one clean Markov blanket.
 - **[Flask app walkthrough](tutorials/flask.md)** — a 98-node / 597-edge real-world example with role counts and GNN output excerpts.
 - **[Active Inference mapping](theory/active_inference.md)** — the 22 translation rules and the seven **Active Inference** `MappingKind` labels counted in `METRICS.yaml` (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE, CONSTRAINT, CONTEXT). `SemanticRole` and rule outputs also use values such as PARAMETER separately; see the mapping page.
-- **[Round-trip verification](theory/roundtrip.md)** — what ISOMORPHIC/APPROXIMATE/DIVERGENT mean; why v0.5.0 achieved 23/23 ISOMORPHIC with ε=1.0.
+- **[Round-trip verification](theory/roundtrip.md)** — `roundtrip_status`, `role_preservation_score`, strict invariant ledgers, and generated-code checks.
 - **[GNN format](theory/gnn_format.md)** — bracket notation, A/B/C/D matrices, and an example export block.
 - **[CLI Reference](cli_reference.md)** — every subcommand, flag, and output artifact.
 - **[API Reference](api/translate.md)** — auto-generated module docs for `cogant.translate`, `cogant.gnn`, `cogant.markov`, `cogant.statespace`, `cogant.static`, and `cogant.simulate`.
@@ -76,4 +76,4 @@ The full Python API and CLI walkthrough live in [Quick Start](getting-started/qu
 - **Agent routing and tooling:** [AGENTS.md](AGENTS.md).
 - **Module map:** [Documentation modules](reference/documentation_modules.md).
 - **Changelog mirror:** [changelog.md](changelog.md) (source of truth: package root `CHANGELOG.md`; sync with `cp CHANGELOG.md docs/changelog.md`).
-- **Package README:** [repository `README.md`](https://github.com/cogant-contributors/cogant/blob/main/cogant/README.md) (install and repo overview).
+- **Package README:** [repository `README.md`](https://github.com/docxology/cogant/blob/main/cogant/README.md) (install and repo overview).

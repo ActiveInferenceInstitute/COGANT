@@ -6,9 +6,12 @@
 **Branch:** main
 **Commits since v0.4.0:** 29
 
-> **Source of truth for current numeric metrics:** [`evaluation/METRICS.yaml`](https://github.com/cogant-contributors/cogant/blob/main/evaluation/METRICS.yaml)
+> **Source of truth for current numeric metrics:** [`evaluation/METRICS.yaml`](https://github.com/docxology/cogant/blob/main/evaluation/METRICS.yaml)
 > (auto-generated). This document is a frozen release artifact for v0.5.0; references to v0.4.0
-> are intentional historical context.
+> are intentional historical context. Roundtrip terminology below has been normalized to the
+> v0.6 vocabulary: role preservation is distinct from strict structural
+> isomorphism. The checked-in 23-row roundtrip ledger is currently
+> `STALE_LEGACY` in v0.6 metrics and must not be used as fresh release evidence.
 
 ---
 
@@ -19,9 +22,11 @@ the v0.4.0 research prototype into a production-deployable system. This release
 ships incremental analysis (up to 20× speedup on no-change runs), Bayesian
 multi-episode learning directly in the `AgentRuntime`, and a hardened FastAPI
 server with Dockerfile and docker-compose — making COGANT suitable for both
-interactive development and always-on deployment. Roundtrip fidelity reaches
-**23/23 ISOMORPHIC (100%)** after POLICY/CONTEXT stub emission closes the final
-synthesis gap that held four targets at APPROXIMATE in v0.4.0.
+interactive development and always-on deployment. The historical v0.5 roundtrip
+benchmark reached 23/23 role-preserved targets after POLICY/CONTEXT stub
+emission closed the final synthesis gap that held four targets in the weaker
+DRIFT tier in v0.4.0; current v0.6 release evidence requires a regenerated
+native ledger.
 
 ---
 
@@ -94,7 +99,7 @@ synthesis gap that held four targets at APPROXIMATE in v0.4.0.
 - **Commit:** `03f1f8f`
 - Confirms that the COGANT Galois loop is not Python-specific: a handwritten
   JavaScript Observer fixture (`examples/zoo/13_js_observer/observer.js`)
-  parses via the tree-sitter JS plugin, rounds-trips with `role_match_score=1.0`,
+  parses via the tree-sitter JS plugin, rounds-trips with `role_preservation_score=1.0`,
   and runs a full Active Inference perception-action cycle on the resulting
   A/B/C/D matrices.
 - Full evidence chain in [`CROSS_LANG_ROUNDTRIP.md`](CROSS_LANG_ROUNDTRIP.md).
@@ -108,9 +113,11 @@ synthesis gap that held four targets at APPROXIMATE in v0.4.0.
 - Each stub is proportional to the origin GNN role count (not a fixed 2-3
   stubs), and the naming conventions match the forward pipeline's role
   classifiers precisely.
-- Impact: four targets that were APPROXIMATE in v0.4.0 (held back by missing
-  POLICY/CONTEXT roles) advance to ISOMORPHIC — roundtrip rate reaches
-  **23/23 ISOMORPHIC (100%)**.
+- Impact: in the historical v0.5 benchmark, four targets that were in the DRIFT
+  tier in v0.4.0 (held back by missing POLICY/CONTEXT roles) advanced to the
+  role-preserved tier, bringing that benchmark to 23/23 role-preserved targets.
+  Current v0.6 metrics classify the checked-in ledger as `STALE_LEGACY` until it
+  is regenerated with native row fields.
 - Behavioral tests added in `7dee2e4`.
 
 ### Scaling Regression Test Suite
@@ -127,7 +134,7 @@ synthesis gap that held four targets at APPROXIMATE in v0.4.0.
 
 - **Commit:** `3b3d9d9`
 - `../../evaluation/dashboards/benchmarks.html` — self-contained Chart.js dashboard
-  visualising forward-pipeline performance (time + RSS per repo), roundtrip ε
+  visualising forward-pipeline performance (time + RSS per repo), roundtrip role preservation
   per target, and coverage/test count timelines from v0.1.0 through v0.5.0.
 - No server required; open in any browser.
 
@@ -145,7 +152,7 @@ synthesis gap that held four targets at APPROXIMATE in v0.4.0.
 - Five appendices added to the COGANT manuscript:
   - A — Formal Galois connection proofs
   - B — GNN spec compliance audit
-  - C — Roundtrip ε derivation
+  - C — Roundtrip role-preservation derivation
   - D — Scaling analysis (dulwich cliff + fix)
   - E — Cross-language extension
 - 40+ new citations added to the bibliography.
@@ -168,7 +175,7 @@ synthesis gap that held four targets at APPROXIMATE in v0.4.0.
 | Tests passing | 1,945 | 1,945+ (regression suite added) | +scaling tests |
 | Coverage | 86% | 86% | stable |
 | mypy strict errors | 0 | 0 | clean |
-| ISOMORPHIC rate (23 targets) | 19/23 (83%) | **23/23 (100%)** | +4 targets |
+| Historical role-preserved rate (23 targets) | 19/23 (83%) | 23/23 (100%) | +4 targets; current v0.6 metrics require native ledger refresh |
 | Incremental speedup (no-change) | N/A | **19.6×** | new |
 | Incremental speedup (1-file change) | N/A | **5.6×** | new |
 | Dulwich time / RSS | 65s / 206 MB | 65s / 206 MB | stable |
@@ -193,7 +200,7 @@ synthesis gap that held four targets at APPROXIMATE in v0.4.0.
   patched in place; the 5.6× partial speedup has margin but further gains are
   possible with targeted patch application.
 - **JS/TS coverage:** The cross-language claim is validated on hand-crafted zoo
-  fixtures. Real-world JS repos have not been benchmarked for roundtrip ε.
+  fixtures. Real-world JS repos have not been benchmarked for roundtrip role preservation.
 
 ---
 

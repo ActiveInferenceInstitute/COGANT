@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from cogant.viz.ablation_view import render_ablation_png
+from cogant.viz.batch_dashboard import (
+    BatchDashboardGenerator,
+    TargetMetrics,
+    write_batch_dashboard,
+)
 from cogant.viz.boundary import BoundaryMapper
 from cogant.viz.dashboard import DashboardGenerator
 from cogant.viz.diff_view import DiffVisualizer
@@ -10,6 +16,13 @@ from cogant.viz.flow import CallGraph, ControlFlowGraph, DependencyGraph, FlowDi
 from cogant.viz.gantt import GanttRenderer
 from cogant.viz.graph_view import GraphVisualizer
 from cogant.viz.html_renderer import HTMLSiteRenderer
+from cogant.viz.inspection_dashboard import (
+    build_inspection_model,
+    render_graphical_abstract_png,
+    render_graphical_abstract_svg,
+    render_inspection_dashboard_html,
+    write_inspection_artifacts,
+)
 from cogant.viz.matrix_view import MatrixVisualizer
 from cogant.viz.mermaid import MermaidGenerator
 from cogant.viz.network_view import NetworkView
@@ -25,6 +38,7 @@ from cogant.viz.png_export import (
     render_connections_matrix_png,
     render_gnn_markdown_png,
     render_graphviz_dot_to_png,
+    render_interpretability_overview_png,
     render_markov_blanket_png,
     render_mermaid_file_to_png,
     render_mermaid_text_to_png,
@@ -47,6 +61,15 @@ __all__ = [
     "StaticPlotter",
     "BoundaryMapper",
     "DashboardGenerator",
+    "build_inspection_model",
+    "render_graphical_abstract_png",
+    "render_graphical_abstract_svg",
+    "render_inspection_dashboard_html",
+    "write_inspection_artifacts",
+    # Batch dashboard (cross-target consolidation)
+    "BatchDashboardGenerator",
+    "TargetMetrics",
+    "write_batch_dashboard",
     # Flow diagrams
     "FlowDiagrammer",
     "ControlFlowGraph",
@@ -79,6 +102,8 @@ __all__ = [
     "render_connections_matrix_png",
     "render_process_gantt_png",
     "render_markov_blanket_png",
+    "render_interpretability_overview_png",
     "render_summary_cover_png",
     "render_gnn_markdown_png",
+    "render_ablation_png",
 ]

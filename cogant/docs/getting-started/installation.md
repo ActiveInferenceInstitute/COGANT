@@ -34,7 +34,7 @@ pip install "cogant[all]"
 ## From source (uv, recommended)
 
 ```bash
-git clone https://github.com/cogant-contributors/cogant.git
+git clone https://github.com/docxology/cogant.git
 cd cogant
 uv sync --all-extras
 uv run cogant --help
@@ -43,7 +43,7 @@ uv run cogant --help
 ## From source (pip)
 
 ```bash
-git clone https://github.com/cogant-contributors/cogant.git
+git clone https://github.com/docxology/cogant.git
 cd cogant
 pip install -e ".[dev,viz]"
 cogant --help
@@ -56,4 +56,4 @@ cogant --help           # authoritative list: 28 top-level names (26 commands + 
 cogant scan .           # run a minimal static analysis on the current directory
 ```
 
-If `cogant --help` lists subcommands, the install is working. **Leaves:** 29 runnable subcommands in total — the two groups add `plugin list`, `plugin info`, and `migrate migrate` under the 26 `@app.command` registrations. Four commands (`analyze-static`, `analyze-graph`, `visualize`, `export`) are **preview stubs** (API pointers only) — see [CLI reference](../cli_reference.md). If the `cogant` entry point is missing or `--help` fails, re-check Python 3.11+ and that the venv containing COGANT is activated.
+If `cogant --help` lists subcommands, the install is working. **Leaves:** 29 runnable subcommands in total — the two groups add `plugin list`, `plugin info`, and `migrate migrate` under the 26 `@app.command` registrations. The analysis and artifact commands (`analyze-static`, `analyze-graph`, `visualize`, `export`) run real package APIs and write JSON/diagram/export files — see [CLI reference](../cli_reference.md). If the `cogant` entry point is missing or `--help` fails, re-check Python 3.11+ and that the venv containing COGANT is activated.

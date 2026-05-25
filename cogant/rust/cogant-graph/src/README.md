@@ -1,6 +1,16 @@
-# rust/cogant-graph/src
+# cogant-graph/src
 
-This directory is part of the COGANT codebase-to-GNN translation engine.
+Rust source for program graph storage. The crate implements nodes, edges, indexes, neighbor queries, and graph summaries.
 
-- Human overview: repository [README.md](../../../README.md)
-- Documentation index: [docs/index.md](../../../docs/index.md)
+## Files
+
+- `lib.rs` - public crate API, unit tests, and FFI-facing helpers when applicable.
+
+## Verification
+
+From [`../../`](../../):
+
+```bash
+cargo test -p cogant-graph
+cargo check -p cogant-graph
+```

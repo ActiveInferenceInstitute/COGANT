@@ -24,11 +24,14 @@ Each node represents a program entity:
 ```
 
 **Key fields**:
-- `id`: Stable identifier (short_id + UUID)
-- `kind`: FUNCTION, VARIABLE, TYPE, MODULE, etc.
-- `role`: FUNCTION_DEF, FUNCTION_CALL, etc. (semantic)
-- `confidence`: 0.0-1.0 (certainty of classification)
-- `provenance`: Origin of the assertion
+- `id`: Stable identifier.
+- `kind`: a `NodeKind` value such as `MODULE`, `CLASS`, `FUNCTION`, `METHOD`, `VARIABLE`,
+  `PARAMETER`, `CONFIGURATION`, `FEATURE_FLAG`, `TEST`, `ASSERTION`, `POLICY`, or `ACTION`.
+- `role`: optional semantic mapping label when a graph node has been translated into a
+  `MappingKind` such as `HIDDEN_STATE`, `OBSERVATION`, `ACTION`, `POLICY`, `CONSTRAINT`,
+  `CONTEXT`, `DATA_FLOW`, `ERROR_HANDLING`, `ORCHESTRATION`, or `CIRCUIT_BREAKER`.
+- `confidence`: 0.0-1.0 (certainty of classification).
+- `provenance`: Origin of the assertion.
 
 ### Edges
 
@@ -50,29 +53,27 @@ Relationships between nodes:
 ```
 
 **Key fields**:
-- `kind`: CALLS, USES, DEFINES, HAS_TYPE, DATA_FLOW, etc.
-- `confidence`: Certainty of relationship
-- `label`: Semantic label (success, error, etc.)
+- `kind`: an `EdgeKind` value such as `CONTAINS`, `IMPORTS`, `INHERITS`, `DEPENDS_ON`,
+  `READS`, `WRITES`, `RETURNS`, `CALLS`, `THROWS`, `CATCHES`, `YIELDS`, `OBSERVES`,
+  `EMITS`, `TRIGGERS`, `GUARDS`, `HANDLES`, or `MUTATES`.
+- `confidence`: Certainty of relationship.
+- `label`: Optional semantic label (success, error, etc.).
 
 ### Node Kinds
 
 ```
-FUNCTION | VARIABLE | TYPE | MODULE | CONTROLFLOW_NODE |
-DATA_STRUCTURE | ERRORHANDLER | CONSTANT | EXTERNAL |
-TEST | DOCUMENTATION | CONFIGURATION | UNKNOWN
+REPO | MODULE | FILE | CLASS | FUNCTION | METHOD | VARIABLE |
+ENDPOINT | EVENT | PARAMETER | RETURN_VALUE | DATA_STRUCTURE |
+CONFIGURATION | FEATURE_FLAG | TEST | ASSERTION | POLICY | ACTION
 ```
 
 ### Semantic Roles
 
-Core roles for GNN training:
+Current `MappingKind` values:
 
 ```
-FUNCTION_DEF | FUNCTION_CALL | VARIABLE_DEF | VARIABLE_USE |
-TYPE_DEF | METHOD_DEF | METHOD_CALL | CONTROL_FLOW |
-ERROR_HANDLING | MODULE_DEF | MODULE_IMPORT | INHERITANCE |
-IMPLEMENTATION | POLYMORPHISM | DATA_ACCESS | TYPE_REF |
-CONSTANT | ANNOTATION | DOCUMENTATION | TEST_CODE |
-CONFIG_PARAM | LOGGING_STMT | PERF_CRITICAL |
-SECURITY_CRITICAL | INTERFACE | GENERIC_PARAM |
-DEPENDENCY_INJECT | UNKNOWN
+OBSERVATION | ACTION | HIDDEN_STATE | CONTEXT | POLICY |
+CONSTRAINT | PREFERENCE | DATA_FLOW | CONTROL_FLOW |
+ERROR_HANDLING | ORCHESTRATION | RETRY_PATTERN |
+CIRCUIT_BREAKER | FEATURE_FLAG
 ```

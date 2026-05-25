@@ -221,6 +221,81 @@ def test_cli_analyze_json_format(calculator_repo: Path) -> None:
 
 
 @pytest.mark.integration
+def test_cli_calculator_translate_export_validate_roundtrip_smoke(
+    calculator_repo: Path, tmp_path: Path
+) -> None:
+    """Calculator CLI smoke pins translate/export/validate/roundtrip artifacts."""
+    output_dir = tmp_path / "calculator_smoke"
+
+    translate = _run_cli(
+        "translate",
+        str(calculator_repo),
+        "--output",
+        str(output_dir),
+        "--layout-output",
+        "--no-dynamic",
+        timeout=240.0,
+    )
+    assert translate.returncode == 0, (
+        f"translate failed: stdout={translate.stdout!r} stderr={translate.stderr!r}"
+    )
+
+    bundle_path = output_dir / "data" / "bundle.json"
+    gnn_package = output_dir / "gnn_package"
+    assert bundle_path.exists(), f"missing translated bundle: {bundle_path}"
+    assert (gnn_package / "model.gnn.md").exists(), "translate did not emit GNN markdown"
+    assert (output_dir / "reports" / "model.gnn.md").exists(), (
+        "layout output did not place report markdown under reports/"
+    )
+
+    export_dir = output_dir / "export_gnn"
+    export = _run_cli(
+        "export-gnn",
+        str(bundle_path),
+        "--output",
+        str(export_dir),
+        "--format",
+        "all",
+        timeout=120.0,
+    )
+    assert export.returncode == 0, (
+        f"export-gnn failed: stdout={export.stdout!r} stderr={export.stderr!r}"
+    )
+    assert (export_dir / "bundle.md").exists(), "export-gnn did not emit bundle.md"
+    assert (export_dir / "bundle.json").exists(), "export-gnn did not emit bundle.json"
+
+    validate = _run_cli("validate", str(gnn_package), timeout=120.0)
+    assert validate.returncode == 0, (
+        f"validate failed: stdout={validate.stdout!r} stderr={validate.stderr!r}"
+    )
+    assert "VALID" in validate.stdout, f"validate output did not report VALID: {validate.stdout!r}"
+
+    roundtrip_dir = output_dir / "roundtrip"
+    roundtrip = _run_cli(
+        "roundtrip",
+        str(calculator_repo),
+        "--output",
+        str(roundtrip_dir),
+        "--json",
+        "--keep-tmp",
+        timeout=180.0,
+    )
+    assert roundtrip.returncode == 0, (
+        f"roundtrip failed: stdout={roundtrip.stdout!r} stderr={roundtrip.stderr!r}"
+    )
+    stdout = roundtrip.stdout.strip()
+    start = stdout.find("{")
+    end = stdout.rfind("}")
+    assert start != -1 and end > start, f"roundtrip stdout has no JSON object: {stdout!r}"
+    payload = json.loads(stdout[start : end + 1])
+    assert payload["roundtrip_status"] == "ROLE_PRESERVED"
+    assert payload["role_preserved"] is True
+    assert payload["role_preservation_score"] >= 0.5
+    assert (roundtrip_dir / "forward" / "model.gnn.md").exists()
+    assert (roundtrip_dir / "regenerated" / "model.gnn.md").exists()
+
+
+@pytest.mark.integration
 def test_cli_version_prints_semver() -> None:
     """``cogant version`` prints the current cogant version (semver)."""
     import re

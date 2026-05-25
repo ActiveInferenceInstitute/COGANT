@@ -24,7 +24,7 @@ ruled out. Owned by whoever is driving the current release train.
 | `version_010_current.md` | Shipped capabilities of the 0.1.x line (retained for historical diff) | Only when a historical correction is needed |
 | `version_020_planned.md` | 0.2.x plan (superseded once a version is shipped) | When 0.2.x scope changes |
 | `version_030_planned.md` | 0.3.x plan (superseded once a version is shipped) | When 0.3.x scope changes |
-| `version_050_shipped.md` | Full arc v0.1.0 → v0.5.0 + wave-21 — canonical shipped history | After each shipped release that extends the shipped arc |
+| `version_050_shipped.md` | Full arc v0.1.0 → v0.5.0 plus April 2026 hardening history | After each shipped release that extends the shipped arc |
 | `version_060_planned.md` | 0.6.x plan (language breadth, streaming, type inference) | When 0.6.x scope changes |
 | `version_100_planned.md` | 1.0.0 stability / hardening / public API freeze | When 1.0 scope changes |
 | `known_limitations_010.md` | Known limitations of the **current release** (filename retained for link stability; content tracks the latest shipped version) | Whenever a new limitation is discovered or an old one is fixed |

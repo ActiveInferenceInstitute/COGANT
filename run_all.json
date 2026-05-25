@@ -26,7 +26,8 @@
     "export_multi": true,
     "export_multi_formats": "json,jsonlines",
     "visualize_diagrams": true,
-    "visualize_format": "mermaid"
+    "visualize_format": "mermaid",
+    "batch_dashboard": true
   },
   "manuscript": {
     "enabled": false,
@@ -54,22 +55,28 @@
     { "id": "zoo_10_constraint",    "path": "examples/zoo/10_constraint" },
     { "id": "zoo_11_sensor_fusion", "path": "examples/zoo/11_sensor_fusion" },
     { "id": "zoo_12_full_pomdp",    "path": "examples/zoo/12_full_pomdp" },
-    { "id": "zoo_13_js_observer",   "path": "examples/zoo/13_js_observer" },
+    {
+      "id": "zoo_13_js_observer",
+      "path": "examples/zoo/13_js_observer",
+      "roundtrip_threshold": 0.0,
+      "roundtrip_note": "Degenerate JS fixture: source role multiset is empty in the Python parser-backed roundtrip scorer."
+    },
 
     { "id": "python_service",   "path": "examples/python-service" },
     { "id": "workflow_engine",  "path": "examples/workflow-engine" },
 
-    { "id": "remote_itsdangerous", "path": null, "git_url": "https://github.com/pallets/itsdangerous.git", "git_ref": null },
-    { "id": "remote_markupsafe",   "path": null, "git_url": "https://github.com/pallets/markupsafe.git",   "git_ref": null }
+    { "id": "remote_itsdangerous", "path": null, "git_url": "https://github.com/pallets/itsdangerous.git", "git_ref": "2.2.0" },
+    { "id": "remote_markupsafe",   "path": null, "git_url": "https://github.com/pallets/markupsafe.git",   "git_ref": "2.1.5" },
+    { "id": "remote_click",        "path": null, "git_url": "https://github.com/pallets/click.git",        "git_ref": "8.1.7" }
   ],
+  "$comment_extra": "Pin every remote target to an immutable release tag via git_ref so shallow clones are reproducible (TODO 3/7); a null git_ref clones a moving default branch.",
   "extra_remote_targets_example": [
-    { "id": "remote_click",     "path": null, "git_url": "https://github.com/pallets/click.git"       },
-    { "id": "remote_pyyaml",    "path": null, "git_url": "https://github.com/yaml/pyyaml.git"         },
-    { "id": "remote_requests",  "path": null, "git_url": "https://github.com/psf/requests.git"        },
-    { "id": "remote_tqdm",      "path": null, "git_url": "https://github.com/tqdm/tqdm.git"           },
-    { "id": "remote_dateutil",  "path": null, "git_url": "https://github.com/dateutil/dateutil.git"   },
-    { "id": "remote_urllib3",   "path": null, "git_url": "https://github.com/urllib3/urllib3.git"     },
-    { "id": "remote_httpx",     "path": null, "git_url": "https://github.com/encode/httpx.git"        },
-    { "id": "remote_fastapi",   "path": null, "git_url": "https://github.com/tiangolo/fastapi.git"    }
+    { "id": "remote_pyyaml",    "path": null, "git_url": "https://github.com/yaml/pyyaml.git",         "git_ref": "6.0.2"  },
+    { "id": "remote_requests",  "path": null, "git_url": "https://github.com/psf/requests.git",        "git_ref": "v2.32.3" },
+    { "id": "remote_tqdm",      "path": null, "git_url": "https://github.com/tqdm/tqdm.git",           "git_ref": "v4.66.5" },
+    { "id": "remote_dateutil",  "path": null, "git_url": "https://github.com/dateutil/dateutil.git",   "git_ref": "2.9.0.post0" },
+    { "id": "remote_urllib3",   "path": null, "git_url": "https://github.com/urllib3/urllib3.git",     "git_ref": "2.2.3"  },
+    { "id": "remote_httpx",     "path": null, "git_url": "https://github.com/encode/httpx.git",        "git_ref": "0.27.2" },
+    { "id": "remote_fastapi",   "path": null, "git_url": "https://github.com/tiangolo/fastapi.git",    "git_ref": "0.115.0" }
   ]
 }

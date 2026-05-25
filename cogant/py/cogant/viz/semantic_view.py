@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """SemanticVisualizer: Render semantic graphs with states, observations, actions."""
 
 import json

@@ -1,12 +1,28 @@
 # GNN export and error-handling philosophy {#sec:02-04-gnn-export-and-error-handling}
 
+This section closes the four-part method core (program graph IR in
+@sec:02-01-program-graph-and-formal-foundations, rule progression in
+@sec:02-02-ir-progression-translation-engine, confidence and state-space
+in @sec:02-03-confidence-state-space-and-behavior) by describing the
+durable interchange boundary — Generalized Notation Notation — and the
+error-handling discipline that prevents one bad rule firing from
+poisoning the rest of an export. From here, @sec:03-api-and-workflows
+explains how the API surfaces these artifacts to Python and CLI
+consumers.
+
 ## GNN export (Generalized Notation Notation)
 
-Exports package the program graph and compiled state-space model into the Active Inference Institute's **Generalized Notation Notation** plus a small set of interop targets:
+Exports package the program graph and compiled state-space model into the Active Inference Institute's **Generalized Notation Notation** plus a small set of interop targets. The upstream GNN repository describes Generalized Notation Notation as a text-based language for Active Inference generative models and provides a broader validation, visualization, and execution pipeline around those files [@friedman2024gnn]; COGANT's export layer treats that format as the durable interchange boundary.
 
 - **GNN Markdown (`model.gnn.md`)** — canonical, human-readable Generalized Notation Notation organized into 19 canonical sections in the specification order defined in `../cogant/docs/export/README.md`.
 - **GNN JSON (`model.gnn.json`)** — machine-readable equivalent of the markdown sections, plus companion JSON files per section (`state_space.json`, `observations.json`, `actions.json`, `transitions.json`, and so on).
-- **Interop exports** — GraphML and Parquet for analysis in Gephi/yEd and DuckDB, and optional tensor views (PyTorch Geometric `Data` objects [@fey2019pyg], DGL graphs, HDF5 tables) for downstream graph neural network training pipelines that consume the program graph as a relational tensor.
+- **Interop exports** — GraphML and Parquet for analysis in Gephi/yEd and DuckDB, and optional tensor views (PyTorch Geometric `Data` objects [@fey2019pyg], DGL graphs [@wang2019dgl], HDF5 tables [@hdfgroup2026hdf5spec]) for downstream graph neural network training pipelines that consume the program graph as a relational tensor. The JSON sidecars are validated by COGANT's package-native schema checks; they are not advertised as normative JSON Schema, JSON-LD, or SHACL artifacts unless an adapter explicitly emits those forms [@jsonSchema2020; @jsonLd11; @w3cShacl2017].
+
+![Rendered first page of the calculator fixture's `model.gnn.md` bundle. The figure is generated from `cogant/output/calculator/gnn_package/model.gnn.md` and shows the human-readable Generalized Notation Notation artifact that travels beside JSON sidecars, validation reports, and provenance metadata. Read it as readability and interchange evidence for the emitted package format; machine validation still comes from the structured JSON and validation artifacts, not from the rasterized page.](../figures/cogant_gnn_markdown_render.png){#fig:cogant-gnn-markdown-render width=82%}
+
+@fig:cogant-gnn-markdown-render is included because interchange formats have a human-review surface as well as a machine-ingestion surface. The rendered page lets a reviewer inspect section ordering, labels, and prose-facing bundle structure; it does not by itself validate that the matrices, role mappings, or downstream semantics are correct.
+
+The export split mirrors two adjacent traditions. ProGraML shows why compiler and ML systems benefit from portable graph representations that explicitly encode control, data, and call dependencies [@cummins2021programl]. The graph-network literature frames this as a relational inductive bias: entities, relations, and global state should remain explicit so downstream models can reason compositionally over them [@battaglia2018relational]. COGANT keeps those graph relations available, but its primary exported object is a Generalized Notation Notation bundle with state-space and active-inference semantics rather than only an optimization dataset or a neural-model input.
 
 ### The 19-section GNN bundle structure
 
@@ -19,7 +35,7 @@ The canonical GNN specification organizes metadata, semantics, and generative-mo
 5. **Observation Modalities** — observable variables (methods, properties, getters, sensors in the metaphor), their sources on the program graph, and the subset of hidden states each can read.
 6. **Actions/Policies** — action-typed nodes (setter methods, clear operations, API calls) and associated policy candidates emitted by the semantic family and behavioural family rules.
 7. **Program Graph Connections** — edges in the original program graph reduced to the Markov-blanket partition (internal vs. boundary nodes). Specifies which internal nodes influence which observations and actions.
-8. **Factors** — nodes in the program graph labeled with their primary semantic role (HIDDEN_STATE, OBSERVATION, ACTION, CONSTRAINT, POLICY, PREFERENCE, CONTEXT, CONFIGURATION, ERROR_HANDLING, ORCHESTRATION, EVENT_BUS, RESILIENCE).
+8. **Factors** — nodes in the program graph labeled with their primary semantic role. Mapping kinds drawn from the formal alphabet $\mathcal{K}_M$ (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE, CONSTRAINT, CONTEXT, DATA_FLOW, ERROR_HANDLING, CIRCUIT_BREAKER, ORCHESTRATION — see @sec:def-translation-rule and @sec:98-active-inference-roles) carry the generative-model semantics; broader graph-level role annotations (for example CONFIGURATION, and illustrative descriptive tags such as event-bus or resilience patterns) come from the separate `SemanticRole` vocabulary and are not part of $\mathcal{K}_M$.
 9. **Transition Structure** — the state-transition component B of the generative model, compiled from WRITES and CALLS edges. Specifies which actions update which state dimensions.
 10. **Likelihood Structure** — the observation likelihood A, compiled from READS/OBSERVES/DEPENDS_ON edges. Specifies which hidden states produce which observations.
 11. **Preferences/Constraints** — C and D components: preference (reward) weights on observations from PREFERENCE and CONSTRAINT mappings, and initial-state priors from CONFIGURATION edges.
@@ -36,7 +52,7 @@ Node and edge feature breakdowns, section contracts, and optional framework targ
 
 ### A/B/C/D matrix derivation from edge kinds
 
-The four matrices of the Active Inference generative model are compiled directly from the program graph's edge kinds in the `GNNMatrices` class (module `statespace/matrices.py`):
+The four matrices of the Active Inference generative model are compiled directly from the program graph's edge kinds in the `GNNMatrices` class (module `gnn/matrices.py`):
 
 - **Matrix A (likelihood)** — derived from READS, OBSERVES, and DEPENDS_ON edges. For each observation, A[observation, hidden_state] = 1.0 if an edge exists from that observation to that hidden state, 0.0 otherwise. Rows with no incoming edges from hidden states fall back to uniform distributions (maximum entropy in the absence of evidence).
 - **Matrix B (transition)** — derived from WRITES and CALLS edges from actions to hidden states. For each action, B[hidden_state, hidden_state, action] encodes the state update: B[s', s, a] = 1.0 if action a writes state s to value s', identity otherwise. Actions with no outgoing WRITES edges fall back to the identity tensor (action has no effect on state), preserving the stay-move property.
@@ -47,14 +63,14 @@ These fallback paths—identity B, uniform A/D, zero C—are **documented degrad
 
 ### AII validator and scoring
 
-The `GNNValidator` class in `validate/validator.py` gates the export step by checking the 19 canonical sections and their internal consistency. The validator produces a composite score from 0 to 100:
+The `GNNValidator` class in `gnn/validator.py` gates the export step by checking the 19 canonical sections and their internal consistency. The validator produces a composite score from 0 to 100:
 
 - **Score 100**: all 19 sections present, matrices satisfy sum-to-one and non-negativity, ontology mappings are present for all high-confidence rules, and no parse errors or conflicting assignments exist.
 - **Score 75–99**: minor issues (missing optional sections like Rendering Hints, sparse confidence annotations) that do not prevent active-inference execution.
 - **Score 50–74**: degraded output (heavy use of fallbacks, missing entire role families) that still validates structurally but may lack semantic coverage.
 - **Score 0–49**: fatal errors (missing required sections, malformed matrices, unresolvable conflicts).
 
-All six shipped fixtures in `examples/` score 100.0, including `json_stdlib` which relies entirely on fallback distributions. The validator score travels with every bundle in section 19 (Validation Notes) and is the single gating signal for whether the bundle is suitable for downstream active-inference runtime consumption.
+All fixtures in @tbl:repo-pipeline-metrics score 100.0, including `json_stdlib` which relies heavily on fallback distributions. The validator score travels with every bundle in section 19 (Validation Notes) and gates structural and matrix validity. Runtime or semantic adequacy is a separate evidence question: high validator scores mean the bundle is well formed and executable by compatible tooling, not that the extracted matrices fully capture source-code behavior.
 
 ## Error handling philosophy
 
@@ -74,8 +90,4 @@ DegradedOutput = NamedTuple(
 )
 ```
 
-Every fallback is recorded in Validation Notes (section 18) alongside the reason and the fallback strategy used. This transparency ensures that users and downstream tools can distinguish high-confidence, evidence-backed assignments from maximum-entropy defaults.
-
-## See also (MkDocs)
-
-Export contracts and interop: [`../cogant/docs/export/README.md`](../cogant/docs/export/README.md). Validation layers: [`../cogant/docs/validation/README.md`](../cogant/docs/validation/README.md). GNN bracket notation primer: [`../cogant/docs/theory/gnn_format.md`](../cogant/docs/theory/gnn_format.md).
+Every fallback is recorded in Validation Notes (section 19) alongside the reason and the fallback strategy used. This transparency lets users and downstream tools distinguish high-confidence, evidence-backed assignments from maximum-entropy defaults.

@@ -9,7 +9,7 @@ with the following layout::
     +-- state.py         # State dataclass (HIDDEN_STATE fields)
     +-- observe.py       # get_<name> functions (OBSERVATION)
     +-- act.py           # update_<name> functions (ACTION)
-    +-- policy.py        # select_policy + policy_<name> functions
+    +-- policy.py        # selector + policy/scaffold functions
     +-- constraints.py   # check_<name> functions (CONSTRAINT)
     +-- matrices.py      # A/B/C/D runtime matrices
     +-- main.py          # Driver that runs a few inference steps
@@ -32,6 +32,7 @@ round-trip verifier, which caches synthesized packages by GNN hash.
 from __future__ import annotations
 
 import ast
+import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -39,9 +40,11 @@ from textwrap import dedent
 
 from cogant.reverse.matrices import render_matrices_module
 from cogant.reverse.parser import ReverseGNNModel
-from cogant.reverse.planner import PackagePlan
+from cogant.reverse.planner import NodePlan, PackagePlan
 
 logger = logging.getLogger(__name__)
+
+SEMANTIC_TARGETS_MANIFEST = ".cogant_semantic_targets.json"
 
 
 # ---------------------------------------------------------------------------
@@ -68,6 +71,95 @@ class SynthesisResult:
     issues: list[str] = field(default_factory=list)
     role_counts: dict[str, int] = field(default_factory=dict)
     filename: str = ""
+
+
+def _policy_helper_is_semantic(plan: PackagePlan) -> bool:
+    """Return whether the selector helper should count as POLICY."""
+    target = int(plan.target_role_counts.get("POLICY", 0))
+    return target > len(plan.policy_functions)
+
+
+def _policy_helper_name(plan: PackagePlan) -> str:
+    """Return the selector helper name, semantic only when needed."""
+    return "select_policy" if _policy_helper_is_semantic(plan) else "pick_index"
+
+
+def _rendered_policy_function_name(node_name: str) -> str:
+    """Return a PolicyRule-matching name for an authoritative policy."""
+    base = node_name[3:] if node_name.startswith("pi_") else node_name
+    policy_prefixes = ("select_", "choose_", "decide_", "plan_", "route_")
+    return base if base.startswith(policy_prefixes) else f"select_{base}"
+
+
+def _rendered_constraint_function_name(node_name: str) -> str:
+    """Return a PreferenceRule-matching name for a constraint slot."""
+    base = node_name[5:] if node_name.startswith("cnst_") else node_name
+    return base if "check" in base else f"check_{base}"
+
+
+def _rendered_context_class_name(node_name: str, index: int) -> str:
+    """Return the ContextRule-matching class name for a context slot."""
+    base = node_name[8:] if node_name.startswith("context_") else node_name
+    cls_name = "".join(part.capitalize() for part in base.split("_")) or f"Ctx{index}"
+    return cls_name + "Settings"
+
+
+def _targeted_context_functions(plan: PackagePlan) -> list[NodePlan]:
+    """Return context functions that should be rendered semantically."""
+    if not plan.target_role_counts:
+        return list(plan.context_functions)
+    target = max(0, int(plan.target_role_counts.get("CONTEXT", 0)))
+    remaining = max(0, target - len(plan.scaffold_context_classes))
+    return list(plan.context_functions[:remaining])
+
+
+def _semantic_role_targets(plan: PackagePlan) -> dict[str, list[str]]:
+    """Return generated definition names that intentionally carry roles."""
+    targets: dict[str, list[str]] = {}
+
+    def add(role: str, names: list[str]) -> None:
+        clean = [name for name in names if name]
+        if plan.target_role_counts:
+            clean = clean[: max(0, int(plan.target_role_counts.get(role, 0)))]
+        if clean:
+            targets[role] = clean
+
+    add("HIDDEN_STATE", [f"Factor{i}" for i, _ in enumerate(plan.state_vars)])
+    add(
+        "OBSERVATION",
+        [
+            node.name if node.name.startswith("get_") else f"get_{node.name}"
+            for node in plan.obs_functions
+        ],
+    )
+    add(
+        "ACTION",
+        [
+            node.name if node.name.startswith("update_") else f"update_{node.name}"
+            for node in plan.action_methods
+        ],
+    )
+
+    policy_names = [_rendered_policy_function_name(node.name) for node in plan.policy_functions]
+    if _policy_helper_is_semantic(plan):
+        policy_names.insert(0, _policy_helper_name(plan))
+    policy_names.extend(node.name for node in plan.scaffold_policy_functions)
+    add("POLICY", policy_names)
+
+    constraint_names = [
+        _rendered_constraint_function_name(node.name) for node in plan.constraint_checks
+    ]
+    constraint_names.extend(node.name for node in plan.scaffold_constraint_checks)
+    add("CONSTRAINT", constraint_names)
+
+    context_names = [node.name for node in plan.scaffold_context_classes]
+    context_names.extend(
+        _rendered_context_class_name(node.name, i)
+        for i, node in enumerate(_targeted_context_functions(plan))
+    )
+    add("CONTEXT", context_names)
+
+    return targets
 
 
 # ---------------------------------------------------------------------------
@@ -306,9 +398,8 @@ def _render_observe_module(plan: PackagePlan) -> str:
     if not plan.obs_functions:
         lines.append("# No observation modalities were declared in the source GNN.")
         lines.append("")
-        lines.append("def get_noop(state: State) -> float:")
-        lines.append('    """Placeholder observation for GNNs without observations."""')
-        lines.append("    _ = state")
+        lines.append("def fallback_value(_state: State) -> float:")
+        lines.append('    """Runtime fallback for GNNs without observations."""')
         lines.append("    return 0.0")
         lines.append("")
     else:
@@ -369,8 +460,15 @@ def _render_act_module(plan: PackagePlan) -> str:
         semantic mappings.
         """
 
+        from typing import Any
+
         from .matrices import B, transition
         from .state import State
+
+
+        def _factor_value(factor: Any) -> Any:
+            """Return a raw scalar from either a State factor or scalar value."""
+            return getattr(factor, "value", factor)
 
         '''
     ).lstrip()
@@ -379,9 +477,9 @@ def _render_act_module(plan: PackagePlan) -> str:
     if not plan.action_methods:
         lines.append("# No actions were declared in the source GNN.")
         lines.append("")
-        lines.append("def update_noop(state: State) -> State:")
-        lines.append('    """No-op action for GNNs without explicit actions."""')
-        lines.append("    return state.copy()")
+        lines.append("def idle_step(state: State) -> State:")
+        lines.append('    """Runtime fallback for GNNs without explicit actions."""')
+        lines.append("    return state")
         lines.append("")
     else:
         # Grab one state var name (if any) so we have something to mutate.
@@ -401,12 +499,12 @@ def _render_act_module(plan: PackagePlan) -> str:
             if first_state_var:
                 t = plan.state_vars[0].python_type
                 if t == "bool":
-                    lines.append(f"    new_value = not state.{first_state_var}")
+                    lines.append(f"    new_value = not bool(_factor_value(state.{first_state_var}))")
                 elif t == "int":
-                    lines.append(f"    new_value = int(state.{first_state_var}) + 1")
+                    lines.append(f"    new_value = int(_factor_value(state.{first_state_var})) + 1")
                 else:
                     lines.append(
-                        f"    new_value = float(state.{first_state_var}) + float(action_index)"
+                        f"    new_value = float(_factor_value(state.{first_state_var})) + float(action_index)"
                     )
                 lines.append(f"    return state.copy({first_state_var}=new_value)")
             else:
@@ -417,27 +515,21 @@ def _render_act_module(plan: PackagePlan) -> str:
 
 
 def _render_policy_module(plan: PackagePlan) -> str:
-    """Render ``policy.py`` with a select_policy helper and scaffold policies.
+    """Render ``policy.py`` with a selector helper and deficit policies.
 
     Three populations are emitted:
 
-    * ``select_policy`` — the canonical expected-free-energy-style
-      helper. ``select`` is outside every rule's keyword lexicon, so
-      this function does **not** contribute a POLICY mapping; it is
-      kept for runtime correctness and as the body that scaffold
-      policies delegate into.
+    * selector helper — named ``select_policy`` only when the source
+      role multiset needs that helper to count as POLICY; otherwise it
+      is named ``pick_index`` so runtime support does not inflate role
+      counts.
     * **Authoritative policies** from ``plan.policy_functions`` —
       emitted with a ``policy_<name>`` prefix when the source GNN
       declared a ``pi_c*`` variable. Rare on forward-emitted GNNs.
     * **Scaffold policies** from ``plan.scaffold_policy_functions`` —
-      top-level ``route_factor_<n>`` functions whose name contains
-      ``route`` (a POLICY-only keyword per
-      :data:`cogant.translate.rules.semantic.PolicyRule`). One per
-      hidden-state factor (minimum 2). These recover the forward
-      POLICY multiset on repos that have web-framework routers /
-      dispatchers in their original source (urllib3, tqdm) without
-      requiring the reverse parser to carry those mappings through
-      the GNN markdown round-trip.
+      target-deficit ``route_factor_<n>`` functions. These appear only
+      when the original forward role multiset contains more POLICY
+      roles than the parsed GNN exposes directly.
 
     ``route_*`` was chosen over ``dispatch_*`` and ``handle_*``
     because both of the latter also appear in
@@ -450,13 +542,9 @@ def _render_policy_module(plan: PackagePlan) -> str:
         f'''
         """Generated policy functions for model {plan.raw_model_name!r}.
 
-        ``select_policy`` chooses among actions to maximise
+        The selector chooses among actions to maximise
         ``<C, likelihood(state)>`` (a degenerate form of expected
-        free-energy minimisation that ignores epistemic value). The
-        ``route_*`` functions are lightweight scaffold policies — one
-        per hidden-state factor — whose names fall inside the
-        forward COGANT ``PolicyRule`` keyword set and deterministically
-        classify as POLICY on the round-trip.
+        free-energy minimisation that ignores epistemic value).
         """
 
         from typing import List
@@ -468,7 +556,8 @@ def _render_policy_module(plan: PackagePlan) -> str:
     ).lstrip()
     lines: list[str] = [header]
 
-    lines.append("def select_policy(state: State, observations: List[float]) -> int:")
+    helper_name = _policy_helper_name(plan)
+    lines.append(f"def {helper_name}(state: State, observations: List[float]) -> int:")
     lines.append('    """Return the action index that maximises the preference score."""')
     lines.append("    if N_ACTIONS <= 0:")
     lines.append("        return 0")
@@ -493,12 +582,12 @@ def _render_policy_module(plan: PackagePlan) -> str:
 
     # Authoritative policies from the parsed GNN (rare).
     for i, node in enumerate(plan.policy_functions):
-        fn_name = node.name if node.name.startswith("pi_") else f"policy_{node.name}"
+        fn_name = _rendered_policy_function_name(node.name)
         lines.append(f"def {fn_name}(state: State, observations: List[float]) -> int:")
         lines.append(
-            f'    """Policy {i}: delegates to :func:`select_policy` for action selection."""'
+            f'    """Policy {i}: delegates to :func:`{helper_name}` for action selection."""'
         )
-        lines.append("    return select_policy(state, observations)")
+        lines.append(f"    return {helper_name}(state, observations)")
         lines.append("")
 
     # Scaffold policies — one ``route_*`` function per hidden-state factor.
@@ -506,9 +595,9 @@ def _render_policy_module(plan: PackagePlan) -> str:
         fn_name = node.name
         lines.append(f"def {fn_name}(state: State, observations: List[float]) -> int:")
         lines.append(
-            f'    """Scaffold policy {i}: route hidden-state factor through select_policy."""'
+            f'    """Scaffold policy {i}: route hidden-state factor through selector."""'
         )
-        lines.append("    return select_policy(state, observations)")
+        lines.append(f"    return {helper_name}(state, observations)")
         lines.append("")
 
     return "\n".join(lines)
@@ -523,13 +612,8 @@ def _render_constraints_module(plan: PackagePlan) -> str:
       ``check_<name>`` per GNN constraint slot declared in the source
       (typically one per ``C_m*=PreferenceVector`` ontology entry).
     * **Scaffold checks** from ``plan.scaffold_constraint_checks`` —
-      one ``check_obs_*`` / ``check_act_*`` / ``check_hs_*`` per
-      observation / action / hidden-state slot. These recover the
-      long-tail CONSTRAINT multiset that the forward pipeline
-      extracts from ``test_*``/``validate_*``/``check_*`` patterns on
-      the original repo but which the GNN formatter does not
-      serialize. See :func:`cogant.reverse.planner._build_scaffold_constraints`
-      for the naming rationale and the isomorphism recovery argument.
+      ``check_role_*`` predicates emitted only for target role deficits
+      supplied by the round-trip verifier.
 
     Every emitted function is a pure ``return True`` predicate that
     accepts a ``State`` (retained for API symmetry) and has no member
@@ -558,9 +642,8 @@ def _render_constraints_module(plan: PackagePlan) -> str:
     if not has_authoritative and not has_scaffold:
         lines.append("# No constraints were declared in the source GNN.")
         lines.append("")
-        lines.append("def check_noop(state: State) -> bool:")
-        lines.append('    """Vacuous constraint; always True."""')
-        lines.append("    _ = state")
+        lines.append("def always_true(_state: State) -> bool:")
+        lines.append('    """Runtime fallback predicate with no semantic constraint signal."""')
         lines.append("    return True")
         lines.append("")
         return "\n".join(lines)
@@ -571,10 +654,7 @@ def _render_constraints_module(plan: PackagePlan) -> str:
         # PreferenceRule (which detects "check" in the function name)
         # counts this as a CONSTRAINT mapping. Strip any ``cnst_``
         # prefix the planner may have added for identifier uniqueness.
-        base = node.name
-        if base.startswith("cnst_"):
-            base = base[len("cnst_") :]
-        fn_name = base if "check" in base else f"check_{base}"
+        fn_name = _rendered_constraint_function_name(node.name)
         lines.append(f"def {fn_name}(state: State) -> bool:")
         lines.append(f'    """Constraint {i}: assert invariant for GNN slot {node.slot}."""')
         lines.append("    _ = state")
@@ -637,12 +717,11 @@ def _render_context_module(plan: PackagePlan) -> str:
     ).lstrip()
     lines: list[str] = [header]
 
-    if not plan.scaffold_context_classes and not plan.context_functions:
-        # Defensive fallback: emit one placeholder so the module is
-        # non-empty and imports cleanly.
-        lines.append("class PlaceholderSettings:")
-        lines.append('    """Placeholder CONTEXT scaffold for empty models."""')
-        lines.append("    default_timeout: int = 30")
+    context_functions = _targeted_context_functions(plan)
+    if not plan.scaffold_context_classes and not context_functions:
+        # Keep the module importable without introducing a source-absent
+        # CONTEXT role. Avoid ``settings``/``config``/``state`` names.
+        lines.append("MODEL_METADATA: dict[str, object] = {}")
         lines.append("")
         return "\n".join(lines)
 
@@ -658,14 +737,10 @@ def _render_context_module(plan: PackagePlan) -> str:
         lines.append("")
 
     # Authoritative context entries from the GNN ontology (rare).
-    for i, node in enumerate(plan.context_functions):
+    for i, node in enumerate(context_functions):
         # Emit as ``*Settings`` class too so it classifies as CONTEXT
         # reliably. Convert identifier to PascalCase + ``Settings``.
-        base = node.name
-        if base.startswith("context_"):
-            base = base[len("context_") :]
-        cls_name = "".join(part.capitalize() for part in base.split("_")) or f"Ctx{i}"
-        cls_name = cls_name + "Settings"
+        cls_name = _rendered_context_class_name(node.name, i)
         lines.append(f"class {cls_name}:")
         lines.append(
             f'    """Authoritative context {i}: derived from GNN ontology slot {node.slot}."""'
@@ -678,13 +753,14 @@ def _render_context_module(plan: PackagePlan) -> str:
 
 def _render_main_module(plan: PackagePlan) -> str:
     """Render ``main.py`` — a small driver loop that exercises everything."""
+    helper_name = _policy_helper_name(plan)
     header = dedent(
         f'''
         """Driver program for the synthesized model {plan.raw_model_name!r}.
 
-        Runs a short inference loop: observe -> select_policy -> act.
+        Runs a short inference loop: observe -> select -> act.
         This module gives the forward COGANT pipeline a clear entry
-        point with data-flow edges between State, observe, policy, and
+        point with data-flow edges between State, observe, selector, and
         act — the same pattern it looks for in hand-written code.
         """
 
@@ -698,17 +774,17 @@ def _render_main_module(plan: PackagePlan) -> str:
         canonical = fn if fn.startswith("get_") else f"get_{fn}"
         lines.append(f"from .observe import {canonical}")
     else:
-        lines.append("from .observe import get_noop")
+        lines.append("from .observe import fallback_value")
     if plan.action_methods:
         fn = plan.action_methods[0].name
         canonical = fn if fn.startswith("update_") else f"update_{fn}"
         lines.append(f"from .act import {canonical}")
     else:
-        lines.append("from .act import update_noop")
-    lines.append("from .policy import select_policy")
+        lines.append("from .act import idle_step")
+    lines.append(f"from .policy import {helper_name}")
     lines.append("")
     lines.append("")
-    lines.append("def run_inference_step(state: State) -> State:")
+    lines.append("def advance_once(state: State) -> State:")
     lines.append('    """One inference step: observe, choose action, update state."""')
     if plan.obs_functions:
         fn = plan.obs_functions[0].name
@@ -716,21 +792,21 @@ def _render_main_module(plan: PackagePlan) -> str:
         lines.append(f"    obs_value = {canonical}(state)")
         lines.append("    observations = [float(obs_value)]")
     else:
-        lines.append("    observations = [get_noop(state)]")
-    lines.append("    _action = select_policy(state, observations)")
+        lines.append("    observations = [fallback_value(state)]")
+    lines.append(f"    _choice = {helper_name}(state, observations)")
     if plan.action_methods:
         fn = plan.action_methods[0].name
         canonical = fn if fn.startswith("update_") else f"update_{fn}"
         lines.append(f"    return {canonical}(state)")
     else:
-        lines.append("    return update_noop(state)")
+        lines.append("    return idle_step(state)")
     lines.append("")
     lines.append("")
     lines.append("def main(num_steps: int = 10) -> State:")
     lines.append('    """Run ``num_steps`` inference steps starting from the default State."""')
     lines.append("    state = State()")
     lines.append("    for t in range(num_steps):")
-    lines.append("        state = run_inference_step(state)")
+    lines.append("        state = advance_once(state)")
     lines.append('        print(f"t={t}: {state}")')
     lines.append("    return state")
     lines.append("")
@@ -744,18 +820,19 @@ def _render_main_module(plan: PackagePlan) -> str:
 
 def _render_test_smoke(plan: PackagePlan) -> str:
     """Render ``tests/test_smoke.py`` — a single round-trip smoke test."""
+    helper_name = _policy_helper_name(plan)
     return dedent(
         f'''
         """Smoke test for synthesized model {plan.raw_model_name!r}."""
 
-        from {plan.package_name}.main import run_inference_step
+        from {plan.package_name}.main import advance_once
         from {plan.package_name}.state import State
 
 
         def test_model_runs() -> None:
             """The synthesized model can execute one inference step."""
             state = State()
-            new_state = run_inference_step(state)
+            new_state = advance_once(state)
             assert isinstance(new_state, State)
 
 
@@ -765,11 +842,11 @@ def _render_test_smoke(plan: PackagePlan) -> str:
             assert state is not None
 
 
-        def test_policy_returns_valid_action() -> None:
-            """``select_policy`` returns a non-negative action index."""
-            from {plan.package_name}.policy import select_policy
+        def test_selector_returns_valid_index() -> None:
+            """The selector returns a non-negative action index."""
+            from {plan.package_name}.policy import {helper_name}
 
-            action = select_policy(State(), [0.0])
+            action = {helper_name}(State(), [0.0])
             assert isinstance(action, int)
             assert action >= 0
         '''
@@ -811,7 +888,16 @@ def synthesize_package(
     tests_path = package_path / "tests"
     tests_path.mkdir(parents=True, exist_ok=True)
 
+    semantic_targets = _semantic_role_targets(plan)
+    manifest = {
+        "schema": "cogant.reverse.semantic_targets.v1",
+        "target_role_counts": dict(plan.target_role_counts),
+        "semantic_targets": semantic_targets,
+    }
     files = {
+        package_path / ".gitignore": "tests\n.pytest_cache\n__pycache__\n*.pyc\n",
+        package_path / SEMANTIC_TARGETS_MANIFEST: json.dumps(manifest, indent=2, sort_keys=True)
+        + "\n",
         package_path / "__init__.py": _render_package_init(plan),
         package_path / "state.py": _render_state_module(plan),
         package_path / "observe.py": _render_observe_module(plan),

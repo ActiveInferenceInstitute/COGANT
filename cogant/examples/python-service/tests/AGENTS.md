@@ -1,14 +1,11 @@
-# AGENTS — examples/python-service/tests
-
-Machine-oriented index for automation and editors.
-
-- Repository root: [README.md](../../../README.md)
-- Docs index: [docs/index.md](../../../docs/index.md)
+# Agents - python-service/tests
 
 ## Scope
 
-Describe what belongs in this folder; keep orchestration thin and logic in `py/cogant/`.
+Python Service Tests for a COGANT example fixture.
 
-## Tests
+## Rules
 
-Run `uv run pytest tests/` from the repository root unless a narrower scope is documented here.
+- Keep behavior deterministic and dependency-light.
+- Update the parent example README when changing the architecture being demonstrated.
+- Run example-specific tests from the example root when present, and run COGANT translate smoke from the inner package root for pipeline verification.

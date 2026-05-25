@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """HTMLSiteRenderer: Generate complete static HTML site with all views."""
 
 import json

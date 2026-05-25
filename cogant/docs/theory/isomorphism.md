@@ -1,8 +1,13 @@
 # COGANT Isomorphism Theorem: Program Graphs and Generative Models as Dual Views of Causal Structure
 
+> **Historical theory sketch.** This page preserves the early categorical argument that
+> motivated reverse mode. It is not the current user-facing roundtrip contract. Current CLI,
+> JSON, and manuscript language distinguish `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`,
+> `DRIFT`, and `FAILED`; see [the roundtrip concept page](../concepts/roundtrip.md).
+
 **Author:** COGANT R&D
 **Date:** 2026-04-09
-**Status:** Theory (pre-proof)
+**Status:** Historical theory sketch (pre-proof)
 **Related:** `ROUNDTRIP_VALIDATION.md`, `SCOPING_REPORT.md`
 
 ---

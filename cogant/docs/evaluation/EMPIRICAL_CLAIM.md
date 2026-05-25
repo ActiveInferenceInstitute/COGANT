@@ -28,21 +28,23 @@ complete Active Inference perception-action cycle on it.
 - **Semantic coverage**: 80.0% (4/5 nodes appear in semantic mappings)
 - **Validation score**: 100.0% (cogant validate)
 
-### 2. Roundtrip (ε-isomorphism)
+### 2. Roundtrip (role preservation, not strict isomorphism)
 
 ```
-role_match_score: 1.0   (PERFECT)
-is_isomorphic:    true  (ISOMORPHIC threshold ε ≥ 0.8; see cogant/evaluation/METRICS.yaml)
+role_preservation_score: 1.0   (PERFECT)
+roundtrip_status:    ROLE_PRESERVED
 original_roles:   {HIDDEN_STATE: 1, OBSERVATION: 1, ACTION: 2}
 synthesized_roles:{HIDDEN_STATE: 1, OBSERVATION: 7, ACTION: 5, CONSTRAINT: 4}
 shape_match:      {n_states: true, n_obs: true, n_actions: true}
 ```
 
-The Galois connection is confirmed: GNN → synthesized Python package → re-scan
-preserves the hidden-state/observation/action role structure with perfect
-role-match (1.0). The synthesized package adds richer observation and constraint
-nodes because the reverse pipeline resolves more semantic detail from the GNN's
-extended annotations, but the essential structural invariant holds.
+The forward-reverse-forward loop preserves the hidden-state / observation /
+action role populations with perfect role-preservation score (`s_role = 1.0`).
+The synthesized package adds additional observation and constraint nodes because
+the reverse pipeline materializes scaffold code from GNN annotations. Those
+extras are useful for role recovery but prevent a strict node/edge isomorphism
+claim; strict structural status is tracked separately by the v0.6 invariant
+ledger.
 
 ### 3. Active Inference Cycle (10-step output)
 
@@ -108,36 +110,39 @@ requires no external services (`--no-dynamic` skips coverage tracing).
   The aggregate matrix representation collapses to n_states=1 factor variable,
   which is correct per the COGANT multi-factor aggregation spec (each factor
   contributes one degree of freedom to the top-level state-space).
-- `role_match=1.0` means the forward→reverse→forward roundtrip recovers all
+- `role_preservation_score=1.0` means the forward→reverse→forward roundtrip recovers all
   three role categories (HIDDEN_STATE, OBSERVATION, ACTION) without loss.
-- `is_isomorphic=true` at the canonical ISOMORPHIC threshold (ε ≥ 0.8) means the structural invariant holds
-  across the Galois connection.
+- `roundtrip_status=ROLE_PRESERVED` means the original semantic-role population
+  survives the loop at the public threshold (`s_role >= 0.5`). It does not
+  assert strict graph isomorphism.
 - The demo uses real GNN text (no mocks, no fixtures) generated live from the
   source code via the cogant CLI subprocess call.
 
 ---
 
-## Extended Empirical Results (Wave 14)
+## Extended Empirical Results (Historical Zoo Demonstration)
 
 Date: 2026-04-10
 
 ### Summary Table
 
-| Target | ε | n_s / n_o / n_a | 10-step VFE (all steps) | Converged |
+| Target | s_role | n_s / n_o / n_a | 10-step VFE (all steps) | Converged |
 |---|---|---|---|---|
 | zoo/04_pomdp_minimal | 1.0 | 0 / 3 / 2 | 23.025851 (constant) | yes (flat) |
 | zoo/06_hierarchical | 1.0 | 2 / 2 / 4 | 0.751435 → 0.798508 | yes (t≥4) |
 | zoo/02_observer | 1.0 | 1 / 3 / 1 | -0.000000 (constant) | yes (flat) |
 
-**Roundtrip (ε-isomorphism):**
+**Roundtrip (role-preservation):**
 
-| Target | role_match_score | is_isomorphic |
+| Target | role_preservation_score | roundtrip_status |
 |---|---|---|
-| zoo/04_pomdp_minimal | 1.0 | True |
-| zoo/06_hierarchical | 1.0 | True |
-| zoo/02_observer | 1.0 | True |
+| zoo/04_pomdp_minimal | 1.0 | ROLE_PRESERVED |
+| zoo/06_hierarchical | 1.0 | ROLE_PRESERVED |
+| zoo/02_observer | 1.0 | ROLE_PRESERVED |
 
-All three targets achieve perfect role-match (ε=1.0) and confirmed isomorphism.
+All three targets achieve perfect role preservation (`s_role=1.0`). Strict
+structural isomorphism is intentionally not claimed by this historical
+demonstration.
 
 ---
 
@@ -153,7 +158,7 @@ All three targets achieve perfect role-match (ε=1.0) and confirmed isomorphism.
 - C (preferences): [0.0, 0.0, 0.0]
 - D (prior): []
 
-**Roundtrip:** ε=1.0, is_isomorphic=True
+**Roundtrip:** s_role=1.0, roundtrip_status=ROLE_PRESERVED
 - original_roles: {OBSERVATION: 3, ACTION: 2}
 - synthesized_roles: {HIDDEN_STATE: 1, OBSERVATION: 5, ACTION: 4, CONSTRAINT: 4}
 - shape_match: {n_obs: True, n_actions: True}
@@ -171,7 +176,7 @@ All three targets achieve perfect role-match (ε=1.0) and confirmed isomorphism.
 | 8 | o_m0 | u_c0 | [] | 23.025851 |
 | 9 | o_m0 | u_c0 | [] | 23.025851 |
 
-**Interpretation:** The `MinimalPOMDPAgent` source declares its internal state as a `list[float]` attribute, but the COGANT static analyser classifies the class as observation-dominant: the `observe()` method with keyword annotation maps to three observation modalities (`o_m0`–`o_m2`), while `act()` generates two action slots. No hidden-state factor is extracted at the aggregate level because the GNN's `InitialParameterization` resolves to an observation-first structure (the GNN file declares `A_observation` as the primary matrix, not a `D_prior` → `s_beliefs` chain). The VFE of 23.025851 = −log(10⁻¹⁰) is the runtime's maximum-uncertainty floor when the likelihood matrix A is empty and the observation must be explained without a prior — this is the correct and expected behaviour for an observation-only GNN. The cycle runs and completes; ε=1.0 confirms the structural roundtrip is intact.
+**Interpretation:** The `MinimalPOMDPAgent` source declares its internal state as a `list[float]` attribute, but the COGANT static analyser classifies the class as observation-dominant: the `observe()` method with keyword annotation maps to three observation modalities (`o_m0`–`o_m2`), while `act()` generates two action slots. No hidden-state factor is extracted at the aggregate level because the GNN's `InitialParameterization` resolves to an observation-first structure (the GNN file declares `A_observation` as the primary matrix, not a `D_prior` → `s_beliefs` chain). The VFE of 23.025851 = −log(10⁻¹⁰) is the runtime's maximum-uncertainty floor when the likelihood matrix A is empty and the observation must be explained without a prior — this is the correct and expected behaviour for an observation-only GNN. The cycle runs and completes; `s_role=1.0` confirms role preservation, while strict graph/matrix preservation remains a separate invariant.
 
 ---
 
@@ -187,7 +192,7 @@ All three targets achieve perfect role-match (ε=1.0) and confirmed isomorphism.
 - C (preferences): [0.0, 0.0]
 - D (prior): [0.5, 0.5]
 
-**Roundtrip:** ε=1.0, is_isomorphic=True
+**Roundtrip:** s_role=1.0, roundtrip_status=ROLE_PRESERVED
 - original_roles: {HIDDEN_STATE: 2, OBSERVATION: 2, ACTION: 4}
 - synthesized_roles: {HIDDEN_STATE: 2, OBSERVATION: 11, ACTION: 9, CONSTRAINT: 4}
 - shape_match: {n_states: True, n_obs: True, n_actions: True}
@@ -221,7 +226,7 @@ All three targets achieve perfect role-match (ε=1.0) and confirmed isomorphism.
 - C (preferences): [0.0, 0.0, 0.0]
 - D (prior): [1.0]
 
-**Roundtrip:** ε=1.0, is_isomorphic=True
+**Roundtrip:** s_role=1.0, roundtrip_status=ROLE_PRESERVED
 - original_roles: {HIDDEN_STATE: 1, OBSERVATION: 3, ACTION: 1}
 - synthesized_roles: {HIDDEN_STATE: 1, OBSERVATION: 9, ACTION: 4, CONSTRAINT: 4}
 - shape_match: {n_states: True, n_obs: True, n_actions: True}
@@ -239,16 +244,16 @@ All three targets achieve perfect role-match (ε=1.0) and confirmed isomorphism.
 | 8 | o_m0 | u_c0 | [1.0] | -0.000000 |
 | 9 | o_m0 | u_c0 | [1.0] | -0.000000 |
 
-**Interpretation:** The `TemperatureSensor` is a read-only observer with no control input — it has no `self.state` that changes, and its only output is continuous noisy observations. The COGANT parser correctly maps it to a single hidden-state factor (`s_f0`, cardinality 4 extracted from method count) with three observation modalities (`observe()`, `read_temperature()`, `get_status()`) and a single action (`u_c0` — the read operation). The uniform A matrix [[1.0], [1.0], [1.0]] reflects that the sensor's true temperature is equally likely to generate any of the three observation types (all are aliases for the same underlying read). VFE=0.0 throughout is identical to zoo/01_simple_state: single-factor identity system, D=[1.0], A column-uniform → no free energy to minimise. The observer role (single action, no state mutation) is correctly captured: ε=1.0, shape_match complete.
+**Interpretation:** The `TemperatureSensor` is a read-only observer with no control input — it has no `self.state` that changes, and its only output is continuous noisy observations. The COGANT parser correctly maps it to a single hidden-state factor (`s_f0`, cardinality 4 extracted from method count) with three observation modalities (`observe()`, `read_temperature()`, `get_status()`) and a single action (`u_c0` — the read operation). The uniform A matrix [[1.0], [1.0], [1.0]] reflects that the sensor's true temperature is equally likely to generate any of the three observation types (all are aliases for the same underlying read). VFE=0.0 throughout is identical to zoo/01_simple_state: single-factor identity system, D=[1.0], A column-uniform → no free energy to minimise. The observer role (single action, no state mutation) is correctly captured: s_role=1.0, shape_match complete.
 
 ---
 
 ### Cross-Target Summary
 
-All four zoo targets (01, 02, 04, 06) achieve ε=1.0 role-match and confirmed isomorphism. The extended results demonstrate three qualitatively distinct VFE regimes:
+All four zoo targets (01, 02, 04, 06) achieve `s_role=1.0` role preservation. The extended results demonstrate three qualitatively distinct VFE regimes:
 
 1. **VFE=0.0 (flat certainty):** zoo/01_simple_state and zoo/02_observer — identity A/B with D=[1.0], no free energy gradient.
 2. **VFE=23.03 (maximum uncertainty floor):** zoo/04_pomdp_minimal — observation-only GNN with empty A; runtime evaluates -log(1e-10) as the floor for an unresolvable observation.
 3. **VFE converging to plateau (0.798508):** zoo/06_hierarchical — two-factor hierarchical model with discriminative A (0.9/0.1); non-trivial belief collapse from uniform prior D=[0.5, 0.5] to s_f0=1.0 by t=2.
 
-The extension confirms the primary empirical claim holds across structurally diverse Python codebases: COGANT's forward pipeline, roundtrip isomorphism check, and Active Inference cycle all complete successfully regardless of whether the source code implements a POMDP agent, an observer, or a two-level hierarchy.
+The extension confirms the primary empirical claim holds across structurally diverse Python codebases: COGANT's forward pipeline, role-preservation check, and Active Inference cycle all complete successfully regardless of whether the source code implements a POMDP agent, an observer, or a two-level hierarchy.

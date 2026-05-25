@@ -200,7 +200,7 @@ Scores GNN bundles 0–100 by checking structural completeness, consistency, and
 
 All 6 shipped fixtures (control_positive, flask_app, event_pipeline, etc.) score 100/100.
 
-### GNNMarkdownFormatter (formatter.py)
+### GNNMarkdownFormatter (formatter/ package)
 
 Formats the 19 canonical sections into human-readable markdown.
 
@@ -307,7 +307,7 @@ print(f"Created {result['file_count']} files")
 print(f"Total size: {result['total_size_bytes']} bytes")
 print(f"Files: {result['files']}")
 # Output:
-# Created 17 files
+# Created 16 files
 # Total size: 256000 bytes
 # Files: ['manifest.json', 'model.gnn.md', 'state_space.json', ...]
 

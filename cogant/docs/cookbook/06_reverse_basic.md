@@ -57,14 +57,18 @@ Synthesized package: ./synthesized/my_project_gnn/
   Matrices:       A, B, C, D
 ```
 
-### 5. Verify round-trip isomorphism
+### 5. Verify roundtrip preservation
 
 ```bash
 cogant roundtrip ./output/gnn_package/model.gnn.md --keep-tmp
 ```
 
-This forward-translates the synthesized package and checks that the
-resulting GNN is role-multiset isomorphic to the original.
+This forward-translates the synthesized package and checks the current
+roundtrip taxonomy: strict structural isomorphism when all invariant-ledger
+checks pass, `ROLE_PRESERVED` when semantic roles survive but structure drifts,
+and `DRIFT` / `FAILED` for weaker outcomes. For day-to-day reverse work, inspect
+`role_preservation_score` and the invariant table rather than treating a
+role-only match as structural isomorphism.
 
 ## Troubleshooting
 

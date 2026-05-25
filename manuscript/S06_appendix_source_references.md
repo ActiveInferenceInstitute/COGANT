@@ -2,26 +2,41 @@
 
 This appendix indexes the external COGANT package documentation, evaluation artefacts,
 and manuscript tooling referenced in the main text and other appendices. All paths are
-relative to the COGANT package root (`../cogant/`) unless otherwise noted. For
-staging-tree paths (before promotion to `projects/cogant/`), replace
-`projects_in_progress/cogant/` with `projects/cogant/` after the `git mv`.
+relative to the COGANT package root (`../cogant/`) unless otherwise noted. In a
+standalone checkout, run project-local commands from the COGANT root. After
+vendoring into the parent template, replace project-local command prefixes with
+`projects/cogant/` when running from the template root.
+
+Package documentation is the canonical navigation surface for API, CLI, MkDocs, and operational details. The manuscript therefore keeps only evidence-bearing package links inline and centralizes the broader documentation map here: start at [`../cogant/docs/index.md`](../cogant/docs/index.md), use [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md) for the module index, and run [`../cogant/docs/verify_doc_links.py`](../cogant/docs/verify_doc_links.py) when editing package docs.
 
 ---
+
+## Source-tier classification
+
+| Tier | Definition | Examples in this manuscript | Use in claims |
+|---|---|---|---|
+| T1 generated package artifact | Machine-written artifact from a COGANT run, regeneration script, or validation gate | `../cogant/evaluation/METRICS.yaml`, `../cogant/evaluation/figures/metrics.json`, `../output/figures/manifest.json` | Numeric release claims, fixture tables, figure provenance |
+| T2 source-controlled implementation/test | Code, tests, or config checked into this tree | `../cogant/py/cogant/`, `../cogant/tests/`, `../tools/claim_ledger.py` | API behavior, validation contracts, audit-tool behavior |
+| T3 historical retained artifact | Older release or wave artifact preserved for traceability but not counted as fresh evidence | `ROUNDTRIP_EVAL.md`, `ROUNDTRIP_IMPROVEMENT.md`, stale v0.5 epsilon rows | Background, regression history, not current headline counts |
+| T4 primary external source | Peer-reviewed paper, standard, official specification, or official project documentation | `references.bib` entries for Joern/CPG, CodeQL, SARIF, ProGraML, PyMDP, CodeT5, CodeXGLUE | Related-work and standards claims |
+| T5 secondary/navigation source | Index pages, README-style maps, or convenience docs | MkDocs navigation pages, manuscript README files | Pointers only; do not anchor numeric or novelty claims |
+
+When tiers conflict, prefer the narrowest directly generated artifact for local numbers, the current implementation/test for package behavior, and primary external sources for related-work claims. Historical rows remain useful for explaining regressions, but @tbl:fresh-v06-vs-stale-legacy-roundtrip is the boundary that prevents stale evidence from carrying fresh release wording.
 
 ## Evaluation artefacts
 
 | Artefact | Path | Referenced in |
 |---|---|---|
-| Canonical roundtrip results (post-wave-16) | [`../cogant/docs/evaluation/ROUNDTRIP_EVAL.md`](../cogant/docs/evaluation/ROUNDTRIP_EVAL.md) | @sec:S01-appendix-roundtrip-epsilon, @sec:05-conclusion, @sec:09-ablation |
+| Historical roundtrip role-preservation artifact | [`../cogant/docs/evaluation/ROUNDTRIP_EVAL.md`](../cogant/docs/evaluation/ROUNDTRIP_EVAL.md) | @sec:S01-appendix-roundtrip-epsilon, @sec:10-conclusion, @sec:09-ablation |
 | Real-world library evaluation | [`../cogant/docs/evaluation/REAL_WORLD_EVAL.md`](../cogant/docs/evaluation/REAL_WORLD_EVAL.md) | @sec:S01-appendix-roundtrip-epsilon |
 | Per-fixture empirical claim runs | [`../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`](../cogant/docs/evaluation/EMPIRICAL_CLAIM.md) | @sec:S01-appendix-roundtrip-epsilon, @sec:S04-appendix-inference-mathematics |
-| POLICY/CONTEXT synthesizer fix (wave-16) | [`../cogant/docs/evaluation/CONSTRAINT_FIX.md`](../cogant/docs/evaluation/CONSTRAINT_FIX.md) | @sec:S01-appendix-a2-constraint |
-| Roundtrip improvement log (wave-13 → 16) | [`../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md`](../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md) | @sec:05-conclusion, @sec:00-abstract |
+| Historical POLICY/CONTEXT synthesizer fix | [`../cogant/docs/evaluation/CONSTRAINT_FIX.md`](../cogant/docs/evaluation/CONSTRAINT_FIX.md) | @sec:S01-appendix-a2-constraint |
+| Historical roundtrip improvement log | [`../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md`](../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md) | @sec:10-conclusion, @sec:00-abstract |
 | Active Inference role mapping per rule | [`../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md`](../cogant/docs/evaluation/ACTIVE_INFERENCE_MAPPING.md) | @sec:09-ablation |
 | Confidence calibration table | [`../cogant/docs/evaluation/CALIBRATION.md`](../cogant/docs/evaluation/CALIBRATION.md) | @sec:09-ablation |
 | Mutation testing report | [`../cogant/docs/evaluation/MUTATION_REPORT.md`](../cogant/docs/evaluation/MUTATION_REPORT.md) | @sec:06-04-tests-mutation-and-benchmarks |
-| ε-Isomorphism theorem (machine-readable) | [`../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md`](../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md) | Appendix C |
-| Annotated bibliography ({{BIB_ENTRIES}} entries) | [`../cogant/docs/evaluation/LITERATURE.md`](../cogant/docs/evaluation/LITERATURE.md) | Appendix E |
+| Historical role-preservation sketch / invariant notes | [`../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md`](../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md) | @sec:S03-appendix-galois-sketch |
+| Annotated bibliography ({{BIB_ENTRIES}} entries) | [`../cogant/docs/evaluation/LITERATURE.md`](../cogant/docs/evaluation/LITERATURE.md) | @sec:S05-appendix-extended-related-work |
 
 ## Manuscript tooling
 
@@ -30,19 +45,22 @@ staging-tree paths (before promotion to `projects/cogant/`), replace
 | Metric token registry | [`../tools/manuscript_vars.py`](../tools/manuscript_vars.py) | `MANUSCRIPT_VARS` keys → dotted paths in `METRICS.yaml` |
 | METRICS.yaml regeneration | [`../tools/regenerate_metrics.py`](../tools/regenerate_metrics.py) | Rebuilds canonical numeric ground truth |
 | Manuscript variable injection | [`../tools/inject_manuscript_vars.py`](../tools/inject_manuscript_vars.py) | Substitutes registered tokens in `.md` files |
+| Manuscript figure registry | [`../tools/manuscript_figures.py`](../tools/manuscript_figures.py) | Copies real package-run PNGs from `../cogant/output/` to `../output/figures/` |
+| Claim ledger generator | [`../tools/claim_ledger.py`](../tools/claim_ledger.py) | Indexes numeric, citation, figure, artifact-path, and placeholder claims in the manuscript |
 | Metrics freshness check | [`../tools/check_metrics_fresh.py`](../tools/check_metrics_fresh.py) | Detects drift between METRICS.yaml and coverage.json |
 | Manuscript number audit | [`../tools/audit_manuscript_numbers.py`](../tools/audit_manuscript_numbers.py) | Cross-checks prose numbers against METRICS.yaml |
 | Canonical metrics | [`../cogant/evaluation/METRICS.yaml`](../cogant/evaluation/METRICS.yaml) | Single source of truth for all manuscript numbers |
 | Variable snapshot | [`../output/data/manuscript_variables.json`](../output/data/manuscript_variables.json) | Flat `{NAME: value}` generated by `z_generate_manuscript_variables.py` |
+| Claim ledger snapshot | [`../output/claim_ledger.md`](../output/claim_ledger.md) | Generated review table for unsupported or newly added literal claims |
 
-## Manuscript source files cited by other appendices
+## Manuscript sections cited by other appendices
 
-| Section | File | Description |
-|---|---|---|
-| Main text @sec:09-ablation | [`09_ablation.md`](09_ablation.md) | @tbl:rule-family-ablation, @tbl:fixpoint-iteration-ablation, @tbl:matrix-fallback-ablation |
-| Appendix B | [`S02_appendix_ablation.md`](S02_appendix_ablation.md) | Per-role ablation on `zoo/01_simple_state` |
-| @sec:02-01-program-graph-and-formal-foundations | [`02_01_program_graph_and_formal_foundations.md`](02_01_program_graph_and_formal_foundations.md) | Formal program-graph and fixpoint definitions |
-| Appendix C | [`S03_appendix_galois_sketch.md`](S03_appendix_galois_sketch.md) | ε-approximate Galois connection proof sketch |
+| Section | Description |
+|---|---|
+| Main text @sec:09-ablation | @tbl:rule-family-ablation, @tbl:fixpoint-iteration-ablation, @tbl:matrix-fallback-ablation |
+| @sec:S02-appendix-ablation | Per-role ablation on `zoo/01_simple_state` |
+| @sec:02-01-program-graph-and-formal-foundations | Formal program-graph and fixpoint definitions |
+| @sec:S03-appendix-galois-sketch | Conjectural Galois-style preorder comparison and scoped role-preservation invariant |
 
 ## Editorial and validation tooling
 
@@ -51,8 +69,4 @@ staging-tree paths (before promotion to `projects/cogant/`), replace
 | Manuscript editorial protocol | [`AGENTS.md`](AGENTS.md) | Canonical sources of truth, exclusion rules, sync cadence |
 | Manuscript structure index | [`README.md`](README.md) | Section ordering, discovery, validation commands |
 | Link verification | [`../cogant/docs/verify_manuscript_links.py`](../cogant/docs/verify_manuscript_links.py) | Checks relative links in `manuscript/*.md` against the package tree |
-| Markdown validation | `uv run python -m infrastructure.validation.cli markdown ./projects_in_progress/cogant/manuscript/` | Template-level Markdown integrity checks |
-
-## See also (MkDocs)
-
-Published documentation home: [`../cogant/docs/index.md`](../cogant/docs/index.md); module map: [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md). In-tree doc links: [`../cogant/docs/verify_doc_links.py`](../cogant/docs/verify_doc_links.py).
+| Markdown validation | `uv run python tools/audit_manuscript_crossrefs.py` locally; `uv run python -m infrastructure.validation.cli markdown ./projects/cogant/manuscript/` after vendoring into the parent template | Manuscript cross-reference and template-level Markdown integrity checks |

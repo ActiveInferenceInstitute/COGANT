@@ -1,6 +1,6 @@
-# Known Limitations (v0.5.0 + wave-21)
+# Known Limitations (v0.6 Hardening Snapshot)
 
-Last updated: 2026-04-13. Limitations are ordered by impact.
+Last updated: 2026-05-14. Limitations are ordered by impact.
 See `feature_backlog.md` for the planned fix target for each item.
 
 ---
@@ -102,7 +102,7 @@ These are environment constraints, not COGANT bugs.
 
 If `regenerate_metrics.py` is run from the wrong directory or without optional deps,
 `test_count_passing` can land at 0. Always verify the value is non-zero before trusting
-the generated file. v0.5.0 wave-21 snapshot: 9,222 passing (9,253 total, 31 skipped), 96.22% coverage; confirm live with `uv run pytest tests/ -q --cov=cogant` from the package root.
+the generated file. Confirm live with `uv run pytest tests/ -q --cov=py/cogant` from the package root and compare the result to `evaluation/METRICS.yaml` before using manuscript-facing counts.
 
 ---
 
@@ -112,11 +112,11 @@ the generated file. v0.5.0 wave-21 snapshot: 9,222 passing (9,253 total, 31 skip
 |-----------|---------|-----|
 | Single-language (Python only) | v0.4.0 | JS/TS tree-sitter parser added |
 | No round-trip | v0.2.0 | `cogant.reverse` + `cogant roundtrip` added |
-| Round-trip ε < 1.0 | v0.5.0 | POLICY/CONTEXT stub emission; 23/23 ISOMORPHIC |
+| Roundtrip role preservation below 1.0 | v0.5.0 historical benchmark | POLICY/CONTEXT stub emission brought the historical corpus to 23/23 role-preserved targets. Current v0.6 release metrics classify the checked-in ledger as `STALE_LEGACY` until a native refreshed ledger exists; strict structural isomorphism is tracked separately. |
 | No incremental analysis | v0.5.0 | `--incremental <git-ref>` + `incremental_since` |
-| No static analysis | wave-21 | `cogant.static` module: complexity, coupling, dead code, Halstead |
-| No visualization beyond HTML | wave-21 | `cogant.viz`: PDF, PNG, Mermaid, SVG, 8-page report |
-| Basic export only (JSON, GraphML) | wave-21 | 9 formats: JSON, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT, JSONLINES |
-| No type system for protocols | wave-21 | 14 `@runtime_checkable` Protocols, 231 .pyi stubs |
-| No network/graph analysis | wave-21 | `GraphAnalyzer`: centrality, community, SCC |
-| No streaming / WebSocket API | wave-21 | `WS /ws/translate` + `translate_batch()` |
+| No static analysis | April 2026 hardening | `cogant.static` module: complexity, coupling, dead code, Halstead |
+| No visualization beyond HTML | April 2026 hardening | `cogant.viz`: PDF, PNG, Mermaid, SVG, 8-page report |
+| Basic export only (JSON, GraphML) | April 2026 hardening | 9 formats: JSON, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT, JSONLINES |
+| No type system for protocols | April 2026 hardening | 14 `@runtime_checkable` Protocols, 231 .pyi stubs |
+| No network/graph analysis | April 2026 hardening | `GraphAnalyzer`: centrality, community, SCC |
+| No streaming / WebSocket API | April 2026 hardening | `WS /ws/translate` + `translate_batch()` |

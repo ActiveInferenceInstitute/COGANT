@@ -3,6 +3,23 @@
 All notable changes to COGANT are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.0] - 2026-05-18
+
+### Changed
+- Version bumped to 0.6.0; `manuscript/config.yaml` aligned to 0.6.0.
+
+### Fixed (audit-driven fidelity pass)
+- Canonical metrics regenerated from a clean full coverage run: line coverage
+  **94.98%** (the prior 97.14% came from a stale `coverage.json`); test counts
+  re-verified **9561 passing / 0 failing / 52 skipped** (9613 collected).
+- `GNNBundle` de-duplicated in `cogant.__all__`; `empirical_claim_demo.py` roundtrip
+  JSON-parse crash fixed; per-directory `AGENTS.md`/`README.md` and manuscript factual
+  corrections (formatter package, 16 `gnn_package/` required files, SipHash checksum
+  doc-comment, PyO3/GIL statement); stale `projects_in_progress/cogant` paths corrected
+  to `projects/cogant`; generated the missing `output/claim_ledger.md` snapshot.
+
+See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
+
 ## [Unreleased]
 
 ### Added
@@ -38,7 +55,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Translation engine enhancements**: `TranslationEngine.explain()`, `validate()`, `get_convergence_info()`; `RuleExplanation.confidence: float` and `contradictions: list[str]`; improved heuristics for all 5 rule families; `to_gnn_role()` on semantic rules.
 - **Round-trip enhancements**: `PackagePlan.validate()`, `diff()`, `to_json()`/`from_json()`; `synthesize_with_validation()` with `ast.parse` check; `IdempotencyReport` dataclass; `MatrixSet.validate()`.
 - **Runtime/statespace/markov enhancements**: `AgentRuntime.run_episode_with_logging()`, `benchmark()`, `reset()`, `get_free_energy()`, serialization; `DegradedOutput` namedtuple; `MarkovBlanket.validate()`, `to_mermaid()`, `merge()`, `get_sensory_states()`, `get_active_states()`.
-- **4 new CLI entry points (preview stubs)**: `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export` — registered in Typer but currently print guidance to use the Python API (`cogant.static`, `cogant.graph.analysis`, `cogant.viz`, `cogant.export`); full orchestration wiring is tracked on the roadmap.
+- **4 analysis/export CLI entry points**: `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export` — real command paths for static metrics, graph analysis, visualization export, and multi-format artifact export.
 - **Comprehensive test suite expansion**: 14 new test files (10 unit + 4 integration), ~6,600 lines covering all new modules. Property tests for rule determinism, roundtrip stability, matrix dimension consistency.
 - `cogant.metrics` public API: `get_metrics()` / `get_metric(key)` backed by `evaluation/METRICS.yaml` (41f96de)
 - `.pyi` type stubs for all public API modules + `py.typed` marker (58c5fe1)
@@ -71,7 +88,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `cogant doctor` extended: tree-sitter grammar checks, uv lockfile parity, optional-dep audit
 - `cogant init <path>`: scaffold helpers for `cogant.yaml`, source stub, `pyproject.toml`
 - Tutorial notebooks 07–12: Flask walkthrough, constraints, plugins, YAML DSL, multi-episode learning, cross-language roundtrip
-- Cross-language roundtrip claim: JS Observer (`examples/zoo/13_js_observer`) → GNN → AI cycle, `role_match_score=1.0`
+- Cross-language roundtrip claim: JS Observer (`examples/zoo/13_js_observer`) → GNN → AI cycle, `role_preservation_score=1.0`
 - POLICY/CONTEXT stub emission in synthesizer: `decide_*` / `get_context_*` stubs proportional to origin GNN role counts
 - Scaling regression tests: guards for B-tensor, BFS, AST cache, INHERITS edge deduplification at dulwich edge density
 - Benchmark dashboard: `evaluation/dashboards/benchmarks.html` (Chart.js, self-contained)
@@ -85,8 +102,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 - `pyproject.toml` dep updates + uv.lock sync (`fbd8d39`)
 
-### Roundtrip ε
-- 19/23 ISOMORPHIC (83%) → **23/23 ISOMORPHIC (100%)** after POLICY/CONTEXT stub emission
+### Roundtrip role preservation
+- Historical v0.5 benchmark moved from 19/23 role-preserved targets (83%) to
+  23/23 role-preserved targets (100%) after POLICY/CONTEXT stub emission. The
+  current v0.6 metrics ledger classifies the checked-in 23-row JSONL as
+  `STALE_LEGACY` until a native ledger with per-row `role_preservation_score`
+  and invariant status fields is regenerated.
 
 ## [0.4.0] - 2026-04-10
 
@@ -99,7 +120,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Tutorial notebooks: 6 Jupyter notebooks (01-06)
 - Interactive playground: single-file HTML with cytoscape.js + CodeMirror
 - mkdocs-material docs site + GitHub Pages workflow
-- ROUNDTRIP_EVAL.md: 23-target roundtrip ε evaluation — now 19/23 ISOMORPHIC (83%) after CONSTRAINT fix
+- ROUNDTRIP_EVAL.md: 23-target role-preservation evaluation — now 19/23 ROLE_PRESERVED (83%) after CONSTRAINT fix
 
 ### Fixed
 - CONSTRAINT role collapse: `cnst_` prefix not detected by forward pipeline's PreferenceRule → now emits `check_` prefix proportional to origin count
@@ -108,7 +129,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Parser ontology fallback: non-standard variable names (s_hidden, o_sensor) now classified via ActInfOntologyAnnotation
 
 ### Improved
-- Roundtrip ε: 14/23 ISOMORPHIC (61%) → 19/23 ISOMORPHIC (83%) after CONSTRAINT fix
+- Roundtrip role preservation: 14/23 ROLE_PRESERVED (61%) → 19/23 ROLE_PRESERVED (83%) after CONSTRAINT fix
 - Real-world eval: 8/8 repos pass forward pipeline
 - Type annotations: 50+ modules updated to modern Python typing (Counter[str], list[T])
 
@@ -122,7 +143,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Reverse Pipeline (GNN to Code)**
 - `cogant.reverse` subpackage: GNN markdown parser, package planner, Python synthesizer, idempotency checker
 - Runtime-callable matrix functions (likelihood, transition, EFE, best_action) without exec
-- ISOMORPHISM_THEOREM.md: Galois connection proof + epsilon-bounded roundtrip error formalization
+- ISOMORPHISM_THEOREM.md: historical Galois-connection proof sketch and bounded roundtrip-error formalization
 
 **Active Inference Runtime**
 - Active Inference agent loop with step/convergence/VFE metrics

@@ -1,27 +1,24 @@
-# cogant-statespace — State Space Compilation (Rust stub)
+# cogant-statespace - State-Space Types
 
-Rust-side scaffolding for compiling control-flow models into state spaces, used by `cogant-ffi`.
+Rust-side state variables, observations, actions, transitions, state-space models, cardinality helpers, and FFI shape summaries.
 
 ## Contents
-- `src/lib.rs` — Types for state variables, observation modalities, and control-flow graph extraction
+
+- `src/lib.rs` - public crate API and crate-local tests.
 
 ## Build
 
 ```bash
-cargo build --release
-cargo test
+cargo test -p cogant-statespace
+cargo check -p cogant-statespace
 ```
 
 ## Dependencies
 
-`[dependencies]` in `Cargo.toml`:
+- `cogant-core` - shared ids and semantic roles
+- `serde`, `serde_json` - serialization
+- `uuid`, `thiserror` - ids and errors
 
-- `cogant-core` — Shared types
-- `serde`, `serde_json` — Serialization
-- `uuid`, `thiserror` — Identifier generation and error types
+## Scope And Status
 
-No `petgraph` and no `bitvec` — the crate is currently a thin scaffold; the authoritative state-space compiler is in [`py/cogant/statespace/`](../../py/cogant/statespace/). Bit-packed representations and graph-algorithm imports will be added only when their pure-Python counterparts are ported.
-
-## Scope and status
-
-Rust-side state-space compilation is intentionally minimal at this stage. Reach for [`py/cogant/statespace/compiler.py`](../../py/cogant/statespace/compiler.py) for behaviour changes; sync this crate only when the Python API stabilizes.
+Python matrix compilation remains authoritative for values. This crate owns typed state-space data structures and shape-level parity helpers.

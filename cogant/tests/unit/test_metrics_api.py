@@ -44,10 +44,19 @@ def test_mypy_errors_returns_non_negative_int() -> None:
     assert errors >= 0
 
 
-def test_isomorphic_count_is_positive() -> None:
+def test_role_preserved_count_is_current_fresh_verdict_count() -> None:
+    count = m.role_preserved_count()
+    assert isinstance(count, int)
+    assert count >= 0
+    roundtrip = m.load()["evaluation"]["roundtrip"]
+    assert count == roundtrip["role_preserved_count"]
+    assert count + roundtrip["stale_legacy_count"] <= m.total_targets()
+
+
+def test_isomorphic_count_is_strict_count() -> None:
     count = m.isomorphic_count()
     assert isinstance(count, int)
-    assert count > 0
+    assert count == m.strict_isomorphism_count()
 
 
 def test_total_targets_is_23() -> None:
@@ -65,8 +74,8 @@ def test_mean_epsilon_in_range() -> None:
     assert 0.0 <= eps <= 1.0
 
 
-def test_epsilon_for_known_isomorphic_target_returns_1() -> None:
-    """01_simple_state has epsilon == 1.0 (ISOMORPHIC tier)."""
+def test_epsilon_for_known_role_preserved_target_returns_1() -> None:
+    """01_simple_state has legacy epsilon == 1.0 (role-preserved tier)."""
     result = m.epsilon_for("01_simple_state")
     assert result is not None
     assert result == 1.0
@@ -77,11 +86,11 @@ def test_epsilon_for_unknown_target_returns_none() -> None:
     assert result is None
 
 
-def test_epsilon_for_requests_target_is_isomorphic() -> None:
-    """requests is ISOMORPHIC post-wave-16 synthesizer fix (epsilon = 1.0)."""
+def test_epsilon_for_requests_target_is_role_preserved() -> None:
+    """requests is role-preserved after the POLICY/CONTEXT synthesizer fix synthesizer fix (epsilon = 1.0)."""
     result = m.epsilon_for("requests")
     assert result is not None
-    assert result >= 0.8  # ISOMORPHIC threshold
+    assert result >= 0.8  # role-preserved threshold
 
 
 def test_bibliography_entries_is_positive() -> None:

@@ -1,6 +1,15 @@
-# examples/control_positive/calculator
+# Calculator Fixture
 
-This directory is part of the COGANT codebase-to-GNN translation engine.
+Arithmetic functions with config values, action-like operations, and assertion-style constraints. It is the default small end-to-end target for translate, visualization, and roundtrip smoke tests.
 
-- Human overview: repository [README.md](../../../README.md)
-- Documentation index: [docs/index.md](../../../docs/index.md)
+## Files
+
+- `calculator.py` - fixture source.
+
+## Smoke Command
+
+From the inner package root:
+
+```bash
+uv run cogant translate examples/control_positive/calculator --layout-output --output output/calculator
+```

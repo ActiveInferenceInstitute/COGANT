@@ -16,7 +16,7 @@ emit a larger serialized graph; it is not used here.) Files written:
     evaluation/figures/metrics.json                -- machine-readable metrics (manuscript source of truth)
     evaluation/figures/metrics_table.md            -- markdown table mirroring the manuscript
 
-Run from the ``projects_in_progress/cogant/`` directory::
+Run from the ``projects/cogant/`` directory::
 
     python evaluation/figures/generate_figures.py
 
@@ -62,6 +62,16 @@ for name in list(logging.Logger.manager.loggerDict):
 from pipeline_api_metrics import run_orchestration_pipeline_metrics  # noqa: E402
 
 import cogant as _cogant_pkg  # noqa: E402
+
+# Color-blind-safe categorical palette used across all manuscript figures.
+PALETTE = {
+    "blue": "#4C72B0",
+    "orange": "#DD8452",
+    "green": "#55A868",
+    "red": "#C44E52",
+    "purple": "#8172B3",
+    "gray": "#6B7280",
+}
 
 # ---------------------------------------------------------------------------
 # Fixture inventory
@@ -160,25 +170,30 @@ def _order(results: dict[str, dict[str, Any]]) -> list[str]:
 
 
 def figure_graph_sizes(results: dict[str, dict[str, Any]]) -> Path:
-    """Render Figure 1: per-fixture node and edge counts as paired bars."""
+    """Render Figure 1: per-fixture node and edge counts as paired horizontal bars."""
     names = _order(results)
     nodes = [results[n].get("nodes", 0) for n in names]
     edges = [results[n].get("edges", 0) for n in names]
 
-    fig, ax = plt.subplots(figsize=(9, 4.5))
-    x = np.arange(len(names))
-    width = 0.38
-    ax.bar(x - width / 2, nodes, width, label="Nodes", color="#4c72b0")
-    ax.bar(x + width / 2, edges, width, label="Edges", color="#dd8452")
-    ax.set_xticks(x)
-    ax.set_xticklabels(names, rotation=30, ha="right")
-    ax.set_ylabel("Count")
+    fig, ax = plt.subplots(figsize=(9.5, 5.2))
+    y = np.arange(len(names))
+    height = 0.36
+    ax.barh(y - height / 2, nodes, height, label="Nodes", color=PALETTE["blue"])
+    ax.barh(y + height / 2, edges, height, label="Edges", color=PALETTE["orange"])
+    ax.set_yticks(y)
+    ax.set_yticklabels(names)
+    ax.invert_yaxis()
+    ax.set_xlabel("Count")
     ax.set_title(f"Program graph size by fixture (COGANT v{_cogant_pkg.__version__})")
-    ax.grid(axis="y", linestyle="--", alpha=0.3)
-    ax.legend()
-    for xi, (n, e) in enumerate(zip(nodes, edges, strict=True)):
-        ax.text(xi - width / 2, n, str(n), ha="center", va="bottom", fontsize=8)
-        ax.text(xi + width / 2, e, str(e), ha="center", va="bottom", fontsize=8)
+    ax.grid(axis="x", linestyle="--", alpha=0.3)
+    ax.legend(loc="lower right")
+    xmax = max([*nodes, *edges, 1])
+    ax.set_xlim(0, xmax * 1.16)
+    for yi, (n, e) in enumerate(zip(nodes, edges, strict=True)):
+        ax.text(n + xmax * 0.018, yi - height / 2, str(n), va="center", fontsize=8)
+        ax.text(e + xmax * 0.018, yi + height / 2, str(e), va="center", fontsize=8)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
     fig.tight_layout()
     out = FIGURES_DIR / "fig1_graph_sizes.png"
     fig.savefig(out, dpi=150)
@@ -187,7 +202,7 @@ def figure_graph_sizes(results: dict[str, dict[str, Any]]) -> Path:
 
 
 def figure_node_kinds(results: dict[str, dict[str, Any]]) -> Path:
-    """Render Figure 2: stacked bar of node kinds (MODULE/CLASS/METHOD/FUNCTION) per fixture."""
+    """Render Figure 2: horizontal stacked bar of node kinds per fixture."""
     names = _order(results)
     kinds = ["MODULE", "CLASS", "METHOD", "FUNCTION"]
     counts: dict[str, list[int]] = {k: [] for k in kinds}
@@ -196,24 +211,40 @@ def figure_node_kinds(results: dict[str, dict[str, Any]]) -> Path:
         for k in kinds:
             counts[k].append(by_kind.get(k, 0))
 
-    fig, ax = plt.subplots(figsize=(9, 4.5))
-    x = np.arange(len(names))
-    bottom = np.zeros(len(names))
+    fig, ax = plt.subplots(figsize=(9.5, 5.2))
+    y = np.arange(len(names))
+    left = np.zeros(len(names))
     colors = {
-        "MODULE": "#4c72b0",
-        "CLASS": "#dd8452",
-        "METHOD": "#55a868",
-        "FUNCTION": "#c44e52",
+        "MODULE": PALETTE["blue"],
+        "CLASS": PALETTE["orange"],
+        "METHOD": PALETTE["green"],
+        "FUNCTION": PALETTE["red"],
     }
     for k in kinds:
-        ax.bar(x, counts[k], bottom=bottom, label=k, color=colors[k])
-        bottom += np.array(counts[k], dtype=float)
-    ax.set_xticks(x)
-    ax.set_xticklabels(names, rotation=30, ha="right")
-    ax.set_ylabel("Node count")
+        vals = np.array(counts[k], dtype=float)
+        ax.barh(y, vals, left=left, label=k, color=colors[k])
+        for yi, value, start in zip(y, vals, left, strict=True):
+            if value >= 5:
+                ax.text(
+                    start + value / 2,
+                    yi,
+                    f"{int(value)}",
+                    va="center",
+                    ha="center",
+                    fontsize=8,
+                    color="white",
+                    fontweight="bold",
+                )
+        left += vals
+    ax.set_yticks(y)
+    ax.set_yticklabels(names)
+    ax.invert_yaxis()
+    ax.set_xlabel("Node count")
     ax.set_title("Node kind distribution by fixture")
-    ax.grid(axis="y", linestyle="--", alpha=0.3)
-    ax.legend(loc="upper left")
+    ax.grid(axis="x", linestyle="--", alpha=0.3)
+    ax.legend(loc="lower right", ncol=2)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
     fig.tight_layout()
     out = FIGURES_DIR / "fig2_node_kinds.png"
     fig.savefig(out, dpi=150)
@@ -222,24 +253,33 @@ def figure_node_kinds(results: dict[str, dict[str, Any]]) -> Path:
 
 
 def figure_state_space(results: dict[str, dict[str, Any]]) -> Path:
-    """Render Figure 3: per-fixture counts of state variables, observations, actions, transitions."""
+    """Render Figure 3: grouped horizontal bars for state-space output counts."""
     names = _order(results)
     fields = ["state_variables", "observations", "actions", "transitions"]
     labels = ["State vars", "Observations", "Actions", "Transitions"]
 
-    fig, ax = plt.subplots(figsize=(9, 4.5))
-    x = np.arange(len(names))
-    width = 0.2
-    colors = ["#4c72b0", "#dd8452", "#55a868", "#8172b3"]
+    fig, ax = plt.subplots(figsize=(10, 5.6))
+    y = np.arange(len(names))
+    height = 0.18
+    colors = [PALETTE["blue"], PALETTE["orange"], PALETTE["green"], PALETTE["purple"]]
+    xmax = max([results[n].get(f, 0) for n in names for f in fields] + [1])
     for i, (f, lbl) in enumerate(zip(fields, labels, strict=True)):
         vals = [results[n].get(f, 0) for n in names]
-        ax.bar(x + (i - 1.5) * width, vals, width, label=lbl, color=colors[i])
-    ax.set_xticks(x)
-    ax.set_xticklabels(names, rotation=30, ha="right")
-    ax.set_ylabel("Count")
+        offset = (i - 1.5) * height
+        ax.barh(y + offset, vals, height, label=lbl, color=colors[i])
+        for yi, value in zip(y, vals, strict=True):
+            if value:
+                ax.text(value + xmax * 0.018, yi + offset, str(value), va="center", fontsize=8)
+    ax.set_yticks(y)
+    ax.set_yticklabels(names)
+    ax.invert_yaxis()
+    ax.set_xlabel("Count")
     ax.set_title("State-space compilation outputs per fixture")
-    ax.grid(axis="y", linestyle="--", alpha=0.3)
-    ax.legend()
+    ax.grid(axis="x", linestyle="--", alpha=0.3)
+    ax.set_xlim(0, xmax * 1.18)
+    ax.legend(loc="lower right", ncol=2)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
     fig.tight_layout()
     out = FIGURES_DIR / "fig3_state_space.png"
     fig.savefig(out, dpi=150)
@@ -248,31 +288,37 @@ def figure_state_space(results: dict[str, dict[str, Any]]) -> Path:
 
 
 def figure_pipeline_latency(results: dict[str, dict[str, Any]]) -> Path:
-    """Render Figure 4: per-fixture wall-clock latency, color-coded by group."""
+    """Render Figure 4: per-fixture wall-clock latency as directly labelled bars."""
     names = _order(results)
     elapsed = [results[n].get("elapsed_s", 0) for n in names]
     colors = [
-        "#4c72b0" if results[n].get("group") == "control_positive" else "#dd8452" for n in names
+        PALETTE["blue"] if results[n].get("group") == "control_positive" else PALETTE["orange"]
+        for n in names
     ]
 
-    fig, ax = plt.subplots(figsize=(9, 4.5))
-    x = np.arange(len(names))
-    ax.bar(x, elapsed, color=colors)
-    ax.set_xticks(x)
-    ax.set_xticklabels(names, rotation=30, ha="right")
-    ax.set_ylabel("Wall-clock seconds")
+    fig, ax = plt.subplots(figsize=(9.5, 5.2))
+    y = np.arange(len(names))
+    ax.barh(y, elapsed, color=colors)
+    ax.set_yticks(y)
+    ax.set_yticklabels(names)
+    ax.invert_yaxis()
+    ax.set_xlabel("Wall-clock seconds")
     ax.set_title("End-to-end pipeline latency (Python fallback, no Rust)")
-    ax.grid(axis="y", linestyle="--", alpha=0.3)
-    for xi, e in zip(x, elapsed, strict=True):
-        ax.text(xi, e, f"{e:.2f}s", ha="center", va="bottom", fontsize=8)
+    ax.grid(axis="x", linestyle="--", alpha=0.3)
+    xmax = max(elapsed + [1])
+    ax.set_xlim(0, xmax * 1.16)
+    for yi, e in zip(y, elapsed, strict=True):
+        ax.text(e + xmax * 0.018, yi, f"{e:.2f}s", va="center", fontsize=8)
     # Legend
     from matplotlib.patches import Patch
 
     legend = [
-        Patch(facecolor="#4c72b0", label="control_positive"),
-        Patch(facecolor="#dd8452", label="real_world"),
+        Patch(facecolor=PALETTE["blue"], label="control_positive"),
+        Patch(facecolor=PALETTE["orange"], label="real_world"),
     ]
-    ax.legend(handles=legend, loc="upper left")
+    ax.legend(handles=legend, loc="lower right")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
     fig.tight_layout()
     out = FIGURES_DIR / "fig4_pipeline_latency.png"
     fig.savefig(out, dpi=150)

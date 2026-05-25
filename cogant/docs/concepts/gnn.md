@@ -53,9 +53,12 @@ The D matrix -- prior beliefs about the initial hidden state. When COGANT finds 
 
 Maps every variable in the model to its Active Inference ontology concept. This is where COGANT's [role assignments](role_assignment.md) become visible in the output. Each annotation uses one of the canonical ontology terms: `HiddenState`, `Observation`, `Action`, `Policy`, `LikelihoodMatrix`, `TransitionMatrix`, `PreferenceVector`, `PriorBelief`, `ExpectedFreeEnergy`, or `Time`.
 
-## The 7 semantic roles
+## Semantic role families
 
-COGANT assigns every code node one of seven primary semantic roles. These roles map directly to GNN sections:
+COGANT assigns code nodes to seven Active Inference roles, plus supporting evidence roles
+that explain connections, orchestration, and resilience patterns. Core roles map directly into
+state-space, preference, prior, and policy sections; supporting roles usually appear as
+connection evidence or explanatory provenance.
 
 | Role | GNN section | What it means in code |
 | --- | --- | --- |
@@ -63,9 +66,10 @@ COGANT assigns every code node one of seven primary semantic roles. These roles 
 | OBSERVATION | Observation Modalities | Getters, read APIs, loggers |
 | ACTION | Actions/Policies | Setters, mutators, event publishers |
 | POLICY | Actions/Policies | Controllers, routers, schedulers |
+| PREFERENCE | Preferences/Constraints | Explicit preference evidence when present |
 | CONSTRAINT | Preferences/Constraints | Validators, test assertions |
 | CONTEXT | InitialParameterization | Config files, feature flags, env vars |
-| DATA_FLOW | Connections | Reader-writer pipelines |
+| DATA_FLOW and other supporting roles | Connections / Evidence | Reader-writer pipelines, orchestration, error-handling, and resilience evidence |
 
 See [How COGANT assigns roles](role_assignment.md) for the full rule engine, and the [Translation rules reference](../reference/translation_rules.md) for the per-rule API entry that detects each role.
 
@@ -110,7 +114,7 @@ The behavior described on this page is implemented by the `cogant.gnn` package. 
 | A / B / C / D matrix construction from rule output | `gnn/matrices.py` | [`cogant.gnn` → Matrix builder](../api/gnn.md#matrix-builder) | `build_matrices`, `MatrixBuilder` |
 | `load_gnn_package()` parser used in [reverse mode](roundtrip.md) | `gnn/runner.py` | [`cogant.gnn` → Runner](../api/gnn.md#runner) | `load_gnn_package` |
 | GNN v1.1 conformance + 0–100 score | `gnn/validator.py` | [`cogant.gnn` → Validator](../api/gnn.md#validator) | `GNNValidator` |
-| Mapping the [seven semantic roles](../reference/semantic_roles.md) onto GNN sections | `translate/rules/` | [`cogant.translate` → Rules](../api/translate.md#rules) | `ObservationRule`, `ActionRule`, `MutatingSubsystemRule`, ... — see [Translation rules reference](../reference/translation_rules.md) |
+| Mapping the [seven Active Inference roles](../reference/semantic_roles.md) and supporting evidence roles onto GNN sections | `translate/rules/` | [`cogant.translate` → Rules](../api/translate.md#rules) | `ObservationRule`, `ActionRule`, `MutatingSubsystemRule`, ... — see [Translation rules reference](../reference/translation_rules.md) |
 | State-space basis projection (variables / observations / actions) | `statespace/compiler.py` | [`cogant.statespace`](../api/statespace.md#compiler) | `StateSpaceCompiler` |
 
 ## Further reading

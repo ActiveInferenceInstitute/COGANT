@@ -3,8 +3,8 @@
 //! This crate provides the abstraction for translating program structures
 //! from one form to another, with pluggable rules and semantic mappings.
 
-use cogant_core::{Confidence, EdgeKind, NodeKind, Provenance, SemanticRole, StableId};
-use cogant_graph::{EdgeData, NodeData, ProgramGraph};
+use cogant_core::{Confidence, NodeKind, SemanticRole};
+use cogant_graph::{NodeData, ProgramGraph};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
@@ -211,7 +211,11 @@ impl TranslationEngine {
     pub fn translate_node(&self, node: &NodeData) -> Result<SemanticRole, TranslationError> {
         // Try to find matching mappings
         for mapping in self.mappings.values() {
-            if mapping.applies_to(node) && mapping.confidence.meets_threshold(self.config.min_confidence) {
+            if mapping.applies_to(node)
+                && mapping
+                    .confidence
+                    .meets_threshold(self.config.min_confidence)
+            {
                 return Ok(mapping.target_role);
             }
         }
@@ -219,7 +223,10 @@ impl TranslationEngine {
         // Try matching rules
         let matching = self.rules.matching_rules(node);
         if let Some(rule) = matching.first() {
-            if rule.confidence().meets_threshold(self.config.min_confidence) {
+            if rule
+                .confidence()
+                .meets_threshold(self.config.min_confidence)
+            {
                 let mapping = rule.apply(node)?;
                 return Ok(mapping.target_role);
             }
@@ -236,10 +243,7 @@ impl TranslationEngine {
     }
 
     /// Translate an entire program graph.
-    pub fn translate_graph(
-        &self,
-        graph: &ProgramGraph,
-    ) -> Result<ProgramGraph, TranslationError> {
+    pub fn translate_graph(&self, graph: &ProgramGraph) -> Result<ProgramGraph, TranslationError> {
         let mut translated = ProgramGraph::new();
 
         // Translate all nodes

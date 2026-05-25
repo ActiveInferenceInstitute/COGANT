@@ -66,9 +66,12 @@ Canonical metrics from `../evaluation/figures/metrics.json` (2026-04-09 run):
 | METHOD | 57 | 58.2 |
 | FUNCTION | 10 | 10.2 |
 
-v0.1.x Python front end emits only these four structural kinds. The richer taxonomy in
+The current Python front end emits these structural kinds for the canonical
+Flask fixture, and the selected orchestration path also records call,
+containment, import, inheritance, and READS/WRITES edges. The richer taxonomy in
 `cogant.schemas.core.NodeKind` (variables, parameters, type references, control-flow
-nodes) is roadmap — tracked as P1-2 / P1-3 in [`../evaluation/SCOPING_REPORT.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/SCOPING_REPORT.md).
+nodes) is still available to parsers and plugins; expanding fixture evidence for
+those long-tail kinds is tracked as P1-2 / P1-3 in [`../evaluation/SCOPING_REPORT.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/SCOPING_REPORT.md).
 
 ### Edge kinds (597 total)
 

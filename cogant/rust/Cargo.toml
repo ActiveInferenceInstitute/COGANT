@@ -13,6 +13,10 @@ members = [
 resolver = "2"
 
 [workspace.package]
+# Intentional independent versioning: the Rust crates version separately from
+# the Python package (`cogant.__version__`, currently 0.6.0). 0.1.0 reflects the
+# Rust workspace's own maturity and the distributed `cogant_rust-0.1.0` wheel;
+# this decoupling is deliberate, not drift.
 version = "0.1.0"
 edition = "2021"
 authors = ["COGANT Contributors"]
@@ -24,7 +28,7 @@ homepage = "https://cogant.io"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 petgraph = { version = "0.6", features = ["serde-1"] }
-pyo3 = { version = "0.22", features = ["extension-module"] }
+pyo3 = { version = "0.22" }
 uuid = { version = "1.6", features = ["v4", "serde"] }
 thiserror = "1.0"
 anyhow = "1.0"

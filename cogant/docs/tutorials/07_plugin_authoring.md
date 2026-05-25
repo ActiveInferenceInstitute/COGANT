@@ -286,8 +286,8 @@ one. Any rules that match against English keywords (`get_*`, `set_*`) will also 
 
 ## Next
 
-- [`py/cogant/plugins/base.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/plugins/base.py) — the full base-class API.
-- [`py/cogant/parsers/tree_sitter_base.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/parsers/tree_sitter_base.py) —
+- [`py/cogant/plugins/base.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/plugins/base.py) — the full base-class API.
+- [`py/cogant/parsers/tree_sitter_base.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/parsers/tree_sitter_base.py) —
   shared tree-sitter helpers.
 - [Tutorial 4: writing a custom rule](04_custom_rules.md) — once your plugin is parsing, you
   can write language-specific rules to refine the role assignments.

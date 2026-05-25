@@ -68,7 +68,7 @@ Rasterizing visualizations in /path/to/output
 │ dot       │ 2     │
 │ network   │ 1     │
 └───────────┴───────┘
- Wrote 7 PNG files
+ Wrote 7 visualization files
 ```
 
 ## Troubleshooting

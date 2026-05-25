@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """
 Static plotter for HTML/SVG visualizations of COGANT models.
 

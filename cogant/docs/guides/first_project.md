@@ -28,7 +28,7 @@ COGANT is developed and tested with [`uv`](https://docs.astral.sh/uv/)
 on Python 3.11+:
 
 ```bash
-git clone https://github.com/cogant-contributors/cogant.git
+git clone https://github.com/docxology/cogant.git
 cd cogant/cogant
 uv sync
 uv run cogant doctor
@@ -142,26 +142,28 @@ The JSON summary looks like (shape emitted by `cogant.reverse.cli.roundtrip_comm
 
 ```json
 {
-  "is_isomorphic": true,
-  "role_match_score": 1.0,
+  "roundtrip_status": "ROLE_PRESERVED",
+  "role_preservation_score": 1.0,
+  "role_preserved": true,
+  "structurally_isomorphic": false,
+  "matrix_preserved": true,
+  "gnn_sections_preserved": true,
+  "generated_code_ok": true,
   "original_roles": {"HIDDEN_STATE": 1, "OBSERVATION": 1, "ACTION": 1},
   "synthesized_roles": {"HIDDEN_STATE": 1, "OBSERVATION": 1, "ACTION": 1},
-  "shape_match": {"n_states": true, "n_obs": true, "n_actions": true},
-  "package_path": "/abs/path/to/output/simple_state/roundtrip/simple_state",
-  "errors": [],
-  "threshold": 0.5
+  "invariants": {"role_preserved": true, "generated_code_ok": true},
+  "errors": []
 }
 ```
 
 What each field means:
 
-- **`is_isomorphic`** — `true` when `role_match_score >= threshold` (default
-  `0.5`, overridable with `--threshold`). This is the concrete empirical
-  claim that the translation is faithful.
-- **`role_match_score`** — Fraction of Active Inference roles preserved
+- **`roundtrip_status`** — one of `STRUCTURALLY_ISOMORPHIC`,
+  `ROLE_PRESERVED`, `DRIFT`, or `FAILED`, computed from the invariant ledger.
+- **`role_preservation_score`** — Fraction of Active Inference roles preserved
   across the cycle. Range `[0.0, 1.0]`; `1.0` is a perfect role-multiset
   match. (NOTE: this is the project-wide convention — see
-  [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md#the-isomorphism-measure).
+  [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md#the-roundtrip-measure).
   Earlier drafts used a complementary "epsilon = drift" formulation
   where `0.0` was best — that form is now legacy.)
 - **`original_roles` / `synthesized_roles`** — Per-role multisets recovered
@@ -191,24 +193,24 @@ print("final VFE:", steps[-1].free_energy)
 
 ---
 
-## 5. Interpret ε
+## 5. Interpret `s_role`
 
-The ε (epsilon) metric quantifies **how much of the original semantic
+The `s_role` metric quantifies **how much of the original semantic
 structure survives a forward → reverse → forward cycle**. The current
 project-wide convention is the role-preservation ratio in
-[`docs/concepts/roundtrip.md`](../concepts/roundtrip.md#the-isomorphism-measure):
-ε = 1.0 means every role was preserved (idempotent cycle), and the
-ISOMORPHIC threshold for the canonical evaluation set is ε ≥ 0.8 (see
+[`docs/concepts/roundtrip.md`](../concepts/roundtrip.md#the-roundtrip-measure):
+`s_role = 1.0` means every role was preserved (idempotent cycle), and the
+public ROLE_PRESERVED threshold is `s_role >= 0.5` (see
 `evaluation/METRICS.yaml`). Values you might observe in practice:
 
-| `role_match_score` (ε) | Meaning                                              |
+| `role_preservation_score` (`s_role`) | Meaning                                              |
 |------------------------|------------------------------------------------------|
 | `1.00`                 | Idempotent; every role preserved.                    |
-| `0.85 – 0.99`          | Minor drift — usually rule-priority ambiguity.       |
-| `0.50 – 0.85`          | Notable drift — inspect the `explain` output.        |
-| `< 0.50`               | Structural mismatch — file a bug with the bundle.    |
+| `0.80 – 0.99`          | High-confidence role preservation with non-strict structural drift. |
+| `0.50 – 0.79`          | Public ROLE_PRESERVED tier; inspect the invariant ledger. |
+| `< 0.50`               | Below the public role-preservation threshold.        |
 
-A `role_match_score < 1.0` is **not** automatically a failure: it simply
+A `role_preservation_score < 1.0` is **not** automatically a failure: it simply
 means the forward and reverse pipelines disagree about some aspect of
 the mapping. The `validate` subcommand reports the same metric alongside
 contract checks:

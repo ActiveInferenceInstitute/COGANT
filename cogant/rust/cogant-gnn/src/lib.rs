@@ -6,8 +6,8 @@
 //! NOT graph neural networks. This crate provides functionality for exporting
 //! program graphs into that notation.
 
-use cogant_core::{EdgeKind, NodeKind, SemanticRole};
-use cogant_graph::{EdgeData, NodeData, ProgramGraph};
+use cogant_core::{EdgeKind, NodeKind};
+use cogant_graph::ProgramGraph;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -119,7 +119,7 @@ pub fn format_markdown(graph: &ProgramGraph, title: &str) -> String {
     output.push_str("## Statistics\n\n");
     output.push_str(&format!("- **Nodes**: {}\n", graph.node_count()));
     output.push_str(&format!("- **Edges**: {}\n", graph.edge_count()));
-    output.push_str("\n");
+    output.push('\n');
 
     // Nodes
     output.push_str("## Nodes\n\n");
@@ -149,7 +149,11 @@ pub fn format_markdown(graph: &ProgramGraph, title: &str) -> String {
         let label = edge.label.as_deref().unwrap_or("-");
         output.push_str(&format!(
             "| {} | {} | {} | {:.2} | {} |\n",
-            source.id.short_id, target.id.short_id, edge.kind, edge.confidence.value(), label
+            source.id.short_id,
+            target.id.short_id,
+            edge.kind,
+            edge.confidence.value(),
+            label
         ));
     }
     output.push('\n');
@@ -327,7 +331,7 @@ pub fn edge_kind_to_gnn_type(kind: EdgeKind) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cogant_core::{Confidence, NodeKind, Provenance, SemanticRole, StableId};
+    use cogant_core::{NodeKind, Provenance, SemanticRole, StableId};
     use cogant_graph::{EdgeData, NodeData};
 
     fn create_test_graph() -> ProgramGraph {

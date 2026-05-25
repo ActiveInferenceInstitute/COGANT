@@ -1,27 +1,24 @@
-# cogant-gnn — GNN Formatters (Rust)
+# cogant-gnn - GNN Formatters
 
-Rust-side GNN bundle formatting helpers wrapped by [`cogant-ffi`](../cogant-ffi/).
+Markdown and JSON formatting helpers for Rust `ProgramGraph` values, used by `cogant-ffi` without re-entering Python.
 
 ## Contents
-- `src/lib.rs` — Exported functions: `format_json`, `format_markdown`
+
+- `src/lib.rs` - public crate API and crate-local tests.
 
 ## Build
 
 ```bash
-cargo build --release
-cargo test
+cargo test -p cogant-gnn
+cargo check -p cogant-gnn
 ```
 
 ## Dependencies
 
-`[dependencies]` in `Cargo.toml`:
+- `cogant-core`, `cogant-graph` - shared types and graph input
+- `serde`, `serde_json` - JSON output
+- `uuid`, `thiserror` - ids and errors
 
-- `cogant-core`, `cogant-graph` — Shared types and graph input
-- `serde`, `serde_json` — JSON output
-- `uuid`, `thiserror` — Identifier generation and error types
+## Scope And Status
 
-No `pyo3-polars`, no `numpy` dependency, and no GPU tensor export. The authoritative GNN bundle emitter lives in [`py/cogant/gnn/formatter/`](../../py/cogant/gnn/formatter/); this crate currently only provides the two format helpers above so the Rust FFI can produce the string forms of a bundle without Python re-entry.
-
-## Scope and status
-
-Tensor export, Arrow/Parquet interop, and numpy-facing APIs are all implemented in the Python package. Expand this crate only when there is a concrete performance reason tied to benchmarks checked into [`benchmarks/`](../../benchmarks/).
+The full GNN package emitter remains in Python. This crate owns Rust string-format parity helpers only.

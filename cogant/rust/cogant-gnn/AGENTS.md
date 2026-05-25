@@ -1,19 +1,24 @@
-# Agents — rust/cogant-gnn
+# Agents - rust/cogant-gnn
 
 ## Owner
-GNN Lead
 
-## Responsibilities
-- High-performance tensor generation for GNNs
-- Feature matrix and edge index computation
-- Multi-relation graph flattening
-- PyArrow interop for zero-copy export
+Infra Lead
 
-## Coordination
-- Consumes graphs from cogant-graph
-- Outputs tensors and tables to Python gnn/
-- Direct PyArrow/polars interop
+## Scope
 
-## Files
-- Cargo.toml — Crate manifest
-- src/lib.rs — TensorGenerator, feature extraction
+Markdown and JSON formatting helpers for Rust `ProgramGraph` values, used by `cogant-ffi` without re-entering Python.
+
+## Rules
+
+- Keep `Cargo.toml`, `README.md`, and `src/AGENTS.md` synchronized when public behavior changes.
+- Add crate-local tests for Rust behavior and Python parity tests before routing package code through the FFI.
+- Keep Python as the canonical fallback unless `COGANT_USE_RUST=1` explicitly forces Rust.
+
+## Verification
+
+From the Rust workspace root:
+
+```bash
+cargo test -p cogant-gnn
+cargo clippy -p cogant-gnn -- -D warnings
+```

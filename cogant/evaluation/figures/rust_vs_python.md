@@ -130,7 +130,7 @@ Deferred to **P1.6: edge-ingest FFI + shadow-store removal**.
 ## Reproducing
 
 ```bash
-cd projects_in_progress/cogant/cogant
+cd projects/cogant/cogant
 
 # Build Rust workspace (must be run from rust/ so .cargo/config.toml is found)
 cd rust && cargo build --release && cd ..

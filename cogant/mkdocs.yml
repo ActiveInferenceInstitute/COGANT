@@ -1,8 +1,8 @@
 site_name: COGANT — Codebase-to-GNN Translation Engine
 site_description: Translate software repositories into Active Inference GNN state-space models
 site_author: COGANT Contributors
-repo_url: https://github.com/cogant-contributors/cogant
-repo_name: cogant
+repo_url: https://github.com/docxology/cogant
+repo_name: docxology/cogant
 
 theme:
   name: material
@@ -283,8 +283,8 @@ nav:
       - Section Index: export/README.md
       - Overview: export/overview.md
       - JSON Format: export/json_export_format.md
-      - PyTorch Geometric: export/pytorch_geometric_export.md
-      - DGL Export: export/dgl_export.md
+      - PyTorch Geometric (planned): export/pytorch_geometric_export.md
+      - DGL Export (planned): export/dgl_export.md
       - Feature Engineering: export/feature_engineering.md
       - Incremental Export: export/incremental_export.md
       - Compression & Size: export/compression_size.md
@@ -413,18 +413,18 @@ nav:
   - Playground: playground.md
   - Notebooks:
       - Overview: notebooks/README.md
-      - 01 Forward Pipeline: notebooks/01_forward_pipeline.md
-      - 02 Explore GNN: notebooks/02_explore_gnn.md
-      - 03 Reverse Synthesis: notebooks/03_reverse_synthesis.md
-      - 04 Roundtrip: notebooks/04_roundtrip.md
-      - 05 Custom Rules: notebooks/05_custom_rules.md
-      - 06 Plugin Authoring: notebooks/06_plugin_authoring.md
-      - 07 Real-world Flask: notebooks/07_real_world_flask.md
-      - 08 Constraint Authoring: notebooks/08_constraint_authoring.md
-      - 09 Plugin Authoring (Minimal LanguagePlugin): notebooks/09_plugin_authoring.md
-      - 10 YAML Rule DSL: notebooks/10_rule_dsl.md
-      - 11 Inference Learning: notebooks/11_inference_learning.md
-      - 12 Cross-language Round-trip: notebooks/12_cross_language.md
+      - 01 Forward Pipeline (planned): notebooks/01_forward_pipeline.md
+      - 02 Explore GNN (planned): notebooks/02_explore_gnn.md
+      - 03 Reverse Synthesis (planned): notebooks/03_reverse_synthesis.md
+      - 04 Roundtrip (planned): notebooks/04_roundtrip.md
+      - 05 Custom Rules (planned): notebooks/05_custom_rules.md
+      - 06 Plugin Authoring (planned): notebooks/06_plugin_authoring.md
+      - 07 Real-world Flask (planned): notebooks/07_real_world_flask.md
+      - 08 Constraint Authoring (planned): notebooks/08_constraint_authoring.md
+      - 09 Plugin Authoring (Minimal LanguagePlugin) (planned): notebooks/09_plugin_authoring.md
+      - 10 YAML Rule DSL (planned): notebooks/10_rule_dsl.md
+      - 11 Inference Learning (planned): notebooks/11_inference_learning.md
+      - 12 Cross-language Round-trip (planned): notebooks/12_cross_language.md
   - FAQ: faq.md
   - Changelog: changelog.md
   - Deployment: CI.md

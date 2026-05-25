@@ -174,8 +174,8 @@ Upgrade static `cogant render` HTML to a fully interactive experience.
 | Coverage | ≥90% |
 | mypy --strict errors | 0 |
 | Ruff violations | 0 |
-| Roundtrip ε (Python + JS/TS) | 1.0 (23/23+ ISOMORPHIC) |
-| Roundtrip ε (Java) | ≥0.85 |
+| Fresh roundtrip role preservation (Python + JS/TS) | `role_preservation_score >= 0.95` on a native v0.6 ledger with zero `STALE_LEGACY` rows |
+| Roundtrip role preservation (Java) | `s_role >= 0.85` |
 | AII validator score (all fixtures) | 100/100 |
 | Real-world repos passing forward pipeline | ≥30 |
 | Public API modules with complete docstrings | 100% |

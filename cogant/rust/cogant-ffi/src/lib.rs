@@ -1,14 +1,18 @@
+#![allow(clippy::too_many_arguments, clippy::useless_conversion)]
+
 //! Python FFI for COGANT using PyO3.
 //!
 //! This module provides a Python interface to COGANT's Rust components,
 //! allowing the Python pipeline to leverage high-performance graph operations.
 
 use cogant_core::{Confidence, EdgeKind, NodeKind, Provenance, SemanticRole, StableId};
-use cogant_graph::{EdgeData, NodeData, ProgramGraph};
 use cogant_gnn::{format_json, format_markdown};
-use petgraph::graph::UnGraph;
+use cogant_graph::{EdgeData, NodeData, ProgramGraph};
 use petgraph::algo::connected_components as petgraph_connected_components;
+use petgraph::graph::UnGraph;
 use pyo3::prelude::*;
+use serde_json::json;
+use std::collections::HashMap;
 
 /// Python wrapper for StableId.
 #[pyclass]
@@ -77,12 +81,7 @@ pub struct PyNodeData {
 #[pymethods]
 impl PyNodeData {
     #[new]
-    pub fn new(
-        id: PyStableId,
-        name: String,
-        kind: String,
-        role: String,
-    ) -> PyResult<Self> {
+    pub fn new(id: PyStableId, name: String, kind: String, role: String) -> PyResult<Self> {
         let kind = parse_node_kind(&kind)?;
         let role = parse_semantic_role(&role)?;
 
@@ -116,6 +115,13 @@ impl PyNodeData {
 #[pyclass]
 pub struct PyProgramGraph {
     pub inner: ProgramGraph,
+    id_lookup: HashMap<String, StableId>,
+}
+
+impl Default for PyProgramGraph {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[pymethods]
@@ -124,6 +130,7 @@ impl PyProgramGraph {
     pub fn new() -> Self {
         PyProgramGraph {
             inner: ProgramGraph::new(),
+            id_lookup: HashMap::new(),
         }
     }
 
@@ -132,6 +139,10 @@ impl PyProgramGraph {
     /// Returns the internal graph index for the inserted node.
     pub fn add_node_data(&mut self, node: &PyNodeData) -> usize {
         let idx = self.inner.add_node(node.inner.clone());
+        self.id_lookup
+            .insert(node.inner.id.short_id.clone(), node.inner.id.clone());
+        self.id_lookup
+            .insert(node.inner.id.to_string(), node.inner.id.clone());
         idx.index()
     }
 
@@ -163,8 +174,40 @@ impl PyProgramGraph {
         node.add_attribute("language", language);
         node.add_attribute("line_start", line_start.to_string());
         node.add_attribute("line_end", line_end.to_string());
+        let rust_id = node.id.clone();
         let idx = self.inner.add_node(node);
+        self.id_lookup
+            .insert(stable_id.to_string(), rust_id.clone());
+        self.id_lookup.insert(rust_id.short_id.clone(), rust_id);
         Ok(idx.index())
+    }
+
+    /// Add an edge from primitive fields.
+    ///
+    /// The source and target IDs must be the stable IDs previously passed to
+    /// `add_node`. Returns true when the edge was inserted.
+    #[pyo3(signature = (source_id, target_id, kind, confidence = 0.75))]
+    pub fn add_edge(
+        &mut self,
+        source_id: &str,
+        target_id: &str,
+        kind: &str,
+        confidence: f32,
+    ) -> PyResult<bool> {
+        let edge_kind = parse_edge_kind(kind)?;
+        let from = self
+            .id_lookup
+            .get(source_id)
+            .cloned()
+            .ok_or_else(|| pyo3::exceptions::PyKeyError::new_err(source_id.to_string()))?;
+        let to = self
+            .id_lookup
+            .get(target_id)
+            .cloned()
+            .ok_or_else(|| pyo3::exceptions::PyKeyError::new_err(target_id.to_string()))?;
+        let conf = Confidence::new(confidence).map_err(pyo3::exceptions::PyValueError::new_err)?;
+        let edge = EdgeData::new(edge_kind, Provenance::Unknown).with_confidence(conf);
+        Ok(self.inner.add_edge(&from, &to, edge).is_some())
     }
 
     pub fn node_count(&self) -> usize {
@@ -218,6 +261,26 @@ impl PyProgramGraph {
 
     pub fn to_markdown(&self, title: &str) -> String {
         format_markdown(&self.inner, title)
+    }
+
+    pub fn summary_json(&self) -> String {
+        graph_summary_json_inner(&self.inner).to_string()
+    }
+
+    pub fn node_kind_counts_json(&self) -> String {
+        let mut counts: HashMap<String, usize> = HashMap::new();
+        for node in self.inner.nodes() {
+            *counts.entry(node.kind.to_string()).or_insert(0) += 1;
+        }
+        json!(counts).to_string()
+    }
+
+    pub fn edge_kind_counts_json(&self) -> String {
+        let mut counts: HashMap<String, usize> = HashMap::new();
+        for (_, _, edge) in self.inner.edges() {
+            *counts.entry(edge.kind.to_string()).or_insert(0) += 1;
+        }
+        json!(counts).to_string()
     }
 
     pub fn __str__(&self) -> String {
@@ -290,6 +353,42 @@ fn parse_node_kind(kind: &str) -> PyResult<NodeKind> {
     }
 }
 
+/// Parse an edge kind string to EdgeKind enum.
+fn parse_edge_kind(kind: &str) -> PyResult<EdgeKind> {
+    match kind.to_lowercase().as_str() {
+        "contains" => Ok(EdgeKind::Contains),
+        "imports" => Ok(EdgeKind::Imports),
+        "inherits" => Ok(EdgeKind::Inherits),
+        "implements" => Ok(EdgeKind::Implements),
+        "depends_on" | "dependson" => Ok(EdgeKind::DependsOn),
+        "reads" => Ok(EdgeKind::Reads),
+        "writes" => Ok(EdgeKind::Writes),
+        "returns" => Ok(EdgeKind::Returns),
+        "calls" => Ok(EdgeKind::Calls),
+        "throws" => Ok(EdgeKind::Throws),
+        "catches" => Ok(EdgeKind::Catches),
+        "yields" => Ok(EdgeKind::Yields),
+        "observes" => Ok(EdgeKind::Observes),
+        "mutates" => Ok(EdgeKind::Mutates),
+        "guards" => Ok(EdgeKind::Guards),
+        "triggers" => Ok(EdgeKind::Triggers),
+        "evidence_from_static" | "evidencefromstatic" => Ok(EdgeKind::EvidenceFromStatic),
+        "evidence_from_dynamic" | "evidencefromdynamic" => Ok(EdgeKind::EvidenceFromDynamic),
+        "uses" => Ok(EdgeKind::Uses),
+        "defines" => Ok(EdgeKind::Defines),
+        "has_type" | "hastype" => Ok(EdgeKind::HasType),
+        "data_flow" | "dataflow" => Ok(EdgeKind::DataFlow),
+        "control_dependency" | "controldependency" => Ok(EdgeKind::ControlDependency),
+        "member_of" | "memberof" => Ok(EdgeKind::MemberOf),
+        "parameter" => Ok(EdgeKind::Parameter),
+        "unknown" => Ok(EdgeKind::Unknown),
+        _ => Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "Unknown edge kind: {}",
+            kind
+        ))),
+    }
+}
+
 /// Parse a semantic role string to SemanticRole enum.
 fn parse_semantic_role(role: &str) -> PyResult<SemanticRole> {
     match role.to_lowercase().as_str() {
@@ -341,10 +440,7 @@ fn parse_semantic_role(role: &str) -> PyResult<SemanticRole> {
 ///
 /// Complexity: O(V + E) using petgraph's union-find.
 #[pyfunction]
-pub fn connected_components(
-    nodes: Vec<String>,
-    edges: Vec<(String, String)>,
-) -> Vec<Vec<String>> {
+pub fn connected_components(nodes: Vec<String>, edges: Vec<(String, String)>) -> Vec<Vec<String>> {
     if nodes.is_empty() {
         return Vec::new();
     }
@@ -360,8 +456,7 @@ pub fn connected_components(
     }
 
     for (src, dst) in &edges {
-        if let (Some(&a), Some(&b)) = (node_index.get(src.as_str()), node_index.get(dst.as_str()))
-        {
+        if let (Some(&a), Some(&b)) = (node_index.get(src.as_str()), node_index.get(dst.as_str())) {
             // petgraph's UnGraph deduplicates automatically via the adjacency
             // representation; adding parallel edges is harmless for BFS/union-find.
             graph.add_edge(a, b, ());
@@ -385,8 +480,7 @@ pub fn connected_components(
     // Build an adjacency list indexed by our 0..n positions.
     let mut adj: Vec<Vec<usize>> = vec![Vec::new(); n];
     for (src, dst) in &edges {
-        if let (Some(&a), Some(&b)) = (node_index.get(src.as_str()), node_index.get(dst.as_str()))
-        {
+        if let (Some(&a), Some(&b)) = (node_index.get(src.as_str()), node_index.get(dst.as_str())) {
             let ai = a.index();
             let bi = b.index();
             adj[ai].push(bi);
@@ -418,6 +512,111 @@ pub fn connected_components(
     }
 
     components
+}
+
+fn graph_summary_json_inner(graph: &ProgramGraph) -> serde_json::Value {
+    let node_count = graph.node_count();
+    let edge_count = graph.edge_count();
+    let possible_edges = node_count.saturating_mul(node_count.saturating_sub(1));
+    let density = if possible_edges == 0 {
+        0.0
+    } else {
+        edge_count as f64 / possible_edges as f64
+    };
+    json!({
+        "node_count": node_count,
+        "edge_count": edge_count,
+        "density": density,
+        "backend": "rust",
+    })
+}
+
+#[pyfunction]
+pub fn graph_summary_json(graph: &PyProgramGraph) -> String {
+    graph_summary_json_inner(&graph.inner).to_string()
+}
+
+#[pyfunction]
+pub fn translation_rule_predicates_json() -> String {
+    json!({
+        "rule_count": 22,
+        "rules": [
+            "observation", "action", "mutating_subsystem", "orchestrator",
+            "preference", "constraint", "policy", "context", "parameter",
+            "state_machine", "endpoint", "configuration", "feature_flag",
+            "event", "test", "assertion", "data_structure", "external_service",
+            "cache", "rate_limiter", "security_guard", "error_handler"
+        ],
+        "authoritative_backend": "python",
+        "rust_parity_scope": "predicate-name metadata and deterministic summaries"
+    })
+    .to_string()
+}
+
+#[pyfunction]
+pub fn compile_matrix_shapes_json(n_states: usize, n_obs: usize, n_actions: usize) -> String {
+    json!({
+        "A": [n_obs, n_states],
+        "B": [n_states, n_states, n_actions],
+        "C": [n_obs],
+        "D": [n_states],
+        "backend": "rust",
+    })
+    .to_string()
+}
+
+#[pyfunction]
+pub fn format_gnn_json(graph: &PyProgramGraph, title: &str) -> String {
+    format_json(&graph.inner, title).to_string()
+}
+
+#[pyfunction]
+pub fn format_gnn_markdown(graph: &PyProgramGraph, title: &str) -> String {
+    format_markdown(&graph.inner, title)
+}
+
+#[pyfunction]
+pub fn write_artifact_atomic(path: String, contents: Vec<u8>) -> PyResult<()> {
+    use std::fs;
+    use std::io::Write;
+    let final_path = std::path::PathBuf::from(path);
+    let parent = final_path
+        .parent()
+        .map(std::path::Path::to_path_buf)
+        .unwrap_or_else(|| std::path::PathBuf::from("."));
+    fs::create_dir_all(&parent)?;
+    let tmp_path = final_path.with_extension("tmp");
+    {
+        let mut file = fs::File::create(&tmp_path)?;
+        file.write_all(&contents)?;
+        file.sync_all()?;
+    }
+    fs::rename(tmp_path, final_path)?;
+    Ok(())
+}
+
+#[pyfunction]
+pub fn summarize_trace_events_json(events_json: &str) -> PyResult<String> {
+    let value: serde_json::Value = serde_json::from_str(events_json)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+    let events = value
+        .as_array()
+        .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("expected JSON list"))?;
+    let mut counts: HashMap<String, usize> = HashMap::new();
+    for event in events {
+        let kind = event
+            .get("event_type")
+            .or_else(|| event.get("type"))
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("unknown");
+        *counts.entry(kind.to_string()).or_insert(0) += 1;
+    }
+    Ok(json!({
+        "event_count": events.len(),
+        "event_type_counts": counts,
+        "backend": "rust",
+    })
+    .to_string())
 }
 
 /// Get COGANT version.
@@ -465,7 +664,16 @@ pub fn create_example_graph() -> PyProgramGraph {
     let edge2 = EdgeData::new(EdgeKind::Uses, Provenance::Unknown);
     graph.add_edge(&node1.id, &node3.id, edge2);
 
-    PyProgramGraph { inner: graph }
+    let mut id_lookup = HashMap::new();
+    for node in [&node1, &node2, &node3] {
+        id_lookup.insert(node.id.short_id.clone(), node.id.clone());
+        id_lookup.insert(node.id.to_string(), node.id.clone());
+    }
+
+    PyProgramGraph {
+        inner: graph,
+        id_lookup,
+    }
 }
 
 /// PyO3 module definition.
@@ -478,6 +686,13 @@ pub fn cogant_rust_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_version, m)?)?;
     m.add_function(wrap_pyfunction!(create_example_graph, m)?)?;
     m.add_function(wrap_pyfunction!(connected_components, m)?)?;
+    m.add_function(wrap_pyfunction!(graph_summary_json, m)?)?;
+    m.add_function(wrap_pyfunction!(translation_rule_predicates_json, m)?)?;
+    m.add_function(wrap_pyfunction!(compile_matrix_shapes_json, m)?)?;
+    m.add_function(wrap_pyfunction!(format_gnn_json, m)?)?;
+    m.add_function(wrap_pyfunction!(format_gnn_markdown, m)?)?;
+    m.add_function(wrap_pyfunction!(write_artifact_atomic, m)?)?;
+    m.add_function(wrap_pyfunction!(summarize_trace_events_json, m)?)?;
 
     m.add_class::<PyStableId>()?;
     m.add_class::<PyConfidence>()?;

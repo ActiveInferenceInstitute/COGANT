@@ -1,6 +1,16 @@
-# rust/cogant-store/src
+# cogant-store/src
 
-This directory is part of the COGANT codebase-to-GNN translation engine.
+Rust source for artifact store. The crate implements file-backed bundle and artifact storage traits used by Rust-side tests and helpers.
 
-- Human overview: repository [README.md](../../../README.md)
-- Documentation index: [docs/index.md](../../../docs/index.md)
+## Files
+
+- `lib.rs` - public crate API, unit tests, and FFI-facing helpers when applicable.
+
+## Verification
+
+From [`../../`](../../):
+
+```bash
+cargo test -p cogant-store
+cargo check -p cogant-store
+```

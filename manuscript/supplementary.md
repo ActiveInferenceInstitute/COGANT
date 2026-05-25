@@ -1,74 +1,46 @@
 # Supplementary materials {#sec:supplementary-materials}
 
-This appendix collects the detailed artifacts supporting the main text: per-role
-roundtrip ε-isomorphism across all 23 evaluation targets (Appendix A), rule-family
-ablation reconstructed from empirical data (Appendix B), a Galois-connection proof
-sketch and ε-isomorphism theorem for the forward/reverse pair (Appendix C), the
-discrete-POMDP active-inference mathematics of Appendix D (the inference loop summarized in
-[`05_conclusion.md`](05_conclusion.md) and formalized in [`S04_appendix_inference_mathematics.md`](S04_appendix_inference_mathematics.md)),
-a curated {{BIB_ENTRIES}}-entry bibliography across 9 research areas (Appendix E),
-and a source-material cross-reference index (Appendix F).
+This appendix collects the detailed artifacts supporting the main text: the
+historical per-role roundtrip ledger across all 23 evaluation targets
+(@sec:S01-appendix-roundtrip-epsilon), measured rule-family ablation
+(@sec:S02-appendix-ablation), a Galois-style comparison
+and scoped role-preservation invariant for the forward/reverse pair (@sec:S03-appendix-galois-sketch), the
+discrete-POMDP active-inference mathematics of @sec:S04-appendix-inference-mathematics (the inference loop summarized in
+@sec:10-conclusion and formalized in @sec:S04-appendix-inference-mathematics),
+a curated {{BIB_ENTRIES}}-entry bibliography across 9 research areas (@sec:S05-appendix-extended-related-work),
+and a source-material cross-reference index (@sec:S06-appendix-source-references).
 
-Numerical data in Appendices A and B derive verbatim from four package evaluation
+Numerical data in @sec:S01-appendix-roundtrip-epsilon and @sec:S02-appendix-ablation derive verbatim from four package evaluation
 artefacts: `../cogant/docs/evaluation/ROUNDTRIP_EVAL.md`,
 `../cogant/docs/evaluation/REAL_WORLD_EVAL.md`,
 `../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`, and
 `../cogant/docs/evaluation/CONSTRAINT_FIX.md`. Where the same measurement appears in
-more than one source the value in `ROUNDTRIP_EVAL.md` (canonical post-wave-16 roundtrip
-artefact, 23/23 ISOMORPHIC) takes precedence.
+more than one source the value in `ROUNDTRIP_EVAL.md` takes precedence as a
+historical role-preservation artifact; the current `METRICS.yaml` aggregate
+counts separately mark legacy rows as `STALE_LEGACY`.
 
-**MkDocs documentation map.** Tutorials, API/CLI reference, theory pages, and module indexes live under [`../cogant/docs/`](../cogant/docs/); start at [`../cogant/docs/index.md`](../cogant/docs/index.md) or the area listing in [`../cogant/docs/reference/documentation_modules.md`](../cogant/docs/reference/documentation_modules.md).
-
-**Recommended reading order:** Appendix A establishes the empirical ground truth
-(per-fixture ε-scores and tier assignments); Appendix B decomposes those scores into
-per-rule-family contributions on the minimal zoo fixture; Appendix C formalizes the
-mathematical substrate (approximate Galois connection and ε-isomorphism theorem);
-Appendix D details the discrete-POMDP active-inference computation that closes the
-evaluation loop; Appendix E contextualizes the work within a curated bibliography;
-Appendix F indexes the package source material cited throughout. Appendices A–B are
-prerequisite for Appendix C; the others are independent.
+**Recommended reading order:** @sec:S01-appendix-roundtrip-epsilon establishes the empirical ground truth
+(per-fixture `s_role` scores and tier assignments); @sec:S02-appendix-ablation decomposes those scores into
+per-rule-family contributions on the minimal zoo fixture; @sec:S03-appendix-galois-sketch formalizes the
+mathematical substrate (approximate preorder-quotient comparison and bounded role-preservation invariant);
+@sec:S04-appendix-inference-mathematics details the discrete-POMDP active-inference computation that closes the
+evaluation loop; @sec:S05-appendix-extended-related-work contextualizes the work within a curated bibliography;
+@sec:S06-appendix-source-references indexes the package source material cited throughout. @sec:S01-appendix-roundtrip-epsilon and @sec:S02-appendix-ablation are
+prerequisites for @sec:S03-appendix-galois-sketch; the others are independent.
 
 ---
 
-## Supplemental files
+## Supplemental sections
 
-- [`S01_appendix_roundtrip_epsilon.md`](S01_appendix_roundtrip_epsilon.md) — per-fixture
-  roundtrip ε-isomorphism tables and validator scores across all 23 evaluation targets,
-  with tier assignments (ISOMORPHIC / APPROXIMATE / DIVERGENT) and wave-14 vs. wave-16
-  comparison.
-
-- [`S02_appendix_ablation.md`](S02_appendix_ablation.md) — role-level rule-family ablation
-  reconstructed on `zoo/01_simple_state` (the smallest ISOMORPHIC fixture), with per-role
-  ε-deltas and failure-mode analysis.
-
-- [`S03_appendix_galois_sketch.md`](S03_appendix_galois_sketch.md) — formal statement and
-  proof sketch of the ε-approximate Galois connection between **Prog** and **GNN**
-  categories, plus the ε-Isomorphism Theorem (Theorem C.2) and the ISOMORPHIC-threshold
-  proposition (Proposition C.3).
-
-- [`S04_appendix_inference_mathematics.md`](S04_appendix_inference_mathematics.md) — discrete-time
-  POMDP formulation, variational free energy (VFE) functional and derivation, belief
-  propagation equations, identity-case VFE = 0 analysis, observed VFE regimes, Bayesian
-  D-update rule, and expected free energy (EFE) for policy selection.
-
-- [`S05_appendix_extended_related_work.md`](S05_appendix_extended_related_work.md) — {{BIB_ENTRIES}}-entry
-  curated bibliography across 9 topical clusters (E.1 program analysis → GNN,
-  E.2 active inference tooling, E.3 code understanding and embeddings, E.4 formal methods,
-  E.5 POMDP solvers, E.6 code summarization, E.7 program synthesis, E.8 lenses and
-  categorical theory, E.9 Markov blankets and active inference foundations).
-
-- [`S06_appendix_source_references.md`](S06_appendix_source_references.md) — index of
-  external COGANT package documentation, evaluation artefacts, and manuscript tooling
-  referenced throughout the main text and appendices.
+- @sec:S01-appendix-roundtrip-epsilon provides per-fixture historical roundtrip role-preservation tables and validator scores across all 23 evaluation targets, with `STRUCTURALLY_ISOMORPHIC` / `ROLE_PRESERVED` / `DRIFT` / `FAILED` status vocabulary and explicitly historical wave-14 / wave-16 comparison.
+- @sec:S02-appendix-ablation gives the measured role-level rule-family ablation on `zoo/01_simple_state`, with per-role deltas and failure-mode analysis.
+- @sec:S03-appendix-galois-sketch gives the conjectural, scoped statement and argument sketch for an ε-approximate Galois-style comparison between **Prog** and **GNN** preorder quotients, plus @sec:thm-bounded-role-preservation-gap and @sec:prop-role-preservation-threshold.
+- @sec:S04-appendix-inference-mathematics gives the discrete-time POMDP formulation, variational free energy (VFE) functional and derivation, belief-propagation equations, identity-case VFE = 0 analysis, observed VFE regimes, Bayesian D-update rule, and expected free energy (EFE) for policy selection.
+- @sec:S05-appendix-extended-related-work gives the {{BIB_ENTRIES}}-entry curated bibliography across 9 topical clusters: program analysis to GNN, active inference tooling, code understanding and embeddings, formal methods, POMDP solvers, code summarization, program synthesis, lenses and categorical theory, and Markov blankets / active-inference foundations.
+- @sec:S06-appendix-source-references indexes external COGANT package documentation, evaluation artefacts, and manuscript tooling referenced throughout the main text and appendices.
 
 ---
 
 ## Notation supplement
 
-- [`98_notation_supplement.md`](98_notation_supplement.md) — canonical reference for every
-  mathematical symbol, acronym, and formal object used across the manuscript. Organised
-  into nine groups: G.1 program graph symbols, G.2 translation engine, G.3 confidence
-  model, G.4 A/B/C/D matrices, G.5 category-theory and Galois symbols, G.6 equation and
-  theorem index, G.7 Active Inference roles and mapping kinds, G.8 node and edge kind
-  enumerations, G.9 acronyms. Rendered after the appendices in the PDF (glossary discovery
-  bucket, `98_` prefix).
+- @sec:98-notation-supplement is the canonical reference for manuscript-level mathematical symbols, acronyms, and formal objects. It is organised into program-graph symbols, translation-engine symbols, confidence-model symbols, A/B/C/D matrices, category-theory and Galois symbols, equation and scoped-claim index, Active Inference roles and mapping kinds, node and edge kind enumerations, and acronyms.

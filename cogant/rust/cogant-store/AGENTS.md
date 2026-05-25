@@ -1,19 +1,24 @@
-# Agents — rust/cogant-store
+# Agents - rust/cogant-store
 
 ## Owner
+
 Infra Lead
 
-## Responsibilities
-- Persistent graph storage (RocksDB or similar)
-- Indexing and retrieval optimization
-- Incremental updates and snapshots
-- Disk/memory trade-offs
+## Scope
 
-## Coordination
-- Optional persistence layer
-- Consumed by Python api/ for large graph caching
-- Provides snapshot/restore capability
+File-backed Rust storage trait and implementation for bundle manifests plus atomic artifact bytes used by crate tests and FFI helper paths.
 
-## Files
-- Cargo.toml — Crate manifest
-- src/lib.rs — PersistentStore, index management
+## Rules
+
+- Keep `Cargo.toml`, `README.md`, and `src/AGENTS.md` synchronized when public behavior changes.
+- Add crate-local tests for Rust behavior and Python parity tests before routing package code through the FFI.
+- Keep Python as the canonical fallback unless `COGANT_USE_RUST=1` explicitly forces Rust.
+
+## Verification
+
+From the Rust workspace root:
+
+```bash
+cargo test -p cogant-store
+cargo clippy -p cogant-store -- -D warnings
+```

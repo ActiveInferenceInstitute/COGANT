@@ -170,7 +170,9 @@ impl ProgramGraph {
 
     /// Get a node by its StableId.
     pub fn get_node(&self, id: &StableId) -> Option<&NodeData> {
-        self.id_to_index.get(id).and_then(|idx| self.graph.node_weight(*idx))
+        self.id_to_index
+            .get(id)
+            .and_then(|idx| self.graph.node_weight(*idx))
     }
 
     /// Get a mutable reference to a node by its StableId.

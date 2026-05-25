@@ -1,15 +1,40 @@
 # COGANT Configuration File
 # =======================
-# Comprehensive configuration for the COGANT codebase analysis framework.
+# v0.6.0 honest-scope header (2026-05-19, RedTeam F24/F27)
+# ---------------------------------------------------------
+# This file ships as a *complete configuration surface description*
+# but only a subset is currently consumed by the CLI. The mismatch is
+# tracked as an open architectural decision (typed-config wire-vs-prune)
+# in TODO.md and Plans/IMPROVEMENTS_2026-05-19.md (F6 follow-up).
 #
-# This file controls the entire pipeline behavior through multiple subsystems:
+# CONSUMED today (cli/main.py:732-757 reads these via
+# ConfigLoader.load_from_yaml + dict access on the ``pipeline:`` block):
+#   - pipeline.stages / pipeline.run_stages
+#   - pipeline.skip_stages
+#   - pipeline.plugins
+#   - pipeline.output_dir
+#   - pipeline.verbose
+#   - pipeline.dry_run
+#   - pipeline.layout_output
+#
+# ASPIRATIONAL today (parsed by ``ConfigLoader.build_pipeline_config``
+# into typed schema objects but NOT yet wired through the CLI default
+# path; the typed surface is pinned by
+# ``tests/unit/test_typed_config_loaders_e2e.py`` so the typed schema
+# does not silently rot):
+#   - system, ingest, parser, normalize, graph, translation,
+#     statespace, process, validate, export, visualization,
+#     provenance, advanced
+#
+# This file controls the consumed subset of pipeline behavior through:
 # - Pipeline: which analysis stages run and their configuration
-# - Parser: language-specific parsing and import resolution
-# - Translation: semantic mapping rules and thresholds
-# - Validation: strictness levels and coverage requirements
-# - Export: output formats and visualization options
+# - Parser: language-specific parsing and import resolution (aspirational)
+# - Translation: semantic mapping rules and thresholds (aspirational)
+# - Validation: strictness levels and coverage requirements (aspirational)
+# - Export: output formats and visualization options (aspirational)
 #
-# PRESETS: Use predefined configurations with --config or in code:
+# PRESETS in cogant/config/presets.py (parallel registry to
+# config/defaults.PRESETS — see typed-config follow-up):
 #   minimal: fast scan, core output (recommended for quick tests)
 #   standard: balanced analysis (default)
 #   comprehensive: all features enabled (slow, full analysis)
@@ -49,24 +74,30 @@ system:
 # ============================================================================
 # Controls which pipeline stages execute and in what order.
 pipeline:
-  # Stages to run in order. Choose from:
-  #   ingest - load source files from disk
+  # Stages to run in order. Valid stage keys (must match the pipeline
+  # runner dispatch table in py/cogant/api/pipeline.py — unknown names are
+  # silently skipped with an "Unknown stage" error and exit code 0):
+  #   ingest    - load source files from disk
+  #   static    - static (AST/tree-sitter) extraction
   #   normalize - standardize symbol references
-  #   graph - build call/type/data flow graphs
-  #   semantic_mapping - map code to semantic patterns
-  #   state_space - compile state machines and transitions
-  #   process_model - extract workflow/pipeline patterns
-  #   validate - run integrity and coverage checks
-  #   export - generate output files and visualizations
+  #   graph     - build call/type/data flow graphs
+  #   dynamic   - optional dynamic-analysis enrichment (skip via --no-dynamic)
+  #   translate - map code to semantic Active Inference roles
+  #   statespace - compile state variables / observations / actions / transitions
+  #   process   - extract workflow/policy/timeline patterns
+  #   export    - generate output files and visualizations
+  #   validate  - run integrity and coverage checks
   stages:
     - ingest
+    - static
     - normalize
     - graph
-    - semantic_mapping
-    - state_space
-    - process_model
-    - validate
+    - dynamic
+    - translate
+    - statespace
+    - process
     - export
+    - validate
 
   # Limit on graph size (max nodes to process)
   max_nodes: 100000

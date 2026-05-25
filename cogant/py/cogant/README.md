@@ -43,17 +43,17 @@ Thirty subpackages. Parent [`AGENTS.md`](../../AGENTS.md) carries the stage mapp
 All modules are importable from the root cogant package:
 
 ```python
-from cogant import PipelineRunner, Session
-from cogant.schemas import Bundle, ProgramGraph
-from cogant.graph import GraphBuilder
-from cogant.export import export_json
+from cogant import PipelineRunner, Session, Bundle
+from cogant.schemas import ProgramGraph
+from cogant.graph import ProgramGraphBuilder
+from cogant.export import BundleExporter
 ```
 
 Subsystem-specific imports:
 
 ```python
-from cogant.ingest import Repository
-from cogant.translate import RuleEngine
+from cogant.ingest import RepoIngester
+from cogant.translate import TranslationEngine
 from cogant.validate import ValidationReport
 ```
 

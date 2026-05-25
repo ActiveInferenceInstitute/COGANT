@@ -1,42 +1,42 @@
-# `cogant.server`
+# cogant.server
 
-REST + WebSocket interface to the COGANT engine. Prefers
-FastAPI + uvicorn (auto-generated OpenAPI at `/docs`, Pydantic request
-validation); falls back to a pure-stdlib `http.server` dispatcher that
-serves the same endpoint contract when FastAPI is not installed, so
-`cogant serve` works on any Python 3.11+ install.
+REST interface to the COGANT engine. The FastAPI backend is the production path;
+request and response models live in `models.py`, and `run_server()` provides the
+public entry point exported from `cogant.server`.
 
 ## Public API
 
-Re-exported from `cogant/server/__init__.py`:
-
 | Symbol | Role |
 | --- | --- |
-| `create_app()` | Build the FastAPI application object. Raises `RuntimeError` if FastAPI is missing — callers wanting the stdlib fallback should use `run_server`. |
-| `run_server(host, port)` | Bind and serve. Selects FastAPI+uvicorn when available; otherwise drops into the stdlib backend. |
+| `create_app()` | Build the FastAPI application object. |
+| `run_server(host, port)` | Serve with FastAPI/uvicorn when available, falling back to the stdlib backend where supported. |
 
-## Endpoint contract
-
-Both backends honour the same paths:
+## Endpoint Contract
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET`  | `/health` | Liveness probe (`{"status": "ok"}`). |
-| `POST` | `/api/v1/translate` | Run the forward pipeline on inline source code. |
-| `POST` | `/api/v1/visualize` | Render the program graph as `mermaid` / `json` / `graphml`. |
-| `POST` | `/api/v1/translate/stream` | Async streaming variant that emits stage events. |
-| `POST` | `/api/v1/translate/batch` | Sequential batch translation with per-item summaries. |
+| `GET` | `/health` | Liveness probe with COGANT version. |
+| `GET` | `/ready` | Dependency readiness checks. |
+| `POST` | `/analyze` | Forward pipeline summary. |
+| `POST` | `/reverse` | Synthesize Python package zip from GNN markdown. |
+| `POST` | `/roundtrip` | v0.6 roundtrip invariant summary. |
+| `GET` | `/metrics` | Prometheus text metrics. |
+| `GET` | `/api/v1/rules` | Translation-rule metadata. |
+| `POST` | `/api/v1/analyze` | Versioned analysis response with request id and timing. |
+| `POST` | `/api/v1/roundtrip` | Versioned roundtrip response with request id and timing. |
+| `POST` | `/api/v1/visualize` | Source-code visualization as `mermaid`, `json`, or `graphml`. |
+| `GET` | `/api/v1/metrics` | JSON metrics summary. |
+
+## Roundtrip Fields
+
+Roundtrip responses use the v0.6 taxonomy: `roundtrip_status`,
+`role_preservation_score`, `role_preserved`, `structurally_isomorphic`,
+`matrix_preserved`, `gnn_sections_preserved`, `generated_code_ok`, and an
+`invariants` ledger. Strict structural isomorphism is separate from role
+preservation.
 
 ## Conventions
 
-* Endpoints are intentionally decoupled from
-  `examples/demo_server.py` so the demo can stay minimal while the
-  production surface evolves (auth, rate limiting, …).
-* All handlers return JSON-safe payloads via
-  `cogant.api.bundle._json_default` so `datetime`, `Path`, and dataclass
-  values serialise cleanly.
-* Errors normalise to `{"detail": str}` with appropriate 4xx/5xx codes.
-
-See [`AGENTS.md`](AGENTS.md) for the per-handler contract and
-[`../api/AGENTS.md`](../api/AGENTS.md) for the orchestration helpers
-the handlers delegate to.
+- Handlers return JSON-safe payloads and normalize errors through `ErrorResponse`.
+- Request metrics are exposed both as Prometheus text and a compact JSON summary.
+- Route docs should be updated in [`AGENTS.md`](AGENTS.md) whenever `app.py` decorators or `models.py` fields change.

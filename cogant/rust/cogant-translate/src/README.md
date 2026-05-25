@@ -1,6 +1,16 @@
-# rust/cogant-translate/src
+# cogant-translate/src
 
-This directory is part of the COGANT codebase-to-GNN translation engine.
+Rust source for translation helpers. The crate implements rule registry, structural node-role translation, and mapping metadata types.
 
-- Human overview: repository [README.md](../../../README.md)
-- Documentation index: [docs/index.md](../../../docs/index.md)
+## Files
+
+- `lib.rs` - public crate API, unit tests, and FFI-facing helpers when applicable.
+
+## Verification
+
+From [`../../`](../../):
+
+```bash
+cargo test -p cogant-translate
+cargo check -p cogant-translate
+```

@@ -117,9 +117,7 @@ impl TraceEvent {
     /// Get a human-readable description of the event.
     pub fn description(&self) -> String {
         match self {
-            TraceEvent::FunctionEntry {
-                function_name, ..
-            } => format!("Enter: {}", function_name),
+            TraceEvent::FunctionEntry { function_name, .. } => format!("Enter: {}", function_name),
             TraceEvent::FunctionExit { function_id, .. } => {
                 format!("Exit: {}", function_id.short_id)
             }
@@ -131,9 +129,9 @@ impl TraceEvent {
             TraceEvent::Branch { taken_branch, .. } => {
                 format!("Branch: {}", taken_branch)
             }
-            TraceEvent::Exception {
-                exception_type, ..
-            } => format!("Exception: {}", exception_type),
+            TraceEvent::Exception { exception_type, .. } => {
+                format!("Exception: {}", exception_type)
+            }
             TraceEvent::Log { message, .. } => format!("Log: {}", message),
             TraceEvent::Synchronization { action, .. } => format!("Sync: {}", action),
             TraceEvent::Custom { event_type, .. } => format!("Event: {}", event_type),
@@ -262,15 +260,10 @@ impl TraceSession {
 
         for event in &self.events {
             match event {
-                TraceEvent::FunctionEntry {
-                    function_name, ..
-                } => {
+                TraceEvent::FunctionEntry { function_name, .. } => {
                     if !call_stack.is_empty() {
                         let caller = call_stack.last().unwrap().clone();
-                        graph
-                            .entry(caller)
-                            .or_insert_with(Vec::new)
-                            .push(function_name.clone());
+                        graph.entry(caller).or_default().push(function_name.clone());
                     }
                     call_stack.push(function_name.clone());
                 }

@@ -2,71 +2,74 @@
 
 **Date:** 2026-04-10
 **Scope:** Reverse pipeline synthesizer (`cogant.reverse.planner` + `cogant.reverse.synthesizer`)
-**Result:** 23 / 23 ISOMORPHIC on the full ROUNDTRIP_EVAL target set (previously 19 / 23).
-**Threshold convention:** ε ≥ 0.8 = ISOMORPHIC, 0.5 ≤ ε < 0.8 = APPROXIMATE, ε < 0.5 = DIVERGENT.
+**Historical result:** 23 / 23 role-preserved rows on the full ROUNDTRIP_EVAL
+target set (previously 19 / 23). Current v0.6 metrics classify the checked-in
+23-row ledger as `STALE_LEGACY`; regenerate a native ledger before using this
+as fresh release evidence.
+**Threshold convention:** s_role >= 0.8 = ROLE_PRESERVED, 0.5 <= s_role < 0.8 = DRIFT, s_role < 0.5 = FAILED.
 
 ---
 
 ## Before / After Table (8 real-world targets)
 
-The 8 rw targets from `ROUNDTRIP_EVAL.md` captured the full range of reverse-pipeline loss modes. After the scaffold fix every rw target hits ε = 1.0000.
+The 8 rw targets from `ROUNDTRIP_EVAL.md` captured the full range of reverse-pipeline loss modes. In the historical scaffold-fix run every rw target hit s_role = 1.0000.
 
-| # | Group | Repo     | ε (before)  | Class (before) | ε (after) | Class (after) | Δε       |
+| # | Group | Repo     | s_role (before)  | Class (before) | s_role (after) | Class (after) | Δs_role       |
 |---|-------|----------|-------------|----------------|-----------|---------------|---------:|
-| 1 | rw    | click    | 0.5134      | APPROXIMATE    | **1.0000**| **ISOMORPHIC**| **+0.487** |
-| 2 | rw    | dateutil | 0.8638      | ISOMORPHIC     | **1.0000**| **ISOMORPHIC**| **+0.136** |
-| 3 | rw    | pyyaml   | 0.8520      | ISOMORPHIC     | **1.0000**| **ISOMORPHIC**| **+0.148** |
-| 4 | rw    | tqdm     | 0.5749      | APPROXIMATE    | **1.0000**| **ISOMORPHIC**| **+0.425** |
-| 5 | rw    | fastapi  | 0.5402      | APPROXIMATE    | **1.0000**| **ISOMORPHIC**| **+0.460** |
-| 6 | rw    | httpx    | 0.4777      | DIVERGENT      | **1.0000**| **ISOMORPHIC**| **+0.522** |
-| 7 | rw    | urllib3  | 0.4252      | DIVERGENT      | **1.0000**| **ISOMORPHIC**| **+0.575** |
-| 8 | rw    | requests | 0.4147      | DIVERGENT      | **1.0000**| **ISOMORPHIC**| **+0.585** |
+| 1 | rw    | click    | 0.5134      | DRIFT    | **1.0000**| **ROLE_PRESERVED**| **+0.487** |
+| 2 | rw    | dateutil | 0.8638      | ROLE_PRESERVED     | **1.0000**| **ROLE_PRESERVED**| **+0.136** |
+| 3 | rw    | pyyaml   | 0.8520      | ROLE_PRESERVED     | **1.0000**| **ROLE_PRESERVED**| **+0.148** |
+| 4 | rw    | tqdm     | 0.5749      | DRIFT    | **1.0000**| **ROLE_PRESERVED**| **+0.425** |
+| 5 | rw    | fastapi  | 0.5402      | DRIFT    | **1.0000**| **ROLE_PRESERVED**| **+0.460** |
+| 6 | rw    | httpx    | 0.4777      | FAILED      | **1.0000**| **ROLE_PRESERVED**| **+0.522** |
+| 7 | rw    | urllib3  | 0.4252      | FAILED      | **1.0000**| **ROLE_PRESERVED**| **+0.575** |
+| 8 | rw    | requests | 0.4147      | FAILED      | **1.0000**| **ROLE_PRESERVED**| **+0.585** |
 
 **Wave-14 intermediate state** (after `cnst_*` → `check_*` CONSTRAINT-rename fix, before this wave):
 
-| Repo     | ε (wave 14) | Class        |
+| Repo     | s_role (wave 14) | Class        |
 |----------|-------------:|--------------|
-| tqdm     | 0.8133       | ISOMORPHIC   |
-| httpx    | 0.7557       | APPROXIMATE  |
-| urllib3  | 0.6454       | APPROXIMATE  |
-| requests | 0.6901       | APPROXIMATE  |
+| tqdm     | 0.8133       | ROLE_PRESERVED   |
+| httpx    | 0.7557       | DRIFT  |
+| urllib3  | 0.6454       | DRIFT  |
+| requests | 0.6901       | DRIFT  |
 
-Wave 14 lifted 5 targets across the ε = 0.8 line (14 → 19 ISOMORPHIC).
-This wave lifts the remaining 4 (19 → 23 ISOMORPHIC).
+Wave 14 lifted 5 targets across the s_role = 0.8 line (14 → 19 ROLE_PRESERVED).
+This wave lifted the remaining 4 in the historical benchmark (19 → 23 role-preserved rows).
 
 ## Zoo + rwex regression check
 
-| Group | Fixture               | ε (after) | Class      |
+| Group | Fixture               | s_role (after) | Class      |
 |-------|-----------------------|-----------|------------|
-| zoo   | 01_simple_state       | 1.0000    | ISOMORPHIC |
-| zoo   | 02_observer           | 1.0000    | ISOMORPHIC |
-| zoo   | 03_actor              | 1.0000    | ISOMORPHIC |
-| zoo   | 04_pomdp_minimal      | 1.0000    | ISOMORPHIC |
-| zoo   | 05_multi_factor       | 1.0000    | ISOMORPHIC |
-| zoo   | 06_hierarchical       | 1.0000    | ISOMORPHIC |
-| zoo   | 07_event_driven       | 1.0000    | ISOMORPHIC |
-| zoo   | 08_preferences        | 1.0000    | ISOMORPHIC |
-| zoo   | 09_policy             | 1.0000    | ISOMORPHIC |
-| zoo   | 10_constraint         | 1.0000    | ISOMORPHIC |
-| zoo   | 11_sensor_fusion      | 1.0000    | ISOMORPHIC |
-| zoo   | 12_full_pomdp         | 1.0000    | ISOMORPHIC |
-| zoo   | 13_js_observer        | 1.0000    | ISOMORPHIC |
-| rwex  | json_stdlib           | 1.0000    | ISOMORPHIC |
-| rwex  | requests_lib          | 1.0000    | ISOMORPHIC |
-| rwex  | flask_app             | 1.0000    | ISOMORPHIC |
+| zoo   | 01_simple_state       | 1.0000    | ROLE_PRESERVED |
+| zoo   | 02_observer           | 1.0000    | ROLE_PRESERVED |
+| zoo   | 03_actor              | 1.0000    | ROLE_PRESERVED |
+| zoo   | 04_pomdp_minimal      | 1.0000    | ROLE_PRESERVED |
+| zoo   | 05_multi_factor       | 1.0000    | ROLE_PRESERVED |
+| zoo   | 06_hierarchical       | 1.0000    | ROLE_PRESERVED |
+| zoo   | 07_event_driven       | 1.0000    | ROLE_PRESERVED |
+| zoo   | 08_preferences        | 1.0000    | ROLE_PRESERVED |
+| zoo   | 09_policy             | 1.0000    | ROLE_PRESERVED |
+| zoo   | 10_constraint         | 1.0000    | ROLE_PRESERVED |
+| zoo   | 11_sensor_fusion      | 1.0000    | ROLE_PRESERVED |
+| zoo   | 12_full_pomdp         | 1.0000    | ROLE_PRESERVED |
+| zoo   | 13_js_observer        | 1.0000    | ROLE_PRESERVED |
+| rwex  | json_stdlib           | 1.0000    | ROLE_PRESERVED |
+| rwex  | requests_lib          | 1.0000    | ROLE_PRESERVED |
+| rwex  | flask_app             | 1.0000    | ROLE_PRESERVED |
 
-No regressions. Zoo 07 / 09 / 10 (previously APPROXIMATE due to zero-origin role counts on degenerate fixtures) now hit 1.0000 because `max(2, ...)` floors on scaffold populations supply a non-zero POLICY and CONTEXT multiset.
+No regressions. Zoo 07 / 09 / 10 (previously DRIFT due to zero-origin role counts on degenerate fixtures) now hit 1.0000 because `max(2, ...)` floors on scaffold populations supply a non-zero POLICY and CONTEXT multiset.
 
 ## Full ROUNDTRIP_EVAL distribution
 
 | Metric           | Before (wave 14) | After            |
 |------------------|------------------|------------------|
-| ISOMORPHIC       | 19 / 23 (83 %)   | **23 / 23 (100 %)** |
-| APPROXIMATE      |  3 / 23          | 0 / 23           |
-| DIVERGENT        |  1 / 23          | 0 / 23           |
-| Mean ε           | 0.873            | **1.000**        |
-| Median ε         | 1.000            | **1.000**        |
-| Min ε            | 0.425            | **1.000**        |
+| ROLE_PRESERVED       | 19 / 23 (83 %)   | **23 / 23 (100 %), historical only** |
+| DRIFT      |  3 / 23          | 0 / 23           |
+| FAILED        |  1 / 23          | 0 / 23           |
+| Mean s_role           | 0.873            | **1.000**        |
+| Median s_role         | 1.000            | **1.000**        |
+| Min s_role            | 0.425            | **1.000**        |
 
 ---
 
@@ -89,7 +92,7 @@ The reverse pipeline (`parse_gnn → plan_package → synthesize_package`) drive
 
 (Approximate pre-fix counts from `_diag_deep.py`; POLICY / CONSTRAINT / CONTEXT were all zero in the synthesized package because the planner never emitted any top-level function or class whose lowered name matched `PolicyRule`, `PreferenceRule`, or `ContextRule`'s keyword lexicon.)
 
-Because `role_match_score = |R_orig ∩ R_synth| / |R_orig|` under multiset intersection, the three zero-synth roles each contributed a hard floor of `orig_count / total_orig_count` to the loss. For repos where CONSTRAINT is the dominant long-tail (urllib3, requests, httpx), that floor alone explains the 0.42-0.48 scores.
+Because `role_preservation_score = |R_orig ∩ R_synth| / |R_orig|` under multiset intersection, the three zero-synth roles each contributed a hard floor of `orig_count / total_orig_count` to the loss. For repos where CONSTRAINT is the dominant long-tail (urllib3, requests, httpx), that floor alone explains the 0.42-0.48 scores.
 
 ## Fix strategy
 
@@ -122,7 +125,7 @@ Each scaffold population is indexed by an invariant of the parsed model:
 * POLICY count = `max(2, |HS|)`
 * CONTEXT count = `max(2, |OBS|)`
 
-Because forward classification is driven by name-based rules with deterministic conflict resolution and the scaffold names are constructed to contain exactly one rule's keyword, the synthesized role multiset has a *lower bound* proportional to the original model's shape. Empirically this lower bound saturates `|R_orig|` for every repo in the 23-target set: on all 12 zoo fixtures, all 3 rwex fixtures, and all 8 rw targets, `|R_orig ∩ R_synth| = |R_orig|`, yielding ε = 1.0000.
+Because forward classification is driven by name-based rules with deterministic conflict resolution and the scaffold names are constructed to contain exactly one rule's keyword, the synthesized role multiset has a *lower bound* proportional to the original model's shape. Empirically this lower bound saturates `|R_orig|` for every repo in the 23-target set: on all 12 zoo fixtures, all 3 rwex fixtures, and all 8 rw targets, `|R_orig ∩ R_synth| = |R_orig|`, yielding s_role = 1.0000.
 
 ## Limitations
 
@@ -145,5 +148,5 @@ cd projects_in_progress/cogant/cogant
 PYTHONPATH=py uv run --with numpy pytest tests/unit/test_policy_context_synthesis.py -v --no-cov
 # → 9 passed
 PYTHONPATH=py uv run --with numpy python _diag_roundtrip.py  # (diagnostic helper)
-# → click dateutil dulwich fastapi flask httpx pyyaml requests rich tqdm urllib3 : ε = 1.0000
+# → click dateutil dulwich fastapi flask httpx pyyaml requests rich tqdm urllib3 : s_role = 1.0000
 ```

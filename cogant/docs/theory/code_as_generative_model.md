@@ -1,9 +1,14 @@
-# Code as a generative model
+# Code as a generative-model artifact
 
-> **Thesis.** A software repository is not merely *describable* as an Active Inference generative model — it **is** one. Program graphs, hidden states, observations, and actions are not analogies borrowed from neuroscience. They are the literal ontology a compiler produces and an interpreter executes.
+> **Thesis.** COGANT treats a software repository as an inspectable artifact that can be
+> projected into an Active Inference-style generative model. The projection is useful because
+> it preserves explicit graph, role, state-space, and matrix evidence, not because every
+> program is literally a probabilistic agent.
 
-This page is the informal companion to [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md),
-which states the formal version.
+This page gives the current operational reading. The historical categorical sketch lives in
+[`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md);
+it is preserved for provenance, while the live contract is the role-preservation and
+strict-invariant taxonomy in [the roundtrip concept page](../concepts/roundtrip.md).
 
 ## The core claim
 
@@ -23,21 +28,22 @@ A running program is structurally identical:
 | Variational free energy | The error-handling / retry / validation surface |
 | Expected free energy | The planner / scheduler / policy layer |
 
-The left column is the neuroscience vocabulary. The right column is what your IDE displays.
-COGANT is the machine that rewrites one into the other.
+The left column is the Active Inference vocabulary. The right column is the software surface
+COGANT can inspect. COGANT rewrites selected, machine-extracted evidence from the right column
+into the left-column notation.
 
-## Why this is not an analogy
+## Why this analogy is operational
 
-Three concrete reasons the mapping is a genuine isomorphism, not a metaphor:
+Three concrete reasons the mapping is useful enough to test:
 
 ### 1. Both are graphs with typed, directed edges
 
 Active Inference is usually written as a factor graph: circles for random variables, squares
 for factors, directed edges for conditional dependencies. A program dependence graph is
 **exactly** that — nodes for symbols (functions, classes, variables), edges for typed
-dependencies (`CALLS`, `READS`, `WRITES`, `IMPORTS`, `INHERITS`). COGANT constructs both
-simultaneously: it calls the resulting object `ProgramGraph`, but a PyMDP practitioner would
-recognize it as a factor graph.
+dependencies (`CALLS`, `READS`, `WRITES`, `IMPORTS`, `INHERITS`). COGANT constructs a
+`ProgramGraph`, then emits factor-graph-like state-space and matrix artifacts whose sidecars
+record the source counts and layout metadata.
 
 ### 2. Both are deterministic transducers of belief
 
@@ -56,7 +62,7 @@ given the module's public API. COGANT's blanket extractor (`py/cogant/markov/bla
 an O(V + E) primitive that computes this partition directly from the graph, without requiring
 any Active Inference concepts at the implementation level.
 
-## The pipeline, in isomorphism language
+## The pipeline, in evidence-preservation language
 
 ```mermaid
 flowchart LR
@@ -74,10 +80,10 @@ flowchart LR
     class H cool
 ```
 
-Each arrow is **content-preserving**:
+Each arrow has an **evidence-preservation contract**:
 
-- **source → graph**: AST is the syntactic form; graph is the semantic form. Information is
-  re-indexed, not thrown away (except whitespace and comments).
+- **source → graph**: AST evidence is re-indexed into graph nodes and typed edges. Whitespace,
+  comments, and unsupported language constructs are intentionally outside this graph.
 - **graph → mappings**: the 22 translation rules assign each node a role in the generative
   model. A rule fires only when the graph carries enough evidence to justify the assignment.
 - **mappings → state space**: the compiler projects the role assignments onto an ordered
@@ -85,22 +91,22 @@ Each arrow is **content-preserving**:
 - **state space → A/B/C/D**: the matrix builder counts evidence edges and normalizes. The
   result is a well-formed probabilistic model suitable for `pymdp` or any Active Inference
   simulator.
-- **A/B/C/D → GNN**: the formatter emits the AII reference bracket notation. This is a
-  lossless re-encoding, not a summary.
-- **GNN → code** *(prototype)*: the reverse module synthesizes a Python package whose forward
-  run produces an isomorphic GNN. The round trip is idempotent up to whitespace and names.
+- **A/B/C/D → GNN**: the formatter emits the AII reference bracket notation plus JSON twins.
+  This is a schema-preserving export of COGANT's compiled model, not a proof that the source
+  code was fully captured.
+- **GNN → code**: the reverse module synthesizes a Python package and the roundtrip command
+  re-runs the forward pipeline. Trust the emitted invariant ledger: `ROLE_PRESERVED` is weaker
+  than `STRUCTURALLY_ISOMORPHIC`.
 
 ## What this buys you
 
-1. **Program understanding as Bayesian inference.** Confidence scores on semantic mappings
-   are literal posteriors over role assignments. A mapping with confidence 0.82 is a
-   probabilistic assertion that the rule's evidence implies its conclusion with that
-   posterior probability.
-2. **Refactoring as free-energy minimization.** A codebase whose A matrix is close to
-   singular (no direct READS evidence on most observations) has high variational free energy
-   — it is surprising in the Active Inference sense. That is also the measurable signature of
-   "spaghetti code" or "hidden coupling." The thesis predicts the two should correlate, and
-   the `../evaluation/CALIBRATION.md` plan is the empirical check.
+1. **Program understanding as auditable evidence.** Confidence scores on semantic mappings
+   are calibrated rule-evidence scores. They should be read as review priorities unless a
+   labelled calibration corpus is available.
+2. **Refactoring hypotheses from model diagnostics.** Sparse or fallback-heavy A/B/C/D
+   matrices can flag places where the source graph lacks explicit evidence. The hypothesis is
+   that those gaps correlate with hidden coupling or underspecified interfaces; the
+   `../evaluation/CALIBRATION.md` plan is the empirical check.
 3. **Active Inference agents from real code.** Once a codebase is represented as A/B/C/D, a
    PyMDP agent can plan over it immediately. This is the reverse-mode end-goal: synthesize a
    runnable agent whose generative model **is** the analyzed codebase.
@@ -110,10 +116,9 @@ Each arrow is **content-preserving**:
 - **Not every program has a clean blanket.** A codebase with no cohesive modules, no visibility
   boundaries, and no typed state will produce a partition that is technically valid but
   uninformative. COGANT reports this via internal / boundary ratios rather than failing.
-- **Keywords matter in v0.1.** Rules like `ObservationRule` and `ActionRule` use English
-  keyword sets. Obfuscated or non-English identifiers fall back to purely structural evidence
-  (edge degree, containment). This is an implementation limitation, not a theoretical one —
-  structural rules are language-independent.
+- **Identifier evidence still matters.** Rules like `ObservationRule` and `ActionRule` combine
+  naming cues with structural evidence. Obfuscated or non-English identifiers lean more heavily
+  on graph evidence, which can lower confidence or leave mappings unresolved.
 - **Uniform C / D fallbacks are honest defaults, not learned parameters.** When the program
   lacks `CONSTRAINT` or `CONFIGURATION` evidence, the preference vector and initial prior are
   uniform. The validator surfaces this as a warning so downstream consumers know not to treat
@@ -121,8 +126,10 @@ Each arrow is **content-preserving**:
 
 ## Further reading
 
-- [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/cogant-contributors/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md) — the formal statement
-  with the proof sketch.
+- [The forward-reverse cycle](../concepts/roundtrip.md) — current status taxonomy and invariant
+  ledger.
+- [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md) —
+  historical proof sketch and terminology.
 - [Active Inference primer](active_inference_primer.md) — three-paragraph background if the
   neuroscience vocabulary is new.
 - [Active Inference mapping](active_inference.md) — the mechanical rule-by-rule version of

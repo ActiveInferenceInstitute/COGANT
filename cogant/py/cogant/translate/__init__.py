@@ -6,6 +6,12 @@ from cogant.translate.engine import (
     TranslationEngine,
     TranslationRule,
 )
+from cogant.translate.evidence import (
+    apply_reviewer_annotations,
+    build_rule_evidence_trace,
+    calibrate_rule_evidence_trace,
+    load_reviewer_annotations,
+)
 from cogant.translate.review import ReviewManager
 from cogant.translate.rules import (
     ActionRule,
@@ -36,6 +42,10 @@ __all__ = [
     "RuleExplanation",
     "TranslationEngine",
     "TranslationRule",
+    "apply_reviewer_annotations",
+    "build_rule_evidence_trace",
+    "calibrate_rule_evidence_trace",
+    "load_reviewer_annotations",
     "ReadOnlyInputRule",
     "MutatingSubsystemRule",
     "OrchestratorRule",

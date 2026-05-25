@@ -11,7 +11,7 @@ preferences, factors, provenance, and confidence — all derived from static
 and dynamic program evidence and all traceable back to source spans.
 """
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 __author__ = "COGANT Contributors"
 
 # Optional Rust acceleration backend. Built from `rust/cogant-ffi` via maturin
@@ -33,48 +33,30 @@ except (ImportError, ModuleNotFoundError):
     _RUST_AVAILABLE = False
     __rust_version__ = None
 
-try:
-    from cogant.api.session import Session
-except (ImportError, ModuleNotFoundError):
-    Session = None  # type: ignore[assignment,misc]
+# First-party cogant submodules. Previously wrapped in try/except blocks that
+# silently set these names to ``None`` on ImportError — but the matching .pyi
+# (``cogant/__init__.pyi``) declares them as concrete classes, so a consumer
+# trusting mypy's view of ``cogant.Session`` could hit ``AttributeError: None
+# has no attribute ...`` at runtime. The honest fix is to let the import
+# fail loudly: these are first-party modules, not optional deps. If any of
+# them cannot be imported, the cogant install is broken and the user needs to
+# see that, not get a silent None. See RedTeam F15 (2026-05-19).
+from cogant.api.bundle import Bundle
+from cogant.api.pipeline import PipelineRunner
+from cogant.api.session import Session
+from cogant.gnn.formatter import GNNMarkdownFormatter
+from cogant.graph.builder import ProgramGraphBuilder
+from cogant.statespace.compiler import StateSpaceCompiler
+from cogant.translate.engine import TranslationEngine
 
-try:
-    from cogant.api.pipeline import PipelineRunner
-except (ImportError, ModuleNotFoundError):
-    PipelineRunner = None  # type: ignore[assignment,misc]
-
-try:
-    from cogant.api.bundle import Bundle
-except (ImportError, ModuleNotFoundError):
-    Bundle = None  # type: ignore[assignment,misc]
-
-try:
-    from cogant.graph.builder import ProgramGraphBuilder
-except (ImportError, ModuleNotFoundError):
-    ProgramGraphBuilder = None  # type: ignore[assignment,misc]
-
-try:
-    from cogant.translate.engine import TranslationEngine
-except (ImportError, ModuleNotFoundError):
-    TranslationEngine = None  # type: ignore[assignment,misc]
-
-try:
-    from cogant.statespace.compiler import StateSpaceCompiler
-except (ImportError, ModuleNotFoundError):
-    StateSpaceCompiler = None  # type: ignore[assignment,misc]
-
-try:
-    from cogant.gnn.formatter import GNNMarkdownFormatter
-except (ImportError, ModuleNotFoundError):
-    GNNMarkdownFormatter = None  # type: ignore[assignment,misc]
-
+# ``ProgramGraph`` has two homes — the newer pydantic schema and the legacy
+# dataclass module. Keep the fallback because they ARE legitimately
+# alternative implementations selected by call site, not a broken-install
+# signal.
 try:
     from cogant.schemas.program_graph import ProgramGraph
 except (ImportError, ModuleNotFoundError):
-    try:
-        from cogant.schemas.graph import ProgramGraph  # type: ignore[assignment]
-    except (ImportError, ModuleNotFoundError):
-        ProgramGraph = None  # type: ignore[assignment,misc]
+    from cogant.schemas.graph import ProgramGraph  # type: ignore[assignment]
 
 # Type infrastructure (always available).
 try:
@@ -198,7 +180,6 @@ __all__ = [
     # Type infrastructure: Shared TypedDicts and aliases
     "NodeAttrs",
     "EdgeAttrs",
-    "GNNBundle",
     "NodeId",
     "EdgeKind",
     "RoleName",

@@ -89,20 +89,17 @@ def run_roundtrip(target: Path) -> dict:
         text=True,
         cwd=str(Path(__file__).parent.parent),
     )
-    # Extract the JSON block from output (may have log lines before it).
-    lines = result.stdout.splitlines()
-    json_lines: list[str] = []
-    in_json = False
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("{"):
-            in_json = True
-        if in_json:
-            json_lines.append(line)
-        if in_json and stripped == "}":
-            break
-    if json_lines:
-        return json.loads("\n".join(json_lines))
+    # Extract the JSON block from output (may have log lines before it, and
+    # the top-level object contains nested objects so naive first-"}" matching
+    # truncates it). Decode the first complete JSON value at the first "{".
+    text = result.stdout
+    start = text.find("{")
+    if start != -1:
+        try:
+            obj, _ = json.JSONDecoder().raw_decode(text[start:])
+            return obj
+        except json.JSONDecodeError:
+            pass
     return {"is_isomorphic": "unknown", "role_match_score": "unknown"}
 
 
@@ -137,7 +134,7 @@ def print_one_cycle(runtime: AgentRuntime, model) -> None:
     state_dist = _normalize(state_dist)
     print("\n  Prior D (initial belief over hidden states):")
     labels = getattr(model, "hidden_states", [f"s_f{i}" for i in range(len(state_dist))])
-    for i, (label, p) in enumerate(zip(labels, state_dist)):
+    for label, p in zip(labels, state_dist, strict=False):
         bar = "#" * int(p * 30)
         print(f"    {label:8s} [{bar:<30s}]  {p:.4f}")
 
@@ -146,7 +143,7 @@ def print_one_cycle(runtime: AgentRuntime, model) -> None:
     obs_idx = _argmax(pred_obs) if pred_obs else 0
     obs_labels = getattr(model, "observations", [f"o_m{i}" for i in range(len(pred_obs))])
     print("\n  Predicted obs P(o|s) via A . state_dist:")
-    for i, (label, p) in enumerate(zip(obs_labels, pred_obs)):
+    for i, (label, p) in enumerate(zip(obs_labels, pred_obs, strict=False)):
         mark = " <-- observed" if i == obs_idx else ""
         print(f"    {label:8s}  {p:.4f}{mark}")
 
@@ -156,13 +153,13 @@ def print_one_cycle(runtime: AgentRuntime, model) -> None:
             runtime.A[obs_idx][j] if j < len(runtime.A[obs_idx]) else 1e-10
             for j in range(len(state_dist))
         ]
-        updated = [s * w for s, w in zip(state_dist, weights)]
+        updated = [s * w for s, w in zip(state_dist, weights, strict=False)]
         posterior = _normalize(updated)
     else:
         posterior = state_dist
 
     print(f"\n  Posterior (Bayesian update after obs {obs_idx}):")
-    for i, (label, p) in enumerate(zip(labels, posterior)):
+    for label, p in zip(labels, posterior, strict=False):
         bar = "#" * int(p * 30)
         print(f"    {label:8s} [{bar:<30s}]  {p:.4f}")
 
@@ -187,7 +184,7 @@ def print_one_cycle(runtime: AgentRuntime, model) -> None:
     new_state = runtime._transition(list(posterior), best_a)
     new_state = _normalize(new_state)
     print(f"\n  State after transition B[:,:,{best_a}] . posterior:")
-    for i, (label, p) in enumerate(zip(labels, new_state)):
+    for label, p in zip(labels, new_state, strict=False):
         bar = "#" * int(p * 30)
         print(f"    {label:8s} [{bar:<30s}]  {p:.4f}")
 
@@ -291,9 +288,11 @@ def main() -> None:
     """)
 
     print("=" * 72)
-    print("  EMPIRICAL CLAIM CONFIRMED:")
-    print("  COGANT maps a real Python codebase to a working generative model")
-    print("  and runs a complete Active Inference perception-action cycle on it.")
+    print("  DEMONSTRATED:")
+    print("  COGANT translated a real Python module into a GNN generative")
+    print("  model and ran a complete Active Inference perception-action")
+    print("  cycle on it. Roundtrip isomorphism is reported separately by")
+    print("  `cogant roundtrip` and is not asserted by this demo.")
     print("=" * 72)
 
 

@@ -17,13 +17,35 @@ cogant translate ./source_code \
 # 4. Validate results
 cogant validate analysis_output/bundle.json
 
-# 5. Generate site
+# 5. Generate review figures and the artifact-first dashboard
+cogant viz analysis_output/
+
+# 6. Generate site
 cogant render analysis_output/bundle.json \
   --output analysis_output/site/
 
-# 6. Open in browser
+# 7. Open in browser
 open analysis_output/site/index.html
 ```
+
+For a complete forward -> reverse -> forward evidence loop:
+
+```bash
+cogant translate examples/control_positive/calculator \
+  --layout-output \
+  --output output/calculator
+
+cogant roundtrip examples/control_positive/calculator \
+  --output output/calculator/roundtrip \
+  --keep-tmp
+
+cogant viz output/calculator
+```
+
+The roundtrip command writes `roundtrip/metrics.json` plus
+`roundtrip/rule_evidence_trace.json`; the viz command turns those into the
+inspection dashboard, graphical abstract, roundtrip diff, rule trace,
+confidence calibration, and deterministic inference trace figures.
 
 ### Skip Specific Stages
 

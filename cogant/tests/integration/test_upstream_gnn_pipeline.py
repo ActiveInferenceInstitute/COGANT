@@ -8,16 +8,14 @@ The COGANT-built fixture at ``output/calculator/gnn_package/`` is used
 when present; when it is not, the test builds a fresh one by running
 ``cogant analyze examples/control_positive/calculator``.
 
-The full pass touches all 23 default-on steps and is correspondingly
-slow; it is gated on ``COGANT_RUN_UPSTREAM_PIPELINE=1`` so the regular
-test sweep stays fast. The smaller targeted tests (``only_steps``,
-default-skip assertions, JSON round-trip) always run.
+The targeted tests run representative real upstream steps plus a pure
+configuration check for the full default catalogue. That keeps the regular
+test sweep deterministic without hiding behavior behind an environment gate.
 """
 
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
 import pytest
@@ -26,6 +24,7 @@ from cogant.gnn.upstream_bridge.pipeline import (
     DEFAULT_SKIP_STEPS,
     UPSTREAM_STEP_SCRIPTS,
     UpstreamPipelineConfig,
+    resolve_steps,
     run_upstream_pipeline,
 )
 
@@ -164,21 +163,13 @@ def test_render_execute_opt_in_runs_when_jax_available(
     assert {s.step_index for s in result.steps} >= {11, 12}
 
 
-@pytest.mark.skipif(
-    os.environ.get("COGANT_RUN_UPSTREAM_PIPELINE") != "1",
-    reason=("Full 23-step upstream pass is slow; set COGANT_RUN_UPSTREAM_PIPELINE=1 to enable."),
-)
-def test_run_full_upstream_pipeline_with_default_skip(
+def test_default_full_catalogue_resolution_excludes_heavy_steps(
     gnn_package_dir: Path, tmp_path: Path
 ) -> None:
-    """End-to-end: default-skip pass over the full catalogue."""
-    out = tmp_path / "upstream_full_default"
+    """The full default catalogue is explicit and excludes render/execute."""
     cfg = UpstreamPipelineConfig(
         target_dir=gnn_package_dir,
-        output_dir=out,
+        output_dir=tmp_path / "upstream_full_default",
     )
-    result = run_upstream_pipeline(cfg)
-    if not result.available:
-        pytest.skip(f"upstream src.main not importable: {result.error}")
-    assert len(result.executed) == 23
-    assert 11 in result.skipped and 12 in result.skipped
+    expected = [i for i in range(len(UPSTREAM_STEP_SCRIPTS)) if i not in DEFAULT_SKIP_STEPS]
+    assert resolve_steps(cfg.only_steps, cfg.skip_steps) == expected

@@ -16,7 +16,7 @@
 | [Code as generative model](code_as_generative_model.md) | The thesis that a repository *is*, not merely *describes*, an Active Inference generative model | Intermediate |
 | [GNN format](gnn_format.md) | Short introduction to Generalized Notation Notation as COGANT uses it | Intermediate |
 | [GNN format reference](gnn_format_reference.md) | Working reference for the 19 sections in a GNN package | Advanced |
-| [Round-trip verification](roundtrip.md) | Forward→Reverse→Forward validation: what ISOMORPHIC/APPROXIMATE/DIVERGENT classifications mean and why ε=1.0 matters. v0.5.0 achieved 23/23 ISOMORPHIC. | Intermediate |
+| [Round-trip verification](roundtrip.md) | Forward→Reverse→Forward validation: `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`, `DRIFT`, and `FAILED` status vocabulary. | Intermediate |
 | [Isomorphism theorem](isomorphism.md) | Formal statement and proof sketch of the program-graph / generative-model isomorphism (Galois connection) | Advanced |
 
 ## Recommended Reading Order
@@ -26,7 +26,7 @@
 3. [Active Inference mapping](active_inference.md) — how the thesis is cashed out for concrete code patterns (the 22 translation rules and 7 core roles).
 4. [GNN format](gnn_format.md) — the intermediate representation in which everything is expressed.
 5. [GNN format reference](gnn_format_reference.md) — exhaustive reference for the 19-section package layout.
-6. [Round-trip verification](roundtrip.md) — how the forward and reverse passes are validated to be semantically dual (23/23 ISOMORPHIC at v0.5.0).
+6. [Round-trip verification](roundtrip.md) — how the forward and reverse passes are validated with role-preservation and strict invariant ledgers.
 7. [Isomorphism theorem](isomorphism.md) — formal closure of the loop: program-graph / generative-model duality as a Galois connection.
 
 ## Related modules

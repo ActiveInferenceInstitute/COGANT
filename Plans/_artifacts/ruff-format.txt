@@ -1,0 +1,22 @@
+error: Failed to format tools: No such file or directory (os error 2)
+Would reformat: py/cogant/api/analysis_commands.py
+Would reformat: py/cogant/api/analysis_commands.pyi
+Would reformat: py/cogant/api/orchestration.py
+Would reformat: py/cogant/api/pipeline.py
+Would reformat: py/cogant/cli/main.py
+Would reformat: py/cogant/protocols.pyi
+Would reformat: py/cogant/reverse/cli.py
+Would reformat: py/cogant/reverse/idempotency.py
+Would reformat: py/cogant/rust_backend.py
+Would reformat: py/cogant/tools/__init__.pyi
+Would reformat: py/cogant/translate/evidence.py
+Would reformat: py/cogant/viz/ablation_view.py
+Would reformat: py/cogant/viz/batch_dashboard.py
+Would reformat: py/cogant/viz/batch_dashboard.pyi
+Would reformat: py/cogant/viz/inspection_dashboard.py
+Would reformat: py/cogant/viz/matrix_view.py
+Would reformat: py/cogant/viz/matrix_view.pyi
+Would reformat: py/cogant/viz/pdf_export.py
+Would reformat: py/cogant/viz/png_export.py
+19 files would be reformatted, 435 files already formatted
+ruff-format rc=2

@@ -45,7 +45,7 @@ test-integration:
 	uv run pytest tests/integration -v -m integration
 
 coverage:
-	uv run pytest tests/ --cov=cogant --cov-report=html --cov-report=term-missing
+	uv run pytest tests/ --cov=py/cogant --cov-report=html --cov-report=term-missing
 	@echo "Coverage report generated in htmlcov/index.html"
 
 # Code quality targets
@@ -61,6 +61,31 @@ format:
 
 type-check:
 	uv run mypy py/cogant/api
+
+# Stage-list drift gate (TODO #4 durable fix) — enforces that every documented
+# full-pipeline stage sequence (CLI docstring, docs/cli_reference.md, FAQ,
+# quickstart, manuscript API section) matches ``cogant.pipeline.RUNNER_STAGES``.
+audit-stages:
+	cd .. && uv run python tools/audit_stage_list.py
+
+# Metrics-freshness gate (RedTeam F19) — coverage drift, git SHA drift,
+# AND roundtrip-status laundering check. Re-classifies every row of
+# ``roundtrip_results.jsonl`` via the same ``_status()`` logic the
+# regenerator uses and asserts the resulting count distribution matches
+# what METRICS.yaml claims. Catches the keystone laundering failure
+# mode where METRICS.yaml inherits a richer prior regen and the data
+# file has since been stripped to legacy rows.
+audit-metrics-fresh:
+	cd .. && uv run python tools/check_metrics_fresh.py
+
+# Coverage-table drift gate (RedTeam F10). Runs ``check_coverage_table.py``
+# in strict mode against either ``.coverage`` SQLite (if present) or the
+# committed ``coverage.json`` fallback (always present), and fails if any
+# per-module Stmts/Cover row in ``@tbl:coverage-stmt-modules`` disagrees
+# with the live data. Catches hand-edit drift on the per-module table
+# that the prior gate could not enforce from a clean checkout.
+audit-coverage-table:
+	cd .. && uv run python tools/check_coverage_table.py --strict
 
 # Building
 build:

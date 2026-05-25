@@ -21,7 +21,7 @@ Rules are:
 - **Traceable**: Log all rule matches in provenance
 - **Versioned**: Rules evolve with language versions
 
-See [Translation Rules](https://github.com/cogant-contributors/cogant/blob/main/cogant/specs/mappings/code-to-gnn.md) for full reference.
+See [Translation Rules](https://github.com/docxology/cogant/blob/main/cogant/specs/mappings/code-to-gnn.md) for full reference.
 
 ## Rule families and their implementing modules
 
@@ -45,11 +45,11 @@ The 22 active translation rules are organized into five families. Each family li
 | `StateMachineRule` | behavioral | Name/metadata matches `state`, `transition`, `machine`, or state enum patterns | HIDDEN_STATE | 0.75 | `py/cogant/translate/rules/behavioral.py` | [`cogant.translate` → Behavioral rules](../api/translate.md#behavioral-rules) |
 | `ConfigRule` | control | Node kind is `CONFIGURATION` | CONTEXT | 0.90 | `py/cogant/translate/rules/control.py` | [`cogant.translate` → Control-flow rules](../api/translate.md#control-flow-rules) |
 | `FeatureFlagRule` | control | Node kind is `FEATURE_FLAG` | CONTEXT | 0.85 | `py/cogant/translate/rules/control.py` | [`cogant.translate` → Control-flow rules](../api/translate.md#control-flow-rules) |
-| `ParameterRule` | control | Tunable numeric/string constants (`learning_rate`, `threshold`, `epsilon`, etc.) | PARAMETER | 0.80 | `py/cogant/translate/rules/control.py` | [`cogant.translate` → Control-flow rules](../api/translate.md#control-flow-rules) |
+| `ParameterRule` | control | Tunable numeric/string constants (`learning_rate`, `threshold`, `epsilon`, etc.) | CONTEXT | 0.80 | `py/cogant/translate/rules/control.py` | [`cogant.translate` → Control-flow rules](../api/translate.md#control-flow-rules) |
 | `RetryPatternRule` | resilience | Name matches `retry`, `backoff`, `circuit`, `breaker`, `timeout`, `fallback` | POLICY | 0.70 | `py/cogant/translate/rules/resilience.py` | [`cogant.translate` → Resilience rules](../api/translate.md#resilience-rules) |
 | `ErrorBoundaryRule` | resilience | Function has CATCHES or THROWS edges | ERROR_HANDLING | 0.70 | `py/cogant/translate/rules/resilience.py` | [`cogant.translate` → Resilience rules](../api/translate.md#resilience-rules) |
 | `SingletonAccessRule` | resilience | Variable/class read by 3+ modules across 3+ paths | CONTEXT | 0.65 | `py/cogant/translate/rules/resilience.py` | [`cogant.translate` → Resilience rules](../api/translate.md#resilience-rules) |
 | `CircuitBreakerRule` | resilience | Has GUARDS edge plus a retry keyword/metadata | CIRCUIT_BREAKER (POLICY-like) | 0.80 | `py/cogant/translate/rules/resilience.py` | [`cogant.translate` → Resilience rules](../api/translate.md#resilience-rules) |
 | `RateLimiterRule` | resilience | Name matches `rate`, `limit`, `throttle`, `quota`, or decorator pattern | ACTION | 0.80 | `py/cogant/translate/rules/resilience.py` | [`cogant.translate` → Resilience rules](../api/translate.md#resilience-rules) |
 
-For the conceptual walkthrough of how these rules fire in priority order, see [How COGANT assigns roles](../concepts/role_assignment.md). For the seven-role taxonomy that the rules emit, see [Semantic roles](semantic_roles.md). For the engine itself — the priority/confidence conflict-resolution loop and the per-rule `.explain()` API — see [`cogant.translate` → Engine](../api/translate.md#engine).
+For the conceptual walkthrough of how these rules fire in priority order, see [How COGANT assigns roles](../concepts/role_assignment.md). For the core-role and supporting-role taxonomy that the rules emit, see [Semantic roles](semantic_roles.md). For the engine itself — the priority/confidence conflict-resolution loop and the per-rule `.explain()` API — see [`cogant.translate` → Engine](../api/translate.md#engine).

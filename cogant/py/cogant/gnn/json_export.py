@@ -22,6 +22,35 @@ from cogant.statespace.compiler import StateSpaceModel
 logger = logging.getLogger(__name__)
 
 
+_CONFIDENCE_LEVEL_VALUES: dict[str, float] = {
+    "definite": 1.0,
+    "high": 0.85,
+    "medium": 0.70,
+    "low": 0.50,
+    "uncertain": 0.20,
+}
+
+
+def _confidence_to_float(value: Any) -> float | None:
+    """Coerce numeric and categorical confidence values onto ``[0, 1]``."""
+    if value is None or isinstance(value, bool):
+        return None
+    raw = value.value if hasattr(value, "value") else value
+    if isinstance(raw, bool):
+        return None
+    if isinstance(raw, (int, float)):
+        return max(0.0, min(1.0, float(raw)))
+    if isinstance(raw, str):
+        text = raw.strip().lower()
+        if text in _CONFIDENCE_LEVEL_VALUES:
+            return _CONFIDENCE_LEVEL_VALUES[text]
+        try:
+            return max(0.0, min(1.0, float(text)))
+        except ValueError:
+            return None
+    return None
+
+
 class GNNJSONExporter:
     """
     Exports GNN models to machine-readable JSON format with stable IDs.
@@ -106,8 +135,10 @@ class GNNJSONExporter:
         }
 
         # Log matrix shapes and section summary at INFO level
-        matrices = output.get("matrices", {})
-        shapes = matrices.get("shapes", {})
+        matrices_raw = output.get("matrices", {})
+        matrices = matrices_raw if isinstance(matrices_raw, dict) else {}
+        shapes_raw = matrices.get("shapes", {})
+        shapes = shapes_raw if isinstance(shapes_raw, dict) else {}
         n_sections = len(output)
         logger.info(
             "GNN JSON export complete: %d sections + matrices (A=%s, B=%s, C=%s, D=%s)",
@@ -516,34 +547,19 @@ class GNNJSONExporter:
                 "observations": self._compute_component_confidence("observations"),
                 "actions": self._compute_component_confidence("actions"),
                 "transitions": self._compute_component_confidence("transitions"),
+                "semantic_mappings": self._compute_component_confidence("semantic_mappings"),
             },
         }
 
     def _compute_average_confidence(self) -> float:
         """Compute average confidence across all components."""
-        confidences = []
-        for var in self.state_space.variables.values():
-            if var.confidence:
-                try:
-                    val = float(
-                        var.confidence.value if hasattr(var.confidence, "value") else var.confidence
-                    )
-                    confidences.append(val)
-                except (TypeError, ValueError):
-                    logger.debug("Skipping non-numeric confidence value for variable: %r", var)
-        for obs in self.state_space.observations.values():
-            if obs.confidence:
-                try:
-                    val = float(
-                        obs.confidence.value if hasattr(obs.confidence, "value") else obs.confidence
-                    )
-                    confidences.append(val)
-                except (TypeError, ValueError):
-                    logger.debug("Skipping non-numeric confidence value for observation: %r", obs)
+        confidences: list[float] = []
+        for component in ("variables", "observations", "actions", "transitions"):
+            confidences.extend(self._component_confidences(component))
+        confidences.extend(self._mapping_confidences())
         return sum(confidences) / len(confidences) if confidences else 0.5
 
-    def _compute_component_confidence(self, component: str) -> float:
-        """Compute confidence for a specific component."""
+    def _component_confidences(self, component: str) -> list[float]:
         components: Any
         if component == "variables":
             components = self.state_space.variables.values()
@@ -554,22 +570,41 @@ class GNNJSONExporter:
         elif component == "transitions":
             components = self.state_space.transitions.values()
         else:
-            return 0.5
+            return []
 
         confidences: list[float] = []
         for comp in components:
-            if hasattr(comp, "confidence") and comp.confidence:
-                try:
-                    val = float(
-                        comp.confidence.value
-                        if hasattr(comp.confidence, "value")
-                        else comp.confidence
-                    )
-                    confidences.append(val)
-                except (TypeError, ValueError):
-                    logger.debug(
-                        "Skipping non-numeric confidence value in component %r: %r", component, comp
-                    )
+            if not hasattr(comp, "confidence"):
+                continue
+            val = _confidence_to_float(comp.confidence)
+            if val is not None:
+                confidences.append(val)
+            elif comp.confidence:
+                logger.debug(
+                    "Skipping uncoercible confidence value in component %r: %r",
+                    component,
+                    comp,
+                )
+        return confidences
+
+    def _mapping_confidences(self) -> list[float]:
+        if not isinstance(self.mappings, dict):
+            return []
+        confidences: list[float] = []
+        for mapping in self.mappings.values():
+            val = _confidence_to_float(getattr(mapping, "confidence_score", None))
+            if val is not None:
+                confidences.append(val)
+        return confidences
+
+    def _compute_component_confidence(self, component: str) -> float:
+        """Compute confidence for a specific component."""
+        if component == "semantic_mappings":
+            confidences = self._mapping_confidences()
+            return sum(confidences) / len(confidences) if confidences else 0.5
+        if component not in {"variables", "observations", "actions", "transitions"}:
+            return 0.5
+        confidences = self._component_confidences(component)
         return sum(confidences) / len(confidences) if confidences else 0.5
 
     def _export_rendering_hints(self) -> dict[str, Any]:

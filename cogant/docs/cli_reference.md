@@ -4,20 +4,20 @@ COGANT ships a Typer-based CLI (entry point `cogant`, defined in `py/cogant/cli/
 
 Run `cogant --help` to see the authoritative, in-tree list (counts change when new commands ship).
 
-## Preview CLI commands (API pointers)
+## Analysis, Visualization, And Export Commands
 
-These four top-level commands are registered and support `--help`, but currently print “not yet fully implemented” guidance and point at the Python API instead of executing a full analysis:
+These four top-level commands are real package entry points. Each one can print JSON/table output and can write artifacts for scripts or dashboards:
 
-| Command | Intended API surface |
+| Command | Behavior |
 | --- | --- |
-| `cogant analyze-static` | `cogant.static` (`ComplexityAnalyzer`, `CouplingAnalyzer`, …) |
-| `cogant analyze-graph` | `cogant.graph.analysis.GraphAnalyzer` |
-| `cogant visualize` | `cogant.viz` |
-| `cogant export` | `cogant.export` / `MultiFormatExporter` |
+| `cogant analyze-static PATH --output report.json --format json|table` | Runs static analyzers over Python source files and reports complexity, dead-code, Halstead, skipped-file, and hotspot data. |
+| `cogant analyze-graph PATH_OR_BUNDLE --output graph.json --format json|table` | Loads or builds a `ProgramGraph`, then reports graph metrics, centrality, cycles, hotspots, node kinds, and edge kinds. |
+| `cogant visualize PATH_OR_RUN_DIR --format mermaid|png|svg|pdf|html --output PATH` | Renders a graph visualization artifact using the shipped visualization/export helpers. |
+| `cogant export PATH_OR_BUNDLE --formats json,jsonlines,graphml,parquet,svg --output-dir DIR` | Writes requested graph export formats plus `exports_manifest.json`. |
 
 ## `cogant translate`
 
-Run the full pipeline: ingest → static → normalize → graph → translate → statespace → process → export → validate.
+Run the full pipeline: ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate (the `dynamic` enrichment stage runs by default and is skipped only with `--no-dynamic`).
 
 ```bash
 cogant translate <repo> [--output DIR] [--layout-output] [--no-dynamic]
@@ -125,11 +125,11 @@ Defaults to 3 iterations. Each iteration runs the pipeline with `export` and `va
 | `cogant validate <target>` | Validate a bundle JSON, a run directory, or a `gnn_package/` (runs `GNNValidator`). |
 | `cogant diff <a> <b>` | Compare two bundles or two output directories (drift report in Markdown; `--output FILE`). |
 | `cogant reverse <gnn_file>` | Synthesize a Python package from a GNN markdown file (`--output DIR`, `--json`). |
-| `cogant roundtrip <target>` | Verify forward-reverse-forward round-trip isomorphism (`--threshold FLOAT`, `--keep-tmp`, `--json`). |
+| `cogant roundtrip <target>` | Verify forward-reverse-forward roundtrip invariants (`--threshold FLOAT`, `--keep-tmp`, `--json`). JSON reports `roundtrip_status`, `role_preservation_score`, strict structural checks, matrix/GNN preservation, and generated-code status. |
 | `cogant plugin list` / `cogant plugin info <name>` | Manage and inspect COGANT plugins. |
 | `cogant migrate migrate <path>` | Migrate GNN files to the current schema version (`--target`, `--dry-run`). |
 | `cogant upstream-gnn <package_dir>` | Drive the upstream GNN 25-step pipeline (`generalized-notation-notation`) against an existing `gnn_package/` (`--only-steps`, `--skip-steps`, `--output-dir`, `--frameworks`, `--llm-model`, `--verbose`). |
-| `cogant analyze-static` / `analyze-graph` / `visualize` / `export` | **Preview stubs** — see [Preview CLI commands](#preview-cli-commands-api-pointers) above. |
+| `cogant analyze-static` / `analyze-graph` / `visualize` / `export` | Real artifact-producing commands; see [analysis, visualization, and export commands](#analysis-visualization-and-export-commands). |
 
 ## Upstream GNN 25-step pipeline
 

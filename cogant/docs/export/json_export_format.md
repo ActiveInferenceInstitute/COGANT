@@ -1,6 +1,6 @@
 ## JSON export format
 
-> **Scope:** Typed **program graph** JSON produced by `TypedExporter.export_typed_graph` (`py/cogant/export/typed_export.py`). This is distinct from the **GNN package** companions (`model.gnn.json`, `state_space.json`, …) emitted under `gnn_package/` — see [Overview](overview.md) and [`gnn/json_export.py`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/gnn/json_export.py).
+> **Scope:** Typed **program graph** JSON produced by `TypedExporter.export_typed_graph` (`py/cogant/export/typed_export.py`). This is distinct from the **GNN package** companions (`model.gnn.json`, `state_space.json`, …) emitted under `gnn_package/` — see [Overview](overview.md) and [`gnn/json_export.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/gnn/json_export.py).
 
 ### Top-level shape
 
@@ -58,5 +58,5 @@ Each entry mirrors `cogant.schemas.core.Edge`:
 ### Related surfaces
 
 - **GNN package JSON** — sections and companions under `gnn_package/`; [Overview](overview.md).
-- **Configuration** — `ExportConfig` compression and bundle options: [`ExportConfig`](https://github.com/cogant-contributors/cogant/blob/main/cogant/py/cogant/config/schema.py) (`compression`: `none` \| `gzip` \| `zstd`).
+- **Configuration** — `ExportConfig` compression and bundle options: [`ExportConfig`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/config/schema.py) (`compression`: `none` \| `gzip` \| `zstd`).
 - **See also** — [See also](see_also.md), [Validation](validation.md).

@@ -10,7 +10,7 @@ the recorded contract.
 | Path | Role |
 | --- | --- |
 | `test_bundle_json_schema.py` | Asserts the canonical top-level keys of `Bundle.save_json()`. |
-| `roundtrip/` | Per-fixture roundtrip snapshots (`<fixture>.json`). Each holds the documented original-role multiset, minimum synthesized-role floor, expected `shape_match`, and `min_role_match_score`. Consumed by `tests/integration/test_roundtrip_stability_gaps.py::TestGoldenRoundtripOutputs`. |
+| `roundtrip/` | Per-fixture roundtrip snapshots (`<fixture>.json`). Each holds the documented original-role multiset, minimum synthesized-role floor, expected `shape_match`, `min_role_match_score` compatibility floor, and v0.6 `must_be_role_preserved` status. Consumed by `tests/integration/test_roundtrip_stability_gaps.py::TestGoldenRoundtripOutputs`. |
 | `README.md` | High-level overview. |
 
 ## Snapshot conventions

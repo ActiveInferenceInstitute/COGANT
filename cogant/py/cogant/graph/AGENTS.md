@@ -38,10 +38,10 @@ ProgramGraphBuilder accumulates nodes and edges, assigns stable IDs via Identity
 - Accumulates nodes and edges from normalized facts
 - Assigns stable IDs via `IdentityResolver` (deterministic, content-based)
 - Deduplicates nodes by ID
-- Methods: `add_node(node)`, `add_edge(source_id, target_id, kind)`, `build() -> ProgramGraph`
+- Methods: `add_node(node)`, `add_edge(source_id, target_id, kind)`, `finalize() -> ProgramGraph`
 - Consumes: `LanguageFact` records from `normalize/`
 
-**query.py** — `GraphQuery`
+**queries.py** — `GraphQuery`
 - Filters nodes: by kind, by language, by name pattern
 - Path finding: `find_path(source, target)`, `all_paths(source, target)`
 - Reachability: `is_reachable(source, target)`, `transitive_closure(node)`
@@ -182,7 +182,7 @@ for fact in facts:
     for edge in fact.to_edges():
         builder.add_edge(edge.source_id, edge.target_id, edge.kind)
 
-graph = builder.build()
+graph = builder.finalize()
 print(f"Graph: {len(graph.nodes)} nodes, {len(graph.edges)} edges")
 ```
 

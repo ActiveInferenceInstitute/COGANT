@@ -696,9 +696,9 @@ def create_app(
         """Run :func:`cogant.reverse.verify_repo_roundtrip` and shape the result.
 
         The underlying helper already tolerates missing artifacts by
-        surfacing a zero ``role_match_score`` and a list of errors; we
-        pass those through verbatim so the caller can decide whether
-        the round-trip is good enough for their use case.
+        surfacing a zero ``role_preservation_score`` plus an invariant
+        ledger and list of errors; we pass those through so callers can
+        decide whether the round-trip is good enough for their use case.
         """
         path = Path(body.repo_path).expanduser().resolve()
         if not path.exists():
@@ -710,8 +710,14 @@ def create_app(
         except (ValueError, RuntimeError, KeyError) as exc:
             raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
         return RoundtripResponse(
-            role_match_score=float(result.role_match_score),
-            is_isomorphic=bool(result.is_isomorphic),
+            roundtrip_status=result.roundtrip_status,
+            role_preservation_score=float(result.role_preservation_score),
+            role_preserved=bool(result.role_preserved),
+            structurally_isomorphic=bool(result.structurally_isomorphic),
+            matrix_preserved=bool(result.matrix_preserved),
+            gnn_sections_preserved=bool(result.gnn_sections_preserved),
+            generated_code_ok=bool(result.generated_code_ok),
+            invariants=dict(result.invariants),
             original_roles=dict(result.original_roles),
             synthesized_roles=dict(result.synthesized_roles),
             threshold=float(body.threshold),
@@ -966,8 +972,14 @@ def create_app(
         duration_total = time.perf_counter() - start_total
         return RoundtripResponseV1(
             request_id=request_id,
-            role_match_score=float(result.role_match_score),
-            is_isomorphic=bool(result.is_isomorphic),
+            roundtrip_status=result.roundtrip_status,
+            role_preservation_score=float(result.role_preservation_score),
+            role_preserved=bool(result.role_preserved),
+            structurally_isomorphic=bool(result.structurally_isomorphic),
+            matrix_preserved=bool(result.matrix_preserved),
+            gnn_sections_preserved=bool(result.gnn_sections_preserved),
+            generated_code_ok=bool(result.generated_code_ok),
+            invariants=dict(result.invariants),
             original_roles=dict(result.original_roles),
             synthesized_roles=dict(result.synthesized_roles),
             threshold=float(body.threshold),

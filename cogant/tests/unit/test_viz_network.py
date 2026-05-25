@@ -10,6 +10,7 @@ matplotlib.use("Agg")
 import pytest
 
 from cogant.viz.network_view import NetworkView
+from tests.unit._viz_assert import assert_figure_nondegenerate
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def nv():
 def test_plot_degree_distribution_basic(nv):
     metrics = {"degrees": [1, 2, 2, 3, 5, 5, 5, 8]}
     fig = nv.plot_degree_distribution(metrics)
-    assert fig is not None
+    assert_figure_nondegenerate(fig)
     import matplotlib.pyplot as plt
 
     plt.close("all")
@@ -40,7 +41,7 @@ def test_plot_degree_distribution_empty(nv):
 def test_plot_centrality_ranking_basic(nv):
     centrality = {"func_a": 0.9, "func_b": 0.5, "func_c": 0.1}
     fig = nv.plot_centrality_ranking(centrality, top_n=3)
-    assert fig is not None
+    assert_figure_nondegenerate(fig)
     import matplotlib.pyplot as plt
 
     plt.close("all")
@@ -61,7 +62,7 @@ def test_plot_community_graph_empty(nv):
 
     g = ProgramGraph(metadata=GraphMetadata(repo_uri="test"))
     fig = nv.plot_community_graph(g, [])
-    assert fig is None or fig is not None  # graceful either way
+    assert fig is None
     import matplotlib.pyplot as plt
 
     plt.close("all")
@@ -72,7 +73,7 @@ def test_plot_adjacency_heatmap_basic(nv):
     matrix = [[1, 0, 1], [0, 1, 0], [1, 0, 1]]
     labels = ["A", "B", "C"]
     fig = nv.plot_adjacency_heatmap(matrix, labels)
-    assert fig is not None
+    assert_figure_nondegenerate(fig)
     import matplotlib.pyplot as plt
 
     plt.close("all")
@@ -89,10 +90,10 @@ def test_plot_adjacency_heatmap_empty(nv):
 
 @pytest.mark.unit
 def test_plot_hotspot_treemap_basic(nv):
+    pytest.importorskip("squarify")
     hotspots = {"mod_a": 0.9, "mod_b": 0.6, "mod_c": 0.3}
     fig = nv.plot_hotspot_treemap(hotspots)
-    # squarify may not be installed; either a figure or None is fine
-    assert fig is None or fig is not None
+    assert_figure_nondegenerate(fig)
     import matplotlib.pyplot as plt
 
     plt.close("all")
@@ -105,6 +106,18 @@ def test_plot_hotspot_treemap_empty(nv):
     import matplotlib.pyplot as plt
 
     plt.close("all")
+
+
+@pytest.mark.unit
+def test_summarize_hotspots_ranks_and_tiers(nv):
+    rows = nv.summarize_hotspots(
+        {"alpha": 1.0, "beta": 0.6, "gamma": 0.2},
+        role_hints={"alpha": "controller"},
+    )
+    assert rows[0]["node"] == "alpha"
+    assert rows[0]["tier"] == "critical"
+    assert rows[0]["role"] == "controller"
+    assert rows[-1]["tier"] == "context"
 
 
 @pytest.mark.unit
@@ -124,6 +137,8 @@ def test_to_mermaid_community_empty(nv):
 def test_to_mermaid_hotspots_basic(nv):
     result = nv.to_mermaid_hotspots({"alpha": 0.8, "beta": 0.4})
     assert isinstance(result, str)
+    assert "Critical hotspots" in result
+    assert "critical --> alpha" in result
 
 
 @pytest.mark.unit

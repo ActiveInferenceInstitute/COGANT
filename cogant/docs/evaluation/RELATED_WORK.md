@@ -1,6 +1,6 @@
 # COGANT Related Work
 
-Extended related-work commentary supplementing `../manuscript/08_scope_and_related_work.md`. Citations key to the annotated entries in `LITERATURE.md`.
+Extended related-work commentary supplementing `../manuscript/08_00_scope_and_related_work.md`. Citations key to the annotated entries in `LITERATURE.md`.
 
 ## Program Graph Extraction
 

@@ -1,20 +1,20 @@
 # Round-Trip Validation Report
 
-**Date:** 2026-04-09 (template — updated by `test_roundtrip.py` empirically)
-**Status:** Protocol defined; results PENDING
-**Related:** `ISOMORPHISM_THEOREM.md`, `SCOPING_REPORT.md`
+**Date:** 2026-04-09 (historical protocol), refreshed for v0.6 terminology
+**Status:** Superseded by `ROUNDTRIP_EVAL.md` and `evaluation/METRICS.yaml`
+**Related:** `ROUNDTRIP_EVAL.md`, `docs/theory/roundtrip.md`, `SCOPING_REPORT.md`
 
 ---
 
 ## 1. Purpose
 
-This document records the validation protocol and empirical results for testing the Role Isomorphism Theorem stated in `ISOMORPHISM_THEOREM.md` §5.
+This document records the original validation protocol for testing whether semantic roles survive a forward-reverse-forward loop. It is retained as a historical design note; current results and the public schema live in `ROUNDTRIP_EVAL.md`, `docs/theory/roundtrip.md`, and `evaluation/METRICS.yaml`.
 
-The theorem claims that for any program graph G:
+The historical theorem stated that for any program graph G:
 
 > |R_dist(G) - R_dist(R(F(G)))| ≤ ε(G)
 
-where F is the COGANT forward pass (`cogant.translate`), R is the COGANT reverse pass (`cogant.reverse`), R_dist is the role distribution vector, and ε(G) is the count of ambiguous nodes. This document provides the empirical estimate of ε(G) for control-positive test repositories.
+where F is the COGANT forward pass (`cogant.translate`), R is the COGANT reverse pass (`cogant.reverse`), R_dist is the role distribution vector, and ε(G) is the count of ambiguous nodes. The current implementation exposes the higher-is-better `role_preservation_score` (`s_role`) and a `roundtrip_status` enum instead of treating this as strict graph isomorphism.
 
 ---
 
@@ -72,10 +72,10 @@ python -m cogant.translate --repo /tmp/cogant-roundtrip-calculator/ --output /tm
 
 Extract role distribution R_dist_roundtrip from `gnn_prime.json`.
 
-### Step 5: Compute role_match
+### Step 5: Compute role preservation
 
 ```python
-def role_match(dist1, dist2):
+def role_preservation_score(dist1, dist2):
     """Intersection-over-max similarity for role distribution vectors."""
     intersection = sum(min(dist1[r], dist2[r]) for r in ROLES)
     max_total = max(sum(dist1.values()), sum(dist2.values()))
@@ -103,26 +103,35 @@ Note: if A-matrix dimensions differ (|S| or |O| changed), padding with zeros bef
 
 ### Step 7: Classify
 
-| role_match | Classification |
+| Condition | Current classification |
 |---|---|
-| ≥ 0.8 | ISOMORPHIC |
-| 0.5 ≤ · < 0.8 | PARTIALLY_ISOMORPHIC |
-| < 0.5 | NON_ISOMORPHIC |
+| `role_preservation_score >= 0.5` | ROLE_PRESERVED |
+| `role_preservation_score < 0.5` | DRIFT |
+| Generated-code, import, or re-forward failure | FAILED |
+
+Strict `STRUCTURALLY_ISOMORPHIC` status is a separate v0.6 invariant-ledger result:
+it additionally requires node/edge deltas, edge-kind deltas, GNN section diffs,
+matrix shape/value deltas, and generated-code compile/smoke checks to pass.
 
 ---
 
 ## 3. Results
 
-*To be populated by `test_roundtrip.py` — run `uv run pytest tests/infra_tests/test_roundtrip.py -v` to generate.*
+This protocol page no longer carries hand-maintained result cells. Current,
+machine-readable results live in `evaluation/METRICS.yaml` and are summarized
+in `ROUNDTRIP_EVAL.md`. The current public contract reports:
 
-| Repo | \|V\| | \|E\| | role_match | matrix_dist | ε(G) | status |
-|---|---|---|---|---|---|---|
-| calculator | ? | ? | PENDING | PENDING | PENDING | PENDING |
-| event_pipeline | ? | ? | PENDING | PENDING | PENDING | PENDING |
-| flask_mini | ? | ? | PENDING | PENDING | PENDING | PENDING |
-| hand-written GNN (3-node) | 3 | 4 | PENDING | PENDING | PENDING | PENDING |
+| Metric | Current source |
+|---|---|
+| Role-preserved target count | `evaluation.roundtrip.role_preserved_count` |
+| Strict structural-isomorphism count | `evaluation.roundtrip.strict_isomorphism_count` |
+| Drift / failed counts | `evaluation.roundtrip.drift_count`, `evaluation.roundtrip.failed_count` |
+| Per-target invariant ledger | each generated `roundtrip/metrics.json` |
 
-Expected outcome (from theorem): all repos with well-structured role assignments should be ISOMORPHIC (role_match ≥ 0.8). `flask_mini` may be PARTIALLY_ISOMORPHIC due to its higher ambiguity rate.
+Expected outcome (from the historical theorem): well-structured role assignments
+should land in the `ROLE_PRESERVED` tier (`s_role >= 0.5`). Strict
+`STRUCTURALLY_ISOMORPHIC` status is intentionally narrower and requires the
+full v0.6 invariant ledger.
 
 ---
 
@@ -150,15 +159,15 @@ The following four loss case categories are documented in `ISOMORPHISM_THEOREM.m
 
 **Detection signal:** Discrepancy here indicates a threshold parameter mismatch between the F and R configurations. Check `cogant.config.EDGE_THRESHOLD`.
 
-### Loss Case 3: Ambiguous Nodes (Primary Source of ε)
+### Loss Case 3: Ambiguous Nodes
 
 **Description:** A node matches multiple role-assignment rules with equal priority score. The original tie-break assigns one role; the synthesized code may break the tie differently if the synthesized structural pattern activates a different subset of the matching rules.
 
 **Expected behavior in round-trip:** If the COGANT rule priority table is deterministic and stable, the same rule wins the tie-break on both the original and synthesized node. Role is preserved. If the priority table has changed between invocations (version drift), roles may differ.
 
-**Expected role_match impact:** Contributes directly to ε(G). Measure as: fraction of nodes in G with rule-priority ties.
+**Expected role-preservation impact:** Contributes directly to the ambiguity estimate. Measure as: fraction of nodes in G with rule-priority ties.
 
-**Detection signal:** High ε(G) combined with low role_match indicates version drift in the priority table. Freeze rule table hash in `cogant.config.RULE_TABLE_HASH` and assert it is stable across forward-pass invocations.
+**Detection signal:** High ambiguity combined with low `s_role` indicates version drift in the priority table. Freeze rule table hash in `cogant.config.RULE_TABLE_HASH` and assert it is stable across forward-pass invocations.
 
 ### Loss Case 4: Zero-Edge (Isolated) Nodes
 
@@ -176,25 +185,25 @@ The following four loss case categories are documented in `ISOMORPHISM_THEOREM.m
 
 ### 5.1 Validity of GNN Metrics as Quality Proxies
 
-If empirical results confirm ISOMORPHIC classification for the calculator and event_pipeline repos (role_match ≥ 0.8, ε ≈ 0), this validates the key claim from `ISOMORPHISM_THEOREM.md` §8.1: that GNN matrix properties (A sparsity, B rank, D entropy, C variance) are valid proxy metrics for codebase quality.
+If empirical results confirm ROLE_PRESERVED classification for the calculator and event_pipeline repos (`s_role >= 0.5`), this supports the narrower claim that semantic-role populations survive regeneration. Matrix properties (A sparsity, B rank, D entropy, C variance) still require their own validation before they are used as codebase-quality proxies.
 
 Specifically: a quality score computed from the GNN will rank-order repositories in the same way as a quality score computed from the original program graphs, for all structural properties that depend only on the role distribution and inter-role edge structure.
 
-### 5.2 Bounded Error Guarantee
+### 5.2 Bounded Role-Preservation Error
 
-The Role Isomorphism Theorem provides a worst-case bound: error ≤ ε(G). Empirical measurement of ε(G) for real repositories is necessary to determine whether this bound is tight or loose. If ε(G) is consistently small (< 5% of nodes) across diverse repositories, the theorem justifies using COGANT as a reliable structural analyzer without ground-truth comparison.
+The historical theorem provides a worst-case role-preservation bound. Empirical measurement of ambiguity for real repositories is necessary to determine whether this bound is tight or loose. Strict structural claims require the v0.6 invariant ledger, not the role score alone.
 
 ### 5.3 Incremental Analysis Validity
 
-If role_match for `flask_mini` (the most complex test corpus) is ISOMORPHIC, this supports the functoriality claim from `ISOMORPHISM_THEOREM.md` §8.3: that COGANT can be run incrementally on changed modules without re-analyzing the full repository. The round-trip results provide the empirical evidence that per-module GNNs compose consistently with the full-repository GNN.
+If `s_role` for `flask_mini` (the most complex test corpus) is ROLE_PRESERVED, this supports the practical claim that incremental runs preserve semantic-role populations. It does not by itself prove full functoriality or strict graph composition.
 
 ### 5.4 Threshold for Flagging Unreliable Repos
 
 Based on the theorem, we propose the following operational threshold for COGANT users:
 
-- **ε(G) < 5%:** Round-trip is reliable. GNN metrics are valid proxies.
-- **5% ≤ ε(G) < 15%:** Round-trip is partially reliable. Metrics should be treated as approximate.
-- **ε(G) ≥ 15%:** Round-trip is unreliable. The codebase has pervasive role ambiguity; structural refactoring is recommended before using GNN metrics.
+- **s_role >= 0.5:** Role preservation clears the public default threshold for inspection and regression tracking.
+- **s_role < 0.5:** Treat the roundtrip as drift; inspect the visual diff and invariant ledger.
+- **FAILED status:** Treat generated-code or re-forward failures as blockers for downstream model claims.
 
 These thresholds are provisional and will be revised based on empirical data from this validation study.
 
@@ -203,18 +212,16 @@ These thresholds are provisional and will be revised based on empirical data fro
 ## 6. Running the Validation
 
 ```bash
-# Install dependencies
+# From the package root
 uv sync
-
-# Run round-trip validation suite
-uv run pytest tests/infra_tests/test_roundtrip.py -v --tb=short
-
-# Run with output capture (writes results table to this file)
-uv run python scripts/run_roundtrip_validation.py --update-report
+uv run pytest tests/unit/test_reverse_cli_commands.py tests/integration/test_roundtrip.py -q
+uv run cogant roundtrip examples/control_positive/calculator --output output/calculator/roundtrip --keep-tmp
 ```
 
-The `--update-report` flag causes `run_roundtrip_validation.py` to overwrite the PENDING entries in section 3 of this document with measured values.
+The historical `--update-report` path is retired for this page. Refresh
+`evaluation/METRICS.yaml` and generated `roundtrip/metrics.json` artifacts
+instead, then regenerate the manuscript variables if those values are cited.
 
 ---
 
-*Document maintained in ``. Theory reference: `ISOMORPHISM_THEOREM.md`. Test implementation: `tests/infra_tests/test_roundtrip.py` (to be written). Script: `scripts/run_roundtrip_validation.py` (to be written).*
+*Historical protocol note. Current theory reference: `docs/theory/roundtrip.md`; current metrics source: `evaluation/METRICS.yaml` and generated `roundtrip/metrics.json` artifacts.*

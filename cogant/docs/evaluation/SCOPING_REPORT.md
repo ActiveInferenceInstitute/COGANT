@@ -9,18 +9,18 @@
 
 ## v4 Refresh Summary (2026-04-21)
 
-- Masthead, "Test results" snapshot, and "File Reference Map" test counts re-aligned with `cogant/evaluation/METRICS.yaml` (test_count_total=7859, passing=7828, coverage=90.03%, mypy_errors=0, ruff_violations=0, isomorphism=23/23). The Phase 0/1 backlog is unchanged because the underlying capability claims are unchanged; only the *headline numbers* moved.
+- Masthead, "Test results" snapshot, and "File Reference Map" test counts re-aligned with the then-current `cogant/evaluation/METRICS.yaml` (test_count_total=7859, passing=7828, coverage=90.03%, mypy_errors=0, ruff_violations=0, historical role-preservation benchmark 23/23). Current v0.6 metrics classify that checked-in ledger as `STALE_LEGACY` until native rows are regenerated. The Phase 0/1 backlog is unchanged because the underlying capability claims are unchanged; only the *headline numbers* moved.
 - The per-module coverage table in §4 (lines reporting `static/dataflow.py = 19 %` etc.) is preserved as a **v3 snapshot** — the live per-module breakdown is in `cogant/coverage.json` after a coverage run. The qualitative "critical gaps" picture has narrowed substantially under v0.5.0 but a fresh per-file breakdown is out of scope for this refresh.
 - v3 sections below are kept verbatim as historical record. Where their *numbers* contradict the live state, defer to `METRICS.yaml`.
 
 ## v3 Update Summary (P4 complete)
 
 - **P4-1 Manuscript audit:** All nine manuscript sections audited against the current implementation. Claims that matched shipped behaviour are left in place; claims whose numbers could only be produced by re-running the pipeline were replaced with measured values taken from the canonical `../../evaluation/figures/metrics.json` snapshot.
-- **P4-2 Experimental numbers:** `manuscript/06_experimental_setup.md` now ships four real tables (Tables 4–7) with concrete node, edge, mapping, state-space, action, transition, GNN-section, and wall-clock numbers for all six fixtures (`calculator`, `event_pipeline`, `flask_mini`, `flask_app`, `requests_lib`, `json_stdlib`).
+- **P4-2 Experimental numbers:** `manuscript/06_00_experimental_setup.md` now frames four real tables in the `06_03` / `06_04` detail sections, with concrete node, edge, mapping, state-space, action, transition, GNN-section, and wall-clock numbers for all six fixtures (`calculator`, `event_pipeline`, `flask_mini`, `flask_app`, `requests_lib`, `json_stdlib`).
 - **P4-3 Flask example:** `manuscript/04_examples_and_failure_modes.md` previously cited hand-crafted Flask numbers (147 nodes, 389 edges, FUNCTION/VARIABLE/TYPE-heavy distribution). Rewritten to cite the packaged `flask_app` fixture (98 nodes, 597 edges, MODULE/CLASS/METHOD/FUNCTION structural core) with the real node-kind and edge-kind distributions from the canonical run.
 - **P4-4 Reproducible figures:** `../../evaluation/figures/generate_figures.py` re-runs the orchestrator over every fixture and writes `metrics.json`, `metrics_table.md`, and four PNGs (`fig1_graph_sizes.png`, `fig2_node_kinds.png`, `fig3_state_space.png`, `fig4_pipeline_latency.png`). The manuscript cross-references the script as its single source of truth for numbers.
 - **P4-5 GNN spec validation:** Every fixture reports `gnn_score = 100.0` with zero errors and zero warnings from the packaged `GNNValidator`, so the emitted GNN packages are compliant with the Active Inference Institute's validator at the structural level. Full section-by-section comparison against upstream GNN spec v1.1 remains open.
-- **Shipped capabilities list:** `manuscript/05_conclusion.md` expanded from five items to ten, now covering: 22-rule fixpoint engine, conflict resolution, dynamic enrichment wired into default pipeline (including `--no-dynamic` CLI flag), confidence tier promotion, ten-stage pipeline, complete state-space compilation, A/B/C/D matrix derivation, principled VFE/EFE, Markov blanket extraction with five seed strategies, and real-world fixture validation.
+- **Shipped capabilities list:** `manuscript/10_conclusion.md` expanded from five items to ten, now covering: 22-rule fixpoint engine, conflict resolution, dynamic enrichment wired into default pipeline (including `--no-dynamic` CLI flag), confidence tier promotion, ten-stage pipeline, complete state-space compilation, A/B/C/D matrix derivation, principled VFE/EFE, Markov blanket extraction with five seed strategies, and real-world fixture validation.
 
 ---
 
@@ -393,12 +393,12 @@ Rust, JS, TS, Go parser directories exist with scaffolding. No actual parsing lo
 | P1-1 | Fix `extract_calls()` stub → real AST Call node traversal | Call edges in graph; OrchestratorRule fires on orchestrators | **DONE** — `CallGraphBuilder` produces 433 CALLS edges on `flask_app`, 183 on `requests_lib`, etc. |
 | P1-2 | Fix `static/dataflow.py` (19%) → real READ/WRITE edge extraction | READ/WRITE edges in graph; data-flow rules fire correctly | **Partial** — READS/WRITES edges present in all six fixtures; coverage still low. |
 | P1-3 | Fix `static/types.py` (16%) → real type annotation propagation | Type annotations appear as node metadata | Pending |
-| P1-4 | Complete `statespace/compiler.py` action/transition/likelihood extraction | StateSpaceModel populated for all 3 control-positive repos | **DONE** — variables, actions, observations, transitions populated for every fixture that yields them (see Table 6 in §6). |
+| P1-4 | Complete `statespace/compiler.py` action/transition/likelihood extraction | StateSpaceModel populated for all 3 control-positive repos | **DONE** — variables, actions, observations, transitions populated for every fixture that yields them; current manuscript tables are generated from `METRICS.yaml` rather than this historical table number. |
 | P1-5 | Complete `process/timeline.py` (16%) temporal analysis | Timeline events extracted for event_pipeline fixture | Pending |
 | P1-6 | Wire dynamic analysis into default pipeline with opt-out flag | `--no-dynamic` flag; coverage paths enrich confidence tiers | **DONE** — `PipelineConfig.skip_dynamic` wired to `--no-dynamic` in `cogant/cli/main.py`. |
-| P1-7 | Validate GNN output section completeness for all fixtures | Document which of 19 sections populate, which are empty | **DONE** — `gnn_package/` validates at 100.0 on every fixture; 19-file layout documented in §6 Table 7. |
-| P1-8 | Implement A/B/C/D matrices in `cogant/gnn/matrices.py` | Normalized A, B, C, D matrices emitted in `model.gnn.json` | **DONE** — `GNNMatrices` class with `compute_A/B/C/D()` shipped; see §5 shipped capability 7. |
-| P1-9 | Principled VFE/EFE in `cogant/simulate/free_energy.py` | `variational_free_energy` / `expected_free_energy` use KL + log likelihood on matrices | **DONE** — canonical Active Inference formulation shipped; see §5 shipped capability 8. |
+| P1-7 | Validate GNN output section completeness for all fixtures | Document which of 19 sections populate, which are empty | **DONE** — `gnn_package/` validates at 100.0 on every fixture; the current package layout is documented in the GNN and export reference pages. |
+| P1-8 | Implement A/B/C/D matrices in `cogant/gnn/matrices.py` | Normalized A, B, C, D matrices emitted in `model.gnn.json` | **DONE** — `GNNMatrices` class with `compute_A/B/C/D()` shipped; the current manuscript shipped-capabilities list and package docs describe the live behavior. |
+| P1-9 | Principled VFE/EFE in `cogant/simulate/free_energy.py` | `variational_free_energy` / `expected_free_energy` use KL + log likelihood on matrices | **DONE** — canonical Active Inference formulation shipped; the current manuscript shipped-capabilities list and runtime docs describe the live behavior. |
 | P1-10 | Markov blanket extraction with multiple seed strategies | Explicit, module, kind, auto-cohesion, mapping_kind strategies supported | **DONE** — see `cogant/markov/extractor.py`; five strategies live. |
 
 ### Phase 2 — Rust integration (performance + type system parity)
@@ -428,7 +428,7 @@ Rust, JS, TS, Go parser directories exist with scaffolding. No actual parsing lo
 | ID | Task | Acceptance | Status |
 |----|------|------------|--------|
 | P4-1 | Audit manuscript sections against implementation (section-by-section) | Every claim is either implemented or marked Future Work | **DONE (v3)** |
-| P4-2 | Write experimental results section (06_experimental_setup.md) with real numbers | Node/edge counts, rule coverage %, confidence distributions for 6 repos | **DONE (v3)** |
+| P4-2 | Write experimental results section (`06_00_experimental_setup.md` plus `06_03` / `06_04` tables) with real numbers | Node/edge counts, rule coverage %, confidence distributions for 6 repos | **DONE (v3)** |
 | P4-3 | Rewrite concrete Flask walkthrough (04_examples_and_failure_modes.md) with measured numbers | Node/edge counts match `../../evaluation/figures/metrics.json` flask_app entry | **DONE (v3)** |
 | P4-4 | Generate reproducible figures for manuscript from fixture runs | `../../evaluation/figures/generate_figures.py` produces PNGs + metrics.json | **DONE (v3)** |
 | P4-5 | Validate manuscript against GNN spec v1.1 | GNN sections match upstream header requirements | **Partial (v3)** — structural validator at 100.0/100 on all fixtures; full spec-v1.1 header comparison still open |

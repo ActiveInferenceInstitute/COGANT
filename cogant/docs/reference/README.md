@@ -34,6 +34,7 @@ For the high-level architecture narrative, see [../architecture/overview.md](../
 | [Configuration](configuration.md) | Reference for configuration keys and defaults | Intermediate |
 | [Calibration Guide](calibration_guide.md) | Methodology and per-threshold sweep registry for resolving `TODO(calibration)` markers in `translate/` and `statespace/` | Advanced |
 | [API Overview](api_overview.md) | Compressed Python / CLI API surface reference | Intermediate |
+| [Batch Dashboard](batch_dashboard.md) | Cross-target `run_all` sweep dashboard artifacts and API | Intermediate |
 | [Examples](examples.md) | Worked examples covering common reference tasks | Beginner |
 
 For the detailed CLI verb reference see [../cli/commands.md](../cli/commands.md) and [../cli/usage_examples.md](../cli/usage_examples.md); for Python API deep-dives see [../api/README.md](../api/README.md). How-to recipes previously fragmented into the reference module now live in [../cookbook/](../cookbook/README.md) and [../getting-started/quickstart.md](../getting-started/quickstart.md).
@@ -45,7 +46,7 @@ For the detailed CLI verb reference see [../cli/commands.md](../cli/commands.md)
 3. [Core Concepts](core_concepts.md) plus [../architecture/overview.md](../architecture/overview.md) — the conceptual scaffold.
 4. [Pipeline Stages](pipeline_stages.md) and [Data Representations](data_representations.md) — what the pipeline does and what flows between stages.
 5. [Semantic Roles](semantic_roles.md) and [Translation Rules](translation_rules.md) — the central knobs you tune.
-6. [Configuration](configuration.md) and [API Overview](api_overview.md) — how to drive COGANT in practice.
+6. [Configuration](configuration.md), [API Overview](api_overview.md), and [Batch Dashboard](batch_dashboard.md) — how to drive COGANT in practice.
 7. [Schemas Reference](schemas_reference.md) — the wire-level contract.
 8. [Implementation Status](implementation_status.md) — what is actually wired up today.
 

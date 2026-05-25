@@ -44,10 +44,31 @@ try:
         PyProgramGraph as _RustGraph,  # type: ignore[import-not-found,unused-ignore]  # optional Rust extension
     )
     from cogant._rust import (
+        compile_matrix_shapes_json as _compile_matrix_shapes_json,  # type: ignore[import-not-found,unused-ignore]
+    )
+    from cogant._rust import (
         create_example_graph as _create_example_graph,  # type: ignore[import-not-found,unused-ignore]
     )
     from cogant._rust import (
+        format_gnn_json as _format_gnn_json,  # type: ignore[import-not-found,unused-ignore]
+    )
+    from cogant._rust import (
+        format_gnn_markdown as _format_gnn_markdown,  # type: ignore[import-not-found,unused-ignore]
+    )
+    from cogant._rust import (
         get_version as _rust_version,  # type: ignore[import-not-found,unused-ignore]
+    )
+    from cogant._rust import (
+        graph_summary_json as _graph_summary_json,  # type: ignore[import-not-found,unused-ignore]
+    )
+    from cogant._rust import (
+        summarize_trace_events_json as _summarize_trace_events_json,  # type: ignore[import-not-found,unused-ignore]
+    )
+    from cogant._rust import (
+        translation_rule_predicates_json as _translation_rule_predicates_json,  # type: ignore[import-not-found,unused-ignore]
+    )
+    from cogant._rust import (
+        write_artifact_atomic as _write_artifact_atomic,  # type: ignore[import-not-found,unused-ignore]
     )
 
     RUST_AVAILABLE: bool = True
@@ -56,8 +77,24 @@ except (ImportError, ModuleNotFoundError):
     _RustGraph = None  # type: ignore[assignment,misc,unused-ignore]
     _create_example_graph = None  # type: ignore[assignment,unused-ignore]
     _rust_version = None  # type: ignore[assignment,unused-ignore]
+    _compile_matrix_shapes_json = None  # type: ignore[assignment,unused-ignore]
+    _format_gnn_json = None  # type: ignore[assignment,unused-ignore]
+    _format_gnn_markdown = None  # type: ignore[assignment,unused-ignore]
+    _graph_summary_json = None  # type: ignore[assignment,unused-ignore]
+    _summarize_trace_events_json = None  # type: ignore[assignment,unused-ignore]
+    _translation_rule_predicates_json = None  # type: ignore[assignment,unused-ignore]
+    _write_artifact_atomic = None  # type: ignore[assignment,unused-ignore]
     RUST_AVAILABLE = False
     _RUST_VERSION = None
+
+
+def _require_rust_function(name: str, fn: Any) -> Any:
+    if not RUST_AVAILABLE or fn is None:
+        raise RuntimeError(
+            f"Rust backend function {name} is unavailable; run "
+            "`uv run maturin develop --release` from rust/cogant-ffi."
+        )
+    return fn
 
 
 def get_program_graph_impl() -> type[Any]:
@@ -68,6 +105,12 @@ def get_program_graph_impl() -> type[Any]:
     ``ProgramGraphBuilder``. The returned class has a compatible ``add_node``
     surface area for the primitive-argument call form used by the pipeline.
     """
+    if _env_prefers_rust() is True and not RUST_AVAILABLE:
+        raise RuntimeError(
+            "COGANT_USE_RUST=1 was requested, but cogant._rust is not importable. "
+            "Run `uv run maturin develop --release` from rust/cogant-ffi or unset "
+            "COGANT_USE_RUST to use the Python backend."
+        )
     if RUST_AVAILABLE and _RustGraph is not None:
         return cast(type[Any], _RustGraph)
     from cogant.graph.builder import ProgramGraphBuilder
@@ -92,6 +135,47 @@ def create_example_graph() -> Any:
             "`maturin develop --release` in rust/cogant-ffi/ to enable."
         )
     return _create_example_graph()
+
+
+def graph_summary_json(graph: Any) -> str:
+    """Return a Rust-computed graph summary JSON string."""
+    return _require_rust_function("graph_summary_json", _graph_summary_json)(graph)
+
+
+def translation_rule_predicates_json() -> str:
+    """Return Rust-side rule predicate metadata JSON."""
+    return _require_rust_function(
+        "translation_rule_predicates_json", _translation_rule_predicates_json
+    )()
+
+
+def compile_matrix_shapes_json(n_states: int, n_obs: int, n_actions: int) -> str:
+    """Return deterministic A/B/C/D shape metadata from Rust."""
+    return _require_rust_function("compile_matrix_shapes_json", _compile_matrix_shapes_json)(
+        n_states, n_obs, n_actions
+    )
+
+
+def format_gnn_json(graph: Any, title: str) -> str:
+    """Return Rust-formatted GNN JSON for a Rust graph."""
+    return _require_rust_function("format_gnn_json", _format_gnn_json)(graph, title)
+
+
+def format_gnn_markdown(graph: Any, title: str) -> str:
+    """Return Rust-formatted GNN Markdown for a Rust graph."""
+    return _require_rust_function("format_gnn_markdown", _format_gnn_markdown)(graph, title)
+
+
+def write_artifact_atomic(path: str, contents: bytes) -> None:
+    """Atomically write an artifact through the Rust store helper."""
+    _require_rust_function("write_artifact_atomic", _write_artifact_atomic)(path, contents)
+
+
+def summarize_trace_events_json(events_json: str) -> str:
+    """Return deterministic trace-event counts from Rust."""
+    return _require_rust_function("summarize_trace_events_json", _summarize_trace_events_json)(
+        events_json
+    )
 
 
 # ============================================================================
@@ -248,6 +332,12 @@ class RustProgramGraphAdapter:
             evidence_sources=evidence_sources or [],
         )
         self._edges[edge_id] = edge
+        try:
+            self._rust_graph.add_edge(source_id, target_id, kind.value, float(weight))
+        except Exception:
+            # Python remains authoritative; Rust parity tests catch backend
+            # drift without sacrificing a successful pure-Python graph build.
+            pass
         return edge
 
     # ------------------------------------------------------------------
@@ -356,8 +446,14 @@ def build_program_graph(
         else:
             use_rust = env_choice
 
-    if use_rust and RUST_AVAILABLE:
-        return RustProgramGraphAdapter(repo_uri)
+    if use_rust:
+        if RUST_AVAILABLE:
+            return RustProgramGraphAdapter(repo_uri)
+        raise RuntimeError(
+            "COGANT_USE_RUST=1 was requested, but cogant._rust is not importable. "
+            "Run `uv run maturin develop --release` from rust/cogant-ffi or set "
+            "COGANT_USE_RUST=0 to force the Python backend."
+        )
 
     from cogant.graph.builder import ProgramGraphBuilder
 
@@ -368,7 +464,14 @@ __all__ = [
     "RUST_AVAILABLE",
     "RustProgramGraphAdapter",
     "build_program_graph",
+    "compile_matrix_shapes_json",
     "create_example_graph",
+    "format_gnn_json",
+    "format_gnn_markdown",
     "get_program_graph_impl",
+    "graph_summary_json",
     "rust_version",
+    "summarize_trace_events_json",
+    "translation_rule_predicates_json",
+    "write_artifact_atomic",
 ]

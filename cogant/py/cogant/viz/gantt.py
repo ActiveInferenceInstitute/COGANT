@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """GanttRenderer: Render process model as timeline/Gantt chart."""
 
 from __future__ import annotations

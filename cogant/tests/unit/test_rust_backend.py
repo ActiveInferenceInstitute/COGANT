@@ -91,14 +91,15 @@ def test_rust_graph_str_repr():
     assert "nodes=0" in str(g)
 
 
-def test_create_example_graph_without_rust_raises():
+def test_create_example_graph_without_rust_raises(monkeypatch):
     """`create_example_graph()` raises a clear error when Rust is missing."""
-    if RUST_AVAILABLE:
-        pytest.skip("Rust bindings present; fallback error path unreachable")
-    from cogant.rust_backend import create_example_graph
+    import cogant.rust_backend as rust_backend
+
+    monkeypatch.setattr(rust_backend, "RUST_AVAILABLE", False)
+    monkeypatch.setattr(rust_backend, "_create_example_graph", None)
 
     with pytest.raises(RuntimeError, match="Rust backend not available"):
-        create_example_graph()
+        rust_backend.create_example_graph()
 
 
 # ----------------------- build_program_graph factory ----------------------
@@ -189,11 +190,12 @@ def test_rust_adapter_add_edge_rejects_missing_endpoints():
     assert edge is None
 
 
-def test_rust_adapter_requires_rust_backend():
+def test_rust_adapter_requires_rust_backend(monkeypatch):
     """Constructing the adapter without Rust raises a clear error."""
-    if RUST_AVAILABLE:
-        pytest.skip("Rust bindings present; error path unreachable")
-    from cogant.rust_backend import RustProgramGraphAdapter
+    import cogant.rust_backend as rust_backend
+
+    monkeypatch.setattr(rust_backend, "RUST_AVAILABLE", False)
+    monkeypatch.setattr(rust_backend, "_RustGraph", None)
 
     with pytest.raises(RuntimeError, match="RustProgramGraphAdapter requires"):
-        RustProgramGraphAdapter(repo_uri="repo://t")
+        rust_backend.RustProgramGraphAdapter(repo_uri="repo://t")

@@ -1,18 +1,32 @@
 #!/usr/bin/env python3
 """Check whether ``cogant/evaluation/METRICS.yaml`` is fresh.
 
-"Fresh" here means two things, both of which must hold:
+"Fresh" here means three check families:
 
 1. **Coverage drift** — ``testing.coverage_percent`` in METRICS.yaml agrees
    with ``cogant/coverage.json`` to within ``COVERAGE_TOLERANCE`` (±0.1 pp
    by default). This catches the common case of "tests ran again, coverage
    shifted, nobody re-ran ``regenerate_metrics.py``".
 
-2. **Git SHA drift** — ``generator_git_sha`` equals the current
-   ``git rev-parse HEAD``. This catches every change that edits code or
-   docs after the last metrics refresh.
+2. **Git SHA / worktree drift** — ``generator_git_sha`` equals the current
+   ``git rev-parse HEAD``. By default the script also warns when the
+   worktree is dirty, because ``HEAD`` alone cannot represent uncommitted
+   code or manuscript edits. Use ``--fail-on-dirty`` for release/CI gates
+   that require metrics to be regenerated from a clean committed tree.
 
-Anything NOT checked here (ruff, mypy, test counts, roundtrip results) is
+3. **Roundtrip-status / score-source laundering** (added 2026-05-19,
+   extended 2026-05-21) — the per-target ``roundtrip_status`` distribution
+   and native aggregate score fields recorded in METRICS.yaml match what
+   ``tools/regenerate_metrics.py`` would produce against the current
+   ``roundtrip_results.jsonl`` data file. This catches the keystone failure
+   mode where METRICS.yaml inherits a richer prior regen (with
+   ``role_preservation_score`` fields) and the data file is subsequently
+   stripped to v0.5 ε-bucket rows — leaving METRICS.yaml asserting
+   ``role_preserved_count: N`` or ``mean_role_preservation_score: 1.0``
+   while the current regen would tag every row as ``STALE_LEGACY`` and leave
+   native aggregate score fields null.
+
+Anything NOT checked here (ruff, mypy, test counts, ablation deltas) is
 deliberately out of scope: this is a *fast* pre-commit / pre-PR guard. The
 full refresh, run by ``tools/regenerate_metrics.py`` from CI on every merge,
 is still the authoritative source of truth.
@@ -27,12 +41,14 @@ Invocation is directory-independent (paths anchored on ``__file__``); you
 may call the script from any cwd.
 
 Usage:
-    uv run python tools/check_metrics_fresh.py           # from staging root
+    uv run python tools/check_metrics_fresh.py           # from project root
+    uv run python tools/check_metrics_fresh.py --fail-on-dirty
     cd cogant && uv run python ../tools/check_metrics_fresh.py
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import subprocess
 import sys
@@ -123,6 +139,32 @@ def _current_git_sha() -> str | None:
     return result.stdout.strip()
 
 
+def _git_dirty_paths() -> list[str] | None:
+    """Return porcelain status lines, or ``None`` when git status is unavailable."""
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=all"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as e:
+        print(
+            f"check_metrics_fresh: could not run git status --porcelain: {e}",
+            file=sys.stderr,
+        )
+        return None
+    if result.returncode != 0:
+        print(
+            "check_metrics_fresh: git status --porcelain failed — skipping dirty-worktree check",
+            file=sys.stderr,
+        )
+        return None
+    return [line for line in result.stdout.splitlines() if line.strip()]
+
+
 # ---------------------------------------------------------------------------
 # Checks
 # ---------------------------------------------------------------------------
@@ -145,8 +187,8 @@ def check_coverage_percent(metrics: dict) -> None:
         )
 
 
-def check_git_sha(metrics: dict) -> None:
-    """Compare METRICS.yaml generator_git_sha vs current HEAD."""
+def check_git_sha(metrics: dict, *, fail_on_dirty: bool = False) -> None:
+    """Compare METRICS.yaml generator_git_sha vs current HEAD and worktree state."""
     live_sha = _current_git_sha()
     if live_sha is None:
         return  # git unavailable; already warned
@@ -155,6 +197,159 @@ def check_git_sha(metrics: dict) -> None:
         _fail("METRICS.yaml missing generator_git_sha")
     if recorded != live_sha:
         _fail(f"generator_git_sha drift: METRICS.yaml={recorded} vs HEAD={live_sha}")
+    dirty_paths = _git_dirty_paths()
+    if not dirty_paths:
+        return
+    preview = "\n".join(f"    {line}" for line in dirty_paths[:20])
+    if len(dirty_paths) > 20:
+        preview += f"\n    ... {len(dirty_paths) - 20} more"
+    message = (
+        f"worktree has {len(dirty_paths)} uncommitted path(s); "
+        "generator_git_sha only binds committed HEAD, not these edits:\n"
+        f"{preview}"
+    )
+    if fail_on_dirty:
+        _fail(message)
+    print(f"check_metrics_fresh: WARNING: {message}", file=sys.stderr)
+
+
+# ---------------------------------------------------------------------------
+# Roundtrip-status laundering check (RedTeam F19, 2026-05-19)
+# ---------------------------------------------------------------------------
+
+
+_JSONL_PATH = COGANT_DIR / "evaluation" / "dataset" / "roundtrip_results.jsonl"
+
+
+def _classify_row(entry: dict) -> str:
+    """Mirror ``tools/regenerate_metrics.py:_status()`` exactly.
+
+    Keep the body of this function lockstep with the regenerator. The
+    regression test ``test_check_metrics_fresh_roundtrip_status_guard.py``
+    proves the two implementations agree on the shipped fixtures.
+    """
+    status = entry.get("roundtrip_status")
+    if status:
+        return str(status)
+    if "role_preservation_score" not in entry:
+        return "STALE_LEGACY"
+    tier = str(entry.get("tier") or "").upper()
+    if tier == "ISOMORPHIC":
+        return "ROLE_PRESERVED"
+    if tier in {"APPROXIMATE", "DIVERGENT"}:
+        return "DRIFT"
+    return "FAILED" if entry.get("error") else "DRIFT"
+
+
+def _score_source(entry: dict) -> str:
+    """Mirror the regenerator's role-score provenance classification."""
+    if "role_preservation_score" in entry:
+        return "v0.6_native"
+    if "epsilon" in entry or "role_match_score" in entry:
+        return "legacy_epsilon_proxy"
+    return "empty"
+
+
+def _aggregate_score_source(rows: list[dict]) -> str:
+    sources = {_score_source(row) for row in rows}
+    if not rows or sources == {"empty"}:
+        return "empty"
+    if sources <= {"legacy_epsilon_proxy", "empty"}:
+        return "legacy_epsilon_proxy"
+    if "v0.6_native" in sources and sources - {"v0.6_native", "empty"}:
+        return "mixed"
+    return "v0.6_native"
+
+
+def check_roundtrip_status_distribution(metrics: dict) -> None:
+    """Catch the F1/F19 laundering pattern: METRICS asserts a non-zero
+    ``role_preserved_count`` while the current data file would produce zero.
+
+    Implementation: re-classify every row in ``roundtrip_results.jsonl``
+    via the same ``_status()`` logic used by the regenerator, recount
+    ``role_preserved_count`` / ``strict_isomorphism_count`` /
+    ``drift_count`` / ``failed_count``, and assert each matches the
+    committed METRICS.yaml value. Mismatch is a freshness defect — the
+    data file has changed since the last regen, or the regen logic has
+    changed since the last METRICS write.
+    """
+    if not _JSONL_PATH.exists():
+        print(
+            f"check_metrics_fresh: {_JSONL_PATH} not found — skipping roundtrip distribution check",
+            file=sys.stderr,
+        )
+        return
+    rows: list[dict] = []
+    with _JSONL_PATH.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError as e:
+                _fail(f"{_JSONL_PATH}: invalid JSON line: {e}")
+    statuses = [_classify_row(e) for e in rows]
+    expected = {
+        "total_targets": len(rows),
+        "role_preserved_count": sum(
+            1 for s in statuses if s in {"STRUCTURALLY_ISOMORPHIC", "ROLE_PRESERVED"}
+        ),
+        "strict_isomorphism_count": sum(1 for s in statuses if s == "STRUCTURALLY_ISOMORPHIC"),
+        "drift_count": sum(1 for s in statuses if s == "DRIFT"),
+        "failed_count": sum(1 for s in statuses if s == "FAILED"),
+        "stale_legacy_count": sum(1 for s in statuses if s == "STALE_LEGACY"),
+        "role_preservation_score_source": _aggregate_score_source(rows),
+    }
+    native_scores = [float(row["role_preservation_score"]) for row in rows if "role_preservation_score" in row]
+    expected_score_fields = {
+        "mean_role_preservation_score": None,
+        "median_role_preservation_score": None,
+        "min_role_preservation_score": None,
+        "max_role_preservation_score": None,
+    }
+    if native_scores:
+        import statistics
+
+        expected_score_fields = {
+            "mean_role_preservation_score": round(statistics.mean(native_scores), 4),
+            "median_role_preservation_score": round(statistics.median(native_scores), 4),
+            "min_role_preservation_score": min(native_scores),
+            "max_role_preservation_score": max(native_scores),
+        }
+    roundtrip = (metrics.get("evaluation") or {}).get("roundtrip") or {}
+    drifts: list[str] = []
+    for key, want in expected.items():
+        got = roundtrip.get(key)
+        if got is None:
+            drifts.append(f"  {key}: missing in METRICS.yaml; expected {want}")
+            continue
+        if isinstance(want, str):
+            if str(got) != want:
+                drifts.append(f"  {key}: METRICS.yaml={got!r} but live classification produces {want!r}")
+            continue
+        if int(got) != want:
+            drifts.append(f"  {key}: METRICS.yaml={got} but live classification produces {want}")
+    for key, want in expected_score_fields.items():
+        got = roundtrip.get(key)
+        if want is None:
+            if got is not None:
+                drifts.append(
+                    f"  {key}: METRICS.yaml={got} but native v0.6 rows are absent, so expected null"
+                )
+            continue
+        if got is None:
+            drifts.append(f"  {key}: missing in METRICS.yaml; expected {want}")
+            continue
+        if abs(float(got) - float(want)) > 0.0001:
+            drifts.append(f"  {key}: METRICS.yaml={got} but live native-score stats produce {want}")
+    if drifts:
+        msg = (
+            "roundtrip status distribution mismatch — METRICS.yaml is out of sync "
+            "with the current roundtrip_results.jsonl (laundering risk per RedTeam F1/F19):\n"
+            + "\n".join(drifts)
+        )
+        _fail(msg)
 
 
 # ---------------------------------------------------------------------------
@@ -162,10 +357,19 @@ def check_git_sha(metrics: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--fail-on-dirty",
+        action="store_true",
+        help="Fail when git status reports uncommitted or untracked files.",
+    )
+    args = parser.parse_args(argv)
+
     metrics = _load_metrics()
     check_coverage_percent(metrics)
-    check_git_sha(metrics)
+    check_git_sha(metrics, fail_on_dirty=args.fail_on_dirty)
+    check_roundtrip_status_distribution(metrics)
     print("check_metrics_fresh: METRICS.yaml is in sync")
     return 0
 

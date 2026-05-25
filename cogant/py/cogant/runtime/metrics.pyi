@@ -1,4 +1,24 @@
-__all__ = ["free_energy", "kl_divergence"]
+from dataclasses import dataclass
+from typing import Any
+
+__all__ = ["free_energy", "kl_divergence", "EpisodeMetrics", "RunMetrics"]
+
+@dataclass
+class EpisodeMetrics:
+    episode_id: int
+    n_steps: int
+    mean_free_energy: float
+    final_free_energy: float
+    n_unique_obs: int = ...
+    action_entropy: float = ...
+    def to_csv_row(self) -> dict[str, Any]: ...
+
+@dataclass
+class RunMetrics:
+    episodes: list[EpisodeMetrics]
+    total_steps: int = ...
+    def summary_statistics(self) -> dict[str, float]: ...
+    def plot_free_energy(self) -> Any: ...
 
 def kl_divergence(p: list[float], q: list[float]) -> float: ...
 def free_energy(

@@ -1,0 +1,56 @@
+# Materials and methods: experimental setup {#sec:06-experimental-setup}
+
+**Terminology.** **GNN** here and in @sec:06-01-environment-api-and-config / @sec:06-04-tests-mutation-and-benchmarks is **Generalized Notation Notation**, not graph neural networks; see @sec:01-introduction.
+
+## Environment, API, exports, parser, and IR
+
+Install paths, Session and Pipeline examples, YAML configuration, CLI usage, export targets, Python `ast` front-end coverage, and the staged IR progression (@tbl:progressive-ir-stages in @sec:06-02-exports-parser-and-ir-stages) are detailed in @sec:06-01-environment-api-and-config and @sec:06-02-exports-parser-and-ir-stages.
+
+## Methods protocol and evidence model
+
+The empirical protocol mirrors the package pipeline rather than a separate manuscript-only analysis. First, repository files are parsed into a `ProgramGraph` with typed nodes, typed edges, source spans, parser-certainty metadata, and provenance markers. Second, declarative translation rules run to a fixpoint, attach semantic roles, record per-rule evidence, and resolve overlaps by priority and confidence as described in @sec:02-02-ir-progression-translation-engine. Third, the confidence model scores each surviving assertion from static evidence, dynamic evidence when present, parser certainty, rule specificity, and penalties for ambiguity. Fourth, the state-space compiler converts mappings into hidden-state factors, observations, actions, transitions, and A/B/C/D matrices. Fifth, the export layer writes the Generalized Notation Notation bundle, JSON sidecars, tensor views, manifests, and validation reports. Sixth, reverse synthesis reads the emitted GNN artifact, generates a Python package skeleton, re-ingests it, and compares the original and regenerated graphs, role multisets, GNN sections, matrix shapes/values, and generated-code smoke results. Seventh, the visualization layer renders the inspection dashboard, roundtrip diff, rule trace, calibration view, batch summaries, and deterministic inference trace directly from those JSON artifacts. Finally, manuscript tables, copied figures, and variable substitutions are regenerated from the same artifacts and `METRICS.yaml`.
+
+@tbl:methods-reviewer-pressure-map turns the method into a reviewer-facing evidence map. The table is deliberately conservative: it links a scholarship pressure point to the artifact that answers it, and it names the boundary beyond which the manuscript does not claim evidence.
+
+| Reviewer pressure point | Methods response | Canonical evidence | Boundary |
+|---|---|---|---|
+| Static-analysis novelty versus CPG/CodeQL | Program graph IR plus semantic role evidence and GNN bundle export | @sec:02-01-program-graph-and-formal-foundations, @sec:08-02-program-analysis-for-ml-and-tables | Not a replacement for mature query/security analyzers. |
+| Graph-learning utility | Typed graph/tensor exports with stable node and edge vocabularies | `../cogant/docs/export/README.md`, @tbl:feature-comparison-toolchains | No downstream accuracy claim without a separate learned-model experiment. |
+| Active-inference rigor | A/B/C/D matrices, structural blanket partition, validator, runtime smoke trace | @sec:02-04-gnn-export-and-error-handling, @fig:cogant-inference-trace | Fallback-heavy matrices are valid but may be semantically weak. |
+| Roundtrip semantics | Forward-reverse-forward invariant ledger, role multiset score, compile status | @sec:S01-appendix-roundtrip-epsilon, @fig:cogant-roundtrip-visual-diff | Self-consistency, not external semantic equivalence. |
+| Reproducibility | Versioned fixtures, manifests, metrics, figure sidecars, claim ledger | @tbl:corpus-data-protocol, @sec:07-reproducibility | Repeatability on fixed inputs, not independent replication. |
+| Figure trustworthiness | Registered PNGs copied from package artifacts with sidecars and QA | @tbl:figure-reading-order, @tbl:figure-provenance-groups | Visual auditability, not user-study proof of interpretability. |
+
+: Reviewer pressure map for the materials and methods protocol. {#tbl:methods-reviewer-pressure-map}
+
+This evidence model deliberately separates claims by backing source. Numeric release claims come from `../cogant/evaluation/METRICS.yaml`; per-fixture pipeline tables come from `../cogant/evaluation/figures/metrics.json`; visual claims in @sec:04-rendered-end-to-end-figures come from `../cogant/output/`; and comparative/theoretical claims cite primary sources in @sec:08-scope-and-related-work and the appendices. The local fast corpus now includes the small calculator/event/control fixtures plus additional control-positive shapes for CLI tools, async services, data pipelines, plugin architectures, notebook-converted modules, and multi-package workspaces. Remote GitHub targets remain opt-in through `run_all.json` so ordinary tests do not depend on network availability or upstream repository drift.
+
+| Evidence slice | Inclusion protocol | Canonical artifact | Claim supported |
+|---|---|---|---|
+| Packaged fixture corpus | Version-controlled examples only; no network fetch during the table run | `../cogant/evaluation/figures/metrics.json` | Pipeline shape, graph composition, state-space counts, GNN package validation |
+| Roundtrip ledger | Rows parsed by `tools/regenerate_metrics.py`; stale v0.5 epsilon rows are not relabelled as fresh v0.6 verdicts | `../cogant/evaluation/dataset/roundtrip_results.jsonl` plus `../cogant/evaluation/METRICS.yaml` | Role-preservation status, strict-isomorphism subset, stale-legacy accounting |
+| Batch-run corpus | Targets declared in `run_all.json`; remote repositories are shallow-cloned only when explicitly configured | `../cogant/output/<target>/run_manifest.json` and `summary.json` | End-to-end orchestration, dashboard completeness, parser/status distributions |
+| Figure corpus | Registered package-generated PNGs copied by `tools/manuscript_figures.py` | `../output/figures/manifest.json` | Visual evidence traceability, renderer/source-artifact provenance |
+| External comparison corpus | Primary papers, standards, or official documentation only | `references.bib` and @sec:S06-appendix-source-references | Related-work boundaries and live-tool contract claims |
+
+: Corpus/data protocol and claim boundaries. {#tbl:corpus-data-protocol}
+
+This is the manuscript's answer to reproducibility rather than an afterthought. Computational-research guidance emphasizes archiving exact inputs, intermediate steps, and outputs [@peng2011reproducible; @sandve2013ten]; ACM artifact-review guidance separates artifact availability, artifact evaluation, and independently validated results [@acmArtifactBadging2020]; and empirical software-engineering standards make validity, reliability, objectivity, and reproducibility explicit review dimensions [@sigsoftEmpiricalStandards2026]. FAIR guidance additionally stresses machine-actionable metadata for discovery and reuse, including algorithms and workflows [@wilkinson2016fair]. COGANT does not claim full FAIR compliance, an ACM artifact badge, or independent reproduction by another team. It follows the same direction: every promoted manuscript number is regenerated from metrics, every promoted figure is copied from a registered package artifact, and every semantic assertion can be traced back to a graph fragment and rule-evidence record.
+
+## Performance characteristics
+
+The architecture wall-clock / memory targets and the `PipelineRunner` stage-sequential execution model are stated authoritatively in @sec:06-03-performance-and-fixture-metrics and are not repeated here.
+
+## Measured runs on packaged fixtures
+
+The following narrative matches @sec:06-03-performance-and-fixture-metrics. Measurements come from `../cogant/evaluation/figures/generate_figures.py`, which uses `cogant.api.orchestration` (same in-memory `ProgramGraph` and mapping counts as the benchmark harness) on every packaged fixture (three control-positive under `../cogant/examples/control_positive/`, three real-world under `../cogant/examples/real_world/`). Optional Rust acceleration is off for reproducibility unless you set `COGANT_USE_RUST=1`. All numbers for @tbl:repo-pipeline-metrics through @tbl:output-artifacts-per-run are written to `../cogant/evaluation/figures/metrics.json`. Those four captioned tables are in that section. (A separate `orchestrate_roundtrip.py` demo can emit a larger serialized graph and extra diagrams; the manuscript does not use that path for @tbl:repo-pipeline-metrics–@tbl:output-artifacts-per-run.)
+
+## Test matrix, mutation testing, and benchmarks
+
+The v{{VERSION}} Python implementation ships **{{TEST_COUNT}}** passing tests with **{{TEST_COUNT_SKIPPED}}** skips, **{{TEST_COUNT_XFAILED}}** expected `xfail`, and **{{TEST_COUNT_XPASSED}}** `xpass`; suite wall-clock **{{SUITE_RUNTIME_S}}** s; **{{COVERAGE_PCT}}%** line coverage on the canonical `uv run pytest tests/ --cov=py/cogant` run (**{{METRICS_GENERATED_AT}}**); **{{MYPY_STRICT_ERRORS}}** `mypy --strict` errors on `py/cogant/`. The interpreter matrix, per-module coverage table, hand-curated mutation summary, and benchmark harness results are in @sec:06-04-tests-mutation-and-benchmarks as @tbl:python-interpreter-matrix, @tbl:coverage-stmt-modules, @tbl:mutation-hand-curated, and @tbl:benchmark-suite-results. The algorithmic core load-bearing for the role-preservation and forward--reverse invariant claims in @sec:S03-appendix-galois-sketch and [`../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md`](../cogant/docs/evaluation/ISOMORPHISM_THEOREM.md) is summarized in @tbl:coverage-stmt-modules; see @sec:06-04-tests-mutation-and-benchmarks for the full narrative on mutation testing and benchmarks. Automated `mutmut` is wired in [`../cogant/pyproject.toml`](../cogant/pyproject.toml) (`[tool.mutmut]`) to `translate/engine.py` and `markov/blanket.py` only; the hand-picked report in `../cogant/docs/evaluation/MUTATION_REPORT.md` also covers `gnn/matrices.py`, `statespace/compiler.py`, and `static/dataflow.py`.
+
+The benchmark harness times the pipeline through `statespace` only, so its wall-clock medians are much smaller than the end-to-end runs in @tbl:repo-pipeline-metrics (which add `process`, `export`, and `validate` via `generate_figures.py`). For pure translation, every shipped fixture in the benchmark snapshot runs in under 100 ms median; see @tbl:benchmark-suite-results. Stage medians for that run are in `{{BENCHMARK_SUITE_FILE}}`. Tensor shapes in the benchmark sidecar use `GNNMatrices` on the post-`statespace` bundle; for `flask_app` they read $A \in \mathbb{R}^{22 \times 13}$, $B \in \mathbb{R}^{13 \times 13 \times 31}$, $C \in \mathbb{R}^{22}$, $D \in \mathbb{R}^{13}$, while @tbl:state-space-compilation counts observations and state variables from the **exported** `gnn_package/` after the full pipeline (on the current snapshot, 22 and 14 respectively for that fixture).
+
+## What to record
+
+For reproducible experiments, record: COGANT version or commit hash, interpreter version, list of stages executed, configuration file contents (redacted), input repository commit hash, and random seeds for any learned components **outside** COGANT that consume the exports.

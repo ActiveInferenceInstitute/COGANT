@@ -1,14 +1,21 @@
-# AGENTS — rust/cogant-ffi/src
-
-Machine-oriented index for automation and editors.
-
-- Repository root: [README.md](../../../README.md)
-- Docs index: [docs/index.md](../../../docs/index.md)
+# Agents - rust/cogant-ffi/src
 
 ## Scope
 
-Describe what belongs in this folder; keep orchestration thin and logic in `py/cogant/`.
+Source for the `cogant-ffi` crate. Keep crate-local behavior here and cross-crate
+Python exposure in `cogant-ffi` unless this crate is itself the FFI crate.
 
-## Tests
+## Rules
 
-Run `uv run pytest tests/` from the repository root unless a narrower scope is documented here.
+- Keep Rust behavior parity-tested against Python before routing package code through it.
+- Add unit tests in `lib.rs` or crate-local test modules for new public behavior.
+- Update [`../README.md`](../README.md) and [`../AGENTS.md`](../AGENTS.md) when the public crate surface changes.
+
+## Verification
+
+From the Rust workspace root:
+
+```bash
+cargo test -p cogant-ffi
+cargo clippy -p cogant-ffi -- -D warnings
+```

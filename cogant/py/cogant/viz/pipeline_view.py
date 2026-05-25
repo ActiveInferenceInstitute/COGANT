@@ -98,7 +98,11 @@ class PipelineVisualizer:
                 zip(*sorted_pairs, strict=False) if sorted_pairs else ([], [])
             )
 
-            ax.barh(sorted_stages, sorted_times, color="steelblue", alpha=0.8)
+            if sorted_pairs:
+                ax.barh(sorted_stages, sorted_times, color="steelblue", alpha=0.8)
+            else:
+                ax.barh(["No data"], [0.0], color="steelblue", alpha=0.2)
+                ax.text(0, 0, "No timing data", va="center", fontsize=10, color="#666666")
             ax.set_xlabel("Time (seconds)")
             ax.set_title("Pipeline Stage Timing Analysis")
             ax.grid(axis="x", alpha=0.3)
@@ -215,6 +219,7 @@ class PipelineVisualizer:
                     ax.set_xlabel("Count")
                     ax.grid(axis="x", alpha=0.3)
                 else:
+                    ax.barh(["No data"], [0.0], color=color, alpha=0.15)
                     ax.text(
                         0.5, 0.5, "No data", ha="center", va="center", fontsize=11, color="#AAAAAA"
                     )
@@ -579,12 +584,14 @@ class PipelineVisualizer:
                         ax.set_title(f"Stage {idx + 1}: {stage}", fontsize=10, weight="bold")
                         ax.grid(axis="y", alpha=0.3)
                     else:
+                        ax.bar([0], [0], color="steelblue", alpha=0.15)
                         ax.text(
                             0.5, 0.5, f"{stage}\n(no data)", ha="center", va="center", fontsize=10
                         )
                         ax.set_xlim(0, 1)
                         ax.set_ylim(0, 1)
                 else:
+                    ax.bar([0], [0], color="steelblue", alpha=0.15)
                     ax.text(0.5, 0.5, f"{stage}", ha="center", va="center", fontsize=10)
                     ax.set_xlim(0, 1)
                     ax.set_ylim(0, 1)

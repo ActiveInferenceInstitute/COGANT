@@ -83,19 +83,26 @@ Sections verified in the emitted GNN markdown:
 `StateSpaceBlock`, `Connections`, `ActInfOntologyAnnotation`,
 `InitialParameterization`, `ModelParameters`, `Time`.
 
-## Roundtrip (ε-isomorphism)
+## Roundtrip (role-preservation)
 
 ```
 R1 (JS forward)    = {HIDDEN_STATE: 1, OBSERVATION: 2, ACTION: 2, CONSTRAINT: 1}
 R2 (re-forward)    = {HIDDEN_STATE: 1, OBSERVATION: 8, ACTION: 5,
                       POLICY: 2, CONSTRAINT: 10, CONTEXT: 3}
 |R1 ∩ R2| / |R1|   = 6 / 6 = 1.0000     (PERFECT)
-threshold          = 0.8 (ISOMORPHIC)
-is_isomorphic      = True
-tier               = ISOMORPHIC (ε = 1.0 — every original role preserved)
+threshold          = 0.5 (ROLE_PRESERVED public default)
+roundtrip_status      = ROLE_PRESERVED
+tier               = ROLE_PRESERVED (s_role = 1.0 — every original role preserved)
 ```
 
-> **Note:** The project-wide ε convention is role-preservation ratio (`|roles_preserved| / |roles_original|`), where ε = 1.0 is a perfect roundtrip and ε ≥ 0.8 is ISOMORPHIC. This matches `cogant/evaluation/METRICS.yaml` and the current benchmark (23/23 ISOMORPHIC, mean ε = 1.0).
+> **Note:** The project-wide role-preservation convention is the multiset ratio
+> `|roles_preserved| / |roles_original|`, where `s_role = 1.0` means every
+> original role population survived and `s_role >= 0.5` is ROLE_PRESERVED.
+> Historical benchmark notes sometimes used a stricter high-confidence `0.8`
+> line for analysis. Current v0.6
+> release metrics classify the checked-in 23-row ledger as `STALE_LEGACY` until
+> a native ledger is regenerated with per-row `role_preservation_score` and
+> invariant status fields. Strict structural isomorphism is tracked separately.
 
 
 The reverse pipeline synthesises a Python package with the standard
@@ -156,7 +163,7 @@ Running the same rule set on `examples/zoo/02_observer/sensor.py`
 | Semantic mappings | 6 | 5 |
 | Role multiset | `HS:1 OBS:2 ACT:2 CONS:1` | `HS:1 OBS:3 ACT:1` |
 | Name overlap (normalised) | — | ≈ 75 % with JS symbols |
-| Roundtrip ε | 1.0 (this doc) | 1.0 (`EMPIRICAL_CLAIM.md`) |
+| Roundtrip role preservation | 1.0 (this doc) | 1.0 (`EMPIRICAL_CLAIM.md`) |
 
 The two fixtures are intentionally different enough to be *independent*
 evidence of the same claim rather than a mechanical port:
@@ -193,7 +200,7 @@ evidence of the same claim rather than a mechanical port:
 5. **The GNN emission is language-agnostic.** Once the program graph
    and semantic mappings are in hand the formatter, state-space
    compiler, and reverse synthesizer have no idea where the graph
-   came from, which is why `role_match_score = 1.0` is recoverable
+   came from, which is why `role_preservation_score = 1.0` is recoverable
    from a non-Python source.
 
 **What does not survive (and why that's acceptable):**
@@ -236,7 +243,7 @@ Tests and what each pins:
    are rectangular, non-empty, and normalised.
 4. `test_js_gnn_emission_has_all_canonical_sections` — six canonical
    GNN markdown sections present.
-5. `test_js_forward_reverse_forward_role_match_above_threshold` —
+5. `test_js_forward_reverse_forward_role_preservation_score_above_threshold` —
    the full forward → reverse → forward loop recovers a role-match
    score strictly above 0.5. Currently 1.0.
 6. `test_js_agent_runtime_runs_ten_steps_without_exception` —

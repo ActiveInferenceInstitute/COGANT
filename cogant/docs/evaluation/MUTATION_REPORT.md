@@ -188,13 +188,13 @@ left as follow-ups.
 - **Calibration registry (boundary thresholds):** [CALIBRATION.md](CALIBRATION.md)
 - **Active Inference mapping:** [ACTIVE_INFERENCE_MAPPING.md](ACTIVE_INFERENCE_MAPPING.md)
 - **v1.0 readiness:** [V1.0_READINESS.md](V1.0_READINESS.md)
-- **Mutation killer test suite:**
-  [`tests/unit/test_mutation_killers_w18.py`](https://github.com/cogant-contributors/cogant/blob/main/tests/unit/test_mutation_killers_w18.py),
-  [`tests/unit/test_mutation_hardening.py`](https://github.com/cogant-contributors/cogant/blob/main/tests/unit/test_mutation_hardening.py)
+- **Mutation regression test suite:**
+  [`tests/unit/test_mutation_regressions_engine_matrices_statespace.py`](https://github.com/docxology/cogant/blob/main/tests/unit/test_mutation_regressions_engine_matrices_statespace.py),
+  [`tests/unit/test_mutation_hardening.py`](https://github.com/docxology/cogant/blob/main/tests/unit/test_mutation_hardening.py)
 - **Implementing modules under test:**
-  [`py/cogant/gnn/matrices.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/gnn/matrices.py),
-  [`py/cogant/markov/blanket.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/markov/blanket.py),
-  [`py/cogant/statespace/compiler.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/statespace/compiler.py),
-  [`py/cogant/translate/engine.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/engine.py),
-  [`py/cogant/static/dataflow.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/static/dataflow.py),
-  [`py/cogant/reverse/synthesizer.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/reverse/synthesizer.py)
+  [`py/cogant/gnn/matrices.py`](https://github.com/docxology/cogant/blob/main/py/cogant/gnn/matrices.py),
+  [`py/cogant/markov/blanket.py`](https://github.com/docxology/cogant/blob/main/py/cogant/markov/blanket.py),
+  [`py/cogant/statespace/compiler.py`](https://github.com/docxology/cogant/blob/main/py/cogant/statespace/compiler.py),
+  [`py/cogant/translate/engine.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/engine.py),
+  [`py/cogant/static/dataflow.py`](https://github.com/docxology/cogant/blob/main/py/cogant/static/dataflow.py),
+  [`py/cogant/reverse/synthesizer.py`](https://github.com/docxology/cogant/blob/main/py/cogant/reverse/synthesizer.py)

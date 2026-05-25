@@ -260,12 +260,12 @@ def _check_mermaid_cli() -> DoctorCheck:
 
 
 def _find_tree_sitter_node_types() -> Path | None:
-    """Locate a tree-sitter ``node-types.json`` bundled with grammars.
+    """Locate a tree-sitter grammar asset bundled with parser wheels.
 
-    The COGANT multilang extras ship language grammars as wheel
-    resources. We walk the installed ``tree_sitter_languages`` /
-    ``tree_sitter_python`` packages for a ``node-types.json``, which
-    is the canonical marker that the grammar assets landed on disk.
+    Older grammar wheels bundled ``node-types.json``; current
+    ``tree-sitter-*`` wheels commonly ship compiled ``_binding`` modules
+    plus query files instead. Any of those assets proves the multilang
+    grammar resources landed on disk.
     """
 
     candidates = (
@@ -284,20 +284,25 @@ def _find_tree_sitter_node_types() -> Path | None:
         pkg_root = Path(spec.origin).parent
         for path in pkg_root.rglob("node-types.json"):
             return path
+        for path in pkg_root.glob("_binding*.so"):
+            return path
+        queries_dir = pkg_root / "queries"
+        if queries_dir.is_dir():
+            return queries_dir
     return None
 
 
 def _check_tree_sitter_node_types() -> DoctorCheck:
-    """Locate a ``node-types.json`` resource from a tree-sitter grammar."""
+    """Locate a tree-sitter grammar resource."""
     path = _find_tree_sitter_node_types()
     if path is None:
         return DoctorCheck(
-            name="tree-sitter node-types.json",
+            name="tree-sitter grammar assets",
             status="warn",
             detail="not found (multilang extras missing)",
         )
     return DoctorCheck(
-        name="tree-sitter node-types.json",
+        name="tree-sitter grammar assets",
         status="ok",
         detail=str(path),
     )

@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """GraphVisualizer: Render program graph with D3.js."""
 
 from __future__ import annotations

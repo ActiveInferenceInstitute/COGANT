@@ -4,7 +4,7 @@
 
 The **eight-item publication checklist** is consolidated in [`07_reproducibility.md`](07_reproducibility.md#publication-checklist). The subsections below spell out **commands**, **manifest semantics**, and a **worked re-run** without duplicating that list.
 
-The COGANT pipeline is deterministic on a fixed filesystem snapshot under a fixed Python interpreter. **Bit-for-bit reproduction** applies to the structured JSON outputs (`program_graph.json`, `state_space.json`, `semantic_mappings.json`, `manifest.json`): given identical inputs and environment, these files are byte-identical across runs. **Wall-clock stage timings** are not bit-for-bit reproducible — they vary ±10% due to CPU scheduling, cache warming, and background load; report `median(3 runs)` for publication rather than a single measurement.
+The COGANT pipeline is deterministic on a fixed filesystem snapshot under a fixed Python interpreter. **Bit-for-bit reproduction** applies only to canonicalized structured outputs after volatile metadata fields (for example `created_at`, `generated_at`, absolute temporary paths, and wall-clock timings) are excluded or normalized. The semantic JSON payloads (`program_graph.json`, `state_space.json`, `semantic_mappings.json`) should therefore be compared via recorded canonical hashes, not by assuming every emitted file byte is stable. **Wall-clock stage timings** are not bit-for-bit reproducible — they vary ±10% due to CPU scheduling, cache warming, and background load; report `median(3 runs)` for publication rather than a single measurement.
 
 ## How to re-run the canonical fixture experiments
 
@@ -25,16 +25,48 @@ uv run python ../cogant/benchmarks/bench_suite.py \
 
 The figure-generation script imports `pipeline_api_metrics.run_orchestration_pipeline_metrics` and runs the **public** `cogant.api.orchestration` path (ingest through validate, same graph/mapping contract as the CLI and `bench_suite.py`) for every fixture under `../cogant/examples/control_positive/` and `../cogant/examples/real_world/`, re-reads the emitted JSON, writes `metrics.json` alongside `fig1_graph_sizes.png`, `fig2_node_kinds.png`, `fig3_state_space.png`, and `fig4_pipeline_latency.png`, and copies the canonical figure set into the `../cogant/evaluation/figures/` tree. A separate `../cogant/examples/orchestrate_roundtrip.py` demo can emit a richer graph for dashboards; it is not what @tbl:repo-pipeline-metrics–@tbl:output-artifacts-per-run and `metrics.json` are tied to. The benchmark-suite harness times the same stages as in @tbl:benchmark-suite-results and writes a dated Markdown report `suite_YYYYMMDD.md` with a JSON sidecar; the report committed as `../cogant/benchmarks/results/suite_20260423.md` is the canonical source for the benchmark table in @sec:06-04-tests-mutation-and-benchmarks.
 
+## How to re-run the manuscript visualization workbench
+
+The dashboard figures in @sec:04-rendered-end-to-end-figures are regenerated from the package output tree rather than from the benchmark fixture script above. From the repository root, the minimal calculator path exercises forward translation, reverse synthesis, visualization, batch aggregation, browser QA, and manuscript figure copying:
+
+```bash
+cd cogant
+uv run cogant translate examples/control_positive/calculator \
+    --layout-output \
+    --output output/calculator
+uv run cogant roundtrip examples/control_positive/calculator \
+    --output output/calculator/roundtrip \
+    --keep-tmp
+uv run cogant viz output/calculator
+uv run python ../scripts/batch_dashboard.py --output-root output --quiet
+uv run cogant viz output/dashboard
+uv run python ../scripts/dashboard_browser_qa.py \
+    output/calculator/site/inspection_dashboard.html \
+    --output-dir output/calculator/dashboard_qa \
+    --quiet
+```
+
+Then, from the repository root, return to the staging root and refresh the manuscript-facing evidence:
+
+```bash
+cd ..
+uv run python tools/claim_ledger.py --quiet
+uv run python tools/manuscript_figures.py --strict
+uv run python scripts/z_generate_manuscript_variables.py --strict
+```
+
+The expected visual sidecars for @sec:04-rendered-end-to-end-figures are `output/calculator/roundtrip/metrics.json`, `output/calculator/rule_evidence_trace.json`, `output/calculator/data/inference_trace.json`, `output/calculator/data/state_space.json`, `output/calculator/gnn_package/markov_blanket.json`, `output/calculator/site/inspection_dashboard.html`, `output/dashboard/metrics_per_target.json`, and the corresponding registered PNGs under `output/calculator/figures/` plus the registered batch summary under `output/dashboard/`. Dashboard audit sidecars such as `output/dashboard/role_distribution.mmd` remain generated and traceable, but the manuscript promotes only registered figures whose source JSON has nonzero supporting evidence. The strict figure copy fails if any registered manuscript figure is missing, and the claim ledger writes `../output/claim_ledger.json` / `../output/claim_ledger.md` so unsupported literal claims can be reviewed before rendering.
+
 ## What the manifest.json index records
 
 Every `gnn_package/` directory emitted by the pipeline includes a `manifest.json` file whose job is to close the reproducibility loop without requiring the downstream consumer to re-hash the bundle. The manifest records: the COGANT version that produced the bundle, the interpreter and platform identifiers from step 2 of the checklist, the list of stages actually executed (step 6), the schema name passed to the state-space compiler, the paths of every file in the `gnn_package/` directory, and the SHA-256 hash of each file. A reproducer can therefore verify a published bundle with a single pass over the manifest, without consulting any external metadata file.
 
 ## Worked example: reproducing the repository pipeline row for `flask_app`
 
-The canonical @tbl:repo-pipeline-metrics row for the `flask_app` fixture (six files, 866 lines, 98 nodes, 154 edges, and on the order of 6.9 s wall clock for the full public API run that populates `metrics.json`) was produced as follows, and the command sequence below should bit-for-bit reproduce the same `program_graph.json` and `state_space.json` on any macOS arm64 machine with the same uv lockfile:
+The canonical @tbl:repo-pipeline-metrics row for the `flask_app` fixture (six files, 866 lines, 98 nodes, 163 edges, and about 11.6 s wall clock for the full public API run that populates `metrics.json`) was produced as follows, and the command sequence below should reproduce the same canonicalized `program_graph.json` and `state_space.json` on any macOS arm64 machine with the same uv lockfile:
 
 ```bash
-cd projects_in_progress/cogant/cogant           # package root
+cd cogant                           # package root
 uv sync --extra all                               # pins every dep per uv.lock
 git rev-parse HEAD                                # record the commit hash
 python --version && uname -a                      # record interpreter + platform
@@ -55,5 +87,5 @@ Every COGANT bundle can contain identifiers, docstrings, and inline comments lif
 ## Cross-references
 
 - The CLI hub at [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md) and [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md) link to every flag that changes the recorded-output shape, and the stage list in [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md) enumerates the ten-stage DAG.
-- The per-release narrative in `../cogant/CHANGELOG.md` and `../cogant/RELEASE_NOTES.md` documents which default-behaviour changes (for example the v0.5.0 POLICY / CONTEXT stub-emission fix discussed in @sec:05-conclusion and `ROUNDTRIP_IMPROVEMENT.md`) could affect a re-run against a pre-v0.5.0 bundle.
-- The calibration sweep plan in `../cogant/docs/evaluation/CALIBRATION.md` is the canonical reference for the `TODO(calibration)` markers cited in @sec:05-conclusion; re-running a confidence-threshold sweep requires the 20+ repository gold-standard corpus discussed there.
+- The per-release narrative in `../cogant/CHANGELOG.md` and `../cogant/RELEASE_NOTES.md` documents which default-behaviour changes (for example the POLICY / CONTEXT stub-emission fix discussed in @sec:10-conclusion and `ROUNDTRIP_IMPROVEMENT.md`) could affect a re-run against an older bundle.
+- The calibration sweep plan in `../cogant/docs/evaluation/CALIBRATION.md` is the canonical reference for the `TODO(calibration)` markers cited in @sec:10-conclusion; re-running a confidence-threshold sweep requires the 20+ repository gold-standard corpus discussed there.

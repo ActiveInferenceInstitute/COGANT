@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Static CSS and JavaScript assets for the COGANT dashboard.
 
 These are extracted into a dedicated module to keep the main

@@ -1,6 +1,16 @@
-# rust/cogant-ffi/src
+# cogant-ffi/src
 
-This directory is part of the COGANT codebase-to-GNN translation engine.
+Rust source for Python bindings. The crate implements PyO3 wrappers and module functions exported as cogant._rust.
 
-- Human overview: repository [README.md](../../../README.md)
-- Documentation index: [docs/index.md](../../../docs/index.md)
+## Files
+
+- `lib.rs` - public crate API, unit tests, and FFI-facing helpers when applicable.
+
+## Verification
+
+From [`../../`](../../):
+
+```bash
+cargo test -p cogant-ffi
+cargo check -p cogant-ffi
+```

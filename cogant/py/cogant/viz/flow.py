@@ -312,17 +312,43 @@ class FlowDiagrammer:
 
         return dep_graph
 
-    def to_mermaid_flowchart(self, cfg: ControlFlowGraph) -> str:
+    def to_mermaid_flowchart(self, cfg: ControlFlowGraph | dict[str, Any]) -> str:
         """
         Render a control flow graph as a Mermaid flowchart.
 
         Args:
-            cfg: The control flow graph to render.
+            cfg: The control flow graph to render. A legacy adjacency
+                dictionary (``{"caller": ["callee"]}``) is also accepted for
+                callers that still use the old export-visualization facade.
 
         Returns:
             Mermaid flowchart syntax as string.
         """
         lines = ["flowchart TD"]
+
+        if isinstance(cfg, dict):
+            node_ids: set[str] = set()
+            edges: list[tuple[str, str]] = []
+            for source, targets in cfg.items():
+                source_id = str(source)
+                node_ids.add(source_id)
+                if isinstance(targets, (list, tuple, set)):
+                    iterable_targets = targets
+                else:
+                    iterable_targets = [targets]
+                for target in iterable_targets:
+                    target_id = str(target)
+                    node_ids.add(target_id)
+                    edges.append((source_id, target_id))
+
+            def _safe(value: str) -> str:
+                return value.replace("-", "_").replace(".", "_").replace(" ", "_")
+
+            for node_id in sorted(node_ids):
+                lines.append(f'    {_safe(node_id)}["{node_id}"]')
+            for source_id, target_id in edges:
+                lines.append(f"    {_safe(source_id)} --> {_safe(target_id)}")
+            return "\n".join(lines)
 
         # Render nodes
         for block_id, block_info in cfg.nodes.items():

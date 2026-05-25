@@ -27,8 +27,9 @@ Every numeric constant in the codebase is categorised as one of:
 All empirical thresholds are to be calibrated against the **20-repo
 fixture corpus** (Python + JS/TS, balanced small/medium/large,
 discovered via `cogant/tests/fixtures/repos/`). Human-labelled
-gold-standards are stored under `evaluation/gold_standards/` (TBD — see
-backlog §4).
+gold standards will be stored under `evaluation/gold_standards/` once the
+review corpus is committed; until then, the backlog items below are calibration
+plans rather than completed empirical claims.
 
 The calibration methodology is:
 
@@ -39,7 +40,7 @@ The calibration methodology is:
 3. Report the sweep curve in the manuscript supplement; pick the value
    at the elbow.
 4. Update the inline annotation with "empirically validated — see
-   CALIBRATION.md §X" to signal that the TODO is resolved.
+   CALIBRATION.md §X" to signal that the calibration marker is resolved.
 
 ### 1.3 Fixpoint convergence
 
@@ -59,8 +60,9 @@ pathological cases and is not calibratable in any meaningful sense.
 All 22 translation rules share a flat priority of 0 and are resolved
 at conflict time via the tuple `(priority, confidence_score)`. The
 confidence bands below are **principled defaults** chosen to align
-rules of similar reliability. Each is a TODO(calibration) target
-against the 20-repo gold-standard.
+rules of similar reliability. Each is marked in code as a `TODO(calibration)`
+target against the 20-repo gold standard; the marker means "needs an empirical
+sweep", not "unfinished implementation".
 
 | Band | Score | Rules |
 | --- | --- | --- |
@@ -120,7 +122,7 @@ docstrings under `py/cogant/translate/rules/`.
 | `max_points` | 100 | Principled default | Percentage scale |
 | `points_per_error` | 10 | Principled default | 10 errors → 0 score |
 | `points_per_warning` | 2 | Principled default | 5:1 severity ratio vs errors |
-| `valid` threshold (`score >= N`) | 80 | Principled default | "At most 2 errors" intuition — TODO(calibration) |
+| `valid` threshold (`score >= N`) | 80 | Principled default | "At most 2 errors" intuition; calibration marker retained until the reviewer sweep lands |
 | A-row / D-sum tolerance | 1e-6 | Stability constant | Row-normalization safety |
 
 ### 2.6 Scoring metrics (`cogant/scoring/metrics.py`)
@@ -139,7 +141,7 @@ docstrings under `py/cogant/translate/rules/`.
 | `ConfidenceLevel.HIGH` threshold | 0.80 | Principled default | `variables.py`, `compiler.py` | ≥ upper-mid rule band |
 | `ConfidenceLevel.MEDIUM` threshold | 0.60 | Principled default | `variables.py`, `compiler.py` | Below lowest rule band |
 | `ConfidenceLevel.LOW` threshold | 0.40 | Principled default | `variables.py`, `compiler.py` | Aligned with RUNTIME_ONLY |
-| `independence_score` placeholder | 0.5 | Placeholder | `variables.py` | Maximum-entropy until graded implementation |
+| `independence_score` maximum-entropy prior | 0.5 | Placeholder | `variables.py` | Replace with graded implementation after review corpus lands |
 | Sequential edge confidence | 0.95 | Principled default | `temporal.py` | Near-DEFINITE (sync Python semantics) |
 | Parallel edge confidence | 0.70 | Principled default | `temporal.py` | Bottom band (async ambiguity) |
 | Async regime threshold | 0.3 | Principled default | `temporal.py` | async_fraction > 0.3 → ASYNCHRONOUS |
@@ -233,7 +235,7 @@ measured on hand-labelled process maps.
 
 ### 3.8 Priority 8 — Independence score
 
-Replace the `independence_score=0.5` placeholder with a graded score
+Replace the `independence_score=0.5` maximum-entropy prior with a graded score
 derived from fraction of overlapping mutation/read edges; calibrate
 against a human-labelled factorization gold standard.
 
@@ -264,7 +266,7 @@ values in production use.
 | Bernoulli `p` | 0.5 | Max-entropy (1 bit) | Information-theoretic prior |
 | Dirichlet `alpha` | 1.0 | Symmetric (uniform simplex) | pymdp default |
 | Gaussian `mean` / `variance` | 0.0 / 1.0 | Standard normal | Friston et al. 2017, Neural Computation 29(1) |
-| `independence_score` | 0.5 | Maximum-entropy placeholder | Pending graded implementation |
+| `independence_score` | 0.5 | Maximum-entropy prior | Pending graded implementation |
 
 ---
 
@@ -282,11 +284,11 @@ values in production use.
 - **Active Inference mapping (theory):** [ACTIVE_INFERENCE_MAPPING.md](ACTIVE_INFERENCE_MAPPING.md)
 - **Translation rules reference:** [`docs/reference/translation_rules.md`](../reference/translation_rules.md)
 - **Implementing modules:**
-  [`py/cogant/translate/confidence.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/confidence.py) (confidence combiner),
-  [`py/cogant/translate/engine.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/engine.py) (fixpoint cap),
-  [`py/cogant/translate/rules/`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/rules/) (22 rules across semantic/structural/behavioral/control/resilience),
-  [`py/cogant/gnn/matrices.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/gnn/matrices.py) (matrix defaults / stability constants),
-  [`py/cogant/gnn/validator.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/gnn/validator.py) (validator scoring),
-  [`py/cogant/statespace/compiler.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/statespace/compiler.py) (confidence-tier mapping),
-  [`py/cogant/statespace/temporal.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/statespace/temporal.py),
-  [`py/cogant/scoring/metrics.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/scoring/metrics.py)
+  [`py/cogant/translate/confidence.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/confidence.py) (confidence combiner),
+  [`py/cogant/translate/engine.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/engine.py) (fixpoint cap),
+  [`py/cogant/translate/rules/`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/) (22 rules across semantic/structural/behavioral/control/resilience),
+  [`py/cogant/gnn/matrices.py`](https://github.com/docxology/cogant/blob/main/py/cogant/gnn/matrices.py) (matrix defaults / stability constants),
+  [`py/cogant/gnn/validator.py`](https://github.com/docxology/cogant/blob/main/py/cogant/gnn/validator.py) (validator scoring),
+  [`py/cogant/statespace/compiler.py`](https://github.com/docxology/cogant/blob/main/py/cogant/statespace/compiler.py) (confidence-tier mapping),
+  [`py/cogant/statespace/temporal.py`](https://github.com/docxology/cogant/blob/main/py/cogant/statespace/temporal.py),
+  [`py/cogant/scoring/metrics.py`](https://github.com/docxology/cogant/blob/main/py/cogant/scoring/metrics.py)

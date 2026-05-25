@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """DiffVisualizer: Compare two bundles and highlight differences."""
 
 import json

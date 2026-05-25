@@ -378,12 +378,12 @@ class TestBlanketNetworkStructure:
         blanket = extractor.extract(strategy="auto")
 
         try:
-            bn = build_blanket_network(blanket)
+            bn = build_blanket_network(small_graph, blanket)
             # Network should have nodes for internal, sensory, active, external
             assert bn is not None
         except Exception:
             # May not be implemented yet
-            pytest.skip("build_blanket_network not available")
+            pytest.fail("build_blanket_network should accept graph plus blanket")
 
     def test_blanket_serialization_roundtrip(self, small_graph):
         """Serializing and deserializing blanket preserves structure."""
@@ -393,8 +393,8 @@ class TestBlanketNetworkStructure:
         blanket = extractor.extract(strategy="auto")
 
         try:
-            serialized = serialize_blanket(blanket)
+            serialized = serialize_blanket(blanket, small_graph)
             # Should produce some JSON-able structure
             assert serialized is not None
         except Exception:
-            pytest.skip("serialize_blanket not available")
+            pytest.fail("serialize_blanket should accept graph plus blanket")

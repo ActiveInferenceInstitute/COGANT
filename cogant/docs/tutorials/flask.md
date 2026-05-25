@@ -48,7 +48,7 @@ Canonical metrics from `../evaluation/figures/metrics.json`:
 | METHOD | 57 | 58.2% |
 | FUNCTION | 10 | 10.2% |
 
-The v0.1.x Python front end emits the structural core: `MODULE`, `CLASS`, `METHOD`, `FUNCTION`. The richer taxonomy declared in `cogant.schemas.core.NodeKind` (variables, parameters, type references, control-flow nodes) is roadmap — tracked as P1-2 / P1-3 in `../evaluation/SCOPING_REPORT.md`.
+The current Python front end emits the structural core visible in this fixture: `MODULE`, `CLASS`, `METHOD`, `FUNCTION`, with call, containment, import, inheritance, and READS/WRITES edges when the selected analysis path recovers them. The richer taxonomy declared in `cogant.schemas.core.NodeKind` remains available to parsers and plugins; extending fixture evidence for long-tail variable, parameter, type-reference, and control-flow nodes is tracked as P1-2 / P1-3 in `../evaluation/SCOPING_REPORT.md`.
 
 ## Edge kind distribution
 

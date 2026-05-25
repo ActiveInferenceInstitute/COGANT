@@ -4,4 +4,6 @@ from cogant.pipeline.dag import Stage as Stage
 from cogant.pipeline.dag import StageResult as StageResult
 from cogant.pipeline.dag import StageStatus as StageStatus
 
-__all__ = ["DAGResult", "PipelineDAG", "Stage", "StageResult", "StageStatus"]
+RUNNER_STAGES: tuple[str, ...]
+
+__all__ = ["DAGResult", "PipelineDAG", "RUNNER_STAGES", "Stage", "StageResult", "StageStatus"]

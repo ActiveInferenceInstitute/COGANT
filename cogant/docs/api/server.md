@@ -1,6 +1,6 @@
 # FastAPI Server Reference
 
-> **What this page is:** Complete reference for COGANT's FastAPI application (`cogant.server.app`) and all 11 exposed HTTP routes.
+> **What this page is:** Reference for COGANT's packaged/demo FastAPI application (`cogant.server.app`) and all 11 exposed HTTP routes.
 >
 > **Prerequisites:** [Installation](installation.md) and familiarity with the [analysis pipeline](overview.md).
 >
@@ -10,7 +10,7 @@
 
 ## Overview
 
-`cogant.server.app` exposes a FastAPI application for analyzing codebases and operating the reverse pipeline via HTTP. The server provides JSON endpoints for translation, reverse synthesis, roundtrip validation, and metrics retrieval. It is packaged as a Docker container (`cogant/Dockerfile`) and can be started via `docker-compose.yml` or directly from Python.
+`cogant.server.app` exposes a FastAPI application for analyzing codebases and operating the reverse pipeline via HTTP. The server provides JSON endpoints for translation, reverse synthesis, roundtrip validation, and metrics retrieval. It is packaged as a runnable demo/container surface (`cogant/Dockerfile`, `docker-compose.yml`) and can also be started directly from Python. It is not a turnkey internet-facing service: token authentication, TLS termination, stricter CORS, and reverse-proxy policy are caller-owned.
 
 ## Routes
 
@@ -156,13 +156,13 @@ Server behavior is controlled via environment variables:
 
 ## Authentication & Security
 
-v0.5.0 **does not** ship token-based authentication. The server implements:
+v0.6.0 **does not** ship token-based authentication. Treat the packaged server as a local demo or an internal service that sits behind infrastructure you control. The application implements:
 
 - **Rate limiting** (configurable via `COGANT_RATE_LIMIT` env var): 100 requests/minute per IP by default.
 - **CORS middleware** (default: all origins allowed; tighten via `COGANT_CORS_ORIGINS`).
 - **Request timeouts** (configurable via `COGANT_TIMEOUT`).
 
-For production deployments, place the server behind a reverse proxy (nginx, Envoy) with API key enforcement, TLS termination, and stricter CORS policies.
+For production-like deployments, place the server behind a reverse proxy (nginx, Envoy, or equivalent) with API key or identity enforcement, TLS termination, request-size limits, and stricter CORS policies before exposing it outside a trusted network.
 
 ## Error Responses
 
@@ -192,7 +192,7 @@ Lightweight check; always returns 200 if the server is running.
 
 ```bash
 curl http://localhost:8080/health
-# {"status": "ok", "version": "0.5.0"}
+# {"status": "ok", "version": "..."}
 ```
 
 ### /ready
@@ -275,4 +275,4 @@ curl -X POST http://localhost:8080/api/v1/visualize \
 - [Complete Example](complete_example.md) — full worked example with error handling
 - [Performance Tips](performance_tips.md) — scaling considerations
 - [FAQ #38: How do I run the FastAPI server?](../faq.md#38-how-do-i-run-the-fastapi-server)
-- [`examples/demo_server.py`](https://github.com/cogant-contributors/cogant/tree/main/cogant/examples/demo_server.py) — standalone server startup example
+- [`examples/demo_server.py`](https://github.com/docxology/cogant/tree/main/cogant/examples/demo_server.py) — standalone server startup example

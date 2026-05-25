@@ -1,6 +1,16 @@
-# rust/cogant-trace/src
+# cogant-trace/src
 
-This directory is part of the COGANT codebase-to-GNN translation engine.
+Rust source for trace summaries. The crate implements trace event/session types and deterministic event summaries.
 
-- Human overview: repository [README.md](../../../README.md)
-- Documentation index: [docs/index.md](../../../docs/index.md)
+## Files
+
+- `lib.rs` - public crate API, unit tests, and FFI-facing helpers when applicable.
+
+## Verification
+
+From [`../../`](../../):
+
+```bash
+cargo test -p cogant-trace
+cargo check -p cogant-trace
+```

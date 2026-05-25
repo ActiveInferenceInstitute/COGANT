@@ -6,7 +6,7 @@ Authoritative CLI list: [docs/cli_reference.md](../docs/cli_reference.md) (same 
 
 ## Contents
 
-- **control_positive/** — Three hand-crafted fixtures (`calculator/`, `flask_mini/`, `event_pipeline/`) that are known to produce non-empty mappings, state spaces, and GNN packages. These are the canonical "does the pipeline still work end-to-end" targets used by tests and examples.
+- **control_positive/** — Hand-crafted fixtures that are known to produce non-empty mappings, state spaces, and GNN packages. The canonical smoke trio is `calculator/`, `flask_mini/`, and `event_pipeline/`; the expanded local corpus adds `cli_tool/`, `async_service/`, `data_pipeline/`, `plugin_architecture/`, `notebook_module/`, and `multi_package_workspace/` for shape-specific evidence.
 - **thin_orchestrated/** — 30 numbered scripts (`01_*.py`–`30_*.py`): each pipeline stage in isolation (01–12) and higher-order workflows that stitch stages together (13–30). See `thin_orchestrated/README.md` for the full index.
 - **python-service/** — Larger Python service fixture with tests (demo).
 - **workflow-engine/** — Workflow engine fixture with complex control flow (demo).
@@ -61,7 +61,13 @@ workflow-engine/
 
 ## Maintained as test fixtures
 
-The `control_positive/` fixtures (`calculator`, `flask_mini`, `event_pipeline`) are the primary regression corpus: they are small enough to run in tests and large enough to exercise every translation rule and GNN section. Fixtures update in lockstep with the translation-rule and state-space-compiler changes they are designed to pin. Golden output lives under `tests/golden/`.
+The `control_positive/` fixtures are the primary local regression corpus: they
+are small enough to run in tests and broad enough to exercise CLI tools, async
+services, data pipelines, plugin registries, notebook-converted modules,
+multi-package workspaces, and the original calculator / Flask / event fixtures.
+Each fixture keeps a README with its intent and expected graph motifs. Golden
+output lives under `tests/golden/`; network-dependent repositories remain
+configuration-driven through `run_all.json`.
 
 ## Community examples
 

@@ -6,33 +6,22 @@ emits a Generalized Notation for Networks (GNN) Active Inference model,
 the reverse direction consumes a GNN markdown file and synthesizes a
 runnable Python package whose structure mirrors the GNN topology.
 
-Isomorphism definition
-----------------------
+Roundtrip contract
+------------------
 The round-trip **cannot** reproduce the original source code verbatim —
 GNN is a lossy semantic projection that discards implementation details,
 argument names, control-flow, docstrings, and anything that is not a
 hidden-state, observation, action, policy, or constraint role.
 
-What the round-trip **must** preserve is graph-level isomorphism. For an
-input GNN ``G`` and the GNN ``G'`` produced by synthesising ``G`` to
-Python and then re-running the forward pipeline on that package, we
-require:
+The public verifier reports a ``roundtrip_status`` enum plus an invariant
+ledger. ``ROLE_PRESERVED`` means the semantic role multiset survived above
+the configured ``role_preservation_score`` threshold. The stricter
+``STRUCTURALLY_ISOMORPHIC`` status is reserved for runs that also preserve
+graph counts, edge kinds, state-space shapes, matrix shapes/values, GNN
+sections, generated-code compile status, and the second forward pass.
 
-1. **Role multiset equality**: the multiset of MappingKind labels on
-   semantic mappings of ``G'`` must equal that of ``G`` (up to
-   the role-match threshold).
-2. **State-space cardinality**: ``|hidden_states(G')| == |hidden_states(G)|``
-   and similarly for observations, actions, policies, and constraints.
-3. **Matrix shape congruence**: the derived A, B, C, D matrices of
-   ``G'`` have the same shape as those of ``G``.
-4. **Topology homomorphism (weak)**: there is a bijection between the
-   semantic nodes of ``G`` and ``G'`` under which the A/B/C/D structural
-   zero/non-zero pattern is preserved up to permutation.
-
-Concrete node IDs and edge weights are **not** required to be equal —
-only the role labels, dimensions, and matrix shapes. This weaker notion
-of isomorphism is what :func:`cogant.reverse.idempotency.verify_roundtrip`
-measures via the ``role_match_score`` metric.
+Concrete node IDs and edge weights are not expected to survive unless the
+strict invariant tier says they did.
 
 Public API
 ----------
@@ -47,6 +36,12 @@ Public API
 from cogant.reverse.callable import MatrixFunctions, make_matrix_functions
 from cogant.reverse.idempotency import (
     ROLE_MATCH_THRESHOLD,
+    ROLE_PRESERVATION_THRESHOLD,
+    ROUNDTRIP_STATUS_DRIFT,
+    ROUNDTRIP_STATUS_FAILED,
+    ROUNDTRIP_STATUS_ROLE_PRESERVED,
+    ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC,
+    ROUNDTRIP_STATUSES,
     RoundtripResult,
     verify_repo_roundtrip,
     verify_roundtrip,
@@ -73,7 +68,13 @@ __all__ = [
     "RoundtripResult",
     "verify_roundtrip",
     "verify_repo_roundtrip",
+    "ROLE_PRESERVATION_THRESHOLD",
     "ROLE_MATCH_THRESHOLD",
+    "ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC",
+    "ROUNDTRIP_STATUS_ROLE_PRESERVED",
+    "ROUNDTRIP_STATUS_DRIFT",
+    "ROUNDTRIP_STATUS_FAILED",
+    "ROUNDTRIP_STATUSES",
     "IsomorphismReport",
     "compare_role_distributions",
     "compare_matrices",

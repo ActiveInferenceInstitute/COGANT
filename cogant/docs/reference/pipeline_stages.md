@@ -19,4 +19,4 @@ Default order:
 
 Markov blanket extraction and GNN matrix formatting run inside the orchestrated pipeline where the implementation wires them (typically around state-space, process, and export). The **reverse** synthesizer (`cogant.reverse`) is a separate workflow from a completed bundle, not a `PipelineRunner` stage in the default list.
 
-Roundtrip evaluation figures (for example **23/23 ISOMORPHIC**, mean ε = 1.0) are recorded in `cogant/evaluation/METRICS.yaml` and `cogant/docs/evaluation/ROUNDTRIP_EVAL.md`.
+Roundtrip evaluation figures (`role_preserved_count`, `strict_isomorphism_count`, mean `role_preservation_score`, and drift/failure counts) are recorded in `cogant/evaluation/METRICS.yaml` and `cogant/docs/evaluation/ROUNDTRIP_EVAL.md`.

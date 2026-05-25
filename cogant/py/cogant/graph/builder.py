@@ -268,7 +268,11 @@ class ProgramGraphBuilder:
                 edge_pairs = [(e.source_id, e.target_id) for e in self.graph.edges.values()]
                 return _rust_cc(node_ids, edge_pairs)
             except (ImportError, ModuleNotFoundError):
-                pass  # fall through to Python BFS
+                raise RuntimeError(
+                    "COGANT_USE_RUST=1 was requested, but cogant._rust is not importable. "
+                    "Run `uv run maturin develop --release` from rust/cogant-ffi or set "
+                    "COGANT_USE_RUST=0 to force the Python backend."
+                ) from None
 
         # Pure-Python BFS — O(V + E) via a pre-built adjacency list.
         # Build an undirected adjacency list in O(|E|) so that the BFS

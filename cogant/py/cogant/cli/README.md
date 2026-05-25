@@ -46,7 +46,7 @@ cogant export: Export the GNN bundle to a specified format (json, jsonl, parquet
 
 cogant reverse: Synthesize a runnable Python package from a GNN markdown file.
 
-cogant roundtrip: Verify forward-reverse-forward round-trip isomorphism (**23/23 ISOMORPHIC** on the canonical evaluation set — 12 zoo fixtures, 3 real-world examples, and 8 uncurated libraries).
+cogant roundtrip: Verify forward-reverse-forward roundtrip invariants, reporting `roundtrip_status`, `role_preservation_score`, strict structural checks, matrix/GNN preservation, and generated-code status.
 
 cogant benchmark: Time pipeline performance across multiple runs, reporting average, min, and max execution times.
 

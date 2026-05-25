@@ -10,6 +10,7 @@ files under ``tmp_path``.
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 
 import pytest
@@ -572,6 +573,29 @@ def test_synthesize_package_all_generated_files_compile(tmp_path: Path) -> None:
         compile(source, str(py_file), "exec")
 
 
+def test_synthesize_package_action_updates_factor_value(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Generated actions mutate a factor's scalar value, not the factor object."""
+    model = parse_gnn(CANONICAL_GNN)
+    plan = plan_package(model)
+    synthesize_package(plan, model, tmp_path)
+
+    monkeypatch.syspath_prepend(str(tmp_path))
+    importlib.invalidate_caches()
+    state_mod = importlib.import_module(f"{plan.package_name}.state")
+    act_mod = importlib.import_module(f"{plan.package_name}.act")
+
+    first_state_var = plan.state_vars[0].name
+    action_fn = plan.action_methods[0].name
+    state = state_mod.State()
+    before = getattr(state, first_state_var).value
+    new_state = getattr(act_mod, action_fn)(state)
+
+    assert isinstance(new_state, state_mod.State)
+    assert getattr(new_state, first_state_var).value == before + 1
+
+
 def test_synthesize_package_empty_model(tmp_path: Path) -> None:
     """Degenerate empty model still yields a compilable package."""
     model = parse_gnn(EMPTY_GNN)
@@ -629,8 +653,8 @@ def test_synthesize_package_returns_package_path_inside_output(tmp_path: Path) -
     assert pkg.name == plan.package_name
 
 
-def test_synthesize_package_policy_module_has_select_policy(tmp_path: Path) -> None:
-    """policy.py defines select_policy and it returns a non-negative int."""
+def test_synthesize_package_policy_module_uses_targeted_selector(tmp_path: Path) -> None:
+    """policy.py exposes ``select_policy`` when POLICY is a target role."""
     model = parse_gnn(CANONICAL_GNN)
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
@@ -638,39 +662,43 @@ def test_synthesize_package_policy_module_has_select_policy(tmp_path: Path) -> N
     assert "def select_policy(" in src
 
 
+def test_synthesize_package_policy_module_uses_neutral_selector(tmp_path: Path) -> None:
+    """policy.py uses ``pick_index`` when no POLICY role is targeted."""
+    model = parse_gnn(MINIMAL_HIDDEN_ONLY_GNN)
+    plan = plan_package(model)
+    pkg = synthesize_package(plan, model, tmp_path)
+    src = (pkg / "policy.py").read_text()
+    assert "def pick_index(" in src
+
+
 def test_synthesize_package_act_module_has_noop_fallback(tmp_path: Path) -> None:
-    """When there are no actions, act.py emits a noop update function."""
+    """When there are no actions, act.py emits a neutral idle fallback."""
     model = parse_gnn(MINIMAL_HIDDEN_ONLY_GNN)
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
     src = (pkg / "act.py").read_text()
-    # Synthesizer emits update_noop as the no-action fallback.
-    assert "def update_noop(" in src or "def act_noop(" in src
+    assert "def idle_step(" in src
+    assert "def update_noop(" not in src
 
 
 def test_synthesize_package_observe_module_has_noop_fallback(tmp_path: Path) -> None:
-    """When there are no observations, observe.py emits a noop observe function."""
+    """When there are no observations, observe.py emits a neutral fallback."""
     model = parse_gnn(MINIMAL_HIDDEN_ONLY_GNN)
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
     src = (pkg / "observe.py").read_text()
-    # Synthesizer emits observe_noop or observe_state as the no-obs fallback.
-    assert "def observe_noop(" in src or "def observe_state(" in src or "noop" in src
+    assert "def fallback_value(" in src
+    assert "def get_noop(" not in src
 
 
 def test_synthesize_package_constraints_module_noop_fallback(tmp_path: Path) -> None:
-    """When there are no explicit constraints, constraints.py emits check_* stubs.
-
-    Wave-14 synthesizer change: noop stubs replaced with per-factor scaffold
-    predicates (check_hs_<factor>) so forward pipeline's PreferenceRule can
-    detect them as CONSTRAINT mappings.  Any check_* function satisfies the
-    invariant.
-    """
+    """When there are no explicit constraints, the fallback is non-semantic."""
     model = parse_gnn(MINIMAL_HIDDEN_ONLY_GNN)
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
     src = (pkg / "constraints.py").read_text()
-    assert "def check_" in src
+    assert "def always_true(" in src
+    assert "def check_" not in src
 
 
 # ---------------------------------------------------------------------------

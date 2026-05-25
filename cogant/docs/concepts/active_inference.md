@@ -133,7 +133,7 @@ The complete Active Inference cycle maps to a standard request-response loop:
 5. **Act** (B matrix): execute the action and transition to a new state
 6. **Repeat**
 
-COGANT's job is to extract this loop from your source code and make it explicit. The [GNN output](gnn.md) is the fully specified model. The [A/B/C/D matrices](gnn.md#the-7-semantic-roles) are the numerical representation. The [Markov blanket](markov_blanket.md) is the boundary that separates your system from its environment.
+COGANT's job is to extract this loop from your source code and make it explicit. The [GNN output](gnn.md) is the fully specified model. The [A/B/C/D matrices and semantic role families](gnn.md#semantic-role-families) are the numerical and provenance representation. The [Markov blanket](markov_blanket.md) is the boundary that separates your system from its environment.
 
 ## What this means for your code
 

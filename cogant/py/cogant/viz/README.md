@@ -20,14 +20,27 @@ HTMLSiteRenderer is the main entry point generating self-contained HTML with tab
 
 DashboardGenerator produces production-quality interactive HTML dashboards with tabbed navigation, embedded SVG charts, Mermaid diagrams, and comprehensive data views.
 
+Inspection dashboard helpers read a completed `cogant/output/<target>/` directory directly. `write_inspection_artifacts()` emits `site/inspection_dashboard.html`, `figures/graphical_abstract.svg`, and a best-effort `figures/graphical_abstract.png` from the actual `data/`, `gnn_package/`, `figures/`, `analysis/`, `reports/`, and `roundtrip/` artifacts. This is the fastest human review path after a run because it does not require holding pipeline objects in memory.
+
+MatrixVisualizer renders Active Inference A/B/C/D matrices and now includes `summarize_matrices()` plus `plot_interpretability_panel()` for one-page diagnostics of likelihoods, transitions, preferences, and priors. The B tensor selector supports both `(state, state, action)` and legacy `(action, state, state)` conventions and reports which slice convention was used.
+
+NetworkView ranks codebase hotspots with `summarize_hotspots()` and emits Mermaid diagrams that group critical, important, and contextual nodes. This gives large program graphs a compact human inspection path before opening the full D3 or PNG graph.
+
 BoundaryMapper analyzes and visualizes module boundaries, type boundaries, and cross-boundary couplings with Mermaid diagrams.
 
-PNGExporter converts charts and graphs to PNG format.
+PNG raster helpers convert charts and graphs to PNG format. `render_all_pngs()` writes sibling PNGs for program graphs, Mermaid, SVG, DOT, state-space factors, A/B/C/D connections, process Gantt charts, Markov blankets, GNN markdown pages, summary covers, the compact `interpretability_overview.png` dashboard, and the inspection dashboard / graphical abstract companions.
 
 ## Usage
 
 ```python
-from cogant.viz import GraphVisualizer, MermaidGenerator, DashboardGenerator
+from cogant.viz import (
+    DashboardGenerator,
+    GraphVisualizer,
+    MatrixVisualizer,
+    MermaidGenerator,
+    render_all_pngs,
+    write_inspection_artifacts,
+)
 from cogant.process import TimelineBuilder
 
 # Graph visualization
@@ -47,4 +60,16 @@ dashboard = DashboardGenerator(
     repo_name="my_repo"
 )
 dashboard.generate("output.html")
+
+# Matrix interpretability
+matrix_viz = MatrixVisualizer()
+diagnostics = matrix_viz.summarize_matrices({"A": A, "B": B, "C": C, "D": D})
+panel = matrix_viz.plot_interpretability_panel({"A": A, "B": B, "C": C, "D": D})
+matrix_viz.to_png(panel, "generative_model_panel.png")
+
+# One-shot PNG rasterization for a completed run directory
+written = render_all_pngs("output/calculator")
+
+# Artifact-first dashboard + graphical abstract for a completed run directory
+review = write_inspection_artifacts("output/calculator")
 ```

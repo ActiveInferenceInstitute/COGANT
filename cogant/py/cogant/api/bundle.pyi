@@ -3,6 +3,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+def _json_default(obj: Any) -> Any: ...
+
 class ArtifactKey(StrEnum):
     REPO_SNAPSHOT = "repo_snapshot"
     PARSED_MODULES = "parsed_modules_detail"

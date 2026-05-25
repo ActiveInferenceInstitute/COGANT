@@ -1,6 +1,16 @@
 from cogant.reverse.callable import MatrixFunctions as MatrixFunctions
 from cogant.reverse.callable import make_matrix_functions as make_matrix_functions
 from cogant.reverse.idempotency import ROLE_MATCH_THRESHOLD as ROLE_MATCH_THRESHOLD
+from cogant.reverse.idempotency import ROLE_PRESERVATION_THRESHOLD as ROLE_PRESERVATION_THRESHOLD
+from cogant.reverse.idempotency import ROUNDTRIP_STATUS_DRIFT as ROUNDTRIP_STATUS_DRIFT
+from cogant.reverse.idempotency import ROUNDTRIP_STATUS_FAILED as ROUNDTRIP_STATUS_FAILED
+from cogant.reverse.idempotency import (
+    ROUNDTRIP_STATUS_ROLE_PRESERVED as ROUNDTRIP_STATUS_ROLE_PRESERVED,
+)
+from cogant.reverse.idempotency import (
+    ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC as ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC,
+)
+from cogant.reverse.idempotency import ROUNDTRIP_STATUSES as ROUNDTRIP_STATUSES
 from cogant.reverse.idempotency import RoundtripResult as RoundtripResult
 from cogant.reverse.idempotency import verify_repo_roundtrip as verify_repo_roundtrip
 from cogant.reverse.idempotency import verify_roundtrip as verify_roundtrip
@@ -27,6 +37,12 @@ __all__ = [
     "RoundtripResult",
     "verify_roundtrip",
     "verify_repo_roundtrip",
+    "ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC",
+    "ROUNDTRIP_STATUS_ROLE_PRESERVED",
+    "ROUNDTRIP_STATUS_DRIFT",
+    "ROUNDTRIP_STATUS_FAILED",
+    "ROUNDTRIP_STATUSES",
+    "ROLE_PRESERVATION_THRESHOLD",
     "ROLE_MATCH_THRESHOLD",
     "IsomorphismReport",
     "compare_role_distributions",

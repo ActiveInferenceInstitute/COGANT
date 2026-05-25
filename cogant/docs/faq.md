@@ -28,11 +28,11 @@ See [Theory — GNN Format](theory/gnn_format.md).
 
 ### 3. What languages does COGANT support?
 
-v0.5.0 supports **Python** (via CPython `ast`) and **JavaScript / TypeScript** (via a complete tree-sitter front end). The mapping rules are language-agnostic (they operate on `NodeKind`/`EdgeKind` in the program graph). Java and Rust parsers remain on the roadmap.
+v0.6.0 supports **Python** (via CPython `ast`) and **JavaScript / TypeScript** (via the optional tree-sitter front end). The mapping rules are language-agnostic because they operate on `NodeKind`/`EdgeKind` in the program graph. Java and Rust parsers remain on the roadmap.
 
 ### 4. How accurate is role assignment?
 
-On the six control-positive fixtures shipped with v0.5.0 (calculator, event_pipeline, flask_mini, flask_app, requests_lib, json_stdlib), mean confidence scores range from 0.83 to 0.91. However, confidence is not accuracy. The known recall gap is real: for example, the calculator fixture never emits an ACTION mapping for `input_digit` or `input_operation` because those method names do not match the keyword list (`set/update/create/delete/send/push/execute/run/process/handle/dispatch`). Only the private helper `_execute_operation` matches. Expect roughly 73% precision and 82% recall on well-structured Python codebases, with worse numbers on codebases that use unconventional naming.
+On the control-positive fixtures shipped with v0.6.0, confidence is reported per rule, per mapping, and per bundle; treat it as heuristic evidence rather than accuracy. Calibration artifacts and reviewer annotations distinguish accepted and rejected mappings, and the docs report precision/recall only where an executable annotation set exists. Unconventional naming, dynamic dispatch, and reflection still reduce recall.
 
 See [R&D — Calibration](rnd/calibration.md).
 
@@ -52,7 +52,7 @@ See [Theory — Active Inference Primer](theory/active_inference_primer.md).
 cogant translate ./my_repo --output output/ --layout-output
 ```
 
-This runs the full pipeline: ingest, static analysis, normalize, graph, translate, state-space, process, export, and validate. Add `--no-dynamic` to skip coverage/trace enrichment when you have no runtime data.
+This runs the full pipeline: ingest, static analysis, normalize, graph, dynamic, translate, state-space, process, export, and validate. The `dynamic` enrichment stage runs by default; add `--no-dynamic` to skip coverage/trace enrichment when you have no runtime data.
 
 See [Getting Started — Quick Start](getting-started/quickstart.md).
 
@@ -82,11 +82,11 @@ Yes, but point `cogant translate` at a specific subdirectory rather than the rep
 
 ### 10a. Is there Rust FFI acceleration?
 
-Yes. Set `COGANT_USE_RUST=1` to enable the optional PyO3 `connected_components` backend for graph construction. When the compiled Rust extension is absent, COGANT falls back to pure Python automatically. Run `cogant doctor` to verify Rust backend availability.
+Yes. Set `COGANT_USE_RUST=1` to require the optional PyO3 backend; COGANT now fails loudly if the compiled extension is unavailable in that mode. Set `COGANT_USE_RUST=0` to force pure Python. When the variable is unset, COGANT uses auto mode and records the selected backend in generated outputs.
 
 ### 10b. Does COGANT ship type stubs?
 
-Yes. v0.5.0 ships `.pyi` stub files for all public API modules and a `py.typed` marker. Mypy, Pyright, and Pylance resolve types from the stubs without requiring the source.
+Yes. v0.6.0 ships `.pyi` stub files for public API modules and a `py.typed` marker. The repository also includes an export-vs-stub parity audit so public `__all__` symbols cannot silently drift away from their stub files.
 
 ---
 
@@ -130,13 +130,13 @@ See [R&D — Active Inference Mapping, Surprising Findings](rnd/active_inference
 
 ### 15. Does COGANT understand runtime behavior?
 
-No. COGANT is **static analysis only** by default in v0.5.0. It parses Python AST (and JS/TS via tree-sitter), builds a program graph from structural relationships (calls, imports, inheritance, reads, writes), and applies rules to that graph. It does not execute your code, trace actual function calls, or observe runtime state.
+No. COGANT is **static analysis only** by default in v0.6.0. It parses Python AST (and JS/TS via tree-sitter when enabled), builds a program graph from structural relationships (calls, imports, inheritance, reads, writes), and applies rules to that graph. It does not execute your code, trace actual function calls, or observe runtime state.
 
 The `--coverage` and `--trace` flags accept pre-collected runtime data (coverage.py JSON and function-call traces) and merge them into the graph, but COGANT itself does not generate that data.
 
 ### 16. Can COGANT analyze dynamic languages like Ruby or PHP?
 
-Not in v0.5.0. The parsers currently cover Python and JavaScript/TypeScript. Highly dynamic languages will be harder to analyze because static analysis cannot resolve runtime dispatch, monkey-patching, or eval-based code generation. Expect lower confidence scores and more RUNTIME_ONLY tier mappings for dynamic language targets.
+Not in v0.6.0. The parsers currently cover Python and JavaScript/TypeScript. Highly dynamic languages will be harder to analyze because static analysis cannot resolve runtime dispatch, monkey-patching, or eval-based code generation. Expect lower confidence scores and more runtime-only evidence gaps for dynamic language targets.
 
 ### 17. What happens with code below the confidence threshold?
 
@@ -150,15 +150,15 @@ Mappings with confidence below 0.4 are kept in the bundle for traceability but e
 
 The reverse direction takes a GNN generative model and synthesizes a minimal Python package that implements it: a class per hidden-state node, a method per action, a getter per observation, and module-level constants for preferences and priors. The goal is to close the loop: `code -> GNN -> code'`.
 
-**Status:** `cogant reverse` and `cogant roundtrip` are fully available CLI subcommands as of v0.5.0. See [Tutorial 6 — Reverse Mode](tutorials/06_reverse_mode.md).
+**Status:** `cogant reverse` and `cogant roundtrip` are fully available CLI subcommands. See [Tutorial 6 — Reverse Mode](tutorials/06_reverse_mode.md).
 
 ### 19. Can I generate a working Python package from a GNN?
 
 In principle, yes. The `PackagePlan` data model and `gnn/matrices.py` entry point exist and can enumerate hidden states, observations, and actions in a stable order. The simulation runner (`simulate/runner.py`) uses the same numerical path the synthesized package would take. In practice, the output is not yet production-quality: it produces semantically equivalent but not textually equivalent code, and arbitrary-language output is not supported.
 
-### 20. What does "role_match_score" mean?
+### 20. What does "role_preservation_score" mean?
 
-When you run a forward-then-reverse roundtrip, `role_match_score` measures how many of the original semantic role assignments survive the round trip. A score of 100% means every node in the regenerated code gets the same Active Inference role as the original. Scores below 100% indicate information loss during either export or reverse synthesis.
+When you run a forward-then-reverse roundtrip, `role_preservation_score` measures how many of the original semantic role assignments survive the round trip. A score of 100% means the regenerated code preserves the original Active Inference role population. Scores below 100% indicate information loss during either export or reverse synthesis. The stricter `roundtrip_status` field separately reports whether graph, matrix, GNN-section, and generated-code invariants also pass.
 
 ### 21. Why is the roundtrip not perfect?
 
@@ -272,13 +272,13 @@ See [Roadmap — v0.6.x planned](roadmap/version_060_planned.md#l1).
 
 ### 34. Is there a web UI?
 
-v0.5.0 ships a basic HTML site via `cogant render` for browsing the program graph and GNN output. An interactive graph visualization with role filtering, Markov blanket highlighting, and drill-down is a roadmap item but has no committed timeline.
+v0.6.0 ships HTML inspection dashboards and manuscript-facing visual artifacts for browsing the program graph, GNN output, roundtrip deltas, parser certainty, and benchmark summaries. The dashboard workbench is generated from real bundle artifacts rather than hand-authored screenshots.
 
 ### 35. What is the long-term vision?
 
 COGANT aims to be a bridge between software engineering and Active Inference research:
 
-1. **Shipped (v0.2–v0.5 + wave-21):** JS/TS parser, Rust PyO3 acceleration, incremental analysis (19.6× speedup), plugin system, 22 translation rules, round-trip ε=1.0 (23/23 ISOMORPHIC), static/network analysis, 9-format export, 8-page PDF reports, WebSocket streaming API.
+1. **Shipped (v0.2–v0.6):** JS/TS parser, Rust PyO3 acceleration, incremental analysis (19.6× speedup), plugin system, 22 translation rules, role-preservation and strict-invariant roundtrip reporting, static/network analysis, 9-format export, 8-page PDF reports, WebSocket streaming API.
 2. **Near term (v0.6.x):** Java and Rust parsers, streaming export for >100k-node graphs, intra-procedural type inference, alias analysis.
 3. **Medium term (v0.7.x–v0.9.x):** Dynamic analysis from runtime traces, cross-repository modeling, interprocedural dataflow, VSCode extension, interactive web dashboard.
 4. **Long term (v1.0+):** Codebases as living generative models — continuous CI integration that tracks how a project's Active Inference structure evolves over time, with drift detection when architectural roles shift unexpectedly. Public API freeze, pre-trained GNN node encoder, distributed processing.
@@ -310,7 +310,7 @@ COGANT derives these from program graph edge kinds: READS edges populate A, WRIT
 
 ### 38. How do I run the FastAPI server?
 
-`cogant serve` is planned for v0.6.x. In v0.5.0, start the server directly:
+Start the server directly from the package entry point:
 
 ```python
 from cogant.server.app import create_app

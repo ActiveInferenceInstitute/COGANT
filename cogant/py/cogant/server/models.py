@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 
 # ---------------------------------------------------------------------------
 # /analyze
@@ -135,10 +135,10 @@ class RoundtripRequest(BaseModel):
 
     Attributes:
         repo_path: Repository to round-trip (forward → reverse → forward).
-        threshold: Minimum ``role_match_score`` for the result to be
-            flagged as isomorphic. The COGANT default is ``0.5``; the
-            server spec pins the default to ``0.7`` so the endpoint
-            returns a stricter signal by default.
+        threshold: Minimum ``role_preservation_score`` for the weaker
+            role-preserved success tier. The package default is ``0.5``;
+            the server pins ``0.7`` so the endpoint returns a stricter
+            signal by default.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -156,12 +156,55 @@ class RoundtripResponse(BaseModel):
     exposed here to keep the contract stable.
     """
 
-    role_match_score: float = Field(..., ge=0.0, le=1.0)
-    is_isomorphic: bool
+    model_config = ConfigDict(populate_by_name=True)
+
+    roundtrip_status: Literal[
+        "STRUCTURALLY_ISOMORPHIC",
+        "ROLE_PRESERVED",
+        "DRIFT",
+        "FAILED",
+    ] = "DRIFT"
+    role_preservation_score: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        validation_alias=AliasChoices("role_preservation_score", "role_match_score"),
+    )
+    role_preserved: bool = False
+    structurally_isomorphic: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("structurally_isomorphic", "is_isomorphic"),
+    )
+    matrix_preserved: bool = False
+    gnn_sections_preserved: bool = False
+    generated_code_ok: bool = False
+    invariants: dict[str, Any] = Field(default_factory=dict)
     original_roles: dict[str, int] = Field(default_factory=dict)
     synthesized_roles: dict[str, int] = Field(default_factory=dict)
     threshold: float = Field(..., ge=0.0, le=1.0)
     errors: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _derive_roundtrip_status(self) -> RoundtripResponse:
+        if self.role_preservation_score >= self.threshold:
+            self.role_preserved = True
+        if self.structurally_isomorphic:
+            self.roundtrip_status = "STRUCTURALLY_ISOMORPHIC"
+        elif self.errors:
+            self.roundtrip_status = "FAILED"
+        elif self.role_preserved:
+            self.roundtrip_status = "ROLE_PRESERVED"
+        return self
+
+    @property
+    def role_match_score(self) -> float:
+        """Deprecated compatibility alias."""
+        return self.role_preservation_score
+
+    @property
+    def is_isomorphic(self) -> bool:
+        """Deprecated compatibility alias."""
+        return self.structurally_isomorphic
 
 
 # ---------------------------------------------------------------------------
@@ -239,7 +282,7 @@ class TranslateOptions(BaseModel):
             possible).
     """
 
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, populate_by_name=True)
 
     include_viz: bool = Field(default=False, description="Include visualization in response")
     viz_format: Literal["mermaid", "json", "graphml"] = Field(
@@ -261,7 +304,7 @@ class TranslateRequest(BaseModel):
         options: Translation options.
     """
 
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, populate_by_name=True)
 
     source_code: str = Field(..., min_length=1, description="Source code to translate")
     language: Literal["python", "javascript", "typescript"] = Field(
@@ -284,7 +327,7 @@ class TranslateResponse(BaseModel):
         timing: Breakdown of per-stage timing in milliseconds.
     """
 
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, populate_by_name=True)
 
     request_id: str = Field(..., description="Unique request identifier (UUID4)")
     gnn_bundle: str = Field(..., description="GNN markdown representation")
@@ -357,7 +400,7 @@ class RoundtripRequestV1(BaseModel):
 
     Attributes:
         repo_path: Repository to round-trip.
-        threshold: Minimum role match score for isomorphic flag.
+        threshold: Minimum role-preservation score for success tier.
     """
 
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -367,7 +410,7 @@ class RoundtripRequestV1(BaseModel):
         default=0.7,
         ge=0.0,
         le=1.0,
-        description="Minimum role match score for isomorphic",
+        description="Minimum role-preservation score for success tier",
     )
 
 
@@ -376,32 +419,82 @@ class RoundtripResponseV1(BaseModel):
 
     Attributes:
         request_id: Unique identifier for this request.
-        role_match_score: Forward-reverse role match score (0-1).
-        is_isomorphic: Whether score >= threshold.
+        roundtrip_status: Public round-trip status enum.
+        role_preservation_score: Forward-reverse role preservation score (0-1).
+        role_preserved: Whether score >= threshold.
         original_roles: Role histogram from forward pass.
         synthesized_roles: Role histogram from reverse pass.
-        threshold: Threshold used for isomorphic judgment.
+        threshold: Threshold used for role-preservation judgment.
         errors: Any errors during round-trip.
     """
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
     request_id: str = Field(..., description="Unique request identifier (UUID4)")
-    role_match_score: float = Field(
-        ..., ge=0.0, le=1.0, description="Forward-reverse role match score"
+    roundtrip_status: Literal[
+        "STRUCTURALLY_ISOMORPHIC",
+        "ROLE_PRESERVED",
+        "DRIFT",
+        "FAILED",
+    ] = Field(default="DRIFT", description="Round-trip status enum")
+    role_preservation_score: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Forward-reverse role preservation score",
+        validation_alias=AliasChoices("role_preservation_score", "role_match_score"),
     )
-    is_isomorphic: bool = Field(..., description="Whether role_match_score >= threshold")
+    role_preserved: bool = Field(
+        default=False, description="Whether role_preservation_score >= threshold"
+    )
+    structurally_isomorphic: bool = Field(
+        default=False,
+        description="Whether strict invariants passed",
+        validation_alias=AliasChoices("structurally_isomorphic", "is_isomorphic"),
+    )
+    matrix_preserved: bool = Field(
+        default=False, description="Whether A/B/C/D matrix invariants passed"
+    )
+    gnn_sections_preserved: bool = Field(
+        default=False, description="Whether GNN sections were preserved"
+    )
+    generated_code_ok: bool = Field(default=False, description="Whether generated code compiled")
+    invariants: dict[str, Any] = Field(
+        default_factory=dict, description="Boolean round-trip invariant ledger"
+    )
     original_roles: dict[str, int] = Field(
         default_factory=dict, description="Forward pass role histogram"
     )
     synthesized_roles: dict[str, int] = Field(
         default_factory=dict, description="Reverse pass role histogram"
     )
-    threshold: float = Field(..., ge=0.0, le=1.0, description="Isomorphic threshold")
+    threshold: float = Field(..., ge=0.0, le=1.0, description="Role-preservation threshold")
     errors: list[str] = Field(default_factory=list, description="Round-trip errors")
     timing: dict[str, float] = Field(
         default_factory=dict, description="Per-stage timing in milliseconds"
     )
+
+    @model_validator(mode="after")
+    def _derive_roundtrip_status(self) -> RoundtripResponseV1:
+        if self.role_preservation_score >= self.threshold:
+            self.role_preserved = True
+        if self.structurally_isomorphic:
+            self.roundtrip_status = "STRUCTURALLY_ISOMORPHIC"
+        elif self.errors:
+            self.roundtrip_status = "FAILED"
+        elif self.role_preserved:
+            self.roundtrip_status = "ROLE_PRESERVED"
+        return self
+
+    @property
+    def role_match_score(self) -> float:
+        """Deprecated compatibility alias."""
+        return self.role_preservation_score
+
+    @property
+    def is_isomorphic(self) -> bool:
+        """Deprecated compatibility alias."""
+        return self.structurally_isomorphic
 
 
 # ---------------------------------------------------------------------------

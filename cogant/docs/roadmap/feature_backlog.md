@@ -16,7 +16,7 @@ These items were previously in the backlog and are now implemented and tested.
 | Incremental analysis: `--incremental <git-ref>` / `PipelineConfig.incremental_since` | v0.5.0 | 19.6× no-change, 5.6× single-file speedup on Flask |
 | Multi-episode Bayesian learning: `run_multi_episode`, `update_D_from_posterior`, `update_A_from_counts` | v0.5.0 | |
 | Production FastAPI server with `/health` + `/translate`; Dockerfile + docker-compose | v0.5.0 | EXPOSE 8080 |
-| Round-trip ε=1.0: 23/23 ISOMORPHIC; `cogant roundtrip` CLI | v0.5.0 | POLICY/CONTEXT stub emission |
+| Roundtrip role-preservation benchmark | v0.5.0 → v0.6 taxonomy | Historical 23/23 role-preservation benchmark retained as legacy evidence; current metrics classify the checked-in ledger as `STALE_LEGACY` until native v0.6 rows are regenerated |
 | Parquet export (`cogant.export.parquet`) | wave-21 | PyArrow optional dep |
 | Static analysis module: `ComplexityAnalyzer`, `CouplingAnalyzer`, `DeadCodeDetector`, `MetricsAnalyzer` | wave-21 | Halstead, Martin metrics |
 | Network/graph analysis: `GraphAnalyzer` with centrality, community detection, Tarjan SCC | wave-21 | Louvain + component fallback |
@@ -27,7 +27,7 @@ These items were previously in the backlog and are now implemented and tested.
 | `AgentRuntime`: `run_episode_with_logging()`, `benchmark()`, `reset()`, `get_free_energy()` | wave-21 | |
 | `MarkovBlanket`: `validate()`, `to_mermaid()`, `merge()`, `get_sensory_states()` | wave-21 | |
 | 3 new translation rules: `ParameterRule`, `StateMachineRule`, `RateLimiterRule` (19 → 22 total) | wave-21 | |
-| 4 CLI preview stubs: `analyze-static`, `analyze-graph`, `visualize`, `export` (API pointers; full wiring backlog) | wave-21 | |
+| 4 analysis/export CLI commands: `analyze-static`, `analyze-graph`, `visualize`, `export` | v0.6 hardening | Real command paths now cover static metrics, graph analysis, visualization, and exports |
 | `cogant.metrics` public API: `get_metrics()` / `get_metric(key)` from `METRICS.yaml` | wave-21 | |
 | Content-addressed result cache keyed on repo SHA256 | v0.2.0 | |
 | Hypothesis property tests (7 COGANT correctness laws) | v0.2.0 | |

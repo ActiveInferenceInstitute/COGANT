@@ -12,7 +12,7 @@ The forward pipeline's `PreferenceRule` in `translate/rules/semantic.py` detects
 CONSTRAINT roles by looking for "check", "test_", "assert_", or "validate" in the
 function name. The `cnst_` prefix matched none of these patterns, so every synthesized
 constraint stub was silently dropped from the synthesized role multiset — causing a
-persistent CONSTRAINT shortfall that dragged `role_match_score` below the 0.5 threshold.
+persistent CONSTRAINT shortfall that dragged `role_preservation_score` below the 0.5 threshold.
 
 ## Fix (synthesizer.py `_render_constraints_module`)
 
@@ -37,33 +37,35 @@ matching the origin count exactly.
 
 ## Before (fixed 3 stubs / `cnst_` naming, undetected by forward)
 
-| Repo | ε_before | Tier_before |
+| Repo | s_role before | Tier before |
 |------|----------|-------------|
-| tqdm | 0.5749 | APPROXIMATE |
-| fastapi | 0.5149 | APPROXIMATE |
-| click | 0.5832 | APPROXIMATE |
-| httpx | 0.4412 | DIVERGENT |
-| urllib3 | 0.3891 | DIVERGENT |
-| requests | 0.4203 | DIVERGENT |
-| zoo/07_event_driven | 0.7778 | ISOMORPHIC |
-| zoo/09_policy | 0.6667 | ISOMORPHIC |
-| zoo/10_constraint | 0.5714 | APPROXIMATE |
+| tqdm | 0.5749 | DRIFT |
+| fastapi | 0.5149 | DRIFT |
+| click | 0.5832 | DRIFT |
+| httpx | 0.4412 | FAILED |
+| urllib3 | 0.3891 | FAILED |
+| requests | 0.4203 | FAILED |
+| zoo/07_event_driven | 0.7778 | ROLE_PRESERVED |
+| zoo/09_policy | 0.6667 | ROLE_PRESERVED |
+| zoo/10_constraint | 0.5714 | DRIFT |
 
 ## After (proportional `check_` stubs, detected by forward pipeline)
 
-| Repo | ε_after | Tier_after | Δε |
+| Repo | s_role after | Tier after | Δs_role |
 |------|---------|------------|----|
-| tqdm | 0.8133 | ISOMORPHIC | +0.2384 |
-| fastapi | 0.9771 | ISOMORPHIC | +0.4622 |
-| click | 0.8277 | ISOMORPHIC | +0.2445 |
-| httpx | 0.7495 | ISOMORPHIC | +0.3083 |
-| urllib3 | 0.6626 | ISOMORPHIC | +0.2735 |
-| requests | 0.6876 | ISOMORPHIC | +0.2673 |
-| zoo/07_event_driven | 0.7778 | ISOMORPHIC | 0.0000 |
-| zoo/09_policy | 0.6667 | ISOMORPHIC | 0.0000 |
-| zoo/10_constraint | 0.8571 | ISOMORPHIC | +0.2857 |
+| tqdm | 0.8133 | ROLE_PRESERVED | +0.2384 |
+| fastapi | 0.9771 | ROLE_PRESERVED | +0.4622 |
+| click | 0.8277 | ROLE_PRESERVED | +0.2445 |
+| httpx | 0.7495 | ROLE_PRESERVED | +0.3083 |
+| urllib3 | 0.6626 | ROLE_PRESERVED | +0.2735 |
+| requests | 0.6876 | ROLE_PRESERVED | +0.2673 |
+| zoo/07_event_driven | 0.7778 | ROLE_PRESERVED | 0.0000 |
+| zoo/09_policy | 0.6667 | ROLE_PRESERVED | 0.0000 |
+| zoo/10_constraint | 0.8571 | ROLE_PRESERVED | +0.2857 |
 
-All 9 targets are now ISOMORPHIC (ε ≥ 0.5).
+All 9 affected targets crossed the historical loose role-preservation gate used
+by this fix note. Current v0.6 reporting uses the stricter ROLE_PRESERVED tier
+(`s_role >= 0.8`) and reports strict structural isomorphism separately.
 
 ## Implementation
 
@@ -84,6 +86,6 @@ Changed: `cogant/py/cogant/reverse/synthesizer.py`, function `_render_constraint
 - **Benchmark calibration snapshot:** [CALIBRATION.md](CALIBRATION.md)
 - **v1.0 readiness:** [V1.0_READINESS.md](V1.0_READINESS.md)
 - **Implementing modules:**
-  [`py/cogant/reverse/synthesizer.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/reverse/synthesizer.py) (`_render_constraints_module`),
-  [`py/cogant/reverse/planner.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/reverse/planner.py) (`plan.constraint_checks`),
-  [`py/cogant/translate/rules/semantic.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/rules/semantic.py) (`PreferenceRule`)
+  [`py/cogant/reverse/synthesizer.py`](https://github.com/docxology/cogant/blob/main/py/cogant/reverse/synthesizer.py) (`_render_constraints_module`),
+  [`py/cogant/reverse/planner.py`](https://github.com/docxology/cogant/blob/main/py/cogant/reverse/planner.py) (`plan.constraint_checks`),
+  [`py/cogant/translate/rules/semantic.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/semantic.py) (`PreferenceRule`)

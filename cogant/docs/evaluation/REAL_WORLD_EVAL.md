@@ -3,7 +3,7 @@
 **Date:** 2026-04-09
 **Tool:** `cogant translate --no-dynamic` (full 10-stage forward pipeline minus
 dynamic coverage enrichment), followed by `cogant export-gnn … --format markdown`
-**COGANT version:** workspace @ `projects_in_progress/cogant/` (v0.2.0 post-wave-8)
+**COGANT version:** historical April 2026 workspace snapshot at `projects_in_progress/cogant/`; this report predates the v0.6 roundtrip taxonomy and is preserved as a forward-pipeline scaling study.
 **Host:** macOS, `/usr/bin/time -l` for wall-clock and peak RSS
 **Harness:** `/tmp/cogant_eval/run_eval.sh` + `/tmp/cogant_eval/collect.py`
 **Raw metrics:** `../../evaluation/real_world_eval_summary.json`
@@ -131,7 +131,7 @@ validator returned `score: 100.0%` on every bundle.
 
 ## Honest assessment of real-world readiness
 
-**The good news.** COGANT v0.2.0 survives the full 10-stage forward pipeline
+**The good news.** The evaluated COGANT snapshot survives the full 10-stage forward pipeline
 on every repo in a fairly demanding set: a micro-framework (flask), two HTTP
 clients (requests, httpx), a validator with heavy metaprogramming (pydantic),
 a web framework (fastapi), a CLI toolkit (click), a terminal rendering library

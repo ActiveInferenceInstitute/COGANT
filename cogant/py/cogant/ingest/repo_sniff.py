@@ -22,12 +22,15 @@ web dashboards, scripts) can import it without pulling in Typer.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
 __all__ = [
+    "RepoSniffer",
     "SOURCE_EXTENSIONS",
     "SKIP_DIRS",
     "count_source_files",
+    "sniff_repo",
     "estimate_pipeline_seconds",
     "format_duration",
 ]
@@ -114,6 +117,81 @@ def count_source_files(
         if path.is_file() and path.suffix.lower() in SOURCE_EXTENSIONS:
             count += 1
     return count
+
+
+def _iter_source_files(
+    root: Path,
+    *,
+    file_budget: int = DEFAULT_FILE_BUDGET,
+) -> list[Path]:
+    """Return parseable source files below ``root`` within ``file_budget``."""
+    if not root.exists() or not root.is_dir():
+        return []
+
+    paths: list[Path] = []
+    budget = file_budget
+    for path in root.rglob("*"):
+        if budget <= 0:
+            break
+        budget -= 1
+        if any(part in SKIP_DIRS for part in path.parts):
+            continue
+        if path.is_file() and path.suffix.lower() in SOURCE_EXTENSIONS:
+            paths.append(path)
+    return paths
+
+
+_LANGUAGE_BY_SUFFIX: dict[str, str] = {
+    ".py": "python",
+    ".pyi": "python",
+    ".js": "javascript",
+    ".jsx": "javascript",
+    ".mjs": "javascript",
+    ".cjs": "javascript",
+    ".ts": "typescript",
+    ".tsx": "typescript",
+}
+
+
+@dataclass(frozen=True)
+class RepoSniffer:
+    """Small object wrapper around the repository sniff helpers.
+
+    The class form is useful for UI and tests that want one reusable object,
+    while the module-level functions remain the lightest public API.
+    """
+
+    root: Path | str
+    file_budget: int = DEFAULT_FILE_BUDGET
+
+    def _root_path(self) -> Path:
+        return Path(self.root)
+
+    def detect_languages(self) -> dict[str, int]:
+        """Return language counts inferred from parseable source suffixes."""
+        counts: dict[str, int] = {}
+        for path in _iter_source_files(self._root_path(), file_budget=self.file_budget):
+            language = _LANGUAGE_BY_SUFFIX.get(path.suffix.lower(), path.suffix.lower().lstrip("."))
+            counts[language] = counts.get(language, 0) + 1
+        return counts
+
+    def sniff(self) -> dict[str, object]:
+        """Return a compact, JSON-ready repository summary."""
+        files = _iter_source_files(self._root_path(), file_budget=self.file_budget)
+        source_count = len(files)
+        seconds = estimate_pipeline_seconds(source_count)
+        return {
+            "root": str(self._root_path()),
+            "source_file_count": source_count,
+            "languages": self.detect_languages(),
+            "estimated_seconds": seconds,
+            "estimated_duration": format_duration(seconds),
+        }
+
+
+def sniff_repo(root: Path | str, *, file_budget: int = DEFAULT_FILE_BUDGET) -> dict[str, object]:
+    """Convenience wrapper returning :meth:`RepoSniffer.sniff` output."""
+    return RepoSniffer(root, file_budget=file_budget).sniff()
 
 
 def estimate_pipeline_seconds(file_count: int) -> float:

@@ -42,6 +42,37 @@ jobs:
       - name: Ruff format --check
         run: uv run ruff format --check py/cogant/ tests/
 
+      - name: Docs/constants drift gate
+        # Active README/AGENTS/MkDocs/manuscript status language should not
+        # regress to stale version, wave, or hard-coded section-number claims.
+        run: cd .. && uv run --directory cogant python ../tools/audit_docs_constants.py
+
+      - name: Folder documentation coverage gate
+        # Every COGANT-owned documentable folder needs local README/AGENTS
+        # signposting unless the tool documents an explicit exception.
+        run: cd .. && uv run --directory cogant python ../tools/audit_folder_docs.py
+
+      - name: Stage-list drift gate
+        # TODO #4 durable fix — every documented full-pipeline stage sequence
+        # must match cogant.pipeline.RUNNER_STAGES verbatim. The script lives
+        # at the staging root (one level above this CI's default working dir).
+        run: cd .. && uv run --directory cogant python ../tools/audit_stage_list.py
+
+      - name: Metrics-freshness gate (with laundering check)
+        # RedTeam F19 durable fix — re-classifies every row of
+        # roundtrip_results.jsonl via the same _status() logic as
+        # regenerate_metrics.py and asserts the count distribution matches
+        # METRICS.yaml. Catches the keystone laundering pattern.
+        run: cd .. && uv run --directory cogant python ../tools/check_metrics_fresh.py
+
+      - name: Coverage-table drift gate
+        # RedTeam F10 durable fix — strict comparison of every per-module
+        # row in @tbl:coverage-stmt-modules against either .coverage SQLite
+        # (when present) or the intentionally committed cogant/coverage.json
+        # fallback. Catches hand-edit drift the prior gate could not enforce
+        # on a clean checkout.
+        run: cd .. && uv run --directory cogant python ../tools/check_coverage_table.py --strict
+
   typecheck:
     name: Typecheck (mypy)
     runs-on: ubuntu-latest
@@ -103,7 +134,13 @@ jobs:
 
       - name: Full tests with coverage gate (3.11 only)
         if: matrix.python-version == '3.11'
-        run: uv run pytest tests/ -q -m "not slow" --cov=cogant --cov-fail-under=75
+        # Coverage gate raised from 75% to 89% to align with ``pyproject.toml``
+        # ``[tool.pytest.ini_options].addopts.--cov-fail-under=89``. The
+        # manuscript-reported headline number (~94.98%) is the *measured*
+        # value on the canonical run; the gate floor (89%) preserves a small
+        # margin so coverage fluctuations from one wave to the next don't
+        # turn CI red on a real refactor.
+        run: uv run pytest tests/ -q -m "not slow" --cov=cogant --cov-fail-under=89
 
   rust-build:
     name: Rust build check

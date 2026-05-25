@@ -32,6 +32,21 @@ _PLACEHOLDER_INNER = re.compile(r"^\{\{([A-Za-z0-9_]+)\}\}$")
 
 # Matches any ``{{IDENT}}`` token (used by strict unresolved-placeholder checks).
 PLACEHOLDER_RE = re.compile(r"\{\{([A-Za-z0-9_]+)\}\}")
+_MISSING = object()
+
+
+def _resolve_path_raw(data: dict[str, Any] | Any, dotpath: str) -> Any:
+    """Traverse a dotted path, preserving present-but-null values."""
+    if not dotpath:
+        return data
+    cur: Any = data
+    for part in dotpath.split("."):
+        if not isinstance(cur, dict):
+            return _MISSING
+        if part not in cur:
+            return _MISSING
+        cur = cur[part]
+    return cur
 
 
 def resolve_path(data: dict[str, Any] | Any, dotpath: str) -> Any:
@@ -41,28 +56,22 @@ def resolve_path(data: dict[str, Any] | Any, dotpath: str) -> Any:
     the final segment, or if the final value is literally ``None``. Accepts an
     empty dotpath (returns *data* unchanged — useful for corner cases).
     """
-    if not dotpath:
-        return data
-    cur: Any = data
-    for part in dotpath.split("."):
-        if not isinstance(cur, dict):
-            return None
-        cur = cur.get(part)
-        if cur is None:
-            return None
-    return cur
+    value = _resolve_path_raw(data, dotpath)
+    return None if value is _MISSING else value
 
 
 def format_value_for_path(path: str, value: Any) -> str:
     """Format a METRICS value for manuscript substitution (aligned with inject tool)."""
     if value is None:
+        if "role_preservation_score" in path:
+            return "N/A"
         return ""
     if isinstance(value, bool):
         return str(value)
     if isinstance(value, int):
         return str(value)
     if isinstance(value, float):
-        if "epsilon" in path or "threshold_" in path:
+        if "epsilon" in path or "role_preservation_score" in path or "threshold_" in path:
             s = f"{value:.4f}"
             return s.rstrip("0").rstrip(".") if "." in s else s
         if "coverage_percent" in path:
@@ -87,8 +96,8 @@ def build_flat_variables(metrics: dict[str, Any]) -> dict[str, str]:
     """Build ``NAME -> formatted string`` for manuscript_variables.json."""
     out: dict[str, str] = {}
     for placeholder, path in MANUSCRIPT_VARS.items():
-        value = resolve_path(metrics, path)
-        if value is None:
+        value = _resolve_path_raw(metrics, path)
+        if value is _MISSING:
             continue
         key = placeholder_to_json_key(placeholder)
         out[key] = format_value_for_path(path, value)
@@ -105,8 +114,8 @@ def substitute_text(text: str, metrics: dict[str, Any]) -> tuple[str, list[str]]
     """
     substitutions: list[str] = []
     for var, path in MANUSCRIPT_VARS.items():
-        value = resolve_path(metrics, path)
-        if value is None:
+        value = _resolve_path_raw(metrics, path)
+        if value is _MISSING:
             continue
         formatted = format_value_for_path(path, value)
         if var in text:
@@ -174,26 +183,41 @@ MANUSCRIPT_VARS: dict[str, str] = {
     "{{STAGE_COUNT}}": "pipeline.stage_count",  # Alias matching METRICS.yaml key
     "{{TRANSLATION_RULES}}": "pipeline.translation_rules",  # Declarative translation rule count
     # ---------------------------------------------------------------
-    # Roundtrip evaluation — tier counts
+    # Roundtrip evaluation — status counts
     # ---------------------------------------------------------------
-    "{{ISO_COUNT}}": "evaluation.roundtrip.isomorphic_count",  # Targets in ISOMORPHIC tier
-    "{{ISOMORPHIC_COUNT}}": "evaluation.roundtrip.isomorphic_count",  # Alias
-    "{{APPROX_COUNT}}": "evaluation.roundtrip.approximate_count",  # Targets in APPROXIMATE tier
-    "{{APPROXIMATE_COUNT}}": "evaluation.roundtrip.approximate_count",  # Alias
-    "{{DIV_COUNT}}": "evaluation.roundtrip.divergent_count",  # Targets in DIVERGENT tier
-    "{{DIVERGENT_COUNT}}": "evaluation.roundtrip.divergent_count",  # Alias
+    "{{STRICT_ISOMORPHISM_COUNT}}": "evaluation.roundtrip.strict_isomorphism_count",  # Strict invariant tier
+    "{{STRUCTURAL_ISOMORPHISM_COUNT}}": "evaluation.roundtrip.strict_isomorphism_count",  # Alias
+    "{{ROLE_PRESERVED_COUNT}}": "evaluation.roundtrip.role_preserved_count",  # Role-preserved tier
+    "{{DRIFT_COUNT}}": "evaluation.roundtrip.drift_count",  # Completed but role score below threshold
+    "{{FAILED_COUNT}}": "evaluation.roundtrip.failed_count",  # Failed roundtrips
+    "{{STALE_LEGACY_COUNT}}": "evaluation.roundtrip.stale_legacy_count",  # Legacy rows outside v0.6 counts
+    "{{ISO_COUNT}}": "evaluation.roundtrip.strict_isomorphism_count",  # Legacy placeholder: strict structural tier
+    "{{ISOMORPHIC_COUNT}}": "evaluation.roundtrip.strict_isomorphism_count",  # Legacy alias
+    "{{APPROX_COUNT}}": "evaluation.roundtrip.drift_count",  # Legacy placeholder: drift count
+    "{{APPROXIMATE_COUNT}}": "evaluation.roundtrip.drift_count",  # Legacy alias
+    "{{DIV_COUNT}}": "evaluation.roundtrip.failed_count",  # Legacy placeholder: failed count
+    "{{DIVERGENT_COUNT}}": "evaluation.roundtrip.failed_count",  # Legacy alias
     "{{TOTAL_TARGETS}}": "evaluation.roundtrip.total_targets",  # Total roundtrip targets
     # ---------------------------------------------------------------
-    # Roundtrip evaluation — epsilon statistics
+    # Roundtrip evaluation — role-preservation statistics
     # ---------------------------------------------------------------
-    "{{MEAN_EPSILON}}": "evaluation.roundtrip.mean_epsilon",  # Mean ε across all targets
-    "{{MEDIAN_EPSILON}}": "evaluation.roundtrip.median_epsilon",  # Median ε
-    "{{MIN_EPSILON}}": "evaluation.roundtrip.min_epsilon",  # Minimum ε (worst-case target)
-    "{{MAX_EPSILON}}": "evaluation.roundtrip.max_epsilon",  # Maximum ε (best-case target)
-    "{{THRESHOLD_ISO}}": "evaluation.roundtrip.threshold_isomorphic",  # ε ≥ T_iso = ISOMORPHIC
-    "{{THRESHOLD_ISOMORPHIC}}": "evaluation.roundtrip.threshold_isomorphic",  # Alias
-    "{{THRESHOLD_APPROX}}": "evaluation.roundtrip.threshold_approximate",  # ε ≥ T_approx = APPROXIMATE
-    "{{THRESHOLD_APPROXIMATE}}": "evaluation.roundtrip.threshold_approximate",  # Alias
+    "{{MEAN_ROLE_PRESERVATION_SCORE}}": "evaluation.roundtrip.mean_role_preservation_score",  # Mean role score
+    "{{MEDIAN_ROLE_PRESERVATION_SCORE}}": "evaluation.roundtrip.median_role_preservation_score",  # Median role score
+    "{{MIN_ROLE_PRESERVATION_SCORE}}": "evaluation.roundtrip.min_role_preservation_score",  # Minimum role score
+    "{{MAX_ROLE_PRESERVATION_SCORE}}": "evaluation.roundtrip.max_role_preservation_score",  # Maximum role score
+    "{{ROLE_PRESERVATION_SCORE_SOURCE}}": (
+        "evaluation.roundtrip.role_preservation_score_source"
+    ),  # Aggregate score provenance
+    "{{THRESHOLD_ROLE_PRESERVED}}": "evaluation.roundtrip.threshold_role_preserved",  # s_role threshold
+    "{{THRESHOLD_DRIFT}}": "evaluation.roundtrip.threshold_drift",  # lower status threshold
+    "{{MEAN_EPSILON}}": "evaluation.roundtrip.mean_role_preservation_score",  # Legacy alias
+    "{{MEDIAN_EPSILON}}": "evaluation.roundtrip.median_role_preservation_score",  # Legacy alias
+    "{{MIN_EPSILON}}": "evaluation.roundtrip.min_role_preservation_score",  # Legacy alias
+    "{{MAX_EPSILON}}": "evaluation.roundtrip.max_role_preservation_score",  # Legacy alias
+    "{{THRESHOLD_ISO}}": "evaluation.roundtrip.threshold_role_preserved",  # Legacy alias
+    "{{THRESHOLD_ISOMORPHIC}}": "evaluation.roundtrip.threshold_role_preserved",  # Legacy alias
+    "{{THRESHOLD_APPROX}}": "evaluation.roundtrip.threshold_drift",  # Legacy alias
+    "{{THRESHOLD_APPROXIMATE}}": "evaluation.roundtrip.threshold_drift",  # Legacy alias
     # ---------------------------------------------------------------
     # Roundtrip evaluation — derived / categorised counts (optional;
     # only emitted if generator populates them)
@@ -224,6 +248,79 @@ MANUSCRIPT_VARS: dict[str, str] = {
     "{{NODE_KIND_COUNT}}": "ir_schema.node_kind_count",  # Distinct NodeKind enum values
     "{{EDGE_KIND_COUNT}}": "ir_schema.edge_kind_count",  # Distinct EdgeKind enum values
     "{{ACTIVE_INF_ROLE_COUNT}}": "ir_schema.active_inf_role_count",  # Active-inference role labels
+    # ---------------------------------------------------------------
+    # Ablation study (09_ablation.md)
+    # ---------------------------------------------------------------
+    "{{ABLATION_CALCULATOR_K10}}": "ablation.fixpoint.calculator.k10",
+    "{{ABLATION_EVENT_PIPELINE_K10}}": "ablation.fixpoint.event_pipeline.k10",
+    "{{ABLATION_FLASK_MINI_K10}}": "ablation.fixpoint.flask_mini.k10",
+    "{{ABLATION_FLASK_APP_K10}}": "ablation.fixpoint.flask_app.k10",
+    "{{ABLATION_REQUESTS_LIB_K10}}": "ablation.fixpoint.requests_lib.k10",
+    "{{ABLATION_JSON_STDLIB_K10}}": "ablation.fixpoint.json_stdlib.k10",
+    "{{ABLATION_CALCULATOR_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.calculator.a_rows_uniform",
+    "{{ABLATION_CALCULATOR_A_ROWS_TOTAL}}": "ablation.matrix_fallback.calculator.a_rows_total",
+    "{{ABLATION_EVENT_PIPELINE_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.event_pipeline.a_rows_uniform",
+    "{{ABLATION_EVENT_PIPELINE_A_ROWS_TOTAL}}": "ablation.matrix_fallback.event_pipeline.a_rows_total",
+    "{{ABLATION_FLASK_MINI_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.flask_mini.a_rows_uniform",
+    "{{ABLATION_FLASK_MINI_A_ROWS_TOTAL}}": "ablation.matrix_fallback.flask_mini.a_rows_total",
+    "{{ABLATION_FLASK_APP_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.flask_app.a_rows_uniform",
+    "{{ABLATION_FLASK_APP_A_ROWS_TOTAL}}": "ablation.matrix_fallback.flask_app.a_rows_total",
+    "{{ABLATION_JSON_STDLIB_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.json_stdlib.a_rows_uniform",
+    "{{ABLATION_JSON_STDLIB_A_ROWS_TOTAL}}": "ablation.matrix_fallback.json_stdlib.a_rows_total",
+    "{{ABLATION_CALCULATOR_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.calculator.c_entries_zero",
+    "{{ABLATION_CALCULATOR_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.calculator.c_entries_total",
+    "{{ABLATION_EVENT_PIPELINE_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.event_pipeline.c_entries_zero",
+    "{{ABLATION_EVENT_PIPELINE_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.event_pipeline.c_entries_total",
+    "{{ABLATION_FLASK_MINI_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.flask_mini.c_entries_zero",
+    "{{ABLATION_FLASK_MINI_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.flask_mini.c_entries_total",
+    "{{ABLATION_FLASK_APP_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.flask_app.c_entries_zero",
+    "{{ABLATION_FLASK_APP_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.flask_app.c_entries_total",
+    "{{ABLATION_REQUESTS_LIB_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.requests_lib.a_rows_uniform",
+    "{{ABLATION_REQUESTS_LIB_A_ROWS_TOTAL}}": "ablation.matrix_fallback.requests_lib.a_rows_total",
+    "{{ABLATION_REQUESTS_LIB_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.requests_lib.c_entries_zero",
+    "{{ABLATION_REQUESTS_LIB_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.requests_lib.c_entries_total",
+    "{{ABLATION_JSON_STDLIB_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.json_stdlib.c_entries_zero",
+    "{{ABLATION_JSON_STDLIB_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.json_stdlib.c_entries_total",
+    # Rule-family ablation: measured per-family total-mapping deltas
+    # (baseline minus rule_filter-restricted run) for the two fixtures
+    # used in @tbl:rule-family-ablation.
+    "{{ABLATION_FLASK_APP_BASELINE}}": "ablation.rule_family.flask_app.baseline_mappings_total",
+    "{{ABLATION_FLASK_APP_STRUCTURAL_DELTA}}": "ablation.rule_family.flask_app.structural_delta",
+    "{{ABLATION_FLASK_APP_SEMANTIC_DELTA}}": "ablation.rule_family.flask_app.semantic_delta",
+    "{{ABLATION_FLASK_APP_CONTROL_DELTA}}": "ablation.rule_family.flask_app.control_delta",
+    "{{ABLATION_FLASK_APP_BEHAVIORAL_DELTA}}": "ablation.rule_family.flask_app.behavioral_delta",
+    "{{ABLATION_FLASK_APP_RESILIENCE_DELTA}}": "ablation.rule_family.flask_app.resilience_delta",
+    "{{ABLATION_CALCULATOR_BASELINE}}": "ablation.rule_family.calculator.baseline_mappings_total",
+    "{{ABLATION_CALCULATOR_STRUCTURAL_DELTA}}": "ablation.rule_family.calculator.structural_delta",
+    "{{ABLATION_CALCULATOR_SEMANTIC_DELTA}}": "ablation.rule_family.calculator.semantic_delta",
+    "{{ABLATION_CALCULATOR_CONTROL_DELTA}}": "ablation.rule_family.calculator.control_delta",
+    "{{ABLATION_CALCULATOR_BEHAVIORAL_DELTA}}": "ablation.rule_family.calculator.behavioral_delta",
+    "{{ABLATION_CALCULATOR_RESILIENCE_DELTA}}": "ablation.rule_family.calculator.resilience_delta",
+    "{{ABLATION_ZOO01_BASELINE}}": "ablation.rule_family.01_simple_state.baseline_mappings_total",
+    "{{ABLATION_ZOO01_STRUCTURAL_DELTA}}": "ablation.rule_family.01_simple_state.structural_delta",
+    "{{ABLATION_ZOO01_SEMANTIC_DELTA}}": "ablation.rule_family.01_simple_state.semantic_delta",
+    "{{ABLATION_ZOO01_CONTROL_DELTA}}": "ablation.rule_family.01_simple_state.control_delta",
+    "{{ABLATION_ZOO01_BEHAVIORAL_DELTA}}": "ablation.rule_family.01_simple_state.behavioral_delta",
+    "{{ABLATION_ZOO01_RESILIENCE_DELTA}}": "ablation.rule_family.01_simple_state.resilience_delta",
+    "{{ABLATION_ZOO01_BASELINE_HIDDEN_STATE}}": (
+        "ablation.rule_family.01_simple_state.baseline_by_mapping_kind.HIDDEN_STATE"
+    ),
+    "{{ABLATION_ZOO01_BASELINE_OBSERVATION}}": (
+        "ablation.rule_family.01_simple_state.baseline_by_mapping_kind.OBSERVATION"
+    ),
+    "{{ABLATION_ZOO01_BASELINE_ACTION}}": "ablation.rule_family.01_simple_state.baseline_by_mapping_kind.ACTION",
+    "{{ABLATION_ZOO01_STRUCTURAL_HIDDEN_STATE_DELTA}}": (
+        "ablation.by_mapping_kind.01_simple_state.structural.HIDDEN_STATE"
+    ),
+    "{{ABLATION_ZOO01_STRUCTURAL_POLICY_DELTA}}": "ablation.by_mapping_kind.01_simple_state.structural.POLICY",
+    "{{ABLATION_ZOO01_SEMANTIC_OBSERVATION_DELTA}}": "ablation.by_mapping_kind.01_simple_state.semantic.OBSERVATION",
+    "{{ABLATION_ZOO01_SEMANTIC_ACTION_DELTA}}": "ablation.by_mapping_kind.01_simple_state.semantic.ACTION",
+    "{{ABLATION_ZOO01_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.01_simple_state.a_rows_uniform",
+    "{{ABLATION_ZOO01_A_ROWS_TOTAL}}": "ablation.matrix_fallback.01_simple_state.a_rows_total",
+    "{{ABLATION_ZOO01_B_ACTIONS_IDENTITY}}": "ablation.matrix_fallback.01_simple_state.b_actions_identity",
+    "{{ABLATION_ZOO01_B_ACTIONS_TOTAL}}": "ablation.matrix_fallback.01_simple_state.b_actions_total",
+    "{{ABLATION_ZOO01_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.01_simple_state.c_entries_zero",
+    "{{ABLATION_ZOO01_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.01_simple_state.c_entries_total",
     # ---------------------------------------------------------------
     # Literature / bibliography
     # ---------------------------------------------------------------

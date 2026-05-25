@@ -2,7 +2,7 @@
 """Audit hardcoded numbers in manuscript markdown files against METRICS.yaml.
 
 Scans every ``manuscript/**/*.md`` file for numeric claims (test counts,
-coverage, version, roundtrip tier counts, epsilons, translation-rule
+coverage, version, roundtrip status counts, role-preservation scores, translation-rule
 counts, fixture counts, LOC, suite runtime, IR schema sizes, and macro-F1
 figures) and compares them against ``cogant/evaluation/METRICS.yaml``.
 
@@ -53,7 +53,7 @@ OUTPUT_PATH = _REPO_ROOT / "cogant" / "_rnd" / "sweep_2026_04" / "manuscript_num
 # ---------------------------------------------------------------------------
 FALLBACK_METRICS: dict = {
     "package": {
-        "version": "0.5.0",
+        "version": "0.6.0",
         "python_min": "3.11",
     },
     "testing": {
@@ -73,25 +73,26 @@ FALLBACK_METRICS: dict = {
             "gpt4_macro_f1": 0.61,
         },
         "roundtrip": {
-            "isomorphic_count": 23,
-            "isomorphic_percent": 100.0,
-            "approximate_count": 0,
-            "divergent_count": 0,
+            "role_preserved_count": 0,
+            "strict_isomorphism_count": 0,
+            "drift_count": 0,
+            "failed_count": 0,
+            "stale_legacy_count": 23,
             "total_targets": 23,
             "zoo_fixture_count": 12,
             "rw_lib_count": 11,
             "rw_repo_count": 8,
-            "mean_epsilon": 1.0,
-            "median_epsilon": 1.0,
-            "min_epsilon": 1.0,
-            "max_epsilon": 1.0,
-            "threshold_isomorphic": 0.8,
-            "threshold_approximate": 0.5,
+            "mean_role_preservation_score": None,
+            "median_role_preservation_score": None,
+            "min_role_preservation_score": None,
+            "max_role_preservation_score": None,
+            "threshold_role_preserved": 0.5,
+            "threshold_drift": 0.5,
         },
     },
     "pipeline": {
         "stage_count": 10,
-        "translation_rules": 19,
+        "translation_rules": 22,
     },
     "codebase": {
         "python_source_files": 180,
@@ -153,17 +154,20 @@ KNOWN_VALUES = [
     # Package version
     ("version", "package.version", None),
     # Roundtrip evaluation
-    ("isomorphic_count", "evaluation.roundtrip.isomorphic_count", None),
+    ("role_preserved_count", "evaluation.roundtrip.role_preserved_count", None),
+    ("strict_isomorphism_count", "evaluation.roundtrip.strict_isomorphism_count", None),
+    ("drift_count", "evaluation.roundtrip.drift_count", None),
+    ("failed_count", "evaluation.roundtrip.failed_count", None),
+    ("stale_legacy_count", "evaluation.roundtrip.stale_legacy_count", None),
     ("total_targets", "evaluation.roundtrip.total_targets", None),
-    ("approximate_count", "evaluation.roundtrip.approximate_count", None),
-    ("divergent_count", "evaluation.roundtrip.divergent_count", None),
     ("rw_repo_count", "evaluation.roundtrip.rw_repo_count", None),
     ("zoo_fixture_count", "evaluation.roundtrip.zoo_fixture_count", None),
     ("rw_lib_count", "evaluation.roundtrip.rw_lib_count", None),
-    ("mean_epsilon", "evaluation.roundtrip.mean_epsilon", 0.01),
-    ("median_epsilon", "evaluation.roundtrip.median_epsilon", 0.01),
-    ("min_epsilon", "evaluation.roundtrip.min_epsilon", 0.01),
-    ("max_epsilon", "evaluation.roundtrip.max_epsilon", 0.01),
+    ("mean_role_preservation_score", "evaluation.roundtrip.mean_role_preservation_score", 0.01),
+    ("median_role_preservation_score", "evaluation.roundtrip.median_role_preservation_score", 0.01),
+    ("min_role_preservation_score", "evaluation.roundtrip.min_role_preservation_score", 0.01),
+    ("max_role_preservation_score", "evaluation.roundtrip.max_role_preservation_score", 0.01),
+    ("threshold_role_preserved", "evaluation.roundtrip.threshold_role_preserved", 0.01),
     # Pipeline
     ("translation_rules", "pipeline.translation_rules", None),
     ("stage_count", "pipeline.stage_count", None),
@@ -194,44 +198,49 @@ EXPECTED_MISMATCHES = [
     ("version", "0.4.0", "Historical reference: describes v0.4.0 behaviour, not current version"),
     ("version", "0.2.0", "Historical reference: describes items shipped in v0.2.0"),
     ("version", "0.1.0", "Historical reference: describes v0.1.0 behaviour or table label"),
-    # Epsilon threshold definitions (ε ≥ 0.5 is APPROXIMATE; ε ≥ 0.8 is ISOMORPHIC tier boundary)
+    # Historical threshold definitions in archived appendix prose.
     (
-        "mean_epsilon",
+        "mean_role_preservation_score",
         "0.5",
-        "Threshold definition: ε ≥ 0.5 defines APPROXIMATE tier boundary, not a data claim",
+        "Historical threshold definition, not a data claim",
     ),
     (
-        "mean_epsilon",
+        "mean_role_preservation_score",
         "0.8",
-        "Threshold definition: ε ≥ 0.8 defines ISOMORPHIC tier boundary, not a data claim",
+        "Role-preservation threshold definition, not a mean-score claim",
+    ),
+    (
+        "mean_role_preservation_score",
+        "0.0",
+        "Role-preservation definition: exactly one side has a role, not a mean-score claim",
     ),
     # Per-target epsilon values extracted from S01 table rows (individual targets, not mean)
     (
-        "mean_epsilon",
+        "mean_role_preservation_score",
         "0.8638",
         (
             "Per-target value: dateutil ε=0.8638 (individual target, "
             "matches METRICS.yaml median_epsilon)"
         ),
     ),
-    ("mean_epsilon", "0.852", "Per-target value: pyyaml ε=0.8520 (individual target)"),
+    ("mean_role_preservation_score", "0.852", "Per-target value: pyyaml s_role=0.8520 (individual target)"),
     # S01 wave-14 historical tier narrative (pre wave-16 canonical 23/23)
     (
-        "mean_epsilon",
+        "mean_role_preservation_score",
         "0.7778",
         "Historical wave-14 appendix row: per-target ε, not METRICS mean_epsilon",
     ),
     (
-        "mean_epsilon",
+        "mean_role_preservation_score",
         "0.6667",
         "Historical wave-14 appendix row: per-target ε, not METRICS mean_epsilon",
     ),
     (
-        "isomorphic_count",
+        "role_preserved_count",
         "14",
         (
-            "Historical wave-14 S01 appendix: 14/23 ISOMORPHIC before wave-16; "
-            "METRICS canonical is 23/23"
+            "Historical wave-14 S01 appendix: 14/23 ROLE_PRESERVED before "
+            "the legacy ledger was reclassified as stale"
         ),
     ),
     # LOC mismatch: manuscript says "20,307 statements in 179 source files" which refers to
@@ -300,22 +309,45 @@ def _mk_patterns():
             re.compile(r"\bv(\d+\.\d+\.\d+)\b"),
             lambda m: m.group(1),
         ),
-        # Isomorphic count: "23 / 23 ISOMORPHIC", "23/23 ISOMORPHIC", "22 / 23 ISOMORPHIC"
+        # Role-preserved count: "23 role-preserved targets", "all 23 targets role-preserved".
+        # Negative lookbehind ``(?<![v\d.])`` excludes matches inside version
+        # tokens such as ``v0.6 role-preserved`` (where the regex would
+        # otherwise extract the ``6`` from the version as a count).
         (
-            "isomorphic_count",
-            re.compile(r"\b(\d+)\s*/\s*(\d+)\s+ISOMORPHIC", re.IGNORECASE),
-            lambda m: int(m.group(1)),  # numerator is iso count
-        ),
-        # Total targets from iso claim: "X / 23 ISOMORPHIC" → total=23
-        (
-            "total_targets",
-            re.compile(r"\b\d+\s*/\s*(\d+)\s+ISOMORPHIC", re.IGNORECASE),
+            "role_preserved_count",
+            re.compile(
+                r"(?<![v\d.])\b(?:all\s+)?(\d+)\s+(?:targets?\s+)?role[- ]preserved(?:\s+targets?)?",
+                re.IGNORECASE,
+            ),
             lambda m: int(m.group(1)),
         ),
-        # Epsilon values: "ε = 0.8858", "epsilon 0.80", "ε ≥ 0.8"
+        # Strict structural-isomorphism count.
         (
-            "mean_epsilon",
-            re.compile(r"[εε]\s*(?:=|≥|≤|>|<|~)\s*(0\.\d+)", re.IGNORECASE),
+            "strict_isomorphism_count",
+            re.compile(r"\b(\d+)\s+strict(?:ly)?\s+structurally\s+isomorphic", re.IGNORECASE),
+            lambda m: int(m.group(1)),
+        ),
+        # Drift / failed counts.
+        (
+            "drift_count",
+            re.compile(r"\b(\d+)\s+drift\s+(?:cases?|targets?)", re.IGNORECASE),
+            lambda m: int(m.group(1)),
+        ),
+        (
+            "failed_count",
+            re.compile(r"\b(\d+)\s+failures?\b", re.IGNORECASE),
+            lambda m: int(m.group(1)),
+        ),
+        # Total targets near roundtrip language.
+        (
+            "total_targets",
+            re.compile(r"\bcanonical\s+(\d+)[- ]target\s+set\b", re.IGNORECASE),
+            lambda m: int(m.group(1)),
+        ),
+        # Role-preservation scores: "s_role = 0.8858"
+        (
+            "mean_role_preservation_score",
+            re.compile(r"s_role\s*(?:=|~)\s*(0\.\d+)", re.IGNORECASE),
             lambda m: float(m.group(1)),
         ),
         # Translation rules: "19 declarative rules", "19 shipped rules"
@@ -531,18 +563,21 @@ def audit_file(
 
                 metrics_val, tolerance = kv_lookup.get(pattern_name, (None, None))
 
-                status, confidence, delta_percent = classify(
-                    extracted,
-                    metrics_val,
-                    tolerance,
-                    is_archive,
-                )
+                note = get_expected_mismatch_note(pattern_name, extracted)
+                if metrics_val is None and note:
+                    status = "EXPECTED_MISMATCH"
+                    confidence = "HIGH"
+                    delta_percent = None
+                else:
+                    status, confidence, delta_percent = classify(
+                        extracted,
+                        metrics_val,
+                        tolerance,
+                        is_archive,
+                    )
 
-                # Upgrade MISMATCH to EXPECTED_MISMATCH if it's in our whitelist
-                note = ""
-                if status == "MISMATCH":
-                    note = get_expected_mismatch_note(pattern_name, extracted)
-                    if note:
+                    # Upgrade MISMATCH to EXPECTED_MISMATCH if it's in our whitelist
+                    if status == "MISMATCH" and note:
                         status = "EXPECTED_MISMATCH"
                         # Expected mismatches are intentional — they carry a
                         # documented justification, so confidence is HIGH in

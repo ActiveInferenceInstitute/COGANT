@@ -1,44 +1,34 @@
-# cogant-ffi — Python Bindings
+# cogant-ffi - Python Bindings
 
-PyO3-based FFI bindings exposing Rust implementations to Python.
+PyO3 bindings exposing Rust graph wrappers, connected components, graph summaries, rule predicate metadata, matrix-shape summaries, GNN formatting, atomic artifact writing, and trace summaries.
 
 ## Contents
-- `src/lib.rs` — PyO3 module definitions and type wrappers
 
-The crate compiles to a `cdylib`/`rlib` named `_rust` (see `[lib]` in `Cargo.toml`), so Python imports resolve via `cogant._rust`.
-
-## Exposed Python API
-
-Currently wrapped (see `src/lib.rs`):
-
-```python
-from cogant._rust import (
-    PyStableId, PyConfidence, PyNodeData, PyProgramGraph,
-    connected_components,   # module-level function over PyProgramGraph
-    get_version, create_example_graph,
-)
-```
-
-Higher-level Python classes (`RuleEngine`, `StateSpaceCompiler`, `PersistentStore`, …) live in the pure-Python package under [`py/cogant/`](../../py/cogant/) and are **not** re-exported through this crate. See [`py/cogant/rust_backend.py`](../../py/cogant/rust_backend.py) for the `COGANT_USE_RUST=1` gated callers.
+- `src/lib.rs` - public crate API and crate-local tests.
 
 ## Build
 
 ```bash
-cargo build --release
-maturin develop       # or: pip install -e .[rust]
+cargo test -p cogant-ffi
+cargo check -p cogant-ffi
 ```
 
 ## Dependencies
 
-`[dependencies]` in `Cargo.toml` (workspace-resolved versions):
+- `cogant-core`, `cogant-graph`, `cogant-translate`, `cogant-statespace`, `cogant-gnn` - sibling crates used directly by the current FFI surface
+- `pyo3` - Python extension bindings
+- `serde`, `serde_json` - conversion helpers
+- `petgraph` - connected-components helper
 
-- `cogant-core`, `cogant-graph`, `cogant-translate`, `cogant-statespace`, `cogant-gnn` — sibling crates used for the wrapped types
-- `pyo3` — Python bindings (extension-module feature)
-- `serde`, `serde_json` — serialization helpers
-- `petgraph` — used for the `connected_components` helper
+## Exposed Python API
 
-Note: `cogant-store` and `cogant-trace` are **not** wired through the FFI yet.
+The compiled `_rust` module exports graph wrapper classes plus functions for
+connected components, graph summaries, rule predicate metadata, matrix-shape
+summaries, GNN formatting, atomic artifact writes, and trace event summaries.
+The artifact-write and trace-summary helpers are implemented in this crate;
+store/trace crate parity can be wired later without changing the Python
+surface.
 
-## Testing
+## Scope And Status
 
-Integration tests that exercise the FFI live in the Python test suite (`tests/`) — enable them with the `requires_rust` pytest marker after `make build-rust` has produced `py/cogant/_rust.*.so`.
+All Python callers go through `py/cogant/rust_backend.py`, which enforces `COGANT_USE_RUST` and fallback policy.

@@ -1,6 +1,6 @@
 # Manuscript Syntax Reference (COGANT)
 
-Formatting conventions for Markdown in this folder. For the full rendering contract, see the template exemplar [`projects/code_project/manuscript/SYNTAX.md`](../../../projects/code_project/manuscript/SYNTAX.md).
+Formatting conventions for Markdown in this folder. For the full rendering contract when vendored into `docxology/template/projects/cogant/`, use the parent template renderer docs under `infrastructure/rendering/`.
 
 ## Citations
 
@@ -14,7 +14,7 @@ Use Pandoc cite syntax; keys must exist in `references.bib`.
 
 ## Cross-references (pandoc-crossref)
 
-Combined PDF/LaTeX is built with Pandoc. When **`pandoc-crossref`** is on `PATH`, `infrastructure/rendering/_pdf_combined_renderer.py` adds `--filter` so native syntax resolves to numbered references in the PDF.
+Combined HTML and PDF/LaTeX are built with Pandoc. When **`pandoc-crossref`** is on `PATH`, the template renderers add `--filter pandoc-crossref` so native syntax resolves to numbered references before citation processing or final output.
 
 **Install:** e.g. `brew install pandoc-crossref` (macOS). Without the filter, the build still runs; `@sec:` / `@tbl:` / `@fig:` tokens remain literal until the filter is available.
 
@@ -40,11 +40,19 @@ Reference: `@tbl:example-id`. In body text, cite tables only with `@tbl:…` (an
 
 ## Equations
 
-Use LaTeX `equation` with `\label` / `\ref`, or ` {#eq:…}` with `@eq:…` when pandoc-crossref is enabled (see code_project SYNTAX).
+Use pandoc-crossref display equations only:
+
+```markdown
+$$
+y = mx + b
+$$ {#eq:example-line}
+```
+
+Reference equations in prose with `@eq:example-line`. Do not use LaTeX `\label`, `\ref`, `Equation \ref{...}`, or `Eq. \ref{...}` in manuscript source.
 
 ## Figures
 
-Follow the code_project SYNTAX for image markdown plus `{#fig:…}` when you add figures. Place assets where the future project `output/` layout can resolve them (typically `output/figures/` after promotion to `projects/cogant/`). Use explicit relative paths from the rendering contract described in `infrastructure/rendering/AGENTS.md`.
+Follow the parent template rendering contract for image markdown plus `{#fig:…}` when you add figures. COGANT's publication figures are copied into `../output/figures/` by `../tools/manuscript_figures.py`; source manuscript paths should therefore reference them as `../figures/<name>.png` so generated files in `output/manuscript/` resolve correctly. When vendored into the parent template, use explicit relative paths from the rendering contract described in `infrastructure/rendering/AGENTS.md`.
 
 ## Section files
 
@@ -56,7 +64,7 @@ Follow the code_project SYNTAX for image markdown plus `{#fig:…}` when you add
 4. Other `*.md` files not matching the above (for example `SYNTAX.md`) — the **other** bucket.
 5. `99_*.md` references when present.
 
-Excluded from the body: `preamble.md`, `AGENTS.md`, `README.md`, `config.yaml`, `config.yaml.example`, `references.bib`.
+Excluded from the body by the parent template renderer: `preamble.md`, `AGENTS.md`, `README.md`, `config.yaml`, `references.bib`. `SYNTAX.md` and `supplementary.md` are not excluded by name in every renderer version, so example labels in this file must remain safe under the cross-reference audit or the renderer skip list must exclude this file before publication.
 
 ## PDF links (readers and contrast)
 

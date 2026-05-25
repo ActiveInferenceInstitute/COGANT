@@ -340,16 +340,16 @@ future work.
 
 ## See also
 
-- **Roundtrip evaluation report:** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md) (23/23 ISOMORPHIC at ε = 1.0)
+- **Roundtrip evaluation report:** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md) (historical 23/23 role-preservation benchmark; current v0.6 metrics classify the checked-in ledger as `STALE_LEGACY`)
 - **Calibration registry:** [CALIBRATION.md](CALIBRATION.md)
 - **Active Inference mapping (theory):** [ACTIVE_INFERENCE_MAPPING.md](ACTIVE_INFERENCE_MAPPING.md)
 - **Published roundtrip explainer:** [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md)
 - **Translation rules reference:** [`docs/reference/translation_rules.md`](../reference/translation_rules.md)
 - **Implementing modules:**
-  [`py/cogant/translate/rules/semantic.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/rules/semantic.py),
-  [`py/cogant/translate/rules/structural.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/rules/structural.py),
-  [`py/cogant/translate/rules/behavioral.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/rules/behavioral.py),
-  [`py/cogant/translate/rules/control.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/rules/control.py),
-  [`py/cogant/translate/rules/resilience.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/translate/rules/resilience.py),
-  [`py/cogant/gnn/matrices.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/gnn/matrices.py),
-  [`py/cogant/gnn/validator.py`](https://github.com/cogant-contributors/cogant/blob/main/py/cogant/gnn/validator.py)
+  [`py/cogant/translate/rules/semantic.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/semantic.py),
+  [`py/cogant/translate/rules/structural.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/structural.py),
+  [`py/cogant/translate/rules/behavioral.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/behavioral.py),
+  [`py/cogant/translate/rules/control.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/control.py),
+  [`py/cogant/translate/rules/resilience.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/resilience.py),
+  [`py/cogant/gnn/matrices.py`](https://github.com/docxology/cogant/blob/main/py/cogant/gnn/matrices.py),
+  [`py/cogant/gnn/validator.py`](https://github.com/docxology/cogant/blob/main/py/cogant/gnn/validator.py)

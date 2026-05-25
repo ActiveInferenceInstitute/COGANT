@@ -6,6 +6,19 @@ from cogant.viz.diff_view import DiffVisualizer as DiffVisualizer
 from cogant.viz.gantt import GanttRenderer as GanttRenderer
 from cogant.viz.graph_view import GraphVisualizer as GraphVisualizer
 from cogant.viz.html_renderer import HTMLSiteRenderer as HTMLSiteRenderer
+from cogant.viz.inspection_dashboard import build_inspection_model as build_inspection_model
+from cogant.viz.inspection_dashboard import (
+    render_graphical_abstract_png as render_graphical_abstract_png,
+)
+from cogant.viz.inspection_dashboard import (
+    render_graphical_abstract_svg as render_graphical_abstract_svg,
+)
+from cogant.viz.inspection_dashboard import (
+    render_inspection_dashboard_html as render_inspection_dashboard_html,
+)
+from cogant.viz.inspection_dashboard import (
+    write_inspection_artifacts as write_inspection_artifacts,
+)
 from cogant.viz.mermaid import MermaidGenerator as MermaidGenerator
 from cogant.viz.plots import StaticPlotter as StaticPlotter
 from cogant.viz.png_export import RenderConfig as RenderConfig
@@ -36,6 +49,11 @@ __all__ = [
     "StaticPlotter",
     "BoundaryMapper",
     "DashboardGenerator",
+    "build_inspection_model",
+    "render_graphical_abstract_png",
+    "render_graphical_abstract_svg",
+    "render_inspection_dashboard_html",
+    "write_inspection_artifacts",
     "RenderConfig",
     "render_all_pngs",
     "render_program_graph_png",

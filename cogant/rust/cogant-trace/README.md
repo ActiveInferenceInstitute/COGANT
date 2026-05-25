@@ -1,27 +1,24 @@
-# cogant-trace — Trace Collection (Rust stub)
+# cogant-trace - Trace Summaries
 
-Rust-side scaffolding for runtime trace collection.
+Trace event and session types plus deterministic summaries for runtime/inference dashboards and FFI event summaries.
 
 ## Contents
-- `src/lib.rs` — Event record types and collection entry points
+
+- `src/lib.rs` - public crate API and crate-local tests.
 
 ## Build
 
 ```bash
-cargo build --release
-cargo test
+cargo test -p cogant-trace
+cargo check -p cogant-trace
 ```
 
 ## Dependencies
 
-`[dependencies]` in `Cargo.toml`:
+- `cogant-core` - shared ids
+- `serde`, `serde_json` - event serialization
+- `uuid` - event ids
 
-- `cogant-core` — Shared types
-- `serde`, `serde_json` — Event record serialization
-- `uuid` — Event identifiers
+## Scope And Status
 
-No compression (`zstd`) dependency, no pytest/unittest integration shims. The authoritative trace ingest path lives in [`py/cogant/dynamic/`](../../py/cogant/dynamic/) and consumes the output of standard coverage/trace tooling (`coverage.py`, `pytest-cov`).
-
-## Scope and status
-
-This crate is **not** wired through [`cogant-ffi`](../cogant-ffi/); it exists to reserve a Rust-side trace API that can be added later without an API break.
+Python dynamic enrichment remains canonical for ingesting coverage and runtime traces. This crate supplies typed summaries and low-level trace data structures.
