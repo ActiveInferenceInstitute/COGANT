@@ -6,6 +6,8 @@ import subprocess
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
 def render_graphviz_dot_to_png(dot_file: Path, output_png: Path, *, timeout: int = 120) -> bool:
     """Render a Graphviz ``.dot`` file to PNG using the ``dot`` binary if available."""
     dot_bin = shutil.which("dot")
@@ -45,5 +47,3 @@ def find_graph_dot(run_dir: Path) -> Path | None:
         if candidate.is_file():
             return candidate
     return None
-
-

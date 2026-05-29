@@ -288,5 +288,3 @@ def draw_color_legend(
         title_fontsize=cfg.banner_fontsize,
         framealpha=0.92,
     )
-
-

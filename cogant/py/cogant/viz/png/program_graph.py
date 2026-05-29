@@ -18,6 +18,8 @@ from cogant.viz.png.config import (
 )
 
 logger = logging.getLogger(__name__)
+
+
 def program_graph_dict_to_networkx(graph: dict[str, Any]) -> Any:
     """Build a NetworkX MultiDiGraph from exported ``program_graph.json`` structure.
 
@@ -574,7 +576,7 @@ def render_program_graph_png(
     write_figure_sidecar(
         output_png,
         {
-            "renderer": "cogant.viz.png_export.render_program_graph_png",
+            "renderer": "cogant.viz.png.render_program_graph_png",
             "method": (
                 "Deterministic containment-first graph layout with node-kind fill colors, "
                 "edge-kind line encodings, semantic-role outlines when rule evidence is present, "
@@ -583,9 +585,7 @@ def render_program_graph_png(
             "source_artifact": str(program_graph_json),
             "source_sha256": sha256_file(program_graph_json),
             "semantic_evidence_artifact": str(mapping_artifact) if mapping_artifact else None,
-            "semantic_evidence_sha256": sha256_file(mapping_artifact)
-            if mapping_artifact
-            else None,
+            "semantic_evidence_sha256": sha256_file(mapping_artifact) if mapping_artifact else None,
             "layout": layout_name,
             "layout_method": layout_name,
             "layout_seed": layout_seed,
@@ -637,5 +637,3 @@ def render_program_graph_png(
         cfg,
     )
     return True
-
-

@@ -475,7 +475,7 @@ def viz(
     inspection dashboard and graphical abstract. Safe to re-run; existing
     generated visual artifacts are overwritten.
     """
-    from cogant.viz.png_export import render_all_pngs
+    from cogant.viz.png import render_all_pngs
 
     target = Path(run_dir).resolve()
     if not target.exists():
@@ -495,5 +495,3 @@ def viz(
         table.add_row(cat, str(len(paths)))
     console.print(table)
     console.print(f"[green]✓ Wrote {total} visualization files[/green]")
-
-

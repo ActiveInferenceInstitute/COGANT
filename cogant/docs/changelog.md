@@ -22,7 +22,17 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 
 ## [Unreleased]
 
+### Changed
+- **Legacy purge:** removed `cogant.viz.png_export` shim; canonical PNG API is
+  `cogant.viz.png`. `ProgramGraph` exports only from `cogant.schemas.graph`.
+  Drift analyzer uses top-level bundle keys only. Config docs distinguish composable
+  vs YAML `PipelineConfig`.
+
+### Removed
+- `scripts/split_*.py` mechanical split generators; CI guard added.
+
 ### Added
+- `tests/unit/test_viz_png_degraded_paths.py`; `tests/unit/test_no_mechanical_split_scripts.py`.
 - **Configurable upstream GNN 25-step pipeline pass** — new
   `cogant.gnn.upstream_bridge.pipeline` module drives `src.main.execute_pipeline_step`
   over the produced `gnn_package/`. Surfaces: `UPSTREAM_STEP_SCRIPTS` (canonical
@@ -63,7 +73,7 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 - Rust PyO3 `connected_components` FFI; `COGANT_USE_RUST=1` feature flag (598945d)
 
 ### Fixed
-- Viz `png_export` tests guarded behind `pytest.importorskip(matplotlib)`; add `numpy` and `pytest-cov` as dev deps (905c2da)
+- Viz `cogant.viz.png` tests guarded behind `pytest.importorskip(matplotlib)`; add `numpy` and `pytest-cov` as dev deps (905c2da)
 - Relax JS hidden-state assertion in cross-language differential test (4aa2710)
 - Ruff UP038 autofix: union-type annotations; remove stale `xfail` mark (cea55d9)
 

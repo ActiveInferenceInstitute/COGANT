@@ -52,10 +52,7 @@ def _make_repo(tmp_path: Path) -> Path:
         encoding="utf-8",
     )
     (repo / "main.py").write_text(
-        "from lib import Calc\n"
-        "\n"
-        "def run():\n"
-        "    return Calc().total([1, 2, 3])\n",
+        "from lib import Calc\n\ndef run():\n    return Calc().total([1, 2, 3])\n",
         encoding="utf-8",
     )
     return repo
@@ -239,8 +236,7 @@ class TestAllList:
         # *other* names should be unique.
         names = [n for n in cogant.__all__ if n != "GNNBundle"]
         assert len(names) == len(set(names)), (
-            f"duplicates in __all__ besides GNNBundle: "
-            f"{[n for n in names if names.count(n) > 1]}"
+            f"duplicates in __all__ besides GNNBundle: {[n for n in names if names.count(n) > 1]}"
         )
 
     def test_run_pipeline_in_all(self) -> None:
@@ -299,9 +295,7 @@ class _BlockingFinder:
     def __init__(self, blocked: set[str]) -> None:
         self.blocked = blocked
 
-    def find_spec(
-        self, name: str, path: object = None, target: object = None
-    ) -> None:
+    def find_spec(self, name: str, path: object = None, target: object = None) -> None:
         if name in self.blocked:
             raise ModuleNotFoundError(f"blocked by test: {name}")
         return None
@@ -318,9 +312,7 @@ def _reload_cogant_with_blocked(blocked: set[str]) -> object:
     # Drop already-loaded cogant submodules so the reload re-runs all
     # ``try/except`` blocks at the top of the package __init__.
     to_drop = [
-        name
-        for name in list(_sys.modules)
-        if name == "cogant" or name.startswith("cogant.")
+        name for name in list(_sys.modules) if name == "cogant" or name.startswith("cogant.")
     ]
     for name in to_drop:
         del _sys.modules[name]
@@ -337,9 +329,7 @@ def _reload_cogant_with_blocked(blocked: set[str]) -> object:
 def _restore_cogant() -> None:
     """Force a clean re-import so subsequent tests see the normal package."""
     to_drop = [
-        name
-        for name in list(_sys.modules)
-        if name == "cogant" or name.startswith("cogant.")
+        name for name in list(_sys.modules) if name == "cogant" or name.startswith("cogant.")
     ]
     for name in to_drop:
         del _sys.modules[name]
@@ -400,59 +390,36 @@ class TestFirstPartyImportFailsLoudly:
         with pytest.raises((ImportError, ModuleNotFoundError)):
             _reload_cogant_with_blocked({"cogant.api.pipeline"})
 
-    def test_bundle_import_fails_loudly_when_bundle_missing(
-        self, restore_cogant: object
-    ) -> None:
+    def test_bundle_import_fails_loudly_when_bundle_missing(self, restore_cogant: object) -> None:
         with pytest.raises((ImportError, ModuleNotFoundError)):
             _reload_cogant_with_blocked({"cogant.api.bundle"})
 
-    def test_program_graph_first_fallback_succeeds_via_legacy(
-        self, restore_cogant: object
-    ) -> None:
-        # Block only program_graph; legacy schemas.graph still imports →
-        # exercises the surviving inner ``try`` recovery path. This is the
-        # *one* legitimate alternative-implementation case the F15 fix
-        # explicitly preserves.
-        fresh = _reload_cogant_with_blocked({"cogant.schemas.program_graph"})
-        assert fresh.ProgramGraph is not None  # type: ignore[attr-defined]
+    def test_program_graph_imports_from_schemas_graph(self, restore_cogant: object) -> None:
+        fresh = _reload_cogant_with_blocked(set())
+        assert fresh.ProgramGraph.__module__ == "cogant.schemas.graph"  # type: ignore[attr-defined]
         assert inspect.isclass(fresh.ProgramGraph)  # type: ignore[attr-defined]
 
-    def test_program_graph_double_fallback_fails_loudly(
-        self, restore_cogant: object
-    ) -> None:
-        # Block both schemas.program_graph AND legacy schemas.graph — there
-        # is no second fallback after the legacy one; the import must
-        # fail loudly.
+    def test_program_graph_import_fails_when_graph_missing(self, restore_cogant: object) -> None:
         with pytest.raises((ImportError, ModuleNotFoundError)):
-            _reload_cogant_with_blocked(
-                {"cogant.schemas.program_graph", "cogant.schemas.graph"}
-            )
+            _reload_cogant_with_blocked({"cogant.schemas.graph"})
 
     def test_graph_builder_import_fails_loudly(self, restore_cogant: object) -> None:
         with pytest.raises((ImportError, ModuleNotFoundError)):
             _reload_cogant_with_blocked({"cogant.graph.builder"})
 
-    def test_translation_engine_import_fails_loudly(
-        self, restore_cogant: object
-    ) -> None:
+    def test_translation_engine_import_fails_loudly(self, restore_cogant: object) -> None:
         with pytest.raises((ImportError, ModuleNotFoundError)):
             _reload_cogant_with_blocked({"cogant.translate.engine"})
 
-    def test_state_space_compiler_import_fails_loudly(
-        self, restore_cogant: object
-    ) -> None:
+    def test_state_space_compiler_import_fails_loudly(self, restore_cogant: object) -> None:
         with pytest.raises((ImportError, ModuleNotFoundError)):
             _reload_cogant_with_blocked({"cogant.statespace.compiler"})
 
-    def test_gnn_formatter_import_fails_loudly(
-        self, restore_cogant: object
-    ) -> None:
+    def test_gnn_formatter_import_fails_loudly(self, restore_cogant: object) -> None:
         with pytest.raises((ImportError, ModuleNotFoundError)):
             _reload_cogant_with_blocked({"cogant.gnn.formatter"})
 
-    def test_rust_extension_fallback_remains_silent(
-        self, restore_cogant: object
-    ) -> None:
+    def test_rust_extension_fallback_remains_silent(self, restore_cogant: object) -> None:
         """The Rust extension IS optional. Its fallback survives the F15
         fix because Rust unavailability is a legitimate runtime state,
         not a packaging defect."""

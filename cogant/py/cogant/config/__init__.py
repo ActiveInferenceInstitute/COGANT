@@ -12,11 +12,12 @@ Two layers coexist here:
    should take one of these — no global flags, no singletons. Configs
    are frozen; use :meth:`PipelineConfig.override` to derive variants.
 
-2. **Legacy schema configs** (still used by the defaults/loaders/presets
-   subsystem): :class:`CogantConfig`, :class:`ExportConfig`,
-   :class:`ValidationConfig`, :class:`LanguageConfig`, etc. The legacy
-   high-level pipeline schema is still available as
-   ``cogant.config.schema.PipelineConfig`` for code that needs it.
+2. **YAML loader schema configs** (used by defaults/loaders/presets):
+   :class:`CogantConfig`, :class:`ExportConfig`,
+   :class:`ValidationConfig`, :class:`LanguageConfig`, etc. The
+   high-level pipeline YAML schema remains
+   ``cogant.config.schema.PipelineConfig`` (distinct from the composable
+   :class:`~cogant.config.pipeline.PipelineConfig`).
 """
 
 # Composable per-stage pydantic configs (primary export).
@@ -54,13 +55,12 @@ from .presets import (
 )
 from .reverse import ReverseConfig
 
-# Legacy high-level configuration schemas.
+# YAML loader configuration schemas (see ``config.schema``).
 #
-# NOTE: the legacy ``schema.PipelineConfig`` is intentionally *not*
-# re-exported at the top level; the composable ``pipeline.PipelineConfig``
-# owns the ``cogant.config.PipelineConfig`` name. External callers that
-# want the legacy schema should import it as
-# ``from cogant.config.schema import PipelineConfig as LegacyPipelineSchema``.
+# NOTE: ``schema.PipelineConfig`` is intentionally *not* re-exported at
+# the top level; the composable ``pipeline.PipelineConfig`` owns the
+# ``cogant.config.PipelineConfig`` name. YAML pipeline files use
+# ``from cogant.config.schema import PipelineConfig``.
 from .schema import (
     CogantBaseConfig,
     CogantConfig,

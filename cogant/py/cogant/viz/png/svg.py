@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+import shutil
+import subprocess
 from pathlib import Path
 
 from cogant.viz.png.config import (
@@ -26,13 +28,6 @@ def render_svg_file_to_png(svg_file: Path, output_png: Path, *, timeout: int = 6
     if not svg_file.is_file():
         return False
     output_png.parent.mkdir(parents=True, exist_ok=True)
-    import types
-    from typing import cast
-
-    import cogant.viz.png_export as _pe
-
-    _shutil = cast(types.ModuleType, getattr(_pe, "shutil"))
-    _subprocess = cast(types.ModuleType, getattr(_pe, "subprocess"))
 
     # 1) cairosvg
     try:
@@ -45,17 +40,17 @@ def render_svg_file_to_png(svg_file: Path, output_png: Path, *, timeout: int = 6
         pass
 
     # 2) rsvg-convert
-    if _shutil.which("rsvg-convert"):
+    if shutil.which("rsvg-convert"):
         cmd = ["rsvg-convert", "-w", "1400", "-o", str(output_png), str(svg_file)]
         try:
-            _subprocess.run(cmd, check=True, capture_output=True, timeout=timeout)
+            subprocess.run(cmd, check=True, capture_output=True, timeout=timeout)
             if output_png.is_file():
                 return True
-        except (_subprocess.CalledProcessError, OSError, _subprocess.TimeoutExpired) as e:
+        except (subprocess.CalledProcessError, OSError, subprocess.TimeoutExpired) as e:
             logger.debug("rsvg-convert failed for %s: %s", svg_file.name, e)
 
     # 3) inkscape
-    if _shutil.which("inkscape"):
+    if shutil.which("inkscape"):
         cmd = [
             "inkscape",
             str(svg_file),
@@ -64,20 +59,20 @@ def render_svg_file_to_png(svg_file: Path, output_png: Path, *, timeout: int = 6
             "--export-width=1400",
         ]
         try:
-            _subprocess.run(cmd, check=True, capture_output=True, timeout=timeout)
+            subprocess.run(cmd, check=True, capture_output=True, timeout=timeout)
             if output_png.is_file():
                 return True
-        except (_subprocess.CalledProcessError, OSError, _subprocess.TimeoutExpired) as e:
+        except (subprocess.CalledProcessError, OSError, subprocess.TimeoutExpired) as e:
             logger.debug("inkscape failed for %s: %s", svg_file.name, e)
 
     # 4) ImageMagick convert
-    if _shutil.which("convert"):
+    if shutil.which("convert"):
         cmd = ["convert", "-density", "150", str(svg_file), str(output_png)]
         try:
-            _subprocess.run(cmd, check=True, capture_output=True, timeout=timeout)
+            subprocess.run(cmd, check=True, capture_output=True, timeout=timeout)
             if output_png.is_file():
                 return True
-        except (_subprocess.CalledProcessError, OSError, _subprocess.TimeoutExpired) as e:
+        except (subprocess.CalledProcessError, OSError, subprocess.TimeoutExpired) as e:
             logger.debug("ImageMagick convert failed for %s: %s", svg_file.name, e)
 
     logger.debug("No SVG→PNG backend succeeded for %s", svg_file.name)
@@ -87,32 +82,30 @@ def render_svg_file_to_png(svg_file: Path, output_png: Path, *, timeout: int = 6
 def render_all_svg_in_run(run_dir: Path) -> list[Path]:
     """Convert every ``.svg`` under ``run_dir`` to a sibling ``.png``.
 
-    If no native SVG backend is available, falls back to a matplotlib-based
-    placeholder carrying the same banner/metadata shell so the run still
+    If no native SVG backend is available, uses a matplotlib-based degraded
+    companion image carrying the same banner/metadata shell so the run still
     yields one PNG per SVG.
     """
-    import cogant.viz.png_export as _pe
-
     written: list[Path] = []
     for svg in sorted(run_dir.rglob("*.svg")):
         png = svg.with_suffix(".png")
         try:
-            if _pe.render_svg_file_to_png(svg, png):
+            if render_svg_file_to_png(svg, png):
                 written.append(png)
-            elif _pe._render_svg_placeholder_png(svg, png):  # type: ignore[attr-defined]
+            elif render_svg_degraded_png(svg, png):
                 written.append(png)
         except Exception as e:  # noqa: BLE001
             logger.warning("SVG→PNG failed for %s: %s", svg.name, e)
     return written
 
 
-def _render_svg_placeholder_png(
+def render_svg_degraded_png(
     svg_file: Path,
     output_png: Path,
     *,
     cfg: RenderConfig | None = None,
 ) -> bool:
-    """When no SVG backend exists, emit a matplotlib placeholder carrying metadata."""
+    """When no SVG backend exists, emit a matplotlib degraded companion image."""
     cfg = cfg or DEFAULT_CONFIG
     try:
         import matplotlib
@@ -132,7 +125,7 @@ def _render_svg_placeholder_png(
     draw_metadata_banner(
         ax,
         title=svg_file.stem.replace("_", " ").title(),
-        subtitle="SVG rasterization (placeholder)",
+        subtitle="SVG rasterization (degraded)",
         stats={"bytes": size, "format": "svg"},
         cfg=cfg,
     )
@@ -158,3 +151,5 @@ def _render_svg_placeholder_png(
     return output_png.is_file()
 
 
+# Backward-compatible alias for callers not yet migrated.
+_render_svg_placeholder_png = render_svg_degraded_png

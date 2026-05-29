@@ -29,7 +29,7 @@ from cogant.viz.network_view import NetworkView
 from cogant.viz.pdf_export import PDFExporter
 from cogant.viz.pipeline_view import PipelineVisualizer
 from cogant.viz.plots import StaticPlotter
-from cogant.viz.png_export import (
+from cogant.viz.png import (
     RenderConfig,
     render_all_dot_in_run,
     render_all_mermaid_in_run,

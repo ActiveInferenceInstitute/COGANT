@@ -59,7 +59,7 @@ from cogant.translate.rules import (  # noqa: E402
     SingletonAccessRule,
     TestAssertionRule,
 )
-from cogant.viz.png_export import RenderConfig, render_all_pngs  # noqa: E402
+from cogant.viz.png import RenderConfig, render_all_pngs  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _GNN_DEFAULT = _REPO_ROOT.parent / "work" / "GNN" / "src"

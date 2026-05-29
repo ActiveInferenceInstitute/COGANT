@@ -478,11 +478,11 @@ and context compaction; fixed 6 test failures before committing 96 new tests.
 - `cogant.pipeline.dag`: ~90%
 - `cogant.observability.*`: ~85%
 - `cogant.plugins.*`: ~80%
-- `cogant.viz.*`: 35-95% (png_export 35% drags total; viz/ untested module cluster)
+- `cogant.viz.*`: 35-95% (`viz/png/` drags total in older snapshots; viz/ untested module cluster)
 - Total: **75.24%**
 
 ### Known Remaining Gaps
-- viz/png_export.py: 35% coverage (1275 lines, complex rendering paths)
+- `cogant.viz.png` (formerly monolithic `png_export`): 35% coverage in v0.5 snapshot (complex rendering paths)
 - validate/schema_check.py: 71%
 - validate/provenance_check.py: 78%
 - JS/TS tree-sitter parser: grammar loaded but rules sparse
@@ -919,7 +919,7 @@ this. The fix is to count CONSTRAINT-role mappings in the source GNN and emit pr
 This would convert most FAILED targets to DRIFT or ROLE_PRESERVED.
 
 **Coverage: 77% → 85% target**
-Remaining low-coverage modules: `viz/png_export.py` (35%, 1275 lines of complex rendering),
+Remaining low-coverage modules: `cogant.viz.png` (35% in v0.5 snapshot, complex rendering),
 `validate/provenance_check.py` (78%), and scattered partial paths in `parsers/`. The viz module
 is the single largest drag.
 
@@ -981,7 +981,7 @@ code (e.g., celery task routing) show low POLICY recall.
 ### Agents
 - dulwich-scaling: cProfile on 8601-node / 15441-edge repo; identify O(edges) hot spot
 - v1.0-readiness: write V1.0_READINESS.md honest gap assessment
-- coverage-final: push 82% → 85% (simulate.free_energy 65→98%, gnn_validator 60→92%, targeting png_export.py next)
+- coverage-final: push 82% → 85% (simulate.free_energy 65→98%, gnn_validator 60→92%, targeting `viz/png/` next)
 - memory-final: update persistent memory with v0.4.0 final state
 
 ### Commits (wave 15)

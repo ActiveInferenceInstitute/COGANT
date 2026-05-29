@@ -225,8 +225,10 @@ def diff(
     full markdown drift report including architectural drift score,
     semantic churn, and side-by-side metrics.
 
-    When both arguments are bundle JSON files, a lightweight shallow
-    diff is shown (legacy behavior).
+    When both arguments are bundle JSON files (with ``graph``,
+    ``state_space``, or related top-level keys), the semantic
+    :class:`cogant.scoring.drift.DriftAnalyzer` report is produced.
+    Otherwise a lightweight stage-list diff is shown.
     """
     p_a = Path(path_a)
     p_b = Path(path_b)
@@ -251,7 +253,7 @@ def diff(
         console.print("\n[green]✓ Diff complete[/green]")
         return
 
-    # File-based shallow diff (legacy behavior)
+    # JSON bundle diff via DriftAnalyzer when payloads look like bundles.
     import json
 
     with open(p_a) as f:
@@ -259,6 +261,27 @@ def diff(
     with open(p_b) as f:
         data2 = json.load(f)
 
+    bundle_keys = {"graph", "state_space", "program_graph", "mappings"}
+    if (
+        isinstance(data1, dict)
+        and isinstance(data2, dict)
+        and (bundle_keys & data1.keys() or bundle_keys & data2.keys())
+    ):
+        from cogant.scoring.drift import DriftAnalyzer
+
+        console.print(f"[bold blue]Comparing bundle JSON[/bold blue] {p_a.name} ↔ {p_b.name}")
+        report = DriftAnalyzer(data1, data2).generate_diff_report()
+        if output:
+            out_path = Path(output)
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(report, encoding="utf-8")
+            console.print(f"[green]Wrote diff report to {out_path}[/green]")
+        else:
+            console.print(report)
+        console.print("\n[green]✓ Diff complete[/green]")
+        return
+
+    # Lightweight stage-list diff for non-bundle JSON payloads.
     console.print(f"\nBundle 1: {data1.get('target', p_a)}")
     console.print(f"Bundle 2: {data2.get('target', p_b)}")
 
@@ -403,5 +426,3 @@ def explain(
     else:
         console.print(f"[red]Unknown --format {output_format!r}; use 'text' or 'json'.[/red]")
         raise typer.Exit(code=1)
-
-

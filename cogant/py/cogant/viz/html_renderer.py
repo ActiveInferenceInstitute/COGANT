@@ -259,7 +259,7 @@ class HTMLSiteRenderer:
         """Best-effort extraction of a program-graph dict from the bundle.
 
         Looks in a handful of well-known locations so that both the typed
-        ``PipelineRunner`` bundle and legacy / ad-hoc bundles can render.
+        ``PipelineRunner`` bundle and alternate / ad-hoc bundles can render.
         Always returns a dict with ``nodes`` and ``edges`` keys.
         """
         candidates: list[Any] = [
@@ -279,9 +279,8 @@ class HTMLSiteRenderer:
     def _extract_statespace_payload(self) -> dict[str, Any]:
         """Best-effort extraction of state-space data for the assets bundle.
 
-        Looks at the typed bundle artifacts and the loosely-typed
-        ``stage_results['statespace']`` shape so the renderer works for
-        both pipeline runs and direct loads of ``state_space.json``.
+        Looks at the typed bundle artifacts and alternate
+        ``stage_results['statespace']`` shapes for lightweight test bundles.
         """
         candidates: list[Any] = [
             (self.bundle.get("artifacts", {}) or {}).get("_state_space_model"),

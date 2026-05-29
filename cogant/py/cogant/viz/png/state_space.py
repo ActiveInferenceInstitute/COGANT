@@ -17,6 +17,8 @@ from cogant.viz.png.config import (
 )
 
 logger = logging.getLogger(__name__)
+
+
 def _state_space_entities(
     state_space: Any,
 ) -> tuple[list[Any], list[Any], list[Any]]:
@@ -260,7 +262,7 @@ def render_state_space_factor_png(
         write_figure_sidecar(
             output_png,
             {
-                "renderer": "cogant.viz.png_export.render_state_space_factor_png",
+                "renderer": "cogant.viz.png.render_state_space_factor_png",
                 "method": (
                     "Layered factor graph over compiled hidden-state, observation, "
                     "and action factors."
@@ -484,7 +486,7 @@ def render_connections_matrix_png(
         write_figure_sidecar(
             output_png,
             {
-                "renderer": "cogant.viz.png_export.render_connections_matrix_png",
+                "renderer": "cogant.viz.png.render_connections_matrix_png",
                 "method": (
                     "Four-panel heatmap rendering of canonical A/B/C/D matrix "
                     "shapes and values when a model.gnn.json matrix artifact is supplied."
@@ -524,5 +526,3 @@ def render_connections_matrix_png(
     except Exception as e:  # noqa: BLE001
         logger.warning("Connections matrix PNG failed: %s", e)
         return False
-
-

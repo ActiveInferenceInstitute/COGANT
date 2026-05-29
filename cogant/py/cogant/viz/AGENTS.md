@@ -31,7 +31,7 @@ Visualization is a **post-pipeline consumer** — it runs after the 10-stage for
 
 | Format | Generator | Use Case | Requires matplotlib | Requires graphviz | Self-contained HTML |
 |--------|-----------|----------|---------------------|--------------------|---------------------|
-| PNG | png_export.py | Quick review, inline in reports | Yes | No | No |
+| PNG | `viz/png/` package (`cogant.viz.png`) | Quick review, inline in reports | Yes | No | No |
 | PDF | pdf_export.py | Publication, multi-page reports | Yes | No | No |
 | Mermaid | mermaid.py | Markdown, GitHub, wiki embedding | No | No | Yes (in HTML) |
 | HTML site | bundle_site.py, html_renderer.py | Full bundle browsing | No | No | Yes |
@@ -49,11 +49,11 @@ Visualization is a **post-pipeline consumer** — it runs after the 10-stage for
 
 ### Visualization Modules (21 public files in `viz/` + `viz/dashboard/`)
 
-The `viz/` package currently ships `ablation_view.py`, `batch_dashboard.py`, `boundary.py`, `bundle_site.py`, `cytoscape_view.py`, `diff_view.py`, `export_view.py`, `flow.py`, `gantt.py`, `graph_view.py`, `html_renderer.py`, `inspection_dashboard.py`, `matrix_view.py`, `mermaid.py`, `network_view.py`, `pdf_export.py`, `pipeline_view.py`, `plots.py`, `png_export.py`, `semantic_view.py`, and `static_analysis_view.py`, plus the `dashboard/` subpackage (`generator.py`, `assets.py`). The headline modules are documented below; see each file's module docstring for the full API surface.
+The `viz/` package currently ships `ablation_view.py`, `batch_dashboard.py`, `boundary.py`, `bundle_site.py`, `cytoscape_view.py`, `diff_view.py`, `export_view.py`, `flow.py`, `gantt.py`, `graph_view.py`, `html_renderer.py`, `inspection_dashboard.py`, `matrix_view.py`, `mermaid.py`, `network_view.py`, `pdf_export.py`, `pipeline_view.py`, `plots.py`, `png/` (canonical PNG raster API), `semantic_view.py`, and `static_analysis_view.py`, plus the `dashboard/` subpackage (`generator.py`, `assets.py`). The headline modules are documented below; see each file's module docstring for the full API surface.
 
 ### Headline modules
 
-**png_export.py** — PNG evidence renderers
+**`viz/png/`** — PNG evidence renderers (public entry: `from cogant.viz.png import render_all_pngs`)
 - Render program graphs, state-space factor views, matrices, and roundtrip panels as matplotlib figures
 - Exports PNG files plus `.figure.json` sidecars with source digests, displayed counts, panels, and QA metadata
 - Public helpers include `render_program_graph_png()`, `render_state_space_png()`, `render_connections_matrix_png()`, `render_roundtrip_diff_png()`, and `render_all_pngs()`
@@ -154,7 +154,7 @@ The Cytoscape-based interactive view lives alongside the other top-level modules
 
 ```python
 from pathlib import Path
-from cogant.viz.png_export import render_program_graph_png
+from cogant.viz.png import render_program_graph_png
 
 png_path = render_program_graph_png(
     graph_json=Path("output/data/program_graph.json"),
@@ -300,7 +300,7 @@ if fig:
 ## Visualization Recipe Book
 
 ### "I want to visualize my program graph"
-→ Use `png_export.export_program_graph()` or `pdf_export.export_program_graph()` for static images
+→ Use `cogant.viz.png.render_program_graph_png()` or `pdf_export.export_program_graph()` for static images
 → Use `dashboard.generator.DashboardGenerator` for interactive HTML exploration
 
 ### "I want to show complexity hotspots"
@@ -317,7 +317,7 @@ if fig:
 
 ### "I want to publish a report with graph visualizations"
 → Use `pdf_export.PDFExporter` to render multi-page PDF with all graphs, matrices, and metadata
-→ Or use `png_export` + matplotlib's figure/subplot layout for custom report generation
+→ Or use `cogant.viz.png` + matplotlib's figure/subplot layout for custom report generation
 
 ### "I want to identify architectural violations"
 → Use `boundary.BoundaryMapper.highlight_violations()` to show cross-boundary calls
@@ -383,7 +383,7 @@ if fig:
 - **PNG/PDF rendering**: ~100-500ms per graph (size-dependent)
 - **Interactive dashboard**: ~1-2s to generate, ~instant to load in browser
 - **Mermaid generation**: ~10-50ms (minimal)
-- **Large graphs**: Consider `network_view` or `cytoscape` instead of png_export for > 1000 nodes
+- **Large graphs**: Consider `network_view` or `cytoscape` instead of cogant.viz.png for > 1000 nodes
 
 ## See Also
 

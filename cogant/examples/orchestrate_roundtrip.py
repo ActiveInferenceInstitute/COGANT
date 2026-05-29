@@ -2897,7 +2897,7 @@ Generated: {datetime.now().isoformat()}
     def _generate_png_outputs(self, graph, state_space=None, process_model=None):
         """Render PNGs for **every** visualization artifact in the run directory.
 
-        Delegates to :func:`cogant.viz.png_export.render_all_pngs` which
+        Delegates to :func:`cogant.viz.png.render_all_pngs` which
         guarantees a PNG sibling for:
 
         * ``program_graph.json``
@@ -2913,7 +2913,7 @@ Generated: {datetime.now().isoformat()}
         it rather than re-implementing PNG export.
         """
         try:
-            from cogant.viz.png_export import render_all_pngs
+            from cogant.viz.png import render_all_pngs
         except ImportError as e:
             logger.warning(f"PNG export unavailable: {e}")
             return

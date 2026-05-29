@@ -3,10 +3,8 @@
 These tests exercise code paths not already covered by
 ``test_drift_analysis.py``:
 
-- Legacy bundle-extraction fallbacks (``stage_results.graph`` etc.)
-- All legacy private ``_count_*`` / ``_compute_*`` helpers that accept
-  two bundles as arguments.
-- ``DriftAnalyzer.analyze`` and ``report`` legacy entry points.
+- Canonical bundle-extraction from top-level ``graph`` / ``state_space`` keys.
+- Private ``_count_*`` / ``_compute_*`` helpers that accept two bundles.
 - ``generate_diff_report`` / ``generate_diff_mermaid`` full formatting.
 - ``to_dict`` serialization.
 - ``CodebaseMetrics.format_report`` full markdown formatting.
@@ -36,13 +34,8 @@ def make_bundle(
     actions=(),
     policies=(),
     mappings=None,
-    legacy=False,
 ):
-    """Build a minimal bundle dict.
-
-    When ``legacy=True`` the graph/state_space are nested under
-    ``stage_results`` to exercise the legacy fallback helpers.
-    """
+    """Build a minimal canonical bundle dict."""
     graph = {
         "nodes": [{"id": nid, "kind": "function", "attributes": {}} for nid in node_ids],
         "edges": [{"source": src, "target": tgt, "kind": "CALLS"} for src, tgt in edges],
@@ -54,23 +47,20 @@ def make_bundle(
         "policies": [{"policy_id": p} for p in policies],
     }
     mappings = mappings or {}
-    if legacy:
-        return {"stage_results": {"graph": graph, "statespace": state_space}, "mappings": mappings}
     return {"graph": graph, "state_space": state_space, "mappings": mappings}
 
 
 # ============================================================== DriftAnalyzer
 
 
-class TestDriftAnalyzerLegacyExtraction:
-    """Exercise the stage_results.graph / stage_results.statespace fallback."""
+class TestDriftAnalyzerExtraction:
+    """Exercise canonical bundle graph/state_space extraction."""
 
-    def test_extracts_graph_from_stage_results(self):
-        a = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),), legacy=True)
+    def test_extracts_graph_from_canonical_keys(self):
+        a = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),))
         b = make_bundle(
             node_ids=("n1", "n2", "n3"),
             edges=(("n1", "n2"), ("n2", "n3")),
-            legacy=True,
         )
         analyzer = DriftAnalyzer(a, b)
         assert len(analyzer.graph_a.get("nodes", [])) == 2
@@ -89,104 +79,101 @@ class TestDriftAnalyzerLegacyExtraction:
         assert analyzer.mappings_a == {}
         assert analyzer.mappings_b == {}
 
-    def test_extract_graph_with_empty_stage_results(self):
+    def test_extract_graph_ignores_non_dict_stage_results(self):
         a = {"stage_results": "not a dict"}
         analyzer = DriftAnalyzer(a, a)
         assert analyzer.graph_a == {}
 
 
-class TestDriftAnalyzerLegacyHelpers:
+class TestDriftAnalyzerHelpers:
     """Exercise the two-argument ``_count_*`` / ``_compute_*`` helpers."""
 
     def test_legacy_count_added_nodes(self):
-        a = make_bundle(node_ids=("n1",), legacy=True)
-        b = make_bundle(node_ids=("n1", "n2", "n3"), legacy=True)
+        a = make_bundle(node_ids=("n1",))
+        b = make_bundle(node_ids=("n1", "n2", "n3"))
         analyzer = DriftAnalyzer(a, b)
 
         assert analyzer._count_added_nodes(a, b) == 2
 
     def test_legacy_count_removed_nodes(self):
-        a = make_bundle(node_ids=("n1", "n2", "n3"), legacy=True)
-        b = make_bundle(node_ids=("n1",), legacy=True)
+        a = make_bundle(node_ids=("n1", "n2", "n3"))
+        b = make_bundle(node_ids=("n1",))
         analyzer = DriftAnalyzer(a, b)
 
         assert analyzer._count_removed_nodes(a, b) == 2
 
     def test_legacy_count_edge_changes(self):
-        a = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),), legacy=True)
+        a = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),))
         b = make_bundle(
             node_ids=("n1", "n2", "n3"),
             edges=(("n1", "n2"), ("n2", "n3"), ("n1", "n3")),
-            legacy=True,
         )
         analyzer = DriftAnalyzer(a, b)
         assert analyzer._count_edge_changes(a, b) == 2
 
     def test_legacy_count_added_states(self):
-        a = make_bundle(states=("s1",), legacy=True)
-        b = make_bundle(states=("s1", "s2", "s3"), legacy=True)
+        a = make_bundle(states=("s1",))
+        b = make_bundle(states=("s1", "s2", "s3"))
         analyzer = DriftAnalyzer(a, b)
         assert analyzer._count_added_states(a, b) == 2
         # Reverse => 0 (not negative)
         assert analyzer._count_added_states(b, a) == 0
 
     def test_legacy_count_removed_states(self):
-        a = make_bundle(states=("s1", "s2", "s3"), legacy=True)
-        b = make_bundle(states=("s1",), legacy=True)
+        a = make_bundle(states=("s1", "s2", "s3"))
+        b = make_bundle(states=("s1",))
         analyzer = DriftAnalyzer(a, b)
         assert analyzer._count_removed_states(a, b) == 2
         assert analyzer._count_removed_states(b, a) == 0
 
     def test_legacy_count_observation_changes(self):
-        a = make_bundle(observations=("o1",), legacy=True)
-        b = make_bundle(observations=("o1", "o2"), legacy=True)
+        a = make_bundle(observations=("o1",))
+        b = make_bundle(observations=("o1", "o2"))
         analyzer = DriftAnalyzer(a, b)
         assert analyzer._count_observation_changes(a, b) == 1
 
     def test_legacy_count_action_changes(self):
-        a = make_bundle(actions=("a1", "a2"), legacy=True)
-        b = make_bundle(actions=("a1",), legacy=True)
+        a = make_bundle(actions=("a1", "a2"))
+        b = make_bundle(actions=("a1",))
         analyzer = DriftAnalyzer(a, b)
         assert analyzer._count_action_changes(a, b) == 1
 
     def test_legacy_count_policy_changes(self):
-        a = make_bundle(policies=("p1",), legacy=True)
-        b = make_bundle(policies=("p1", "p2", "p3"), legacy=True)
+        a = make_bundle(policies=("p1",))
+        b = make_bundle(policies=("p1", "p2", "p3"))
         analyzer = DriftAnalyzer(a, b)
         assert analyzer._count_policy_changes(a, b) == 2
 
     def test_legacy_compute_architectural_drift(self):
-        a = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),), legacy=True)
+        a = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),))
         b = make_bundle(
             node_ids=("n1", "n2", "n3", "n4"),
             edges=(("n1", "n2"), ("n2", "n3"), ("n3", "n4")),
-            legacy=True,
         )
         analyzer = DriftAnalyzer(a, b)
         drift = analyzer._compute_architectural_drift(a, b)
         assert 0.0 < drift <= 1.0
 
     def test_legacy_compute_architectural_drift_from_empty_baseline(self):
-        a = make_bundle(legacy=True)
-        b = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),), legacy=True)
+        a = make_bundle()
+        b = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),))
         analyzer = DriftAnalyzer(a, b)
         drift = analyzer._compute_architectural_drift(a, b)
         # Both nodes_a and edges_a are 0 so node_drift=0.5 and edge_drift=0.5
         assert drift == 0.5
 
     def test_legacy_compute_architectural_drift_identical_empty(self):
-        a = make_bundle(legacy=True)
+        a = make_bundle()
         analyzer = DriftAnalyzer(a, a)
         drift = analyzer._compute_architectural_drift(a, a)
         assert drift == 0.0
 
     def test_legacy_compute_semantic_churn(self):
-        a = make_bundle(states=("s1",), observations=("o1",), actions=("a1",), legacy=True)
+        a = make_bundle(states=("s1",), observations=("o1",), actions=("a1",))
         b = make_bundle(
             states=("s1", "s2"),
             observations=("o1", "o2"),
             actions=("a1", "a2", "a3"),
-            legacy=True,
         )
         analyzer = DriftAnalyzer(a, b)
         churn = analyzer._compute_semantic_churn(a, b)

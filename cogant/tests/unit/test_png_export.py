@@ -16,7 +16,7 @@ _needs_matplotlib = pytest.mark.skipif(
     reason="matplotlib not installed — install cogant[viz] to enable PNG rendering tests",
 )
 
-from cogant.viz.png_export import (
+from cogant.viz.png import (
     RenderConfig,
     _downsample_graph,
     find_graph_dot,

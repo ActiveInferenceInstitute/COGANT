@@ -191,4 +191,3 @@ def doctor() -> None:
     code = doctor_command(console)
     if code != 0:
         raise typer.Exit(code=code)
-

@@ -402,5 +402,3 @@ def render_interpretability_overview_png(
     except Exception as e:  # noqa: BLE001
         logger.warning("Interpretability overview PNG failed: %s", e)
         return False
-
-

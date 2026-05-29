@@ -608,9 +608,7 @@ def _rule_trace_summary(trace: dict[str, Any], path: Path | None, run_dir: Path)
         )
         mapping_status_summary[mapping_status] = mapping_status_summary.get(mapping_status, 0) + 1
         review = _as_mapping(mapping.get("review"))
-        review_status = str(
-            review.get("status") or mapping.get("review_status") or "unreviewed"
-        )
+        review_status = str(review.get("status") or mapping.get("review_status") or "unreviewed")
         review_status_summary[review_status] = review_status_summary.get(review_status, 0) + 1
         if review_status.lower() not in {"", "auto_proposed", "unreviewed", "none", "unknown"}:
             reviewed_mapping_rows += 1
@@ -1109,7 +1107,7 @@ def render_graphical_abstract_png(
         if output_png is not None
         else root / "figures" / "graphical_abstract.png"
     )
-    from cogant.viz.png_export import render_svg_file_to_png
+    from cogant.viz.png import render_svg_file_to_png
 
     if render_svg_file_to_png(svg, png):
         return png
@@ -1157,7 +1155,7 @@ def _bar_svg(
 def _write_svg_png(svg_text: str, svg_path: Path, png_path: Path) -> Path | None:
     svg_path.parent.mkdir(parents=True, exist_ok=True)
     svg_path.write_text(svg_text, encoding="utf-8")
-    from cogant.viz.png_export import render_svg_file_to_png
+    from cogant.viz.png import render_svg_file_to_png
 
     return png_path if render_svg_file_to_png(svg_path, png_path) else None
 
@@ -1550,7 +1548,9 @@ def _confidence_calibration_svg(model: dict[str, Any]) -> str:
         '<text x="754" y="292" font-size="19" font-weight="800" fill="#172033">Confidence and review status</text>',
         '<text x="754" y="316" font-size="12" fill="#526070">Confidence tiers summarize proposals; review rows show annotation coverage.</text>',
     ]
-    for idx, (rule, value) in enumerate(sorted(rules.items(), key=lambda item: (-_to_int(item[1]), item[0]))[:6]):
+    for idx, (rule, value) in enumerate(
+        sorted(rules.items(), key=lambda item: (-_to_int(item[1]), item[0]))[:6]
+    ):
         parts.append(
             _coverage_bar(
                 label=str(rule),
@@ -1563,7 +1563,9 @@ def _confidence_calibration_svg(model: dict[str, Any]) -> str:
             )
         )
     if not rules:
-        parts.append('<text x="72" y="354" font-size="15" fill="#526070">No rule evidence found.</text>')
+        parts.append(
+            '<text x="72" y="354" font-size="15" fill="#526070">No rule evidence found.</text>'
+        )
 
     y = 344
     for tier, value in sorted(tiers.items(), key=lambda item: (-_to_int(item[1]), item[0]))[:4]:
@@ -1579,7 +1581,9 @@ def _confidence_calibration_svg(model: dict[str, Any]) -> str:
             )
         )
         y += 34
-    for status, value in sorted(review_status.items(), key=lambda item: (-_to_int(item[1]), item[0]))[:4]:
+    for status, value in sorted(
+        review_status.items(), key=lambda item: (-_to_int(item[1]), item[0])
+    )[:4]:
         parts.append(
             _coverage_bar(
                 label=f"review: {status}",

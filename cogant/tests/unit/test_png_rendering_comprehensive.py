@@ -1,6 +1,6 @@
 """Comprehensive tests for the COGANT PNG rendering pipeline.
 
-Covers every public surface added to ``cogant.viz.png_export``:
+Covers every public surface added to ``cogant.viz.png``:
 * the native Mermaid-to-PNG fallback for every diagram kind COGANT emits,
 * SVG→PNG via whichever backend is available on the host,
 * ``render_all_mermaid_in_run`` / ``render_all_svg_in_run`` file discovery,
@@ -27,7 +27,7 @@ _needs_matplotlib = pytest.mark.skipif(
     reason="matplotlib not installed — install cogant[viz] to enable PNG rendering tests",
 )
 
-from cogant.viz.png_export import (
+from cogant.viz.png import (
     RenderConfig,
     _detect_mermaid_kind,
     _parse_mermaid_class_diagram,
@@ -283,7 +283,7 @@ class TestRenderMermaidFileFallback:
         src = tmp_path / "sample.mermaid"
         src.write_text("graph TD\n    A --> B\n", encoding="utf-8")
         dst = tmp_path / "sample.png"
-        # allow_native_fallback=True is the default; result should succeed
+        # allow_native_renderer=True is the default; result should succeed
         # even on hosts without mmdc installed because matplotlib is required.
         ok = render_mermaid_file_to_png(src, dst)
         assert ok is True
@@ -292,13 +292,13 @@ class TestRenderMermaidFileFallback:
     def test_native_fallback_disabled_returns_false_when_mmdc_missing(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import cogant.viz.png_export as png_export
+        import cogant.viz.png.mermaid as png_mermaid
 
-        monkeypatch.setattr(png_export, "_mmdc_command", lambda: None)
+        monkeypatch.setattr(png_mermaid, "_mmdc_command", lambda: None)
         src = tmp_path / "x.mermaid"
         src.write_text("graph TD\n    A --> B\n", encoding="utf-8")
         dst = tmp_path / "x.png"
-        ok = png_export.render_mermaid_file_to_png(src, dst, allow_native_fallback=False)
+        ok = png_mermaid.render_mermaid_file_to_png(src, dst, allow_native_renderer=False)
         assert ok is False
 
 

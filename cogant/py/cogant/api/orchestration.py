@@ -543,9 +543,9 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
             path=rel,
             language="python",
         )
-        # Index under both the bare stem (legacy keying) and the dotted
-        # package-qualified name. Downstream IMPORTS resolution tries the
-        # dotted form first, then falls back to the head segment.
+        # Index under both the bare stem and the dotted package-qualified name.
+        # Downstream IMPORTS resolution tries the dotted form first, then falls
+        # back to the head segment for single-file modules.
         module_nodes[module_name] = module_node
         if dotted_name and dotted_name != module_name:
             module_nodes[dotted_name] = module_node
@@ -619,7 +619,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
         #      submodule-name case.
         #   2. Successive parent packages of the bare target:
         #      ``pkg.deep.x`` → ``pkg.deep`` → ``pkg``
-        #   3. Bare head segment (legacy fallback).
+        #   3. Bare head segment (single-file module alias).
         #
         # The first hit in ``module_nodes`` (excluding self) wins. This closes
         # the dotted-import under-linking documented in TODO #2
@@ -643,7 +643,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
             parts = target_name.split(".")
             for i in range(len(parts), 0, -1):
                 candidates.append(".".join(parts[:i]))
-            # Candidate set 3: bare head (legacy fallback)
+            # Candidate set 3: bare head (single-file module alias)
             head = parts[0] if parts else target_name
             if head and head not in candidates:
                 candidates.append(head)
@@ -999,7 +999,7 @@ def run_export(
     # never abort the export stage.
     if render_visualizations:
         try:
-            from cogant.viz.png_export import render_all_pngs
+            from cogant.viz.png import render_all_pngs
 
             png_result = render_all_pngs(out, state_space=ss, process_model=pm)
             visualization_paths = {

@@ -499,7 +499,9 @@ def _render_act_module(plan: PackagePlan) -> str:
             if first_state_var:
                 t = plan.state_vars[0].python_type
                 if t == "bool":
-                    lines.append(f"    new_value = not bool(_factor_value(state.{first_state_var}))")
+                    lines.append(
+                        f"    new_value = not bool(_factor_value(state.{first_state_var}))"
+                    )
                 elif t == "int":
                     lines.append(f"    new_value = int(_factor_value(state.{first_state_var})) + 1")
                 else:
@@ -594,9 +596,7 @@ def _render_policy_module(plan: PackagePlan) -> str:
     for i, node in enumerate(plan.scaffold_policy_functions):
         fn_name = node.name
         lines.append(f"def {fn_name}(state: State, observations: List[float]) -> int:")
-        lines.append(
-            f'    """Scaffold policy {i}: route hidden-state factor through selector."""'
-        )
+        lines.append(f'    """Scaffold policy {i}: route hidden-state factor through selector."""')
         lines.append(f"    return {helper_name}(state, observations)")
         lines.append("")
 

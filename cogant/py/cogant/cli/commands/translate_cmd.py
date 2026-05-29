@@ -282,5 +282,3 @@ def translate(
     console.print("\n[green]✓ Translation complete[/green]")
     console.print(f"Output: {output_dir}")
     console.print(f"[dim]Saved bundle: {bundle_path}[/dim]")
-
-

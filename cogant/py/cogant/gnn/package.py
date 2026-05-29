@@ -528,7 +528,7 @@ class GNNPackageBuilder:
     def _generate_program_graph_json(self, output_path: Path) -> None:
         """Dump the typed ``ProgramGraph`` as a JSON sidecar.
 
-        This is the canonical input for :func:`cogant.viz.png_export.render_program_graph_png`
+        This is the canonical input for :func:`cogant.viz.png.render_program_graph_png`
         and guarantees that any consumer of a COGANT GNN package (``cogant validate``,
         ``cogant viz``, downstream tooling) can rebuild a NetworkX view of the
         repo without re-running the pipeline.
@@ -550,7 +550,7 @@ class GNNPackageBuilder:
         Mirrors ``_generate_program_graph_json``: gives consumers (notably
         ``render_all_pngs`` → ``render_process_gantt_png``) a standalone file
         to load without re-running ``ProcessExtractor``. The shape matches
-        what :func:`cogant.viz.png_export._load_process_model_from_json`
+        what :func:`cogant.viz.png._load_process_model_from_json`
         expects: ``process_id``, ``stages``, ``policies``, ``timelines``.
         """
         if self.process_model is None:

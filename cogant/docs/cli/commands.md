@@ -239,7 +239,7 @@ cogant viz output/my_repo_run/
 
 - `run_dir`: Directory containing `program_graph.json`, `.mermaid`, `.dot`, `.svg`, or other assets produced by analysis (walks recursively).
 
-Uses [`cogant.viz.png_export.render_all_pngs`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/viz/png_export.py). Safe to re-run; overwrites existing PNGs.
+Uses [`cogant.viz.png.render_all_pngs`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/viz/png/orchestrator.py). Safe to re-run; overwrites existing PNGs.
 
 ### validate
 

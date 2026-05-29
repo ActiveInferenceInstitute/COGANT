@@ -389,9 +389,7 @@ def _role_multiset_from_mappings(
     if mappings is None:
         return roles
     target_sets = {
-        str(role).upper(): set(names)
-        for role, names in (semantic_targets or {}).items()
-        if names
+        str(role).upper(): set(names) for role, names in (semantic_targets or {}).items() if names
     }
     values = mappings.values() if isinstance(mappings, dict) else list(mappings)
     for mapping in values:

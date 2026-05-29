@@ -6,6 +6,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from typing import Any
+
 from cogant.viz.png.config import (
     DEFAULT_CONFIG,
     RenderConfig,
@@ -32,7 +33,7 @@ def render_mermaid_file_to_png(
     output_png: Path,
     *,
     timeout: int = 120,
-    allow_native_fallback: bool = True,
+    allow_native_renderer: bool = True,
     cfg: RenderConfig | None = None,
 ) -> bool:
     """Render one ``.mmd``/``.mermaid`` file to PNG.
@@ -46,33 +47,25 @@ def render_mermaid_file_to_png(
     function never raises; callers treat rendering as best-effort.
     """
     cfg = cfg or DEFAULT_CONFIG
-    import cogant.viz.png_export as _png_export
-
-    prefix = _png_export._mmdc_command()  # type: ignore[attr-defined]
+    prefix = _mmdc_command()
     if prefix:
         output_png.parent.mkdir(parents=True, exist_ok=True)
         cmd = [*prefix, "-i", str(mermaid_file), "-o", str(output_png), "-b", "transparent"]
         try:
-            r = _png_export.subprocess.run(  # type: ignore[attr-defined]
-                cmd, check=True, capture_output=True, text=True, timeout=timeout
-            )
+            r = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=timeout)
             if r.stderr:
                 logger.debug("mmdc stderr: %s", r.stderr.strip()[:500])
             if output_png.is_file():
                 return True
-        except (
-            _png_export.subprocess.CalledProcessError,  # type: ignore[attr-defined]
-            OSError,
-            _png_export.subprocess.TimeoutExpired,  # type: ignore[attr-defined]
-        ) as e:
+        except (subprocess.CalledProcessError, OSError, subprocess.TimeoutExpired) as e:
             err = getattr(e, "stderr", None) or getattr(e, "stdout", None) or str(e)
             logger.debug(
-                "mmdc failed for %s: %s; trying native fallback",
+                "mmdc failed for %s: %s; trying native renderer",
                 mermaid_file.name,
                 str(err)[:300],
             )
 
-    if not allow_native_fallback:
+    if not allow_native_renderer:
         return False
 
     try:
@@ -102,8 +95,6 @@ def render_all_mermaid_in_run(
     of successfully written PNG paths.
     """
     cfg = cfg or DEFAULT_CONFIG
-    import cogant.viz.png_export as _png_export
-
     written: list[Path] = []
     seen: set[Path] = set()
     for pattern in ("*.mermaid", "*.mmd"):
@@ -113,7 +104,7 @@ def render_all_mermaid_in_run(
             seen.add(mmd)
             png = mmd.with_suffix(".png")
             try:
-                if _png_export.render_mermaid_file_to_png(mmd, png, cfg=cfg):  # type: ignore[arg-type]
+                if render_mermaid_file_to_png(mmd, png, cfg=cfg):
                     written.append(png)
             except Exception as e:  # noqa: BLE001 - never let viz kill the pipeline
                 logger.warning("Mermaid→PNG failed for %s: %s", mmd.name, e)
@@ -1043,5 +1034,3 @@ def _render_gantt_png(
     plt.savefig(output_png, dpi=cfg.dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     return output_png.is_file()
-
-

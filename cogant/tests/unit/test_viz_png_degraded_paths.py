@@ -1,4 +1,4 @@
-"""Targeted branch tests for: cogant.viz.png_export missing line ranges.
+"""Targeted branch tests for: cogant.viz.png missing line ranges.
 
 Targets specific uncovered ranges from the targeted coverage report:
 - 383-385: matplotlib ImportError in render_program_graph_png
@@ -36,16 +36,20 @@ matplotlib.use("Agg")
 
 import pytest
 
-from cogant.viz import png_export
+import cogant.viz.png as png
+import cogant.viz.png.dot as png_dot
+import cogant.viz.png.mermaid as png_mermaid
+import cogant.viz.png.orchestrator as png_orchestrator
+import cogant.viz.png.svg as png_svg
 
 pytestmark = pytest.mark.unit
 
 
-def _live_png_export():
-    """Return the live ``cogant.viz.png_export`` module (survives package reloads)."""
+def _live_png():
+    """Return the live ``cogant.viz.png`` module (survives package reloads)."""
     import importlib
 
-    return importlib.import_module("cogant.viz.png_export")
+    return importlib.import_module("cogant.viz.png")
 
 
 # ---------------------------------------------------------------------------
@@ -99,7 +103,7 @@ def test_render_program_graph_png_no_matplotlib(monkeypatch, tmp_path: Path) -> 
     out = tmp_path / "out.png"
 
     _force_matplotlib_unavailable(monkeypatch)
-    result = png_export.render_program_graph_png(pg_json, out)
+    result = png.render_program_graph_png(pg_json, out)
     assert result is False
 
 
@@ -111,9 +115,7 @@ def test_render_program_graph_png_no_matplotlib(monkeypatch, tmp_path: Path) -> 
 def test_render_mermaid_text_to_png_no_matplotlib(monkeypatch, tmp_path: Path) -> None:
     out = tmp_path / "out.png"
     _force_matplotlib_unavailable(monkeypatch)
-    result = png_export.render_mermaid_text_to_png(
-        "graph TD\nA --> B\n", out
-    )
+    result = png.render_mermaid_text_to_png("graph TD\nA --> B\n", out)
     assert result is False
 
 
@@ -126,7 +128,7 @@ def test_render_state_space_factor_png_no_matplotlib(monkeypatch, tmp_path: Path
     out = tmp_path / "out.png"
     _force_matplotlib_unavailable(monkeypatch)
     ss = SimpleNamespace(variables={}, observations={}, actions={})
-    result = png_export.render_state_space_factor_png(ss, out)
+    result = png.render_state_space_factor_png(ss, out)
     assert result is False
 
 
@@ -143,26 +145,27 @@ def test_render_state_space_factor_png_handles_exception(tmp_path: Path) -> None
     inner try/except that returns False at line 1768-1770.
     """
     out = tmp_path / "out.png"
+
     # Variables list whose elements have an iter that raises during iteration
     class _BadIter:
         def __iter__(self):
             raise RuntimeError("iter explosion")
 
     bad_ss = SimpleNamespace(variables=_BadIter(), observations={}, actions={})
-    result = png_export.render_state_space_factor_png(bad_ss, out)
+    result = png.render_state_space_factor_png(bad_ss, out)
     assert result is False
 
 
 def test_render_state_space_factor_png_returns_false_for_none() -> None:
     out = Path("/tmp/never_written.png")
-    assert png_export.render_state_space_factor_png(None, out) is False
+    assert png.render_state_space_factor_png(None, out) is False
 
 
 def test_render_state_space_factor_png_empty_entities(tmp_path: Path) -> None:
     """All three layers empty → return False at the early-out branch."""
     out = tmp_path / "out.png"
     ss = SimpleNamespace(variables={}, observations={}, actions={})
-    result = png_export.render_state_space_factor_png(ss, out)
+    result = png.render_state_space_factor_png(ss, out)
     assert result is False
 
 
@@ -176,7 +179,7 @@ def test_render_connections_matrix_png_no_matplotlib(monkeypatch, tmp_path: Path
     out = tmp_path / "out.png"
     _force_matplotlib_unavailable(monkeypatch)
     ss = SimpleNamespace(variables={"v": 1}, observations={"o": 1}, actions={})
-    result = png_export.render_connections_matrix_png(ss, out)
+    result = png.render_connections_matrix_png(ss, out)
     assert result is False
 
 
@@ -184,7 +187,7 @@ def test_render_connections_matrix_png_no_numpy(monkeypatch, tmp_path: Path) -> 
     out = tmp_path / "out.png"
     _force_numpy_unavailable(monkeypatch)
     ss = SimpleNamespace(variables={"v": 1}, observations={"o": 1}, actions={})
-    result = png_export.render_connections_matrix_png(ss, out)
+    result = png.render_connections_matrix_png(ss, out)
     assert result is False
 
 
@@ -196,14 +199,14 @@ def test_render_connections_matrix_png_with_source_label(tmp_path: Path) -> None
         observations={"o1": SimpleNamespace(name="o1")},
         actions={"a1": SimpleNamespace(name="a1")},
     )
-    result = png_export.render_connections_matrix_png(ss, out, source_label="my_run")
+    result = png.render_connections_matrix_png(ss, out, source_label="my_run")
     assert result is True
     assert out.is_file()
 
 
 def test_render_connections_matrix_png_returns_false_for_none() -> None:
     out = Path("/tmp/never.png")
-    assert png_export.render_connections_matrix_png(None, out) is False
+    assert png.render_connections_matrix_png(None, out) is False
 
 
 def test_render_connections_matrix_png_handles_exception(monkeypatch, tmp_path: Path) -> None:
@@ -217,7 +220,7 @@ def test_render_connections_matrix_png_handles_exception(monkeypatch, tmp_path: 
         raise RuntimeError("rng failure")
 
     monkeypatch.setattr(np.random, "default_rng", boom)
-    result = png_export.render_connections_matrix_png(ss, out)
+    result = png.render_connections_matrix_png(ss, out)
     assert result is False
 
 
@@ -230,26 +233,26 @@ def test_render_process_gantt_png_no_matplotlib(monkeypatch, tmp_path: Path) -> 
     out = tmp_path / "out.png"
     _force_matplotlib_unavailable(monkeypatch)
     pm = SimpleNamespace(stages={"s1": SimpleNamespace(name="s1")}, policies=[])
-    assert png_export.render_process_gantt_png(pm, out) is False
+    assert png.render_process_gantt_png(pm, out) is False
 
 
 def test_render_process_gantt_png_returns_false_for_none(tmp_path: Path) -> None:
     out = tmp_path / "out.png"
-    assert png_export.render_process_gantt_png(None, out) is False
+    assert png.render_process_gantt_png(None, out) is False
 
 
 def test_render_process_gantt_png_returns_false_when_stages_none(tmp_path: Path) -> None:
     """getattr(process_model, 'stages', None) is None → line 1917."""
     out = tmp_path / "out.png"
     pm = SimpleNamespace(policies=[])  # no stages attribute
-    assert png_export.render_process_gantt_png(pm, out) is False
+    assert png.render_process_gantt_png(pm, out) is False
 
 
 def test_render_process_gantt_png_returns_false_when_no_stages(tmp_path: Path) -> None:
     """Empty stage list → returns False."""
     out = tmp_path / "out.png"
     pm = SimpleNamespace(stages=[], policies=[])
-    assert png_export.render_process_gantt_png(pm, out) is False
+    assert png.render_process_gantt_png(pm, out) is False
 
 
 def test_render_process_gantt_png_dict_stages(tmp_path: Path) -> None:
@@ -262,7 +265,7 @@ def test_render_process_gantt_png_dict_stages(tmp_path: Path) -> None:
         },
         policies=[],
     )
-    result = png_export.render_process_gantt_png(pm, out)
+    result = png.render_process_gantt_png(pm, out)
     assert result is True
     assert out.is_file()
 
@@ -283,7 +286,7 @@ def test_render_process_gantt_png_handles_exception(monkeypatch, tmp_path: Path)
         duration = 1
 
     pm = SimpleNamespace(stages=[BadStage()], policies=[])
-    result = png_export.render_process_gantt_png(pm, out)
+    result = png.render_process_gantt_png(pm, out)
     assert result is False
 
 
@@ -295,7 +298,7 @@ def test_render_process_gantt_png_handles_exception(monkeypatch, tmp_path: Path)
 def test_render_markov_blanket_png_returns_false_for_missing_file(tmp_path: Path) -> None:
     blanket_json = tmp_path / "missing.json"
     out = tmp_path / "out.png"
-    assert png_export.render_markov_blanket_png(blanket_json, out) is False
+    assert png.render_markov_blanket_png(blanket_json, out) is False
 
 
 def test_render_markov_blanket_png_no_matplotlib(monkeypatch, tmp_path: Path) -> None:
@@ -303,14 +306,14 @@ def test_render_markov_blanket_png_no_matplotlib(monkeypatch, tmp_path: Path) ->
     blanket_json.write_text(json.dumps({"roles": {"n1": "internal"}, "edges": []}))
     out = tmp_path / "out.png"
     _force_matplotlib_unavailable(monkeypatch)
-    assert png_export.render_markov_blanket_png(blanket_json, out) is False
+    assert png.render_markov_blanket_png(blanket_json, out) is False
 
 
 def test_render_markov_blanket_png_invalid_json(tmp_path: Path) -> None:
     blanket_json = tmp_path / "blanket.json"
     blanket_json.write_text("{not json")
     out = tmp_path / "out.png"
-    assert png_export.render_markov_blanket_png(blanket_json, out) is False
+    assert png.render_markov_blanket_png(blanket_json, out) is False
 
 
 def test_render_markov_blanket_png_grouped_roles_with_dict_members(tmp_path: Path) -> None:
@@ -333,7 +336,7 @@ def test_render_markov_blanket_png_grouped_roles_with_dict_members(tmp_path: Pat
         )
     )
     out = tmp_path / "out.png"
-    result = png_export.render_markov_blanket_png(blanket_json, out)
+    result = png.render_markov_blanket_png(blanket_json, out)
     assert result is True
     assert out.is_file()
 
@@ -353,16 +356,14 @@ def test_render_markov_blanket_png_partition_lists(tmp_path: Path) -> None:
         )
     )
     out = tmp_path / "out.png"
-    result = png_export.render_markov_blanket_png(blanket_json, out)
+    result = png.render_markov_blanket_png(blanket_json, out)
     assert result is True
 
 
 def test_render_markov_blanket_png_exception_path(monkeypatch, tmp_path: Path) -> None:
     """Force matplotlib.pyplot.subplots to raise to trigger line 2226-2228."""
     blanket_json = tmp_path / "blanket.json"
-    blanket_json.write_text(
-        json.dumps({"roles": {"n1": "internal"}, "edges": []})
-    )
+    blanket_json.write_text(json.dumps({"roles": {"n1": "internal"}, "edges": []}))
     out = tmp_path / "out.png"
 
     import matplotlib.pyplot as plt
@@ -371,13 +372,13 @@ def test_render_markov_blanket_png_exception_path(monkeypatch, tmp_path: Path) -
         raise RuntimeError("subplots failure")
 
     monkeypatch.setattr(plt, "subplots", boom)
-    result = png_export.render_markov_blanket_png(blanket_json, out)
+    result = png.render_markov_blanket_png(blanket_json, out)
     assert result is False
 
 
 def test_render_markov_blanket_png_large_downsample(tmp_path: Path) -> None:
     """Build a blanket > max_render_nodes (default 400) to exercise downsampling lines 2105-2129."""
-    cfg = png_export.RenderConfig()
+    cfg = png.RenderConfig()
     n_nodes = cfg.max_render_nodes + 50
 
     roles_flat: dict[str, str] = {}
@@ -393,7 +394,7 @@ def test_render_markov_blanket_png_large_downsample(tmp_path: Path) -> None:
     blanket_json = tmp_path / "blanket.json"
     blanket_json.write_text(json.dumps({"roles": roles_flat, "edges": edges}))
     out = tmp_path / "out.png"
-    result = png_export.render_markov_blanket_png(blanket_json, out, cfg=cfg)
+    result = png.render_markov_blanket_png(blanket_json, out, cfg=cfg)
     # Either succeeds or falls through; we want the path to execute.
     # The function returns True on success.
     assert result is True or result is False  # don't fail; coverage matters
@@ -411,7 +412,7 @@ def test_render_markov_blanket_png_dict_edge_specs(tmp_path: Path) -> None:
         )
     )
     out = tmp_path / "out.png"
-    result = png_export.render_markov_blanket_png(blanket_json, out)
+    result = png.render_markov_blanket_png(blanket_json, out)
     assert result is True
 
 
@@ -428,7 +429,7 @@ def test_render_markov_blanket_png_unknown_edge_spec(tmp_path: Path) -> None:
     )
     out = tmp_path / "out.png"
     # Should not crash; the unknown edge specs are skipped
-    result = png_export.render_markov_blanket_png(blanket_json, out)
+    result = png.render_markov_blanket_png(blanket_json, out)
     assert result is True
 
 
@@ -436,7 +437,7 @@ def test_render_markov_blanket_png_zero_nodes_returns_false(tmp_path: Path) -> N
     blanket_json = tmp_path / "blanket.json"
     blanket_json.write_text(json.dumps({"roles": {}, "edges": []}))
     out = tmp_path / "out.png"
-    result = png_export.render_markov_blanket_png(blanket_json, out)
+    result = png.render_markov_blanket_png(blanket_json, out)
     assert result is False
 
 
@@ -448,20 +449,16 @@ def test_render_markov_blanket_png_zero_nodes_returns_false(tmp_path: Path) -> N
 def test_render_summary_cover_png_no_matplotlib(monkeypatch, tmp_path: Path) -> None:
     out = tmp_path / "out.png"
     _force_matplotlib_unavailable(monkeypatch)
-    result = png_export.render_summary_cover_png(tmp_path, out)
+    result = png.render_summary_cover_png(tmp_path, out)
     assert result is False
 
 
 def test_render_summary_cover_png_with_list_mappings(tmp_path: Path) -> None:
     """semantic_mappings.json as list → line 2284-2285."""
-    (tmp_path / "semantic_mappings.json").write_text(
-        json.dumps([{"id": "m1"}, {"id": "m2"}])
-    )
-    (tmp_path / "program_graph.json").write_text(
-        json.dumps({"nodes": [{"id": "n1"}], "edges": []})
-    )
+    (tmp_path / "semantic_mappings.json").write_text(json.dumps([{"id": "m1"}, {"id": "m2"}]))
+    (tmp_path / "program_graph.json").write_text(json.dumps({"nodes": [{"id": "n1"}], "edges": []}))
     out = tmp_path / "cover.png"
-    result = png_export.render_summary_cover_png(tmp_path, out)
+    result = png.render_summary_cover_png(tmp_path, out)
     assert result is True
 
 
@@ -471,7 +468,7 @@ def test_render_summary_cover_png_with_markov_blanket_metric(tmp_path: Path) -> 
         json.dumps({"markov_blanket": {"internal": 5, "sensory": 2, "active": 1}})
     )
     out = tmp_path / "cover.png"
-    result = png_export.render_summary_cover_png(tmp_path, out)
+    result = png.render_summary_cover_png(tmp_path, out)
     assert result is True
 
 
@@ -485,7 +482,7 @@ def test_render_summary_cover_png_handles_exception(monkeypatch, tmp_path: Path)
         raise RuntimeError("figure failure")
 
     monkeypatch.setattr(plt, "figure", boom)
-    result = png_export.render_summary_cover_png(tmp_path, out)
+    result = png.render_summary_cover_png(tmp_path, out)
     assert result is False
 
 
@@ -499,14 +496,14 @@ def test_render_gnn_markdown_png_no_matplotlib(monkeypatch, tmp_path: Path) -> N
     md.write_text("## Section\nbody\n")
     out = tmp_path / "model.png"
     _force_matplotlib_unavailable(monkeypatch)
-    result = png_export.render_gnn_markdown_png(md, out)
+    result = png.render_gnn_markdown_png(md, out)
     assert result == []
 
 
 def test_render_gnn_markdown_png_missing_file(tmp_path: Path) -> None:
     md = tmp_path / "missing.md"
     out = tmp_path / "model.png"
-    assert png_export.render_gnn_markdown_png(md, out) == []
+    assert png.render_gnn_markdown_png(md, out) == []
 
 
 def test_render_gnn_markdown_png_unreadable_file(monkeypatch, tmp_path: Path) -> None:
@@ -523,7 +520,7 @@ def test_render_gnn_markdown_png_unreadable_file(monkeypatch, tmp_path: Path) ->
         return real_read(self, *args, **kwargs)
 
     monkeypatch.setattr(Path, "read_text", fake_read)
-    result = png_export.render_gnn_markdown_png(md, out)
+    result = png.render_gnn_markdown_png(md, out)
     assert result == []
 
 
@@ -532,7 +529,7 @@ def test_render_gnn_markdown_png_empty_file(tmp_path: Path) -> None:
     md = tmp_path / "empty.md"
     md.write_text("")
     out = tmp_path / "out.png"
-    assert png_export.render_gnn_markdown_png(md, out) == []
+    assert png.render_gnn_markdown_png(md, out) == []
 
 
 def test_render_gnn_markdown_png_with_source_label(tmp_path: Path) -> None:
@@ -540,7 +537,7 @@ def test_render_gnn_markdown_png_with_source_label(tmp_path: Path) -> None:
     md = tmp_path / "model.md"
     md.write_text("## A\nbody A\n## B\nbody B\n")
     out = tmp_path / "out.png"
-    pages = png_export.render_gnn_markdown_png(md, out, source_label="run42")
+    pages = png.render_gnn_markdown_png(md, out, source_label="run42")
     assert len(pages) >= 1
 
 
@@ -550,7 +547,7 @@ def test_render_gnn_markdown_png_multipage(tmp_path: Path) -> None:
     md = tmp_path / "long.md"
     md.write_text(sections)
     out = tmp_path / "out.png"
-    pages = png_export.render_gnn_markdown_png(md, out, max_sections_per_page=3)
+    pages = png.render_gnn_markdown_png(md, out, max_sections_per_page=3)
     assert len(pages) >= 2
 
 
@@ -561,19 +558,19 @@ def test_render_gnn_markdown_png_multipage(tmp_path: Path) -> None:
 
 def test_load_state_space_from_json_missing(tmp_path: Path) -> None:
     p = tmp_path / "missing.json"
-    assert png_export._load_state_space_from_json(p) is None
+    assert png._load_state_space_from_json(p) is None
 
 
 def test_load_state_space_from_json_bad_json(tmp_path: Path) -> None:
     p = tmp_path / "bad.json"
     p.write_text("{not json")
-    assert png_export._load_state_space_from_json(p) is None
+    assert png._load_state_space_from_json(p) is None
 
 
 def test_load_state_space_from_json_non_dict(tmp_path: Path) -> None:
     p = tmp_path / "list.json"
     p.write_text("[1, 2, 3]")
-    assert png_export._load_state_space_from_json(p) is None
+    assert png._load_state_space_from_json(p) is None
 
 
 def test_load_state_space_from_json_valid(tmp_path: Path) -> None:
@@ -589,7 +586,7 @@ def test_load_state_space_from_json_valid(tmp_path: Path) -> None:
             }
         )
     )
-    result = png_export._load_state_space_from_json(p)
+    result = png._load_state_space_from_json(p)
     assert result is not None
     assert result.model_id == "ss42"
 
@@ -600,27 +597,25 @@ def test_load_state_space_from_json_valid(tmp_path: Path) -> None:
 
 
 def test_load_process_model_from_json_missing(tmp_path: Path) -> None:
-    assert png_export._load_process_model_from_json(tmp_path / "missing.json") is None
+    assert png._load_process_model_from_json(tmp_path / "missing.json") is None
 
 
 def test_load_process_model_from_json_bad_json(tmp_path: Path) -> None:
     p = tmp_path / "bad.json"
     p.write_text("not json {")
-    assert png_export._load_process_model_from_json(p) is None
+    assert png._load_process_model_from_json(p) is None
 
 
 def test_load_process_model_from_json_non_dict(tmp_path: Path) -> None:
     p = tmp_path / "list.json"
     p.write_text("[1, 2]")
-    assert png_export._load_process_model_from_json(p) is None
+    assert png._load_process_model_from_json(p) is None
 
 
 def test_load_process_model_from_json_valid(tmp_path: Path) -> None:
     p = tmp_path / "pm.json"
-    p.write_text(
-        json.dumps({"process_id": "pm1", "stages": [{"id": "s1"}], "policies": []})
-    )
-    result = png_export._load_process_model_from_json(p)
+    p.write_text(json.dumps({"process_id": "pm1", "stages": [{"id": "s1"}], "policies": []}))
+    result = png._load_process_model_from_json(p)
     assert result is not None
     assert result.process_id == "pm1"
 
@@ -635,54 +630,54 @@ def test_load_process_model_from_json_valid(tmp_path: Path) -> None:
 
 
 def test_render_graphviz_dot_to_png_no_dot_binary(monkeypatch, tmp_path: Path) -> None:
-    monkeypatch.setattr(png_export.shutil, "which", lambda b: None)
+    monkeypatch.setattr(png.shutil, "which", lambda b: None)
     dot = tmp_path / "x.dot"
     dot.write_text("digraph G { a -> b; }")
     out = tmp_path / "x.png"
-    assert png_export.render_graphviz_dot_to_png(dot, out) is False
+    assert png.render_graphviz_dot_to_png(dot, out) is False
 
 
 def test_render_graphviz_dot_to_png_missing_dot_file(monkeypatch, tmp_path: Path) -> None:
     """dot binary 'available' but file missing → line 1498."""
-    monkeypatch.setattr(png_export.shutil, "which", lambda b: "/usr/bin/dot" if b == "dot" else None)
+    monkeypatch.setattr(png.shutil, "which", lambda b: "/usr/bin/dot" if b == "dot" else None)
     dot = tmp_path / "missing.dot"
     out = tmp_path / "x.png"
-    assert png_export.render_graphviz_dot_to_png(dot, out) is False
+    assert png.render_graphviz_dot_to_png(dot, out) is False
 
 
 def test_render_graphviz_dot_to_png_subprocess_fails(monkeypatch, tmp_path: Path) -> None:
     """dot binary fails (CalledProcessError) → line 1504-1506."""
     import subprocess
 
-    monkeypatch.setattr(png_export.shutil, "which", lambda b: "/usr/bin/dot" if b == "dot" else None)
+    monkeypatch.setattr(png.shutil, "which", lambda b: "/usr/bin/dot" if b == "dot" else None)
 
     def boom(*args, **kwargs):
         raise subprocess.CalledProcessError(1, args[0] if args else ["dot"])
 
-    monkeypatch.setattr(png_export.subprocess, "run", boom)
+    monkeypatch.setattr(png.subprocess, "run", boom)
     dot = tmp_path / "x.dot"
     dot.write_text("digraph G {}")
     out = tmp_path / "x.png"
-    assert png_export.render_graphviz_dot_to_png(dot, out) is False
+    assert png.render_graphviz_dot_to_png(dot, out) is False
 
 
 def test_render_all_dot_in_run_no_dot_binary(monkeypatch, tmp_path: Path) -> None:
-    monkeypatch.setattr(png_export.shutil, "which", lambda b: None)
+    monkeypatch.setattr(png.shutil, "which", lambda b: None)
     (tmp_path / "x.dot").write_text("digraph G {}")
-    result = png_export.render_all_dot_in_run(tmp_path)
+    result = png.render_all_dot_in_run(tmp_path)
     assert result == []
 
 
 def test_render_all_dot_in_run_handles_exception(monkeypatch, tmp_path: Path) -> None:
     """render_graphviz_dot_to_png raising → line 1519-1520."""
-    monkeypatch.setattr(png_export.shutil, "which", lambda b: "/usr/bin/dot" if b == "dot" else None)
+    monkeypatch.setattr(png.shutil, "which", lambda b: "/usr/bin/dot" if b == "dot" else None)
 
     def boom(*args, **kwargs):
         raise RuntimeError("simulated render failure")
 
-    monkeypatch.setattr(png_export, "render_graphviz_dot_to_png", boom)
+    monkeypatch.setattr(png_dot, "render_graphviz_dot_to_png", boom)
     (tmp_path / "x.dot").write_text("digraph G {}")
-    result = png_export.render_all_dot_in_run(tmp_path)
+    result = png.render_all_dot_in_run(tmp_path)
     assert result == []
 
 
@@ -694,7 +689,7 @@ def test_render_all_dot_in_run_handles_exception(monkeypatch, tmp_path: Path) ->
 def test_render_svg_file_to_png_missing_file(tmp_path: Path) -> None:
     svg = tmp_path / "missing.svg"
     out = tmp_path / "out.png"
-    assert png_export.render_svg_file_to_png(svg, out) is False
+    assert png.render_svg_file_to_png(svg, out) is False
 
 
 def test_render_svg_file_to_png_no_backend(monkeypatch, tmp_path: Path) -> None:
@@ -712,29 +707,29 @@ def test_render_svg_file_to_png_no_backend(monkeypatch, tmp_path: Path) -> None:
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
-    monkeypatch.setattr(png_export.shutil, "which", lambda b: None)
-    assert png_export.render_svg_file_to_png(svg, out) is False
+    monkeypatch.setattr(png.shutil, "which", lambda b: None)
+    assert png.render_svg_file_to_png(svg, out) is False
 
 
-def test_render_svg_placeholder_png_no_matplotlib(monkeypatch, tmp_path: Path) -> None:
+def testrender_svg_degraded_png_no_matplotlib(monkeypatch, tmp_path: Path) -> None:
     svg = tmp_path / "x.svg"
     svg.write_text("<svg/>")
     out = tmp_path / "out.png"
     _force_matplotlib_unavailable(monkeypatch)
-    assert png_export._render_svg_placeholder_png(svg, out) is False
+    assert png.render_svg_degraded_png(svg, out) is False
 
 
-def test_render_svg_placeholder_png_succeeds(tmp_path: Path) -> None:
+def testrender_svg_degraded_png_succeeds(tmp_path: Path) -> None:
     """Hits the full matplotlib placeholder render path (lines 1441-1483)."""
     svg = tmp_path / "diagram.svg"
     svg.write_text('<svg xmlns="http://www.w3.org/2000/svg" />')
     out = tmp_path / "diagram.png"
-    result = png_export._render_svg_placeholder_png(svg, out)
+    result = png.render_svg_degraded_png(svg, out)
     assert result is True
     assert out.is_file()
 
 
-def test_render_svg_placeholder_png_size_oserror(monkeypatch, tmp_path: Path) -> None:
+def testrender_svg_degraded_png_size_oserror(monkeypatch, tmp_path: Path) -> None:
     """svg_file.stat() raises OSError → size = 0 (covers OSError branch)."""
     svg = tmp_path / "x.svg"
     svg.write_text("<svg/>")
@@ -748,7 +743,7 @@ def test_render_svg_placeholder_png_size_oserror(monkeypatch, tmp_path: Path) ->
         return real_stat(self, *args, **kwargs)
 
     monkeypatch.setattr(Path, "stat", fake_stat)
-    result = png_export._render_svg_placeholder_png(svg, out)
+    result = png.render_svg_degraded_png(svg, out)
     assert result is True
 
 
@@ -765,25 +760,25 @@ def test_render_all_svg_in_run_uses_placeholder(monkeypatch, tmp_path: Path) -> 
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
-    monkeypatch.setattr(png_export.shutil, "which", lambda b: None)
-    written = png_export.render_all_svg_in_run(tmp_path)
+    monkeypatch.setattr(png.shutil, "which", lambda b: None)
+    written = png.render_all_svg_in_run(tmp_path)
     # Should have written placeholder PNG
     assert len(written) == 1
 
 
 def test_render_all_svg_in_run_handles_exception(monkeypatch, tmp_path: Path) -> None:
     """render_svg_file_to_png raising → except branch."""
-    pe = _live_png_export()
+    _live_png()
     svg = tmp_path / "x.svg"
     svg.write_text("<svg/>")
 
     def boom(*args, **kwargs):
         raise RuntimeError("svg render boom")
 
-    monkeypatch.setattr(pe, "render_svg_file_to_png", boom)
-    monkeypatch.setattr(pe, "_render_svg_placeholder_png", boom)
+    monkeypatch.setattr(png_svg, "render_svg_file_to_png", boom)
+    monkeypatch.setattr(png_svg, "render_svg_degraded_png", boom)
 
-    result = pe.render_all_svg_in_run(tmp_path)
+    result = png_svg.render_all_svg_in_run(tmp_path)
     assert result == []
 
 
@@ -794,17 +789,17 @@ def test_render_all_svg_in_run_handles_exception(monkeypatch, tmp_path: Path) ->
 
 def test_render_mermaid_file_to_png_no_mmdc_no_native_fallback(monkeypatch, tmp_path: Path) -> None:
     """Disable mmdc + disable native fallback → return False (line 551)."""
-    monkeypatch.setattr(png_export.shutil, "which", lambda b: None)
+    monkeypatch.setattr(png.shutil, "which", lambda b: None)
     mmd = tmp_path / "x.mmd"
     mmd.write_text("graph TD\nA --> B\n")
     out = tmp_path / "out.png"
-    result = png_export.render_mermaid_file_to_png(mmd, out, allow_native_fallback=False)
+    result = png.render_mermaid_file_to_png(mmd, out, allow_native_renderer=False)
     assert result is False
 
 
 def test_render_mermaid_file_to_png_unreadable(monkeypatch, tmp_path: Path) -> None:
     """No mmdc, native fallback enabled, but file read raises OSError → 555-557."""
-    monkeypatch.setattr(png_export.shutil, "which", lambda b: None)
+    monkeypatch.setattr(png.shutil, "which", lambda b: None)
     mmd = tmp_path / "x.mmd"
     mmd.write_text("graph TD\nA --> B\n")
     out = tmp_path / "out.png"
@@ -817,7 +812,7 @@ def test_render_mermaid_file_to_png_unreadable(monkeypatch, tmp_path: Path) -> N
         return real_read(self, *args, **kwargs)
 
     monkeypatch.setattr(Path, "read_text", fake_read)
-    result = png_export.render_mermaid_file_to_png(mmd, out)
+    result = png.render_mermaid_file_to_png(mmd, out)
     assert result is False
 
 
@@ -826,7 +821,7 @@ def test_render_mermaid_file_to_png_mmdc_succeeds(monkeypatch, tmp_path: Path) -
 
     Hits lines 538-541 (success path).
     """
-    monkeypatch.setattr(png_export.shutil, "which", lambda b: "/usr/bin/mmdc" if b == "mmdc" else None)
+    monkeypatch.setattr(png.shutil, "which", lambda b: "/usr/bin/mmdc" if b == "mmdc" else None)
     mmd = tmp_path / "x.mmd"
     mmd.write_text("graph TD\nA --> B\n")
     out = tmp_path / "out.png"
@@ -836,8 +831,8 @@ def test_render_mermaid_file_to_png_mmdc_succeeds(monkeypatch, tmp_path: Path) -
         Path(cmd[cmd.index("-o") + 1]).write_bytes(b"fake-png-bytes")
         return SimpleNamespace(stderr="some warning", stdout="", returncode=0)
 
-    monkeypatch.setattr(png_export.subprocess, "run", fake_run)
-    result = png_export.render_mermaid_file_to_png(mmd, out)
+    monkeypatch.setattr(png.subprocess, "run", fake_run)
+    result = png.render_mermaid_file_to_png(mmd, out)
     assert result is True
 
 
@@ -845,7 +840,7 @@ def test_render_mermaid_file_to_png_mmdc_fails_native_fallback(monkeypatch, tmp_
     """mmdc raises CalledProcessError, native fallback writes PNG."""
     import subprocess as sp
 
-    monkeypatch.setattr(png_export.shutil, "which", lambda b: "/usr/bin/mmdc" if b == "mmdc" else None)
+    monkeypatch.setattr(png.shutil, "which", lambda b: "/usr/bin/mmdc" if b == "mmdc" else None)
     mmd = tmp_path / "x.mmd"
     mmd.write_text("graph TD\nA --> B\n")
     out = tmp_path / "out.png"
@@ -853,8 +848,8 @@ def test_render_mermaid_file_to_png_mmdc_fails_native_fallback(monkeypatch, tmp_
     def fake_run(cmd, *args, **kwargs):
         raise sp.CalledProcessError(1, cmd, stderr="mmdc oh no")
 
-    monkeypatch.setattr(png_export.subprocess, "run", fake_run)
-    result = png_export.render_mermaid_file_to_png(mmd, out)
+    monkeypatch.setattr(png.subprocess, "run", fake_run)
+    result = png.render_mermaid_file_to_png(mmd, out)
     # Native fallback should produce a PNG
     assert result is True
 
@@ -867,14 +862,14 @@ def test_render_mermaid_file_to_png_mmdc_fails_native_fallback(monkeypatch, tmp_
 def test_parse_mermaid_flowchart_pipe_label_scrubbing() -> None:
     """Lines 749-751: leftover |label| segment is scrubbed from the line."""
     text = "graph TD\nA[Start] --> B[End] | extra label here |\n"
-    nodes, edges, _clusters = png_export._parse_mermaid_flowchart(text)
+    nodes, edges, _clusters = png._parse_mermaid_flowchart(text)
     assert ("A", "Start") in nodes or any(n[0] == "A" for n in nodes)
 
 
 def test_parse_mermaid_flowchart_reserved_id_skip() -> None:
     """Line 758-759: reserved IDs (e.g. 'TD' from 'graph TD') are skipped."""
     text = "graph TD\nA --> B\n"
-    nodes, edges, _clusters = png_export._parse_mermaid_flowchart(text)
+    nodes, edges, _clusters = png._parse_mermaid_flowchart(text)
     node_ids = {n[0] for n in nodes}
     assert "TD" not in node_ids
 
@@ -883,7 +878,7 @@ def test_parse_mermaid_flowchart_node_no_label_setdefault() -> None:
     """Line 772: setdefault when nm has shape but no real label."""
     # A node like A[A] where label == id falls into setdefault branch
     text = "flowchart LR\nA[A] --> B[B]\n"
-    nodes, _edges, _ = png_export._parse_mermaid_flowchart(text)
+    nodes, _edges, _ = png._parse_mermaid_flowchart(text)
     node_ids = {n[0] for n in nodes}
     assert "A" in node_ids
     assert "B" in node_ids
@@ -899,7 +894,7 @@ class Foo {
 class Bar
 Foo <|-- Bar
 """
-    nodes, edges = png_export._parse_mermaid_class_diagram(text)
+    nodes, edges = png._parse_mermaid_class_diagram(text)
     node_ids = {n[0] for n in nodes}
     assert "Foo" in node_ids
     assert "Bar" in node_ids
@@ -918,7 +913,7 @@ def test_parse_mermaid_state_diagram_empty_line_skip() -> None:
     A --> B: trigger
     A: Active state
 """
-    nodes, edges = png_export._parse_mermaid_state_diagram(text)
+    nodes, edges = png._parse_mermaid_state_diagram(text)
     node_ids = {n[0] for n in nodes}
     assert "A" in node_ids
     assert "B" in node_ids
@@ -932,34 +927,34 @@ def test_parse_mermaid_state_diagram_empty_source_skip() -> None:
     s0: Idle state
     s0 --> s1: start
 """
-    nodes, edges = png_export._parse_mermaid_state_diagram(text)
+    nodes, edges = png._parse_mermaid_state_diagram(text)
     aliases = dict(nodes)
     assert aliases["s0"] == "Idle state"
 
 
 def test_detect_mermaid_kind_er_diagram() -> None:
     """Line 890: 'erDiagram' → 'er' kind."""
-    assert png_export._detect_mermaid_kind("erDiagram\nCUSTOMER ||--o{ ORDER : places\n") == "er"
+    assert png._detect_mermaid_kind("erDiagram\nCUSTOMER ||--o{ ORDER : places\n") == "er"
 
 
 def test_detect_mermaid_kind_class() -> None:
-    assert png_export._detect_mermaid_kind("classDiagram\nclass A\n") == "class"
+    assert png._detect_mermaid_kind("classDiagram\nclass A\n") == "class"
 
 
 def test_detect_mermaid_kind_state() -> None:
-    assert png_export._detect_mermaid_kind("stateDiagram\n[*] --> A\n") == "state"
+    assert png._detect_mermaid_kind("stateDiagram\n[*] --> A\n") == "state"
 
 
 def test_detect_mermaid_kind_sequence() -> None:
-    assert png_export._detect_mermaid_kind("sequenceDiagram\nA->>B: hi\n") == "sequence"
+    assert png._detect_mermaid_kind("sequenceDiagram\nA->>B: hi\n") == "sequence"
 
 
 def test_detect_mermaid_kind_gantt() -> None:
-    assert png_export._detect_mermaid_kind("gantt\ntitle x\n") == "gantt"
+    assert png._detect_mermaid_kind("gantt\ntitle x\n") == "gantt"
 
 
 def test_detect_mermaid_kind_default_graph() -> None:
-    assert png_export._detect_mermaid_kind("graph TD\nA --> B\n") == "graph"
+    assert png._detect_mermaid_kind("graph TD\nA --> B\n") == "graph"
 
 
 # ---------------------------------------------------------------------------
@@ -971,7 +966,7 @@ def test_render_mermaid_text_to_png_empty_sequence(tmp_path: Path) -> None:
     """Sequence kind with no participants → return False (line 985)."""
     text = "sequenceDiagram\n"
     out = tmp_path / "seq.png"
-    result = png_export.render_mermaid_text_to_png(text, out)
+    result = png.render_mermaid_text_to_png(text, out)
     assert result is False
 
 
@@ -979,7 +974,7 @@ def test_render_mermaid_text_to_png_empty_gantt(tmp_path: Path) -> None:
     """Gantt kind with no tasks → return False (line 993)."""
     text = "gantt\ntitle Empty\n"
     out = tmp_path / "gantt.png"
-    result = png_export.render_mermaid_text_to_png(text, out)
+    result = png.render_mermaid_text_to_png(text, out)
     assert result is False
 
 
@@ -993,7 +988,7 @@ def test_render_mermaid_text_to_png_kamada_fallback(monkeypatch, tmp_path: Path)
     monkeypatch.setattr(nx, "kamada_kawai_layout", boom)
     out = tmp_path / "out.png"
     text = "graph TD\nA --> B\nA --> C\n"
-    result = png_export.render_mermaid_text_to_png(text, out)
+    result = png.render_mermaid_text_to_png(text, out)
     assert result is True
 
 
@@ -1001,28 +996,30 @@ def test_render_mermaid_text_to_png_class_diagram(tmp_path: Path) -> None:
     """Drives the class diagram kind through the full render path."""
     text = "classDiagram\nclass A\nclass B\nA <|-- B\n"
     out = tmp_path / "class.png"
-    result = png_export.render_mermaid_text_to_png(text, out)
+    result = png.render_mermaid_text_to_png(text, out)
     assert result is True
 
 
 def test_render_mermaid_text_to_png_state_diagram(tmp_path: Path) -> None:
     text = "stateDiagram\n[*] --> A\nA --> B: go\n"
     out = tmp_path / "state.png"
-    result = png_export.render_mermaid_text_to_png(text, out)
+    result = png.render_mermaid_text_to_png(text, out)
     assert result is True
 
 
 def test_render_mermaid_text_to_png_sequence(tmp_path: Path) -> None:
     """Drives _render_sequence_png with messages."""
-    text = "sequenceDiagram\nparticipant A\nparticipant B\nA->>B: hello\nB-->>A: world\nA->>A: self\n"
+    text = (
+        "sequenceDiagram\nparticipant A\nparticipant B\nA->>B: hello\nB-->>A: world\nA->>A: self\n"
+    )
     out = tmp_path / "seq.png"
-    result = png_export.render_mermaid_text_to_png(text, out)
+    result = png.render_mermaid_text_to_png(text, out)
     assert result is True
 
 
 def test_render_mermaid_text_to_png_sequence_with_downsample(tmp_path: Path) -> None:
     """Many participants → downsample by activity (lines 1158-1165)."""
-    cfg = png_export.RenderConfig(max_sequence_participants=3)
+    cfg = png.RenderConfig(max_sequence_participants=3)
     n = 6
     lines = ["sequenceDiagram"]
     for i in range(n):
@@ -1034,19 +1031,19 @@ def test_render_mermaid_text_to_png_sequence_with_downsample(tmp_path: Path) -> 
     lines.append("P4->>P5: m4")
     text = "\n".join(lines) + "\n"
     out = tmp_path / "seq2.png"
-    result = png_export.render_mermaid_text_to_png(text, out, cfg=cfg)
+    result = png.render_mermaid_text_to_png(text, out, cfg=cfg)
     assert result is True
 
 
 def test_render_mermaid_text_to_png_sequence_no_messages_downsample(tmp_path: Path) -> None:
     """Many participants but NO messages → falls into the elif at line 1166-1167."""
-    cfg = png_export.RenderConfig(max_sequence_participants=2)
+    cfg = png.RenderConfig(max_sequence_participants=2)
     lines = ["sequenceDiagram"]
     for i in range(5):
         lines.append(f"participant P{i}")
     text = "\n".join(lines) + "\n"
     out = tmp_path / "seq3.png"
-    result = png_export.render_mermaid_text_to_png(text, out, cfg=cfg)
+    result = png.render_mermaid_text_to_png(text, out, cfg=cfg)
     # No messages but participants exist; render should succeed
     assert result is True
 
@@ -1058,7 +1055,7 @@ def test_render_mermaid_text_to_png_sequence_too_many_messages(tmp_path: Path) -
         lines.append(f"A->>B: msg_{i}")
     text = "\n".join(lines) + "\n"
     out = tmp_path / "seq4.png"
-    result = png_export.render_mermaid_text_to_png(text, out)
+    result = png.render_mermaid_text_to_png(text, out)
     assert result is True
 
 
@@ -1073,7 +1070,7 @@ section Phase2
 Task C :c1, 5, 1
 """
     out = tmp_path / "gantt.png"
-    result = png_export.render_mermaid_text_to_png(text, out)
+    result = png.render_mermaid_text_to_png(text, out)
     assert result is True
 
 
@@ -1097,28 +1094,25 @@ def test_render_program_graph_png_kamada_fallback(monkeypatch, tmp_path: Path) -
             {
                 "nodes": [{"id": f"n{i}", "kind": "function"} for i in range(20)],
                 "edges": [
-                    {"source": f"n{i}", "target": f"n{i + 1}", "kind": "calls"}
-                    for i in range(19)
+                    {"source": f"n{i}", "target": f"n{i + 1}", "kind": "calls"} for i in range(19)
                 ],
             }
         )
     )
     out = tmp_path / "out.png"
-    result = png_export.render_program_graph_png(pg_json, out)
+    result = png.render_program_graph_png(pg_json, out)
     assert result is True
 
 
 def test_render_program_graph_png_downsamples(tmp_path: Path) -> None:
     """Build a program graph > max_render_nodes → downsample, hit line 482."""
-    cfg = png_export.RenderConfig(max_render_nodes=20, max_render_edges=30)
+    cfg = png.RenderConfig(max_render_nodes=20, max_render_edges=30)
     nodes = [{"id": f"n{i}", "kind": "function"} for i in range(40)]
-    edges = [
-        {"source": f"n{i}", "target": f"n{(i + 1) % 40}", "kind": "calls"} for i in range(40)
-    ]
+    edges = [{"source": f"n{i}", "target": f"n{(i + 1) % 40}", "kind": "calls"} for i in range(40)]
     pg_json = tmp_path / "program_graph.json"
     pg_json.write_text(json.dumps({"nodes": nodes, "edges": edges}))
     out = tmp_path / "out.png"
-    result = png_export.render_program_graph_png(pg_json, out, cfg=cfg)
+    result = png.render_program_graph_png(pg_json, out, cfg=cfg)
     assert result is True
 
 
@@ -1126,14 +1120,14 @@ def test_render_program_graph_png_invalid_json(tmp_path: Path) -> None:
     pg_json = tmp_path / "pg.json"
     pg_json.write_text("not json {")
     out = tmp_path / "out.png"
-    assert png_export.render_program_graph_png(pg_json, out) is False
+    assert png.render_program_graph_png(pg_json, out) is False
 
 
 def test_render_program_graph_png_empty(tmp_path: Path) -> None:
     pg_json = tmp_path / "pg.json"
     pg_json.write_text(json.dumps({"nodes": [], "edges": []}))
     out = tmp_path / "out.png"
-    assert png_export.render_program_graph_png(pg_json, out) is False
+    assert png.render_program_graph_png(pg_json, out) is False
 
 
 # ---------------------------------------------------------------------------
@@ -1143,7 +1137,7 @@ def test_render_program_graph_png_empty(tmp_path: Path) -> None:
 
 def test_render_all_pngs_minimal_run_dir(tmp_path: Path) -> None:
     """Empty run directory → orchestrator returns dict with empty lists."""
-    result = png_export.render_all_pngs(tmp_path)
+    result = png.render_all_pngs(tmp_path)
     assert isinstance(result, dict)
     assert all(isinstance(v, list) for v in result.values())
 
@@ -1159,128 +1153,134 @@ def test_render_all_pngs_with_program_graph(tmp_path: Path) -> None:
             }
         )
     )
-    result = png_export.render_all_pngs(tmp_path)
+    result = png.render_all_pngs(tmp_path)
     assert len(result["program_graph"]) >= 1
 
 
 def test_render_all_pngs_program_graph_exception(monkeypatch, tmp_path: Path) -> None:
     """render_program_graph_png raises → except at 2704-2705."""
-    pe = _live_png_export()
+    _live_png()
     pg = tmp_path / "program_graph.json"
     pg.write_text(json.dumps({"nodes": [{"id": "n1"}], "edges": []}))
 
     def boom(*args, **kwargs):
         raise RuntimeError("simulated pg failure")
 
-    monkeypatch.setattr(pe, "render_program_graph_png", boom)
-    result = pe.render_all_pngs(tmp_path)
+    monkeypatch.setattr(png_orchestrator, "render_program_graph_png", boom)
+    result = png.render_all_pngs(tmp_path)
     assert result["program_graph"] == []
 
 
 def test_render_all_pngs_mermaid_exception(monkeypatch, tmp_path: Path) -> None:
+    (tmp_path / "x.mmd").write_text("graph TD\nA-->B\n")
+
     def boom(*args, **kwargs):
         raise RuntimeError("mermaid boom")
 
-    monkeypatch.setattr(png_export, "render_all_mermaid_in_run", boom)
-    result = png_export.render_all_pngs(tmp_path)
+    monkeypatch.setattr(png_orchestrator, "render_all_mermaid_in_run", boom)
+    result = png.render_all_pngs(tmp_path)
     assert result["mermaid"] == []
 
 
 def test_render_all_pngs_svg_exception(monkeypatch, tmp_path: Path) -> None:
+    (tmp_path / "x.svg").write_text("<svg/>")
+
     def boom(*args, **kwargs):
         raise RuntimeError("svg boom")
 
-    monkeypatch.setattr(png_export, "render_all_svg_in_run", boom)
-    result = png_export.render_all_pngs(tmp_path)
+    monkeypatch.setattr(png_orchestrator, "render_all_svg_in_run", boom)
+    result = png.render_all_pngs(tmp_path)
     assert result["svg"] == []
 
 
 def test_render_all_pngs_dot_exception(monkeypatch, tmp_path: Path) -> None:
+    (tmp_path / "x.dot").write_text("digraph G {}")
+
     def boom(*args, **kwargs):
         raise RuntimeError("dot boom")
 
-    monkeypatch.setattr(png_export, "render_all_dot_in_run", boom)
-    result = png_export.render_all_pngs(tmp_path)
+    monkeypatch.setattr(png_orchestrator, "render_all_dot_in_run", boom)
+    result = png.render_all_pngs(tmp_path)
     assert result["dot"] == []
 
 
 def test_render_all_pngs_state_space_exception(monkeypatch, tmp_path: Path) -> None:
     """state_space provided + render_state_space_factor_png raises → 2728-2729."""
-    pe = _live_png_export()
+    _live_png()
     ss = SimpleNamespace(variables={"v": 1}, observations={}, actions={})
 
     def boom(*args, **kwargs):
         raise RuntimeError("ss boom")
 
-    monkeypatch.setattr(pe, "render_state_space_factor_png", boom)
-    result = pe.render_all_pngs(tmp_path, state_space=ss)
+    monkeypatch.setattr(png_orchestrator, "render_state_space_factor_png", boom)
+    result = png.render_all_pngs(tmp_path, state_space=ss)
     assert result["state_space"] == []
 
 
 def test_render_all_pngs_connections_exception(monkeypatch, tmp_path: Path) -> None:
     """state_space provided + render_connections_matrix_png raises → 2735-2736."""
-    pe = _live_png_export()
+    _live_png()
     ss = SimpleNamespace(variables={"v": 1}, observations={}, actions={})
 
     def boom(*args, **kwargs):
         raise RuntimeError("cx boom")
 
-    monkeypatch.setattr(pe, "render_connections_matrix_png", boom)
+    monkeypatch.setattr(png_orchestrator, "render_connections_matrix_png", boom)
     # state_space factor PNG can succeed; we only care about connections branch
-    result = pe.render_all_pngs(tmp_path, state_space=ss)
+    result = png.render_all_pngs(tmp_path, state_space=ss)
     assert result["connections"] == []
 
 
 def test_render_all_pngs_process_exception(monkeypatch, tmp_path: Path) -> None:
     """process_model provided + render_process_gantt_png raises → 2743-2744."""
-    pe = _live_png_export()
+    _live_png()
     pm = SimpleNamespace(stages=[SimpleNamespace(name="s1")], policies=[])
 
     def boom(*args, **kwargs):
         raise RuntimeError("proc boom")
 
-    monkeypatch.setattr(pe, "render_process_gantt_png", boom)
-    result = pe.render_all_pngs(tmp_path, process_model=pm)
+    monkeypatch.setattr(png_orchestrator, "render_process_gantt_png", boom)
+    result = png.render_all_pngs(tmp_path, process_model=pm)
     assert result["process"] == []
 
 
 def test_render_all_pngs_markov_blanket_exception(monkeypatch, tmp_path: Path) -> None:
     """markov_blanket.json present, render raises → 2763-2764."""
-    pe = _live_png_export()
+    _live_png()
     mb = tmp_path / "markov_blanket.json"
     mb.write_text(json.dumps({"roles": {"n1": "internal"}, "edges": []}))
 
     def boom(*args, **kwargs):
         raise RuntimeError("mb boom")
 
-    monkeypatch.setattr(pe, "render_markov_blanket_png", boom)
-    result = pe.render_all_pngs(tmp_path)
+    monkeypatch.setattr(png_orchestrator, "render_markov_blanket_png", boom)
+    result = png.render_all_pngs(tmp_path)
     assert result["markov_blanket"] == []
 
 
 def test_render_all_pngs_gnn_md_exception(monkeypatch, tmp_path: Path) -> None:
     """model.gnn.md present, render raises → 2786-2787."""
-    pe = _live_png_export()
+    _live_png()
     md = tmp_path / "model.gnn.md"
     md.write_text("## A\nbody\n")
 
     def boom(*args, **kwargs):
         raise RuntimeError("gnn boom")
 
-    monkeypatch.setattr(pe, "render_gnn_markdown_png", boom)
-    result = pe.render_all_pngs(tmp_path)
+    monkeypatch.setattr(png_orchestrator, "render_gnn_markdown_png", boom)
+    result = png.render_all_pngs(tmp_path)
     assert result["gnn_markdown"] == []
 
 
 def test_render_all_pngs_summary_cover_exception(monkeypatch, tmp_path: Path) -> None:
     """render_summary_cover_png raises → 2795-2796."""
-    pe = _live_png_export()
+    _live_png()
 
     def boom(*args, **kwargs):
         raise RuntimeError("cover boom")
 
-    monkeypatch.setattr(pe, "render_summary_cover_png", boom)
-    result = pe.render_all_pngs(tmp_path)
+    monkeypatch.setattr(png_orchestrator, "render_summary_cover_png", boom)
+    result = png.render_all_pngs(tmp_path)
     assert result["summary_cover"] == []
 
 
@@ -1295,26 +1295,22 @@ def test_render_all_pngs_full_state_space_and_process(tmp_path: Path) -> None:
         stages=[SimpleNamespace(name="s1", type="phase", start=0, duration=1)],
         policies=[],
     )
-    result = png_export.render_all_pngs(tmp_path, state_space=ss, process_model=pm)
+    result = png.render_all_pngs(tmp_path, state_space=ss, process_model=pm)
     assert len(result["state_space"]) >= 1 or len(result["connections"]) >= 1
 
 
 def test_render_all_pngs_auto_discovers_state_space_json(tmp_path: Path) -> None:
     """state_space auto-discovery via _discover_state_space_json + load."""
     ss = tmp_path / "state_space.json"
-    ss.write_text(
-        json.dumps({"variables": [{"name": "v1"}], "observations": [], "actions": []})
-    )
-    result = png_export.render_all_pngs(tmp_path)
+    ss.write_text(json.dumps({"variables": [{"name": "v1"}], "observations": [], "actions": []}))
+    result = png.render_all_pngs(tmp_path)
     assert "state_space" in result
 
 
 def test_render_all_pngs_auto_discovers_process_model_json(tmp_path: Path) -> None:
     pm = tmp_path / "process_model.json"
-    pm.write_text(
-        json.dumps({"process_id": "p1", "stages": [{"name": "s1"}], "policies": []})
-    )
-    result = png_export.render_all_pngs(tmp_path)
+    pm.write_text(json.dumps({"process_id": "p1", "stages": [{"name": "s1"}], "policies": []}))
+    result = png.render_all_pngs(tmp_path)
     assert "process" in result
 
 
@@ -1322,7 +1318,7 @@ def test_render_all_pngs_with_gnn_markdown(tmp_path: Path) -> None:
     """Drop model.gnn.md; orchestrator renders it."""
     md = tmp_path / "model.gnn.md"
     md.write_text("## Section A\nbody A\n## Section B\nbody B\n")
-    result = png_export.render_all_pngs(tmp_path)
+    result = png.render_all_pngs(tmp_path)
     assert len(result["gnn_markdown"]) >= 1
 
 
@@ -1336,7 +1332,7 @@ def test_render_all_pngs_with_markov_blanket(tmp_path: Path) -> None:
             }
         )
     )
-    result = png_export.render_all_pngs(tmp_path)
+    result = png.render_all_pngs(tmp_path)
     assert len(result["markov_blanket"]) >= 1
 
 
@@ -1349,25 +1345,25 @@ def test_discover_state_space_json_finds_subdir(tmp_path: Path) -> None:
     sub = tmp_path / "gnn_package"
     sub.mkdir()
     (sub / "state_space.json").write_text("{}")
-    found = png_export._discover_state_space_json(tmp_path)
+    found = png._discover_state_space_json(tmp_path)
     assert found is not None
     assert found.name == "state_space.json"
 
 
 def test_discover_state_space_json_returns_none(tmp_path: Path) -> None:
-    assert png_export._discover_state_space_json(tmp_path) is None
+    assert png._discover_state_space_json(tmp_path) is None
 
 
 def test_discover_process_model_json_finds_subdir(tmp_path: Path) -> None:
     sub = tmp_path / "gnn_package"
     sub.mkdir()
     (sub / "process_model.json").write_text("{}")
-    found = png_export._discover_process_model_json(tmp_path)
+    found = png._discover_process_model_json(tmp_path)
     assert found is not None
 
 
 def test_discover_process_model_json_returns_none(tmp_path: Path) -> None:
-    assert png_export._discover_process_model_json(tmp_path) is None
+    assert png._discover_process_model_json(tmp_path) is None
 
 
 # ---------------------------------------------------------------------------
@@ -1381,7 +1377,7 @@ def test_render_all_pngs_program_graph_in_subdir(tmp_path: Path) -> None:
     sub.mkdir()
     pg = sub / "program_graph.json"
     pg.write_text(json.dumps({"nodes": [{"id": "a", "kind": "function"}], "edges": []}))
-    result = png_export.render_all_pngs(tmp_path)
+    result = png.render_all_pngs(tmp_path)
     # Both subdir PNG and root PNG should be written
     assert len(result["program_graph"]) >= 1
 
@@ -1392,7 +1388,7 @@ def test_render_all_pngs_markov_blanket_in_subdir(tmp_path: Path) -> None:
     sub.mkdir()
     mb = sub / "markov_blanket.json"
     mb.write_text(json.dumps({"roles": {"n1": "internal"}, "edges": []}))
-    result = png_export.render_all_pngs(tmp_path)
+    result = png.render_all_pngs(tmp_path)
     assert len(result["markov_blanket"]) >= 1
 
 
@@ -1402,21 +1398,21 @@ def test_render_all_pngs_gnn_markdown_in_subdir(tmp_path: Path) -> None:
     sub.mkdir()
     md = sub / "model.gnn.md"
     md.write_text("## A\nbody A\n")
-    result = png_export.render_all_pngs(tmp_path)
+    result = png.render_all_pngs(tmp_path)
     # Both subdir + root pages should appear
     assert len(result["gnn_markdown"]) >= 2
 
 
 def test_render_markov_blanket_png_dict_edges_in_downsample(tmp_path: Path) -> None:
     """Downsample path with dict-shaped edge specs (lines 2110-2113)."""
-    cfg = png_export.RenderConfig(max_render_nodes=10)
+    cfg = png.RenderConfig(max_render_nodes=10)
     nodes = {f"ext_{i}": "external" for i in range(20)}
     nodes["int_1"] = "internal"
     edges = [{"source": "int_1", "target": f"ext_{i}"} for i in range(20)] + ["bogus"]
     blanket_json = tmp_path / "blanket.json"
     blanket_json.write_text(json.dumps({"roles": nodes, "edges": edges}))
     out = tmp_path / "out.png"
-    result = png_export.render_markov_blanket_png(blanket_json, out, cfg=cfg)
+    result = png.render_markov_blanket_png(blanket_json, out, cfg=cfg)
     assert result is True
 
 
@@ -1439,7 +1435,7 @@ def test_render_markov_blanket_png_kamada_fallback(monkeypatch, tmp_path: Path) 
         )
     )
     out = tmp_path / "out.png"
-    result = png_export.render_markov_blanket_png(blanket_json, out)
+    result = png.render_markov_blanket_png(blanket_json, out)
     assert result is True
 
 
@@ -1458,7 +1454,7 @@ def test_render_markov_blanket_png_grouped_with_int_member(tmp_path: Path) -> No
         )
     )
     out = tmp_path / "out.png"
-    result = png_export.render_markov_blanket_png(blanket_json, out)
+    result = png.render_markov_blanket_png(blanket_json, out)
     assert result is True
 
 
@@ -1470,7 +1466,7 @@ def test_render_all_pngs_uses_existing_root_program_graph_png(tmp_path: Path) ->
     pg.write_text(json.dumps({"nodes": [{"id": "n1", "kind": "function"}], "edges": []}))
     # Pre-create root PNG so the orchestrator skips the second call
     (tmp_path / "program_graph.png").write_bytes(b"existing")
-    result = png_export.render_all_pngs(tmp_path)
+    result = png.render_all_pngs(tmp_path)
     # Subdir PNG still created
     assert any("program_graph" in str(p) for p in result["program_graph"])
 
@@ -1495,7 +1491,7 @@ def test_render_svg_file_to_png_via_rsvg_convert_success(monkeypatch, tmp_path: 
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setattr(
-        png_export.shutil, "which", lambda b: "/usr/bin/rsvg-convert" if b == "rsvg-convert" else None
+        png.shutil, "which", lambda b: "/usr/bin/rsvg-convert" if b == "rsvg-convert" else None
     )
 
     def fake_run(cmd, *args, **kwargs):
@@ -1505,8 +1501,8 @@ def test_render_svg_file_to_png_via_rsvg_convert_success(monkeypatch, tmp_path: 
             out_path.write_bytes(b"fake-png")
         return SimpleNamespace(returncode=0, stdout=b"", stderr=b"")
 
-    monkeypatch.setattr(png_export.subprocess, "run", fake_run)
-    assert png_export.render_svg_file_to_png(svg, out) is True
+    monkeypatch.setattr(png.subprocess, "run", fake_run)
+    assert png.render_svg_file_to_png(svg, out) is True
 
 
 def test_render_svg_file_to_png_via_inkscape_success(monkeypatch, tmp_path: Path) -> None:
@@ -1527,7 +1523,7 @@ def test_render_svg_file_to_png_via_inkscape_success(monkeypatch, tmp_path: Path
     def fake_which(b):
         return "/usr/bin/inkscape" if b == "inkscape" else None
 
-    monkeypatch.setattr(png_export.shutil, "which", fake_which)
+    monkeypatch.setattr(png.shutil, "which", fake_which)
 
     def fake_run(cmd, *args, **kwargs):
         # inkscape uses --export-filename=...
@@ -1536,8 +1532,8 @@ def test_render_svg_file_to_png_via_inkscape_success(monkeypatch, tmp_path: Path
                 Path(arg.split("=", 1)[1]).write_bytes(b"fake-png")
         return SimpleNamespace(returncode=0)
 
-    monkeypatch.setattr(png_export.subprocess, "run", fake_run)
-    assert png_export.render_svg_file_to_png(svg, out) is True
+    monkeypatch.setattr(png.subprocess, "run", fake_run)
+    assert png.render_svg_file_to_png(svg, out) is True
 
 
 def test_render_svg_file_to_png_via_imagemagick_success(monkeypatch, tmp_path: Path) -> None:
@@ -1558,15 +1554,15 @@ def test_render_svg_file_to_png_via_imagemagick_success(monkeypatch, tmp_path: P
     def fake_which(b):
         return "/usr/bin/convert" if b == "convert" else None
 
-    monkeypatch.setattr(png_export.shutil, "which", fake_which)
+    monkeypatch.setattr(png.shutil, "which", fake_which)
 
     def fake_run(cmd, *args, **kwargs):
         # convert <input> <output>: last arg is output path
         Path(cmd[-1]).write_bytes(b"fake-png")
         return SimpleNamespace(returncode=0)
 
-    monkeypatch.setattr(png_export.subprocess, "run", fake_run)
-    assert png_export.render_svg_file_to_png(svg, out) is True
+    monkeypatch.setattr(png.subprocess, "run", fake_run)
+    assert png.render_svg_file_to_png(svg, out) is True
 
 
 def test_render_svg_file_to_png_rsvg_fails(monkeypatch, tmp_path: Path) -> None:
@@ -1586,14 +1582,14 @@ def test_render_svg_file_to_png_rsvg_fails(monkeypatch, tmp_path: Path) -> None:
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setattr(
-        png_export.shutil, "which", lambda b: "/usr/bin/rsvg-convert" if b == "rsvg-convert" else None
+        png.shutil, "which", lambda b: "/usr/bin/rsvg-convert" if b == "rsvg-convert" else None
     )
 
     def fake_run(*args, **kwargs):
         raise sp.CalledProcessError(1, args[0] if args else "rsvg-convert")
 
-    monkeypatch.setattr(png_export.subprocess, "run", fake_run)
-    assert png_export.render_svg_file_to_png(svg, out) is False
+    monkeypatch.setattr(png.subprocess, "run", fake_run)
+    assert png.render_svg_file_to_png(svg, out) is False
 
 
 def test_render_svg_file_to_png_inkscape_fails(monkeypatch, tmp_path: Path) -> None:
@@ -1613,14 +1609,14 @@ def test_render_svg_file_to_png_inkscape_fails(monkeypatch, tmp_path: Path) -> N
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setattr(
-        png_export.shutil, "which", lambda b: "/usr/bin/inkscape" if b == "inkscape" else None
+        png.shutil, "which", lambda b: "/usr/bin/inkscape" if b == "inkscape" else None
     )
 
     def fake_run(*args, **kwargs):
         raise sp.CalledProcessError(1, args[0] if args else "inkscape")
 
-    monkeypatch.setattr(png_export.subprocess, "run", fake_run)
-    assert png_export.render_svg_file_to_png(svg, out) is False
+    monkeypatch.setattr(png.subprocess, "run", fake_run)
+    assert png.render_svg_file_to_png(svg, out) is False
 
 
 def test_render_svg_file_to_png_convert_fails(monkeypatch, tmp_path: Path) -> None:
@@ -1640,14 +1636,14 @@ def test_render_svg_file_to_png_convert_fails(monkeypatch, tmp_path: Path) -> No
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setattr(
-        png_export.shutil, "which", lambda b: "/usr/bin/convert" if b == "convert" else None
+        png.shutil, "which", lambda b: "/usr/bin/convert" if b == "convert" else None
     )
 
     def fake_run(*args, **kwargs):
         raise sp.CalledProcessError(1, args[0] if args else "convert")
 
-    monkeypatch.setattr(png_export.subprocess, "run", fake_run)
-    assert png_export.render_svg_file_to_png(svg, out) is False
+    monkeypatch.setattr(png.subprocess, "run", fake_run)
+    assert png.render_svg_file_to_png(svg, out) is False
 
 
 # ---------------------------------------------------------------------------
@@ -1665,7 +1661,7 @@ def test_parse_mermaid_flowchart_subgraph_with_id(tmp_path: Path) -> None:
       C --> D
     end
 """
-    nodes, edges, clusters = png_export._parse_mermaid_flowchart(text)
+    nodes, edges, clusters = png._parse_mermaid_flowchart(text)
     assert "SG1" in clusters or "SG2" in clusters or len(clusters) >= 0
 
 
@@ -1675,7 +1671,7 @@ def test_parse_mermaid_flowchart_node_with_label_assignment(tmp_path: Path) -> N
     Foo[My Foo Node] --> Bar(Bar shape)
     Baz{Decision}
 """
-    nodes, edges, _ = png_export._parse_mermaid_flowchart(text)
+    nodes, edges, _ = png._parse_mermaid_flowchart(text)
     labels = dict(nodes)
     assert "Foo" in labels
     # The label text might be 'My Foo Node'
@@ -1684,25 +1680,26 @@ def test_parse_mermaid_flowchart_node_with_label_assignment(tmp_path: Path) -> N
 
 def test_render_all_mermaid_in_run_handles_exception(monkeypatch, tmp_path: Path) -> None:
     """render_mermaid_file_to_png raises → except branch line 591-592."""
-    pe = _live_png_export()
+    _live_png()
     mmd = tmp_path / "x.mmd"
     mmd.write_text("graph TD\nA-->B\n")
 
     def boom(*args, **kwargs):
         raise RuntimeError("simulated render failure")
 
-    monkeypatch.setattr(pe, "render_mermaid_file_to_png", boom)
-    result = pe.render_all_mermaid_in_run(tmp_path)
+    monkeypatch.setattr(png_mermaid, "render_mermaid_file_to_png", boom)
+    result = png_mermaid.render_all_mermaid_in_run(tmp_path)
     assert result == []
 
 
 def test_mmdc_command_npx_fallback(monkeypatch) -> None:
     """No mmdc but npx available → returns ['npx', ..., 'mmdc'] (line 509)."""
+
     def fake_which(b):
         return "/usr/bin/npx" if b == "npx" else None
 
-    monkeypatch.setattr(png_export.shutil, "which", fake_which)
-    cmd = png_export._mmdc_command()
+    monkeypatch.setattr(png.shutil, "which", fake_which)
+    cmd = png._mmdc_command()
     assert cmd is not None
     assert "npx" in cmd[0]
     assert "mmdc" in cmd

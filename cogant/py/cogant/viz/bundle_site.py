@@ -16,9 +16,8 @@ The public surface is intentionally small:
   templates. Exposed so callers (tests, alternative renderers) can grab
   a single fragment without touching the filesystem.
 
-The templates match the legacy strings that previously lived on
-``Bundle._render_*`` byte-for-byte so switching to this module is a
-pure refactor. A richer renderer already exists in
+The templates match the inline strings that previously lived on
+``Bundle._render_*`` so switching to this module is a pure refactor. A richer renderer already exists in
 :mod:`cogant.viz.html_renderer`; this module is the minimal fallback
 used by ``Bundle.render_site`` and ``cogant render``.
 """

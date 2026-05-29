@@ -158,6 +158,7 @@ def friendly_pipeline_error(exc: BaseException, target: Path | None = None) -> N
     console.print("  [dim]→ Run [bold]cogant doctor[/bold] to check your environment[/dim]")
     console.print("  [dim]→ File a bug at https://github.com/docxology/cogant/issues[/dim]")
 
+
 def run_pipeline_with_progress(
     runner: "PipelineRunner",
     target: str,
@@ -210,4 +211,3 @@ def run_pipeline_with_progress(
         # retry without a spinner. A real pipeline error will re-raise
         # from the inner ``runner.run`` and be caught by the caller.
         return runner.run(target, config)
-

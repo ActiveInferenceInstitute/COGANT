@@ -6,7 +6,7 @@
 
 ## Executive verdict
 
-**Pass (post-restore).** Incomplete wave-3 mechanical line-range splits were discarded; HEAD functionality restored on `main` with W1/W2 semantic splits retained (`cli/`, `png/`, `run_target`, mermaid parse/render). PNG orchestration now dispatches through `cogant.viz.png_export` so tests can monkeypatch the public shim. Gates measured 2026-05-28: ruff clean, mypy clean (232 files), pytest **9651+** passed at **95.5%** line coverage on `py/cogant` (≥89% gate), `cogant doctor` READY.
+**Pass (legacy purge complete).** Wave-3 mechanical splits remain banned; W1/W2 semantic splits retained (`cli/`, `viz/png/`, `run_target`, mermaid parse/render). The `png_export.py` shim is deleted — canonical PNG API is `cogant.viz.png` with direct submodule imports in `viz/png/orchestrator.py`. CI blocks `scripts/split_*.py` via `tests/unit/test_no_mechanical_split_scripts.py`.
 
 **Do not repeat:** `scripts/split_*.py` line-range generators, mixin reassembly, or partial wiring of orphan draft modules. Future splits are one monolith at a time with TDD (see backlog below).
 
@@ -14,12 +14,9 @@
 
 | Metric | Before | After W1 | Post-restore (2026-05-28) |
 |--------|--------|----------|---------------------------|
-| Largest authored file | `viz/png_export.py` **4081** | `viz/inspection_dashboard.py` **2526** | `viz/inspection_dashboard.py` **2526** |
-| Files >1000 lines (authored) | **16** | **12** | **12** |
-| `cli/main.py` | 2053 | **17** | **17** |
-| `run_all.py` | 1037 | **41** | **41** |
-| `viz/png_export.py` shim | — | **87** | **109** (re-exports + test dispatch) |
-| `viz/png/orchestrator.py` | — | — | **229** (lazy `png_export` dispatch) |
+| Largest authored file | `viz/inspection_dashboard.py` **2526** | `viz/inspection_dashboard.py` **2526** | `viz/inspection_dashboard.py` **2526** |
+| `viz/png/` package | monolith | split package | **canonical** (`png_export.py` deleted) |
+| `viz/png/orchestrator.py` | — | — | direct sibling imports (no lazy shim) |
 | pytest + coverage | — | re-run after merge | **9651 passed**, **95.5%** on `py/cogant` |
 | mypy `py/cogant/` | clean (211 files) | clean | **clean (232 files)** |
 | ruff `py/cogant/` | clean | clean | **clean** |
@@ -41,16 +38,16 @@
 
 ## W1 remediations (completed)
 
-### W1-A: `viz/png_export.py` → `viz/png/*`
+### W1-A: `viz/viz/png/` → `viz/png/*`
 
 Split into focused modules with a backward-compatible shim:
 
 - `viz/png/config.py` — `RenderConfig`, shared drawing helpers
 - `viz/png/program_graph.py`, `mermaid.py`, `svg.py`, `dot.py`, `state_space.py`, …
 - `viz/png/orchestrator.py` — `render_all_pngs()` registry
-- `viz/png_export.py` — re-export shim (public imports unchanged)
+- `viz/viz/png/` — re-export shim (public imports unchanged)
 
-**Post-restore dispatch:** `orchestrator.render_all_pngs` lazy-imports `cogant.viz.png_export` and calls renderers on that module so unit tests can monkeypatch `png_export.*`. Submodule batch helpers (`render_all_svg_in_run`, `render_all_mermaid_in_run`) delegate file-level renders through the same shim.
+**PNG package:** `cogant.viz.png` re-exports the public surface from `viz/png/*`. Orchestrator imports renderers directly; tests monkeypatch `cogant.viz.png.orchestrator` or submodule bindings.
 
 ### W1-B: `cli/main.py` → `cli/_app.py` + `cli/commands/*`
 
@@ -88,7 +85,7 @@ A line-range `scripts/split_*.py` wave gutted seven shims and left **52 unreacha
 | `run_all.json` steps vs `RUNNER_STAGES` | Parallel vocabularies | Document mapping in `tools/audit_stage_list.py` |
 | `api/orchestration.py` | Lazy-imports `render_all_pngs` mid-pipeline | Acceptable; keep viz coupling behind orchestration facade |
 | `tools/` vs `cogant/py/cogant/` | Manuscript tooling at project root | Intentional for template vendoring (`PROMOTION.md`) |
-| `test_package_init_metadata` reload | Stale `png_export` refs in long pytest runs | Exception tests use `_live_png_export()` helper |
+| `test_package_init_metadata` reload | Stale `cogant.viz.png` refs in long pytest runs | Exception tests use `_live_png()` helper |
 
 ## Verification checklist
 
@@ -115,7 +112,7 @@ Real-functionality smokes:
 
 ```bash
 uv run cogant translate examples/control_positive/calculator -o /tmp/cogant-smoke
-uv run python -c "from cogant.viz.png_export import render_all_pngs; print(sum(len(v) for v in render_all_pngs('/tmp/cogant-smoke').values()))"
+uv run python -c "from cogant.viz.png import render_all_pngs; print(sum(len(v) for v in render_all_pngs('/tmp/cogant-smoke').values()))"
 uv run python -c "from fastapi.testclient import TestClient; from cogant.server.app import create_app; assert TestClient(create_app()).post('/analyze', json={}).status_code == 422"
 ```
 
@@ -124,7 +121,7 @@ uv run python -c "from fastapi.testclient import TestClient; from cogant.server.
 | Criterion | Status |
 |-----------|--------|
 | No unjustified >1k file growth from W1 | Pass |
-| Public API imports stable | Pass — `cogant.viz.png_export`, CLI entrypoints |
+| Public API imports stable | Pass — `cogant.viz.png`, CLI entrypoints |
 | Structural regressions | None after restore + dispatch fix |
 | Full test + type + lint gates | **Pass** (measured 2026-05-28) |
 | Mechanical wave-3 debris removed | Pass — backup on `wip/broken-wave3-backup` |

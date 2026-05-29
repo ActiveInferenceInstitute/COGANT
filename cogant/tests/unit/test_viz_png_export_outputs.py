@@ -1,4 +1,4 @@
-"""Behavioral tests for cogant.viz.png_export.
+"""Behavioral tests for cogant.viz.png.
 
 Drives every public PNG renderer with real on-disk fixtures using the
 headless ``Agg`` matplotlib backend so the tests work in CI without a
@@ -13,7 +13,7 @@ import json
 import os
 from pathlib import Path
 
-# Force the headless matplotlib backend BEFORE importing png_export.
+# Force the headless matplotlib backend BEFORE importing png.
 os.environ.setdefault("MPLBACKEND", "Agg")
 
 import pytest
@@ -30,7 +30,7 @@ from cogant.statespace.compiler import (
 )
 from cogant.statespace.temporal import TimeRegime
 from cogant.statespace.variables import StateVariable, StateVariableType
-from cogant.viz.png_export import (
+from cogant.viz.png import (
     RenderConfig,
     _build_kind_legend,
     _detect_mermaid_kind,

@@ -24,7 +24,7 @@ cogant export-gnn: Re-export an existing bundle JSON as JSON and/or a Markdown r
 
 cogant render: Generate interactive HTML site from bundle.json, creating index.html, graph/, models/, provenance/, and assets/ with CSS styling.
 
-cogant viz: Walk a run/output directory and rasterize Mermaid, SVG, dot, and related artifacts to PNG (see `cogant.viz.png_export`).
+cogant viz: Walk a run/output directory and rasterize Mermaid, SVG, dot, and related artifacts to PNG (see `cogant.viz.png`).
 
 cogant validate: Run validation checks on bundle.json, or on a directory containing `gnn_package/` (full GNN package validation when applicable). For a `gnn_package` directory, Active Inference Institute `src.gnn` checks on `model.gnn.md` run by default; pass `--no-upstream-gnn` to skip them while keeping COGANT structural validation, or set `COGANT_DISABLE_UPSTREAM_GNN=1`.
 

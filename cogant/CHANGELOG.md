@@ -3,6 +3,24 @@
 All notable changes to COGANT are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+- **Legacy purge:** removed `cogant.viz.png_export` shim; canonical PNG API is
+  `cogant.viz.png` with direct submodule imports in `viz/png/orchestrator.py`.
+- `ProgramGraph` exports only from `cogant.schemas.graph` (no import fallback chain).
+- Drift analyzer reads top-level `graph` / `state_space` / `mappings` only (dropped
+  nested `stage_results` bundle layouts).
+- Config docs distinguish composable `pipeline.PipelineConfig` from YAML
+  `schema.PipelineConfig`.
+
+### Removed
+- `scripts/split_png_export.py` and `scripts/split_cli_main.py` (wave-3 mechanical
+  split debris); CI guard `tests/unit/test_no_mechanical_split_scripts.py`.
+
+### Added
+- `tests/unit/test_viz_png_degraded_paths.py` (renamed from `test_viz_png_export_fallbacks`).
+
 ## [0.6.0] - 2026-05-18
 
 ### Changed
@@ -271,7 +289,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Rust PyO3 `connected_components` FFI; `COGANT_USE_RUST=1` feature flag (598945d)
 
 ### Fixed
-- Viz `png_export` tests guarded behind `pytest.importorskip(matplotlib)`; add `numpy` and `pytest-cov` as dev deps (905c2da)
+- Viz `cogant.viz.png` tests guarded behind `pytest.importorskip(matplotlib)`; add `numpy` and `pytest-cov` as dev deps (905c2da)
 - Relax JS hidden-state assertion in cross-language differential test (4aa2710)
 - Ruff UP038 autofix: union-type annotations; remove stale `xfail` mark (cea55d9)
 

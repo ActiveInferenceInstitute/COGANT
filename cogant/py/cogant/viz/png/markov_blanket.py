@@ -266,7 +266,7 @@ def render_markov_blanket_png(
                     "source_artifact": str(blanket_json),
                     "source_artifact_sha256": sha256_file(blanket_json),
                     "source_artifact_digest": sha256_file(blanket_json),
-                    "renderer": "cogant.viz.png_export.render_markov_blanket_png",
+                    "renderer": "cogant.viz.png.render_markov_blanket_png",
                     "layout_method": "deterministic sparse role partition lanes",
                     "displayed_counts": {
                         **counts,
@@ -370,7 +370,7 @@ def render_markov_blanket_png(
                 "source_artifact": str(blanket_json),
                 "source_artifact_sha256": sha256_file(blanket_json),
                 "source_artifact_digest": sha256_file(blanket_json),
-                "renderer": "cogant.viz.png_export.render_markov_blanket_png",
+                "renderer": "cogant.viz.png.render_markov_blanket_png",
                 "layout_method": network_layout_method,
                 "layout_seed": 23 if n > 80 else None,
                 "displayed_counts": {
@@ -402,5 +402,3 @@ def render_markov_blanket_png(
     except Exception as e:  # noqa: BLE001
         logger.warning("Markov blanket PNG failed: %s", e)
         return False
-
-

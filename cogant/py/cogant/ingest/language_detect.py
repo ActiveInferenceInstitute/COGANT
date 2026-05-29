@@ -45,7 +45,7 @@ class LanguageDetector:
 
         Prefers the new tree-sitter backed plugins for JavaScript and
         TypeScript when the ``tree-sitter`` runtime + grammars are
-        installed, and falls back to the legacy regex-based
+        installed, and falls back to the regex-plugin
         ``TypeScriptLanguageParser`` otherwise.
         """
         if cls.PARSER_CLASSES["python"] is not None:
@@ -201,7 +201,7 @@ def get_parser_for_extension(ext: str) -> Any:
     """Return a LanguagePlugin instance suitable for a file extension.
 
     Prefers tree-sitter backed plugins when the corresponding grammar is
-    installed, and falls back to the legacy regex plugins otherwise.
+    installed, and falls back to the regex plugins otherwise.
 
     Args:
         ext: File extension, e.g. ``.py``, ``.ts``, ``.js``.
@@ -237,7 +237,7 @@ def get_parser_for_extension(ext: str) -> Any:
                         return TypeScriptTreeSitterParser()
                 except Exception:
                     pass
-            # python / rust / go — fall through to the legacy dispatcher
+            # python / rust / go — fall through to the regex-plugin dispatcher
     except Exception:
         pass
 

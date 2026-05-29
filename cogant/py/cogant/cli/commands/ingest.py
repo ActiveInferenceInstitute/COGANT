@@ -179,5 +179,3 @@ def graph(
     n_nodes = len(nodes) if isinstance(nodes, dict) else len(nodes)
     n_edges = len(edges) if isinstance(edges, dict) else len(edges)
     console.print(Panel(f"Graph: {n_nodes} nodes, {n_edges} edges"))
-
-

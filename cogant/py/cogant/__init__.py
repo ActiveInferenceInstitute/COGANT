@@ -46,17 +46,9 @@ from cogant.api.pipeline import PipelineRunner
 from cogant.api.session import Session
 from cogant.gnn.formatter import GNNMarkdownFormatter
 from cogant.graph.builder import ProgramGraphBuilder
+from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceCompiler
 from cogant.translate.engine import TranslationEngine
-
-# ``ProgramGraph`` has two homes — the newer pydantic schema and the legacy
-# dataclass module. Keep the fallback because they ARE legitimately
-# alternative implementations selected by call site, not a broken-install
-# signal.
-try:
-    from cogant.schemas.program_graph import ProgramGraph
-except (ImportError, ModuleNotFoundError):
-    from cogant.schemas.graph import ProgramGraph  # type: ignore[assignment]
 
 # Type infrastructure (always available).
 try:

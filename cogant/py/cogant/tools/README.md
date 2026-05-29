@@ -40,4 +40,4 @@ After organization, run directory structure is:
 
 organize_example_outputs: pathlib, re (regex rewriting), shutil (file operations), logging.
 
-render_output_figures: cogant.viz.png_export (find_graph_dot, render_program_graph_png, render_graphviz_dot_to_png, render_all_mermaid_in_run), pathlib, logging, argparse.
+render_output_figures: cogant.viz.png (find_graph_dot, render_program_graph_png, render_graphviz_dot_to_png, render_all_mermaid_in_run), pathlib, logging, argparse.

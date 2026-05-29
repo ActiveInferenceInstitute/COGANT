@@ -7,7 +7,7 @@ import logging
 import sys
 from pathlib import Path
 
-from cogant.viz.png_export import (
+from cogant.viz.png import (
     find_graph_dot,
     render_all_mermaid_in_run,
     render_graphviz_dot_to_png,

@@ -10,6 +10,8 @@ from cogant.viz.png.config import (
 )
 
 logger = logging.getLogger(__name__)
+
+
 def _split_gnn_markdown(text: str) -> list[tuple[str, str]]:
     """Split a GNN markdown file into (section_title, body) pairs.
 
@@ -164,5 +166,3 @@ def render_gnn_markdown_png(
             pages.append(out)
 
     return pages
-
-

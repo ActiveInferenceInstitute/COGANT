@@ -14,6 +14,8 @@ from cogant.viz.png.config import (
 )
 
 logger = logging.getLogger(__name__)
+
+
 def render_process_gantt_png(
     process_model: Any,
     output_png: Path,
@@ -148,5 +150,3 @@ def render_process_gantt_png(
     except Exception as e:  # noqa: BLE001
         logger.warning("Process Gantt PNG failed: %s", e)
         return False
-
-

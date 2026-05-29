@@ -10,7 +10,7 @@ The visualization module (`cogant.viz`) produces visual representations of COGAN
 
 | Format | Module | Data Type | Use Case | Dependencies | Output | Size |
 |--------|--------|-----------|----------|--------------|--------|------|
-| PNG | png_export | Bitmap image | Quick reviews, reports | matplotlib, Pillow | Binary file | 0.5-50 MB |
+| PNG | cogant.viz.png | Bitmap image | Quick reviews, reports | matplotlib, Pillow | Binary file | 0.5-50 MB |
 | PDF | pdf_export | Multi-page document | Publication, formal reports | matplotlib, reportlab | Binary file | 5-200 MB |
 | Mermaid | mermaid | Diagram syntax | Markdown, wikis, docs | None | Text file (.mmd) | 0.01-1 MB |
 | SVG | svg_export | Vector graphics | Web embedding, scalable | graphviz (optional) | Text file | 1-100 MB |
@@ -100,12 +100,12 @@ reports obvious horizontal overflow.
 
 ### PNG Function Renderers
 
-`cogant.viz.png_export` exposes function renderers rather than a `PNGExporter`
+`cogant.viz.png` exposes function renderers rather than a `PNGExporter`
 class. The most common entry point for an already-written run directory is
 `render_all_pngs()`.
 
 ```python
-from cogant.viz.png_export import (
+from cogant.viz.png import (
     render_all_pngs,
     render_connections_matrix_png,
     render_program_graph_png,
@@ -116,7 +116,7 @@ from cogant.viz.png_export import (
 **Usage:**
 ```python
 from pathlib import Path
-from cogant.viz.png_export import render_program_graph_png
+from cogant.viz.png import render_program_graph_png
 
 ok = render_program_graph_png(
     Path("output/calculator/data/program_graph.json"),
@@ -490,7 +490,7 @@ with open("dashboard.html", "w") as f:
 
 ```python
 from pathlib import Path
-from cogant.viz.png_export import render_program_graph_png
+from cogant.viz.png import render_program_graph_png
 from cogant.static.complexity import ComplexityAnalyzer
 
 # Analyze complexity
@@ -539,7 +539,7 @@ with open("API.md", "w") as f:
 ```python
 from pathlib import Path
 from cogant.viz.dashboard.generator import DashboardGenerator
-from cogant.viz.png_export import render_all_pngs
+from cogant.viz.png import render_all_pngs
 
 # Generate dashboard (interactive)
 dash_gen = DashboardGenerator()
@@ -588,7 +588,7 @@ All visualization modules handle missing dependencies gracefully:
 
 ```python
 from pathlib import Path
-from cogant.viz.png_export import render_program_graph_png
+from cogant.viz.png import render_program_graph_png
 import logging
 
 logger = logging.getLogger(__name__)

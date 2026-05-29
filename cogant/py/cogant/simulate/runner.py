@@ -340,7 +340,7 @@ class ModelRunner:
         return bayesian_belief_update(prior, self.A, observation_index)
 
     # ------------------------------------------------------------------
-    # Back-compat state-dict VFE (used when no generative model matrices).
+    # Degraded state-dict VFE when generative model matrices are absent.
     # ------------------------------------------------------------------
 
     def compute_free_energy(self, state: dict[str, Any], observation: str) -> float:
@@ -349,8 +349,8 @@ class ModelRunner:
 
         When ``self.A`` and ``self.D`` are present, this delegates to the
         principled matrix-based VFE by projecting ``state`` into a one-hot
-        belief over the variables in ``state``. Otherwise it falls back to
-        the heuristic implementation preserved for backward compatibility.
+        belief over the variables in ``state``. Otherwise it uses the
+        heuristic degraded path when matrices are unavailable.
 
         VFE = KL(Q||P) - E_Q[log P(o|s)]
             = complexity - accuracy
@@ -397,7 +397,7 @@ class ModelRunner:
                     observation=None,
                 )
 
-        # Heuristic fallback (back-compat): create a belief distribution
+        # Heuristic degraded path: build a belief distribution from state
         # from state values using state keys as "categories".
         categories = list(state.keys())
 

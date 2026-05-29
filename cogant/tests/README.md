@@ -3,7 +3,7 @@
 Unit, integration, and golden tests for COGANT.
 
 ## Contents
-- **unit/** — Unit tests for individual modules (including `test_png_export`, `test_organize_example_outputs`, `test_render_output_figures`)
+- **unit/** — Unit tests for individual modules (including `test_viz_png_degraded_paths`, `test_organize_example_outputs`, `test_render_output_figures`)
 - **integration/** — Cross-module integration tests (`test_layout_output`, `test_full_pipeline`, …)
 - **golden/** — Golden test fixtures and expected outputs
 - conftest.py — Pytest configuration and fixtures
@@ -34,7 +34,7 @@ Full-suite runs should omit `--no-cov` so CI and local defaults stay aligned.
 Test files are named by subsystem and behavior, not by implementation campaign.
 Use durable names such as `test_server_app_http_routes.py`,
 `test_reverse_idempotency_contract.py`, or
-`test_viz_png_export_fallbacks.py`. Do not introduce campaign numbers, dated
+`test_viz_png_degraded_paths.py`. Do not introduce campaign numbers, dated
 batch tags, or opaque coverage-only suffixes. Branch tests that exist primarily
 for coverage should still name the exercised behavior or error path.
 

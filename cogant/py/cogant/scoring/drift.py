@@ -10,9 +10,8 @@ and produces:
   (mappings), and state-space (variables, observations, actions).
 * Markdown and mermaid renderers for embedding the diff in reports.
 
-The analyzer accepts bundles in either the flat layout
-(``{"graph": ..., "state_space": ..., "mappings": ...}``) or the legacy
-nested ``stage_results`` layout, and transparently normalizes both.
+The analyzer accepts bundles with top-level ``graph``, ``state_space``,
+and ``mappings`` keys.
 All scoring is ratio-based so absolute size differences between
 repositories do not dominate the diff.
 
@@ -107,17 +106,10 @@ class DriftAnalyzer:
         if not isinstance(bundle, dict):
             return {}
 
-        # Try direct 'graph' key
+        # Try canonical top-level keys only.
         graph = bundle.get("graph")
         if isinstance(graph, dict):
             return graph
-
-        # Try 'stage_results.graph' (legacy format)
-        stage_results = bundle.get("stage_results")
-        if isinstance(stage_results, dict):
-            nested = stage_results.get("graph", {})
-            if isinstance(nested, dict):
-                return nested
 
         return {}
 
@@ -126,17 +118,10 @@ class DriftAnalyzer:
         if not isinstance(bundle, dict):
             return {}
 
-        # Try direct 'state_space' key
+        # Try canonical top-level key only.
         state_space = bundle.get("state_space")
         if isinstance(state_space, dict):
             return state_space
-
-        # Try 'stage_results.statespace' (legacy format)
-        stage_results = bundle.get("stage_results")
-        if isinstance(stage_results, dict):
-            nested = stage_results.get("statespace", {})
-            if isinstance(nested, dict):
-                return nested
 
         return {}
 
@@ -635,8 +620,8 @@ class DriftAnalyzer:
         self, bundle1: dict[str, Any], bundle2: dict[str, Any]
     ) -> float:
         """Compute drift in program graph structure."""
-        graph1 = bundle1.get("stage_results", {}).get("graph", {})
-        graph2 = bundle2.get("stage_results", {}).get("graph", {})
+        graph1 = self._extract_graph(bundle1)
+        graph2 = self._extract_graph(bundle2)
 
         nodes1 = len(graph1.get("nodes", []))
         nodes2 = len(graph2.get("nodes", []))
@@ -659,8 +644,8 @@ class DriftAnalyzer:
 
     def _compute_semantic_churn(self, bundle1: dict[str, Any], bundle2: dict[str, Any]) -> float:
         """Compute semantic model churn."""
-        ss1 = bundle1.get("stage_results", {}).get("statespace", {})
-        ss2 = bundle2.get("stage_results", {}).get("statespace", {})
+        ss1 = self._extract_statespace(bundle1)
+        ss2 = self._extract_statespace(bundle2)
 
         state_drift = self._compute_collection_drift(ss1.get("states", []), ss2.get("states", []))
         obs_drift = self._compute_collection_drift(

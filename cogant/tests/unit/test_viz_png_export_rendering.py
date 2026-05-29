@@ -1,4 +1,4 @@
-"""Targeted unit tests for: exercise cogant.viz.png_export public API.
+"""Targeted unit tests for: exercise cogant.viz.png public API.
 
 Builds a real (if small) GNN package on disk, then drives render_all_pngs,
 render_program_graph_png, render_mermaid_text_to_png, render_connections_matrix_png,
@@ -24,7 +24,7 @@ from cogant.schemas.graph import (
 )
 from cogant.statespace.compiler import StateSpaceModel
 from cogant.statespace.temporal import TimeRegime
-from cogant.viz.png_export import (
+from cogant.viz.png import (
     RenderConfig,
     program_graph_dict_to_networkx,
     render_all_pngs,

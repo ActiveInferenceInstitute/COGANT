@@ -321,7 +321,7 @@ def run_visualize(path_or_run_dir: Path, *, output: Path, fmt: str = "mermaid") 
             )
         if fmt == "svg":
             return output
-        from cogant.viz.png_export import render_svg_file_to_png
+        from cogant.viz.png import render_svg_file_to_png
 
         if not render_svg_file_to_png(svg_path, output):
             output.write_bytes(_BLANK_PNG)

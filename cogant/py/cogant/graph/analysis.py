@@ -210,7 +210,9 @@ class GraphAnalyzer:
         Returns:
             CentralityScores with all centrality measures.
         """
-        threshold = self.exact_centrality_node_limit if approximate_above is None else approximate_above
+        threshold = (
+            self.exact_centrality_node_limit if approximate_above is None else approximate_above
+        )
         limit = self.centrality_sample_size if sample_size is None else sample_size
         approximate = threshold is not None and len(self.graph.nodes) > threshold
         scores = CentralityScores()
@@ -621,7 +623,9 @@ class GraphAnalyzer:
 
         for source in sources:
             distances = self._shortest_distances_bfs(source)
-            total_distance = sum(distance for node_id, distance in distances.items() if node_id != source)
+            total_distance = sum(
+                distance for node_id, distance in distances.items() if node_id != source
+            )
             reachable = len(distances) - 1
 
             if reachable > 0:
@@ -734,9 +738,7 @@ class GraphAnalyzer:
         """Return nodes that can be in a directed cycle."""
         candidates = {node_id for component in sccs if len(component) > 1 for node_id in component}
         self_loop_nodes = {
-            edge.source_id
-            for edge in self.graph.edges.values()
-            if edge.source_id == edge.target_id
+            edge.source_id for edge in self.graph.edges.values() if edge.source_id == edge.target_id
         }
         return candidates | self_loop_nodes
 

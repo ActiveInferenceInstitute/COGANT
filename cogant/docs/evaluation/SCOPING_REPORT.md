@@ -196,7 +196,7 @@ All 8 crates are **real working Rust code**, not scaffolding stubs:
 | Parquet (PyArrow) | `cogant.export.parquet` | ✅ |
 | Mermaid diagrams (6 types) | `cogant.viz.mermaid` | ✅ |
 | HTML interactive site | `cogant.viz` | ✅ |
-| PNG exports | `cogant.viz.png_export` | ✅ (1275 lines) |
+| PNG exports | `cogant.viz.png` | ✅ (package under `viz/png/`) |
 
 ---
 

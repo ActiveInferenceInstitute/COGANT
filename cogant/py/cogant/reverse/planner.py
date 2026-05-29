@@ -274,8 +274,7 @@ class PackagePlan:
 
         if self.target_role_counts != other.target_role_counts:
             diffs.append(
-                f"  target_role_counts: {self.target_role_counts!r} vs "
-                f"{other.target_role_counts!r}"
+                f"  target_role_counts: {self.target_role_counts!r} vs {other.target_role_counts!r}"
             )
 
         # Compare matrix presence flags
