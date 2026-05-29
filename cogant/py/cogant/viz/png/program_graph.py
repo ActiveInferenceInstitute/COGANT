@@ -2,24 +2,18 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 import shutil
-import subprocess
 from collections import Counter
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from cogant.viz.png.config import (
     DEFAULT_CONFIG,
     RenderConfig,
-    draw_color_legend,
     draw_footer,
     draw_metadata_banner,
-    downsample_graph,
     sha256_file,
     truncate,
-    timestamp,
     write_figure_sidecar,
 )
 
@@ -31,7 +25,7 @@ def program_graph_dict_to_networkx(graph: dict[str, Any]) -> Any:
     target with different edge kinds. A ``DiGraph`` would collapse those edges
     and under-report displayed counts in publication sidecars.
     """
-    import networkx as nx  # type: ignore[import-untyped]
+    import networkx as nx
 
     g = nx.MultiDiGraph()
     nodes = graph.get("nodes") or {}

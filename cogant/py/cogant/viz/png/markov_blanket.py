@@ -2,13 +2,8 @@ from __future__ import annotations
 
 import json
 import logging
-import re
-import shutil
-import subprocess
-from collections import Counter
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from cogant.viz.png.config import (
     DEFAULT_CONFIG,
@@ -16,10 +11,8 @@ from cogant.viz.png.config import (
     draw_color_legend,
     draw_footer,
     draw_metadata_banner,
-    downsample_graph,
     sha256_file,
     truncate,
-    timestamp,
     write_figure_sidecar,
 )
 

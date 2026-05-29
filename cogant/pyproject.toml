@@ -200,6 +200,7 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = [
     "matplotlib.*",
+    "networkx.*",
     "numpy.*",
     "cogant._rust",
     # PyYAML ships no type stubs by default and pulling types-PyYAML

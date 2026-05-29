@@ -1,52 +1,21 @@
 from __future__ import annotations
 
-import json
 import logging
-import re
-import shutil
-import subprocess
-from collections import Counter
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
-from cogant.viz.png.config import (
-    DEFAULT_CONFIG,
-    RenderConfig,
-    draw_color_legend,
-    draw_footer,
-    draw_metadata_banner,
-    downsample_graph,
-    sha256_file,
-    truncate,
-    timestamp,
-    write_figure_sidecar,
-)
+from cogant.viz.png.config import DEFAULT_CONFIG, RenderConfig
+from cogant.viz.png.discovery import first_existing
 
 logger = logging.getLogger(__name__)
 
-from cogant.viz.png.discovery import (
-    discover_process_model_json,
-    discover_state_space_json,
-    first_existing,
-    load_process_model_from_json,
-    load_state_space_from_json,
-)
-from cogant.viz.png.dot import render_all_dot_in_run
-from cogant.viz.png.gnn_markdown import render_gnn_markdown_png
-from cogant.viz.png.markov_blanket import render_markov_blanket_png
-from cogant.viz.png.mermaid import render_all_mermaid_in_run
-from cogant.viz.png.process_gantt import render_process_gantt_png
-from cogant.viz.png.program_graph import render_program_graph_png
-from cogant.viz.png.state_space import (
-    render_connections_matrix_png,
-    render_state_space_factor_png,
-)
-from cogant.viz.png.summary import (
-    render_interpretability_overview_png,
-    render_summary_cover_png,
-)
-from cogant.viz.png.svg import render_all_svg_in_run
+
+def _png_export() -> Any:
+    """Lazy import so png_export can re-export this orchestrator without a cycle."""
+    import cogant.viz.png_export as pe
+
+    return pe
+
 
 def render_all_pngs(
     run_dir: Path,
@@ -76,6 +45,7 @@ def render_all_pngs(
     """
     run_dir = Path(run_dir)
     cfg = cfg or DEFAULT_CONFIG
+    _pe = _png_export()
     out: dict[str, list[Path]] = {
         "program_graph": [],
         "mermaid": [],
@@ -95,15 +65,15 @@ def render_all_pngs(
 
     # Auto-discover from on-disk JSON when not explicitly passed.
     if state_space is None:
-        ss_json = discover_state_space_json(run_dir)
+        ss_json = _pe._discover_state_space_json(run_dir)
         if ss_json is not None:
-            state_space = load_state_space_from_json(ss_json)
+            state_space = _pe._load_state_space_from_json(ss_json)
     else:
         ss_json = None
     if process_model is None:
-        pm_json = discover_process_model_json(run_dir)
+        pm_json = _pe._discover_process_model_json(run_dir)
         if pm_json is not None:
-            process_model = load_process_model_from_json(pm_json)
+            process_model = _pe._load_process_model_from_json(pm_json)
 
     pg_candidates = [
         run_dir / "data" / "program_graph.json",
@@ -116,27 +86,29 @@ def render_all_pngs(
         if pg_json.is_file():
             pg_png = pg_json.with_suffix(".png")
             try:
-                if render_program_graph_png(pg_json, pg_png, cfg=cfg):
+                if _pe.render_program_graph_png(pg_json, pg_png, cfg=cfg):
                     out["program_graph"].append(pg_png)
                 root_png = run_dir / "program_graph.png"
-                if not root_png.exists() and render_program_graph_png(pg_json, root_png, cfg=cfg):
+                if not root_png.exists() and _pe.render_program_graph_png(
+                    pg_json, root_png, cfg=cfg
+                ):
                     out["program_graph"].append(root_png)
             except Exception as e:  # noqa: BLE001
                 logger.warning("program_graph PNG failed: %s", e)
             break
 
     try:
-        out["mermaid"] = render_all_mermaid_in_run(run_dir, cfg=cfg)
+        out["mermaid"] = _pe.render_all_mermaid_in_run(run_dir, cfg=cfg)
     except Exception as e:  # noqa: BLE001
         logger.warning("render_all_mermaid_in_run failed: %s", e)
 
     try:
-        out["svg"] = render_all_svg_in_run(run_dir)
+        out["svg"] = _pe.render_all_svg_in_run(run_dir)
     except Exception as e:  # noqa: BLE001
         logger.warning("render_all_svg_in_run failed: %s", e)
 
     try:
-        out["dot"] = render_all_dot_in_run(run_dir)
+        out["dot"] = _pe.render_all_dot_in_run(run_dir)
     except Exception as e:  # noqa: BLE001
         logger.warning("render_all_dot_in_run failed: %s", e)
 
@@ -144,7 +116,9 @@ def render_all_pngs(
         try:
             png = run_dir / "state_space_factor.png"
             ss_label = str(ss_json.relative_to(run_dir)) if ss_json else "state_space"
-            if render_state_space_factor_png(state_space, png, cfg=cfg, source_label=ss_label):
+            if _pe.render_state_space_factor_png(
+                state_space, png, cfg=cfg, source_label=ss_label
+            ):
                 out["state_space"].append(png)
         except Exception as e:  # noqa: BLE001
             logger.warning("state-space factor PNG failed: %s", e)
@@ -159,7 +133,7 @@ def render_all_pngs(
                     "data/model.gnn.json",
                 ),
             )
-            if render_connections_matrix_png(
+            if _pe.render_connections_matrix_png(
                 state_space,
                 cx_png,
                 cfg=cfg,
@@ -173,12 +147,11 @@ def render_all_pngs(
     if process_model is not None:
         try:
             png = run_dir / "process_gantt.png"
-            if render_process_gantt_png(process_model, png, cfg=cfg):
+            if _pe.render_process_gantt_png(process_model, png, cfg=cfg):
                 out["process"].append(png)
         except Exception as e:  # noqa: BLE001
             logger.warning("process Gantt PNG failed: %s", e)
 
-    # Markov blanket role-colored graph — check run root + gnn package subdirs.
     mb_candidates = [
         run_dir / "markov_blanket.json",
         run_dir / "gnn_package" / "markov_blanket.json",
@@ -187,19 +160,18 @@ def render_all_pngs(
     for mb_json in mb_candidates:
         if mb_json.is_file():
             try:
-                # Emit next to the JSON (so nested runs get nested PNGs) AND
-                # at the run root for discoverability.
                 mb_png = mb_json.with_suffix(".png")
-                if render_markov_blanket_png(mb_json, mb_png, cfg=cfg):
+                if _pe.render_markov_blanket_png(mb_json, mb_png, cfg=cfg):
                     out["markov_blanket"].append(mb_png)
                 root_png = run_dir / "markov_blanket.png"
-                if not root_png.exists() and render_markov_blanket_png(mb_json, root_png, cfg=cfg):
+                if not root_png.exists() and _pe.render_markov_blanket_png(
+                    mb_json, root_png, cfg=cfg
+                ):
                     out["markov_blanket"].append(root_png)
             except Exception as e:  # noqa: BLE001
                 logger.warning("markov blanket PNG failed for %s: %s", mb_json, e)
-            break  # stop at first found
+            break
 
-    # Full GNN markdown → PNG pages — check run root + gnn_package subdir.
     gnn_md_candidates = [
         run_dir / "model.gnn.md",
         run_dir / "gnn_package" / "model.gnn.md",
@@ -208,31 +180,29 @@ def render_all_pngs(
     for gnn_md in gnn_md_candidates:
         if gnn_md.is_file():
             try:
-                # Emit next to the source MD and at run root for discoverability.
                 gnn_png = gnn_md.parent / "model_gnn.png"
-                pages = render_gnn_markdown_png(gnn_md, gnn_png, cfg=cfg)
+                pages = _pe.render_gnn_markdown_png(gnn_md, gnn_png, cfg=cfg)
                 if pages:
                     out["gnn_markdown"].extend(pages)
                 root_png = run_dir / "model_gnn.png"
                 if not root_png.exists():
-                    root_pages = render_gnn_markdown_png(gnn_md, root_png, cfg=cfg)
+                    root_pages = _pe.render_gnn_markdown_png(gnn_md, root_png, cfg=cfg)
                     if root_pages:
                         out["gnn_markdown"].extend(root_pages)
             except Exception as e:  # noqa: BLE001
                 logger.warning("GNN markdown PNG failed: %s", e)
             break
 
-    # Summary cover dashboard
     try:
         cover_png = run_dir / "summary_cover.png"
-        if render_summary_cover_png(run_dir, cover_png, cfg=cfg):
+        if _pe.render_summary_cover_png(run_dir, cover_png, cfg=cfg):
             out["summary_cover"].append(cover_png)
     except Exception as e:  # noqa: BLE001
         logger.warning("summary cover PNG failed: %s", e)
 
     try:
         overview_png = run_dir / "interpretability_overview.png"
-        if render_interpretability_overview_png(run_dir, overview_png, cfg=cfg):
+        if _pe.render_interpretability_overview_png(run_dir, overview_png, cfg=cfg):
             out["interpretability_overview"].append(overview_png)
     except Exception as e:  # noqa: BLE001
         logger.warning("interpretability overview PNG failed: %s", e)

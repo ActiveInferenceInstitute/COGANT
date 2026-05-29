@@ -1,29 +1,24 @@
 from __future__ import annotations
 
-import json
 import logging
 import re
 import shutil
 import subprocess
-from collections import Counter
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, cast
-
+from typing import Any
 from cogant.viz.png.config import (
     DEFAULT_CONFIG,
     RenderConfig,
+    downsample_graph,
     draw_color_legend,
     draw_footer,
     draw_metadata_banner,
-    downsample_graph,
-    sha256_file,
     truncate,
-    timestamp,
-    write_figure_sidecar,
 )
 
 logger = logging.getLogger(__name__)
+
+
 def _mmdc_command() -> list[str] | None:
     if shutil.which("mmdc"):
         return ["mmdc"]
@@ -51,19 +46,25 @@ def render_mermaid_file_to_png(
     function never raises; callers treat rendering as best-effort.
     """
     cfg = cfg or DEFAULT_CONFIG
-    from cogant.viz import png_export as _png_shim
+    import cogant.viz.png_export as _png_export
 
-    prefix = _png_shim._mmdc_command()
+    prefix = _png_export._mmdc_command()  # type: ignore[attr-defined]
     if prefix:
         output_png.parent.mkdir(parents=True, exist_ok=True)
         cmd = [*prefix, "-i", str(mermaid_file), "-o", str(output_png), "-b", "transparent"]
         try:
-            r = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=timeout)
+            r = _png_export.subprocess.run(  # type: ignore[attr-defined]
+                cmd, check=True, capture_output=True, text=True, timeout=timeout
+            )
             if r.stderr:
                 logger.debug("mmdc stderr: %s", r.stderr.strip()[:500])
             if output_png.is_file():
                 return True
-        except (subprocess.CalledProcessError, OSError, subprocess.TimeoutExpired) as e:
+        except (
+            _png_export.subprocess.CalledProcessError,  # type: ignore[attr-defined]
+            OSError,
+            _png_export.subprocess.TimeoutExpired,  # type: ignore[attr-defined]
+        ) as e:
             err = getattr(e, "stderr", None) or getattr(e, "stdout", None) or str(e)
             logger.debug(
                 "mmdc failed for %s: %s; trying native fallback",
@@ -101,6 +102,8 @@ def render_all_mermaid_in_run(
     of successfully written PNG paths.
     """
     cfg = cfg or DEFAULT_CONFIG
+    import cogant.viz.png_export as _png_export
+
     written: list[Path] = []
     seen: set[Path] = set()
     for pattern in ("*.mermaid", "*.mmd"):
@@ -110,7 +113,7 @@ def render_all_mermaid_in_run(
             seen.add(mmd)
             png = mmd.with_suffix(".png")
             try:
-                if render_mermaid_file_to_png(mmd, png, cfg=cfg):
+                if _png_export.render_mermaid_file_to_png(mmd, png, cfg=cfg):  # type: ignore[arg-type]
                     written.append(png)
             except Exception as e:  # noqa: BLE001 - never let viz kill the pipeline
                 logger.warning("Mermaid→PNG failed for %s: %s", mmd.name, e)

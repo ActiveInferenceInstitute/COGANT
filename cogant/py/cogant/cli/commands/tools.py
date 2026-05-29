@@ -1,6 +1,7 @@
 """CLI command registrations."""
 
 import functools
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -14,23 +15,19 @@ from cogant.api.analysis_commands import (
     run_static_analysis,
     run_visualize,
 )
-from cogant.api.bundle import Bundle
 from cogant.api.pipeline import PipelineConfig, PipelineRunner
-from cogant.api.session import Session
-from cogant.cli.doctor import doctor_command, render_report, run_doctor
-from cogant.ingest.repo_sniff import count_source_files as _count_source_files
-from cogant.ingest.repo_sniff import estimate_pipeline_seconds as _estimate_pipeline_seconds
-from cogant.ingest.repo_sniff import format_duration as _format_duration
-from cogant.reverse.cli import reverse_command, roundtrip_command
 from cogant.cli._app import (
     app,
     console,
-    friendly_pipeline_error as _friendly_pipeline_error,
-    parse_step_csv as _parse_step_csv,
-    apply_upstream_pipeline_flags as _apply_upstream_pipeline_flags,
-    render_upstream_pipeline_table as _render_upstream_pipeline_table,
-    run_pipeline_with_progress as _run_pipeline_with_progress,
 )
+from cogant.cli._app import (
+    parse_step_csv as _parse_step_csv,
+)
+from cogant.cli._app import (
+    render_upstream_pipeline_table as _render_upstream_pipeline_table,
+)
+from cogant.reverse.cli import reverse_command, roundtrip_command
+
 
 @app.command()
 def benchmark(

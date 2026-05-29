@@ -41,6 +41,13 @@ from cogant.viz import png_export
 pytestmark = pytest.mark.unit
 
 
+def _live_png_export():
+    """Return the live ``cogant.viz.png_export`` module (survives package reloads)."""
+    import importlib
+
+    return importlib.import_module("cogant.viz.png_export")
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -766,16 +773,17 @@ def test_render_all_svg_in_run_uses_placeholder(monkeypatch, tmp_path: Path) -> 
 
 def test_render_all_svg_in_run_handles_exception(monkeypatch, tmp_path: Path) -> None:
     """render_svg_file_to_png raising → except branch."""
+    pe = _live_png_export()
     svg = tmp_path / "x.svg"
     svg.write_text("<svg/>")
 
     def boom(*args, **kwargs):
         raise RuntimeError("svg render boom")
 
-    monkeypatch.setattr(png_export, "render_svg_file_to_png", boom)
-    monkeypatch.setattr(png_export, "_render_svg_placeholder_png", boom)
+    monkeypatch.setattr(pe, "render_svg_file_to_png", boom)
+    monkeypatch.setattr(pe, "_render_svg_placeholder_png", boom)
 
-    result = png_export.render_all_svg_in_run(tmp_path)
+    result = pe.render_all_svg_in_run(tmp_path)
     assert result == []
 
 
@@ -1157,14 +1165,15 @@ def test_render_all_pngs_with_program_graph(tmp_path: Path) -> None:
 
 def test_render_all_pngs_program_graph_exception(monkeypatch, tmp_path: Path) -> None:
     """render_program_graph_png raises → except at 2704-2705."""
+    pe = _live_png_export()
     pg = tmp_path / "program_graph.json"
     pg.write_text(json.dumps({"nodes": [{"id": "n1"}], "edges": []}))
 
     def boom(*args, **kwargs):
         raise RuntimeError("simulated pg failure")
 
-    monkeypatch.setattr(png_export, "render_program_graph_png", boom)
-    result = png_export.render_all_pngs(tmp_path)
+    monkeypatch.setattr(pe, "render_program_graph_png", boom)
+    result = pe.render_all_pngs(tmp_path)
     assert result["program_graph"] == []
 
 
@@ -1197,75 +1206,81 @@ def test_render_all_pngs_dot_exception(monkeypatch, tmp_path: Path) -> None:
 
 def test_render_all_pngs_state_space_exception(monkeypatch, tmp_path: Path) -> None:
     """state_space provided + render_state_space_factor_png raises → 2728-2729."""
+    pe = _live_png_export()
     ss = SimpleNamespace(variables={"v": 1}, observations={}, actions={})
 
     def boom(*args, **kwargs):
         raise RuntimeError("ss boom")
 
-    monkeypatch.setattr(png_export, "render_state_space_factor_png", boom)
-    result = png_export.render_all_pngs(tmp_path, state_space=ss)
+    monkeypatch.setattr(pe, "render_state_space_factor_png", boom)
+    result = pe.render_all_pngs(tmp_path, state_space=ss)
     assert result["state_space"] == []
 
 
 def test_render_all_pngs_connections_exception(monkeypatch, tmp_path: Path) -> None:
     """state_space provided + render_connections_matrix_png raises → 2735-2736."""
+    pe = _live_png_export()
     ss = SimpleNamespace(variables={"v": 1}, observations={}, actions={})
 
     def boom(*args, **kwargs):
         raise RuntimeError("cx boom")
 
-    monkeypatch.setattr(png_export, "render_connections_matrix_png", boom)
+    monkeypatch.setattr(pe, "render_connections_matrix_png", boom)
     # state_space factor PNG can succeed; we only care about connections branch
-    result = png_export.render_all_pngs(tmp_path, state_space=ss)
+    result = pe.render_all_pngs(tmp_path, state_space=ss)
     assert result["connections"] == []
 
 
 def test_render_all_pngs_process_exception(monkeypatch, tmp_path: Path) -> None:
     """process_model provided + render_process_gantt_png raises → 2743-2744."""
+    pe = _live_png_export()
     pm = SimpleNamespace(stages=[SimpleNamespace(name="s1")], policies=[])
 
     def boom(*args, **kwargs):
         raise RuntimeError("proc boom")
 
-    monkeypatch.setattr(png_export, "render_process_gantt_png", boom)
-    result = png_export.render_all_pngs(tmp_path, process_model=pm)
+    monkeypatch.setattr(pe, "render_process_gantt_png", boom)
+    result = pe.render_all_pngs(tmp_path, process_model=pm)
     assert result["process"] == []
 
 
 def test_render_all_pngs_markov_blanket_exception(monkeypatch, tmp_path: Path) -> None:
     """markov_blanket.json present, render raises → 2763-2764."""
+    pe = _live_png_export()
     mb = tmp_path / "markov_blanket.json"
     mb.write_text(json.dumps({"roles": {"n1": "internal"}, "edges": []}))
 
     def boom(*args, **kwargs):
         raise RuntimeError("mb boom")
 
-    monkeypatch.setattr(png_export, "render_markov_blanket_png", boom)
-    result = png_export.render_all_pngs(tmp_path)
+    monkeypatch.setattr(pe, "render_markov_blanket_png", boom)
+    result = pe.render_all_pngs(tmp_path)
     assert result["markov_blanket"] == []
 
 
 def test_render_all_pngs_gnn_md_exception(monkeypatch, tmp_path: Path) -> None:
     """model.gnn.md present, render raises → 2786-2787."""
+    pe = _live_png_export()
     md = tmp_path / "model.gnn.md"
     md.write_text("## A\nbody\n")
 
     def boom(*args, **kwargs):
         raise RuntimeError("gnn boom")
 
-    monkeypatch.setattr(png_export, "render_gnn_markdown_png", boom)
-    result = png_export.render_all_pngs(tmp_path)
+    monkeypatch.setattr(pe, "render_gnn_markdown_png", boom)
+    result = pe.render_all_pngs(tmp_path)
     assert result["gnn_markdown"] == []
 
 
 def test_render_all_pngs_summary_cover_exception(monkeypatch, tmp_path: Path) -> None:
     """render_summary_cover_png raises → 2795-2796."""
+    pe = _live_png_export()
 
     def boom(*args, **kwargs):
         raise RuntimeError("cover boom")
 
-    monkeypatch.setattr(png_export, "render_summary_cover_png", boom)
-    result = png_export.render_all_pngs(tmp_path)
+    monkeypatch.setattr(pe, "render_summary_cover_png", boom)
+    result = pe.render_all_pngs(tmp_path)
     assert result["summary_cover"] == []
 
 
@@ -1669,14 +1684,15 @@ def test_parse_mermaid_flowchart_node_with_label_assignment(tmp_path: Path) -> N
 
 def test_render_all_mermaid_in_run_handles_exception(monkeypatch, tmp_path: Path) -> None:
     """render_mermaid_file_to_png raises → except branch line 591-592."""
+    pe = _live_png_export()
     mmd = tmp_path / "x.mmd"
     mmd.write_text("graph TD\nA-->B\n")
 
     def boom(*args, **kwargs):
         raise RuntimeError("simulated render failure")
 
-    monkeypatch.setattr(png_export, "render_mermaid_file_to_png", boom)
-    result = png_export.render_all_mermaid_in_run(tmp_path)
+    monkeypatch.setattr(pe, "render_mermaid_file_to_png", boom)
+    result = pe.render_all_mermaid_in_run(tmp_path)
     assert result == []
 
 

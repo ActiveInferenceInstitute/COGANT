@@ -2,11 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import re
-import shutil
-import subprocess
-from collections import Counter
-from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, cast
 
@@ -16,10 +11,8 @@ from cogant.viz.png.config import (
     draw_color_legend,
     draw_footer,
     draw_metadata_banner,
-    downsample_graph,
     sha256_file,
     truncate,
-    timestamp,
     write_figure_sidecar,
 )
 
@@ -471,14 +464,14 @@ def render_connections_matrix_png(
             "C": [n_o, 1],
             "D": [n_s, 1],
         }
-        fallback_source_matrix_shapes = {
+        fallback_source_matrix_shapes: dict[str, list[int]] = {
             "A": [original_n_o, original_n_s],
             "B": [original_n_s, original_n_s],
             "C": [original_n_o, 1],
             "D": [original_n_s, 1],
         }
-        for key, shape in fallback_source_matrix_shapes.items():
-            source_matrix_shapes.setdefault(key, shape)
+        for key, fallback_shape in fallback_source_matrix_shapes.items():
+            source_matrix_shapes.setdefault(key, fallback_shape)
         displayed_counts = {
             "matrices": 4,
             "hidden_states": n_s,

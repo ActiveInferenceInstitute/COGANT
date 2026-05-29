@@ -1,19 +1,15 @@
 """Shared Typer app, console, and CLI helper utilities."""
 
-import functools
 import logging
-import sys
 from pathlib import Path
-from typing import Any
 
 import typer
 from rich.console import Console
-from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.table import Table
 
-from cogant.api.pipeline import PipelineConfig, PipelineRunner
 from cogant.api.bundle import Bundle
+from cogant.api.pipeline import PipelineConfig, PipelineRunner
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -124,9 +120,12 @@ def render_upstream_pipeline_table(result: object) -> None:
         )
     console.print(table)
     console.print(
-        f"[dim]executed={len(result.executed)} skipped={len(result.skipped)} "
-        f"success={result.success_count} fail={result.failure_count} "
-        f"total={result.total_duration_s:.2f}s output={result.output_dir}[/dim]"
+        f"[dim]executed={len(getattr(result, 'executed', []))} "
+        f"skipped={len(getattr(result, 'skipped', []))} "
+        f"success={getattr(result, 'success_count', 0)} "
+        f"fail={getattr(result, 'failure_count', 0)} "
+        f"total={float(getattr(result, 'total_duration_s', 0.0)):.2f}s "
+        f"output={getattr(result, 'output_dir', '')}[/dim]"
     )
 
 
