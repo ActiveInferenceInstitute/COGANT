@@ -4,7 +4,7 @@
 
 schema_version: '1.0'
 generated_at: '2026-05-31T18:44:38.255577Z'
-generator_git_sha: 4e195dc6278002988dc3369c6901fde96172ad5e
+generator_git_sha: af9478084930383d350d0844c9bc805784b9a056
 cogant_version: 0.6.0
 package:
   name: cogant
