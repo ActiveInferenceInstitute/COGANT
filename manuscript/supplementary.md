@@ -16,8 +16,8 @@ artefacts: `../cogant/docs/evaluation/ROUNDTRIP_EVAL.md`,
 `../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`, and
 `../cogant/docs/evaluation/CONSTRAINT_FIX.md`. Where the same measurement appears in
 more than one source the value in `ROUNDTRIP_EVAL.md` takes precedence as a
-historical role-preservation artifact; the current `METRICS.yaml` aggregate
-counts separately mark legacy rows as `STALE_LEGACY`.
+historical role-preservation artifact; the current `METRICS.yaml` aggregates are sourced from the native v0.6
+ledger (`role_preservation_score_source: {{ROLE_PRESERVATION_SCORE_SOURCE}}`); any retained legacy rows are marked `STALE_LEGACY` and excluded.
 
 **Recommended reading order:** @sec:S01-appendix-roundtrip-epsilon establishes the empirical ground truth
 (per-fixture `s_role` scores and tier assignments); @sec:S02-appendix-ablation decomposes those scores into

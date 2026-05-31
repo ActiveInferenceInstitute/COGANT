@@ -120,7 +120,7 @@ reverse synthesizer's **deficit-based** scaffolding for role `r` — the
 deficits relative to the source bundle (`cogant.reverse.planner`,
 `scaffold_*` plans). Because the scaffolding is deficit-based rather than a
 fixed template, `scaffold_r` is target-dependent and bounded, not a constant;
-the legacy ε-corpus rows illustrate its magnitude on small fixtures. The
+the native v0.6 ledger rows illustrate its magnitude on small fixtures. The
 large-program regime is the defensible asymptotic case: as origin role counts
 grow, this additive term becomes a smaller share of the role distribution. The small-program regime is
 diagnostic rather than theorem-friendly, because scaffolding can inflate a

@@ -1,0 +1,607 @@
+{
+  "per_transform": {
+    "drop_half_definitions": {
+      "category": "negative_control",
+      "fixtures": 3,
+      "mean_similarity": 0.9163,
+      "min_similarity": 0.7882,
+      "status": "DETECTED"
+    },
+    "insert_comments": {
+      "category": "semantics_preserving",
+      "fixtures": 3,
+      "mean_similarity": 1.0,
+      "min_similarity": 1.0,
+      "status": "ROBUST"
+    },
+    "insert_dead_code": {
+      "category": "semantics_preserving",
+      "fixtures": 3,
+      "mean_similarity": 1.0,
+      "min_similarity": 1.0,
+      "status": "ROBUST"
+    },
+    "outline_first_function": {
+      "category": "sensitivity_probe",
+      "fixtures": 3,
+      "mean_similarity": 1.0,
+      "min_similarity": 1.0,
+      "status": "PRESERVED"
+    },
+    "reformat": {
+      "category": "semantics_preserving",
+      "fixtures": 3,
+      "mean_similarity": 1.0,
+      "min_similarity": 1.0,
+      "status": "ROBUST"
+    },
+    "rename_parameters": {
+      "category": "semantics_preserving",
+      "fixtures": 3,
+      "mean_similarity": 1.0,
+      "min_similarity": 1.0,
+      "status": "ROBUST"
+    },
+    "reorder_methods": {
+      "category": "semantics_preserving",
+      "fixtures": 3,
+      "mean_similarity": 1.0,
+      "min_similarity": 1.0,
+      "status": "ROBUST"
+    },
+    "swap_if_branches": {
+      "category": "semantics_preserving",
+      "fixtures": 3,
+      "mean_similarity": 1.0,
+      "min_similarity": 1.0,
+      "status": "ROBUST"
+    }
+  },
+  "robust_threshold": 0.99,
+  "rows": [
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "calculator",
+      "original_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "reformat",
+      "transformed_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "event_pipeline",
+      "original_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "reformat",
+      "transformed_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "flask_mini",
+      "original_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "reformat",
+      "transformed_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "calculator",
+      "original_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "insert_comments",
+      "transformed_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "event_pipeline",
+      "original_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "insert_comments",
+      "transformed_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "flask_mini",
+      "original_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "insert_comments",
+      "transformed_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "calculator",
+      "original_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "insert_dead_code",
+      "transformed_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "event_pipeline",
+      "original_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "insert_dead_code",
+      "transformed_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "flask_mini",
+      "original_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "insert_dead_code",
+      "transformed_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "calculator",
+      "original_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "rename_parameters",
+      "transformed_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "event_pipeline",
+      "original_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "rename_parameters",
+      "transformed_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "flask_mini",
+      "original_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "rename_parameters",
+      "transformed_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "calculator",
+      "original_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "reorder_methods",
+      "transformed_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "event_pipeline",
+      "original_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "reorder_methods",
+      "transformed_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "flask_mini",
+      "original_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "reorder_methods",
+      "transformed_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "calculator",
+      "original_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "swap_if_branches",
+      "transformed_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "event_pipeline",
+      "original_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "swap_if_branches",
+      "transformed_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      }
+    },
+    {
+      "category": "semantics_preserving",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "flask_mini",
+      "original_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "ROBUST",
+      "transform": "swap_if_branches",
+      "transformed_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      }
+    },
+    {
+      "category": "sensitivity_probe",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "calculator",
+      "original_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "PRESERVED",
+      "transform": "outline_first_function",
+      "transformed_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      }
+    },
+    {
+      "category": "sensitivity_probe",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "event_pipeline",
+      "original_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "PRESERVED",
+      "transform": "outline_first_function",
+      "transformed_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      }
+    },
+    {
+      "category": "sensitivity_probe",
+      "degradation": 0.0,
+      "error": null,
+      "fixture": "flask_mini",
+      "original_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      },
+      "role_delta": {},
+      "similarity": 1.0,
+      "status": "PRESERVED",
+      "transform": "outline_first_function",
+      "transformed_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      }
+    },
+    {
+      "category": "negative_control",
+      "degradation": 0.2118,
+      "error": null,
+      "fixture": "calculator",
+      "original_roles": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      },
+      "role_delta": {
+        "ACTION": -1,
+        "CONSTRAINT": -1,
+        "OBSERVATION": -3
+      },
+      "similarity": 0.7882,
+      "status": "DETECTED",
+      "transform": "drop_half_definitions",
+      "transformed_roles": {
+        "ACTION": 5,
+        "HIDDEN_STATE": 1
+      }
+    },
+    {
+      "category": "negative_control",
+      "degradation": 0.0101,
+      "error": null,
+      "fixture": "event_pipeline",
+      "original_roles": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 9,
+        "POLICY": 4
+      },
+      "role_delta": {
+        "ACTION": -2,
+        "OBSERVATION": -4
+      },
+      "similarity": 0.9899,
+      "status": "DETECTED",
+      "transform": "drop_half_definitions",
+      "transformed_roles": {
+        "ACTION": 5,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 5,
+        "POLICY": 4
+      }
+    },
+    {
+      "category": "negative_control",
+      "degradation": 0.0292,
+      "error": null,
+      "fixture": "flask_mini",
+      "original_roles": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      },
+      "role_delta": {
+        "ACTION": -5,
+        "OBSERVATION": -1,
+        "POLICY": -2
+      },
+      "similarity": 0.9708,
+      "status": "DETECTED",
+      "transform": "drop_half_definitions",
+      "transformed_roles": {
+        "ACTION": 8,
+        "HIDDEN_STATE": 6,
+        "POLICY": 3
+      }
+    }
+  ],
+  "schema_version": "1.0",
+  "summary": {
+    "min_preserving_similarity": 1.0,
+    "negative_controls": 1,
+    "negative_controls_detected": 1,
+    "robust_transforms": 6,
+    "semantics_preserving_transforms": 6
+  }
+}
