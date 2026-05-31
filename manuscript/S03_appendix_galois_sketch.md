@@ -21,7 +21,7 @@ Define two order-preserving maps:
 
 > **F : Prog → GNN** — the forward pipeline. `F(G)` is the GNN bundle
 > emitted by `cogant translate G`: it runs ingest → static → normalize →
-> graph → translate → statespace → process → export → validate and returns
+> graph → dynamic → translate → statespace → process → export → validate and returns
 > the `gnn_package/model.gnn.md` bundle together with the derived A/B/C/D
 > matrices.
 >

@@ -71,6 +71,51 @@ report the fallback fraction and the non-default role distribution alongside the
 validator score; the shipped fixtures expose these via the per-target
 `metrics.json` (`role_confusion`, `graph_delta`, `matrix_delta`).
 
+## Lexical construct validity of forward role assignment
+
+The roundtrip `s_role` caveat above concerns the *reverse* direction. The
+*forward* role assignment carries its own construct-validity limit that the
+rule-evidence trace makes inspectable but does not eliminate. Semantic-family
+roles (OBSERVATION / ACTION / POLICY / PREFERENCE / CONTEXT) are assigned by
+tokenising an identifier on underscore and camel-case boundaries and matching
+the resulting whole tokens against per-role keyword vocabularies
+(`OBSERVATION_KEYWORDS`, `ACTION_KEYWORDS`, and the policy/preference/context
+sets). Role assignment is therefore a **lexical heuristic anchored to whole
+tokens**, not a behavioural analysis, and it is fallible in two opposite
+directions:
+
+- **False positives (mis-naming).** A method whose name contains a registered
+  keyword token but whose behaviour differs --- a `get_*` accessor that in fact
+  mutates state --- is mis-roled by name. The structural rules partially counter
+  this: COGANT suppresses an OBSERVATION mapping for a function that has WRITES
+  or MUTATES edges (the mutation fact outranks the lexical hint), and HIDDEN\_STATE
+  is driven by edges rather than names. Where no such structural signal exists,
+  the OBSERVATION/ACTION/POLICY split rests on the name.
+- **False negatives (non-canonical morphology).** Because matching is anchored to
+  whole tokens rather than raw substrings, an inflected or affixed form of a
+  keyword is *not* matched: `reroute` and `routes` do not match POLICY keyword
+  `route`, `download` does not match ACTION keyword `load`, and `environment`
+  does not match CONTEXT keyword `env`, so a legitimately role-bearing method can
+  be left unmapped and silently drop out of the generative model. (Whole-token
+  agentive nouns that are *themselves* registered keywords --- `dispatcher`,
+  `router`, `coordinator` in the POLICY vocabulary --- are unaffected and match
+  directly.) This is a deliberate precision-over-recall choice --- raw-substring
+  matching produced false positives such as `set_target` matching the keyword
+  `get` (the substring inside `target`) and `reset`/`dataset` matching `set` ---
+  and the recall loss is partially recovered by prefix-form keywords (the
+  OBSERVATION vocabulary registers `get_`, `read_`, and `sensor_` alongside the
+  bare forms) and by the structural edge rules.
+  The trade-off is pinned by a regression test
+  (`tests/unit/test_semantic_role_token_anchoring.py`) so any future move to
+  morphological normalisation is a deliberate change rather than silent drift.
+
+Two behaviourally distinct methods that share a keyword token collapse to the
+same `MappingKind`. This is precisely why the manuscript reports per-mapping
+provenance and the reviewer-facing rule-evidence trace rather than a single
+role-assignment accuracy figure: a human reviewer is expected to confirm or
+reject each role, and the keyword vocabularies were tuned on the shipped
+fixtures (see below).
+
 ## External validity: corpus and tuning
 
 The canonical roundtrip result is measured on **{{TOTAL_TARGETS}}** targets

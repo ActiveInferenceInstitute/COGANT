@@ -588,6 +588,7 @@ def _matrix_delta(original: dict[str, Any], synthesized: dict[str, Any]) -> dict
     shape_matches = 0
     compared = 0
     value_max_abs_delta = 0.0
+    value_length_mismatch = False
     for key in ("A", "B", "C", "D"):
         left = original.get(key)
         right = synthesized.get(key)
@@ -600,6 +601,13 @@ def _matrix_delta(original: dict[str, Any], synthesized: dict[str, Any]) -> dict
             shape_matches += 1
         left_vals = _flatten_numeric(left)
         right_vals = _flatten_numeric(right)
+        # A length mismatch means elements were dropped or added: a truncated
+        # ``zip`` would compare only the overlap and could report max_abs=0.0
+        # ("values preserved") even though the matrix changed size. Flag it so
+        # ``matrix_values_preserved`` cannot read a dropped element as zero drift.
+        key_length_mismatch = present and len(left_vals) != len(right_vals)
+        if key_length_mismatch:
+            value_length_mismatch = True
         deltas = [abs(a - b) for a, b in zip(left_vals, right_vals, strict=False)]
         max_abs = max(deltas) if deltas else None
         if max_abs is not None:
@@ -611,6 +619,7 @@ def _matrix_delta(original: dict[str, Any], synthesized: dict[str, Any]) -> dict
             "original_values": len(left_vals),
             "synthesized_values": len(right_vals),
             "max_abs_delta": max_abs,
+            "length_mismatch": key_length_mismatch,
         }
     return {
         "matrices": matrices,
@@ -618,6 +627,7 @@ def _matrix_delta(original: dict[str, Any], synthesized: dict[str, Any]) -> dict
         "compared_count": compared,
         "shape_score": shape_matches / compared if compared else 0.0,
         "max_abs_delta": value_max_abs_delta,
+        "length_mismatch": value_length_mismatch,
     }
 
 
@@ -699,6 +709,7 @@ def _roundtrip_invariants(
         ),
         "matrix_values_preserved": (
             float(matrix_delta.get("max_abs_delta", 0.0) or 0.0) <= MATRIX_VALUE_TOLERANCE
+            and not matrix_delta.get("length_mismatch", False)
             if matrix_delta.get("compared_count")
             else False
         ),

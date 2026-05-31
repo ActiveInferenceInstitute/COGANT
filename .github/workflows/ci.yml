@@ -63,7 +63,14 @@ jobs:
         # roundtrip_results.jsonl via the same _status() logic as
         # regenerate_metrics.py and asserts the count distribution matches
         # METRICS.yaml. Catches the keystone laundering pattern.
-        run: cd .. && uv run --directory cogant python ../tools/check_metrics_fresh.py
+        run: cd .. && uv run --directory cogant python ../tools/check_metrics_fresh.py --fail-on-dirty
+
+      - name: Manuscript module-reference gate
+        # RedTeam durable fix — every backticked ``cogant.*`` module/attribute
+        # cited in the manuscript must still resolve in the installed package.
+        # Catches references to deleted modules (e.g. the former
+        # ``cogant.viz.png_export``). Run from the inner env so deps import.
+        run: cd .. && uv run --directory cogant python ../tools/audit_manuscript_module_refs.py
 
       - name: Coverage-table drift gate
         # RedTeam F10 durable fix — strict comparison of every per-module

@@ -78,7 +78,7 @@ uv run cogant validate /tmp/repro_flask_app/gnn_package
 sha256sum /tmp/repro_flask_app/gnn_package/*.json | sort
 ```
 
-The `validate` step should report score `100.0 / 100` with zero errors and zero warnings, and the sorted SHA-256 listing should match the one recorded in `../cogant/examples/real_world/flask_app/output/manifest.json` (committed alongside the fixture). Any mismatch points to either a dependency drift (step 3) or an input drift (the Flask fixture itself changed between the committed output and the re-run).
+The `validate` step should report score `100.0 / 100` with zero errors and zero warnings, and the sorted SHA-256 listing should match the `manifest.json` written into the `gnn_package/` directory of the worked-example run itself. Any mismatch points to either a dependency drift (step 3) or an input drift (the Flask fixture itself changed between runs).
 
 ## Data ethics and licensing for exported bundles
 
@@ -87,5 +87,5 @@ Every COGANT bundle can contain identifiers, docstrings, and inline comments lif
 ## Cross-references
 
 - The CLI hub at [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md) and [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md) link to every flag that changes the recorded-output shape, and the stage list in [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md) enumerates the ten-stage DAG.
-- The per-release narrative in `../cogant/CHANGELOG.md` and `../cogant/RELEASE_NOTES.md` documents which default-behaviour changes (for example the POLICY / CONTEXT stub-emission fix discussed in @sec:10-conclusion and `ROUNDTRIP_IMPROVEMENT.md`) could affect a re-run against an older bundle.
+- The per-release narrative in `../cogant/CHANGELOG.md` documents which default-behaviour changes (for example the POLICY / CONTEXT stub-emission fix discussed in @sec:10-conclusion and `ROUNDTRIP_IMPROVEMENT.md`) could affect a re-run against an older bundle.
 - The calibration sweep plan in `../cogant/docs/evaluation/CALIBRATION.md` is the canonical reference for the `TODO(calibration)` markers cited in @sec:10-conclusion; re-running a confidence-threshold sweep requires the 20+ repository gold-standard corpus discussed there.

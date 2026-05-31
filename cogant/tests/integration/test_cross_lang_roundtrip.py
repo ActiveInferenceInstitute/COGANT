@@ -219,11 +219,13 @@ def test_js_state_space_and_matrices_are_non_degenerate(
     assert len(C) >= 1, f"C preferences empty; got len={len(C)}"
     assert len(D) >= 1, f"D prior empty; got len={len(D)}"
 
-    # Probability-simplex sanity: every row of A and D should be a valid
-    # distribution (sum ~ 1). This catches uninitialised matrices early.
-    for i, row in enumerate(A):
-        s = sum(row)
-        assert abs(s - 1.0) < 1e-6 or s == 0.0, f"A row {i} should be normalised; sum={s}"
+    # Probability-simplex sanity: A is column-stochastic (P(o|s) sums to 1
+    # over observation outcomes for each fixed hidden state s), and D is a
+    # valid distribution. This catches uninitialised matrices early.
+    n_states_A = len(A[0]) if A else 0
+    for j in range(n_states_A):
+        s = sum(A[i][j] for i in range(len(A)))
+        assert abs(s - 1.0) < 1e-6 or s == 0.0, f"A column {j} should be normalised; sum={s}"
     d_sum = sum(D)
     assert abs(d_sum - 1.0) < 1e-6 or d_sum == 0.0, f"D prior should be normalised; sum={d_sum}"
 

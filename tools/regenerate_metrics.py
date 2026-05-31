@@ -249,7 +249,9 @@ def get_test_results_and_coverage() -> tuple[dict[str, int], float, float]:
         rc, out = _run(
             "uv run pytest tests/ -q --tb=no -p no:warnings --no-header --no-cov 2>&1",
             cwd=COGANT_DIR,
-            timeout=1800,
+            # The full ~9.7k-test suite takes ~57 min single-process (no
+            # pytest-xdist); a tighter cap silently degrades the counts to 0.
+            timeout=5400,
         )
         for line in out.splitlines():
             if re.search(r"\d+\s+passed", line) or re.search(r"\d+\s+failed", line):

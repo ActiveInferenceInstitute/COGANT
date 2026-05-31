@@ -11,6 +11,7 @@ See :mod:`cogant.translate.rules` for the umbrella re-export and
 """
 
 import hashlib
+import re
 from typing import Any
 
 from cogant.graph.queries import GraphQuery
@@ -39,6 +40,72 @@ __all__ = [
     "PreferenceRule",
     "ContextRule",
 ]
+
+# Split on camelCase boundaries (``readSensor`` -> ``read`` | ``Sensor``),
+# acronym→word boundaries (``HTTPServer`` -> ``HTTP`` | ``Server``), and
+# letter↔digit boundaries so digit-glued verbs keep their leading token
+# (``read2Sensor`` -> ``read`` | ``2`` | ``sensor``; ``load3DModel`` ->
+# ``load`` | ``3`` | ``d`` | ``model``). Without the digit boundary,
+# ``get2`` tokenised to ``["get2"]`` and silently lost the ``get`` keyword
+# — a recall regression versus the old substring logic.
+_CAMEL_BOUNDARY = re.compile(
+    r"(?<=[a-z0-9])(?=[A-Z])"  # camelCase:    read|Sensor
+    r"|(?<=[A-Z])(?=[A-Z][a-z])"  # acronym→word: HTTP|Server
+    r"|(?<=[a-zA-Z])(?=[0-9])"  # letter→digit: get|2
+    r"|(?<=[0-9])(?=[a-zA-Z])"  # digit→letter: 2|Sensor
+)
+
+
+def _tokenize_name(name: str) -> list[str]:
+    """Split an identifier into lowercase tokens.
+
+    Splits on underscores and camelCase boundaries so that role-keyword
+    matching is anchored to whole tokens rather than raw substrings.
+    ``set_target`` -> ``["set", "target"]``; ``readSensor`` ->
+    ``["read", "sensor"]``; ``dataset`` -> ``["dataset"]``.
+    """
+    tokens: list[str] = []
+    for part in (name or "").split("_"):
+        if not part:
+            continue
+        tokens.extend(piece.lower() for piece in _CAMEL_BOUNDARY.split(part) if piece)
+    return tokens
+
+
+def _matched_keywords(name: str, keywords: list[str]) -> list[str]:
+    """Return the role keywords that match *name* under token anchoring.
+
+    A bare keyword (``"get"``) matches when it equals one of the
+    identifier's tokens. A ``"_"``-suffixed keyword (``"get_"``,
+    ``"sensor_"``) is prefix-style: it matches only when its stem is the
+    leading token. This replaces the previous unanchored substring
+    containment (``kw in name_lower``), which produced false hits such as
+    ``set_target`` matching observation keyword ``"get"`` (from
+    ``tar*get*``) and ``dataset``/``reset`` matching action keyword
+    ``"set"``. (An earlier draft also listed ``description``/``"describe"``;
+    that pair is not actually a substring match and is intentionally
+    omitted — the regression test's negative control rejects fixtures whose
+    offending keyword is not a real substring. See
+    ``tests/unit/test_semantic_role_token_anchoring.py``.)
+    """
+    tokens = _tokenize_name(name)
+    if not tokens:
+        return []
+    token_set = set(tokens)
+    leading = tokens[0]
+    out: list[str] = []
+    for kw in keywords:
+        if kw.endswith("_"):
+            if leading == kw[:-1]:
+                out.append(kw)
+        elif kw in token_set:
+            out.append(kw)
+    return out
+
+
+def _matches_keyword(name: str, keywords: list[str]) -> bool:
+    """Token-anchored keyword match (see :func:`_matched_keywords`)."""
+    return bool(_matched_keywords(name, keywords))
 
 
 class ObservationRule(TranslationRule):
@@ -80,18 +147,29 @@ class ObservationRule(TranslationRule):
         methods = graph.get_nodes_by_kind(NodeKind.METHOD)
 
         for node in functions + methods:
-            name_lower = node.name.lower()
-
-            # Check for keyword match
-            keyword_match = any(kw in name_lower for kw in observation_keywords)
+            # Token-anchored keyword match (no raw substring containment).
+            keyword_match = _matches_keyword(node.name, observation_keywords)
 
             # Check for read-only pattern: READS but no WRITES
             out_edges = graph.get_edges_from(node.id)
             reads = sum(1 for e in out_edges if e.kind == EdgeKind.READS)
             writes = sum(1 for e in out_edges if e.kind == EdgeKind.WRITES)
+            mutates = sum(1 for e in out_edges if e.kind == EdgeKind.MUTATES)
 
-            # Match if keyword match OR (has reads and no writes)
-            if keyword_match or (reads > 0 and writes == 0):
+            # A write-bearing function is an ACTION, not an OBSERVATION, even
+            # when its name lexically suggests a read (``read_sensor`` writes
+            # ``self.current_temp``). The structural mutation fact outranks
+            # the lexical observation hint, so the keyword signal is only
+            # honoured for functions that do not mutate state. This makes
+            # ActionRule's precedence over ObservationRule deterministic
+            # rather than relying on the 0.85 > 0.80 confidence tiebreak.
+            keyword_match = keyword_match and (writes + mutates) == 0
+
+            # Match if keyword match OR (has reads and neither writes nor mutates).
+            # A function that mutates state is an ACTION even without a WRITES
+            # edge, so the structural read-only branch must also exclude
+            # mutations (mirrors the keyword suppression above and explain()).
+            if keyword_match or (reads > 0 and writes == 0 and mutates == 0):
                 matches.append(
                     {
                         "node_id": node.id,
@@ -177,12 +255,12 @@ class ObservationRule(TranslationRule):
                 mapping_kind=self.mapping_kind.value,
             )
 
-        name_lower = (node.name or "").lower()
-        matched_keywords = [kw for kw in OBSERVATION_KEYWORDS if kw in name_lower]
+        matched_keywords = _matched_keywords(node.name, OBSERVATION_KEYWORDS)
 
         out_edges = graph.get_edges_from(node.id)
         read_targets = [e.target_id for e in out_edges if e.kind == EdgeKind.READS]
         write_targets = [e.target_id for e in out_edges if e.kind == EdgeKind.WRITES]
+        mutate_count = sum(1 for e in out_edges if e.kind == EdgeKind.MUTATES)
 
         evidence: list[str] = []
         if matched_keywords:
@@ -192,8 +270,10 @@ class ObservationRule(TranslationRule):
         if read_targets:
             evidence.append(f"READS targets: {sorted(read_targets)[:5]}")
 
-        keyword_match = bool(matched_keywords)
-        read_only = len(read_targets) > 0 and len(write_targets) == 0
+        # A write-bearing function is an ACTION; suppress the observation
+        # keyword signal when the node mutates state (mirrors matches()).
+        keyword_match = bool(matched_keywords) and (len(write_targets) + mutate_count) == 0
+        read_only = len(read_targets) > 0 and (len(write_targets) + mutate_count) == 0
 
         if keyword_match or read_only:
             if keyword_match and read_only:
@@ -218,14 +298,23 @@ class ObservationRule(TranslationRule):
                 mapping_kind=self.mapping_kind.value,
             )
 
+        if matched_keywords and (len(write_targets) + mutate_count) > 0:
+            reason = (
+                f"observation keyword(s) {matched_keywords} present but the "
+                f"function mutates state (WRITES={len(write_targets)}, "
+                f"MUTATES={mutate_count}); the structural mutation fact "
+                f"reclassifies it as an action"
+            )
+        else:
+            reason = (
+                f"no observation keyword in '{node.name}' and not read-only "
+                f"(READS={len(read_targets)}, WRITES={len(write_targets)})"
+            )
         return RuleExplanation(
             rule_name=self.name,
             priority=self.priority,
             fired=False,
-            reason=(
-                f"no observation keyword in '{node.name}' and not read-only "
-                f"(READS={len(read_targets)}, WRITES={len(write_targets)})"
-            ),
+            reason=reason,
             evidence=evidence,
             mapping_kind=self.mapping_kind.value,
         )
@@ -284,16 +373,13 @@ class ActionRule(TranslationRule):
         methods = graph.get_nodes_by_kind(NodeKind.METHOD)
 
         for node in functions + methods:
-            name_lower = node.name.lower()
-
-            # Check for keyword match
-            keyword_match = any(kw in name_lower for kw in action_keywords)
+            # Token-anchored keyword match (no raw substring containment).
+            keyword_match = _matches_keyword(node.name, action_keywords)
 
             # Count mutations (also used as edge-based fallback trigger)
             out_edges = graph.get_edges_from(node.id)
             writes = sum(1 for e in out_edges if e.kind in (EdgeKind.WRITES, EdgeKind.MUTATES))
             calls = sum(1 for e in out_edges if e.kind == EdgeKind.CALLS)
-            sum(1 for e in out_edges if e.kind == EdgeKind.WRITES)
 
             # Fallback threshold: ``writes >= 1`` outgoing WRITES/MUTATES
             # edge. Principled default aligned with the property invariant
@@ -373,8 +459,8 @@ class ActionRule(TranslationRule):
         Mirrors the :meth:`matches` decision by checking for action
         keywords in the node name and counting outgoing WRITES/MUTATES
         edges. The rule fires when either (a) the name contains an
-        action keyword, or (b) at least 2 outgoing WRITES edges exist
-        (the functional-codebase recall threshold).
+        action keyword, or (b) at least 1 outgoing WRITES/MUTATES edge
+        exists (the functional-codebase recall threshold).
         """
         if node.kind not in (NodeKind.FUNCTION, NodeKind.METHOD):
             return RuleExplanation(
@@ -388,8 +474,7 @@ class ActionRule(TranslationRule):
                 mapping_kind=self.mapping_kind.value,
             )
 
-        name_lower = (node.name or "").lower()
-        matched_keywords = [kw for kw in ACTION_KEYWORDS if kw in name_lower]
+        matched_keywords = _matched_keywords(node.name, ACTION_KEYWORDS)
 
         out_edges = graph.get_edges_from(node.id)
         write_edges = [e for e in out_edges if e.kind == EdgeKind.WRITES]
@@ -522,17 +607,25 @@ class PolicyRule(TranslationRule):
         # Find classes
         classes = graph.get_nodes_by_kind(NodeKind.CLASS)
         for cls in classes:
-            name_lower = cls.name.lower()
-            has_keyword = any(kw in name_lower for kw in policy_keywords)
+            has_keyword = _matches_keyword(cls.name, policy_keywords)
 
             # Check for __call__ method (callable class = decision logic)
             has_call_method = False
             out_edges = graph.get_edges_from(cls.id)
-            methods = [
-                graph.get_node(e.target_id) for e in out_edges if e.kind == EdgeKind.CONTAINS
+            # Distinct name from the function-loop ``methods`` below; filtering
+            # None here keeps the type ``list[Node]`` (get_node may return None
+            # for dangling CONTAINS targets) so attribute access is type-safe.
+            contained = [
+                node
+                for node in (
+                    graph.get_node(e.target_id)
+                    for e in out_edges
+                    if e.kind == EdgeKind.CONTAINS
+                )
+                if node is not None
             ]
-            for method in methods:
-                if method and method.name == "__call__":
+            for method in contained:
+                if method.name == "__call__":
                     has_call_method = True
                     break
 
@@ -552,8 +645,7 @@ class PolicyRule(TranslationRule):
         methods = graph.get_nodes_by_kind(NodeKind.METHOD)
 
         for node in functions + methods:
-            name_lower = node.name.lower()
-            if any(kw in name_lower for kw in policy_keywords):
+            if _matches_keyword(node.name, policy_keywords):
                 out_edges = graph.get_edges_from(node.id)
                 call_count = sum(1 for e in out_edges if e.kind == EdgeKind.CALLS)
 
@@ -672,8 +764,7 @@ class PreferenceRule(TranslationRule):
         # Find classes with Validator/Checker/etc in name
         classes = graph.get_nodes_by_kind(NodeKind.CLASS)
         for cls in classes:
-            name_lower = cls.name.lower()
-            if any(kw in name_lower for kw in constraint_keywords):
+            if _matches_keyword(cls.name, constraint_keywords):
                 matches.append(
                     {
                         "node_id": cls.id,
@@ -686,8 +777,7 @@ class PreferenceRule(TranslationRule):
         methods = graph.get_nodes_by_kind(NodeKind.METHOD)
 
         for node in functions + methods:
-            name_lower = node.name.lower()
-            if any(kw in name_lower for kw in constraint_keywords):
+            if _matches_keyword(node.name, constraint_keywords):
                 matches.append(
                     {
                         "node_id": node.id,
@@ -801,8 +891,7 @@ class ContextRule(TranslationRule):
         # Find classes and functions with context keywords
         classes = graph.get_nodes_by_kind(NodeKind.CLASS)
         for cls in classes:
-            name_lower = cls.name.lower()
-            if any(kw in name_lower for kw in context_keywords):
+            if _matches_keyword(cls.name, context_keywords):
                 matches.append(
                     {
                         "node_id": cls.id,
@@ -813,7 +902,6 @@ class ContextRule(TranslationRule):
         # Find functions that only read and return values (read-only + returns)
         functions = graph.get_nodes_by_kind(NodeKind.FUNCTION)
         for func in functions:
-            name_lower = func.name.lower()
             out_edges = graph.get_edges_from(func.id)
             reads = sum(1 for e in out_edges if e.kind == EdgeKind.READS)
             writes = sum(1 for e in out_edges if e.kind == EdgeKind.WRITES)
@@ -821,7 +909,7 @@ class ContextRule(TranslationRule):
 
             # Context function: reads config/state and returns it,
             # OR has context keyword in name
-            has_context_keyword = any(kw in name_lower for kw in context_keywords)
+            has_context_keyword = _matches_keyword(func.name, context_keywords)
             if has_context_keyword or (reads > 0 and writes == 0 and returns > 0):
                 matches.append(
                     {

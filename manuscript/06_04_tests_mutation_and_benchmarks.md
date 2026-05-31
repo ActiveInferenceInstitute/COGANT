@@ -29,31 +29,33 @@ Module-level coverage is concentrated in the layers that the **{{SHIPPED_FIXTURE
 |---|---:|---:|
 | `cogant.translate.engine` | 250 | 96% |
 | `cogant.translate.rules.structural` | 190 | 99% |
-| `cogant.translate.rules.semantic` | 235 | 94% |
+| `cogant.translate.rules.semantic` | 255 | 93% |
 | `cogant.translate.rules.behavioral` | 108 | 100% |
 | `cogant.translate.rules.control` | 79 | 100% |
 | `cogant.translate.rules.resilience` | 164 | 93% |
-| `cogant.translate.confidence` | 99 | 100% |
-| `cogant.statespace.compiler` | 471 | 100% |
+| `cogant.translate.confidence` | 98 | 100% |
+| `cogant.statespace.compiler` | 471 | 99% |
 | `cogant.statespace.variables` | 263 | 99% |
 | `cogant.statespace.temporal` | 217 | 100% |
 | `cogant.markov.blanket` | 166 | 100% |
-| `cogant.gnn.matrices` | 352 | 100% |
+| `cogant.gnn.matrices` | 359 | 99% |
 | `cogant.static.calls` | 151 | 89% |
 | `cogant.static.dataflow` | 297 | 95% |
 | `cogant.static.parser` | 236 | 89% |
 | `cogant.simulate.free_energy` | 165 | 100% |
 | `cogant.simulate.runner` | 252 | 99% |
 | `cogant.simulate.distributions` | 118 | 100% |
-| `cogant.scoring.drift` | 232 | 100% |
+| `cogant.scoring.drift` | 222 | 100% |
 | `cogant.scoring.metrics` | 142 | 99% |
 | `cogant.validate.integrity` | 140 | 96% |
 | `cogant.validate.schema_check` | 103 | 96% |
 | `cogant.validate.provenance_check` | 73 | 100% |
-| `cogant.viz.png_export` | 1771 | 90% |
-| `cogant.viz.matrix_view` | 292 | 92% |
+| `cogant.viz.png.mermaid` | 502 | 78% |
+| `cogant.viz.png.program_graph` | 283 | 89% |
+| `cogant.viz.png.state_space` | 215 | 97% |
+| `cogant.viz.matrix_view` | 324 | 92% |
 | `cogant.viz.network_view` | 227 | 91% |
-| `cogant.viz.flow` | 251 | 100% |
+| `cogant.viz.flow` | 251 | 99% |
 
 : Statement coverage of load-bearing modules (canonical v{{VERSION}} run, {{METRICS_GENERATED_AT}}). {#tbl:coverage-stmt-modules}
 

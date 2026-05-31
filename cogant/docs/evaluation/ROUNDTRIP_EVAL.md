@@ -15,10 +15,25 @@ Threshold convention: s_role >= 0.8 = ROLE_PRESERVED, 0.5 <= s_role < 0.8 = DRIF
 
 **Historical note:** The CONSTRAINT, POLICY, and CONTEXT scaffold changes dramatically
 improved reverse-synthesizer role preservation. The table below reflects a historical
-full re-run of all 23 targets after those changes. It reported all targets as
+full re-run of all 23 targets after those changes, which reported all targets as
 role-preserved (`s_role = 1.0000`). Earlier buckets (14 role-preserved, 6 drift,
 3 failed) are kept only as release history; neither historical bucket is current
 native v0.6 evidence or strict graph-isomorphism evidence.
+
+> **Reproducibility and consistency warning.** The per-target `s_role = 1.0000`
+> values in the table below are **not regenerable from any checked-in artifact**
+> and are **internally inconsistent with the v0.6 scorer** documented in
+> @sec:S01-appendix-roundtrip-epsilon. That scorer is the per-role mean of
+> $\min/\max$ multiset similarity, which penalizes hallucinated roles: for row 1
+> (`orig 1/1/2` vs `synth 1/7/5`) it would score the OBSERVATION role at
+> $1/7 \approx 0.14$ and the ACTION role at $2/5 = 0.40$, **not** 1.0. The
+> 1.0000 values were therefore produced by a different (legacy v0.5) procedure
+> that did not penalize role-count inflation, and the shipped
+> `roundtrip_results.jsonl` carries no `role_preservation_score` column to
+> recompute them. Treat this entire table as **unverified release history**, not
+> as a measured v0.6 result. The authoritative live figures are the
+> `role_preserved_count: 0` / `strict_isomorphism_count: 0` reported by
+> `METRICS.yaml`.
 
 ## Summary Table
 

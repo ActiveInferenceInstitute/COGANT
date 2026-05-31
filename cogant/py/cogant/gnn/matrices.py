@@ -5,7 +5,9 @@ Inference Institute (AII) upstream Generalized Notation Notation (GNN)
 specification:
 
 * **A** — likelihood matrix ``P(o | s)`` (observation given hidden state),
-  shape ``[n_obs x n_states]``. Rows sum to 1.0.
+  shape ``[n_obs x n_states]``. Columns sum to 1.0 (column-stochastic per
+  AII/pymdp convention: for each fixed hidden state ``s``, the distribution
+  over observation outcomes ``sum_o P(o | s) == 1``).
 * **B** — transition tensor ``P(s' | s, a)`` (next state given current
   state and action), shape ``[n_states x n_states x n_actions]``. For
   each action slice, columns sum to 1.0 (column-stochastic per AII
@@ -339,7 +341,10 @@ class GNNMatrices:
             n_direct = len(direct)
             n_indirect = n_states - n_direct
             if n_direct == 0:
-                # Uniform likelihood if no edges found — safer than zero.
+                # No evidence linking this observation to any state: assign
+                # equal pre-normalization mass across states. After the
+                # column normalization below this row contributes uniformly
+                # to every state-column (a maximally vague observation).
                 A[i] = [1.0 / n_states] * n_states
                 n_uniform += 1
                 continue
@@ -347,7 +352,23 @@ class GNNMatrices:
             indirect_share = _DEFAULT_INDIRECT_MASS / n_indirect if n_indirect > 0 else 0.0
             for j in range(n_states):
                 A[i][j] = direct_share if j in direct else indirect_share
-            A[i] = _normalize_row(A[i])
+
+        # Column-stochastic normalization (AII/pymdp convention). ``A`` holds
+        # ``A[o][s] = P(o | s)``, so for every fixed hidden state ``s`` the
+        # distribution over observation outcomes must sum to 1: each *column*
+        # sums to 1, not each row. (Row-normalizing would make ``sum_s
+        # P(o|s) = 1``, which is not a valid likelihood and breaks the
+        # predicted-observation update ``pred_obs[o] = sum_s A[o][s]·q(s)``
+        # in ``simulate/free_energy.py``.)
+        for j in range(n_states):
+            col_total = sum(A[i][j] for i in range(n_obs))
+            if col_total <= _EPSILON:
+                # A state observed by nothing: uniform over observations.
+                for i in range(n_obs):
+                    A[i][j] = 1.0 / n_obs
+            else:
+                for i in range(n_obs):
+                    A[i][j] = A[i][j] / col_total
 
         # Log A matrix computation details
         n_informed = n_obs - n_uniform
@@ -781,9 +802,12 @@ class GNNMatrices:
             elif A and any(len(row) != n_s for row in A):
                 errors.append(f"A has inconsistent column count (expected {n_s})")
             else:
-                for i, row in enumerate(A):
-                    if abs(sum(row) - 1.0) > 1e-6:  # row-norm tolerance
-                        errors.append(f"A row {i} does not sum to 1 (sum={sum(row):.6f})")
+                # A is column-stochastic: P(o|s) sums to 1 over observation
+                # outcomes for each fixed hidden state s (a column).
+                for j in range(n_s):
+                    col_sum = sum(A[i][j] for i in range(len(A)))
+                    if abs(col_sum - 1.0) > 1e-6:  # col-norm tolerance
+                        errors.append(f"A column {j} does not sum to 1 (sum={col_sum:.6f})")
 
         # B: n_states x n_states x n_actions
         if n_s > 0:

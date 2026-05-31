@@ -139,13 +139,24 @@ class MatrixVisualizer:
             fig, ax = plt.subplots(figsize=(10, 8))
 
             A_array = np.asarray(A, dtype=float)
-            if A_array.size == 0:
+            empty = A_array.size == 0
+            if empty:
                 A_array = np.zeros((1, 1), dtype=float)
             im = ax.imshow(A_array, cmap="YlGnBu", aspect="auto", origin="lower", vmin=0.0)
 
             ax.set_xlabel("Hidden States")
             ax.set_ylabel("Observations")
-            ax.set_title("A Matrix: Likelihood (Observation Model)")
+            # On empty data, label the no-data case explicitly rather than
+            # drawing a single blue cell under the normal title (which reads as
+            # a legitimate 1-state model). Matches plot_C_vector/plot_D_vector.
+            if empty:
+                ax.set_title("A Matrix: no data")
+                ax.text(
+                    0.5, 0.5, "no A-matrix data",
+                    ha="center", va="center", transform=ax.transAxes,
+                )
+            else:
+                ax.set_title("A Matrix: Likelihood (Observation Model)")
 
             plt.colorbar(im, ax=ax, label="Probability")
 
@@ -186,7 +197,8 @@ class MatrixVisualizer:
             fig, ax = plt.subplots(figsize=(10, 8))
 
             B_array = np.asarray(B, dtype=float)
-            if B_array.size == 0:
+            empty = B_array.size == 0
+            if empty:
                 B_array = np.zeros((1, 1), dtype=float)
 
             B_slice, convention = self._select_B_slice(B_array, action_idx)
@@ -195,7 +207,16 @@ class MatrixVisualizer:
 
             ax.set_xlabel("Current State")
             ax.set_ylabel("Next State")
-            ax.set_title(f"B Matrix: State Transition (Action {action_idx}, {convention})")
+            # Label the no-data case rather than drawing a blank cell under the
+            # normal title (consistent with plot_A_matrix / plot_C_vector).
+            if empty:
+                ax.set_title("B Matrix: no data")
+                ax.text(
+                    0.5, 0.5, "no B-matrix data",
+                    ha="center", va="center", transform=ax.transAxes,
+                )
+            else:
+                ax.set_title(f"B Matrix: State Transition (Action {action_idx}, {convention})")
 
             plt.colorbar(im, ax=ax, label="Probability")
 

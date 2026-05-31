@@ -55,14 +55,21 @@ without treating that information-theoretic distance as the shipped scorer.
 > dataset state" for the construct-validity bound.
 >
 > **This table** is the intermediate snapshot from wave 14 (CONSTRAINT
-> synthesizer fix only). The canonical historical evaluation it
-> describes is **wave 16** (CONSTRAINT + POLICY + CONTEXT synthesizer
-> fixes, 2026-04-10), which achieves role preservation for all 23
-> targets at s_role = 1.0 as recorded historically; current
-> METRICS.yaml's `role_preserved_count: 0` reflects the STALE_LEGACY
-> tagging of the retained ε-corpus, *not* a regression in the
-> evaluator. The wave-14 `s_role` values and tier assignments below
-> are preserved for historical traceability; see
+> synthesizer fix only). A later wave-16 run (CONSTRAINT + POLICY +
+> CONTEXT synthesizer fixes, 2026-04-10) is *reported* in
+> `../cogant/docs/evaluation/ROUNDTRIP_EVAL.md` as a perfect
+> role-preservation result on every target (s_role = 1.0), but that
+> figure is **not regenerable from any
+> checked-in artifact**: the retained ε-corpus
+> (`roundtrip_results.jsonl`) carries no `role_preservation_score`
+> field, and its per-target dimensions do not match the wave-16 table,
+> so the 23/23 result must be treated as **unverified release history,
+> not current evidence**. This is why `METRICS.yaml` reports
+> `role_preserved_count: 0`: the retained rows are tagged
+> `STALE_LEGACY` and the v0.6 evaluator is given no fresh corpus to
+> score — it is a *measurement gap*, not a demonstrated regression and
+> not a demonstrated 1.0 result. The wave-14 `s_role` values and tier
+> assignments below are preserved for historical traceability only; see
 > @sec:S01-appendix-a2-constraint for the CONSTRAINT fix trajectory
 > and `../cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md` for the full
 > wave-14 → wave-16 trajectory.

@@ -338,7 +338,6 @@ class ConfidenceModel:
 
         # Check evidence sources
         sources = [p.source for p in mapping.provenance]
-        set(sources)
 
         has_static = any("static" in s for s in sources)
         has_dynamic = any("dynamic" in s or "runtime" in s for s in sources)

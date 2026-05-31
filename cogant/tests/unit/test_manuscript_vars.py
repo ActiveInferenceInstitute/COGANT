@@ -104,6 +104,25 @@ def test_format_value_none_returns_empty_string(mv):
     assert mv.format_value_for_path("anything", None) == ""
 
 
+def test_load_bearing_null_is_left_unresolved_not_blanked(mv):
+    """A present-but-null load-bearing metric must NOT be silently substituted
+    with an empty string; the token stays unresolved so --strict can flag it."""
+    metrics = {"testing": {"coverage_percent": None}}
+    text = "Coverage is {{COVERAGE_PCT}}%."
+    out, _subs = mv.substitute_text(text, metrics)
+    assert "{{COVERAGE_PCT}}" in out
+    assert mv.find_unresolved_placeholders(out) == ["{{COVERAGE_PCT}}"]
+
+
+def test_intentionally_nullable_score_still_renders_na(mv):
+    """A null native role-preservation score is intentional and renders N/A."""
+    metrics = {"evaluation": {"roundtrip": {"mean_role_preservation_score": None}}}
+    text = "Mean score: {{MEAN_ROLE_PRESERVATION_SCORE}}."
+    out, _subs = mv.substitute_text(text, metrics)
+    assert out == "Mean score: N/A."
+    assert mv.find_unresolved_placeholders(out) == []
+
+
 def test_format_value_int_round_trips(mv):
     assert mv.format_value_for_path("testing.test_count_passing", 6915) == "6915"
 

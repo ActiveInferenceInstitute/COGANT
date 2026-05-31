@@ -15,6 +15,7 @@ from __future__ import annotations
 import logging
 import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -38,6 +39,24 @@ from cogant.translate.rules.semantic import (
     PolicyRule,
     PreferenceRule,
 )
+
+
+@contextmanager
+def _silence_logging():
+    """Silence noisy pipeline logs for the duration of a block, then restore
+    the *process-global* ``logging.disable`` threshold.
+
+    ``logging.disable(logging.CRITICAL)`` sets a global threshold; left set, it
+    drops every WARNING for the rest of the process and makes later tests that
+    rely on captured WARNING records (e.g. ``test_viz_failure_surfacing``) fail
+    order-dependently. Always pair the disable with a restore.
+    """
+    previous = logging.root.manager.disable
+    logging.disable(logging.CRITICAL)
+    try:
+        yield
+    finally:
+        logging.disable(previous)
 from cogant.translate.rules.structural import (
     MutatingSubsystemRule,
     ReadOnlyInputRule,
@@ -114,6 +133,38 @@ def test_read_only_function_without_keyword_still_observation() -> None:
 
     kinds = _apply_rule(builder.graph, ObservationRule())
     assert kinds.get(fn.id) == MappingKind.OBSERVATION
+
+
+def test_reads_and_mutates_without_keyword_is_not_observation() -> None:
+    """A function that READS *and* MUTATES state (no WRITES edge, no keyword)
+    must not fall through to OBSERVATION: a state mutation makes it an ACTION.
+
+    Regression for a RedTeam finding — the structural read-only branch checked
+    only ``writes == 0`` and ignored MUTATES edges, so an in-place updater with
+    no observation keyword was mislabeled OBSERVATION.
+    """
+    builder = _fresh_builder()
+    fn = builder.add_node(
+        kind=NodeKind.FUNCTION,
+        name="accumulate",  # no observation keyword
+        qualified_name="mod.accumulate",
+        path="mod.py",
+        language="Python",
+    )
+    var = builder.add_node(
+        kind=NodeKind.VARIABLE,
+        name="total",
+        qualified_name="mod.total",
+        path="mod.py",
+        language="Python",
+    )
+    builder.add_edge(fn.id, var.id, EdgeKind.READS)
+    builder.add_edge(fn.id, var.id, EdgeKind.MUTATES)
+
+    obs_kinds = _apply_rule(builder.graph, ObservationRule())
+    assert obs_kinds.get(fn.id) != MappingKind.OBSERVATION
+    action_kinds = _apply_rule(builder.graph, ActionRule())
+    assert action_kinds.get(fn.id) == MappingKind.ACTION
 
 
 # ---------------------------------------------------------------------------
@@ -288,22 +339,22 @@ def calculator_pipeline():
     Returns a tuple ``(graph, semantic_mappings_dict, markov_blanket)``.
     Module-scoped so we pay the ingest/parse cost once.
     """
-    logging.disable(logging.CRITICAL)
-    from orchestrate_roundtrip import RoundtripOrchestrator  # type: ignore
+    with _silence_logging():
+        from orchestrate_roundtrip import RoundtripOrchestrator  # type: ignore
 
-    from cogant.markov.extractor import MarkovBlanketExtractor
+        from cogant.markov.extractor import MarkovBlanketExtractor
 
-    repo = _EX / "control_positive" / "calculator"
-    with tempfile.TemporaryDirectory() as d:
-        orch = RoundtripOrchestrator(repo, Path(d))
-        snapshot = orch._ingest_repo()
-        parsed = orch._parse_files(snapshot)
-        symtabs = orch._extract_symbols(parsed)
-        imports = orch._analyze_imports(snapshot)
-        calls = orch._build_call_graph(snapshot)
-        graph = orch._build_program_graph(snapshot, parsed, symtabs, imports, calls)
-        mappings = orch._apply_translation_rules(graph)
-        blanket = MarkovBlanketExtractor(graph).extract(strategy="auto")
+        repo = _EX / "control_positive" / "calculator"
+        with tempfile.TemporaryDirectory() as d:
+            orch = RoundtripOrchestrator(repo, Path(d))
+            snapshot = orch._ingest_repo()
+            parsed = orch._parse_files(snapshot)
+            symtabs = orch._extract_symbols(parsed)
+            imports = orch._analyze_imports(snapshot)
+            calls = orch._build_call_graph(snapshot)
+            graph = orch._build_program_graph(snapshot, parsed, symtabs, imports, calls)
+            mappings = orch._apply_translation_rules(graph)
+            blanket = MarkovBlanketExtractor(graph).extract(strategy="auto")
     return graph, mappings, blanket
 
 
@@ -383,19 +434,19 @@ def test_calculator_blanket_roles_are_consistent(calculator_pipeline) -> None:
 @pytest.mark.parametrize("fixture_name", ["event_pipeline", "flask_mini"])
 def test_other_fixtures_produce_policy_mappings(fixture_name: str) -> None:
     """Handler/middleware-heavy fixtures should surface POLICY mappings."""
-    logging.disable(logging.CRITICAL)
-    from orchestrate_roundtrip import RoundtripOrchestrator  # type: ignore
+    with _silence_logging():
+        from orchestrate_roundtrip import RoundtripOrchestrator  # type: ignore
 
-    repo = _EX / "control_positive" / fixture_name
-    with tempfile.TemporaryDirectory() as d:
-        orch = RoundtripOrchestrator(repo, Path(d))
-        snapshot = orch._ingest_repo()
-        parsed = orch._parse_files(snapshot)
-        symtabs = orch._extract_symbols(parsed)
-        imports = orch._analyze_imports(snapshot)
-        calls = orch._build_call_graph(snapshot)
-        graph = orch._build_program_graph(snapshot, parsed, symtabs, imports, calls)
-        mappings = orch._apply_translation_rules(graph)
+        repo = _EX / "control_positive" / fixture_name
+        with tempfile.TemporaryDirectory() as d:
+            orch = RoundtripOrchestrator(repo, Path(d))
+            snapshot = orch._ingest_repo()
+            parsed = orch._parse_files(snapshot)
+            symtabs = orch._extract_symbols(parsed)
+            imports = orch._analyze_imports(snapshot)
+            calls = orch._build_call_graph(snapshot)
+            graph = orch._build_program_graph(snapshot, parsed, symtabs, imports, calls)
+            mappings = orch._apply_translation_rules(graph)
 
     kinds = {m.kind for m in mappings.values()}
     # These fixtures all contain Handler/Controller/Middleware classes

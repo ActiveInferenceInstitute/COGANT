@@ -31,12 +31,32 @@ from cogant.viz.png.svg import render_all_svg_in_run
 logger = logging.getLogger(__name__)
 
 
+class _RendererFailureCapture(logging.Handler):
+    """Scoped handler that records per-renderer warnings during a render run.
+
+    Each renderer in :func:`render_all_pngs` catches its own exception and logs
+    a warning so one bad artifact does not abort the rest. Without this capture
+    those warnings vanished into the log and a half-failed run reported the same
+    green success as a complete one. This collects them so the run can emit a
+    single distinct ERROR summary and expose the failures to the caller.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(level=logging.WARNING)
+        self.messages: list[str] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        if record.levelno >= logging.WARNING:
+            self.messages.append(record.getMessage())
+
+
 def render_all_pngs(
     run_dir: Path,
     *,
     state_space: Any = None,
     process_model: Any = None,
     cfg: RenderConfig | None = None,
+    failures: list[str] | None = None,
 ) -> dict[str, list[Path]]:
     """Render review artifacts for every visualization artifact under ``run_dir``.
 
@@ -59,6 +79,21 @@ def render_all_pngs(
     """
     run_dir = Path(run_dir)
     cfg = cfg or DEFAULT_CONFIG
+    # Capture renderer warnings so a partially-failed run is reported loudly
+    # rather than as a silent success. Attach to the ``cogant.viz.png`` PACKAGE
+    # logger (an ancestor of every sub-renderer module logger), not this
+    # module's own logger: per Python logging, a record propagates UP to its
+    # ancestors but never to siblings, so a handler on ``...png.orchestrator``
+    # would miss failures logged by ``...png.program_graph`` etc. The package
+    # logger sees both the orchestrator's own except-block warnings and the
+    # sub-renderers' internally-handled warnings. (Strip any stale capturer
+    # first to bound accumulation if a prior call left without cleanup.)
+    _viz_logger = logging.getLogger("cogant.viz.png")
+    _viz_logger.handlers = [
+        h for h in _viz_logger.handlers if not isinstance(h, _RendererFailureCapture)
+    ]
+    _capture = _RendererFailureCapture()
+    _viz_logger.addHandler(_capture)
     out: dict[str, list[Path]] = {
         "program_graph": [],
         "mermaid": [],
@@ -231,4 +266,15 @@ def render_all_pngs(
 
     total = sum(len(v) for v in out.values())
     logger.info("render_all_pngs wrote %d visualization files under %s", total, run_dir)
+
+    _viz_logger.removeHandler(_capture)
+    if _capture.messages:
+        logger.error(
+            "render_all_pngs: %d renderer warning(s)/failure(s) (run may be "
+            "incomplete): %s",
+            len(_capture.messages),
+            "; ".join(_capture.messages),
+        )
+        if failures is not None:
+            failures.extend(_capture.messages)
     return out

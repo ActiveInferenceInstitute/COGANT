@@ -34,7 +34,18 @@ def main() -> int:
     if args.print_default_config:
         print(json.dumps(DEFAULT_CONFIG, indent=2))
         return 0
-    return run_batch(args)
+    # C1: main()'s exit code must be failure-aware. ``failures`` is bound
+    # before the try so the final return references a defined name on every
+    # non-early-return path (and mypy --strict sees no possibly-unbound name).
+    failures: list[str] = []
+    try:
+        rc = run_batch(args)
+    except KeyboardInterrupt:
+        print("run_all: interrupted", file=sys.stderr)
+        return 130
+    if rc != 0:
+        failures.append(f"run_batch exit={rc}")
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":

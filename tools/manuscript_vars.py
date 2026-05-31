@@ -60,10 +60,22 @@ def resolve_path(data: dict[str, Any] | Any, dotpath: str) -> Any:
     return None if value is _MISSING else value
 
 
+def is_nullable_path(path: str) -> bool:
+    """True if a ``None`` value at *path* is intentional (renders ``N/A``).
+
+    Only the native role-preservation score fields are legitimately nullable
+    (when only legacy ε rows are present). Every other load-bearing metric that
+    resolves to ``None`` is a generation defect and must be surfaced — see
+    :func:`substitute_text`, which leaves such tokens unresolved so ``--strict``
+    can fail rather than shipping a silent blank.
+    """
+    return "role_preservation_score" in path
+
+
 def format_value_for_path(path: str, value: Any) -> str:
     """Format a METRICS value for manuscript substitution (aligned with inject tool)."""
     if value is None:
-        if "role_preservation_score" in path:
+        if is_nullable_path(path):
             return "N/A"
         return ""
     if isinstance(value, bool):
@@ -97,7 +109,9 @@ def build_flat_variables(metrics: dict[str, Any]) -> dict[str, str]:
     out: dict[str, str] = {}
     for placeholder, path in MANUSCRIPT_VARS.items():
         value = _resolve_path_raw(metrics, path)
-        if value is _MISSING:
+        # Skip missing keys and load-bearing nulls so they surface as unresolved
+        # tokens (an intentionally-nullable score still renders "N/A").
+        if value is _MISSING or (value is None and not is_nullable_path(path)):
             continue
         key = placeholder_to_json_key(placeholder)
         out[key] = format_value_for_path(path, value)
@@ -115,7 +129,10 @@ def substitute_text(text: str, metrics: dict[str, Any]) -> tuple[str, list[str]]
     substitutions: list[str] = []
     for var, path in MANUSCRIPT_VARS.items():
         value = _resolve_path_raw(metrics, path)
-        if value is _MISSING:
+        # Leave missing keys and load-bearing nulls unresolved so
+        # find_unresolved_placeholders / --strict can flag them, rather than
+        # silently substituting an empty string for a present-but-null metric.
+        if value is _MISSING or (value is None and not is_nullable_path(path)):
             continue
         formatted = format_value_for_path(path, value)
         if var in text:
@@ -257,16 +274,16 @@ MANUSCRIPT_VARS: dict[str, str] = {
     "{{ABLATION_FLASK_APP_K10}}": "ablation.fixpoint.flask_app.k10",
     "{{ABLATION_REQUESTS_LIB_K10}}": "ablation.fixpoint.requests_lib.k10",
     "{{ABLATION_JSON_STDLIB_K10}}": "ablation.fixpoint.json_stdlib.k10",
-    "{{ABLATION_CALCULATOR_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.calculator.a_rows_uniform",
-    "{{ABLATION_CALCULATOR_A_ROWS_TOTAL}}": "ablation.matrix_fallback.calculator.a_rows_total",
-    "{{ABLATION_EVENT_PIPELINE_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.event_pipeline.a_rows_uniform",
-    "{{ABLATION_EVENT_PIPELINE_A_ROWS_TOTAL}}": "ablation.matrix_fallback.event_pipeline.a_rows_total",
-    "{{ABLATION_FLASK_MINI_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.flask_mini.a_rows_uniform",
-    "{{ABLATION_FLASK_MINI_A_ROWS_TOTAL}}": "ablation.matrix_fallback.flask_mini.a_rows_total",
-    "{{ABLATION_FLASK_APP_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.flask_app.a_rows_uniform",
-    "{{ABLATION_FLASK_APP_A_ROWS_TOTAL}}": "ablation.matrix_fallback.flask_app.a_rows_total",
-    "{{ABLATION_JSON_STDLIB_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.json_stdlib.a_rows_uniform",
-    "{{ABLATION_JSON_STDLIB_A_ROWS_TOTAL}}": "ablation.matrix_fallback.json_stdlib.a_rows_total",
+    "{{ABLATION_CALCULATOR_A_COLS_UNIFORM}}": "ablation.matrix_fallback.calculator.a_cols_uniform",
+    "{{ABLATION_CALCULATOR_A_COLS_TOTAL}}": "ablation.matrix_fallback.calculator.a_cols_total",
+    "{{ABLATION_EVENT_PIPELINE_A_COLS_UNIFORM}}": "ablation.matrix_fallback.event_pipeline.a_cols_uniform",
+    "{{ABLATION_EVENT_PIPELINE_A_COLS_TOTAL}}": "ablation.matrix_fallback.event_pipeline.a_cols_total",
+    "{{ABLATION_FLASK_MINI_A_COLS_UNIFORM}}": "ablation.matrix_fallback.flask_mini.a_cols_uniform",
+    "{{ABLATION_FLASK_MINI_A_COLS_TOTAL}}": "ablation.matrix_fallback.flask_mini.a_cols_total",
+    "{{ABLATION_FLASK_APP_A_COLS_UNIFORM}}": "ablation.matrix_fallback.flask_app.a_cols_uniform",
+    "{{ABLATION_FLASK_APP_A_COLS_TOTAL}}": "ablation.matrix_fallback.flask_app.a_cols_total",
+    "{{ABLATION_JSON_STDLIB_A_COLS_UNIFORM}}": "ablation.matrix_fallback.json_stdlib.a_cols_uniform",
+    "{{ABLATION_JSON_STDLIB_A_COLS_TOTAL}}": "ablation.matrix_fallback.json_stdlib.a_cols_total",
     "{{ABLATION_CALCULATOR_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.calculator.c_entries_zero",
     "{{ABLATION_CALCULATOR_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.calculator.c_entries_total",
     "{{ABLATION_EVENT_PIPELINE_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.event_pipeline.c_entries_zero",
@@ -275,8 +292,8 @@ MANUSCRIPT_VARS: dict[str, str] = {
     "{{ABLATION_FLASK_MINI_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.flask_mini.c_entries_total",
     "{{ABLATION_FLASK_APP_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.flask_app.c_entries_zero",
     "{{ABLATION_FLASK_APP_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.flask_app.c_entries_total",
-    "{{ABLATION_REQUESTS_LIB_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.requests_lib.a_rows_uniform",
-    "{{ABLATION_REQUESTS_LIB_A_ROWS_TOTAL}}": "ablation.matrix_fallback.requests_lib.a_rows_total",
+    "{{ABLATION_REQUESTS_LIB_A_COLS_UNIFORM}}": "ablation.matrix_fallback.requests_lib.a_cols_uniform",
+    "{{ABLATION_REQUESTS_LIB_A_COLS_TOTAL}}": "ablation.matrix_fallback.requests_lib.a_cols_total",
     "{{ABLATION_REQUESTS_LIB_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.requests_lib.c_entries_zero",
     "{{ABLATION_REQUESTS_LIB_C_ENTRIES_TOTAL}}": "ablation.matrix_fallback.requests_lib.c_entries_total",
     "{{ABLATION_JSON_STDLIB_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.json_stdlib.c_entries_zero",
@@ -315,8 +332,8 @@ MANUSCRIPT_VARS: dict[str, str] = {
     "{{ABLATION_ZOO01_STRUCTURAL_POLICY_DELTA}}": "ablation.by_mapping_kind.01_simple_state.structural.POLICY",
     "{{ABLATION_ZOO01_SEMANTIC_OBSERVATION_DELTA}}": "ablation.by_mapping_kind.01_simple_state.semantic.OBSERVATION",
     "{{ABLATION_ZOO01_SEMANTIC_ACTION_DELTA}}": "ablation.by_mapping_kind.01_simple_state.semantic.ACTION",
-    "{{ABLATION_ZOO01_A_ROWS_UNIFORM}}": "ablation.matrix_fallback.01_simple_state.a_rows_uniform",
-    "{{ABLATION_ZOO01_A_ROWS_TOTAL}}": "ablation.matrix_fallback.01_simple_state.a_rows_total",
+    "{{ABLATION_ZOO01_A_COLS_UNIFORM}}": "ablation.matrix_fallback.01_simple_state.a_cols_uniform",
+    "{{ABLATION_ZOO01_A_COLS_TOTAL}}": "ablation.matrix_fallback.01_simple_state.a_cols_total",
     "{{ABLATION_ZOO01_B_ACTIONS_IDENTITY}}": "ablation.matrix_fallback.01_simple_state.b_actions_identity",
     "{{ABLATION_ZOO01_B_ACTIONS_TOTAL}}": "ablation.matrix_fallback.01_simple_state.b_actions_total",
     "{{ABLATION_ZOO01_C_ENTRIES_ZERO}}": "ablation.matrix_fallback.01_simple_state.c_entries_zero",

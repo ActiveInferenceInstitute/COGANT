@@ -55,8 +55,8 @@ isolate each rule family's contribution to the minimal POMDP skeleton.
    assertion/event, and resilience idioms in the fixture.
 
 4. **Matrix fallbacks are fully active on the minimal fixture.** The same
-   measured run records {{ABLATION_ZOO01_A_ROWS_UNIFORM}} /
-   {{ABLATION_ZOO01_A_ROWS_TOTAL}} uniform A rows,
+   measured run records {{ABLATION_ZOO01_A_COLS_UNIFORM}} /
+   {{ABLATION_ZOO01_A_COLS_TOTAL}} uniform A state-columns,
    {{ABLATION_ZOO01_B_ACTIONS_IDENTITY}} /
    {{ABLATION_ZOO01_B_ACTIONS_TOTAL}} identity B actions, and
    {{ABLATION_ZOO01_C_ENTRIES_ZERO}} /

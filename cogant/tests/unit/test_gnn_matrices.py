@@ -275,11 +275,17 @@ class TestAMatrix:
         for row in A:
             assert len(row) == matrices.n_states  # 3 hidden states
 
-    def test_A_rows_sum_to_one(self, matrices: GNNMatrices) -> None:
-        """Each row of A must be a valid probability distribution."""
+    def test_A_columns_sum_to_one(self, matrices: GNNMatrices) -> None:
+        """A is column-stochastic: P(o|s) sums to 1 over observation outcomes
+        for each fixed hidden state s (a column), per the AII/pymdp convention.
+        Row-normalizing would make sum_s P(o|s)=1, which is not a valid
+        likelihood and breaks the predicted-observation update in free_energy.
+        """
         A = matrices.compute_A()
-        for i, row in enumerate(A):
-            assert abs(sum(row) - 1.0) < 1e-6, f"A row {i} sums to {sum(row)}"
+        n_states = matrices.n_states
+        for j in range(n_states):
+            col_sum = sum(A[i][j] for i in range(len(A)))
+            assert abs(col_sum - 1.0) < 1e-6, f"A column {j} sums to {col_sum}"
 
     def test_A_concentrates_mass_on_direct_reads(self, matrices: GNNMatrices) -> None:
         """Observation 0 reads state 0, so A[0][0] should be the largest."""

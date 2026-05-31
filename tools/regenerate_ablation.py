@@ -208,9 +208,22 @@ def compute_ablation(fixtures: list[tuple[str, str]]) -> dict[str, Any]:
             matrix_d = matrices.compute_D()
 
             b_identity, b_total = _count_identity_b_actions(matrix_b)
+            # A is column-stochastic (P(o|s)): a "fallback" column is a hidden
+            # state whose likelihood over observations is the maximum-entropy
+            # uniform default — i.e. no observation reads/observes that state,
+            # so it carries no discriminating evidence. Count uniform COLUMNS
+            # (the correct axis for P(o|s)); the legacy row count is invalid
+            # under the column-stochastic convention.
+            n_obs_a = len(matrix_a)
+            n_states_a = len(matrix_a[0]) if matrix_a and matrix_a[0] else 0
+            a_cols_uniform = sum(
+                1
+                for j in range(n_states_a)
+                if _is_uniform_vector([matrix_a[i][j] for i in range(n_obs_a)])
+            )
             matrix_fallback[name] = {
-                "a_rows_uniform": sum(1 for row in matrix_a if _is_uniform_row(row)),
-                "a_rows_total": len(matrix_a),
+                "a_cols_uniform": a_cols_uniform,
+                "a_cols_total": n_states_a,
                 "b_actions_identity": b_identity,
                 "b_actions_total": b_total,
                 "c_entries_zero": sum(

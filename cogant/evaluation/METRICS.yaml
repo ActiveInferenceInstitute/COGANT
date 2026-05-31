@@ -3,33 +3,33 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-05-22T12:51:40.805983Z'
-generator_git_sha: 73eacf80b915c66af7f54e939b5a182ea52a34bf
+generated_at: '2026-05-31T03:36:45.955533Z'
+generator_git_sha: 38d841cfbc43695d5d03e5cf830e790493865120
 cogant_version: 0.6.0
 package:
   name: cogant
   version: 0.6.0
   python_min: '3.11'
 testing:
-  test_count_total: 9654
-  test_count_passing: 9650
+  test_count_total: 9676
+  test_count_passing: 9672
   test_count_failing: 0
   test_count_skipped: 4
   test_count_xfailed: 0
   test_count_xpassed: 0
-  test_files_unit: 309
+  test_files_unit: 312
   test_files_integration: 28
   test_files_property: 10
   test_files_fuzz: 1
-  coverage_percent: 94.98
+  coverage_percent: 95.55
   mypy_strict_errors: 0
   ruff_violations: 0
 codebase:
-  python_source_files: 211
-  python_loc: 81500
-  public_modules: 174
+  python_source_files: 231
+  python_loc: 82121
+  public_modules: 191
   public_classes: 405
-  public_functions: 1113
+  public_functions: 1134
 pipeline:
   stage_count: 10
   translation_rules: 22
@@ -49,7 +49,7 @@ evaluation:
     data_source: cogant/evaluation/dataset/roundtrip_results.jsonl
     note: 'Legacy benchmark rows converted to the v0.6 roundtrip taxonomy: role-preserved
       is reported separately from strict structural isomorphism.'
-    threshold_role_preserved: 0.8
+    threshold_role_preserved: 0.5
     threshold_drift: 0.5
     total_targets: 23
     role_preserved_count: 0
@@ -481,7 +481,7 @@ literature:
   source: cogant/docs/evaluation/LITERATURE.md
   bibliography_entries: 103
 benchmark:
-  suite_runtime_s: 1359.42
+  suite_runtime_s: 3083.85
   shipped_fixture_count: 12
   benchmark_suite_file: suite_20260423.md
   benchmark_python_version: 3.12.11
@@ -533,10 +533,10 @@ ablation:
     flask_mini:
       baseline_mappings_total: 25
       baseline_by_mapping_kind:
-        ACTION: 14
+        ACTION: 13
         HIDDEN_STATE: 6
         OBSERVATION: 1
-        POLICY: 4
+        POLICY: 5
       structural_delta: 3
       behavioral_delta: 0
       control_delta: 0
@@ -545,11 +545,11 @@ ablation:
     flask_app:
       baseline_mappings_total: 72
       baseline_by_mapping_kind:
-        ACTION: 28
+        ACTION: 26
         CONSTRAINT: 1
         CONTEXT: 5
         HIDDEN_STATE: 13
-        OBSERVATION: 22
+        OBSERVATION: 24
         POLICY: 3
       structural_delta: 10
       behavioral_delta: 0
@@ -557,27 +557,27 @@ ablation:
       semantic_delta: 53
       resilience_delta: 1
     requests_lib:
-      baseline_mappings_total: 63
+      baseline_mappings_total: 62
       baseline_by_mapping_kind:
-        ACTION: 17
+        ACTION: 15
         HIDDEN_STATE: 8
-        OBSERVATION: 36
+        OBSERVATION: 37
         POLICY: 2
       structural_delta: 4
       behavioral_delta: 0
       control_delta: 0
-      semantic_delta: 51
+      semantic_delta: 50
       resilience_delta: 0
     json_stdlib:
-      baseline_mappings_total: 19
+      baseline_mappings_total: 16
       baseline_by_mapping_kind:
-        ACTION: 15
+        ACTION: 11
         HIDDEN_STATE: 3
-        OBSERVATION: 1
+        OBSERVATION: 2
       structural_delta: 3
       behavioral_delta: 0
       control_delta: 0
-      semantic_delta: 16
+      semantic_delta: 13
       resilience_delta: 0
   by_mapping_kind:
     01_simple_state:
@@ -671,10 +671,10 @@ ablation:
         OBSERVATION: 0
         POLICY: 0
       semantic:
-        ACTION: 14
+        ACTION: 13
         HIDDEN_STATE: 0
         OBSERVATION: 1
-        POLICY: 4
+        POLICY: 5
       resilience:
         ACTION: 0
         HIDDEN_STATE: 0
@@ -703,11 +703,11 @@ ablation:
         OBSERVATION: 0
         POLICY: 0
       semantic:
-        ACTION: 28
+        ACTION: 26
         CONSTRAINT: 1
         CONTEXT: 0
         HIDDEN_STATE: 0
-        OBSERVATION: 22
+        OBSERVATION: 24
         POLICY: 2
       resilience:
         ACTION: 0
@@ -733,9 +733,9 @@ ablation:
         OBSERVATION: 0
         POLICY: 0
       semantic:
-        ACTION: 17
+        ACTION: 15
         HIDDEN_STATE: -4
-        OBSERVATION: 36
+        OBSERVATION: 37
         POLICY: 2
       resilience:
         ACTION: 0
@@ -756,9 +756,9 @@ ablation:
         HIDDEN_STATE: 0
         OBSERVATION: 0
       semantic:
-        ACTION: 15
+        ACTION: 11
         HIDDEN_STATE: 0
-        OBSERVATION: 1
+        OBSERVATION: 2
       resilience:
         ACTION: 0
         HIDDEN_STATE: 0
@@ -790,69 +790,69 @@ ablation:
       k5: 72
       k10: 72
     requests_lib:
-      k1: 63
-      k2: 63
-      k5: 63
-      k10: 63
+      k1: 62
+      k2: 62
+      k5: 62
+      k10: 62
     json_stdlib:
-      k1: 19
-      k2: 19
-      k5: 19
-      k10: 19
+      k1: 16
+      k2: 16
+      k5: 16
+      k10: 16
   matrix_fallback:
     01_simple_state:
-      a_rows_uniform: 1
-      a_rows_total: 1
+      a_cols_uniform: 1
+      a_cols_total: 1
       b_actions_identity: 2
       b_actions_total: 2
       c_entries_zero: 1
       c_entries_total: 1
       d_uniform: true
     calculator:
-      a_rows_uniform: 3
-      a_rows_total: 3
+      a_cols_uniform: 1
+      a_cols_total: 1
       b_actions_identity: 6
       b_actions_total: 6
       c_entries_zero: 3
       c_entries_total: 3
       d_uniform: true
     event_pipeline:
-      a_rows_uniform: 9
-      a_rows_total: 9
+      a_cols_uniform: 1
+      a_cols_total: 1
       b_actions_identity: 11
       b_actions_total: 11
       c_entries_zero: 9
       c_entries_total: 9
       d_uniform: true
     flask_mini:
-      a_rows_uniform: 0
-      a_rows_total: 1
+      a_cols_uniform: 6
+      a_cols_total: 6
       b_actions_identity: 12
       b_actions_total: 18
       c_entries_zero: 1
       c_entries_total: 1
       d_uniform: true
     flask_app:
-      a_rows_uniform: 9
-      a_rows_total: 22
-      b_actions_identity: 16
-      b_actions_total: 31
-      c_entries_zero: 22
-      c_entries_total: 22
+      a_cols_uniform: 0
+      a_cols_total: 13
+      b_actions_identity: 14
+      b_actions_total: 29
+      c_entries_zero: 24
+      c_entries_total: 24
       d_uniform: false
     requests_lib:
-      a_rows_uniform: 32
-      a_rows_total: 36
-      b_actions_identity: 11
-      b_actions_total: 19
-      c_entries_zero: 36
-      c_entries_total: 36
+      a_cols_uniform: 0
+      a_cols_total: 8
+      b_actions_identity: 9
+      b_actions_total: 17
+      c_entries_zero: 37
+      c_entries_total: 37
       d_uniform: false
     json_stdlib:
-      a_rows_uniform: 0
-      a_rows_total: 1
-      b_actions_identity: 12
-      b_actions_total: 15
-      c_entries_zero: 1
-      c_entries_total: 1
+      a_cols_uniform: 1
+      a_cols_total: 3
+      b_actions_identity: 8
+      b_actions_total: 11
+      c_entries_zero: 2
+      c_entries_total: 2
       d_uniform: true

@@ -44,9 +44,9 @@ The canonical GNN specification organizes metadata, semantics, and generative-mo
 14. **Ontology Mapping** — the semantic mapping of each program node (function, class, variable) to its AII role(s), plus the confidence band and rule family responsible for the assignment.
 15. **Markov Blanket** — the Active-Inference partition of the program graph into internal (μ), sensory (s), active (a), and external (η) states, with the seed strategy and per-node rationale.
 16. **Provenance** — which rules (by name and version) emitted each mapping, including the conflict-resolution logic that selected a winner when multiple rules proposed the same role.
-17. **Confidence Scores** — per-mapping confidence bands and the source rule's calibration (typically 0.65–0.95) from `../cogant/docs/evaluation/CALIBRATION.md`.
+17. **Confidence Scores** — per-mapping confidence bands and the source rule's calibration (typically 0.65–0.90) from `../cogant/docs/evaluation/CALIBRATION.md`.
 18. **Rendering Hints** — layout and visualization metadata (node positions, color coding by role, cluster membership) consumed by downstream graphical tools.
-19. **Validation Notes** — the output of the `GNNValidator` (see **AII validator and scoring** above; implementation in `../cogant/py/cogant/validate/validator.py`) with section-by-section pass/fail status, any missing sections, and the composite 0–100 score.
+19. **Validation Notes** — the output of the `GNNValidator` (see **AII validator and scoring** above; implementation in `../cogant/py/cogant/gnn/validator.py`) with section-by-section pass/fail status, any missing sections, and the composite 0–100 score.
 
 Node and edge feature breakdowns, section contracts, and optional framework targets are specified in `../cogant/docs/export/README.md`; they determine the structure of the emitted notation and the effective input dimensionality of any downstream model.
 
@@ -59,7 +59,7 @@ The four matrices of the Active Inference generative model are compiled directly
 - **Matrix C (preferences)** — derived from PREFERENCE and CONSTRAINT mappings on observations. C is a column vector per observation indexed by the observation's discrete values; entries come from the confidence bands of PREFERENCE mappings. Observations with no preference evidence are initialized to zero (neutral).
 - **Matrix D (initial prior)** — derived from CONFIGURATION edges pointing to hidden states. D[hidden_state] is uniform over the state's cardinality, unless CONFIGURATION nodes provide evidence for specific initial values. Configurations with zero evidence default to uniform (maximum entropy).
 
-These fallback paths—identity B, uniform A/D, zero C—are **documented degraded-output modes** (see **Degraded-output semantics** above and the user-facing walkthrough in [`04_examples_and_failure_modes.md`](04_examples_and_failure_modes.md)). When the program graph provides no edge evidence for a matrix entry, the engine emits a validation finding and supplies the appropriate maximum-entropy or identity fallback. The pipeline validates that all fallback tensors satisfy shape, sum-to-one, and non-negativity invariants; all shipped fixtures validate at 100.0 even with extensive fallbacks (e.g., `json_stdlib` with zero ACTION mappings still produces a valid B tensor via the identity fallback).
+These fallback paths—identity B, uniform A/D, zero C—are **documented degraded-output modes** (see **Degraded-output semantics** above and the user-facing walkthrough in [`04_examples_and_failure_modes.md`](04_examples_and_failure_modes.md)). When the program graph provides no edge evidence for a matrix entry, the engine emits a validation finding and supplies the appropriate maximum-entropy or identity fallback. The pipeline validates that all fallback tensors satisfy shape, sum-to-one, and non-negativity invariants; all shipped fixtures validate at 100.0 even with extensive fallbacks (e.g., `json_stdlib`, where 8 of its 11 action slices default to the identity B tensor because the corresponding functions carry no WRITES edges to hidden states, still produces a valid B tensor).
 
 ### AII validator and scoring
 

@@ -405,33 +405,40 @@ class GNNValidator:
             if key not in matrices_json:
                 errors.append(f"Missing matrix: {key}")
 
-        dims = matrices_json.get("dimensions") or {}
-        n_states = int(dims.get("n_states") or 0)
-        n_obs = int(dims.get("n_obs") or 0)
-        n_actions = int(dims.get("n_actions") or 0)
-
         A = matrices_json.get("A") or []
         B = matrices_json.get("B") or []
         C = matrices_json.get("C") or []
         D = matrices_json.get("D") or []
 
-        # A: rows == n_obs, cols == n_states, rows sum to 1.
+        dims = matrices_json.get("dimensions") or {}
+        # Declared dims may be absent/zero even when matrices carry content.
+        # Derive effective dims from the matrices themselves so a missing
+        # ``dimensions`` block cannot silently skip every shape / stochastic
+        # check (a non-empty A/B/C/D must always be validated).
+        n_states = int(dims.get("n_states") or 0) or len(D) or (len(A[0]) if A and A[0] else 0)
+        n_obs = int(dims.get("n_obs") or 0) or len(A) or len(C)
+        n_actions = int(dims.get("n_actions") or 0) or (
+            len(B[0][0]) if B and B[0] and B[0][0] else 0
+        )
+
+        # A: rows == n_obs, cols == n_states, columns sum to 1 (column-stochastic).
         if n_obs > 0 and n_states > 0:
             if len(A) != n_obs:
                 errors.append(f"A row count {len(A)} != n_obs {n_obs}")
             elif A and any(len(row) != n_states for row in A):
                 errors.append(f"A column count mismatch; expected {n_states}")
             else:
-                for i, row in enumerate(A):
-                    # Tolerance 1e-6 — stability constant. A-matrix rows
-                    # encode P(o|s) and must sum to 1 by construction,
-                    # but float64 accumulation introduces ~n_states * eps
-                    # drift (n_states ~ 10-100 in our corpus, eps ~ 2.2e-16
-                    # → drift ~ 1e-14). 1e-6 leaves 8 orders of magnitude
-                    # headroom and matches the pymdp / scipy convention
-                    # for stochastic matrix row-normalization checks.
-                    if abs(sum(row) - 1.0) > 1e-6:
-                        errors.append(f"A row {i} does not sum to 1 (sum={sum(row):.6f})")
+                # Tolerance 1e-6 — stability constant. A-matrix encodes
+                # P(o|s) and is column-stochastic (AII/pymdp convention):
+                # for each fixed hidden state s (a column), the distribution
+                # over observation outcomes sums to 1. float64 accumulation
+                # introduces ~n_obs * eps drift; 1e-6 leaves ~8 orders of
+                # magnitude headroom and matches the pymdp / scipy convention
+                # for stochastic-matrix normalization checks.
+                for j in range(n_states):
+                    col_sum = sum(A[i][j] for i in range(len(A)))
+                    if abs(col_sum - 1.0) > 1e-6:
+                        errors.append(f"A column {j} does not sum to 1 (sum={col_sum:.6f})")
 
         # B: shape n_states x n_states x n_actions.
         if n_states > 0:

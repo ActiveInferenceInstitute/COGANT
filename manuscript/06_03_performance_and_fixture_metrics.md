@@ -37,16 +37,16 @@ The fixture corpus is intentionally small but role-diverse. @tbl:fixture-corpus-
 
 | Fixture | Files | LOC | Nodes | Edges | Mappings | State vars | Obs | Actions | Transitions | GNN sections | GNN score | Wall-clock (s) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| `calculator` | 1 | 120 | 12 | 25 | 11 | 1 | 3 | 6 | 6 | 31 | 100.0 | 9.97 |
-| `event_pipeline` | 1 | 150 | 23 | 36 | 21 | 1 | 9 | 11 | 11 | 31 | 100.0 | 9.67 |
-| `flask_mini` | 1 | 172 | 26 | 40 | 25 | 6 | 1 | 18 | 18 | 31 | 100.0 | 9.82 |
-| `flask_app` | 6 | 866 | 98 | 163 | 72 | 14 | 22 | 31 | 31 | 31 | 100.0 | 11.62 |
-| `requests_lib` | 6 | 745 | 98 | 162 | 63 | 9 | 36 | 19 | 19 | 31 | 100.0 | 11.22 |
-| `json_stdlib` | 4 | 1231 | 29 | 36 | 19 | 3 | 1 | 15 | 15 | 31 | 100.0 | 9.65 |
+| `calculator` | 1 | 120 | 12 | 25 | 11 | 1 | 3 | 6 | 6 | 31 | 100.0 | 10.33 |
+| `event_pipeline` | 1 | 150 | 23 | 36 | 21 | 1 | 9 | 11 | 11 | 31 | 100.0 | 10.19 |
+| `flask_mini` | 1 | 172 | 26 | 40 | 25 | 6 | 1 | 18 | 18 | 31 | 100.0 | 10.64 |
+| `flask_app` | 6 | 866 | 98 | 163 | 72 | 14 | 24 | 29 | 29 | 31 | 100.0 | 12.24 |
+| `requests_lib` | 6 | 745 | 98 | 162 | 62 | 9 | 37 | 17 | 17 | 31 | 100.0 | 12.11 |
+| `json_stdlib` | 4 | 1231 | 29 | 36 | 16 | 3 | 2 | 11 | 11 | 31 | 100.0 | 10.35 |
 
 : Repository-level pipeline metrics (canonical run, COGANT v{{VERSION}}). {#tbl:repo-pipeline-metrics}
 
-"GNN sections" counts the level-two Markdown headings emitted in `model.gnn.md`, which on every fixture sits at 31 (the 19 core Generalized Notation Notation sections plus section-specific subheadings for state space, observations, actions, and transitions). "GNN score" is the `score` field returned by `GNNValidator.validate()` on the compiled `gnn_package/` directory; every listed fixture validates at 100.0 with zero errors and zero warnings. Together the table covers one-to-six file repositories and 120 to 1231 lines of code, exercising the pipeline on both minimal control positives and small real-world modules. Wall-clock times on a 2024-class Apple-silicon workstation are a few seconds per fixture for the API path (@tbl:repo-pipeline-metrics includes export + GNN build but not the separate dashboard asset pass from `orchestrate_roundtrip.py`).
+"GNN sections" counts the level-two Markdown headings emitted in `model.gnn.md`, which on every fixture sits at 31 (the 19 core Generalized Notation Notation sections plus section-specific subheadings for state space, observations, actions, and transitions). "GNN score" is the `score` field returned by `GNNValidator.validate_package()` on the compiled `gnn_package/` directory; every listed fixture validates at 100.0 with zero errors and zero warnings. Together the table covers one-to-six file repositories and 120 to 1231 lines of code, exercising the pipeline on both minimal control positives and small real-world modules. Wall-clock times on a 2024-class Apple-silicon workstation are a few seconds per fixture for the API path (@tbl:repo-pipeline-metrics includes export + GNN build but not the separate dashboard asset pass from `orchestrate_roundtrip.py`).
 
 Node kinds and edge kinds below are taken from `metrics.json` (same in-memory `ProgramGraph` as @tbl:benchmark-suite-results). The default `run_graph` / `ProgramGraphBuilder` path used here includes `IMPORTS` where the API path emits them, while optional `CALLS` edges from a dedicated call-graph pass are recorded only when that pass is part of the built graph; `---` marks a zero count in the edge-kind columns.
 
@@ -71,16 +71,16 @@ For each fixture the `StateSpaceCompiler` emits a `StateSpaceModel` whose variab
 |---|---:|---:|---:|---:|---:|
 | `calculator` | 1 | 3 | 6 | 6 | 1 |
 | `event_pipeline` | 1 | 9 | 11 | 11 | 4 |
-| `flask_mini` | 6 | 1 | 18 | 18 | 4 |
-| `flask_app` | 14 | 22 | 31 | 31 | 3 |
-| `requests_lib` | 9 | 36 | 19 | 19 | 2 |
-| `json_stdlib` | 3 | 1 | 15 | 15 | 1 |
+| `flask_mini` | 6 | 1 | 18 | 18 | 5 |
+| `flask_app` | 14 | 24 | 29 | 29 | 3 |
+| `requests_lib` | 9 | 37 | 17 | 17 | 2 |
+| `json_stdlib` | 3 | 2 | 11 | 11 | 1 |
 
 : State-space compilation outputs. {#tbl:state-space-compilation}
 
 ![State-space output comparison for the packaged fixtures. The figure is rendered by `cogant.evaluation.figures.generate_figures.figure_state_space` from `../cogant/evaluation/figures/metrics.json`; grouped horizontal bars show compiled hidden-state variables, observations, actions, and transitions from the same run as @tbl:state-space-compilation. Inspect the observation/action balance before interpreting matrix fallbacks. The chart reports compiled counts only, not behavioral adequacy.](../figures/cogant_eval_state_space.png){#fig:cogant-eval-state-space width=92%}
 
-`calculator` has one compiled hidden-state variable in the v{{VERSION}} compiler output on the API path. `json_stdlib` compiles 15 action slots on this run; the rule engine and compiler still interleave default slices where WRITES evidence is missing. The `requests_lib` fixture has the highest observation count in the table because its session/adapter classes expose a large number of read-only attributes that the rule engine matches as `OBSERVATION` mappings.
+`calculator` has one compiled hidden-state variable in the v{{VERSION}} compiler output on the API path. `json_stdlib` compiles 11 action slots on this run; the rule engine and compiler still interleave default slices where WRITES evidence is missing. The `requests_lib` fixture has the highest observation count in the table because its session/adapter classes expose a large number of read-only attributes that the rule engine matches as `OBSERVATION` mappings.
 
 Every fixture emits the same `GNNPackageBuilder` layout: `model.gnn.md`, `model.gnn.json`, the section JSONs, `markov_blanket.json` / `markov_network.json`, and related companion files (the 16 required files per fixture in the canonical v{{VERSION}} `gnn_package/`, plus generated `diagrams/`/`visualizations/` assets). A separate `examples/orchestrate_roundtrip.py` run can add Mermaid, GraphML, Parquet, and dashboard HTML on top; those assets are not part of the @tbl:repo-pipeline-metrics–@tbl:output-artifacts-per-run set.
 

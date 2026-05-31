@@ -14,12 +14,12 @@ The v{{VERSION}} front end relies on `cogant.static.parser.PythonASTParser`, whi
 - **Classes**: class definitions, base classes, metaclasses, and the `__init__` / `__new__` boundary.
 - **Decorators**: `@staticmethod`, `@classmethod`, `@property`, `@dataclass`, and arbitrary user-defined decorators. Decorator arguments are captured as attribute metadata.
 - **Type annotations**: PEP 484 / 526 / 604 annotations on function parameters, return types, and variable assignments. Generic subscripts (`List[int]`, `Dict[str, Any]`) are preserved as type strings.
-- **Comprehensions and generators**: list, set, dict comprehensions and generator expressions are represented as anonymous FUNCTION nodes with DATA_FLOW edges to their enclosing scope.
-- **Control flow**: `if`/`elif`/`else`, `for`/`while`/`else`, `try`/`except`/`finally`, `with`/`async with`, and `match`/`case` (Python 3.10+) are mapped to CONTROLFLOW_NODE entities.
-- **Imports**: `import` and `from ... import` statements produce MODULE_IMPORT roles with edges to the resolved module when discoverable on the file system.
-- **Constants**: module-level and class-level assignments to `Final` or ALL_CAPS names are classified as CONSTANT nodes.
+- **Comprehensions and generators**: list, set, dict comprehensions and generator expressions are represented as anonymous `FUNCTION` nodes with `READS`/`WRITES` edges (`cogant.schemas.core.EdgeKind`) to their enclosing scope.
+- **Control flow**: `if`/`elif`/`else`, `for`/`while`/`else`, `try`/`except`/`finally`, `with`/`async with`, and `match`/`case` (Python 3.10+) are recognized as control-flow structure that informs `CONTROL_FLOW` semantic mappings (`cogant.schemas.semantic.MappingKind`); they are not assigned a dedicated `NodeKind`.
+- **Imports**: `import` and `from ... import` statements produce `EdgeKind.IMPORTS` edges to the resolved module node when discoverable on the file system.
+- **Constants**: module-level and class-level assignments to `Final` or ALL_CAPS names are represented as `VARIABLE` nodes (`cogant.schemas.core.NodeKind` has no separate constant kind).
 
-Constructs that require runtime evaluation (for example `exec`, `importlib.import_module`, or dynamic `__getattr__`) are recorded as EXTERNAL nodes with HEURISTIC provenance and correspondingly lower confidence.
+Constructs that require runtime evaluation (for example `exec`, `importlib.import_module`, or dynamic `__getattr__`) cannot be fully resolved by the static front end and are therefore captured with correspondingly lower confidence rather than asserted as resolved structure.
 
 ## Progressive IR stages
 

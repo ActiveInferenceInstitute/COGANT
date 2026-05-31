@@ -1,7 +1,9 @@
 # Appendix D — Inference Loop Mathematics {#sec:S04-appendix-inference-mathematics}
 
 This appendix formalizes the discrete-time active inference loop executed
-by `cogant process` on the extracted A/B/C/D matrices and reported
+by COGANT's matrix runtime (`cogant.gnn.runner` / `cogant.runtime.loop`, with
+the variational free-energy functions in `cogant.simulate.free_energy`) on the
+extracted A/B/C/D matrices and reported
 empirically in [`../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`](../cogant/docs/evaluation/EMPIRICAL_CLAIM.md)
 (VFE trace tables per zoo fixture). The variational free-energy discussion in
 [`10_conclusion.md`](10_conclusion.md) ties the same functions to shipped capabilities. The
@@ -11,9 +13,10 @@ with PyMDP as the closest executable reference implementation for the
 matrix-based POMDP loop [@heins2022pymdp]. The factor-graph language is used
 in the standard sense of a bipartite representation of factored functions and
 sum-product message passing [@kschischang2001factor], but COGANT's current
-runtime executes the finite matrix model emitted by `cogant.process` rather
-than a general-purpose loopy factor-graph solver. We restate it here in
-notation consistent with COGANT's `cogant.process` module.
+runtime (`cogant.gnn.runner` / `cogant.runtime.loop`) executes the finite
+matrix model — the compiled A/B/C/D state space — rather than a
+general-purpose loopy factor-graph solver. We restate it here in notation
+consistent with COGANT's `cogant.simulate.free_energy` implementation.
 
 ### POMDP formulation {#sec:S04-pomdp-formulation}
 
@@ -160,7 +163,7 @@ reported in `../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`:
    — observation-only GNN where the likelihood matrix `A_mat` is empty
    (the extracted model has no hidden-state factor). The runtime evaluates
    `-log(1e-10) = 23.025850929940457` as the floor for an unresolvable
-   observation, which is the expected floor for the `cogant.process`
+   observation, which is the expected floor for the `cogant.simulate.free_energy`
    implementation when the likelihood is vacuously defined.
 
 3. **VFE approaches 0.798508 (converging plateau).** `zoo/06_hierarchical` —

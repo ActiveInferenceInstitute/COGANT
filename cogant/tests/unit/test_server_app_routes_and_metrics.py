@@ -102,14 +102,39 @@ class TestProbeDependencies:
 
 
 class TestApiV1Rules:
-    def test_rules_endpoint_returns_19_rules(self, client: TestClient) -> None:
-        """The hand-coded list contains 19 rule entries (count matches len)."""
+    def test_rules_endpoint_matches_default_registry(self, client: TestClient) -> None:
+        """The endpoint must expose EVERY rule the default engine registers.
+
+        Previously the hand-coded list shipped only 19 of the 22 registered
+        rules (`ParameterRule`, `RateLimiterRule`, `StateMachineRule` were
+        missing) while the docstring and FAQ claimed 22. This binds the
+        endpoint to ``_default_translation_engine()`` so the two can never
+        drift again: a rule added to / removed from the registry now fails
+        here until the endpoint metadata is updated to match.
+        """
+        from cogant.api.orchestration import _default_translation_engine
+
         r = client.get("/api/v1/rules")
         assert r.status_code == 200
         data = r.json()
-        # The list inside create_app contains 19 RuleMetadata objects.
         assert data["count"] == len(data["rules"])
-        assert data["count"] >= 19
+
+        # Registry exposes snake_case names (``read_only_input``); the endpoint
+        # exposes PascalCase class names (``ReadOnlyInputRule``). Compare on a
+        # normalised key so the two naming conventions line up.
+        def _norm(name: str) -> str:
+            return name.lower().replace("_", "").replace("rule", "")
+
+        registry_names = {
+            _norm(rule.name) for rule in _default_translation_engine().rules
+        }
+        endpoint_names = {_norm(row["name"]) for row in data["rules"]}
+        assert endpoint_names == registry_names, (
+            "endpoint /api/v1/rules diverged from the default rule registry; "
+            f"only in registry: {registry_names - endpoint_names}; "
+            f"only in endpoint: {endpoint_names - registry_names}"
+        )
+        assert data["count"] == len(registry_names) == 22
 
     def test_rules_have_all_required_fields(self, client: TestClient) -> None:
         rules = client.get("/api/v1/rules").json()["rules"]

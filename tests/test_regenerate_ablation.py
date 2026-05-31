@@ -29,8 +29,10 @@ def test_compute_ablation_calculator_fixture_is_deterministic() -> None:
     assert calculator_fixpoint["k1"] == calculator_fixpoint["k10"]
 
     calculator_matrix = result["matrix_fallback"]["calculator"]
-    assert calculator_matrix["a_rows_uniform"] == 3
-    assert calculator_matrix["a_rows_total"] == 3
+    assert calculator_matrix["a_cols_uniform"] == 1
+    assert calculator_matrix["a_cols_total"] == 1
+    assert calculator_matrix["b_actions_identity"] == 6
+    assert calculator_matrix["b_actions_total"] == 6
     assert calculator_matrix["c_entries_zero"] == 3
     assert calculator_matrix["d_uniform"] is True
 

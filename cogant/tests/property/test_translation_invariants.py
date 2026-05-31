@@ -343,12 +343,18 @@ def test_action_has_policy_ancestor_or_mutation_or_keyword(
     suppress_health_check=[HealthCheck.too_slow, HealthCheck.filter_too_much],
 )
 def test_gnn_matrices_lie_on_probability_simplex(graph: ProgramGraph) -> None:
-    """GNN A rows and D vector must sum to 1.0 (within 1e-6).
+    """GNN A *columns* and the D vector must sum to 1.0 (within 1e-6).
 
-    The ``GNNMatrices`` class normalises every row/vector at derivation
-    time; this property certifies that derivation against arbitrary
-    graphs. When the matrices are empty (no mappings → zero-dim),
-    the invariant is vacuously true and we skip the row checks.
+    ``A[o][s] = P(o | s)`` is **column-stochastic** per the AII/pymdp
+    convention: for each fixed hidden state ``s`` the distribution over
+    observation outcomes (a *column*) sums to 1. (Row-normalising would
+    assert ``sum_s P(o|s) = 1``, which is not a valid likelihood and
+    breaks the predicted-observation update in ``simulate/free_energy.py``;
+    see ``GNNMatrices.compute_A`` and the sibling
+    ``test_gnn_matrices.py::test_A_columns_sum_to_one``.) This property
+    certifies that derivation against arbitrary graphs. When the matrices
+    are empty (no mappings → zero-dim), the invariant is vacuously true and
+    we skip the checks.
     """
     engine = _make_engine()
     mappings = engine.translate(graph)
@@ -360,13 +366,13 @@ def test_gnn_matrices_lie_on_probability_simplex(graph: ProgramGraph) -> None:
     A = gnn.compute_A()
     D = gnn.compute_D()
 
-    if A:
-        for i, row in enumerate(A):
-            if not row:
-                continue
-            row_sum = sum(row)
-            assert math.isclose(row_sum, 1.0, abs_tol=1e-6), (
-                f"A row {i} does not sum to 1 (sum={row_sum:.8f})"
+    if A and A[0]:
+        n_obs_rows = len(A)
+        n_state_cols = len(A[0])
+        for j in range(n_state_cols):
+            col_sum = sum(A[i][j] for i in range(n_obs_rows))
+            assert math.isclose(col_sum, 1.0, abs_tol=1e-6), (
+                f"A column {j} does not sum to 1 (sum={col_sum:.8f})"
             )
 
     if D:

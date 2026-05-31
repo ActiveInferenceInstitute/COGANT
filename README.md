@@ -52,11 +52,12 @@ uv run python tools/audit_stage_list.py
 uv run python tools/audit_manuscript_crossrefs.py
 uv run python tools/audit_manuscript_citations.py
 uv run python tools/audit_manuscript_numbers.py
+uv run --directory cogant python ../tools/audit_manuscript_module_refs.py
 uv run python tools/check_coverage_table.py --strict
 uv run python tools/check_metrics_fresh.py --fail-on-dirty
 ```
 
-`tools/audit_stage_list.py` enforces `RUNNER_STAGES` vs. doc/CLI drift. `tools/check_metrics_fresh.py --fail-on-dirty` is a release gate that refuses uncommitted metric provenance.
+`tools/audit_stage_list.py` enforces `RUNNER_STAGES` vs. doc/CLI drift. `tools/audit_manuscript_module_refs.py` verifies every backticked `cogant.*` module/attribute cited in the manuscript still resolves in the installed package (run it from the inner `cogant/` env so the package's dependencies are importable); it catches references to deleted modules such as the former `cogant.viz.png_export`. `tools/check_metrics_fresh.py --fail-on-dirty` is a release gate that refuses uncommitted metric provenance.
 
 **Coverage table (`{#tbl:coverage-stmt-modules}`).** Per-module `Stmts` / `Cover` rows in [`manuscript/06_04_tests_mutation_and_benchmarks.md`](manuscript/06_04_tests_mutation_and_benchmarks.md) are hand-copied from `coverage report`. After `uv run pytest tests/ --cov=py/cogant` in [`cogant/`](cogant/) (inner package root), run `uv run python tools/check_coverage_table.py` from this project root to compare the table to the report; use `--strict` to fail on drift. See [`manuscript/AGENTS.md`](manuscript/AGENTS.md) and [`PROMOTION.md`](PROMOTION.md).
 

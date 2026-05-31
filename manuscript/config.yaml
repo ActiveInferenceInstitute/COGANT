@@ -11,7 +11,9 @@ authors:
   - name: "Daniel Ari Friedman"
     orcid: "0000-0001-6232-9096"
     email: "daniel@activeinference.institute"
-    affiliation: "Active Inference Institute"
+    affiliations:
+      - "Active Inference Institute"
+      - "FractAI"
     corresponding: true
 
 publication:

@@ -471,15 +471,30 @@ def create_app(
             if not limiter.check(f"{client_host}:{path}"):
                 metrics.record_rate_limited(method, path)
                 duration = time.perf_counter() - start
-                logger.info(
-                    "request rate-limited",
-                    method=method,
-                    path=path,
-                    status_code=429,
-                    duration_ms=round(duration * 1000, 3),
-                    client=client_host,
-                    request_id=request_id,
-                ) if hasattr(logger, "info") else None
+                # Structured kwargs only work when a structlog-bound logger is
+                # active; fall back to stdlib %-formatting otherwise (mirrors
+                # the "request handled" call below). Without this, a stdlib
+                # logger raises TypeError here and the 429 response never
+                # returns — a real robustness bug, not just a test artifact.
+                try:
+                    logger.info(
+                        "request rate-limited",
+                        method=method,
+                        path=path,
+                        status_code=429,
+                        duration_ms=round(duration * 1000, 3),
+                        client=client_host,
+                        request_id=request_id,
+                    )
+                except TypeError:
+                    logger.info(
+                        "request rate-limited method=%s path=%s status=429 "
+                        "duration_ms=%.3f request_id=%s",
+                        method,
+                        path,
+                        duration * 1000,
+                        request_id,
+                    )
                 metrics.record(method, path, 429, duration)
                 return JSONResponse(
                     status_code=429,
@@ -892,6 +907,27 @@ def create_app(
                 description="Identifies test assertions and invariants",
                 confidence_min=0.8,
                 confidence_max=0.98,
+            ),
+            RuleMetadata(
+                name="ParameterRule",
+                family="structural",
+                description="Identifies tunable parameter and hyperparameter state",
+                confidence_min=0.7,
+                confidence_max=0.95,
+            ),
+            RuleMetadata(
+                name="RateLimiterRule",
+                family="resilience",
+                description="Detects rate-limiting and throttling controls",
+                confidence_min=0.6,
+                confidence_max=0.9,
+            ),
+            RuleMetadata(
+                name="StateMachineRule",
+                family="behavioral",
+                description="Detects finite-state-machine control patterns",
+                confidence_min=0.7,
+                confidence_max=0.92,
             ),
         ]
         return RulesResponse(rules=rules, count=len(rules))

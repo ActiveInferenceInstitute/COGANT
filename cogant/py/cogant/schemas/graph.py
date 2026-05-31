@@ -140,7 +140,10 @@ class ProgramGraph:
                 neighbors.add(edge.target_id)
             if edge.target_id == node_id:
                 neighbors.add(edge.source_id)
-        return [self.nodes[nid] for nid in neighbors if nid in self.nodes]
+        # Sort the neighbor IDs so traversal order (and any downstream
+        # betweenness-centrality computation in the pure-Python BFS
+        # fallback) is deterministic; set iteration order is not.
+        return [self.nodes[nid] for nid in sorted(neighbors) if nid in self.nodes]
 
     def get_nodes_by_kind(self, kind: NodeKind) -> list[Node]:
         """Get all nodes of a specific kind.
