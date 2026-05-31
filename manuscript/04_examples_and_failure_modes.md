@@ -76,7 +76,7 @@ The inference trace in @fig:cogant-inference-trace is intentionally a determinis
 
 **Read this for:** representative node/edge/mapping and GNN validation numbers aligned with the benchmark tables in @sec:06-03-performance-and-fixture-metrics.
 
-To make the pipeline's behavior tangible, consider the `flask_app` fixture distributed under `../cogant/examples/real_world/flask_app/`: a small six-module Flask application (`__init__.py`, `app.py`, `config.py`, `models.py`, `services.py`, `utils.py`) totalling 866 lines of Python analyzed end-to-end by the **public** pipeline (`cogant.api.orchestration`, the same code path as `cogant translate` and the benchmark harness). Canonical `flask_app` numbers in `../cogant/evaluation/figures/metrics.json` are produced by `evaluation/figures/generate_figures.py` and match graph size rows in @tbl:benchmark-suite-results. (The `examples/orchestrate_roundtrip.py` demo can emit a larger serialized graph, including a call graph, for dashboard-heavy exports; the manuscript and `metrics.json` stay on the API pipeline so one definition of \(|V|\) and \(|E|\) applies throughout.)
+To make the pipeline's behavior tangible, consider the `flask_app` fixture distributed under `../cogant/examples/real_world/flask_app/`: a small six-module Flask application (`__init__.py`, `app.py`, `config.py`, `models.py`, `services.py`, `utils.py`) totalling {{FIXTURE_FLASK_APP_LOC}} lines of Python analyzed end-to-end by the **public** pipeline (`cogant.api.orchestration`, the same code path as `cogant translate` and the benchmark harness). Canonical `flask_app` numbers in `../cogant/evaluation/figures/metrics.json` are produced by `evaluation/figures/generate_figures.py` and match graph size rows in @tbl:benchmark-suite-results. (The `examples/orchestrate_roundtrip.py` demo can emit a larger serialized graph, including a call graph, for dashboard-heavy exports; the manuscript and `metrics.json` stay on the API pipeline so one definition of \(|V|\) and \(|E|\) applies throughout.)
 
 | Metric | Value |
 |--------|-------|
@@ -84,7 +84,7 @@ To make the pipeline's behavior tangible, consider the `flask_app` fixture distr
 | Lines analyzed | 866 |
 | **Nodes** | **98** |
 | **Edges** | **163** |
-| Total semantic mappings | 72 (`mappings_total` for `flask_app` in `../cogant/evaluation/figures/metrics.json`; same post-`statespace` count as the `mappings` column in @tbl:benchmark-suite-results) |
+| Total semantic mappings | {{FIXTURE_FLASK_APP_MAPPINGS_TOTAL}} (`mappings_total` for `flask_app` in `../cogant/evaluation/figures/metrics.json`; same post-`statespace` count as the `mappings` column in @tbl:benchmark-suite-results) |
 | GNN package files | 28 |
 | GNN validation | PASS (score 100.0, 0 errors, 0 warnings) |
 
@@ -115,7 +115,7 @@ The default graph stage in this path emits structural kinds (MODULE, CLASS, METH
 
 **Read this for:** how the pipeline remains valid with sparse static evidence and identity/default matrix rows (validator notes in the bundle).
 
-The `examples/real_world/json_stdlib/` fixture exercises **partial-evidence** paths without failing validation. In the current rule set, the expanded `ActionRule` keyword set matches `dump`, `dumps`, `load`, `loads`, and serialisation synonyms; the auto-generated `METRICS.yaml` records `state_variables: 3`, `observations: 2`, `actions: 11`, and `mappings_total: 16`. Of the 11 action slices of $B$, 8 default to the identity tensor (no WRITES edges link those actions to hidden states at the AST extraction granularity), and 1 of the 3 observation rows of $A$ is uniform. The pipeline still emits a valid `gnn_package/` (the 16 required files plus generated diagram/visualization assets) with **validator 100.0/100**: Validation Notes (section 19 of the bundle) list every maximum-entropy entry so downstream consumers can distinguish evidence-backed matrix rows from structural defaults (see [`02_04_gnn_export_and_error_handling.md`](02_04_gnn_export_and_error_handling.md)).
+The `examples/real_world/json_stdlib/` fixture exercises **partial-evidence** paths without failing validation. In the current rule set, the expanded `ActionRule` keyword set matches `dump`, `dumps`, `load`, `loads`, and serialisation synonyms; the auto-generated `METRICS.yaml` records `state_variables: {{FIXTURE_JSON_STDLIB_STATE_VARIABLES}}`, `observations: {{FIXTURE_JSON_STDLIB_OBSERVATIONS}}`, `actions: {{FIXTURE_JSON_STDLIB_ACTIONS}}`, and `mappings_total: {{FIXTURE_JSON_STDLIB_MAPPINGS_TOTAL}}`. Of the {{ABLATION_JSON_STDLIB_B_ACTIONS_TOTAL}} action slices of $B$, {{ABLATION_JSON_STDLIB_B_ACTIONS_IDENTITY}} default to the identity tensor (no WRITES edges link those actions to hidden states at the AST extraction granularity), and {{ABLATION_JSON_STDLIB_A_COLS_UNIFORM}} of the {{ABLATION_JSON_STDLIB_A_COLS_TOTAL}} state columns of $A$ is uniform. The pipeline still emits a valid `gnn_package/` (the 16 required files plus generated diagram/visualization assets) with **validator 100.0/100**: Validation Notes (section 19 of the bundle) list every maximum-entropy entry so downstream consumers can distinguish evidence-backed matrix rows from structural defaults (see [`02_04_gnn_export_and_error_handling.md`](02_04_gnn_export_and_error_handling.md)).
 
 ### Example semantic mapping output
 

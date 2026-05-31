@@ -63,7 +63,7 @@ Every `gnn_package/` directory emitted by the pipeline includes a `manifest.json
 
 ## Worked example: reproducing the repository pipeline row for `flask_app`
 
-The canonical @tbl:repo-pipeline-metrics row for the `flask_app` fixture (six files, 866 lines, 98 nodes, 163 edges, and about 11.6 s wall clock for the full public API run that populates `metrics.json`) was produced as follows, and the command sequence below should reproduce the same canonicalized `program_graph.json` and `state_space.json` on any macOS arm64 machine with the same uv lockfile:
+The canonical @tbl:repo-pipeline-metrics row for the `flask_app` fixture ({{FIXTURE_FLASK_APP_FILES}} files, {{FIXTURE_FLASK_APP_LOC}} lines, {{FIXTURE_FLASK_APP_NODES}} nodes, {{FIXTURE_FLASK_APP_EDGES}} edges, and about 11.6 s wall clock for the full public API run that populates `metrics.json`) was produced as follows, and the command sequence below should reproduce the same canonicalized `program_graph.json` and `state_space.json` on any macOS arm64 machine with the same uv lockfile:
 
 ```bash
 cd cogant                           # package root
@@ -86,6 +86,6 @@ Every COGANT bundle can contain identifiers, docstrings, and inline comments lif
 
 ## Cross-references
 
-- The CLI hub at [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md) and [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md) link to every flag that changes the recorded-output shape, and the stage list in [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md) enumerates the ten-stage DAG.
+- The CLI hub at [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md) and [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md) link to every flag that changes the recorded-output shape, and the stage list in [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md) enumerates the {{STAGE_COUNT}}-stage DAG.
 - The per-release narrative in `../cogant/CHANGELOG.md` documents which default-behaviour changes (for example the POLICY / CONTEXT stub-emission fix discussed in @sec:10-conclusion and `ROUNDTRIP_IMPROVEMENT.md`) could affect a re-run against an older bundle.
 - The calibration sweep plan in `../cogant/docs/evaluation/CALIBRATION.md` is the canonical reference for the `TODO(calibration)` markers cited in @sec:10-conclusion; re-running a confidence-threshold sweep requires the 20+ repository gold-standard corpus discussed there.

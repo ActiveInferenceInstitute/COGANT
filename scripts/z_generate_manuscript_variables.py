@@ -89,6 +89,9 @@ OUTPUT_DIR = COGANT_STAGING_ROOT / "output"
 DATA_DIR = OUTPUT_DIR / "data"
 INJECTED_MS_DIR = OUTPUT_DIR / "manuscript"
 METRICS_PATH = COGANT_STAGING_ROOT / "cogant" / "evaluation" / "METRICS.yaml"
+FIXTURE_METRICS_PATH = (
+    COGANT_STAGING_ROOT / "cogant" / "evaluation" / "figures" / "metrics.json"
+)
 REGENERATE_SCRIPT = _TOOLS / "regenerate_metrics.py"
 
 AUX_COPY_NAMES = ("config.yaml", "references.bib", "preamble.md")
@@ -159,6 +162,30 @@ def load_metrics() -> dict:
     return data
 
 
+def load_fixture_metrics() -> dict:
+    """Load per-fixture pipeline metrics from ``evaluation/figures/metrics.json``.
+
+    These back the ``{{FIXTURE_<NAME>_<FIELD>}}`` placeholders so per-fixture
+    numbers cited in prose (node/edge/LOC/role counts, etc.) are injected from
+    the same generated artifact the @tbl:repo-pipeline-metrics tables are
+    verified against — no hand-typed per-fixture literals in prose. Returns an
+    empty mapping (with a warning) when the figures pipeline has not run yet.
+    """
+    if not FIXTURE_METRICS_PATH.exists():
+        logger.warning(
+            "%s not found; {{FIXTURE_*}} placeholders will be unresolved. "
+            "Run evaluation/figures/generate_figures.py first.",
+            FIXTURE_METRICS_PATH,
+        )
+        return {}
+    try:
+        data = json.loads(FIXTURE_METRICS_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning("could not read %s: %s", FIXTURE_METRICS_PATH, exc)
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def regenerate_metrics() -> None:
     """Shell out to ``tools/regenerate_metrics.py`` and surface failures loudly."""
     if not REGENERATE_SCRIPT.is_file():
@@ -217,6 +244,9 @@ def main(argv: list[str] | None = None) -> int:
         regenerate_metrics()
 
     metrics = load_metrics()
+    # Merge per-fixture pipeline metrics so {{FIXTURE_*}} placeholders resolve
+    # from the same generated artifact the fixture tables are verified against.
+    metrics["fixtures"] = load_fixture_metrics()
     flat = build_flat_variables(metrics)
 
     provenance = {

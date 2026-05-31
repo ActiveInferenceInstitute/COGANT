@@ -11,7 +11,7 @@ When citing or redistributing a COGANT run, archive together:
 3. **Dependency lock** — `uv.lock` from the package root with the same `uv sync --extra …` extras as the run.
 4. **Input snapshot** — Git commit of each analyzed repository; for fixtures under `examples/`, record the COGANT monorepo SHA.
 5. **Pipeline configuration** — `cogant.yaml` or `PipelineConfig` serialization (secrets redacted).
-6. **Stages executed** — full ten-stage DAG vs `skip_stages`, `--no-dynamic`, `--skip-validate`, etc.
+6. **Stages executed** — full {{STAGE_COUNT}}-stage DAG vs `skip_stages`, `--no-dynamic`, `--skip-validate`, etc.
 7. **Downstream seeds** — only if a learned model consumes exports (COGANT’s default pipeline is deterministic).
 8. **Output hashes** — SHA-256 of `gnn_package/` and `bundle.json` for verification.
 

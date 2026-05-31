@@ -195,7 +195,7 @@ of `count_synth` from a small scaffold constant toward `count_origin` (proportio
 so `min = count_origin` and the per-role ratio jumps to 1.0.  ∎
 
 **Scaffolding diagnostic emitted with every per-target row.** As of
-v0.6.0, `tools/regenerate_metrics.py` emits a `scaffolding_fraction`
+v{{VERSION}}, `tools/regenerate_metrics.py` emits a `scaffolding_fraction`
 field per `per_target` row of `METRICS.yaml.evaluation.roundtrip`,
 defined as `(sum(synth_n_*) − sum(orig_n_*)) / sum(synth_n_*)` over
 HIDDEN_STATE / OBSERVATION / ACTION role-count fields when present. A
