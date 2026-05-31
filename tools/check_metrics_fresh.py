@@ -8,11 +8,14 @@
    by default). This catches the common case of "tests ran again, coverage
    shifted, nobody re-ran ``regenerate_metrics.py``".
 
-2. **Git SHA / worktree drift** — ``generator_git_sha`` equals the current
-   ``git rev-parse HEAD``. By default the script also warns when the
-   worktree is dirty, because ``HEAD`` alone cannot represent uncommitted
-   code or manuscript edits. Use ``--fail-on-dirty`` for release/CI gates
-   that require metrics to be regenerated from a clean committed tree.
+2. **Git SHA / worktree drift** — ``generator_git_sha`` is an ancestor of
+   HEAD and no *metric-affecting source* (package code, tests, fixtures,
+   roundtrip dataset, ``cogant/pyproject.toml``) changed in between. A literal
+   ``generator_git_sha == HEAD`` is unsatisfiable on a committed tip — the
+   commit that records the sha advances HEAD past it — so freshness is judged
+   against source changes, not exact-equality. By default the script also
+   warns when the worktree is dirty; ``--fail-on-dirty`` turns *metric-affecting*
+   uncommitted source into a hard failure for release/CI gates.
 
 3. **Roundtrip-status / score-source laundering** (added 2026-05-19,
    extended 2026-05-21) — the per-target ``roundtrip_status`` distribution
@@ -165,6 +168,50 @@ def _git_dirty_paths() -> list[str] | None:
     return [line for line in result.stdout.splitlines() if line.strip()]
 
 
+# Paths whose change invalidates METRICS.yaml (test counts, coverage, mypy/ruff,
+# codebase stats, ablation, roundtrip). Everything else — the regenerated
+# artifacts themselves (METRICS.yaml, evaluation/figures/*, coverage.json),
+# the manuscript, tools/scripts, CI, and root-shell tests/ — does NOT, so a
+# commit that touches only those keeps the metrics fresh even though HEAD moved.
+_METRICS_SOURCE_PREFIXES = (
+    "cogant/py/cogant/",
+    "cogant/tests/",
+    "cogant/examples/",
+    "cogant/evaluation/dataset/",
+)
+_METRICS_SOURCE_FILES = ("cogant/pyproject.toml",)
+
+
+def _path_is_metrics_source(path: str) -> bool:
+    p = path.strip().strip('"')
+    # porcelain rename lines look like ``old -> new``; judge the destination.
+    if " -> " in p:
+        p = p.split(" -> ", 1)[1]
+    return p.startswith(_METRICS_SOURCE_PREFIXES) or p in _METRICS_SOURCE_FILES
+
+
+def _git_committed_changes_since(base_sha: str) -> list[str] | None:
+    """Files changed between ``base_sha`` and HEAD (committed only).
+
+    Returns ``None`` when ``base_sha`` is not an ancestor of HEAD (shallow
+    clone, rewritten history) so the caller can fall back to a strict check.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--name-only", f"{base_sha}..HEAD"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    return [line for line in result.stdout.splitlines() if line.strip()]
+
+
 # ---------------------------------------------------------------------------
 # Checks
 # ---------------------------------------------------------------------------
@@ -188,7 +235,16 @@ def check_coverage_percent(metrics: dict) -> None:
 
 
 def check_git_sha(metrics: dict, *, fail_on_dirty: bool = False) -> None:
-    """Compare METRICS.yaml generator_git_sha vs current HEAD and worktree state."""
+    """Verify METRICS.yaml is not stale relative to *metric-affecting source*.
+
+    ``generator_git_sha`` records HEAD at regeneration time. Because committing
+    the regenerated METRICS.yaml necessarily advances HEAD, a literal
+    ``generator_git_sha == HEAD`` equality is unsatisfiable on any committed tip
+    (a git hash cannot contain its own value). Instead we treat the metrics as
+    fresh when ``generator_git_sha`` is an ancestor of HEAD and **no
+    metric-affecting source** (see ``_METRICS_SOURCE_PREFIXES``) changed in
+    between — i.e. only the regenerated artifacts / manuscript / tooling moved.
+    """
     live_sha = _current_git_sha()
     if live_sha is None:
         return  # git unavailable; already warned
@@ -196,7 +252,22 @@ def check_git_sha(metrics: dict, *, fail_on_dirty: bool = False) -> None:
     if not recorded:
         _fail("METRICS.yaml missing generator_git_sha")
     if recorded != live_sha:
-        _fail(f"generator_git_sha drift: METRICS.yaml={recorded} vs HEAD={live_sha}")
+        changed = _git_committed_changes_since(recorded)
+        if changed is None:
+            _fail(
+                f"generator_git_sha {recorded} is not an ancestor of HEAD "
+                f"{live_sha}; cannot verify freshness — regenerate METRICS.yaml"
+            )
+        source_changed = sorted(p for p in changed if _path_is_metrics_source(p))
+        if source_changed:
+            preview = "\n".join(f"    {p}" for p in source_changed[:20])
+            if len(source_changed) > 20:
+                preview += f"\n    ... {len(source_changed) - 20} more"
+            _fail(
+                f"metric-affecting source changed since generator_git_sha "
+                f"{recorded[:12]} (HEAD={live_sha[:12]}):\n{preview}"
+            )
+        # Only regenerated artifacts / docs / tooling changed since regen — fresh.
     dirty_paths = _git_dirty_paths()
     if not dirty_paths:
         return

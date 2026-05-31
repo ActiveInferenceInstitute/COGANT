@@ -4,6 +4,7 @@
 coverage.xml
 htmlcov/
 coverage.json
+coverage_project.json
 !cogant/coverage.json
 
 # pytest / hypothesis

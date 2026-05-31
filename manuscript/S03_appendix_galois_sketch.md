@@ -114,11 +114,15 @@ planned node). Composing the two:
 
 The multiset similarity `min(a,b) / max(a,b)` averaged over roles is
 therefore bounded below by `(count_origin) / (count_origin + scaffold_r)`
-for each role `r`, where `scaffold_r` is the fixed contribution of the
-reverse synthesizer's scaffolding (4 CONSTRAINT, 7 OBSERVATION, 5 ACTION on
-the minimum-case synthesis). The large-program regime is the defensible
-asymptotic case: as origin role counts grow, the additive scaffolding term
-becomes a smaller share of the role distribution. The small-program regime is
+for each role `r`, where `scaffold_r` is the additive contribution of the
+reverse synthesizer's **deficit-based** scaffolding for role `r` — the
+`check_*` (CONSTRAINT), POLICY, and CONTEXT scaffolds it emits to fill role
+deficits relative to the source bundle (`cogant.reverse.planner`,
+`scaffold_*` plans). Because the scaffolding is deficit-based rather than a
+fixed template, `scaffold_r` is target-dependent and bounded, not a constant;
+the legacy ε-corpus rows illustrate its magnitude on small fixtures. The
+large-program regime is the defensible asymptotic case: as origin role counts
+grow, this additive term becomes a smaller share of the role distribution. The small-program regime is
 diagnostic rather than theorem-friendly, because scaffolding can inflate a
 role score that would otherwise reveal weak preservation. The conjecture
 therefore has empirical content only when the reported score is read together

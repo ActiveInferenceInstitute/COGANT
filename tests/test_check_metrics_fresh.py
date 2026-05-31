@@ -263,6 +263,112 @@ def test_freshness_gate_strict_detects_dirty_worktree(tmp_path: Path) -> None:
     )
 
 
+def _git(sandbox: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", "-c", "user.name=T", "-c", "user.email=t@e.x", *args],
+        cwd=sandbox,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+
+def _seed_sandbox(tmp_path: Path) -> Path:
+    """A minimal git repo with a metric source file, dataset, coverage, and gate."""
+    sandbox = tmp_path / "sandbox"
+    (sandbox / "cogant" / "py" / "cogant").mkdir(parents=True)
+    (sandbox / "cogant" / "evaluation" / "dataset").mkdir(parents=True)
+    (sandbox / "tools").mkdir()
+    (sandbox / "manuscript").mkdir()
+    (sandbox / "tools" / "check_metrics_fresh.py").write_text(GATE.read_text())
+    (sandbox / "cogant" / "py" / "cogant" / "core.py").write_text("X = 1\n")
+    (sandbox / "manuscript" / "ch.md").write_text("draft\n")
+    (sandbox / "cogant" / "evaluation" / "dataset" / "roundtrip_results.jsonl").write_text(
+        json.dumps({"tier": "ISOMORPHIC", "epsilon": 1.0}) + "\n"
+    )
+    (sandbox / "cogant" / "coverage.json").write_text(json.dumps({"totals": {"percent_covered": 95.0}}))
+    _git(sandbox, "init")
+    _git(sandbox, "add", ".")
+    _git(sandbox, "commit", "-m", "seed source")
+    return sandbox
+
+
+def _write_metrics(sandbox: Path, sha: str) -> None:
+    (sandbox / "cogant" / "evaluation" / "METRICS.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "schema_version": "1.0",
+                "generator_git_sha": sha,
+                "testing": {"coverage_percent": 95.0},
+                "evaluation": {
+                    "roundtrip": {
+                        "total_targets": 1,
+                        "role_preserved_count": 0,
+                        "strict_isomorphism_count": 0,
+                        "drift_count": 0,
+                        "failed_count": 0,
+                        "stale_legacy_count": 1,
+                        "role_preservation_score_source": "legacy_epsilon_proxy",
+                        "mean_role_preservation_score": None,
+                        "median_role_preservation_score": None,
+                        "min_role_preservation_score": None,
+                        "max_role_preservation_score": None,
+                    },
+                },
+            }
+        )
+    )
+
+
+def _run_in(sandbox: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(sandbox / "tools" / "check_metrics_fresh.py")],
+        capture_output=True,
+        text=True,
+        cwd=sandbox,
+        check=False,
+    )
+
+
+def test_freshness_gate_passes_when_only_artifacts_changed_since_sha(tmp_path: Path) -> None:
+    """C1: the committed tip can never satisfy ``generator_git_sha == HEAD``
+    (the metrics commit advances HEAD). The gate must instead pass when only
+    NON-metric-affecting paths (METRICS.yaml, manuscript, tooling) changed
+    since ``generator_git_sha``.
+    """
+    sandbox = _seed_sandbox(tmp_path)
+    base = _git(sandbox, "rev-parse", "HEAD")
+    _write_metrics(sandbox, base)  # regenerated against `base`'s source tree
+    (sandbox / "manuscript" / "ch.md").write_text("revised prose\n")  # non-source edit
+    _git(sandbox, "add", ".")
+    _git(sandbox, "commit", "-m", "commit metrics + manuscript (HEAD now != base)")
+
+    result = _run_in(sandbox)
+    assert result.returncode == 0, (
+        "gate must treat artifact/manuscript-only changes since generator_git_sha "
+        f"as fresh.\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    )
+    assert "is in sync" in result.stdout
+
+
+def test_freshness_gate_fails_when_source_changed_since_sha(tmp_path: Path) -> None:
+    """The dual: if metric-affecting source (package code) changed since
+    ``generator_git_sha``, the metrics are stale and the gate must fail."""
+    sandbox = _seed_sandbox(tmp_path)
+    base = _git(sandbox, "rev-parse", "HEAD")
+    _write_metrics(sandbox, base)
+    (sandbox / "cogant" / "py" / "cogant" / "core.py").write_text("X = 2  # changed\n")
+    _git(sandbox, "add", ".")
+    _git(sandbox, "commit", "-m", "change package source after metrics")
+
+    result = _run_in(sandbox)
+    assert result.returncode == 1, (
+        "gate must flag stale metrics when package source changed since "
+        f"generator_git_sha.\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    )
+    assert "metric-affecting source changed" in (result.stdout + result.stderr)
+
+
 def test_classify_row_matches_regenerator_logic() -> None:
     """Sanity test: ``_classify_row`` in check_metrics_fresh must produce
     the same status string as ``_status()`` in regenerate_metrics for every
