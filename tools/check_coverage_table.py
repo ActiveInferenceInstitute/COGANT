@@ -408,6 +408,22 @@ def _run_coverage_report(package_root: Path) -> str | None:
     return proc.stdout
 
 
+def _display_covered_int(pc: float) -> int:
+    """Integer coverage percent as ``coverage report`` displays it (precision 0).
+
+    Mirrors coverage.py ``Numbers.display_covered``: a value in ``(0, 1)`` shows
+    as ``1`` and a value in ``(99, 100)`` shows as ``99`` — coverage never rounds
+    up to a misleading ``0%`` or ``100%``. The manuscript table is built from this
+    displayed value, so the committed-``coverage.json`` fallback must reproduce it
+    rather than naively ``round()``-ing (which turned 99.79% into a false 100%).
+    """
+    if 0 < pc < 1:
+        return 1
+    if 99 < pc < 100:
+        return 99
+    return round(pc)
+
+
 def _parse_coverage_json(json_path: Path) -> dict[str, tuple[int, int]] | None:
     """Parse a committed ``coverage.json`` file as a fallback when ``.coverage``
     SQLite is unavailable.
@@ -432,14 +448,11 @@ def _parse_coverage_json(json_path: Path) -> dict[str, tuple[int, int]] | None:
             continue
         summary = (payload or {}).get("summary") or {}
         stmts = summary.get("num_statements")
-        # ``percent_covered`` is a float; round to int to match the report
-        # output format. The display in coverage report uses "97%" /
-        # "100%" rounded to nearest integer, so do the same here.
         percent = summary.get("percent_covered")
         if stmts is None or percent is None:
             continue
         try:
-            out[mod] = (int(stmts), round(float(percent)))
+            out[mod] = (int(stmts), _display_covered_int(float(percent)))
         except (TypeError, ValueError):
             continue
     return out or None

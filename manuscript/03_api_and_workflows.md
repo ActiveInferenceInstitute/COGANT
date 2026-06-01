@@ -29,7 +29,7 @@ flowchart LR
   BU --> GP
 ```
 
-`Session` exposes stepwise methods (`extract_static`, `build_graph`, …); `PipelineRunner` executes the full DAG under one `PipelineConfig`. Exported files (`model.gnn.md`, JSON companions, `manifest.json`) materialize under the configured output tree. Authoritative command and flag list: [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md).
+`Session` exposes stepwise methods (`extract_static`, `build_graph`, …) up to `export_all`; `PipelineRunner` executes the full ingest-to-validate DAG — including the `validate` gate that the stepwise `Session` path does not run — under one `PipelineConfig`. Exported files (`model.gnn.md`, JSON companions, `manifest.json`) materialize under the configured output tree. Authoritative command and flag list: [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md).
 
 ## Session-oriented workflow
 

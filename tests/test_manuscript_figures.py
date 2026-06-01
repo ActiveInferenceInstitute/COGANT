@@ -267,6 +267,25 @@ def test_caption_encoding_constants_hold() -> None:
     assert '"#deadbe"' not in state_space  # a fabricated color would fail the gate
 
 
+def test_gantt_diamond_marker_check_is_ast_draw_path_bound() -> None:
+    """The gantt diamond assertion must bind to a real scatter draw call, not a
+    bare substring (so a marker surviving only on a legend handle cannot pass it).
+    Non-vacuous: a legend-only diamond is rejected; a scatter diamond is accepted.
+    """
+    import ast
+
+    assert afr._gantt_diamond_marker_errors() == []  # the real renderer passes
+    # Legend handle alone (Line2D marker="D") must NOT satisfy the draw-path check.
+    legend_only = ast.parse('Line2D([0], [0], marker="D", label="gate")\n')
+    assert not afr._has_scatter_with_diamond(legend_only)
+    # An actual scatter draw call with a diamond does satisfy it.
+    real_scatter = ast.parse('ax.scatter(x, y, marker="D", color="#172033")\n')
+    assert afr._has_scatter_with_diamond(real_scatter)
+    # gate-stage set predicate is grounded and non-vacuous.
+    assert afr._has_gate_stage_set(ast.parse('gate_stages = {"validate", "roundtrip"}\n'))
+    assert not afr._has_gate_stage_set(ast.parse('gate_stages = {"validate"}\n'))
+
+
 def test_module_name_collector_sees_conditionally_defined_symbols() -> None:
     """The AST name collector must see symbols guarded by try/except or if — the
     optional-dependency pattern a renderer could be refactored into — so the gate

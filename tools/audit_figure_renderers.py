@@ -136,16 +136,69 @@ _ENCODING_ASSERTIONS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
         "cogant/py/cogant/viz/png/state_space.py",
         ('"Blues"', '"Greens"', '"Oranges"', '"Purples"'),
     ),
-    (
-        "roundtrip_batch_gantt caption: dark diamond markers mark validate/roundtrip gates",
-        "tools/manuscript_figures.py",
-        ('marker="D"', 'gate_stages = {"validate", "roundtrip"}'),
-    ),
 )
 
 
+def _has_scatter_with_diamond(tree: ast.AST) -> bool:
+    """True iff some ``scatter(...)`` call passes ``marker="D"`` — i.e. a diamond
+    is drawn on the LIVE path, not merely present as a decorative legend handle."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", "")
+        if name != "scatter":
+            continue
+        for kw in node.keywords:
+            if kw.arg == "marker" and isinstance(kw.value, ast.Constant) and kw.value.value == "D":
+                return True
+    return False
+
+
+def _has_gate_stage_set(tree: ast.AST) -> bool:
+    """True iff a ``gate_stages = {...}`` set literal lists validate + roundtrip."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Set):
+            continue
+        if not any(isinstance(t, ast.Name) and t.id == "gate_stages" for t in node.targets):
+            continue
+        members = {e.value for e in node.value.elts if isinstance(e, ast.Constant)}
+        if {"validate", "roundtrip"} <= members:
+            return True
+    return False
+
+
+def _gantt_diamond_marker_errors() -> list[str]:
+    """AST-confirm the gantt caption claim ("dark diamond markers mark
+    validate/roundtrip gates"): a ``scatter`` call must draw ``marker="D"`` and the
+    gate-stage set must list validate+roundtrip. Stronger than a substring check —
+    it cannot be satisfied by a diamond that survives only on a legend handle."""
+    relpath = "tools/manuscript_figures.py"
+    source_file = _REPO_ROOT / relpath
+    if not source_file.exists():
+        return [f"roundtrip_batch_gantt: renderer source missing: {relpath}"]
+    tree = ast.parse(source_file.read_text(encoding="utf-8"))
+    errors: list[str] = []
+    if not _has_scatter_with_diamond(tree):
+        errors.append(
+            f'roundtrip_batch_gantt caption "dark diamond markers": no '
+            f'scatter(marker="D") draw call in {relpath} — the gate glyph changed'
+        )
+    if not _has_gate_stage_set(tree):
+        errors.append(
+            f'roundtrip_batch_gantt caption "validate/roundtrip gates": gate_stages '
+            f"set in {relpath} no longer lists validate+roundtrip"
+        )
+    return errors
+
+
 def audit_encodings() -> list[str]:
-    """Confirm each locked caption-encoding constant still exists in its renderer."""
+    """Confirm each locked caption-encoding claim still holds in its renderer.
+
+    Color/colormap claims are checked as exact source substrings (dict/list
+    literals, low ambiguity); the gantt diamond-marker claim is checked via AST
+    against the actual ``scatter`` draw call (a glyph reused in a legend cannot
+    satisfy it)."""
     errors: list[str] = []
     for claim, relpath, required in _ENCODING_ASSERTIONS:
         source_file = _REPO_ROOT / relpath
@@ -159,6 +212,7 @@ def audit_encodings() -> list[str]:
                 f"{claim}: {relpath} no longer contains {missing} — the renderer "
                 "encoding changed; update the caption AND this assertion together"
             )
+    errors.extend(_gantt_diamond_marker_errors())
     return errors
 
 
@@ -183,7 +237,7 @@ def audit() -> list[str]:
     errors.extend(encoding_errors)
     print(
         f"audit_figure_renderers: {checked} dotted renderer path(s) + "
-        f"{len(_ENCODING_ASSERTIONS)} caption-encoding assertion(s) checked, "
+        f"{len(_ENCODING_ASSERTIONS) + 1} caption-encoding assertion(s) checked, "
         f"{len(errors)} error(s)"
     )
     return errors
