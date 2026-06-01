@@ -22,7 +22,7 @@ flowchart LR
     BU[Bundle]
     GP[gnn_package]
   end
-  SE --> PC
+  SE --> DAG
   PR --> PC
   PC --> DAG
   DAG --> BU

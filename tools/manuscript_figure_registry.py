@@ -55,7 +55,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "space, and Markov blanket partition on one page."
         ),
         source_artifact="cogant/output/calculator/data/program_graph.json",
-        renderer="cogant.viz.png_export.render_interpretability_overview_png",
+        renderer="cogant.viz.png.render_interpretability_overview_png",
         method_note=(
             "Multi-panel overview generated from program graph, rule trace, state space, "
             "and blanket artifacts."
@@ -75,7 +75,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "by downstream semantic mapping."
         ),
         source_artifact="cogant/output/calculator/data/program_graph.json",
-        renderer="cogant.viz.png_export.render_program_graph_png",
+        renderer="cogant.viz.png.render_program_graph_png",
         method_note="Deterministic containment-first graph drawing from the same JSON consumed by semantic mapping.",
         reading_guide=(
             "Node fill encodes program kind; edge color/style encodes relation kind; "
@@ -95,7 +95,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "hidden state, observation, and action factors."
         ),
         source_artifact="cogant/output/calculator/data/state_space.json",
-        renderer="cogant.viz.png_export.render_state_space_factor_png",
+        renderer="cogant.viz.png.render_state_space_factor_png",
         method_note="Factor graph view of hidden states, observations, actions, and transitions.",
         reading_guide=(
             "Read purple as hidden state, green as observation, orange as action, and "
@@ -114,7 +114,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "state-space model and exported matrix artifact when available."
         ),
         source_artifact="cogant/output/calculator/data/state_space.json",
-        renderer="cogant.viz.png_export.render_connections_matrix_png",
+        renderer="cogant.viz.png.render_connections_matrix_png",
         method_note=(
             "Heatmap rendering of likelihood, transition, preference, and prior arrays; "
             "falls back to deterministic shape proxies if matrix JSON is unavailable."
@@ -139,7 +139,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "gnn_package/markov_blanket.json sidecar."
         ),
         source_artifact="cogant/output/calculator/gnn_package/markov_blanket.json",
-        renderer="cogant.viz.png_export.render_markov_blanket_png",
+        renderer="cogant.viz.png.render_markov_blanket_png",
         method_note=(
             "Deterministic role-partition renderer for internal, sensory, active, "
             "and external program-node groups."
@@ -167,7 +167,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "human-readable Generalized Notation Notation artifact."
         ),
         source_artifact="cogant/output/calculator/gnn_package/model.gnn.md",
-        renderer="cogant.viz.png_export.render_gnn_markdown_png",
+        renderer="cogant.viz.png.render_gnn_markdown_png",
         method_note="Rasterized view of the emitted GNN markdown bundle.",
         reading_guide=(
             "Use it to inspect the reader-facing bundle format alongside the JSON "
@@ -208,12 +208,12 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         role="forward-reverse-forward-roundtrip",
         caption=(
             "Publication timeline rendered from run_all's manifest, showing the "
-            "explicit roundtrip_calculator stage after forward translation, "
+            "explicit roundtrip:calculator stage after forward translation, "
             "rendering, visualization, and validation; dark diamond markers identify "
             "validation and roundtrip gates."
         ),
         source_artifact="cogant/output/run_manifest.json",
-        renderer="tools.manuscript_figures.render_publication_batch_timeline",
+        renderer="tools.manuscript_figures._render_publication_batch_timeline",
         method_note=(
             "Light matplotlib timeline generated from run manifest command records; "
             "the stdlib batch-dashboard generator remains unchanged."
@@ -241,7 +241,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "workbench completeness."
         ),
         source_artifact="cogant/output/dashboard/metrics_per_target.json",
-        renderer="tools.manuscript_figures.render_publication_batch_evidence_summary",
+        renderer="tools.manuscript_figures._render_publication_batch_evidence_summary",
         method_note=(
             "Matplotlib small-multiple chart generated from the batch dashboard JSON; "
             "the raw Mermaid audit sidecars remain in cogant/output/dashboard/."
@@ -304,8 +304,9 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         source_artifact="cogant/output/calculator/data/rule_evidence_trace.json",
         renderer="cogant.viz.inspection_dashboard rule trace renderer",
         method_note=(
-            "Mapping-level trace of rule id, matched nodes, confidence components, "
-            "conflicts, and review status."
+            "Aggregate per-rule contribution bars with mapping, conflict, and "
+            "accepted/rejected totals; the per-mapping rule id, matched nodes, and "
+            "confidence components live in the source JSON, not this rendered panel."
         ),
         reading_guide=(
             "Rows are proposed semantic mappings; inspect rule id and confidence "
@@ -351,12 +352,17 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         destination="cogant_inference_trace.png",
         role="runtime-belief-policy-free-energy-trace",
         caption=(
-            "Deterministic runtime inference trace emitted from generated A/B/C/D "
-            "matrices, with belief, action, preference, and free-energy panels."
+            "Deterministic runtime inference trace emitted from the package's "
+            "built-in demonstration A/B/C/D matrices (not the fixture's exported "
+            "values), with belief, action, preference, and free-energy panels."
         ),
         source_artifact="cogant/output/calculator/data/inference_trace.json",
         renderer="cogant.runtime.inference_demo and visualization renderer",
-        method_note="Deterministic trace generated from exported A/B/C/D matrices.",
+        method_note=(
+            "Deterministic trace generated from the package's built-in demonstration "
+            "A/B/C/D matrices (`default_demo_matrices`), which share an exported model's "
+            "shape but are not the fixture's exported values."
+        ),
         reading_guide=(
             "Read belief, action, preference, and free-energy-like panels as a smoke "
             "demonstration of executable matrices."
@@ -410,7 +416,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "cogant/evaluation/figures/metrics.json."
         ),
         source_artifact="cogant/evaluation/figures/metrics.json",
-        renderer="cogant.evaluation.figures.generate_figures.figure_graph_sizes",
+        renderer="generate_figures.figure_graph_sizes",
         method_note=(
             "Horizontal grouped bar chart of node and edge counts from the public "
             "API fixture run."
@@ -439,7 +445,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "cogant/evaluation/figures/metrics.json."
         ),
         source_artifact="cogant/evaluation/figures/metrics.json",
-        renderer="cogant.evaluation.figures.generate_figures.figure_node_kinds",
+        renderer="generate_figures.figure_node_kinds",
         method_note=(
             "Horizontal stacked bar chart of MODULE, CLASS, METHOD, and FUNCTION "
             "counts by fixture."
@@ -468,7 +474,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "cogant/evaluation/figures/metrics.json."
         ),
         source_artifact="cogant/evaluation/figures/metrics.json",
-        renderer="cogant.evaluation.figures.generate_figures.figure_state_space",
+        renderer="generate_figures.figure_state_space",
         method_note=(
             "Grouped horizontal bar chart of compiled hidden-state variables, "
             "observations, actions, and transitions."
@@ -502,7 +508,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "cogant/evaluation/figures/metrics.json."
         ),
         source_artifact="cogant/evaluation/figures/metrics.json",
-        renderer="cogant.evaluation.figures.generate_figures.figure_pipeline_latency",
+        renderer="generate_figures.figure_pipeline_latency",
         method_note=(
             "Directly labelled horizontal bar chart of end-to-end API run time, "
             "color-coded by fixture group."

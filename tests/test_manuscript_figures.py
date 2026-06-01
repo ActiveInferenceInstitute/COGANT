@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_ROOT = PROJECT_ROOT / "tools"
 if str(TOOLS_ROOT) not in sys.path:
     sys.path.insert(0, str(TOOLS_ROOT))
 
+import audit_figure_renderers as afr  # noqa: E402
 from manuscript_figures import (  # noqa: E402
     MANUSCRIPT_FIGURES,
     ManuscriptFigure,
@@ -224,3 +224,44 @@ def test_artifact_summary_extracts_fixture_metrics_counts(tmp_path: Path) -> Non
     assert summary["total_observations"] == 25
     assert summary["total_actions"] == 37
     assert summary["total_elapsed_s"] == 9.54
+
+
+def test_registry_renderer_paths_resolve() -> None:
+    """Every dotted ``renderer`` path in the registry must import to a callable.
+
+    Guards the silent-provenance-lie failure mode where a renderer is refactored
+    into a new module (e.g. ``cogant.viz.png_export`` -> ``cogant.viz.png``) but
+    the registry metadata still points at the dead path. Free-text descriptions
+    (with spaces) are skipped by design.
+    """
+    errors = afr.audit()
+    assert errors == [], "stale/unresolvable renderer paths in registry:\n" + "\n".join(errors)
+
+
+def test_renderer_audit_is_not_vacuous() -> None:
+    """The audit must actually fail on a bad path (else green is meaningless)."""
+    # A dotted path that looks importable but cannot resolve.
+    assert afr.looks_like_import_path("cogant.viz.png.render_does_not_exist_png")
+    with pytest.raises((AttributeError, ModuleNotFoundError, ValueError)):
+        afr.resolve_renderer("cogant.viz.png.render_does_not_exist_png")
+    with pytest.raises((AttributeError, ModuleNotFoundError, ValueError)):
+        afr.resolve_renderer("cogant.viz.png_export.render_program_graph_png")
+    # Free-text descriptions are correctly treated as non-paths (and skipped).
+    assert not afr.looks_like_import_path("upstream GNN visualization pipeline")
+    assert not afr.looks_like_import_path("cogant.viz.inspection_dashboard roundtrip renderer")
+
+
+def test_caption_encoding_constants_hold() -> None:
+    """Every locked caption-encoding constant must still exist in its renderer.
+
+    This is the layer that defends caption<->encoding drift (a color/marker change
+    silently making a caption lie) — the failure the path-resolution layer cannot
+    catch. Non-vacuous: a fabricated constant is provably absent, so a real
+    renderer color change (vanished substring) would fail the same check.
+    """
+    assert afr.audit_encodings() == []
+    state_space = (
+        afr._REPO_ROOT / "cogant" / "py" / "cogant" / "viz" / "png" / "state_space.py"
+    ).read_text(encoding="utf-8")
+    assert '"#8e44ad"' in state_space  # the real "hidden state = purple" constant
+    assert '"#deadbe"' not in state_space  # a fabricated color would fail the gate
