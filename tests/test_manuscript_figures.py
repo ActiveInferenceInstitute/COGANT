@@ -265,3 +265,26 @@ def test_caption_encoding_constants_hold() -> None:
     ).read_text(encoding="utf-8")
     assert '"#8e44ad"' in state_space  # the real "hidden state = purple" constant
     assert '"#deadbe"' not in state_space  # a fabricated color would fail the gate
+
+
+def test_module_name_collector_sees_conditionally_defined_symbols() -> None:
+    """The AST name collector must see symbols guarded by try/except or if — the
+    optional-dependency pattern a renderer could be refactored into — so the gate
+    does not spuriously fail a valid path (Forge cross-vendor finding)."""
+    import ast
+
+    tree = ast.parse(
+        "try:\n"
+        "    from somewhere import render_x_png\n"
+        "except ImportError:\n"
+        "    def render_x_png():\n        return None\n"
+        "if True:\n"
+        "    render_y_png = render_x_png\n"
+        "class C:\n"
+        "    def method_not_a_module_attr(self):\n        return 1\n"
+    )
+    names = afr._module_level_names(tree)
+    assert "render_x_png" in names  # try-body import
+    assert "render_y_png" in names  # if-guarded assignment
+    assert "C" in names
+    assert "method_not_a_module_attr" not in names  # class methods are not module attrs

@@ -45,13 +45,14 @@ def looks_like_import_path(value: str) -> bool:
     return " " not in value and bool(_DOTTED.match(value))
 
 
-def _module_level_names(tree: ast.Module) -> set[str]:
-    """Names a module exposes at top level: defs, classes, assignments, and the
-    aliases it imports (re-exports count — ``module.name`` resolves them)."""
-    names: set[str] = set()
-    for node in tree.body:
+def _collect_names(body: list[ast.stmt], names: set[str]) -> None:
+    """Collect names bound at module scope, recursing into control-flow blocks
+    (if/try/with/for) but NOT into def/class bodies — so a symbol guarded by a
+    ``try/except`` import or an ``if`` (the common optional-dependency pattern) is
+    captured, while a class's methods are not mistaken for module attributes."""
+    for node in body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            names.add(node.name)
+            names.add(node.name)  # named here; do not descend into its body
         elif isinstance(node, (ast.Import, ast.ImportFrom)):
             for alias in node.names:
                 names.add(alias.asname or alias.name.split(".")[0])
@@ -61,6 +62,28 @@ def _module_level_names(tree: ast.Module) -> set[str]:
                     names.add(target.id)
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
+        elif isinstance(node, ast.If):
+            _collect_names(node.body, names)
+            _collect_names(node.orelse, names)
+        elif isinstance(node, ast.Try):
+            _collect_names(node.body, names)
+            _collect_names(node.orelse, names)
+            _collect_names(node.finalbody, names)
+            for handler in node.handlers:
+                _collect_names(handler.body, names)
+        elif isinstance(node, (ast.With, ast.AsyncWith)):
+            _collect_names(node.body, names)
+        elif isinstance(node, (ast.For, ast.AsyncFor)):
+            _collect_names(node.body, names)
+            _collect_names(node.orelse, names)
+
+
+def _module_level_names(tree: ast.Module) -> set[str]:
+    """Names a module exposes at module scope: defs, classes, assignments, and the
+    aliases it imports (re-exports count — ``module.name`` resolves them), including
+    those guarded by ``try/except`` / ``if`` (optional-dependency re-exports)."""
+    names: set[str] = set()
+    _collect_names(tree.body, names)
     return names
 
 
@@ -69,11 +92,16 @@ def resolve_renderer(path: str) -> str:
 
     Locates the module file via :func:`importlib.util.find_spec` and confirms
     ``attr`` is defined (or re-exported) in it by parsing the source with
-    :mod:`ast` — WITHOUT executing the module body. This keeps the audit free of
-    the renderers' heavy runtime imports (matplotlib, the cogant package), so it
-    behaves identically in every environment (CI, the coverage-instrumented
-    project runner, a bare checkout). Handles ``tools`` not being an importable
-    package by stripping a leading ``tools.`` (``tools/`` is on ``sys.path``).
+    :mod:`ast` — WITHOUT executing the *leaf renderer* module body. This keeps the
+    audit free of the renderers' heavy, env-sensitive runtime imports (matplotlib,
+    numpy), which the cogant renderers import lazily inside their draw functions.
+    Caveat: ``find_spec`` does execute the *parent packages'* ``__init__`` modules,
+    so the ``cogant`` package must be importable (``cogant/py`` is placed on
+    ``sys.path`` at module load); this is why the audit runs cleanly under CI, the
+    coverage-instrumented project runner, and a checkout with cogant installed, but
+    is not claimed to work where the package cannot be imported at all. Handles
+    ``tools`` not being an importable package by stripping a leading ``tools.``
+    (``tools/`` is on ``sys.path``).
     Raises ModuleNotFoundError / AttributeError / ValueError on any failure.
     Returns the normalized ``module.attr`` string on success.
     """
