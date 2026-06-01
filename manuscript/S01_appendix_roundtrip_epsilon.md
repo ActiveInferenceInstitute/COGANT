@@ -41,7 +41,17 @@ without treating that information-theoretic distance as the shipped scorer.
 
 : Fresh-v0.6 versus stale-legacy roundtrip evidence streams. {#tbl:fresh-v06-vs-stale-legacy-roundtrip}
 
-### A.1 All 23 targets, wave-14 intermediate results
+### A.1 Historical wave-14 snapshot (23-target ε corpus, superseded)
+
+> **Reconciliation with the native ledger.** The wave tables in this subsection
+> are the **historical 23-target ε corpus** and are *disjoint* from the live
+> native v0.6 ledger, which has **{{TOTAL_TARGETS}}** targets with
+> **{{ROLE_PRESERVED_COUNT}}** role-preserved and **{{DRIFT_COUNT}}** drift. In
+> particular, `07_event_driven` and `09_policy` — shown as DRIFT in the wave-14
+> snapshot below — are classified `ROLE_PRESERVED` at `role_preservation_score`
+> 1.0 in the native ledger (the wave-16 POLICY/CONTEXT fix, since superseded by
+> the native run). None of the wave numbers below feed the headline
+> {{TOTAL_TARGETS}}/{{ROLE_PRESERVED_COUNT}}/{{DRIFT_COUNT}} counts.
 
 > **Regeneration note.** `../cogant/evaluation/dataset/roundtrip_results.jsonl`
 > is now regenerated **natively** by `tools/regenerate_roundtrip_ledger.py`,

@@ -14,6 +14,7 @@ means exactly "the roundtrip semantic oracle sees no role drift from it".
 from __future__ import annotations
 
 import shutil
+import subprocess
 import sys
 import tempfile
 from collections import Counter
@@ -91,6 +92,71 @@ def test_negative_control_is_detected(base_roles: Counter) -> None:
         f"negative control similarity {similarity:.4f} >= {_ROBUST_THRESHOLD} "
         "— oracle failed to detect a real semantic change (vacuous suite)"
     )
+
+
+_FLASK_MINI = _PKG_ROOT / "examples" / "control_positive" / "flask_mini"
+
+
+def _imports_cleanly(repo: Path) -> tuple[bool, str]:
+    """Import every top-level module in ``repo`` in a subprocess. Catches
+    behaviour-breaking edits that fire at definition time (decorators with
+    keyword args, ``@x.setter`` ordering) which static parsing misses."""
+    mods = sorted(
+        p.stem for p in repo.glob("*.py")
+        if p.stem != "__init__" and "__pycache__" not in p.parts
+    )
+    for mod in mods:
+        proc = subprocess.run(
+            [sys.executable, "-c", f"import {mod}"],
+            cwd=str(repo), capture_output=True, text=True, timeout=60, check=False,
+        )
+        if proc.returncode != 0:
+            return False, proc.stderr.strip().splitlines()[-1] if proc.stderr.strip() else "?"
+    return True, ""
+
+
+@pytest.mark.parametrize("transform_name", sorted(T.SEMANTICS_PRESERVING))
+def test_semantics_preserving_transform_keeps_fixture_importable(transform_name: str) -> None:
+    """A semantics-preserving transform must not break the fixture at runtime.
+
+    Regression for the RedTeam finding that an earlier ``rename_parameters``
+    renamed parameters without rewriting keyword call sites (e.g. flask_mini's
+    ``@app.route('/users', method='POST')``), and ``reorder_methods`` could
+    reorder ``@property``/``@x.setter`` pairs — both pass ``ast.parse`` but raise
+    at import. flask_mini is the fixture that exercises a keyword-bearing
+    decorator call, so the original must import and the transformed copy must too.
+    """
+    base_ok, _ = _imports_cleanly(_FLASK_MINI)
+    assert base_ok, "flask_mini fixture must import cleanly as a baseline"
+    with tempfile.TemporaryDirectory() as tmp:
+        dst = Path(tmp) / _FLASK_MINI.name
+        shutil.copytree(_FLASK_MINI, dst)
+        for py in dst.rglob("*.py"):
+            if "__pycache__" in py.parts:
+                continue
+            py.write_text(
+                T.SEMANTICS_PRESERVING[transform_name](py.read_text(encoding="utf-8")),
+                encoding="utf-8",
+            )
+        ok, err = _imports_cleanly(dst)
+    assert ok, f"{transform_name} broke flask_mini at import time: {err}"
+
+
+def test_reorder_methods_preserves_property_class() -> None:
+    """reorder_methods must not break a @property/@x.setter pair (which would
+    raise NameError at class-definition time if the setter is moved first)."""
+    src = (
+        "class C:\n"
+        "    def __init__(self):\n        self._v = 0\n"
+        "    @property\n    def v(self):\n        return self._v\n"
+        "    @v.setter\n    def v(self, x):\n        self._v = x\n"
+    )
+    out = T.reorder_methods(src)
+    ns: dict = {}
+    exec(compile(out, "<reorder-property>", "exec"), ns)  # must not raise NameError
+    obj = ns["C"]()
+    obj.v = 7
+    assert obj.v == 7
 
 
 def test_transforms_emit_valid_python() -> None:

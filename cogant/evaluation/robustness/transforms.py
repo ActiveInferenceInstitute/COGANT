@@ -10,8 +10,8 @@ to the kinds of edits a refactor or a different author would introduce:
                           i.e. parser/frontend formatting variation.
 * ``insert_comments``   — comment and blank-line injection.
 * ``insert_dead_code``  — unreachable ``if False:`` blocks inside each function.
-* ``rename_parameters`` — consistent renaming of function parameters and their
-                          in-body uses (scope-local identifier renaming).
+* ``rename_locals``     — consistent renaming of function local variables and
+                          their in-body uses (call-safe identifier renaming).
 * ``reorder_methods``   — reverse method-definition order within each class
                           (definition order is semantics-irrelevant).
 * ``swap_if_branches``  — rewrite ``if c: A else: B`` to ``if not c: B else: A``.
@@ -98,32 +98,59 @@ def insert_dead_code(src: str) -> str:
     return ast.unparse(tree)
 
 
-class _ParamRenamer(ast.NodeTransformer):
-    """Rename function parameters (and their in-body Name uses) with a suffix.
+def _is_flat_scope(node: ast.AST) -> bool:
+    """True if a function body introduces NO nested binding scopes (nested
+    functions, classes, lambdas, or comprehensions). Renaming locals is only
+    done for flat functions so a simple ``ast.walk`` cannot leak the rename into
+    an inner scope with different binding rules."""
+    for child in ast.walk(node):
+        if child is node:
+            continue
+        if isinstance(child, (
+            ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda,
+            ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp,
+        )):
+            return False
+    return True
 
-    Skips functions that use ``global``/``nonlocal`` (where a local rename
-    could change binding semantics) and never touches ``self``/``cls``.
+
+class _LocalRenamer(ast.NodeTransformer):
+    """Rename a function's LOCAL VARIABLES (assigned names that are not
+    parameters) and their in-body uses with a suffix.
+
+    Local variables are never visible at call sites, so renaming them — unlike
+    renaming parameters — can never break a keyword caller. This makes the
+    transform a genuinely behaviour-preserving identifier rename. Functions that
+    declare ``global``/``nonlocal`` or contain nested scopes (closures,
+    comprehensions) are skipped to keep the rewrite provably scope-local.
     """
 
-    _SUFFIX = "_rb"
+    _SUFFIX = "_lv"
     _SKIP = {"self", "cls"}
 
     def _func(self, node):
+        self.generic_visit(node)
         if any(isinstance(n, (ast.Global, ast.Nonlocal)) for n in ast.walk(node)):
-            self.generic_visit(node)
             return node
-        params = []
-        for a in [*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs]:
-            if a.arg not in self._SKIP:
-                params.append(a.arg)
-        if node.args.vararg and node.args.vararg.arg not in self._SKIP:
-            params.append(node.args.vararg.arg)
-        if node.args.kwarg and node.args.kwarg.arg not in self._SKIP:
-            params.append(node.args.kwarg.arg)
-        rename = {p: p + self._SUFFIX for p in params}
+        if not _is_flat_scope(node):
+            return node
+        params: set[str] = {a.arg for a in (
+            *node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs
+        )}
+        if node.args.vararg:
+            params.add(node.args.vararg.arg)
+        if node.args.kwarg:
+            params.add(node.args.kwarg.arg)
+        locals_assigned: set[str] = set()
+        for child in ast.walk(node):
+            if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store):
+                locals_assigned.add(child.id)
+        rename = {
+            name: name + self._SUFFIX
+            for name in (locals_assigned - params - self._SKIP)
+        }
         if rename:
             _RenameNames(rename).visit(node)
-        self.generic_visit(node)
         return node
 
     visit_FunctionDef = _func
@@ -146,15 +173,34 @@ class _RenameNames(ast.NodeTransformer):
 
 
 @_safe
-def rename_parameters(src: str) -> str:
-    tree = _ParamRenamer().visit(ast.parse(src))
+def rename_locals(src: str) -> str:
+    tree = _LocalRenamer().visit(ast.parse(src))
     ast.fix_missing_locations(tree)
     return ast.unparse(tree)
+
+
+def _has_decorator_coupling(node: ast.ClassDef) -> bool:
+    """True if the class has decorator-coupled methods whose definition order is
+    NOT free to change — e.g. ``@property`` + ``@<name>.setter``/``.getter``/
+    ``.deleter``, where the setter's decorator references the property name and
+    must be defined after it. Reordering such a class would raise NameError at
+    class-definition time, so it is left in place.
+    """
+    for m in node.body:
+        if not isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for dec in m.decorator_list:
+            # @x.setter / @x.getter / @x.deleter — attribute on another name.
+            if isinstance(dec, ast.Attribute) and dec.attr in {"setter", "getter", "deleter"}:
+                return True
+    return False
 
 
 class _MethodReorderer(ast.NodeTransformer):
     def visit_ClassDef(self, node: ast.ClassDef) -> ast.ClassDef:
         self.generic_visit(node)
+        if _has_decorator_coupling(node):
+            return node  # reordering would break @property/@x.setter pairing
         methods = [n for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
         if len(methods) > 1:
             rev = list(reversed(methods))
@@ -284,7 +330,7 @@ SEMANTICS_PRESERVING: dict[str, object] = {
     "reformat": reformat,
     "insert_comments": insert_comments,
     "insert_dead_code": insert_dead_code,
-    "rename_parameters": rename_parameters,
+    "rename_locals": rename_locals,
     "reorder_methods": reorder_methods,
     "swap_if_branches": swap_if_branches,
 }

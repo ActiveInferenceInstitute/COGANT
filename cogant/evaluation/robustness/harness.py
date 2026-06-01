@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 from collections import Counter
@@ -74,22 +75,59 @@ def _apply_transform(src_dir: Path, dst_dir: Path, fn) -> None:
             pass
 
 
-def _classify(transform: str, similarity: float) -> str:
+def _imports_ok(repo: Path) -> bool:
+    """True if every top-level module in ``repo`` imports without error.
+
+    Importing (vs merely parsing) is what catches behaviour-breaking edits that
+    fire at definition time — e.g. a decorator (`@app.route(..., method=...)`)
+    or a `@x.setter` that references a renamed/out-of-order name. A transform is
+    only judged ROBUST when role extraction is stable AND this holds, so the
+    harness validates behavioural equivalence, not just role-multiset stability.
+    """
+    mods = sorted(
+        p.stem for p in repo.glob("*.py")
+        if p.stem != "__init__" and "__pycache__" not in p.parts
+    )
+    if not mods:
+        # package-style fixture: import each top-level package dir
+        mods = sorted(
+            d.name for d in repo.iterdir() if d.is_dir() and (d / "__init__.py").exists()
+        )
+    if not mods:
+        return True  # nothing importable to check
+    for mod in mods:
+        proc = subprocess.run(
+            [sys.executable, "-c", f"import {mod}"],
+            cwd=str(repo), capture_output=True, text=True, timeout=60, check=False,
+        )
+        if proc.returncode != 0:
+            return False
+    return True
+
+
+def _classify(transform: str, similarity: float, runtime_ok: bool) -> str:
     preserving = transform in T.SEMANTICS_PRESERVING
     negative = transform in T.NEGATIVE_CONTROLS
+    role_stable = similarity >= ROBUST_THRESHOLD
     if negative:
-        return "DETECTED" if similarity < ROBUST_THRESHOLD else "MISSED"
+        return "DETECTED" if (not role_stable or not runtime_ok) else "MISSED"
     if preserving:
-        return "ROBUST" if similarity >= ROBUST_THRESHOLD else "DEGRADED"
+        # Robust requires BOTH role stability and that the transformed code
+        # still imports (behavioural equivalence), not role stability alone.
+        if role_stable and runtime_ok:
+            return "ROBUST"
+        return "BROKEN" if not runtime_ok else "DEGRADED"
     # sensitivity probe
-    return "PRESERVED" if similarity >= ROBUST_THRESHOLD else "SHIFTED"
+    return "PRESERVED" if (role_stable and runtime_ok) else "SHIFTED"
 
 
 def run() -> dict:
     rows: list[dict] = []
     base_roles: dict[str, Counter] = {}
+    base_imports: dict[str, bool] = {}
     for group, name in BASE_FIXTURES:
         base_roles[name] = _forward_roles(EXAMPLES / group / name)
+        base_imports[name] = _imports_ok(EXAMPLES / group / name)
 
     for transform_name, fn in T.ALL_TRANSFORMS.items():
         for group, name in BASE_FIXTURES:
@@ -100,10 +138,15 @@ def run() -> dict:
                 try:
                     _apply_transform(base, dst, fn)
                     transformed = _forward_roles(dst)
+                    transformed_imports = _imports_ok(dst)
                     error = None
                 except Exception as exc:  # noqa: BLE001
                     transformed = Counter()
+                    transformed_imports = False
                     error = f"{type(exc).__name__}: {exc}"
+            # A transform "imports cleanly" iff it does not regress importability
+            # relative to the original fixture (which must import to baseline).
+            runtime_ok = (not base_imports[name]) or transformed_imports
             similarity = compare_role_distributions(orig, transformed)
             delta = {
                 k: transformed.get(k, 0) - orig.get(k, 0)
@@ -123,7 +166,8 @@ def run() -> dict:
                 "role_delta": delta,
                 "similarity": round(float(similarity), 4),
                 "degradation": round(1.0 - float(similarity), 4),
-                "status": _classify(transform_name, similarity),
+                "runtime_ok": bool(runtime_ok),
+                "status": _classify(transform_name, similarity, runtime_ok),
                 "error": error,
             })
 

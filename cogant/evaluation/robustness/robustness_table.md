@@ -5,7 +5,7 @@
 | `reformat` | semantics_preserving | 1.0000 | ROBUST |
 | `insert_comments` | semantics_preserving | 1.0000 | ROBUST |
 | `insert_dead_code` | semantics_preserving | 1.0000 | ROBUST |
-| `rename_parameters` | semantics_preserving | 1.0000 | ROBUST |
+| `rename_locals` | semantics_preserving | 1.0000 | ROBUST |
 | `reorder_methods` | semantics_preserving | 1.0000 | ROBUST |
 | `swap_if_branches` | semantics_preserving | 1.0000 | ROBUST |
 | `outline_first_function` | sensitivity_probe | 1.0000 | PRESERVED |

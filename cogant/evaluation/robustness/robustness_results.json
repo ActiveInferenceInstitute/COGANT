@@ -35,7 +35,7 @@
       "min_similarity": 1.0,
       "status": "ROBUST"
     },
-    "rename_parameters": {
+    "rename_locals": {
       "category": "semantics_preserving",
       "fixtures": 3,
       "mean_similarity": 1.0,
@@ -71,6 +71,7 @@
         "OBSERVATION": 3
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "reformat",
@@ -93,6 +94,7 @@
         "POLICY": 4
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "reformat",
@@ -115,6 +117,7 @@
         "POLICY": 5
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "reformat",
@@ -137,6 +140,7 @@
         "OBSERVATION": 3
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "insert_comments",
@@ -159,6 +163,7 @@
         "POLICY": 4
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "insert_comments",
@@ -181,6 +186,7 @@
         "POLICY": 5
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "insert_comments",
@@ -203,6 +209,7 @@
         "OBSERVATION": 3
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "insert_dead_code",
@@ -225,6 +232,7 @@
         "POLICY": 4
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "insert_dead_code",
@@ -247,6 +255,7 @@
         "POLICY": 5
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "insert_dead_code",
@@ -269,9 +278,10 @@
         "OBSERVATION": 3
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
-      "transform": "rename_parameters",
+      "transform": "rename_locals",
       "transformed_roles": {
         "ACTION": 6,
         "CONSTRAINT": 1,
@@ -291,9 +301,10 @@
         "POLICY": 4
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
-      "transform": "rename_parameters",
+      "transform": "rename_locals",
       "transformed_roles": {
         "ACTION": 7,
         "HIDDEN_STATE": 1,
@@ -313,9 +324,10 @@
         "POLICY": 5
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
-      "transform": "rename_parameters",
+      "transform": "rename_locals",
       "transformed_roles": {
         "ACTION": 13,
         "HIDDEN_STATE": 6,
@@ -335,6 +347,7 @@
         "OBSERVATION": 3
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "reorder_methods",
@@ -357,6 +370,7 @@
         "POLICY": 4
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "reorder_methods",
@@ -379,6 +393,7 @@
         "POLICY": 5
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "reorder_methods",
@@ -401,6 +416,7 @@
         "OBSERVATION": 3
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "swap_if_branches",
@@ -423,6 +439,7 @@
         "POLICY": 4
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "swap_if_branches",
@@ -445,6 +462,7 @@
         "POLICY": 5
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "ROBUST",
       "transform": "swap_if_branches",
@@ -467,6 +485,7 @@
         "OBSERVATION": 3
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "PRESERVED",
       "transform": "outline_first_function",
@@ -489,6 +508,7 @@
         "POLICY": 4
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "PRESERVED",
       "transform": "outline_first_function",
@@ -511,6 +531,7 @@
         "POLICY": 5
       },
       "role_delta": {},
+      "runtime_ok": true,
       "similarity": 1.0,
       "status": "PRESERVED",
       "transform": "outline_first_function",
@@ -537,6 +558,7 @@
         "CONSTRAINT": -1,
         "OBSERVATION": -3
       },
+      "runtime_ok": true,
       "similarity": 0.7882,
       "status": "DETECTED",
       "transform": "drop_half_definitions",
@@ -560,6 +582,7 @@
         "ACTION": -2,
         "OBSERVATION": -4
       },
+      "runtime_ok": true,
       "similarity": 0.9899,
       "status": "DETECTED",
       "transform": "drop_half_definitions",
@@ -586,6 +609,7 @@
         "OBSERVATION": -1,
         "POLICY": -2
       },
+      "runtime_ok": true,
       "similarity": 0.9708,
       "status": "DETECTED",
       "transform": "drop_half_definitions",

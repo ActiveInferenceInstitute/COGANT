@@ -236,23 +236,32 @@ semantics-preserving source transform it runs the forward pipeline on a base
 fixture and on a transformed copy, then scores role drift with the **same
 semantic oracle** the roundtrip evaluator uses
 (`cogant.reverse.metrics.compare_role_distributions`). A transform is *robust*
-when the role multiset is preserved (similarity $\geq$ 0.99). The assertions are
-pinned by `tests/integration/test_semantic_preservation.py`, and a negative
-control (`drop_half_definitions`) that genuinely removes behaviour must be
-*detected* by the oracle, so the suite cannot pass vacuously.
+only when **both** the role multiset is preserved (similarity $\geq$ 0.99)
+**and** the transformed fixture still imports — the harness subprocess-imports
+every transformed module, so a transform that parses but breaks at definition
+time (a renamed parameter that orphans a keyword call site, a reordered
+`@property`/`@x.setter` pair) is scored BROKEN, not robust. This makes the
+transforms genuine behaviour-preserving edits rather than merely
+role-multiset-stable ones: `rename_locals` renames only function-local
+variables (never parameters, which are visible at keyword call sites), and
+`reorder_methods` leaves decorator-coupled method groups in place. The assertions are pinned by
+`tests/integration/test_semantic_preservation.py` (which also asserts
+importability and a `@property` reordering case), and a negative control
+(`drop_half_definitions`) that genuinely removes behaviour must be *detected* by
+the oracle, so the suite cannot pass vacuously.
 
 | Transform | Class | Role similarity | Verdict |
 |---|---|---:|---|
 | `reformat` (AST round-trip / formatting) | semantics-preserving | 1.0000 | ROBUST |
 | `insert_comments` (comment + whitespace) | semantics-preserving | 1.0000 | ROBUST |
 | `insert_dead_code` (`if False:` blocks) | semantics-preserving | 1.0000 | ROBUST |
-| `rename_parameters` (identifier renaming) | semantics-preserving | 1.0000 | ROBUST |
+| `rename_locals` (local-variable renaming) | semantics-preserving | 1.0000 | ROBUST |
 | `reorder_methods` (definition reordering) | semantics-preserving | 1.0000 | ROBUST |
 | `swap_if_branches` (equivalent branch rewrite) | semantics-preserving | 1.0000 | ROBUST |
 | `outline_first_function` (outlining refactor) | sensitivity probe | 1.0000 | PRESERVED |
 | `drop_half_definitions` | **negative control** | < 0.99 | DETECTED |
 
-: Role-preservation under source transforms (`evaluation/robustness/`, exact role-multiset equality pinned by `test_semantic_preservation.py`). {#tbl:robustness-transforms}
+: Role-preservation and importability under source transforms (`evaluation/robustness/`, exact role-multiset equality + subprocess-import equivalence pinned by `test_semantic_preservation.py`). {#tbl:robustness-transforms}
 
 On the shipped control-positive fixtures, all six semantics-preserving
 transforms leave the extracted role multiset **exactly** unchanged: COGANT's
