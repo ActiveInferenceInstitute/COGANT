@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-02  
 **Scope:** Full first-party codebase (clean `main`, no PR diff)  
-**Rubric:** [thermo-nuclear-code-quality-review](cursor-team-kit skill)  
+**Rubric:** `thermo-nuclear-code-quality-review` (cursor-team-kit skill)  
 **Exclusions:** `.venv/`, `cogant/output/` (generated clones), `evaluation/eval_repos/*` (vendored benchmarks)
 
 ---

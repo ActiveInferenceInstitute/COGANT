@@ -18,4 +18,4 @@ Empty checkouts make benchmarks skip rather than fail, so this step is only need
 
 See [`AGENTS.md`](AGENTS.md) for the per-submodule inventory, refresh procedure, and consumer references.
 
-The metrics derived from these fixtures are reported in [`../METRICS.yaml`](../METRICS.yaml) and the manuscript chapter [`../../../manuscript/05_evaluation_and_results.md`](../../../manuscript/05_evaluation_and_results.md).
+The metrics derived from these fixtures are reported in [`../METRICS.yaml`](../METRICS.yaml) and the manuscript chapter [`../../../manuscript/06_03_performance_and_fixture_metrics.md`](../../../manuscript/06_03_performance_and_fixture_metrics.md).

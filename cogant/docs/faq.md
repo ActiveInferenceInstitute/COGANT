@@ -308,7 +308,7 @@ These are the standard Active Inference matrices:
 
 COGANT derives these from program graph edge kinds: READS edges populate A, WRITES/CALLS populate B, CONFIGURATION edges populate C, and the Markov blanket partition seeds D. See `docs/theory/active_inference.md` for the full derivation.
 
-### 38. How do I run the FastAPI server?
+### 38. How do I run the FastAPI server? {#38-how-do-i-run-the-fastapi-server}
 
 Start the server directly from the package entry point:
 

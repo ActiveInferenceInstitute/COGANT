@@ -56,7 +56,7 @@ Follow the parent template rendering contract for image markdown plus `{#fig:…
 
 ## Section files
 
-[`infrastructure/rendering/manuscript_discovery.py`](../../../infrastructure/rendering/manuscript_discovery.py) concatenates:
+[`infrastructure/rendering/manuscript_discovery.py`](https://github.com/docxology/template/blob/main/infrastructure/rendering/manuscript_discovery.py) concatenates:
 
 1. Digit-prefixed `*.md` files (`00_` … `09_`, including splits such as `02_01_…`, `06_04_…`) in **lexicographic stem order**.
 2. Supplemental `S*.md` appendices.

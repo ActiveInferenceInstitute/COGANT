@@ -20,7 +20,7 @@ COGANT does not subsume formal verification, interactive theorem proving, or ful
 
 ## Forward compatibility
 
-Promoting COGANT into [`../../../projects/`](../../../projects/) integrates manuscript PDF rendering with the template’s validation gates. Cross-references in this folder use paths **relative to these Markdown files** (for example [`../cogant/docs/`](../cogant/docs/)) so links stay stable when the tree moves.
+Promoting COGANT into the sidecar `projects/` tree integrates manuscript PDF rendering with the template’s validation gates. Cross-references in this folder use paths **relative to these Markdown files** (for example [`../cogant/docs/`](../cogant/docs/)) so links stay stable when the tree moves.
 
 ## When the extraction story weakens
 
