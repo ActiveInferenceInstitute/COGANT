@@ -3,8 +3,8 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-06-07T04:03:29.306372Z'
-generator_git_sha: e3d3d1b7a652b822de120de5d221a2989dfa5ab5
+generated_at: '2026-06-08T00:09:44.356709Z'
+generator_git_sha: 9ae07a7f0ecffe66e650dff20505c771cbb08b1c
 cogant_version: 0.6.0
 package:
   name: cogant
@@ -499,7 +499,7 @@ literature:
   source: cogant/docs/evaluation/LITERATURE.md
   bibliography_entries: 103
 benchmark:
-  suite_runtime_s: 3172.8
+  suite_runtime_s: 3774.56
   shipped_fixture_count: 12
   benchmark_suite_file: suite_20260423.md
   benchmark_python_version: 3.12.11
