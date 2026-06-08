@@ -37,8 +37,8 @@ where `code'` is a new Python package with:
 
 This is the roundtrip-validation version of COGANT: the regenerated package is
 checked through the current `roundtrip_status`, `role_preservation_score`, and
-invariant ledger rather than assumed to be a lossless inverse. The historical
-categorical sketch is preserved in
+invariant ledger rather than assumed to be a lossless inverse. The categorical
+sketch is in
 [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md),
 but the current operational contract is [the roundtrip concept page](../concepts/roundtrip.md).
 
@@ -162,4 +162,4 @@ Tracked in [`../evaluation/SCOPING_REPORT.md § reverse`](https://github.com/doc
 - [The forward-reverse cycle](../concepts/roundtrip.md) — the current roundtrip taxonomy and
   invariant ledger.
 - [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md) —
-  the historical theory sketch that originally motivated reverse mode.
+  the theory sketch behind reverse mode.

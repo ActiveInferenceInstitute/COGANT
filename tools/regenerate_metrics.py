@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """Regenerate ``cogant/evaluation/METRICS.yaml`` from live repo state.
 
-Run from any directory — all paths are anchored on ``__file__``. The
-historical convention was to run from the ``cogant/`` package root, and that
-still works::
+Run from any directory — all paths are anchored on ``__file__``. Running from
+the ``cogant/`` package root is supported::
 
     cd cogant && uv run python ../tools/regenerate_metrics.py
 
 or equivalently::
 
     uv run python tools/regenerate_metrics.py
-    uv run python projects/cogant/tools/regenerate_metrics.py  # parent template root
+    uv run python projects/working/cogant/tools/regenerate_metrics.py  # parent template root
 
 The script probes the live repository at call time: it runs pytest,
 mypy, and ruff against ``cogant/py/cogant/``; reads ``coverage.json``
@@ -433,7 +432,7 @@ def parse_roundtrip_results() -> dict:
             "strict_isomorphism_count": 0,
             "drift_count": 0,
             "failed_count": 0,
-            "stale_legacy_count": 0,
+            "non_native_count": 0,
             "role_preservation_score_source": "empty",
             "mean_role_preservation_score": None,
             "median_role_preservation_score": None,
@@ -453,12 +452,12 @@ def parse_roundtrip_results() -> dict:
         status = entry.get("roundtrip_status")
         if status:
             return str(status)
-        # Legacy v0.5 rows carry only `tier`/`epsilon` and NO v0.6
+        # Non-native rows carry only `tier`/`epsilon` and NO v0.6
         # `role_preservation_score`. Relabelling tier=ISOMORPHIC as a
-        # fresh v0.6 "ROLE_PRESERVED" verdict is laundering, not a
-        # measurement — flag it so it is NOT counted as role-preserved.
+        # v0.6 "ROLE_PRESERVED" verdict is laundering, not a measurement;
+        # flag it so it is NOT counted as role-preserved.
         if "role_preservation_score" not in entry:
-            return "STALE_LEGACY"
+            return "NON_NATIVE"
         tier = str(entry.get("tier") or "").upper()
         if tier == "ISOMORPHIC":
             return "ROLE_PRESERVED"
@@ -481,7 +480,7 @@ def parse_roundtrip_results() -> dict:
         if "role_preservation_score" in entry:
             return "v0.6_native"
         if "epsilon" in entry or "role_match_score" in entry:
-            return "legacy_epsilon_proxy"
+            return "epsilon_proxy"
         return "empty"
 
     def _scaffolding_fraction(entry: dict) -> float | None:
@@ -527,8 +526,8 @@ def parse_roundtrip_results() -> dict:
     score_sources = {_score_source(e) for e in entries}
     if not entries or score_sources == {"empty"}:
         role_score_source = "empty"
-    elif score_sources <= {"legacy_epsilon_proxy", "empty"}:
-        role_score_source = "legacy_epsilon_proxy"
+    elif score_sources <= {"epsilon_proxy", "empty"}:
+        role_score_source = "epsilon_proxy"
     elif "v0.6_native" in score_sources and score_sources - {"v0.6_native", "empty"}:
         role_score_source = "mixed"
     else:
@@ -539,7 +538,7 @@ def parse_roundtrip_results() -> dict:
     strict = sum(1 for status in statuses if status == "STRUCTURALLY_ISOMORPHIC")
     drift = sum(1 for status in statuses if status == "DRIFT")
     failed = sum(1 for status in statuses if status == "FAILED")
-    stale_legacy = sum(1 for status in statuses if status == "STALE_LEGACY")
+    non_native = sum(1 for status in statuses if status == "NON_NATIVE")
 
     per_target = [
         {
@@ -583,7 +582,7 @@ def parse_roundtrip_results() -> dict:
         "strict_isomorphism_count": strict,
         "drift_count": drift,
         "failed_count": failed,
-        "stale_legacy_count": stale_legacy,
+        "non_native_count": non_native,
         "role_preservation_score_source": role_score_source,
         "mean_role_preservation_score": (
             round(statistics.mean(native_scores), 4) if native_scores else None
@@ -751,7 +750,7 @@ def count_active_inf_roles() -> int:
     :data:`_ACTIVE_INF_ROLE_NAMES` must appear as an enum member. If the
     enum is missing or a role name has been renamed, return 0 so that the
     placeholder remains unresolved (forcing an explicit review) rather than
-    silently substituting a stale value.
+    silently substituting an out-of-sync value.
     """
     sem_path = PY_PKG / "schemas" / "semantic.py"
     if not sem_path.is_file():
@@ -934,9 +933,8 @@ def main() -> None:
             "roundtrip": {
                 "data_source": "cogant/evaluation/dataset/roundtrip_results.jsonl",
                 "note": (
-                    "Legacy benchmark rows converted to the v0.6 roundtrip taxonomy: "
-                    "role-preserved is reported separately from strict structural "
-                    "isomorphism."
+                    "Native v0.6 roundtrip taxonomy: role-preserved is reported "
+                    "separately from strict structural isomorphism."
                 ),
                 "threshold_role_preserved": 0.5,
                 "threshold_drift": 0.5,
@@ -945,7 +943,7 @@ def main() -> None:
                 "strict_isomorphism_count": roundtrip["strict_isomorphism_count"],
                 "drift_count": roundtrip["drift_count"],
                 "failed_count": roundtrip["failed_count"],
-                "stale_legacy_count": roundtrip["stale_legacy_count"],
+                "non_native_count": roundtrip["non_native_count"],
                 "role_preservation_score_source": roundtrip["role_preservation_score_source"],
                 "mean_role_preservation_score": roundtrip["mean_role_preservation_score"],
                 "median_role_preservation_score": roundtrip["median_role_preservation_score"],

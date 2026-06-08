@@ -3,7 +3,7 @@
 Manuscript-grounding utilities. The numbers that appear in
 [`../manuscript/`](../manuscript/) are written here to a single source of
 truth (`../cogant/evaluation/METRICS.yaml`) and substituted into the
-prose by these scripts. The gates refuse stale metrics and numeric
+prose by these scripts. The gates refuse out-of-sync metrics and numeric
 mismatches; the claim ledger inventories unsupported literal claims for
 review and can be made stricter with its release-only flags.
 

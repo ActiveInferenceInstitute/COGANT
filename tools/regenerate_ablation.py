@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Regenerate the ``ablation`` block in ``cogant/evaluation/METRICS.yaml``.
 
-Run from any directory; all paths are anchored on ``__file__``. The historical
-convention was to run from the ``cogant/`` package root, and that still works::
+Run from any directory; all paths are anchored on ``__file__``. Running from the
+``cogant/`` package root is supported::
 
     cd cogant && uv run python ../tools/regenerate_ablation.py
 
 or equivalently::
 
     uv run python tools/regenerate_ablation.py
-    uv run python projects/cogant/tools/regenerate_ablation.py  # parent template root
+    uv run python projects/working/cogant/tools/regenerate_ablation.py  # parent template root
 
 The script runs the live ingest/static/normalize/graph/translate/state-space/
 matrix pipeline on the seven packaged fixtures, computes the rule-family,
@@ -212,7 +212,7 @@ def compute_ablation(fixtures: list[tuple[str, str]]) -> dict[str, Any]:
             # state whose likelihood over observations is the maximum-entropy
             # uniform default — i.e. no observation reads/observes that state,
             # so it carries no discriminating evidence. Count uniform COLUMNS
-            # (the correct axis for P(o|s)); the legacy row count is invalid
+            # (the correct axis for P(o|s)); the previous row count is invalid
             # under the column-stochastic convention.
             n_obs_a = len(matrix_a)
             n_states_a = len(matrix_a[0]) if matrix_a and matrix_a[0] else 0

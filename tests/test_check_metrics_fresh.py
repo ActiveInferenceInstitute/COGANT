@@ -5,10 +5,10 @@ Three contracts:
 
 1. **Positive control** — the shipped METRICS.yaml passes the gate against
    the shipped data file. If a future regen breaks this, the gate flips red
-   and the team is alerted before the metric stale-laundering ships.
+   and the team is alerted before out-of-sync metric laundering ships.
 
 2. **Negative control** — a synthetic METRICS.yaml that asserts a non-zero
-   ``role_preserved_count`` against a STALE_LEGACY-only data file MUST fail
+   ``role_preserved_count`` against a NON_NATIVE-only data file MUST fail
    the gate. Without this control, a regression in the classify-and-recount
    logic would let laundered METRICS.yaml through silently — the very
    failure mode this gate was added to catch (see
@@ -53,16 +53,16 @@ def test_freshness_gate_passes_on_current_tree() -> None:
 
 def test_freshness_gate_detects_laundered_roundtrip_count(tmp_path: Path) -> None:
     """A synthetic METRICS.yaml with ``role_preserved_count: 23`` against a
-    legacy-only data file must FAIL the gate.
+    non-native data file must FAIL the gate.
 
-    This replicates the F1/F19 keystone laundering scenario: a stale
+    This replicates the F1/F19 keystone laundering scenario: an out-of-sync
     METRICS.yaml that asserts a richer count than the current data file
     can support. The fix in ``check_metrics_fresh.py:check_roundtrip_status_distribution``
     re-classifies every row via the same ``_status()`` logic as the
     regenerator and compares the resulting count to the committed value.
 
     To isolate the test from the live tree, we copy the gate into a
-    minimal sandbox with a forged METRICS.yaml and a legacy-only JSONL.
+    minimal sandbox with a forged METRICS.yaml and a non-native JSONL.
     """
     sandbox = tmp_path / "sandbox"
     (sandbox / "cogant" / "evaluation" / "dataset").mkdir(parents=True)
@@ -72,18 +72,18 @@ def test_freshness_gate_detects_laundered_roundtrip_count(tmp_path: Path) -> Non
     #    resolves to the sandbox (the gate uses Path(__file__).parent.parent).
     (sandbox / "tools" / "check_metrics_fresh.py").write_text(GATE.read_text())
 
-    # 2. Write a legacy-only JSONL — same shape as the shipped one — with
+    # 2. Write a non-native JSONL with
     #    THREE rows, all v0.5 (no role_preservation_score, no roundtrip_status).
     jsonl = sandbox / "cogant" / "evaluation" / "dataset" / "roundtrip_results.jsonl"
-    legacy_rows = [
+    non_native_rows = [
         {"rank": 1, "group": "zoo", "repo": "fake_a", "tier": "ISOMORPHIC", "epsilon": 1.0},
         {"rank": 2, "group": "zoo", "repo": "fake_b", "tier": "ISOMORPHIC", "epsilon": 1.0},
         {"rank": 3, "group": "rw", "repo": "fake_c", "tier": "APPROXIMATE", "epsilon": 0.6},
     ]
-    jsonl.write_text("\n".join(json.dumps(r) for r in legacy_rows) + "\n")
+    jsonl.write_text("\n".join(json.dumps(r) for r in non_native_rows) + "\n")
 
     # 3. Write a LAUNDERED METRICS.yaml that claims all 3 are role-preserved
-    #    against this legacy data — the gate must catch this.
+    #    against this non-native data — the gate must catch this.
     metrics_path = sandbox / "cogant" / "evaluation" / "METRICS.yaml"
     metrics = {
         "schema_version": "1.0",
@@ -92,12 +92,12 @@ def test_freshness_gate_detects_laundered_roundtrip_count(tmp_path: Path) -> Non
         "evaluation": {
             "roundtrip": {
                 "total_targets": 3,
-                "role_preserved_count": 3,  # WRONG — should be 0 (all STALE_LEGACY)
+                "role_preserved_count": 3,  # WRONG — should be 0 (all NON_NATIVE)
                 "strict_isomorphism_count": 3,  # WRONG — should be 0
                 "drift_count": 0,
                 "failed_count": 0,
-                "stale_legacy_count": 3,
-                "role_preservation_score_source": "legacy_epsilon_proxy",
+                "non_native_count": 3,
+                "role_preservation_score_source": "epsilon_proxy",
                 "mean_role_preservation_score": None,
                 "median_role_preservation_score": None,
                 "min_role_preservation_score": None,
@@ -125,24 +125,23 @@ def test_freshness_gate_detects_laundered_roundtrip_count(tmp_path: Path) -> Non
     )
     combined = result.stdout + result.stderr
     assert "role_preserved_count" in combined
-    assert "STALE_LEGACY" in combined or "laundering" in combined.lower() or "live classification" in combined
+    assert "NON_NATIVE" in combined or "laundering" in combined.lower() or "live classification" in combined
 
 
-def test_freshness_gate_passes_when_metrics_match_legacy_only_data(tmp_path: Path) -> None:
-    """The honest case: METRICS.yaml asserts 0/0/0/0 against a legacy-only
-    data file. The gate must pass. This is the post-regen state of the
-    shipped tree as of 2026-05-19.
+def test_freshness_gate_passes_when_metrics_match_non_native_data(tmp_path: Path) -> None:
+    """The honest case: METRICS.yaml asserts 0/0/0/0 against non-native data.
+    The gate must pass.
     """
     sandbox = tmp_path / "sandbox"
     (sandbox / "cogant" / "evaluation" / "dataset").mkdir(parents=True)
     (sandbox / "tools").mkdir()
     (sandbox / "tools" / "check_metrics_fresh.py").write_text(GATE.read_text())
     jsonl = sandbox / "cogant" / "evaluation" / "dataset" / "roundtrip_results.jsonl"
-    legacy_rows = [
+    non_native_rows = [
         {"rank": 1, "group": "zoo", "repo": "fake_a", "tier": "ISOMORPHIC", "epsilon": 1.0},
         {"rank": 2, "group": "zoo", "repo": "fake_b", "tier": "ISOMORPHIC", "epsilon": 1.0},
     ]
-    jsonl.write_text("\n".join(json.dumps(r) for r in legacy_rows) + "\n")
+    jsonl.write_text("\n".join(json.dumps(r) for r in non_native_rows) + "\n")
     metrics_path = sandbox / "cogant" / "evaluation" / "METRICS.yaml"
     metrics = {
         "schema_version": "1.0",
@@ -151,12 +150,12 @@ def test_freshness_gate_passes_when_metrics_match_legacy_only_data(tmp_path: Pat
         "evaluation": {
             "roundtrip": {
                 "total_targets": 2,
-                "role_preserved_count": 0,  # Honest: all STALE_LEGACY
+                "role_preserved_count": 0,  # Honest: all NON_NATIVE
                 "strict_isomorphism_count": 0,
                 "drift_count": 0,
                 "failed_count": 0,
-                "stale_legacy_count": 2,
-                "role_preservation_score_source": "legacy_epsilon_proxy",
+                "non_native_count": 2,
+                "role_preservation_score_source": "epsilon_proxy",
                 "mean_role_preservation_score": None,
                 "median_role_preservation_score": None,
                 "min_role_preservation_score": None,
@@ -173,7 +172,7 @@ def test_freshness_gate_passes_when_metrics_match_legacy_only_data(tmp_path: Pat
         check=False,
     )
     assert result.returncode == 0, (
-        f"Honest legacy-only METRICS.yaml failed the freshness gate:\n"
+        f"Honest non-native METRICS.yaml failed the freshness gate:\n"
         f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )
 
@@ -229,8 +228,8 @@ def test_freshness_gate_strict_detects_dirty_worktree(tmp_path: Path) -> None:
                 "strict_isomorphism_count": 0,
                 "drift_count": 0,
                 "failed_count": 0,
-                "stale_legacy_count": 1,
-                "role_preservation_score_source": "legacy_epsilon_proxy",
+                "non_native_count": 1,
+                "role_preservation_score_source": "epsilon_proxy",
                 "mean_role_preservation_score": None,
                 "median_role_preservation_score": None,
                 "min_role_preservation_score": None,
@@ -307,8 +306,8 @@ def _write_metrics(sandbox: Path, sha: str) -> None:
                         "strict_isomorphism_count": 0,
                         "drift_count": 0,
                         "failed_count": 0,
-                        "stale_legacy_count": 1,
-                        "role_preservation_score_source": "legacy_epsilon_proxy",
+                        "non_native_count": 1,
+                        "role_preservation_score_source": "epsilon_proxy",
                         "mean_role_preservation_score": None,
                         "median_role_preservation_score": None,
                         "min_role_preservation_score": None,
@@ -353,7 +352,7 @@ def test_freshness_gate_passes_when_only_artifacts_changed_since_sha(tmp_path: P
 
 def test_freshness_gate_fails_when_source_changed_since_sha(tmp_path: Path) -> None:
     """The dual: if metric-affecting source (package code) changed since
-    ``generator_git_sha``, the metrics are stale and the gate must fail."""
+    ``generator_git_sha``, the metrics are out of sync and the gate must fail."""
     sandbox = _seed_sandbox(tmp_path)
     base = _git(sandbox, "rev-parse", "HEAD")
     _write_metrics(sandbox, base)
@@ -363,7 +362,7 @@ def test_freshness_gate_fails_when_source_changed_since_sha(tmp_path: Path) -> N
 
     result = _run_in(sandbox)
     assert result.returncode == 1, (
-        "gate must flag stale metrics when package source changed since "
+        "gate must flag metrics when package source changed since "
         f"generator_git_sha.\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )
     assert "metric-affecting source changed" in (result.stdout + result.stderr)
@@ -387,9 +386,9 @@ def test_classify_row_matches_regenerator_logic() -> None:
         sys.path.pop(0)
 
     cases = [
-        # Legacy v0.5 rows (no role_preservation_score field) — STALE_LEGACY
-        ({"tier": "ISOMORPHIC", "epsilon": 1.0}, "STALE_LEGACY"),
-        ({"tier": "APPROXIMATE", "epsilon": 0.6}, "STALE_LEGACY"),
+        # Non-native rows (no role_preservation_score field) — NON_NATIVE
+        ({"tier": "ISOMORPHIC", "epsilon": 1.0}, "NON_NATIVE"),
+        ({"tier": "APPROXIMATE", "epsilon": 0.6}, "NON_NATIVE"),
         # v0.6 rows with explicit roundtrip_status — pass through
         ({"roundtrip_status": "ROLE_PRESERVED", "role_preservation_score": 1.0}, "ROLE_PRESERVED"),
         ({"roundtrip_status": "STRUCTURALLY_ISOMORPHIC", "role_preservation_score": 1.0}, "STRUCTURALLY_ISOMORPHIC"),
@@ -405,8 +404,8 @@ def test_classify_row_matches_regenerator_logic() -> None:
         assert got == expected, f"_classify_row({entry!r}) = {got!r}, expected {expected!r}"
 
 
-def test_freshness_gate_detects_legacy_proxy_scores_mislabeled_as_native(tmp_path: Path) -> None:
-    """Legacy epsilon-only rows must not populate native role-score aggregates."""
+def test_freshness_gate_detects_epsilon_proxy_scores_mislabeled_as_native(tmp_path: Path) -> None:
+    """Epsilon-only rows must not populate native role-score aggregates."""
     sandbox = tmp_path / "sandbox"
     (sandbox / "cogant" / "evaluation" / "dataset").mkdir(parents=True)
     (sandbox / "tools").mkdir()
@@ -426,9 +425,9 @@ def test_freshness_gate_detects_legacy_proxy_scores_mislabeled_as_native(tmp_pat
                 "strict_isomorphism_count": 0,
                 "drift_count": 0,
                 "failed_count": 0,
-                "stale_legacy_count": 1,
+                "non_native_count": 1,
                 "role_preservation_score_source": "v0.6_native",  # WRONG: no native field exists
-                "mean_role_preservation_score": 1.0,  # WRONG: legacy epsilon proxy, not native s_role
+                "mean_role_preservation_score": 1.0,  # WRONG: epsilon proxy, not native s_role
                 "median_role_preservation_score": 1.0,
                 "min_role_preservation_score": 1.0,
                 "max_role_preservation_score": 1.0,

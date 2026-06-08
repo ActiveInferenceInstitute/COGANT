@@ -25,33 +25,11 @@ from cogant.schemas.semantic import SemanticMapping
 from cogant.statespace.compiler import StateSpaceCompiler
 from cogant.static.parser import PythonASTParser
 from cogant.translate.confidence import ConfidenceModel
-from cogant.translate.engine import TranslationEngine
+from cogant.translate.default_engine import (
+    default_translation_engine as _default_translation_engine,
+)
 from cogant.translate.evidence import build_rule_evidence_trace
 from cogant.translate.review import ReviewManager
-from cogant.translate.rules import (
-    ActionRule,
-    CircuitBreakerRule,
-    ConfigRule,
-    ContainmentRule,
-    ContextRule,
-    DataPipelineRule,
-    ErrorBoundaryRule,
-    EventBusRule,
-    FeatureFlagRule,
-    InheritanceRule,
-    MutatingSubsystemRule,
-    ObservationRule,
-    OrchestratorRule,
-    ParameterRule,
-    PolicyRule,
-    PreferenceRule,
-    RateLimiterRule,
-    ReadOnlyInputRule,
-    RetryPatternRule,
-    SingletonAccessRule,
-    StateMachineRule,
-    TestAssertionRule,
-)
 from cogant.validate.schema_check import SchemaValidator
 
 logger = logging.getLogger(__name__)
@@ -171,44 +149,6 @@ def program_graph_to_dict(
         "edges": {eid: _serialize_edge(e) for eid, e in pg.edges.items()},
         "statistics": statistics or {},
     }
-
-
-def _default_translation_engine() -> TranslationEngine:
-    """Construct a TranslationEngine seeded with the full default rule set.
-
-    Registers every translation rule shipped with COGANT so that the
-    default pipeline produces the maximum number of real semantic
-    mappings. Callers that want a restricted set can construct their
-    own engine and register the subset they need.
-
-    Returns:
-        A ready-to-use ``TranslationEngine`` instance with the full shipped
-        concrete rule set (see ``cogant.translate.rules`` / ``METRICS.yaml``).
-    """
-    eng = TranslationEngine()
-    eng.register_rule(ReadOnlyInputRule())
-    eng.register_rule(MutatingSubsystemRule())
-    eng.register_rule(OrchestratorRule())
-    eng.register_rule(StateMachineRule())
-    eng.register_rule(TestAssertionRule())
-    eng.register_rule(RetryPatternRule())
-    eng.register_rule(RateLimiterRule())
-    eng.register_rule(EventBusRule())
-    eng.register_rule(ConfigRule())
-    eng.register_rule(FeatureFlagRule())
-    eng.register_rule(ParameterRule())
-    eng.register_rule(ObservationRule())
-    eng.register_rule(ActionRule())
-    eng.register_rule(PolicyRule())
-    eng.register_rule(PreferenceRule())
-    eng.register_rule(ContextRule())
-    eng.register_rule(InheritanceRule())
-    eng.register_rule(ContainmentRule())
-    eng.register_rule(DataPipelineRule())
-    eng.register_rule(ErrorBoundaryRule())
-    eng.register_rule(SingletonAccessRule())
-    eng.register_rule(CircuitBreakerRule())
-    return eng
 
 
 def _filter_semantic_mappings(

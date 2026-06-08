@@ -1,63 +1,49 @@
-# Evaluation and R&D
+# Evaluation
 
-> Dated reports, calibration notes, benchmarks, and empirical analyses for COGANT. These documents are the historical and ongoing record of how COGANT's roundtrip-preservation, strict-invariant, and real-world coverage claims have been measured. Machine-readable artifacts live in the **`evaluation/`** directory at the repository root (sibling of **`docs/`**, not part of the MkDocs tree).
+Current evidence for COGANT's release-facing claims.
 
-## Contents
+Machine-readable artifacts live under the repository-level `evaluation/`
+directory. The most important files are:
 
-### Release readiness and milestones
+- [`evaluation/METRICS.yaml`](https://github.com/docxology/cogant/blob/main/evaluation/METRICS.yaml)
+- [`evaluation/dataset/roundtrip_results.jsonl`](https://github.com/docxology/cogant/blob/main/evaluation/dataset/roundtrip_results.jsonl)
 
-| Page | Description | Level |
-|------|-------------|-------|
-| [V1.0 Readiness](V1.0_READINESS.md) | Gate-by-gate readiness assessment for v1.0 | Reference |
-| [Final Report](FINAL_REPORT.md) | Consolidated final report on the v1.0 evaluation effort | Reference |
-| [Release Notes v0.2.0](RELEASE_NOTES_v0.2.0.md) | Historical release notes | Reference |
-| [Release Notes v0.5.0](RELEASE_NOTES_v0.5.0.md) | Historical release notes | Reference |
-| [Scoping Report](SCOPING_REPORT.md) | Roadmap and milestone tracking | Reference |
-| [R&D Log](R&D_LOG.md) | Dated gate entries: changes, tests, coverage, decisions | Reference |
+## Current Status
 
-### Theory and mapping
+| Page | Purpose |
+| --- | --- |
+| [V1.0 readiness](V1.0_READINESS.md) | Scope, claim boundaries, and remaining release work |
+| [Evaluation report](FINAL_REPORT.md) | Current evidence summary |
+| [R&D status](R&D_LOG.md) | Current gate status and active work |
+| [Roundtrip evaluation](ROUNDTRIP_EVAL.md) | Native 24-target role-preservation ledger |
+| [Roundtrip validation contract](ROUNDTRIP_VALIDATION.md) | How roundtrip results are classified |
+| [Current reverse-synthesis status](ROUNDTRIP_IMPROVEMENT.md) | Reverse-package mechanism and failure modes |
+| [Empirical claim](EMPIRICAL_CLAIM.md) | Claim wording and evidence limits |
+| [Calibration](CALIBRATION.md) | Confidence and matrix calibration backlog |
+| [Scaling analysis](SCALING_ANALYSIS.md) | Current scaling constraints and regression targets |
+| [Cross-language roundtrip](CROSS_LANG_ROUNDTRIP.md) | Language-pair evidence outside the Python native ledger |
+| [GNN validation report](GNN_VALIDATION_REPORT.md) | Structural validation of emitted GNN packages |
+| [Mutation report](MUTATION_REPORT.md) | Mutation-testing results |
+| [Literature](LITERATURE.md) | Research sources |
+| [Related work](RELATED_WORK.md) | Tool and method comparison |
 
-| Page | Description | Level |
-|------|-------------|-------|
-| [Active Inference Mapping](ACTIVE_INFERENCE_MAPPING.md) | Code patterns to Active Inference roles | Intermediate |
-| [Isomorphism Theorem](ISOMORPHISM_THEOREM.md) | Historical roundtrip/isomorphism proof sketch; not the current CLI contract | Advanced |
-| [Calibration](CALIBRATION.md) | Confidence and rule calibration backlog | Advanced |
-| [Constraint Fix](CONSTRAINT_FIX.md) | The CONSTRAINT detection fix and its evaluation impact | Advanced |
-| [First Inference](FIRST_INFERENCE.md) | First-inference experiment notes | Intermediate |
+## Reading Order
 
-### Empirical studies
+1. [V1.0 readiness](V1.0_READINESS.md)
+2. [Evaluation report](FINAL_REPORT.md)
+3. [Roundtrip evaluation](ROUNDTRIP_EVAL.md)
+4. [Roundtrip validation contract](ROUNDTRIP_VALIDATION.md)
+5. [Calibration](CALIBRATION.md)
+6. [Scaling analysis](SCALING_ANALYSIS.md)
+7. [Literature](LITERATURE.md) and [Related work](RELATED_WORK.md)
 
-| Page | Description | Level |
-|------|-------------|-------|
-| [Roundtrip Eval](ROUNDTRIP_EVAL.md) | Forward + reverse roundtrip evaluation | Intermediate |
-| [Roundtrip Validation](ROUNDTRIP_VALIDATION.md) | Validation of the roundtrip claim | Intermediate |
-| [Roundtrip Improvement](ROUNDTRIP_IMPROVEMENT.md) | Iterative improvements to roundtrip fidelity | Intermediate |
-| [Cross-Language Roundtrip](CROSS_LANG_ROUNDTRIP.md) | Roundtrip across language pairs | Advanced |
-| [Real-World Eval](REAL_WORLD_EVAL.md) | External repository runs | Advanced |
-| [Empirical Claim](EMPIRICAL_CLAIM.md) | Stated empirical claims and their evidence | Reference |
-| [Benchmark vs Prior](BENCHMARK_VS_PRIOR.md) | Comparison against prior baselines | Advanced |
-| [Incremental Benchmark](INCREMENTAL_BENCHMARK.md) | Incremental rescanning benchmarks | Advanced |
-| [Scaling Analysis](SCALING_ANALYSIS.md) | Scaling characteristics on larger inputs | Advanced |
-| [GNN Validation Report](GNN_VALIDATION_REPORT.md) | Validation results for generated GNN packages | Intermediate |
-| [Mutation Report](MUTATION_REPORT.md) | Mutation-testing results | Advanced |
+## Required Gates
 
-### Bibliography
-
-| Page | Description | Level |
-|------|-------------|-------|
-| [Literature](LITERATURE.md) | Bibliography-style references for COGANT | Reference |
-| [Related Work](RELATED_WORK.md) | Comparison with adjacent tools and research | Reference |
-
-## Recommended Reading Order
-
-1. [V1.0 Readiness](V1.0_READINESS.md) — current top-level status.
-2. [Final Report](FINAL_REPORT.md) — the consolidated narrative.
-3. [Active Inference Mapping](ACTIVE_INFERENCE_MAPPING.md) — the conceptual contract being evaluated.
-4. [Roundtrip Eval](ROUNDTRIP_EVAL.md) and [Roundtrip Validation](ROUNDTRIP_VALIDATION.md) — the central empirical claim.
-5. [Real-World Eval](REAL_WORLD_EVAL.md) and [Cross-Language Roundtrip](CROSS_LANG_ROUNDTRIP.md) — generalization beyond the lab.
-6. [Calibration](CALIBRATION.md) and [Constraint Fix](CONSTRAINT_FIX.md) — known caveats and recent fixes.
-7. [Literature](LITERATURE.md) and [Related Work](RELATED_WORK.md) — situate COGANT in the wider ecosystem.
-
-See also the [documentation hub](../index.md) for tutorials, theory, and API reference.
-
-Agent notes: [AGENTS.md](AGENTS.md)
+```bash
+uv run --directory cogant pytest tests/ -q
+uv run --directory cogant ruff check py/cogant tests
+uv run --directory cogant mypy py/cogant
+uv run python tools/check_metrics_fresh.py
+uv run python tools/audit_docs_constants.py
+uv run --directory cogant python docs/verify_doc_links.py
+```

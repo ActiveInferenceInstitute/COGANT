@@ -88,5 +88,5 @@ entry point documented in [`plugin_api.md`](../api/plugin_api.md).
 
 - [Tutorial 4: Writing a custom translation rule](../tutorials/04_custom_rules.md) — full read-only-cache walkthrough.
 - [`docs/api/translate.md`](../api/translate.md) — every public symbol your rule will touch.
-- [Recipe 19: Adding a custom translation rule](19_extend_rules.md) — the older one-page recipe (kept for backwards compatibility).
+- [Recipe 19: Adding a custom translation rule](19_extend_rules.md) — the numbered custom-rule recipe.
 - [Recipe 3: Explain a single node](03_explain_node.md) — using `RuleExplanation` from the CLI.

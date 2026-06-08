@@ -69,6 +69,6 @@ the original, with high role-match score from `cogant roundtrip`.
 
 | Problem | Fix |
 |---------|-----|
-| Output directory already exists | COGANT overwrites files; use a fresh directory if you need to preserve old output |
+| Output directory already exists | COGANT overwrites files; use a fresh directory if you need to preserve existing output |
 | Package not importable | Check `__init__.py` exists; ensure no syntax errors in generated code |
 | Drift between original and re-translated | Expected for large models; inspect per-node diffs with `cogant explain` |

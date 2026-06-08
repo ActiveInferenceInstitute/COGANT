@@ -12,8 +12,8 @@ and hardening release that makes COGANT safe to depend on. The public API contra
 ## Goals
 
 1. **API freeze**: Define and freeze the stable public API surface. Everything in `__all__` at 1.0 is semver-guaranteed.
-2. **Promotion**: Move from `projects_in_progress/cogant/` → `projects/cogant/`. The staging split disappears.
-3. **Zero known regressions**: All fixtures at ε=1.0, all validators at 100/100, all languages at ≥85% roundtrip.
+2. **Template render path**: Keep the working sidecar linked under `projects/working/cogant/` with current render commands.
+3. **Zero known regressions**: No failed fixtures, all validators at 100/100, and language-specific roundtrip targets met.
 4. **Production readiness**: Distributed processing, cloud deployment, schema migration, IDE extension.
 5. **Ecosystem**: Plugin marketplace, DuckDB query interface, pre-trained GNN encoder (beta).
 
@@ -34,17 +34,17 @@ Define the stable surface. Everything outside `__all__` in public modules is int
 - [ ] `cogant.__version__` follows semver; `cogant.version_info: tuple[int, int, int]`
 - [ ] All public classes/functions have Google-style docstrings with full Args/Returns/Raises/Examples
 
-### H2 — Staging Tree Promotion (PROMOTION.md)
+### H2 — Template Render Path (PROMOTION.md)
 
 **Effort:** S | **Blocks:** PDF rendering, `run.sh`, pipeline discovery
 
-The `projects_in_progress/` prefix creates orientation cost for every new contributor.
-Promotion to `projects/cogant/` enables the full parent template pipeline.
+The sidecar-root / package-root split creates orientation cost for every new contributor.
+The current render path is `projects/working/cogant/`.
 
-- [ ] `git mv projects_in_progress/cogant projects/cogant`
-- [ ] Fix all `projects_in_progress/cogant` literals in docs, scripts, CI workflows
+- [ ] Verify sidecar/template linking exposes `projects/working/cogant/`
+- [ ] Fix hard-coded render-path literals in docs, scripts, CI workflows
 - [ ] Verify `./run.sh` and `infrastructure/project/discovery.py` discover the project
-- [ ] End-to-end PDF rendering via `scripts/03_render_pdf.py --project cogant`
+- [ ] End-to-end PDF rendering via `scripts/03_render_pdf.py --project working/cogant`
 - [ ] Manuscript variable injection end-to-end: `regenerate_metrics.py` → `z_generate_manuscript_variables.py` → PDF
 
 ### H3 — Schema Versioning + Migration Harness
@@ -174,7 +174,7 @@ Upgrade static `cogant render` HTML to a fully interactive experience.
 | Coverage | ≥90% |
 | mypy --strict errors | 0 |
 | Ruff violations | 0 |
-| Fresh roundtrip role preservation (Python + JS/TS) | `role_preservation_score >= 0.95` on a native v0.6 ledger with zero `STALE_LEGACY` rows |
+| Native roundtrip role preservation (Python + JS/TS) | `role_preservation_score >= 0.95` on a native ledger with zero non-native rows |
 | Roundtrip role preservation (Java) | `s_role >= 0.85` |
 | AII validator score (all fixtures) | 100/100 |
 | Real-world repos passing forward pipeline | ≥30 |

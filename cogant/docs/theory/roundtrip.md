@@ -65,8 +65,8 @@ the public CLI default.
 }
 ```
 
-The old `is_isomorphic` and `role_match_score` constructor aliases are accepted
-inside Python for compatibility, but new CLI/server JSON emits the v0.6 field
+The `is_isomorphic` and `role_match_score` constructor aliases are accepted
+inside Python for compatibility, but CLI/server JSON emits the v0.6 field
 names above.
 
 ## Interpreting Drift
@@ -83,8 +83,8 @@ diffs, matrix deltas, generated-code status, and the final status badge.
 
 ## Further Reading
 
-- [ROUNDTRIP_EVAL.md](../evaluation/ROUNDTRIP_EVAL.md) records the historical
-  role-preservation corpus.
+- [ROUNDTRIP_EVAL.md](../evaluation/ROUNDTRIP_EVAL.md) records the native v0.6
+  role-preservation ledger.
 - [ROUNDTRIP_IMPROVEMENT.md](../evaluation/ROUNDTRIP_IMPROVEMENT.md) explains
   the policy/context/constraint synthesizer improvements that made the role
   corpus stable.

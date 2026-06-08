@@ -37,7 +37,7 @@ directly.
 
 ## Non-numbered recipes
 
-Three older recipes predate the numbering scheme and are kept under their
+Three stable recipes predate the numbering scheme and are kept under their
 original slugs so external links do not break. They remain valid but new
 content should go into a new numbered recipe rather than extending these.
 

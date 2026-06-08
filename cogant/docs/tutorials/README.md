@@ -14,12 +14,12 @@
 | [06 Reverse Mode](06_reverse_mode.md) | Synthesize runnable code from a GNN markdown file | Advanced |
 | [07 Plugin Authoring](07_plugin_authoring.md) | Build a parser, translator, validator, or exporter plugin | Advanced |
 
-## Legacy examples
+## Stable Examples
 
 These pages predate the `NN_slug.md` numbering scheme and are kept as
 compact worked examples that some of the numbered tutorials link to.
 They are stable but should not be extended in place — new content goes
-into a new numbered tutorial. See [AGENTS.md](AGENTS.md#legacy-files) for
+into a new numbered tutorial. See [AGENTS.md](AGENTS.md#stable-example-files) for
 the retention policy.
 
 | Page | Description | Status |

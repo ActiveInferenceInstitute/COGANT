@@ -57,7 +57,12 @@ Parsing and graph construction aim for deterministic ordering on a fixed filesys
 
 Every numeric token in this manuscript (`{{COVERAGE_PCT}}`, `{{TEST_COUNT}}`, role-preservation counts, suite runtime, ...) resolves from one source of record, `cogant/evaluation/METRICS.yaml`, via the chain `regenerate_metrics.py` → `inject_manuscript_vars.py` → render. The contract is intentionally one-directional: prose never hard-codes a metric, and `tools/check_metrics_fresh.py` is the drift detector that fails CI when `METRICS.yaml` disagrees with the committed `coverage.json`. For release provenance, run it with `--fail-on-dirty`; the default mode compares committed `HEAD` and warns if uncommitted code, docs, or generated artifacts mean `generator_git_sha` is not a sufficient description of the tree. Three failure modes were observed and hardened so the contract degrades safely rather than silently:
 
-- **Stale-artifact drift.** A checked-in `coverage.json` whose statement denominator predates code growth makes every derived figure stale even though `check_metrics_fresh` reports "in sync" (it compares against that same stale artifact). The mitigation is procedural and stated here for auditors: regenerate from a *fresh* full `uv run pytest tests/ --cov=py/cogant` run, not from the committed artifact, before trusting the headline coverage number.
+- **Artifact drift.** A checked-in `coverage.json` whose statement denominator
+  no longer matches the source tree makes every derived figure unreliable even
+  when `check_metrics_fresh` reports "in sync" against that same artifact. The
+  mitigation is procedural and stated here for auditors: regenerate from a full
+  `uv run pytest tests/ --cov=py/cogant` run before trusting the headline
+  coverage number.
 - **Environment-fragile regeneration.** `regenerate_metrics.py` re-runs the suite in a fast no-coverage mode to recover pass/fail counts; in some environments that sub-invocation mis-parses and returns zero passing. A guard treats `passing == 0` on a multi-thousand-test suite as a parse failure and **preserves the prior canonical counts with a loud warning** rather than overwriting `METRICS.yaml` with corrupted zeros, so a single bad regeneration cannot silently destroy the record.
 - **Dirty-worktree provenance.** A clean `generator_git_sha` comparison only shows that `METRICS.yaml` was generated from the committed `HEAD`; it does not show that the current manuscript/package tree has no uncommitted edits. The freshness gate now reports dirty paths by default and can fail via `uv run python tools/check_metrics_fresh.py --fail-on-dirty` for release builds.
 
@@ -65,7 +70,7 @@ These checks are why the round-trip and coverage numbers in this paper are repro
 
 ## Relation to the template repository
 
-In this standalone checkout, COGANT is checked with the local project commands (`tools/audit_manuscript_crossrefs.py`, `tools/audit_manuscript_numbers.py`, `cogant/docs/verify_manuscript_links.py`, and the package test suite). When the same tree is vendored into the parent template under [`../../../projects/cogant/`](../../../projects/), the root `./run.sh` discovery layer can execute it with `src/`, `tests/`, and `pyproject.toml` per template rules, and Markdown can also be checked from the template repository root with `uv run python -m infrastructure.validation.cli markdown ./projects/cogant/manuscript/`.
+In this standalone checkout, COGANT is checked with the local project commands (`tools/audit_manuscript_crossrefs.py`, `tools/audit_manuscript_numbers.py`, `cogant/docs/verify_manuscript_links.py`, and the package test suite). When the same tree is linked into the parent template under `projects/working/cogant/`, the root `./run.sh` discovery layer can execute it with `src/`, `tests/`, and `pyproject.toml` per template rules, and Markdown can also be checked from the template repository root with `uv run python -m infrastructure.validation.cli markdown ./projects/working/cogant/manuscript/`.
 
 ## Validation gates
 

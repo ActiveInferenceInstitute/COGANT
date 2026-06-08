@@ -45,7 +45,7 @@ with multiple packages) are invisible to the Markov blanket partition.
 
 ### 4. Limited Type Inference
 
-Translation rules use type annotations where present. Un-annotated Python code (legacy Django,
+Translation rules use type annotations where present. Un-annotated Python code (Django,
 Flask scripts, data science notebooks) has lower rule confidence due to missing type evidence.
 
 **Impact:** `ObservationRule` and `ActionRule` false negatives increase without type hints.
@@ -56,15 +56,18 @@ Flask scripts, data science notebooks) has lower rule confidence due to missing 
 
 ---
 
-### 5. Dulwich Scaling Cliff
+### 5. Dulwich Edge-Density Regression Risk
 
-At ~1.80 edges/node ratio, Dulwich-derived graphs hit a performance cliff (~380s, 8.5 GB RAM).
-This is documented in CHANGELOG.md and has a tracking test (`tests/unit/test_markov_performance_gaps.py`).
+Historical Dulwich-derived graphs at ~1.80 edges/node hit a performance cliff
+(~380s, 8.5 GB RAM). Wave-15 fixes reduced the documented run to ~65s and a
+206 MB generated package, so this is now a regression watch item rather than a
+current v1.0 blocker.
 
 **Workaround:** Use `cogant translate --incremental <git-ref>` (19.6× no-change speedup).
 Split large monorepos by module: `cogant translate --include src/core/`.
 
-**Target fix:** Streaming graph construction + alias analysis (reduces e/n ratio) planned for v0.6.x.
+**Target fix:** Keep Dulwich-class fixtures in the performance suite and add streaming graph/export
+paths for larger held-out repositories.
 
 ---
 
@@ -112,7 +115,7 @@ the generated file. Confirm live with `uv run pytest tests/ -q --cov=py/cogant` 
 |-----------|---------|-----|
 | Single-language (Python only) | v0.4.0 | JS/TS tree-sitter parser added |
 | No round-trip | v0.2.0 | `cogant.reverse` + `cogant roundtrip` added |
-| Roundtrip role preservation below 1.0 | v0.5.0 historical benchmark | POLICY/CONTEXT stub emission brought the historical corpus to 23/23 role-preserved targets. Current v0.6 release metrics classify the checked-in ledger as `STALE_LEGACY` until a native refreshed ledger exists; strict structural isomorphism is tracked separately. |
+| Roundtrip role preservation below 1.0 | Native v0.6 ledger | Resolved for the current in-sample ledger: metrics record 24/24 role-preserved targets and 0 drift targets; strict structural isomorphism is tracked separately at 0/24. |
 | No incremental analysis | v0.5.0 | `--incremental <git-ref>` + `incremental_since` |
 | No static analysis | April 2026 hardening | `cogant.static` module: complexity, coupling, dead code, Halstead |
 | No visualization beyond HTML | April 2026 hardening | `cogant.viz`: PDF, PNG, Mermaid, SVG, 8-page report |

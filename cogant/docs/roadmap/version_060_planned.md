@@ -82,7 +82,7 @@ building full in-memory structures.
 **Effort:** L | **Owner:** static analysis team | **Blocks:** L5 (alias analysis benefits from types)
 
 Un-annotated Python is common. Hindley-Milner-lite propagation inside function bodies would reduce
-OBSERVATION false negatives for codebases without type annotations (legacy Django, Flask, scripts).
+OBSERVATION false negatives for codebases without type annotations (Django, Flask, scripts).
 
 - [ ] `cogant/static/type_inference.py`: `TypeInferrer`
   - `infer_function(node: ast.FunctionDef) -> dict[str, type | None]`

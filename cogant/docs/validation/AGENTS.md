@@ -31,7 +31,6 @@ stage that consumes validation reports.
 | `audit_trail.md` | Reproducible audit trail of validator runs | When the audit format or retention changes |
 | `verification_and_test_posture.md` | How COGANT itself is tested and verified | When the test posture changes |
 | `cogant_implementation_verification_report.md` | Snapshot verification report for the implementation | When a new snapshot is produced |
-| `archival_note.md` | Provenance of historical validation artifacts | Rarely; treat as archived |
 | `see_also.md` | Cross-links to related modules | When link targets move |
 
 ## Adding a new doc

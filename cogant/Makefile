@@ -74,7 +74,7 @@ audit-stages:
 # regenerator uses and asserts the resulting count distribution matches
 # what METRICS.yaml claims. Catches the keystone laundering failure
 # mode where METRICS.yaml inherits a richer prior regen and the data
-# file has since been stripped to legacy rows.
+# file has since been stripped to non-native rows.
 audit-metrics-fresh:
 	cd .. && uv run python tools/check_metrics_fresh.py
 

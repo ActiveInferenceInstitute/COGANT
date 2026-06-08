@@ -44,7 +44,7 @@ editing the manuscript or theory track; keep definitions in lockstep with
 
 - Keep terminology consistent with the manuscript. If you change a defined
   term (for example "Markov blanket" vs. "Markov boundary") here, mirror the
-  change in `manuscript/` and search the rest of `docs/` for stale usage.
+  change in `manuscript/` and search the rest of `docs/` for inconsistent usage.
 - `roundtrip.md` and `../theory/isomorphism.md` cover overlapping ground; the
   concepts page is the gentle introduction and `theory/isomorphism.md` is the
   formal statement. Keep them in agreement but do not merge them.

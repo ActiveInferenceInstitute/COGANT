@@ -8,14 +8,13 @@ Template-aligned Markdown for **COGANT** (Codebase-to-GNN Translation): theory o
 
 | Term | Meaning |
 | --- | --- |
-| COGANT project root | The directory above this manuscript folder; in this passive checkout, `/Users/4d/Documents/GitHub/projects/passive/cogant`. |
+| COGANT project root | The directory above this manuscript folder; in this working checkout, `/Users/4d/Documents/GitHub/projects/working/cogant`. |
 | COGANT package root | The nested `../cogant/` directory containing `pyproject.toml`, `py/cogant/`, package tests, and package docs. |
-| Active template location | `docxology/template/projects/cogant`; parent-template validators and renderers apply only there. |
-| Historical staging location | `docxology/template/projects_in_progress/cogant`; keep only legacy/promotion references to it. |
+| Template render location | `/Users/4d/Documents/GitHub/template/projects/working/cogant`; parent-template validators and renderers apply only there. |
 
 ## Section files
 
-Stem order follows the parent template renderer (`infrastructure/rendering/manuscript_discovery.py`) when vendored under `projects/cogant/`: digit-prefixed names sort lexicographically, so overview pages that own a chapter prefix use `NN_00_...` before `NN_01_...` detail files. Discovery concatenates main sections (`00_`-`10_`), then supplemental appendices (`S01_`-`S06_`), then glossary files (`98_`), then the **other** bucket (for example `SYNTAX.md`), then optional `99_*.md` references last. Do not hard-code section-file counts in prose; re-count with `find manuscript -maxdepth 1 -name '*.md'` from the COGANT project root after adds or splits.
+Stem order follows the parent template renderer (`infrastructure/rendering/manuscript_discovery.py`) when linked under `projects/working/cogant/`: digit-prefixed names sort lexicographically, so overview pages that own a chapter prefix use `NN_00_...` before `NN_01_...` detail files. Discovery concatenates main sections (`00_`-`10_`), then supplemental appendices (`S01_`-`S06_`), then glossary files (`98_`), then the **other** bucket (for example `SYNTAX.md`), then optional `99_*.md` references last. Do not hard-code section-file counts in prose; re-count with `find manuscript -maxdepth 1 -name '*.md'` from the COGANT project root after adds or splits.
 
 **Pandoc-crossref sanity** (COGANT project root): `uv run python tools/audit_manuscript_crossrefs.py` — fails on duplicate `{#sec:…}` / `{#tbl:…}` ids or orphan `@sec:` / `@tbl:` references across body fragments (`SYNTAX.md` and a few helpers are skipped so example ids do not pollute the audit). **Citation sanity:** `uv run python tools/audit_manuscript_citations.py` — fails when a body citation key is missing from `references.bib` or duplicated there.
 
@@ -63,10 +62,10 @@ uv run --directory cogant python ../tools/regenerate_metrics.py
 uv run python scripts/z_generate_manuscript_variables.py
 ```
 
-From the parent template root after vendoring under `projects/cogant/`:
+From the parent template root after linking under `projects/working/cogant/`:
 
 ```bash
-uv run python projects/cogant/scripts/z_generate_manuscript_variables.py
+uv run python projects/working/cogant/scripts/z_generate_manuscript_variables.py
 ```
 
 Outputs: `../output/data/manuscript_variables.json`, `../output/manuscript/*.md` (plus copied `config.yaml`, `references.bib`, `preamble.md`), and `../output/figures/manifest.json` with the curated real-run and evaluation PNGs referenced from the manuscript. The renderer prefers `output/manuscript/` when those files exist, and the figure paths in generated Markdown resolve to sibling assets under `output/figures/`.
@@ -87,7 +86,7 @@ Retired monoliths (not concatenated into the PDF) may live under an `_archive/` 
 
 ## Pipeline discovery
 
-This manuscript tree is nested next to the package as `../cogant/`. In a standalone COGANT checkout, use the local commands in this README. In the parent `docxology/template` repository, discovery-based scripts such as `scripts/03_render_pdf.py --project cogant` apply only after the project lives under `projects/cogant/` with the layout expected by the template (for this codebase: `src/`, `tests/`, and `pyproject.toml` at the project root, with the real package nested under `cogant/`).
+This manuscript tree is nested next to the package as `../cogant/`. In a standalone COGANT checkout, use the local commands in this README. In the parent `docxology/template` repository, discovery-based scripts such as `scripts/03_render_pdf.py --project working/cogant` apply only after the project appears under `projects/working/cogant/` with the layout expected by the template (for this codebase: `src/`, `tests/`, and `pyproject.toml` at the project root, with the real package nested under `cogant/`).
 
 ## Validate Markdown (now)
 
@@ -103,8 +102,8 @@ uv run --directory cogant python docs/verify_manuscript_links.py
 When the project is vendored under the parent template, additionally run from the template root:
 
 ```bash
-uv run python -m infrastructure.validation.cli markdown ./projects/cogant/manuscript/
-uv run python -m infrastructure.validation.cli markdown ./projects/cogant/output/manuscript/
+uv run python -m infrastructure.validation.cli markdown ./projects/working/cogant/manuscript/
+uv run python -m infrastructure.validation.cli markdown ./projects/working/cogant/output/manuscript/
 ```
 
 ## COGANT package tests
@@ -129,14 +128,14 @@ For API and CLI details, use package docs as the authoritative reference:
 
 ## Render PDF (after promotion)
 
-After moving the project under `projects/cogant/` and wiring the manuscript path as for other template projects:
+After linking the project under `projects/working/cogant/` and wiring the manuscript path as for other template projects:
 
 ```bash
-uv run python scripts/03_render_pdf.py --project cogant
+uv run python scripts/03_render_pdf.py --project working/cogant
 ```
 
 ## See also
 
 - [`AGENTS.md`](AGENTS.md) — editor protocol for this folder
 - [`../cogant/AGENTS.md`](../cogant/AGENTS.md) — package tree orientation (docs live under `cogant/docs/`)
-- Parent template code-project manuscript docs — exemplar layout when this tree is vendored under `docxology/template/projects/cogant/`
+- Parent template code-project manuscript docs — exemplar layout when this tree is linked under `docxology/template/projects/working/cogant/`

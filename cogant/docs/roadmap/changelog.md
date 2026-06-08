@@ -9,4 +9,4 @@ The canonical changelog is **[Changelog](../changelog.md)** (MkDocs) / `CHANGELO
 cp CHANGELOG.md docs/changelog.md
 ```
 
-This page remains so older links to `roadmap/changelog.md` still resolve.
+This page remains so compatibility links to `roadmap/changelog.md` still resolve.

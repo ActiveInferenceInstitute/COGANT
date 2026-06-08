@@ -1,13 +1,13 @@
 # Feature Backlog
 
-Last updated: 2026-04-13 (v0.5.0). Items are grouped by status and priority.
+Last updated: 2026-06-06 (v0.6.0). Items are grouped by status and priority.
 The authoritative source for what is **shipped** is `CHANGELOG.md` and `evaluation/METRICS.yaml`.
 
 ---
 
-## Recently Shipped (v0.2.0 – v0.5.0 / wave-21)
+## Implemented Capabilities
 
-These items were previously in the backlog and are now implemented and tested.
+These items are implemented and tested in the current tree.
 
 | Item | Shipped in | Notes |
 |------|-----------|-------|
@@ -16,7 +16,7 @@ These items were previously in the backlog and are now implemented and tested.
 | Incremental analysis: `--incremental <git-ref>` / `PipelineConfig.incremental_since` | v0.5.0 | 19.6× no-change, 5.6× single-file speedup on Flask |
 | Multi-episode Bayesian learning: `run_multi_episode`, `update_D_from_posterior`, `update_A_from_counts` | v0.5.0 | |
 | Production FastAPI server with `/health` + `/translate`; Dockerfile + docker-compose | v0.5.0 | EXPOSE 8080 |
-| Roundtrip role-preservation benchmark | v0.5.0 → v0.6 taxonomy | Historical 23/23 role-preservation benchmark retained as legacy evidence; current metrics classify the checked-in ledger as `STALE_LEGACY` until native v0.6 rows are regenerated |
+| Roundtrip role-preservation benchmark | v0.6.0 | Native v0.6 ledger records 24/24 ROLE_PRESERVED, 0/24 DRIFT, 0 non-native rows, and 0 strict structural-isomorphism rows |
 | Parquet export (`cogant.export.parquet`) | wave-21 | PyArrow optional dep |
 | Static analysis module: `ComplexityAnalyzer`, `CouplingAnalyzer`, `DeadCodeDetector`, `MetricsAnalyzer` | wave-21 | Halstead, Martin metrics |
 | Network/graph analysis: `GraphAnalyzer` with centrality, community detection, Tarjan SCC | wave-21 | Louvain + component fallback |
@@ -194,19 +194,18 @@ Allow users to attach trained classifiers (e.g. a fine-tuned CodeBERT) as additi
 
 These are internal quality items that don't add user-facing features but reduce entropy and technical debt.
 
-### R1. Consolidate `cogant/` dual-directory confusion (staging → projects promotion)
+### R1. Consolidate `cogant/` dual-directory confusion (sidecar -> template render path)
 **Priority:** High | **Effort:** S
-The staging-root / package-root split (`projects_in_progress/cogant/` vs `cogant/cogant/`) creates orientation cost for every new contributor. Promotion via `PROMOTION.md` should be executed before any public beta.
-- [ ] `git mv projects_in_progress/cogant projects/cogant`
-- [ ] Fix all `projects_in_progress/cogant` literals in docs, scripts, CI
+The sidecar-root / package-root split (`projects/working/cogant/` vs `projects/working/cogant/cogant/`) creates orientation cost for every new contributor. The render-location checklist in `PROMOTION.md` should stay current before any public beta.
+- [ ] Verify sidecar/template linking exposes `projects/working/cogant`
+- [ ] Fix any remaining hard-coded render-path literals in docs, scripts, CI
 - [ ] Verify `./run.sh` and `scripts/execute_pipeline.py` discover the project
-- [ ] End-to-end PDF rendering via `scripts/03_render_pdf.py --project cogant`
+- [ ] End-to-end PDF rendering via `scripts/03_render_pdf.py --project working/cogant`
 
 ### R2. Flatten roadmap version docs to reflect actual release history
 **Priority:** High | **Effort:** S
 Roadmap docs still describe v0.1.0 as "current". All version plan files need to be updated to match CHANGELOG reality (v0.5.0 shipped).
 - [ ] Rename `version_010_current.md` → `version_010_shipped.md`
-- [ ] Write `version_050_shipped.md` summarizing v0.2.0–v0.5.0 arc
 - [ ] Write `version_060_planned.md` (see dedicated file)
 - [ ] Write `version_100_planned.md` with hardening/public API freeze scope
 

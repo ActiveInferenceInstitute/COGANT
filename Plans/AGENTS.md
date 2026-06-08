@@ -1,17 +1,17 @@
 # AGENTS.md - COGANT planning notes
 
-This directory contains planning and audit notes for broad project work.
+This directory contains current planning and audit notes for broad project work.
 
 ## Rules
 
-- Prefer adding short, dated planning notes over editing old audit records.
+- Prefer short planning notes tied to active gates.
 - Keep raw command output in `_artifacts/`; keep synthesized decisions in the
   top-level plan files.
 - Before using a plan as current evidence, re-run the relevant validation
   command from the project root.
 - If a plan contradicts active package docs, manuscript prose, or
   `cogant/evaluation/METRICS.yaml`, treat the active source as authoritative
-  and update the plan only as historical context.
+  and update or remove the plan.
 
 ## Validation
 

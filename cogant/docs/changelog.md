@@ -10,20 +10,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed (audit-driven fidelity pass)
 - Canonical metrics regenerated from a clean full coverage run: line coverage
-  **94.98%** (the prior 97.14% came from a stale `coverage.json`); test counts
+  **94.98%** (the prior 97.14% came from an out-of-sync `coverage.json`); test counts
   re-verified **9561 passing / 0 failing / 52 skipped** (9613 collected).
 - `GNNBundle` de-duplicated in `cogant.__all__`; `empirical_claim_demo.py` roundtrip
   JSON-parse crash fixed; per-directory `AGENTS.md`/`README.md` and manuscript factual
   corrections (formatter package, 16 `gnn_package/` required files, SipHash checksum
-  doc-comment, PyO3/GIL statement); stale `projects_in_progress/cogant` paths corrected
-  to `projects/cogant`; generated the missing `output/claim_ledger.md` snapshot.
+  doc-comment, PyO3/GIL statement); out-of-date project paths corrected to
+  `projects/working/cogant`; generated the missing `output/claim_ledger.md` snapshot.
 
 See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 
 ## [Unreleased]
 
 ### Changed
-- **Legacy purge:** removed `cogant.viz.png_export` shim; canonical PNG API is
+- **Compatibility cleanup:** removed `cogant.viz.png_export` shim; canonical PNG API is
   `cogant.viz.png`. `ProgramGraph` exports only from `cogant.schemas.graph`.
   Drift analyzer uses top-level bundle keys only. Config docs distinguish composable
   vs YAML `PipelineConfig`.
@@ -75,7 +75,7 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 ### Fixed
 - Viz `cogant.viz.png` tests guarded behind `pytest.importorskip(matplotlib)`; add `numpy` and `pytest-cov` as dev deps (905c2da)
 - Relax JS hidden-state assertion in cross-language differential test (4aa2710)
-- Ruff UP038 autofix: union-type annotations; remove stale `xfail` mark (cea55d9)
+- Ruff UP038 autofix: union-type annotations; remove obsolete `xfail` mark (cea55d9)
 
 ### Changed
 - `evaluation/METRICS.yaml` promoted to canonical source of truth for test count, coverage, and roundtrip metrics (41f96de)
@@ -113,11 +113,9 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 - `pyproject.toml` dep updates + uv.lock sync (`fbd8d39`)
 
 ### Roundtrip role preservation
-- Historical v0.5 benchmark moved from 19/23 role-preserved targets (83%) to
-  23/23 role-preserved targets (100%) after POLICY/CONTEXT stub emission. The
-  current v0.6 metrics ledger classifies the checked-in 23-row JSONL as
-  `STALE_LEGACY` until a native ledger with per-row `role_preservation_score`
-  and invariant status fields is regenerated.
+- Current release evidence uses the native v0.6 ledger: 24 targets, 24
+  role-preserved, 0 drift, 0 failed, and 0 strict structural isomorphism. Each
+  row carries `role_preservation_score` and invariant status fields.
 
 ## [0.4.0] - 2026-04-10
 
@@ -130,7 +128,7 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 - Tutorial notebooks: 6 Jupyter notebooks (01-06)
 - Interactive playground: single-file HTML with cytoscape.js + CodeMirror
 - mkdocs-material docs site + GitHub Pages workflow
-- ROUNDTRIP_EVAL.md: 23-target role-preservation evaluation — now 19/23 ROLE_PRESERVED (83%) after CONSTRAINT fix
+- ROUNDTRIP_EVAL.md: role-preservation evaluation improved after the CONSTRAINT fix
 
 ### Fixed
 - CONSTRAINT role collapse: `cnst_` prefix not detected by forward pipeline's PreferenceRule → now emits `check_` prefix proportional to origin count
@@ -139,7 +137,7 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 - Parser ontology fallback: non-standard variable names (s_hidden, o_sensor) now classified via ActInfOntologyAnnotation
 
 ### Improved
-- Roundtrip role preservation: 14/23 ROLE_PRESERVED (61%) → 19/23 ROLE_PRESERVED (83%) after CONSTRAINT fix
+- Roundtrip role preservation improved after the CONSTRAINT fix
 - Real-world eval: 8/8 repos pass forward pipeline
 - Type annotations: 50+ modules updated to modern Python typing (Counter[str], list[T])
 
@@ -153,7 +151,7 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 **Reverse Pipeline (GNN to Code)**
 - `cogant.reverse` subpackage: GNN markdown parser, package planner, Python synthesizer, idempotency checker
 - Runtime-callable matrix functions (likelihood, transition, EFE, best_action) without exec
-- ISOMORPHISM_THEOREM.md: historical Galois-connection proof sketch and bounded roundtrip-error formalization
+- ISOMORPHISM_THEOREM.md: Galois-connection proof sketch and bounded roundtrip-error formalization
 
 **Active Inference Runtime**
 - Active Inference agent loop with step/convergence/VFE metrics

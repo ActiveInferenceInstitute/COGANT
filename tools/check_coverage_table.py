@@ -15,7 +15,7 @@ Exit codes
 * ``1`` — mismatch, missing ``coverage`` data when ``--strict``, or table parse error.
 
 Path layout: ``{tools,manuscript,cogant/}`` at the COGANT project root, or
-``projects/cogant/{tools,manuscript,cogant/}`` when vendored into the parent
+``projects/working/cogant/{tools,manuscript,cogant/}`` when linked into the parent
 template. ``--package-root`` should point to the directory that contains the
 inner ``cogant`` test tree and ``pyproject.toml`` used for ``pytest``."""
 
@@ -525,7 +525,7 @@ def main() -> int:
     # Fallback to committed coverage.json (RedTeam F10 — .coverage SQLite
     # is not committed; coverage.json is). This makes the gate runnable on
     # a clean checkout, not just after a fresh pytest --cov run. It also
-    # avoids letting a stale local .coverage file mask the committed
+    # avoids letting an out-of-sync local .coverage file mask the committed
     # canonical artifact when the JSON exactly matches the manuscript table.
     if not live and json_live:
         live = json_live

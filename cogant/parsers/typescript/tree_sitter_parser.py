@@ -1,8 +1,8 @@
 """TypeScript language parser plugin backed by tree-sitter.
 
-The legacy :class:`parsers.typescript.parser.TypeScriptLanguageParser`
+The compatibility :class:`parsers.typescript.parser.TypeScriptLanguageParser`
 (regex-based) remains the default registered TS/JS parser for
-backwards-compatibility with existing pipelines and tests. This module
+existing pipelines and tests. This module
 adds a parallel tree-sitter-backed implementation that prefers the
 ``tree_sitter_typescript`` grammar (with a ``.tsx`` variant) and falls
 back gracefully when the optional ``multilang`` extras aren't
@@ -85,7 +85,7 @@ class TypeScriptTreeSitterParser(LanguagePlugin):
 
         Tree-sitter does not resolve type annotations, so this is a
         best-effort structural view that keeps the shape of the
-        legacy regex parser's output.
+        compatibility regex parser's output.
         """
         interfaces = [s for s in ast.get("symbols", []) if s.get("kind") == "interface"]
         classes = [s for s in ast.get("symbols", []) if s.get("kind") == "class"]

@@ -159,9 +159,8 @@ useful in active-inference runtimes.
 
 ## 7. CI, Packaging, And Promotion Readiness
 
-Goal: make the project easy to promote into `projects/cogant/` from the
-passive checkout or historical `projects_in_progress/` staging path without
-breaking the template pipeline.
+Goal: make the project easy to link into `projects/working/cogant/` from the
+working sidecar checkout without breaking the template pipeline.
 
 - [x] Keep `PROMOTION.md` current with every path assumption introduced by new
   tooling.
@@ -253,13 +252,13 @@ review-and-improve pass (architectural decision or broad refactor).
   loop/branch rewrites, inlining/outlining, and parser/frontend variation.
   Success means each transform has a fixture, a roundtrip semantic-oracle
   assertion, and a dashboard-visible degradation row.
-- [ ] **Native v0.6 roundtrip ledger refresh (2026-05-21).**
-  The retained 23-row ledger is correctly tagged `STALE_LEGACY`; before a
-  publishable wave, regenerate a native ledger with per-row
-  `role_preservation_score`, `roundtrip_status`, file/LOC/node/edge counts,
-  and scaffolding fraction populated from the same run. `check_metrics_fresh`
-  now guards against relabelling legacy epsilon proxy scores as native
-  aggregates.
+- [ ] **Roundtrip drift reduction.**
+  The native v0.6 ledger now carries per-row `role_preservation_score`,
+  `roundtrip_status`, file/LOC/node/edge counts, and scaffolding fraction.
+  The previous `cli_tool` and `notebook_module` drift rows now carry source
+  roles and roundtrip as `ROLE_PRESERVED`; the remaining release work is to
+  keep `check_metrics_fresh` guarding against non-native score relabelling and
+  add held-out fixtures that can stress the now-saturated in-sample ledger.
 
 ## Preferred Sequence
 

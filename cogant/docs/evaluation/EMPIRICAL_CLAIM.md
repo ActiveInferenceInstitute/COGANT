@@ -97,7 +97,7 @@ correct implementation must reproduce.
 ## Reproducibility
 
 ```bash
-cd projects_in_progress/cogant/cogant
+cd cogant
 uv run python scripts/empirical_claim_demo.py
 ```
 
@@ -120,7 +120,7 @@ requires no external services (`--no-dynamic` skips coverage tracing).
 
 ---
 
-## Extended Empirical Results (Historical Zoo Demonstration)
+## Extended Empirical Results (Zoo Demonstration)
 
 Date: 2026-04-10
 
@@ -141,8 +141,7 @@ Date: 2026-04-10
 | zoo/02_observer | 1.0 | ROLE_PRESERVED |
 
 All three targets achieve perfect role preservation (`s_role=1.0`). Strict
-structural isomorphism is intentionally not claimed by this historical
-demonstration.
+structural isomorphism is intentionally not claimed by this demonstration.
 
 ---
 

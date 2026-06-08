@@ -2,16 +2,15 @@
 
 ## Purpose
 
-Long-form prose describing COGANT theory and practice in the same structural shape as the parent template's code-oriented manuscript projects when this checkout is vendored into `projects/cogant/`. This folder is **not** a substitute for package documentation; it synthesizes narrative for PDF/HTML output via the template rendering stack when the project is active under `projects/`.
+Long-form prose describing COGANT theory and practice in the same structural shape as the parent template's code-oriented manuscript projects when this checkout is linked into `projects/working/cogant/`. This folder is **not** a substitute for package documentation; it synthesizes narrative for PDF/HTML output via the template rendering stack when the project is active under `projects/`.
 
 ## Location terms
 
 | Term | Meaning |
 | --- | --- |
-| COGANT project root | The directory above this manuscript folder; in this passive checkout, `/Users/4d/Documents/GitHub/projects/passive/cogant`. |
+| COGANT project root | The directory above this manuscript folder; in this working checkout, `/Users/4d/Documents/GitHub/projects/working/cogant`. |
 | COGANT package root | The nested `../cogant/` directory containing `pyproject.toml`, `py/cogant/`, package tests, and package docs. |
-| Active template location | `docxology/template/projects/cogant`; parent-template validators and renderers apply only there. |
-| Historical staging location | `docxology/template/projects_in_progress/cogant`; keep only legacy/promotion references to it. |
+| Template render location | `/Users/4d/Documents/GitHub/template/projects/working/cogant`; parent-template validators and renderers apply only there. |
 
 ## Canonical sources of truth
 
@@ -48,10 +47,10 @@ Per `infrastructure/rendering/manuscript_discovery.py`, these names are **not** 
 - Other Markdown (for example `SYNTAX.md`): **other** bucket after supplemental.
 - References: `99_*.md` last among Markdown.
 
-Keep numbering aligned with the parent template renderer (`infrastructure/rendering/manuscript_discovery.py`) when this project is vendored under `projects/cogant/`.
+Keep numbering aligned with the parent template renderer (`infrastructure/rendering/manuscript_discovery.py`) when this project is linked under `projects/working/cogant/`.
 
 **Appendix status (current manuscript):**
-- S01 (Appendix A — Roundtrip role preservation): current role-preservation evidence and historical rows.
+- S01 (Appendix A — Roundtrip role preservation): current native v0.6 role-preservation evidence and drift rows.
 - S02 (Appendix B — Ablation): current reconstructed ablation evidence; measured deltas remain scoped to the cited fixtures.
 - S03 (Appendix C — Galois sketch): current Galois-style preorder comparison; approximate adjunction remains a conjecture and role preservation is a scoped empirical invariant.
 - S04 (Appendix D — Inference math): current emitted-model inference mathematics; exactness claims are limited to the represented finite matrix model.
@@ -90,15 +89,16 @@ uv run python tools/audit_manuscript_numbers.py           # numeric drift vs MET
 uv run --directory cogant python docs/verify_manuscript_links.py  # catch broken cross-links
 ```
 
-Template `.github/workflows/` jobs do **not** invoke COGANT manuscript scripts unless this tree is vendored under `projects/cogant/` and a workflow explicitly targets it; run these locally before manuscript edits.
+Template `.github/workflows/` jobs do **not** invoke COGANT manuscript scripts unless this tree is linked under `projects/working/cogant/` and a workflow explicitly targets it; run these locally before manuscript edits.
 
 **Source of truth on conflicts:** if package docs and manuscript prose disagree,
 the package docs are authoritative for API names, types, and behaviour; the manuscript
 is authoritative for the narrative framing and pedagogical presentation. When resolving
 a conflict, update the manuscript to match the package docs — never the reverse.
 
-**Breaking changes:** when an API is removed or renamed, cite the old form in the
-manuscript with a note: "(deprecated; see `CHANGELOG.md` for the replacement)". Update the prose to the new form once the new form ships and is tested.
+**Breaking changes:** when an API is removed or renamed, cite the removed form
+only when needed to explain migration, then update the prose to the replacement
+once the replacement ships and is tested.
 
 ## Citations
 
@@ -110,4 +110,4 @@ The examples chapter uses real package-run PNGs copied by [`../tools/manuscript_
 
 ## Pipeline caveat
 
-In a standalone checkout, discovery-based parent-template scripts will not target this manuscript. After vendoring under `docxology/template/projects/cogant/`, run the parent template Markdown validator and PDF renderer described in [`README.md`](README.md).
+In a standalone checkout, discovery-based parent-template scripts will not target this manuscript. After linking under `docxology/template/projects/working/cogant/`, run the parent template Markdown validator and PDF renderer described in [`README.md`](README.md).

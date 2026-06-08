@@ -8,18 +8,17 @@
 | [`manuscript/`](manuscript/) | PDF/HTML manuscript templates with `{{PLACEHOLDER}}` substitution syntax. Source of truth for prose; never edit by hand any number that has a `{{...}}` token. |
 | [`tools/`](tools/) | `MANUSCRIPT_VARS` registry, metrics regeneration CLI, inject CLI, audit helpers, manuscript figure copier. |
 | [`scripts/`](scripts/) | Thin orchestrators (`z_generate_manuscript_variables.py`, which also refreshes `output/figures/`). |
-| [`src/`](src/), [`tests/`](tests/), [`pyproject.toml`](pyproject.toml) | Tiny parent-template compatibility shell so `docxology/template` project discovery sees top-level source/tests when vendored under `projects/cogant/`. The real package remains nested under `cogant/`. |
+| [`src/`](src/), [`tests/`](tests/), [`pyproject.toml`](pyproject.toml) | Tiny parent-template compatibility shell so `docxology/template` project discovery sees top-level source/tests when linked under `projects/working/cogant/`. The real package remains nested under `cogant/`. |
 | [`run_all.py`](run_all.py), [`run_all.sh`](run_all.sh), [`run_all.example.json`](run_all.example.json) | Configurable batch run: `translate` + GNN exports + `render` + `viz` + `validate` per target. Targets are either `path` (under inner `cogant/`) or `git_url` (shallow clone to `<output_root>/<target_id>/_git_source/`). If `run_all.json` is absent, built-in defaults cover the three `examples/control_positive/*` fixtures plus two small Pallets repos; the shipped `run_all.json` is the larger corpus config. The shipped and built-in configs set `output_root: "cogant/output"`; `run_all.example.json` uses `output`. Each target writes under `<output_root>/<target_id>/` (with `data/`, `figures/`, `site/`, `reports/`, `gnn_package/`, `analysis/`, `exports/`, `roundtrip/`). Stderr + optional `--log`: per-target banner, per-step wall time / exit status, batch `summary` in `<output_root>/run_manifest.json`, cross-target `summary.md`/`summary.json`, and `<output_root>/dashboard/` when `steps.batch_dashboard` is enabled. |
 | [`output/`](output/) | Generated manuscript outputs — `data/manuscript_variables.json`, `output/manuscript/` injected copy, and copied figures (all disposable and regeneratable). Batch runs write per-target directories under the configured `<output_root>/<target_id>/`; the shipped `run_all.json` uses `cogant/output`, while `run_all.example.json` uses project-root `output`. |
-| [`PROMOTION.md`](PROMOTION.md) | Authoritative checklist for placing this tree at `projects/cogant/` inside the parent template repository; `projects_in_progress/cogant/` is historical staging context. |
+| [`PROMOTION.md`](PROMOTION.md) | Checklist for exposing this working sidecar tree to the parent template render location. |
 
 ## Location matrix
 
 | Context | COGANT project root | COGANT package root | Notes |
 | --- | --- | --- | --- |
-| Passive standalone checkout | `/Users/4d/Documents/GitHub/projects/passive/cogant` | `/Users/4d/Documents/GitHub/projects/passive/cogant/cogant` | Current local checkout; parent-template discovery and PDF rendering are not active. |
-| Active parent-template project | `docxology/template/projects/cogant` | `docxology/template/projects/cogant/cogant` | Template discovery, Markdown validation, and `scripts/03_render_pdf.py --project cogant` apply here. |
-| Historical staging path | `docxology/template/projects_in_progress/cogant` | `docxology/template/projects_in_progress/cogant/cogant` | Legacy references only; do not add new workflow docs that require this path. |
+| Working sidecar checkout | `/Users/4d/Documents/GitHub/projects/working/cogant` | `/Users/4d/Documents/GitHub/projects/working/cogant/cogant` | Current local checkout; run project-local commands here. |
+| Parent-template render path | `/Users/4d/Documents/GitHub/template/projects/working/cogant` | `/Users/4d/Documents/GitHub/template/projects/working/cogant/cogant` | Created by the sidecar/template linker; render with `--project working/cogant`. |
 
 ## Two-directory structure (common confusion point)
 
@@ -54,7 +53,7 @@ When any doc (README, AGENTS, cookbook, CLI help) says "run from `cogant/`" it m
 | `tools/regenerate_metrics.py` | Rebuilds `cogant/evaluation/METRICS.yaml` from live test + pipeline runs |
 | `tools/audit_manuscript_citations.py` | Verifies body citation keys exist in `manuscript/references.bib`; fails on missing or duplicate keys |
 | `tools/audit_manuscript_numbers.py` | Checks all prose numbers against `METRICS.yaml`; flags drift |
-| `tools/check_metrics_fresh.py` | Warns if `METRICS.yaml` is stale (mtime > 48 h) |
+| `tools/check_metrics_fresh.py` | Warns if `METRICS.yaml` is out of sync with source artifacts |
 | `tools/manuscript_figures.py` | Copies curated package-generated PNGs from `cogant/output/` into `output/figures/` |
 | `scripts/z_generate_manuscript_variables.py` | Thin orchestrator: YAML → JSON + full `output/manuscript/` tree + copied figures |
 
@@ -76,12 +75,12 @@ uv run python tools/audit_manuscript_citations.py
 uv run python tools/audit_manuscript_numbers.py
 ```
 
-When this tree is vendored under the parent template as `projects/cogant/`, also run the
-template Markdown validator from the template root:
+When this tree is linked under the parent template as `projects/working/cogant/`,
+also run the template Markdown validator from the template root:
 
 ```bash
-uv run python -m infrastructure.validation.cli markdown projects/cogant/manuscript/
-uv run python -m infrastructure.validation.cli markdown projects/cogant/output/manuscript/
+uv run python -m infrastructure.validation.cli markdown projects/working/cogant/manuscript/
+uv run python -m infrastructure.validation.cli markdown projects/working/cogant/output/manuscript/
 ```
 
 All `{{PLACEHOLDER}}` tokens in `manuscript/*.md` resolve against `cogant/evaluation/METRICS.yaml`
@@ -107,7 +106,7 @@ Test markers: `unit`, `integration`, `slow`, `requires_rust`, `fuzz`, `property`
 ## Authoritative numbers
 
 `cogant/evaluation/METRICS.yaml` is the single source of truth for every numeric claim in the
-manuscript. If a prose number looks stale, regenerate and re-inject; never hand-edit.
+manuscript. If a prose number looks out of sync, regenerate and re-inject; never hand-edit.
 
 **Live suite:** run `cd cogant && uv run pytest tests/ -q` from the inner package root; counts are
 not duplicated here (they drift every commit).
@@ -123,18 +122,17 @@ Canonical benchmark-style figures still in `METRICS.yaml` (roundtrip, etc.) — 
 ## Promotion checklist
 
 `PROMOTION.md` is authoritative. In brief:
-1. If starting from the historical staging path, `git mv projects_in_progress/cogant projects/cogant`
-2. Fix any remaining `projects_in_progress/cogant` literals in docs, scripts, and CI snippets
-3. Run the three manuscript commands above
-4. Run `scripts/03_render_pdf.py --project cogant` for PDF generation
+1. Ensure the sidecar/template linker exposes this tree under `../template/projects/working/cogant`.
+2. Run the three manuscript commands above.
+3. From the template root, run `uv run python scripts/03_render_pdf.py --project working/cogant`.
 
 After promotion, this tree is discovered by the parent template `./run.sh` and infrastructure
 pipeline; before promotion, use the project-local `uv` / `make` / `pytest` commands above.
 
 ## Discovery
 
-Discovered by `discover_projects()` only when vendored under the parent template at
-`projects/cogant/`; see [`PROMOTION.md`](PROMOTION.md) for staging-to-active history.
+Discovered by `discover_projects()` only when linked under the parent template
+project tree; see [`PROMOTION.md`](PROMOTION.md) for the current render-location checklist.
 
 ## Imported Claude Cowork project instructions
 

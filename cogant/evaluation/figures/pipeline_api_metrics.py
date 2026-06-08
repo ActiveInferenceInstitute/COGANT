@@ -40,7 +40,7 @@ def _count_edges_by_kind(graph: Any) -> dict[str, int]:
 def _transitions_count(state_file: dict[str, Any]) -> int:
     """Extract the transition count from a serialized state-space file.
 
-    Tolerates both legacy schema variants (``transitions: {transition_count: int}``,
+    Tolerates supported schema variants (``transitions: {transition_count: int}``,
     ``transitions: {structure: [..]}``) and a flat ``transitions: [..]`` list.
     """
     t = state_file.get("transitions", {})

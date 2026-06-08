@@ -6,6 +6,19 @@ import argparse
 from pathlib import Path
 
 
+class LineCounterState:
+    """State holder that makes this fixture role-bearing."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+
+    def get_path(self) -> Path:
+        return self.path
+
+    def read_count(self) -> int:
+        return count_lines(self.path)
+
+
 def count_lines(path: Path) -> int:
     """Count non-empty lines in a text file."""
 
@@ -21,7 +34,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    total = count_lines(args.path)
+    state = LineCounterState(args.path)
+    total = state.read_count()
     if total < args.minimum:
         return 2
     print(total)

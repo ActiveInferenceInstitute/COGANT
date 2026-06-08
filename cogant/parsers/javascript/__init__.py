@@ -2,7 +2,7 @@
 
 Exposes :class:`JavaScriptLanguageParser`, a tree-sitter backed plugin
 defined in :mod:`parsers.javascript.parser`. For compatibility with the
-pre-tree-sitter plugin layout, the legacy alias pointing at
+pre-tree-sitter plugin layout, the compatibility alias pointing at
 ``TypeScriptLanguageParser`` is still available under
 ``LegacyJavaScriptLanguageParser``.
 """

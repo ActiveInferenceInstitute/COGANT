@@ -1,7 +1,7 @@
 # Plans
 
-Working notes for broad COGANT review, red-team, and improvement passes.
-These files are planning and audit records, not package runtime inputs.
+Working notes for current COGANT review, red-team, and improvement passes.
+These files are planning notes, not package runtime inputs.
 
 Use this directory for durable planning artifacts that explain why a broad
 docs, manuscript, evaluation, or validation pass changed scope. Keep generated
@@ -10,12 +10,7 @@ readable.
 
 ## Contents
 
-- `FIRST_PRINCIPLES_AUDIT.md` - first-principles project review notes.
-- `IMPROVEMENTS_2026-05-19.md` - improvement backlog from the May 2026 sweep.
-- `PRE_STATE_2026-05-19.md` - pre-change state capture for the same sweep.
-- `REDTEAM_FINDINGS.md` - adversarial review findings and follow-up notes.
-- `WORLD_THREAT_MODEL_COGANT_2026-05-21.md` - COGANT-specific horizon stress
-  test using the WorldThreatModelHarness frame and Perplexity research signals.
+- `CURRENT_STATUS.md` - live planning guidance for this working checkout.
 - `_artifacts/` - text snapshots from verification commands and audits.
 
 ## Ground Rules
@@ -25,5 +20,5 @@ readable.
   changes.
 - Do not cite command-output snapshots as current truth without re-running the
   underlying command.
-- Keep filenames date- or topic-scoped so later audits can distinguish active
-  plans from historical notes.
+- Keep filenames topic-scoped and remove files that no longer describe active
+  project state.

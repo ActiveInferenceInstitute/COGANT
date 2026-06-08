@@ -340,7 +340,7 @@ future work.
 
 ## See also
 
-- **Roundtrip evaluation report:** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md) (historical 23/23 role-preservation benchmark; current v0.6 metrics classify the checked-in ledger as `STALE_LEGACY`)
+- **Roundtrip evaluation report:** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md) (current native v0.6 ledger: 24/24 role-preserved rows, 0 drift rows, and 0 non-native rows)
 - **Calibration registry:** [CALIBRATION.md](CALIBRATION.md)
 - **Active Inference mapping (theory):** [ACTIVE_INFERENCE_MAPPING.md](ACTIVE_INFERENCE_MAPPING.md)
 - **Published roundtrip explainer:** [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md)

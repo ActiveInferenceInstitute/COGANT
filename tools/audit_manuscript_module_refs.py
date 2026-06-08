@@ -32,7 +32,7 @@ reported when *no* prefix resolves or an attribute is genuinely absent.
 Exit codes
 ----------
 * ``0`` — every checked reference resolves (warnings allowed).
-* ``1`` — at least one stale reference, or (``--strict``) an import error.
+* ``1`` — at least one unresolved reference, or (``--strict``) an import error.
 
 Usage::
 
@@ -41,7 +41,7 @@ Usage::
     uv run python tools/audit_manuscript_module_refs.py --strict
 
 Path layout is anchored on ``__file__`` at the COGANT project root (or
-``projects/cogant/`` when vendored into the parent template). The inner package
+``projects/working/cogant/`` when linked into the parent template). The inner package
 ``py/`` is added to ``sys.path`` so ``import cogant`` resolves from a source
 checkout without an editable install.
 """
@@ -224,7 +224,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="Exit non-zero on import errors in addition to stale references.",
+        help="Exit non-zero on import errors in addition to unresolved references.",
     )
     args = parser.parse_args(argv)
 
@@ -237,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"module-ref audit: manuscript dir not found: {manuscript_dir}", file=sys.stderr)
         return 1
 
-    stale: list[tuple[str, int, str, str]] = []
+    unresolved: list[tuple[str, int, str, str]] = []
     import_errors: list[tuple[str, int, str, str]] = []
     checked = 0
     distinct: set[str] = set()
@@ -255,16 +255,16 @@ def main(argv: list[str] | None = None) -> int:
                 if detail.startswith("import of"):
                     import_errors.append((str(rel), lineno, name, detail))
                 else:
-                    stale.append((str(rel), lineno, name, detail))
+                    unresolved.append((str(rel), lineno, name, detail))
 
     print(
         f"module-ref audit: {checked} reference(s) ({len(distinct)} distinct) scanned in "
-        f"{manuscript_dir.name}/; {len(stale)} stale, {len(import_errors)} import error(s)"
+        f"{manuscript_dir.name}/; {len(unresolved)} unresolved, {len(import_errors)} import error(s)"
     )
 
-    if stale:
+    if unresolved:
         print("\nStale references (module/attribute does not exist):")
-        for rel, lineno, name, detail in stale:
+        for rel, lineno, name, detail in unresolved:
             print(f"  {rel}:{lineno}: `{name}` — {detail}")
 
     if import_errors:
@@ -272,7 +272,7 @@ def main(argv: list[str] | None = None) -> int:
         for rel, lineno, name, detail in import_errors:
             print(f"  {rel}:{lineno}: `{name}` — {detail}")
 
-    if stale:
+    if unresolved:
         return 1
     if import_errors and args.strict:
         return 1

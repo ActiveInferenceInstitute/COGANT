@@ -17,18 +17,15 @@ specific area you want to work on.
    (also surfaced inside the docs at `docs/AGENTS.md`). Read it before
    touching code.
 
-2. **[R&D Log](../evaluation/R&D_LOG.md)** — A running log of what's been
-   tried, what worked, and what didn't. Skim the most recent entries first
-   to understand current focus areas, then search for keywords matching
-   whatever you want to work on. This is the institutional memory of the
-   project — using it well means you won't re-do work that's already been
-   done (and discarded for good reason).
+2. **[R&D Status](../evaluation/R&D_LOG.md)** — The current research and
+   validation status: active evidence, readiness gaps, and the commands that
+   keep the evaluation surface reproducible. Use it to understand the current
+   focus before changing a subsystem or claim.
 
 3. **[v1.0 Readiness](../evaluation/V1.0_READINESS.md)** — The honest
    assessment of what's blocking a 1.0 release: which subsystems are stable,
    which are still in flux, and what concrete gaps remain. If you're looking
-   for "where can I make the biggest difference right now?", this is the
-   answer.
+   for "where can I make the biggest difference right now?", start here.
 
 4. **[Roadmap Overview](../roadmap/overview.md)** — The forward-looking
    complement to step 3. Versions, themes, and the rough order in which

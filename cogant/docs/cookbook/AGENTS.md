@@ -20,8 +20,8 @@ back. Owned by whoever is editing the CLI / user-facing workflows.
 | `AGENTS.md` | This file — maintenance rules | When numbering, non-numbered-recipe, or ownership policy changes |
 | `01_scan_basic.md` – `20_dataset.md` | Numbered recipes, read the README table for descriptions | When the CLI, pipeline, or exporter they demonstrate changes |
 | `analyze_a_flask_app.md` | Pre-numbering Flask walkthrough — kept stable for inbound links | When the Flask example itself is moved or the CLI contract changes |
-| `custom_translation_rules.md` | Pre-numbering custom-rules recipe — superseded by `19_extend_rules.md` for new work | Only to fix factual errors; new content goes in the numbered recipe |
-| `interpret_gnn_output.md` | Pre-numbering GNN interpretation recipe — superseded by `03_explain_node.md` for new work | Only to fix factual errors; new content goes in the numbered recipe |
+| `custom_translation_rules.md` | Pre-numbering custom-rules recipe; use `19_extend_rules.md` for new work | Only to fix factual errors; new content goes in the numbered recipe |
+| `interpret_gnn_output.md` | Pre-numbering GNN interpretation recipe; use `03_explain_node.md` for new work | Only to fix factual errors; new content goes in the numbered recipe |
 
 ## Adding a new recipe
 

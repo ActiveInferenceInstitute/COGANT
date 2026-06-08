@@ -27,7 +27,7 @@ Usage::
     uv run python tools/audit_manuscript_crossrefs.py --strict-rendered
 
 Path layout is anchored on ``__file__`` at the COGANT project root (or
-``projects/cogant/`` when vendored into the parent template).
+``projects/working/cogant/`` when linked into the parent template).
 """
 
 from __future__ import annotations

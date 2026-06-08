@@ -12,175 +12,99 @@ tags:
   - code-understanding
   - roundtrip-evaluation
   - codebase-to-gnn
-pretty_name: COGANT Roundtrip Evaluation Dataset
+pretty_name: COGANT Native Roundtrip Evaluation Dataset
 size_categories:
   - n<1K
 ---
 
-# COGANT Roundtrip Evaluation Dataset
+# COGANT Native Roundtrip Evaluation Dataset
 
-A benchmark of **23 Python repositories** evaluated for roundtrip fidelity
-under the COGANT (Codebase-to-GNN Analysis Tool) pipeline. Each repository
-was processed forward (code → program graph → GNN in Active Inference notation)
-and then reversed (GNN → synthesized Python package → re-forwarded GNN). The
-**ε (epsilon) role-match score** measures structural fidelity between the
-original and reconstructed GNN.
+This dataset records COGANT roundtrip checks over the Python fixture corpus
+that ships with the project. Each row is produced by the native v0.6 roundtrip
+path:
 
-## Description
+1. translate a Python fixture to a program graph and GNN package;
+2. synthesize a Python package back from the GNN;
+3. translate the synthesized package again; and
+4. compare the original and synthesized semantic-role multisets plus graph
+   and matrix diagnostics.
 
-COGANT translates arbitrary Python codebases into Generative Neural Network
-(GNN) representations using Active Inference semantics. The forward pipeline
-assigns every program-graph node a role from the set
-`{HIDDEN_STATE, OBSERVATION, ACTION, POLICY, CONSTRAINT, CONTEXT}` and
-compiles state-space matrices `(A, B, C, D, π)`. The reverse pipeline parses
-a GNN markdown file and synthesizes a new Python package; re-running the
-forward pipeline on that package yields a second GNN. The ε score is the
-multiset similarity between the role populations of the two GNNs.
+The authoritative data file is [`roundtrip_results.jsonl`](roundtrip_results.jsonl).
+It is regenerated from source fixtures by
+[`../../../tools/regenerate_roundtrip_ledger.py`](../../../tools/regenerate_roundtrip_ledger.py)
+and summarized into [`../METRICS.yaml`](../METRICS.yaml) by
+[`../../../tools/regenerate_metrics.py`](../../../tools/regenerate_metrics.py).
+Do not hand-edit row counts or status distributions in prose.
 
-This dataset records the ε scores, GNN shape parameters, and classification
-tiers for all 23 evaluation targets, spanning:
+## Corpus
 
-- **Zoo fixtures** (11 targets): hand-authored Active Inference primitives
-  designed to exercise individual POMDP components.
-- **Curated real-world examples** (3 targets): small, well-understood Python
-  packages hand-validated by the COGANT team.
-- **Real-world libraries** (9 targets): third-party open-source Python
-  libraries of varying complexity, pulled from PyPI.
+The generator walks these local fixture groups:
 
-## Motivation
+| Group | Path | Purpose |
+|---|---|---|
+| `zoo` | `examples/zoo/` | Small Active Inference/POMDP primitives designed to exercise individual roles and matrix shapes. |
+| `control_positive` | `examples/control_positive/` | Role-bearing fixtures with known hidden-state, observation, and action structure. |
+| `real_world` | `examples/real_world/` | Small Python packages that resemble real application code while remaining reproducible in the repository. |
 
-Roundtrip fidelity is the central empirical claim of the COGANT v1.0 paper:
-that the forward GNN translation is faithful enough that an independently
-synthesized codebase re-forwards to the same structural GNN. This dataset
-makes that claim reproducible and extensible. Researchers can:
+JavaScript-only fixtures are skipped by this ledger because the current
+roundtrip claim is scoped to the Python front end.
 
-1. Verify the published ε scores by running `regenerate.py`.
-2. Add new repositories to the evaluation corpus.
-3. Use the pre-computed `roundtrip_results.jsonl` as a benchmark baseline for
-   alternative GNN translation or synthesis approaches.
+## Schema
 
-## Structure
-
-```
-evaluation/dataset/
-├── DATASET_CARD.md          # This file (HuggingFace README format)
-├── LICENSE                  # Apache 2.0
-├── citation.bib             # BibTeX entry for the COGANT manuscript
-├── regenerate.py            # Script to reproduce all ε scores from source
-├── roundtrip_results.jsonl  # Pre-computed results (one JSON per line)
-├── README.md                # Original ML dataset card (node-classification task)
-├── dataset_summary.json     # Aggregate statistics
-├── instances.jsonl          # Per-repo graph and GNN shape records
-├── nodes.jsonl              # Per-node feature and role records
-└── instances/               # Full per-repo JSON bundles
-    ├── calculator.json
-    ├── event_pipeline.json
-    ├── flask_app.json
-    ├── flask_mini.json
-    ├── json_stdlib.json
-    └── requests_lib.json
-```
-
-The roundtrip evaluation data lives in `roundtrip_results.jsonl`. Each line
-is a JSON object with the following fields:
+Each JSONL row is self-classifying and contains:
 
 | Field | Type | Description |
 |---|---|---|
-| `rank` | int | Row number in the ROUNDTRIP_EVAL.md summary table (1–23). |
-| `group` | str | Target group: `zoo`, `rwex` (curated real-world), or `rw` (real-world library). |
-| `repo` | str | Short repository or fixture name. |
-| `epsilon` | float | Role-match score ε ∈ [0, 1]. |
-| `tier` | str | `ISOMORPHIC` (ε ≥ 0.8), `APPROXIMATE` (0.5 ≤ ε < 0.8), or `DIVERGENT` (ε < 0.5). |
-| `orig_n_hidden` | int | HIDDEN_STATE count in the original GNN (n_states). |
-| `orig_n_obs` | int | OBSERVATION count in the original GNN (n_obs). |
-| `orig_n_actions` | int | ACTION count in the original GNN (n_actions). |
-| `synth_n_hidden` | int | HIDDEN_STATE count in the re-forwarded synthesized GNN. |
-| `synth_n_obs` | int | OBSERVATION count in the re-forwarded synthesized GNN. |
-| `synth_n_actions` | int | ACTION count in the re-forwarded synthesized GNN. |
-| `elapsed_s` | float | Wall-clock seconds for the full roundtrip (forward + reverse + forward). |
+| `rank` | int | Deterministic display rank after sorting by role-preservation score, group, and repo. |
+| `group` / `fixture_group` | str | Fixture group: `zoo`, `control_positive`, or `real_world`. |
+| `repo` | str | Fixture directory name. |
+| `roundtrip_status` | str | One of `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`, `DRIFT`, `FAILED`, or `NON_NATIVE`. |
+| `role_preservation_score` | float | Native v0.6 role-multiset preservation score in `[0, 1]`. |
+| `structurally_isomorphic` | bool | Whether strict structural isomorphism held for the checked representation. |
+| `matrix_score` / `structural_score` | float | Matrix and graph-structure comparison scores emitted by the roundtrip verifier. |
+| `generated_code_ok` | bool | Whether the synthesized Python package compiled and passed the verifier's code check. |
+| `orig_n_hidden`, `orig_n_obs`, `orig_n_actions` | int | Original role counts for hidden states, observations, and actions. |
+| `synth_n_hidden`, `synth_n_obs`, `synth_n_actions` | int | Re-forwarded synthesized role counts for the same role families. |
+| `shape_match` | object | Per-shape comparison details when available. |
+| `node_count`, `edge_count` | int | Original program-graph size. |
+| `file_count`, `loc` | int | Python source files and lines counted by the ledger generator. |
+| `elapsed_s` | float | Wall-clock seconds for the fixture roundtrip on the local machine. |
+| `error` | str | Present only for failed rows. |
 
-## Summary Table (23 Targets)
-
-| Rank | Group | Repo / Fixture | ε | Tier |
-|---:|---|---|---:|---|
-|  1 | zoo  | 01_simple_state  | 1.0000 | ISOMORPHIC  |
-|  2 | zoo  | 02_observer      | 1.0000 | ISOMORPHIC  |
-|  3 | zoo  | 03_actor         | 1.0000 | ISOMORPHIC  |
-|  4 | zoo  | 04_pomdp_minimal | 1.0000 | ISOMORPHIC  |
-|  5 | zoo  | 05_multi_factor  | 1.0000 | ISOMORPHIC  |
-|  6 | zoo  | 06_hierarchical  | 1.0000 | ISOMORPHIC  |
-|  7 | zoo  | 08_preferences   | 1.0000 | ISOMORPHIC  |
-|  8 | zoo  | 11_sensor_fusion | 1.0000 | ISOMORPHIC  |
-|  9 | rwex | json_stdlib      | 1.0000 | ISOMORPHIC  |
-| 10 | rwex | requests_lib     | 1.0000 | ISOMORPHIC  |
-| 11 | zoo  | 12_full_pomdp    | 0.9474 | ISOMORPHIC  |
-| 12 | rw   | dateutil         | 0.8638 | ISOMORPHIC  |
-| 13 | rw   | pyyaml           | 0.8520 | ISOMORPHIC  |
-| 14 | rwex | flask_app        | 0.8429 | ISOMORPHIC  |
-| 15 | zoo  | 07_event_driven  | 0.7778 | APPROXIMATE |
-| 16 | zoo  | 10_constraint    | 0.7143 | APPROXIMATE |
-| 17 | zoo  | 09_policy        | 0.6667 | APPROXIMATE |
-| 18 | rw   | tqdm             | 0.5749 | APPROXIMATE |
-| 19 | rw   | fastapi          | 0.5402 | APPROXIMATE |
-| 20 | rw   | click            | 0.5134 | APPROXIMATE |
-| 21 | rw   | httpx            | 0.4777 | DIVERGENT   |
-| 22 | rw   | urllib3          | 0.4252 | DIVERGENT   |
-| 23 | rw   | requests         | 0.4147 | DIVERGENT   |
-
-**Distribution:** ISOMORPHIC 14/23 (61%) · APPROXIMATE 6/23 (26%) · DIVERGENT 3/23 (13%)
-
-### Key finding
-
-The three DIVERGENT repositories (requests, urllib3, httpx) share a single
-failure mode: constraint-heavy role distributions (304–744 CONSTRAINT nodes)
-collapse to the synthesizer's fixed scaffolding of 3–4 CONSTRAINT nodes,
-driving ε below 0.5. All zoo fixtures and curated real-world examples land in
-ISOMORPHIC or APPROXIMATE. The core POMDP skeleton (HIDDEN_STATE, OBSERVATION,
-ACTION) is preserved across all 23 targets; fidelity loss is confined to
-POLICY, CONTEXT, and high-cardinality CONSTRAINT populations.
-
-## Intended Use
-
-- **Benchmark baseline**: compare alternative GNN translation or synthesis
-  methods against the COGANT v0.5.0 baseline ε scores.
-- **Ablation studies**: remove or replace individual pipeline stages
-  (parser, planner, synthesizer) and measure ε impact.
-- **Synthesizer improvement**: the DIVERGENT bucket defines a clear target —
-  closing the CONSTRAINT-count gap — for future synthesizer work.
-- **Active Inference tooling**: the pre-computed GNN shape parameters
-  (n_hidden, n_obs, n_actions) enable downstream researchers to select
-  tractable targets for Active Inference simulation without re-running COGANT.
-
-## Limitations
-
-- **Python only**: COGANT supports JavaScript ingestion experimentally, but
-  only Python repositories are included in this evaluation.
-- **Rule-derived roles**: semantic role assignments come from COGANT's
-  translation rules, not from human annotators. Agreement with expert
-  annotators has not been measured on this corpus.
-- **ε is a multiset-similarity metric**: it is sensitive to role-population
-  imbalance. A repository dominated by CONSTRAINT nodes will score poorly even
-  if all other roles round-trip faithfully. A coverage-based metric (does every
-  origin role appear at least once?) would yield higher scores for the DIVERGENT
-  bucket.
-- **Synthesizer version lock**: scores were computed with `cogant==0.5.0`. The
-  reverse synthesizer is under active development; future versions are expected
-  to close the CONSTRAINT gap.
-- **Wall-clock elapsed times** were measured on a single machine and are
-  provided for relative comparison only.
+`tools/check_metrics_fresh.py` verifies that `METRICS.yaml` matches the live
+JSONL distribution and now rejects zero-role `control_positive` rows, because
+such rows cannot support a role-preservation claim.
 
 ## Reproducibility
 
+From the project root:
+
 ```bash
-cd projects_in_progress/cogant
-python evaluation/dataset/regenerate.py
-# outputs: evaluation/dataset/roundtrip_results.jsonl
+uv run --directory cogant python ../tools/regenerate_roundtrip_ledger.py
+uv run --directory cogant python ../tools/regenerate_metrics.py
+uv run python tools/check_metrics_fresh.py
 ```
 
-The `regenerate.py` script uses `cogant.reverse.idempotency.verify_repo_roundtrip()`
-on the zoo fixtures in `examples/zoo/` and the curated examples in
-`examples/real_world/`, and `cogant roundtrip` (subprocess) for the third-party
-library fixtures in `evaluation/eval_repos/`.
+The ledger is deterministic except for `elapsed_s`, which is a local
+wall-clock measurement. Commit refreshed JSONL and YAML together.
+
+## Intended Use
+
+- Regression testing of the forward/reverse/forward COGANT pipeline.
+- Corpus-level tracking of role-preservation and drift rows.
+- Fixture design review: rows with zero original role counts are not valid
+  positive roundtrip evidence.
+- Benchmarking alternative reverse-synthesis strategies against the same
+  role-preservation schema.
+
+## Limitations
+
+- The ledger is Python-front-end evidence only.
+- Role labels are produced by COGANT rules, not by human annotators.
+- Role preservation is weaker than semantic equivalence of arbitrary Python
+  behavior.
+- Wall-clock timings are provided for local diagnostics, not cross-machine
+  performance claims.
 
 ## Citation
 
@@ -190,12 +114,11 @@ library fixtures in `evaluation/eval_repos/`.
   author  = {Friedman, Daniel Ari},
   year    = {2026},
   url     = {https://github.com/docxology/template},
-  version = {0.5.0}
+  version = {0.6.0}
 }
 ```
 
 ## License
 
-Apache 2.0. See `LICENSE` for the full text. Third-party library fixtures in
-`evaluation/eval_repos/` carry their own upstream licenses; consult each library's
-`LICENSE` file for terms.
+Apache 2.0. See [`LICENSE`](LICENSE) for the full text. Third-party evaluation
+repositories under `../eval_repos/` carry their own upstream licenses.

@@ -12,8 +12,9 @@ manuscript. It performs the following steps, in order:
    placeholders in :mod:`tools.manuscript_vars` and **write**
    ``output/data/manuscript_variables.json`` with provenance metadata.
 4. **Clean and substitute** every ``{{VAR}}`` in ``manuscript/*.md`` and write
-   the result to ``output/manuscript/*.md``. The cleanup removes stale generated
-   Markdown fragments so section renames cannot leave duplicate render inputs.
+   the result to ``output/manuscript/*.md``. The cleanup removes previously
+   generated Markdown fragments so section renames cannot leave duplicate render
+   inputs.
    Links that intentionally point from source fragments into sibling project
    files are rebased so they remain valid after the fragment is copied under
    ``output/manuscript/``.
@@ -39,7 +40,7 @@ Exit codes
 Usage::
 
     uv run python scripts/z_generate_manuscript_variables.py
-    uv run python projects/cogant/scripts/z_generate_manuscript_variables.py  # parent template root
+    uv run python projects/working/cogant/scripts/z_generate_manuscript_variables.py  # parent template root
     uv run python scripts/z_generate_manuscript_variables.py --regenerate-metrics
     uv run python scripts/z_generate_manuscript_variables.py --strict
 """
@@ -116,7 +117,7 @@ def rebase_generated_links(text: str) -> str:
     """Adjust source-relative markdown links for ``output/manuscript``.
 
     The manuscript source lives at ``manuscript`` in this project root
-    (or ``projects/cogant/manuscript`` when vendored into the parent template);
+    (or ``projects/working/cogant/manuscript`` when linked into the parent template);
     generated fragments live one directory deeper at ``output/manuscript``.
     Figure links already
     target ``../figures`` and should stay unchanged. Links back to package,
@@ -136,8 +137,8 @@ def rebase_generated_links(text: str) -> str:
         "](../../../infrastructure/": "](../../../../infrastructure/",
         "](../../../projects/": "](../../../../projects/",
     }
-    for old, new in replacements.items():
-        text = text.replace(old, new)
+    for source, replacement in replacements.items():
+        text = text.replace(source, replacement)
     return text
 
 

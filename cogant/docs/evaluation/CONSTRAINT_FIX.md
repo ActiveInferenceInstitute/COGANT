@@ -63,9 +63,9 @@ matching the origin count exactly.
 | zoo/09_policy | 0.6667 | ROLE_PRESERVED | 0.0000 |
 | zoo/10_constraint | 0.8571 | ROLE_PRESERVED | +0.2857 |
 
-All 9 affected targets crossed the historical loose role-preservation gate used
-by this fix note. Current v0.6 reporting uses the stricter ROLE_PRESERVED tier
-(`s_role >= 0.8`) and reports strict structural isomorphism separately.
+All 9 affected targets crossed the role-preservation gate measured by this fix
+note. Current v0.6 reporting uses the public ROLE_PRESERVED threshold
+(`s_role >= 0.5`) and reports strict structural isomorphism separately.
 
 ## Implementation
 

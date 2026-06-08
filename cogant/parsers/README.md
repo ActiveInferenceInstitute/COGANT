@@ -5,8 +5,8 @@ Polyglot language parsers converting source code to symbols and ASTs.
 ## Contents
 
 - **python/** — Python parser (AST-based via `ast` module)
-- **typescript/** — TypeScript parser (regex-based); also handles JavaScript source in the legacy path
-- **javascript/** — Tree-sitter backed `JavaScriptLanguageParser` delegating to `cogant.parsers.tree_sitter_base.TreeSitterParser`; the legacy regex alias remains available as `LegacyJavaScriptLanguageParser`
+- **typescript/** — TypeScript parser (regex-based); also handles JavaScript source through the compatibility path
+- **javascript/** — Tree-sitter backed `JavaScriptLanguageParser` delegating to `cogant.parsers.tree_sitter_base.TreeSitterParser`; the compatibility regex alias remains available as `LegacyJavaScriptLanguageParser`
 - **rust/** — Rust parser (regex-based)
 - **go/** — Go parser (regex-based)
 
@@ -56,8 +56,8 @@ parser = LanguageDetector.get_parser("python")
 ## Implementation Approach
 
 - **Python**: Full AST parsing via Python's `ast` module (no external deps)
-- **JavaScript**: Tree-sitter backed (`tree_sitter_javascript` grammar) with an embedded fallback to the legacy regex TypeScript parser when the grammar is unavailable
-- **TypeScript**: Regex-based extraction (legacy path; tree-sitter upgrade pending)
+- **JavaScript**: Tree-sitter backed (`tree_sitter_javascript` grammar) with an embedded fallback to the compatibility regex TypeScript parser when the grammar is unavailable
+- **TypeScript**: Regex-based extraction through the registered compatibility parser
 - **Rust**: Regex-based extraction (no external deps)
 - **Go**: Regex-based extraction (no external deps)
 

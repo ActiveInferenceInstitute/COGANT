@@ -102,8 +102,8 @@ graph.
 
 **CONSTRAINT** — Semantic role for validators, assertions, and tests. Detected by
 `PreferenceRule` and `TestAssertionRule`. Contributes to the C matrix. The canonical
-capitalization is **CONSTRAINT** (all caps); the historical reverse-pipeline planner prefix
-`cnst_` is a stale internal artifact, not a canonical spelling — synthesizer output is
+capitalization is **CONSTRAINT** (all caps); the reverse-pipeline planner prefix
+`cnst_` is an internal artifact, not a canonical spelling — synthesizer output is
 normalized to `check_*`.
 
 **CONTEXT** — Semantic role for configuration, feature flags, and global state that
@@ -142,9 +142,9 @@ v0.1.0.
 a program graph. Defined as `s_role = |roles_preserved| / |roles_original|`, so `s_role ∈ [0, 1]` and
 `s_role = 1.0` is a perfect role-multiset match (every original semantic role is recovered). The
 ROLE_PRESERVED threshold is `s_role >= 0.5`; strict `STRUCTURALLY_ISOMORPHIC` status also requires graph, matrix, GNN-section, and generated-code invariants. Canonical current values live in
-`cogant/evaluation/METRICS.yaml`. An earlier historical "error" formulation
-(where `ε_max = 0` meant exact recovery; see `evaluation/ISOMORPHISM_THEOREM.md`
-§4) is preserved for theoretical context only. See also
+`cogant/evaluation/METRICS.yaml`. The theoretical "error" formulation
+(where `ε_max = 0` means exact recovery; see `evaluation/ISOMORPHISM_THEOREM.md`
+§4) is separate from the release status vocabulary. See also
 ε-bounded adjunction.
 
 **ε-bounded adjunction** — The categorical-strength claim that COGANT's forward and reverse
@@ -231,7 +231,7 @@ interest with no direct external adjacency. Node role `BlanketRole.INTERNAL`.
 node/edge preservation, edge-kind preservation, role preservation, matrix shape/value
 preservation, GNN-section preservation, and generated-code import/compile success.
 
-**ROLE_PRESERVED** — The weaker success tier used by the canonical historical corpus.
+**ROLE_PRESERVED** — The weaker success tier used by the native v0.6 roundtrip ledger.
 It means the semantic-role population survives the forward → reverse → forward loop at
 `s_role >= 0.5`; it does not imply node/edge or matrix equality.
 

@@ -165,7 +165,7 @@ What each field means:
   match. (NOTE: this is the project-wide convention — see
   [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md#the-roundtrip-measure).
   Earlier drafts used a complementary "epsilon = drift" formulation
-  where `0.0` was best — that form is now legacy.)
+  where `0.0` was best — current reports use `role_preservation_score`.)
 - **`original_roles` / `synthesized_roles`** — Per-role multisets recovered
   from the source GNN versus the forward pipeline run on the synthesized
   package, respectively.

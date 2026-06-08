@@ -91,7 +91,7 @@ The v0.6 invariant ledger separately checks stronger properties:
 
 Strict `STRUCTURALLY_ISOMORPHIC` status requires those ledger checks in addition to role preservation (canonical source `cogant/evaluation/METRICS.yaml`).
 
-> **Legacy note:** Earlier drafts used a complementary "error" formulation in
+> **Compatibility note:** Earlier drafts used a complementary "error" formulation in
 > `ISOMORPHISM_THEOREM.md`, where ε_max = 0 meant exact recovery. The current project-wide
 > convention is the role-preservation ratio above, where 1.0 is exact.
 
@@ -104,9 +104,9 @@ In practice, the forward pipeline discards information that cannot be recovered:
 
 These losses explain why role preservation can pass while stricter graph, matrix, or generated-code invariants fail. Treat `ROLE_PRESERVED` as a useful semantic-regression tier and `STRUCTURALLY_ISOMORPHIC` as the strict tier.
 
-## Historical Galois connection framing
+## Galois Connection Framing
 
-The historical theory sketch frames the forward and reverse pipelines as a restricted Galois-style relation between two partially ordered sets:
+The theory sketch frames the forward and reverse pipelines as a restricted Galois-style relation between two partially ordered sets:
 
 - **Programs**, ordered by behavioral refinement (P1 refines P2 if P1 can do everything P2 can do)
 - **Generative models**, ordered by model inclusion (M1 includes M2 if M1's state space contains M2's)
@@ -181,7 +181,7 @@ The forward stages live across `cogant.static`, `cogant.translate`, `cogant.stat
 | Reverse — synthesis planning | `reverse/planner.py` | [`cogant.reverse` → Planner](../api/reverse.md#planner) | planner classes |
 | Reverse — Python package synthesis (`synthesize_package`) | `reverse/synthesizer.py`, `reverse/matrices.py` | [`cogant.reverse` → Synthesizer](../api/reverse.md#synthesizer) | `synthesize_package` |
 | Reverse — runtime-callable closures (`MatrixFunctions`) | `reverse/callable.py` | [`cogant.reverse` → Callable](../api/reverse.md#callable) | `MatrixFunctions` |
-| Roundtrip role-preservation metric and idempotency checks | `reverse/metrics.py`, `reverse/idempotency.py` | [`cogant.reverse` → Metrics](../api/reverse.md#metrics), [`cogant.reverse` → Idempotency](../api/reverse.md#idempotency) | legacy metric helpers plus v0.6 invariant ledger |
+| Roundtrip role-preservation metric and idempotency checks | `reverse/metrics.py`, `reverse/idempotency.py` | [`cogant.reverse` → Metrics](../api/reverse.md#metrics), [`cogant.reverse` → Idempotency](../api/reverse.md#idempotency) | v0.6 invariant ledger plus compatibility helpers |
 | Forward-pipeline orchestration consumed by `cogant roundtrip` | `pipeline/`, `cli/` | [`cogant.gnn` → Runner](../api/gnn.md#runner), [pipelinerunner_api](../api/pipelinerunner_api.md) | pipeline runner |
 
 ## Further reading

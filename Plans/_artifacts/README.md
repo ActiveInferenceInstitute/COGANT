@@ -4,8 +4,8 @@ Command-output snapshots supporting the planning notes in [`..`](..).
 
 These files are intentionally low-ceremony text captures from audits, lint
 checks, cross-reference checks, claim-ledger runs, and sanity probes. They are
-useful for reconstructing why a plan was written, but they are not current
-verification evidence after the worktree changes.
+useful for explaining why a plan was written, but they are not release
+evidence unless the command was run against the current worktree.
 
 ## Use
 

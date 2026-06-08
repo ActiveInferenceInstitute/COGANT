@@ -21,7 +21,6 @@
 
 | Page | Description | Status |
 |------|-------------|--------|
-| [Version 0.1.0-0.5.0 shipped](version_050_shipped.md) | Full arc: v0.1.0 R&D through v0.5.0 plus April 2026 hardening improvements | Shipped |
 | [Version 0.6.x (planned)](version_060_planned.md) | Language breadth (Java, Rust) + streaming scale + type inference | Planned |
 | [Version 1.0.0 (planned)](version_100_planned.md) | Stability, hardening, public API freeze, ecosystem | Planned |
 | [Known limitations](known_limitations_010.md) | What the current hardening snapshot cannot do and planned fixes | Current |
@@ -53,12 +52,11 @@
 
 1. [Overview](overview.md) — start here for the one-page summary and current capability status table.
 2. [Version strategy](version_strategy.md) — semver intent.
-3. [Version 0.1.0-0.5.0 shipped](version_050_shipped.md) — full shipped history.
-4. [Version 0.6.x (planned)](version_060_planned.md) and [Version 1.0.0 (planned)](version_100_planned.md) — forward-looking plans.
-5. [Known limitations](known_limitations_010.md) and [Deprecation policy](deprecation_policy.md) — what is not yet supported and what will break.
+3. [Version 0.6.x (planned)](version_060_planned.md) and [Version 1.0.0 (planned)](version_100_planned.md) — forward-looking plans.
+4. [Known limitations](known_limitations_010.md) and [Deprecation policy](deprecation_policy.md) — what is not yet supported and what will break.
 5. [Performance targets](performance_targets.md) and [Test coverage goals](test_coverage_goals.md) — quality bar.
 6. [Feature backlog](feature_backlog.md) and [Contingencies](contingencies.md) — unscheduled work and risk.
-7. [Changelog](../changelog.md) — shipped history.
+7. [Changelog](../changelog.md) — release notes.
 
 ## Related modules
 

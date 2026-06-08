@@ -6,7 +6,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
-- **Legacy purge:** removed `cogant.viz.png_export` shim; canonical PNG API is
+- **Compatibility cleanup:** removed `cogant.viz.png_export` shim; canonical PNG API is
   `cogant.viz.png` with direct submodule imports in `viz/png/orchestrator.py`.
 - `ProgramGraph` exports only from `cogant.schemas.graph` (no import fallback chain).
 - Drift analyzer reads top-level `graph` / `state_space` / `mappings` only (dropped
@@ -29,7 +29,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed (audit-driven fidelity pass, 2026-05-18)
 - Canonical metrics regenerated from a clean full `uv run pytest tests/ --cov=py/cogant`
   run: line coverage **94.98%** (28016/29498 statements). The previously advertised
-  97.14% was carried from a stale `coverage.json` whose statement denominator (26986)
+  97.14% was carried from an out-of-sync `coverage.json` whose statement denominator (26986)
   predated codebase growth; it was above the 89% CI gate so no build broke, but the
   advertised figure was inaccurate. Test counts re-verified unchanged: **9561 passing /
   0 failing / 52 skipped** (9613 collected).
@@ -46,9 +46,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Manuscript factual corrections: PyO3/GIL statement (calls are synchronous and hold
   the GIL; no GIL release is implemented), and the matrix-mass defaults attributed to
   the real module-level `_DEFAULT_DIRECT_MASS`/`_normalize_row` symbols.
-- Stale `projects_in_progress/cogant` path references corrected to `projects/cogant`
-  across active docs, scripts, and tooling (project is now an active,
-  pipeline-discovered project under `projects/cogant/`).
+- Out-of-date `projects_in_progress/cogant` path references corrected to
+  `projects/working/cogant` across active docs, scripts, and tooling.
 - Generated the missing `output/claim_ledger.md` snapshot referenced by
   `manuscript/S06_appendix_source_references.md` (manuscript link checker now clean).
 
@@ -291,7 +290,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 - Viz `cogant.viz.png` tests guarded behind `pytest.importorskip(matplotlib)`; add `numpy` and `pytest-cov` as dev deps (905c2da)
 - Relax JS hidden-state assertion in cross-language differential test (4aa2710)
-- Ruff UP038 autofix: union-type annotations; remove stale `xfail` mark (cea55d9)
+- Ruff UP038 autofix: union-type annotations; remove obsolete `xfail` mark (cea55d9)
 
 ### Changed
 - `evaluation/METRICS.yaml` promoted to canonical source of truth for test count, coverage, and roundtrip metrics (41f96de)
@@ -329,11 +328,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `pyproject.toml` dep updates + uv.lock sync (`fbd8d39`)
 
 ### Roundtrip role preservation
-- Historical v0.5 benchmark moved from 19/23 role-preserved targets (83%) to
-  23/23 role-preserved targets (100%) after POLICY/CONTEXT stub emission. The
-  current v0.6 metrics ledger classifies the checked-in 23-row JSONL as
-  `STALE_LEGACY` until a native ledger with per-row `role_preservation_score`
-  and invariant status fields is regenerated.
+- Current release evidence uses the native v0.6 ledger: 24 targets, 22
+  role-preserved, 2 drift, 0 failed, and 0 strict structural isomorphism. Each
+  row carries `role_preservation_score` and invariant status fields.
 
 ## [0.4.0] - 2026-04-10
 

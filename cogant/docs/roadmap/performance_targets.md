@@ -1,20 +1,20 @@
 # Performance Targets
 
-Last updated: 2026-05-14 (v0.6 hardening snapshot). Measured values from `evaluation/METRICS.yaml`
+Last updated: 2026-06-06 (v0.6 current status). Measured values from `evaluation/METRICS.yaml`
 and the Flask benchmark (`cogant translate --incremental`).
 
 ---
 
-## Measured Baselines (v0.5.0)
+## Measured Baselines
 
 | Benchmark | Result | Notes |
 |-----------|--------|-------|
 | Flask app — no-change incremental | **19.6× speedup** | Re-uses previous ProgramGraph |
 | Flask app — single-file change | **5.6× speedup** | Only changed paths re-analyzed |
-| Roundtrip ledger classification (23 canonical fixtures) | **23 `STALE_LEGACY` / 0 fresh v0.6 role-preserved rows** | Historical 23/23 role-preservation benchmark retained only as legacy evidence until native v0.6 ledger refresh |
+| Roundtrip ledger classification (24 fixtures/reductions) | **24 ROLE_PRESERVED / 0 DRIFT / 0 non-native rows** | Native v0.6 ledger; strict structural isomorphism remains 0/24 |
 | AII validator score (all fixtures) | **100/100** | |
 | `cogant translate` on 8 real-world repos | all pass | flask, requests, dulwich, etc. |
-| Dulwich edge-density cliff | ~380s / 8.5 GB | At 1.80 e/n ratio — known limitation |
+| Dulwich edge-density stress case | Checked-in fixture: 380.02s / 8510.9 MB; post-fix target: <120s | 1.80 e/n ratio; needs refreshed external fixture before new public timing claim |
 
 Export timing (from `export/AGENTS.md`):
 
@@ -69,17 +69,19 @@ Export timing (from `export/AGENTS.md`):
 
 ---
 
-## Dulwich Scaling Cliff (Known Limitation)
+## Dulwich Edge-Density Stress Case
 
-At ~1.80 edges-per-node (Dulwich repo), the current single-process pipeline hits a cliff:
-~380 seconds elapsed, 8.5 GB peak memory. This is caused by:
+At ~1.80 edges-per-node (Dulwich repo), the checked-in external fixture records
+380.02 seconds elapsed and 8510.9 MB peak memory. Profiling attributed the blow-up to:
 
 1. Markov blanket BFS traversal at high edge density (superlinear traversal cost)
 2. In-memory INHERITS edge deduplication (quadratic on large class hierarchies)
 3. No streaming in the graph construction phase
 
-**Mitigations in v0.5.0:** `--incremental` mode (19.6× speedup on no-change), INHERITS deduplication
-scaling regression tests added.
+**Current evidence boundary:** implementation fixes target <120s and bounded
+package size, but the external fixture must be rerun before replacing the
+checked-in Dulwich timing table. Keep Dulwich-class edge density in the benchmark
+suite as a regression watch item.
 
 **Target fix:** Streaming graph construction + alias analysis reduces e/n ratio (v0.6.x); parallel
 processing reduces wall clock (v1.0).

@@ -43,7 +43,7 @@ manuscript or running the formal proof track.
 
 1. Pick a short, lower-case, underscore-separated slug.
 2. Open with a one-sentence claim and a "Status" line (draft / stable /
-   superseded).
+   inactive).
 3. Put formal definitions and theorem statements in clearly numbered
    blocks so the manuscript can cite them by number.
 4. Add a row to the `## Contents` table in `README.md`.

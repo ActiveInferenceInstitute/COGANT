@@ -87,5 +87,5 @@ Every COGANT bundle can contain identifiers, docstrings, and inline comments lif
 ## Cross-references
 
 - The CLI hub at [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md) and [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md) link to every flag that changes the recorded-output shape, and the stage list in [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md) enumerates the {{STAGE_COUNT}}-stage DAG.
-- The per-release narrative in `../cogant/CHANGELOG.md` documents which default-behaviour changes (for example the POLICY / CONTEXT stub-emission fix discussed in @sec:10-conclusion and `ROUNDTRIP_IMPROVEMENT.md`) could affect a re-run against an older bundle.
+- The per-release narrative in `../cogant/CHANGELOG.md` documents which default-behaviour changes (for example the POLICY / CONTEXT stub-emission fix discussed in @sec:10-conclusion and `ROUNDTRIP_IMPROVEMENT.md`) could affect a re-run against a previously generated bundle.
 - The calibration sweep plan in `../cogant/docs/evaluation/CALIBRATION.md` is the canonical reference for the `TODO(calibration)` markers cited in @sec:10-conclusion; re-running a confidence-threshold sweep requires the 20+ repository gold-standard corpus discussed there.

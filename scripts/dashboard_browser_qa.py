@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
-# Staging root = projects/cogant/ (parent of scripts/). Used to resolve the
+# Project root = projects/working/cogant/ (parent of scripts/). Used to resolve the
 # default dashboard location the same way ``batch_dashboard.py`` does, so this
 # script can run as a zero-argument analysis step under stage-04.
 _STAGING_ROOT = Path(__file__).resolve().parent.parent

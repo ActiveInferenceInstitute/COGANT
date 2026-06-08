@@ -16,8 +16,8 @@ user-facing change large enough to invalidate the existing walkthroughs.
 
 | File | Purpose | Update trigger |
 |------|---------|----------------|
-| `README.md` | TOC, recommended reading order, status of legacy files | When a tutorial is added, renumbered, or deprecated |
-| `AGENTS.md` | This file — maintenance rules | When the numbering policy, the legacy-file policy, or ownership changes |
+| `README.md` | TOC, recommended reading order, status of stable example files | When a tutorial is added, renumbered, or deprecated |
+| `AGENTS.md` | This file — maintenance rules | When the numbering policy, stable-example policy, or ownership changes |
 | `01_quickstart.md` | Install + first scan on a tiny sample | When install or first-scan flow changes |
 | `02_small_repo_walkthrough.md` | Every pipeline stage on a small Python repo | When the pipeline stage list or stage outputs change |
 | `03_flask_walkthrough.md` | COGANT against a real-world Flask application | When the Flask fixture or CLI flags for the run change |
@@ -25,10 +25,10 @@ user-facing change large enough to invalidate the existing walkthroughs.
 | `05_gnn_interpretation.md` | Reading, debugging, and visualizing a generated GNN | When the GNN schema or visualization helpers change |
 | `06_reverse_mode.md` | Synthesizing runnable code from a GNN markdown file | When the reverse-mode CLI or synthesis API changes |
 | `07_plugin_authoring.md` | Building a parser/rule/validator/exporter plugin | When the plugin contracts change |
-| `calculator.md` | **Legacy.** Tiny calculator example referenced by other tutorials | Kept stable for inbound links; see "Legacy files" below |
-| `flask.md` | **Legacy.** Auxiliary Flask example sources and notes | Kept stable for inbound links; see "Legacy files" below |
+| `calculator.md` | Tiny calculator example referenced by other tutorials | Kept stable for inbound links; see "Stable example files" below |
+| `flask.md` | Auxiliary Flask example sources and notes | Kept stable for inbound links; see "Stable example files" below |
 
-## Legacy files
+## Stable Example Files
 
 `calculator.md` and `flask.md` predate the `NN_slug.md` numbering scheme.
 They are not formal tutorials — they are worked examples that some of

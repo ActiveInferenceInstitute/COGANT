@@ -60,7 +60,7 @@ The full Python API and CLI walkthrough live in [Quick Start](getting-started/qu
 ## Where to go next
 
 - **[Documentation modules](reference/documentation_modules.md)** — map of every `docs/<module>/` area (API, architecture, evaluation, export, and others).
-- **[Evaluation index](evaluation/README.md)** — R&D reports, dated gate log ([R&D log](evaluation/R&D_LOG.md)), calibration and roundtrip studies. Machine-readable corpora and dashboards live in the `evaluation/` directory at the repository root (sibling of `docs/`; not shipped in the installable wheel).
+- **[Evaluation index](evaluation/README.md)** — current readiness, roundtrip, calibration, and empirical-evidence pages. Machine-readable corpora and dashboards live in the `evaluation/` directory at the repository root (sibling of `docs/`; not shipped in the installable wheel).
 - **[Small repo walkthrough](tutorials/calculator.md)** — step through the `calculator` fixture: 6 mappings, 12 nodes, one clean Markov blanket.
 - **[Flask app walkthrough](tutorials/flask.md)** — a 98-node / 597-edge real-world example with role counts and GNN output excerpts.
 - **[Active Inference mapping](theory/active_inference.md)** — the 22 translation rules and the seven **Active Inference** `MappingKind` labels counted in `METRICS.yaml` (HIDDEN_STATE, OBSERVATION, ACTION, POLICY, PREFERENCE, CONSTRAINT, CONTEXT). `SemanticRole` and rule outputs also use values such as PARAMETER separately; see the mapping page.

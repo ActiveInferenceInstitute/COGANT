@@ -6,4 +6,4 @@ From the repository root:
 uv sync --all-extras
 ```
 
-Or: `pip install -e ".[dev,viz]"`. Package root: `py/cogant/`. See also `py/requirements.txt` (legacy optional pins).
+Or: `pip install -e ".[dev,viz]"`. Package root: `py/cogant/`. See also `py/requirements.txt` for optional pins.

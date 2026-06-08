@@ -5,14 +5,12 @@ Runs ``verify_repo_roundtrip`` (forward → reverse → forward) on every
 locally-available evaluation fixture (``examples/{zoo,control_positive,
 real_world}/``) and writes a **native v0.6** ledger carrying
 ``roundtrip_status``, ``role_preservation_score``, per-role multiset counts,
-graph size, file/LOC, and the scaffolding diagnostic inputs — replacing the
-retained legacy v0.5 ε-corpus rows (which ``regenerate_metrics.py`` tags
-``STALE_LEGACY``).
+graph size, file/LOC, and the scaffolding diagnostic inputs.
 
 Each row is self-classifying for ``tools/regenerate_metrics.py`` /
 ``tools/check_metrics_fresh.py``: because it carries an explicit
-``roundtrip_status``, those tools route it through the native path rather than
-the legacy ε proxy, so ``METRICS.yaml`` reports real fresh-v0.6 counts.
+``roundtrip_status``, those tools route it through the native path, so
+``METRICS.yaml`` reports native v0.6 counts.
 
 Run from the inner package env so ``cogant`` imports resolve::
 
@@ -37,7 +35,7 @@ _REPO_ROOT = _TOOLS.parent
 _PKG_ROOT = _REPO_ROOT / "cogant"
 if (_PKG_ROOT / "py" / "cogant" / "__init__.py").exists():
     sys.path.insert(0, str(_PKG_ROOT / "py"))
-else:  # vendored under projects/cogant/ — fall back to a sibling layout
+else:  # linked under projects/working/cogant/ — fall back to a sibling layout
     sys.path.insert(0, str(_REPO_ROOT / "py"))
 
 from cogant.reverse.idempotency import (  # noqa: E402

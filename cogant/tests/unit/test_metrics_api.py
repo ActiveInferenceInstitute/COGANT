@@ -50,7 +50,7 @@ def test_role_preserved_count_is_current_fresh_verdict_count() -> None:
     assert count >= 0
     roundtrip = m.load()["evaluation"]["roundtrip"]
     assert count == roundtrip["role_preserved_count"]
-    assert count + roundtrip["stale_legacy_count"] <= m.total_targets()
+    assert count + roundtrip["non_native_count"] <= m.total_targets()
 
 
 def test_isomorphic_count_is_strict_count() -> None:
@@ -59,9 +59,11 @@ def test_isomorphic_count_is_strict_count() -> None:
     assert count == m.strict_isomorphism_count()
 
 
-def test_total_targets_is_23() -> None:
-    """Dataset has 23 known targets."""
-    assert m.total_targets() == 23
+def test_total_targets_matches_per_target_rows() -> None:
+    """Total target count is derived from the current native ledger."""
+    roundtrip = m.load()["evaluation"]["roundtrip"]
+    assert m.total_targets() == roundtrip["total_targets"]
+    assert m.total_targets() == len(roundtrip["per_target"])
 
 
 def test_isomorphic_count_leq_total() -> None:
@@ -75,7 +77,7 @@ def test_mean_epsilon_in_range() -> None:
 
 
 def test_epsilon_for_known_role_preserved_target_returns_1() -> None:
-    """01_simple_state has legacy epsilon == 1.0 (role-preserved tier)."""
+    """01_simple_state has epsilon proxy == 1.0 (role-preserved tier)."""
     result = m.epsilon_for("01_simple_state")
     assert result is not None
     assert result == 1.0
@@ -86,9 +88,9 @@ def test_epsilon_for_unknown_target_returns_none() -> None:
     assert result is None
 
 
-def test_epsilon_for_requests_target_is_role_preserved() -> None:
-    """requests is role-preserved after the POLICY/CONTEXT synthesizer fix synthesizer fix (epsilon = 1.0)."""
-    result = m.epsilon_for("requests")
+def test_epsilon_for_requests_lib_target_is_role_preserved() -> None:
+    """requests_lib is role-preserved in the native v0.6 roundtrip ledger."""
+    result = m.epsilon_for("requests_lib")
     assert result is not None
     assert result >= 0.8  # role-preserved threshold
 

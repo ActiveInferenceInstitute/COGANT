@@ -1,6 +1,6 @@
 """JavaScript language parser plugin backed by tree-sitter.
 
-Unlike the legacy regex-based ``TypeScriptLanguageParser`` (which still
+Unlike the compatibility regex-based ``TypeScriptLanguageParser`` (which still
 covers both JS and TS), this plugin delegates to the shared
 ``cogant.parsers.tree_sitter_base.TreeSitterParser`` so it can produce
 proper AST-based symbol tables with nested-scope qualified names.
@@ -8,7 +8,7 @@ proper AST-based symbol tables with nested-scope qualified names.
 If the ``tree-sitter`` runtime or the ``tree_sitter_javascript`` grammar
 aren't installed, the plugin falls back to an empty result with a
 descriptive error message — callers can check ``result["error"]`` to
-detect the degraded mode and optionally route through the legacy regex
+detect the degraded mode and optionally route through the compatibility regex
 parser.
 """
 

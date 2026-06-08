@@ -45,7 +45,7 @@ cogant scan ./my_repo --format json
 **Options:**
 - `--format, -f`: Output format: `table` (default) or `json`
 
-**Table columns:** ingest file count, Python modules parsed, symbol summary (the static stage uses module lists rather than legacy empty AST `nodes`/`edges` placeholders).
+**Table columns:** ingest file count, Python modules parsed, symbol summary (the static stage uses module lists rather than empty AST `nodes`/`edges` placeholders).
 
 ### extract-static
 
@@ -277,7 +277,7 @@ cogant validate output/gnn_package/            # directory that *is* a package
 
 ### diff
 
-Compare two bundles or output directories and report drift. When both arguments are directories containing COGANT output (with `program_graph.json`, `semantic_mappings.json`, and/or `model.gnn.json`), the full [`cogant.cli.diff.diff_command`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/cli/diff.py) is invoked: it runs `DriftAnalyzer` and `CodebaseMetrics` and prints / writes a full markdown drift report. When both arguments are bundle JSON files, a lightweight shallow diff is shown (legacy behavior).
+Compare two bundles or output directories and report drift. When both arguments are directories containing COGANT output (with `program_graph.json`, `semantic_mappings.json`, and/or `model.gnn.json`), the full [`cogant.cli.diff.diff_command`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/cli/diff.py) is invoked: it runs `DriftAnalyzer` and `CodebaseMetrics` and prints / writes a full markdown drift report. When both arguments are bundle JSON files, a lightweight shallow diff is shown.
 
 ```bash
 cogant diff <path_a> <path_b>

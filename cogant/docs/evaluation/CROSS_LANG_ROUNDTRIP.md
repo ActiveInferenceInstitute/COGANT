@@ -99,10 +99,9 @@ tier               = ROLE_PRESERVED (s_role = 1.0 — every original role preser
 > `|roles_preserved| / |roles_original|`, where `s_role = 1.0` means every
 > original role population survived and `s_role >= 0.5` is ROLE_PRESERVED.
 > Historical benchmark notes sometimes used a stricter high-confidence `0.8`
-> line for analysis. Current v0.6
-> release metrics classify the checked-in 23-row ledger as `STALE_LEGACY` until
-> a native ledger is regenerated with per-row `role_preservation_score` and
-> invariant status fields. Strict structural isomorphism is tracked separately.
+> line for analysis. Current v0.6 release metrics use a native 24-target Python
+> fixture ledger with per-row `role_preservation_score` and invariant status
+> fields; strict structural isomorphism is tracked separately.
 
 
 The reverse pipeline synthesises a Python package with the standard

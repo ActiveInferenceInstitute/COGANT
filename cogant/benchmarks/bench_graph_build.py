@@ -11,7 +11,7 @@ Measures the time to build a realistic graph of ``N_NODES`` nodes and
 
 Run directly:
 
-    cd projects/cogant/cogant
+    cd projects/working/cogant/cogant
     uv run python benchmarks/bench_graph_build.py
 
 The benchmark prints per-backend wall times and the Rust speedup factor.
@@ -88,7 +88,6 @@ def bench_rust_raw() -> tuple[float, int, int]:
     """Time the Rust core without the Python shadow store / ID resolver."""
     from cogant._rust import PyProgramGraph
 
-    rng = random.Random(SEED)
     g = PyProgramGraph()
     start = time.perf_counter()
 

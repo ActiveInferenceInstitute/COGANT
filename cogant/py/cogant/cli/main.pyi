@@ -4,6 +4,12 @@ from typing import Any
 console: Any
 app: Any
 
+_apply_upstream_pipeline_flags: Any
+_friendly_pipeline_error: Any
+_parse_step_csv: Any
+_render_upstream_pipeline_table: Any
+_run_pipeline_with_progress: Any
+
 def init(
     path: str = ..., quiet: bool = ..., check_env: bool = ..., run: bool = ..., yes: bool = ...
 ) -> None: ...

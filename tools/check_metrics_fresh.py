@@ -12,7 +12,7 @@
    HEAD and no *metric-affecting source* (package code, tests, fixtures,
    roundtrip dataset, ``cogant/pyproject.toml``) changed in between. A literal
    ``generator_git_sha == HEAD`` is unsatisfiable on a committed tip — the
-   commit that records the sha advances HEAD past it — so freshness is judged
+   commit that records the sha advances HEAD beyond it — so freshness is judged
    against source changes, not exact-equality. By default the script also
    warns when the worktree is dirty; ``--fail-on-dirty`` turns *metric-affecting*
    uncommitted source into a hard failure for release/CI gates.
@@ -26,7 +26,7 @@
    ``role_preservation_score`` fields) and the data file is subsequently
    stripped to v0.5 ε-bucket rows — leaving METRICS.yaml asserting
    ``role_preserved_count: N`` or ``mean_role_preservation_score: 1.0``
-   while the current regen would tag every row as ``STALE_LEGACY`` and leave
+   while the current regen would tag every row as ``NON_NATIVE`` and leave
    native aggregate score fields null.
 
 Anything NOT checked here (ruff, mypy, test counts, ablation deltas) is
@@ -76,8 +76,8 @@ COVERAGE_TOLERANCE = 0.1
 
 
 def _fail(msg: str) -> None:
-    """Print a helpful stale-metrics message to stderr and exit 1."""
-    print("METRICS.yaml is STALE:", file=sys.stderr)
+    """Print a helpful out-of-sync metrics message to stderr and exit 1."""
+    print("METRICS.yaml is OUT OF SYNC:", file=sys.stderr)
     print(f"  {msg}", file=sys.stderr)
     print("", file=sys.stderr)
     print("Fix by regenerating and committing:", file=sys.stderr)
@@ -184,7 +184,7 @@ _METRICS_SOURCE_FILES = ("cogant/pyproject.toml",)
 
 def _path_is_metrics_source(path: str) -> bool:
     p = path.strip().strip('"')
-    # porcelain rename lines look like ``old -> new``; judge the destination.
+    # porcelain rename lines look like ``source -> destination``; judge the destination.
     if " -> " in p:
         p = p.split(" -> ", 1)[1]
     return p.startswith(_METRICS_SOURCE_PREFIXES) or p in _METRICS_SOURCE_FILES
@@ -235,7 +235,7 @@ def check_coverage_percent(metrics: dict) -> None:
 
 
 def check_git_sha(metrics: dict, *, fail_on_dirty: bool = False) -> None:
-    """Verify METRICS.yaml is not stale relative to *metric-affecting source*.
+    """Verify METRICS.yaml is in sync with *metric-affecting source*.
 
     ``generator_git_sha`` records HEAD at regeneration time. Because committing
     the regenerated METRICS.yaml necessarily advances HEAD, a literal
@@ -290,6 +290,11 @@ def check_git_sha(metrics: dict, *, fail_on_dirty: bool = False) -> None:
 
 
 _JSONL_PATH = COGANT_DIR / "evaluation" / "dataset" / "roundtrip_results.jsonl"
+_ROLE_COUNT_KEYS = (
+    "orig_n_hidden",
+    "orig_n_obs",
+    "orig_n_actions",
+)
 
 
 def _classify_row(entry: dict) -> str:
@@ -303,7 +308,7 @@ def _classify_row(entry: dict) -> str:
     if status:
         return str(status)
     if "role_preservation_score" not in entry:
-        return "STALE_LEGACY"
+        return "NON_NATIVE"
     tier = str(entry.get("tier") or "").upper()
     if tier == "ISOMORPHIC":
         return "ROLE_PRESERVED"
@@ -317,7 +322,7 @@ def _score_source(entry: dict) -> str:
     if "role_preservation_score" in entry:
         return "v0.6_native"
     if "epsilon" in entry or "role_match_score" in entry:
-        return "legacy_epsilon_proxy"
+        return "epsilon_proxy"
     return "empty"
 
 
@@ -325,11 +330,31 @@ def _aggregate_score_source(rows: list[dict]) -> str:
     sources = {_score_source(row) for row in rows}
     if not rows or sources == {"empty"}:
         return "empty"
-    if sources <= {"legacy_epsilon_proxy", "empty"}:
-        return "legacy_epsilon_proxy"
+    if sources <= {"epsilon_proxy", "empty"}:
+        return "epsilon_proxy"
     if "v0.6_native" in sources and sources - {"v0.6_native", "empty"}:
         return "mixed"
     return "v0.6_native"
+
+
+def _source_role_total(row: dict) -> int:
+    return sum(int(row.get(key) or 0) for key in _ROLE_COUNT_KEYS)
+
+
+def _check_control_positive_rows_are_role_bearing(rows: list[dict]) -> list[str]:
+    defects: list[str] = []
+    for row in rows:
+        if row.get("fixture_group") != "control_positive" and row.get("group") != "control_positive":
+            continue
+        if _classify_row(row) in {"FAILED", "NON_NATIVE"}:
+            continue
+        if _source_role_total(row) == 0:
+            repo = row.get("repo", "<unknown>")
+            defects.append(
+                f"  control_positive/{repo}: source role count is zero; "
+                "this fixture cannot support a role-preservation claim"
+            )
+    return defects
 
 
 def check_roundtrip_status_distribution(metrics: dict) -> None:
@@ -369,7 +394,7 @@ def check_roundtrip_status_distribution(metrics: dict) -> None:
         "strict_isomorphism_count": sum(1 for s in statuses if s == "STRUCTURALLY_ISOMORPHIC"),
         "drift_count": sum(1 for s in statuses if s == "DRIFT"),
         "failed_count": sum(1 for s in statuses if s == "FAILED"),
-        "stale_legacy_count": sum(1 for s in statuses if s == "STALE_LEGACY"),
+        "non_native_count": sum(1 for s in statuses if s == "NON_NATIVE"),
         "role_preservation_score_source": _aggregate_score_source(rows),
     }
     native_scores = [float(row["role_preservation_score"]) for row in rows if "role_preservation_score" in row]
@@ -388,8 +413,9 @@ def check_roundtrip_status_distribution(metrics: dict) -> None:
             "min_role_preservation_score": min(native_scores),
             "max_role_preservation_score": max(native_scores),
         }
+    corpus_defects = _check_control_positive_rows_are_role_bearing(rows)
     roundtrip = (metrics.get("evaluation") or {}).get("roundtrip") or {}
-    drifts: list[str] = []
+    drifts: list[str] = list(corpus_defects)
     for key, want in expected.items():
         got = roundtrip.get(key)
         if got is None:

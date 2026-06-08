@@ -6,7 +6,7 @@ structural pass also verifies dataclass-field parity and top-level helper
 signature parity for API modules whose stubs are part of the public contract.
 Explicit file arguments opt those files into the structural checks too, which
 keeps the audit useful for focused regression tests without turning every
-legacy stub into a migration blocker.
+compatibility stub into a migration blocker.
 """
 
 from __future__ import annotations

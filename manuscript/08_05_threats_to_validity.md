@@ -200,8 +200,8 @@ control-positive, real-world reductions) and records each target's
 `roundtrip_status`, native `role_preservation_score` (the per-role mean of
 $\min/\max$ multiset similarity), per-role multiset counts, graph size, and
 file/LOC. Because every row carries an explicit `roundtrip_status`,
-`tools/regenerate_metrics.py:_status()` routes it through the native path
-(not the legacy ε proxy), and `tools/check_metrics_fresh.py` re-derives the
+`tools/regenerate_metrics.py:_status()` routes it through the native path,
+and `tools/check_metrics_fresh.py` re-derives the
 count distribution from the same rows as an anti-laundering gate. METRICS.yaml
 reports `role_preservation_score_source: {{ROLE_PRESERVATION_SCORE_SOURCE}}`
 with native mean/median **{{MEAN_ROLE_PRESERVATION_SCORE}}** /

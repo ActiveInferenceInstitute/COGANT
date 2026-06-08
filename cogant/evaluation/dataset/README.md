@@ -185,8 +185,8 @@ print(len(bundle["nodes"]), len(bundle["instance"]["edges"]))
 ## Reproducibility
 
 ```bash
-cd projects_in_progress/cogant
-python evaluation/dataset/generate_dataset.py
+cd projects/working/cogant/cogant
+uv run python evaluation/dataset/generate_dataset.py
 ```
 
 The generator is fully deterministic: no RNG seeds, no wall-clock timestamps
@@ -220,13 +220,13 @@ If you use this dataset please cite the COGANT manuscript:
 - **Small corpus (6 repos)**: suitable for few-shot / transfer-learning
   studies and for unit-testing downstream models, but too small for
   high-variance training of deep GNNs from scratch. Extension to the full
-  20-repo COGANT benchmark corpus is planned for v0.2.
+  benchmark corpus requires a new generator scope decision and validation run.
 - **Label skew**: `ACTION` and `OBSERVATION` dominate the non-`UNMAPPED`
   rows; `CONSTRAINT` has only 2 instances. Report per-class precision /
   recall, never only macro accuracy.
 - **Feature columns**: `has_type_annotation` and `is_async` are reserved
-  fields that are always `false` in v0.1; they will be populated by the
-  richer `PythonASTParser` pass planned for v0.2.
+  fields that are always `false` in v0.1; do not treat them as measured
+  parser capabilities in this dataset snapshot.
 
 ## License
 

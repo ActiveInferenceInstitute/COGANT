@@ -99,7 +99,7 @@ should hit the ingest → static → graph re-parse path.
 
 ## Reproduction
 
-From `projects_in_progress/cogant/cogant/`:
+From the inner package root (`cogant/`):
 
 ```bash
 # CLI smoke (note: includes Python + typer startup ≈ 0.3 s)

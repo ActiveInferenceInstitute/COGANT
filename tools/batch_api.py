@@ -3,7 +3,7 @@
 ``run_all.py`` historically used this script before several CLI commands
 shared package-level implementations. The implementations now live in
 ``cogant.api.analysis_commands`` and the public CLI calls those same APIs.
-This wrapper preserves the old subprocess contract for existing batch configs.
+This wrapper preserves the subprocess contract for existing batch configs.
 """
 
 from __future__ import annotations

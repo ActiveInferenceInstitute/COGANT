@@ -21,13 +21,10 @@ ruled out. Owned by whoever is driving the current release train.
 | `AGENTS.md` | This file — maintenance rules | When grouping, ownership, or the append-only changelog policy changes |
 | `overview.md` | One-page roadmap summary | At every release train kickoff |
 | `version_strategy.md` | Semver intent and version bucket definitions | When semver policy changes |
-| `version_010_current.md` | Shipped capabilities of the 0.1.x line (retained for historical diff) | Only when a historical correction is needed |
-| `version_020_planned.md` | 0.2.x plan (superseded once a version is shipped) | When 0.2.x scope changes |
-| `version_030_planned.md` | 0.3.x plan (superseded once a version is shipped) | When 0.3.x scope changes |
-| `version_050_shipped.md` | Full arc v0.1.0 → v0.5.0 plus April 2026 hardening history | After each shipped release that extends the shipped arc |
+| `version_010_current.md` | Link-stable status page for early-version capability notes | Only when factual corrections are needed |
 | `version_060_planned.md` | 0.6.x plan (language breadth, streaming, type inference) | When 0.6.x scope changes |
 | `version_100_planned.md` | 1.0.0 stability / hardening / public API freeze | When 1.0 scope changes |
-| `known_limitations_010.md` | Known limitations of the **current release** (filename retained for link stability; content tracks the latest shipped version) | Whenever a new limitation is discovered or an old one is fixed |
+| `known_limitations_010.md` | Known limitations of the **current release** (filename retained for link stability; content tracks the latest shipped version) | Whenever a new limitation is discovered or fixed |
 | `deprecation_policy.md` | Breaking-change announcement and staging policy | When the policy changes |
 | `performance_targets.md` | Wall-clock and memory targets | When targets are renegotiated |
 | `test_coverage_goals.md` | Per-component coverage goals | When coverage targets are renegotiated |
@@ -40,7 +37,7 @@ ruled out. Owned by whoever is driving the current release train.
 | `budget_resources.md` | Development time and resource estimates | When estimates change materially |
 | `contingencies.md` | Slip and scope-cut fallbacks | When a contingency is triggered or added |
 | `related_work.md` | Adjacent tools and research tracked for comparison | When a new comparable tool ships |
-| `changelog.md` | Stub linking to [`../changelog.md`](../changelog.md); keeps legacy URLs working | Only if the stub workflow text changes |
+| `changelog.md` | Stub linking to [`../changelog.md`](../changelog.md); keeps compatibility URLs working | Only if the stub workflow text changes |
 | `see_also.md` | Cross-links to related modules | When link targets move |
 
 ## Changelog
@@ -70,11 +67,8 @@ cp CHANGELOG.md docs/changelog.md
   Sync `docs/changelog.md` from the root `CHANGELOG.md` in the same commit.
 - The version-plan files use two suffixes: `_current.md` (the version whose
   content is still authoritative for "what is shipping now"), `_planned.md`
-  (a plan that has not yet shipped), and `_shipped.md` (historical
-  arc, kept append-only). When a version ships, its `_planned.md` content is
-  folded into `version_050_shipped.md` (or the current canonical shipped
-  file) rather than renamed in place, and the README's "Version plans"
-  table is updated in the same commit.
-- `known_limitations_010.md` deliberately keeps its legacy `_010` suffix
-  to avoid breaking inbound links; the content inside always tracks the
-  latest shipped release, not 0.1.0.
+  (a plan that has not yet shipped), and `_shipped.md` (release-arc notes
+  retained for link stability). When a version ships, update the current
+  roadmap pages and the README's "Version plans" table in the same commit.
+- `known_limitations_010.md` keeps its `_010` suffix for link stability; the
+  content inside always tracks the latest shipped release, not 0.1.0.

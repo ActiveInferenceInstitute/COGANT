@@ -21,6 +21,27 @@ from typing import Any
 STAGING_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CONFIG_PATH = STAGING_ROOT / "run_all.json"
 
+
+@dataclass(frozen=True)
+class RunBatchOptions:
+    """Programmatic options for :func:`run_batch` (no argparse re-parse)."""
+
+    config: Path | None = None
+    dry_run: bool = False
+    fail_fast: bool = False
+    log: Path | None = None
+    targets: str | None = None
+
+    @classmethod
+    def from_namespace(cls, args: argparse.Namespace) -> RunBatchOptions:
+        return cls(
+            config=getattr(args, "config", None),
+            dry_run=bool(getattr(args, "dry_run", False)),
+            fail_fast=bool(getattr(args, "fail_fast", False)),
+            log=getattr(args, "log", None),
+            targets=getattr(args, "targets", None),
+        )
+
 DEFAULT_CONFIG: dict[str, Any] = {
     "package_root": "cogant",
     "output_root": "cogant/output",
@@ -483,26 +504,12 @@ def _write_cross_target_summary(
 
 
 
-def run_batch(args: argparse.Namespace) -> int:
-    parser = argparse.ArgumentParser(description="Run COGANT pipeline + GNN outputs.")
-    parser.add_argument("--config", type=Path, default=None)
-    parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--fail-fast", action="store_true")
-    parser.add_argument("--log", type=Path, default=None)
-    parser.add_argument("--print-default-config", action="store_true")
-    parser.add_argument(
-        "--targets",
-        type=str,
-        default=None,
-        help="Comma-separated target ids to run (subset of the config). Default: all.",
-    )
-    args = parser.parse_args()
+def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
+    """Run the configured batch corpus. Accepts :class:`RunBatchOptions` or argparse namespace."""
+    if isinstance(options, argparse.Namespace):
+        options = RunBatchOptions.from_namespace(options)
 
-    if args.print_default_config:
-        print(json.dumps(DEFAULT_CONFIG, indent=2))
-        return 0
-
-    cfg = load_config(args.config)
+    cfg = load_config(options.config)
     package_root = (STAGING_ROOT / Path(cfg["package_root"])).resolve()
     if not (package_root / "pyproject.toml").is_file():
         print(f"error: package_root {package_root} has no pyproject.toml", file=sys.stderr)
@@ -513,8 +520,8 @@ def run_batch(args: argparse.Namespace) -> int:
     manuscript = cfg.get("manuscript") or {}
     remote_cfg = cfg.get("remote") or {}
 
-    if args.targets:
-        wanted = {s.strip() for s in args.targets.split(",") if s.strip()}
+    if options.targets:
+        wanted = {s.strip() for s in options.targets.split(",") if s.strip()}
         cfg["targets"] = [t for t in cfg["targets"] if t.get("id") in wanted]
         if not cfg["targets"]:
             print(
@@ -523,8 +530,8 @@ def run_batch(args: argparse.Namespace) -> int:
             )
             return 2
 
-    if args.log:
-        log_path = Path(args.log).expanduser()
+    if options.log:
+        log_path = Path(options.log).expanduser()
         if log_path.parent != Path("."):
             log_path.parent.mkdir(parents=True, exist_ok=True)
         log_fp: Any = open(log_path, "a", encoding="utf-8")
@@ -537,7 +544,7 @@ def run_batch(args: argparse.Namespace) -> int:
             "staging_root": str(STAGING_ROOT),
             "package_root": str(package_root),
             "output_root": str(output_root),
-            "dry_run": args.dry_run,
+            "dry_run": options.dry_run,
             "targets": [],
         }
         batch_start = time.monotonic()
@@ -548,7 +555,7 @@ def run_batch(args: argparse.Namespace) -> int:
             if code != 0:
                 report(f"warning: {label} exited {code}", log_fp=log_fp)
                 failures.append(label)
-                if args.fail_fast:
+                if options.fail_fast:
                     return code
             return 0
 
@@ -566,7 +573,7 @@ def run_batch(args: argparse.Namespace) -> int:
             result = run_cmd(
                 margv,
                 cwd=template_root,
-                dry_run=args.dry_run,
+                dry_run=options.dry_run,
                 log_fp=log_fp,
                 step="manuscript_variables",
             )
@@ -577,7 +584,7 @@ def run_batch(args: argparse.Namespace) -> int:
             result = run_cmd(
                 ["uv", "run", "cogant", "doctor"],
                 cwd=package_root,
-                dry_run=args.dry_run,
+                dry_run=options.dry_run,
                 log_fp=log_fp,
                 step="doctor",
             )
@@ -613,7 +620,7 @@ def run_batch(args: argparse.Namespace) -> int:
                     f"error: target {tid!r} needs either path or git_url",
                     file=sys.stderr,
                 )
-                if args.fail_fast:
+                if options.fail_fast:
                     return 2
                 continue
 
@@ -632,7 +639,7 @@ def run_batch(args: argparse.Namespace) -> int:
                     dest=src,
                     shallow=bool(remote_cfg.get("shallow_clone", True)),
                     refresh=bool(remote_cfg.get("refresh", False)),
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     log_fp=log_fp,
                 )
                 entry["commands"].append(
@@ -641,9 +648,9 @@ def run_batch(args: argparse.Namespace) -> int:
                 if rc := check(result, f"git_clone:{tid}"):
                     return rc
 
-            if not args.dry_run and not target_path.exists():
+            if not options.dry_run and not target_path.exists():
                 print(f"error: missing target path {target_path}", file=sys.stderr)
-                if args.fail_fast:
+                if options.fail_fast:
                     return 2
                 continue
 
@@ -680,7 +687,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 result = run_cmd(
                     tr,
                     cwd=package_root,
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     log_fp=log_fp,
                     step=f"translate:{tid}",
                 )
@@ -691,7 +698,7 @@ def run_batch(args: argparse.Namespace) -> int:
                     return rc
                 # Re-resolve after translate so downstream gates see the real path.
                 bundle_json = _bundle_path()
-                if not args.dry_run and not bundle_json.is_file():
+                if not options.dry_run and not bundle_json.is_file():
                     print(
                         f"warning: no bundle at {bundle_json} after translate",
                         file=sys.stderr,
@@ -702,7 +709,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 result = run_cmd_capture(
                     scan_cmd,
                     cwd=package_root,
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     out_path=run_dir / "scan.json",
                     log_fp=log_fp,
                     step=f"scan:{tid}",
@@ -718,7 +725,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 result = run_cmd_capture(
                     graph_cmd,
                     cwd=package_root,
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     out_path=run_dir / "graph.txt",
                     log_fp=log_fp,
                     step=f"graph:{tid}",
@@ -729,7 +736,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 if rc := check(result, f"graph:{tid}"):
                     return rc
 
-            if steps.get("export_gnn") and (args.dry_run or bundle_json.is_file()):
+            if steps.get("export_gnn") and (options.dry_run or bundle_json.is_file()):
                 eg_dir = run_dir / "export_gnn"
                 fmt = str(steps.get("export_gnn_format") or "all")
                 ex = [
@@ -746,7 +753,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 result = run_cmd(
                     ex,
                     cwd=package_root,
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     log_fp=log_fp,
                     step=f"export_gnn:{tid}",
                 )
@@ -756,7 +763,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 if rc := check(result, f"export-gnn:{tid}"):
                     return rc
 
-            if steps.get("render_site") and (args.dry_run or bundle_json.is_file()):
+            if steps.get("render_site") and (options.dry_run or bundle_json.is_file()):
                 site_dir = run_dir / "site"
                 rv = [
                     "uv",
@@ -768,7 +775,7 @@ def run_batch(args: argparse.Namespace) -> int:
                     str(site_dir),
                 ]
                 result = run_cmd(
-                    rv, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"render:{tid}"
+                    rv, cwd=package_root, dry_run=options.dry_run, log_fp=log_fp, step=f"render:{tid}"
                 )
                 entry["commands"].append(
                     command_record(rv, step=f"render:{tid}", result=result)
@@ -776,10 +783,10 @@ def run_batch(args: argparse.Namespace) -> int:
                 if rc := check(result, f"render:{tid}"):
                     return rc
 
-            if steps.get("viz_png") and (args.dry_run or run_dir.is_dir()):
+            if steps.get("viz_png") and (options.dry_run or run_dir.is_dir()):
                 vz = ["uv", "run", "cogant", "viz", str(run_dir)]
                 result = run_cmd(
-                    vz, cwd=package_root, dry_run=args.dry_run, log_fp=log_fp, step=f"viz:{tid}"
+                    vz, cwd=package_root, dry_run=options.dry_run, log_fp=log_fp, step=f"viz:{tid}"
                 )
                 entry["commands"].append(
                     command_record(vz, step=f"viz:{tid}", result=result)
@@ -787,14 +794,14 @@ def run_batch(args: argparse.Namespace) -> int:
                 if rc := check(result, f"viz:{tid}"):
                     return rc
 
-            if steps.get("validate_run_dir") and (args.dry_run or run_dir.is_dir()):
+            if steps.get("validate_run_dir") and (options.dry_run or run_dir.is_dir()):
                 val = ["uv", "run", "cogant", "validate", str(run_dir)]
                 if steps.get("validate_no_upstream_gnn"):
                     val.append("--no-upstream-gnn")
                 result = run_cmd_capture(
                     val,
                     cwd=package_root,
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     out_path=run_dir / "validate.txt",
                     log_fp=log_fp,
                     step=f"validate:{tid}",
@@ -820,7 +827,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 result = run_cmd_capture(
                     ex,
                     cwd=package_root,
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     out_path=run_dir / "explain.json",
                     log_fp=log_fp,
                     step=f"explain:{tid}",
@@ -831,9 +838,9 @@ def run_batch(args: argparse.Namespace) -> int:
                 if rc := check(result, f"explain:{tid}"):
                     return rc
 
-            if steps.get("roundtrip") and (args.dry_run or target_path.exists()):
+            if steps.get("roundtrip") and (options.dry_run or target_path.exists()):
                 rt_dir = run_dir / "roundtrip"
-                if not args.dry_run:
+                if not options.dry_run:
                     rt_dir.mkdir(parents=True, exist_ok=True)
                 rt = [
                     "uv",
@@ -851,7 +858,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 result = run_cmd(
                     rt,
                     cwd=package_root,
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     log_fp=log_fp,
                     step=f"roundtrip:{tid}",
                 )
@@ -863,7 +870,7 @@ def run_batch(args: argparse.Namespace) -> int:
 
             batch_api = STAGING_ROOT / "tools" / "batch_api.py"
 
-            if steps.get("analyze_graph") and (args.dry_run or target_path.exists()):
+            if steps.get("analyze_graph") and (options.dry_run or target_path.exists()):
                 ag = [
                     "uv",
                     "run",
@@ -878,7 +885,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 result = run_cmd(
                     ag,
                     cwd=package_root,
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     log_fp=log_fp,
                     step=f"analyze_graph:{tid}",
                 )
@@ -888,7 +895,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 if rc := check(result, f"analyze_graph:{tid}"):
                     return rc
 
-            if steps.get("analyze_static") and (args.dry_run or target_path.exists()):
+            if steps.get("analyze_static") and (options.dry_run or target_path.exists()):
                 asta = [
                     "uv",
                     "run",
@@ -903,7 +910,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 result = run_cmd(
                     asta,
                     cwd=package_root,
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     log_fp=log_fp,
                     step=f"analyze_static:{tid}",
                 )
@@ -913,7 +920,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 if rc := check(result, f"analyze_static:{tid}"):
                     return rc
 
-            if steps.get("export_multi") and (args.dry_run or bundle_json.is_file()):
+            if steps.get("export_multi") and (options.dry_run or bundle_json.is_file()):
                 exm = [
                     "uv",
                     "run",
@@ -928,7 +935,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 result = run_cmd(
                     exm,
                     cwd=package_root,
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     log_fp=log_fp,
                     step=f"export_multi:{tid}",
                 )
@@ -938,7 +945,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 if rc := check(result, f"export_multi:{tid}"):
                     return rc
 
-            if steps.get("visualize_diagrams") and (args.dry_run or target_path.exists()):
+            if steps.get("visualize_diagrams") and (options.dry_run or target_path.exists()):
                 vzd = [
                     "uv",
                     "run",
@@ -953,7 +960,7 @@ def run_batch(args: argparse.Namespace) -> int:
                 result = run_cmd(
                     vzd,
                     cwd=package_root,
-                    dry_run=args.dry_run,
+                    dry_run=options.dry_run,
                     log_fp=log_fp,
                     step=f"visualize:{tid}",
                 )
@@ -971,7 +978,7 @@ def run_batch(args: argparse.Namespace) -> int:
             "failed_steps": failures,
         }
 
-        if not args.dry_run:
+        if not options.dry_run:
             _write_cross_target_summary(output_root, manifest, log_fp=log_fp)
         report(
             f"batch done total_wall_time={total_wall:.2f}s targets={n_targets} "
@@ -981,11 +988,11 @@ def run_batch(args: argparse.Namespace) -> int:
         if failures:
             report(f"failures: {', '.join(failures)}", log_fp=log_fp)
         man_path = output_root / "run_manifest.json"
-        if not args.dry_run:
+        if not options.dry_run:
             man_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
             print(f"Wrote {man_path}", file=log_fp, flush=True)
 
-        if not args.dry_run and steps.get("batch_dashboard", True):
+        if not options.dry_run and steps.get("batch_dashboard", True):
             dash_script = STAGING_ROOT / "scripts" / "batch_dashboard.py"
             if dash_script.is_file():
                 result = run_cmd(
@@ -1031,5 +1038,4 @@ def run_batch(args: argparse.Namespace) -> int:
     # run.sh callers can detect a failed sweep without parsing summary.json.
     # (--fail-fast still early-returns the nonzero code mid-loop.)
     return 1 if failures else 0
-
 

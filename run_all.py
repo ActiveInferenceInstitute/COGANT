@@ -12,7 +12,7 @@ import json
 import sys
 from pathlib import Path
 
-from tools.run_all_runner import DEFAULT_CONFIG, run_batch
+from tools.run_all_runner import DEFAULT_CONFIG, RunBatchOptions, run_batch
 
 STAGING_ROOT = Path(__file__).resolve().parent
 
@@ -39,7 +39,7 @@ def main() -> int:
     # non-early-return path (and mypy --strict sees no possibly-unbound name).
     failures: list[str] = []
     try:
-        rc = run_batch(args)
+        rc = run_batch(RunBatchOptions.from_namespace(args))
     except KeyboardInterrupt:
         print("run_all: interrupted", file=sys.stderr)
         return 130

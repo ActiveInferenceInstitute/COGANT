@@ -5,9 +5,9 @@
 > it preserves explicit graph, role, state-space, and matrix evidence, not because every
 > program is literally a probabilistic agent.
 
-This page gives the current operational reading. The historical categorical sketch lives in
+This page gives the current operational reading. The formal categorical sketch lives in
 [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md);
-it is preserved for provenance, while the live contract is the role-preservation and
+the live contract is the role-preservation and
 strict-invariant taxonomy in [the roundtrip concept page](../concepts/roundtrip.md).
 
 ## The core claim
@@ -129,7 +129,7 @@ Each arrow has an **evidence-preservation contract**:
 - [The forward-reverse cycle](../concepts/roundtrip.md) — current status taxonomy and invariant
   ledger.
 - [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md) —
-  historical proof sketch and terminology.
+  formal proof sketch and terminology.
 - [Active Inference primer](active_inference_primer.md) — three-paragraph background if the
   neuroscience vocabulary is new.
 - [Active Inference mapping](active_inference.md) — the mechanical rule-by-rule version of

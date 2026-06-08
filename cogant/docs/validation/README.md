@@ -17,7 +17,6 @@
 | [Audit Trail](audit_trail.md) | Reproducible audit trail of validator runs | Intermediate |
 | [Verification and Test Posture](verification_and_test_posture.md) | How COGANT itself is tested and verified | Advanced |
 | [COGANT Implementation Verification Report](cogant_implementation_verification_report.md) | Snapshot verification report for the implementation | Advanced |
-| [Archival Note](archival_note.md) | Provenance of historical validation artifacts | Reference |
 | [See Also](see_also.md) | Cross-links to related documentation | Beginner |
 
 ## Getting started

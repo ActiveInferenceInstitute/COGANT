@@ -3,7 +3,7 @@
 
 Guards the failure mode where a renderer is refactored into a new module
 (e.g. ``cogant.viz.png_export`` -> ``cogant.viz.png``) but the registry's
-``renderer`` metadata is left pointing at the old, non-existent path. That is a
+``renderer`` metadata is left pointing at a removed path. That is a
 silent provenance lie: a caption claims a figure was drawn by a function that no
 longer exists at the stated location, and no number / crossref / citation /
 module-ref audit catches it (the module-ref audit only scans backticked refs in

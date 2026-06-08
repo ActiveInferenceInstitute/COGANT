@@ -31,7 +31,7 @@ a gate -- it is a reproducible snapshot you can diff between commits.
 
 Usage::
 
-    cd projects/cogant/cogant
+    cd projects/working/cogant/cogant
     uv run python benchmarks/bench_suite.py
     uv run python benchmarks/bench_suite.py --runs 5
     uv run python benchmarks/bench_suite.py --fixture calculator

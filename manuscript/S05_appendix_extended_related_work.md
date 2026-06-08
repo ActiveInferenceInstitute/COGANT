@@ -98,7 +98,7 @@ integration tests.
 [16] Friston, K. J., Mattout, J., Trujillo-Barreto, N., Ashburner, J.,
 Penny, W. (2007). **Variational Free Energy and the Laplace Approximation.**
 *NeuroImage, 34(1).* SPM12 active-inference variational Bayesian framework;
-the historical predecessor to pymdp and the source of the Laplace
+a predecessor to pymdp and the source of the Laplace
 approximation used in continuous-state extensions of COGANT.
 
 [17] Smekal, J., Friedman, D. A. et al. (2023). **Generalized Notation
@@ -244,7 +244,7 @@ that compute exact EFE-optimal policies rather than argmin-tie-break.
 
 [45] Astrom, K. J. (1965). **Optimal Control of Markov Decision Processes
 with Incomplete State Information.** *Journal of Mathematical Analysis
-and Applications, 10(1).* The historical origin of the belief-state MDP
+and Applications, 10(1).* A source for the belief-state MDP
 reformulation used throughout the POMDP literature.
 
 [46] Hansen, E. A. (1998). **Solving POMDPs by Searching in Policy Space.**

@@ -64,7 +64,7 @@ def is_nullable_path(path: str) -> bool:
     """True if a ``None`` value at *path* is intentional (renders ``N/A``).
 
     Only the native role-preservation score fields are legitimately nullable
-    (when only legacy ε rows are present). Every other load-bearing metric that
+    (when only non-native epsilon rows are present). Every other load-bearing metric that
     resolves to ``None`` is a generation defect and must be surfaced — see
     :func:`substitute_text`, which leaves such tokens unresolved so ``--strict``
     can fail rather than shipping a silent blank.
@@ -207,13 +207,13 @@ MANUSCRIPT_VARS: dict[str, str] = {
     "{{ROLE_PRESERVED_COUNT}}": "evaluation.roundtrip.role_preserved_count",  # Role-preserved tier
     "{{DRIFT_COUNT}}": "evaluation.roundtrip.drift_count",  # Completed but role score below threshold
     "{{FAILED_COUNT}}": "evaluation.roundtrip.failed_count",  # Failed roundtrips
-    "{{STALE_LEGACY_COUNT}}": "evaluation.roundtrip.stale_legacy_count",  # Legacy rows outside v0.6 counts
-    "{{ISO_COUNT}}": "evaluation.roundtrip.strict_isomorphism_count",  # Legacy placeholder: strict structural tier
-    "{{ISOMORPHIC_COUNT}}": "evaluation.roundtrip.strict_isomorphism_count",  # Legacy alias
-    "{{APPROX_COUNT}}": "evaluation.roundtrip.drift_count",  # Legacy placeholder: drift count
-    "{{APPROXIMATE_COUNT}}": "evaluation.roundtrip.drift_count",  # Legacy alias
-    "{{DIV_COUNT}}": "evaluation.roundtrip.failed_count",  # Legacy placeholder: failed count
-    "{{DIVERGENT_COUNT}}": "evaluation.roundtrip.failed_count",  # Legacy alias
+    "{{NON_NATIVE_COUNT}}": "evaluation.roundtrip.non_native_count",  # Rows outside native v0.6 counts
+    "{{ISO_COUNT}}": "evaluation.roundtrip.strict_isomorphism_count",  # Compatibility placeholder: strict structural tier
+    "{{ISOMORPHIC_COUNT}}": "evaluation.roundtrip.strict_isomorphism_count",  # Compatibility alias
+    "{{APPROX_COUNT}}": "evaluation.roundtrip.drift_count",  # Compatibility placeholder: drift count
+    "{{APPROXIMATE_COUNT}}": "evaluation.roundtrip.drift_count",  # Compatibility alias
+    "{{DIV_COUNT}}": "evaluation.roundtrip.failed_count",  # Compatibility placeholder: failed count
+    "{{DIVERGENT_COUNT}}": "evaluation.roundtrip.failed_count",  # Compatibility alias
     "{{TOTAL_TARGETS}}": "evaluation.roundtrip.total_targets",  # Total roundtrip targets
     # ---------------------------------------------------------------
     # Roundtrip evaluation — role-preservation statistics

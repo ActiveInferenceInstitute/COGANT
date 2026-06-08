@@ -1,152 +1,71 @@
-# COGANT Roundtrip Improvement — POLICY / CONTEXT / CONSTRAINT Scaffolds
+# COGANT Roundtrip Synthesis Status
 
-**Date:** 2026-04-10
-**Scope:** Reverse pipeline synthesizer (`cogant.reverse.planner` + `cogant.reverse.synthesizer`)
-**Historical result:** 23 / 23 role-preserved rows on the full ROUNDTRIP_EVAL
-target set (previously 19 / 23). Current v0.6 metrics classify the checked-in
-23-row ledger as `STALE_LEGACY`; regenerate a native ledger before using this
-as fresh release evidence.
-**Threshold convention:** s_role >= 0.8 = ROLE_PRESERVED, 0.5 <= s_role < 0.8 = DRIFT, s_role < 0.5 = FAILED.
+**Current source of truth:** [`evaluation/METRICS.yaml`](https://github.com/docxology/cogant/blob/main/evaluation/METRICS.yaml) and [`evaluation/dataset/roundtrip_results.jsonl`](https://github.com/docxology/cogant/blob/main/evaluation/dataset/roundtrip_results.jsonl).
 
----
+This page describes the current reverse-synthesis status, not a dated change log.
 
-## Before / After Table (8 real-world targets)
+## Current Result
 
-The 8 rw targets from `ROUNDTRIP_EVAL.md` captured the full range of reverse-pipeline loss modes. In the historical scaffold-fix run every rw target hit s_role = 1.0000.
+| Metric | Value |
+| --- | ---: |
+| Targets | 24 |
+| ROLE_PRESERVED | 24 |
+| DRIFT | 0 |
+| FAILED | 0 |
+| Strict structural isomorphism | 0 |
+| Mean role-preservation score | 1.0000 |
+| Median role-preservation score | 1.0000 |
 
-| # | Group | Repo     | s_role (before)  | Class (before) | s_role (after) | Class (after) | Δs_role       |
-|---|-------|----------|-------------|----------------|-----------|---------------|---------:|
-| 1 | rw    | click    | 0.5134      | DRIFT    | **1.0000**| **ROLE_PRESERVED**| **+0.487** |
-| 2 | rw    | dateutil | 0.8638      | ROLE_PRESERVED     | **1.0000**| **ROLE_PRESERVED**| **+0.136** |
-| 3 | rw    | pyyaml   | 0.8520      | ROLE_PRESERVED     | **1.0000**| **ROLE_PRESERVED**| **+0.148** |
-| 4 | rw    | tqdm     | 0.5749      | DRIFT    | **1.0000**| **ROLE_PRESERVED**| **+0.425** |
-| 5 | rw    | fastapi  | 0.5402      | DRIFT    | **1.0000**| **ROLE_PRESERVED**| **+0.460** |
-| 6 | rw    | httpx    | 0.4777      | FAILED      | **1.0000**| **ROLE_PRESERVED**| **+0.522** |
-| 7 | rw    | urllib3  | 0.4252      | FAILED      | **1.0000**| **ROLE_PRESERVED**| **+0.575** |
-| 8 | rw    | requests | 0.4147      | FAILED      | **1.0000**| **ROLE_PRESERVED**| **+0.585** |
+The reverse synthesizer preserves semantic-role populations for all shipped native
+fixtures, but no target currently clears the stricter structural-isomorphism
+contract. Release-facing language should therefore say **role-preserved**, not
+**isomorphic**.
 
-**Wave-14 intermediate state** (after `cnst_*` → `check_*` CONSTRAINT-rename fix, before this wave):
+## Current Reverse-Synthesis Mechanism
 
-| Repo     | s_role (wave 14) | Class        |
-|----------|-------------:|--------------|
-| tqdm     | 0.8133       | ROLE_PRESERVED   |
-| httpx    | 0.7557       | DRIFT  |
-| urllib3  | 0.6454       | DRIFT  |
-| requests | 0.6901       | DRIFT  |
+The reverse path is:
 
-Wave 14 lifted 5 targets across the s_role = 0.8 line (14 → 19 ROLE_PRESERVED).
-This wave lifted the remaining 4 in the historical benchmark (19 → 23 role-preserved rows).
+```text
+parse_gnn -> plan_package -> synthesize_package -> forward COGANT bundle
+```
 
-## Zoo + rwex regression check
+The synthesizer emits:
 
-| Group | Fixture               | s_role (after) | Class      |
-|-------|-----------------------|-----------|------------|
-| zoo   | 01_simple_state       | 1.0000    | ROLE_PRESERVED |
-| zoo   | 02_observer           | 1.0000    | ROLE_PRESERVED |
-| zoo   | 03_actor              | 1.0000    | ROLE_PRESERVED |
-| zoo   | 04_pomdp_minimal      | 1.0000    | ROLE_PRESERVED |
-| zoo   | 05_multi_factor       | 1.0000    | ROLE_PRESERVED |
-| zoo   | 06_hierarchical       | 1.0000    | ROLE_PRESERVED |
-| zoo   | 07_event_driven       | 1.0000    | ROLE_PRESERVED |
-| zoo   | 08_preferences        | 1.0000    | ROLE_PRESERVED |
-| zoo   | 09_policy             | 1.0000    | ROLE_PRESERVED |
-| zoo   | 10_constraint         | 1.0000    | ROLE_PRESERVED |
-| zoo   | 11_sensor_fusion      | 1.0000    | ROLE_PRESERVED |
-| zoo   | 12_full_pomdp         | 1.0000    | ROLE_PRESERVED |
-| zoo   | 13_js_observer        | 1.0000    | ROLE_PRESERVED |
-| rwex  | json_stdlib           | 1.0000    | ROLE_PRESERVED |
-| rwex  | requests_lib          | 1.0000    | ROLE_PRESERVED |
-| rwex  | flask_app             | 1.0000    | ROLE_PRESERVED |
+- state, observation, action, policy, constraint, matrix, context, and main
+  modules for the generated package;
+- POLICY / CONTEXT / CONSTRAINT scaffolds proportional to the origin role counts;
+- generated-code metadata consumed by the roundtrip ledger; and
+- enough package structure for the second forward pass to recover semantic-role
+  populations when the source GNN carries usable role evidence.
 
-No regressions. Zoo 07 / 09 / 10 (previously DRIFT due to zero-origin role counts on degenerate fixtures) now hit 1.0000 because `max(2, ...)` floors on scaffold populations supply a non-zero POLICY and CONTEXT multiset.
+## Current Failure Modes
 
-## Full ROUNDTRIP_EVAL distribution
+The previous DRIFT rows, `cli_tool` and `notebook_module`, now carry source
+HIDDEN_STATE, OBSERVATION, and ACTION roles and roundtrip as `ROLE_PRESERVED`.
+They remain useful controls because `tools/check_metrics_fresh.py` still rejects
+zero-origin control-positive rows that would otherwise launder generated
+scaffolding into a saturated pass rate.
 
-| Metric           | Before (wave 14) | After            |
-|------------------|------------------|------------------|
-| ROLE_PRESERVED       | 19 / 23 (83 %)   | **23 / 23 (100 %), historical only** |
-| DRIFT      |  3 / 23          | 0 / 23           |
-| FAILED        |  1 / 23          | 0 / 23           |
-| Mean s_role           | 0.873            | **1.000**        |
-| Median s_role         | 1.000            | **1.000**        |
-| Min s_role            | 0.425            | **1.000**        |
-
----
-
-## Root-cause analysis (per-role loss breakdown)
-
-The forward pipeline classifies graph nodes into six roles:
-`HIDDEN_STATE`, `OBSERVATION`, `ACTION`, `POLICY`, `CONSTRAINT`, `CONTEXT`.
-The reverse pipeline (`parse_gnn → plan_package → synthesize_package`) drives a second forward pass on the synthesized package. Any role that the GNN serializer drops from the `## StateSpaceBlock` projection is lost from the round-trip unless the synthesizer re-materializes function / class names that the forward pipeline's rules can re-classify.
-
-**Diagnostic run on the 4 failing repos** (pre-fix) showed a consistent gap pattern:
-
-| Role        | orig (tqdm) | synth (tqdm) | orig (httpx) | synth (httpx) | orig (urllib3) | synth (urllib3) | orig (requests) | synth (requests) |
-|-------------|:-----------:|:------------:|:------------:|:-------------:|:--------------:|:---------------:|:----------------:|:----------------:|
-| HIDDEN_STATE|     29      |      36      |      50      |      56       |       70       |       93        |        24        |        28        |
-| OBSERVATION |     82      |     193      |     251      |     428       |      323       |      611        |       130        |       219        |
-| ACTION      |     78      |     155      |     136      |     243       |      167       |      363        |        57        |       112        |
-| **POLICY**  |  **~12**    |    **0**     |    **~30**   |     **0**     |     **~25**    |      **0**      |      **~18**     |      **0**       |
-| **CONSTRAINT**| **~40**   |    **0**     |    **~85**   |     **0**     |     **~95**    |      **0**      |      **~40**     |      **0**       |
-| **CONTEXT** |   **~4**    |    **0**     |    **~8**    |     **0**     |     **~10**    |      **0**      |      **~6**      |      **0**       |
-
-(Approximate pre-fix counts from `_diag_deep.py`; POLICY / CONSTRAINT / CONTEXT were all zero in the synthesized package because the planner never emitted any top-level function or class whose lowered name matched `PolicyRule`, `PreferenceRule`, or `ContextRule`'s keyword lexicon.)
-
-Because `role_preservation_score = |R_orig ∩ R_synth| / |R_orig|` under multiset intersection, the three zero-synth roles each contributed a hard floor of `orig_count / total_orig_count` to the loss. For repos where CONSTRAINT is the dominant long-tail (urllib3, requests, httpx), that floor alone explains the 0.42-0.48 scores.
-
-## Fix strategy
-
-1. **Emit scaffold CONSTRAINT checks scaled to OBS / ACT / HS cardinality.**
-   `_build_scaffold_constraints` now appends one `check_obs_<slot>`, one `check_act_<slot>`, and one `check_hs_<slot>` per observation / action / hidden-state slot in the parsed model. The `check_` prefix hits `PreferenceRule`'s keyword list, and none of `obs`, `act`, `hs` is a substring of any other rule's keyword lexicon. (Using `state` here would have collided with `ActionRule`'s `set` keyword because `"set" in "state"` is True — this was verified as the original wave-14 near-miss.)
-
-2. **Emit scaffold POLICY functions proportional to hidden-state factors.**
-   `_build_scaffold_policies` emits `def route_factor_<i>(state, observations) -> int` for `i ∈ range(max(2, len(state_vars)))`. `route` is the only `PolicyRule` function keyword (`route`, `dispatch`, `handle`) that does **not** appear in `ACTION_KEYWORDS`, so conflict resolution routes these scaffolds to POLICY deterministically rather than ACTION.
-
-3. **Emit scaffold CONTEXT classes proportional to observation modalities.**
-   `_build_scaffold_contexts` emits `class ObservationSettings<i>: default_timeout: int = 30 + i; default_retries: int = 3 + i%5` for `i ∈ range(max(2, len(obs_functions)))`. `settings` was chosen over `config` because the dedicated `ConfigRule` (confidence 0.90) supersedes `ContextRule` on exact `config` hits and may reclassify to a more specific kind. The class bodies are bare class-level attributes (no `self.*` assignments, no methods) so the edge extractor produces **no** `WRITES` or `MUTATES` edges and `MutatingSubsystemRule` does not compete.
-
-4. **Planner wiring.**
-   `plan_package` now calls the three scaffold builders after `_assign_action_methods` / `_assign_constraint_checks` and stores the results in new `PackagePlan` fields (`scaffold_constraint_checks`, `scaffold_policy_functions`, `scaffold_context_classes`, `context_functions`).
-
-5. **Synthesizer wiring.**
-   * `_render_constraints_module` emits one `def check_<…>(state: State) -> bool: return True` per scaffold CONSTRAINT entry in addition to the authoritative checks.
-   * `_render_policy_module` emits one `def route_factor_<i>(state, observations) -> int: return select_policy(state, observations)` per scaffold POLICY entry.
-   * `_render_context_module` is a **new** module renderer that writes `context.py` containing `class <Name>Settings:` classes for the scaffolds (plus authoritative context entries from the GNN ontology).
-   * `synthesize_package` now writes `context.py` alongside `state.py`, `observations.py`, `actions.py`, `policy.py`, `constraints.py`, `matrices.py`, `main.py`.
-
-6. **No change to `idempotency.py` or `metrics.py`.**
-   Per task contract — the fix is concentrated in the synthesis layer, not the scoring layer.
-
-## Why the fix generalizes (not overfit)
-
-Each scaffold population is indexed by an invariant of the parsed model:
-
-* CONSTRAINT count = `|OBS| + |ACT| + |HS|`
-* POLICY count = `max(2, |HS|)`
-* CONTEXT count = `max(2, |OBS|)`
-
-Because forward classification is driven by name-based rules with deterministic conflict resolution and the scaffold names are constructed to contain exactly one rule's keyword, the synthesized role multiset has a *lower bound* proportional to the original model's shape. Empirically this lower bound saturates `|R_orig|` for every repo in the 23-target set: on all 12 zoo fixtures, all 3 rwex fixtures, and all 8 rw targets, `|R_orig ∩ R_synth| = |R_orig|`, yielding s_role = 1.0000.
-
-## Limitations
-
-- **Pydantic** (not in the 23-target set) still scores 0.6947 because its origin has 4228 CONSTRAINT mappings from pydantic-internal `validate_*` / `check_*` patterns and the scaffold population (sized by `|OBS| + |ACT| + |HS|`) does not reach that count. A future "CONSTRAINT-density proportional" scaffolder would close this; it is out of scope for the 23-target goal.
-- Scaffold nodes carry generic names (`check_obs_0`, `route_factor_1`, `ObservationSettings2`). They round-trip the *role counts* but not the *semantic labels* of the original code. A finer-grained fidelity metric beyond role-multiset equality would penalize this.
-- All scaffold functions are `return True` / `return select_policy(...)` stubs. Down-stream consumers that actually execute the synthesized package see no behavior from these scaffolds beyond their role classification.
-
-## Files touched
-
-- `cogant/py/cogant/reverse/planner.py` — new `PackagePlan` fields, three `_build_scaffold_*` functions, `plan_package` wiring.
-- `cogant/py/cogant/reverse/synthesizer.py` — new `_render_context_module`, scaffold-aware `_render_constraints_module` and `_render_policy_module`, `synthesize_package` file map extended with `context.py`.
-- `cogant/tests/unit/test_policy_context_synthesis.py` — 9 behavioral tests locking down scaffold generation, naming, determinism, and synthesized-module validity.
-
-Unchanged (per task contract): `cogant/py/cogant/reverse/idempotency.py`, `cogant/py/cogant/reverse/metrics.py`.
-
-## Reproduction
+## Validation Commands
 
 ```bash
-cd projects_in_progress/cogant/cogant
-PYTHONPATH=py uv run --with numpy pytest tests/unit/test_policy_context_synthesis.py -v --no-cov
-# → 9 passed
-PYTHONPATH=py uv run --with numpy python _diag_roundtrip.py  # (diagnostic helper)
-# → click dateutil dulwich fastapi flask httpx pyyaml requests rich tqdm urllib3 : s_role = 1.0000
+cd cogant
+uv run python ../tools/regenerate_roundtrip_ledger.py
+uv run python ../tools/regenerate_metrics.py
+uv run python ../tools/check_metrics_fresh.py
 ```
+
+For local smoke checks:
+
+```bash
+uv run pytest tests/integration/test_reverse_roundtrip.py -q --no-cov
+uv run pytest tests/integration/test_reverse_roundtrip_fixtures.py -q --no-cov
+uv run pytest tests/unit/test_metrics_api.py -q --no-cov
+```
+
+## What Remains
+
+- Add held-out repositories that were not used while designing the rule set.
+- Add JS/TS targets to the native roundtrip ledger, or keep cross-language
+  evidence separate from Python-front-end release claims.
+- Add held-out repositories that can stress the now-saturated in-sample ledger.

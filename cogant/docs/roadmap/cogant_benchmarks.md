@@ -122,7 +122,7 @@ A PR introduces a regression if, on the reference fixture set, it causes:
 - End-to-end round-trip on `event_pipeline` to exceed 1.5 s by more than 20% (1.8 s).
 - Memory on any fixture to exceed the target by more than 10%.
 
-Regressions require either (a) an accompanying optimization, (b) a raised target with stakeholder sign-off in the PR, or (c) an opt-in flag to preserve the old behavior.
+Regressions require either (a) an accompanying optimization, (b) a raised target with stakeholder sign-off in the PR, or (c) an opt-in flag to preserve the previous behavior.
 
 ### Optimization priorities
 

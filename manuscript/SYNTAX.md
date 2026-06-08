@@ -1,6 +1,6 @@
 # Manuscript Syntax Reference (COGANT)
 
-Formatting conventions for Markdown in this folder. For the full rendering contract when vendored into `docxology/template/projects/cogant/`, use the parent template renderer docs under `infrastructure/rendering/`.
+Formatting conventions for Markdown in this folder. For the full rendering contract when linked into `docxology/template/projects/working/cogant/`, use the parent template renderer docs under `infrastructure/rendering/`.
 
 ## Citations
 

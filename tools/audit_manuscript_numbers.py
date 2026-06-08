@@ -14,7 +14,7 @@ fuzzy ±0.5 % envelope). Findings are partitioned into:
 * ``MISMATCH``          — real drift (these gate CI)
 * ``EXPECTED_MISMATCH`` — whitelisted contextually-valid differences
 * ``UNVERIFIED``        — no METRICS.yaml entry to compare against
-* ``STALE_ARCHIVE``     — found in ``manuscript/_archive/``; informational
+* ``ARCHIVE_ONLY``      — found in ``manuscript/_archive/``; informational
 
 A Markdown audit report is written to ``--output``.
 
@@ -23,7 +23,7 @@ Invocation is directory-independent: all paths are anchored on ``__file__``.
 Exit codes
 ----------
 * ``0`` — no actionable mismatches (CLOSE / EXPECTED_MISMATCH / UNVERIFIED
-          / STALE_ARCHIVE / MATCH are all non-blocking).
+          / ARCHIVE_ONLY / MATCH are all non-blocking).
 * ``1`` — at least one MISMATCH was found, or no ``.md`` files were
           discovered under ``--manuscript-dir``.
 
@@ -44,100 +44,33 @@ _TOOLS_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TOOLS_DIR.parent
 sys.path.insert(0, str(_TOOLS_DIR))
 
+from manuscript_vars import resolve_path  # noqa: E402
+
 METRICS_PATH = _REPO_ROOT / "cogant" / "evaluation" / "METRICS.yaml"
 MANUSCRIPT_DIR = _REPO_ROOT / "manuscript"
 OUTPUT_PATH = _REPO_ROOT / "cogant" / "_rnd" / "sweep_2026_04" / "manuscript_number_audit.md"
 
-# ---------------------------------------------------------------------------
-# Fallback defaults when METRICS.yaml does not yet exist
-# ---------------------------------------------------------------------------
-FALLBACK_METRICS: dict = {
-    "package": {
-        "version": "0.6.0",
-        "python_min": "3.11",
-    },
-    "testing": {
-        "test_count_passing": 2129,
-        "test_count_total": 2230,
-        "test_count_failing": 12,
-        "test_count_skipped": 86,
-        "test_count_xfailed": 2,
-        "test_count_xpassed": 1,
-        "coverage_percent": 83.42,
-        "mypy_strict_errors": 0,
-        "ruff_violations": 1,
-    },
-    "evaluation": {
-        "semantic": {
-            "cogant_macro_f1": 0.73,
-            "gpt4_macro_f1": 0.61,
-        },
-        "roundtrip": {
-            "role_preserved_count": 0,
-            "strict_isomorphism_count": 0,
-            "drift_count": 0,
-            "failed_count": 0,
-            "stale_legacy_count": 23,
-            "total_targets": 23,
-            "zoo_fixture_count": 12,
-            "rw_lib_count": 11,
-            "rw_repo_count": 8,
-            "mean_role_preservation_score": None,
-            "median_role_preservation_score": None,
-            "min_role_preservation_score": None,
-            "max_role_preservation_score": None,
-            "threshold_role_preserved": 0.5,
-            "threshold_drift": 0.5,
-        },
-    },
-    "pipeline": {
-        "stage_count": 10,
-        "translation_rules": 22,
-    },
-    "codebase": {
-        "python_source_files": 180,
-        "python_loc": 57015,
-    },
-    "benchmark": {
-        "suite_runtime_s": 238,
-        "shipped_fixture_count": 6,
-    },
-    "ir_schema": {
-        "node_kind_count": 18,
-        "edge_kind_count": 18,
-        "active_inf_role_count": 7,
-    },
-    "rust": {
-        "crates_total": 8,
-        "ffi_available": True,
-    },
-}
 
+def load_metrics() -> dict:
+    """Load METRICS.yaml. Exit if missing or unparseable."""
+    if not METRICS_PATH.is_file():
+        print(
+            f"ERROR: {METRICS_PATH} not found — run "
+            f"`uv run --directory cogant python ../tools/regenerate_metrics.py` first.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    try:
+        import yaml
 
-def load_metrics() -> tuple[dict, bool]:
-    """Load METRICS.yaml; fall back to hardcoded defaults if missing.
-
-    Returns (data, is_fallback).
-    """
-    if METRICS_PATH.exists():
-        try:
-            import yaml
-
-            with open(METRICS_PATH) as f:
-                return yaml.safe_load(f), False
-        except Exception as e:
-            print(f"WARNING: Could not parse {METRICS_PATH}: {e}", file=sys.stderr)
-    print(f"NOTE: {METRICS_PATH} not found — using hardcoded fallback defaults.", file=sys.stderr)
-    return FALLBACK_METRICS, True
-
-
-def resolve_path(data: dict, dotpath: str):
-    parts = dotpath.split(".")
-    for p in parts:
-        if isinstance(data, dict):
-            data = data.get(p)
-        else:
-            return None
+        with open(METRICS_PATH, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+    except Exception as e:
+        print(f"ERROR: Could not parse {METRICS_PATH}: {e}", file=sys.stderr)
+        sys.exit(1)
+    if not isinstance(data, dict):
+        print(f"ERROR: {METRICS_PATH} must contain a YAML mapping at the root.", file=sys.stderr)
+        sys.exit(1)
     return data
 
 
@@ -158,7 +91,7 @@ KNOWN_VALUES = [
     ("strict_isomorphism_count", "evaluation.roundtrip.strict_isomorphism_count", None),
     ("drift_count", "evaluation.roundtrip.drift_count", None),
     ("failed_count", "evaluation.roundtrip.failed_count", None),
-    ("stale_legacy_count", "evaluation.roundtrip.stale_legacy_count", None),
+    ("non_native_count", "evaluation.roundtrip.non_native_count", None),
     ("total_targets", "evaluation.roundtrip.total_targets", None),
     ("rw_repo_count", "evaluation.roundtrip.rw_repo_count", None),
     ("zoo_fixture_count", "evaluation.roundtrip.zoo_fixture_count", None),
@@ -193,16 +126,15 @@ KNOWN_VALUES = [
 # None for extracted_value means "any value matching this pattern"
 # ---------------------------------------------------------------------------
 EXPECTED_MISMATCHES = [
-    # Historical version references in narrative text (v0.1.0, v0.2.0, v0.4.0
-    # appear in "shipped in v0.2.0 – v0.5.0" style sentences describing history)
-    ("version", "0.4.0", "Historical reference: describes v0.4.0 behaviour, not current version"),
-    ("version", "0.2.0", "Historical reference: describes items shipped in v0.2.0"),
-    ("version", "0.1.0", "Historical reference: describes v0.1.0 behaviour or table label"),
-    # Historical threshold definitions in archived appendix prose.
+    # Version references in narrative text can differ from the package version.
+    ("version", "0.4.0", "Version reference: describes v0.4.0 behaviour, not current version"),
+    ("version", "0.2.0", "Version reference: describes items shipped in v0.2.0"),
+    ("version", "0.1.0", "Version reference: describes v0.1.0 behaviour or table label"),
+    # Threshold definitions in appendix prose can differ from aggregate means.
     (
         "mean_role_preservation_score",
         "0.5",
-        "Historical threshold definition, not a data claim",
+        "Threshold definition, not a data claim",
     ),
     (
         "mean_role_preservation_score",
@@ -224,23 +156,23 @@ EXPECTED_MISMATCHES = [
         ),
     ),
     ("mean_role_preservation_score", "0.852", "Per-target value: pyyaml s_role=0.8520 (individual target)"),
-    # S01 wave-14 historical tier narrative (pre wave-16 canonical 23/23)
+    # S01 archive tier narrative.
     (
         "mean_role_preservation_score",
         "0.7778",
-        "Historical wave-14 appendix row: per-target ε, not METRICS mean_epsilon",
+        "Archive appendix row: per-target ε, not METRICS mean_epsilon",
     ),
     (
         "mean_role_preservation_score",
         "0.6667",
-        "Historical wave-14 appendix row: per-target ε, not METRICS mean_epsilon",
+        "Archive appendix row: per-target ε, not METRICS mean_epsilon",
     ),
     (
         "role_preserved_count",
         "14",
         (
-            "Historical wave-14 S01 appendix: 14/23 ROLE_PRESERVED before "
-            "the legacy ledger was reclassified as stale"
+            "Archive S01 appendix: 14/23 ROLE_PRESERVED before the native "
+            "ledger refresh"
         ),
     ),
     # LOC mismatch: manuscript says "20,307 statements in 179 source files" which refers to
@@ -433,7 +365,7 @@ class Finding:
     manuscript_claim: str  # the raw matched text
     extracted_value: object  # numeric or string extracted
     metrics_value: object  # what METRICS.yaml says
-    status: str  # MATCH | CLOSE | MISMATCH | EXPECTED_MISMATCH | UNVERIFIED | STALE_ARCHIVE
+    status: str  # MATCH | CLOSE | MISMATCH | EXPECTED_MISMATCH | UNVERIFIED | ARCHIVE_ONLY
     context: str  # surrounding text (~80 chars)
     note: str = ""
     confidence: str = "LOW"  # HIGH | MEDIUM | LOW
@@ -479,7 +411,7 @@ def classify(
     """Classify a finding.
 
     Returns ``(status, confidence, delta_percent)`` where:
-    - ``status`` ∈ {MATCH, CLOSE, MISMATCH, UNVERIFIED, STALE_ARCHIVE}
+    - ``status`` ∈ {MATCH, CLOSE, MISMATCH, UNVERIFIED, ARCHIVE_ONLY}
     - ``confidence`` ∈ {HIGH, MEDIUM, LOW}:
         * HIGH   — exact match against a known METRICS.yaml variable
         * MEDIUM — within fuzzy ±0.5% of a known variable (CLOSE tier)
@@ -493,7 +425,7 @@ def classify(
     if is_archive:
         # Archive files are informational only; confidence is LOW regardless.
         delta = _relative_delta_percent(extracted, metrics_val)
-        return "STALE_ARCHIVE", "LOW", delta
+        return "ARCHIVE_ONLY", "LOW", delta
 
     # Numeric comparison path (tolerance-based)
     if tolerance is not None:
@@ -622,7 +554,6 @@ def deduplicate(findings: list[Finding]) -> list[Finding]:
 def render_report(
     findings: list[Finding],
     metrics: dict,
-    is_fallback: bool,
     known_values: list,
 ) -> str:
     from datetime import date
@@ -632,18 +563,14 @@ def render_report(
     expected_mismatches = [f for f in findings if f.status == "EXPECTED_MISMATCH"]
     matches = [f for f in findings if f.status == "MATCH"]
     unverified = [f for f in findings if f.status == "UNVERIFIED"]
-    stale = [f for f in findings if f.status == "STALE_ARCHIVE"]
+    archive_only = [f for f in findings if f.status == "ARCHIVE_ONLY"]
 
     # Confidence totals across the entire run
     n_high = sum(1 for f in findings if f.confidence == "HIGH")
     n_medium = sum(1 for f in findings if f.confidence == "MEDIUM")
     n_low = sum(1 for f in findings if f.confidence == "LOW")
 
-    metrics_src = (
-        "FALLBACK DEFAULTS (METRICS.yaml not found)"
-        if is_fallback
-        else str(METRICS_PATH.relative_to(_REPO_ROOT))
-    )
+    metrics_src = str(METRICS_PATH.relative_to(_REPO_ROOT))
     lines = [
         "# Manuscript Number Audit",
         "",
@@ -662,16 +589,16 @@ def render_report(
         ),
         (
             f"| CLOSE | {len(close_findings)} | "
-            "Within ±0.5% of METRICS.yaml — likely rounding / stale cache |"
+            "Within ±0.5% of METRICS.yaml — likely rounding / cache drift |"
         ),
         (
             f"| EXPECTED_MISMATCH | {len(expected_mismatches)} | "
-            "Contextually valid — historical refs, scope differences, "
+            "Contextually valid — version refs, scope differences, "
             "threshold definitions |"
         ),
         f"| MATCH | {len(matches)} | Verified exact |",
         f"| UNVERIFIED | {len(unverified)} | No METRICS.yaml entry to compare against |",
-        f"| STALE_ARCHIVE | {len(stale)} | In _archive/ — expected to differ |",
+        f"| ARCHIVE_ONLY | {len(archive_only)} | In _archive/ — expected to differ |",
         f"| **Total findings** | **{len(findings)}** | |",
         "",
         "### Confidence distribution",
@@ -684,24 +611,11 @@ def render_report(
         "",
     ]
 
-    if is_fallback:
-        lines += [
-            (
-                "> **Note:** METRICS.yaml does not yet exist. "
-                "All comparisons use hardcoded fallback values."
-            ),
-            (
-                "> Run the metrics-agent to generate METRICS.yaml, then re-run this audit "
-                "for authoritative results."
-            ),
-            "",
-        ]
-
     # -----------------------------------------------------------------------
     # METRICS.yaml reference values
     # -----------------------------------------------------------------------
     lines += [
-        "## Reference Values (from METRICS.yaml / fallback)",
+        "## Reference Values (from METRICS.yaml)",
         "",
         "| Variable | Path | Value |",
         "|----------|------|-------|",
@@ -749,7 +663,7 @@ def render_report(
         "## Close Matches (within tolerance)",
         "",
         f"These manuscript claims are within ±{tol_pct:.1f}% of the METRICS.yaml value.",
-        "Likely a rounding artefact or a stale cache. Fixing these is typically a one-line update.",
+        "Likely a rounding artefact or cache drift. Fixing these is typically a one-line update.",
         "",
     ]
     if close_findings:
@@ -795,7 +709,7 @@ def render_report(
         "## Expected Mismatches (contextually valid — no action required)",
         "",
         "These numbers appear to differ from METRICS.yaml but are correct in context:",
-        "historical version references, threshold definitions, or different counting scopes.",
+        "version references, threshold definitions, or different counting scopes.",
         "",
     ]
     if expected_mismatches:
@@ -839,27 +753,27 @@ def render_report(
     lines.append("")
 
     # -----------------------------------------------------------------------
-    # Stale archive findings
+    # Archive findings
     # -----------------------------------------------------------------------
     lines += [
-        "## Stale Archive Claims",
+        "## Archive-Only Claims",
         "",
-        "These numbers appear in `manuscript/_archive/` files. They reflect an older state",
-        "of the codebase and are expected to differ from current METRICS.yaml values.",
+        "These numbers appear in `manuscript/_archive/` files and are expected to differ",
+        "from current METRICS.yaml values.",
         "No action required unless an archive file is being actively used.",
         "",
         "| File | Line | Pattern | Extracted | Current Metrics Value | Context |",
         "|------|------|---------|-----------|----------------------|---------|",
     ]
-    if stale:
-        for f in sorted(stale, key=lambda x: (x.file, x.line)):
+    if archive_only:
+        for f in sorted(archive_only, key=lambda x: (x.file, x.line)):
             ctx = f.context.replace("|", "\\|").replace("\n", " ")
             lines.append(
                 f"| `{f.file}` | {f.line} | {f.pattern_name} "
                 f"| {f.extracted_value} | {f.metrics_value} | {ctx} |"
             )
     else:
-        lines.append("_No stale archive claims found._")
+        lines.append("_No archive-only claims found._")
     lines.append("")
 
     # -----------------------------------------------------------------------
@@ -996,11 +910,11 @@ def main():
         "--include-archive",
         action="store_true",
         default=True,
-        help="Include manuscript/_archive/ files (default: True, marked as STALE_ARCHIVE)",
+        help="Include manuscript/_archive/ files (default: True, marked as ARCHIVE_ONLY)",
     )
     args = parser.parse_args()
 
-    metrics, is_fallback = load_metrics()
+    metrics = load_metrics()
     patterns = _mk_patterns()
     manuscript_dir = Path(args.manuscript_dir)
     output_path = Path(args.output)
@@ -1025,14 +939,14 @@ def main():
     expected_mismatches = [f for f in all_findings if f.status == "EXPECTED_MISMATCH"]
     matches = [f for f in all_findings if f.status == "MATCH"]
     unverified = [f for f in all_findings if f.status == "UNVERIFIED"]
-    stale = [f for f in all_findings if f.status == "STALE_ARCHIVE"]
+    archive_only = [f for f in all_findings if f.status == "ARCHIVE_ONLY"]
 
     print(f"  MISMATCH:          {len(mismatches)}")
     print(f"  CLOSE (±0.5%):     {len(close_findings)}")
     print(f"  EXPECTED_MISMATCH: {len(expected_mismatches)}")
     print(f"  MATCH:             {len(matches)}")
     print(f"  UNVERIFIED:        {len(unverified)}")
-    print(f"  STALE_ARCHIVE:     {len(stale)}")
+    print(f"  ARCHIVE_ONLY:      {len(archive_only)}")
     print(f"  Total:             {len(all_findings)}")
 
     # Confidence summary
@@ -1041,7 +955,7 @@ def main():
     n_low = sum(1 for f in all_findings if f.confidence == "LOW")
     print(f"  Confidence:        HIGH={n_high}  MEDIUM={n_medium}  LOW={n_low}")
 
-    report = render_report(all_findings, metrics, is_fallback, KNOWN_VALUES)
+    report = render_report(all_findings, metrics, KNOWN_VALUES)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(report, encoding="utf-8")

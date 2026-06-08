@@ -133,7 +133,7 @@ because threshold movement in that band can change the state-space surface.
 | $s_\text{role}(P, R(F(P)))$ | `$s_\text{role}(P, R(F(P)))$` | Roundtrip role-preservation score; multiset similarity between role distributions | @sec:S03-role-preservation-theorem (@sec:thm-bounded-role-preservation-gap) | Higher is better; ROLE_PRESERVED when $s_\text{role} \ge {{THRESHOLD_ROLE_PRESERVED}}$ |
 | $\text{JS}$ | `$\text{JS}$` | Jensen–Shannon distance | @sec:S03-role-preservation-theorem | Symmetric; $\text{JS} \in [0, 1]$ |
 | $\text{multiset\_sim}(a, b)$ | `$\text{multiset\_sim}(a,b)$` | Per-role multiset similarity; $\min(a,b)/\max(a,b)$ | @sec:S03-approximate-adjunction | Averaged over roles to yield global score |
-| $\text{scaffold}_r$ | `$\text{scaffold}_r$` | Fixed role-$r$ count contributed by reverse synthesizer scaffolding | @sec:S03-approximate-adjunction, @sec:S03-role-preservation-theorem | Wave-16 POLICY/CONTEXT fix reduces this for policy-bearing targets |
+| $\text{scaffold}_r$ | `$\text{scaffold}_r$` | Fixed role-$r$ count contributed by reverse synthesizer scaffolding | @sec:S03-approximate-adjunction, @sec:S03-role-preservation-theorem | POLICY/CONTEXT synthesis reduces this for policy-bearing targets |
 | $\varepsilon_\text{worst}$ | `$\varepsilon_\text{worst}$` | Worst-case approximation gap; depends only on rule table and synthesizer | @sec:S03-approximate-adjunction | Bounded; approaches 0 for large programs |
 | $\leq_\text{GNN}$ | `$\leq_\text{GNN}$` | Pointwise bundle subset order in **GNN** | @sec:S03-categories | Each bundle section is subset-ordered |
 | $\leq_\text{Prog}$ | `$\leq_\text{Prog}$` | Pointwise graph subset order in **Prog** | @sec:S03-categories | $G \leq G'$ iff $V \subseteq V'$, $E \subseteq E'$ |

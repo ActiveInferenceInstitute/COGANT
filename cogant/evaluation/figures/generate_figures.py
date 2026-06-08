@@ -16,9 +16,10 @@ emit a larger serialized graph; it is not used here.) Files written:
     evaluation/figures/metrics.json                -- machine-readable metrics (manuscript source of truth)
     evaluation/figures/metrics_table.md            -- markdown table mirroring the manuscript
 
-Run from the ``projects/cogant/`` directory::
+Run from the inner package directory::
 
-    python evaluation/figures/generate_figures.py
+    cd projects/working/cogant/cogant
+    uv run python evaluation/figures/generate_figures.py
 
 The script is deterministic modulo wall-clock time; everything else (node /
 edge / mapping counts, GNN section counts, validator scores) is a pure

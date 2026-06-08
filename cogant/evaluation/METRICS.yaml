@@ -3,8 +3,8 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-06-01T00:50:41.235402Z'
-generator_git_sha: 272f2bff2752fbcb0b0b28c89dcaf14e04be1ed6
+generated_at: '2026-06-07T04:03:29.306372Z'
+generator_git_sha: e3d3d1b7a652b822de120de5d221a2989dfa5ab5
 cogant_version: 0.6.0
 package:
   name: cogant
@@ -12,8 +12,8 @@ package:
   python_min: '3.11'
 testing:
   test_count_total: 9691
-  test_count_passing: 9685
-  test_count_failing: 2
+  test_count_passing: 9687
+  test_count_failing: 0
   test_count_skipped: 4
   test_count_xfailed: 0
   test_count_xpassed: 0
@@ -25,11 +25,11 @@ testing:
   mypy_strict_errors: 0
   ruff_violations: 0
 codebase:
-  python_source_files: 231
-  python_loc: 82121
-  public_modules: 191
+  python_source_files: 232
+  python_loc: 82079
+  public_modules: 192
   public_classes: 405
-  public_functions: 1134
+  public_functions: 1135
 pipeline:
   stage_count: 10
   translation_rules: 22
@@ -47,20 +47,20 @@ pipeline:
 evaluation:
   roundtrip:
     data_source: cogant/evaluation/dataset/roundtrip_results.jsonl
-    note: 'Legacy benchmark rows converted to the v0.6 roundtrip taxonomy: role-preserved
-      is reported separately from strict structural isomorphism.'
+    note: 'Native v0.6 roundtrip taxonomy: role-preserved is reported separately from
+      strict structural isomorphism.'
     threshold_role_preserved: 0.5
     threshold_drift: 0.5
     total_targets: 24
-    role_preserved_count: 22
+    role_preserved_count: 24
     strict_isomorphism_count: 0
-    drift_count: 2
+    drift_count: 0
     failed_count: 0
-    stale_legacy_count: 0
+    non_native_count: 0
     role_preservation_score_source: v0.6_native
-    mean_role_preservation_score: 0.9167
+    mean_role_preservation_score: 1.0
     median_role_preservation_score: 1.0
-    min_role_preservation_score: 0.0
+    min_role_preservation_score: 1.0
     max_role_preservation_score: 1.0
     per_target:
     - name: async_service
@@ -80,7 +80,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.089
+      elapsed_s: 0.084
     - name: calculator
       group: control_positive
       role_preservation_score: 1.0
@@ -98,7 +98,25 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.104
+      elapsed_s: 0.102
+    - name: cli_tool
+      group: control_positive
+      role_preservation_score: 1.0
+      role_preservation_score_source: v0.6_native
+      scaffolding_fraction: 0.0
+      roundtrip_status: ROLE_PRESERVED
+      strict_structural: false
+      role_preserved: true
+      fixture_group: control_positive
+      file_count: 1
+      loc: 46
+      node_count: 8
+      edge_count: 10
+      parser_fallback_count: 0
+      skipped_file_count: 0
+      unsupported_construct_count: 0
+      dashboard_artifact_completeness: 0.0
+      elapsed_s: 0.09
     - name: data_pipeline
       group: control_positive
       role_preservation_score: 1.0
@@ -134,7 +152,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.111
+      elapsed_s: 0.093
     - name: flask_mini
       group: control_positive
       role_preservation_score: 1.0
@@ -152,7 +170,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.135
+      elapsed_s: 0.119
     - name: multi_package_workspace
       group: control_positive
       role_preservation_score: 1.0
@@ -170,7 +188,25 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.087
+      elapsed_s: 0.079
+    - name: notebook_module
+      group: control_positive
+      role_preservation_score: 1.0
+      role_preservation_score_source: v0.6_native
+      scaffolding_fraction: 0.0
+      roundtrip_status: ROLE_PRESERVED
+      strict_structural: false
+      role_preserved: true
+      fixture_group: control_positive
+      file_count: 1
+      loc: 37
+      node_count: 7
+      edge_count: 9
+      parser_fallback_count: 0
+      skipped_file_count: 0
+      unsupported_construct_count: 0
+      dashboard_artifact_completeness: 0.0
+      elapsed_s: 0.08
     - name: plugin_architecture
       group: control_positive
       role_preservation_score: 1.0
@@ -188,7 +224,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.091
+      elapsed_s: 0.079
     - name: flask_app
       group: real_world
       role_preservation_score: 1.0
@@ -206,7 +242,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.217
+      elapsed_s: 0.191
     - name: json_stdlib
       group: real_world
       role_preservation_score: 1.0
@@ -224,7 +260,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.105
+      elapsed_s: 0.1
     - name: requests_lib
       group: real_world
       role_preservation_score: 1.0
@@ -242,7 +278,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.156
+      elapsed_s: 0.146
     - name: 01_simple_state
       group: zoo
       role_preservation_score: 1.0
@@ -260,7 +296,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.084
+      elapsed_s: 0.082
     - name: 02_observer
       group: zoo
       role_preservation_score: 1.0
@@ -278,7 +314,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.092
+      elapsed_s: 0.084
     - name: 03_actor
       group: zoo
       role_preservation_score: 1.0
@@ -296,7 +332,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.084
+      elapsed_s: 0.078
     - name: 04_pomdp_minimal
       group: zoo
       role_preservation_score: 1.0
@@ -314,7 +350,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.085
+      elapsed_s: 0.077
     - name: 05_multi_factor
       group: zoo
       role_preservation_score: 1.0
@@ -332,7 +368,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.085
+      elapsed_s: 0.083
     - name: 06_hierarchical
       group: zoo
       role_preservation_score: 1.0
@@ -350,7 +386,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.089
+      elapsed_s: 0.082
     - name: 07_event_driven
       group: zoo
       role_preservation_score: 1.0
@@ -368,7 +404,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.086
+      elapsed_s: 0.076
     - name: 08_preferences
       group: zoo
       role_preservation_score: 1.0
@@ -386,7 +422,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.086
+      elapsed_s: 0.083
     - name: 09_policy
       group: zoo
       role_preservation_score: 1.0
@@ -404,7 +440,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.086
+      elapsed_s: 0.078
     - name: 10_constraint
       group: zoo
       role_preservation_score: 1.0
@@ -422,7 +458,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.086
+      elapsed_s: 0.085
     - name: 11_sensor_fusion
       group: zoo
       role_preservation_score: 1.0
@@ -440,7 +476,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.135
+      elapsed_s: 0.086
     - name: 12_full_pomdp
       group: zoo
       role_preservation_score: 1.0
@@ -458,48 +494,12 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.124
-    - name: cli_tool
-      group: control_positive
-      role_preservation_score: 0.0
-      role_preservation_score_source: v0.6_native
-      scaffolding_fraction: 1.0
-      roundtrip_status: DRIFT
-      strict_structural: false
-      role_preserved: false
-      fixture_group: control_positive
-      file_count: 1
-      loc: 32
-      node_count: 4
-      edge_count: 3
-      parser_fallback_count: 0
-      skipped_file_count: 0
-      unsupported_construct_count: 0
-      dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.086
-    - name: notebook_module
-      group: control_positive
-      role_preservation_score: 0.0
-      role_preservation_score_source: v0.6_native
-      scaffolding_fraction: 1.0
-      roundtrip_status: DRIFT
-      strict_structural: false
-      role_preserved: false
-      fixture_group: control_positive
-      file_count: 1
-      loc: 22
-      node_count: 3
-      edge_count: 2
-      parser_fallback_count: 0
-      skipped_file_count: 0
-      unsupported_construct_count: 0
-      dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.083
+      elapsed_s: 0.1
 literature:
   source: cogant/docs/evaluation/LITERATURE.md
   bibliography_entries: 103
 benchmark:
-  suite_runtime_s: 3557.71
+  suite_runtime_s: 3172.8
   shipped_fixture_count: 12
   benchmark_suite_file: suite_20260423.md
   benchmark_python_version: 3.12.11

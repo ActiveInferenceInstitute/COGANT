@@ -6,7 +6,7 @@
 
 ## Executive verdict
 
-**Pass (legacy purge complete).** Wave-3 mechanical splits remain banned; W1/W2 semantic splits retained (`cli/`, `viz/png/`, `run_target`, mermaid parse/render). The `png_export.py` shim is deleted — canonical PNG API is `cogant.viz.png` with direct submodule imports in `viz/png/orchestrator.py`. CI blocks `scripts/split_*.py` via `tests/unit/test_no_mechanical_split_scripts.py`.
+**Pass (compatibility-shim cleanup complete).** Wave-3 mechanical splits remain banned; W1/W2 semantic splits retained (`cli/`, `viz/png/`, `run_target`, mermaid parse/render). The `png_export.py` shim is deleted — canonical PNG API is `cogant.viz.png` with direct submodule imports in `viz/png/orchestrator.py`. CI blocks `scripts/split_*.py` via `tests/unit/test_no_mechanical_split_scripts.py`.
 
 **Do not repeat:** `scripts/split_*.py` line-range generators, mixin reassembly, or partial wiring of orphan draft modules. Future splits are one monolith at a time with TDD (see backlog below).
 
@@ -71,7 +71,7 @@ A line-range `scripts/split_*.py` wave gutted seven shims and left **52 unreacha
 
 ### Rules for any future split
 
-1. **One monolith at a time** — wiring + tests + delete old code in the same change.
+1. **One monolith at a time** — wiring + tests + delete replaced code in the same change.
 2. **Semantic boundaries** — compilation phase, route group, renderer type; never `lines[178:364]`.
 3. **No throwaway generators** — ban `scripts/split_*.py` pattern.
 4. **No mixin reassembly** — prefer composition or a single class module.
@@ -85,7 +85,7 @@ A line-range `scripts/split_*.py` wave gutted seven shims and left **52 unreacha
 | `run_all.json` steps vs `RUNNER_STAGES` | Parallel vocabularies | Document mapping in `tools/audit_stage_list.py` |
 | `api/orchestration.py` | Lazy-imports `render_all_pngs` mid-pipeline | Acceptable; keep viz coupling behind orchestration facade |
 | `tools/` vs `cogant/py/cogant/` | Manuscript tooling at project root | Intentional for template vendoring (`PROMOTION.md`) |
-| `test_package_init_metadata` reload | Stale `cogant.viz.png` refs in long pytest runs | Exception tests use `_live_png()` helper |
+| `test_package_init_metadata` reload | Out-of-date `cogant.viz.png` refs in long pytest runs | Exception tests use `_live_png()` helper |
 
 ## Verification checklist
 

@@ -1,6 +1,6 @@
-"""Rewrite links from old monolithic guide filenames to ``../<module>/README.md``.
+"""Rewrite links from monolithic guide filenames to ``../<module>/README.md``.
 
-This one-shot migration tool rewrites legacy ``SPEC.md``-style links that
+This one-shot migration tool rewrites monolithic ``SPEC.md``-style links that
 survived the April-2026 modularisation refactor, pointing them at the new
 ``../<module>/README.md`` indexes. It also writes a *minimal-stub*
 ``AGENTS.md`` into any module folder that doesn't yet have one — stubs
@@ -10,9 +10,9 @@ is edited.
 Exit codes
 ----------
 * ``0`` — default mode: finished successfully (files may have been
-          rewritten). ``--check`` mode: no legacy links remained and no
+          rewritten). ``--check`` mode: no monolithic links remained and no
           stub AGENTS.md files were needed.
-* ``1`` — ``--check`` mode only: at least one legacy link or missing
+* ``1`` — ``--check`` mode only: at least one monolithic link or missing
           AGENTS.md was found; use the default mode to fix them.
 
 Invocation is directory-independent — all paths are anchored on
@@ -71,7 +71,7 @@ def is_stub_agents(text: str) -> bool:
 
 
 def update_links(filepath: Path, *, at_docs_root: bool, check_only: bool = False) -> bool:
-    """Rewrite legacy links in *filepath*; return ``True`` if it changed.
+    """Rewrite monolithic links in *filepath*; return ``True`` if it changed.
 
     When ``check_only`` is set, no file is written — the return value simply
     indicates whether a rewrite *would* have occurred.
@@ -92,7 +92,7 @@ def update_links(filepath: Path, *, at_docs_root: bool, check_only: bool = False
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Rewrite legacy monolith link targets to ../<module>/README.md "
+            "Rewrite monolithic link targets to ../<module>/README.md "
             "and backfill missing AGENTS.md stubs. Use --check in CI to "
             "flag issues without modifying any files."
         ),
@@ -100,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--check",
         action="store_true",
-        help=("Do not modify any files. Exit 1 if legacy links or stub AGENTS.md files are found."),
+        help=("Do not modify any files. Exit 1 if monolithic links or stub AGENTS.md files are found."),
     )
     args = parser.parse_args(argv)
     check_only = args.check
@@ -131,7 +131,7 @@ def main(argv: list[str] | None = None) -> int:
             changed = update_links(path, at_docs_root=False, check_only=check_only)
             if changed:
                 if check_only:
-                    issues.append(f"legacy link: {path.relative_to(DOCS_DIR)}")
+                    issues.append(f"monolithic link: {path.relative_to(DOCS_DIR)}")
                 else:
                     rewrites.append(path)
                     print(f"Fixed links in {path}")
@@ -143,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
         changed = update_links(fp, at_docs_root=True, check_only=check_only)
         if changed:
             if check_only:
-                issues.append(f"legacy link: {fp.relative_to(DOCS_DIR)}")
+                issues.append(f"monolithic link: {fp.relative_to(DOCS_DIR)}")
             else:
                 rewrites.append(fp)
                 print(f"Fixed links in {fp}")
@@ -158,7 +158,7 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 1
-        print("fix_links --check: no legacy links or stub AGENTS.md files found")
+        print("fix_links --check: no monolithic links or stub AGENTS.md files found")
         return 0
 
     print(f"fix_links: rewrote {len(rewrites)} file(s)")

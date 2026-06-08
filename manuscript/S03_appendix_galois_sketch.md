@@ -105,7 +105,8 @@ planned node). Composing the two:
    number of declarations of role `r` equals `count_ρ(G, r)`.
 3. `parse_gnn(F(G))` recovers the full declaration list bijectively.
 4. `synthesize_package(plan)` emits one Python artefact per `NodePlan`; by
-   the CONSTRAINT-role synthesizer fix recorded in @sec:S01-appendix-a2-constraint, the mapping from `NodePlan` to emitted
+   the CONSTRAINT-role synthesizer invariant recorded in
+   [`../cogant/docs/evaluation/CONSTRAINT_FIX.md`](../cogant/docs/evaluation/CONSTRAINT_FIX.md), the mapping from `NodePlan` to emitted
    artefact is injective on role multiplicity.
 5. Re‑running `F` on the synthesized package recovers the same role
    multiset up to the **synthesizer gap**: extra OBSERVATION/CONSTRAINT
@@ -166,7 +167,8 @@ limit of large programs (real-world libraries), this ratio vanishes and
 role distribution; a high score in that regime is treated as a warning to
 inspect `scaffolding_fraction`, not as an asymptotic proof. The most
 informative cases fall at intermediate sizes where origin and scaffold are
-comparable; this is exactly where @sec:S01-appendix-roundtrip-epsilon shows overall role-preservation gaps of roughly 0.85--0.95 on the affected historical rows. ∎
+comparable; this is exactly where @sec:S01-appendix-roundtrip-epsilon now
+reports the drift fixtures and their high scaffolding fractions. ∎
 
 ### Role-preservation threshold and strict invariant tier {#sec:S03-role-preservation-threshold}
 
@@ -188,8 +190,8 @@ requiring `count_origin ≥ t · count_synth`. Summing over roles, the
 ROLE_PRESERVED threshold corresponds to "enough of the origin role multiset
 survives the roundtrip without being drowned out by scaffolding" under the
 configured public threshold. The
-CONSTRAINT fix (@sec:S01-appendix-a2-constraint) and the later POLICY/CONTEXT role-preservation fix are the
-transformations intended to make this true for constraint-heavy and policy-bearing
+CONSTRAINT-role recovery mechanism and the POLICY/CONTEXT role-preservation
+mechanism are the transformations intended to make this true for constraint-heavy and policy-bearing
 real-world libraries: each raises the CONSTRAINT (or POLICY/CONTEXT) component
 of `count_synth` from a small scaffold constant toward `count_origin` (proportional),
 so `min = count_origin` and the per-role ratio jumps to 1.0.  ∎

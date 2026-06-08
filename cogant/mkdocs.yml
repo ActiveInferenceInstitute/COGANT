@@ -86,8 +86,8 @@ nav:
       - GNN Interpretation: tutorials/05_gnn_interpretation.md
       - Reverse Mode: tutorials/06_reverse_mode.md
       - Plugin Authoring: tutorials/07_plugin_authoring.md
-      - Calculator (legacy): tutorials/calculator.md
-      - Flask (legacy): tutorials/flask.md
+      - Calculator Walkthrough: tutorials/calculator.md
+      - Flask Walkthrough: tutorials/flask.md
   - Cookbook:
       - Overview: cookbook/README.md
       - Scan a Repo: cookbook/01_scan_basic.md
@@ -305,7 +305,6 @@ nav:
       - Validation Report: validation/validation_report.md
       - Verification & Test Posture: validation/verification_and_test_posture.md
       - Implementation Verification Report: validation/cogant_implementation_verification_report.md
-      - Archival Note: validation/archival_note.md
       - See Also: validation/see_also.md
   - Rules:
       - Section Index: rules/README.md
@@ -364,9 +363,9 @@ nav:
       - Active Inference Mapping: rnd/active_inference_mapping.md
   - Evaluation:
       - Overview: evaluation/README.md
-      - "R&D Log": "evaluation/R&D_LOG.md"
-      - Final Report: evaluation/FINAL_REPORT.md
-      - Readiness: evaluation/V1.0_READINESS.md
+      - "R&D Status": "evaluation/R&D_LOG.md"
+      - Evaluation Report: evaluation/FINAL_REPORT.md
+      - V1.0 Readiness: evaluation/V1.0_READINESS.md
       - Calibration notes: evaluation/CALIBRATION.md
       - Empirical Claim: evaluation/EMPIRICAL_CLAIM.md
       - First Inference: evaluation/FIRST_INFERENCE.md
@@ -374,8 +373,8 @@ nav:
       - Isomorphism Theorem: evaluation/ISOMORPHISM_THEOREM.md
       - Constraint Fix: evaluation/CONSTRAINT_FIX.md
       - Roundtrip evaluation: evaluation/ROUNDTRIP_EVAL.md
-      - Roundtrip Validation: evaluation/ROUNDTRIP_VALIDATION.md
-      - Roundtrip Improvement: evaluation/ROUNDTRIP_IMPROVEMENT.md
+      - Roundtrip Validation Contract: evaluation/ROUNDTRIP_VALIDATION.md
+      - Reverse Synthesis Status: evaluation/ROUNDTRIP_IMPROVEMENT.md
       - Cross-Language Roundtrip: evaluation/CROSS_LANG_ROUNDTRIP.md
       - GNN Validation Report: evaluation/GNN_VALIDATION_REPORT.md
       - Mutation Report: evaluation/MUTATION_REPORT.md
@@ -386,14 +385,10 @@ nav:
       - Scoping Report: evaluation/SCOPING_REPORT.md
       - Literature: evaluation/LITERATURE.md
       - Related Work: evaluation/RELATED_WORK.md
-      - "Release Notes — v0.2.0": evaluation/RELEASE_NOTES_v0.2.0.md
-      - "Release Notes — v0.5.0": evaluation/RELEASE_NOTES_v0.5.0.md
   - Roadmap:
       - Section Index: roadmap/README.md
       - Overview: roadmap/overview.md
       - "v0.1.0 (Current)": roadmap/version_010_current.md
-      - "v0.2.0 (Planned)": roadmap/version_020_planned.md
-      - "v0.3.0 (Planned)": roadmap/version_030_planned.md
       - "v1.0.0 (Planned)": roadmap/version_100_planned.md
       - Version Strategy: roadmap/version_strategy.md
       - Feature Backlog: roadmap/feature_backlog.md

@@ -331,7 +331,7 @@ For every marker resolved, verify:
   the codebase, so a snapshot pass is non-optional.
 * [ ] An entry is appended to the audit log
   ([`CALIBRATION.md`](../evaluation/CALIBRATION.md) §6) recording
-  date, parameter, old value, new value, and reviewer.
+  date, parameter, prior value, new value, and reviewer.
 
 ### 4.5 Wontfix and deferral
 

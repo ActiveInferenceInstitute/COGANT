@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit active docs/manuscript text for stale COGANT v0.5 terminology."""
+"""Audit active docs/manuscript text for current COGANT terminology."""
 
 from __future__ import annotations
 
@@ -47,6 +47,42 @@ def _active_status_doc(path: Path) -> bool:
     }
 
 
+def _roundtrip_current_count_doc(path: Path) -> bool:
+    """Return true for docs that present current roundtrip status counts."""
+    try:
+        rel = path.relative_to(ROOT).as_posix()
+    except ValueError:
+        return True
+    current_count_docs = {
+        "README.md",
+        "AGENTS.md",
+        "ISA.md",
+        "TODO.md",
+        "PROMOTION.md",
+        "cogant/README.md",
+        "cogant/AGENTS.md",
+        "cogant/docs/changelog.md",
+        "cogant/docs/evaluation/BENCHMARK_VS_PRIOR.md",
+        "cogant/docs/evaluation/FINAL_REPORT.md",
+        "cogant/docs/evaluation/R&D_LOG.md",
+        "cogant/docs/evaluation/RELEASE_NOTES_v0.5.0.md",
+        "cogant/docs/evaluation/ROUNDTRIP_EVAL.md",
+        "cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md",
+        "cogant/docs/evaluation/ROUNDTRIP_VALIDATION.md",
+        "cogant/docs/evaluation/SCOPING_REPORT.md",
+        "cogant/docs/evaluation/V1.0_READINESS.md",
+        "cogant/docs/roadmap/feature_backlog.md",
+        "cogant/docs/roadmap/known_limitations_010.md",
+        "cogant/docs/roadmap/overview.md",
+        "cogant/docs/roadmap/performance_targets.md",
+    }
+    return (
+        rel in current_count_docs
+        or rel.startswith("manuscript/")
+        or rel.startswith("output/manuscript/")
+    )
+
+
 def _current_guidance_doc(path: Path) -> bool:
     try:
         rel = path.relative_to(ROOT).as_posix()
@@ -54,7 +90,7 @@ def _current_guidance_doc(path: Path) -> bool:
         return False
     if not rel.startswith("cogant/docs/"):
         return False
-    historical_parts = (
+    current_exception_parts = (
         "/evaluation/R&D_LOG.md",
         "/evaluation/RELEASE_NOTES",
         "/evaluation/ROUNDTRIP_EVAL.md",
@@ -66,7 +102,7 @@ def _current_guidance_doc(path: Path) -> bool:
         "/roadmap/version_",
         "/roadmap/feature_backlog.md",
     )
-    return not any(part in rel for part in historical_parts)
+    return not any(part in rel for part in current_exception_parts)
 
 
 def _active_guidance_doc(path: Path) -> bool:
@@ -88,18 +124,16 @@ def _active_guidance_doc(path: Path) -> bool:
 
 _MANUSCRIPT_BODY_SKIP = {"AGENTS.md", "README.md", "SYNTAX.md", "supplementary.md"}
 
-ROUNDTRIP_LEGACY_CLAIM_RE = re.compile(
-    r"\b23\s*/\s*23\s*(?:\(\s*100\s*%\s*\))?\s*"
+ROUNDTRIP_ALL_TARGET_CLAIM_RE = re.compile(
+    r"\b\d+\s*/\s*\d+\s*(?:\(\s*100\s*%\s*\))?\s*"
     r"(?:ROLE_PRESERVED|role[- ]preserved(?:\s+(?:targets|rows))?)\b"
-    r"|\b(?:all\s+)?23\s+(?:targets|rows)\s+(?:are|were|as|reported\s+)?"
-    r"(?:ROLE_PRESERVED|role[- ]preserved)\b"
-    r"|\bROLE_PRESERVED\b[^\n]{0,120}\b23\s*/\s*23\b",
+    r"|\b(?:all\s+)?\d+\s+(?:targets|rows)\s+(?:are|were|as|reported\s+)?"
+    r"(?:ROLE_PRESERVED|role[- ]preserved)\b",
     re.IGNORECASE,
 )
 
-ROUNDTRIP_LEGACY_QUALIFIER_RE = re.compile(
+ROUNDTRIP_CURRENT_QUALIFIER_RE = re.compile(
     r"\b("
-    r"historical|legacy|STALE_LEGACY|not\s+fresh|"
     r"native\s+(?:v0\.6\s+)?ledger|ledger\s+refresh|"
     r"fresh\s+v0\.6\s+(?:release\s+)?evidence|"
     r"current\s+v0\.6\s+metrics\s+classif"
@@ -107,8 +141,8 @@ ROUNDTRIP_LEGACY_QUALIFIER_RE = re.compile(
     re.IGNORECASE,
 )
 
-ROUNDTRIP_LEGACY_QUALIFIER_WINDOW = 320
-ROUNDTRIP_LEGACY_SKIP_PREFIXES = ("Plans/", "tests/", "tools/")
+ROUNDTRIP_CURRENT_QUALIFIER_WINDOW = 320
+ROUNDTRIP_PREVIOUS_CLAIM_SKIP_PREFIXES = ("Plans/", "tests/", "tools/")
 
 ROUNDTRIP_ROLE_THRESHOLD_08_RE = re.compile(
     r"(?:"
@@ -123,13 +157,36 @@ ROUNDTRIP_ROLE_THRESHOLD_08_RE = re.compile(
 
 ROUNDTRIP_ROLE_THRESHOLD_08_QUALIFIER_RE = re.compile(
     r"\b("
-    r"historical|legacy|STALE_LEGACY|high[- ]confidence|stricter|"
+    r"high[- ]confidence|stricter|"
     r"not\s+the\s+public\s+(?:CLI\s+)?default|benchmark\s+notes?|wave[-_ ]?\d+"
     r")\b",
     re.IGNORECASE,
 )
 
 ROUNDTRIP_ROLE_THRESHOLD_08_QUALIFIER_WINDOW = 240
+
+ROUNDTRIP_STATUS_COUNT_RE = re.compile(
+    r"\b(?P<fraction_count>\d+)\s*/\s*(?P<fraction_total>\d+)\s*"
+    r"(?P<fraction_status>ROLE_PRESERVED|DRIFT|FAILED)\b"
+    r"|\b(?P<of_count>\d+)\s+of\s+(?P<of_total>\d+)\s+(?:native\s+)?"
+    r"(?:roundtrip\s+)?(?:fixtures?|targets?|rows?)?\s*"
+    r"(?P<of_status>role[- ]preserved|drift|failed)\b"
+    r"|\b(?P<for_status>ROLE_PRESERVED|DRIFT|FAILED|role[- ]preserved|drift|failed)"
+    r"\s+for\s+(?P<for_count>\d+)\s+of\s+(?P<for_total>\d+)\s+"
+    r"(?:fixtures?|targets?|rows?)\b"
+    r"|\b(?P<prefix_count>\d+)\s+(?P<prefix_status>ROLE_PRESERVED|DRIFT|FAILED)\b"
+    r"|\|\s*(?P<table_status>ROLE_PRESERVED|DRIFT|FAILED|Strict structural isomorphism)"
+    r"\s*\|\s*(?P<table_count>\d+)\s*\|"
+    r"|\b(?P<phrase_status>role[- ]preserved|drift|failed|strict structural[- ]isomorphism)"
+    r"\s+(?:rows?|targets?|cases?)\s*:\s*(?P<phrase_count>\d+)\b",
+    re.IGNORECASE,
+)
+
+ROUNDTRIP_MEAN_SCORE_RE = re.compile(
+    r"\|\s*Mean role-preservation score\s*\|\s*(?P<table_score>\d+(?:\.\d+)?)\s*\|"
+    r"|\bmean role-preservation score\s*:\s*(?P<phrase_score>\d+(?:\.\d+)?)\b",
+    re.IGNORECASE,
+)
 
 
 def _manuscript_body(path: Path) -> bool:
@@ -143,44 +200,42 @@ def _manuscript_body(path: Path) -> bool:
 
 
 def _roundtrip_claim_is_qualified(text: str, start: int, end: int) -> bool:
-    window_start = max(0, start - ROUNDTRIP_LEGACY_QUALIFIER_WINDOW)
-    window_end = min(len(text), end + ROUNDTRIP_LEGACY_QUALIFIER_WINDOW)
-    return bool(ROUNDTRIP_LEGACY_QUALIFIER_RE.search(text[window_start:window_end]))
+    window_start = max(0, start - ROUNDTRIP_CURRENT_QUALIFIER_WINDOW)
+    window_end = min(len(text), end + ROUNDTRIP_CURRENT_QUALIFIER_WINDOW)
+    return bool(ROUNDTRIP_CURRENT_QUALIFIER_RE.search(text[window_start:window_end]))
 
 
-def _skip_roundtrip_legacy_claim_audit(path: Path) -> bool:
+def _skip_roundtrip_previous_claim_audit(path: Path) -> bool:
     try:
         rel = path.relative_to(ROOT).as_posix()
     except ValueError:
         return False
-    return rel.startswith(ROUNDTRIP_LEGACY_SKIP_PREFIXES)
+    return rel.startswith(ROUNDTRIP_PREVIOUS_CLAIM_SKIP_PREFIXES)
 
 
-def audit_roundtrip_legacy_claims(file_paths: set[Path], findings: list[str]) -> None:
-    """Require legacy 23/23 role-preservation claims to carry provenance.
+def audit_roundtrip_previous_claims(file_paths: set[Path], findings: list[str]) -> None:
+    """Require all-target role-preservation claims to carry current provenance.
 
-    The legacy v0.5 JSONL rows do not contain native v0.6 role-score fields, so
-    an unqualified "23/23 ROLE_PRESERVED" phrase is evidence laundering. The
-    claim may remain in historical release notes or R&D logs only when nearby
-    text explicitly labels it historical, legacy, stale, or pending native-ledger
-    refresh.
+    A count such as "24/24 ROLE_PRESERVED" is load-bearing. It may remain only
+    when nearby text explicitly cites native v0.6 ledger evidence or a current
+    ledger refresh.
     """
     for file_path in sorted(file_paths):
-        if _skip_roundtrip_legacy_claim_audit(file_path):
+        if _skip_roundtrip_previous_claim_audit(file_path):
             continue
         try:
             text = file_path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             continue
-        for match in ROUNDTRIP_LEGACY_CLAIM_RE.finditer(text):
+        for match in ROUNDTRIP_ALL_TARGET_CLAIM_RE.finditer(text):
             if _roundtrip_claim_is_qualified(text, match.start(), match.end()):
                 continue
             line_no = text.count("\n", 0, match.start()) + 1
             rel = file_path.relative_to(ROOT) if file_path.is_relative_to(ROOT) else file_path
             snippet = match.group(0).replace("\n", " ")
             findings.append(
-                f"{rel}:{line_no}: unqualified-roundtrip-legacy-claim: {snippet!r}. "
-                "Label 23/23 role-preservation claims as historical/legacy or cite a native v0.6 ledger."
+                f"{rel}:{line_no}: unqualified-roundtrip-previous-claim: {snippet!r}. "
+                "Cite a native v0.6 ledger for all-target role-preservation claims."
             )
 
 
@@ -195,15 +250,15 @@ def _roundtrip_threshold_claim_doc(path: Path) -> bool:
 
 
 def audit_roundtrip_threshold_claims(file_paths: set[Path], findings: list[str]) -> None:
-    """Reject unqualified stale 0.8 ROLE_PRESERVED threshold claims.
+    """Reject unqualified 0.8 ROLE_PRESERVED threshold claims.
 
     The public ``cogant roundtrip`` default is ``s_role >= 0.5``. A 0.8 line may
-    still appear in historical reports or as a labelled high-confidence analysis
-    threshold, but active docs/manuscript text must not call it the default or
-    unqualified ROLE_PRESERVED threshold.
+    appear only as a labelled high-confidence analysis threshold; active
+    docs/manuscript text must not call it the default or unqualified
+    ROLE_PRESERVED threshold.
     """
     for file_path in sorted(file_paths):
-        if _skip_roundtrip_legacy_claim_audit(file_path):
+        if _skip_roundtrip_previous_claim_audit(file_path):
             continue
         if not _roundtrip_threshold_claim_doc(file_path):
             continue
@@ -221,7 +276,152 @@ def audit_roundtrip_threshold_claims(file_paths: set[Path], findings: list[str])
             snippet = match.group(0).replace("\n", " ")
             findings.append(
                 f"{rel}:{line_no}: unqualified-roundtrip-threshold-0.8: {snippet!r}. "
-                "Use the public default s_role >= 0.5, or label 0.8 as historical/legacy/high-confidence."
+                "Use the public default s_role >= 0.5, or label 0.8 as high-confidence analysis."
+            )
+
+
+def _roundtrip_counts_from_metrics() -> dict[str, int]:
+    metrics_text = (ROOT / "cogant" / "evaluation" / "METRICS.yaml").read_text(
+        encoding="utf-8"
+    )
+    keys = {
+        "total_targets": "TOTAL",
+        "role_preserved_count": "ROLE_PRESERVED",
+        "drift_count": "DRIFT",
+        "failed_count": "FAILED",
+        "strict_isomorphism_count": "STRICT_ISOMORPHISM",
+    }
+    counts: dict[str, int] = {}
+    for yaml_key, status in keys.items():
+        match = re.search(rf"^\s*{yaml_key}:\s*(\d+)\b", metrics_text, re.MULTILINE)
+        if match is None:
+            raise RuntimeError(f"Missing {yaml_key} in METRICS.yaml")
+        counts[status] = int(match.group(1))
+    return counts
+
+
+def _roundtrip_mean_score_from_metrics() -> float:
+    metrics_text = (ROOT / "cogant" / "evaluation" / "METRICS.yaml").read_text(
+        encoding="utf-8"
+    )
+    match = re.search(
+        r"^\s*mean_role_preservation_score:\s*(\d+(?:\.\d+)?)\b",
+        metrics_text,
+        re.MULTILINE,
+    )
+    if match is None:
+        raise RuntimeError("Missing mean_role_preservation_score in METRICS.yaml")
+    return float(match.group(1))
+
+
+def _normalize_roundtrip_status(raw: str) -> str:
+    lowered = raw.lower().replace("_", "-")
+    if "role" in lowered:
+        return "ROLE_PRESERVED"
+    if "drift" in lowered:
+        return "DRIFT"
+    if "failed" in lowered:
+        return "FAILED"
+    if "strict" in lowered:
+        return "STRICT_ISOMORPHISM"
+    raise ValueError(f"Unknown roundtrip status {raw!r}")
+
+
+def _roundtrip_status_count_match(match: re.Match[str]) -> tuple[str, int, int | None]:
+    if match.group("fraction_status"):
+        return (
+            _normalize_roundtrip_status(match.group("fraction_status")),
+            int(match.group("fraction_count")),
+            int(match.group("fraction_total")),
+        )
+    if match.group("of_status"):
+        return (
+            _normalize_roundtrip_status(match.group("of_status")),
+            int(match.group("of_count")),
+            int(match.group("of_total")),
+        )
+    if match.group("for_status"):
+        return (
+            _normalize_roundtrip_status(match.group("for_status")),
+            int(match.group("for_count")),
+            int(match.group("for_total")),
+        )
+    if match.group("prefix_status"):
+        return (
+            _normalize_roundtrip_status(match.group("prefix_status")),
+            int(match.group("prefix_count")),
+            None,
+        )
+    if match.group("table_status"):
+        return (
+            _normalize_roundtrip_status(match.group("table_status")),
+            int(match.group("table_count")),
+            None,
+        )
+    return (
+        _normalize_roundtrip_status(match.group("phrase_status")),
+        int(match.group("phrase_count")),
+        None,
+    )
+
+
+def audit_roundtrip_current_counts(file_paths: set[Path], findings: list[str]) -> None:
+    """Reject current roundtrip counts that no longer match METRICS.yaml."""
+    expected = _roundtrip_counts_from_metrics()
+    for file_path in sorted(file_paths):
+        if _skip_roundtrip_previous_claim_audit(file_path):
+            continue
+        if not _roundtrip_current_count_doc(file_path):
+            continue
+        try:
+            text = file_path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        for match in ROUNDTRIP_STATUS_COUNT_RE.finditer(text):
+            status, count, total = _roundtrip_status_count_match(match)
+            expected_count = expected[status]
+            expected_total = expected["TOTAL"]
+            if count == expected_count and (total is None or total == expected_total):
+                continue
+            line_no = text.count("\n", 0, match.start()) + 1
+            rel = file_path.relative_to(ROOT) if file_path.is_relative_to(ROOT) else file_path
+            snippet = match.group(0).replace("\n", " ")
+            suffix = (
+                f" of {expected_total} targets."
+                if total is not None
+                else "."
+            )
+            findings.append(
+                f"{rel}:{line_no}: stale-roundtrip-current-count: {snippet!r}. "
+                f"METRICS.yaml currently has {expected_count} {status}{suffix}"
+            )
+
+
+def audit_roundtrip_mean_score(file_paths: set[Path], findings: list[str]) -> None:
+    """Reject current roundtrip mean-score claims that no longer match METRICS.yaml."""
+    expected = _roundtrip_mean_score_from_metrics()
+    for file_path in sorted(file_paths):
+        if _skip_roundtrip_previous_claim_audit(file_path):
+            continue
+        if not _roundtrip_current_count_doc(file_path):
+            continue
+        try:
+            text = file_path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        for match in ROUNDTRIP_MEAN_SCORE_RE.finditer(text):
+            raw_score = match.group("table_score") or match.group("phrase_score")
+            if raw_score is None:
+                continue
+            score = float(raw_score)
+            if abs(score - expected) < 0.00005:
+                continue
+            line_no = text.count("\n", 0, match.start()) + 1
+            rel = file_path.relative_to(ROOT) if file_path.is_relative_to(ROOT) else file_path
+            snippet = match.group(0).replace("\n", " ")
+            findings.append(
+                f"{rel}:{line_no}: stale-roundtrip-mean-score: {snippet!r}. "
+                f"METRICS.yaml currently has mean_role_preservation_score {expected:.4f}."
             )
 
 
@@ -247,7 +447,7 @@ BANNED_PATTERNS = [
         "Report role-preserved and strict structural-isomorphism counts separately.",
     ),
     BannedPattern(
-        "old-roundtrip-tier-list",
+        "previous-roundtrip-tier-list",
         re.compile(r"\bISOMORPHIC\s*/\s*APPROXIMATE\s*/\s*DIVERGENT\b", re.IGNORECASE),
         "Use STRUCTURALLY_ISOMORPHIC / ROLE_PRESERVED / DRIFT / FAILED.",
     ),
@@ -258,7 +458,7 @@ BANNED_PATTERNS = [
         applies_to=_readme_or_agents,
     ),
     BannedPattern(
-        "legacy-server-roundtrip-field",
+        "compat-server-roundtrip-field",
         re.compile(r"\bisomorphic\s*:\s*bool\b", re.IGNORECASE),
         "Document roundtrip_status, role_preservation_score, and strict structural booleans instead.",
         applies_to=_readme_or_agents,
@@ -298,9 +498,9 @@ BANNED_PATTERNS = [
         ),
     ),
     BannedPattern(
-        "stale-v01x-current-doc",
+        "v01x-current-doc",
         re.compile(r"\bv0\.1\.x\b", re.IGNORECASE),
-        "Active docs should describe the current v0.6 behaviour or mark older text as historical.",
+        "Active docs should describe the current v0.6 behaviour.",
         applies_to=_current_guidance_doc,
     ),
     BannedPattern(
@@ -319,6 +519,24 @@ BANNED_PATTERNS = [
         re.compile(r"\brole[- ]multiset isomorphic\b", re.IGNORECASE),
         "Use role-preserved / role_preservation_score unless strict structural isomorphism is meant.",
         applies_to=_current_guidance_doc,
+    ),
+    BannedPattern(
+        "obsolete-project-path",
+        re.compile(r"\bprojects_in_progress/cogant\b|\bprojects/cogant\b"),
+        "Use projects/working/cogant for this checkout.",
+        applies_to=_active_guidance_doc,
+    ),
+    BannedPattern(
+        "removed-roundtrip-status-name",
+        re.compile(r"\bSTALE_LEGACY\b|\bstale_legacy_count\b|\blegacy_epsilon_proxy\b"),
+        "Use NON_NATIVE / non_native_count / epsilon_proxy.",
+        applies_to=_active_guidance_doc,
+    ),
+    BannedPattern(
+        "current-doc-legacy-or-stale-label",
+        re.compile(r"\b(?:legacy|stale)\b", re.IGNORECASE),
+        "Use compatibility, non-native, out-of-sync, or obsolete as appropriate.",
+        applies_to=_active_guidance_doc,
     ),
 ]
 
@@ -468,12 +686,14 @@ def main(argv: list[str] | None = None) -> int:
                     f"{rel}:{line_no}: {pattern.name}: {snippet!r}. {pattern.guidance}"
                 )
 
-    audit_roundtrip_legacy_claims(file_paths, findings)
+    audit_roundtrip_previous_claims(file_paths, findings)
     audit_roundtrip_threshold_claims(file_paths, findings)
+    audit_roundtrip_current_counts(file_paths, findings)
+    audit_roundtrip_mean_score(file_paths, findings)
     audit_ir_expansion(findings)
 
     if findings:
-        print("Stale docs/manuscript terminology found:", file=sys.stderr)
+        print("Out-of-date docs/manuscript terminology found:", file=sys.stderr)
         for finding in findings:
             print(f"  {finding}", file=sys.stderr)
         return 1

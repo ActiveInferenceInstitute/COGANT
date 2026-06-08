@@ -1,6 +1,6 @@
 # COGANT
 
-Codebase-to-GNN translation — **package** under [`cogant/`](cogant/), **manuscript** under [`manuscript/`](manuscript/). This checkout is self-contained at the COGANT project root; when vendored into `docxology/template`, the same tree is expected to live at `projects/cogant/` and be discovered by the template pipeline (`infrastructure/project/discovery.py`). See [`PROMOTION.md`](PROMOTION.md) for the promotion checklist.
+Codebase-to-GNN translation — **package** under [`cogant/`](cogant/), **manuscript** under [`manuscript/`](manuscript/). This checkout is self-contained at the COGANT project root; when linked into `docxology/template`, the same tree is expected to appear at `projects/working/cogant/` and be rendered with the lifecycle-qualified project name `working/cogant`. See [`PROMOTION.md`](PROMOTION.md) for the render-location checklist.
 
 Top-level [`src/`](src/), [`tests/`](tests/), and [`pyproject.toml`](pyproject.toml)
 form a tiny compatibility shell for the parent `docxology/template` project
@@ -11,9 +11,8 @@ discovery contract. The actual installable COGANT package remains the nested
 
 | Context | COGANT project root | COGANT package root | Notes |
 | --- | --- | --- | --- |
-| Passive standalone checkout | `/Users/4d/Documents/GitHub/projects/passive/cogant` | `/Users/4d/Documents/GitHub/projects/passive/cogant/cogant` | Current local checkout; parent-template discovery and PDF rendering are not active. |
-| Active parent-template project | `docxology/template/projects/cogant` | `docxology/template/projects/cogant/cogant` | Template discovery, Markdown validation, and `scripts/03_render_pdf.py --project cogant` apply here. |
-| Historical staging path | `docxology/template/projects_in_progress/cogant` | `docxology/template/projects_in_progress/cogant/cogant` | Legacy references only; do not add new workflow docs that require this path. |
+| Working sidecar checkout | `/Users/4d/Documents/GitHub/projects/working/cogant` | `/Users/4d/Documents/GitHub/projects/working/cogant/cogant` | Current local checkout; run project-local commands here. |
+| Parent-template render path | `/Users/4d/Documents/GitHub/template/projects/working/cogant` | `/Users/4d/Documents/GitHub/template/projects/working/cogant/cogant` | Created by the sidecar/template linker; render with `--project working/cogant`. |
 
 In this documentation, **COGANT project root** means the directory containing this README, `run_all.py`, `tools/`, `scripts/`, `manuscript/`, and the nested package directory. **COGANT package root** means the inner [`cogant/`](cogant/) directory containing `pyproject.toml`, `py/cogant/`, package tests, docs, and Rust crates.
 
@@ -35,11 +34,11 @@ uv run python tools/audit_manuscript_citations.py
 uv run python tools/audit_manuscript_numbers.py
 ```
 
-When vendored under the parent template as `projects/cogant/`, also run from the template root:
+When linked under the parent template as `projects/working/cogant/`, also run from the template root:
 
 ```bash
-uv run python -m infrastructure.validation.cli markdown projects/cogant/manuscript/
-uv run python -m infrastructure.validation.cli markdown projects/cogant/output/manuscript/
+uv run python -m infrastructure.validation.cli markdown projects/working/cogant/manuscript/
+uv run python -m infrastructure.validation.cli markdown projects/working/cogant/output/manuscript/
 ```
 
 Audit drift-sensitive docs and stubs:
@@ -61,7 +60,7 @@ uv run python tools/check_metrics_fresh.py --fail-on-dirty
 
 **Coverage table (`{#tbl:coverage-stmt-modules}`).** Per-module `Stmts` / `Cover` rows in [`manuscript/06_04_tests_mutation_and_benchmarks.md`](manuscript/06_04_tests_mutation_and_benchmarks.md) are hand-copied from `coverage report`. After `uv run pytest tests/ --cov=py/cogant` in [`cogant/`](cogant/) (inner package root), run `uv run python tools/check_coverage_table.py` from this project root to compare the table to the report; use `--strict` to fail on drift. See [`manuscript/AGENTS.md`](manuscript/AGENTS.md) and [`PROMOTION.md`](PROMOTION.md).
 
-Rendering uses `output/manuscript/` when present in the parent template renderer (see `infrastructure/rendering/pipeline.py`). Full template PDF rendering requires the vendored `projects/cogant/` location and `scripts/03_render_pdf.py --project cogant`.
+Rendering uses `output/manuscript/` when present in the parent template renderer (see `infrastructure/rendering/pipeline.py`). Full template PDF rendering requires the linked `projects/working/cogant/` location and `scripts/03_render_pdf.py --project working/cogant`.
 
 The same generator refreshes manuscript figures under `output/figures/` by
 copying curated real run PNGs from `cogant/output/` (program graph,
