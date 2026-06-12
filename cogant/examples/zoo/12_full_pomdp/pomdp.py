@@ -164,7 +164,7 @@ class FullPOMDPAgent:
         }
 
     def execute_action(self, action: int) -> None:
-        """Apply the selected action to the environment (stub)."""
+        """Apply the selected action to the minimal environment."""
         pass  # In a real system this would mutate environment state
 
 

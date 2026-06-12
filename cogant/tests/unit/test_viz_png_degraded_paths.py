@@ -821,6 +821,7 @@ def test_render_mermaid_file_to_png_mmdc_succeeds(monkeypatch, tmp_path: Path) -
 
     Hits lines 538-541 (success path).
     """
+    monkeypatch.setenv("COGANT_USE_EXTERNAL_MMDC", "1")
     monkeypatch.setattr(png.shutil, "which", lambda b: "/usr/bin/mmdc" if b == "mmdc" else None)
     mmd = tmp_path / "x.mmd"
     mmd.write_text("graph TD\nA --> B\n")
@@ -840,6 +841,7 @@ def test_render_mermaid_file_to_png_mmdc_fails_native_fallback(monkeypatch, tmp_
     """mmdc raises CalledProcessError, native fallback writes PNG."""
     import subprocess as sp
 
+    monkeypatch.setenv("COGANT_USE_EXTERNAL_MMDC", "1")
     monkeypatch.setattr(png.shutil, "which", lambda b: "/usr/bin/mmdc" if b == "mmdc" else None)
     mmd = tmp_path / "x.mmd"
     mmd.write_text("graph TD\nA --> B\n")
@@ -1489,6 +1491,7 @@ def test_render_svg_file_to_png_via_rsvg_convert_success(monkeypatch, tmp_path: 
             raise ImportError("simulated cairosvg missing")
         return real_import(name, *args, **kwargs)
 
+    monkeypatch.setenv("COGANT_USE_EXTERNAL_SVG_CONVERTERS", "1")
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setattr(
         png.shutil, "which", lambda b: "/usr/bin/rsvg-convert" if b == "rsvg-convert" else None
@@ -1518,6 +1521,7 @@ def test_render_svg_file_to_png_via_inkscape_success(monkeypatch, tmp_path: Path
             raise ImportError("simulated cairosvg missing")
         return real_import(name, *args, **kwargs)
 
+    monkeypatch.setenv("COGANT_USE_EXTERNAL_SVG_CONVERTERS", "1")
     monkeypatch.setattr(builtins, "__import__", fake_import)
 
     def fake_which(b):
@@ -1549,6 +1553,7 @@ def test_render_svg_file_to_png_via_imagemagick_success(monkeypatch, tmp_path: P
             raise ImportError("simulated cairosvg missing")
         return real_import(name, *args, **kwargs)
 
+    monkeypatch.setenv("COGANT_USE_EXTERNAL_SVG_CONVERTERS", "1")
     monkeypatch.setattr(builtins, "__import__", fake_import)
 
     def fake_which(b):
@@ -1580,6 +1585,7 @@ def test_render_svg_file_to_png_rsvg_fails(monkeypatch, tmp_path: Path) -> None:
             raise ImportError("simulated cairosvg missing")
         return real_import(name, *args, **kwargs)
 
+    monkeypatch.setenv("COGANT_USE_EXTERNAL_SVG_CONVERTERS", "1")
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setattr(
         png.shutil, "which", lambda b: "/usr/bin/rsvg-convert" if b == "rsvg-convert" else None
@@ -1607,6 +1613,7 @@ def test_render_svg_file_to_png_inkscape_fails(monkeypatch, tmp_path: Path) -> N
             raise ImportError("simulated cairosvg missing")
         return real_import(name, *args, **kwargs)
 
+    monkeypatch.setenv("COGANT_USE_EXTERNAL_SVG_CONVERTERS", "1")
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setattr(
         png.shutil, "which", lambda b: "/usr/bin/inkscape" if b == "inkscape" else None
@@ -1634,6 +1641,7 @@ def test_render_svg_file_to_png_convert_fails(monkeypatch, tmp_path: Path) -> No
             raise ImportError("simulated cairosvg missing")
         return real_import(name, *args, **kwargs)
 
+    monkeypatch.setenv("COGANT_USE_EXTERNAL_SVG_CONVERTERS", "1")
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setattr(
         png.shutil, "which", lambda b: "/usr/bin/convert" if b == "convert" else None
@@ -1692,12 +1700,27 @@ def test_render_all_mermaid_in_run_handles_exception(monkeypatch, tmp_path: Path
     assert result == []
 
 
-def test_mmdc_command_npx_fallback(monkeypatch) -> None:
-    """No mmdc but npx available → returns ['npx', ..., 'mmdc'] (line 509)."""
+def test_mmdc_command_uses_native_renderer_by_default(monkeypatch) -> None:
+    """External mmdc/npx renderers are opt-in; default uses native rendering."""
+
+    def fake_which(b):
+        return f"/usr/bin/{b}" if b in {"mmdc", "npx"} else None
+
+    monkeypatch.delenv("COGANT_USE_EXTERNAL_MMDC", raising=False)
+    monkeypatch.delenv("COGANT_ALLOW_NPX_MMDC", raising=False)
+    monkeypatch.setattr(png.shutil, "which", fake_which)
+    cmd = png._mmdc_command()
+    assert cmd is None
+
+
+def test_mmdc_command_npx_fallback_is_explicitly_opt_in(monkeypatch) -> None:
+    """No mmdc but npx available → opt-in returns ['npx', ..., 'mmdc']."""
 
     def fake_which(b):
         return "/usr/bin/npx" if b == "npx" else None
 
+    monkeypatch.setenv("COGANT_USE_EXTERNAL_MMDC", "1")
+    monkeypatch.setenv("COGANT_ALLOW_NPX_MMDC", "1")
     monkeypatch.setattr(png.shutil, "which", fake_which)
     cmd = png._mmdc_command()
     assert cmd is not None

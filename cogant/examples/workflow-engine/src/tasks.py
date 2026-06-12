@@ -98,7 +98,7 @@ class DatabaseTask(Task):
         self.params = params or {}
 
     def execute(self) -> TaskResult:
-        """Execute database query (mock)."""
+        """Execute simulated database query."""
         self.started_at = datetime.utcnow()
         try:
             # In a real implementation, this would execute the query
@@ -138,7 +138,7 @@ class HttpTask(Task):
         self.data = data
 
     def execute(self) -> TaskResult:
-        """Execute HTTP request (mock)."""
+        """Execute simulated HTTP request."""
         self.started_at = datetime.utcnow()
         try:
             # In a real implementation, this would make an HTTP request

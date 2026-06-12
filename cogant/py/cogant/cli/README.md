@@ -10,7 +10,7 @@ cogant scan: Quick repository summary showing target, file count, language distr
 
 cogant extract-static: Extract static analysis from target repository, parsing Python files for AST, types, and symbols. Can optionally export full graph and layout output.
 
-cogant extract-dynamic: Extract dynamic analysis (traces, coverage). Placeholder for runtime trace ingestion; supports optional trace file paths.
+cogant extract-dynamic: Extract dynamic analysis (traces, coverage). Reserved runtime trace ingestion command; supports optional trace file paths.
 
 cogant graph: Build program dependency graph from target, showing node and edge counts. Runs ingest and static stages as prerequisites.
 

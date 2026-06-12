@@ -34,7 +34,7 @@ This page records the current evaluation posture for release-facing readers.
 
 ## Active Work Needed
 
-1. Freeze a held-out Python repository corpus and rerun the native ledger.
+1. Promote the existing held-out pilot into a frozen Python repository corpus and rerun the native ledger.
 2. Add native JS/TS roundtrip rows or keep cross-language results separate.
 3. Reduce graph, matrix, section, and generated-code deltas enough to earn
    strict structural successes.

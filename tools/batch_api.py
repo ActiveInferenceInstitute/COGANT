@@ -19,6 +19,7 @@ from cogant.api.analysis_commands import (
     run_static_analysis,
     run_visualize,
 )
+from cogant.viz.inspection_dashboard import write_inspection_artifacts
 
 
 def _print_path(path: Path) -> None:
@@ -44,6 +45,9 @@ def _cli() -> int:
     p_vz = sub.add_parser("visualize")
     p_vz.add_argument("--run-dir", type=Path, required=True)
     p_vz.add_argument("--target", type=Path, required=True)
+
+    p_insp = sub.add_parser("inspection-artifacts")
+    p_insp.add_argument("--run-dir", type=Path, required=True)
 
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
@@ -75,6 +79,11 @@ def _cli() -> int:
         out = args.run_dir / "diagrams" / "dependency_graph.mmd"
         run_visualize(args.target, output=out, fmt="mermaid")
         _print_path(out)
+        return 0
+    if args.cmd == "inspection-artifacts":
+        written = write_inspection_artifacts(args.run_dir)
+        for path in written.values():
+            _print_path(path)
         return 0
     return 2
 

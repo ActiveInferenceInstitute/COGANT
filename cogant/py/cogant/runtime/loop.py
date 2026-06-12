@@ -547,14 +547,14 @@ class AgentRuntime:
         distribution over observations.
 
         Observations that were never seen during the episode leave their
-        corresponding A rows unchanged, which keeps the update conservative
+        corresponding A entries unchanged, which keeps the update conservative
         and avoids collapsing A toward zeros.
 
         Args:
             obs_state_counts: ``[n_obs x n_states]`` soft counts from an
                 :class:`EpisodeResult`.
             learning_rate: Step size in ``[0, 1]``. ``0`` disables the
-                update; ``1`` replaces A rows with empirical frequencies
+                update; ``1`` replaces A entries with empirical frequencies
                 (still followed by column normalisation).
 
         Returns:

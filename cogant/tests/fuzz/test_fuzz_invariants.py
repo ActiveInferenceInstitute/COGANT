@@ -32,7 +32,7 @@ The five invariants checked here are:
    union of INTERNAL ∪ SENSORY ∪ ACTIVE ∪ EXTERNAL must equal the
    full node set and the four role sets must be mutually disjoint.
 
-4. **Matrix stochasticity** — every row of the A matrix (likelihood
+4. **Matrix stochasticity** — every column of the A matrix (likelihood
    ``P(o | s)``) sums to 1.0 ± 1e-4, and every (current-state, action)
    column of the B tensor sums to 1.0 ± 1e-4 (AII column-stochastic
    convention per :mod:`cogant.gnn.matrices`).
@@ -573,7 +573,7 @@ def _assert_blanket_is_a_partition(blanket: MarkovBlanket, all_ids: set[str]) ->
 )
 @_FUZZ_SETTINGS
 def test_matrix_stochasticity(n_hidden: int, n_obs: int, n_actions: int) -> None:
-    """The A matrix rows must sum to 1.0 ± 1e-4 and each (cur, action)
+    """The A matrix columns must sum to 1.0 ± 1e-4 and each (cur, action)
     column of B must sum to 1.0 ± 1e-4.
 
     We shape the synthetic graph so the state-space compiler recovers
@@ -638,17 +638,17 @@ def test_matrix_stochasticity(n_hidden: int, n_obs: int, n_actions: int) -> None
     A = gnn.compute_A()
     B = gnn.compute_B()
 
-    # A: row-stochastic over states for each observation.
+    # A: column-stochastic over observations for each hidden state.
     if A:
-        for i, row in enumerate(A):
-            if not row:
-                # Degenerate slice (n_states == 0) — vacuous.
-                continue
-            row_sum = sum(row)
-            assert math.isclose(row_sum, 1.0, abs_tol=1e-4), (
-                f"A row {i} does not sum to 1 (sum={row_sum!r}); row={row!r}"
+        n_obs_actual = len(A)
+        n_states_actual = len(A[0]) if A and A[0] else 0
+        for j in range(n_states_actual):
+            col = [A[i][j] for i in range(n_obs_actual)]
+            col_sum = sum(col)
+            assert math.isclose(col_sum, 1.0, abs_tol=1e-4), (
+                f"A column {j} does not sum to 1 (sum={col_sum!r}); column={col!r}"
             )
-            assert all(v >= 0.0 for v in row), f"A row {i} has negative entries: {row!r}"
+            assert all(v >= 0.0 for v in col), f"A column {j} has negative entries: {col!r}"
 
     # B: column-stochastic over next-state for each (cur, action). The
     # engine shape is ``B[next][cur][action]`` per compute_B's docstring.

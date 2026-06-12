@@ -118,9 +118,10 @@ class RoundtripResult:
 
     Attributes:
         roundtrip_status: One of ``ROUNDTRIP_STATUSES``.
-        role_preservation_score: Fraction of source-GNN roles that were
-            recovered by the forward pipeline on the synthesized
-            package. Range ``[0.0, 1.0]``.
+        role_preservation_score: Per-role mean of
+            ``min(original_count, synthesized_count) /
+            max(original_count, synthesized_count)`` over the union of
+            original and synthesized role multisets. Range ``[0.0, 1.0]``.
         role_preserved: True when ``role_preservation_score`` meets
             the configured threshold.
         structurally_isomorphic: True only when the full strict
@@ -131,6 +132,8 @@ class RoundtripResult:
             survives the round-trip exactly.
         generated_code_ok: True when synthesized Python files import
             through ``py_compile``.
+        vacuous_roundtrip: True when both role multisets are empty and
+            the role-preservation score's 1.0 value is vacuous.
         matrix_score: Frobenius-based similarity of the A/B/C/D
             matrix stacks produced by the two sides of the round-trip.
             Range ``[0.0, 1.0]``. Defaults to ``0.0`` when matrices
@@ -160,7 +163,9 @@ class RoundtripResult:
             code → graph → GNN → code → graph cycle.
         rule_evidence_trace: Rule/mapping evidence artifact from the
             synthesized forward pass, suitable for dashboard review.
-        errors: Non-fatal warnings collected during the round-trip.
+        warnings: Non-fatal diagnostic warnings collected during the
+            round-trip that do not affect status.
+        errors: Non-fatal errors collected during the round-trip.
     """
 
     roundtrip_status: str
@@ -170,6 +175,7 @@ class RoundtripResult:
     matrix_preserved: bool
     gnn_sections_preserved: bool
     generated_code_ok: bool
+    vacuous_roundtrip: bool
     matrix_score: float = 0.0
     structural_score: float = 0.0
     original_roles: dict[str, int]
@@ -183,6 +189,7 @@ class RoundtripResult:
     matrix_delta: dict[str, Any]
     invariants: dict[str, Any]
     rule_evidence_trace: dict[str, Any]
+    warnings: list[str]
     errors: list[str]
 
     def __init__(
@@ -195,6 +202,7 @@ class RoundtripResult:
         matrix_preserved: bool | None = None,
         gnn_sections_preserved: bool | None = None,
         generated_code_ok: bool | None = None,
+        vacuous_roundtrip: bool | None = None,
         matrix_score: float = 0.0,
         structural_score: float = 0.0,
         original_roles: dict[str, int] | None = None,
@@ -208,6 +216,7 @@ class RoundtripResult:
         matrix_delta: dict[str, Any] | None = None,
         invariants: dict[str, Any] | None = None,
         rule_evidence_trace: dict[str, Any] | None = None,
+        warnings: list[str] | None = None,
         errors: list[str] | None = None,
         # Backward-compatible input aliases. They are accepted so older
         # in-package tests and third-party callers fail gently, but the
@@ -251,6 +260,7 @@ class RoundtripResult:
         self.matrix_preserved = bool(matrix_preserved)
         self.gnn_sections_preserved = bool(gnn_sections_preserved)
         self.generated_code_ok = bool(generated_code_ok)
+        self.vacuous_roundtrip = bool(vacuous_roundtrip)
         self.structurally_isomorphic = bool(structurally_isomorphic)
         self.roundtrip_status = roundtrip_status or _roundtrip_status_from_invariants(
             role_preserved=self.role_preserved,
@@ -272,6 +282,7 @@ class RoundtripResult:
         self.gnn_diff = dict(gnn_diff or {})
         self.matrix_delta = dict(matrix_delta or {})
         self.rule_evidence_trace = dict(rule_evidence_trace or {})
+        self.warnings = list(warnings or [])
         self.errors = list(errors or [])
 
     @property
@@ -426,6 +437,48 @@ def _load_semantic_targets(repo_path: Path) -> dict[str, list[str]]:
         if clean:
             targets[str(role).upper()] = clean
     return targets
+
+
+def _role_preservation_score(
+    original_roles: dict[str, int] | Counter[str],
+    synthesized_roles: dict[str, int] | Counter[str],
+) -> tuple[float, bool]:
+    """Return the appendix-S01 symmetric role-overlap score and vacuity flag."""
+    roles = set(original_roles) | set(synthesized_roles)
+    vacuous = not roles
+    if vacuous:
+        return 1.0, True
+
+    components: list[float] = []
+    for role in roles:
+        original_count = original_roles.get(role, 0)
+        synthesized_count = synthesized_roles.get(role, 0)
+        if original_count == 0 and synthesized_count == 0:
+            components.append(1.0)
+        elif original_count == 0 or synthesized_count == 0:
+            components.append(0.0)
+        else:
+            components.append(min(original_count, synthesized_count) / max(original_count, synthesized_count))
+    return sum(components) / len(components), False
+
+
+def _parse_regenerated_gnn(
+    synthesized_gnn_md: str,
+    synthesized_gnn_path: Path,
+    warnings: list[str],
+) -> ReverseGNNModel | None:
+    """Write and parse regenerated GNN markdown, surfacing non-fatal warnings."""
+    if not synthesized_gnn_md:
+        return None
+
+    synthesized_gnn_path.parent.mkdir(parents=True, exist_ok=True)
+    synthesized_gnn_path.write_text(synthesized_gnn_md, encoding="utf-8")
+    try:
+        return parse_gnn(synthesized_gnn_path)
+    except Exception as exc:
+        logger.debug("Could not parse regenerated GNN %s: %s", synthesized_gnn_path, exc)
+        warnings.append(f"regenerated GNN parse failed for {synthesized_gnn_path}: {exc}")
+        return None
 
 
 def _model_matrices(model: ReverseGNNModel) -> dict[str, Any]:
@@ -1004,6 +1057,7 @@ def verify_roundtrip(
         forward.get("mappings"),
         semantic_targets=forward.get("semantic_targets"),
     )
+    roundtrip_warnings: list[str] = []
 
     # 4. role_preservation_score = mean over every role present on either
     #    side of min(orig,synth)/max(orig,synth) — the formula documented
@@ -1012,21 +1066,7 @@ def verify_roundtrip(
     #    (Prior code computed recall-only Sum(min)/Sum(orig), which
     #    saturated at exactly 1.0 for ANY superset synthesis and did NOT
     #    match the documented s_role — keystone defect, review 2026-05-19.)
-    _roles = set(original_roles) | set(synthesized_roles)
-    if not _roles:
-        score = 1.0  # vacuous: empty-model round-trip
-    else:
-        _components: list[float] = []
-        for _r in _roles:
-            _o = original_roles.get(_r, 0)
-            _s = synthesized_roles.get(_r, 0)
-            if _o == 0 and _s == 0:
-                _components.append(1.0)
-            elif _o == 0 or _s == 0:
-                _components.append(0.0)
-            else:
-                _components.append(min(_o, _s) / max(_o, _s))
-        score = sum(_components) / len(_components)
+    score, vacuous_roundtrip = _role_preservation_score(original_roles, synthesized_roles)
 
     # 5. Check shape match. For the degenerate case where the original
     # has zero obs/actions, the forward pipeline is allowed to produce
@@ -1057,14 +1097,14 @@ def verify_roundtrip(
     synth_model: ReverseGNNModel | None = None
     if synthesized_gnn_md:
         regenerated_dir = tmp_dir_obj / "regenerated"
-        regenerated_dir.mkdir(parents=True, exist_ok=True)
         synthesized_gnn_path = regenerated_dir / "model.gnn.md"
-        synthesized_gnn_path.write_text(synthesized_gnn_md, encoding="utf-8")
-        try:
-            synth_model = parse_gnn(synthesized_gnn_path)
+        synth_model = _parse_regenerated_gnn(
+            synthesized_gnn_md,
+            synthesized_gnn_path,
+            roundtrip_warnings,
+        )
+        if synth_model is not None:
             matrix_score = compare_matrices(_model_matrices(model), _model_matrices(synth_model))
-        except Exception as exc:  # pragma: no cover - best effort diagnostics
-            logger.debug("Could not parse regenerated GNN %s: %s", synthesized_gnn_path, exc)
     # For the orig side we lack a real semantic-mapping view, so
     # synthesise node dicts directly from the role multiset derived
     # from the parsed GNN. The synth side uses the real mappings.
@@ -1131,7 +1171,9 @@ def verify_roundtrip(
         matrix_delta=matrix_delta,
         invariants=invariants,
         rule_evidence_trace=forward.get("rule_evidence_trace") or {},
+        warnings=roundtrip_warnings,
         errors=errors,
+        vacuous_roundtrip=vacuous_roundtrip,
     )
 
     # 6. Cleanup.
@@ -1239,16 +1281,14 @@ def verify_repo_roundtrip(
             forward.get("mappings"),
             semantic_targets=forward.get("semantic_targets"),
         )
+        roundtrip_warnings: list[str] = []
         synthesized_gnn_md = str(forward.get("gnn_markdown") or "")
         synthesized_gnn_path = work_dir / "regenerated" / "model.gnn.md"
-        synth_model: ReverseGNNModel | None = None
-        if synthesized_gnn_md:
-            synthesized_gnn_path.parent.mkdir(parents=True, exist_ok=True)
-            synthesized_gnn_path.write_text(synthesized_gnn_md, encoding="utf-8")
-            try:
-                synth_model = parse_gnn(synthesized_gnn_path)
-            except Exception as exc:  # pragma: no cover - best effort diagnostics
-                logger.debug("Could not parse regenerated GNN %s: %s", synthesized_gnn_path, exc)
+        synth_model = _parse_regenerated_gnn(
+            synthesized_gnn_md,
+            synthesized_gnn_path,
+            roundtrip_warnings,
+        )
 
         # role_preservation_score = mean over every role present on either
         # side of min(orig,synth)/max(orig,synth) — the formula documented
@@ -1256,21 +1296,7 @@ def verify_repo_roundtrip(
         # 0.0 for that role; both-zero scores 1.0 (vacuous). (Prior code:
         # recall-only Sum(min)/Sum(orig), saturated at 1.0 for ANY superset
         # synthesis — keystone defect, review 2026-05-19.)
-        _roles = set(original_roles) | set(synthesized_roles)
-        if not _roles:
-            score = 1.0
-        else:
-            _comp: list[float] = []
-            for _r in _roles:
-                _o = original_roles.get(_r, 0)
-                _s = synthesized_roles.get(_r, 0)
-                if _o == 0 and _s == 0:
-                    _comp.append(1.0)
-                elif _o == 0 or _s == 0:
-                    _comp.append(0.0)
-                else:
-                    _comp.append(min(_o, _s) / max(_o, _s))
-            score = sum(_comp) / len(_comp)
+        score, vacuous_roundtrip = _role_preservation_score(original_roles, synthesized_roles)
 
         # Shape match: compare the two state-space models directly.
         shape_match: dict[str, bool] = {}
@@ -1364,7 +1390,9 @@ def verify_repo_roundtrip(
                 "original": original_trace,
                 "synthesized": forward.get("rule_evidence_trace") or {},
             },
+            warnings=roundtrip_warnings,
             errors=errors,
+            vacuous_roundtrip=vacuous_roundtrip,
         )
         logger.info("Repo round-trip result: %s", result.summary())
         return result

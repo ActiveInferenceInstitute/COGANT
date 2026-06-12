@@ -66,7 +66,7 @@ identity.
 
 ## Required Extensions
 
-- Add held-out repositories selected before rule changes.
+- Promote the existing held-out pilot into a frozen metrics/claim pipeline selected before any further rule changes.
 - Add native JS/TS roundtrip rows or keep cross-language evidence in a separate
   table.
 - Track strict graph, matrix, GNN-section, and generated-code deltas as release

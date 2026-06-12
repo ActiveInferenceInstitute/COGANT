@@ -60,8 +60,11 @@ class TestPythonASTParserExtended:
         parser = self._make_parser()
         src = "x = 1\ndef foo(): pass\n"
         module = parser.parse_string(src)
-        assert module is not None
+        # `parse_string` always returns a PythonModule, so `is not None` was
+        # tautological (RedTeam 2026-06-09); assert the parse actually found the
+        # defined function by name instead.
         assert len(module.functions) >= 1
+        assert any(getattr(f, "name", None) == "foo" for f in module.functions)
 
     def test_parse_string_with_class(self):
         parser = self._make_parser()

@@ -1,6 +1,6 @@
 # Reproducibility {#sec:07-reproducibility}
 
-Reproducible computational research requires version-pinned tools, fixed inputs, documented workflows, and archived outputs [@peng2011reproducible; @sandve2013ten]. ACM's artifact-review terminology is useful here because it distinguishes available artifacts, evaluated artifacts, reproduced results, and independently replicated results [@acmArtifactBadging2020]. COGANT contributes the **graph-generation** slice of that story: identical source trees and identical pipeline configuration should yield identical exported bundles modulo declared nondeterminism (for example optional neural embeddings if enabled). That is a repeatability and artifact-audit claim, not a claim that an independent team has reproduced or replicated every manuscript result. The project also borrows the FAIR emphasis on machine-actionable metadata [@wilkinson2016fair]: generated bundles, figure manifests, rule traces, and claim-ledger rows are designed to be inspected by scripts as well as by human reviewers.
+Reproducible computational research requires version-pinned tools, fixed inputs, documented workflows, archived outputs, and citable software artifacts [@peng2011reproducible; @sandve2013ten; @smith2016softwareCitationPrinciples]. ACM's artifact-review terminology is useful here because it distinguishes available artifacts, evaluated artifacts, reproduced results, and independently replicated results [@acmArtifactBadging2020]. COGANT contributes the **graph-generation** slice of that story: identical source trees and identical pipeline configuration should yield identical exported bundles modulo declared nondeterminism (for example optional neural embeddings if enabled). That is a repeatability and artifact-audit claim, not a claim that an independent team has reproduced or replicated every manuscript result. The project also borrows the FAIR emphasis on machine-actionable metadata [@wilkinson2016fair]: generated bundles, figure manifests, rule traces, and claim-ledger rows are designed to be inspected by scripts as well as by human reviewers. When a release is deposited in Zenodo or a similar archive, the software citation should identify the exact archived version rather than only the moving source repository [@vanDeSandt2019zenodoSoftwareCitations].
 
 ## Publication checklist
 
@@ -14,8 +14,9 @@ When citing or redistributing a COGANT run, archive together:
 6. **Stages executed** — full {{STAGE_COUNT}}-stage DAG vs `skip_stages`, `--no-dynamic`, `--skip-validate`, etc.
 7. **Downstream seeds** — only if a learned model consumes exports (COGANT’s default pipeline is deterministic).
 8. **Output hashes** — SHA-256 of `gnn_package/` and `bundle.json` for verification.
+9. **Software citation metadata** — archived DOI or release URL, authorship/maintainer metadata, license, and citation file where available.
 
-Worked commands, manifest semantics, and a full `flask_app` re-run recipe: [`06_05_reproducible_recording.md`](06_05_reproducible_recording.md).
+Worked commands, manifest semantics, and a full `flask_app` re-run recipe are given in @sec:06-05-reproducible-recording.
 
 ## Version pinning
 
@@ -24,6 +25,7 @@ Pin:
 - The **COGANT** version (`pyproject.toml` / package `__version__`) and Git commit when installing from source.
 - The **Python** minor version.
 - **Optional** Rust toolchain commit when building native extensions from `../cogant/rust/`.
+- The **archived software release** DOI or immutable tag used for the run, when results are redistributed outside the repository.
 
 ## Artifact layout
 
@@ -41,7 +43,7 @@ This means that visualizations in @sec:01-introduction, @sec:02-04-gnn-export-an
 
 | Figure group | Source artifact | Renderer family | Evidence boundary |
 |---|---|---|---|
-| End-to-end calculator chain | `../cogant/output/calculator/` JSON, GNN, matrix, and roundtrip artifacts | `cogant.viz.png` and `cogant.viz.inspection_dashboard` | Demonstrates inspectable conversion surfaces for one real run; does not prove semantic recall. |
+| End-to-end calculator chain | `../cogant/output/calculator/` JSON, GNN, matrix, and roundtrip artifacts | `cogant.viz.png` and `cogant.viz.inspection_dashboard` | Demonstrates inspectable conversion surfaces for one real run; does not prove role-ground-truth coverage. |
 | Fixture evaluation figures | `../cogant/evaluation/figures/metrics.json` | `../cogant/evaluation/figures/generate_figures.py` | Summarizes public API fixture metrics; timing bars are single-run provenance, not benchmark distributions. |
 | Ablation figure | `../cogant/evaluation/METRICS.yaml` | `cogant.viz.ablation_view.render_ablation_png` | Shows measured rule-family and fixpoint deltas; does not decompose every mapping kind in the main panel. |
 | Batch timeline | `../cogant/output/run_manifest.json` | `tools.manuscript_figures.render_publication_batch_timeline` | Shows recorded stage ordering and verification gates; wall-clock durations are audit metadata. |
@@ -124,4 +126,4 @@ If COGANT is promoted into the template project workflow under `projects/`, repo
 
 ## Data ethics and licensing
 
-Exported graphs can contain identifiers and comments from source code. Redistribution of derived graphs must respect the licenses of input repositories and organizational data policies. The **Publication checklist** above is the short form; [`06_05_reproducible_recording.md`](06_05_reproducible_recording.md) expands each item with paths, regeneration scripts, and a worked `flask_app` example.
+Exported graphs can contain identifiers and comments from source code. Redistribution of derived graphs must respect the licenses of input repositories and organizational data policies. The **Publication checklist** above is the short form; @sec:06-05-reproducible-recording expands each item with paths, regeneration scripts, and a worked `flask_app` example.

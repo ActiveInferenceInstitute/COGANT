@@ -261,16 +261,19 @@ class GNNValidator:
         # Check 4: JSON files valid
         self._check_json_files()
 
-        # Check 5: Markdown valid
+        # Check 5: A/B/C/D matrix block valid
+        self._check_matrices()
+
+        # Check 6: Markdown valid
         self._check_markdown()
 
-        # Check 6: State space valid
+        # Check 7: State space valid
         self._check_state_space()
 
-        # Check 7: Provenance valid
+        # Check 8: Provenance valid
         self._check_provenance()
 
-        # Check 8: Checksums match
+        # Check 9: Checksums match
         if manifest:
             self._check_checksums(manifest)
 
@@ -386,7 +389,7 @@ class GNNValidator:
         :class:`cogant.gnn.matrices.GNNMatrices`. The matrices must
         satisfy:
 
-        * A: shape ``[n_obs x n_states]``, rows sum to 1.0.
+        * A: shape ``[n_obs x n_states]``, columns sum to 1.0.
         * B: shape ``[n_states x n_states x n_actions]``.
         * C: length equal to ``n_obs``.
         * D: length equal to ``n_states``, sums to 1.0.
@@ -435,6 +438,8 @@ class GNNValidator:
                 # introduces ~n_obs * eps drift; 1e-6 leaves ~8 orders of
                 # magnitude headroom and matches the pymdp / scipy convention
                 # for stochastic-matrix normalization checks.
+                if any(A[i][j] < -1e-9 for i in range(len(A)) for j in range(n_states)):
+                    errors.append("A contains negative probabilities")
                 for j in range(n_states):
                     col_sum = sum(A[i][j] for i in range(len(A)))
                     if abs(col_sum - 1.0) > 1e-6:
@@ -448,6 +453,22 @@ class GNNValidator:
                 errors.append(f"B second dim mismatch; expected {n_states}")
             elif any(len(cell) != n_actions for row in B for cell in row):
                 errors.append(f"B third dim mismatch; expected {n_actions}")
+            else:
+                if any(
+                    B[i][j][k] < -1e-9
+                    for i in range(n_states)
+                    for j in range(n_states)
+                    for k in range(n_actions)
+                ):
+                    errors.append("B contains negative probabilities")
+                for k in range(n_actions):
+                    for j in range(n_states):
+                        col_sum = sum(B[i][j][k] for i in range(n_states))
+                        if abs(col_sum - 1.0) > 1e-6:
+                            errors.append(
+                                f"B action {k} column {j} does not sum to 1 "
+                                f"(sum={col_sum:.6f})"
+                            )
 
         # C: length n_obs.
         if n_obs > 0 and len(C) != n_obs:
@@ -457,14 +478,126 @@ class GNNValidator:
         if n_states > 0:
             if len(D) != n_states:
                 errors.append(f"D length {len(D)} != n_states {n_states}")
+            elif any(value < -1e-9 for value in D):
+                errors.append("D contains negative probabilities")
             elif D and abs(sum(D) - 1.0) > 1e-6:
                 # Tolerance 1e-6 — stability constant, same rationale as
-                # A-row tolerance above (pymdp/scipy convention for
+                # A-column tolerance above (pymdp/scipy convention for
                 # probability-simplex sum checks; ~8 orders of magnitude
                 # headroom over float64 accumulation drift).
                 errors.append(f"D does not sum to 1 (sum={sum(D):.6f})")
 
         return errors
+
+    def _effective_matrix_dimensions(self, matrices_json: dict[str, Any]) -> dict[str, int]:
+        """Return matrix dimensions declared in, or inferred from, A/B/C/D."""
+        A = matrices_json.get("A") or []
+        B = matrices_json.get("B") or []
+        C = matrices_json.get("C") or []
+        D = matrices_json.get("D") or []
+        dims = matrices_json.get("dimensions") or {}
+        n_states = int(dims.get("n_states") or 0) or len(D) or (len(A[0]) if A and A[0] else 0)
+        n_obs = int(dims.get("n_obs") or 0) or len(A) or len(C)
+        n_actions = int(dims.get("n_actions") or 0) or (
+            len(B[0][0]) if B and B[0] and B[0][0] else 0
+        )
+        return {"n_states": n_states, "n_obs": n_obs, "n_actions": n_actions}
+
+    def _state_space_dimensions(self) -> dict[str, int] | None:
+        """Return compiled state-space dimensions from ``state_space.json``."""
+        state_space_path = self.package_dir / "state_space.json"
+        if not state_space_path.exists():
+            return None
+        try:
+            with open(state_space_path) as f:
+                loaded = json.load(f)
+        except Exception as exc:
+            self.result.warnings.append(
+                f"Matrix validation skipped state-space alignment: {exc}"
+            )
+            return None
+        state_space = loaded if isinstance(loaded, dict) else {}
+
+        def _count(key: str) -> int:
+            value = state_space.get(key)
+            if isinstance(value, (list, dict)):
+                return len(value)
+            return 0
+
+        return {
+            "n_states": _count("variables"),
+            "n_obs": _count("observations"),
+            "n_actions": _count("actions"),
+        }
+
+    def _matrix_state_space_alignment_errors(
+        self,
+        matrix_dimensions: dict[str, int],
+        state_space_dimensions: dict[str, int] | None,
+    ) -> tuple[list[str], dict[str, Any]]:
+        """Compare matrix dimensions with compiled state-space dimensions."""
+        if state_space_dimensions is None:
+            return [], {}
+
+        alignment: dict[str, Any] = {
+            "matrix_dimensions": matrix_dimensions,
+            "state_space_dimensions": state_space_dimensions,
+        }
+        errors: list[str] = []
+        comparisons = (
+            ("n_states", "hidden-state"),
+            ("n_obs", "observation"),
+            ("n_actions", "action"),
+        )
+        for key, label in comparisons:
+            matrix_value = matrix_dimensions.get(key, 0)
+            state_value = state_space_dimensions.get(key, 0)
+            match = matrix_value == state_value
+            if key == "n_actions" and state_value == 0 and matrix_value == 1:
+                alignment["implicit_noop_action_axis"] = True
+                match = True
+                self.result.warnings.append(
+                    "Matrix validation: state_space.json defines no actions; "
+                    "B uses one explicit no-op action axis"
+                )
+            alignment[f"{key}_match"] = match
+            if not match:
+                errors.append(
+                    f"{label} dimension mismatch: matrix {key}={matrix_value} "
+                    f"!= state_space {key}={state_value}"
+                )
+        return errors, alignment
+
+    def _matrix_degenerate_warnings(
+        self,
+        matrices: dict[str, Any],
+        matrix_dimensions: dict[str, int],
+        state_space_dimensions: dict[str, int] | None,
+    ) -> list[str]:
+        """Return non-public warnings for valid but degenerate matrix exports."""
+        warnings: list[str] = []
+        if state_space_dimensions is None:
+            return warnings
+        if (
+            state_space_dimensions.get("n_obs") == 0
+            and matrix_dimensions.get("n_obs") == 0
+            and not matrices.get("A")
+            and not matrices.get("C")
+        ):
+            warnings.append(
+                "Matrix validation: degenerate model has no observation modalities; "
+                "A/C are empty and not publication-ready evidence"
+            )
+        if (
+            state_space_dimensions.get("n_states") == 0
+            and matrix_dimensions.get("n_states") == 0
+            and (not matrices.get("A") or not matrices.get("B") or not matrices.get("D"))
+        ):
+            warnings.append(
+                "Matrix validation: degenerate model has no hidden-state variables; "
+                "A/B/D are empty and not publication-ready evidence"
+            )
+        return warnings
 
     def validate_provenance(self, provenance_json: dict[str, Any]) -> list[str]:
         """
@@ -563,6 +696,61 @@ class GNNValidator:
             except Exception as e:
                 self.result.errors.append(f"Failed to read {filename}: {e}")
 
+    def _check_matrices(self) -> None:
+        """Validate the exported ``model.gnn.json`` A/B/C/D matrix block."""
+        model_path = self.package_dir / "model.gnn.json"
+        if not model_path.exists():
+            self.result.errors.append("Missing model.gnn.json for matrix validation")
+            return
+
+        try:
+            with open(model_path) as f:
+                loaded = json.load(f)
+            model = loaded if isinstance(loaded, dict) else {}
+            matrices_raw = model.get("matrices")
+            if not isinstance(matrices_raw, dict):
+                self.result.errors.append("Missing matrices block in model.gnn.json")
+                self.result.details["matrices"] = {
+                    "present": False,
+                    "validation_errors": ["Missing matrices block in model.gnn.json"],
+                }
+                return
+            matrices = matrices_raw
+            errors = self.validate_matrices(matrices)
+            matrix_dimensions = self._effective_matrix_dimensions(matrices)
+            state_space_dimensions = self._state_space_dimensions()
+            alignment_errors, dimension_alignment = self._matrix_state_space_alignment_errors(
+                matrix_dimensions,
+                state_space_dimensions,
+            )
+            errors.extend(alignment_errors)
+            warnings = self._matrix_degenerate_warnings(
+                matrices,
+                matrix_dimensions,
+                state_space_dimensions,
+            )
+            self.result.details["matrices"] = {
+                "present": True,
+                "shapes": matrices.get("shapes") if isinstance(matrices.get("shapes"), dict) else {},
+                "dimensions": (
+                    matrices.get("dimensions") if isinstance(matrices.get("dimensions"), dict) else {}
+                ),
+                "effective_dimensions": matrix_dimensions,
+                "state_space_dimensions": state_space_dimensions or {},
+                "dimension_alignment": dimension_alignment,
+                "truncation": matrices.get("truncation"),
+                "matrix_keys": [key for key in ("A", "B", "C", "D") if key in matrices],
+                "validation_errors": errors,
+                "validation_warnings": warnings,
+            }
+            if errors:
+                self.result.errors.extend(f"Matrix validation: {error}" for error in errors)
+            else:
+                logger.debug("  ✓ model.gnn.json matrices are well-formed")
+            self.result.warnings.extend(warnings)
+        except Exception as e:
+            self.result.errors.append(f"Failed to validate model.gnn.json matrices: {e}")
+
     def _check_markdown(self) -> None:
         """Check markdown validity."""
         markdown_path = self.package_dir / "model.gnn.md"
@@ -574,7 +762,7 @@ class GNNValidator:
             markdown = markdown_path.read_text(encoding="utf-8")
             errors = self.validate_markdown(markdown)
             if errors:
-                self.result.warnings.extend(errors)
+                self.result.errors.extend(f"Markdown validation: {error}" for error in errors)
             else:
                 logger.debug("  ✓ model.gnn.md has all canonical sections")
 
@@ -601,7 +789,7 @@ class GNNValidator:
                 state_space = json.load(f)
             errors = self.validate_state_space(state_space)
             if errors:
-                self.result.warnings.extend(errors)
+                self.result.errors.extend(f"State-space validation: {error}" for error in errors)
             else:
                 logger.debug("  ✓ state_space.json is well-formed")
         except Exception as e:
@@ -619,7 +807,7 @@ class GNNValidator:
                 provenance = json.load(f)
             errors = self.validate_provenance(provenance)
             if errors:
-                self.result.warnings.extend(errors)
+                self.result.errors.extend(f"Provenance validation: {error}" for error in errors)
             else:
                 logger.debug("  ✓ provenance.json is well-formed")
         except Exception as e:
@@ -649,13 +837,22 @@ class GNNValidator:
                     actual = hashlib.sha256(content.encode()).hexdigest()
 
                 if actual != expected_checksum:
-                    self.result.warnings.append(
-                        f"Checksum mismatch for {filename}: expected {expected_checksum}, got {actual}"
+                    message = (
+                        f"Checksum mismatch for {filename}: "
+                        f"expected {expected_checksum}, got {actual}"
                     )
+                    if filename in self.REQUIRED_FILES:
+                        self.result.errors.append(message)
+                    else:
+                        self.result.warnings.append(message)
                 else:
                     logger.debug(f"  ✓ {filename} checksum matches")
             except Exception as e:
-                self.result.warnings.append(f"Failed to verify checksum for {filename}: {e}")
+                message = f"Failed to verify checksum for {filename}: {e}"
+                if filename in self.REQUIRED_FILES:
+                    self.result.errors.append(message)
+                else:
+                    self.result.warnings.append(message)
 
     def _compute_final_score(self) -> None:
         """Compute final validation score and validity.

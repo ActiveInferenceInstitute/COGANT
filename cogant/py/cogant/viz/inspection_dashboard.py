@@ -1107,9 +1107,9 @@ def render_graphical_abstract_png(
         if output_png is not None
         else root / "figures" / "graphical_abstract.png"
     )
-    from cogant.viz.png import render_svg_file_to_png
+    from cogant.viz.png import render_svg_degraded_png, render_svg_file_to_png
 
-    if render_svg_file_to_png(svg, png):
+    if render_svg_file_to_png(svg, png) or render_svg_degraded_png(svg, png):
         return png
     return None
 
@@ -1155,9 +1155,13 @@ def _bar_svg(
 def _write_svg_png(svg_text: str, svg_path: Path, png_path: Path) -> Path | None:
     svg_path.parent.mkdir(parents=True, exist_ok=True)
     svg_path.write_text(svg_text, encoding="utf-8")
-    from cogant.viz.png import render_svg_file_to_png
+    from cogant.viz.png import render_svg_degraded_png, render_svg_file_to_png
 
-    return png_path if render_svg_file_to_png(svg_path, png_path) else None
+    return (
+        png_path
+        if render_svg_file_to_png(svg_path, png_path) or render_svg_degraded_png(svg_path, png_path)
+        else None
+    )
 
 
 def _sha256_path(path: Path | None) -> str | None:

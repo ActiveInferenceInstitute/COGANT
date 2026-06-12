@@ -3,7 +3,7 @@
 The A, B, and D matrices emitted by the reverse-synthesis pipeline
 must be proper categorical distributions:
 
-* Every row of ``A`` (likelihood ``P(o | s)``) sums to ``1.0``.
+* Every column of ``A`` (likelihood ``P(o | s)``) sums to ``1.0``.
 * Every column of every action slice of ``B`` (transition
   ``P(s' | s, a)``) sums to ``1.0`` — the AII convention is
   column-stochastic per action.
@@ -16,7 +16,7 @@ constants, and check the sums.
 
 Tolerance note: the renderer serialises each float as a 6-decimal
 literal (``_format_float``), so the worst-case precision loss in a
-row of width ``k`` is ``k * 1e-6``. We allow ``5e-6`` absolute
+column of height ``k`` is ``k * 1e-6``. We allow ``5e-6`` absolute
 tolerance — comfortably above the 6 * 1e-6 worst case across the
 generated dimensions (``n_states ≤ 6``). A genuine renormalisation
 bug would exceed this tolerance by orders of magnitude.
@@ -60,9 +60,9 @@ def reverse_model(draw) -> ReverseGNNModel:
 
     # Randomly decide whether to supply an explicit A/B/C/D or let
     # the renderer fall back to shape-consistent defaults. Both
-    # branches must produce stochastic rows/columns.
+    # branches must produce stochastic columns.
     if draw(st.booleans()):
-        # Provide an A where each row is a random positive vector;
+        # Provide an A where each column is a random positive vector;
         # the renderer is documented to leave A untouched on the
         # happy path, so we also normalise it up-front to match the
         # post-render invariant.
@@ -70,8 +70,12 @@ def reverse_model(draw) -> ReverseGNNModel:
             [draw(st.floats(min_value=0.1, max_value=10.0)) for _ in range(n_states)]
             for _ in range(n_obs)
         ]
-        model.A = [[v / sum(row) for v in row] for row in raw_rows]
-    # else: leave A empty → renderer emits uniform 1/n_states rows.
+        col_sums = [sum(raw_rows[i][j] for i in range(n_obs)) for j in range(n_states)]
+        model.A = [
+            [raw_rows[i][j] / col_sums[j] for j in range(n_states)]
+            for i in range(n_obs)
+        ]
+    # else: leave A empty -> renderer emits uniform 1/n_obs columns.
 
     if draw(st.booleans()):
         # Leave D empty so the renderer synthesises a uniform prior.
@@ -93,7 +97,7 @@ def _exec_generated_module(source: str) -> types.ModuleType:
 
 
 # ---------------------------------------------------------------------------
-# Law 5a: every row of A sums to 1.0.
+# Law 5a: every column of A sums to 1.0.
 # ---------------------------------------------------------------------------
 
 
@@ -103,18 +107,20 @@ def _exec_generated_module(source: str) -> types.ModuleType:
     deadline=500,
     suppress_health_check=[HealthCheck.too_slow, HealthCheck.filter_too_much],
 )
-def test_generated_A_rows_are_stochastic(model: ReverseGNNModel) -> None:
-    """Every row of the generated A matrix must sum to 1.0 ± {tol}."""
+def test_generated_A_columns_are_stochastic(model: ReverseGNNModel) -> None:
+    """Every column of the generated A matrix must sum to 1.0 ± {tol}."""
     source = render_matrices_module(model)
     mod = _exec_generated_module(source)
     A = mod.A
     assert isinstance(A, list)
     if not A:
         return  # Empty A is admissible for degenerate (n_obs == 0) models.
-    for i, row in enumerate(A):
-        s = sum(row)
+    n_obs = len(A)
+    n_states = len(A[0]) if A and A[0] else 0
+    for j in range(n_states):
+        s = sum(A[i][j] for i in range(n_obs))
         assert math.isclose(s, 1.0, abs_tol=_STOCHASTIC_TOL), (
-            f"A row {i} sums to {s:.12f} (expected 1.0 ± {_STOCHASTIC_TOL}); "
+            f"A column {j} sums to {s:.12f} (expected 1.0 ± {_STOCHASTIC_TOL}); "
             f"shape=({model.n_obs}, {model.n_states})"
         )
 

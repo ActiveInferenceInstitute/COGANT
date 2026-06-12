@@ -110,8 +110,9 @@ requires no external services (`--no-dynamic` skips coverage tracing).
   The aggregate matrix representation collapses to n_states=1 factor variable,
   which is correct per the COGANT multi-factor aggregation spec (each factor
   contributes one degree of freedom to the top-level state-space).
-- `role_preservation_score=1.0` means the forward→reverse→forward roundtrip recovers all
-  three role categories (HIDDEN_STATE, OBSERVATION, ACTION) without loss.
+- `role_preservation_score=1.0` means the forward→reverse→forward roundtrip
+  has exact per-role multiset overlap for the three role categories
+  (HIDDEN_STATE, OBSERVATION, ACTION), with no dropped or extra role counts.
 - `roundtrip_status=ROLE_PRESERVED` means the original semantic-role population
   survives the loop at the public threshold (`s_role >= 0.5`). It does not
   assert strict graph isomorphism.

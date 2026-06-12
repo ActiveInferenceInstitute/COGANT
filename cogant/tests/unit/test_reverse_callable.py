@@ -40,7 +40,7 @@ D_f1={ (0.5, 0.5) }
 D_f2={ (0.3, 0.7) }
 C_m0={ (0.8, 0.2) }
 C_m1={ (0.4, 0.6) }
-A_m0={ ( (0.9, 0.05, 0.05), (0.1, 0.8, 0.1) ) }
+A_m0={ ( (0.9, 0.2, 0.4), (0.1, 0.8, 0.6) ) }
 
 ## ActInfOntologyAnnotation
 s_f0=HiddenState
@@ -56,8 +56,8 @@ u_c0=Action
 
 ```gnn-matrices
 A[[rows=2][cols=3]]
-0.9 0.05 0.05
-0.1 0.8 0.1
+0.9 0.2 0.4
+0.1 0.8 0.6
 B[[rows=3][cols=3][depth=2]]
 # action=0
 1.0 0.0 0.0
@@ -91,7 +91,7 @@ def _make_no_actions_model() -> ReverseGNNModel:
         hidden_states=["s_f0", "s_f1"],
         observations=["o_m0"],
         actions=[],
-        A=[[0.6, 0.4], [0.3, 0.7]],
+        A=[[0.6, 0.3], [0.4, 0.7]],
         B=[],
         C=[0.5, 0.5],
         D=[0.5, 0.5],
@@ -125,23 +125,18 @@ def test_likelihood_uniform_state() -> None:
 
 
 def test_likelihood_sums_approx_one() -> None:
-    """For row-stochastic A with uniform state, likelihood sums to n_obs/n_states.
+    """For column-stochastic A with uniform state, likelihood sums to 1.0.
 
-    Each row of A sums to 1.0 (row-stochastic). With uniform state
-    [1/n, 1/n, 1/n], each obs_i = (1/n)*sum_j(A[i][j]) = 1/n.
-    Total = n_obs * (1/n_states). For a column-stochastic A the sum
-    would be 1.0, but our fixture A is row-stochastic, so we verify
-    each element is non-negative and the total is consistent.
+    Each column of A sums to 1.0. With a normalized hidden-state
+    distribution, ``A @ state`` is therefore a normalized observation
+    distribution.
     """
     model = _make_model()
     mf = MatrixFunctions(model)
     result = mf.likelihood([1.0 / 3, 1.0 / 3, 1.0 / 3])
     # Each element should be non-negative
     assert all(v >= 0.0 for v in result)
-    # Each row of A sums to 1.0 => each obs element = 1/3
-    # Total = 2/3 for a 2x3 row-stochastic A with uniform input
-    expected_sum = len(result) / 3.0
-    assert abs(sum(result) - expected_sum) < 1e-9
+    assert abs(sum(result) - 1.0) < 1e-9
 
 
 # ---------------------------------------------------------------------------

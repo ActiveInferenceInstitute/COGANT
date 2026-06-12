@@ -193,10 +193,10 @@ def test_validate_matrices_missing_keys_reported():
         assert any(f"Missing matrix: {key}" in e for e in errors)
 
 
-def test_validate_matrices_a_row_sum_violation():
-    """A rows that don't sum to 1 are flagged."""
+def test_validate_matrices_a_column_sum_violation():
+    """A columns that don't sum to 1 are flagged."""
     block = {
-        "A": [[0.5, 0.5], [0.3, 0.4]],  # second row sums to 0.7
+        "A": [[0.5, 0.5], [0.3, 0.4]],  # columns sum to 0.8 and 0.9
         "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
         "C": [0.0, 0.0],
         "D": [0.5, 0.5],
@@ -219,6 +219,19 @@ def test_validate_matrices_d_sum_violation():
     assert any("D does not sum to 1" in e for e in errors)
 
 
+def test_validate_matrices_b_column_sum_violation():
+    """B action-slice columns that don't sum to 1 are flagged."""
+    block = {
+        "A": [[1.0, 0.0], [0.0, 1.0]],
+        "B": [[[0.7], [0.0]], [[0.1], [1.0]]],  # first column sums to 0.8
+        "C": [0.0, 0.0],
+        "D": [0.5, 0.5],
+        "dimensions": {"n_states": 2, "n_obs": 2, "n_actions": 1},
+    }
+    errors = GNNValidator().validate_matrices(block)
+    assert any("B action 0 column 0 does not sum to 1" in e for e in errors)
+
+
 def test_validate_matrices_dimension_mismatches():
     """Wrong A row count, C length and B dims are all reported."""
     block = {
@@ -233,6 +246,21 @@ def test_validate_matrices_dimension_mismatches():
     assert "A row count" in joined
     assert "C length" in joined
     assert "D length" in joined
+
+
+def test_validate_matrices_empty_required_a_c_are_reported():
+    """Empty A/C panels fail when the declared observation axis is non-empty."""
+    block = {
+        "A": [],
+        "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+        "C": [],
+        "D": [0.5, 0.5],
+        "dimensions": {"n_states": 2, "n_obs": 2, "n_actions": 1},
+    }
+    errors = GNNValidator().validate_matrices(block)
+    joined = " ".join(errors)
+    assert "A row count 0 != n_obs 2" in joined
+    assert "C length 0 != n_obs 2" in joined
 
 
 # --------------------------- validate_provenance ----------------------- #
@@ -268,15 +296,24 @@ def _build_full_package(root: Path) -> None:
     root.mkdir(parents=True, exist_ok=True)
     md = _full_markdown()
     (root / "model.gnn.md").write_text(md)
+    matrix_block = {
+        "A": [[1.0, 0.0], [0.0, 1.0]],
+        "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+        "C": [0.0, 0.0],
+        "D": [0.5, 0.5],
+        "shapes": {"A": [2, 2], "B": [2, 2, 1], "C": [2], "D": [2]},
+        "dimensions": {"n_states": 2, "n_obs": 2, "n_actions": 1},
+        "truncation": None,
+    }
     state_space = {
-        "variables": [],
-        "observations": [],
-        "actions": [],
+        "variables": [{"id": "s0"}, {"id": "s1"}],
+        "observations": [{"id": "o0"}, {"id": "o1"}],
+        "actions": [{"id": "u0"}],
         "transitions": {},
     }
     provenance = {"timestamp": "2026-01-01", "sources": {}}
     json_files = {
-        "model.gnn.json": {},
+        "model.gnn.json": {"matrices": matrix_block},
         "state_space.json": state_space,
         "observations.json": {},
         "actions.json": {},
@@ -304,6 +341,18 @@ def _build_full_package(root: Path) -> None:
     (root / "manifest.json").write_text(json.dumps(manifest))
 
 
+def _refresh_manifest_checksums(root: Path) -> None:
+    """Refresh manifest checksums after a test mutates package JSON."""
+    checksums = {}
+    for path in root.glob("*.json"):
+        if path.name == "manifest.json":
+            continue
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        canon = json.dumps(payload, sort_keys=True, default=str).encode()
+        checksums[path.name] = hashlib.sha256(canon).hexdigest()
+    (root / "manifest.json").write_text(json.dumps({"name": "test", "checksums": checksums}))
+
+
 def test_validate_package_missing_directory_returns_invalid(tmp_path):
     """A non-existent directory yields a single error and zero score."""
     result = GNNValidator().validate_package(str(tmp_path / "missing"))
@@ -321,6 +370,171 @@ def test_validate_package_full_package_is_valid(tmp_path):
     assert result.errors == []
     assert result.score >= 80.0
     assert result.valid is True
+    assert result.details["matrices"]["validation_errors"] == []
+
+
+def test_validate_package_missing_matrices_block_is_invalid(tmp_path):
+    """A package without exported A/B/C/D data cannot validate at 100."""
+    pkg = tmp_path / "missing_matrices"
+    _build_full_package(pkg)
+    (pkg / "model.gnn.json").write_text(json.dumps({}))
+    result = GNNValidator().validate_package(str(pkg))
+    assert result.valid is False
+    assert result.score < 100.0
+    assert any("Missing matrices block" in e for e in result.errors)
+
+
+def test_validate_package_bad_matrix_block_is_invalid(tmp_path):
+    """A package with non-stochastic matrix data fails package validation."""
+    pkg = tmp_path / "bad_matrices"
+    _build_full_package(pkg)
+    bad_model = {
+        "matrices": {
+            "A": [[0.5, 0.5], [0.2, 0.1]],
+            "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+            "C": [0.0, 0.0],
+            "D": [0.5, 0.5],
+            "dimensions": {"n_states": 2, "n_obs": 2, "n_actions": 1},
+        }
+    }
+    (pkg / "model.gnn.json").write_text(json.dumps(bad_model))
+    result = GNNValidator().validate_package(str(pkg))
+    assert result.valid is False
+    assert result.score < 100.0
+    assert any("Matrix validation: A column" in e for e in result.errors)
+
+
+def test_validate_package_state_space_dimension_mismatch_is_invalid(tmp_path):
+    """A package cannot score perfectly when matrices omit compiled states."""
+    pkg = tmp_path / "mismatched_dimensions"
+    _build_full_package(pkg)
+    mismatched_model = {
+        "matrices": {
+            "A": [[0.5], [0.5]],
+            "B": [[[1.0]]],
+            "C": [0.0, 0.0],
+            "D": [1.0],
+            "dimensions": {"n_states": 1, "n_obs": 2, "n_actions": 1},
+        }
+    }
+    (pkg / "model.gnn.json").write_text(json.dumps(mismatched_model))
+    _refresh_manifest_checksums(pkg)
+
+    result = GNNValidator().validate_package(str(pkg))
+
+    assert result.valid is False
+    assert result.score < 100.0
+    assert any("hidden-state dimension mismatch" in e for e in result.errors)
+    assert (
+        result.details["matrices"]["dimension_alignment"]["n_states_match"] is False
+    )
+
+
+def test_validate_package_missing_markdown_section_is_invalid(tmp_path):
+    """A package missing a canonical markdown section is not publication-valid."""
+    pkg = tmp_path / "missing_markdown_section"
+    _build_full_package(pkg)
+    markdown = (pkg / "model.gnn.md").read_text(encoding="utf-8")
+    (pkg / "model.gnn.md").write_text(
+        markdown.replace("## Model Metadata\n\nbody\n", ""),
+        encoding="utf-8",
+    )
+
+    result = GNNValidator().validate_package(str(pkg))
+
+    assert result.valid is False
+    assert any("Markdown validation: Missing canonical section" in e for e in result.errors)
+
+
+def test_validate_package_malformed_state_space_is_invalid(tmp_path):
+    """Malformed state-space structure is a hard package error."""
+    pkg = tmp_path / "bad_state_space"
+    _build_full_package(pkg)
+    (pkg / "state_space.json").write_text(
+        json.dumps({"variables": "bad", "observations": [], "actions": [], "transitions": {}}),
+        encoding="utf-8",
+    )
+    _refresh_manifest_checksums(pkg)
+
+    result = GNNValidator().validate_package(str(pkg))
+
+    assert result.valid is False
+    assert any("State-space validation: Variables must be a list" in e for e in result.errors)
+
+
+def test_validate_package_malformed_provenance_is_invalid(tmp_path):
+    """Missing provenance keys are hard package errors."""
+    pkg = tmp_path / "bad_provenance"
+    _build_full_package(pkg)
+    (pkg / "provenance.json").write_text(json.dumps({}), encoding="utf-8")
+    _refresh_manifest_checksums(pkg)
+
+    result = GNNValidator().validate_package(str(pkg))
+
+    assert result.valid is False
+    assert any("Provenance validation: Missing provenance key" in e for e in result.errors)
+
+
+def test_validate_package_degenerate_no_observations_warns_not_perfect(tmp_path):
+    """No-observation developer packages remain valid only with an explicit warning."""
+    pkg = tmp_path / "no_observations"
+    _build_full_package(pkg)
+    state_space = {
+        "variables": [{"id": "s0"}, {"id": "s1"}],
+        "observations": [],
+        "actions": [{"id": "u0"}],
+        "transitions": {},
+    }
+    model = {
+        "matrices": {
+            "A": [],
+            "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+            "C": [],
+            "D": [0.5, 0.5],
+            "dimensions": {"n_states": 2, "n_obs": 0, "n_actions": 1},
+        }
+    }
+    (pkg / "state_space.json").write_text(json.dumps(state_space))
+    (pkg / "model.gnn.json").write_text(json.dumps(model))
+    _refresh_manifest_checksums(pkg)
+
+    result = GNNValidator().validate_package(str(pkg))
+
+    assert result.valid is True
+    assert result.score < 100.0
+    assert not result.errors
+    assert any("no observation modalities" in warning for warning in result.warnings)
+
+
+def test_validate_package_degenerate_no_hidden_states_warns_not_perfect(tmp_path):
+    """No-hidden-state developer packages remain valid only with an explicit warning."""
+    pkg = tmp_path / "no_hidden_states"
+    _build_full_package(pkg)
+    state_space = {
+        "variables": [],
+        "observations": [{"id": "o0"}, {"id": "o1"}],
+        "actions": [{"id": "u0"}],
+        "transitions": {},
+    }
+    model = {
+        "matrices": {
+            "A": [],
+            "B": [],
+            "C": [0.0, 0.0],
+            "D": [],
+            "dimensions": {"n_states": 0, "n_obs": 2, "n_actions": 1},
+        }
+    }
+    (pkg / "state_space.json").write_text(json.dumps(state_space))
+    (pkg / "model.gnn.json").write_text(json.dumps(model))
+    _refresh_manifest_checksums(pkg)
+
+    result = GNNValidator().validate_package(str(pkg))
+
+    assert result.valid is True
+    assert result.score < 100.0
+    assert not result.errors
+    assert any("no hidden-state variables" in warning for warning in result.warnings)
 
 
 def test_validate_package_partial_directory_collects_missing_file_errors(tmp_path):
@@ -357,14 +571,15 @@ def test_validate_package_invalid_json_in_data_file(tmp_path):
     assert "state_space" in joined
 
 
-def test_validate_package_checksum_mismatch_warns(tmp_path):
-    """A checksum mismatch is captured as a warning, not an error."""
+def test_validate_package_checksum_mismatch_is_invalid_for_required_file(tmp_path):
+    """A required-file checksum mismatch is a hard package error."""
     pkg = tmp_path / "tampered"
     _build_full_package(pkg)
     # Tamper with one file after writing manifest
     (pkg / "factors.json").write_text(json.dumps({"tampered": True}))
     result = GNNValidator().validate_package(str(pkg))
-    assert any("Checksum mismatch for factors.json" in w for w in result.warnings)
+    assert result.valid is False
+    assert any("Checksum mismatch for factors.json" in e for e in result.errors)
 
 
 def test_validate_package_manifest_without_checksums_warns(tmp_path):

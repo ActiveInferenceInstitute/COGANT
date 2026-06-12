@@ -420,7 +420,7 @@ class RoundtripResponseV1(BaseModel):
     Attributes:
         request_id: Unique identifier for this request.
         roundtrip_status: Public round-trip status enum.
-        role_preservation_score: Forward-reverse role preservation score (0-1).
+        role_preservation_score: Forward-reverse symmetric role-overlap score (0-1).
         role_preserved: Whether score >= threshold.
         original_roles: Role histogram from forward pass.
         synthesized_roles: Role histogram from reverse pass.
@@ -441,7 +441,7 @@ class RoundtripResponseV1(BaseModel):
         default=0.0,
         ge=0.0,
         le=1.0,
-        description="Forward-reverse role preservation score",
+        description="Forward-reverse symmetric role-overlap score",
         validation_alias=AliasChoices("role_preservation_score", "role_match_score"),
     )
     role_preserved: bool = Field(

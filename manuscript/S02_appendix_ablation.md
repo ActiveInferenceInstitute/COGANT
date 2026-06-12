@@ -54,7 +54,7 @@ isolate each rule family's contribution to the minimal POMDP skeleton.
    Their measured deltas are all zero, matching the absence of config,
    assertion/event, and resilience idioms in the fixture.
 
-4. **Matrix fallbacks are fully active on the minimal fixture.** The same
+4. **Matrix degraded-output defaults are fully active on the minimal fixture.** The same
    measured run records {{ABLATION_ZOO01_A_COLS_UNIFORM}} /
    {{ABLATION_ZOO01_A_COLS_TOTAL}} uniform A state-columns,
    {{ABLATION_ZOO01_B_ACTIONS_IDENTITY}} /
@@ -62,7 +62,7 @@ isolate each rule family's contribution to the minimal POMDP skeleton.
    {{ABLATION_ZOO01_C_ENTRIES_ZERO}} /
    {{ABLATION_ZOO01_C_ENTRIES_TOTAL}} zero C entries. This confirms that
    the minimal POMDP is a structural smoke case, not an informative-matrix
-   exemplar (cf. @sec:09-ablation, @tbl:matrix-fallback-ablation).
+   exemplar (cf. @sec:09-ablation, @tbl:matrix-degraded-output-ablation).
 
 ### B.2 Cross-reference with main-text rule-family ablation
 
@@ -75,11 +75,11 @@ in @sec:09-ablation / @tbl:rule-family-ablation as follows:
 | ObservationRule    | Semantic                            | `ObservationRule`, `PolicyRule`, `ContextRule`                    |
 | ActionRule         | Semantic                            | `ActionRule`, `OrchestratorRule`                                  |
 | ConstraintRule     | Semantic + Behavioural              | `PreferenceRule`, `TestAssertionRule`                             |
-| FallbackRule       | Matrix-fallback (@tbl:matrix-fallback-ablation) | `compute_A`, `compute_B`, `compute_C`, `compute_D` fallback paths |
+| DefaultRule        | Matrix degraded-output defaults (@tbl:matrix-degraded-output-ablation) | `compute_A`, `compute_B`, `compute_C`, `compute_D` default paths |
 
 The ablation in @sec:09-ablation is fixture-level (`flask_app`, `calculator`) and
 reports mapping-count deltas; the ablation in @sec:S02-appendix-ablation is role-level
-(HS, OBS, ACT, CNST, fallback) and reports `s_role` deltas on the
+(HS, OBS, ACT, CNST, matrix-default) and reports `s_role` deltas on the
 minimum-complexity fixture that still round-trips perfectly. The two
 ablations are complementary: together they bracket the failure surface from
 "largest real-world fixture" down to "smallest runnable POMDP".

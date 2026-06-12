@@ -1167,7 +1167,7 @@ class StateSpaceCompiler:
                         if effect_name not in visited:
                             visited.add(effect_name)
                             effects.append(effect_name)
-                    break
+                        break
 
         # Strategy 2: Find direct WRITES edges from this action node
         for edge in self.graph.get_edges_from(node_id):
@@ -1194,7 +1194,7 @@ class StateSpaceCompiler:
                         if effect_name not in visited:
                             visited.add(effect_name)
                             effects.append(f"modifies {parent_node.name}")
-                    break
+                        break
 
         # Strategy 4: Find CALLS edges - methods called are side effects
         called_methods = []
@@ -1271,7 +1271,7 @@ class StateSpaceCompiler:
                 parent_node = self.graph.get_node(edge.source_id)
                 if parent_node and parent_node.kind == NodeKind.CLASS:
                     preconditions.append(f"requires {parent_node.name} instance")
-                break
+                    break
 
         # Strategy 5: Extract from docstring if available
         if "docstring" in node.metadata and node.metadata["docstring"]:

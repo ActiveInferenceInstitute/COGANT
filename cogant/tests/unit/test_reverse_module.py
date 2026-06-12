@@ -59,7 +59,7 @@ C_m0[2,1,type=float]
 D_f0={ (0.6, 0.2, 0.2) }
 D_f1={ (0.4, 0.6) }
 C_m0={ (0.5, 0.5) }
-A_m0={ ( (0.9, 0.1, 0.0), (0.1, 0.8, 0.1) ) }
+A_m0={ ( (0.9, 0.2, 0.4), (0.1, 0.8, 0.6) ) }
 B_f0=identity(3,3,4)
 
 ## ActInfOntologyAnnotation
@@ -88,8 +88,8 @@ G=ExpectedFreeEnergy
 
 ```gnn-matrices
 A[[rows=2][cols=3]]
-0.9 0.1 0.0
-0.1 0.8 0.1
+0.9 0.2 0.4
+0.1 0.8 0.6
 B[[rows=3][cols=3][depth=2]]
 # action=0
 1.0 0.0 0.0
@@ -200,7 +200,7 @@ def test_parse_gnn_fenced_matrix_block_overrides_aggregates() -> None:
     """The gnn-matrices fenced block is authoritative over aggregates."""
     model = parse_gnn(CANONICAL_GNN)
     # A from the fence:
-    assert model.A == [[0.9, 0.1, 0.0], [0.1, 0.8, 0.1]]
+    assert model.A == [[0.9, 0.2, 0.4], [0.1, 0.8, 0.6]]
     # B from the fence with two actions.
     assert len(model.B) == 3
     assert len(model.B[0]) == 3
@@ -471,7 +471,7 @@ def test_render_matrices_module_runtime_semantics() -> None:
     source = render_matrices_module(model)
     ns: dict = {}
     exec(compile(source, "matrices.py", "exec"), ns)
-    # A is the 2x3 likelihood, so likelihood over uniform state gives row sums/3.
+    # A is the likelihood, so A @ uniform state yields an observation distribution.
     uniform_state = [1.0 / 3] * 3
     obs = ns["likelihood"](uniform_state)
     assert len(obs) == 2

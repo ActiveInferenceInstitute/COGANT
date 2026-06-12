@@ -529,12 +529,13 @@ class TestGNNMatricesDimensions:
         _add_node(g, nid, NodeKind.FUNCTION, name)
         return g
 
-    def test_n_states_from_hidden_state_mappings(self) -> None:
-        """n_states uses HIDDEN_STATE mappings when present.
+    def test_n_states_prefers_compiled_state_space_variables(self) -> None:
+        """n_states uses compiled state-space variables when present.
 
-        Kills: ``not self._hidden_states and ...`` → ``or ...`` (would
-        use state-space vars even when hidden-state mappings exist,
-        producing wrong count if counts differ).
+        Matrix axes are aligned to the compiler's hidden-variable set, not
+        just the subset of direct HIDDEN_STATE mappings. This catches the
+        public-matrix mismatch where the matrix payload had fewer state axes
+        than the exported state_space.json artifact.
         """
         g = self._make_graph_with_node("s1", "state_var")
         ss = self._minimal_state_space(n_vars=5)  # 5 vars in state space
@@ -542,8 +543,8 @@ class TestGNNMatricesDimensions:
         m_hs = _make_mapping("hs1", MappingKind.HIDDEN_STATE, ["s1"])
         matrices = GNNMatrices(graph=g, mappings=[m_hs], state_space=ss)
 
-        # 1 HIDDEN_STATE mapping, not 5 from state-space vars.
-        assert matrices.n_states == 1
+        # State-space variables are authoritative for matrix dimensions.
+        assert matrices.n_states == 5
 
     def test_n_states_falls_back_to_state_space_vars_when_no_hs_mappings(self) -> None:
         """n_states falls back to state_space.variables when no HS mappings.

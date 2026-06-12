@@ -15,10 +15,12 @@ import re
 import shutil
 import subprocess
 import zlib
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
+
+from manuscript_figure_registry import MANUSCRIPT_FIGURES, ManuscriptFigure
 
 
 _TOOLS_DIR = Path(__file__).resolve().parent
@@ -26,9 +28,6 @@ COGANT_STAGING_ROOT = _TOOLS_DIR.parent
 OUTPUT_FIGURES_DIR = COGANT_STAGING_ROOT / "output" / "figures"
 FIGURE_MANIFEST_SCHEMA_VERSION = "1.2"
 FIGURE_SIDECAR_SCHEMA_VERSION = "1.2"
-
-
-from manuscript_figure_registry import MANUSCRIPT_FIGURES, ManuscriptFigure
 
 
 
@@ -266,6 +265,54 @@ def _fixture_metrics_summary(data: dict[str, object]) -> dict[str, object] | Non
         "total_transitions": sum(_as_int(row.get("transitions")) for row in fixture_rows),
         "total_elapsed_s": round(sum(_as_float(row.get("elapsed_s")) for row in fixture_rows), 3),
     }
+
+
+def _count_nested(container: object, key: str) -> int:
+    if not isinstance(container, dict):
+        return 0
+    value = container.get(key)
+    if isinstance(value, (list, dict)):
+        return len(value)
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    return 0
+
+
+def _gnn_bundle_summary(data: dict[str, object]) -> dict[str, object] | None:
+    """Summarize an exported ``model.gnn.json`` bundle without fixture heuristics."""
+    matrices = data.get("matrices")
+    state_space = data.get("state_space")
+    if not isinstance(matrices, dict) or not isinstance(state_space, dict):
+        return None
+
+    dimensions = matrices.get("dimensions") if isinstance(matrices.get("dimensions"), dict) else {}
+    shapes = matrices.get("shapes") if isinstance(matrices.get("shapes"), dict) else {}
+    mappings = data.get("mappings")
+    ontology = data.get("ontology_mapping")
+    graph = data.get("program_graph")
+    summary: dict[str, object] = {
+        "bundle_kind": "gnn_model",
+        "model_id": str(data.get("model_id") or ""),
+        "schema_name": str(data.get("schema_name") or ""),
+        "matrices_count": len([key for key in ("A", "B", "C", "D") if key in matrices]),
+        "matrix_dimensions": dict(dimensions),
+        "matrix_shapes": dict(shapes),
+        "variables_count": _count_nested(state_space, "variables"),
+        "observations_count": _count_nested(state_space, "observations"),
+        "actions_count": _count_nested(state_space, "actions"),
+        "transitions_count": _count_nested(state_space, "transitions"),
+        "likelihoods_count": _count_nested(state_space, "likelihoods"),
+        "preferences_count": _count_nested(state_space, "preferences"),
+        "mappings_count": _count_nested(mappings, "mappings"),
+        "ontology_mappings_count": _count_nested(ontology, "mappings"),
+        "program_nodes_count": _count_nested(graph, "nodes"),
+        "program_edges_count": _count_nested(graph, "edges"),
+    }
+    if isinstance(dimensions, dict):
+        summary["total_state_variables"] = _as_int(dimensions.get("n_states"))
+        summary["total_observations"] = _as_int(dimensions.get("n_obs"))
+        summary["total_actions"] = _as_int(dimensions.get("n_actions"))
+    return summary
 
 
 def _stage_base(step: object) -> str:
@@ -811,11 +858,46 @@ def _render_publication_batch_evidence_summary(
 
 
 def _prepare_source_figures(root: Path, figures: Iterable[ManuscriptFigure]) -> None:
+    figures = tuple(figures)
     keys = {figure.key for figure in figures}
     if "roundtrip_batch_gantt" in keys:
         _render_publication_batch_timeline(root)
     if "batch_evidence_summary" in keys:
         _render_publication_batch_evidence_summary(root)
+    for figure in figures:
+        if figure.key != "forward_abcd_matrices":
+            continue
+        run_dir = root / Path(figure.source).parent
+        if not run_dir.is_dir():
+            continue
+        rendered = False
+        try:
+            from cogant.viz.png.orchestrator import render_all_pngs
+
+            result = render_all_pngs(run_dir, strict_real_matrices=True)
+            if result.get("connections"):
+                rendered = True
+        except Exception:
+            rendered = False
+        if rendered or not (root / "cogant" / "pyproject.toml").is_file():
+            continue
+        try:
+            rel_run_dir = Path(figure.source).parent.relative_to("cogant")
+        except ValueError:
+            continue
+        script = (
+            "from pathlib import Path\n"
+            "from cogant.viz.png.orchestrator import render_all_pngs\n"
+            f"result = render_all_pngs(Path({str(rel_run_dir)!r}), strict_real_matrices=True)\n"
+            "raise SystemExit(0 if result.get('connections') else 1)\n"
+        )
+        subprocess.run(
+            ["uv", "run", "python", "-c", script],
+            cwd=root / "cogant",
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
     if {"confidence_calibration", "rule_evidence_trace", "inference_trace", "roundtrip_visual_diff"} & keys:
         run_dir = root / "cogant" / "output" / "calculator"
         if not run_dir.is_dir():
@@ -854,9 +936,13 @@ def _artifact_summary(path: Path | None, root: Path) -> dict[str, object] | None
             summary["kind"] = "json"
             if isinstance(data, dict):
                 summary["top_level_keys"] = sorted(data.keys())[:40]
-                fixture_summary = _fixture_metrics_summary(data)
-                if fixture_summary:
-                    summary.update(fixture_summary)
+                gnn_summary = _gnn_bundle_summary(data)
+                if gnn_summary:
+                    summary.update(gnn_summary)
+                else:
+                    fixture_summary = _fixture_metrics_summary(data)
+                    if fixture_summary:
+                        summary.update(fixture_summary)
                 for key in (
                     "nodes",
                     "edges",
@@ -873,7 +959,7 @@ def _artifact_summary(path: Path | None, root: Path) -> dict[str, object] | None
                 ):
                     value = data.get(key)
                     if isinstance(value, (list, dict)):
-                        summary[f"{key}_count"] = len(value)
+                        summary.setdefault(f"{key}_count", len(value))
                 if isinstance(data.get("targets"), list):
                     targets = [row for row in data["targets"] if isinstance(row, dict)]
                     role_totals: dict[str, int] = {}
@@ -944,6 +1030,39 @@ def _artifact_summary(path: Path | None, root: Path) -> dict[str, object] | None
         summary["kind"] = "binary"
         summary["byte_count"] = path.stat().st_size
     return summary
+
+
+def _source_artifact_staleness(path: Path | None, root: Path) -> list[dict[str, object]]:
+    """Return newer divergent siblings for ``cogant/output/<target>/data/*`` artifacts."""
+    if path is None or not path.is_file():
+        return []
+    try:
+        rel = path.relative_to(root)
+    except ValueError:
+        return []
+    parts = rel.parts
+    if len(parts) < 5 or parts[0] != "cogant" or parts[1] != "output" or parts[3] != "data":
+        return []
+    run_dir = root / Path(*parts[:3])
+    source_digest = _sha256_file(path)
+    findings: list[dict[str, object]] = []
+    for candidate in (run_dir / path.name, run_dir / "gnn_package" / path.name):
+        if not candidate.is_file() or candidate == path:
+            continue
+        if candidate.stat().st_mtime_ns <= path.stat().st_mtime_ns:
+            continue
+        candidate_digest = _sha256_file(candidate)
+        if candidate_digest == source_digest:
+            continue
+        findings.append(
+            {
+                "source_artifact": str(rel),
+                "newer_sibling": str(candidate.relative_to(root)),
+                "source_sha256": source_digest,
+                "newer_sibling_sha256": candidate_digest,
+            }
+        )
+    return findings
 
 
 def _int_dict(value: object) -> dict[str, int]:
@@ -1155,6 +1274,82 @@ def _evidence_requirement_findings(record: dict[str, object]) -> list[str]:
     return findings
 
 
+def _matrix_provenance_findings(record: dict[str, object]) -> list[str]:
+    if record.get("key") != "forward_abcd_matrices":
+        return []
+    source_metadata = _source_metadata(record)
+    findings: list[str] = []
+
+    def _alignment_findings(prefix: str, value: object) -> list[str]:
+        if not isinstance(value, dict) or not value:
+            return [prefix]
+        missing_or_false: list[str] = []
+        for key in ("hidden_states_match", "observations_match", "actions_match"):
+            if value.get(key) is not True:
+                missing_or_false.append(f"{prefix}.{key}")
+        return missing_or_false
+
+    if source_metadata.get("matrix_values_from_artifact") is not True:
+        findings.append("source_figure_metadata.matrix_values_from_artifact")
+    matrix_validation_errors = source_metadata.get("matrix_validation_errors")
+    if matrix_validation_errors not in ([], ()):
+        findings.append("source_figure_metadata.matrix_validation_errors_empty")
+    fallback_panels = source_metadata.get("fallback_panels")
+    if fallback_panels not in ([], ()):
+        findings.append("source_figure_metadata.fallback_panels_empty")
+    if not source_metadata.get("matrix_source_artifact"):
+        findings.append("source_figure_metadata.matrix_source_artifact")
+    if not source_metadata.get("source_artifact_digest"):
+        findings.append("source_figure_metadata.matrix_source_digest")
+    source_shapes = source_metadata.get("source_matrix_shapes")
+    if not isinstance(source_shapes, dict):
+        findings.append("source_figure_metadata.source_matrix_shapes")
+    else:
+        for key in ("A", "B", "C", "D"):
+            if not isinstance(source_shapes.get(key), list) or not source_shapes.get(key):
+                findings.append(f"source_figure_metadata.source_matrix_shapes.{key}")
+    reducers = source_metadata.get("matrix_reducers")
+    if not isinstance(reducers, dict):
+        findings.append("source_figure_metadata.matrix_reducers")
+    else:
+        reducer_b = reducers.get("B")
+        if not isinstance(reducer_b, dict) or reducer_b.get("method") != "max_over_actions":
+            findings.append("source_figure_metadata.matrix_reducers.B")
+    findings.extend(
+        _alignment_findings(
+            "source_figure_metadata.dimension_alignment",
+            source_metadata.get("dimension_alignment"),
+        )
+    )
+    degraded_panels = record.get("degraded_panels")
+    if degraded_panels not in ([], ()):
+        findings.append("degraded_panels_empty")
+    if not record.get("matrix_source_path"):
+        findings.append("matrix_source_path")
+    if not record.get("matrix_source_digest"):
+        findings.append("matrix_source_digest")
+    b_reducer = record.get("b_reducer")
+    if not isinstance(b_reducer, dict) or b_reducer.get("method") != "max_over_actions":
+        findings.append("b_reducer")
+    for key in (
+        "source_matrix_diagnostics",
+        "panel_diagnostics",
+        "matrix_dimensions",
+        "state_space_counts",
+    ):
+        value = record.get(key)
+        if not isinstance(value, dict) or not value:
+            findings.append(key)
+    findings.extend(_alignment_findings("dimension_alignment", record.get("dimension_alignment")))
+    for key in ("source_matrix_diagnostics", "panel_diagnostics"):
+        value = record.get(key)
+        if isinstance(value, dict):
+            for panel in ("A", "B", "C", "D"):
+                if not isinstance(value.get(panel), dict) or not value.get(panel):
+                    findings.append(f"{key}.{panel}")
+    return findings
+
+
 def _metadata_missing(record: dict[str, object]) -> list[str]:
     required = (
         "caption",
@@ -1193,11 +1388,16 @@ def _metadata_missing(record: dict[str, object]) -> list[str]:
             missing.append("visual_qa.color_diversity_ok")
     missing.extend(_publication_dimension_findings(record))
     missing.extend(_evidence_requirement_findings(record))
+    missing.extend(_matrix_provenance_findings(record))
     missing.extend(_caption_reference_findings(str(record.get("caption") or "")))
     return missing
 
 
-_MANUSCRIPT_FIGURE_RE = re.compile(r"\]\(\.\./figures/([^)#\s]+\.png)(?:#[^)]+)?\)")
+_MANUSCRIPT_FIGURE_RE = re.compile(
+    r"\]\(\s*<?\.\./figures/([^)>#\s]+\.png)(?:#[^)>\s]+)?>?"
+    r"(?:\s+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))?\s*\)",
+    re.IGNORECASE,
+)
 
 
 def _active_manuscript_figure_refs(root: Path) -> set[str]:
@@ -1285,6 +1485,7 @@ def copy_manuscript_figures(
             record["source_artifact_digest"] = source_artifact_sha256
             record["data_digest_sha256"] = source_artifact_sha256
             record["source_artifact_summary"] = _artifact_summary(source_artifact, root)
+            record["source_artifact_staleness"] = _source_artifact_staleness(source_artifact, root)
             record["visual_qa"] = _png_visual_metrics(dest)
             source_sidecar = src.with_suffix(".figure.json")
             if source_sidecar.is_file():
@@ -1295,6 +1496,43 @@ def copy_manuscript_figures(
                     )
                 except ValueError:
                     record["source_figure_metadata"] = None
+            source_metadata = _source_metadata(record)
+            if source_metadata:
+                for key in (
+                    "matrix_source_artifact",
+                    "matrix_values_from_artifact",
+                    "matrix_validation_errors",
+                    "fallback_panels",
+                    "degraded_panels",
+                    "panel_sources",
+                    "source_matrix_shapes",
+                    "display_matrix_shapes",
+                    "displayed_matrix_shapes",
+                    "matrix_reducers",
+                    "source_matrix_diagnostics",
+                    "panel_diagnostics",
+                    "matrix_dimensions",
+                    "state_space_counts",
+                    "dimension_alignment",
+                    "strict_real_matrices",
+                ):
+                    if key in source_metadata:
+                        record[key] = source_metadata[key]
+                if "source_artifact_digest" in source_metadata:
+                    record["matrix_source_artifact_digest"] = source_metadata[
+                        "source_artifact_digest"
+                    ]
+            if figure.key == "forward_abcd_matrices":
+                record["matrix_source_path"] = figure.source_artifact
+                record["matrix_source_digest"] = source_artifact_sha256
+                record["matrix_source_artifact_digest"] = (
+                    record.get("matrix_source_artifact_digest") or source_artifact_sha256
+                )
+                reducers = record.get("matrix_reducers")
+                if isinstance(reducers, dict) and isinstance(reducers.get("B"), dict):
+                    record["b_reducer"] = reducers["B"]
+                record.setdefault("fallback_panels", [])
+                record.setdefault("degraded_panels", [])
             record["renderer_version"] = renderer_version
             record["known_limitations"] = figure.limitations
             record["displayed_counts"] = _displayed_counts(record)
@@ -1303,6 +1541,11 @@ def copy_manuscript_figures(
             record["panel_metadata"] = _panel_metadata(figure, record)
             record["panels"] = _panels(record)
             metadata_missing = _metadata_missing(record)
+            if record["source_artifact_staleness"]:
+                metadata_missing.extend(
+                    f"source_artifact_stale:{item['newer_sibling']}"
+                    for item in record["source_artifact_staleness"]
+                )
             record["metadata_complete"] = not metadata_missing
             record["metadata_missing"] = metadata_missing
             destination_sidecar = dest.with_suffix(".figure.json")
@@ -1331,11 +1574,43 @@ def copy_manuscript_figures(
                 "displayed_counts": record["displayed_counts"],
                 "panel_metadata": record["panel_metadata"],
                 "panels": record["panels"],
+                "matrix_source_artifact": record.get("matrix_source_artifact"),
+                "matrix_source_artifact_digest": record.get("matrix_source_artifact_digest"),
+                "matrix_source_path": record.get("matrix_source_path"),
+                "matrix_source_digest": record.get("matrix_source_digest"),
+                "matrix_values_from_artifact": record.get("matrix_values_from_artifact"),
+                "matrix_validation_errors": record.get("matrix_validation_errors"),
+                "fallback_panels": record.get("fallback_panels"),
+                "degraded_panels": record.get("degraded_panels"),
+                "panel_sources": record.get("panel_sources"),
+                "source_matrix_shapes": record.get("source_matrix_shapes"),
+                "display_matrix_shapes": record.get("display_matrix_shapes"),
+                "displayed_matrix_shapes": record.get("displayed_matrix_shapes")
+                or record.get("display_matrix_shapes"),
+                "matrix_reducers": record.get("matrix_reducers"),
+                "b_reducer": record.get("b_reducer"),
+                "source_matrix_diagnostics": record.get("source_matrix_diagnostics"),
+                "panel_diagnostics": record.get("panel_diagnostics"),
+                "matrix_dimensions": record.get("matrix_dimensions"),
+                "state_space_counts": record.get("state_space_counts"),
+                "dimension_alignment": record.get("dimension_alignment"),
+                "strict_real_matrices": record.get("strict_real_matrices"),
                 "dimensions_px": record["dimensions_px"],
+                "image_width_px": (
+                    record["dimensions_px"].get("width")
+                    if isinstance(record.get("dimensions_px"), dict)
+                    else None
+                ),
+                "image_height_px": (
+                    record["dimensions_px"].get("height")
+                    if isinstance(record.get("dimensions_px"), dict)
+                    else None
+                ),
                 "bytes": record["bytes"],
                 "sha256": record["sha256"],
                 "visual_qa": record["visual_qa"],
                 "source_artifact_summary": record["source_artifact_summary"],
+                "source_artifact_staleness": record["source_artifact_staleness"],
                 "source_figure_metadata": record.get("source_figure_metadata"),
             }
             destination_sidecar.write_text(

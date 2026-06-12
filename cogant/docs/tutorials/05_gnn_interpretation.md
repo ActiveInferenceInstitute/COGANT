@@ -13,7 +13,7 @@
 > **Theory background:** The A / B / C / D matrices are the canonical building blocks of an
 > [Active Inference](../concepts/active_inference.md) generative model. The bundle they live in
 > is COGANT's [GNN package](../concepts/gnn.md). Read the Active Inference primer first if the
-> `p(o, s, a)` factorization shown in the next section is new — it makes the row/column
+> `p(o, s, a)` factorization shown in the next section is new — it makes the index
 > walkthroughs much easier to follow.
 
 COGANT's `gnn_package/` directory contains four probabilistic structures at the heart of an
@@ -77,15 +77,16 @@ Expected for calculator (3 observations × 3 hidden states):
 ['0.05', '0.05', '0.90']     # P(assert_display | display, accumulator, history_len)
 ```
 
-Interpretation. Row 0 says: "when the hidden state `Calculator.display` is the true value,
+Interpretation. Column 0 says: "when the hidden state `Calculator.display` is the true value,
 there is a 90% chance the `get_display()` observation reflects it accurately, and a 5% chance
 it is contaminated by one of the other two hidden-state channels." The `0.90 / 0.05` split is
 the `_DEFAULT_DIRECT_MASS / _DEFAULT_INDIRECT_MASS` placeholder defined at the top of
 `matrices.py`. It is **not learned** — it is a documented fallback.
 
-**Where did row 0 come from?** The READS-edge query in `compute_A()` found one incoming READS
+**Where did column 0 come from?** The READS-edge query in `compute_A()` found one incoming READS
 edge from `Calculator.display` to `get_display`. That's the "direct" hit. The other two hidden
-states share the residual `0.10` mass uniformly.
+observations share the residual `0.10` mass uniformly. A is column-stochastic: each hidden-state
+column sums to one over observation outcomes.
 
 ## Step 3 — read the B matrix (transition)
 

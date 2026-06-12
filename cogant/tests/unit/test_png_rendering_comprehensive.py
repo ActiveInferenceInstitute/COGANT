@@ -331,23 +331,13 @@ def _importable(module_name: str) -> bool:
         return False
 
 
-_HAS_SVG_BACKEND = bool(
-    shutil.which("rsvg-convert")
-    or shutil.which("inkscape")
-    or shutil.which("convert")
-    or _importable("cairosvg")
-)
+_HAS_SVG_BACKEND = _importable("cairosvg")
 
 
 class TestSvgRendering:
     @pytest.mark.skipif(
-        not (
-            _importable("cairosvg")
-            or shutil.which("rsvg-convert")
-            or shutil.which("inkscape")
-            or shutil.which("convert")
-        ),
-        reason="No SVG rendering backend installed",
+        not _importable("cairosvg"),
+        reason="No default pure-Python SVG rendering backend installed",
     )
     def test_svg_to_png(self, tmp_path: Path) -> None:
         svg = tmp_path / "hello.svg"
@@ -724,6 +714,21 @@ class TestRenderAllPngsAutoDiscovery:
                     "variables": [{"id": "s0", "name": "s0"}],
                     "observations": [{"id": "o0", "name": "o0"}],
                     "actions": [{"id": "u0", "name": "u0"}],
+                }
+            )
+        )
+        (run / "gnn_package" / "model.gnn.json").write_text(
+            json.dumps(
+                {
+                    "matrices": {
+                        "A": [[1.0]],
+                        "B": [[[1.0]]],
+                        "C": [0.0],
+                        "D": [1.0],
+                        "shapes": {"A": [1, 1], "B": [1, 1, 1], "C": [1], "D": [1]},
+                        "dimensions": {"n_states": 1, "n_obs": 1, "n_actions": 1},
+                        "truncation": None,
+                    }
                 }
             )
         )

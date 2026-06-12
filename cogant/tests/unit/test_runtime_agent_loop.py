@@ -205,7 +205,7 @@ class TestEpisodeAndLearning:
         )
         rt = AgentRuntime(ns)
         result = rt.run_episode(0)
-        # Uniform over n_states (defaulted to 1 when D is empty + A row size)
+        # Uniform over n_states (defaulted to 1 when D is empty + A column count)
         assert math.isclose(sum(result.final_posterior), 1.0)
 
     def test_update_D_from_posterior_running_average(self):

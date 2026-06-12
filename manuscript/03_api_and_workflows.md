@@ -2,7 +2,7 @@
 
 This section describes the programmatic surface that the shipped Python package exposes in practice, aligned with `../cogant/docs/api/README.md` and the inventory-style notes under `../cogant/docs/reference/`. It is **not** an empirical benchmark section; COGANT does not ship comparative timing claims in the manuscript layer. Instead, it records the **surface area** users can rely on: two complementary entry points (a Session for stepwise work and a Pipeline for batch runs), the Bundle accessors that expose their artifacts, a command-line interface, and a Review API for human-in-the-loop curation.
 
-**Scope snapshot.** For what is implemented, staged, or omitted in v{{VERSION}} (Rust paths, optional parsers, CLI flags), treat [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md) as the live boundary; if this section lags a release, follow the package table first.
+**Scope snapshot.** For what is implemented, staged, or omitted in v{{VERSION}} (Rust paths, optional parsers, CLI flags), treat the package implementation-status table under `../cogant/docs/reference/` as the live boundary; if this section lags a release, follow the package table first.
 
 ## End-to-end data flow
 
@@ -29,7 +29,7 @@ flowchart LR
   BU --> GP
 ```
 
-`Session` exposes stepwise methods (`extract_static`, `build_graph`, …) up to `export_all`; `PipelineRunner` executes the full ingest-to-validate DAG — including the `validate` gate that the stepwise `Session` path does not run — under one `PipelineConfig`. Exported files (`model.gnn.md`, JSON companions, `manifest.json`) materialize under the configured output tree. Authoritative command and flag list: [`../cogant/docs/cli/README.md`](../cogant/docs/cli/README.md).
+`Session` exposes stepwise methods (`extract_static`, `build_graph`, …) up to `export_all`; `PipelineRunner` executes the full ingest-to-validate DAG — including the `validate` gate that the stepwise `Session` path does not run — under one `PipelineConfig`. Exported files (`model.gnn.md`, JSON companions, `manifest.json`) materialize under the configured output tree. The authoritative command and flag list lives in `../cogant/docs/cli/README.md`.
 
 ## Session-oriented workflow
 
@@ -66,7 +66,7 @@ For canonical 19-section Generalized Notation Notation artifacts (`model.gnn.md`
 
 ## Command-line interface
 
-The CLI entry point (`cogant.cli.main`) registers **26** top-level subcommands (`cogant --help`). The high-traffic paths are `cogant translate` (full pipeline, equivalent to `cogant analyze`; accepts `--incremental <git-ref>` for per-commit CI re-runs over a Git diff), `cogant validate`, `cogant reverse`, `cogant roundtrip`, and `cogant doctor` (environment diagnostics). Other commands cover scanning (`scan`, `extract-static`, `extract-dynamic`, `graph`), compilation (`statespace`, `process`), re-export (`export-gnn`, `export`), static/graph analytics (`analyze-static`, `analyze-graph`), visualization (`render`, `viz`, `visualize`, `diff`), review (`explain`), upstream interop (`upstream-gnn` — drives the upstream `generalized-notation-notation` 25-step pipeline against an existing `gnn_package/`, also exposed as `--upstream-gnn-pipeline` on `translate` / `analyze` / `validate`), and lifecycle management (`init`, `plugin`, `migrate`, `benchmark`, `changed`). Exact flags live in `../cogant/docs/cli/README.md` and the single-page [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md); the manuscript does not duplicate them to avoid drift.
+The CLI entry point (`cogant.cli.main`) registers **26** top-level subcommands (`cogant --help`). The high-traffic paths are `cogant translate` (full pipeline, equivalent to `cogant analyze`; accepts `--incremental <git-ref>` for per-commit CI re-runs over a Git diff), `cogant validate`, `cogant reverse`, `cogant roundtrip`, and `cogant doctor` (environment diagnostics). Other commands cover scanning (`scan`, `extract-static`, `extract-dynamic`, `graph`), compilation (`statespace`, `process`), re-export (`export-gnn`, `export`), static/graph analytics (`analyze-static`, `analyze-graph`), visualization (`render`, `viz`, `visualize`, `diff`), review (`explain`), upstream interop (`upstream-gnn` — drives the upstream `generalized-notation-notation` 25-step pipeline against an existing `gnn_package/`, also exposed as `--upstream-gnn-pipeline` on `translate` / `analyze` / `validate`), and lifecycle management (`init`, `plugin`, `migrate`, `benchmark`, `changed`). Exact flags live in `../cogant/docs/cli/README.md` and `../cogant/docs/cli_reference.md`; the manuscript does not duplicate them to avoid drift.
 
 **Per-command stage coverage (RedTeam F40 disambiguation).** Not every
 subcommand exercises all {{STAGE_COUNT}} runner stages. `cogant translate` and

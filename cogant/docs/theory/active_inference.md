@@ -98,7 +98,7 @@ COGANT derives the four Active Inference generative-model matrices from the prog
 
 | Matrix | Shape | Source | Semantics | COGANT derivation |
 | --- | --- | --- | --- | --- |
-| **A** (likelihood) | `[n_obs × n_states]` | OBSERVATION mappings + READS/OBSERVES edges | `P(observation \| hidden_state)` — probability of observing a particular external state given an internal state | One row per OBSERVATION role; heuristic fill: 0.9 on diagonal (strong likelihood), 0.1 off-diagonal (weak) |
+| **A** (likelihood) | `[n_obs × n_states]` | OBSERVATION mappings + READS/OBSERVES edges | `P(observation \| hidden_state)` — probability of observing a particular external state given an internal state | One column per hidden state; direct observation edges receive high mass, then each hidden-state column is normalized over observations |
 | **B** (transition) | `[n_states × n_states × n_actions]` | ACTION mappings + WRITES/MUTATES/CALLS edges | `P(next_state \| current_state, action)` — probability of transitioning between states under a given action | One matrix slice per ACTION role; identity fill (no change) when action has no outgoing WRITES edge, otherwise transition from source to target WRITES edge |
 | **C** (preference) | `[n_obs]` | CONSTRAINT/PREFERENCE mappings + confidence scores | `log P(preferred observations)` — preference/cost over observations | Weighted by confidence score of CONSTRAINT mappings; uniform when no constraints exist |
 | **D** (prior) | `[n_states]` | CONTEXT/CONFIGURATION nodes + defaults | `P(initial hidden_state)` — prior belief over hidden states at t=0 | Derived from nodes tagged CONTEXT; uniform default when none found |
@@ -107,7 +107,7 @@ The `StateSpaceCompiler` (`py/cogant/statespace/compiler.py`) consumes the trans
 
 ## Known limitations
 
-1. **A matrix sparsity** — heuristic `0.9 / 0.1` diagonal vs off-diagonal fill; no learned parameters yet.
+1. **A matrix sparsity** — heuristic `0.9 / 0.1` direct-vs-indirect fill before column normalization; no learned parameters yet.
 2. **B matrix identity fallback** — when an `ACTION` has no `WRITES` edge, B is identity-filled along the current state.
 3. **Uniform C** — when no `CONSTRAINT` mappings exist the preference vector is uniform.
 4. **Uniform D** — when no `CONFIGURATION` nodes or type domains are found the prior is uniform.

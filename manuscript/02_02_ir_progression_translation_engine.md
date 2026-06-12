@@ -2,7 +2,7 @@
 
 ## Progressive IRs
 
-Processing proceeds through a sequence of representations. Which stages are complete for a given repository is summarized in [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md) (partial areas include translation rules, state space, and Rust acceleration):
+Processing proceeds through a sequence of representations. Which stages are complete for a given repository is summarized in the package implementation-status table under `../cogant/docs/reference/` (partial areas include translation rules, state space, and Rust acceleration):
 
 1. **Repo IR** — entities and relationships extracted from parsers.
 2. **Program graph IR** — consolidated graph with deduplication and metadata.
@@ -18,7 +18,7 @@ a semantics-preserving compiler. Each IR layer writes a material artifact
 (`program_graph.json`, `semantic_mappings.json`, `state_space.json`, matrix JSON,
 GNN Markdown, validation report, and optional dashboard figures). Later stages may
 consume earlier artifacts, but they do not erase them: a low-confidence mapping,
-parser fallback, skipped file, or matrix fallback stays inspectable in the run
+parser alternate path, skipped file, or matrix degraded-output default stays inspectable in the run
 directory and in the dashboard. This is the practical reason the manuscript
 separates role preservation from strict structural isomorphism: the reverse
 synthesizer can preserve the semantic-role population while still adding scaffold

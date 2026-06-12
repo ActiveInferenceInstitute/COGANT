@@ -175,9 +175,9 @@ because threshold movement in that band can change the state-space surface.
 
 | Label | Location | Description |
 |-------|----------|-------------|
-| Fixpoint termination theorem | @sec:thm-fixpoint-termination | **Fixpoint termination** — Kleene chain stabilises in $\leq n \cdot |\mathcal{K}_M|$ steps |
-| Markov blanket completeness theorem | @sec:thm-markov-blanket-completeness | **Markov blanket completeness** — $\Pi_{G,S}$ is total and mutually exclusive |
-| Matrix validity theorem | @sec:thm-matrix-validity | **Matrix validity** — $A$, $B$, $D$ satisfy stochasticity within $10^{-6}$ |
+| Fixpoint termination proposition | @sec:thm-fixpoint-termination | **Fixpoint termination** — Kleene chain stabilises in $\leq n \cdot |\mathcal{K}_M|$ steps |
+| Markov blanket partition invariant | @sec:thm-markov-blanket-completeness | **Markov blanket partition totality** — seed-induced $\Pi_{G,S}$ is total and mutually exclusive |
+| Matrix validity proposition | @sec:thm-matrix-validity | **Matrix validity** — $A$, $B$, $D$ satisfy stochasticity within $10^{-6}$ |
 | Approximate Galois conjecture | @sec:prop-approximate-galois | **ε-approximate Galois comparison** — $(F, R)$ pair is conjectured to satisfy a role-quotient approximate adjunction |
 | Role-preservation bound | @sec:thm-bounded-role-preservation-gap | **Role preservation** — roundtrip role similarity is a scoped empirical invariant and multiset approximation to JS distance between normalised role distributions |
 | Role-preservation-threshold proposition | @sec:prop-role-preservation-threshold | **ROLE_PRESERVED threshold** — $\text{multiset\_sim} \geq {{THRESHOLD_ROLE_PRESERVED}}$ corresponds to the configured public role-preservation floor |

@@ -18,6 +18,11 @@ import sys
 from pathlib import Path
 
 RUN_ALL = Path(__file__).resolve().parent.parent / "run_all.py"
+ROOT = RUN_ALL.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import run_all_runner  # noqa: E402
 
 
 def test_run_all_py_exists_and_parses() -> None:
@@ -114,3 +119,29 @@ def test_failures_is_hoisted_before_try() -> None:
             if isinstance(t, ast.Name) and t.id == "failures":
                 saw_failures_assign = True
     raise AssertionError("no try block found in main()")
+
+
+def test_cross_target_summary_invalid_package_is_fatal(tmp_path) -> None:
+    """Fresh summary validation failures must propagate to the batch exit path."""
+    run_dir = tmp_path / "out" / "bad_target"
+    (run_dir / "data").mkdir(parents=True)
+    (run_dir / "gnn_package").mkdir()
+    (run_dir / "data" / "bundle.json").write_text(
+        '{"stage_results": {"validate": {"gnn_validation": {"score": 100, "valid": true}}}}',
+        encoding="utf-8",
+    )
+    manifest = {
+        "summary": {"failed_steps": [], "total_wall_time_s": 0.1},
+        "targets": [{"id": "bad_target", "run_dir": str(run_dir), "path": "demo"}],
+    }
+
+    failures = run_all_runner._write_cross_target_summary(
+        tmp_path / "out",
+        manifest,
+        package_root=ROOT / "cogant",
+        log_fp=sys.stdout,
+    )
+
+    assert failures == ["summary_validate:bad_target"]
+    summary = (tmp_path / "out" / "summary.json").read_text(encoding="utf-8")
+    assert "summary_validate:bad_target" in summary

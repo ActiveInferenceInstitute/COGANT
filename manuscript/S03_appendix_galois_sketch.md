@@ -58,6 +58,16 @@ The role multiset is a deliberately low-dimensional quotient of the program
 graph. It is not a replacement for label-preserving graph kernels such as the
 Weisfeiler-Lehman family [@shervashidze2011weisfeiler]; instead, it is the
 invariant that the current reverse synthesizer is designed to preserve.
+The implemented score averages `min(a,b)/max(a,b)` across role counts, making it
+closer to a macro-averaged per-role min/max multiset similarity than to recall
+[@wu2018weightedMinhash].
+The wider space of graph-similarity and graph-distance measures this role quotient sits
+beneath --- the different ways of quantifying how similar or distant two graphs are --- is
+surveyed by Grohe [@grohe2024similarity], with graph edit distance as a
+canonical distance family for attributed relational graphs
+[@sanfeliu1983distance]; the distinction COGANT relies on between *exact*
+graph isomorphism and the weaker, role-level similarity that the `STRUCTURALLY_ISOMORPHIC` /
+`ROLE_PRESERVED` status vocabulary encodes lives within that space.
 In a standard Galois connection, $\gamma \circ \alpha$ is an inflationary closure
 (abstraction is lossy by construction). The COGANT comparison is weaker: this round-trip is an identity only on
 the normal-form sub-image the reverse synthesizer targets — not a global
@@ -106,7 +116,7 @@ planned node). Composing the two:
 3. `parse_gnn(F(G))` recovers the full declaration list bijectively.
 4. `synthesize_package(plan)` emits one Python artefact per `NodePlan`; by
    the CONSTRAINT-role synthesizer invariant recorded in
-   [`../cogant/docs/evaluation/CONSTRAINT_FIX.md`](../cogant/docs/evaluation/CONSTRAINT_FIX.md), the mapping from `NodePlan` to emitted
+   `../cogant/docs/evaluation/CONSTRAINT_FIX.md`, the mapping from `NodePlan` to emitted
    artefact is injective on role multiplicity.
 5. Re‑running `F` on the synthesized package recovers the same role
    multiset up to the **synthesizer gap**: extra OBSERVATION/CONSTRAINT

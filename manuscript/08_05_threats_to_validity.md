@@ -55,10 +55,10 @@ uncurated input.
 
 ## Degeneracy and the vacuity floor
 
-When a rule does not fire, matrix construction falls back to identity tensors
+When a rule does not fire, matrix construction uses identity tensors
 and a uniform prior (the $(0.9, 0.1)$ mass split of
 @sec:02-01-program-graph-and-formal-foundations). A model dominated by such
-fallbacks is *structurally* valid yet *semantically* near-empty, and a
+degraded-output defaults is *structurally* valid yet *semantically* near-empty, and a
 structure-only validator score of 100/100 does not by itself exclude this case
 (@sec:08-04-world-models-boundaries-and-compatibility already warns against
 "over-interpreting matrix defaults or high validator scores as end-to-end
@@ -67,7 +67,7 @@ gate requires generated-code compile success and zero matrix/section deltas, and
 the per-target `s_role` denominator handling in
 @sec:S01-appendix-roundtrip-epsilon assigns the vacuous one-sided case
 `s_role = 0.0` rather than rewarding it. Readers auditing a *new* corpus should
-report the fallback fraction and the non-default role distribution alongside the
+report the degraded-output fraction and the non-default role distribution alongside the
 validator score; the shipped fixtures expose these via the per-target
 `metrics.json` (`role_confusion`, `graph_delta`, `matrix_delta`).
 
@@ -188,7 +188,7 @@ The contemporary default for "code → X" is often to prompt a large language mo
 
 ## Visualization validity
 
-The figure set is generated and provenance-bearing, but that is not the same as proving that the visual workbench improves human judgment. The current evidence answers a **functional** question: the PNG exists, is nonblank, has a sidecar, records displayed counts, links to a source artifact, and is cited from the manuscript. It does not answer a **human-grounded** question: whether researchers using the dashboard more accurately find a failed mapping, explain a matrix fallback, or decide whether a roundtrip should be trusted. Visualization research treats domain task, abstraction, encoding, algorithm, and user validation as separable layers [@munzner2009nested; @sedlmair2012design; @brehmer2013typology]. COGANT currently claims the first four layers only for the registered static figures and dashboard artifacts; a design-study or user-task evaluation remains future work before stronger interpretability claims should be made.
+The figure set is generated and provenance-bearing, but that is not the same as proving that the visual workbench improves human judgment. The current evidence answers a **functional** question: the PNG exists, is nonblank, has a sidecar, records displayed counts, links to a source artifact, and is cited from the manuscript. It does not answer a **human-grounded** question: whether researchers using the dashboard more accurately find a failed mapping, explain a matrix degraded-output default, or decide whether a roundtrip should be trusted. Visualization research treats domain task, abstraction, encoding, algorithm, and user validation as separable layers [@munzner2009nested; @sedlmair2012design; @brehmer2013typology]. COGANT currently claims the first four layers only for the registered static figures and dashboard artifacts; a design-study or user-task evaluation remains future work before stronger interpretability claims should be made.
 
 ## Native v0.6 roundtrip ledger
 
@@ -209,22 +209,39 @@ with native mean/median **{{MEAN_ROLE_PRESERVATION_SCORE}}** /
 role-preserved, **{{STRICT_ISOMORPHISM_COUNT}}** strictly structurally
 isomorphic, and **{{DRIFT_COUNT}}** drift targets.
 
-Three caveats bound this result. First, **role preservation is recall, not
-isomorphism**: {{STRICT_ISOMORPHISM_COUNT}} of {{TOTAL_TARGETS}} targets clear
-the strict bar (zero node/edge deltas, preserved edge-kind counts, matrix
-shape/value preservation, GNN-section preservation, generated-code compile
-success), so a role-preserved verdict means the synthesized package's role
-multiset matches the original's — not that the two program graphs are
-isomorphic. Second, the **{{DRIFT_COUNT}} drift targets** (role score below
+Three caveats bound this result. First, **role preservation is symmetric
+role-overlap, not isomorphism and not recall**: {{STRICT_ISOMORPHISM_COUNT}} of
+{{TOTAL_TARGETS}} targets clear the strict bar (zero node/edge deltas,
+preserved edge-kind counts, matrix shape/value preservation, GNN-section
+preservation, generated-code compile success), so a role-preserved verdict
+means the synthesized package's role multiset has high per-role
+`min/max` overlap with the original's [@wu2018weightedMinhash] — not that the
+two program graphs are isomorphic. Graph edit distance and graph-similarity
+measures expose a much broader structural comparison space than this role
+quotient [@sanfeliu1983distance; @grohe2024similarity]. Second, the
+**{{DRIFT_COUNT}} drift targets** (role score below
 {{THRESHOLD_ROLE_PRESERVED}}) are reported alongside the successes rather than
 suppressed; the ledger records honest failures. Third, and most important,
 **the fixtures are in-sample**: the {{TRANSLATION_RULES}} translation rules and
 their keyword vocabularies were authored with these fixtures visible, so the
-native scores *upper-bound* role recall and do **not** estimate performance on
-never-tuned repositories — the external-validity caveat above applies in full.
-The per-row `scaffolding_fraction` records how much of a high score is faithful
-recovery versus synthesizer-introduced scaffolding, so a `role_preserved`
-verdict can be read together with the inflation it tolerated.
+native scores *upper-bound* role-overlap behavior and do **not** estimate
+performance on never-tuned repositories — the external-validity caveat above
+applies in full.
+Part of this circularity is *constructive*, not merely sample-tuned: the reverse
+synthesizer emits role-keyword-prefixed identifiers (e.g. `get_`/`read_` for
+observations, action-verb stems for actions) that the forward keyword rules are
+built to match, so a fraction of any role-preservation score reflects the
+synthesizer reproducing the cues the extractor keys on rather than independent
+recovery of the original program's roles. This token-level circularity is
+disclosed here qualitatively; it is *not* separately quantified, and the
+per-row `scaffolding_fraction` does **not** measure it. That generator-computed
+field (`tools/regenerate_metrics.py`) measures a different, dimensional kind of
+inflation — `(Σ synth_n − Σ orig_n) / Σ synth_n` over the state-space count
+fields — and is `0.0` on all {{TOTAL_TARGETS}} targets because the round-trip is
+state-space-dimension-preserving here; it therefore bounds *count* scaffolding
+to zero but says nothing about the keyword-token circularity above. Read the two
+caveats separately: role preservation is therefore
+necessary but not sufficient evidence of faithful structural capture.
 
 ## Semantics-preserving robustness suite
 

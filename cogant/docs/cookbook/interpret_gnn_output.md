@@ -46,8 +46,11 @@ for row in A["matrix"]:
 ```
 
 Each **row** is an observation modality; each **column** is a hidden-state
-factor. A `1.0` means "this observation is fully informative about that
-state"; rows are softmax-normalized.
+factor. A `1.0` means this exported observation receives all of the normalized
+likelihood mass for that hidden-state column in the emitted matrix; it is a
+structural edge-evidence statement, not proof that the observation is
+empirically fully informative about runtime behavior. Rows are
+softmax-normalized.
 
 ## Step 3 — read the B matrix (transition)
 

@@ -4,11 +4,11 @@
 
 **Requirements**: Python 3.11 or newer (enforced in `pyproject.toml`), plus an optional Rust toolchain (`cargo`, stable 1.70+) when building native acceleration crates under `../cogant/rust/`.
 
-From the COGANT package root [`../cogant/`](../cogant/) (where `pyproject.toml` and `py/cogant/` live), install with `uv sync --all-extras`, or `pip install -e ".[dev,viz]"` / `pip install -e ".[all]"` as in the MkDocs guides [`../cogant/docs/getting-started/installation.md`](../cogant/docs/getting-started/installation.md) and [`../cogant/docs/getting-started/quickstart.md`](../cogant/docs/getting-started/quickstart.md). Run those commands from that directory when working inside this monorepo layout. Python sources live under [`../cogant/py/cogant/`](../cogant/py/cogant/); see the package [README.md](../cogant/README.md).
+From the COGANT package root `../cogant/` (where `pyproject.toml` and `py/cogant/` live), install with `uv sync --all-extras`, or `pip install -e ".[dev,viz]"` / `pip install -e ".[all]"` as in the MkDocs installation and quickstart guides under `../cogant/docs/getting-started/`. Run those commands from that directory when working inside this monorepo layout. Python sources live under `../cogant/py/cogant/`; package orientation is in `../cogant/README.md`.
 
 ## Terminology: runner stages and conceptual IRs
 
-The **`PipelineRunner`** executes an ordered list of **runner stages** (for example ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate), recorded in `cogant/evaluation/METRICS.yaml` as `pipeline.runner_stages`. Separately, @sec:02-01-program-graph-and-formal-foundations and [`06_02_exports_parser_and_ir_stages.md`](06_02_exports_parser_and_ir_stages.md) describe a **six-layer conceptual IR progression** (repo snapshot through validation reports). Those layers are *artifacts* and documentation structure; they are not a 1:1 rename of the runner-stage list. Use “runner stage” when referring to `PipelineConfig.stages`, and “IR layer” when referring to the methodological table.
+The **`PipelineRunner`** executes an ordered list of **runner stages** (for example ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate), recorded in `cogant/evaluation/METRICS.yaml` as `pipeline.runner_stages`. Separately, @sec:02-01-program-graph-and-formal-foundations and @sec:06-02-exports-parser-and-ir-stages describe a **six-layer conceptual IR progression** (repo snapshot through validation reports). Those layers are *artifacts* and documentation structure; they are not a 1:1 rename of the runner-stage list. Use “runner stage” when referring to `PipelineConfig.stages`, and “IR layer” when referring to the methodological table.
 
 ## Running the API
 
@@ -39,7 +39,7 @@ Adjust `PipelineConfig.stages`, `skip_stages`, and `plugins` to match the langua
 
 ## Configuration files
 
-YAML configuration can drive pipeline behavior (paths, stages, plugin options). [`../cogant/docs/architecture/README.md`](../cogant/docs/architecture/README.md) and [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md) describe the configuration surface; keep project-specific secrets out of version control.
+YAML configuration can drive pipeline behavior (paths, stages, plugin options). The architecture and implementation-status package docs under `../cogant/docs/` describe the configuration surface; keep project-specific secrets out of version control.
 
 A minimal pipeline configuration looks like this:
 
@@ -74,4 +74,4 @@ Each stage key corresponds to a handler in `cogant.api.pipeline.PipelineRunner.s
 
 ## CLI
 
-Use the `cogant` CLI for scripted batch runs—see `../cogant/docs/cli/README.md` and [`../cogant/docs/cli_reference.md`](../cogant/docs/cli_reference.md) for the command list that matches the installed version.
+Use the `cogant` CLI for scripted batch runs; `../cogant/docs/cli/README.md` and `../cogant/docs/cli_reference.md` contain the command list that matches the installed version.

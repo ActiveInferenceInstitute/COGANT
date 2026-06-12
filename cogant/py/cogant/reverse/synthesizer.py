@@ -413,7 +413,7 @@ def _render_observe_module(plan: PackagePlan) -> str:
             )
             lines.append("")
             lines.append("    Implementation: project the hidden-state distribution through")
-            lines.append("    the likelihood matrix row corresponding to this modality.")
+            lines.append("    the likelihood matrix projection for this modality.")
             lines.append('    """')
             lines.append("    # Flatten state to a uniform-mass vector (structural placeholder).")
             lines.append("    state_dist = [1.0]")

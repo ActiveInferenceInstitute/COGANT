@@ -57,6 +57,7 @@ def render_all_pngs(
     process_model: Any = None,
     cfg: RenderConfig | None = None,
     failures: list[str] | None = None,
+    strict_real_matrices: bool = True,
 ) -> dict[str, list[Path]]:
     """Render review artifacts for every visualization artifact under ``run_dir``.
 
@@ -76,6 +77,10 @@ def render_all_pngs(
     Returns a mapping of category → list of paths written. Most categories are
     PNGs; ``inspection_dashboard`` and ``graphical_abstract`` may include HTML
     or SVG companions.
+
+    ``strict_real_matrices`` is True by default because run-directory renders
+    are publication/review artifacts: the A/B/C/D heatmap should come from the
+    exported ``model.gnn.json`` matrix block, not shape proxies.
     """
     run_dir = Path(run_dir)
     cfg = cfg or DEFAULT_CONFIG
@@ -181,6 +186,7 @@ def render_all_pngs(
                 cfg=cfg,
                 source_label=ss_label,
                 matrix_source_json=matrix_json,
+                strict_real_matrices=strict_real_matrices,
             ):
                 out["connections"].append(cx_png)
         except Exception as e:  # noqa: BLE001

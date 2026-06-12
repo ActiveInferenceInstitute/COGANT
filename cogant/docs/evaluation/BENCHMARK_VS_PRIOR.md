@@ -211,7 +211,7 @@ COGANT is the only approach in this comparison that produces end-to-end GNN
 output. The benchmark suite confirms valid matrix shapes across all six
 fixtures (suite_20260423.md): from A=[3x1], B=[1x1x6] for the calculator
 to A=[21x10], B=[10x10x31] for flask_app. The GNN validator
-(CALIBRATION.md section 2.5) enforces row-normalization with 1e-6 tolerance
+(CALIBRATION.md section 2.5) enforces column-normalization with 1e-6 tolerance
 and a validity score threshold of >= 80/100.
 
 Even if a user combined tree-sitter + pyan + manual role labels, they would

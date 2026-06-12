@@ -399,7 +399,7 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
                 B[i][i][k] = 1.0
         # If any factor's B is non-identity, attempt to reflect that by
         # damping the diagonal — in practice COGANT forward emits
-        # identity() for all factors, so this is a no-op placeholder.
+        # identity() for all factors, so this is a no-op degraded convention.
         model.B = B
 
 

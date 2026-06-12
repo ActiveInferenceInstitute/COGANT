@@ -4,13 +4,18 @@ This appendix formalizes the discrete-time active inference loop executed
 by COGANT's matrix runtime (`cogant.gnn.runner` / `cogant.runtime.loop`, with
 the variational free-energy functions in `cogant.simulate.free_energy`) on the
 extracted A/B/C/D matrices and reported
-empirically in [`../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`](../cogant/docs/evaluation/EMPIRICAL_CLAIM.md)
+empirically in `../cogant/docs/evaluation/EMPIRICAL_CLAIM.md`
 (VFE trace tables per zoo fixture). The variational free-energy discussion in
-[`10_conclusion.md`](10_conclusion.md) ties the same functions to shipped capabilities. The
+@sec:10-conclusion ties the same functions to shipped capabilities. The
 formalism follows the free-energy principle and the discrete-state Active
 Inference synthesis [@friston2010free; @dacosta2020active; @parr2022active],
 with PyMDP as the closest executable reference implementation for the
-matrix-based POMDP loop [@heins2022pymdp]. The factor-graph language is used
+matrix-based POMDP loop [@heins2022pymdp]. The discrete POMDP/active-inference loop COGANT closes its evaluation around is
+the small-scale instance of a broader lineage; the scale-free, renormalising
+generalisation that lifts partially observed Markov decision processes to
+include paths as latent variables [@friston2024pixels] is the current
+state of that discrete-state generalisation beyond [@dacosta2020active] and
+[@parr2022active]. The factor-graph language is used
 in the standard sense of a bipartite representation of factored functions and
 sum-product message passing [@kschischang2001factor], but COGANT's current
 runtime (`cogant.gnn.runner` / `cogant.runtime.loop`) executes the finite
@@ -190,16 +195,20 @@ where `k` is the number of completed episodes before the update and
 `Q^{(k)}_{\mathrm{final}}` is the normalized final posterior from the latest episode. The helper
 `AgentRuntime.update_D_from_posterior()` mutates `D` in place and renormalizes to guard against
 floating-point drift. The companion `update_A_from_counts()` blends empirical
-observation-state frequencies into each A-row with a configurable `learning_rate`, then
+observation-state frequencies into each A entry with a configurable `learning_rate`, then
 renormalizes columns. These are pragmatic count/posterior updates for deterministic smoke
 experiments; the manuscript does not claim a geometric-contraction proof for the implemented
-runtime.
+runtime. This running-mean scheme is a substitute for, not an implementation of, Bayesian
+model reduction for structure learning [@friston2017curiosity; @friston2025reasoning], which selects or prunes model
+structure by expected free energy / information gain and would be the principled route to
+learning $D$ --- and the underlying factor structure --- across episodes rather than averaging
+posteriors at fixed cardinality.
 
 ### Expected free energy and policy selection {#sec:S04-expected-free-energy}
 
 For policy selection, COGANT uses the expected free energy (EFE) for each
 candidate policy $\pi$, following the risk-plus-ambiguity decomposition used
-in discrete active inference [@dacosta2020active; @parr2022active]:
+in discrete active inference [@dacosta2020active; @parr2022active; @parr2019generalised]:
 
 $$
 G(\pi) =

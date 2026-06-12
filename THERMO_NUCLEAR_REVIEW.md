@@ -7,6 +7,36 @@
 
 ---
 
+## 0. Reconciliation — 2026-06-09 (verifier-first re-audit at current HEAD)
+
+This review is now **partially stale**. A verifier-first RedTeam re-audit
+(2026-06-09) checked every presumptive blocker against current HEAD with a
+grep/wc oracle. Status below is the ground truth; the body sections that follow
+describe the **2026-06-02** state and are retained for history.
+
+| Item | 2026-06-02 | 2026-06-09 verdict | Evidence |
+|------|-----------|--------------------|----------|
+| **B6** `run_batch(args)` re-parses argv | Blocker | ✅ **FIXED** | `run_all_runner.py:507` → `def run_batch(options: RunBatchOptions \| argparse.Namespace)` |
+| **B7** `FALLBACK_METRICS` shadow copy | Blocker | ✅ **FIXED** | `grep FALLBACK_METRICS tools/audit_manuscript_numbers.py` → 0 hits |
+| **Code-judo #5** rule-registry factory | High | ✅ **FIXED** | `translate/default_engine.py:11-18` registry factory; import wall removed from `orchestration.py` |
+| **B2** dead `_generate_mermaid_tab` | Blocker | ✅ **FIXED 2026-06-09** | removed `viz/dashboard/generator.py` (never referenced in tab nav) |
+| **High-137** dead `_rule_dependency_graph` | High | ✅ **FIXED 2026-06-09** | removed write-only dead state in `translate/engine.py` |
+| **Low-147** dead ternary expression | Low | ✅ **FIXED 2026-06-09** | removed discarded `width/len(kinds)` expr `generator.py:298` |
+| **B1** 11 production modules >1k lines | Blocker | ⛔ **OPEN** | `inspection_dashboard.py` 2530, `compiler.py` 1447, `orchestration.py` 1380, … |
+| **B3** `api/orchestration.py` god module | Blocker | 🟡 **PARTIAL** | 1380 lines (was 1440); still owns stage bodies + graph build |
+| **B4** duplicate GNN sidecar files | Blocker | ⛔ **OPEN** | `actions.json` ≡ `actions_policies.json` still both emitted |
+| **B5** `server/app.py` inline rule catalog | Blocker | 🟡 **PARTIAL** | rules still hardcoded `app.py:761-933` |
+| **B8** 3240-line `orchestrate_roundtrip.py` | Blocker | 🟡 **PARTIAL** | still 3240 lines |
+
+**Net:** the three P0 quick wins (B6, B7, registry factory) and three dead-code
+items are done; the **structural decomposition of the >1k-line god modules
+(B1/B3/B4/B5/B8) remains OPEN** and is tracked, not regressed. It was
+deliberately NOT executed in the 2026-06-09 pass because a blind decompose is
+high-risk against a 9691-test suite and an active maintenance loop; it needs its
+own scoped, single-monolith-at-a-time sprint per §11.
+
+---
+
 ## 1. Executive verdict: **BLOCK**
 
 COGANT is functionally rich, well-tested, and release-disciplined (METRICS.yaml, audit gates, manuscript pipeline). **Maintainability does not pass the thermo-nuclear bar.** The codebase has accumulated **15 first-party files above 1,000 lines** (11 in `py/cogant/`, 4 in `tools/`), **three parallel dashboard HTML stacks**, **two parallel GNN export implementations**, **graph construction living in `api/` instead of `graph/`**, and **92 coverage-targeted test files** (17 over 1k lines) that mirror production sprawl.
@@ -250,11 +280,13 @@ flowchart TB
 
 Ordered for **smallest behavior-preserving wins first**:
 
+Completed P0 history: `run_batch(RunBatchOptions)`, the
+`default_translation_engine()` registry, and the manuscript metrics resolver
+cleanup were closed in the 2026-06-12 evidence-gated pass. They remain in the
+summary table above as audit history, not future roadmap work.
+
 | Phase | Work | Impact | Effort |
 |-------|------|--------|--------|
-| **P0** | Fix `run_batch(RunBatchOptions)` API | Unblocks programmatic batch | S |
-| **P0** | `default_translation_engine()` registry | Removes api/rule coupling | S |
-| **P0** | Delete `FALLBACK_METRICS`; import `manuscript_vars.resolve_path` | METRICS integrity | S |
 | **P1** | `graph/from_repo.py` extraction from orchestration | −320 lines from api/ | M |
 | **P1** | `viz/_coerce.py` + `viz/_svg_bars.py` shared primitives | −200 lines across 3 files | M |
 | **P1** | `gnn/sections.py` — single section builders | −400 lines; fixes export inconsistency | L |
@@ -311,9 +343,8 @@ uv run python tools/check_metrics_fresh.py    # metrics freshness
 ## 11. Recommended immediate actions (before next feature)
 
 1. **Freeze line growth** in all files >800 lines — no new features land without decomposition PR first.
-2. **P0 quick wins** (1–2 days): `RunBatchOptions`, rule registry factory, delete `FALLBACK_METRICS`.
-3. **Pick one monolith** for next sprint: `inspection_dashboard.py` OR `api/orchestration.py` OR `gnn/package.py` — not all three in parallel.
-4. **Add CI gate:** fail if any new first-party `.py` file exceeds 800 lines without `ALLOW_LARGE_FILES.txt` entry + expiry.
+2. **Pick one monolith** for next sprint: `inspection_dashboard.py` OR `api/orchestration.py` OR `gnn/package.py` — not all three in parallel.
+3. **Add CI gate:** fail if any new first-party `.py` file exceeds 800 lines without `ALLOW_LARGE_FILES.txt` entry + expiry.
 
 ---
 

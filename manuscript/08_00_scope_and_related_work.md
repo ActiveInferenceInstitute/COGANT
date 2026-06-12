@@ -26,4 +26,4 @@ The detailed related-work comparison is split by topic so the overview does not 
 - @sec:08-03-lenses-and-synthesis — bidirectional lenses, edit lenses, incremental analysis, categorical framing, and synthesis positioning.
 - @sec:08-04-world-models-boundaries-and-compatibility — world models from code, active inference, boundaries, and forward compatibility.
 
-Authoritative **implementation scope** (languages, parsers, Rust acceleration) is always [`../cogant/docs/reference/implementation_status.md`](../cogant/docs/reference/implementation_status.md).
+Authoritative **implementation scope** (languages, parsers, Rust acceleration) is recorded in `../cogant/docs/reference/implementation_status.md`.

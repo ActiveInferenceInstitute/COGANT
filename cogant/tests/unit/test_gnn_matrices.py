@@ -256,6 +256,33 @@ class TestGNNMatricesDimensions:
     def test_n_states_reflects_hidden_state_mappings(self, matrices: GNNMatrices) -> None:
         assert matrices.n_states == 3
 
+    def test_n_states_uses_compiled_state_space_variables(
+        self,
+        sample_graph_and_ids,
+        semantic_mappings,
+        state_space,
+    ) -> None:
+        """Compiled variables define the hidden-state matrix axis."""
+        graph, ids = sample_graph_and_ids
+        extra = StateVariable(
+            id="var:s0_alias",
+            name="s0_alias",
+            var_type=StateVariableType.DISCRETE,
+            node_id=ids["s0"],
+            cardinality=2,
+            confidence=ConfidenceLevel.HIGH,
+        )
+        state_space.variables[extra.id] = extra
+
+        matrices = GNNMatrices(graph=graph, mappings=semantic_mappings, state_space=state_space)
+        matrix_dict = matrices.to_dict()
+
+        assert matrices.n_states == 4
+        assert matrix_dict["dimensions"]["n_states"] == 4
+        assert matrix_dict["shapes"]["A"] == [2, 4]
+        assert matrix_dict["shapes"]["B"] == [4, 4, 2]
+        assert matrix_dict["shapes"]["D"] == [4]
+
     def test_n_obs_reflects_observation_mappings(self, matrices: GNNMatrices) -> None:
         assert matrices.n_obs == 2
 

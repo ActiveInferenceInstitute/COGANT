@@ -162,7 +162,7 @@ class MarkovBlanket:
             * ``sensory``: List of sensory boundary node ids.
             * ``active``: List of active boundary node ids.
             * ``external``: List of external node ids.
-            * ``edges``: List of (source, target, kind) tuples for cross-boundary edges; placeholder until full edge export.
+            * ``edges``: List of (source, target, kind) tuples for cross-boundary edges; reserved until full edge export.
 
         Example:
             >>> vis = blanket.visualize()
@@ -173,7 +173,7 @@ class MarkovBlanket:
             "sensory": sorted(self.sensory_ids),
             "active": sorted(self.active_ids),
             "external": sorted(self.external_ids),
-            "edges": [],  # Placeholder; full edge list would require graph
+            "edges": [],  # Reserved field; full edge list would require graph
         }
 
     def validate(self) -> list[str]:

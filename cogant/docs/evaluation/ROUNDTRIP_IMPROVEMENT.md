@@ -65,7 +65,7 @@ uv run pytest tests/unit/test_metrics_api.py -q --no-cov
 
 ## What Remains
 
-- Add held-out repositories that were not used while designing the rule set.
+- Promote the existing held-out pilot into a frozen metrics/claim pipeline with no rule tuning after selection.
 - Add JS/TS targets to the native roundtrip ledger, or keep cross-language
   evidence separate from Python-front-end release claims.
-- Add held-out repositories that can stress the now-saturated in-sample ledger.
+- Add one more small permissively licensed held-out fixture to stress the now-saturated in-sample ledger.

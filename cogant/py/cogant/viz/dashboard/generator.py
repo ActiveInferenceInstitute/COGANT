@@ -295,7 +295,6 @@ class DashboardGenerator:
 
         # Generate SVG
         width, height = 800, 250
-        width / len(kinds) if kinds else width
         chart_html = self._create_bar_chart(kinds, counts, max_count, width, height)
         return chart_html
 
@@ -1279,28 +1278,6 @@ class DashboardGenerator:
                     {rows}
                 </tbody>
             </table>
-        </div>
-    </div>
-"""
-
-    def _generate_mermaid_tab(self) -> str:
-        """Generate Mermaid Diagrams tab with all diagrams."""
-        diagrams_html = ""
-
-        for name, content in self.mermaid_diagrams.items():
-            clean_name = name.replace("_", " ").title()
-            diagrams_html += f"""
-            <h3>{clean_name}</h3>
-            <pre class="mermaid">
-{html.escape(content)}
-            </pre>
-"""
-
-        return f"""
-    <div id="mermaid-diagrams" class="tab-content">
-        <div class="container">
-            <h2>Mermaid Diagrams</h2>
-            {diagrams_html if diagrams_html else "<p>No diagrams available</p>"}
         </div>
     </div>
 """

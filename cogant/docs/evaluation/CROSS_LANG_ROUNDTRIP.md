@@ -1,7 +1,7 @@
 # COGANT Cross-Language Roundtrip: JavaScript Observer
 
 Date: 2026-04-10
-Status: CONFIRMED
+Status: HISTORICAL DIAGNOSTIC — superseded for release metrics by the native v0.6 roundtrip ledger
 Companion to: `EMPIRICAL_CLAIM.md`
 
 ## Claim
@@ -9,9 +9,12 @@ Companion to: `EMPIRICAL_CLAIM.md`
 The COGANT Galois loop — Code → Program Graph → Semantic Mappings → GNN
 → synthesized Python package → re-forward — is **not Python-specific**.
 A hand-written JavaScript fixture carrying the same structural
-semantics as `zoo/02_observer` rounds-trips with a perfect role-match
-score (1.0) and runs a full Active Inference perception-action cycle
-on the resulting A/B/C/D matrices.
+semantics as `zoo/02_observer` exercises the tree-sitter-backed JS parser,
+the language-agnostic state-space compiler, and the reverse synthesizer.
+This page is retained as a cross-language diagnostic, not as a current
+release metric: the current public `role_preservation_score` is the
+symmetric per-role `min/max` multiset-overlap score, while this older note
+also shows the pre-v0.6 one-sided role-match calculation.
 
 This extends the empirical claim established in `EMPIRICAL_CLAIM.md`
 (Python-only) to a second language through the tree-sitter backed JS
@@ -89,19 +92,21 @@ Sections verified in the emitted GNN markdown:
 R1 (JS forward)    = {HIDDEN_STATE: 1, OBSERVATION: 2, ACTION: 2, CONSTRAINT: 1}
 R2 (re-forward)    = {HIDDEN_STATE: 1, OBSERVATION: 8, ACTION: 5,
                       POLICY: 2, CONSTRAINT: 10, CONTEXT: 3}
-|R1 ∩ R2| / |R1|   = 6 / 6 = 1.0000     (PERFECT)
+legacy one-sided overlap = 6 / 6 = 1.0000     (pre-v0.6 diagnostic only)
+v0.6 symmetric s_role   = (1 + 2/8 + 2/5 + 1/10 + 0 + 0) / 6 ≈ 0.2917
 threshold          = 0.5 (ROLE_PRESERVED public default)
-roundtrip_status      = ROLE_PRESERVED
-tier               = ROLE_PRESERVED (s_role = 1.0 — every original role preserved)
+roundtrip_status    = not part of the native Python v0.6 release ledger
+tier                = cross-language diagnostic; strict release status deferred
 ```
 
-> **Note:** The project-wide role-preservation convention is the multiset ratio
-> `|roles_preserved| / |roles_original|`, where `s_role = 1.0` means every
-> original role population survived and `s_role >= 0.5` is ROLE_PRESERVED.
-> Historical benchmark notes sometimes used a stricter high-confidence `0.8`
-> line for analysis. Current v0.6 release metrics use a native 24-target Python
-> fixture ledger with per-row `role_preservation_score` and invariant status
-> fields; strict structural isomorphism is tracked separately.
+> **Note:** The project-wide role-preservation convention is now the symmetric
+> per-role `min/max` multiset-overlap score, where `s_role = 1.0` means the
+> original and synthesized role multisets match exactly. Historical benchmark
+> notes used a one-sided overlap line for
+> analysis; this page keeps that legacy calculation visible but does not treat
+> it as a release score. Current v0.6 release metrics use a native 24-target
+> Python fixture ledger with per-row `role_preservation_score` and invariant
+> status fields; strict structural isomorphism is tracked separately.
 
 
 The reverse pipeline synthesises a Python package with the standard
@@ -199,8 +204,9 @@ evidence of the same claim rather than a mechanical port:
 5. **The GNN emission is language-agnostic.** Once the program graph
    and semantic mappings are in hand the formatter, state-space
    compiler, and reverse synthesizer have no idea where the graph
-   came from, which is why `role_preservation_score = 1.0` is recoverable
-   from a non-Python source.
+   came from. The current scoring contract still penalizes extra
+   synthesized role counts, so this cross-language page should be read as
+   parser and pipeline evidence rather than as a perfect role-overlap claim.
 
 **What does not survive (and why that's acceptable):**
 

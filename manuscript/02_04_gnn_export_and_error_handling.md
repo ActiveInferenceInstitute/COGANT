@@ -18,7 +18,7 @@ Exports package the program graph and compiled state-space model into the Active
 - **GNN JSON (`model.gnn.json`)** — machine-readable equivalent of the markdown sections, plus companion JSON files per section (`state_space.json`, `observations.json`, `actions.json`, `transitions.json`, and so on).
 - **Interop exports** — GraphML and Parquet for analysis in Gephi/yEd and DuckDB, and optional tensor views (PyTorch Geometric `Data` objects [@fey2019pyg], DGL graphs [@wang2019dgl], HDF5 tables [@hdfgroup2026hdf5spec]) for downstream graph neural network training pipelines that consume the program graph as a relational tensor. The JSON sidecars are validated by COGANT's package-native schema checks; they are not advertised as normative JSON Schema, JSON-LD, or SHACL artifacts unless an adapter explicitly emits those forms [@jsonSchema2020; @jsonLd11; @w3cShacl2017].
 
-![Rendered first page of the calculator fixture's `model.gnn.md` bundle. The figure is generated from `cogant/output/calculator/gnn_package/model.gnn.md` and shows the human-readable Generalized Notation Notation artifact that travels beside JSON sidecars, validation reports, and provenance metadata. Read it as readability and interchange evidence for the emitted package format; machine validation still comes from the structured JSON and validation artifacts, not from the rasterized page.](../figures/cogant_gnn_markdown_render.png){#fig:cogant-gnn-markdown-render width=82%}
+![Rendered first page of the calculator fixture's `model.gnn.md` bundle. The figure is generated from `cogant/output/calculator/gnn_package/model.gnn.md` and shows the human-readable Generalized Notation Notation artifact that travels beside JSON sidecars, validation reports, and provenance metadata. Read it as readability and interchange evidence for the emitted package format; machine validation still comes from the structured JSON and validation artifacts, not from the rasterized page.](../figures/cogant_gnn_markdown_render.png){#fig:cogant-gnn-markdown-render width=95%}
 
 @fig:cogant-gnn-markdown-render is included because interchange formats have a human-review surface as well as a machine-ingestion surface. The rendered page lets a reviewer inspect section ordering, labels, and prose-facing bundle structure; it does not by itself validate that the matrices, role mappings, or downstream semantics are correct.
 
@@ -44,7 +44,7 @@ The canonical GNN specification organizes metadata, semantics, and generative-mo
 14. **Ontology Mapping** — the semantic mapping of each program node (function, class, variable) to its AII role(s), plus the confidence band and rule family responsible for the assignment.
 15. **Markov Blanket** — the Active-Inference partition of the program graph into internal (μ), sensory (s), active (a), and external (η) states, with the seed strategy and per-node rationale.
 16. **Provenance** — which rules (by name and version) emitted each mapping, including the conflict-resolution logic that selected a winner when multiple rules proposed the same role.
-17. **Confidence Scores** — per-mapping confidence bands and the source rule's calibration (typically 0.65–0.90) from `../cogant/docs/evaluation/CALIBRATION.md`.
+17. **Confidence Scores** — per-mapping confidence bands and the source rule's evidence score (typically 0.65–0.90) from `../cogant/docs/evaluation/CALIBRATION.md`; these are rule defaults and review-priority signals, not empirical calibration curves.
 18. **Rendering Hints** — layout and visualization metadata (node positions, color coding by role, cluster membership) consumed by downstream graphical tools.
 19. **Validation Notes** — the output of the `GNNValidator` (see **AII validator and scoring** above; implementation in `../cogant/py/cogant/gnn/validator.py`) with section-by-section pass/fail status, any missing sections, and the composite 0–100 score.
 
@@ -54,12 +54,12 @@ Node and edge feature breakdowns, section contracts, and optional framework targ
 
 The four matrices of the Active Inference generative model are compiled directly from the program graph's edge kinds in the `GNNMatrices` class (module `gnn/matrices.py`):
 
-- **Matrix A (likelihood)** — derived from READS, OBSERVES, and DEPENDS_ON edges. For each observation, A[observation, hidden_state] = 1.0 if an edge exists from that observation to that hidden state, 0.0 otherwise. Rows with no incoming edges from hidden states fall back to uniform distributions (maximum entropy in the absence of evidence).
-- **Matrix B (transition)** — derived from WRITES and CALLS edges from actions to hidden states. For each action, B[hidden_state, hidden_state, action] encodes the state update: B[s', s, a] = 1.0 if action a writes state s to value s', identity otherwise. Actions with no outgoing WRITES edges fall back to the identity tensor (action has no effect on state), preserving the stay-move property.
+- **Matrix A (likelihood)** — derived from READS, OBSERVES, and DEPENDS_ON edges. `A[observation, hidden_state]` encodes $P(o\mid s)$ and is normalized by hidden-state column, so every fixed hidden state defines a distribution over observation outcomes. A hidden-state column with no observation evidence uses a uniform observation distribution (maximum entropy in the absence of evidence).
+- **Matrix B (transition)** — derived from WRITES and CALLS edges from actions to hidden states. For each action, B[hidden_state, hidden_state, action] encodes the state update: B[s', s, a] = 1.0 if action a writes state s to value s', identity otherwise. Actions with no outgoing WRITES edges use the identity degraded-output default (action has no effect on state), preserving the stay-move property.
 - **Matrix C (preferences)** — derived from PREFERENCE and CONSTRAINT mappings on observations. C is a column vector per observation indexed by the observation's discrete values; entries come from the confidence bands of PREFERENCE mappings. Observations with no preference evidence are initialized to zero (neutral).
 - **Matrix D (initial prior)** — derived from CONFIGURATION edges pointing to hidden states. D[hidden_state] is uniform over the state's cardinality, unless CONFIGURATION nodes provide evidence for specific initial values. Configurations with zero evidence default to uniform (maximum entropy).
 
-These fallback paths—identity B, uniform A/D, zero C—are **documented degraded-output modes** (see **Degraded-output semantics** above and the user-facing walkthrough in [`04_examples_and_failure_modes.md`](04_examples_and_failure_modes.md)). When the program graph provides no edge evidence for a matrix entry, the engine emits a validation finding and supplies the appropriate maximum-entropy or identity fallback. The pipeline validates that all fallback tensors satisfy shape, sum-to-one, and non-negativity invariants; all shipped fixtures validate at 100.0 even with extensive fallbacks (e.g., `json_stdlib`, where {{ABLATION_JSON_STDLIB_B_ACTIONS_IDENTITY}} of its {{ABLATION_JSON_STDLIB_B_ACTIONS_TOTAL}} action slices default to the identity B tensor because the corresponding functions carry no WRITES edges to hidden states, still produces a valid B tensor).
+These identity/uniform/zero defaults are **documented degraded-output modes** (see **Degraded-output semantics** above and the user-facing walkthrough in @sec:04-examples-and-failure-modes). When the program graph provides no edge evidence for a matrix entry, the engine records the resulting default frequencies in ablation tables and figure sidecars, while the validator gates structural matrix validity: required panels, dimensions, non-negativity, A/B column sums, D prior sum, and state-space alignment. `json_stdlib`, for example, still produces a structurally valid B tensor even though {{ABLATION_JSON_STDLIB_B_ACTIONS_IDENTITY}} of its {{ABLATION_JSON_STDLIB_B_ACTIONS_TOTAL}} action slices default to identity because the corresponding functions carry no WRITES edges to hidden states. This score is a structural well-formedness gate and does not claim that default-heavy matrices are semantically adequate.
 
 ### AII validator and scoring
 
@@ -67,27 +67,27 @@ The `GNNValidator` class in `gnn/validator.py` gates the export step by checking
 
 - **Score 100**: all 19 sections present, matrices satisfy sum-to-one and non-negativity, ontology mappings are present for all high-confidence rules, and no parse errors or conflicting assignments exist.
 - **Score 75–99**: minor issues (missing optional sections like Rendering Hints, sparse confidence annotations) that do not prevent active-inference execution.
-- **Score 50–74**: degraded output (heavy use of fallbacks, missing entire role families) that still validates structurally but may lack semantic coverage.
+- **Score 50–74**: degraded output (heavy use of degraded-output defaults, missing entire role families) that still validates structurally but may lack semantic coverage.
 - **Score 0–49**: fatal errors (missing required sections, malformed matrices, unresolvable conflicts).
 
-All fixtures in @tbl:repo-pipeline-metrics score 100.0, including `json_stdlib` which relies heavily on fallback distributions. The validator score travels with every bundle in section 19 (Validation Notes) and gates structural and matrix validity. Runtime or semantic adequacy is a separate evidence question: high validator scores mean the bundle is well formed and executable by compatible tooling, not that the extracted matrices fully capture source-code behavior.
+Validator scores in @tbl:repo-pipeline-metrics travel with every bundle in section 19 (Validation Notes) and gate structural and matrix validity. Runtime or semantic adequacy is a separate evidence question: high validator scores mean the bundle is well formed and executable by compatible tooling, not that the extracted matrices fully capture source-code behavior. Packages with missing, malformed, incomplete, or state-space-misaligned matrices cannot receive a perfect package score.
 
 ## Error handling philosophy
 
 The implementation distinguishes fatal configuration or parse failures from per-file errors that allow partial results. Validation aggregates warnings and inconsistencies into a report that travels with the bundle. This mirrors the layered error categories documented in the architecture (fatal, error, warning, info).
 
-**Degraded-output semantics** are explicit: when the pipeline lacks evidence for a rule or matrix entry, it emits a validation finding and supplies a documented fallback (identity-biased B, uniform A/D, zero C) rather than silently guessing or failing. The `DegradedOutput` NamedTuple tracks the type and location of each fallback:
+**Degraded-output semantics** are explicit: when the pipeline lacks evidence for a rule or matrix entry, it emits a validation finding and supplies a documented degraded-output default (identity-biased B, uniform A/D, zero C) rather than silently guessing or failing. The `DegradedOutput` NamedTuple tracks the type and location of each default:
 
 ```
 DegradedOutput = NamedTuple(
     "DegradedOutput",
     [
-        ("category", str),          # "matrix_fallback", "rule_noevidence", etc.
+        ("category", str),          # "matrix_default", "rule_noevidence", etc.
         ("location", str),          # "B[s', s, a]", "A[o, s]", section name, etc.
         ("reason", str),            # "no WRITES edges", "no PREFERENCE edges", etc.
-        ("fallback_value", object), # identity tensor, uniform dist, 0, etc.
+        ("default_value", object),  # identity tensor, uniform dist, 0, etc.
     ],
 )
 ```
 
-Every fallback is recorded in Validation Notes (section 19) alongside the reason and the fallback strategy used. This transparency lets users and downstream tools distinguish high-confidence, evidence-backed assignments from maximum-entropy defaults.
+Every degraded-output default is recorded in Validation Notes (section 19) alongside the reason and strategy used. This transparency lets users and downstream tools distinguish high-confidence, evidence-backed assignments from maximum-entropy defaults.

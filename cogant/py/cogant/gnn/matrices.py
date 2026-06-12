@@ -54,20 +54,20 @@ logger = logging.getLogger(__name__)
 # Default probability masses used when no graph evidence is present.
 #
 # Principled defaults — not empirically calibrated. These follow the
-# "high direct, low indirect" Active Inference placeholder convention
+# "high direct, low indirect" Active Inference degraded-output convention
 # used by the upstream PyMDP examples (see Da Costa et al., "Active
 # inference on discrete state-spaces: a synthesis", J. Math. Psychol.
 # 2020, and the PyMDP tutorials at pymdp-rtd.readthedocs.io). The
 # 0.9/0.1 split encodes the prior that a directly-linked
 # (READS/OBSERVES/WRITES/MUTATES) node pair carries 9x the
 # probability mass of any indirectly-linked pair. This is a standard
-# sparse-observation-matrix placeholder and is *not* intended to
+# sparse-observation-matrix default and is *not* intended to
 # represent ground-truth PyMDP weights; it is the starting point for
 # manual or empirical refinement.
 #
-# The two masses must sum to 1.0 because every row of A and every
-# column of each B slice is row-normalized in
-# ``_normalize_row`` — the 0.9/0.1 split is a pre-normalization
+# The two masses must sum to 1.0 because each hidden-state column of A
+# and each column of every B action slice is normalized to a simplex.
+# The 0.9/0.1 split is a pre-normalization
 # ratio, not a post-normalization target. TODO(calibration): sweep
 # {0.80/0.20, 0.85/0.15, 0.90/0.10, 0.95/0.05} on the 20-repo
 # fixture set and compare against hand-labeled likelihood matrices
@@ -168,10 +168,14 @@ class GNNMatrices:
             m for m in self._mappings if m.kind in (MappingKind.CONSTRAINT, MappingKind.PREFERENCE)
         ]
 
-        # Fallback: if no HIDDEN_STATE semantic mappings are present but
-        # the state space has variables, use those as the hidden-state
-        # dimension so the matrices are always non-empty for real models.
-        self._use_state_space_vars = not self._hidden_states and bool(self.state_space.variables)
+        # The compiled state-space variables are the authoritative hidden-state
+        # axis. A single HIDDEN_STATE mapping can cover multiple graph-fragment
+        # nodes, and the state-space compiler expands those into distinct
+        # variables. Using the compiled variables here keeps A/B/D dimensions
+        # aligned with ``state_space.json`` and avoids losing matrix-bearing
+        # states when a mapping spans more than one node.
+        self._state_space_vars = list(self.state_space.variables.values())
+        self._use_state_space_vars = bool(self._state_space_vars)
 
         # Populated by compute_B() when the full B tensor would exceed
         # _MAX_B_ENTRIES.  Callers can inspect these to understand the
@@ -187,7 +191,7 @@ class GNNMatrices:
     def n_states(self) -> int:
         """Number of hidden-state dimensions."""
         if self._use_state_space_vars:
-            return len(self.state_space.variables)
+            return len(self._state_space_vars)
         return len(self._hidden_states)
 
     @property
@@ -195,7 +199,7 @@ class GNNMatrices:
         """Number of observation dimensions."""
         if self._observations:
             return len(self._observations)
-        # Fallback to compiled observation modalities.
+        # Use compiled observation modalities when no observation mappings exist.
         return len(self.state_space.observations)
 
     @property
@@ -212,7 +216,7 @@ class GNNMatrices:
     def _state_node_ids(self) -> list[str]:
         """Return the ordered list of graph node IDs backing hidden states."""
         if self._use_state_space_vars:
-            return [v.node_id for v in self.state_space.variables.values()]
+            return [v.node_id for v in self._state_space_vars]
         ids: list[str] = []
         for mapping in self._hidden_states:
             if mapping.graph_fragment_node_ids:
@@ -304,7 +308,8 @@ class GNNMatrices:
             nodes that it directly reads (READS/OBSERVES edges from the
             observation's node). Those direct reads receive a high
             probability mass; all other states share the residual mass
-            uniformly. Each row is then normalized so it sums to 1.0.
+            uniformly. Columns are then normalized so each hidden state
+            defines a distribution over observations.
         """
         n_obs = self.n_obs
         n_states = self.n_states
@@ -373,8 +378,8 @@ class GNNMatrices:
         # Log A matrix computation details
         n_informed = n_obs - n_uniform
         logger.info(
-            "A matrix computed: shape [%d x %d], %d/%d rows with direct evidence, "
-            "%d uniform (no READS/OBSERVES edges)",
+            "A matrix computed: shape [%d x %d], %d/%d observations with direct evidence, "
+            "%d observations uniform before column normalization (no READS/OBSERVES edges)",
             n_obs,
             n_states,
             n_informed,
@@ -612,7 +617,7 @@ class GNNMatrices:
             # value or a CONFIGURATION neighbor in the graph.
             biased = [0.0] * n_states
             any_bias = False
-            for j, var in enumerate(self.state_space.variables.values()):
+            for j, var in enumerate(self._state_space_vars):
                 bias = 1.0
                 # Explicit domain/default bias.
                 meta_default = getattr(var, "domain", None)
@@ -789,8 +794,8 @@ class GNNMatrices:
         n_o = self.n_obs
         n_a = self.n_actions
 
-        # A: n_obs x n_states, rows sum to 1.
-        # Row-sum tolerance 1e-6 — principled default, matches the
+        # A: n_obs x n_states, columns sum to 1.
+        # Column-sum tolerance 1e-6 — principled default, matches the
         # PyMDP validator tolerance and is ~7 orders of magnitude
         # above float64 round-off noise (~1e-16) for a typical
         # n_states <= 50. Strict enough to catch normalization bugs
@@ -817,16 +822,32 @@ class GNNMatrices:
                 errors.append(f"B second dim != n_states {n_s}")
             elif any(len(cell) != n_a for row in B for cell in row):
                 errors.append(f"B third dim != n_actions {n_a}")
+            else:
+                if any(
+                    B[i][j][k] < -1e-9
+                    for i in range(n_s)
+                    for j in range(n_s)
+                    for k in range(n_a)
+                ):
+                    errors.append("B contains negative probabilities")
+                for k in range(n_a):
+                    for j in range(n_s):
+                        col_sum = sum(B[i][j][k] for i in range(n_s))
+                        if abs(col_sum - 1.0) > 1e-6:  # same tolerance as A columns
+                            errors.append(
+                                f"B action {k} column {j} does not sum to 1 "
+                                f"(sum={col_sum:.6f})"
+                            )
 
         # C: length n_obs
         if len(C) != n_o:
             errors.append(f"C length {len(C)} != n_obs {n_o}")
 
         # D: length n_states, sums to 1 (same 1e-6 tolerance as A/B
-        # row-normalization check above).
+            # simplex-normalization check above).
         if len(D) != n_s:
             errors.append(f"D length {len(D)} != n_states {n_s}")
-        elif D and abs(sum(D) - 1.0) > 1e-6:  # same tolerance as A rows
+        elif D and abs(sum(D) - 1.0) > 1e-6:  # same tolerance as A/B columns
             errors.append(f"D does not sum to 1 (sum={sum(D):.6f})")
 
         return (len(errors) == 0, errors)
@@ -835,7 +856,7 @@ class GNNMatrices:
         """Validate dimensional consistency across A/B/C/D matrices.
 
         Checks that all four matrices have the expected shapes and that
-        stochastic constraints are satisfied (row sums for A, column
+        stochastic constraints are satisfied (column sums for A, column
         sums for B slices, sum for D).
 
         Returns:

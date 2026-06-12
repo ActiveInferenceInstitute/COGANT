@@ -53,7 +53,9 @@ aggregates that ledger into the headline numbers above.
 ## What The Result Means
 
 `ROLE_PRESERVED` means the semantic-role population survives the roundtrip at
-the configured public threshold. It is a role-level recall measure.
+the configured public threshold. It is a symmetric per-role multiset-overlap
+measure, not a recall estimate: extra synthesized roles and dropped original
+roles both reduce the score.
 
 It does not imply:
 
@@ -70,7 +72,7 @@ structural-isomorphism count is 0/24.
 
 | Failure mode | Current status | Required improvement |
 | --- | --- | --- |
-| Scaffold-introduced roles on degenerate inputs | Current ledger has 0 DRIFT rows | Keep zero-origin controls rejected by freshness checks and add held-out stress fixtures |
+| Scaffold-introduced roles on degenerate inputs | Current ledger has 0 DRIFT rows | Keep zero-origin controls rejected by freshness checks and promote the held-out pilot into metrics/claim gates |
 | Strict graph/matrix/section deltas | 0 strict successes | Preserve node/edge counts, edge-kind distributions, GNN sections, and matrix values |
 | Dynamic enrichment workflow | Implemented but operator-dependent | Add a complete trace-collection tutorial and fixture |
 | Held-out generalization | Not established | Freeze an unseen repository corpus and rerun the ledger |
@@ -107,7 +109,7 @@ uv run --directory cogant python docs/verify_manuscript_links.py
 
 ## Next Evidence Needed
 
-1. A frozen held-out Python corpus with no rule tuning after selection.
+1. The existing held-out pilot promoted into a frozen Python corpus with no rule tuning after selection.
 2. Native JS/TS roundtrip rows or a clearly separate cross-language claim.
 3. A strict-fidelity workstream that reduces graph, section, matrix, and
    generated-code deltas.

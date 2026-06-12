@@ -30,15 +30,18 @@ The role-preservation score is:
 
 ```text
 s_role =
-    sum(min(count_original[role], count_resynthesized[role]) for role in roles)
-    / max(sum(count_original.values()), sum(count_resynthesized.values()))
+    mean(
+        min(count_original[role], count_resynthesized[role])
+        / max(count_original[role], count_resynthesized[role])
+        for role in roles_original ∪ roles_resynthesized
+    )
 ```
 
-The default role-preserved threshold is `s_role >= 0.5`. This is a useful
-semantic regression signal, but it is intentionally weaker than strict graph
-isomorphism, matrix equality, or textual code recovery. Historical evaluation
-notes sometimes call out a stricter high-confidence `0.8` line; that is not
-the public CLI default.
+The default role-preserved threshold is `s_role >= 0.5`. This symmetric
+multiset-overlap score penalizes both dropped and extra roles, but it is still
+intentionally weaker than strict graph isomorphism, matrix equality, or textual
+code recovery. Historical evaluation notes sometimes call out a stricter
+high-confidence `0.8` line; that is not the public CLI default.
 
 ## JSON Contract
 

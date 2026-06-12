@@ -141,8 +141,8 @@ integration path.
 - **`translate/engine.py` conflict resolution**: 1/1 killed. The
   `test_priority_wins_over_lower_priority` and `test_confidence_wins_on_equal_priority`
   tests directly exercise the comparator.
-- **`gnn/matrices.py` row/column normalisation**: 4/5 killed. The
-  `A_rows_sum_to_one`, `B_columns_sum_to_one_per_action`, and
+- **`gnn/matrices.py` column normalisation**: 4/5 killed. The
+  `A_columns_sum_to_one`, `B_columns_sum_to_one_per_action`, and
   `A_concentrates_mass_on_direct_reads` tests are good — every
   arithmetic mutation to normalisation is caught. The only miss in
   this file is the PREFERENCE-label sign flip (M4) and the D-vector

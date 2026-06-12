@@ -158,7 +158,7 @@ In principle, yes. The `PackagePlan` data model and `gnn/matrices.py` entry poin
 
 ### 20. What does "role_preservation_score" mean?
 
-When you run a forward-then-reverse roundtrip, `role_preservation_score` measures how many of the original semantic role assignments survive the round trip. A score of 100% means the regenerated code preserves the original Active Inference role population. Scores below 100% indicate information loss during either export or reverse synthesis. The stricter `roundtrip_status` field separately reports whether graph, matrix, GNN-section, and generated-code invariants also pass.
+When you run a forward-then-reverse roundtrip, `role_preservation_score` measures symmetric overlap between the original and regenerated Active Inference role multisets. For each role present on either side, COGANT computes `min(original_count, synthesized_count) / max(original_count, synthesized_count)` and averages those per-role ratios. A score of 100% means the regenerated code has the same role population; lower scores can reflect dropped roles, hallucinated roles, or both. The stricter `roundtrip_status` field separately reports whether graph, matrix, GNN-section, and generated-code invariants also pass.
 
 ### 21. Why is the roundtrip not perfect?
 

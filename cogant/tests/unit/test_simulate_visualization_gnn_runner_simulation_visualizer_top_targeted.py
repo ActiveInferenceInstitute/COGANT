@@ -332,8 +332,13 @@ class TestCogantTopLevel:
         assert hasattr(cogant, "__file__")
 
     def test_importable_names(self):
-        # Try to access common top-level names
-        assert True  # just importing is sufficient coverage
+        import cogant
+
+        # Assert the documented public surface actually resolves (was a vacuous
+        # `assert True` — RedTeam 2026-06-09).
+        assert isinstance(cogant.__version__, str) and cogant.__version__
+        assert hasattr(cogant, "Session")
+        assert hasattr(cogant, "ProgramGraph")
 
 
 # ---------------------------------------------------------------------------
@@ -406,13 +411,15 @@ class TestGNNValidatorImport:
         from cogant.gnn.validator import GNNValidator
 
         v = GNNValidator()
-        # Try to validate empty or minimal markdown
-        try:
-            result = v.validate("")
-            # Accept any result — the point is to exercise the code
-            assert result is not None
-        except Exception:
-            pass  # Some validators require more complete input
+        # Empty markdown is missing every canonical section, so the real
+        # validator must report errors (it returns a list of issue strings).
+        # (Was: `v.validate("")` against a non-existent method whose
+        # AttributeError was swallowed by `except Exception: pass`, so the test
+        # passed without exercising the validator at all — RedTeam 2026-06-09.)
+        errors = v.validate_markdown("")
+        assert isinstance(errors, list)
+        assert errors, "empty GNN markdown must produce validation errors"
+        assert any("Missing canonical section" in e for e in errors)
 
 
 # ---------------------------------------------------------------------------
@@ -683,9 +690,9 @@ class TestLanguageDetector:
     def test_lazy_load_parsers(self):
         from cogant.ingest.language_detect import LanguageDetector
 
-        # This just exercises the lazy-load path
-        LanguageDetector._lazy_load_parsers()
-        assert True  # No exception = pass
+        # Exercise the lazy-load path and assert its documented return (None)
+        # rather than a vacuous `assert True` — RedTeam 2026-06-09.
+        assert LanguageDetector._lazy_load_parsers() is None
 
     def test_get_parser_unknown(self):
         from cogant.ingest.language_detect import LanguageDetector

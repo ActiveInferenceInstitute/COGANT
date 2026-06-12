@@ -61,7 +61,7 @@ def get_display(self) -> str:
     return str(self.display)
 ```
 
-COGANT uses a heuristic `0.9 / 0.1` diagonal-vs-off-diagonal fill: the state that a getter directly reads gets 0.9, and all other states get a small `0.1 / (n-1)` share. This produces a valid probability distribution without learned parameters.
+COGANT uses a heuristic `0.9 / 0.1` direct-vs-indirect fill before column normalization: observations that directly read a state receive high likelihood mass, and each hidden-state column is normalized so it defines a valid distribution over observations. This produces a valid probability distribution without learned parameters.
 
 ### B matrix -- transition (dynamics model)
 

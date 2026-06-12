@@ -37,7 +37,7 @@ class Session:
     Lifecycle:
       1. Session.from_target(path) or Session(repo_path=..., workspace=...)
       2. extract_static() -> static analysis summary
-      3. extract_dynamic() -> trace bundle (placeholder unless dynamic hooks enabled)
+      3. extract_dynamic() -> empty trace bundle unless dynamic hooks are enabled
       4. build_graph() -> ProgramGraph dict
       5. translate_to_gnn() -> GNN-oriented summary
       6. compile_state_space() -> state space summary

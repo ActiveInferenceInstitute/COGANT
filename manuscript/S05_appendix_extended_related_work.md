@@ -7,7 +7,7 @@ into topical clusters spanning program analysis, active-inference tooling, learn
 graph kernels, abstract interpretation, POMDP planning, synthesis, bidirectional transformations,
 Markov blankets, evidence provenance, reproducibility, and visual analytics. References are numbered consecutively across clusters;
 in-text citations in other appendices use `[N]` format. Consult
-[`../cogant/docs/evaluation/LITERATURE.md`](../cogant/docs/evaluation/LITERATURE.md) for
+`../cogant/docs/evaluation/LITERATURE.md` for
 the full annotated pool; this appendix lists the curated subset most directly relevant
 to COGANT's design and evaluation.
 
@@ -394,7 +394,7 @@ behind COGANT's containment-first program-graph layout.
 
 [74] Fruchterman, T. M. J., Reingold, E. M. (1991). **Graph Drawing by
 Force-Directed Placement.** *Software: Practice and Experience.* Provides the
-force-directed fallback logic for non-hierarchical program-graph fragments.
+alternate force-directed logic for non-hierarchical program-graph fragments.
 
 [75] Gansner, E. R., Koutsofios, E., North, S. C., Vo, K.-P. (1993). **A
 Technique for Drawing Directed Graphs.** *IEEE Transactions on Software

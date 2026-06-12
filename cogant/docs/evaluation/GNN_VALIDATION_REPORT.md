@@ -27,7 +27,7 @@ Date: 2026-04-09
 | Connection syntax (bare variable names, no parentheses on single-variable nodes) | FIXED | Was: `(D_f0) > (s_f0)`; Fixed to: `D_f0>s_f0` |
 | Time section format (`Discrete` + `Time=t` as separate keywords) | FIXED | Was: `DiscreteTime=t` (fused, not a valid upstream keyword); Fixed to: `Discrete\nTime=t` |
 | No duplicate `## Connections` section headers | FIXED | COGANT extended section renamed from `## Connections` to `## Program Graph Connections` |
-| A matrix notation (rows sum to 1) | PASS | Validated by `GNNValidator.validate_matrices()` |
+| A matrix notation (columns sum to 1) | PASS | Validated by `GNNValidator.validate_matrices()` |
 | B matrix notation (columns per action slice sum to 1) | PASS | Validated by `GNNValidator.validate_matrices()` |
 | C vector (log-preferences, length = n_obs) | PASS | Validated by `GNNValidator.validate_matrices()` |
 | D vector (prior, sums to 1, length = n_states) | PASS | Validated by `GNNValidator.validate_matrices()` |

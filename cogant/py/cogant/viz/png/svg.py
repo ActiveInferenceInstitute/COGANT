@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -38,6 +39,13 @@ def render_svg_file_to_png(svg_file: Path, output_png: Path, *, timeout: int = 6
             return True
     except Exception:
         pass
+
+    if os.environ.get("COGANT_USE_EXTERNAL_SVG_CONVERTERS") != "1":
+        logger.debug(
+            "External SVG converters disabled for %s; using degraded companion if requested",
+            svg_file.name,
+        )
+        return False
 
     # 2) rsvg-convert
     if shutil.which("rsvg-convert"):

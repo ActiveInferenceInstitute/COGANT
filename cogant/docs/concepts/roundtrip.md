@@ -76,10 +76,11 @@ The synthesized code is not a copy of the original -- it is a **minimal implemen
 How do you know the roundtrip worked? COGANT defines the role-preservation fidelity metric as:
 
 ```
-s_role = |roles_preserved| / |roles_original|
+s_role = mean_role min(count_original[role], count_resynthesized[role])
+                / max(count_original[role], count_resynthesized[role])
 ```
 
-where the numerator counts semantic-role assignments preserved across the `forward → reverse → forward` roundtrip and the denominator counts the roles in the original GNN bundle. A perfect role-preservation score has **s_role = 1.0** (all roles preserved), and the public ROLE_PRESERVED threshold is **s_role >= 0.5**.
+where the mean ranges over every role present in either the original or resynthesized bundle. A perfect role-preservation score has **s_role = 1.0** (the two role multisets match exactly), and the public ROLE_PRESERVED threshold is **s_role >= 0.5**. Because the denominator is per-role `max(original, resynthesized)`, the score penalizes both dropped roles and extra roles introduced by the synthesizer; it is not a recall ratio.
 
 The v0.6 invariant ledger separately checks stronger properties:
 
@@ -93,7 +94,7 @@ Strict `STRUCTURALLY_ISOMORPHIC` status requires those ledger checks in addition
 
 > **Compatibility note:** Earlier drafts used a complementary "error" formulation in
 > `ISOMORPHISM_THEOREM.md`, where ε_max = 0 meant exact recovery. The current project-wide
-> convention is the role-preservation ratio above, where 1.0 is exact.
+> convention is the symmetric role-overlap score above, where 1.0 is exact.
 
 In practice, the forward pipeline discards information that cannot be recovered:
 

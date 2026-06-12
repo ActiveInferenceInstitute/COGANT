@@ -36,8 +36,8 @@ the native v0.6 release ledger is Python-centered.
 | ruff violations | 0 | `METRICS.yaml` |
 | Python source files | 231 | `METRICS.yaml` |
 | Roundtrip targets | 24 | `METRICS.yaml` |
-| Role-preserved targets | 22 | `METRICS.yaml` |
-| Drift targets | 2 | `METRICS.yaml` |
+| Role-preserved targets | 24 | `METRICS.yaml` |
+| Drift targets | 0 | `METRICS.yaml` |
 | Failed targets | 0 | `METRICS.yaml` |
 | Strict structural isomorphism | 0 | `METRICS.yaml` |
 
@@ -66,7 +66,6 @@ the native v0.6 release ledger is Python-centered.
 
 | Gap | Why it matters | Needed evidence |
 |---|---|---|
-| Two drift targets (`cli_tool`, `notebook_module`) | The current roundtrip ledger is not all role-preserved | Reverse-synthesis or role-mapping fixes plus regenerated native ledger |
 | 0 strict structural isomorphism rows | Strict roundtrip wording is unsupported | Structural-invariant preservation or narrower published claim |
 | External-repository fixture needs refresh | The checked-in fixture predates the post-fix dulwich scaling target | Rerun `REAL_WORLD_EVAL.md` fixture and commit updated JSON |
 | Confidence calibration remains unlearned | Rule scores are principled defaults, not empirical precision estimates | Human-labeled corpus and calibration report |

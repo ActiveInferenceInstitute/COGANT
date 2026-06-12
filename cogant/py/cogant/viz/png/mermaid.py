@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -21,9 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 def _mmdc_command() -> list[str] | None:
+    if os.environ.get("COGANT_USE_EXTERNAL_MMDC") != "1":
+        return None
     if shutil.which("mmdc"):
         return ["mmdc"]
-    if shutil.which("npx"):
+    if os.environ.get("COGANT_ALLOW_NPX_MMDC") == "1" and shutil.which("npx"):
         return ["npx", "--yes", "@mermaid-js/mermaid-cli", "mmdc"]
     return None
 
@@ -39,7 +42,9 @@ def render_mermaid_file_to_png(
     """Render one ``.mmd``/``.mermaid`` file to PNG.
 
     Strategy:
-      1. Try the Mermaid CLI (``mmdc`` or ``npx ... mmdc``) for pixel-perfect output.
+      1. If ``COGANT_USE_EXTERNAL_MMDC=1`` is set, try the Mermaid CLI
+         (``mmdc``; opt-in ``npx ... mmdc`` via ``COGANT_ALLOW_NPX_MMDC=1``)
+         for pixel-perfect output.
       2. On failure, fall back to the pure-Python native renderer
          (:func:`render_mermaid_text_to_png`) so roundtrips always produce PNG.
 

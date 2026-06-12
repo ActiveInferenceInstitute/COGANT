@@ -166,7 +166,7 @@ Each of `A.json`, `B.json`, `C.json`, `D.json` has the same envelope:
 1. **Structural** — all required sections present, no unknown sections.
 2. **Shape** — A is `[n_obs × n_states]`, B is `[n_states × n_states × n_actions]`, C is
    `[n_obs]`, D is `[n_states]`.
-3. **Normalization** — A rows sum to 1.0 ± ε, B action-slices are column-stochastic ± ε, D
+3. **Normalization** — A columns sum to 1.0 ± ε, B action-slices are column-stochastic ± ε, D
    sums to 1.0 ± ε.
 4. **Ontology** — every variable in `StateSpaceBlock` appears in `ActInfOntologyAnnotation`
    with a known Active Inference term.
@@ -184,8 +184,8 @@ fallbacks and surfaces them in `gnn_score.json` as warnings:
 
 | Fallback | Trigger | Surfaced as |
 | --- | --- | --- |
-| `A_direct_0.9` | A row has at least one direct READS hit | Silent (default) |
-| `A_uniform_row` | A row has zero READS hits | Warning `A_row_uniform` |
+| `A_direct_0.9` | A hidden-state column has at least one direct READS hit | Silent (default) |
+| `A_uniform_column` | A hidden-state column has zero READS hits | Warning `A_column_uniform` |
 | `B_identity_per_action` | an action has zero WRITES targeting hidden state | Warning `B_identity_fallback` |
 | `C_uniform` | no CONSTRAINT/PREFERENCE mappings | Warning `C_uniform` |
 | `D_uniform` | no CONFIGURATION nodes | Warning `D_uniform` |

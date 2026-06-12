@@ -8,8 +8,8 @@ install, matching COGANT's preference for hermetic generated code.
 
 Matrix semantics
 ----------------
-* **A** (likelihood) — each row is a categorical distribution over
-  hidden states given an observation. The generated code implements
+* **A** (likelihood) — each column is a categorical distribution over
+  observations given a hidden state. The generated code implements
   ``sample_obs(state_vec)`` via the forward equation ``P(o) = A · s``
   and a deterministic argmax selector.
 * **B** (transition) — per action slice, the generated code computes
@@ -87,7 +87,7 @@ def render_matrices_module(model: ReverseGNNModel) -> str:
     # so "something rather than nothing" is the right default.
     A = model.A if model.A else []
     if not A and n_obs and n_states:
-        A = [[1.0 / n_states] * n_states for _ in range(n_obs)]
+        A = [[1.0 / n_obs] * n_states for _ in range(n_obs)]
 
     B = model.B if model.B else []
     if not B and n_states:
@@ -118,7 +118,7 @@ def render_matrices_module(model: ReverseGNNModel) -> str:
         "",
         "# ---------------------------------------------------------------------",
         "# A matrix: likelihood P(observation | hidden_state)",
-        f"# shape = [{n_obs} x {n_states}]; rows sum to 1.0",
+        f"# shape = [{n_obs} x {n_states}]; columns sum to 1.0",
         "# ---------------------------------------------------------------------",
         f"A: List[List[float]] = {_format_matrix_2d(A)}",
         "",

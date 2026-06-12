@@ -3,21 +3,21 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-06-08T00:09:44.356709Z'
-generator_git_sha: 9ae07a7f0ecffe66e650dff20505c771cbb08b1c
+generated_at: '2026-06-11T04:42:29.275813Z'
+generator_git_sha: 60a06af52f81579408851219fde698503ce617c5
 cogant_version: 0.6.0
 package:
   name: cogant
   version: 0.6.0
   python_min: '3.11'
 testing:
-  test_count_total: 9691
-  test_count_passing: 9687
+  test_count_total: 9703
+  test_count_passing: 9650
   test_count_failing: 0
-  test_count_skipped: 4
+  test_count_skipped: 53
   test_count_xfailed: 0
   test_count_xpassed: 0
-  test_files_unit: 312
+  test_files_unit: 313
   test_files_integration: 29
   test_files_property: 10
   test_files_fuzz: 1
@@ -26,7 +26,7 @@ testing:
   ruff_violations: 0
 codebase:
   python_source_files: 232
-  python_loc: 82079
+  python_loc: 82212
   public_modules: 192
   public_classes: 405
   public_functions: 1135
@@ -80,7 +80,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.084
+      elapsed_s: 0.079
     - name: calculator
       group: control_positive
       role_preservation_score: 1.0
@@ -98,7 +98,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.102
+      elapsed_s: 0.101
     - name: cli_tool
       group: control_positive
       role_preservation_score: 1.0
@@ -116,7 +116,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.09
+      elapsed_s: 0.086
     - name: data_pipeline
       group: control_positive
       role_preservation_score: 1.0
@@ -134,7 +134,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.084
+      elapsed_s: 0.088
     - name: event_pipeline
       group: control_positive
       role_preservation_score: 1.0
@@ -152,7 +152,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.093
+      elapsed_s: 0.091
     - name: flask_mini
       group: control_positive
       role_preservation_score: 1.0
@@ -170,7 +170,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.119
+      elapsed_s: 0.107
     - name: multi_package_workspace
       group: control_positive
       role_preservation_score: 1.0
@@ -188,7 +188,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.079
+      elapsed_s: 0.075
     - name: notebook_module
       group: control_positive
       role_preservation_score: 1.0
@@ -206,7 +206,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.08
+      elapsed_s: 0.087
     - name: plugin_architecture
       group: control_positive
       role_preservation_score: 1.0
@@ -224,7 +224,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.079
+      elapsed_s: 0.117
     - name: flask_app
       group: real_world
       role_preservation_score: 1.0
@@ -242,7 +242,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.191
+      elapsed_s: 0.208
     - name: json_stdlib
       group: real_world
       role_preservation_score: 1.0
@@ -260,7 +260,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.1
+      elapsed_s: 0.114
     - name: requests_lib
       group: real_world
       role_preservation_score: 1.0
@@ -278,7 +278,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.146
+      elapsed_s: 0.172
     - name: 01_simple_state
       group: zoo
       role_preservation_score: 1.0
@@ -296,7 +296,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.082
+      elapsed_s: 0.081
     - name: 02_observer
       group: zoo
       role_preservation_score: 1.0
@@ -314,7 +314,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.084
+      elapsed_s: 0.091
     - name: 03_actor
       group: zoo
       role_preservation_score: 1.0
@@ -332,7 +332,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.078
+      elapsed_s: 0.084
     - name: 04_pomdp_minimal
       group: zoo
       role_preservation_score: 1.0
@@ -350,7 +350,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.077
+      elapsed_s: 0.092
     - name: 05_multi_factor
       group: zoo
       role_preservation_score: 1.0
@@ -368,7 +368,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.083
+      elapsed_s: 0.084
     - name: 06_hierarchical
       group: zoo
       role_preservation_score: 1.0
@@ -386,7 +386,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.082
+      elapsed_s: 0.083
     - name: 07_event_driven
       group: zoo
       role_preservation_score: 1.0
@@ -404,7 +404,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.076
+      elapsed_s: 0.08
     - name: 08_preferences
       group: zoo
       role_preservation_score: 1.0
@@ -422,7 +422,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.083
+      elapsed_s: 0.082
     - name: 09_policy
       group: zoo
       role_preservation_score: 1.0
@@ -440,7 +440,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.078
+      elapsed_s: 0.079
     - name: 10_constraint
       group: zoo
       role_preservation_score: 1.0
@@ -458,7 +458,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.085
+      elapsed_s: 0.116
     - name: 11_sensor_fusion
       group: zoo
       role_preservation_score: 1.0
@@ -476,7 +476,7 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.086
+      elapsed_s: 0.087
     - name: 12_full_pomdp
       group: zoo
       role_preservation_score: 1.0
@@ -494,12 +494,12 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.1
+      elapsed_s: 0.105
 literature:
   source: cogant/docs/evaluation/LITERATURE.md
   bibliography_entries: 103
 benchmark:
-  suite_runtime_s: 3774.56
+  suite_runtime_s: 3304.42
   shipped_fixture_count: 12
   benchmark_suite_file: suite_20260423.md
   benchmark_python_version: 3.12.11

@@ -511,9 +511,9 @@ class TestMatricesValidateErrors:
         assert ok is False
         assert any("inconsistent column count" in e for e in errs)
 
-    def test_validate_shapes_A_row_does_not_sum_to_one(self) -> None:
+    def test_validate_shapes_A_column_does_not_sum_to_one(self) -> None:
         gm = self._baseline()
-        # n_obs=1, n_states=1: 1 row × 1 col, but value is 0.0 → row-sum 0.
+        # n_obs=1, n_states=1: 1 row × 1 col, but value is 0.0 → column-sum 0.
         gm.compute_A = lambda: [[0.0]]  # type: ignore[method-assign]
         ok, errs = gm.validate_shapes()
         assert ok is False
@@ -542,6 +542,13 @@ class TestMatricesValidateErrors:
         ok, errs = gm.validate_shapes()
         assert ok is False
         assert any("B third dim" in e for e in errs)
+
+    def test_validate_shapes_B_column_does_not_sum_to_one(self) -> None:
+        gm = self._baseline()
+        gm.compute_B = lambda: [[[0.0]]]  # type: ignore[method-assign]
+        ok, errs = gm.validate_shapes()
+        assert ok is False
+        assert any("B action 0 column 0 does not sum to 1" in e for e in errs)
 
     def test_validate_shapes_C_length_mismatch(self) -> None:
         gm = self._baseline()

@@ -13,8 +13,9 @@ class StatespaceConfig(BaseModel):
     """Configuration for the state-space compilation stage.
 
     Attributes:
-        normalize_matrices: Whether to row-normalize transition /
-            observation matrices after construction.
+        normalize_matrices: Whether to normalize transition and observation
+            matrices after construction. Active-inference A/B matrices are
+            checked as column-stochastic at export/validation boundaries.
         matrix_tolerance: Numerical tolerance used when checking matrix
             properties (stochasticity, symmetry, etc.).
         max_hidden_states: Upper bound on hidden-state dimension.
@@ -23,7 +24,7 @@ class StatespaceConfig(BaseModel):
 
     normalize_matrices: bool = Field(
         default=True,
-        description="Row-normalize transition/observation matrices",
+        description="Normalize transition/observation matrices",
     )
     matrix_tolerance: float = Field(
         default=1e-6,

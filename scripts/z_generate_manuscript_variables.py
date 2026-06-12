@@ -24,8 +24,10 @@ manuscript. It performs the following steps, in order:
    ``output/figures/`` for template PDF/HTML rendering. With ``--strict``,
    missing registered figures or incomplete figure metadata are fatal.
 7. **Validate** — scan every written file for surviving ``{{PLACEHOLDER}}``
-   tokens. Warnings are always logged; with ``--strict`` the process also
-   exits non-zero (suitable for CI on pure-template manuscripts).
+   tokens. With ``--strict``, also reject body-fragment links to ``.md`` files
+   so the manuscript uses intra-manuscript cross-references instead of
+   source-file hyperlinks. Warnings are always logged; with ``--strict`` the
+   process exits non-zero (suitable for CI on pure-template manuscripts).
 
 Invocation is directory-independent: all paths are anchored on ``__file__``.
 
@@ -81,6 +83,7 @@ from manuscript_vars import (  # noqa: E402
     find_unresolved_placeholders,
     substitute_text,
 )
+from audit_manuscript_markdown_links import audit as audit_markdown_links  # noqa: E402
 from manuscript_figures import copy_manuscript_figures  # noqa: E402
 
 logger = get_logger(__name__)
@@ -319,6 +322,17 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         for line in msg_lines:
             logger.warning("%s", line)
+
+    if args.strict:
+        markdown_link_findings = audit_markdown_links(COGANT_STAGING_ROOT, include_generated=True)
+        if markdown_link_findings:
+            print(
+                "Markdown-file links remained in manuscript body fragments:",
+                file=sys.stderr,
+            )
+            for finding in markdown_link_findings:
+                print(f"  {finding.format(COGANT_STAGING_ROOT)}", file=sys.stderr)
+            return 1
 
     return 0
 

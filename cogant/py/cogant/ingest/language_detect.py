@@ -156,8 +156,8 @@ class LanguageDetector:
                     lang = LanguageDetector.detect_language(file_path)
                     if lang:
                         language_counts[lang] += 1
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Failed while scanning %s for languages: %s", repo_path, exc)
 
         return dict(language_counts)
 

@@ -112,8 +112,8 @@ docstrings under `py/cogant/translate/rules/`.
 | `_DEFAULT_DIRECT_MASS` | 0.9 | Principled default | PyMDP convention for direct-evidence mass (Da Costa et al. 2020) |
 | `_DEFAULT_INDIRECT_MASS` | 0.1 | Principled default | Complement of direct mass |
 | `_EPSILON` | 1e-9 | Stability constant | scipy/pymdp convention; float64 safety |
-| A-row normalization tolerance | 1e-6 | Stability constant | 8 orders of magnitude over float64 drift |
-| D-vector sum tolerance | 1e-6 | Stability constant | Same rationale as A-row |
+| A-column normalization tolerance | 1e-6 | Stability constant | 8 orders of magnitude over float64 drift |
+| D-vector sum tolerance | 1e-6 | Stability constant | Same rationale as A-column |
 
 ### 2.5 GNN validator scoring (`cogant/gnn/validator.py`)
 
@@ -123,7 +123,7 @@ docstrings under `py/cogant/translate/rules/`.
 | `points_per_error` | 10 | Principled default | 10 errors → 0 score |
 | `points_per_warning` | 2 | Principled default | 5:1 severity ratio vs errors |
 | `valid` threshold (`score >= N`) | 80 | Principled default | "At most 2 errors" intuition; calibration marker retained until the reviewer sweep lands |
-| A-row / D-sum tolerance | 1e-6 | Stability constant | Row-normalization safety |
+| A-column / D-sum tolerance | 1e-6 | Stability constant | Simplex-normalization safety |
 
 ### 2.6 Scoring metrics (`cogant/scoring/metrics.py`)
 
@@ -250,8 +250,8 @@ documented here for completeness.
 | Constant | Value | Use | Source |
 | --- | --- | --- | --- |
 | `_EPSILON` | 1e-9 | Log-domain safety in matrix construction | pymdp / scipy convention |
-| Row-sum tolerance | 1e-6 | Stochastic matrix validation | 8 orders headroom over float64 drift (~1e-14 for n≤100) |
-| D-sum tolerance | 1e-6 | Initial-prior validation | Same as row-sum |
+| Column-sum tolerance | 1e-6 | A/B stochastic matrix validation | 8 orders headroom over float64 drift (~1e-14 for n≤100) |
+| D-sum tolerance | 1e-6 | Initial-prior validation | Same as column-sum |
 
 ---
 

@@ -53,6 +53,12 @@ When any doc (README, AGENTS, cookbook, CLI help) says "run from `cogant/`" it m
 | `tools/regenerate_metrics.py` | Rebuilds `cogant/evaluation/METRICS.yaml` from live test + pipeline runs |
 | `tools/audit_manuscript_citations.py` | Verifies body citation keys exist in `manuscript/references.bib`; fails on missing or duplicate keys |
 | `tools/audit_manuscript_numbers.py` | Checks all prose numbers against `METRICS.yaml`; flags drift |
+| `tools/audit_manuscript_markdown_links.py` | Rejects rendered body links to `.md` files; public manuscript links should be intra-manuscript refs, figures/tables/equations/formalisms, or citations |
+| `tools/audit_manuscript_math_adjacency.py` | Resolves manuscript variables and fails on inline math spans whose closing `$` is immediately followed by a digit |
+| `tools/audit_robustness_table.py` | Checks the manuscript robustness table against the generated robustness JSON artifact |
+| `tools/audit_synthetic_surfaces.py` | Classifies retained synthetic-surface terminology and fails on unallowlisted or unbacked cases |
+| `tools/audit_figure_renderers.py` | Verifies registered figure renderer import paths and locked caption/provenance constants |
+| `tools/citation_claim_ledger.py` | Emits reviewable claim/source pairs for selected citation keys |
 | `tools/check_metrics_fresh.py` | Warns if `METRICS.yaml` is out of sync with source artifacts |
 | `tools/manuscript_figures.py` | Copies curated package-generated PNGs from `cogant/output/` into `output/figures/` |
 | `scripts/z_generate_manuscript_variables.py` | Thin orchestrator: YAML → JSON + full `output/manuscript/` tree + copied figures |
@@ -73,6 +79,11 @@ uv run --directory cogant python docs/verify_manuscript_links.py
 uv run python tools/audit_manuscript_crossrefs.py
 uv run python tools/audit_manuscript_citations.py
 uv run python tools/audit_manuscript_numbers.py
+uv run python tools/audit_manuscript_markdown_links.py
+uv run python tools/audit_manuscript_math_adjacency.py
+uv run python tools/audit_robustness_table.py
+uv run python tools/audit_synthetic_surfaces.py --strict
+uv run python tools/audit_figure_renderers.py
 ```
 
 When this tree is linked under the parent template as `projects/working/cogant/`,

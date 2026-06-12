@@ -1,6 +1,6 @@
 # COGANT TODO
 
-Last updated: 2026-05-21
+Last updated: 2026-06-12
 
 This backlog scopes the most useful next development avenues after the manuscript,
 test, rendering, and visualization passes. Keep items grounded in generated
@@ -104,9 +104,9 @@ Goal: make semantic mapping rules inspectable, tunable, and reviewable.
   manuscript without hand-editing numeric claims. (`tools/regenerate_ablation.py`
   runs the live pipeline + `TranslationEngine.translate(rule_filter=…)` per
   family on the 6 packaged fixtures, computes rule-family / fixpoint /
-  matrix-fallback deltas, merges an `ablation:` block into `METRICS.yaml`
+  matrix degraded-output deltas, merges an `ablation:` block into `METRICS.yaml`
   (additive, header-preserving), and is wired into `regenerate_metrics.py`.
-  `09_ablation.md` rule-family + fixpoint + matrix-fallback tables now
+  `09_ablation.md` rule-family + fixpoint + matrix degraded-output tables now
   resolve from `{{ABLATION_*}}` placeholders — no hand-edited numerics.
   Measurement corrected materially-wrong reconstructed values; see
   CHANGELOG erratum.)
@@ -121,7 +121,7 @@ Goal: make semantic mapping rules inspectable, tunable, and reviewable.
 ## 5. Language Front-End Maturation
 
 Goal: make parser and graph extraction behavior clear across languages and
-fallback modes.
+degraded-output modes.
 
 - [x] Document exactly which language front ends are production-grade,
   experimental, or fixture-only.
@@ -141,7 +141,7 @@ fallback modes.
   each is its own increment): method-receiver→class resolution,
   async-call edge kind, decorator-driven edges, generated-file
   detection, test-only `NodeKind.TEST` classification.
-- [x] Add dashboard badges for parser certainty and fallback usage.
+- [x] Add dashboard badges for parser certainty and degraded-output usage.
 - [x] Add error reports that identify skipped files and unsupported constructs.
 
 ## 6. Runtime And Inference Demonstrations
@@ -243,7 +243,7 @@ review-and-improve pass (architectural decision or broad refactor).
   defined at `manuscript/04_examples_and_failure_modes.md:43`) is now
   cross-referenced. `tools/audit_manuscript_crossrefs.py` reports 109
   ids, 417 references, zero dangling.
-- [ ] **Semantic-preservation and robustness suite (2026-05-21).**
+- [~] **Semantic-preservation and robustness suite (2026-05-21).**
   Per the WorldThreatModel/RedTeam/Perplexity stress test in
   `Plans/WORLD_THREAT_MODEL_COGANT_2026-05-21.md`, the next evaluation
   wave should add semantics-preserving transformation tests before any
@@ -252,20 +252,59 @@ review-and-improve pass (architectural decision or broad refactor).
   loop/branch rewrites, inlining/outlining, and parser/frontend variation.
   Success means each transform has a fixture, a roundtrip semantic-oracle
   assertion, and a dashboard-visible degradation row.
-- [ ] **Roundtrip drift reduction.**
-  The native v0.6 ledger now carries per-row `role_preservation_score`,
-  `roundtrip_status`, file/LOC/node/edge counts, and scaffolding fraction.
-  The previous `cli_tool` and `notebook_module` drift rows now carry source
-  roles and roundtrip as `ROLE_PRESERVED`; the remaining release work is to
-  keep `check_metrics_fresh` guarding against non-native score relabelling and
-  add held-out fixtures that can stress the now-saturated in-sample ledger.
+  **Progress 2026-06-09 (verifier-first RedTeam):** the harness +
+  `tests/integration/test_semantic_preservation.py` now cover **7** transforms
+  (reformat, insert_comments, insert_dead_code, rename_locals, reorder_methods,
+  swap_if_branches, outline_first_function) with a real negative control
+  (`drop_half_definitions`, DETECTED) — confirmed genuinely behaviour-checking
+  (importability + role-multiset equality, not shape-only). The manuscript
+  robustness table is now **claim-policy-bound**: `tools/audit_robustness_table.py`
+  (+ `tests/test_audit_robustness_table.py`, 5 negative controls) ties every
+  manuscript row to `robustness_results.json`, wired into CI and the gate list —
+  closing the RedTeam science-gap that the table was hand-written. **Remaining
+  honest follow-ups:** still in-sample-only (3 base fixtures); the *equivalent
+  loop rewrite*, *inlining*, and *parser/frontend variation* transforms and a
+  held-out robustness corpus are not yet implemented; the
+  `robustness_results.json` freshness (re-run harness on PR) is audited for
+  table-consistency but not yet auto-regenerated in CI.
+- [x] **Roundtrip drift reduction.**
+  Completed in the 2026-06-12 evidence-gated pass: the native v0.6 ledger now
+  carries per-row `role_preservation_score`, `roundtrip_status`, file/LOC/node/
+  edge counts, and scaffolding fraction, and all 24 native rows are
+  role-preserved with 0 drift targets in the refreshed metrics. Remaining
+  release work is no longer in-sample drift reduction; it is the separate
+  held-out promotion item in the current sequence below.
 
-## Preferred Sequence
+- [x] **Evidence-gated real-matrix publication pass (2026-06-12).**
+  Public A/B/C/D matrix figures now require real exported `matrices.A/B/C/D`
+  from `gnn_package/model.gnn.json`, a source digest, source/display shapes,
+  B reducer metadata, aligned state-space dimensions, and empty fallback /
+  degraded panel lists. `GNNValidator` now actively validates matrix shape,
+  stochasticity, missing panels, and state-space alignment before a package can
+  receive a perfect score; degenerate developer fixtures remain non-public
+  diagnostics with warnings rather than perfect evidence. `run_all.py` summary
+  rows are revalidated from the generated `gnn_package/`, and strict manuscript
+  generation plus `audit_manuscript_markdown_links.py`,
+  `audit_synthetic_surfaces.py --strict`, and figure-renderer/provenance checks
+  gate public output. Verified on 2026-06-12 with `run_all.py --fail-fast`
+  (`24` targets, `0` failed steps), strict manuscript regeneration, template
+  Markdown validators, and PDF/HTML render.
 
-1. Finish the visual inspection workbench and graphical abstract.
-2. Add roundtrip diagnostics and visual diffs.
-3. Expand the evaluation corpus with fixture intent files.
-4. Calibrate rules using reviewer annotations and ablations.
-5. Mature language front ends and parser fallback reporting.
-6. Add runtime inference demonstrations.
-7. Harden CI and run the promotion checklist.
+## Current Sequence
+
+Completed items above stay as history. The active sequence is:
+
+1. Resolve the typed config / preset subsystem into one documented preset
+   registry with a deprecation path for legacy field names.
+2. Finish the remaining graph-normalization increments one at a time:
+   method-receiver-to-class resolution, async-call edge kind, decorator-driven
+   edges, generated-file detection, and test-only `NodeKind.TEST`
+   classification.
+3. Extend semantic-preservation robustness beyond the current 7 transforms with
+   equivalent loop rewrites, inlining/outlining variants, parser/frontend
+   variation, and a held-out robustness corpus.
+4. Add held-out fixtures that stress the saturated in-sample roundtrip ledger and
+   keep `check_metrics_fresh` guarding against non-native score relabelling.
+5. Decompose one thermo-nuclear maintainability hotspot per sprint, starting
+   with `viz/inspection_dashboard.py` or `tools/manuscript_figures.py`, without
+   weakening the public-output evidence gates.

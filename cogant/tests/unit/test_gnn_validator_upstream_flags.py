@@ -294,32 +294,33 @@ def test_validate_package_invalid_state_space_json(tmp_path: Path) -> None:
 
 
 def test_validate_package_markdown_missing_canonical_sections(tmp_path: Path) -> None:
-    """A markdown file lacking canonical sections produces warnings (line 570)."""
+    """A markdown file lacking canonical sections is a hard package error."""
     pkg = tmp_path / "pkg"
     _scaffold_minimal_package(pkg)
     (pkg / "model.gnn.md").write_text("# Title only\n", encoding="utf-8")
     result = GNNValidator().validate_package(str(pkg), upstream_gnn=False)
-    # Many missing canonical sections → warnings list grows
-    assert any("Missing canonical section" in w for w in result.warnings)
+    assert result.valid is False
+    assert any("Markdown validation: Missing canonical section" in e for e in result.errors)
 
 
-def test_validate_package_state_space_missing_keys_warns(tmp_path: Path) -> None:
-    """state_space.json missing required keys triggers warnings (line 597)."""
+def test_validate_package_state_space_missing_keys_is_invalid(tmp_path: Path) -> None:
+    """state_space.json missing required keys is a hard package error."""
     pkg = tmp_path / "pkg"
     _scaffold_minimal_package(pkg)
     (pkg / "state_space.json").write_text(json.dumps({"variables": []}), encoding="utf-8")
     result = GNNValidator().validate_package(str(pkg), upstream_gnn=False)
-    # validate_state_space returns errors; _check_state_space appends them as warnings
-    assert any("Missing state space key" in w for w in result.warnings)
+    assert result.valid is False
+    assert any("State-space validation: Missing state space key" in e for e in result.errors)
 
 
-def test_validate_package_provenance_missing_keys_warns(tmp_path: Path) -> None:
-    """provenance.json missing required keys triggers warnings (line 615)."""
+def test_validate_package_provenance_missing_keys_is_invalid(tmp_path: Path) -> None:
+    """provenance.json missing required keys is a hard package error."""
     pkg = tmp_path / "pkg"
     _scaffold_minimal_package(pkg)
     (pkg / "provenance.json").write_text(json.dumps({}), encoding="utf-8")
     result = GNNValidator().validate_package(str(pkg), upstream_gnn=False)
-    assert any("Missing provenance key" in w for w in result.warnings)
+    assert result.valid is False
+    assert any("Provenance validation: Missing provenance key" in e for e in result.errors)
 
 
 def test_validate_package_invalid_provenance_json(tmp_path: Path) -> None:
@@ -345,8 +346,8 @@ def test_validate_package_invalid_other_json(tmp_path: Path) -> None:
 # --------------------------------------------------------------------------- #
 
 
-def test_validate_package_checksum_mismatch_warns(tmp_path: Path) -> None:
-    """Checksums mismatch produces warnings (line 644-647)."""
+def test_validate_package_checksum_mismatch_is_invalid_for_required_file(tmp_path: Path) -> None:
+    """Required-file checksum mismatch is a hard package error."""
     import hashlib
 
     pkg = tmp_path / "pkg"
@@ -358,7 +359,8 @@ def test_validate_package_checksum_mismatch_warns(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     result = GNNValidator().validate_package(str(pkg), upstream_gnn=False)
-    assert any("Checksum mismatch" in w for w in result.warnings)
+    assert result.valid is False
+    assert any("Checksum mismatch" in e for e in result.errors)
     # Sanity: the actual sha256 of the canonical-encoded JSON is reproducible
     real_sha = hashlib.sha256(
         json.dumps([], sort_keys=True, default=str).encode()

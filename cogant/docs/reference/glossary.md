@@ -25,7 +25,7 @@ and should be normalized on sight:
   `forward pass` / `reverse pass` are reserved for the categorical / functorial framing in
   `evaluation/ISOMORPHISM_THEOREM.md`.
 - `fixpoint` is one word. Never `fix-point` or `fixed point`.
-- `s_role` is the **role-preservation fidelity** of a roundtrip: `s_role = |roles_preserved| / |roles_original|`. It is a ratio in `[0, 1]`, where `s_role = 1.0` is a perfect role-multiset match and `s_role >= 0.5` is the public ROLE_PRESERVED threshold. Canonical values live in `cogant/evaluation/METRICS.yaml`.
+- `s_role` is the **role-preservation fidelity** of a roundtrip: the mean, over roles present on either side, of `min(original_count, synthesized_count) / max(original_count, synthesized_count)`. It is a symmetric overlap score in `[0, 1]`, where `s_role = 1.0` is a perfect role-multiset match and `s_role >= 0.5` is the public ROLE_PRESERVED threshold. Canonical values live in `cogant/evaluation/METRICS.yaml`.
 - Roundtrip statuses are `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`, `DRIFT`, and `FAILED` (all caps).
 - `Markov blanket` (uppercase M, lowercase b in prose; capitalized only in headings).
 - `Galois connection` (uppercase G, lowercase c in prose; capitalized only in headings).
@@ -139,8 +139,10 @@ stripped during validation).
 v0.1.0.
 
 **s_role** — Role-preservation fidelity of a forward → reverse → forward roundtrip on
-a program graph. Defined as `s_role = |roles_preserved| / |roles_original|`, so `s_role ∈ [0, 1]` and
-`s_role = 1.0` is a perfect role-multiset match (every original semantic role is recovered). The
+a program graph. Defined as the mean, over roles present on either side, of
+`min(original_count, synthesized_count) / max(original_count, synthesized_count)`, so
+`s_role ∈ [0, 1]` and `s_role = 1.0` is a perfect role-multiset match with no
+dropped or extra role counts. The
 ROLE_PRESERVED threshold is `s_role >= 0.5`; strict `STRUCTURALLY_ISOMORPHIC` status also requires graph, matrix, GNN-section, and generated-code invariants. Canonical current values live in
 `cogant/evaluation/METRICS.yaml`. The theoretical "error" formulation
 (where `ε_max = 0` means exact recovery; see `evaluation/ISOMORPHISM_THEOREM.md`
@@ -408,7 +410,7 @@ language plugin). <https://tree-sitter.github.io/>.
 beliefs about hidden state.
 
 **`ViolationCheck`** — A validator helper that checks one structural invariant of a GNN
-package (e.g. "A rows sum to 1.0"). Each check is a pure function returning a pass/fail
+package (e.g. "A columns sum to 1.0"). Each check is a pure function returning a pass/fail
 and an optional warning message.
 
 ## W

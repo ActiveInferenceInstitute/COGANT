@@ -240,7 +240,6 @@ class TranslationEngine:
         self.max_iterations = max_iterations
         self.iterations: list[dict[str, Any]] = []
         self._convergence_iteration: int | None = None
-        self._rule_dependency_graph: dict[str, set[str]] = {}
 
     def register_rule(self, rule: TranslationRule) -> None:
         """Register a translation rule.
@@ -296,12 +295,7 @@ class TranslationEngine:
         self._match_log.clear()
         self._rule_priority.clear()
         self._convergence_iteration = None
-        self._rule_dependency_graph.clear()
         self.iterations = []
-
-        # Initialize rule dependency graph for cycle detection
-        for rule in self.rules:
-            self._rule_dependency_graph[rule.name] = set()
 
         n_nodes = len(graph.nodes)
         n_edges = len(graph.edges)

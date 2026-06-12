@@ -332,7 +332,7 @@ def test_action_has_policy_ancestor_or_mutation_or_keyword(
 
 
 # ---------------------------------------------------------------------------
-# 3. Probability simplex: A rows and D vector sum to 1.0
+# 3. Probability simplex: A columns and D vector sum to 1.0
 # ---------------------------------------------------------------------------
 
 

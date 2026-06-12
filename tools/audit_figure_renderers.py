@@ -127,9 +127,9 @@ def resolve_renderer(path: str) -> str:
 # "a color change silently makes a caption lie" surface that motivated this tool.
 _ENCODING_ASSERTIONS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     (
-        "forward_state_space_factor caption: purple=hidden state, green=observation, orange=action",
+        "forward_state_space_factor caption: blue=hidden state, teal=observation, orange=action",
         "cogant/py/cogant/viz/png/state_space.py",
-        ('"state": "#8e44ad"', '"obs": "#27ae60"', '"act": "#e67e22"'),
+        ('"state": "#0072B2"', '"obs": "#009E73"', '"act": "#E69F00"'),
     ),
     (
         "forward_abcd_matrices: A/B/C/D heatmap colormaps Blues/Greens/Oranges/Purples",

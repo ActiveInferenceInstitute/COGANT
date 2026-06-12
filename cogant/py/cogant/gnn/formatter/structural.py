@@ -238,8 +238,8 @@ class _StructuralSectionsMixin:
            semantic mappings with their evidence counts.
 
         Returns:
-            A newline-joined markdown string. Falls back to an
-            explanatory placeholder when no actions are detected.
+            A newline-joined markdown string. Emits an explanatory empty-state
+            sentence when no actions are detected.
         """
         lines = ["## Actions Policies"]
         lines.append("")

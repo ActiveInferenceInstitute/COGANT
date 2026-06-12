@@ -373,7 +373,7 @@ ProgramEntity
 
 #### Unknown
 **Definition**: Unable to classify
-**GNN Use Case**: Placeholder
+**GNN Use Case**: Reserved unknown-role marker
 **Typical Features**: None
 
 ## Role Assignment Guidelines

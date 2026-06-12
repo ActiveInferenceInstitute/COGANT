@@ -65,6 +65,15 @@ def test_manuscript_figure_registry_covers_forward_and_roundtrip() -> None:
     assert all(figure.destination.endswith(".png") for figure in MANUSCRIPT_FIGURES)
 
 
+def test_forward_abcd_matrix_figure_uses_flask_real_matrix_artifact() -> None:
+    figure = next(item for item in MANUSCRIPT_FIGURES if item.key == "forward_abcd_matrices")
+
+    assert figure.source == "cogant/output/flask_app/connections_matrix.png"
+    assert figure.source_artifact == "cogant/output/flask_app/gnn_package/model.gnn.json"
+    assert figure.destination == "cogant_forward_abcd_matrices.png"
+    assert "Flask" in figure.caption
+
+
 def test_copy_manuscript_figures_writes_manifest(tmp_path: Path) -> None:
     source = tmp_path / "cogant" / "output" / "demo" / "figure.png"
     source.parent.mkdir(parents=True)
@@ -176,6 +185,312 @@ def test_copy_manuscript_figures_strict_fails_on_inserted_unregistered_figure(
         copy_manuscript_figures(tmp_path, figures=figures, strict=True)
 
 
+def test_copy_manuscript_figures_strict_fails_on_angle_bracket_unregistered_figure(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "cogant" / "output" / "demo" / "figure.png"
+    _write_test_png(source)
+    manuscript = tmp_path / "manuscript"
+    manuscript.mkdir()
+    (manuscript / "00_demo.md").write_text(
+        "![Unregistered](<../figures/not_registered.png>)\n",
+        encoding="utf-8",
+    )
+    figures = (
+        ManuscriptFigure(
+            key="demo",
+            source="cogant/output/demo/figure.png",
+            destination="demo.png",
+            caption="Demo figure.",
+            role="test",
+            source_artifact="cogant/output/demo/figure.png",
+            renderer="test renderer",
+            method_note="Test method.",
+            reading_guide="Test reading order.",
+            limitations="Test limitation.",
+            alt_text="Demo figure.",
+            require_manuscript_reference=False,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="inserted-but-unregistered"):
+        copy_manuscript_figures(tmp_path, figures=figures, strict=True)
+
+
+def test_copy_manuscript_figures_strict_requires_real_matrix_sidecar(tmp_path: Path) -> None:
+    source = tmp_path / "cogant" / "output" / "demo" / "connections_matrix.png"
+    _write_test_png(source)
+    source.with_suffix(".figure.json").write_text(
+        json.dumps(
+            {
+                "renderer": "cogant.viz.png.render_connections_matrix_png",
+                "displayed_counts": {"matrices": 4},
+                "panel_metadata": {
+                    "panels": [
+                        {"key": "A", "shape": [1, 1]},
+                        {"key": "B", "shape": [1, 1]},
+                        {"key": "C", "shape": [1, 1]},
+                        {"key": "D", "shape": [1, 1]},
+                    ]
+                },
+                "matrix_values_from_artifact": False,
+                "fallback_panels": ["A", "B", "C", "D"],
+                "matrix_source_artifact": None,
+                "source_artifact_digest": "digest",
+                "source_matrix_shapes": {"A": [1, 1], "B": [1, 1, 1], "C": [1], "D": [1]},
+                "matrix_reducers": {"B": {"method": "max_over_actions"}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    model = tmp_path / "cogant" / "output" / "demo" / "gnn_package" / "model.gnn.json"
+    model.parent.mkdir(parents=True)
+    model.write_text(
+        json.dumps(
+            {
+                "matrices": {
+                    "A": [[1.0]],
+                    "B": [[[1.0]]],
+                    "C": [0.0],
+                    "D": [1.0],
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    figures = (
+        ManuscriptFigure(
+            key="forward_abcd_matrices",
+            source="cogant/output/demo/connections_matrix.png",
+            destination="demo_abcd.png",
+            caption="A/B/C/D matrix panel.",
+            role="forward-state-space-to-matrices",
+            source_artifact="cogant/output/demo/gnn_package/model.gnn.json",
+            renderer="cogant.viz.png.render_connections_matrix_png",
+            method_note="Matrix method.",
+            reading_guide="Matrix guide.",
+            limitations="Matrix limitation.",
+            alt_text="Matrix panel.",
+            require_manuscript_reference=False,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="matrix_values_from_artifact"):
+        copy_manuscript_figures(tmp_path, figures=figures, strict=True)
+
+
+def test_copy_manuscript_figures_strict_fails_on_matrix_dimension_mismatch(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "cogant" / "output" / "demo" / "connections_matrix.png"
+    _write_test_png(source)
+    source.with_suffix(".figure.json").write_text(
+        json.dumps(
+            {
+                "renderer": "cogant.viz.png.render_connections_matrix_png",
+                "displayed_counts": {"matrices": 4},
+                "panel_metadata": {
+                    "panels": [
+                        {"key": "A", "shape": [1, 1]},
+                        {"key": "B", "shape": [1, 1]},
+                        {"key": "C", "shape": [1, 1]},
+                        {"key": "D", "shape": [1, 1]},
+                    ]
+                },
+                "matrix_values_from_artifact": True,
+                "matrix_validation_errors": [],
+                "fallback_panels": [],
+                "degraded_panels": [],
+                "matrix_source_artifact": "output/demo/gnn_package/model.gnn.json",
+                "source_artifact_digest": "source-digest",
+                "source_matrix_shapes": {"A": [1, 1], "B": [1, 1, 1], "C": [1], "D": [1]},
+                "display_matrix_shapes": {
+                    "A": [1, 1],
+                    "B": [1, 1],
+                    "C": [1, 1],
+                    "D": [1, 1],
+                },
+                "matrix_reducers": {
+                    "B": {
+                        "method": "max_over_actions",
+                        "axis": 2,
+                        "source_action_count": 1,
+                    }
+                },
+                "source_matrix_diagnostics": {
+                    "A": {"distinct_values": 1},
+                    "B": {"distinct_values": 1},
+                    "C": {"distinct_values": 1},
+                    "D": {"distinct_values": 1},
+                },
+                "panel_diagnostics": {
+                    "A": {"nonzero_fraction": 1.0},
+                    "B": {"nonzero_fraction": 1.0},
+                    "C": {"nonzero_fraction": 0.0},
+                    "D": {"nonzero_fraction": 1.0},
+                },
+                "matrix_dimensions": {"hidden_states": 1, "observations": 1, "actions": 1},
+                "state_space_counts": {"hidden_states": 2, "observations": 1, "actions": 1},
+                "dimension_alignment": {
+                    "hidden_states_match": False,
+                    "observations_match": True,
+                    "actions_match": True,
+                },
+                "strict_real_matrices": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    model = tmp_path / "cogant" / "output" / "demo" / "gnn_package" / "model.gnn.json"
+    model.parent.mkdir(parents=True)
+    model.write_text(
+        json.dumps(
+            {
+                "matrices": {
+                    "A": [[1.0]],
+                    "B": [[[1.0]]],
+                    "C": [0.0],
+                    "D": [1.0],
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    figures = (
+        ManuscriptFigure(
+            key="forward_abcd_matrices",
+            source="cogant/output/demo/connections_matrix.png",
+            destination="demo_abcd.png",
+            caption="A/B/C/D matrix panel.",
+            role="forward-state-space-to-matrices",
+            source_artifact="cogant/output/demo/gnn_package/model.gnn.json",
+            renderer="cogant.viz.png.render_connections_matrix_png",
+            method_note="Matrix method.",
+            reading_guide="Matrix guide.",
+            limitations="Matrix limitation.",
+            alt_text="Matrix panel.",
+            require_manuscript_reference=False,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="dimension_alignment.hidden_states_match"):
+        copy_manuscript_figures(tmp_path, figures=figures, strict=True)
+
+
+def test_copy_manuscript_figures_promotes_matrix_diagnostics(tmp_path: Path) -> None:
+    source = tmp_path / "cogant" / "output" / "demo" / "connections_matrix.png"
+    _write_test_png(source)
+    source.with_suffix(".figure.json").write_text(
+        json.dumps(
+            {
+                "renderer": "cogant.viz.png.render_connections_matrix_png",
+                "displayed_counts": {
+                    "matrices": 4,
+                    "hidden_states": 1,
+                    "observations": 1,
+                    "actions": 1,
+                },
+                "panel_metadata": {
+                    "panels": [
+                        {"key": "A", "shape": [1, 1]},
+                        {"key": "B", "shape": [1, 1]},
+                        {"key": "C", "shape": [1, 1]},
+                        {"key": "D", "shape": [1, 1]},
+                    ]
+                },
+                "matrix_values_from_artifact": True,
+                "matrix_validation_errors": [],
+                "fallback_panels": [],
+                "degraded_panels": [],
+                "matrix_source_artifact": "output/demo/gnn_package/model.gnn.json",
+                "source_artifact_digest": "source-digest",
+                "source_matrix_shapes": {"A": [1, 1], "B": [1, 1, 1], "C": [1], "D": [1]},
+                "display_matrix_shapes": {
+                    "A": [1, 1],
+                    "B": [1, 1],
+                    "C": [1, 1],
+                    "D": [1, 1],
+                },
+                "matrix_reducers": {
+                    "B": {
+                        "method": "max_over_actions",
+                        "axis": 2,
+                        "source_action_count": 1,
+                    }
+                },
+                "source_matrix_diagnostics": {
+                    "A": {"distinct_values": 1},
+                    "B": {"distinct_values": 1},
+                    "C": {"distinct_values": 1},
+                    "D": {"distinct_values": 1},
+                },
+                "panel_diagnostics": {
+                    "A": {"nonzero_fraction": 1.0},
+                    "B": {"nonzero_fraction": 1.0},
+                    "C": {"nonzero_fraction": 0.0},
+                    "D": {"nonzero_fraction": 1.0},
+                },
+                "matrix_dimensions": {"hidden_states": 1, "observations": 1, "actions": 1},
+                "state_space_counts": {"hidden_states": 1, "observations": 1, "actions": 1},
+                "dimension_alignment": {
+                    "hidden_states_match": True,
+                    "observations_match": True,
+                    "actions_match": True,
+                },
+                "strict_real_matrices": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    model = tmp_path / "cogant" / "output" / "demo" / "gnn_package" / "model.gnn.json"
+    model.parent.mkdir(parents=True)
+    model.write_text(
+        json.dumps(
+            {
+                "matrices": {
+                    "A": [[1.0]],
+                    "B": [[[1.0]]],
+                    "C": [0.0],
+                    "D": [1.0],
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    figures = (
+        ManuscriptFigure(
+            key="forward_abcd_matrices",
+            source="cogant/output/demo/connections_matrix.png",
+            destination="demo_abcd.png",
+            caption="A/B/C/D matrix panel.",
+            role="forward-state-space-to-matrices",
+            source_artifact="cogant/output/demo/gnn_package/model.gnn.json",
+            renderer="cogant.viz.png.render_connections_matrix_png",
+            method_note="Matrix method.",
+            reading_guide="Matrix guide.",
+            limitations="Matrix limitation.",
+            alt_text="Matrix panel.",
+            require_manuscript_reference=False,
+        ),
+    )
+
+    copy_manuscript_figures(tmp_path, figures=figures, strict=True)
+
+    sidecar = json.loads((tmp_path / "output" / "figures" / "demo_abcd.figure.json").read_text())
+    assert sidecar["matrix_values_from_artifact"] is True
+    assert sidecar["matrix_validation_errors"] == []
+    assert sidecar["matrix_source_path"] == "cogant/output/demo/gnn_package/model.gnn.json"
+    assert sidecar["matrix_source_digest"]
+    assert sidecar["source_matrix_shapes"]["B"] == [1, 1, 1]
+    assert sidecar["b_reducer"]["method"] == "max_over_actions"
+    assert sidecar["source_matrix_diagnostics"]["A"]["distinct_values"] == 1
+    assert sidecar["panel_diagnostics"]["B"]["nonzero_fraction"] == 1.0
+    assert sidecar["fallback_panels"] == []
+    assert sidecar["degraded_panels"] == []
+    assert sidecar["image_width_px"] == 1200
+    assert sidecar["image_height_px"] == 600
+
+
 def test_artifact_summary_extracts_fixture_metrics_counts(tmp_path: Path) -> None:
     metrics = tmp_path / "cogant" / "evaluation" / "figures" / "metrics.json"
     metrics.parent.mkdir(parents=True)
@@ -226,6 +541,52 @@ def test_artifact_summary_extracts_fixture_metrics_counts(tmp_path: Path) -> Non
     assert summary["total_elapsed_s"] == 9.54
 
 
+def test_artifact_summary_extracts_gnn_bundle_counts_without_fixture_heuristics(
+    tmp_path: Path,
+) -> None:
+    model = tmp_path / "cogant" / "output" / "demo" / "gnn_package" / "model.gnn.json"
+    model.parent.mkdir(parents=True)
+    model.write_text(
+        json.dumps(
+            {
+                "model_id": "demo",
+                "schema_name": "Demo",
+                "state_space": {
+                    "variables": [{"id": "s0"}, {"id": "s1"}],
+                    "observations": [{"id": "o0"}, {"id": "o1"}, {"id": "o2"}],
+                    "actions": [{"id": "a0"}],
+                    "transitions": [{"id": "t0"}],
+                    "likelihoods": [{"id": "l0"}],
+                    "preferences": [],
+                },
+                "matrices": {
+                    "A": [[0.5, 0.5], [0.5, 0.5], [0.0, 0.0]],
+                    "B": [[[1.0]], [[1.0]]],
+                    "C": [0.0, 0.0, 0.0],
+                    "D": [0.5, 0.5],
+                    "dimensions": {"n_states": 2, "n_obs": 3, "n_actions": 1},
+                    "shapes": {"A": [3, 2], "B": [2, 2, 1], "C": [3], "D": [2]},
+                },
+                "mappings": {"mappings": [{"id": "m0"}]},
+                "ontology_mapping": {"mappings": [{"id": "o0"}]},
+                "program_graph": {"nodes": [{"id": "n0"}], "edges": [{"id": "e0"}]},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    summary = _artifact_summary(model, tmp_path)
+
+    assert summary is not None
+    assert summary["bundle_kind"] == "gnn_model"
+    assert "fixture_count" not in summary
+    assert summary["total_state_variables"] == 2
+    assert summary["total_observations"] == 3
+    assert summary["total_actions"] == 1
+    assert summary["mappings_count"] == 1
+    assert summary["program_nodes_count"] == 1
+
+
 def test_registry_renderer_paths_resolve() -> None:
     """Every dotted ``renderer`` path in the registry must import to a callable.
 
@@ -263,7 +624,7 @@ def test_caption_encoding_constants_hold() -> None:
     state_space = (
         afr._REPO_ROOT / "cogant" / "py" / "cogant" / "viz" / "png" / "state_space.py"
     ).read_text(encoding="utf-8")
-    assert '"#8e44ad"' in state_space  # the real "hidden state = purple" constant
+    assert '"#0072B2"' in state_space  # the real "hidden state = blue" constant
     assert '"#deadbe"' not in state_space  # a fabricated color would fail the gate
 
 

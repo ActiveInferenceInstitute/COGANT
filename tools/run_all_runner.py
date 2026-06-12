@@ -102,6 +102,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "export_multi_formats": "json,jsonlines",
         "visualize_diagrams": True,
         "visualize_format": "mermaid",
+        "inspection_artifacts": True,
         # Post-batch cross-target dashboard
         # (cogant.viz.batch_dashboard via scripts/batch_dashboard.py).
         "batch_dashboard": True,
@@ -324,12 +325,58 @@ def _rel(run_dir: Path, child: Path) -> str:
         return str(child)
 
 
+def _validate_gnn_package_summary(
+    package_root: Path,
+    package_dir: Path,
+    *,
+    log_fp: Any,
+) -> dict[str, Any] | None:
+    """Return a fresh ``GNNValidator`` summary for ``package_dir``.
+
+    The bundle's ``stage_results.validate`` payload is useful historical
+    evidence, but the cross-target summary is a public aggregation and must
+    reflect the current package validator, including matrix hardening that may
+    have changed after a bundle was first written.
+    """
+    if not package_dir.is_dir():
+        return None
+
+    package_py = package_root / "py"
+    inserted = False
+    if str(package_py) not in sys.path:
+        sys.path.insert(0, str(package_py))
+        inserted = True
+    try:
+        from cogant.gnn.validator import GNNValidator
+
+        result = GNNValidator().validate_package(package_dir)
+        return {
+            "score": result.score,
+            "valid": result.valid,
+            "errors": list(result.errors),
+            "warnings": list(result.warnings),
+        }
+    except Exception as exc:  # pragma: no cover - defensive summary fallback
+        report(
+            f"  [summary_validate] unable to validate {package_dir}: {exc}",
+            log_fp=log_fp,
+        )
+        return None
+    finally:
+        if inserted:
+            try:
+                sys.path.remove(str(package_py))
+            except ValueError:
+                pass
+
+
 def _write_cross_target_summary(
     output_root: Path,
     manifest: dict[str, Any],
     *,
+    package_root: Path,
     log_fp: Any,
-) -> None:
+) -> list[str]:
     """Emit ``summary.json`` and ``summary.md`` aggregating per-target results.
 
     ``summary.json`` is the structured source of truth: one ``rows`` entry per
@@ -349,6 +396,7 @@ def _write_cross_target_summary(
     """
     summary_meta = manifest.get("summary", {}) or {}
     failures: list[str] = list(summary_meta.get("failed_steps", []) or [])
+    summary_validation_failures: list[str] = []
 
     rows: list[dict[str, Any]] = []
     for t in manifest.get("targets", []):
@@ -368,18 +416,52 @@ def _write_cross_target_summary(
             gnn_val = (sr.get("validate", {}) or {}).get("gnn_validation", {}) or {}
             graph_stage = sr.get("graph", {}) or {}
             translate_stage = sr.get("translate", {}) or {}
+            package_dir = run_dir / "gnn_package"
+            package_validation = _validate_gnn_package_summary(
+                package_root,
+                package_dir,
+                log_fp=log_fp,
+            )
+            validation_warnings = (
+                list(package_validation.get("warnings") or []) if package_validation else []
+            )
+            validation_errors = (
+                list(package_validation.get("errors") or []) if package_validation else []
+            )
+            if package_validation is not None and package_validation.get("valid") is False:
+                label = f"summary_validate:{t.get('id')}"
+                if label not in failures:
+                    failures.append(label)
+                summary_validation_failures.append(label)
+                target_failures.append(label)
             row.update(
                 {
-                    "score": gnn_val.get("score"),
-                    "valid": gnn_val.get("valid"),
+                    "score": (
+                        package_validation.get("score")
+                        if package_validation is not None
+                        else gnn_val.get("score")
+                    ),
+                    "valid": (
+                        package_validation.get("valid")
+                        if package_validation is not None
+                        else gnn_val.get("valid")
+                    ),
+                    "score_source": (
+                        "gnn_package_validator"
+                        if package_validation is not None
+                        else "bundle_stage_results"
+                    ),
+                    "validator_warnings": validation_warnings,
+                    "validator_errors": validation_errors,
+                    "warnings_count": len(target_failures) + len(validation_warnings),
                     "node_count": _stage_count(graph_stage, prefer="node_count", fallback="nodes"),
                     "edge_count": _stage_count(graph_stage, prefer="edge_count", fallback="edges"),
                     "mapping_count": _stage_count(
                         translate_stage, prefer="mapping_count", fallback="mapping_ids"
                     ),
                     "gnn_package_files": (
-                        len(list((run_dir / "gnn_package").glob("*")))
-                        if (run_dir / "gnn_package").is_dir()
+                        len(list(package_dir.glob("*")))
+                        if package_dir.is_dir()
                         else 0
                     ),
                     "has_site": (run_dir / "site" / "index.html").is_file(),
@@ -480,6 +562,10 @@ def _write_cross_target_summary(
         lines.append(f"| mappings | {r.get('mapping_count', 0)} |")
         lines.append(f"| gnn_package files | {r.get('gnn_package_files', 0)} |")
         lines.append(f"| warnings | {r.get('warnings_count', 0)} |")
+        if r.get("validator_warnings"):
+            lines.append(f"| validator warnings | {'; '.join(r['validator_warnings'])} |")
+        if r.get("validator_errors"):
+            lines.append(f"| validator errors | {'; '.join(r['validator_errors'])} |")
         if r.get("failed_steps"):
             lines.append(f"| failed steps | {', '.join(r['failed_steps'])} |")
         lines.append("")
@@ -501,6 +587,7 @@ def _write_cross_target_summary(
     summary_md = output_root / "summary.md"
     summary_md.write_text("\n".join(lines) + "\n", encoding="utf-8")
     report(f"wrote cross-target summary: {summary_json.name}, {summary_md.name}", log_fp=log_fp)
+    return summary_validation_failures
 
 
 
@@ -970,6 +1057,29 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 if rc := check(result, f"visualize:{tid}"):
                     return rc
 
+            if steps.get("inspection_artifacts") and (options.dry_run or run_dir.is_dir()):
+                insp = [
+                    "uv",
+                    "run",
+                    "python",
+                    str(batch_api),
+                    "inspection-artifacts",
+                    "--run-dir",
+                    str(run_dir),
+                ]
+                result = run_cmd(
+                    insp,
+                    cwd=package_root,
+                    dry_run=options.dry_run,
+                    log_fp=log_fp,
+                    step=f"inspection_artifacts:{tid}",
+                )
+                entry["commands"].append(
+                    command_record(insp, step=f"inspection_artifacts:{tid}", result=result)
+                )
+                if rc := check(result, f"inspection_artifacts:{tid}"):
+                    return rc
+
         total_wall = time.monotonic() - batch_start
         manifest["finished_at"] = datetime.now(timezone.utc).isoformat()
         manifest["summary"] = {
@@ -979,7 +1089,16 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
         }
 
         if not options.dry_run:
-            _write_cross_target_summary(output_root, manifest, log_fp=log_fp)
+            summary_validation_failures = _write_cross_target_summary(
+                output_root,
+                manifest,
+                package_root=package_root,
+                log_fp=log_fp,
+            )
+            for label in summary_validation_failures:
+                if label not in failures:
+                    failures.append(label)
+            manifest["summary"]["failed_steps"] = failures
         report(
             f"batch done total_wall_time={total_wall:.2f}s targets={n_targets} "
             f"failed_steps={len(failures)}",
@@ -1038,4 +1157,3 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
     # run.sh callers can detect a failed sweep without parsing summary.json.
     # (--fail-fast still early-returns the nonzero code mid-loop.)
     return 1 if failures else 0
-

@@ -306,7 +306,7 @@ class _UpstreamSectionsMixin:
         program graph and semantic mappings using
         :class:`cogant.gnn.matrices.GNNMatrices`. The derivation is
         deterministic and always produces valid probability distributions
-        (rows of A sum to 1, columns of B per action slice sum to 1, D
+        (columns of A sum to 1, columns of B per action slice sum to 1, D
         sums to 1). C is emitted as an unnormalized log-preference.
 
         For factor-indexed variables (``A_m0``, ``B_f0``, ``D_f0``,
@@ -356,8 +356,8 @@ class _UpstreamSectionsMixin:
                 vec = ", ".join([f"{share}"] * card)
             lines.append(f"D_f{i}={{ ({vec}) }}")
 
-        # A_m: use derived A row when shapes are compatible, else
-        # identity-like likelihood as in the previous implementation.
+        # A_m: emit an identity-like symbolic likelihood over local outcome
+        # categories; the aggregate A matrix is column-stochastic.
         for i in range(min(n_obs, max(n_states, 1))):
             obs = list(self.state_space.observations.values())[i]
             obs_card = obs.cardinality or 2

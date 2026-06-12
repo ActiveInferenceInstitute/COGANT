@@ -388,7 +388,153 @@ def test_render_connections_matrix_png_writes_file(tmp_path):
     assert metadata["displayed_counts"]["matrices"] == 4
     assert metadata["matrix_shapes"]["A"] == [1, 2]
     assert metadata["matrix_shapes"]["B"] == [2, 2]
+    assert metadata["matrix_values_from_artifact"] is False
+    assert metadata["fallback_panels"] == ["A", "B", "C", "D"]
     assert {panel["key"] for panel in metadata["panels"]} == {"A", "B", "C", "D"}
+    assert metadata["panel_diagnostics"]["A"]["distinct_values"] > 1
+    assert metadata["state_space_counts"]["hidden_states"] == 2
+
+
+def test_render_connections_matrix_png_uses_real_matrix_payload(tmp_path):
+    out = tmp_path / "cx.png"
+    matrix_json = tmp_path / "model.gnn.json"
+    matrix_json.write_text(
+        json.dumps(
+            {
+                "matrices": {
+                    "A": [[1.0, 1.0]],
+                    "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+                    "C": [0.0],
+                    "D": [0.5, 0.5],
+                    "dimensions": {"n_states": 2, "n_obs": 1, "n_actions": 1},
+                }
+            }
+        )
+    )
+
+    assert (
+        render_connections_matrix_png(
+            _state_space_fixture(),
+            out,
+            matrix_source_json=matrix_json,
+            strict_real_matrices=True,
+        )
+        is True
+    )
+    metadata = json.loads(out.with_suffix(".figure.json").read_text())
+    assert metadata["matrix_values_from_artifact"] is True
+    assert metadata["matrix_validation_errors"] == []
+    assert metadata["fallback_panels"] == []
+    assert metadata["degraded_panels"] == []
+    assert metadata["matrix_source_artifact"] == str(matrix_json)
+    assert metadata["source_matrix_shapes"] == {
+        "A": [1, 2],
+        "B": [2, 2, 1],
+        "C": [1],
+        "D": [2],
+    }
+    assert metadata["display_matrix_shapes"]["B"] == [2, 2]
+    assert metadata["matrix_reducers"]["B"]["method"] == "max_over_actions"
+    assert metadata["matrix_dimensions"] == {
+        "hidden_states": 2,
+        "observations": 1,
+        "actions": 1,
+    }
+    assert metadata["dimension_alignment"]["hidden_states_match"] is True
+    assert metadata["source_matrix_diagnostics"]["A"]["uniform_columns"] == 2
+    assert metadata["source_matrix_diagnostics"]["B"]["identity_action_slices"] == 1
+    assert metadata["source_matrix_diagnostics"]["C"]["zero_preference_vector"] is True
+    assert metadata["panel_diagnostics"]["B"]["distinct_values"] == 2
+    assert metadata["panel_sources"] == {
+        "A": "matrix_source_artifact",
+        "B": "matrix_source_artifact",
+        "C": "matrix_source_artifact",
+        "D": "matrix_source_artifact",
+    }
+
+
+def test_render_connections_matrix_png_strict_nonstochastic_matrix_deletes_stale(tmp_path):
+    out = tmp_path / "cx.png"
+    out.write_bytes(b"stale")
+    out.with_suffix(".figure.json").write_text("{}")
+    matrix_json = tmp_path / "bad_model.gnn.json"
+    matrix_json.write_text(
+        json.dumps(
+            {
+                "matrices": {
+                    "A": [[0.5, 0.5]],
+                    "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+                    "C": [0.0],
+                    "D": [0.5, 0.5],
+                    "dimensions": {"n_states": 2, "n_obs": 1, "n_actions": 1},
+                }
+            }
+        )
+    )
+
+    assert (
+        render_connections_matrix_png(
+            _state_space_fixture(),
+            out,
+            matrix_source_json=matrix_json,
+            strict_real_matrices=True,
+        )
+        is False
+    )
+    assert not out.exists()
+    assert not out.with_suffix(".figure.json").exists()
+
+
+def test_render_connections_matrix_png_strict_missing_matrix_deletes_stale(tmp_path):
+    out = tmp_path / "cx.png"
+    out.write_bytes(b"stale")
+    out.with_suffix(".figure.json").write_text("{}")
+    matrix_json = tmp_path / "partial_model.gnn.json"
+    matrix_json.write_text(json.dumps({"matrices": {"A": [[1.0, 1.0]]}}))
+
+    assert (
+        render_connections_matrix_png(
+            _state_space_fixture(),
+            out,
+            matrix_source_json=matrix_json,
+            strict_real_matrices=True,
+        )
+        is False
+    )
+    assert not out.exists()
+    assert not out.with_suffix(".figure.json").exists()
+
+
+def test_render_connections_matrix_png_strict_dimension_mismatch_deletes_stale(tmp_path):
+    out = tmp_path / "cx.png"
+    out.write_bytes(b"stale")
+    out.with_suffix(".figure.json").write_text("{}")
+    matrix_json = tmp_path / "mismatched_model.gnn.json"
+    matrix_json.write_text(
+        json.dumps(
+            {
+                "matrices": {
+                    "A": [[1.0]],
+                    "B": [[[1.0]]],
+                    "C": [0.0],
+                    "D": [1.0],
+                    "dimensions": {"n_states": 1, "n_obs": 1, "n_actions": 1},
+                }
+            }
+        )
+    )
+
+    assert (
+        render_connections_matrix_png(
+            _state_space_fixture(),
+            out,
+            matrix_source_json=matrix_json,
+            strict_real_matrices=True,
+        )
+        is False
+    )
+    assert not out.exists()
+    assert not out.with_suffix(".figure.json").exists()
 
 
 def test_render_connections_matrix_png_none_returns_false(tmp_path):

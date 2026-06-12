@@ -72,6 +72,29 @@ jobs:
         # ``cogant.viz.png_export``). Run from the inner env so deps import.
         run: cd .. && uv run --directory cogant python ../tools/audit_manuscript_module_refs.py
 
+      - name: Manuscript math-adjacency gate
+        # RedTeam durable fix — Pandoc does not parse a closing ``$`` that is
+        # immediately followed by a digit as math, so ``$-${{COUNT}}`` leaks as
+        # literal ``$-$10`` in HTML and PDF. Resolves variables first, then
+        # flags any inline-math span that closes before a digit. Use a Unicode
+        # minus ``−`` (or plain ``-``) before numbers, never ``$-$``.
+        run: cd .. && uv run --directory cogant python ../tools/audit_manuscript_math_adjacency.py
+
+      - name: Manuscript markdown-link gate
+        # Rendered manuscript body sections must use intra-manuscript references,
+        # figures, tables, equations, formalisms, or bibliography citations rather
+        # than reader-facing links to source Markdown files.
+        run: cd .. && uv run --directory cogant python ../tools/audit_manuscript_markdown_links.py
+
+      - name: Robustness-table claim gate
+        # RedTeam science-gap durable fix (2026-06-09) — the manuscript
+        # robustness table ({#tbl:robustness-transforms}) hand-wrote per-transform
+        # similarity/verdict cells bound to nothing, violating the claim policy
+        # (no manuscript metric unless injected from a generator or audited). This
+        # gate binds every row to cogant/evaluation/robustness/robustness_results.json
+        # (the harness artifact) and fails on any drift.
+        run: cd .. && uv run --directory cogant python ../tools/audit_robustness_table.py
+
       - name: Coverage-table drift gate
         # RedTeam F10 durable fix — strict comparison of every per-module
         # row in @tbl:coverage-stmt-modules against either .coverage SQLite
@@ -79,6 +102,17 @@ jobs:
         # fallback. Catches hand-edit drift the prior gate could not enforce
         # on a clean checkout.
         run: cd .. && uv run --directory cogant python ../tools/check_coverage_table.py --strict
+
+      - name: Synthetic-surface classification gate
+        # Every retained fallback/mock/placeholder/stub occurrence in tracked
+        # project-owned files must be classified as degraded output, template
+        # variable, type stub, negative control, or UI empty state.
+        run: cd .. && uv run --directory cogant python ../tools/audit_synthetic_surfaces.py --strict
+
+      - name: Manuscript figure-renderer provenance gate
+        # Registered manuscript figures must point to importable renderers and
+        # locked caption/provenance fields must stay present in source.
+        run: cd .. && uv run --directory cogant python ../tools/audit_figure_renderers.py
 
   typecheck:
     name: Typecheck (mypy)

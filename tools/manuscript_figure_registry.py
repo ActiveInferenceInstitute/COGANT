@@ -37,12 +37,14 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "compilation, GNN matrices, Markov blanket partition, and "
             "roundtrip artifact status."
         ),
-        source_artifact="cogant/output/calculator/data/program_graph.json",
+        source_artifact="cogant/output/calculator/program_graph.json",
         renderer="cogant.viz.inspection_dashboard.render_graphical_abstract_png",
         method_note="End-to-end visual synopsis composed from run artifacts.",
         reading_guide="Read left-to-right as code graph, semantic mapping, matrices, boundary, and roundtrip evidence.",
         limitations="Overview only; detailed panels provide the inspectable counts and deltas.",
         alt_text="Graphical abstract summarizing COGANT's code to graph to GNN to code evidence chain.",
+        min_width_px=1400,
+        min_height_px=600,
     ),
     ManuscriptFigure(
         key="interpretability_overview",
@@ -54,7 +56,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "summarizing the code graph, semantic role mappings, GNN state "
             "space, and Markov blanket partition on one page."
         ),
-        source_artifact="cogant/output/calculator/data/program_graph.json",
+        source_artifact="cogant/output/calculator/program_graph.json",
         renderer="cogant.viz.png.render_interpretability_overview_png",
         method_note=(
             "Multi-panel overview generated from program graph, rule trace, state space, "
@@ -63,6 +65,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         reading_guide="Use it as the map of the inspection workbench before reading individual diagnostic figures.",
         limitations="Small panels intentionally trade detail for continuity across conversion boundaries.",
         alt_text="Interpretability overview tying graph, mappings, state space, and Markov blanket panels together.",
+        min_width_px=1800,
+        min_height_px=900,
     ),
     ManuscriptFigure(
         key="forward_program_graph",
@@ -74,7 +78,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "conversion; nodes are the package-emitted program entities used "
             "by downstream semantic mapping."
         ),
-        source_artifact="cogant/output/calculator/data/program_graph.json",
+        source_artifact="cogant/output/calculator/program_graph.json",
         renderer="cogant.viz.png.render_program_graph_png",
         method_note="Deterministic containment-first graph drawing from the same JSON consumed by semantic mapping.",
         reading_guide=(
@@ -83,6 +87,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         ),
         limitations="Static extraction view; it does not prove complete runtime behavior coverage.",
         alt_text="Program graph for calculator with node kinds, edge kinds, counts, and semantic-role outlines.",
+        min_width_px=1800,
+        min_height_px=1200,
     ),
     ManuscriptFigure(
         key="forward_state_space_factor",
@@ -94,40 +100,48 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "showing the one-way conversion from semantic mappings into "
             "hidden state, observation, and action factors."
         ),
-        source_artifact="cogant/output/calculator/data/state_space.json",
+        source_artifact="cogant/output/calculator/state_space.json",
         renderer="cogant.viz.png.render_state_space_factor_png",
         method_note="Factor graph view of hidden states, observations, actions, and transitions.",
         reading_guide=(
-            "Read purple as hidden state, green as observation, orange as action, and "
+            "Read blue as hidden state, teal as observation, orange as action, and "
             "connecting edges as matrix-generating relations."
         ),
         limitations="Displays compiled factors, not an empirical validation of behavioral adequacy.",
         alt_text="State-space factor graph showing hidden states, observations, actions, and transition links.",
+        min_width_px=1800,
+        min_height_px=1200,
     ),
     ManuscriptFigure(
         key="forward_abcd_matrices",
-        source="cogant/output/calculator/connections_matrix.png",
+        source="cogant/output/flask_app/connections_matrix.png",
         destination="cogant_forward_abcd_matrices.png",
         role="forward-state-space-to-matrices",
         caption=(
-            "A/B/C/D connection-matrix panel generated from the calculator "
-            "state-space model and exported matrix artifact when available."
+            "A/B/C/D connection-matrix panel rendered from the Flask application "
+            "fixture's exported model.gnn.json matrix arrays."
         ),
-        source_artifact="cogant/output/calculator/data/state_space.json",
+        source_artifact="cogant/output/flask_app/gnn_package/model.gnn.json",
         renderer="cogant.viz.png.render_connections_matrix_png",
         method_note=(
-            "Heatmap rendering of likelihood, transition, preference, and prior arrays; "
-            "falls back to deterministic shape proxies if matrix JSON is unavailable."
+            "Heatmap rendering of exported likelihood, transition, preference, and "
+            "prior arrays. A, C, and D are direct matrix/vector panels; B is a "
+            "recorded action-axis summary of the exported transition tensor."
         ),
         reading_guide=(
-            "Inspect shapes, sparsity, and identity/default bands before interpreting "
-            "downstream inference traces."
+            "Inspect shapes, sparsity, identity/default bands, and the B reducer "
+            "metadata before interpreting downstream inference traces."
         ),
         limitations=(
-            "Panels are inspection views of exported values or deterministic shape proxies, "
-            "not learned probability estimates."
+            "Panels are inspection views of exported structural values, not learned "
+            "probability estimates or semantic-adequacy evidence."
         ),
-        alt_text="A/B/C/D matrix heatmap panel generated from the calculator state-space model.",
+        alt_text=(
+            "A/B/C/D matrix heatmap panel generated from the Flask application "
+            "state-space model."
+        ),
+        min_width_px=1800,
+        min_height_px=1300,
     ),
     ManuscriptFigure(
         key="markov_blanket",
@@ -156,6 +170,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Markov blanket partition with internal, sensory, active, and external "
             "role groups for the calculator fixture."
         ),
+        min_width_px=1600,
+        min_height_px=1000,
     ),
     ManuscriptFigure(
         key="gnn_markdown_render",
@@ -178,6 +194,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "evidence, not a validation result."
         ),
         alt_text="Rendered page from the calculator model.gnn.md bundle.",
+        min_width_px=1600,
+        min_height_px=1200,
     ),
     ManuscriptFigure(
         key="upstream_generative_model",
@@ -200,6 +218,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         ),
         limitations="It confirms representation compatibility, not model correctness.",
         alt_text="Upstream GNN visualization of the generated POMDP model structure.",
+        min_width_px=1800,
+        min_height_px=2400,
     ),
     ManuscriptFigure(
         key="roundtrip_batch_gantt",
@@ -252,7 +272,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         ),
         limitations=(
             "Aggregate counts describe emitted artifacts for this run; they do not "
-            "prove semantic correctness, role recall, or benchmark performance."
+            "prove semantic correctness, role-ground-truth coverage, or benchmark performance."
         ),
         alt_text=(
             "Four-panel batch summary with semantic role totals, validation score "
@@ -291,6 +311,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         ),
         limitations="Reverse synthesis is intentionally skeletal and can preserve roles while drifting structurally.",
         alt_text="Roundtrip visual diff showing graph, GNN, matrix, invariant, and generated-code status.",
+        min_width_px=1400,
+        min_height_px=650,
     ),
     ManuscriptFigure(
         key="rule_evidence_trace",
@@ -301,7 +323,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Rule evidence trace figure generated from rule_evidence_trace.json, "
             "showing which translation rules contributed semantic mappings."
         ),
-        source_artifact="cogant/output/calculator/data/rule_evidence_trace.json",
+        source_artifact="cogant/output/calculator/rule_evidence_trace.json",
         renderer="cogant.viz.inspection_dashboard rule trace renderer",
         method_note=(
             "Aggregate per-rule contribution bars with mapping, conflict, and "
@@ -312,8 +334,10 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Rows are proposed semantic mappings; inspect rule id and confidence "
             "components before trusting a role assignment."
         ),
-        limitations="Reviewed precision proxies do not imply recall without a labelled false-negative corpus.",
+        limitations="Reviewed precision proxies do not quantify missed mappings without a labelled false-negative corpus.",
         alt_text="Rule evidence trace table linking semantic mappings to rules, evidence snippets, and review status.",
+        min_width_px=1400,
+        min_height_px=650,
     ),
     ManuscriptFigure(
         key="confidence_calibration",
@@ -324,7 +348,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Evidence-coverage and review-readiness panel generated from "
             "rule_evidence_trace.json."
         ),
-        source_artifact="cogant/output/calculator/data/rule_evidence_trace.json",
+        source_artifact="cogant/output/calculator/rule_evidence_trace.json",
         renderer="cogant.viz.inspection_dashboard evidence coverage renderer",
         method_note=(
             "Mapping confidence tiers, rule contribution counts, conflict events, "
@@ -336,7 +360,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         ),
         limitations=(
             "When reviewed rows are zero, this is review-priority evidence only; it "
-            "does not estimate calibration, recall, or semantic truth."
+            "does not estimate calibration, false-negative coverage, or semantic truth."
         ),
         alt_text=(
             "Evidence coverage panel with proposed mappings, rule contributions, "
@@ -372,6 +396,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Inference trace with belief trajectory, selected actions, preference "
             "satisfaction, and free-energy-like curve."
         ),
+        min_width_px=1400,
+        min_height_px=650,
     ),
     ManuscriptFigure(
         key="rule_family_ablation",
@@ -405,6 +431,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Two-panel ablation figure: grouped bars of net mapping delta per rule "
             "family per fixture, and fixpoint convergence lines versus iteration cap."
         ),
+        min_width_px=1800,
+        min_height_px=800,
     ),
     ManuscriptFigure(
         key="eval_graph_sizes",
@@ -433,6 +461,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Horizontal grouped bars comparing node and edge counts across the six "
             "packaged fixtures."
         ),
+        min_width_px=1400,
+        min_height_px=750,
         evidence_requirements=("fixture_count", "total_nodes", "total_edges"),
     ),
     ManuscriptFigure(
@@ -462,6 +492,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Stacked horizontal bars showing module, class, method, and function "
             "nodes for each packaged fixture."
         ),
+        min_width_px=1400,
+        min_height_px=750,
         evidence_requirements=("fixture_count", "node_kind_count", "total_nodes"),
     ),
     ManuscriptFigure(
@@ -481,7 +513,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         ),
         reading_guide=(
             "Compare observation/action balance across fixtures before interpreting "
-            "matrix fallback rates."
+            "matrix default-value diagnostics."
         ),
         limitations=(
             "The figure reports compiled counts only; it does not evaluate whether "
@@ -491,6 +523,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Grouped horizontal bars comparing state variables, observations, "
             "actions, and transitions across fixtures."
         ),
+        min_width_px=1400,
+        min_height_px=800,
         evidence_requirements=(
             "fixture_count",
             "total_state_variables",
@@ -525,6 +559,8 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Horizontal bars showing public API pipeline wall-clock seconds for "
             "each packaged fixture."
         ),
+        min_width_px=1400,
+        min_height_px=750,
         evidence_requirements=("fixture_count", "total_elapsed_s"),
     ),
 )

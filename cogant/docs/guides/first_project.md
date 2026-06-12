@@ -160,9 +160,11 @@ What each field means:
 
 - **`roundtrip_status`** — one of `STRUCTURALLY_ISOMORPHIC`,
   `ROLE_PRESERVED`, `DRIFT`, or `FAILED`, computed from the invariant ledger.
-- **`role_preservation_score`** — Fraction of Active Inference roles preserved
-  across the cycle. Range `[0.0, 1.0]`; `1.0` is a perfect role-multiset
-  match. (NOTE: this is the project-wide convention — see
+- **`role_preservation_score`** — Symmetric Active Inference role-multiset
+  overlap across the cycle: per role, `min(original, synthesized) /
+  max(original, synthesized)`, averaged over the union of roles. Range
+  `[0.0, 1.0]`; `1.0` is a perfect role-multiset match. (NOTE: this is
+  the project-wide convention — see
   [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md#the-roundtrip-measure).
   Earlier drafts used a complementary "epsilon = drift" formulation
   where `0.0` was best — current reports use `role_preservation_score`.)

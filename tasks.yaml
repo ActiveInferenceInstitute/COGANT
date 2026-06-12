@@ -1,0 +1,117 @@
+# tasks.yaml — task + Gantt source of truth for this project.
+# Managed by the projects/taskboard server (live read-write) and seed_tasks.py.
+# status: todo | in_progress | blocked | done. dates: YYYY-MM-DD. progress: 0-100.
+project:
+  name: cogant
+  title: COGANT — codebase-to-GNN translation
+  status: active
+  color: '#55A868'
+  lead: DAF
+tasks:
+- id: cog-1
+  title: Single-target inspection dashboard from run dir
+  status: done
+  start: '2026-05-18'
+  end: '2026-05-24'
+  progress: 100
+  milestone: false
+  deps: []
+  tags:
+  - viz
+  notes: ''
+- id: cog-2
+  title: Roundtrip diagnostics + graph/GNN visual diff panels
+  status: done
+  start: '2026-05-24'
+  end: '2026-05-30'
+  progress: 100
+  milestone: false
+  deps:
+  - cog-1
+  tags:
+  - viz
+  notes: ''
+- id: cog-3
+  title: Benchmark-scale visual completeness summaries
+  status: done
+  start: '2026-05-30'
+  end: '2026-06-02'
+  progress: 100
+  milestone: false
+  deps:
+  - cog-2
+  tags:
+  - benchmark
+  notes: ''
+- id: cog-4
+  title: Refresh roundtrip ledger + metrics YAML + claim ledger together
+  status: done
+  start: '2026-06-06'
+  end: '2026-06-16'
+  progress: 100
+  milestone: false
+  deps: []
+  tags:
+  - evidence
+  notes: 'Closed by the 2026-06-12 evidence-gated pass. Full package suite,
+    ruff, mypy, run_all.py --fail-fast (24 targets, 0 failed steps), strict
+    manuscript generation, synthetic-surface audit, markdown-link audit,
+    crossref/citation/number/math/robustness audits, template Markdown
+    validators, and PDF/HTML render all passed on the current artifacts.'
+- id: cog-5
+  title: Manuscript pipeline refresh before release conclusions
+  status: done
+  start: '2026-06-16'
+  end: '2026-06-26'
+  progress: 100
+  milestone: false
+  deps:
+  - cog-4
+  tags:
+  - manuscript
+  notes: 'Closed by the 2026-06-12 strict regeneration and template render.
+    Public Figure 7 sidecar points to real flask_app matrices with digest,
+    source shapes, B reducer metadata, aligned state-space counts, and empty
+    degraded-output/proxy panel lists. Generated body output has no unresolved
+    placeholders, markdown-file links, or synthetic/proxy matrix claims.'
+- id: cog-6
+  title: Remaining robustness transforms + CI regeneration gate
+  status: in_progress
+  start: '2026-06-16'
+  end: '2026-06-28'
+  progress: 65
+  milestone: false
+  deps:
+  - cog-4
+  tags:
+  - eval
+  notes: 'Seven transforms plus a negative control are implemented and audited
+    into the manuscript robustness table. Remaining scoped work: equivalent
+    loop rewrite, inlining/outlining variants, parser/frontend variation, held-out
+    robustness corpus, and CI auto-regeneration of robustness_results.json.'
+- id: cog-7
+  title: Promote held-out pilot into metrics/claim gates
+  status: in_progress
+  start: '2026-06-18'
+  end: '2026-06-28'
+  progress: 25
+  milestone: false
+  deps:
+  - cog-4
+  tags:
+  - eval
+  notes: 'Held-out pilot data exists in docs/evaluation/heldout_pilot. Remaining
+    scoped work: promote the pilot into the metrics/claim pipeline with freshness
+    checks, add at least one more small permissively licensed fixture, and keep
+    check_metrics_fresh guarding against non-native score relabelling.'
+- id: cog-m1
+  title: COGANT release
+  status: todo
+  start: '2026-07-01'
+  end: '2026-07-01'
+  progress: 0
+  milestone: true
+  deps:
+  - cog-5
+  tags: []
+  notes: ''

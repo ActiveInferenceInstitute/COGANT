@@ -277,6 +277,7 @@ def _roundtrip_result_payload(
         "matrix_preserved": result.matrix_preserved,
         "gnn_sections_preserved": result.gnn_sections_preserved,
         "generated_code_ok": bool(result.generated_code_ok and generated_code_ok),
+        "vacuous_roundtrip": result.vacuous_roundtrip,
         "matrix_score": result.matrix_score,
         "structural_score": result.structural_score,
         "role_confusion": role_confusion,
@@ -294,6 +295,7 @@ def _roundtrip_result_payload(
         "synthesized_graph_summary": result.synthesized_graph_summary,
         "shape_match": result.shape_match,
         "package_path": str(result.package_path) if result.package_path else None,
+        "warnings": result.warnings,
         "errors": result.errors,
         "threshold": threshold,
     }
