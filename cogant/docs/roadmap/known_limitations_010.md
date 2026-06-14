@@ -58,7 +58,7 @@ Flask scripts, data science notebooks) has lower rule confidence due to missing 
 
 ### 5. Dulwich Edge-Density Regression Risk
 
-Historical Dulwich-derived graphs at ~1.80 edges/node hit a performance cliff
+Recorded Dulwich-derived graphs at ~1.80 edges/node hit a performance cliff
 (~380s, 8.5 GB RAM). Wave-15 fixes reduced the documented run to ~65s and a
 206 MB generated package, so this is now a regression watch item rather than a
 current v1.0 blocker.
@@ -114,9 +114,9 @@ the generated file. Confirm live with `uv run pytest tests/ -q --cov=py/cogant` 
 | Limitation | Fixed in | How |
 |-----------|---------|-----|
 | Single-language (Python only) | v0.4.0 | JS/TS tree-sitter parser added |
-| No round-trip | v0.2.0 | `cogant.reverse` + `cogant roundtrip` added |
-| Roundtrip role preservation below 1.0 | Native v0.6 ledger | Resolved for the current in-sample ledger: metrics record 24/24 role-preserved targets and 0 drift targets; strict structural isomorphism is tracked separately at 0/24. |
-| No incremental analysis | v0.5.0 | `--incremental <git-ref>` + `incremental_since` |
+| No round-trip | current | `cogant.reverse` + `cogant roundtrip` added |
+| Roundtrip role preservation below 1.0 | Current native ledger | Resolved for the current in-sample ledger: metrics record 25/25 role-preserved targets and 0 drift targets; strict structural isomorphism is tracked separately at 1/25, confined to `roundtrip_strict_minimal`. |
+| No incremental analysis | current | `--incremental <git-ref>` + `incremental_since` |
 | No static analysis | April 2026 hardening | `cogant.static` module: complexity, coupling, dead code, Halstead |
 | No visualization beyond HTML | April 2026 hardening | `cogant.viz`: PDF, PNG, Mermaid, SVG, 8-page report |
 | Basic export only (JSON, GraphML) | April 2026 hardening | 9 formats: JSON, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT, JSONLINES |

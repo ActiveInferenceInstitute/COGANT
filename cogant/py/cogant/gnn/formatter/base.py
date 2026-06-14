@@ -38,16 +38,17 @@ class GNNMarkdownFormatter(
     """
     Formats complete GNN models to canonical markdown with all sections.
 
-    The emitted markdown is simultaneously a valid upstream GNN v1.1 file
+    The emitted markdown is simultaneously a valid upstream GNN v2.0.0-engine file
     (containing ``## GNNSection``, ``## GNNVersionAndFlags``,
     ``## ModelName``, ``## StateSpaceBlock``, ``## Connections``,
-    ``## InitialParameterization``, ``## Time``, and
-    ``## ActInfOntologyAnnotation``) and a COGANT-extended bundle with
+    ``## InitialParameterization``, ``## Equations``, ``## Time``,
+    ``## ActInfOntologyAnnotation``, ``## ModelParameters``, ``## Footer``,
+    and ``## Signature``) and a COGANT-extended bundle with
     richer metadata, provenance, Markov blanket, and validation
     sections appended below the upstream header.
     """
 
-    # Canonical section order. The upstream GNN v1.1 header comes FIRST
+    # Canonical section order. The upstream GNN v2.0.0 header comes FIRST
     # so the file parses cleanly in the upstream type-checker
     # (``src/5_type_checker.py``). COGANT's extended sections follow and
     # are treated as ignored extras by upstream tooling.

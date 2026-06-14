@@ -6,7 +6,6 @@ import importlib.util
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 AUDIT = ROOT / "tools" / "audit_docs_constants.py"
 
@@ -30,15 +29,15 @@ def test_roundtrip_claim_audit_rejects_unqualified_all_target_claim(tmp_path: Pa
     audit.audit_roundtrip_previous_claims({doc}, findings)
 
     assert findings
-    assert "unqualified-roundtrip-previous-claim" in findings[0]
+    assert "unqualified-roundtrip-current-claim" in findings[0]
 
 
-def test_roundtrip_claim_audit_accepts_native_ledger_claim(tmp_path: Path) -> None:
+def test_roundtrip_claim_audit_accepts_current_ledger_claim(tmp_path: Path) -> None:
     audit = _load_audit_module()
     doc = tmp_path / "claim.md"
     doc.write_text(
-        "Native v0.6 ledger: 24/24 ROLE_PRESERVED. "
-        "Current v0.6 metrics classification is documented in METRICS.yaml.\n"
+        "Current ledger: 24/24 ROLE_PRESERVED. "
+        "Current metrics classification is documented in METRICS.yaml.\n"
     )
 
     findings: list[str] = []
@@ -47,21 +46,21 @@ def test_roundtrip_claim_audit_accepts_native_ledger_claim(tmp_path: Path) -> No
     assert findings == []
 
 
-def test_roundtrip_current_count_audit_rejects_stale_native_ledger_count(
+def test_roundtrip_current_count_audit_rejects_out_of_sync_current_ledger_count(
     tmp_path: Path,
 ) -> None:
     audit = _load_audit_module()
     doc = tmp_path / "claim.md"
-    doc.write_text("Native v0.6 ledger: 22/24 ROLE_PRESERVED and 2 DRIFT.\n")
+    doc.write_text("Current ledger: 22/24 ROLE_PRESERVED and 2 DRIFT.\n")
 
     findings: list[str] = []
     audit.audit_roundtrip_current_counts({doc}, findings)
 
     assert len(findings) == 2
-    assert all("stale-roundtrip-current-count" in finding for finding in findings)
+    assert all("out-of-sync-roundtrip-current-count" in finding for finding in findings)
 
 
-def test_roundtrip_mean_score_audit_rejects_stale_native_ledger_score(
+def test_roundtrip_mean_score_audit_rejects_out_of_sync_current_ledger_score(
     tmp_path: Path,
 ) -> None:
     audit = _load_audit_module()
@@ -72,13 +71,13 @@ def test_roundtrip_mean_score_audit_rejects_stale_native_ledger_score(
     audit.audit_roundtrip_mean_score({doc}, findings)
 
     assert len(findings) == 1
-    assert "stale-roundtrip-mean-score" in findings[0]
+    assert "out-of-sync-roundtrip-mean-score" in findings[0]
 
 
-def test_current_doc_audit_rejects_obsolete_project_paths(tmp_path: Path) -> None:
+def test_current_doc_audit_rejects_unsupported_project_paths(tmp_path: Path) -> None:
     audit = _load_audit_module()
     doc = tmp_path / "README.md"
     doc.write_text("Run from projects_in_progress/cogant.\n")
-    pattern = next(p for p in audit.BANNED_PATTERNS if p.name == "obsolete-project-path")
+    pattern = next(p for p in audit.BANNED_PATTERNS if p.name == "unsupported-project-path")
 
     assert pattern.regex.search(doc.read_text())

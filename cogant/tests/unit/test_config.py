@@ -6,7 +6,7 @@ Covers:
   StatespaceConfig, GNNConfig, ReverseConfig) — defaults and frozenness.
 - Composite ``PipelineConfig`` — defaults, nesting, override semantics,
   dict round-trip, JSON round-trip, and optional YAML round-trip.
-- Legacy-superset guarantee: the exact constructor calls used by the
+- Compatibility-superset guarantee: the exact constructor calls used by the
   old ``cogant.api.pipeline.PipelineConfig`` dataclass still work.
 
 No mocks; everything operates on real pydantic models and real temp
@@ -322,12 +322,12 @@ def test_from_yaml_rejects_non_mapping(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Legacy-superset: the old dataclass constructor kwargs still work
+# Compatibility-superset: the old dataclass constructor kwargs still work
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
-def test_legacy_kwargs_still_construct():
+def test_compatibility_kwargs_still_construct():
     """The exact signatures used by the old api.pipeline.PipelineConfig."""
     cfg = PipelineConfig(
         stages=["ingest", "static", "graph"],
@@ -353,7 +353,7 @@ def test_legacy_kwargs_still_construct():
 
 
 @pytest.mark.unit
-def test_legacy_default_skip_dynamic_shape():
+def test_compatibility_default_skip_dynamic_shape():
     """Default stages/skip_dynamic must match the task-spec signature.
 
     Task spec: ``PipelineConfig(stages=[...], skip_dynamic=True)`` — so

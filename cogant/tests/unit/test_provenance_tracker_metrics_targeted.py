@@ -7,8 +7,8 @@ Covers:
   get_records_by_type, get_records_by_evidence_type, get_records_by_method,
   get_coverage_statistics, query_records, merge_tracker, clear,
   get_record_count, get_target_count)
-- metrics.py: load, version, test_count, coverage, mypy_errors, isomorphic_count,
-  total_targets, mean_epsilon, epsilon_for, bibliography_entries
+- metrics.py: load, version, test_count, coverage, mypy_errors, strict_isomorphism_count,
+  total_targets, mean_role_preservation_score, role_preservation_score_for, bibliography_entries
 """
 
 import pytest
@@ -207,10 +207,10 @@ class TestMetricsModule:
         errs = metrics.mypy_errors()
         assert isinstance(errs, int)
 
-    def test_isomorphic_count_returns_int(self):
+    def test_strict_isomorphism_count_returns_int(self):
         from cogant import metrics
 
-        count = metrics.isomorphic_count()
+        count = metrics.strict_isomorphism_count()
         assert isinstance(count, int)
 
     def test_total_targets_returns_int(self):
@@ -219,17 +219,17 @@ class TestMetricsModule:
         total = metrics.total_targets()
         assert isinstance(total, int)
 
-    def test_mean_epsilon_returns_float(self):
+    def test_mean_role_preservation_score_returns_float(self):
         from cogant import metrics
 
-        eps = metrics.mean_epsilon()
+        eps = metrics.mean_role_preservation_score()
         assert isinstance(eps, float)
 
-    def test_epsilon_for_known(self):
+    def test_role_preservation_score_for_known(self):
         from cogant import metrics
 
-        # epsilon_for returns float or None for unknown
-        result = metrics.epsilon_for("some_target")
+        # role_preservation_score_for returns float or None for unknown
+        result = metrics.role_preservation_score_for("some_target")
         assert result is None or isinstance(result, float)
 
     def test_bibliography_entries_returns_int(self):

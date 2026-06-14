@@ -455,7 +455,6 @@ class NetworkView:
                 return ""
 
             fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
-            plt.close(fig)
 
             logger.info(f"Saved figure to {output_path}")
             return output_path
@@ -463,6 +462,9 @@ class NetworkView:
         except Exception as e:
             logger.error(f"Error saving PNG: {e}")
             return ""
+        finally:
+            if fig is not None:
+                plt.close(fig)
 
     def to_pdf(self, fig: Any, output_path: str) -> str:
         """
@@ -487,7 +489,6 @@ class NetworkView:
                 return ""
 
             fig.savefig(output_path, format="pdf", bbox_inches="tight")
-            plt.close(fig)
 
             logger.info(f"Saved figure to {output_path}")
             return output_path
@@ -495,3 +496,6 @@ class NetworkView:
         except Exception as e:
             logger.error(f"Error saving PDF: {e}")
             return ""
+        finally:
+            if fig is not None:
+                plt.close(fig)

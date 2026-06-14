@@ -168,8 +168,8 @@ class TestReverseCLIRenderHelpers:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.95,
+            structurally_isomorphic=True,
+            role_preservation_score=0.95,
             original_roles={"HIDDEN_STATE": 2, "OBSERVATION": 1},
             synthesized_roles={"HIDDEN_STATE": 2, "OBSERVATION": 1},
             shape_match={"A": True, "B": True},
@@ -183,8 +183,8 @@ class TestReverseCLIRenderHelpers:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.55,
+            structurally_isomorphic=False,
+            role_preservation_score=0.55,
             original_roles={"HIDDEN_STATE": 3},
             synthesized_roles={"HIDDEN_STATE": 2},
             shape_match={"A": False, "B": True},
@@ -198,8 +198,8 @@ class TestReverseCLIRenderHelpers:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=1.0,
+            structurally_isomorphic=True,
+            role_preservation_score=1.0,
             original_roles={},
             synthesized_roles={},
             shape_match={},

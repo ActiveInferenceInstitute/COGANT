@@ -31,16 +31,16 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult()
-        assert result.is_isomorphic is False
-        assert result.role_match_score == 0.0
+        assert result.structurally_isomorphic is False
+        assert result.role_preservation_score == 0.0
         assert isinstance(result.errors, list)
 
     def test_fully_populated(self):
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.95,
+            structurally_isomorphic=True,
+            role_preservation_score=0.95,
             matrix_score=0.8,
             structural_score=0.9,
             original_roles={"HIDDEN_STATE": 3},
@@ -48,8 +48,8 @@ class TestRoundtripResult:
             shape_match={"A": True, "B": False},
             errors=[],
         )
-        assert result.is_isomorphic is True
-        assert result.role_match_score == 0.95
+        assert result.structurally_isomorphic is True
+        assert result.role_preservation_score == 0.95
         assert result.matrix_score == 0.8
         assert result.structural_score == 0.9
         assert result.original_roles["HIDDEN_STATE"] == 3
@@ -59,19 +59,19 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.3,
+            structurally_isomorphic=False,
+            role_preservation_score=0.3,
             errors=["Role mismatch", "Shape error"],
         )
         assert len(result.errors) == 2
-        assert result.is_isomorphic is False
+        assert result.structurally_isomorphic is False
 
     def test_with_package_path(self):
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=1.0,
+            structurally_isomorphic=True,
+            role_preservation_score=1.0,
             package_path=Path("/tmp/synthesized"),
         )
         assert result.package_path == Path("/tmp/synthesized")
@@ -181,11 +181,11 @@ class TestIdempotencyHelpers:
         score = compare_matrices(a, b)
         assert isinstance(score, float)
 
-    def test_role_match_threshold_exists(self):
-        from cogant.reverse.idempotency import ROLE_MATCH_THRESHOLD
+    def test_role_preservation_threshold_exists(self):
+        from cogant.reverse.idempotency import ROLE_PRESERVATION_THRESHOLD
 
-        assert isinstance(ROLE_MATCH_THRESHOLD, float)
-        assert 0.0 <= ROLE_MATCH_THRESHOLD <= 1.0
+        assert isinstance(ROLE_PRESERVATION_THRESHOLD, float)
+        assert 0.0 <= ROLE_PRESERVATION_THRESHOLD <= 1.0
 
 
 # ---------------------------------------------------------------------------
@@ -449,29 +449,28 @@ class TestSchemaDetector:
         result = detect_version("## ModelName\n**MyModel**\n")
         assert isinstance(result, str)
 
-    def test_detect_version_with_version_marker(self):
+    def test_detect_version_rejects_missing_current_contract(self):
         from cogant.schema.detector import detect_version
 
-        result = detect_version("## GNNModelSpec v1.0\n## ModelName\n**M**\n")
-        assert isinstance(result, str)
+        result = detect_version("## GNNModelSpec\n## ModelName\n**M**\n")
+        assert result == "unsupported"
 
-    def test_detect_version_with_v11_content(self):
+    def test_detect_version_rejects_marker_without_required_header(self):
         from cogant.schema.detector import detect_version
 
-        result = detect_version("## GNNModelSpec v1.1\nsome content\n")
-        assert isinstance(result, str)
+        result = detect_version("## GNNModelSpec v2.0.0\nsome content\n")
+        assert result == "unsupported"
 
-    def test_detect_version_returns_semver_like(self):
+    def test_detect_version_returns_unsupported_for_plain_text(self):
         from cogant.schema.detector import detect_version
 
         result = detect_version("x = 1")
-        # Should return something like "1.0" or "1.1"
-        assert "." in result or result.isdigit()
+        assert result == "unsupported"
 
-    def test_schema_version_enum(self):
-        from cogant.schema.versions import SchemaVersion
+    def test_current_gnn_version_constant(self):
+        from cogant.schema.versions import CURRENT_GNN_VERSION
 
-        assert hasattr(SchemaVersion, "V1_0") or len(list(SchemaVersion)) >= 1
+        assert CURRENT_GNN_VERSION == "2.0.0"
 
 
 # ---------------------------------------------------------------------------

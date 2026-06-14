@@ -7,8 +7,8 @@ Quick reference for every intermediate representation (IR) and export schema use
 ### Versioning
 
 - Each IR family has an independent `schema_version` (`MAJOR.MINOR.PATCH`).
-- **Minor** bumps are backward-compatible additions.
-- **Major** bumps break field shape and require a migration rule.
+- Export readers validate artifacts against the current contract before use.
+- Unsupported artifact headers fail validation instead of being silently rewritten.
 - Every exported artifact carries the COGANT version and a config hash for reproducibility.
 
 ### Schema families
@@ -308,10 +308,10 @@ The 19 canonical Markdown sections, in order:
 
 ### Stability guarantees
 
-- **Core schemas** (`Node`, `Edge`, `ProgramGraph`, `SemanticMapping`): stable since v0.1.0.
-- **State-space schema**: stable since v0.1.0.
+- **Core schemas** (`Node`, `Edge`, `ProgramGraph`, `SemanticMapping`): stable since current.
+- **State-space schema**: stable since current.
 - **GNN export contract (19 sections)**: locked in `gnn.validator.GNNValidator.CANONICAL_SECTIONS`. Do not add or remove sections without a major-version bump.
-- **Provenance schema**: stable since v0.1.0. New `EvidenceKind` values may be added in minor versions but existing values must never be renamed.
+- **Provenance schema**: stable since current. New `EvidenceKind` values may be added in minor versions but existing values must never be renamed.
 
 ### Cross-references
 

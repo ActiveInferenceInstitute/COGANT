@@ -29,12 +29,9 @@ __all__ = [
     "mypy_errors",
     "role_preserved_count",
     "strict_isomorphism_count",
-    "isomorphic_count",
     "total_targets",
     "mean_role_preservation_score",
-    "mean_epsilon",
     "role_preservation_score_for",
-    "epsilon_for",
     "bibliography_entries",
 ]
 
@@ -84,31 +81,12 @@ def mypy_errors() -> int:
 
 def role_preserved_count() -> int:
     """Return the number of roundtrip targets that preserve GNN roles."""
-    return int(
-        _get(
-            "evaluation.roundtrip.role_preserved_count",
-            _get("evaluation.roundtrip.isomorphic_count", 0),
-        )
-    )
+    return int(_get("evaluation.roundtrip.role_preserved_count", 0))
 
 
 def strict_isomorphism_count() -> int:
     """Return the number of strict structurally isomorphic roundtrip targets."""
-    return int(
-        _get(
-            "evaluation.roundtrip.strict_isomorphism_count",
-            _get("evaluation.roundtrip.structural_isomorphism_count", 0),
-        )
-    )
-
-
-def isomorphic_count() -> int:
-    """Deprecated alias for :func:`strict_isomorphism_count`.
-
-    COGANT v0.6 reserves strict isomorphism for full structural, matrix,
-    GNN-section, generated-code, and role-invariant preservation.
-    """
-    return strict_isomorphism_count()
+    return int(_get("evaluation.roundtrip.strict_isomorphism_count", 0))
 
 
 def total_targets() -> int:
@@ -118,17 +96,7 @@ def total_targets() -> int:
 
 def mean_role_preservation_score() -> float:
     """Return the mean role-preservation score across roundtrip targets."""
-    return float(
-        _get(
-            "evaluation.roundtrip.mean_role_preservation_score",
-            _get("evaluation.roundtrip.mean_epsilon", 0.0),
-        )
-    )
-
-
-def mean_epsilon() -> float:
-    """Deprecated alias for :func:`mean_role_preservation_score`."""
-    return mean_role_preservation_score()
+    return float(_get("evaluation.roundtrip.mean_role_preservation_score", 0.0))
 
 
 def role_preservation_score_for(name: str) -> float | None:
@@ -136,14 +104,9 @@ def role_preservation_score_for(name: str) -> float | None:
     targets = _get("evaluation.roundtrip.per_target", [])
     for target in targets:
         if isinstance(target, dict) and target.get("name") == name:
-            value = target.get("role_preservation_score", target.get("epsilon"))
+            value = target.get("role_preservation_score")
             return float(value) if value is not None else None
     return None
-
-
-def epsilon_for(name: str) -> float | None:
-    """Deprecated alias for :func:`role_preservation_score_for`."""
-    return role_preservation_score_for(name)
 
 
 def bibliography_entries() -> int:

@@ -44,7 +44,7 @@ jobs:
 
       - name: Docs/constants drift gate
         # Active README/AGENTS/MkDocs/manuscript status language should not
-        # regress to stale version, wave, or hard-coded section-number claims.
+        # regress to out-of-sync version, wave, or hard-coded section-number claims.
         run: cd .. && uv run --directory cogant python ../tools/audit_docs_constants.py
 
       - name: Folder documentation coverage gate
@@ -190,7 +190,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      # ``actions-rs/*`` is archived (Node 12, last released 2020); use the
+      # ``actions-rs/*`` is immutable (Node 12, last released 2020); use the
       # community-maintained ``dtolnay/rust-toolchain`` action which is the
       # de-facto replacement and runs on the modern Node runtime.
       - name: Install Rust toolchain

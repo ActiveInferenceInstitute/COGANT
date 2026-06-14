@@ -38,7 +38,7 @@ Visualization is a **post-pipeline consumer** — it runs after the 10-stage for
 | Interactive graph | cytoscape_view.py, graph_view.py | Web embedding, scalable | No | No | Yes |
 | DOT | flow.py | Graphviz processing | No | Optional | No |
 | HTML Dashboard | dashboard/ (generator.py, assets.py) | Interactive exploration | Yes (optional) | No | Yes |
-| Inspection dashboard | inspection_dashboard.py | Artifact-first run review + graphical abstract | No | Optional for PNG abstract | Yes |
+| Inspection dashboard | inspection_dashboard.py | Artifact-first run review + graphical abstract | PNG only | No | Yes |
 | Batch dashboard | batch_dashboard.py | Cross-target sweep summary (CSV + Markdown + Mermaid) | No | No | No |
 
 ### Single-target vs. batch dashboards
@@ -141,8 +141,11 @@ The `viz/` package currently ships `ablation_view.py`, `batch_dashboard.py`, `bo
 
 **inspection_dashboard.py** — artifact-first dashboard and graphical abstract
 - Reads completed `cogant/output/<target>/` directories directly
-- Writes `site/inspection_dashboard.html`, `figures/graphical_abstract.svg`, and a best-effort PNG abstract
+- Writes `site/inspection_dashboard.html`, `figures/graphical_abstract.svg`, and a native matplotlib PNG abstract when matplotlib is available
 - Summarizes graph counts, semantic roles, matrix shapes, blanket roles, hotspots, figure evidence, artifact presence, and roundtrip status
+- Compatibility shim only: keep public imports here, and place implementation in
+  `inspection/model.py`, `inspection/abstract.py`, `inspection/details.py`,
+  `inspection/html.py`, and `inspection/writer.py`
 
 **dashboard/assets.py** — Inlined CSS/JS assets used by the dashboard for fully self-contained HTML output.
 

@@ -136,7 +136,7 @@ stripped during validation).
 **`EdgeKind`** — Closed enum in `py/cogant/schemas/core.py`. Values include `CALLS`,
 `CONTAINS`, `READS`, `WRITES`, `IMPORTS`, `INHERITS`, `OBSERVES`, `DEPENDS_ON`, `MUTATES`,
 `CATCHES`, `THROWS`, `GUARDS`. These are the only relationships the graph can represent in
-v0.1.0.
+current.
 
 **s_role** — Role-preservation fidelity of a forward → reverse → forward roundtrip on
 a program graph. Defined as the mean, over roles present on either side, of
@@ -286,7 +286,7 @@ edges as `HIDDEN_STATE`. Priority 80.
 
 ## N
 
-**`NodeKind`** — Closed enum in `py/cogant/schemas/core.py`. v0.1.0 Python front end emits
+**`NodeKind`** — Closed enum in `py/cogant/schemas/core.py`. current Python front end emits
 four kinds: `MODULE`, `CLASS`, `METHOD`, `FUNCTION`. Additional kinds (`VARIABLE`,
 `PARAMETER`, `TYPE_REFERENCE`, control-flow nodes) are roadmap P1-2 / P1-3.
 

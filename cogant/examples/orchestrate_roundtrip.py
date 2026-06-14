@@ -776,7 +776,7 @@ class RoundtripOrchestrator:
             return True
 
     def _save_program_graph(self, graph):
-        """Save program graph as JSON (legacy, kept for compatibility)."""
+        """Save program graph as JSON (compatibility, kept for compatibility)."""
         self._save_enhanced_program_graph(graph)
 
     def _save_enhanced_program_graph(self, graph):

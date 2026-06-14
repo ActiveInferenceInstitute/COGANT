@@ -17,6 +17,7 @@ from manuscript_figures import (  # noqa: E402
     MANUSCRIPT_FIGURES,
     ManuscriptFigure,
     _artifact_summary,
+    _render_publication_batch_timeline,
     copy_manuscript_figures,
 )
 
@@ -72,6 +73,16 @@ def test_forward_abcd_matrix_figure_uses_flask_real_matrix_artifact() -> None:
     assert figure.source_artifact == "cogant/output/flask_app/gnn_package/model.gnn.json"
     assert figure.destination == "cogant_forward_abcd_matrices.png"
     assert "Flask" in figure.caption
+    assert "inheritance-role" in figure.caption
+
+
+def test_gnn_markdown_figure_promotes_all_page_mosaic() -> None:
+    figure = next(item for item in MANUSCRIPT_FIGURES if item.key == "gnn_markdown_render")
+
+    assert figure.source == "cogant/output/calculator/figures/model_gnn_mosaic.png"
+    single_panel_phrase = "first" + " page"
+    assert single_panel_phrase not in figure.caption.lower()
+    assert "all-page mosaic" in figure.caption
 
 
 def test_copy_manuscript_figures_writes_manifest(tmp_path: Path) -> None:
@@ -123,6 +134,238 @@ def test_copy_manuscript_figures_strict_fails_on_missing(tmp_path: Path) -> None
 
     with pytest.raises(FileNotFoundError, match="missing"):
         copy_manuscript_figures(tmp_path, figures=figures, strict=True)
+
+
+def test_copy_manuscript_figures_strict_rejects_degraded_graphical_abstract(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "cogant" / "output" / "demo" / "figures" / "graphical_abstract.png"
+    _write_test_png(source, width=1600, height=800)
+    source_artifact = tmp_path / "cogant" / "output" / "demo" / "data" / "program_graph.json"
+    source_artifact.parent.mkdir(parents=True, exist_ok=True)
+    source_artifact.write_text('{"nodes": [], "edges": []}\n', encoding="utf-8")
+    source.with_suffix(".figure.json").write_text(
+        json.dumps(
+            {
+                "render_backend": "svg_degraded",
+                "degraded_renderer": True,
+                "renderer": "cogant.viz.inspection_dashboard.render_graphical_abstract_png",
+                "displayed_counts": {"nodes_count": 1, "edges_count": 1},
+                "panel_metadata": {"panel": "graphical_abstract"},
+                "panels": [{"key": "graphical_abstract"}],
+                "known_limitations": "renderer unavailable placeholder.",
+            }
+        ),
+        encoding="utf-8",
+    )
+    figures = (
+        ManuscriptFigure(
+            key="graphical_abstract",
+            source="cogant/output/demo/figures/graphical_abstract.png",
+            destination="graphical_abstract.png",
+            caption="Graphical abstract.",
+            role="code-gnn-code-graphical-abstract",
+            source_artifact="cogant/output/demo/data/program_graph.json",
+            renderer="cogant.viz.inspection_dashboard.render_graphical_abstract_png",
+            method_note="Native renderer.",
+            reading_guide="Read left to right.",
+            limitations="Overview only.",
+            alt_text="Graphical abstract.",
+            min_width_px=1400,
+            min_height_px=600,
+            require_manuscript_reference=False,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="degraded_renderer"):
+        copy_manuscript_figures(tmp_path, figures=figures, strict=True)
+
+
+def test_copy_manuscript_figures_strict_accepts_native_graphical_abstract(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "cogant" / "output" / "demo" / "figures" / "graphical_abstract.png"
+    _write_test_png(source, width=1600, height=800)
+    source_artifact = tmp_path / "cogant" / "output" / "demo" / "data" / "program_graph.json"
+    source_artifact.parent.mkdir(parents=True, exist_ok=True)
+    source_artifact.write_text('{"nodes": [{"id": "n"}], "edges": []}\n', encoding="utf-8")
+    source.with_suffix(".figure.json").write_text(
+        json.dumps(
+            {
+                "render_backend": "matplotlib_native",
+                "degraded_renderer": False,
+                "degraded_rasterization": False,
+                "renderer": "cogant.viz.inspection_dashboard.render_graphical_abstract_png",
+                "displayed_counts": {"nodes_count": 1, "edges_count": 0},
+                "panel_metadata": {"panel": "graphical_abstract"},
+                "panels": [{"key": "graphical_abstract"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    figures = (
+        ManuscriptFigure(
+            key="graphical_abstract",
+            source="cogant/output/demo/figures/graphical_abstract.png",
+            destination="graphical_abstract.png",
+            caption="Graphical abstract.",
+            role="code-gnn-code-graphical-abstract",
+            source_artifact="cogant/output/demo/data/program_graph.json",
+            renderer="cogant.viz.inspection_dashboard.render_graphical_abstract_png",
+            method_note="Native renderer.",
+            reading_guide="Read left to right.",
+            limitations="Overview only.",
+            alt_text="Graphical abstract.",
+            min_width_px=1400,
+            min_height_px=600,
+            require_manuscript_reference=False,
+        ),
+    )
+
+    copy_manuscript_figures(tmp_path, figures=figures, strict=True)
+
+    sidecar = json.loads(
+        (tmp_path / "output" / "figures" / "graphical_abstract.figure.json").read_text()
+    )
+    assert sidecar["render_backend"] == "matplotlib_native"
+    assert sidecar["degraded_renderer"] is False
+    assert sidecar["displayed_counts"]["nodes_count"] == 1
+
+
+def test_copy_manuscript_figures_strict_rejects_non_native_detail_panel(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "cogant" / "output" / "demo" / "figures" / "rule_trace.png"
+    _write_test_png(source, width=1600, height=800)
+    source_artifact = tmp_path / "cogant" / "output" / "demo" / "rule_evidence_trace.json"
+    source_artifact.parent.mkdir(parents=True, exist_ok=True)
+    source_artifact.write_text('{"mappings": [{"id": "m1"}]}\n', encoding="utf-8")
+    source.with_suffix(".figure.json").write_text(
+        json.dumps(
+            {
+                "renderer": "cogant.viz.inspection_dashboard.render_interpretability_detail_pngs",
+                "displayed_counts": {"mappings": 1, "rules": 1, "conflict_events": 0},
+                "panel_metadata": {"panel": "rule_trace"},
+                "panels": [{"key": "rule_trace"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    figures = (
+        ManuscriptFigure(
+            key="rule_evidence_trace",
+            source="cogant/output/demo/figures/rule_trace.png",
+            destination="rule_trace.png",
+            caption="Rule evidence trace.",
+            role="rule-evidence-human-review-trace",
+            source_artifact="cogant/output/demo/rule_evidence_trace.json",
+            renderer="cogant.viz.inspection_dashboard native rule trace renderer",
+            method_note="Rule trace method.",
+            reading_guide="Read rule bars.",
+            limitations="Trace only.",
+            alt_text="Rule trace.",
+            min_width_px=1400,
+            min_height_px=650,
+            require_manuscript_reference=False,
+        ),
+    )
+
+    with pytest.raises(ValueError, match="render_backend_matplotlib_native"):
+        copy_manuscript_figures(tmp_path, figures=figures, strict=True)
+
+
+def test_copy_manuscript_figures_strict_rejects_tall_timeline(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "cogant" / "output" / "dashboard" / "run_gantt.png"
+    _write_test_png(source, width=1600, height=1600)
+    source_artifact = tmp_path / "cogant" / "output" / "run_manifest.json"
+    source_artifact.parent.mkdir(parents=True, exist_ok=True)
+    source_artifact.write_text('{"targets": []}\n', encoding="utf-8")
+    source.with_suffix(".figure.json").write_text(
+        json.dumps(
+            {
+                "selected_target_id": "calculator",
+                "selected_target_command_count": 13,
+                "batch_target_count": 24,
+                "batch_command_count": 315,
+                "displayed_counts": {"targets_count": 24, "stages": 13},
+                "panel_metadata": {"panel": "roundtrip_batch_gantt"},
+                "panels": [{"key": "roundtrip_batch_gantt"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    figures = (
+        ManuscriptFigure(
+            key="roundtrip_batch_gantt",
+            source="cogant/output/dashboard/run_gantt.png",
+            destination="run_gantt.png",
+            caption="Calculator timeline.",
+            role="forward-reverse-forward-roundtrip",
+            source_artifact="cogant/output/run_manifest.json",
+            renderer="tools.manuscript_figures._render_publication_batch_timeline",
+            method_note="Timeline method.",
+            reading_guide="Read top to bottom.",
+            limitations="Single run.",
+            alt_text="Timeline.",
+            min_width_px=1400,
+            min_height_px=700,
+            require_manuscript_reference=False,
+            evidence_requirements=("targets_count", "stages"),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="height_gt_1400"):
+        copy_manuscript_figures(tmp_path, figures=figures, strict=True)
+
+
+def test_publication_batch_timeline_selects_calculator_and_bounds_height(
+    tmp_path: Path,
+) -> None:
+    pytest.importorskip("matplotlib")
+    manifest = tmp_path / "cogant" / "output" / "run_manifest.json"
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    manifest.write_text(
+        json.dumps(
+            {
+                "targets": [
+                    {
+                        "id": "calculator",
+                        "commands": [
+                            {"step": "translate:calculator", "wall_time_s": 1.0},
+                            {"step": "validate:calculator", "wall_time_s": 0.5},
+                            {"step": "roundtrip:calculator", "wall_time_s": 0.75},
+                        ],
+                    },
+                    {
+                        "id": "other",
+                        "commands": [
+                            {"step": "translate:other", "wall_time_s": 2.0},
+                            {"step": "validate:other", "wall_time_s": 1.0},
+                        ],
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    output = _render_publication_batch_timeline(tmp_path)
+
+    assert output is not None
+    sidecar = json.loads(output.with_suffix(".figure.json").read_text(encoding="utf-8"))
+    assert sidecar["selected_target_id"] == "calculator"
+    assert sidecar["selected_target_command_count"] == 3
+    assert sidecar["batch_target_count"] == 2
+    assert sidecar["batch_command_count"] == 5
+    assert sidecar["displayed_counts"]["stages"] == 3
+    data = output.read_bytes()
+    width = int.from_bytes(data[16:20], "big")
+    height = int.from_bytes(data[20:24], "big")
+    assert width >= 1400
+    assert height <= 1400
+    assert width / height >= 1.6
 
 
 def test_copy_manuscript_figures_strict_fails_on_uncited_registered_figure(
@@ -432,6 +675,25 @@ def test_copy_manuscript_figures_promotes_matrix_diagnostics(tmp_path: Path) -> 
                 },
                 "matrix_dimensions": {"hidden_states": 1, "observations": 1, "actions": 1},
                 "state_space_counts": {"hidden_states": 1, "observations": 1, "actions": 1},
+                "axis_labels": {
+                    "hidden_states": ["Service - Hidden State"],
+                    "observations": ["event - Observation"],
+                    "actions": ["act - Action"],
+                },
+                "state_label_groups": [
+                    {
+                        "key": "program_service_state_variables",
+                        "label": "program/service state variables",
+                        "indices": "0",
+                        "count": 1,
+                    }
+                ],
+                "matrix_interpretation_notes": {
+                    "A": "Likelihood columns are non-uniform when extracted evidence is non-uniform.",
+                    "B": "Displayed panel is the max-over-actions transition summary.",
+                    "C": "The zero preference vector is exported.",
+                    "D": "The prior vector is exported structural evidence.",
+                },
                 "dimension_alignment": {
                     "hidden_states_match": True,
                     "observations_match": True,
@@ -596,7 +858,7 @@ def test_registry_renderer_paths_resolve() -> None:
     (with spaces) are skipped by design.
     """
     errors = afr.audit()
-    assert errors == [], "stale/unresolvable renderer paths in registry:\n" + "\n".join(errors)
+    assert errors == [], "out-of-sync/unresolvable renderer paths in registry:\n" + "\n".join(errors)
 
 
 def test_renderer_audit_is_not_vacuous() -> None:

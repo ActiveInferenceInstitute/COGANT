@@ -54,7 +54,7 @@ dependencies = [
     # or an upstream PyPI release is tracked as future work; meanwhile the
     # pinned SHA gives reproducible installs and the CC-BY-NC-SA-4.0 license
     # implications for redistribution are documented in ``cogant/README.md``.
-    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.git@41a64381c6d277c8240ef65499be67e7f882ef73",
+    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.git@11a89f0615f1e48ddacca58d1bcf3c5092b1b055",
 ]
 
 [project.optional-dependencies]

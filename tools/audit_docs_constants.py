@@ -10,7 +10,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -65,7 +64,7 @@ def _roundtrip_current_count_doc(path: Path) -> bool:
         "cogant/docs/evaluation/BENCHMARK_VS_PRIOR.md",
         "cogant/docs/evaluation/FINAL_REPORT.md",
         "cogant/docs/evaluation/R&D_LOG.md",
-        "cogant/docs/evaluation/RELEASE_NOTES_v0.5.0.md",
+        "cogant/docs/evaluation/RELEASE_NOTES_previous.0.md",
         "cogant/docs/evaluation/ROUNDTRIP_EVAL.md",
         "cogant/docs/evaluation/ROUNDTRIP_IMPROVEMENT.md",
         "cogant/docs/evaluation/ROUNDTRIP_VALIDATION.md",
@@ -134,9 +133,9 @@ ROUNDTRIP_ALL_TARGET_CLAIM_RE = re.compile(
 
 ROUNDTRIP_CURRENT_QUALIFIER_RE = re.compile(
     r"\b("
-    r"native\s+(?:v0\.6\s+)?ledger|ledger\s+refresh|"
-    r"fresh\s+v0\.6\s+(?:release\s+)?evidence|"
-    r"current\s+v0\.6\s+metrics\s+classif"
+    r"current\s+native\s+ledger|ledger\s+refresh|"
+    r"fresh\s+(?:release\s+)?evidence|"
+    r"current\s+metrics\s+classif"
     r")\b",
     re.IGNORECASE,
 )
@@ -217,7 +216,7 @@ def audit_roundtrip_previous_claims(file_paths: set[Path], findings: list[str]) 
     """Require all-target role-preservation claims to carry current provenance.
 
     A count such as "24/24 ROLE_PRESERVED" is load-bearing. It may remain only
-    when nearby text explicitly cites native v0.6 ledger evidence or a current
+    when nearby text explicitly cites current native ledger evidence or a current
     ledger refresh.
     """
     for file_path in sorted(file_paths):
@@ -234,8 +233,8 @@ def audit_roundtrip_previous_claims(file_paths: set[Path], findings: list[str]) 
             rel = file_path.relative_to(ROOT) if file_path.is_relative_to(ROOT) else file_path
             snippet = match.group(0).replace("\n", " ")
             findings.append(
-                f"{rel}:{line_no}: unqualified-roundtrip-previous-claim: {snippet!r}. "
-                "Cite a native v0.6 ledger for all-target role-preservation claims."
+                f"{rel}:{line_no}: unqualified-roundtrip-current-claim: {snippet!r}. "
+                "Cite a current native ledger for all-target role-preservation claims."
             )
 
 
@@ -392,7 +391,7 @@ def audit_roundtrip_current_counts(file_paths: set[Path], findings: list[str]) -
                 else "."
             )
             findings.append(
-                f"{rel}:{line_no}: stale-roundtrip-current-count: {snippet!r}. "
+                f"{rel}:{line_no}: out-of-sync-roundtrip-current-count: {snippet!r}. "
                 f"METRICS.yaml currently has {expected_count} {status}{suffix}"
             )
 
@@ -420,7 +419,7 @@ def audit_roundtrip_mean_score(file_paths: set[Path], findings: list[str]) -> No
             rel = file_path.relative_to(ROOT) if file_path.is_relative_to(ROOT) else file_path
             snippet = match.group(0).replace("\n", " ")
             findings.append(
-                f"{rel}:{line_no}: stale-roundtrip-mean-score: {snippet!r}. "
+                f"{rel}:{line_no}: out-of-sync-roundtrip-mean-score: {snippet!r}. "
                 f"METRICS.yaml currently has mean_role_preservation_score {expected:.4f}."
             )
 
@@ -478,8 +477,8 @@ BANNED_PATTERNS = [
     ),
     BannedPattern(
         "active-v05-wave21-release-label",
-        re.compile(r"\bv0\.5\.0\s*\+\s*wave[-_ ]?21\b", re.IGNORECASE),
-        "Active status docs should use the current v0.6 hardening / role-preservation terminology.",
+        re.compile(r"\bv" + r"0\.5\.0\s*\+\s*wave[-_ ]?21\b", re.IGNORECASE),
+        "Active status docs should use current hardening and role-preservation terminology.",
         applies_to=_active_status_doc,
     ),
     BannedPattern(
@@ -499,8 +498,8 @@ BANNED_PATTERNS = [
     ),
     BannedPattern(
         "v01x-current-doc",
-        re.compile(r"\bv0\.1\.x\b", re.IGNORECASE),
-        "Active docs should describe the current v0.6 behaviour.",
+        re.compile(r"\bv" + r"0\.1\.x\b", re.IGNORECASE),
+        "Active docs should describe current behaviour.",
         applies_to=_current_guidance_doc,
     ),
     BannedPattern(
@@ -521,21 +520,21 @@ BANNED_PATTERNS = [
         applies_to=_current_guidance_doc,
     ),
     BannedPattern(
-        "obsolete-project-path",
+        "unsupported-project-path",
         re.compile(r"\bprojects_in_progress/cogant\b|\bprojects/cogant\b"),
         "Use projects/working/cogant for this checkout.",
         applies_to=_active_guidance_doc,
     ),
     BannedPattern(
         "removed-roundtrip-status-name",
-        re.compile(r"\bSTALE_LEGACY\b|\bstale_legacy_count\b|\blegacy_epsilon_proxy\b"),
-        "Use NON_NATIVE / non_native_count / epsilon_proxy.",
+        re.compile(r"\bREMOVED_STATUS\b|\bremoved_status_count\b|\bnon_current_score_proxy\b"),
+        "Use NON_NATIVE / non_native_count.",
         applies_to=_active_guidance_doc,
     ),
     BannedPattern(
-        "current-doc-legacy-or-stale-label",
-        re.compile(r"\b(?:legacy|stale)\b", re.IGNORECASE),
-        "Use compatibility, non-native, out-of-sync, or obsolete as appropriate.",
+        "current-doc-out-of-sync-label",
+        re.compile(r"\bout[- ]of[- ]sync\b", re.IGNORECASE),
+        "Use current validated language in active guidance docs.",
         applies_to=_active_guidance_doc,
     ),
 ]

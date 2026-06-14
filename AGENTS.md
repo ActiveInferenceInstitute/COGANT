@@ -55,11 +55,12 @@ When any doc (README, AGENTS, cookbook, CLI help) says "run from `cogant/`" it m
 | `tools/audit_manuscript_numbers.py` | Checks all prose numbers against `METRICS.yaml`; flags drift |
 | `tools/audit_manuscript_markdown_links.py` | Rejects rendered body links to `.md` files; public manuscript links should be intra-manuscript refs, figures/tables/equations/formalisms, or citations |
 | `tools/audit_manuscript_math_adjacency.py` | Resolves manuscript variables and fails on inline math spans whose closing `$` is immediately followed by a digit |
+| `tools/audit_manuscript_claim_scope.py` | Rejects uncaveated guarantees, inferential-statistics wording, and semantic-totality overclaims in manuscript prose |
 | `tools/audit_robustness_table.py` | Checks the manuscript robustness table against the generated robustness JSON artifact |
 | `tools/audit_synthetic_surfaces.py` | Classifies retained synthetic-surface terminology and fails on unallowlisted or unbacked cases |
 | `tools/audit_figure_renderers.py` | Verifies registered figure renderer import paths and locked caption/provenance constants |
 | `tools/citation_claim_ledger.py` | Emits reviewable claim/source pairs for selected citation keys |
-| `tools/check_metrics_fresh.py` | Warns if `METRICS.yaml` is out of sync with source artifacts |
+| `tools/check_metrics_fresh.py` | Warns if `METRICS.yaml` has drifted from source artifacts |
 | `tools/manuscript_figures.py` | Copies curated package-generated PNGs from `cogant/output/` into `output/figures/` |
 | `scripts/z_generate_manuscript_variables.py` | Thin orchestrator: YAML → JSON + full `output/manuscript/` tree + copied figures |
 
@@ -81,6 +82,7 @@ uv run python tools/audit_manuscript_citations.py
 uv run python tools/audit_manuscript_numbers.py
 uv run python tools/audit_manuscript_markdown_links.py
 uv run python tools/audit_manuscript_math_adjacency.py
+uv run python tools/audit_manuscript_claim_scope.py
 uv run python tools/audit_robustness_table.py
 uv run python tools/audit_synthetic_surfaces.py --strict
 uv run python tools/audit_figure_renderers.py
@@ -117,7 +119,7 @@ Test markers: `unit`, `integration`, `slow`, `requires_rust`, `fuzz`, `property`
 ## Authoritative numbers
 
 `cogant/evaluation/METRICS.yaml` is the single source of truth for every numeric claim in the
-manuscript. If a prose number looks out of sync, regenerate and re-inject; never hand-edit.
+manuscript. If a prose number looks drifted, regenerate and re-inject; never hand-edit.
 
 **Live suite:** run `cd cogant && uv run pytest tests/ -q` from the inner package root; counts are
 not duplicated here (they drift every commit).

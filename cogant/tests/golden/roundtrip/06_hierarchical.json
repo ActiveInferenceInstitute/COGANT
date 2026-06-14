@@ -1,7 +1,7 @@
 {
   "fixture": "06_hierarchical",
   "fixture_path": "examples/zoo/06_hierarchical",
-  "min_role_match_score": 0.2,
+  "min_role_preservation_score": 0.2,
   "must_be_role_preserved": false,
   "expected_original_roles": {
     "HIDDEN_STATE": 2,
@@ -18,5 +18,5 @@
     "OBSERVATION": 2,
     "ACTION": 4
   },
-  "notes": "Hierarchical POMDP with two hidden-state factors. v0.6 classifies the checked-in legacy roundtrip evidence as diagnostic DRIFT; this golden asserts cardinality preservation and role floors without labeling it fresh role-preserved evidence."
+  "notes": "Hierarchical POMDP with two hidden-state factors. v0.6 classifies the checked-in compatibility roundtrip evidence as diagnostic DRIFT; this golden asserts cardinality preservation and role floors without labeling it fresh role-preserved evidence."
 }

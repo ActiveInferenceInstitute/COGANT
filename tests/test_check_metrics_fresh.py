@@ -73,7 +73,7 @@ def test_freshness_gate_detects_laundered_roundtrip_count(tmp_path: Path) -> Non
     (sandbox / "tools" / "check_metrics_fresh.py").write_text(GATE.read_text())
 
     # 2. Write a non-native JSONL with
-    #    THREE rows, all v0.5 (no role_preservation_score, no roundtrip_status).
+    #    THREE rows, all previous (no role_preservation_score, no roundtrip_status).
     jsonl = sandbox / "cogant" / "evaluation" / "dataset" / "roundtrip_results.jsonl"
     non_native_rows = [
         {"rank": 1, "group": "zoo", "repo": "fake_a", "tier": "ISOMORPHIC", "epsilon": 1.0},
@@ -379,6 +379,7 @@ def test_classify_row_matches_regenerator_logic() -> None:
     try:
         # Force a fresh import so any in-flight edit to the file is picked up.
         import importlib
+
         import check_metrics_fresh as cmf
 
         importlib.reload(cmf)
@@ -389,10 +390,10 @@ def test_classify_row_matches_regenerator_logic() -> None:
         # Non-native rows (no role_preservation_score field) — NON_NATIVE
         ({"tier": "ISOMORPHIC", "epsilon": 1.0}, "NON_NATIVE"),
         ({"tier": "APPROXIMATE", "epsilon": 0.6}, "NON_NATIVE"),
-        # v0.6 rows with explicit roundtrip_status — pass through
+        # current rows with explicit roundtrip_status — pass through
         ({"roundtrip_status": "ROLE_PRESERVED", "role_preservation_score": 1.0}, "ROLE_PRESERVED"),
         ({"roundtrip_status": "STRUCTURALLY_ISOMORPHIC", "role_preservation_score": 1.0}, "STRUCTURALLY_ISOMORPHIC"),
-        # v0.6 rows without explicit status but with role_preservation_score
+        # current rows without explicit status but with role_preservation_score
         # (derived from tier)
         ({"role_preservation_score": 0.9, "tier": "ISOMORPHIC"}, "ROLE_PRESERVED"),
         ({"role_preservation_score": 0.6, "tier": "APPROXIMATE"}, "DRIFT"),
@@ -426,7 +427,7 @@ def test_freshness_gate_detects_epsilon_proxy_scores_mislabeled_as_native(tmp_pa
                 "drift_count": 0,
                 "failed_count": 0,
                 "non_native_count": 1,
-                "role_preservation_score_source": "v0.6_native",  # WRONG: no native field exists
+                "role_preservation_score_source": "current_native",  # WRONG: no native field exists
                 "mean_role_preservation_score": 1.0,  # WRONG: epsilon proxy, not native s_role
                 "median_role_preservation_score": 1.0,
                 "min_role_preservation_score": 1.0,

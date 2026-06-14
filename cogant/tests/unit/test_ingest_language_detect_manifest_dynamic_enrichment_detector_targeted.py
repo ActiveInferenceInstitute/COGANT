@@ -610,8 +610,8 @@ class TestRoundtripResultDataclass:
         from cogant.reverse.idempotency import RoundtripResult
 
         r = RoundtripResult()
-        assert r.is_isomorphic is False
-        assert r.role_match_score == 0.0
+        assert r.structurally_isomorphic is False
+        assert r.role_preservation_score == 0.0
         assert r.matrix_score == 0.0
         assert r.structural_score == 0.0
         assert r.original_roles == {}
@@ -624,32 +624,32 @@ class TestRoundtripResultDataclass:
         from cogant.reverse.idempotency import RoundtripResult
 
         r = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.8,
+            structurally_isomorphic=True,
+            role_preservation_score=0.8,
             original_roles={"HIDDEN_STATE": 2},
             synthesized_roles={"HIDDEN_STATE": 2},
         )
-        assert r.is_isomorphic is True
-        assert r.role_match_score == 0.8
+        assert r.structurally_isomorphic is True
+        assert r.role_preservation_score == 0.8
 
     def test_summary_iso(self):
         from cogant.reverse.idempotency import RoundtripResult
 
-        r = RoundtripResult(is_isomorphic=True, role_match_score=1.0)
+        r = RoundtripResult(structurally_isomorphic=True, role_preservation_score=1.0)
         s = r.summary()
         assert "ISO" in s
 
     def test_summary_drift(self):
         from cogant.reverse.idempotency import RoundtripResult
 
-        r = RoundtripResult(is_isomorphic=False, role_match_score=0.3)
+        r = RoundtripResult(structurally_isomorphic=False, role_preservation_score=0.3)
         s = r.summary()
         assert "DRIFT" in s
 
     def test_summary_contains_scores(self):
         from cogant.reverse.idempotency import RoundtripResult
 
-        r = RoundtripResult(role_match_score=0.75, matrix_score=0.5, structural_score=0.6)
+        r = RoundtripResult(role_preservation_score=0.75, matrix_score=0.5, structural_score=0.6)
         s = r.summary()
         assert "role_preservation" in s
         assert "matrix" in s

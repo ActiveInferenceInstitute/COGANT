@@ -15,7 +15,7 @@
 
 ## Pipeline Steps
 
-1. **Parse GNN** -- `cogant.reverse.parser.parse_gnn(HAND_WRITTEN_GNN)` reads the GNN v1 markdown specification and extracts a `ReverseGNNModel` with all state-space slots, cardinalities, ontology annotations, connections, and A/B/C/D matrices.
+1. **Parse GNN** -- `cogant.reverse.parser.parse_gnn(HAND_WRITTEN_GNN)` reads the GNN v2.0.0 markdown specification and extracts a `ReverseGNNModel` with all state-space slots, cardinalities, ontology annotations, connections, and A/B/C/D matrices.
 
 2. **Plan package** -- `cogant.reverse.planner.plan_package(model)` maps each GNN role to a Python construct: hidden states become `state.py` dataclass fields, observations become `observe.py` functions, actions become `act.py` functions.
 

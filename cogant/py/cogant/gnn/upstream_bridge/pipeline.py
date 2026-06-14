@@ -32,11 +32,13 @@ import importlib
 import json
 import logging
 import os
+import shutil
+import sys
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -328,6 +330,87 @@ def _build_pipeline_arguments(src_main: Any, cfg: UpstreamPipelineConfig) -> Any
     )
 
 
+def _render_target_dir(cfg: UpstreamPipelineConfig) -> Path:
+    """Stage only renderable GNN markdown files for upstream render/execute.
+
+    A COGANT ``gnn_package/`` contains JSON sidecars that are valid package
+    evidence but are not standalone renderable POMDP models. Upstream render
+    scans ``*.json`` as model inputs, so steps 11 and 12 receive a small
+    staging directory containing only ``*.gnn.md`` / ``model.gnn.md`` files.
+    """
+    markdown_files = sorted(cfg.target_dir.glob("*.gnn.md"))
+    model_path = cfg.target_dir / "model.gnn.md"
+    if model_path.is_file() and model_path not in markdown_files:
+        markdown_files.insert(0, model_path)
+    if not markdown_files:
+        return cfg.target_dir
+
+    staged = cfg.output_dir / "_cogant_render_input"
+    staged.mkdir(parents=True, exist_ok=True)
+    for existing in staged.iterdir():
+        if existing.is_file():
+            existing.unlink()
+    for source in markdown_files:
+        shutil.copy2(source, staged / source.name)
+    return staged
+
+
+def _with_target_dir(cfg: UpstreamPipelineConfig, target_dir: Path) -> UpstreamPipelineConfig:
+    """Return a config copy with a different target directory."""
+    return UpstreamPipelineConfig(
+        target_dir=target_dir,
+        output_dir=cfg.output_dir,
+        only_steps=cfg.only_steps,
+        skip_steps=list(cfg.skip_steps),
+        frameworks=cfg.frameworks,
+        llm_model=cfg.llm_model,
+        timesteps=cfg.timesteps,
+        verbose=cfg.verbose,
+        skip_llm=cfg.skip_llm,
+    )
+
+
+def _execute_upstream_step(src_main: Any, script: str, args: Any, *, verbose: bool) -> dict[str, Any]:
+    """Run an upstream numbered step with COGANT's active Python interpreter."""
+    with _preserve_cwd():
+        if str(src_main.SCRIPT_DIR) not in sys.path:
+            sys.path.insert(0, str(src_main.SCRIPT_DIR))
+        from pipeline.step_timeouts import get_step_timeout  # type: ignore[import-not-found]
+        from utils.argument_utils import build_step_command_args
+        from utils.execution_utils import (
+            execute_command_streaming,  # type: ignore[import-not-found]
+        )
+
+    script_path = Path(src_main.SCRIPT_DIR) / script
+    cmd = build_step_command_args(
+        script.replace(".py", ""),
+        args,
+        sys.executable,
+        script_path,
+    )
+
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
+    existing_pythonpath = env.get("PYTHONPATH", "")
+    pythonpath_parts = [str(src_main.SCRIPT_DIR)]
+    if existing_pythonpath:
+        pythonpath_parts.extend(p for p in existing_pythonpath.split(os.pathsep) if p)
+    env["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(pythonpath_parts))
+
+    return cast(
+        dict[str, Any],
+        execute_command_streaming(
+            cmd,
+            cwd=src_main.PROJECT_ROOT,
+            env=env,
+            timeout=get_step_timeout(script, comprehensive=False),
+            print_stdout=verbose,
+            print_stderr=True,
+            capture_output=True,
+        ),
+    )
+
+
 def _per_step_output_dir(output_dir: Path, step_index: int) -> Path:
     """Return the conventional per-step output directory.
 
@@ -384,11 +467,16 @@ def run_upstream_pipeline(
     total_start = time.perf_counter()
 
     with _preserve_cwd():
-        step_logger = src_main.setup_step_logging(
+        src_main.setup_step_logging(
             "cogant.upstream_pipeline",
             verbose=cfg.verbose,
         )
         args = _build_pipeline_arguments(src_main, cfg)
+        render_args = (
+            _build_pipeline_arguments(src_main, _with_target_dir(cfg, _render_target_dir(cfg)))
+            if any(step in {11, 12} for step in chosen)
+            else None
+        )
 
         for position, step_index in enumerate(chosen, start=1):
             script = UPSTREAM_STEP_SCRIPTS[step_index]
@@ -401,7 +489,12 @@ def run_upstream_pipeline(
             step_start = time.perf_counter()
             try:
                 with _preserve_cwd():
-                    raw = src_main.execute_pipeline_step(script, args, step_logger)
+                    raw = _execute_upstream_step(
+                        src_main,
+                        script,
+                        render_args if step_index in {11, 12} and render_args is not None else args,
+                        verbose=cfg.verbose,
+                    )
             except Exception as exc:  # pragma: no cover - defensive
                 logger.warning("Upstream step %s raised: %s", script, exc, exc_info=True)
                 step_results.append(

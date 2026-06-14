@@ -1,6 +1,6 @@
 # COGANT Isomorphism Theorem: Program Graphs and Generative Models as Dual Views of Causal Structure
 
-> **Historical theory sketch.** This document preserves the early categorical argument that
+> **Recorded theory sketch.** This document preserves the early categorical argument that
 > motivated reverse mode. It is not the current package, CLI, or manuscript contract. Current
 > COGANT distinguishes `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`, `DRIFT`, and `FAILED`,
 > and reports separate invariant booleans for graph, role, matrix, GNN-section, and generated
@@ -8,7 +8,7 @@
 
 **Author:** COGANT R&D
 **Date:** 2026-04-09
-**Status:** Historical theory sketch (pre-proof)
+**Status:** Recorded theory sketch (pre-proof)
 **Related:** `ROUNDTRIP_VALIDATION.md`, `SCOPING_REPORT.md`
 
 ---
@@ -198,9 +198,9 @@ Then for every program graph G:
 
 **Corollary 4.7 (tightness).** If the rule table has no equal-priority collisions (all priority scores are distinct), then ε_max(T) = 0 and the round-trip is exact on the role distribution.
 
-### 4.4 Computing ε_max for the COGANT v0.1.0 Rule Table
+### 4.4 Computing ε_max for the Immutable COGANT current Rule Table
 
-The COGANT v0.1.0 rule table contains K = 27 rules distributed across the 6 roles. Inspection of the priority column reveals 4 equal-priority pairs:
+The immutable COGANT current rule table contains K = 27 rules distributed across the 6 roles. Inspection of the priority column reveals 4 equal-priority pairs:
 
 | Pair | Rule A | Role A | Rule B | Role B | d_role |
 |------|--------|--------|--------|--------|-------:|
@@ -211,11 +211,11 @@ The COGANT v0.1.0 rule table contains K = 27 rules distributed across the 6 role
 
 Therefore:
 
-> ε_max(v0.1.0) = max{0.5, 0.2, 0.2, 0.6} = 0.6
+> ε_max(current) = max{0.5, 0.2, 0.2, 0.6} = 0.6
 
-This is the theoretical worst-case pointwise role error for any program graph processed by COGANT v0.1.0. The empirical ε(G) for the three control-positive corpora is expected to be strictly smaller (see `ROUNDTRIP_VALIDATION.md` §3, populated by `test_roundtrip.py`), because most graphs do not exercise all four collision pairs simultaneously.
+This is the theoretical worst-case pointwise role error for any program graph processed by the immutable COGANT current rule table. The empirical ε(G) for the three control-positive corpora is expected to be strictly smaller (see `ROUNDTRIP_VALIDATION.md` §3, populated by `test_roundtrip.py`), because most graphs do not exercise all four collision pairs simultaneously.
 
-**Mitigation.** Pairs 2 and 3 can be merged into a single priority tier with an explicit per-token tie-break (lexicographic on the keyword), reducing ε_max to 0.6 (unchanged, pair 4 dominates). Pair 4 can be eliminated by changing `constant_fallback`'s priority to be strictly less than `isolated_fallback`'s, which would reduce ε_max to 0.5. With both mitigations and a priority adjustment to pair 1, ε_max could be driven to 0.2 in v0.2.0.
+**Mitigation.** Pairs 2 and 3 can be merged into a single priority tier with an explicit per-token tie-break (lexicographic on the keyword), reducing ε_max to 0.6 (unchanged, pair 4 dominates). Pair 4 can be eliminated by changing `constant_fallback`'s priority to be strictly less than `isolated_fallback`'s, which would reduce ε_max to 0.5. With both mitigations and a priority adjustment to pair 1, ε_max could be driven to 0.2 in current.
 
 ---
 
@@ -424,11 +424,11 @@ This section is explicit about what would need to change for F ⊣ R to be a gen
 
 and C_G would include numerical matrix values preserved verbatim (distinct from the thresholded binary edges R reads back). The correspondence relation R ⊆ C_P × C_G would enforce that c_P and c_G were last synchronized at the same `cogant.version`.
 
-**Verdict.** *This is the proposed path forward.* It is neither trivial (Path A) nor aspirational-only (Path B); it is a concrete engineering project that closes the adjunction gap for real COGANT inputs. Estimated scope: one quarter of engineering work (v0.2.0 target, tracked in `SCOPING_REPORT.md` §4.3 as "lossless round-trip"). The symmetric lens framework of Hofmann et al. provides ready-made well-behavedness laws and a semantics that will serve as the correctness specification for the upgrade.
+**Verdict.** *This is the proposed path forward.* It is neither trivial (Path A) nor aspirational-only (Path B); it is a concrete engineering project that closes the adjunction gap for real COGANT inputs. Estimated scope: one quarter of engineering work (current target, tracked in `SCOPING_REPORT.md` §4.3 as "lossless round-trip"). The symmetric lens framework of Hofmann et al. provides ready-made well-behavedness laws and a semantics that will serve as the correctness specification for the upgrade.
 
 ### 7.4 Honest Summary
 
-**The adjunction does not hold for the current COGANT (v0.1.0).** The document claims neither more nor less than what is true: (a) a Galois connection holds on the role preorders (§8), (b) a role-isomorphism theorem holds at ε(G) = 0 on the role-quotient 𝒫/≡_ρ (§9), (c) a partial lens holds on the role-quotient with approximate PutGet (§6). The full adjunction is aspirational; the path to making it hold (Path C) is well-defined but requires engineering work not yet done.
+**The adjunction does not hold for the current COGANT (current).** The document claims neither more nor less than what is true: (a) a Galois connection holds on the role preorders (§8), (b) a role-isomorphism theorem holds at ε(G) = 0 on the role-quotient 𝒫/≡_ρ (§9), (c) a partial lens holds on the role-quotient with approximate PutGet (§6). The full adjunction is aspirational; the path to making it hold (Path C) is well-defined but requires engineering work not yet done.
 
 This honest gap is not a defect of the theoretical framework — it is the *price of useful lossy compression*. Active Inference agents do not need implementation bodies; they need A/B/C/D matrices. COGANT's purpose is to extract those matrices from source code, and the lossy projection is *exactly what makes the projection useful*. A full adjunction would be a round-trip preservation theorem, not a projection theorem, and would have different applications.
 
@@ -574,9 +574,9 @@ This is the **restriction property**: COGANT results for a module should not cha
 
 ### 12.4 Toward the Full Adjunction
 
-The gap between the current Galois connection and the full adjunction F ⊣ R can be closed along one of the three paths documented in §7. Path C (symmetric-lens upgrade with complement carriers) is the proposed engineering direction for v0.2.0: augment F and R with carrier types C_P (implementation bodies, types, docstrings, call metadata, ordering) and C_G (numerical matrix values), synchronized by a correspondence relation. This would make (F̂, R̂) a genuine adjunction on the carrier-augmented categories 𝒫̂ and 𝒢̂, closing the round-trip gap for real-world COGANT inputs.
+The gap between the current Galois connection and the full adjunction F ⊣ R can be closed along one of the three paths documented in §7. Path C (symmetric-lens upgrade with complement carriers) is the proposed engineering direction for current: augment F and R with carrier types C_P (implementation bodies, types, docstrings, call metadata, ordering) and C_G (numerical matrix values), synchronized by a correspondence relation. This would make (F̂, R̂) a genuine adjunction on the carrier-augmented categories 𝒫̂ and 𝒢̂, closing the round-trip gap for real-world COGANT inputs.
 
-Until Path C is implemented, COGANT v0.1.0's theoretical guarantees are: Galois connection on preorders (§8), Role Isomorphism Theorem on the role-quotient at ε(G) ≤ ε_max(T) = 0.6 (§4, §9), and approximate PutGet on matrix dimensions and sparsity (§6.4). These are sufficient to justify COGANT as a *structural analyzer and legibility auditor* but not as a *lossless bidirectional transformation system*. The distinction matters for downstream users: COGANT's output can be trusted for quality metrics (§12.1), for incremental analysis (§12.3), and for ambiguity detection (§12.2), but not as a substitute for the original source code.
+Until Path C is implemented, the immutable current analysis establishes these bounded theoretical guarantees for the analyzed rule table: Galois connection on preorders (§8), Role Isomorphism Theorem on the role-quotient at ε(G) ≤ ε_max(T) = 0.6 (§4, §9), and approximate PutGet on matrix dimensions and sparsity (§6.4). These are sufficient to justify COGANT as a *structural analyzer and legibility auditor* but not as a *lossless bidirectional transformation system*. The distinction matters for downstream users: COGANT's output can be trusted for quality metrics (§12.1), for incremental analysis (§12.3), and for ambiguity detection (§12.2), but not as a substitute for the original source code.
 
 ---
 
@@ -600,4 +600,4 @@ Until Path C is implemented, COGANT v0.1.0's theoretical guarantees are: Galois 
 
 ---
 
-*Document maintained in ``. Empirical validation of ε(G) measurements is in `ROUNDTRIP_VALIDATION.md`. Formal proofs of the monoidal functor claim (§11.2) are deferred to a companion proof document. The ε_max(v0.1.0) = 0.6 figure in §4.4 reflects inspection of the COGANT v0.1.0 rule table and should be re-derived when the rule table is revised for v0.2.0.*
+*Document maintained in ``. Empirical validation of ε(G) measurements is in `ROUNDTRIP_VALIDATION.md`. Formal proofs of the monoidal functor claim (§11.2) are deferred to a companion proof document. The ε_max(current) = 0.6 figure in §4.4 reflects inspection of the immutable COGANT current rule table and should be re-derived whenever the active rule table is revised.*

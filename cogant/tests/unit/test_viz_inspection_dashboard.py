@@ -5,8 +5,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from cogant.viz.inspection_dashboard import (
     build_inspection_model,
+    render_graphical_abstract_png,
     render_graphical_abstract_svg,
     render_inspection_dashboard_html,
     render_interpretability_detail_pngs,
@@ -240,6 +243,24 @@ def test_render_graphical_abstract_svg_writes_visual_chain(tmp_path):
     assert "100%" in text
 
 
+def test_render_graphical_abstract_png_writes_native_publication_artifact(tmp_path):
+    pytest.importorskip("matplotlib")
+    _write_run_fixture(tmp_path)
+
+    png = render_graphical_abstract_png(tmp_path)
+
+    assert png is not None
+    assert png.is_file()
+    assert b"No SVG" not in png.read_bytes()
+    sidecar = json.loads(png.with_suffix(".figure.json").read_text(encoding="utf-8"))
+    assert sidecar["render_backend"] == "matplotlib_native"
+    assert sidecar["degraded_renderer"] is False
+    assert sidecar["displayed_counts"]["nodes_count"] == 3
+    assert sidecar["displayed_counts"]["semantic_mappings_count"] == 2
+    assert sidecar["visual_qa"]["nonblank"] is True
+    assert sidecar["visual_qa"]["color_diversity_ok"] is True
+
+
 def test_render_inspection_dashboard_html_writes_embedded_dashboard(tmp_path):
     _write_run_fixture(tmp_path)
 
@@ -261,13 +282,17 @@ def test_render_inspection_dashboard_html_writes_embedded_dashboard(tmp_path):
 
 
 def test_write_inspection_artifacts_returns_dashboard_and_abstract(tmp_path):
+    pytest.importorskip("matplotlib")
     _write_run_fixture(tmp_path)
 
     written = write_inspection_artifacts(tmp_path, embed_assets=False)
 
     assert written["inspection_dashboard_html"].is_file()
     assert written["graphical_abstract_svg"].is_file()
-    assert set(written).issuperset({"inspection_dashboard_html", "graphical_abstract_svg"})
+    assert written["graphical_abstract_png"].is_file()
+    assert set(written).issuperset(
+        {"inspection_dashboard_html", "graphical_abstract_svg", "graphical_abstract_png"}
+    )
 
 
 def test_render_detail_pngs_records_evidence_coverage_counts(tmp_path):
@@ -276,6 +301,7 @@ def test_render_detail_pngs_records_evidence_coverage_counts(tmp_path):
     written = render_interpretability_detail_pngs(tmp_path)
 
     assert written["confidence_calibration"].is_file()
+    assert b"No SVG" not in written["confidence_calibration"].read_bytes()
     svg_text = (tmp_path / "figures" / "confidence_calibration.svg").read_text(
         encoding="utf-8"
     )
@@ -286,7 +312,23 @@ def test_render_detail_pngs_records_evidence_coverage_counts(tmp_path):
             encoding="utf-8"
         )
     )
+    assert sidecar["render_backend"] == "matplotlib_native"
+    assert sidecar["degraded_renderer"] is False
+    assert sidecar["degraded_rasterization"] is False
     assert sidecar["displayed_counts"]["mappings"] == 2
     assert sidecar["displayed_counts"]["reviewed_mapping_rows"] == 0
     assert sidecar["displayed_counts"]["unreviewed_mapping_rows"] == 2
     assert sidecar["displayed_counts"]["conflict_events"] == 1
+
+
+def test_render_detail_pngs_writes_native_rule_and_inference_panels(tmp_path):
+    _write_run_fixture(tmp_path)
+
+    written = render_interpretability_detail_pngs(tmp_path)
+
+    for key in ("rule_trace", "inference_trace", "roundtrip_diff"):
+        assert written[key].is_file()
+        assert b"No SVG" not in written[key].read_bytes()
+        sidecar = json.loads(written[key].with_suffix(".figure.json").read_text())
+        assert sidecar["render_backend"] == "matplotlib_native"
+        assert sidecar["degraded_renderer"] is False

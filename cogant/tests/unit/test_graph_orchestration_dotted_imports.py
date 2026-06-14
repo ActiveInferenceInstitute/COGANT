@@ -12,7 +12,7 @@ This module pins the post-fix behaviour with three end-to-end cases:
 
 1. ``from pkg.deep.x import …`` → IMPORTS edge to ``pkg.deep.x``
 2. ``import pkg.util as u``    → IMPORTS edge to ``pkg.util``
-3. Single-level ``import foo`` → IMPORTS edge to ``foo`` (legacy path)
+3. Single-level ``import foo`` → IMPORTS edge to ``foo`` (compatibility path)
 
 The fixture uses a real on-disk repo snapshot via ``RepoIngester`` because the
 project's no-mocks policy precludes synthetic ``RepoSnapshot`` objects.

@@ -212,7 +212,7 @@ def test_hidden_state_action_are_disjoint(graph: ProgramGraph) -> None:
     """HIDDEN_STATE ∩ ACTION must be empty — a dedicated regression guard.
 
     The HIDDEN_STATE/ACTION conflict is the one that the ``mutating``
-    and ``action`` rule families have historically fought over, so we
+    and ``action`` rule families have recordedly fought over, so we
     pin it as its own falsifier alongside the generic pairwise test.
     """
     mappings = _make_engine().translate(graph)

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # ---------------------------------------------------------------------------
 # /analyze
@@ -168,13 +168,9 @@ class RoundtripResponse(BaseModel):
         default=0.0,
         ge=0.0,
         le=1.0,
-        validation_alias=AliasChoices("role_preservation_score", "role_match_score"),
     )
     role_preserved: bool = False
-    structurally_isomorphic: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("structurally_isomorphic", "is_isomorphic"),
-    )
+    structurally_isomorphic: bool = False
     matrix_preserved: bool = False
     gnn_sections_preserved: bool = False
     generated_code_ok: bool = False
@@ -195,16 +191,6 @@ class RoundtripResponse(BaseModel):
         elif self.role_preserved:
             self.roundtrip_status = "ROLE_PRESERVED"
         return self
-
-    @property
-    def role_match_score(self) -> float:
-        """Deprecated compatibility alias."""
-        return self.role_preservation_score
-
-    @property
-    def is_isomorphic(self) -> bool:
-        """Deprecated compatibility alias."""
-        return self.structurally_isomorphic
 
 
 # ---------------------------------------------------------------------------
@@ -442,7 +428,6 @@ class RoundtripResponseV1(BaseModel):
         ge=0.0,
         le=1.0,
         description="Forward-reverse symmetric role-overlap score",
-        validation_alias=AliasChoices("role_preservation_score", "role_match_score"),
     )
     role_preserved: bool = Field(
         default=False, description="Whether role_preservation_score >= threshold"
@@ -450,7 +435,6 @@ class RoundtripResponseV1(BaseModel):
     structurally_isomorphic: bool = Field(
         default=False,
         description="Whether strict invariants passed",
-        validation_alias=AliasChoices("structurally_isomorphic", "is_isomorphic"),
     )
     matrix_preserved: bool = Field(
         default=False, description="Whether A/B/C/D matrix invariants passed"
@@ -485,17 +469,6 @@ class RoundtripResponseV1(BaseModel):
         elif self.role_preserved:
             self.roundtrip_status = "ROLE_PRESERVED"
         return self
-
-    @property
-    def role_match_score(self) -> float:
-        """Deprecated compatibility alias."""
-        return self.role_preservation_score
-
-    @property
-    def is_isomorphic(self) -> bool:
-        """Deprecated compatibility alias."""
-        return self.structurally_isomorphic
-
 
 # ---------------------------------------------------------------------------
 # /api/v1/rules

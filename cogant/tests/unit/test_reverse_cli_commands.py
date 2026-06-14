@@ -27,7 +27,7 @@ def gnn_markdown(tmp_path: Path) -> Path:
     """Produce a valid (if empty) GNN markdown file on disk."""
     ss = StateSpaceModel(
         id="m",
-        schema_name="v0.1.0",
+        schema_name="current",
         variables={},
         observations={},
         actions={},
@@ -36,7 +36,7 @@ def gnn_markdown(tmp_path: Path) -> Path:
         preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
-    pm = ProcessModel(id="m", schema_name="v0.1.0", stages={}, connections={})
+    pm = ProcessModel(id="m", schema_name="current", stages={}, connections={})
     g = ProgramGraph(metadata=GraphMetadata(repo_uri="test", languages={"python"}))
     formatter = GNNMarkdownFormatter(g, ss, pm, {})
     gnn_path = tmp_path / "model.gnn.md"

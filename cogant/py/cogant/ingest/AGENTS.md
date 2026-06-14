@@ -613,7 +613,7 @@ Each downstream consumer independently reads the snapshot; ingest is never re-ru
 
 ## Known Limitations & Future Work
 
-### Currently Implemented (v0.5.0)
+### Currently Implemented (current)
 - Local and remote (git) repository ingestion
 - File enumeration with .gitignore respect
 - Language detection (11 languages)

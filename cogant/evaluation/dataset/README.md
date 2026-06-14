@@ -19,7 +19,7 @@ size_categories:
   - n<1K
 ---
 
-# COGANT ML Dataset (v0.1.0)
+# COGANT ML Dataset (current)
 
 A structured collection of `(repository, program_graph, semantic_mappings, GNN)`
 triples extracted by the [COGANT](../../) codebase-to-GNN translation engine

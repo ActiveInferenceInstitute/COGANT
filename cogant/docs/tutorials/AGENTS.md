@@ -16,7 +16,7 @@ user-facing change large enough to invalidate the existing walkthroughs.
 
 | File | Purpose | Update trigger |
 |------|---------|----------------|
-| `README.md` | TOC, recommended reading order, status of stable example files | When a tutorial is added, renumbered, or deprecated |
+| `README.md` | TOC, recommended reading order, status of stable example files | When a tutorial is added, renumbered, or removed |
 | `AGENTS.md` | This file — maintenance rules | When the numbering policy, stable-example policy, or ownership changes |
 | `01_quickstart.md` | Install + first scan on a tiny sample | When install or first-scan flow changes |
 | `02_small_repo_walkthrough.md` | Every pipeline stage on a small Python repo | When the pipeline stage list or stage outputs change |
@@ -33,17 +33,17 @@ user-facing change large enough to invalidate the existing walkthroughs.
 `calculator.md` and `flask.md` predate the `NN_slug.md` numbering scheme.
 They are not formal tutorials — they are worked examples that some of
 the numbered tutorials reference. They are **kept, not promoted and not
-deprecated**:
+removed**:
 
 - **Kept** because external content (blog posts, conference talks,
   slide decks) links to them by slug and we do not want to break those
   links.
 - **Not promoted** because the numbered tutorials are the canonical
   teaching sequence; we do not want two overlapping spines.
-- **Not deprecated** because they still serve as compact, reusable worked
+- **Not removed** because they still serve as compact, reusable worked
   examples that the numbered tutorials link to.
 
-If either file becomes genuinely obsolete — for example, if the
+If either file becomes genuinely unsupported — for example, if the
 calculator example moves wholesale into `examples/zoo/` — leave a short
 stub here pointing at the new location rather than deleting the file.
 

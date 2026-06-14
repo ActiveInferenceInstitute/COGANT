@@ -189,7 +189,7 @@ def _identical_package() -> dict:
 
 def test_isomorphism_report_fields() -> None:
     """The report must expose all documented fields in the right ranges
-    and the is_isomorphic flag must agree with the threshold."""
+    and the structurally_isomorphic flag must agree with the threshold."""
     pkg_a = _identical_package()
     pkg_b = _identical_package()
     report = compute_isomorphism_report(pkg_a, pkg_b)
@@ -200,8 +200,8 @@ def test_isomorphism_report_fields() -> None:
     assert 0.0 <= report.matrix_score <= 1.0
     assert 0.0 <= report.structural_score <= 1.0
     assert report.total_score == pytest.approx(1.0, abs=1e-9)
-    assert report.is_isomorphic is True
-    assert (report.total_score >= DEFAULT_ISOMORPHISM_THRESHOLD) == report.is_isomorphic
+    assert report.structurally_isomorphic is True
+    assert (report.total_score >= DEFAULT_ISOMORPHISM_THRESHOLD) == report.structurally_isomorphic
     assert "role_score" in report.breakdown
     assert "matrix_score" in report.breakdown
     assert "structural_score" in report.breakdown
@@ -209,7 +209,7 @@ def test_isomorphism_report_fields() -> None:
 
 
 def test_isomorphism_report_drift_flag_flips_with_threshold() -> None:
-    """Raising the threshold above total_score must flip is_isomorphic."""
+    """Raising the threshold above total_score must flip structurally_isomorphic."""
     pkg_a = _identical_package()
     pkg_b = _identical_package()
     # Force a strict diff by corrupting one matrix.
@@ -219,8 +219,8 @@ def test_isomorphism_report_drift_flag_flips_with_threshold() -> None:
     loose = compute_isomorphism_report(pkg_a, pkg_b, threshold=0.0)
     tight = compute_isomorphism_report(pkg_a, pkg_b, threshold=0.99)
 
-    assert loose.is_isomorphic is True
-    assert tight.is_isomorphic is False
+    assert loose.structurally_isomorphic is True
+    assert tight.structurally_isomorphic is False
     assert 0.0 <= loose.total_score <= 1.0
 
 

@@ -40,7 +40,7 @@ s_role =
 The default role-preserved threshold is `s_role >= 0.5`. This symmetric
 multiset-overlap score penalizes both dropped and extra roles, but it is still
 intentionally weaker than strict graph isomorphism, matrix equality, or textual
-code recovery. Historical evaluation notes sometimes call out a stricter
+code recovery. Recorded evaluation notes sometimes call out a stricter
 high-confidence `0.8` line; that is not the public CLI default.
 
 ## JSON Contract
@@ -68,7 +68,7 @@ high-confidence `0.8` line; that is not the public CLI default.
 }
 ```
 
-The `is_isomorphic` and `role_match_score` constructor aliases are accepted
+The `structurally_isomorphic` and `role_preservation_score` constructor aliases are accepted
 inside Python for compatibility, but CLI/server JSON emits the v0.6 field
 names above.
 

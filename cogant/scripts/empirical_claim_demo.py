@@ -100,7 +100,7 @@ def run_roundtrip(target: Path) -> dict:
             return obj
         except json.JSONDecodeError:
             pass
-    return {"is_isomorphic": "unknown", "role_match_score": "unknown"}
+    return {"structurally_isomorphic": "unknown", "role_preservation_score": "unknown"}
 
 
 # ---------------------------------------------------------------------------
@@ -236,8 +236,8 @@ def main() -> None:
     # --- Roundtrip ---
     print("\n[2] Roundtrip isomorphism check")
     rt_result = run_roundtrip(ZOO_01)
-    print(f"    role_match_score: {rt_result.get('role_match_score', '?')}")
-    print(f"    is_isomorphic:    {rt_result.get('is_isomorphic', '?')}")
+    print(f"    role_preservation_score: {rt_result.get('role_preservation_score', '?')}")
+    print(f"    structurally_isomorphic:    {rt_result.get('structurally_isomorphic', '?')}")
     print(f"    original_roles:   {rt_result.get('original_roles', {})}")
     print("    Galois connection: confirmed (GNN -> Python -> GNN preserves structure)")
 

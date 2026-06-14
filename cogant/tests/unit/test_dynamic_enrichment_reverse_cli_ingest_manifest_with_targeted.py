@@ -166,48 +166,48 @@ class TestReverseCLIRenderHelpers:
 
     def test_render_roundtrip_result_isomorphic(self):
         from cogant.reverse.cli import _render_roundtrip_result
-        from cogant.reverse.idempotency import ROLE_MATCH_THRESHOLD, RoundtripResult
+        from cogant.reverse.idempotency import ROLE_PRESERVATION_THRESHOLD, RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.95,
+            structurally_isomorphic=True,
+            role_preservation_score=0.95,
             original_roles={"function": 3, "class": 1},
             synthesized_roles={"function": 3, "class": 1},
             shape_match={"A": True, "B": False},
             errors=[],
             package_path=None,
         )
-        _render_roundtrip_result(result, ROLE_MATCH_THRESHOLD)
+        _render_roundtrip_result(result, ROLE_PRESERVATION_THRESHOLD)
 
     def test_render_roundtrip_result_drift(self):
         from cogant.reverse.cli import _render_roundtrip_result
-        from cogant.reverse.idempotency import ROLE_MATCH_THRESHOLD, RoundtripResult
+        from cogant.reverse.idempotency import ROLE_PRESERVATION_THRESHOLD, RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.45,
+            structurally_isomorphic=False,
+            role_preservation_score=0.45,
             original_roles={"function": 5},
             synthesized_roles={"function": 2, "class": 1},
             shape_match=None,
             errors=["shape mismatch in A"],
             package_path=Path("/tmp/synth_pkg"),
         )
-        _render_roundtrip_result(result, ROLE_MATCH_THRESHOLD)
+        _render_roundtrip_result(result, ROLE_PRESERVATION_THRESHOLD)
 
     def test_render_roundtrip_result_no_shape_match(self):
         from cogant.reverse.cli import _render_roundtrip_result
-        from cogant.reverse.idempotency import ROLE_MATCH_THRESHOLD, RoundtripResult
+        from cogant.reverse.idempotency import ROLE_PRESERVATION_THRESHOLD, RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.0,
+            structurally_isomorphic=False,
+            role_preservation_score=0.0,
             original_roles={},
             synthesized_roles={},
             shape_match=None,
             errors=[],
             package_path=None,
         )
-        _render_roundtrip_result(result, ROLE_MATCH_THRESHOLD)
+        _render_roundtrip_result(result, ROLE_PRESERVATION_THRESHOLD)
 
 
 # ---------------------------------------------------------------------------

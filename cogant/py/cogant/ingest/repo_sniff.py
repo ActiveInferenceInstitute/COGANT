@@ -197,7 +197,7 @@ def sniff_repo(root: Path | str, *, file_budget: int = DEFAULT_FILE_BUDGET) -> d
 def estimate_pipeline_seconds(file_count: int) -> float:
     """Rough wall-clock estimate for a full ``cogant translate`` run.
 
-    The 50 ms/file heuristic comes from the v0.1.0 benchmark table on
+    The 50 ms/file heuristic comes from the current benchmark table on
     the control-positive fixtures. It overestimates for tiny repos
     (where the constant-time overhead dominates) and underestimates for
     very large ones (where IO starts to matter), but is honest enough to

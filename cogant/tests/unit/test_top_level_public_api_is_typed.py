@@ -41,7 +41,7 @@ def test_top_level_class_names_are_classes_not_none() -> None:
 
 def test_program_graph_is_a_class() -> None:
     """``cogant.ProgramGraph`` may come from either the pydantic or the
-    legacy dataclass module, but it must be a class either way."""
+    compatibility dataclass module, but it must be a class either way."""
     obj = getattr(cogant, "ProgramGraph", None)
     assert obj is not None
     assert inspect.isclass(obj)

@@ -44,7 +44,7 @@ _METRICS = (
     schema_version: '1.0'
     package:
       name: cogant
-      version: '0.5.0'
+      version: '0.6.0'
       python_min: '3.11'
     testing:
       test_count_passing: 6915
@@ -80,7 +80,7 @@ def test_inject_substitutes_placeholders_in_place(tmp_path: Path) -> None:
     result = _run(cli, str(md))
     assert result.returncode == 0, result.stderr
     written = md.read_text(encoding="utf-8")
-    assert "0.5.0" in written
+    assert "0.6.0" in written
     assert "6915" in written
     assert "90.44" in written
     assert "{{" not in written
@@ -151,7 +151,7 @@ def test_inject_directory_mode_with_output_dir(tmp_path: Path) -> None:
     out_dir = tmp_path / "staging"
     result = _run(cli, str(src_dir), "--all", "--output-dir", str(out_dir))
     assert result.returncode == 0, result.stderr
-    assert (out_dir / "a.md").read_text(encoding="utf-8").strip() == "cogant v0.5.0"
+    assert (out_dir / "a.md").read_text(encoding="utf-8").strip() == "cogant v0.6.0"
     assert (out_dir / "b.md").read_text(encoding="utf-8").strip() == "6915 tests"
     # Originals must be untouched.
     assert "{{VERSION}}" in (src_dir / "a.md").read_text(encoding="utf-8")

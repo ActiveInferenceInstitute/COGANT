@@ -45,7 +45,7 @@ class _FakeMarkovBlanket:
 
 @dataclass
 class _FakeRoundtripResult:
-    role_match_score: float = 1.0
+    role_preservation_score: float = 1.0
     tier: str = "ISOMORPHIC"
     forward_roles: dict[str, int] = field(default_factory=dict)
     reverse_roles: dict[str, int] = field(default_factory=dict)
@@ -96,7 +96,7 @@ def blanket():
 @pytest.fixture
 def roundtrip_result():
     return _FakeRoundtripResult(
-        role_match_score=1.0,
+        role_preservation_score=1.0,
         tier="ISOMORPHIC",
         forward_roles={"HIDDEN_STATE": 2, "OBSERVATION": 3, "ACTION": 1},
         reverse_roles={"HIDDEN_STATE": 2, "OBSERVATION": 4, "ACTION": 2, "POLICY": 1},
@@ -251,7 +251,7 @@ def test_export_roundtrip_report_creates_pdf(exporter, roundtrip_result, tmp_pat
 @pytest.mark.unit
 def test_export_roundtrip_report_dict_input(exporter, tmp_path):
     rt_dict = {
-        "role_match_score": 0.75,
+        "role_preservation_score": 0.75,
         "tier": "APPROXIMATE",
         "forward_roles": {"HIDDEN_STATE": 1},
         "reverse_roles": {"HIDDEN_STATE": 1, "OBSERVATION": 2},
@@ -266,7 +266,7 @@ def test_export_roundtrip_report_dict_input(exporter, tmp_path):
 @pytest.mark.unit
 def test_export_roundtrip_report_low_score(exporter, tmp_path):
     rt = _FakeRoundtripResult(
-        role_match_score=0.3,
+        role_preservation_score=0.3,
         tier="DIVERGENT",
         forward_roles={"HIDDEN_STATE": 5},
         reverse_roles={"ACTION": 2},

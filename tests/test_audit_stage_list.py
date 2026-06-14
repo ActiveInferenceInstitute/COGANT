@@ -191,7 +191,7 @@ def test_runner_stages_constant_is_exported_from_pipeline() -> None:
     """
     sys.path.insert(0, str(ROOT / "cogant" / "py"))
     try:
-        # Force-reimport via importlib to avoid stale module state.
+        # Force-reimport via importlib to avoid out-of-sync module state.
         import importlib
 
         import cogant.pipeline as pipeline_module

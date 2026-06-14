@@ -15,7 +15,11 @@ Disable upstream validation in :class:`cogant.gnn.validator.GNNValidator` via
 from __future__ import annotations
 
 import importlib
+import importlib.machinery
+import importlib.util
 import logging
+import sys
+import types
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, TypeVar
@@ -35,11 +39,52 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
+def _activate_upstream_src_layout() -> None:
+    """Make upstream's installed ``src/`` tree importable as repo-style modules."""
+    spec = importlib.util.find_spec("src")
+    locations = getattr(spec, "submodule_search_locations", None) if spec else None
+    if not locations:
+        return
+
+    src_dir = str(Path(next(iter(locations))))
+    if src_dir not in sys.path:
+        sys.path.insert(0, src_dir)
+
+
+def _install_gnn_alias_for_src_package() -> None:
+    """Expose ``src.gnn`` as ``gnn`` for upstream's internal absolute imports.
+
+    The upstream v2.0.0 git package is distributed as the top-level ``src``
+    package, but several upstream modules import siblings as ``gnn.*``. Creating
+    a transient package alias keeps COGANT's bridge working without patching the
+    installed dependency.
+    """
+    if "gnn" in sys.modules:
+        return
+
+    spec = importlib.util.find_spec("src.gnn")
+    locations = getattr(spec, "submodule_search_locations", None) if spec else None
+    if not locations:
+        return
+
+    alias = types.ModuleType("gnn")
+    alias.__package__ = "gnn"
+    alias.__path__ = list(locations)  # type: ignore[attr-defined]
+    alias.__spec__ = importlib.machinery.ModuleSpec("gnn", loader=None, is_package=True)
+    sys.modules["gnn"] = alias
+
+
 def _require_src_gnn() -> Any:
     """Import and return the ``src.gnn`` module (core dependency)."""
+    _activate_upstream_src_layout()
     try:
         return importlib.import_module("src.gnn")
     except ImportError as e:
+        _install_gnn_alias_for_src_package()
+        try:
+            return importlib.import_module("src.gnn")
+        except ImportError:
+            pass
         raise ImportError(
             "generalized-notation-notation (import path src.gnn) is a core COGANT "
             "dependency but failed to import. Re-run `uv sync` from the package root."
@@ -92,7 +137,7 @@ class UpstreamGNNValidation:
 def is_upstream_gnn_available() -> bool:
     """Return True if ``src.gnn`` imports successfully."""
     try:
-        importlib.import_module("src.gnn")
+        _require_src_gnn()
     except ImportError:
         return False
     return True
@@ -111,12 +156,11 @@ def upstream_version() -> str | None:
 def run_upstream_validate_gnn(markdown: str) -> UpstreamGNNValidation:
     """Run upstream ``validate_gnn`` on GNN markdown (full type-check pipeline).
 
-    Upstream ``src.gnn.validate_gnn`` accepts ``Union[str, Path]`` but probes
-    ``Path(x).exists()`` first. On POSIX, passing raw markdown with embedded
-    newlines raises ``OSError: [Errno 63] File name too long`` before the
-    content branch is reached (upstream 1.1.x). The defensive workaround here
-    stages the markdown to a temp file and passes the path so the content
-    branch is never exercised.
+    Upstream ``src.gnn.validate_gnn`` accepts ``Union[str, Path]`` and probes
+    ``Path(x).exists()`` before treating an input as content. On POSIX, passing
+    raw markdown with embedded newlines can raise ``OSError: [Errno 63] File
+    name too long`` before the content branch is reached. The defensive
+    workaround here stages the markdown to a temp file and passes the path.
     """
     import tempfile
 

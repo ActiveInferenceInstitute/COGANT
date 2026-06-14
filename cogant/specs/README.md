@@ -12,7 +12,7 @@ Canonical specifications, schemas, and design documents.
 ## Structure
 
 Each spec is a Markdown document with:
-- Status (Draft, Review, Accepted, Deprecated)
+- Status (Draft, Review, Accepted, Removed)
 - Authors and reviewers
 - Rationale and design decisions
 - Examples and test cases

@@ -8,7 +8,7 @@ tests drive it by constructing a synthetic JSONL and inspecting the
 
 The contract:
 
-* For v0.5 ε-bucket rows that carry the per-role count fields
+* For unscored rows that carry the per-role count fields
   (``orig_n_*``, ``synth_n_*``), the fraction is well-defined and equals
   ``(sum(synth) - sum(orig)) / sum(synth)``.
 * For rows that carry none of those fields, the fraction is ``None``.

@@ -133,7 +133,7 @@ def render_svg_degraded_png(
     draw_metadata_banner(
         ax,
         title=svg_file.stem.replace("_", " ").title(),
-        subtitle="SVG rasterization (degraded)",
+        subtitle="vector conversion (degraded)",
         stats={"bytes": size, "format": "svg"},
         cfg=cfg,
     )

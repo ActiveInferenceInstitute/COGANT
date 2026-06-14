@@ -15,6 +15,6 @@ Imported as `cogant.gnn.formatter`; consumed by `gnn/package.py` and export path
 ## Files
 
 - `base.py` — formatter class, `format()`, shared helpers.
-- `upstream.py` — upstream GNN v1.1 canonical header sections.
+- `upstream.py` — upstream GNN v2.0.0 canonical header sections for the v2.0.0 bundle.
 - `metadata.py`, `structural.py`, `dynamics.py`, `semantic.py` — section families.
 - `__init__.py` — `GNNMarkdownFormatter` and upstream section constants.

@@ -15,7 +15,7 @@
 3. **Warning**: Log and continue
    - Low confidence detection
    - Partial type info
-   - Deprecated usage
+   - Removed usage
 
 4. **Info**: Log only
    - Processing milestones

@@ -548,7 +548,7 @@ def test_export_roundtrip_report_high_score(tmp_path: Path) -> None:
     out = str(tmp_path / "rt_high.pdf")
     result = e.export_roundtrip_report(
         {
-            "role_match_score": 0.95,
+            "role_preservation_score": 0.95,
             "tier": "ISOMORPHIC",
             "forward_roles": {"X": 1, "Y": 2},
             "reverse_roles": {"X": 1, "Y": 2, "Z": 1},
@@ -568,7 +568,7 @@ def test_export_roundtrip_report_mid_score(tmp_path: Path) -> None:
     out = str(tmp_path / "rt_mid.pdf")
     result = e.export_roundtrip_report(
         {
-            "role_match_score": 0.65,
+            "role_preservation_score": 0.65,
             "tier": "PARTIAL",
             "forward_roles": {"A": 3},
             "reverse_roles": {"A": 4, "B": 1},
@@ -592,7 +592,7 @@ def test_export_roundtrip_report_no_roles(tmp_path: Path) -> None:
     e = PDFExporter()
     out = str(tmp_path / "rt_empty.pdf")
     result = e.export_roundtrip_report(
-        {"role_match_score": 0.0, "tier": "EMPTY", "forward_roles": {}, "reverse_roles": {}},
+        {"role_preservation_score": 0.0, "tier": "EMPTY", "forward_roles": {}, "reverse_roles": {}},
         out,
     )
     # Either the report renders (some matplotlib versions tolerate empty tables)
@@ -1098,7 +1098,7 @@ def test_run_upstream_validate_gnn_real_call_success_path() -> None:
     if not is_upstream_gnn_available():
         pytest.skip("src.gnn not importable in this environment")
     minimal = (
-        "## GNNSection\nm\n## GNNVersionAndFlags\nGNN v1\n## ModelName\nn\n"
+        "## GNNSection\nm\n## GNNVersionAndFlags\nGNN v2.0.0\n## ModelName\nn\n"
         "## StateSpaceBlock\ns_f0[1,1,type=int]\n## Connections\n"
         "## InitialParameterization\n## Time\nDiscrete\n## ActInfOntologyAnnotation\n"
     )

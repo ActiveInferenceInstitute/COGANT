@@ -1,13 +1,15 @@
 # GNN Spec Validation Report
-Date: 2026-04-09
+Date: 2026-06-12
 
 ## Upstream Validator
 
-**Not found as a pip-installable package.** No PyPI package named `gnn`, `pyGNN`, or `generalized-notation-notation` exists for the AII GNN spec. The Active Inference Institute's GNN project (`github.com/ActiveInferenceInstitute/GeneralizedNotationNotation`) provides a type-checker as part of its pipeline (`src/type_checker/checker.py`) but does not publish a standalone validator package.
+**Installed as a git-pinned dependency.** COGANT depends on the Active Inference Institute's `generalized-notation-notation` repository through a pinned git revision in `cogant/pyproject.toml` and `uv.lock`. The current pinned release bundle is v2.0.0, whose Python package exposes a v2.0.0.0 GNN engine.
+
+**Bridge boundary:** COGANT callers must use `cogant.gnn.upstream_bridge`, not raw `import src.gnn`. The upstream v2.0.0 package is installed as a top-level `src` package but still imports siblings as `gnn.*`; the bridge activates the installed `src/` tree before importing upstream modules and before launching upstream subprocess steps.
 
 **Reference implementation used:** COGANT's own `GNNValidator` in `py/cogant/gnn/validator.py`, cross-referenced against:
-- Upstream spec: `doc/gnn/gnn_syntax.md` v1.1
-- Upstream type-checker logic: `src/type_checker/checker.py` (analyzed via WebFetch)
+- Upstream spec: `doc/gnn/reference/gnn_syntax.md` v2.0.0.0 engine / v2.0.0 bundle
+- Upstream type-checker logic: `src/type_checker/checker.py`
 - Canonical example files: `input/gnn_files/discrete/two_state_bistable.md`, `actinf_pomdp_agent.md`, `simple_mdp.md`
 
 ## Spec Source
@@ -20,7 +22,7 @@ Date: 2026-04-09
 
 | Requirement | Status | Notes |
 |---|---|---|
-| Required upstream sections present (GNNSection, GNNVersionAndFlags, ModelName, StateSpaceBlock, Connections, InitialParameterization, Time, ActInfOntologyAnnotation) | PASS | All 8 present and in canonical order |
+| Required upstream sections present (`GNNSection`, `GNNVersionAndFlags`, `ModelName`, `StateSpaceBlock`, `Connections`, `InitialParameterization`, `Equations`, `Time`, `ActInfOntologyAnnotation`, `ModelParameters`, `Footer`, `Signature`) | PASS | All required v2.0.0.0-engine sections present and in canonical order |
 | StateSpaceBlock variable syntax: `NAME[dim,dim,...,type=T]` | PASS | Uses `s_f0[10,1,type=int]` format matching upstream regex `(\w+)\s*\[([^\]]+)\]` |
 | Variable type annotations | PASS | All declarations include `type=float` or `type=int` |
 | Variable naming conventions (factor-indexed `s_fN`, `o_mN`, `u_cN`, `A_mN`, `B_fN`) | PASS | Factor-indexed naming is valid per spec; upstream allows alphanumeric+underscore |
@@ -95,23 +97,54 @@ Fixed by renaming the COGANT extended section to `## Program Graph Connections`.
 
 ## Tests Added
 
-New test file: `tests/unit/test_gnn_spec_compliance.py` — 13 tests covering:
+Test file: `tests/unit/test_gnn_spec_compliance.py` covers:
 
 - `TestTimeSection` (3 tests): Dynamic time uses `Discrete` + `Time=t`, not `DiscreteTime=t`; static time emits `Static`
 - `TestConnectionSyntax` (2 tests): No parenthesised single-variable nodes in upstream Connections section
 - `TestNoDuplicateConnectionsHeader` (2 tests): Exactly one `## Connections`, COGANT extended uses `## Program Graph Connections`
-- `TestUpstreamSectionOrder` (2 tests): All 8 required sections present and in canonical order
+- `TestUpstreamSectionOrder`: all required upstream sections present and in canonical order
 - `TestStateSpaceBlockSyntax` (2 tests): Variable declarations match upstream regex and include `type=` annotation
 - `TestValidatorSpec` (2 tests): Validator detects correct time format; CANONICAL_SECTIONS updated for renamed section
 
-All 80 GNN-related tests pass (13 new + 67 existing).
+Additional negative controls live in `tests/unit/test_gnn_upstream_bridge.py`,
+`tests/unit/test_upstream_pipeline_resolution.py`, and
+`tests/unit/test_gnn_validator_reports.py`: they distinguish raw upstream import
+failure from bridge success, lock the active-interpreter subprocess contract, and
+make the v2.0.0.0-only tail sections (`Equations`, `ModelParameters`, `Footer`,
+`Signature`) non-optional.
+
+## Audit Surface And Visualization
+
+The structural validator is not the only evidence surface. The project-root
+helper `tools/gnn_v2_audit_surface.py` consumes an exhaustive audit directory
+and writes JSON, Markdown, and SVG outputs that keep four claims separate:
+
+- pinned upstream version and bridge currentness;
+- COGANT-owned package, validator, formatter, reverse, roundtrip, runner, CLI,
+  and pipeline method health;
+- selected upstream all-step execution status;
+- dependency and supply-chain scan status.
+
+Use it after an audit run:
+
+```bash
+uv run python tools/gnn_v2_audit_surface.py \
+  --audit-dir /tmp/cogant_gnn_v2_audit \
+  --output-dir /tmp/cogant_gnn_v2_audit/published_surface
+```
+
+Use `--strict-upstream` when the all-step upstream pipeline is a release gate.
+That mode deliberately fails on selected upstream-step failures even though
+normal COGANT product paths keep those failures advisory and preserve the
+validated package. The companion page
+[GNN v2 audit surface](GNN_V2_AUDIT_SURFACE.md) explains how to read the SVG.
 
 ## Remaining Open Issues
 
-1. **No upstream pip-installable validator.** The AII GNN project does not publish a standalone Python package. True upstream validation requires cloning the full GeneralizedNotationNotation repo and running `src/5_type_checker.py` locally. This is not currently wired into COGANT's CI.
+1. **Raw upstream import remains layout-sensitive.** Direct `import src.gnn` can fail before COGANT's bridge adjusts `sys.path` for upstream's repo-style imports. This is intentional containment: COGANT code must call the `upstream_*` facade functions rather than importing upstream modules directly.
 
-2. **`html_renderer.py` imports missing `cytoscape_view` module.** This is a pre-existing bug in the working tree (`py/cogant/viz/html_renderer.py` line 8) that breaks integration tests when the `html_renderer` is imported. This is unrelated to GNN spec compliance and is NOT caused by these fixes.
+2. **Upstream executable render/execute is stricter than structural validation.** A COGANT package can pass COGANT validation plus upstream parse/type-check/export while upstream framework code generation still reports missing executable POMDP metadata. That failure is an interop target, not proof that the COGANT package validator is wrong; nevertheless, docs must not convert a green validator score into an all-step execution claim.
 
 3. **Variable naming diverges from canonical upstream examples.** Upstream simple models use flat names (`s`, `o`, `A`, `B`). COGANT uses factor-indexed names (`s_f0`, `o_m0`, `A_m0`, `B_f0`). This is valid per the spec (alphanumeric + underscore allowed) and is intentional for multi-factor support. No change needed, but it may cause semantic mismatch warnings if the upstream type-checker expects single-letter names in `ActInfOntologyAnnotation`.
 
-4. **`InitialParameterization` uses `identity()` function syntax for B.** COGANT emits `B_f0=identity(10,10,1)` as a symbolic shorthand. The upstream spec examples use explicit brace-delimited matrix notation. The upstream type-checker only counts `=` assignments without deep structural validation, so this passes, but strict future validators may reject the symbolic form.
+4. **`InitialParameterization` uses `identity()` function syntax for B.** COGANT emits `B_f0=identity(10,10,1)` as a symbolic shorthand. The upstream examples often use explicit brace-delimited matrix notation. The upstream type-checker currently accepts assignment syntax without deep matrix expansion, but stricter future validators may require explicit tensor payloads.

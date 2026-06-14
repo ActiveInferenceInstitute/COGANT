@@ -6,7 +6,7 @@ together with the top-level execution flags that ``PipelineRunner``
 understands (``stages``, ``skip_stages``, ``skip_dynamic``, output
 locations, dynamic-stage data paths, etc.).
 
-This class is a *superset* of the legacy
+This class is a *superset* of the compatibility
 ``cogant.api.pipeline.PipelineConfig`` dataclass: any kwargs that used
 to work on the dataclass also work here, so existing call-sites such
 as ``PipelineConfig(stages=[...], skip_dynamic=True)`` keep behaving
@@ -46,7 +46,7 @@ _DEFAULT_STAGES: list[str] = [
 class PipelineConfig(BaseModel):
     """Composite config — one per pipeline run.
 
-    Top-level execution fields mirror the legacy
+    Top-level execution fields mirror the compatibility
     ``cogant.api.pipeline.PipelineConfig`` dataclass so existing
     call-sites continue to work unchanged.
 

@@ -9,7 +9,7 @@ describe the current checked-in evidence, not release archaeology.
 Evaluation pages are maintained as current status surfaces. Stable filenames
 may be kept for inbound links, but their content should be rewritten when a new
 ledger, metric contract, or validation gate replaces an earlier one. Do not
-leave an active page carrying an obsolete headline with a small correction
+leave an active page carrying an unsupported headline with a small correction
 banner.
 
 The source of truth for numeric release claims is

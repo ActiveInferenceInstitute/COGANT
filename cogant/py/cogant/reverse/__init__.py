@@ -35,7 +35,6 @@ Public API
 
 from cogant.reverse.callable import MatrixFunctions, make_matrix_functions
 from cogant.reverse.idempotency import (
-    ROLE_MATCH_THRESHOLD,
     ROLE_PRESERVATION_THRESHOLD,
     ROUNDTRIP_STATUS_DRIFT,
     ROUNDTRIP_STATUS_FAILED,
@@ -69,7 +68,6 @@ __all__ = [
     "verify_roundtrip",
     "verify_repo_roundtrip",
     "ROLE_PRESERVATION_THRESHOLD",
-    "ROLE_MATCH_THRESHOLD",
     "ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC",
     "ROUNDTRIP_STATUS_ROLE_PRESERVED",
     "ROUNDTRIP_STATUS_DRIFT",

@@ -58,6 +58,6 @@ affects the posture.
 - `compliance.md` lists frameworks the project explicitly claims to
   address. Do not add a framework unless there is a written policy and
   controls elsewhere in this module that back the claim.
-- Historical security advisories, when they happen, go into
+- Recorded security advisories, when they happen, go into
   `security_release_process.md` or a dated sibling page — **not** inline
   in `threat_model.md` or `overview.md`, which stay forward-looking.

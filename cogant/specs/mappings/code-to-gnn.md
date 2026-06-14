@@ -258,7 +258,7 @@ else:
 - Confidence: 1.0 (syntactic)
 
 #### Rule: Annotation Presence
-- Match: @Annotation (including @Override, @Deprecated)
+- Match: @Annotation (including @Override, @Removed)
 - Transform: Add semantic flags
 - Confidence: 1.0
 
@@ -300,7 +300,7 @@ All rules subject to modification based on context:
 - **-0.2**: Inferred from weak heuristic only
 - **-0.15**: Type mismatch between expected and actual
 - **-0.1**: Unused or unreachable code
-- **-0.1**: Deprecated API usage
+- **-0.1**: Removed API usage
 
 ## Conflict Resolution
 

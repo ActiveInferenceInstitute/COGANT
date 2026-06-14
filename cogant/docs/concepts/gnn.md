@@ -14,7 +14,7 @@ GNN stands for **Generalized Notation Notation** -- a structured markdown format
 
 A GNN file is a self-contained description of a generative model. It tells you: what hidden states exist, what observations the system can make, what actions it can take, how states transition given actions, how observations relate to hidden states, and what the system prefers. In COGANT's case, the "system" is your codebase and the generative model is derived from static analysis of your source code.
 
-The format is a markdown file with specific `##` section headers that parsers and type-checkers recognize. COGANT produces files that satisfy the upstream GNN v1.1 specification while also appending extended sections for provenance, Markov blankets, and confidence metrics.
+The format is a markdown file with specific `##` section headers that parsers and type-checkers recognize. COGANT now targets the upstream GNN v2.0.0 engine carried by the pinned GeneralizedNotationNotation v2.0.0 release bundle while also appending extended sections for provenance, Markov blankets, and confidence metrics.
 
 ## Anatomy of a GNN file
 
@@ -22,7 +22,7 @@ A GNN file emitted by COGANT contains these sections in canonical order:
 
 ### GNNSection and GNNVersionAndFlags
 
-The header block that identifies the file as a GNN model and declares the version. COGANT emits `v1.1` with flags indicating the file was machine-generated.
+The header block that identifies the file as a GNN model and declares the version. COGANT emits `GNN v2.0.0` with a bundle provenance comment so the upstream checker and COGANT's own validator agree on the required header surface.
 
 ### ModelName and ModelAnnotation
 
@@ -34,9 +34,9 @@ The core of the model. Declares every hidden state variable, its type, and its c
 
 ```
 ## StateSpaceBlock
-- s_f0: display (int, cardinality=10)
-- s_f1: accumulator (float, cardinality=1)
-- s_f2: history_len (int, cardinality=100)
+s_f0[10,1,type=int]
+s_f1[1,1,type=float]
+s_f2[100,1,type=int]
 ```
 
 Each `s_fN` entry corresponds to a class attribute or mutable variable that COGANT's `MutatingSubsystemRule` identified as internal state.
@@ -100,7 +100,7 @@ The package directory contains `model.gnn.md` (the human-readable GNN), `model.g
 
 ## A concrete example
 
-Given a Python module with a `Calculator` class, COGANT's forward pipeline produces a GNN whose `StateSpaceBlock` contains entries like `s_f0: display`, `s_f1: accumulator` -- because these are the mutable attributes identified by `MutatingSubsystemRule`. The `ObservationRule` maps `get_display()` and `get_history()` to observation modalities. The `ActionRule` maps `_execute_operation()` to an action. The resulting GNN file is a complete Active Inference model that a PyMDP agent could run immediately.
+Given a Python module with a `Calculator` class, COGANT's forward pipeline produces a GNN whose `StateSpaceBlock` contains entries like `s_f0: display`, `s_f1: accumulator` -- because these are the mutable attributes identified by `MutatingSubsystemRule`. The `ObservationRule` maps `get_display()` and `get_history()` to observation modalities. The `ActionRule` maps `_execute_operation()` to an action. The resulting GNN file is a structurally complete Active Inference candidate whose matrices and sections can be validated, visualized, and inspected. Executable PyMDP-style runtime use remains a downstream compatibility question: COGANT's built-in simulation path exercises derived matrices, while upstream framework render/execute steps are audited separately.
 
 ## Implementation
 
@@ -113,7 +113,7 @@ The behavior described on this page is implemented by the `cogant.gnn` package. 
 | `GNNPackage` directory layout (`model.gnn.md` + satellites) | `gnn/package.py` | [`cogant.gnn` → Package builder](../api/gnn.md#package-builder) | `GNNPackageBuilder` |
 | A / B / C / D matrix construction from rule output | `gnn/matrices.py` | [`cogant.gnn` → Matrix builder](../api/gnn.md#matrix-builder) | `build_matrices`, `MatrixBuilder` |
 | `load_gnn_package()` parser used in [reverse mode](roundtrip.md) | `gnn/runner.py` | [`cogant.gnn` → Runner](../api/gnn.md#runner) | `load_gnn_package` |
-| GNN v1.1 conformance + 0–100 score | `gnn/validator.py` | [`cogant.gnn` → Validator](../api/gnn.md#validator) | `GNNValidator` |
+| GNN v2.0.0-engine conformance + 0–100 score | `gnn/validator.py` | [`cogant.gnn` → Validator](../api/gnn.md#validator) | `GNNValidator` |
 | Mapping the [seven Active Inference roles](../reference/semantic_roles.md) and supporting evidence roles onto GNN sections | `translate/rules/` | [`cogant.translate` → Rules](../api/translate.md#rules) | `ObservationRule`, `ActionRule`, `MutatingSubsystemRule`, ... — see [Translation rules reference](../reference/translation_rules.md) |
 | State-space basis projection (variables / observations / actions) | `statespace/compiler.py` | [`cogant.statespace`](../api/statespace.md#compiler) | `StateSpaceCompiler` |
 

@@ -162,5 +162,5 @@ def test_get_parser_for_extension_ts():
 
     parser = get_parser_for_extension(".ts")
     assert parser is not None
-    # Tree-sitter or legacy regex TS are both acceptable.
+    # Tree-sitter or compatibility regex TS are both acceptable.
     assert parser.metadata.name == "typescript"

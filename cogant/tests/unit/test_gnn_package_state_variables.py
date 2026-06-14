@@ -60,7 +60,7 @@ pytestmark = pytest.mark.unit
 def _empty_state_space() -> StateSpaceModel:
     return StateSpaceModel(
         id="ss",
-        schema_name="v0.1.0",
+        schema_name="current",
         variables={},
         observations={},
         actions={},
@@ -72,7 +72,7 @@ def _empty_state_space() -> StateSpaceModel:
 
 
 def _empty_process_model() -> ProcessModel:
-    return ProcessModel(id="pm", schema_name="v0.1.0", stages={}, connections={})
+    return ProcessModel(id="pm", schema_name="current", stages={}, connections={})
 
 
 def _empty_graph() -> ProgramGraph:
@@ -954,7 +954,7 @@ class TestPackageBuilderProgramGraphAndProcessJsonFallbacks:
         # Build a process model whose stages list contains pydantic-like obj
         pm = ProcessModel(
             id="pm1",
-            schema_name="v0.1.0",
+            schema_name="current",
             stages={"s1": Stage(id="s1", name="stage_a")},
             connections={
                 "c1": ProcessConnection(

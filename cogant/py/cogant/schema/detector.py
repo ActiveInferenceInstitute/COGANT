@@ -1,24 +1,15 @@
-"""Detect the schema version of a GNN markdown text.
-
-The detector never raises -- it falls back to V1_0 when the version
-cannot be determined.
-"""
+"""Detect whether a GNN markdown text declares the current 2.0.0 contract."""
 
 import re
 
-from cogant.schema.versions import SchemaVersion
+from cogant.schema.versions import CURRENT_GNN_VERSION, UNSUPPORTED_GNN_VERSION
 
 _VERSION_AND_FLAGS_RE = re.compile(r"^##\s+GNNVersionAndFlags\b", re.MULTILINE)
-_GNN_V1_MARKER_RE = re.compile(r"GNN\s+v1\b", re.MULTILINE)
+_GNN_V2_MARKER_RE = re.compile(r"\bGNN\s+v2\.0\.0\b", re.MULTILINE)
 
 
 def detect_version(gnn_text: str) -> str:
-    """Return the schema version string for *gnn_text*.
-
-    Detection logic:
-    - If a ``## GNNVersionAndFlags`` section exists **and** contains
-      the marker ``GNN v1``, the text is classified as v1.1.
-    - Otherwise, falls back to v1.0.
+    """Return ``2.0.0`` for current GNN markdown, otherwise ``unsupported``.
 
     Parameters
     ----------
@@ -28,11 +19,11 @@ def detect_version(gnn_text: str) -> str:
     Returns
     -------
     str
-        One of :attr:`SchemaVersion.V1_0` or :attr:`SchemaVersion.V1_1`.
+        The current GNN version string or ``unsupported``.
     """
     try:
-        if _VERSION_AND_FLAGS_RE.search(gnn_text) and _GNN_V1_MARKER_RE.search(gnn_text):
-            return SchemaVersion.V1_1
+        if _VERSION_AND_FLAGS_RE.search(gnn_text) and _GNN_V2_MARKER_RE.search(gnn_text):
+            return CURRENT_GNN_VERSION
     except Exception:  # noqa: BLE001 — never raise
         pass
-    return SchemaVersion.V1_0
+    return UNSUPPORTED_GNN_VERSION

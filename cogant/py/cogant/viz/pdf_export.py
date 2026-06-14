@@ -361,7 +361,7 @@ class PDFExporter:
         """
         Render A/B/C/D matrices as heatmaps in PDF.
 
-        Creates a multi-page PDF: first page shows all four matrices as a
+        Creates a multi-page PDF: opening page shows all four matrices as a
         2×2 grid; subsequent pages show each matrix individually for detail.
 
         Args:
@@ -529,8 +529,9 @@ class PDFExporter:
                 ax.set_ylabel("Node count")
                 ax.set_title("Markov Blanket Partition", fontsize=14, weight="bold")
                 ax.grid(axis="y", alpha=0.3)
-                ax.set_ylim(0, max(counts, default=1) * 1.2)
-                fig.tight_layout()
+                y_max = max(max(counts, default=0), 1)
+                ax.set_ylim(0, y_max * 1.2)
+                fig.subplots_adjust(left=0.12, right=0.96, bottom=0.18, top=0.88)
                 pdf.savefig(fig, bbox_inches="tight")
                 plt.close(fig)
 
@@ -761,7 +762,7 @@ class PDFExporter:
                     v = roundtrip_result.get(attr, default)
                 return v if v is not None else default
 
-            score: float = float(_get("role_preservation_score", _get("role_match_score", 0.0)))
+            score: float = float(_get("role_preservation_score", _get("role_preservation_score", 0.0)))
             tier: str = str(_get("tier", "UNKNOWN"))
             forward_roles: dict[str, int] = dict(_get("forward_roles", {}))
             reverse_roles: dict[str, int] = dict(_get("reverse_roles", {}))

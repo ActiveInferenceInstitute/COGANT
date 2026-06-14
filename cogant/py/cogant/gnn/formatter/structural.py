@@ -313,7 +313,7 @@ class _StructuralSectionsMixin:
 
         This COGANT-extended section uses the header ``## Program Graph
         Connections`` (not ``## Connections``) to avoid a duplicate level-2
-        header collision with the upstream GNN v1.1 ``## Connections`` section
+        header collision with the upstream GNN v2.0.0.x ``## Connections`` section
         that appears earlier in the document.  The upstream type-checker only
         processes the first ``## Connections`` section it encounters; a second
         identically-named section would be parsed as a continuation of the

@@ -242,7 +242,7 @@ def test_coverage_report_partial_coverage_percentage() -> None:
     assert report["uncovered_node_ids"] == ["n2", "n3"]
 
 
-def test_coverage_report_stale_mapping_ids_are_dropped() -> None:
+def test_coverage_report_out_of_sync_mapping_ids_are_dropped() -> None:
     """Mappings referencing missing nodes do not inflate coverage.
 
     Kills the mutation that removes the ``covered_node_ids &= all_node_ids``
@@ -252,8 +252,8 @@ def test_coverage_report_stale_mapping_ids_are_dropped() -> None:
     graph = _make_graph()
     _add_node(graph, "real_node")
 
-    stale = _mapping("stale", ["real_node", "ghost_node"], score=0.5)
-    engine.mappings[stale.id] = stale
+    out_of_sync = _mapping("out-of-sync", ["real_node", "ghost_node"], score=0.5)
+    engine.mappings[out_of_sync.id] = out_of_sync
 
     report = engine.get_coverage_report(graph)
 
@@ -420,19 +420,19 @@ def test_translate_clears_prior_state_on_each_call() -> None:
     Kills mutations removing ``self.mappings.clear()`` etc.
     """
     engine = TranslationEngine(max_iterations=1)
-    # Seed stale state.
-    engine.mappings["stale"] = _mapping("stale", ["x"], 0.5)
+    # Seed out-of-sync state.
+    engine.mappings["out-of-sync"] = _mapping("out-of-sync", ["x"], 0.5)
     engine._match_log.append({"event_type": "old", "rule_name": "x", "detail": "y"})
-    engine._rule_priority["stale"] = 9
+    engine._rule_priority["out-of-sync"] = 9
 
     graph = _make_graph()
     _add_node(graph, "n1")
     result = engine.translate(graph)
 
     assert result == []
-    assert "stale" not in engine.mappings
+    assert "out-of-sync" not in engine.mappings
     assert not any(e["event_type"] == "old" for e in engine.get_match_log())
-    assert "stale" not in engine._rule_priority
+    assert "out-of-sync" not in engine._rule_priority
 
 
 def test_translate_max_iterations_one_still_logs_iteration_complete() -> None:

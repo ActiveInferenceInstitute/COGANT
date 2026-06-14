@@ -24,6 +24,6 @@ jobs:
         working-directory: cogant
         run: uv sync --all-extras
 
-      - name: Check METRICS.yaml is not stale
+      - name: Check METRICS.yaml is not out-of-sync
         working-directory: cogant
         run: uv run python ../tools/check_metrics_fresh.py

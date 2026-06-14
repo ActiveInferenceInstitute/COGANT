@@ -28,7 +28,16 @@ The interaction between `InheritanceRule` and `MutatingSubsystemRule` is summari
 
 ## Fixpoint-iteration ablation
 
-The translation engine's default iteration cap is `max_iterations = 10`; this ablation studies how the output depends on that cap. @sec:thm-fixpoint-termination guarantees termination from finiteness and stable mapping IDs, not from a global disjointness claim over all rule families. The empirical question here is narrower: on the packaged fixtures, do additional passes after the first nonzero pass add any new semantic mappings? The ablation verifies this by rerunning the pipeline with the cap set to $K \in \{1, 2, 5, 10\}$ and recording the total mapping count at each setting.
+The translation engine's default iteration cap is `max_iterations = 10`; this
+ablation studies how the output depends on that cap. @sec:thm-fixpoint-termination
+is a bounded-implementation argument: finiteness, stable mapping IDs, the
+no-new-mapping break condition, and the explicit cap make the shipped loop stop,
+without implying a global disjointness or confluence claim over every possible
+user-defined rule family. The empirical question here is narrower: on the
+packaged fixtures, do additional passes after the first nonzero pass add any new
+semantic mappings? The ablation verifies this by rerunning the pipeline with the
+cap set to $K \in \{1, 2, 5, 10\}$ and recording the total mapping count at each
+setting.
 
 | $K$ (max iterations) | `calculator` mappings | `event_pipeline` mappings | `flask_mini` mappings | `flask_app` mappings | `requests_lib` mappings | `json_stdlib` mappings | Convergence |
 |---:|:---:|:---:|:---:|:---:|:---:|:---:|---|

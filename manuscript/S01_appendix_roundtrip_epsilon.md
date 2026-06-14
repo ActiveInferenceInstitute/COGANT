@@ -24,9 +24,11 @@ per-target rows are checked in at
 : Native v{{VERSION}} roundtrip aggregate ledger. {#tbl:fresh-v06-roundtrip}
 
 The current ledger supports a role-preservation claim for
-{{ROLE_PRESERVED_COUNT}} of {{TOTAL_TARGETS}} targets. It does not support a
-strict structural-isomorphism claim: `STRUCTURALLY_ISOMORPHIC` is
-{{STRICT_ISOMORPHISM_COUNT}} in the checked-in metrics.
+{{ROLE_PRESERVED_COUNT}} of {{TOTAL_TARGETS}} targets. It supports a strict
+structural-isomorphism claim only for the deliberately minimal reversible
+fixture `roundtrip_strict_minimal`: `STRUCTURALLY_ISOMORPHIC` is
+{{STRICT_ISOMORPHISM_COUNT}} in the checked-in metrics, and ordinary application
+fixtures remain role-preserved rather than graph-isomorphic.
 
 ## A.2 Per-target status
 
@@ -41,6 +43,7 @@ strict structural-isomorphism claim: `STRUCTURALLY_ISOMORPHIC` is
 | `multi_package_workspace` | control_positive | 1.0 | `ROLE_PRESERVED` | no |
 | `notebook_module` | control_positive | 1.0 | `ROLE_PRESERVED` | no |
 | `plugin_architecture` | control_positive | 1.0 | `ROLE_PRESERVED` | no |
+| `roundtrip_strict_minimal` | control_positive | 1.0 | `STRUCTURALLY_ISOMORPHIC` | yes |
 | `flask_app` | real_world | 1.0 | `ROLE_PRESERVED` | no |
 | `json_stdlib` | real_world | 1.0 | `ROLE_PRESERVED` | no |
 | `requests_lib` | real_world | 1.0 | `ROLE_PRESERVED` | no |

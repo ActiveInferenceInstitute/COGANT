@@ -8,7 +8,7 @@ run the tree-sitter JS parser, build a program graph, run the
 translation engine, compile a state-space model, emit a GNN markdown,
 reverse-synthesize a Python package, and re-run the forward pipeline
 on the synthesized package. The final role multiset must overlap the
-JS-side multiset above the lenient ``ROLE_MATCH_THRESHOLD`` (0.5).
+JS-side multiset above the lenient ``ROLE_PRESERVATION_THRESHOLD`` (0.5).
 
 The runtime tier is also exercised: the JS-derived A/B/C/D matrices
 are fed into :class:`cogant.runtime.loop.AgentRuntime` which must
@@ -283,12 +283,12 @@ def test_js_forward_reverse_forward_role_match_above_threshold(
     tmp_path: Path,
     js_pipeline: dict[str, Any],
 ) -> None:
-    """JS → GNN → Python package → forward: role_match_score > 0.5.
+    """JS → GNN → Python package → forward: role_preservation_score > 0.5.
 
     The strictest acceptance criterion for the cross-language claim:
     the role multiset recovered from re-scanning the reverse-synthesized
     Python package must overlap the JS-side multiset above the lenient
-    isomorphism threshold. A ``role_match_score`` of exactly 0.5 means
+    isomorphism threshold. A ``role_preservation_score`` of exactly 0.5 means
     half the JS-side roles survived the lossy GNN projection; anything
     above that is evidence the core Active Inference structure holds
     cross-language.
@@ -296,7 +296,7 @@ def test_js_forward_reverse_forward_role_match_above_threshold(
     from cogant.gnn.formatter import GNNMarkdownFormatter
     from cogant.process.extractor import ProcessExtractor
     from cogant.reverse.idempotency import (
-        ROLE_MATCH_THRESHOLD,
+        ROLE_PRESERVATION_THRESHOLD,
         _role_multiset_from_mappings,
         _run_forward,
     )
@@ -358,11 +358,11 @@ def test_js_forward_reverse_forward_role_match_above_threshold(
     overlap = sum((r1 & r2).values())
     score = overlap / sum(r1.values())
 
-    assert ROLE_MATCH_THRESHOLD <= 0.5, (
-        "ROLE_MATCH_THRESHOLD tightened unexpectedly; this test assumes the lenient default."
+    assert ROLE_PRESERVATION_THRESHOLD <= 0.5, (
+        "ROLE_PRESERVATION_THRESHOLD tightened unexpectedly; this test assumes the lenient default."
     )
     assert score > 0.5, (
-        f"Cross-language role_match_score={score:.4f} <= 0.5. "
+        f"Cross-language role_preservation_score={score:.4f} <= 0.5. "
         f"R1(js)={dict(r1)}  R2(resyn)={dict(r2)}"
     )
 

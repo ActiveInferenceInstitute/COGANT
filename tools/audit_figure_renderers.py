@@ -169,11 +169,13 @@ def _has_gate_stage_set(tree: ast.AST) -> bool:
 
 
 def _gantt_diamond_marker_errors() -> list[str]:
-    """AST-confirm the gantt caption claim ("dark diamond markers mark
-    validate/roundtrip gates"): a ``scatter`` call must draw ``marker="D"`` and the
-    gate-stage set must list validate+roundtrip. Stronger than a substring check —
-    it cannot be satisfied by a diamond that survives only on a legend handle."""
-    relpath = "tools/manuscript_figures.py"
+    """AST-confirm the gantt gate-marker claim.
+
+    A ``scatter`` call must draw ``marker="D"`` and the gate-stage set must list
+    validate+roundtrip. Stronger than a substring check: it cannot be satisfied
+    by a marker that survives only on a legend handle.
+    """
+    relpath = "tools/figures/renderers.py"
     source_file = _REPO_ROOT / relpath
     if not source_file.exists():
         return [f"roundtrip_batch_gantt: renderer source missing: {relpath}"]
@@ -181,7 +183,7 @@ def _gantt_diamond_marker_errors() -> list[str]:
     errors: list[str] = []
     if not _has_scatter_with_diamond(tree):
         errors.append(
-            f'roundtrip_batch_gantt caption "dark diamond markers": no '
+            f'roundtrip_batch_gantt caption "gate markers": no '
             f'scatter(marker="D") draw call in {relpath} — the gate glyph changed'
         )
     if not _has_gate_stage_set(tree):

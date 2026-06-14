@@ -6,7 +6,7 @@ ingest/repo.py RepoIngester (local ingestion), gnn/package.py exception paths.
 Covers:
 - reverse/idempotency.py: RoundtripResult (summary), _role_multiset_from_model,
   _role_multiset_from_mappings, _model_matrices, _state_space_matrices,
-  _nodes_edges_from_mappings, plan_package helper (re-exported), ROLE_MATCH_THRESHOLD
+  _nodes_edges_from_mappings, plan_package helper (re-exported), ROLE_PRESERVATION_THRESHOLD
 - ingest/manifest.py: ManifestParser (parse, parse_pyproject_toml, parse_setup_py,
   parse_requirements_txt, parse_package_json, parse_cargo_toml,
   _parse_requirement_line, _parse_requirement_list)
@@ -65,8 +65,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         r = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.8,
+            structurally_isomorphic=True,
+            role_preservation_score=0.8,
             matrix_score=0.9,
             structural_score=0.7,
             original_roles={"HIDDEN_STATE": 2},
@@ -80,8 +80,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         r = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.2,
+            structurally_isomorphic=False,
+            role_preservation_score=0.2,
             matrix_score=0.0,
             structural_score=0.1,
             original_roles={"HIDDEN_STATE": 3},
@@ -94,8 +94,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         r = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=1.0,
+            structurally_isomorphic=True,
+            role_preservation_score=1.0,
             matrix_score=0.5,
             structural_score=0.5,
         )
@@ -108,8 +108,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         r = RoundtripResult()
-        assert r.is_isomorphic is False
-        assert r.role_match_score == 0.0
+        assert r.structurally_isomorphic is False
+        assert r.role_preservation_score == 0.0
         assert isinstance(r.errors, list)
         assert isinstance(r.shape_match, dict)
 
@@ -253,11 +253,11 @@ class TestIdempotencyHelpers:
         assert nodes[0]["role"] == "ACTION"
         assert edges == []
 
-    def test_role_match_threshold_is_float(self):
-        from cogant.reverse.idempotency import ROLE_MATCH_THRESHOLD
+    def test_role_preservation_threshold_is_float(self):
+        from cogant.reverse.idempotency import ROLE_PRESERVATION_THRESHOLD
 
-        assert isinstance(ROLE_MATCH_THRESHOLD, float)
-        assert 0.0 <= ROLE_MATCH_THRESHOLD <= 1.0
+        assert isinstance(ROLE_PRESERVATION_THRESHOLD, float)
+        assert 0.0 <= ROLE_PRESERVATION_THRESHOLD <= 1.0
 
 
 # ---------------------------------------------------------------------------

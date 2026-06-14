@@ -126,10 +126,6 @@ KNOWN_VALUES = [
 # None for extracted_value means "any value matching this pattern"
 # ---------------------------------------------------------------------------
 EXPECTED_MISMATCHES = [
-    # Version references in narrative text can differ from the package version.
-    ("version", "0.4.0", "Version reference: describes v0.4.0 behaviour, not current version"),
-    ("version", "0.2.0", "Version reference: describes items shipped in v0.2.0"),
-    ("version", "0.1.0", "Version reference: describes v0.1.0 behaviour or table label"),
     # Threshold definitions in appendix prose can differ from aggregate means.
     (
         "mean_role_preservation_score",
@@ -146,13 +142,13 @@ EXPECTED_MISMATCHES = [
         "0.0",
         "Role-preservation definition: exactly one side has a role, not a mean-score claim",
     ),
-    # Per-target epsilon values extracted from S01 table rows (individual targets, not mean)
+    # Per-target score values extracted from S01 table rows (individual targets, not mean)
     (
         "mean_role_preservation_score",
         "0.8638",
         (
-            "Per-target value: dateutil ε=0.8638 (individual target, "
-            "matches METRICS.yaml median_epsilon)"
+            "Per-target value: dateutil role score 0.8638 (individual target, "
+            "matches METRICS.yaml median role score)"
         ),
     ),
     ("mean_role_preservation_score", "0.852", "Per-target value: pyyaml s_role=0.8520 (individual target)"),
@@ -160,12 +156,12 @@ EXPECTED_MISMATCHES = [
     (
         "mean_role_preservation_score",
         "0.7778",
-        "Archive appendix row: per-target ε, not METRICS mean_epsilon",
+        "Appendix row: per-target role score, not METRICS mean role score",
     ),
     (
         "mean_role_preservation_score",
         "0.6667",
-        "Archive appendix row: per-target ε, not METRICS mean_epsilon",
+        "Appendix row: per-target role score, not METRICS mean role score",
     ),
     (
         "role_preserved_count",
@@ -235,7 +231,7 @@ def _mk_patterns():
             re.compile(r"(?:about|~|approximately)\s*(\d{2,3}(?:\.\d+)?)\s*%", re.IGNORECASE),
             lambda m: float(m.group(1)),
         ),
-        # Version: "v0.5.0"
+        # Version: "previous.0"
         (
             "version",
             re.compile(r"\bv(\d+\.\d+\.\d+)\b"),
@@ -243,7 +239,7 @@ def _mk_patterns():
         ),
         # Role-preserved count: "23 role-preserved targets", "all 23 targets role-preserved".
         # Negative lookbehind ``(?<![v\d.])`` excludes matches inside version
-        # tokens such as ``v0.6 role-preserved`` (where the regex would
+        # tokens such as ``current role-preserved`` (where the regex would
         # otherwise extract the ``6`` from the version as a count).
         (
             "role_preserved_count",
@@ -447,7 +443,7 @@ def classify(
     # String / exact comparison path
     if str(extracted) == str(metrics_val):
         return "MATCH", "HIGH", 0.0
-    # Near-match for version strings like "0.5.0" vs "v0.5.0"
+    # Near-match for version strings like "0.5.0" vs "previous.0"
     if str(extracted).lstrip("v") == str(metrics_val).lstrip("v"):
         return "MATCH", "HIGH", 0.0
 

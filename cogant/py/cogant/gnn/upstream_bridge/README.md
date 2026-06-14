@@ -5,6 +5,11 @@ Lazy facade over the Active Inference Institute
 Heavy upstream dependencies are imported only on first use, so
 `import cogant` stays fast.
 
+Callers should use this facade instead of raw `import src.gnn`. The pinned
+upstream v2.0.0 package is installed as a top-level `src` package but still
+uses repo-style `gnn.*` sibling imports internally; the bridge prepares that
+layout before loading upstream modules or launching upstream subprocess steps.
+
 Two independent surfaces:
 
 * **Validation / parsing helpers** (`upstream_*` functions) — wrap

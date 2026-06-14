@@ -274,10 +274,10 @@ def test_action_effects_reads_effects_attribute():
 def test_action_effects_falls_back_to_affects_state_vars():
     """When 'effects' is missing but 'affects_state_vars' is present it is used."""
 
-    class _Legacy:
+    class _Compatibility:
         affects_state_vars = ["a", "b"]
 
-    assert GNNMarkdownFormatter._action_effects(_Legacy()) == ["a", "b"]
+    assert GNNMarkdownFormatter._action_effects(_Compatibility()) == ["a", "b"]
 
 
 def test_action_effects_empty_when_neither_attribute_present():

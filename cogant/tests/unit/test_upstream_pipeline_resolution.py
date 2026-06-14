@@ -7,7 +7,11 @@ execution lives in ``tests/integration/test_upstream_gnn_pipeline.py``.
 
 from __future__ import annotations
 
+import os
 import re
+import sys
+import types
+from pathlib import Path
 
 import pytest
 
@@ -167,6 +171,102 @@ def test_run_upstream_pipeline_returns_unavailable_when_src_main_missing(
     assert result.error is not None
     assert "src.main" in result.error
     assert result.steps == []
+
+
+def test_execute_upstream_step_uses_active_python_and_src_pythonpath(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Subprocess bridge must not fall back to upstream's nested ``.venv``."""
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    script_dir = tmp_path / "installed_src"
+    script_dir.mkdir()
+    project_root = tmp_path / "project_root"
+    project_root.mkdir()
+    captured: dict[str, object] = {}
+
+    pipeline_pkg = types.ModuleType("pipeline")
+    pipeline_pkg.__path__ = []  # type: ignore[attr-defined]
+    timeouts_mod = types.ModuleType("pipeline.step_timeouts")
+    timeouts_mod.get_step_timeout = lambda script, comprehensive=False: 123
+
+    utils_pkg = types.ModuleType("utils")
+    utils_pkg.__path__ = []  # type: ignore[attr-defined]
+    args_mod = types.ModuleType("utils.argument_utils")
+
+    def _build_step_command_args(step_name, args, python_executable, script_path):
+        captured["step_name"] = step_name
+        captured["args"] = args
+        captured["python_executable"] = python_executable
+        captured["script_path"] = script_path
+        return [python_executable, str(script_path), "--target-dir", str(args.target_dir)]
+
+    args_mod.build_step_command_args = _build_step_command_args
+    exec_mod = types.ModuleType("utils.execution_utils")
+
+    def _execute_command_streaming(cmd, cwd, env, timeout, print_stdout, print_stderr, capture_output):
+        captured["cmd"] = cmd
+        captured["cwd"] = cwd
+        captured["env"] = env
+        captured["timeout"] = timeout
+        captured["print_stdout"] = print_stdout
+        captured["print_stderr"] = print_stderr
+        captured["capture_output"] = capture_output
+        return {"status": "SUCCESS", "exit_code": 0}
+
+    exec_mod.execute_command_streaming = _execute_command_streaming
+
+    for name, module in {
+        "pipeline": pipeline_pkg,
+        "pipeline.step_timeouts": timeouts_mod,
+        "utils": utils_pkg,
+        "utils.argument_utils": args_mod,
+        "utils.execution_utils": exec_mod,
+    }.items():
+        monkeypatch.setitem(sys.modules, name, module)
+
+    monkeypatch.setenv("PYTHONPATH", f"/already{os.pathsep}{script_dir}")
+
+    fake_src_main = types.SimpleNamespace(SCRIPT_DIR=script_dir, PROJECT_ROOT=project_root)
+    args = types.SimpleNamespace(target_dir=tmp_path / "pkg")
+    out = pipeline_mod._execute_upstream_step(
+        fake_src_main,
+        "3_gnn.py",
+        args,
+        verbose=True,
+    )
+
+    assert out["status"] == "SUCCESS"
+    assert captured["python_executable"] == sys.executable
+    assert captured["cmd"] == [sys.executable, str(script_dir / "3_gnn.py"), "--target-dir", str(args.target_dir)]
+    assert captured["cwd"] == project_root
+    assert captured["timeout"] == 123
+    assert captured["print_stdout"] is True
+    assert captured["print_stderr"] is True
+    assert captured["capture_output"] is True
+    pythonpath = str(captured["env"]["PYTHONPATH"])  # type: ignore[index]
+    assert pythonpath.split(os.pathsep).count(str(script_dir)) == 1
+    assert pythonpath.split(os.pathsep)[0] == str(script_dir)
+
+
+def test_render_target_dir_stages_only_gnn_markdown(tmp_path: Path) -> None:
+    """Render/execute steps should not receive JSON sidecars as model inputs."""
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    package = tmp_path / "gnn_package"
+    package.mkdir()
+    (package / "model.gnn.md").write_text("## GNNSection\nDemo\n", encoding="utf-8")
+    (package / "connections.json").write_text("{}", encoding="utf-8")
+    (package / "notes.md").write_text("# not a gnn model\n", encoding="utf-8")
+    out = tmp_path / "out"
+    cfg = UpstreamPipelineConfig(target_dir=package, output_dir=out)
+
+    staged = pipeline_mod._render_target_dir(cfg)
+
+    assert staged == (out / "_cogant_render_input").resolve()
+    assert sorted(path.name for path in staged.iterdir()) == ["model.gnn.md"]
+    assert (staged / "model.gnn.md").read_text(encoding="utf-8") == "## GNNSection\nDemo\n"
 
 
 # ---------------------------------------------------------------------------

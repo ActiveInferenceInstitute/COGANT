@@ -23,7 +23,7 @@ Add new types to appropriate module files (state_space.py for state concepts, se
 - base.py — CogantBaseModel (Pydantic v2 base), StableID, SemanticVersion, Span, EvidenceRef, TypeInfo, ConfidenceMetric, LocationInfo
 - core.py — NodeKind, EdgeKind enums (MODULE, CLASS, FUNCTION, etc.; CALLS, READS, WRITES, etc.)
 - graph.py — GraphMetadata, ProgramGraph (core graph container)
-- program_graph.py — Node, Edge, ProgramGraph (legacy/extended graph schema with attributes)
+- program_graph.py — Node, Edge, ProgramGraph (compatibility/extended graph schema with attributes)
 - bundle.py — TargetLanguage, TargetInfo, ProvenanceOrigin, ArtifactPaths, CoreBundleSchema
 - semantic.py — MappingKind, ConfidenceTier enums; ProvenanceRecord, SemanticMapping (dataclasses)
 - semantic_mapping.py — SemanticRole, MappingRule, SourceGraphElement, TargetSemanticElement, ReviewStatus, SemanticMapping, SemanticMappingCollection (Pydantic models)

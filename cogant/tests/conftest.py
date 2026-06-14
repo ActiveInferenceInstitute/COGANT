@@ -21,6 +21,23 @@ def temp_dir() -> Generator[Path, None, None]:
         yield Path(tmpdir)
 
 
+@pytest.fixture(autouse=True)
+def close_matplotlib_figures_between_tests() -> Generator[None, None, None]:
+    """Keep figure-returning visualization tests isolated.
+
+    COGANT visualization APIs intentionally return live matplotlib figures so
+    callers can save or inspect them. Tests must not let those figures
+    accumulate across files, because later valid renders can otherwise trip
+    matplotlib's global open-figure warning.
+    """
+    yield
+    try:
+        import matplotlib.pyplot as plt
+    except Exception:
+        return
+    plt.close("all")
+
+
 @pytest.fixture
 def sample_python_code() -> str:
     """Sample Python code for parser testing."""

@@ -20,15 +20,21 @@ HTMLSiteRenderer is the main entry point generating self-contained HTML with tab
 
 DashboardGenerator produces production-quality interactive HTML dashboards with tabbed navigation, embedded SVG charts, Mermaid diagrams, and comprehensive data views.
 
-Inspection dashboard helpers read a completed `cogant/output/<target>/` directory directly. `write_inspection_artifacts()` emits `site/inspection_dashboard.html`, `figures/graphical_abstract.svg`, and a best-effort `figures/graphical_abstract.png` from the actual `data/`, `gnn_package/`, `figures/`, `analysis/`, `reports/`, and `roundtrip/` artifacts. This is the fastest human review path after a run because it does not require holding pipeline objects in memory.
+Inspection dashboard helpers read a completed `cogant/output/<target>/` directory directly. `write_inspection_artifacts()` emits `site/inspection_dashboard.html`, `figures/graphical_abstract.svg`, and, when matplotlib is available, a native `figures/graphical_abstract.png` from the actual `data/`, `gnn_package/`, `figures/`, `analysis/`, `reports/`, and `roundtrip/` artifacts. This is the fastest human review path after a run because it does not require holding pipeline objects in memory.
 
-MatrixVisualizer renders Active Inference A/B/C/D matrices and now includes `summarize_matrices()` plus `plot_interpretability_panel()` for one-page diagnostics of likelihoods, transitions, preferences, and priors. The B tensor selector supports both `(state, state, action)` and legacy `(action, state, state)` conventions and reports which slice convention was used.
+`inspection_dashboard.py` is now a compatibility shim. The implementation lives
+under `inspection/`: `model.py` builds the artifact-derived inspection model,
+`abstract.py` renders the graphical abstract, `details.py` writes companion
+figures and sidecars, `html.py` renders the dashboard, and `writer.py`
+orchestrates the public `write_inspection_artifacts()` path.
+
+MatrixVisualizer renders Active Inference A/B/C/D matrices and now includes `summarize_matrices()` plus `plot_interpretability_panel()` for one-page diagnostics of likelihoods, transitions, preferences, and priors. The B tensor selector supports both `(state, state, action)` and compatibility `(action, state, state)` conventions and reports which slice convention was used.
 
 NetworkView ranks codebase hotspots with `summarize_hotspots()` and emits Mermaid diagrams that group critical, important, and contextual nodes. This gives large program graphs a compact human inspection path before opening the full D3 or PNG graph.
 
 BoundaryMapper analyzes and visualizes module boundaries, type boundaries, and cross-boundary couplings with Mermaid diagrams.
 
-PNG raster helpers convert charts and graphs to PNG format. `render_all_pngs()` writes sibling PNGs for program graphs, Mermaid, SVG, DOT, state-space factors, A/B/C/D connections, process Gantt charts, Markov blankets, GNN markdown pages, summary covers, the compact `interpretability_overview.png` dashboard, and the inspection dashboard / graphical abstract companions.
+PNG raster helpers convert charts and graphs to PNG format. `render_all_pngs()` writes sibling PNGs for program graphs, Mermaid, SVG, DOT, state-space factors, A/B/C/D connections, process Gantt charts, Markov blankets, GNN markdown pages plus an all-page mosaic, summary covers, the compact `interpretability_overview.png` dashboard, and the inspection dashboard / graphical abstract companions. Dashboard SVG fallbacks are allowed for exploratory review, but registered manuscript PNGs use native renderers and strict promotion rejects degraded placeholders.
 
 ## Usage
 

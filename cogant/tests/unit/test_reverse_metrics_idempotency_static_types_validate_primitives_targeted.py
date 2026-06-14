@@ -428,7 +428,7 @@ class TestComputeIsomorphismReport:
         }
         report = compute_isomorphism_report(gnn, gnn)
         assert report.total_score > 0.7
-        assert report.is_isomorphic is True
+        assert report.structurally_isomorphic is True
 
     def test_empty_gnns(self):
         from cogant.reverse.metrics import compute_isomorphism_report
@@ -440,7 +440,7 @@ class TestComputeIsomorphismReport:
         from cogant.reverse.metrics import IsomorphismReport
 
         report = IsomorphismReport(
-            is_isomorphic=True,
+            structurally_isomorphic=True,
             total_score=0.85,
             role_score=0.9,
             matrix_score=0.85,
@@ -453,7 +453,7 @@ class TestComputeIsomorphismReport:
     def test_summary_drift(self):
         from cogant.reverse.metrics import IsomorphismReport
 
-        report = IsomorphismReport(is_isomorphic=False, total_score=0.4)
+        report = IsomorphismReport(structurally_isomorphic=False, total_score=0.4)
         summary = report.summary()
         assert "DRIFT" in summary
 
@@ -463,7 +463,7 @@ class TestComputeIsomorphismReport:
         gnn_a = {"roles": {"HIDDEN_STATE": 2}}
         gnn_b = {"roles": {"OBSERVATION": 2}}
         report = compute_isomorphism_report(gnn_a, gnn_b, threshold=0.9)
-        assert report.is_isomorphic is False
+        assert report.structurally_isomorphic is False
 
 
 # ---------------------------------------------------------------------------
@@ -478,8 +478,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult()
-        assert result.is_isomorphic is False
-        assert result.role_match_score == 0.0
+        assert result.structurally_isomorphic is False
+        assert result.role_preservation_score == 0.0
         assert isinstance(result.original_roles, dict)
         assert isinstance(result.errors, list)
 
@@ -487,8 +487,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.85,
+            structurally_isomorphic=True,
+            role_preservation_score=0.85,
             matrix_score=0.9,
             structural_score=0.7,
         )
@@ -499,7 +499,7 @@ class TestRoundtripResult:
     def test_roundtrip_result_summary_drift(self):
         from cogant.reverse.idempotency import RoundtripResult
 
-        result = RoundtripResult(is_isomorphic=False, role_match_score=0.3)
+        result = RoundtripResult(structurally_isomorphic=False, role_preservation_score=0.3)
         summary = result.summary()
         assert "DRIFT" in summary
 

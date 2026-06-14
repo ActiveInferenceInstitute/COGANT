@@ -33,7 +33,7 @@ HAND_WRITTEN_GNN = """\
 HandwrittenMiniPOMDP
 
 ## GNNVersionAndFlags
-GNN v1
+GNN v2.0.0
 
 ## ModelName
 HandwrittenMiniPOMDP

@@ -214,7 +214,7 @@ def test_to_dict_with_string_status_falls_back_safely(tmp_path: Path) -> None:
     """to_dict tolerates a status that isn't a SessionStatus enum."""
     repo = _make_repo(tmp_path)
     session = Session(target=str(repo))
-    # Bypass field validation on purpose: simulate a legacy persisted form
+    # Bypass field validation on purpose: simulate a compatibility persisted form
     object.__setattr__(session, "status", "weird")  # type: ignore[arg-type]
     payload = session.to_dict()
     assert payload["status"] == "weird"

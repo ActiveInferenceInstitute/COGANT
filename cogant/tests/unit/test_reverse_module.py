@@ -893,7 +893,7 @@ def test_compute_isomorphism_report_identical_gnns() -> None:
     }
     report = compute_isomorphism_report(gnn, gnn)
     assert report.total_score == pytest.approx(1.0, abs=1e-6)
-    assert report.is_isomorphic is True
+    assert report.structurally_isomorphic is True
     assert "role_score" in report.breakdown
     assert "matrix_score" in report.breakdown
     assert "structural_score" in report.breakdown
@@ -909,7 +909,7 @@ def test_compute_isomorphism_report_disjoint_gnns() -> None:
     }
     b = {"roles": {"ACTION": 3}, "matrices": {"B": [[1.0]]}, "nodes": [{"role": "Y"}], "edges": []}
     report = compute_isomorphism_report(a, b)
-    assert report.is_isomorphic is False
+    assert report.structurally_isomorphic is False
     assert report.total_score < DEFAULT_ISOMORPHISM_THRESHOLD
 
 
@@ -925,14 +925,14 @@ def test_compute_isomorphism_report_missing_sections_use_neutral_defaults() -> N
 
 
 def test_compute_isomorphism_report_custom_threshold() -> None:
-    """A custom threshold shifts the is_isomorphic decision."""
+    """A custom threshold shifts the structurally_isomorphic decision."""
     gnn = {"roles": {"HIDDEN_STATE": 1}}
     # role_score=1.0, matrix_score=0.5 (neutral), struct=1.0
     # total = 0.4*1 + 0.4*0.5 + 0.2*1 = 0.8
     report_loose = compute_isomorphism_report(gnn, gnn, threshold=0.5)
     report_tight = compute_isomorphism_report(gnn, gnn, threshold=0.99)
-    assert report_loose.is_isomorphic is True
-    assert report_tight.is_isomorphic is False
+    assert report_loose.structurally_isomorphic is True
+    assert report_tight.structurally_isomorphic is False
 
 
 def test_compute_isomorphism_report_per_matrix_frobenius_breakdown() -> None:
@@ -951,7 +951,7 @@ def test_isomorphism_report_summary_format() -> None:
         matrix_score=0.8,
         structural_score=0.7,
         total_score=0.82,
-        is_isomorphic=True,
+        structurally_isomorphic=True,
     )
     s = report.summary()
     assert "ISO" in s
@@ -959,13 +959,13 @@ def test_isomorphism_report_summary_format() -> None:
 
 
 def test_isomorphism_report_summary_drift() -> None:
-    """is_isomorphic=False surfaces as 'DRIFT' in summary()."""
+    """structurally_isomorphic=False surfaces as 'DRIFT' in summary()."""
     report = IsomorphismReport(
         role_score=0.1,
         matrix_score=0.1,
         structural_score=0.1,
         total_score=0.1,
-        is_isomorphic=False,
+        structurally_isomorphic=False,
     )
     assert "DRIFT" in report.summary()
 

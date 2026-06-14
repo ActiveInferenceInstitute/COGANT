@@ -50,6 +50,7 @@ from cogant.viz.png import (
     render_state_space_factor_png,
     render_summary_cover_png,
 )
+from cogant.viz.png.gnn_markdown import render_gnn_markdown_mosaic_png
 from tests.unit._viz_assert import assert_png_nondegenerate
 
 # --------------------------- helpers / fixtures ------------------------ #
@@ -453,9 +454,56 @@ def test_render_connections_matrix_png_uses_real_matrix_payload(tmp_path):
     }
 
 
-def test_render_connections_matrix_png_strict_nonstochastic_matrix_deletes_stale(tmp_path):
+def test_render_connections_matrix_png_records_state_label_groups(tmp_path):
     out = tmp_path / "cx.png"
-    out.write_bytes(b"stale")
+    matrix_json = tmp_path / "model.gnn.json"
+    matrix_json.write_text(
+        json.dumps(
+            {
+                "state_space": {
+                    "variables": {
+                        "v1": {"id": "v1", "name": "Service - Hidden State"},
+                        "v2": {"id": "v2", "name": "AuthorizationError - Inheritance Role"},
+                    },
+                    "observations": {"o1": {"id": "o1", "name": "event - Observation"}},
+                    "actions": {"a1": {"id": "a1", "name": "act - Action"}},
+                },
+                "matrices": {
+                    "A": [[1.0, 1.0]],
+                    "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
+                    "C": [0.0],
+                    "D": [0.5, 0.5],
+                    "dimensions": {"n_states": 2, "n_obs": 1, "n_actions": 1},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert (
+        render_connections_matrix_png(
+            _state_space_fixture(),
+            out,
+            matrix_source_json=matrix_json,
+            strict_real_matrices=True,
+        )
+        is True
+    )
+
+    metadata = json.loads(out.with_suffix(".figure.json").read_text(encoding="utf-8"))
+    assert metadata["axis_labels"]["hidden_states"] == [
+        "Service - Hidden State",
+        "AuthorizationError - Inheritance Role",
+    ]
+    assert metadata["state_label_groups"][0]["indices"] == "0"
+    assert metadata["state_label_groups"][1]["indices"] == "1"
+    assert metadata["state_label_groups"][1]["key"] == "inheritance_role_states"
+    assert metadata["matrix_interpretation_notes"]["B"].startswith("Displayed panel")
+
+
+def test_render_connections_matrix_png_strict_nonstochastic_matrix_deletes_out_of_sync(tmp_path):
+    out = tmp_path / "cx.png"
+    out.write_bytes(b"out-of-sync")
     out.with_suffix(".figure.json").write_text("{}")
     matrix_json = tmp_path / "bad_model.gnn.json"
     matrix_json.write_text(
@@ -485,9 +533,9 @@ def test_render_connections_matrix_png_strict_nonstochastic_matrix_deletes_stale
     assert not out.with_suffix(".figure.json").exists()
 
 
-def test_render_connections_matrix_png_strict_missing_matrix_deletes_stale(tmp_path):
+def test_render_connections_matrix_png_strict_missing_matrix_deletes_out_of_sync(tmp_path):
     out = tmp_path / "cx.png"
-    out.write_bytes(b"stale")
+    out.write_bytes(b"out-of-sync")
     out.with_suffix(".figure.json").write_text("{}")
     matrix_json = tmp_path / "partial_model.gnn.json"
     matrix_json.write_text(json.dumps({"matrices": {"A": [[1.0, 1.0]]}}))
@@ -505,9 +553,9 @@ def test_render_connections_matrix_png_strict_missing_matrix_deletes_stale(tmp_p
     assert not out.with_suffix(".figure.json").exists()
 
 
-def test_render_connections_matrix_png_strict_dimension_mismatch_deletes_stale(tmp_path):
+def test_render_connections_matrix_png_strict_dimension_mismatch_deletes_out_of_sync(tmp_path):
     out = tmp_path / "cx.png"
-    out.write_bytes(b"stale")
+    out.write_bytes(b"out-of-sync")
     out.with_suffix(".figure.json").write_text("{}")
     matrix_json = tmp_path / "mismatched_model.gnn.json"
     matrix_json.write_text(
@@ -669,6 +717,27 @@ def test_render_gnn_markdown_png_missing_file_returns_empty(tmp_path):
     """A missing markdown file returns an empty list."""
     pages = render_gnn_markdown_png(tmp_path / "nope.md", tmp_path / "out.png")
     assert pages == []
+
+
+def test_render_gnn_markdown_mosaic_png_writes_all_pages_sidecar(tmp_path):
+    """Publication mosaic composes every rendered GNN markdown page."""
+    md = tmp_path / "model.gnn.md"
+    md.write_text(
+        "\n".join(f"## Section{i}\nbody {i}" for i in range(1, 9)),
+        encoding="utf-8",
+    )
+    out = tmp_path / "model_gnn_mosaic.png"
+
+    mosaic = render_gnn_markdown_mosaic_png(md, out, max_sections_per_page=1)
+
+    assert mosaic == out
+    assert_png_nondegenerate(out)
+    sidecar = json.loads(out.with_suffix(".figure.json").read_text(encoding="utf-8"))
+    assert sidecar["render_backend"] == "matplotlib_native"
+    assert sidecar["degraded_renderer"] is False
+    assert sidecar["displayed_counts"]["pages"] == 8
+    assert sidecar["displayed_counts"]["sections"] == 8
+    assert len(sidecar["page_artifacts"]) == 8
 
 
 # --------------------------- render_all_pngs --------------------------- #

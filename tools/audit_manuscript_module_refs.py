@@ -21,7 +21,7 @@ Resolution strategy (no manuscript-specific allowlist):
 2. Otherwise treat the name as ``module.attr[.attr…]``: find the longest dotted
    prefix that is an importable module, import it, and walk the remaining
    components with ``getattr``. All must resolve.
-3. If neither path resolves, the reference is reported as STALE with the first
+3. If neither path resolves, the reference is reported as UNRESOLVED with the first
    component that failed.
 
 Names that are obviously prose rather than code (single segment ``cogant``, or a
@@ -73,7 +73,7 @@ _REF_RE = re.compile(r"`(cogant(?:\.[A-Za-z_][A-Za-z0-9_]*)+)(?:\([^`]*\))?`")
 _FILE_LEAF_EXTS = frozenset(
     {
         "yaml", "yml", "json", "jsonl", "toml", "md", "txt", "lock", "cfg",
-        "ini", "sh", "png", "pdf", "csv", "svg", "html", "rs", "lock",
+        "ini", "sh", "png", "pdf", "csv", "svg", "html", "rs",
     }
 )
 
@@ -263,7 +263,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     if unresolved:
-        print("\nStale references (module/attribute does not exist):")
+        print("\nOut-of-sync references (module/attribute does not exist):")
         for rel, lineno, name, detail in unresolved:
             print(f"  {rel}:{lineno}: `{name}` — {detail}")
 

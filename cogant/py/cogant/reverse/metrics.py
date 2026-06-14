@@ -33,7 +33,7 @@ The three scores are combined with the weights ``0.4 * role +
 0.4 * matrix + 0.2 * structural`` — role and matrix carry equal top
 billing because they are the scientifically meaningful axes for an
 Active Inference model, while structural drift is treated as a
-tie-breaker. The cutoff for ``is_isomorphic`` defaults to ``0.7`` and
+tie-breaker. The cutoff for ``structurally_isomorphic`` defaults to ``0.7`` and
 can be tightened by the caller.
 
 All functions in this module are pure and free of side effects. The
@@ -66,7 +66,7 @@ __all__ = [
 # ---------------------------------------------------------------------------
 
 DEFAULT_ISOMORPHISM_THRESHOLD: float = 0.7
-"""Default cutoff for :attr:`IsomorphismReport.is_isomorphic`."""
+"""Default cutoff for :attr:`IsomorphismReport.structurally_isomorphic`."""
 
 MATRIX_KEYS: tuple[str, ...] = ("A", "B", "C", "D")
 """Canonical Active Inference matrix slot names used by COGANT."""
@@ -87,7 +87,7 @@ class IsomorphismReport:
     All ``*_score`` fields are in ``[0.0, 1.0]`` where ``1.0`` means
     "identical" and ``0.0`` means "maximally different under this
     metric". The ``total_score`` is the weighted mean of the three
-    component scores and is itself in ``[0.0, 1.0]``. ``is_isomorphic``
+    component scores and is itself in ``[0.0, 1.0]``. ``structurally_isomorphic``
     is simply ``total_score >= threshold``.
 
     Attributes:
@@ -97,7 +97,7 @@ class IsomorphismReport:
         matrix_score: Frobenius-based matrix similarity in ``[0, 1]``.
         total_score: Weighted mean
             ``0.4 * role + 0.4 * matrix + 0.2 * structural``.
-        is_isomorphic: True when ``total_score >= threshold``.
+        structurally_isomorphic: True when ``total_score >= threshold``.
         breakdown: Per-metric diagnostic detail. Keys include the
             three component scores, the threshold, the weighting, and
             (when available) per-matrix Frobenius distances.
@@ -107,7 +107,7 @@ class IsomorphismReport:
     role_score: float = 0.0
     matrix_score: float = 0.0
     total_score: float = 0.0
-    is_isomorphic: bool = False
+    structurally_isomorphic: bool = False
     breakdown: dict[str, Any] = field(default_factory=dict)
 
     def summary(self) -> str:
@@ -118,9 +118,9 @@ class IsomorphismReport:
             [ISO] total=0.82 role=0.90 matrix=0.85 struct=0.60
 
         with ``ISO`` swapped for ``DRIFT`` when
-        ``is_isomorphic`` is False.
+        ``structurally_isomorphic`` is False.
         """
-        status = "ISO" if self.is_isomorphic else "DRIFT"
+        status = "ISO" if self.structurally_isomorphic else "DRIFT"
         return (
             f"[{status}] total={self.total_score:.2f} "
             f"role={self.role_score:.2f} "
@@ -503,12 +503,12 @@ def compute_isomorphism_report(
 
         total = 0.4 * role + 0.4 * matrix + 0.2 * structural
 
-    and ``is_isomorphic`` is ``total >= threshold``.
+    and ``structurally_isomorphic`` is ``total >= threshold``.
 
     Args:
         gnn_a: First GNN package dict.
         gnn_b: Second GNN package dict.
-        threshold: Cutoff for :attr:`IsomorphismReport.is_isomorphic`.
+        threshold: Cutoff for :attr:`IsomorphismReport.structurally_isomorphic`.
             Defaults to :data:`DEFAULT_ISOMORPHISM_THRESHOLD` (0.7).
 
     Returns:
@@ -572,6 +572,6 @@ def compute_isomorphism_report(
         role_score=float(role_score),
         matrix_score=float(matrix_score),
         total_score=float(total_score),
-        is_isomorphic=bool(total_score >= threshold),
+        structurally_isomorphic=bool(total_score >= threshold),
         breakdown=breakdown,
     )

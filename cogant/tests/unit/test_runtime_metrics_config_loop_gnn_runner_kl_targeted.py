@@ -654,22 +654,22 @@ class TestRoundtripResponse:
     def test_basic(self):
         from cogant.server.models import RoundtripResponse
 
-        r = RoundtripResponse(role_match_score=0.85, is_isomorphic=True, threshold=0.7)
-        assert r.role_match_score == 0.85
-        assert r.is_isomorphic is True
+        r = RoundtripResponse(role_preservation_score=0.85, structurally_isomorphic=True, threshold=0.7)
+        assert r.role_preservation_score == 0.85
+        assert r.structurally_isomorphic is True
 
     def test_not_isomorphic(self):
         from cogant.server.models import RoundtripResponse
 
         r = RoundtripResponse(
-            role_match_score=0.4,
-            is_isomorphic=False,
+            role_preservation_score=0.4,
+            structurally_isomorphic=False,
             threshold=0.7,
             original_roles={"obs": 3},
             synthesized_roles={"obs": 1},
             errors=["role mismatch"],
         )
-        assert r.is_isomorphic is False
+        assert r.structurally_isomorphic is False
         assert len(r.errors) == 1
 
 
@@ -1020,28 +1020,18 @@ class TestConcretePlugin:
 # ---------------------------------------------------------------------------
 
 
-class TestSchemaVersion:
+class TestGNNVersion:
     def test_versions(self):
-        from cogant.schema.versions import SchemaVersion
+        from cogant.schema.versions import CURRENT_GNN_VERSION
 
-        assert SchemaVersion.V1_0 == "1.0"
-        assert SchemaVersion.V1_1 == "1.1"
-        assert SchemaVersion.CURRENT == "1.1"
+        assert CURRENT_GNN_VERSION == "2.0.0"
 
-    def test_gnn_v1_0_sections(self):
-        from cogant.schema.versions import GNN_V1_0_REQUIRED_SECTIONS
+    def test_gnn_current_sections(self):
+        from cogant.schema.versions import GNN_V2_REQUIRED_SECTIONS
 
-        assert "GNNSection" in GNN_V1_0_REQUIRED_SECTIONS
-        assert "ModelName" in GNN_V1_0_REQUIRED_SECTIONS
-        assert "StateSpaceBlock" in GNN_V1_0_REQUIRED_SECTIONS
-
-    def test_gnn_v1_1_sections(self):
-        from cogant.schema.versions import GNN_V1_0_REQUIRED_SECTIONS, GNN_V1_1_REQUIRED_SECTIONS
-
-        assert "GNNVersionAndFlags" in GNN_V1_1_REQUIRED_SECTIONS
-        # V1.1 should include all V1.0 sections
-        for sec in GNN_V1_0_REQUIRED_SECTIONS:
-            assert sec in GNN_V1_1_REQUIRED_SECTIONS
+        assert "GNNSection" in GNN_V2_REQUIRED_SECTIONS
+        assert "GNNVersionAndFlags" in GNN_V2_REQUIRED_SECTIONS
+        assert "Signature" in GNN_V2_REQUIRED_SECTIONS
 
 
 # ---------------------------------------------------------------------------
@@ -1196,7 +1186,7 @@ class TestSmallConfigModules:
         assert cfg is not None
 
 
-class TestSchemaVersionsModule:
+class TestCurrentGNNVersionsModule:
     def test_schema_init(self):
         import cogant.schema as s
 

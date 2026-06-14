@@ -13,7 +13,7 @@ from cogant.viz.png.discovery import (
     load_state_space_from_json,
 )
 from cogant.viz.png.dot import render_all_dot_in_run
-from cogant.viz.png.gnn_markdown import render_gnn_markdown_png
+from cogant.viz.png.gnn_markdown import render_gnn_markdown_mosaic_png, render_gnn_markdown_png
 from cogant.viz.png.markov_blanket import render_markov_blanket_png
 from cogant.viz.png.mermaid import render_all_mermaid_in_run
 from cogant.viz.png.process_gantt import render_process_gantt_png
@@ -91,7 +91,7 @@ def render_all_pngs(
     # ancestors but never to siblings, so a handler on ``...png.orchestrator``
     # would miss failures logged by ``...png.program_graph`` etc. The package
     # logger sees both the orchestrator's own except-block warnings and the
-    # sub-renderers' internally-handled warnings. (Strip any stale capturer
+    # sub-renderers' internally-handled warnings. (Strip any out-of-sync capturer
     # first to bound accumulation if a prior call left without cleanup.)
     _viz_logger = logging.getLogger("cogant.viz.png")
     _viz_logger.handlers = [
@@ -230,11 +230,27 @@ def render_all_pngs(
                 pages = render_gnn_markdown_png(gnn_md, gnn_png, cfg=cfg)
                 if pages:
                     out["gnn_markdown"].extend(pages)
+                    mosaic = render_gnn_markdown_mosaic_png(
+                        gnn_md,
+                        gnn_md.parent / "model_gnn_mosaic.png",
+                        cfg=cfg,
+                        page_pngs=pages,
+                    )
+                    if mosaic is not None:
+                        out["gnn_markdown"].append(mosaic)
                 root_png = run_dir / "model_gnn.png"
                 if not root_png.exists():
                     root_pages = render_gnn_markdown_png(gnn_md, root_png, cfg=cfg)
                     if root_pages:
                         out["gnn_markdown"].extend(root_pages)
+                        root_mosaic = render_gnn_markdown_mosaic_png(
+                            gnn_md,
+                            run_dir / "model_gnn_mosaic.png",
+                            cfg=cfg,
+                            page_pngs=root_pages,
+                        )
+                        if root_mosaic is not None:
+                            out["gnn_markdown"].append(root_mosaic)
             except Exception as e:  # noqa: BLE001
                 logger.warning("GNN markdown PNG failed: %s", e)
             break

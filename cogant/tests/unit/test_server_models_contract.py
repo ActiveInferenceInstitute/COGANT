@@ -155,13 +155,13 @@ def test_roundtrip_request_forbids_extra_fields():
 def test_roundtrip_response_construction_and_dump():
     """All required fields can be supplied and the dump is stable."""
     resp = RoundtripResponse(
-        role_match_score=0.85,
-        is_isomorphic=True,
+        role_preservation_score=0.85,
+        structurally_isomorphic=True,
         original_roles={"observation": 2},
         synthesized_roles={"observation": 2},
         threshold=0.8,
     )
-    assert resp.is_isomorphic is True
+    assert resp.structurally_isomorphic is True
     dumped = resp.model_dump()
     assert dumped["role_preservation_score"] == 0.85
     assert dumped["roundtrip_status"] == "STRUCTURALLY_ISOMORPHIC"
@@ -169,11 +169,11 @@ def test_roundtrip_response_construction_and_dump():
 
 
 def test_roundtrip_response_rejects_out_of_range_scores():
-    """role_match_score must be in [0, 1]."""
+    """role_preservation_score must be in [0, 1]."""
     with pytest.raises(ValidationError):
         RoundtripResponse(
-            role_match_score=2.0,
-            is_isomorphic=False,
+            role_preservation_score=2.0,
+            structurally_isomorphic=False,
             threshold=0.5,
         )
 

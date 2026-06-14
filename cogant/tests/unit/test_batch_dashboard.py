@@ -117,7 +117,7 @@ def _seed_output_tree(tmp_path: Path) -> Path:
     (a / "scan.json").write_text("{}", encoding="utf-8")
     (a / "roundtrip").mkdir()
     (a / "roundtrip" / "metrics.json").write_text(
-        json.dumps({"role_match_score": 1.0}), encoding="utf-8"
+        json.dumps({"role_preservation_score": 1.0}), encoding="utf-8"
     )
 
     # Target B — remote git_url, lower score

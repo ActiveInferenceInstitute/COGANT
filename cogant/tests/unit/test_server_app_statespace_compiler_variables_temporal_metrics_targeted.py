@@ -34,15 +34,15 @@ def real_server_app():
     import types
 
     # Remove the stub (or the cached real module) so we get a fresh import.
-    stale = sys.modules.pop("cogant.server.app", None)
+    cached_module = sys.modules.pop("cogant.server.app", None)
     # Also pop the parent package's cached reference so __init__ re-imports.
     sys.modules.pop("cogant.server", None)
 
     yield
 
     # Restore original state so other tests are not surprised.
-    if stale is not None and not isinstance(stale, types.ModuleType):
-        sys.modules["cogant.server.app"] = stale
+    if cached_module is not None and not isinstance(cached_module, types.ModuleType):
+        sys.modules["cogant.server.app"] = cached_module
     elif "cogant.server.app" in sys.modules:
         # Leave the freshly-imported real module in place — it's valid.
         pass

@@ -54,7 +54,7 @@ tasks:
   tags:
   - evidence
   notes: 'Closed by the 2026-06-12 evidence-gated pass. Full package suite,
-    ruff, mypy, run_all.py --fail-fast (24 targets, 0 failed steps), strict
+    ruff, mypy, run_all.py --fail-fast (24 batch targets, 0 failed steps), strict
     manuscript generation, synthetic-surface audit, markdown-link audit,
     crossref/citation/number/math/robustness audits, template Markdown
     validators, and PDF/HTML render all passed on the current artifacts.'
@@ -104,6 +104,41 @@ tasks:
     scoped work: promote the pilot into the metrics/claim pipeline with freshness
     checks, add at least one more small permissively licensed fixture, and keep
     check_metrics_fresh guarding against non-native score relabelling.'
+- id: cog-8
+  title: Roadmap truth audit + current benchmark cleanup
+  status: done
+  start: '2026-06-13'
+  end: '2026-06-13'
+  progress: 100
+  milestone: false
+  deps:
+  - cog-5
+  tags:
+  - roadmap
+  - docs
+  - evidence
+  notes: 'Completed 2026-06-13. Added tools/audit_roadmap_truth.py, removed
+    misaligned current-version and benchmark wording, and tied roadmap docs to
+    generated run manifests, metrics, publication figure QA, and strict
+    manuscript gates rather than hard-coded recorded numbers.'
+- id: cog-9
+  title: Refactor manuscript figure and inspection dashboard modules
+  status: done
+  start: '2026-06-13'
+  end: '2026-06-13'
+  progress: 100
+  milestone: false
+  deps:
+  - cog-8
+  tags:
+  - refactor
+  - viz
+  - manuscript
+  notes: 'Completed 2026-06-13. Split tools/manuscript_figures.py under
+    tools/figures/ and viz/inspection_dashboard.py under
+    py/cogant/viz/inspection/ while preserving public imports, CLI behavior,
+    renderer metadata, native graphical abstract output, strict figure QA, and
+    dashboard sidecars.'
 - id: cog-m1
   title: COGANT release
   status: todo
@@ -113,5 +148,9 @@ tasks:
   milestone: true
   deps:
   - cog-5
+  - cog-6
+  - cog-7
+  - cog-8
+  - cog-9
   tags: []
   notes: ''

@@ -1,6 +1,6 @@
 from cogant.reverse.callable import MatrixFunctions as MatrixFunctions
 from cogant.reverse.callable import make_matrix_functions as make_matrix_functions
-from cogant.reverse.idempotency import ROLE_MATCH_THRESHOLD as ROLE_MATCH_THRESHOLD
+from cogant.reverse.idempotency import ROLE_PRESERVATION_THRESHOLD as ROLE_PRESERVATION_THRESHOLD
 from cogant.reverse.idempotency import RoundtripResult as RoundtripResult
 from cogant.reverse.idempotency import verify_repo_roundtrip as verify_repo_roundtrip
 from cogant.reverse.idempotency import verify_roundtrip as verify_roundtrip
@@ -27,7 +27,7 @@ __all__ = [
     "RoundtripResult",
     "verify_roundtrip",
     "verify_repo_roundtrip",
-    "ROLE_MATCH_THRESHOLD",
+    "ROLE_PRESERVATION_THRESHOLD",
     "IsomorphismReport",
     "compare_role_distributions",
     "compare_matrices",

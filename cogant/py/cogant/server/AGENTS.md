@@ -31,7 +31,7 @@ Do not describe role-only preservation as isomorphism. Current responses expose:
 `roundtrip_status`, `role_preservation_score`, `role_preserved`,
 `structurally_isomorphic`, `matrix_preserved`, `gnn_sections_preserved`,
 `generated_code_ok`, `invariants`, original/synthesized role counts, threshold,
-and errors. Deprecated compatibility aliases may exist in models, but docs and
+and errors. Removed compatibility aliases may exist in models, but docs and
 new clients should use the v0.6 names.
 
 ## Rules

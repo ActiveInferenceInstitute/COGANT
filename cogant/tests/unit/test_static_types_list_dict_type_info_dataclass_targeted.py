@@ -395,7 +395,7 @@ class TestInferReturnFromBody:
 
 
 # ---------------------------------------------------------------------------
-# TypeInferencer deprecated helpers — _infer_function_return_type
+# TypeInferencer removed helpers — _infer_function_return_type
 # ---------------------------------------------------------------------------
 
 
@@ -452,7 +452,7 @@ class TestInferFunctionReturnType:
 
 
 # ---------------------------------------------------------------------------
-# TypeInferencer deprecated helpers — _infer_variable_type
+# TypeInferencer removed helpers — _infer_variable_type
 # ---------------------------------------------------------------------------
 
 

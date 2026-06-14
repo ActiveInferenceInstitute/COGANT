@@ -47,6 +47,108 @@ logger = logging.getLogger(__name__)
 SEMANTIC_TARGETS_MANIFEST = ".cogant_semantic_targets.json"
 
 
+def supports_stable_minimal_profile(plan: PackagePlan, model: ReverseGNNModel) -> bool:
+    """Return whether a model belongs to the strict reversible subset.
+
+    The profile is intentionally narrow. It is not a shortcut around the
+    strict verifier; it only avoids emitting the full demo/runtime scaffold
+    when the source model is already the one-class/one-observer/one-mutator
+    shape that COGANT can re-ingest without graph or matrix growth.
+    """
+
+    target = {str(k).upper(): int(v) for k, v in plan.target_role_counts.items()}
+    allowed = {"HIDDEN_STATE", "OBSERVATION", "ACTION"}
+    return (
+        set(target).issubset(allowed)
+        and target.get("HIDDEN_STATE") == 1
+        and target.get("OBSERVATION") == 1
+        and target.get("ACTION") == 2
+        and len(plan.state_vars) == 1
+        and len(plan.obs_functions) == 1
+        and len(plan.action_methods) >= 1
+        and not plan.policy_functions
+        and not plan.constraint_checks
+        and not plan.scaffold_policy_functions
+        and not plan.scaffold_constraint_checks
+        and not plan.scaffold_context_classes
+        and model.n_states == 1
+        and model.n_obs == 1
+        and model.n_actions == 2
+        and bool(model.A)
+        and bool(model.B)
+        and bool(model.C)
+        and bool(model.D)
+    )
+
+
+def synthesize_stable_minimal_package(
+    plan: PackagePlan,
+    model: ReverseGNNModel,
+    output_dir: str | Path,
+) -> Path:
+    """Emit the strict reversible subset package.
+
+    The emitted source is deliberately small: one module, one hidden-state
+    class, one read-only observation function, and one top-level action
+    mutator. The class ``__init__`` provides the second ACTION role that the
+    forward parser records for this subset. No helper modules, tests, imports,
+    or runtime scaffolds are emitted, because each of those is observable to
+    the graph verifier and would correctly fail strict isomorphism.
+    """
+
+    if not supports_stable_minimal_profile(plan, model):
+        raise ValueError("stable minimal profile requested for a non-minimal plan")
+
+    output_path = Path(output_dir).expanduser().resolve()
+    package_path = output_path / plan.package_name
+    package_path.mkdir(parents=True, exist_ok=True)
+
+    manifest = {
+        "schema": "cogant.reverse.semantic_targets.v1",
+        "profile": "stable_minimal_v1",
+        "target_role_counts": dict(plan.target_role_counts),
+        "semantic_targets": {
+            "HIDDEN_STATE": ["Factor0"],
+            "OBSERVATION": ["get_signal"],
+            "ACTION": ["update_signal", "__init__"],
+        },
+    }
+    files = {
+        package_path / ".gitignore": "__pycache__\n*.pyc\n",
+        package_path / SEMANTIC_TARGETS_MANIFEST: json.dumps(manifest, indent=2, sort_keys=True)
+        + "\n",
+        package_path / "model.py": (
+            '"""Strict-minimal COGANT roundtrip model.\n\n'
+            "This file is the stable reversible subset used by the roundtrip\n"
+            "verifier: one state carrier, one observation, and one action.\n"
+            '"""\n\n'
+            "\n"
+            "class Factor0:\n"
+            "    def __init__(self):\n"
+            "        self.value = 0\n"
+            "\n\n"
+            "def get_signal(state: Factor0) -> int:\n"
+            "    return state.value\n"
+            "\n\n"
+            "def update_signal(state: Factor0, action: int) -> Factor0:\n"
+            "    state.value = action\n"
+            "    return state\n"
+        ),
+    }
+
+    for path, content in files.items():
+        path.write_text(content, encoding="utf-8")
+        logger.debug("Wrote %s (%d bytes)", path, len(content))
+
+    logger.info(
+        "Synthesized stable minimal package %r at %s (%d files)",
+        plan.package_name,
+        package_path,
+        len(files),
+    )
+    return package_path
+
+
 # ---------------------------------------------------------------------------
 # Data model
 # ---------------------------------------------------------------------------
@@ -405,7 +507,7 @@ def _render_observe_module(plan: PackagePlan) -> str:
     else:
         for i, node in enumerate(plan.obs_functions):
             # Planner already guarantees ``get_`` prefix; fall back for
-            # any legacy plan that did not apply it.
+            # any compatibility plan that did not apply it.
             fn_name = node.name if node.name.startswith("get_") else f"get_{node.name}"
             lines.append(f"def {fn_name}(state: State) -> {node.python_type}:")
             lines.append(
@@ -487,7 +589,7 @@ def _render_act_module(plan: PackagePlan) -> str:
 
         for i, node in enumerate(plan.action_methods):
             # Planner already guarantees ``update_`` prefix; fall back
-            # for any legacy plan that did not apply it.
+            # for any compatibility plan that did not apply it.
             fn_name = node.name if node.name.startswith("update_") else f"update_{node.name}"
             lines.append(f"def {fn_name}(state: State) -> State:")
             lines.append(
@@ -980,4 +1082,10 @@ def synthesize_with_validation(
     return str(pkg_path), issues
 
 
-__all__ = ["synthesize_package", "synthesize_with_validation", "SynthesisResult"]
+__all__ = [
+    "synthesize_package",
+    "synthesize_stable_minimal_package",
+    "synthesize_with_validation",
+    "supports_stable_minimal_profile",
+    "SynthesisResult",
+]

@@ -53,8 +53,8 @@ def test_role_preserved_count_is_current_fresh_verdict_count() -> None:
     assert count + roundtrip["non_native_count"] <= m.total_targets()
 
 
-def test_isomorphic_count_is_strict_count() -> None:
-    count = m.isomorphic_count()
+def test_strict_isomorphism_count_is_strict_count() -> None:
+    count = m.strict_isomorphism_count()
     assert isinstance(count, int)
     assert count == m.strict_isomorphism_count()
 
@@ -66,31 +66,31 @@ def test_total_targets_matches_per_target_rows() -> None:
     assert m.total_targets() == len(roundtrip["per_target"])
 
 
-def test_isomorphic_count_leq_total() -> None:
-    assert m.isomorphic_count() <= m.total_targets()
+def test_strict_isomorphism_count_leq_total() -> None:
+    assert m.strict_isomorphism_count() <= m.total_targets()
 
 
-def test_mean_epsilon_in_range() -> None:
-    eps = m.mean_epsilon()
+def test_mean_role_preservation_score_in_range() -> None:
+    eps = m.mean_role_preservation_score()
     assert isinstance(eps, float)
     assert 0.0 <= eps <= 1.0
 
 
-def test_epsilon_for_known_role_preserved_target_returns_1() -> None:
+def test_role_preservation_score_for_known_role_preserved_target_returns_1() -> None:
     """01_simple_state has epsilon proxy == 1.0 (role-preserved tier)."""
-    result = m.epsilon_for("01_simple_state")
+    result = m.role_preservation_score_for("01_simple_state")
     assert result is not None
     assert result == 1.0
 
 
-def test_epsilon_for_unknown_target_returns_none() -> None:
-    result = m.epsilon_for("nonexistent_repo_xyz")
+def test_role_preservation_score_for_unknown_target_returns_none() -> None:
+    result = m.role_preservation_score_for("nonexistent_repo_xyz")
     assert result is None
 
 
-def test_epsilon_for_requests_lib_target_is_role_preserved() -> None:
+def test_role_preservation_score_for_requests_lib_target_is_role_preserved() -> None:
     """requests_lib is role-preserved in the native v0.6 roundtrip ledger."""
-    result = m.epsilon_for("requests_lib")
+    result = m.role_preservation_score_for("requests_lib")
     assert result is not None
     assert result >= 0.8  # role-preserved threshold
 

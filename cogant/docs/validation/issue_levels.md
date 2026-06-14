@@ -10,7 +10,7 @@ Non-critical observations:
 Potential quality issues:
 - Low confidence detection
 - Partial type information
-- Deprecated API usage
+- Removed API usage
 - Unusual patterns
 
 ### ERROR

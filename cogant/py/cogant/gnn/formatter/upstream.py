@@ -1,8 +1,8 @@
-"""Upstream GNN v1.1 canonical header section formatter.
+"""Upstream GNN 2.0.0 canonical header section formatter.
 
-This mixin emits the five required and three recommended GNN v1.1 sections
-expected by the upstream Active Inference Institute GNN type-checker
-(``src/5_type_checker.py``) and the broader GNN pipeline.
+This mixin emits the required GNN 2.0.0 sections expected by the Active
+Inference Institute Generalized Notation Notation package type-checker
+and the broader GNN pipeline.
 
 The canonical upstream section ordering is:
 
@@ -13,17 +13,18 @@ The canonical upstream section ordering is:
     ## StateSpaceBlock
     ## Connections
     ## InitialParameterization
+    ## Equations
     ## Time
     ## ActInfOntologyAnnotation
-    ## ModelParameters              (optional)
-    ## Footer                        (recommended)
-    ## Signature                     (optional)
+    ## ModelParameters
+    ## Footer
+    ## Signature
 
 COGANT emits these sections at the TOP of ``model.gnn.md`` so that the
-resulting file is simultaneously a valid upstream GNN v1 file AND a
-COGANT-extended bundle. COGANT's richer sections (``## Model Metadata``,
-``## Source Coverage``, ``## Markov Blanket``, etc.) follow below and are
-treated as extensions by the upstream parser.
+resulting file is simultaneously a valid upstream GNN 2.0.0 file and a
+COGANT-extended bundle. COGANT's richer sections (``## Model
+Metadata``, ``## Source Coverage``, ``## Markov Blanket``, etc.) follow
+below and are treated as extensions by the upstream parser.
 
 Variable naming convention (follows upstream examples):
   * hidden states → ``s_fN`` (factor index N)
@@ -45,15 +46,15 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
+from cogant import __version__
+
 if TYPE_CHECKING:
     from cogant.process.extractor import ProcessModel
     from cogant.schemas.graph import ProgramGraph
     from cogant.statespace.compiler import StateSpaceModel
 
 
-# Upstream canonical section list, in the order the type-checker expects.
-# Required sections per the upstream syntax spec at
-# doc/gnn/gnn_syntax.md (v1.1):
+# Upstream canonical section list, in the order the GNN 2.0.0 package expects.
 UPSTREAM_REQUIRED_SECTIONS: list[str] = [
     "GNNSection",
     "GNNVersionAndFlags",
@@ -61,21 +62,21 @@ UPSTREAM_REQUIRED_SECTIONS: list[str] = [
     "StateSpaceBlock",
     "Connections",
     "InitialParameterization",
+    "Equations",
     "Time",
     "ActInfOntologyAnnotation",
-]
-
-# Recommended/optional sections that COGANT also emits for completeness.
-UPSTREAM_OPTIONAL_SECTIONS: list[str] = [
-    "ModelAnnotation",
     "ModelParameters",
-    "Equations",
     "Footer",
     "Signature",
 ]
 
+# Optional sections that COGANT emits for human-facing provenance.
+UPSTREAM_OPTIONAL_SECTIONS: list[str] = [
+    "ModelAnnotation",
+]
 
-# Map COGANT StateVariableType values to GNN v1 StateSpaceBlock type strings.
+
+# Map COGANT StateVariableType values to GNN 2.0.0 StateSpaceBlock type strings.
 # Upstream examples use int, float, bool, and (by convention) categorical.
 _VAR_TYPE_TO_GNN_TYPE: dict[str, str] = {
     "boolean": "bool",
@@ -88,13 +89,13 @@ _VAR_TYPE_TO_GNN_TYPE: dict[str, str] = {
 
 
 def _gnn_type_for(var_type: object) -> str:
-    """Return the upstream GNN v1 type string for a StateVariableType."""
+    """Return the upstream GNN 2.0.0 type string for a StateVariableType."""
     raw = getattr(var_type, "value", None) or str(var_type).lower()
     return _VAR_TYPE_TO_GNN_TYPE.get(raw, "float")
 
 
 class _UpstreamSectionsMixin:
-    """Emit upstream-compatible GNN v1.1 sections.
+    """Emit upstream-compatible GNN 2.0.0 sections.
 
     This mixin is layered onto :class:`GNNMarkdownFormatter` and expects
     ``self.graph``, ``self.state_space``, ``self.process``, and
@@ -111,10 +112,10 @@ class _UpstreamSectionsMixin:
     # Public aggregate
     # ------------------------------------------------------------------
     def _format_upstream_header(self) -> str:
-        """Format the full upstream GNN v1.1 header block.
+        """Format the full upstream GNN 2.0.0 header block.
 
         Emits, in order, every upstream-required section plus
-        ``ModelAnnotation``, ``ModelParameters``, and ``Footer``.
+        ``ModelAnnotation``.
         """
         blocks = [
             self._format_gnn_section(),
@@ -124,10 +125,12 @@ class _UpstreamSectionsMixin:
             self._format_state_space_block(),
             self._format_upstream_connections(),
             self._format_initial_parameterization(),
+            self._format_equations(),
             self._format_time(),
             self._format_actinf_ontology_annotation(),
             self._format_model_parameters(),
             self._format_upstream_footer(),
+            self._format_signature(),
         ]
         return "\n\n".join(block for block in blocks if block)
 
@@ -148,7 +151,7 @@ class _UpstreamSectionsMixin:
         return "\n".join(
             [
                 "## GNNVersionAndFlags",
-                "GNN v1",
+                "GNN v2.0.0",
             ]
         )
 
@@ -179,8 +182,8 @@ class _UpstreamSectionsMixin:
             ),
             "",
             (
-                "This file is simultaneously a valid upstream GNN v1.1 model and a "
-                "COGANT-extended bundle. The sections below the upstream header "
+                "This file is simultaneously a valid upstream GNN 2.0.0 model "
+                "and a COGANT-extended bundle. The sections below the upstream header "
                 "(Model Metadata, Source Coverage, Markov Blanket, etc.) are COGANT "
                 "extensions that upstream parsers will ignore."
             ),
@@ -190,7 +193,7 @@ class _UpstreamSectionsMixin:
     def _format_state_space_block(self) -> str:
         """Emit ``## StateSpaceBlock`` — upstream variable declarations.
 
-        Uses the ``name[card,1,type=X]`` syntax from GNN v1.1 examples.
+        Uses the ``name[card,1,type=X]`` syntax from GNN 2.0.0 examples.
         Hidden states → ``s_fN``, observations → ``o_mN``, actions → ``u_cN``.
         Matrices (A, B, C, D) are emitted when the corresponding structures
         are non-empty so the type-checker sees a complete Active Inference
@@ -205,20 +208,20 @@ class _UpstreamSectionsMixin:
         for i, var in enumerate(self.state_space.variables.values()):
             card = var.cardinality or 2
             t = _gnn_type_for(var.var_type)
-            lines.append(f"s_f{i}[{card},1,type={t}]")
+            lines.append(f"s_f{i}[{card},1,type={t}] # state factor")
 
         # Observation modalities
         for i, obs in enumerate(self.state_space.observations.values()):
             card = obs.cardinality or 2
-            lines.append(f"o_m{i}[{card},1,type=int]")
+            lines.append(f"o_m{i}[{card},1,type=int] # observation modality")
 
         # Control/action factors
         for i in range(n_act):
-            lines.append(f"u_c{i}[1,1,type=int]")
+            lines.append(f"u_c{i}[1,1,type=int] # action control")
 
         # Likelihood A_m: observation | state
-        for i in range(min(n_obs, max(n_states, 1))):
-            obs_card = list(self.state_space.observations.values())[i].cardinality or 2
+        for i, obs in enumerate(self.state_space.observations.values()):
+            obs_card = obs.cardinality or 2
             first_state = next(iter(self.state_space.variables.values()), None)
             st_card = (first_state.cardinality if first_state else None) or 2
             lines.append(f"A_m{i}[{obs_card},{st_card},type=float]")
@@ -253,7 +256,7 @@ class _UpstreamSectionsMixin:
         """Emit ``## Connections`` — upstream arrow-syntax causal edges.
 
         Produces the standard Active Inference POMDP connection pattern using
-        the upstream GNN v1.1 canonical syntax (no parentheses for single-variable
+        the upstream GNN 2.0.0 canonical syntax (no parentheses for single-variable
         sources/targets; multi-source tuple syntax uses bare comma-separated form):
 
             D_f0>s_f0           (prior -> state)
@@ -280,9 +283,11 @@ class _UpstreamSectionsMixin:
         for i in range(n_states):
             lines.append(f"D_f{i}>s_f{i}")
 
-        for i in range(min(n_states, n_obs)):
-            lines.append(f"s_f{i}>A_m{i}")
-            lines.append(f"A_m{i},s_f{i}>o_m{i}")
+        if n_states > 0:
+            for i in range(n_obs):
+                state_idx = min(i, n_states - 1)
+                lines.append(f"s_f{state_idx}>A_m{i}")
+                lines.append(f"A_m{i},s_f{state_idx}>o_m{i}")
 
         for i in range(n_states):
             lines.append(f"s_f{i},B_f{i}>s_f{i}")
@@ -358,7 +363,7 @@ class _UpstreamSectionsMixin:
 
         # A_m: emit an identity-like symbolic likelihood over local outcome
         # categories; the aggregate A matrix is column-stochastic.
-        for i in range(min(n_obs, max(n_states, 1))):
+        for i in range(n_obs):
             obs = list(self.state_space.observations.values())[i]
             obs_card = obs.cardinality or 2
             first_state = next(iter(self.state_space.variables.values()), None)
@@ -369,11 +374,20 @@ class _UpstreamSectionsMixin:
                 rows.append("(" + ", ".join(row) + ")")
             lines.append(f"A_m{i}={{ ({', '.join(rows)}) }}")
 
-        # B_f: identity transition per action slice (symbolic).
+        # B_f: explicit identity transition per action slice. Upstream render
+        # processors consume literal tensors; avoid symbolic identity(...)
+        # shorthand in publication/current artifacts.
         for i, var in enumerate(self.state_space.variables.values()):
             card = var.cardinality or 2
             act_card = max(n_act, 1)
-            lines.append(f"B_f{i}=identity({card},{card},{act_card})")
+            slices: list[str] = []
+            for next_state in range(card):
+                columns: list[str] = []
+                for previous_state in range(card):
+                    value = "1.0" if next_state == previous_state else "0.0"
+                    columns.append("(" + ", ".join([value] * act_card) + ")")
+                slices.append("(" + ", ".join(columns) + ")")
+            lines.append(f"B_f{i}={{ ({', '.join(slices)}) }}")
 
         # C_m: use derived log-preference values.
         if self.state_space.preferences and n_obs > 0:
@@ -393,8 +407,19 @@ class _UpstreamSectionsMixin:
             lines.append("# No parameters to emit; code-derived values live in state_space.json")
         return "\n".join(lines)
 
+    def _format_equations(self) -> str:
+        """Emit ``## Equations`` — required by the GNN 2.0.0 package."""
+        return "\n".join(
+            [
+                "## Equations",
+                "# Generative model equations are symbolic summaries of the derived A/B/C/D payload.",
+                "Q(s) = softmax(ln(D) + ln(A^T * o))",
+                "Q(pi) = softmax(-G(pi))",
+            ]
+        )
+
     def _format_time(self) -> str:
-        """Emit ``## Time`` — GNN v1.1 time block.
+        """Emit ``## Time`` — GNN 2.0.0 time block.
 
         Uses ``Static`` when the state space has no transitions and
         ``Dynamic/Discrete/Time=t/ModelTimeHorizon=Unbounded`` when it does.
@@ -436,7 +461,7 @@ class _UpstreamSectionsMixin:
             lines.append(f"s_f{i}=HiddenState")
             lines.append(f"D_f{i}=PriorBelief")
             lines.append(f"B_f{i}=TransitionMatrix")
-        for i in range(min(n_states, n_obs)):
+        for i in range(n_obs):
             lines.append(f"A_m{i}=LikelihoodMatrix")
         for i in range(n_obs):
             lines.append(f"o_m{i}=Observation")
@@ -464,21 +489,36 @@ class _UpstreamSectionsMixin:
         lines.append(f"num_control_factors={n_act}")
         lines.append(f"num_transitions={len(self.state_space.transitions)}")
         lines.append(f"num_preferences={len(self.state_space.preferences)}")
+        first_state = next(iter(self.state_space.variables.values()), None)
+        first_obs = next(iter(self.state_space.observations.values()), None)
+        joint_state_cardinality = (first_state.cardinality if first_state else None) or max(n_states, 1)
+        representative_observation_cardinality = (
+            (first_obs.cardinality if first_obs else None) or max(n_obs, 1)
+        )
+        lines.append(f"num_states: {joint_state_cardinality}")
+        lines.append(f"num_obs: {representative_observation_cardinality}")
+        lines.append(f"num_actions: {max(n_act, 1)}")
         regime = getattr(self.state_space.time_regime, "value", str(self.state_space.time_regime))
         lines.append(f"time_regime={regime}")
         return "\n".join(lines)
 
     def _format_upstream_footer(self) -> str:
-        """Emit ``## Footer`` — generation timestamp and signature."""
+        """Emit ``## Footer`` — generation timestamp and bundle provenance."""
         ts = datetime.now(UTC).isoformat()
         return "\n".join(
             [
                 "## Footer",
-                f"Generated by COGANT v0.1.0 at {ts}.",
+                f"Generated by COGANT v{__version__} at {ts}; targets GNN v2.0.0.",
                 "COGANT — codebase-to-GNN translation engine.",
-                "",
+            ]
+        )
+
+    def _format_signature(self) -> str:
+        """Emit ``## Signature`` as the required provenance field."""
+        return "\n".join(
+            [
                 "## Signature",
-                "Cryptographic signature: not signed (COGANT development build).",
+                "pending",
             ]
         )
 
@@ -488,7 +528,7 @@ class _UpstreamSectionsMixin:
     def _upstream_model_id(self) -> str:
         """Return the upstream-safe model identifier.
 
-        GNN v1 identifiers should be alphanumeric (plus underscore); we
+        GNN 2.0.0 identifiers should be alphanumeric (plus underscore); we
         sanitize the COGANT schema name so the upstream parser accepts it.
         """
         raw = self.state_space.schema_name or self.state_space.id or "CogantModel"

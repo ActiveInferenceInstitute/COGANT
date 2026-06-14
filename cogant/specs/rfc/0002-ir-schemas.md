@@ -512,7 +512,7 @@ For major version changes, provide:
     "script": "migrate_v1_to_v2.py",
     "rules": [
       { "old_field": "type", "new_field": "kind", "transform": "uppercase" },
-      { "removed_field": "deprecated_role", "reason": "Consolidated into role" }
+      { "removed_field": "removed_role", "reason": "Consolidated into role" }
     ]
   }
 }

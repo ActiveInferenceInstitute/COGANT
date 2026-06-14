@@ -20,9 +20,13 @@ manuscript. It performs the following steps, in order:
    ``output/manuscript/``.
 5. **Copy** ``config.yaml``, ``references.bib``, ``preamble.md`` into
    ``output/manuscript/`` (renderer expects them there).
-6. **Copy figures** — move curated real run PNGs from ``cogant/output`` into
-   ``output/figures/`` for template PDF/HTML rendering. With ``--strict``,
-   missing registered figures or incomplete figure metadata are fatal.
+6. **Copy and audit figures** — move curated real run PNGs from ``cogant/output``
+   into ``output/figures/`` for template PDF/HTML rendering, then refresh the
+   visualization-quality JSON / Markdown / PNG review artifacts, the
+   section-level manuscript-evidence audit, a fresh claim ledger, and the
+   combined review dashboard. With ``--strict``, missing registered figures,
+   incomplete figure metadata, evidence-audit findings, or dashboard findings
+   are fatal.
 7. **Validate** — scan every written file for surviving ``{{PLACEHOLDER}}``
    tokens. With ``--strict``, also reject body-fragment links to ``.md`` files
    so the manuscript uses intra-manuscript cross-references instead of
@@ -54,7 +58,7 @@ import json
 import logging
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -71,20 +75,26 @@ if str(_TOOLS) not in sys.path:
     sys.path.insert(0, str(_TOOLS))
 
 try:
-    from infrastructure.core.logging.utils import get_logger  # type: ignore[import-not-found]  # noqa: E402
+    from infrastructure.core.logging.utils import (  # type: ignore[import-not-found]  # noqa: E402
+        get_logger,
+    )
 except ModuleNotFoundError:  # standalone passive checkout without parent template package
 
     def get_logger(name: str) -> logging.Logger:
         logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
         return logging.getLogger(name)
 
+import manuscript_evidence_audit as evidence_audit  # noqa: E402
+import manuscript_review_dashboard as review_dashboard  # noqa: E402
+import visualization_quality_audit as visual_quality  # noqa: E402
+from audit_manuscript_markdown_links import audit as audit_markdown_links  # noqa: E402
+from claim_ledger import build_claim_ledger, write_ledger  # noqa: E402
+from manuscript_figures import copy_manuscript_figures  # noqa: E402
 from manuscript_vars import (  # noqa: E402
     build_flat_variables,
     find_unresolved_placeholders,
     substitute_text,
 )
-from audit_manuscript_markdown_links import audit as audit_markdown_links  # noqa: E402
-from manuscript_figures import copy_manuscript_figures  # noqa: E402
 
 logger = get_logger(__name__)
 
@@ -258,7 +268,7 @@ def main(argv: list[str] | None = None) -> int:
         "metrics_path": str(METRICS_PATH.relative_to(TEMPLATE_ROOT)),
         "metrics_generated_at": metrics.get("generated_at", ""),
         "generator_git_sha": metrics.get("generator_git_sha", ""),
-        "injected_at": datetime.now(timezone.utc).isoformat(),
+        "injected_at": datetime.now(UTC).isoformat(),
         "variables": flat,
     }
 
@@ -302,10 +312,83 @@ def main(argv: list[str] | None = None) -> int:
         strict=args.strict or args.strict_figures,
     )
     logger.info("Prepared manuscript figures: %s", figure_manifest)
+    visual_quality_report = visual_quality.build_visualization_quality_audit(figure_manifest)
+    visual_quality_json = visual_quality.write_json(
+        visual_quality_report,
+        COGANT_STAGING_ROOT / "output" / "figures" / "visual_quality_audit.json",
+    )
+    visual_quality.write_markdown(
+        visual_quality_report,
+        COGANT_STAGING_ROOT / "output" / "figures" / "visual_quality_audit.md",
+    )
+    visual_quality.write_png_matrix(
+        visual_quality_report,
+        COGANT_STAGING_ROOT / "output" / "figures" / "visual_quality_audit.png",
+    )
+    logger.info("Prepared visualization quality audit: %s", visual_quality_json)
+    if (args.strict or args.strict_figures) and visual_quality_report["summary"]["failed"]:
+        print(
+            "Visualization quality audit failed for "
+            f"{visual_quality_report['summary']['failed']} figure(s)",
+            file=sys.stderr,
+        )
+        return 1
+    evidence_report = evidence_audit.build_manuscript_evidence_audit(MANUSCRIPT_DIR)
+    evidence_json = evidence_audit.write_json(
+        evidence_report,
+        COGANT_STAGING_ROOT / "output" / "analysis" / "manuscript_evidence_audit.json",
+    )
+    evidence_audit.write_markdown(
+        evidence_report,
+        COGANT_STAGING_ROOT / "output" / "analysis" / "manuscript_evidence_audit.md",
+    )
+    evidence_audit.write_png_matrix(
+        evidence_report,
+        COGANT_STAGING_ROOT / "output" / "analysis" / "manuscript_evidence_audit.png",
+    )
+    logger.info("Prepared manuscript evidence audit: %s", evidence_json)
+    if args.strict and evidence_report["summary"]["failed"]:
+        print(
+            "Manuscript evidence audit failed for "
+            f"{evidence_report['summary']['failed']} section(s)",
+            file=sys.stderr,
+        )
+        return 1
+    claim_paths = write_ledger(build_claim_ledger(MANUSCRIPT_DIR), OUTPUT_DIR)
+    claim_json = claim_paths["json"]
+    logger.info("Prepared claim ledger: %s", claim_json)
+    review_report = review_dashboard.build_review_dashboard(
+        evidence_path=evidence_json,
+        visual_path=visual_quality_json,
+        claim_path=claim_json,
+        figure_manifest_path=figure_manifest,
+    )
+    review_json = review_dashboard.write_json(
+        review_report,
+        COGANT_STAGING_ROOT / "output" / "analysis" / "manuscript_review_dashboard.json",
+    )
+    review_dashboard.write_markdown(
+        review_report,
+        COGANT_STAGING_ROOT / "output" / "analysis" / "manuscript_review_dashboard.md",
+    )
+    review_dashboard.write_png(
+        review_report,
+        COGANT_STAGING_ROOT / "output" / "analysis" / "manuscript_review_dashboard.png",
+    )
+    logger.info("Prepared manuscript review dashboard: %s", review_json)
+    if args.strict and review_report["status"] != "pass":
+        print("Manuscript review dashboard failed", file=sys.stderr)
+        for issue in review_report["issues"]:
+            print(f"  {issue}", file=sys.stderr)
+        return 1
 
     print(str(out_json))
     print(str(INJECTED_MS_DIR))
     print(str(figure_manifest))
+    print(str(visual_quality_json))
+    print(str(evidence_json))
+    print(str(claim_json))
+    print(str(review_json))
 
     if unresolved_by_file:
         msg_lines = [

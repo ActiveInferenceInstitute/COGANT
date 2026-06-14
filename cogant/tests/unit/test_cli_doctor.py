@@ -6,7 +6,7 @@ The doctor command inspects the *actual* interpreter, so we assert
 only on stable substrings (``Python``) and exit codes.
 
 The tests also verify that the enhanced ``init`` command still
-creates the legacy ``.cogant/config.json`` layout (backward
+creates the compatibility ``.cogant/config.json`` layout (backward
 compatibility with ``test_cli.py::TestInitCommand``).
 """
 
@@ -94,7 +94,7 @@ class TestDoctorCommand:
 class TestInitCommand:
     """Tests for the enhanced ``init`` command.
 
-    The legacy ``test_cli.py::TestInitCommand::test_init_creates_project_layout``
+    The compatibility ``test_cli.py::TestInitCommand::test_init_creates_project_layout``
     already covers the default-path scaffold behaviour; these tests
     extend coverage to the new flags (``--check``, ``--run``,
     ``--yes``) and the friendly error surface.

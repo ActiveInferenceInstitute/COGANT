@@ -2,7 +2,7 @@
 full_pomdp
 
 ## GNNVersionAndFlags
-GNN v1
+GNN v2.0.0
 
 ## ModelName
 full_pomdp

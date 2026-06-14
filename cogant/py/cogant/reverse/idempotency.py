@@ -34,8 +34,7 @@ The role metric is intentionally soft. The forward pipeline emits
 semantic mappings for any pattern it recognises, including patterns
 the synthesizer did not explicitly model. The verifier rewards overlap
 but reports extra/missing roles, graph deltas, matrix deltas, and GNN
-section deltas instead of hiding them behind an overloaded
-"isomorphism" label.
+section deltas instead of collapsing distinct evidence into one label.
 """
 
 from __future__ import annotations
@@ -56,7 +55,12 @@ from cogant.reverse.metrics import (
 )
 from cogant.reverse.parser import ReverseGNNModel, parse_gnn
 from cogant.reverse.planner import plan_package
-from cogant.reverse.synthesizer import SEMANTIC_TARGETS_MANIFEST, synthesize_package
+from cogant.reverse.synthesizer import (
+    SEMANTIC_TARGETS_MANIFEST,
+    supports_stable_minimal_profile,
+    synthesize_package,
+    synthesize_stable_minimal_package,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -74,10 +78,6 @@ ROUNDTRIP_STATUSES = (
 
 ROLE_PRESERVATION_THRESHOLD = 0.5
 """Default minimum role-preservation score for the weaker success tier."""
-
-# Deprecated compatibility alias for callers that have not yet moved to
-# ``ROLE_PRESERVATION_THRESHOLD``. New JSON/CLI surfaces do not emit this name.
-ROLE_MATCH_THRESHOLD = ROLE_PRESERVATION_THRESHOLD
 
 MATRIX_VALUE_TOLERANCE = 1e-9
 """Maximum absolute A/B/C/D value delta allowed for strict preservation."""
@@ -218,25 +218,10 @@ class RoundtripResult:
         rule_evidence_trace: dict[str, Any] | None = None,
         warnings: list[str] | None = None,
         errors: list[str] | None = None,
-        # Backward-compatible input aliases. They are accepted so older
-        # in-package tests and third-party callers fail gently, but the
-        # public JSON/CLI contract no longer emits them.
-        is_isomorphic: bool | None = None,
-        role_match_score: float | None = None,
-        roundtrip_invariants: dict[str, Any] | None = None,
     ) -> None:
-        if role_match_score is not None:
-            role_preservation_score = role_match_score
-        if invariants is None and roundtrip_invariants is not None:
-            invariants = roundtrip_invariants
-
         self.role_preservation_score = float(role_preservation_score)
         if role_preserved is None:
-            role_preserved = (
-                bool(is_isomorphic)
-                if is_isomorphic is not None
-                else self.role_preservation_score >= ROLE_PRESERVATION_THRESHOLD
-            )
+            role_preserved = self.role_preservation_score >= ROLE_PRESERVATION_THRESHOLD
         self.role_preserved = bool(role_preserved)
 
         self.invariants = dict(invariants or {})
@@ -246,9 +231,7 @@ class RoundtripResult:
             gnn_sections_preserved = bool(self.invariants.get("gnn_sections_preserved", False))
         if generated_code_ok is None:
             generated_code_ok = bool(self.invariants.get("generated_code_ok", False))
-        if structurally_isomorphic is None and is_isomorphic is not None:
-            structurally_isomorphic = bool(is_isomorphic)
-        elif structurally_isomorphic is None:
+        if structurally_isomorphic is None:
             structurally_isomorphic = _strict_invariants_preserved(
                 role_preserved=self.role_preserved,
                 matrix_preserved=bool(matrix_preserved),
@@ -284,21 +267,6 @@ class RoundtripResult:
         self.rule_evidence_trace = dict(rule_evidence_trace or {})
         self.warnings = list(warnings or [])
         self.errors = list(errors or [])
-
-    @property
-    def is_isomorphic(self) -> bool:
-        """Deprecated compatibility view; use ``structurally_isomorphic``."""
-        return self.structurally_isomorphic
-
-    @property
-    def role_match_score(self) -> float:
-        """Deprecated compatibility view; use ``role_preservation_score``."""
-        return self.role_preservation_score
-
-    @property
-    def roundtrip_invariants(self) -> dict[str, Any]:
-        """Deprecated compatibility view; use ``invariants``."""
-        return self.invariants
 
     def summary(self) -> str:
         """Return a human-readable single-line summary of the result."""
@@ -725,7 +693,7 @@ def _gnn_diff(original_markdown: str, synthesized_markdown: str) -> dict[str, An
     }
 
 
-def _roundtrip_invariants(
+def _invariants(
     *,
     role_preservation_score: float,
     role_threshold: float,
@@ -1087,7 +1055,7 @@ def verify_roundtrip(
     # Compute auxiliary distance metrics (matrix Frobenius + graph
     # structure) from whatever the forward pipeline exposed. These
     # never cause the round-trip to fail — they are reported as
-    # diagnostic signal alongside the authoritative role_match_score.
+    # diagnostic signal alongside the authoritative role_preservation_score.
     matrix_score = compare_matrices(
         _model_matrices(model),
         _state_space_matrices(forward.get("state_space")),
@@ -1125,7 +1093,7 @@ def verify_roundtrip(
     errors = list(generated_code_errors)
     if forward.get("error"):
         errors.append(str(forward["error"]))
-    invariants = _roundtrip_invariants(
+    invariants = _invariants(
         role_preservation_score=score,
         role_threshold=role_threshold,
         shape_match=shape_match,
@@ -1180,7 +1148,7 @@ def verify_roundtrip(
     if cleanup_dir is not None:
         try:
             shutil.rmtree(cleanup_dir, ignore_errors=True)
-            # The package_path becomes stale; clear it so callers don't
+            # The package_path points to deleted files; clear it so callers don't
             # try to read deleted files.
             result.package_path = None
         except OSError:  # pragma: no cover - defensive
@@ -1208,7 +1176,8 @@ def verify_repo_roundtrip(
     4. Runs the forward pipeline again on the synthesized package and
        collects a **second** semantic-mappings multiset ``R2``.
     5. Compares ``R1`` and ``R2`` directly; the role-preservation score is
-       ``|R1 ∩ R2| / |R1|`` under multiset intersection.
+       the mean per-role ``min(count1, count2) / max(count1, count2)``
+       multiset similarity.
 
     This comparison style (forward-vs-forward) is the strictest role
     preservation measurement for an existing repository:
@@ -1273,7 +1242,10 @@ def verify_repo_roundtrip(
         # Stage 2+3: parse → plan → synthesize.
         model = parse_gnn(gnn_path)
         plan = plan_package(model, expected_roles=original_roles)
-        package_path = synthesize_package(plan, model, reverse_dir)
+        if supports_stable_minimal_profile(plan, model):
+            package_path = synthesize_stable_minimal_package(plan, model, reverse_dir)
+        else:
+            package_path = synthesize_package(plan, model, reverse_dir)
 
         # Stage 4: forward on the synthesized package.
         forward = _run_forward(package_path)
@@ -1341,7 +1313,7 @@ def verify_repo_roundtrip(
         errors = list(generated_code_errors)
         if forward.get("error"):
             errors.append(str(forward["error"]))
-        invariants = _roundtrip_invariants(
+        invariants = _invariants(
             role_preservation_score=score,
             role_threshold=role_threshold,
             shape_match=shape_match,
@@ -1412,7 +1384,6 @@ __all__ = [
     "ROUNDTRIP_STATUS_FAILED",
     "ROUNDTRIP_STATUSES",
     "ROLE_PRESERVATION_THRESHOLD",
-    "ROLE_MATCH_THRESHOLD",
     "check_structural_idempotency",
     "check_semantic_idempotency",
 ]

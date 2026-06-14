@@ -36,7 +36,7 @@ from cogant.viz.png import (
 def _empty_state_space() -> StateSpaceModel:
     return StateSpaceModel(
         id="ss",
-        schema_name="v0.1.0",
+        schema_name="current",
         variables={},
         observations={},
         actions={},
@@ -48,7 +48,7 @@ def _empty_state_space() -> StateSpaceModel:
 
 
 def _empty_process_model() -> ProcessModel:
-    return ProcessModel(id="pm", schema_name="v0.1.0", stages={}, connections={})
+    return ProcessModel(id="pm", schema_name="current", stages={}, connections={})
 
 
 def _small_graph() -> ProgramGraph:

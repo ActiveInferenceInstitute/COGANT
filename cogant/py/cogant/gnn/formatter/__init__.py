@@ -9,11 +9,12 @@ Layout::
     cogant.gnn.formatter/
       __init__.py      -- re-exports GNNMarkdownFormatter
       base.py          -- class, format(), and shared helpers
-      upstream.py      -- upstream GNN v1.1 canonical header sections
+      upstream.py      -- upstream GNN 2.0.0 canonical header sections
                           (GNNSection, GNNVersionAndFlags, ModelName,
                           StateSpaceBlock, Connections,
-                          InitialParameterization, Time,
-                          ActInfOntologyAnnotation, etc.)
+                          InitialParameterization, Equations, Time,
+                          ActInfOntologyAnnotation, ModelParameters,
+                          Footer, Signature, etc.)
       metadata.py      -- model, repo, source, provenance, ...
       structural.py    -- state space, observations, factors, ...
       dynamics.py      -- transitions, likelihoods, time, ...

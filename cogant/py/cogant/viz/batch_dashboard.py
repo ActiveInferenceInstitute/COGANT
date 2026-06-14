@@ -187,7 +187,7 @@ def _roundtrip_statuses(run_dir: Path) -> tuple[str, str, float | None]:
         return ("not_present", "not_present", None)
     status = str(metrics.get("roundtrip_status") or "").lower()
     if not status:
-        is_iso = metrics.get("is_isomorphic")
+        is_iso = metrics.get("structurally_isomorphic")
         status = (
             "structurally_isomorphic"
             if is_iso is True
@@ -239,7 +239,7 @@ def _stage_count(
 
 
 def _bundle_stages(bundle: dict[str, Any] | None) -> dict[str, Any]:
-    """Return the stage mapping from either historical bundle layout.
+    """Return the stage mapping from either recorded bundle layout.
 
     Current COGANT bundles write ``stage_results``; older tests and a few
     fixtures use ``stages``. Supporting both keeps the dashboard useful across
@@ -686,7 +686,7 @@ class BatchDashboardGenerator:
     def render_mermaid_score_pie(self, metrics: list[TargetMetrics]) -> str:
         """Return validation-score buckets as bars.
 
-        The historical method name is retained for callers and tests that
+        The recorded method name is retained for callers and tests that
         predate the visualization rewrite away from pie charts.
         """
         buckets = {"100": 0, "90-99": 0, "70-89": 0, "<70": 0, "no-score": 0}
@@ -707,7 +707,7 @@ class BatchDashboardGenerator:
     def render_mermaid_visual_completeness_pie(self, metrics: list[TargetMetrics]) -> str:
         """Return visual-workbench completeness buckets as bars.
 
-        The historical method name is retained for compatibility.
+        The recorded method name is retained for compatibility.
         """
         buckets = {"dashboard+abstract+roundtrip": 0, "partial": 0, "missing": 0}
         for m in metrics:

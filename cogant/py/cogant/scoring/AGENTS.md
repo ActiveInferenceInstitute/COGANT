@@ -26,7 +26,7 @@ stage 10: validate/          → ValidationReport
                               → Quality gates (pass/fail)
 ```
 
-The scoring module is the **final quality gate before deployment and release tracking**. All metrics feed into dashboards, CI/CD gates, and historical trend databases.
+The scoring module is the **final quality gate before deployment and release tracking**. All metrics feed into dashboards, CI/CD gates, and recorded trend databases.
 
 ## Core Components
 
@@ -310,7 +310,7 @@ if summary_b.semantic_coverage < summary_a.semantic_coverage - 0.05:
 2. **CI/CD Gates** — enforce max drift thresholds before merge
 3. **Dashboards** — track drift and quality trends over time
 4. **Release Notes** — include drift summary in deployment artifacts
-5. **Historical Analysis** — feed into trend databases for capacity planning
+5. **Recorded Analysis** — feed into trend databases for capacity planning
 
 ## Responsibilities & Coordination
 

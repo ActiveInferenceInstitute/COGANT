@@ -30,7 +30,7 @@ jobs:
       - name: Regenerate metrics
         run: uv run python ../tools/regenerate_metrics.py
 
-      - name: Check metrics not stale
+      - name: Check metrics not out-of-sync
         # Compare regenerated METRICS.yaml to the committed copy while
         # ignoring fields that are inherently environment-dependent and
         # therefore drift between developer machines and the GHA runner:
@@ -60,7 +60,7 @@ jobs:
             -I '^  coverage_percent:'
           )
           if ! git diff --quiet "${ignore[@]}" -- evaluation/METRICS.yaml; then
-            echo "METRICS.yaml is stale on a structural field — run tools/regenerate_metrics.py and commit"
+            echo "METRICS.yaml is out-of-sync on a structural field — run tools/regenerate_metrics.py and commit"
             git diff "${ignore[@]}" -- evaluation/METRICS.yaml
             exit 1
           fi

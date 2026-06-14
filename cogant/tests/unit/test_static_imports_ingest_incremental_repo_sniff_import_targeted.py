@@ -481,7 +481,7 @@ class TestReverseMetrics:
         gnn_b = {"roles": {"HiddenState": 1, "Observation": 1}}
         result = compute_isomorphism_report(gnn_a, gnn_b)
         assert result is not None
-        assert hasattr(result, "is_isomorphic") or hasattr(result, "role_match_score")
+        assert hasattr(result, "structurally_isomorphic") or hasattr(result, "role_preservation_score")
 
 
 # ---------------------------------------------------------------------------

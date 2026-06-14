@@ -520,20 +520,19 @@ class MatrixVisualizer:
             logger.warning("matplotlib not available; skipping PNG save")
             return ""
 
+        if fig is None:
+            logger.warning("Figure is None; skipping PNG save")
+            return ""
+
         try:
-            if fig is None:
-                logger.warning("Figure is None; skipping PNG save")
-                return ""
-
             fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
-            plt.close(fig)
-
             logger.info(f"Saved figure to {output_path}")
             return output_path
-
         except Exception as e:
             logger.error(f"Error saving PNG: {e}")
             return ""
+        finally:
+            plt.close(fig)
 
     def to_pdf(self, fig: Any, output_path: str) -> str:
         """
@@ -552,17 +551,16 @@ class MatrixVisualizer:
             logger.warning("matplotlib not available; skipping PDF save")
             return ""
 
+        if fig is None:
+            logger.warning("Figure is None; skipping PDF save")
+            return ""
+
         try:
-            if fig is None:
-                logger.warning("Figure is None; skipping PDF save")
-                return ""
-
             fig.savefig(output_path, format="pdf", bbox_inches="tight")
-            plt.close(fig)
-
             logger.info(f"Saved figure to {output_path}")
             return output_path
-
         except Exception as e:
             logger.error(f"Error saving PDF: {e}")
             return ""
+        finally:
+            plt.close(fig)

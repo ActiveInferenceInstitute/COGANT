@@ -296,8 +296,8 @@ def test_role_multiset_from_mappings_iterable() -> None:
 
 def test_roundtrip_result_summary_iso_status() -> None:
     res = RoundtripResult(
-        is_isomorphic=True,
-        role_match_score=0.9,
+        structurally_isomorphic=True,
+        role_preservation_score=0.9,
         matrix_score=0.5,
         structural_score=0.7,
         original_roles={"HIDDEN_STATE": 1},
@@ -313,8 +313,8 @@ def test_roundtrip_result_summary_iso_status() -> None:
 
 def test_roundtrip_result_summary_drift_status() -> None:
     res = RoundtripResult(
-        is_isomorphic=False,
-        role_match_score=0.1,
+        structurally_isomorphic=False,
+        role_preservation_score=0.1,
     )
     summary = res.summary()
     assert "DRIFT" in summary

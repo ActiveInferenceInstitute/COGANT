@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+
 @dataclass(frozen=True)
 class ManuscriptFigure:
     """A package-generated figure copied into the manuscript asset tree."""
@@ -119,18 +120,21 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         role="forward-state-space-to-matrices",
         caption=(
             "A/B/C/D connection-matrix panel rendered from the Flask application "
-            "fixture's exported model.gnn.json matrix arrays."
+            "fixture's exported model.gnn.json matrix arrays, with hidden-state "
+            "group annotations for program/service states and inheritance-role states."
         ),
         source_artifact="cogant/output/flask_app/gnn_package/model.gnn.json",
         renderer="cogant.viz.png.render_connections_matrix_png",
         method_note=(
             "Heatmap rendering of exported likelihood, transition, preference, and "
             "prior arrays. A, C, and D are direct matrix/vector panels; B is a "
-            "recorded action-axis summary of the exported transition tensor."
+            "recorded action-axis summary of the exported transition tensor. Axis "
+            "labels and state groups are derived from model.gnn.json."
         ),
         reading_guide=(
-            "Inspect shapes, sparsity, identity/default bands, and the B reducer "
-            "metadata before interpreting downstream inference traces."
+            "Inspect shapes, sparsity, identity/default bands, hidden-state index "
+            "groups, and the B reducer metadata before interpreting downstream "
+            "inference traces."
         ),
         limitations=(
             "Panels are inspection views of exported structural values, not learned "
@@ -175,25 +179,24 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
     ),
     ManuscriptFigure(
         key="gnn_markdown_render",
-        source="cogant/output/calculator/figures/model_gnn.png",
+        source="cogant/output/calculator/figures/model_gnn_mosaic.png",
         destination="cogant_gnn_markdown_render.png",
         role="forward-gnn-markdown-render",
         caption=(
-            "Rendered first page of the emitted model.gnn.md bundle, the "
+            "Rendered all-page mosaic of the emitted model.gnn.md bundle, the "
             "human-readable Generalized Notation Notation artifact."
         ),
         source_artifact="cogant/output/calculator/gnn_package/model.gnn.md",
-        renderer="cogant.viz.png.render_gnn_markdown_png",
-        method_note="Rasterized view of the emitted GNN markdown bundle.",
+        renderer="cogant.viz.png.gnn_markdown.render_gnn_markdown_mosaic_png",
+        method_note="Native matplotlib mosaic composed from every rendered GNN markdown page.",
         reading_guide=(
             "Use it to inspect the reader-facing bundle format alongside the JSON "
             "and validation sidecars."
         ),
         limitations=(
-            "Only the rendered page is shown; it is readability and interchange "
-            "evidence, not a validation result."
+            "The mosaic is readability and interchange evidence, not a validation result."
         ),
-        alt_text="Rendered page from the calculator model.gnn.md bundle.",
+        alt_text="Eight-panel mosaic of the calculator model.gnn.md bundle.",
         min_width_px=1600,
         min_height_px=1200,
     ),
@@ -227,20 +230,20 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         destination="cogant_roundtrip_batch_gantt.png",
         role="forward-reverse-forward-roundtrip",
         caption=(
-            "Publication timeline rendered from run_all's manifest, showing the "
-            "explicit roundtrip:calculator stage after forward translation, "
-            "rendering, visualization, and validation; dark diamond markers identify "
-            "validation and roundtrip gates."
+            "Calculator-target publication timeline rendered from run_all's manifest, "
+            "showing the selected command sequence and the explicit "
+            "roundtrip:calculator stage; gate markers identify validation and "
+            "roundtrip checks."
         ),
         source_artifact="cogant/output/run_manifest.json",
         renderer="tools.manuscript_figures._render_publication_batch_timeline",
         method_note=(
-            "Light matplotlib timeline generated from run manifest command records; "
-            "the stdlib batch-dashboard generator remains unchanged."
+            "Wide matplotlib timeline generated from the calculator command records "
+            "in the batch manifest; batch-wide context remains in the sidecar."
         ),
         reading_guide=(
-            "Read the ordered bars as the recorded per-target stage sequence; elapsed "
-            "durations are audit metadata, not benchmark claims. Diamond markers "
+            "Read the ordered bars as the recorded calculator stage sequence; elapsed "
+            "durations are audit metadata, not benchmark claims. Gate markers "
             "distinguish verification gates from ordinary execution stages."
         ),
         limitations="Timing varies by machine and should not be interpreted as a benchmark without repeated runs.",
@@ -324,7 +327,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "showing which translation rules contributed semantic mappings."
         ),
         source_artifact="cogant/output/calculator/rule_evidence_trace.json",
-        renderer="cogant.viz.inspection_dashboard rule trace renderer",
+        renderer="cogant.viz.inspection_dashboard native rule trace renderer",
         method_note=(
             "Aggregate per-rule contribution bars with mapping, conflict, and "
             "accepted/rejected totals; the per-mapping rule id, matched nodes, and "
@@ -349,7 +352,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "rule_evidence_trace.json."
         ),
         source_artifact="cogant/output/calculator/rule_evidence_trace.json",
-        renderer="cogant.viz.inspection_dashboard evidence coverage renderer",
+        renderer="cogant.viz.inspection_dashboard native evidence coverage renderer",
         method_note=(
             "Mapping confidence tiers, rule contribution counts, conflict events, "
             "and reviewer-annotation coverage derived from rule evidence."
@@ -381,7 +384,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "values), with belief, action, preference, and free-energy panels."
         ),
         source_artifact="cogant/output/calculator/data/inference_trace.json",
-        renderer="cogant.runtime.inference_demo and visualization renderer",
+        renderer="cogant.runtime.inference_demo and native visualization renderer",
         method_note=(
             "Deterministic trace generated from the package's built-in demonstration "
             "A/B/C/D matrices (`default_demo_matrices`), which share an exported model's "

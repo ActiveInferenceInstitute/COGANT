@@ -46,7 +46,7 @@ By default, ``GNNValidator.validate_package`` runs upstream ``validate_gnn`` on
 ``model.gnn.md`` after COGANT checks. Disable with ``upstream_gnn=False``, the
 ``cogant validate --no-upstream-gnn`` CLI flag, the env flag
 ``COGANT_DISABLE_UPSTREAM_GNN=1``, or ``PipelineConfig.upstream_gnn_validation=False``.
-Legacy env ``COGANT_GNN_UPSTREAM`` is **not** read (it used to opt-in; upstream
+Compatibility env ``COGANT_GNN_UPSTREAM`` is **not** read (it used to opt-in; upstream
 is now on by default).
 
 Upstream is **CC-BY-NC-SA-4.0**; see ``LICENSES.md`` in the package root. Results
@@ -81,8 +81,11 @@ see ``upstream_bridge/AGENTS.md`` for the per-step catalogue.
 #### Facades only on ``cogant.gnn.upstream_bridge``
 
 ``cogant.gnn`` re-exports the bridge entry points listed in ``gnn/__init__.py`` ``__all__``.
-For programmatic access to the rest of ``src.gnn``, import the submodule directly. These
-are thin wrappers (no COGANT-specific behavior beyond path coercion and ``json_safe``):
+Do not import ``src.gnn`` directly from COGANT code: the upstream v2.0.0 package
+uses repo-style sibling imports that the bridge prepares before loading upstream modules.
+If a new upstream entry point is needed, add a facade here instead of bypassing the bridge.
+The current facades are thin wrappers around upstream behavior plus path coercion and
+``json_safe``:
 
 | Name | Upstream target (typical) |
 |------|---------------------------|

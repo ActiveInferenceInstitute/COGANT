@@ -240,9 +240,9 @@ Entries marked with "(details need verification)" have authors and approximate y
 **Scope:** The Active Inference Institute's Generalized Notation Notation (GNN) standard, which is the *output format* of COGANT. GNN here is a human-readable scientific notation, not graph neural networks.
 
 ### [smekal2023gnn] Smekal, Friedman et al. (2023) — "Generalized Notation Notation: A Text-Based Format for Active Inference Generative Models" (details need verification)
-**Relevance**: The specification document for GNN v1.1, which COGANT's `cogant.gnn` formatter targets. Every COGANT output is a GNN bundle validated against this spec.
+**Relevance**: The specification lineage for the GNN v2.0.0.x family. COGANT currently targets the upstream GNN v2.0.0.6.0 engine carried by the pinned GeneralizedNotationNotation v2.0.0 release bundle. Every COGANT output is a GNN bundle validated against this required-section surface plus COGANT's own package invariants.
 **Key contribution**: A Markdown-structured, section-based syntax for declaring state variables, observations, actions, matrices (A/B/C/D), time horizons, and Markov blankets in a form that is both human-readable and machine-parseable.
-**Connection**: COGANT emits GNN v1.1 bundles. The `GNNValidator` in `py/cogant/gnn/validator.py` checks every section defined in this spec. Current COGANT fixtures score 100.0 on the structural validator; the `GNN_VALIDATION_REPORT.md` in this directory tracks compliance.
+**Connection**: COGANT emits v2.0.0.0-engine-compatible GNN bundles with COGANT extension sections below the upstream header. The `GNNValidator` in `py/cogant/gnn/validator.py` checks the upstream section order, the COGANT package sidecars, matrix consistency, and upstream `src.gnn` results through the bridge; `GNN_VALIDATION_REPORT.md` tracks the current compliance boundary.
 
 ### [activeInferenceInstitute2022gnn] Active Inference Institute (2022–2026) — "Generalized Notation Notation Reference Implementation and Examples"
 **Relevance**: The reference Python implementation and example gallery for GNN, which defines the de-facto conformance tests for any tool claiming to emit GNN.
@@ -686,11 +686,27 @@ Primary synthesis references in this bibliography include Alur 2013, Solar-Lezam
 
 ---
 
+## 15. Organizational State Spaces and Economic World Models
+
+**Search terms used:** "economic world model portfolio optimization recursive self improvement", "organization state space model capital allocation", "channel histories economic world model"
+
+**Relevance to COGANT:** This small cluster records adjacent work for the provisional organization-state-space track. These sources should not be read as validation of COGANT's current code-derived GNN bundles; they are conceptual anchors for future socio-technical surrogate models with explicit evidence histories.
+
+### [westenhaver2026recursiveSelfImprovementPortfolio] Westenhaver, Branscomb, Grant (2026) — "Recursive Self-Improvement is a Portfolio Optimization Problem"
+**Relevance**: Industry white paper framing recursive self-improvement as auditable capital allocation over an Economic World Model, channel histories, and a portfolio optimizer.
+**Key contribution**: Makes the improvement loop explicitly economic: actions, costs, outcomes, and reinvestment need to be recorded before a controller can compare heterogeneous improvement channels.
+**Connection**: Useful for COGANT's future typed-organization work because it names the evidence discipline a socio-technical optimizer would need. It is not peer-reviewed evidence for COGANT, and its t-RSI statistic is not implemented in COGANT.
+- URL: https://www.alphafund.com/whitepaper
+- PDF: https://www.alphafund.com/whitepaper/whitepaper.pdf
+
+---
+
 ## Summary Statistics
 
-- **Sections:** 14 (10 core topic areas + 4 extended-search areas)
-- **Entries:** 100 (72 core sections 1-10 + 28 extended sections 11-14)
+- **Sections:** 15 (10 core topic areas + 5 extended-search areas)
+- **Entries:** 101 (72 core sections 1-10 + 29 extended sections 11-15)
 - **New entries added (2026-04-11):** 17 — Sections 1 (3), 2 (3), 3 (4), 4 (1), 6 (4)
+- **New entries added (2026-06-12):** 1 — Section 15 (1)
 - **Entries with full DOI/arXiv:** 32
 - **Entries flagged "details need verification":** 9
-- **Last updated:** 2026-04-11
+- **Last updated:** 2026-06-12

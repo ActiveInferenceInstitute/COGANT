@@ -37,7 +37,7 @@ def _resolve_upstream_flag(explicit: bool | None) -> bool:
     * ``None`` — run upstream unless :envvar:`COGANT_DISABLE_UPSTREAM_GNN` is truthy
       (default: upstream **on**).
 
-    Legacy: ``COGANT_GNN_UPSTREAM=1`` used to *enable* upstream; it is no longer read.
+    Compatibility: ``COGANT_GNN_UPSTREAM=1`` used to *enable* upstream; it is no longer read.
     Use ``COGANT_DISABLE_UPSTREAM_GNN`` to disable, or pass ``upstream_gnn=False``.
     """
     if explicit is not None:
@@ -191,9 +191,8 @@ class GNNValidator:
         "validation_notes",
     ]
 
-    # Upstream GNN v1.1 canonical headers that the Active Inference
-    # Institute GNN type-checker expects. COGANT emits these at the top
-    # of ``model.gnn.md`` for upstream compatibility.
+    # Upstream GNN 2.0.0 headers. COGANT emits these at the top of
+    # ``model.gnn.md`` for upstream validation.
     UPSTREAM_SECTIONS = [
         "GNNSection",
         "GNNVersionAndFlags",
@@ -201,8 +200,12 @@ class GNNValidator:
         "StateSpaceBlock",
         "Connections",
         "InitialParameterization",
+        "Equations",
         "Time",
         "ActInfOntologyAnnotation",
+        "ModelParameters",
+        "Footer",
+        "Signature",
     ]
 
     def __init__(self) -> None:
@@ -295,10 +298,10 @@ class GNNValidator:
 
         Checks both the COGANT-extended canonical sections
         (``## Model Metadata``, ``## Source Coverage``, ``## Markov
-        Blanket``, etc.) and the upstream GNN v1.1 required headers
+        Blanket``, etc.) and the upstream GNN 2.0.0 required headers
         (``## GNNSection``, ``## StateSpaceBlock``, ``## Connections``,
-        ``## InitialParameterization``, ``## Time``,
-        ``## ActInfOntologyAnnotation``, etc.). Upstream section
+        ``## InitialParameterization``, ``## Equations``, ``## Time``,
+        ``## ActInfOntologyAnnotation``, ``## ModelParameters``, etc.). Upstream section
         checks are ordered: they must appear in the spec-mandated
         order at the TOP of the file.
 
@@ -317,7 +320,7 @@ class GNNValidator:
             if section_header.lower() not in lowered:
                 errors.append(f"Missing canonical section: {section}")
 
-        # 2) Upstream GNN v1.1 required sections — each must be present.
+        # 2) Upstream GNN 2.0.0 required sections — each must be present.
         missing_upstream: list[str] = []
         upstream_offsets: list[tuple[str, int]] = []
         for section in self.UPSTREAM_SECTIONS:
@@ -328,7 +331,7 @@ class GNNValidator:
             else:
                 upstream_offsets.append((section, idx))
         for section in missing_upstream:
-            errors.append(f"Missing upstream GNN v1.1 section: {section}")
+            errors.append(f"Missing upstream GNN 2.0.0 section: {section}")
 
         # 3) Upstream sections must appear in canonical order.
         if not missing_upstream and upstream_offsets:
@@ -336,7 +339,7 @@ class GNNValidator:
             sorted_order = [s for s, _ in sorted(upstream_offsets, key=lambda x: x[1])]
             if expected_order != sorted_order:
                 errors.append(
-                    "Upstream GNN v1.1 sections out of canonical order: "
+                    "Upstream GNN 2.0.0 sections out of canonical order: "
                     f"found {sorted_order}, expected {expected_order}"
                 )
 

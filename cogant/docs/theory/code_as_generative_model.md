@@ -108,8 +108,10 @@ Each arrow has an **evidence-preservation contract**:
    that those gaps correlate with hidden coupling or underspecified interfaces; the
    `../evaluation/CALIBRATION.md` plan is the empirical check.
 3. **Active Inference agents from real code.** Once a codebase is represented as A/B/C/D, a
-   PyMDP agent can plan over it immediately. This is the reverse-mode end-goal: synthesize a
-   runnable agent whose generative model **is** the analyzed codebase.
+   compatible downstream runtime has a structured candidate model to inspect or adapt. This is
+   the reverse-mode end-goal: synthesize a runnable agent whose generative model is grounded in
+   the analyzed codebase. It is still an adapter and validation task, not something a structural
+   package score proves by itself.
 
 ## Caveats
 

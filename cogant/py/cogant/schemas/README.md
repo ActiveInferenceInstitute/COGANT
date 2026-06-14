@@ -22,7 +22,7 @@ Canonical Pydantic and dataclass definitions for all data structures: program gr
 - GraphMetadata — metadata for graph (name, version, language, source_root, created_at, updated_at)
 - ProgramGraph — core graph container (nodes: Dict[str, Node], edges: Dict[str, Edge], metadata: GraphMetadata)
 
-### program_graph.py (legacy/extended variant)
+### program_graph.py (compatibility/extended variant)
 - Node — extended node with attributes (id, kind, name, type, position, attributes, metadata)
 - Edge — extended edge with attributes (id, kind, source, target, weight, attributes, metadata)
 - ProgramGraph — extended variant

@@ -8,9 +8,9 @@ Galois-style comparison between typed Python program graphs and **GNN** bundles 
 Let **Prog** be the comparison category whose objects are typed Python program graphs
 `G = (V, E, λ_V, λ_E, τ)` in the sense of @sec:02-01-program-graph ({{NODE_KIND_COUNT}} node kinds, {{EDGE_KIND_COUNT}}
 edge kinds in the shipped schema; the Python front end emits a subset) and whose morphisms are graph homomorphisms that preserve node
-and edge labels. Let **GNN** be the analogous comparison category whose objects are GNN v1.1
-bundles (the Markdown sections `StateSpaceBlock`, `Connections`,
-`InitialParameterization`, `ActInfOntologyAnnotation`, plus the
+and edge labels. Let **GNN** be the analogous comparison category whose objects are current upstream GNN release artifacts
+(the Markdown sections `StateSpaceBlock`, `Connections`,
+`InitialParameterization`, `Equations`, `ActInfOntologyAnnotation`, plus the
 A/B/C/D matrices) and whose morphisms are role-preserving bundle embeddings.
 
 The approximate statement below uses preorder quotients of these categories rather than the full homomorphism categories. Write `G ≤_Prog G'` iff `V ⊆ V'`, `E ⊆ E'`, and the labelings agree on the common subset; write `M ≤_GNN M'` iff each bundle section of `M` is included in the corresponding section of `M'` and the matrix dimensions/provenance records agree on shared entries. The maps below are therefore order-preserving maps on these quotients. Calling them "functors" is shorthand for the implemented structure-preserving maps after quotienting by stable identifiers and role labels, not a proof that every implementation detail is functorial.
@@ -131,7 +131,7 @@ reverse synthesizer's **deficit-based** scaffolding for role `r` — the
 deficits relative to the source bundle (`cogant.reverse.planner`,
 `scaffold_*` plans). Because the scaffolding is deficit-based rather than a
 fixed template, `scaffold_r` is target-dependent and bounded, not a constant;
-the native v0.6 ledger rows illustrate its magnitude on small fixtures. The
+the current native ledger rows illustrate its magnitude on small fixtures. The
 large-program regime is the defensible asymptotic case: as origin role counts
 grow, this additive term becomes a smaller share of the role distribution. The small-program regime is
 diagnostic rather than theorem-friendly, because scaffolding can inflate a
@@ -205,6 +205,11 @@ mechanism are the transformations intended to make this true for constraint-heav
 real-world libraries: each raises the CONSTRAINT (or POLICY/CONTEXT) component
 of `count_synth` from a small scaffold constant toward `count_origin` (proportional),
 so `min = count_origin` and the per-role ratio jumps to 1.0.  ∎
+
+The strict row in the current ledger, `roundtrip_strict_minimal`, is therefore
+best read as a normal-form fixed point for a deliberately narrow reversible
+subset. It shows that the strict invariant tier is operational, but it does not
+promote the unrestricted forward/reverse pair to an exact lens.
 
 **Scaffolding diagnostic emitted with every per-target row.** As of
 v{{VERSION}}, `tools/regenerate_metrics.py` emits a `scaffolding_fraction`

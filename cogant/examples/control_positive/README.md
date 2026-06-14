@@ -15,6 +15,7 @@ are COGANT-owned and should remain runnable without network access.
 - [`plugin_architecture/`](plugin_architecture/) - registry and plugin dispatch pattern.
 - [`notebook_module/`](notebook_module/) - notebook-converted analysis module.
 - [`multi_package_workspace/`](multi_package_workspace/) - cross-package imports and workspace boundaries.
+- [`roundtrip_strict_minimal/`](roundtrip_strict_minimal/) - smallest natural fixture intended to clear strict structural-isomorphism roundtrip.
 
 ## Smoke Command
 

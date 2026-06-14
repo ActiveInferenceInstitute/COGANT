@@ -11,7 +11,8 @@ GNN-style Active Inference artifacts, then synthesizing a Python package from
 that emitted GNN and measuring what survives a second forward pass.
 
 The current evidence supports a **scoped artifact-generation and role-preservation
-claim**. It does not support strict graph isomorphism, semantic equivalence for
+claim**. It also includes one deliberately minimal strict-roundtrip fixed point.
+It does not support broad strict graph isomorphism, semantic equivalence for
 arbitrary programs, or calibrated behavioral modeling.
 
 ## Current Headline Metrics
@@ -19,17 +20,17 @@ arbitrary programs, or calibrated behavioral modeling.
 | Metric | Current value |
 | --- | ---: |
 | Package version | 0.6.0 |
-| Test count | 9,687 passing / 0 failing / 4 skipped |
+| Test count | 9,697 passing / 0 failing / 5 skipped |
 | Coverage | 95.55% |
 | mypy strict errors | 0 |
 | ruff violations | 0 |
 | Runner stages | 10 |
 | Translation rules | 22 |
-| Roundtrip targets | 24 |
-| ROLE_PRESERVED | 24 |
+| Roundtrip targets | 25 |
+| ROLE_PRESERVED | 25 |
 | DRIFT | 0 |
 | FAILED | 0 |
-| Strict structural isomorphism | 0 |
+| Strict structural isomorphism | 1 |
 | Mean role-preservation score | 1.0000 |
 
 ## Evidence Chain
@@ -66,14 +67,15 @@ It does not imply:
 - probability calibration against runtime behavior.
 
 Those stronger properties are tracked separately. The current strict
-structural-isomorphism count is 0/24.
+structural-isomorphism count is 1/25, and the one strict row is the intentionally
+small `roundtrip_strict_minimal` fixture.
 
 ## Current Failure Modes
 
 | Failure mode | Current status | Required improvement |
 | --- | --- | --- |
 | Scaffold-introduced roles on degenerate inputs | Current ledger has 0 DRIFT rows | Keep zero-origin controls rejected by freshness checks and promote the held-out pilot into metrics/claim gates |
-| Strict graph/matrix/section deltas | 0 strict successes | Preserve node/edge counts, edge-kind distributions, GNN sections, and matrix values |
+| Strict graph/matrix/section deltas | 1 strict success, confined to the minimal reversible fixture | Preserve node/edge counts, edge-kind distributions, GNN sections, and matrix values on ordinary fixtures |
 | Dynamic enrichment workflow | Implemented but operator-dependent | Add a complete trace-collection tutorial and fixture |
 | Held-out generalization | Not established | Freeze an unseen repository corpus and rerun the ledger |
 | Probability calibration | Not established | Build a reviewed gold corpus and calibrate confidence/matrix defaults |
@@ -83,8 +85,10 @@ structural-isomorphism count is 0/24.
 Use this wording:
 
 > COGANT maps supported Python repositories into GNN-style Active Inference
-> artifacts and preserves semantic-role populations on 24 of 24 native
-> roundtrip fixtures. Strict structural roundtrip fidelity is not yet achieved.
+> artifacts and preserves semantic-role populations on 25 of 25 native
+> roundtrip fixtures. One deliberately minimal fixture clears strict structural
+> roundtrip fidelity; ordinary application fixtures should be described as
+> role-preserved, not strictly isomorphic.
 
 Avoid wording that says or implies:
 

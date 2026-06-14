@@ -21,7 +21,7 @@ Semantic Lead
 - **Downstream:** `runtime/` executes the synthesized matrices in an active inference agent loop.
 - **Validation:** `idempotency.py` feeds the synthesized package back through the forward pipeline to report `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`, `DRIFT`, or `FAILED`.
 
-## Key improvements (v0.5.0)
+## Key improvements (current)
 
 - **POLICY stub emission** — generates `decide_*` methods proportional to the origin GNN's POLICY role count.
 - **CONTEXT stub emission** — generates `get_context_*` methods for CONFIG/CONTEXT roles.

@@ -10,7 +10,7 @@ Targets the residual uncovered branches in ``review.py``:
   for ``_semantic_mappings``.
 * Line 137 — non-dict / empty-dict entries are skipped.
 * Line 140 — ``kind`` carries a ``.value`` attribute (Enum-like).
-* Lines 164-168 — legacy fallback when ``_semantic_mappings`` is absent
+* Lines 164-168 — compatibility fallback when ``_semantic_mappings`` is absent
   but ``stage_results['translate']['node_features']`` is present.
 
 All tests use real JSON files and real ReviewAPI instances. No mocks.
@@ -122,7 +122,7 @@ class TestExtractMappingsEdgeCases:
         bundle_path.write_text(json.dumps(bundle))
         api = ReviewAPI()
         api.load_bundle(str(bundle_path))
-        # No mappings extracted; legacy fallback also produces nothing.
+        # No mappings extracted; compatibility fallback also produces nothing.
         assert api.mappings == []
 
     def test_skip_non_dict_entries_in_list(self, tmp_path: Path) -> None:
@@ -254,13 +254,13 @@ class TestExtractMappingsEdgeCases:
         assert api.mappings[0].evidence == "Static analysis"
 
 
-# ============================================================ legacy fallback
+# ============================================================ compatibility fallback
 
 
-class TestLegacyNodeFeaturesFallback:
+class TestCompatibilityNodeFeaturesFallback:
     """Cover lines 161-176: fallback to ``stage_results.translate.node_features``."""
 
-    def test_legacy_node_features_extracted_when_no_semantic_mappings(
+    def test_compatibility_node_features_extracted_when_no_semantic_mappings(
         self, tmp_path: Path
     ) -> None:
         bundle = {
@@ -268,12 +268,12 @@ class TestLegacyNodeFeaturesFallback:
                 "translate": {
                     "node_features": [
                         {
-                            "id": "legacy_m1",
+                            "id": "compatibility_m1",
                             "kind": "OBSERVATION",
                             "confidence": 0.65,
                         },
                         {
-                            "id": "legacy_m2",
+                            "id": "compatibility_m2",
                             "kind": "ACTION",
                             "confidence": 0.85,
                         },
@@ -287,12 +287,12 @@ class TestLegacyNodeFeaturesFallback:
         api.load_bundle(str(bundle_path))
         assert len(api.mappings) == 2
         ids = {m.id for m in api.mappings}
-        assert ids == {"legacy_m1", "legacy_m2"}
-        # Source equals id in legacy mode.
+        assert ids == {"compatibility_m1", "compatibility_m2"}
+        # Source equals id in compatibility mode.
         for m in api.mappings:
             assert m.source == m.id
 
-    def test_legacy_skips_non_dict_node_features(self, tmp_path: Path) -> None:
+    def test_compatibility_skips_non_dict_node_features(self, tmp_path: Path) -> None:
         """Cover line 164-165: non-dict node_feature is skipped."""
         bundle = {
             "stage_results": {
@@ -315,7 +315,7 @@ class TestLegacyNodeFeaturesFallback:
         assert len(api.mappings) == 1
         assert api.mappings[0].id == "good"
 
-    def test_legacy_handles_missing_translate_key(self, tmp_path: Path) -> None:
+    def test_compatibility_handles_missing_translate_key(self, tmp_path: Path) -> None:
         """Bundle with ``stage_results`` but no translate → empty mappings."""
         bundle = {"stage_results": {"other_stage": {}}}
         bundle_path = tmp_path / "bundle.json"
@@ -324,7 +324,7 @@ class TestLegacyNodeFeaturesFallback:
         api.load_bundle(str(bundle_path))
         assert api.mappings == []
 
-    def test_legacy_handles_empty_node_features(self, tmp_path: Path) -> None:
+    def test_compatibility_handles_empty_node_features(self, tmp_path: Path) -> None:
         """Empty list → no mappings."""
         bundle = {"stage_results": {"translate": {"node_features": []}}}
         bundle_path = tmp_path / "bundle.json"

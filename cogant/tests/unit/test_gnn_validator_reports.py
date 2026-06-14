@@ -83,8 +83,12 @@ def _full_markdown() -> str:
         "StateSpaceBlock",
         "Connections",
         "InitialParameterization",
+        "Equations",
         "Time",
         "ActInfOntologyAnnotation",
+        "ModelParameters",
+        "Footer",
+        "Signature",
     ]
     parts = [f"## {sec}\n\nbody\n" for sec in upstream]
     parts.extend(f"## {sec}\n\nbody\n" for sec in canonical)
@@ -108,15 +112,29 @@ def test_validate_markdown_missing_upstream_section_is_reported():
     """Removing an upstream section produces a missing-upstream error."""
     md = _full_markdown().replace("## StateSpaceBlock\n\nbody\n", "")
     errors = GNNValidator().validate_markdown(md)
-    assert any("Missing upstream GNN v1.1 section" in e for e in errors)
+    assert any("Missing upstream GNN 2.0.0 section" in e for e in errors)
+
+
+def test_validate_markdown_missing_current_tail_sections_are_reported():
+    """GNN 2.0.0 required tail sections are not silently treated as optional."""
+    for section in ("Equations", "ModelParameters", "Footer", "Signature"):
+        md = _full_markdown().replace(f"## {section}\n\nbody\n", "")
+        errors = GNNValidator().validate_markdown(md)
+        assert any(f"Missing upstream GNN 2.0.0 section: {section}" == e for e in errors), (
+            f"Expected missing-section error for {section}; got {errors}"
+        )
 
 
 def test_validate_markdown_out_of_order_upstream_is_reported():
     """Upstream sections out of order trigger an order-violation error."""
     # Build the upstream sections in reverse order
     upstream = [
+        "Signature",
+        "Footer",
+        "ModelParameters",
         "ActInfOntologyAnnotation",
         "Time",
+        "Equations",
         "InitialParameterization",
         "Connections",
         "StateSpaceBlock",

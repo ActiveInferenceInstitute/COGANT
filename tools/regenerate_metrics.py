@@ -36,7 +36,7 @@ import statistics
 import subprocess
 import sys
 import tomllib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -452,10 +452,6 @@ def parse_roundtrip_results() -> dict:
         status = entry.get("roundtrip_status")
         if status:
             return str(status)
-        # Non-native rows carry only `tier`/`epsilon` and NO v0.6
-        # `role_preservation_score`. Relabelling tier=ISOMORPHIC as a
-        # v0.6 "ROLE_PRESERVED" verdict is laundering, not a measurement;
-        # flag it so it is NOT counted as role-preserved.
         if "role_preservation_score" not in entry:
             return "NON_NATIVE"
         tier = str(entry.get("tier") or "").upper()
@@ -467,20 +463,14 @@ def parse_roundtrip_results() -> dict:
             return "DRIFT"
         return "FAILED" if entry.get("error") else "DRIFT"
 
-    def _role_score(entry: dict) -> float:
+    def _role_score(entry: dict) -> float | None:
         if "role_preservation_score" in entry:
             return float(entry["role_preservation_score"])
-        if "epsilon" in entry:
-            return float(entry["epsilon"])
-        if "role_match_score" in entry:
-            return float(entry["role_match_score"])
-        return 0.0
+        return None
 
     def _score_source(entry: dict) -> str:
         if "role_preservation_score" in entry:
-            return "v0.6_native"
-        if "epsilon" in entry or "role_match_score" in entry:
-            return "epsilon_proxy"
+            return "current_native"
         return "empty"
 
     def _scaffolding_fraction(entry: dict) -> float | None:
@@ -490,7 +480,7 @@ def parse_roundtrip_results() -> dict:
         present on the row (``orig_n_hidden``, ``orig_n_obs``,
         ``orig_n_actions``, ``synth_n_*``), normalised by the synth
         total. Returns ``None`` when neither side has any counts on the
-        row (e.g. for v0.5 ε-bucket rows that carry no per-role
+        row (e.g. for unscored rows that carry no per-role
         breakdown). Returns 0.0 when the synth total is also zero so
         the fraction is undefined-but-conventionally-zero.
         """
@@ -526,12 +516,10 @@ def parse_roundtrip_results() -> dict:
     score_sources = {_score_source(e) for e in entries}
     if not entries or score_sources == {"empty"}:
         role_score_source = "empty"
-    elif score_sources <= {"epsilon_proxy", "empty"}:
-        role_score_source = "epsilon_proxy"
-    elif "v0.6_native" in score_sources and score_sources - {"v0.6_native", "empty"}:
+    elif "current_native" in score_sources and score_sources - {"current_native", "empty"}:
         role_score_source = "mixed"
     else:
-        role_score_source = "v0.6_native"
+        role_score_source = "current_native"
     role_preserved = sum(
         1 for status in statuses if status in {"STRUCTURALLY_ISOMORPHIC", "ROLE_PRESERVED"}
     )
@@ -814,7 +802,7 @@ def main() -> None:
 
     version = get_cogant_version()
     git_sha = get_git_sha()
-    generated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    generated_at = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     print("  [1/10] Version + SHA", file=sys.stderr)
 
@@ -933,7 +921,7 @@ def main() -> None:
             "roundtrip": {
                 "data_source": "cogant/evaluation/dataset/roundtrip_results.jsonl",
                 "note": (
-                    "Native v0.6 roundtrip taxonomy: role-preserved is reported "
+                    "Current native roundtrip taxonomy: role-preserved is reported "
                     "separately from strict structural isomorphism."
                 ),
                 "threshold_role_preserved": 0.5,

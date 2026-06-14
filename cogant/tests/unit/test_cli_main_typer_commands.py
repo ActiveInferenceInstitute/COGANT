@@ -70,7 +70,7 @@ def gnn_package_dir(tmp_path: Path) -> Path:
     """Build a real GNN package on disk via GNNPackageBuilder."""
     ss = StateSpaceModel(
         id="m",
-        schema_name="v0.1.0",
+        schema_name="current",
         variables={},
         observations={},
         actions={},
@@ -79,7 +79,7 @@ def gnn_package_dir(tmp_path: Path) -> Path:
         preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
-    pm = ProcessModel(id="pm", schema_name="v0.1.0", stages={}, connections={})
+    pm = ProcessModel(id="pm", schema_name="current", stages={}, connections={})
     g = ProgramGraph(metadata=GraphMetadata(repo_uri="test", languages={"python"}))
     pkg = tmp_path / "gnn_package"
     pkg.mkdir()
@@ -285,7 +285,7 @@ class TestValidateCommand:
         sub.mkdir()
         ss = StateSpaceModel(
             id="m",
-            schema_name="v0.1.0",
+            schema_name="current",
             variables={},
             observations={},
             actions={},
@@ -294,7 +294,7 @@ class TestValidateCommand:
             preferences={},
             time_regime=TimeRegime.SYNCHRONOUS,
         )
-        pm = ProcessModel(id="pm", schema_name="v0.1.0", stages={}, connections={})
+        pm = ProcessModel(id="pm", schema_name="current", stages={}, connections={})
         g = ProgramGraph(metadata=GraphMetadata(repo_uri="test", languages={"python"}))
         GNNPackageBuilder(graph=g, state_space=ss, process_model=pm, mappings={}).build(str(sub))
 

@@ -84,7 +84,7 @@ __all__ = [
     "StatespaceConfig",
     "GNNConfig",
     "ReverseConfig",
-    # Legacy schemas
+    # Compatibility schemas
     "CogantBaseConfig",
     "CogantConfig",
     "ExportConfig",

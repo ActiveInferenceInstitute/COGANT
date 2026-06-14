@@ -18,8 +18,9 @@ Targets uncovered lines in py/cogant/gnn/upstream_bridge/__init__.py:
 * line 283: parse_upstream_model_gnn_md missing-file branch
 * lines 287-289: parse_upstream_model_gnn_md exception branch
 
-All facade functions delegate to ``src.gnn`` (a core dep — confirmed importable
-in this repo). Tests skip individual cases gracefully if upstream is missing.
+All facade functions delegate to ``src.gnn`` through the COGANT bridge (a core
+dep — confirmed importable in this repo). Tests skip individual cases
+gracefully if upstream is missing.
 """
 
 from __future__ import annotations
@@ -207,7 +208,7 @@ def test_upstream_gnn_validation_default_errors_empty_list() -> None:
 def test_upstream_validate_file_content_returns_dict_or_wrapped() -> None:
     """Line 190-191: dict → json_safe; non-dict → wrapped in {'result': ...}."""
     minimal = (
-        "## GNNSection\nm\n## GNNVersionAndFlags\nGNN v1\n## ModelName\nn\n"
+        "## GNNSection\nm\n## GNNVersionAndFlags\nGNN v2.0.0\n## ModelName\nn\n"
         "## StateSpaceBlock\ns_f0[1,1,type=int]\n## Connections\n"
         "## InitialParameterization\n## Time\nDiscrete\n## ActInfOntologyAnnotation\n"
     )
@@ -260,7 +261,7 @@ def test_upstream_process_directory_lightweight_smoke(tmp_path: Path) -> None:
     try:
         upstream_process_directory_lightweight(in_dir, out_dir)
     except Exception:
-        # Some upstream versions reject empty dirs; the line was still hit
+        # Empty dirs may be rejected; the line was still hit.
         pass
 
 
@@ -286,7 +287,7 @@ def test_upstream_validate_structure_with_path(tmp_path: Path) -> None:
     """Lines 234-235: forward to src.gnn.validate_gnn_structure."""
     md = tmp_path / "x.gnn.md"
     md.write_text(
-        "## GNNSection\nm\n## GNNVersionAndFlags\nGNN v1\n## ModelName\nn\n"
+        "## GNNSection\nm\n## GNNVersionAndFlags\nGNN v2.0.0\n## ModelName\nn\n"
         "## StateSpaceBlock\ns_f0[1,1,type=int]\n## Connections\n"
         "## InitialParameterization\n## Time\nDiscrete\n## ActInfOntologyAnnotation\n",
         encoding="utf-8",
@@ -372,7 +373,7 @@ def test_parse_upstream_model_gnn_md_with_minimal_valid(tmp_path: Path) -> None:
     pkg = tmp_path / "valid"
     pkg.mkdir()
     (pkg / "model.gnn.md").write_text(
-        "## GNNSection\nm\n## GNNVersionAndFlags\nGNN v1\n## ModelName\nn\n"
+        "## GNNSection\nm\n## GNNVersionAndFlags\nGNN v2.0.0\n## ModelName\nn\n"
         "## StateSpaceBlock\ns_f0[1,1,type=int]\n## Connections\n"
         "## InitialParameterization\n## Time\nDiscrete\n"
         "## ActInfOntologyAnnotation\n",

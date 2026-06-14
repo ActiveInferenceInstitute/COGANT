@@ -409,8 +409,8 @@ class TestReverseCliRenderFunctions:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.9,
+            structurally_isomorphic=True,
+            role_preservation_score=0.9,
             original_roles={"HIDDEN_STATE": 2, "OBSERVATION": 1},
             synthesized_roles={"HIDDEN_STATE": 2, "OBSERVATION": 1},
             shape_match={"n_states": True},
@@ -423,8 +423,8 @@ class TestReverseCliRenderFunctions:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.3,
+            structurally_isomorphic=False,
+            role_preservation_score=0.3,
             original_roles={"HIDDEN_STATE": 3},
             synthesized_roles={"OBSERVATION": 1},
             errors=["Some error"],
@@ -437,8 +437,8 @@ class TestReverseCliRenderFunctions:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.8,
+            structurally_isomorphic=True,
+            role_preservation_score=0.8,
             package_path=tmp_path / "synth_pkg",
         )
         _render_roundtrip_result(result, threshold=0.5)

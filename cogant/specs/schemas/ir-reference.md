@@ -414,7 +414,7 @@ Every IR must pass JSON schema validation (schema files available separately).
 ## Backward Compatibility
 
 - New optional fields are always added with defaults
-- Removed fields are deprecated for 2 major versions
+- Removed fields are removed for 2 major versions
 - Renamed fields have migration rules defined
 - New enum values are backward compatible
 

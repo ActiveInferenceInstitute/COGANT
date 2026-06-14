@@ -114,7 +114,7 @@ def _parse_manuscript_rows(text: str) -> list[ManuscriptRow]:
             break
         i -= 1
     for line_no, ln in sorted(block):
-        cells = [c for c in ln.split("|")]
+        cells = list(ln.split("|"))
         # A markdown row is `| a | b | c | d |` → split gives ['', a, b, c, d, '']
         inner = [c.strip() for c in cells[1:-1]] if len(cells) >= 2 else []
         if len(inner) < 4:

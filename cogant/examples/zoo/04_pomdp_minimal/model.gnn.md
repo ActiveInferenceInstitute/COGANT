@@ -2,7 +2,7 @@
 pomdp_minimal
 
 ## GNNVersionAndFlags
-GNN v1
+GNN v2.0.0
 
 ## ModelName
 pomdp_minimal

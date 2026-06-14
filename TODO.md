@@ -1,6 +1,6 @@
 # COGANT TODO
 
-Last updated: 2026-06-12
+Last updated: 2026-06-13
 
 This backlog scopes the most useful next development avenues after the manuscript,
 test, rendering, and visualization passes. Keep items grounded in generated
@@ -193,7 +193,7 @@ review-and-improve pass (architectural decision or broad refactor).
   richer-content presets into `defaults.PRESETS`. Deferred to a release
   session because the field-name mapping between `cogant.yaml`'s
   `pipeline.stages` and the schema's `run_stages` is the kind of rename
-  that wants a deprecation cycle, not an overnight pass.
+  that wants an explicit transition cycle, not an overnight pass.
 - [x] **Pipeline stage-list docs omit `dynamic` and self-contradict.**
   Fixed: `docs/cli_reference.md:20`, `docs/getting-started/quickstart.md:19`,
   `docs/faq.md:55`, and the `cogant translate` CLI docstring
@@ -268,10 +268,11 @@ review-and-improve pass (architectural decision or broad refactor).
   `robustness_results.json` freshness (re-run harness on PR) is audited for
   table-consistency but not yet auto-regenerated in CI.
 - [x] **Roundtrip drift reduction.**
-  Completed in the 2026-06-12 evidence-gated pass: the native v0.6 ledger now
+  Completed in the 2026-06-12 evidence-gated pass: the current native ledger now
   carries per-row `role_preservation_score`, `roundtrip_status`, file/LOC/node/
-  edge counts, and scaffolding fraction, and all 24 native rows are
-  role-preserved with 0 drift targets in the refreshed metrics. Remaining
+  edge counts, and scaffolding fraction, and all 25 native rows are
+  role-preserved with 0 drift targets in the refreshed metrics. One deliberately
+  minimal fixture is now strictly structurally isomorphic; remaining
   release work is no longer in-sample drift reduction; it is the separate
   held-out promotion item in the current sequence below.
 
@@ -287,24 +288,31 @@ review-and-improve pass (architectural decision or broad refactor).
   generation plus `audit_manuscript_markdown_links.py`,
   `audit_synthetic_surfaces.py --strict`, and figure-renderer/provenance checks
   gate public output. Verified on 2026-06-12 with `run_all.py --fail-fast`
-  (`24` targets, `0` failed steps), strict manuscript regeneration, template
+  (`24` batch targets, `0` failed steps), strict manuscript regeneration, template
   Markdown validators, and PDF/HTML render.
 
 ## Current Sequence
 
 Completed items above stay as history. The active sequence is:
 
-1. Resolve the typed config / preset subsystem into one documented preset
-   registry with a deprecation path for legacy field names.
-2. Finish the remaining graph-normalization increments one at a time:
+1. Keep the completed **Refactor-first maintainability tranche** green: maintain
+   the roadmap truth audit, preserve the decomposed `tools/manuscript_figures.py`
+   and `viz/inspection_dashboard.py` shims, and keep strict figure/manuscript
+   gates rejecting degraded publication artifacts.
+2. Resolve the typed config / preset subsystem into one documented preset
+   registry with a transition path for compatibility field names.
+3. Finish the remaining graph-normalization increments one at a time:
    method-receiver-to-class resolution, async-call edge kind, decorator-driven
    edges, generated-file detection, and test-only `NodeKind.TEST`
    classification.
-3. Extend semantic-preservation robustness beyond the current 7 transforms with
+4. Extend semantic-preservation robustness beyond the current 7 transforms with
    equivalent loop rewrites, inlining/outlining variants, parser/frontend
    variation, and a held-out robustness corpus.
-4. Add held-out fixtures that stress the saturated in-sample roundtrip ledger and
+5. Add held-out fixtures that stress the saturated in-sample roundtrip ledger and
    keep `check_metrics_fresh` guarding against non-native score relabelling.
-5. Decompose one thermo-nuclear maintainability hotspot per sprint, starting
-   with `viz/inspection_dashboard.py` or `tools/manuscript_figures.py`, without
-   weakening the public-output evidence gates.
+6. After the refactor tranche is green, resume feature expansion work such as
+   Java/Rust parser breadth, streaming export, and cross-repo analysis.
+
+The roadmap truth audit is deliberately small: it catches misaligned "current
+version" labels, unsupported benchmark fixture/stage claims, and TODO/task drift
+before those surfaces can contradict the generated evidence artifacts.

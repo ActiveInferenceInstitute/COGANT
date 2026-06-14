@@ -1,4 +1,4 @@
-"""Unit tests for AII GNN v1.1 spec compliance in COGANT's output formatter.
+"""Unit tests for AII GNN v2.0.0 spec compliance in COGANT's output formatter.
 
 These tests assert the three non-conformances identified during the 2026-04-09
 GNN spec validation audit and fixed in this session:
@@ -8,7 +8,7 @@ GNN spec validation audit and fixed in this session:
 3. No duplicate ``## Connections`` header (COGANT extended section renamed).
 
 Spec source: https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation
-             doc/gnn/gnn_syntax.md v1.1
+             doc/gnn/reference/gnn_syntax.md v2.0.0
 Upstream type-checker: src/type_checker/checker.py
 
 All tests use real COGANT value objects — no mocks.
@@ -151,11 +151,40 @@ def _build_formatter(dynamic: bool = False) -> GNNMarkdownFormatter:
     )
 
 
+def _build_multi_observation_formatter() -> GNNMarkdownFormatter:
+    """Return formatter with one state factor and three observation modalities."""
+    from cogant.process.extractor import ProcessModel  # type: ignore[attr-defined]
+
+    graph = _build_minimal_graph()
+    state_space = _build_state_space(graph, dynamic=True)
+    obs_template = next(iter(state_space.observations.values()))
+    state_space.observations = {
+        f"obs:o{i}": ObservationModality(
+            id=f"obs:o{i}",
+            name=f"obs{i}",
+            source_node_id=obs_template.source_node_id,
+            modality_type="discrete",
+            cardinality=2,
+        )
+        for i in range(3)
+    }
+    try:
+        process = ProcessModel(stages={}, connections={})
+    except Exception:
+        process = type("ProcessModel", (), {"stages": {}, "connections": {}})()
+    return GNNMarkdownFormatter(
+        program_graph=graph,
+        state_space_model=state_space,
+        process_model=process,
+        semantic_mappings={},
+    )
+
+
 # ------------------------------------------------------------------ spec tests
 
 
 class TestTimeSection:
-    """GNN v1.1 spec: Time section must use Discrete and Time=t separately."""
+    """GNN 2.0.0 spec: Time section must use Discrete and Time=t separately."""
 
     def test_dynamic_time_emits_discrete_keyword(self):
         """Dynamic model must have 'Discrete' on its own line (not 'DiscreteTime=t').
@@ -187,7 +216,7 @@ class TestTimeSection:
         fmt = _build_formatter(dynamic=True)
         md = fmt.format()
         assert "DiscreteTime=t" not in md, (
-            "The fused token 'DiscreteTime=t' is not a valid upstream GNN v1.1 "
+            "The fused token 'DiscreteTime=t' is not a valid upstream GNN 2.0.0 "
             "time specification. Use 'Discrete' + 'Time=t' on separate lines."
         )
 
@@ -204,7 +233,7 @@ class TestTimeSection:
 
 
 class TestConnectionSyntax:
-    """GNN v1.1 spec: Connections must use bare variable names without parentheses."""
+    """GNN 2.0.0 spec: Connections must use bare variable names without parentheses."""
 
     def test_upstream_connections_no_leading_paren(self):
         """No connection line in ## Connections should start with '('.
@@ -229,7 +258,7 @@ class TestConnectionSyntax:
                 continue
             assert not line.startswith("("), (
                 f"Connection line must not start with '(': {line!r}. "
-                "Use bare variable names per upstream GNN v1.1 spec."
+                "Use bare variable names per upstream GNN 2.0.0 spec."
             )
 
     def test_upstream_connections_target_no_paren(self):
@@ -261,7 +290,7 @@ class TestConnectionSyntax:
 
 
 class TestNoDuplicateConnectionsHeader:
-    """GNN v1.1: Only one ## Connections section should appear in the document.
+    """GNN 2.0.0: Only one ## Connections section should appear in the document.
 
     Having two ## Connections headers confuses the upstream parser which
     treats the second as a continuation of the first upstream connections block.
@@ -290,7 +319,7 @@ class TestNoDuplicateConnectionsHeader:
 
 
 class TestUpstreamSectionOrder:
-    """GNN v1.1 spec: required upstream sections must appear in canonical order."""
+    """GNN v2.0.0 spec: required upstream sections must appear in canonical order."""
 
     UPSTREAM_REQUIRED = [
         "GNNSection",
@@ -299,12 +328,16 @@ class TestUpstreamSectionOrder:
         "StateSpaceBlock",
         "Connections",
         "InitialParameterization",
+        "Equations",
         "Time",
         "ActInfOntologyAnnotation",
+        "ModelParameters",
+        "Footer",
+        "Signature",
     ]
 
     def test_all_upstream_sections_present(self):
-        """All 8 required upstream GNN v1.1 sections must appear."""
+        """All required upstream GNN v2.0.0 sections must appear."""
         fmt = _build_formatter()
         md = fmt.format()
         for section in self.UPSTREAM_REQUIRED:
@@ -324,7 +357,7 @@ class TestUpstreamSectionOrder:
 
 
 class TestStateSpaceBlockSyntax:
-    """GNN v1.1 spec: StateSpaceBlock variable declarations must parse correctly."""
+    """GNN 2.0.0 spec: StateSpaceBlock variable declarations must parse correctly."""
 
     def test_variable_declarations_match_spec_pattern(self):
         """Each variable declaration must match pattern: NAME[dim,dim,...,type=T].
@@ -357,7 +390,7 @@ class TestStateSpaceBlockSyntax:
             )
 
     def test_variable_declarations_have_type_annotation(self):
-        """Each variable declaration must include 'type=' per GNN v1.1 spec."""
+        """Each variable declaration must include 'type=' per GNN 2.0.0 spec."""
         fmt = _build_formatter()
         md = fmt.format()
 
@@ -374,8 +407,46 @@ class TestStateSpaceBlockSyntax:
         ]
         for line in var_lines:
             assert "type=" in line, (
-                f"Variable declaration missing 'type=' annotation per GNN v1.1: {line!r}"
+                f"Variable declaration missing 'type=' annotation per GNN 2.0.0: {line!r}"
             )
+
+    def test_each_observation_modality_has_likelihood_matrix(self):
+        """Multi-modal models need one A_mN likelihood per observation modality."""
+        fmt = _build_multi_observation_formatter()
+        md = fmt.format()
+
+        for expected in (
+            "A_m0[2,2,type=float]",
+            "A_m1[2,2,type=float]",
+            "A_m2[2,2,type=float]",
+            "s_f0>A_m0",
+            "s_f0>A_m1",
+            "s_f0>A_m2",
+            "A_m0,s_f0>o_m0",
+            "A_m1,s_f0>o_m1",
+            "A_m2,s_f0>o_m2",
+            "A_m0={",
+            "A_m1={",
+            "A_m2={",
+            "A_m0=LikelihoodMatrix",
+            "A_m1=LikelihoodMatrix",
+            "A_m2=LikelihoodMatrix",
+        ):
+            assert expected in md
+
+    def test_current_artifact_uses_renderable_state_space_and_transition_contract(self):
+        """Current public GNN artifacts expose metadata the upstream renderer can parse."""
+        fmt = _build_multi_observation_formatter()
+        md = fmt.format()
+
+        assert "s_f0[2,1,type=int] # state factor" in md
+        assert "o_m0[2,1,type=int] # observation modality" in md
+        assert "u_c0[1,1,type=int] # action control" in md
+        assert "identity(" not in md
+        assert "B_f0={ ((" in md
+        assert "num_states:" in md
+        assert "num_obs:" in md
+        assert "num_actions:" in md
 
 
 class TestValidatorSpec:
@@ -387,17 +458,21 @@ class TestValidatorSpec:
         # A minimal document with the correct time format
         md_correct = (
             "## GNNSection\nTest\n\n"
-            "## GNNVersionAndFlags\nGNN v1\n\n"
+            "## GNNVersionAndFlags\nGNN v2.0.0\n\n"
             "## ModelName\nTest\n\n"
             "## StateSpaceBlock\ns_f0[2,1,type=int]\n\n"
             "## Connections\nD_f0>s_f0\n\n"
             "## InitialParameterization\nD_f0={ (0.5, 0.5) }\n\n"
+            "## Equations\nQ(s) = softmax(ln(D) + ln(A^T * o))\n\n"
             "## Time\nDynamic\nDiscrete\nTime=t\nModelTimeHorizon=Unbounded\n\n"
-            "## ActInfOntologyAnnotation\ns_f0=HiddenState\n"
+            "## ActInfOntologyAnnotation\ns_f0=HiddenState\n\n"
+            "## ModelParameters\nnum_hidden_states=1\n\n"
+            "## Footer\nGenerated by COGANT.\n\n"
+            "## Signature\npending\n"
         )
         errors = validator.validate_markdown(md_correct)
         # Should find no upstream section errors
-        upstream_errors = [e for e in errors if "upstream GNN v1.1 section" in e]
+        upstream_errors = [e for e in errors if "upstream GNN v2.0.0 section" in e]
         assert upstream_errors == [], (
             f"Correct upstream document should have no section errors: {upstream_errors}"
         )

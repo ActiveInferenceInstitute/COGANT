@@ -61,7 +61,7 @@ def gnn_text() -> str:
     """Produce a real GNN markdown string from an empty model."""
     ss = StateSpaceModel(
         id="m",
-        schema_name="v0.1.0",
+        schema_name="current",
         variables={},
         observations={},
         actions={},
@@ -70,7 +70,7 @@ def gnn_text() -> str:
         preferences={},
         time_regime=TimeRegime.SYNCHRONOUS,
     )
-    pm = ProcessModel(id="pm", schema_name="v0.1.0", stages={}, connections={})
+    pm = ProcessModel(id="pm", schema_name="current", stages={}, connections={})
     g = ProgramGraph(metadata=GraphMetadata(repo_uri="test", languages={"python"}))
     return GNNMarkdownFormatter(g, ss, pm, {}).format()
 

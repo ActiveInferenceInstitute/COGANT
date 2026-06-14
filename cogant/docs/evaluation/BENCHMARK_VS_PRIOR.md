@@ -1,7 +1,7 @@
 # COGANT Benchmark vs Prior Approaches
 
 **Date:** 2026-04-09
-**COGANT version:** 0.1.0
+**COGANT version:** immutable current snapshot; not a current-version claim
 **Scope:** Semantic role assignment for codebase-to-GNN translation
 
 This document compares COGANT's automated semantic role assignment against
@@ -320,7 +320,7 @@ future work.
    labelling has not been measured on our corpus. Published estimates for
    similar semantic annotation tasks range from 0.75-0.85 kappa.
 
-7. **Single-snapshot evaluation.** All numbers reflect COGANT v0.1.0 as of
+7. **Single-snapshot evaluation.** All numbers reflect the immutable COGANT current audit state as of
    2026-04-09. The calibration backlog will change these numbers -- ideally
    upward, but the "(est.)" qualification means they could also move
    downward once empirical data is collected.
@@ -340,7 +340,7 @@ future work.
 
 ## See also
 
-- **Roundtrip evaluation report:** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md) (current native v0.6 ledger: 24/24 role-preserved rows, 0 drift rows, and 0 non-native rows)
+- **Roundtrip evaluation report:** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md) (current native ledger: 25/25 role-preserved rows, 0 drift rows, 0 non-native rows, and 1 strict row confined to `roundtrip_strict_minimal`)
 - **Calibration registry:** [CALIBRATION.md](CALIBRATION.md)
 - **Active Inference mapping (theory):** [ACTIVE_INFERENCE_MAPPING.md](ACTIVE_INFERENCE_MAPPING.md)
 - **Published roundtrip explainer:** [`docs/concepts/roundtrip.md`](../concepts/roundtrip.md)

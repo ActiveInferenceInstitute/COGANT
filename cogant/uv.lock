@@ -465,7 +465,7 @@ dev = [
 requires-dist = [
     { name = "duckdb", specifier = ">=0.9" },
     { name = "fastapi", specifier = ">=0.135.3" },
-    { name = "generalized-notation-notation", git = "https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.git?rev=41a64381c6d277c8240ef65499be67e7f882ef73" },
+    { name = "generalized-notation-notation", git = "https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.git?rev=11a89f0615f1e48ddacca58d1bcf3c5092b1b055" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.0" },
     { name = "jinja2", marker = "extra == 'all'", specifier = ">=3.0.0" },
@@ -1180,8 +1180,8 @@ wheels = [
 
 [[package]]
 name = "generalized-notation-notation"
-version = "1.5.0"
-source = { git = "https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.git?rev=41a64381c6d277c8240ef65499be67e7f882ef73#41a64381c6d277c8240ef65499be67e7f882ef73" }
+version = "2.0.0"
+source = { git = "https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.git?rev=11a89f0615f1e48ddacca58d1bcf3c5092b1b055#11a89f0615f1e48ddacca58d1bcf3c5092b1b055" }
 dependencies = [
     { name = "aiohttp" },
     { name = "bnlearn" },
@@ -1205,6 +1205,7 @@ dependencies = [
     { name = "pandas" },
     { name = "plotly" },
     { name = "psutil" },
+    { name = "pygments" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "seaborn" },

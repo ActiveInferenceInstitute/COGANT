@@ -124,7 +124,7 @@ because threshold movement in that band can change the state-space surface.
 | Symbol | LaTeX | Meaning | First defined | Notes |
 |--------|-------|---------|---------------|-------|
 | **Prog** | `**Prog**` | Comparison category/preorder quotient of typed Python program graphs | @sec:S03-categories | Morphisms are label-preserving graph homomorphisms; approximate claims use the subset preorder quotient |
-| **GNN** | `**GNN**` | Comparison category/preorder quotient of GNN v1.1 bundles | @sec:S03-categories | Morphisms are role-preserving bundle embeddings; approximate claims use bundle-section inclusion |
+| **GNN** | `**GNN**` | Comparison category/preorder quotient of current upstream GNN release artifacts | @sec:S03-categories | Morphisms are role-preserving bundle embeddings; approximate claims use bundle-section inclusion |
 | $\mathbf{Mset}$ | `$\mathbf{Mset}$` | Category of multisets | @sec:S03-role-multiset-functor | Target vocabulary for role-multiset map $\rho$ |
 | $F$ | `$F$` | Forward order-preserving map; $F : \mathbf{Prog} \to \mathbf{GNN}$ on preorder quotients | @sec:S03-forward-reverse-functors | Realised by `cogant translate` |
 | $R$ | `$R$` | Reverse order-preserving map; $R : \mathbf{GNN} \to \mathbf{Prog}$ on preorder quotients | @sec:S03-forward-reverse-functors | Realised by `cogant reverse` then re-parse |

@@ -1,6 +1,6 @@
 """Compatibility wrapper for package-level COGANT analysis command APIs.
 
-``run_all.py`` historically used this script before several CLI commands
+``run_all.py`` uses this script for several CLI-adjacent commands
 shared package-level implementations. The implementations now live in
 ``cogant.api.analysis_commands`` and the public CLI calls those same APIs.
 This wrapper preserves the subprocess contract for existing batch configs.

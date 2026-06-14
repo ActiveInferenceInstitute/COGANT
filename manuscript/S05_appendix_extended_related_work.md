@@ -5,7 +5,7 @@ text (@sec:08-scope-and-related-work through @sec:08-04-world-models-boundaries-
 (which contains {{BIB_ENTRIES}} entries organized into a broader bibliography outline). The list below is organized
 into topical clusters spanning program analysis, active-inference tooling, learned code models,
 graph kernels, abstract interpretation, POMDP planning, synthesis, bidirectional transformations,
-Markov blankets, evidence provenance, reproducibility, and visual analytics. References are numbered consecutively across clusters;
+Markov blankets, evidence provenance, reproducibility, visual analytics, organizational state-space models, differentiable programming, and world-model proof certificates. References are numbered consecutively across clusters;
 in-text citations in other appendices use `[N]` format. Consult
 `../cogant/docs/evaluation/LITERATURE.md` for
 the full annotated pool; this appendix lists the curated subset most directly relevant
@@ -103,8 +103,9 @@ approximation used in continuous-state extensions of COGANT.
 
 [17] Smekal, J., Friedman, D. A. et al. (2023). **Generalized Notation
 Notation: A Text-Based Format for Active Inference Generative Models.**
-Active Inference Institute technical report. The specification document
-for GNN v1.1, which COGANT's `cogant.gnn` formatter targets.
+Active Inference Institute technical report. The maintained syntax reference
+now distinguishes the syntax engine from the release bundle, and COGANT's
+`cogant.gnn` formatter targets that current upstream bundle.
 
 [18] Champion, T., Grzes, M., Bowman, H. (2022). **Branching Time Active
 Inference: Empirical Study and Complexity Class Analysis.** *Neural
@@ -387,6 +388,14 @@ Analytics in Deep Learning: An Interrogative Survey for the Next Frontiers.**
 dashboard panels that let reviewers ask why mappings fired, where confidence
 comes from, and when generated model artifacts fail.
 
+The same cluster also motivates COGANT's audit-surface visualizations. A
+validator-status SVG is treated as a compact claim ledger: it does not merely
+decorate a report, but separates version currentness, bridge importability,
+package-native validation, upstream executable compatibility, and supply-chain
+state into distinct lanes. In Munzner's terms, this keeps the abstraction and
+encoding choices honest; a red upstream-execution lane is a domain finding even
+when the package-validator lane is green.
+
 [73] Sugiyama, K., Tagawa, S., Toda, M. (1981). **Methods for Visual
 Understanding of Hierarchical System Structures.** *IEEE Transactions on
 Systems, Man, and Cybernetics.* Provides the layered graph-drawing precedent
@@ -427,7 +436,93 @@ Program Comprehension.* Connects COGANT's visualization workbench to the
 software-comprehension literature on navigation, orientation, and task
 support.
 
-### E.11 Scholarship coverage checklist
+### E.11 Organizational state spaces and differentiable surrogates
+
+[81] World Wide Web Consortium Government Linked Data Working Group (2014).
+**The Organization Ontology.** *W3C Recommendation.* Defines core linked-data
+terms for organizations, sub-organizations, memberships, roles, posts, sites,
+and change events; for COGANT this is the closest standards anchor for reading
+an org chart as a typed graph rather than as behavior.
+
+[82] Object Management Group (2014). **Business Process Model and Notation
+(BPMN), Version 2.0.2.** *OMG formal specification.* Provides a stakeholder-readable
+business-process notation with machine-readable specification artifacts; COGANT's
+future organization-state-space track would treat BPMN tasks, events, gateways,
+and handoffs as typed process evidence, not as measured execution.
+
+[83] Galbraith, J. R. (1974). **Organization Design: An Information Processing
+View.** *Interfaces, 4(3).* Frames organization design around task uncertainty
+and information-processing demands; this is the management-theory analogue of
+COGANT's claim that structure matters because it constrains information flow.
+
+[84] Carley, K. M. (1995). **Computational and Mathematical Organization
+Theory: Perspective and Directions.** *Computational and Mathematical
+Organization Theory, 1.* Treats organizations as collections of processes and
+adaptive agents studied through formal computational and mathematical models;
+this is the closest organization-science home for a COGANT-style typed
+coordination model.
+
+[85] Levinthal, D. A. (1997). **Adaptation on Rugged Landscapes.**
+*Management Science, 43(7).* Models organizational form as search over
+interdependent design choices; useful for bounding any optimization story
+around "differentiable typed corporations" to surrogate search rather than
+guaranteed organizational improvement.
+
+[86] Zou, N., Li, J. (2017). **Modeling and Change Detection of Dynamic Network
+Data by a Network State Space Model.** *IISE Transactions, 49(1).* Proposes a
+network state-space model where dynamic network observations are linked to
+latent node propensities and used for change detection. This is the direct
+methodological bridge from static org-chart edges to dynamic organizational
+state inference.
+
+[87] Baydin, A. G., Pearlmutter, B. A., Radul, A. A., Siskind, J. M. (2018).
+**Automatic Differentiation in Machine Learning: A Survey.** *Journal of
+Machine Learning Research, 18.* Clarifies automatic differentiation and
+differentiable programming for machine-learning systems; it bounds COGANT's
+future differentiable-organization language to explicit differentiable
+surrogates.
+
+[88] Mak, C., Ong, C.-H. L., Paquet, H., Wagner, D. (2021). **Densities of
+Almost Surely Terminating Probabilistic Programs are Differentiable Almost
+Everywhere.** *European Symposium on Programming.* Establishes a formal route
+from probabilistic programs to almost-everywhere differentiable densities under
+specific conditions; relevant as a boundary condition for differentiating
+compiled generative-model surrogates.
+
+[89] Smithe, T. St C. (2024). **Structured Active Inference.** *arXiv.*
+Generalizes active inference using categorical systems theory, structured
+interfaces, typed policies, and agents managing other agents. It supplies the
+active-inference-specific bridge from typed program or organization interfaces
+to compositional multi-agent GNN bundles.
+
+[90] Westenhaver, Y., Branscomb, M., Grant, A. (2026). **Recursive
+Self-Improvement is a Portfolio Optimization Problem.** *AlphaFund white
+paper.* An industry white paper that frames recursive self-improvement as a
+capital-allocation process over Economic World Models, channel histories, and
+portfolio optimization. COGANT uses it only as conceptual adjacent work for
+economic-world-model and typed-corporation framing, not as peer-reviewed
+evidence and not as support for current COGANT implementation claims.
+
+The provisional validator in `../tools/organization_state_space_audit.py`
+turns this cluster into a falsifiable design-review surface: static
+organization artifacts, dynamic traces, factor evidence, transition evidence,
+and negative controls must be present before COGANT prose can use
+surrogate-model language for an organization-level sketch.
+
+### E.12 World-model proof and exported-model certificates
+
+[91] Bakhta, A. (2026). **ProvableWorldModel: commit-and-audit proofs for
+world-model inference.** Software artifact. ProvableWorldModel demonstrates
+a commitment-bound audit pattern for exact quantized world-model inference:
+Merkle commitments bind model and trace artifacts, Fiat-Shamir derives the
+audit challenge, Freivalds checks fixed-weight matrix multiplications, and
+cheap deterministic operations are replayed exactly. For COGANT, it is most
+useful as a boundary reference and future-method target for exported-model
+certificates: COGANT can bind source, config, package checksums, and runtime
+trace digests today, but it should not claim a proof of inference execution
+without implementing a comparable verifier [@provableworldmodel2026].
+
+### E.13 Scholarship coverage checklist
 
 The main text uses this appendix as a coverage check, not as an
 exhaustive bibliography. The current manuscript should be read as satisfying
@@ -441,5 +536,7 @@ the following reviewer-facing scholarship commitments:
 | Roundtrip language is weaker than full bidirectional-transformation proof. | E.7 and E.8 | @sec:08-03-lenses-and-synthesis, @sec:S01-appendix-roundtrip-epsilon |
 | Reproducibility claims are tied to manifests, metrics, sidecars, and scripts. | E.10 | @sec:06-experimental-setup, @sec:07-reproducibility, @sec:S06-appendix-source-references |
 | Figure claims are task- and evidence-bounded. | E.10 | @sec:04-rendered-end-to-end-figures, @tbl:figure-reading-order, @tbl:figure-provenance-groups |
+| Organization-level extensions are treated as future typed surrogate models, not shipped corporate simulators. | E.11 | @sec:02-03-state-space-and-behavior, @sec:08-04-world-models-boundaries-and-compatibility, @sec:10-conclusion |
+| Exported-model proof language is bounded by implemented artifact checks, not borrowed from adjacent proof systems. | E.12 | @sec:08-04-world-models-boundaries-and-compatibility |
 
 : Scholarship coverage checklist for the COGANT manuscript. {#tbl:S05-scholarship-coverage-checklist}

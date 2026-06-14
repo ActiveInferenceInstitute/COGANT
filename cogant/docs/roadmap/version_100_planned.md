@@ -14,7 +14,7 @@ and hardening release that makes COGANT safe to depend on. The public API contra
 1. **API freeze**: Define and freeze the stable public API surface. Everything in `__all__` at 1.0 is semver-guaranteed.
 2. **Template render path**: Keep the working sidecar linked under `projects/working/cogant/` with current render commands.
 3. **Zero known regressions**: No failed fixtures, all validators at 100/100, and language-specific roundtrip targets met.
-4. **Production readiness**: Distributed processing, cloud deployment, schema migration, IDE extension.
+4. **Production readiness**: Distributed processing, cloud deployment, current-schema validation, IDE extension.
 5. **Ecosystem**: Plugin marketplace, DuckDB query interface, pre-trained GNN encoder (beta).
 
 ---
@@ -30,7 +30,7 @@ Define the stable surface. Everything outside `__all__` in public modules is int
 - [ ] Audit all `__all__` declarations across `py/cogant/` (currently ~50 modules)
 - [ ] Move implementation details under `_internal/` or add underscore prefixes
 - [ ] Write `API_STABILITY.md`: tier classification (stable / experimental / internal)
-- [ ] Changelog deprecation notices for any pre-1.0 interfaces being dropped
+- [ ] Changelog entries for any pre-1.0 interfaces being dropped
 - [ ] `cogant.__version__` follows semver; `cogant.version_info: tuple[int, int, int]`
 - [ ] All public classes/functions have Google-style docstrings with full Args/Returns/Raises/Examples
 
@@ -47,16 +47,17 @@ The current render path is `projects/working/cogant/`.
 - [ ] End-to-end PDF rendering via `scripts/03_render_pdf.py --project working/cogant`
 - [ ] Manuscript variable injection end-to-end: `regenerate_metrics.py` → `z_generate_manuscript_variables.py` → PDF
 
-### H3 — Schema Versioning + Migration Harness
+### H3 — Current Schema Contract Harness
 
 **Effort:** M | **Owner:** export team
 
-Bundles created at v0.1.0 must be readable at v1.0.0. Automated migration tests catch breakage.
+Bundles created by the current package must declare the active schema contract
+and fail fast when a reader sees an unsupported header. The v1.0.0 gate should
+make that behavior explicit across bundle manifests, validators, and fixtures.
 
 - [ ] `BundleManifest.schema_version: str` bump policy documented in `deprecation_policy.md`
-- [ ] `cogant migrate <bundle_dir>`: auto-detect version, apply migration chain
-- [ ] Migration registry: `cogant.export.migrations.{v010_to_v050, v050_to_v100}`
-- [ ] Automated migration test: apply migrations to all 6 fixtures; assert round-trip integrity
+- [ ] `cogant migrate <bundle_dir>`: current-contract verifier that reports unsupported headers
+- [ ] Automated current-contract tests across all packaged fixtures
 - [ ] `cogant validate-bundle manifest.json`: includes schema version check + checksum verification
 
 ### H4 — Stubgen CI Check
@@ -179,7 +180,7 @@ Upgrade static `cogant render` HTML to a fully interactive experience.
 | AII validator score (all fixtures) | 100/100 |
 | Real-world repos passing forward pipeline | ≥30 |
 | Public API modules with complete docstrings | 100% |
-| Schema migration: v0.1→v1.0 bundle round-trip | Pass |
+| Current bundle schema contract validation | Pass |
 | CI pipeline duration | <10 min |
 
 ---
@@ -192,4 +193,4 @@ Upgrade static `cogant render` HTML to a fully interactive experience.
 | Distributed processing introduces non-determinism | Medium | Hash-seed everything; property test determinism law |
 | VSCode extension version lag behind CLI | High | Pin extension to compatible CLI minor version; semver compatibility matrix |
 | Pre-trained encoder requires large training corpus | High | Scope as "beta" opt-in; heuristic rules remain default |
-| Schema migration chain grows brittle | Medium | Integration test every migration step automatically |
+| Schema contract checks grow inconsistent across CLI/API paths | Medium | Integration test every validator entry point automatically |

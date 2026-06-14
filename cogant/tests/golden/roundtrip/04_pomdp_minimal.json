@@ -1,7 +1,7 @@
 {
   "fixture": "04_pomdp_minimal",
   "fixture_path": "examples/zoo/04_pomdp_minimal",
-  "min_role_match_score": 0.2,
+  "min_role_preservation_score": 0.2,
   "must_be_role_preserved": false,
   "expected_original_roles": {
     "HIDDEN_STATE": 1,
@@ -18,5 +18,5 @@
     "OBSERVATION": 2,
     "ACTION": 2
   },
-  "notes": "Single hidden-state POMDP. v0.6 classifies the checked-in legacy roundtrip evidence as diagnostic DRIFT; this golden asserts the source/synthesized role floors and shape preservation while keeping fresh role-preserved evidence separate."
+  "notes": "Single hidden-state POMDP. v0.6 classifies the checked-in compatibility roundtrip evidence as diagnostic DRIFT; this golden asserts the source/synthesized role floors and shape preservation while keeping fresh role-preserved evidence separate."
 }

@@ -1,6 +1,6 @@
 """Deep tests for :class:`cogant.translate.confidence.ConfidenceModel`.
 
-The legacy ``test_confidence.py`` file tests a conceptual dict-based
+The compatibility ``test_confidence.py`` file tests a conceptual dict-based
 confidence idea that has no relationship to the real ``ConfidenceModel``
 in the codebase. This module tests the actual class against
 :class:`SemanticMapping` instances, covering: the base scoring formula,

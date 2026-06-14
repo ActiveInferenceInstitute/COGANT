@@ -81,7 +81,7 @@ class GraphQuery:
     is_reachable(source_id: str, target_id: str) -> bool
     transitive_closure(node_id: str) -> Set[str]
 
-    # New in v0.5.0+
+    # New in current+
     find_by_role(role: str) -> List[Node]  # HIDDEN_STATE, OBSERVATION, ACTION, POLICY, etc.
     get_neighborhood(node_id: str, depth: int = 1, direction: str = 'both') -> Set[str]
     filter_by_edge_type(edge_type: str) -> List[Edge]

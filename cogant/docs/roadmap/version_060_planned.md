@@ -4,7 +4,7 @@
 **Status:** Planning | **Target window:** Q2–Q3 2026
 
 This document scopes the v0.6.x minor series. All items are planned, not committed.
-Scope is subject to revision based on actual v0.5.0 usage patterns and community feedback.
+Scope is subject to revision based on actual current usage patterns and community feedback.
 
 ---
 

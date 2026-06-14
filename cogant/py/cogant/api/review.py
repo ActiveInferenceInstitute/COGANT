@@ -156,7 +156,7 @@ class ReviewAPI:
         if self.mappings:
             return
 
-        # Legacy fallback: bundles that only carry the translate-stage
+        # Compatibility fallback: bundles that only carry the translate-stage
         # node_features shape (no _semantic_mappings artifact).
         stage_results = self.current_bundle.get("stage_results", {}) or {}
         translate = stage_results.get("translate", {}) or {}

@@ -457,11 +457,11 @@ class TestMetrics:
         assert hasattr(report, "role_score")
         assert hasattr(report, "matrix_score")
         assert hasattr(report, "total_score")
-        assert hasattr(report, "is_isomorphic")
+        assert hasattr(report, "structurally_isomorphic")
         assert hasattr(report, "breakdown")
 
     def test_compute_isomorphism_report_score_in_range(self) -> None:
-        """compute_isomorphism_report: returns report with role_match_score in [0,1]."""
+        """compute_isomorphism_report: returns report with role_preservation_score in [0,1]."""
         gnn_a = {
             "roles": {"HIDDEN_STATE": 2, "OBSERVATION": 1},
             "matrices": {},
@@ -477,4 +477,4 @@ class TestMetrics:
         report = compute_isomorphism_report(gnn_a, gnn_b)
         assert 0.0 <= report.role_score <= 1.0
         assert 0.0 <= report.total_score <= 1.0
-        assert report.is_isomorphic is True  # identical inputs
+        assert report.structurally_isomorphic is True  # identical inputs

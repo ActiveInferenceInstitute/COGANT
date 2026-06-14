@@ -25,6 +25,20 @@ output/
 cogant/_rnd/
 cogant/out/
 
+# Parent project ignore rules hide untracked files inside nested cogant/ dirs.
+# Keep this intentionally added MkDocs page visible without surfacing generated
+# package outputs or unrelated sidecar notes.
+!cogant/
+cogant/*
+!cogant/docs/
+cogant/docs/*
+!cogant/docs/evaluation/
+cogant/docs/evaluation/*
+!cogant/docs/evaluation/GNN_V2_AUDIT_SURFACE.md
+!cogant/docs/rnd/
+cogant/docs/rnd/*
+!cogant/docs/rnd/organization_state_spaces.md
+
 # OS / editor cruft
 .DS_Store
 **/.DS_Store

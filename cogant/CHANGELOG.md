@@ -290,7 +290,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 - Viz `cogant.viz.png` tests guarded behind `pytest.importorskip(matplotlib)`; add `numpy` and `pytest-cov` as dev deps (905c2da)
 - Relax JS hidden-state assertion in cross-language differential test (4aa2710)
-- Ruff UP038 autofix: union-type annotations; remove obsolete `xfail` mark (cea55d9)
+- Ruff UP038 autofix: union-type annotations; remove unsupported `xfail` mark (cea55d9)
 
 ### Changed
 - `evaluation/METRICS.yaml` promoted to canonical source of truth for test count, coverage, and roundtrip metrics (41f96de)
@@ -313,7 +313,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `cogant doctor` extended: tree-sitter grammar checks, uv lockfile parity, optional-dep audit
 - `cogant init <path>`: scaffold helpers for `cogant.yaml`, source stub, `pyproject.toml`
 - Tutorial notebooks 07–12: Flask walkthrough, constraints, plugins, YAML DSL, multi-episode learning, cross-language roundtrip
-- Cross-language roundtrip claim: JS Observer (`examples/zoo/13_js_observer`) → GNN → AI cycle, `role_match_score=1.0`
+- Cross-language roundtrip claim: JS Observer (`examples/zoo/13_js_observer`) → GNN → AI cycle, `role_preservation_score=1.0`
 - POLICY/CONTEXT stub emission in synthesizer: `decide_*` / `get_context_*` stubs proportional to origin GNN role counts
 - Scaling regression tests: guards for B-tensor, BFS, AST cache, INHERITS edge deduplification at dulwich edge density
 - Benchmark dashboard: `evaluation/dashboards/benchmarks.html` (Chart.js, self-contained)
@@ -415,7 +415,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Real-world evaluation on 8 open-source Python repositories
 
 ### Changed
-- Complete README rewrite for v0.2.0 feature set
+- Complete README rewrite for current feature set
 - Docstring audit and type annotation hygiene across all modules
 - Test suite: 1300+ tests, 0 failures (skips for optional deps only)
 - py.typed marker added (PEP 561 compliance)

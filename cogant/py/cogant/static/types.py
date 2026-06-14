@@ -340,7 +340,7 @@ class TypeInferencer:
         )
 
     # ------------------------------------------------------------------
-    # Deprecated single-item helpers retained for backwards compatibility
+    # Removed single-item helpers retained for backwards compatibility
     # ------------------------------------------------------------------
 
     def _infer_function_return_type(self, func: FunctionDef, symbol_table: Any) -> TypeInfo | None:

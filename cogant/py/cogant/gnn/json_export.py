@@ -10,6 +10,7 @@ import json
 import logging
 from collections import defaultdict
 from datetime import UTC, datetime
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
 from cogant.gnn.matrices import GNNMatrices
@@ -20,6 +21,13 @@ from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceModel
 
 logger = logging.getLogger(__name__)
+
+
+def _cogant_version() -> str:
+    try:
+        return version("cogant")
+    except PackageNotFoundError:
+        return "0.6.0"
 
 
 _CONFIDENCE_LEVEL_VALUES: dict[str, float] = {
@@ -207,7 +215,7 @@ class GNNJSONExporter:
         metadata: dict[str, Any] = {
             "generated_at": datetime.now().isoformat(),
             "schema_version": "1.0",
-            "cogant_version": "0.1.0",
+            "cogant_version": _cogant_version(),
             "model_id": self.state_space.id,
             "schema_name": self.state_space.schema_name,
         }
@@ -622,7 +630,7 @@ class GNNJSONExporter:
         """Export validation notes and metadata."""
         return {
             "schema_version": "1.0",
-            "cogant_version": "0.1.0",
+            "cogant_version": _cogant_version(),
             "last_validated": datetime.now().isoformat(),
             "validation_status": "valid",
         }

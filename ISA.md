@@ -97,7 +97,7 @@ Ready means:
 - all gates above pass on the current worktree;
 - `METRICS.yaml`, `roundtrip_results.jsonl`, and `output/manuscript/` agree;
 - rendered figures are present under `output/figures/`;
-- active docs contain no obsolete working-directory paths; and
+- active docs contain no unsupported working-directory paths; and
 - remaining limitations are explicit scope boundaries, not hidden defects.
 
 Follow-up work that changes the empirical scope must come with new data:

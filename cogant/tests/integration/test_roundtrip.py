@@ -12,7 +12,7 @@ These tests exercise the reverse direction of the COGANT pipeline:
 
 The round-trip emits a diagnostic verdict under the role-multiset
 equivalence defined in :mod:`cogant.reverse`. Current v0.6 evidence keeps
-fresh role-preserved runs separate from stale legacy DRIFT fixtures rather
+fresh role-preserved runs separate from out-of-sync compatibility DRIFT fixtures rather
 than treating every successful command as role-preserved evidence.
 
 The ``cogant.reverse`` module is under active construction. Every
@@ -73,7 +73,7 @@ except ImportError:  # pragma: no cover - availability sentinel
 
 
 # ---------------------------------------------------------------------------
-# GNN fixture — canonical upstream v1.1 markdown.
+# GNN fixture — canonical upstream v2.0.0 markdown.
 #
 # This deliberately mirrors what :class:`cogant.gnn.formatter.upstream`
 # emits so the parser handles it through its production code path. The
@@ -88,7 +88,7 @@ MINIMAL_GNN = """\
 TestModel
 
 ## GNNVersionAndFlags
-GNNVersion=1.0
+GNNVersion=2.0.0
 Flags=
 
 ## ModelName
@@ -433,8 +433,8 @@ def test_roundtrip_result_structure(minimal_gnn_file: Path, tmp_path: Path) -> N
     """``verify_roundtrip`` returns a populated ``RoundtripResult``."""
     result = verify_roundtrip(str(minimal_gnn_file), str(tmp_path / "roundtrip"))
     assert isinstance(result, RoundtripResult)
-    assert hasattr(result, "is_isomorphic")
-    assert hasattr(result, "role_match_score")
+    assert hasattr(result, "structurally_isomorphic")
+    assert hasattr(result, "role_preservation_score")
     assert hasattr(result, "original_roles")
     assert hasattr(result, "synthesized_roles")
     assert isinstance(result.original_roles, dict)
@@ -450,10 +450,10 @@ def test_roundtrip_result_structure(minimal_gnn_file: Path, tmp_path: Path) -> N
 
 @pytest.mark.slow
 @pytest.mark.skipif(not HAS_IDEMPOTENCY, reason="idempotency verifier not available")
-def test_roundtrip_role_match_score_bounds(minimal_gnn_file: Path, tmp_path: Path) -> None:
+def test_roundtrip_role_preservation_score_bounds(minimal_gnn_file: Path, tmp_path: Path) -> None:
     """Role-match score is always a valid probability in ``[0, 1]``."""
     result = verify_roundtrip(str(minimal_gnn_file), str(tmp_path / "roundtrip-bounds"))
-    assert 0.0 <= result.role_match_score <= 1.0
+    assert 0.0 <= result.role_preservation_score <= 1.0
 
 
 @pytest.mark.slow
@@ -468,7 +468,7 @@ def test_roundtrip_role_match_meets_lenient_threshold(
     assert result.roundtrip_status in {"DRIFT", "ROLE_PRESERVED", "STRUCTURALLY_ISOMORPHIC"}
     assert result.original_roles
     assert result.synthesized_roles
-    assert result.role_match_score > 0.0
+    assert result.role_preservation_score > 0.0
 
 
 @pytest.mark.slow

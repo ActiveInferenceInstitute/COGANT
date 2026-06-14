@@ -84,8 +84,8 @@ class TestReverseCLIRendering:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.9,
+            structurally_isomorphic=True,
+            role_preservation_score=0.9,
             original_roles={"HIDDEN_STATE": 2, "OBSERVATION": 1},
             synthesized_roles={"HIDDEN_STATE": 2, "OBSERVATION": 1},
             shape_match={"n_states": True, "n_obs": True},
@@ -98,8 +98,8 @@ class TestReverseCLIRendering:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.2,
+            structurally_isomorphic=False,
+            role_preservation_score=0.2,
             original_roles={"HIDDEN_STATE": 3},
             synthesized_roles={"OBSERVATION": 1},
             shape_match={"n_states": False},
@@ -112,8 +112,8 @@ class TestReverseCLIRendering:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=1.0,
+            structurally_isomorphic=True,
+            role_preservation_score=1.0,
             original_roles={},
             synthesized_roles={},
             package_path=tmp_path / "pkg",
@@ -125,8 +125,8 @@ class TestReverseCLIRendering:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=1.0,
+            structurally_isomorphic=True,
+            role_preservation_score=1.0,
             original_roles={},
             synthesized_roles={},
         )
@@ -137,8 +137,8 @@ class TestReverseCLIRendering:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.3,
+            structurally_isomorphic=False,
+            role_preservation_score=0.3,
             original_roles={"ACTION": 2},
             synthesized_roles={},
             shape_match={},  # empty

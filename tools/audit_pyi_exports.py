@@ -16,7 +16,6 @@ import ast
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = ROOT / "cogant" / "py" / "cogant"
 TARGETED_STRUCTURAL_MODULES = {
@@ -141,12 +140,14 @@ def _function_signature(
         True for _ in args.defaults
     ]
     params: list[tuple[str, str, str, bool]] = []
-    for index, (arg, has_default) in enumerate(zip(positional, positional_defaults)):
+    for index, (arg, has_default) in enumerate(
+        zip(positional, positional_defaults, strict=True)
+    ):
         kind = "posonly" if index < len(args.posonlyargs) else "pos"
         params.append((kind, arg.arg, _annotation_text(arg.annotation), has_default))
     if args.vararg is not None:
         params.append(("vararg", args.vararg.arg, _annotation_text(args.vararg.annotation), False))
-    for arg, default in zip(args.kwonlyargs, args.kw_defaults):
+    for arg, default in zip(args.kwonlyargs, args.kw_defaults, strict=True):
         params.append(("kwonly", arg.arg, _annotation_text(arg.annotation), default is not None))
     if args.kwarg is not None:
         params.append(("kwarg", args.kwarg.arg, _annotation_text(args.kwarg.annotation), False))

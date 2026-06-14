@@ -377,6 +377,7 @@ nav:
       - Reverse Synthesis Status: evaluation/ROUNDTRIP_IMPROVEMENT.md
       - Cross-Language Roundtrip: evaluation/CROSS_LANG_ROUNDTRIP.md
       - GNN Validation Report: evaluation/GNN_VALIDATION_REPORT.md
+      - GNN v2 Audit Surface: evaluation/GNN_V2_AUDIT_SURFACE.md
       - Mutation Report: evaluation/MUTATION_REPORT.md
       - Benchmark vs Prior Work: evaluation/BENCHMARK_VS_PRIOR.md
       - Incremental Benchmark: evaluation/INCREMENTAL_BENCHMARK.md
@@ -388,7 +389,7 @@ nav:
   - Roadmap:
       - Section Index: roadmap/README.md
       - Overview: roadmap/overview.md
-      - "v0.1.0 (Current)": roadmap/version_010_current.md
+      - "current (Current)": roadmap/version_010_current.md
       - "v1.0.0 (Planned)": roadmap/version_100_planned.md
       - Version Strategy: roadmap/version_strategy.md
       - Feature Backlog: roadmap/feature_backlog.md

@@ -24,7 +24,7 @@
    ``roundtrip_results.jsonl`` data file. This catches the keystone failure
    mode where METRICS.yaml inherits a richer prior regen (with
    ``role_preservation_score`` fields) and the data file is subsequently
-   stripped to v0.5 ε-bucket rows — leaving METRICS.yaml asserting
+   stripped to unscored rows — leaving METRICS.yaml asserting
    ``role_preserved_count: N`` or ``mean_role_preservation_score: 1.0``
    while the current regen would tag every row as ``NON_NATIVE`` and leave
    native aggregate score fields null.
@@ -320,9 +320,7 @@ def _classify_row(entry: dict) -> str:
 def _score_source(entry: dict) -> str:
     """Mirror the regenerator's role-score provenance classification."""
     if "role_preservation_score" in entry:
-        return "v0.6_native"
-    if "epsilon" in entry or "role_match_score" in entry:
-        return "epsilon_proxy"
+        return "current_native"
     return "empty"
 
 
@@ -330,11 +328,9 @@ def _aggregate_score_source(rows: list[dict]) -> str:
     sources = {_score_source(row) for row in rows}
     if not rows or sources == {"empty"}:
         return "empty"
-    if sources <= {"epsilon_proxy", "empty"}:
-        return "epsilon_proxy"
-    if "v0.6_native" in sources and sources - {"v0.6_native", "empty"}:
+    if "current_native" in sources and sources - {"current_native", "empty"}:
         return "mixed"
-    return "v0.6_native"
+    return "current_native"
 
 
 def _source_role_total(row: dict) -> int:
@@ -432,7 +428,7 @@ def check_roundtrip_status_distribution(metrics: dict) -> None:
         if want is None:
             if got is not None:
                 drifts.append(
-                    f"  {key}: METRICS.yaml={got} but native v0.6 rows are absent, so expected null"
+                    f"  {key}: METRICS.yaml={got} but current native rows are absent, so expected null"
                 )
             continue
         if got is None:

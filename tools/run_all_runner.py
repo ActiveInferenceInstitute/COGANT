@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -94,7 +94,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "validate_run_dir": True,
         "validate_no_upstream_gnn": False,
         "roundtrip": True,
-        # The four steps below bypass the v0.5.0 CLI stubs and call the real
+        # The four steps below bypass the auxiliary CLI wrappers and call the real
         # Python APIs via tools/batch_api.py. Flip to False to skip.
         "analyze_graph": True,
         "analyze_static": True,
@@ -141,7 +141,7 @@ def load_config(path: Path | None) -> dict[str, Any]:
 
 
 def _ts() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def report(msg: str, *, log_fp: Any | None = None) -> None:
@@ -333,7 +333,7 @@ def _validate_gnn_package_summary(
 ) -> dict[str, Any] | None:
     """Return a fresh ``GNNValidator`` summary for ``package_dir``.
 
-    The bundle's ``stage_results.validate`` payload is useful historical
+    The bundle's ``stage_results.validate`` payload is useful recorded
     evidence, but the cross-target summary is a public aggregation and must
     reflect the current package validator, including matrix hardening that may
     have changed after a bundle was first written.
@@ -496,7 +496,7 @@ def _write_cross_target_summary(
     summary_json.write_text(
         json.dumps(
             {
-                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "generated_at": datetime.now(UTC).isoformat(),
                 "target_count": len(rows),
                 "total_wall_time_s": summary_meta.get("total_wall_time_s"),
                 "failed_steps": failures,
@@ -513,7 +513,7 @@ def _write_cross_target_summary(
     lines: list[str] = []
     lines.append("# COGANT batch run summary")
     lines.append("")
-    lines.append(f"- Generated: {datetime.now(timezone.utc).isoformat()}")
+    lines.append(f"- Generated: {datetime.now(UTC).isoformat()}")
     lines.append(f"- Targets: **{len(rows)}**")
     lines.append(f"- Total wall time: **{summary_meta.get('total_wall_time_s')}s**")
     lines.append(f"- Failed steps: **{len(failures)}**")
@@ -627,7 +627,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
     failures: list[str] = []
     try:
         manifest: dict[str, Any] = {
-            "started_at": datetime.now(timezone.utc).isoformat(),
+            "started_at": datetime.now(UTC).isoformat(),
             "staging_root": str(STAGING_ROOT),
             "package_root": str(package_root),
             "output_root": str(output_root),
@@ -744,9 +744,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
             # With --layout-output the bundle is relocated to <run_dir>/data/bundle.json.
             # The closure resolves whichever path exists at call time so downstream
             # steps fire reliably regardless of layout choice.
-            _run_dir = run_dir
-
-            def _bundle_path() -> Path:
+            def _bundle_path(_run_dir: Path = run_dir) -> Path:
                 top = _run_dir / "bundle.json"
                 laid = _run_dir / "data" / "bundle.json"
                 if top.is_file():
@@ -1081,7 +1079,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                     return rc
 
         total_wall = time.monotonic() - batch_start
-        manifest["finished_at"] = datetime.now(timezone.utc).isoformat()
+        manifest["finished_at"] = datetime.now(UTC).isoformat()
         manifest["summary"] = {
             "total_wall_time_s": round(total_wall, 3),
             "target_count": n_targets,

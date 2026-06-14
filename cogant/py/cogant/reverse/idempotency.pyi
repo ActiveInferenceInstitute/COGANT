@@ -13,7 +13,6 @@ __all__ = [
     "ROUNDTRIP_STATUS_FAILED",
     "ROUNDTRIP_STATUSES",
     "ROLE_PRESERVATION_THRESHOLD",
-    "ROLE_MATCH_THRESHOLD",
     "check_structural_idempotency",
     "check_semantic_idempotency",
 ]
@@ -24,7 +23,6 @@ ROUNDTRIP_STATUS_DRIFT: str
 ROUNDTRIP_STATUS_FAILED: str
 ROUNDTRIP_STATUSES: tuple[str, ...]
 ROLE_PRESERVATION_THRESHOLD: float
-ROLE_MATCH_THRESHOLD: float
 
 @dataclass
 class IdempotencyReport:
@@ -59,12 +57,6 @@ class RoundtripResult:
     rule_evidence_trace: dict[str, Any] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
-    @property
-    def is_isomorphic(self) -> bool: ...
-    @property
-    def role_match_score(self) -> float: ...
-    @property
-    def roundtrip_invariants(self) -> dict[str, Any]: ...
     def summary(self) -> str: ...
 
 def check_structural_idempotency(

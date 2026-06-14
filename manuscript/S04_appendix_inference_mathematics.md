@@ -145,7 +145,7 @@ Substituting into the VFE decomposition:
 >   = **0.0**
 
 The three terms vanish separately: the prediction error is zero because
-`A_mat[0, 0] = 1.0` and the observation is guaranteed, the entropy is zero
+`A_mat[0, 0] = 1.0` makes the single observation deterministic, the entropy is zero
 because `Q(s) = [1.0]` is a Dirac delta on the single state, and the
 complexity term is zero because the prior is also a Dirac. This is the
 correct and expected behaviour for any fixture where the extracted model is

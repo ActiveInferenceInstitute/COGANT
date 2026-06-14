@@ -249,8 +249,8 @@ class TestReverseIdempotencyHelpers:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.9,
+            structurally_isomorphic=True,
+            role_preservation_score=0.9,
             matrix_score=0.85,
             structural_score=0.8,
         )
@@ -263,8 +263,8 @@ class TestReverseIdempotencyHelpers:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.5,
+            structurally_isomorphic=False,
+            role_preservation_score=0.49,
         )
         summary = result.summary()
         assert "DRIFT" in summary

@@ -2,7 +2,7 @@
 
 These tests exercise the scaffold helpers through real filesystem
 operations under :func:`tmp_path`. They avoid mocking and avoid
-spawning the Typer app so they stay independent of the legacy
+spawning the Typer app so they stay independent of the compatibility
 ``cogant init`` command in :mod:`cogant.cli.main`.
 
 Test surface covered:

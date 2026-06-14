@@ -25,8 +25,8 @@ repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMa
 - **Reverse path**: `py/cogant/reverse/` synthesizes a runnable Python package from any GNN
   bundle and is exposed through the top-level `cogant reverse` and `cogant roundtrip` CLI
   subcommands. The v0.6.0 contract reports `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`,
-  `DRIFT`, or `FAILED`; the native v0.6 ledger is role-preserved for 24 of 24 targets, while strict
-  structural-isomorphism counts are reported separately in `METRICS.yaml`.
+  `DRIFT`, or `FAILED`; the current native ledger is role-preserved for 25 of 25 targets, with
+  one strict structural-isomorphism row confined to `roundtrip_strict_minimal`.
 - **Incremental mode**: `cogant analyze --incremental <git-ref>` (or
   `PipelineConfig.incremental_since`) re-uses the previous run's program graph for unchanged
   source paths, measuring **19.6× no-change** and **5.6× single-file** speedups on the Flask

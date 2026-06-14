@@ -79,7 +79,7 @@ class DashboardGenerator:
             Complete HTML string ready for output
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        version = getattr(self.validation_report, "schema_name", "v0.1.0")
+        version = getattr(self.validation_report, "schema_name", "current")
 
         html_doc = f"""<!DOCTYPE html>
 <html lang="en">

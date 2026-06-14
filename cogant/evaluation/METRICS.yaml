@@ -3,18 +3,18 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-06-11T04:42:29.275813Z'
-generator_git_sha: 60a06af52f81579408851219fde698503ce617c5
+generated_at: '2026-06-14T15:21:40.386756Z'
+generator_git_sha: 565d4a23cd46b5ad3bfa2ea4ca653e9e2f9eac12
 cogant_version: 0.6.0
 package:
   name: cogant
   version: 0.6.0
   python_min: '3.11'
 testing:
-  test_count_total: 9703
-  test_count_passing: 9650
+  test_count_total: 9702
+  test_count_passing: 9697
   test_count_failing: 0
-  test_count_skipped: 53
+  test_count_skipped: 5
   test_count_xfailed: 0
   test_count_xpassed: 0
   test_files_unit: 313
@@ -25,11 +25,11 @@ testing:
   mypy_strict_errors: 0
   ruff_violations: 0
 codebase:
-  python_source_files: 232
-  python_loc: 82212
-  public_modules: 192
-  public_classes: 405
-  public_functions: 1135
+  python_source_files: 240
+  python_loc: 83913
+  public_modules: 199
+  public_classes: 404
+  public_functions: 1126
 pipeline:
   stage_count: 10
   translation_rules: 22
@@ -47,17 +47,17 @@ pipeline:
 evaluation:
   roundtrip:
     data_source: cogant/evaluation/dataset/roundtrip_results.jsonl
-    note: 'Native v0.6 roundtrip taxonomy: role-preserved is reported separately from
-      strict structural isomorphism.'
+    note: 'Current native roundtrip taxonomy: role-preserved is reported separately
+      from strict structural isomorphism.'
     threshold_role_preserved: 0.5
     threshold_drift: 0.5
-    total_targets: 24
-    role_preserved_count: 24
-    strict_isomorphism_count: 0
+    total_targets: 25
+    role_preserved_count: 25
+    strict_isomorphism_count: 1
     drift_count: 0
     failed_count: 0
     non_native_count: 0
-    role_preservation_score_source: v0.6_native
+    role_preservation_score_source: current_native
     mean_role_preservation_score: 1.0
     median_role_preservation_score: 1.0
     min_role_preservation_score: 1.0
@@ -66,7 +66,7 @@ evaluation:
     - name: async_service
       group: control_positive
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -80,11 +80,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.079
+      elapsed_s: 0.082
     - name: calculator
       group: control_positive
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -98,11 +98,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.101
+      elapsed_s: 0.105
     - name: cli_tool
       group: control_positive
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -116,11 +116,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.086
+      elapsed_s: 0.099
     - name: data_pipeline
       group: control_positive
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -134,11 +134,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.088
+      elapsed_s: 0.125
     - name: event_pipeline
       group: control_positive
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -152,11 +152,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.091
+      elapsed_s: 0.094
     - name: flask_mini
       group: control_positive
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -170,11 +170,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.107
+      elapsed_s: 0.125
     - name: multi_package_workspace
       group: control_positive
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -188,11 +188,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.075
+      elapsed_s: 0.08
     - name: notebook_module
       group: control_positive
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -206,11 +206,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.087
+      elapsed_s: 0.082
     - name: plugin_architecture
       group: control_positive
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -224,11 +224,29 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.117
+      elapsed_s: 0.083
+    - name: roundtrip_strict_minimal
+      group: control_positive
+      role_preservation_score: 1.0
+      role_preservation_score_source: current_native
+      scaffolding_fraction: 0.0
+      roundtrip_status: STRUCTURALLY_ISOMORPHIC
+      strict_structural: true
+      role_preserved: true
+      fixture_group: control_positive
+      file_count: 1
+      loc: 20
+      node_count: 5
+      edge_count: 5
+      parser_fallback_count: 0
+      skipped_file_count: 0
+      unsupported_construct_count: 0
+      dashboard_artifact_completeness: 0.0
+      elapsed_s: 0.092
     - name: flask_app
       group: real_world
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -242,11 +260,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.208
+      elapsed_s: 0.253
     - name: json_stdlib
       group: real_world
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -264,7 +282,7 @@ evaluation:
     - name: requests_lib
       group: real_world
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -278,11 +296,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.172
+      elapsed_s: 0.171
     - name: 01_simple_state
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -300,7 +318,7 @@ evaluation:
     - name: 02_observer
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -314,11 +332,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.091
+      elapsed_s: 0.086
     - name: 03_actor
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -332,11 +350,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.084
+      elapsed_s: 0.111
     - name: 04_pomdp_minimal
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -350,11 +368,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.092
+      elapsed_s: 0.093
     - name: 05_multi_factor
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -368,11 +386,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.084
+      elapsed_s: 0.091
     - name: 06_hierarchical
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -386,11 +404,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.083
+      elapsed_s: 0.086
     - name: 07_event_driven
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -404,11 +422,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.08
+      elapsed_s: 0.086
     - name: 08_preferences
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -422,11 +440,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.082
+      elapsed_s: 0.084
     - name: 09_policy
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -440,11 +458,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.079
+      elapsed_s: 0.082
     - name: 10_constraint
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -458,11 +476,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.116
+      elapsed_s: 0.101
     - name: 11_sensor_fusion
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -476,11 +494,11 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.087
+      elapsed_s: 0.102
     - name: 12_full_pomdp
       group: zoo
       role_preservation_score: 1.0
-      role_preservation_score_source: v0.6_native
+      role_preservation_score_source: current_native
       scaffolding_fraction: 0.0
       roundtrip_status: ROLE_PRESERVED
       strict_structural: false
@@ -494,13 +512,13 @@ evaluation:
       skipped_file_count: 0
       unsupported_construct_count: 0
       dashboard_artifact_completeness: 0.0
-      elapsed_s: 0.105
+      elapsed_s: 0.118
 literature:
   source: cogant/docs/evaluation/LITERATURE.md
-  bibliography_entries: 103
+  bibliography_entries: 104
 benchmark:
-  suite_runtime_s: 3304.42
-  shipped_fixture_count: 12
+  suite_runtime_s: 1097.2
+  shipped_fixture_count: 13
   benchmark_suite_file: suite_20260423.md
   benchmark_python_version: 3.12.11
   benchmark_os: macOS-26.4.1-arm64-arm-64bit
@@ -852,7 +870,7 @@ ablation:
       d_uniform: true
     flask_app:
       a_cols_uniform: 0
-      a_cols_total: 13
+      a_cols_total: 14
       b_actions_identity: 14
       b_actions_total: 29
       c_entries_zero: 24
@@ -860,7 +878,7 @@ ablation:
       d_uniform: false
     requests_lib:
       a_cols_uniform: 0
-      a_cols_total: 8
+      a_cols_total: 9
       b_actions_identity: 9
       b_actions_total: 17
       c_entries_zero: 37

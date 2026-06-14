@@ -420,7 +420,7 @@ class TestMarkovBlanketExceptionPath:
 
         Patch the exact __globals__ dict that _export_markov_blanket uses for
         name lookup — robust to prior-test module reloads that may have left
-        stale class references in sys.modules vs. live method globals.
+        out-of-sync class references in sys.modules vs. live method globals.
         """
 
         class _ErrorExtractor:

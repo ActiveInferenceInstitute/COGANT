@@ -88,21 +88,21 @@ class TestDriftAnalyzerExtraction:
 class TestDriftAnalyzerHelpers:
     """Exercise the two-argument ``_count_*`` / ``_compute_*`` helpers."""
 
-    def test_legacy_count_added_nodes(self):
+    def test_compatibility_count_added_nodes(self):
         a = make_bundle(node_ids=("n1",))
         b = make_bundle(node_ids=("n1", "n2", "n3"))
         analyzer = DriftAnalyzer(a, b)
 
         assert analyzer._count_added_nodes(a, b) == 2
 
-    def test_legacy_count_removed_nodes(self):
+    def test_compatibility_count_removed_nodes(self):
         a = make_bundle(node_ids=("n1", "n2", "n3"))
         b = make_bundle(node_ids=("n1",))
         analyzer = DriftAnalyzer(a, b)
 
         assert analyzer._count_removed_nodes(a, b) == 2
 
-    def test_legacy_count_edge_changes(self):
+    def test_compatibility_count_edge_changes(self):
         a = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),))
         b = make_bundle(
             node_ids=("n1", "n2", "n3"),
@@ -111,7 +111,7 @@ class TestDriftAnalyzerHelpers:
         analyzer = DriftAnalyzer(a, b)
         assert analyzer._count_edge_changes(a, b) == 2
 
-    def test_legacy_count_added_states(self):
+    def test_compatibility_count_added_states(self):
         a = make_bundle(states=("s1",))
         b = make_bundle(states=("s1", "s2", "s3"))
         analyzer = DriftAnalyzer(a, b)
@@ -119,32 +119,32 @@ class TestDriftAnalyzerHelpers:
         # Reverse => 0 (not negative)
         assert analyzer._count_added_states(b, a) == 0
 
-    def test_legacy_count_removed_states(self):
+    def test_compatibility_count_removed_states(self):
         a = make_bundle(states=("s1", "s2", "s3"))
         b = make_bundle(states=("s1",))
         analyzer = DriftAnalyzer(a, b)
         assert analyzer._count_removed_states(a, b) == 2
         assert analyzer._count_removed_states(b, a) == 0
 
-    def test_legacy_count_observation_changes(self):
+    def test_compatibility_count_observation_changes(self):
         a = make_bundle(observations=("o1",))
         b = make_bundle(observations=("o1", "o2"))
         analyzer = DriftAnalyzer(a, b)
         assert analyzer._count_observation_changes(a, b) == 1
 
-    def test_legacy_count_action_changes(self):
+    def test_compatibility_count_action_changes(self):
         a = make_bundle(actions=("a1", "a2"))
         b = make_bundle(actions=("a1",))
         analyzer = DriftAnalyzer(a, b)
         assert analyzer._count_action_changes(a, b) == 1
 
-    def test_legacy_count_policy_changes(self):
+    def test_compatibility_count_policy_changes(self):
         a = make_bundle(policies=("p1",))
         b = make_bundle(policies=("p1", "p2", "p3"))
         analyzer = DriftAnalyzer(a, b)
         assert analyzer._count_policy_changes(a, b) == 2
 
-    def test_legacy_compute_architectural_drift(self):
+    def test_compatibility_compute_architectural_drift(self):
         a = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),))
         b = make_bundle(
             node_ids=("n1", "n2", "n3", "n4"),
@@ -154,7 +154,7 @@ class TestDriftAnalyzerHelpers:
         drift = analyzer._compute_architectural_drift(a, b)
         assert 0.0 < drift <= 1.0
 
-    def test_legacy_compute_architectural_drift_from_empty_baseline(self):
+    def test_compatibility_compute_architectural_drift_from_empty_baseline(self):
         a = make_bundle()
         b = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),))
         analyzer = DriftAnalyzer(a, b)
@@ -162,13 +162,13 @@ class TestDriftAnalyzerHelpers:
         # Both nodes_a and edges_a are 0 so node_drift=0.5 and edge_drift=0.5
         assert drift == 0.5
 
-    def test_legacy_compute_architectural_drift_identical_empty(self):
+    def test_compatibility_compute_architectural_drift_identical_empty(self):
         a = make_bundle()
         analyzer = DriftAnalyzer(a, a)
         drift = analyzer._compute_architectural_drift(a, a)
         assert drift == 0.0
 
-    def test_legacy_compute_semantic_churn(self):
+    def test_compatibility_compute_semantic_churn(self):
         a = make_bundle(states=("s1",), observations=("o1",), actions=("a1",))
         b = make_bundle(
             states=("s1", "s2"),
@@ -204,7 +204,7 @@ class TestDriftAnalyzerHelpers:
 class TestDriftAnalyzerAnalyzeAndReports:
     """Exercise ``analyze``, ``report``, ``generate_diff_*``, ``to_dict``."""
 
-    def test_analyze_legacy_entry_point(self):
+    def test_analyze_compatibility_entry_point(self):
         a = make_bundle(node_ids=("n1",), edges=())
         b = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),))
         analyzer = DriftAnalyzer({}, {})
@@ -213,7 +213,7 @@ class TestDriftAnalyzerAnalyzeAndReports:
         assert isinstance(drift, DriftScore)
         assert drift.architectural_score > 0.0
 
-    def test_report_legacy_method(self):
+    def test_report_compatibility_method(self):
         bundle = make_bundle(node_ids=("n1", "n2"), edges=(("n1", "n2"),))
         analyzer = DriftAnalyzer(bundle, bundle)
         drift = analyzer._compute_drift_score()

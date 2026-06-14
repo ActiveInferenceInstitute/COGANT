@@ -27,8 +27,7 @@ def test_every_module_importable_and_instantiable() -> None:
     from cogant.runtime.config import AgentConfig
     from cogant.runtime.loop import AgentRuntime
     from cogant.schema.detector import detect_version
-    from cogant.schema.migrations import migrate_gnn
-    from cogant.schema.versions import SchemaVersion
+    from cogant.schema.versions import CURRENT_GNN_VERSION
     from cogant.translate.dsl import compile_ruleset, load_rules_from_dict
 
     # Each class/function is a real object, not None
@@ -37,9 +36,8 @@ def test_every_module_importable_and_instantiable() -> None:
     assert hash_file is not None
     assert PipelineDAG is not None
     assert Stage is not None
-    assert SchemaVersion is not None
+    assert CURRENT_GNN_VERSION == "2.0.0"
     assert detect_version is not None
-    assert migrate_gnn is not None
     assert PluginRegistry is not None
     assert load_rules_from_dict is not None
     assert compile_ruleset is not None

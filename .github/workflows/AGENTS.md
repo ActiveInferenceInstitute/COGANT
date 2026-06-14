@@ -9,7 +9,7 @@ through `uv run` so CI matches local development.
 |------|-----------|------|---------|
 | [`ci.yml`](ci.yml) | `push` to `main`/`feat/**`/`fix/**`, `pull_request`, `workflow_dispatch` | `lint`, `typecheck`, `test (3.11/3.12/3.13)`, `rust-build`, `pre-commit` | Primary quality gate. Ruff (no-fix; `--output-format=github`), `ruff format --check`, `mypy --strict`, the full pytest matrix, a Cargo `check` smoke, and a `pre-commit run --all-files` pass. Coverage gate is `--cov-fail-under=75` on 3.11 only. |
 | [`metrics.yml`](metrics.yml) | `push`/`pull_request` to `main` | `metrics` | Regenerate `cogant/evaluation/METRICS.yaml` against the live tree and refuse to merge if any structural field drifted (env-dependent fields like `generated_at`, `test_count_*`, `suite_runtime_s`, and `coverage_percent` are tolerated via `git diff -I`). |
-| [`metrics-fresh.yml`](metrics-fresh.yml) | `pull_request` | `check-metrics` | Fast staleness gate — verifies `METRICS.yaml` was regenerated against the PR's HEAD. Runs `tools/check_metrics_fresh.py`. |
+| [`metrics-fresh.yml`](metrics-fresh.yml) | `pull_request` | `check-metrics` | Fast out-of-syncness gate — verifies `METRICS.yaml` was regenerated against the PR's HEAD. Runs `tools/check_metrics_fresh.py`. |
 | [`docs.yml`](docs.yml) | `push` to `main` (paths `cogant/docs/**`, `cogant/mkdocs.yml`, `cogant/py/**`); `workflow_run: [CI] completed`; `workflow_dispatch` | `deploy` | `mkdocs build` + GitHub Pages deploy via `peaceiris/actions-gh-pages`. Only deploys when CI is green. |
 | [`perf-smoke.yml`](perf-smoke.yml) | `schedule: 0 6 * * 1` (Mondays 06:00 UTC); `workflow_dispatch` | `perf` | Weekly graph-build benchmark; uploads `perf_results.txt` for 90 days. |
 
@@ -27,7 +27,7 @@ major tags for that action:
 | `actions/cache` | `@v5` | Node 24 since v5.0.0. |
 | `actions/upload-artifact` | `@v5` | Node 24. |
 | `astral-sh/setup-uv` | `@v8.1.0` | Pinned (immutable tag); `@v8` floating tag is intentionally unpublished. |
-| `dtolnay/rust-toolchain` | `@stable` | Replacement for the archived `actions-rs/toolchain`. |
+| `dtolnay/rust-toolchain` | `@stable` | Replacement for the immutable `actions-rs/toolchain`. |
 | `peaceiris/actions-gh-pages` | `@v4` | Current major; the action's own runtime is still Node 20, so the `docs` job sets `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"` to opt in early. Drop that env once the action ships a Node 24 release (or migrate to `actions/deploy-pages`). |
 
 The `pre-commit` job intentionally **does not** use

@@ -708,8 +708,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=1.0,
+            structurally_isomorphic=True,
+            role_preservation_score=1.0,
             matrix_score=1.0,
             structural_score=1.0,
             original_roles={},
@@ -717,7 +717,7 @@ class TestRoundtripResult:
             shape_match={},
             errors=[],
         )
-        assert result.is_isomorphic is True
+        assert result.structurally_isomorphic is True
         summary = result.summary()
         assert "[STRUCTURALLY_ISOMORPHIC]" in summary
 
@@ -725,8 +725,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.5,
+            structurally_isomorphic=False,
+            role_preservation_score=0.5,
             matrix_score=0.7,
             structural_score=0.6,
             original_roles={"HiddenState": 2},
@@ -734,28 +734,28 @@ class TestRoundtripResult:
             shape_match={},
             errors=["role mismatch"],
         )
-        assert result.is_isomorphic is False
+        assert result.structurally_isomorphic is False
         summary = result.summary()
         assert "[FAILED]" in summary
 
-    def test_role_match_score_range(self):
+    def test_role_preservation_score_range(self):
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.75,
+            structurally_isomorphic=False,
+            role_preservation_score=0.75,
             matrix_score=0.8,
             structural_score=0.9,
         )
-        assert 0.0 <= result.role_match_score <= 1.0
+        assert 0.0 <= result.role_preservation_score <= 1.0
         assert 0.0 <= result.matrix_score <= 1.0
 
     def test_summary_includes_scores(self):
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.95,
+            structurally_isomorphic=True,
+            role_preservation_score=0.95,
             matrix_score=0.88,
             structural_score=0.91,
         )

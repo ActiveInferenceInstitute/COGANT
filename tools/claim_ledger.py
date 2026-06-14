@@ -20,7 +20,6 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MANUSCRIPT_DIR = ROOT / "manuscript"
 OUTPUT_DIR = ROOT / "output"

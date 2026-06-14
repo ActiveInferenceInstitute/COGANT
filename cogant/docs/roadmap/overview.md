@@ -84,7 +84,7 @@ See: [version_060_planned.md](version_060_planned.md)
 1. Stable public API freeze (semver-guaranteed stability)
 2. Keep the template render location normalized at `projects/working/cogant/`
 3. Stubgen-based .pyi auto-generation with CI drift check
-4. Full schema versioning + migration harness (v0.1→v0.5→v1.0 bundle migration)
+4. Current schema contract validation across CLI, Python API, and generated bundles
 5. Distributed / parallel file processing (Ray or ProcessPoolExecutor)
 6. Native PyG/DGL adapters and a pre-trained node encoder from Parquet bundles
 
@@ -92,7 +92,7 @@ See: [version_100_planned.md](version_100_planned.md)
 
 ---
 
-## Known Limitations (v0.5.0)
+## Known Limitations (current)
 
 | Limitation | Workaround | Target Fix |
 |-----------|-----------|-----------|
@@ -113,6 +113,6 @@ See: [version_100_planned.md](version_100_planned.md)
 | Coverage | see `pyproject.toml`, `evaluation/METRICS.yaml`, and live `uv run pytest tests/ -q --cov=py/cogant` output | meet or raise the package gate | stable release gate |
 | mypy errors | see `evaluation/METRICS.yaml` (`mypy_strict_errors`) | 0 | 0 |
 | Ruff violations | see `evaluation/METRICS.yaml` (`ruff_violations`) | 0 | 0 |
-| Native roundtrip role preservation | Native v0.6 ledger: 24/24 ROLE_PRESERVED, 0/24 DRIFT, 0 non-native rows; strict structural isomorphism 0/24 | Add held-out fixtures and Java corpus | 1.0 on refreshed all-language corpus |
+| Native roundtrip role preservation | Current native ledger: 25/25 ROLE_PRESERVED, 0/25 DRIFT, 0 non-native rows; strict structural isomorphism 1/25 and confined to `roundtrip_strict_minimal` | Add held-out fixtures and Java corpus | 1.0 on refreshed all-language corpus |
 | AII validator score | 100/100 (all fixtures) | 100/100 | 100/100 |
 | Real-world repos passing | see latest `run_all.py` summary | expand pinned corpus | broad release corpus |

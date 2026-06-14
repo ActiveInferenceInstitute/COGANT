@@ -253,7 +253,7 @@ class TestGetParserForExtensionFallbacks:
         finder = _BlockingFinder({"cogant.parsers.tree_sitter_base"})
         sys.meta_path.insert(0, finder)
         try:
-            # .py always succeeds via the legacy dispatcher.
+            # .py always succeeds via the compatibility dispatcher.
             p = get_parser_for_extension(".py")
             assert p is not None
         finally:
@@ -263,7 +263,7 @@ class TestGetParserForExtensionFallbacks:
         self, restore_module: object
     ) -> None:
         # Block javascript.parser so the inner ``try`` for JS raises →
-        # covers 228-229. .js still resolves via the legacy dispatcher.
+        # covers 228-229. .js still resolves via the compatibility dispatcher.
         for name in list(sys.modules):
             if name == "javascript.parser":
                 del sys.modules[name]
@@ -291,7 +291,7 @@ class TestGetParserForExtensionFallbacks:
         finally:
             sys.meta_path.remove(finder)
 
-    def test_legacy_dispatcher_exception_returns_none(
+    def test_compatibility_dispatcher_exception_returns_none(
         self, restore_module: object, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Force ``LanguageDetector.get_parser`` to raise → covers 249-250.

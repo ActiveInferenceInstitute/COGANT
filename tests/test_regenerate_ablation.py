@@ -72,6 +72,8 @@ def test_rule_filter_positive_control_harness_bites() -> None:
     from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "cogant" / "py"))
+    from regenerate_ablation import RULE_FAMILIES
+
     from cogant.api.bundle import Bundle
     from cogant.api.orchestration import (
         _default_translation_engine,
@@ -80,8 +82,6 @@ def test_rule_filter_positive_control_harness_bites() -> None:
         run_normalize,
         run_static,
     )
-
-    from regenerate_ablation import RULE_FAMILIES
 
     fixture = str(
         Path(__file__).resolve().parent.parent

@@ -15,7 +15,7 @@ directory. The most important files are:
 | [V1.0 readiness](V1.0_READINESS.md) | Scope, claim boundaries, and remaining release work |
 | [Evaluation report](FINAL_REPORT.md) | Current evidence summary |
 | [R&D status](R&D_LOG.md) | Current gate status and active work |
-| [Roundtrip evaluation](ROUNDTRIP_EVAL.md) | Native 24-target role-preservation ledger |
+| [Roundtrip evaluation](ROUNDTRIP_EVAL.md) | Native 25-target role-preservation ledger with one strict minimal fixed point |
 | [Roundtrip validation contract](ROUNDTRIP_VALIDATION.md) | How roundtrip results are classified |
 | [Current reverse-synthesis status](ROUNDTRIP_IMPROVEMENT.md) | Reverse-package mechanism and failure modes |
 | [Empirical claim](EMPIRICAL_CLAIM.md) | Claim wording and evidence limits |
@@ -23,6 +23,7 @@ directory. The most important files are:
 | [Scaling analysis](SCALING_ANALYSIS.md) | Current scaling constraints and regression targets |
 | [Cross-language roundtrip](CROSS_LANG_ROUNDTRIP.md) | Language-pair evidence outside the Python native ledger |
 | [GNN validation report](GNN_VALIDATION_REPORT.md) | Structural validation of emitted GNN packages |
+| [GNN v2 audit surface](GNN_V2_AUDIT_SURFACE.md) | Version, bridge, upstream-step, and supply-chain claim boundary |
 | [Mutation report](MUTATION_REPORT.md) | Mutation-testing results |
 | [Literature](LITERATURE.md) | Research sources |
 | [Related work](RELATED_WORK.md) | Tool and method comparison |
@@ -34,8 +35,9 @@ directory. The most important files are:
 3. [Roundtrip evaluation](ROUNDTRIP_EVAL.md)
 4. [Roundtrip validation contract](ROUNDTRIP_VALIDATION.md)
 5. [Calibration](CALIBRATION.md)
-6. [Scaling analysis](SCALING_ANALYSIS.md)
-7. [Literature](LITERATURE.md) and [Related work](RELATED_WORK.md)
+6. [GNN v2 audit surface](GNN_V2_AUDIT_SURFACE.md)
+7. [Scaling analysis](SCALING_ANALYSIS.md)
+8. [Literature](LITERATURE.md) and [Related work](RELATED_WORK.md)
 
 ## Required Gates
 

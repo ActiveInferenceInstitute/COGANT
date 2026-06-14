@@ -23,6 +23,10 @@ Export includes metadata for verification:
 
 Concrete keys vary by bundle stage; treat `manifest.json` and any `export_metadata` block as the source of truth for a given run.
 
+## Future verification certificates
+
+A future `verification_certificate.json` should be a separate optional export artifact, not a replacement for `manifest.json` or `GNNValidator`. The certificate would bind the source snapshot digest, pipeline configuration digest, emitted GNN package checksums, and runtime trace digest so consumers can verify internal artifact consistency for a specific run. This is inspired by commit-and-audit systems such as ProvableWorldModel, but it would remain a COGANT artifact-integrity certificate unless a real inference proof verifier is added; it must not be described as a Freivalds/Merkle/Fiat-Shamir proof of model execution by default.
+
 ### See also
 
 - [Validation](validation.md) — checks applied before artifacts are trusted.

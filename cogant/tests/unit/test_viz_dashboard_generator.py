@@ -30,7 +30,7 @@ from cogant.viz.dashboard.generator import DashboardGenerator
 def _empty_state_space() -> StateSpaceModel:
     return StateSpaceModel(
         id="ss-empty",
-        schema_name="v0.1.0",
+        schema_name="current",
         variables={},
         observations={},
         actions={},
@@ -44,7 +44,7 @@ def _empty_state_space() -> StateSpaceModel:
 def _empty_process_model() -> ProcessModel:
     return ProcessModel(
         id="pm-empty",
-        schema_name="v0.1.0",
+        schema_name="current",
         stages={},
         connections={},
     )
@@ -53,7 +53,7 @@ def _empty_process_model() -> ProcessModel:
 def _empty_validation_report() -> ValidationReport:
     return ValidationReport(
         id="vr-empty",
-        schema_name="v0.1.0",
+        schema_name="current",
         validated_at=datetime.now(),
         model_id="m-empty",
         issues=[],

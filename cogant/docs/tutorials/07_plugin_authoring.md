@@ -16,7 +16,7 @@
 > [rules overview](../rules/overview.md). Skim both before writing your first plugin so the
 > abstract methods below have context.
 
-COGANT's parser layer is plugin-based. v0.1.0 ships plugins for Python (CPython `ast`) and
+COGANT's parser layer is plugin-based. current ships plugins for Python (CPython `ast`) and
 JavaScript / TypeScript (via `tree-sitter`). Adding a new language means:
 
 1. Implementing a `LanguagePlugin` subclass.

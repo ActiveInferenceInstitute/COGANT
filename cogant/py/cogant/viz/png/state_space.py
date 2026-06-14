@@ -50,6 +50,93 @@ def _state_space_entities(
     return variables, observations, actions
 
 
+def _record_items(value: Any) -> list[dict[str, Any]]:
+    if isinstance(value, dict):
+        return [item for item in value.values() if isinstance(item, dict)]
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, dict)]
+    return []
+
+
+def _record_name(record: dict[str, Any], fallback: str) -> str:
+    for key in ("name", "label", "id"):
+        value = record.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return fallback
+
+
+def _axis_labels_from_model(model_payload: dict[str, Any]) -> dict[str, list[str]]:
+    state_space = model_payload.get("state_space")
+    state_space = state_space if isinstance(state_space, dict) else {}
+    variables = _record_items(state_space.get("variables"))
+    observations = _record_items(state_space.get("observations"))
+    actions = _record_items(state_space.get("actions"))
+    return {
+        "hidden_states": [
+            _record_name(record, f"s{i}") for i, record in enumerate(variables)
+        ],
+        "observations": [
+            _record_name(record, f"o{i}") for i, record in enumerate(observations)
+        ],
+        "actions": [_record_name(record, f"u{i}") for i, record in enumerate(actions)],
+    }
+
+
+def _format_index_span(indices: list[int]) -> str:
+    if not indices:
+        return ""
+    ordered = sorted(indices)
+    if ordered == list(range(ordered[0], ordered[-1] + 1)):
+        return f"{ordered[0]}-{ordered[-1]}" if ordered[0] != ordered[-1] else str(ordered[0])
+    return ", ".join(str(index) for index in ordered)
+
+
+def _hidden_state_groups(labels: list[str]) -> list[dict[str, Any]]:
+    if not labels:
+        return []
+    inheritance = [
+        index for index, label in enumerate(labels) if "inheritance role" in label.lower()
+    ]
+    concrete = [index for index in range(len(labels)) if index not in set(inheritance)]
+    groups: list[dict[str, Any]] = []
+    if concrete:
+        groups.append(
+            {
+                "key": "program_service_state_variables",
+                "label": "program/service state variables",
+                "indices": _format_index_span(concrete),
+                "count": len(concrete),
+                "example_labels": [labels[index] for index in concrete[:4]],
+            }
+        )
+    if inheritance:
+        groups.append(
+            {
+                "key": "inheritance_role_states",
+                "label": "inheritance-role hidden states",
+                "indices": _format_index_span(inheritance),
+                "count": len(inheritance),
+                "example_labels": [labels[index] for index in inheritance[:4]],
+            }
+        )
+    return groups
+
+
+def _group_boundaries(groups: list[dict[str, Any]]) -> list[float]:
+    boundaries: list[float] = []
+    for group in groups[:-1]:
+        indices = str(group.get("indices") or "")
+        if "-" not in indices:
+            continue
+        _, _, end = indices.partition("-")
+        try:
+            boundaries.append(float(int(end) + 0.5))
+        except ValueError:
+            continue
+    return boundaries
+
+
 def render_state_space_factor_png(
     state_space: Any,
     output_png: Path,
@@ -430,18 +517,27 @@ def render_connections_matrix_png(
         source_arrays: dict[str, Any] = {}
         matrix_values_from_artifact = False
 
-        def _matrix_payload(path: Path | None) -> dict[str, Any]:
+        def _model_payload(path: Path | None) -> dict[str, Any]:
             if path is None or not path.is_file():
                 return {}
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 return {}
-            if isinstance(payload, dict) and isinstance(payload.get("matrices"), dict):
-                return cast(dict[str, Any], payload["matrices"])
             return payload if isinstance(payload, dict) else {}
 
-        payload = _matrix_payload(matrix_source_json)
+        model_payload = _model_payload(matrix_source_json)
+        payload = (
+            cast(dict[str, Any], model_payload["matrices"])
+            if isinstance(model_payload.get("matrices"), dict)
+            else model_payload
+        )
+        axis_labels = _axis_labels_from_model(model_payload)
+        hidden_labels = axis_labels["hidden_states"]
+        observation_labels = axis_labels["observations"]
+        action_labels = axis_labels["actions"]
+        state_label_groups = _hidden_state_groups(hidden_labels)
+        state_group_boundaries = _group_boundaries(state_label_groups)
         matrix_validation_errors: list[str] = []
         if strict_real_matrices:
             try:
@@ -451,15 +547,15 @@ def render_connections_matrix_png(
             except Exception as exc:  # noqa: BLE001
                 matrix_validation_errors = [f"matrix validation unavailable: {exc}"]
             if matrix_validation_errors:
-                for stale in (output_png, output_png.with_suffix(".figure.json")):
+                for artifact_to_remove in (output_png, output_png.with_suffix(".figure.json")):
                     try:
-                        stale.unlink()
+                        artifact_to_remove.unlink()
                     except FileNotFoundError:
                         pass
                     except OSError as exc:
                         logger.warning(
-                            "Could not remove stale strict matrix artifact %s: %s",
-                            stale,
+                            "Could not remove out-of-sync strict matrix artifact %s: %s",
+                            artifact_to_remove,
                             exc,
                         )
                 logger.warning(
@@ -520,13 +616,17 @@ def render_connections_matrix_png(
                 visual_source_label = f"matrix source: {matrix_source_json.name}"
 
         if strict_real_matrices and fallback_panels:
-            for stale in (output_png, output_png.with_suffix(".figure.json")):
+            for artifact_to_remove in (output_png, output_png.with_suffix(".figure.json")):
                 try:
-                    stale.unlink()
+                    artifact_to_remove.unlink()
                 except FileNotFoundError:
                     pass
                 except OSError as exc:
-                    logger.warning("Could not remove stale strict matrix artifact %s: %s", stale, exc)
+                    logger.warning(
+                        "Could not remove out-of-sync strict matrix artifact %s: %s",
+                        artifact_to_remove,
+                        exc,
+                    )
             logger.warning(
                 "Connections matrix PNG requires real A/B/C/D values; missing %s from %s",
                 ", ".join(fallback_panels),
@@ -717,13 +817,17 @@ def render_connections_matrix_png(
             bool(dimension_alignment[key])
             for key in ("hidden_states_match", "observations_match", "actions_match")
         ):
-            for stale in (output_png, output_png.with_suffix(".figure.json")):
+            for artifact_to_remove in (output_png, output_png.with_suffix(".figure.json")):
                 try:
-                    stale.unlink()
+                    artifact_to_remove.unlink()
                 except FileNotFoundError:
                     pass
                 except OSError as exc:
-                    logger.warning("Could not remove stale strict matrix artifact %s: %s", stale, exc)
+                    logger.warning(
+                        "Could not remove out-of-sync strict matrix artifact %s: %s",
+                        artifact_to_remove,
+                        exc,
+                    )
             logger.warning(
                 "Connections matrix PNG requires matrix dimensions to match state_space.json; "
                 "alignment=%s source=%s",
@@ -747,6 +851,18 @@ def render_connections_matrix_png(
             ("C", "C — preference (o)", C, cmaps[2]),
             ("D", "D — prior (s)", D, cmaps[3]),
         ]
+        def _axis_tick_labels(labels: list[str], count: int) -> list[str]:
+            if labels:
+                return [f"{idx}\n{truncate(labels[idx], 11)}" for idx in range(min(count, len(labels)))]
+            return [str(idx) for idx in range(count)]
+
+        def _draw_state_group_boundaries(ax: Any, key: str) -> None:
+            for boundary in state_group_boundaries:
+                if key in {"A", "B"}:
+                    ax.axvline(boundary, color="#172033", linewidth=1.4, linestyle="--", alpha=0.75)
+                if key in {"B", "D"}:
+                    ax.axhline(boundary, color="#172033", linewidth=1.4, linestyle="--", alpha=0.75)
+
         for ax, (key, name, m, cmap) in zip(axes.flat, mats, strict=False):
             im = ax.imshow(m, aspect="auto", cmap=cmap)
             ax.set_title(
@@ -764,8 +880,31 @@ def render_connections_matrix_png(
             # layout for diminishing visual benefit.
             if m.shape[1] <= 40:
                 ax.set_xticks(range(m.shape[1]))
+                if key in {"A", "B"}:
+                    ax.set_xticklabels(
+                        _axis_tick_labels(hidden_labels, m.shape[1]),
+                        rotation=45,
+                        ha="right",
+                    )
             if m.shape[0] <= 40:
                 ax.set_yticks(range(m.shape[0]))
+                if key == "A" or key == "C":
+                    ax.set_yticklabels(_axis_tick_labels(observation_labels, m.shape[0]))
+                elif key in {"B", "D"}:
+                    ax.set_yticklabels(_axis_tick_labels(hidden_labels, m.shape[0]))
+            if key == "A":
+                ax.set_xlabel("hidden state index")
+                ax.set_ylabel("observation index")
+            elif key == "B":
+                ax.set_xlabel("current hidden state index")
+                ax.set_ylabel("next hidden state index")
+            elif key == "C":
+                ax.set_xlabel("preference column")
+                ax.set_ylabel("observation index")
+            elif key == "D":
+                ax.set_xlabel("prior column")
+                ax.set_ylabel("hidden state index")
+            _draw_state_group_boundaries(ax, key)
             ax.tick_params(axis="both", labelsize=cfg.edge_fontsize)
             fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
@@ -785,8 +924,21 @@ def render_connections_matrix_png(
                 fontsize=cfg.subtitle_fontsize,
                 color="#555555",
             )
+        if state_label_groups:
+            group_text = "; ".join(
+                f"{group['indices']} = {group['label']}" for group in state_label_groups
+            )
+            fig.text(
+                0.5,
+                0.905,
+                f"Hidden-state groups: {group_text}",
+                ha="center",
+                va="top",
+                fontsize=cfg.subtitle_fontsize - 1,
+                color="#526070",
+            )
         draw_footer(fig, source=visual_source_label or "state_space", cfg=cfg)
-        plt.tight_layout(rect=(0, 0.03, 1, 0.93))
+        plt.tight_layout(rect=(0, 0.03, 1, 0.89))
         output_png.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_png, dpi=cfg.dpi, bbox_inches="tight", facecolor="white")
         plt.close(fig)
@@ -870,6 +1022,28 @@ def render_connections_matrix_png(
                     "hidden_states": matrix_hidden_states,
                     "observations": matrix_observations,
                     "actions": matrix_actions,
+                },
+                "axis_labels": {
+                    "hidden_states": hidden_labels,
+                    "observations": observation_labels,
+                    "actions": action_labels,
+                },
+                "state_label_groups": state_label_groups,
+                "state_group_boundary_indices": state_group_boundaries,
+                "matrix_interpretation_notes": {
+                    "A": (
+                        "Likelihood columns are non-uniform when extracted observations "
+                        "connect unevenly to hidden-state evidence."
+                    ),
+                    "B": (
+                        "Displayed panel is the recorded max-over-actions summary of the "
+                        "exported three-dimensional transition tensor."
+                    ),
+                    "C": "The all-zero preference vector is an exported value, not a renderer default.",
+                    "D": (
+                        "The prior vector is exported structural evidence; it is not a learned "
+                        "posterior over program states."
+                    ),
                 },
                 "dimension_alignment": dimension_alignment,
                 "matrix_values_from_artifact": matrix_values_from_artifact,

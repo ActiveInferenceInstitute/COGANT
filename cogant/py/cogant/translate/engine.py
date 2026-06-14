@@ -616,7 +616,7 @@ class TranslationEngine:
         for mapping in self.mappings.values():
             covered_node_ids.update(mapping.graph_fragment_node_ids)
 
-        # Intersect with actual graph nodes (in case mappings reference stale IDs)
+        # Intersect with actual graph nodes (in case mappings reference out-of-sync IDs)
         covered_node_ids &= all_node_ids
         uncovered = all_node_ids - covered_node_ids
 

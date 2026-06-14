@@ -50,7 +50,7 @@ Per `infrastructure/rendering/manuscript_discovery.py`, these names are **not** 
 Keep numbering aligned with the parent template renderer (`infrastructure/rendering/manuscript_discovery.py`) when this project is linked under `projects/working/cogant/`.
 
 **Appendix status (current manuscript):**
-- S01 (Appendix A — Roundtrip role preservation): current native v0.6 role-preservation evidence and drift rows.
+- S01 (Appendix A — Roundtrip role preservation): current native role-preservation evidence and drift rows.
 - S02 (Appendix B — Ablation): current reconstructed ablation evidence; measured deltas remain scoped to the cited fixtures.
 - S03 (Appendix C — Galois sketch): current Galois-style preorder comparison; approximate adjunction remains a conjecture and role preservation is a scoped empirical invariant.
 - S04 (Appendix D — Inference math): current emitted-model inference mathematics; exactness claims are limited to the represented finite matrix model.
@@ -98,9 +98,8 @@ the package docs are authoritative for API names, types, and behaviour; the manu
 is authoritative for the narrative framing and pedagogical presentation. When resolving
 a conflict, update the manuscript to match the package docs — never the reverse.
 
-**Breaking changes:** when an API is removed or renamed, cite the removed form
-only when needed to explain migration, then update the prose to the replacement
-once the replacement ships and is tested.
+**Breaking changes:** when an API is removed or renamed, keep manuscript prose on
+the shipped replacement and avoid preserving removed forms as active methods.
 
 ## Citations
 

@@ -1,27 +1,21 @@
-"""Canonical schema version declarations for the GNN format.
+"""Current GNN 2.0.0 schema declarations."""
 
-Each version defines the set of required markdown sections that a
-conforming GNN file must contain.
-"""
+CURRENT_GNN_VERSION = "2.0.0"
+UNSUPPORTED_GNN_VERSION = "unsupported"
 
-
-class SchemaVersion:
-    """Known GNN schema versions."""
-
-    V1_0 = "1.0"
-    V1_1 = "1.1"
-    CURRENT = "1.1"
-
-
-GNN_V1_0_REQUIRED_SECTIONS: list[str] = [
+GNN_V2_REQUIRED_SECTIONS: list[str] = [
     "GNNSection",
+    "GNNVersionAndFlags",
     "ModelName",
     "StateSpaceBlock",
+    "Connections",
+    "InitialParameterization",
+    "Equations",
+    "Time",
     "ActInfOntologyAnnotation",
+    "ModelParameters",
+    "Footer",
+    "Signature",
 ]
 
-GNN_V1_1_REQUIRED_SECTIONS: list[str] = [
-    # v1.1 adds GNNVersionAndFlags as required
-    *GNN_V1_0_REQUIRED_SECTIONS,
-    "GNNVersionAndFlags",
-]
+__all__ = ["CURRENT_GNN_VERSION", "UNSUPPORTED_GNN_VERSION", "GNN_V2_REQUIRED_SECTIONS"]

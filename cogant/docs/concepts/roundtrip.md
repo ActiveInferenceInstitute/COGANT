@@ -29,7 +29,7 @@ The forward pipeline is a six-layer evidence transformation:
 
 4. **State space to A/B/C/D matrices.** The [matrix builder](active_inference.md) counts evidence edges and normalizes to produce well-formed probability distributions. The result is a complete Active Inference model.
 
-5. **Matrices to GNN markdown.** The `GNNMarkdownFormatter` emits a valid upstream GNN v1.1 file with `StateSpaceBlock`, `Connections`, `InitialParameterization`, and `ActInfOntologyAnnotation` sections.
+5. **Matrices to GNN markdown.** The `GNNMarkdownFormatter` emits a valid upstream GNN v2.0.0-engine file with the required `StateSpaceBlock`, `Connections`, `InitialParameterization`, `Equations`, `Time`, `ActInfOntologyAnnotation`, `ModelParameters`, `Footer`, and `Signature` sections.
 
 6. **GNN package.** The `GNNPackageBuilder` writes `model.gnn.md`, `model.gnn.json`, satellite matrix files, the [Markov blanket](markov_blanket.md) partition, and provenance metadata into a self-contained directory.
 

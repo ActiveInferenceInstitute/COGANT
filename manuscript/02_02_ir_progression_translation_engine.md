@@ -59,7 +59,12 @@ for k in 1..K:
 return ResolveConflicts(M)
 ```
 
-@sec:alg-fixpoint-translation-engine summarizes the engine. Termination is guaranteed because each iteration either produces at least one new mapping (whose stable ID is then fixed in $\mathcal{M}$) or terminates by the break condition; the outer $K$ bound serves as a safety valve for pathological rule sets.
+@sec:alg-fixpoint-translation-engine summarizes the engine. The implemented
+loop terminates by construction: each iteration either produces at least one
+new mapping (whose stable ID is then fixed in $\mathcal{M}$), stops at the
+no-new-mapping break condition, or reaches the explicit outer $K$ cap. The cap
+is a runtime safety valve for pathological or user-registered rule sets, not a
+semantic proof that every possible rule family is globally well behaved.
 
 ### Algorithm: Priority-ordered conflict resolution {#sec:alg-conflict-resolution}
 

@@ -153,7 +153,7 @@
   <header>
     <h1>COGANT Benchmarks Dashboard</h1>
     <div class="meta">
-      <span>version: v0.2.0 / post wave 14</span>
+      <span>version: current / post wave 14</span>
       <span>data: 2026-04-09 / 2026-04-10</span>
       <span>sources: REAL_WORLD_EVAL.md | ROUNDTRIP_EVAL.md | SCALING_ANALYSIS.md</span>
     </div>
@@ -196,7 +196,7 @@
       <h2>3. Roundtrip &epsilon; (role-match) <span class="tag">23 targets</span></h2>
       <p class="desc">
         <code>cogant roundtrip</code> full forward &rarr; reverse &rarr; forward loop. &epsilon; is
-        <code>role_match_score</code> (multiset similarity over HIDDEN_STATE/OBSERVATION/ACTION/POLICY/CONSTRAINT/CONTEXT
+        <code>role_preservation_score</code> (multiset similarity over HIDDEN_STATE/OBSERVATION/ACTION/POLICY/CONSTRAINT/CONTEXT
         populations). 14/23 ISOMORPHIC, 6/23 APPROXIMATE, 3/23 DIVERGENT. The three DIVERGENT HTTP-client libraries
         share the CONSTRAINT-collapse failure mode (synth emits a fixed 3 constraint nodes vs 304-744 in origin).
       </p>
@@ -525,7 +525,7 @@ const epsColor = cls => cls === "ISOMORPHIC" ? "#3fb950" : (cls === "APPROXIMATE
       scales: {
         x: {
           min: 0, max: 1.0,
-          title: { display: true, text: "ε (role_match_score)", color: "#8b949e" },
+          title: { display: true, text: "ε (role_preservation_score)", color: "#8b949e" },
           ticks: { color: "#c9d1d9" },
           grid: { color: "#30363d" },
         },

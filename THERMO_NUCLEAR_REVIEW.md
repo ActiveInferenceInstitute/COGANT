@@ -9,7 +9,7 @@
 
 ## 0. Reconciliation — 2026-06-09 (verifier-first re-audit at current HEAD)
 
-This review is now **partially stale**. A verifier-first RedTeam re-audit
+This review is now **partially out-of-sync**. A verifier-first RedTeam re-audit
 (2026-06-09) checked every presumptive blocker against current HEAD with a
 grep/wc oracle. Status below is the ground truth; the body sections that follow
 describe the **2026-06-02** state and are retained for history.
@@ -144,7 +144,7 @@ Extract `analyze.py`, `roundtrip.py`, `visualize.py`, `rules.py` from `server/ap
 | Severity | Location | Issue | Remedy |
 |----------|----------|-------|--------|
 | **Blocker** | `viz/inspection_dashboard.py` (2530) | Five subsystems in one file: loaders, SVG, HTML, PNG QA, site surgery | Decompose per §4.2; freeze new features until split |
-| **Blocker** | `viz/dashboard/generator.py` (1392) | Second full HTML stack; dead `_generate_mermaid_tab` (1286–1306, never in tab nav 200–212) | Merge behind `InspectionModel` or deprecate |
+| **Blocker** | `viz/dashboard/generator.py` (1392) | Second full HTML stack; dead `_generate_mermaid_tab` (1286-1306, never in tab nav 200-212) | Merge behind `InspectionModel` or retire |
 | **Blocker** | `api/orchestration.py` (1440) | Stage bodies + graph build + export + validate + streaming in one module | Decompose to domain stages + `api/translation.py` |
 | **Blocker** | `api/orchestration.py:448-681` | Canonical graph build in `api/`, duplicates `examples/thin_orchestrated/_common.py` | Move to `graph/from_repo.py` |
 | **Blocker** | `gnn/package.py` (1273) | God-object: 16 extractors + viz + manifest; 108 if/elif branches | `gnn/sections.py` + thin writer; §4.6 |
@@ -154,7 +154,7 @@ Extract `analyze.py`, `roundtrip.py`, `visualize.py`, `rules.py` from `server/ap
 | **Blocker** | `reverse/idempotency.py` (1390) | Compare + Session forward + public API monolith | Split to `reverse/roundtrip/` |
 | **Blocker** | `tools/run_all_runner.py:486-499` | `run_batch(args)` ignores passed namespace | `RunBatchOptions` dataclass |
 | **Blocker** | `tools/audit_manuscript_numbers.py:54-114` | `FALLBACK_METRICS` duplicates METRICS.yaml | Delete fallback; exit 1 if YAML missing |
-| **Blocker** | `examples/orchestrate_roundtrip.py` (3240) | "Thin orchestrator" docstring; reimplements pipeline | Replace with ~60-line API call or deprecate |
+| **Blocker** | `examples/orchestrate_roundtrip.py` (3240) | "Thin orchestrator" docstring; reimplements pipeline | Replace with ~60-line API call or retire |
 | **High** | `viz/__init__.py:12-25,63-68` | Exports both dashboard APIs as peers | Mark inspection path canonical |
 | **High** | `inspection_dashboard.py:2433-2468` | String surgery on `site/index.html` | Emit nav link at site generation time |
 | **High** | `inspection_dashboard.py:2511-2516` | Bare `except Exception: pass` on inference trace | Catch specific exceptions; log warning |
@@ -189,7 +189,7 @@ Extract `analyze.py`, `roundtrip.py`, `visualize.py`, `rules.py` from `server/ap
 | `viz/inspection_dashboard.py` | 2530 | **Decompose** (mandatory) — live production path |
 | `statespace/compiler.py` | 1447 | **Decompose** — extract `extractors/{actions,likelihoods,preferences}.py` |
 | `api/orchestration.py` | 1440 | **Decompose** — thin to ~200 lines re-export barrel |
-| `viz/dashboard/generator.py` | 1392 | **Code-judo merge or deprecate** — obsolete subset of inspection path |
+| `viz/dashboard/generator.py` | 1392 | **Code-judo merge or retire** — unsupported subset of inspection path |
 | `reverse/idempotency.py` | 1390 | **Split** — `reverse/roundtrip/{ledger,compare,runner}.py` |
 | `gnn/package.py` | 1273 | **Decompose** — `gnn/sections.py` + thin writer |
 | `viz/pdf_export.py` | 1263 | **Decompose** — page library + matplotlib gate |
@@ -219,7 +219,7 @@ Extract `analyze.py`, `roundtrip.py`, `visualize.py`, `rules.py` from `server/ap
 
 | File | Lines | Verdict |
 |------|------:|---------|
-| `examples/orchestrate_roundtrip.py` | 3240 | **Replace or deprecate** — not an example |
+| `examples/orchestrate_roundtrip.py` | 3240 | **Replace or retire** - not an example |
 
 ### Waived (near 1k, acceptable with watch)
 
@@ -264,7 +264,7 @@ flowchart TB
   godTests --> fixtures
 ```
 
-**Dual dashboard APIs:** Production uses artifact-first path exclusively (`viz/png/orchestrator.py`). `DashboardGenerator` is exported but out of sync (dead mermaid tab, absent roundtrip/rule-trace panels, different CSS theme). **Recommendation:** deprecate `DashboardGenerator` in favor of object→model adapter.
+**Dual dashboard APIs:** Production uses artifact-first path exclusively (`viz/png/orchestrator.py`). `DashboardGenerator` is exported but out of sync (dead mermaid tab, absent roundtrip/rule-trace panels, different CSS theme). **Recommendation:** retire `DashboardGenerator` in favor of the object-to-model adapter.
 
 **Orchestration import wall:** 22 rules manually registered in `api/` while `translate/rules/__init__.py` already maintains `__all__`. **Single registry factory** fixes drift between orchestration, tests, and METRICS docs.
 
@@ -297,7 +297,7 @@ summary table above as audit history, not future roadmap work.
 | **P3** | `tools/run_all/` + `tools/metrics/` + `tools/figures/` splits | 4 files >1k → 0 | L |
 | **P3** | `tools/audit/` consolidation | 10 scripts → 1 package | M |
 | **P3** | Test fixture extraction + targeted-file retirement | 17 god tests → parametrized modules | L |
-| **P4** | Deprecate `DashboardGenerator`; unify on `InspectionModel` | Deletes dual-stack debt | M |
+| **P4** | Retire `DashboardGenerator`; unify on `InspectionModel` | Deletes dual-stack debt | M |
 | **P4** | Replace `orchestrate_roundtrip.py` with pipeline API | −3240 lines | S |
 | **P5** | Runtime unification (`AgentRuntime` canonical) | −600 lines across 3 runners | L |
 | **P5** | `PipelineDAG` wire-up or test-only relocation | Resolves dead abstraction | M |

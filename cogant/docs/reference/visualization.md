@@ -15,7 +15,7 @@ The visualization module (`cogant.viz`) produces visual representations of COGAN
 | Mermaid | mermaid | Diagram syntax | Markdown, wikis, docs | None | Text file (.mmd) | 0.01-1 MB |
 | SVG | svg_export | Vector graphics | Web embedding, scalable | graphviz (optional) | Text file | 1-100 MB |
 | HTML | dashboard | Interactive website | Exploration, dashboards | matplotlib (optional) | HTML + CSS + JS | 1-50 MB |
-| Inspection HTML | inspection_dashboard | Artifact-first run review | Human inspection after `cogant viz` / `run_all.py` | None for HTML, SVG converter optional for PNG abstract | HTML + SVG/PNG | 0.1-20 MB |
+| Inspection HTML | inspection_dashboard | Artifact-first run review | Human inspection after `cogant viz` / `run_all.py` | None for HTML/SVG, matplotlib for PNG abstract | HTML + SVG/PNG | 0.1-20 MB |
 | Batch Markdown | batch_dashboard | Cross-target sweep report | `run_all` summaries, manuscript metrics | None | Markdown, CSV, JSON, Mermaid | 0.01-5 MB |
 | DOT | mermaid (internal) | Graph syntax | Graphviz processing | graphviz | Text file | 0.1-10 MB |
 
@@ -30,6 +30,7 @@ does not need in-memory pipeline objects.
 ```python
 from cogant.viz.inspection_dashboard import (
     build_inspection_model,
+    render_graphical_abstract_png,
     render_graphical_abstract_svg,
     render_inspection_dashboard_html,
     write_inspection_artifacts,
@@ -38,10 +39,11 @@ from cogant.viz.inspection_dashboard import (
 model = build_inspection_model("output/calculator")
 dashboard = render_inspection_dashboard_html("output/calculator")
 abstract = render_graphical_abstract_svg("output/calculator")
+abstract_png = render_graphical_abstract_png("output/calculator")
 
 # Convenience wrapper: writes site/inspection_dashboard.html plus
-# figures/graphical_abstract.svg and, when an SVG rasterizer is available,
-# figures/graphical_abstract.png.
+# figures/graphical_abstract.svg and, when matplotlib is available,
+# a native figures/graphical_abstract.png.
 written = write_inspection_artifacts("output/calculator")
 ```
 
@@ -67,14 +69,16 @@ chain is complete while the GNN JSON still reports calibrated semantic
 confidence for individual mappings and model components.
 
 `write_inspection_artifacts()` also writes the publication-facing companion
-figures below when the SVG rasterizer is available:
+figures below. Ordinary product runs degrade gracefully when optional rendering
+libraries are unavailable, but manuscript promotion rejects degraded placeholder
+PNGs for registered publication figures:
 
 | Figure | Source artifact | Purpose |
 | --- | --- | --- |
 | `figures/roundtrip_diff.png` | `roundtrip/metrics.json` | Original vs regenerated graph counts, GNN section preservation, matrix shape/value deltas, and invariant status. |
-| `figures/rule_trace.png` | `data/rule_evidence_trace.json` or `roundtrip/rule_evidence_trace.json` | Per-rule mapping contributions and conflict-resolution evidence. |
-| `figures/confidence_calibration.png` | reviewer annotations applied to the rule trace | Review coverage and precision proxies by rule. |
-| `figures/inference_trace.png` | `data/inference_trace.json` | Belief trajectory, selected actions, preference satisfaction, and free-energy curve for the deterministic runtime smoke demo. |
+| `figures/rule_trace.png` | `data/rule_evidence_trace.json` or `roundtrip/rule_evidence_trace.json` | Native publication PNG with per-rule mapping contributions and conflict-resolution evidence. |
+| `figures/confidence_calibration.png` | reviewer annotations applied to the rule trace | Native publication PNG with review coverage and precision proxies by rule. |
+| `figures/inference_trace.png` | `data/inference_trace.json` | Native publication PNG with belief trajectory, selected actions, preference satisfaction, and free-energy curve for the deterministic runtime smoke demo. |
 
 Each publication-facing PNG may have a neighboring `.figure.json` sidecar. The
 sidecar is the evidence contract for manuscript use: it records renderer
@@ -83,8 +87,30 @@ counts, a top-level `panels` list, compatibility `panel_metadata`, image
 dimensions, byte size, visual QA, reading guide, and known limitations. For
 example, the rule-trace sidecar reports mapping and conflict counts from
 `rule_evidence_trace.json`, while the state-space and matrix sidecars report
-factor counts and A/B/C/D panel shapes rather than a generic "one panel"
-placeholder.
+factor counts, A/B/C/D panel shapes, hidden-state label groups, reducer notes,
+and interpretation notes rather than a generic "one panel" placeholder. SVG
+companions may still be emitted for dashboard embedding, but registered
+publication PNGs must use native renderers or strict promotion fails.
+
+After strict promotion, the staging-root command
+`uv run python tools/visualization_quality_audit.py --strict` summarizes the
+registered manuscript figures into `output/figures/visual_quality_audit.json`,
+`output/figures/visual_quality_audit.md`, and a compact PNG review matrix. The
+audit checks destination sidecars, source artifact digests, nonblank and color
+diversity QA, minimum dimensions, degraded-renderer metadata, and
+publication-specific policies such as the native graphical-abstract renderer,
+native detail panels, and the bounded calculator timeline. This is a
+release-review surface; it does not
+claim that a visual encoding is the only correct encoding or that the dashboard
+has been user-study validated.
+
+The staging-root manuscript dashboard adds one more layer above figure QA:
+`uv run python tools/manuscript_review_dashboard.py --strict` combines the
+figure audit, section evidence audit, claim ledger, and figure manifest into
+`output/analysis/manuscript_review_dashboard.{json,md,png}`. The dashboard's
+review queue is intentionally non-fatal; it points maintainers toward thin but
+passing sections that may need another evidence lane, clearer boundary language,
+or a stronger citation anchor before publication.
 
 Reusable browser QA for generated dashboards lives at the staging root:
 

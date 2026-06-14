@@ -317,7 +317,7 @@ class FlowDiagrammer:
         Render a control flow graph as a Mermaid flowchart.
 
         Args:
-            cfg: The control flow graph to render. A legacy adjacency
+            cfg: The control flow graph to render. A compatibility adjacency
                 dictionary (``{"caller": ["callee"]}``) is also accepted for
                 callers that still use the old export-visualization facade.
 

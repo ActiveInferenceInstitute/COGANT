@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Regenerate the native v0.6 roundtrip ledger ``roundtrip_results.jsonl``.
+"""Regenerate the current native roundtrip ledger ``roundtrip_results.jsonl``.
 
 Runs ``verify_repo_roundtrip`` (forward → reverse → forward) on every
 locally-available evaluation fixture (``examples/{zoo,control_positive,
-real_world}/``) and writes a **native v0.6** ledger carrying
+real_world}/``) and writes a **current native** ledger carrying
 ``roundtrip_status``, ``role_preservation_score``, per-role multiset counts,
 graph size, file/LOC, and the scaffolding diagnostic inputs.
 
 Each row is self-classifying for ``tools/regenerate_metrics.py`` /
 ``tools/check_metrics_fresh.py``: because it carries an explicit
 ``roundtrip_status``, those tools route it through the native path, so
-``METRICS.yaml`` reports native v0.6 counts.
+``METRICS.yaml`` reports current native counts.
 
 Run from the inner package env so ``cogant`` imports resolve::
 

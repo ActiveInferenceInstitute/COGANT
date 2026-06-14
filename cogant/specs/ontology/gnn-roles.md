@@ -347,7 +347,7 @@ ProgramEntity
 #### Annotation
 **Definition**: Annotation/decorator/attribute
 **GNN Use Case**: Metadata node
-**Examples**: `@property`, `@deprecated`, `#[attribute]`
+**Examples**: `@property`, `@removed`, `#[attribute]`
 **Typical Features**:
 - Annotation name
 - Parameters

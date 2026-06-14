@@ -1,7 +1,7 @@
 # Supplementary materials {#sec:supplementary-materials}
 
 This appendix collects the detailed artifacts supporting the main text: the
-native v0.6 roundtrip ledger across all {{TOTAL_TARGETS}} evaluation targets
+current native roundtrip ledger across all {{TOTAL_TARGETS}} evaluation targets
 (@sec:S01-appendix-roundtrip-epsilon), measured rule-family ablation
 (@sec:S02-appendix-ablation), a Galois-style comparison and scoped
 role-preservation invariant for the forward/reverse pair
@@ -36,7 +36,7 @@ source material cited throughout.
 
 ## Supplemental sections
 
-- @sec:S01-appendix-roundtrip-epsilon provides per-fixture native v0.6
+- @sec:S01-appendix-roundtrip-epsilon provides per-fixture current native
   roundtrip role-preservation status across all {{TOTAL_TARGETS}} evaluation
   targets, with `STRUCTURALLY_ISOMORPHIC` / `ROLE_PRESERVED` / `DRIFT` /
   `FAILED` status vocabulary.

@@ -518,7 +518,7 @@ See `cogant/statespace/` for how confidence tiers influence matrix compilation.
 
 ## Known Limitations & Future Work
 
-### Currently Implemented (v0.5.0)
+### Currently Implemented (current)
 - Coverage.py SQLite and Cobertura XML ingestion
 - Chrome DevTools trace parsing
 - File + source_range matching

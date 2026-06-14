@@ -28,36 +28,36 @@ from cogant.reverse.metrics import (
 
 
 def test_report_summary_drift_label() -> None:
-    """Summary says DRIFT when is_isomorphic is False."""
+    """Summary says DRIFT when structurally_isomorphic is False."""
     report = IsomorphismReport(
         total_score=0.3,
         role_score=0.2,
         matrix_score=0.4,
         structural_score=0.3,
-        is_isomorphic=False,
+        structurally_isomorphic=False,
     )
     s = report.summary()
     assert s.startswith("[DRIFT]")
 
 
 def test_report_summary_iso_label() -> None:
-    """Summary says ISO when is_isomorphic is True."""
+    """Summary says ISO when structurally_isomorphic is True."""
     report = IsomorphismReport(
         total_score=0.9,
         role_score=0.95,
         matrix_score=0.85,
         structural_score=0.9,
-        is_isomorphic=True,
+        structurally_isomorphic=True,
     )
     s = report.summary()
     assert s.startswith("[ISO]")
 
 
 def test_report_default_values() -> None:
-    """Default IsomorphismReport has all zeros and is_isomorphic False."""
+    """Default IsomorphismReport has all zeros and structurally_isomorphic False."""
     report = IsomorphismReport()
     assert report.total_score == 0.0
-    assert report.is_isomorphic is False
+    assert report.structurally_isomorphic is False
     assert report.breakdown == {}
 
 
@@ -188,7 +188,7 @@ def test_report_threshold_1_requires_perfect_match() -> None:
         "edges": [],
     }
     report = compute_isomorphism_report(pkg, pkg, threshold=1.0)
-    assert report.is_isomorphic is True
+    assert report.structurally_isomorphic is True
     assert report.total_score == pytest.approx(1.0, abs=1e-9)
 
 

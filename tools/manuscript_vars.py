@@ -64,7 +64,7 @@ def is_nullable_path(path: str) -> bool:
     """True if a ``None`` value at *path* is intentional (renders ``N/A``).
 
     Only the native role-preservation score fields are legitimately nullable
-    (when only non-native epsilon rows are present). Every other load-bearing metric that
+    when the current ledger has no scored rows. Every other load-bearing metric that
     resolves to ``None`` is a generation defect and must be surfaced — see
     :func:`substitute_text`, which leaves such tokens unresolved so ``--strict``
     can fail rather than shipping a silent blank.
@@ -83,7 +83,7 @@ def format_value_for_path(path: str, value: Any) -> str:
     if isinstance(value, int):
         return str(value)
     if isinstance(value, float):
-        if "epsilon" in path or "role_preservation_score" in path or "threshold_" in path:
+        if "role_preservation_score" in path or "threshold_" in path:
             s = f"{value:.4f}"
             return s.rstrip("0").rstrip(".") if "." in s else s
         if "coverage_percent" in path:
@@ -207,13 +207,7 @@ MANUSCRIPT_VARS: dict[str, str] = {
     "{{ROLE_PRESERVED_COUNT}}": "evaluation.roundtrip.role_preserved_count",  # Role-preserved tier
     "{{DRIFT_COUNT}}": "evaluation.roundtrip.drift_count",  # Completed but role score below threshold
     "{{FAILED_COUNT}}": "evaluation.roundtrip.failed_count",  # Failed roundtrips
-    "{{NON_NATIVE_COUNT}}": "evaluation.roundtrip.non_native_count",  # Rows outside native v0.6 counts
-    "{{ISO_COUNT}}": "evaluation.roundtrip.strict_isomorphism_count",  # Compatibility placeholder: strict structural tier
-    "{{ISOMORPHIC_COUNT}}": "evaluation.roundtrip.strict_isomorphism_count",  # Compatibility alias
-    "{{APPROX_COUNT}}": "evaluation.roundtrip.drift_count",  # Compatibility placeholder: drift count
-    "{{APPROXIMATE_COUNT}}": "evaluation.roundtrip.drift_count",  # Compatibility alias
-    "{{DIV_COUNT}}": "evaluation.roundtrip.failed_count",  # Compatibility placeholder: failed count
-    "{{DIVERGENT_COUNT}}": "evaluation.roundtrip.failed_count",  # Compatibility alias
+    "{{NON_NATIVE_COUNT}}": "evaluation.roundtrip.non_native_count",  # Rows outside current native counts
     "{{TOTAL_TARGETS}}": "evaluation.roundtrip.total_targets",  # Total roundtrip targets
     # ---------------------------------------------------------------
     # Roundtrip evaluation — role-preservation statistics
@@ -227,14 +221,6 @@ MANUSCRIPT_VARS: dict[str, str] = {
     ),  # Aggregate score provenance
     "{{THRESHOLD_ROLE_PRESERVED}}": "evaluation.roundtrip.threshold_role_preserved",  # s_role threshold
     "{{THRESHOLD_DRIFT}}": "evaluation.roundtrip.threshold_drift",  # lower status threshold
-    "{{MEAN_EPSILON}}": "evaluation.roundtrip.mean_role_preservation_score",  # Legacy alias
-    "{{MEDIAN_EPSILON}}": "evaluation.roundtrip.median_role_preservation_score",  # Legacy alias
-    "{{MIN_EPSILON}}": "evaluation.roundtrip.min_role_preservation_score",  # Legacy alias
-    "{{MAX_EPSILON}}": "evaluation.roundtrip.max_role_preservation_score",  # Legacy alias
-    "{{THRESHOLD_ISO}}": "evaluation.roundtrip.threshold_role_preserved",  # Legacy alias
-    "{{THRESHOLD_ISOMORPHIC}}": "evaluation.roundtrip.threshold_role_preserved",  # Legacy alias
-    "{{THRESHOLD_APPROX}}": "evaluation.roundtrip.threshold_drift",  # Legacy alias
-    "{{THRESHOLD_APPROXIMATE}}": "evaluation.roundtrip.threshold_drift",  # Legacy alias
     # ---------------------------------------------------------------
     # Roundtrip evaluation — derived / categorised counts (optional;
     # only emitted if generator populates them)

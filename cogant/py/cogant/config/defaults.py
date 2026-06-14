@@ -420,7 +420,7 @@ LENIENT_VALIDATION_CONFIG = ValidationConfig(
 )
 
 
-# Preset configurations (legacy, kept for backward compatibility)
+# Preset configurations (compatibility, kept for backward compatibility)
 # Note: New presets should be defined in presets.py
 PRESETS = {
     "default": {

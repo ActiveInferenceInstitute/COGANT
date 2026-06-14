@@ -32,7 +32,7 @@ class TestIsomorphismReport:
         assert report.role_score == 0.0
         assert report.matrix_score == 0.0
         assert report.total_score == 0.0
-        assert report.is_isomorphic is False
+        assert report.structurally_isomorphic is False
 
     def test_summary_isomorphic(self):
         from cogant.reverse.metrics import IsomorphismReport
@@ -42,7 +42,7 @@ class TestIsomorphismReport:
             role_score=0.9,
             matrix_score=0.85,
             total_score=0.87,
-            is_isomorphic=True,
+            structurally_isomorphic=True,
         )
         s = report.summary()
         assert "ISO" in s
@@ -56,7 +56,7 @@ class TestIsomorphismReport:
             role_score=0.2,
             matrix_score=0.1,
             total_score=0.2,
-            is_isomorphic=False,
+            structurally_isomorphic=False,
         )
         s = report.summary()
         assert "DRIFT" in s
@@ -69,7 +69,7 @@ class TestIsomorphismReport:
             matrix_score=0.6,
             structural_score=0.4,
             total_score=0.52,
-            is_isomorphic=False,
+            structurally_isomorphic=False,
         )
         s = report.summary()
         assert "role=" in s
@@ -298,7 +298,7 @@ class TestComputeIsomorphismReport:
 
         gnn = {"roles": {"HIDDEN": 1}}
         report = compute_isomorphism_report(gnn, gnn, threshold=0.0)
-        assert report.is_isomorphic is True
+        assert report.structurally_isomorphic is True
 
     def test_high_threshold_not_isomorphic(self):
         from cogant.reverse.metrics import compute_isomorphism_report
@@ -306,8 +306,8 @@ class TestComputeIsomorphismReport:
         gnn = {"roles": {"HIDDEN": 1}}
         report = compute_isomorphism_report(gnn, gnn, threshold=1.0)
         # Total score may be less than 1.0 due to neutral matrix score
-        # so is_isomorphic may be False even for identical
-        assert isinstance(report.is_isomorphic, bool)
+        # so structurally_isomorphic may be False even for identical
+        assert isinstance(report.structurally_isomorphic, bool)
 
     def test_breakdown_keys_present(self):
         from cogant.reverse.metrics import compute_isomorphism_report
@@ -322,7 +322,7 @@ class TestComputeIsomorphismReport:
 
         a = {"roles": {"HIDDEN": 5, "OBS": 3}, "nodes": [{"kind": "module"}] * 5}
         report = compute_isomorphism_report(a, a, threshold=0.5)
-        assert report.is_isomorphic == (report.total_score >= 0.5)
+        assert report.structurally_isomorphic == (report.total_score >= 0.5)
 
     def test_per_matrix_frobenius_in_breakdown(self):
         from cogant.reverse.metrics import compute_isomorphism_report

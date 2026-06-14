@@ -1,6 +1,6 @@
 """Compatibility visualization exports.
 
-Historically, a few callers imported visualization helpers from
+Recordedly, a few callers imported visualization helpers from
 ``cogant.export.visualization`` even though the maintained implementations now
 live in :mod:`cogant.viz`.  This module keeps that public path real by
 re-exporting the production visualizers and providing a small graph-to-Mermaid

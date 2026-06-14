@@ -63,6 +63,7 @@ _DEST: dict[str, str] = {
     "graphical_abstract.svg": "figures",
     "markov_blanket.png": "figures",
     "model_gnn.png": "figures",
+    "model_gnn_mosaic.png": "figures",
     "model_gnn_p2.png": "figures",
     "model_gnn_p3.png": "figures",
     "model_gnn_p4.png": "figures",

@@ -70,7 +70,7 @@ def run_zoo_fixture(fixture_path: Path) -> dict[str, Any]:
 
     ``verify_repo_roundtrip`` now returns a ``RoundtripResult`` dataclass
     (post-wave-16). Shape fields are derived from the role multisets
-    (``original_roles`` / ``synthesized_roles``) rather than a deprecated
+    (``original_roles`` / ``synthesized_roles``) rather than a removed
     ``state_space_shape`` list.
     """
     try:
@@ -89,7 +89,7 @@ def run_zoo_fixture(fixture_path: Path) -> dict[str, Any]:
     synth_roles: dict[str, int] = result.synthesized_roles
 
     return {
-        "epsilon": float(result.role_match_score),
+        "epsilon": float(result.role_preservation_score),
         "orig_n_hidden": orig_roles.get("HIDDEN_STATE", 0),
         "orig_n_obs": orig_roles.get("OBSERVATION", 0),
         "orig_n_actions": orig_roles.get("ACTION", 0),
@@ -144,7 +144,7 @@ def run_subprocess_roundtrip(target_path: Path) -> dict[str, Any]:
     synth_roles: dict[str, int] = data.get("synthesized_roles", {})
 
     return {
-        "epsilon": float(data.get("role_match_score", 0.0)),
+        "epsilon": float(data.get("role_preservation_score", 0.0)),
         "orig_n_hidden": orig_roles.get("HIDDEN_STATE", 0),
         "orig_n_obs": orig_roles.get("OBSERVATION", 0),
         "orig_n_actions": orig_roles.get("ACTION", 0),

@@ -1,7 +1,7 @@
 # COGANT Cross-Language Roundtrip: JavaScript Observer
 
 Date: 2026-04-10
-Status: HISTORICAL DIAGNOSTIC — superseded for release metrics by the native v0.6 roundtrip ledger
+Status: Current diagnostic — separate from release metrics reported by the current native roundtrip ledger
 Companion to: `EMPIRICAL_CLAIM.md`
 
 ## Claim
@@ -92,7 +92,7 @@ Sections verified in the emitted GNN markdown:
 R1 (JS forward)    = {HIDDEN_STATE: 1, OBSERVATION: 2, ACTION: 2, CONSTRAINT: 1}
 R2 (re-forward)    = {HIDDEN_STATE: 1, OBSERVATION: 8, ACTION: 5,
                       POLICY: 2, CONSTRAINT: 10, CONTEXT: 3}
-legacy one-sided overlap = 6 / 6 = 1.0000     (pre-v0.6 diagnostic only)
+compatibility one-sided overlap = 6 / 6 = 1.0000     (pre-v0.6 diagnostic only)
 v0.6 symmetric s_role   = (1 + 2/8 + 2/5 + 1/10 + 0 + 0) / 6 ≈ 0.2917
 threshold          = 0.5 (ROLE_PRESERVED public default)
 roundtrip_status    = not part of the native Python v0.6 release ledger
@@ -101,12 +101,13 @@ tier                = cross-language diagnostic; strict release status deferred
 
 > **Note:** The project-wide role-preservation convention is now the symmetric
 > per-role `min/max` multiset-overlap score, where `s_role = 1.0` means the
-> original and synthesized role multisets match exactly. Historical benchmark
+> original and synthesized role multisets match exactly. Recorded benchmark
 > notes used a one-sided overlap line for
-> analysis; this page keeps that legacy calculation visible but does not treat
-> it as a release score. Current v0.6 release metrics use a native 24-target
-> Python fixture ledger with per-row `role_preservation_score` and invariant
-> status fields; strict structural isomorphism is tracked separately.
+> analysis; this page keeps that compatibility calculation visible but does not treat
+> it as a release score. Current release metrics use a native 25-target Python
+> fixture ledger with per-row `role_preservation_score` and invariant status
+> fields; strict structural isomorphism is tracked separately and currently
+> applies only to `roundtrip_strict_minimal`.
 
 
 The reverse pipeline synthesises a Python package with the standard

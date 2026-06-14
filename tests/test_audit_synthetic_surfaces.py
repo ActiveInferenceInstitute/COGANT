@@ -202,8 +202,10 @@ def test_matrix_sidecar_audit_uses_registry_resolved_source(tmp_path: Path) -> N
     _write_forward_matrix_registry(tmp_path)
     copied = tmp_path / "output" / "figures" / "cogant_forward_abcd_matrices.figure.json"
     source = tmp_path / "cogant" / "output" / "flask_app" / "connections_matrix.figure.json"
-    stale_calculator = tmp_path / "cogant" / "output" / "calculator" / "connections_matrix.figure.json"
-    for path in (copied, source, stale_calculator):
+    out_of_sync_calculator = (
+        tmp_path / "cogant" / "output" / "calculator" / "connections_matrix.figure.json"
+    )
+    for path in (copied, source, out_of_sync_calculator):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(_valid_matrix_sidecar()), encoding="utf-8")
     source.write_text(

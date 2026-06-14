@@ -10,8 +10,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed (audit-driven fidelity pass)
 - Canonical metrics regenerated from a clean full coverage run: line coverage
-  **94.98%** (the prior 97.14% came from an out-of-sync `coverage.json`); test counts
-  re-verified **9561 passing / 0 failing / 52 skipped** (9613 collected).
+  **94.98%** from the verified coverage artifact; test counts re-verified
+  **9561 passing / 0 failing / 52 skipped** (9613 collected).
 - `GNNBundle` de-duplicated in `cogant.__all__`; `empirical_claim_demo.py` roundtrip
   JSON-parse crash fixed; per-directory `AGENTS.md`/`README.md` and manuscript factual
   corrections (formatter package, 16 `gnn_package/` required files, SipHash checksum
@@ -75,7 +75,7 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 ### Fixed
 - Viz `cogant.viz.png` tests guarded behind `pytest.importorskip(matplotlib)`; add `numpy` and `pytest-cov` as dev deps (905c2da)
 - Relax JS hidden-state assertion in cross-language differential test (4aa2710)
-- Ruff UP038 autofix: union-type annotations; remove obsolete `xfail` mark (cea55d9)
+- Ruff UP038 autofix: union-type annotations; remove unsupported `xfail` mark (cea55d9)
 
 ### Changed
 - `evaluation/METRICS.yaml` promoted to canonical source of truth for test count, coverage, and roundtrip metrics (41f96de)
@@ -113,9 +113,10 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 - `pyproject.toml` dep updates + uv.lock sync (`fbd8d39`)
 
 ### Roundtrip role preservation
-- Current release evidence uses the native v0.6 ledger: 24 targets, 24
-  role-preserved, 0 drift, 0 failed, and 0 strict structural isomorphism. Each
-  row carries `role_preservation_score` and invariant status fields.
+- Current release evidence uses the native ledger: 25 targets, 25 role-preserved,
+  0 drift, 0 failed, and 1 strict structural-isomorphism row confined to
+  `roundtrip_strict_minimal`. Each row carries `role_preservation_score` and
+  invariant status fields.
 
 ## [0.4.0] - 2026-04-10
 
@@ -200,7 +201,7 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 - Real-world evaluation on 8 open-source Python repositories
 
 ### Changed
-- Complete README rewrite for v0.2.0 feature set
+- Complete README rewrite for current feature set
 - Docstring audit and type annotation hygiene across all modules
 - Test suite: 1300+ tests, 0 failures (skips for optional deps only)
 - py.typed marker added (PEP 561 compliance)

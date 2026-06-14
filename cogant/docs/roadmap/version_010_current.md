@@ -1,36 +1,37 @@
-## Version 0.1.0 (current)
+## Version 0.1.0 shipped baseline
 
-### Core Components
+This file keeps its recorded name for link stability. It no longer describes
+the current COGANT tree. Current shipped capability is tracked by the package
+changelog, `evaluation/METRICS.yaml`, generated run manifests, strict figure
+sidecars, and the manuscript validation gates.
+
+### Recorded core components
 
 - [x] Rust workspace structure
-- [x] Core types (StableId, NodeKind, SemanticRole, Confidence, Provenance)
-- [x] Program graph implementation (nodes, edges, queries)
-- [x] Translation rules engine
-- [x] State space types
+- [x] Core types: `StableId`, `NodeKind`, `SemanticRole`, `Confidence`, and
+  provenance records
+- [x] Program graph implementation for nodes, edges, and basic queries
+- [x] Translation rule engine
+- [x] State-space type definitions
 - [x] Storage abstraction layer
 - [x] Trace types
-- [x] GNN export (JSON, Markdown)
+- [x] GNN export in JSON and Markdown forms
 - [x] PyO3 FFI bridge
-- [x] Comprehensive documentation
+- [x] Initial documentation set
 
-### Python Components
+### Recorded Python surface
 
-- [x] Main API (Session / PipelineRunner / Bundle)
-- [ ] Configuration system (YAML loader) — partial
-- [x] File discovery (ingest / enumeration)
-- [x] Python parser (AST pipeline)
-- [x] Repo IR construction — partial by design
-- [ ] Translation rule implementations — coverage varies
-- [ ] State space analyzer — partial
-- [ ] Validation system — partial
-- [ ] PyTorch Geometric exporter
-- [x] CLI interface (`cogant` Typer app)
+- [x] Main API: `Session`, `PipelineRunner`, and `Bundle`
+- [x] File discovery and Python AST parsing
+- [x] CLI interface through the `cogant` Typer app
+- [~] Configuration, repository IR construction, translation-rule coverage,
+  state-space analysis, and validation were partial early surfaces
+- [ ] PyTorch Geometric export was not part of the Generalized Notation
+  Notation path and remains out of scope unless built as a separate adapter
 
-### Documentation
+### Current-status handoff
 
-- [x] RFC 0001: Naming & Scope
-- [x] RFC 0002: IR Schemas
-- [x] Architecture documentation
-- [x] Specs: Pipeline, Mappings, Ontology, Reference
-- [x] Top-level docs: SPEC, ARCHITECTURE, RULES, EXPORT, VALIDATION, PLUGIN_API
-- Narrative docs track CLI subcommands, `validate` routing, and export/`gnn_package` behavior in [CLI_GUIDE](../cli/README.md), [API_GUIDE](../api/README.md), and [VALIDATION](../validation/README.md) (see [SPEC § Implementation status](../reference/README.md)).
+Use the current roadmap, TODO/taskboard, and generated artifacts instead of this
+page for release decisions. In particular, benchmark and publication claims must
+come from the generated run manifests, `METRICS.yaml`, figure sidecars, and
+strict manuscript audits rather than recorded version-plan prose.

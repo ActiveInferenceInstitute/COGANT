@@ -1,6 +1,6 @@
 # Feature Backlog
 
-Last updated: 2026-06-06 (v0.6.0). Items are grouped by status and priority.
+Last updated: 2026-06-13 (refactor-first tranche). Items are grouped by status and priority.
 The authoritative source for what is **shipped** is `CHANGELOG.md` and `evaluation/METRICS.yaml`.
 
 ---
@@ -13,10 +13,10 @@ These items are implemented and tested in the current tree.
 |------|-----------|-------|
 | JS/TS tree-sitter parser (arrow fns, async, generics, interfaces, decorators) | v0.4.0 | JS grammar fallback for `.ts` |
 | Rust PyO3 `connected_components` FFI; `COGANT_USE_RUST=1` gate | v0.4.0 | Pure-Python fallback default |
-| Incremental analysis: `--incremental <git-ref>` / `PipelineConfig.incremental_since` | v0.5.0 | 19.6× no-change, 5.6× single-file speedup on Flask |
-| Multi-episode Bayesian learning: `run_multi_episode`, `update_D_from_posterior`, `update_A_from_counts` | v0.5.0 | |
-| Production FastAPI server with `/health` + `/translate`; Dockerfile + docker-compose | v0.5.0 | EXPOSE 8080 |
-| Roundtrip role-preservation benchmark | v0.6.0 | Native v0.6 ledger records 24/24 ROLE_PRESERVED, 0/24 DRIFT, 0 non-native rows, and 0 strict structural-isomorphism rows |
+| Incremental analysis: `--incremental <git-ref>` / `PipelineConfig.incremental_since` | current | 19.6× no-change, 5.6× single-file speedup on Flask |
+| Multi-episode Bayesian learning: `run_multi_episode`, `update_D_from_posterior`, `update_A_from_counts` | current | |
+| Production FastAPI server with `/health` + `/translate`; Dockerfile + docker-compose | current | EXPOSE 8080 |
+| Roundtrip role-preservation benchmark | v0.6.0 | Current native ledger records 25/25 ROLE_PRESERVED, 0/25 DRIFT, 0 non-native rows, and 1/25 strict structural-isomorphism row confined to `roundtrip_strict_minimal` |
 | Parquet export (`cogant.export.parquet`) | wave-21 | PyArrow optional dep |
 | Static analysis module: `ComplexityAnalyzer`, `CouplingAnalyzer`, `DeadCodeDetector`, `MetricsAnalyzer` | wave-21 | Halstead, Martin metrics |
 | Network/graph analysis: `GraphAnalyzer` with centrality, community detection, Tarjan SCC | wave-21 | Louvain + component fallback |
@@ -29,11 +29,11 @@ These items are implemented and tested in the current tree.
 | 3 new translation rules: `ParameterRule`, `StateMachineRule`, `RateLimiterRule` (19 → 22 total) | wave-21 | |
 | 4 analysis/export CLI commands: `analyze-static`, `analyze-graph`, `visualize`, `export` | v0.6 hardening | Real command paths now cover static metrics, graph analysis, visualization, and exports |
 | `cogant.metrics` public API: `get_metrics()` / `get_metric(key)` from `METRICS.yaml` | wave-21 | |
-| Content-addressed result cache keyed on repo SHA256 | v0.2.0 | |
-| Hypothesis property tests (7 COGANT correctness laws) | v0.2.0 | |
-| YAML rule DSL compiled to Python matchers | v0.2.0 | |
-| Tutorial Jupyter notebooks 01–12 | v0.4.0–v0.5.0 | |
-| mkdocs-material docs site with 20 sections | v0.2.0 | |
+| Content-addressed result cache keyed on repo SHA256 | current | |
+| Hypothesis property tests (7 COGANT correctness laws) | current | |
+| YAML rule DSL compiled to Python matchers | current | |
+| Tutorial Jupyter notebooks 01–12 | v0.4.0–current | |
+| mkdocs-material docs site with 20 sections | current | |
 
 ---
 
@@ -114,7 +114,7 @@ Current `cogant render` HTML is static. Interactive graph exploration would acce
 
 ### 10. Plugin / rule registry
 **Effort:** M | **Complexity:** medium | **Value:** high
-Entry-point plugin system exists (v0.2.0) but rule registration is still manual. A registry would let third parties ship custom rule families without forking.
+Entry-point plugin system exists (current) but rule registration is still manual. A registry would let third parties ship custom rule families without forking.
 - [ ] `cogant.plugins.RulePlugin` ABC + `cogant_rules` entry-point group
 - [ ] Hot-reload rules without restart (dev mode)
 - [ ] Rule conflict resolution policy (priority/override/merge)
@@ -142,11 +142,13 @@ Parquet export already works. A thin DuckDB wrapper would let analysts run SQL o
 - [ ] Auto-load from latest bundle's Parquet files
 - [ ] Export query results as CSV/JSON
 
-### 14. Schema versioning + migration (hardening)
+### 14. Current schema contract validation (hardening)
 **Effort:** M | **Complexity:** medium | **Value:** medium
-`cogant migrate` subcommand exists. Full versioned schema registry with forward/back migration would let bundles survive version upgrades.
+`cogant migrate` now acts as a current-contract verifier. The hardening work is
+to make unsupported artifact headers fail consistently across CLI, Python API,
+server models, generated bundles, and manuscript-facing examples.
 - [ ] `BundleManifest.schema_version` bump policy
-- [ ] Automated migration tests for v0.1→v0.5→v1.0 bundles
+- [ ] Automated current-contract tests for all packaged fixtures
 - [ ] `cogant validate-bundle` with schema version check
 
 ---
@@ -202,12 +204,19 @@ The sidecar-root / package-root split (`projects/working/cogant/` vs `projects/w
 - [ ] Verify `./run.sh` and `scripts/execute_pipeline.py` discover the project
 - [ ] End-to-end PDF rendering via `scripts/03_render_pdf.py --project working/cogant`
 
-### R2. Flatten roadmap version docs to reflect actual release history
+### R2. Keep roadmap version docs aligned with release history and evidence
 **Priority:** High | **Effort:** S
-Roadmap docs still describe v0.1.0 as "current". All version plan files need to be updated to match CHANGELOG reality (v0.5.0 shipped).
-- [ ] Rename `version_010_current.md` → `version_010_shipped.md`
-- [ ] Write `version_060_planned.md` (see dedicated file)
-- [ ] Write `version_100_planned.md` with hardening/public API freeze scope
+The link-stable `version_010_current.md` filename is retained for compatibility,
+but its content now describes 0.1.0 as a shipped baseline. Current capability
+claims belong in generated metrics, run manifests, strict figure sidecars, and
+release notes.
+- [x] Reframe `version_010_current.md` as a recorded baseline page.
+- [x] Remove hard-coded out-of-sync stage/fixture/perfect-validation claims from the
+  benchmark roadmap page.
+- [x] Add `tools/audit_roadmap_truth.py` to catch recurrence of those drift
+  markers.
+- [ ] Decide in a future docs-only pass whether to add an alias or redirect page
+  named `version_010_shipped.md`.
 
 ### R3. Decouple `cogant.viz` matplotlib imports at module level
 **Priority:** Medium | **Effort:** S

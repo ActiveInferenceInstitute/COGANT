@@ -208,13 +208,13 @@ class TestReverseIdempotency:
         from cogant.reverse.idempotency import RoundtripResult
 
         result = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.95,
+            structurally_isomorphic=True,
+            role_preservation_score=0.95,
             original_roles={"hidden": 2},
             synthesized_roles={"hidden": 2},
         )
-        assert result.is_isomorphic is True
-        assert result.role_match_score == 0.95
+        assert result.structurally_isomorphic is True
+        assert result.role_preservation_score == 0.95
 
     def test_ontology_to_role_mapping(self):
         from cogant.reverse.idempotency import _ONTOLOGY_TO_ROLE

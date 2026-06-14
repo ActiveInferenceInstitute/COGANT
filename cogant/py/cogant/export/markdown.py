@@ -8,7 +8,7 @@ that dict and emits a compact report that is suitable for embedding in
 
 The renderer is intentionally tolerant: any unexpected payload shape
 (e.g. an old bundle format, or a partially-populated stage) degrades to
-``-`` rather than raising, so it can safely run over historical outputs.
+``-`` rather than raising, so it can safely run over recorded outputs.
 """
 
 from __future__ import annotations

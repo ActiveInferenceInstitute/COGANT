@@ -11,7 +11,7 @@ and the Flask benchmark (`cogant translate --incremental`).
 |-----------|--------|-------|
 | Flask app — no-change incremental | **19.6× speedup** | Re-uses previous ProgramGraph |
 | Flask app — single-file change | **5.6× speedup** | Only changed paths re-analyzed |
-| Roundtrip ledger classification (24 fixtures/reductions) | **24 ROLE_PRESERVED / 0 DRIFT / 0 non-native rows** | Native v0.6 ledger; strict structural isomorphism remains 0/24 |
+| Roundtrip ledger classification (25 fixtures/reductions) | **25 ROLE_PRESERVED / 0 DRIFT / 0 non-native rows** | Current native ledger; strict structural isomorphism is 1/25 and confined to `roundtrip_strict_minimal` |
 | AII validator score (all fixtures) | **100/100** | |
 | `cogant translate` on 8 real-world repos | all pass | flask, requests, dulwich, etc. |
 | Dulwich edge-density stress case | Checked-in fixture: 380.02s / 8510.9 MB; post-fix target: <120s | 1.80 e/n ratio; needs refreshed external fixture before new public timing claim |
@@ -90,7 +90,7 @@ processing reduces wall clock (v1.0).
 
 ## Test Coverage Targets
 
-| Component | v0.5.0 Actual | v0.6.x Target | v1.0 Target |
+| Component | current Actual | v0.6.x Target | v1.0 Target |
 |-----------|--------------|--------------|------------|
 | Core pipeline (`graph/`, `translate/`, `statespace/`) | ~85% | 88% | 92% |
 | Parsers (`parsers/`, `ingest/`, `static/`, `dynamic/`) | ~78% | 83% | 90% |
@@ -101,4 +101,4 @@ processing reduces wall clock (v1.0).
 | API/server (`server/`, `api/`) | ~72% | 80% | 88% |
 | **Overall** | **96.22%** | **96%** | **97%** |
 
-**May 2026 package-hardening snapshot:** **9,222 tests passing** (9,253 total, 31 skipped), **96.22%** line coverage. **CI gate:** `pyproject.toml` uses `--cov-fail-under=89`, `branch = false`, `omit` for `static/treesitter_parser.py`, and `parallel = true` — run `uv run pytest tests/ -q --cov=py/cogant` for live counts. Earlier package-hardening snapshot: 8,980 passing (9,011 total), 95.11% coverage. Historical v0.5.0 (2026-04-10) snapshot: 2,129 tests passing, 83.42% coverage.
+**May 2026 package-hardening snapshot:** **9,222 tests passing** (9,253 total, 31 skipped), **96.22%** line coverage. **CI gate:** `pyproject.toml` uses `--cov-fail-under=89`, `branch = false`, `omit` for `static/treesitter_parser.py`, and `parallel = true` — run `uv run pytest tests/ -q --cov=py/cogant` for live counts. Earlier package-hardening snapshot: 8,980 passing (9,011 total), 95.11% coverage. Recorded current (2026-04-10) snapshot: 2,129 tests passing, 83.42% coverage.

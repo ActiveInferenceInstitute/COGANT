@@ -99,7 +99,7 @@ class TestSynthesizedCodeValidity:
 TestModel
 
 ## GNNVersionAndFlags
-GNNVersion=1.0
+GNNVersion=2.0.0
 Flags=
 
 ## ModelName
@@ -158,7 +158,7 @@ D_f0 = PriorBelief
 TestModel
 
 ## GNNVersionAndFlags
-GNNVersion=1.0
+GNNVersion=2.0.0
 Flags=
 
 ## ModelName
@@ -255,7 +255,7 @@ class TestRoundtripIsomorphism:
 TestModel
 
 ## GNNVersionAndFlags
-GNNVersion=1.0
+GNNVersion=2.0.0
 Flags=
 
 ## ModelName
@@ -354,7 +354,7 @@ class TestGoldenRoundtripOutputs:
         result = verify_repo_roundtrip(
             fixture,
             output_dir=tmp_path / golden["fixture"],
-            role_threshold=golden["min_role_match_score"],
+            role_threshold=golden["min_role_preservation_score"],
         )
 
         # Source-side role multiset must include at least the documented
@@ -390,9 +390,9 @@ class TestGoldenRoundtripOutputs:
                 f"expected {expected!r}.\n  shape_match: {result.shape_match}"
             )
 
-        assert result.role_match_score >= golden["min_role_match_score"], (
-            f"{golden['fixture']}: role_match_score regressed below golden floor "
-            f"({result.role_match_score:.3f} < {golden['min_role_match_score']}).\n"
+        assert result.role_preservation_score >= golden["min_role_preservation_score"], (
+            f"{golden['fixture']}: role_preservation_score regressed below golden floor "
+            f"({result.role_preservation_score:.3f} < {golden['min_role_preservation_score']}).\n"
             f"{result.summary()}"
         )
 
@@ -424,7 +424,7 @@ class TestRoundtripRegressions:
 TestModel
 
 ## GNNVersionAndFlags
-GNNVersion=1.0
+GNNVersion=2.0.0
 Flags=
 
 ## ModelName

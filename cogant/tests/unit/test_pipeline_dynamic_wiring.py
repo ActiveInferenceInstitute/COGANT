@@ -179,7 +179,7 @@ def test_explicit_coverage_path_is_picked_up(tmp_path):
 
 @pytest.mark.unit
 def test_plugins_dynamic_coverage_path_still_supported(tmp_path):
-    """Legacy plugins['dynamic']['coverage_path'] is honoured too."""
+    """Compatibility plugins['dynamic']['coverage_path'] is honoured too."""
     if not FIXTURE_CALCULATOR.exists():
         pytest.skip("calculator fixture missing")
     coverage_file = tmp_path / "coverage.xml"
@@ -195,7 +195,7 @@ def test_plugins_dynamic_coverage_path_still_supported(tmp_path):
 
     result = bundle.stage_results.get("dynamic", {})
     assert result.get("skipped") is not True, (
-        f"dynamic stage unexpectedly skipped with legacy plugins config, got {result}"
+        f"dynamic stage unexpectedly skipped with compatibility plugins config, got {result}"
     )
     assert result.get("coverage_path") == str(coverage_file)
 

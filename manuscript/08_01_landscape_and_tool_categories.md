@@ -4,6 +4,8 @@
 
 COGANT sits at the intersection of four established research areas: classical program analysis, machine learning for source code, graph-based program representations, and active-inference behavioral modeling. The following subsections place it against each, emphasizing what COGANT provides as infrastructure rather than as a novel model, compiler, theorem prover, or benchmark.
 
+The implementation counterpart to this literature map is deliberately narrower than the scholarly landscape. The current parser, language, export, visualization, Rust-acceleration, and roadmap boundaries are recorded in `../cogant/docs/reference/implementation_status.md` and the export contracts under `../cogant/docs/export/`; the related-work comparison should be read against those artifacts rather than as a claim that COGANT covers every category below.
+
 **Classical program analysis** supplies the fixpoint and abstraction discipline. Kildall's global data-flow framework and the Cousots' abstract interpretation both model analysis as iteration over finite or suitably ordered abstract states [@kildall1973unified; @cousot1977abstract]. COGANT adopts that shape for rule application over a finite program graph, while making the deliberate engineering trade-off that mappings are evidence records rather than sound abstract semantics for all executions.
 
 **Machine learning for big code** surveys cover naturalness, representation learning, and task taxonomy [@allamanis2018survey]. COGANT contributes **infrastructure**: a documented IR, pipeline, and export contract rather than a new benchmark or model architecture.

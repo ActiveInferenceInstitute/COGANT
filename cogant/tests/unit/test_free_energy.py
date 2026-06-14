@@ -296,8 +296,8 @@ def test_compute_free_energy_uses_principled_path_when_matrices_present():
 def test_compute_free_energy_falls_back_without_generative_model():
     runner = ModelRunner()
     state = {"s0": 0, "s1": 0}
-    vfe_legacy = runner.compute_free_energy(state, observation="s0")
-    assert math.isfinite(vfe_legacy)
+    vfe_compatibility = runner.compute_free_energy(state, observation="s0")
+    assert math.isfinite(vfe_compatibility)
 
 
 def test_uniform_distribution_helper():

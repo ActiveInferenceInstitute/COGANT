@@ -5,11 +5,19 @@ import hashlib
 import json
 import logging
 from dataclasses import dataclass, field
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
 FIGURE_SIDECAR_SCHEMA_VERSION = "1.2"
+
+
+def _cogant_version() -> str:
+    try:
+        return version("cogant")
+    except PackageNotFoundError:
+        return "0.6.0"
 
 
 @dataclass
@@ -30,7 +38,7 @@ class RenderConfig:
     footer_fontsize: int = 8
     node_size: int = 1800
     edge_label_bg: str = "#ffffffcc"
-    cogant_version: str = "0.1.0"
+    cogant_version: str = _cogant_version()
     max_label_len: int = 32
     show_legend: bool = True
     show_footer: bool = True

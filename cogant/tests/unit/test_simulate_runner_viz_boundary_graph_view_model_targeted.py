@@ -606,8 +606,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         r = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=0.85,
+            structurally_isomorphic=True,
+            role_preservation_score=0.85,
             matrix_score=0.9,
             structural_score=0.75,
             original_roles={"HIDDEN_STATE": 2, "OBSERVATION": 1},
@@ -624,8 +624,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         r = RoundtripResult(
-            is_isomorphic=False,
-            role_match_score=0.3,
+            structurally_isomorphic=False,
+            role_preservation_score=0.3,
             matrix_score=0.5,
             structural_score=0.4,
         )
@@ -637,8 +637,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         r = RoundtripResult(
-            is_isomorphic=True,
-            role_match_score=1.0,
+            structurally_isomorphic=True,
+            role_preservation_score=1.0,
             matrix_score=1.0,
             structural_score=1.0,
         )
@@ -650,8 +650,8 @@ class TestRoundtripResult:
         from cogant.reverse.idempotency import RoundtripResult
 
         r = RoundtripResult()
-        assert r.is_isomorphic is False
-        assert r.role_match_score == 0.0
+        assert r.structurally_isomorphic is False
+        assert r.role_preservation_score == 0.0
         assert r.errors == []
 
 

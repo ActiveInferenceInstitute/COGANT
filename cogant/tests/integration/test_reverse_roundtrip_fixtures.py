@@ -22,6 +22,7 @@ Fixtures
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pytest
@@ -63,6 +64,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CONTROL_POSITIVE = REPO_ROOT / "examples" / "control_positive"
 """Directory containing the calculator / event_pipeline / flask_mini repos."""
 
+STRICT_MINIMAL = CONTROL_POSITIVE / "roundtrip_strict_minimal"
+"""Hand-authored reversible-subset fixture for strict structural isomorphism."""
+
 
 # ---------------------------------------------------------------------------
 # Inline hand-written GNN (does not depend on fixture repos).
@@ -74,7 +78,7 @@ HAND_WRITTEN_GNN = """\
 HandwrittenMiniPOMDP
 
 ## GNNVersionAndFlags
-GNN v1
+GNN v2.0.0
 
 ## ModelName
 HandwrittenMiniPOMDP
@@ -166,9 +170,66 @@ def _assert_diagnostic_roundtrip(result: RoundtripResult) -> None:
         assert ok, f"shape dimension {dim} did not survive round-trip: {result.shape_match}"
 
 
+def _assert_strict_roundtrip(result: RoundtripResult) -> None:
+    """Assert every strict structural-isomorphism invariant explicitly."""
+    assert result.roundtrip_status == ROUNDTRIP_STATUS_STRUCTURALLY_ISOMORPHIC
+    assert result.structurally_isomorphic is True
+    assert result.role_preserved is True
+    assert result.role_preservation_score == 1.0
+    assert result.generated_code_ok is True
+    assert result.matrix_preserved is True
+    assert result.gnn_sections_preserved is True
+    assert result.graph_delta["node_delta"] == 0
+    assert result.graph_delta["edge_delta"] == 0
+    assert all(int(v) == 0 for v in result.graph_delta["edge_kind_delta"].values())
+    assert all(result.shape_match.values())
+    assert result.matrix_delta["compared_count"] == 4
+    assert result.matrix_delta["shape_score"] == 1.0
+    assert result.matrix_delta["length_mismatch"] is False
+    assert result.matrix_delta["max_abs_delta"] == 0.0
+    assert result.gnn_diff["section_score"] == 1.0
+    assert not result.errors
+
+
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not HAS_REVERSE, reason="cogant.reverse not available")
+@pytest.mark.skipif(
+    not STRICT_MINIMAL.is_dir(),
+    reason="roundtrip_strict_minimal fixture repo missing",
+)
+def test_roundtrip_strict_minimal_is_structurally_isomorphic(tmp_path: Path) -> None:
+    """The hand-authored reversible subset clears the strict roundtrip tier."""
+    result = verify_repo_roundtrip(
+        STRICT_MINIMAL,
+        output_dir=tmp_path / "strict-minimal-rt",
+        role_threshold=0.5,
+    )
+    _assert_strict_roundtrip(result)
+    assert result.original_roles == {"HIDDEN_STATE": 1, "ACTION": 2, "OBSERVATION": 1}
+    assert result.synthesized_roles == result.original_roles
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not HAS_REVERSE, reason="cogant.reverse not available")
+@pytest.mark.skipif(
+    not STRICT_MINIMAL.is_dir(),
+    reason="roundtrip_strict_minimal fixture repo missing",
+)
+def test_roundtrip_strict_minimal_not_target_name_special_cased(tmp_path: Path) -> None:
+    """A renamed copy must pass by invariants, not by fixture-name branching."""
+    renamed = tmp_path / "renamed_reversible_subset"
+    shutil.copytree(STRICT_MINIMAL, renamed)
+    result = verify_repo_roundtrip(
+        renamed,
+        output_dir=tmp_path / "renamed-strict-minimal-rt",
+        role_threshold=0.5,
+    )
+    _assert_strict_roundtrip(result)
 
 
 @pytest.mark.slow

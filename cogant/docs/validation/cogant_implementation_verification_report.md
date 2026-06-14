@@ -26,7 +26,7 @@ The COGANT (Codebase-to-GNN Translation Engine) project infrastructure has been 
 
 **File**: `py/cogant/__init__.py`
 
-- ✓ `__version__ = "0.1.0"`
+- ✓ `__version__` exposed from the package version module
 - ✓ Top-level imports: Session, PipelineRunner, Bundle, ReviewAPI
 - ✓ Proper `__all__` exports
 

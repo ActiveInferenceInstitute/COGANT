@@ -177,7 +177,7 @@ class DriftAnalyzer:
         Run-dir bundles written by
         :func:`cogant.api.orchestration._dump_program_graph` store
         ``nodes`` and ``edges`` as dicts keyed by id
-        (``{id: payload}``). Legacy/test bundles use a list of
+        (``{id: payload}``). Compatibility/test bundles use a list of
         payloads. Both shapes must flow through
         :meth:`compute_structural_drift` without crashing.
 
@@ -414,7 +414,7 @@ class DriftAnalyzer:
         return abs(count_b - count_a) / max(count_a, count_b)
 
     def _compute_collection_drift(self, col1: list[Any], col2: list[Any]) -> float:
-        """Compute drift between two collections (legacy method)."""
+        """Compute drift between two collections (compatibility method)."""
         return self._compute_count_drift(len(col1), len(col2))
 
     def _count_added_nodes(self, bundle1: dict[str, Any], bundle2: dict[str, Any]) -> int:
@@ -657,7 +657,7 @@ class DriftAnalyzer:
 
         return (state_drift + obs_drift + action_drift) / 3
 
-    # Legacy duplicate method blocks (``_compute_collection_drift``,
+    # Compatibility duplicate method blocks (``_compute_collection_drift``,
     # ``_count_added_nodes``, ``_count_removed_nodes``,
     # ``_count_edge_changes``, ``_count_added_states``,
     # ``_count_removed_states``, ``_count_observation_changes``,
@@ -669,7 +669,7 @@ class DriftAnalyzer:
     # removed to silence ``no-redef`` and avoid confusing behavior.
 
     def report(self, score: DriftScore) -> str:
-        """Generate human-readable report (legacy method)."""
+        """Generate human-readable report (compatibility method)."""
         return self.generate_diff_report()
 
     def to_dict(self) -> dict[str, Any]:
