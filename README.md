@@ -16,8 +16,8 @@ discovery contract. The actual installable COGANT package remains the nested
 
 | Context | COGANT project root | COGANT package root | Notes |
 | --- | --- | --- | --- |
-| Working sidecar checkout | `/Users/4d/Documents/GitHub/projects/working/cogant` | `/Users/4d/Documents/GitHub/projects/working/cogant/cogant` | Current local checkout; run project-local commands here. |
-| Parent-template render path | `/Users/4d/Documents/GitHub/template/projects/working/cogant` | `/Users/4d/Documents/GitHub/template/projects/working/cogant/cogant` | Created by the sidecar/template linker; render with `--project working/cogant`. |
+| Working sidecar checkout | `<cogant-sidecar>` | `<cogant-sidecar>/cogant` | Current local checkout; run project-local commands here. |
+| Parent-template render path | `<template-checkout>/projects/working/cogant` | `<template-checkout>/projects/working/cogant/cogant` | Created by the sidecar/template linker; render with `--project working/cogant`. |
 
 In this documentation, **COGANT project root** means the directory containing this README, `run_all.py`, `tools/`, `scripts/`, `manuscript/`, and the nested package directory. **COGANT package root** means the inner [`cogant/`](cogant/) directory containing `pyproject.toml`, `py/cogant/`, package tests, docs, and Rust crates.
 

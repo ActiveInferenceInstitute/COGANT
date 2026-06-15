@@ -8,9 +8,9 @@ Long-form prose describing COGANT theory and practice in the same structural sha
 
 | Term | Meaning |
 | --- | --- |
-| COGANT project root | The directory above this manuscript folder; in this working checkout, `/Users/4d/Documents/GitHub/projects/working/cogant`. |
+| COGANT project root | The directory above this manuscript folder; in this working checkout, `<cogant-sidecar>`. |
 | COGANT package root | The nested `../cogant/` directory containing `pyproject.toml`, `py/cogant/`, package tests, and package docs. |
-| Template render location | `/Users/4d/Documents/GitHub/template/projects/working/cogant`; parent-template validators and renderers apply only there. |
+| Template render location | `<template-checkout>/projects/working/cogant`; parent-template validators and renderers apply only there. |
 
 ## Canonical sources of truth
 

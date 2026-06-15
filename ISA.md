@@ -9,7 +9,7 @@ updated: 2026-06-07
 
 COGANT is a private working project that pairs an installable Python package
 with a manuscript and generated evidence artifacts. The authoritative project
-root is `/Users/4d/Documents/GitHub/projects/working/cogant`; the installable
+root is `<cogant-sidecar>`; the installable
 package root is `cogant/`; manuscript source lives in `manuscript/`; generated
 manuscript output lives in `output/`; native package evaluation output lives
 under `cogant/evaluation/`.

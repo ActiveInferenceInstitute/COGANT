@@ -3,19 +3,19 @@
 The private sidecar checkout lives at:
 
 ```text
-/Users/4d/Documents/GitHub/projects/working/cogant
+<cogant-sidecar>
 ```
 
 The public template engine lives in the sibling checkout:
 
 ```text
-/Users/4d/Documents/GitHub/template
+<template-checkout>
 ```
 
 The sidecar/template linker should expose this project to the template as:
 
 ```text
-/Users/4d/Documents/GitHub/template/projects/working/cogant
+<template-checkout>/projects/working/cogant
 ```
 
 Render commands should use the lifecycle-qualified project name:
@@ -36,7 +36,7 @@ uv run python scripts/rerender_working_pdfs.py --project cogant
 
 ## Link or Copy
 
-From `/Users/4d/Documents/GitHub/template`, refresh sidecar links:
+From `<template-checkout>`, refresh sidecar links:
 
 ```bash
 uv run python -m infrastructure.orchestration link-projects
