@@ -5,7 +5,7 @@ paper:
   title: "COGANT: Deterministic Codebase-to-GNN Translation"
   subtitle: "Program Graphs, Active-Inference Model Artifacts, and Reproducible Evidence"
   version: "0.6.0"
-  date: "2026-05-22"
+  date: ""
 
 authors:
   - name: "Daniel Ari Friedman"
@@ -17,14 +17,14 @@ authors:
     corresponding: true
 
 publication:
-  doi: "pending"
+  doi: "10.5281/zenodo.20705351"
   journal: ""
   volume: ""
   pages: ""
   year: "2026"
-  artifact_doi: "pending"
-  artifact_archive: "pending"
-  artifact_commit: "pending"
+  artifact_doi: "10.5281/zenodo.20705351"
+  artifact_archive: "https://doi.org/10.5281/zenodo.20705350"
+  artifact_commit: "v0.6.0"
 
 keywords:
   - "program analysis"

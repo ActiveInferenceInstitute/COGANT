@@ -32,6 +32,7 @@ def test_audit_accepts_known_keys_and_ignores_code_and_crossrefs(tmp_path: Path)
     manuscript_dir, bib_path = _write_fixture(
         tmp_path,
         "A cited claim [@known]. A section pointer @sec:intro.\n"
+        "Formal pointers @def:program-graph and @prop:fixpoint-termination.\n"
         "`@not_a_citation`\n"
         "```text\n@also_not_a_citation\n```\n",
         "@article{known,\n  title = {Known},\n  year = {2026}\n}\n",

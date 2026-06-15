@@ -121,6 +121,48 @@ def test_copy_manuscript_figures_writes_manifest(tmp_path: Path) -> None:
     assert sidecar["panels"][0]["displayed_counts"]["panels"] == 1
 
 
+def test_copy_manuscript_figures_writes_template_figure_registry(tmp_path: Path) -> None:
+    source = tmp_path / "cogant" / "output" / "demo" / "figure.png"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(b"fake png bytes")
+    manuscript_dir = tmp_path / "manuscript"
+    manuscript_dir.mkdir()
+    (manuscript_dir / "01_body.md").write_text(
+        "![Demo figure.](../figures/demo.png){#fig:demo-figure width=80%}\n",
+        encoding="utf-8",
+    )
+    figures = (
+        ManuscriptFigure(
+            key="demo",
+            source="cogant/output/demo/figure.png",
+            destination="demo.png",
+            caption="Demo figure.",
+            role="test",
+            renderer="test.renderer",
+        ),
+    )
+
+    copy_manuscript_figures(tmp_path, figures=figures)
+
+    registry = json.loads(
+        (tmp_path / "output" / "figures" / "figure_registry.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert registry["figures"] == [
+        {
+            "caption": "Demo figure.",
+            "filename": "demo.png",
+            "generated_by": "test.renderer",
+            "key": "demo",
+            "label": "fig:demo-figure",
+            "role": "test",
+            "sha256": registry["figures"][0]["sha256"],
+            "source_artifact": "",
+        }
+    ]
+
+
 def test_copy_manuscript_figures_strict_fails_on_missing(tmp_path: Path) -> None:
     figures = (
         ManuscriptFigure(

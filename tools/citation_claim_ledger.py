@@ -42,7 +42,19 @@ SKIP_NAMES = frozenset({"AGENTS.md", "README.md", "SYNTAX.md"})
 CITATION_RE = re.compile(r"(?<![\w])@([A-Za-z][A-Za-z0-9_:-]+)")
 BIB_ENTRY_RE = re.compile(r"@\w+\{([^,\s]+)\s*,(.*?)\n\}", re.S)
 TITLE_RE = re.compile(r"title\s*=\s*[{\"](.+?)[}\"]\s*,?\s*$", re.M | re.S)
-XREF_PREFIXES = ("sec:", "tbl:", "fig:", "eq:")
+XREF_PREFIXES = (
+    "sec:",
+    "tbl:",
+    "fig:",
+    "eq:",
+    "lst:",
+    "def:",
+    "prop:",
+    "inv:",
+    "conj:",
+    "alg:",
+    "thm:",
+)
 
 
 def _strip_code(text: str) -> str:

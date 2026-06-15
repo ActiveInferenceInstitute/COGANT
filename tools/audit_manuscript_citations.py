@@ -3,8 +3,9 @@
 
 The audit scans rendered-body Markdown fragments, strips fenced and inline code,
 collects Pandoc citation keys, and verifies that every used key exists in
-``manuscript/references.bib``. Cross-reference tokens such as ``@sec:...`` are
-handled by ``audit_manuscript_crossrefs.py`` and ignored here.
+``manuscript/references.bib``. Cross-reference tokens such as ``@sec:...`` and
+formalism tokens such as ``@def:...`` are handled by dedicated audits and ignored
+here.
 
 Exit codes
 ----------
@@ -28,7 +29,19 @@ BIB_PATH = MANUSCRIPT_DIR / "references.bib"
 SKIP_NAMES = frozenset({"AGENTS.md", "README.md", "SYNTAX.md"})
 CITATION_RE = re.compile(r"(?<![\w])@([A-Za-z][A-Za-z0-9_:-]+)")
 BIB_KEY_RE = re.compile(r"@\w+\{([^,\s]+)\s*,")
-XREF_PREFIXES = ("sec:", "tbl:", "fig:", "eq:")
+XREF_PREFIXES = (
+    "sec:",
+    "tbl:",
+    "fig:",
+    "eq:",
+    "lst:",
+    "def:",
+    "prop:",
+    "inv:",
+    "conj:",
+    "alg:",
+    "thm:",
+)
 
 
 def _strip_markdown_code(text: str) -> str:

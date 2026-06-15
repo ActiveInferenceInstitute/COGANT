@@ -52,6 +52,7 @@ When any doc (README, AGENTS, cookbook, CLI help) says "run from `cogant/`" it m
 | `tools/inject_manuscript_vars.py` | CLI: substitute one file or directory; `--dry-run`, `--report`, `--strict` flags |
 | `tools/regenerate_metrics.py` | Rebuilds `cogant/evaluation/METRICS.yaml` from live test + pipeline runs |
 | `tools/audit_manuscript_citations.py` | Verifies body citation keys exist in `manuscript/references.bib`; fails on missing or duplicate keys |
+| `tools/audit_manuscript_formalisms.py` | Verifies typed formalism labels, generated formal numbering, and `@def:` / `@prop:` / `@inv:` / `@conj:` / `@alg:` / `@thm:` references |
 | `tools/audit_manuscript_numbers.py` | Checks all prose numbers against `METRICS.yaml`; flags drift |
 | `tools/audit_manuscript_markdown_links.py` | Rejects rendered body links to `.md` files; public manuscript links should be intra-manuscript refs, figures/tables/equations/formalisms, or citations |
 | `tools/audit_manuscript_math_adjacency.py` | Resolves manuscript variables and fails on inline math spans whose closing `$` is immediately followed by a digit |
@@ -59,6 +60,7 @@ When any doc (README, AGENTS, cookbook, CLI help) says "run from `cogant/`" it m
 | `tools/audit_robustness_table.py` | Checks the manuscript robustness table against the generated robustness JSON artifact |
 | `tools/audit_synthetic_surfaces.py` | Classifies retained synthetic-surface terminology and fails on unallowlisted or unbacked cases |
 | `tools/audit_figure_renderers.py` | Verifies registered figure renderer import paths and locked caption/provenance constants |
+| `tools/audit_publication_readiness.py` | Combines claim ledger, evidence audit, visual QA, figure manifest, date autofill, claim-scope, and docs-constant status into a publication readiness verdict |
 | `tools/citation_claim_ledger.py` | Emits reviewable claim/source pairs for selected citation keys |
 | `tools/check_metrics_fresh.py` | Warns if `METRICS.yaml` has drifted from source artifacts |
 | `tools/manuscript_figures.py` | Copies curated package-generated PNGs from `cogant/output/` into `output/figures/` |
@@ -72,13 +74,14 @@ Run these from the COGANT project root:
 # 1. Regenerate METRICS.yaml from live test + benchmark runs.
 uv run --directory cogant python ../tools/regenerate_metrics.py
 
-# 2. Build manuscript_variables.json + output/manuscript/ + output/figures/.
+# 2. Build manuscript_variables.json + formalism_registry.json + output/manuscript/ + output/figures/.
 uv run python scripts/z_generate_manuscript_variables.py
 
 # 3. Validate local links + manuscript structure.
 uv run --directory cogant python docs/verify_manuscript_links.py
 uv run python tools/audit_manuscript_crossrefs.py
 uv run python tools/audit_manuscript_citations.py
+uv run python tools/audit_manuscript_formalisms.py --strict
 uv run python tools/audit_manuscript_numbers.py
 uv run python tools/audit_manuscript_markdown_links.py
 uv run python tools/audit_manuscript_math_adjacency.py
@@ -86,6 +89,7 @@ uv run python tools/audit_manuscript_claim_scope.py
 uv run python tools/audit_robustness_table.py
 uv run python tools/audit_synthetic_surfaces.py --strict
 uv run python tools/audit_figure_renderers.py
+uv run python tools/audit_publication_readiness.py --strict
 ```
 
 When this tree is linked under the parent template as `projects/working/cogant/`,
@@ -100,6 +104,7 @@ All `{{PLACEHOLDER}}` tokens in `manuscript/*.md` resolve against `cogant/evalua
 via the registry in `tools/manuscript_vars.py`. **Never hand-edit a number that has a `{{...}}`
 token** — fix the METRICS.yaml source instead.
 `tools/regenerate_ablation.py` populates `ablation.*` in `METRICS.yaml` and is called by `tools/regenerate_metrics.py`.
+Keep `manuscript/config.yaml` `paper.date` empty for active publication builds so the parent template fills the render date.
 
 ## Package development commands (run from `cogant/` — inner package root)
 

@@ -133,7 +133,8 @@ def main(argv: list[str] | None = None) -> int:
         for finding in findings:
             print(f"  {finding.format(ROOT)}", file=sys.stderr)
         print(
-            "Use @sec:/@fig:/@tbl:/@eq: cross-references, plain artifact names, or citations.",
+            "Use @sec:/@fig:/@tbl:/@eq:/@def:/@prop: cross-references, "
+            "plain artifact names, or citations.",
             file=sys.stderr,
         )
         return 1

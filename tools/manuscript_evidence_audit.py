@@ -34,7 +34,19 @@ EXCLUDED_FILES = {
     "preamble.md",
     "references.bib",
 }
-REFERENCE_PREFIXES = ("sec", "tbl", "fig", "eq", "lst", "def", "alg", "thm")
+REFERENCE_PREFIXES = (
+    "sec",
+    "tbl",
+    "fig",
+    "eq",
+    "lst",
+    "def",
+    "prop",
+    "inv",
+    "conj",
+    "alg",
+    "thm",
+)
 
 PLACEHOLDER_RE = re.compile(r"\{\{[A-Z0-9_]+\}\}")
 CITATION_RE = re.compile(r"(?<![\w`])@([A-Za-z][A-Za-z0-9_:-]+)")

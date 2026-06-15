@@ -50,6 +50,18 @@ $$ {#eq:example-line}
 
 Reference equations in prose with `@eq:example-line`. Do not use LaTeX `\label`, `\ref`, `Equation \ref{...}`, or `Eq. \ref{...}` in manuscript source.
 
+## Formalisms
+
+Definitions, propositions, invariants, conjectures, algorithms, and theorem-style claims are numbered by COGANT during `scripts/z_generate_manuscript_variables.py`, not by pandoc-crossref. Source files use typed labels and source references:
+
+```markdown
+### Definition: Program graph {#def:program-graph}
+
+See @def:program-graph and @prop:fixpoint-termination.
+```
+
+Generated files under `output/manuscript/` rewrite the heading to an anchored numbered paragraph and rewrite references to internal Markdown links. Do not hand-write formal object numbers or `{#sec:def-...}` labels in source prose; the formalism audit rejects hand-numbered and section-labeled formal objects.
+
 ## Figures
 
 Follow the parent template rendering contract for image markdown plus `{#fig:…}` when you add figures. COGANT's publication figures are copied into `../output/figures/` by `../tools/manuscript_figures.py`; source manuscript paths should therefore reference them as `../figures/<name>.png` so generated files in `output/manuscript/` resolve correctly. When vendored into the parent template, use explicit relative paths from the rendering contract described in `infrastructure/rendering/AGENTS.md`.

@@ -4,32 +4,34 @@ This supplement is the **canonical reference for manuscript-level mathematical s
 
 Cross-references use automatic manuscript identifiers for equations, definitions, scoped formal claims, and appendices. Rendered numbering follows manuscript discovery order; source files never rely on hand-written numbers.
 
+The notation surface is also validator-backed: `uv run python tools/audit_manuscript_crossrefs.py` checks the referenced labels, `uv run python tools/audit_manuscript_math_adjacency.py` checks inline math adjacency after variable substitution, and `../output/analysis/publication_readiness.md` records whether notation rows remain metric-, figure-, artifact-, or validator-backed.
+
 ---
 
 ## Program graph symbols {#sec:98-program-graph-symbols}
 
 | Symbol | LaTeX | Meaning | First defined | Notes |
 |--------|-------|---------|---------------|-------|
-| $G$ | `$G$` | Program graph | @sec:def-program-graph | Tuple $(V, E, \lambda_V, \lambda_E, \tau)$ |
-| $V$ | `$V$` | Finite set of program nodes | @sec:def-program-graph | Modules, classes, methods, functions, … |
-| $E$ | `$E$` | Finite set of typed directed edges; $E \subseteq V \times V \times K$ | @sec:def-program-graph | Drawn from edge-kind alphabet $K$ |
-| $K$ | `$K$` | Edge-kind alphabet (18 kinds) | @sec:def-program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
-| $\mathcal{N}$ | `$\mathcal{N}$` | Node-kind alphabet (18 kinds) | @sec:def-program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
-| $\lambda_V$ | `$\lambda_V$` | Node-kind labelling function; $\lambda_V : V \to \mathcal{N}$ | @sec:def-program-graph | |
-| $\lambda_E$ | `$\lambda_E$` | Edge-kind labelling function; $\lambda_E : E \to K$ | @sec:def-program-graph | Trivial projection onto edge kind |
-| $\tau$ | `$\tau$` | Type annotation map; $\tau : V \to (T \cup \{\bot\})$ | @sec:def-program-graph | $\bot$ when no annotation available |
-| $T$ | `$T$` | Set of type strings recovered from front end | @sec:def-program-graph | |
-| $\bot$ | `$\bot$` | Missing/unavailable type annotation | @sec:def-program-graph | Lattice bottom |
+| $G$ | `$G$` | Program graph | @def:program-graph | Tuple $(V, E, \lambda_V, \lambda_E, \tau)$ |
+| $V$ | `$V$` | Finite set of program nodes | @def:program-graph | Modules, classes, methods, functions, … |
+| $E$ | `$E$` | Finite set of typed directed edges; $E \subseteq V \times V \times K$ | @def:program-graph | Drawn from edge-kind alphabet $K$ |
+| $K$ | `$K$` | Edge-kind alphabet (18 kinds) | @def:program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
+| $\mathcal{N}$ | `$\mathcal{N}$` | Node-kind alphabet (18 kinds) | @def:program-graph | See @sec:98-node-edge-kind-enumerations for full enumeration |
+| $\lambda_V$ | `$\lambda_V$` | Node-kind labelling function; $\lambda_V : V \to \mathcal{N}$ | @def:program-graph | |
+| $\lambda_E$ | `$\lambda_E$` | Edge-kind labelling function; $\lambda_E : E \to K$ | @def:program-graph | Trivial projection onto edge kind |
+| $\tau$ | `$\tau$` | Type annotation map; $\tau : V \to (T \cup \{\bot\})$ | @def:program-graph | $\bot$ when no annotation available |
+| $T$ | `$T$` | Set of type strings recovered from front end | @def:program-graph | |
+| $\bot$ | `$\bot$` | Missing/unavailable type annotation | @def:program-graph | Lattice bottom |
 | $\phi$ | `$\phi$` | Graph isomorphism bijection; $\phi : V_1 \to V_2$ | @eq:typed-iso | Accepted when it preserves adjacency |
 | $G_1, G_2$ | `$G_1, G_2$` | Two program graphs under structural comparison | @eq:typed-iso | |
-| $N^{\text{in}}(v)$ | `$N^{\text{in}}(v)$` | In-neighbour set of node $v$; $\{u : (u,v,k) \in E\}$ | @sec:def-markov-blanket-partition | Computed in $O(\|V\|+\|E\|)$ |
-| $N^{\text{out}}(v)$ | `$N^{\text{out}}(v)$` | Out-neighbour set of node $v$; $\{u : (v,u,k) \in E\}$ | @sec:def-markov-blanket-partition | |
-| $S$ | `$S$` | Seed set for Markov blanket partition; $S \subseteq V$ | @sec:def-markov-blanket-partition | Selected by one of five strategies |
-| $\Pi_{G,S}$ | `$\Pi_{G,S}$` | Structural Markov-blanket partition function; $\Pi_{G,S} : V \to \{\mu, s, a, \eta\}$ | @sec:def-markov-blanket-partition (@eq:markov-partition) | Total and mutually exclusive; no conditional-independence claim (@sec:thm-markov-blanket-completeness) |
-| $\mu$ | `$\mu$` | Internal (autonomous) node role | @sec:def-markov-blanket-partition | In seed; all neighbours also in seed |
-| $s$ | `$s$` | Sensory node role | @sec:def-markov-blanket-partition | In seed; receives input from outside seed |
-| $a$ | `$a$` | Active node role | @sec:def-markov-blanket-partition | In seed; sends output outside seed |
-| $\eta$ | `$\eta$` | External node role | @sec:def-markov-blanket-partition | Not in seed |
+| $N^{\text{in}}(v)$ | `$N^{\text{in}}(v)$` | In-neighbour set of node $v$; $\{u : (u,v,k) \in E\}$ | @def:markov-blanket-partition | Computed in $O(\|V\|+\|E\|)$ |
+| $N^{\text{out}}(v)$ | `$N^{\text{out}}(v)$` | Out-neighbour set of node $v$; $\{u : (v,u,k) \in E\}$ | @def:markov-blanket-partition | |
+| $S$ | `$S$` | Seed set for Markov blanket partition; $S \subseteq V$ | @def:markov-blanket-partition | Selected by one of five strategies |
+| $\Pi_{G,S}$ | `$\Pi_{G,S}$` | Structural Markov-blanket partition function; $\Pi_{G,S} : V \to \{\mu, s, a, \eta\}$ | @def:markov-blanket-partition (@eq:markov-partition) | Total and mutually exclusive; no conditional-independence claim (@inv:markov-blanket-partition-totality) |
+| $\mu$ | `$\mu$` | Internal (autonomous) node role | @def:markov-blanket-partition | In seed; all neighbours also in seed |
+| $s$ | `$s$` | Sensory node role | @def:markov-blanket-partition | In seed; receives input from outside seed |
+| $a$ | `$a$` | Active node role | @def:markov-blanket-partition | In seed; sends output outside seed |
+| $\eta$ | `$\eta$` | External node role | @def:markov-blanket-partition | Not in seed |
 
 ---
 
@@ -37,22 +39,22 @@ Cross-references use automatic manuscript identifiers for equations, definitions
 
 | Symbol | LaTeX | Meaning | First defined | Notes |
 |--------|-------|---------|---------------|-------|
-| $r$ | `$r$` | Translation rule quadruple $({\varphi_r, \kappa_r, w_r, p_r})$ | @sec:def-translation-rule | {{TRANSLATION_RULES}} shipped rules in 5 families (5+5+3+4+5); `METRICS.yaml` `pipeline.translation_rules` |
-| $\varphi_r$ | `$\varphi_r$` | Rule match predicate; $\varphi_r : \mathcal{G} \to 2^{\mathcal{F}}$ | @sec:def-translation-rule | `matches(graph, query)` in code |
-| $\mathcal{G}$ | `$\mathcal{G}$` | Universe of finite program graphs | @sec:def-translation-rule | |
-| $\mathcal{F}$ | `$\mathcal{F}$` | Fragment space (finite tuples of node/edge ids) | @sec:def-translation-rule | |
-| $\kappa_r$ | `$\kappa_r$` | Mapping kind assigned by rule $r$ | @sec:def-translation-rule | Element of $\mathcal{K}_M$; see @sec:98-active-inference-roles |
-| $\mathcal{K}_M$ | `$\mathcal{K}_M$` | Formal mapping-kind alphabet (11 kinds; code `MappingKind` enum has 14, incl. 3 non-formal implementation kinds) | @sec:def-translation-rule | See @sec:98-active-inference-roles for full enumeration |
-| $w_r$ | `$w_r$` | Base confidence weight of rule $r$; $w_r \in (0, 1]$ | @sec:def-translation-rule | |
-| $p_r$ | `$p_r$` | Rule priority; $p_r \in \mathbb{Z}$ | @sec:def-translation-rule | Higher wins in conflict resolution |
-| $R$ | `$R$` | Finite rule set; $|R|$ equals the shipped rule count | @sec:def-fixpoint-semantics | Injected as {{TRANSLATION_RULES}}; `METRICS.yaml` `pipeline.translation_rules` |
-| $\mathcal{M}$ | `$\mathcal{M}$` | Universe of possible semantic mappings on $G$ under $R$ | @sec:def-fixpoint-semantics | $\|\mathcal{M}\| \leq n \cdot \|\mathcal{K}_M\|$ |
-| $F_{G,R}$ | `$F_{G,R}$` | Rule-application operator; $F_{G,R} : 2^{\mathcal{M}} \to 2^{\mathcal{M}}$ | @sec:def-fixpoint-semantics (@eq:fixpoint-operator) | Monotone on $(2^{\mathcal{M}}, \subseteq)$ |
-| $T^{*}(G)$ | `$T^{*}(G)$` | Translation of $G$ under $R$; least fixpoint $\bigsqcup_{k \geq 0} F_{G,R}^k(\emptyset)$ | @sec:def-fixpoint-semantics (@eq:least-fixpoint) | |
-| $K$ | `$K$` | Iteration cap; default $K = 10$ | @sec:thm-fixpoint-termination | `max_iterations` in `engine.py` |
-| $n$ | `$n$` | Number of nodes in program graph; $n = \|V\|$ | @sec:thm-fixpoint-termination | |
-| $k$ | `$k$` | Number of rules; $k = \|R\|$ | @sec:thm-fixpoint-termination | |
-| $(p(\mu), c(\mu))$ | `$(p(\mu), c(\mu))$` | Conflict-resolution key: (priority, confidence) for mapping $\mu$ | @sec:def-translation-rule, @sec:alg-conflict-resolution | Higher priority wins; confidence breaks ties |
+| $r$ | `$r$` | Translation rule quadruple $({\varphi_r, \kappa_r, w_r, p_r})$ | @def:translation-rule | {{TRANSLATION_RULES}} shipped rules in 5 families (5+5+3+4+5); `METRICS.yaml` `pipeline.translation_rules` |
+| $\varphi_r$ | `$\varphi_r$` | Rule match predicate; $\varphi_r : \mathcal{G} \to 2^{\mathcal{F}}$ | @def:translation-rule | `matches(graph, query)` in code |
+| $\mathcal{G}$ | `$\mathcal{G}$` | Universe of finite program graphs | @def:translation-rule | |
+| $\mathcal{F}$ | `$\mathcal{F}$` | Fragment space (finite tuples of node/edge ids) | @def:translation-rule | |
+| $\kappa_r$ | `$\kappa_r$` | Mapping kind assigned by rule $r$ | @def:translation-rule | Element of $\mathcal{K}_M$; see @sec:98-active-inference-roles |
+| $\mathcal{K}_M$ | `$\mathcal{K}_M$` | Formal mapping-kind alphabet (11 kinds; code `MappingKind` enum has 14, incl. 3 non-formal implementation kinds) | @def:translation-rule | See @sec:98-active-inference-roles for full enumeration |
+| $w_r$ | `$w_r$` | Base confidence weight of rule $r$; $w_r \in (0, 1]$ | @def:translation-rule | |
+| $p_r$ | `$p_r$` | Rule priority; $p_r \in \mathbb{Z}$ | @def:translation-rule | Higher wins in conflict resolution |
+| $R$ | `$R$` | Finite rule set; $|R|$ equals the shipped rule count | @def:fixpoint-semantics | Injected as {{TRANSLATION_RULES}}; `METRICS.yaml` `pipeline.translation_rules` |
+| $\mathcal{M}$ | `$\mathcal{M}$` | Universe of possible semantic mappings on $G$ under $R$ | @def:fixpoint-semantics | $\|\mathcal{M}\| \leq n \cdot \|\mathcal{K}_M\|$ |
+| $F_{G,R}$ | `$F_{G,R}$` | Rule-application operator; $F_{G,R} : 2^{\mathcal{M}} \to 2^{\mathcal{M}}$ | @def:fixpoint-semantics (@eq:fixpoint-operator) | Monotone on $(2^{\mathcal{M}}, \subseteq)$ |
+| $T^{*}(G)$ | `$T^{*}(G)$` | Translation of $G$ under $R$; least fixpoint $\bigsqcup_{k \geq 0} F_{G,R}^k(\emptyset)$ | @def:fixpoint-semantics (@eq:least-fixpoint) | |
+| $K$ | `$K$` | Iteration cap; default $K = 10$ | @prop:fixpoint-termination | `max_iterations` in `engine.py` |
+| $n$ | `$n$` | Number of nodes in program graph; $n = \|V\|$ | @prop:fixpoint-termination | |
+| $k$ | `$k$` | Number of rules; $k = \|R\|$ | @prop:fixpoint-termination | |
+| $(p(\mu), c(\mu))$ | `$(p(\mu), c(\mu))$` | Conflict-resolution key: (priority, confidence) for mapping $\mu$ | @def:translation-rule, @alg:conflict-resolution | Higher priority wins; confidence breaks ties |
 | $\rho$ | `$\rho$` | Role-multiset functor $\rho : \mathbf{Prog} \to \mathbf{Mset}(\text{Roles})$ | @sec:S03-role-multiset-functor | Counts role assignments per node |
 
 ---
@@ -66,13 +68,13 @@ Cross-references use automatic manuscript identifiers for equations, definitions
 | $\delta_d$ | `$\delta_d$` | Evidence-diversity bonus (bounded, scaled) | @sec:02-03-confidence-scoring (@eq:confidence-core) | Raised by dynamic enrichment |
 | $\kappa$ | `$\kappa$` | Parser certainty factor; applied multiplicatively | @sec:02-03-confidence-scoring (@eq:confidence-core) | $\kappa \in [0, 1]$ |
 | $\pi$ | `$\pi$` | Aggregate conflict penalties (subtracted post-scaling) | @sec:02-03-confidence-scoring (@eq:confidence-core) | Not to be confused with policy $\pi$ in @sec:S04-appendix-inference-mathematics |
-| $\varepsilon$ | `$\varepsilon$` | Numerical tolerance for stochasticity checks; $\varepsilon = 10^{-9}$ (normalisation), $10^{-6}$ (validation) | @sec:thm-matrix-validity | `validate_shapes()` in `gnn/matrices.py` |
-| $\xi$ | `$\xi$` | Evidence-labelled assertion tuple $(x, \kappa_\xi, c_\xi, \mathcal{P}_\xi)$ | @sec:def-evidence-labelled-assertion | Operational assertion emitted by translation, validation, review, or provenance tooling |
-| $x$ | `$x$` | Target of an evidence-labelled assertion | @sec:def-evidence-labelled-assertion | Node, edge, or finite fragment |
-| $\kappa_\xi$ | `$\kappa_\xi$` | Assertion kind for $\xi$ | @sec:def-evidence-labelled-assertion | Mapping kind, validation predicate, or structural property |
-| $c_\xi$ | `$c_\xi$` | Confidence attached to assertion $\xi$ | @sec:def-evidence-labelled-assertion | Computed by @eq:confidence-core |
-| $\mathcal{P}_\xi$ | `$\mathcal{P}_\xi$` | Finite provenance/evidence set for $\xi$ | @sec:def-evidence-labelled-assertion | Rule names, parser outputs, dynamic traces, reviewer markers, schema checks |
-| $\preceq_e$ | `$\preceq_e$` | Evidence preorder over same-target assertions | @sec:def-evidence-labelled-assertion (@eq:evidence-preorder) | More recorded evidence/support, not higher semantic truth probability |
+| $\varepsilon$ | `$\varepsilon$` | Numerical tolerance for stochasticity checks; $\varepsilon = 10^{-9}$ (normalisation), $10^{-6}$ (validation) | @prop:matrix-validity | `validate_shapes()` in `gnn/matrices.py` |
+| $\xi$ | `$\xi$` | Evidence-labelled assertion tuple $(x, \kappa_\xi, c_\xi, \mathcal{P}_\xi)$ | @def:evidence-labelled-assertion | Operational assertion emitted by translation, validation, review, or provenance tooling |
+| $x$ | `$x$` | Target of an evidence-labelled assertion | @def:evidence-labelled-assertion | Node, edge, or finite fragment |
+| $\kappa_\xi$ | `$\kappa_\xi$` | Assertion kind for $\xi$ | @def:evidence-labelled-assertion | Mapping kind, validation predicate, or structural property |
+| $c_\xi$ | `$c_\xi$` | Confidence attached to assertion $\xi$ | @def:evidence-labelled-assertion | Computed by @eq:confidence-core |
+| $\mathcal{P}_\xi$ | `$\mathcal{P}_\xi$` | Finite provenance/evidence set for $\xi$ | @def:evidence-labelled-assertion | Rule names, parser outputs, dynamic traces, reviewer markers, schema checks |
+| $\preceq_e$ | `$\preceq_e$` | Evidence preorder over same-target assertions | @def:evidence-labelled-assertion (@eq:evidence-preorder) | More recorded evidence/support, not higher semantic truth probability |
 
 **Confidence tier thresholds** (`determine_confidence_tier` in `translate/confidence.py`):
 
@@ -97,13 +99,13 @@ because threshold movement in that band can change the state-space surface.
 
 | Symbol | LaTeX | Meaning | First defined | Notes |
 |--------|-------|---------|---------------|-------|
-| $\mathbf{V}$ | `$\mathbf{V}$` | Set of hidden-state variables | @sec:def-abcd-matrices | Identified from WRITES edges |
-| $\mathbf{O}$ | `$\mathbf{O}$` | Set of observation modalities | @sec:def-abcd-matrices | From OBSERVATION-kind mappings |
-| $\mathbf{A}$ | `$\mathbf{A}$` | Set of actions (control states) | @sec:def-abcd-matrices | From ACTION-kind mappings |
-| $A$ | `$A$` | Likelihood matrix; $A \in \mathbb{R}^{|\mathbf{O}| \times |\mathbf{V}|}$ | @sec:def-abcd-matrices (@eq:matrices-defn) | $A_{ij} = P(o_i \mid s_j)$; columns sum to 1 |
-| $B$ | `$B$` | State-transition tensor; $B \in \mathbb{R}^{|\mathbf{V}| \times |\mathbf{V}| \times |\mathbf{A}|}$ | @sec:def-abcd-matrices (@eq:matrices-defn) | $B_{ijk} = P(s'_i \mid s_j, a_k)$; columns sum to 1 |
-| $C$ | `$C$` | Log-preference vector; $C \in \mathbb{R}^{|\mathbf{O}|}$ | @sec:def-abcd-matrices (@eq:matrices-defn) | $C_i = \log \tilde{P}(o_i)$; not normalised |
-| $D$ | `$D$` | Prior over initial hidden states; $D \in \mathbb{R}^{|\mathbf{V}|}$ | @sec:def-abcd-matrices (@eq:matrices-defn) | $D_j = P(s_j \mid t=0)$; sums to 1 |
+| $\mathbf{V}$ | `$\mathbf{V}$` | Set of hidden-state variables | @def:abcd-matrices | Identified from WRITES edges |
+| $\mathbf{O}$ | `$\mathbf{O}$` | Set of observation modalities | @def:abcd-matrices | From OBSERVATION-kind mappings |
+| $\mathbf{A}$ | `$\mathbf{A}$` | Set of actions (control states) | @def:abcd-matrices | From ACTION-kind mappings |
+| $A$ | `$A$` | Likelihood matrix; $A \in \mathbb{R}^{|\mathbf{O}| \times |\mathbf{V}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $A_{ij} = P(o_i \mid s_j)$; columns sum to 1 |
+| $B$ | `$B$` | State-transition tensor; $B \in \mathbb{R}^{|\mathbf{V}| \times |\mathbf{V}| \times |\mathbf{A}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $B_{ijk} = P(s'_i \mid s_j, a_k)$; columns sum to 1 |
+| $C$ | `$C$` | Log-preference vector; $C \in \mathbb{R}^{|\mathbf{O}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $C_i = \log \tilde{P}(o_i)$; not normalised |
+| $D$ | `$D$` | Prior over initial hidden states; $D \in \mathbb{R}^{|\mathbf{V}|}$ | @def:abcd-matrices (@eq:matrices-defn) | $D_j = P(s_j \mid t=0)$; sums to 1 |
 | $s_j$ | `$s_j$` | Hidden state $j$ | @sec:S04-pomdp-formulation | Element of $S = \{s_1, \ldots, s_{|S|}\}$ |
 | $o_i$ | `$o_i$` | Observation $i$ | @sec:S04-pomdp-formulation | Element of $O = \{o_1, \ldots, o_{|O|}\}$ |
 | $a_k$ | `$a_k$` | Action / control state $k$ | @sec:S04-pomdp-formulation | Element of $A \subseteq \{1, \ldots, |A|\}$ |
@@ -130,7 +132,7 @@ because threshold movement in that band can change the state-space surface.
 | $R$ | `$R$` | Reverse order-preserving map; $R : \mathbf{GNN} \to \mathbf{Prog}$ on preorder quotients | @sec:S03-forward-reverse-functors | Realised by `cogant reverse` then re-parse |
 | $\rho$ | `$\rho$` | Role-multiset map; maps $G$ to its role distribution | @sec:S03-role-multiset-functor | $\rho : \mathbf{Prog} \to \mathbf{Mset}(\text{Roles})$ |
 | $\rho_\text{norm}$ | `$\rho_\text{norm}$` | Normalised role distribution (probability vector over Roles) | @sec:S03-role-preservation-theorem | Used in JS-distance formula |
-| $s_\text{role}(P, R(F(P)))$ | `$s_\text{role}(P, R(F(P)))$` | Roundtrip role-preservation score; multiset similarity between role distributions | @sec:S03-role-preservation-theorem (@sec:thm-bounded-role-preservation-gap) | Higher is better; ROLE_PRESERVED when $s_\text{role} \ge {{THRESHOLD_ROLE_PRESERVED}}$ |
+| $s_\text{role}(P, R(F(P)))$ | `$s_\text{role}(P, R(F(P)))$` | Roundtrip role-preservation score; multiset similarity between role distributions | @sec:S03-role-preservation-theorem (@inv:bounded-role-preservation-gap) | Higher is better; ROLE_PRESERVED when $s_\text{role} \ge {{THRESHOLD_ROLE_PRESERVED}}$ |
 | $\text{JS}$ | `$\text{JS}$` | Jensen–Shannon distance | @sec:S03-role-preservation-theorem | Symmetric; $\text{JS} \in [0, 1]$ |
 | $\text{multiset\_sim}(a, b)$ | `$\text{multiset\_sim}(a,b)$` | Per-role multiset similarity; $\min(a,b)/\max(a,b)$ | @sec:S03-approximate-adjunction | Averaged over roles to yield global score |
 | $\text{scaffold}_r$ | `$\text{scaffold}_r$` | Fixed role-$r$ count contributed by reverse synthesizer scaffolding | @sec:S03-approximate-adjunction, @sec:S03-role-preservation-theorem | POLICY/CONTEXT synthesis reduces this for policy-bearing targets |
@@ -151,42 +153,54 @@ because threshold movement in that band can change the state-space surface.
 
 ## Equation and scoped-claim index {#sec:98-equation-theorem-index}
 
+### Definitions
+
+| Label | Location | Description |
+|-------|----------|-------------|
+| Program graph | @def:program-graph | Typed directed multigraph $G=(V,E,\tau_V,\tau_E,\alpha)$ used by the source IR |
+| Evidence-labelled assertion | @def:evidence-labelled-assertion | Atomic semantic claim with mapping kind, confidence, provenance, and degraded-output marker |
+| Translation rule | @def:translation-rule | Partial rule from typed graph evidence to candidate semantic assertions |
+| Fixpoint semantics | @def:fixpoint-semantics | Least fixpoint of monotone rule application over finite candidate assertions |
+| Markov blanket partition | @def:markov-blanket-partition | Four-way role partition induced by selected semantic seeds |
+| A/B/C/D matrices | @def:abcd-matrices | Exported likelihood, transition, preference, and prior matrices |
+| Typed organizational surrogate | @def:typed-organizational-surrogate | Future R&D object over typed organization artifacts, dynamic traces, losses, bounded interventions, and provenance |
+
 ### Equations
 
 | Label | Location | Description |
 |-------|----------|-------------|
 | `eq:typed-iso` | @eq:typed-iso | Typed graph isomorphism: $(u,v)\in E_1 \iff (\phi(u),\phi(v))\in E_2$ |
 | `eq:evidence-preorder` | @eq:evidence-preorder | Evidence preorder: $\xi_1 \preceq_e \xi_2$ iff confidence and provenance support both increase |
-| `eq:fixpoint-operator` | @sec:def-fixpoint-semantics | Rule-application operator $F_{G,R}(S) = S \cup \{\ldots\}$ |
-| `eq:kleene-chain` | @sec:thm-fixpoint-termination | Kleene ascending chain $\emptyset \subseteq F_{G,R}(\emptyset) \subseteq \cdots$ |
-| `eq:least-fixpoint` | @sec:def-fixpoint-semantics | Least fixpoint $T^*(G) = \bigsqcup_{k\geq 0} F_{G,R}^k(\emptyset)$ |
-| `eq:markov-partition` | @sec:def-markov-blanket-partition | Four-way partition $\Pi_{G,S}(v) \in \{\mu, s, a, \eta\}$ |
-| `eq:matrices-defn` | @sec:def-abcd-matrices | A/B/C/D generative-model matrix definitions |
+| `eq:fixpoint-operator` | @def:fixpoint-semantics | Rule-application operator $F_{G,R}(S) = S \cup \{\ldots\}$ |
+| `eq:kleene-chain` | @prop:fixpoint-termination | Kleene ascending chain $\emptyset \subseteq F_{G,R}(\emptyset) \subseteq \cdots$ |
+| `eq:least-fixpoint` | @def:fixpoint-semantics | Least fixpoint $T^*(G) = \bigsqcup_{k\geq 0} F_{G,R}^k(\emptyset)$ |
+| `eq:markov-partition` | @def:markov-blanket-partition | Four-way partition $\Pi_{G,S}(v) \in \{\mu, s, a, \eta\}$ |
+| `eq:matrices-defn` | @def:abcd-matrices | A/B/C/D generative-model matrix definitions |
 | `eq:confidence-core` | @sec:02-03-confidence-scoring | Confidence formula $c = \max(0, \min(1, (\bar{e}+\delta_d)\cdot\kappa - \pi))$ |
 
 ### Algorithms
 
 | Label | Location | Description |
 |-------|----------|-------------|
-| Fixpoint translation algorithm | @sec:alg-fixpoint-translation-engine | Translation fixpoint loop (`TranslationEngine.translate()`) |
-| Conflict-resolution algorithm | @sec:alg-conflict-resolution | Conflict resolution (`_resolve_conflicts()`, sorted by $(p_r, c)$) |
+| Fixpoint translation algorithm | @alg:fixpoint-translation-engine | Translation fixpoint loop (`TranslationEngine.translate()`) |
+| Conflict-resolution algorithm | @alg:conflict-resolution | Conflict resolution (`_resolve_conflicts()`, sorted by $(p_r, c)$) |
 
 ### Theorems, propositions, conjectures, and scoped invariants
 
 | Label | Location | Description |
 |-------|----------|-------------|
-| Fixpoint termination proposition | @sec:thm-fixpoint-termination | **Fixpoint termination** — Kleene chain stabilises in $\leq n \cdot |\mathcal{K}_M|$ steps |
-| Markov blanket partition invariant | @sec:thm-markov-blanket-completeness | **Markov blanket partition totality** — seed-induced $\Pi_{G,S}$ is total and mutually exclusive |
-| Matrix validity proposition | @sec:thm-matrix-validity | **Matrix validity** — $A$, $B$, $D$ satisfy stochasticity within $10^{-6}$ |
-| Approximate Galois conjecture | @sec:prop-approximate-galois | **ε-approximate Galois comparison** — $(F, R)$ pair is conjectured to satisfy a role-quotient approximate adjunction |
-| Role-preservation bound | @sec:thm-bounded-role-preservation-gap | **Role preservation** — roundtrip role similarity is a scoped empirical invariant and multiset approximation to JS distance between normalised role distributions |
-| Role-preservation-threshold proposition | @sec:prop-role-preservation-threshold | **ROLE_PRESERVED threshold** — $\text{multiset\_sim} \geq {{THRESHOLD_ROLE_PRESERVED}}$ corresponds to the configured public role-preservation floor |
+| Fixpoint termination proposition | @prop:fixpoint-termination | **Fixpoint termination** — Kleene chain stabilises in $\leq n \cdot |\mathcal{K}_M|$ steps |
+| Markov blanket partition invariant | @inv:markov-blanket-partition-totality | **Markov blanket partition totality** — seed-induced $\Pi_{G,S}$ is total and mutually exclusive |
+| Matrix validity proposition | @prop:matrix-validity | **Matrix validity** — $A$, $B$, $D$ satisfy stochasticity within $10^{-6}$ |
+| Approximate Galois conjecture | @conj:approximate-galois | **ε-approximate Galois comparison** — $(F, R)$ pair is conjectured to satisfy a role-quotient approximate adjunction |
+| Role-preservation bound | @inv:bounded-role-preservation-gap | **Role preservation** — roundtrip role similarity is a scoped empirical invariant and multiset approximation to JS distance between normalised role distributions |
+| Role-preservation-threshold proposition | @prop:role-preservation-threshold | **ROLE_PRESERVED threshold** — $\text{multiset\_sim} \geq {{THRESHOLD_ROLE_PRESERVED}}$ corresponds to the configured public role-preservation floor |
 
 ---
 
 ## Active Inference roles and mapping kinds {#sec:98-active-inference-roles}
 
-**`MappingKind` vs `SemanticRole`.** Translation rules emit `SemanticMapping.kind` values from the `MappingKind` enum in `cogant.schemas.semantic` (Active Inference subset plus structural kinds; see the table below). **`SemanticRole`** is a separate, larger vocabulary in `semantic_mapping.py` for graph-level annotations; do not conflate the two---formal definitions and the abstract appear in @sec:def-translation-rule and @sec:00-abstract.
+**`MappingKind` vs `SemanticRole`.** Translation rules emit `SemanticMapping.kind` values from the `MappingKind` enum in `cogant.schemas.semantic` (Active Inference subset plus structural kinds; see the table below). **`SemanticRole`** is a separate, larger vocabulary in `semantic_mapping.py` for graph-level annotations; do not conflate the two---formal definitions and the abstract appear in @def:translation-rule and @sec:00-abstract.
 
 ### Seven Active Inference roles (elements of $\text{Roles}$)
 
@@ -215,7 +229,7 @@ because threshold movement in that band can change the state-space surface.
 
 ## Node and edge kind enumerations {#sec:98-node-edge-kind-enumerations}
 
-These are the canonical members of `cogant.schemas.core.NodeKind` and `EdgeKind` as of v{{VERSION}}. @sec:def-program-graph notes that the Python front end currently emits a subset (MODULE, CLASS, METHOD, FUNCTION for node kinds; CALLS, CONTAINS, READS, WRITES, IMPORTS, INHERITS for edge kinds); the remaining kinds are declared in the schema and emitted by other parsers or dynamic enrichment.
+These are the canonical members of `cogant.schemas.core.NodeKind` and `EdgeKind` as of v{{VERSION}}. @def:program-graph notes that the Python front end currently emits a subset (MODULE, CLASS, METHOD, FUNCTION for node kinds; CALLS, CONTAINS, READS, WRITES, IMPORTS, INHERITS for edge kinds); the remaining kinds are declared in the schema and emitted by other parsers or dynamic enrichment.
 
 ### NodeKind (18 members)
 

@@ -23,6 +23,20 @@ from typing import Any
 DEFAULT_OUTPUT_DIR = Path("/tmp/cogant_org_state_space_audit")
 REQUIRED_FACTOR_KINDS = frozenset({"state", "action", "observation"})
 REQUIRED_NEGATIVE_CONTROLS = frozenset({"org_chart_only", "trace_only"})
+REQUIRED_OPTIMIZATION_FIELDS = frozenset(
+    {
+        "loss_terms",
+        "differentiability_scope",
+        "intervention_bounds",
+        "evidence_links",
+        "prohibited_decision_uses",
+    }
+)
+PROHIBITED_DECISION_CATEGORIES = (
+    ("legal", ("legal", "law", "compliance")),
+    ("financial", ("financial", "finance", "capital", "budget")),
+    ("hr", ("hr", "human resource", "employment", "hiring", "firing", "compensation")),
+)
 
 
 @dataclass(frozen=True)
@@ -44,6 +58,11 @@ class AuditSurface:
     dynamic_traces: int
     factors: int
     transitions: int
+    differentiable_surrogate_claimed: bool
+    optimization_loss_terms: int
+    optimization_intervention_bounds: int
+    optimization_evidence_links: int
+    prohibited_decision_uses: int
     negative_controls: int
     factor_kinds: tuple[str, ...]
     dynamic_trace_kinds: tuple[str, ...]
@@ -68,9 +87,10 @@ class AuditSurface:
         data["claim_boundary"] = (
             "This audit checks whether a proposed typed organizational surrogate "
             "has static artifacts, dynamic traces, provenance-bearing factors, "
-            "transition evidence, and negative controls. It does not claim that "
-            "COGANT models a legal entity or that an organization is literally "
-            "differentiable."
+            "transition evidence, negative controls, and, when claimed, an "
+            "explicit differentiable-surrogate optimization surface. It does "
+            "not claim that COGANT models a legal entity or that an organization "
+            "is literally differentiable."
         )
         return data
 
@@ -164,6 +184,36 @@ def example_spec() -> dict[str, Any]:
                 "evidence": ["ticket_42", "incident_7", "approval_3"],
             }
         ],
+        "claims_differentiable_surrogate": True,
+        "optimization_surface": {
+            "loss_terms": [
+                {
+                    "id": "loss_recovery_time",
+                    "label": "Reduce documented recovery lag",
+                    "evidence_links": ["ticket_42", "incident_7"],
+                }
+            ],
+            "differentiability_scope": (
+                "Only surrogate parameters, objective weights, and bounded "
+                "intervention variables are differentiable; people, legal "
+                "entities, incentives, employment decisions, and financial "
+                "obligations are not differentiable programs."
+            ),
+            "intervention_bounds": [
+                {
+                    "id": "bound_oncall_assignment",
+                    "action": "action_assign_oncall",
+                    "evidence_links": ["approval_3", "process_incident"],
+                    "description": "Review assignments only within approved response process.",
+                }
+            ],
+            "evidence_links": ["ticket_42", "incident_7", "approval_3"],
+            "prohibited_decision_uses": [
+                "legal_entity_modeling",
+                "financial_allocation_automation",
+                "hr_employment_decision_automation",
+            ],
+        },
         "negative_controls": [
             {
                 "id": "org_chart_only",
@@ -205,6 +255,27 @@ def _links(record: dict[str, Any]) -> list[str]:
     if not isinstance(values, list):
         return []
     return [str(value) for value in values if isinstance(value, str) and value]
+
+
+def _string_list(record: dict[str, Any], field: str) -> list[str]:
+    values = record.get(field, [])
+    if not isinstance(values, list):
+        return []
+    return [str(value) for value in values if isinstance(value, str) and value]
+
+
+def _evidence_links(record: dict[str, Any]) -> list[str]:
+    links: list[str] = []
+    for field in ("evidence_links", "evidence", "links"):
+        links.extend(_string_list(record, field))
+    return links
+
+
+def _dict_records(record: dict[str, Any], field: str) -> list[dict[str, Any]]:
+    values = record.get(field, [])
+    if not isinstance(values, list):
+        return []
+    return [value for value in values if isinstance(value, dict)]
 
 
 def _parse_timestamp(value: Any) -> datetime | None:
@@ -253,6 +324,22 @@ def validate_spec(spec: dict[str, Any]) -> AuditSurface:
     factors = _records(spec, "factors")
     transitions = _records(spec, "transitions")
     controls = _records(spec, "negative_controls")
+    differentiable_surrogate_claimed = bool(
+        spec.get("claims_differentiable_surrogate")
+        or spec.get("differentiable_surrogate_ready")
+    )
+    optimization_surface_raw = spec.get("optimization_surface", {})
+    optimization_surface = (
+        optimization_surface_raw if isinstance(optimization_surface_raw, dict) else {}
+    )
+    optimization_loss_terms = _dict_records(optimization_surface, "loss_terms")
+    optimization_intervention_bounds = _dict_records(
+        optimization_surface, "intervention_bounds"
+    )
+    optimization_evidence_links = _string_list(optimization_surface, "evidence_links")
+    prohibited_decision_uses = _string_list(
+        optimization_surface, "prohibited_decision_uses"
+    )
     findings: list[Finding] = []
 
     for key, records in (
@@ -520,6 +607,156 @@ def validate_spec(spec: dict[str, Any]) -> AuditSurface:
                     )
                 )
 
+    if differentiable_surrogate_claimed:
+        if not optimization_surface:
+            findings.append(
+                Finding(
+                    "critical",
+                    "optimization_surface_required",
+                    "optimization_surface",
+                    "Differentiable-surrogate claims need an optimization surface.",
+                )
+            )
+        missing_optimization_fields = sorted(
+            field
+            for field in REQUIRED_OPTIMIZATION_FIELDS
+            if not optimization_surface.get(field)
+        )
+        if missing_optimization_fields:
+            findings.append(
+                Finding(
+                    "critical",
+                    "optimization_field_required",
+                    "optimization_surface",
+                    "Missing optimization field(s): "
+                    + ", ".join(missing_optimization_fields),
+                )
+            )
+        scope = optimization_surface.get("differentiability_scope")
+        if not isinstance(scope, str) or not scope.strip():
+            findings.append(
+                Finding(
+                    "critical",
+                    "differentiability_scope_required",
+                    "optimization_surface.differentiability_scope",
+                    "Differentiability scope must be explicit prose.",
+                )
+            )
+        else:
+            scope_lower = scope.lower()
+            if "surrogate" not in scope_lower or not any(
+                token in scope_lower for token in ("not", "outside", "exclude")
+            ):
+                findings.append(
+                    Finding(
+                        "warning",
+                        "differentiability_scope_boundary_weak",
+                        "optimization_surface.differentiability_scope",
+                        (
+                            "Scope should state that differentiability applies to "
+                            "surrogate variables, not the organization itself."
+                        ),
+                    )
+                )
+        if not optimization_loss_terms:
+            findings.append(
+                Finding(
+                    "critical",
+                    "loss_terms_required",
+                    "optimization_surface.loss_terms",
+                    "Optimization-ready sketches need explicit loss/objective terms.",
+                )
+            )
+        if not optimization_intervention_bounds:
+            findings.append(
+                Finding(
+                    "critical",
+                    "intervention_bounds_required",
+                    "optimization_surface.intervention_bounds",
+                    "Optimization-ready sketches need bounded intervention variables.",
+                )
+            )
+        if not optimization_evidence_links:
+            findings.append(
+                Finding(
+                    "critical",
+                    "optimization_evidence_links_required",
+                    "optimization_surface.evidence_links",
+                    "Optimization-ready sketches need provenance links for the surface.",
+                )
+            )
+        if not prohibited_decision_uses:
+            findings.append(
+                Finding(
+                    "critical",
+                    "prohibited_decision_uses_required",
+                    "optimization_surface.prohibited_decision_uses",
+                    "Optimization-ready sketches need explicit non-use boundaries.",
+                )
+            )
+
+        optimization_records = (
+            ("loss_terms", optimization_loss_terms),
+            ("intervention_bounds", optimization_intervention_bounds),
+        )
+        for field_name, records in optimization_records:
+            for index, record in enumerate(records):
+                record_id = str(record.get("id", index))
+                evidence_links = _evidence_links(record)
+                if not evidence_links:
+                    findings.append(
+                        Finding(
+                            "critical",
+                            "optimization_record_evidence_required",
+                            f"optimization_surface.{field_name}.{record_id}",
+                            "Optimization terms and bounds need evidence links.",
+                        )
+                    )
+                    continue
+                unknown_links = sorted(
+                    ref for ref in evidence_links if ref not in known_evidence
+                )
+                if unknown_links:
+                    findings.append(
+                        Finding(
+                            "critical",
+                            "unknown_optimization_evidence",
+                            f"optimization_surface.{field_name}.{record_id}",
+                            "Unknown optimization evidence reference(s): "
+                            + ", ".join(unknown_links),
+                        )
+                    )
+
+        unknown_surface_links = sorted(
+            ref for ref in optimization_evidence_links if ref not in known_evidence
+        )
+        if unknown_surface_links:
+            findings.append(
+                Finding(
+                    "critical",
+                    "unknown_optimization_evidence",
+                    "optimization_surface.evidence_links",
+                    "Unknown optimization evidence reference(s): "
+                    + ", ".join(unknown_surface_links),
+                )
+            )
+        prohibited_text = " ".join(prohibited_decision_uses).lower()
+        missing_non_use_categories = [
+            label
+            for label, tokens in PROHIBITED_DECISION_CATEGORIES
+            if not any(token in prohibited_text for token in tokens)
+        ]
+        if missing_non_use_categories:
+            findings.append(
+                Finding(
+                    "warning",
+                    "prohibited_decision_category_missing",
+                    "optimization_surface.prohibited_decision_uses",
+                    "Missing non-use category/categories: "
+                    + ", ".join(missing_non_use_categories),
+                )
+            )
+
     control_ids = _string_set(controls, "id")
     missing_controls = REQUIRED_NEGATIVE_CONTROLS - control_ids
     if missing_controls:
@@ -539,6 +776,11 @@ def validate_spec(spec: dict[str, Any]) -> AuditSurface:
         dynamic_traces=len(dynamic),
         factors=len(factors),
         transitions=len(transitions),
+        differentiable_surrogate_claimed=differentiable_surrogate_claimed,
+        optimization_loss_terms=len(optimization_loss_terms),
+        optimization_intervention_bounds=len(optimization_intervention_bounds),
+        optimization_evidence_links=len(optimization_evidence_links),
+        prohibited_decision_uses=len(prohibited_decision_uses),
         negative_controls=len(controls),
         factor_kinds=tuple(sorted(factor_kinds)),
         dynamic_trace_kinds=tuple(sorted(_string_set(dynamic, "kind"))),
@@ -557,6 +799,11 @@ def render_markdown(surface: AuditSurface) -> str:
         f"- Dynamic traces: {surface.dynamic_traces}",
         f"- Candidate factors: {surface.factors}",
         f"- Candidate transitions: {surface.transitions}",
+        f"- Differentiable-surrogate claim: {surface.differentiable_surrogate_claimed}",
+        f"- Optimization loss terms: {surface.optimization_loss_terms}",
+        f"- Intervention bounds: {surface.optimization_intervention_bounds}",
+        f"- Optimization evidence links: {surface.optimization_evidence_links}",
+        f"- Prohibited decision uses: {surface.prohibited_decision_uses}",
         f"- Negative controls: {surface.negative_controls}",
         "",
         "## Claim Boundary",
@@ -565,7 +812,10 @@ def render_markdown(surface: AuditSurface) -> str:
             "This audit treats organization charts and process diagrams as typed "
             "priors. It requires dynamic evidence, provenance, temporal "
             "admissibility, role-compatible transitions, and negative controls "
-            "before a sketch can be discussed as a surrogate model."
+            "before a sketch can be discussed as a surrogate model. When the "
+            "sketch claims differentiable-surrogate readiness, only declared "
+            "surrogate parameters, losses, and bounded intervention variables "
+            "are in scope for optimization."
         ),
         "",
     ]
@@ -614,6 +864,19 @@ def render_svg(surface: AuditSurface) -> str:
         "unknown_transition_evidence",
         "unknown_transition_factor",
     }
+    optimization_blockers = {
+        "differentiability_scope_boundary_weak",
+        "differentiability_scope_required",
+        "intervention_bounds_required",
+        "loss_terms_required",
+        "optimization_evidence_links_required",
+        "optimization_field_required",
+        "optimization_record_evidence_required",
+        "optimization_surface_required",
+        "prohibited_decision_category_missing",
+        "prohibited_decision_uses_required",
+        "unknown_optimization_evidence",
+    }
     lanes = [
         _lane("Typed artifacts present", surface.static_artifacts > 0, 84),
         _lane("Dynamic evidence present", surface.dynamic_traces > 0, 122),
@@ -623,7 +886,27 @@ def render_svg(surface: AuditSurface) -> str:
             160,
         ),
         _lane("Transitions are temporally admissible", not (critical_codes & transition_blockers), 198),
-        _lane("Negative controls present", "negative_control_missing" not in critical_codes, 236),
+        _lane(
+            "Differentiability scoped to surrogate",
+            not (
+                surface.differentiable_surrogate_claimed
+                and ((critical_codes | warning_codes) & optimization_blockers)
+            ),
+            236,
+        ),
+        _lane(
+            "Non-use boundaries declared",
+            not (
+                surface.differentiable_surrogate_claimed
+                and {
+                    "prohibited_decision_category_missing",
+                    "prohibited_decision_uses_required",
+                }
+                & (critical_codes | warning_codes)
+            ),
+            274,
+        ),
+        _lane("Negative controls present", "negative_control_missing" not in critical_codes, 312),
     ]
     title = html.escape("Organization state-space audit")
     subtitle = html.escape(
@@ -633,15 +916,15 @@ def render_svg(surface: AuditSurface) -> str:
     warning_note = ""
     if warning_codes:
         warning_note = (
-            '<text x="370" y="216" font-family="Arial, sans-serif" '
+            '<text x="370" y="240" font-family="Arial, sans-serif" '
             'font-size="13" fill="#8a5c00">Warnings: '
             + html.escape(", ".join(sorted(warning_codes)))
             + "</text>"
         )
     return "\n".join(
         [
-            '<svg xmlns="http://www.w3.org/2000/svg" width="900" height="320" viewBox="0 0 900 320" role="img" aria-label="Organization state-space audit">',
-            '<rect width="900" height="320" fill="#f8faf7"/>',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400" viewBox="0 0 900 400" role="img" aria-label="Organization state-space audit">',
+            '<rect width="900" height="400" fill="#f8faf7"/>',
             f'<text x="40" y="38" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#172018">{title}</text>',
             f'<text x="40" y="64" font-family="Arial, sans-serif" font-size="14" fill="#405047">{subtitle}</text>',
             *lanes,
@@ -650,8 +933,9 @@ def render_svg(surface: AuditSurface) -> str:
             '<text x="370" y="154" font-family="Arial, sans-serif" font-size="13" fill="#405047">They do not mean an organization has been modeled or optimized.</text>',
             '<text x="370" y="178" font-family="Arial, sans-serif" font-size="13" fill="#405047">Red lanes block surrogate-model language until repaired.</text>',
             '<text x="370" y="202" font-family="Arial, sans-serif" font-size="13" fill="#405047">Temporal checks reject future evidence for earlier transitions.</text>',
+            '<text x="370" y="226" font-family="Arial, sans-serif" font-size="13" fill="#405047">Differentiability, if claimed, is scoped to the surrogate surface.</text>',
             warning_note,
-            '<text x="40" y="296" font-family="Arial, sans-serif" font-size="12" fill="#405047">Negative controls: org-chart-only should fail for missing dynamic evidence; trace-only should fail for missing typed artifacts.</text>',
+            '<text x="40" y="372" font-family="Arial, sans-serif" font-size="12" fill="#405047">Negative controls: org-chart-only should fail for missing dynamic evidence; trace-only should fail for missing typed artifacts.</text>',
             "</svg>",
         ]
     )

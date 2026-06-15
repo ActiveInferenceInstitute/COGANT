@@ -1,6 +1,6 @@
 # AGENTS.md — `.github/workflows`
 
-GitHub Actions workflows for `docxology/cogant`. All Python steps run
+GitHub Actions workflows for `ActiveInferenceInstitute/COGANT`. All Python steps run
 through `uv run` so CI matches local development.
 
 ## Workflow inventory

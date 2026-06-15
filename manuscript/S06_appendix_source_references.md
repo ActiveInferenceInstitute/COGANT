@@ -60,6 +60,7 @@ related-work claims.
 | Visualization quality audit | `../tools/visualization_quality_audit.py` | Summarizes promoted figure sidecars into JSON, Markdown, and PNG review artifacts |
 | Manuscript evidence audit | `../tools/manuscript_evidence_audit.py` | Summarizes section-level citation, metric, figure, artifact, validator, and boundary-language lanes, including non-fatal reviewer actions |
 | Manuscript review dashboard | `../tools/manuscript_review_dashboard.py` | Combines figure QA, section evidence, claim ledger, figure-manifest status, and the current evidence review queue |
+| Publication readiness audit | `../tools/audit_publication_readiness.py` | Classifies claims by evidence primitive, checks render-time date autofill, and combines generated evidence surfaces into a ready / caveated / blocked verdict |
 | Claim ledger generator | `../tools/claim_ledger.py` | Indexes numeric, citation, figure, artifact-path, and placeholder claims in the manuscript |
 | GNN v2 audit surface | `../tools/gnn_v2_audit_surface.py` | Separates version, bridge, COGANT-method, upstream-step, and supply-chain claims into JSON/Markdown/SVG evidence |
 | Organization state-space R&D audit | `../tools/organization_state_space_audit.py` | Validates typed-organization sketches against dynamic-evidence, provenance, temporal-admissibility, role-compatible transition, negative-control, and SVG-review requirements |
@@ -70,6 +71,7 @@ related-work claims.
 | Claim ledger snapshot | `../output/claim_ledger.md` | Generated review table for unsupported or newly added literal claims |
 | Manuscript evidence snapshot | `../output/analysis/manuscript_evidence_audit.md` | Generated section-level matrix and reviewer-action queue for evidence-lane review |
 | Manuscript review dashboard | `../output/analysis/manuscript_review_dashboard.md` | Generated integrated review summary for figure, claim, evidence, manifest, and review-queue status |
+| Publication readiness snapshot | `../output/analysis/publication_readiness.md` | Generated verdict tying active publication metadata and claims to metric, artifact, citation, validator, or limitation evidence |
 
 ## Manuscript sections cited by other appendices
 

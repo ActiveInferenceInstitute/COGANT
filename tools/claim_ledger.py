@@ -38,10 +38,10 @@ class ClaimRecord:
 PLACEHOLDER_RE = re.compile(r"\{\{[A-Z0-9_]+\}\}")
 CITATION_RE = re.compile(r"@\w[\w:-]+")
 FIGURE_RE = re.compile(r"@fig:[\w:-]+|!\[[^\]]*\]\(([^)]+)\)")
-NUMBER_RE = re.compile(r"(?<![\w{])(?:\d+(?:\.\d+)?%?|\d+/\d+)(?![\w}])")
+NUMBER_RE = re.compile(r"(?<![\w])-?(?:\d+(?:\.\d+)?%?|\d+/\d+)(?![\w])")
 PATH_RE = re.compile(r"`(\.\./[^`]+|cogant/[^`]+|tools/[^`]+|scripts/[^`]+)`")
 INLINE_CODE_RE = re.compile(r"`[^`]+`")
-CROSSREF_RE = re.compile(r"@(?:sec|tbl|fig|eq|lst):[\w:-]+")
+CROSSREF_RE = re.compile(r"@(?:sec|tbl|fig|eq|lst|def|prop|inv|conj|alg|thm):[\w:-]+")
 ANCHOR_RE = re.compile(r"\{#[\w:-]+\}")
 DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 VERSION_RE = re.compile(r"\bv?\d+(?:\.\d+)+(?:[a-z])?\b", re.IGNORECASE)
@@ -66,6 +66,8 @@ def _kind_hint(kind: str, token: str, classification: str = "") -> str:
     if kind == "placeholder":
         return "METRICS.yaml via tools/manuscript_vars.py"
     if kind == "citation":
+        if CROSSREF_RE.fullmatch(token):
+            return "validator-backed manuscript cross-reference"
         return "references.bib primary/source citation"
     if kind == "figure":
         return "generated/copied figure manifest"
@@ -124,6 +126,8 @@ def classify_literal_number(
     if _inside_span(start, end, _spans(INLINE_CODE_RE, line) + _spans(MARKDOWN_LINK_RE, line)):
         return "inline_code_or_artifact_path"
     if _inside_span(start, end, _spans(MATH_RE, line)):
+        return "math_notation"
+    if line.count("$") == 1 and "$$" not in line:
         return "math_notation"
     if "zoo/" in line:
         return "artifact_coordinate"
@@ -249,6 +253,7 @@ def write_ledger(records: list[ClaimRecord], output_dir: Path = OUTPUT_DIR) -> d
     }
     json_path = output_dir / "claim_ledger.json"
     json_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    template_seed_path = write_template_evidence_claim_ledger(records, output_dir)
     md_path = output_dir / "claim_ledger.md"
     lines = [
         "# COGANT Claim Ledger",
@@ -265,7 +270,57 @@ def write_ledger(records: list[ClaimRecord], output_dir: Path = OUTPUT_DIR) -> d
             f"{record.classification} | {record.evidence_hint} |"
         )
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return {"json": json_path, "markdown": md_path}
+    return {"json": json_path, "markdown": md_path, "template_evidence": template_seed_path}
+
+
+def write_template_evidence_claim_ledger(
+    records: list[ClaimRecord],
+    output_dir: Path = OUTPUT_DIR,
+) -> Path:
+    """Write a compatibility claim ledger for the parent template validator.
+
+    The template evidence registry already consumes ``*claim*ledger*.json`` files
+    under ``output/data``. COGANT's richer ledger lives at ``output/`` and uses a
+    different row shape, so this derived seed exposes the same claims as simple
+    ``{claim_id, kind, value}`` facts without changing template infrastructure.
+    """
+
+    data_dir = output_dir / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    claims: list[dict[str, object]] = []
+    for index, record in enumerate(records, start=1):
+        kind, value = _template_evidence_kind_value(record)
+        if kind is None or value is None:
+            continue
+        claims.append(
+            {
+                "claim_id": f"{record.file}:{record.line}:{index}",
+                "kind": kind,
+                "value": value,
+                "source": "COGANT claim ledger",
+                "source_path": record.file,
+                "source_tier": "claim_ledger",
+                "freshness": "active",
+            }
+        )
+    path = data_dir / "template_evidence_claim_ledger.json"
+    payload = {
+        "schema_version": "template-evidence-claim-ledger-v1",
+        "generated_at": datetime.now(UTC).isoformat(),
+        "claims": claims,
+    }
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _template_evidence_kind_value(record: ClaimRecord) -> tuple[str | None, str | None]:
+    if record.kind == "literal_number":
+        return "number", record.text
+    if record.kind == "citation":
+        return "citation", record.text.removeprefix("@")
+    if record.kind == "figure" and record.text.startswith("@fig:"):
+        return "figure", record.text.removeprefix("@")
+    return None, None
 
 
 def main(argv: list[str] | None = None) -> int:

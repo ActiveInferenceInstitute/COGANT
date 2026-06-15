@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Audit pandoc-crossref-style identifiers across COGANT manuscript fragments.
 
-Collects definitions ``{#sec:…}``, ``{#tbl:…}``, ``{#eq:…}``, ``{#fig:…}`` and
-references ``@sec:…``, ``@tbl:…``, ``@eq:…``, ``@fig:…`` from Markdown files under
-``manuscript/``. Reports duplicate definitions and references with no matching
-definition.
+Collects definitions ``{#sec:…}``, ``{#tbl:…}``, ``{#eq:…}``, ``{#fig:…}``,
+and COGANT-owned formal references such as ``{#def:…}`` / ``{#prop:…}`` from
+Markdown files under ``manuscript/``. Reports duplicate definitions and
+references with no matching definition.
 
 Strict mode also scans manuscript source, injected Markdown, rendered HTML, and
 the combined LaTeX file for unresolved cross-reference tokens, raw LaTeX
@@ -42,13 +42,14 @@ _TOOLS_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TOOLS_DIR.parent
 
 # {#sec:id} or image/table attrs like {#fig:id width=95%}; allow hyphenated ids.
-_DEF_RE = re.compile(r"\{#(sec|tbl|eq|fig):([A-Za-z0-9_-]+)(?:\s+[^}]*)?\}")
-_REF_RE = re.compile(r"@(sec|tbl|eq|fig):([A-Za-z0-9_-]+)\b")
+_CROSSREF_PREFIXES = "sec|tbl|eq|fig|lst|def|prop|inv|conj|alg|thm"
+_DEF_RE = re.compile(r"\{#(" + _CROSSREF_PREFIXES + r"):([A-Za-z0-9_-]+)(?:\s+[^}]*)?\}")
+_REF_RE = re.compile(r"@(" + _CROSSREF_PREFIXES + r"):([A-Za-z0-9_-]+)\b")
 
 _SKIP_NAMES = frozenset({"AGENTS.md", "README.md", "SYNTAX.md"})
 
 _RAW_LATEX_REF_RE = re.compile(r"\\(?:eq)?ref\{[^}]+\}|(?:Equation|Eq\.)\s+\\ref\{[^}]+\}")
-_RAW_RENDERED_REF_RE = re.compile(r"@(sec|tbl|eq|fig):[A-Za-z0-9_-]+\b")
+_RAW_RENDERED_REF_RE = re.compile(r"@(" + _CROSSREF_PREFIXES + r"):[A-Za-z0-9_-]+\b")
 _DUP_RENDERED_CAPTION_RE = re.compile(
     r"\b(Table|Figure)\s+\d+[A-Za-z]?(?:\.\d+)?\s*:\s*\1\s+\d+[A-Za-z]?(?:\.\d+)?\b",
     re.IGNORECASE,
@@ -66,6 +67,15 @@ _HARDCODED_REF_RE = re.compile(
     r")\b"
 )
 _RAW_FRAGMENT_RE = re.compile(r"\b0[1-9]_[0-9]{2}\b|\bS0[1-9]_[A-Za-z0-9_-]+\b")
+_GENERATED_FORMALISM_RE = re.compile(
+    r"\[\]\{#(?:def|prop|inv|conj|alg|thm):[A-Za-z0-9_-]+\}"
+    r"\*\*(?:Definition|Proposition|Implementation invariant|Empirical invariant|"
+    r"Conjecture|Algorithm|Theorem) \d+"
+)
+_GENERATED_FORMALISM_LINK_RE = re.compile(
+    r"\[(?:Definition|Proposition|Implementation invariant|Empirical invariant|"
+    r"Conjecture|Algorithm|Theorem) \d+\]\(#(?:def|prop|inv|conj|alg|thm):[A-Za-z0-9_-]+\)"
+)
 
 _SOURCE_SCAN_EXTS = {".md"}
 _RENDERED_SCAN_EXTS = {".html", ".tex"}
@@ -117,9 +127,12 @@ def _scan_source_reference_hygiene(files: list[Path]) -> list[str]:
         for lineno, line in _strip_fenced_code_lines(text):
             if _is_allowed_heading_reference(line):
                 continue
+            scan_line = _GENERATED_FORMALISM_LINK_RE.sub("", line)
+            if _GENERATED_FORMALISM_RE.search(scan_line):
+                scan_line = _GENERATED_FORMALISM_RE.sub("", scan_line)
             if _RAW_LATEX_REF_RE.search(line):
                 findings.append(_finding(path, lineno, "raw LaTeX reference; use @eq:/@sec:/@tbl:/@fig:"))
-            match = _HARDCODED_REF_RE.search(line)
+            match = _HARDCODED_REF_RE.search(scan_line)
             if match:
                 findings.append(
                     _finding(path, lineno, f"hard-coded prose reference `{match.group(0)}`; use pandoc-crossref")

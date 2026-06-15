@@ -22,6 +22,11 @@ Numerical data in @sec:S01-appendix-roundtrip-epsilon and
 `METRICS.yaml` governs roundtrip aggregate claims and measured fixture files
 govern their own fixture-specific tables.
 
+This appendix is an index and not a new evidence source. Cross-reference and
+claim-scope checks should be run with `uv run python tools/audit_manuscript_crossrefs.py`
+and `uv run python tools/audit_manuscript_claim_scope.py`; those validators
+bound the appendix links but do not independently remeasure the package.
+
 **Recommended reading order:** @sec:S01-appendix-roundtrip-epsilon establishes
 the empirical ground truth for roundtrip status; @sec:S02-appendix-ablation
 decomposes those scores into per-rule-family contributions on the minimal zoo
@@ -45,8 +50,8 @@ source material cited throughout.
 - @sec:S03-appendix-galois-sketch gives the conjectural, scoped statement and
   argument sketch for an epsilon-approximate Galois-style comparison between
   **Prog** and **GNN** preorder quotients, plus
-  @sec:thm-bounded-role-preservation-gap and
-  @sec:prop-role-preservation-threshold.
+  @inv:bounded-role-preservation-gap and
+  @prop:role-preservation-threshold.
 - @sec:S04-appendix-inference-mathematics gives the discrete-time POMDP
   formulation, variational free energy (VFE) functional and derivation,
   belief-propagation equations, identity-case zero-VFE analysis, observed VFE

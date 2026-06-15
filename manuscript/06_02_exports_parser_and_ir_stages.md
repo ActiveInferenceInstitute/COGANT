@@ -37,3 +37,10 @@ Processing advances through six intermediate representations, each adding semant
 : Progressive IR stages and their contributions. {#tbl:progressive-ir-stages}
 
 Stages 4 and 5 are **partial** for many repositories: the state-space compiler requires either execution traces or sufficient static structure (for example annotated state machines) to produce meaningful output. Where dynamic evidence is available, COGANT's ingestion pipeline follows the established pattern of attaching runtime observations (coverage, call frequencies, traces) to static program elements --- dynamic instrumentation frameworks such as Pin [@luk2005pin] and invariant detectors such as Daikon [@ernst2007daikon] established this general approach of augmenting static program structure with execution-time evidence. The pipeline tolerates missing stages gracefully; the Validation IR records which stages completed and which were skipped.
+
+The parser/export claims in this subsection are covered by package tests rather
+than by the stage table alone: `uv run --directory cogant pytest --no-cov tests/unit/test_export_formats.py tests/unit/test_export_bundle_contract.py tests/unit/test_static_types_calls_gnn_json_export_type_targeted.py tests/integration/test_export_pipeline.py -q`
+checks export formats, bundle contracts, typed static extraction, and the
+integration export path. These tests validate artifact shape and parser coverage
+for the shipped fixtures; they do not establish complete Python semantic
+resolution.

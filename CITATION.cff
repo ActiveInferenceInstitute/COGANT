@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use COGANT, please cite it using the metadata below."
+title: "COGANT: Deterministic Codebase-to-GNN Translation"
+abstract: >-
+  COGANT (Codebase-to-GNN Translation) deterministically converts software
+  repositories into structured Active Inference artifacts expressed in the
+  Active Inference Institute's Generalized Notation Notation (GNN). It is an
+  evidence compiler: it propagates reviewable program facts through a finite
+  fixpoint rule pipeline and emits graph, matrix, provenance, visualization,
+  and round-trip artifacts with confidence and provenance.
+type: software
+version: "0.6.0"
+date-released: "2026-06-15"
+license: MIT
+repository-code: "https://github.com/ActiveInferenceInstitute/COGANT"
+url: "https://github.com/ActiveInferenceInstitute/COGANT"
+doi: "10.5281/zenodo.20705350"
+authors:
+  - family-names: Friedman
+    given-names: Daniel Ari
+    orcid: "https://orcid.org/0000-0001-6232-9096"
+    affiliation: "Active Inference Institute"
+keywords:
+  - program analysis
+  - Generalized Notation Notation
+  - GNN
+  - intermediate representation
+  - code property graph
+  - active inference
+  - reproducible research
+  - codebase-to-model translation
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.20705350"
+    description: "Concept DOI (all versions)"
+  - type: doi
+    value: "10.5281/zenodo.20705351"
+    description: "Version DOI (v0.6.0)"

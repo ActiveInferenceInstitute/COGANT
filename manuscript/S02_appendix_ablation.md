@@ -18,6 +18,13 @@ isolate each rule family's contribution to the minimal POMDP skeleton.
 > family, removing one family may change the role mix without changing the net
 > mapping count.
 
+Regenerate this appendix's numeric surface with `uv run python tools/regenerate_ablation.py`
+followed by `uv run python scripts/z_generate_manuscript_variables.py --strict`.
+Those commands refresh `../cogant/evaluation/METRICS.yaml`,
+`../output/data/manuscript_variables.json`, and the generated readiness reports;
+they do not turn the minimal zoo fixture into evidence for broad application
+generality.
+
 ### B.1 Rule-family ablation on zoo/01\_simple\_state
 
 **Baseline (all 5 families enabled).** The live harness records

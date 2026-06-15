@@ -1,5 +1,13 @@
 # Reproducibility {#sec:07-reproducibility}
 
+**Availability.** The COGANT source repository is published at
+<https://github.com/ActiveInferenceInstitute/COGANT> under the MIT License, and
+this release is archived on Zenodo with version DOI
+[10.5281/zenodo.20705351](https://doi.org/10.5281/zenodo.20705351) (the
+version-independent concept DOI [10.5281/zenodo.20705350](https://doi.org/10.5281/zenodo.20705350)
+always resolves to the latest version). Cite the version DOI when reporting
+results derived from a specific release.
+
 Reproducible computational research requires version-pinned tools, fixed inputs, documented workflows, immutable outputs, and citable software artifacts [@peng2011reproducible; @sandve2013ten; @smith2016softwareCitationPrinciples]. ACM's artifact-review terminology is useful here because it distinguishes available artifacts, evaluated artifacts, reproduced results, and independently replicated results [@acmArtifactBadging2020]. COGANT contributes the **graph-generation** slice of that story: identical source trees and identical pipeline configuration should yield identical exported bundles modulo declared nondeterminism (for example optional neural embeddings if enabled). That is a repeatability and artifact-audit claim, not a claim that an independent team has reproduced or replicated every manuscript result. The project also borrows the FAIR emphasis on machine-actionable metadata [@wilkinson2016fair]: generated bundles, figure manifests, rule traces, and claim-ledger rows are designed to be inspected by scripts as well as by human reviewers. When a release is deposited in Zenodo or a similar archive, the software citation should identify the exact immutable version rather than only the moving source repository [@vanDeSandt2019zenodoSoftwareCitations].
 
 ## Publication checklist

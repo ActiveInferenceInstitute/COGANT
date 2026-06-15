@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from collections.abc import Iterable
 from dataclasses import asdict
@@ -31,6 +32,10 @@ from figures.metadata import (
 )
 from figures.png import _png_dimensions, _png_text_metadata, _png_visual_metrics, _sha256_file
 from figures.renderers import _prepare_source_figures
+
+_IMAGE_LABEL_RE = re.compile(
+    r"!\[[^\]]*\]\((?P<path>[^)]+)\)\{#(?P<label>fig:[-A-Za-z0-9_.:]+)(?:\s[^}]*)?\}"
+)
 
 
 def copy_manuscript_figures(
@@ -273,6 +278,7 @@ def copy_manuscript_figures(
     }
     manifest_path = output_dir / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    _write_template_figure_registry(root, output_dir, copied, generated_at)
 
     if strict and missing:
         missing_sources = ", ".join(str(item["source"]) for item in missing)
@@ -281,3 +287,57 @@ def copy_manuscript_figures(
         raise ValueError("Incomplete manuscript figure metadata: " + "; ".join(strict_failures))
 
     return manifest_path
+
+
+def _write_template_figure_registry(
+    root: Path,
+    output_dir: Path,
+    copied: list[dict[str, object]],
+    generated_at: str,
+) -> Path:
+    """Write the parent-template figure registry shape beside COGANT's manifest."""
+
+    labels_by_filename = _manuscript_figure_labels_by_filename(root)
+    entries: list[dict[str, object]] = []
+    for record in copied:
+        destination = str(record.get("destination") or "")
+        filename = Path(destination).name
+        for label in sorted(labels_by_filename.get(filename, ())):
+            entries.append(
+                {
+                    "label": label,
+                    "filename": filename,
+                    "caption": record.get("caption", ""),
+                    "key": record.get("key", ""),
+                    "role": record.get("role", ""),
+                    "generated_by": record.get("renderer", ""),
+                    "source_artifact": record.get("source_artifact", ""),
+                    "sha256": record.get("sha256", ""),
+                }
+            )
+    registry = {
+        "schema_version": "template-figure-registry-v1",
+        "generated_at": generated_at,
+        "figures": entries,
+    }
+    path = output_dir / "figure_registry.json"
+    path.write_text(json.dumps(registry, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _manuscript_figure_labels_by_filename(root: Path) -> dict[str, set[str]]:
+    labels: dict[str, set[str]] = {}
+    manuscript_dir = root / "manuscript"
+    if not manuscript_dir.exists():
+        return labels
+    for path in sorted(manuscript_dir.glob("*.md")):
+        if path.name in {"AGENTS.md", "README.md", "SYNTAX.md"}:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for match in _IMAGE_LABEL_RE.finditer(text):
+            filename = Path(match.group("path")).name
+            labels.setdefault(filename, set()).add(match.group("label").rstrip(".,;:"))
+    return labels

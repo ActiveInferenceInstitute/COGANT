@@ -1,0 +1,32 @@
+{
+  "title": "COGANT: Deterministic Codebase-to-GNN Translation",
+  "upload_type": "software",
+  "license": "MIT",
+  "version": "0.6.0",
+  "publication_date": "2026-06-15",
+  "creators": [
+    {
+      "name": "Friedman, Daniel Ari",
+      "orcid": "0000-0001-6232-9096",
+      "affiliation": "Active Inference Institute"
+    }
+  ],
+  "keywords": [
+    "program analysis",
+    "Generalized Notation Notation",
+    "GNN",
+    "intermediate representation",
+    "code property graph",
+    "active inference",
+    "reproducible research",
+    "codebase-to-model translation",
+    "cognitive ecosystem modeling"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/ActiveInferenceInstitute/COGANT",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ]
+}

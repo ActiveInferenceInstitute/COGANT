@@ -83,6 +83,7 @@ or rule-set modification. The authoritative check is:
 # From this COGANT project root
 uv run python tools/audit_manuscript_crossrefs.py       # orphan @sec/@tbl vs {#sec:}/{#tbl:}; duplicate ids
 uv run python tools/audit_manuscript_citations.py       # body @citation keys vs references.bib; duplicate bib keys
+uv run python tools/audit_manuscript_formalisms.py --strict  # typed formal labels and generated formal numbering
 uv run python tools/audit_manuscript_numbers.py           # numeric drift vs METRICS.yaml
 uv run python tools/audit_manuscript_math_adjacency.py     # inline-math spans that would leak after digit substitution
 uv run python tools/audit_robustness_table.py              # robustness table rows vs generated JSON artifact

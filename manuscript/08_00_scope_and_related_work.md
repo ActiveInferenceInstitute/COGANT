@@ -27,3 +27,5 @@ The detailed related-work comparison is split by topic so the overview does not 
 - @sec:08-04-world-models-boundaries-and-compatibility — world models from code, active inference, boundaries, and forward compatibility.
 
 Authoritative **implementation scope** (languages, parsers, Rust acceleration) is recorded in `../cogant/docs/reference/implementation_status.md`.
+
+The chapter-level review surface is executable: `uv run python tools/audit_manuscript_claim_scope.py` screens the related-work prose for overclaims, benchmark framing, and semantic-totality language, while `../output/analysis/publication_readiness.md` records whether the generated claim ledger still treats the chapter as citation-backed, artifact-backed, validator-backed, or boundary-scoped.

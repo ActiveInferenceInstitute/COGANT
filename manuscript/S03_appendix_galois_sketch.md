@@ -52,7 +52,7 @@ Both extensions agree on the image of `F`: `ρ(F(G)) = ρ_GNN(F(G))` for every
 mapping in the translate output. The PREFERENCE role is included in `Roles`
 because the GNN `Preferences/Constraints` section can record explicit preferences while the
 shipped source-code rule set usually emits validator/test evidence as CONSTRAINT mappings;
-@sec:def-translation-rule lists the mapping-kind alphabet that contains all Active Inference
+@def:translation-rule lists the mapping-kind alphabet that contains all Active Inference
 roles.
 The role multiset is a deliberately low-dimensional quotient of the program
 graph. It is not a replacement for label-preserving graph kernels such as the
@@ -77,7 +77,7 @@ in full.
 
 ### Adjunction (approximate) {#sec:S03-approximate-adjunction}
 
-#### Conjecture: Approximate Galois-style comparison {#sec:prop-approximate-galois}
+#### Conjecture: Approximate Galois-style comparison {#conj:approximate-galois}
 
 > **Status.** This is a **conjecture**, not a proposition. The "proof
 > sketch" that follows is a structural informal argument — *not* a
@@ -141,7 +141,7 @@ with the `scaffolding_fraction` field described below. ∎
 
 ### Role-preservation bound {#sec:S03-role-preservation-theorem}
 
-#### Empirical invariant: Bounded role-preservation gap {#sec:thm-bounded-role-preservation-gap}
+#### Empirical invariant: Bounded role-preservation gap {#inv:bounded-role-preservation-gap}
 
 > **Status.** This is an empirical invariant and analytic bound for the current
 > evaluator, not a fully formal theorem over all Python program graphs. It is
@@ -182,7 +182,7 @@ reports the drift fixtures and their high scaffolding fractions. ∎
 
 ### Role-preservation threshold and strict invariant tier {#sec:S03-role-preservation-threshold}
 
-#### Proposition: Role-preservation threshold {#sec:prop-role-preservation-threshold}
+#### Proposition: Role-preservation threshold {#prop:role-preservation-threshold}
 
 The threshold `s_role >= {{THRESHOLD_ROLE_PRESERVED}}` (as defined in
 `METRICS.yaml` `threshold_role_preserved`) to classify a target as

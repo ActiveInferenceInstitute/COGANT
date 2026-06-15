@@ -1,5 +1,10 @@
 # COGANT
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20705351.svg)](https://doi.org/10.5281/zenodo.20705351)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+Public home: <https://github.com/ActiveInferenceInstitute/COGANT> · Archived release: [10.5281/zenodo.20705351](https://doi.org/10.5281/zenodo.20705351) (all versions: [10.5281/zenodo.20705350](https://doi.org/10.5281/zenodo.20705350)).
+
 Codebase-to-GNN translation — **package** under [`cogant/`](cogant/), **manuscript** under [`manuscript/`](manuscript/). This checkout is self-contained at the COGANT project root; when linked into `docxology/template`, the same tree is expected to appear at `projects/working/cogant/` and be rendered with the lifecycle-qualified project name `working/cogant`. See [`PROMOTION.md`](PROMOTION.md) for the render-location checklist.
 
 Top-level [`src/`](src/), [`tests/`](tests/), and [`pyproject.toml`](pyproject.toml)
@@ -107,7 +112,7 @@ Equivalent: `cd cogant && uv run python ../run_all.py --config ../run_all.json`
 Quantitative benchmarks under [`cogant/evaluation/`](cogant/evaluation/) read 12 third-party Python repositories vendored as git submodules under [`cogant/evaluation/eval_repos/`](cogant/evaluation/eval_repos/). Fresh clones leave them empty; populate them with either of:
 
 ```bash
-git clone --recurse-submodules https://github.com/docxology/cogant.git
+git clone --recurse-submodules https://github.com/ActiveInferenceInstitute/COGANT.git
 # or, for an existing clone:
 git submodule update --init --recursive cogant/evaluation/eval_repos
 ```

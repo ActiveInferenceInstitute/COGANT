@@ -31,6 +31,11 @@ def test_example_spec_passes_and_writes_json_markdown_svg(tmp_path: Path) -> Non
     )
     assert payload["status"] == "PASS"
     assert payload["ready_for_surrogate"] is True
+    assert payload["differentiable_surrogate_claimed"] is True
+    assert payload["optimization_loss_terms"] == 1
+    assert payload["optimization_intervention_bounds"] == 1
+    assert payload["optimization_evidence_links"] == 3
+    assert payload["prohibited_decision_uses"] == 3
     assert payload["findings"] == []
     assert "not claim that COGANT models a legal entity" in payload["claim_boundary"]
     assert "literally differentiable" in payload["claim_boundary"]
@@ -41,6 +46,8 @@ def test_example_spec_passes_and_writes_json_markdown_svg(tmp_path: Path) -> Non
     svg = (output_dir / "organization_state_space_audit.svg").read_text(encoding="utf-8")
     assert "<svg" in svg
     assert "Dynamic evidence present" in svg
+    assert "Differentiability scoped to surrogate" in svg
+    assert "Non-use boundaries declared" in svg
 
 
 def test_org_chart_only_negative_control_fails_strict(tmp_path: Path) -> None:
@@ -132,3 +139,28 @@ def test_transition_factor_roles_must_match_state_action_contract() -> None:
         "transitions.transition_triage_to_recovery.from_state",
         "transitions.transition_triage_to_recovery.action",
     }
+
+
+def test_differentiable_surrogate_claim_requires_optimization_surface() -> None:
+    module = _load_module()
+    spec = module.example_spec()
+    spec["optimization_surface"].pop("loss_terms")
+
+    surface = module.validate_spec(spec)
+    codes = {finding.code for finding in surface.findings}
+    assert surface.status == "FAIL"
+    assert "optimization_field_required" in codes
+    assert "loss_terms_required" in codes
+
+
+def test_differentiable_surrogate_claim_requires_non_use_categories() -> None:
+    module = _load_module()
+    spec = module.example_spec()
+    spec["optimization_surface"]["prohibited_decision_uses"] = [
+        "legal_entity_modeling"
+    ]
+
+    surface = module.validate_spec(spec)
+    codes = {finding.code for finding in surface.findings}
+    assert surface.status == "REVIEW"
+    assert "prohibited_decision_category_missing" in codes

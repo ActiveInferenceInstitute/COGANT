@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -48,6 +49,22 @@ def test_strict_literal_number_gate_ignores_structural_markdown_numbers(tmp_path
     assert _actionable(records) == []
 
 
+def test_strict_literal_number_gate_ignores_split_inline_math_numbers(tmp_path: Path) -> None:
+    records = _records_for(
+        tmp_path,
+        "The update uses $B[s_t, s_{t-1}, a_{t-1}]\n"
+        "\\cdot Q(s_{t-1})$ as a finite categorical product.\n",
+    )
+
+    assert _actionable(records) == []
+    assert any(
+        record.kind == "literal_number"
+        and record.text == "1"
+        and record.classification == "math_notation"
+        for record in records
+    )
+
+
 def test_strict_literal_number_gate_reports_plain_prose_number(tmp_path: Path) -> None:
     records = _records_for(
         tmp_path,
@@ -58,3 +75,39 @@ def test_strict_literal_number_gate_reports_plain_prose_number(tmp_path: Path) -
     assert len(actionable) == 1
     assert actionable[0].text == "42"
     assert actionable[0].classification == "actionable_literal_number"
+
+
+def test_formal_references_are_validator_backed_in_ledger(tmp_path: Path) -> None:
+    records = _records_for(
+        tmp_path,
+        "The proof sketch refers to @def:program-graph and @prop:matrix-validity.\n",
+    )
+
+    formal_records = [record for record in records if record.kind == "citation"]
+    assert {record.text for record in formal_records} == {
+        "@def:program-graph",
+        "@prop:matrix-validity",
+    }
+    assert {
+        record.evidence_hint for record in formal_records
+    } == {"validator-backed manuscript cross-reference"}
+
+
+def test_write_ledger_emits_template_evidence_seed(tmp_path: Path) -> None:
+    module = _load_module()
+    records = _records_for(
+        tmp_path,
+        "The proof sketch cites @def:program-graph and reports 42 review rows.\n",
+    )
+
+    paths = module.write_ledger(records, tmp_path / "output")
+
+    seed_path = paths["template_evidence"]
+    payload = json.loads(seed_path.read_text(encoding="utf-8"))
+    claims = payload["claims"]
+    assert seed_path.name == "template_evidence_claim_ledger.json"
+    assert any(
+        claim["kind"] == "citation" and claim["value"] == "def:program-graph"
+        for claim in claims
+    )
+    assert any(claim["kind"] == "number" and claim["value"] == "42" for claim in claims)

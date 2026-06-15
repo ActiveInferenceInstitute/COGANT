@@ -36,9 +36,11 @@ After fixpoint termination, the engine invokes `_resolve_conflicts()` to reconci
 
 The same run also emits a rule-evidence trace. Each `SemanticMapping` carries additive metadata for the rule identifier, rule priority, matched node IDs, and fixpoint iteration that created it. `build_rule_evidence_trace()` then joins that metadata with graph snippets and the conflict log to produce a reviewer-facing table: mapping ID, role, confidence score, evidence snippets, confidence components, conflict-resolution outcome, and final status. This trace is COGANT's domain-specific analogue of a provenance record: it captures which activity produced the assertion, which graph entities it used, and which conflict-resolution activity modified its status, aligning with the entity/activity/derivation vocabulary of PROV-DM without requiring the JSON sidecar to be a literal PROV serialization [@moreau2013prov]. The finer-grained design is also consonant with provenance-semiring work, where derivation annotations are propagated through relational and Datalog-style fixed points instead of being collapsed into booleans [@green2007provenance]. Optional reviewer annotations mark mappings as accepted or rejected; the calibration summary derived from those annotations reports reviewed counts, accepted/rejected counts, per-rule precision proxies, and review coverage. This is deliberately narrower than a gold-standard recall claim: recall requires a labelled false-negative corpus, while the current artifact measures the precision of mappings that the rule engine actually proposed.
 
+The implementation assertions in this subsection are covered by focused regression tests rather than prose alone. From the package root, `uv run pytest --no-cov tests/unit/test_translation_rules.py tests/unit/test_translate_engine_rule_explanation_translation_init_targeted.py tests/property/test_translation_invariants.py -q` exercises rule matching, explanation traces, engine conflict behavior, and translation invariants; the source artifacts remain `../cogant/py/cogant/translate/engine.py` and `../cogant/py/cogant/translate/rules.py`.
+
 Translation coverage -- the fraction of graph nodes that received at least one semantic mapping -- is reported by `get_coverage_report(graph)`. It returns the total node count, the number of covered nodes, the number of uncovered nodes, a `coverage_percent` value rounded to two decimal places, and the sorted list of uncovered node IDs. The uncovered list is intentionally emitted verbatim so that downstream tooling can target unmapped regions for manual review or rule extension, rather than burying the gap behind a single aggregate number [@allamanis2018survey].
 
-### Algorithm: Fixpoint translation engine {#sec:alg-fixpoint-translation-engine}
+### Algorithm: Fixpoint translation engine {#alg:fixpoint-translation-engine}
 
 ```text
 input:  program graph G = (V, E), rule set R, maximum iterations K
@@ -59,14 +61,14 @@ for k in 1..K:
 return ResolveConflicts(M)
 ```
 
-@sec:alg-fixpoint-translation-engine summarizes the engine. The implemented
+@alg:fixpoint-translation-engine summarizes the engine. The implemented
 loop terminates by construction: each iteration either produces at least one
 new mapping (whose stable ID is then fixed in $\mathcal{M}$), stops at the
 no-new-mapping break condition, or reaches the explicit outer $K$ cap. The cap
 is a runtime safety valve for pathological or user-registered rule sets, not a
 semantic proof that every possible rule family is globally well behaved.
 
-### Algorithm: Priority-ordered conflict resolution {#sec:alg-conflict-resolution}
+### Algorithm: Priority-ordered conflict resolution {#alg:conflict-resolution}
 
 ```text
 input:  mapping set M, priority function p
@@ -89,4 +91,4 @@ for each pair (mu_a, mu_b) in C:
 return M minus R
 ```
 
-@sec:alg-conflict-resolution detects conflicts via an inverted index in $O(\sum_v |\mathcal{I}(v)|^2)$ worst-case time, which is substantially faster than the naive all-pairs scan for graphs where most nodes carry at most one mapping.
+@alg:conflict-resolution detects conflicts via an inverted index in $O(\sum_v |\mathcal{I}(v)|^2)$ worst-case time, which is substantially faster than the naive all-pairs scan for graphs where most nodes carry at most one mapping.

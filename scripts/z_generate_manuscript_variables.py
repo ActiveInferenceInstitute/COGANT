@@ -11,23 +11,28 @@ manuscript. It performs the following steps, in order:
 3. **Build** a flat ``{NAME: formatted_str}`` dict from the registered
    placeholders in :mod:`tools.manuscript_vars` and **write**
    ``output/data/manuscript_variables.json`` with provenance metadata.
-4. **Clean and substitute** every ``{{VAR}}`` in ``manuscript/*.md`` and write
+4. **Number formalisms** into ``output/data/formalism_registry.json`` so typed
+   source labels such as ``{#def:program-graph}`` render as generated formal
+   references in the injected manuscript.
+5. **Clean and substitute** every ``{{VAR}}`` in ``manuscript/*.md`` and write
    the result to ``output/manuscript/*.md``. The cleanup removes previously
    generated Markdown fragments so section renames cannot leave duplicate render
    inputs.
    Links that intentionally point from source fragments into sibling project
    files are rebased so they remain valid after the fragment is copied under
    ``output/manuscript/``.
-5. **Copy** ``config.yaml``, ``references.bib``, ``preamble.md`` into
+6. **Copy** ``config.yaml``, ``references.bib``, ``preamble.md`` into
    ``output/manuscript/`` (renderer expects them there).
-6. **Copy and audit figures** — move curated real run PNGs from ``cogant/output``
+7. **Copy and audit figures** — move curated real run PNGs from ``cogant/output``
    into ``output/figures/`` for template PDF/HTML rendering, then refresh the
    visualization-quality JSON / Markdown / PNG review artifacts, the
    section-level manuscript-evidence audit, a fresh claim ledger, and the
    combined review dashboard. With ``--strict``, missing registered figures,
    incomplete figure metadata, evidence-audit findings, or dashboard findings
-   are fatal.
-7. **Validate** — scan every written file for surviving ``{{PLACEHOLDER}}``
+   are fatal. The publication-readiness report is refreshed from the same
+   generated surfaces and blocks strict runs when active publication metadata or
+   claim support is not ready.
+8. **Validate** — scan every written file for surviving ``{{PLACEHOLDER}}``
    tokens. With ``--strict``, also reject body-fragment links to ``.md`` files
    so the manuscript uses intra-manuscript cross-references instead of
    source-file hyperlinks. Warnings are always logged; with ``--strict`` the
@@ -54,6 +59,7 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import logging
 import subprocess
@@ -84,11 +90,17 @@ except ModuleNotFoundError:  # standalone passive checkout without parent templa
         logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
         return logging.getLogger(name)
 
+import audit_publication_readiness as publication_readiness  # noqa: E402
 import manuscript_evidence_audit as evidence_audit  # noqa: E402
 import manuscript_review_dashboard as review_dashboard  # noqa: E402
 import visualization_quality_audit as visual_quality  # noqa: E402
 from audit_manuscript_markdown_links import audit as audit_markdown_links  # noqa: E402
 from claim_ledger import build_claim_ledger, write_ledger  # noqa: E402
+from formalisms import (  # noqa: E402
+    build_formalism_registry,
+    render_formalisms_for_output,
+    write_formalism_registry,
+)
 from manuscript_figures import copy_manuscript_figures  # noqa: E402
 from manuscript_vars import (  # noqa: E402
     build_flat_variables,
@@ -109,6 +121,8 @@ FIXTURE_METRICS_PATH = (
 REGENERATE_SCRIPT = _TOOLS / "regenerate_metrics.py"
 
 AUX_COPY_NAMES = ("config.yaml", "references.bib", "preamble.md")
+ARTIFACT_MANIFEST_DIRS = ("analysis", "data", "figures")
+ARTIFACT_MANIFEST_FILES = ("claim_ledger.json", "claim_ledger.md")
 
 
 def clean_injected_manuscript_dir() -> None:
@@ -217,6 +231,50 @@ def regenerate_metrics() -> None:
         )
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def write_hydration_artifact_manifest() -> Path:
+    """Write a parent-template-compatible manifest for generated hydration files."""
+
+    timestamp = datetime.now(UTC).isoformat(timespec="seconds")
+    entries: list[dict[str, object]] = []
+    candidates: list[Path] = []
+    for name in ARTIFACT_MANIFEST_FILES:
+        path = OUTPUT_DIR / name
+        if path.is_file():
+            candidates.append(path)
+    for name in ARTIFACT_MANIFEST_DIRS:
+        root = OUTPUT_DIR / name
+        if root.exists():
+            candidates.extend(path for path in sorted(root.rglob("*")) if path.is_file())
+    reports_dir = OUTPUT_DIR / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = reports_dir / "artifact_manifest.json"
+    for path in sorted(set(candidates)):
+        if path == manifest_path:
+            continue
+        entries.append(
+            {
+                "path": path.relative_to(COGANT_STAGING_ROOT).as_posix(),
+                "size_bytes": path.stat().st_size,
+                "sha256": _sha256_file(path),
+                "stage_num": 3,
+                "stage_name": "cogant_manuscript_hydration",
+                "contract_match": True,
+                "timestamp": timestamp,
+            }
+        )
+    manifest = {"entries": entries, "issues": []}
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return manifest_path
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -286,11 +344,23 @@ def main(argv: list[str] | None = None) -> int:
         logger.error(msg)
         raise SystemExit(f"ERROR: {msg}")
 
+    formalism_records = build_formalism_registry(MANUSCRIPT_DIR, root=COGANT_STAGING_ROOT)
+    formalism_registry_path = write_formalism_registry(
+        formalism_records,
+        DATA_DIR / "formalism_registry.json",
+    )
+    logger.info(
+        "Wrote %s (%d formal object(s))",
+        formalism_registry_path,
+        len(formalism_records),
+    )
+
     unresolved_by_file: dict[str, list[str]] = {}
     for src in md_files:
         text = src.read_text(encoding="utf-8")
         new_text, subs = substitute_text(text, metrics)
         new_text = rebase_generated_links(new_text)
+        new_text = render_formalisms_for_output(new_text, formalism_records)
         if subs:
             logger.debug("%s: %d substitution(s)", src.name, len(subs))
         dest = INJECTED_MS_DIR / src.name
@@ -381,14 +451,45 @@ def main(argv: list[str] | None = None) -> int:
         for issue in review_report["issues"]:
             print(f"  {issue}", file=sys.stderr)
         return 1
+    readiness_report = publication_readiness.build_publication_readiness(
+        root=COGANT_STAGING_ROOT,
+        claim_ledger_path=claim_json,
+        evidence_audit_path=evidence_json,
+        visual_qa_path=visual_quality_json,
+        figure_manifest_path=figure_manifest,
+        review_dashboard_path=review_json,
+        run_external_audits=True,
+    )
+    readiness_json = COGANT_STAGING_ROOT / "output" / "analysis" / "publication_readiness.json"
+    readiness_md = COGANT_STAGING_ROOT / "output" / "analysis" / "publication_readiness.md"
+    publication_readiness.write_publication_readiness(
+        readiness_report,
+        readiness_json,
+        readiness_md,
+    )
+    logger.info(
+        "Prepared publication readiness report: %s (%s)",
+        readiness_json,
+        readiness_report["verdict"],
+    )
+    if args.strict and readiness_report["verdict"] == "blocked":
+        print("Publication readiness audit blocked publication", file=sys.stderr)
+        for blocker in readiness_report["blockers"]:
+            print(f"  {blocker}", file=sys.stderr)
+        return 1
+    artifact_manifest = write_hydration_artifact_manifest()
+    logger.info("Prepared hydration artifact manifest: %s", artifact_manifest)
 
     print(str(out_json))
     print(str(INJECTED_MS_DIR))
+    print(str(formalism_registry_path))
     print(str(figure_manifest))
     print(str(visual_quality_json))
     print(str(evidence_json))
     print(str(claim_json))
     print(str(review_json))
+    print(str(readiness_json))
+    print(str(artifact_manifest))
 
     if unresolved_by_file:
         msg_lines = [

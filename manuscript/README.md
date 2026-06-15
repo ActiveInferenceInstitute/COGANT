@@ -16,7 +16,7 @@ Template-aligned Markdown for **COGANT** (Codebase-to-GNN Translation): theory o
 
 Stem order follows the parent template renderer (`infrastructure/rendering/manuscript_discovery.py`) when linked under `projects/working/cogant/`: digit-prefixed names sort lexicographically, so overview pages that own a chapter prefix use `NN_00_...` before `NN_01_...` detail files. Discovery concatenates main sections (`00_`-`10_`), then supplemental appendices (`S01_`-`S06_`), then glossary files (`98_`), then the **other** bucket (for example `SYNTAX.md`), then optional `99_*.md` references last. Do not hard-code section-file counts in prose; re-count with `find manuscript -maxdepth 1 -name '*.md'` from the COGANT project root after adds or splits.
 
-**Pandoc-crossref sanity** (COGANT project root): `uv run python tools/audit_manuscript_crossrefs.py` — fails on duplicate `{#sec:…}` / `{#tbl:…}` ids or orphan `@sec:` / `@tbl:` references across body fragments (`SYNTAX.md` and a few helpers are skipped so example ids do not pollute the audit). **Citation sanity:** `uv run python tools/audit_manuscript_citations.py` — fails when a body citation key is missing from `references.bib` or duplicated there.
+**Pandoc-crossref sanity** (COGANT project root): `uv run python tools/audit_manuscript_crossrefs.py` — fails on duplicate `{#sec:…}` / `{#tbl:…}` ids or orphan `@sec:` / `@tbl:` references across body fragments (`SYNTAX.md` and a few helpers are skipped so example ids do not pollute the audit). **Formalism sanity:** `uv run python tools/audit_manuscript_formalisms.py --strict` — fails on `{#sec:def-...}`-style formal labels, hand-numbered formal claims, unresolved `@def:` / `@prop:` / `@inv:` / `@conj:` / `@alg:` / `@thm:` references, or generated numbering drift. **Citation sanity:** `uv run python tools/audit_manuscript_citations.py` — fails when a body citation key is missing from `references.bib` or duplicated there.
 
 | Files | Contents |
 |------|-----------|
@@ -68,7 +68,9 @@ From the parent template root after linking under `projects/working/cogant/`:
 uv run python projects/working/cogant/scripts/z_generate_manuscript_variables.py
 ```
 
-Outputs: `../output/data/manuscript_variables.json`, `../output/manuscript/*.md` (plus copied `config.yaml`, `references.bib`, `preamble.md`), and `../output/figures/manifest.json` with the curated real-run and evaluation PNGs referenced from the manuscript. The renderer prefers `output/manuscript/` when those files exist, and the figure paths in generated Markdown resolve to sibling assets under `output/figures/`.
+Outputs: `../output/data/manuscript_variables.json`, `../output/data/formalism_registry.json`, `../output/manuscript/*.md` (plus copied `config.yaml`, `references.bib`, `preamble.md`), and `../output/figures/manifest.json` with the curated real-run and evaluation PNGs referenced from the manuscript. The renderer prefers `output/manuscript/` when those files exist, and the figure paths in generated Markdown resolve to sibling assets under `output/figures/`. Formal numbers are generated into `output/manuscript/` only; source prose keeps typed labels such as `{#def:program-graph}` and references such as `@def:program-graph`.
+
+**Publication metadata and readiness.** `config.yaml` keeps `paper.date` empty on purpose; the template renderer fills the date at render time. Do not replace it with a fixed calendar date for active publication builds. `scripts/z_generate_manuscript_variables.py` also refreshes `../output/analysis/publication_readiness.json` and `.md`, which classify claim-ledger rows as metric-backed, artifact-backed, citation-backed, validator-backed, boundary/limitation, or unsupported. A strict readiness block means the manuscript still has a metadata, claim-support, figure, or validator issue that must be fixed before promotion.
 
 **Manuscript figures.** The copied figures come from declared package-generated and evaluation outputs: calculator run artifacts under `../cogant/output/`, fixture metric figures under `../cogant/evaluation/figures/`, and the measured ablation render produced from `../cogant/evaluation/METRICS.yaml`. The registry covers the native graphical abstract and interpretability overview, forward graph/state-space/matrix renders, the all-page GNN Markdown mosaic, the Markov-blanket partition, upstream GNN POMDP visualization, the calculator-focused `run_all.py` publication timeline with the explicit `roundtrip_calculator` stage, roundtrip diff, rule-evidence trace, evidence-coverage/review-readiness panel, deterministic inference trace, rule-family ablation, and fixture graph/role/state-space/timing figures. The figure manifest and per-figure `.figure.json` sidecars record renderer, source artifact, data digest, dimensions, byte size, visual QA, reading guide, limitation, and alt text; strict promotion also rejects degraded SVG-rasterization placeholders, native-required detail panels produced by fallback rasterization, and timeline dimensions that are unsuitable for publication. Refresh them from the COGANT project root with:
 
@@ -77,6 +79,7 @@ uv run python tools/manuscript_figures.py --strict
 uv run python tools/visualization_quality_audit.py --strict
 uv run python tools/manuscript_evidence_audit.py --strict
 uv run python tools/manuscript_review_dashboard.py --strict
+uv run python tools/audit_publication_readiness.py --strict
 ```
 
 **@tbl:coverage-stmt-modules (per-module statement coverage).** The `Stmts` / `Cover` rows in [`06_04_tests_mutation_and_benchmarks.md`](06_04_tests_mutation_and_benchmarks.md) (referenced from [`06_00_experimental_setup.md`](06_00_experimental_setup.md) via `@tbl:`) are **not** generated from `METRICS.yaml`. They must be updated manually from the same canonical `uv run pytest tests/ --cov=py/cogant` run (for example `htmlcov/` or `coverage report -m`) whenever the suite or instrumentation changes, so they stay aligned with the aggregate **{{COVERAGE_PCT}}%** and **{{METRICS_GENERATED_AT}}** fields that *are* injected.
@@ -98,7 +101,9 @@ Run locally from this COGANT project root:
 ```bash
 uv run python tools/audit_manuscript_crossrefs.py
 uv run python tools/audit_manuscript_citations.py
+uv run python tools/audit_manuscript_formalisms.py --strict
 uv run python tools/audit_manuscript_numbers.py
+uv run python tools/audit_publication_readiness.py --strict
 uv run --directory cogant python docs/verify_manuscript_links.py
 ```
 
