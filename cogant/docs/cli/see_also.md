@@ -6,5 +6,5 @@
 - [SPEC](../reference/README.md)
 - [Validation](../validation/README.md)
 - [GNN export](../export/README.md)
-- [Pipeline contract (specs)](https://github.com/docxology/cogant/blob/main/cogant/specs/architecture/pipeline.md)
-- [Examples: example_pipeline.py](https://github.com/docxology/cogant/blob/main/cogant/examples/example_pipeline.py), [orchestrate_roundtrip.py](https://github.com/docxology/cogant/blob/main/cogant/examples/orchestrate_roundtrip.py)
+- [Pipeline contract (specs)](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/specs/architecture/pipeline.md)
+- [Examples: example_pipeline.py](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/examples/example_pipeline.py), [orchestrate_roundtrip.py](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/examples/orchestrate_roundtrip.py)

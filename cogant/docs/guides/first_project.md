@@ -28,7 +28,7 @@ COGANT is developed and tested with [`uv`](https://docs.astral.sh/uv/)
 on Python 3.11+:
 
 ```bash
-git clone https://github.com/docxology/cogant.git
+git clone https://github.com/ActiveInferenceInstitute/COGANT.git
 cd cogant/cogant
 uv sync
 uv run cogant doctor

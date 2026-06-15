@@ -27,7 +27,7 @@ cogant translate tests/fixtures/control_positive/calculator \
   --layout-output
 ```
 
-This writes `data/`, `diagrams/`, `site/`, `reports/`, and `figures/` subdirectories plus a top-level `bundle.json`. Running through `run_all.py` (see [`README.md`](https://github.com/docxology/cogant/blob/main/cogant/README.md)) adds `analysis/`, `exports/`, `gnn_package/`, and `roundtrip/` for the same target.
+This writes `data/`, `diagrams/`, `site/`, `reports/`, and `figures/` subdirectories plus a top-level `bundle.json`. Running through `run_all.py` (see [`README.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/README.md)) adds `analysis/`, `exports/`, `gnn_package/`, and `roundtrip/` for the same target.
 
 ## What the pipeline finds
 

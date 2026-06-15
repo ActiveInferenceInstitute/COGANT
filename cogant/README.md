@@ -248,7 +248,7 @@ MIT — see [`LICENSES.md`](LICENSES.md) for the COGANT license and third-party 
   title  = {COGANT: Codebase-to-GNN Translation Engine},
   author = {{COGANT contributors}},
   year   = {2026},
-  url    = {https://github.com/docxology/cogant},
+  url    = {https://github.com/ActiveInferenceInstitute/COGANT},
   version = {0.6.0}
 }
 ```

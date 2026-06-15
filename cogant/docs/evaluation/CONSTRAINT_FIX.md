@@ -86,6 +86,6 @@ Changed: `cogant/py/cogant/reverse/synthesizer.py`, function `_render_constraint
 - **Benchmark calibration snapshot:** [CALIBRATION.md](CALIBRATION.md)
 - **v1.0 readiness:** [V1.0_READINESS.md](V1.0_READINESS.md)
 - **Implementing modules:**
-  [`py/cogant/reverse/synthesizer.py`](https://github.com/docxology/cogant/blob/main/py/cogant/reverse/synthesizer.py) (`_render_constraints_module`),
-  [`py/cogant/reverse/planner.py`](https://github.com/docxology/cogant/blob/main/py/cogant/reverse/planner.py) (`plan.constraint_checks`),
-  [`py/cogant/translate/rules/semantic.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/semantic.py) (`PreferenceRule`)
+  [`py/cogant/reverse/synthesizer.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/reverse/synthesizer.py) (`_render_constraints_module`),
+  [`py/cogant/reverse/planner.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/reverse/planner.py) (`plan.constraint_checks`),
+  [`py/cogant/translate/rules/semantic.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/translate/rules/semantic.py) (`PreferenceRule`)

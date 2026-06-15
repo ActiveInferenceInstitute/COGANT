@@ -5,8 +5,8 @@ Current evidence for COGANT's release-facing claims.
 Machine-readable artifacts live under the repository-level `evaluation/`
 directory. The most important files are:
 
-- [`evaluation/METRICS.yaml`](https://github.com/docxology/cogant/blob/main/evaluation/METRICS.yaml)
-- [`evaluation/dataset/roundtrip_results.jsonl`](https://github.com/docxology/cogant/blob/main/evaluation/dataset/roundtrip_results.jsonl)
+- [`evaluation/METRICS.yaml`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/METRICS.yaml)
+- [`evaluation/dataset/roundtrip_results.jsonl`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/dataset/roundtrip_results.jsonl)
 
 ## Current Status
 

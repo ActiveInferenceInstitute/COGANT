@@ -47,7 +47,7 @@ the program graph** rather than learning them.
 | **D** | `[n_states]` | `CONFIGURATION` nodes, type domains | `P(initial hidden_state)` |
 
 Full derivation details live in
-[`py/cogant/gnn/matrices.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/gnn/matrices.py).
+[`py/cogant/gnn/matrices.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/gnn/matrices.py).
 
 ## Step 1 — open the package
 

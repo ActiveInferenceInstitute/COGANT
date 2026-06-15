@@ -34,7 +34,7 @@ pip install "cogant[all]"
 ## From source (uv, recommended)
 
 ```bash
-git clone https://github.com/docxology/cogant.git
+git clone https://github.com/ActiveInferenceInstitute/COGANT.git
 cd cogant
 uv sync --all-extras
 uv run cogant --help
@@ -43,7 +43,7 @@ uv run cogant --help
 ## From source (pip)
 
 ```bash
-git clone https://github.com/docxology/cogant.git
+git clone https://github.com/ActiveInferenceInstitute/COGANT.git
 cd cogant
 pip install -e ".[dev,viz]"
 cogant --help

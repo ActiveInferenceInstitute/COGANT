@@ -1,6 +1,6 @@
 # COGANT Roundtrip Synthesis Status
 
-**Current source of truth:** [`evaluation/METRICS.yaml`](https://github.com/docxology/cogant/blob/main/evaluation/METRICS.yaml) and [`evaluation/dataset/roundtrip_results.jsonl`](https://github.com/docxology/cogant/blob/main/evaluation/dataset/roundtrip_results.jsonl).
+**Current source of truth:** [`evaluation/METRICS.yaml`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/METRICS.yaml) and [`evaluation/dataset/roundtrip_results.jsonl`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/dataset/roundtrip_results.jsonl).
 
 This page describes the current reverse-synthesis status, not a dated change log.
 

@@ -29,7 +29,7 @@ default to *empty* checkouts — populate them with one of:
 
 ```bash
 # Initial clone (one shot)
-git clone --recurse-submodules https://github.com/docxology/cogant.git
+git clone --recurse-submodules https://github.com/ActiveInferenceInstitute/COGANT.git
 
 # Existing clone, populate eval corpus
 git submodule update --init --recursive cogant/evaluation/eval_repos

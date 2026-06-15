@@ -16,7 +16,7 @@ This page walks through a minimal end-to-end COGANT run: translate a repository,
 cogant translate ./my_repo --output output/ --layout-output
 ```
 
-This runs the full pipeline: **ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate** (the `dynamic` enrichment stage runs by default; skip it with `--no-dynamic`). The `--layout-output` flag reorganizes the results into `data/`, `diagrams/`, `site/`, `reports/`, and `figures/` subdirectories so the output tree is easy to browse. The batch runner `run_all.py` (see [`README.md`](https://github.com/docxology/cogant/blob/main/cogant/README.md)) adds `analysis/`, `exports/`, `gnn_package/`, and `roundtrip/` for the same target.
+This runs the full pipeline: **ingest → static → normalize → graph → dynamic → translate → statespace → process → export → validate** (the `dynamic` enrichment stage runs by default; skip it with `--no-dynamic`). The `--layout-output` flag reorganizes the results into `data/`, `diagrams/`, `site/`, `reports/`, and `figures/` subdirectories so the output tree is easy to browse. The batch runner `run_all.py` (see [`README.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/README.md)) adds `analysis/`, `exports/`, `gnn_package/`, and `roundtrip/` for the same target.
 
 Skip dynamic enrichment (coverage + trace) when you have no runtime data:
 

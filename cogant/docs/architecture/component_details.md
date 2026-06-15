@@ -26,7 +26,7 @@ Responsibilities:
 - `cogant.dynamic`: Dynamic analysis (coverage, traces, enrichment)
 - `cogant.validate`: IR validation and integrity checks (schema_check, provenance_check, integrity, report)
 - `cogant.export`: Format handlers (typed_export, graphml, parquet, bundle)
-- `cogant.gnn`: GNN formatting and export (formatter, json_export, [`GNNPackageBuilder`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/gnn/package.py)); the Python **`export`** stage ([`run_export`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/api/orchestration.py)) writes flat JSON under the run output dir and, when graph + state-space + process model + semantic mappings dict exist, materializes **`gnn_package/`** for validator and downstream tools (details: [GNN_EXPORT](../export/README.md))
+- `cogant.gnn`: GNN formatting and export (formatter, json_export, [`GNNPackageBuilder`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/gnn/package.py)); the Python **`export`** stage ([`run_export`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/api/orchestration.py)) writes flat JSON under the run output dir and, when graph + state-space + process model + semantic mappings dict exist, materializes **`gnn_package/`** for validator and downstream tools (details: [GNN_EXPORT](../export/README.md))
 - `cogant.viz`: Visualization (mermaid, plots, html_renderer, diff_view, graph_view, semantic_view, boundary, gantt)
 - `cogant.scoring`: Drift analysis (drift)
 - `cogant.simulate`: Simulation (runner)

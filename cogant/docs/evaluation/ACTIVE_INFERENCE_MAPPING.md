@@ -281,12 +281,12 @@ covering:
 - **Calibration registry:** [CALIBRATION.md](CALIBRATION.md)
 - **Roundtrip evaluation:** [ROUNDTRIP_EVAL.md](ROUNDTRIP_EVAL.md)
 - **Implementing modules:**
-  [`py/cogant/translate/rules/semantic.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/semantic.py) (ObservationRule, ActionRule, PolicyRule, PreferenceRule, ContextRule),
-  [`py/cogant/translate/rules/structural.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/structural.py) (MutatingSubsystemRule, ReadOnlyInputRule, InheritanceRule, ContainmentRule, DataPipelineRule),
-  [`py/cogant/translate/rules/behavioral.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/behavioral.py) (OrchestratorRule, EventBusRule, TestAssertionRule),
-  [`py/cogant/translate/rules/control.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/control.py) (ConfigRule, FeatureFlagRule),
-  [`py/cogant/translate/rules/resilience.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/resilience.py) (RetryPatternRule, CircuitBreakerRule, ErrorBoundaryRule, SingletonAccessRule),
-  [`py/cogant/markov/extractor.py`](https://github.com/docxology/cogant/blob/main/py/cogant/markov/extractor.py),
-  [`py/cogant/markov/blanket.py`](https://github.com/docxology/cogant/blob/main/py/cogant/markov/blanket.py),
-  [`py/cogant/statespace/compiler.py`](https://github.com/docxology/cogant/blob/main/py/cogant/statespace/compiler.py),
-  [`py/cogant/gnn/matrices.py`](https://github.com/docxology/cogant/blob/main/py/cogant/gnn/matrices.py)
+  [`py/cogant/translate/rules/semantic.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/translate/rules/semantic.py) (ObservationRule, ActionRule, PolicyRule, PreferenceRule, ContextRule),
+  [`py/cogant/translate/rules/structural.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/translate/rules/structural.py) (MutatingSubsystemRule, ReadOnlyInputRule, InheritanceRule, ContainmentRule, DataPipelineRule),
+  [`py/cogant/translate/rules/behavioral.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/translate/rules/behavioral.py) (OrchestratorRule, EventBusRule, TestAssertionRule),
+  [`py/cogant/translate/rules/control.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/translate/rules/control.py) (ConfigRule, FeatureFlagRule),
+  [`py/cogant/translate/rules/resilience.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/translate/rules/resilience.py) (RetryPatternRule, CircuitBreakerRule, ErrorBoundaryRule, SingletonAccessRule),
+  [`py/cogant/markov/extractor.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/markov/extractor.py),
+  [`py/cogant/markov/blanket.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/markov/blanket.py),
+  [`py/cogant/statespace/compiler.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/statespace/compiler.py),
+  [`py/cogant/gnn/matrices.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/gnn/matrices.py)

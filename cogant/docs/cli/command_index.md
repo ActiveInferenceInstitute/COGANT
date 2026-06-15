@@ -1,6 +1,6 @@
 ## Command index
 
-`cogant --help` is the authoritative source. [`py/cogant/cli/main.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/cli/main.py) currently registers 26 top-level commands directly on the Typer app, plus `plugin` and `migrate` sub-typers for 29 leaf commands total.
+`cogant --help` is the authoritative source. [`py/cogant/cli/main.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/cli/main.py) currently registers 26 top-level commands directly on the Typer app, plus `plugin` and `migrate` sub-typers for 29 leaf commands total.
 
 | Command | Purpose |
 |---------|---------|

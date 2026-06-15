@@ -34,7 +34,7 @@ pip install "cogant[all]"
 From source:
 
 ```bash
-git clone https://github.com/docxology/cogant.git
+git clone https://github.com/ActiveInferenceInstitute/COGANT.git
 cd cogant
 uv sync --all-extras
 ```
@@ -76,4 +76,4 @@ The full Python API and CLI walkthrough live in [Quick Start](getting-started/qu
 - **Agent routing and tooling:** [AGENTS.md](AGENTS.md).
 - **Module map:** [Documentation modules](reference/documentation_modules.md).
 - **Changelog mirror:** [changelog.md](changelog.md) (source of truth: package root `CHANGELOG.md`; sync with `cp CHANGELOG.md docs/changelog.md`).
-- **Package README:** [repository `README.md`](https://github.com/docxology/cogant/blob/main/cogant/README.md) (install and repo overview).
+- **Package README:** [repository `README.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/README.md) (install and repo overview).

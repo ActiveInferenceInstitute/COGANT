@@ -71,7 +71,7 @@ Flask fixture, and the selected orchestration path also records call,
 containment, import, inheritance, and READS/WRITES edges. The richer taxonomy in
 `cogant.schemas.core.NodeKind` (variables, parameters, type references, control-flow
 nodes) is still available to parsers and plugins; expanding fixture evidence for
-those long-tail kinds is tracked as P1-2 / P1-3 in [`../evaluation/SCOPING_REPORT.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/SCOPING_REPORT.md).
+those long-tail kinds is tracked as P1-2 / P1-3 in [`../evaluation/SCOPING_REPORT.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/docs/evaluation/SCOPING_REPORT.md).
 
 ### Edge kinds (597 total)
 

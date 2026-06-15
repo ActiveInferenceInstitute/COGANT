@@ -6,7 +6,7 @@ in:
 - [V1.0 readiness](V1.0_READINESS.md)
 - [Evaluation report](FINAL_REPORT.md)
 - [Roundtrip evaluation](ROUNDTRIP_EVAL.md)
-- [`evaluation/METRICS.yaml`](https://github.com/docxology/cogant/blob/main/evaluation/METRICS.yaml)
+- [`evaluation/METRICS.yaml`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/METRICS.yaml)
 
 ## Current Release Metrics
 

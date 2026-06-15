@@ -1,8 +1,8 @@
 site_name: COGANT — Codebase-to-GNN Translation Engine
 site_description: Translate software repositories into Active Inference GNN state-space models
 site_author: COGANT Contributors
-repo_url: https://github.com/docxology/cogant
-repo_name: docxology/cogant
+repo_url: https://github.com/ActiveInferenceInstitute/COGANT
+repo_name: ActiveInferenceInstitute/COGANT
 
 theme:
   name: material

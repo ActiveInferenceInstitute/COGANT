@@ -48,4 +48,4 @@ This page records the current evaluation posture for release-facing readers.
 - [Roundtrip evaluation](ROUNDTRIP_EVAL.md)
 - [Roundtrip validation contract](ROUNDTRIP_VALIDATION.md)
 - [Current reverse-synthesis status](ROUNDTRIP_IMPROVEMENT.md)
-- [`evaluation/METRICS.yaml`](https://github.com/docxology/cogant/blob/main/evaluation/METRICS.yaml)
+- [`evaluation/METRICS.yaml`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/METRICS.yaml)

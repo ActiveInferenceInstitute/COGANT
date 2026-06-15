@@ -156,7 +156,7 @@ def friendly_pipeline_error(exc: BaseException, target: Path | None = None) -> N
     # Fallback — print exception type + message, suggest doctor.
     console.print(f"[red]Unexpected error:[/red] {type(exc).__name__}: {exc}")
     console.print("  [dim]→ Run [bold]cogant doctor[/bold] to check your environment[/dim]")
-    console.print("  [dim]→ File a bug at https://github.com/docxology/cogant/issues[/dim]")
+    console.print("  [dim]→ File a bug at https://github.com/ActiveInferenceInstitute/COGANT/issues[/dim]")
 
 
 def run_pipeline_with_progress(

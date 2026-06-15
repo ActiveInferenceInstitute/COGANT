@@ -154,7 +154,7 @@ ALLOW_RULES: tuple[AllowRule, ...] = (
         justification="maximum-entropy priors and structural defaults are documented degraded-output values",
     ),
     AllowRule(
-        path=r"(^\.github/workflows/.*\.ya?ml$|^README\.md$|^THERMO_NUCLEAR_REVIEW\.md$|^TODO\.md$|^cogant/(\.gitignore|AGENTS\.md|CHANGELOG\.md|CONTRIBUTING\.md|Makefile|README\.md|pyproject\.toml)$|^cogant/docs/|^cogant/evaluation/|^cogant/examples/|^cogant/parsers/|^cogant/specs/|^cogant/rust/|^manuscript/|^scripts/|^tools/)",
+        path=r"(^\.github/workflows/.*\.ya?ml$|^README\.md$|^TODO\.md$|^cogant/(\.gitignore|AGENTS\.md|CHANGELOG\.md|CONTRIBUTING\.md|Makefile|README\.md|pyproject\.toml)$|^cogant/docs/|^cogant/evaluation/|^cogant/examples/|^cogant/parsers/|^cogant/specs/|^cogant/rust/|^manuscript/|^scripts/|^tools/)",
         terms=("fallback", "mock", "stub"),
         category="degraded_output",
         justification="project documentation, examples, and release notes describe audited degradation or compatibility behavior",

@@ -4,8 +4,8 @@ Generated from current native ledger: 2026-06-14
 Tooling: `tools/regenerate_roundtrip_ledger.py` plus `tools/regenerate_metrics.py`
 Public threshold: `role_preservation_score >= 0.5` = `ROLE_PRESERVED`
 
-> **Source of truth for headline numbers:** [`evaluation/METRICS.yaml`](https://github.com/docxology/cogant/blob/main/evaluation/METRICS.yaml)
-> and [`evaluation/dataset/roundtrip_results.jsonl`](https://github.com/docxology/cogant/blob/main/evaluation/dataset/roundtrip_results.jsonl).
+> **Source of truth for headline numbers:** [`evaluation/METRICS.yaml`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/METRICS.yaml)
+> and [`evaluation/dataset/roundtrip_results.jsonl`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/dataset/roundtrip_results.jsonl).
 > The current checked-in JSONL is a native ledger: every row carries
 > `roundtrip_status`, `role_preservation_score`, role-count fields, graph size,
 > file/LOC, and generated-code status.
@@ -117,5 +117,5 @@ role-preservation counts than the JSONL can support, the freshness gate fails.
 - [Conceptual roundtrip explainer](../concepts/roundtrip.md)
 - [Roundtrip validation](ROUNDTRIP_VALIDATION.md)
 - [Cross-language roundtrip](CROSS_LANG_ROUNDTRIP.md)
-- [Live metrics](https://github.com/docxology/cogant/blob/main/evaluation/METRICS.yaml)
-- [Native ledger](https://github.com/docxology/cogant/blob/main/evaluation/dataset/roundtrip_results.jsonl)
+- [Live metrics](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/METRICS.yaml)
+- [Native ledger](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/dataset/roundtrip_results.jsonl)

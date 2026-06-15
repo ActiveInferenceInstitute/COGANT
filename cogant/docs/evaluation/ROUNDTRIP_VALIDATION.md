@@ -1,6 +1,6 @@
 # Roundtrip Validation Contract
 
-**Current source of truth:** [`ROUNDTRIP_EVAL.md`](ROUNDTRIP_EVAL.md), [`evaluation/METRICS.yaml`](https://github.com/docxology/cogant/blob/main/evaluation/METRICS.yaml), and [`evaluation/dataset/roundtrip_results.jsonl`](https://github.com/docxology/cogant/blob/main/evaluation/dataset/roundtrip_results.jsonl).
+**Current source of truth:** [`ROUNDTRIP_EVAL.md`](ROUNDTRIP_EVAL.md), [`evaluation/METRICS.yaml`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/METRICS.yaml), and [`evaluation/dataset/roundtrip_results.jsonl`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/evaluation/dataset/roundtrip_results.jsonl).
 
 ## Claim Under Test
 

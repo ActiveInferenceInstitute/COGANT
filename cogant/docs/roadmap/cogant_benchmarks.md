@@ -127,7 +127,7 @@ A change needs review when it:
 
 ### Related documents
 
-- [benchmarks/README.md](https://github.com/docxology/cogant/blob/main/cogant/benchmarks/README.md)
+- [benchmarks/README.md](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/benchmarks/README.md)
   - low-level benchmark layout and running guide
 - [Architecture](../architecture/README.md) - layered architecture and stage
   boundaries

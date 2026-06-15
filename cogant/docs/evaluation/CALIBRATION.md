@@ -284,11 +284,11 @@ values in production use.
 - **Active Inference mapping (theory):** [ACTIVE_INFERENCE_MAPPING.md](ACTIVE_INFERENCE_MAPPING.md)
 - **Translation rules reference:** [`docs/reference/translation_rules.md`](../reference/translation_rules.md)
 - **Implementing modules:**
-  [`py/cogant/translate/confidence.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/confidence.py) (confidence combiner),
-  [`py/cogant/translate/engine.py`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/engine.py) (fixpoint cap),
-  [`py/cogant/translate/rules/`](https://github.com/docxology/cogant/blob/main/py/cogant/translate/rules/) (22 rules across semantic/structural/behavioral/control/resilience),
-  [`py/cogant/gnn/matrices.py`](https://github.com/docxology/cogant/blob/main/py/cogant/gnn/matrices.py) (matrix defaults / stability constants),
-  [`py/cogant/gnn/validator.py`](https://github.com/docxology/cogant/blob/main/py/cogant/gnn/validator.py) (validator scoring),
-  [`py/cogant/statespace/compiler.py`](https://github.com/docxology/cogant/blob/main/py/cogant/statespace/compiler.py) (confidence-tier mapping),
-  [`py/cogant/statespace/temporal.py`](https://github.com/docxology/cogant/blob/main/py/cogant/statespace/temporal.py),
-  [`py/cogant/scoring/metrics.py`](https://github.com/docxology/cogant/blob/main/py/cogant/scoring/metrics.py)
+  [`py/cogant/translate/confidence.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/translate/confidence.py) (confidence combiner),
+  [`py/cogant/translate/engine.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/translate/engine.py) (fixpoint cap),
+  [`py/cogant/translate/rules/`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/translate/rules/) (22 rules across semantic/structural/behavioral/control/resilience),
+  [`py/cogant/gnn/matrices.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/gnn/matrices.py) (matrix defaults / stability constants),
+  [`py/cogant/gnn/validator.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/gnn/validator.py) (validator scoring),
+  [`py/cogant/statespace/compiler.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/statespace/compiler.py) (confidence-tier mapping),
+  [`py/cogant/statespace/temporal.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/statespace/temporal.py),
+  [`py/cogant/scoring/metrics.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/py/cogant/scoring/metrics.py)

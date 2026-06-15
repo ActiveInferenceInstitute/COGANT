@@ -21,7 +21,7 @@ Rules are:
 - **Traceable**: Log all rule matches in provenance
 - **Versioned**: Rules evolve with language versions
 
-See [Translation Rules](https://github.com/docxology/cogant/blob/main/cogant/specs/mappings/code-to-gnn.md) for full reference.
+See [Translation Rules](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/specs/mappings/code-to-gnn.md) for full reference.
 
 ## Rule families and their implementing modules
 

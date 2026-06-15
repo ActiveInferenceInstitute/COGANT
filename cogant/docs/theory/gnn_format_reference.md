@@ -195,5 +195,5 @@ matrix with many fallback warnings as uninformative rather than authoritative.
 - [`gnn_format.md`](gnn_format.md) — the short version, on one page.
 - [Active Inference mapping](active_inference.md) — how the rules derive the matrix values.
 - [Tutorial 5: reading GNN matrices](../tutorials/05_gnn_interpretation.md) — worked example.
-- [`py/cogant/gnn/matrices.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/gnn/matrices.py) — the reference builder.
-- [`py/cogant/gnn/validator.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/gnn/validator.py) — the reference validator.
+- [`py/cogant/gnn/matrices.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/gnn/matrices.py) — the reference builder.
+- [`py/cogant/gnn/validator.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/gnn/validator.py) — the reference validator.

@@ -40,7 +40,7 @@ and should be normalized on sight:
 **A matrix** — Likelihood matrix `P(o | s)`, shape `[n_obs × n_states]`. Encodes how hidden
 states produce observations. The canonical spelling is `A matrix` (single capital letter,
 space, lowercase noun); do **not** write `A_matrix`, `a_matrix`, or `A-matrix`. See
-[`py/cogant/gnn/matrices.py`](https://github.com/docxology/cogant/blob/main/cogant/py/cogant/gnn/matrices.py).
+[`py/cogant/gnn/matrices.py`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/gnn/matrices.py).
 
 **ACTION** — Semantic role for code that mutates hidden state. Detected by `ActionRule`.
 The canonical capitalization is **ACTION** (all caps) when referring to the role; lowercase
@@ -423,4 +423,4 @@ attribute. The primary evidence for `MutatingSubsystemRule` and the B matrix.
 - [Active Inference primer](../theory/active_inference_primer.md)
 - [Code as a generative model](../theory/code_as_generative_model.md)
 - [GNN format reference](../theory/gnn_format_reference.md)
-- [`py/cogant/schemas/`](https://github.com/docxology/cogant/tree/main/cogant/py/cogant/schemas) — the authoritative type definitions.
+- [`py/cogant/schemas/`](https://github.com/ActiveInferenceInstitute/COGANT/tree/main/cogant/py/cogant/schemas) — the authoritative type definitions.

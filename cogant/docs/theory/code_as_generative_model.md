@@ -6,7 +6,7 @@
 > program is literally a probabilistic agent.
 
 This page gives the current operational reading. The formal categorical sketch lives in
-[`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md);
+[`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md);
 the live contract is the role-preservation and
 strict-invariant taxonomy in [the roundtrip concept page](../concepts/roundtrip.md).
 
@@ -130,7 +130,7 @@ Each arrow has an **evidence-preservation contract**:
 
 - [The forward-reverse cycle](../concepts/roundtrip.md) — current status taxonomy and invariant
   ledger.
-- [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/docxology/cogant/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md) —
+- [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/docs/evaluation/ISOMORPHISM_THEOREM.md) —
   formal proof sketch and terminology.
 - [Active Inference primer](active_inference_primer.md) — three-paragraph background if the
   neuroscience vocabulary is new.

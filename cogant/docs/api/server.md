@@ -275,4 +275,4 @@ curl -X POST http://localhost:8080/api/v1/visualize \
 - [Complete Example](complete_example.md) — full worked example with error handling
 - [Performance Tips](performance_tips.md) — scaling considerations
 - [FAQ #38: How do I run the FastAPI server?](../faq.md#38-how-do-i-run-the-fastapi-server)
-- [`examples/demo_server.py`](https://github.com/docxology/cogant/tree/main/cogant/examples/demo_server.py) — standalone server startup example
+- [`examples/demo_server.py`](https://github.com/ActiveInferenceInstitute/COGANT/tree/main/cogant/examples/demo_server.py) — standalone server startup example

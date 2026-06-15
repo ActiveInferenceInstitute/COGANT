@@ -8,7 +8,7 @@ The 12 submodules are wired through the top-level [`/.gitmodules`](../../../.git
 
 ```bash
 # Fresh clone (recommended)
-git clone --recurse-submodules https://github.com/docxology/cogant.git
+git clone --recurse-submodules https://github.com/ActiveInferenceInstitute/COGANT.git
 
 # Existing clone (also works after a normal clone)
 git submodule update --init --recursive cogant/evaluation/eval_repos
