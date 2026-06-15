@@ -190,13 +190,13 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/docxology/cogant" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/ActiveInferenceInstitute/COGANT" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
-    docxology/cogant
+    ActiveInferenceInstitute/COGANT
   </div>
 </a>
       </div>
@@ -742,13 +742,13 @@
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/docxology/cogant" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/ActiveInferenceInstitute/COGANT" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
-    docxology/cogant
+    ActiveInferenceInstitute/COGANT
   </div>
 </a>
     </div>
@@ -12027,7 +12027,7 @@
 <p>Two documentation patterns intentionally diverge from "every folder has its own AGENTS.md + README.md" — agents auditing folder coverage should treat these as features, not gaps:</p>
 <ul>
 <li><strong><code>cogant/docs/</code> itself has no <code>README.md</code>.</strong> <a href="../"><code>index.md</code></a> is the MkDocs home page, and an extra <code>docs/README.md</code> would shadow it (see "MkDocs site root" above). A <code>README.md</code> here will fail <code>mkdocs build --strict</code>.</li>
-<li><strong><code>cogant/evaluation/eval_repos/</code> ships a single shared <a href="https://github.com/docxology/cogant/blob/main/cogant/evaluation/eval_repos/AGENTS.md"><code>AGENTS.md</code></a> + <a href="https://github.com/docxology/cogant/blob/main/cogant/evaluation/eval_repos/README.md"><code>README.md</code></a> at the parent level only.</strong> The 12 entries below it are git submodules pinned to upstream commits (manifest at <code>/.gitmodules</code>, one level above this <code>cogant/</code> package); their internal contents are <strong>read-only third-party code</strong> and must not receive COGANT-authored AGENTS files. Per-submodule documentation lives upstream.</li>
+<li><strong><code>cogant/evaluation/eval_repos/</code> ships a single shared <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/evaluation/eval_repos/AGENTS.md"><code>AGENTS.md</code></a> + <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/evaluation/eval_repos/README.md"><code>README.md</code></a> at the parent level only.</strong> The 12 entries below it are git submodules pinned to upstream commits (manifest at <code>/.gitmodules</code>, one level above this <code>cogant/</code> package); their internal contents are <strong>read-only third-party code</strong> and must not receive COGANT-authored AGENTS files. Per-submodule documentation lives upstream.</li>
 </ul>
 <h2 id="module-readme-indexes">Module README indexes</h2>
 <p>The hub listing all module areas is <a href="../reference/documentation_modules/"><code>reference/documentation_modules.md</code></a>. Each <code>docs/&lt;module&gt;/README.md</code> is the table of contents for that module. Link labels should be human-readable titles (for example <code>Overview</code>), not pasted heading markers (avoid leading <code>##</code> in the link text). If <code>split_docs.py</code> is used on a new monolith, empty headings (such as JSON <code>{</code> / <code>}</code> lines) must not become a filename <code>.md</code> or orphan TOC rows; merge those lines into a surrounding section or give them an explicit slug.</p>

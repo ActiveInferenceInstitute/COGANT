@@ -194,13 +194,13 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/docxology/cogant" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/ActiveInferenceInstitute/COGANT" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
-    docxology/cogant
+    ActiveInferenceInstitute/COGANT
   </div>
 </a>
       </div>
@@ -748,13 +748,13 @@
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/docxology/cogant" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/ActiveInferenceInstitute/COGANT" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
-    docxology/cogant
+    ActiveInferenceInstitute/COGANT
   </div>
 </a>
     </div>
@@ -12551,7 +12551,7 @@
   <h1>Commands</h1>
 
 <h2 id="commands">Commands</h2>
-<p>The Typer app in <a href="https://github.com/docxology/cogant/blob/main/cogant/py/cogant/cli/main.py"><code>py/cogant/cli/main.py</code></a> registers the current top-level subcommands for v0.6.0. <code>cogant --help</code> is ground truth; the entries below are kept in sync by the doc-link verifier.</p>
+<p>The Typer app in <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/cli/main.py"><code>py/cogant/cli/main.py</code></a> registers the current top-level subcommands for v0.6.0. <code>cogant --help</code> is ground truth; the entries below are kept in sync by the doc-link verifier.</p>
 <h3 id="init">init</h3>
 <p>Initialize a new COGANT project with configuration. Safe to re-run: creates <code>.cogant/config.json</code> if missing and refuses to clobber an existing config.</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>init<span class="w"> </span>&lt;path&gt;
@@ -12590,7 +12590,7 @@ cogant<span class="w"> </span>extract-static<span class="w"> </span>./my_repo<sp
 - <code>target</code>: Path to repository</p>
 <p><strong>Options:</strong>
 - <code>--output, -o</code>: Output <strong>directory</strong> for JSON artifacts. When set, runs the full export path (graph/GNN/state space) into that directory; omit for a short summary panel (modules parsed and symbols).
-- <code>--layout-output</code>: After export, move artifacts into <code>data/</code>, <code>diagrams/</code>, <code>site/</code>, <code>reports/</code>, <code>figures/</code> subdirectories for easier downstream consumption. The batch runner (<code>run_all.py</code>, see <a href="https://github.com/docxology/cogant/blob/main/cogant/README.md"><code>README.md</code></a>) adds <code>analysis/</code>, <code>exports/</code>, <code>gnn_package/</code>, and <code>roundtrip/</code> alongside these.</p>
+- <code>--layout-output</code>: After export, move artifacts into <code>data/</code>, <code>diagrams/</code>, <code>site/</code>, <code>reports/</code>, <code>figures/</code> subdirectories for easier downstream consumption. The batch runner (<code>run_all.py</code>, see <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/README.md"><code>README.md</code></a>) adds <code>analysis/</code>, <code>exports/</code>, <code>gnn_package/</code>, and <code>roundtrip/</code> alongside these.</p>
 <h3 id="extract-dynamic">extract-dynamic</h3>
 <p>Extract dynamic analysis (traces, coverage).</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>extract-dynamic<span class="w"> </span>&lt;target&gt;
@@ -12710,9 +12710,9 @@ cogant<span class="w"> </span>viz<span class="w"> </span>output/my_repo_run/
 <ul>
 <li><code>run_dir</code>: Directory containing <code>program_graph.json</code>, <code>.mermaid</code>, <code>.dot</code>, <code>.svg</code>, or other assets produced by analysis (walks recursively).</li>
 </ul>
-<p>Uses <a href="https://github.com/docxology/cogant/blob/main/cogant/py/cogant/viz/png/orchestrator.py"><code>cogant.viz.png.render_all_pngs</code></a>. Safe to re-run; overwrites existing PNGs.</p>
+<p>Uses <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/viz/png/orchestrator.py"><code>cogant.viz.png.render_all_pngs</code></a>. Safe to re-run; overwrites existing PNGs.</p>
 <h3 id="validate">validate</h3>
-<p>Run validation checks on a bundle file or on a directory (run output, <code>gnn_package</code>, or hybrid). Implementation: <a href="https://github.com/docxology/cogant/blob/main/cogant/py/cogant/cli/main.py"><code>py/cogant/cli/main.py</code></a>.</p>
+<p>Run validation checks on a bundle file or on a directory (run output, <code>gnn_package</code>, or hybrid). Implementation: <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/cli/main.py"><code>py/cogant/cli/main.py</code></a>.</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>validate<span class="w"> </span>&lt;bundle_or_dir&gt;
 cogant<span class="w"> </span>validate<span class="w"> </span>output/bundle.json
 cogant<span class="w"> </span>validate<span class="w"> </span>output/run_dir/<span class="w">                 </span><span class="c1"># see routing table below</span>
@@ -12733,7 +12733,7 @@ cogant<span class="w"> </span>validate<span class="w"> </span>output/gnn_package
 </tr>
 <tr>
 <td><strong>Directory</strong> whose path <strong>is</strong> a GNN package (<code>manifest.json</code> + <code>model.gnn.md</code> at that path)</td>
-<td>Full <a href="https://github.com/docxology/cogant/blob/main/cogant/py/cogant/gnn/validator.py"><code>GNNValidator</code></a>: score, errors, warnings (18-section contract).</td>
+<td>Full <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/gnn/validator.py"><code>GNNValidator</code></a>: score, errors, warnings (18-section contract).</td>
 </tr>
 <tr>
 <td><strong>Directory</strong> containing <code>gnn_package/manifest.json</code></td>
@@ -12760,7 +12760,7 @@ cogant<span class="w"> </span>validate<span class="w"> </span>output/gnn_package
 <p><strong>GNN package path:</strong> prints validation score, errors, and warnings from the 18-section contract.</p>
 <p><strong>Troubleshooting:</strong> Validating a <strong>run directory</strong> after <code>cogant translate</code> expects <code>gnn_package/</code> once the export stage built it (requires program graph, state-space model, process model, and semantic mappings dict on the bundle). If <code>gnn_package/</code> is missing, inspect <code>bundle.json</code> / stage artifacts for <code>export_warnings</code> and see <a href="../../reference/">SPEC § Implementation status</a>.</p>
 <h3 id="diff">diff</h3>
-<p>Compare two bundles or output directories and report drift. When both arguments are directories containing COGANT output (with <code>program_graph.json</code>, <code>semantic_mappings.json</code>, and/or <code>model.gnn.json</code>), the full <a href="https://github.com/docxology/cogant/blob/main/cogant/py/cogant/cli/diff.py"><code>cogant.cli.diff.diff_command</code></a> is invoked: it runs <code>DriftAnalyzer</code> and <code>CodebaseMetrics</code> and prints / writes a full markdown drift report. When both arguments are bundle JSON files, a lightweight shallow diff is shown.</p>
+<p>Compare two bundles or output directories and report drift. When both arguments are directories containing COGANT output (with <code>program_graph.json</code>, <code>semantic_mappings.json</code>, and/or <code>model.gnn.json</code>), the full <a href="https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/cli/diff.py"><code>cogant.cli.diff.diff_command</code></a> is invoked: it runs <code>DriftAnalyzer</code> and <code>CodebaseMetrics</code> and prints / writes a full markdown drift report. When both arguments are bundle JSON files, a lightweight shallow diff is shown.</p>
 <div class="highlight"><pre><span></span><code>cogant<span class="w"> </span>diff<span class="w"> </span>&lt;path_a&gt;<span class="w"> </span>&lt;path_b&gt;
 cogant<span class="w"> </span>diff<span class="w"> </span>output/bundle_v1.json<span class="w"> </span>output/bundle_v2.json
 cogant<span class="w"> </span>diff<span class="w"> </span>output/run_v1/<span class="w"> </span>output/run_v2/<span class="w"> </span>--output<span class="w"> </span>drift.md
