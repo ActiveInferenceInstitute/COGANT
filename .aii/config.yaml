@@ -1,0 +1,51 @@
+# AII sidecar — InstituteOS metadata. Schema: instituteos.platform.aii_sidecar
+meta:
+  updated: '2026-06-30'
+repo:
+  name: COGANT
+  slug: cogant
+  full_name: ActiveInferenceInstitute/COGANT
+  description: 'Public home: <https://github.com/ActiveInferenceInstitute/COGANT>
+    · Archived release: [10.5281/zenodo.20705351](https://doi.org/10.5281/zenodo.20705351)
+    (all versions: [10.5281/zenodo.20705350](https://doi.org/10.5281/zenodo.20705350)).'
+institute:
+  category: research-software
+  steward: Active Inference Institute
+ecosystem:
+  links:
+    github: https://github.com/ActiveInferenceInstitute/COGANT
+    website: https://www.activeinference.org
+artifacts:
+- path: README.md
+  kind: doc
+  description: Repository overview.
+- path: src
+  kind: code
+  description: Source tree.
+- path: pyproject.toml
+  kind: code
+  description: Python package config.
+- path: LICENSE
+  kind: doc
+  description: License.
+provenance:
+  license: MIT
+  citation:
+    doi: 10.5281/zenodo.20705351.svg
+instituteos:
+  tags:
+  - cogant
+  - public
+  - home
+  - https
+  - github
+  - python
+capabilities:
+- python-package
+- tested
+- notebooks
+- dataset
+tasks:
+  test:
+    cmd: python -m pytest
+    description: Run the test suite.
