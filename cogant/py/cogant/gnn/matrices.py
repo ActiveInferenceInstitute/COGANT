@@ -204,11 +204,16 @@ class GNNMatrices:
 
     @property
     def n_actions(self) -> int:
-        """Number of action dimensions (must be at least 1 for a valid B)."""
+        """Number of action dimensions.
+
+        Zero is a valid dimension for a degenerate empty state space.  The
+        matrix exporter preserves that fact instead of inventing an action
+        dimension, which keeps the declared dimensions consistent with the
+        compiled state-space model.
+        """
         if self._actions:
             return len(self._actions)
-        n_act = len(self.state_space.actions)
-        return n_act if n_act > 0 else 1
+        return len(self.state_space.actions)
 
     # ------------------------------------------------------------------
     # Helpers
@@ -742,7 +747,7 @@ class GNNMatrices:
             n_cols = len(A[0])
             lines.append(f"A[[rows={n_rows}][cols={n_cols}]]")
             for row in A:
-                lines.append("  " + " ".join(f"{v:.6f}" for v in row))
+                lines.append("  " + " ".join(f"{v:.12g}" for v in row))
             lines.append("")
 
         # --- B tensor ---
@@ -755,21 +760,21 @@ class GNNMatrices:
                 lines.append(f"  # action={k}")
                 for r in range(n_rows):
                     row_vals = [B[r][c][k] for c in range(n_cols)]
-                    lines.append("  " + " ".join(f"{v:.6f}" for v in row_vals))
+                    lines.append("  " + " ".join(f"{v:.12g}" for v in row_vals))
             lines.append("")
 
         # --- C vector ---
         if C:
             lines.append(f"C[[rows={len(C)}]]")
             for v in C:
-                lines.append(f"  {v:.6f}")
+                lines.append(f"  {v:.12g}")
             lines.append("")
 
         # --- D vector ---
         if D:
             lines.append(f"D[[rows={len(D)}]]")
             for v in D:
-                lines.append(f"  {v:.6f}")
+                lines.append(f"  {v:.12g}")
             lines.append("")
 
         return "\n".join(lines).rstrip()

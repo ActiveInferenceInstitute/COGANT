@@ -8,6 +8,121 @@ project:
   color: '#55A868'
   lead: DAF
 tasks:
+- id: cog-p0
+  title: Restore green baseline after parser/config/server refactor
+  status: in_progress
+  start: '2026-07-17'
+  end: '2026-07-24'
+  progress: 25
+  milestone: false
+  deps: []
+  tags:
+  - refactor
+  - quality
+  - packaging
+  notes: 'Active P0 baseline task. Reconcile package exports and stubs, hermetic
+    test collection, parser documentation, mypy package-root invocation, Rust
+    workspace formatting, optional Rust manuscript references, and regenerated
+    evidence. Detailed exit criteria live in TODO.md cog-p0-01 through
+    cog-p0-04.'
+- id: cog-p1-01
+  title: Canonical typed configuration and migration contract
+  status: in_progress
+  start: '2026-07-24'
+  end: '2026-08-07'
+  progress: 45
+  milestone: false
+  deps:
+  - cog-p0
+  tags: [config, compatibility]
+  notes: 'TODO.md cog-p1-01: ProjectConfig, one preset registry, legacy
+    warnings, precedence fixtures, and schema-version migration.'
+- id: cog-p1-02
+  title: Explicit parser capability and fallback contract
+  status: in_progress
+  start: '2026-07-24'
+  end: '2026-08-07'
+  progress: 65
+  milestone: false
+  deps:
+  - cog-p0
+  tags: [parser, capabilities]
+  notes: 'TODO.md cog-p1-02: registry-only selection, observable fallback,
+    provenance, and unavailable-parser tests.'
+- id: cog-p1-03
+  title: Fail-closed pipeline stages and artifact manifest
+  status: in_progress
+  start: '2026-08-07'
+  end: '2026-08-21'
+  progress: 45
+  milestone: false
+  deps:
+  - cog-p1-01
+  - cog-p1-02
+  tags: [pipeline, provenance]
+  notes: 'TODO.md cog-p1-03: explicit outcomes, required artifacts, digests,
+    and reproducibility metadata.'
+- id: cog-p1-04
+  title: Content-addressed incremental execution
+  status: in_progress
+  start: '2026-08-21'
+  end: '2026-09-04'
+  progress: 55
+  milestone: false
+  deps:
+  - cog-p1-03
+  tags: [cache, incremental]
+  notes: 'TODO.md cog-p1-04: deterministic invalidation for content, config,
+    parser, rule, deletion, rename, corruption, and atomic-write cases.'
+- id: cog-p1-05
+  title: Versioned server boundary and abuse controls
+  status: in_progress
+  start: '2026-08-21'
+  end: '2026-09-11'
+  progress: 50
+  milestone: false
+  deps:
+  - cog-p1-03
+  tags: [server, security]
+  notes: 'TODO.md cog-p1-05: API v1 envelope, limits, safe paths, local-only
+    default, authentication, cancellation, and structured errors.'
+- id: cog-p2-01
+  title: Graph normalization semantics
+  status: in_progress
+  start: '2026-09-04'
+  end: '2026-09-18'
+  progress: 45
+  milestone: false
+  deps:
+  - cog-p1-02
+  - cog-p1-03
+  tags: [graph, semantics]
+  notes: 'TODO.md cog-p2-01: receiver/class, async, decorator, generated-file,
+    and test-symbol normalization with invariants.'
+- id: cog-p2-02
+  title: Cross-language parser and graph fixture matrix
+  status: in_progress
+  start: '2026-09-18'
+  end: '2026-10-02'
+  progress: 25
+  milestone: false
+  deps:
+  - cog-p2-01
+  tags: [fixtures, languages]
+  notes: 'TODO.md cog-p2-02: Python, JavaScript, TypeScript, Rust, and Go
+    positive, negative, fallback, and provenance-bearing fixtures.'
+- id: cog-p2-03
+  title: Capability-aware analysis evidence
+  status: in_progress
+  start: '2026-10-02'
+  end: '2026-10-16'
+  progress: 25
+  milestone: false
+  deps:
+  - cog-p2-02
+  tags: [evidence, parser]
+  notes: 'TODO.md cog-p2-03: parser mode, confidence, unsupported constructs,
+    skipped files, and degradation reasons in exported reports.'
 - id: cog-1
   title: Single-target inspection dashboard from run dir
   status: done
@@ -19,6 +134,140 @@ tasks:
   tags:
   - viz
   notes: ''
+- id: cog-p3-03
+  title: Semantic preservation oracles and labeled review
+  status: todo
+  start: '2026-10-16'
+  end: '2026-10-30'
+  progress: 0
+  milestone: false
+  deps:
+  - cog-6
+  - cog-p2-03
+  tags: [evaluation, oracles]
+  notes: 'TODO.md cog-p3-03: edge-kind, matrix, structural, behavior, and
+    human-labeled checks with separate role-preservation reporting.'
+- id: cog-p3-04
+  title: Stratified evidence and failure taxonomy
+  status: todo
+  start: '2026-10-30'
+  end: '2026-11-13'
+  progress: 0
+  milestone: false
+  deps:
+  - cog-7
+  - cog-p3-03
+  tags: [evaluation, claims]
+  notes: 'TODO.md cog-p3-04: evidence classes, calibration, and
+    language/transformation-specific failure reporting.'
+- id: cog-p4-01
+  title: Isolated optional upstream GNN integration
+  status: in_progress
+  start: '2026-11-13'
+  end: '2026-11-27'
+  progress: 25
+  milestone: false
+  deps:
+  - cog-p1-02
+  - cog-p5-03
+  tags: [upstream, supply-chain]
+  notes: 'TODO.md cog-p4-01: pinned, bounded, licensed, provenance-bearing
+    integration that cannot block core installation. The optional extra is
+    isolated from all/core and a manually triggered CI smoke lane now reports
+    unavailable versus validation-failed outcomes.'
+- id: cog-p4-02
+  title: Streaming and resource-bounded analysis
+  status: todo
+  start: '2026-11-13'
+  end: '2026-12-04'
+  progress: 0
+  milestone: false
+  deps:
+  - cog-p1-03
+  tags: [performance, resources]
+  notes: 'TODO.md cog-p4-02: streaming, backpressure, cancellation, and
+    large-graph benchmark provenance.'
+- id: cog-p4-03
+  title: Monorepo and cross-repository identity
+  status: todo
+  start: '2026-12-04'
+  end: '2026-12-18'
+  progress: 0
+  milestone: false
+  deps:
+  - cog-p4-02
+  tags: [repositories, provenance]
+  notes: 'TODO.md cog-p4-03: package boundaries, collision handling, pinned
+    remote sources, and reproducible source manifests.'
+- id: cog-p4-04
+  title: Python/Rust semantic parity and utility evidence
+  status: todo
+  start: '2026-12-18'
+  end: '2027-01-08'
+  progress: 0
+  milestone: false
+  deps:
+  - cog-p2-03
+  - cog-p4-02
+  tags: [rust, parity]
+  notes: 'TODO.md cog-p4-04: shared parity tests and a separate downstream
+    utility evidence track.'
+- id: cog-p4-05
+  title: Tested isolation boundary before sandbox claims
+  status: todo
+  start: '2027-01-08'
+  end: '2027-01-22'
+  progress: 0
+  milestone: false
+  deps:
+  - cog-p1-05
+  - cog-p4-02
+  tags: [security, threat-model]
+  notes: 'TODO.md cog-p4-05: threat model, filesystem/process boundaries,
+    resource controls, and adversarial tests.'
+- id: cog-p5-02
+  title: Documentation truth pass
+  status: in_progress
+  start: '2026-07-24'
+  end: '2026-08-14'
+  progress: 40
+  milestone: false
+  deps:
+  - cog-p0
+  - cog-p1-01
+  - cog-p2-03
+  tags: [docs, security]
+  notes: 'TODO.md cog-p5-02: refresh implementation-facing docs and remove or
+    label unsupported claims.'
+- id: cog-p5-03
+  title: Supply-chain and release integrity
+  status: in_progress
+  start: '2026-08-14'
+  end: '2026-08-28'
+  progress: 65
+  milestone: false
+  deps:
+  - cog-p1-05
+  tags: [release, supply-chain]
+  notes: 'TODO.md cog-p5-03: OpenAPI, SBOM/license, reproducible wheel,
+    version-consistency, and pinned-source checks. audit_release_integrity.py
+    now emits the release report and CycloneDX-shaped SBOM; independent CI
+    execution and final human license review remain.'
+- id: cog-p5-04
+  title: Deprecation and maintenance policy
+  status: in_progress
+  start: '2026-08-28'
+  end: '2026-09-11'
+  progress: 20
+  milestone: false
+  deps:
+  - cog-p1-01
+  - cog-p1-02
+  tags: [maintenance, compatibility]
+  notes: 'TODO.md cog-p5-04: removal schedule, migration tests, warnings, and
+    reproducible generated-output guidance. Legacy config normalization and
+    parser refresh compatibility hooks are active; the removal schedule and
+    complete compatibility cycle remain.'
 - id: cog-2
   title: Roundtrip diagnostics + graph/GNN visual diff panels
   status: done
@@ -86,9 +335,10 @@ tasks:
   tags:
   - eval
   notes: 'Seven transforms plus a negative control are implemented and audited
-    into the manuscript robustness table. Remaining scoped work: equivalent
-    loop rewrite, inlining/outlining variants, parser/frontend variation, held-out
-    robustness corpus, and CI auto-regeneration of robustness_results.json.'
+    into the manuscript robustness table. Remaining scope is tracked in
+    TODO.md cog-p3-01: equivalent loop and branch rewrites, inlining/outlining
+    variants, parser/frontend variation, held-out robustness corpus, and CI
+    regeneration/freshness enforcement.'
 - id: cog-7
   title: Promote held-out pilot into metrics/claim gates
   status: in_progress
@@ -101,8 +351,9 @@ tasks:
   tags:
   - eval
   notes: 'Held-out pilot data exists in docs/evaluation/heldout_pilot. Remaining
-    scoped work: promote the pilot into the metrics/claim pipeline with freshness
-    checks, add at least one more small permissively licensed fixture, and keep
+    scope is tracked in TODO.md cog-p3-02: promote the pilot into the
+    metrics/claim pipeline with pinned provenance and freshness checks, add at
+    least one more small permissively licensed fixture, and keep
     check_metrics_fresh guarding against non-native score relabelling.'
 - id: cog-8
   title: Roadmap truth audit + current benchmark cleanup
@@ -141,10 +392,10 @@ tasks:
     dashboard sidecars.'
 - id: cog-m1
   title: COGANT release
-  status: todo
+  status: in_progress
   start: '2026-07-01'
   end: '2026-07-01'
-  progress: 0
+  progress: 20
   milestone: true
   deps:
   - cog-5
@@ -152,5 +403,13 @@ tasks:
   - cog-7
   - cog-8
   - cog-9
+  - cog-p0
+  - cog-p1-03
+  - cog-p2-03
+  - cog-p3-04
+  - cog-p4-01
   tags: []
-  notes: ''
+  notes: 'Release milestone is governed by TODO.md cog-p5-01. It depends on
+    the P0 baseline plus robustness/held-out evidence and requires the
+    aggregate release gate, regenerated manuscript artifacts, visual QA, and
+    provenance checks.'

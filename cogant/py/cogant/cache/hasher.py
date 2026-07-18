@@ -9,7 +9,19 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-_DEFAULT_EXTENSIONS: list[str] = [".py", ".js", ".ts"]
+_DEFAULT_EXTENSIONS: list[str] = [
+    ".py",
+    ".pyx",
+    ".pyi",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".rs",
+    ".go",
+]
 _IGNORED_DIRS: set[str] = {"__pycache__", ".git", ".venv", "node_modules"}
 
 
@@ -43,7 +55,12 @@ def hash_repo(
             entries.append((rel, child.read_bytes()))
 
     for rel, content in entries:
-        h.update(rel.encode())
+        # Length-prefix both fields so path/content boundaries cannot collide
+        # (for example, ``ab`` + ``c`` vs ``a`` + ``bc``).
+        rel_bytes = rel.encode()
+        h.update(len(rel_bytes).to_bytes(8, "big"))
+        h.update(rel_bytes)
+        h.update(len(content).to_bytes(8, "big"))
         h.update(content)
 
     return h.hexdigest()

@@ -15,7 +15,10 @@ ROOT = Path(__file__).resolve().parents[1]
 TEXT_DOC_NAMES = {"README.md", "AGENTS.md"}
 
 HARD_EXCLUDED_PARTS = {
-    ".git",
+    # .aii is an editor/tool sidecar owned by the surrounding workspace, not
+    # part of the COGANT source or release tree.
+    ".aii",
+	".git",
     ".mypy_cache",
     ".pytest_cache",
     ".ruff_cache",

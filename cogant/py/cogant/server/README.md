@@ -39,4 +39,16 @@ preservation.
 
 - Handlers return JSON-safe payloads and normalize errors through `ErrorResponse`.
 - Request metrics are exposed both as Prometheus text and a compact JSON summary.
+- `create_app()` bounds actual request bytes (including chunked bodies),
+  expensive-request concurrency, and dispatch time. The default bind is
+  loopback; non-loopback binds require an auth token.
+- The default workspace is local and path-bounded: relative paths resolve
+  beneath `workspace_root`, outside/traversal paths return 403, and missing
+  in-bound directories return 404. Absolute paths require the explicit
+  `allow_absolute_paths=True` opt-in.
+- Invalid request bodies use 422; internal failures return a redacted 500
+  envelope with a request id. This service is not a sandbox or arbitrary-code
+  execution boundary.
+- Analysis responses expose `pipeline_status` so partial, failed, skipped, and
+  unavailable results cannot be mistaken for successful evidence.
 - Route docs should be updated in [`AGENTS.md`](AGENTS.md) whenever `app.py` decorators or `models.py` fields change.

@@ -5,7 +5,7 @@ of the runtime to help users figure out whether their machine is set up
 correctly before running long pipelines. It checks:
 
 * Python version against the minimum supported interpreter,
-* every runtime dependency COGANT can use (core, viz, multilang),
+* every runtime dependency COGANT can use (core, viz, multilang, analytics),
 * the optional Rust backend extension module,
 * external tools such as ``git`` and ``coverage``,
 * and prints a single ``Overall`` verdict.
@@ -105,7 +105,7 @@ _DEPENDENCIES: list[tuple[str, str, str, bool]] = [
     ("cogant", "cogant", "core", True),
     ("networkx", "networkx", "core", True),
     ("pyarrow", "pyarrow", "core", True),
-    ("duckdb", "duckdb", "core", True),
+    ("duckdb", "duckdb (analytics extra)", "analytics", False),
     ("matplotlib", "matplotlib (viz extras)", "viz", False),
     ("tree_sitter", "tree-sitter (multilang extras)", "multilang", False),
     ("coverage", "coverage.py (dynamic analysis)", "optional", False),

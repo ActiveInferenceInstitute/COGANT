@@ -1,5 +1,7 @@
 from typing import Any
 
+from .schema import ProjectConfig
+
 DEFAULT_COGANT_CONFIG: Any
 DEFAULT_PYTHON_CONFIG: Any
 DEFAULT_JAVASCRIPT_CONFIG: Any
@@ -17,4 +19,4 @@ STRICT_VALIDATION_CONFIG: Any
 LENIENT_VALIDATION_CONFIG: Any
 PRESETS: Any
 
-def get_preset(name: str) -> dict[str, Any]: ...
+def get_preset(name: str) -> ProjectConfig: ...

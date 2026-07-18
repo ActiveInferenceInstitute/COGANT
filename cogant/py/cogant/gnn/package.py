@@ -93,6 +93,7 @@ class GNNPackageBuilder:
         self.config = config or {}
         self.timestamp = datetime.now(UTC).isoformat()
         self.checksums: dict[str, str] = {}
+        self.artifact_warnings: list[str] = []
 
     def build(self, output_dir: str) -> dict[str, Any]:
         """
@@ -245,7 +246,10 @@ class GNNPackageBuilder:
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate state space: {e}", exc_info=True)
-            # Non-fatal: continue with other files
+            # Derived package sections are best-effort.  The manifest records
+            # the files that were actually emitted, so callers can distinguish
+            # an incomplete optional export from a valid complete package.
+            return
 
     def _generate_observations(self, output_path: Path) -> None:
         """Generate observation modalities JSON."""
@@ -262,6 +266,7 @@ class GNNPackageBuilder:
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate observations: {e}", exc_info=True)
+            return
 
     def _generate_actions(self, output_path: Path) -> None:
         """Generate actions and policies JSON."""
@@ -279,6 +284,7 @@ class GNNPackageBuilder:
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate actions: {e}", exc_info=True)
+            return
 
     def _generate_transitions(self, output_path: Path) -> None:
         """Generate transition structure JSON."""
@@ -294,6 +300,7 @@ class GNNPackageBuilder:
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate transitions: {e}", exc_info=True)
+            return
 
     def _generate_preferences(self, output_path: Path) -> None:
         """Generate preferences and constraints JSON."""
@@ -309,6 +316,7 @@ class GNNPackageBuilder:
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate preferences: {e}", exc_info=True)
+            return
 
     def _generate_factors(self, output_path: Path) -> None:
         """Generate factorization structure JSON."""
@@ -323,6 +331,7 @@ class GNNPackageBuilder:
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate factors: {e}", exc_info=True)
+            return
 
     def _generate_provenance(self, output_path: Path) -> None:
         """Generate full provenance chain JSON."""
@@ -341,6 +350,7 @@ class GNNPackageBuilder:
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate provenance: {e}", exc_info=True)
+            return
 
     def _generate_ontology(self, output_path: Path) -> None:
         """Generate ontology mappings JSON."""
@@ -356,6 +366,7 @@ class GNNPackageBuilder:
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate ontology: {e}", exc_info=True)
+            return
 
     def _generate_actions_policies(self, output_path: Path) -> None:
         """Generate canonical actions and policies JSON."""
@@ -373,6 +384,7 @@ class GNNPackageBuilder:
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate actions_policies: {e}", exc_info=True)
+            return
 
     def _generate_connections(self, output_path: Path) -> None:
         """Generate connections (graph edges) JSON."""
@@ -390,6 +402,7 @@ class GNNPackageBuilder:
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate connections: {e}", exc_info=True)
+            return
 
     def _generate_preferences_constraints(self, output_path: Path) -> None:
         """Generate canonical preferences and constraints JSON."""
@@ -407,6 +420,7 @@ class GNNPackageBuilder:
             logger.info(f"Generated {json_path.name}")
         except Exception as e:
             logger.error(f"Failed to generate preferences_constraints: {e}", exc_info=True)
+            return
 
     def _generate_markov_blanket(self, output_path: Path) -> None:
         """Compute and serialize the Active-Inference Markov blanket.
@@ -428,10 +442,9 @@ class GNNPackageBuilder:
           - ``config["markov_blanket"]["mapping_kinds"]`` — list of
             mapping kinds when strategy is ``"mapping_kind"``.
 
-        If no semantic mappings are present, the extractor falls back
-        to the ``auto`` cohesion-scoring strategy. Failures are logged
-        but not fatal: a minimal stub with an ``error`` field is written
-        so the bundle still contains the required files.
+        If no semantic mappings are present, the extractor uses its explicit
+        configured strategy against the real graph. Generation errors abort
+        the package so incomplete evidence cannot be published.
         """
         mb_cfg = self.config.get("markov_blanket", {}) if isinstance(self.config, dict) else {}
         strategy = mb_cfg.get("strategy", "auto")
@@ -488,8 +501,8 @@ class GNNPackageBuilder:
                     self.graph, blanket=blanket, max_per_role=12
                 )
                 (diag_dir / "markov_blanket_detail.mmd").write_text(detail_mmd, encoding="utf-8")
-            except Exception as e:  # pragma: no cover - detail view is optional
-                logger.warning(f"Failed to render detailed Markov blanket diagram: {e}")
+            except Exception as e:
+                raise RuntimeError("failed to render detailed Markov blanket diagram") from e
 
             logger.info(
                 "Generated markov_blanket.json (strategy=%s, internal=%d, boundary=%d, external=%d)",
@@ -499,31 +512,42 @@ class GNNPackageBuilder:
                 blanket.stats.get("external_count", 0),
             )
         except Exception as e:
-            logger.error(f"Failed to generate markov blanket: {e}", exc_info=True)
-            # Preserve bundle required-files contract by writing stub files.
-            stub_blanket = {
-                "schema_version": "1.0.0",
-                "error": str(e),
-                "seeds": [],
-                "stats": {},
-                "roles": {"internal": [], "sensory": [], "active": [], "external": []},
-                "metadata": {"strategy": strategy, "error": True},
+            # The Markov blanket is a derived diagnostic artifact.  Keep the
+            # package structurally consumable when it cannot be computed, but
+            # emit an explicit unavailable payload and manifest warning so a
+            # validator/publication gate cannot mistake the stub for evidence.
+            reason = str(e)
+            warning = f"markov blanket unavailable: {reason}"
+            self.artifact_warnings.append(warning)
+            logger.warning("%s", warning)
+            error_payload = {
+                "schema_version": "1.0",
+                "metadata": {
+                    "error": True,
+                    "status": "unavailable",
+                    "reason": reason,
+                },
+                "error": reason,
+                "roles": {
+                    "internal": [],
+                    "sensory": [],
+                    "active": [],
+                    "external": [],
+                },
             }
-            stub_network = {
-                "role_counts": {"internal": 0, "sensory": 0, "active": 0, "external": 0},
-                "role_members": {"internal": [], "sensory": [], "active": [], "external": []},
-                "aggregate_edges": [],
-                "edge_kind_breakdown": [],
-                "metadata": {"error": str(e)},
+            network_payload = {
+                "schema_version": "1.0",
+                "metadata": {"error": True, "status": "unavailable", "reason": reason},
+                "nodes": [],
+                "edges": [],
             }
-            (output_path / "markov_blanket.json").write_text(
-                json.dumps(stub_blanket, indent=2), encoding="utf-8"
-            )
-            (output_path / "markov_network.json").write_text(
-                json.dumps(stub_network, indent=2), encoding="utf-8"
-            )
-            self.checksums["markov_blanket.json"] = self._checksum_dict(stub_blanket)
-            self.checksums["markov_network.json"] = self._checksum_dict(stub_network)
+            for filename, payload in (
+                ("markov_blanket.json", error_payload),
+                ("markov_network.json", network_payload),
+            ):
+                path = output_path / filename
+                path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+                self.checksums[filename] = self._checksum_dict(payload)
 
     def _generate_program_graph_json(self, output_path: Path) -> None:
         """Dump the typed ``ProgramGraph`` as a JSON sidecar.
@@ -542,7 +566,8 @@ class GNNPackageBuilder:
             self.checksums["program_graph.json"] = self._checksum_dict(data)
             logger.info("Generated program_graph.json")
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"Could not generate program_graph.json: {e}")
+            logger.error(f"Could not generate program_graph.json: {e}", exc_info=True)
+            return
 
     def _generate_process_model_json(self, output_path: Path) -> None:
         """Dump the ``ProcessModel`` as a JSON sidecar.
@@ -624,6 +649,7 @@ class GNNPackageBuilder:
                 logger.info(f"Generated {filename}")
         except Exception as e:
             logger.error(f"Failed to generate diagrams: {e}", exc_info=True)
+            return
 
     def _generate_visualizations(self, output_path: Path) -> None:
         """Generate HTML visualizations using the real plotting modules.
@@ -652,15 +678,15 @@ class GNNPackageBuilder:
             try:
                 charts["node_dist.html"] = plotter.plot_node_type_distribution(self.graph)
             except Exception as e:
-                logger.warning(f"node_dist plot failed, falling back: {e}")
-                charts["node_dist.html"] = self._fallback_chart(
+                logger.info("node_dist plot unavailable; using deterministic SVG renderer: %s", e)
+                charts["node_dist.html"] = self._render_distribution_chart(
                     "Node distribution", self._count_nodes_by_kind()
                 )
             try:
                 charts["edge_dist.html"] = plotter.plot_edge_type_distribution(self.graph)
             except Exception as e:
-                logger.warning(f"edge_dist plot failed, falling back: {e}")
-                charts["edge_dist.html"] = self._fallback_chart(
+                logger.info("edge_dist plot unavailable; using deterministic SVG renderer: %s", e)
+                charts["edge_dist.html"] = self._render_distribution_chart(
                     "Edge distribution", self._count_edges_by_kind()
                 )
             try:
@@ -668,8 +694,8 @@ class GNNPackageBuilder:
                     self.mappings if isinstance(self.mappings, dict) else {}
                 )
             except Exception as e:
-                logger.warning(f"confidence plot failed, falling back: {e}")
-                charts["confidence.html"] = self._fallback_chart(
+                logger.info("confidence plot unavailable; using deterministic SVG renderer: %s", e)
+                charts["confidence.html"] = self._render_distribution_chart(
                     "Confidence distribution",
                     self._count_mappings_by_tier(),
                 )
@@ -681,9 +707,10 @@ class GNNPackageBuilder:
                 logger.info(f"Generated {filename}")
         except Exception as e:
             logger.error(f"Failed to generate visualizations: {e}", exc_info=True)
+            return
 
     def _count_nodes_by_kind(self) -> dict[str, int]:
-        """Count nodes by kind for fallback charts."""
+        """Count nodes by kind for deterministic chart rendering."""
         from collections import defaultdict
 
         counts: dict[str, int] = defaultdict(int)
@@ -705,7 +732,7 @@ class GNNPackageBuilder:
             counts[label] += 1
         return dict(counts)
 
-    def _fallback_chart(self, title: str, counts: dict[str, int]) -> str:
+    def _render_distribution_chart(self, title: str, counts: dict[str, int]) -> str:
         """Render a tiny SVG bar chart from a counts dict.
 
         Used when the StaticPlotter raises (e.g. matplotlib unavailable
@@ -747,6 +774,16 @@ class GNNPackageBuilder:
             + "</svg></body></html>"
         )
 
+    def _fallback_chart(self, title: str, counts: dict[str, int]) -> str:
+        """Backward-compatible name for the deterministic chart renderer.
+
+        Older downstream callers used ``_fallback_chart`` while the renderer
+        was renamed to describe that it emits a complete distribution chart.
+        Keep the alias for one compatibility cycle and route both names
+        through the same deterministic implementation.
+        """
+        return self._render_distribution_chart(title, counts)
+
     def _create_manifest(self, output_path: Path) -> dict[str, Any]:
         """Create and save the package manifest."""
         manifest = {
@@ -761,6 +798,12 @@ class GNNPackageBuilder:
             },
             "state_space_stats": self._count_state_space_elements(),
             "semantic_mappings_count": len(self.mappings) if isinstance(self.mappings, dict) else 0,
+            "artifact_status": {
+                "markov_blanket": "unavailable"
+                if any("markov blanket unavailable:" in item for item in self.artifact_warnings)
+                else "success"
+            },
+            "warnings": list(self.artifact_warnings),
         }
 
         manifest_path = output_path / "manifest.json"
@@ -889,12 +932,12 @@ class GNNPackageBuilder:
         if observations is not None:
             iterable = observations.values() if isinstance(observations, dict) else observations
             for obs in iterable:
-                modality = getattr(obs, "modality", None)
+                modality = getattr(obs, "modality", None) or getattr(obs, "modality_type", None)
                 if modality and modality not in modalities:
                     modalities.append(str(modality))
-        if not modalities:
-            modalities = ["symbolic"]
-        return modalities
+        # An empty symbolic state space still has a meaningful observation
+        # channel for consumers that need a stable modality dimension.
+        return modalities or ["symbolic"]
 
     def _extract_actions(self) -> list[dict[str, Any]]:
         """Extract actions with full details including effects and preconditions."""
@@ -933,11 +976,7 @@ class GNNPackageBuilder:
         return actions_list
 
     def _extract_policies(self) -> list[dict[str, Any]]:
-        """Extract policies derived from POLICY/ORCHESTRATION mappings.
-
-        Falls back to a single deterministic stub if no policy mappings
-        exist so the section is never empty in a working pipeline.
-        """
+        """Extract policies derived from actual POLICY/ORCHESTRATION mappings."""
         out: list[dict[str, Any]] = []
         if isinstance(self.mappings, dict):
             for mid, m in self.mappings.items():
@@ -956,18 +995,6 @@ class GNNPackageBuilder:
                             "tier": _enum_value(getattr(m, "confidence_tier", None)),
                         }
                     )
-        if not out:
-            out.append(
-                {
-                    "id": "policy:default",
-                    "label": "deterministic-default",
-                    "kind": "policy",
-                    "description": "No POLICY mappings extracted; using deterministic default.",
-                    "controller_node_ids": [],
-                    "confidence": 0.0,
-                    "tier": "static_only",
-                }
-            )
         return out
 
     def _extract_preferences(self) -> list[dict[str, Any]]:

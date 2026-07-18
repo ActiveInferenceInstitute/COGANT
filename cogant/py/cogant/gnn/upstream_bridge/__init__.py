@@ -1,15 +1,15 @@
 """Integration with the Active Inference Institute **generalized-notation-notation** package.
 
 The PyPI distribution name is ``generalized-notation-notation``; the import path is
-``src.gnn`` (not top-level ``gnn``). This is a **core** COGANT dependency.
+``src.gnn`` (not top-level ``gnn``). This is an **optional** COGANT extra.
 
 Upstream is **CC-BY-NC-SA-4.0**; see ``LICENSES.md`` at the package root.
 
 All call sites use lazy ``importlib`` loading so importing ``cogant`` does not
 eagerly initialize JAX/PyTorch until a bridge function runs.
 
-Disable upstream validation in :class:`cogant.gnn.validator.GNNValidator` via
-``COGANT_DISABLE_UPSTREAM_GNN=1`` (or pipeline / CLI flags).
+Enable upstream validation explicitly with ``COGANT_ENABLE_UPSTREAM_GNN=1`` or
+the validator/pipeline/CLI option.
 """
 
 from __future__ import annotations
@@ -75,7 +75,7 @@ def _install_gnn_alias_for_src_package() -> None:
 
 
 def _require_src_gnn() -> Any:
-    """Import and return the ``src.gnn`` module (core dependency)."""
+    """Import and return the optional ``src.gnn`` module."""
     _activate_upstream_src_layout()
     try:
         return importlib.import_module("src.gnn")
@@ -86,8 +86,9 @@ def _require_src_gnn() -> Any:
         except ImportError:
             pass
         raise ImportError(
-            "generalized-notation-notation (import path src.gnn) is a core COGANT "
-            "dependency but failed to import. Re-run `uv sync` from the package root."
+            "generalized-notation-notation (import path src.gnn) is not installed. "
+            "Install the optional `cogant[upstream]` extra to enable this check; "
+            "core COGANT remains usable without it."
         ) from e
 
 
@@ -170,7 +171,10 @@ def run_upstream_validate_gnn(markdown: str) -> UpstreamGNNValidation:
         return UpstreamGNNValidation(
             available=False,
             ok=True,
-            skipped_reason=str(e),
+            skipped_reason=(
+                f"{e} core COGANT validation remains available; this optional upstream "
+                "check was skipped."
+            ),
         )
 
     validate_gnn = getattr(mod, "validate_gnn", None)

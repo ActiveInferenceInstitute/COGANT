@@ -99,54 +99,7 @@ def synthesize_stable_minimal_package(
     if not supports_stable_minimal_profile(plan, model):
         raise ValueError("stable minimal profile requested for a non-minimal plan")
 
-    output_path = Path(output_dir).expanduser().resolve()
-    package_path = output_path / plan.package_name
-    package_path.mkdir(parents=True, exist_ok=True)
-
-    manifest = {
-        "schema": "cogant.reverse.semantic_targets.v1",
-        "profile": "stable_minimal_v1",
-        "target_role_counts": dict(plan.target_role_counts),
-        "semantic_targets": {
-            "HIDDEN_STATE": ["Factor0"],
-            "OBSERVATION": ["get_signal"],
-            "ACTION": ["update_signal", "__init__"],
-        },
-    }
-    files = {
-        package_path / ".gitignore": "__pycache__\n*.pyc\n",
-        package_path / SEMANTIC_TARGETS_MANIFEST: json.dumps(manifest, indent=2, sort_keys=True)
-        + "\n",
-        package_path / "model.py": (
-            '"""Strict-minimal COGANT roundtrip model.\n\n'
-            "This file is the stable reversible subset used by the roundtrip\n"
-            "verifier: one state carrier, one observation, and one action.\n"
-            '"""\n\n'
-            "\n"
-            "class Factor0:\n"
-            "    def __init__(self):\n"
-            "        self.value = 0\n"
-            "\n\n"
-            "def get_signal(state: Factor0) -> int:\n"
-            "    return state.value\n"
-            "\n\n"
-            "def update_signal(state: Factor0, action: int) -> Factor0:\n"
-            "    state.value = action\n"
-            "    return state\n"
-        ),
-    }
-
-    for path, content in files.items():
-        path.write_text(content, encoding="utf-8")
-        logger.debug("Wrote %s (%d bytes)", path, len(content))
-
-    logger.info(
-        "Synthesized stable minimal package %r at %s (%d files)",
-        plan.package_name,
-        package_path,
-        len(files),
-    )
-    return package_path
+    return synthesize_package(plan, model, output_dir)
 
 
 # ---------------------------------------------------------------------------
@@ -176,7 +129,7 @@ class SynthesisResult:
 
 
 def _policy_helper_is_semantic(plan: PackagePlan) -> bool:
-    """Return whether the selector helper should count as POLICY."""
+    """Return whether a selector is needed to cover a declared policy role."""
     target = int(plan.target_role_counts.get("POLICY", 0))
     return target > len(plan.policy_functions)
 
@@ -358,30 +311,35 @@ def _render_state_module(plan: PackagePlan) -> str:
 
         from typing import Any
 
+        from .matrices import INITIAL_STATE_PRIOR, N_HIDDEN_STATES
+
         '''
     ).lstrip()
     lines: list[str] = [header]
 
-    # Degenerate case: no hidden states declared.
+    # Degenerate case: zero-dimensional state space. It is a real empty
+    # carrier, not a fabricated field used to create a parser edge.
     if not plan.state_vars:
         lines.append("class State:")
         lines.append('    """Empty hidden-state aggregator (no factors in source GNN)."""')
-        lines.append("")
-        lines.append("    def __init__(self) -> None:")
-        lines.append('        """Initialize an empty State."""')
-        lines.append("        self._placeholder: int = 0")
-        lines.append("")
-        lines.append("    def update_placeholder(self, value: int) -> None:")
-        lines.append('        """Mutator retained so forward rules see a WRITES edge."""')
-        lines.append("        self._placeholder = value")
+        lines.append("    __slots__ = ()")
         lines.append("")
         lines.append('    def copy(self, **changes: Any) -> "State":')
-        lines.append('        """Return a copy; retained for API symmetry."""')
-        lines.append("        new = State()")
-        lines.append("        new._placeholder = self._placeholder")
-        lines.append("        for key, val in changes.items():")
-        lines.append("            setattr(new, key, val)")
-        lines.append("        return new")
+        lines.append('        """Return an independent empty state."""')
+        lines.append("        if changes:")
+        lines.append("            raise AttributeError(f'unknown state fields: {sorted(changes)}')")
+        lines.append("        return type(self)()")
+        lines.append("")
+        lines.append("    def as_distribution(self) -> list[float]:")
+        lines.append('        """Return the explicit zero-dimensional distribution."""')
+        lines.append("        return []")
+        lines.append("")
+        lines.append("    @classmethod")
+        lines.append('    def from_distribution(cls, values: list[float]) -> "State":')
+        lines.append('        """Build an empty state from an empty distribution."""')
+        lines.append("        if values:")
+        lines.append("            raise ValueError('zero-dimensional state requires an empty distribution')")
+        lines.append("        return cls()")
         lines.append("")
         return "\n".join(lines)
 
@@ -432,10 +390,26 @@ def _render_state_module(plan: PackagePlan) -> str:
     lines.append('    """Aggregator holding one instance of each hidden-state factor class."""')
     lines.append("")
     init_args = ", ".join(f"{n.name}: {n.python_type} = {n.initial_value}" for n in plan.state_vars)
-    lines.append(f"    def __init__(self, {init_args}) -> None:")
+    constructor_args = init_args
+    if constructor_args:
+        constructor_args += ", "
+    lines.append(
+        f"    def __init__(self, {constructor_args}*, distribution: list[float] | None = None) -> None:"
+    )
     lines.append('        """Initialize every factor with an optional override."""')
     for n, cls_name in zip(plan.state_vars, factor_class_names, strict=False):
         lines.append(f"        self.{n.name}: {cls_name} = {cls_name}(value={n.name})")
+    lines.append("        if distribution is None:")
+    lines.append("            self._distribution = list(INITIAL_STATE_PRIOR)")
+    lines.append("        else:")
+    lines.append("            if len(distribution) != N_HIDDEN_STATES:")
+    lines.append("                raise ValueError('state distribution has incompatible dimensions')")
+    lines.append("            if any(value < 0.0 for value in distribution):")
+    lines.append("                raise ValueError('state distribution must be non-negative')")
+    lines.append("            total = sum(float(value) for value in distribution)")
+    lines.append("            if total <= 0.0:")
+    lines.append("                raise ValueError('state distribution must contain probability mass')")
+    lines.append("            self._distribution = [float(value) / total for value in distribution]")
     lines.append("")
 
     # Mutators at the aggregator level delegate into the leaf factors.
@@ -450,7 +424,11 @@ def _render_state_module(plan: PackagePlan) -> str:
     lines.append('        """Return a new State with the given field updates applied."""')
     lines.append("        new = State(")
     lines.append(
-        "            " + ", ".join(f"{n.name}=self.{n.name}.value" for n in plan.state_vars)
+        "            "
+        + ", ".join(
+            [*(f"{n.name}=self.{n.name}.value" for n in plan.state_vars),
+             "distribution=list(self._distribution)"]
+        )
     )
     lines.append("        )")
     lines.append("        for key, val in changes.items():")
@@ -459,7 +437,44 @@ def _render_state_module(plan: PackagePlan) -> str:
     lines.append("            if factor is not None and hasattr(factor, 'update'):")
     lines.append("                factor.update(val)")
     lines.append("            else:")
-    lines.append("                setattr(new, key, val)")
+    lines.append("                raise AttributeError(f'unknown state field: {key}')")
+    lines.append("        return new")
+    lines.append("")
+
+    lines.append("    def as_distribution(self) -> list[float]:")
+    lines.append('        """Return the authoritative hidden-state distribution."""')
+    lines.append("        return list(self._distribution)")
+    lines.append("")
+    lines.append("    @classmethod")
+    lines.append('    def from_distribution(cls, values: list[float]) -> "State":')
+    lines.append('        """Construct state factors from a transition distribution."""')
+    lines.append("        if len(values) != N_HIDDEN_STATES:")
+    lines.append("            raise ValueError('transition distribution has incompatible dimensions')")
+    lines.append("        new = cls(distribution=values)")
+    factor_cards = [n.cardinality for n in plan.state_vars]
+    for index, n in enumerate(plan.state_vars):
+        if n.cardinality > 0:
+            trailing = factor_cards[index + 1 :]
+            stride_expr = " * ".join(str(card) for card in trailing) or "1"
+            lines.append(f"        stride = {stride_expr}")
+            lines.append(f"        marginal = [0.0] * {n.cardinality}")
+            lines.append("        for joint_index, probability in enumerate(values):")
+            lines.append(
+                f"            category = (joint_index // stride) % {n.cardinality}"
+            )
+            lines.append("            marginal[category] += probability")
+            lines.append(
+                "        expected = sum(category * probability for category, probability in enumerate(marginal))"
+            )
+        else:
+            lines.append(f"        expected = values[{index}] if values else 0.0")
+        if n.python_type == "bool":
+            expression = "bool(expected >= 0.5)"
+        elif n.python_type == "int":
+            expression = "int(round(expected))"
+        else:
+            expression = "float(expected)"
+        lines.append(f"        new.{n.name}.update({expression})")
     lines.append("        return new")
     lines.append("")
 
@@ -490,7 +505,7 @@ def _render_observe_module(plan: PackagePlan) -> str:
         semantic mappings.
         """
 
-        from .matrices import A, likelihood
+        from .matrices import likelihood
         from .state import State
 
         '''
@@ -498,11 +513,7 @@ def _render_observe_module(plan: PackagePlan) -> str:
     lines: list[str] = [header]
 
     if not plan.obs_functions:
-        lines.append("# No observation modalities were declared in the source GNN.")
-        lines.append("")
-        lines.append("def fallback_value(_state: State) -> float:")
-        lines.append('    """Runtime fallback for GNNs without observations."""')
-        lines.append("    return 0.0")
+        lines.append("# The source model declares no observation modalities.")
         lines.append("")
     else:
         for i, node in enumerate(plan.obs_functions):
@@ -517,26 +528,18 @@ def _render_observe_module(plan: PackagePlan) -> str:
             lines.append("    Implementation: project the hidden-state distribution through")
             lines.append("    the likelihood matrix projection for this modality.")
             lines.append('    """')
-            lines.append("    # Flatten state to a uniform-mass vector (structural placeholder).")
-            lines.append("    state_dist = [1.0]")
-            lines.append("    if A and len(A) > 0 and len(A[0]) > 0:")
-            lines.append("        n = len(A[0])")
-            lines.append("        state_dist = [1.0 / n] * n")
+            lines.append("    state_dist = state.as_distribution()")
             lines.append("    obs_dist = likelihood(state_dist)")
             lines.append(f"    idx = {i}")
-            lines.append("    if idx < len(obs_dist):")
+            lines.append("    if idx >= len(obs_dist):")
+            lines.append("        raise ValueError('observation matrix has incompatible dimensions')")
+            lines.append("    value = obs_dist[idx]")
             if node.python_type == "bool":
-                lines.append("        return obs_dist[idx] > 0.5")
+                lines.append("    return value > 0.5")
             elif node.python_type == "int":
-                lines.append("        return int(round(obs_dist[idx]))")
+                lines.append("    return int(round(value))")
             else:
-                lines.append("        return float(obs_dist[idx])")
-            if node.python_type == "bool":
-                lines.append("    return False")
-            elif node.python_type == "int":
-                lines.append("    return 0")
-            else:
-                lines.append("    return 0.0")
+                lines.append("    return float(value)")
             lines.append("")
 
     return "\n".join(lines)
@@ -562,31 +565,20 @@ def _render_act_module(plan: PackagePlan) -> str:
         semantic mappings.
         """
 
-        from typing import Any
-
-        from .matrices import B, transition
+        from .matrices import transition
         from .state import State
-
-
-        def _factor_value(factor: Any) -> Any:
-            """Return a raw scalar from either a State factor or scalar value."""
-            return getattr(factor, "value", factor)
 
         '''
     ).lstrip()
     lines: list[str] = [header]
 
     if not plan.action_methods:
-        lines.append("# No actions were declared in the source GNN.")
-        lines.append("")
+        lines.append("# The source model declares no action modalities.")
         lines.append("def idle_step(state: State) -> State:")
-        lines.append('    """Runtime fallback for GNNs without explicit actions."""')
+        lines.append('    """Return the state unchanged for a zero-action model."""')
         lines.append("    return state")
         lines.append("")
     else:
-        # Grab one state var name (if any) so we have something to mutate.
-        first_state_var = plan.state_vars[0].name if plan.state_vars else None
-
         for i, node in enumerate(plan.action_methods):
             # Planner already guarantees ``update_`` prefix; fall back
             # for any compatibility plan that did not apply it.
@@ -596,23 +588,8 @@ def _render_act_module(plan: PackagePlan) -> str:
                 f'    """Action {i}: applies transition slice {i} of the B tensor to state."""'
             )
             lines.append(f"    action_index = {i}")
-            lines.append("    _ = transition  # retained import for forward-pipeline introspection")
-            lines.append("    _ = B")
-            if first_state_var:
-                t = plan.state_vars[0].python_type
-                if t == "bool":
-                    lines.append(
-                        f"    new_value = not bool(_factor_value(state.{first_state_var}))"
-                    )
-                elif t == "int":
-                    lines.append(f"    new_value = int(_factor_value(state.{first_state_var})) + 1")
-                else:
-                    lines.append(
-                        f"    new_value = float(_factor_value(state.{first_state_var})) + float(action_index)"
-                    )
-                lines.append(f"    return state.copy({first_state_var}=new_value)")
-            else:
-                lines.append("    return state.copy()")
+            lines.append("    next_distribution = transition(state.as_distribution(), action_index)")
+            lines.append("    return State.from_distribution(next_distribution)")
             lines.append("")
 
     return "\n".join(lines)
@@ -630,17 +607,9 @@ def _render_policy_module(plan: PackagePlan) -> str:
     * **Authoritative policies** from ``plan.policy_functions`` —
       emitted with a ``policy_<name>`` prefix when the source GNN
       declared a ``pi_c*`` variable. Rare on forward-emitted GNNs.
-    * **Scaffold policies** from ``plan.scaffold_policy_functions`` —
-      target-deficit ``route_factor_<n>`` functions. These appear only
-      when the original forward role multiset contains more POLICY
-      roles than the parsed GNN exposes directly.
-
-    ``route_*`` was chosen over ``dispatch_*`` and ``handle_*``
-    because both of the latter also appear in
-    :data:`cogant.translate.rules.semantic.ACTION_KEYWORDS` — a
-    function named ``dispatch_foo`` matches both PolicyRule and
-    ActionRule and is handed to ACTION on the confidence tiebreak
-    (both 0.80). ``route`` has no such collision.
+    The selector is runtime support and is deliberately named ``pick_index``
+    so it is not presented as a source policy during a forward parse. Source
+    policy declarations are emitted separately and delegate to this selector.
     """
     header = dedent(
         f'''
@@ -664,13 +633,8 @@ def _render_policy_module(plan: PackagePlan) -> str:
     lines.append(f"def {helper_name}(state: State, observations: List[float]) -> int:")
     lines.append('    """Return the action index that maximises the preference score."""')
     lines.append("    if N_ACTIONS <= 0:")
-    lines.append("        return 0")
-    lines.append("    # Default state distribution: uniform over hidden states.")
-    lines.append("    from .matrices import N_HIDDEN_STATES")
-    lines.append("    if N_HIDDEN_STATES > 0:")
-    lines.append("        state_dist = [1.0 / N_HIDDEN_STATES] * N_HIDDEN_STATES")
-    lines.append("    else:")
-    lines.append("        state_dist = [1.0]")
+    lines.append("        raise ValueError('policy selection requires at least one action')")
+    lines.append("    state_dist = state.as_distribution()")
     lines.append("    best_action = 0")
     lines.append('    best_score = float("-inf")')
     lines.append("    for a in range(N_ACTIONS):")
@@ -694,11 +658,11 @@ def _render_policy_module(plan: PackagePlan) -> str:
         lines.append(f"    return {helper_name}(state, observations)")
         lines.append("")
 
-    # Scaffold policies — one ``route_*`` function per hidden-state factor.
     for i, node in enumerate(plan.scaffold_policy_functions):
-        fn_name = node.name
-        lines.append(f"def {fn_name}(state: State, observations: List[float]) -> int:")
-        lines.append(f'    """Scaffold policy {i}: route hidden-state factor through selector."""')
+        lines.append(f"def {node.name}(state: State, observations: List[float]) -> int:")
+        lines.append(
+            f'    """Compatibility policy scaffold {i} for GNN slot {node.slot}."""'
+        )
         lines.append(f"    return {helper_name}(state, observations)")
         lines.append("")
 
@@ -708,20 +672,9 @@ def _render_policy_module(plan: PackagePlan) -> str:
 def _render_constraints_module(plan: PackagePlan) -> str:
     """Render ``constraints.py`` with one ``check_<name>`` per constraint.
 
-    Two populations are emitted:
-
-    * **Authoritative checks** from ``plan.constraint_checks`` — one
-      ``check_<name>`` per GNN constraint slot declared in the source
-      (typically one per ``C_m*=PreferenceVector`` ontology entry).
-    * **Scaffold checks** from ``plan.scaffold_constraint_checks`` —
-      ``check_role_*`` predicates emitted only for target role deficits
-      supplied by the round-trip verifier.
-
-    Every emitted function is a pure ``return True`` predicate that
-    accepts a ``State`` (retained for API symmetry) and has no member
-    reads inside its body, so forward edge extraction produces no
-    READS / WRITES / RETURNS edges and the only matching rule is
-    ``PreferenceRule``.
+    Each source constraint is an executable state-distribution check. A
+    missing source constraint produces no generated predicate; source role
+    counts are never padded with invented functions.
     """
     header = dedent(
         f'''
@@ -732,23 +685,28 @@ def _render_constraints_module(plan: PackagePlan) -> str:
         assert/predicate patterns as CONSTRAINT mappings.
         """
 
+        import math
+
         from .state import State
 
         '''
     ).lstrip()
     lines: list[str] = [header]
 
-    has_authoritative = bool(plan.constraint_checks)
-    has_scaffold = bool(plan.scaffold_constraint_checks)
-
-    if not has_authoritative and not has_scaffold:
-        lines.append("# No constraints were declared in the source GNN.")
-        lines.append("")
-        lines.append("def always_true(_state: State) -> bool:")
-        lines.append('    """Runtime fallback predicate with no semantic constraint signal."""')
-        lines.append("    return True")
+    if not plan.constraint_checks and not plan.scaffold_constraint_checks:
+        lines.append("# The source model declares no constraints.")
         lines.append("")
         return "\n".join(lines)
+
+    lines.extend(
+        [
+            "def _state_is_valid(state: State) -> bool:",
+            '    """Check the emitted state distribution against its contract."""',
+            "    values = state.as_distribution()",
+            "    return bool(values) and all(math.isfinite(value) and value >= 0.0 for value in values) and math.isclose(sum(values), 1.0, abs_tol=1e-6)",
+            "",
+        ]
+    )
 
     # Authoritative constraint checks from the source GNN.
     for i, node in enumerate(plan.constraint_checks):
@@ -759,17 +717,15 @@ def _render_constraints_module(plan: PackagePlan) -> str:
         fn_name = _rendered_constraint_function_name(node.name)
         lines.append(f"def {fn_name}(state: State) -> bool:")
         lines.append(f'    """Constraint {i}: assert invariant for GNN slot {node.slot}."""')
-        lines.append("    _ = state")
-        lines.append("    return True")
+        lines.append("    return _state_is_valid(state)")
         lines.append("")
 
-    # Scaffold constraint checks — one per OBS / ACT / HS slot.
     for i, node in enumerate(plan.scaffold_constraint_checks):
-        fn_name = node.name
-        lines.append(f"def {fn_name}(state: State) -> bool:")
-        lines.append(f'    """Scaffold constraint {i}: invariant over slot {node.slot}."""')
-        lines.append("    _ = state")
-        lines.append("    return True")
+        lines.append(f"def {node.name}(state: State) -> bool:")
+        lines.append(
+            f'    """Compatibility constraint scaffold {i} for GNN slot {node.slot}."""'
+        )
+        lines.append("    return _state_is_valid(state)")
         lines.append("")
 
     return "\n".join(lines)
@@ -876,14 +832,15 @@ def _render_main_module(plan: PackagePlan) -> str:
         canonical = fn if fn.startswith("get_") else f"get_{fn}"
         lines.append(f"from .observe import {canonical}")
     else:
-        lines.append("from .observe import fallback_value")
+        lines.append("# No observation import: the source model has zero modalities.")
     if plan.action_methods:
         fn = plan.action_methods[0].name
         canonical = fn if fn.startswith("update_") else f"update_{fn}"
         lines.append(f"from .act import {canonical}")
     else:
-        lines.append("from .act import idle_step")
-    lines.append(f"from .policy import {helper_name}")
+        lines.append("# No action import: the source model has zero actions.")
+    if plan.action_methods:
+        lines.append(f"from .policy import {helper_name}")
     lines.append("")
     lines.append("")
     lines.append("def advance_once(state: State) -> State:")
@@ -894,14 +851,18 @@ def _render_main_module(plan: PackagePlan) -> str:
         lines.append(f"    obs_value = {canonical}(state)")
         lines.append("    observations = [float(obs_value)]")
     else:
-        lines.append("    observations = [fallback_value(state)]")
-    lines.append(f"    _choice = {helper_name}(state, observations)")
+        lines.append("    observations = []")
+    if not plan.action_methods:
+        lines.append("    return state.copy()")
+    else:
+        lines.append(f"    _choice = {helper_name}(state, observations)")
+        lines.append("    del _choice")
     if plan.action_methods:
         fn = plan.action_methods[0].name
         canonical = fn if fn.startswith("update_") else f"update_{fn}"
         lines.append(f"    return {canonical}(state)")
     else:
-        lines.append("    return idle_step(state)")
+        lines.append("    return state.copy()")
     lines.append("")
     lines.append("")
     lines.append("def main(num_steps: int = 10) -> State:")

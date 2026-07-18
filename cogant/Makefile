@@ -1,4 +1,4 @@
-.PHONY: help install dev test lint format type-check build-rust clean docs coverage
+.PHONY: help install dev test lint format type-check build build-rust check-rust release-gate clean docs coverage wheel-smoke
 
 help:
 	@echo "COGANT Development Commands"
@@ -21,13 +21,14 @@ help:
 	@echo "Building:"
 	@echo "  make build         Build Python package"
 	@echo "  make build-rust    Build Rust components"
+	@echo "  make release-gate Run the aggregate root release gate"
 	@echo ""
 	@echo "Maintenance:"
 	@echo "  make clean         Clean build artifacts"
 	@echo "  make clean-cache   Clean pytest/mypy caches"
 	@echo "  make docs          Generate documentation"
 
-# Installation targets (prefer uv; pip remains for compatibility)
+# Installation targets.
 install:
 	uv pip install -e ".[all]"
 
@@ -48,10 +49,9 @@ coverage:
 	uv run pytest tests/ --cov=py/cogant --cov-report=html --cov-report=term-missing
 	@echo "Coverage report generated in htmlcov/index.html"
 
-# Code quality targets
-# Focused lint (API + orchestration). Full-tree cleanup tracked separately.
+# Code quality targets.
 lint:
-	uv run ruff check py/cogant/api
+	uv run ruff check py/cogant tests
 
 lint-all:
 	uv run ruff check py/cogant tests examples
@@ -60,7 +60,7 @@ format:
 	uv run ruff format py/cogant tests examples
 
 type-check:
-	uv run mypy py/cogant/api
+	MYPYPATH=py uv run mypy --package cogant --strict --no-warn-unused-configs
 
 # Stage-list drift gate (TODO #4 durable fix) — enforces that every documented
 # full-pipeline stage sequence (CLI docstring, docs/cli_reference.md, FAQ,
@@ -94,6 +94,23 @@ build:
 build-rust:
 	cd rust && cargo build --release
 
+check-rust:
+	cargo fmt --manifest-path rust/Cargo.toml --all --check
+	cd rust && cargo check --workspace
+	cd rust && cargo test --workspace
+	cd rust && cargo clippy --workspace -- -D warnings
+
+release-gate:
+	cd .. && uv run python tools/release_gate.py
+
+wheel-smoke:
+	uv build --wheel --out-dir /tmp/cogant-wheelhouse
+	rm -rf /tmp/cogant-wheel-install
+	# Install the wheel with its required runtime dependencies, but do not ask
+	# uv to resolve optional extras (especially the large upstream GNN checkout).
+	uv pip install --target /tmp/cogant-wheel-install /tmp/cogant-wheelhouse/cogant-*.whl
+	cd /tmp && PYTHONPATH=/tmp/cogant-wheel-install uv run --project "$(CURDIR)" python -c "import importlib; [importlib.import_module(n) for n in ('cogant','cogant.api','cogant.cli','cogant.config','cogant.gnn','cogant.parsers','cogant.reverse','cogant.server')]; from cogant.parsers import get_parser, parser_capabilities; [get_parser(lang) for lang in sorted(parser_capabilities())]"
+
 # Cleanup
 clean: clean-cache
 	rm -rf build/ dist/ *.egg-info/
@@ -108,12 +125,10 @@ clean-cache:
 	find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
 
 docs:
-	@echo "Generating documentation..."
-	@echo "Documentation should be built from docs/ directory"
-	@echo "Update with your documentation system (Sphinx, MkDocs, etc.)"
+	uv run mkdocs build --strict
 
 # Development helpers
-check: lint type-check test
+check: lint type-check test wheel-smoke
 	@echo "All checks passed!"
 
 install-pre-commit:
@@ -124,7 +139,7 @@ pre-commit-run:
 	pre-commit run --all-files
 
 # CI/CD helpers
-ci: install test lint type-check
+ci: install lint type-check test wheel-smoke
 	@echo "CI checks completed"
 
 # Utility targets

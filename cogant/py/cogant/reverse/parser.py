@@ -23,11 +23,19 @@ file alone is sufficient to produce a ReverseGNNModel.
 from __future__ import annotations
 
 import logging
+import math
 import re
 from dataclasses import dataclass, field
+from itertools import product
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
+class ReverseModelError(ValueError):
+    """Raised when a parsed model cannot provide executable semantics."""
+
+    code = "INVALID_REVERSE_MODEL"
 
 
 # ---------------------------------------------------------------------------
@@ -90,21 +98,60 @@ class ReverseGNNModel:
     D: list[float] = field(default_factory=list)
     connections: list[str] = field(default_factory=list)
     human_names: dict[str, str] = field(default_factory=dict)
+    degraded: bool = False
+    diagnostics: list[str] = field(default_factory=list)
+
+    @property
+    def n_hidden_factors(self) -> int:
+        """Number of named hidden-state factors in the source ontology."""
+        return len(self.hidden_states)
 
     @property
     def n_states(self) -> int:
-        """Number of hidden-state factors."""
+        """Number of hidden dimensions represented by this model.
+
+        Matrix dimensions are authoritative when present.  Before matrices
+        are parsed, retain the declared factor count so callers can inspect
+        a syntactically valid but not-yet-executable model.
+        """
+        if self.D:
+            if len(self.D) == 1 and len(self.hidden_states) == 1:
+                declared = self.cardinalities.get(self.hidden_states[0], 0)
+                if declared > 1:
+                    return declared
+            return len(self.D)
+        if self.B:
+            return len(self.B)
         return len(self.hidden_states)
 
     @property
     def n_obs(self) -> int:
-        """Number of observation modalities."""
+        """Number of observation dimensions represented by this model."""
+        if self.C:
+            return len(self.C)
+        if self.A:
+            return len(self.A)
         return len(self.observations)
 
     @property
     def n_actions(self) -> int:
-        """Number of action/control factors."""
+        """Number of action dimensions represented by this model."""
+        if self.B and self.B[0] and self.B[0][0]:
+            return len(self.B[0][0])
         return len(self.actions)
+
+    def validate(self) -> list[str]:
+        """Return evidence and dimension errors without inventing values."""
+        errors: list[str] = []
+        if self.hidden_states and not self.D:
+            errors.append("D is required when hidden-state variables are declared")
+        if self.observations and not self.C:
+            errors.append("C is required when observation variables are declared")
+        if self.actions and not self.B:
+            errors.append("B is required when action variables are declared")
+        if self.D and any(value < 0 for value in self.D):
+            errors.append("D contains a negative probability")
+        return errors
 
 
 # ---------------------------------------------------------------------------
@@ -240,6 +287,14 @@ def _parse_state_space_block(body: str, model: ReverseGNNModel) -> None:
     model.policies = [policies[i] for i in sorted(policies)]
     model.constraints = [constraints[i] for i in sorted(constraints)]
 
+    for idx, slot in enumerate(model.hidden_states):
+        if model.cardinalities.get(slot, 0) <= 0:
+            for source in (f"D_f{idx}", f"B_f{idx}"):
+                card = model.cardinalities.get(source)
+                if card is not None and card > 0:
+                    model.cardinalities[slot] = card
+                    break
+
 
 def _parse_ontology_annotation(body: str, model: ReverseGNNModel) -> None:
     """Populate ``model.annotations`` from ``## ActInfOntologyAnnotation``.
@@ -270,17 +325,25 @@ def _parse_ontology_annotation(body: str, model: ReverseGNNModel) -> None:
             + model.constraints
         )
         if "hiddenstate" in lc.replace(" ", "") or "hidden" == lc:
-            if var_name not in all_classified:
+            if var_name not in all_classified and (
+                not model.hidden_states or re.match(r"^(s_f|s)\d+$", var_name)
+            ):
                 model.hidden_states.append(var_name)
         elif "observation" in lc and var_name not in all_classified:
-            model.observations.append(var_name)
+            if not model.observations or re.match(r"^(o_m|o)\d+$", var_name):
+                model.observations.append(var_name)
         elif "action" in lc and var_name not in all_classified:
-            model.actions.append(var_name)
+            if not model.actions or re.match(r"^(u_c|u|a_c)\d+$", var_name):
+                model.actions.append(var_name)
         elif "policy" in lc and var_name not in model.policies:
-            if var_name not in all_classified:
+            if var_name not in all_classified and (
+                not model.policies or re.match(r"^(pi_c|pi|policy_)\d+$", var_name)
+            ):
                 model.policies.append(var_name)
         elif ("constraint" in lc or "preference" in lc) and var_name not in model.constraints:
-            if var_name not in all_classified:
+            if var_name not in all_classified and (
+                not model.constraints or re.match(r"^(c_f|constraint_)\d+$", var_name)
+            ):
                 model.constraints.append(var_name)
 
 
@@ -338,69 +401,131 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
                     per_factor_A[name] = [floats]
             continue
 
-    # Assemble the aggregate D vector. COGANT emits one D_fN per hidden
-    # factor; the aggregate D has one entry per factor. We use the max
-    # of each factor's distribution as that factor's aggregate mass —
-    # this preserves the "peaky" prior structure better than averaging
-    # and matches what the forward GNNMatrices.compute_D produces.
-    if model.hidden_states:
-        D_vec: list[float] = []
-        for i, _ in enumerate(model.hidden_states):
-            key = f"D_f{i}"
-            if key in per_factor_D and per_factor_D[key]:
-                D_vec.append(max(per_factor_D[key]))
-            else:
-                D_vec.append(1.0 / len(model.hidden_states))
-        # Normalize so D sums to 1.
+    # A factorized upstream block does not always include a global A/B/C/D
+    # tensor.  Preserve the historical projection as an explicitly degraded
+    # compatibility representation so reverse tooling can still inspect and
+    # compile legacy files.  The diagnostics are carried into generated
+    # provenance by callers; this is never treated as equivalent to a global
+    # matrix block.
+    def declared_dimension(names: list[str]) -> int:
+        """Return the Cartesian dimension when factor cardinalities exist.
+
+        Older callers construct ``ReverseGNNModel`` with one entry per
+        global state and no cardinality metadata.  In that compatibility
+        shape the number of names remains the dimension.  Parsed upstream
+        models, however, declare one name per factor and put the categorical
+        size on that name; their executable matrix dimension is the product
+        of those sizes.
+        """
+        cardinalities = [model.cardinalities.get(name, 0) for name in names]
+        if cardinalities and all(card > 0 for card in cardinalities):
+            return math.prod(cardinalities)
+        return len(names)
+
+    hidden_dimension = declared_dimension(model.hidden_states)
+    observation_dimension = declared_dimension(model.observations)
+    action_dimension = declared_dimension(model.actions)
+
+    # A state-only compatibility fragment historically exposed factor-level
+    # D values.  Keep that inspection shape until the rest of the executable
+    # model is present; complete models take the Cartesian projection below.
+    project_hidden = bool(model.observations or model.actions)
+
+    if model.hidden_states and not model.D:
+        factor_vectors = [
+            per_factor_D.get(f"D_f{i}")
+            or (
+                [1.0 / model.cardinalities[slot]] * model.cardinalities[slot]
+                if model.cardinalities.get(slot, 0) > 0
+                else [1.0]
+            )
+            for i, slot in enumerate(model.hidden_states)
+        ]
+        if project_hidden and hidden_dimension != len(model.hidden_states) and all(
+            len(values) == model.cardinalities.get(slot, 0)
+            for values, slot in zip(factor_vectors, model.hidden_states, strict=False)
+        ):
+            D_vec = [
+                math.prod(values[index] for values, index in zip(factor_vectors, indexes, strict=False))
+                for indexes in product(*(range(len(values)) for values in factor_vectors))
+            ]
+        else:
+            # Legacy model objects already use one name per global state.
+            D_vec = [max(values) if values else 1.0 for values in factor_vectors]
         total = sum(D_vec) or 1.0
-        model.D = [v / total for v in D_vec]
+        model.D = [value / total for value in D_vec]
+        if project_hidden:
+            model.degraded = True
+            model.diagnostics.append(
+                "factorized D declarations projected to the executable Cartesian prior"
+            )
 
-    # Assemble the aggregate C vector (one value per observation).
-    if model.observations:
-        C_vec: list[float] = []
-        for i, _ in enumerate(model.observations):
-            key = f"C_m{i}"
-            if key in per_factor_C and per_factor_C[key]:
-                C_vec.append(per_factor_C[key][0])
+    if model.observations and not model.C:
+        factor_vectors = [
+            per_factor_C.get(f"C_m{i}")
+            or [0.0] * max(model.cardinalities.get(slot, 1), 1)
+            for i, slot in enumerate(model.observations)
+        ]
+        if observation_dimension != len(model.observations) and all(
+            len(values) == model.cardinalities.get(slot, 0)
+            for values, slot in zip(factor_vectors, model.observations, strict=False)
+        ):
+            model.C = [
+                sum(values[index] for values, index in zip(factor_vectors, indexes, strict=False))
+                for indexes in product(*(range(len(values)) for values in factor_vectors))
+            ]
+        else:
+            model.C = [(values[0] if values else 0.0) for values in factor_vectors]
+        model.degraded = True
+        model.diagnostics.append(
+            "factorized C declarations projected to executable observation preferences"
+        )
+
+    if model.observations and model.hidden_states and not model.A:
+        n_obs = observation_dimension
+        n_states = hidden_dimension
+        raw_rows: list[list[float]] = []
+        for i in range(len(model.observations)):
+            rows = per_factor_A.get(f"A_m{i}", [])
+            if len(rows) == n_obs and all(len(row) == n_states for row in rows):
+                raw_rows.extend([list(row) for row in rows])
             else:
-                C_vec.append(0.0)
-        model.C = C_vec
+                row = rows[0] if rows and len(rows[0]) == n_states else []
+                raw_rows.append(list(row) if row else [1.0] * n_states)
+        if n_obs != len(raw_rows):
+            # A factorized source may not provide a global modality matrix.
+            # Preserve a valid, explicitly degraded shape rather than
+            # silently reusing one modality for every Cartesian outcome.
+            raw_rows = [[1.0] * n_states for _ in range(n_obs)]
+        # Normalize each projected likelihood column.  A one-modality
+        # factorized declaration therefore remains a valid categorical
+        # likelihood rather than leaking the source row's arbitrary scale.
+        model.A = [[0.0] * n_states for _ in range(n_obs)]
+        for column in range(n_states):
+            total = sum(row[column] for row in raw_rows)
+            if total <= 0.0:
+                total = float(n_obs)
+                for row_idx in range(n_obs):
+                    model.A[row_idx][column] = 1.0 / total
+            else:
+                for row_idx in range(n_obs):
+                    model.A[row_idx][column] = raw_rows[row_idx][column] / total
+        model.degraded = True
+        model.diagnostics.append(
+            "factorized A declarations projected to executable modality/state dimensions"
+        )
 
-    # Aggregate A matrix. Each A_mN is (obs_card x state_card) per
-    # modality; we collapse to the global (n_obs x n_states) shape by
-    # taking the top-left element of each factor's block.
-    if model.observations and model.hidden_states:
-        n_o = len(model.observations)
-        n_s = len(model.hidden_states)
-        A = [[0.0] * n_s for _ in range(n_o)]
-        # Fallback: uniform likelihood over states per observation.
-        default_prob = 1.0 / n_s if n_s > 0 else 0.0
-        for i in range(n_o):
-            key = f"A_m{i}"
-            if key in per_factor_A and per_factor_A[key]:
-                row = per_factor_A[key][0]
-                if len(row) == n_s:
-                    A[i] = list(row)
-                    continue
-            A[i] = [default_prob] * n_s
-        model.A = A
-
-    # Aggregate B tensor. Each B_fN is a (card, card, n_actions) identity
-    # transition per factor; the global B has shape (n_states, n_states, n_actions).
-    # We collapse per-factor tensors to a global identity by default and
-    # only override the diagonal when a factor's B differs meaningfully.
-    if model.hidden_states:
-        n_s = len(model.hidden_states)
-        n_a = max(1, len(model.actions))
-        B = [[[0.0] * n_a for _ in range(n_s)] for _ in range(n_s)]
-        # Default: identity per action.
-        for i in range(n_s):
-            for k in range(n_a):
-                B[i][i][k] = 1.0
-        # If any factor's B is non-identity, attempt to reflect that by
-        # damping the diagonal — in practice COGANT forward emits
-        # identity() for all factors, so this is a no-op degraded convention.
-        model.B = B
+    if model.hidden_states and model.actions and not model.B:
+        n_states = hidden_dimension
+        n_actions = action_dimension
+        model.B = [
+            [[1.0 if row == col else 0.0 for _ in range(n_actions)] for col in range(n_states)]
+            for row in range(n_states)
+        ]
+        model.degraded = True
+        model.diagnostics.append(
+            "factorized B declarations projected to executable identity transitions"
+        )
 
 
 def _parse_state_variables_extended(body: str, model: ReverseGNNModel) -> None:
@@ -455,6 +580,56 @@ def _parse_connections(body: str, model: ReverseGNNModel) -> None:
             continue
         if arrow_re.match(stripped):
             model.connections.append(stripped)
+
+
+def _normalize_reverse_dimensions(model: ReverseGNNModel) -> None:
+    """Align parsed variable declarations with authoritative matrix semantics."""
+    model.hidden_states = [
+        name for name in model.hidden_states if re.match(r"^(s_f|s)\d+$", name)
+    ]
+    model.observations = [
+        name for name in model.observations if re.match(r"^(o_m|o)\d+$", name)
+    ]
+    model.actions = [
+        name for name in model.actions if re.match(r"^(u_c|u|a_c)\d+$", name)
+    ]
+
+    if model.D and not model.degraded:
+        model.hidden_states = [model.hidden_states[0] if model.hidden_states else "s_f0"]
+    if model.C and not model.degraded:
+        model.observations = [model.observations[0] if model.observations else "o_m0"]
+    if model.B and model.B[0] and model.B[0][0] and not model.degraded:
+        model.actions = [model.actions[0] if model.actions else "u_c0"]
+
+    for idx, slot in enumerate(model.hidden_states):
+        if model.D and not model.degraded and model.cardinalities.get(slot, 0) <= 0:
+            model.cardinalities[slot] = len(model.D)
+        elif model.cardinalities.get(slot, 0) <= 0:
+            for source in (f"D_f{idx}", f"B_f{idx}"):
+                card = model.cardinalities.get(source)
+                if card is not None and card > 0:
+                    model.cardinalities[slot] = card
+                    break
+
+    for idx, slot in enumerate(model.observations):
+        if model.C and not model.degraded and model.cardinalities.get(slot, 0) <= 0:
+            model.cardinalities[slot] = len(model.C)
+        elif model.cardinalities.get(slot, 0) <= 0:
+            for source in (f"C_m{idx}", f"A_m{idx}"):
+                card = model.cardinalities.get(source)
+                if card is not None and card > 0:
+                    model.cardinalities[slot] = card
+                    break
+
+    for slot in model.actions:
+        if (
+            model.B
+            and model.B[0]
+            and model.B[0][0]
+            and not model.degraded
+            and model.cardinalities.get(slot, 0) <= 0
+        ):
+            model.cardinalities[slot] = len(model.B[0][0])
 
 
 def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
@@ -564,10 +739,9 @@ def parse_gnn(gnn: str | Path) -> ReverseGNNModel:
             an existing file, it is treated as the raw markdown text.
 
     Returns:
-        A populated :class:`ReverseGNNModel`. Fields that cannot be
-        parsed from the source (e.g. observations when the GNN only
-        declares hidden states) remain empty — the caller is expected
-        to handle that gracefully.
+        A populated :class:`ReverseGNNModel`. Fields that cannot be parsed
+        from the source remain empty. Consumers must treat an incomplete
+        model as invalid evidence rather than filling missing semantics.
 
     Example:
         >>> from cogant.reverse.parser import parse_gnn
@@ -649,6 +823,7 @@ def parse_gnn(gnn: str | Path) -> ReverseGNNModel:
     # Pull the authoritative A/B/C/D from the fenced gnn-matrices block
     # if present — it overrides the aggregate forms derived above.
     _parse_matrices_fenced_block(text, model)
+    _normalize_reverse_dimensions(model)
 
     logger.info(
         "Parsed GNN model %r: n_states=%d n_obs=%d n_actions=%d",

@@ -22,7 +22,6 @@ happens *when* the grammar is loaded, not whether it must always be.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -39,15 +38,10 @@ from ._js_helpers import (  # noqa: E402
 
 pytestmark = pytest.mark.integration
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-
 # Probe the tree-sitter JS grammar at import time so the skip message is
 # attached to a concrete reason rather than an opaque ImportError.
 try:
-    _PARSERS_ROOT = _REPO_ROOT / "parsers"
-    if str(_PARSERS_ROOT) not in sys.path:
-        sys.path.insert(0, str(_PARSERS_ROOT))
-    from javascript.parser import JavaScriptLanguageParser  # type: ignore
+    from cogant.parsers.languages.javascript.parser import JavaScriptLanguageParser
 
     _probe = JavaScriptLanguageParser()
     _probe_result = _probe.parse("class _Probe {}\n", "_probe.js")
@@ -68,6 +62,7 @@ _requires_js = pytest.mark.skipif(not _HAS_JS_PARSER or not _GRAMMAR_AVAILABLE, 
 # Shared paths and cached pipeline state.
 # ---------------------------------------------------------------------------
 
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _JS_FIXTURE = _REPO_ROOT / "examples" / "zoo" / "13_js_observer" / "observer.js"
 
 

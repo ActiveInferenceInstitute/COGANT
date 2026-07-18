@@ -43,8 +43,12 @@ from cogant.server.app import (  # noqa: E402
 
 
 @pytest.fixture()
-def client() -> TestClient:
-    app = create_app(rate_limit_requests=100000, rate_limit_window_s=3600.0)
+def client(tmp_path: Path) -> TestClient:
+    app = create_app(
+        rate_limit_requests=100000,
+        rate_limit_window_s=3600.0,
+        workspace_root=tmp_path,
+    )
     return TestClient(app)
 
 
@@ -77,6 +81,13 @@ class TestRateLimiterPruning:
         # After window expires, the prior entry is pruned and we can
         # proceed again.
         assert limiter.check("k") is True
+
+
+def test_server_resource_limits_are_validated() -> None:
+    with pytest.raises(ValueError, match="positive"):
+        create_app(max_concurrent_requests=0)
+    with pytest.raises(ValueError, match="request_timeout_s"):
+        create_app(request_timeout_s=0)
 
 
 # --------------------------------------------------------------------------- #
@@ -164,7 +175,7 @@ class TestApiV1AnalyzeHappy:
         self, client: TestClient, tiny_repo: Path
     ) -> None:
         r = client.post(
-            "/api/v1/analyze", json={"repo_path": str(tiny_repo), "skip_dynamic": True}
+            "/api/v1/analyze", json={"repo_path": "repo", "skip_dynamic": True}
         )
         # Accept 200 or 500 (pipeline failures are still covered)
         if r.status_code == 200:
@@ -188,7 +199,7 @@ class TestApiV1AnalyzeHappy:
         r = client.post(
             "/api/v1/analyze",
             json={
-                "repo_path": str(tiny_repo),
+                "repo_path": "repo",
                 "stages": ["ingest", "static", "normalize", "graph"],
                 "skip_dynamic": True,
             },
@@ -207,7 +218,7 @@ class TestApiV1RoundtripHappy:
     ) -> None:
         r = client.post(
             "/api/v1/roundtrip",
-            json={"repo_path": str(tiny_repo), "threshold": 0.5},
+            json={"repo_path": "repo", "threshold": 0.5},
         )
         if r.status_code == 200:
             body = r.json()
@@ -342,15 +353,12 @@ class TestAnalyzeErrorPaths:
         r = client.post(
             "/analyze",
             json={
-                "repo_path": str(tiny_repo),
+                "repo_path": "repo",
                 "stages": ["this_stage_does_not_exist"],
                 "skip_dynamic": True,
             },
         )
-        # Must be either 500 (caught & rethrown) or 200 if the runner
-        # silently ignores. We accept the 500 path explicitly so the
-        # ValueError handler is exercised.
-        assert r.status_code in (200, 500)
+        assert r.status_code == 422
 
 
 # --------------------------------------------------------------------------- #
@@ -366,9 +374,8 @@ class TestRoundtripErrorPaths:
         empty = tmp_path / "empty"
         empty.mkdir()
         r = client.post(
-            "/roundtrip", json={"repo_path": str(empty), "threshold": 0.5}
+            "/roundtrip", json={"repo_path": "empty", "threshold": 0.5}
         )
-        # Either 200 (zero score) or 500 (pipeline ValueError caught)
         assert r.status_code in (200, 500)
 
 
@@ -423,7 +430,7 @@ class TestApiV1AnalyzeErrors:
     def test_analyze_v1_404_when_repo_missing(self, client: TestClient) -> None:
         r = client.post(
             "/api/v1/analyze",
-            json={"repo_path": "/definitely/no/such/path/abc123"},
+            json={"repo_path": "missing-repo"},
         )
         assert r.status_code == 404
         body = r.json()

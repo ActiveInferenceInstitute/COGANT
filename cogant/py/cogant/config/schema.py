@@ -6,9 +6,22 @@ export settings, and validation configuration.
 """
 
 from enum import StrEnum
+from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from .pipeline import PipelineConfig as CanonicalPipelineConfig
+
+CURRENT_CONFIG_SCHEMA_VERSION = "1.0"
+
+
+def _validate_path_text(value: str, field_name: str) -> str:
+    if not value.strip() or "\x00" in value:
+        raise ValueError(f"{field_name} must be non-empty and NUL-free")
+    if ".." in Path(value).parts:
+        raise ValueError(f"{field_name} must not contain path traversal components")
+    return value
 
 
 class CogantBaseConfig(BaseModel):
@@ -18,6 +31,8 @@ class CogantBaseConfig(BaseModel):
         use_enum_values=False,
         validate_assignment=True,
         arbitrary_types_allowed=True,
+        extra="forbid",
+        validate_default=True,
     )
 
 
@@ -83,6 +98,11 @@ class CogantConfig(CogantBaseConfig):
         description="Preserve original source formatting in exports",
     )
 
+    @field_validator("log_file", "cache_dir")
+    @classmethod
+    def validate_paths(cls, value: str | None) -> str | None:
+        return None if value is None else _validate_path_text(value, "configuration path")
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -127,86 +147,9 @@ class PipelineStage(CogantBaseConfig):
     )
 
 
-class PipelineConfig(CogantBaseConfig):
-    """
-    Configuration for the analysis pipeline.
-
-    Specifies which analysis stages run, in what order, and with what settings.
-    """
-
-    # Pipeline identity
-    name: str = Field(default="default", description="Pipeline name")
-    description: str | None = Field(default=None, description="Pipeline description")
-
-    # Execution
-    run_stages: list[str] = Field(
-        default_factory=lambda: [
-            "ingest",
-            "static",
-            "normalize",
-            "graph",
-            "dynamic",
-            "translate",
-            "statespace",
-            "process",
-            "validate",
-            "export",
-        ],
-        description="Stages to run in order",
-    )
-    parallel_stages: list[list[str]] = Field(
-        default_factory=list,
-        description="Groups of stages to run in parallel",
-    )
-
-    # Stage configs
-    stages: dict[str, PipelineStage] = Field(
-        default_factory=dict,
-        description="Configuration for each stage",
-    )
-
-    # Language support
-    languages: list[LanguageConfig] = Field(
-        default_factory=list,
-        description="Language-specific analyzer configs",
-    )
-
-    # Filtering
-    include_patterns: list[str] = Field(
-        default_factory=list,
-        description="File patterns to include (e.g., '*.py')",
-    )
-    exclude_patterns: list[str] = Field(
-        default_factory=list,
-        description="File patterns to exclude (e.g., 'test_*.py')",
-    )
-
-    # Analysis scope
-    analyze_tests: bool = Field(default=True, description="Include test files in analysis")
-    analyze_dependencies: bool = Field(
-        default=True,
-        description="Analyze external dependencies",
-    )
-    follow_imports: bool = Field(default=True, description="Follow import/include statements")
-    max_import_depth: int = Field(default=5, ge=0, description="Maximum import depth to follow")
-
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "name": "default",
-                "run_stages": [
-                    "ingest",
-                    "static",
-                    "graph",
-                    "translate",
-                    "validate",
-                    "export",
-                ],
-                "exclude_patterns": ["**/test_*.py", "**/__pycache__/**"],
-                "analyze_tests": True,
-            }
-        }
-    )
+# The pipeline model is defined once in ``config.pipeline``.  Keep this
+# import path as a direct alias so there cannot be two accepted schemas.
+PipelineConfig = CanonicalPipelineConfig
 
 
 class ExportFormat(StrEnum):
@@ -285,6 +228,11 @@ class ExportConfig(CogantBaseConfig):
         description="Train/test split ratio",
     )
 
+    @field_validator("output_dir", "bundle_name")
+    @classmethod
+    def validate_paths(cls, value: str) -> str:
+        return _validate_path_text(value, "export path")
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -307,88 +255,188 @@ class ValidationLevel(StrEnum):
     PARANOID = "paranoid"  # Extra checks + all warnings
 
 
+
 class ValidationConfig(CogantBaseConfig):
-    """
-    Configuration for validation checks.
+    """Configuration for validation checks."""
 
-    Controls which validation checks run and how strict they are.
-    """
+    level: ValidationLevel = Field(default=ValidationLevel.MODERATE)
+    validate_schema: bool = Field(default=True)
+    validate_references: bool = Field(default=True)
+    validate_graph_structure: bool = Field(default=True)
+    min_provenance_coverage: float = Field(default=0.8, ge=0.0, le=1.0)
+    min_mean_confidence: float = Field(default=0.7, ge=0.0, le=1.0)
+    check_missing_mappings: bool = Field(default=True)
+    check_unobservable_state: bool = Field(default=True)
+    check_unreachable_code: bool = Field(default=False)
+    warn_on_large_graph: bool = Field(default=True)
+    large_graph_threshold: int = Field(default=50_000, ge=1)
+    generate_report: bool = Field(default=True)
+    fail_on_error: bool = Field(default=False)
+    use_upstream_gnn_validator: bool = Field(default=False)
+    auto_fix_warnings: bool = Field(default=False)
 
-    # Validation level
-    level: ValidationLevel = Field(
-        default=ValidationLevel.MODERATE,
-        description="Validation strictness",
-    )
 
-    # Schema validation
-    validate_schema: bool = Field(default=True, description="Validate against schemas")
-    validate_references: bool = Field(
-        default=True,
-        description="Check referential integrity",
-    )
-    validate_graph_structure: bool = Field(default=True, description="Validate graph structure")
+class ServerConfig(CogantBaseConfig):
+    """Local-safe settings for the HTTP analysis service."""
 
-    # Coverage validation
-    min_provenance_coverage: float = Field(
-        default=0.8,
-        ge=0.0,
-        le=1.0,
-        description="Minimum provenance coverage ratio",
-    )
-    min_mean_confidence: float = Field(
-        default=0.7,
-        ge=0.0,
-        le=1.0,
-        description="Minimum mean confidence score",
-    )
-
-    # Completeness checks
-    check_missing_mappings: bool = Field(
-        default=True,
-        description="Warn about unmapped code elements",
-    )
-    check_unobservable_state: bool = Field(
-        default=True,
-        description="Warn about unobservable state vars",
-    )
-    check_unreachable_code: bool = Field(
-        default=False,
-        description="Detect unreachable code sections",
+    host: str = Field(default="127.0.0.1", min_length=1)
+    port: int = Field(default=8000, ge=1, le=65_535)
+    workspace_root: str = Field(default=".", min_length=1)
+    allow_absolute_paths: bool = False
+    auth_token: str | None = Field(default=None, min_length=1)
+    max_request_bytes: int = Field(default=2_000_000, ge=1_024)
+    max_gnn_text_bytes: int = Field(default=1_000_000, ge=1_024)
+    max_archive_bytes: int = Field(default=25_000_000, ge=1_024)
+    max_archive_files: int = Field(default=1_000, ge=1)
+    max_concurrent_requests: int = Field(default=4, ge=1)
+    request_timeout_seconds: float = Field(default=300.0, gt=0)
+    rate_limit_requests: int = Field(default=10, ge=1)
+    rate_limit_window_seconds: int = Field(default=60, ge=1)
+    rate_limit_paths: list[str] = Field(
+        default_factory=lambda: ["/analyze", "/roundtrip", "/reverse"]
     )
 
-    # Performance checks
-    warn_on_large_graph: bool = Field(
-        default=True,
-        description="Warn if graph exceeds size threshold",
-    )
-    large_graph_threshold: int = Field(default=50000, ge=1, description="Graph size threshold")
+    @field_validator("workspace_root")
+    @classmethod
+    def validate_workspace_root(cls, value: str) -> str:
+        return _validate_path_text(value, "server workspace_root")
 
-    # Output
-    generate_report: bool = Field(default=True, description="Generate validation report")
-    fail_on_error: bool = Field(
-        default=False,
-        description="Fail bundle if validation errors found",
-    )
-    use_upstream_gnn_validator: bool = Field(
-        default=True,
-        description=(
-            "Run Active Inference Institute src.gnn checks in addition to COGANT "
-            "validators (mirrors pipeline ``upstream_gnn_validation`` when wired)"
-        ),
-    )
-    auto_fix_warnings: bool = Field(
-        default=False,
-        description="Automatically fix fixable issues",
-    )
+    @field_validator("auth_token")
+    @classmethod
+    def validate_auth_token(cls, value: str | None) -> str | None:
+        if value is not None and (not value.strip() or "\x00" in value):
+            raise ValueError("server auth_token must be non-empty and NUL-free")
+        return value
 
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "level": "moderate",
-                "validate_schema": True,
-                "validate_references": True,
-                "min_mean_confidence": 0.7,
-                "fail_on_error": False,
-            }
-        }
+    @model_validator(mode="after")
+    def require_auth_for_non_loopback(self) -> "ServerConfig":
+        loopback_hosts = {"127.0.0.1", "::1", "localhost"}
+        if self.host not in loopback_hosts and not self.auth_token:
+            raise ValueError("auth_token is required when server host is not loopback")
+        return self
+
+
+class BatchTargetConfig(CogantBaseConfig):
+    """One source repository in a batch execution."""
+
+    id: str = Field(min_length=1, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+    path: str | None = None
+    git_url: str | None = None
+    git_ref: str | None = None
+    explain: str | None = None
+    roundtrip_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
+    roundtrip_note: str | None = None
+
+    @field_validator("path", "git_url", "git_ref", "explain", "roundtrip_note")
+    @classmethod
+    def validate_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _validate_path_text(value, "batch target value")
+
+    @model_validator(mode="after")
+    def require_one_source(self) -> "BatchTargetConfig":
+        if bool(self.path) == bool(self.git_url):
+            raise ValueError("each batch target must define exactly one of path or git_url")
+        return self
+
+
+class BatchRemoteConfig(CogantBaseConfig):
+    """Remote source acquisition policy for batch execution."""
+
+    shallow_clone: bool = True
+    refresh: bool = False
+
+
+class BatchManuscriptConfig(CogantBaseConfig):
+    """Optional manuscript regeneration stage settings."""
+
+    enabled: bool = False
+    regenerate_metrics: bool = False
+    strict: bool = False
+
+
+class BatchStepsConfig(CogantBaseConfig):
+    """Explicitly typed batch stages and their format selectors."""
+
+    doctor: bool = False
+    translate: bool = True
+    layout_output: bool = True
+    no_dynamic: bool = True
+    scan_json: bool = True
+    graph_stdout: bool = True
+    export_gnn: bool = True
+    export_gnn_format: str = Field(default="all", min_length=1)
+    render_site: bool = True
+    viz_png: bool = True
+    validate_run_dir: bool = True
+    validate_no_upstream_gnn: bool = False
+    roundtrip: bool = True
+    analyze_graph: bool = True
+    analyze_static: bool = True
+    export_multi: bool = True
+    export_multi_formats: str = Field(default="json,jsonlines", min_length=1)
+    visualize_diagrams: bool = True
+    visualize_format: str = Field(default="mermaid", min_length=1)
+    inspection_artifacts: bool = True
+    batch_dashboard: bool = True
+
+
+class BatchConfig(CogantBaseConfig):
+    """Typed settings for multi-target execution and reporting."""
+
+    package_root: str = Field(default="cogant", min_length=1)
+    output_root: str = Field(default="output", min_length=1)
+    remote: BatchRemoteConfig = Field(default_factory=BatchRemoteConfig)
+    targets: list[BatchTargetConfig] = Field(default_factory=list)
+    steps: BatchStepsConfig = Field(default_factory=BatchStepsConfig)
+    manuscript: BatchManuscriptConfig = Field(default_factory=BatchManuscriptConfig)
+    target_ids: list[str] = Field(default_factory=list)
+    enabled_steps: list[str] = Field(
+        default_factory=lambda: ["translate", "export", "render", "visualize", "validate"]
     )
+    dashboard: bool = True
+    max_targets: int = Field(default=100, ge=1)
+    max_archive_files: int = Field(default=1_000, ge=1)
+    max_archive_bytes: int = Field(default=25_000_000, ge=1_024)
+
+    @field_validator("package_root", "output_root")
+    @classmethod
+    def validate_output_root(cls, value: str) -> str:
+        return _validate_path_text(value, "batch path")
+
+
+class ProjectConfig(CogantBaseConfig):
+    """Fully typed configuration consumed by all COGANT entry points."""
+
+    schema_version: str = Field(
+        default=CURRENT_CONFIG_SCHEMA_VERSION,
+        pattern=r"^1\.\d+$",
+        description="Version of the canonical project configuration schema",
+    )
+    cogant: CogantConfig = Field(default_factory=CogantConfig)
+    pipeline: CanonicalPipelineConfig = Field(default_factory=CanonicalPipelineConfig)
+    export: ExportConfig = Field(default_factory=ExportConfig)
+    validation: ValidationConfig = Field(default_factory=ValidationConfig)
+    server: ServerConfig = Field(default_factory=ServerConfig)
+    batch: BatchConfig = Field(default_factory=BatchConfig)
+
+    def __getitem__(self, key: str) -> Any:
+        """Expose named sections for read-only boundary adapters."""
+        if key not in type(self).model_fields:
+            raise KeyError(key)
+        return getattr(self, key)
+
+    def __contains__(self, key: object) -> bool:
+        """Support legacy section-membership checks without exposing a dict.
+
+        Presets now contain canonical :class:`ProjectConfig` models rather
+        than duplicated raw dictionaries.  A small mapping-compatible
+        membership surface keeps older integrations such as ``"cogant" in
+        PRESETS["default"]`` working during the deprecation cycle.
+        """
+        return isinstance(key, str) and key in type(self).model_fields
+
+    def keys(self) -> tuple[str, ...]:
+        """Return section names for structured adapters, not raw config data."""
+        return tuple(type(self).model_fields)

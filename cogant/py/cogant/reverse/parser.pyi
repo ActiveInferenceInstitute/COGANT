@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 
-__all__ = ["ReverseGNNModel", "parse_gnn"]
+__all__ = ["ReverseGNNModel", "ReverseModelError", "parse_gnn"]
+
+class ReverseModelError(ValueError):
+    code: str
 
 @dataclass
 class ReverseGNNModel:
@@ -21,11 +24,16 @@ class ReverseGNNModel:
     D: list[float] = field(default_factory=list)
     connections: list[str] = field(default_factory=list)
     human_names: dict[str, str] = field(default_factory=dict)
+    degraded: bool = False
+    diagnostics: list[str] = field(default_factory=list)
+    @property
+    def n_hidden_factors(self) -> int: ...
     @property
     def n_states(self) -> int: ...
     @property
     def n_obs(self) -> int: ...
     @property
     def n_actions(self) -> int: ...
+    def validate(self) -> list[str]: ...
 
 def parse_gnn(gnn: str | Path) -> ReverseGNNModel: ...

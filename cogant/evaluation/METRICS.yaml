@@ -3,21 +3,21 @@
 # DO NOT EDIT BY HAND. Run: cd cogant && uv run python ../tools/regenerate_metrics.py
 
 schema_version: '1.0'
-generated_at: '2026-06-15T03:24:19.607235Z'
-generator_git_sha: 46a943415abe822f439462fb11267ab8c30d2e6e
+generated_at: '2026-07-18T02:44:12.327562Z'
+generator_git_sha: 1ce5c219d76b67f81a39b326a0b35832ece6b9a6
 cogant_version: 0.6.0
 package:
   name: cogant
   version: 0.6.0
   python_min: '3.11'
 testing:
-  test_count_total: 9702
-  test_count_passing: 9697
-  test_count_failing: 0
-  test_count_skipped: 5
+  test_count_total: 9664
+  test_count_passing: 9474
+  test_count_failing: 144
+  test_count_skipped: 46
   test_count_xfailed: 0
   test_count_xpassed: 0
-  test_files_unit: 313
+  test_files_unit: 314
   test_files_integration: 29
   test_files_property: 10
   test_files_fuzz: 1
@@ -25,11 +25,11 @@ testing:
   mypy_strict_errors: 0
   ruff_violations: 0
 codebase:
-  python_source_files: 240
-  python_loc: 83913
-  public_modules: 199
-  public_classes: 404
-  public_functions: 1126
+  python_source_files: 246
+  python_loc: 83763
+  public_modules: 198
+  public_classes: 429
+  public_functions: 1197
 pipeline:
   stage_count: 10
   translation_rules: 22
@@ -517,14 +517,14 @@ literature:
   source: cogant/docs/evaluation/LITERATURE.md
   bibliography_entries: 104
 benchmark:
-  suite_runtime_s: 1477.22
-  shipped_fixture_count: 13
+  suite_runtime_s: 403.56
+  shipped_fixture_count: 12
   benchmark_suite_file: suite_20260423.md
   benchmark_python_version: 3.12.11
   benchmark_os: macOS-26.4.1-arm64-arm-64bit
 ir_schema:
   node_kind_count: 18
-  edge_kind_count: 18
+  edge_kind_count: 19
   active_inf_role_count: 7
 rust:
   crates_total: 8
@@ -555,14 +555,14 @@ ablation:
       semantic_delta: 10
       resilience_delta: 0
     event_pipeline:
-      baseline_mappings_total: 21
+      baseline_mappings_total: 22
       baseline_by_mapping_kind:
         ACTION: 7
         HIDDEN_STATE: 1
-        OBSERVATION: 9
+        OBSERVATION: 10
         POLICY: 4
       structural_delta: 1
-      behavioral_delta: 0
+      behavioral_delta: 1
       control_delta: 0
       semantic_delta: 19
       resilience_delta: 0
@@ -576,33 +576,33 @@ ablation:
       structural_delta: 3
       behavioral_delta: 0
       control_delta: 0
-      semantic_delta: 19
+      semantic_delta: 18
       resilience_delta: 0
     flask_app:
-      baseline_mappings_total: 72
+      baseline_mappings_total: 75
       baseline_by_mapping_kind:
         ACTION: 26
         CONSTRAINT: 1
         CONTEXT: 5
         HIDDEN_STATE: 13
-        OBSERVATION: 24
+        OBSERVATION: 27
         POLICY: 3
       structural_delta: 10
-      behavioral_delta: 0
+      behavioral_delta: 3
       control_delta: 0
-      semantic_delta: 53
+      semantic_delta: 51
       resilience_delta: 1
     requests_lib:
-      baseline_mappings_total: 62
+      baseline_mappings_total: 64
       baseline_by_mapping_kind:
         ACTION: 15
         HIDDEN_STATE: 8
-        OBSERVATION: 37
+        OBSERVATION: 39
         POLICY: 2
       structural_delta: 4
-      behavioral_delta: 0
+      behavioral_delta: 2
       control_delta: 0
-      semantic_delta: 50
+      semantic_delta: 51
       resilience_delta: 0
     json_stdlib:
       baseline_mappings_total: 16
@@ -673,7 +673,7 @@ ablation:
       behavioral:
         ACTION: 0
         HIDDEN_STATE: 0
-        OBSERVATION: 0
+        OBSERVATION: 1
         POLICY: 0
       control:
         ACTION: 0
@@ -710,6 +710,7 @@ ablation:
         ACTION: 13
         HIDDEN_STATE: 0
         OBSERVATION: 1
+        ORCHESTRATION: -1
         POLICY: 5
       resilience:
         ACTION: 0
@@ -729,7 +730,7 @@ ablation:
         CONSTRAINT: 0
         CONTEXT: 0
         HIDDEN_STATE: 0
-        OBSERVATION: 0
+        OBSERVATION: 3
         POLICY: 0
       control:
         ACTION: 0
@@ -744,6 +745,7 @@ ablation:
         CONTEXT: 0
         HIDDEN_STATE: 0
         OBSERVATION: 24
+        ORCHESTRATION: -2
         POLICY: 2
       resilience:
         ACTION: 0
@@ -761,7 +763,7 @@ ablation:
       behavioral:
         ACTION: 0
         HIDDEN_STATE: 0
-        OBSERVATION: 0
+        OBSERVATION: 2
         POLICY: 0
       control:
         ACTION: 0
@@ -770,8 +772,9 @@ ablation:
         POLICY: 0
       semantic:
         ACTION: 15
-        HIDDEN_STATE: -4
+        HIDDEN_STATE: -2
         OBSERVATION: 37
+        ORCHESTRATION: -1
         POLICY: 2
       resilience:
         ACTION: 0
@@ -811,25 +814,25 @@ ablation:
       k5: 11
       k10: 11
     event_pipeline:
-      k1: 21
-      k2: 21
-      k5: 21
-      k10: 21
+      k1: 22
+      k2: 22
+      k5: 22
+      k10: 22
     flask_mini:
       k1: 25
       k2: 25
       k5: 25
       k10: 25
     flask_app:
-      k1: 72
-      k2: 72
-      k5: 72
-      k10: 72
+      k1: 75
+      k2: 75
+      k5: 75
+      k10: 75
     requests_lib:
-      k1: 62
-      k2: 62
-      k5: 62
-      k10: 62
+      k1: 64
+      k2: 64
+      k5: 64
+      k10: 64
     json_stdlib:
       k1: 16
       k2: 16
@@ -857,8 +860,8 @@ ablation:
       a_cols_total: 1
       b_actions_identity: 11
       b_actions_total: 11
-      c_entries_zero: 9
-      c_entries_total: 9
+      c_entries_zero: 10
+      c_entries_total: 10
       d_uniform: true
     flask_mini:
       a_cols_uniform: 6
@@ -873,16 +876,16 @@ ablation:
       a_cols_total: 14
       b_actions_identity: 14
       b_actions_total: 29
-      c_entries_zero: 24
-      c_entries_total: 24
+      c_entries_zero: 27
+      c_entries_total: 27
       d_uniform: false
     requests_lib:
       a_cols_uniform: 0
       a_cols_total: 9
       b_actions_identity: 9
       b_actions_total: 17
-      c_entries_zero: 37
-      c_entries_total: 37
+      c_entries_zero: 39
+      c_entries_total: 39
       d_uniform: false
     json_stdlib:
       a_cols_uniform: 1

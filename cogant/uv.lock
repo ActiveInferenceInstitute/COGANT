@@ -405,9 +405,7 @@ name = "cogant"
 version = "0.6.0"
 source = { editable = "." }
 dependencies = [
-    { name = "duckdb" },
     { name = "fastapi" },
-    { name = "generalized-notation-notation" },
     { name = "httpx" },
     { name = "networkx" },
     { name = "numpy" },
@@ -419,6 +417,7 @@ dependencies = [
 
 [package.optional-dependencies]
 all = [
+    { name = "duckdb" },
     { name = "jinja2" },
     { name = "matplotlib" },
     { name = "mypy" },
@@ -430,6 +429,9 @@ all = [
     { name = "tree-sitter-javascript" },
     { name = "tree-sitter-python" },
     { name = "tree-sitter-typescript" },
+]
+analytics = [
+    { name = "duckdb" },
 ]
 dev = [
     { name = "hypothesis" },
@@ -444,6 +446,9 @@ multilang = [
     { name = "tree-sitter-javascript" },
     { name = "tree-sitter-python" },
     { name = "tree-sitter-typescript" },
+]
+upstream = [
+    { name = "generalized-notation-notation" },
 ]
 viz = [
     { name = "jinja2" },
@@ -463,9 +468,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "duckdb", specifier = ">=0.9" },
+    { name = "duckdb", marker = "extra == 'all'", specifier = ">=0.9" },
+    { name = "duckdb", marker = "extra == 'analytics'", specifier = ">=0.9" },
     { name = "fastapi", specifier = ">=0.135.3" },
-    { name = "generalized-notation-notation", git = "https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.git?rev=11a89f0615f1e48ddacca58d1bcf3c5092b1b055" },
+    { name = "generalized-notation-notation", marker = "extra == 'upstream'", git = "https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.git?rev=11a89f0615f1e48ddacca58d1bcf3c5092b1b055" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.0" },
     { name = "jinja2", marker = "extra == 'all'", specifier = ">=3.0.0" },
@@ -498,7 +504,7 @@ requires-dist = [
     { name = "tree-sitter-typescript", marker = "extra == 'multilang'", specifier = ">=0.21" },
     { name = "typer", specifier = ">=0.9" },
 ]
-provides-extras = ["dev", "viz", "multilang", "all"]
+provides-extras = ["dev", "viz", "multilang", "analytics", "upstream", "all"]
 
 [package.metadata.requires-dev]
 dev = [

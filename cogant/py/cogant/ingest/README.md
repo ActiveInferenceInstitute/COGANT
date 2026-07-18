@@ -8,7 +8,7 @@ RepoIngester is the primary entry point. It ingests repositories (local paths or
 
 File enumeration respects .gitignore patterns, filters out build artifacts and common ignore patterns (node_modules, venv, __pycache__, etc.), and optionally computes SHA256 checksums for integrity tracking. FileInfo records path, relative path, detected language, file size, test status, and optional checksum.
 
-Language detection uses file extensions to identify programming languages (Python, JavaScript, TypeScript, Rust, Go, Java, C/C++, C#, Ruby, PHP). LanguageDetector provides both single-file and repository-wide language detection, with lazy-loading of language-specific parsers.
+Language detection uses file extensions to identify programming languages (Python, JavaScript, TypeScript, Rust, Go, Java, C/C++, C#, Ruby, PHP). The public parser registry currently provides Python, JavaScript, TypeScript, Rust, and Go; Rust and Go remain experimental. `LanguageDetector` provides single-file and repository-wide detection, while parser selection and capability reporting are delegated to `cogant.parsers`.
 
 ManifestParser extracts dependencies from multiple manifest file formats: Python (setup.py, pyproject.toml, requirements.txt), Node.js (package.json), and Rust (Cargo.toml). Each manifest is parsed to extract project metadata and dependencies (including dev vs. production, local vs. third-party).
 
@@ -30,8 +30,9 @@ ManifestParser class with methods:
 LanguageDetector class with static methods:
 - detect_language(file_path) — Detect language from file extension
 - detect_repo_languages(repo_path) — Return dict of language → count
-- get_parser(language) — Lazy-load and return language-specific parser instance
+- get_parser(language) — Select a registered parser or raise `LanguageParserUnavailable`
 - get_supported_languages() — List of supported languages
+- `cogant.parsers.parser_capability_report()` — Active implementation, optional grammar availability, and explicit degradation reason
 
 Data classes:
 - RepoSnapshot(metadata, files, dependencies, root_path) — Complete repository snapshot

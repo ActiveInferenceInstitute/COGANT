@@ -10,7 +10,7 @@ The architecture targets the following benchmarks on a 4-core machine, as specif
 | 100K functions | < 5 min | < 2 GB |
 | 1M functions | < 1 hr | < 2 GB (streaming) |
 
-These are architecture targets, not benchmark claims from this manuscript. They assume the Python orchestration layer with Rust acceleration on critical paths (graph construction, rule matching, and Generalized Notation Notation section/tensor packing in `cogant-gnn`). In the current v{{VERSION}} release, Rust acceleration is partially wired — `cogant._rust` exposes a PyO3 `connected_components` FFI for graph construction behind the `COGANT_USE_RUST` feature flag — and the pure-Python implementation handles the remaining code paths.
+These are architecture targets, not benchmark claims from this manuscript. They assume the Python orchestration layer with Rust acceleration on critical paths (graph construction, rule matching, and Generalized Notation Notation section/tensor packing in `cogant-gnn`). In the current v{{VERSION}} release, Rust acceleration is partially wired through the optional `cogant.rust_backend` adapter, which exposes the PyO3 `connected_components` FFI for graph construction behind the `COGANT_USE_RUST` feature flag; the pure-Python implementation handles the remaining code paths and is used when the extension is absent.
 
 Current `PipelineRunner` behavior is stage-sequential with per-stage error capture and continuation. It does not currently expose built-in incremental checkpoint/resume in `cogant.api.pipeline`; treat checkpointing as a potential outer-orchestration feature rather than a guaranteed package-level runtime behavior.
 

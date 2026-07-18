@@ -24,6 +24,7 @@ Typical usage::
 
 from __future__ import annotations
 
+from cogant.reverse.matrices import _validate_matrix_semantics
 from cogant.reverse.parser import ReverseGNNModel, parse_gnn
 
 
@@ -52,27 +53,17 @@ class MatrixFunctions:
     """
 
     def __init__(self, model: ReverseGNNModel) -> None:
+        _validate_matrix_semantics(model)
         n_states = model.n_states
         n_obs = model.n_obs
         n_actions = model.n_actions
 
-        # Resolve matrices with the same fallback logic as render_matrices_module.
-        A = model.A if model.A else []
-        if not A and n_obs and n_states:
-            A = [[1.0 / n_states] * n_states for _ in range(n_obs)]
-
-        B = model.B if model.B else []
-        if not B and n_states:
-            B = [
-                [
-                    [1.0 if (r == c) else 0.0 for _ in range(max(n_actions, 1))]
-                    for c in range(n_states)
-                ]
-                for r in range(n_states)
-            ]
-
-        C = model.C if model.C else [0.0] * n_obs
-        D = model.D if model.D else ([1.0 / n_states] * n_states if n_states else [])
+        # Runtime execution uses the source matrices exactly. Missing
+        # matrices are evidence gaps, not values to invent.
+        A = [list(row) for row in model.A]
+        B = [[list(cell) for cell in row] for row in model.B]
+        C = list(model.C)
+        D = list(model.D)
 
         self._A = A
         self._B = B
@@ -94,15 +85,16 @@ class MatrixFunctions:
         Implements ``P(o) = A . state_dist`` — identical to the generated
         ``likelihood()`` function in ``render_matrices_module``.
         """
+        self._validate_state_distribution(state_dist)
         A = self._A
-        if not A or not state_dist:
+        if not A:
             return []
         n_obs = len(A)
         n_states = len(state_dist)
         result = [0.0] * n_obs
         for i in range(n_obs):
             row = A[i] if i < len(A) else []
-            for j in range(min(len(row), n_states)):
+            for j in range(n_states):
                 result[i] += row[j] * state_dist[j]
         return result
 
@@ -112,33 +104,55 @@ class MatrixFunctions:
         Implements ``P(s') = B[:,:,action] . state_dist``, normalized —
         identical to the generated ``transition()`` function.
         """
+        self._validate_state_distribution(state_dist)
         B = self._B
-        if not B or not state_dist:
-            return list(state_dist)
+        if not state_dist:
+            return []
+        if not B:
+            raise ValueError("transition matrix B is unavailable for this model")
         n_states = len(state_dist)
         n_actions = len(B[0][0]) if (B and B[0]) else 1
-        k = max(0, min(action, n_actions - 1))
+        if action < 0 or action >= n_actions:
+            raise ValueError("action index is outside the declared B dimension")
+        k = action
         result = [0.0] * n_states
         for i in range(n_states):
             row = B[i] if i < len(B) else []
-            for j in range(min(len(row), n_states)):
-                slice_k = row[j][k] if k < len(row[j]) else 0.0
+            for j in range(n_states):
+                slice_k = row[j][k]
                 result[i] += slice_k * state_dist[j]
         # Normalize to keep result a proper distribution.
         total = sum(result)
-        if total > 0.0:
-            result = [v / total for v in result]
+        if total <= 0.0:
+            raise ValueError("transition matrix produced no probability mass")
+        result = [v / total for v in result]
         return result
 
     def preference_score(self, obs_dist: list[float]) -> float:
         """Return log-preference score <C, obs_dist> for policy selection."""
         C = self._C
-        if not C or not obs_dist:
+        if len(obs_dist) != self._n_obs:
+            raise ValueError("observation distribution has incompatible dimensions")
+        if any(value < 0.0 for value in obs_dist) or not all(
+            value == value and abs(value) != float("inf") for value in obs_dist
+        ):
+            raise ValueError("observation distribution must be finite and non-negative")
+        if not C:
             return 0.0
         score = 0.0
         for i in range(min(len(C), len(obs_dist))):
             score += C[i] * obs_dist[i]
         return score
+
+    def _validate_state_distribution(self, state_dist: list[float]) -> None:
+        if len(state_dist) != self._n_states:
+            raise ValueError("state distribution has incompatible dimensions")
+        if any(value < 0.0 for value in state_dist) or not all(
+            value == value and abs(value) != float("inf") for value in state_dist
+        ):
+            raise ValueError("state distribution must be finite and non-negative")
+        if state_dist and abs(sum(state_dist) - 1.0) > 1e-6:
+            raise ValueError("state distribution must sum to 1.0")
 
     def prior(self) -> list[float]:
         """Return D vector (initial state prior)."""
@@ -158,9 +172,9 @@ class MatrixFunctions:
         return -self.preference_score(obs)
 
     def best_action(self, state_dist: list[float]) -> int:
-        """Return argmin EFE over all actions (0 if n_actions == 0)."""
+        """Return argmin EFE over the declared action axis."""
         if self._n_actions == 0:
-            return 0
+            raise ValueError("policy selection requires at least one action")
         best_a = 0
         best_efe = float("inf")
         for a in range(self._n_actions):

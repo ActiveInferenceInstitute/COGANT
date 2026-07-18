@@ -317,7 +317,7 @@ def get_mypy_errors() -> int:
     """
     try:
         rc, out = _run(
-            "uv run mypy --strict py/cogant/",
+            "MYPYPATH=py uv run mypy --package cogant --strict",
             cwd=COGANT_DIR,
             timeout=120,
         )

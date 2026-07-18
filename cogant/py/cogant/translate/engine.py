@@ -76,7 +76,7 @@ class TranslationRule(ABC):
         Returns:
             List of matched fragments, each with node/edge IDs.
         """
-        pass
+        ...
 
     @abstractmethod
     def apply(
@@ -93,19 +93,19 @@ class TranslationRule(ABC):
         Returns:
             SemanticMapping if successful, None otherwise.
         """
-        pass
+        ...
 
     @property
     @abstractmethod
     def name(self) -> str:
         """Name of this rule."""
-        pass
+        ...
 
     @property
     @abstractmethod
     def mapping_kind(self) -> MappingKind:
         """Kind of semantic mapping produced."""
-        pass
+        ...
 
     @property
     def priority(self) -> int:

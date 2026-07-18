@@ -25,29 +25,20 @@ TestModel
 
 ## StateSpaceBlock
 s_f0[3,1,type=int]
-s_f1[2,1,type=int]
-s_f2[2,1,type=int]
 o_m0[2,1,type=float]
-o_m1[2,1,type=float]
-u_c0[4,1,type=int]
+u_c0[2,1,type=int]
 
 ## Connections
 (D_f0) > (s_f0)
 
 ## InitialParameterization
 D_f0={ (0.6, 0.2, 0.2) }
-D_f1={ (0.5, 0.5) }
-D_f2={ (0.3, 0.7) }
 C_m0={ (0.8, 0.2) }
-C_m1={ (0.4, 0.6) }
 A_m0={ ( (0.9, 0.2, 0.4), (0.1, 0.8, 0.6) ) }
 
 ## ActInfOntologyAnnotation
 s_f0=HiddenState
-s_f1=HiddenState
-s_f2=HiddenState
 o_m0=Observation
-o_m1=Observation
 u_c0=Action
 
 ## State Space
@@ -88,9 +79,10 @@ def _make_no_actions_model() -> ReverseGNNModel:
     m = ReverseGNNModel(
         model_name="no_actions",
         raw_model_name="NoActions",
-        hidden_states=["s_f0", "s_f1"],
+        hidden_states=["s_f0"],
         observations=["o_m0"],
         actions=[],
+        cardinalities={"s_f0": 2, "o_m0": 2},
         A=[[0.6, 0.3], [0.4, 0.7]],
         B=[],
         C=[0.5, 0.5],
@@ -206,12 +198,14 @@ def test_best_action_type() -> None:
     assert isinstance(action, int)
 
 
-def test_best_action_no_actions_returns_zero() -> None:
-    """Model with n_actions=0 returns best_action == 0."""
+def test_best_action_no_actions_raises() -> None:
+    """Model with n_actions=0 cannot select a fabricated action."""
     model = _make_no_actions_model()
     mf = MatrixFunctions(model)
-    action = mf.best_action([0.5, 0.5])
-    assert action == 0
+    import pytest
+
+    with pytest.raises(ValueError, match="at least one action"):
+        mf.best_action([0.5, 0.5])
 
 
 # ---------------------------------------------------------------------------

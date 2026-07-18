@@ -46,68 +46,38 @@ from cogant.api.pipeline import PipelineRunner
 from cogant.api.session import Session
 from cogant.gnn.formatter import GNNMarkdownFormatter
 from cogant.graph.builder import ProgramGraphBuilder
+
+# Type infrastructure is first-party and must import successfully.
+from cogant.protocols import (
+    Analyzable,
+    Exportable,
+    GraphBackend,
+    PipelineStage,
+    Serializable,
+    Translatable,
+    TranslationRule,
+    Validatable,
+    Visualizable,
+)
 from cogant.schemas.graph import ProgramGraph
 from cogant.statespace.compiler import StateSpaceCompiler
 from cogant.translate.engine import TranslationEngine
-
-# Type infrastructure (always available).
-try:
-    from cogant.protocols import (
-        Analyzable,
-        Exportable,
-        GraphBackend,
-        PipelineStage,
-        Serializable,
-        Translatable,
-        TranslationRule,
-        Validatable,
-        Visualizable,
-    )
-except (ImportError, ModuleNotFoundError):
-    Analyzable = None  # type: ignore[assignment,misc]
-    Exportable = None  # type: ignore[assignment,misc]
-    GraphBackend = None  # type: ignore[assignment,misc]
-    PipelineStage = None  # type: ignore[assignment,misc]
-    Serializable = None  # type: ignore[assignment,misc]
-    TranslationRule = None  # type: ignore[assignment,misc]
-    Translatable = None  # type: ignore[assignment,misc]
-    Validatable = None  # type: ignore[assignment,misc]
-    Visualizable = None  # type: ignore[assignment,misc]
-
-try:
-    from cogant.types import (
-        AMatrix,
-        BMatrix,
-        ConfidenceScore,
-        CVector,
-        DotStr,
-        DVector,
-        EdgeAttrs,
-        EdgeKind,
-        FilePath,
-        GNNBundle,
-        JsonStr,
-        MermaidStr,
-        NodeAttrs,
-        NodeId,
-        RoleName,
-    )
-except (ImportError, ModuleNotFoundError):
-    AMatrix = None  # type: ignore[assignment,misc]
-    BMatrix = None  # type: ignore[assignment,misc]
-    CVector = None  # type: ignore[assignment,misc]
-    ConfidenceScore = None  # type: ignore[assignment,misc]
-    DVector = None  # type: ignore[assignment,misc]
-    DotStr = None  # type: ignore[assignment,misc]
-    EdgeAttrs = None  # type: ignore[assignment,misc]
-    EdgeKind = None  # type: ignore[assignment,misc]
-    FilePath = None  # type: ignore[assignment,misc]
-    GNNBundle = None  # type: ignore[assignment,misc]
-    JsonStr = None  # type: ignore[assignment,misc]
-    MermaidStr = None  # type: ignore[assignment,misc]
-    NodeAttrs = None  # type: ignore[assignment,misc]
-    NodeId = None  # type: ignore[assignment,misc]
-    RoleName = None  # type: ignore[assignment,misc]
+from cogant.types import (
+    AMatrix,
+    BMatrix,
+    ConfidenceScore,
+    CVector,
+    DotStr,
+    DVector,
+    EdgeAttrs,
+    EdgeKind,
+    FilePath,
+    JsonStr,
+    MermaidStr,
+    NodeAttrs,
+    NodeId,
+    RoleName,
+)
 
 # Convenience aliases for the public API.
 # Users can write:
@@ -131,11 +101,8 @@ def run_pipeline(target: str, output_dir: str = "output") -> object:
         output_dir: Directory where artifacts are written. Defaults to ``"output"``.
 
     Returns:
-        The :class:`Session` object after ``export_all`` has been called, or
-        ``None`` if the session API is unavailable.
+        The :class:`Session` object after ``export_all`` has been called.
     """
-    if Session is None:
-        raise ImportError("cogant.api.session is not available; check your installation.")
     sess = Session(target=target)
     sess.extract_static()
     sess.build_graph()

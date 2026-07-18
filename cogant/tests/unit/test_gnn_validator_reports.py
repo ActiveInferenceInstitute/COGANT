@@ -35,6 +35,10 @@ def test_validation_result_to_dict_round_trip():
         "score": 88.0,
         "errors": ["e"],
         "warnings": ["w"],
+        "advisories": ["w"],
+        "capabilities": {},
+        "artifact_digests": {},
+        "dimensions": {},
         "details": {},
         "section_scores": {},
     }
@@ -158,7 +162,7 @@ def test_validate_state_space_complete_dict_passes():
             "variables": [],
             "observations": [],
             "actions": [],
-            "transitions": {},
+            "transitions": {"transition_count": 0, "time_regime": "synchronous"},
         }
     )
     assert errors == []
@@ -198,6 +202,7 @@ def test_validate_matrices_well_formed_2x2():
         "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
         "C": [0.0, 0.0],
         "D": [0.5, 0.5],
+        "shapes": {"A": [2, 2], "B": [2, 2, 1], "C": [2], "D": [2]},
         "dimensions": {"n_states": 2, "n_obs": 2, "n_actions": 1},
     }
     errors = GNNValidator().validate_matrices(block)
@@ -327,9 +332,9 @@ def _build_full_package(root: Path) -> None:
         "variables": [{"id": "s0"}, {"id": "s1"}],
         "observations": [{"id": "o0"}, {"id": "o1"}],
         "actions": [{"id": "u0"}],
-        "transitions": {},
+        "transitions": {"transition_count": 0, "time_regime": "synchronous"},
     }
-    provenance = {"timestamp": "2026-01-01", "sources": {}}
+    provenance = {"timestamp": "2026-01-01", "sources": {"repository": "fixture"}}
     json_files = {
         "model.gnn.json": {"matrices": matrix_block},
         "state_space.json": state_space,
@@ -349,12 +354,14 @@ def _build_full_package(root: Path) -> None:
     for name, payload in json_files.items():
         (root / name).write_text(json.dumps(payload))
 
-    # Compute checksums for the JSON files only (the validator only checks
-    # files actually present in the manifest's checksum table).
+    # Cover every required artifact except manifest.json, whose digest would
+    # be self-referential.
     checksums = {}
     for name, payload in json_files.items():
         canon = json.dumps(payload, sort_keys=True, default=str).encode()
         checksums[name] = hashlib.sha256(canon).hexdigest()
+    markdown = (root / "model.gnn.md").read_bytes()
+    checksums["model.gnn.md"] = hashlib.sha256(markdown).hexdigest()
     manifest = {"name": "test", "checksums": checksums}
     (root / "manifest.json").write_text(json.dumps(manifest))
 
@@ -362,12 +369,15 @@ def _build_full_package(root: Path) -> None:
 def _refresh_manifest_checksums(root: Path) -> None:
     """Refresh manifest checksums after a test mutates package JSON."""
     checksums = {}
-    for path in root.glob("*.json"):
-        if path.name == "manifest.json":
+    for path in root.iterdir():
+        if path.name == "manifest.json" or not path.is_file():
             continue
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        canon = json.dumps(payload, sort_keys=True, default=str).encode()
-        checksums[path.name] = hashlib.sha256(canon).hexdigest()
+        if path.suffix == ".json":
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            content = json.dumps(payload, sort_keys=True, default=str).encode()
+        else:
+            content = path.read_bytes()
+        checksums[path.name] = hashlib.sha256(content).hexdigest()
     (root / "manifest.json").write_text(json.dumps({"name": "test", "checksums": checksums}))
 
 
@@ -501,7 +511,7 @@ def test_validate_package_degenerate_no_observations_warns_not_perfect(tmp_path)
         "variables": [{"id": "s0"}, {"id": "s1"}],
         "observations": [],
         "actions": [{"id": "u0"}],
-        "transitions": {},
+        "transitions": {"transition_count": 0, "time_regime": "synchronous"},
     }
     model = {
         "matrices": {
@@ -509,6 +519,7 @@ def test_validate_package_degenerate_no_observations_warns_not_perfect(tmp_path)
             "B": [[[1.0], [0.0]], [[0.0], [1.0]]],
             "C": [],
             "D": [0.5, 0.5],
+            "shapes": {"A": [0, 2], "B": [2, 2, 1], "C": [0], "D": [2]},
             "dimensions": {"n_states": 2, "n_obs": 0, "n_actions": 1},
         }
     }
@@ -532,7 +543,7 @@ def test_validate_package_degenerate_no_hidden_states_warns_not_perfect(tmp_path
         "variables": [],
         "observations": [{"id": "o0"}, {"id": "o1"}],
         "actions": [{"id": "u0"}],
-        "transitions": {},
+        "transitions": {"transition_count": 0, "time_regime": "synchronous"},
     }
     model = {
         "matrices": {
@@ -540,6 +551,7 @@ def test_validate_package_degenerate_no_hidden_states_warns_not_perfect(tmp_path
             "B": [],
             "C": [0.0, 0.0],
             "D": [],
+            "shapes": {"A": [2, 0], "B": [0, 0, 1], "C": [2], "D": [0]},
             "dimensions": {"n_states": 0, "n_obs": 2, "n_actions": 1},
         }
     }
@@ -600,14 +612,14 @@ def test_validate_package_checksum_mismatch_is_invalid_for_required_file(tmp_pat
     assert any("Checksum mismatch for factors.json" in e for e in result.errors)
 
 
-def test_validate_package_manifest_without_checksums_warns(tmp_path):
-    """A manifest with no 'checksums' table emits a single warning."""
+def test_validate_package_manifest_without_checksums_is_invalid(tmp_path):
+    """A manifest with no checksum evidence is invalid."""
     pkg = tmp_path / "no_checksums"
     _build_full_package(pkg)
     # Overwrite the manifest, dropping checksums
     (pkg / "manifest.json").write_text(json.dumps({"name": "x"}))
     result = GNNValidator().validate_package(str(pkg))
-    assert any("contains no checksums" in w for w in result.warnings)
+    assert any("checksums" in e for e in result.errors)
 
 
 def test_generate_validation_badge_returns_svg_string(tmp_path):

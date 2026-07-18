@@ -94,7 +94,7 @@ cd cogant && uv run pytest -q --override-ini="addopts="
 
    ```bash
    uv run pytest tests/ -q
-   uv run mypy py/cogant/
+   MYPYPATH=py uv run mypy --package cogant
    uv run ruff check py/
    uv run ruff format --check py/
    ```
@@ -121,7 +121,7 @@ Every pull request must:
 - [ ] Reference an open issue (or explain in the description why none is needed).
 - [ ] Include at least one new test **unless** the change is docs-only.
 - [ ] Pass `uv run pytest tests/ -q` with no failures and no new skips.
-- [ ] Pass `uv run mypy py/cogant/` with no new errors.
+- [ ] Pass `MYPYPATH=py uv run mypy --package cogant` with no new errors.
 - [ ] Pass `uv run ruff check py/` and `uv run ruff format --check py/`.
 - [ ] Maintain or improve overall test coverage (reported in CI).
 - [ ] Update documentation in `docs/` when the change affects public API or user-visible

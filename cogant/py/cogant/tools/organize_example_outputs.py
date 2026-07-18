@@ -124,10 +124,9 @@ def organize_run_dir(flat_dir: Path, *, dry_run: bool = False) -> Path | None:
         flat_dir / "site" / "index.html"
     ).exists():
         logger.info("Already organized: %s", flat_dir)
-        if not dry_run:
-            (flat_dir / "figures").mkdir(exist_ok=True)
-            _populate_reports(flat_dir)
-        return flat_dir
+        # Keep going: late-created root artifacts such as ``bundle.json`` may
+        # still need to be moved into the stable layout after a prior export
+        # stage already organized the directory.
 
     plan: list[tuple[Path, Path]] = []
     for p in sorted(flat_dir.iterdir()):

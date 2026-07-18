@@ -1,5 +1,7 @@
 """PipelineRunner: Orchestrates all analysis stages in sequence."""
 
+import hashlib
+import json
 import logging
 import time
 from collections.abc import Callable
@@ -7,333 +9,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from cogant.api import orchestration
-from cogant.api.bundle import Bundle
-from cogant.translate.confidence import ConfidenceModel
+from cogant.api.bundle import Bundle, StageOutcome
+from cogant.config.pipeline import PipelineConfig
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class PipelineConfig:
-    """Configuration for pipeline execution."""
-
-    stages: list[str] = field(
-        default_factory=lambda: [
-            "ingest",
-            "static",
-            "normalize",
-            "graph",
-            "dynamic",
-            "translate",
-            "statespace",
-            "process",
-            "export",
-            "validate",
-        ]
-    )
-    """Stages to execute in order."""
-
-    skip_stages: list[str] = field(default_factory=list)
-    """Stages to skip."""
-
-    plugins: dict[str, dict[str, Any]] = field(default_factory=dict)
-    """Plugin configurations."""
-
-    output_dir: str = "output"
-    """Output directory for artifacts."""
-
-    verbose: bool = False
-    """Enable verbose logging."""
-
-    dry_run: bool = False
-    """Run without side effects."""
-
-    layout_output: bool = False
-    """After export, move flat artifacts into data/, diagrams/, site/, reports/, figures/."""
-
-    render_visualizations: bool = True
-    """Render PNG visualization artifacts during the export stage.
-
-    Export always writes JSON, GNN package, Mermaid, SVG, and HTML artifacts.
-    This flag controls the browser/Graphviz-backed rasterization pass so
-    machine-readable summary commands can avoid re-rendering large existing
-    output trees.
-    """
-
-    skip_dynamic: bool = False
-    """Explicit opt-out for the dynamic-analysis enrichment stage.
-
-    When ``True``, the ``dynamic`` stage is treated as skipped for the
-    duration of a single ``run()`` even when it would otherwise appear in
-    ``stages``. This is the flag wired to the ``--no-dynamic`` CLI option
-    and lets callers disable dynamic enrichment without having to edit
-    the stage list by hand.
-    """
-
-    coverage_path: str | None = None
-    """Explicit path to a coverage database (``.coverage`` or ``coverage.xml``).
-
-    When set, the dynamic stage uses this file directly. When ``None``,
-    the dynamic stage looks for ``plugins['dynamic']['coverage_path']``,
-    then falls back to auto-detecting a ``.coverage`` file at the target
-    root before deciding there is no coverage data available.
-    """
-
-    trace_path: str | None = None
-    """Explicit path to a Chrome DevTools trace JSON file.
-
-    When set, the dynamic stage uses this file directly. When ``None``,
-    the dynamic stage looks for ``plugins['dynamic']['trace_path']``
-    before deciding there is no trace data available.
-    """
-
-    incremental_since: str | None = None
-    """Git ref (commit, tag, branch) to use as the incremental baseline.
-
-    When set, ``PipelineRunner.run`` will attempt to load a previously
-    cached bundle for the target and only re-run the ingest / static /
-    graph stages for Python files that changed between ``incremental_since``
-    and ``HEAD``. A dict summarising the incremental run is recorded on
-    ``bundle.metadata['incremental_stats']`` with the following keys:
-
-    * ``enabled`` — ``True`` whenever this field is set
-    * ``since`` — the ref that was passed in
-    * ``files_total`` — number of Python files in the repo
-    * ``files_reparsed`` — number of Python files that needed re-parsing
-    * ``cache_hit`` — ``True`` if a cached bundle was found and used
-    * ``reason`` — free-form explanation when ``cache_hit`` is ``False``
-
-    When ``None`` (the default), the pipeline behaves exactly as before
-    and never touches the cache. This makes incremental mode strictly
-    opt-in so existing callers and tests keep the same semantics.
-    """
-
-    cache_dir: str | None = None
-    """Override for the cache directory used by incremental mode.
-
-    When ``None``, incremental mode uses ``~/.cache/cogant``. Setting
-    this lets tests and benchmarks isolate cache state to a tmp dir.
-    """
-
-    min_confidence: float = ConfidenceModel.RUNTIME_ONLY_THRESHOLD
-    """Minimum semantic-mapping confidence admitted past translate.
-
-    Mappings whose scored ``confidence_score`` falls below this
-    threshold are removed from ``bundle.artifacts['_semantic_mappings']``
-    before the statespace/process/export/validate stages consume them.
-    The default intentionally matches
-    :data:`cogant.translate.confidence.RUNTIME_ONLY_THRESHOLD` (0.4),
-    which is the documented "runtime-only evidence" floor.
-    """
-
-    profiling_enabled: bool = False
-    """Enable per-stage profiling (timing + memory tracking).
-
-    When ``True``, each stage's execution is timed and memory usage
-    is estimated, and the results are recorded on the returned
-    ``PipelineResult.timing`` dict.
-    """
-
-    upstream_gnn_validation: bool = True
-    """When ``True``, run Active Inference Institute ``src.gnn`` validation on
-    ``gnn_package/`` during the validate stage (unless overridden per-call).
-    Set ``False`` to skip upstream checks while keeping COGANT's own GNN checks."""
-
-    upstream_gnn_pipeline: bool = False
-    """Master opt-in for the upstream GNN 25-step pipeline pass.
-
-    When ``True``, after the ``validate`` stage runs successfully and a
-    ``gnn_package/`` directory exists, COGANT drives upstream
-    :func:`src.main.execute_pipeline_step` for every step in
-    ``UPSTREAM_STEP_SCRIPTS`` minus :data:`upstream_gnn_skip_steps` (and,
-    optionally, restricted to :data:`upstream_gnn_only_steps`). Results are
-    recorded as ``bundle.artifacts['upstream_pipeline_steps']`` /
-    ``['upstream_pipeline_summary']`` and never raise — failing upstream
-    steps are advisory warnings only.
-    """
-
-    upstream_gnn_only_steps: list[int] | None = None
-    """Restrict the upstream pipeline pass to these step indices.
-
-    ``None`` means "every step that is not in :data:`upstream_gnn_skip_steps`".
-    """
-
-    upstream_gnn_skip_steps: list[int] = field(default_factory=lambda: [11, 12])
-    """Step indices to drop from the upstream pipeline pass.
-
-    Defaults to ``[11, 12]`` (``11_render`` and ``12_execute``): they emit
-    framework-specific simulation code and run it, which is rarely meaningful
-    for codebase-derived bundles. Set to ``[]`` to opt back in.
-    """
-
-    upstream_gnn_output_dir: str | None = None
-    """Where the upstream pipeline pass writes per-step outputs.
-
-    When ``None``, defaults to ``<output_dir>/upstream_pipeline/``.
-    """
-
-    upstream_gnn_frameworks: str = "lite"
-    """Forwarded to upstream ``11_render`` / ``12_execute``.
-
-    Common values: ``"lite"`` (PyMDP only), ``"all"``, or a CSV list like
-    ``"pymdp,jax"``. Has no effect when both render and execute are skipped.
-    """
-
-    upstream_gnn_llm_model: str | None = None
-    """Override ``OLLAMA_MODEL`` for upstream ``13_llm``.
-
-    When ``None``, the existing environment variable (or upstream's default)
-    is used unchanged.
-    """
-
-    def validate(self) -> list[str]:
-        """Validate pipeline configuration pre-flight.
-
-        Returns:
-            A list of validation errors (empty if config is valid).
-        """
-        errors: list[str] = []
-
-        # Check that all stages are known
-        known_stages = {
-            "ingest",
-            "static",
-            "normalize",
-            "graph",
-            "dynamic",
-            "translate",
-            "statespace",
-            "process",
-            "export",
-            "validate",
-        }
-        for stage in self.stages:
-            if stage not in known_stages:
-                errors.append(f"Unknown stage: {stage}")
-
-        for stage in self.skip_stages:
-            if stage not in known_stages:
-                errors.append(f"Unknown skip_stage: {stage}")
-
-        # Check output directory path
-        if self.output_dir:
-            output_path = Path(self.output_dir)
-            if output_path.exists() and not output_path.is_dir():
-                errors.append(f"output_dir exists but is not a directory: {self.output_dir}")
-
-        # Check coverage/trace paths if provided
-        if self.coverage_path:
-            coverage_path = Path(self.coverage_path)
-            if not coverage_path.exists():
-                errors.append(f"coverage_path does not exist: {self.coverage_path}")
-
-        if self.trace_path:
-            trace_path = Path(self.trace_path)
-            if not trace_path.exists():
-                errors.append(f"trace_path does not exist: {self.trace_path}")
-
-        if not 0.0 <= self.min_confidence <= 1.0:
-            errors.append(f"min_confidence must be between 0.0 and 1.0: {self.min_confidence}")
-
-        upstream_step_range = range(25)
-        for label, values in (
-            ("upstream_gnn_only_steps", self.upstream_gnn_only_steps or []),
-            ("upstream_gnn_skip_steps", self.upstream_gnn_skip_steps or []),
-        ):
-            for v in values:
-                if not isinstance(v, int) or v not in upstream_step_range:
-                    errors.append(f"{label} contains invalid step {v!r}; must be int in 0..24")
-
-        return errors
-
-    def with_profiling(self) -> "PipelineConfig":
-        """Return a copy of this config with profiling enabled."""
-        import copy
-
-        config_copy = copy.deepcopy(self)
-        config_copy.profiling_enabled = True
-        return config_copy
-
-    def to_yaml(self, path: str | Path) -> None:
-        """Persist this config to a YAML file.
-
-        Args:
-            path: Target file path.
-        """
-        data = {
-            "stages": self.stages,
-            "skip_stages": self.skip_stages,
-            "plugins": self.plugins,
-            "output_dir": self.output_dir,
-            "verbose": self.verbose,
-            "dry_run": self.dry_run,
-            "layout_output": self.layout_output,
-            "skip_dynamic": self.skip_dynamic,
-            "coverage_path": self.coverage_path,
-            "trace_path": self.trace_path,
-            "incremental_since": self.incremental_since,
-            "cache_dir": self.cache_dir,
-            "min_confidence": self.min_confidence,
-            "profiling_enabled": self.profiling_enabled,
-            "upstream_gnn_validation": self.upstream_gnn_validation,
-            "upstream_gnn_pipeline": self.upstream_gnn_pipeline,
-            "upstream_gnn_only_steps": self.upstream_gnn_only_steps,
-            "upstream_gnn_skip_steps": list(self.upstream_gnn_skip_steps),
-            "upstream_gnn_output_dir": self.upstream_gnn_output_dir,
-            "upstream_gnn_frameworks": self.upstream_gnn_frameworks,
-            "upstream_gnn_llm_model": self.upstream_gnn_llm_model,
-        }
-        path_obj = Path(path)
-        path_obj.parent.mkdir(parents=True, exist_ok=True)
-        path_obj.write_text(yaml.dump(data, default_flow_style=False), encoding="utf-8")
-
-    @classmethod
-    def from_yaml(cls, path: str | Path) -> "PipelineConfig":
-        """Load config from a YAML file.
-
-        Args:
-            path: Source file path.
-
-        Returns:
-            A new PipelineConfig instance.
-        """
-        path_obj = Path(path)
-        if not path_obj.exists():
-            raise FileNotFoundError(f"Config file not found: {path}")
-
-        with open(path_obj, encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
-
-        return cls(
-            stages=data.get("stages") or cls().stages,
-            skip_stages=data.get("skip_stages", []),
-            plugins=data.get("plugins", {}),
-            output_dir=data.get("output_dir", "output"),
-            verbose=data.get("verbose", False),
-            dry_run=data.get("dry_run", False),
-            layout_output=data.get("layout_output", False),
-            skip_dynamic=data.get("skip_dynamic", False),
-            coverage_path=data.get("coverage_path"),
-            trace_path=data.get("trace_path"),
-            incremental_since=data.get("incremental_since"),
-            cache_dir=data.get("cache_dir"),
-            min_confidence=data.get("min_confidence", ConfidenceModel.RUNTIME_ONLY_THRESHOLD),
-            profiling_enabled=data.get("profiling_enabled", False),
-            upstream_gnn_validation=data.get("upstream_gnn_validation", True),
-            upstream_gnn_pipeline=data.get("upstream_gnn_pipeline", False),
-            upstream_gnn_only_steps=data.get("upstream_gnn_only_steps"),
-            upstream_gnn_skip_steps=(
-                list(data["upstream_gnn_skip_steps"])
-                if "upstream_gnn_skip_steps" in data
-                else [11, 12]
-            ),
-            upstream_gnn_output_dir=data.get("upstream_gnn_output_dir"),
-            upstream_gnn_frameworks=data.get("upstream_gnn_frameworks", "lite"),
-            upstream_gnn_llm_model=data.get("upstream_gnn_llm_model"),
-        )
 
 
 @dataclass
@@ -418,7 +100,20 @@ class PipelineRunner:
             len(config.skip_stages),
         )
 
-        bundle = Bundle(target=target, metadata={"config": vars(config)})
+        bundle = Bundle(target=target, metadata={"config": config.model_dump(mode="json")})
+        bundle.metadata["version"] = self._package_version()
+        contract = self._contract_metadata()
+        bundle.metadata.update(contract)
+        try:
+            from cogant.cache.hasher import hash_repo
+
+            source_path = Path(target).expanduser().resolve()
+            if source_path.is_dir():
+                bundle.metadata["source_content_digest"] = hash_repo(source_path)
+        except (OSError, ValueError):
+            # Remote/non-filesystem targets retain their identity without a
+            # misleading local content digest.
+            pass
 
         # Incremental-mode pre-flight: try to short-circuit the full run
         # when the caller opted in and a cached bundle is available. On a
@@ -430,6 +125,10 @@ class PipelineRunner:
             cache_outcome = self._incremental_preflight(target, bundle, config)
             if cache_outcome == "full_hit":
                 logger.info("Incremental mode: full cache hit, returning cached bundle")
+                bundle.metadata["stage_outcomes"] = {
+                    name: outcome.value for name, outcome in bundle.stage_outcomes.items()
+                }
+                bundle.metadata["artifact_manifest"] = bundle.artifact_manifest()
                 return bundle
 
         # Build the effective skip set. ``skip_dynamic`` acts as a shorthand
@@ -452,6 +151,7 @@ class PipelineRunner:
                         "skipped": True,
                         "reason": "skip_dynamic=True",
                     }
+                bundle.stage_outcomes[stage] = StageOutcome.SKIPPED
                 timing[stage] = 0.0
                 continue
 
@@ -459,6 +159,7 @@ class PipelineRunner:
                 error = f"Unknown stage: {stage}"
                 logger.error(error)
                 bundle.errors.append(error)
+                bundle.stage_outcomes[stage] = StageOutcome.FAILED
                 timing[stage] = 0.0
                 continue
 
@@ -470,6 +171,7 @@ class PipelineRunner:
                 stage_duration = time.perf_counter() - stage_start
                 timing[stage] = round(stage_duration * 1000, 3)
                 bundle.stage_results[stage] = result
+                bundle.stage_outcomes[stage] = self._classify_stage_result(result, config)
                 logger.info(
                     "Stage %s completed in %.1fms",
                     stage,
@@ -479,6 +181,7 @@ class PipelineRunner:
                 error = f"Stage {stage} failed: {str(e)}"
                 logger.error(error)
                 bundle.errors.append(error)
+                bundle.stage_outcomes[stage] = StageOutcome.FAILED
                 stage_duration = time.perf_counter() - stage_start
                 timing[stage] = round(stage_duration * 1000, 3)
                 # Continue to next stage even if one fails
@@ -510,6 +213,10 @@ class PipelineRunner:
         total_duration = time.perf_counter() - total_start
         timing["total"] = round(total_duration * 1000, 3)
         bundle.metadata["timing"] = timing
+        bundle.metadata["stage_outcomes"] = {
+            name: outcome.value for name, outcome in sorted(bundle.stage_outcomes.items())
+        }
+        bundle.metadata["artifact_manifest"] = bundle.artifact_manifest()
 
         ran_stages = [s for s in config.stages if s in timing and timing[s] > 0]
         skipped_stages = [s for s in config.stages if s in effective_skip]
@@ -522,6 +229,98 @@ class PipelineRunner:
             timing["total"],
         )
         return bundle
+
+    @staticmethod
+    def _package_version() -> str | None:
+        try:
+            from cogant import __version__
+
+            return __version__
+        except Exception:  # pragma: no cover - defensive import boundary
+            return None
+
+    @staticmethod
+    def _classify_stage_result(result: Any, config: PipelineConfig) -> StageOutcome:
+        """Map a stage result to the explicit release-gate vocabulary."""
+
+        if config.dry_run:
+            return StageOutcome.SKIPPED
+        if isinstance(result, dict):
+            status = str(result.get("status", "")).lower()
+            if status in {outcome.value for outcome in StageOutcome}:
+                return StageOutcome(status)
+            if result.get("passed") is False:
+                return StageOutcome.FAILED
+            if result.get("unavailable") or result.get("available") is False:
+                return StageOutcome.UNAVAILABLE
+            if result.get("partial") or result.get("degraded"):
+                return StageOutcome.PARTIAL
+            if result.get("errors"):
+                return StageOutcome.PARTIAL
+        return StageOutcome.SUCCESS
+
+    @staticmethod
+    def _digest_payload(payload: Any) -> str:
+        """Hash a canonical JSON representation of a pipeline contract."""
+        from cogant.api.bundle import _json_default
+
+        encoded = json.dumps(
+            payload,
+            default=_json_default,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode()
+        return hashlib.sha256(encoded).hexdigest()
+
+    @classmethod
+    def _contract_metadata(cls) -> dict[str, Any]:
+        """Return serializable parser/rule contract metadata."""
+        from cogant.parsers.registry import parser_capability_report
+
+        capabilities = parser_capability_report()
+        rule_root = Path(__file__).resolve().parents[1] / "translate" / "rules"
+        from cogant.cache.hasher import hash_repo
+
+        rule_digest = hash_repo(rule_root, extensions=[".py"])
+        return {
+            "parser_capabilities": capabilities,
+            "parser_digest": cls._digest_payload(capabilities),
+            "rule_digest": rule_digest,
+        }
+
+    @classmethod
+    def _cache_key(cls, target: str, config: PipelineConfig) -> Any:
+        """Build a content/config/parser/rule-addressed cache key."""
+        from cogant import __version__ as cogant_version
+        from cogant.cache.hasher import hash_repo
+        from cogant.cache.store import CacheKey
+
+        repo_path = Path(target).expanduser().resolve()
+        content_hash = hash_repo(repo_path)
+        contract = cls._contract_metadata()
+        config_payload = config.model_dump(mode="json")
+        # These values describe this invocation's transport/output context,
+        # not the analysis semantics. Excluding them permits a warm cache to
+        # be reused when a caller changes only the destination or ref used to
+        # discover the delta.
+        for ephemeral in (
+            "output_dir",
+            "cache_dir",
+            "incremental_since",
+            "verbose",
+            "dry_run",
+            "layout_output",
+            "upstream_gnn_output_dir",
+        ):
+            config_payload.pop(ephemeral, None)
+        return CacheKey(
+            repo_path=str(repo_path),
+            content_hash=content_hash,
+            cogant_version=cogant_version,
+            config_digest=cls._digest_payload(config_payload),
+            parser_digest=str(contract["parser_digest"]),
+            rule_digest=str(contract["rule_digest"]),
+        )
 
     # ------------------------------------------------------------------
     # Incremental-mode helpers
@@ -542,8 +341,7 @@ class PipelineRunner:
         * ``"miss"`` — no usable cache entry or no git repo; the caller
           falls back to a full run (incremental stats still recorded).
         """
-        from cogant import __version__ as _cogant_version
-        from cogant.cache.store import CacheKey, CacheStore
+        from cogant.cache.store import CacheStore
         from cogant.ingest.incremental import IncrementalIngester
 
         repo_path = Path(target).expanduser().resolve()
@@ -575,32 +373,30 @@ class PipelineRunner:
         ]
         stats["files_total"] = len(all_py)
 
-        # Build the cache key. ``content_hash`` here is a stable digest
-        # of ``(repo_path, cogant_version)`` — not a content hash of the
-        # repo itself. Incremental mode uses the git working tree as
-        # its authoritative source of truth, so we don't want to invalidate
-        # the cache on *every* file edit; instead, the cache is keyed on
-        # the repo identity and we let the git diff decide what to reuse.
-        import hashlib
-
-        digest = hashlib.sha256()
-        digest.update(str(repo_path).encode())
-        digest.update(_cogant_version.encode())
-        key = CacheKey(
-            repo_path=str(repo_path),
-            content_hash=digest.hexdigest(),
-            cogant_version=_cogant_version,
-        )
+        key = self._cache_key(target, config)
 
         cache_dir = Path(config.cache_dir) if config.cache_dir else None
         store = CacheStore(cache_dir=cache_dir)
         entry = store.get(key)
+        if entry is None:
+            # A changed content digest should still be able to find the
+            # previous snapshot, but only when all other contracts match.
+            entry = store.get_latest(
+                repo_path=key.repo_path,
+                cogant_version=key.cogant_version,
+                config_digest=key.config_digest,
+                parser_digest=key.parser_digest,
+                rule_digest=key.rule_digest,
+            )
 
-        changed = ingester.python_files_changed_since(config.incremental_since)
-        # ``changed`` contains absolute paths already resolved against the
-        # repo root. Keep only the ones that actually exist on disk.
-        changed = [p for p in changed if p.exists()]
+        changes = ingester.source_changes_since(config.incremental_since)
+        changed = [
+            change.path
+            for change in changes
+            if change.change_type != "D" and change.path.exists()
+        ]
         stats["files_reparsed"] = len(changed)
+        stats["files_changed"] = len(changes)
 
         if entry is None:
             stats["reason"] = "no cached bundle"
@@ -613,9 +409,14 @@ class PipelineRunner:
         cached = entry.stage_results
         bundle.stage_results.update(cached.get("stage_results") or {})
         bundle.errors = list(cached.get("errors") or [])
+        for name, outcome in (cached.get("stage_outcomes") or {}).items():
+            try:
+                bundle.stage_outcomes[name] = StageOutcome(outcome)
+            except ValueError:
+                bundle.stage_outcomes[name] = StageOutcome.PARTIAL
         stats["cache_hit"] = True
 
-        if not changed:
+        if not changes and entry.key.content_hash == key.content_hash:
             # Full hit: the user asked "what changed since <ref>?" and
             # the answer is "nothing". Return the cached bundle as-is.
             return "full_hit"
@@ -628,8 +429,12 @@ class PipelineRunner:
         bundle.metadata["_incremental"] = {
             "changed_files": [str(p) for p in changed],
             "changed_count": len(changed),
+            "change_records": [
+                {"path": str(change.path), "change_type": change.change_type}
+                for change in changes
+            ],
         }
-        stats["reason"] = f"{len(changed)} file(s) changed"
+        stats["reason"] = f"{len(changes)} source change(s) detected"
         return "partial"
 
     def _incremental_cache_save(self, target: str, bundle: Bundle, config: PipelineConfig) -> None:
@@ -646,22 +451,12 @@ class PipelineRunner:
         values before handing the dict to the cache store, which
         itself uses plain ``json.dump``.
         """
-        import hashlib
         import json as _json
 
-        from cogant import __version__ as _cogant_version
         from cogant.api.bundle import _json_default
-        from cogant.cache.store import CacheKey, CacheStore
+        from cogant.cache.store import CacheStore
 
-        repo_path = Path(target).expanduser().resolve()
-        digest = hashlib.sha256()
-        digest.update(str(repo_path).encode())
-        digest.update(_cogant_version.encode())
-        key = CacheKey(
-            repo_path=str(repo_path),
-            content_hash=digest.hexdigest(),
-            cogant_version=_cogant_version,
-        )
+        key = self._cache_key(target, config)
         cache_dir = Path(config.cache_dir) if config.cache_dir else None
         store = CacheStore(cache_dir=cache_dir)
 
@@ -672,6 +467,9 @@ class PipelineRunner:
             {
                 "stage_results": safe_results,
                 "errors": safe_errors,
+                "stage_outcomes": {
+                    name: outcome.value for name, outcome in bundle.stage_outcomes.items()
+                },
             },
         )
 

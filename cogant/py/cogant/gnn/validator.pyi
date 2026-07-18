@@ -1,6 +1,9 @@
 from pathlib import Path
 from typing import Any
 
+class GNNCapabilityError(RuntimeError):
+    code: str
+
 class ValidationResult:
     valid: Any
     errors: list[str]
@@ -8,12 +11,20 @@ class ValidationResult:
     score: Any
     details: dict[str, Any]
     section_scores: dict[str, float]
+    advisories: list[str]
+    capabilities: dict[str, Any]
+    artifact_digests: dict[str, str]
+    dimensions: dict[str, Any]
     def __init__(
         self,
         valid: bool = False,
         errors: list[str] | None = None,
         warnings: list[str] | None = None,
         score: float = 0.0,
+        advisories: list[str] | None = None,
+        capabilities: dict[str, Any] | None = None,
+        artifact_digests: dict[str, str] | None = None,
+        dimensions: dict[str, Any] | None = None,
     ) -> None: ...
     def to_dict(self) -> dict[str, Any]: ...
     def to_markdown(self) -> str: ...

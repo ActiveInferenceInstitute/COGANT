@@ -54,7 +54,9 @@ def test_manuscript_figure_registry_covers_forward_and_roundtrip() -> None:
     assert "forward-graph-to-state-space" in roles
     assert "forward-state-space-to-matrices" in roles
     assert "structural-markov-blanket-partition" in roles
-    assert "gnn-to-upstream-generative-model" in roles
+    # The optional upstream integration is not a publication claim until its
+    # separately pinned job produces a complete provenance-bearing run.
+    assert "gnn-to-upstream-generative-model" not in roles
     assert "forward-reverse-forward-roundtrip" in roles
     assert "evidence-coverage-review-readiness" in roles
     assert "fixture-graph-size-comparison" in roles

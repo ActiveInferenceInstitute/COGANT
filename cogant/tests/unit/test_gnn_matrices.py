@@ -464,6 +464,7 @@ class TestEmptyModel:
             metadata={},
         )
         m = GNNMatrices(graph=graph, mappings={}, state_space=empty_ss)
+        assert m.n_actions == 0
         assert m.compute_A() == []
         assert m.compute_B() == []
         assert m.compute_C() == []

@@ -55,7 +55,8 @@ cogant/                         ← package root (this directory)
 │   ├── cogant-trace/           ← Trace collection and processing
 │   ├── cogant-gnn/             ← GNN tensor generation
 │   └── cogant-ffi/             ← Python bindings (COGANT_USE_RUST=1)
-├── parsers/                    ← tree-sitter grammar files (JS, TS, Go, Python, Rust)
+├── py/cogant/parsers/          ← registry plus language front ends
+│   └── languages/              ← Python, JS/TS, Rust, and experimental Go parsers
 ├── specs/                      ← RFCs and IR schema contracts
 ├── examples/                   ← 20+ runnable sample repos / fixtures (3 control_positive + 13 zoo + standalone)
 │   └── zoo/                    ← 13 Active Inference fixtures (01–13); 23 total roundtrip evaluation targets across all fixture sources
@@ -74,7 +75,7 @@ cogant/                         ← package root (this directory)
 | Metric | Value |
 |--------|-------|
 | Translation rules | 22 (5 structural + 5 semantic + 3 control + 4 behavioral + 5 resilience) |
-| Languages supported | Python (full AST), JavaScript / TypeScript (tree-sitter with fallback paths) |
+| Languages supported | Python (full AST), JavaScript / TypeScript (tree-sitter-preferred with observable structural fallback), Rust and Go (experimental structural parsers) |
 | Roundtrip reporting | `roundtrip_status` separates `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`, `DRIFT`, and `FAILED`; role-preserved fixture counts and strict structural-isomorphism counts are reported separately in `evaluation/METRICS.yaml` |
 | Test suite | Large unit / integration / property / golden / fuzz suite; run `uv run pytest tests/ -q` for the live count |
 | Export formats | JSON, JSONLines, GraphML, Parquet, SVG, PNG, PDF, Mermaid, DOT |
@@ -97,7 +98,7 @@ uv run cogant export <repo> --format all     # export in all 9 formats
 uv run cogant analyze <repo> --upstream-gnn-pipeline   # forward pipeline + AII 25-step pass (Render/Execute off)
 uv run cogant upstream-gnn <package_dir>     # re-run the AII 25-step pass on an existing gnn_package/
 uv run pytest tests/ -q                      # full test suite
-uv run mypy py/cogant/                       # strict type check (0 errors target)
+MYPYPATH=py uv run mypy --package cogant      # strict type check (0 errors target)
 uv run ruff check py/cogant/                 # linting (0 violations target)
 ```
 

@@ -139,6 +139,9 @@ class PackagePlan:
     has_B_tensor: bool = False
     has_C_vector: bool = False
     has_D_vector: bool = False
+    state_dimension: int = 0
+    observation_dimension: int = 0
+    action_dimension: int = 0
 
     def validate(self) -> list[str]:
         """Validate the package plan for structural consistency.
@@ -315,6 +318,9 @@ class PackagePlan:
             "has_B_tensor": self.has_B_tensor,
             "has_C_vector": self.has_C_vector,
             "has_D_vector": self.has_D_vector,
+            "state_dimension": self.state_dimension,
+            "observation_dimension": self.observation_dimension,
+            "action_dimension": self.action_dimension,
         }
         return json.dumps(data, indent=2)
 
@@ -363,6 +369,9 @@ class PackagePlan:
             has_B_tensor=parsed.get("has_B_tensor", False),
             has_C_vector=parsed.get("has_C_vector", False),
             has_D_vector=parsed.get("has_D_vector", False),
+            state_dimension=int(parsed.get("state_dimension", 0)),
+            observation_dimension=int(parsed.get("observation_dimension", 0)),
+            action_dimension=int(parsed.get("action_dimension", 0)),
         )
         return plan
 
@@ -730,23 +739,22 @@ def plan_package(
         else _role_counts_from_model(model)
     )
 
-    # Deficit-based scaffolds: only synthesize role-bearing support
-    # constructs needed to reach the source role multiset. This keeps
-    # default GNN round-trips faithful to the parsed model and avoids
-    # source-absent CONTEXT/POLICY/CONSTRAINT inflation.
+    # Fill only declared role deficits.  These are explicit compatibility
+    # scaffolds, not unlabelled runtime helpers: the generated manifest names
+    # them and the forward role audit can distinguish them from source-backed
+    # definitions.  In particular, an ExpectedFreeEnergy annotation needs a
+    # policy-shaped selector to survive a reverse/forward round trip.
     plan.scaffold_constraint_checks = _build_scaffold_constraints(plan, used_names)
     plan.scaffold_policy_functions = _build_scaffold_policies(plan, used_names)
     plan.scaffold_context_classes = _build_scaffold_contexts(plan, used_names)
-    plan.nodes.extend(
-        plan.scaffold_constraint_checks
-        + plan.scaffold_policy_functions
-        + plan.scaffold_context_classes
-    )
 
     plan.has_A_matrix = bool(model.A) and any(any(row) for row in model.A)
     plan.has_B_tensor = bool(model.B)
     plan.has_C_vector = bool(model.C)
     plan.has_D_vector = bool(model.D)
+    plan.state_dimension = model.n_states
+    plan.observation_dimension = model.n_obs
+    plan.action_dimension = model.n_actions
 
     logger.info(
         "Planned package %r: %d state vars, %d obs, %d actions, %d policies, "

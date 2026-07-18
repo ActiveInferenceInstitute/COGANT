@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # ---------------------------------------------------------------------------
 # /analyze
@@ -42,7 +42,7 @@ class AnalyzeRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    repo_path: str = Field(..., min_length=1, description="Path to repository to analyze")
+    repo_path: str = Field(..., min_length=1, max_length=4096, description="Path to repository to analyze")
     stages: list[str] | None = Field(
         default=None,
         description="Explicit pipeline stages (None = default stage list)",
@@ -51,6 +51,25 @@ class AnalyzeRequest(BaseModel):
         default=True,
         description="Skip the dynamic-analysis enrichment stage",
     )
+
+    @field_validator("stages")
+    @classmethod
+    def _validate_stage_names(cls, value: list[str] | None) -> list[str] | None:
+        allowed = {
+            "ingest",
+            "static",
+            "normalize",
+            "graph",
+            "dynamic",
+            "translate",
+            "statespace",
+            "process",
+            "export",
+            "validate",
+        }
+        if value is not None and (set(value) - allowed or len(value) != len(set(value))):
+            raise ValueError("stages must be a unique list of supported pipeline stage names")
+        return value
 
 
 class AnalyzeResponse(BaseModel):
@@ -73,6 +92,23 @@ class AnalyzeResponse(BaseModel):
     mappings: int = Field(..., ge=0)
     roles: dict[str, int] = Field(default_factory=dict)
     errors: list[str] = Field(default_factory=list)
+    pipeline_status: Literal["success", "partial", "skipped", "failed", "unavailable"] = Field(
+        default="success", description="Conservative aggregate pipeline outcome"
+    )
+
+
+class ReverseRequest(BaseModel):
+    """Request body for ``POST /reverse``."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    gnn_text: str = Field(..., min_length=1, max_length=1_000_000)
+
+    @model_validator(mode="after")
+    def _require_non_whitespace(self) -> ReverseRequest:
+        if not self.gnn_text.strip():
+            raise ValueError("gnn_text must contain non-whitespace content")
+        return self
 
 
 # ---------------------------------------------------------------------------
@@ -143,7 +179,7 @@ class RoundtripRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    repo_path: str = Field(..., min_length=1)
+    repo_path: str = Field(..., min_length=1, max_length=4096)
     threshold: float = Field(default=0.7, ge=0.0, le=1.0)
 
 
@@ -247,6 +283,7 @@ class ErrorResponse(BaseModel):
 
     detail: str = Field(..., description="Human-readable error message")
     error_type: str = Field(..., description="Exception class name")
+    request_id: str | None = Field(default=None, description="Request correlation identifier")
 
 
 # ---------------------------------------------------------------------------
@@ -371,6 +408,9 @@ class AnalysisResponse(BaseModel):
     mappings: int = Field(..., ge=0, description="Semantic mapping count")
     roles: dict[str, int] = Field(default_factory=dict, description="Role distribution")
     errors: list[str] = Field(default_factory=list, description="Pipeline errors")
+    pipeline_status: Literal["success", "partial", "skipped", "failed", "unavailable"] = Field(
+        default="success", description="Conservative aggregate pipeline outcome"
+    )
     timing: dict[str, float] = Field(
         default_factory=dict, description="Per-stage timing in milliseconds"
     )
@@ -526,7 +566,7 @@ class VisualizeRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    source_code: str = Field(..., min_length=1, description="Source code to visualize")
+    source_code: str = Field(..., min_length=1, max_length=1_000_000, description="Source code to visualize")
     language: Literal["python", "javascript", "typescript"] = Field(
         ..., description="Programming language"
     )

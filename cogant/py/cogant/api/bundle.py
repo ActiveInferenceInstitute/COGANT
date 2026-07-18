@@ -1,9 +1,13 @@
 """Bundle: Wraps all analysis artifacts with convenient accessors."""
 
 import dataclasses
+import hashlib
 import json
 import logging
+import platform
+import sys
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import Enum, StrEnum
 from pathlib import Path
 from typing import Any
@@ -11,7 +15,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-__all__ = ["Bundle", "ArtifactKey", "_json_default"]
+__all__ = ["Bundle", "ArtifactKey", "StageOutcome", "_json_default"]
 
 
 def _json_default(obj: Any) -> Any:
@@ -74,6 +78,16 @@ class ArtifactKey(StrEnum):
     EXPORT_PATHS = "export_paths"
 
 
+class StageOutcome(StrEnum):
+    """Explicit outcome vocabulary shared by pipeline and release gates."""
+
+    SUCCESS = "success"
+    PARTIAL = "partial"
+    SKIPPED = "skipped"
+    FAILED = "failed"
+    UNAVAILABLE = "unavailable"
+
+
 @dataclass
 class Bundle:
     """
@@ -118,11 +132,115 @@ class Bundle:
     stage_results: dict[str, dict[str, Any]] = field(default_factory=dict)
     """Results from each pipeline stage."""
 
+    stage_outcomes: dict[str, StageOutcome] = field(default_factory=dict)
+    """Explicit outcome for every requested stage."""
+
     errors: list[str] = field(default_factory=list)
     """Errors encountered during analysis."""
 
     metadata: dict[str, Any] = field(default_factory=dict)
     """Bundle metadata: config, timing, version."""
+
+    @property
+    def pipeline_status(self) -> StageOutcome:
+        """Return the conservative aggregate status for this bundle.
+
+        A failed stage dominates all other states.  Missing required work is
+        never represented as success merely because a later stage produced a
+        partial summary.
+        """
+
+        outcomes = set(self.stage_outcomes.values())
+        if not outcomes:
+            return StageOutcome.UNAVAILABLE
+        if StageOutcome.FAILED in outcomes:
+            return StageOutcome.FAILED
+        if StageOutcome.UNAVAILABLE in outcomes:
+            return StageOutcome.UNAVAILABLE
+        if StageOutcome.PARTIAL in outcomes:
+            return StageOutcome.PARTIAL
+        if outcomes and outcomes <= {StageOutcome.SKIPPED}:
+            return StageOutcome.SKIPPED
+        return StageOutcome.SUCCESS
+
+    def artifact_manifest(self) -> dict[str, Any]:
+        """Build a provenance-bearing manifest for the current bundle.
+
+        In-memory artifacts receive a canonical JSON digest; file and
+        directory artifacts receive content digests.  This keeps the
+        manifest useful before and after export without pretending that a
+        path or a stage error is evidence of a valid artifact.
+        """
+
+        def digest_payload(value: Any) -> str:
+            encoded = json.dumps(value, sort_keys=True, default=_json_default).encode("utf-8")
+            return hashlib.sha256(encoded).hexdigest()
+
+        def digest_path(path: Path) -> tuple[str, int]:
+            digest = hashlib.sha256()
+            size = 0
+            if path.is_file():
+                digest.update(path.read_bytes())
+                return digest.hexdigest(), path.stat().st_size
+            if path.is_dir():
+                for child in sorted(p for p in path.rglob("*") if p.is_file()):
+                    relative = child.relative_to(path).as_posix().encode("utf-8")
+                    content = child.read_bytes()
+                    digest.update(relative)
+                    digest.update(b"\0")
+                    digest.update(content)
+                    size += len(content)
+                return digest.hexdigest(), size
+            raise FileNotFoundError(path)
+
+        records: list[dict[str, Any]] = []
+        for key, value in sorted(self.artifacts.items()):
+            record: dict[str, Any] = {"key": key, "kind": type(value).__name__}
+            if isinstance(value, (str, Path)):
+                candidate = Path(value)
+                if candidate.exists():
+                    digest, size = digest_path(candidate)
+                    record.update({"path": str(candidate), "sha256": digest, "size_bytes": size})
+                else:
+                    record.update({"sha256": digest_payload(value), "value": str(value)})
+            else:
+                record["sha256"] = digest_payload(value)
+            records.append(record)
+
+        config = self.metadata.get("config", {})
+        raw_target = str(self.target)
+        # Preserve remote/source references as references.  Treating a Git URL
+        # as a local Path produces a misleading absolute path and makes the
+        # manifest look reproducible against the wrong source identity.
+        target_identity = (
+            raw_target
+            if "://" in raw_target or raw_target.startswith("git@")
+            else str(Path(raw_target).expanduser().resolve())
+        )
+        return {
+            "schema_version": "1.0",
+            "generated_at": datetime.now(UTC).isoformat(),
+            "pipeline_status": self.pipeline_status.value,
+            "target": target_identity,
+            "source_identity": {
+                "target": target_identity,
+                "content_digest": self.metadata.get("source_content_digest"),
+            },
+            "configuration_digest": digest_payload(config),
+            "parser_digest": self.metadata.get("parser_digest"),
+            "rule_digest": self.metadata.get("rule_digest"),
+            "parser_capabilities": self.metadata.get("parser_capabilities", {}),
+            "stage_outcomes": {
+                name: outcome.value for name, outcome in sorted(self.stage_outcomes.items())
+            },
+            "artifact_digests": records,
+            "errors": list(self.errors),
+            "reproducibility": {
+                "cogant_version": self.metadata.get("version"),
+                "python": sys.version.split()[0],
+                "platform": platform.platform(),
+            },
+        }
 
     def get_artifact(self, key: str, required: bool = False) -> Any:
         """Get an artifact by key with optional required check.
@@ -266,6 +384,7 @@ class Bundle:
             "target": self.target,
             "artifacts": self.artifacts,
             "stage_results": self.stage_results,
+            "stage_outcomes": self.stage_outcomes,
             "errors": self.errors,
             "metadata": self.metadata,
         }

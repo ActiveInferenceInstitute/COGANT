@@ -19,6 +19,9 @@ class IncrementalIngester:
     def source_files_changed_since(
         self, ref: str = "HEAD~1", extensions: set[str] | None = None
     ) -> list[Path]: ...
+    def source_changes_since(
+        self, ref: str = "HEAD~1", extensions: set[str] | None = None
+    ) -> list[ChangedFile]: ...
 
 def get_changed_files(
     repo_path: Path, since_commit: str, extensions: set[str] | None = None

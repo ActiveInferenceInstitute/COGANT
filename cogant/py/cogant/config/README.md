@@ -1,6 +1,9 @@
-# Config — Configuration Schemas and Defaults
+# Configuration
 
-Comprehensive configuration system for COGANT with Pydantic v2 models, YAML/JSON loaders, sensible defaults, and named presets for common scenarios.
+COGANT has one public configuration root: `ProjectConfig`. Every loader and
+preset returns that validated Pydantic model. The precedence chain is:
+
+`defaults < preset < file < environment < CLI`
 
 ## Classes and Functions
 
@@ -14,13 +17,24 @@ LanguageConfig: Configuration for language-specific analyzers, specifying langua
 
 PipelineStage: Configuration for a single pipeline stage (name, enabled, timeout_seconds, retry_count, skip_on_error, parameters dict).
 
-PipelineConfig: Configuration for analysis pipeline execution with pipeline identity (name, description), stage specification (run_stages list, parallel_stages for concurrent execution), language configurations, and analysis options (analyze_tests, analyze_dependencies, follow_imports, max_import_depth).
+PipelineConfig: The canonical execution model for ordered stages, output
+locations, runtime flags, dynamic inputs, and per-stage configuration.
 
 ExportConfig: Configuration for output and export behavior (primary_format, output_dir, create_bundle, compression, include_provenance, include_metadata, include_statistics, minify_json, gnn_format).
 
 ValidationConfig: Configuration for validation checks (level, validate_schema, validate_references, min_provenance_coverage, min_mean_confidence, check_missing_mappings, check_unobservable_state, warn_on_large_graph, generate_report, fail_on_error).
 
-ConfigLoader: Static utility class with methods to load configurations from YAML (load_from_yaml), JSON (load_json_from_file), dictionaries (load_from_dict), and merge configs with override semantics (merge_configs supports deep recursive merging).
+ServerConfig: Local-only host defaults, workspace/path policy, authentication,
+request/archive byte and file limits, rate limits, bounded concurrency, and
+request timeouts.
+
+BatchConfig: Typed package/output roots, source targets, remote acquisition,
+batch steps, archive limits, and optional manuscript stages.
+
+ConfigLoader: Static utility class with `load_project_config`, `load_from_yaml`,
+`load_json_from_file`, and `load_from_dict`. All of these validate the complete
+`ProjectConfig`; `merge_configs` is only a mapping utility and does not bypass
+validation.
 
 ConfigLoadError: Exception raised when configuration loading fails.
 
@@ -30,22 +44,31 @@ MINIMAL_PIPELINE_CONFIG, COMPREHENSIVE_PIPELINE_CONFIG, GNN_EXPORT_CONFIG, STRIC
 
 DEFAULT_PYTHON_CONFIG, DEFAULT_JAVASCRIPT_CONFIG, DEFAULT_JAVA_CONFIG: Language-specific default analyzer configurations.
 
-get_preset, list_presets: Functions to retrieve and list named preset configurations. Presets include "minimal" (fast scan, core output), "standard" (balanced with common stages), "comprehensive" (all features), "gnn-focused" (optimized for GNN quality), "security" (boundary and security analysis), "research" (for research/publication quality), "review" (human-in-loop curation), and "batch" (high-volume processing).
+`get_preset`, `get_named_preset`, `list_presets`: Functions backed by the one
+registry. The supported names are `default`, `minimal`, `standard`,
+`comprehensive`, `gnn-focused`, and `security`.
 
 ## Usage Example
 
 ```python
-from cogant.config import ConfigLoader, get_preset
+from cogant.config import ConfigLoader, ProjectConfig, get_preset
 
-# Load from YAML with overrides
-base = ConfigLoader.load_from_yaml("cogant.yaml")
-config = CogantConfig(**base)
+# Load the complete typed root from YAML, then apply higher-precedence values.
+config = ConfigLoader.load_project_config(
+    "cogant.yaml",
+    environment={"COGANT_SERVER__HOST": "127.0.0.1"},
+    cli={"pipeline": {"verbose": True}},
+)
+assert isinstance(config, ProjectConfig)
 
 # Use a preset
-research_config = get_preset("research")
+security_config = get_preset("security")
 
 # Merge configs
-merged = ConfigLoader.merge_configs(base, {"max_workers": 8})
+merged = ConfigLoader.merge_configs(
+    {"pipeline": {"verbose": False}},
+    {"pipeline": {"verbose": True}},
+)
 ```
 
 ## Dependencies

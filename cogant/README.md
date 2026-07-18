@@ -2,12 +2,12 @@
 
 > **Translate software repositories into Active Inference generative models.**
 
-COGANT converts Python, JavaScript, and TypeScript codebases into
+COGANT converts Python, JavaScript, TypeScript, Rust, and Go codebases into
 [Active Inference Institute](https://activeinference.org/) **Generalized Notation Notation (GNN)**
 state-space models — complete with A/B/C/D probabilistic matrices, Markov blanket
 partitions, and principled free-energy derivations.
 
-Current release: **v0.6.0** (2026-05-14). **Tests:** run `uv run pytest tests/ -q` from this package root for the live count (skips/xfails vary by environment). **Coverage:** the line gate lives in `pyproject.toml` (`--cov-fail-under=89`, `branch = false`, omit rules for optional/static paths); run the suite with coverage for the current percentage instead of copying a number into docs. **`evaluation/METRICS.yaml`** (regenerated from the COGANT project root via `uv run --directory cogant python ../tools/regenerate_metrics.py`) holds manuscript-facing numbers and may lag the live suite — see `mypy_strict_errors`, `ruff_violations`, and `python_source_files` there for current counts; run `uv run mypy py/cogant/` and `uv run ruff check py/cogant/` for a live read. **Round-trip reporting now separates role preservation from strict structural isomorphism** via `roundtrip_status`.
+Current release: **v0.6.0** (2026-05-14). **Tests:** run `uv run pytest tests/ -q` from this package root for the live count (skips/xfails vary by environment). **Coverage:** the line gate lives in `pyproject.toml` (`--cov-fail-under=89`, `branch = false`, omit rules for optional/static paths); run the suite with coverage for the current percentage instead of copying a number into docs. **`evaluation/METRICS.yaml`** (regenerated from the COGANT project root via `uv run --directory cogant python ../tools/regenerate_metrics.py`) holds manuscript-facing numbers and may lag the live suite — see `mypy_strict_errors`, `ruff_violations`, and `python_source_files` there for current counts; run `MYPYPATH=py uv run mypy --package cogant` and `uv run ruff check py/cogant/` for a live read. **Round-trip reporting now separates role preservation from strict structural isomorphism** via `roundtrip_status`.
 
 ---
 
@@ -33,15 +33,20 @@ repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMa
   benchmark.
 - **Packaged demo server**: `cogant.server.app` exposes HTTP endpoints including `/health`
   and `/translate`; a packaged `Dockerfile` (python:3.12-slim + uv, `EXPOSE 8080`) and
-  `docker-compose.yml` make it runnable as a container. It does not ship token auth, so use it
-  locally or behind your own reverse proxy, TLS, and authentication layer.
+  `docker-compose.yml` make it runnable as a container. The default server is loopback-only;
+  non-loopback binds require an auth token, and the service remains a local analysis boundary,
+  not a sandbox for arbitrary code.
 
-## Third-party GNN reference implementation
+## Optional third-party GNN reference implementation
 
-COGANT depends on the Active Inference Institute **generalized-notation-notation**
-package (Python import `src.gnn`) as a **core** dependency for parsing and validating
-against the upstream GNN toolchain. That package is licensed **CC-BY-NC-SA-4.0**;
-see [`LICENSES.md`](LICENSES.md). COGANT itself remains MIT.
+COGANT can validate against the Active Inference Institute
+**generalized-notation-notation** package (Python import `src.gnn`) through an
+explicit optional integration. It is not part of normal installation, routine
+tests, or the `all` extra because its upstream checkout is large and network/
+disk-intensive. The dedicated upstream job pins the source commit, records
+license/provenance, and reports unavailable upstream separately from validation
+failure. That package is licensed **CC-BY-NC-SA-4.0**; see [`LICENSES.md`](LICENSES.md).
+COGANT itself remains MIT.
 
 In addition to single-file `validate_gnn` checks, COGANT can drive the upstream
 **25-step pipeline** (`src.main.execute_pipeline_step`, scripts `0_template.py`
@@ -80,8 +85,10 @@ from this package root or `./run_all.sh` from the COGANT project root.
 
 ## Features (v0.6.0)
 
-- **Language front ends** — Python via CPython `ast`; JavaScript / TypeScript via `tree-sitter` with
-  JS-grammar fallback for `.ts` files on mixed repositories.
+- **Language front ends** — Python via CPython `ast`; JavaScript / TypeScript with
+  tree-sitter preferred when its grammar is installed and an explicit structural
+  fallback otherwise; Rust and Go are experimental structural parsers. Runtime
+  capability and degradation status are available from `cogant.parsers`.
 - **22 translation rules** across five families (structural, semantic, control, behavioral,
   resilience; 5+5+3+4+5) — see `py/cogant/translate/rules/` — assigning seven Active Inference
   `MappingKind` labels (`HIDDEN_STATE`, `OBSERVATION`, `ACTION`, `POLICY`, `PREFERENCE`,
@@ -98,9 +105,11 @@ from this package root or `./run_all.sh` from the COGANT project root.
   (partial re-run) speedups on Flask. Complements `cogant changed` git-diff helper for CI.
 - **Multi-episode Bayesian learning**: `AgentRuntime.run_multi_episode`, `run_episode`,
   `update_D_from_posterior`, `update_A_from_counts`.
-- **Packaged FastAPI demo server**: `cogant.server.app` with HTTP endpoints,
-  integration tests, and Docker / docker-compose packaging; authentication and
-  internet-facing hardening are caller-owned.
+- **Packaged FastAPI server**: `cogant.server.app` with versioned HTTP endpoints,
+  bounded request/archive bodies, safe workspace paths, authentication for
+  non-loopback binds, timeouts, cancellation, concurrency controls, structured
+  errors, and integration tests. The default bind remains loopback; this is not
+  a sandbox or arbitrary-code execution boundary.
 - **Forward-reverse-forward round-trip**: invariant-ledger reporting for 12 zoo fixtures,
   3 real-world-example fixtures, and 8 uncurated third-party libraries, with
   `role_preservation_score`, strict structural-isomorphism status, matrix preservation,
@@ -221,7 +230,7 @@ See [docs/architecture/README.md](docs/architecture/README.md) for per-module de
 uv sync --extra all            # install everything (python + viz + tree-sitter + rust bindings)
 uv run cogant doctor            # verify the environment
 uv run pytest tests/ -q         # full suite; coverage gate per pyproject.toml
-uv run mypy py/cogant/          # strict type check; see `evaluation/METRICS.yaml` (`mypy_strict_errors`, `python_source_files`)
+MYPYPATH=py uv run mypy --package cogant  # strict type check; see `evaluation/METRICS.yaml` (`mypy_strict_errors`, `python_source_files`)
 uv run ruff check py/cogant/    # lint; see `evaluation/METRICS.yaml` (`ruff_violations`)
 make build-rust                 # optional: compile the rust backend
 ```

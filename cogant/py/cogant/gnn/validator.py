@@ -14,6 +14,7 @@ Checks:
 import hashlib
 import json
 import logging
+import math
 import os
 from pathlib import Path
 from typing import Any
@@ -21,30 +22,31 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+class GNNCapabilityError(RuntimeError):
+    """Raised when an explicitly requested validator capability is unavailable."""
+
+    code = "CAPABILITY_UNAVAILABLE"
+
+
 def _env_truthy(name: str) -> bool:
     return os.environ.get(name, "").strip().lower() in ("1", "true", "yes")
 
 
-def _upstream_disabled_by_env() -> bool:
-    """When set, skip upstream ``src.gnn`` validation (core dep; opt-out)."""
-    return _env_truthy("COGANT_DISABLE_UPSTREAM_GNN")
+def _upstream_enabled_by_env() -> bool:
+    """Return whether the optional upstream validator was explicitly enabled."""
+    return _env_truthy("COGANT_ENABLE_UPSTREAM_GNN")
 
 
 def _resolve_upstream_flag(explicit: bool | None) -> bool:
     """Resolve whether to run upstream ``validate_gnn`` on ``model.gnn.md``.
 
     * ``explicit is not None`` — caller/pipeline/CLI choice wins.
-    * ``None`` — run upstream unless :envvar:`COGANT_DISABLE_UPSTREAM_GNN` is truthy
-      (default: upstream **on**).
-
-    Compatibility: ``COGANT_GNN_UPSTREAM=1`` used to *enable* upstream; it is no longer read.
-    Use ``COGANT_DISABLE_UPSTREAM_GNN`` to disable, or pass ``upstream_gnn=False``.
+    * ``None`` — use COGANT's self-contained validator.  The optional upstream
+      validator runs only when :envvar:`COGANT_ENABLE_UPSTREAM_GNN` is truthy.
     """
     if explicit is not None:
         return explicit
-    if _upstream_disabled_by_env():
-        return False
-    return True
+    return _upstream_enabled_by_env()
 
 
 class ValidationResult:
@@ -56,6 +58,10 @@ class ValidationResult:
         errors: list[str] | None = None,
         warnings: list[str] | None = None,
         score: float = 0.0,
+        advisories: list[str] | None = None,
+        capabilities: dict[str, Any] | None = None,
+        artifact_digests: dict[str, str] | None = None,
+        dimensions: dict[str, Any] | None = None,
     ):
         """
         Initialize validation result.
@@ -68,10 +74,19 @@ class ValidationResult:
         """
         self.valid = valid
         self.errors: list[str] = errors or []
-        self.warnings: list[str] = warnings or []
+        self.advisories: list[str] = list(advisories if advisories is not None else warnings or [])
         self.score = score
         self.details: dict[str, Any] = {}
         self.section_scores: dict[str, float] = {}
+        self.capabilities: dict[str, Any] = dict(capabilities or {})
+        self.artifact_digests: dict[str, str] = dict(artifact_digests or {})
+        self.dimensions: dict[str, Any] = dict(dimensions or {})
+
+    @property
+    def warnings(self) -> list[str]:
+        """Backward-compatible view of non-fatal validation advisories."""
+
+        return self.advisories
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -79,7 +94,11 @@ class ValidationResult:
             "valid": self.valid,
             "score": self.score,
             "errors": self.errors,
-            "warnings": self.warnings,
+            "warnings": self.advisories,
+            "advisories": self.advisories,
+            "capabilities": self.capabilities,
+            "artifact_digests": self.artifact_digests,
+            "dimensions": self.dimensions,
             "details": self.details,
             "section_scores": self.section_scores,
         }
@@ -241,6 +260,18 @@ class GNNValidator:
         self.package_dir = Path(package_dir)
         self.result = ValidationResult()
         self._upstream_gnn = _resolve_upstream_flag(upstream_gnn)
+        self.result.capabilities["upstream_gnn"] = {
+            "requested": self._upstream_gnn,
+            "available": False,
+        }
+        try:
+            from cogant.parsers.registry import parser_capabilities
+
+            self.result.capabilities["parsers"] = {
+                language: capability.__dict__ for language, capability in parser_capabilities().items()
+            }
+        except Exception as exc:
+            self.result.capabilities["parsers"] = {"error": str(exc)}
 
         logger.info(
             "Validating GNN package: %s (upstream_gnn=%s)",
@@ -254,6 +285,13 @@ class GNNValidator:
             self.result.valid = False
             self.result.score = 0.0
             return self.result
+
+        if not self.package_dir.is_dir():
+            self.result.errors.append(f"Package path is not a directory: {self.package_dir}")
+            self.result.score = 0.0
+            return self.result
+
+        self.result.artifact_digests = self._artifact_digests()
 
         # Check 2: Required files present
         self._check_required_files()
@@ -335,12 +373,12 @@ class GNNValidator:
 
         # 3) Upstream sections must appear in canonical order.
         if not missing_upstream and upstream_offsets:
-            expected_order = [s for s, _ in upstream_offsets]
-            sorted_order = [s for s, _ in sorted(upstream_offsets, key=lambda x: x[1])]
-            if expected_order != sorted_order:
+            expected_order = list(self.UPSTREAM_SECTIONS)
+            found_order = [section for section, _ in sorted(upstream_offsets, key=lambda x: x[1])]
+            if expected_order != found_order:
                 errors.append(
                     "Upstream GNN 2.0.0 sections out of canonical order: "
-                    f"found {sorted_order}, expected {expected_order}"
+                    f"found {found_order}, expected {expected_order}"
                 )
 
         return errors
@@ -355,7 +393,9 @@ class GNNValidator:
         Returns:
             List of errors (empty if valid).
         """
-        errors = []
+        if not isinstance(state_space_json, dict):
+            return ["State-space root must be a JSON object"]
+        errors: list[str] = []
 
         # Check required keys
         required_keys = ["variables", "observations", "actions", "transitions"]
@@ -367,21 +407,46 @@ class GNNValidator:
         variables = state_space_json.get("variables", [])
         if not isinstance(variables, list):
             errors.append("Variables must be a list")
+        elif any(not isinstance(item, dict) for item in variables):
+            errors.append("Variables entries must be objects")
 
         # Check observations are well-formed
         observations = state_space_json.get("observations", [])
         if not isinstance(observations, list):
             errors.append("Observations must be a list")
+        elif any(not isinstance(item, dict) for item in observations):
+            errors.append("Observations entries must be objects")
 
         # Check actions are well-formed
         actions = state_space_json.get("actions", [])
         if not isinstance(actions, list):
             errors.append("Actions must be a list")
+        elif any(not isinstance(item, dict) for item in actions):
+            errors.append("Actions entries must be objects")
 
         # Check transitions are well-formed
         transitions = state_space_json.get("transitions", {})
         if not isinstance(transitions, dict):
             errors.append("Transitions must be a dict")
+        else:
+            if not isinstance(transitions.get("transition_count"), int):
+                errors.append("Transitions must declare an integer transition_count")
+            if not isinstance(transitions.get("time_regime"), str) or not transitions.get("time_regime"):
+                errors.append("Transitions must declare a non-empty time_regime")
+
+        metadata = state_space_json.get("metadata")
+        if metadata is not None:
+            if not isinstance(metadata, dict):
+                errors.append("State-space metadata must be an object")
+            else:
+                for key, values in (
+                    ("num_variables", variables),
+                    ("num_observations", observations),
+                    ("num_actions", actions),
+                ):
+                    declared = metadata.get(key)
+                    if isinstance(values, list) and declared != len(values):
+                        errors.append(f"State-space metadata {key} does not match emitted entries")
 
         return errors
 
@@ -411,21 +476,90 @@ class GNNValidator:
             if key not in matrices_json:
                 errors.append(f"Missing matrix: {key}")
 
-        A = matrices_json.get("A") or []
-        B = matrices_json.get("B") or []
-        C = matrices_json.get("C") or []
-        D = matrices_json.get("D") or []
+        A = matrices_json.get("A", [])
+        B = matrices_json.get("B", [])
+        C = matrices_json.get("C", [])
+        D = matrices_json.get("D", [])
 
-        dims = matrices_json.get("dimensions") or {}
-        # Declared dims may be absent/zero even when matrices carry content.
-        # Derive effective dims from the matrices themselves so a missing
-        # ``dimensions`` block cannot silently skip every shape / stochastic
-        # check (a non-empty A/B/C/D must always be validated).
-        n_states = int(dims.get("n_states") or 0) or len(D) or (len(A[0]) if A and A[0] else 0)
-        n_obs = int(dims.get("n_obs") or 0) or len(A) or len(C)
-        n_actions = int(dims.get("n_actions") or 0) or (
-            len(B[0][0]) if B and B[0] and B[0][0] else 0
-        )
+        if not isinstance(A, list):
+            errors.append("A must be a list")
+            A = []
+        if not isinstance(B, list):
+            errors.append("B must be a list")
+            B = []
+        if not isinstance(C, list):
+            errors.append("C must be a list")
+            C = []
+        if not isinstance(D, list):
+            errors.append("D must be a list")
+            D = []
+        if any(not isinstance(row, list) for row in A):
+            errors.append("A rows must be lists")
+            A = [row for row in A if isinstance(row, list)]
+        if any(not isinstance(row, list) for row in B):
+            errors.append("B rows must be lists")
+            B = [row for row in B if isinstance(row, list)]
+        if any(not isinstance(cell, list) for row in B for cell in row):
+            errors.append("B cells must be lists")
+            B = [
+                [cell for cell in row if isinstance(cell, list)]
+                for row in B
+            ]
+
+        dims = matrices_json.get("dimensions")
+        if not isinstance(dims, dict):
+            if dims is None:
+                errors.append("dimensions must be declared as an object")
+            else:
+                errors.append("dimensions must be an object")
+            dims = {}
+
+        inferred_states = len(D) or (len(A[0]) if A and A[0] else 0)
+        inferred_obs = len(A) or len(C)
+        inferred_actions = len(B[0][0]) if B and B[0] and B[0][0] else 0
+
+        def dimension(name: str, inferred: int) -> int:
+            if name not in dims:
+                return inferred
+            value = dims[name]
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                errors.append(f"dimensions.{name} must be a non-negative integer")
+                return inferred
+            return value
+
+        n_states = dimension("n_states", inferred_states)
+        n_obs = dimension("n_obs", inferred_obs)
+        n_actions = dimension("n_actions", inferred_actions)
+
+        shapes = matrices_json.get("shapes")
+        if not isinstance(shapes, dict):
+            errors.append("shapes must be declared as an object")
+        else:
+            expected_shapes = {
+                "A": [n_obs, n_states],
+                "B": [n_states, n_states, n_actions],
+                "C": [n_obs],
+                "D": [n_states],
+            }
+            for key, expected in expected_shapes.items():
+                actual_shape = shapes.get(key)
+                if actual_shape != expected:
+                    errors.append(f"declared shape for {key} does not match dimensions")
+
+        for name, value, actual in (
+            ("n_states", n_states, len(D)),
+            ("n_obs", n_obs, len(C)),
+        ):
+            if name in dims and actual != value:
+                errors.append(f"declared {name}={value} does not match {name} vector length {actual}")
+        if "n_states" in dims and A and any(len(row) != n_states for row in A):
+            errors.append(f"declared n_states={n_states} does not match A column count")
+        if "n_obs" in dims and A and len(A) != n_obs:
+            errors.append(f"declared n_obs={n_obs} does not match A row count")
+        if "n_actions" in dims and B and B[0] and any(
+            len(cell) != n_actions for row in B for cell in row
+        ):
+            errors.append(f"declared n_actions={n_actions} does not match B depth")
 
         # A: rows == n_obs, cols == n_states, columns sum to 1 (column-stochastic).
         if n_obs > 0 and n_states > 0:
@@ -441,16 +575,27 @@ class GNNValidator:
                 # introduces ~n_obs * eps drift; 1e-6 leaves ~8 orders of
                 # magnitude headroom and matches the pymdp / scipy convention
                 # for stochastic-matrix normalization checks.
-                if any(A[i][j] < -1e-9 for i in range(len(A)) for j in range(n_states)):
+                if any(
+                    not isinstance(A[i][j], (int, float))
+                    or not math.isfinite(float(A[i][j]))
+                    or A[i][j] < -1e-9
+                    for i in range(len(A))
+                    for j in range(n_states)
+                ):
                     errors.append("A contains negative probabilities")
                 for j in range(n_states):
                     col_sum = sum(A[i][j] for i in range(len(A)))
                     if abs(col_sum - 1.0) > 1e-6:
                         errors.append(f"A column {j} does not sum to 1 (sum={col_sum:.6f})")
 
+        elif A:
+            errors.append("A must be empty when observations or hidden states are zero")
+
         # B: shape n_states x n_states x n_actions.
         if n_states > 0:
-            if len(B) != n_states:
+            if n_actions == 0 and not B:
+                pass
+            elif len(B) != n_states:
                 errors.append(f"B first dim {len(B)} != n_states {n_states}")
             elif any(len(row) != n_states for row in B):
                 errors.append(f"B second dim mismatch; expected {n_states}")
@@ -458,7 +603,9 @@ class GNNValidator:
                 errors.append(f"B third dim mismatch; expected {n_actions}")
             else:
                 if any(
-                    B[i][j][k] < -1e-9
+                    not isinstance(B[i][j][k], (int, float))
+                    or not math.isfinite(float(B[i][j][k]))
+                    or B[i][j][k] < -1e-9
                     for i in range(n_states)
                     for j in range(n_states)
                     for k in range(n_actions)
@@ -473,15 +620,25 @@ class GNNValidator:
                                 f"(sum={col_sum:.6f})"
                             )
 
+        elif B:
+            errors.append("B must be empty when hidden states are zero")
+
         # C: length n_obs.
-        if n_obs > 0 and len(C) != n_obs:
+        if len(C) != n_obs:
             errors.append(f"C length {len(C)} != n_obs {n_obs}")
+        elif any(not isinstance(value, (int, float)) or not math.isfinite(float(value)) for value in C):
+            errors.append("C contains non-finite values")
 
         # D: length n_states, sums to 1.
-        if n_states > 0:
-            if len(D) != n_states:
-                errors.append(f"D length {len(D)} != n_states {n_states}")
-            elif any(value < -1e-9 for value in D):
+        if len(D) != n_states:
+            errors.append(f"D length {len(D)} != n_states {n_states}")
+        elif n_states > 0:
+            if any(
+                not isinstance(value, (int, float))
+                or not math.isfinite(float(value))
+                or value < -1e-9
+                for value in D
+            ):
                 errors.append("D contains negative probabilities")
             elif D and abs(sum(D) - 1.0) > 1e-6:
                 # Tolerance 1e-6 — stability constant, same rationale as
@@ -494,16 +651,19 @@ class GNNValidator:
 
     def _effective_matrix_dimensions(self, matrices_json: dict[str, Any]) -> dict[str, int]:
         """Return matrix dimensions declared in, or inferred from, A/B/C/D."""
-        A = matrices_json.get("A") or []
-        B = matrices_json.get("B") or []
-        C = matrices_json.get("C") or []
-        D = matrices_json.get("D") or []
-        dims = matrices_json.get("dimensions") or {}
-        n_states = int(dims.get("n_states") or 0) or len(D) or (len(A[0]) if A and A[0] else 0)
-        n_obs = int(dims.get("n_obs") or 0) or len(A) or len(C)
-        n_actions = int(dims.get("n_actions") or 0) or (
-            len(B[0][0]) if B and B[0] and B[0][0] else 0
+        B = matrices_json.get("B", [])
+        C = matrices_json.get("C", [])
+        D = matrices_json.get("D", [])
+        dims = matrices_json.get("dimensions")
+        dims = dims if isinstance(dims, dict) else {}
+        n_states = dims.get("n_states", len(D) if isinstance(D, list) else 0)
+        n_obs = dims.get("n_obs", len(C) if isinstance(C, list) else 0)
+        n_actions = dims.get(
+            "n_actions",
+            len(B[0][0]) if isinstance(B, list) and B and B[0] and B[0][0] else 0,
         )
+        if not all(isinstance(value, int) and not isinstance(value, bool) for value in (n_states, n_obs, n_actions)):
+            return {"n_states": 0, "n_obs": 0, "n_actions": 0}
         return {"n_states": n_states, "n_obs": n_obs, "n_actions": n_actions}
 
     def _state_space_dimensions(self) -> dict[str, int] | None:
@@ -556,13 +716,6 @@ class GNNValidator:
             matrix_value = matrix_dimensions.get(key, 0)
             state_value = state_space_dimensions.get(key, 0)
             match = matrix_value == state_value
-            if key == "n_actions" and state_value == 0 and matrix_value == 1:
-                alignment["implicit_noop_action_axis"] = True
-                match = True
-                self.result.warnings.append(
-                    "Matrix validation: state_space.json defines no actions; "
-                    "B uses one explicit no-op action axis"
-                )
             alignment[f"{key}_match"] = match
             if not match:
                 errors.append(
@@ -612,7 +765,9 @@ class GNNValidator:
         Returns:
             List of errors (empty if valid).
         """
-        errors = []
+        if not isinstance(provenance_json, dict):
+            return ["Provenance root must be a JSON object"]
+        errors: list[str] = []
 
         # Check required keys
         required_keys = ["timestamp", "sources"]
@@ -660,7 +815,10 @@ class GNNValidator:
         try:
             with open(manifest_path) as f:
                 loaded = json.load(f)
-            manifest: dict[str, Any] = dict(loaded) if isinstance(loaded, dict) else {}
+            if not isinstance(loaded, dict):
+                self.result.errors.append("manifest.json must contain a JSON object")
+                return None
+            manifest = dict(loaded)
             logger.debug("  ✓ manifest.json is valid JSON")
             self.result.details["manifest"] = manifest
             return manifest
@@ -674,15 +832,9 @@ class GNNValidator:
     def _check_json_files(self) -> None:
         """Check that all JSON files are valid."""
         json_files = [
-            "model.gnn.json",
-            "state_space.json",
-            "observations.json",
-            "actions.json",
-            "transitions.json",
-            "preferences.json",
-            "factors.json",
-            "provenance.json",
-            "ontology.json",
+            filename
+            for filename in self.REQUIRED_FILES
+            if filename.endswith(".json") and filename != "manifest.json"
         ]
 
         for filename in json_files:
@@ -692,7 +844,10 @@ class GNNValidator:
 
             try:
                 with open(filepath) as f:
-                    json.load(f)
+                    loaded = json.load(f)
+                    if not isinstance(loaded, dict):
+                        self.result.errors.append(f"JSON root must be an object in {filename}")
+                        continue
                 logger.debug(f"  ✓ {filename} is valid JSON")
             except json.JSONDecodeError as e:
                 self.result.errors.append(f"Invalid JSON in {filename}: {e}")
@@ -746,6 +901,11 @@ class GNNValidator:
                 "validation_errors": errors,
                 "validation_warnings": warnings,
             }
+            self.result.dimensions = {
+                "matrices": matrix_dimensions,
+                "state_space": state_space_dimensions or {},
+                "alignment": dimension_alignment,
+            }
             if errors:
                 self.result.errors.extend(f"Matrix validation: {error}" for error in errors)
             else:
@@ -774,9 +934,20 @@ class GNNValidator:
 
                 up = run_upstream_validate_gnn(markdown)
                 self.result.details["upstream_gnn"] = up.to_dict()
-                if up.available and not up.ok:
-                    for err in up.errors:
-                        self.result.warnings.append(f"[upstream GNN] {err}")
+                self.result.capabilities["upstream_gnn"] = up.to_dict()
+                if not up.available:
+                    self.result.capabilities["upstream_gnn"] = {
+                        **up.to_dict(),
+                        "requested": True,
+                        "available": False,
+                        "error_code": GNNCapabilityError.code,
+                    }
+                    self.result.errors.append(
+                        f"{GNNCapabilityError.code}: requested upstream GNN validation is unavailable: "
+                        f"{up.skipped_reason or 'install the cogant[upstream] extra'}"
+                    )
+                elif not up.ok:
+                    self.result.errors.extend(f"[upstream GNN] {err}" for err in up.errors)
         except Exception as e:
             self.result.errors.append(f"Failed to read model.gnn.md: {e}")
 
@@ -790,6 +961,9 @@ class GNNValidator:
         try:
             with open(state_space_path) as f:
                 state_space = json.load(f)
+            if not isinstance(state_space, dict):
+                self.result.errors.append("State-space validation: state_space.json root must be an object")
+                return
             errors = self.validate_state_space(state_space)
             if errors:
                 self.result.errors.extend(f"State-space validation: {error}" for error in errors)
@@ -808,6 +982,9 @@ class GNNValidator:
         try:
             with open(provenance_path) as f:
                 provenance = json.load(f)
+            if not isinstance(provenance, dict):
+                self.result.errors.append("Provenance validation: provenance.json root must be an object")
+                return
             errors = self.validate_provenance(provenance)
             if errors:
                 self.result.errors.extend(f"Provenance validation: {error}" for error in errors)
@@ -818,14 +995,29 @@ class GNNValidator:
 
     def _check_checksums(self, manifest: dict[str, Any]) -> None:
         """Check that checksums match."""
-        checksums = manifest.get("checksums", {})
-        if not checksums:
-            self.result.warnings.append("Manifest contains no checksums")
+        checksums = manifest.get("checksums")
+        if not isinstance(checksums, dict) or not checksums:
+            self.result.errors.append("Manifest must contain checksums for evidence validation")
             return
 
+        # The manifest owns this table, so including its own digest would be
+        # recursive. Every other required artifact must be covered.
+        for required in self.REQUIRED_FILES:
+            if required == "manifest.json":
+                continue
+            if required not in checksums:
+                self.result.errors.append(f"Manifest is missing checksum for required file: {required}")
+
         for filename, expected_checksum in checksums.items():
-            filepath = self.package_dir / filename
-            if not filepath.exists():
+            if not isinstance(filename, str) or not isinstance(expected_checksum, str):
+                self.result.errors.append("Manifest checksums must map string filenames to digests")
+                continue
+            filepath = (self.package_dir / filename).resolve()
+            if self.package_dir.resolve() not in filepath.parents:
+                self.result.errors.append(f"Checksum path escapes package directory: {filename}")
+                continue
+            if not filepath.is_file():
+                self.result.errors.append(f"Checksum references missing file: {filename}")
                 continue
 
             try:
@@ -836,57 +1028,39 @@ class GNNValidator:
                         json.dumps(data, sort_keys=True, default=str).encode()
                     ).hexdigest()
                 else:
-                    content = filepath.read_text(encoding="utf-8")
-                    actual = hashlib.sha256(content.encode()).hexdigest()
+                    actual = hashlib.sha256(filepath.read_bytes()).hexdigest()
 
                 if actual != expected_checksum:
                     message = (
                         f"Checksum mismatch for {filename}: "
                         f"expected {expected_checksum}, got {actual}"
                     )
-                    if filename in self.REQUIRED_FILES:
-                        self.result.errors.append(message)
-                    else:
-                        self.result.warnings.append(message)
+                    self.result.errors.append(message)
                 else:
                     logger.debug(f"  ✓ {filename} checksum matches")
             except Exception as e:
                 message = f"Failed to verify checksum for {filename}: {e}"
-                if filename in self.REQUIRED_FILES:
-                    self.result.errors.append(message)
-                else:
-                    self.result.warnings.append(message)
+                self.result.errors.append(message)
+
+    def _artifact_digests(self) -> dict[str, str]:
+        """Return raw SHA-256 digests for every regular package artifact."""
+        digests: dict[str, str] = {}
+        for path in sorted(self.package_dir.rglob("*")):
+            if path.is_file() and path.name != "manifest.json":
+                digests[str(path.relative_to(self.package_dir))] = hashlib.sha256(
+                    path.read_bytes()
+                ).hexdigest()
+        return digests
 
     def _compute_final_score(self) -> None:
         """Compute final validation score and validity.
 
-        Scoring constants (audit 2026-04-09):
-            ``max_points = 100`` — principled default (percentage scale,
-            human-interpretable).
-
-            ``points_per_error = 10`` — principled default. An error is
-            a hard violation (missing file, shape mismatch, bad sum).
-            10 points per error means 10 errors reduce a perfect model
-            to zero, which matches the intuition that "a model with 10
-            hard bugs should not pass validation."
-
-            ``points_per_warning = 2`` — principled default. Warnings
-            are softer signals (checksum mismatch, missing optional
-            field). The 5:1 error-to-warning ratio reflects the
-            severity gap and ensures that a model must accumulate 50
-            warnings before they dominate a single error.
-
-            ``score >= 80`` valid threshold — principled default. An
-            80/100 threshold corresponds to "at most 2 errors OR at
-            most 10 warnings OR a mix below that envelope." This is
-            calibrated against the intuition that a model with >2
-            hard errors should not be shipped. TODO(calibration):
-            validate threshold against human-labelled 20-repo corpus;
-            sweep {70, 75, 80, 85} and report precision/recall on
-            human "ship/don't ship" decisions.
+        The score is a human-readable quality signal only. Certification is
+        evidence-based: any hard validation error makes the package invalid,
+        while advisories remain visible without being converted into a pass.
         """
-        # Score based on errors and warnings.
-        # See the docstring above for per-constant justification.
+        # Keep the score monotonic for reports, but never use it to certify a
+        # package. One hard error is enough to invalidate evidence.
         max_points = 100  # percentage scale
         points_per_error = 10  # 10 errors → zero score
         points_per_warning = 2  # 5:1 severity ratio vs. errors
@@ -897,9 +1071,7 @@ class GNNValidator:
         score = max(0, min(100, score))
 
         self.result.score = float(score)
-        # Valid iff zero errors AND score >= 80 (principled default;
-        # see docstring — TODO(calibration) on 20-repo corpus).
-        self.result.valid = len(self.result.errors) == 0 and score >= 80
+        self.result.valid = len(self.result.errors) == 0
 
         logger.debug(
             f"  Final score: {self.result.score:.1f}% - {'VALID' if self.result.valid else 'INVALID'}"

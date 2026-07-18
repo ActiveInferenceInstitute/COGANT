@@ -202,3 +202,56 @@ class TestCacheStore:
         store.get(self._make_key())  # should still hit (same key)
         stats = store.stats()
         assert isinstance(stats, dict)
+
+    def test_contract_digests_isolate_and_find_prior_content(self, tmp_path):
+        from cogant.cache.store import CacheKey, CacheStore
+
+        store = CacheStore(cache_dir=tmp_path / "cache")
+        baseline = CacheKey(
+            repo_path="/repo",
+            content_hash="old-content",
+            cogant_version="1.0",
+            config_digest="config-a",
+            parser_digest="parser-a",
+            rule_digest="rules-a",
+        )
+        current = CacheKey(
+            repo_path="/repo",
+            content_hash="new-content",
+            cogant_version="1.0",
+            config_digest="config-a",
+            parser_digest="parser-a",
+            rule_digest="rules-a",
+        )
+        store.put(baseline, {"result": "old"})
+        prior = store.get_latest(
+            repo_path=current.repo_path,
+            cogant_version=current.cogant_version,
+            config_digest=current.config_digest,
+            parser_digest=current.parser_digest,
+            rule_digest=current.rule_digest,
+        )
+        assert prior is not None
+        assert prior.key.content_hash == "old-content"
+        assert store.get(current) is None
+
+        assert (
+            store.get_latest(
+                repo_path=current.repo_path,
+                cogant_version=current.cogant_version,
+                config_digest="different-config",
+                parser_digest=current.parser_digest,
+                rule_digest=current.rule_digest,
+            )
+            is None
+        )
+
+    def test_corrupt_entry_is_a_miss(self, tmp_path):
+        from cogant.cache.store import CacheStore
+
+        store = CacheStore(cache_dir=tmp_path / "cache")
+        key = self._make_key()
+        path = store._path_for(key)
+        path.parent.mkdir(parents=True)
+        path.write_text('{"key": {"repo_path": null}}', encoding="utf-8")
+        assert store.get(key) is None

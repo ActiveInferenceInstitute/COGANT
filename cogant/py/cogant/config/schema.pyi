@@ -4,6 +4,10 @@ from typing import Any, ClassVar, Literal
 from _typeshed import Incomplete
 from pydantic import BaseModel
 
+from .pipeline import PipelineConfig as PipelineConfig
+
+CURRENT_CONFIG_SCHEMA_VERSION: str
+
 class CogantBaseConfig(BaseModel):
     model_config: ClassVar[Incomplete]
 
@@ -51,21 +55,6 @@ class PipelineStage(CogantBaseConfig):
     skip_on_error: bool
     parameters: dict[str, Any]
 
-class PipelineConfig(CogantBaseConfig):
-    name: str
-    description: str | None
-    run_stages: list[str]
-    parallel_stages: list[list[str]]
-    stages: dict[str, PipelineStage]
-    languages: list[LanguageConfig]
-    include_patterns: list[str]
-    exclude_patterns: list[str]
-    analyze_tests: bool
-    analyze_dependencies: bool
-    follow_imports: bool
-    max_import_depth: int
-    model_config: ClassVar[Incomplete]
-
 class ExportFormat(StrEnum):
     JSON = "json"
     JSON_LINES = "jsonl"
@@ -112,3 +101,85 @@ class ValidationConfig(CogantBaseConfig):
     fail_on_error: bool
     auto_fix_warnings: bool
     model_config: ClassVar[Incomplete]
+
+class ServerConfig(CogantBaseConfig):
+    host: str
+    port: int
+    workspace_root: str
+    allow_absolute_paths: bool
+    auth_token: str | None
+    max_request_bytes: int
+    max_gnn_text_bytes: int
+    max_archive_bytes: int
+    max_archive_files: int
+    max_concurrent_requests: int
+    request_timeout_seconds: float
+    rate_limit_requests: int
+    rate_limit_window_seconds: int
+    rate_limit_paths: list[str]
+
+class BatchConfig(CogantBaseConfig):
+    package_root: str
+    output_root: str
+    remote: BatchRemoteConfig
+    targets: list[BatchTargetConfig]
+    steps: BatchStepsConfig
+    manuscript: BatchManuscriptConfig
+    target_ids: list[str]
+    enabled_steps: list[str]
+    dashboard: bool
+    max_targets: int
+    max_archive_files: int
+    max_archive_bytes: int
+
+class BatchTargetConfig(CogantBaseConfig):
+    id: str
+    path: str | None
+    git_url: str | None
+    git_ref: str | None
+    explain: str | None
+    roundtrip_threshold: float | None
+    roundtrip_note: str | None
+
+class BatchRemoteConfig(CogantBaseConfig):
+    shallow_clone: bool
+    refresh: bool
+
+class BatchManuscriptConfig(CogantBaseConfig):
+    enabled: bool
+    regenerate_metrics: bool
+    strict: bool
+
+class BatchStepsConfig(CogantBaseConfig):
+    doctor: bool
+    translate: bool
+    layout_output: bool
+    no_dynamic: bool
+    scan_json: bool
+    graph_stdout: bool
+    export_gnn: bool
+    export_gnn_format: str
+    render_site: bool
+    viz_png: bool
+    validate_run_dir: bool
+    validate_no_upstream_gnn: bool
+    roundtrip: bool
+    analyze_graph: bool
+    analyze_static: bool
+    export_multi: bool
+    export_multi_formats: str
+    visualize_diagrams: bool
+    visualize_format: str
+    inspection_artifacts: bool
+    batch_dashboard: bool
+
+class ProjectConfig(CogantBaseConfig):
+    schema_version: str
+    cogant: CogantConfig
+    pipeline: PipelineConfig
+    export: ExportConfig
+    validation: ValidationConfig
+    server: ServerConfig
+    batch: BatchConfig
+    def __contains__(self, key: object) -> bool: ...
+    def __getitem__(self, key: str) -> Any: ...

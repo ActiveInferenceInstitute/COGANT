@@ -18,6 +18,6 @@ From the inner package root (`..`):
 
 ```bash
 uv run pytest tests/ -q --no-cov
-uv run mypy py/cogant/
+MYPYPATH=py uv run mypy --package cogant
 uv run ruff check py/cogant/
 ```

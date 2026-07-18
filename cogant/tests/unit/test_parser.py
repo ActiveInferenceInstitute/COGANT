@@ -13,11 +13,11 @@ parsers package).
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import pytest
 
+from cogant.parsers.languages.python.parser import PythonLanguageParser
 from cogant.static.parser import (
     AssignmentDef,
     ClassDef,
@@ -27,14 +27,20 @@ from cogant.static.parser import (
     PythonModule,
 )
 
-# Make the ``parsers`` package importable (it lives outside ``py/``).
-_PARSERS_ROOT = Path(__file__).resolve().parents[2]
-if str(_PARSERS_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PARSERS_ROOT))
-
-from parsers.python.parser import PythonLanguageParser  # noqa: E402
-
 pytestmark = pytest.mark.unit
+
+
+def test_parser_capability_report_exposes_active_mode_and_degradation() -> None:
+    from cogant.parsers import parser_capability_report
+
+    report = parser_capability_report()
+    assert {"python", "javascript", "typescript", "rust", "go"} <= set(report)
+    for language, details in report.items():
+        assert details["language"] == language
+        assert details["active_implementation"]
+        assert isinstance(details["degraded"], bool)
+        if details["degraded"]:
+            assert details["reason"]
 
 
 # --------------------------------------------------------------------- fixtures

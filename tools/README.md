@@ -33,6 +33,9 @@ review and can be made stricter with its release-only flags.
 | [`audit_test_names.py`](audit_test_names.py) | Fail when active tests or thin examples use campaign-era names such as campaign numbers, dated batch tags, or opaque coverage-only suffixes. |
 | [`audit_folder_docs.py`](audit_folder_docs.py) | Check COGANT-owned folders for README/AGENTS coverage, placeholder boilerplate, documented exceptions, and relative-link health. |
 | [`audit_synthetic_surfaces.py`](audit_synthetic_surfaces.py) | Classify retained synthetic-surface terms and fail unallowlisted fallback/mock/placeholder/stub occurrences; `--strict` also checks generated manuscript variables and matrix sidecar provenance. |
+| [`audit_manuscript_module_refs.py`](audit_manuscript_module_refs.py) | Resolve backticked `cogant.*` references in manuscript source against the installable package; `--strict` also fails dependency/import errors. |
+| [`release_gate.py`](release_gate.py) | Run the aggregate fail-closed code, package, Rust, documentation, evidence, manuscript, provenance, and freshness gate; writes `output/reports/release_gate.json`. |
+| [`audit_release_integrity.py`](audit_release_integrity.py) | Validate version consistency, optional-upstream isolation and commit pinning, OpenAPI coverage, wheel `RECORD` hashes, dependency/license inventory, CycloneDX-shaped SBOM output, and reproducible local wheel builds; writes `output/reports/release_integrity.json` plus `output/reports/cogant-sbom.cdx.json`. |
 
 ## Common workflows
 
@@ -84,6 +87,15 @@ uv run python tools/audit_robustness_table.py
 uv run python tools/audit_roadmap_truth.py
 uv run python tools/citation_claim_ledger.py --keys KEY [KEY ...]
 uv run python tools/organization_state_space_audit.py --strict
+```
+
+Run the aggregate release gate from the project root. Use `--skip-tests` only
+for faster artifact iteration; it never substitutes for the full suite.
+
+```bash
+uv run python tools/release_gate.py
+uv run python tools/release_gate.py --skip-tests
+uv run python tools/release_gate.py --dry-run
 ```
 
 Refresh manuscript figure assets and metadata sidecars after `run_all.py` has

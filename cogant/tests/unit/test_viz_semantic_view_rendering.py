@@ -23,7 +23,8 @@ import matplotlib.pyplot as plt
 import pytest
 
 from cogant.viz.semantic_view import SemanticVisualizer
-from tests.unit._viz_assert import assert_figure_nondegenerate
+
+from ._viz_assert import assert_figure_nondegenerate
 
 pytestmark = pytest.mark.unit
 

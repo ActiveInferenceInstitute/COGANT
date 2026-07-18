@@ -30,6 +30,7 @@ cogant/out/
 # package outputs or unrelated sidecar notes.
 !cogant/
 cogant/*
+!cogant/py/
 !cogant/docs/
 cogant/docs/*
 !cogant/docs/evaluation/

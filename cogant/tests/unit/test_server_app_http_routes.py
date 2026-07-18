@@ -17,17 +17,12 @@ import pytest
 fastapi = pytest.importorskip("fastapi")
 from fastapi.testclient import TestClient  # noqa: E402
 
-from cogant.gnn.formatter import GNNMarkdownFormatter  # noqa: E402
-from cogant.process.extractor import ProcessModel  # noqa: E402
-from cogant.schemas.graph import GraphMetadata, ProgramGraph  # noqa: E402
 from cogant.server.app import (  # noqa: E402
     _MetricsStore,
     _probe_dependencies,
     _RateLimiter,
     create_app,
 )
-from cogant.statespace.compiler import StateSpaceModel  # noqa: E402
-from cogant.statespace.temporal import TimeRegime  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # fixtures
@@ -35,16 +30,24 @@ from cogant.statespace.temporal import TimeRegime  # noqa: E402
 
 
 @pytest.fixture()
-def client() -> TestClient:
+def client(tmp_path: Path) -> TestClient:
     # Very high rate limit so the tests never trip it by accident.
-    app = create_app(rate_limit_requests=10000, rate_limit_window_s=3600.0)
+    app = create_app(
+        rate_limit_requests=10000,
+        rate_limit_window_s=3600.0,
+        workspace_root=tmp_path,
+    )
     return TestClient(app)
 
 
 @pytest.fixture()
-def throttled_client() -> TestClient:
+def throttled_client(tmp_path: Path) -> TestClient:
     # Very low rate limit so we can verify the 429 path.
-    app = create_app(rate_limit_requests=1, rate_limit_window_s=60.0)
+    app = create_app(
+        rate_limit_requests=1,
+        rate_limit_window_s=60.0,
+        workspace_root=tmp_path,
+    )
     return TestClient(app)
 
 
@@ -58,21 +61,33 @@ def tiny_repo(tmp_path: Path) -> Path:
 
 @pytest.fixture()
 def gnn_text() -> str:
-    """Produce a real GNN markdown string from an empty model."""
-    ss = StateSpaceModel(
-        id="m",
-        schema_name="current",
-        variables={},
-        observations={},
-        actions={},
-        transitions={},
-        likelihoods={},
-        preferences={},
-        time_regime=TimeRegime.SYNCHRONOUS,
-    )
-    pm = ProcessModel(id="pm", schema_name="current", stages={}, connections={})
-    g = ProgramGraph(metadata=GraphMetadata(repo_uri="test", languages={"python"}))
-    return GNNMarkdownFormatter(g, ss, pm, {}).format()
+    """Return a complete one-state GNN document with explicit matrices."""
+    return """## ModelName
+ServerUnitModel
+
+## StateSpaceBlock
+s_f0[1,1,type=float]
+o_m0[1,1,type=float]
+u_c0[1,1,type=int]
+
+## Connections
+(s_f0) > (o_m0)
+(u_c0) > (s_f0)
+
+## InitialParameterization
+D_f0={ (1.0) }
+A_m0={ (1.0) }
+B_f0=identity(1,1,1)
+C_m0={ (0.0) }
+
+## ActInfOntologyAnnotation
+s_f0=HiddenState
+o_m0=Observation
+u_c0=Action
+
+## Time
+Static
+"""
 
 
 # ---------------------------------------------------------------------------
@@ -123,7 +138,7 @@ class TestAnalyzeEndpoint:
     def test_analyze_happy_path(self, client: TestClient, tiny_repo: Path) -> None:
         r = client.post(
             "/analyze",
-            json={"repo_path": str(tiny_repo), "skip_dynamic": True},
+            json={"repo_path": "repo", "skip_dynamic": True},
         )
         assert r.status_code == 200, r.text
         body = r.json()
@@ -134,7 +149,7 @@ class TestAnalyzeEndpoint:
     def test_analyze_missing_repo_returns_404(self, client: TestClient) -> None:
         r = client.post(
             "/analyze",
-            json={"repo_path": "/definitely/not/a/real/repo/xyz123"},
+            json={"repo_path": "missing-repo"},
         )
         assert r.status_code == 404
         body = r.json()
@@ -170,18 +185,11 @@ class TestReverseEndpoint:
         r = client.post("/reverse", json={"gnn_text": "   \n   "})
         assert r.status_code == 422
 
-    def test_reverse_tolerates_non_gnn_text(self, client: TestClient) -> None:
-        """parse_gnn is lenient — free-form text still produces a package.
-
-        This exercises the happy path through ``_synthesize_zip_from_gnn_text``
-        with input the parser has to heal (no valid sections). The server
-        should NOT 500 — it should return a zip with some file count.
-        """
+    def test_reverse_rejects_non_gnn_text(self, client: TestClient) -> None:
+        """Malformed GNN text is rejected instead of becoming a package."""
         r = client.post("/reverse", json={"gnn_text": "not gnn at all"})
-        assert r.status_code == 200
-        body = r.json()
-        assert "package_zip_b64" in body
-        assert body["file_count"] >= 1
+        assert r.status_code == 422
+        assert "invalid GNN text" in r.json()["detail"]
 
 
 # ---------------------------------------------------------------------------
@@ -193,7 +201,7 @@ class TestRoundtripEndpoint:
     def test_roundtrip_missing_path_returns_404(self, client: TestClient) -> None:
         r = client.post(
             "/roundtrip",
-            json={"repo_path": "/nonexistent/path", "threshold": 0.8},
+            json={"repo_path": "missing-repo", "threshold": 0.8},
         )
         assert r.status_code == 404
 
@@ -214,13 +222,13 @@ class TestRateLimiting:
         # First request: success or 404/422 (still counts for the limiter)
         r1 = throttled_client.post(
             "/analyze",
-            json={"repo_path": str(tiny_repo), "skip_dynamic": True},
+            json={"repo_path": "repo", "skip_dynamic": True},
         )
         assert r1.status_code in (200, 404, 422, 429, 500)
         # Second request must be rate-limited (max_requests=1)
         r2 = throttled_client.post(
             "/analyze",
-            json={"repo_path": str(tiny_repo), "skip_dynamic": True},
+            json={"repo_path": "repo", "skip_dynamic": True},
         )
         assert r2.status_code == 429
         body = r2.json()

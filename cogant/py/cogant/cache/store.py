@@ -10,6 +10,7 @@ Thread safety for concurrent reads is achieved via atomic writes
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import tempfile
@@ -31,8 +32,11 @@ class CacheKey:
     """Uniquely identifies a cached analysis result."""
 
     repo_path: str
-    content_hash: str  # SHA-256 of repo contents
+    content_hash: str  # SHA-256 of relevant source contents
     cogant_version: str
+    config_digest: str = ""
+    parser_digest: str = ""
+    rule_digest: str = ""
 
 
 @dataclass
@@ -81,11 +85,63 @@ class CacheStore:
             self._misses += 1
             return None
 
-        entry = self._deserialize(data)
-        if self._is_expired(entry):
+        try:
+            entry = self._deserialize(data)
+            expired = self._is_expired(entry)
+        except (KeyError, TypeError, ValueError):
+            # Corrupt or pre-contract cache entries are misses, never a
+            # reason to fail the analysis itself.
+            self._misses += 1
+            return None
+        if expired:
             self._misses += 1
             return None
 
+        entry.hit = True
+        self._hits += 1
+        return entry
+
+    def get_latest(
+        self,
+        *,
+        repo_path: str,
+        cogant_version: str,
+        config_digest: str = "",
+        parser_digest: str = "",
+        rule_digest: str = "",
+    ) -> CacheEntry | None:
+        """Return the newest valid entry for a contract, regardless of content.
+
+        Incremental analysis needs the prior source snapshot when the current
+        content digest has changed.  The exact ``get`` path remains
+        content-addressed; this lookup is deliberately constrained by every
+        non-content contract component so a result from a different config,
+        parser, rule set, package version, or repository cannot be reused.
+        """
+        candidates: list[CacheEntry] = []
+        if not self._dir.is_dir():
+            self._misses += 1
+            return None
+        for path in self._dir.rglob("*.json"):
+            try:
+                entry = self._deserialize(json.loads(path.read_text()))
+                if self._is_expired(entry):
+                    continue
+            except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+                continue
+            key = entry.key
+            if (
+                key.repo_path == repo_path
+                and key.cogant_version == cogant_version
+                and key.config_digest == config_digest
+                and key.parser_digest == parser_digest
+                and key.rule_digest == rule_digest
+            ):
+                candidates.append(entry)
+        if not candidates:
+            self._misses += 1
+            return None
+        entry = max(candidates, key=lambda item: item.created_at)
         entry.hit = True
         self._hits += 1
         return entry
@@ -159,7 +215,17 @@ class CacheStore:
     # -- internal helpers ----------------------------------------------------
 
     def _path_for(self, key: CacheKey) -> Path:
-        h = key.content_hash
+        identity = "\0".join(
+            (
+                key.repo_path,
+                key.content_hash,
+                key.cogant_version,
+                key.config_digest,
+                key.parser_digest,
+                key.rule_digest,
+            )
+        ).encode()
+        h = hashlib.sha256(identity).hexdigest()
         return self._dir / h[:2] / f"{h}.json"
 
     def _is_expired(self, entry: CacheEntry) -> bool:

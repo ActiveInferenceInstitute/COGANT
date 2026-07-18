@@ -51,7 +51,8 @@ from cogant.viz.png import (
     render_summary_cover_png,
 )
 from cogant.viz.png.gnn_markdown import render_gnn_markdown_mosaic_png
-from tests.unit._viz_assert import assert_png_nondegenerate
+
+from ._viz_assert import assert_png_nondegenerate
 
 # --------------------------- helpers / fixtures ------------------------ #
 
@@ -408,6 +409,7 @@ def test_render_connections_matrix_png_uses_real_matrix_payload(tmp_path):
                     "C": [0.0],
                     "D": [0.5, 0.5],
                     "dimensions": {"n_states": 2, "n_obs": 1, "n_actions": 1},
+                    "shapes": {"A": [1, 2], "B": [2, 2, 1], "C": [1], "D": [2]},
                 }
             }
         )
@@ -474,6 +476,7 @@ def test_render_connections_matrix_png_records_state_label_groups(tmp_path):
                     "C": [0.0],
                     "D": [0.5, 0.5],
                     "dimensions": {"n_states": 2, "n_obs": 1, "n_actions": 1},
+                    "shapes": {"A": [1, 2], "B": [2, 2, 1], "C": [1], "D": [2]},
                 },
             }
         ),

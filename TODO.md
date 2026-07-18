@@ -1,318 +1,291 @@
 # COGANT TODO
 
-Last updated: 2026-06-13
+Last updated: 2026-07-17
 
-This backlog scopes the most useful next development avenues after the manuscript,
-test, rendering, and visualization passes. Keep items grounded in generated
-artifacts and package behavior; COGANT should make claims only when the run
-directory, test suite, or manuscript pipeline can reproduce them.
+This is the future-only execution backlog. Completed work belongs in Git
+history, generated evidence, audit reports, or the taskboard; it must not be
+reintroduced here as `[x]` history. Every item below is active or upcoming and
+has an explicit priority, dependency, deliverable, and acceptance condition.
 
-## 1. Visual Inspection Workbench
+Status markers:
 
-Goal: make human inspection of codebase-to-GNN and GNN-to-code artifacts a
-first-class interface, not a side effect of scattered PNG files.
+- `[~]` active work or an unresolved current baseline issue.
+- `[ ]` planned work that is not yet started.
+- `[!]` blocked work; the blocker is recorded in the item.
 
-- [x] Add an early, manuscript-ready interpretability overview figure generated
-  from real `<output_root>/<target_id>/` artifacts.
-- [x] Render program graph, state-space factor, A/B/C/D matrix, Markov blanket,
-  GNN markdown, process Gantt, and summary-cover PNGs from the same completed
-  run directory.
-- [x] Add a single-target inspection dashboard that reads `data/`,
-  `gnn_package/`, `figures/`, `analysis/`, `reports/`, and `roundtrip/` without
-  requiring in-memory Python objects.
-- [x] Add a graphical abstract artifact that summarizes source code, typed
-  graph, semantic roles, state-space compilation, GNN matrices, blanket
-  partition, and roundtrip status in one visual chain.
-- [x] Wire the inspection dashboard into `cogant viz`, `render_all_pngs()`,
-  `run_all.py`'s existing viz step, and package documentation.
-- [x] Link the inspection dashboard from generated `site/index.html` pages when
-  a static site already exists.
-- [x] Add dashboard affordances for artifact health: present/missing states,
-  generated-at timestamps, validation status, matrix shapes, source coverage,
-  confidence tiers, and hotspot rankings.
-- [x] Add roundtrip diagnostics panels for role-preservation score, matrix score,
-  structural score, shape parity, generated-code compile/test status, warnings,
-  and changed semantic roles.
-- [x] Add graph and GNN visual diff panels for roundtrip comparison: original
-  graph versus regenerated graph and original GNN versus roundtripped GNN.
-- [x] Add benchmark-scale visual artifact completeness summaries for the batch
-  dashboard.
-- [x] Add broader benchmark visual summaries for cross-target role
-  distributions, graph-size trends, and failure reasons.
-- [x] Run screenshot/browser QA for the current generated HTML dashboard after
-  frontend changes.
-- [x] Add reusable screenshot/browser QA for generated HTML dashboards.
+Source-of-truth rules:
 
-## 2. Roundtrip Quality Diagnostics
+- Numeric manuscript claims come from
+  [`cogant/evaluation/METRICS.yaml`](cogant/evaluation/METRICS.yaml).
+- Robustness, held-out, roundtrip, and batch claims come from generated
+  artifacts with source/configuration provenance.
+- Rendered manuscript outputs and visual QA are release artifacts, not manual
+  substitutes for source validation.
+- [`tasks.yaml`](tasks.yaml) mirrors the active workstreams and aliases below;
+  Git history and task records retain completed work outside this file.
 
-Goal: treat roundtrip as a measurable reconstruction problem with inspectable
-losses, not just a file-emission demo.
+## P0 — Stabilize the current refactor
 
-- [x] Define roundtrip invariants for code -> graph -> GNN -> code -> graph:
-  node identity preservation, edge-kind preservation, role preservation,
-  state-space shape preservation, and executable smoke behavior.
-- [x] Emit `roundtrip/metrics.json` with role-preservation score, matrix score,
-  structural score, shape parity, artifact paths, and warnings.
-- [x] Extend `roundtrip/metrics.json` with a transparent role-multiset
-  edit-distance proxy, a `graph_edit_distance` field for dashboards, and
-  generated-code compile/test status.
-- [x] Add role-delta roundtrip diagnostics to the inspection dashboard.
-- [x] Add original-vs-regenerated graph and GNN side-by-side visualizations to
-  the inspection dashboard.
-- [x] Add fixture-level thresholds to `evaluation/METRICS.yaml` and manuscript
-  variable bindings for roundtrip quality.
-- [x] Add tests for roundtrip metrics emission and dashboard consumption.
-- [x] Add a reverse-synthesis smoke test that executes a generated action
-  against generated `State` factors.
-- [x] Add broader tests for both one-way conversions and complete roundtrip
-  output comparisons.
-- [x] Keep failure cases explicit: when reverse synthesis is unavailable, the
-  dashboard should say so rather than implying a completed loop.
+- [~] **cog-p0-01 — Restore a clean package baseline.**
+  - Priority: P0.
+  - Depends on: none; reconcile the existing parser/config/server worktree.
+  - Deliverable: one coherent parser package, typed-config surface, server
+    surface, exports, stubs, package-data rules, and mypy module identity.
+  - Acceptance: strict Ruff, strict mypy, focused parser/config/server tests,
+    clean-wheel import smoke, and supported non-upstream test collection pass.
 
-## 3. Evaluation Corpus Expansion
+- [~] **cog-p0-02 — Make developer and CI environments hermetic.**
+  - Priority: P0.
+  - Depends on: cog-p0-01.
+  - Deliverable: tests use repository-local imports, routine installation is
+    independent of the optional upstream GNN checkout, and the upstream smoke
+    job is separate and resource-bounded.
+  - Acceptance: a clean offline environment collects and runs the documented
+    core suite without an unrelated installed `tests` package or upstream
+    network access.
+  - Blocker: the complete historical `pytest tests/` lane now collects cleanly
+    but still contains legacy contract failures in older configuration,
+    reverse-matrix, cache-layout, parser-loader, server-error, GNN-package,
+    and optional-upstream tests. The canonical registry and strict server
+    boundary remain authoritative; the focused current-contract lane must not
+    be presented as a full-suite certification.
 
-Goal: broaden evidence across codebase shapes while keeping the suite cheap
-enough for local development.
+- [~] **cog-p0-03 — Close the documentation and packaging boundary.**
+  - Priority: P0.
+  - Depends on: cog-p0-01.
+  - Deliverable: documented installable parser/language tree, repaired example
+    links, current parser paths/capability wording, and corrected Rust format
+    commands using `cargo fmt --all --check`.
+  - Acceptance: folder-doc, package-data, public-export, Rust format/check/test,
+    and clippy audits pass.
 
-- [x] Add small fixtures for CLI tools, async services, data pipelines, plugin
-  architectures, notebooks converted to modules, and multi-package workspaces.
-- [x] Add one or two medium real repositories with permissive licenses and stable
-  shallow-clone behavior. (`run_all.json`: `remote_click` 8.1.7 — ~10 KLOC
-  BSD-3 — promoted to an active target; `remote_itsdangerous` and
-  `remote_markupsafe` pinned to `2.2.0`/`2.1.5`. All remote `git_ref`s are
-  now immutable release tags so `git clone --depth 1 --branch <tag>` is
-  reproducible; the example block models the same pinned pattern.)
-- [x] Record fixture intent, expected graph motifs, expected semantic roles, and
-  expected failure modes near each fixture.
-- [x] Add corpus-stratified metrics: file count, LOC, node/edge counts,
-  mapping count, state-space dimensions, validation result, render completeness,
-  and roundtrip status.
-- [x] Keep slow or network-dependent corpus runs separated from the fast unit
-  suite while making their results reproducible through `run_all.py`.
+- [~] **cog-p0-04 — Reconcile generated evidence after refactor changes.**
+  - Priority: P0.
+  - Depends on: cog-p0-01, cog-p0-02, cog-p0-03.
+  - Deliverable: regenerated [`METRICS.yaml`](cogant/evaluation/METRICS.yaml),
+    manuscript variables, figures,
+    injected manuscript tree, figure manifest, and artifact manifest; optional
+    Rust references resolve through the public adapter.
+  - Acceptance: metrics freshness, manuscript crossrefs, citations,
+    formalisms, numbers, links, claim scope, synthetic-surface, renderer,
+    robustness, visual-QA, and publication-readiness gates pass.
+  - Blocker: `check_metrics_fresh.py --fail-on-dirty` remains intentionally
+    red until these source edits are committed and metrics are regenerated
+    against that commit; the current worktree has been regenerated from the
+    live sources but cannot claim commit-bound freshness while uncommitted.
 
-## 4. Rule Calibration And Reviewer Loop
+## P1 — Canonical public contracts and reliability
 
-Goal: make semantic mapping rules inspectable, tunable, and reviewable.
+- [~] **cog-p1-01 — Canonical typed configuration.**
+  - Priority: P1.
+  - Depends on: cog-p0-01.
+  - Deliverable: `ProjectConfig` and one preset registry as the authoritative
+    model, legacy translation/warnings for one deprecation cycle, and a schema
+    version/migration mechanism.
+  - Acceptance: compatibility fixtures prove precedence
+    `defaults < preset < file < environment < CLI`; no parallel registry remains.
 
-- [x] Emit per-rule match traces with evidence snippets, confidence components,
-  conflict resolution decisions, and final role assignments.
-- [x] Add a reviewer annotation format for accepted/rejected mappings and use it
-  to calibrate confidence thresholds.
-- [x] Add precision/recall reports on annotated fixtures.
-- [x] Add dashboard panels for rule-family contribution and conflict outcomes.
-- [x] Add ablation regeneration commands that update `METRICS.yaml` and the
-  manuscript without hand-editing numeric claims. (`tools/regenerate_ablation.py`
-  runs the live pipeline + `TranslationEngine.translate(rule_filter=…)` per
-  family on the 6 packaged fixtures, computes rule-family / fixpoint /
-  matrix degraded-output deltas, merges an `ablation:` block into `METRICS.yaml`
-  (additive, header-preserving), and is wired into `regenerate_metrics.py`.
-  `09_ablation.md` rule-family + fixpoint + matrix degraded-output tables now
-  resolve from `{{ABLATION_*}}` placeholders — no hand-edited numerics.
-  Measurement corrected materially-wrong reconstructed values; see
-  CHANGELOG erratum.)
-  - [x] Sub: emit per-`MappingKind` decomposition of family deltas.
-    `tools/regenerate_ablation.py` now writes `ablation.by_mapping_kind`
-    alongside net family totals, with regression coverage in
-    `tests/test_regenerate_ablation.py`.
-  - [x] Sub: extend the measured harness to `zoo/01_simple_state`.
-    `S02_appendix_ablation.md` now resolves measured zoo/01 values from
-    `METRICS.yaml` rather than hand-reconstructed estimates.
+- [~] **cog-p1-02 — Explicit parser capabilities.**
+  - Priority: P1.
+  - Depends on: cog-p0-01, cog-p0-03.
+  - Deliverable: registry-only parser selection with language, extensions,
+    implementation, optional dependency, fallback/degraded status, and source
+    provenance.
+  - Acceptance: tree-sitter is selected when installed; fallback is observable;
+    unavailable-parser errors and capability tests cover every registered language.
 
-## 5. Language Front-End Maturation
+- [~] **cog-p1-03 — Fail-closed pipeline contracts.**
+  - Priority: P1.
+  - Depends on: cog-p1-01, cog-p1-02.
+  - Deliverable: stage outcomes (`success`, `partial`, `skipped`, `failed`,
+    `unavailable`), required-artifact contracts, and a manifest containing
+    source identity, config/parser/rule versions, stage outcomes, artifact
+    digests, and reproducibility metadata.
+  - Acceptance: validation/publication refuse incomplete bundles and partial
+    results cannot be mistaken for valid evidence.
 
-Goal: make parser and graph extraction behavior clear across languages and
-degraded-output modes.
+- [~] **cog-p1-04 — Correct incremental execution.**
+  - Priority: P1.
+  - Depends on: cog-p1-02, cog-p1-03.
+  - Deliverable: cache keys based on repository content, config, parser, and
+    rule digests, with deletion/rename/corruption handling and atomic writes.
+  - Acceptance: fixture tests prove deterministic invalidation and equivalence
+    of full and incremental outputs across all supported languages.
 
-- [x] Document exactly which language front ends are production-grade,
-  experimental, or fixture-only.
-- [x] Add language-specific smoke fixtures and parser fallback tests.
-- [~] Improve graph normalization around imports, method receivers, async calls,
-  decorators/annotations, generated files, and test-only code.
-  **Progress 2026-05-19**: dotted-import package-qualified keying landed.
-  `module_nodes` is now indexed under both the bare stem *and* the
-  dotted package path (e.g. `pkg.deep.x`), `__init__.py` collapses to its
-  package name, IMPORTS resolution walks `pkg.deep.x → pkg.deep → pkg` and
-  also tries `target + imported_name` for the submodule case
-  (`from pkg.deep import x` matches `pkg.deep.x`). A two-pass refactor
-  fixes a latent ordering hazard (importing modules walked before targets
-  were indexed silently dropped edges). Behaviour pinned by
-  `cogant/tests/unit/test_graph_orchestration_dotted_imports.py` (4
-  tests). **Remaining as honest follow-ups** (out of scope for this pass —
-  each is its own increment): method-receiver→class resolution,
-  async-call edge kind, decorator-driven edges, generated-file
-  detection, test-only `NodeKind.TEST` classification.
-- [x] Add dashboard badges for parser certainty and degraded-output usage.
-- [x] Add error reports that identify skipped files and unsupported constructs.
+- [~] **cog-p1-05 — Versioned server boundary.**
+  - Priority: P1.
+  - Depends on: cog-p0-01, cog-p1-03.
+  - Deliverable: API v1 request/response/error envelope with bounded bodies and
+    archives, safe workspace paths, non-loopback authentication, timeouts,
+    cancellation, concurrency/rate limits, and source-safe structured logs.
+  - Acceptance: abuse/security tests pass and the default server remains
+    local-only until an actual isolation boundary exists.
 
-## 6. Runtime And Inference Demonstrations
+## P2 — Language and graph semantics
 
-Goal: show that emitted GNN artifacts are not only syntactically valid but also
-useful in active-inference runtimes.
+- [~] **cog-p2-01 — Complete graph normalization increments.**
+  - Priority: P2.
+  - Depends on: cog-p1-02, cog-p1-03.
+  - Deliverable: method-receiver-to-class resolution, async-call edge kinds,
+    decorator/annotation edges, generated-file detection, and test-only
+    `NodeKind.TEST` classification.
+  - Acceptance: positive/negative fixtures and graph invariants cover every
+    increment without changing unrelated edge semantics.
 
-- [x] Add a small deterministic POMDP demo whose generated matrices can be run
-  through the upstream GNN toolchain and an inference backend.
-- [x] Record inference traces as artifacts and visualize policy, belief, and
-  preference trajectories.
-- [x] Add manuscript figures that distinguish structural translation evidence
-  from actual inference behavior.
-- [x] Keep runtime dependencies optional and isolate them behind explicit extras.
+- [~] **cog-p2-02 — Cross-language fixture matrix.**
+  - Priority: P2.
+  - Depends on: cog-p2-01.
+  - Deliverable: Python, JavaScript, TypeScript, Rust, and Go fixture matrices
+    covering positive, negative, fallback, source-span, import/package,
+    generated-file, async, decorator, and test-symbol cases.
+  - Acceptance: Rust and Go remain marked experimental until evidenced; Java is
+    not advertised without a real implementation; every fixture exports mode
+    and confidence metadata.
 
-## 7. CI, Packaging, And Promotion Readiness
+- [~] **cog-p2-03 — Capability-aware evidence.**
+  - Priority: P2.
+  - Depends on: cog-p1-02, cog-p2-01.
+  - Deliverable: analysis reports and dashboards containing parser mode,
+    confidence, unsupported constructs, skipped files, and degradation reasons.
+  - Acceptance: invariants prevent unsupported syntax from silently becoming
+    high-confidence graph evidence.
 
-Goal: make the project easy to link into `projects/working/cogant/` from the
-working sidecar checkout without breaking the template pipeline.
+## P3 — Robustness, held-out evidence, and claim governance
 
-- [x] Keep `PROMOTION.md` current with every path assumption introduced by new
-  tooling.
-- [x] Add CI checks for `uv sync --extra all`, `pytest`, `ruff`, `mypy`,
-  manuscript variable generation, manuscript validation, and strict figure-copy
-  mode.
-- [x] Add an artifact completeness check for `run_all.py` outputs.
-- [x] Ensure generated dashboards and figures remain deterministic enough for
-  documentation and review.
-- [x] Audit docs for the COGANT project root versus package root distinction
-  before promotion.
+- [~] **cog-6 / cog-p3-01 — Extend semantic-preservation robustness.**
+  - Priority: P3.
+  - Depends on: cog-p0-04, cog-p2-02.
+  - Deliverable: equivalent loop/branch rewrites, inlining/outlining variants,
+    parser/frontend variation, and canonical JSON/Markdown regeneration.
+  - Acceptance: CI regenerates or rejects stale robustness artifacts; negative
+    controls fail as expected and robustness audits remain clean.
 
-## 8. Review Backlog (surfaced 2026-05-15 comprehensive review)
+- [~] **cog-7 / cog-p3-02 — Promote the held-out pilot.**
+  - Priority: P3.
+  - Depends on: cog-p3-01.
+  - Deliverable: pinned source refs/digests, licensing and fixture intent,
+    split/generator metadata, one additional permissively licensed fixture, and
+    metrics/claim freshness integration.
+  - Acceptance: held-out output regenerates deterministically, leakage rules are
+    recorded, and claim-scope gates reject unsupported score relabelling.
 
-Concrete findings from the multi-agent review that are reviewed and
-recorded here rather than silently deferred. Each is scoped beyond a safe
-review-and-improve pass (architectural decision or broad refactor).
+- [ ] **cog-p3-03 — Strengthen semantic oracles.**
+  - Priority: P3.
+  - Depends on: cog-p2-03, cog-p3-01.
+  - Deliverable: edge-kind, matrix-dimension, structural-invariant, behavior-
+    oracle where justified, and human-labeled precision/recall checks.
+  - Acceptance: role preservation is reported separately from accuracy,
+    external validity, and generalization; oracle failures identify their layer.
 
-- [~] **Typed config / preset subsystem partial-wire decision (2026-05-19).**
-  The `--config` path (`py/cogant/cli/main.py:732`) does call
-  `ConfigLoader.load_from_yaml` / `load_json_from_file`, but
-  `build_pipeline_config(preset=...)`, `config/presets.py:PRESETS` (a
-  *parallel* registry to `config/defaults.py:PRESETS`), and the
-  `config/schema.py` enums were not anchored by any test. Status pinned by
-  `tests/unit/test_typed_config_loaders_e2e.py` (14 tests, including
-  `test_documented_dual_preset_surface_remains_acknowledged` which records
-  the two-registry asymmetry as deliberate-and-known). **Resolution path A**
-  (preferred): canonicalize a single name map and have the CLI honour both
-  registries. **Resolution path B**: prune `presets.py` and migrate the
-  richer-content presets into `defaults.PRESETS`. Deferred to a release
-  session because the field-name mapping between `cogant.yaml`'s
-  `pipeline.stages` and the schema's `run_stages` is the kind of rename
-  that wants an explicit transition cycle, not an overnight pass.
-- [x] **Pipeline stage-list docs omit `dynamic` and self-contradict.**
-  Fixed: `docs/cli_reference.md:20`, `docs/getting-started/quickstart.md:19`,
-  `docs/faq.md:55`, and the `cogant translate` CLI docstring
-  (`py/cogant/cli/main.py:695`) now list the real 10-stage default
-  (`… → graph → dynamic → translate → …`) and note `dynamic` runs by
-  default / `--no-dynamic` skips it. The `analyze` docstring was already
-  correct; the `explain` minimal-pipeline mentions are intentionally
-  dynamic-free and left as-is. Empirically grounded against the observed
-  live stage log.
-- [x] **FAQ `--min-confidence` flag** (2026-05-19). The flag IS implemented
-  on both `cogant translate` (cli/main.py:690) and `cogant analyze`
-  (cli/main.py:952), threaded through to
-  `api.orchestration._filter_semantic_mappings` (line 218). The FAQ
-  documentation (`cogant/docs/faq.md:143`) matches the implemented
-  semantics. Behaviour pinned by
-  `tests/unit/test_min_confidence_filtering.py` (10 tests covering
-  threshold-band keep/drop, edge cases at 0.0 / 1.0, empty-input, and
-  out-of-range tolerance with the validation layer at the CLI boundary).
-- [x] **Stage-list drift gate (durable fix for M4)** (2026-05-19). Canonical
-  source of truth now lives at `cogant.pipeline.RUNNER_STAGES`
-  (`py/cogant/pipeline/__init__.py`, exported via `__init__.pyi`).
-  Auditor `tools/audit_stage_list.py` scans CLI docstrings + selected docs
-  + manuscript API section for full-pipeline-claiming stage lists, fails on
-  any divergence from the canonical tuple, and is wired into the
-  Makefile (`make audit-stages`) and the CI lint job
-  (`.github/workflows/ci.yml`). Tests at
-  `tests/test_audit_stage_list.py` (7 tests including a negative-control
-  fixture that proves the gate catches a forged canonical mismatch — pinned
-  per [[feedback-shape-tests-dont-bind-truth]]). No hand-patch path remains.
-- [x] **Viz test output-blindness** (2026-05-19). Shared
-  helper `cogant/tests/unit/_viz_assert.py` exports
-  `assert_figure_nondegenerate` (rejects empty-axes / text-only Figures)
-  and `assert_png_nondegenerate` (validates PNG magic bytes + IHDR
-  dimensions > 1×1). Migrated viz tests: `test_viz_network.py`,
-  `test_viz_matrix.py`, `test_viz_ablation.py`,
-  `test_viz_static_analysis.py` (heatmap + histogram),
-  `test_viz_static_analysis_view_rendering.py`,
-  `test_viz_pipeline_view_rendering.py`, `test_viz_png_export_outputs.py`,
-  `test_viz_semantic_view_rendering.py`,
-  `test_viz_export_network_views.py` (4 figures). `test_viz_diff.py` and
-  `test_viz_plots.py` were verified to have no tautological
-  Figure-is-not-None assertions (their probes are content-typed strings).
-- [x] **`98_notation_supplement` dangling figure** (2026-05-19). Resolved
-  by adding a call-out paragraph in
-  `manuscript/98_notation_supplement.md` after the confidence-tier
-  threshold table; the figure (`{#fig:cogant-confidence-calibration}`,
-  defined at `manuscript/04_examples_and_failure_modes.md:43`) is now
-  cross-referenced. `tools/audit_manuscript_crossrefs.py` reports 109
-  ids, 417 references, zero dangling.
-- [~] **Semantic-preservation and robustness suite (2026-05-21).**
-  Per the WorldThreatModel/RedTeam/Perplexity stress test in
-  `Plans/WORLD_THREAT_MODEL_COGANT_2026-05-21.md`, the next evaluation
-  wave should add semantics-preserving transformation tests before any
-  stronger generalization claim: identifier renaming, dead-code insertion,
-  formatting/comment changes, legal statement reordering, equivalent
-  loop/branch rewrites, inlining/outlining, and parser/frontend variation.
-  Success means each transform has a fixture, a roundtrip semantic-oracle
-  assertion, and a dashboard-visible degradation row.
-  **Progress 2026-06-09 (verifier-first RedTeam):** the harness +
-  `tests/integration/test_semantic_preservation.py` now cover **7** transforms
-  (reformat, insert_comments, insert_dead_code, rename_locals, reorder_methods,
-  swap_if_branches, outline_first_function) with a real negative control
-  (`drop_half_definitions`, DETECTED) — confirmed genuinely behaviour-checking
-  (importability + role-multiset equality, not shape-only). The manuscript
-  robustness table is now **claim-policy-bound**: `tools/audit_robustness_table.py`
-  (+ `tests/test_audit_robustness_table.py`, 5 negative controls) ties every
-  manuscript row to `robustness_results.json`, wired into CI and the gate list —
-  closing the RedTeam science-gap that the table was hand-written. **Remaining
-  honest follow-ups:** still in-sample-only (3 base fixtures); the *equivalent
-  loop rewrite*, *inlining*, and *parser/frontend variation* transforms and a
-  held-out robustness corpus are not yet implemented; the
-  `robustness_results.json` freshness (re-run harness on PR) is audited for
-  table-consistency but not yet auto-regenerated in CI.
-- [x] **Roundtrip drift reduction.**
-  Completed in the 2026-06-12 evidence-gated pass: the current native ledger now
-  carries per-row `role_preservation_score`, `roundtrip_status`, file/LOC/node/
-  edge counts, and scaffolding fraction, and all 25 native rows are
-  role-preserved with 0 drift targets in the refreshed metrics. One deliberately
-  minimal fixture is now strictly structurally isomorphic; remaining
-  release work is no longer in-sample drift reduction; it is the separate
-  held-out promotion item in the current sequence below.
+- [ ] **cog-p3-04 — Stratify evidence and failure modes.**
+  - Priority: P3.
+  - Depends on: cog-p3-02, cog-p3-03.
+  - Deliverable: claim-ledger lanes for in-sample, held-out, synthetic,
+    negative-control, and externally validated evidence plus calibration and
+    language/transformation failure taxonomy.
+  - Acceptance: aggregate scores cannot conceal stratified regressions and no
+    manuscript claim exceeds its evidence class.
 
-- [x] **Evidence-gated real-matrix publication pass (2026-06-12).**
-  Public A/B/C/D matrix figures now require real exported `matrices.A/B/C/D`
-  from `gnn_package/model.gnn.json`, a source digest, source/display shapes,
-  B reducer metadata, aligned state-space dimensions, and empty fallback /
-  degraded panel lists. `GNNValidator` now actively validates matrix shape,
-  stochasticity, missing panels, and state-space alignment before a package can
-  receive a perfect score; degenerate developer fixtures remain non-public
-  diagnostics with warnings rather than perfect evidence. `run_all.py` summary
-  rows are revalidated from the generated `gnn_package/`, and strict manuscript
-  generation plus `audit_manuscript_markdown_links.py`,
-  `audit_synthetic_surfaces.py --strict`, and figure-renderer/provenance checks
-  gate public output. Verified on 2026-06-12 with `run_all.py --fail-fast`
-  (`24` batch targets, `0` failed steps), strict manuscript regeneration, template
-  Markdown validators, and PDF/HTML render.
+## P4 — Scale and interoperability
 
-## Current Sequence
+- [~] **cog-p4-01 — Isolated upstream GNN integration.**
+  - Priority: P4.
+  - Depends on: cog-p1-02, cog-p5-03.
+  - Deliverable: pinned optional dependency, bounded checkout/cache, license and
+    provenance record, distinct unavailable versus validation-failed results,
+    and a manually triggered CI smoke lane that never enters core installation.
+  - Acceptance: core install/tests remain independent; upstream failures are
+    fail-closed, bounded, and diagnosable.
+  - Current state: the optional extra is excluded from `all`, the bridge
+    distinguishes unavailable from failed validation, release integrity checks
+    the full commit pin and license metadata, and CI has an explicit manual
+    smoke job. The upstream checkout itself remains intentionally uninstalled
+    in the core developer environment.
 
-Completed items above stay as history. The active sequence is:
+- [ ] **cog-p4-02 — Streaming and resource bounds.**
+  - Priority: P4.
+  - Depends on: cog-p1-03.
+  - Deliverable: streaming export, bounded-memory processing, backpressure,
+    cancellation, and large-graph benchmark fixtures with machine provenance.
+  - Acceptance: documented resource limits hold and outputs match full runs under
+    incremental, cancellation, and rerun scenarios.
 
-1. Keep the completed **Refactor-first maintainability tranche** green: maintain
-   the roadmap truth audit, preserve the decomposed `tools/manuscript_figures.py`
-   and `viz/inspection_dashboard.py` shims, and keep strict figure/manuscript
-   gates rejecting degraded publication artifacts.
-2. Resolve the typed config / preset subsystem into one documented preset
-   registry with a transition path for compatibility field names.
-3. Finish the remaining graph-normalization increments one at a time:
-   method-receiver-to-class resolution, async-call edge kind, decorator-driven
-   edges, generated-file detection, and test-only `NodeKind.TEST`
-   classification.
-4. Extend semantic-preservation robustness beyond the current 7 transforms with
-   equivalent loop rewrites, inlining/outlining variants, parser/frontend
-   variation, and a held-out robustness corpus.
-5. Add held-out fixtures that stress the saturated in-sample roundtrip ledger and
-   keep `check_metrics_fresh` guarding against non-native score relabelling.
-6. After the refactor tranche is green, resume feature expansion work such as
-   Java/Rust parser breadth, streaming export, and cross-repo analysis.
+- [ ] **cog-p4-03 — Monorepo and cross-repository analysis.**
+  - Priority: P4.
+  - Depends on: cog-p1-03, cog-p4-02.
+  - Deliverable: source identity, package boundaries, collision handling,
+    repository pinning, and reproducible remote-source manifests.
+  - Acceptance: multi-package fixtures preserve identity and cannot merge
+    unrelated symbols or silently lose repository provenance.
 
-The roadmap truth audit is deliberately small: it catches misaligned "current
-version" labels, unsupported benchmark fixture/stage claims, and TODO/task drift
-before those surfaces can contradict the generated evidence artifacts.
+- [ ] **cog-p4-04 — Python/Rust parity and downstream utility.**
+  - Priority: P4.
+  - Depends on: cog-p2-03, cog-p4-02.
+  - Deliverable: shared semantic parity tests and a separately labeled
+    downstream inference/runtime utility evidence track.
+  - Acceptance: Rust acceleration remains opt-in until parity passes, and
+    downstream utility claims never certify structural translation quality.
+
+- [ ] **cog-p4-05 — Isolation claims.**
+  - Priority: P4.
+  - Depends on: cog-p1-05, cog-p4-02.
+  - Deliverable: threat model, subprocess/filesystem boundary, resource limits,
+    and adversarial tests before any sandbox or arbitrary-code claim.
+  - Acceptance: no production isolation wording appears until the tested
+    boundary is real and the adversarial suite is green.
+
+## P5 — Release, security, documentation, and maintenance
+
+- [~] **cog-p5-01 / cog-m1 — Aggregate release gate.**
+  - Priority: P5.
+  - Depends on: cog-p0-04, cog-p1-03, cog-p2-03, cog-p3-04, cog-p4-01.
+  - Deliverable: [`tools/release_gate.py`](tools/release_gate.py), one go/no-go
+    command covering code quality, installation, collection, Rust checks,
+    freshness, generated artifacts, manuscript audits,
+    visual QA, security, provenance, and reproducibility.
+  - Acceptance: the gate fails closed on any required lane and produces a
+    reviewable machine-readable summary with exact remediation paths.
+  - Blocker: the gate remains red until the historical full-suite failures are
+    reconciled and the dirty-worktree metrics freshness check is rerun after
+    commit-bound regeneration.
+
+- [~] **cog-p5-02 — Documentation truth pass.**
+  - Priority: P5.
+  - Depends on: cog-p0-03, cog-p1-01, cog-p2-03.
+  - Deliverable: implementation-aligned README, FAQ, configuration, parser,
+    evaluation, and security documentation; aspirational claims are labeled.
+  - Acceptance: folder-doc, link, docs-constant, and claim-scope audits pass
+    against the current code and generated artifacts.
+
+- [~] **cog-p5-03 — Supply-chain and release integrity.**
+  - Priority: P5.
+  - Depends on: cog-p1-05, cog-p4-01.
+  - Deliverable: OpenAPI checks, dependency/license/SBOM report, reproducible
+    wheel checks, package/API version consistency, pinned remote provenance,
+    and CI wiring for clean-wheel attribution.
+  - Acceptance: release artifacts can be rebuilt and independently attributed
+    without network-dependent hidden inputs.
+  - Current state: `audit_release_integrity.py` emits the release report and
+    CycloneDX-shaped SBOM, verifies wheel `RECORD` hashes and byte-identical
+    clean builds, checks OpenAPI request/response coverage, and verifies the
+    optional upstream commit pin. Independent CI execution and final human
+    license review remain open.
+
+- [ ] **cog-p5-04 — Deprecation and maintenance policy.**
+  - Priority: P5.
+  - Depends on: cog-p1-01, cog-p1-02.
+  - Deliverable: removal schedule for legacy config fields, parser aliases, stub
+    paths, and CLI behavior; generated output remains disposable and reproducible.
+  - Acceptance: deprecation warnings, migration tests, and regeneration docs
+    remain green for one complete compatibility cycle.
+
+## Execution order
+
+1. Complete P0 and make the current refactor green.
+2. Land canonical config, parser, pipeline, cache, and server contracts.
+3. Complete language/graph fixtures and capability-aware reporting.
+4. Finish robustness and held-out evidence gates without widening claims.
+5. Add scale and upstream integration as isolated capability tracks.
+6. Run the aggregate release gate, regenerate all publication artifacts, and
+   update `tasks.yaml` so only genuinely active/upcoming work remains in the
+   execution view while taskboard history stays outside this file.

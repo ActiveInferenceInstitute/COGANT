@@ -22,6 +22,7 @@
 | [`audit_test_names.py`](audit_test_names.py) | Active test/example naming audit. Rejects campaign labels (campaign numbers, dated batch tags, opaque coverage-only suffixes) so tests stay organized by behavior and subsystem. |
 | [`audit_folder_docs.py`](audit_folder_docs.py) | Project-owned folder documentation audit. Checks README/AGENTS coverage, placeholder boilerplate, documented exceptions, and relative links while excluding vendored evaluation repositories and build outputs. |
 | [`audit_synthetic_surfaces.py`](audit_synthetic_surfaces.py) | Classifies retained `fallback` / `mock` / `placeholder` / `stub` occurrences in tracked project files and, with `--strict`, verifies generated manuscript and matrix provenance artifacts. |
+| [`audit_release_integrity.py`](audit_release_integrity.py) | Checks package/version consistency, optional dependency isolation and full upstream commit pinning, OpenAPI operations, wheel `RECORD` hashes, local license metadata, CycloneDX-shaped SBOM output, and reproducible local wheel builds. |
 
 Authoritative ground truth for prose numbers: `../cogant/evaluation/METRICS.yaml`.
 

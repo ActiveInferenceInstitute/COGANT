@@ -12,7 +12,6 @@ divergent global state.
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 
 import pytest
@@ -33,17 +32,8 @@ from cogant.translate.rules import (
     ReadOnlyInputRule,
 )
 
-# ---------------------------------------------------------------------------
-# sys.path bootstrapping for the tree-sitter-backed JS parser plugin
-# ---------------------------------------------------------------------------
-
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_PARSERS_ROOT = _REPO_ROOT / "parsers"
-if str(_PARSERS_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PARSERS_ROOT))
-
 try:
-    from javascript.parser import JavaScriptLanguageParser  # type: ignore  # noqa: E402
+    from cogant.parsers.languages.javascript.parser import JavaScriptLanguageParser
 
     _HAS_JS_PARSER = True
 except ImportError:  # pragma: no cover

@@ -160,6 +160,12 @@ ALLOW_RULES: tuple[AllowRule, ...] = (
         justification="project documentation, examples, and release notes describe audited degradation or compatibility behavior",
     ),
     AllowRule(
+        path=r"^tasks\.yaml$",
+        terms=("fallback",),
+        category="degraded_output",
+        justification="the roadmap names fallback behavior as an explicitly observable degraded capability",
+    ),
+    AllowRule(
         path=r"^cogant/py/cogant/",
         terms=("fallback", "stub"),
         category="degraded_output",
@@ -445,7 +451,7 @@ def audit(
 ) -> tuple[list[Occurrence], list[AuditFinding]]:
     occurrences = scan_paths(root, project_files(root, include_untracked=strict), rules=rules)
     findings = [
-        AuditFinding(o.path, f"unclassified synthetic-surface term {o.term!r}: {o.line}", o.line_no)
+        AuditFinding(o.path, "INCOMPLETE_SURFACE_UNCLASSIFIED", o.line_no)
         for o in occurrences
         if not o.classified
     ]
@@ -467,7 +473,7 @@ def _category_counts(occurrences: Sequence[Occurrence]) -> dict[str, int]:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Audit fallback/mock/placeholder/stub occurrences and public provenance gates."
+        description="Audit incomplete-surface markers and public provenance gates."
     )
     parser.add_argument("--root", type=Path, default=ROOT, help="Repository root to audit.")
     parser.add_argument("--strict", action="store_true", help="Also validate generated public artifacts.")

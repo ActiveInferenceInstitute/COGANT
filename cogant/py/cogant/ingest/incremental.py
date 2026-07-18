@@ -204,6 +204,25 @@ class IncrementalIngester:
             cf.path for cf in changed if cf.change_type != "D" and cf.path.suffix.lower() in exts
         ]
 
+    def source_changes_since(
+        self,
+        ref: str = "HEAD~1",
+        extensions: set[str] | None = None,
+    ) -> list[ChangedFile]:
+        """Return source changes, retaining deletions and rename metadata.
+
+        The older path-only helper intentionally omits deleted files for
+        callers that immediately open each path. Cache invalidation needs the
+        complete change record so a deletion or rename cannot look like a
+        zero-change run.
+        """
+        exts = extensions or self._SOURCE_EXTENSIONS
+        return [
+            change
+            for change in self.changed_since(ref)
+            if change.path.suffix.lower() in exts
+        ]
+
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------

@@ -25,7 +25,7 @@ from cogant.reverse.metrics import (
     compare_role_distributions,
     compute_isomorphism_report,
 )
-from cogant.reverse.parser import ReverseGNNModel, parse_gnn
+from cogant.reverse.parser import ReverseGNNModel, ReverseModelError, parse_gnn
 from cogant.reverse.planner import (
     NodePlan,
     PackagePlan,
@@ -43,10 +43,9 @@ SampleModel-v1
 
 ## StateSpaceBlock
 s_f0[3,1,type=int]
-s_f1[2,1,type=float]
 o_m0[2,1,type=float]
-u_c0[4,1,type=int]
-B_f0[3,3,4,type=float]
+u_c0[2,1,type=int]
+B_f0[3,3,2,type=float]
 A_m0[2,3,type=float]
 D_f0[3,1,type=float]
 C_m0[2,1,type=float]
@@ -57,14 +56,12 @@ C_m0[2,1,type=float]
 
 ## InitialParameterization
 D_f0={ (0.6, 0.2, 0.2) }
-D_f1={ (0.4, 0.6) }
 C_m0={ (0.5, 0.5) }
 A_m0={ ( (0.9, 0.2, 0.4), (0.1, 0.8, 0.6) ) }
-B_f0=identity(3,3,4)
+B_f0=identity(3,3,2)
 
 ## ActInfOntologyAnnotation
 s_f0=HiddenState
-s_f1=HiddenState
 o_m0=Observation
 u_c0=Action
 A_m0=LikelihoodMatrix
@@ -80,7 +77,6 @@ G=ExpectedFreeEnergy
 | ID | Name | Type |
 |----|------|------|
 | s_f0 | Counter - Hidden State | discrete |
-| s_f1 | Temperature - Hidden State | discrete |
 
 ## State Space
 
@@ -129,6 +125,9 @@ s_f0[2,1,type=int]
 
 ## ActInfOntologyAnnotation
 s_f0=HiddenState
+
+## InitialParameterization
+D_f0={ (0.5, 0.5) }
 """
 
 
@@ -140,8 +139,8 @@ s_f0=HiddenState
 def test_parse_gnn_from_string_populates_hidden_states() -> None:
     """parse_gnn accepts a raw markdown string and fills hidden_states."""
     model = parse_gnn(CANONICAL_GNN)
-    assert model.hidden_states == ["s_f0", "s_f1"]
-    assert model.n_states == 2
+    assert model.hidden_states == ["s_f0"]
+    assert model.n_states == 3
 
 
 def test_parse_gnn_populates_observations_and_actions() -> None:
@@ -149,17 +148,15 @@ def test_parse_gnn_populates_observations_and_actions() -> None:
     model = parse_gnn(CANONICAL_GNN)
     assert model.observations == ["o_m0"]
     assert model.actions == ["u_c0"]
-    assert model.n_obs == 1
-    assert model.n_actions == 1
+    assert model.n_obs == 2
+    assert model.n_actions == 2
 
 
 def test_parse_gnn_cardinalities_and_types() -> None:
     """Cardinality and type are parsed from ``s_f0[3,1,type=int]``."""
     model = parse_gnn(CANONICAL_GNN)
     assert model.cardinalities["s_f0"] == 3
-    assert model.cardinalities["s_f1"] == 2
     assert model.types["s_f0"] == "int"
-    assert model.types["s_f1"] == "float"
 
 
 def test_parse_gnn_ontology_annotations() -> None:
@@ -230,7 +227,7 @@ def test_parse_gnn_from_path(tmp_path: Path) -> None:
     gnn_file = tmp_path / "model.gnn.md"
     gnn_file.write_text(CANONICAL_GNN, encoding="utf-8")
     model = parse_gnn(gnn_file)
-    assert model.n_states == 2
+    assert model.n_states == 3
 
 
 def test_parse_gnn_from_string_path(tmp_path: Path) -> None:
@@ -238,7 +235,7 @@ def test_parse_gnn_from_string_path(tmp_path: Path) -> None:
     gnn_file = tmp_path / "model.gnn.md"
     gnn_file.write_text(MINIMAL_HIDDEN_ONLY_GNN, encoding="utf-8")
     model = parse_gnn(str(gnn_file))
-    assert model.n_states == 1
+    assert model.n_states == 2
 
 
 def test_parse_gnn_type_error_on_unexpected_input() -> None:
@@ -309,7 +306,7 @@ def test_plan_package_emits_state_vars_for_each_hidden_state() -> None:
     """One NodePlan per hidden-state factor is emitted with HIDDEN_STATE role."""
     model = parse_gnn(CANONICAL_GNN)
     plan = plan_package(model)
-    assert len(plan.state_vars) == 2
+    assert len(plan.state_vars) == 1
     assert all(n.role == "HIDDEN_STATE" for n in plan.state_vars)
     assert all(n.module == "state.py" for n in plan.state_vars)
 
@@ -460,9 +457,9 @@ def test_render_matrices_module_produces_valid_python() -> None:
     source = render_matrices_module(model)
     # Compile it to ensure syntactic validity.
     compile(source, "matrices.py", "exec")
-    assert "N_HIDDEN_STATES: int = 2" in source
-    assert "N_OBSERVATIONS: int = 1" in source
-    assert "N_ACTIONS: int = 1" in source
+    assert "N_HIDDEN_STATES: int = 3" in source
+    assert "N_OBSERVATIONS: int = 2" in source
+    assert "N_ACTIONS: int = 2" in source
 
 
 def test_render_matrices_module_runtime_semantics() -> None:
@@ -483,10 +480,10 @@ def test_render_matrices_module_runtime_semantics() -> None:
     assert isinstance(score, float)
 
 
-def test_render_matrices_module_empty_a_falls_back_to_identity() -> None:
-    """When A is missing but n_obs/n_states > 0, we synthesize a uniform A."""
+def test_render_matrices_module_rejects_missing_required_matrices() -> None:
+    """A declared non-empty model must emit concrete matrices."""
     model = ReverseGNNModel(
-        hidden_states=["s_f0", "s_f1"],
+        hidden_states=["s_f0"],
         observations=["o_m0"],
         actions=["u_c0"],
         A=[],
@@ -494,10 +491,8 @@ def test_render_matrices_module_empty_a_falls_back_to_identity() -> None:
         C=[],
         D=[],
     )
-    source = render_matrices_module(model)
-    compile(source, "matrices.py", "exec")
-    # Non-empty A was synthesized.
-    assert "A: List[List[float]] = []" not in source
+    with pytest.raises(ReverseModelError):
+        render_matrices_module(model)
 
 
 def test_render_matrices_module_empty_model_yields_scalars() -> None:
@@ -515,7 +510,8 @@ def test_render_matrices_module_likelihood_guards_empty_inputs() -> None:
     ns: dict = {}
     exec(compile(source, "matrices.py", "exec"), ns)
     assert ns["likelihood"]([]) == []
-    assert ns["likelihood"]([1.0]) == []  # A is empty
+    with pytest.raises(ValueError):
+        ns["likelihood"]([1.0])
 
 
 def test_render_matrices_module_preference_score_empty() -> None:
@@ -524,18 +520,21 @@ def test_render_matrices_module_preference_score_empty() -> None:
     source = render_matrices_module(model)
     ns: dict = {}
     exec(compile(source, "matrices.py", "exec"), ns)
-    assert ns["preference_score"]([1.0]) == 0.0
+    with pytest.raises(ValueError):
+        ns["preference_score"]([1.0])
 
 
 def test_render_matrices_module_with_mismatched_A_shape() -> None:
-    """A whose row count != n_obs is trimmed to match."""
+    """A whose row count does not match C is rejected."""
     model = ReverseGNNModel(
         hidden_states=["s_f0"],
         observations=["o_m0", "o_m1"],
         A=[[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],  # 3 rows > n_obs=2
+        C=[0.5, 0.5],
+        D=[0.5, 0.5],
     )
-    source = render_matrices_module(model)
-    compile(source, "matrices.py", "exec")
+    with pytest.raises(ReverseModelError):
+        render_matrices_module(model)
 
 
 # ---------------------------------------------------------------------------
@@ -602,9 +601,9 @@ def test_synthesize_package_empty_model(tmp_path: Path) -> None:
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
     state_src = (pkg / "state.py").read_text()
-    # Empty state placeholder class is emitted.
+    # Zero-dimensional state has explicit empty-distribution semantics.
     assert "class State:" in state_src
-    assert "_placeholder" in state_src
+    assert "zero-dimensional state" in state_src
 
 
 def test_synthesize_package_hidden_only(tmp_path: Path) -> None:
@@ -636,6 +635,8 @@ def test_synthesize_package_state_module_executes(tmp_path: Path) -> None:
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
     ns: dict = {}
+    ns["__name__"] = f"{plan.package_name}.state"
+    ns["__package__"] = plan.package_name
     exec((pkg / "state.py").read_text(), ns)
     State = ns["State"]
     s = State()
@@ -654,12 +655,12 @@ def test_synthesize_package_returns_package_path_inside_output(tmp_path: Path) -
 
 
 def test_synthesize_package_policy_module_uses_targeted_selector(tmp_path: Path) -> None:
-    """policy.py exposes ``select_policy`` when POLICY is a target role."""
+    """policy.py exposes the executable matrix-backed action selector."""
     model = parse_gnn(CANONICAL_GNN)
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
     src = (pkg / "policy.py").read_text()
-    assert "def select_policy(" in src
+    assert "def pick_index(" in src
 
 
 def test_synthesize_package_policy_module_uses_neutral_selector(tmp_path: Path) -> None:
@@ -671,33 +672,31 @@ def test_synthesize_package_policy_module_uses_neutral_selector(tmp_path: Path) 
     assert "def pick_index(" in src
 
 
-def test_synthesize_package_act_module_has_noop_fallback(tmp_path: Path) -> None:
-    """When there are no actions, act.py emits a neutral idle fallback."""
+def test_synthesize_package_act_module_has_no_concrete_noop(tmp_path: Path) -> None:
+    """When there are no actions, act.py emits no fabricated action update."""
     model = parse_gnn(MINIMAL_HIDDEN_ONLY_GNN)
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
     src = (pkg / "act.py").read_text()
-    assert "def idle_step(" in src
     assert "def update_noop(" not in src
 
 
-def test_synthesize_package_observe_module_has_noop_fallback(tmp_path: Path) -> None:
-    """When there are no observations, observe.py emits a neutral fallback."""
+def test_synthesize_package_observe_module_has_no_concrete_noop(tmp_path: Path) -> None:
+    """When there are no observations, observe.py emits no fabricated getter."""
     model = parse_gnn(MINIMAL_HIDDEN_ONLY_GNN)
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
     src = (pkg / "observe.py").read_text()
-    assert "def fallback_value(" in src
     assert "def get_noop(" not in src
 
 
-def test_synthesize_package_constraints_module_noop_fallback(tmp_path: Path) -> None:
-    """When there are no explicit constraints, the fallback is non-semantic."""
+def test_synthesize_package_constraints_module_has_explicit_validator(tmp_path: Path) -> None:
+    """No declared constraints means no concrete predicate is fabricated."""
     model = parse_gnn(MINIMAL_HIDDEN_ONLY_GNN)
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
     src = (pkg / "constraints.py").read_text()
-    assert "def always_true(" in src
+    assert "def _state_is_valid(" not in src
     assert "def check_" not in src
 
 

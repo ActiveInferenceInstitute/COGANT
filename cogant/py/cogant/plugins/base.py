@@ -29,12 +29,12 @@ class Plugin(ABC):
     @abstractmethod
     def initialize(self, config: dict[str, Any]) -> None:
         """Initialize plugin with configuration."""
-        pass
+        ...
 
     @abstractmethod
     def shutdown(self) -> None:
         """Shutdown plugin gracefully."""
-        pass
+        ...
 
 
 class LanguagePlugin(Plugin):
@@ -53,22 +53,22 @@ class LanguagePlugin(Plugin):
     @abstractmethod
     def parse(self, source_code: str) -> dict[str, Any]:
         """Parse source code and return AST."""
-        pass
+        ...
 
     @abstractmethod
     def extract_symbols(self, ast: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract symbols from AST."""
-        pass
+        ...
 
     @abstractmethod
     def extract_types(self, ast: dict[str, Any]) -> dict[str, Any]:
         """Extract type information."""
-        pass
+        ...
 
     @abstractmethod
-    def resolve_imports(self, ast: dict[str, Any]) -> list[str]:
+    def resolve_imports(self, ast: dict[str, Any]) -> list[str] | list[dict[str, Any]]:
         """Resolve import dependencies."""
-        pass
+        ...
 
 
 class TracePlugin(Plugin):
@@ -85,17 +85,17 @@ class TracePlugin(Plugin):
     @abstractmethod
     def parse_trace(self, trace_file: str) -> dict[str, Any]:
         """Parse trace file and return trace data."""
-        pass
+        ...
 
     @abstractmethod
     def parse_coverage(self, coverage_file: str) -> dict[str, Any]:
         """Parse coverage file (coverage.xml, .coverage, etc)."""
-        pass
+        ...
 
     @abstractmethod
     def extract_call_graph(self, trace_data: dict[str, Any]) -> dict[str, Any]:
         """Extract call graph from trace."""
-        pass
+        ...
 
 
 class NormalizerPlugin(Plugin):
@@ -111,12 +111,12 @@ class NormalizerPlugin(Plugin):
     @abstractmethod
     def normalize(self, data: dict[str, Any]) -> dict[str, Any]:
         """Normalize data to canonical form."""
-        pass
+        ...
 
     @abstractmethod
     def validate_schema(self, data: dict[str, Any]) -> bool:
         """Validate data against schema."""
-        pass
+        ...
 
 
 class TranslationRulePlugin(Plugin):
@@ -132,17 +132,17 @@ class TranslationRulePlugin(Plugin):
     @abstractmethod
     def translate_nodes(self, graph_nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Translate program graph nodes to GNN nodes."""
-        pass
+        ...
 
     @abstractmethod
     def translate_edges(self, graph_edges: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Translate program graph edges to GNN edges."""
-        pass
+        ...
 
     @abstractmethod
     def compute_features(self, node: dict[str, Any]) -> list[float]:
         """Compute feature vector for a node."""
-        pass
+        ...
 
 
 class StateSpacePlugin(Plugin):
@@ -159,17 +159,17 @@ class StateSpacePlugin(Plugin):
     @abstractmethod
     def extract_states(self, gnn_model: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract states from GNN model."""
-        pass
+        ...
 
     @abstractmethod
     def extract_observations(self, gnn_model: dict[str, Any]) -> list[dict[str, Any]]:
         """Define observation space."""
-        pass
+        ...
 
     @abstractmethod
     def extract_actions(self, gnn_model: dict[str, Any]) -> list[dict[str, Any]]:
         """Define action space."""
-        pass
+        ...
 
     @abstractmethod
     def learn_policies(
@@ -179,7 +179,7 @@ class StateSpacePlugin(Plugin):
         actions: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         """Learn policies from model."""
-        pass
+        ...
 
 
 class ProcessModelPlugin(Plugin):
@@ -195,19 +195,19 @@ class ProcessModelPlugin(Plugin):
     @abstractmethod
     def extract_stages(self, bundle: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract process stages."""
-        pass
+        ...
 
     @abstractmethod
     def extract_dependencies(self, stages: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Extract dependencies between stages."""
-        pass
+        ...
 
     @abstractmethod
     def compute_ordering(
         self, stages: list[dict[str, Any]], dependencies: list[dict[str, Any]]
     ) -> list[str]:
         """Compute execution order."""
-        pass
+        ...
 
 
 class ExportPlugin(Plugin):
@@ -225,12 +225,12 @@ class ExportPlugin(Plugin):
     @abstractmethod
     def export(self, bundle: dict[str, Any], output_path: str, format: str) -> None:
         """Export bundle in specified format."""
-        pass
+        ...
 
     @abstractmethod
     def get_format_info(self, format: str) -> dict[str, Any]:
         """Get information about export format."""
-        pass
+        ...
 
 
 class ValidationPlugin(Plugin):
@@ -246,12 +246,12 @@ class ValidationPlugin(Plugin):
     @abstractmethod
     def validate(self, bundle: dict[str, Any]) -> dict[str, Any]:
         """Run validation checks."""
-        pass
+        ...
 
     @abstractmethod
     def compute_quality_metrics(self, bundle: dict[str, Any]) -> dict[str, float]:
         """Compute quality/completeness metrics."""
-        pass
+        ...
 
 
 class VisualizationPlugin(Plugin):
@@ -269,9 +269,9 @@ class VisualizationPlugin(Plugin):
     @abstractmethod
     def render(self, bundle: dict[str, Any], output_path: str, viz_type: str) -> None:
         """Render visualization."""
-        pass
+        ...
 
     @abstractmethod
     def get_viz_info(self, viz_type: str) -> dict[str, Any]:
         """Get information about visualization type."""
-        pass
+        ...

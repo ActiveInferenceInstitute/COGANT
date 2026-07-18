@@ -35,6 +35,7 @@ class EdgeKind(StrEnum):
     WRITES = "writes"
     RETURNS = "returns"
     CALLS = "calls"
+    ASYNC_CALLS = "async_calls"
     THROWS = "throws"
     CATCHES = "catches"
     YIELDS = "yields"

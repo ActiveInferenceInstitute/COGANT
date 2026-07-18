@@ -244,7 +244,8 @@ class Dependency:
 
 ### LanguageDetector — Language Identification & Parser Loading
 
-**Purpose**: Identify programming language and lazy-load language-specific parsers.
+**Purpose**: Identify programming language and delegate parser selection to the
+canonical capability-aware registry.
 
 **Key Methods**:
 
@@ -253,16 +254,17 @@ class Dependency:
 - Return language string (e.g., "python") or None if unknown
 
 **`get_parser(language: str) -> Any`**
-- Lazy-load parser class for language
-- Return parser instance (or None if not available)
-- Supported: python, javascript, typescript, rust, go
-- Fall back gracefully if tree-sitter unavailable
+- Select a parser through `cogant.parsers`.
+- Return a concrete parser instance or raise the typed
+  `LanguageParserUnavailable` error with the supported-language set.
+- Supported registry languages: python, javascript, typescript, rust, go.
+- Tree-sitter is preferred for JS/TS when its grammar is installed; the
+  structural fallback remains observable through the capability report.
 
-**`_lazy_load_parsers()`**
-- Load parser classes on first use
-- Prefer tree-sitter for JS/TS when available
-- Fall back to regex-based parsers otherwise
-- Called automatically by get_parser()
+Use `cogant.parsers.parser_capability_report()` to inspect active parser mode,
+optional dependency availability, and degradation reasons. Unsupported source
+files are retained in graph-stage `skipped_files` evidence rather than being
+silently presented as parsed.
 
 **Constants**:
 ```python

@@ -82,15 +82,26 @@ def _coordination_findings() -> list[str]:
     todo = _read(TODO_PATH)
     tasks = _read(TASKS_PATH)
     findings: list[str] = []
-    required_todo = (
+    legacy_todo_markers = (
         "Refactor-first maintainability tranche",
         "roadmap truth audit",
         "tools/manuscript_figures.py",
         "viz/inspection_dashboard.py",
     )
-    for marker in required_todo:
-        if marker not in todo:
-            findings.append(f"TODO.md: current sequence missing {marker!r}")
+    future_todo_markers = (
+        "cog-p0-01",
+        "cog-p1-01",
+        "cog-p2-01",
+        "cog-p3-01",
+        "cog-p5-01",
+    )
+    if not all(marker in todo for marker in legacy_todo_markers) and not all(
+        marker in todo for marker in future_todo_markers
+    ):
+        expected = future_todo_markers if "cog-p5-01" in todo else legacy_todo_markers
+        for marker in expected:
+            if marker not in todo:
+                findings.append(f"TODO.md: current sequence missing {marker!r}")
     required_tasks = (
         "Roadmap truth audit + current benchmark cleanup",
         "Refactor manuscript figure and inspection dashboard modules",
@@ -103,7 +114,11 @@ def _coordination_findings() -> list[str]:
         findings.append("tasks.yaml: missing release milestone cog-m1")
         return findings
     release_text = release_block.group("body")
-    release_blockers = ("cog-6", "cog-7", "cog-8", "cog-9")
+    release_blockers = (
+        ("cog-p0", "cog-p1-03", "cog-p2-03", "cog-p3-04", "cog-p4-01")
+        if "cog-p5-01" in todo
+        else ("cog-6", "cog-7", "cog-8", "cog-9")
+    )
     for blocker in release_blockers:
         if f"  - {blocker}" not in release_text:
             findings.append(f"tasks.yaml: release milestone dependency missing {blocker}")

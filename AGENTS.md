@@ -55,6 +55,7 @@ When any doc (README, AGENTS, cookbook, CLI help) says "run from `cogant/`" it m
 | `tools/audit_manuscript_formalisms.py` | Verifies typed formalism labels, generated formal numbering, and `@def:` / `@prop:` / `@inv:` / `@conj:` / `@alg:` / `@thm:` references |
 | `tools/audit_manuscript_numbers.py` | Checks all prose numbers against `METRICS.yaml`; flags drift |
 | `tools/audit_manuscript_markdown_links.py` | Rejects rendered body links to `.md` files; public manuscript links should be intra-manuscript refs, figures/tables/equations/formalisms, or citations |
+| `tools/audit_manuscript_module_refs.py` | Resolves backticked `cogant.*` manuscript references against the installable package and fails stale module paths |
 | `tools/audit_manuscript_math_adjacency.py` | Resolves manuscript variables and fails on inline math spans whose closing `$` is immediately followed by a digit |
 | `tools/audit_manuscript_claim_scope.py` | Rejects uncaveated guarantees, inferential-statistics wording, and semantic-totality overclaims in manuscript prose |
 | `tools/audit_robustness_table.py` | Checks the manuscript robustness table against the generated robustness JSON artifact |
@@ -63,6 +64,7 @@ When any doc (README, AGENTS, cookbook, CLI help) says "run from `cogant/`" it m
 | `tools/audit_publication_readiness.py` | Combines claim ledger, evidence audit, visual QA, figure manifest, date autofill, claim-scope, and docs-constant status into a publication readiness verdict |
 | `tools/citation_claim_ledger.py` | Emits reviewable claim/source pairs for selected citation keys |
 | `tools/check_metrics_fresh.py` | Warns if `METRICS.yaml` has drifted from source artifacts |
+| `tools/release_gate.py` | Aggregate fail-closed release gate; writes `output/reports/release_gate.json` |
 | `tools/manuscript_figures.py` | Copies curated package-generated PNGs from `cogant/output/` into `output/figures/` |
 | `scripts/z_generate_manuscript_variables.py` | Thin orchestrator: YAML → JSON + full `output/manuscript/` tree + copied figures |
 
@@ -88,8 +90,16 @@ uv run python tools/audit_manuscript_math_adjacency.py
 uv run python tools/audit_manuscript_claim_scope.py
 uv run python tools/audit_robustness_table.py
 uv run python tools/audit_synthetic_surfaces.py --strict
-uv run python tools/audit_figure_renderers.py
+uv run --directory cogant python ../tools/audit_figure_renderers.py
 uv run python tools/audit_publication_readiness.py --strict
+```
+
+The aggregate release command is the final go/no-go wrapper. Run it from the
+COGANT project root; `--skip-tests` is an iteration aid and never substitutes
+for the full package suite.
+
+```bash
+uv run python tools/release_gate.py
 ```
 
 When this tree is linked under the parent template as `projects/working/cogant/`,
@@ -114,7 +124,7 @@ uv run cogant doctor                                 # verify environment
 uv run pytest tests/ -q                              # full suite (see live count; coverage gate in cogant/pyproject.toml)
 uv run pytest tests/unit/test_engine.py -v           # single test file
 uv run pytest -m property                            # Hypothesis law tests
-uv run mypy py/cogant/                               # strict mypy (target: 0 errors)
+MYPYPATH=py uv run mypy --package cogant               # strict mypy (target: 0 errors)
 uv run ruff check py/cogant/                         # lint (target: 0 violations)
 make build-rust                                      # optional: compile Rust backend
 ```

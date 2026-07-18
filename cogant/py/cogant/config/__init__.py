@@ -1,26 +1,5 @@
-"""
-COGANT Configuration Module
+"""Validated configuration models and the canonical configuration loader."""
 
-Comprehensive configuration system for the COGANT framework.
-
-Two layers coexist here:
-
-1. **Composable per-stage pydantic configs** (preferred for new code):
-   :class:`PipelineConfig` plus its sub-configs (:class:`IngestConfig`,
-   :class:`GraphConfig`, :class:`TranslateConfig`, :class:`StatespaceConfig`,
-   :class:`GNNConfig`, :class:`ReverseConfig`). Every stage and method
-   should take one of these — no global flags, no singletons. Configs
-   are frozen; use :meth:`PipelineConfig.override` to derive variants.
-
-2. **YAML loader schema configs** (used by defaults/loaders/presets):
-   :class:`CogantConfig`, :class:`ExportConfig`,
-   :class:`ValidationConfig`, :class:`LanguageConfig`, etc. The
-   high-level pipeline YAML schema remains
-   ``cogant.config.schema.PipelineConfig`` (distinct from the composable
-   :class:`~cogant.config.pipeline.PipelineConfig`).
-"""
-
-# Composable per-stage pydantic configs (primary export).
 # Defaults and presets
 from .defaults import (
     COMPREHENSIVE_PIPELINE_CONFIG,
@@ -43,25 +22,19 @@ from .graph import GraphConfig
 from .ingest import IngestConfig
 
 # Configuration loaders
-from .loaders import ConfigLoader, ConfigLoadError
+from .loaders import ConfigLoader, ConfigLoadError, ConfigMigrationWarning
 from .pipeline import PipelineConfig
 
 # Named presets
-from .presets import (
-    get_preset as get_named_preset,
-)
-from .presets import (
-    list_presets,
-)
+from .presets import get_preset as get_named_preset
+from .presets import list_presets
 from .reverse import ReverseConfig
-
-# YAML loader configuration schemas (see ``config.schema``).
-#
-# NOTE: ``schema.PipelineConfig`` is intentionally *not* re-exported at
-# the top level; the composable ``pipeline.PipelineConfig`` owns the
-# ``cogant.config.PipelineConfig`` name. YAML pipeline files use
-# ``from cogant.config.schema import PipelineConfig``.
 from .schema import (
+    BatchConfig,
+    BatchManuscriptConfig,
+    BatchRemoteConfig,
+    BatchStepsConfig,
+    BatchTargetConfig,
     CogantBaseConfig,
     CogantConfig,
     ExportConfig,
@@ -69,6 +42,8 @@ from .schema import (
     LanguageConfig,
     LogLevel,
     PipelineStage,
+    ProjectConfig,
+    ServerConfig,
     ValidationConfig,
     ValidationLevel,
 )
@@ -76,7 +51,7 @@ from .statespace import StatespaceConfig
 from .translate import TranslateConfig
 
 __all__ = [
-    # Composable per-stage configs (new)
+    # Canonical pipeline and stage configs
     "PipelineConfig",
     "IngestConfig",
     "GraphConfig",
@@ -84,7 +59,7 @@ __all__ = [
     "StatespaceConfig",
     "GNNConfig",
     "ReverseConfig",
-    # Compatibility schemas
+    # Project configuration sections
     "CogantBaseConfig",
     "CogantConfig",
     "ExportConfig",
@@ -94,9 +69,17 @@ __all__ = [
     "LogLevel",
     "ExportFormat",
     "ValidationLevel",
+    "ProjectConfig",
+    "ServerConfig",
+    "BatchConfig",
+    "BatchTargetConfig",
+    "BatchStepsConfig",
+    "BatchRemoteConfig",
+    "BatchManuscriptConfig",
     # Loaders
     "ConfigLoader",
     "ConfigLoadError",
+    "ConfigMigrationWarning",
     # Defaults
     "DEFAULT_COGANT_CONFIG",
     "DEFAULT_PIPELINE_CONFIG",

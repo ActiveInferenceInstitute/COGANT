@@ -16,13 +16,24 @@ class ArtifactKey(StrEnum):
     PROCESS_MODEL = "_process_model"
     EXPORT_PATHS = "export_paths"
 
+class StageOutcome(StrEnum):
+    SUCCESS = "success"
+    PARTIAL = "partial"
+    SKIPPED = "skipped"
+    FAILED = "failed"
+    UNAVAILABLE = "unavailable"
+
 @dataclass
 class Bundle:
     target: str
     artifacts: dict[str, Any] = field(default_factory=dict)
     stage_results: dict[str, dict[str, Any]] = field(default_factory=dict)
+    stage_outcomes: dict[str, StageOutcome] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
+    @property
+    def pipeline_status(self) -> StageOutcome: ...
+    def artifact_manifest(self) -> dict[str, Any]: ...
     def get_artifact(self, key: str, required: bool = False) -> Any: ...
     def repo_summary(self) -> dict[str, Any]: ...
     def program_graph(self) -> dict[str, Any]: ...

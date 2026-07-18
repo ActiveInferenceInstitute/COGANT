@@ -1,4 +1,4 @@
-"""Production FastAPI server for COGANT.
+"""Local-safe FastAPI server for COGANT.
 
 This module hardens the package-level :mod:`cogant.server` contract into
 a production-grade HTTP surface backed by FastAPI + uvicorn. The design
@@ -16,10 +16,9 @@ goals are:
    10 req/min per IP via an in-memory token bucket. Liveness
    (``/health``) and metrics are unrestricted so probes never trip the
    limiter.
-4. **Graceful degradation** — FastAPI is an optional dependency. When it
-   is not installed, :func:`create_app` raises a clear
-   :class:`RuntimeError` instead of crashing on import so callers can
-   catch the condition and fall back to the stdlib demo server.
+4. **Explicit capability boundaries** — the core package exposes a FastAPI
+   service when the declared server dependency is installed; unavailable
+   capabilities are reported as typed errors.
 
 The module is intentionally self-contained: it does not mutate global
 state when imported, and every rate-limit / metrics cache lives on the
@@ -28,12 +27,12 @@ FastAPI ``app.state`` object so parallel test clients are isolated.
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import io
 import shutil
 import tempfile
 import time
-import traceback
 import uuid
 import zipfile
 from collections import Counter, defaultdict, deque
@@ -52,6 +51,7 @@ except ImportError:  # pragma: no cover - FastAPI extra not installed
 import cogant
 from cogant.api.bundle import ArtifactKey, Bundle
 from cogant.api.pipeline import PipelineConfig, PipelineRunner
+from cogant.config.schema import ProjectConfig
 from cogant.observability.logging import get_logger
 from cogant.reverse import (
     parse_gnn,
@@ -67,6 +67,7 @@ from cogant.server.models import (
     ErrorResponse,
     HealthResponse,
     MetricsResponse,
+    ReverseRequest,
     RoundtripRequest,
     RoundtripRequestV1,
     RoundtripResponse,
@@ -78,6 +79,38 @@ from cogant.server.models import (
 )
 
 logger = get_logger("cogant.server")
+
+
+class PathBoundaryError(ValueError):
+    """Raised when a requested repository escapes the configured workspace."""
+
+
+class _RequestBodyTooLarge(Exception):
+    """Internal control flow for chunked request-body limit enforcement."""
+
+
+def _resolve_workspace_path(
+    raw_path: str,
+    workspace_root: Path,
+    *,
+    allow_absolute: bool = False,
+) -> Path:
+    """Resolve a repository path without permitting traversal or symlink escape."""
+
+    candidate = Path(raw_path).expanduser()
+    if candidate.is_absolute() and not allow_absolute:
+        raise PathBoundaryError("absolute repository paths are disabled")
+    if not candidate.is_absolute():
+        candidate = workspace_root / candidate
+    resolved = candidate.resolve()
+    root = workspace_root.resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise PathBoundaryError("repository path is outside the configured workspace") from exc
+    if not resolved.is_dir():
+        raise FileNotFoundError(f"repository directory does not exist: {raw_path}")
+    return resolved
 
 
 # ---------------------------------------------------------------------------
@@ -229,6 +262,8 @@ def _run_forward_pipeline(
     *,
     stages: list[str] | None,
     skip_dynamic: bool,
+    workspace_root: Path | None = None,
+    allow_absolute_paths: bool = False,
 ) -> Bundle:
     """Resolve ``repo_path`` and run the forward COGANT pipeline.
 
@@ -246,9 +281,17 @@ def _run_forward_pipeline(
             caller is expected to translate this into an HTTP 404 /
             422 depending on the endpoint contract.
     """
-    path = Path(repo_path).expanduser().resolve()
-    if not path.exists():
-        raise FileNotFoundError(f"repo path does not exist: {repo_path}")
+    path = (
+        _resolve_workspace_path(
+            repo_path,
+            workspace_root,
+            allow_absolute=allow_absolute_paths,
+        )
+        if workspace_root is not None
+        else Path(repo_path).expanduser().resolve()
+    )
+    if not path.is_dir():
+        raise FileNotFoundError(f"repository directory does not exist: {repo_path}")
 
     runner = PipelineRunner()
     config = PipelineConfig(
@@ -288,10 +331,17 @@ def _bundle_to_analyze_response(bundle: Bundle) -> AnalyzeResponse:
         mappings=len(semantic_mappings),
         roles=dict(role_counts),
         errors=list(bundle.errors),
+        pipeline_status=bundle.pipeline_status.value,
     )
 
 
-def _synthesize_zip_from_gnn_text(gnn_text: str) -> tuple[str, int]:
+def _synthesize_zip_from_gnn_text(
+    gnn_text: str,
+    *,
+    max_text_bytes: int = 1_000_000,
+    max_archive_bytes: int = 25_000_000,
+    max_archive_files: int = 1_000,
+) -> tuple[str, int]:
     """Parse ``gnn_text``, synthesize a package, and return it as base64 zip.
 
     The function writes the synthesized package to a temporary
@@ -310,10 +360,20 @@ def _synthesize_zip_from_gnn_text(gnn_text: str) -> tuple[str, int]:
     Raises:
         ValueError: If the text cannot be parsed as a valid GNN model.
     """
+    encoded_text = gnn_text.encode("utf-8")
+    if len(encoded_text) > max_text_bytes:
+        raise ValueError(f"GNN text exceeds the {max_text_bytes}-byte limit")
+    required_headers = ("## ModelName", "## StateSpaceBlock", "## InitialParameterization")
+    missing_headers = [header for header in required_headers if header not in gnn_text]
+    if missing_headers:
+        raise ValueError(
+            "missing required GNN sections: " + ", ".join(missing_headers)
+        )
+
     tmp_root = Path(tempfile.mkdtemp(prefix="cogant-reverse-"))
     try:
         gnn_path = tmp_root / "model.gnn.md"
-        gnn_path.write_text(gnn_text, encoding="utf-8")
+        gnn_path.write_bytes(encoded_text)
 
         model = parse_gnn(gnn_path)
         plan = plan_package(model)
@@ -329,10 +389,15 @@ def _synthesize_zip_from_gnn_text(gnn_text: str) -> tuple[str, int]:
                 if not file_path.is_file():
                     continue
                 arcname = file_path.relative_to(package_path).as_posix()
+                if file_count >= max_archive_files:
+                    raise ValueError(f"generated package exceeds the {max_archive_files}-file limit")
                 zf.write(file_path, arcname=arcname)
                 file_count += 1
 
-        return base64.b64encode(buf.getvalue()).decode("ascii"), file_count
+        archive = buf.getvalue()
+        if len(archive) > max_archive_bytes:
+            raise ValueError(f"generated package exceeds the {max_archive_bytes}-byte limit")
+        return base64.b64encode(archive).decode("ascii"), file_count
     finally:
         shutil.rmtree(tmp_root, ignore_errors=True)
 
@@ -375,8 +440,18 @@ def create_app(
     *,
     rate_limit_requests: int = 10,
     rate_limit_window_s: float = 60.0,
-    rate_limited_paths: Iterable[str] = ("/analyze",),
+    rate_limited_paths: Iterable[str] | None = None,
     unlimited_paths: Iterable[str] = ("/health", "/ready", "/metrics", "/openapi.json", "/docs"),
+    workspace_root: str | Path = ".",
+    allow_absolute_paths: bool = False,
+    auth_token: str | None = None,
+    max_request_bytes: int = 2_000_000,
+    max_gnn_text_bytes: int = 1_000_000,
+    max_archive_bytes: int = 25_000_000,
+    max_archive_files: int = 1_000,
+    max_concurrent_requests: int = 4,
+    request_timeout_s: float = 300.0,
+    bind_host: str = "127.0.0.1",
 ) -> Any:
     """Build and return a configured FastAPI application.
 
@@ -390,7 +465,8 @@ def create_app(
         rate_limit_requests: Max requests allowed inside the sliding
             window for any throttled route.
         rate_limit_window_s: Sliding-window duration in seconds.
-        rate_limited_paths: Routes subject to the limiter.
+        rate_limited_paths: Routes subject to the limiter. If omitted, every
+            expensive analysis route is limited.
         unlimited_paths: Routes that bypass the limiter entirely
             (liveness and observability probes).
 
@@ -398,26 +474,43 @@ def create_app(
         The configured FastAPI ``app`` instance.
 
     Raises:
-        RuntimeError: If FastAPI is not importable. Callers that need
-            the stdlib fallback should catch this and route to
-            ``examples/demo_server.py`` instead.
+        RuntimeError: If FastAPI is not importable.
     """
     try:
         from fastapi import FastAPI, HTTPException
         from fastapi.exceptions import RequestValidationError
         from fastapi.responses import JSONResponse, PlainTextResponse
     except ImportError as exc:  # pragma: no cover - exercised in fallback path
-        raise RuntimeError(
-            "FastAPI is required for cogant.server.app.create_app(). "
-            "Install with `pip install fastapi uvicorn`, or use the stdlib "
-            "fallback at examples/demo_server.py."
-        ) from exc
+        raise RuntimeError("FastAPI is required for cogant.server.app.create_app(); install fastapi") from exc
+
+    root = Path(workspace_root).expanduser().resolve()
+    if not root.is_dir():
+        raise ValueError(f"workspace_root is not a directory: {root}")
+    if auth_token is not None and not auth_token.strip():
+        raise ValueError("auth_token must not be blank")
+    if bind_host not in {"127.0.0.1", "localhost", "::1"} and not auth_token:
+        raise ValueError("auth_token is required when bind_host is not loopback")
+    if rate_limit_requests < 1 or rate_limit_window_s <= 0:
+        raise ValueError("rate limits must be positive")
+    if any(
+        limit < 1
+        for limit in (
+            max_request_bytes,
+            max_gnn_text_bytes,
+            max_archive_bytes,
+            max_archive_files,
+            max_concurrent_requests,
+        )
+    ):
+        raise ValueError("request and archive limits must be positive")
+    if request_timeout_s <= 0:
+        raise ValueError("request_timeout_s must be positive")
 
     app = FastAPI(
-        title="COGANT Production Server",
+        title="COGANT Local Analysis Service",
         version=cogant.__version__,
         description=(
-            "Production REST surface for COGANT: codebase → GNN translation, "
+            "Local REST surface for COGANT: codebase → GNN translation, "
             "GNN → Python reverse synthesis, and round-trip idempotency "
             "verification. See /docs for the interactive OpenAPI UI."
         ),
@@ -430,9 +523,30 @@ def create_app(
         max_requests=rate_limit_requests,
         window_s=rate_limit_window_s,
     )
-    app.state.rate_limited_paths = frozenset(rate_limited_paths)
+    app.state.rate_limited_paths = frozenset(
+        rate_limited_paths
+        if rate_limited_paths is not None
+        else (
+            "/analyze",
+            "/roundtrip",
+            "/reverse",
+            "/api/v1/analyze",
+            "/api/v1/roundtrip",
+            "/api/v1/visualize",
+        )
+    )
     app.state.unlimited_paths = frozenset(unlimited_paths)
-    app.state.active_sessions = 0  # Track concurrent sessions
+    app.state.workspace_root = root
+    app.state.allow_absolute_paths = allow_absolute_paths
+    app.state.auth_token = auth_token
+    app.state.max_request_bytes = max_request_bytes
+    app.state.max_gnn_text_bytes = max_gnn_text_bytes
+    app.state.max_archive_bytes = max_archive_bytes
+    app.state.max_archive_files = max_archive_files
+    app.state.max_concurrent_requests = max_concurrent_requests
+    app.state.request_timeout_s = request_timeout_s
+    app.state.request_semaphore = asyncio.Semaphore(max_concurrent_requests)
+    app.state.active_sessions = 0
 
     # -----------------------------------------------------------------
     # Middleware: structured logging + metrics + rate limiting.
@@ -467,6 +581,86 @@ def create_app(
         limiter: _RateLimiter = request.app.state.rate_limiter
         metrics: _MetricsStore = request.app.state.metrics
 
+        content_length = request.headers.get("content-length")
+        try:
+            declared_length = int(content_length) if content_length is not None else 0
+        except ValueError:
+            metrics.record(method, path, 400, time.perf_counter() - start)
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "detail": "content-length must be an integer",
+                    "error_type": "InvalidContentLength",
+                    "request_id": request_id,
+                },
+            )
+        if declared_length < 0:
+            metrics.record(method, path, 400, time.perf_counter() - start)
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "detail": "content-length must not be negative",
+                    "error_type": "InvalidContentLength",
+                    "request_id": request_id,
+                },
+            )
+        if declared_length > request.app.state.max_request_bytes:
+            metrics.record(method, path, 413, time.perf_counter() - start)
+            return JSONResponse(
+                status_code=413,
+                content={
+                    "detail": "request body exceeds configured limit",
+                    "error_type": "RequestTooLarge",
+                    "request_id": request_id,
+                },
+            )
+
+        # Content-Length is optional for chunked transfer encoding. Consume
+        # the ASGI body once with a bounded accumulator so the limit applies
+        # to actual bytes, not only the declared header. The cached body is
+        # then reused by FastAPI without a second receive pass.
+        original_receive = request.receive
+        body_parts: list[bytes] = []
+        received_bytes = 0
+        try:
+            while True:
+                message = await original_receive()
+                if message.get("type") == "http.disconnect":
+                    break
+                if message.get("type") != "http.request":
+                    continue
+                chunk = message.get("body", b"")
+                received_bytes += len(chunk)
+                if received_bytes > request.app.state.max_request_bytes:
+                    raise _RequestBodyTooLarge
+                body_parts.append(chunk)
+                if not message.get("more_body", False):
+                    break
+            request._body = b"".join(body_parts)
+        except _RequestBodyTooLarge:
+            metrics.record(method, path, 413, time.perf_counter() - start)
+            return JSONResponse(
+                status_code=413,
+                content={
+                    "detail": "request body exceeds configured limit",
+                    "error_type": "RequestTooLarge",
+                    "request_id": request_id,
+                },
+            )
+
+        if path in request.app.state.rate_limited_paths and request.app.state.auth_token:
+            expected = f"Bearer {request.app.state.auth_token}"
+            if request.headers.get("authorization") != expected:
+                metrics.record(method, path, 401, time.perf_counter() - start)
+                return JSONResponse(
+                    status_code=401,
+                    content={
+                        "detail": "authentication required",
+                        "error_type": "AuthenticationRequired",
+                        "request_id": request_id,
+                    },
+                )
+
         if path in request.app.state.rate_limited_paths:
             if not limiter.check(f"{client_host}:{path}"):
                 metrics.record_rate_limited(method, path)
@@ -499,15 +693,61 @@ def create_app(
                 return JSONResponse(
                     status_code=429,
                     content={
-                        "detail": f"rate limit exceeded for {path} (10/min per IP)",
+                        "detail": (
+                            f"rate limit exceeded for {path} "
+                            f"({request.app.state.rate_limiter.max_requests}/"
+                            f"{request.app.state.rate_limiter.window_s:g}s per IP)"
+                        ),
                         "error_type": "RateLimitExceeded",
                         "request_id": request_id,
                     },
                 )
 
+        acquired = False
+        gated = path in request.app.state.rate_limited_paths and path not in request.app.state.unlimited_paths
         try:
-            response = await call_next(request)
+            if gated:
+                semaphore: asyncio.Semaphore = request.app.state.request_semaphore
+                if semaphore.locked():
+                    duration = time.perf_counter() - start
+                    metrics.record(method, path, 503, duration)
+                    return JSONResponse(
+                        status_code=503,
+                        content={
+                            "detail": "server concurrency limit reached",
+                            "error_type": "ConcurrencyLimitExceeded",
+                            "request_id": request_id,
+                        },
+                    )
+                await semaphore.acquire()
+                acquired = True
+                request.app.state.active_sessions += 1
+            response = await asyncio.wait_for(
+                call_next(request), timeout=request.app.state.request_timeout_s
+            )
             status_code = response.status_code
+        except _RequestBodyTooLarge:
+            duration = time.perf_counter() - start
+            metrics.record(method, path, 413, duration)
+            return JSONResponse(
+                status_code=413,
+                content={
+                    "detail": "request body exceeds configured limit",
+                    "error_type": "RequestTooLarge",
+                    "request_id": request_id,
+                },
+            )
+        except TimeoutError:
+            duration = time.perf_counter() - start
+            metrics.record(method, path, 504, duration)
+            return JSONResponse(
+                status_code=504,
+                content={
+                    "detail": "request exceeded configured timeout",
+                    "error_type": "RequestTimeout",
+                    "request_id": request_id,
+                },
+            )
         except Exception as exc:  # noqa: BLE001 - final safety net
             duration = time.perf_counter() - start
             metrics.record(method, path, 500, duration)
@@ -515,11 +755,15 @@ def create_app(
             return JSONResponse(
                 status_code=500,
                 content={
-                    "detail": f"{type(exc).__name__}: {exc}",
-                    "error_type": type(exc).__name__,
+                    "detail": "internal server error",
+                    "error_type": "InternalServerError",
                     "request_id": request_id,
                 },
             )
+        finally:
+            if acquired:
+                request.app.state.active_sessions -= 1
+                request.app.state.request_semaphore.release()
 
         duration = time.perf_counter() - start
         metrics.record(method, path, status_code, duration)
@@ -567,7 +811,8 @@ def create_app(
         payload = ErrorResponse(
             detail=messages or "request validation failed",
             error_type="RequestValidationError",
-        ).model_dump()
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump(exclude_none=True)
         return JSONResponse(status_code=422, content=payload)
 
     @app.exception_handler(HTTPException)
@@ -576,7 +821,8 @@ def create_app(
         payload = ErrorResponse(
             detail=str(exc.detail),
             error_type=exc.__class__.__name__,
-        ).model_dump()
+            request_id=getattr(request.state, "request_id", None),
+        ).model_dump(exclude_none=True)
         return JSONResponse(status_code=exc.status_code, content=payload)
 
     # -----------------------------------------------------------------
@@ -638,17 +884,26 @@ def create_app(
     async def analyze(body: AnalyzeRequest) -> AnalyzeResponse:
         """Run the forward pipeline on ``body.repo_path`` and return a summary.
 
-        The endpoint uses :func:`_run_forward_pipeline` which expands
-        and resolves the repo path, so both absolute and relative
-        inputs are accepted. A non-existent path yields 404; a pipeline
-        failure bubbles up as a 500 with the exception name.
+        The endpoint resolves relative paths beneath the configured
+        workspace. Absolute paths are accepted only when the app was
+        explicitly created with ``allow_absolute_paths=True``. A path
+        outside the boundary yields 403, a missing in-bound path yields
+        404, and pipeline failures use a redacted 500 envelope.
         """
         try:
             bundle = _run_forward_pipeline(
-                body.repo_path,
+                str(
+                    _resolve_workspace_path(
+                        body.repo_path,
+                        app.state.workspace_root,
+                        allow_absolute=app.state.allow_absolute_paths,
+                    )
+                ),
                 stages=body.stages,
                 skip_dynamic=body.skip_dynamic,
             )
+        except PathBoundaryError as exc:
+            raise HTTPException(status_code=403, detail=str(exc)) from exc
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except (ValueError, RuntimeError, KeyError) as exc:
@@ -665,7 +920,7 @@ def create_app(
             500: {"model": ErrorResponse, "description": "Synthesis failed."},
         },
     )
-    async def reverse(body: dict[str, Any]) -> dict[str, Any]:
+    async def reverse(body: ReverseRequest) -> dict[str, Any]:
         """Accept ``{"gnn_text": str}`` and return a base64 zip of the package.
 
         The body is a bare dict rather than a Pydantic model because
@@ -673,22 +928,19 @@ def create_app(
         ``gnn_text`` key by hand to produce a friendly error when it
         is missing or empty.
         """
-        gnn_text = body.get("gnn_text") if isinstance(body, dict) else None
-        if not isinstance(gnn_text, str) or not gnn_text.strip():
-            raise HTTPException(
-                status_code=422,
-                detail="body must be an object with a non-empty 'gnn_text' string",
-            )
+        gnn_text = body.gnn_text
         try:
-            zip_b64, file_count = _synthesize_zip_from_gnn_text(gnn_text)
+            zip_b64, file_count = _synthesize_zip_from_gnn_text(
+                gnn_text,
+                max_text_bytes=app.state.max_gnn_text_bytes,
+                max_archive_bytes=app.state.max_archive_bytes,
+                max_archive_files=app.state.max_archive_files,
+            )
         except (ValueError, KeyError) as exc:
             raise HTTPException(status_code=422, detail=f"invalid GNN text: {exc}") from exc
-        except Exception as exc:  # noqa: BLE001 - surface as 500
+        except Exception as exc:  # noqa: BLE001 - log details, return redacted response
             logger.exception("reverse synthesis failed")
-            raise HTTPException(
-                status_code=500,
-                detail=f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}",
-            ) from exc
+            raise HTTPException(status_code=500, detail="reverse synthesis failed") from exc
 
         return {
             "package_zip_b64": zip_b64,
@@ -715,11 +967,16 @@ def create_app(
         ledger and list of errors; we pass those through so callers can
         decide whether the round-trip is good enough for their use case.
         """
-        path = Path(body.repo_path).expanduser().resolve()
-        if not path.exists():
-            raise HTTPException(
-                status_code=404, detail=f"repo path does not exist: {body.repo_path}"
+        try:
+            path = _resolve_workspace_path(
+                body.repo_path,
+                app.state.workspace_root,
+                allow_absolute=app.state.allow_absolute_paths,
             )
+        except PathBoundaryError as exc:
+            raise HTTPException(status_code=403, detail=str(exc)) from exc
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
         try:
             result = verify_repo_roundtrip(path, role_threshold=body.threshold)
         except (ValueError, RuntimeError, KeyError) as exc:
@@ -953,11 +1210,18 @@ def create_app(
         start_total = time.perf_counter()
 
         try:
-            bundle = _run_forward_pipeline(
+            path = _resolve_workspace_path(
                 body.repo_path,
+                app.state.workspace_root,
+                allow_absolute=app.state.allow_absolute_paths,
+            )
+            bundle = _run_forward_pipeline(
+                str(path),
                 stages=body.stages,
                 skip_dynamic=body.skip_dynamic,
             )
+        except PathBoundaryError as exc:
+            raise HTTPException(status_code=403, detail=str(exc)) from exc
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except (ValueError, RuntimeError, KeyError) as exc:
@@ -973,6 +1237,7 @@ def create_app(
             mappings=response.mappings,
             roles=response.roles,
             errors=response.errors,
+            pipeline_status=response.pipeline_status,
             timing={"total_ms": round(duration_total * 1000, 3)},
         )
 
@@ -995,11 +1260,16 @@ def create_app(
         request_id: str = getattr(request.state, "request_id", str(uuid.uuid4()))
         start_total = time.perf_counter()
 
-        path = Path(body.repo_path).expanduser().resolve()
-        if not path.exists():
-            raise HTTPException(
-                status_code=404, detail=f"repo path does not exist: {body.repo_path}"
+        try:
+            path = _resolve_workspace_path(
+                body.repo_path,
+                app.state.workspace_root,
+                allow_absolute=app.state.allow_absolute_paths,
             )
+        except PathBoundaryError as exc:
+            raise HTTPException(status_code=403, detail=str(exc)) from exc
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
         try:
             result = verify_repo_roundtrip(path, role_threshold=body.threshold)
         except (ValueError, RuntimeError, KeyError) as exc:
@@ -1069,10 +1339,7 @@ def create_app(
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         except Exception as exc:  # noqa: BLE001
             logger.exception("visualization pipeline failed")
-            raise HTTPException(
-                status_code=500,
-                detail=f"{type(exc).__name__}: {exc}",
-            ) from exc
+            raise HTTPException(status_code=500, detail="visualization pipeline failed") from exc
 
         program_graph = bundle.get_artifact(ArtifactKey.PROGRAM_GRAPH)
         if program_graph is None:
@@ -1105,10 +1372,7 @@ def create_app(
             raise
         except Exception as exc:  # noqa: BLE001
             logger.exception("visualization rendering failed")
-            raise HTTPException(
-                status_code=500,
-                detail=f"{type(exc).__name__}: {exc}",
-            ) from exc
+            raise HTTPException(status_code=500, detail="visualization rendering failed") from exc
 
         return VisualizeResponse(
             request_id=request_id,
@@ -1151,24 +1415,35 @@ def create_app(
     return app
 
 
+def create_app_from_config(config: ProjectConfig) -> Any:
+    """Build the server from the canonical validated project configuration."""
+    settings = config.server
+    return create_app(
+        rate_limit_requests=settings.rate_limit_requests,
+        rate_limit_window_s=float(settings.rate_limit_window_seconds),
+        rate_limited_paths=settings.rate_limit_paths,
+        workspace_root=settings.workspace_root,
+        allow_absolute_paths=settings.allow_absolute_paths,
+        auth_token=settings.auth_token,
+        max_request_bytes=settings.max_request_bytes,
+        max_gnn_text_bytes=settings.max_gnn_text_bytes,
+        max_archive_bytes=settings.max_archive_bytes,
+        max_archive_files=settings.max_archive_files,
+        max_concurrent_requests=settings.max_concurrent_requests,
+        request_timeout_s=float(settings.request_timeout_seconds),
+        bind_host=settings.host,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Module-level app instance for uvicorn / docker.
 # ---------------------------------------------------------------------------
 
 
 def _build_default_app() -> Any:
-    """Return a module-level FastAPI app, or ``None`` when FastAPI is missing.
+    """Return the configured loopback app used by uvicorn."""
 
-    This is the handle ``uvicorn cogant.server.app:app`` looks for. We
-    swallow the ``RuntimeError`` raised by :func:`create_app` on a
-    minimal install so `import cogant.server` keeps working even
-    without FastAPI — callers who need the HTTP layer will get a clear
-    error the moment they try to start uvicorn.
-    """
-    try:
-        return create_app()
-    except RuntimeError:
-        return None
+    return create_app()
 
 
 app = _build_default_app()
@@ -1179,7 +1454,14 @@ app = _build_default_app()
 # ---------------------------------------------------------------------------
 
 
-def run_server(host: str = "0.0.0.0", port: int = 8080) -> int:
+def run_server(
+    host: str = "127.0.0.1",
+    port: int = 8080,
+    *,
+    workspace_root: str | Path = ".",
+    auth_token: str | None = None,
+    config: ProjectConfig | None = None,
+) -> int:
     """Serve the FastAPI app via uvicorn. Returns a process exit code.
 
     This is the entry point re-exported by :mod:`cogant.server.__init__`
@@ -1191,7 +1473,16 @@ def run_server(host: str = "0.0.0.0", port: int = 8080) -> int:
     If FastAPI or uvicorn are not installed the function raises a
     clear :class:`RuntimeError` describing the missing dependency.
     """
-    built = create_app()
+    if config is not None:
+        built = create_app_from_config(config)
+        host = config.server.host
+        port = config.server.port
+    else:
+        built = create_app(
+            bind_host=host,
+            workspace_root=workspace_root,
+            auth_token=auth_token,
+        )
     try:
         import uvicorn  # type: ignore[import-not-found]
     except ImportError as exc:  # pragma: no cover - exercised only at runtime
@@ -1205,4 +1496,4 @@ def run_server(host: str = "0.0.0.0", port: int = 8080) -> int:
     return 0
 
 
-__all__ = ["app", "create_app", "run_server"]
+__all__ = ["app", "create_app", "create_app_from_config", "run_server"]

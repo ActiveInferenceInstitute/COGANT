@@ -63,11 +63,17 @@ ServerTestModel
 ## StateSpaceBlock
 s_f0[2,1,type=categorical]
 o_m0[2,1,type=categorical]
-u_c0[2,1,type=categorical]
+u_c0[1,1,type=categorical]
 
 ## Connections
 (s_f0) > (o_m0)
 (u_c0) > (s_f0)
+
+## InitialParameterization
+D_f0={ (0.5, 0.5) }
+A_m0={ ( (0.8, 0.3), (0.2, 0.7) ) }
+B_f0=identity(2,2,1)
+C_m0={ (1.0, 0.0) }
 
 ## ActInfOntologyAnnotation
 s_f0=HiddenState
@@ -156,7 +162,7 @@ def test_analyze_nonexistent_path_returns_404() -> None:
         async with _client(app) as c:
             resp = await c.post(
                 "/analyze",
-                json={"repo_path": "/definitely/not/a/real/path/xyz", "skip_dynamic": True},
+                json={"repo_path": "missing", "skip_dynamic": True},
             )
         assert resp.status_code == 404
         payload = resp.json()
@@ -168,7 +174,7 @@ def test_analyze_nonexistent_path_returns_404() -> None:
 
 def test_reverse_with_valid_gnn_returns_zip_b64() -> None:
     """``POST /reverse`` must synthesise a package and return it as zip b64."""
-    app = create_app()
+    app = create_app(workspace_root=_CALCULATOR_REPO.parent, allow_absolute_paths=True)
 
     async def body() -> None:
         async with _client(app) as c:
@@ -205,6 +211,27 @@ def test_reverse_with_missing_body_returns_422() -> None:
     _run(body)
 
 
+def test_chunked_request_body_limit_is_enforced() -> None:
+    """A missing Content-Length header must not bypass the body limit."""
+    app = create_app(max_request_bytes=1024)
+
+    async def chunks():
+        yield b'{"gnn_text":"' + (b"x" * 700)
+        yield (b"y" * 700) + b'"}'
+
+    async def body() -> None:
+        async with _client(app) as c:
+            resp = await c.post(
+                "/reverse",
+                content=chunks(),
+                headers={"content-type": "application/json"},
+            )
+        assert resp.status_code == 413, resp.text
+        assert resp.json()["error_type"] == "RequestTooLarge"
+
+    _run(body)
+
+
 def test_metrics_returns_prometheus_text() -> None:
     """``GET /metrics`` must expose Prometheus v0.0.4 text output."""
     app = create_app()
@@ -237,7 +264,7 @@ def test_openapi_json_is_served() -> None:
             resp = await c.get("/openapi.json")
         assert resp.status_code == 200
         schema = resp.json()
-        assert schema["info"]["title"] == "COGANT Production Server"
+        assert schema["info"]["title"] == "COGANT Local Analysis Service"
         assert schema["info"]["version"] == cogant.__version__
         paths = schema["paths"]
         for endpoint in ("/health", "/ready", "/analyze", "/reverse", "/roundtrip", "/metrics"):
@@ -254,7 +281,12 @@ def test_rate_limiter_trips_on_analyze_burst() -> None:
     assert that at least one of the tail requests is rate-limited with
     the uniform error shape.
     """
-    app = create_app(rate_limit_requests=3, rate_limit_window_s=60.0)
+    app = create_app(
+        rate_limit_requests=3,
+        rate_limit_window_s=60.0,
+        workspace_root=_CALCULATOR_REPO.parent,
+        allow_absolute_paths=True,
+    )
 
     async def body() -> None:
         async with _client(app) as c:
@@ -262,7 +294,7 @@ def test_rate_limiter_trips_on_analyze_burst() -> None:
             for _ in range(5):
                 resp = await c.post(
                     "/analyze",
-                    json={"repo_path": "/nope/still/not/real", "skip_dynamic": True},
+                    json={"repo_path": "nope/still/not/real", "skip_dynamic": True},
                 )
                 statuses.append(resp.status_code)
         # First 3 attempts should be allowed through (hitting 404 because
@@ -284,7 +316,7 @@ def test_analyze_happy_path_with_real_repo() -> None:
     if not _CALCULATOR_REPO.exists():
         pytest.skip(f"calculator fixture not present at {_CALCULATOR_REPO}")
 
-    app = create_app()
+    app = create_app(workspace_root=_CALCULATOR_REPO.parent, allow_absolute_paths=True)
 
     async def body() -> None:
         async with _client(app) as c:

@@ -1,17 +1,19 @@
-"""Universal tree-sitter parser substrate for multi-language analysis.
+"""Installable language parser registry for COGANT.
 
-This sub-package exposes a single tree-sitter driven ``TreeSitterParser``
-that can parse multiple languages (Python, JavaScript, TypeScript, TSX,
-Rust, Go) through the same interface. Grammar packages are loaded lazily
-at import time and unavailable languages degrade gracefully instead of
-raising.
-
-The older ``parsers/`` top-level plugins (``parsers/python/``,
-``parsers/typescript/``, ``parsers/rust/``) remain the canonical
-``LanguagePlugin`` implementations; this module provides the low-level
-tree-sitter substrate they (optionally) delegate to.
+All parser implementations live below this package.  Importing a parser
+therefore works identically from a checkout and from an installed wheel;
+callers never need to mutate ``sys.path`` or know the repository layout.
 """
 
+from cogant.parsers.registry import (
+    LanguageParserUnavailable,
+    ParserCapability,
+    get_parser,
+    get_parser_for_extension,
+    parser_capabilities,
+    parser_capability_report,
+    supported_languages,
+)
 from cogant.parsers.tree_sitter_base import (
     ParsedFile,
     ParsedSymbol,
@@ -24,4 +26,11 @@ __all__ = [
     "ParsedSymbol",
     "TreeSitterParser",
     "get_tree_sitter_parser",
+    "LanguageParserUnavailable",
+    "ParserCapability",
+    "get_parser",
+    "get_parser_for_extension",
+    "parser_capability_report",
+    "parser_capabilities",
+    "supported_languages",
 ]

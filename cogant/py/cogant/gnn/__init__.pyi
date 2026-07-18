@@ -21,6 +21,7 @@ from cogant.gnn.upstream_bridge import run_upstream_validate_gnn as run_upstream
 from cogant.gnn.upstream_bridge import upstream_parse_file as upstream_parse_file
 from cogant.gnn.upstream_bridge import upstream_validate_markdown as upstream_validate_markdown
 from cogant.gnn.upstream_bridge import upstream_version as upstream_version
+from cogant.gnn.validator import GNNCapabilityError as GNNCapabilityError
 from cogant.gnn.validator import GNNValidator as GNNValidator
 from cogant.gnn.validator import ValidationResult as ValidationResult
 
@@ -31,6 +32,7 @@ __all__ = [
     "GNNMatrices",
     "GNNPackageBuilder",
     "GNNValidator",
+    "GNNCapabilityError",
     "ValidationResult",
     "GNNModelRunner",
     "ExecutionTrace",

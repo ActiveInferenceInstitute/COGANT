@@ -20,6 +20,7 @@ from cogant.reverse.metrics import compare_matrices as compare_matrices
 from cogant.reverse.metrics import compare_role_distributions as compare_role_distributions
 from cogant.reverse.metrics import compute_isomorphism_report as compute_isomorphism_report
 from cogant.reverse.parser import ReverseGNNModel as ReverseGNNModel
+from cogant.reverse.parser import ReverseModelError as ReverseModelError
 from cogant.reverse.parser import parse_gnn as parse_gnn
 from cogant.reverse.planner import NodePlan as NodePlan
 from cogant.reverse.planner import PackagePlan as PackagePlan
@@ -28,6 +29,7 @@ from cogant.reverse.synthesizer import synthesize_package as synthesize_package
 
 __all__ = [
     "ReverseGNNModel",
+    "ReverseModelError",
     "parse_gnn",
     "NodePlan",
     "PackagePlan",

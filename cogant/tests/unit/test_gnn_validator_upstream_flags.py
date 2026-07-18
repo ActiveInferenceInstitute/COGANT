@@ -59,10 +59,11 @@ def test_resolve_upstream_flag_disabled_by_env() -> None:
         os.environ.pop("COGANT_DISABLE_UPSTREAM_GNN", None)
 
 
-def test_resolve_upstream_flag_default_on() -> None:
-    """``None`` + env unset returns ``True``."""
+def test_resolve_upstream_flag_default_off() -> None:
+    """``None`` + env unset keeps optional upstream validation disabled."""
     os.environ.pop("COGANT_DISABLE_UPSTREAM_GNN", None)
-    assert _resolve_upstream_flag(None) is True
+    os.environ.pop("COGANT_ENABLE_UPSTREAM_GNN", None)
+    assert _resolve_upstream_flag(None) is False
 
 
 # --------------------------------------------------------------------------- #
@@ -402,13 +403,13 @@ def test_validate_package_checksum_skips_missing_file(tmp_path: Path) -> None:
     assert not any("Checksum mismatch for phantom.json" in w for w in result.warnings)
 
 
-def test_validate_package_no_checksums_warns(tmp_path: Path) -> None:
-    """Manifest without a checksums dict adds a no-checksums warning (line 625)."""
+def test_validate_package_no_checksums_is_invalid(tmp_path: Path) -> None:
+    """Manifest without a checksums dict is a hard evidence failure."""
     pkg = tmp_path / "pkg"
     _scaffold_minimal_package(pkg)
     (pkg / "manifest.json").write_text(json.dumps({"name": "test"}), encoding="utf-8")
     result = GNNValidator().validate_package(str(pkg), upstream_gnn=False)
-    assert any("no checksums" in w for w in result.warnings)
+    assert any("checksums" in e for e in result.errors)
 
 
 def test_validate_package_plain_text_checksum(tmp_path: Path) -> None:

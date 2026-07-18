@@ -6,7 +6,7 @@ import typer
 from rich.panel import Panel
 from rich.table import Table
 
-from cogant.api.pipeline import PipelineConfig, PipelineRunner
+from cogant.api.pipeline import PipelineRunner
 from cogant.cli._app import (
     app,
     console,
@@ -153,43 +153,29 @@ def translate(
         _friendly_pipeline_error(NotADirectoryError(target), target_path)
         raise typer.Exit(code=1)
 
-    config = PipelineConfig(output_dir=output_dir, layout_output=layout_output)
+    if min_confidence is not None and not 0.0 <= min_confidence <= 1.0:
+        console.print("[red]--min-confidence must be between 0.0 and 1.0[/red]")
+        raise typer.Exit(code=1)
+
+    from cogant.config.loaders import ConfigLoader, ConfigLoadError
+
+    cli_pipeline: dict[str, object] = {
+        "output_dir": output_dir,
+        "layout_output": layout_output,
+    }
     if min_confidence is not None:
-        if not 0.0 <= min_confidence <= 1.0:
-            console.print("[red]--min-confidence must be between 0.0 and 1.0[/red]")
-            raise typer.Exit(code=1)
-        config.min_confidence = min_confidence
+        cli_pipeline["min_confidence"] = min_confidence
+    try:
+        project_config = ConfigLoader.load_project_config(
+            config_file,
+            cli={"pipeline": cli_pipeline},
+        )
+    except ConfigLoadError as exc:
+        console.print(f"[red]Invalid configuration: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+    config = project_config.pipeline
     if config_file:
-        try:
-            from cogant.config.loaders import ConfigLoader
-
-            cf_path = Path(config_file)
-            if cf_path.suffix.lower() in {".yaml", ".yml"}:
-                cf_data = ConfigLoader.load_from_yaml(cf_path)
-            else:
-                cf_data = ConfigLoader.load_json_from_file(cf_path)
-
-            # Support a `pipeline:` section or a flat layout
-            pipe_data = cf_data.get("pipeline", cf_data)
-            if isinstance(pipe_data, dict):
-                if "stages" in pipe_data or "run_stages" in pipe_data:
-                    _stages = pipe_data.get("stages") or pipe_data.get("run_stages") or []
-                    config.stages = list(_stages)
-                if "skip_stages" in pipe_data:
-                    config.skip_stages = list(pipe_data["skip_stages"])
-                if "plugins" in pipe_data:
-                    config.plugins = dict(pipe_data["plugins"])
-                if "output_dir" in pipe_data:
-                    config.output_dir = str(pipe_data["output_dir"])
-                if "verbose" in pipe_data:
-                    config.verbose = bool(pipe_data["verbose"])
-                if "dry_run" in pipe_data:
-                    config.dry_run = bool(pipe_data["dry_run"])
-                if "layout_output" in pipe_data:
-                    config.layout_output = bool(pipe_data["layout_output"])
-            console.print(f"[dim]Loaded config from {config_file}[/dim]")
-        except Exception as e:
-            console.print(f"[yellow]Warning: failed to load config {config_file}: {e}[/yellow]")
+        console.print(f"[dim]Loaded config from {config_file}[/dim]")
     if skip_stages:
         config.skip_stages = [s.strip() for s in skip_stages.split(",") if s.strip()]
 

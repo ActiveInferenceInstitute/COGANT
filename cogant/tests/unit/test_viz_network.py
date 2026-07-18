@@ -10,7 +10,8 @@ matplotlib.use("Agg")
 import pytest
 
 from cogant.viz.network_view import NetworkView
-from tests.unit._viz_assert import assert_figure_nondegenerate
+
+from ._viz_assert import assert_figure_nondegenerate
 
 
 @pytest.fixture

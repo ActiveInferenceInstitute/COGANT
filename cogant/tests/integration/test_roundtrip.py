@@ -15,17 +15,15 @@ equivalence defined in :mod:`cogant.reverse`. Current v0.6 evidence keeps
 fresh role-preserved runs separate from out-of-sync compatibility DRIFT fixtures rather
 than treating every successful command as role-preserved evidence.
 
-The ``cogant.reverse`` module is under active construction. Every
-import is guarded with a ``HAS_*`` flag and each test is
-``skipif``-gated on the specific subset of the module it needs so the
-suite collects cleanly even before the downstream components exist,
-and fills in naturally as they land.
+The fixture below is a coherent executable GNN model: D, A, B, and C
+declare the same dimensions as the state-space variables. Missing or
+inconsistent matrices are covered by negative unit tests and are not
+accepted by the synthesizer.
 """
 
 from __future__ import annotations
 
-import importlib.util
-import sys
+import importlib
 from pathlib import Path
 
 import pytest
@@ -96,25 +94,19 @@ TestModel
 
 ## StateSpaceBlock
 s_f0[2,1,type=int]
-s_f1[2,1,type=int]
 o_m0[2,1,type=int]
 u_c0[2,1,type=int]
-u_c1[2,1,type=int]
 
 ## Connections
 (D_f0) > (s_f0)
-(D_f1) > (s_f1)
 (s_f0) > (A_m0)
 (A_m0, s_f0) > (o_m0)
 (u_c0) > (s_f0)
-(u_c1) > (s_f0)
 
 ## InitialParameterization
 D_f0={ (0.6, 0.4) }
-D_f1={ (0.55, 0.45) }
-A_m0={ ( (0.8, 0.2), (0.3, 0.7) ) }
+A_m0={ ( (0.8, 0.3), (0.2, 0.7) ) }
 B_f0=identity(2,2,2)
-B_f1=identity(2,2,2)
 C_m0={ (0.5, -0.3) }
 
 ## Time
@@ -123,15 +115,11 @@ ModelTimeHorizon=Unbounded
 
 ## ActInfOntologyAnnotation
 s_f0 = HiddenState
-s_f1 = HiddenState
 o_m0 = Observation
 u_c0 = Action
-u_c1 = Action
 A_m0 = LikelihoodMatrix
 B_f0 = TransitionMatrix
-B_f1 = TransitionMatrix
 D_f0 = PriorBelief
-D_f1 = PriorBelief
 """
 
 
@@ -163,10 +151,9 @@ def test_parse_gnn_returns_model(minimal_gnn_file: Path) -> None:
 
 @pytest.mark.skipif(not HAS_PARSER, reason="cogant.reverse.parser not yet available")
 def test_parse_gnn_extracts_hidden_states(minimal_gnn_file: Path) -> None:
-    """The parser lists the two ``s_fN`` factors as hidden states."""
+    """The parser lists declared hidden-state factors."""
     model = parse_gnn(str(minimal_gnn_file))
     assert "s_f0" in model.hidden_states
-    assert "s_f1" in model.hidden_states
     assert model.n_states == 2
 
 
@@ -175,9 +162,8 @@ def test_parse_gnn_extracts_observations_and_actions(minimal_gnn_file: Path) -> 
     """Observations ``o_mN`` and actions ``u_cN`` are classified correctly."""
     model = parse_gnn(str(minimal_gnn_file))
     assert "o_m0" in model.observations
-    assert model.n_obs == 1
+    assert model.n_obs == 2
     assert "u_c0" in model.actions
-    assert "u_c1" in model.actions
     assert model.n_actions == 2
 
 
@@ -186,13 +172,13 @@ def test_parse_gnn_extracts_matrices(minimal_gnn_file: Path) -> None:
     """A/B/C/D have the shapes dictated by the state-space cardinalities."""
     model = parse_gnn(str(minimal_gnn_file))
     # A is [n_obs x n_states].
-    assert len(model.A) == model.n_obs == 1
+    assert len(model.A) == model.n_obs == 2
     assert len(model.A[0]) == model.n_states == 2
     # D has one entry per hidden factor and sums to 1.
     assert len(model.D) == model.n_states == 2
     assert abs(sum(model.D) - 1.0) < 1e-6
-    # C has one entry per observation modality.
-    assert len(model.C) == model.n_obs == 1
+    # C has one entry per observation outcome.
+    assert len(model.C) == model.n_obs == 2
     # B is [n_states x n_states x n_actions].
     assert len(model.B) == model.n_states == 2
     assert len(model.B[0]) == model.n_states == 2
@@ -204,10 +190,8 @@ def test_parse_gnn_extracts_annotations(minimal_gnn_file: Path) -> None:
     """``ActInfOntologyAnnotation`` entries land in ``model.annotations``."""
     model = parse_gnn(str(minimal_gnn_file))
     assert model.annotations.get("s_f0") == "HiddenState"
-    assert model.annotations.get("s_f1") == "HiddenState"
     assert model.annotations.get("o_m0") == "Observation"
     assert model.annotations.get("u_c0") == "Action"
-    assert model.annotations.get("u_c1") == "Action"
 
 
 @pytest.mark.skipif(not HAS_PARSER, reason="cogant.reverse.parser not yet available")
@@ -255,12 +239,13 @@ def test_plan_has_state_vars(minimal_gnn_file: Path) -> None:
     """Every GNN hidden-state factor becomes a ``HIDDEN_STATE`` NodePlan."""
     model = parse_gnn(str(minimal_gnn_file))
     plan = plan_package(model)
-    assert len(plan.state_vars) == model.n_states == 2
+    assert len(plan.state_vars) == 1
+    assert model.n_states == 2
     for node in plan.state_vars:
         assert node.role == "HIDDEN_STATE"
         assert node.module == "state.py"
     slots = {n.slot for n in plan.state_vars}
-    assert slots == {"s_f0", "s_f1"}
+    assert slots == {"s_f0"}
 
 
 @pytest.mark.skipif(
@@ -271,7 +256,8 @@ def test_plan_has_observations(minimal_gnn_file: Path) -> None:
     """Each observation modality becomes an ``OBSERVATION`` NodePlan."""
     model = parse_gnn(str(minimal_gnn_file))
     plan = plan_package(model)
-    assert len(plan.obs_functions) == model.n_obs == 1
+    assert len(plan.obs_functions) == 1
+    assert model.n_obs == 2
     assert plan.obs_functions[0].role == "OBSERVATION"
     assert plan.obs_functions[0].module == "observe.py"
     assert plan.obs_functions[0].slot == "o_m0"
@@ -285,12 +271,13 @@ def test_plan_has_actions(minimal_gnn_file: Path) -> None:
     """Each action slot becomes an ``ACTION`` NodePlan in ``act.py``."""
     model = parse_gnn(str(minimal_gnn_file))
     plan = plan_package(model)
-    assert len(plan.action_methods) == model.n_actions == 2
+    assert len(plan.action_methods) == 1
+    assert model.n_actions == 2
     for node in plan.action_methods:
         assert node.role == "ACTION"
         assert node.module == "act.py"
     slots = {n.slot for n in plan.action_methods}
-    assert slots == {"u_c0", "u_c1"}
+    assert slots == {"u_c0"}
 
 
 @pytest.mark.skipif(
@@ -368,26 +355,18 @@ def test_synthesize_creates_files(minimal_gnn_file: Path, tmp_path: Path) -> Non
     not (HAS_PARSER and HAS_PLANNER and HAS_SYNTHESIZER),
     reason="cogant.reverse.synthesizer not yet available",
 )
-def test_synthesized_state_is_importable(minimal_gnn_file: Path, tmp_path: Path) -> None:
+def test_synthesized_state_is_importable(
+    minimal_gnn_file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """The emitted ``state.py`` module imports and exposes a ``State`` class."""
     model = parse_gnn(str(minimal_gnn_file))
     plan = plan_package(model)
     out_dir = tmp_path / "synthesized"
-    pkg_path = synthesize_package(plan, model, str(out_dir))
+    synthesize_package(plan, model, str(out_dir))
 
-    state_file = pkg_path / "state.py"
-    assert state_file.is_file()
-
-    spec = importlib.util.spec_from_file_location(
-        f"_roundtrip_state_{plan.package_name}", state_file
-    )
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    try:
-        spec.loader.exec_module(module)
-    finally:
-        sys.modules.pop(spec.name, None)
-    assert hasattr(module, "State"), "synthesized state module exposes State"
+    monkeypatch.syspath_prepend(str(out_dir.resolve()))
+    module = importlib.import_module(f"{plan.package_name}.state")
+    assert hasattr(module, "State"), "synthesized package exposes State"
     instance = module.State()
     assert instance is not None
 

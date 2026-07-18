@@ -38,7 +38,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "compilation, GNN matrices, Markov blanket partition, and "
             "roundtrip artifact status."
         ),
-        source_artifact="cogant/output/calculator/program_graph.json",
+        source_artifact="cogant/output/calculator/data/program_graph.json",
         renderer="cogant.viz.inspection_dashboard.render_graphical_abstract_png",
         method_note="End-to-end visual synopsis composed from run artifacts.",
         reading_guide="Read left-to-right as code graph, semantic mapping, matrices, boundary, and roundtrip evidence.",
@@ -57,7 +57,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "summarizing the code graph, semantic role mappings, GNN state "
             "space, and Markov blanket partition on one page."
         ),
-        source_artifact="cogant/output/calculator/program_graph.json",
+        source_artifact="cogant/output/calculator/data/program_graph.json",
         renderer="cogant.viz.png.render_interpretability_overview_png",
         method_note=(
             "Multi-panel overview generated from program graph, rule trace, state space, "
@@ -79,7 +79,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "conversion; nodes are the package-emitted program entities used "
             "by downstream semantic mapping."
         ),
-        source_artifact="cogant/output/calculator/program_graph.json",
+        source_artifact="cogant/output/calculator/data/program_graph.json",
         renderer="cogant.viz.png.render_program_graph_png",
         method_note="Deterministic containment-first graph drawing from the same JSON consumed by semantic mapping.",
         reading_guide=(
@@ -93,7 +93,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
     ),
     ManuscriptFigure(
         key="forward_state_space_factor",
-        source="cogant/output/calculator/state_space_factor.png",
+        source="cogant/output/calculator/figures/state_space_factor.png",
         destination="cogant_forward_state_space_factor.png",
         role="forward-graph-to-state-space",
         caption=(
@@ -101,7 +101,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "showing the one-way conversion from semantic mappings into "
             "hidden state, observation, and action factors."
         ),
-        source_artifact="cogant/output/calculator/state_space.json",
+        source_artifact="cogant/output/calculator/gnn_package/state_space.json",
         renderer="cogant.viz.png.render_state_space_factor_png",
         method_note="Factor graph view of hidden states, observations, actions, and transitions.",
         reading_guide=(
@@ -201,45 +201,20 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
         min_height_px=1200,
     ),
     ManuscriptFigure(
-        key="upstream_generative_model",
-        source=(
-            "cogant/output/upstream_pipeline/8_visualization_output/model.gnn/"
-            "model.gnn_generative_model.png"
-        ),
-        destination="cogant_upstream_generative_model.png",
-        role="gnn-to-upstream-generative-model",
-        caption=(
-            "Upstream Generalized Notation Notation visualization of the "
-            "POMDP generative-model structure."
-        ),
-        source_artifact="cogant/output/upstream_pipeline/8_visualization_output/model.gnn/model.gnn_generative_model.png",
-        renderer="upstream GNN visualization pipeline",
-        method_note="Interoperability figure copied from the upstream Generalized Notation Notation pipeline output.",
-        reading_guide=(
-            "Read this as a boundary check that COGANT's emitted GNN artifact can be "
-            "accepted by upstream tooling."
-        ),
-        limitations="It confirms representation compatibility, not model correctness.",
-        alt_text="Upstream GNN visualization of the generated POMDP model structure.",
-        min_width_px=1800,
-        min_height_px=2400,
-    ),
-    ManuscriptFigure(
         key="roundtrip_batch_gantt",
         source="cogant/output/dashboard/run_gantt.png",
         destination="cogant_roundtrip_batch_gantt.png",
         role="forward-reverse-forward-roundtrip",
         caption=(
-            "Calculator-target publication timeline rendered from run_all's manifest, "
-            "showing the selected command sequence and the explicit "
-            "roundtrip:calculator stage; gate markers identify validation and "
-            "roundtrip checks."
+            "Selected-target publication timeline rendered from run_all's manifest, "
+            "showing the recorded command sequence and explicit validation and "
+            "roundtrip gates."
         ),
         source_artifact="cogant/output/run_manifest.json",
         renderer="tools.manuscript_figures._render_publication_batch_timeline",
         method_note=(
-            "Wide matplotlib timeline generated from the calculator command records "
-            "in the batch manifest; batch-wide context remains in the sidecar."
+            "Wide matplotlib timeline generated from the selected target's command "
+            "records in the batch manifest; batch-wide context remains in the sidecar."
         ),
         reading_guide=(
             "Read the ordered bars as the recorded calculator stage sequence; elapsed "
@@ -326,7 +301,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Rule evidence trace figure generated from rule_evidence_trace.json, "
             "showing which translation rules contributed semantic mappings."
         ),
-        source_artifact="cogant/output/calculator/rule_evidence_trace.json",
+        source_artifact="cogant/output/calculator/data/rule_evidence_trace.json",
         renderer="cogant.viz.inspection_dashboard native rule trace renderer",
         method_note=(
             "Aggregate per-rule contribution bars with mapping, conflict, and "
@@ -351,7 +326,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "Evidence-coverage and review-readiness panel generated from "
             "rule_evidence_trace.json."
         ),
-        source_artifact="cogant/output/calculator/rule_evidence_trace.json",
+        source_artifact="cogant/output/calculator/data/rule_evidence_trace.json",
         renderer="cogant.viz.inspection_dashboard native evidence coverage renderer",
         method_note=(
             "Mapping confidence tiers, rule contribution counts, conflict events, "
@@ -383,7 +358,7 @@ MANUSCRIPT_FIGURES: tuple[ManuscriptFigure, ...] = (
             "built-in demonstration A/B/C/D matrices (not the fixture's exported "
             "values), with belief, action, preference, and free-energy panels."
         ),
-        source_artifact="cogant/output/calculator/data/inference_trace.json",
+        source_artifact="cogant/output/calculator/gnn_package/model.gnn.json",
         renderer="cogant.runtime.inference_demo and native visualization renderer",
         method_note=(
             "Deterministic trace generated from the package's built-in demonstration "

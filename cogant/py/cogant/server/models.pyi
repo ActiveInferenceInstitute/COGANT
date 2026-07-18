@@ -15,6 +15,17 @@ class AnalyzeResponse(BaseModel):
     mappings: int
     roles: dict[str, int]
     errors: list[str]
+    pipeline_status: Literal["success", "partial", "skipped", "failed", "unavailable"]
+
+class AnalysisResponse(BaseModel):
+    request_id: str
+    nodes: int
+    edges: int
+    mappings: int
+    roles: dict[str, int]
+    errors: list[str]
+    pipeline_status: Literal["success", "partial", "skipped", "failed", "unavailable"]
+    timing: dict[str, float]
 
 class HealthResponse(BaseModel):
     status: str

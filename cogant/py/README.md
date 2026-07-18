@@ -17,6 +17,6 @@ Run commands from the inner package root, one level up from this directory:
 ```bash
 cd ..
 uv run pytest tests/ -q
-uv run mypy py/cogant/
+MYPYPATH=py uv run mypy --package cogant
 uv run ruff check py/cogant/
 ```

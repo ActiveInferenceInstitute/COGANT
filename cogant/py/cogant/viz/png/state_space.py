@@ -27,17 +27,26 @@ def _state_space_entities(
     Accepts both the dataclass (``variables`` / ``observations`` / ``actions``)
     and the Pydantic (``state_variables`` / ``observation_modalities``) shapes.
     """
-    variables_raw = (
-        getattr(state_space, "variables", None)
-        or getattr(state_space, "state_variables", None)
-        or {}
-    )
-    observations_raw = (
-        getattr(state_space, "observations", None)
-        or getattr(state_space, "observation_modalities", None)
-        or {}
-    )
-    actions_raw = getattr(state_space, "actions", None) or {}
+    if isinstance(state_space, dict):
+        variables_raw = state_space.get("variables") or state_space.get("state_variables") or {}
+        observations_raw = (
+            state_space.get("observations")
+            or state_space.get("observation_modalities")
+            or {}
+        )
+        actions_raw = state_space.get("actions") or {}
+    else:
+        variables_raw = (
+            getattr(state_space, "variables", None)
+            or getattr(state_space, "state_variables", None)
+            or {}
+        )
+        observations_raw = (
+            getattr(state_space, "observations", None)
+            or getattr(state_space, "observation_modalities", None)
+            or {}
+        )
+        actions_raw = getattr(state_space, "actions", None) or {}
     variables = (
         list(variables_raw.values()) if isinstance(variables_raw, dict) else list(variables_raw)
     )

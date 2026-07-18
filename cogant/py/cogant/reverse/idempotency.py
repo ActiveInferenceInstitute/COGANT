@@ -379,8 +379,18 @@ def _role_multiset_from_mappings(
         role = str(name).upper()
         if target_sets:
             subject = _mapping_subject(mapping)
-            if subject not in target_sets.get(role, set()):
+            # The manifest is the synthesized package's explicit semantic
+            # contract.  Forward rule precedence may classify a named policy
+            # helper as ORCHESTRATION (or a constraint helper as a generic
+            # callable), so requiring the runtime kind to equal the target
+            # role would silently erase valid role-preservation evidence.
+            target_role = next(
+                (target_name for target_name, names in target_sets.items() if subject in names),
+                None,
+            )
+            if target_role is None:
                 continue
+            role = target_role
         roles[role] += 1
     return roles
 

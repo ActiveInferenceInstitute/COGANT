@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
 import pytest
 
 try:
@@ -23,17 +20,10 @@ except ImportError:  # pragma: no cover
     HAS_TS_GRAMMAR = False
 
 
-# Ensure the top-level ``parsers`` package is importable the same way
-# test_polyglot_parsers.py does it.
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_PARSERS_ROOT = _REPO_ROOT / "parsers"
-if str(_PARSERS_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PARSERS_ROOT))
-
 
 @pytest.mark.skipif(not HAS_JS_GRAMMAR, reason="tree-sitter-javascript not installed")
 def test_js_parser_available():
-    from javascript.parser import JavaScriptLanguageParser
+    from cogant.parsers.languages.javascript.parser import JavaScriptLanguageParser
 
     parser = JavaScriptLanguageParser()
     assert parser.metadata.name == "javascript"
@@ -43,7 +33,7 @@ def test_js_parser_available():
 
 @pytest.mark.skipif(not HAS_JS_GRAMMAR, reason="tree-sitter-javascript not installed")
 def test_js_parser_extracts_class_and_method():
-    from javascript.parser import JavaScriptLanguageParser
+    from cogant.parsers.languages.javascript.parser import JavaScriptLanguageParser
 
     parser = JavaScriptLanguageParser()
     source = (
@@ -61,7 +51,7 @@ def test_js_parser_extracts_class_and_method():
 
 @pytest.mark.skipif(not HAS_JS_GRAMMAR, reason="tree-sitter-javascript not installed")
 def test_js_parser_extracts_imports_and_calls():
-    from javascript.parser import JavaScriptLanguageParser
+    from cogant.parsers.languages.javascript.parser import JavaScriptLanguageParser
 
     parser = JavaScriptLanguageParser()
     source = (
@@ -80,7 +70,7 @@ def test_js_parser_extracts_imports_and_calls():
 
 @pytest.mark.skipif(not HAS_JS_GRAMMAR, reason="tree-sitter-javascript not installed")
 def test_js_parser_parse_file(tmp_path):
-    from javascript.parser import JavaScriptLanguageParser
+    from cogant.parsers.languages.javascript.parser import JavaScriptLanguageParser
 
     file_path = tmp_path / "x.js"
     file_path.write_text("function hi() { return 1; }\n", encoding="utf-8")
@@ -93,7 +83,7 @@ def test_js_parser_parse_file(tmp_path):
 
 @pytest.mark.skipif(not HAS_TS_GRAMMAR, reason="tree-sitter-typescript not installed")
 def test_ts_tree_sitter_parser_interface_and_class():
-    from typescript.tree_sitter_parser import TypeScriptTreeSitterParser
+    from cogant.parsers.languages.typescript.tree_sitter_parser import TypeScriptTreeSitterParser
 
     parser = TypeScriptTreeSitterParser()
     source = (
@@ -118,7 +108,7 @@ def test_ts_tree_sitter_parser_interface_and_class():
 
 @pytest.mark.skipif(not HAS_TS_GRAMMAR, reason="tree-sitter-typescript not installed")
 def test_ts_tree_sitter_parser_routes_tsx(tmp_path):
-    from typescript.tree_sitter_parser import TypeScriptTreeSitterParser
+    from cogant.parsers.languages.typescript.tree_sitter_parser import TypeScriptTreeSitterParser
 
     parser = TypeScriptTreeSitterParser()
     # TSX uses JSX syntax alongside TS types.
@@ -132,9 +122,12 @@ def test_ts_tree_sitter_parser_routes_tsx(tmp_path):
 
 def test_get_parser_for_extension_unknown():
     from cogant.ingest.language_detect import get_parser_for_extension
+    from cogant.parsers.registry import LanguageParserUnavailable
 
-    assert get_parser_for_extension(".xyz") is None
-    assert get_parser_for_extension("") is None
+    with pytest.raises(LanguageParserUnavailable, match="no shipped parser"):
+        get_parser_for_extension(".xyz")
+    with pytest.raises(LanguageParserUnavailable, match="no shipped parser"):
+        get_parser_for_extension("")
 
 
 def test_get_parser_for_extension_python():

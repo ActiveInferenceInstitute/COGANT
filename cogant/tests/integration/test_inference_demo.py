@@ -22,10 +22,10 @@ from cogant.reverse.synthesizer import synthesize_package
 from cogant.runtime.loop import AgentRuntime, AgentStep
 
 # ---------------------------------------------------------------------------
-# The hand-written multi-factor POMDP GNN fixture.
-# 2 hidden-state factors (s_f0[3], s_f1[2]), 1 observation (o_m0[2]),
-# 1 action (u_c0[2]).  Matrices A, C, D are specified; B defaults to
-# identity per factor.
+# The hand-written POMDP GNN fixture.
+# One global hidden-state axis with 2 states, one observation axis with
+# 2 outcomes, and one control axis with 2 actions. A/B/C/D are all explicit
+# so reverse execution never needs to collapse per-factor declarations.
 # ---------------------------------------------------------------------------
 
 HAND_WRITTEN_GNN = """\
@@ -39,41 +39,33 @@ GNN v2.0.0
 HandwrittenMiniPOMDP
 
 ## StateSpaceBlock
-s_f0[3,1,type=int]
-s_f1[2,1,type=int]
+s_f0[2,1,type=int]
 o_m0[2,1,type=int]
 u_c0[2,1,type=int]
-A_m0[2,3,type=float]
-B_f0[3,3,2,type=float]
-B_f1[2,2,1,type=float]
+A_m0[2,2,type=float]
+B_f0[2,2,2,type=float]
 C_m0[2,type=float]
-D_f0[3,1,type=float]
-D_f1[2,1,type=float]
+D_f0[2,1,type=float]
 
 ## Connections
 (D_f0) > (s_f0)
-(D_f1) > (s_f1)
 (s_f0, A_m0) > (o_m0)
 (s_f0, B_f0, u_c0) > (s_f0)
-(s_f1, B_f1) > (s_f1)
 
 ## InitialParameterization
-D_f0={ (0.3, 0.4, 0.3) }
-D_f1={ (0.5, 0.5) }
-A_m0={ ( (0.8, 0.5, 0.2), (0.2, 0.5, 0.8) ) }
+D_f0={ (0.6, 0.4) }
+A_m0={ ( (0.8, 0.2), (0.2, 0.8) ) }
+B_f0=identity(2,2,2)
 C_m0={ (1.0, -1.0) }
 
 ## ActInfOntologyAnnotation
 s_f0=HiddenState
-s_f1=HiddenState
 o_m0=Observation
 u_c0=Action
 A_m0=LikelihoodMatrix
 B_f0=TransitionMatrix
-B_f1=TransitionMatrix
 C_m0=PreferenceVector
 D_f0=PriorBelief
-D_f1=PriorBelief
 
 ## Time
 Static
@@ -93,9 +85,9 @@ def test_inference_demo(tmp_path: Path) -> None:
     """
     # 1. Parse the GNN specification.
     model = parse_gnn(HAND_WRITTEN_GNN)
-    assert model.n_states == 2, f"Expected 2 hidden-state factors, got {model.n_states}"
-    assert model.n_obs == 1, f"Expected 1 observation modality, got {model.n_obs}"
-    assert model.n_actions == 1, f"Expected 1 action factor, got {model.n_actions}"
+    assert model.n_states == 2, f"Expected 2 hidden states, got {model.n_states}"
+    assert model.n_obs == 2, f"Expected 2 observation outcomes, got {model.n_obs}"
+    assert model.n_actions == 2, f"Expected 2 actions, got {model.n_actions}"
 
     # 2. Plan and synthesize into tmp_path.
     plan = plan_package(model)

@@ -43,6 +43,22 @@ def _render_publication_batch_timeline(
         None,
     )
     if selected_target is None:
+        # The publication registry prefers calculator when the shipped batch
+        # contains it, but the renderer must remain truthful for reduced
+        # manifests used in focused or optional-upstream runs.
+        selected_target = next(
+            (
+                target
+                for target in targets
+                if isinstance(target.get("commands"), list) and target.get("commands")
+            ),
+            None,
+        )
+        if selected_target is not None:
+            selected_target_id = str(
+                selected_target.get("id") or selected_target.get("target_id") or "selected"
+            )
+    if selected_target is None:
         return None
 
     batch_command_count = sum(

@@ -4,16 +4,9 @@ Tests all language-specific parsers (Python, TypeScript, Rust, Go) and
 language detection functionality.
 """
 
-import sys
 from pathlib import Path
 
 import pytest
-
-# Ensure parsers can be imported
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-_PARSERS_ROOT = _REPO_ROOT.parent / "parsers"
-if str(_PARSERS_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PARSERS_ROOT))
 
 from cogant.ingest.language_detect import LanguageDetector
 
@@ -29,7 +22,7 @@ class TestPythonParser:
     def setup_parser(self):
         """Setup Python parser."""
         try:
-            from python.parser import PythonLanguageParser
+            from cogant.parsers.languages.python.parser import PythonLanguageParser
 
             self.parser = PythonLanguageParser()
         except ImportError as e:
@@ -219,7 +212,7 @@ class TestTypeScriptParser:
     def setup_parser(self):
         """Setup TypeScript parser."""
         try:
-            from typescript.parser import TypeScriptLanguageParser
+            from cogant.parsers.languages.typescript.parser import TypeScriptLanguageParser
 
             self.parser = TypeScriptLanguageParser()
         except ImportError as e:
@@ -424,7 +417,7 @@ class TestRustParser:
     def setup_parser(self):
         """Setup Rust parser."""
         try:
-            from rust.parser import RustLanguageParser
+            from cogant.parsers.languages.rust.parser import RustLanguageParser
 
             self.parser = RustLanguageParser()
         except ImportError as e:
@@ -673,7 +666,7 @@ class TestGoParser:
     def setup_parser(self):
         """Setup Go parser."""
         try:
-            from go.parser import GoLanguageParser
+            from cogant.parsers.languages.go.parser import GoLanguageParser
 
             self.parser = GoLanguageParser()
         except ImportError as e:
@@ -1121,7 +1114,7 @@ func (u *User) GetName() string {
 
         # Parse each
         try:
-            from python.parser import PythonLanguageParser
+            from cogant.parsers.languages.python.parser import PythonLanguageParser
 
             py_parser = PythonLanguageParser()
             py_ast = py_parser.parse(python_code)
@@ -1130,7 +1123,7 @@ func (u *User) GetName() string {
             pass
 
         try:
-            from typescript.parser import TypeScriptLanguageParser
+            from cogant.parsers.languages.typescript.parser import TypeScriptLanguageParser
 
             ts_parser = TypeScriptLanguageParser()
             ts_ast = ts_parser.parse(ts_code)
@@ -1139,7 +1132,7 @@ func (u *User) GetName() string {
             pass
 
         try:
-            from rust.parser import RustLanguageParser
+            from cogant.parsers.languages.rust.parser import RustLanguageParser
 
             rust_parser = RustLanguageParser()
             rust_ast = rust_parser.parse(rust_code)
@@ -1148,7 +1141,7 @@ func (u *User) GetName() string {
             pass
 
         try:
-            from go.parser import GoLanguageParser
+            from cogant.parsers.languages.go.parser import GoLanguageParser
 
             go_parser = GoLanguageParser()
             go_ast = go_parser.parse(go_code)

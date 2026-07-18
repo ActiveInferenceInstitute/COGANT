@@ -53,7 +53,7 @@ This means that visualizations in @sec:01-introduction, @sec:02-04-gnn-export-an
 
 | Figure group | Source artifact | Renderer family | Evidence boundary |
 |---|---|---|---|
-| End-to-end calculator chain | `../cogant/output/calculator/` JSON, GNN, matrix, and roundtrip artifacts | `cogant.viz.png` and `cogant.viz.inspection_dashboard` | Demonstrates inspectable conversion surfaces for one real run; does not prove role-ground-truth coverage. |
+| End-to-end calculator chain | `../cogant/output/calculator/` JSON, GNN, matrix, and roundtrip artifacts | `cogant.viz.png.program_graph`, `cogant.viz.png.state_space`, and `cogant.viz.inspection_dashboard` | Demonstrates inspectable conversion surfaces for one real run; does not prove role-ground-truth coverage. |
 | Fixture evaluation figures | `../cogant/evaluation/figures/metrics.json` | `../cogant/evaluation/figures/generate_figures.py` | Summarizes public API fixture metrics; timing bars are single-run provenance, not benchmark distributions. |
 | Ablation figure | `../cogant/evaluation/METRICS.yaml` | `cogant.viz.ablation_view.render_ablation_png` | Shows measured rule-family and fixpoint deltas; does not decompose every mapping kind in the main panel. |
 | Batch timeline | `../cogant/output/run_manifest.json` | `tools.manuscript_figures.render_publication_batch_timeline` | Shows selected calculator stage ordering and verification gates while recording batch-wide target and command context in the sidecar; wall-clock durations are audit metadata. |

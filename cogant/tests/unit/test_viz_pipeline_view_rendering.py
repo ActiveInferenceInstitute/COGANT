@@ -27,7 +27,8 @@ import matplotlib.pyplot as plt
 import pytest
 
 from cogant.viz.pipeline_view import PipelineVisualizer
-from tests.unit._viz_assert import assert_figure_nondegenerate, assert_png_nondegenerate
+
+from ._viz_assert import assert_figure_nondegenerate, assert_png_nondegenerate
 
 pytestmark = pytest.mark.unit
 

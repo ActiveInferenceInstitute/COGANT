@@ -29,7 +29,7 @@ from cogant.gnn.upstream_bridge import (
     upstream_validate_markdown,
     upstream_version,
 )
-from cogant.gnn.validator import GNNValidator, ValidationResult
+from cogant.gnn.validator import GNNCapabilityError, GNNValidator, ValidationResult
 
 __all__ = [
     "DEFAULT_SKIP_STEPS",
@@ -40,6 +40,7 @@ __all__ = [
     "GNNModelRunner",
     "GNNPackageBuilder",
     "GNNValidator",
+    "GNNCapabilityError",
     "UPSTREAM_STEP_SCRIPTS",
     "UpstreamGNNValidation",
     "UpstreamPipelineConfig",

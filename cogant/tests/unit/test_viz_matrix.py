@@ -15,7 +15,8 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../py"))
 
 from cogant.viz.matrix_view import MatrixVisualizer  # noqa: E402
-from tests.unit._viz_assert import (  # noqa: E402
+
+from ._viz_assert import (  # noqa: E402
     assert_figure_nondegenerate,
     assert_png_nondegenerate,
 )

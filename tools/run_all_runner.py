@@ -18,6 +18,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from cogant.config import ConfigLoadError, ConfigLoader, ProjectConfig
+
 STAGING_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CONFIG_PATH = STAGING_ROOT / "run_all.json"
 
@@ -123,11 +125,28 @@ class CommandResult:
     wall_time_s: float = 0.0
 
 
-def load_config(path: Path | None) -> dict[str, Any]:
+def _without_config_comments(value: Any) -> Any:
+    """Remove non-semantic JSON annotations before strict model validation."""
+    if isinstance(value, dict):
+        ignored = {"$comment", "$comment_extra", "_py_api_comment", "extra_remote_targets_example"}
+        return {
+            key: _without_config_comments(item)
+            for key, item in value.items()
+            if key not in ignored
+        }
+    if isinstance(value, list):
+        return [_without_config_comments(item) for item in value]
+    return value
+
+
+def load_config(path: Path | None) -> ProjectConfig:
+    """Load the batch file through the canonical validated project model."""
     cfg = json.loads(json.dumps(DEFAULT_CONFIG))
     p = path or (DEFAULT_CONFIG_PATH if DEFAULT_CONFIG_PATH.is_file() else None)
     if p is not None and p.is_file():
         data = json.loads(p.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError(f"batch configuration must be a JSON object: {p}")
         for k, v in data.items():
             if k == "steps" and isinstance(v, dict):
                 cfg["steps"].update(v)
@@ -137,7 +156,12 @@ def load_config(path: Path | None) -> dict[str, Any]:
                 cfg["remote"].update(v)
             else:
                 cfg[k] = v
-    return cfg
+    try:
+        return ConfigLoader.load_project_config(
+            overrides={"batch": _without_config_comments(cfg)}
+        )
+    except ConfigLoadError as exc:
+        raise ValueError(f"invalid batch configuration: {exc}") from exc
 
 
 def _ts() -> str:
@@ -272,16 +296,22 @@ def command_record(
     }
 
 
-def _read_bundle(run_dir: Path) -> dict[str, Any] | None:
-    """Return parsed bundle.json for a run dir, preferring the --layout-output
-    path. Silent on parse errors — the caller just skips the row."""
+class BundleSummaryError(RuntimeError):
+    """Raised when a completed target cannot provide verifiable evidence."""
+
+
+def _read_bundle(run_dir: Path) -> dict[str, Any]:
+    """Return a parsed bundle or fail closed with an actionable error."""
     for candidate in (run_dir / "data" / "bundle.json", run_dir / "bundle.json"):
         if candidate.is_file():
             try:
-                return json.loads(candidate.read_text(encoding="utf-8"))
-            except json.JSONDecodeError:
-                return None
-    return None
+                loaded = json.loads(candidate.read_text(encoding="utf-8"))
+            except json.JSONDecodeError as exc:
+                raise BundleSummaryError(f"invalid JSON in {candidate}: {exc}") from exc
+            if not isinstance(loaded, dict):
+                raise BundleSummaryError(f"bundle must be a JSON object: {candidate}")
+            return loaded
+    raise BundleSummaryError(f"bundle.json is missing from {run_dir}")
 
 
 def _stage_count(stage: dict[str, Any], *, prefer: str, fallback: str) -> int:
@@ -330,7 +360,7 @@ def _validate_gnn_package_summary(
     package_dir: Path,
     *,
     log_fp: Any,
-) -> dict[str, Any] | None:
+) -> dict[str, Any]:
     """Return a fresh ``GNNValidator`` summary for ``package_dir``.
 
     The bundle's ``stage_results.validate`` payload is useful recorded
@@ -339,13 +369,8 @@ def _validate_gnn_package_summary(
     have changed after a bundle was first written.
     """
     if not package_dir.is_dir():
-        return None
+        raise BundleSummaryError(f"GNN package directory is missing: {package_dir}")
 
-    package_py = package_root / "py"
-    inserted = False
-    if str(package_py) not in sys.path:
-        sys.path.insert(0, str(package_py))
-        inserted = True
     try:
         from cogant.gnn.validator import GNNValidator
 
@@ -356,18 +381,12 @@ def _validate_gnn_package_summary(
             "errors": list(result.errors),
             "warnings": list(result.warnings),
         }
-    except Exception as exc:  # pragma: no cover - defensive summary fallback
+    except Exception as exc:
         report(
             f"  [summary_validate] unable to validate {package_dir}: {exc}",
             log_fp=log_fp,
         )
-        return None
-    finally:
-        if inserted:
-            try:
-                sys.path.remove(str(package_py))
-            except ValueError:
-                pass
+        raise BundleSummaryError(f"validator failed for {package_dir}: {exc}") from exc
 
 
 def _write_cross_target_summary(
@@ -401,7 +420,6 @@ def _write_cross_target_summary(
     rows: list[dict[str, Any]] = []
     for t in manifest.get("targets", []):
         run_dir = Path(t["run_dir"])
-        bundle = _read_bundle(run_dir)
         target_failures = _failures_for_target(failures, t.get("id", ""))
         row: dict[str, Any] = {
             "id": t.get("id"),
@@ -410,10 +428,13 @@ def _write_cross_target_summary(
             "run_dir": str(run_dir),
             "warnings_count": len(target_failures),
             "failed_steps": target_failures,
+            "validator_result": None,
+            "artifact_presence": {},
+            "failure_reason": None,
         }
-        if bundle is not None:
+        try:
+            bundle = _read_bundle(run_dir)
             sr = bundle.get("stage_results", {}) or {}
-            gnn_val = (sr.get("validate", {}) or {}).get("gnn_validation", {}) or {}
             graph_stage = sr.get("graph", {}) or {}
             translate_stage = sr.get("translate", {}) or {}
             package_dir = run_dir / "gnn_package"
@@ -422,13 +443,19 @@ def _write_cross_target_summary(
                 package_dir,
                 log_fp=log_fp,
             )
-            validation_warnings = (
-                list(package_validation.get("warnings") or []) if package_validation else []
-            )
-            validation_errors = (
-                list(package_validation.get("errors") or []) if package_validation else []
-            )
-            if package_validation is not None and package_validation.get("valid") is False:
+            validation_warnings = list(package_validation.get("warnings") or [])
+            validation_errors = list(package_validation.get("errors") or [])
+            row["validator_result"] = package_validation
+            row["artifact_presence"] = {
+                "bundle": any(
+                    (run_dir / name).is_file()
+                    for name in ("bundle.json", "data/bundle.json")
+                ),
+                "gnn_package": package_dir.is_dir(),
+                "validation": bool(package_validation.get("valid")),
+                "dashboard": (run_dir / "site" / "inspection_dashboard.html").is_file(),
+            }
+            if package_validation.get("valid") is False:
                 label = f"summary_validate:{t.get('id')}"
                 if label not in failures:
                     failures.append(label)
@@ -438,18 +465,12 @@ def _write_cross_target_summary(
                 {
                     "score": (
                         package_validation.get("score")
-                        if package_validation is not None
-                        else gnn_val.get("score")
                     ),
                     "valid": (
                         package_validation.get("valid")
-                        if package_validation is not None
-                        else gnn_val.get("valid")
                     ),
                     "score_source": (
                         "gnn_package_validator"
-                        if package_validation is not None
-                        else "bundle_stage_results"
                     ),
                     "validator_warnings": validation_warnings,
                     "validator_errors": validation_errors,
@@ -478,9 +499,64 @@ def _write_cross_target_summary(
                     and any((run_dir / "diagrams").iterdir()),
                 }
             )
-        else:
+            row["status"] = "failed" if target_failures else "ok"
+            if target_failures:
+                row["failure_reason"] = "; ".join(target_failures)
+            t["status"] = row["status"]
+            t["failed_steps"] = list(target_failures)
+            t["validator_result"] = package_validation
+            t["artifact_presence"] = dict(row["artifact_presence"])
+            t["failure_reason"] = row["failure_reason"]
+        except Exception as exc:
+            label = f"summary_evidence:{t.get('id')}"
+            if label not in failures:
+                failures.append(label)
+            target_failures.append(label)
+            row.update(
+                {
+                    "status": "failed",
+                    "valid": False,
+                    "score": 0.0,
+                    "score_source": "evidence_error",
+                    "evidence_error": str(exc),
+                    "validator_warnings": [],
+                    "validator_errors": [str(exc)],
+                    "node_count": 0,
+                    "edge_count": 0,
+                    "mapping_count": 0,
+                    "gnn_package_files": 0,
+                    "has_site": False,
+                    "has_reverse": False,
+                    "has_analysis": False,
+                    "has_exports": False,
+                    "has_diagrams": False,
+                    "warnings_count": len(target_failures),
+                    "validator_result": {
+                        "valid": False,
+                        "errors": [str(exc)],
+                    },
+                    "artifact_presence": {
+                        "bundle": any(
+                            (run_dir / name).is_file()
+                            for name in ("bundle.json", "data/bundle.json")
+                        ),
+                        "gnn_package": (run_dir / "gnn_package").is_dir(),
+                        "validation": False,
+                        "dashboard": False,
+                    },
+                    "failure_reason": str(exc),
+                }
+            )
+            t["status"] = "failed"
+            t["failed_steps"] = list(target_failures)
+            t["validator_result"] = row["validator_result"]
+            t["artifact_presence"] = row["artifact_presence"]
+            t["failure_reason"] = str(exc)
+            report(f"  [summary_evidence] {exc}", log_fp=log_fp)
+        if "status" not in row:
             row["score"] = None
-            row["valid"] = None
+            row["valid"] = False
+            row["status"] = "failed"
             row["node_count"] = 0
             row["edge_count"] = 0
             row["mapping_count"] = 0
@@ -490,6 +566,9 @@ def _write_cross_target_summary(
             row["has_analysis"] = False
             row["has_exports"] = False
             row["has_diagrams"] = False
+            row["validator_result"] = None
+            row["artifact_presence"] = {}
+            row["failure_reason"] = "; ".join(target_failures) or "target did not produce a result"
         rows.append(row)
 
     summary_json = output_root / "summary.json"
@@ -596,21 +675,27 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
     if isinstance(options, argparse.Namespace):
         options = RunBatchOptions.from_namespace(options)
 
-    cfg = load_config(options.config)
-    package_root = (STAGING_ROOT / Path(cfg["package_root"])).resolve()
+    try:
+        project_config = load_config(options.config)
+    except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    batch_config = project_config.batch
+    package_root = (STAGING_ROOT / Path(batch_config.package_root)).resolve()
     if not (package_root / "pyproject.toml").is_file():
         print(f"error: package_root {package_root} has no pyproject.toml", file=sys.stderr)
         return 2
 
-    output_root = (STAGING_ROOT / cfg["output_root"]).resolve()
-    steps = cfg["steps"]
-    manuscript = cfg.get("manuscript") or {}
-    remote_cfg = cfg.get("remote") or {}
+    output_root = (STAGING_ROOT / batch_config.output_root).resolve()
+    steps = batch_config.steps.model_dump(mode="python")
+    manuscript = batch_config.manuscript.model_dump(mode="python")
+    remote_cfg = batch_config.remote.model_dump(mode="python")
+    targets = [target.model_dump(mode="python") for target in batch_config.targets]
 
     if options.targets:
         wanted = {s.strip() for s in options.targets.split(",") if s.strip()}
-        cfg["targets"] = [t for t in cfg["targets"] if t.get("id") in wanted]
-        if not cfg["targets"]:
+        targets = [t for t in targets if t.get("id") in wanted]
+        if not targets:
             print(
                 f"error: --targets {sorted(wanted)!r} matched nothing in config",
                 file=sys.stderr,
@@ -635,7 +720,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
             "targets": [],
         }
         batch_start = time.monotonic()
-        n_targets = len(cfg["targets"])
+        n_targets = len(targets)
 
         def check(result: CommandResult | int, label: str) -> int:
             code = result.returncode if isinstance(result, CommandResult) else result
@@ -680,7 +765,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
 
         output_root.mkdir(parents=True, exist_ok=True)
 
-        for ti, t in enumerate(cfg["targets"], start=1):
+        for ti, t in enumerate(targets, start=1):
             tid = t["id"]
             run_dir = (output_root / tid).resolve()
             git_url = t.get("git_url")
@@ -690,6 +775,11 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 "id": tid,
                 "run_dir": str(run_dir),
                 "commands": [],
+                "status": "running",
+                "failed_steps": [],
+                "validator_result": None,
+                "artifact_presence": {},
+                "failure_reason": None,
             }
 
             if git_url:
@@ -707,6 +797,12 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                     f"error: target {tid!r} needs either path or git_url",
                     file=sys.stderr,
                 )
+                label = f"target_source_missing:{tid}"
+                failures.append(label)
+                entry["status"] = "failed"
+                entry["failed_steps"] = [label]
+                entry["failure_reason"] = "target needs either path or git_url"
+                manifest["targets"].append(entry)
                 if options.fail_fast:
                     return 2
                 continue
@@ -737,6 +833,17 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
 
             if not options.dry_run and not target_path.exists():
                 print(f"error: missing target path {target_path}", file=sys.stderr)
+                label = f"target_missing:{tid}"
+                failures.append(label)
+                entry["status"] = "failed"
+                entry["failed_steps"] = [label]
+                entry["failure_reason"] = f"target path is missing: {target_path}"
+                entry["artifact_presence"] = {
+                    "bundle": False,
+                    "gnn_package": False,
+                    "validation": False,
+                    "dashboard": False,
+                }
                 if options.fail_fast:
                     return 2
                 continue
@@ -785,9 +892,11 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 bundle_json = _bundle_path()
                 if not options.dry_run and not bundle_json.is_file():
                     print(
-                        f"warning: no bundle at {bundle_json} after translate",
+                        f"error: no bundle at {bundle_json} after translate",
                         file=sys.stderr,
                     )
+                    label = f"bundle_missing:{tid}"
+                    failures.append(label)
 
             if steps.get("scan_json"):
                 scan_cmd = ["uv", "run", "cogant", "scan", str(target_path), "-f", "json"]
@@ -1078,6 +1187,24 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 if rc := check(result, f"inspection_artifacts:{tid}"):
                     return rc
 
+            command_failures = [
+                str(command.get("step"))
+                for command in entry["commands"]
+                if int(command.get("exit", 0)) != 0
+            ]
+            target_failures = _failures_for_target(failures, tid)
+            entry["failed_steps"] = sorted(set(command_failures + target_failures))
+            entry["status"] = "failed" if entry["failed_steps"] else "ok"
+            entry["artifact_presence"] = {
+                "bundle": _bundle_path().is_file(),
+                "gnn_package": (run_dir / "gnn_package").is_dir(),
+                "validation": (run_dir / "validate.txt").is_file(),
+                "dashboard": (run_dir / "dashboard").is_dir()
+                or (run_dir / "site" / "inspection_dashboard.html").is_file(),
+            }
+            if entry["status"] == "failed":
+                entry["failure_reason"] = "; ".join(entry["failed_steps"])
+
         total_wall = time.monotonic() - batch_start
         manifest["finished_at"] = datetime.now(UTC).isoformat()
         manifest["summary"] = {
@@ -1134,18 +1261,55 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 }
                 manifest.setdefault("post_steps", {})["batch_dashboard"] = post_record
                 if result.returncode != 0:
+                    failures.append("batch_dashboard")
+                    for target in manifest.get("targets", []):
+                        tid = str(target.get("id"))
+                        label = f"batch_dashboard:{tid}"
+                        failures.append(label)
+                        target.setdefault("failed_steps", []).append(label)
+                        target["status"] = "failed"
+                        target["failure_reason"] = "batch dashboard generation failed"
                     report(
-                        f"batch_dashboard failed exit={result.returncode} (not fatal)",
+                        f"batch_dashboard failed exit={result.returncode}",
                         log_fp=log_fp,
                     )
+                elif not (output_root / "dashboard").is_dir():
+                    failures.append("batch_dashboard")
+                    for target in manifest.get("targets", []):
+                        tid = str(target.get("id"))
+                        label = f"batch_dashboard:{tid}"
+                        failures.append(label)
+                        target.setdefault("failed_steps", []).append(label)
+                        target["status"] = "failed"
+                        target["failure_reason"] = "batch dashboard output is missing"
                 # Rewrite manifest so post_steps is persisted, including
                 # advisory failures.
                 man_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
             else:
+                failures.append("batch_dashboard")
+                for target in manifest.get("targets", []):
+                    tid = str(target.get("id"))
+                    label = f"batch_dashboard:{tid}"
+                    failures.append(label)
+                    target.setdefault("failed_steps", []).append(label)
+                    target["status"] = "failed"
+                    target["failure_reason"] = "batch dashboard script is missing"
                 report(
-                    f"batch_dashboard skipped (script not found at {dash_script})",
+                    f"batch_dashboard failed: script not found at {dash_script}",
                     log_fp=log_fp,
                 )
+
+            if failures and not options.dry_run:
+                manifest["summary"]["failed_steps"] = failures
+                _write_cross_target_summary(
+                    output_root,
+                    manifest,
+                    package_root=package_root,
+                    log_fp=log_fp,
+                )
+
+            manifest["summary"]["failed_steps"] = failures
+            man_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
     finally:
         if log_fp is not sys.stdout:

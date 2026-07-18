@@ -53,6 +53,7 @@ class EdgeKind(StrEnum):
     WRITES = "writes"
     RETURNS = "returns"
     CALLS = "calls"
+    ASYNC_CALLS = "async_calls"
 
     # Control flow
     THROWS = "throws"

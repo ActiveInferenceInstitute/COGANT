@@ -108,6 +108,7 @@ from manuscript_vars import (  # noqa: E402
     substitute_text,
 )
 
+
 logger = get_logger(__name__)
 
 MANUSCRIPT_DIR = COGANT_STAGING_ROOT / "manuscript"
@@ -275,6 +276,31 @@ def write_hydration_artifact_manifest() -> Path:
     return manifest_path
 
 
+def render_manuscript_ablation_figure() -> Path:
+    """Render the registered ablation figure from the authoritative metrics."""
+    output = COGANT_STAGING_ROOT / "cogant" / "output" / "calculator" / "figures" / "ablation_rule_family.png"
+    renderer = COGANT_STAGING_ROOT / "cogant" / "py" / "cogant" / "viz" / "ablation_view.py"
+    code = (
+        "from pathlib import Path; import runpy; "
+        f"runpy.run_path({str(renderer)!r})['render_ablation_png']("
+        f"Path({str(METRICS_PATH)!r}), Path({str(output)!r}))"
+    )
+    subprocess.run(
+        [
+            "uv",
+            "run",
+            "--directory",
+            str(COGANT_STAGING_ROOT / "cogant"),
+            "python",
+            "-c",
+            code,
+        ],
+        cwd=COGANT_STAGING_ROOT,
+        check=True,
+    )
+    return output
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -376,6 +402,9 @@ def main(argv: list[str] | None = None) -> int:
             logger.info("Copied %s to output/manuscript/", name)
         else:
             logger.warning("Optional manuscript auxiliary not found: %s", p)
+
+    ablation_figure = render_manuscript_ablation_figure()
+    logger.info("Rendered manuscript ablation figure: %s", ablation_figure)
 
     figure_manifest = copy_manuscript_figures(
         COGANT_STAGING_ROOT,

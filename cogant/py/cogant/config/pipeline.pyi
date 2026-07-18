@@ -19,6 +19,18 @@ class PipelineConfig(BaseModel):
     layout_output: bool
     verbose: bool
     dry_run: bool
+    render_visualizations: bool
+    incremental_since: str | None
+    cache_dir: str | None
+    min_confidence: float
+    profiling_enabled: bool
+    upstream_gnn_validation: bool
+    upstream_gnn_pipeline: bool
+    upstream_gnn_only_steps: list[int] | None
+    upstream_gnn_skip_steps: list[int]
+    upstream_gnn_output_dir: str | None
+    upstream_gnn_frameworks: str
+    upstream_gnn_llm_model: str | None
     coverage_path: str | None
     trace_path: str | None
     plugins: dict[str, dict[str, Any]]
@@ -29,6 +41,7 @@ class PipelineConfig(BaseModel):
     gnn: GNNConfig
     reverse: ReverseConfig
     model_config: ClassVar[Incomplete]
+    def __init__(self, **data: Any) -> None: ...
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> PipelineConfig: ...
     @classmethod
@@ -38,4 +51,6 @@ class PipelineConfig(BaseModel):
     def to_dict(self) -> dict[str, Any]: ...
     def to_yaml(self, path: str | Path) -> None: ...
     def to_json(self, path: str | Path) -> None: ...
+    def validate(self) -> list[str]: ...  # type: ignore[override]
+    def with_profiling(self) -> PipelineConfig: ...
     def override(self, **kwargs: Any) -> PipelineConfig: ...
