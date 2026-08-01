@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -237,6 +238,45 @@ def run_cmd_capture(
     return CommandResult(proc.returncode, dt)
 
 
+_GIT_URL_RE = re.compile(
+    r"^(?:https?|file|ssh|git|git\+ssh|git\+https)://[A-Za-z0-9._~:/?#@!$&'()*+,;=%\[\]-]+$"
+)
+# scp-style remote: ``[user@]host:path/to/repo`` (no scheme). Contains no
+# shell metacharacters and rejects a leading ``-``.
+_SCP_URL_RE = re.compile(r"^(?:[A-Za-z0-9._-]+@)?[A-Za-z0-9._-]+:[A-Za-z0-9._/~+%:@=-]+$")
+# Restrict refs to safe git ref characters; rejects leading ``-`` (option
+# injection) and whitespace/shell metacharacters.
+_GIT_REF_RE = re.compile(r"^[A-Za-z0-9._/+~-]+$")
+
+
+class GitUrlError(ValueError):
+    """Raised when a batch git URL or ref cannot be safely passed to git."""
+
+
+def validate_git_args(git_url: str, git_ref: str | None) -> None:
+    """Reject git URLs/refs that could inject options or be shell-escaped.
+
+    ``git clone`` treats a first argument beginning with ``-`` as an option
+    (e.g. ``--upload-pack=...``), and git runs ``upload-pack``/``ext::``
+    through a shell — so an attacker-controlled URL/ref in the batch config
+    can yield arbitrary command execution. Enforce an allowlisted scheme and
+    forbid leading ``-`` and CLI-metacharacter refs.
+    """
+    if not isinstance(git_url, str) or not git_url or git_url.lstrip().startswith("-"):
+        raise GitUrlError(f"invalid git_url: {git_url!r}")
+    if not (_GIT_URL_RE.match(git_url) or _SCP_URL_RE.match(git_url)):
+        raise GitUrlError(
+            "git_url must be an https/ssh/git URL without shell metacharacters"
+        )
+    if git_ref is not None:
+        if not isinstance(git_ref, str) or not git_ref or git_ref.startswith("-"):
+            raise GitUrlError(f"invalid git_ref: {git_ref!r}")
+        if not _GIT_REF_RE.match(git_ref):
+            raise GitUrlError(
+                f"git_ref contains unsafe characters: {git_ref!r}"
+            )
+
+
 def ensure_git_clone(
     *,
     git_url: str,
@@ -247,13 +287,16 @@ def ensure_git_clone(
     dry_run: bool,
     log_fp: Any,
 ) -> CommandResult:
+    validate_git_args(git_url, git_ref)
+    branch_args = ["--branch", git_ref] if git_ref else []
+    url_args = ["--", git_url]
     if dry_run:
         parts = ["git", "clone"]
         if shallow:
             parts.extend(["--depth", "1"])
-        if git_ref:
-            parts.extend(["--branch", git_ref])
-        parts.extend([git_url, str(dest)])
+        parts.extend(branch_args)
+        parts.extend(url_args)
+        parts.append(str(dest))
         print(f"+ {' '.join(parts)}", file=log_fp, flush=True)
         report("  [git_clone] (dry-run)", log_fp=log_fp)
         return CommandResult(0, 0.0)
@@ -268,9 +311,9 @@ def ensure_git_clone(
     cmd = ["git", "clone"]
     if shallow:
         cmd.extend(["--depth", "1"])
-    if git_ref:
-        cmd.extend(["--branch", git_ref])
-    cmd.extend([git_url, str(dest)])
+    cmd.extend(branch_args)
+    cmd.extend(url_args)
+    cmd.append(str(dest))
     print(f"+ {' '.join(cmd)}", file=log_fp, flush=True)
     t0 = time.monotonic()
     try:

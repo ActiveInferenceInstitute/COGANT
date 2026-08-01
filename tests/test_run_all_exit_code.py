@@ -145,3 +145,40 @@ def test_cross_target_summary_invalid_package_is_fatal(tmp_path) -> None:
     assert failures == ["summary_validate:bad_target"]
     summary = (tmp_path / "out" / "summary.json").read_text(encoding="utf-8")
     assert "summary_validate:bad_target" in summary
+
+
+def test_validate_git_args_accepts_wellformed() -> None:
+    run_all_runner.validate_git_args(
+        "https://github.com/pallets/itsdangerous.git", "main"
+    )
+    run_all_runner.validate_git_args(
+        "https://github.com/ActiveInferenceInstitute/COGANT.git", None
+    )
+    run_all_runner.validate_git_args(
+        "git@github.com:org/repo.git", "feature/x"
+    )
+
+
+def test_validate_git_args_rejects_option_injection() -> None:
+    """A leading '-' URL/ref must be rejected (git option-injection -> RCE)."""
+    import pytest
+
+    for bad in (
+        "--upload-pack=id",
+        "-c core.sshCommand=id",
+        " --upload-pack=sh",
+        "https://host/repo.git;rm -rf /",
+        "https://host/repo.git foo",
+        "not a url",
+    ):
+        with pytest.raises(run_all_runner.GitUrlError):
+            run_all_runner.validate_git_args(bad, None)
+    with pytest.raises(run_all_runner.GitUrlError):
+        run_all_runner.validate_git_args(
+            "https://github.com/org/repo.git", "--upload-pack=id"
+        )
+    with pytest.raises(run_all_runner.GitUrlError):
+        run_all_runner.validate_git_args(
+            "https://github.com/org/repo.git", "main;id"
+        )
+

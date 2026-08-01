@@ -2,6 +2,7 @@
 
 import hashlib
 import logging
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -12,6 +13,35 @@ from cogant.ingest.files import FileEnumerator, FileInfo
 from cogant.ingest.manifest import Dependency, ManifestParser
 
 logger = logging.getLogger(__name__)
+
+_GIT_URL_RE = re.compile(
+    r"^(?:https?|file|ssh|git|git\+ssh|git\+https)://[A-Za-z0-9._~:/?#@!$&'()*+,;=%\[\]-]+$"
+)
+_SCP_URL_RE = re.compile(r"^(?:[A-Za-z0-9._-]+@)?[A-Za-z0-9._-]+:[A-Za-z0-9._/~+%:@=-]+$")
+_GIT_REF_RE = re.compile(r"^[A-Za-z0-9._/+~-]+$")
+
+
+class GitUrlError(ValueError):
+    """Raised when a git URL or branch cannot be safely passed to git clone."""
+
+
+def _validate_git_remote(url: str, branch: str | None) -> None:
+    """Reject git URLs/branches that could inject options (e.g. ``--upload-pack``).
+
+    ``git clone`` parses a leading ``-`` argument as its own option and may
+    pass ``upload-pack``/``ext::`` values through a shell, so an untrusted URL
+    or branch can yield arbitrary command execution on clone.
+    """
+    if not isinstance(url, str) or not url or url.lstrip().startswith("-"):
+        raise GitUrlError(f"invalid git url: {url!r}")
+    if not (_GIT_URL_RE.match(url) or _SCP_URL_RE.match(url)):
+        raise GitUrlError("git url must be an https/ssh/git URL without shell metacharacters")
+    if branch is not None:
+        if not isinstance(branch, str) or not branch or branch.startswith("-"):
+            raise GitUrlError(f"invalid git branch: {branch!r}")
+        if not _GIT_REF_RE.match(branch):
+            raise GitUrlError(f"git branch contains unsafe characters: {branch!r}")
+
 
 __all__ = ["RepoMetadata", "RepoSnapshot", "RepoIngester"]
 
@@ -149,6 +179,11 @@ class RepoIngester:
         Returns:
             RepoSnapshot with all metadata and files.
         """
+        # Validate before naming the clone dir AND before invoking git, so an
+        # attacker-controlled URL/branch cannot inject git options (RCE) or
+        # point the clone/removal at an unrelated path.
+        _validate_git_remote(url, branch)
+
         # Clone repository. Derive a plain directory component from the URL,
         # never an untrusted path: a URL ending in ``..`` or containing path
         # separators (e.g. ``https://host/a/../../b``) must not escape the
@@ -170,7 +205,9 @@ class RepoIngester:
             cmd = ["git", "clone"]
             if branch:
                 cmd.extend(["--branch", branch])
-            cmd.extend([url, str(repo_path)])
+            # ``--`` marks the end of options so the URL cannot be mis-parsed
+            # as a git option.
+            cmd.extend(["--", url, str(repo_path)])
 
             logger.info(f"Cloning repository: {url}")
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)

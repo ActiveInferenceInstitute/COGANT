@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from cogant.ingest.repo import RepoIngester
+from cogant.ingest.repo import GitUrlError, RepoIngester, _validate_git_remote
 
 
 def _make_local_git_repo(dst: Path) -> Path:
@@ -109,3 +109,35 @@ class TestRepoIngesterCloneRemote:
                 "file:///definitely/not/a/real/repo/anywhere_xyz",
                 cleanup=True,
             )
+
+
+class TestGitRemoteValidation:
+    """git option-injection (RCE) must be rejected before git clone runs."""
+
+    def test_valid_https_url_accepted(self) -> None:
+        # No raise means accepted.
+        _validate_git_remote("https://github.com/pallets/itsdangerous.git", None)
+        _validate_git_remote("git@github.com:org/repo.git", "main")
+        _validate_git_remote(
+            "https://github.com/ActiveInferenceInstitute/COGANT.git",
+            "feature/foo-bar",
+        )
+
+    def test_option_injection_url_rejected(self) -> None:
+        # Leading '-' is parsed by git as an option (upload-pack -> RCE).
+        for bad in (
+            "--upload-pack=id",
+            "-c core.sshCommand=id",
+            " --upload-pack=sh",
+            "https://host/repo.git;rm -rf /",
+            "https://host/repo.git foo",
+            "not a url",
+        ):
+            with pytest.raises(GitUrlError):
+                _validate_git_remote(bad, None)
+
+    def test_option_injection_ref_rejected(self) -> None:
+        with pytest.raises(GitUrlError):
+            _validate_git_remote("https://github.com/org/repo.git", "--upload-pack=id")
+        with pytest.raises(GitUrlError):
+            _validate_git_remote("https://github.com/org/repo.git", "main;id")

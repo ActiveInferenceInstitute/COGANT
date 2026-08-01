@@ -235,19 +235,27 @@ class TransitionMatrix:
 
         matrix = cls(states, actions)
 
-        # Count transitions to estimate probabilities
+        # Count transitions to estimate probabilities. The compiler emits
+        # transitions keyed by ``trans_<action_id>`` with ``source_state`` /
+        # ``target_state`` dicts mapping the involved variable ids to
+        # symbolic value tags. Derive concrete source/target states from those
+        # variable ids (they are the matrix ``states``), not from parsing the
+        # transition id (which yields ``trans``/``act`` — never a state).
         transition_counts: dict[tuple[str, str, str], int] = defaultdict(int)
 
-        for trans_id, trans in state_space.transitions.items():
-            if trans.action_id:
-                # Extract state identifiers from transition source/target
-                # For simplicity, use the transition IDs themselves as state proxies
-                action_id = trans.action_id
-                source = trans_id.split("_")[0] if "_" in trans_id else "s0"
-                target = trans_id.split("_")[1] if "_" in trans_id else "s1"
-
-                # Normalize to valid state/action IDs
-                if action_id in actions:
+        for trans in state_space.transitions.values():
+            if not trans.action_id:
+                continue
+            action_id = trans.action_id
+            if action_id not in actions:
+                continue
+            sources = [v for v in trans.source_state if v in states]
+            targets = [v for v in trans.target_state if v in states]
+            # A transition may touch several variables; record each involved
+            # (source -> target) pair so no action is silently dropped into a
+            # uniform matrix. Pairs with no valid source or target are skipped.
+            for source in sources:
+                for target in targets:
                     transition_counts[(source, action_id, target)] += 1
 
         # Convert counts to probabilities

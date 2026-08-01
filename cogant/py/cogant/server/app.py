@@ -906,14 +906,19 @@ def create_app(
         404, and pipeline failures use a redacted 500 envelope.
         """
         try:
-            bundle = _run_forward_pipeline(
-                str(
-                    _resolve_workspace_path(
-                        body.repo_path,
-                        app.state.workspace_root,
-                        allow_absolute=app.state.allow_absolute_paths,
-                    )
-                ),
+            resolved_path = str(
+                _resolve_workspace_path(
+                    body.repo_path,
+                    app.state.workspace_root,
+                    allow_absolute=app.state.allow_absolute_paths,
+                )
+            )
+            # Run the CPU-bound pipeline off the event loop so a slow analysis
+            # cannot stall /health, /ready, /metrics, or other requests, and so
+            # the middleware's wait_for timeout can actually interrupt it.
+            bundle = await asyncio.to_thread(
+                _run_forward_pipeline,
+                resolved_path,
                 stages=body.stages,
                 skip_dynamic=body.skip_dynamic,
             )
@@ -948,7 +953,8 @@ def create_app(
         """
         gnn_text = body.gnn_text
         try:
-            zip_b64, file_count = _synthesize_zip_from_gnn_text(
+            zip_b64, file_count = await asyncio.to_thread(
+                _synthesize_zip_from_gnn_text,
                 gnn_text,
                 max_text_bytes=app.state.max_gnn_text_bytes,
                 max_archive_bytes=app.state.max_archive_bytes,
@@ -996,7 +1002,9 @@ def create_app(
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         try:
-            result = verify_repo_roundtrip(path, role_threshold=body.threshold)
+            result = await asyncio.to_thread(
+                verify_repo_roundtrip, path, role_threshold=body.threshold
+            )
         except (ValueError, RuntimeError, KeyError) as exc:
             logger.exception("roundtrip execution failed")
             raise HTTPException(status_code=500, detail="roundtrip execution failed") from exc
@@ -1234,7 +1242,8 @@ def create_app(
                 app.state.workspace_root,
                 allow_absolute=app.state.allow_absolute_paths,
             )
-            bundle = _run_forward_pipeline(
+            bundle = await asyncio.to_thread(
+                _run_forward_pipeline,
                 str(path),
                 stages=body.stages,
                 skip_dynamic=body.skip_dynamic,
@@ -1291,7 +1300,9 @@ def create_app(
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         try:
-            result = verify_repo_roundtrip(path, role_threshold=body.threshold)
+            result = await asyncio.to_thread(
+                verify_repo_roundtrip, path, role_threshold=body.threshold
+            )
         except (ValueError, RuntimeError, KeyError) as exc:
             logger.exception("roundtrip execution failed")
             raise HTTPException(status_code=500, detail="roundtrip execution failed") from exc

@@ -58,6 +58,11 @@ jobs:
         # at the staging root (one level above this CI's default working dir).
         run: cd .. && uv run --directory cogant python ../tools/audit_stage_list.py
 
+      - name: Test/example naming gate
+        # Reject generated-era campaign labels (wave, *_cov.py, *_coverage.py)
+        # in active test and example names so tests stay behavior-organized.
+        run: cd .. && uv run --directory cogant python ../tools/audit_test_names.py
+
       - name: Metrics-freshness gate (with laundering check)
         # RedTeam F19 durable fix — re-classifies every row of
         # roundtrip_results.jsonl via the same _status() logic as

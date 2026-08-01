@@ -954,7 +954,10 @@ class StateSpaceCompiler:
         pref_mappings = [(mid, m) for mid, m in semantic_mappings.items() if m.kind in pref_kinds]
 
         for i, (mapping_id, mapping) in enumerate(pref_mappings):
-            pref_id = f"pref_{i}"
+            # Key by the stable mapping id, not a positional index, so
+            # inserting/removing an earlier mapping cannot shift every
+            # downstream preference id (unstable ids break persistence/diffing).
+            pref_id = mapping_id if mapping_id else f"pref_{i}"
 
             # Extract scope: which state variables are touched by the
             # constraint's graph fragment.

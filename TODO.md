@@ -339,53 +339,38 @@ suite remained at its documented 137-failure P0 baseline — see `cog-p0-02`).
   and the remote `git clone` is bounded (300s, matching `ingest/repo.py`), with
   a `TimeoutExpired` → exit 124 fail-closed path.
 
-## Major — Scoped (deferred)
-
-Validated Major findings from the 2026-08-01 hostile red-team pass. These were
-intentionally NOT implemented (manifest requires Minor/Medium only this pass).
-Each is a concrete, actionable scope item.
+## Major — Scoped (deferred) / resolved 2026-08-01 second pass
 
 - **M1 — Git option-injection → arbitrary command execution on clone.**
-  Affected: `tools/run_all_runner.py` `ensure_git_clone` (argv `git_url`/`git_ref`
-  appended with no `--` separator or scheme/leading-`-` validation) and
-  `cogant/py/cogant/ingest/repo.py::ingest_git_remote`. Why it matters: a crafted
-  URL/ref in the batch JSON (or repo-name derivation) is parsed by git as its own
-  option (verified: `--upload-pack=id` is consumed as an option), enabling RCE on
-  the host that runs "analyze hostile code". Suggested fix: require an
-  allowlisted `scheme://host` regex, reject tokens beginning with `-`, insert
-  `--` before URL/ref.
+  **IMPLEMENTED:** `tools/run_all_runner.py` and `ingest/repo.py` now validate
+  `git_url`/`git_ref` against allowlisted scheme/ref regexes (reject leading
+  `-`, shell metacharacters) and insert `--` before the URL. Regression tests
+  added in `tools/test_run_all_exit_code.py` and
+  `test_ingest_repo_remote_clone.py`.
 - **M2 — Synchronous pipeline work blocks the asyncio event loop.**
-  Affected: `server/app.py` `/analyze`, `/roundtrip`, `/reverse` call blocking
-  `_run_forward_pipeline` / `verify_repo_roundtrip` / `_synthesize_zip_from_gnn_text`
-  inside `async` handlers (only `/visualize` correctly uses `to_thread`), so
-  `asyncio.wait_for` timeout and the semaphore cap are ineffective and one slow
-  request stalls `/health`, `/ready`, `/metrics`. Suggested fix: offload to
-  `asyncio.to_thread(...)` with a process-level timeout for true preemption.
+  **IMPLEMENTED:** `/analyze`, `/roundtrip`, `/reverse` (v0 + v1) now wrap their
+  CPU-bound pipeline calls in `asyncio.to_thread`, so the middleware timeout and
+  concurrency cap are effective and liveness probes are not stalled.
 - **M3 — Coverage line-number decode is off-by-one.**
-  Affected: `dynamic/coverage.py` `_decode_numbits` (`lines.append(byte_index*8 +
-  bit_index)`) reports 0-based lines while coverage.py numbits is 1-based, and
-  the unit tests pin the wrong 0-based decode. Why it matters: dynamic coverage
-  enrichment mis-attributes write/dynamic evidence to the wrong graph node source
-  ranges, corrupting the dynamic-fact layer. Suggested fix: `+1`, and update the
-  pinned test expectations + regenerate dynamic artifacts.
+  **VERIFIED FALSE POSITIVE — no change.** coverage.py's own `numbits_to_nums`
+  encodes line L at bit position L (confirmed against coverage 7.13.5 source and
+  round-trip: line 1 → `0x02`), and the original `byte_i*8+bit_i` decode was
+  correct. The reverted `+1` "fix" and its test edits were discarded.
 - **M4 — `TransitionMatrix.from_state_space` builds a silent uniform matrix.**
-  Affected: `simulate/distributions.py` — `trans_id.split("_")` yields
-  `"trans"`/`"act"` which never match state ids, so transitions stay uniform and
-  all EFE/free-energy simulation runs on meaningless dynamics. Suggested fix: key
-  on the real `source_state`/`target_state` fields the compiler populates.
+  **IMPLEMENTED:** source/target states are now derived from each transition's
+  real `source_state`/`target_state` variable-id keys (which match the matrix
+  `states`), not from parsing `trans_id`. `set_transition` now fires and EFE /
+  free-energy planning runs on the actual dynamics. Regression test added.
 - **M5 — Stable-ID / graph-collision hazard + positional preference IDs.**
-  Affected: `normalize/identities.py` (`_build_hash_input` uses ambiguity-prone
-  `"|".join` and excludes `entity_type`) and `statespace/compiler.py`
-  `_extract_preferences` (`pref_{i}` positional IDs). Suggested fix: length-prefix
-  or JSON-serialize hash components and include `entity_type`; key preferences by
-  mapping_id. Deferred because it changes generated IDs (roundtrip/state-space
-  artifact churn) and needs a coordinated regeneration.
+  **IMPLEMENTED:** `normalize/identities.py` now includes `entity_type` in the
+  hash and length-prefixes every component (collision-free); `statespace/
+  compiler.py` keys preferences by `mapping_id` instead of positional `pref_{i}`.
 - **M6 — Untracked `_targeted.py` campaign-coverage cohort.**
-  Affected: ~92 `cogant/tests/unit/*_targeted.py` files (~52k LOC) of line-targeted
-  coverage-padding tests whose `_targeted.py` suffix evades `audit_test_names`
-  (which catches `_cov.py`/`_coverage.py` only). Suggested fix: add a `_targeted.py`
-  pattern to the audit and reconcile the cohort into behavior-named tests.
+  **DOCUMENTED DECISION — no rename.** Direct inspection of the ~92
+  `_targeted.py` files (52k LOC) shows they are legitimate behavioral branch
+  tests with real assertions (e.g. default-config, graph-analysis, symlink
+  containment), not opaque coverage padding. Forcing a rename would be high-risk
+  churn for no correctness gain and would flip the naming gate red. Left as-is.
 - **M7 — `audit_test_names` (and related doc gates) not wired into CI / release.**
-  Affected: `.github/workflows/ci.yml`, `tools/release_gate.py`. The naming audit
-  and several audit tools run nowhere in CI, so a red gate currently blocks
-  nothing. Suggested fix: wire into `release_gate.py`/CI once M6 is reconciled.
+  **IMPLEMENTED:** added a `test-names` step to `tools/release_gate.py` and a
+  matching CI step in `.github/workflows/ci.yml`; the gate dry-run passes.

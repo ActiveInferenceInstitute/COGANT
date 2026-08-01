@@ -58,7 +58,7 @@ class IdentityResolver:
             Stable, deterministic ID as hex string.
         """
         # Create hash input from components
-        hash_inputs = self._build_hash_input(repo_uri, path, qualified_name)
+        hash_inputs = self._build_hash_input(entity_type, repo_uri, path, qualified_name)
 
         # Generate deterministic ID using SHA256
         hash_obj = hashlib.sha256(hash_inputs.encode("utf-8"))
@@ -80,13 +80,15 @@ class IdentityResolver:
 
     def _build_hash_input(
         self,
+        entity_type: str,
         repo_uri: str,
         path: str | None = None,
         qualified_name: str | None = None,
     ) -> str:
-        """Build concatenated string for hashing.
+        """Build a collision-resistant concatenated string for hashing.
 
         Args:
+            entity_type: Type of entity.
             repo_uri: Repository URI.
             path: Optional path.
             qualified_name: Optional qualified name.
@@ -94,12 +96,20 @@ class IdentityResolver:
         Returns:
             Concatenated string for hashing.
         """
-        parts = [repo_uri]
-        if path:
-            parts.append(path)
-        if qualified_name:
-            parts.append(qualified_name)
-        return "|".join(parts)
+        parts = [
+            "entity_type",
+            entity_type,
+            "repo_uri",
+            repo_uri,
+            "path",
+            path or "",
+            "qualified_name",
+            qualified_name or "",
+        ]
+        # Length-prefix a delimiter that itself is length-delimited so
+        # distinct component splits cannot collapse (e.g. ``a|b,c`` vs
+        # ``a,b|c``). The length token makes every boundary unambiguous.
+        return "".join(f"{len(p)}:{p};" for p in parts)
 
     def get_id(
         self,
@@ -119,7 +129,7 @@ class IdentityResolver:
         Returns:
             Stable ID for the entity.
         """
-        hash_input = self._build_hash_input(repo_uri, path, qualified_name)
+        hash_input = self._build_hash_input(entity_type, repo_uri, path, qualified_name)
         if hash_input in self._reverse_lookup:
             return self._reverse_lookup[hash_input]
         return self.generate_id(entity_type, repo_uri, path, qualified_name)
@@ -142,7 +152,7 @@ class IdentityResolver:
         Returns:
             ID if found, None otherwise.
         """
-        hash_input = self._build_hash_input(repo_uri, path, qualified_name)
+        hash_input = self._build_hash_input(entity_type, repo_uri, path, qualified_name)
         return self._reverse_lookup.get(hash_input)
 
     def get_record(self, identity_id: str) -> IdentityRecord | None:

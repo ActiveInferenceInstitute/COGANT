@@ -158,6 +158,11 @@ def build_steps(*, include_tests: bool = True) -> list[GateStep]:
             _step("folder-docs", ("uv", "run", "python", "../tools/audit_folder_docs.py"), cwd=INNER),
             _step("stage-list", ("uv", "run", "python", "../tools/audit_stage_list.py"), cwd=INNER),
             _step("roadmap-truth", ("uv", "run", "python", "tools/audit_roadmap_truth.py")),
+            _step(
+                "test-names",
+                ("uv", "run", "python", "../tools/audit_test_names.py"),
+                cwd=INNER,
+            ),
             _step("manuscript-crossrefs", ("uv", "run", "python", "tools/audit_manuscript_crossrefs.py")),
             _step("manuscript-citations", ("uv", "run", "python", "tools/audit_manuscript_citations.py")),
             _step(

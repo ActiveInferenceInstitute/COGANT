@@ -319,6 +319,42 @@ class TestTransitionMatrix:
         assert "v1" in m.states
         assert "a1" in m.actions
 
+    def test_from_state_space_keys_real_variables_not_trans_id(self):
+        """Transitions keyed by real variable ids, not the trans_<action> id.
+
+        Regression for the silent-uniform-matrix bug: the old code derived
+        source/target from ``trans_id.split(\"_\")`` which yields ``trans`` /
+        ``act`` (never a state), so ``set_transition`` was never called and no
+        action ever populated a row — every action silently fell back to the
+        default uniform distribution in EFE planning.
+        """
+        from cogant.simulate.distributions import TransitionMatrix
+        from cogant.statespace.compiler import Transition
+
+        # Use a single involved variable so the pairwise product is 1 x 1 and
+        # the populated probability is exactly 1.0 (distinct from uniform 0.5).
+        v1 = _make_variable("v1")
+        v2 = _make_variable("v2")
+        a1 = _make_action("a1")
+        trans = Transition(
+            id="trans_act_x",
+            source_state={"v1": "pre"},
+            target_state={"v1": "post"},
+            action_id="a1",
+        )
+        ss = _make_state_space(
+            variables={"v1": v1, "v2": v2},
+            actions={"a1": a1},
+            transitions={"trans_act_x": trans},
+        )
+        m = TransitionMatrix.from_state_space(ss)
+        # The a1 row for v1 must be populated from the transition (prob 1.0),
+        # i.e. set_transition ran; before the fix it stayed the default uniform.
+        assert "v1" in m.transitions["a1"]
+        dist = m.get_next_state_dist("v1", "a1")
+        assert dist.probabilities[0] == pytest.approx(1.0)
+        assert dist.probabilities[1] == pytest.approx(0.0)
+
     def test_repr_contains_state_count(self):
         from cogant.simulate.distributions import TransitionMatrix
 

@@ -139,15 +139,23 @@ class TestIdentityResolver:
 
     def test_build_hash_input_all_components(self) -> None:
         r = self._make_resolver()
-        h = r._build_hash_input("repo://x", path="src/main.py", qualified_name="Foo.bar")
+        h = r._build_hash_input("module", "repo://x", path="src/main.py", qualified_name="Foo.bar")
         assert "repo://x" in h
         assert "src/main.py" in h
         assert "Foo.bar" in h
+        # entity_type must participate in the hash or distinct entity kinds
+        # with the same repo/path/name collide.
+        h_other = r._build_hash_input(
+            "function", "repo://x", path="src/main.py", qualified_name="Foo.bar"
+        )
+        assert h != h_other
 
-    def test_build_hash_input_no_optional(self) -> None:
+    def test_build_hash_input_length_prefixed_collision_free(self) -> None:
         r = self._make_resolver()
-        h = r._build_hash_input("repo://x")
-        assert h == "repo://x"
+        # ``|`` inside a component must not collapse two distinct inputs.
+        a = r._build_hash_input("m", "repo:x", path="a|b", qualified_name="c")
+        b = r._build_hash_input("m", "repo:x", path="a", qualified_name="b|c")
+        assert a != b
 
 
 # ---------------------------------------------------------------------------
