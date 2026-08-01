@@ -965,7 +965,12 @@ class StateSpaceCompiler:
 
             # Weight is driven by the mapping confidence -- a constraint we
             # are certain of carries more weight in the preference model.
-            weight = float(mapping.confidence_score) if mapping.confidence_score else 1.0
+            # Use the confidence directly so certainty is monotone in weight:
+            # a zero-confidence constraint (no evidence) weights lowest rather
+            # than boomeranging up to the maximum.
+            weight = (
+                float(mapping.confidence_score) if mapping.confidence_score is not None else 1.0
+            )
 
             preference = Preference(
                 id=pref_id,

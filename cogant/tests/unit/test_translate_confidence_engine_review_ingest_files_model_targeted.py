@@ -20,6 +20,8 @@ Covers:
 - ingest/repo_sniff.py: count_source_files, estimate_pipeline_seconds, format_duration
 """
 
+from pathlib import Path
+
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -368,6 +370,39 @@ class TestFileEnumerator:
             assert hasattr(fi, "path")
             assert hasattr(fi, "language")
             assert hasattr(fi, "size_bytes")
+
+    def test_enumerate_rejects_symlink_outside_repo(self, tmp_path):
+        """Files reached through a symlink outside the repo root must not be enumerated."""
+        import os
+        import tempfile
+
+        from cogant.ingest.files import FileEnumerator
+
+        # Put the payload in a truly external directory (sibling of the repo),
+        # not under tmp_path, so an escaping symlink is actually out-of-tree.
+        outside_dir = Path(tempfile.mkdtemp(prefix="cogant-outside-"))
+        try:
+            (outside_dir / "secret.py").write_text("TOKEN = 's3cr3t'\n")
+            (tmp_path / "real.py").write_text("x = 1\n")
+
+            # Create a directory symlink inside the repo pointing outside it.
+            link = tmp_path / "linked"
+            try:
+                os.symlink(outside_dir, link)
+            except (OSError, NotImplementedError):
+                import pytest
+
+                pytest.skip("symlinks not supported on this platform")
+
+            enumerator = FileEnumerator(tmp_path, respect_gitignore=False)
+            files = enumerator.enumerate()
+            rel_paths = {f.relative_path for f in files}
+            assert "real.py" in rel_paths
+            assert not any("secret.py" in str(p) for p in rel_paths)
+        finally:
+            import shutil
+
+            shutil.rmtree(outside_dir, ignore_errors=True)
 
 
 class TestFileInfo:

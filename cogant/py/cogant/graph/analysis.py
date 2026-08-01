@@ -251,7 +251,7 @@ class GraphAnalyzer:
                 nx_graph = self.to_networkx()
                 from networkx.algorithms import community
 
-                communities = list(community.louvain_communities(nx_graph))
+                communities = list(community.louvain_communities(nx_graph, seed=0))
                 return [frozenset(c) for c in communities]
             except Exception:
                 pass
@@ -435,7 +435,7 @@ class GraphAnalyzer:
                     "pagerank": round(centrality.pagerank.get(node_id, 0.0), 4),
                     "closeness": round(centrality.closeness_centrality.get(node_id, 0.0), 4),
                 }
-                for node_id in list(self.graph.nodes.keys())[:3]
+                for node_id in self._centrality_sample_nodes(3)
             },
         }
 

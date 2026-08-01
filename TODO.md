@@ -1,6 +1,8 @@
 # COGANT TODO
 
-Last updated: 2026-07-17
+- Status: Active (P0–P5 roadmap below).
+- Owner: DAF.
+- Last reviewed: 2026-08-01 (hostile red-team pass: Miner/Medium fixes implemented; Major findings scoped in the "Major — Scoped (deferred)" section below).
 
 This is the future-only execution backlog. Completed work belongs in Git
 history, generated evidence, audit reports, or the taskboard; it must not be
@@ -289,3 +291,101 @@ Source-of-truth rules:
 6. Run the aggregate release gate, regenerate all publication artifacts, and
    update `tasks.yaml` so only genuinely active/upcoming work remains in the
    execution view while taskboard history stays outside this file.
+
+## Completed/Closed — 2026-08-01 hostile red-team pass
+
+Items implemented and closed this pass (each verified by a targeted test run,
+with Ruff clean and strict mypy clean on changed source; the full `not slow`
+suite remained at its documented 137-failure P0 baseline — see `cog-p0-02`).
+
+- [x] **ingest/files.py — symlink-containment guard.** `FileEnumerator.enumerate`
+  now resolves each enumerated path and rejects any whose real path escapes the
+  repo root (scope-escape / external-file-read). Regression test added
+  (`TestFileEnumerator.test_enumerate_rejects_symlink_outside_repo`).
+- [x] **ingest/repo.py — remote clone dir sanitisation.** `repo_name` is derived
+  via `Path(...).name` with a salted-hash fallback so a hostile URL cannot
+  escape `work_dir` or target an unrelated directory for `rmtree`.
+- [x] **cache/store.py — durable atomic writes.** fsync before rename so a crash
+  cannot leave a zero-length/incomplete entry that misleads `get_latest`.
+- [x] **cache/hasher.py — bounded memory + symlink containment.**
+  `hash_repo` now streams per file (no unbounded `bytes` buffer) and walks with
+  `os.walk(followlinks=False)`, pruning out-of-tree real paths from the digest.
+- [x] **graph/analysis.py — deterministic community + centrality sample.**
+  `louvain_communities(..., seed=0)` and `centrality_sample` uses the
+  deterministic `_centrality_sample_nodes(3)` instead of insertion order.
+- [x] **statespace/compiler.py — monotone preference weight.** Zero-confidence
+  constraints no longer boomerang to weight 1.0; certainty is monotone in weight
+  (test-pinned positive confidence values unchanged).
+- [x] **server/app.py — auth decoupled from rate limiting.** A configured
+  `auth_token` now protects every non-unlimited route, independent of
+  `rate_limited_paths` (previously `/api/v1/rules`, `/api/v1/metrics`, and any
+  newly added route silently skipped auth). Regression tests added
+  (`TestAuthDecoupling`).
+- [x] **server/app.py — redacted 500 envelopes.** The four 500-error sites no
+  longer leak `{Type}: {exc}` to remote clients; exceptions are logged
+  server-side and a static message returned (consistent with `/reverse`).
+- [x] **server/app.py — bounded rate-limiter memory.** Empty drained buckets are
+  pruned so `_RateLimiter._history` cannot grow unbounded across client IPs.
+- [x] **audit_test_names gate.** Fixed a content-regex false positive
+  (`"wave-3 debris"` descriptive prose → `"legacy campaign debris"`); the naming
+  audit now passes cleanly at HEAD.
+- [x] **test_metrics_api.py — de-tautologised assertion.**
+  `test_strict_isomorphism_count_is_strict_count` now asserts against the
+  authoritative METRICS ledger field instead of a self-comparison.
+- [x] **tasks.yaml — stale in-progress end dates.** Rolled forward internally
+  inconsistent past `end` dates for `cog-6`, `cog-7`, and `cog-m1`; the
+  `audit_roadmap_truth` and `audit_test_names` gates stay green.
+- [x] **run_all_runner.py — subprocess timeouts.** `run_cmd` accepts a `timeout`
+  and the remote `git clone` is bounded (300s, matching `ingest/repo.py`), with
+  a `TimeoutExpired` → exit 124 fail-closed path.
+
+## Major — Scoped (deferred)
+
+Validated Major findings from the 2026-08-01 hostile red-team pass. These were
+intentionally NOT implemented (manifest requires Minor/Medium only this pass).
+Each is a concrete, actionable scope item.
+
+- **M1 — Git option-injection → arbitrary command execution on clone.**
+  Affected: `tools/run_all_runner.py` `ensure_git_clone` (argv `git_url`/`git_ref`
+  appended with no `--` separator or scheme/leading-`-` validation) and
+  `cogant/py/cogant/ingest/repo.py::ingest_git_remote`. Why it matters: a crafted
+  URL/ref in the batch JSON (or repo-name derivation) is parsed by git as its own
+  option (verified: `--upload-pack=id` is consumed as an option), enabling RCE on
+  the host that runs "analyze hostile code". Suggested fix: require an
+  allowlisted `scheme://host` regex, reject tokens beginning with `-`, insert
+  `--` before URL/ref.
+- **M2 — Synchronous pipeline work blocks the asyncio event loop.**
+  Affected: `server/app.py` `/analyze`, `/roundtrip`, `/reverse` call blocking
+  `_run_forward_pipeline` / `verify_repo_roundtrip` / `_synthesize_zip_from_gnn_text`
+  inside `async` handlers (only `/visualize` correctly uses `to_thread`), so
+  `asyncio.wait_for` timeout and the semaphore cap are ineffective and one slow
+  request stalls `/health`, `/ready`, `/metrics`. Suggested fix: offload to
+  `asyncio.to_thread(...)` with a process-level timeout for true preemption.
+- **M3 — Coverage line-number decode is off-by-one.**
+  Affected: `dynamic/coverage.py` `_decode_numbits` (`lines.append(byte_index*8 +
+  bit_index)`) reports 0-based lines while coverage.py numbits is 1-based, and
+  the unit tests pin the wrong 0-based decode. Why it matters: dynamic coverage
+  enrichment mis-attributes write/dynamic evidence to the wrong graph node source
+  ranges, corrupting the dynamic-fact layer. Suggested fix: `+1`, and update the
+  pinned test expectations + regenerate dynamic artifacts.
+- **M4 — `TransitionMatrix.from_state_space` builds a silent uniform matrix.**
+  Affected: `simulate/distributions.py` — `trans_id.split("_")` yields
+  `"trans"`/`"act"` which never match state ids, so transitions stay uniform and
+  all EFE/free-energy simulation runs on meaningless dynamics. Suggested fix: key
+  on the real `source_state`/`target_state` fields the compiler populates.
+- **M5 — Stable-ID / graph-collision hazard + positional preference IDs.**
+  Affected: `normalize/identities.py` (`_build_hash_input` uses ambiguity-prone
+  `"|".join` and excludes `entity_type`) and `statespace/compiler.py`
+  `_extract_preferences` (`pref_{i}` positional IDs). Suggested fix: length-prefix
+  or JSON-serialize hash components and include `entity_type`; key preferences by
+  mapping_id. Deferred because it changes generated IDs (roundtrip/state-space
+  artifact churn) and needs a coordinated regeneration.
+- **M6 — Untracked `_targeted.py` campaign-coverage cohort.**
+  Affected: ~92 `cogant/tests/unit/*_targeted.py` files (~52k LOC) of line-targeted
+  coverage-padding tests whose `_targeted.py` suffix evades `audit_test_names`
+  (which catches `_cov.py`/`_coverage.py` only). Suggested fix: add a `_targeted.py`
+  pattern to the audit and reconcile the cohort into behavior-named tests.
+- **M7 — `audit_test_names` (and related doc gates) not wired into CI / release.**
+  Affected: `.github/workflows/ci.yml`, `tools/release_gate.py`. The naming audit
+  and several audit tools run nowhere in CI, so a red gate currently blocks
+  nothing. Suggested fix: wire into `release_gate.py`/CI once M6 is reconciled.

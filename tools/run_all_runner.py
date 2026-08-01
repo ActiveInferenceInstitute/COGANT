@@ -183,13 +183,18 @@ def run_cmd(
     dry_run: bool,
     log_fp: Any,
     step: str = "cmd",
+    timeout: float | None = None,
 ) -> CommandResult:
     print(f"+ {' '.join(argv)}", file=log_fp, flush=True)
     if dry_run:
         report(f"  [{step}] (dry-run)", log_fp=log_fp)
         return CommandResult(0, 0.0)
     t0 = time.monotonic()
-    code = subprocess.call(argv, cwd=str(cwd), env=os.environ.copy())
+    try:
+        code = subprocess.call(argv, cwd=str(cwd), env=os.environ.copy(), timeout=timeout)
+    except subprocess.TimeoutExpired:
+        report(f"  [{step}] TIMEOUT after {timeout}s", log_fp=log_fp)
+        return CommandResult(124, time.monotonic() - t0)
     dt = time.monotonic() - t0
     status = "ok" if code == 0 else f"FAIL exit={code}"
     report(f"  [{step}] {status} wall_time={dt:.2f}s", log_fp=log_fp)
@@ -268,7 +273,16 @@ def ensure_git_clone(
     cmd.extend([git_url, str(dest)])
     print(f"+ {' '.join(cmd)}", file=log_fp, flush=True)
     t0 = time.monotonic()
-    proc = subprocess.run(cmd, env=os.environ.copy(), capture_output=True, text=True)
+    try:
+        proc = subprocess.run(
+            cmd, env=os.environ.copy(), capture_output=True, text=True, timeout=300
+        )
+    except subprocess.TimeoutExpired:
+        report(
+            f"  [git_clone] TIMEOUT after 300s wall_time={(time.monotonic() - t0):.2f}s",
+            log_fp=log_fp,
+        )
+        return CommandResult(124, time.monotonic() - t0)
     dt = time.monotonic() - t0
     if proc.returncode != 0:
         report(

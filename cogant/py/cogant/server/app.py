@@ -248,6 +248,12 @@ class _RateLimiter:
             bucket.popleft()
         if len(bucket) >= self.max_requests:
             return False
+        # Prune keys whose window has fully drained so ``_history`` does not
+        # grow without bound across many distinct client IPs. The key is
+        # recreated on the next request, so behavior is unchanged.
+        if not bucket:
+            self._history.pop(key, None)
+            bucket = self._history.setdefault(key, deque())
         bucket.append(now)
         return True
 
@@ -366,9 +372,7 @@ def _synthesize_zip_from_gnn_text(
     required_headers = ("## ModelName", "## StateSpaceBlock", "## InitialParameterization")
     missing_headers = [header for header in required_headers if header not in gnn_text]
     if missing_headers:
-        raise ValueError(
-            "missing required GNN sections: " + ", ".join(missing_headers)
-        )
+        raise ValueError("missing required GNN sections: " + ", ".join(missing_headers))
 
     tmp_root = Path(tempfile.mkdtemp(prefix="cogant-reverse-"))
     try:
@@ -390,7 +394,9 @@ def _synthesize_zip_from_gnn_text(
                     continue
                 arcname = file_path.relative_to(package_path).as_posix()
                 if file_count >= max_archive_files:
-                    raise ValueError(f"generated package exceeds the {max_archive_files}-file limit")
+                    raise ValueError(
+                        f"generated package exceeds the {max_archive_files}-file limit"
+                    )
                 zf.write(file_path, arcname=arcname)
                 file_count += 1
 
@@ -481,7 +487,9 @@ def create_app(
         from fastapi.exceptions import RequestValidationError
         from fastapi.responses import JSONResponse, PlainTextResponse
     except ImportError as exc:  # pragma: no cover - exercised in fallback path
-        raise RuntimeError("FastAPI is required for cogant.server.app.create_app(); install fastapi") from exc
+        raise RuntimeError(
+            "FastAPI is required for cogant.server.app.create_app(); install fastapi"
+        ) from exc
 
     root = Path(workspace_root).expanduser().resolve()
     if not root.is_dir():
@@ -648,7 +656,11 @@ def create_app(
                 },
             )
 
-        if path in request.app.state.rate_limited_paths and request.app.state.auth_token:
+        if path not in request.app.state.unlimited_paths and request.app.state.auth_token:
+            # Authenticate any non-public route when a token is configured.
+            # Enforcement is deliberately decoupled from ``rate_limited_paths``:
+            # gating auth on the limiter's path set means a customized or
+            # extended route list silently drops the token from new endpoints.
             expected = f"Bearer {request.app.state.auth_token}"
             if request.headers.get("authorization") != expected:
                 metrics.record(method, path, 401, time.perf_counter() - start)
@@ -704,7 +716,10 @@ def create_app(
                 )
 
         acquired = False
-        gated = path in request.app.state.rate_limited_paths and path not in request.app.state.unlimited_paths
+        gated = (
+            path in request.app.state.rate_limited_paths
+            and path not in request.app.state.unlimited_paths
+        )
         try:
             if gated:
                 semaphore: asyncio.Semaphore = request.app.state.request_semaphore
@@ -907,7 +922,10 @@ def create_app(
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except (ValueError, RuntimeError, KeyError) as exc:
-            raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+            # Log the full exception server-side; return a redacted envelope so
+            # internal paths/stack details do not reach remote clients.
+            logger.exception("pipeline execution failed")
+            raise HTTPException(status_code=500, detail="pipeline execution failed") from exc
         return _bundle_to_analyze_response(bundle)
 
     @app.post(
@@ -980,7 +998,8 @@ def create_app(
         try:
             result = verify_repo_roundtrip(path, role_threshold=body.threshold)
         except (ValueError, RuntimeError, KeyError) as exc:
-            raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+            logger.exception("roundtrip execution failed")
+            raise HTTPException(status_code=500, detail="roundtrip execution failed") from exc
         return RoundtripResponse(
             roundtrip_status=result.roundtrip_status,
             role_preservation_score=float(result.role_preservation_score),
@@ -1225,7 +1244,8 @@ def create_app(
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except (ValueError, RuntimeError, KeyError) as exc:
-            raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+            logger.exception("pipeline execution failed")
+            raise HTTPException(status_code=500, detail="pipeline execution failed") from exc
 
         duration_total = time.perf_counter() - start_total
 
@@ -1273,7 +1293,8 @@ def create_app(
         try:
             result = verify_repo_roundtrip(path, role_threshold=body.threshold)
         except (ValueError, RuntimeError, KeyError) as exc:
-            raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+            logger.exception("roundtrip execution failed")
+            raise HTTPException(status_code=500, detail="roundtrip execution failed") from exc
 
         duration_total = time.perf_counter() - start_total
         return RoundtripResponseV1(

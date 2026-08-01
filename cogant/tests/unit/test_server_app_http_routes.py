@@ -274,3 +274,34 @@ class TestMetricsStoreAndRateLimiter:
         for name in ["cogant.api.pipeline", "cogant.reverse", "networkx", "pydantic"]:
             assert name in status
             assert isinstance(status[name], str)
+
+
+class TestAuthDecoupling:
+    """Auth must protect non-public routes independent of the rate-limit set."""
+
+    def test_auth_protects_non_rate_limited_route(self, tmp_path: Path) -> None:
+        app = create_app(
+            rate_limit_requests=10000,
+            rate_limit_window_s=3600.0,
+            workspace_root=tmp_path,
+            auth_token="s3cret",
+        )
+        client = TestClient(app)
+        # /api/v1/rules is not in the default rate_limited_paths set, so it
+        # must still be auth-protected when a token is configured.
+        assert client.get("/api/v1/rules").status_code == 401
+        assert (
+            client.get("/api/v1/rules", headers={"authorization": "Bearer s3cret"}).status_code
+            == 200
+        )
+
+    def test_auth_leaves_unlimited_route_open(self, tmp_path: Path) -> None:
+        app = create_app(
+            rate_limit_requests=10000,
+            rate_limit_window_s=3600.0,
+            workspace_root=tmp_path,
+            auth_token="s3cret",
+        )
+        client = TestClient(app)
+        assert client.get("/health").status_code == 200
+        assert client.get("/ready").status_code in (200, 503)

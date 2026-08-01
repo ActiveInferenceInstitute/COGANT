@@ -15,6 +15,6 @@ _SCRIPTS_DIR = _REPO_ROOT / "scripts"
 def test_scripts_dir_has_no_mechanical_split_generators() -> None:
     offenders = sorted(_SCRIPTS_DIR.glob("split_*.py"))
     assert offenders == [], (
-        "Mechanical split_*.py generators are banned (wave-3 debris). "
+        "Mechanical split_*.py generators are banned (legacy campaign debris). "
         f"Remove: {[p.name for p in offenders]}"
     )

@@ -7,6 +7,7 @@ deterministic regardless of filesystem traversal order.
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 
 _DEFAULT_EXTENSIONS: list[str] = [
@@ -32,6 +33,28 @@ def hash_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def _iter_repo_files(repo_path: Path, exts: set[str]):
+    """Yield ``(relative_path, real_path)`` for matching files in the repo.
+
+    Uses ``os.walk(followlinks=False)`` so directory symlinks that leave the
+    repository are not traversed, keeping the content hash (and thus the cache
+    key) from silently including or looping through out-of-tree content.
+    """
+    root = repo_path.resolve()
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        # Prune ignored directories in-place so os.walk does not descend.
+        dirnames[:] = [d for d in dirnames if d not in _IGNORED_DIRS]
+        for filename in sorted(filenames):
+            full = Path(dirpath) / filename
+            if full.is_file() and full.suffix in exts:
+                try:
+                    rel = full.resolve().relative_to(root)
+                except ValueError:
+                    # Real path escapes the repo root; skip it.
+                    continue
+                yield rel, full
+
+
 def hash_repo(
     repo_path: Path,
     extensions: list[str] | None = None,
@@ -40,27 +63,22 @@ def hash_repo(
 
     The hash is computed over ``sorted(relative_path + file_content)`` for
     every file whose suffix is in *extensions* (default: .py, .js, .ts).
-    Directories in ``_IGNORED_DIRS`` are skipped entirely.
+    Files are streamed one at a time so memory stays bounded regardless of
+    total repository size. Directories in ``_IGNORED_DIRS`` are skipped.
     """
     exts = set(extensions) if extensions is not None else set(_DEFAULT_EXTENSIONS)
     h = hashlib.sha256()
 
-    entries: list[tuple[str, bytes]] = []
-    for child in sorted(repo_path.rglob("*")):
-        # Skip ignored directories and their contents.
-        if any(part in _IGNORED_DIRS for part in child.parts):
-            continue
-        if child.is_file() and child.suffix in exts:
-            rel = str(child.relative_to(repo_path))
-            entries.append((rel, child.read_bytes()))
-
-    for rel, content in entries:
+    for rel, full in sorted(_iter_repo_files(repo_path, exts), key=lambda pair: pair[0]):
         # Length-prefix both fields so path/content boundaries cannot collide
         # (for example, ``ab`` + ``c`` vs ``a`` + ``bc``).
-        rel_bytes = rel.encode()
+        rel_bytes = str(rel).encode()
         h.update(len(rel_bytes).to_bytes(8, "big"))
         h.update(rel_bytes)
-        h.update(len(content).to_bytes(8, "big"))
-        h.update(content)
+        content_length = full.stat().st_size
+        h.update(content_length.to_bytes(8, "big"))
+        with full.open("rb") as fh:
+            for chunk in iter(lambda: fh.read(65536), b""):
+                h.update(chunk)
 
     return h.hexdigest()

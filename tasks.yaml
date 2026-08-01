@@ -327,7 +327,7 @@ tasks:
   title: Remaining robustness transforms + CI regeneration gate
   status: in_progress
   start: '2026-06-16'
-  end: '2026-06-28'
+  end: '2026-09-30'
   progress: 65
   milestone: false
   deps:
@@ -343,7 +343,7 @@ tasks:
   title: Promote held-out pilot into metrics/claim gates
   status: in_progress
   start: '2026-06-18'
-  end: '2026-06-28'
+  end: '2026-09-30'
   progress: 25
   milestone: false
   deps:
@@ -394,7 +394,7 @@ tasks:
   title: COGANT release
   status: in_progress
   start: '2026-07-01'
-  end: '2026-07-01'
+  end: '2026-12-31'
   progress: 20
   milestone: true
   deps:

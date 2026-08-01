@@ -223,6 +223,19 @@ class FileEnumerator:
                 if not path.is_file():
                     continue
 
+                # Reject files whose real path escapes the repository root.
+                # pathlib rglob recurses through symlinked directories and
+                # is_file() follows symlinks, so without this guard a hostile
+                # repo could place a symlink that reads/analyzes host files
+                # outside the repo (scope escape + content exfiltration into
+                # the exported bundle). Resolve and require containment.
+                try:
+                    resolved = path.resolve()
+                    resolved.relative_to(self.repo_root.resolve())
+                except (OSError, ValueError):
+                    logger.warning(f"Skipping path outside repository root: {path}")
+                    continue
+
                 if self._should_ignore(path):
                     continue
 

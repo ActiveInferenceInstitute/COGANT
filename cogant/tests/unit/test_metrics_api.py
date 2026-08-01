@@ -56,7 +56,10 @@ def test_role_preserved_count_is_current_fresh_verdict_count() -> None:
 def test_strict_isomorphism_count_is_strict_count() -> None:
     count = m.strict_isomorphism_count()
     assert isinstance(count, int)
-    assert count == m.strict_isomorphism_count()
+    roundtrip = m.load()["evaluation"]["roundtrip"]
+    # Assert against the authoritative ledger field, not a self-comparison.
+    assert count == roundtrip["strict_isomorphism_count"]
+    assert count <= m.total_targets()
 
 
 def test_total_targets_matches_per_target_rows() -> None:

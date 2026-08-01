@@ -1,5 +1,6 @@
 """Repository ingestion: clone, read, detect language, and extract metadata."""
 
+import hashlib
 import logging
 import shutil
 import subprocess
@@ -148,9 +149,15 @@ class RepoIngester:
         Returns:
             RepoSnapshot with all metadata and files.
         """
-        # Clone repository
-        repo_name = url.rstrip("/").split("/")[-1].replace(".git", "")
-        repo_path = self.work_dir / repo_name
+        # Clone repository. Derive a plain directory component from the URL,
+        # never an untrusted path: a URL ending in ``..`` or containing path
+        # separators (e.g. ``https://host/a/../../b``) must not escape the
+        # work_dir or target an unrelated directory for removal/write.
+        raw_name = url.rstrip("/").split("/")[-1].replace(".git", "")
+        name = Path(raw_name).name
+        if not name or name in {".", ".."}:
+            name = hashlib.sha256(url.encode("utf-8")).hexdigest()[:12]
+        repo_path = self.work_dir / name
 
         # Remove if already exists
         if repo_path.exists():

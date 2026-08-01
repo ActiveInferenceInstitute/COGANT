@@ -156,11 +156,16 @@ class CacheStore:
         path = self._path_for(key)
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Atomic write: temp file in same dir, then rename.
+        # Atomic write: temp file in same dir, then rename. fsync before
+        # rename so a crash cannot leave a zero-length/incomplete entry that
+        # later fools a ``get_latest`` scan (reads already treat corrupt
+        # entries as misses, but fsync keeps the on-disk TTL/contract honest).
         fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
         try:
             with os.fdopen(fd, "w") as f:
                 json.dump(self._serialize(entry), f)
+                f.flush()
+                os.fsync(f.fileno())
             os.replace(tmp, str(path))
         except BaseException:
             # Clean up temp on failure.
