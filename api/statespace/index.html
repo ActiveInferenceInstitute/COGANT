@@ -16863,7 +16863,12 @@ model.variables  # dict of StateVariable keyed by id
 <span class="normal">1444</span>
 <span class="normal">1445</span>
 <span class="normal">1446</span>
-<span class="normal">1447</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StateSpaceCompiler</span><span class="p">:</span>
+<span class="normal">1447</span>
+<span class="normal">1448</span>
+<span class="normal">1449</span>
+<span class="normal">1450</span>
+<span class="normal">1451</span>
+<span class="normal">1452</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StateSpaceCompiler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compile a state-space model from a program graph and semantic mappings.</span>
 
 <span class="sd">    The compiler is the bridge between the symbolic output of the</span>
@@ -17445,7 +17450,12 @@ model.variables  # dict of StateVariable keyed by id
 
             <span class="c1"># Weight is driven by the mapping confidence -- a constraint we</span>
             <span class="c1"># are certain of carries more weight in the preference model.</span>
-            <span class="n">weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mapping</span><span class="o">.</span><span class="n">confidence_score</span><span class="p">)</span> <span class="k">if</span> <span class="n">mapping</span><span class="o">.</span><span class="n">confidence_score</span> <span class="k">else</span> <span class="mf">1.0</span>
+            <span class="c1"># Use the confidence directly so certainty is monotone in weight:</span>
+            <span class="c1"># a zero-confidence constraint (no evidence) weights lowest rather</span>
+            <span class="c1"># than boomeranging up to the maximum.</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">mapping</span><span class="o">.</span><span class="n">confidence_score</span><span class="p">)</span> <span class="k">if</span> <span class="n">mapping</span><span class="o">.</span><span class="n">confidence_score</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">1.0</span>
+            <span class="p">)</span>
 
             <span class="n">preference</span> <span class="o">=</span> <span class="n">Preference</span><span class="p">(</span>
                 <span class="nb">id</span><span class="o">=</span><span class="n">pref_id</span><span class="p">,</span>
@@ -18527,12 +18537,7 @@ model1 = compiler.compile(mappings1)</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>py/cogant/statespace/compiler.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1330</span>
-<span class="normal">1331</span>
-<span class="normal">1332</span>
-<span class="normal">1333</span>
-<span class="normal">1334</span>
-<span class="normal">1335</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1335</span>
 <span class="normal">1336</span>
 <span class="normal">1337</span>
 <span class="normal">1338</span>
@@ -18609,7 +18614,12 @@ model1 = compiler.compile(mappings1)</p>
 <span class="normal">1409</span>
 <span class="normal">1410</span>
 <span class="normal">1411</span>
-<span class="normal">1412</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile_incremental</span><span class="p">(</span>
+<span class="normal">1412</span>
+<span class="normal">1413</span>
+<span class="normal">1414</span>
+<span class="normal">1415</span>
+<span class="normal">1416</span>
+<span class="normal">1417</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile_incremental</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">semantic_mappings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SemanticMapping</span><span class="p">],</span>
     <span class="n">prev_result</span><span class="p">:</span> <span class="n">StateSpaceModel</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -18801,12 +18811,7 @@ Compiler strategy for schema 'system':
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>py/cogant/statespace/compiler.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1414</span>
-<span class="normal">1415</span>
-<span class="normal">1416</span>
-<span class="normal">1417</span>
-<span class="normal">1418</span>
-<span class="normal">1419</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1419</span>
 <span class="normal">1420</span>
 <span class="normal">1421</span>
 <span class="normal">1422</span>
@@ -18834,7 +18839,12 @@ Compiler strategy for schema 'system':
 <span class="normal">1444</span>
 <span class="normal">1445</span>
 <span class="normal">1446</span>
-<span class="normal">1447</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">explain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">1447</span>
+<span class="normal">1448</span>
+<span class="normal">1449</span>
+<span class="normal">1450</span>
+<span class="normal">1451</span>
+<span class="normal">1452</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">explain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a human-readable account of the compilation strategy.</span>
 
 <span class="sd">    Returns:</span>
@@ -26542,7 +26552,12 @@ model.variables  # dict of StateVariable keyed by id
 <span class="normal">1444</span>
 <span class="normal">1445</span>
 <span class="normal">1446</span>
-<span class="normal">1447</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StateSpaceCompiler</span><span class="p">:</span>
+<span class="normal">1447</span>
+<span class="normal">1448</span>
+<span class="normal">1449</span>
+<span class="normal">1450</span>
+<span class="normal">1451</span>
+<span class="normal">1452</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StateSpaceCompiler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compile a state-space model from a program graph and semantic mappings.</span>
 
 <span class="sd">    The compiler is the bridge between the symbolic output of the</span>
@@ -27124,7 +27139,12 @@ model.variables  # dict of StateVariable keyed by id
 
             <span class="c1"># Weight is driven by the mapping confidence -- a constraint we</span>
             <span class="c1"># are certain of carries more weight in the preference model.</span>
-            <span class="n">weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mapping</span><span class="o">.</span><span class="n">confidence_score</span><span class="p">)</span> <span class="k">if</span> <span class="n">mapping</span><span class="o">.</span><span class="n">confidence_score</span> <span class="k">else</span> <span class="mf">1.0</span>
+            <span class="c1"># Use the confidence directly so certainty is monotone in weight:</span>
+            <span class="c1"># a zero-confidence constraint (no evidence) weights lowest rather</span>
+            <span class="c1"># than boomeranging up to the maximum.</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">mapping</span><span class="o">.</span><span class="n">confidence_score</span><span class="p">)</span> <span class="k">if</span> <span class="n">mapping</span><span class="o">.</span><span class="n">confidence_score</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">1.0</span>
+            <span class="p">)</span>
 
             <span class="n">preference</span> <span class="o">=</span> <span class="n">Preference</span><span class="p">(</span>
                 <span class="nb">id</span><span class="o">=</span><span class="n">pref_id</span><span class="p">,</span>
@@ -28206,12 +28226,7 @@ model1 = compiler.compile(mappings1)</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>py/cogant/statespace/compiler.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1330</span>
-<span class="normal">1331</span>
-<span class="normal">1332</span>
-<span class="normal">1333</span>
-<span class="normal">1334</span>
-<span class="normal">1335</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1335</span>
 <span class="normal">1336</span>
 <span class="normal">1337</span>
 <span class="normal">1338</span>
@@ -28288,7 +28303,12 @@ model1 = compiler.compile(mappings1)</p>
 <span class="normal">1409</span>
 <span class="normal">1410</span>
 <span class="normal">1411</span>
-<span class="normal">1412</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile_incremental</span><span class="p">(</span>
+<span class="normal">1412</span>
+<span class="normal">1413</span>
+<span class="normal">1414</span>
+<span class="normal">1415</span>
+<span class="normal">1416</span>
+<span class="normal">1417</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile_incremental</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">semantic_mappings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SemanticMapping</span><span class="p">],</span>
     <span class="n">prev_result</span><span class="p">:</span> <span class="n">StateSpaceModel</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -28480,12 +28500,7 @@ Compiler strategy for schema 'system':
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>py/cogant/statespace/compiler.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1414</span>
-<span class="normal">1415</span>
-<span class="normal">1416</span>
-<span class="normal">1417</span>
-<span class="normal">1418</span>
-<span class="normal">1419</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1419</span>
 <span class="normal">1420</span>
 <span class="normal">1421</span>
 <span class="normal">1422</span>
@@ -28513,7 +28528,12 @@ Compiler strategy for schema 'system':
 <span class="normal">1444</span>
 <span class="normal">1445</span>
 <span class="normal">1446</span>
-<span class="normal">1447</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">explain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">1447</span>
+<span class="normal">1448</span>
+<span class="normal">1449</span>
+<span class="normal">1450</span>
+<span class="normal">1451</span>
+<span class="normal">1452</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">explain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a human-readable account of the compilation strategy.</span>
 
 <span class="sd">    Returns:</span>
