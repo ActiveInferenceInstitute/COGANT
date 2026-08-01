@@ -16868,7 +16868,10 @@ model.variables  # dict of StateVariable keyed by id
 <span class="normal">1449</span>
 <span class="normal">1450</span>
 <span class="normal">1451</span>
-<span class="normal">1452</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StateSpaceCompiler</span><span class="p">:</span>
+<span class="normal">1452</span>
+<span class="normal">1453</span>
+<span class="normal">1454</span>
+<span class="normal">1455</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StateSpaceCompiler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compile a state-space model from a program graph and semantic mappings.</span>
 
 <span class="sd">    The compiler is the bridge between the symbolic output of the</span>
@@ -17439,7 +17442,10 @@ model.variables  # dict of StateVariable keyed by id
         <span class="n">pref_mappings</span> <span class="o">=</span> <span class="p">[(</span><span class="n">mid</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">mid</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">semantic_mappings</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="n">pref_kinds</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">mapping_id</span><span class="p">,</span> <span class="n">mapping</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pref_mappings</span><span class="p">):</span>
-            <span class="n">pref_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pref_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="c1"># Key by the stable mapping id, not a positional index, so</span>
+            <span class="c1"># inserting/removing an earlier mapping cannot shift every</span>
+            <span class="c1"># downstream preference id (unstable ids break persistence/diffing).</span>
+            <span class="n">pref_id</span> <span class="o">=</span> <span class="n">mapping_id</span> <span class="k">if</span> <span class="n">mapping_id</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;pref_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
 
             <span class="c1"># Extract scope: which state variables are touched by the</span>
             <span class="c1"># constraint&#39;s graph fragment.</span>
@@ -18537,10 +18543,7 @@ model1 = compiler.compile(mappings1)</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>py/cogant/statespace/compiler.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1335</span>
-<span class="normal">1336</span>
-<span class="normal">1337</span>
-<span class="normal">1338</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1338</span>
 <span class="normal">1339</span>
 <span class="normal">1340</span>
 <span class="normal">1341</span>
@@ -18619,7 +18622,10 @@ model1 = compiler.compile(mappings1)</p>
 <span class="normal">1414</span>
 <span class="normal">1415</span>
 <span class="normal">1416</span>
-<span class="normal">1417</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile_incremental</span><span class="p">(</span>
+<span class="normal">1417</span>
+<span class="normal">1418</span>
+<span class="normal">1419</span>
+<span class="normal">1420</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile_incremental</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">semantic_mappings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SemanticMapping</span><span class="p">],</span>
     <span class="n">prev_result</span><span class="p">:</span> <span class="n">StateSpaceModel</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -18811,10 +18817,7 @@ Compiler strategy for schema 'system':
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>py/cogant/statespace/compiler.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1419</span>
-<span class="normal">1420</span>
-<span class="normal">1421</span>
-<span class="normal">1422</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1422</span>
 <span class="normal">1423</span>
 <span class="normal">1424</span>
 <span class="normal">1425</span>
@@ -18844,7 +18847,10 @@ Compiler strategy for schema 'system':
 <span class="normal">1449</span>
 <span class="normal">1450</span>
 <span class="normal">1451</span>
-<span class="normal">1452</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">explain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">1452</span>
+<span class="normal">1453</span>
+<span class="normal">1454</span>
+<span class="normal">1455</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">explain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a human-readable account of the compilation strategy.</span>
 
 <span class="sd">    Returns:</span>
@@ -26557,7 +26563,10 @@ model.variables  # dict of StateVariable keyed by id
 <span class="normal">1449</span>
 <span class="normal">1450</span>
 <span class="normal">1451</span>
-<span class="normal">1452</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StateSpaceCompiler</span><span class="p">:</span>
+<span class="normal">1452</span>
+<span class="normal">1453</span>
+<span class="normal">1454</span>
+<span class="normal">1455</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StateSpaceCompiler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compile a state-space model from a program graph and semantic mappings.</span>
 
 <span class="sd">    The compiler is the bridge between the symbolic output of the</span>
@@ -27128,7 +27137,10 @@ model.variables  # dict of StateVariable keyed by id
         <span class="n">pref_mappings</span> <span class="o">=</span> <span class="p">[(</span><span class="n">mid</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">mid</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">semantic_mappings</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="n">pref_kinds</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">mapping_id</span><span class="p">,</span> <span class="n">mapping</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pref_mappings</span><span class="p">):</span>
-            <span class="n">pref_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pref_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="c1"># Key by the stable mapping id, not a positional index, so</span>
+            <span class="c1"># inserting/removing an earlier mapping cannot shift every</span>
+            <span class="c1"># downstream preference id (unstable ids break persistence/diffing).</span>
+            <span class="n">pref_id</span> <span class="o">=</span> <span class="n">mapping_id</span> <span class="k">if</span> <span class="n">mapping_id</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;pref_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
 
             <span class="c1"># Extract scope: which state variables are touched by the</span>
             <span class="c1"># constraint&#39;s graph fragment.</span>
@@ -28226,10 +28238,7 @@ model1 = compiler.compile(mappings1)</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>py/cogant/statespace/compiler.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1335</span>
-<span class="normal">1336</span>
-<span class="normal">1337</span>
-<span class="normal">1338</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1338</span>
 <span class="normal">1339</span>
 <span class="normal">1340</span>
 <span class="normal">1341</span>
@@ -28308,7 +28317,10 @@ model1 = compiler.compile(mappings1)</p>
 <span class="normal">1414</span>
 <span class="normal">1415</span>
 <span class="normal">1416</span>
-<span class="normal">1417</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile_incremental</span><span class="p">(</span>
+<span class="normal">1417</span>
+<span class="normal">1418</span>
+<span class="normal">1419</span>
+<span class="normal">1420</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compile_incremental</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">semantic_mappings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SemanticMapping</span><span class="p">],</span>
     <span class="n">prev_result</span><span class="p">:</span> <span class="n">StateSpaceModel</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -28500,10 +28512,7 @@ Compiler strategy for schema 'system':
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>py/cogant/statespace/compiler.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1419</span>
-<span class="normal">1420</span>
-<span class="normal">1421</span>
-<span class="normal">1422</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1422</span>
 <span class="normal">1423</span>
 <span class="normal">1424</span>
 <span class="normal">1425</span>
@@ -28533,7 +28542,10 @@ Compiler strategy for schema 'system':
 <span class="normal">1449</span>
 <span class="normal">1450</span>
 <span class="normal">1451</span>
-<span class="normal">1452</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">explain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">1452</span>
+<span class="normal">1453</span>
+<span class="normal">1454</span>
+<span class="normal">1455</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">explain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a human-readable account of the compilation strategy.</span>
 
 <span class="sd">    Returns:</span>
