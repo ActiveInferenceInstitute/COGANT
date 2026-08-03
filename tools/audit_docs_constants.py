@@ -135,7 +135,7 @@ ROUNDTRIP_CURRENT_QUALIFIER_RE = re.compile(
     r"\b("
     r"current\s+native\s+ledger|ledger\s+refresh|"
     r"fresh\s+(?:release\s+)?evidence|"
-    r"current\s+metrics\s+classif"
+    r"current\s+metrics\s+classification"
     r")\b",
     re.IGNORECASE,
 )
