@@ -2,7 +2,7 @@
 
 - Status: Active (P0–P5 roadmap below).
 - Owner: DAF.
-- Last reviewed: 2026-08-01 (hostile red-team pass: Miner/Medium fixes implemented; Major findings scoped in the "Major — Scoped (deferred)" section below).
+- Last reviewed: 2026-08-02 (docs-deep review pass: Minor/Medium findings implemented; see "Completed/Closed — 2026-08-02 docs-deep review pass").
 
 This is the future-only execution backlog. Completed work belongs in Git
 history, generated evidence, audit reports, or the taskboard; it must not be
@@ -374,3 +374,86 @@ suite remained at its documented 137-failure P0 baseline — see `cog-p0-02`).
 - **M7 — `audit_test_names` (and related doc gates) not wired into CI / release.**
   **IMPLEMENTED:** added a `test-names` step to `tools/release_gate.py` and a
   matching CI step in `.github/workflows/ci.yml`; the gate dry-run passes.
+
+## Completed/Closed — 2026-08-02 docs-deep review pass
+
+Fleet docs-deep pass (log: [`REVIEW_LOG_2026-08-02.md`](REVIEW_LOG_2026-08-02.md)).
+Findings below were verified against the live parser registry, CLI help, module
+layout, and METRICS.yaml before editing. Commits: `d86528c`, `d2d7156`.
+
+### Minor — implemented (✓)
+
+- [x] **Broken markdown fences** in `architecture/use_finalmappings_for_gnn_training.md`,
+  `architecture/6_export.md`, `architecture/analyze.md`,
+  `architecture/convert_to_node.md`, `architecture/enumerate_all_source_files.md`.
+- [x] **Stale "not yet linked from the main nav"** statement in `docs/playground.md`
+  (the Playground is in `mkdocs.yml` nav).
+- [x] **Missing file-map row** for `theory/roundtrip.md` in `docs/theory/AGENTS.md`.
+- [x] **Missing contents-table rows** for `network_analysis.md`, `static_analysis.md`,
+  `visualization.md` in `docs/reference/README.md`.
+
+### Medium — implemented (✓)
+
+- [x] **Wrong supported-language lists** (Java/C++/C#/Ruby/PHP advertised as
+  parsed) in `architecture/analyze_data_flow.md`, `enumerate_all_source_files.md`,
+  `ingest_a_remote_git_repository.md`, `convert_to_node.md`,
+  `use_finalmappings_for_gnn_training.md`, `api/pipelinerunner_api.md`.
+  Canonical set (live `cogant.parsers` registry): Python, JS/TS, experimental
+  Rust/Go.
+- [x] **Stale FAQ language statements** (`docs/faq.md` Q3, Q16, Q33 said Rust/Go
+  had no parser and Java/Rust were roadmap-only).
+- [x] **Stale roadmap limitations** (`roadmap/known_limitations_010.md` sections 1–2)
+  updated to the live parser registry and the implemented dynamic-enrichment stage.
+- [x] **Internal sandbox path leaks** (`/sessions/focused-bold-noether/mnt/cogant`)
+  removed from 3 architecture pages; replaced with package-root guidance.
+- [x] **Dead `translate/rules.py` paths + "8 concrete rules" counts** updated to the
+  `translate/rules/` package (22 rules, 5 families) in 4 docs.
+- [x] **Stale `cogant.semantics` import** and outdated `TranslationRule` example in
+  `architecture/rule_taxonomy.md` (now `cogant.schemas.*`, current ABC).
+- [x] **Stale version examples** `0.5.0 → 0.6.0` in `api/server.md` and
+  `export/reproducibility.md`.
+- [x] **Nonexistent `PipelineConfig.plugins` example** (incl. a Java entry) removed
+  from `api/pipelinerunner_api.md`.
+- [x] **`docs/changelog.md` drift** — resynced from `CHANGELOG.md` (the documented
+  `cp` convention); this also fixed the `../CHANGELOG.md` link that aborted
+  `mkdocs build --strict`.
+- [x] **78 dead absolute GitHub source links** (missing `cogant/` prefix) repaired
+  across `evaluation/`, `rnd/`, `reference/`, `theory/`, `tutorials/`.
+  `verify_doc_links.py` only checks relative links, so these 404s were uncaught.
+- [x] **Missing `cogant/SECURITY.md`** created (referenced by `docs/security/AGENTS.md`
+  and `docs/fix_links.py` but absent).
+- [x] **`audit_docs_constants.py` false positives on the changelog mirror** — the
+  changelog is a dated record, not active guidance; exception lists updated
+  (`/changelog.md` + preview-stubs scope). Gate green, ruff clean.
+- [x] **Stale `.github/README.md`** — server "ships no auth" claim (auth token now
+  required for non-loopback binds) and language list.
+- [x] **RFC 0001 defined GNN as "graph neural network"** — corrected to
+  Generalized Notation Notation (matches the rest of the corpus).
+- [x] **Stale `docs/CI.md`** — referenced `checkout@v4`/`setup-uv@v5`/`--strict`;
+  rewritten to match the real `docs.yml` (checkout@v5, setup-uv@v8.1.0, non-strict
+  build, peaceiris deploy).
+- [x] **Wrong roundtrip fixture breakdown** in `cogant/README.md` ("8 uncurated
+  third-party libraries" → 10 control-positive + 3 real-world + 12 zoo = 25).
+- [x] **Orphaned pages missing from the MkDocs nav** — added `api/server.md`,
+  `architecture/rule_taxonomy.md`, `architecture/static_analysis.md`,
+  `reference/batch_dashboard.md`, `reference/calibration_guide.md`,
+  `reference/network_analysis.md`, `reference/static_analysis.md`,
+  `reference/visualization.md`, `rnd/organization_state_spaces.md`,
+  `roadmap/version_060_planned.md`, `theory/roundtrip.md`,
+  `evaluation/heldout_pilot/README.md`, and the `learning-paths/README.md`
+  section index.
+
+### Open / deferred
+
+- [ ] **Notebook stubs** — `docs/notebooks/*.md` (12 pages) are deliberate
+  "(planned)" placeholders with one-line descriptions; filling them needs the
+  Jupyter toolchain and is a major effort. Left as-is (they are honestly labeled
+  in the nav).
+- [ ] **Pre-existing audit test failure** —
+  `tests/test_audit_docs_constants.py::test_roundtrip_claim_audit_accepts_current_ledger_claim`
+  fails at HEAD without this pass's changes (verified by stash); not caused by the
+  docs pass. Owner should reconcile the test fixture with the current qualifier
+  regex.
+- [ ] **METRICS regeneration** — `METRICS.yaml` must be regenerated against the
+  new HEAD (`tools/regenerate_metrics.py`) before the metrics-fresh / release
+  gates can claim commit-bound freshness (see `cog-p0-04`).

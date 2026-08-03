@@ -1,6 +1,6 @@
 # Playground
 
-The interactive **COGANT Playground** is a single-page editor and graph preview shipped as [`playground.html`](playground.html) next to this file. It is not yet linked from the main nav as a polished product surface; use it for local experiments.
+The interactive **COGANT Playground** is a single-page editor and graph preview shipped as [`playground.html`](playground.html) next to this file (linked from the main nav as "Playground"). Use it for local experiments.
 
 ## Local preview
 
