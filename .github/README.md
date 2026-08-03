@@ -7,7 +7,8 @@
 > **Translate software repositories into Active Inference generative models.**
 
 **COGANT** (Codebase-to-GNN Translation) deterministically converts Python, JavaScript, and
-TypeScript codebases into [Active Inference Institute](https://activeinference.org/)
+TypeScript codebases (plus experimental Rust and Go front ends) into
+[Active Inference Institute](https://activeinference.org/)
 **Generalized Notation Notation (GNN)** state-space models — complete with A/B/C/D probabilistic
 matrices, Markov-blanket partitions, and principled free-energy derivations.
 
@@ -36,8 +37,9 @@ repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMa
 - **Incremental mode** — `cogant analyze --incremental <git-ref>` re-uses the prior run's program
   graph for unchanged paths (measured no-change / single-file speedups on the Flask benchmark).
 - **Packaged demo server** — `cogant.server.app` exposes `/health` and `/translate`; a packaged
-  `Dockerfile` (python:3.12-slim + uv) and `docker-compose.yml` run it as a container. It ships
-  **no auth** — run it locally or behind your own reverse proxy, TLS, and authentication.
+  `Dockerfile` (python:3.12-slim + uv) and `docker-compose.yml` run it as a container. The default
+  bind is loopback-only; non-loopback binds require an authentication token. It remains a local
+  analysis boundary, not a sandbox for arbitrary code.
 
 ## Quick start
 

@@ -60,7 +60,6 @@ def _roundtrip_current_count_doc(path: Path) -> bool:
         "PROMOTION.md",
         "cogant/README.md",
         "cogant/AGENTS.md",
-        "cogant/docs/changelog.md",
         "cogant/docs/evaluation/BENCHMARK_VS_PRIOR.md",
         "cogant/docs/evaluation/FINAL_REPORT.md",
         "cogant/docs/evaluation/R&D_LOG.md",
@@ -90,6 +89,7 @@ def _current_guidance_doc(path: Path) -> bool:
     if not rel.startswith("cogant/docs/"):
         return False
     current_exception_parts = (
+        "/changelog.md",
         "/evaluation/R&D_LOG.md",
         "/evaluation/RELEASE_NOTES",
         "/evaluation/ROUNDTRIP_EVAL.md",
@@ -429,6 +429,7 @@ BANNED_PATTERNS = [
         "preview-stubs",
         re.compile(r"\bPreview stubs?\b|\bpreview stubs?\b"),
         "Describe analyze-static/analyze-graph/visualize/export as real commands.",
+        applies_to=_active_guidance_doc,
     ),
     BannedPattern(
         "nineteen-built-in",

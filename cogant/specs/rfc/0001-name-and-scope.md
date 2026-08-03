@@ -25,7 +25,7 @@ COGANT bridges this gap by providing a translation pipeline that:
 
 **COGANT** = **Co**debase-to-**G**NN **AN**alysi**s** **T**ranslation
 
-The name encodes the system's core purpose: systematically translating codebases into graph neural network inputs. Alternatives considered:
+The name encodes the system's core purpose: systematically translating codebases into Generalized Notation Notation (GNN) model bundles — the Active Inference Institute's structured state-space and process-model notation, not graph neural networks. Alternatives considered:
 - "code2gnn" (too narrow, ignores intermediate IRs)
 - "GraphCodebase" (doesn't emphasize GNN focus)
 - "SemanticGraphPipeline" (overly verbose)
