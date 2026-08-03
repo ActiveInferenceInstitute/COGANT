@@ -35,6 +35,9 @@ For the high-level architecture narrative, see [../architecture/overview.md](../
 | [Calibration Guide](calibration_guide.md) | Methodology and per-threshold sweep registry for resolving `TODO(calibration)` markers in `translate/` and `statespace/` | Advanced |
 | [API Overview](api_overview.md) | Compressed Python / CLI API surface reference | Intermediate |
 | [Batch Dashboard](batch_dashboard.md) | Cross-target `run_all` sweep dashboard artifacts and API | Intermediate |
+| [Network Analysis](network_analysis.md) | `GraphAnalyzer` network metrics, centrality, communities, cycles | Intermediate |
+| [Static Analysis](static_analysis.md) | Static analyzers: complexity, coupling, dead code, metrics API | Intermediate |
+| [Visualization](visualization.md) | Visualization workbench: inspection dashboard, PNG/PDF/SVG/Mermaid artifacts | Intermediate |
 | [Examples](examples.md) | Worked examples covering common reference tasks | Beginner |
 
 For the detailed CLI verb reference see [../cli/commands.md](../cli/commands.md) and [../cli/usage_examples.md](../cli/usage_examples.md); for Python API deep-dives see [../api/README.md](../api/README.md). How-to recipes previously fragmented into the reference module now live in [../cookbook/](../cookbook/README.md) and [../getting-started/quickstart.md](../getting-started/quickstart.md).

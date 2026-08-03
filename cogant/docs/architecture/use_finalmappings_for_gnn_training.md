@@ -1,7 +1,6 @@
 ## Use final_mappings for GNN export
 
 > **Note:** "GNN" here refers to Generalized Notation Notation (the Active Inference Institute's structured state-space and process-model notation), NOT graph neural networks. COGANT translates code into GNN model artifacts; it does not train neural network layers.
-```
 
 ---
 
@@ -16,7 +15,7 @@ class Node:
     name: str                        # Human-readable name
     qualified_name: str              # Fully qualified name
     path: Optional[str]              # File/module path
-    language: Optional[str]          # python, javascript, java, etc.
+    language: Optional[str]          # python, javascript, typescript, rust, go
     source_range: Optional[Dict]     # Start/end line/column
     metadata: Dict[str, Any]         # Language-specific metadata
 ```
@@ -73,16 +72,22 @@ py/cogant/
 │   ├── queries.py           # GraphQuery
 │   └── merge.py             # GraphMerger
 ├── translate/
-│   ├── __init__.py
-│   ├── engine.py            # TranslationEngine
-│   ├── rules.py             # 8 concrete rules
-│   ├── confidence.py        # ConfidenceModel
-│   └── review.py            # ReviewManager
+│   ├── __init__.py            # TranslationEngine
+│   ├── engine.py              # TranslationEngine
+│   ├── rules/                 # 22 concrete rules across 5 family modules
+│   │   ├── structural.py
+│   │   ├── semantic.py
+│   │   ├── control.py
+│   │   ├── behavioral.py
+│   │   └── resilience.py
+│   ├── confidence.py          # ConfidenceModel
+│   └── review.py              # ReviewManager
 └── schemas/
     ├── __init__.py
-    ├── core.py              # Node, Edge, NodeKind, EdgeKind
-    ├── graph.py             # ProgramGraph, GraphMetadata
-    └── semantic.py          # SemanticMapping, etc.
+    ├── core.py                # NodeKind, EdgeKind
+    ├── graph.py               # ProgramGraph, GraphMetadata
+    ├── semantic.py            # MappingKind, ConfidenceTier
+    └── semantic_mapping.py    # SemanticMapping, SemanticRole
 ```
 
 ---
@@ -90,8 +95,8 @@ py/cogant/
 ### Running Tests
 
 ```bash
-cd /sessions/focused-bold-noether/mnt/cogant
-python tests/test_engine.py
+cd <package-root>   # the directory containing py/, tests/, pyproject.toml
+uv run pytest tests/ -q --no-cov
 ```
 
 Output shows:

@@ -1,26 +1,30 @@
-# Known Limitations (v0.6 Hardening Snapshot)
+# Known Limitations (v0.6 Snapshot)
 
-Last updated: 2026-05-14. Limitations are ordered by impact.
+Last updated: 2026-08-02. Limitations are ordered by impact.
 See `feature_backlog.md` for the planned fix target for each item.
 
 ---
 
 ## Active Limitations
 
-### 1. Language Support: Python and JS/TS Only
+### 1. Language Support: Parsers for Python/JS/TS Plus Experimental Rust/Go
 
-Java, Rust, C/C++, Go, Ruby, and other languages have no parser.
-The tree-sitter substrate is in place; adding parsers requires grammar wiring + language-specific rules.
+Registered parsers cover Python (CPython `ast`), JavaScript / TypeScript
+(tree-sitter-preferred with a structural fallback), and experimental structural
+parsers for Rust and Go. Java, C/C++, Ruby, PHP, and other languages have no
+parser, though file enumeration recognizes their extensions.
 
 **Workaround:** Manually annotate cross-language boundary nodes using the YAML rule DSL.
-**Target fix:** Java + Rust parsers planned for v0.6.x.
+**Target fix:** Java parser planned (see `feature_backlog.md`).
 
 ---
 
-### 2. Static Analysis Only (No Runtime Traces)
+### 2. No Self-Generated Runtime Traces
 
-`ConfidenceTier.RUNTIME_ONLY` and `STATIC_PLUS_RUNTIME` paths exist in the confidence model
-but are not yet populated. All evidence is derived from AST/tree-sitter analysis, not execution.
+COGANT does not execute the analyzed code. The `dynamic` stage can enrich the
+graph with runtime evidence (coverage databases, execution traces) when such data
+is supplied, and `ConfidenceTier.RUNTIME_ONLY` / `STATIC_PLUS_RUNTIME` tiers
+reflect that evidence, but no runtime data is produced by the pipeline itself.
 
 **Impact:** Dynamic dispatch, monkey-patching, and probabilistic runtime branching are not modeled.
 OBSERVATION false negatives occur when a value is conditionally observed only at runtime.

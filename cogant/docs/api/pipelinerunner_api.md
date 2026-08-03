@@ -41,12 +41,7 @@ config = PipelineConfig(
         "validate",
     ],
     # Skip specific stages
-    skip_stages=["dynamic", "process"],
-    # Plugin configurations
-    plugins={
-        "python": {"version": "3.9"},
-        "java": {"jdk_home": "/usr/lib/jvm/java-11"},
-    },
+    skip_stages=["dynamic"],
     # Output directory
     output_dir="output/",
     # Enable verbose logging

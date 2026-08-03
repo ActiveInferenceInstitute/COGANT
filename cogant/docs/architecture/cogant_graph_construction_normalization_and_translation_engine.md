@@ -31,7 +31,7 @@ This document describes the complete engine for COGANT - the **Codebase-to-GNN T
 ┌─────────────────────────────────────────────────────────────┐
 │                  TRANSLATION LAYER                           │
 │  • TranslationEngine: Rule orchestration                     │
-│  • 8 Concrete Rules: Pattern detection                       │
+│  • 22 Concrete Rules: Pattern detection                       │
 │  • ConfidenceModel: Evidence scoring                         │
 │  • ReviewManager: Human curation                            │
 └──────────────────────────┬──────────────────────────────────┘

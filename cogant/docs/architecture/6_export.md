@@ -1,88 +1,80 @@
 ## 6. Export
-final = reviewer.export_reviewed_mappings()
-```
+
+The export stage serializes the pipeline's artifacts — the `ProgramGraph`, semantic
+mappings, and derived state-space / process models — into a **bundle**: a directory of
+files plus a manifest with checksums and provenance. It runs after translation,
+state-space compilation, and process extraction (stage 9 of the 10-stage pipeline) and
+is followed by validation (stage 10).
+
+The GNN bundle itself (the 19-section markdown package) is emitted by
+`cogant.gnn`; the multi-format serializers live under `py/cogant/export/` and are
+driven by `cogant export` / `cogant export-gnn` on the CLI.
 
 ### File Locations
 
-All files located in `/sessions/focused-bold-noether/mnt/cogant/`:
+All paths are relative to the package root (the directory containing `py/`, `tests/`,
+`pyproject.toml`):
 
 ```
 py/cogant/
 ├── normalize/
-│   ├── __init__.py (14 lines)
-│   ├── identities.py (293 lines)
-│   └── canonical.py (337 lines)
+│   ├── identities.py        # IdentityResolver
+│   └── canonical.py         # CanonicalNormalizer
 ├── graph/
-│   ├── __init__.py (11 lines)
-│   ├── builder.py (373 lines)
-│   ├── queries.py (420 lines)
-│   └── merge.py (280 lines)
+│   ├── builder.py           # ProgramGraphBuilder
+│   ├── queries.py           # GraphQuery
+│   ├── merge.py             # GraphMerger
+│   └── analysis.py          # GraphAnalyzer (centrality, communities, cycles)
 ├── translate/
-│   ├── __init__.py (24 lines)
-│   ├── engine.py (123 lines)
-│   ├── rules.py (493 lines)
-│   ├── confidence.py (283 lines)
-│   └── review.py (273 lines)
+│   ├── engine.py            # TranslationEngine
+│   ├── rules/               # 22 concrete rules across 5 family modules
+│   │   ├── structural.py
+│   │   ├── semantic.py
+│   │   ├── control.py
+│   │   ├── behavioral.py
+│   │   └── resilience.py
+│   ├── confidence.py        # ConfidenceModel
+│   └── review.py            # ReviewManager
+├── export/
+│   ├── formats.py           # ExportFormat enum, ExportConfig, MultiFormatExporter
+│   ├── bundle.py            # BundleExporter
+│   ├── typed_export.py      # TypedExporter (JSON + schema)
+│   ├── graphml.py           # GraphMLExporter
+│   ├── parquet.py           # ParquetExporter
+│   ├── svg_export.py        # SVGExporter
+│   ├── json_schema.py       # JSONSchemaExporter
+│   └── markdown.py          # render_bundle_markdown (export-gnn --format markdown)
 └── schemas/
-    ├── core.py (180 lines)
-    ├── graph.py (95 lines)
-    └── semantic.py (61 lines)
-
-tests/
-└── test_engine.py (394 lines)
-
-documentation/
-├── Detailed graph engine (850+ lines, this document)
-└── Graph engine summary (this document)
+    ├── core.py              # NodeKind, EdgeKind
+    ├── graph.py             # ProgramGraph, GraphMetadata
+    ├── semantic.py          # MappingKind, ConfidenceTier
+    ├── semantic_mapping.py  # SemanticMapping, SemanticRole
+    └── gnn_export.py        # 19 canonical GNN bundle sections
 ```
+
+The `ExportFormat` enum in `py/cogant/export/formats.py` is the canonical list of
+supported formats: `json`, `graphml`, `parquet`, `svg`, `png`, `pdf`, `mermaid`,
+`dot`, and `jsonlines`.
 
 ### Testing
 
-Run the test suite:
+Run the test suite from the package root:
 
 ```bash
-cd /sessions/focused-bold-noether/mnt/cogant
-python tests/test_engine.py
+cd <package-root>   # the directory containing py/, tests/, pyproject.toml
+uv run pytest tests/ -q --no-cov
 ```
 
-Expected output:
-```
-============================================================
-COGANT Engine Integration Tests
-============================================================
+This runs the full unit / integration / property / golden / fuzz suite, including the
+pipeline integration tests in `tests/test_engine.py`. For a single file:
 
-=== Testing IdentityResolver ===
-✓ IdentityResolver tests passed
-
-=== Testing CanonicalNormalizer ===
-✓ CanonicalNormalizer tests passed
-
-=== Testing ProgramGraphBuilder ===
-✓ ProgramGraphBuilder tests passed
-
-=== Testing GraphQuery ===
-✓ GraphQuery tests passed
-
-=== Testing TranslationEngine ===
-✓ TranslationEngine tests passed
-
-=== Testing ConfidenceModel ===
-✓ ConfidenceModel tests passed
-
-=== Testing ReviewManager ===
-✓ ReviewManager tests passed
-
-=== Testing GraphMerger ===
-✓ GraphMerger tests passed
-
-============================================================
-All tests passed! ✓
-============================================================
+```bash
+uv run pytest tests/test_engine.py -v
 ```
 
 ### Architecture Highlights
 
-1. **Modularity**: Each component (normalize, graph, translate) is independent and composable
+1. **Modularity**: Each component (normalize, graph, translate, export) is independent and composable
 2. **Type Safety**: Extensive use of dataclasses, enums, and type hints
 3. **Deterministic**: Stable IDs and reproducible processing
 4. **Provenance**: Complete audit trail of all operations

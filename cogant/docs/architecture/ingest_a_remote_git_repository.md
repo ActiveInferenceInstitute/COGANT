@@ -23,7 +23,7 @@ class RepoSnapshot:
 Walks repository filesystem, detects programming languages, filters files.
 
 ##### Features:
-- Multi-language support (Python, JavaScript, Rust, Go, Java, C++, C#)
+- Multi-language file recognition (Python, JavaScript, TypeScript, Rust, Go — the languages with registered parsers; see `cogant.parsers`)
 - `.gitignore` pattern respect
 - Test file detection
 - Checksum computation

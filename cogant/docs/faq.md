@@ -28,7 +28,7 @@ See [Theory — GNN Format](theory/gnn_format.md).
 
 ### 3. What languages does COGANT support?
 
-v0.6.0 supports **Python** (via CPython `ast`) and **JavaScript / TypeScript** (via the optional tree-sitter front end). The mapping rules are language-agnostic because they operate on `NodeKind`/`EdgeKind` in the program graph. Java and Rust parsers remain on the roadmap.
+v0.6.0 supports **Python** (via CPython `ast`), **JavaScript / TypeScript** (via the optional tree-sitter front end), and experimental **Rust** and **Go** structural parsers. The mapping rules are language-agnostic because they operate on `NodeKind`/`EdgeKind` in the program graph. Java remains on the roadmap.
 
 ### 4. How accurate is role assignment?
 
@@ -136,7 +136,7 @@ The `--coverage` and `--trace` flags accept pre-collected runtime data (coverage
 
 ### 16. Can COGANT analyze dynamic languages like Ruby or PHP?
 
-Not in v0.6.0. The parsers currently cover Python and JavaScript/TypeScript. Highly dynamic languages will be harder to analyze because static analysis cannot resolve runtime dispatch, monkey-patching, or eval-based code generation. Expect lower confidence scores and more runtime-only evidence gaps for dynamic language targets.
+Not in v0.6.0. The parsers currently cover Python, JavaScript/TypeScript, and experimental Rust and Go structural front ends. Highly dynamic languages will be harder to analyze because static analysis cannot resolve runtime dispatch, monkey-patching, or eval-based code generation. Expect lower confidence scores and more runtime-only evidence gaps for dynamic language targets.
 
 ### 17. What happens with code below the confidence threshold?
 
@@ -266,7 +266,7 @@ Validation scores (0-100) measure **structural correctness** of the GNN bundle: 
 
 ### 33. Will COGANT support Rust, Go, and Java?
 
-JavaScript and TypeScript are fully supported (v0.4.0, tree-sitter). Java and Rust parsers are the next priority on the roadmap (v0.6.x), also built on tree-sitter. The translation rules are language-agnostic; only the parser and fact-extraction layers need to be language-specific. Go parser is planned but has no committed timeline.
+Python is fully supported (CPython `ast`); JavaScript and TypeScript are fully supported (v0.4.0+, tree-sitter); Rust and Go have experimental structural parsers (v0.6.0). Java is the next parser priority on the roadmap, also built on tree-sitter. The translation rules are language-agnostic; only the parser and fact-extraction layers need to be language-specific.
 
 See [Roadmap — v0.6.x planned](roadmap/version_060_planned.md#l1).
 

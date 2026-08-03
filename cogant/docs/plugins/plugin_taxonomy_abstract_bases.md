@@ -14,4 +14,4 @@
 
 **Registration:** There is no dynamic plugin registry in `cogant.plugins` yet—subclasses are imported and wired by application code or tests. Treat these bases as contracts for downstream packages; contributing a first-party registry is tracked on the [roadmap](../roadmap/README.md).
 
-**Pipeline translation rules:** The running pipeline applies concrete [`TranslationRule`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/translate/rules.py) instances from the translate package; see [Translation rules](../rules/README.md) and the examples below.
+**Pipeline translation rules:** The running pipeline applies concrete [`TranslationRule`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/py/cogant/translate/rules/) instances from the translate package; see [Translation rules](../rules/README.md) and the examples below.

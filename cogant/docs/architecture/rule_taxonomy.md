@@ -83,35 +83,34 @@ Custom rules extend the pipeline without modifying core code. Follow these three
 
 ```python
 from cogant.translate.engine import TranslationRule
-from cogant.graph import Node, NodeKind
-from cogant.semantics import SemanticRole
+from cogant.schemas import Node, NodeKind, SemanticMapping
+from cogant.schemas.semantic_mapping import SemanticRole
+from cogant.schemas.graph import ProgramGraph
+from cogant.graph import GraphQuery
 
 class MyCustomRule(TranslationRule):
     """Short docstring."""
 
     name = "MyCustomRule"
-    priority = 50  # 0–100; lower fires earlier
-    family = "semantic"  # or "structural", "behavioral", "control", "resilience"
+    priority = 50  # higher fires earlier (default 0)
+
+    def matches(self, graph: ProgramGraph, query: GraphQuery) -> list[dict]:
+        # Return matched fragments (each with node/edge IDs) for this rule's pattern.
+        return [
+            {"node_ids": [node.id]}
+            for node in graph.nodes.values()
+            if node.kind == NodeKind.FUNCTION and "my_pattern" in node.name
+        ]
+
+    def apply(self, graph: ProgramGraph, match: dict) -> SemanticMapping | None:
+        # Build a SemanticMapping for the matched fragment: mapping_rule=
+        # self.name, mapping_type=SemanticRole.ACTION, plus confidence and
+        # source/target element references. See
+        # cogant.schemas.semantic_mapping for the constructor contract.
+        return None
 ```
 
-### 2. Implement apply() and explain()
-
-```python
-def apply(self, node: Node, context: "TranslationContext") -> Optional[SemanticRole]:
-    """
-    Return a SemanticRole if the rule matches, else None.
-    """
-    # Check node properties
-    if node.kind == NodeKind.FUNCTION and "my_pattern" in node.name:
-        return SemanticRole.ACTION
-    return None
-
-def explain(self, node: Node) -> str:
-    """One-line explanation of why the rule did or didn't fire."""
-    return f"Matched 'my_pattern' in {node.name}"
-```
-
-### 3. Register with the engine
+### 2. Register with the engine
 
 ```python
 from cogant.translate.engine import TranslationEngine

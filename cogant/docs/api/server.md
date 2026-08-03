@@ -63,7 +63,7 @@ zip plus a small metadata envelope.
 {
   "package_zip_b64": "UEsDBBQAAAAIAA...",
   "file_count": 6,
-  "cogant_version": "0.5.0"
+  "cogant_version": "0.6.0"
 }
 ```
 

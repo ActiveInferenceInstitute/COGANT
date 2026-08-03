@@ -111,7 +111,7 @@ from this package root or `./run_all.sh` from the COGANT project root.
   errors, and integration tests. The default bind remains loopback; this is not
   a sandbox or arbitrary-code execution boundary.
 - **Forward-reverse-forward round-trip**: invariant-ledger reporting for 12 zoo fixtures,
-  3 real-world-example fixtures, and 8 uncurated third-party libraries, with
+  10 control-positive fixtures, and 3 real-world example fixtures (25 targets total), with
   `role_preservation_score`, strict structural-isomorphism status, matrix preservation,
   GNN-section preservation, generated-code compile status, and full JSON diagnostics.
 - **Cross-language roundtrip**: `examples/zoo/13_js_observer` demonstrates a JavaScript

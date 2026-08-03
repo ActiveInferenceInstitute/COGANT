@@ -138,8 +138,8 @@ DataFlowEdge
 Run the integration test suite:
 
 ```bash
-cd /sessions/focused-bold-noether/mnt/cogant
-python3 py/cogant/test_pipeline_integration.py
+cd <package-root>   # the directory containing py/, tests/, pyproject.toml
+uv run pytest tests/ -q --no-cov
 ```
 
 Expected output: All 8 tests passing
@@ -156,7 +156,7 @@ Tests include:
 
 ### File Paths
 
-All files are located relative to `/sessions/focused-bold-noether/mnt/cogant/`:
+All files are located relative to the package root (the directory containing `py/`, `tests/`, `pyproject.toml`):
 
 **Ingest Stage:**
 - `py/cogant/ingest/__init__.py`
@@ -174,34 +174,21 @@ All files are located relative to `/sessions/focused-bold-noether/mnt/cogant/`:
 - `py/cogant/static/dataflow.py`
 
 **Tests & Documentation:**
-- `py/cogant/test_pipeline_integration.py`
+- `tests/integration/` — end-to-end pipeline integration tests (pytest)
+- `tests/test_engine.py` — pipeline integration tests
 - [Detailed pipeline guide](detailed_pipeline_guide.md#detailed-pipeline-guide) (sibling doc)
 - [Reference index](../reference/README.md) (ingest milestone)
 - [Pipeline module index](pipeline_module_index.md#pipeline-module-index) (sibling doc)
 
-### Key Statistics
-
-- **Lines of Code:** 3,162 (production + tests)
-- **Classes:** 28 total
-- **Type Hints:** 100% coverage
-- **Docstring Coverage:** 100%
-- **Test Coverage:** 8 integration tests, all passing
-- **Python Version:** 3.10+
-- **Dependencies:** Standard library only
-
 ### Supported Languages
 
-File enumeration detects and enumerates:
-- Python (.py, .pyx, .pyi)
+File enumeration detects and enumerates the languages with registered parsers
+(see `cogant.parsers` for the canonical capability list):
+- Python (.py, .pyi, .pyx)
 - JavaScript (.js, .jsx, .mjs, .cjs)
 - TypeScript (.ts, .tsx)
 - Rust (.rs)
 - Go (.go)
-- Java (.java)
-- C/C++ (.c, .cpp, .cc, .cxx, .h, .hpp)
-- C# (.cs)
-- Ruby (.rb)
-- PHP (.php)
 
 ### Manifest Formats Supported
 

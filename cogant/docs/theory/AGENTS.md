@@ -24,6 +24,7 @@ manuscript or running the formal proof track.
 | `code_as_generative_model.md` | The "code is a generative model" thesis | When the thesis is refined or extended |
 | `gnn_format.md` | Short narrative on the GNN format as COGANT uses it | When the headline story about GNN changes |
 | `gnn_format_reference.md` | Exhaustive reference for the 19-section GNN package | When a section is added, removed, or renamed in the AII GNN spec or the COGANT emitter |
+| `roundtrip.md` | Forward→Reverse→Forward verification: role preservation vs strict structural isomorphism | When the roundtrip contract, status vocabulary, or verification methodology changes |
 | `isomorphism.md` | Formal statement and proof sketch of the isomorphism theorem | When the theorem statement, assumptions, or proof outline changes |
 
 ## Notation and consistency

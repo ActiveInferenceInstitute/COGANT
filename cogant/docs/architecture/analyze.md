@@ -1,11 +1,16 @@
 ## Analyze
+
+```python
 obs_mappings = engine.get_mappings_by_kind(MappingKind.OBSERVATION)
 stats = engine.get_statistics()
 ```
 
-#### 3.2 Translation Rules (`cogant/translate/rules.py`)
+#### 3.2 Translation Rules (`cogant/translate/rules/`)
 
-**8 Concrete Rule Implementations:**
+**22 Concrete Rule Implementations** across five family modules (`structural.py`,
+`semantic.py`, `control.py`, `behavioral.py`, `resilience.py`). The rules below
+are the original eight; see [Rules — Core Rules Summary](../rules/core_rules_summary.md)
+for the complete current roster.
 
 ##### ReadOnlyInputRule
 - **Pattern:** Modules with many read operations, no writes

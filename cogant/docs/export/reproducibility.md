@@ -5,7 +5,7 @@ Export includes metadata for verification:
 ```json
 {
   "export_metadata": {
-    "cogant_version": "0.5.0",
+    "cogant_version": "0.6.0",
     "export_timestamp": "2026-04-10T12:00:00Z",
     "graph_id": "graph_myproject",
     "node_count": 320,

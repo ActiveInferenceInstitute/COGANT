@@ -53,8 +53,8 @@ Successfully implemented the complete graph construction, normalization, and tra
    - Graph pattern matching and mapping creation
    - Statistics and match logging
 
-3. **py/cogant/translate/rules.py** - 8 Concrete Rules
-   - 493 lines of implementation
+3. **py/cogant/translate/rules/** - 22 Concrete Rules (5 family modules)
+   - structural.py, semantic.py, control.py, behavioral.py, resilience.py
    - ReadOnlyInputRule: OBSERVATION from read-only modules
    - MutatingSubsystemRule: HIDDEN_STATE from stateful objects
    - OrchestratorRule: ORCHESTRATION from high fan-out controllers

@@ -2,51 +2,47 @@
 
 COGANT uses [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) for documentation.
 
-**Repository layout:** `mkdocs.yml` lives next to `docs/` at the **COGANT package root** (the directory you `cd` into for `uv sync` and `pytest`). This tree includes the workflow file `.github/workflows/docs.yml` at that same root. If you embed COGANT inside a monorepo, set `defaults.run.working-directory` (or per-step `working-directory`) to the subdirectory that contains `mkdocs.yml`, and point `upload-pages-artifact` at `<that-subdir>/site`.
+The package root is the directory containing `mkdocs.yml`, `docs/`, and `pyproject.toml`.
+Run the commands below from that directory. The checked-in deployment workflow is
+`.github/workflows/docs.yml` at the repository root.
 
-## Local Development
+## Local development
 
-```bash
-uv run --with mkdocs-material --with 'mkdocstrings[python]' mkdocs serve
-```
-
-Open <http://127.0.0.1:8000> in your browser.
-
-## Building Locally
+Install the development dependencies, then serve the site:
 
 ```bash
-uv run --with mkdocs-material --with 'mkdocstrings[python]' mkdocs build --strict
+uv sync --extra dev
+uv run mkdocs serve
 ```
 
-The static site is written to `site/` (git-ignored).
+Open <http://127.0.0.1:8000> in a browser. The generated site is written to the
+git-ignored `site/` directory.
 
-Strict builds are the release gate; use the non-strict command only while editing a page interactively.
+## Building locally
+
+```bash
+uv run mkdocs build
+```
+
+The repository workflow currently uses this non-strict build because the published
+site includes documentation-only `AGENTS.md` pages and a generated changelog whose
+source is outside the MkDocs docs directory. Run the package's relative-link and
+anchor checker separately when editing documentation:
+
+```bash
+uv run python docs/verify_doc_links.py
+```
 
 ## GitHub Pages deployment
 
-The workflow at `.github/workflows/docs.yml` runs `mkdocs build` from the repository root when that root **is** the package root. It uses **uv**; see [Building Locally](#building-locally). Enable **GitHub Pages** (source: GitHub Actions) and a `github-pages` environment if your org requires it.
+On pushes to `main`, after a successful `CI` workflow, or through manual dispatch,
+`.github/workflows/docs.yml` installs the dev dependencies, runs `uv run mkdocs build`,
+and deploys `site/` with `peaceiris/actions-gh-pages@v4`. The job uses
+`actions/checkout@v5`, `actions/setup-python@v6`, and `astral-sh/setup-uv@v8.1.0`.
+It grants `contents: write` because the action publishes the generated site to the
+`gh-pages` branch. The workflow also sets
+`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` while the deployment action has not yet
+published a Node 24 release.
 
-Minimal equivalent:
-
-```yaml
-name: Deploy docs
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - run: uv run --with mkdocs-material --with 'mkdocstrings[python]' mkdocs build --strict
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-      - uses: actions/deploy-pages@v4
-```
+For the exact triggers, paths, permissions, and deployment settings, treat the
+workflow file as authoritative rather than copying an independent workflow snippet.

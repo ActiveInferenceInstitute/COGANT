@@ -1,10 +1,12 @@
 ## Convert to Node
+
+```python
 node = normalizer.to_node(normalized, node_id="canonical_id")
 ```
 
 **Metadata Extraction:**
 - Extracts common fields: visibility, is_abstract, is_static, decorators, type_hints
-- Language-specific: Python (is_async, is_generator), JavaScript (is_arrow, export_type), Java (modifiers, annotations)
+- Language-specific: Python (is_async, is_generator), JavaScript (is_arrow, export_type)
 
 ---
 

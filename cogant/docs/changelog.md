@@ -3,36 +3,251 @@
 All notable changes to COGANT are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.6.0] - 2026-05-18
-
-### Changed
-- Version bumped to 0.6.0; `manuscript/config.yaml` aligned to 0.6.0.
-
-### Fixed (audit-driven fidelity pass)
-- Canonical metrics regenerated from a clean full coverage run: line coverage
-  **94.98%** from the verified coverage artifact; test counts re-verified
-  **9561 passing / 0 failing / 52 skipped** (9613 collected).
-- `GNNBundle` de-duplicated in `cogant.__all__`; `empirical_claim_demo.py` roundtrip
-  JSON-parse crash fixed; per-directory `AGENTS.md`/`README.md` and manuscript factual
-  corrections (formatter package, 16 `gnn_package/` required files, SipHash checksum
-  doc-comment, PyO3/GIL statement); out-of-date project paths corrected to
-  `projects/working/cogant`; generated the missing `output/claim_ledger.md` snapshot.
-
-See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
-
 ## [Unreleased]
 
 ### Changed
 - **Compatibility cleanup:** removed `cogant.viz.png_export` shim; canonical PNG API is
-  `cogant.viz.png`. `ProgramGraph` exports only from `cogant.schemas.graph`.
-  Drift analyzer uses top-level bundle keys only. Config docs distinguish composable
-  vs YAML `PipelineConfig`.
+  `cogant.viz.png` with direct submodule imports in `viz/png/orchestrator.py`.
+- `ProgramGraph` exports only from `cogant.schemas.graph` (no import fallback chain).
+- Drift analyzer reads top-level `graph` / `state_space` / `mappings` only (dropped
+  nested `stage_results` bundle layouts).
+- Config docs distinguish composable `pipeline.PipelineConfig` from YAML
+  `schema.PipelineConfig`.
 
 ### Removed
-- `scripts/split_*.py` mechanical split generators; CI guard added.
+- `scripts/split_png_export.py` and `scripts/split_cli_main.py` (wave-3 mechanical
+  split debris); CI guard `tests/unit/test_no_mechanical_split_scripts.py`.
 
 ### Added
-- `tests/unit/test_viz_png_degraded_paths.py`; `tests/unit/test_no_mechanical_split_scripts.py`.
+- `tests/unit/test_viz_png_degraded_paths.py` (renamed from `test_viz_png_export_fallbacks`).
+
+## [0.6.0] - 2026-05-18
+
+### Changed
+- Version bumped to 0.6.0 (`cogant.__version__`); `manuscript/config.yaml` aligned to 0.6.0.
+
+### Fixed (audit-driven fidelity pass, 2026-05-18)
+- Canonical metrics regenerated from a clean full `uv run pytest tests/ --cov=py/cogant`
+  run: line coverage **94.98%** (28016/29498 statements). The previously advertised
+  97.14% was carried from an out-of-sync `coverage.json` whose statement denominator (26986)
+  predated codebase growth; it was above the 89% CI gate so no build broke, but the
+  advertised figure was inaccurate. Test counts re-verified unchanged: **9561 passing /
+  0 failing / 52 skipped** (9613 collected).
+- `GNNBundle` de-duplicated in `cogant.__all__`.
+- `scripts/empirical_claim_demo.py`: roundtrip JSON extraction rewritten to
+  `json.JSONDecoder().raw_decode` (the prior first-`}` match truncated nested JSON and
+  crashed the demo with exit 1; it now runs to completion).
+- Documentation accuracy corrections: `py/cogant/graph/AGENTS.md`
+  (`finalize()`/`queries.py`), `py/cogant/gnn/AGENTS.md` (`formatter/` package; 16
+  required files), `py/cogant/viz/AGENTS.md` (21 viz modules incl. `ablation_view.py`),
+  `py/cogant/README.md` usage imports, `cogant-store` checksum doc-comment (SipHash via
+  `DefaultHasher`, not SHA256), and the manuscript's `27 on-disk files` claim corrected
+  to the 16 required `gnn_package/` files plus generated assets.
+- Manuscript factual corrections: PyO3/GIL statement (calls are synchronous and hold
+  the GIL; no GIL release is implemented), and the matrix-mass defaults attributed to
+  the real module-level `_DEFAULT_DIRECT_MASS`/`_normalize_row` symbols.
+- Out-of-date `projects_in_progress/cogant` path references corrected to
+  `projects/working/cogant` across active docs, scripts, and tooling.
+- Generated the missing `output/claim_ledger.md` snapshot referenced by
+  `manuscript/S06_appendix_source_references.md` (manuscript link checker now clean).
+
+## [0.5.1] - 2026-05-09
+
+### Added (wave-21, 2026-05-09)
+- 242 new tests across 4 new test files (wave-21 sweep) targeting thin
+  coverage in `viz/export_view.py`, `viz/network_view.py`,
+  `viz/flow.py`, `viz/matrix_view.py`, `observability/logging.py`,
+  `ingest/manifest.py`, `config/loaders.py`, `cli/main.py`,
+  `viz/pdf_export.py`, and `gnn/upstream_bridge`; overall coverage
+  rises from 95.11% to **96.22%** (9,222 passing, 9,253 total).
+- Comprehensive calibration guide at `docs/reference/calibration_guide.md`
+  documenting the four-tier confidence model, threshold registry across
+  all `translate/` and `statespace/` source files, calibration
+  methodology, and all 36 `TODO(calibration)` markers.
+- Expanded `translate/confidence.py` module docstring (~215 lines)
+  covering the full public API surface, threshold tables, and an
+  end-to-end walk-through of `compute_confidence_score()`.
+
+### Added (wave-20 + wave-20b, 2026-05-09)
+- ~1150 new tests across 44 new test files (wave-20 + wave-20b sweep)
+  targeting previously thin coverage in `process/`, `statespace/`,
+  `normalize/`, `validate/`, `gnn/`, `config/`, `viz/`, `markov/`,
+  and `observability/`; overall coverage rises from 90% to **95.1%**.
+- `__all__` export list on `cogant.metrics` for predictable
+  `from cogant.metrics import *` behaviour and clearer public API.
+- Honoured `set_entry_stage()` override on `ProcessExtractor` —
+  the value is now stored on `_forced_entry_stage_id` and consumed by
+  `_find_entry_stage()` on the next `extract()` call. Previously the
+  setter logged but never altered the resulting `ProcessModel`.
+
+### Fixed
+- `find_cycles` directed-graph correctness in `graph/builder.py`:
+  cycle detection now walks the *directed* adjacency (out-edges only)
+  instead of the undirected neighbour set, eliminating spurious
+  "cycles" reported for every single directed edge.
+- `AttributeError` in `statespace/temporal.py`: callers that asked for
+  `compute_critical_path` now resolve to the canonical
+  `get_critical_path` (the older method was renamed and the one
+  remaining call site was missed).
+- `process/extractor.py` `_find_entry_stage` / `_find_exit_stages`:
+  the two helpers were operating on swapped sets — entry was returning
+  exit stages and vice versa. Both now use the correct
+  `target_stage_id` (incoming) / `source_stage_id` (outgoing) sets
+  matching their docstrings.
+- `process/policies.py` `_extract_branches_for_node` now restricts the
+  branch table to control-flow edge kinds (`CALLS` / `TRIGGERS`) and
+  drops self-loops, so incidental `CONTAINS` / `READS` edges no longer
+  pollute the branching policy output.
+- Broken doc link in `docs/playground.md`.
+
+### Changed
+- Performance of `validate/integrity.py` lifted from O(V³) to O(V+E) by
+  replacing the per-node scan with a precomputed adjacency view.
+- `process/extractor.py::_infer_trigger` now takes a typed `Edge`
+  parameter instead of `Any`; `Any` import dropped from the module.
+- `normalize/canonical.py::_extract_python_metadata` no longer
+  re-copies the `decorators` field; the common-field pass already
+  handles it (purely cosmetic — values were identical, just clarifies
+  intent).
+- `statespace/variables.py::compute_dimensionality` docstring now
+  documents the heuristic `2**k` continuous-variable contribution as a
+  coarse two-bin discretization rather than implying it is exact.
+
+### Internal
+- Narrowed bare `except Exception` clauses in `config/loaders.py`
+  (now `except (OSError, ValueError, yaml.YAMLError)`) and in
+  `gnn/matrices.py` (now `except (ValueError, IndexError, TypeError)`).
+- `gnn/json_export.py`: `datetime.utcnow()` → `datetime.now(UTC)` (deprecation fix).
+- Test isolation fix in `TestMarkovBlanketExceptionPath`: patch
+  `GNNJSONExporter._export_markov_blanket.__globals__["MarkovBlanketExtractor"]`
+  directly so the monkeypatch survives any prior-test module-reload ordering.
+- Coverage lifted from 90.0% to **95.1%** on `py/cogant/`.
+
+## [Unreleased]
+
+### Added
+- **Measured-ablation visualization (`cogant.viz.ablation_view.render_ablation_png`).**
+  New deterministic two-panel figure (rule-family net deltas + fixpoint
+  convergence) rendered from the `ablation` block of
+  `evaluation/METRICS.yaml`. Exported from `cogant.viz` (with `.pyi`
+  parity), wired into `tools/manuscript_figures.py` as
+  `cogant_rule_family_ablation.png` (curated copy + synthesized
+  `.figure.json` sidecar; strict figure-copy passes at 14 figures, 0
+  missing, 0 metadata failures), and referenced from `manuscript/09_ablation.md`
+  as `@fig:cogant-rule-family-ablation`. No-mocks tests in
+  `tests/unit/test_viz_ablation.py` (valid-PNG, byte-determinism, real
+  shipped METRICS.yaml). Closes the gap where iteration-2 produced measured
+  ablation data but no figure visualized it.
+
+### Fixed
+- **`manuscript/09_ablation.md` `requests_lib` matrix-fallback A-rows was a
+  wrong hardcoded literal.** The cell read `30 / 36` while
+  `ablation.matrix_fallback.requests_lib.a_rows_uniform` in `METRICS.yaml`
+  is `32`. `requests_lib` was the only matrix-fallback row left fully
+  hand-maintained; it is now tokenized (`{{ABLATION_REQUESTS_LIB_A_ROWS_UNIFORM/_TOTAL}}`
+  registered in `tools/manuscript_vars.py`, alongside the pre-existing
+  C-entries tokens) so it can no longer drift.
+- **`manuscript/98_notation_supplement.md` undercounted `MappingKind`.** It
+  called the formal $\mathcal{K}_M$ list "Full ... (11 kinds)" while the
+  code `MappingKind` enum in `cogant.schemas.semantic` has **14** members.
+  Reworded to distinguish the 11-kind *formal* alphabet from the 14-member
+  code enum, explicitly naming the three non-formal implementation kinds
+  (`CONTROL_FLOW`, `RETRY_PATTERN`, `FEATURE_FLAG`).
+- **`cogant.yaml` `pipeline.stages` used invalid stage names.** It listed
+  `semantic_mapping`, `state_space`, `process_model` and omitted `static`
+  and `dynamic`; the pipeline runner dispatch table only recognizes
+  `ingest, static, normalize, graph, dynamic, translate, statespace,
+  process, export, validate`. A real `cogant translate --config cogant.yaml`
+  would have silently skipped translate/statespace/process with "Unknown
+  stage" errors and exited 0. Stage list and the explanatory comment block
+  corrected to the real keys/order.
+
+### Added (iteration 2)
+- **Ablation regeneration harness (`tools/regenerate_ablation.py`).** Runs
+  the live ingest→…→translate pipeline on the 6 packaged fixtures and
+  re-runs `TranslationEngine.translate(graph, rule_filter=…)` with each of
+  the 5 rule families withheld, plus a fixpoint-cap axis (K∈{1,2,5,10}) and
+  a matrix-fallback axis (uniform-A / identity-B / zero-C / uniform-D
+  counts). Merges a measured `ablation:` block into `evaluation/METRICS.yaml`
+  (additive; canonical header and all existing keys preserved) and is wired
+  as a step in `regenerate_metrics.py`. Deterministic; no-mocks test
+  (`tests/test_regenerate_ablation.py`) including a positive control that
+  proves `rule_filter` genuinely restricts the rule set. Rule-family,
+  fixpoint, and matrix-fallback tables in `manuscript/09_ablation.md` now
+  resolve from `{{ABLATION_*}}` placeholders — closes the open
+  ablation-regeneration backlog item (manuscript ablation numbers are no
+  longer hand-edited).
+
+### Erratum
+- **`manuscript/09_ablation.md` rule-family ablation numbers were
+  hand-reconstructed and materially inaccurate.** Replacing them with
+  measured values from the new harness corrected, on the `flask_app`
+  fixture: control family **−5 CONTEXT → measured net Δ 0**; behavioural
+  family **≈−2 POLICY/−1 CONSTRAINT → measured net Δ 0**; and on
+  `calculator` the semantic family **−9 → measured Δ 10**. Root cause: the
+  prior text estimated each family's standalone role count instead of the
+  *net* mapping delta under the conflict resolver (a node whose top rule is
+  withheld is re-won by a retained rule, so an emitting family can show zero
+  net delta). Impact assessed: no abstract/introduction/conclusion or other
+  section depended on the corrected figures (verified by cross-section
+  grep), so this is a numeric/finding correction local to §9. The §9 table
+  and prose were rewritten to be measurement-driven; `S02_appendix_ablation.md`
+  (still hand-reconstructed for `zoo/01`) is now explicitly flagged as
+  containing unverified estimates pending harness extension.
+
+### Fixed
+- **Graph stage emitted zero IMPORTS edges for Python modules.** In
+  `api/orchestration.py::run_graph` the IMPORTS block read
+  `imp.module`/`imp.name`, which do not exist on `static.parser.ImportDef`
+  (real fields: `module_name`, `is_relative`, `names`). The expression was
+  always `None`, so the loop always `continue`d and **no IMPORTS edge was
+  ever added** despite the docstring promising them. Now reads
+  `module_name` with a `names[0]` fallback and strips leading dots so
+  `from . import x` relative imports resolve. Added two no-mocks tests in
+  `tests/unit/test_api_orchestration_stage_functions.py` covering plain,
+  dotted, `from … import`, relative, external (no edge), and self-import
+  (no edge) shapes. (TODO §5 — graph normalization, imports.)
+- **`run_all.py` exited 0 even when every target failed.** `main()` ended
+  with an unconditional `return 0`; without `--fail-fast`, a fully-failed
+  sweep was indistinguishable from success by exit code, so CI/`run.sh`
+  callers could not detect a failed batch. `failures` is now hoisted above
+  the `try` and `main()` returns `1 if failures else 0`. Regression guarded
+  by `tests/test_run_all_exit_code.py` (no-mocks: real dry-run subprocess +
+  source-AST invariant). (TODO §7 — promotion/CI readiness.)
+- **Manuscript module references corrected to match the code.**
+  `02_04` `statespace/matrices.py`→`gnn/matrices.py` and
+  `validate/validator.py`→`gnn/validator.py`; `S04` attributed the VFE/EFE
+  loop to a non-existent `cogant.process.evaluate_policies` — now points at
+  `variational_free_energy`/`expected_free_energy` in
+  `cogant.simulate.free_energy` and `GNNModelRunner._evaluate_policies`
+  (`cogant.gnn.runner`), consistent with the conclusion. GNN canonical
+  section count corrected `18`→`19` in `03` and `06_03` to match
+  `gnn.validator.GNNValidator.CANONICAL_SECTIONS` (19 entries).
+
+### Changed
+- **Remote `run_all` targets pinned to immutable release tags for
+  reproducible shallow clones** (TODO §3, §7). `remote_itsdangerous`
+  (`2.2.0`) and `remote_markupsafe` (`2.1.5`) no longer clone a moving
+  default branch; `remote_click` (`8.1.7`, ~10 KLOC BSD-3 — a genuine
+  *medium* real repository) promoted from the example block to an active
+  target. The `extra_remote_targets_example` entries now model the
+  pinned-`git_ref` pattern instead of the non-reproducible `null` default.
+
+### Added
+- **Batch dashboard for `run_all` sweeps** — new
+  `cogant.viz.batch_dashboard.BatchDashboardGenerator` consolidates the
+  per-target outputs of a staging-root `run_all` sweep into a single
+  `output/dashboard/` directory with:
+  `summary.csv`, `metrics_per_target.json`, three Mermaid charts
+  (`node_count_bar.mmd`, `edge_count_bar.mmd`, `score_distribution.mmd`),
+  a Mermaid Gantt of recorded command timings (`run_gantt.mmd`), and a
+  cross-linked Markdown report (`dashboard.md`). Pure-stdlib; works
+  under the minimal install profile. Exposed via the staging-root
+  `scripts/batch_dashboard.py` orchestrator and wired into `run_all.py`
+  as the `steps.batch_dashboard` post-batch step (on by default).
+  `BatchDashboardGenerator`, `TargetMetrics`, and `write_batch_dashboard`
+  are re-exported from `cogant.viz`. Covered by
+  `tests/unit/test_batch_dashboard.py` (25 tests, strict no-mocks).
 - **Configurable upstream GNN 25-step pipeline pass** — new
   `cogant.gnn.upstream_bridge.pipeline` module drives `src.main.execute_pipeline_step`
   over the produced `gnn_package/`. Surfaces: `UPSTREAM_STEP_SCRIPTS` (canonical
@@ -65,7 +280,7 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 - **Translation engine enhancements**: `TranslationEngine.explain()`, `validate()`, `get_convergence_info()`; `RuleExplanation.confidence: float` and `contradictions: list[str]`; improved heuristics for all 5 rule families; `to_gnn_role()` on semantic rules.
 - **Round-trip enhancements**: `PackagePlan.validate()`, `diff()`, `to_json()`/`from_json()`; `synthesize_with_validation()` with `ast.parse` check; `IdempotencyReport` dataclass; `MatrixSet.validate()`.
 - **Runtime/statespace/markov enhancements**: `AgentRuntime.run_episode_with_logging()`, `benchmark()`, `reset()`, `get_free_energy()`, serialization; `DegradedOutput` namedtuple; `MarkovBlanket.validate()`, `to_mermaid()`, `merge()`, `get_sensory_states()`, `get_active_states()`.
-- **4 analysis/export CLI entry points**: `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export` — real command paths for static metrics, graph analysis, visualization export, and multi-format artifact export.
+- **4 new CLI entry points (preview stubs)**: `cogant analyze-static`, `cogant analyze-graph`, `cogant visualize`, `cogant export` — registered in Typer but currently print guidance to use the Python API (`cogant.static`, `cogant.graph.analysis`, `cogant.viz`, `cogant.export`); full orchestration wiring is tracked on the roadmap.
 - **Comprehensive test suite expansion**: 14 new test files (10 unit + 4 integration), ~6,600 lines covering all new modules. Property tests for rule determinism, roundtrip stability, matrix dimension consistency.
 - `cogant.metrics` public API: `get_metrics()` / `get_metric(key)` backed by `evaluation/METRICS.yaml` (41f96de)
 - `.pyi` type stubs for all public API modules + `py.typed` marker (58c5fe1)
@@ -113,10 +328,9 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 - `pyproject.toml` dep updates + uv.lock sync (`fbd8d39`)
 
 ### Roundtrip role preservation
-- Current release evidence uses the native ledger: 25 targets, 25 role-preserved,
-  0 drift, 0 failed, and 1 strict structural-isomorphism row confined to
-  `roundtrip_strict_minimal`. Each row carries `role_preservation_score` and
-  invariant status fields.
+- Current release evidence uses the native v0.6 ledger: 24 targets, 22
+  role-preserved, 2 drift, 0 failed, and 0 strict structural isomorphism. Each
+  row carries `role_preservation_score` and invariant status fields.
 
 ## [0.4.0] - 2026-04-10
 
@@ -129,7 +343,7 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 - Tutorial notebooks: 6 Jupyter notebooks (01-06)
 - Interactive playground: single-file HTML with cytoscape.js + CodeMirror
 - mkdocs-material docs site + GitHub Pages workflow
-- ROUNDTRIP_EVAL.md: role-preservation evaluation improved after the CONSTRAINT fix
+- ROUNDTRIP_EVAL.md: 23-target roundtrip ε evaluation — now 19/23 ISOMORPHIC (83%) after CONSTRAINT fix
 
 ### Fixed
 - CONSTRAINT role collapse: `cnst_` prefix not detected by forward pipeline's PreferenceRule → now emits `check_` prefix proportional to origin count
@@ -138,7 +352,7 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 - Parser ontology fallback: non-standard variable names (s_hidden, o_sensor) now classified via ActInfOntologyAnnotation
 
 ### Improved
-- Roundtrip role preservation improved after the CONSTRAINT fix
+- Roundtrip ε: 14/23 ISOMORPHIC (61%) → 19/23 ISOMORPHIC (83%) after CONSTRAINT fix
 - Real-world eval: 8/8 repos pass forward pipeline
 - Type annotations: 50+ modules updated to modern Python typing (Counter[str], list[T])
 
@@ -152,7 +366,7 @@ See [`../CHANGELOG.md`](../CHANGELOG.md) for the full per-wave history.
 **Reverse Pipeline (GNN to Code)**
 - `cogant.reverse` subpackage: GNN markdown parser, package planner, Python synthesizer, idempotency checker
 - Runtime-callable matrix functions (likelihood, transition, EFE, best_action) without exec
-- ISOMORPHISM_THEOREM.md: Galois-connection proof sketch and bounded roundtrip-error formalization
+- ISOMORPHISM_THEOREM.md: Galois connection proof + epsilon-bounded roundtrip error formalization
 
 **Active Inference Runtime**
 - Active Inference agent loop with step/convergence/VFE metrics

@@ -61,6 +61,7 @@ nav:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
   - Learning Paths:
+      - Section Index: learning-paths/README.md
       - New User: learning-paths/new-user.md
       - API Consumer: learning-paths/api-consumer.md
       - Theory Reader: learning-paths/theory-reader.md
@@ -153,6 +154,7 @@ nav:
       - Pipeline Runner: api/pipelinerunner_api.md
       - Plugin API: api/plugin_api.md
       - Review API: api/reviewapi.md
+      - Server API: api/server.md
       - Scoring API: api/scoring_api.md
       - Session API: api/session_api.md
       - Visualization: api/visualization_api.md
@@ -243,10 +245,12 @@ nav:
           - Register Rules: architecture/register_rules.md
           - Report: architecture/report.md
           - Review Process (Interactive): architecture/review_process_interactive.md
+          - Rule Taxonomy: architecture/rule_taxonomy.md
           - Same Inputs Same ID (Determinism): architecture/same_inputs_same_id_deterministic.md
           - Score Mappings: architecture/score_mappings.md
           - See Also: architecture/see_also.md
           - Split: architecture/split.md
+          - Static Analysis: architecture/static_analysis.md
           - Step 1 — Ingest Repository: architecture/step_1_ingest_repository.md
           - Step 1 — Normalize Language-Specific Facts: architecture/step_1_normalize_language_specific_facts.md
           - Step 2 — Build Graph from Normalized Facts: architecture/step_2_build_graph_from_normalized_facts.md
@@ -264,6 +268,7 @@ nav:
       - GNN Format: theory/gnn_format.md
       - GNN Format Reference: theory/gnn_format_reference.md
       - Isomorphism Theorem: theory/isomorphism.md
+      - Roundtrip (Forward-Reverse): theory/roundtrip.md
       - Contributing Notes: theory/AGENTS.md
   - Plugins:
       - Section Index: plugins/README.md
@@ -356,11 +361,18 @@ nav:
           - Configuration: reference/configuration.md
           - API Overview: reference/api_overview.md
           - Examples: reference/examples.md
+      - Tool Guides:
+          - Batch Dashboard: reference/batch_dashboard.md
+          - Calibration Guide: reference/calibration_guide.md
+          - Network Analysis: reference/network_analysis.md
+          - Static Analysis: reference/static_analysis.md
+          - Visualization: reference/visualization.md
       - References (Bibliography): reference/references.md
   - R&D:
       - Section Index: rnd/README.md
       - Calibration: rnd/calibration.md
       - Active Inference Mapping: rnd/active_inference_mapping.md
+      - Organization State Spaces: rnd/organization_state_spaces.md
   - Evaluation:
       - Overview: evaluation/README.md
       - "R&D Status": "evaluation/R&D_LOG.md"
@@ -384,12 +396,14 @@ nav:
       - Scaling Analysis: evaluation/SCALING_ANALYSIS.md
       - Real-World Evaluation: evaluation/REAL_WORLD_EVAL.md
       - Scoping Report: evaluation/SCOPING_REPORT.md
+      - Held-out Pilot: evaluation/heldout_pilot/README.md
       - Literature: evaluation/LITERATURE.md
       - Related Work: evaluation/RELATED_WORK.md
   - Roadmap:
       - Section Index: roadmap/README.md
       - Overview: roadmap/overview.md
       - "current (Current)": roadmap/version_010_current.md
+      - "v0.6.x (Planned)": roadmap/version_060_planned.md
       - "v1.0.0 (Planned)": roadmap/version_100_planned.md
       - Version Strategy: roadmap/version_strategy.md
       - Feature Backlog: roadmap/feature_backlog.md
