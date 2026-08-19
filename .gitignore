@@ -31,6 +31,12 @@ cogant/out/
 !cogant/
 cogant/*
 !cogant/py/
+!cogant/benchmarks/
+cogant/benchmarks/*
+!cogant/benchmarks/results/
+cogant/benchmarks/results/*
+!cogant/benchmarks/results/*.md
+!cogant/benchmarks/results/*.json
 !cogant/docs/
 cogant/docs/*
 !cogant/docs/evaluation/

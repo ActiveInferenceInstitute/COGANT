@@ -101,19 +101,19 @@ A reproducible benchmark harness lives at `../cogant/benchmarks/bench_suite.py` 
 
 | Fixture | Wall-clock median (ms) | Wall-clock p95 (ms) | Nodes | Edges | Mappings | Peak memory (MB) |
 |---|---:|---:|---:|---:|---:|---:|
-| `calculator` | 35 | 35 | 12 | 25 | 11 | 0.2 |
-| `event_pipeline` | 41 | 43 | 23 | 36 | 21 | 0.2 |
-| `flask_mini` | 38 | 38 | 26 | 40 | 25 | 0.1 |
-| `flask_app` | 59 | 62 | 98 | 154 | 72 | 0.4 |
-| `requests_lib` | 54 | 58 | 98 | 152 | 63 | 0.1 |
-| `json_stdlib` | 47 | 49 | 29 | 34 | 19 | 0.0 |
+| `calculator` | 57 | 64 | 12 | 27 | 11 | 0.0 |
+| `event_pipeline` | 62 | 62 | 24 | 39 | 22 | 0.1 |
+| `flask_mini` | 59 | 66 | 26 | 43 | 25 | 0.0 |
+| `flask_app` | 124 | 135 | 101 | 187 | 75 | 0.0 |
+| `requests_lib` | 114 | 116 | 100 | 187 | 64 | 0.0 |
+| `json_stdlib` | 84 | 113 | 29 | 46 | 16 | 0.0 |
 
 : Benchmark suite results (`{{BENCHMARK_SUITE_FILE}}`, three iterations per fixture, CPython {{BENCHMARK_PYTHON_VERSION}}). {#tbl:benchmark-suite-results}
 
 Node and mapping columns use the same fixture definitions as @tbl:repo-pipeline-metrics. The edge columns are pinned to the benchmark snapshot named in the caption, while the refreshed public API metric table can include newer import-edge extraction. The `mappings` count is from the same post-`statespace` in-memory `semantic_mappings` dict that `../cogant/evaluation/figures/metrics.json` uses (`pipeline_api_metrics` samples immediately after `run_statespace`); conflict resolution in `TranslationEngine` applies **sorted** iteration over colliding mapping pairs so this count is stable across `bench_suite` and `generate_figures` runs.
 
-The benchmark harness times the pipeline up through `statespace` (no `process` / `export` / `validate`), so its wall-clock medians are much smaller than the end-to-end times in @tbl:repo-pipeline-metrics, which add process model extraction, GNN package build, and validation. For pure translation, every shipped fixture in this run finishes in under 100 ms median wall time; the stage breakdown in `suite_20260423.md` shows `ingest` and `graph` as the main contributors on the larger fixtures.
+The benchmark harness times the pipeline up through `statespace` (no `process` / `export` / `validate`), so its wall-clock medians are much smaller than the end-to-end times in @tbl:repo-pipeline-metrics, which add process model extraction, GNN package build, and validation. For pure translation, every shipped fixture in this run finishes in under 130 ms median wall time; the stage breakdown in `{{BENCHMARK_SUITE_FILE}}` shows `ingest` and `graph` as the main contributors on the larger fixtures.
 
 The manuscript therefore keeps two timing views separate: @tbl:benchmark-suite-results is a repeated harness measurement of the pre-export pipeline, while @fig:cogant-eval-pipeline-latency is a single-run provenance figure for the public API path that also builds and validates the GNN package.
 
-Approximate stage breakdown from the same file: per-fixture `ingest` is on the order of 30--35 ms; `graph` reaches roughly 7--13 ms on the larger fixtures. The benchmark file records GNN tensor shapes from `GNNMatrices` on the post-`statespace` bundle; for example `flask_app` shows $A \in \mathbb{R}^{22 \times 13}$, $B \in \mathbb{R}^{13 \times 13 \times 31}$, $C \in \mathbb{R}^{22}$, $D \in \mathbb{R}^{13}$, which line up with the Markov structure implied by the observation and hidden-state rows in the summary section of `suite_20260423.md` (exported `gnn_package/` modalities in @tbl:state-space-compilation can still differ from the post-`statespace` GNN read when `run_process` refines the bundle).
+Approximate stage breakdown from the same file: per-fixture `ingest` is on the order of 45--55 ms; `graph` reaches roughly 6--15 ms on the larger fixtures. The benchmark file records GNN tensor shapes from `GNNMatrices` on the post-`statespace` bundle; for example `flask_app` shows $A \in \mathbb{R}^{22 \times 13}$, $B \in \mathbb{R}^{13 \times 13 \times 31}$, $C \in \mathbb{R}^{22}$, $D \in \mathbb{R}^{13}$, which line up with the Markov structure implied by the observation and hidden-state rows in the summary section of `{{BENCHMARK_SUITE_FILE}}` (exported `gnn_package/` modalities in @tbl:state-space-compilation can still differ from the post-`statespace` GNN read when `run_process` refines the bundle).

@@ -158,6 +158,10 @@ workspace/
 !coverage.json
 coverage.json.*
 benchmarks/results/*.json
+# The suite_*.json sidecar is committed alongside its .md report: it is the
+# machine-readable source consumed by ../tools/check_coverage_table.py
+# --strict (see the results/README.md regeneration contract).
+!benchmarks/results/suite_*.json
 !benchmarks/perf_baseline.json
 
 # Temporary files

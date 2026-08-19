@@ -1,0 +1,430 @@
+{
+  "date": "2026-08-18",
+  "cogant_version": "0.6.0",
+  "python_version": "3.12.13",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "iterations": 3,
+  "fixtures": {
+    "calculator": {
+      "runs": 3,
+      "wall_ms": {
+        "median": 57.05,
+        "p95": 64.03,
+        "min": 55.73
+      },
+      "stage_ms": {
+        "ingest": {
+          "median": 48.88,
+          "p95": 49.67,
+          "min": 47.97
+        },
+        "static": {
+          "median": 0.61,
+          "p95": 0.7,
+          "min": 0.58
+        },
+        "normalize": {
+          "median": 0.4,
+          "p95": 0.49,
+          "min": 0.4
+        },
+        "graph": {
+          "median": 5.75,
+          "p95": 12.99,
+          "min": 5.44
+        },
+        "translate": {
+          "median": 0.79,
+          "p95": 0.81,
+          "min": 0.78
+        },
+        "statespace": {
+          "median": 0.17,
+          "p95": 0.18,
+          "min": 0.17
+        }
+      },
+      "memory_mb": {
+        "peak_delta_median": 0.03,
+        "peak_delta_max": 0.03
+      },
+      "graph": {
+        "nodes": 12,
+        "edges": 27,
+        "avg_degree": 4.5
+      },
+      "mappings": {
+        "ACTION": 6,
+        "CONSTRAINT": 1,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 3
+      },
+      "mappings_total": 11,
+      "gnn": {
+        "available": true,
+        "n_states": 1,
+        "n_obs": 3,
+        "n_actions": 6,
+        "A_rows": 3,
+        "A_cols": 1,
+        "B_rows": 1,
+        "B_cols": 1,
+        "B_depth": 6,
+        "C_len": 3,
+        "D_len": 1
+      },
+      "path": "/Users/4d/Documents/GitHub/projects/ongoing/instituteos/repos/COGANT/cogant/examples/control_positive/calculator"
+    },
+    "event_pipeline": {
+      "runs": 3,
+      "wall_ms": {
+        "median": 61.5,
+        "p95": 62.19,
+        "min": 58.26
+      },
+      "stage_ms": {
+        "ingest": {
+          "median": 49.34,
+          "p95": 50.45,
+          "min": 46.77
+        },
+        "static": {
+          "median": 0.8,
+          "p95": 1.36,
+          "min": 0.66
+        },
+        "normalize": {
+          "median": 0.67,
+          "p95": 0.72,
+          "min": 0.48
+        },
+        "graph": {
+          "median": 8.53,
+          "p95": 8.7,
+          "min": 8.49
+        },
+        "translate": {
+          "median": 1.31,
+          "p95": 1.57,
+          "min": 1.31
+        },
+        "statespace": {
+          "median": 0.25,
+          "p95": 0.25,
+          "min": 0.24
+        }
+      },
+      "memory_mb": {
+        "peak_delta_median": 0.05,
+        "peak_delta_max": 0.08
+      },
+      "graph": {
+        "nodes": 24,
+        "edges": 39,
+        "avg_degree": 3.25
+      },
+      "mappings": {
+        "ACTION": 7,
+        "HIDDEN_STATE": 1,
+        "OBSERVATION": 10,
+        "POLICY": 4
+      },
+      "mappings_total": 22,
+      "gnn": {
+        "available": true,
+        "n_states": 1,
+        "n_obs": 10,
+        "n_actions": 11,
+        "A_rows": 10,
+        "A_cols": 1,
+        "B_rows": 1,
+        "B_cols": 1,
+        "B_depth": 11,
+        "C_len": 10,
+        "D_len": 1
+      },
+      "path": "/Users/4d/Documents/GitHub/projects/ongoing/instituteos/repos/COGANT/cogant/examples/control_positive/event_pipeline"
+    },
+    "flask_mini": {
+      "runs": 3,
+      "wall_ms": {
+        "median": 59.18,
+        "p95": 66.37,
+        "min": 58.45
+      },
+      "stage_ms": {
+        "ingest": {
+          "median": 43.98,
+          "p95": 51.56,
+          "min": 42.58
+        },
+        "static": {
+          "median": 0.86,
+          "p95": 0.87,
+          "min": 0.77
+        },
+        "normalize": {
+          "median": 0.58,
+          "p95": 0.59,
+          "min": 0.55
+        },
+        "graph": {
+          "median": 11.5,
+          "p95": 12.57,
+          "min": 11.4
+        },
+        "translate": {
+          "median": 1.5,
+          "p95": 2.19,
+          "min": 1.42
+        },
+        "statespace": {
+          "median": 0.34,
+          "p95": 0.38,
+          "min": 0.32
+        }
+      },
+      "memory_mb": {
+        "peak_delta_median": 0.02,
+        "peak_delta_max": 0.03
+      },
+      "graph": {
+        "nodes": 26,
+        "edges": 43,
+        "avg_degree": 3.308
+      },
+      "mappings": {
+        "ACTION": 13,
+        "HIDDEN_STATE": 6,
+        "OBSERVATION": 1,
+        "POLICY": 5
+      },
+      "mappings_total": 25,
+      "gnn": {
+        "available": true,
+        "n_states": 6,
+        "n_obs": 1,
+        "n_actions": 18,
+        "A_rows": 1,
+        "A_cols": 6,
+        "B_rows": 6,
+        "B_cols": 6,
+        "B_depth": 18,
+        "C_len": 1,
+        "D_len": 6
+      },
+      "path": "/Users/4d/Documents/GitHub/projects/ongoing/instituteos/repos/COGANT/cogant/examples/control_positive/flask_mini"
+    },
+    "flask_app": {
+      "runs": 3,
+      "wall_ms": {
+        "median": 124.15,
+        "p95": 134.64,
+        "min": 120.74
+      },
+      "stage_ms": {
+        "ingest": {
+          "median": 48.4,
+          "p95": 51.59,
+          "min": 45.68
+        },
+        "static": {
+          "median": 3.71,
+          "p95": 3.87,
+          "min": 3.47
+        },
+        "normalize": {
+          "median": 5.61,
+          "p95": 9.98,
+          "min": 3.39
+        },
+        "graph": {
+          "median": 57.95,
+          "p95": 66.06,
+          "min": 56.93
+        },
+        "translate": {
+          "median": 6.65,
+          "p95": 6.83,
+          "min": 6.27
+        },
+        "statespace": {
+          "median": 1.02,
+          "p95": 1.07,
+          "min": 1.01
+        }
+      },
+      "memory_mb": {
+        "peak_delta_median": 0.0,
+        "peak_delta_max": 0.09
+      },
+      "graph": {
+        "nodes": 101,
+        "edges": 187,
+        "avg_degree": 3.703
+      },
+      "mappings": {
+        "ACTION": 26,
+        "CONSTRAINT": 1,
+        "CONTEXT": 5,
+        "HIDDEN_STATE": 13,
+        "OBSERVATION": 27,
+        "POLICY": 3
+      },
+      "mappings_total": 75,
+      "gnn": {
+        "available": true,
+        "n_states": 14,
+        "n_obs": 27,
+        "n_actions": 29,
+        "A_rows": 27,
+        "A_cols": 14,
+        "B_rows": 14,
+        "B_cols": 14,
+        "B_depth": 29,
+        "C_len": 27,
+        "D_len": 14
+      },
+      "path": "/Users/4d/Documents/GitHub/projects/ongoing/instituteos/repos/COGANT/cogant/examples/real_world/flask_app"
+    },
+    "requests_lib": {
+      "runs": 3,
+      "wall_ms": {
+        "median": 113.59,
+        "p95": 115.93,
+        "min": 110.34
+      },
+      "stage_ms": {
+        "ingest": {
+          "median": 52.93,
+          "p95": 56.28,
+          "min": 45.86
+        },
+        "static": {
+          "median": 2.84,
+          "p95": 3.14,
+          "min": 2.8
+        },
+        "normalize": {
+          "median": 2.56,
+          "p95": 2.61,
+          "min": 2.38
+        },
+        "graph": {
+          "median": 50.68,
+          "p95": 51.98,
+          "min": 44.98
+        },
+        "translate": {
+          "median": 6.21,
+          "p95": 6.39,
+          "min": 6.05
+        },
+        "statespace": {
+          "median": 0.7,
+          "p95": 0.74,
+          "min": 0.69
+        }
+      },
+      "memory_mb": {
+        "peak_delta_median": 0.0,
+        "peak_delta_max": 0.0
+      },
+      "graph": {
+        "nodes": 100,
+        "edges": 187,
+        "avg_degree": 3.74
+      },
+      "mappings": {
+        "ACTION": 15,
+        "HIDDEN_STATE": 8,
+        "OBSERVATION": 39,
+        "POLICY": 2
+      },
+      "mappings_total": 64,
+      "gnn": {
+        "available": true,
+        "n_states": 9,
+        "n_obs": 39,
+        "n_actions": 17,
+        "A_rows": 39,
+        "A_cols": 9,
+        "B_rows": 9,
+        "B_cols": 9,
+        "B_depth": 17,
+        "C_len": 39,
+        "D_len": 9
+      },
+      "path": "/Users/4d/Documents/GitHub/projects/ongoing/instituteos/repos/COGANT/cogant/examples/real_world/requests_lib"
+    },
+    "json_stdlib": {
+      "runs": 3,
+      "wall_ms": {
+        "median": 84.43,
+        "p95": 112.54,
+        "min": 82.94
+      },
+      "stage_ms": {
+        "ingest": {
+          "median": 47.54,
+          "p95": 70.29,
+          "min": 44.64
+        },
+        "static": {
+          "median": 3.39,
+          "p95": 4.0,
+          "min": 3.26
+        },
+        "normalize": {
+          "median": 2.7,
+          "p95": 2.81,
+          "min": 2.67
+        },
+        "graph": {
+          "median": 32.25,
+          "p95": 33.75,
+          "min": 27.78
+        },
+        "translate": {
+          "median": 1.33,
+          "p95": 1.42,
+          "min": 1.3
+        },
+        "statespace": {
+          "median": 0.24,
+          "p95": 0.25,
+          "min": 0.24
+        }
+      },
+      "memory_mb": {
+        "peak_delta_median": 0.0,
+        "peak_delta_max": 0.0
+      },
+      "graph": {
+        "nodes": 29,
+        "edges": 46,
+        "avg_degree": 3.172
+      },
+      "mappings": {
+        "ACTION": 11,
+        "HIDDEN_STATE": 3,
+        "OBSERVATION": 2
+      },
+      "mappings_total": 16,
+      "gnn": {
+        "available": true,
+        "n_states": 3,
+        "n_obs": 2,
+        "n_actions": 11,
+        "A_rows": 2,
+        "A_cols": 3,
+        "B_rows": 3,
+        "B_cols": 3,
+        "B_depth": 11,
+        "C_len": 2,
+        "D_len": 3
+      },
+      "path": "/Users/4d/Documents/GitHub/projects/ongoing/instituteos/repos/COGANT/cogant/examples/real_world/json_stdlib"
+    }
+  }
+}
