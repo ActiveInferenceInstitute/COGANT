@@ -560,10 +560,11 @@ class TestGNNMatricesDimensions:
         assert matrices.n_states == 3
 
     def test_n_actions_minimum_one_for_valid_B(self) -> None:
-        """n_actions returns at least 1 for a valid B tensor.
+        """n_actions returns 0 for a degenerate empty state space.
 
-        Kills: early return of 0 instead of 1 when action list is empty
-        but state-space actions are also empty.
+        Zero is a valid dimension: the matrix exporter preserves the
+        declared dimensions instead of inventing an action dimension
+        (see GNNMatrices.n_actions docstring).
         """
         g = self._make_graph_with_node("n1", "v1")
         ss = StateSpaceModel(
@@ -579,7 +580,7 @@ class TestGNNMatricesDimensions:
         )
 
         matrices = GNNMatrices(graph=g, mappings=[], state_space=ss)
-        assert matrices.n_actions >= 1
+        assert matrices.n_actions == 0
 
 
 # ---------------------------------------------------------------------------
@@ -680,9 +681,10 @@ class TestSynthesizerDegenerate:
 
         tree = ast.parse(source)
         assert isinstance(tree, ast.Module)
-        # Fallback class must contain a placeholder update method.
+        # Fallback class carries explicit zero-dimensional semantics
+        # (673db14 removed the fabricated placeholder mutator).
         assert "class State" in source
-        assert "_placeholder" in source
+        assert "zero-dimensional state" in source
 
     def test_render_state_module_single_state_produces_update(self) -> None:
         """One state var produces a class body with an update() method.

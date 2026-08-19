@@ -441,13 +441,9 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
             )
             for i, slot in enumerate(model.hidden_states)
         ]
-        if (
-            project_hidden
-            and hidden_dimension != len(model.hidden_states)
-            and all(
-                len(values) == model.cardinalities.get(slot, 0)
-                for values, slot in zip(factor_vectors, model.hidden_states, strict=False)
-            )
+        if hidden_dimension != len(model.hidden_states) and all(
+            len(values) == model.cardinalities.get(slot, 0)
+            for values, slot in zip(factor_vectors, model.hidden_states, strict=False)
         ):
             D_vec = [
                 math.prod(
@@ -455,6 +451,16 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
                 )
                 for indexes in product(*(range(len(values)) for values in factor_vectors))
             ]
+        elif all(
+            len(values) == model.cardinalities.get(slot, 0)
+            for values, slot in zip(factor_vectors, model.hidden_states, strict=False)
+        ):
+            # State-only fragment: a factor vector whose length equals its
+            # declared cardinality is already the executable prior. The
+            # historical branch collapsed it to [max(values)], producing a
+            # one-entry D for a multi-state factor and a downstream
+            # "D must contain N entries" synthesis error.
+            D_vec = [value for values in factor_vectors for value in values]
         else:
             # Legacy model objects already use one name per global state.
             D_vec = [max(values) if values else 1.0 for values in factor_vectors]

@@ -891,39 +891,45 @@ def _render_main_module(plan: PackagePlan) -> str:
     return "\n".join(lines)
 
 
-def _render_test_smoke(plan: PackagePlan) -> str:
+def _render_test_smoke(plan: PackagePlan, *, has_actions: bool) -> str:
     """Render ``tests/test_smoke.py`` — a single round-trip smoke test."""
     helper_name = _policy_helper_name(plan)
-    return dedent(
-        f'''
-        """Smoke test for synthesized model {plan.raw_model_name!r}."""
-
-        from {plan.package_name}.main import advance_once
-        from {plan.package_name}.state import State
-
-
-        def test_model_runs() -> None:
-            """The synthesized model can execute one inference step."""
-            state = State()
-            new_state = advance_once(state)
-            assert isinstance(new_state, State)
-
-
-        def test_state_has_expected_fields() -> None:
-            """The State dataclass exposes the hidden-state attributes."""
-            state = State()
-            assert state is not None
-
-
-        def test_selector_returns_valid_index() -> None:
-            """The selector returns a non-negative action index."""
-            from {plan.package_name}.policy import {helper_name}
-
-            action = {helper_name}(State(), [0.0])
-            assert isinstance(action, int)
-            assert action >= 0
-        '''
-    ).lstrip()
+    selector_lines: list[str] = []
+    if has_actions:
+        selector_lines = [
+            "",
+            "",
+            "def test_selector_returns_valid_index() -> None:",
+            '    """The selector returns a non-negative action index."""',
+            f"    from {plan.package_name}.policy import {helper_name}",
+            "",
+            f"    action = {helper_name}(State(), [0.0])",
+            "    assert isinstance(action, int)",
+            "    assert action >= 0",
+        ]
+    body_lines: list[str] = [
+        '"""Smoke test for synthesized model {name!r}.""".format(',
+        f"            name={plan.raw_model_name!r}",
+        "        ),",
+        "",
+        f"from {plan.package_name}.main import advance_once",
+        f"from {plan.package_name}.state import State",
+        "",
+        "",
+        "def test_model_runs() -> None:",
+        '    """The synthesized model can execute one inference step."""',
+        "    state = State()",
+        "    new_state = advance_once(state)",
+        "    assert isinstance(new_state, State)",
+        "",
+        "",
+        "def test_state_has_expected_fields() -> None:",
+        '    """The State dataclass exposes the hidden-state attributes."""',
+        "    state = State()",
+        "    assert state is not None",
+    ]
+    body_lines.extend(selector_lines)
+    return "\n".join(body_lines) + "\n"
 
 
 # ---------------------------------------------------------------------------
@@ -981,7 +987,7 @@ def synthesize_package(
         package_path / "matrices.py": render_matrices_module(model),
         package_path / "main.py": _render_main_module(plan),
         tests_path / "__init__.py": '"""Test package for the synthesized model."""\n',
-        tests_path / "test_smoke.py": _render_test_smoke(plan),
+        tests_path / "test_smoke.py": _render_test_smoke(plan, has_actions=model.n_actions > 0),
     }
 
     for path, content in files.items():

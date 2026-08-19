@@ -655,12 +655,19 @@ def test_synthesize_package_returns_package_path_inside_output(tmp_path: Path) -
 
 
 def test_synthesize_package_policy_module_uses_targeted_selector(tmp_path: Path) -> None:
-    """policy.py exposes the executable matrix-backed action selector."""
+    """policy.py exposes the semantic selector when POLICY is a target role.
+
+    CANONICAL_GNN declares a POLICY role target with no source policy
+    functions, so ``_policy_helper_name`` yields the semantic
+    ``select_policy`` (one POLICY slot, matching the planner contract in
+    ``test_policy_context_synthesis.py``). ``pick_index`` is reserved for
+    plans with no POLICY deficit.
+    """
     model = parse_gnn(CANONICAL_GNN)
     plan = plan_package(model)
     pkg = synthesize_package(plan, model, tmp_path)
     src = (pkg / "policy.py").read_text()
-    assert "def pick_index(" in src
+    assert "def select_policy(" in src
 
 
 def test_synthesize_package_policy_module_uses_neutral_selector(tmp_path: Path) -> None:

@@ -178,15 +178,50 @@ class TestParser:
         model = parse_gnn(MINIMAL_GNN)
         assert model.model_name == "minimalmodel"
         assert model.hidden_states == ["s_f0"]
-        assert model.n_states == 1
+        # s_f0[3] with a 3-entry D: matrix dimension is authoritative.
+        assert model.n_states == 3
         assert model.observations == []
         assert model.actions == []
+
+    def test_parse_state_only_factor_d_preserved(self) -> None:
+        """A state-only fragment keeps its full factor D vector.
+
+        Regression: the legacy aggregation branch collapsed the factor
+        vector to [max(values)], producing a one-entry D for a
+        multi-state factor and a downstream "D must contain N entries"
+        synthesis error in render_matrices_module.
+        """
+        gnn = dedent(
+            """\
+            ## ModelName
+            StateOnly
+
+            ## StateSpaceBlock
+            s_f0[3,1,type=int]
+
+            ## ActInfOntologyAnnotation
+            s_f0=HiddenState
+
+            ## InitialParameterization
+            D_f0={ (0.5, 0.3, 0.2) }
+            """
+        )
+        model = parse_gnn(gnn)
+        assert model.hidden_states == ["s_f0"]
+        assert model.D == [0.5, 0.3, 0.2]
+        assert model.n_states == 3
+        # Synthesis must accept the model (no "D must contain" error).
+        from cogant.reverse.matrices import render_matrices_module
+
+        render_matrices_module(model)
 
     def test_parse_multi_factor_gnn(self) -> None:
         """Parse multi-factor GNN -> correct hidden_states list."""
         model = parse_gnn(MULTI_FACTOR_GNN)
         assert model.hidden_states == ["s_f0", "s_f1"]
-        assert model.n_states == 2
+        # s_f0[4] x s_f1[3] factorized declaration projected to the
+        # executable Cartesian prior: 12 hidden-state dimensions.
+        assert model.n_states == 12
         assert model.observations == ["o_m0"]
         assert model.actions == ["u_c0"]
 
