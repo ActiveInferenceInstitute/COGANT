@@ -370,7 +370,9 @@ def _with_target_dir(cfg: UpstreamPipelineConfig, target_dir: Path) -> UpstreamP
     )
 
 
-def _execute_upstream_step(src_main: Any, script: str, args: Any, *, verbose: bool) -> dict[str, Any]:
+def _execute_upstream_step(
+    src_main: Any, script: str, args: Any, *, verbose: bool
+) -> dict[str, Any]:
     """Run an upstream numbered step with COGANT's active Python interpreter."""
     with _preserve_cwd():
         if str(src_main.SCRIPT_DIR) not in sys.path:

@@ -301,9 +301,7 @@ def render_gnn_markdown_mosaic_png(
                 "rendered_page_count": len(pages),
                 "source_section_count": len(sections),
             },
-            "page_artifacts": [
-                {"path": page.name, "sha256": sha256_file(page)} for page in pages
-            ],
+            "page_artifacts": [{"path": page.name, "sha256": sha256_file(page)} for page in pages],
             "panel_metadata": {
                 "panels": [
                     {

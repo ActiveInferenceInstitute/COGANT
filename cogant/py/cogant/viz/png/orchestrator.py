@@ -292,8 +292,7 @@ def render_all_pngs(
     _viz_logger.removeHandler(_capture)
     if _capture.messages:
         logger.error(
-            "render_all_pngs: %d renderer warning(s)/failure(s) (run may be "
-            "incomplete): %s",
+            "render_all_pngs: %d renderer warning(s)/failure(s) (run may be incomplete): %s",
             len(_capture.messages),
             "; ".join(_capture.messages),
         )

@@ -299,9 +299,7 @@ class TestEpisodeAndLearning:
 
     def test_run_multi_episode(self):
         rt = AgentRuntime.from_matrices_dict(_identity_matrices())
-        result = rt.run_multi_episode(
-            n_episodes=3, steps_per_episode=2, learning_rate=0.1
-        )
+        result = rt.run_multi_episode(n_episodes=3, steps_per_episode=2, learning_rate=0.1)
         assert isinstance(result, MultiEpisodeResult)
         assert len(result.episodes) == 3
         assert len(result.D_trajectory) == 3

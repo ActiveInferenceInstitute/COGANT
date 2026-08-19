@@ -66,6 +66,7 @@ class JavaScriptLanguageParser(CogantLanguagePlugin):
             "calls": result.calls,
             "errors": result.errors,
         }
+
     def extract_symbols(self, ast: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract symbols from a previously produced AST dict."""
         return list(ast.get("symbols", []))

@@ -236,9 +236,7 @@ def test_upstream_discover_files_empty_dir(tmp_path: Path) -> None:
 @pytest.mark.skipif(not UPSTREAM_AVAILABLE, reason="src.gnn not importable")
 def test_upstream_discover_files_finds_gnn_md(tmp_path: Path) -> None:
     """A file matching the upstream discovery pattern is found."""
-    (tmp_path / "model.gnn.md").write_text(
-        "## GNNSection\nm\n", encoding="utf-8"
-    )
+    (tmp_path / "model.gnn.md").write_text("## GNNSection\nm\n", encoding="utf-8")
     out = upstream_discover_files(tmp_path)
     out_list = list(out)
     # At least one match (upstream may or may not pick up the partial file)

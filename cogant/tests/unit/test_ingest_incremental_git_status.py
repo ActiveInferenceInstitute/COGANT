@@ -193,9 +193,7 @@ class TestWorkingTreePorcelainBranches:
             stderr="",
         )
 
-    def test_short_line_skipped(
-        self, temp_git_repo: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_short_line_skipped(self, temp_git_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Porcelain lines with fewer than 3 chars are skipped (line 163)."""
         ingester = IncrementalIngester(temp_git_repo)
         # Need to keep _git_available True; only stub out the second call

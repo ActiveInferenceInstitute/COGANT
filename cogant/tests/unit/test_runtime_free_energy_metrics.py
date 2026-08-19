@@ -115,9 +115,7 @@ def test_episode_metrics_to_csv_row_writable_via_dictwriter() -> None:
 
 def test_episode_metrics_default_optional_fields() -> None:
     """n_unique_obs and action_entropy default to 0 / 0.0."""
-    em = EpisodeMetrics(
-        episode_id=1, n_steps=2, mean_free_energy=0.0, final_free_energy=0.0
-    )
+    em = EpisodeMetrics(episode_id=1, n_steps=2, mean_free_energy=0.0, final_free_energy=0.0)
     assert em.n_unique_obs == 0
     assert em.action_entropy == 0.0
     row = em.to_csv_row()
@@ -228,8 +226,9 @@ def test_run_metrics_summary_single_episode_zero_std() -> None:
 def test_run_metrics_summary_three_episodes_min_max() -> None:
     """min/max across three episodes pick the right extremes."""
     eps = [
-        EpisodeMetrics(episode_id=i, n_steps=i + 1, mean_free_energy=float(v),
-                       final_free_energy=float(v) / 2)
+        EpisodeMetrics(
+            episode_id=i, n_steps=i + 1, mean_free_energy=float(v), final_free_energy=float(v) / 2
+        )
         for i, v in enumerate([10, 1, 5])
     ]
     rm = RunMetrics(episodes=eps)
@@ -262,8 +261,9 @@ def test_plot_free_energy_with_episodes_returns_figure_or_none() -> None:
     test environment-agnostic, but exercise both code paths' coverage.
     """
     eps = [
-        EpisodeMetrics(episode_id=i, n_steps=2, mean_free_energy=float(i),
-                       final_free_energy=float(i) * 0.5)
+        EpisodeMetrics(
+            episode_id=i, n_steps=2, mean_free_energy=float(i), final_free_energy=float(i) * 0.5
+        )
         for i in range(3)
     ]
     rm = RunMetrics(episodes=eps)
@@ -284,8 +284,7 @@ def test_plot_free_energy_with_episodes_returns_figure_or_none() -> None:
 
 def test_plot_free_energy_single_episode_does_not_crash() -> None:
     """Plotting a single-episode RunMetrics succeeds (no division-by-zero)."""
-    em = EpisodeMetrics(episode_id=0, n_steps=1, mean_free_energy=1.0,
-                        final_free_energy=0.5)
+    em = EpisodeMetrics(episode_id=0, n_steps=1, mean_free_energy=1.0, final_free_energy=0.5)
     rm = RunMetrics(episodes=[em])
     fig = rm.plot_free_energy()
     # Either a real Figure or None (no matplotlib) — both are valid.

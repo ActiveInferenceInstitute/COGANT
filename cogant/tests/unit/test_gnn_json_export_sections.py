@@ -413,9 +413,7 @@ class TestTransitionsAndModalities:
 class TestMarkovBlanketExceptionPath:
     """Cover lines 479-485: ``_export_markov_blanket`` exception fallback."""
 
-    def test_markov_blanket_fallback_on_value_error(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_markov_blanket_fallback_on_value_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Force MarkovBlanketExtractor.extract to raise ValueError.
 
         Patch the exact __globals__ dict that _export_markov_blanket uses for

@@ -200,8 +200,9 @@ class _FakeStep:
 
 
 class _FakeUpstreamResult:
-    def __init__(self, available: bool, steps: list[_FakeStep] | None = None,
-                 error: str | None = None) -> None:
+    def __init__(
+        self, available: bool, steps: list[_FakeStep] | None = None, error: str | None = None
+    ) -> None:
         self.available = available
         self.error = error
         self.steps = steps or []

@@ -173,17 +173,8 @@ def build_inspection_model(run_dir: Path | str) -> dict[str, Any]:
     nodes, edges = _graph_counts(graph, manifest)
     state = _state_counts(state_space, manifest)
     matrix_section = package.get("matrices", {}) if isinstance(package, dict) else {}
-    matrix_shapes = (
-        matrix_section.get("shapes", {})
-        if isinstance(matrix_section, dict)
-        else {}
-    )
-    matrices = {
-        "shapes": {
-            str(key): _shape_text(value)
-            for key, value in matrix_shapes.items()
-        }
-    }
+    matrix_shapes = matrix_section.get("shapes", {}) if isinstance(matrix_section, dict) else {}
+    matrices = {"shapes": {str(key): _shape_text(value) for key, value in matrix_shapes.items()}}
     confidence = package.get("confidence", {}) if isinstance(package, dict) else {}
     coverage = package.get("source_coverage", {}) if isinstance(package, dict) else {}
     roundtrip = _json(run, "roundtrip/metrics.json")
@@ -226,9 +217,7 @@ def build_inspection_model(run_dir: Path | str) -> dict[str, Any]:
         "state_space": {
             **state,
             "transitions": (
-                state_space.get("transitions", {})
-                if isinstance(state_space, dict)
-                else {}
+                state_space.get("transitions", {}) if isinstance(state_space, dict) else {}
             ),
         },
         "matrices": matrices,
@@ -317,9 +306,13 @@ def _native_png(path: Path, title: str, lines: list[str], counts: dict[str, Any]
     figure.patch.set_facecolor("#101827")
     axis.set_facecolor("#101827")
     axis.axis("off")
-    axis.text(0.03, 0.90, title, color="#8be9fd", fontsize=17, weight="bold", transform=axis.transAxes)
+    axis.text(
+        0.03, 0.90, title, color="#8be9fd", fontsize=17, weight="bold", transform=axis.transAxes
+    )
     for index, line in enumerate(lines):
-        axis.text(0.04, 0.76 - index * 0.105, line, color="#f8f8f2", fontsize=11, transform=axis.transAxes)
+        axis.text(
+            0.04, 0.76 - index * 0.105, line, color="#f8f8f2", fontsize=11, transform=axis.transAxes
+        )
     figure.savefig(path, facecolor=figure.get_facecolor(), bbox_inches="tight")
     plt.close(figure)
     _figure_sidecar(path, counts=counts, title=title)
@@ -330,7 +323,9 @@ def render_graphical_abstract_svg(
     run_dir: Path | str, output_svg: Path | str | None = None
 ) -> Path:
     run = _path(run_dir)
-    output = Path(output_svg) if output_svg is not None else run / "figures" / "graphical_abstract.svg"
+    output = (
+        Path(output_svg) if output_svg is not None else run / "figures" / "graphical_abstract.svg"
+    )
     model = build_inspection_model(run)
     coverage = model["coverage"]["percentage"]
     coverage_text = f"{coverage:g}%" if isinstance(coverage, (int, float)) else "—"
@@ -357,7 +352,9 @@ def render_graphical_abstract_png(
     model = build_inspection_model(run)
     svg = Path(output_svg) if output_svg is not None else run / "figures" / "graphical_abstract.svg"
     render_graphical_abstract_svg(run, svg)
-    output = Path(output_png) if output_png is not None else run / "figures" / "graphical_abstract.png"
+    output = (
+        Path(output_png) if output_png is not None else run / "figures" / "graphical_abstract.png"
+    )
     return _native_png(
         output,
         "COGANT graphical abstract",
@@ -447,7 +444,9 @@ def render_inspection_dashboard_html(
 ) -> Path:
     run = _path(run_dir)
     model = build_inspection_model(run)
-    output = Path(output_html) if output_html is not None else run / "site" / "inspection_dashboard.html"
+    output = (
+        Path(output_html) if output_html is not None else run / "site" / "inspection_dashboard.html"
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
     if model["no_run_data"]:
         cards = '<div class="no-run-data"><div class="metric-label">NO RUN DATA</div><div class="metric-value">Emit a COGANT run before reviewing this page.</div></div>'
@@ -468,15 +467,15 @@ def render_inspection_dashboard_html(
         if isinstance(row, dict)
     )
     asset_note = "embedded" if embed_assets else "present"
-    html_text = f'''<!doctype html>
+    html_text = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>COGANT Inspection Dashboard</title>
 <style>body{{background:#101827;color:#f8f8f2;font:16px sans-serif;margin:2rem}}h1{{color:#8be9fd}}.metric-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem}}.metric-card,.no-run-data{{background:#1d2a3a;border:1px solid #40536b;border-radius:8px;padding:1rem}}.metric-label{{color:#b8c7d9;font-size:.82rem}}.metric-value{{font-size:1.35rem;margin-top:.5rem}}.no-run-data{{border-color:#ffb86c;grid-column:1/-1}}a{{color:#8be9fd}}</style></head>
 <body><h1>COGANT Inspection Dashboard</h1><p>Inspection dashboard generated from the emitted run artifacts ({asset_note}).</p>
 <section class="metric-grid" aria-label="Run metrics">{cards}</section>
 <h2>Graphical Abstract</h2><p><a href="../figures/graphical_abstract.svg">Graphical abstract</a></p>
 <h2>Visual Evidence</h2><p>Program Graph, semantic mappings, matrix dimensions, and generated artifacts are shown from disk.</p>
-<h2>Roundtrip Diagnostics</h2><p>Role preservation: {html.escape(str(model['roundtrip']['role_preservation_score']))}; Generated code: {html.escape(str(model['roundtrip']['generated_code'].get('status', 'not recorded')))}.</p>
-<p>Mappings: {mapping_labels or 'none recorded'}.</p></body></html>\n'''
+<h2>Roundtrip Diagnostics</h2><p>Role preservation: {html.escape(str(model["roundtrip"]["role_preservation_score"]))}; Generated code: {html.escape(str(model["roundtrip"]["generated_code"].get("status", "not recorded")))}.</p>
+<p>Mappings: {mapping_labels or "none recorded"}.</p></body></html>\n"""
     output.write_text(html_text, encoding="utf-8")
     index = run / "site" / "index.html"
     if output != index:

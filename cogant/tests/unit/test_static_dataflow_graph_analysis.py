@@ -195,13 +195,7 @@ class TestDataFlowAnalyzerFiles:
 class TestClassAnalysis:
     def test_class_body_attributes_emit_edges(self, tmp_path: Path):
         analyzer = DataFlowAnalyzer(repo_root=tmp_path)
-        src = (
-            "class C:\n"
-            "    x: int = 5\n"
-            "    y = 'hello'\n"
-            "    def m(self):\n"
-            "        return self.x\n"
-        )
+        src = "class C:\n    x: int = 5\n    y = 'hello'\n    def m(self):\n        return self.x\n"
         flows = analyzer.analyze_source(src, tmp_path / "c.py")
         contexts = {e.context for e in flows}
         # Class body emits with context == class name; method emits with C.m
@@ -210,12 +204,7 @@ class TestClassAnalysis:
 
     def test_method_body_context_uses_dotted_name(self, tmp_path: Path):
         analyzer = DataFlowAnalyzer(repo_root=tmp_path)
-        src = (
-            "class K:\n"
-            "    def go(self, n):\n"
-            "        self.total += n\n"
-            "        return self.total\n"
-        )
+        src = "class K:\n    def go(self, n):\n        self.total += n\n        return self.total\n"
         flows = analyzer.analyze_source(src, tmp_path / "k.py")
         assert any(e.context == "K.go" for e in flows)
         # AugAssign emits a 'mutates' edge
@@ -257,23 +246,14 @@ class TestVisitorEdgeCases:
             "def f(arr, i, v):\n    arr[i] = v\n",
             tmp_path / "s.py",
         )
-        assert any(
-            e.target_symbol == "arr" and e.edge_type == "writes" for e in flows
-        )
+        assert any(e.target_symbol == "arr" and e.edge_type == "writes" for e in flows)
 
     def test_attribute_root_handles_chained_attribute(self, tmp_path: Path):
         analyzer = DataFlowAnalyzer(repo_root=tmp_path)
-        src = (
-            "class C:\n"
-            "    def f(self, v):\n"
-            "        self.inner.value = v\n"
-        )
+        src = "class C:\n    def f(self, v):\n        self.inner.value = v\n"
         flows = analyzer.analyze_source(src, tmp_path / "ch.py")
         # Dotted write captures full chain
-        assert any(
-            e.target_symbol == "self.inner.value" and e.edge_type == "writes"
-            for e in flows
-        )
+        assert any(e.target_symbol == "self.inner.value" and e.edge_type == "writes" for e in flows)
 
     def test_attribute_root_helper_with_subscript(self):
         body = ast.parse("a[0]").body
@@ -303,9 +283,7 @@ class TestVisitorEdgeCases:
             "def f(obj):\n    obj.append(1)\n",
             tmp_path / "call.py",
         )
-        assert any(
-            e.edge_type == "mutates" and e.target_symbol == "obj" for e in flows
-        )
+        assert any(e.edge_type == "mutates" and e.target_symbol == "obj" for e in flows)
 
     def test_visit_call_with_kwargs(self, tmp_path: Path):
         analyzer = DataFlowAnalyzer(repo_root=tmp_path)
@@ -314,8 +292,6 @@ class TestVisitorEdgeCases:
             tmp_path / "kw.py",
         )
         assert any(
-            e.source_symbol == "arg"
-            and e.target_symbol == "<call>"
-            and e.edge_type == "reads"
+            e.source_symbol == "arg" and e.target_symbol == "<call>" and e.edge_type == "reads"
             for e in flows
         )

@@ -142,9 +142,7 @@ def test_badge_svg_renders() -> None:
 
 
 def test_to_dict_round_trip() -> None:
-    result = ValidationResult(
-        valid=False, errors=["e1"], warnings=["w1"], score=10.0
-    )
+    result = ValidationResult(valid=False, errors=["e1"], warnings=["w1"], score=10.0)
     result.details = {"k": "v"}
     result.section_scores = {"s1": 1.0}
     out = result.to_dict()
@@ -363,9 +361,7 @@ def test_validate_package_checksum_mismatch_is_invalid_for_required_file(tmp_pat
     assert result.valid is False
     assert any("Checksum mismatch" in e for e in result.errors)
     # Sanity: the actual sha256 of the canonical-encoded JSON is reproducible
-    real_sha = hashlib.sha256(
-        json.dumps([], sort_keys=True, default=str).encode()
-    ).hexdigest()
+    real_sha = hashlib.sha256(json.dumps([], sort_keys=True, default=str).encode()).hexdigest()
     assert real_sha != bogus
 
 
@@ -376,9 +372,7 @@ def test_validate_package_checksum_matches_no_warning(tmp_path: Path) -> None:
     pkg = tmp_path / "pkg"
     _scaffold_minimal_package(pkg)
     # actions.json was scaffolded as `[]`. Compute its real canonical sha256.
-    real_sha = hashlib.sha256(
-        json.dumps([], sort_keys=True, default=str).encode()
-    ).hexdigest()
+    real_sha = hashlib.sha256(json.dumps([], sort_keys=True, default=str).encode()).hexdigest()
     (pkg / "manifest.json").write_text(
         json.dumps({"name": "test", "checksums": {"actions.json": real_sha}}),
         encoding="utf-8",
@@ -393,9 +387,7 @@ def test_validate_package_checksum_skips_missing_file(tmp_path: Path) -> None:
     pkg = tmp_path / "pkg"
     _scaffold_minimal_package(pkg)
     (pkg / "manifest.json").write_text(
-        json.dumps(
-            {"name": "test", "checksums": {"phantom.json": "deadbeef" * 8}}
-        ),
+        json.dumps({"name": "test", "checksums": {"phantom.json": "deadbeef" * 8}}),
         encoding="utf-8",
     )
     result = GNNValidator().validate_package(str(pkg), upstream_gnn=False)

@@ -18,9 +18,7 @@ from cogant.translate.rules.control import (
 
 
 def _make_graph(nodes: list[Node]) -> ProgramGraph:
-    metadata = GraphMetadata(
-        repo_uri="test://control", languages={"python"}, version="1.0"
-    )
+    metadata = GraphMetadata(repo_uri="test://control", languages={"python"}, version="1.0")
     graph = ProgramGraph(metadata=metadata)
     for n in nodes:
         graph.add_node(n)
@@ -253,9 +251,7 @@ class TestParameterRule:
         )
         graph = _make_graph([var])
         rule = ParameterRule()
-        mapping = rule.apply(
-            graph, {"node_id": "var:gamma_decay", "parameter_type": "variable"}
-        )
+        mapping = rule.apply(graph, {"node_id": "var:gamma_decay", "parameter_type": "variable"})
         assert mapping is not None
         assert mapping.confidence_score == 0.85
         # Variable branch -> 0.90 parser certainty
@@ -272,9 +268,7 @@ class TestParameterRule:
         )
         graph = _make_graph([cls])
         rule = ParameterRule()
-        mapping = rule.apply(
-            graph, {"node_id": "class:ParamConfig", "parameter_type": "class"}
-        )
+        mapping = rule.apply(graph, {"node_id": "class:ParamConfig", "parameter_type": "class"})
         assert mapping is not None
         # Class branch -> 0.85 parser certainty
         assert mapping.parser_certainty == 0.85
@@ -298,10 +292,7 @@ class TestParameterRule:
     def test_apply_returns_none_for_missing_node(self):
         graph = _make_graph([])
         rule = ParameterRule()
-        assert (
-            rule.apply(graph, {"node_id": "var:missing", "parameter_type": "variable"})
-            is None
-        )
+        assert rule.apply(graph, {"node_id": "var:missing", "parameter_type": "variable"}) is None
 
 
 class TestModuleExports:

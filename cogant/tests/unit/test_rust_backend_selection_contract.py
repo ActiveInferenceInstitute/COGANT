@@ -174,11 +174,17 @@ def test_rust_adapter_add_edge_existing_updates_weight_and_evidence() -> None:
         kind=NodeKind.FUNCTION, name="b", qualified_name="pkg.b", path="pkg/mod.py"
     )
     e1 = adapter.add_edge(
-        source_id=a.id, target_id=b.id, kind=EdgeKind.CALLS, weight=0.3,
+        source_id=a.id,
+        target_id=b.id,
+        kind=EdgeKind.CALLS,
+        weight=0.3,
         evidence_sources=["static"],
     )
     e2 = adapter.add_edge(
-        source_id=a.id, target_id=b.id, kind=EdgeKind.CALLS, weight=0.7,
+        source_id=a.id,
+        target_id=b.id,
+        kind=EdgeKind.CALLS,
+        weight=0.7,
         evidence_sources=["dynamic_trace", "static"],  # static is dup
     )
     assert e1 is e2  # same edge object
@@ -193,9 +199,7 @@ def test_rust_adapter_add_edge_existing_updates_weight_and_evidence() -> None:
 def test_rust_adapter_graph_property_returns_finalized() -> None:
     """The .graph property materialises a fresh ProgramGraph each call."""
     adapter = RustProgramGraphAdapter("repo://test")
-    adapter.add_node(
-        kind=NodeKind.FUNCTION, name="f", qualified_name="pkg.f", path="pkg/mod.py"
-    )
+    adapter.add_node(kind=NodeKind.FUNCTION, name="f", qualified_name="pkg.f", path="pkg/mod.py")
     graph = adapter.graph
     from cogant.schemas.graph import ProgramGraph
 

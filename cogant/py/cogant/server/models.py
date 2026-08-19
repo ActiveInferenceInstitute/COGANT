@@ -42,7 +42,9 @@ class AnalyzeRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    repo_path: str = Field(..., min_length=1, max_length=4096, description="Path to repository to analyze")
+    repo_path: str = Field(
+        ..., min_length=1, max_length=4096, description="Path to repository to analyze"
+    )
     stages: list[str] | None = Field(
         default=None,
         description="Explicit pipeline stages (None = default stage list)",
@@ -510,6 +512,7 @@ class RoundtripResponseV1(BaseModel):
             self.roundtrip_status = "ROLE_PRESERVED"
         return self
 
+
 # ---------------------------------------------------------------------------
 # /api/v1/rules
 # ---------------------------------------------------------------------------
@@ -566,7 +569,9 @@ class VisualizeRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    source_code: str = Field(..., min_length=1, max_length=1_000_000, description="Source code to visualize")
+    source_code: str = Field(
+        ..., min_length=1, max_length=1_000_000, description="Source code to visualize"
+    )
     language: Literal["python", "javascript", "typescript"] = Field(
         ..., description="Programming language"
     )

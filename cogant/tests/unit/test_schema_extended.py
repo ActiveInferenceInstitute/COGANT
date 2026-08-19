@@ -13,7 +13,9 @@ from cogant.schema import (
 def test_detect_version_requires_header_and_marker() -> None:
     assert detect_version("## GNNVersionAndFlags\nGNN v2.0.0\n") == CURRENT_GNN_VERSION
     assert detect_version("GNN v2.0.0\n") == UNSUPPORTED_GNN_VERSION
-    assert detect_version("## GNNVersionAndFlags\nstrict_validation=true\n") == UNSUPPORTED_GNN_VERSION
+    assert (
+        detect_version("## GNNVersionAndFlags\nstrict_validation=true\n") == UNSUPPORTED_GNN_VERSION
+    )
 
 
 def test_detect_version_handles_whitespace_after_hashes() -> None:

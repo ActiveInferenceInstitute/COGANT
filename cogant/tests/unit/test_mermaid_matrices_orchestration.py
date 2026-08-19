@@ -440,12 +440,8 @@ class TestMatricesIncomingObservesEdges:
         # lines 333-337 walks _edges_to(obs) and picks the source as a
         # direct-evidence state index.
         b = ProgramGraphBuilder(repo_uri="test://w22-incoming-obs")
-        state_node = b.add_node(
-            kind=NodeKind.VARIABLE, name="state_x", qualified_name="m.state_x"
-        )
-        obs_node = b.add_node(
-            kind=NodeKind.VARIABLE, name="obs_y", qualified_name="m.obs_y"
-        )
+        state_node = b.add_node(kind=NodeKind.VARIABLE, name="state_x", qualified_name="m.state_x")
+        obs_node = b.add_node(kind=NodeKind.VARIABLE, name="obs_y", qualified_name="m.obs_y")
         # state -> obs OBSERVES: incoming to the obs node.
         b.add_edge(source_id=state_node.id, target_id=obs_node.id, kind=EdgeKind.OBSERVES)
         graph = b.finalize()
@@ -484,15 +480,11 @@ class TestMatricesValidateErrors:
 
     def _baseline(self) -> GNNMatrices:
         graph = _empty_graph()
-        hs = SemanticMapping(
-            id="hs1", kind=MappingKind.HIDDEN_STATE, graph_fragment_node_ids=["x"]
-        )
+        hs = SemanticMapping(id="hs1", kind=MappingKind.HIDDEN_STATE, graph_fragment_node_ids=["x"])
         obs = SemanticMapping(
             id="obs1", kind=MappingKind.OBSERVATION, graph_fragment_node_ids=["y"]
         )
-        act = SemanticMapping(
-            id="act1", kind=MappingKind.ACTION, graph_fragment_node_ids=["z"]
-        )
+        act = SemanticMapping(id="act1", kind=MappingKind.ACTION, graph_fragment_node_ids=["z"])
         return GNNMatrices(graph=graph, mappings=[hs, obs, act], state_space=_state_space())
 
     def test_validate_shapes_A_row_count_mismatch(self) -> None:
@@ -506,7 +498,9 @@ class TestMatricesValidateErrors:
     def test_validate_shapes_A_inconsistent_column_count(self) -> None:
         gm = self._baseline()
         # Right number of rows, wrong column count (line 782 trigger).
-        gm.compute_A = lambda: [[0.5, 0.5]]  # 1 row, 2 cols vs n_states=1  # type: ignore[method-assign]
+        gm.compute_A = lambda: [
+            [0.5, 0.5]
+        ]  # 1 row, 2 cols vs n_states=1  # type: ignore[method-assign]
         ok, errs = gm.validate_shapes()
         assert ok is False
         assert any("inconsistent column count" in e for e in errs)
@@ -588,15 +582,9 @@ class TestMatricesValidateErrors:
 class TestMatricesToPlainDict:
     def _build_with_graph(self) -> GNNMatrices:
         b = ProgramGraphBuilder(repo_uri="test://w22-toplain")
-        state_node = b.add_node(
-            kind=NodeKind.VARIABLE, name="state_x", qualified_name="m.state_x"
-        )
-        obs_node = b.add_node(
-            kind=NodeKind.VARIABLE, name="obs_y", qualified_name="m.obs_y"
-        )
-        act_node = b.add_node(
-            kind=NodeKind.FUNCTION, name="action_z", qualified_name="m.action_z"
-        )
+        state_node = b.add_node(kind=NodeKind.VARIABLE, name="state_x", qualified_name="m.state_x")
+        obs_node = b.add_node(kind=NodeKind.VARIABLE, name="obs_y", qualified_name="m.obs_y")
+        act_node = b.add_node(kind=NodeKind.FUNCTION, name="action_z", qualified_name="m.action_z")
         graph = b.finalize()
 
         hs = SemanticMapping(
@@ -627,7 +615,9 @@ class TestMatricesToPlainDict:
             again = gm.to_plain_dict()
             assert again["A"][0][0] != 999.0
 
-    def test_to_plain_dict_includes_truncation_metadata(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_to_plain_dict_includes_truncation_metadata(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         # Drive the actual truncation path by lowering _MAX_B_ENTRIES so that
         # even a small number of states triggers the guard. This is a
         # genuine value override (not a mock) on a module-level constant.
@@ -648,9 +638,7 @@ class TestMatricesToPlainDict:
         hs3 = SemanticMapping(
             id="hs3", kind=MappingKind.HIDDEN_STATE, graph_fragment_node_ids=[s3.id]
         )
-        act = SemanticMapping(
-            id="act", kind=MappingKind.ACTION, graph_fragment_node_ids=[a1.id]
-        )
+        act = SemanticMapping(id="act", kind=MappingKind.ACTION, graph_fragment_node_ids=[a1.id])
 
         # n_states=3, n_actions=1 -> 3*3*1 = 9 entries. Cap at 4 to force truncation.
         # Patch the exact globals dict used by the imported class. Earlier
@@ -776,9 +764,7 @@ class TestOrchestrationGraph:
 
 
 class TestOrchestrationExportFallbacks:
-    def test_export_state_space_fallback_on_serialization_error(
-        self, tmp_path: Path
-    ) -> None:
+    def test_export_state_space_fallback_on_serialization_error(self, tmp_path: Path) -> None:
         # Place a non-asdict-friendly object as the state space so that
         # `asdict()` raises TypeError and the fallback "minimal identity"
         # branch (lines 831-832) executes.
@@ -802,9 +788,7 @@ class TestOrchestrationExportFallbacks:
             "state_space.json" in p for p in result["artifacts"]
         )
 
-    def test_export_process_model_fallback_on_serialization_error(
-        self, tmp_path: Path
-    ) -> None:
+    def test_export_process_model_fallback_on_serialization_error(self, tmp_path: Path) -> None:
         bundle = Bundle(target=str(tmp_path))
 
         class FakePM:
@@ -834,9 +818,7 @@ class TestOrchestrationExportFallbacks:
 
 
 class TestOrchestrationPngWarnings:
-    def test_export_with_no_visualization_inputs_completes(
-        self, tmp_path: Path
-    ) -> None:
+    def test_export_with_no_visualization_inputs_completes(self, tmp_path: Path) -> None:
         # Run export with no artifacts so render_all_pngs has nothing to render
         # except whatever it auto-discovers from disk (none). The branch on
         # lines 882-889 either records the "wrote 0 files" warning or
@@ -851,9 +833,7 @@ class TestOrchestrationPngWarnings:
         # The export stage completed without raising.
         assert isinstance(png_paths, dict) or isinstance(warnings, list)
 
-    def test_export_with_program_graph_but_no_visualizations(
-        self, tmp_path: Path
-    ) -> None:
+    def test_export_with_program_graph_but_no_visualizations(self, tmp_path: Path) -> None:
         # Slightly richer scenario: create a real program graph and run export.
         # Confirms the png_paths stash is populated and total count is sane.
         b = ProgramGraphBuilder(repo_uri=str(tmp_path))
@@ -914,9 +894,7 @@ class TestOrchestrationValidateUpstream:
         summary = result["upstream_pipeline"]
         assert "available" in summary
 
-    def test_validate_with_upstream_pipeline_and_default_skip_steps(
-        self, tmp_path: Path
-    ) -> None:
+    def test_validate_with_upstream_pipeline_and_default_skip_steps(self, tmp_path: Path) -> None:
         # Drive the ``skip_steps is None`` default branch (lines 1002-1005).
         b = ProgramGraphBuilder(repo_uri=str(tmp_path))
         b.add_node(kind=NodeKind.MODULE, name="m", qualified_name="m")

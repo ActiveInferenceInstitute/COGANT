@@ -231,9 +231,7 @@ class TestExtractMappingsEdgeCases:
         assert len(api.mappings) == 1
         assert api.mappings[0].source == "fallback_label"
 
-    def test_evidence_default_for_no_description_or_label(
-        self, tmp_path: Path
-    ) -> None:
+    def test_evidence_default_for_no_description_or_label(self, tmp_path: Path) -> None:
         """Cover the ``"Static analysis"`` default for evidence."""
         bundle = {
             "artifacts": {

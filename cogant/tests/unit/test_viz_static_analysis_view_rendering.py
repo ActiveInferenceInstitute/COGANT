@@ -170,12 +170,8 @@ def _coupling_dict_form() -> Any:
 def _dead_code() -> DeadCodeReport:
     rep = DeadCodeReport(file_path=Path("d.py"))
     rep.entries = [
-        DeadCodeEntry(
-            symbol_name="f1", file_path=Path("d.py"), line_num=1, kind="UNUSED_FUNCTION"
-        ),
-        DeadCodeEntry(
-            symbol_name="f2", file_path=Path("d.py"), line_num=5, kind="UNUSED_FUNCTION"
-        ),
+        DeadCodeEntry(symbol_name="f1", file_path=Path("d.py"), line_num=1, kind="UNUSED_FUNCTION"),
+        DeadCodeEntry(symbol_name="f2", file_path=Path("d.py"), line_num=5, kind="UNUSED_FUNCTION"),
         DeadCodeEntry(
             symbol_name="v1", file_path=Path("d.py"), line_num=12, kind="UNUSED_VARIABLE"
         ),

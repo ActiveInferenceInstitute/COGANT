@@ -95,7 +95,16 @@ def _comprehensive() -> ProjectConfig:
 def _gnn_focused() -> ProjectConfig:
     return ProjectConfig(
         pipeline=PipelineConfig(
-            stages=["ingest", "static", "normalize", "graph", "translate", "statespace", "export", "validate"],
+            stages=[
+                "ingest",
+                "static",
+                "normalize",
+                "graph",
+                "translate",
+                "statespace",
+                "export",
+                "validate",
+            ],
             render_visualizations=True,
             gnn={"include_metadata": True, "include_connections": True, "include_matrices": True},
         ),

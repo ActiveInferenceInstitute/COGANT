@@ -491,10 +491,12 @@ class _UpstreamSectionsMixin:
         lines.append(f"num_preferences={len(self.state_space.preferences)}")
         first_state = next(iter(self.state_space.variables.values()), None)
         first_obs = next(iter(self.state_space.observations.values()), None)
-        joint_state_cardinality = (first_state.cardinality if first_state else None) or max(n_states, 1)
-        representative_observation_cardinality = (
-            (first_obs.cardinality if first_obs else None) or max(n_obs, 1)
+        joint_state_cardinality = (first_state.cardinality if first_state else None) or max(
+            n_states, 1
         )
+        representative_observation_cardinality = (
+            first_obs.cardinality if first_obs else None
+        ) or max(n_obs, 1)
         lines.append(f"num_states: {joint_state_cardinality}")
         lines.append(f"num_obs: {representative_observation_cardinality}")
         lines.append(f"num_actions: {max(n_act, 1)}")

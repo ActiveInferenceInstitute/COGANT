@@ -20,7 +20,6 @@ except ImportError:  # pragma: no cover
     HAS_TS_GRAMMAR = False
 
 
-
 @pytest.mark.skipif(not HAS_JS_GRAMMAR, reason="tree-sitter-javascript not installed")
 def test_js_parser_available():
     from cogant.parsers.languages.javascript.parser import JavaScriptLanguageParser

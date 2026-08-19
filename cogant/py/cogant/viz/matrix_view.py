@@ -152,8 +152,12 @@ class MatrixVisualizer:
             if empty:
                 ax.set_title("A Matrix: no data")
                 ax.text(
-                    0.5, 0.5, "no A-matrix data",
-                    ha="center", va="center", transform=ax.transAxes,
+                    0.5,
+                    0.5,
+                    "no A-matrix data",
+                    ha="center",
+                    va="center",
+                    transform=ax.transAxes,
                 )
             else:
                 ax.set_title("A Matrix: Likelihood (Observation Model)")
@@ -212,8 +216,12 @@ class MatrixVisualizer:
             if empty:
                 ax.set_title("B Matrix: no data")
                 ax.text(
-                    0.5, 0.5, "no B-matrix data",
-                    ha="center", va="center", transform=ax.transAxes,
+                    0.5,
+                    0.5,
+                    "no B-matrix data",
+                    ha="center",
+                    va="center",
+                    transform=ax.transAxes,
                 )
             else:
                 ax.set_title(f"B Matrix: State Transition (Action {action_idx}, {convention})")

@@ -93,9 +93,7 @@ def _validate_matrix_semantics(model: ReverseGNNModel) -> None:
         raise ReverseModelError("B is required to establish the action dimension")
 
     if len(model.D) != n_states:
-        raise ReverseModelError(
-            f"D must contain {n_states} entries; received {len(model.D)}"
-        )
+        raise ReverseModelError(f"D must contain {n_states} entries; received {len(model.D)}")
     if model.D:
         if any(value < -tolerance or not math.isfinite(value) for value in model.D):
             raise ReverseModelError("D must contain finite non-negative probabilities")
@@ -108,9 +106,7 @@ def _validate_matrix_semantics(model: ReverseGNNModel) -> None:
         for column in range(n_states):
             values = [model.A[row][column] for row in range(n_obs)]
             if any(value < -tolerance or not math.isfinite(value) for value in values):
-                raise ReverseModelError(
-                    "A must contain finite non-negative probabilities"
-                )
+                raise ReverseModelError("A must contain finite non-negative probabilities")
             if not math.isclose(sum(values), 1.0, abs_tol=tolerance):
                 raise ReverseModelError("each A column must sum to 1.0")
     elif model.A:
@@ -120,41 +116,31 @@ def _validate_matrix_semantics(model: ReverseGNNModel) -> None:
 
     if n_states and n_actions:
         if len(model.B) != n_states or any(len(row) != n_states for row in model.B):
-            raise ReverseModelError(
-                f"B must have shape ({n_states}, {n_states}, {n_actions})"
-            )
+            raise ReverseModelError(f"B must have shape ({n_states}, {n_states}, {n_actions})")
         if any(len(cell) != n_actions for row in model.B for cell in row):
             raise ReverseModelError(f"B must have depth {n_actions}")
         for action in range(n_actions):
             for source in range(n_states):
                 values = [model.B[target][source][action] for target in range(n_states)]
                 if any(value < -tolerance or not math.isfinite(value) for value in values):
-                    raise ReverseModelError(
-                        "B must contain finite non-negative probabilities"
-                    )
+                    raise ReverseModelError("B must contain finite non-negative probabilities")
                 if not math.isclose(sum(values), 1.0, abs_tol=tolerance):
                     raise ReverseModelError("each B action column must sum to 1.0")
     elif model.B:
         raise ReverseModelError("B must be empty when hidden states or actions are zero")
 
     if len(model.C) != n_obs:
-        raise ReverseModelError(
-            f"C must contain {n_obs} entries; received {len(model.C)}"
-        )
+        raise ReverseModelError(f"C must contain {n_obs} entries; received {len(model.C)}")
     if any(not math.isfinite(value) for value in model.C):
         raise ReverseModelError("C must contain finite values")
 
     if model.hidden_states and not model.degraded:
         declared_cards = [model.cardinalities.get(slot, 0) for slot in model.hidden_states]
         if any(card <= 0 for card in declared_cards):
-            raise ReverseModelError(
-                "every hidden-state declaration needs a positive cardinality"
-            )
+            raise ReverseModelError("every hidden-state declaration needs a positive cardinality")
         product = math.prod(declared_cards)
         if product != n_states:
-            raise ReverseModelError(
-                "hidden-state cardinalities do not match the D dimension"
-            )
+            raise ReverseModelError("hidden-state cardinalities do not match the D dimension")
     for label, declarations, dimension in (
         ("observation", model.observations, n_obs),
         ("action", model.actions, n_actions),
@@ -162,9 +148,7 @@ def _validate_matrix_semantics(model: ReverseGNNModel) -> None:
         if declarations and not model.degraded:
             cards = [model.cardinalities.get(slot, 0) for slot in declarations]
             if any(card <= 0 for card in cards):
-                raise ReverseModelError(
-                    f"every {label} declaration needs a positive cardinality"
-                )
+                raise ReverseModelError(f"every {label} declaration needs a positive cardinality")
             if math.prod(cards) != dimension:
                 raise ReverseModelError(
                     f"{label} cardinalities do not match the emitted matrix dimension"

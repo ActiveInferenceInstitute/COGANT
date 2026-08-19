@@ -618,9 +618,7 @@ class PolicyRule(TranslationRule):
             contained = [
                 node
                 for node in (
-                    graph.get_node(e.target_id)
-                    for e in out_edges
-                    if e.kind == EdgeKind.CONTAINS
+                    graph.get_node(e.target_id) for e in out_edges if e.kind == EdgeKind.CONTAINS
                 )
                 if node is not None
             ]

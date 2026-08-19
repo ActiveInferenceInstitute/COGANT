@@ -509,6 +509,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                 EdgeKind.TRIGGERS,
                 metadata={"decorator": decorator, "confidence": "explicit"},
             )
+
     for file_path, _module in parsed.items():
         rel = _rel(file_path)
         is_test_file, is_generated_file = _file_flags(file_path, rel)
@@ -592,8 +593,12 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                     },
                 )
                 callable_nodes[method_qname] = method_node
-                callable_context.append((file_path, module_name, cls.name, method_node, method.name))
-                _emit_decorator_edges(list(getattr(method, "decorators", []) or []), method_node, rel)
+                callable_context.append(
+                    (file_path, module_name, cls.name, method_node, method.name)
+                )
+                _emit_decorator_edges(
+                    list(getattr(method, "decorators", []) or []), method_node, rel
+                )
                 builder.add_edge(class_node.id, method_node.id, EdgeKind.CONTAINS)
                 _emit_dataflow_edges(
                     builder,
@@ -690,18 +695,14 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
         candidates: list[str] = []
         if isinstance(func, _ast.Name):
             candidates.append(f"{module_name}.{func.id}")
-            candidates.extend(
-                name for name in callable_nodes if name.endswith(f".{func.id}")
-            )
+            candidates.extend(name for name in callable_nodes if name.endswith(f".{func.id}"))
         elif isinstance(func, _ast.Attribute):
             receiver = _ast.unparse(func.value)
             if receiver == "self" and class_name:
                 candidates.append(f"{module_name}.{class_name}.{func.attr}")
             elif isinstance(func.value, _ast.Name):
                 candidates.append(f"{module_name}.{func.value.id}.{func.attr}")
-                candidates.extend(
-                    name for name in callable_nodes if name.endswith(f".{func.attr}")
-                )
+                candidates.extend(name for name in callable_nodes if name.endswith(f".{func.attr}"))
         for candidate in candidates:
             target = callable_nodes.get(candidate)
             if target is not None:

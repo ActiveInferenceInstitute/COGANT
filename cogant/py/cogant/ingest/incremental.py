@@ -217,11 +217,7 @@ class IncrementalIngester:
         zero-change run.
         """
         exts = extensions or self._SOURCE_EXTENSIONS
-        return [
-            change
-            for change in self.changed_since(ref)
-            if change.path.suffix.lower() in exts
-        ]
+        return [change for change in self.changed_since(ref) if change.path.suffix.lower() in exts]
 
     # ------------------------------------------------------------------
     # Helpers

@@ -56,12 +56,8 @@ def _write_minimal_package(
     (pkg_dir / "model.gnn.json").write_text(json.dumps(model))
 
     state_space: dict[str, Any] = {
-        "variables": [
-            {"name": f"var_{i}", "type": "discrete"} for i in range(n_variables)
-        ],
-        "observations": [
-            {"name": f"var_{i}", "type": "discrete"} for i in range(n_observations)
-        ],
+        "variables": [{"name": f"var_{i}", "type": "discrete"} for i in range(n_variables)],
+        "observations": [{"name": f"var_{i}", "type": "discrete"} for i in range(n_observations)],
         "actions": [{"name": f"act_{i}"} for i in range(n_actions)],
     }
     (pkg_dir / "state_space.json").write_text(json.dumps(state_space))
@@ -85,9 +81,7 @@ class TestLoadPackageExceptionPath:
     """Cover lines 180-181: malformed transitions.json triggers the broad except."""
 
     def test_load_with_bad_transitions_json(self, tmp_path: Path) -> None:
-        pkg = _write_minimal_package(
-            tmp_path, with_transitions=True, bad_transitions=True
-        )
+        pkg = _write_minimal_package(tmp_path, with_transitions=True, bad_transitions=True)
         runner = GNNModelRunner()
         # Bad JSON inside transitions.json triggers JSONDecodeError, which
         # is logged at warning level and not propagated.
@@ -95,9 +89,7 @@ class TestLoadPackageExceptionPath:
         assert manifest["version"] == "1.0"
 
     def test_load_with_valid_optional_files(self, tmp_path: Path) -> None:
-        pkg = _write_minimal_package(
-            tmp_path, with_transitions=True, with_preferences=True
-        )
+        pkg = _write_minimal_package(tmp_path, with_transitions=True, with_preferences=True)
         runner = GNNModelRunner()
         manifest = runner.load_package(str(pkg))
         assert manifest["version"] == "1.0"
@@ -206,9 +198,7 @@ class TestComputeCoverageScore:
             "observations": [{"name": "o0"}, {"name": "o1"}],
         }
         # 4 possible states. Provide 5 traces → coverage > 1 → capped at 1.0.
-        traces = [
-            {"state": {"v0": i}} for i in range(5)
-        ]
+        traces = [{"state": {"v0": i}} for i in range(5)]
         score = runner._compute_coverage_score(traces)
         assert score == 1.0
 

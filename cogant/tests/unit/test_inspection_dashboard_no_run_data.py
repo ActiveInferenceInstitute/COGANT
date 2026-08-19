@@ -133,9 +133,9 @@ def test_real_calculator_run_dir_renders_real_numbers_no_banner(
 )
 def test_real_calculator_metric_region_is_byte_identical(tmp_path: Path) -> None:
     """The fix must not perturb real-target metric-region bytes."""
-    existing = (
-        _CALCULATOR_RUN_DIR / "site" / "inspection_dashboard.html"
-    ).read_text(encoding="utf-8")
+    existing = (_CALCULATOR_RUN_DIR / "site" / "inspection_dashboard.html").read_text(
+        encoding="utf-8"
+    )
     regenerated = render_inspection_dashboard_html(
         _CALCULATOR_RUN_DIR,
         tmp_path / "calculator.html",

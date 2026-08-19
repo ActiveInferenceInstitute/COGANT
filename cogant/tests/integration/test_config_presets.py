@@ -56,15 +56,16 @@ def test_preset_configuration_is_consistent_across_reads() -> None:
         assert first.model_dump(mode="json") == second.model_dump(mode="json")
 
 
-@pytest.mark.parametrize(
-    "fixture_name", ["flask_mini", "calculator", "event_pipeline"]
-)
+@pytest.mark.parametrize("fixture_name", ["flask_mini", "calculator", "event_pipeline"])
 def test_real_fixture_executes_core_pipeline(fixture_name: str) -> None:
     repo_path = _REPO_ROOT / "examples" / "control_positive" / fixture_name
     if not repo_path.is_dir():
         pytest.skip(f"fixture not present: {fixture_name}")
     with tempfile.TemporaryDirectory():
-        bundle = Bundle(target=str(repo_path), metadata={"config": get_preset("standard").model_dump(mode="json")})
+        bundle = Bundle(
+            target=str(repo_path),
+            metadata={"config": get_preset("standard").model_dump(mode="json")},
+        )
         run_ingest(str(repo_path), bundle)
         run_static(bundle)
         run_normalize(bundle)

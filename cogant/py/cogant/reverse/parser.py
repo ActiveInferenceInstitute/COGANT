@@ -441,12 +441,18 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
             )
             for i, slot in enumerate(model.hidden_states)
         ]
-        if project_hidden and hidden_dimension != len(model.hidden_states) and all(
-            len(values) == model.cardinalities.get(slot, 0)
-            for values, slot in zip(factor_vectors, model.hidden_states, strict=False)
+        if (
+            project_hidden
+            and hidden_dimension != len(model.hidden_states)
+            and all(
+                len(values) == model.cardinalities.get(slot, 0)
+                for values, slot in zip(factor_vectors, model.hidden_states, strict=False)
+            )
         ):
             D_vec = [
-                math.prod(values[index] for values, index in zip(factor_vectors, indexes, strict=False))
+                math.prod(
+                    values[index] for values, index in zip(factor_vectors, indexes, strict=False)
+                )
                 for indexes in product(*(range(len(values)) for values in factor_vectors))
             ]
         else:
@@ -462,8 +468,7 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
 
     if model.observations and not model.C:
         factor_vectors = [
-            per_factor_C.get(f"C_m{i}")
-            or [0.0] * max(model.cardinalities.get(slot, 1), 1)
+            per_factor_C.get(f"C_m{i}") or [0.0] * max(model.cardinalities.get(slot, 1), 1)
             for i, slot in enumerate(model.observations)
         ]
         if observation_dimension != len(model.observations) and all(
@@ -584,15 +589,9 @@ def _parse_connections(body: str, model: ReverseGNNModel) -> None:
 
 def _normalize_reverse_dimensions(model: ReverseGNNModel) -> None:
     """Align parsed variable declarations with authoritative matrix semantics."""
-    model.hidden_states = [
-        name for name in model.hidden_states if re.match(r"^(s_f|s)\d+$", name)
-    ]
-    model.observations = [
-        name for name in model.observations if re.match(r"^(o_m|o)\d+$", name)
-    ]
-    model.actions = [
-        name for name in model.actions if re.match(r"^(u_c|u|a_c)\d+$", name)
-    ]
+    model.hidden_states = [name for name in model.hidden_states if re.match(r"^(s_f|s)\d+$", name)]
+    model.observations = [name for name in model.observations if re.match(r"^(o_m|o)\d+$", name)]
+    model.actions = [name for name in model.actions if re.match(r"^(u_c|u|a_c)\d+$", name)]
 
     if model.D and not model.degraded:
         model.hidden_states = [model.hidden_states[0] if model.hidden_states else "s_f0"]

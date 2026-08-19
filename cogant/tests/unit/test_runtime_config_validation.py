@@ -100,10 +100,7 @@ def test_from_yaml_loads_all_fields(tmp_path: Path) -> None:
     """All four fields are read from a populated YAML file."""
     p = tmp_path / "cfg.yaml"
     p.write_text(
-        "max_steps: 200\n"
-        "convergence_threshold: 0.01\n"
-        "action_selection: entropy\n"
-        "seed: 7\n",
+        "max_steps: 200\nconvergence_threshold: 0.01\naction_selection: entropy\nseed: 7\n",
         encoding="utf-8",
     )
     cfg = AgentConfig.from_yaml(str(p))
@@ -195,9 +192,7 @@ def test_to_yaml_then_from_yaml_roundtrips(tmp_path: Path) -> None:
     assert restored == original
 
 
-def test_to_yaml_emits_info_log(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
-) -> None:
+def test_to_yaml_emits_info_log(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
     cfg = AgentConfig()
     p = tmp_path / "log.yaml"
     with caplog.at_level(logging.INFO, logger="cogant.runtime.config"):

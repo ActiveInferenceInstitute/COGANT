@@ -829,10 +829,7 @@ class GNNMatrices:
                 errors.append(f"B third dim != n_actions {n_a}")
             else:
                 if any(
-                    B[i][j][k] < -1e-9
-                    for i in range(n_s)
-                    for j in range(n_s)
-                    for k in range(n_a)
+                    B[i][j][k] < -1e-9 for i in range(n_s) for j in range(n_s) for k in range(n_a)
                 ):
                     errors.append("B contains negative probabilities")
                 for k in range(n_a):
@@ -840,8 +837,7 @@ class GNNMatrices:
                         col_sum = sum(B[i][j][k] for i in range(n_s))
                         if abs(col_sum - 1.0) > 1e-6:  # same tolerance as A columns
                             errors.append(
-                                f"B action {k} column {j} does not sum to 1 "
-                                f"(sum={col_sum:.6f})"
+                                f"B action {k} column {j} does not sum to 1 (sum={col_sum:.6f})"
                             )
 
         # C: length n_obs
@@ -849,7 +845,7 @@ class GNNMatrices:
             errors.append(f"C length {len(C)} != n_obs {n_o}")
 
         # D: length n_states, sums to 1 (same 1e-6 tolerance as A/B
-            # simplex-normalization check above).
+        # simplex-normalization check above).
         if len(D) != n_s:
             errors.append(f"D length {len(D)} != n_states {n_s}")
         elif D and abs(sum(D) - 1.0) > 1e-6:  # same tolerance as A/B columns

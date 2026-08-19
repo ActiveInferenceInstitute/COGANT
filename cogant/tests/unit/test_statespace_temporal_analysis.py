@@ -259,9 +259,7 @@ class TestLoopDetection:
         g = _empty_graph()
         g.add_node(_node("a"))
         # Inject a dangling edge directly into the dict.
-        dangling = Edge(
-            id="dangle", source_id="a", target_id="ghost", kind=EdgeKind.CALLS
-        )
+        dangling = Edge(id="dangle", source_id="a", target_id="ghost", kind=EdgeKind.CALLS)
         g.edges["dangle"] = dangling
         analyzer = TemporalAnalyzer(g)
         analyzer.analyze()

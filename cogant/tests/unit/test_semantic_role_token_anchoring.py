@@ -177,8 +177,7 @@ def test_no_bare_keyword_matches_as_mid_token_substring() -> None:
             assert kw in trap, "fixture sanity: kw must be a substring of trap"
             matched = _matched_keywords(trap, keywords)
             assert kw not in matched, (
-                f"{label}: {kw!r} must not match mid-token in {trap!r}; "
-                f"got {matched!r}"
+                f"{label}: {kw!r} must not match mid-token in {trap!r}; got {matched!r}"
             )
 
 
@@ -208,11 +207,7 @@ def test_property_random_padding_never_creates_mid_token_match() -> None:
     from hypothesis import strategies as st
 
     pad = st.text(alphabet="abcdefghijklmnopqrstuvwxyz", min_size=1, max_size=6)
-    all_bare = [
-        (kws, kw)
-        for _label, kws in _ALL_KEYWORD_LISTS
-        for kw in _bare_keywords(kws)
-    ]
+    all_bare = [(kws, kw) for _label, kws in _ALL_KEYWORD_LISTS for kw in _bare_keywords(kws)]
 
     @hypothesis.given(prefix=pad, suffix=pad, idx=st.integers(min_value=0))
     def _check(prefix: str, suffix: str, idx: int) -> None:

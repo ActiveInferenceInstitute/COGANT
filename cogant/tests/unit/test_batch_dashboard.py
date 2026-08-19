@@ -148,8 +148,18 @@ def _seed_output_tree(tmp_path: Path) -> Path:
                 "run_dir": str(a),
                 "path": "/tmp/calculator",
                 "commands": [
-                    {"cmd": "translate", "step": "translate:calculator", "exit": 0, "wall_time_s": 1.5},
-                    {"cmd": "validate", "step": "validate:calculator", "exit": 0, "wall_time_s": 0.5},
+                    {
+                        "cmd": "translate",
+                        "step": "translate:calculator",
+                        "exit": 0,
+                        "wall_time_s": 1.5,
+                    },
+                    {
+                        "cmd": "validate",
+                        "step": "validate:calculator",
+                        "exit": 0,
+                        "wall_time_s": 0.5,
+                    },
                 ],
             },
             {
@@ -157,7 +167,12 @@ def _seed_output_tree(tmp_path: Path) -> Path:
                 "run_dir": str(b),
                 "git_url": "https://example.com/repo.git",
                 "commands": [
-                    {"cmd": "translate", "step": "translate:remote_thing", "exit": 0, "wall_time_s": 3.2},
+                    {
+                        "cmd": "translate",
+                        "step": "translate:remote_thing",
+                        "exit": 0,
+                        "wall_time_s": 3.2,
+                    },
                 ],
             },
             {
@@ -171,9 +186,7 @@ def _seed_output_tree(tmp_path: Path) -> Path:
             },
         ],
     }
-    (output_root / "run_manifest.json").write_text(
-        json.dumps(manifest, indent=2), encoding="utf-8"
-    )
+    (output_root / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     return output_root
 
 
@@ -424,9 +437,7 @@ class TestRenderMermaid:
     def test_gantt_fallback_when_no_timing(self, tmp_path: Path) -> None:
         # Manifest with commands but no wall_time_s
         manifest = {
-            "targets": [
-                {"id": "a", "commands": [{"cmd": "translate", "exit": 0}]}
-            ],
+            "targets": [{"id": "a", "commands": [{"cmd": "translate", "exit": 0}]}],
             "summary": {},
         }
         gen = BatchDashboardGenerator(tmp_path, manifest=manifest)
@@ -514,11 +525,7 @@ class TestScriptEntryPoint:
         # Import the script via its on-disk path (it lives outside py/).
         import importlib.util
 
-        script_path = (
-            Path(__file__).resolve().parents[3]
-            / "scripts"
-            / "batch_dashboard.py"
-        )
+        script_path = Path(__file__).resolve().parents[3] / "scripts" / "batch_dashboard.py"
         if not script_path.is_file():
             pytest.skip(f"scripts/batch_dashboard.py not present at {script_path}")
         spec = importlib.util.spec_from_file_location("cogant_batch_dashboard", script_path)
@@ -538,11 +545,7 @@ class TestScriptEntryPoint:
     ) -> None:
         import importlib.util
 
-        script_path = (
-            Path(__file__).resolve().parents[3]
-            / "scripts"
-            / "batch_dashboard.py"
-        )
+        script_path = Path(__file__).resolve().parents[3] / "scripts" / "batch_dashboard.py"
         if not script_path.is_file():
             pytest.skip(f"scripts/batch_dashboard.py not present at {script_path}")
         spec = importlib.util.spec_from_file_location("cogant_batch_dashboard", script_path)

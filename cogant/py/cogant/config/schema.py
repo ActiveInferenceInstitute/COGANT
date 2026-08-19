@@ -255,7 +255,6 @@ class ValidationLevel(StrEnum):
     PARANOID = "paranoid"  # Extra checks + all warnings
 
 
-
 class ValidationConfig(CogantBaseConfig):
     """Configuration for validation checks."""
 

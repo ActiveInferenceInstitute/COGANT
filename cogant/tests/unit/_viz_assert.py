@@ -106,7 +106,9 @@ def assert_png_nondegenerate(path: str | os.PathLike[str]) -> None:
     with png_path.open("rb") as handle:
         header = handle.read(24)
 
-    assert len(header) >= 24, f"{png_path}: file too short for PNG header/IHDR ({len(header)} bytes)"
+    assert len(header) >= 24, (
+        f"{png_path}: file too short for PNG header/IHDR ({len(header)} bytes)"
+    )
     assert header[:8] == PNG_MAGIC, f"{png_path}: invalid PNG magic {header[:8]!r}"
 
     chunk_length, chunk_type = struct.unpack(">I4s", header[8:16])

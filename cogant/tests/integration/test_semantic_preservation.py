@@ -102,13 +102,16 @@ def _imports_cleanly(repo: Path) -> tuple[bool, str]:
     behaviour-breaking edits that fire at definition time (decorators with
     keyword args, ``@x.setter`` ordering) which static parsing misses."""
     mods = sorted(
-        p.stem for p in repo.glob("*.py")
-        if p.stem != "__init__" and "__pycache__" not in p.parts
+        p.stem for p in repo.glob("*.py") if p.stem != "__init__" and "__pycache__" not in p.parts
     )
     for mod in mods:
         proc = subprocess.run(
             [sys.executable, "-c", f"import {mod}"],
-            cwd=str(repo), capture_output=True, text=True, timeout=60, check=False,
+            cwd=str(repo),
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
         )
         if proc.returncode != 0:
             return False, proc.stderr.strip().splitlines()[-1] if proc.stderr.strip() else "?"

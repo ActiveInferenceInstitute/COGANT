@@ -181,9 +181,7 @@ def test_to_arrow_ipc_non_dict_items_warns_and_returns_path(
     assert not out.exists()
 
 
-def test_to_arrow_ipc_empty_list_skips(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
-) -> None:
+def test_to_arrow_ipc_empty_list_skips(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
     """Empty input → no Arrow file written (the truthiness check fails)."""
     out = tmp_path / "empty.arrow"
     import logging

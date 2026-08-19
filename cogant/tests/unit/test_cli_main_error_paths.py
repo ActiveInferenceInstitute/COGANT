@@ -61,9 +61,7 @@ class TestTranslateErrorPaths:
     """Trigger the per-exception error handlers inside translate."""
 
     @pytest.mark.unit
-    def test_translate_nonexistent_path_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_translate_nonexistent_path_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
         """FileNotFoundError branch (lines 777–779): pipeline raises when the
         target directory does not exist."""
         nonexistent = str(tmp_path / "no_such_directory_xyz")
@@ -71,9 +69,7 @@ class TestTranslateErrorPaths:
         assert result.exit_code == 1
 
     @pytest.mark.unit
-    def test_translate_file_path_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_translate_file_path_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
         """NotADirectoryError branch (lines 783–785): target is a file, not a dir."""
         f = tmp_path / "not_a_dir.py"
         f.write_text("x = 1\n")
@@ -86,9 +82,7 @@ class TestTranslateErrorPaths:
     ) -> None:
         """Generic exception branch (786–788): empty dir raises inside pipeline.
         The error message must appear in output regardless of exit code."""
-        result = runner.invoke(
-            app, ["translate", str(tmp_path), "--output", str(tmp_path / "out")]
-        )
+        result = runner.invoke(app, ["translate", str(tmp_path), "--output", str(tmp_path / "out")])
         # Either success (0) or error exit (1) — we just need the branch to
         # have been reached; the assertion on exit_code is deliberately
         # permissive because an empty repo may either succeed or fail
@@ -96,9 +90,7 @@ class TestTranslateErrorPaths:
         assert result.exit_code in (0, 1)
 
     @pytest.mark.unit
-    def test_translate_skip_stages_config_branch(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_translate_skip_stages_config_branch(self, runner: CliRunner, tiny_repo: Path) -> None:
         """lines 732–740: translate config loading branches — skip_stages CLI
         option triggers the config.skip_stages branch."""
         result = runner.invoke(
@@ -115,9 +107,7 @@ class TestTranslateErrorPaths:
         assert result.exit_code in (0, 1)
 
     @pytest.mark.unit
-    def test_translate_layout_output_flag(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_translate_layout_output_flag(self, runner: CliRunner, tiny_repo: Path) -> None:
         """Lines 829–831: --layout-output triggers the organize_run_dir call."""
         result = runner.invoke(
             app,
@@ -134,9 +124,7 @@ class TestTranslateErrorPaths:
         assert result.exit_code in (0, 1)
 
     @pytest.mark.unit
-    def test_translate_no_dynamic_flag(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_translate_no_dynamic_flag(self, runner: CliRunner, tiny_repo: Path) -> None:
         """CLI flag --no-dynamic sets config.skip_dynamic; pipeline still runs."""
         result = runner.invoke(
             app,
@@ -151,9 +139,7 @@ class TestTranslateErrorPaths:
         assert result.exit_code in (0, 1)
 
     @pytest.mark.unit
-    def test_translate_config_file_plugins_branch(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_translate_config_file_plugins_branch(self, runner: CliRunner, tmp_path: Path) -> None:
         """Lines 732–740: cogant.yaml with plugins / output_dir / verbose /
         dry_run / layout_output fields exercises those config-parsing branches."""
         repo = tmp_path / "myrepo"
@@ -172,9 +158,7 @@ class TestTranslateErrorPaths:
             "    example_plugin: false\n"
         )
 
-        result = runner.invoke(
-            app, ["translate", str(repo), "--output", str(tmp_path / "out")]
-        )
+        result = runner.invoke(app, ["translate", str(repo), "--output", str(tmp_path / "out")])
         # The config file will be loaded and those branches exercised.
         assert result.exit_code in (0, 1)
 
@@ -192,9 +176,7 @@ class TestAnalyzeCommandPaths:
         assert result.exit_code == 1
 
     @pytest.mark.unit
-    def test_analyze_file_not_directory_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_analyze_file_not_directory_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
         """NotADirectoryError path: target is a file, not a dir."""
         f = tmp_path / "file.py"
         f.write_text("x = 1\n")
@@ -222,9 +204,7 @@ class TestAnalyzeCommandPaths:
         assert result.exit_code in (0, 1)
 
     @pytest.mark.unit
-    def test_analyze_skip_stages_config_branch(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_analyze_skip_stages_config_branch(self, runner: CliRunner, tiny_repo: Path) -> None:
         """Line 987: skip_stages CLI option populates config.skip_stages."""
         result = runner.invoke(
             app,
@@ -240,9 +220,7 @@ class TestAnalyzeCommandPaths:
         assert result.exit_code in (0, 1)
 
     @pytest.mark.unit
-    def test_analyze_no_dynamic_flag(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_analyze_no_dynamic_flag(self, runner: CliRunner, tiny_repo: Path) -> None:
         """Line 989–990: --no-dynamic sets config.skip_dynamic = True."""
         result = runner.invoke(
             app,
@@ -257,9 +235,7 @@ class TestAnalyzeCommandPaths:
         assert result.exit_code in (0, 1)
 
     @pytest.mark.unit
-    def test_analyze_incremental_config_branch(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_analyze_incremental_config_branch(self, runner: CliRunner, tiny_repo: Path) -> None:
         """Lines 991–992: --incremental sets config.incremental_since."""
         result = runner.invoke(
             app,
@@ -275,9 +251,7 @@ class TestAnalyzeCommandPaths:
         assert result.exit_code in (0, 1)
 
     @pytest.mark.unit
-    def test_analyze_cache_dir_config_branch(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_analyze_cache_dir_config_branch(self, runner: CliRunner, tiny_repo: Path) -> None:
         """Line 993: --cache-dir sets config.cache_dir."""
         cache = tiny_repo / ".cache"
         cache.mkdir()
@@ -295,9 +269,7 @@ class TestAnalyzeCommandPaths:
         assert result.exit_code in (0, 1)
 
     @pytest.mark.unit
-    def test_analyze_json_format_sets_quiet(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
+    def test_analyze_json_format_sets_quiet(self, runner: CliRunner, tiny_repo: Path) -> None:
         """Lines 963–965: --format json sets quiet=True implicitly."""
         result = runner.invoke(
             app,
@@ -320,9 +292,7 @@ class TestInitCommandPaths:
     """Cover init command branches not hit by existing tests."""
 
     @pytest.mark.unit
-    def test_init_run_declined_via_stdin(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_run_declined_via_stdin(self, runner: CliRunner, tmp_path: Path) -> None:
         """Lines 326–332: user declines the translate confirmation prompt.
         Passing 'n\\n' via stdin causes typer.confirm to return False, hitting
         the early-return branch at line 331."""
@@ -339,9 +309,7 @@ class TestInitCommandPaths:
         assert "skip" in result.stdout.lower() or result.exit_code == 1
 
     @pytest.mark.unit
-    def test_init_yes_flag_skips_confirm_prompt(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_yes_flag_skips_confirm_prompt(self, runner: CliRunner, tmp_path: Path) -> None:
         """--yes auto-confirms so the confirm() call at line 326 is bypassed.
         This keeps the init --run test suite balanced."""
         proj = tmp_path / "autoyes"
@@ -352,9 +320,7 @@ class TestInitCommandPaths:
         assert result.exit_code in (0, 1)
 
     @pytest.mark.unit
-    def test_init_basic_creates_cogant_dir(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_basic_creates_cogant_dir(self, runner: CliRunner, tmp_path: Path) -> None:
         """Basic init without --run creates .cogant scaffold."""
         proj = tmp_path / "basicproj"
         result = runner.invoke(app, ["init", str(proj)])
@@ -380,9 +346,7 @@ class TestDoctorCommand:
         assert result.exit_code in (0, 1)
 
     @pytest.mark.unit
-    def test_doctor_output_contains_check_section(
-        self, runner: CliRunner
-    ) -> None:
+    def test_doctor_output_contains_check_section(self, runner: CliRunner) -> None:
         """doctor output includes at least one check label."""
         result = runner.invoke(app, ["doctor"])
         # Any environment should produce *some* output from the doctor checks.

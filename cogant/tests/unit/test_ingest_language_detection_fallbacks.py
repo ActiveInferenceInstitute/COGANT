@@ -116,9 +116,7 @@ class TestLazyLoadFallbacks:
         # Block python.parser → covers lines 60-61.
         with caplog.at_level(logging.DEBUG, logger="cogant.ingest.language_detect"):
             _force_lazy_load_with_blocked({"python.parser"})
-        assert any(
-            "Python tree-sitter parser unavailable" in rec.message for rec in caplog.records
-        )
+        assert any("Python tree-sitter parser unavailable" in rec.message for rec in caplog.records)
 
     def test_javascript_tree_sitter_unavailable(
         self, restore_module: object, caplog: pytest.LogCaptureFixture
@@ -148,8 +146,7 @@ class TestLazyLoadFallbacks:
         with caplog.at_level(logging.DEBUG, logger="cogant.ingest.language_detect"):
             _force_lazy_load_with_blocked({"javascript.parser"})
         assert any(
-            "JavaScript using TypeScript regex fallback parser" in r.message
-            for r in caplog.records
+            "JavaScript using TypeScript regex fallback parser" in r.message for r in caplog.records
         )
 
     def test_typescript_regex_fallback_unavailable(
@@ -243,9 +240,7 @@ class TestGetParserForExtensionFallbacks:
         # May be None (no JS parser) or instance — both are valid.
         assert p is None or p is not None
 
-    def test_tree_sitter_unavailable_falls_through(
-        self, restore_module: object
-    ) -> None:
+    def test_tree_sitter_unavailable_falls_through(self, restore_module: object) -> None:
         # Block tree_sitter_base so the outer ``try`` raises → covers 241-242.
         for name in list(sys.modules):
             if name == "cogant.parsers.tree_sitter_base":
@@ -259,9 +254,7 @@ class TestGetParserForExtensionFallbacks:
         finally:
             sys.meta_path.remove(finder)
 
-    def test_javascript_inner_exception_fallback(
-        self, restore_module: object
-    ) -> None:
+    def test_javascript_inner_exception_fallback(self, restore_module: object) -> None:
         # Block javascript.parser so the inner ``try`` for JS raises →
         # covers 228-229. .js still resolves via the compatibility dispatcher.
         for name in list(sys.modules):
@@ -276,9 +269,7 @@ class TestGetParserForExtensionFallbacks:
         finally:
             sys.meta_path.remove(finder)
 
-    def test_typescript_inner_exception_fallback(
-        self, restore_module: object
-    ) -> None:
+    def test_typescript_inner_exception_fallback(self, restore_module: object) -> None:
         # Block typescript.tree_sitter_parser → covers 238-239.
         for name in list(sys.modules):
             if name == "typescript.tree_sitter_parser":

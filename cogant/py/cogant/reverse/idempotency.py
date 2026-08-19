@@ -436,7 +436,9 @@ def _role_preservation_score(
         elif original_count == 0 or synthesized_count == 0:
             components.append(0.0)
         else:
-            components.append(min(original_count, synthesized_count) / max(original_count, synthesized_count))
+            components.append(
+                min(original_count, synthesized_count) / max(original_count, synthesized_count)
+            )
     return sum(components) / len(components), False
 
 

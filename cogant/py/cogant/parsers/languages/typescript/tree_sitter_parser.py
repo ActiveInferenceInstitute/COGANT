@@ -71,6 +71,7 @@ class TypeScriptTreeSitterParser(LanguagePlugin):
             "calls": result.calls,
             "errors": result.errors,
         }
+
     def extract_symbols(self, ast: dict[str, Any]) -> list[dict[str, Any]]:
         return list(ast.get("symbols", []))
 

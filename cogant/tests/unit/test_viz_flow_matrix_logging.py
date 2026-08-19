@@ -177,9 +177,7 @@ def test_generate_dependency_graph_root_calculation_via_incoming_count() -> None
 def test_to_mermaid_flowchart_emits_conditional_and_unconditional_edges() -> None:
     """to_mermaid_flowchart emits ``-->|conditional|`` and plain ``-->`` (335-341)."""
     cfg = ControlFlowGraph(
-        function_node=Node(
-            id="fn-x", kind=NodeKind.FUNCTION, name="fnx", qualified_name="fnx"
-        ),
+        function_node=Node(id="fn-x", kind=NodeKind.FUNCTION, name="fnx", qualified_name="fnx"),
     )
     cfg.nodes["a-1"] = {"name": "alpha", "kind": "basic_block"}
     cfg.nodes["b.2"] = {"name": "beta", "kind": "basic_block"}
@@ -379,9 +377,7 @@ def test_matrix_methods_return_none_when_matplotlib_unavailable(monkeypatch) -> 
 
 
 @pytest.mark.unit
-def test_matrix_to_png_returns_empty_when_matplotlib_unavailable(
-    tmp_path, monkeypatch
-) -> None:
+def test_matrix_to_png_returns_empty_when_matplotlib_unavailable(tmp_path, monkeypatch) -> None:
     """to_png returns '' when matplotlib import fails (lines 267-269)."""
     monkeypatch.setitem(sys.modules, "matplotlib.pyplot", None)
     viz = MatrixVisualizer()
@@ -391,9 +387,7 @@ def test_matrix_to_png_returns_empty_when_matplotlib_unavailable(
 
 
 @pytest.mark.unit
-def test_matrix_to_pdf_returns_empty_when_matplotlib_unavailable(
-    tmp_path, monkeypatch
-) -> None:
+def test_matrix_to_pdf_returns_empty_when_matplotlib_unavailable(tmp_path, monkeypatch) -> None:
     """to_pdf returns '' when matplotlib import fails (lines 299-301)."""
     monkeypatch.setitem(sys.modules, "matplotlib.pyplot", None)
     viz = MatrixVisualizer()

@@ -426,9 +426,7 @@ class TestStateSpaceCompilerInternals:
         compiler = StateSpaceCompiler(graph, "T")
         from cogant.schemas.semantic import MappingKind
 
-        mapping = _make_semantic_mapping(
-            MappingKind.OBSERVATION, [func1.id], label="sensor metric"
-        )
+        mapping = _make_semantic_mapping(MappingKind.OBSERVATION, [func1.id], label="sensor metric")
         result = compiler._infer_modality_type(func1, mapping)
         assert result is not None
 

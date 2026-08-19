@@ -100,9 +100,7 @@ _LEGACY_FLAT_FIELDS: dict[str, tuple[str, str]] = {
     "rate_limit_window_seconds": ("server", "rate_limit_window_seconds"),
 }
 
-_LEGACY_ENV_FIELDS = {
-    f"COGANT_{name.upper()}": path for name, path in _LEGACY_FLAT_FIELDS.items()
-}
+_LEGACY_ENV_FIELDS = {f"COGANT_{name.upper()}": path for name, path in _LEGACY_FLAT_FIELDS.items()}
 
 
 class ConfigLoadError(ValueError):
@@ -137,7 +135,9 @@ def _normalize_legacy_mapping(data: Mapping[str, Any], source: str) -> dict[str,
         value = result.pop(field_name)
         target = result.setdefault(section, {})
         if not isinstance(target, Mapping):
-            raise ConfigLoadError(f"Configuration section {section!r} in {source} must be an object")
+            raise ConfigLoadError(
+                f"Configuration section {section!r} in {source} must be an object"
+            )
         if canonical_name not in target:
             target[canonical_name] = value
         migrated.append(f"{field_name} -> {section}.{canonical_name}")

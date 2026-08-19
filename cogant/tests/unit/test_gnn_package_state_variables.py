@@ -825,7 +825,9 @@ class TestPackageBuilderHelperExceptions:
 
         class _Bad:
             kind = MappingKind.HIDDEN_STATE
-            graph_fragment_node_ids = property(lambda self: (_ for _ in ()).throw(RuntimeError("boom")))
+            graph_fragment_node_ids = property(
+                lambda self: (_ for _ in ()).throw(RuntimeError("boom"))
+            )
 
         bad_mappings["x"] = _Bad()
         builder.mappings = bad_mappings
@@ -922,9 +924,7 @@ class TestPackageBuilderMarkdownAndJsonFailures:
 class TestPackageBuilderProgramGraphAndProcessJsonFallbacks:
     """Cover lines 544-545 and 591-592 fallback branches."""
 
-    def test_program_graph_json_fallback_when_orchestration_breaks(
-        self, tmp_path: Path
-    ) -> None:
+    def test_program_graph_json_fallback_when_orchestration_breaks(self, tmp_path: Path) -> None:
         """If ``program_graph_to_dict`` raises, the helper should warn and
         not crash (line 544-545)."""
         from cogant.api import orchestration
@@ -957,9 +957,7 @@ class TestPackageBuilderProgramGraphAndProcessJsonFallbacks:
             schema_name="current",
             stages={"s1": Stage(id="s1", name="stage_a")},
             connections={
-                "c1": ProcessConnection(
-                    id="c1", source_stage_id="s1", target_stage_id="s1"
-                )
+                "c1": ProcessConnection(id="c1", source_stage_id="s1", target_stage_id="s1")
             },
         )
         # Inject a pydantic-like via attribute attachment for stages list path
@@ -1055,9 +1053,7 @@ class TestPackageBuilderVisualizationFallbacks:
     """Cover lines 670-672 (confidence chart fallback) and 682-683
     (visualization outer exception)."""
 
-    def test_visualizations_falls_back_to_svg_when_plotter_raises(
-        self, tmp_path: Path
-    ) -> None:
+    def test_visualizations_falls_back_to_svg_when_plotter_raises(self, tmp_path: Path) -> None:
         from cogant.viz import plots
 
         builder = _make_builder()

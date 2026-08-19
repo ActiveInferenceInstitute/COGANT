@@ -62,7 +62,9 @@ class LanguageDetector:
             try:
                 parser = registry_get_parser(language)
             except LanguageParserUnavailable as exc:
-                logger.debug("Parser %s unavailable during compatibility refresh: %s", language, exc)
+                logger.debug(
+                    "Parser %s unavailable during compatibility refresh: %s", language, exc
+                )
                 continue
             cls.PARSER_CLASSES[language] = type(parser)
 

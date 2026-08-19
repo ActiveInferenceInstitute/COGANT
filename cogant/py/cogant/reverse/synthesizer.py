@@ -338,7 +338,9 @@ def _render_state_module(plan: PackagePlan) -> str:
         lines.append('    def from_distribution(cls, values: list[float]) -> "State":')
         lines.append('        """Build an empty state from an empty distribution."""')
         lines.append("        if values:")
-        lines.append("            raise ValueError('zero-dimensional state requires an empty distribution')")
+        lines.append(
+            "            raise ValueError('zero-dimensional state requires an empty distribution')"
+        )
         lines.append("        return cls()")
         lines.append("")
         return "\n".join(lines)
@@ -403,13 +405,19 @@ def _render_state_module(plan: PackagePlan) -> str:
     lines.append("            self._distribution = list(INITIAL_STATE_PRIOR)")
     lines.append("        else:")
     lines.append("            if len(distribution) != N_HIDDEN_STATES:")
-    lines.append("                raise ValueError('state distribution has incompatible dimensions')")
+    lines.append(
+        "                raise ValueError('state distribution has incompatible dimensions')"
+    )
     lines.append("            if any(value < 0.0 for value in distribution):")
     lines.append("                raise ValueError('state distribution must be non-negative')")
     lines.append("            total = sum(float(value) for value in distribution)")
     lines.append("            if total <= 0.0:")
-    lines.append("                raise ValueError('state distribution must contain probability mass')")
-    lines.append("            self._distribution = [float(value) / total for value in distribution]")
+    lines.append(
+        "                raise ValueError('state distribution must contain probability mass')"
+    )
+    lines.append(
+        "            self._distribution = [float(value) / total for value in distribution]"
+    )
     lines.append("")
 
     # Mutators at the aggregator level delegate into the leaf factors.
@@ -426,8 +434,10 @@ def _render_state_module(plan: PackagePlan) -> str:
     lines.append(
         "            "
         + ", ".join(
-            [*(f"{n.name}=self.{n.name}.value" for n in plan.state_vars),
-             "distribution=list(self._distribution)"]
+            [
+                *(f"{n.name}=self.{n.name}.value" for n in plan.state_vars),
+                "distribution=list(self._distribution)",
+            ]
         )
     )
     lines.append("        )")
@@ -449,7 +459,9 @@ def _render_state_module(plan: PackagePlan) -> str:
     lines.append('    def from_distribution(cls, values: list[float]) -> "State":')
     lines.append('        """Construct state factors from a transition distribution."""')
     lines.append("        if len(values) != N_HIDDEN_STATES:")
-    lines.append("            raise ValueError('transition distribution has incompatible dimensions')")
+    lines.append(
+        "            raise ValueError('transition distribution has incompatible dimensions')"
+    )
     lines.append("        new = cls(distribution=values)")
     factor_cards = [n.cardinality for n in plan.state_vars]
     for index, n in enumerate(plan.state_vars):
@@ -459,9 +471,7 @@ def _render_state_module(plan: PackagePlan) -> str:
             lines.append(f"        stride = {stride_expr}")
             lines.append(f"        marginal = [0.0] * {n.cardinality}")
             lines.append("        for joint_index, probability in enumerate(values):")
-            lines.append(
-                f"            category = (joint_index // stride) % {n.cardinality}"
-            )
+            lines.append(f"            category = (joint_index // stride) % {n.cardinality}")
             lines.append("            marginal[category] += probability")
             lines.append(
                 "        expected = sum(category * probability for category, probability in enumerate(marginal))"
@@ -532,7 +542,9 @@ def _render_observe_module(plan: PackagePlan) -> str:
             lines.append("    obs_dist = likelihood(state_dist)")
             lines.append(f"    idx = {i}")
             lines.append("    if idx >= len(obs_dist):")
-            lines.append("        raise ValueError('observation matrix has incompatible dimensions')")
+            lines.append(
+                "        raise ValueError('observation matrix has incompatible dimensions')"
+            )
             lines.append("    value = obs_dist[idx]")
             if node.python_type == "bool":
                 lines.append("    return value > 0.5")
@@ -588,7 +600,9 @@ def _render_act_module(plan: PackagePlan) -> str:
                 f'    """Action {i}: applies transition slice {i} of the B tensor to state."""'
             )
             lines.append(f"    action_index = {i}")
-            lines.append("    next_distribution = transition(state.as_distribution(), action_index)")
+            lines.append(
+                "    next_distribution = transition(state.as_distribution(), action_index)"
+            )
             lines.append("    return State.from_distribution(next_distribution)")
             lines.append("")
 
@@ -660,9 +674,7 @@ def _render_policy_module(plan: PackagePlan) -> str:
 
     for i, node in enumerate(plan.scaffold_policy_functions):
         lines.append(f"def {node.name}(state: State, observations: List[float]) -> int:")
-        lines.append(
-            f'    """Compatibility policy scaffold {i} for GNN slot {node.slot}."""'
-        )
+        lines.append(f'    """Compatibility policy scaffold {i} for GNN slot {node.slot}."""')
         lines.append(f"    return {helper_name}(state, observations)")
         lines.append("")
 
@@ -722,9 +734,7 @@ def _render_constraints_module(plan: PackagePlan) -> str:
 
     for i, node in enumerate(plan.scaffold_constraint_checks):
         lines.append(f"def {node.name}(state: State) -> bool:")
-        lines.append(
-            f'    """Compatibility constraint scaffold {i} for GNN slot {node.slot}."""'
-        )
+        lines.append(f'    """Compatibility constraint scaffold {i} for GNN slot {node.slot}."""')
         lines.append("    return _state_is_valid(state)")
         lines.append("")
 

@@ -58,9 +58,7 @@ def _graph() -> ProgramGraph:
             path="pkg/file.py",
         )
     )
-    g.add_edge(
-        Edge(id="e1", source_id="f1", target_id="f2", kind=EdgeKind.CALLS, weight=1.0)
-    )
+    g.add_edge(Edge(id="e1", source_id="f1", target_id="f2", kind=EdgeKind.CALLS, weight=1.0))
     return g
 
 

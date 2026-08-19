@@ -205,7 +205,9 @@ def test_execute_upstream_step_uses_active_python_and_src_pythonpath(
     args_mod.build_step_command_args = _build_step_command_args
     exec_mod = types.ModuleType("utils.execution_utils")
 
-    def _execute_command_streaming(cmd, cwd, env, timeout, print_stdout, print_stderr, capture_output):
+    def _execute_command_streaming(
+        cmd, cwd, env, timeout, print_stdout, print_stderr, capture_output
+    ):
         captured["cmd"] = cmd
         captured["cwd"] = cwd
         captured["env"] = env
@@ -239,7 +241,12 @@ def test_execute_upstream_step_uses_active_python_and_src_pythonpath(
 
     assert out["status"] == "SUCCESS"
     assert captured["python_executable"] == sys.executable
-    assert captured["cmd"] == [sys.executable, str(script_dir / "3_gnn.py"), "--target-dir", str(args.target_dir)]
+    assert captured["cmd"] == [
+        sys.executable,
+        str(script_dir / "3_gnn.py"),
+        "--target-dir",
+        str(args.target_dir),
+    ]
     assert captured["cwd"] == project_root
     assert captured["timeout"] == 123
     assert captured["print_stdout"] is True

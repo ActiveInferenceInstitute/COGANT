@@ -201,7 +201,7 @@ def test_translate_batch_mixed_success_and_invalid_request() -> None:
 
 def test_translate_batch_unsupported_language_returns_error() -> None:
     """A request with an unsupported language returns ``status=error``."""
-    requests = [{"language": "elixir", "source_code": "IO.puts(\"hi\")\n"}]
+    requests = [{"language": "elixir", "source_code": 'IO.puts("hi")\n'}]
     results = translate_batch(requests)
     assert len(results) == 1
     assert results[0]["status"] == "error"

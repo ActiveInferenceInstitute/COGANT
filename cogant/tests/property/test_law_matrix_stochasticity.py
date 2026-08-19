@@ -71,10 +71,7 @@ def reverse_model(draw) -> ReverseGNNModel:
             for _ in range(n_obs)
         ]
         col_sums = [sum(raw_rows[i][j] for i in range(n_obs)) for j in range(n_states)]
-        model.A = [
-            [raw_rows[i][j] / col_sums[j] for j in range(n_states)]
-            for i in range(n_obs)
-        ]
+        model.A = [[raw_rows[i][j] / col_sums[j] for j in range(n_states)] for i in range(n_obs)]
     # else: leave A empty -> renderer emits uniform 1/n_obs columns.
 
     if draw(st.booleans()):

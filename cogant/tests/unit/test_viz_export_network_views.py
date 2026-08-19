@@ -528,9 +528,7 @@ def test_plot_community_graph_empty_graph(nv: NetworkView) -> None:
 
 
 @pytest.mark.unit
-def test_plot_community_graph_logs_error(
-    nv: NetworkView, caplog: pytest.LogCaptureFixture
-) -> None:
+def test_plot_community_graph_logs_error(nv: NetworkView, caplog: pytest.LogCaptureFixture) -> None:
     """Inconsistent communities (non-iterable) trigger the outer except."""
     pytest.importorskip("matplotlib")
     nx = pytest.importorskip("networkx")

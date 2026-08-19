@@ -181,4 +181,3 @@ def test_validate_git_args_rejects_option_injection() -> None:
         run_all_runner.validate_git_args(
             "https://github.com/org/repo.git", "main;id"
         )
-

@@ -987,9 +987,7 @@ def test_upstream_process_multi_format_uses_default_logger(monkeypatch, tmp_path
     with monkeypatch.context() as m:
         m.setattr(importlib, "import_module", _swap)
         # Pass log=None to force the `or logger` branch
-        result = upstream_bridge.upstream_process_multi_format(
-            tmp_path, tmp_path / "out", log=None
-        )
+        result = upstream_bridge.upstream_process_multi_format(tmp_path, tmp_path / "out", log=None)
     assert result == "done"
     # Default logger from module
     assert captured["log"] is upstream_bridge.logger

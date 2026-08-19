@@ -241,8 +241,17 @@ def test_pipeline_runner_skip_dynamic_records_skip_result(tmp_path: Path) -> Non
 def test_pipeline_runner_dry_run_marks_each_stage(tmp_path: Path) -> None:
     runner = PipelineRunner()
     cfg = PipelineConfig(
-        stages=["ingest", "static", "normalize", "graph", "translate", "statespace",
-                "process", "export", "validate"],
+        stages=[
+            "ingest",
+            "static",
+            "normalize",
+            "graph",
+            "translate",
+            "statespace",
+            "process",
+            "export",
+            "validate",
+        ],
         dry_run=True,
         output_dir=str(tmp_path / "out"),
     )

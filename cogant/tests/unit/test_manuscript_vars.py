@@ -77,7 +77,10 @@ def test_resolve_path_single_segment(mv, sample_metrics):
 
 def test_resolve_path_nested(mv, sample_metrics):
     assert mv.resolve_path(sample_metrics, "testing.test_count_passing") == 6915
-    assert mv.resolve_path(sample_metrics, "evaluation.roundtrip.mean_role_preservation_score") == 0.8092
+    assert (
+        mv.resolve_path(sample_metrics, "evaluation.roundtrip.mean_role_preservation_score")
+        == 0.8092
+    )
 
 
 def test_resolve_path_missing_key(mv, sample_metrics):
@@ -137,8 +140,13 @@ def test_format_value_coverage_two_decimals(mv):
 
 def test_format_value_epsilon_strips_trailing_zeros(mv):
     # "epsilon" path → 4dp then strip trailing zeros
-    assert mv.format_value_for_path("evaluation.roundtrip.mean_role_preservation_score", 0.8) == "0.8"
-    assert mv.format_value_for_path("evaluation.roundtrip.mean_role_preservation_score", 0.8092) == "0.8092"
+    assert (
+        mv.format_value_for_path("evaluation.roundtrip.mean_role_preservation_score", 0.8) == "0.8"
+    )
+    assert (
+        mv.format_value_for_path("evaluation.roundtrip.mean_role_preservation_score", 0.8092)
+        == "0.8092"
+    )
 
 
 def test_format_value_threshold_strips_trailing_zeros(mv):

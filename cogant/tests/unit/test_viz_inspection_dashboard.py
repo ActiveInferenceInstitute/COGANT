@@ -169,9 +169,7 @@ def _write_run_fixture(run_dir: Path) -> None:
     (run_dir / "reports").mkdir(parents=True, exist_ok=True)
     (run_dir / "reports" / "run_summary.md").write_text("# summary\n", encoding="utf-8")
     (run_dir / "roundtrip" / "forward").mkdir(parents=True, exist_ok=True)
-    (run_dir / "roundtrip" / "forward" / "model.gnn.md").write_text(
-        "# model\n", encoding="utf-8"
-    )
+    (run_dir / "roundtrip" / "forward" / "model.gnn.md").write_text("# model\n", encoding="utf-8")
     (run_dir / "roundtrip" / "reverse" / "calculator").mkdir(parents=True, exist_ok=True)
     (run_dir / "roundtrip" / "reverse" / "calculator" / "__init__.py").write_text(
         "", encoding="utf-8"
@@ -207,7 +205,7 @@ def _write_run_fixture(run_dir: Path) -> None:
     )
     (run_dir / "site").mkdir(parents=True, exist_ok=True)
     (run_dir / "site" / "index.html").write_text(
-        "<html><body><nav><ul><li><a href=\"index.html\">Overview</a></li></ul></nav></body></html>",
+        '<html><body><nav><ul><li><a href="index.html">Overview</a></li></ul></nav></body></html>',
         encoding="utf-8",
     )
     (run_dir / "figures").mkdir(parents=True, exist_ok=True)
@@ -302,15 +300,11 @@ def test_render_detail_pngs_records_evidence_coverage_counts(tmp_path):
 
     assert written["confidence_calibration"].is_file()
     assert b"No SVG" not in written["confidence_calibration"].read_bytes()
-    svg_text = (tmp_path / "figures" / "confidence_calibration.svg").read_text(
-        encoding="utf-8"
-    )
+    svg_text = (tmp_path / "figures" / "confidence_calibration.svg").read_text(encoding="utf-8")
     assert "Evidence coverage and review-readiness" in svg_text
     assert "0 reviewed mapping rows" in svg_text
     sidecar = json.loads(
-        (tmp_path / "figures" / "confidence_calibration.figure.json").read_text(
-            encoding="utf-8"
-        )
+        (tmp_path / "figures" / "confidence_calibration.figure.json").read_text(encoding="utf-8")
     )
     assert sidecar["render_backend"] == "matplotlib_native"
     assert sidecar["degraded_renderer"] is False

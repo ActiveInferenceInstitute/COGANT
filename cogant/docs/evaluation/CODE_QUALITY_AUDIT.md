@@ -1,7 +1,7 @@
 # COGANT Code Quality Audit (Thermo-Nuclear)
 
-**Date:** 2026-05-28 (post-restore verification)  
-**Scope:** Authored Python under `cogant/py/cogant/`, `tools/`, `scripts/`, `run_all.py`, outer `src/` (excludes `cogant/evaluation/eval_repos/**` vendored trees).  
+**Date:** 2026-05-28 (post-restore verification)
+**Scope:** Authored Python under `cogant/py/cogant/`, `tools/`, `scripts/`, `run_all.py`, outer `src/` (excludes `cogant/evaluation/eval_repos/**` vendored trees).
 **Rubric:** Thermo-nuclear maintainability review — 1k-line ceiling, anti-spaghetti, boundary cleanliness, code-judo restructuring.
 
 ## Executive verdict

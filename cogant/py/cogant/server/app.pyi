@@ -42,7 +42,6 @@ def create_app(
     request_timeout_s: float = 300.0,
     bind_host: str = "127.0.0.1",
 ) -> Any: ...
-
 def create_app_from_config(config: ProjectConfig) -> Any: ...
 
 app: Any

@@ -89,7 +89,9 @@ def _specs() -> tuple[_ParserSpec, ...]:
                 optional_dependency="cogant[multilang]",
                 fallback_implementation="regex-structural",
             ),
-            tree_sitter_or_fallback("javascript", JavaScriptLanguageParser, TypeScriptLanguageParser),
+            tree_sitter_or_fallback(
+                "javascript", JavaScriptLanguageParser, TypeScriptLanguageParser
+            ),
         ),
         _ParserSpec(
             ParserCapability(
@@ -99,7 +101,9 @@ def _specs() -> tuple[_ParserSpec, ...]:
                 optional_dependency="cogant[multilang]",
                 fallback_implementation="regex-structural",
             ),
-            tree_sitter_or_fallback("typescript", TypeScriptTreeSitterParser, TypeScriptLanguageParser),
+            tree_sitter_or_fallback(
+                "typescript", TypeScriptTreeSitterParser, TypeScriptLanguageParser
+            ),
         ),
         _ParserSpec(
             ParserCapability("rust", (".rs",), "regex-structural"),
@@ -137,12 +141,11 @@ def parser_capability_report() -> dict[str, dict[str, object]]:
 
     report: dict[str, dict[str, object]] = {}
     for language, capability in sorted(capabilities.items()):
-        grammar_backed = (
-            capability.fallback_implementation is not None
-            and language in available
-        )
-        active = capability.implementation if grammar_backed else (
-            capability.fallback_implementation or capability.implementation
+        grammar_backed = capability.fallback_implementation is not None and language in available
+        active = (
+            capability.implementation
+            if grammar_backed
+            else (capability.fallback_implementation or capability.implementation)
         )
         degraded = capability.fallback_implementation is not None and not grammar_backed
         report[language] = {

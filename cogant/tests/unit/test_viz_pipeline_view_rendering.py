@@ -88,9 +88,7 @@ class TestRenderStageDiagram:
 
 class TestRenderTimingChart:
     def test_basic_dict(self, pv):
-        fig = pv.render_timing_chart(
-            {"ingest": 0.5, "parse": 1.2, "build": 0.8}
-        )
+        fig = pv.render_timing_chart({"ingest": 0.5, "parse": 1.2, "build": 0.8})
         assert_figure_nondegenerate(fig)
 
     def test_empty_dict(self, pv):

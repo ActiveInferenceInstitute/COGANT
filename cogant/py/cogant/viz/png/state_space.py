@@ -30,9 +30,7 @@ def _state_space_entities(
     if isinstance(state_space, dict):
         variables_raw = state_space.get("variables") or state_space.get("state_variables") or {}
         observations_raw = (
-            state_space.get("observations")
-            or state_space.get("observation_modalities")
-            or {}
+            state_space.get("observations") or state_space.get("observation_modalities") or {}
         )
         actions_raw = state_space.get("actions") or {}
     else:
@@ -82,12 +80,8 @@ def _axis_labels_from_model(model_payload: dict[str, Any]) -> dict[str, list[str
     observations = _record_items(state_space.get("observations"))
     actions = _record_items(state_space.get("actions"))
     return {
-        "hidden_states": [
-            _record_name(record, f"s{i}") for i, record in enumerate(variables)
-        ],
-        "observations": [
-            _record_name(record, f"o{i}") for i, record in enumerate(observations)
-        ],
+        "hidden_states": [_record_name(record, f"s{i}") for i, record in enumerate(variables)],
+        "observations": [_record_name(record, f"o{i}") for i, record in enumerate(observations)],
         "actions": [_record_name(record, f"u{i}") for i, record in enumerate(actions)],
     }
 
@@ -436,9 +430,7 @@ def render_state_space_factor_png(
                     ),
                     "edge_draw_cap": cfg.max_render_edges,
                     "edge_draw_strategy": (
-                        "full_relation_edges"
-                        if draw_full_edges
-                        else "aggregate_relation_bands"
+                        "full_relation_edges" if draw_full_edges else "aggregate_relation_bands"
                     ),
                 },
                 "panel_metadata": {
@@ -655,10 +647,7 @@ def render_connections_matrix_png(
         rendered_matrices = {"A": A, "B": B, "C": C, "D": D}
         for key, matrix in rendered_matrices.items():
             display_matrix_shapes.setdefault(key, [int(dim) for dim in matrix.shape])
-        matrix_shapes = {
-            key: display_matrix_shapes[key]
-            for key in ("A", "B", "C", "D")
-        }
+        matrix_shapes = {key: display_matrix_shapes[key] for key in ("A", "B", "C", "D")}
 
         fallback_source_matrix_shapes: dict[str, list[int]] = {
             "A": [original_n_o, original_n_s],
@@ -761,12 +750,10 @@ def render_connections_matrix_png(
             return diagnostics
 
         source_matrix_diagnostics = {
-            key: _source_matrix_diagnostics(key)
-            for key in ("A", "B", "C", "D")
+            key: _source_matrix_diagnostics(key) for key in ("A", "B", "C", "D")
         }
         panel_diagnostics = {
-            key: _generic_matrix_diagnostics(matrix)
-            for key, matrix in rendered_matrices.items()
+            key: _generic_matrix_diagnostics(matrix) for key, matrix in rendered_matrices.items()
         }
         for key in ("A", "B", "C", "D"):
             panel_diagnostics[key]["source_diagnostics"] = source_matrix_diagnostics[key]
@@ -860,9 +847,12 @@ def render_connections_matrix_png(
             ("C", "C — preference (o)", C, cmaps[2]),
             ("D", "D — prior (s)", D, cmaps[3]),
         ]
+
         def _axis_tick_labels(labels: list[str], count: int) -> list[str]:
             if labels:
-                return [f"{idx}\n{truncate(labels[idx], 11)}" for idx in range(min(count, len(labels)))]
+                return [
+                    f"{idx}\n{truncate(labels[idx], 11)}" for idx in range(min(count, len(labels)))
+                ]
             return [str(idx) for idx in range(count)]
 
         def _draw_state_group_boundaries(ax: Any, key: str) -> None:

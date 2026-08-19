@@ -654,7 +654,9 @@ class TestRoundtripResponse:
     def test_basic(self):
         from cogant.server.models import RoundtripResponse
 
-        r = RoundtripResponse(role_preservation_score=0.85, structurally_isomorphic=True, threshold=0.7)
+        r = RoundtripResponse(
+            role_preservation_score=0.85, structurally_isomorphic=True, threshold=0.7
+        )
         assert r.role_preservation_score == 0.85
         assert r.structurally_isomorphic is True
 

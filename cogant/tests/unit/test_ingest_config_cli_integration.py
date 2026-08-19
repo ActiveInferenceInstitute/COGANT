@@ -255,9 +255,7 @@ serde = "1.0"
     def test_parse_dispatcher_case_insensitive(self, tmp_path: Path) -> None:
         """The dispatcher lowercases the filename, so PYPROJECT.TOML routes the same."""
         pyp = tmp_path / "PyProject.TOML"
-        pyp.write_text(
-            "[project]\nname = \"disp-up\"\nversion = \"0.1\"\ndependencies = []\n"
-        )
+        pyp.write_text('[project]\nname = "disp-up"\nversion = "0.1"\ndependencies = []\n')
         meta, _deps = ManifestParser().parse(pyp)
         assert meta.get("name") == "disp-up"
 
@@ -582,9 +580,7 @@ class TestFriendlyPipelineError:
 class TestRenderUpstreamPipelineTable:
     """Cover the upstream-pipeline table renderer."""
 
-    def test_unavailable_result_prints_warning(
-        self, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_unavailable_result_prints_warning(self, capsys: pytest.CaptureFixture) -> None:
         class FakeResult:
             available = False
             error = "src.main not importable"
@@ -724,22 +720,14 @@ class TestRealArtifactCommands:
 class TestExplainErrorBranches:
     """Exercise explain command error paths (lines 1670-1681 territory)."""
 
-    def test_explain_node_not_found_exits_2(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
-        result = runner.invoke(
-            app, ["explain", str(tiny_repo), "definitely_not_a_node_xyz"]
-        )
+    def test_explain_node_not_found_exits_2(self, runner: CliRunner, tiny_repo: Path) -> None:
+        result = runner.invoke(app, ["explain", str(tiny_repo), "definitely_not_a_node_xyz"])
         # Should exit 2 (NodeNotFoundError) or 1 (pipeline error). Both are
         # error exits we want to exercise.
         assert result.exit_code in (1, 2)
 
-    def test_explain_unknown_format_exits_1(
-        self, runner: CliRunner, tiny_repo: Path
-    ) -> None:
-        result = runner.invoke(
-            app, ["explain", str(tiny_repo), "main", "--format", "xml"]
-        )
+    def test_explain_unknown_format_exits_1(self, runner: CliRunner, tiny_repo: Path) -> None:
+        result = runner.invoke(app, ["explain", str(tiny_repo), "main", "--format", "xml"])
         # Either pipeline succeeds and complains about format (1), or pipeline
         # fails first (1, 2). All error paths.
         assert result.exit_code in (1, 2)
@@ -748,17 +736,13 @@ class TestExplainErrorBranches:
 class TestTranslateErrorBranches:
     """Lines 777-788, 802, 807-809, 829-831 in cli.main translate command."""
 
-    def test_translate_missing_target_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_translate_missing_target_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
         nonexistent = tmp_path / "nope_dir"
         result = runner.invoke(app, ["translate", str(nonexistent)])
         assert result.exit_code == 1
         assert "Repository not found" in result.stdout
 
-    def test_translate_target_is_file_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_translate_target_is_file_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
         f = tmp_path / "single.py"
         f.write_text("x = 1\n")
         result = runner.invoke(app, ["translate", str(f)])
@@ -772,11 +756,7 @@ class TestTranslateErrorBranches:
         pytest.importorskip("yaml")
         cfg = tmp_path / "pipe.yaml"
         cfg.write_text(
-            "pipeline:\n"
-            "  verbose: false\n"
-            "  output_dir: out\n"
-            "  skip_stages:\n"
-            "    - validate\n"
+            "pipeline:\n  verbose: false\n  output_dir: out\n  skip_stages:\n    - validate\n"
         )
         out_dir = tmp_path / "translate_out"
         result = runner.invoke(
@@ -821,17 +801,13 @@ class TestTranslateErrorBranches:
 class TestAnalyzeErrorBranches:
     """Lines 1011-1022 (analyze command exception handlers)."""
 
-    def test_analyze_missing_target_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_analyze_missing_target_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
         nonexistent = tmp_path / "nope_dir"
         result = runner.invoke(app, ["analyze", str(nonexistent)])
         assert result.exit_code == 1
         assert "Repository not found" in result.stdout
 
-    def test_analyze_target_is_file_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_analyze_target_is_file_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
         f = tmp_path / "single.py"
         f.write_text("x = 1\n")
         result = runner.invoke(app, ["analyze", str(f)])
@@ -871,9 +847,7 @@ class TestAnalyzeErrorBranches:
 class TestValidateCommandBranches:
     """Drive lines 1389-1395 (errors/warnings) and 1451-1452 (not file/dir)."""
 
-    def test_validate_nonexistent_path_exits_2(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_validate_nonexistent_path_exits_2(self, runner: CliRunner, tmp_path: Path) -> None:
         result = runner.invoke(app, ["validate", str(tmp_path / "missing.json")])
         assert result.exit_code == 2
         assert "Not found" in result.stdout
@@ -887,9 +861,7 @@ class TestValidateCommandBranches:
         assert result.exit_code == 2
         assert "no gnn_package" in result.stdout
 
-    def test_validate_invalid_bundle_with_errors(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_validate_invalid_bundle_with_errors(self, runner: CliRunner, tmp_path: Path) -> None:
         """A bundle with errors and missing artifacts hits the failure branch."""
         bundle = tmp_path / "bad_bundle.json"
         bundle.write_text(
@@ -911,16 +883,12 @@ class TestValidateCommandBranches:
 class TestVizCommandErrors:
     """Lines 1280-1283 (viz command error paths)."""
 
-    def test_viz_nonexistent_path_exits_2(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_viz_nonexistent_path_exits_2(self, runner: CliRunner, tmp_path: Path) -> None:
         result = runner.invoke(app, ["viz", str(tmp_path / "missing")])
         assert result.exit_code == 2
         assert "does not exist" in result.stdout
 
-    def test_viz_file_not_directory_exits_2(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_viz_file_not_directory_exits_2(self, runner: CliRunner, tmp_path: Path) -> None:
         f = tmp_path / "x.txt"
         f.write_text("hello")
         result = runner.invoke(app, ["viz", str(f)])
@@ -931,16 +899,12 @@ class TestVizCommandErrors:
 class TestUpstreamGnnCommand:
     """Cover lines 1923-1963 in upstream-gnn command."""
 
-    def test_upstream_gnn_missing_path_exits_2(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_upstream_gnn_missing_path_exits_2(self, runner: CliRunner, tmp_path: Path) -> None:
         result = runner.invoke(app, ["upstream-gnn", str(tmp_path / "missing")])
         assert result.exit_code == 2
         assert "not found" in result.stdout.lower()
 
-    def test_upstream_gnn_no_model_md_exits_2(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_upstream_gnn_no_model_md_exits_2(self, runner: CliRunner, tmp_path: Path) -> None:
         empty = tmp_path / "empty_pkg"
         empty.mkdir()
         result = runner.invoke(app, ["upstream-gnn", str(empty)])
@@ -951,9 +915,7 @@ class TestUpstreamGnnCommand:
 class TestChangedCommand:
     """Lines around 1597-1626 in changed command."""
 
-    def test_changed_in_non_git_directory_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_changed_in_non_git_directory_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
         result = runner.invoke(app, ["changed", str(tmp_path)])
         assert result.exit_code == 1
         assert "Not a git repository" in result.stdout
@@ -992,9 +954,7 @@ class TestInitOptionalBranches:
         # But config still created
         assert (proj / ".cogant" / "config.json").exists()
 
-    def test_init_with_check_runs_doctor(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_with_check_runs_doctor(self, runner: CliRunner, tmp_path: Path) -> None:
         """--check runs doctor; succeeds in healthy env."""
         proj = tmp_path / "check_proj"
         result = runner.invoke(app, ["init", str(proj), "--check"])
@@ -1003,9 +963,7 @@ class TestInitOptionalBranches:
         if result.exit_code == 0:
             assert "Step 1/4" in result.stdout
 
-    def test_init_run_with_no_files_skips(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_init_run_with_no_files_skips(self, runner: CliRunner, tmp_path: Path) -> None:
         """--run on an empty project skips translate (no source files)."""
         proj = tmp_path / "empty_proj"
         result = runner.invoke(app, ["init", str(proj), "--run", "--yes"])
@@ -1029,9 +987,7 @@ class TestScanCommand:
         result = runner.invoke(app, ["scan", str(tiny_repo), "--format", "json"])
         assert result.exit_code in (0, 1)
 
-    def test_scan_missing_target_exits_1(
-        self, runner: CliRunner, tmp_path: Path
-    ) -> None:
+    def test_scan_missing_target_exits_1(self, runner: CliRunner, tmp_path: Path) -> None:
         result = runner.invoke(app, ["scan", str(tmp_path / "nope")])
         assert result.exit_code == 1
 

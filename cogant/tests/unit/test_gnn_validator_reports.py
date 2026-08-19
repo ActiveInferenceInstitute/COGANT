@@ -453,9 +453,7 @@ def test_validate_package_state_space_dimension_mismatch_is_invalid(tmp_path):
     assert result.valid is False
     assert result.score < 100.0
     assert any("hidden-state dimension mismatch" in e for e in result.errors)
-    assert (
-        result.details["matrices"]["dimension_alignment"]["n_states_match"] is False
-    )
+    assert result.details["matrices"]["dimension_alignment"]["n_states_match"] is False
 
 
 def test_validate_package_missing_markdown_section_is_invalid(tmp_path):

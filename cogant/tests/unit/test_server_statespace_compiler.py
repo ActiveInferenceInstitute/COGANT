@@ -289,9 +289,7 @@ class TestAnalyzeErrorPaths:
         assert "detail" in body
         assert body["error_type"] in ("HTTPException", "FileNotFoundError")
 
-    def test_analyze_unknown_stage_path(
-        self, client: TestClient, tiny_repo: Path
-    ) -> None:
+    def test_analyze_unknown_stage_path(self, client: TestClient, tiny_repo: Path) -> None:
         """Lines 639-640: ValueError/RuntimeError from runner → 500 envelope."""
         r = client.post(
             "/analyze",
@@ -329,9 +327,7 @@ class TestReverseEndpoint:
         r = client.post("/reverse", json={"gnn_text": 12345})
         assert r.status_code == 422
 
-    def test_reverse_invalid_markdown_returns_422_or_500(
-        self, client: TestClient
-    ) -> None:
+    def test_reverse_invalid_markdown_returns_422_or_500(self, client: TestClient) -> None:
         """Lines 669-676: ValueError → 422; other exception → 500."""
         # Send obviously-broken GNN text. Either ValueError (422) or raw
         # Exception (500) is acceptable; both branches are covered.
@@ -360,9 +356,7 @@ class TestRoundtripErrorPaths:
         assert r.status_code == 404
 
     def test_roundtrip_threshold_out_of_range(self, client: TestClient) -> None:
-        r = client.post(
-            "/roundtrip", json={"repo_path": "/tmp", "threshold": 5.0}
-        )
+        r = client.post("/roundtrip", json={"repo_path": "/tmp", "threshold": 5.0})
         assert r.status_code == 422
 
     def test_roundtrip_with_empty_dir_returns_5xx_or_200(
@@ -425,9 +419,7 @@ class TestApiV1AnalyzeError:
         )
         assert r.status_code == 404
 
-    def test_unknown_stage_returns_5xx_or_200(
-        self, client: TestClient, tiny_repo: Path
-    ) -> None:
+    def test_unknown_stage_returns_5xx_or_200(self, client: TestClient, tiny_repo: Path) -> None:
         """Lines 921-922 path: ValueError → 500."""
         r = client.post(
             "/api/v1/analyze",
@@ -874,9 +866,7 @@ class TestCompilerBrokenReferences:
     ``if not node: continue`` early-out branches in extraction methods.
     """
 
-    def test_observation_mapping_with_missing_node_skipped(
-        self, empty_graph: ProgramGraph
-    ) -> None:
+    def test_observation_mapping_with_missing_node_skipped(self, empty_graph: ProgramGraph) -> None:
         """Line 553."""
         bad_mapping = SemanticMapping(
             id="m_obs_ghost",
@@ -892,9 +882,7 @@ class TestCompilerBrokenReferences:
         assert model.observations == {}
         assert model.likelihoods == {}
 
-    def test_action_mapping_with_missing_node_skipped(
-        self, empty_graph: ProgramGraph
-    ) -> None:
+    def test_action_mapping_with_missing_node_skipped(self, empty_graph: ProgramGraph) -> None:
         """Line 608."""
         bad = SemanticMapping(
             id="m_act_ghost",
@@ -1077,9 +1065,7 @@ class TestObservationDistributionInference:
         )
         assert compiler._infer_observation_distribution(node) == expected
 
-    def test_infer_observation_distribution_no_metadata(
-        self, empty_graph: ProgramGraph
-    ) -> None:
+    def test_infer_observation_distribution_no_metadata(self, empty_graph: ProgramGraph) -> None:
         node = Node(
             id="x",
             kind=NodeKind.VARIABLE,
@@ -1644,9 +1630,7 @@ class TestExplain:
 
 
 class TestCompileIncremental:
-    def test_incremental_with_no_prev_returns_full_compile(
-        self, empty_graph: ProgramGraph
-    ) -> None:
+    def test_incremental_with_no_prev_returns_full_compile(self, empty_graph: ProgramGraph) -> None:
         """Line 1356-1357: when prev_result is None, falls through to compile()."""
         compiler = StateSpaceCompiler(empty_graph, schema_name="inc-none")
         model = compiler.compile_incremental({}, prev_result=None)

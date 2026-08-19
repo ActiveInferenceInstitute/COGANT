@@ -56,9 +56,9 @@ def test_environment_keys_must_use_section_field_syntax() -> None:
 
 
 def test_raw_mapping_merge_remains_a_boundary_utility() -> None:
-    assert ConfigLoader.merge_configs(
-        {"a": {"x": 1, "y": 2}}, {"a": {"y": 3}}
-    ) == {"a": {"x": 1, "y": 3}}
+    assert ConfigLoader.merge_configs({"a": {"x": 1, "y": 2}}, {"a": {"y": 3}}) == {
+        "a": {"x": 1, "y": 3}
+    }
 
 
 def test_unknown_preset_is_typed_loader_error() -> None:

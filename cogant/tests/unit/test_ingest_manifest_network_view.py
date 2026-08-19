@@ -145,7 +145,7 @@ def test_fallback_parse_toml_handles_simple_section_and_string():
 def test_fallback_parse_toml_skips_blank_and_comment_lines():
     """Blank lines and comments are skipped by the fallback parser."""
     parse_toml, _ = _load_fallback_toml()
-    text = "# comment\n\n[meta]\n# another\nkey = \"v\"\n"
+    text = '# comment\n\n[meta]\n# another\nkey = "v"\n'
     out = parse_toml(text)
     assert out["meta"]["key"] == "v"
 
@@ -184,7 +184,7 @@ def test_fallback_parse_toml_bool_int_float_and_fallback_string():
 def test_fallback_parse_toml_nested_section():
     """Dotted section headers create nested dicts on the way to the leaf."""
     parse_toml, _ = _load_fallback_toml()
-    text = "[tool.poetry.dev-dependencies]\nfoo = \"1.0\"\n"
+    text = '[tool.poetry.dev-dependencies]\nfoo = "1.0"\n'
     out = parse_toml(text)
     # The top-level key is the full dotted name (per the fallback's behavior),
     # and nested intermediate dicts are created.
@@ -272,9 +272,7 @@ def test_parse_setup_py_with_io_error_logs_warning(parser: ManifestParser, tmp_p
 
 
 @pytest.mark.unit
-def test_parse_package_json_with_invalid_json_returns_empty(
-    parser: ManifestParser, tmp_path: Path
-):
+def test_parse_package_json_with_invalid_json_returns_empty(parser: ManifestParser, tmp_path: Path):
     """Malformed JSON triggers the warning path in parse_package_json."""
     bad = _write(tmp_path, "package.json", "{ this is not json")
     meta, deps = parser.parse_package_json(bad)
@@ -283,9 +281,7 @@ def test_parse_package_json_with_invalid_json_returns_empty(
 
 
 @pytest.mark.unit
-def test_parse_cargo_toml_with_io_error_returns_empty(
-    parser: ManifestParser, tmp_path: Path
-):
+def test_parse_cargo_toml_with_io_error_returns_empty(parser: ManifestParser, tmp_path: Path):
     """Missing Cargo.toml triggers the broad except in parse_cargo_toml."""
     meta, deps = parser.parse_cargo_toml(tmp_path / "Cargo_missing.toml")
     assert meta == {}
@@ -293,9 +289,7 @@ def test_parse_cargo_toml_with_io_error_returns_empty(
 
 
 @pytest.mark.unit
-def test_parse_requirements_txt_with_io_error_returns_empty(
-    parser: ManifestParser, tmp_path: Path
-):
+def test_parse_requirements_txt_with_io_error_returns_empty(parser: ManifestParser, tmp_path: Path):
     """Missing requirements.txt yields an empty list and logs a warning."""
     deps = parser.parse_requirements_txt(tmp_path / "no_such_requirements.txt")
     assert deps == []

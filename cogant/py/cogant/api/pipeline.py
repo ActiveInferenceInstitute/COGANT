@@ -16,8 +16,6 @@ from cogant.config.pipeline import PipelineConfig
 logger = logging.getLogger(__name__)
 
 
-
-
 @dataclass
 class PipelineResult:
     """Result of a full pipeline run.
@@ -391,9 +389,7 @@ class PipelineRunner:
 
         changes = ingester.source_changes_since(config.incremental_since)
         changed = [
-            change.path
-            for change in changes
-            if change.change_type != "D" and change.path.exists()
+            change.path for change in changes if change.change_type != "D" and change.path.exists()
         ]
         stats["files_reparsed"] = len(changed)
         stats["files_changed"] = len(changes)
@@ -430,8 +426,7 @@ class PipelineRunner:
             "changed_files": [str(p) for p in changed],
             "changed_count": len(changed),
             "change_records": [
-                {"path": str(change.path), "change_type": change.change_type}
-                for change in changes
+                {"path": str(change.path), "change_type": change.change_type} for change in changes
             ],
         }
         stats["reason"] = f"{len(changes)} source change(s) detected"

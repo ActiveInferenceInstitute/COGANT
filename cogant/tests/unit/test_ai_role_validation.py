@@ -57,6 +57,8 @@ def _silence_logging():
         yield
     finally:
         logging.disable(previous)
+
+
 from cogant.translate.rules.structural import (
     MutatingSubsystemRule,
     ReadOnlyInputRule,

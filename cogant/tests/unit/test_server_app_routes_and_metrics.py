@@ -56,9 +56,7 @@ def client(tmp_path: Path) -> TestClient:
 def tiny_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "repo"
     repo.mkdir()
-    (repo / "main.py").write_text(
-        "x: int = 0\n\ndef increment(n: int) -> int:\n    return n + 1\n"
-    )
+    (repo / "main.py").write_text("x: int = 0\n\ndef increment(n: int) -> int:\n    return n + 1\n")
     return repo
 
 
@@ -136,9 +134,7 @@ class TestApiV1Rules:
         def _norm(name: str) -> str:
             return name.lower().replace("_", "").replace("rule", "")
 
-        registry_names = {
-            _norm(rule.name) for rule in _default_translation_engine().rules
-        }
+        registry_names = {_norm(rule.name) for rule in _default_translation_engine().rules}
         endpoint_names = {_norm(row["name"]) for row in data["rules"]}
         assert endpoint_names == registry_names, (
             "endpoint /api/v1/rules diverged from the default rule registry; "
@@ -174,9 +170,7 @@ class TestApiV1AnalyzeHappy:
     def test_analyze_returns_200_with_request_id_and_timing(
         self, client: TestClient, tiny_repo: Path
     ) -> None:
-        r = client.post(
-            "/api/v1/analyze", json={"repo_path": "repo", "skip_dynamic": True}
-        )
+        r = client.post("/api/v1/analyze", json={"repo_path": "repo", "skip_dynamic": True})
         # Accept 200 or 500 (pipeline failures are still covered)
         if r.status_code == 200:
             body = r.json()
@@ -192,9 +186,7 @@ class TestApiV1AnalyzeHappy:
             body = r.json()
             assert "detail" in body
 
-    def test_analyze_with_explicit_stages(
-        self, client: TestClient, tiny_repo: Path
-    ) -> None:
+    def test_analyze_with_explicit_stages(self, client: TestClient, tiny_repo: Path) -> None:
         """Passing an explicit stage list is accepted and produces a response."""
         r = client.post(
             "/api/v1/analyze",
@@ -373,9 +365,7 @@ class TestRoundtripErrorPaths:
         """An empty directory drives the roundtrip pipeline error path."""
         empty = tmp_path / "empty"
         empty.mkdir()
-        r = client.post(
-            "/roundtrip", json={"repo_path": "empty", "threshold": 0.5}
-        )
+        r = client.post("/roundtrip", json={"repo_path": "empty", "threshold": 0.5})
         assert r.status_code in (200, 500)
 
 
