@@ -183,6 +183,72 @@ class TestParser:
         assert model.observations == []
         assert model.actions == []
 
+    def test_parse_degenerate_aggregate_d_expanded_to_declared_cardinality(self) -> None:
+        """A 1-entry aggregate D for a multi-state factor is broadcast.
+
+        Regression: the forward pipeline emits an aggregate in-memory
+        matrices block (one entry per variable) alongside factorized
+        declarations whose cardinalities exceed 1. The fenced D[[rows=1]]
+        overrode the factorized D, and the synthesizer rejected the model
+        with "D must contain N entries; received 1". The parser now
+        broadcasts the degenerate prior to the declared cardinality and
+        realigns A/B to the expanded state dimension.
+        """
+        gnn = dedent(
+            """\
+            ## ModelName
+            AggregateMismatch
+
+            ## StateSpaceBlock
+            s_f0[4,1,type=int]
+            o_m0[2,1,type=int]
+            u_c0[2,1,type=int]
+
+            ## ActInfOntologyAnnotation
+            s_f0=HiddenState
+            o_m0=Observation
+            u_c0=Action
+
+            ## InitialParameterization
+            D_f0={ (0.25, 0.25, 0.25, 0.25) }
+            C_m0={ (0.5, 0.5) }
+            A_m0={ ( (0.9, 0.1), (0.1, 0.9) ) }
+            B_f0=identity(4,4,2)
+
+            ```gnn-matrices
+            A[[rows=2][cols=1]]
+            0.5
+            0.5
+            B[[rows=1][cols=1][depth=2]]
+            # action=0
+            1
+            # action=1
+            1
+            C[[rows=2]]
+            0
+            0
+            D[[rows=1]]
+            1
+            ```
+            """
+        )
+        model = parse_gnn(gnn)
+        assert model.n_states == 4
+        assert len(model.D) == 4
+        assert model.D == [0.25, 0.25, 0.25, 0.25]
+        # A columns broadcast to the expanded state dimension.
+        assert len(model.A) == 2 and all(len(row) == 4 for row in model.A)
+        # B expanded to identity transitions (4x4x2), columns sum to 1.
+        assert len(model.B) == 4 and len(model.B[0]) == 4
+        for action in range(2):
+            for source in range(4):
+                total = sum(model.B[t][source][action] for t in range(4))
+                assert abs(total - 1.0) < 1e-9
+        # The reconciled model synthesizes without the shape error.
+        from cogant.reverse.matrices import render_matrices_module
+
+        render_matrices_module(model)
+
     def test_parse_state_only_factor_d_preserved(self) -> None:
         """A state-only fragment keeps its full factor D vector.
 
