@@ -104,8 +104,10 @@ def test_real_calculator_run_dir_renders_real_numbers_no_banner(
     """Real run dir -> real numbers, no banner, untouched metric region."""
     model = build_inspection_model(_CALCULATOR_RUN_DIR)
     assert model["no_run_data"] is False
+    # 12 nodes / 27 edges: the current graph builder emits CALLS edges
+    # (673db14), matching the regenerated suite_20260818 benchmark snapshot.
     assert model["program"]["nodes"] == 12
-    assert model["program"]["edges"] == 25
+    assert model["program"]["edges"] == 27
 
     html = render_inspection_dashboard_html(
         _CALCULATOR_RUN_DIR,
