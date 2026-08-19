@@ -375,6 +375,63 @@ suite remained at its documented 137-failure P0 baseline — see `cog-p0-02`).
   **IMPLEMENTED:** added a `test-names` step to `tools/release_gate.py` and a
   matching CI step in `.github/workflows/ci.yml`; the gate dry-run passes.
 
+## Completed/Closed — 2026-08-18 fleet review pass
+
+Findings implemented this pass (commits d0b3522, 693ea24, and the test-contract
+batch). Baseline at pass start (2026-08-18, historical measurement): unit suite reported a triple-digit failure count; remote CI
+red on every push since 2026-06 (ruff-format drift + pre-commit end-of-file
+fixes); `check_coverage_table --strict` red (missing benchmark JSON sidecar).
+
+### Implemented
+
+- [x] **CI-blocking ruff-format drift** — 78 files reformatted (the exact set
+  failing `Ruff format --check` in hosted CI); end-of-file/trailing-whitespace
+  fixes in 5 files; `pre-commit run --all-files` fully green.
+- [x] **reverse/parser.py state-only D-vector collapse** — the legacy
+  aggregation branch collapsed a factor D vector to `[max(values)]`;
+  now preserved verbatim when it matches the declared cardinality.
+  Regression test added.
+- [x] **reverse/synthesizer.py zero-action smoke test** — generated
+  `test_smoke.py` always emitted the selector test; `N_ACTIONS == 0` made the
+  synthesized package's own tests fail. Selector test now gated on
+  `model.n_actions > 0`.
+- [x] **Stale test contracts aligned to the canonical post-673db14 API** —
+  ~35 test files updated: ConfigLoader returns validated `ProjectConfig`
+  models; `PipelineConfig` canonical stage list / `validate_assignment`;
+  construction-time rejection of unknown stages; server 403 workspace
+  boundary; fail-closed `detect_repo_languages`; SHA-256 cache layout;
+  no fabricated policy stubs; `Session=None` guard removed. Unit suite now
+  passes with zero non-environmental failures.
+- [x] **Benchmark artifact chain** — regenerated `suite_20260818.{json,md}`
+  from a real `bench_suite.py` run; JSON sidecar un-ignored and committed;
+  manuscript benchmark table + prose updated to the new snapshot;
+  `check_coverage_table --strict` green for the first time.
+
+### Open / deferred
+
+- [ ] **cog-6-adjacent — GNNMatrices cardinality-vs-variable-count dimension
+  inconsistency (forward path).** `GNNMatrices.n_states` counts state-space
+  *variables* while the upstream GNN formatter's StateSpaceBlock declares
+  per-variable *cardinalities*. For the calculator run this emits an
+  internally inconsistent forward GNN: the gnn-matrices block says
+  `D[[rows=1]]`/n_states=1 while StateSpaceBlock declares `s_f0[10]` with a
+  10-entry `D_f0`. The reverse parser then reads n_states=10 but D=[1.0]
+  (set by the global-matrix block), so the roundtrip step fails with
+  "D must contain 10 entries; received 1" — verified pre-existing at HEAD
+  (reproduces without this pass's changes).
+  - Deliverable: `GNNMatrices` (or the exporter) expands dimensions by
+    variable cardinality consistently with the StateSpaceBlock, or the
+    StateSpaceBlock emits variable counts; pick one dimension model.
+  - Acceptance: `run_all` roundtrip step passes for the calculator fixture;
+    the `roundtrip_visual_diff` manuscript figure's source artifact
+    (`cogant/output/calculator/roundtrip/metrics.json`) regenerates;
+    `manuscript_figures.py --strict` passes fully.
+  - Blocker for: `verify_manuscript_links` (1 figure) and the
+    `roundtrip_visual_diff` strict-metadata check in the figure copier.
+- [ ] **METRICS freshness** — `METRICS.yaml` was regenerated against the
+  current worktree (2026-08-18); the commit-bound freshness gate must be
+  re-run after these commits land (cog-p0-04 remains the tracking item).
+
 ## Completed/Closed — 2026-08-02 docs-deep review pass
 
 Fleet docs-deep pass (log: [`REVIEW_LOG_2026-08-02.md`](REVIEW_LOG_2026-08-02.md)).
