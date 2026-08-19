@@ -409,28 +409,31 @@ fixes); `check_coverage_table --strict` red (missing benchmark JSON sidecar).
 
 ### Open / deferred
 
-- [ ] **cog-6-adjacent — GNNMatrices cardinality-vs-variable-count dimension
-  inconsistency (forward path).** `GNNMatrices.n_states` counts state-space
-  *variables* while the upstream GNN formatter's StateSpaceBlock declares
-  per-variable *cardinalities*. For the calculator run this emits an
-  internally inconsistent forward GNN: the gnn-matrices block says
-  `D[[rows=1]]`/n_states=1 while StateSpaceBlock declares `s_f0[10]` with a
-  10-entry `D_f0`. The reverse parser then reads n_states=10 but D=[1.0]
-  (set by the global-matrix block), so the roundtrip step fails with
-  "D must contain 10 entries; received 1" — verified pre-existing at HEAD
-  (reproduces without this pass's changes).
-  - Deliverable: `GNNMatrices` (or the exporter) expands dimensions by
-    variable cardinality consistently with the StateSpaceBlock, or the
-    StateSpaceBlock emits variable counts; pick one dimension model.
-  - Acceptance: `run_all` roundtrip step passes for the calculator fixture;
-    the `roundtrip_visual_diff` manuscript figure's source artifact
-    (`cogant/output/calculator/roundtrip/metrics.json`) regenerates;
-    `manuscript_figures.py --strict` passes fully.
-  - Blocker for: `verify_manuscript_links` (1 figure) and the
-    `roundtrip_visual_diff` strict-metadata check in the figure copier.
 - [ ] **METRICS freshness** — `METRICS.yaml` was regenerated against the
-  current worktree (2026-08-18); the commit-bound freshness gate must be
+  current worktree (2026-08-19); the commit-bound freshness gate must be
   re-run after these commits land (cog-p0-04 remains the tracking item).
+
+### Closed in the follow-up pass (2026-08-19)
+
+- [x] **GNNMatrices cardinality-vs-variable-count dimension inconsistency
+  (forward path).** Root cause: the forward pipeline's aggregate in-memory
+  matrices (fenced gnn-matrices block) carry one entry per state-space
+  *variable* while the StateSpaceBlock declares per-variable
+  *cardinalities*. For the calculator run the fenced block said
+  `D[[rows=1]]` while `s_f0[10]` was declared, so the reverse parser read
+  n_states=10 with D=[1.0] and the roundtrip step failed with
+  "D must contain 10 entries; received 1". Fix: `_normalize_reverse_dimensions`
+  (reverse/parser.py) now detects the degenerate single-entry aggregate
+  (one hidden factor, declared cardinality > 1, D=[1.0]) and broadcasts D
+  uniformly to the declared cardinality, broadcasts A's columns, and
+  expands B to identity transitions — matching the InitialParameterization
+  broadcast conventions. Regression test added
+  (`test_parse_degenerate_aggregate_d_expanded_to_declared_cardinality`).
+  Acceptance verified: `run_all` roundtrip:calculator passes (ROLE_PRESERVED
+  100%, failed_steps=0), `manuscript_figures.py --strict` passes,
+  `verify_manuscript_links` 0 broken (was 18),
+  `audit_publication_readiness --strict` verdict=ready blockers=0,
+  and the full unit suite is green (9200 passed / 0 failed).
 
 ## Completed/Closed — 2026-08-02 docs-deep review pass
 
