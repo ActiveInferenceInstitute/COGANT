@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from pydantic import ValidationError
 
 from cogant.api.bundle import Bundle
 from cogant.api.pipeline import (
@@ -41,15 +42,16 @@ def test_pipeline_config_validate_default_clean() -> None:
 
 
 def test_pipeline_config_validate_unknown_stage() -> None:
-    cfg = PipelineConfig(stages=["ingest", "BOGUS"])
-    errs = cfg.validate()
-    assert any("Unknown stage: BOGUS" in e for e in errs)
+    """Unknown stage names are rejected at construction by the field
+    validator (the canonical fail-fast contract from 673db14)."""
+    with pytest.raises(ValidationError, match="unknown pipeline stages"):
+        PipelineConfig(stages=["ingest", "BOGUS"])
 
 
 def test_pipeline_config_validate_unknown_skip_stage() -> None:
-    cfg = PipelineConfig(skip_stages=["WRONG"])
-    errs = cfg.validate()
-    assert any("Unknown skip_stage: WRONG" in e for e in errs)
+    """Unknown skip_stages names are rejected at construction."""
+    with pytest.raises(ValidationError, match="unknown pipeline stages"):
+        PipelineConfig(skip_stages=["WRONG"])
 
 
 def test_pipeline_config_validate_output_dir_is_file(tmp_path: Path) -> None:
@@ -82,9 +84,9 @@ def test_pipeline_config_validate_coverage_path_existing(tmp_path: Path) -> None
 
 
 def test_pipeline_config_validate_upstream_only_steps_invalid_type() -> None:
-    cfg = PipelineConfig(upstream_gnn_only_steps=["not-an-int"])  # type: ignore[list-item]
-    errs = cfg.validate()
-    assert any("upstream_gnn_only_steps" in e for e in errs)
+    """Non-integer upstream step indices are rejected at construction."""
+    with pytest.raises(ValidationError, match="upstream_gnn_only_steps"):
+        PipelineConfig(upstream_gnn_only_steps=["not-an-int"])  # type: ignore[list-item]
 
 
 def test_pipeline_config_validate_upstream_skip_steps_out_of_range() -> None:
@@ -94,11 +96,9 @@ def test_pipeline_config_validate_upstream_skip_steps_out_of_range() -> None:
 
 
 def test_pipeline_config_validate_no_output_dir() -> None:
-    """Empty string output_dir bypasses the dir-exists check."""
-    cfg = PipelineConfig(output_dir="")
-    errs = cfg.validate()
-    # No errors triggered by the empty path branch
-    assert all("output_dir" not in e for e in errs)
+    """Empty output_dir is rejected at construction by the path validator."""
+    with pytest.raises(ValidationError, match="path values must be non-empty"):
+        PipelineConfig(output_dir="")
 
 
 # ------------------------------------------------------------------ #
@@ -210,15 +210,15 @@ def test_pipeline_config_from_yaml_partial_data(tmp_path: Path) -> None:
 
 def test_pipeline_runner_unknown_stage_records_error(tmp_path: Path) -> None:
     """A stage not in handlers becomes an error in bundle.errors."""
-    runner = PipelineRunner()
-    cfg = PipelineConfig(
-        stages=["BOGUS_STAGE"],
-        skip_stages=[],
-        dry_run=True,
-        output_dir=str(tmp_path / "out"),
-    )
-    bundle = runner.run(str(tmp_path), cfg)
-    assert any("Unknown stage: BOGUS_STAGE" in e for e in bundle.errors)
+    # Unknown stages are rejected at config construction (fail-fast), so a
+    # run cannot reach the runner with an unknown stage list.
+    with pytest.raises(ValidationError, match="unknown pipeline stages"):
+        PipelineConfig(
+            stages=["BOGUS_STAGE"],
+            skip_stages=[],
+            dry_run=True,
+            output_dir=str(tmp_path / "out"),
+        )
 
 
 def test_pipeline_runner_skip_dynamic_records_skip_result(tmp_path: Path) -> None:

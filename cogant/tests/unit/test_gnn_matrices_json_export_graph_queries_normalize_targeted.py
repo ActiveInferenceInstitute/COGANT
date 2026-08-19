@@ -157,7 +157,7 @@ class TestGNNMatrices:
         matrices = GNNMatrices(graph, [], ssm)
         n = matrices.n_actions
         assert isinstance(n, int)
-        assert n >= 1  # at least 1 for valid B
+        assert n == 0  # zero is a valid dimension for an empty state space
 
     def test_compute_A(self):
         from cogant.gnn.matrices import GNNMatrices

@@ -559,8 +559,9 @@ class TestAnalyzeRequest:
     def test_with_stages(self):
         from cogant.server.models import AnalyzeRequest
 
-        req = AnalyzeRequest(repo_path="/my/repo", stages=["ingest", "analyze"], skip_dynamic=False)
-        assert req.stages == ["ingest", "analyze"]
+        # 'analyze' is not a canonical stage name; use the RUNNER_STAGES set.
+        req = AnalyzeRequest(repo_path="/my/repo", stages=["ingest", "static"], skip_dynamic=False)
+        assert req.stages == ["ingest", "static"]
         assert req.skip_dynamic is False
 
     def test_forbids_extra(self):
@@ -1111,25 +1112,24 @@ class TestPipelineStage:
 
 
 class TestPipelineConfig:
+    """Canonical PipelineConfig contract (stages/skip_dynamic; no name)."""
+
     def test_basic(self):
-        from cogant.config.schema import PipelineConfig
+        from cogant.config.pipeline import PipelineConfig
 
         pc = PipelineConfig()
-        assert pc.name == "default"
+        assert pc.stages[0] == "ingest"
+        assert pc.skip_dynamic is False
 
     def test_with_stages(self):
-        from cogant.config.schema import PipelineConfig
+        from cogant.config.pipeline import PipelineConfig
 
         pc = PipelineConfig(
-            name="my_pipeline",
-            run_stages=["ingest", "analyze"],
+            stages=["ingest", "static", "normalize"],
+            skip_dynamic=True,
         )
-        assert len(pc.run_stages) == 2
-
-
-# ---------------------------------------------------------------------------
-# schemas/program_graph.py
-# ---------------------------------------------------------------------------
+        assert pc.stages == ["ingest", "static", "normalize"]
+        assert pc.skip_dynamic is True
 
 
 class TestProgramGraphSchema:

@@ -304,8 +304,11 @@ class TestSynthesizerRenderModules:
         from cogant.reverse.synthesizer import _render_test_smoke
 
         plan, _ = _make_package_plan()
-        result = _render_test_smoke(plan)
+        result = _render_test_smoke(plan, has_actions=False)
         assert isinstance(result, str)
+        assert "test_selector_returns_valid_index" not in result
+        result_with_actions = _render_test_smoke(plan, has_actions=True)
+        assert "test_selector_returns_valid_index" in result_with_actions
 
     def test_synthesize_package_creates_files(self, tmp_path):
         from cogant.reverse.synthesizer import synthesize_package

@@ -37,7 +37,7 @@ class TestPipelineConfig:
         from cogant.config.pipeline import PipelineConfig
 
         cfg = PipelineConfig()
-        assert cfg.skip_dynamic is True
+        assert cfg.skip_dynamic is False
 
     def test_default_output_dir(self):
         from cogant.config.pipeline import PipelineConfig
@@ -66,12 +66,16 @@ class TestPipelineConfig:
         assert isinstance(cfg.ingest, IngestConfig)
         assert isinstance(cfg.graph, GraphConfig)
 
-    def test_frozen_raises_on_mutation(self):
+    def test_assignment_is_validated(self):
+        """validate_assignment (not frozen): invalid values raise, valid
+        assignments succeed."""
         from cogant.config.pipeline import PipelineConfig
 
         cfg = PipelineConfig()
         with pytest.raises(ValidationError):
-            cfg.verbose = True
+            cfg.verbose = "not-a-bool"  # type: ignore[assignment]
+        cfg.verbose = True
+        assert cfg.verbose is True
 
     def test_from_dict_basic(self):
         from cogant.config.pipeline import PipelineConfig
@@ -213,11 +217,13 @@ class TestConfigLoader:
         import json
 
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         cfg_file = tmp_path / "config.json"
-        cfg_file.write_text(json.dumps({"key": "value"}))
+        cfg_file.write_text(json.dumps({"cogant": {"max_workers": 7}}))
         result = ConfigLoader.load_json_from_file(cfg_file)
-        assert result == {"key": "value"}
+        assert isinstance(result, ProjectConfig)
+        assert result.cogant.max_workers == 7
 
     def test_load_json_from_file_missing_raises(self, tmp_path):
         from cogant.config.loaders import ConfigLoader, ConfigLoadError
@@ -233,23 +239,25 @@ class TestConfigLoader:
         with pytest.raises((ConfigLoadError, Exception)):
             ConfigLoader.load_json_from_file(cfg_file)
 
-    def test_load_json_from_file_array_returns_empty(self, tmp_path):
+    def test_load_json_from_file_array_raises(self, tmp_path):
         import json
 
-        from cogant.config.loaders import ConfigLoader
+        from cogant.config.loaders import ConfigLoader, ConfigLoadError
 
         cfg_file = tmp_path / "arr.json"
         cfg_file.write_text(json.dumps([1, 2, 3]))
-        result = ConfigLoader.load_json_from_file(cfg_file)
-        # Non-dict returns empty dict per implementation
-        assert result == {}
+        with pytest.raises(ConfigLoadError, match="mapping/object"):
+            ConfigLoader.load_json_from_file(cfg_file)
 
     def test_load_from_dict(self):
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
-        data = {"pipeline": {"stages": ["ingest"]}, "graph": {"max_nodes": 100}}
+        data = {"pipeline": {"stages": ["ingest"]}, "validation": {"validate_schema": False}}
         result = ConfigLoader.load_from_dict(data)
-        assert result == data
+        assert isinstance(result, ProjectConfig)
+        assert result.pipeline.stages == ["ingest"]
+        assert result.validation.validate_schema is False
 
     def test_load_from_dict_non_dict_raises(self):
         from cogant.config.loaders import ConfigLoader, ConfigLoadError
@@ -257,12 +265,13 @@ class TestConfigLoader:
         with pytest.raises(ConfigLoadError):
             ConfigLoader.load_from_dict([1, 2, 3])  # type: ignore
 
-    def test_load_default_returns_dict(self):
+    def test_load_default_returns_project_config(self):
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         result = ConfigLoader.load_default()
-        assert isinstance(result, dict)
-        assert "cogant" in result or "pipeline" in result
+        assert isinstance(result, ProjectConfig)
+        assert result.pipeline is not None
 
     def test_load_preset_default(self):
         from cogant.config.loaders import ConfigLoader

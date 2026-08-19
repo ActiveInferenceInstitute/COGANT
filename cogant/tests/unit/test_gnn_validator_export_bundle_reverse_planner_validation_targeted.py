@@ -177,10 +177,24 @@ class TestGNNValidator:
 
     def test_validate_state_space_valid(self):
         validator = self._make_validator()
-        ss = {"variables": [], "observations": [], "actions": [], "transitions": {}}
+        ss = {
+            "variables": [],
+            "observations": [],
+            "actions": [],
+            "transitions": {"transition_count": 0, "time_regime": "synchronous"},
+        }
         errors = validator.validate_state_space(ss)
         assert isinstance(errors, list)
-        assert len(errors) == 0
+        assert errors == []
+
+    def test_validate_state_space_transitions_need_count_and_regime(self):
+        """An empty transitions dict is invalid: transition_count and
+        time_regime are required declarations."""
+        validator = self._make_validator()
+        ss = {"variables": [], "observations": [], "actions": [], "transitions": {}}
+        errors = validator.validate_state_space(ss)
+        assert "Transitions must declare an integer transition_count" in errors
+        assert "Transitions must declare a non-empty time_regime" in errors
 
     def test_validate_state_space_missing_keys(self):
         validator = self._make_validator()

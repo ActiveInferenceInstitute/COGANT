@@ -24,25 +24,28 @@ class TestConfigLoader:
 
     def test_load_from_dict_basic(self):
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
-        data = {"key": "value", "nested": {"a": 1}}
+        data = {"cogant": {"version": "9.9.9"}}
         result = ConfigLoader.load_from_dict(data)
-        assert result == data
+        assert isinstance(result, ProjectConfig)
+        assert result.cogant.version == "9.9.9"
 
     def test_load_from_dict_non_dict_raises(self):
         from cogant.config.loaders import ConfigLoader, ConfigLoadError
 
-        with pytest.raises(ConfigLoadError, match="dictionary"):
+        with pytest.raises(ConfigLoadError, match="mapping"):
             ConfigLoader.load_from_dict("not a dict")  # type: ignore
 
     def test_load_from_json_file(self, tmp_path):
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         cfg_file = tmp_path / "config.json"
-        cfg_file.write_text(json.dumps({"setting": "value", "level": 2}))
+        cfg_file.write_text(json.dumps({"cogant": {"max_workers": 2}}))
         result = ConfigLoader.load_json_from_file(cfg_file)
-        assert result["setting"] == "value"
-        assert result["level"] == 2
+        assert isinstance(result, ProjectConfig)
+        assert result.cogant.max_workers == 2
 
     def test_load_from_json_file_missing_raises(self, tmp_path):
         from cogant.config.loaders import ConfigLoader, ConfigLoadError
@@ -58,13 +61,13 @@ class TestConfigLoader:
         with pytest.raises(ConfigLoadError, match="Invalid JSON"):
             ConfigLoader.load_json_from_file(bad_json)
 
-    def test_load_from_json_non_dict_returns_empty(self, tmp_path):
-        from cogant.config.loaders import ConfigLoader
+    def test_load_from_json_non_dict_raises(self, tmp_path):
+        from cogant.config.loaders import ConfigLoader, ConfigLoadError
 
         json_file = tmp_path / "list.json"
         json_file.write_text(json.dumps([1, 2, 3]))
-        result = ConfigLoader.load_json_from_file(json_file)
-        assert result == {}
+        with pytest.raises(ConfigLoadError, match="mapping/object"):
+            ConfigLoader.load_json_from_file(json_file)
 
     def test_merge_configs_shallow(self):
         from cogant.config.loaders import ConfigLoader
@@ -94,9 +97,10 @@ class TestConfigLoader:
 
     def test_load_preset_default(self):
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         result = ConfigLoader.load_preset("default")
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
     def test_load_preset_unknown_raises(self):
         from cogant.config.loaders import ConfigLoader, ConfigLoadError
@@ -116,10 +120,13 @@ class TestConfigLoader:
                 ConfigLoader.load_from_yaml(yaml_file)
         else:
             # yaml is available, test a valid load
+            from cogant.config.schema import ProjectConfig
+
             yaml_file = tmp_path / "config.yaml"
-            yaml_file.write_text("key: value\nlevel: 3\n")
+            yaml_file.write_text("cogant:\n  max_workers: 3\n")
             result = ConfigLoader.load_from_yaml(yaml_file)
-            assert result.get("key") == "value"
+            assert isinstance(result, ProjectConfig)
+            assert result.cogant.max_workers == 3
 
     def test_load_from_yaml_missing_file_raises(self, tmp_path):
         from cogant.config.loaders import HAS_YAML, ConfigLoader, ConfigLoadError

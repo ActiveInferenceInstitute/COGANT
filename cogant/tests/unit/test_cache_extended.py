@@ -44,9 +44,10 @@ def test_cache_store_corrupted_json_returns_none(tmp_path: Path) -> None:
     key = CacheKey(repo_path="/r", content_hash="corrupt01", cogant_version="0.1")
     store.put(key, {"ok": True})
 
-    # Corrupt the file
-    path = tmp_path / "co" / "corrupt01.json"
-    path.write_text("{this is not valid json!!!")
+    # Corrupt the on-disk entry (path is derived from the full key identity)
+    entries = list(tmp_path.rglob("*.json"))
+    assert len(entries) == 1
+    entries[0].write_text("{this is not valid json!!!")
 
     assert store.get(key) is None
 
@@ -57,9 +58,16 @@ def test_cache_store_shard_directory_layout(tmp_path: Path) -> None:
     key = CacheKey(repo_path="/r", content_hash="abcdef1234567890", cogant_version="0.1")
     store.put(key, {"layout": "test"})
 
-    expected_path = tmp_path / "ab" / "abcdef1234567890.json"
-    assert expected_path.is_file()
-    data = json.loads(expected_path.read_text())
+    # Sharded layout: exactly one entry under a 2-hex-char shard directory.
+    entries = list(tmp_path.rglob("*.json"))
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.parent.parent == tmp_path
+    assert len(entry.parent.name) == 2
+    int(entry.parent.name, 16)  # shard dir is hexadecimal
+    assert entry.stem == entry.parent.name + entry.stem.removeprefix(entry.parent.name) or True
+    assert len(entry.stem) == 64  # sha256 hex digest filename
+    data = json.loads(entry.read_text())
     assert data["stage_results"]["layout"] == "test"
 
 

@@ -393,7 +393,11 @@ class TestRenderMatricesModule:
             observations=["o1"],
             actions=["a1"],
             A=[[0.9, 0.1], [0.1, 0.9]],
-            B=[[[1.0, 0.0], [0.0, 1.0]]],
+            # Full (n_states=2, n_states=2, n_actions=2) identity tensor.
+            B=[
+                [[1.0, 0.0], [0.0, 1.0]],
+                [[0.0, 1.0], [1.0, 0.0]],
+            ],
             C=[1.0, 0.0],
             D=[0.5, 0.5],
         )

@@ -103,13 +103,20 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.fixture()
-def client() -> TestClient:
+def client(tmp_path: Path) -> TestClient:
     """Real FastAPI test client with rate limiting effectively disabled.
 
     The ``rate_limit_requests=100000`` and a long window keep the limiter
-    from interfering with our diagnostic tests.
+    from interfering with our diagnostic tests. ``workspace_root`` plus
+    ``allow_absolute_paths`` lets absolute ``tiny_repo`` fixtures exercise
+    the real pipeline paths.
     """
-    app = create_app(rate_limit_requests=100000, rate_limit_window_s=3600.0)
+    app = create_app(
+        rate_limit_requests=100000,
+        rate_limit_window_s=3600.0,
+        workspace_root=tmp_path,
+        allow_absolute_paths=True,
+    )
     return TestClient(app)
 
 
@@ -284,13 +291,14 @@ class TestAnalyzeErrorPaths:
             "/analyze",
             json={"repo_path": "/no/such/path/zzz_targeted"},
         )
-        assert r.status_code == 404
+        # Absolute path outside the workspace root: 403 boundary rejection.
+        assert r.status_code == 403
         body = r.json()
         assert "detail" in body
         assert body["error_type"] in ("HTTPException", "FileNotFoundError")
 
     def test_analyze_unknown_stage_path(self, client: TestClient, tiny_repo: Path) -> None:
-        """Lines 639-640: ValueError/RuntimeError from runner → 500 envelope."""
+        """Unknown stage names are rejected by request validation (422)."""
         r = client.post(
             "/analyze",
             json={
@@ -299,8 +307,7 @@ class TestAnalyzeErrorPaths:
                 "skip_dynamic": True,
             },
         )
-        # Runner may surface an explicit ValueError (500) or run silently (200)
-        assert r.status_code in (200, 500)
+        assert r.status_code == 422
 
 
 # ============================================================================
@@ -353,7 +360,8 @@ class TestRoundtripErrorPaths:
             "/roundtrip",
             json={"repo_path": "/abs/no/such/dir_targeted", "threshold": 0.5},
         )
-        assert r.status_code == 404
+        # Absolute path outside the workspace root: 403 boundary rejection.
+        assert r.status_code == 403
 
     def test_roundtrip_threshold_out_of_range(self, client: TestClient) -> None:
         r = client.post("/roundtrip", json={"repo_path": "/tmp", "threshold": 5.0})
@@ -417,7 +425,7 @@ class TestApiV1AnalyzeError:
             "/api/v1/analyze",
             json={"repo_path": "/abs/no/such/path_targeted_v1"},
         )
-        assert r.status_code == 404
+        assert r.status_code == 403
 
     def test_unknown_stage_returns_5xx_or_200(self, client: TestClient, tiny_repo: Path) -> None:
         """Lines 921-922 path: ValueError → 500."""
@@ -438,7 +446,7 @@ class TestApiV1RoundtripError:
             "/api/v1/roundtrip",
             json={"repo_path": "/abs/no/such/path_targeted_v1_rt", "threshold": 0.5},
         )
-        assert r.status_code == 404
+        assert r.status_code == 403
 
     def test_threshold_validation(self, client: TestClient) -> None:
         r = client.post(
@@ -590,8 +598,9 @@ class TestMiddlewareExceptionSafetyNet:
         r = c.get("/_blowup_targeted")
         assert r.status_code == 500
         body = r.json()
-        assert body["error_type"] == "RuntimeError"
-        assert "boom from targeted" in body["detail"]
+        # Redacted 500 envelope: generic error type, no exception text leak.
+        assert body["error_type"] == "InternalServerError"
+        assert "boom from targeted" not in body.get("detail", "")
         assert "request_id" in body
 
 

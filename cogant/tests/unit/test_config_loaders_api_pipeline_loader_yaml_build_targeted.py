@@ -21,13 +21,12 @@ pytestmark = pytest.mark.unit
 
 
 class TestConfigLoaderYamlPath:
-    def test_load_from_yaml_raises_when_no_yaml(self, monkeypatch):
-        """Test ConfigLoadError when yaml not installed."""
-        import cogant.config.loaders as loaders
+    def test_load_from_yaml_missing_file_raises(self, tmp_path):
+        """A missing yaml path raises ConfigLoadError before parsing."""
+        from cogant.config.loaders import ConfigLoader, ConfigLoadError
 
-        monkeypatch.setattr(loaders, "HAS_YAML", False)
-        with pytest.raises(loaders.ConfigLoadError, match="PyYAML is not installed"):
-            loaders.ConfigLoader.load_from_yaml("/tmp/some.yaml")
+        with pytest.raises(ConfigLoadError, match="not found"):
+            ConfigLoader.load_from_yaml(tmp_path / "missing.yaml")
 
     def test_load_from_yaml_file_not_found(self, tmp_path):
         from cogant.config.loaders import HAS_YAML, ConfigLoader, ConfigLoadError
@@ -44,10 +43,13 @@ class TestConfigLoaderYamlPath:
             pytest.skip("yaml not available")
         import yaml
 
+        from cogant.config.schema import ProjectConfig
+
         f = tmp_path / "cfg.yaml"
-        f.write_text(yaml.dump({"key": "value"}))
+        f.write_text(yaml.dump({"cogant": {"max_workers": 5}}))
         result = ConfigLoader.load_from_yaml(f)
-        assert result == {"key": "value"}
+        assert isinstance(result, ProjectConfig)
+        assert result.cogant.max_workers == 5
 
     def test_load_from_yaml_invalid_yaml(self, tmp_path):
         from cogant.config.loaders import HAS_YAML, ConfigLoader, ConfigLoadError
@@ -64,10 +66,12 @@ class TestConfigLoaderYamlPath:
 
         if not HAS_YAML:
             pytest.skip("yaml not available")
+        from cogant.config.loaders import ConfigLoadError
+
         f = tmp_path / "list.yaml"
         f.write_text("- item1\n- item2\n")
-        result = ConfigLoader.load_from_yaml(f)
-        assert result == {}
+        with pytest.raises(ConfigLoadError, match="mapping/object"):
+            ConfigLoader.load_from_yaml(f)
 
 
 # ---------------------------------------------------------------------------
@@ -385,15 +389,16 @@ class TestPipelineRunnerRun:
             assert bundle.stage_results["dynamic"].get("skipped") is True
 
     def test_run_unknown_stage_adds_to_errors(self, tmp_path):
-        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+        # Unknown stages are rejected at construction (fail-fast).
+        from pydantic import ValidationError
 
-        cfg = PipelineConfig(
-            stages=["totally_fake_stage"],
-            output_dir=str(tmp_path / "output"),
-        )
-        runner = PipelineRunner()
-        bundle = runner.run(str(tmp_path), cfg)
-        assert any("Unknown stage" in e for e in bundle.errors)
+        from cogant.api.pipeline import PipelineConfig
+
+        with pytest.raises(ValidationError, match="unknown pipeline stages"):
+            PipelineConfig(
+                stages=["totally_fake_stage"],
+                output_dir=str(tmp_path / "output"),
+            )
 
     def test_run_returns_bundle_with_metadata(self, tmp_path):
         from cogant.api.pipeline import PipelineConfig, PipelineRunner

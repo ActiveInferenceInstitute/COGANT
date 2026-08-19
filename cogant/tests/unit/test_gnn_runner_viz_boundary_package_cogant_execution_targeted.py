@@ -529,8 +529,8 @@ class TestGNNPackageBuilderHelpers:
         builder = self._make_builder()
         result = builder._extract_policies()
         assert isinstance(result, list)
-        # Should at least have default policy
-        assert len(result) >= 1
+        # No POLICY mappings → no fabricated default policy (673db14).
+        assert result == []
 
     def test_extract_constraints_empty(self):
         builder = self._make_builder()

@@ -803,10 +803,12 @@ class TestConfigLoaders:
 
     def test_load_from_dict(self):
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
-        config = ConfigLoader.load_from_dict({"debug": True, "max_depth": 5})
+        config = ConfigLoader.load_from_dict({"cogant": {"max_workers": 5}})
         assert config is not None
-        assert isinstance(config, dict)
+        assert isinstance(config, ProjectConfig)
+        assert config.cogant.max_workers == 5
 
     def test_load_from_dict_empty(self):
         from cogant.config.loaders import ConfigLoader
@@ -816,26 +818,30 @@ class TestConfigLoaders:
 
     def test_load_default(self):
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         config = ConfigLoader.load_default()
-        assert isinstance(config, dict)
+        assert isinstance(config, ProjectConfig)
 
     def test_load_from_yaml(self, tmp_path):
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         cfg_file = tmp_path / "config.yaml"
-        cfg_file.write_text("debug: true\ntimeout: 30\n")
+        cfg_file.write_text("cogant:\n  timeout_seconds: 30\n")
         config = ConfigLoader.load_from_yaml(cfg_file)
-        assert isinstance(config, dict)
+        assert isinstance(config, ProjectConfig)
+        assert config.cogant.timeout_seconds == 30
 
     def test_load_json_from_file(self, tmp_path):
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         cfg_file = tmp_path / "config.json"
-        cfg_file.write_text(json.dumps({"debug": False, "timeout": 30}))
+        cfg_file.write_text(json.dumps({"cogant": {"timeout_seconds": 30}}))
         config = ConfigLoader.load_json_from_file(cfg_file)
-        assert isinstance(config, dict)
-        assert config.get("timeout") == 30
+        assert isinstance(config, ProjectConfig)
+        assert config.cogant.timeout_seconds == 30
 
     def test_merge_configs(self):
         from cogant.config.loaders import ConfigLoader

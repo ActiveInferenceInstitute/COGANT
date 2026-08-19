@@ -15,7 +15,6 @@ from __future__ import annotations
 import importlib
 import logging
 import sys
-from pathlib import Path
 
 import pytest
 
@@ -108,103 +107,61 @@ def restore_module() -> object:
 
 
 class TestLazyLoadFallbacks:
-    """Drive each ``except Exception`` arm in ``_lazy_load_parsers``."""
+    """The compatibility refresh logs unavailable parsers via the registry.
 
-    def test_python_parser_unavailable_logs_debug(
-        self, restore_module: object, caplog: pytest.LogCaptureFixture
-    ) -> None:
-        # Block python.parser → covers lines 60-61.
-        with caplog.at_level(logging.DEBUG, logger="cogant.ingest.language_detect"):
-            _force_lazy_load_with_blocked({"python.parser"})
-        assert any("Python tree-sitter parser unavailable" in rec.message for rec in caplog.records)
+    Parser selection moved to cogant.parsers.registry (673db14);
+    _lazy_load_parsers is a compatibility refresh, not a module-import
+    loader, so blocking module imports no longer changes behavior. The
+    observable contract: unavailable parsers produce a debug log and
+    PARSER_CLASSES keeps a typed entry for every registered language.
+    """
 
-    def test_javascript_tree_sitter_unavailable(
-        self, restore_module: object, caplog: pytest.LogCaptureFixture
-    ) -> None:
-        # Block JS tree-sitter → covers 74-75 (and forces the regex fallback to load).
-        with caplog.at_level(logging.DEBUG, logger="cogant.ingest.language_detect"):
-            _force_lazy_load_with_blocked({"javascript.parser"})
-        assert any(
-            "JavaScript tree-sitter parser unavailable" in rec.message for rec in caplog.records
+    def test_refresh_populates_all_registered_languages(self) -> None:
+        from cogant.ingest.language_detect import LanguageDetector
+
+        LanguageDetector.PARSER_CLASSES = dict.fromkeys(
+            ("python", "typescript", "javascript", "rust", "go"), None
         )
+        LanguageDetector._lazy_load_parsers()
+        assert set(LanguageDetector.PARSER_CLASSES) >= {
+            "python",
+            "typescript",
+            "javascript",
+            "rust",
+            "go",
+        }
+        assert all(cls is not None for cls in LanguageDetector.PARSER_CLASSES.values())
 
-    def test_typescript_tree_sitter_unavailable_falls_back_to_regex(
-        self, restore_module: object, caplog: pytest.LogCaptureFixture
-    ) -> None:
-        # Block TS tree-sitter → covers 87-88 + the regex-fallback log on 97-98.
-        with caplog.at_level(logging.DEBUG, logger="cogant.ingest.language_detect"):
-            _force_lazy_load_with_blocked({"typescript.tree_sitter_parser"})
-        msgs = [r.message for r in caplog.records]
-        assert any("TypeScript tree-sitter parser unavailable" in m for m in msgs)
-        # And the regex fallback log fires.
-        assert any("TypeScript using regex fallback parser" in m for m in msgs)
+    def test_refresh_logs_unavailable_parser(self, caplog: pytest.LogCaptureFixture) -> None:
+        from cogant.ingest import language_detect as mod
+        from cogant.ingest.language_detect import LanguageDetector
+        from cogant.parsers import LanguageParserUnavailable
 
-    def test_javascript_regex_fallback_log(
-        self, restore_module: object, caplog: pytest.LogCaptureFixture
-    ) -> None:
-        # Block JS tree-sitter → JS uses TS regex fallback. Covers 100-103.
-        with caplog.at_level(logging.DEBUG, logger="cogant.ingest.language_detect"):
-            _force_lazy_load_with_blocked({"javascript.parser"})
-        assert any(
-            "JavaScript using TypeScript regex fallback parser" in r.message for r in caplog.records
-        )
+        class _Unavailable:
+            @staticmethod
+            def _get_parser(language: str):
+                raise LanguageParserUnavailable(language, "no parser installed")
 
-    def test_typescript_regex_fallback_unavailable(
-        self, restore_module: object, caplog: pytest.LogCaptureFixture
-    ) -> None:
-        # Block both tree-sitter AND the regex parser → covers 102-103.
-        with caplog.at_level(logging.DEBUG, logger="cogant.ingest.language_detect"):
-            _force_lazy_load_with_blocked(
-                {
-                    "typescript.tree_sitter_parser",
-                    "typescript.parser",
-                    "javascript.parser",
-                }
+        original = mod.registry_get_parser
+        mod.registry_get_parser = _Unavailable._get_parser
+        try:
+            with caplog.at_level(logging.DEBUG, logger="cogant.ingest.language_detect"):
+                LanguageDetector._lazy_load_parsers()
+            assert any(
+                "unavailable during compatibility refresh" in rec.message for rec in caplog.records
             )
-        assert any(
-            "TypeScript/JavaScript regex fallback parser unavailable" in r.message
-            for r in caplog.records
-        )
-
-    def test_rust_parser_unavailable(
-        self, restore_module: object, caplog: pytest.LogCaptureFixture
-    ) -> None:
-        # Block rust.parser → covers 111-112.
-        with caplog.at_level(logging.DEBUG, logger="cogant.ingest.language_detect"):
-            _force_lazy_load_with_blocked({"rust.parser"})
-        assert any("Rust parser unavailable" in r.message for r in caplog.records)
-
-    def test_go_parser_unavailable(
-        self, restore_module: object, caplog: pytest.LogCaptureFixture
-    ) -> None:
-        # Block go.parser → covers 118-119.
-        with caplog.at_level(logging.DEBUG, logger="cogant.ingest.language_detect"):
-            _force_lazy_load_with_blocked({"go.parser"})
-        assert any("Go parser unavailable" in r.message for r in caplog.records)
-
-
-# ---------------------------------------------------------------------------
-# detect_repo_languages — exception branch
-# ---------------------------------------------------------------------------
+        finally:
+            mod.registry_get_parser = original
 
 
 class TestDetectRepoLanguagesErrorPath:
     """Drive the ``except Exception`` block on lines 159-160."""
 
-    def test_unreadable_repo_returns_empty_dict(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        # Force ``rglob`` to raise by passing a path object whose ``rglob``
-        # method blows up. ``detect_repo_languages`` swallows the exception
-        # and returns an empty dict.
-        class BadPath:
-            def rglob(self, _pattern: str):  # noqa: ANN001, D401
-                raise PermissionError("cannot read")
-
-        # Bypass the str→Path coercion by passing a Path-typed sentinel
-        # already resolved.
-        result = ld.LanguageDetector.detect_repo_languages(BadPath())  # type: ignore[arg-type]
-        assert result == {}
+    def test_missing_repo_raises(self) -> None:
+        # detect_repo_languages is fail-closed: a missing directory raises
+        # LanguageDetectionError instead of silently returning {}.
+        with pytest.raises(ld.LanguageDetectionError, match="does not exist"):
+            ld.LanguageDetector.detect_repo_languages("/definitely/not/a/repo/targeted")
 
 
 # ---------------------------------------------------------------------------

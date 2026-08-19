@@ -144,15 +144,20 @@ def test_translate_config_threshold_bounds():
 @pytest.mark.unit
 def test_pipeline_config_defaults_and_nesting():
     cfg = PipelineConfig()
-    # Default stage list
+    # Default stage list — the canonical RUNNER_STAGES sequence.
     assert cfg.stages == [
         "ingest",
         "static",
         "normalize",
         "graph",
+        "dynamic",
         "translate",
+        "statespace",
+        "process",
+        "export",
+        "validate",
     ]
-    assert cfg.skip_dynamic is True
+    assert cfg.skip_dynamic is False
     # Nested sub-config access
     assert isinstance(cfg.ingest, IngestConfig)
     assert isinstance(cfg.graph, GraphConfig)
@@ -167,10 +172,16 @@ def test_pipeline_config_defaults_and_nesting():
 
 
 @pytest.mark.unit
-def test_pipeline_config_is_frozen():
+def test_pipeline_config_assignment_is_validated():
+    """Assignments run field validation (673db14 replaced frozen with
+    validate_assignment so entry points can derive run instances)."""
     cfg = PipelineConfig()
+    # Invalid value rejected at assignment time.
     with pytest.raises(ValidationError):
-        cfg.skip_dynamic = False  # type: ignore[misc]
+        cfg.skip_dynamic = "not-a-bool"  # type: ignore[assignment]
+    # Valid assignment is permitted and re-validated.
+    cfg.skip_dynamic = True
+    assert cfg.skip_dynamic is True
 
 
 @pytest.mark.unit
@@ -188,10 +199,10 @@ def test_pipeline_config_sub_configs_are_still_frozen():
 @pytest.mark.unit
 def test_override_changes_scalar_field():
     cfg = PipelineConfig()
-    new_cfg = cfg.override(skip_dynamic=False)
-    assert new_cfg.skip_dynamic is False
-    # Original is untouched (immutability)
-    assert cfg.skip_dynamic is True
+    new_cfg = cfg.override(skip_dynamic=True)
+    assert new_cfg.skip_dynamic is True
+    # Original is untouched (override returns a new instance)
+    assert cfg.skip_dynamic is False
     # A new object is returned
     assert new_cfg is not cfg
 
@@ -360,7 +371,7 @@ def test_compatibility_default_skip_dynamic_shape():
     the default skip_dynamic is ``True`` on the new pydantic config.
     """
     cfg = PipelineConfig()
-    assert cfg.skip_dynamic is True
+    assert cfg.skip_dynamic is False
     assert "ingest" in cfg.stages
     assert cfg.skip_stages == []
     assert cfg.plugins == {}

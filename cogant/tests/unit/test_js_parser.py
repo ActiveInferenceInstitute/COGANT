@@ -121,12 +121,10 @@ def test_ts_tree_sitter_parser_routes_tsx(tmp_path):
 
 def test_get_parser_for_extension_unknown():
     from cogant.ingest.language_detect import get_parser_for_extension
-    from cogant.parsers.registry import LanguageParserUnavailable
 
-    with pytest.raises(LanguageParserUnavailable, match="no shipped parser"):
-        get_parser_for_extension(".xyz")
-    with pytest.raises(LanguageParserUnavailable, match="no shipped parser"):
-        get_parser_for_extension("")
+    # Unknown extensions fall back to None; callers decide how to surface it.
+    assert get_parser_for_extension(".xyz") is None
+    assert get_parser_for_extension("") is None
 
 
 def test_get_parser_for_extension_python():

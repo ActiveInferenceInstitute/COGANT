@@ -302,29 +302,31 @@ class TestConfigBuilderErrorPaths:
     def test_build_cogant_config_with_invalid_dict_raises(self) -> None:
         """A non-coercible field type raises ConfigLoadError."""
         bad = {"cogant": {"log_level": ["not", "a", "string"]}}
-        with pytest.raises(ConfigLoadError, match="Invalid CogantConfig"):
+        with pytest.raises(ConfigLoadError, match="Invalid project configuration"):
             ConfigLoader.build_cogant_config(bad)
 
     def test_build_pipeline_config_with_invalid_dict_raises(self) -> None:
-        bad = {"pipeline": {"max_import_depth": "not-an-int"}}
-        with pytest.raises(ConfigLoadError, match="Invalid PipelineConfig"):
+        bad = {"pipeline": {"max_workers": "not-an-int"}}
+        with pytest.raises(ConfigLoadError, match="Invalid project configuration"):
             ConfigLoader.build_pipeline_config(bad)
 
     def test_build_export_config_with_invalid_dict_raises(self) -> None:
         bad = {"export": {"include_metadata": ["nope"]}}
-        with pytest.raises(ConfigLoadError, match="Invalid ExportConfig"):
+        with pytest.raises(ConfigLoadError, match="Invalid project configuration"):
             ConfigLoader.build_export_config(bad)
 
     def test_build_validation_config_with_invalid_dict_raises(self) -> None:
-        bad = {"validation": {"large_graph_threshold": "not-an-int"}}
-        with pytest.raises(ConfigLoadError, match="Invalid ValidationConfig"):
+        bad = {"validation": {"strict": "not-a-bool-list"}}
+        with pytest.raises(ConfigLoadError, match="Invalid project configuration"):
             ConfigLoader.build_validation_config(bad)
 
 
 class TestConfigLoaderHappyPaths:
     """Round-trip every preset/file through build_*_config and load_all_configs."""
 
-    @pytest.mark.parametrize("preset", ["default", "minimal", "comprehensive", "gnn"])
+    @pytest.mark.parametrize(
+        "preset", ["default", "minimal", "standard", "comprehensive", "gnn-focused", "security"]
+    )
     def test_build_all_configs_with_each_preset(self, preset: str) -> None:
         c = ConfigLoader.build_cogant_config(preset=preset)
         p = ConfigLoader.build_pipeline_config(preset=preset)
@@ -336,32 +338,31 @@ class TestConfigLoaderHappyPaths:
         assert e is not None
         assert v is not None
 
-    def test_build_pipeline_config_yaml_stages_renamed_to_run_stages(self) -> None:
-        """The 'stages' YAML key is mapped to 'run_stages' before model construction."""
+    def test_build_pipeline_config_stages_field_round_trips(self) -> None:
+        """The pipeline 'stages' key populates the canonical stages field."""
         config = {
             "pipeline": {
                 "stages": ["ingest", "static", "graph"],
             }
         }
         result = ConfigLoader.build_pipeline_config(config)
-        # run_stages should now be populated
-        assert hasattr(result, "run_stages")
+        assert result.stages == ["ingest", "static", "graph"]
 
     def test_load_all_configs_with_yaml_path(self, tmp_path: Path) -> None:
         """Load all configs from a YAML file end-to-end."""
         pytest.importorskip("yaml")
         yaml_path = tmp_path / "all.yaml"
         yaml_path.write_text(
-            "cogant:\n  name: my-proj\n"
+            "cogant:\n  environment: production\n"
             "pipeline:\n  verbose: true\n"
             "export:\n  include_metadata: true\n"
-            "validation:\n  strict: false\n"
+            "validation:\n  validate_schema: false\n"
         )
         configs = ConfigLoader.load_all_configs(yaml_path=yaml_path)
-        assert "cogant" in configs
-        assert "pipeline" in configs
-        assert "export" in configs
-        assert "validation" in configs
+        assert configs.cogant.environment == "production"
+        assert configs.pipeline.verbose is True
+        assert configs.export.include_metadata is True
+        assert configs.validation.validate_schema is False
 
     def test_load_all_configs_with_yaml_path_and_preset(self, tmp_path: Path) -> None:
         """Combining a YAML override with a preset still produces all four configs."""
@@ -369,50 +370,61 @@ class TestConfigLoaderHappyPaths:
         yaml_path = tmp_path / "minimal_override.yaml"
         yaml_path.write_text("pipeline:\n  verbose: false\n")
         configs = ConfigLoader.load_all_configs(yaml_path=yaml_path, preset="minimal")
-        assert set(configs.keys()) == {"cogant", "pipeline", "export", "validation"}
+        assert configs.pipeline.verbose is False
 
     def test_load_all_configs_with_only_preset(self) -> None:
         configs = ConfigLoader.load_all_configs(preset="default")
-        assert set(configs.keys()) == {"cogant", "pipeline", "export", "validation"}
+        from cogant.config.schema import ProjectConfig
+
+        assert isinstance(configs, ProjectConfig)
 
     def test_load_all_configs_with_no_args(self) -> None:
         """No yaml + no preset -> uses DEFAULT_* baselines."""
         configs = ConfigLoader.load_all_configs()
-        assert set(configs.keys()) == {"cogant", "pipeline", "export", "validation"}
+        from cogant.config.schema import ProjectConfig
 
-    def test_load_default_returns_dict(self) -> None:
+        assert isinstance(configs, ProjectConfig)
+
+    def test_load_default_returns_project_config(self) -> None:
         result = ConfigLoader.load_default()
-        assert isinstance(result, dict)
-        assert {"cogant", "pipeline", "export", "validation"}.issubset(result.keys())
+        from cogant.config.schema import ProjectConfig
+
+        assert isinstance(result, ProjectConfig)
 
     def test_load_preset_unknown_lists_available(self) -> None:
         with pytest.raises(ConfigLoadError, match="Available:"):
             ConfigLoader.load_preset("nonexistent")
 
-    @pytest.mark.parametrize("preset", ["default", "minimal", "comprehensive", "gnn"])
+    @pytest.mark.parametrize(
+        "preset", ["default", "minimal", "standard", "comprehensive", "gnn-focused", "security"]
+    )
     def test_load_preset_each_preset(self, preset: str) -> None:
         result = ConfigLoader.load_preset(preset)
-        assert isinstance(result, dict)
-        assert "cogant" in result
+        from cogant.config.schema import ProjectConfig
+
+        assert isinstance(result, ProjectConfig)
+        assert result.cogant is not None
 
 
 class TestConfigLoaderJsonFile:
     def test_load_json_from_file_dict(self, tmp_path: Path) -> None:
         path = tmp_path / "cfg.json"
-        path.write_text('{"cogant": {"name": "x"}, "pipeline": {"verbose": true}}')
+        path.write_text('{"cogant": {"environment": "staging"}, "pipeline": {"verbose": true}}')
         result = ConfigLoader.load_json_from_file(path)
-        assert result == {"cogant": {"name": "x"}, "pipeline": {"verbose": True}}
+        assert result.cogant.environment == "staging"
+        assert result.pipeline.verbose is True
 
-    def test_load_json_from_file_list_returns_empty_dict(self, tmp_path: Path) -> None:
+    def test_load_json_from_file_list_raises(self, tmp_path: Path) -> None:
         path = tmp_path / "list.json"
         path.write_text("[1, 2, 3]")
-        assert ConfigLoader.load_json_from_file(path) == {}
+        with pytest.raises(ConfigLoadError, match="must be a mapping/object"):
+            ConfigLoader.load_json_from_file(path)
 
     def test_load_json_from_file_with_unicode(self, tmp_path: Path) -> None:
         path = tmp_path / "u.json"
-        path.write_text('{"name": "café"}', encoding="utf-8")
+        path.write_text('{"cogant": {"log_file": "café.log"}}', encoding="utf-8")
         result = ConfigLoader.load_json_from_file(path)
-        assert result == {"name": "café"}
+        assert result.cogant.log_file == "café.log"
 
 
 class TestConfigLoaderMerge:

@@ -63,16 +63,12 @@ class TestCogantInit:
         for name in cogant.__all__:
             assert hasattr(cogant, name), f"Missing: {name}"
 
-    def test_run_pipeline_session_none_raises(self):
+    def test_run_pipeline_session_is_always_a_class(self):
         import cogant
 
-        original = cogant.Session
-        try:
-            cogant.Session = None
-            with pytest.raises(ImportError):
-                cogant.run_pipeline("/tmp/nowhere")
-        finally:
-            cogant.Session = original
+        # The silent Session=None guard was removed (F15): first-party
+        # imports fail loudly at module import instead.
+        assert isinstance(cogant.Session, type)
 
 
 # ---------------------------------------------------------------------------

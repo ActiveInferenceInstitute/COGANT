@@ -130,11 +130,13 @@ class TestLanguageDetectorDetectRepoLanguages:
         result = LanguageDetector.detect_repo_languages(str(tmp_path))  # type: ignore
         assert isinstance(result, dict)
 
-    def test_nonexistent_dir_returns_empty(self, tmp_path):
-        from cogant.ingest.language_detect import LanguageDetector
+    def test_nonexistent_dir_raises(self, tmp_path):
+        import pytest as _pytest
 
-        result = LanguageDetector.detect_repo_languages(tmp_path / "nonexistent")
-        assert result == {}
+        from cogant.ingest.language_detect import LanguageDetectionError, LanguageDetector
+
+        with _pytest.raises(LanguageDetectionError, match="does not exist"):
+            LanguageDetector.detect_repo_languages(tmp_path / "nonexistent")
 
 
 class TestLanguageDetectorGetParser:

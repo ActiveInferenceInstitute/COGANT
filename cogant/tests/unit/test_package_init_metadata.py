@@ -208,17 +208,16 @@ class TestRunPipelineHappyPath:
 
 
 class TestRunPipelineErrorPath:
-    """Exercise the ImportError branch in ``run_pipeline`` (line 164)."""
+    """First-party imports fail loudly (RedTeam F15): the silent Session=None
+    guard was removed from run_pipeline, so the ImportError branch no longer
+    exists. Pin the loud-failure contract instead."""
 
-    def test_run_pipeline_raises_import_error_when_session_unavailable(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        # Replace the module-level Session symbol with None — no mocking
-        # framework, just attribute reassignment via monkeypatch which
-        # restores it after the test.
-        monkeypatch.setattr(cogant, "Session", None)
-        with pytest.raises(ImportError, match="cogant.api.session is not available"):
-            cogant.run_pipeline("ignored", "ignored")
+    def test_run_pipeline_session_is_always_a_class(self) -> None:
+        assert isinstance(cogant.Session, type)
+
+    def test_run_pipeline_rejects_missing_target(self) -> None:
+        with pytest.raises((FileNotFoundError, OSError, ValueError)):
+            cogant.run_pipeline("/definitely/not/a/repo/targeted")
 
 
 # ---------------------------------------------------------------------------

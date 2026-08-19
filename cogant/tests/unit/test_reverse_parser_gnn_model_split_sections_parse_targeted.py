@@ -682,7 +682,8 @@ class TestParseGNN:
             "## InitialParameterization\nD_f0={ (0.6, 0.4) }\n"
         )
         model = _parse_gnn(gnn)
-        assert len(model.D) == 1
+        # The factor D vector is preserved verbatim (s_f0 has cardinality 2).
+        assert model.D == [0.6, 0.4]
 
     def test_parse_connections(self):
         gnn = "## StateSpaceBlock\ns_f0[2]\n## Connections\ns_f0 -> o_m0\n"

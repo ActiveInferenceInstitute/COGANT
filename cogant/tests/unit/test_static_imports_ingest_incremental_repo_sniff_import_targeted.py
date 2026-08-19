@@ -511,6 +511,12 @@ u_c0[2, 1, type=int]
 s_f0 = HiddenState
 o_m0 = Observation
 u_c0 = Action
+
+## InitialParameterization
+D_f0={ (0.6, 0.4) }
+C_m0={ (0.5, 0.5) }
+A_m0={ ( (0.9, 0.2), (0.1, 0.8) ) }
+B_f0=identity(2,2,2)
 """)
 
     def test_import(self):
@@ -568,6 +574,12 @@ u_c0[2, 1, type=int]
 s_f0 = HiddenState
 o_m0 = Observation
 u_c0 = Action
+
+## InitialParameterization
+D_f0={ (0.6, 0.4) }
+C_m0={ (0.5, 0.5) }
+A_m0={ ( (0.9, 0.2), (0.1, 0.8) ) }
+B_f0=identity(2,2,2)
 """)
 
     def test_import(self):

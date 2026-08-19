@@ -253,18 +253,20 @@ def test_build_program_graph_env_disables_rust(monkeypatch) -> None:
 
 
 def test_build_program_graph_env_enables_rust_when_available(monkeypatch) -> None:
-    """COGANT_USE_RUST=1 returns the Rust adapter (when available)."""
+    """COGANT_USE_RUST=1 returns the Rust adapter (when available).
+
+    Without the compiled extension the request is fail-closed: an explicit
+    RuntimeError is raised rather than silently falling back to Python.
+    """
+    import pytest
+
     monkeypatch.setenv("COGANT_USE_RUST", "1")
     if RUST_AVAILABLE:
         builder = build_program_graph("repo://x")
         assert isinstance(builder, RustProgramGraphAdapter)
     else:
-        # Even with COGANT_USE_RUST=1 the code falls back to Python when
-        # the extension is not actually available.
-        builder = build_program_graph("repo://x")
-        from cogant.graph.builder import ProgramGraphBuilder
-
-        assert isinstance(builder, ProgramGraphBuilder)
+        with pytest.raises(RuntimeError, match="cogant._rust is not importable"):
+            build_program_graph("repo://x")
 
 
 def test_build_program_graph_unset_env_autodetect(monkeypatch) -> None:

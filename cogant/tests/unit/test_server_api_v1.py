@@ -11,8 +11,13 @@ from cogant.server.app import create_app  # noqa: E402
 
 
 @pytest.fixture()
-def client() -> TestClient:
-    app = create_app(rate_limit_requests=100000, rate_limit_window_s=3600.0)
+def client(tmp_path) -> TestClient:
+    app = create_app(
+        rate_limit_requests=100000,
+        rate_limit_window_s=3600.0,
+        workspace_root=tmp_path,
+        allow_absolute_paths=True,
+    )
     return TestClient(app)
 
 
@@ -64,7 +69,9 @@ def test_api_v1_metrics_has_total_requests(client):
 @pytest.mark.unit
 def test_api_v1_analyze_missing_repo_returns_error(client):
     r = client.post("/api/v1/analyze", json={"repo_path": "/nonexistent/path/xyz"})
-    assert r.status_code in (404, 422, 400, 500)
+    # Outside the workspace root: 403 boundary rejection; an in-bound missing
+    # path would be 404.
+    assert r.status_code in (403, 404, 422, 400, 500)
 
 
 @pytest.mark.unit
@@ -76,7 +83,7 @@ def test_api_v1_analyze_empty_body_returns_422(client):
 @pytest.mark.unit
 def test_api_v1_roundtrip_missing_path_returns_error(client):
     r = client.post("/api/v1/roundtrip", json={"repo_path": "/nonexistent/path/xyz"})
-    assert r.status_code in (404, 422, 400, 500)
+    assert r.status_code in (403, 404, 422, 400, 500)
 
 
 @pytest.mark.unit

@@ -186,23 +186,26 @@ class TestTypedExporter:
 
 
 class TestConfigLoader:
-    def test_load_default_returns_dict(self):
+    def test_load_default_returns_project_config(self):
         from cogant.config import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         result = ConfigLoader.load_default()
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
     def test_load_all_configs_no_path(self):
         from cogant.config import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         result = ConfigLoader.load_all_configs()
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
     def test_load_all_configs_with_preset(self):
         from cogant.config import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         result = ConfigLoader.load_all_configs(preset="minimal")
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
     def test_build_cogant_config_default(self):
         from cogant.config import ConfigLoader
@@ -235,21 +238,24 @@ class TestConfigModuleFunctions:
 
     def test_get_preset_minimal(self):
         from cogant.config import get_preset
+        from cogant.config.schema import ProjectConfig
 
         result = get_preset("minimal")
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
     def test_get_preset_comprehensive(self):
         from cogant.config import get_preset
+        from cogant.config.schema import ProjectConfig
 
         result = get_preset("comprehensive")
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
     def test_get_named_preset(self):
         from cogant.config import get_named_preset
+        from cogant.config.schema import ProjectConfig
 
         result = get_named_preset("minimal")
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
     def test_get_preset_unknown_raises(self):
         from cogant.config import get_preset

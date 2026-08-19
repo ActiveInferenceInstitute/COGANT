@@ -39,10 +39,11 @@ class TestConfigPresets:
 
     def test_get_preset_valid(self):
         from cogant.config.presets import get_preset, list_presets
+        from cogant.config.schema import ProjectConfig
 
         preset_name = list_presets()[0]
         result = get_preset(preset_name)
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
 
 # ---------------------------------------------------------------------------

@@ -371,7 +371,7 @@ class TestGNNMatricesMappingBranches:
         g = _make_graph()
         ss = _make_state_space()  # no actions
         m = GNNMatrices(g, [], ss)
-        assert m.n_actions == 1
+        assert m.n_actions == 0  # zero-dimensional state space: no invented actions
 
     def test_gnn_matrices_n_obs_fallback_to_state_space(self):
         """n_obs falls back to state_space.observations when no semantic obs."""

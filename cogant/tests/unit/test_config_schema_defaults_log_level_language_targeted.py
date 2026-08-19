@@ -215,48 +215,43 @@ class TestPipelineStage:
 
 
 class TestSchemaPipelineConfig:
-    def test_default_name(self):
+    """schema.PipelineConfig is an alias of the canonical config.pipeline model
+    (673db14): stages/skip_stages/skip_dynamic are the execution fields."""
+
+    def test_default_stages(self):
         from cogant.config.schema import PipelineConfig
 
         cfg = PipelineConfig()
-        assert cfg.name == "default"
+        assert "ingest" in cfg.stages
+        assert len(cfg.stages) >= 3
+        assert "validate" in cfg.stages
 
-    def test_default_run_stages(self):
+    def test_default_skip_stages_empty(self):
         from cogant.config.schema import PipelineConfig
 
         cfg = PipelineConfig()
-        assert "ingest" in cfg.run_stages
-        assert len(cfg.run_stages) >= 3
+        assert cfg.skip_stages == []
 
-    def test_default_analyze_tests(self):
+    def test_default_skip_dynamic_false(self):
         from cogant.config.schema import PipelineConfig
 
         cfg = PipelineConfig()
-        assert cfg.analyze_tests is True
+        assert cfg.skip_dynamic is False
 
-    def test_default_follow_imports(self):
+    def test_stages_reject_unknown_names(self):
+        import pytest as _pytest
+        from pydantic import ValidationError
+
         from cogant.config.schema import PipelineConfig
 
-        cfg = PipelineConfig()
-        assert cfg.follow_imports is True
+        with _pytest.raises(ValidationError):
+            PipelineConfig(stages=["not_a_stage"])
 
-    def test_custom_name(self):
+    def test_schema_alias_is_canonical_model(self):
+        from cogant.config import pipeline as pipeline_module
         from cogant.config.schema import PipelineConfig
 
-        cfg = PipelineConfig(name="my_pipeline")
-        assert cfg.name == "my_pipeline"
-
-    def test_exclude_patterns_default_empty(self):
-        from cogant.config.schema import PipelineConfig
-
-        cfg = PipelineConfig()
-        assert cfg.exclude_patterns == []
-
-    def test_max_import_depth_default(self):
-        from cogant.config.schema import PipelineConfig
-
-        cfg = PipelineConfig()
-        assert cfg.max_import_depth == 5
+        assert PipelineConfig is pipeline_module.PipelineConfig
 
 
 # ---------------------------------------------------------------------------

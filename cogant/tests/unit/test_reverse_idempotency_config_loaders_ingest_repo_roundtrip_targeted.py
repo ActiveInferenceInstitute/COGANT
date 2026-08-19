@@ -199,31 +199,42 @@ class TestConfigLoader:
 
         return ConfigLoader()
 
-    def test_load_default_returns_dict(self):
+    def test_load_default_returns_project_config(self):
+        from cogant.config.schema import ProjectConfig
+
         loader = self._make_loader()
         result = loader.load_default()
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
     def test_load_from_dict_identity(self):
+        from cogant.config.schema import ProjectConfig
+
         loader = self._make_loader()
-        data = {"version": "1.0.0", "log_level": "info"}
+        data = {"cogant": {"version": "1.0.0", "log_level": "info"}}
         result = loader.load_from_dict(data)
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
+        assert result.cogant.version == "1.0.0"
 
     def test_load_from_dict_empty(self):
+        from cogant.config.schema import ProjectConfig
+
         loader = self._make_loader()
         result = loader.load_from_dict({})
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
     def test_load_preset_default(self):
+        from cogant.config.schema import ProjectConfig
+
         loader = self._make_loader()
         result = loader.load_preset("default")
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
     def test_load_preset_minimal(self):
+        from cogant.config.schema import ProjectConfig
+
         loader = self._make_loader()
         result = loader.load_preset("minimal")
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
 
     def test_load_preset_unknown_raises(self):
         from cogant.config.loaders import ConfigLoadError
@@ -290,10 +301,12 @@ class TestConfigLoader:
 
         loader = self._make_loader()
         f = tmp_path / "config.json"
-        f.write_text(json.dumps({"version": "1.0.0", "log_level": "info"}))
+        f.write_text(json.dumps({"cogant": {"version": "1.0.0", "log_level": "info"}}))
         result = loader.load_json_from_file(f)
-        assert isinstance(result, dict)
-        assert result["version"] == "1.0.0"
+        from cogant.config.schema import ProjectConfig
+
+        assert isinstance(result, ProjectConfig)
+        assert result.cogant.version == "1.0.0"
 
 
 class TestConfigConstants:
@@ -304,25 +317,23 @@ class TestConfigConstants:
         assert len(PRESETS) >= 1
 
     def test_default_cogant_config_exists(self):
-        from cogant.config.loaders import DEFAULT_COGANT_CONFIG
+        from cogant.config.defaults import DEFAULT_COGANT_CONFIG
 
         assert DEFAULT_COGANT_CONFIG is not None
-        assert hasattr(DEFAULT_COGANT_CONFIG, "version") or isinstance(
-            DEFAULT_COGANT_CONFIG, (dict, object)
-        )
+        assert hasattr(DEFAULT_COGANT_CONFIG, "version")
 
     def test_default_pipeline_config_exists(self):
-        from cogant.config.loaders import DEFAULT_PIPELINE_CONFIG
+        from cogant.config.defaults import DEFAULT_PIPELINE_CONFIG
 
         assert DEFAULT_PIPELINE_CONFIG is not None
 
     def test_default_export_config_exists(self):
-        from cogant.config.loaders import DEFAULT_EXPORT_CONFIG
+        from cogant.config.defaults import DEFAULT_EXPORT_CONFIG
 
         assert DEFAULT_EXPORT_CONFIG is not None
 
     def test_default_validation_config_exists(self):
-        from cogant.config.loaders import DEFAULT_VALIDATION_CONFIG
+        from cogant.config.defaults import DEFAULT_VALIDATION_CONFIG
 
         assert DEFAULT_VALIDATION_CONFIG is not None
 

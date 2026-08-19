@@ -214,11 +214,13 @@ class TestConfigLoader:
 
     def test_load_from_yaml_valid(self, tmp_path):
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         p = tmp_path / "config.yaml"
-        p.write_text("cogant:\n  timeout: 30\n")
+        p.write_text("cogant:\n  timeout_seconds: 30\n")
         result = ConfigLoader.load_from_yaml(p)
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
+        assert result.cogant.timeout_seconds == 30
 
     def test_load_json_from_file_nonexistent(self, tmp_path):
         from cogant.config.loaders import ConfigLoader, ConfigLoadError
@@ -236,11 +238,13 @@ class TestConfigLoader:
 
     def test_load_json_from_file_valid(self, tmp_path):
         from cogant.config.loaders import ConfigLoader
+        from cogant.config.schema import ProjectConfig
 
         p = tmp_path / "config.json"
-        p.write_text('{"cogant": {"timeout": 30}}')
+        p.write_text('{"cogant": {"timeout_seconds": 30}}')
         result = ConfigLoader.load_json_from_file(p)
-        assert isinstance(result, dict)
+        assert isinstance(result, ProjectConfig)
+        assert result.cogant.timeout_seconds == 30
 
     def test_build_cogant_config_default(self):
         from cogant.config.loaders import ConfigLoader

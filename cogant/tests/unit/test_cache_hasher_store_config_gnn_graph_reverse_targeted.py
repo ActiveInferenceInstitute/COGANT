@@ -664,7 +664,23 @@ class TestCacheStore:
         store = CacheStore(cache_dir=tmp_path)
         key = CacheKey(repo_path="/r", content_hash="deadbeef" + "0" * 56, cogant_version="1.0")
         path = store._path_for(key)
-        assert path.parent.name == "de"  # first 2 chars of hash
+        # Filename is the sha256 of the full cache identity (repo, content,
+        # version, config/parser/rule digests), sharded by its first 2 hex chars.
+        import hashlib as _hl
+
+        identity = "\0".join(
+            (
+                key.repo_path,
+                key.content_hash,
+                key.cogant_version,
+                key.config_digest,
+                key.parser_digest,
+                key.rule_digest,
+            )
+        ).encode()
+        expected = _hl.sha256(identity).hexdigest()
+        assert path.stem == expected
+        assert path.parent.name == expected[:2]
 
     def test_serialize_deserialize_roundtrip(self, tmp_path):
         from cogant.cache.store import CacheEntry, CacheKey, CacheStore

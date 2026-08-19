@@ -472,12 +472,12 @@ class TestExtractionHelpers:
         assert len(result) == 1
         assert result[0]["name"] == "plain_str_action"
 
-    def test_extract_policies_default_stub(self):
+    def test_extract_policies_no_mappings_is_empty(self):
         b = _make_builder()
         result = b._extract_policies()
-        # No POLICY mappings → default stub
-        assert len(result) == 1
-        assert result[0]["id"] == "policy:default"
+        # No POLICY mappings → no fabricated default stub (673db14 removed
+        # invented policies; only real POLICY/ORCHESTRATION mappings emit).
+        assert result == []
 
     def test_extract_policies_with_policy_mapping(self):
         from cogant.schemas.semantic import MappingKind
@@ -745,11 +745,10 @@ class TestPipelineRunner:
         assert bundle.stage_results["dynamic"].get("skipped") is True
 
     def test_unknown_stage_generates_error(self):
-        """An unknown stage name should add an error but not raise."""
-        from cogant.api.pipeline import PipelineConfig, PipelineRunner
+        """An unknown stage name is rejected at construction (fail-fast)."""
+        from pydantic import ValidationError
 
-        runner = PipelineRunner()
-        cfg = PipelineConfig(stages=["nonexistent_stage_xyz"])
-        bundle = runner.run(".", cfg)
-        # Check that error was recorded
-        assert any("Unknown stage" in e or "nonexistent_stage_xyz" in e for e in bundle.errors)
+        from cogant.api.pipeline import PipelineConfig
+
+        with pytest.raises(ValidationError, match="unknown pipeline stages"):
+            PipelineConfig(stages=["nonexistent_stage_xyz"])
