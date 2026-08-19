@@ -12546,8 +12546,8 @@
 
 
 <h1 id="cogant-code-quality-audit-thermo-nuclear">COGANT Code Quality Audit (Thermo-Nuclear)</h1>
-<p><strong>Date:</strong> 2026-05-28 (post-restore verification)<br />
-<strong>Scope:</strong> Authored Python under <code>cogant/py/cogant/</code>, <code>tools/</code>, <code>scripts/</code>, <code>run_all.py</code>, outer <code>src/</code> (excludes <code>cogant/evaluation/eval_repos/**</code> vendored trees).<br />
+<p><strong>Date:</strong> 2026-05-28 (post-restore verification)
+<strong>Scope:</strong> Authored Python under <code>cogant/py/cogant/</code>, <code>tools/</code>, <code>scripts/</code>, <code>run_all.py</code>, outer <code>src/</code> (excludes <code>cogant/evaluation/eval_repos/**</code> vendored trees).
 <strong>Rubric:</strong> Thermo-nuclear maintainability review — 1k-line ceiling, anti-spaghetti, boundary cleanliness, code-judo restructuring.</p>
 <h2 id="executive-verdict">Executive verdict</h2>
 <p><strong>Pass (compatibility-shim cleanup complete).</strong> Wave-3 mechanical splits remain banned; W1/W2 semantic splits retained (<code>cli/</code>, <code>viz/png/</code>, <code>run_target</code>, mermaid parse/render). The <code>png_export.py</code> shim is deleted — canonical PNG API is <code>cogant.viz.png</code> with direct submodule imports in <code>viz/png/orchestrator.py</code>. CI blocks <code>scripts/split_*.py</code> via <code>tests/unit/test_no_mechanical_split_scripts.py</code>.</p>
