@@ -2,7 +2,7 @@
 project: cogant
 phase: current-readiness
 mode: source-grounded
-updated: 2026-06-07
+updated: 2026-09-08
 ---
 
 # COGANT Ideal State Artifact
@@ -54,7 +54,7 @@ uv run --directory cogant python ../tools/regenerate_metrics.py
 uv run python scripts/z_generate_manuscript_variables.py --strict
 uv run python tools/check_metrics_fresh.py
 uv run python tools/audit_docs_constants.py
-uv run python tools/audit_stage_list.py
+uv run --directory cogant python ../tools/audit_stage_list.py
 uv run python tools/audit_manuscript_numbers.py --output /tmp/cogant_number_audit.md
 uv run python tools/audit_manuscript_markdown_links.py
 uv run python tools/audit_manuscript_crossrefs.py
@@ -107,6 +107,15 @@ target.
 
 ## Changelog
 
+- **2026-09-08 — Review-and-improvement pass.** Property-law tests re-pinned
+  to the fail-closed renderer contract (laws 4/5/6 + matrix stochasticity);
+  `run_all` fail-fast now persists the partial manifest/summary, capture
+  steps are timeout-bounded, interrupted git clones self-repair; math-adjacency
+  and coverage-table gates fail loud on unavailable inputs; cog-p1-02 closed
+  (parser capability registry + fallback contract tests); METRICS.yaml
+  regenerated against commit-bound HEAD and the manuscript chain re-rendered
+  (publication readiness: ready). Full suite 9612 passed / 0 failed / 47
+  skipped, coverage 94.61%. See `REVIEW_LOG_2026-09-08.md`.
 - **2026-06-08 — Post-review hardening + held-out eval (round 2).**
   - **Guard audit (durable):** added `tools/audit_manuscript_math_adjacency.py`
     + `tests/test_audit_manuscript_math_adjacency.py` and wired it into the gate

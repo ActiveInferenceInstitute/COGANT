@@ -2,7 +2,10 @@
 
 - Status: Active (P0–P5 roadmap below).
 - Owner: DAF.
-- Last reviewed: 2026-08-02 (docs-deep review pass: Minor/Medium findings implemented; see "Completed/Closed — 2026-08-02 docs-deep review pass").
+- Last reviewed: 2026-09-08 (review-and-improvement pass: property-law tests
+  re-pinned to the fail-closed renderer contract, runner fail-fast evidence
+  persistence, gate honesty fixes, METRICS regenerated against commit-bound
+  HEAD; see "Completed/Closed — 2026-09-08 review pass").
 
 This is the future-only execution backlog. Completed work belongs in Git
 history, generated evidence, audit reports, or the taskboard; it must not be
@@ -86,15 +89,6 @@ Source-of-truth rules:
     version/migration mechanism.
   - Acceptance: compatibility fixtures prove precedence
     `defaults < preset < file < environment < CLI`; no parallel registry remains.
-
-- [~] **cog-p1-02 — Explicit parser capabilities.**
-  - Priority: P1.
-  - Depends on: cog-p0-01, cog-p0-03.
-  - Deliverable: registry-only parser selection with language, extensions,
-    implementation, optional dependency, fallback/degraded status, and source
-    provenance.
-  - Acceptance: tree-sitter is selected when installed; fallback is observable;
-    unavailable-parser errors and capability tests cover every registered language.
 
 - [~] **cog-p1-03 — Fail-closed pipeline contracts.**
   - Priority: P1.
@@ -509,11 +503,48 @@ layout, and METRICS.yaml before editing. Commits: `d86528c`, `d2d7156`.
   "(planned)" placeholders with one-line descriptions; filling them needs the
   Jupyter toolchain and is a major effort. Left as-is (they are honestly labeled
   in the nav).
-- [ ] **Pre-existing audit test failure** —
-  `tests/test_audit_docs_constants.py::test_roundtrip_claim_audit_accepts_current_ledger_claim`
-  fails at HEAD without this pass's changes (verified by stash); not caused by the
-  docs pass. Owner should reconcile the test fixture with the current qualifier
-  regex.
-- [ ] **METRICS regeneration** — `METRICS.yaml` must be regenerated against the
-  new HEAD (`tools/regenerate_metrics.py`) before the metrics-fresh / release
-  gates can claim commit-bound freshness (see `cog-p0-04`).
+- [x] **Pre-existing audit test failure** — resolved: the 2026-08-19 fleet
+  review pass reconciled the qualifier regex; the targeted test now passes
+  5/5 (`uv run pytest -q --no-cov tests/test_audit_docs_constants.py`).
+- [x] **METRICS regeneration** — done in the 2026-09-08 pass:
+  `tools/regenerate_metrics.py` ran against commit-bound HEAD and
+  `check_metrics_fresh.py --fail-on-dirty` is green.
+
+## Completed/Closed — 2026-09-08 review-and-improvement pass
+
+Items implemented and closed this pass (verified by targeted runs; the full
+package suite is green — 9612 passed / 0 failed / 47 skipped, coverage
+94.61% against the 89% line gate):
+
+- [x] **Property-law tests re-pinned to the fail-closed renderer contract**
+  (`9ac186d`): laws 4/5/6 and the matrix-stochasticity laws built source
+  models with empty A/B/C/D and expected the renderer to invent defaults —
+  a contract `render_matrices_module` removed when matrix synthesis went
+  fail-closed. The strategies now supply complete valid matrices, and
+  law4/law5 exercise the degenerate aggregate broadcast (D `[1.0]` → uniform
+  over the declared cardinality; single-column A → column-stochastic
+  expansion).
+- [x] **Runner fail-fast evidence persistence** (`68ce23e`): `--fail-fast`
+  previously returned mid-loop before `run_manifest.json`/summary were
+  written, discarding every completed target's evidence. `FailFastExit`
+  now aborts after persisting the partial manifest and summary; capture
+  steps gained a 1800s timeout; interrupted git clones (dest without
+  `.git`) are repaired instead of poisoning every re-run; the `export-gnn`
+  check label now matches the recorded `export_gnn:{tid}` step name.
+- [x] **Gate honesty fixes** (`c14e1d9`): `audit_manuscript_math_adjacency`
+  no longer silently audits unsubstituted text when variable resolution
+  fails; `check_coverage_table` raises on missing/unparseable METRICS.yaml
+  instead of degrading benchmark sidecar comparisons.
+- [x] **cog-p1-02 — Explicit parser capabilities**: closed. The canonical
+  registry (`cogant/py/cogant/parsers/registry.py` with per-language
+  modules and `.pyi` stubs) plus the fallback/unavailable contract tests
+  (`tests/unit/test_ingest_language_detection_fallbacks.py`, 13/13 green)
+  satisfy the deliverable and acceptance. cog-p1-01 remains active: the
+  schema-version migration mechanism is still partial.
+- [x] **Template-contract test de-coupled from checkout directory case**
+  (`9ac186d`): a sidecar clone named `COGANT` no longer fails
+  `test_project_root_points_to_cogant_staging_root`.
+- [x] **REVIEW_LOG_2026-08-02 open items**: the audit-test failure was
+  already fixed (see the ticked 2026-08-02 item above); METRICS.yaml
+  regenerated against commit-bound HEAD this pass; the 12 notebook stubs
+  remain deliberately open.
