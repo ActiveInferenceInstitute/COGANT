@@ -120,21 +120,20 @@ def test_law3_role_symmetry(a: dict[str, float], b: dict[str, float]) -> None:
 # ---------------------------------------------------------------------------
 
 
-@given(
-    n_states=st.integers(min_value=1, max_value=10),
-    n_obs=st.integers(min_value=1, max_value=10),
-    n_actions=st.integers(min_value=1, max_value=5),
-)
+@given(n_states=st.integers(min_value=1, max_value=10))
 @settings(max_examples=100, deadline=None)
-def test_law4_d_vector_normalization(n_states: int, n_obs: int, n_actions: int) -> None:
-    """Generated D vector must sum to approximately 1.0."""
+def test_law4_d_vector_normalization(n_states: int) -> None:
+    """Broadcast D vector must be uniform and sum to approximately 1.0."""
     model = ReverseGNNModel(
         model_name="test_model",
-        hidden_states=[f"s_f{i}" for i in range(n_states)],
-        observations=[f"o_m{i}" for i in range(n_obs)],
-        actions=[f"u_c{i}" for i in range(n_actions)],
-        # D is left empty so render_matrices_module generates the default
-        # uniform prior which must sum to 1.0.
+        hidden_states=["s_f0"],
+        cardinalities={"s_f0": n_states},
+        # The forward pipeline's degenerate aggregate prior (all mass on a
+        # single aggregate state). The renderer is fail-closed and never
+        # invents matrices, but it must broadcast the degenerate single-entry
+        # D uniformly over the declared factor cardinality, so the emitted D
+        # has n_states entries summing to 1.0.
+        D=[1.0],
     )
     source = render_matrices_module(model)
 
@@ -145,28 +144,39 @@ def test_law4_d_vector_normalization(n_states: int, n_obs: int, n_actions: int) 
     assert len(d_values) == n_states, f"D has {len(d_values)} entries, expected {n_states}"
     d_sum = sum(d_values)
     assert math.isclose(d_sum, 1.0, abs_tol=1e-4), f"D vector sum={d_sum}, expected ~1.0"
+    expected = 1.0 / n_states
+    for i, value in enumerate(d_values):
+        assert math.isclose(value, expected, abs_tol=1e-4), (
+            f"D[{i}]={value}, expected uniform {expected}"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Law 5: A shape consistency
-# If n_obs and n_states > 0 and A is empty -> generated A has shape
-# [n_obs][n_states]
+# A degenerate single-column aggregate A broadcasts to shape
+# [n_obs][n_states] with column-stochastic output
 # ---------------------------------------------------------------------------
 
 
 @given(
-    n_states=st.integers(min_value=1, max_value=8),
+    n_states=st.integers(min_value=2, max_value=8),
     n_obs=st.integers(min_value=1, max_value=8),
 )
 @settings(max_examples=100, deadline=None)
 def test_law5_a_shape_consistency(n_states: int, n_obs: int) -> None:
-    """When A is empty but n_obs and n_states > 0, generated A must be [n_obs][n_states]."""
+    """A degenerate aggregate A must broadcast to [n_obs][n_states], columns stochastic."""
+    # Column-stochastic single-column aggregate A (one aggregate state
+    # variable). The renderer is fail-closed, but it must broadcast the
+    # aggregate column across the declared hidden-state cardinality while
+    # keeping every emitted column a proper distribution.
     model = ReverseGNNModel(
         model_name="shape_test",
-        hidden_states=[f"s_f{i}" for i in range(n_states)],
-        observations=[f"o_m{i}" for i in range(n_obs)],
-        actions=["u_c0"],
-        # A left empty to trigger fallback generation.
+        hidden_states=["s_f0"],
+        cardinalities={"s_f0": n_states},
+        observations=["o_m0"],
+        C=[0.0] * n_obs,
+        A=[[1.0 / n_obs] for _ in range(n_obs)],
+        D=[1.0],
     )
     source = render_matrices_module(model)
 
@@ -180,9 +190,17 @@ def test_law5_a_shape_consistency(n_states: int, n_obs: int) -> None:
     assert a_block_match is not None, "A matrix block not found in generated source"
     row_matches = re.findall(r"\[([^\[\]]+)\]", a_block_match.group(1))
     assert len(row_matches) == n_obs, f"A has {len(row_matches)} rows, expected {n_obs}"
+    columns: list[list[float]] = [[] for _ in range(n_states)]
     for i, row_str in enumerate(row_matches):
         cols = [float(x.strip()) for x in row_str.split(",")]
         assert len(cols) == n_states, f"A row {i} has {len(cols)} cols, expected {n_states}"
+        for j, value in enumerate(cols):
+            columns[j].append(value)
+    for j, column in enumerate(columns):
+        col_sum = sum(column)
+        assert math.isclose(col_sum, 1.0, abs_tol=1e-4), (
+            f"A column {j} sums to {col_sum}, expected ~1.0"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -203,11 +221,25 @@ def test_law6_transition_normalization(
     action_idx: int,
 ) -> None:
     """transition(uniform_dist, k) must return a distribution summing to ~1.0."""
+    # The renderer is fail-closed, so supply the identity B the aggregate
+    # broadcast convention emits for a single-factor model: every action
+    # column of transition(uniform, k) must still be a proper distribution.
     model = ReverseGNNModel(
         model_name="trans_test",
-        hidden_states=[f"s_f{i}" for i in range(n_states)],
-        observations=[f"o_m{i}" for i in range(max(1, n_states))],
+        hidden_states=["s_f0"],
+        cardinalities={"s_f0": n_states},
+        observations=["o_m0"],
+        C=[0.0],
         actions=[f"u_c{i}" for i in range(n_actions)],
+        A=[[1.0]],
+        D=[1.0],
+        B=[
+            [
+                [1.0 if row == col else 0.0 for _ in range(n_actions)]
+                for col in range(n_states)
+            ]
+            for row in range(n_states)
+        ],
     )
     source = render_matrices_module(model)
 
