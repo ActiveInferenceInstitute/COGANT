@@ -151,16 +151,20 @@ def _load_json(path: Path) -> Any | None:
 
 
 def _load_metrics_yaml(package_root: Path) -> dict[str, Any]:
+    """Load METRICS.yaml; a missing or unparseable file is a gate error,
+    never a silent degradation of the benchmark sidecar comparison."""
     metrics_path = package_root / "evaluation" / "METRICS.yaml"
     if not metrics_path.is_file():
-        return {}
+        raise SystemExit(f"check_coverage_table: METRICS.yaml missing at {metrics_path}")
     try:
         import yaml
 
         data = yaml.safe_load(metrics_path.read_text(encoding="utf-8"))
-    except Exception:
-        return {}
-    return data if isinstance(data, dict) else {}
+    except Exception as exc:
+        raise SystemExit(f"check_coverage_table: cannot parse {metrics_path}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise SystemExit(f"check_coverage_table: {metrics_path} is not a mapping")
+    return data
 
 
 def _compare_metric_row(
