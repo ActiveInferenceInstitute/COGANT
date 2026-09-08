@@ -210,6 +210,7 @@ def run_cmd_capture(
     out_path: Path,
     log_fp: Any,
     step: str = "capture",
+    timeout: float | None = None,
 ) -> CommandResult:
     print(f"+ {' '.join(argv)} > {out_path}", file=log_fp, flush=True)
     if dry_run:
@@ -217,13 +218,21 @@ def run_cmd_capture(
         return CommandResult(0, 0.0)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     t0 = time.monotonic()
-    proc = subprocess.run(
-        argv,
-        cwd=str(cwd),
-        env=os.environ.copy(),
-        capture_output=True,
-        text=True,
-    )
+    try:
+        proc = subprocess.run(
+            argv,
+            cwd=str(cwd),
+            env=os.environ.copy(),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        dt = time.monotonic() - t0
+        partial = f"{exc.stdout or ''}{exc.stderr or ''}"
+        out_path.write_text(partial, encoding="utf-8")
+        report(f"  [{step}] TIMEOUT after {timeout}s", log_fp=log_fp)
+        return CommandResult(124, dt)
     dt = time.monotonic() - t0
     combined = (proc.stdout or "") + (proc.stderr or "")
     out_path.write_text(combined, encoding="utf-8")
@@ -306,6 +315,11 @@ def ensure_git_clone(
     if dest.exists() and (dest / ".git").is_dir():
         report(f"  [git_clone] skip (existing clone) {dest}", log_fp=log_fp)
         return CommandResult(0, 0.0)
+    if dest.exists():
+        # An interrupted clone leaves a partial directory without .git that
+        # would fail every subsequent clone with "already exists"; remove it.
+        report(f"  [git_clone] removing incomplete clone at {dest}", log_fp=log_fp)
+        shutil.rmtree(dest)
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     cmd = ["git", "clone"]
@@ -355,6 +369,14 @@ def command_record(
 
 class BundleSummaryError(RuntimeError):
     """Raised when a completed target cannot provide verifiable evidence."""
+
+
+class FailFastExit(RuntimeError):
+    """Raised when --fail-fast aborts the batch; carries the process exit code."""
+
+    def __init__(self, exit_code: int) -> None:
+        super().__init__(f"fail-fast exit {exit_code}")
+        self.exit_code = exit_code
 
 
 def _read_bundle(run_dir: Path) -> dict[str, Any]:
@@ -785,7 +807,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 report(f"warning: {label} exited {code}", log_fp=log_fp)
                 failures.append(label)
                 if options.fail_fast:
-                    return code
+                    raise FailFastExit(code)
             return 0
 
         if manuscript.get("enabled"):
@@ -806,8 +828,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 log_fp=log_fp,
                 step="manuscript_variables",
             )
-            if rc := check(result, "manuscript_variables"):
-                return rc
+            check(result, "manuscript_variables")
 
         if steps.get("doctor"):
             result = run_cmd(
@@ -817,8 +838,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 log_fp=log_fp,
                 step="doctor",
             )
-            if rc := check(result, "doctor"):
-                return rc
+            check(result, "doctor")
 
         output_root.mkdir(parents=True, exist_ok=True)
 
@@ -861,7 +881,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["failure_reason"] = "target needs either path or git_url"
                 manifest["targets"].append(entry)
                 if options.fail_fast:
-                    return 2
+                    raise FailFastExit(2)
                 continue
 
             manifest["targets"].append(entry)
@@ -885,8 +905,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record("git clone", step=f"git_clone:{tid}", result=result)
                 )
-                if rc := check(result, f"git_clone:{tid}"):
-                    return rc
+                check(result, f"git_clone:{tid}")
 
             if not options.dry_run and not target_path.exists():
                 print(f"error: missing target path {target_path}", file=sys.stderr)
@@ -902,7 +921,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                     "dashboard": False,
                 }
                 if options.fail_fast:
-                    return 2
+                    raise FailFastExit(2)
                 continue
 
             # With --layout-output the bundle is relocated to <run_dir>/data/bundle.json.
@@ -943,8 +962,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record(tr, step=f"translate:{tid}", result=result)
                 )
-                if rc := check(result, f"translate:{tid}"):
-                    return rc
+                check(result, f"translate:{tid}")
                 # Re-resolve after translate so downstream gates see the real path.
                 bundle_json = _bundle_path()
                 if not options.dry_run and not bundle_json.is_file():
@@ -964,12 +982,12 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                     out_path=run_dir / "scan.json",
                     log_fp=log_fp,
                     step=f"scan:{tid}",
+                    timeout=1800,
                 )
                 entry["commands"].append(
                     command_record(scan_cmd, step=f"scan:{tid}", result=result)
                 )
-                if rc := check(result, f"scan:{tid}"):
-                    return rc
+                check(result, f"scan:{tid}")
 
             if steps.get("graph_stdout"):
                 graph_cmd = ["uv", "run", "cogant", "graph", str(target_path)]
@@ -980,12 +998,12 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                     out_path=run_dir / "graph.txt",
                     log_fp=log_fp,
                     step=f"graph:{tid}",
+                    timeout=1800,
                 )
                 entry["commands"].append(
                     command_record(graph_cmd, step=f"graph:{tid}", result=result)
                 )
-                if rc := check(result, f"graph:{tid}"):
-                    return rc
+                check(result, f"graph:{tid}")
 
             if steps.get("export_gnn") and (options.dry_run or bundle_json.is_file()):
                 eg_dir = run_dir / "export_gnn"
@@ -1011,8 +1029,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record(ex, step=f"export_gnn:{tid}", result=result)
                 )
-                if rc := check(result, f"export-gnn:{tid}"):
-                    return rc
+                check(result, f"export_gnn:{tid}")
 
             if steps.get("render_site") and (options.dry_run or bundle_json.is_file()):
                 site_dir = run_dir / "site"
@@ -1031,8 +1048,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record(rv, step=f"render:{tid}", result=result)
                 )
-                if rc := check(result, f"render:{tid}"):
-                    return rc
+                check(result, f"render:{tid}")
 
             if steps.get("viz_png") and (options.dry_run or run_dir.is_dir()):
                 vz = ["uv", "run", "cogant", "viz", str(run_dir)]
@@ -1042,8 +1058,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record(vz, step=f"viz:{tid}", result=result)
                 )
-                if rc := check(result, f"viz:{tid}"):
-                    return rc
+                check(result, f"viz:{tid}")
 
             if steps.get("validate_run_dir") and (options.dry_run or run_dir.is_dir()):
                 val = ["uv", "run", "cogant", "validate", str(run_dir)]
@@ -1056,12 +1071,12 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                     out_path=run_dir / "validate.txt",
                     log_fp=log_fp,
                     step=f"validate:{tid}",
+                    timeout=1800,
                 )
                 entry["commands"].append(
                     command_record(val, step=f"validate:{tid}", result=result)
                 )
-                if rc := check(result, f"validate:{tid}"):
-                    return rc
+                check(result, f"validate:{tid}")
 
             explain_node = t.get("explain")
             if explain_node and isinstance(explain_node, str) and explain_node.strip():
@@ -1082,12 +1097,12 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                     out_path=run_dir / "explain.json",
                     log_fp=log_fp,
                     step=f"explain:{tid}",
+                    timeout=1800,
                 )
                 entry["commands"].append(
                     command_record(ex, step=f"explain:{tid}", result=result)
                 )
-                if rc := check(result, f"explain:{tid}"):
-                    return rc
+                check(result, f"explain:{tid}")
 
             if steps.get("roundtrip") and (options.dry_run or target_path.exists()):
                 rt_dir = run_dir / "roundtrip"
@@ -1116,8 +1131,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record(rt, step=f"roundtrip:{tid}", result=result)
                 )
-                if rc := check(result, f"roundtrip:{tid}"):
-                    return rc
+                check(result, f"roundtrip:{tid}")
 
             batch_api = STAGING_ROOT / "tools" / "batch_api.py"
 
@@ -1143,8 +1157,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record(ag, step=f"analyze_graph:{tid}", result=result)
                 )
-                if rc := check(result, f"analyze_graph:{tid}"):
-                    return rc
+                check(result, f"analyze_graph:{tid}")
 
             if steps.get("analyze_static") and (options.dry_run or target_path.exists()):
                 asta = [
@@ -1168,8 +1181,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record(asta, step=f"analyze_static:{tid}", result=result)
                 )
-                if rc := check(result, f"analyze_static:{tid}"):
-                    return rc
+                check(result, f"analyze_static:{tid}")
 
             if steps.get("export_multi") and (options.dry_run or bundle_json.is_file()):
                 exm = [
@@ -1193,8 +1205,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record(exm, step=f"export_multi:{tid}", result=result)
                 )
-                if rc := check(result, f"export_multi:{tid}"):
-                    return rc
+                check(result, f"export_multi:{tid}")
 
             if steps.get("visualize_diagrams") and (options.dry_run or target_path.exists()):
                 vzd = [
@@ -1218,8 +1229,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record(vzd, step=f"visualize:{tid}", result=result)
                 )
-                if rc := check(result, f"visualize:{tid}"):
-                    return rc
+                check(result, f"visualize:{tid}")
 
             if steps.get("inspection_artifacts") and (options.dry_run or run_dir.is_dir()):
                 insp = [
@@ -1241,8 +1251,7 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
                 entry["commands"].append(
                     command_record(insp, step=f"inspection_artifacts:{tid}", result=result)
                 )
-                if rc := check(result, f"inspection_artifacts:{tid}"):
-                    return rc
+                check(result, f"inspection_artifacts:{tid}")
 
             command_failures = [
                 str(command.get("step"))
@@ -1368,11 +1377,45 @@ def run_batch(options: RunBatchOptions | argparse.Namespace) -> int:
             manifest["summary"]["failed_steps"] = failures
             man_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
+    except FailFastExit as exc:
+        # --fail-fast abort: persist the partial evidence instead of
+        # discarding the manifest and summary for every completed target.
+        report(
+            f"fail-fast: aborting remaining batch steps (exit {exc.exit_code})",
+            log_fp=log_fp,
+        )
+        for target in manifest["targets"]:
+            if target.get("status") != "running":
+                continue
+            target["status"] = "failed"
+            abort_tid = str(target.get("id"))
+            abort_steps = _failures_for_target(failures, abort_tid)
+            target["failed_steps"] = sorted(set(abort_steps)) or ["fail_fast"]
+            target["failure_reason"] = "batch aborted by --fail-fast"
+        manifest["finished_at"] = datetime.now(UTC).isoformat()
+        manifest["summary"] = {
+            "total_wall_time_s": round(time.monotonic() - batch_start, 3),
+            "target_count": n_targets,
+            "failed_steps": failures,
+            "fail_fast": True,
+        }
+        if not options.dry_run:
+            _write_cross_target_summary(
+                output_root,
+                manifest,
+                package_root=package_root,
+                log_fp=log_fp,
+            )
+            (output_root / "run_manifest.json").write_text(
+                json.dumps(manifest, indent=2), encoding="utf-8"
+            )
+        return exc.exit_code
+
     finally:
         if log_fp is not sys.stdout:
             log_fp.close()
 
     # Propagate batch failure through the process exit code so CI and
     # run.sh callers can detect a failed sweep without parsing summary.json.
-    # (--fail-fast still early-returns the nonzero code mid-loop.)
+    # (--fail-fast aborts mid-loop after persisting the partial manifest.)
     return 1 if failures else 0
