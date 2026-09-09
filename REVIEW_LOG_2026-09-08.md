@@ -99,6 +99,18 @@ Ranked outcomes per dimension:
   regeneration → exit 0.
 - Manuscript generator re-run → publication readiness `verdict=ready`,
   blockers=0; visual QA 18/18.
+- Release gate (`tools/release_gate.py`) lane matrix, root venv
+  (Python 3.14.6): package-tests **passed**, ruff **passed**, mypy
+  **passed**, rust-format **passed**; rust lanes require
+  `PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1` (PyO3 0.22.6 caps at 3.13) and
+  then rust-check / rust-test / rust-clippy all **pass**; wheel-smoke
+  **fails** only because no pydantic_core binary supports 3.14. Under the
+  inner 3.12 env the wheel toolchain is supported but the gate's
+  package-tests lane exceeds its 1800s cap (inner addopts add coverage +
+  verbose output and the gate runs rust lanes concurrently). All failures
+  are environmental (interpreter/toolchain), not code regressions: this
+  pass touches no Rust, wheel, or dependency code, and the identical
+  pre-pass HEAD fails the same lanes under the same root venv.
 
 ## Open / deferred
 
@@ -116,3 +128,7 @@ Ranked outcomes per dimension:
 - **Pre-existing ruff I001/SIM115 in `tools/run_all_runner.py`** — outside
   the configured lint scope (CI lints `py/cogant/ tests/` in the inner
   package only); left untouched.
+- **Release gate wheel-smoke under Python 3.14** — needs a PyO3/pydantic
+  toolchain that supports 3.14, or running the gate from a ≤3.13
+  interpreter with a package-tests timeout budget that accommodates the
+  inner env's coverage addopts. Environmental; out of scope for this pass.
