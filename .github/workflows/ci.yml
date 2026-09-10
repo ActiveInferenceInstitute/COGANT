@@ -295,8 +295,12 @@ jobs:
           PY
 
       - name: Release integrity and wheel reproducibility
+        # PYTHONPATH points at the clean target install so the OpenAPI
+        # contract check imports cogant from the wheel under test; without
+        # it the audit failed with "No module named 'cogant'" (latent
+        # defect: this job is needs: lint and lint never reached green).
         run: |
-          python ../tools/audit_release_integrity.py \
+          PYTHONPATH=/tmp/cogant-wheel-install python ../tools/audit_release_integrity.py \
             --wheel /tmp/cogant-wheelhouse/cogant-*.whl \
             --require-wheel \
             --check-wheel-reproducibility
