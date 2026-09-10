@@ -58,29 +58,47 @@ def reverse_model(draw) -> ReverseGNNModel:
     model.actions = [f"u_c{i}" for i in range(n_actions)]
     model.raw_model_name = "law5_model"
 
-    # Randomly decide whether to supply an explicit A/B/C/D or let
-    # the renderer fall back to shape-consistent defaults. Both
-    # branches must produce stochastic columns.
-    if draw(st.booleans()):
-        # Provide an A where each column is a random positive vector;
-        # the renderer is documented to leave A untouched on the
-        # happy path, so we also normalise it up-front to match the
-        # post-render invariant.
-        raw_rows = [
-            [draw(st.floats(min_value=0.1, max_value=10.0)) for _ in range(n_states)]
-            for _ in range(n_obs)
-        ]
-        col_sums = [sum(raw_rows[i][j] for i in range(n_obs)) for j in range(n_states)]
-        model.A = [[raw_rows[i][j] / col_sums[j] for j in range(n_states)] for i in range(n_obs)]
-    # else: leave A empty -> renderer emits uniform 1/n_obs columns.
+    # The reverse renderer is fail-closed: it never invents a missing
+    # matrix, so the strategy always supplies a complete, valid source
+    # model — column-stochastic A, column-stochastic B per action, zero
+    # preferences, and a normalized D. Both the source model and the
+    # emitted module must satisfy the stochasticity invariants.
+    raw_rows = [
+        [draw(st.floats(min_value=0.1, max_value=10.0)) for _ in range(n_states)]
+        for _ in range(n_obs)
+    ]
+    col_sums = [sum(raw_rows[i][j] for i in range(n_obs)) for j in range(n_states)]
+    model.A = [[raw_rows[i][j] / col_sums[j] for j in range(n_states)] for i in range(n_obs)]
 
-    if draw(st.booleans()):
-        # Leave D empty so the renderer synthesises a uniform prior.
-        pass
-    else:
-        raw_d = [draw(st.floats(min_value=0.1, max_value=10.0)) for _ in range(n_states)]
-        total = sum(raw_d)
-        model.D = [v / total for v in raw_d]
+    raw_d = [draw(st.floats(min_value=0.1, max_value=10.0)) for _ in range(n_states)]
+    d_total = sum(raw_d)
+    model.D = [v / d_total for v in raw_d]
+
+    raw_b = [
+        [
+            [draw(st.floats(min_value=0.1, max_value=10.0)) for _ in range(n_actions)]
+            for _ in range(n_states)
+        ]
+        for _ in range(n_states)
+    ]
+    b_col_sums = [
+        [
+            sum(raw_b[target][source][action] for target in range(n_states))
+            for action in range(n_actions)
+        ]
+        for source in range(n_states)
+    ]
+    model.B = [
+        [
+            [
+                raw_b[target][source][action] / b_col_sums[source][action]
+                for action in range(n_actions)
+            ]
+            for source in range(n_states)
+        ]
+        for target in range(n_states)
+    ]
+    model.C = [0.0] * n_obs
 
     return model
 

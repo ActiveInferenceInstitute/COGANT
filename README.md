@@ -51,8 +51,7 @@ Audit drift-sensitive docs and stubs:
 ```bash
 uv run python tools/audit_docs_constants.py
 uv run python tools/audit_folder_docs.py
-uv run python tools/audit_pyi_exports.py
-uv run python tools/audit_stage_list.py
+uv run --directory cogant python ../tools/audit_stage_list.py
 uv run python tools/audit_manuscript_crossrefs.py
 uv run python tools/audit_manuscript_citations.py
 uv run python tools/audit_manuscript_numbers.py

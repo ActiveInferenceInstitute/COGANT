@@ -82,17 +82,16 @@ def find_digit_adjacent_math(text: str) -> list[tuple[int, int, str]]:
 
 
 def _resolve(text: str) -> str:
-    """Best-effort manuscript-variable resolution so token-adjacent leaks
-    (``$-${{COUNT}}`` -> ``$-$10``) are caught. Falls back to raw text if the
-    injector or METRICS.yaml is unavailable."""
-    try:
-        sys.path.insert(0, str(ROOT / "tools"))
-        import inject_manuscript_vars as inj  # type: ignore
+    """Resolve manuscript variables so token-adjacent leaks
+    (``$-${{COUNT}}`` -> ``$-$10``) are caught. The audit runs from the
+    inner package environment (``uv run --directory cogant``), where
+    ``load_metrics`` is importable; a resolution failure is a gate error,
+    not a reason to audit unsubstituted text, so it propagates."""
+    sys.path.insert(0, str(ROOT / "tools"))
+    import inject_manuscript_vars as inj  # type: ignore
 
-        resolved, _ = inj.inject(text, inj.load_metrics(), dry_run=False)
-        return resolved
-    except Exception:
-        return text
+    resolved, _ = inj.inject(text, inj.load_metrics(), dry_run=False)
+    return resolved
 
 
 def audit(manuscript_dir: Path) -> list[str]:
