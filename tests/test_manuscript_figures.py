@@ -161,6 +161,7 @@ def test_copy_manuscript_figures_writes_template_figure_registry(tmp_path: Path)
             "role": "test",
             "sha256": registry["figures"][0]["sha256"],
             "source_artifact": "",
+            "alt_text": "",
         }
     ]
 

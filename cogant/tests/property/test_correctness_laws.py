@@ -234,10 +234,7 @@ def test_law6_transition_normalization(
         A=[[1.0]],
         D=[1.0],
         B=[
-            [
-                [1.0 if row == col else 0.0 for _ in range(n_actions)]
-                for col in range(n_states)
-            ]
+            [[1.0 if row == col else 0.0 for _ in range(n_actions)] for col in range(n_states)]
             for row in range(n_states)
         ],
     )

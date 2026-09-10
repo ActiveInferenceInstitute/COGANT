@@ -11,6 +11,7 @@ import ast
 import re
 from pathlib import Path
 
+
 def improve_file(path: Path) -> dict:
     source = path.read_text()
     lines = source.splitlines(keepends=True)

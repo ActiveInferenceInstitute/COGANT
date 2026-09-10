@@ -21,7 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
+        # Full history: check_metrics_fresh.py verifies that METRICS.yaml's
+        # ``generator_git_sha`` is an ancestor of HEAD; a shallow checkout
+        # (default depth 1) cannot walk ancestry on the PR merge ref, so the
+        # gate fails with "not an ancestor of HEAD" even when METRICS is in
+        # sync.
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v8.1.0
@@ -111,8 +118,12 @@ jobs:
       - name: Synthetic-surface classification gate
         # Every retained fallback/mock/placeholder/stub occurrence in tracked
         # project-owned files must be classified as degraded output, template
-        # variable, type stub, negative control, or UI empty state.
-        run: cd .. && uv run --directory cogant python ../tools/audit_synthetic_surfaces.py --strict
+        # variable, type stub, negative control, or UI empty state. --strict
+        # additionally validates generated public artifacts (output/manuscript,
+        # figure sidecars), which only exist after a pipeline run — that lane
+        # belongs to tools/release_gate.py on a rendered worktree, not a clean
+        # CI checkout, so CI enforces the classification layer only.
+        run: cd .. && uv run --directory cogant python ../tools/audit_synthetic_surfaces.py
 
       - name: Manuscript figure-renderer provenance gate
         # Registered manuscript figures must point to importable renderers and
@@ -148,7 +159,12 @@ jobs:
         run: MYPYPATH=py uv run mypy --package cogant --strict --no-warn-unused-configs
 
   test:
-    name: Test (py${{ matrix.python-version }})
+    # No explicit ``name:``: matrix context in ``jobs.<job_id>.name`` only
+    # expands for jobs that actually RUN — while the job is skipped (e.g.
+    # ``needs: lint`` failing) GitHub renders the raw ``${{ matrix.* }}``
+    # expression literally in the UI. Dropping the name lets GitHub apply
+    # its default matrix naming (``test (3.11)`` …), which renders the
+    # expanded python version in both skipped and executed states.
     runs-on: ubuntu-latest
     needs: lint
     strategy:
@@ -232,6 +248,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      # audit_release_integrity --check-wheel-reproducibility rebuilds the
+      # wheel via ``uv build``; without this step the job dies with
+      # FileNotFoundError: 'uv' (latent defect: the job is ``needs: lint``
+      # and lint never reached green until now).
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -270,8 +295,12 @@ jobs:
           PY
 
       - name: Release integrity and wheel reproducibility
+        # PYTHONPATH points at the clean target install so the OpenAPI
+        # contract check imports cogant from the wheel under test; without
+        # it the audit failed with "No module named 'cogant'" (latent
+        # defect: this job is needs: lint and lint never reached green).
         run: |
-          python ../tools/audit_release_integrity.py \
+          PYTHONPATH=/tmp/cogant-wheel-install python ../tools/audit_release_integrity.py \
             --wheel /tmp/cogant-wheelhouse/cogant-*.whl \
             --require-wheel \
             --check-wheel-reproducibility
