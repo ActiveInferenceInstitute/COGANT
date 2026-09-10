@@ -248,6 +248,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      # audit_release_integrity --check-wheel-reproducibility rebuilds the
+      # wheel via ``uv build``; without this step the job dies with
+      # FileNotFoundError: 'uv' (latent defect: the job is ``needs: lint``
+      # and lint never reached green until now).
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
