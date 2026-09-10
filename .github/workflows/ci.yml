@@ -21,7 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
+        # Full history: check_metrics_fresh.py verifies that METRICS.yaml's
+        # ``generator_git_sha`` is an ancestor of HEAD; a shallow checkout
+        # (default depth 1) cannot walk ancestry on the PR merge ref, so the
+        # gate fails with "not an ancestor of HEAD" even when METRICS is in
+        # sync.
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v8.1.0
