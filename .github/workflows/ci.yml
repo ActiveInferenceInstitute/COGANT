@@ -118,8 +118,12 @@ jobs:
       - name: Synthetic-surface classification gate
         # Every retained fallback/mock/placeholder/stub occurrence in tracked
         # project-owned files must be classified as degraded output, template
-        # variable, type stub, negative control, or UI empty state.
-        run: cd .. && uv run --directory cogant python ../tools/audit_synthetic_surfaces.py --strict
+        # variable, type stub, negative control, or UI empty state. --strict
+        # additionally validates generated public artifacts (output/manuscript,
+        # figure sidecars), which only exist after a pipeline run — that lane
+        # belongs to tools/release_gate.py on a rendered worktree, not a clean
+        # CI checkout, so CI enforces the classification layer only.
+        run: cd .. && uv run --directory cogant python ../tools/audit_synthetic_surfaces.py
 
       - name: Manuscript figure-renderer provenance gate
         # Registered manuscript figures must point to importable renderers and
