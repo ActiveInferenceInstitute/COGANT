@@ -108,7 +108,6 @@ from manuscript_vars import (  # noqa: E402
     substitute_text,
 )
 
-
 logger = get_logger(__name__)
 
 MANUSCRIPT_DIR = COGANT_STAGING_ROOT / "manuscript"

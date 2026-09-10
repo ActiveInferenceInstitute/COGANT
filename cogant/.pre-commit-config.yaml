@@ -16,15 +16,18 @@ repos:
       # CI ratchet (.github/workflows/ci.yml :: Lint (ruff)). Auxiliary
       # scripts under tools/, scripts/, manuscript/, etc. are intentionally
       # not policed by pre-commit yet — see CONTRIBUTING.md "Lint scope".
-      # NOTE: pre-commit is invoked from the repo root by both
-      # ``pre-commit run --config cogant/.pre-commit-config.yaml`` (CI) and
-      # ``pre-commit install`` from inside ``cogant/`` (local), so we
-      # accept either prefix.
+      # NOTE: pre-commit always matches ``files`` against paths relative to
+      # the git repo root (COGANT/), regardless of the cwd the command was
+      # invoked from, so the ``cogant/`` prefix is required. A bare
+      # ``tests/`` alternative would also sweep the repo-root ``tests/``
+      # tree (tools audit tests) which is NOT covered by the CI ruff
+      # ratchet and formats under a different ruff config — on CI that made
+      # this hook rewrite 24 files and fail every run.
       - id: ruff
         args: [--fix]
-        files: ^(cogant/)?(py/cogant/|tests/)
+        files: ^cogant/(py/cogant|tests)/
       - id: ruff-format
-        files: ^(cogant/)?(py/cogant/|tests/)
+        files: ^cogant/(py/cogant|tests)/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

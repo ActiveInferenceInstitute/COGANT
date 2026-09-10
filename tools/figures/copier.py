@@ -313,6 +313,10 @@ def _write_template_figure_registry(
                     "generated_by": record.get("renderer", ""),
                     "source_artifact": record.get("source_artifact", ""),
                     "sha256": record.get("sha256", ""),
+                    # The template HTML renderer refuses figures without
+                    # accessibility alt text (``require_record_alt``), so
+                    # every registry record carries the registered alt text.
+                    "alt_text": record.get("alt_text", ""),
                 }
             )
     registry = {
