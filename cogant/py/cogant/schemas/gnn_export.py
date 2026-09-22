@@ -2,7 +2,7 @@
 GNNExportBundle: Comprehensive export format for Generalized Notation Notation (GNN).
 
 "GNN" here refers to the Active Inference Institute's Generalized Notation Notation
-(https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation), a structured
+(https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation), a structured
 notation for Active Inference state-space and process models — not graph neural networks.
 
 Packages all analysis artifacts (graph structure, semantic mappings, state space,

@@ -14,9 +14,9 @@ Date: 2026-06-12
 
 ## Spec Source
 
-- Primary: https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation/blob/main/doc/gnn/gnn_syntax.md
-- Type-checker: https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation/blob/main/src/type_checker/checker.py
-- Examples: https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation/tree/main/input/gnn_files/discrete/
+- Primary: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/blob/main/doc/gnn/gnn_syntax.md
+- Type-checker: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/blob/main/src/type_checker/checker.py
+- Examples: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation/tree/main/input/gnn_files/discrete/
 
 ## Compliance Check
 

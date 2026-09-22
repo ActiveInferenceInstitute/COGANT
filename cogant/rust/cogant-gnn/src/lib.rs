@@ -1,7 +1,7 @@
 //! GNN export and formatting.
 //!
 //! "GNN" in COGANT refers to the Active Inference Institute's Generalized
-//! Notation Notation (https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation),
+//! Notation Notation (https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation),
 //! a structured notation for Active Inference state-space and process models —
 //! NOT graph neural networks. This crate provides functionality for exporting
 //! program graphs into that notation.

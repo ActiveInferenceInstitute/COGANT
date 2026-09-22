@@ -3,7 +3,7 @@
 Translates software repositories into Generalized Notation Notation (GNN) — the
 Active Inference Institute's structured state-space / process-model notation
 (NOT graph neural networks). See
-https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.
+https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.
 
 The output of a COGANT run is a GNN-compatible model bundle: hidden states,
 observation modalities, actions, policies, transitions, likelihoods,
