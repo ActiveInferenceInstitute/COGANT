@@ -7,7 +7,7 @@ GNN spec validation audit and fixed in this session:
 2. Connections section uses bare variable names without parentheses.
 3. No duplicate ``## Connections`` header (COGANT extended section renamed).
 
-Spec source: https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation
+Spec source: https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation
              doc/gnn/reference/gnn_syntax.md v2.0.0
 Upstream type-checker: src/type_checker/checker.py
 

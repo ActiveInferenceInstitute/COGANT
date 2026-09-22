@@ -74,7 +74,7 @@ from cogant.markov import MarkovBlanketExtractor
 
 # Public documentation URL. ``GET /docs`` redirects here when FastAPI's
 # built-in OpenAPI UI is not available.
-COGANT_DOCS_URL = "https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation"
+COGANT_DOCS_URL = "https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation"
 
 logger = logging.getLogger("cogant.demo_server")
 

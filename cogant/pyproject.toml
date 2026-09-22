@@ -64,7 +64,7 @@ analytics = [
     "duckdb>=0.9",
 ]
 upstream = [
-    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/GeneralizedNotationNotation.git@11a89f0615f1e48ddacca58d1bcf3c5092b1b055",
+    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git@11a89f0615f1e48ddacca58d1bcf3c5092b1b055",
 ]
 all = [
     "pytest>=7.4.0",
