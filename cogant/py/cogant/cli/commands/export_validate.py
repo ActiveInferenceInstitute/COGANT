@@ -1,6 +1,7 @@
 """CLI command registrations."""
 
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.panel import Panel
@@ -271,13 +272,33 @@ def diff(
         console.print("\n[green]✓ Diff complete[/green]")
         return
 
+    if p_a.is_dir() or p_b.is_dir():
+        console.print(
+            "[red]Error: compare two run directories or two bundle JSON files, "
+            f"not a directory with a file:[/red] {p_a} ↔ {p_b}"
+        )
+        raise typer.Exit(code=2)
+
     # JSON bundle diff via DriftAnalyzer when payloads look like bundles.
     import json
 
-    with open(p_a) as f:
-        data1 = json.load(f)
-    with open(p_b) as f:
-        data2 = json.load(f)
+    def _load_bundle_json(path: Path) -> dict[str, Any]:
+        try:
+            with open(path, encoding="utf-8") as f:
+                loaded = json.load(f)
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            console.print(f"[red]Error: Not a bundle JSON object:[/red] {path} ({exc})")
+            raise typer.Exit(code=2) from exc
+        if not isinstance(loaded, dict):
+            console.print(
+                f"[red]Error: Not a bundle JSON object:[/red] {path} "
+                f"(top level is {type(loaded).__name__})"
+            )
+            raise typer.Exit(code=2)
+        return loaded
+
+    data1 = _load_bundle_json(p_a)
+    data2 = _load_bundle_json(p_b)
 
     bundle_keys = {"graph", "state_space", "program_graph", "mappings"}
     if (
