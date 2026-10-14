@@ -258,17 +258,20 @@ class TransitionMatrix:
                 for target in targets:
                     transition_counts[(source, action_id, target)] += 1
 
-        # Convert counts to probabilities
-        action_state_counts: dict[tuple[str, str], int] = defaultdict(int)
-        for (source, action, _target), count in transition_counts.items():
-            action_state_counts[(action, source)] += count
-
+        # Convert counts to probabilities. Each observed (action, source) row
+        # is built in one go from its normalised count vector: going through
+        # ``set_transition`` per target would re-spread the remaining mass
+        # uniformly on every call and overwrite earlier targets.
+        row_counts: dict[tuple[str, str], list[int]] = {}
         for (source, action, target), count in transition_counts.items():
-            total = action_state_counts[(action, source)]
-            if total > 0:
-                prob = count / total
-                if source in states and target in states and action in actions:
-                    matrix.set_transition(source, action, target, prob)
+            row = row_counts.setdefault((action, source), [0] * len(states))
+            row[states.index(target)] += count
+
+        for (action, source), counts in row_counts.items():
+            if sum(counts) > 0:
+                matrix.transitions[action][source] = CategoricalDistribution(
+                    states, [float(c) for c in counts]
+                )
 
         return matrix
 
