@@ -145,7 +145,9 @@ class RoundtripResult:
         original_roles: Role multiset derived from the source GNN
             (``{role_name: count}``).
         synthesized_roles: Role multiset from the forward pipeline's
-            semantic mappings after reverse-synthesis.
+            semantic mappings after reverse-synthesis, restricted to the
+            role-bearing definitions named in the package's semantic-target
+            manifest (generated runtime support code is not scored).
         shape_match: Dict describing whether n_states, n_obs, and
             n_actions dimensions survived the round-trip.
     package_path: Absolute path to the synthesized package (kept
@@ -363,7 +365,16 @@ def _role_multiset_from_mappings(
     *,
     semantic_targets: dict[str, list[str]] | None = None,
 ) -> Counter[str]:
-    """Derive a role multiset from a forward-pipeline semantic mappings dict."""
+    """Derive a role multiset from a forward-pipeline semantic mappings dict.
+
+    Without ``semantic_targets`` every mapping counts under its own kind.
+    With the synthesized package's manifest, only mappings on the
+    role-bearing definitions it names are counted (under the manifest role);
+    mappings on generated runtime support code (factor ``__init__``/``copy``
+    helpers, the ``State`` aggregator, the action selector) are excluded.
+    The manifest lists every generated role definition, so a package that
+    over-generates a role still scores below 1.0.
+    """
     roles: Counter[str] = Counter()
     if mappings is None:
         return roles

@@ -169,13 +169,18 @@ def _targeted_context_functions(plan: PackagePlan) -> list[NodePlan]:
 
 
 def _semantic_role_targets(plan: PackagePlan) -> dict[str, list[str]]:
-    """Return generated definition names that intentionally carry roles."""
+    """Return generated definition names that intentionally carry roles.
+
+    Every role-bearing definition the package emits is listed, including
+    any in excess of the source role counts (``plan.target_role_counts``):
+    the round-trip verifier scores the synthesized role multiset from this
+    manifest, so truncating it to the source counts would make
+    over-generation invisible and saturate the score at 1.0.
+    """
     targets: dict[str, list[str]] = {}
 
     def add(role: str, names: list[str]) -> None:
         clean = [name for name in names if name]
-        if plan.target_role_counts:
-            clean = clean[: max(0, int(plan.target_role_counts.get(role, 0)))]
         if clean:
             targets[role] = clean
 
