@@ -387,7 +387,11 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
     * ``IMPORTS`` edges - module → imported in-repo module
     * ``INHERITS`` edges - class → base class (resolved in-repo)
     * ``READS``/``WRITES`` edges - method → enclosing class via
-      ``self.attr`` dataflow
+      ``self.attr`` dataflow in that method's own body
+    * ``CALLS``/``ASYNC_CALLS`` edges - caller → callee resolved only through
+      the caller's module and class, locals of an evident in-repo class, and
+      in-repo imports (see ``_SymbolResolver``); other dynamic dispatch is
+      left unresolved
 
     The finalized graph is stored under
     ``bundle.artifacts['_program_graph']``. Without edges the translate
@@ -431,7 +435,12 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
         parsed[path] = parser.parse_file(path)
 
     module_nodes: dict[str, Any] = {}
-    class_nodes: dict[str, Any] = {}
+    # (dotted module key, class node) per class, in discovery order. Calls
+    # and bases resolve through ``resolver``, keyed by dotted module name.
+    class_entries: list[tuple[str, Any]] = []
+    resolver = _SymbolResolver(
+        root_package=repo_root.name if (repo_root / "__init__.py").is_file() else None
+    )
 
     # AST cache: each file is parsed at most once for the dataflow and call
     # passes below, and every method/function is resolved to its own
@@ -464,8 +473,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
     # module — a non-trivial fraction of dotted-import drops traced to this
     # ordering hazard. See TODO #2 sub-fix.
     parsed_module_meta: dict[Path, tuple[str, str]] = {}
-    callable_nodes: dict[str, Any] = {}
-    # (file, module, owning class, graph node, FunctionDef AST node)
+    # (file, dotted module key, owning class, graph node, FunctionDef AST node)
     callable_context: list[tuple[Path, str, str | None, Any, Any]] = []
 
     def _file_flags(path: Path, rel: str) -> tuple[bool, bool]:
@@ -552,6 +560,17 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
         module_node = (
             module_nodes[dotted_name] if dotted_name in module_nodes else module_nodes[module_name]
         )
+        is_stub = file_path.suffix == ".pyi"
+        module_tree = _parse_module_ast(file_path, _ast, _ast_cache)
+        resolver.add_module(
+            dotted_name,
+            _import_bindings(
+                module_tree, _ast, dotted_name, is_package=file_path.stem == "__init__"
+            )
+            if module_tree is not None
+            else {},
+            is_stub=is_stub,
+        )
 
         for cls in getattr(module, "classes", []) or []:
             class_qname = f"{module_name}.{cls.name}"
@@ -568,7 +587,8 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                     "decorators": list(getattr(cls, "decorators", []) or []),
                 },
             )
-            class_nodes[class_qname] = class_node
+            resolver.add_class(dotted_name, cls.name, class_node, is_stub=is_stub)
+            class_entries.append((dotted_name, class_node))
             builder.add_edge(module_node.id, class_node.id, EdgeKind.CONTAINS)
             _emit_decorator_edges(list(getattr(cls, "decorators", []) or []), class_node, rel)
 
@@ -595,13 +615,15 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                         "is_async": bool(getattr(method, "is_async", False)),
                     },
                 )
-                callable_nodes[method_qname] = method_node
+                resolver.add_callable(
+                    dotted_name, cls.name, method.name, method_node, is_stub=is_stub
+                )
                 method_def = _definition_for(
                     file_path, cls.name, method.name, int(getattr(method, "line_start", 0))
                 )
                 if method_def is not None:
                     callable_context.append(
-                        (file_path, module_name, cls.name, method_node, method_def)
+                        (file_path, dotted_name, cls.name, method_node, method_def)
                     )
                 _emit_decorator_edges(
                     list(getattr(method, "decorators", []) or []), method_node, rel
@@ -634,12 +656,12 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                     "is_async": bool(getattr(func, "is_async", False)),
                 },
             )
-            callable_nodes[f"{module_name}.{func.name}"] = func_node
+            resolver.add_callable(dotted_name, None, func.name, func_node, is_stub=is_stub)
             func_def = _definition_for(
                 file_path, None, func.name, int(getattr(func, "line_start", 0))
             )
             if func_def is not None:
-                callable_context.append((file_path, module_name, None, func_node, func_def))
+                callable_context.append((file_path, dotted_name, None, func_node, func_def))
             _emit_decorator_edges(list(getattr(func, "decorators", []) or []), func_node, rel)
             builder.add_edge(module_node.id, func_node.id, EdgeKind.CONTAINS)
 
@@ -696,46 +718,28 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                     break
 
     # Resolve local function/method calls after all callable nodes exist. The
-    # resolver is intentionally conservative: unresolved dynamic dispatch is
-    # omitted rather than represented as a false high-confidence edge.
-    def _call_target(
-        module_name: str,
-        class_name: str | None,
-        call: _ast.Call,
-    ) -> tuple[Any | None, str | None]:
-        func = call.func
-        receiver: str | None = None
-        candidates: list[str] = []
-        if isinstance(func, _ast.Name):
-            candidates.append(f"{module_name}.{func.id}")
-            candidates.extend(name for name in callable_nodes if name.endswith(f".{func.id}"))
-        elif isinstance(func, _ast.Attribute):
-            receiver = _ast.unparse(func.value)
-            if receiver == "self" and class_name:
-                candidates.append(f"{module_name}.{class_name}.{func.attr}")
-            elif isinstance(func.value, _ast.Name):
-                candidates.append(f"{module_name}.{func.value.id}.{func.attr}")
-                candidates.extend(name for name in callable_nodes if name.endswith(f".{func.attr}"))
-        for candidate in candidates:
-            target = callable_nodes.get(candidate)
-            if target is not None:
-                return target, receiver
-        return None, receiver
-
-    for _file_path, module_name, class_name, source_node, definition in callable_context:
+    # resolver is intentionally conservative: only the caller's own module and
+    # class, classes of its module, and import-bound names are followed;
+    # unresolved dynamic dispatch (``items.append``, ``config.get``) is omitted
+    # rather than represented as a false high-confidence edge.
+    for _file_path, module_key, class_name, source_node, definition in callable_context:
         parent_map = {
             child: parent
             for parent in _ast.walk(definition)
             for child in _ast.iter_child_nodes(parent)
         }
+        local_types = resolver.local_types(module_key, definition, _ast)
         for call in [node for node in _ast.walk(definition) if isinstance(node, _ast.Call)]:
-            target, receiver = _call_target(module_name, class_name, call)
-            if target is None or target.id == source_node.id:
+            callee = resolver.call_target(module_key, class_name, call.func, _ast, local_types)
+            if callee is None or callee.id == source_node.id:
                 continue
+            receiver = (
+                _ast.unparse(call.func.value) if isinstance(call.func, _ast.Attribute) else None
+            )
             is_async_call = isinstance(parent_map.get(call), _ast.Await)
             builder.add_edge(
                 source_node.id,
-                target.id,
+                callee.id,
                 EdgeKind.ASYNC_CALLS if is_async_call else EdgeKind.CALLS,
                 metadata={
                     "receiver": receiver,
@@ -744,20 +748,25 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                 },
             )
 
-    # INHERITS edges.
-    # Build a name→node index first so lookup is O(1) instead of O(|classes|)
-    # per base class. The original nested loop was O(|classes|² × |bases|),
-    # which is tolerable for small repos but degrades for large ones.
+    # INHERITS edges. A base resolves to a class of the same module first,
+    # then through the module's imports; only a base name that no import
+    # binds falls back to the (last-seen) class of that simple name.
     class_by_name: dict[str, Any] = {}
-    for other_node in class_nodes.values():
+    for _module_key, other_node in class_entries:
         # Later definitions override earlier ones; for duplicate simple
         # names we keep the last-seen (arbitrary but deterministic).
         class_by_name[other_node.name] = other_node
 
-    for class_node in class_nodes.values():
+    seen_classes: set[str] = set()
+    for module_key, class_node in class_entries:
+        if class_node.id in seen_classes:
+            continue
+        seen_classes.add(class_node.id)
         bases = (class_node.metadata or {}).get("bases", [])
         for base in bases:
-            other_node = class_by_name.get(base)
+            other_node = resolver.base_class(module_key, base)
+            if other_node is None and not resolver.is_bound(module_key, base.split(".")[0]):
+                other_node = class_by_name.get(base)
             if other_node is not None and other_node.id != class_node.id:
                 builder.add_edge(class_node.id, other_node.id, EdgeKind.INHERITS)
 
@@ -831,6 +840,268 @@ def _callable_definitions(tree: Any, ast_mod: Any) -> dict[tuple[str | None, str
                 if isinstance(item, function_types):
                     index[(node.name, item.name, item.lineno)] = item
     return index
+
+
+def _import_bindings(tree: Any, ast_mod: Any, module: str, *, is_package: bool) -> dict[str, str]:
+    """Map each name an import binds in ``module`` to its absolute dotted target.
+
+    ``import a.b`` binds ``a`` → ``a``; ``import a.b as m`` binds ``m`` →
+    ``a.b``; ``from a import f as g`` binds ``g`` → ``a.f``. Relative imports
+    are resolved against ``module``'s package (``module`` itself when it is a
+    package ``__init__``). Star imports bind nothing.
+    """
+    package_parts = module.split(".") if is_package else module.split(".")[:-1]
+    bindings: dict[str, str] = {}
+    for node in ast_mod.walk(tree):
+        if isinstance(node, ast_mod.Import):
+            for alias in node.names:
+                if alias.asname:
+                    bindings[alias.asname] = alias.name
+                else:
+                    head = alias.name.split(".")[0]
+                    bindings[head] = head
+        elif isinstance(node, ast_mod.ImportFrom):
+            if node.level:
+                keep = len(package_parts) - (node.level - 1)
+                if keep < 0:
+                    continue
+                base_parts = package_parts[:keep] + (node.module.split(".") if node.module else [])
+                base = ".".join(base_parts)
+            else:
+                base = node.module or ""
+            for alias in node.names:
+                if alias.name == "*":
+                    continue
+                bindings[alias.asname or alias.name] = (
+                    f"{base}.{alias.name}" if base else alias.name
+                )
+    return bindings
+
+
+_MAX_REEXPORT_DEPTH = 5
+
+
+class _SymbolResolver:
+    """Resolve call targets and base classes to in-repo graph nodes.
+
+    Every index is keyed by a file's dotted module name (``pkg/sub/x.py`` →
+    ``pkg.sub.x``), so same-stem modules in different packages stay apart.
+    A name resolves only through the caller's own module, its own class
+    (``self.m()`` / ``cls.m()``), a class of its module (``Cls.m()``), a
+    local whose in-repo class is evident in the same body (``s = Store();
+    s.get()`` or an annotated parameter), or a name bound by an import that
+    leads to an in-repo module (following package re-exports). Attribute
+    calls on any other receiver (``items.append(x)``, ``config.get(k)``)
+    are left unresolved rather than matched by name against every repo
+    method. A ``.py`` definition wins over its ``.pyi`` stub when both map
+    to the same module.
+    """
+
+    def __init__(self, root_package: str | None) -> None:
+        self.root_package = root_package
+        self.callables: dict[tuple[str, str | None, str], Any] = {}
+        self.classes: dict[tuple[str, str], Any] = {}
+        self._class_keys: dict[str, tuple[str, str]] = {}
+        self.bindings: dict[str, dict[str, str]] = {}
+        self._modules: set[str] = set()
+        self._by_suffix: dict[str, list[str]] = {}
+        self._stub_entries: set[tuple[str, tuple[str | None, ...]]] = set()
+
+    def add_module(self, module: str, bindings: dict[str, str], *, is_stub: bool) -> None:
+        if module not in self._modules:
+            self._modules.add(module)
+            parts = module.split(".")
+            for start in range(1, len(parts)):
+                self._by_suffix.setdefault(".".join(parts[start:]), []).append(module)
+        held = self.bindings.setdefault(module, {})
+        for name, target in bindings.items():
+            if is_stub:
+                held.setdefault(name, target)
+            else:
+                held[name] = target
+
+    def add_callable(
+        self, module: str, class_name: str | None, name: str, node: Any, *, is_stub: bool
+    ) -> None:
+        key = (module, class_name, name)
+        if self._keep_existing("callable", key, key in self.callables, is_stub):
+            return
+        self.callables[key] = node
+
+    def add_class(self, module: str, name: str, node: Any, *, is_stub: bool) -> None:
+        key = (module, name)
+        if self._keep_existing("class", key, key in self.classes, is_stub):
+            return
+        self.classes[key] = node
+        self._class_keys[node.id] = key
+
+    def _keep_existing(
+        self, kind: str, key: tuple[str | None, ...], present: bool, is_stub: bool
+    ) -> bool:
+        entry = (kind, key)
+        if present and is_stub and entry not in self._stub_entries:
+            return True  # keep the .py definition over its .pyi stub
+        if is_stub:
+            self._stub_entries.add(entry)
+        else:
+            self._stub_entries.discard(entry)
+        return False
+
+    def is_bound(self, module: str, name: str) -> bool:
+        return name in self.bindings.get(module, {})
+
+    def resolve_module(self, path: str) -> str | None:
+        """Map an absolute import path to an in-repo module key, if any."""
+        if path in self._modules:
+            return path
+        root = self.root_package
+        if root and path.startswith(f"{root}."):
+            # The analysed directory is itself package ``root``.
+            stripped = path[len(root) + 1 :]
+            if stripped in self._modules:
+                return stripped
+        # Source roots below the analysed directory (``src/pkg/...``): the
+        # unique module whose key ends with ``.<path>`` and has the fewest
+        # extra leading components. Ambiguous matches stay unresolved.
+        candidates = self._by_suffix.get(path)
+        if not candidates:
+            return None
+        fewest = min(candidate.count(".") for candidate in candidates)
+        best = [candidate for candidate in candidates if candidate.count(".") == fewest]
+        return best[0] if len(best) == 1 else None
+
+    def resolve_symbol(self, path: str, *, want_class: bool = False, depth: int = 0) -> Any:
+        """Resolve ``module.attr[.attr]`` to a callable (or class) node."""
+        parts = path.split(".")
+        for split in range(len(parts) - 1, 0, -1):
+            module = self.resolve_module(".".join(parts[:split]))
+            if module is None:
+                continue
+            rest = parts[split:]
+            node = self._lookup(module, rest, want_class=want_class)
+            if node is not None:
+                return node
+            reexport = self.bindings.get(module, {}).get(rest[0])
+            if reexport is not None and depth < _MAX_REEXPORT_DEPTH:
+                return self.resolve_symbol(
+                    ".".join([reexport, *rest[1:]]), want_class=want_class, depth=depth + 1
+                )
+            return None
+        return None
+
+    def _lookup(self, module: str, rest: list[str], *, want_class: bool) -> Any:
+        if want_class:
+            return self.classes.get((module, rest[0])) if len(rest) == 1 else None
+        if len(rest) == 1:
+            return self.callables.get((module, None, rest[0]))
+        if len(rest) == 2:
+            return self.callables.get((module, rest[0], rest[1]))
+        return None
+
+    def class_of(self, module: str, expr: Any, ast_mod: Any) -> Any:
+        """Resolve a class reference (``Cls``, ``mod.Cls``, ``"Cls"``) to a class node."""
+        if isinstance(expr, ast_mod.Constant) and isinstance(expr.value, str):
+            if not expr.value.isidentifier():
+                return None
+            expr = ast_mod.Name(id=expr.value, ctx=ast_mod.Load())
+        if isinstance(expr, ast_mod.Name):
+            return self.base_class(module, expr.id)
+        if isinstance(expr, ast_mod.Attribute) and isinstance(expr.value, ast_mod.Name):
+            return self.base_class(module, f"{expr.value.id}.{expr.attr}")
+        return None
+
+    def local_types(self, module: str, definition: Any, ast_mod: Any) -> dict[str, Any]:
+        """Infer in-repo classes of local names inside one callable body.
+
+        A name is typed only when every binding of it in the body is either
+        a constructor call of one in-repo class (``store = CacheStore(...)``)
+        or a parameter/variable annotated with that class; any other
+        binding (reassignment, loop target, unannotated parameter, ...)
+        leaves it untyped.
+        """
+        stores: dict[str, int] = {}
+        inferred: dict[str, list[Any]] = {}
+        args = definition.args
+        for arg in [*args.posonlyargs, *args.args, *args.kwonlyargs]:
+            stores[arg.arg] = stores.get(arg.arg, 0) + 1
+            if arg.annotation is not None:
+                inferred.setdefault(arg.arg, []).append(
+                    self.class_of(module, arg.annotation, ast_mod)
+                )
+        for extra in (args.vararg, args.kwarg):
+            if extra is not None:
+                stores[extra.arg] = stores.get(extra.arg, 0) + 1
+        for node in ast_mod.walk(definition):
+            if isinstance(node, ast_mod.Name) and isinstance(node.ctx, ast_mod.Store):
+                stores[node.id] = stores.get(node.id, 0) + 1
+            elif isinstance(node, ast_mod.Assign) and isinstance(node.value, ast_mod.Call):
+                cls_node = self.class_of(module, node.value.func, ast_mod)
+                for target in node.targets:
+                    if isinstance(target, ast_mod.Name):
+                        inferred.setdefault(target.id, []).append(cls_node)
+            elif isinstance(node, ast_mod.AnnAssign) and isinstance(node.target, ast_mod.Name):
+                source = (
+                    node.value.func if isinstance(node.value, ast_mod.Call) else node.annotation
+                )
+                inferred.setdefault(node.target.id, []).append(
+                    self.class_of(module, source, ast_mod)
+                )
+        typed: dict[str, Any] = {}
+        for name, classes in inferred.items():
+            first = classes[0]
+            if (
+                first is not None
+                and stores.get(name, 0) == len(classes)
+                and all(cls_node is first for cls_node in classes)
+            ):
+                typed[name] = first
+        return typed
+
+    def call_target(
+        self,
+        module: str,
+        class_name: str | None,
+        func: Any,
+        ast_mod: Any,
+        local_types: dict[str, Any] | None = None,
+    ) -> Any:
+        """Resolve the callee expression of one call site, or ``None``."""
+        bindings = self.bindings.get(module, {})
+        if isinstance(func, ast_mod.Name):
+            node = self.callables.get((module, None, func.id))
+            if node is not None:
+                return node
+            target = bindings.get(func.id)
+            return self.resolve_symbol(target) if target else None
+        if isinstance(func, ast_mod.Attribute) and isinstance(func.value, ast_mod.Name):
+            receiver = func.value.id
+            if receiver in {"self", "cls"} and class_name:
+                return self.callables.get((module, class_name, func.attr))
+            typed = (local_types or {}).get(receiver)
+            if typed is not None:
+                return self._method_of(typed, func.attr)
+            node = self.callables.get((module, receiver, func.attr))
+            if node is not None:
+                return node
+            target = bindings.get(receiver)
+            return self.resolve_symbol(f"{target}.{func.attr}") if target else None
+        return None
+
+    def _method_of(self, class_node: Any, name: str) -> Any:
+        key = self._class_keys.get(class_node.id)
+        return self.callables.get((key[0], key[1], name)) if key is not None else None
+
+    def base_class(self, module: str, base: str) -> Any:
+        """Resolve a base-class expression to a class node, or ``None``."""
+        head, _, tail = base.partition(".")
+        if not tail:
+            node = self.classes.get((module, base))
+            if node is not None:
+                return node
+        target = self.bindings.get(module, {}).get(head)
+        if target is None:
+            return None
+        return self.resolve_symbol(f"{target}.{tail}" if tail else target, want_class=True)
 
 
 def _emit_dataflow_edges(
