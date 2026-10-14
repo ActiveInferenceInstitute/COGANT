@@ -52,6 +52,10 @@ _DEFAULT_STAGES: list[str] = [
 
 _VALID_STAGES = frozenset(_DEFAULT_STAGES)
 
+# The upstream GNN pipeline has 25 steps, indexed 0..24 (the same range the
+# CLI `--upstream-gnn-*-steps` flags accept).
+_UPSTREAM_LAST_STEP = 24
+
 
 def _validate_path_text(value: str) -> str:
     if not value.strip() or "\x00" in value:
@@ -280,7 +284,9 @@ class PipelineConfig(BaseModel):
             ("upstream_gnn_only_steps", self.upstream_gnn_only_steps),
             ("upstream_gnn_skip_steps", self.upstream_gnn_skip_steps),
         ):
-            if values is not None and any(step < 0 or step > 12 for step in values):
+            if values is not None and any(
+                step < 0 or step > _UPSTREAM_LAST_STEP for step in values
+            ):
                 errors.append(f"{field_name} contains an out-of-range step")
         return errors
 
