@@ -128,7 +128,7 @@ cogant translate ./my_repo --output output/ --skip dynamic,export
 
 ### analyze
 
-Canonical entry point for running the COGANT pipeline on a codebase, with first-class incremental support. In its default form it is equivalent to `cogant translate`. With `--incremental <commit>` it switches to the fast path: resolves `git diff --name-only <commit> HEAD`, looks up a cached bundle in `~/.cache/cogant`, and re-parses only changed files, patching cached stage results via `cogant.ingest.incremental.apply_incremental_patch`. On cache miss it falls back to a full cold run and populates the cache.
+Canonical entry point for running the COGANT pipeline on a codebase, with first-class incremental support. In its default form it is equivalent to `cogant translate`. With `--incremental <commit>` it resolves `git diff --name-only <commit> HEAD` and looks up a cached run in `~/.cache/cogant`. When nothing changed and the cached run's exported outputs exist in the current output directory, the cached bundle is returned without re-parsing (the fast path). Any source change, cache miss, or stale cached output re-analyses the full snapshot and refreshes the cache; per-file patching of cached graphs is not implemented, so a changed-files-only run never drops unchanged files.
 
 ```bash
 cogant analyze <target>

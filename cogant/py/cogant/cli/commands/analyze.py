@@ -179,11 +179,13 @@ def analyze(
        ``~/.cache/cogant`` (or ``--cache-dir`` override).
     3. On a full cache hit with zero changed files, return the cached
        bundle without touching the parsers — the typical "second run
-       with no edits" fast path.
-    4. On a partial hit, re-parse only the changed subset, patch the
-       cached stage-results via
-       :func:`cogant.ingest.incremental.apply_incremental_patch`, and
-       write the updated bundle/GNN output.
+       with no edits" fast path — provided the cached run recorded no
+       stage errors and its exported outputs exist in this run's output
+       directory (otherwise recompute).
+    4. When any source file changed, re-analyse the full snapshot (the
+       cache stores JSON stage results, not per-file graphs, so a
+       changed-files-only run would drop every unchanged file) and
+       refresh the cache entry.
     5. On a cache miss or non-git target, fall back to a full cold run
        and populate the cache so the next incremental call can benefit.
 
