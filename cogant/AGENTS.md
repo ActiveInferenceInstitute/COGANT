@@ -70,7 +70,7 @@ cogant/                         ← package root (this directory)
 
 ---
 
-## Current State (v0.6.0)
+## Current State (v0.7.0)
 
 | Metric | Value |
 |--------|-------|

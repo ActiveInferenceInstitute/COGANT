@@ -7,7 +7,7 @@ COGANT converts Python, JavaScript, TypeScript, Rust, and Go codebases into
 state-space models — complete with A/B/C/D probabilistic matrices, Markov blanket
 partitions, and principled free-energy derivations.
 
-Current release: **v0.6.0** (2026-05-14). **Tests:** run `uv run pytest tests/ -q` from this package root for the live count (skips/xfails vary by environment). **Coverage:** the line gate lives in `pyproject.toml` (`--cov-fail-under=89`, `branch = false`, omit rules for optional/static paths); run the suite with coverage for the current percentage instead of copying a number into docs. **`evaluation/METRICS.yaml`** (regenerated from the COGANT project root via `uv run --directory cogant python ../tools/regenerate_metrics.py`) holds manuscript-facing numbers and may lag the live suite — see `mypy_strict_errors`, `ruff_violations`, and `python_source_files` there for current counts; run `MYPYPATH=py uv run mypy --package cogant` and `uv run ruff check py/cogant/` for a live read. **Round-trip reporting now separates role preservation from strict structural isomorphism** via `roundtrip_status`.
+Current release: **v0.7.0** (2026-10-14). **Tests:** run `uv run pytest tests/ -q` from this package root for the live count (skips/xfails vary by environment). **Coverage:** the line gate lives in `pyproject.toml` (`--cov-fail-under=89`, `branch = false`, omit rules for optional/static paths); run the suite with coverage for the current percentage instead of copying a number into docs. **`evaluation/METRICS.yaml`** (regenerated from the COGANT project root via `uv run --directory cogant python ../tools/regenerate_metrics.py`) holds manuscript-facing numbers and may lag the live suite — see `mypy_strict_errors`, `ruff_violations`, and `python_source_files` there for current counts; run `MYPYPATH=py uv run mypy --package cogant` and `uv run ruff check py/cogant/` for a live read. **Round-trip reporting now separates role preservation from strict structural isomorphism** via `roundtrip_status`.
 
 ---
 
@@ -24,7 +24,7 @@ repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMa
   mappings → compiled state space → GNN markdown bundle (AII-spec compliant).
 - **Reverse path**: `py/cogant/reverse/` synthesizes a runnable Python package from any GNN
   bundle and is exposed through the top-level `cogant reverse` and `cogant roundtrip` CLI
-  subcommands. The v0.6.0 contract reports `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`,
+  subcommands. The v0.7.0 contract reports `STRUCTURALLY_ISOMORPHIC`, `ROLE_PRESERVED`,
   `DRIFT`, or `FAILED`; the current native ledger is role-preserved for 25 of 25 targets, with
   one strict structural-isomorphism row confined to `roundtrip_strict_minimal`.
 - **Incremental mode**: `cogant analyze --incremental <git-ref>` (or
@@ -95,7 +95,7 @@ project-root `output` for smoke tests. Remote `git_url` targets clone into
 `<output_root>/dashboard/` unless `steps.batch_dashboard` is disabled. You can run `../run_all.sh`
 from this package root or `./run_all.sh` from the COGANT project root.
 
-## Features (v0.6.0)
+## Features (v0.7.0)
 
 - **Language front ends** — Python via CPython `ast`; JavaScript / TypeScript with
   tree-sitter preferred when its grammar is installed and an explicit structural
@@ -207,7 +207,7 @@ Synthesized Python Package
 Re-forward for Roundtrip Invariant Check
 ```
 
-**Forward-reverse-forward round-trip:** v0.6.0 reports role preservation separately from strict structural isomorphism. The reverse synthesizer emits POLICY and CONTEXT scaffolding proportional to origin GNN role counts, and `cogant roundtrip --json` includes `roundtrip_status`, `role_preservation_score`, `structurally_isomorphic`, matrix/GNN/generated-code booleans, and the underlying invariant ledger.
+**Forward-reverse-forward round-trip:** v0.7.0 reports role preservation separately from strict structural isomorphism. The reverse synthesizer emits POLICY and CONTEXT scaffolding proportional to origin GNN role counts, and `cogant roundtrip --json` includes `roundtrip_status`, `role_preservation_score`, `structurally_isomorphic`, matrix/GNN/generated-code booleans, and the underlying invariant ledger.
 
 See [docs/architecture/README.md](docs/architecture/README.md) for per-module deep dives and [docs/theory/roundtrip.md](docs/theory/roundtrip.md) for round-trip validation details.
 
@@ -270,6 +270,6 @@ MIT — see [`LICENSES.md`](LICENSES.md) for the COGANT license and third-party 
   author = {{COGANT contributors}},
   year   = {2026},
   url    = {https://github.com/ActiveInferenceInstitute/COGANT},
-  version = {0.6.0}
+  version = {0.7.0}
 }
 ```

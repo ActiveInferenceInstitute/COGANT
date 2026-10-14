@@ -1,6 +1,6 @@
 [project]
 name = "cogant-template-shell"
-version = "0.6.0"
+version = "0.7.0"
 description = "Template-facing compatibility shell for the nested COGANT package project."
 requires-python = ">=3.11"
 dependencies = [

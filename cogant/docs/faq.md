@@ -28,11 +28,11 @@ See [Theory — GNN Format](theory/gnn_format.md).
 
 ### 3. What languages does COGANT support?
 
-v0.6.0 supports **Python** (via CPython `ast`), **JavaScript / TypeScript** (via the optional tree-sitter front end), and experimental **Rust** and **Go** structural parsers. The mapping rules are language-agnostic because they operate on `NodeKind`/`EdgeKind` in the program graph. Java remains on the roadmap.
+v0.7.0 supports **Python** (via CPython `ast`), **JavaScript / TypeScript** (via the optional tree-sitter front end), and experimental **Rust** and **Go** structural parsers. The mapping rules are language-agnostic because they operate on `NodeKind`/`EdgeKind` in the program graph. Java remains on the roadmap.
 
 ### 4. How accurate is role assignment?
 
-On the control-positive fixtures shipped with v0.6.0, confidence is reported per rule, per mapping, and per bundle; treat it as heuristic evidence rather than accuracy. Calibration artifacts and reviewer annotations distinguish accepted and rejected mappings, and the docs report precision/recall only where an executable annotation set exists. Unconventional naming, dynamic dispatch, and reflection still reduce recall.
+On the control-positive fixtures shipped with v0.7.0, confidence is reported per rule, per mapping, and per bundle; treat it as heuristic evidence rather than accuracy. Calibration artifacts and reviewer annotations distinguish accepted and rejected mappings, and the docs report precision/recall only where an executable annotation set exists. Unconventional naming, dynamic dispatch, and reflection still reduce recall.
 
 See [R&D — Calibration](rnd/calibration.md).
 
@@ -86,7 +86,7 @@ Yes. Set `COGANT_USE_RUST=1` to require the optional PyO3 backend; COGANT now fa
 
 ### 10b. Does COGANT ship type stubs?
 
-Yes. v0.6.0 ships `.pyi` stub files for public API modules and a `py.typed` marker. The repository also includes an export-vs-stub parity audit so public `__all__` symbols cannot silently drift away from their stub files.
+Yes. v0.7.0 ships `.pyi` stub files for public API modules and a `py.typed` marker. The repository also includes an export-vs-stub parity audit so public `__all__` symbols cannot silently drift away from their stub files.
 
 ---
 
@@ -130,13 +130,13 @@ See [R&D — Active Inference Mapping, Surprising Findings](rnd/active_inference
 
 ### 15. Does COGANT understand runtime behavior?
 
-No. COGANT is **static analysis only** by default in v0.6.0. It parses Python AST (and JS/TS via tree-sitter when enabled), builds a program graph from structural relationships (calls, imports, inheritance, reads, writes), and applies rules to that graph. It does not execute your code, trace actual function calls, or observe runtime state.
+No. COGANT is **static analysis only** by default in v0.7.0. It parses Python AST (and JS/TS via tree-sitter when enabled), builds a program graph from structural relationships (calls, imports, inheritance, reads, writes), and applies rules to that graph. It does not execute your code, trace actual function calls, or observe runtime state.
 
 The `--coverage` and `--trace` flags accept pre-collected runtime data (coverage.py JSON and function-call traces) and merge them into the graph, but COGANT itself does not generate that data.
 
 ### 16. Can COGANT analyze dynamic languages like Ruby or PHP?
 
-Not in v0.6.0. The parsers currently cover Python, JavaScript/TypeScript, and experimental Rust and Go structural front ends. Highly dynamic languages will be harder to analyze because static analysis cannot resolve runtime dispatch, monkey-patching, or eval-based code generation. Expect lower confidence scores and more runtime-only evidence gaps for dynamic language targets.
+Not in v0.7.0. The parsers currently cover Python, JavaScript/TypeScript, and experimental Rust and Go structural front ends. Highly dynamic languages will be harder to analyze because static analysis cannot resolve runtime dispatch, monkey-patching, or eval-based code generation. Expect lower confidence scores and more runtime-only evidence gaps for dynamic language targets.
 
 ### 17. What happens with code below the confidence threshold?
 
@@ -266,13 +266,13 @@ Validation scores (0-100) measure **structural correctness** of the GNN bundle: 
 
 ### 33. Will COGANT support Rust, Go, and Java?
 
-Python is fully supported (CPython `ast`); JavaScript and TypeScript are fully supported (v0.4.0+, tree-sitter); Rust and Go have experimental structural parsers (v0.6.0). Java is the next parser priority on the roadmap, also built on tree-sitter. The translation rules are language-agnostic; only the parser and fact-extraction layers need to be language-specific.
+Python is fully supported (CPython `ast`); JavaScript and TypeScript are fully supported (v0.4.0+, tree-sitter); Rust and Go have experimental structural parsers (v0.7.0). Java is the next parser priority on the roadmap, also built on tree-sitter. The translation rules are language-agnostic; only the parser and fact-extraction layers need to be language-specific.
 
 See [Roadmap — v0.6.x planned](roadmap/version_060_planned.md#l1).
 
 ### 34. Is there a web UI?
 
-v0.6.0 ships HTML inspection dashboards and manuscript-facing visual artifacts for browsing the program graph, GNN output, roundtrip deltas, parser certainty, and benchmark summaries. The dashboard workbench is generated from real bundle artifacts rather than hand-authored screenshots.
+v0.7.0 ships HTML inspection dashboards and manuscript-facing visual artifacts for browsing the program graph, GNN output, roundtrip deltas, parser certainty, and benchmark summaries. The dashboard workbench is generated from real bundle artifacts rather than hand-authored screenshots.
 
 ### 35. What is the long-term vision?
 

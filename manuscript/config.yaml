@@ -4,7 +4,7 @@
 paper:
   title: "COGANT: Deterministic Codebase-to-GNN Translation"
   subtitle: "Program Graphs, Active-Inference Model Artifacts, and Reproducible Evidence"
-  version: "0.6.0"
+  version: "0.7.0"
   date: ""
 
 authors:
@@ -17,14 +17,16 @@ authors:
     corresponding: true
 
 publication:
-  doi: "10.5281/zenodo.20705351"
+  # Concept DOI (all versions) until Zenodo mints the v0.7.0 version DOI;
+  # the v0.6.0 version DOI is 10.5281/zenodo.20705351.
+  doi: "10.5281/zenodo.20705350"
   journal: ""
   volume: ""
   pages: ""
   year: "2026"
-  artifact_doi: "10.5281/zenodo.20705351"
+  artifact_doi: "10.5281/zenodo.20705350"
   artifact_archive: "https://doi.org/10.5281/zenodo.20705350"
-  artifact_commit: "v0.6.0"
+  artifact_commit: "v0.7.0"
 
 keywords:
   - "program analysis"

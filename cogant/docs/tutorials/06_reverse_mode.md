@@ -8,7 +8,7 @@
 >
 > **Next steps:** [Reverse API reference](../api/reverse.md) · [Tutorial 7: Plugin authoring](07_plugin_authoring.md) · [What is a GNN?](../concepts/gnn.md)
 
-> **Status.** Reverse synthesis is available in v0.6.0. `cogant reverse` and `cogant roundtrip` are CLI subcommands. Roundtrip output now reports `roundtrip_status`, `role_preservation_score`, and explicit invariant booleans.
+> **Status.** Reverse synthesis is available in v0.7.0. `cogant reverse` and `cogant roundtrip` are CLI subcommands. Roundtrip output now reports `roundtrip_status`, `role_preservation_score`, and explicit invariant booleans.
 
 > **Theory background:** "Forward → reverse → forward" is the COGANT
 > [roundtrip](../concepts/roundtrip.md) construction, and the role-preservation / invariant ledger reported by
@@ -42,7 +42,7 @@ sketch is in
 [`../evaluation/ISOMORPHISM_THEOREM.md`](https://github.com/ActiveInferenceInstitute/COGANT/blob/main/cogant/docs/evaluation/ISOMORPHISM_THEOREM.md),
 but the current operational contract is [the roundtrip concept page](../concepts/roundtrip.md).
 
-## Current state (v0.6.0)
+## Current state (v0.7.0)
 
 What **does** work:
 

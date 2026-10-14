@@ -161,7 +161,7 @@ Running `cogant translate` on this synthesized code produces a GNN whose `StateS
 
 ## Current limitations
 
-- `cogant reverse` and `cogant roundtrip` are available CLI subcommands in v0.6.0.
+- `cogant reverse` and `cogant roundtrip` are available CLI subcommands in v0.7.0.
 - Only Python synthesis output is supported.
 - The B matrix placeholder code does not implement real transition logic -- it preserves the structural skeleton.
 - Complex control flow (loops, conditionals, exception handling) is not synthesized.

@@ -64,19 +64,20 @@ and a validator report scoring **100.0 / 100** on the calculator fixture.
 
 The accompanying manuscript — *COGANT: Deterministic Codebase-to-GNN Translation* — documents the
 IR theory, translation engine, confidence/provenance model, round-trip evaluation, and
-reproducibility contract. The rendered PDF ships as an asset on the
-[v0.6.0 release](https://github.com/ActiveInferenceInstitute/COGANT/releases/tag/v0.6.0); the
+reproducibility contract. Rendered PDFs ship as assets on the
+[GitHub releases](https://github.com/ActiveInferenceInstitute/COGANT/releases) (archived
+[v0.6.0 release](https://github.com/ActiveInferenceInstitute/COGANT/releases/tag/v0.6.0)); the
 markdown sources live under [`manuscript/`](../manuscript/).
 
 ## Citation
 
 If you use COGANT, please cite the archived release (metadata in [`CITATION.cff`](../CITATION.cff)):
 
+- **Concept DOI (all versions, resolves to the latest archive):** [10.5281/zenodo.20705350](https://doi.org/10.5281/zenodo.20705350)
 - **Version DOI (v0.6.0):** [10.5281/zenodo.20705351](https://doi.org/10.5281/zenodo.20705351)
-- **Concept DOI (all versions):** [10.5281/zenodo.20705350](https://doi.org/10.5281/zenodo.20705350)
 
-> Friedman, Daniel Ari (2026). *COGANT: Deterministic Codebase-to-GNN Translation* (v0.6.0).
-> Active Inference Institute. https://doi.org/10.5281/zenodo.20705351
+> Friedman, Daniel Ari (2026). *COGANT: Deterministic Codebase-to-GNN Translation* (v0.7.0).
+> Active Inference Institute. https://doi.org/10.5281/zenodo.20705350
 
 ## License
 
