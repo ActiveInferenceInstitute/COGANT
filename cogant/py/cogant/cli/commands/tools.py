@@ -39,7 +39,8 @@ def benchmark(
         3,
         "--iterations",
         "-n",
-        help="Number of independent pipeline runs to time.",
+        min=1,
+        help="Number of independent pipeline runs to time (at least 1).",
     ),
     no_dynamic: bool = typer.Option(
         False,
