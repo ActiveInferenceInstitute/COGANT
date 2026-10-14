@@ -40,12 +40,8 @@ def _formatter() -> GNNMarkdownFormatter:
     obs = ObservationModality(
         id="obs_o0", name="o0", source_node_id="o0", modality_type="log", cardinality=2
     )
-    actions = {
-        f"act_{a}": Action(id=f"act_{a}", name=a, controller_id=a) for a in ("a0", "a1")
-    }
-    pref = Preference(
-        id="pref", name="pref", description="", scope=["var_s0"], expression="ok"
-    )
+    actions = {f"act_{a}": Action(id=f"act_{a}", name=a, controller_id=a) for a in ("a0", "a1")}
+    pref = Preference(id="pref", name="pref", description="", scope=["var_s0"], expression="ok")
     state_space = StateSpaceModel(
         id="ss",
         schema_name="current",
