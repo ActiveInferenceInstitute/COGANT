@@ -5,12 +5,12 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 from typing import Any
 
 import pytest
 
-from cogant.api.bundle import Bundle
+from cogant.api.bundle import ArtifactKey, Bundle
 from cogant.config.pipeline import PipelineConfig
 
 _RUN_EVAL = Path(__file__).resolve().parents[2] / "evaluation" / "run_eval.py"
@@ -68,3 +68,46 @@ def test_default_evaluation_skips_the_dynamic_stage(run_eval: ModuleType) -> Non
 
     (config,) = _RecordingRunner.configs
     assert not _runs_stage(config, "dynamic")
+
+
+def _bundle_with_graph(target: str) -> Bundle:
+    bundle = Bundle(target=target)
+    bundle.artifacts[ArtifactKey.PROGRAM_GRAPH] = SimpleNamespace(nodes={"n1": object()}, edges={})
+    bundle.artifacts[ArtifactKey.SEMANTIC_MAPPINGS] = {}
+    bundle.artifacts[ArtifactKey.STATE_SPACE_MODEL] = object()
+    return bundle
+
+
+def test_gnn_matrix_failure_is_not_reported_as_pass(
+    run_eval: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _RecordingRunner.bundle_factory = _bundle_with_graph
+
+    import cogant.gnn.matrices as matrices
+
+    class _BrokenMatrices:
+        def __init__(self, *_args: object) -> None:
+            raise ValueError("state space has no factors")
+
+    monkeypatch.setattr(matrices, "GNNMatrices", _BrokenMatrices)
+
+    result = run_eval.run_one("demo")
+
+    assert result["node_count"] == 1
+    assert any("GNNMatrices error" in err for err in result["bundle_errors"])
+    assert result["status"] == "partial"
+
+
+def test_bundle_error_count_is_not_capped_by_the_error_preview(run_eval: ModuleType) -> None:
+    def bundle_with_many_errors(target: str) -> Bundle:
+        bundle = _bundle_with_graph(target)
+        bundle.errors.extend(f"Stage s{i} failed: boom" for i in range(7))
+        return bundle
+
+    _RecordingRunner.bundle_factory = bundle_with_many_errors
+
+    result = run_eval.run_one("demo")
+
+    assert result["bundle_error_count"] >= 7
+    assert len(result["bundle_errors"]) <= 5 + 1  # preview plus evaluation errors
+    assert result["status"] == "partial"

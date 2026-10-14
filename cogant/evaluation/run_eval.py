@@ -150,6 +150,10 @@ def run_one(repo_name: str, *, skip_dynamic: bool = True) -> dict[str, Any]:
     errors = list(getattr(bundle, "errors", []) or [])
     result["bundle_error_count"] = len(errors)
     result["bundle_errors"] = errors[:5]  # first 5 for brevity
+    # Failures of the evaluation's own inspection (graph sizing, GNN matrix
+    # computation) are appended to ``bundle_errors`` below; they must also
+    # count against ``status``, which ``bundle_error_count`` alone does not.
+    evaluation_errors = 0
 
     graph = bundle.get_artifact(ArtifactKey.PROGRAM_GRAPH)
     mappings = bundle.get_artifact(ArtifactKey.SEMANTIC_MAPPINGS)
@@ -161,6 +165,7 @@ def run_one(repo_name: str, *, skip_dynamic: bool = True) -> dict[str, Any]:
             result["edge_count"] = len(graph.edges)
         except (AttributeError, TypeError) as exc:
             result["bundle_errors"].append(f"graph inspection error: {exc}")
+            evaluation_errors += 1
 
     if mappings is not None:
         try:
@@ -187,11 +192,13 @@ def run_one(repo_name: str, *, skip_dynamic: bool = True) -> dict[str, Any]:
             md_block = gnn.to_gnn_markdown_block()
         except (ValueError, TypeError, AttributeError, KeyError) as exc:
             result["bundle_errors"].append(f"GNNMatrices error: {type(exc).__name__}: {exc}")
+            evaluation_errors += 1
 
     result["gnn_section_count"] = _count_gnn_sections(md_block)
 
     has_graph = result["node_count"] > 0
-    if result["bundle_error_count"] == 0 and result["exception"] is None:
+    clean = result["bundle_error_count"] == 0 and evaluation_errors == 0
+    if clean and result["exception"] is None:
         result["status"] = "pass" if has_graph else "empty"
     elif has_graph:
         result["status"] = "partial"
