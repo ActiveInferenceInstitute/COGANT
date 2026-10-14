@@ -40,6 +40,7 @@ _PY_ROOT = _REPO_ROOT / "py"
 if _PY_ROOT.is_dir() and str(_PY_ROOT) not in sys.path:
     sys.path.insert(0, str(_PY_ROOT))
 
+from cogant.api.bundle import StageOutcome  # noqa: E402
 from cogant.api.pipeline import PipelineConfig, PipelineRunner  # noqa: E402
 
 # --- Configuration ----------------------------------------------------------
@@ -77,6 +78,12 @@ def _run_pipeline_once(fixture_path: Path) -> None:
     Uses a fresh temp directory for exports each call to avoid cross-run
     interference. ``dynamic`` and ``validate`` stages are skipped so the
     measurement focuses on the deterministic core pipeline.
+
+    Raises:
+        RuntimeError: If any stage failed. ``PipelineRunner.run`` records
+            stage exceptions in ``bundle.errors`` rather than raising, and a
+            pipeline that bails out early is faster, so timing it would
+            hide the breakage (or bake it into a regenerated baseline).
     """
     runner = PipelineRunner()
     with tempfile.TemporaryDirectory(prefix="cogant-perf-") as tmp:
@@ -85,7 +92,15 @@ def _run_pipeline_once(fixture_path: Path) -> None:
             skip_dynamic=True,
             skip_stages=["validate"],
         )
-        runner.run(str(fixture_path), config)
+        bundle = runner.run(str(fixture_path), config)
+    failed = sorted(
+        stage for stage, outcome in bundle.stage_outcomes.items() if outcome == StageOutcome.FAILED
+    )
+    if bundle.errors or failed:
+        details = "; ".join(bundle.errors) or "no error message recorded"
+        raise RuntimeError(
+            f"pipeline failed on {fixture_path} (failed stages: {failed or 'none'}): {details}"
+        )
 
 
 def measure(fixture_path: Path, iterations: int) -> dict[str, float]:
