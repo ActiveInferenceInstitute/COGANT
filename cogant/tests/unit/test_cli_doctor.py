@@ -115,7 +115,7 @@ class TestInitCommand:
         # The scaffolded config is still created for backward compat.
         assert (repo / ".cogant" / "config.json").exists()
         cfg = json.loads((repo / ".cogant" / "config.json").read_text())
-        assert "translate" in cfg["stages"]
+        assert "translate" in cfg["pipeline"]["stages"]
 
     def test_init_warns_when_no_source_files(self, runner: CliRunner, tmp_path: Path) -> None:
         """Empty repos trigger a friendly warning rather than an error."""
@@ -150,7 +150,7 @@ class TestInitCommand:
         original = cfg_path.read_text()
 
         # Mutate the config so we can detect clobber.
-        cfg_path.write_text(original.replace("untitled", "custom-name"))
+        cfg_path.write_text(original.replace('"output"', '"custom-name"'))
 
         second = runner.invoke(app, ["init", str(repo)])
         assert second.exit_code == 0

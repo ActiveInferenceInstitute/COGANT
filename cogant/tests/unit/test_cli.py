@@ -41,10 +41,10 @@ class TestInitCommand:
         assert result.exit_code == 0
         assert "Initializing COGANT project" in result.stdout
         assert (target / ".cogant" / "config.json").exists()
-        # Config is valid JSON with a stages list.
+        # Config is valid canonical JSON with a pipeline.stages list.
         cfg = json.loads((target / ".cogant" / "config.json").read_text())
-        assert isinstance(cfg.get("stages"), list)
-        assert "translate" in cfg["stages"]
+        assert isinstance(cfg["pipeline"].get("stages"), list)
+        assert "translate" in cfg["pipeline"]["stages"]
 
 
 # ------------------------------------------------------------------- scan --

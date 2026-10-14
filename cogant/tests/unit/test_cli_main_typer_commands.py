@@ -120,10 +120,10 @@ class TestInitCommand:
         assert result.exit_code == 0, result.stdout
         # Config must exist on disk
         assert (proj / ".cogant" / "config.json").exists()
-        # Parsed as JSON with a stages list
+        # Parsed as canonical JSON with a pipeline.stages list
         cfg = json.loads((proj / ".cogant" / "config.json").read_text())
-        assert "stages" in cfg
-        assert isinstance(cfg["stages"], list) and len(cfg["stages"]) >= 1
+        stages = cfg["pipeline"]["stages"]
+        assert isinstance(stages, list) and len(stages) >= 1
 
     def test_init_is_idempotent(self, runner: CliRunner, tmp_path: Path) -> None:
         """Re-running init must not overwrite the config file."""
@@ -132,7 +132,7 @@ class TestInitCommand:
         cfg_path = proj / ".cogant" / "config.json"
         original = cfg_path.read_text()
         # Mutate the config, then re-run init
-        cfg_path.write_text(original.replace('"untitled"', '"mutated_by_user"'))
+        cfg_path.write_text(original.replace('"output"', '"mutated_by_user"'))
         mutated = cfg_path.read_text()
         result = runner.invoke(app, ["init", str(proj)])
         assert result.exit_code == 0

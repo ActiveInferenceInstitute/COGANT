@@ -98,25 +98,29 @@ def init(
     config_file = cogant_dir / "config.json"
     config_created = False
     if not config_file.exists():
+        # Canonical ProjectConfig sections only, so the scaffold loads with
+        # ``cogant translate -c .cogant/config.json`` without legacy
+        # migration warnings or unknown-key errors.
         config_file.write_text(
             """{
-  "version": "0.1.0",
-  "name": "untitled",
-  "target": ".",
-  "output_dir": "output",
-  "stages": [
-    "ingest",
-    "static",
-    "normalize",
-    "graph",
-    "translate",
-    "statespace",
-    "process",
-    "export",
-    "validate"
-  ]
+  "schema_version": "1.0",
+  "pipeline": {
+    "output_dir": "output",
+    "stages": [
+      "ingest",
+      "static",
+      "normalize",
+      "graph",
+      "translate",
+      "statespace",
+      "process",
+      "export",
+      "validate"
+    ]
+  }
 }
-"""
+""",
+            encoding="utf-8",
         )
         config_created = True
 
@@ -171,11 +175,14 @@ def init(
             _friendly_pipeline_error(exc, project_dir)
             raise typer.Exit(code=1) from exc
 
+        bundle_path = project_dir / "output" / "bundle.json"
+        bundle_path.parent.mkdir(parents=True, exist_ok=True)
+        bundle.save_json(str(bundle_path))
         console.print(
             f"[green]✓ Translate complete[/green] — "
             f"{len(bundle.stage_results)} stages, {len(bundle.errors)} errors"
         )
-        console.print(f"  Bundle: {project_dir / 'output' / 'bundle.json'}")
+        console.print(f"  Bundle: {bundle_path}")
 
 
 @app.command()
