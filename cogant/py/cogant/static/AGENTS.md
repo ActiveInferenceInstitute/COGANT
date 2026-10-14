@@ -43,8 +43,10 @@ The static module is the **bridge between raw source and graph representation**.
 - Outputs: `SymbolInfo` records (name, kind, location, type, is_public)
 
 **imports.py** — `ImportAnalyzer`
-- Classifies imports: stdlib, third-party, local, relative
-- Resolves import paths against repo root structure
+- Classifies imports: stdlib (by top-level package, so `os.path` is stdlib), third-party, local, relative
+- Resolves relative imports against the importing file (one directory up per extra dot, carried as
+  `ImportDef.metadata["level"]`), and absolute imports against `repo_root` when one is given;
+  only unresolved non-stdlib absolute imports are third-party
 - Tracks: import source, import target, import kind (from/import)
 - Outputs: `ImportEdge` records
 - Builds global dependency graph for later coupling analysis

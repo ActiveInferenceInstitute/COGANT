@@ -393,6 +393,8 @@ class PythonASTParser:
                             is_relative=is_relative,
                             names=[alias.name],
                             line_num=node.lineno,
+                            # Leading-dot count: ``from ..x`` is level 2.
+                            metadata={"level": node.level},
                         )
                     )
 

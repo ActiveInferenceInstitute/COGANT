@@ -2,6 +2,7 @@
 
 import hashlib
 import logging
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -60,8 +61,12 @@ class ImportAnalyzer:
 
         Args:
             repo_root: Root path of repository for local import resolution.
+                Absolute imports (``import pkg.mod``) are resolved against
+                it only when it is given; relative imports always resolve
+                against the importing file.
         """
         self.repo_root = Path(repo_root or "/")
+        self._resolve_absolute = repo_root is not None
         self.parser = PythonASTParser()
         self._stdlib_modules = self._load_stdlib_modules()
 
@@ -103,18 +108,27 @@ class ImportAnalyzer:
         edges = []
 
         for imp in import_defs:
-            # Classify import
-            is_stdlib = imp.module_name in self._stdlib_modules
-            is_third_party = not is_stdlib and not imp.is_relative
-            is_local = False
+            # Classify on the top-level package: ``os.path`` is stdlib because
+            # ``os`` is. Relative imports are never stdlib.
+            top_level = imp.module_name.split(".", 1)[0]
+            is_stdlib = not imp.is_relative and top_level in self._stdlib_modules
 
-            # Try to resolve local import
+            # Resolve relative imports, and absolute ones against repo_root,
+            # before anything non-stdlib is called third-party.
             resolved_file = None
-            if imp.is_relative or (not is_stdlib and not is_third_party):
+            if imp.is_relative:
+                metadata = imp.metadata if isinstance(imp.metadata, dict) else {}
                 resolved_file = self._resolve_local_import(
-                    file_path, imp.module_name, imp.is_relative
+                    file_path,
+                    imp.module_name,
+                    True,
+                    level=int(metadata.get("level", 1) or 1),
+                    names=list(imp.names or []),
                 )
-                is_local = resolved_file is not None
+            elif not is_stdlib and self._resolve_absolute:
+                resolved_file = self._resolve_local_import(file_path, imp.module_name, False)
+            is_local = resolved_file is not None
+            is_third_party = not is_stdlib and not imp.is_relative and not is_local
 
             edge = ImportEdge(
                 id=self._generate_import_id(file_path, imp.module_name),
@@ -133,38 +147,50 @@ class ImportAnalyzer:
         return edges
 
     def _resolve_local_import(
-        self, source_file: Path, module_name: str, is_relative: bool
+        self,
+        source_file: Path,
+        module_name: str,
+        is_relative: bool,
+        level: int = 1,
+        names: list[str] | None = None,
     ) -> Path | None:
         """Try to resolve a local import to a file.
 
         Args:
             source_file: File containing the import.
-            module_name: Module name to resolve.
+            module_name: Module name to resolve (empty for ``from . import x``).
             is_relative: Whether import is relative.
+            level: Number of leading dots of a relative import; each dot
+                beyond the first moves up one package directory.
+            names: Imported names; for ``from . import x`` a submodule
+                ``x`` is preferred over the package itself.
 
         Returns:
             Resolved file path or None if not found.
         """
         if is_relative:
-            # Relative import
-            source_dir = source_file.parent
-            if module_name:
-                target = source_dir / module_name.replace(".", "/")
-            else:
-                target = source_dir
+            base = source_file.parent
+            for _ in range(max(level, 1) - 1):
+                base = base.parent
+            if not module_name:
+                # ``from . import x``: x is a submodule or a package attribute.
+                for name in names or []:
+                    for candidate in (base / f"{name}.py", base / name / "__init__.py"):
+                        if candidate.exists():
+                            return candidate
+                package_init = base / "__init__.py"
+                return package_init if package_init.exists() else None
+            target = base / module_name.replace(".", "/")
         else:
             # Absolute import
             target = self.repo_root / module_name.replace(".", "/")
 
-        # Try as package (directory with __init__.py)
-        if (target.parent / "__init__.py").exists():
-            return target.parent / "__init__.py"
-
         # Try as module (file.py)
-        if target.with_suffix(".py").exists():
-            return target.with_suffix(".py")
+        module_file = target.parent / f"{target.name}.py"
+        if module_file.exists():
+            return module_file
 
-        # Try as package
+        # Try as package (directory with __init__.py)
         if (target / "__init__.py").exists():
             return target / "__init__.py"
 
@@ -175,7 +201,9 @@ class ImportAnalyzer:
         """Load set of Python standard library module names.
 
         Returns:
-            Set of stdlib module names.
+            Set of stdlib module names: the running interpreter's
+            ``sys.stdlib_module_names`` plus modules removed from recent
+            Python versions that older code may still import.
         """
         # Core standard library modules
         stdlib = {
@@ -365,7 +393,6 @@ class ImportAnalyzer:
             "turtledemo",
             "types",
             "typing",
-            "typing_extensions",
             "unicodedata",
             "unittest",
             "urllib",
@@ -388,7 +415,7 @@ class ImportAnalyzer:
             "zlib",
         }
 
-        return stdlib
+        return stdlib | set(sys.stdlib_module_names)
 
     @staticmethod
     def _generate_import_id(file_path: Path, module_name: str) -> str:
