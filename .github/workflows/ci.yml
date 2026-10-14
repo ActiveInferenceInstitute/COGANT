@@ -299,7 +299,7 @@ jobs:
         run: |
           mkdir -p /tmp/cogant-wheel-install
           python -m pip install --target /tmp/cogant-wheel-install \
-            pydantic typer rich networkx pyarrow fastapi httpx numpy \
+            pydantic typer rich networkx pyarrow fastapi numpy \
             /tmp/cogant-wheelhouse/cogant-*.whl
 
       - name: Import public packages and instantiate parsers
@@ -362,32 +362,68 @@ jobs:
       - name: Install the pinned optional upstream extra
         # Keep the cache in an ephemeral, bounded job-local location so this
         # lane cannot evict the core dependency cache or hide its provenance.
+        # The dev extra supplies pytest for the bridge test lane below.
         env:
           UV_CACHE_DIR: /tmp/cogant-upstream-uv-cache
-        run: uv sync --extra upstream --no-dev
+        run: uv sync --extra upstream --extra dev
 
-      - name: Verify upstream availability and validation outcome
+      - name: Verify upstream availability on a COGANT-emitted package
+        # GNN 4.x validates the full required-section contract, so the probe
+        # is a real package emitted by the current formatter (a bare
+        # ``## GNNSection`` stub is correctly rejected upstream).
         run: |
           uv run python - <<'PY'
           import json
+          import tempfile
+          from pathlib import Path
+
+          from cogant.api.pipeline import PipelineConfig, PipelineRunner
           from cogant.gnn.upstream_bridge import (
               is_upstream_gnn_available,
               run_upstream_validate_gnn,
               upstream_version,
           )
+          from cogant.gnn.upstream_bridge.pipeline import (
+              UpstreamPipelineConfig,
+              run_upstream_pipeline,
+          )
 
-          result = run_upstream_validate_gnn("## GNNSection\nmanual-smoke\n")
+          if not is_upstream_gnn_available():
+              raise SystemExit("optional upstream was requested but is unavailable")
+          out = Path(tempfile.mkdtemp(prefix="cogant-upstream-smoke-"))
+          PipelineRunner().run(
+              "examples/control_positive/calculator", PipelineConfig(output_dir=str(out))
+          )
+          package = out / "gnn_package"
+          markdown = (package / "model.gnn.md").read_text(encoding="utf-8")
+          validation = {
+              level: run_upstream_validate_gnn(markdown, validation_level=level).to_dict()
+              for level in ("standard", "strict")
+          }
+          steps = run_upstream_pipeline(
+              UpstreamPipelineConfig(
+                  target_dir=package, output_dir=out / "upstream", only_steps=[3, 5, 6]
+              )
+          )
           payload = {
-              "available": is_upstream_gnn_available(),
               "version": upstream_version(),
-              "validation": result.to_dict(),
+              "validation": validation,
+              "steps": steps.to_dict(),
           }
           print(json.dumps(payload, indent=2, sort_keys=True))
-          if not payload["available"]:
-              raise SystemExit("optional upstream was requested but is unavailable")
-          if not result.ok:
-              raise SystemExit("optional upstream validation failed")
+          if not all(result["ok"] for result in validation.values()):
+              raise SystemExit("upstream validation rejected the COGANT package")
+          if steps.error or steps.failure_count:
+              raise SystemExit("upstream parse/type-check/validation steps failed")
           PY
+
+      - name: Bridge and upstream integration tests
+        run: >-
+          uv run pytest -q --no-cov -o addopts= -rs
+          tests/unit/test_gnn_upstream_bridge.py
+          tests/unit/test_gnn_upstream_bridge_contract.py
+          tests/unit/test_upstream_pipeline_resolution.py
+          tests/integration/test_upstream_gnn_pipeline.py
 
       - name: Audit pinned upstream provenance
         run: python ../tools/audit_release_integrity.py --no-openapi
@@ -423,4 +459,7 @@ jobs:
             pre-commit-${{ runner.os }}-py3.11-
 
       - name: Run pre-commit
+        # metrics-freshness needs uv and is enforced by the lint job.
+        env:
+          SKIP: metrics-freshness
         run: pre-commit run --config cogant/.pre-commit-config.yaml --all-files --show-diff-on-failure

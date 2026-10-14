@@ -3,8 +3,9 @@
 # COGANT production server image.
 #
 # The image uses python:3.12-slim + uv to replicate the developer
-# workflow: `uv sync --frozen --no-dev` installs the runtime dependencies
-# pinned in uv.lock, and the container runs
+# workflow: `uv sync --frozen --no-dev --extra server` installs the runtime
+# dependencies plus the uvicorn ASGI server pinned in uv.lock, and the
+# container runs
 # `uv run uvicorn cogant.server.app:app`. We intentionally avoid a
 # multi-stage build. Instead the dependency layer is keyed on
 # pyproject.toml + uv.lock only (a source-only change reuses it), and uv's
@@ -50,7 +51,7 @@ WORKDIR /app
 # Layer 1: third-party dependencies only, keyed on the lockfile inputs.
 COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-project
+    uv sync --frozen --no-dev --extra server --no-install-project
 
 # Layer 2: the project itself. `uv sync` installs cogant in editable mode
 # from /app/py; the source is baked into the image, so no bind mount is
@@ -59,7 +60,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # whose dependency set matched no committed lockfile.
 COPY . .
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --extra server
 
 EXPOSE 8080
 

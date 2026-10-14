@@ -66,6 +66,20 @@ def test_resolve_upstream_flag_default_off() -> None:
     assert _resolve_upstream_flag(None) is False
 
 
+def test_resolve_upstream_flag_enable_env_turns_upstream_on(monkeypatch) -> None:
+    monkeypatch.delenv("COGANT_DISABLE_UPSTREAM_GNN", raising=False)
+    monkeypatch.setenv("COGANT_ENABLE_UPSTREAM_GNN", "1")
+    assert _resolve_upstream_flag(None) is True
+
+
+def test_resolve_upstream_flag_disable_env_wins_over_enable(monkeypatch) -> None:
+    """The documented kill switch beats the opt-in when no explicit choice is given."""
+    monkeypatch.setenv("COGANT_ENABLE_UPSTREAM_GNN", "1")
+    monkeypatch.setenv("COGANT_DISABLE_UPSTREAM_GNN", "yes")
+    assert _resolve_upstream_flag(None) is False
+    assert _resolve_upstream_flag(True) is True
+
+
 # --------------------------------------------------------------------------- #
 # ValidationResult.to_markdown — every section branch
 # --------------------------------------------------------------------------- #

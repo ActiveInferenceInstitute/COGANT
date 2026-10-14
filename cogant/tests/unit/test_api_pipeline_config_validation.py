@@ -189,7 +189,7 @@ def test_pipeline_config_from_yaml_empty_file_uses_defaults(tmp_path: Path) -> N
     # All defaults populated
     assert cfg.output_dir == "output"
     assert cfg.skip_stages == []
-    assert cfg.upstream_gnn_skip_steps == [11, 12]
+    assert cfg.upstream_gnn_skip_steps == [1, 2, 11, 12]
 
 
 def test_pipeline_config_from_yaml_partial_data(tmp_path: Path) -> None:
@@ -200,7 +200,7 @@ def test_pipeline_config_from_yaml_partial_data(tmp_path: Path) -> None:
     assert cfg.output_dir == "from_partial"
     assert cfg.verbose is True
     # Defaults preserved
-    assert cfg.upstream_gnn_skip_steps == [11, 12]
+    assert cfg.upstream_gnn_skip_steps == [1, 2, 11, 12]
 
 
 # ------------------------------------------------------------------ #

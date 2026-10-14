@@ -5,7 +5,7 @@ import logging
 import shutil
 from collections import Counter
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from cogant.viz.png.config import (
     DEFAULT_CONFIG,
@@ -130,7 +130,10 @@ def _edge_color(kind: str) -> str:
     return _EDGE_COLORS[""]
 
 
-def _edge_style(kind: str) -> str:
+_EdgeLineStyle = Literal["solid", "dashed", "dashdot", "dotted"]
+
+
+def _edge_style(kind: str) -> _EdgeLineStyle:
     kind = (kind or "").lower()
     if "read" in kind:
         return "dashed"

@@ -28,9 +28,10 @@ def validate(
         False,
         "--no-upstream-gnn",
         help=(
-            "Skip Active Inference Institute upstream gnn validation on model.gnn.md "
-            "(COGANT structural checks still run). Default is to run upstream. "
-            "Or set COGANT_DISABLE_UPSTREAM_GNN=1."
+            "Never run the optional Active Inference Institute upstream gnn "
+            "validation on model.gnn.md (COGANT structural checks still run). "
+            "Without this flag upstream runs only when COGANT_ENABLE_UPSTREAM_GNN=1 "
+            "and COGANT_DISABLE_UPSTREAM_GNN is unset."
         ),
     ),
     upstream_gnn_pipeline: bool = typer.Option(

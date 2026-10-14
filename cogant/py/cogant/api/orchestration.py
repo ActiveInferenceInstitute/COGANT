@@ -1170,8 +1170,9 @@ def run_validate(
     Args:
         bundle: Pipeline bundle; ``_program_graph`` is optional.
         upstream_gnn: Passed to :meth:`cogant.gnn.validator.GNNValidator.validate_package`
-            when a GNN package is present (``None`` = default: upstream on unless
-            ``COGANT_DISABLE_UPSTREAM_GNN`` is set).
+            when a GNN package is present (``None`` = default: upstream runs
+            only when ``COGANT_ENABLE_UPSTREAM_GNN`` is truthy and
+            ``COGANT_DISABLE_UPSTREAM_GNN`` is not).
         upstream_pipeline: Master switch for the 25-step pass.
         upstream_pipeline_output_dir: Where upstream writes per-step output.
             Defaults to ``<gnn_package_dir>/../upstream_pipeline``.

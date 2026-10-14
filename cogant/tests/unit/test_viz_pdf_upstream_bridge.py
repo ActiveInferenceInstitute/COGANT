@@ -12,18 +12,16 @@ Targets uncovered lines in two files:
    * line 1141, 1158, 1244, 1261-1263: full-analysis matrix + findings dict branch
    * Page-layout exercises: report with non-dict pipeline_result object, large finding lists
 
-2. ``py/cogant/gnn/upstream_bridge/__init__.py`` (82% → ~95%):
-   * lines 42-43: ``_require_src_gnn`` ImportError chain
-   * lines 67-68: ``json_safe`` model_dump fallback (already partially covered)
-   * lines 96-97: ``is_upstream_gnn_available`` ImportError branch
-   * lines 107-108: ``upstream_version`` ImportError swallow
-   * lines 125-126: ``run_upstream_validate_gnn`` ImportError-on-_require branch
-   * line 134: validate_gnn missing on module branch
-   * lines 156-157: tmp_path.unlink() OSError swallow
-   * lines 165-167: validate_gnn raised exception branch
-   * line 189: validate_gnn_file missing branch
-   * lines 212-213, 251-252: process_directory + process_multi_format passthroughs
-   * lines 287-289: parse_upstream_model_gnn_md exception branch
+2. ``py/cogant/gnn/upstream_bridge/__init__.py``:
+   * ``_require_upstream_gnn`` missing-distribution ImportError chain
+   * ``json_safe`` model_dump fallback (already partially covered)
+   * ``is_upstream_gnn_available`` / ``upstream_version`` ImportError branches
+   * ``run_upstream_validate_gnn``: unavailable, missing ``validate_gnn_syntax``,
+     raising validator, and swallowed temp-file unlink OSError branches
+   * ``upstream_validate_file_content``: missing ``validate_gnn_source`` and
+     non-dict result branches
+   * process_directory + process_multi_format passthroughs
+   * parse_upstream_model_gnn_md exception branch
 
 All tests use real objects (no mocks) per COGANT no-mocks policy. Optional
 matplotlib / reportlab paths use ``pytest.importorskip``. Import-error
@@ -34,7 +32,6 @@ Python machinery, not unittest.mock).
 from __future__ import annotations
 
 import builtins
-import importlib
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -694,108 +691,74 @@ def test_export_full_analysis_with_invalid_matrix(tmp_path: Path) -> None:
 
 
 # --------------------------------------------------------------------------- #
-# upstream_bridge — _require_src_gnn ImportError chain (lines 42-43)
+# upstream_bridge — import gate (_require_upstream_gnn)
 # --------------------------------------------------------------------------- #
 
 
-def test_require_src_gnn_raises_with_chained_import_error(monkeypatch) -> None:
-    """Lines 42-46: ImportError from importlib is wrapped + chained."""
-    from cogant.gnn.upstream_bridge import _require_src_gnn
+def _fake_upstream(**attrs: Any) -> Any:
+    """A stand-in upstream ``gnn`` module carrying only ``attrs``."""
+    mod = type(sys)("gnn")
+    for name, value in attrs.items():
+        setattr(mod, name, value)
+    return mod
 
-    real_import_module = importlib.import_module
 
-    def _blocked(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            raise ImportError("simulated missing")
-        return real_import_module(name, *args, **kwargs)
+def _install_upstream(monkeypatch: pytest.MonkeyPatch, module: Any) -> None:
+    """Route every bridge facade to ``module`` (or raise it, if an exception)."""
+    from cogant.gnn import upstream_bridge
 
-    from cogant.gnn.upstream_bridge import is_upstream_gnn_available
+    def _require() -> Any:
+        if isinstance(module, BaseException):
+            raise module
+        return module
 
-    if not is_upstream_gnn_available():
-        # Without the optional upstream tree installed, the alias installer
-        # raises ModuleNotFoundError('src') before the wrapped retry path is
-        # reachable; the import still fails loudly, which is the contract.
-        with pytest.raises(ImportError, match="No module named"):
-            _require_src_gnn()
-        return
+    monkeypatch.setattr(upstream_bridge, "_require_upstream_gnn", _require)
 
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _blocked)
-        with pytest.raises(ImportError) as excinfo:
-            _require_src_gnn()
-    # The wrapped message is informative and actionable
+
+def test_require_upstream_gnn_wraps_missing_distribution(monkeypatch) -> None:
+    """A missing distribution raises an actionable, chained ImportError."""
+    import importlib.metadata
+
+    from cogant.gnn.upstream_bridge import _require_upstream_gnn
+
+    def _missing(name: str) -> str:
+        raise importlib.metadata.PackageNotFoundError(name)
+
+    monkeypatch.setattr(importlib.metadata, "version", _missing)
+    with pytest.raises(ImportError) as excinfo:
+        _require_upstream_gnn()
     assert "cogant[upstream]" in str(excinfo.value)
-    # Cause chain preserved
     assert excinfo.value.__cause__ is not None
 
 
 def test_is_upstream_gnn_available_returns_false_on_import_error(monkeypatch) -> None:
-    """Lines 96-97: is_upstream_gnn_available returns False on ImportError."""
     from cogant.gnn import upstream_bridge
 
-    real_import_module = importlib.import_module
-
-    def _blocked(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            raise ImportError("simulated")
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _blocked)
-        assert upstream_bridge.is_upstream_gnn_available() is False
+    _install_upstream(monkeypatch, ImportError("simulated"))
+    assert upstream_bridge.is_upstream_gnn_available() is False
 
 
 def test_upstream_version_returns_none_on_import_error(monkeypatch) -> None:
-    """Lines 107-108: upstream_version swallows ImportError → None."""
     from cogant.gnn import upstream_bridge
 
-    real_import_module = importlib.import_module
-
-    def _blocked(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            raise ImportError("simulated")
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _blocked)
-        assert upstream_bridge.upstream_version() is None
+    _install_upstream(monkeypatch, ImportError("simulated"))
+    assert upstream_bridge.upstream_version() is None
 
 
 def test_upstream_version_returns_none_for_non_string_version(monkeypatch) -> None:
-    """Line 106: __version__ that isn't a str returns None."""
+    """A ``__version__`` that isn't a str returns None."""
     from cogant.gnn import upstream_bridge
 
-    # Build a fake module whose __version__ is an int
-    fake_mod = type(sys)("src.gnn")
-    fake_mod.__version__ = 42  # type: ignore[attr-defined]
-
-    real_import_module = importlib.import_module
-
-    def _swap(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            return fake_mod
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _swap)
-        assert upstream_bridge.upstream_version() is None
+    _install_upstream(monkeypatch, _fake_upstream(__version__=42))
+    assert upstream_bridge.upstream_version() is None
 
 
 def test_run_upstream_validate_gnn_returns_skipped_on_import_error(monkeypatch) -> None:
-    """Lines 125-130: run_upstream_validate_gnn handles ImportError → skipped."""
     from cogant.gnn import upstream_bridge
     from cogant.gnn.upstream_bridge import UpstreamGNNValidation
 
-    real_import_module = importlib.import_module
-
-    def _blocked(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            raise ImportError("simulated missing src.gnn")
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _blocked)
-        result = upstream_bridge.run_upstream_validate_gnn("## anything\n")
+    _install_upstream(monkeypatch, ImportError("simulated missing gnn"))
+    result = upstream_bridge.run_upstream_validate_gnn("## anything\n")
     assert isinstance(result, UpstreamGNNValidation)
     assert result.available is False
     assert result.ok is True
@@ -804,50 +767,30 @@ def test_run_upstream_validate_gnn_returns_skipped_on_import_error(monkeypatch) 
 
 
 def test_run_upstream_validate_gnn_returns_skipped_when_function_missing(monkeypatch) -> None:
-    """Line 132-138: validate_gnn missing on module → skipped."""
+    """An upstream without ``validate_gnn_syntax`` is reported as skipped."""
     from cogant.gnn import upstream_bridge
     from cogant.gnn.upstream_bridge import UpstreamGNNValidation
 
-    fake_mod = type(sys)("src.gnn")
-    # Note: no validate_gnn attribute set
-    real_import_module = importlib.import_module
-
-    def _swap(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            return fake_mod
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _swap)
-        result = upstream_bridge.run_upstream_validate_gnn("## anything\n")
+    _install_upstream(monkeypatch, _fake_upstream())
+    result = upstream_bridge.run_upstream_validate_gnn("## anything\n")
     assert isinstance(result, UpstreamGNNValidation)
     assert result.available is False
-    assert result.skipped_reason == "src.gnn has no validate_gnn"
+    assert result.skipped_reason == "upstream gnn has no validate_gnn_syntax"
 
 
 def test_run_upstream_validate_gnn_handles_function_raising(monkeypatch) -> None:
-    """Lines 165-172: validate_gnn raises → captured in errors list."""
+    """A raising validator is captured in ``errors`` with the upstream version."""
     from cogant.gnn import upstream_bridge
     from cogant.gnn.upstream_bridge import UpstreamGNNValidation
 
-    fake_mod = type(sys)("src.gnn")
-
-    def _bad_validate(_path: Any) -> Any:
+    def _bad_validate(_path: Any, _level: Any = None) -> Any:
         raise RuntimeError("upstream blew up")
 
-    fake_mod.validate_gnn = _bad_validate  # type: ignore[attr-defined]
-    fake_mod.__version__ = "0.0.test"  # type: ignore[attr-defined]
-
-    real_import_module = importlib.import_module
-
-    def _swap(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            return fake_mod
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _swap)
-        result = upstream_bridge.run_upstream_validate_gnn("## anything\n")
+    _install_upstream(
+        monkeypatch,
+        _fake_upstream(validate_gnn_syntax=_bad_validate, __version__="0.0.test"),
+    )
+    result = upstream_bridge.run_upstream_validate_gnn("## anything\n")
     assert isinstance(result, UpstreamGNNValidation)
     assert result.available is True
     assert result.ok is False
@@ -857,209 +800,124 @@ def test_run_upstream_validate_gnn_handles_function_raising(monkeypatch) -> None
 
 
 def test_run_upstream_validate_gnn_swallows_unlink_oserror(monkeypatch) -> None:
-    """Lines 154-157: tmp_path.unlink raising OSError is swallowed silently."""
+    """A failing temp-file cleanup never turns a valid verdict into an error."""
     from cogant.gnn import upstream_bridge
     from cogant.gnn.upstream_bridge import UpstreamGNNValidation
 
-    fake_mod = type(sys)("src.gnn")
+    staged: list[Path] = []
 
-    def _validator(path: Path) -> tuple[bool, list[str]]:
-        # Return a successful result; the unlink failure is on cleanup
+    def _validator(path: Path, _level: Any = None) -> tuple[bool, list[str]]:
+        staged.append(Path(path))
         return (True, [])
-
-    fake_mod.validate_gnn = _validator  # type: ignore[attr-defined]
-    fake_mod.__version__ = "0.0.unlink-test"  # type: ignore[attr-defined]
-
-    real_import_module = importlib.import_module
-    real_unlink = Path.unlink
-
-    def _swap(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            return fake_mod
-        return real_import_module(name, *args, **kwargs)
 
     def _failing_unlink(self: Path, *a: Any, **kw: Any) -> None:
         raise OSError("simulated unlink failure")
 
+    _install_upstream(
+        monkeypatch,
+        _fake_upstream(validate_gnn_syntax=_validator, __version__="0.0.unlink-test"),
+    )
+    real_unlink = Path.unlink
     with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _swap)
         m.setattr(Path, "unlink", _failing_unlink)
-        # Should NOT raise — unlink OSError is swallowed
         result = upstream_bridge.run_upstream_validate_gnn("## ok\n")
     assert isinstance(result, UpstreamGNNValidation)
     assert result.available is True
     assert result.ok is True
-    # Best-effort cleanup of the leaked tmp file
-    try:
-        # Path.unlink restored after monkeypatch context exits, so we can run real_unlink now
-        del real_unlink  # silence linter (assigned but used only inside context)
-    except Exception:
-        pass
+    for leaked in staged:
+        real_unlink(leaked, missing_ok=True)
 
 
 def test_upstream_validate_file_content_returns_when_function_missing(monkeypatch) -> None:
-    """Line 188-189: when src.gnn has no validate_gnn_file, returns shaped dict."""
+    """Without ``validate_gnn_source`` the facade returns a shaped failure dict."""
     from cogant.gnn import upstream_bridge
 
-    fake_mod = type(sys)("src.gnn")
-    # Deliberately omit validate_gnn_file
-    real_import_module = importlib.import_module
-
-    def _swap(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            return fake_mod
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _swap)
-        out = upstream_bridge.upstream_validate_file_content("anything")
-    assert out == {"is_valid": False, "errors": ["src.gnn has no validate_gnn_file"]}
+    _install_upstream(monkeypatch, _fake_upstream())
+    out = upstream_bridge.upstream_validate_file_content("anything")
+    assert out == {"is_valid": False, "errors": ["upstream gnn has no validate_gnn_source"]}
 
 
 def test_upstream_validate_file_content_wraps_non_dict_result(monkeypatch) -> None:
-    """Line 191: non-dict result wrapped in {'result': ...}."""
+    """A non-dict upstream result is wrapped in ``{'result': ...}``."""
     from cogant.gnn import upstream_bridge
 
-    fake_mod = type(sys)("src.gnn")
-
     def _fn(content: str, *, is_content: bool = True) -> Any:
-        return ["a", "list", "result"]  # non-dict
+        return ["a", "list", "result"]
 
-    fake_mod.validate_gnn_file = _fn  # type: ignore[attr-defined]
-
-    real_import_module = importlib.import_module
-
-    def _swap(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            return fake_mod
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _swap)
-        out = upstream_bridge.upstream_validate_file_content("x")
-    assert "result" in out
-    assert out["result"] == ["a", "list", "result"]
+    _install_upstream(monkeypatch, _fake_upstream(validate_gnn_source=_fn))
+    out = upstream_bridge.upstream_validate_file_content("x")
+    assert out == {"result": ["a", "list", "result"]}
 
 
 def test_upstream_process_directory_passes_kwargs(monkeypatch, tmp_path: Path) -> None:
-    """Lines 211-213: kwargs forwarded to upstream process_gnn_directory."""
+    """kwargs are forwarded to upstream ``process_gnn_directory``."""
     from cogant.gnn import upstream_bridge
 
-    fake_mod = type(sys)("src.gnn")
     captured: dict[str, Any] = {}
 
     def _proc(in_dir: Path, out_dir: Path, **kwargs: Any) -> dict[str, Any]:
-        captured["in_dir"] = in_dir
-        captured["out_dir"] = out_dir
-        captured["kwargs"] = kwargs
+        captured.update(in_dir=in_dir, out_dir=out_dir, kwargs=kwargs)
         return {"ok": True}
 
-    fake_mod.process_gnn_directory = _proc  # type: ignore[attr-defined]
-
-    real_import_module = importlib.import_module
-
-    def _swap(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            return fake_mod
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _swap)
-        result = upstream_bridge.upstream_process_directory(
-            tmp_path, tmp_path / "out", recursive=True, n_workers=4
-        )
+    _install_upstream(monkeypatch, _fake_upstream(process_gnn_directory=_proc))
+    result = upstream_bridge.upstream_process_directory(
+        tmp_path, tmp_path / "out", recursive=True, parallel=False
+    )
     assert result == {"ok": True}
     assert captured["in_dir"] == tmp_path
     assert captured["out_dir"] == tmp_path / "out"
-    assert captured["kwargs"] == {"recursive": True, "n_workers": 4}
+    assert captured["kwargs"] == {"recursive": True, "parallel": False}
 
 
 def test_upstream_process_multi_format_uses_default_logger(monkeypatch, tmp_path: Path) -> None:
-    """Lines 250-252: log defaults to module logger when None passed."""
+    """``log`` defaults to the bridge module logger when None is passed."""
     from cogant.gnn import upstream_bridge
 
-    fake_mod = type(sys)("src.gnn")
     captured: dict[str, Any] = {}
 
     def _proc(in_dir: Path, out_dir: Path, log: Any, **kwargs: Any) -> str:
         captured["log"] = log
         return "done"
 
-    fake_mod.process_gnn_multi_format = _proc  # type: ignore[attr-defined]
-
-    real_import_module = importlib.import_module
-
-    def _swap(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            return fake_mod
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _swap)
-        # Pass log=None to force the `or logger` branch
-        result = upstream_bridge.upstream_process_multi_format(tmp_path, tmp_path / "out", log=None)
+    _install_upstream(monkeypatch, _fake_upstream(process_gnn_multi_format=_proc))
+    result = upstream_bridge.upstream_process_multi_format(tmp_path, tmp_path / "out", log=None)
     assert result == "done"
-    # Default logger from module
     assert captured["log"] is upstream_bridge.logger
 
 
 def test_upstream_process_multi_format_uses_explicit_logger(monkeypatch, tmp_path: Path) -> None:
-    """Lines 250-252 alt path: explicit log argument is preserved."""
     import logging as _logging
 
     from cogant.gnn import upstream_bridge
 
-    fake_mod = type(sys)("src.gnn")
     captured: dict[str, Any] = {}
+    custom_log = _logging.getLogger("custom-test-logger")
 
     def _proc(in_dir: Path, out_dir: Path, log: Any, **kwargs: Any) -> str:
         captured["log"] = log
         return "done"
 
-    fake_mod.process_gnn_multi_format = _proc  # type: ignore[attr-defined]
-
-    real_import_module = importlib.import_module
-    custom_log = _logging.getLogger("custom-test-logger")
-
-    def _swap(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            return fake_mod
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _swap)
-        result = upstream_bridge.upstream_process_multi_format(
-            tmp_path, tmp_path / "out", log=custom_log
-        )
+    _install_upstream(monkeypatch, _fake_upstream(process_gnn_multi_format=_proc))
+    result = upstream_bridge.upstream_process_multi_format(
+        tmp_path, tmp_path / "out", log=custom_log
+    )
     assert result == "done"
     assert captured["log"] is custom_log
 
 
 def test_parse_upstream_model_gnn_md_exception_branch(monkeypatch, tmp_path: Path) -> None:
-    """Lines 287-289: upstream_parse_file raises → returns {'path': ..., 'error': ...}."""
+    """A raising upstream parser yields ``{'path': ..., 'error': ...}``."""
     from cogant.gnn import upstream_bridge
 
     pkg = tmp_path / "pkg_with_bad_parse"
     pkg.mkdir()
     (pkg / "model.gnn.md").write_text("## stuff\n", encoding="utf-8")
 
-    fake_mod = type(sys)("src.gnn")
-
     def _bad_parse(path: Path) -> Any:
         raise RuntimeError("parse failure")
 
-    fake_mod.parse_gnn_file = _bad_parse  # type: ignore[attr-defined]
-
-    real_import_module = importlib.import_module
-
-    def _swap(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "src.gnn":
-            return fake_mod
-        return real_import_module(name, *args, **kwargs)
-
-    with monkeypatch.context() as m:
-        m.setattr(importlib, "import_module", _swap)
-        out = upstream_bridge.parse_upstream_model_gnn_md(pkg)
+    _install_upstream(monkeypatch, _fake_upstream(parse_gnn_file=_bad_parse))
+    out = upstream_bridge.parse_upstream_model_gnn_md(pkg)
     assert "path" in out
     assert "error" in out
     assert "parse failure" in out["error"]
@@ -1104,7 +962,7 @@ def test_run_upstream_validate_gnn_real_call_success_path() -> None:
     )
 
     if not is_upstream_gnn_available():
-        pytest.skip("src.gnn not importable in this environment")
+        pytest.skip("upstream gnn not importable in this environment")
     minimal = (
         "## GNNSection\nm\n## GNNVersionAndFlags\nGNN v2.0.0\n## ModelName\nn\n"
         "## StateSpaceBlock\ns_f0[1,1,type=int]\n## Connections\n"

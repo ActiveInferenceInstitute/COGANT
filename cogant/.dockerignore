@@ -1,0 +1,23 @@
+# Build context for cogant/Dockerfile (`docker build -t cogant .` from cogant/).
+# Keep local environments, build products and generated run output out of the
+# context: they bloat it and can shadow the frozen, lockfile-driven install.
+.venv/
+**/__pycache__/
+**/*.py[cod]
+*.egg-info/
+build/
+dist/
+htmlcov/
+.coverage
+.coverage.*
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+rust/target/
+output/
+site/
+mutants/
+evaluation/eval_repos/
+.git
+.github/

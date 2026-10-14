@@ -103,7 +103,7 @@ def test_apply_upstream_pipeline_flags_all_none() -> None:
     assert cfg.upstream_gnn_pipeline is True
     # Defaults preserved
     assert cfg.upstream_gnn_only_steps is None
-    assert cfg.upstream_gnn_skip_steps == [11, 12]
+    assert cfg.upstream_gnn_skip_steps == [1, 2, 11, 12]
     assert cfg.upstream_gnn_frameworks == "lite"
     assert cfg.upstream_gnn_llm_model is None
 

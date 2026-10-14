@@ -33,7 +33,13 @@ def _env_truthy(name: str) -> bool:
 
 
 def _upstream_enabled_by_env() -> bool:
-    """Return whether the optional upstream validator was explicitly enabled."""
+    """Return whether the environment enables the optional upstream validator.
+
+    ``COGANT_DISABLE_UPSTREAM_GNN`` is a kill switch that wins over
+    ``COGANT_ENABLE_UPSTREAM_GNN``; neither overrides an explicit caller choice.
+    """
+    if _env_truthy("COGANT_DISABLE_UPSTREAM_GNN"):
+        return False
     return _env_truthy("COGANT_ENABLE_UPSTREAM_GNN")
 
 
@@ -42,7 +48,8 @@ def _resolve_upstream_flag(explicit: bool | None) -> bool:
 
     * ``explicit is not None`` — caller/pipeline/CLI choice wins.
     * ``None`` — use COGANT's self-contained validator.  The optional upstream
-      validator runs only when :envvar:`COGANT_ENABLE_UPSTREAM_GNN` is truthy.
+      validator runs only when :envvar:`COGANT_ENABLE_UPSTREAM_GNN` is truthy
+      and :envvar:`COGANT_DISABLE_UPSTREAM_GNN` is not.
     """
     if explicit is not None:
         return explicit

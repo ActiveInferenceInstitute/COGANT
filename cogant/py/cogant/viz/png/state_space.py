@@ -509,7 +509,7 @@ def render_connections_matrix_png(
         def _mat(rows: int, cols: int, rng_seed: int) -> Any:
             rng = np.random.default_rng(rng_seed)
             m = rng.random((rows, cols))
-            m = m / max(m.sum(axis=0, keepdims=True).max(), 1e-9)
+            m = m / max(float(np.max(m.sum(axis=0))), 1e-9)
             return m
 
         source_matrix_shapes: dict[str, list[int]] = {}

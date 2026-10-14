@@ -47,10 +47,14 @@ repos:
 
   - repo: local
     hooks:
+      # pre-commit runs hooks from the git root (COGANT/) and matches ``files``
+      # against root-relative paths, so both the entry and the pattern are
+      # anchored there. CI skips this hook (SKIP=metrics-freshness): the
+      # pre-commit job has no uv, and the lint job already enforces the gate.
       - id: metrics-freshness
         name: METRICS.yaml freshness
-        entry: uv run python ../tools/check_metrics_fresh.py
+        entry: uv run --directory cogant python ../tools/check_metrics_fresh.py
         language: system
         pass_filenames: false
         always_run: false
-        files: ^evaluation/METRICS\.yaml$
+        files: ^cogant/evaluation/METRICS\.yaml$
