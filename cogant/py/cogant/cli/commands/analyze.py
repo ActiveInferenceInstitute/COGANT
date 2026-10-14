@@ -30,6 +30,25 @@ from cogant.cli._app import (
 )
 
 
+def _graph_count(graph: object, statistic: str, collection: str) -> int:
+    """Return a node or edge count from a graph stage result.
+
+    The graph stage stores its counts under ``statistics`` and its
+    ``nodes``/``edges`` as id-keyed dicts, so prefer
+    ``statistics[statistic]`` and fall back to the collection size.
+    """
+
+    if not isinstance(graph, dict):
+        return int(getattr(graph, f"{collection[:-1]}_count", 0) or 0)
+    statistics = graph.get("statistics")
+    if isinstance(statistics, dict) and isinstance(statistics.get(statistic), int):
+        return int(statistics[statistic])
+    items = graph.get(collection)
+    if isinstance(items, (dict, list)):
+        return len(items)
+    return int(graph.get(f"{collection[:-1]}_count") or 0)
+
+
 @app.command()
 def analyze(
     target: str = typer.Argument(
@@ -239,12 +258,8 @@ def analyze(
     if json_mode:
         graph = bundle.stage_results.get("graph") or {}
         translate = bundle.stage_results.get("translate") or {}
-        node_count = (
-            graph.get("node_count") if isinstance(graph, dict) else getattr(graph, "node_count", 0)
-        ) or 0
-        edge_count = (
-            graph.get("edge_count") if isinstance(graph, dict) else getattr(graph, "edge_count", 0)
-        ) or 0
+        node_count = _graph_count(graph, "total_nodes", "nodes")
+        edge_count = _graph_count(graph, "total_edges", "edges")
         mapping_count = (
             translate.get("mapping_count")
             if isinstance(translate, dict)
