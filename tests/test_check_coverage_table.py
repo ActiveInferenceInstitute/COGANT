@@ -6,6 +6,8 @@ import importlib.util
 import json
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "tools" / "check_coverage_table.py"
 
@@ -88,38 +90,69 @@ def test_metric_json_backed_tables_accept_matching_values(tmp_path: Path) -> Non
     assert check_coverage_table._check_metric_tables(manuscript_dir, package_root) == []
 
 
-def test_benchmark_json_backed_table_detects_drift(tmp_path: Path) -> None:
+def _write_benchmark_fixture(
+    tmp_path: Path, *, median_cell: str, metrics_yaml: bool = True
+) -> tuple[Path, Path]:
     manuscript = tmp_path / "06_04_tests_mutation_and_benchmarks.md"
     package_root = tmp_path / "cogant"
     results = package_root / "benchmarks" / "results"
     results.mkdir(parents=True)
-    (results / "suite_20260423.json").write_text(
-        json.dumps(
+
+    def _suite(median: float) -> str:
+        return json.dumps(
             {
                 "fixtures": {
                     "calculator": {
-                        "wall_ms": {"median": 35.34, "p95": 35.47},
+                        "wall_ms": {"median": median, "p95": 35.47},
                         "graph": {"nodes": 12, "edges": 25},
                         "mappings_total": 11,
                         "memory_mb": {"peak_delta_median": 0.22},
                     }
                 }
             }
-        ),
-        encoding="utf-8",
-    )
+        )
+
+    (results / "suite_20260423.json").write_text(_suite(35.34), encoding="utf-8")
+    # A newer sidecar that METRICS.yaml does not name must not be compared.
+    (results / "suite_20991231.json").write_text(_suite(500.0), encoding="utf-8")
+    if metrics_yaml:
+        (package_root / "evaluation").mkdir(parents=True)
+        (package_root / "evaluation" / "METRICS.yaml").write_text(
+            "benchmark:\n  benchmark_suite_file: suite_20260423.md\n",
+            encoding="utf-8",
+        )
     manuscript.write_text(
         "\n".join(
             [
                 "| Fixture | Wall-clock median (ms) | Wall-clock p95 (ms) | Nodes | Edges | Mappings | Peak memory (MB) |",
                 "|---|---:|---:|---:|---:|---:|---:|",
-                "| `calculator` | 99 | 35 | 12 | 25 | 11 | 0.2 |",
+                f"| `calculator` | {median_cell} | 35 | 12 | 25 | 11 | 0.2 |",
                 ": Benchmark suite results. {#tbl:benchmark-suite-results}",
             ]
         ),
         encoding="utf-8",
     )
+    return manuscript, package_root
+
+
+def test_benchmark_json_backed_table_detects_drift(tmp_path: Path) -> None:
+    manuscript, package_root = _write_benchmark_fixture(tmp_path, median_cell="99")
 
     findings = check_coverage_table._check_benchmark_table(manuscript, package_root)
 
     assert any("wall_median_ms" in finding for finding in findings)
+
+
+def test_benchmark_table_is_compared_to_the_sidecar_named_in_metrics(tmp_path: Path) -> None:
+    manuscript, package_root = _write_benchmark_fixture(tmp_path, median_cell="35")
+
+    assert check_coverage_table._check_benchmark_table(manuscript, package_root) == []
+
+
+def test_benchmark_table_check_fails_loudly_without_metrics_yaml(tmp_path: Path) -> None:
+    manuscript, package_root = _write_benchmark_fixture(
+        tmp_path, median_cell="35", metrics_yaml=False
+    )
+
+    with pytest.raises(SystemExit, match="METRICS.yaml missing"):
+        check_coverage_table._check_benchmark_table(manuscript, package_root)
