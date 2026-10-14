@@ -110,10 +110,10 @@ cogant translate ./my_repo --output output/ --skip dynamic,export
 - `target`: Path to repository (default: current directory)
 
 **Options:**
-- `--config, -c`: YAML or JSON pipeline config file with stage / plugin overrides.
+- `--config, -c`: YAML or JSON project config file (`pipeline`, `export`, `validation`, ... sections; see `configuration_file.md`). Values sit below `COGANT_<SECTION>__<FIELD>` environment variables and CLI flags. The per-stage `pipeline.ingest` / `graph` / `translate` / `statespace` / `gnn` / `reverse` sections are reserved and only emit a `ReservedConfigWarning`.
 - `--skip`: Comma-separated list of stages to skip (e.g. `'dynamic,validate'`). Whitespace around names is trimmed.
-- `--output, -o`: Directory where `bundle.json` and derived artifacts are written. Default: `output`.
-- `--layout-output`: After export, move artifacts into `data/`, `diagrams/`, `site/`, `reports/`, `figures/` subdirectories.
+- `--output, -o`: Directory where `bundle.json` and derived artifacts are written. Default: `pipeline.output_dir` from `--config` / `COGANT_PIPELINE__OUTPUT_DIR`, else `output`. A relative path containing `..` is resolved to an absolute path.
+- `--layout-output`: After export, move artifacts into `data/`, `diagrams/`, `site/`, `reports/`, `figures/` subdirectories. Default: `pipeline.layout_output` from `--config` / the environment, else off.
 - `--no-dynamic`: Skip the dynamic-analysis enrichment stage (coverage + trace). Faster but less accurate.
 - `--coverage`: Path to a coverage database (`.coverage`) or Cobertura `coverage.xml`.
 - `--trace`: Path to a Chrome DevTools trace JSON file for dynamic analysis.
@@ -121,6 +121,8 @@ cogant translate ./my_repo --output output/ --skip dynamic,export
 - `--cache-dir`: Override the incremental cache directory. Defaults to `~/.cache/cogant`. Useful for tests and benchmarks that need an isolated cache state.
 
 **Artifacts:** Writes **`bundle.json`** in the output directory (full pipeline `Bundle` snapshot for `cogant render` / `cogant validate`) plus stage exports from the `export` stage when run.
+
+**Exit status:** The results table shows each stage's recorded outcome (success, partial, skipped, unavailable, failed). The command exits `1` when any stage failed or errors were recorded; the bundle is still written for inspection.
 
 **Stages:** ingest, static, normalize, graph, translate, statespace, process, export, validate
 
