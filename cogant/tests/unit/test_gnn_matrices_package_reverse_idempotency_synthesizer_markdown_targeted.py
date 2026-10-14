@@ -66,6 +66,8 @@ def _make_process_model():
 def _make_reverse_model(name="test_model"):
     from cogant.reverse.parser import ReverseGNNModel
 
+    # Declared roles need source matrices: synthesis refuses to invent them,
+    # and arbitrary variable names are no longer discarded by the parser.
     return ReverseGNNModel(
         model_name=name,
         hidden_states=["state_a", "state_b"],
@@ -73,6 +75,10 @@ def _make_reverse_model(name="test_model"):
         actions=["act_1"],
         policies=[],
         constraints=[],
+        A=[[0.9, 0.2], [0.1, 0.8]],
+        B=[[[1.0], [0.0]], [[0.0], [1.0]]],
+        C=[0.0, 1.0],
+        D=[0.5, 0.5],
     )
 
 

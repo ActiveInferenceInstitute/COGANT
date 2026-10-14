@@ -370,6 +370,11 @@ def reverse_command(
             "has_B_tensor": plan.has_B_tensor,
             "has_C_vector": plan.has_C_vector,
             "has_D_vector": plan.has_D_vector,
+            # Matrices the source did not provide were projected from its
+            # factorized declarations; say so instead of implying the
+            # package carries source-equivalent semantics.
+            "degraded_source_projection": model.degraded,
+            "diagnostics": list(model.diagnostics),
         }
         console.print_json(data=payload)
     else:
@@ -382,6 +387,11 @@ def reverse_command(
             policy_count=len(plan.policy_functions),
             constraint_count=len(plan.constraint_checks),
         )
+        if model.degraded:
+            console.print(
+                "[yellow]warning:[/yellow] some matrices were projected from factorized "
+                "declarations rather than read from the source: " + "; ".join(model.diagnostics)
+            )
 
 
 def roundtrip_command(

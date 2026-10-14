@@ -12,9 +12,16 @@ legacy bare comma sources (``A_m0,s_f0>o_m0``), and compatibility
 parenthesised examples (``(D_f0) > (s_f0)``), both bracketed matrix blocks
 (``A[[rows=3][cols=2]]``) and InitialParameterization tuple blocks
 (``D_f0={ (0.3, 0.3, 0.4) }``), and any mix of COGANT's extended
-sections alongside the upstream header. Sections the parser does not
-recognise are ignored rather than causing an error, so the parser
-tolerates future COGANT extensions.
+sections alongside the upstream header. Upstream files keep their own
+variable names (``s``, ``o``, ``u``, ``s_beliefs``), trailing ``# comments``,
+multi-line ``A={`` ... ``}`` parameter literals, and action-major ``B``
+slices. Sections the parser does not recognise are ignored rather than
+causing an error, so the parser tolerates future COGANT extensions.
+
+Matrices the source does not provide are projected from its factorized
+declarations and the model is marked ``degraded`` with ``diagnostics``;
+every allocation sized by source integers is bounded by
+:data:`MAX_REVERSE_MATRIX_ELEMENTS`.
 
 The parser does **not** consult the ProgramGraph; it relies entirely on
 the markdown text. This keeps the reverse pipeline standalone — a GNN
@@ -29,6 +36,7 @@ import re
 from dataclasses import dataclass, field
 from itertools import product
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -81,10 +89,12 @@ class ReverseGNNModel:
         raw_model_name: The unsanitized ``## ModelName`` value as it
             appears in the markdown (may contain non-identifier chars).
         hidden_states: Names of hidden-state factors (``s_f0``, ``s_f1``,
-            ...). Each entry is the upstream variable name.
+            ... in COGANT bundles; ``s`` or any ``HiddenState``-annotated
+            name upstream). Each entry is the source variable name.
         observations: Names of observation modalities
-            (``o_m0``, ``o_m1``, ...).
-        actions: Names of action/control factors (``u_c0``, ``u_c1``, ...).
+            (``o_m0``, ``o_m1``, ... / ``o``).
+        actions: Names of action/control factors (``u_c0``, ``u_c1``, ... /
+            ``u``).
         policies: Names of policy variables (rare; usually empty).
         constraints: Names of constraint/preference variables.
         annotations: Map from variable name → ontology concept
@@ -195,8 +205,49 @@ _SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 
 # Matches a StateSpaceBlock variable declaration like ``s_f0[10,1,type=int]``
 # or ``A_m0[2,2,type=float]``. We keep the match deliberately permissive so
-# a missing type= suffix or a trailing comment is tolerated.
+# a missing type= suffix is tolerated; trailing ``# comments`` are removed by
+# :func:`_strip_inline_comment` before matching.
 _VAR_DECL_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*\[\s*([^\]]+?)\s*\]\s*$")
+
+# Sections that declare variables in ``name[dims,type=...]`` form.  Upstream
+# GNN uses ``StateSpaceBlock``; COGANT's hand-authored zoo models also put
+# observation, control, and preference declarations in their own blocks.
+_DECLARATION_SECTIONS = ("StateSpaceBlock", "ObservationBlock", "ControlBlock", "PreferenceBlock")
+
+# Ontology concepts that name a variable of the role itself (rather than a
+# matrix, prior, or successor attached to it), e.g. ``HiddenStateFactor1``.
+_HIDDEN_STATE_CONCEPT_RE = re.compile(r"^hiddenstate(?:factor\d+)?$")
+_OBSERVATION_CONCEPT_RE = re.compile(r"^observation(?:modality\d+)?$")
+_ACTION_CONCEPT_RE = re.compile(r"^action(?:factor\d+)?$")
+
+# Matches the start of an InitialParameterization assignment ``name=value``.
+_PARAM_ASSIGN_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$")
+
+# COGANT's factor/modality-indexed parameter keys (``D_f0``, ``A_m1``, ...).
+_INDEXED_PARAMETER_RE = re.compile(r"^(?:D_f|B_f|A_m|C_m)\d+$")
+
+# Tokens of a nested numeric literal: brackets, numbers, or anything else.
+_NESTED_TOKEN_RE = re.compile(
+    r"[\[\](){}]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?|[^\s,\[\](){}]+"
+)
+_OPEN_BRACKETS = frozenset("([{")
+_CLOSE_BRACKETS = frozenset(")]}")
+
+# Column sums within this distance of 1.0 are treated as rounding in the
+# source literal (``0.33333`` x 3) and renormalized; larger deviations are
+# kept so matrix validation rejects them.
+_ROUNDING_TOLERANCE = 1e-3
+
+
+def _strip_inline_comment(line: str) -> str:
+    """Return ``line`` without a trailing GNN ``# comment``, whitespace-trimmed.
+
+    GNN allows comments after declarations, annotations, and parameter
+    assignments (``s[3,1,type=float]   # Current hidden state``), and COGANT's
+    own formatter writes ``s_f0[10,1,type=int] # state factor``.
+    """
+    return line.split("#", 1)[0].strip()
+
 
 # Matches an ontology annotation like ``s_f0=HiddenState``.
 _ONTOLOGY_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*$")
@@ -263,6 +314,140 @@ def _parse_tuple_vector(body: str) -> list[float]:
     return [float(n) for n in nums]
 
 
+def _parse_nested_numbers(text: str) -> list[Any] | None:
+    """Parse a GNN parameter literal into nested lists of floats.
+
+    ``{}``, ``()``, and ``[]`` each open one nesting level, so
+    ``{ ((0.9, 0.1), (0.1, 0.9)) }`` and ``{ [[0.9, 0.1], [0.1, 0.9]] }``
+    yield the same structure (wrapped in redundant singleton levels that
+    :func:`_squeeze` removes).  Returns ``None`` for unbalanced brackets or
+    non-numeric tokens, so symbolic values are never mistaken for numbers.
+    """
+    stack: list[list[Any]] = [[]]
+    for token in _NESTED_TOKEN_RE.findall(text):
+        if token in _OPEN_BRACKETS:
+            child: list[Any] = []
+            stack[-1].append(child)
+            stack.append(child)
+        elif token in _CLOSE_BRACKETS:
+            if len(stack) == 1:
+                return None
+            stack.pop()
+        else:
+            try:
+                stack[-1].append(float(token))
+            except ValueError:
+                return None
+    if len(stack) != 1:
+        return None
+    return stack[0]
+
+
+def _nesting_depth(value: Any) -> int:
+    """Return how many list levels ``value`` nests along its first elements."""
+    depth = 0
+    while isinstance(value, list):
+        depth += 1
+        value = value[0] if value else None
+    return depth
+
+
+def _squeeze(value: list[Any], depth: int) -> list[Any]:
+    """Drop redundant singleton wrappers until ``value`` nests ``depth`` deep."""
+    while _nesting_depth(value) > depth and len(value) == 1 and isinstance(value[0], list):
+        value = value[0]
+    return value
+
+
+def _flatten_numbers(value: Any) -> list[float]:
+    """Return every number in a nested list, in order."""
+    if isinstance(value, list):
+        return [number for item in value for number in _flatten_numbers(item)]
+    return [float(value)]
+
+
+def _as_matrix(value: list[Any]) -> list[list[float]] | None:
+    """Return a rectangular 2-D float matrix, or ``None`` if ``value`` is not one."""
+    value = _squeeze(value, 2)
+    if value and all(not isinstance(item, list) for item in value):
+        value = [value]
+    if not value or not all(
+        isinstance(row, list) and row and all(not isinstance(cell, list) for cell in row)
+        for row in value
+    ):
+        return None
+    if len({len(row) for row in value}) != 1:
+        return None
+    return [[float(cell) for cell in row] for row in value]
+
+
+def _as_tensor3(value: list[Any]) -> list[list[list[float]]] | None:
+    """Return a rectangular 3-D float tensor (2-D input gains a unit depth)."""
+    value = _squeeze(value, 3)
+    if _nesting_depth(value) == 2:
+        matrix = _as_matrix(value)
+        return None if matrix is None else [[[cell] for cell in row] for row in matrix]
+    slices = [_as_matrix(item) if isinstance(item, list) else None for item in value]
+    if not slices or any(item is None for item in slices):
+        return None
+    clean = [item for item in slices if item is not None]
+    if len({(len(item), len(item[0])) for item in clean}) != 1:
+        return None
+    return clean
+
+
+def _repair_column_rounding(columns: list[list[float]]) -> None:
+    """Renormalize, in place, columns whose sum is 1.0 up to source rounding."""
+    for column in columns:
+        total = sum(column)
+        if (
+            all(value >= 0.0 for value in column)
+            and total > 0.0
+            and abs(total - 1.0) <= _ROUNDING_TOLERANCE
+        ):
+            column[:] = [value / total for value in column]
+
+
+def _is_column_stochastic(tensor: list[list[list[float]]]) -> bool:
+    """Return whether every ``tensor[:, previous, action]`` column sums to 1.0."""
+    n_next = len(tensor)
+    n_previous = len(tensor[0]) if tensor else 0
+    n_actions = len(tensor[0][0]) if n_previous else 0
+    for previous in range(n_previous):
+        for action in range(n_actions):
+            column = [tensor[nxt][previous][action] for nxt in range(n_next)]
+            if any(value < 0.0 for value in column):
+                return False
+            if abs(sum(column) - 1.0) > _ROUNDING_TOLERANCE:
+                return False
+    return True
+
+
+def _canonical_transition_tensor(raw: list[list[list[float]]]) -> list[list[list[float]]]:
+    """Return ``B[next][previous][action]`` from a 3-D transition literal.
+
+    Upstream GNN writes ``B`` as one ``[next][previous]`` slice per action
+    (action-major); COGANT's own factor blocks use the canonical
+    ``[next][previous][action]`` order.  The shape decides when only one
+    reading is square; for a cube, the reading whose per-action columns are
+    stochastic wins, preferring the upstream action-major convention.
+    """
+    d0, d1, d2 = len(raw), len(raw[0]), len(raw[0][0])
+    canonical = raw
+    action_major = (
+        [[[raw[a][n][p] for a in range(d0)] for p in range(d2)] for n in range(d1)]
+        if d1 == d2
+        else None
+    )
+    if action_major is None:
+        return canonical
+    if d0 != d1:
+        return action_major
+    if _is_column_stochastic(canonical) and not _is_column_stochastic(action_major):
+        return canonical
+    return action_major
+
+
 def _parse_state_space_block(body: str, model: ReverseGNNModel) -> None:
     """Populate variable lists and cardinalities from ``## StateSpaceBlock``.
 
@@ -275,9 +460,9 @@ def _parse_state_space_block(body: str, model: ReverseGNNModel) -> None:
     constraints: dict[int, str] = {}
     policies: dict[int, str] = {}
 
-    for line in body.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
+    for raw_line in body.splitlines():
+        line = _strip_inline_comment(raw_line)
+        if not line:
             continue
         match = _VAR_DECL_RE.match(line)
         if not match:
@@ -333,11 +518,16 @@ def _parse_ontology_annotation(body: str, model: ReverseGNNModel) -> None:
 
     Also treats explicit Policy / Constraint / Preference annotations as
     additional entries in the corresponding variable lists when the
-    variable was not already classified by StateSpaceBlock.
+    variable was not already classified by StateSpaceBlock.  A variable
+    annotated with the role concept itself (``HiddenState``,
+    ``HiddenStateFactor1``, ``Observation``, ``Action``, ...) is registered
+    whatever its name, so upstream and hand-authored models keep every
+    factor; priors and successors (``PriorOverHiddenStates``,
+    ``NextHiddenState``) are not hidden-state variables.
     """
-    for line in body.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
+    for raw_line in body.splitlines():
+        line = _strip_inline_comment(raw_line)
+        if not line:
             continue
         match = _ONTOLOGY_RE.match(line)
         if not match:
@@ -349,6 +539,7 @@ def _parse_ontology_annotation(body: str, model: ReverseGNNModel) -> None:
         # If the ontology block introduces a variable that wasn't classified
         # by StateSpaceBlock prefix heuristics, register it by concept type.
         lc = concept.lower()
+        compact = lc.replace(" ", "")
         all_classified = (
             model.hidden_states
             + model.observations
@@ -356,16 +547,28 @@ def _parse_ontology_annotation(body: str, model: ReverseGNNModel) -> None:
             + model.policies
             + model.constraints
         )
-        if "hiddenstate" in lc.replace(" ", "") or "hidden" == lc:
+        if ("hiddenstate" in compact or "hidden" == lc) and not compact.startswith(
+            ("prior", "next", "posterior")
+        ):
             if var_name not in all_classified and (
-                not model.hidden_states or re.match(r"^(s_f|s)\d+$", var_name)
+                not model.hidden_states
+                or re.match(r"^(s_f|s)\d+$", var_name)
+                or _HIDDEN_STATE_CONCEPT_RE.match(compact)
             ):
                 model.hidden_states.append(var_name)
         elif "observation" in lc and var_name not in all_classified:
-            if not model.observations or re.match(r"^(o_m|o)\d+$", var_name):
+            if (
+                not model.observations
+                or re.match(r"^(o_m|o)\d+$", var_name)
+                or _OBSERVATION_CONCEPT_RE.match(compact)
+            ):
                 model.observations.append(var_name)
         elif "action" in lc and var_name not in all_classified:
-            if not model.actions or re.match(r"^(u_c|u|a_c)\d+$", var_name):
+            if (
+                not model.actions
+                or re.match(r"^(u_c|u|a_c)\d+$", var_name)
+                or _ACTION_CONCEPT_RE.match(compact)
+            ):
                 model.actions.append(var_name)
         elif "policy" in lc and var_name not in model.policies:
             if var_name not in all_classified and (
@@ -379,57 +582,226 @@ def _parse_ontology_annotation(body: str, model: ReverseGNNModel) -> None:
                 model.constraints.append(var_name)
 
 
-def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
+def _bracket_balance(text: str) -> int:
+    """Return the number of unclosed ``{([`` brackets in ``text``."""
+    return sum(ch in _OPEN_BRACKETS for ch in text) - sum(ch in _CLOSE_BRACKETS for ch in text)
+
+
+def _iter_parameter_assignments(body: str) -> list[tuple[str, str]]:
+    """Return the ``(name, value)`` assignments of ``## InitialParameterization``.
+
+    A value may span several lines (upstream writes ``A={`` ... ``}``): it
+    continues until its brackets balance, or until the next ``name=``
+    assignment begins, so an unbalanced value never swallows the rest of the
+    section.  Inline ``#`` comments are dropped.
+    """
+    assignments: list[tuple[str, str]] = []
+    name: str | None = None
+    parts: list[str] = []
+    balance = 0
+    for raw_line in body.splitlines():
+        line = _strip_inline_comment(raw_line)
+        if not line:
+            continue
+        start = _PARAM_ASSIGN_RE.match(line)
+        if name is not None and start is not None:
+            assignments.append((name, " ".join(parts)))
+            name = None
+        if name is None:
+            if start is None:
+                continue
+            name = start.group(1)
+            parts = [start.group(2).strip()]
+            balance = _bracket_balance(parts[0])
+        else:
+            parts.append(line)
+            balance += _bracket_balance(line)
+        if balance <= 0:
+            assignments.append((name, " ".join(parts)))
+            name = None
+    if name is not None:
+        assignments.append((name, " ".join(parts)))
+    return assignments
+
+
+def _parameter_role(name: str, annotations: dict[str, str]) -> str | None:
+    """Return which of A/B/C/D a non-indexed parameter key provides.
+
+    Plain ``A``/``B``/``C``/``D`` keys name themselves; otherwise the
+    ontology concept decides (``A_likelihood=LikelihoodMatrix``), falling
+    back to the ``A_``/``B_``/``C_``/``D_`` name prefix the zoo models use.
+    """
+    if name in ("A", "B", "C", "D"):
+        return name
+    concept = annotations.get(name, "").lower()
+    if "likelihood" in concept or concept.startswith("observationmatrix"):
+        return "A"
+    if "transition" in concept:
+        return "B"
+    if "preference" in concept:
+        return "C"
+    if concept.startswith("prior") and "action" not in concept:
+        return "D"
+    head = name.split("_", 1)[0]
+    if "_" in name and head in ("A", "B", "C", "D"):
+        return head
+    return None
+
+
+def _identity_transitions(rows: int, cols: int, depth: int) -> list[list[list[float]]]:
+    """Return the ``identity(rows, cols, depth)`` transition tensor."""
+    _require_element_budget(f"identity({rows},{cols},{depth})", rows, cols, depth)
+    return [
+        [[1.0 if nxt == previous else 0.0 for _ in range(depth)] for previous in range(cols)]
+        for nxt in range(rows)
+    ]
+
+
+def _apply_source_parameter(model: ReverseGNNModel, role: str, value: Any) -> None:
+    """Set ``model.<role>`` from a source parameter value given for the whole model.
+
+    ``value`` is a nested numeric literal or, for ``B``, an
+    ``("identity", rows, cols, depth)`` shorthand.  Values that do not have
+    the role's shape are left unset (the factorized projection then applies
+    and marks the model degraded).
+    """
+    if isinstance(value, tuple):
+        if role == "B":
+            _, rows, cols, depth = value
+            model.B = _identity_transitions(rows, cols, depth)
+        return
+    if role == "D":
+        prior = _flatten_numbers(value)
+        total = sum(prior)
+        if prior and all(entry >= 0.0 for entry in prior) and total > 0.0:
+            # Same normalization the factorized D projection applies.
+            prior = [entry / total for entry in prior]
+        model.D = prior
+    elif role == "C":
+        model.C = _flatten_numbers(value)
+    elif role == "A":
+        matrix = _as_matrix(value)
+        if matrix is None:
+            return
+        columns = [list(column) for column in zip(*matrix, strict=True)]
+        _repair_column_rounding(columns)
+        model.A = [list(row) for row in zip(*columns, strict=True)]
+    elif role == "B":
+        raw = _as_tensor3(value)
+        if raw is None:
+            return
+        tensor = _canonical_transition_tensor(raw)
+        n_previous = len(tensor[0])
+        n_actions = len(tensor[0][0])
+        for previous in range(n_previous):
+            for action in range(n_actions):
+                column = [tensor[nxt][previous][action] for nxt in range(len(tensor))]
+                _repair_column_rounding([column])
+                for nxt, entry in enumerate(column):
+                    tensor[nxt][previous][action] = entry
+        model.B = tensor
+
+
+def _parse_initial_parameterization(
+    body: str,
+    model: ReverseGNNModel,
+    *,
+    fenced: frozenset[str] = frozenset(),
+) -> None:
     """Populate A, B, C, D from ``## InitialParameterization``.
 
-    Supports both the tuple-vector form (``D_f0={ (0.3, 0.3, 0.4) }``)
-    and the identity shorthand (``B_f0=identity(2,2,1)``). When the
-    block gives per-factor shapes for D_fN but we have multiple hidden
-    states, we aggregate per-factor D values into the global D vector
-    by taking the first element of each factor's distribution.
+    Three key conventions are recognised:
+
+    * COGANT's factor/modality-indexed blocks (``D_f0={ (0.3, 0.3, 0.4) }``,
+      ``A_m0=...``, ``C_m0=...``, ``B_f0=identity(2,2,1)``), which are
+      projected to the executable Cartesian dimensions below and mark the
+      model ``degraded``;
+    * upstream whole-model keys (``A``, ``B``, ``C``, ``D``), including
+      multi-line ``A={`` ... ``}`` literals and action-major ``B`` slices;
+    * named keys (``D_prior``, ``A_likelihood``, ``B_transition=identity(5,5,3)``)
+      resolved by ontology concept or ``A_``/``B_``/``C_``/``D_`` prefix.  With
+      one hidden factor (and one modality for A/C) they are the model's
+      matrices; with several they bind to the factors in declaration order
+      and join the factorized projection.
+
+    Matrices named in ``fenced`` are supplied by the authoritative
+    ``gnn-matrices`` block, so their projection is not materialized (the
+    degraded flag and diagnostics are still recorded as before).
     """
     per_factor_D: dict[str, list[float]] = {}
     per_factor_C: dict[str, list[float]] = {}
     per_factor_A: dict[str, list[list[float]]] = {}
+    named: dict[str, list[tuple[str, Any]]] = {"A": [], "B": [], "C": [], "D": []}
 
-    for line in body.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
+    for name, value_text in _iter_parameter_assignments(body):
+        line = f"{name}={value_text}"
 
-        # identity(card,card,depth) shorthand — used for B_fN.  The B
-        # projection below always emits identity transitions, so the
-        # shorthand is only checked against the allocation budget here; it
-        # is never materialized eagerly.
+        # identity(card,card,depth) shorthand.  Indexed ``B_fN`` shorthands
+        # are covered by the identity B projection below, so they are only
+        # checked against the allocation budget; named ones are kept as the
+        # source transition tensor.
         id_match = _IPARAM_IDENTITY_RE.match(line)
         if id_match:
-            _require_element_budget(
-                f"{id_match.group(1)}=identity(...)",
-                int(id_match.group(2)),
-                int(id_match.group(3)),
-                int(id_match.group(4)),
-            )
+            rows, cols, depth = (int(id_match.group(k)) for k in (2, 3, 4))
+            _require_element_budget(f"{name}=identity(...)", rows, cols, depth)
+            if not _INDEXED_PARAMETER_RE.match(name) and (
+                _parameter_role(name, model.annotations) == "B"
+            ):
+                named["B"].append((name, ("identity", rows, cols, depth)))
             continue
 
-        # ``D_f0={ ( ... ) }`` / ``A_m0={ ( (row0), (row1), ... ) }`` / ``C_m0={ ( ... ) }``
-        vec_match = _IPARAM_VEC_RE.match(line)
-        if vec_match:
-            name = vec_match.group(1)
-            inner = vec_match.group(2)
-            floats = _parse_tuple_vector(inner)
-            if name.startswith("D_"):
-                per_factor_D[name] = floats
-            elif name.startswith("C_"):
-                per_factor_C[name] = floats
-            elif name.startswith("A_"):
-                # Attempt to reshape: count inner tuples to infer row count.
-                inner_groups = re.findall(r"\(([^()]+)\)", inner)
-                if inner_groups:
-                    rows_list = [_parse_tuple_vector(g) for g in inner_groups]
-                    per_factor_A[name] = rows_list
-                else:
-                    per_factor_A[name] = [floats]
+        if _INDEXED_PARAMETER_RE.match(name):
+            # ``D_f0={ ( ... ) }`` / ``A_m0={ ( (row0), (row1), ... ) }`` / ``C_m0={ ( ... ) }``
+            vec_match = _IPARAM_VEC_RE.match(line)
+            if vec_match:
+                inner = vec_match.group(2)
+                floats = _parse_tuple_vector(inner)
+                if name.startswith("D_"):
+                    per_factor_D[name] = floats
+                elif name.startswith("C_"):
+                    per_factor_C[name] = floats
+                elif name.startswith("A_"):
+                    # Attempt to reshape: count inner tuples to infer row count.
+                    inner_groups = re.findall(r"\(([^()]+)\)", inner)
+                    if inner_groups:
+                        rows_list = [_parse_tuple_vector(g) for g in inner_groups]
+                        per_factor_A[name] = rows_list
+                    else:
+                        per_factor_A[name] = [floats]
             continue
+
+        role = _parameter_role(name, model.annotations)
+        nested = _parse_nested_numbers(value_text)
+        if role is not None and nested:
+            named[role].append((name, nested))
+
+    factors_for = {
+        "D": model.hidden_states,
+        "B": model.hidden_states,
+        "C": model.observations,
+        "A": model.observations,
+    }
+    for role, entries in named.items():
+        plain = [value for key, value in entries if key == role]
+        others = [(key, value) for key, value in entries if key != role]
+        factors = factors_for[role]
+        whole_model = len(factors) <= 1 and (role != "A" or len(model.hidden_states) <= 1)
+        if plain:
+            _apply_source_parameter(model, role, plain[-1])
+        elif len(others) == 1 and whole_model:
+            _apply_source_parameter(model, role, others[0][1])
+        elif len(others) > 1 and len(others) == len(factors):
+            for index, (_key, value) in enumerate(others):
+                if isinstance(value, tuple):
+                    continue
+                if role == "D":
+                    per_factor_D.setdefault(f"D_f{index}", _flatten_numbers(value))
+                elif role == "C":
+                    per_factor_C.setdefault(f"C_m{index}", _flatten_numbers(value))
+                elif role == "A":
+                    matrix = _as_matrix(value)
+                    if matrix is not None:
+                        per_factor_A.setdefault(f"A_m{index}", matrix)
 
     # A factorized upstream block does not always include a global A/B/C/D
     # tensor.  Preserve the historical projection as an explicitly degraded
@@ -462,43 +834,45 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
     project_hidden = bool(model.observations or model.actions)
 
     if model.hidden_states and not model.D:
-        for slot in model.hidden_states:
-            _require_element_budget(f"prior for {slot}", model.cardinalities.get(slot, 0))
-        _require_element_budget("projected D prior", hidden_dimension)
-        factor_vectors = [
-            per_factor_D.get(f"D_f{i}")
-            or (
-                [1.0 / model.cardinalities[slot]] * model.cardinalities[slot]
-                if model.cardinalities.get(slot, 0) > 0
-                else [1.0]
-            )
-            for i, slot in enumerate(model.hidden_states)
-        ]
-        if hidden_dimension != len(model.hidden_states) and all(
-            len(values) == model.cardinalities.get(slot, 0)
-            for values, slot in zip(factor_vectors, model.hidden_states, strict=False)
-        ):
-            D_vec = [
-                math.prod(
-                    values[index] for values, index in zip(factor_vectors, indexes, strict=False)
+        if "D" not in fenced:
+            for slot in model.hidden_states:
+                _require_element_budget(f"prior for {slot}", model.cardinalities.get(slot, 0))
+            _require_element_budget("projected D prior", hidden_dimension)
+            factor_vectors = [
+                per_factor_D.get(f"D_f{i}")
+                or (
+                    [1.0 / model.cardinalities[slot]] * model.cardinalities[slot]
+                    if model.cardinalities.get(slot, 0) > 0
+                    else [1.0]
                 )
-                for indexes in product(*(range(len(values)) for values in factor_vectors))
+                for i, slot in enumerate(model.hidden_states)
             ]
-        elif all(
-            len(values) == model.cardinalities.get(slot, 0)
-            for values, slot in zip(factor_vectors, model.hidden_states, strict=False)
-        ):
-            # State-only fragment: a factor vector whose length equals its
-            # declared cardinality is already the executable prior. The
-            # historical branch collapsed it to [max(values)], producing a
-            # one-entry D for a multi-state factor and a downstream
-            # "D must contain N entries" synthesis error.
-            D_vec = [value for values in factor_vectors for value in values]
-        else:
-            # Legacy model objects already use one name per global state.
-            D_vec = [max(values) if values else 1.0 for values in factor_vectors]
-        total = sum(D_vec) or 1.0
-        model.D = [value / total for value in D_vec]
+            if hidden_dimension != len(model.hidden_states) and all(
+                len(values) == model.cardinalities.get(slot, 0)
+                for values, slot in zip(factor_vectors, model.hidden_states, strict=False)
+            ):
+                D_vec = [
+                    math.prod(
+                        values[index]
+                        for values, index in zip(factor_vectors, indexes, strict=False)
+                    )
+                    for indexes in product(*(range(len(values)) for values in factor_vectors))
+                ]
+            elif all(
+                len(values) == model.cardinalities.get(slot, 0)
+                for values, slot in zip(factor_vectors, model.hidden_states, strict=False)
+            ):
+                # State-only fragment: a factor vector whose length equals its
+                # declared cardinality is already the executable prior. The
+                # historical branch collapsed it to [max(values)], producing a
+                # one-entry D for a multi-state factor and a downstream
+                # "D must contain N entries" synthesis error.
+                D_vec = [value for values in factor_vectors for value in values]
+            else:
+                # Legacy model objects already use one name per global state.
+                D_vec = [max(values) if values else 1.0 for values in factor_vectors]
+            total = sum(D_vec) or 1.0
+            model.D = [value / total for value in D_vec]
         if project_hidden:
             model.degraded = True
             model.diagnostics.append(
@@ -506,71 +880,77 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
             )
 
     if model.observations and not model.C:
-        for slot in model.observations:
-            _require_element_budget(f"preferences for {slot}", model.cardinalities.get(slot, 0))
-        _require_element_budget("projected C preferences", observation_dimension)
-        factor_vectors = [
-            per_factor_C.get(f"C_m{i}") or [0.0] * max(model.cardinalities.get(slot, 1), 1)
-            for i, slot in enumerate(model.observations)
-        ]
-        if observation_dimension != len(model.observations) and all(
-            len(values) == model.cardinalities.get(slot, 0)
-            for values, slot in zip(factor_vectors, model.observations, strict=False)
-        ):
-            model.C = [
-                sum(values[index] for values, index in zip(factor_vectors, indexes, strict=False))
-                for indexes in product(*(range(len(values)) for values in factor_vectors))
+        if "C" not in fenced:
+            for slot in model.observations:
+                _require_element_budget(f"preferences for {slot}", model.cardinalities.get(slot, 0))
+            _require_element_budget("projected C preferences", observation_dimension)
+            factor_vectors = [
+                per_factor_C.get(f"C_m{i}") or [0.0] * max(model.cardinalities.get(slot, 1), 1)
+                for i, slot in enumerate(model.observations)
             ]
-        else:
-            model.C = [(values[0] if values else 0.0) for values in factor_vectors]
+            if observation_dimension != len(model.observations) and all(
+                len(values) == model.cardinalities.get(slot, 0)
+                for values, slot in zip(factor_vectors, model.observations, strict=False)
+            ):
+                model.C = [
+                    sum(
+                        values[index]
+                        for values, index in zip(factor_vectors, indexes, strict=False)
+                    )
+                    for indexes in product(*(range(len(values)) for values in factor_vectors))
+                ]
+            else:
+                model.C = [(values[0] if values else 0.0) for values in factor_vectors]
         model.degraded = True
         model.diagnostics.append(
             "factorized C declarations projected to executable observation preferences"
         )
 
     if model.observations and model.hidden_states and not model.A:
-        n_obs = observation_dimension
-        n_states = hidden_dimension
-        _require_element_budget("projected A likelihood", n_obs, n_states)
-        raw_rows: list[list[float]] = []
-        for i in range(len(model.observations)):
-            rows = per_factor_A.get(f"A_m{i}", [])
-            if len(rows) == n_obs and all(len(row) == n_states for row in rows):
-                raw_rows.extend([list(row) for row in rows])
-            else:
-                row = rows[0] if rows and len(rows[0]) == n_states else []
-                raw_rows.append(list(row) if row else [1.0] * n_states)
-        if n_obs != len(raw_rows):
-            # A factorized source may not provide a global modality matrix.
-            # Preserve a valid, explicitly degraded shape rather than
-            # silently reusing one modality for every Cartesian outcome.
-            raw_rows = [[1.0] * n_states for _ in range(n_obs)]
-        # Normalize each projected likelihood column.  A one-modality
-        # factorized declaration therefore remains a valid categorical
-        # likelihood rather than leaking the source row's arbitrary scale.
-        model.A = [[0.0] * n_states for _ in range(n_obs)]
-        for column in range(n_states):
-            total = sum(row[column] for row in raw_rows)
-            if total <= 0.0:
-                total = float(n_obs)
-                for row_idx in range(n_obs):
-                    model.A[row_idx][column] = 1.0 / total
-            else:
-                for row_idx in range(n_obs):
-                    model.A[row_idx][column] = raw_rows[row_idx][column] / total
+        if "A" not in fenced:
+            n_obs = observation_dimension
+            n_states = hidden_dimension
+            _require_element_budget("projected A likelihood", n_obs, n_states)
+            raw_rows: list[list[float]] = []
+            for i in range(len(model.observations)):
+                rows = per_factor_A.get(f"A_m{i}", [])
+                if len(rows) == n_obs and all(len(row) == n_states for row in rows):
+                    raw_rows.extend([list(row) for row in rows])
+                else:
+                    row = rows[0] if rows and len(rows[0]) == n_states else []
+                    raw_rows.append(list(row) if row else [1.0] * n_states)
+            if n_obs != len(raw_rows):
+                # A factorized source may not provide a global modality matrix.
+                # Preserve a valid, explicitly degraded shape rather than
+                # silently reusing one modality for every Cartesian outcome.
+                raw_rows = [[1.0] * n_states for _ in range(n_obs)]
+            # Normalize each projected likelihood column.  A one-modality
+            # factorized declaration therefore remains a valid categorical
+            # likelihood rather than leaking the source row's arbitrary scale.
+            model.A = [[0.0] * n_states for _ in range(n_obs)]
+            for column in range(n_states):
+                total = sum(row[column] for row in raw_rows)
+                if total <= 0.0:
+                    total = float(n_obs)
+                    for row_idx in range(n_obs):
+                        model.A[row_idx][column] = 1.0 / total
+                else:
+                    for row_idx in range(n_obs):
+                        model.A[row_idx][column] = raw_rows[row_idx][column] / total
         model.degraded = True
         model.diagnostics.append(
             "factorized A declarations projected to executable modality/state dimensions"
         )
 
     if model.hidden_states and model.actions and not model.B:
-        n_states = hidden_dimension
-        n_actions = action_dimension
-        _require_element_budget("projected B transitions", n_states, n_states, n_actions)
-        model.B = [
-            [[1.0 if row == col else 0.0 for _ in range(n_actions)] for col in range(n_states)]
-            for row in range(n_states)
-        ]
+        if "B" not in fenced:
+            n_states = hidden_dimension
+            n_actions = action_dimension
+            _require_element_budget("projected B transitions", n_states, n_states, n_actions)
+            model.B = [
+                [[1.0 if row == col else 0.0 for _ in range(n_actions)] for col in range(n_states)]
+                for row in range(n_states)
+            ]
         model.degraded = True
         model.diagnostics.append(
             "factorized B declarations projected to executable identity transitions"
@@ -631,23 +1011,62 @@ def _parse_connections(body: str, model: ReverseGNNModel) -> None:
             model.connections.append(stripped)
 
 
-def _normalize_reverse_dimensions(model: ReverseGNNModel) -> None:
-    """Align parsed variable declarations with authoritative matrix semantics."""
-    model.hidden_states = [name for name in model.hidden_states if re.match(r"^(s_f|s)\d+$", name)]
-    model.observations = [name for name in model.observations if re.match(r"^(o_m|o)\d+$", name)]
-    model.actions = [name for name in model.actions if re.match(r"^(u_c|u|a_c)\d+$", name)]
+def _align_slots_to_dimension(
+    model: ReverseGNNModel,
+    slots: list[str],
+    dimension: int,
+    default_slot: str,
+    *,
+    index_cardinality: bool = False,
+) -> list[str]:
+    """Return the declared slots that carry an authoritative matrix dimension.
 
+    Several declared factors whose cardinalities multiply to ``dimension``
+    are a consistent factorization and are all kept.  Otherwise the matrix
+    is an aggregate over one slot (the first declared, or ``default_slot``):
+    an unset cardinality, or one inherited from collapsing several declared
+    factors, becomes ``dimension``.  With ``index_cardinality`` a declared
+    cardinality of 1 is an action-index variable (upstream ``u[1,type=int]``)
+    and also takes the matrix dimension.
+    """
+    cards = [model.cardinalities.get(slot, 0) for slot in slots]
+    smallest_factor = 2 if index_cardinality else 1
+    if (
+        len(slots) > 1
+        and all(card >= smallest_factor for card in cards)
+        and math.prod(cards) == dimension
+    ):
+        return list(slots)
+    slot = slots[0] if slots else default_slot
+    current = model.cardinalities.get(slot, 0)
+    if current <= 0 or len(slots) > 1 or (index_cardinality and current == 1):
+        model.cardinalities[slot] = dimension
+    return [slot]
+
+
+def _normalize_reverse_dimensions(model: ReverseGNNModel) -> None:
+    """Align parsed variable declarations with authoritative matrix semantics.
+
+    Declared names are kept as written — upstream's bare ``s``/``o``/``u``
+    and arbitrary ontology-classified names (``s_beliefs``) included.  For a
+    non-degraded model the A/B/C/D matrices are authoritative: the variable
+    lists are aligned to their dimensions by :func:`_align_slots_to_dimension`.
+    """
     if model.D and not model.degraded:
-        model.hidden_states = [model.hidden_states[0] if model.hidden_states else "s_f0"]
+        model.hidden_states = _align_slots_to_dimension(
+            model, model.hidden_states, len(model.D), "s_f0"
+        )
     if model.C and not model.degraded:
-        model.observations = [model.observations[0] if model.observations else "o_m0"]
+        model.observations = _align_slots_to_dimension(
+            model, model.observations, len(model.C), "o_m0"
+        )
     if model.B and model.B[0] and model.B[0][0] and not model.degraded:
-        model.actions = [model.actions[0] if model.actions else "u_c0"]
+        model.actions = _align_slots_to_dimension(
+            model, model.actions, len(model.B[0][0]), "u_c0", index_cardinality=True
+        )
 
     for idx, slot in enumerate(model.hidden_states):
-        if model.D and not model.degraded and model.cardinalities.get(slot, 0) <= 0:
-            model.cardinalities[slot] = len(model.D)
-        elif model.cardinalities.get(slot, 0) <= 0:
+        if model.cardinalities.get(slot, 0) <= 0:
             for source in (f"D_f{idx}", f"B_f{idx}"):
                 card = model.cardinalities.get(source)
                 if card is not None and card > 0:
@@ -655,24 +1074,12 @@ def _normalize_reverse_dimensions(model: ReverseGNNModel) -> None:
                     break
 
     for idx, slot in enumerate(model.observations):
-        if model.C and not model.degraded and model.cardinalities.get(slot, 0) <= 0:
-            model.cardinalities[slot] = len(model.C)
-        elif model.cardinalities.get(slot, 0) <= 0:
+        if model.cardinalities.get(slot, 0) <= 0:
             for source in (f"C_m{idx}", f"A_m{idx}"):
                 card = model.cardinalities.get(source)
                 if card is not None and card > 0:
                     model.cardinalities[slot] = card
                     break
-
-    for slot in model.actions:
-        if (
-            model.B
-            and model.B[0]
-            and model.B[0][0]
-            and not model.degraded
-            and model.cardinalities.get(slot, 0) <= 0
-        ):
-            model.cardinalities[slot] = len(model.B[0][0])
 
     # Reconcile a degenerate single-entry D with a declared multi-state
     # factor. The forward pipeline's aggregate in-memory matrices carry one
@@ -721,7 +1128,7 @@ def _normalize_reverse_dimensions(model: ReverseGNNModel) -> None:
 
 
 def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
-    """Optionally parse the ``gnn-matrices`` fenced code block.
+    """Optionally parse the ``gnn-matrices`` fenced code block into ``model``.
 
     When COGANT's extended ``## State Space`` → "Active Inference
     Matrices" block is present, it contains authoritative A/B/C/D
@@ -729,9 +1136,23 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
     ``## InitialParameterization``. This gives the reverse synthesizer
     the most accurate matrix values available.
     """
+    for key, value in _read_matrices_fenced_block(text).items():
+        setattr(model, key, value)
+
+
+def _read_matrices_fenced_block(text: str) -> dict[str, Any]:
+    """Return the non-empty A/B/C/D matrices of the ``gnn-matrices`` fence.
+
+    :func:`parse_gnn` reads the fence before ``## InitialParameterization`` so
+    the factorized projection never materializes a matrix the fence
+    overrides (COGANT bundles declare per-category factor cardinalities whose
+    Cartesian product can be far larger than the fence's per-variable
+    matrices).
+    """
+    found: dict[str, Any] = {}
     fence_match = re.search(r"```gnn-matrices\s*\n(.*?)\n```", text, re.DOTALL)
     if not fence_match:
-        return
+        return found
     block = fence_match.group(1)
     lines = block.splitlines()
     i = 0
@@ -756,7 +1177,7 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
                         A.append(vals)
                 i += 1
             if A:
-                model.A = A
+                found["A"] = A
         elif tag == "B":
             # Block format: ``# action=k`` header followed by rows rows.
             # The header dimensions come straight from the text, so check
@@ -793,7 +1214,7 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
                     row_idx += 1
                 i += 1
             if B and B[0]:
-                model.B = B
+                found["B"] = B
         elif tag == "C":
             C: list[float] = []
             while i < len(lines) and len(C) < rows:
@@ -804,7 +1225,7 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
                         C.extend(vals[:1])
                 i += 1
             if C:
-                model.C = C[:rows]
+                found["C"] = C[:rows]
         elif tag == "D":
             D: list[float] = []
             while i < len(lines) and len(D) < rows:
@@ -815,7 +1236,8 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
                         D.extend(vals[:1])
                 i += 1
             if D:
-                model.D = D[:rows]
+                found["D"] = D[:rows]
+    return found
 
 
 # ---------------------------------------------------------------------------
@@ -885,17 +1307,21 @@ def parse_gnn(gnn: str | Path) -> ReverseGNNModel:
             model.raw_model_name = raw[0].strip()
             model.model_name = _sanitize_identifier(raw[0].strip())
 
-    body = first("StateSpaceBlock")
-    if body:
-        _parse_state_space_block(body, model)
+    declarations = [body for body in map(first, _DECLARATION_SECTIONS) if body]
+    if declarations:
+        _parse_state_space_block("\n".join(declarations), model)
 
     body = first("ActInfOntologyAnnotation")
     if body:
         _parse_ontology_annotation(body, model)
 
+    # The authoritative gnn-matrices fence overrides the parameterization;
+    # read it first so the projection skips the matrices it supplies.
+    fenced = _read_matrices_fenced_block(text)
+
     body = first("InitialParameterization")
     if body:
-        _parse_initial_parameterization(body, model)
+        _parse_initial_parameterization(body, model, fenced=frozenset(fenced))
 
     # COGANT extended section with the human-readable state variable
     # table (header is ``## State Space``). This gives the planner
@@ -913,9 +1339,10 @@ def parse_gnn(gnn: str | Path) -> ReverseGNNModel:
     if body:
         _parse_connections(body, model)
 
-    # Pull the authoritative A/B/C/D from the fenced gnn-matrices block
+    # Apply the authoritative A/B/C/D from the fenced gnn-matrices block
     # if present — it overrides the aggregate forms derived above.
-    _parse_matrices_fenced_block(text, model)
+    for key, value in fenced.items():
+        setattr(model, key, value)
     _normalize_reverse_dimensions(model)
 
     logger.info(
