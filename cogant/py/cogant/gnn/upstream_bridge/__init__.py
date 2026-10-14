@@ -348,10 +348,22 @@ def get_upstream_gnn_format_enum() -> Any:
 
 
 def parse_upstream_model_gnn_md(package_dir: str | Path) -> dict[str, Any]:
-    """Parse ``model.gnn.md`` inside a COGANT GNN package directory; JSON-safe summary."""
+    """Parse ``model.gnn.md`` inside a COGANT GNN package directory; JSON-safe summary.
+
+    Returns ``{"path", "parse"}`` on success. When the optional
+    ``cogant[upstream]`` extra is not installed (an expected configuration)
+    returns ``{"path", "error", "available": False}`` and logs only at debug
+    level; a genuine upstream parse failure returns ``{"path", "error"}`` and
+    logs a warning with the traceback.
+    """
     p = Path(package_dir) / "model.gnn.md"
     if not p.is_file():
         return {"error": f"missing {p}"}
+    try:
+        _require_upstream_gnn()
+    except ImportError as e:
+        logger.debug("upstream parse_gnn_file skipped: %s", e)
+        return {"path": str(p), "error": str(e), "available": False}
     try:
         info = upstream_parse_file(p)
         return {"path": str(p), "parse": json_safe(info)}
