@@ -28,7 +28,7 @@ cogant viz: Walk a run/output directory and rasterize Mermaid, SVG, dot, and rel
 
 cogant validate: Run validation checks on bundle.json, or on a directory containing `gnn_package/` (full GNN package validation when applicable). For a `gnn_package` directory, the optional Active Inference Institute upstream check (`gnn.validate_gnn_syntax` from the `upstream` extra, GNN 4.1.0 release line) on `model.gnn.md` runs only when `COGANT_ENABLE_UPSTREAM_GNN` is truthy; `--no-upstream-gnn` forces it off while keeping COGANT structural validation. Add `--upstream-gnn-pipeline` to drive the upstream 25-step pass (default skip `1,2,11,12`).
 
-cogant diff: Compare two bundle.json files showing differences in errors and stages. Supports baseline vs current analysis.
+cogant diff: Compare two bundle.json files (errors and stages) or two run directories (structural, semantic, and state-space drift plus metrics). Supports baseline vs current analysis.
 
 cogant changed: List source files that changed since a given git ref (used for incremental analysis scoping).
 
@@ -74,7 +74,7 @@ cogant benchmark ./my_repo --iterations 5
 
 main.py: Typer app instance that registers **26 top-level commands** via `@app.command` (17 plain `@app.command()` calls + 9 with an explicit name — 6 positional like `@app.command("analyze-static")`, plus `name="reverse"`, `name="roundtrip"`, and `name="version"`). It also attaches the `plugin` sub-typer (2 leaves: `list`, `info`) and the `migrate` sub-typer (1 leaf) via `app.add_typer`, for **29 leaf commands total**. Each command delegates to Session, PipelineRunner, or ReviewAPI from `cogant.api`. Rich Console for styled table and panel output. Typer.Argument and Typer.Option for parameter handling.
 
-diff.py: Helper functions load_bundle and diff_command for comparing two output directories using DriftAnalyzer and CodebaseMetrics.
+diff.py: Helper functions load_bundle and diff_command for comparing two run directories (flat, `--layout-output` `data/`, or `gnn_package/`) using DriftAnalyzer and CodebaseMetrics.
 
 ## Dependencies
 

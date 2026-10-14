@@ -221,10 +221,11 @@ def diff(
 ) -> None:
     """Compare two bundles or output directories and report drift.
 
-    When both arguments are directories containing COGANT output (with
-    ``program_graph.json``, ``semantic_mappings.json``, and/or
-    ``model.gnn.json``), the rich
-    :func:`cogant.cli.diff.diff_command` is invoked: it runs
+    When both arguments are COGANT run directories (flat, ``--layout-output``
+    ``data/``, or with a ``gnn_package/``), the rich
+    :func:`cogant.cli.diff.diff_command` is invoked. It reads
+    ``program_graph.json``, ``state_space.json`` and the semantic mappings
+    (``semantic_mappings.json`` or ``gnn_package/model.gnn.json``), runs
     :class:`cogant.scoring.drift.DriftAnalyzer` and
     :class:`cogant.scoring.metrics.CodebaseMetrics` and prints/writes a
     full markdown drift report including architectural drift score,
