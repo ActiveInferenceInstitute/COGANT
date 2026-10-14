@@ -66,6 +66,9 @@ class IncrementalIngester:
     def __init__(self, repo_path: Path, git_timeout: float = 30.0) -> None:
         self.repo_path = Path(repo_path)
         self.git_timeout = float(git_timeout)
+        # Path of ``repo_path`` relative to the git work-tree top level
+        # (``""`` at the top level, ``"pkg/sub/"`` inside a monorepo).
+        self._worktree_prefix = ""
         self._git_available = self._check_git()
 
     # ------------------------------------------------------------------
@@ -73,20 +76,28 @@ class IncrementalIngester:
     # ------------------------------------------------------------------
 
     def _check_git(self) -> bool:
-        """Return True iff ``self.repo_path`` is inside a git repo."""
+        """Return True iff ``self.repo_path`` is inside a git work tree.
+
+        Also records the work-tree prefix of ``repo_path`` so that
+        top-level-relative paths reported by ``git status`` can be mapped
+        back below ``repo_path``.
+        """
         if not self.repo_path.exists():
             return False
         try:
             result = subprocess.run(
-                ["git", "rev-parse", "--git-dir"],
+                ["git", "rev-parse", "--show-prefix"],
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
                 timeout=5,
             )
-            return result.returncode == 0
         except (subprocess.SubprocessError, FileNotFoundError, OSError):
             return False
+        if result.returncode != 0:
+            return False
+        self._worktree_prefix = result.stdout.strip()
+        return True
 
     def is_git_repo(self) -> bool:
         """Return True when git plumbing can be used on this repo."""
@@ -103,6 +114,9 @@ class IncrementalIngester:
         Renamed and copied files are reported with the *new* path and
         ``R`` / ``C`` change types; callers that need the old path
         should use a richer git API.
+
+        When ``repo_path`` is a subdirectory of the git work tree only
+        changes below it are reported, as paths under ``repo_path``.
         """
         if not self._git_available:
             logger.warning("Not a git repository, cannot do incremental analysis")
@@ -110,7 +124,19 @@ class IncrementalIngester:
 
         try:
             result = subprocess.run(
-                ["git", "diff", "--name-status", ref, "HEAD"],
+                # ``--relative`` scopes the diff to ``repo_path`` (the cwd) and
+                # prints paths relative to it; ``core.quotePath=false`` keeps
+                # non-ASCII names verbatim instead of C-quoting them.
+                [
+                    "git",
+                    "-c",
+                    "core.quotePath=false",
+                    "diff",
+                    "--name-status",
+                    "--relative",
+                    ref,
+                    "HEAD",
+                ],
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
@@ -137,13 +163,17 @@ class IncrementalIngester:
         modifications are reported with a single-character ``change_type``
         (the first column of the porcelain status, which covers the
         index state for tracked files and ``?`` for untracked ones).
+        Only changes below ``repo_path`` are reported.
         """
         if not self._git_available:
             return []
 
         try:
             result = subprocess.run(
-                ["git", "status", "--porcelain"],
+                # Porcelain paths are always relative to the work-tree top
+                # level; the ``.`` pathspec limits them to ``repo_path`` and
+                # the recorded prefix is stripped below.
+                ["git", "-c", "core.quotePath=false", "status", "--porcelain", "--", "."],
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
@@ -166,6 +196,9 @@ class IncrementalIngester:
             # `git status` separates old → new for renames with " -> "
             if " -> " in path:
                 path = path.split(" -> ", 1)[1]
+            prefix = self._worktree_prefix
+            if prefix and path.startswith(prefix):
+                path = path[len(prefix) :]
             # Pick the first non-space status char to report something
             # meaningful for both staged and unstaged modifications.
             primary = status[0] if status[0] != " " else status[1]
