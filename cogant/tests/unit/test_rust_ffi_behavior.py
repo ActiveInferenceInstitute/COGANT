@@ -8,6 +8,8 @@ Tests are marked ``requires_rust`` and skip when the extension is not built
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from cogant.rust_backend import RUST_AVAILABLE
@@ -99,6 +101,42 @@ def test_connected_components_treat_duplicate_node_ids_as_one_node() -> None:
     components = connected_components(["a", "b", "a", "c"], [("a", "b")])
 
     assert components == [["a", "b"], ["c"]]
+
+
+def test_write_artifact_atomic_leaves_a_sibling_tmp_file_untouched(tmp_path: Path) -> None:
+    from cogant._rust import write_artifact_atomic
+
+    sibling = tmp_path / "notes.tmp"
+    sibling.write_bytes(b"user data")
+
+    write_artifact_atomic(str(tmp_path / "notes.md"), b"artifact")
+
+    assert (tmp_path / "notes.md").read_bytes() == b"artifact"
+    assert sibling.read_bytes() == b"user data"
+
+
+def test_write_artifact_atomic_keeps_artifacts_sharing_a_stem_apart(tmp_path: Path) -> None:
+    from cogant._rust import write_artifact_atomic
+
+    write_artifact_atomic(str(tmp_path / "model.json"), b"{}")
+    write_artifact_atomic(str(tmp_path / "model.md"), b"# model")
+
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["model.json", "model.md"]
+    assert (tmp_path / "model.json").read_bytes() == b"{}"
+
+
+def test_write_artifact_atomic_removes_its_temp_file_when_the_rename_fails(
+    tmp_path: Path,
+) -> None:
+    from cogant._rust import write_artifact_atomic
+
+    target = tmp_path / "out.json"
+    target.mkdir()  # renaming a file over a directory fails
+
+    with pytest.raises(OSError):
+        write_artifact_atomic(str(target), b"{}")
+
+    assert [p.name for p in tmp_path.iterdir()] == ["out.json"]
 
 
 def test_connected_components_ignore_edges_to_unknown_nodes() -> None:

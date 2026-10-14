@@ -620,22 +620,72 @@ fn artifact_io_error(err: std::io::Error) -> PyErr {
 
 #[pyfunction]
 pub fn write_artifact_atomic(path: String, contents: Vec<u8>) -> PyResult<()> {
+    write_artifact_atomic_inner(std::path::Path::new(&path), &contents).map_err(artifact_io_error)
+}
+
+/// Write `contents` to `final_path` through a temp file in the same directory,
+/// fsync it, then rename it over `final_path`.
+///
+/// The temp file gets a unique hidden name and is opened with `create_new`, so
+/// it can never truncate an existing file — neither a sibling `<stem>.tmp`
+/// belonging to the user nor the temp file of a concurrent write to another
+/// artifact with the same stem (`model.json` / `model.md`). It is removed again
+/// if any step fails. This matches the Python writer in `cogant.cache.store`
+/// (`mkstemp` in the target directory, then `os.replace`).
+fn write_artifact_atomic_inner(
+    final_path: &std::path::Path,
+    contents: &[u8],
+) -> std::io::Result<()> {
     use std::fs;
-    use std::io::Write;
-    let final_path = std::path::PathBuf::from(path);
-    let parent = final_path
-        .parent()
-        .map(std::path::Path::to_path_buf)
-        .unwrap_or_else(|| std::path::PathBuf::from("."));
-    fs::create_dir_all(&parent).map_err(artifact_io_error)?;
-    let tmp_path = final_path.with_extension("tmp");
-    {
-        let mut file = fs::File::create(&tmp_path).map_err(artifact_io_error)?;
-        file.write_all(&contents).map_err(artifact_io_error)?;
-        file.sync_all().map_err(artifact_io_error)?;
+    use std::io::{Error, ErrorKind, Write};
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
+    const MAX_ATTEMPTS: u32 = 64;
+
+    let file_name = final_path.file_name().ok_or_else(|| {
+        Error::new(
+            ErrorKind::InvalidInput,
+            format!("artifact path has no file name: {}", final_path.display()),
+        )
+    })?;
+    let parent = match final_path.parent() {
+        Some(dir) if !dir.as_os_str().is_empty() => dir.to_path_buf(),
+        _ => std::path::PathBuf::from("."),
+    };
+    fs::create_dir_all(&parent)?;
+
+    let mut attempt = 0;
+    let (tmp_path, mut file) = loop {
+        let mut name = std::ffi::OsString::from(".");
+        name.push(file_name);
+        name.push(format!(
+            ".{}.{}.tmp",
+            std::process::id(),
+            TEMP_COUNTER.fetch_add(1, Ordering::Relaxed)
+        ));
+        let candidate = parent.join(name);
+        match fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&candidate)
+        {
+            Ok(file) => break (candidate, file),
+            Err(err) if err.kind() == ErrorKind::AlreadyExists && attempt < MAX_ATTEMPTS => {
+                attempt += 1;
+            }
+            Err(err) => return Err(err),
+        }
+    };
+
+    let written = file.write_all(contents).and_then(|()| file.sync_all());
+    drop(file);
+    let result = written.and_then(|()| fs::rename(&tmp_path, final_path));
+    if result.is_err() {
+        // Best effort: the original error is what the caller needs to see.
+        let _ = fs::remove_file(&tmp_path);
     }
-    fs::rename(tmp_path, final_path).map_err(artifact_io_error)?;
-    Ok(())
+    result
 }
 
 #[pyfunction]
@@ -771,6 +821,50 @@ mod tests {
     fn connected_components_keeps_duplicate_ids_in_one_component() {
         let components = connected_components(ids(&["a", "b", "a", "c"]), pairs(&[("a", "b")]));
         assert_eq!(components, vec![ids(&["a", "b"]), ids(&["c"])]);
+    }
+
+    fn scratch_dir(tag: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "cogant-ffi-{tag}-{}-{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    fn entries(dir: &std::path::Path) -> Vec<String> {
+        let mut names: Vec<String> = std::fs::read_dir(dir)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+            .collect();
+        names.sort();
+        names
+    }
+
+    #[test]
+    fn write_artifact_atomic_does_not_touch_a_sibling_tmp_file() {
+        let dir = scratch_dir("sibling");
+        std::fs::write(dir.join("notes.tmp"), b"user data").unwrap();
+
+        write_artifact_atomic_inner(&dir.join("notes.md"), b"artifact").unwrap();
+
+        assert_eq!(std::fs::read(dir.join("notes.md")).unwrap(), b"artifact");
+        assert_eq!(std::fs::read(dir.join("notes.tmp")).unwrap(), b"user data");
+        assert_eq!(entries(&dir), vec!["notes.md", "notes.tmp"]);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn write_artifact_atomic_cleans_up_when_the_rename_fails() {
+        let dir = scratch_dir("cleanup");
+        std::fs::create_dir(dir.join("out.json")).unwrap();
+
+        assert!(write_artifact_atomic_inner(&dir.join("out.json"), b"{}").is_err());
+
+        assert_eq!(entries(&dir), vec!["out.json"]);
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
