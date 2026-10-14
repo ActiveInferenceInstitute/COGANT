@@ -433,11 +433,22 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
     module_nodes: dict[str, Any] = {}
     class_nodes: dict[str, Any] = {}
 
-    # AST cache: avoid re-parsing the same file for every method it contains.
-    # Without caching, _emit_dataflow_edges called ast.parse() once per
-    # method, so a file with N methods was parsed N times (O(files × methods)
-    # compile calls). With the cache each file is parsed at most once.
+    # AST cache: each file is parsed at most once for the dataflow and call
+    # passes below, and every method/function is resolved to its own
+    # ``FunctionDef`` (owning class + name + ``def`` line), never to the first
+    # same-named definition elsewhere in the file.
     _ast_cache: dict[Path, Any] = {}
+    _definitions_cache: dict[Path, dict[tuple[str | None, str, int], Any]] = {}
+
+    def _definition_for(
+        file_path: Path, class_name: str | None, name: str, line_start: int
+    ) -> Any | None:
+        index = _definitions_cache.get(file_path)
+        if index is None:
+            tree = _parse_module_ast(file_path, _ast, _ast_cache)
+            index = _callable_definitions(tree, _ast) if tree is not None else {}
+            _definitions_cache[file_path] = index
+        return index.get((class_name, name, line_start))
 
     def _rel(p: Path) -> str:
         try:
@@ -454,6 +465,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
     # ordering hazard. See TODO #2 sub-fix.
     parsed_module_meta: dict[Path, tuple[str, str]] = {}
     callable_nodes: dict[str, Any] = {}
+    # (file, module, owning class, graph node, FunctionDef AST node)
     callable_context: list[tuple[Path, str, str | None, Any, Any]] = []
 
     def _file_flags(path: Path, rel: str) -> tuple[bool, bool]:
@@ -584,22 +596,28 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                     },
                 )
                 callable_nodes[method_qname] = method_node
-                callable_context.append(
-                    (file_path, module_name, cls.name, method_node, method.name)
+                method_def = _definition_for(
+                    file_path, cls.name, method.name, int(getattr(method, "line_start", 0))
                 )
+                if method_def is not None:
+                    callable_context.append(
+                        (file_path, module_name, cls.name, method_node, method_def)
+                    )
                 _emit_decorator_edges(
                     list(getattr(method, "decorators", []) or []), method_node, rel
                 )
                 builder.add_edge(class_node.id, method_node.id, EdgeKind.CONTAINS)
-                _emit_dataflow_edges(
-                    builder,
-                    method_node,
-                    class_node,
-                    method.name,
-                    file_path,
-                    _ast,
-                    ast_cache=_ast_cache,
-                )
+                if method_def is not None:
+                    _emit_dataflow_edges(
+                        builder,
+                        method_node,
+                        class_node,
+                        method.name,
+                        file_path,
+                        _ast,
+                        ast_cache=_ast_cache,
+                        definition=method_def,
+                    )
 
         for func in getattr(module, "functions", []) or []:
             func_qname = f"{module_name}.{func.name}"
@@ -617,7 +635,11 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                 },
             )
             callable_nodes[f"{module_name}.{func.name}"] = func_node
-            callable_context.append((file_path, module_name, None, func_node, func.name))
+            func_def = _definition_for(
+                file_path, None, func.name, int(getattr(func, "line_start", 0))
+            )
+            if func_def is not None:
+                callable_context.append((file_path, module_name, None, func_node, func_def))
             _emit_decorator_edges(list(getattr(func, "decorators", []) or []), func_node, rel)
             builder.add_edge(module_node.id, func_node.id, EdgeKind.CONTAINS)
 
@@ -700,37 +722,27 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                 return target, receiver
         return None, receiver
 
-    for file_path, module_name, class_name, source_node, function_name in callable_context:
-        try:
-            tree = _ast.parse(file_path.read_text(encoding="utf-8"))
-        except (OSError, SyntaxError, UnicodeDecodeError):
-            continue
-        for definition in _ast.walk(tree):
-            if not isinstance(definition, (_ast.FunctionDef, _ast.AsyncFunctionDef)):
+    for _file_path, module_name, class_name, source_node, definition in callable_context:
+        parent_map = {
+            child: parent
+            for parent in _ast.walk(definition)
+            for child in _ast.iter_child_nodes(parent)
+        }
+        for call in [node for node in _ast.walk(definition) if isinstance(node, _ast.Call)]:
+            target, receiver = _call_target(module_name, class_name, call)
+            if target is None or target.id == source_node.id:
                 continue
-            if definition.name != function_name:
-                continue
-            parent_map = {
-                child: parent
-                for parent in _ast.walk(definition)
-                for child in _ast.iter_child_nodes(parent)
-            }
-            for call in [node for node in _ast.walk(definition) if isinstance(node, _ast.Call)]:
-                target, receiver = _call_target(module_name, class_name, call)
-                if target is None or target.id == source_node.id:
-                    continue
-                is_async_call = isinstance(parent_map.get(call), _ast.Await)
-                builder.add_edge(
-                    source_node.id,
-                    target.id,
-                    EdgeKind.ASYNC_CALLS if is_async_call else EdgeKind.CALLS,
-                    metadata={
-                        "receiver": receiver,
-                        "async": is_async_call,
-                        "confidence": "local-symbol-resolution",
-                    },
-                )
-            break
+            is_async_call = isinstance(parent_map.get(call), _ast.Await)
+            builder.add_edge(
+                source_node.id,
+                target.id,
+                EdgeKind.ASYNC_CALLS if is_async_call else EdgeKind.CALLS,
+                metadata={
+                    "receiver": receiver,
+                    "async": is_async_call,
+                    "confidence": "local-symbol-resolution",
+                },
+            )
 
     # INHERITS edges.
     # Build a name→node index first so lookup is O(1) instead of O(|classes|)
@@ -786,6 +798,41 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
     return graph_result
 
 
+def _parse_module_ast(file_path: Path, ast_mod: Any, ast_cache: dict[Path, Any] | None) -> Any:
+    """Parse ``file_path`` once, memoising the tree (``None`` when unparsable)."""
+    if ast_cache is not None and file_path in ast_cache:
+        return ast_cache[file_path]
+    try:
+        tree = ast_mod.parse(file_path.read_text(encoding="utf-8"))
+    except (SyntaxError, UnicodeDecodeError, OSError, ValueError) as e:
+        logger.debug("Skipping AST-derived edges for %s: %s", file_path, e)
+        tree = None
+    if ast_cache is not None:
+        ast_cache[file_path] = tree
+    return tree
+
+
+def _callable_definitions(tree: Any, ast_mod: Any) -> dict[tuple[str | None, str, int], Any]:
+    """Index module-level functions and class-body methods by owner, name, line.
+
+    Mirrors what ``PythonASTParser`` extracts (``tree.body`` functions and the
+    direct ``FunctionDef`` children of top-level classes), keyed by
+    ``(class name or None, def name, def line)`` so each graph callable maps
+    to exactly its own definition even when several classes share a method
+    name or a module-level function shares a method's name.
+    """
+    function_types = (ast_mod.FunctionDef, ast_mod.AsyncFunctionDef)
+    index: dict[tuple[str | None, str, int], Any] = {}
+    for node in tree.body:
+        if isinstance(node, function_types):
+            index[(None, node.name, node.lineno)] = node
+        elif isinstance(node, ast_mod.ClassDef):
+            for item in node.body:
+                if isinstance(item, function_types):
+                    index[(node.name, item.name, item.lineno)] = item
+    return index
+
+
 def _emit_dataflow_edges(
     builder: ProgramGraphBuilder,
     method_node: Any,
@@ -794,6 +841,8 @@ def _emit_dataflow_edges(
     file_path: Path,
     ast_mod: Any,
     ast_cache: dict[Path, Any] | None = None,
+    *,
+    definition: Any | None = None,
 ) -> None:
     """Emit ``READS``/``WRITES`` edges from a method to its enclosing class.
 
@@ -806,67 +855,70 @@ def _emit_dataflow_edges(
             When supplied, each file is parsed at most once regardless of
             how many methods it contains. This reduces graph-stage time
             from O(files × methods) AST-compile calls to O(files).
+        definition: The method's own ``FunctionDef`` node. When omitted the
+            method is looked up by name among the direct children of the
+            class named ``class_node.name`` only, so a same-named method of
+            another class or a module-level function is never used instead.
     """
-    if ast_cache is not None and file_path in ast_cache:
-        tree = ast_cache[file_path]
+    node = definition
+    if node is None:
+        tree = _parse_module_ast(file_path, ast_mod, ast_cache)
         if tree is None:
-            return  # Previously failed to parse
-    else:
-        try:
-            tree = ast_mod.parse(file_path.read_text())
-        except (SyntaxError, UnicodeDecodeError, OSError) as e:
-            logger.debug("Skipping dataflow edges for %s: %s", file_path, e)
-            if ast_cache is not None:
-                ast_cache[file_path] = None  # Cache the failure
+            return  # Unreadable or unparsable (cached as ``None``)
+        owner = getattr(class_node, "name", None)
+        function_types = (ast_mod.FunctionDef, ast_mod.AsyncFunctionDef)
+        for candidate in ast_mod.walk(tree):
+            if isinstance(candidate, ast_mod.ClassDef) and candidate.name == owner:
+                node = next(
+                    (
+                        item
+                        for item in candidate.body
+                        if isinstance(item, function_types) and item.name == method_name
+                    ),
+                    None,
+                )
+                break
+        if node is None:
             return
-        if ast_cache is not None:
-            ast_cache[file_path] = tree
 
-    for node in ast_mod.walk(tree):
-        if not isinstance(node, ast_mod.FunctionDef | ast_mod.AsyncFunctionDef):
-            continue
-        if node.name != method_name:
-            continue
-
-        writes = 0
-        reads = 0
-        # Track Attribute nodes that are pure assignment targets so we
-        # don't double-count them as reads. AugAssign targets (``self.x +=
-        # 1``) are both a read and a write, so they stay outside this set.
-        write_targets: set[int] = set()
-        for child in ast_mod.walk(node):
-            if isinstance(child, ast_mod.Assign):
-                for tgt in child.targets:
-                    if (
-                        isinstance(tgt, ast_mod.Attribute)
-                        and isinstance(tgt.value, ast_mod.Name)
-                        and tgt.value.id == "self"
-                    ):
-                        writes += 1
-                        write_targets.add(id(tgt))
-            if isinstance(child, ast_mod.AugAssign):
+    writes = 0
+    reads = 0
+    # Track Attribute nodes that are pure assignment targets so we
+    # don't double-count them as reads. AugAssign targets (``self.x +=
+    # 1``) are both a read and a write, so they stay outside this set.
+    write_targets: set[int] = set()
+    for child in ast_mod.walk(node):
+        if isinstance(child, ast_mod.Assign):
+            for tgt in child.targets:
                 if (
-                    isinstance(child.target, ast_mod.Attribute)
-                    and isinstance(child.target.value, ast_mod.Name)
-                    and child.target.value.id == "self"
+                    isinstance(tgt, ast_mod.Attribute)
+                    and isinstance(tgt.value, ast_mod.Name)
+                    and tgt.value.id == "self"
                 ):
                     writes += 1
+                    write_targets.add(id(tgt))
+        if isinstance(child, ast_mod.AugAssign):
+            if (
+                isinstance(child.target, ast_mod.Attribute)
+                and isinstance(child.target.value, ast_mod.Name)
+                and child.target.value.id == "self"
+            ):
+                writes += 1
 
-        for child in ast_mod.walk(node):
-            if isinstance(child, ast_mod.Attribute):
-                if (
-                    isinstance(child.value, ast_mod.Name)
-                    and child.value.id == "self"
-                    and id(child) not in write_targets
-                ):
-                    # AugAssign targets are also reads (they read-modify-write)
-                    reads += 1
+    for child in ast_mod.walk(node):
+        if isinstance(child, ast_mod.Attribute):
+            if (
+                isinstance(child.value, ast_mod.Name)
+                and child.value.id == "self"
+                and id(child) not in write_targets
+            ):
+                # AugAssign targets are also reads (they read-modify-write)
+                reads += 1
 
-        if writes > 0:
-            builder.add_edge(method_node.id, class_node.id, EdgeKind.WRITES)
-        if reads > 0:
-            builder.add_edge(method_node.id, class_node.id, EdgeKind.READS)
-        return
+    if writes > 0:
+        builder.add_edge(method_node.id, class_node.id, EdgeKind.WRITES)
+    if reads > 0:
+        builder.add_edge(method_node.id, class_node.id, EdgeKind.READS)
 
 
 def run_translate(
