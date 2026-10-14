@@ -402,9 +402,13 @@ class GoLanguageParser(CogantLanguagePlugin):
         """
         functions = []
 
-        # Pattern: func name(params) return_type
-        # Negative lookbehind to exclude methods: func (receiver) name(params)
-        pattern = r"func\s+(?!\()\s*(\w+)\s*\(([^)]*)\)(?:\s+([^{]+))?"
+        # Pattern: func name[type params](params) return_type
+        # Negative lookahead to exclude methods: func (receiver) name(params).
+        # Type parameter lists may nest one bracket level: [M ~map[K]V, K comparable].
+        pattern = (
+            r"func\s+(?!\()\s*(\w+)\s*(?:\[(?:[^\[\]]|\[[^\[\]]*\])*\])?"
+            r"\s*\(([^)]*)\)(?:\s+([^{]+))?"
+        )
 
         for match in re.finditer(pattern, source):
             name = match.group(1)

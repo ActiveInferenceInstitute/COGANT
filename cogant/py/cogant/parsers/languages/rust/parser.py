@@ -7,6 +7,14 @@ from typing import Any
 
 from cogant.parsers._base import CogantLanguagePlugin  # noqa: E402
 
+# Generic parameter/argument list such as ``<T>``, ``<T: Into<String>>`` or
+# ``<T: Into<Vec<u8>>>`` (up to three levels of nested angle brackets).
+_GENERICS = r"<(?:[^<>]|<(?:[^<>]|<[^<>]*>)*>)*>"
+
+# ``use`` path: identifiers, ``::`` and ``*``, plus brace groups (nested up
+# to three levels) that may span lines, e.g. ``std::{io::{self, Write}, fmt}``.
+_USE_PATH = r"(?:[\w:*]|\{(?:[^{};]|\{(?:[^{};]|\{[^{};]*\})*\})*\})+"
+
 
 @dataclass
 class ParseResult:
@@ -244,11 +252,12 @@ class RustLanguageParser(CogantLanguagePlugin):
         """
         uses = []
 
-        # Pattern: use path::to::module
-        pattern = r"use\s+([a-zA-Z0-9_:*{}]+)(?:\s+as\s+(\w+))?;"
+        # Pattern: use path::to::module [as alias];  (grouped ``{A, B}`` allowed)
+        pattern = rf"\buse\s+({_USE_PATH})(?:\s+as\s+(\w+))?\s*;"
 
         for match in re.finditer(pattern, source):
-            path = match.group(1)
+            # Collapse multi-line groups to single spaces.
+            path = " ".join(match.group(1).split())
             alias = match.group(2)
 
             uses.append(
@@ -381,8 +390,8 @@ class RustLanguageParser(CogantLanguagePlugin):
         """
         impls = []
 
-        # Pattern: impl Name or impl Trait for Type
-        pattern = r"impl\s+(?:<?([^>}]+)>?\s+for\s+)?(\w+)"
+        # Pattern: impl[<generics>] Name or impl[<generics>] Trait[<args>] for Type
+        pattern = rf"\bimpl(?:\s*{_GENERICS})?\s+(?:([\w:]+(?:{_GENERICS})?)\s+for\s+)?(\w+)"
 
         for match in re.finditer(pattern, source):
             trait_name = match.group(1)
@@ -409,9 +418,10 @@ class RustLanguageParser(CogantLanguagePlugin):
         """
         functions = []
 
-        # Pattern: fn name(params) -> return_type
+        # Pattern: fn name[<generics>](params) -> return_type
         pattern = (
-            r"(?:pub\s+)?(?:async\s+)?(?:unsafe\s+)?fn\s+(\w+)\s*\(([^)]*)\)(?:\s*->\s*([^{]+))?"
+            r"(?:pub\s+)?(?:async\s+)?(?:unsafe\s+)?fn\s+(\w+)\s*"
+            rf"(?:{_GENERICS})?\s*\(([^)]*)\)(?:\s*->\s*([^{{]+))?"
         )
 
         for match in re.finditer(pattern, source):
