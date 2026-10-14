@@ -2,7 +2,7 @@
 
 The flag's help (shared with translate/analyze and ``cogant upstream-gnn``)
 says an empty value means "skip nothing"; validate must not fall back to the
-default ``[11, 12]`` skip list in that case.
+default ``DEFAULT_SKIP_STEPS`` skip list in that case.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from typer.testing import CliRunner
 
 from cogant.api.pipeline import PipelineConfig, PipelineRunner
 from cogant.cli.main import app
+from cogant.gnn.upstream_bridge.pipeline import DEFAULT_SKIP_STEPS
 
 
 @pytest.fixture()
@@ -58,7 +59,7 @@ def captured(monkeypatch: pytest.MonkeyPatch) -> list[Any]:
     [
         (["--upstream-gnn-skip-steps", ""], []),
         (["--upstream-gnn-skip-steps", "3,4"], [3, 4]),
-        ([], [11, 12]),
+        ([], sorted(DEFAULT_SKIP_STEPS)),
     ],
 )
 def test_validate_skip_steps_flag(
