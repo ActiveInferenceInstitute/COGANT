@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use thiserror::Error;
 
 /// Error type for storage operations.
@@ -121,18 +121,30 @@ impl FileStore {
     }
 
     /// Get the path to a bundle directory.
-    fn bundle_path(&self, id: &str) -> PathBuf {
-        self.root_path.join(id)
+    ///
+    /// `id` must be a single normal path component, so it cannot name the
+    /// store root, its parent (`..`), an absolute path, or a nested path —
+    /// otherwise `delete_bundle("../x")` would remove a directory outside
+    /// the store.
+    fn bundle_path(&self, id: &str) -> Result<PathBuf, StoreError> {
+        Ok(self.root_path.join(single_component("bundle id", id)?))
     }
 
     /// Get the path to the manifest file for a bundle.
-    fn manifest_path(&self, id: &str) -> PathBuf {
-        self.bundle_path(id).join("manifest.json")
+    fn manifest_path(&self, id: &str) -> Result<PathBuf, StoreError> {
+        Ok(self.bundle_path(id)?.join("manifest.json"))
     }
 
     /// Get the path to artifacts directory.
-    fn artifacts_path(&self, id: &str) -> PathBuf {
-        self.bundle_path(id).join("artifacts")
+    fn artifacts_path(&self, id: &str) -> Result<PathBuf, StoreError> {
+        Ok(self.bundle_path(id)?.join("artifacts"))
+    }
+
+    /// Get the path to one artifact file inside a bundle.
+    fn artifact_path(&self, bundle_id: &str, artifact_name: &str) -> Result<PathBuf, StoreError> {
+        Ok(self
+            .artifacts_path(bundle_id)?
+            .join(single_component("artifact name", artifact_name)?))
     }
 
     /// Calculate a non-cryptographic SipHash checksum of data (std `DefaultHasher`).
@@ -146,16 +158,36 @@ impl FileStore {
     }
 }
 
+/// Return `value` if it is exactly one normal path component.
+///
+/// Rejects empty values, `.`, `..`, absolute paths and anything containing a
+/// `/` or `\` separator, so a bundle id or artifact name can never resolve
+/// outside its directory.
+fn single_component<'a>(what: &str, value: &'a str) -> Result<&'a str, StoreError> {
+    let mut components = Path::new(value).components();
+    let is_single_normal = matches!(
+        (components.next(), components.next()),
+        (Some(Component::Normal(_)), None)
+    );
+    if is_single_normal && !value.contains(['/', '\\']) {
+        Ok(value)
+    } else {
+        Err(StoreError::InvalidPath(format!(
+            "{what} must be a single path component, got {value:?}"
+        )))
+    }
+}
+
 impl BundleStore for FileStore {
     fn save_bundle(&self, bundle: &Bundle) -> Result<(), StoreError> {
-        let bundle_dir = self.bundle_path(&bundle.id);
+        let bundle_dir = self.bundle_path(&bundle.id)?;
         fs::create_dir_all(&bundle_dir)?;
 
-        let artifacts_dir = self.artifacts_path(&bundle.id);
+        let artifacts_dir = self.artifacts_path(&bundle.id)?;
         fs::create_dir_all(&artifacts_dir)?;
 
         // Write manifest
-        let manifest_path = self.manifest_path(&bundle.id);
+        let manifest_path = self.manifest_path(&bundle.id)?;
         let manifest_json = serde_json::to_string_pretty(bundle)?;
         fs::write(manifest_path, manifest_json)?;
 
@@ -163,7 +195,7 @@ impl BundleStore for FileStore {
     }
 
     fn load_bundle(&self, id: &str) -> Result<Bundle, StoreError> {
-        let manifest_path = self.manifest_path(id);
+        let manifest_path = self.manifest_path(id)?;
         if !manifest_path.exists() {
             return Err(StoreError::NotFound(format!("Bundle not found: {}", id)));
         }
@@ -174,7 +206,7 @@ impl BundleStore for FileStore {
     }
 
     fn delete_bundle(&self, id: &str) -> Result<(), StoreError> {
-        let bundle_dir = self.bundle_path(id);
+        let bundle_dir = self.bundle_path(id)?;
         if bundle_dir.exists() {
             fs::remove_dir_all(bundle_dir)?;
         }
@@ -197,7 +229,7 @@ impl BundleStore for FileStore {
     }
 
     fn has_bundle(&self, id: &str) -> Result<bool, StoreError> {
-        Ok(self.manifest_path(id).exists())
+        Ok(self.manifest_path(id)?.exists())
     }
 
     fn save_artifact(
@@ -206,10 +238,8 @@ impl BundleStore for FileStore {
         artifact_name: &str,
         data: &[u8],
     ) -> Result<(), StoreError> {
-        let artifacts_dir = self.artifacts_path(bundle_id);
-        fs::create_dir_all(&artifacts_dir)?;
-
-        let artifact_path = artifacts_dir.join(artifact_name);
+        let artifact_path = self.artifact_path(bundle_id, artifact_name)?;
+        fs::create_dir_all(self.artifacts_path(bundle_id)?)?;
         fs::write(&artifact_path, data)?;
 
         // Update manifest
@@ -229,7 +259,7 @@ impl BundleStore for FileStore {
     }
 
     fn load_artifact(&self, bundle_id: &str, artifact_name: &str) -> Result<Vec<u8>, StoreError> {
-        let artifact_path = self.artifacts_path(bundle_id).join(artifact_name);
+        let artifact_path = self.artifact_path(bundle_id, artifact_name)?;
         if !artifact_path.exists() {
             return Err(StoreError::NotFound(format!(
                 "Artifact not found: {}/{}",
@@ -306,6 +336,55 @@ mod tests {
 
         let bundles = store.list_bundles().unwrap();
         assert_eq!(bundles.len(), 2);
+    }
+
+    #[test]
+    fn test_file_store_rejects_ids_that_escape_the_root() {
+        let temp_dir = TempDir::new().unwrap();
+        let root = temp_dir.path().join("store");
+        let outside = temp_dir.path().join("outside");
+        fs::create_dir_all(&outside).unwrap();
+        fs::write(outside.join("precious.txt"), b"keep").unwrap();
+        let store = FileStore::new(&root).unwrap();
+
+        for bad in ["../outside", "..", ".", "", "a/b", "a\\b"] {
+            assert!(
+                matches!(store.delete_bundle(bad), Err(StoreError::InvalidPath(_))),
+                "delete_bundle({bad:?}) must be rejected"
+            );
+            assert!(
+                matches!(store.load_bundle(bad), Err(StoreError::InvalidPath(_))),
+                "load_bundle({bad:?}) must be rejected"
+            );
+        }
+        let absolute = outside.to_string_lossy().into_owned();
+        assert!(matches!(
+            store.delete_bundle(&absolute),
+            Err(StoreError::InvalidPath(_))
+        ));
+        assert!(outside.join("precious.txt").exists());
+    }
+
+    #[test]
+    fn test_file_store_rejects_artifact_names_that_escape_the_bundle() {
+        let temp_dir = TempDir::new().unwrap();
+        let store = FileStore::new(temp_dir.path().join("store")).unwrap();
+        let bundle = Bundle {
+            id: "b".to_string(),
+            version: "1.0.0".to_string(),
+            created_at: test_timestamp(),
+            metadata: HashMap::new(),
+            artifacts: HashMap::new(),
+        };
+        store.save_bundle(&bundle).unwrap();
+
+        let escaped = store.save_artifact("b", "../../evil.txt", b"x");
+        assert!(matches!(escaped, Err(StoreError::InvalidPath(_))));
+        assert!(!temp_dir.path().join("evil.txt").exists());
+        assert!(matches!(
+            store.load_artifact("b", "../manifest.json"),
+            Err(StoreError::InvalidPath(_))
+        ));
     }
 
     #[test]
