@@ -55,3 +55,13 @@ def edge_endpoints(edge: dict[str, Any]) -> tuple[str | None, str | None]:
     source = edge.get("source_id") or edge.get("source")
     target = edge.get("target_id") or edge.get("target")
     return (str(source) if source else None, str(target) if target else None)
+
+
+def edge_key(edge: dict[str, Any]) -> tuple[str | None, str | None, str]:
+    """Return the identity of an edge payload as ``(source, target, kind)``.
+
+    Endpoints plus kind identify a relationship in every bundle shape;
+    edge ids are not used because hand-built bundles often omit them.
+    """
+    source, target = edge_endpoints(edge)
+    return (source, target, str(edge.get("kind") or ""))

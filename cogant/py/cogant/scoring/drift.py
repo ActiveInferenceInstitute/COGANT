@@ -23,8 +23,11 @@ Example:
 """
 
 import logging
+from collections import Counter
 from dataclasses import dataclass
 from typing import Any
+
+from cogant.scoring._records import edge_key, iter_records
 
 logger = logging.getLogger(__name__)
 
@@ -191,26 +194,17 @@ class DriftAnalyzer:
             strings, numbers) are filtered out so downstream
             ``.get(...)`` calls are always safe.
         """
-        if isinstance(collection, dict):
-            # Dict shape: values are the node/edge payloads. Inject the
-            # key as ``id`` when the payload omits it so id-based diffs
-            # still work against the orchestration output.
-            normalized: list[dict[str, Any]] = []
-            for key, value in collection.items():
-                if isinstance(value, dict):
-                    if "id" not in value:
-                        value = {**value, "id": key}
-                    normalized.append(value)
-            return normalized
-        if isinstance(collection, list):
-            return [item for item in collection if isinstance(item, dict)]
-        return []
+        # Dict shape: values are the payloads, and the key is injected as
+        # ``id`` when a payload omits it so id-based diffs still work.
+        return iter_records(collection)
 
     def compute_structural_drift(self) -> dict[str, Any]:
         """Return an added/removed/changed summary of the two program graphs.
 
-        Compares node ids and ``source→target`` edge keys between
-        ``self.graph_a`` and ``self.graph_b``. A node that exists in
+        Compares node ids and ``(source, target, kind)`` edge keys
+        between ``self.graph_a`` and ``self.graph_b``; endpoints come
+        from ``source_id``/``target_id`` (the serialized program graph)
+        or the legacy ``source``/``target`` names. A node that exists in
         both but compares non-equal at the dict level is counted as
         "changed" (the entire subdict must be identical to be stable,
         so cosmetic changes such as renamed labels flag as drift).
@@ -233,10 +227,16 @@ class DriftAnalyzer:
         nodes_a = {n.get("id"): n for n in nodes_list_a}
         nodes_b = {n.get("id"): n for n in nodes_list_b}
 
-        edges_list_a = self._iter_graph_collection(self.graph_a.get("edges"))
-        edges_list_b = self._iter_graph_collection(self.graph_b.get("edges"))
-        edges_a = [f"{e.get('source')}→{e.get('target')}" for e in edges_list_a]
-        edges_b = [f"{e.get('source')}→{e.get('target')}" for e in edges_list_b]
+        # Edges are identified by (source, target, kind), read from the
+        # serialized ``source_id``/``target_id`` fields with the legacy
+        # ``source``/``target`` names as fallback. A multiset keeps
+        # parallel edges distinct.
+        edges_a = Counter(
+            edge_key(e) for e in self._iter_graph_collection(self.graph_a.get("edges"))
+        )
+        edges_b = Counter(
+            edge_key(e) for e in self._iter_graph_collection(self.graph_b.get("edges"))
+        )
 
         added_nodes = set(nodes_b.keys()) - set(nodes_a.keys())
         removed_nodes = set(nodes_a.keys()) - set(nodes_b.keys())
@@ -247,8 +247,8 @@ class DriftAnalyzer:
             if nodes_a[nid] != nodes_b[nid]:
                 changed_nodes.append(nid)
 
-        added_edges = set(edges_b) - set(edges_a)
-        removed_edges = set(edges_a) - set(edges_b)
+        added_edges = edges_b - edges_a
+        removed_edges = edges_a - edges_b
 
         return {
             "nodes_added": list(added_nodes),
@@ -257,8 +257,8 @@ class DriftAnalyzer:
             "nodes_added_count": len(added_nodes),
             "nodes_removed_count": len(removed_nodes),
             "nodes_changed_count": len(changed_nodes),
-            "edges_added_count": len(added_edges),
-            "edges_removed_count": len(removed_edges),
+            "edges_added_count": sum(added_edges.values()),
+            "edges_removed_count": sum(removed_edges.values()),
         }
 
     def compute_semantic_drift(self) -> dict[str, Any]:
