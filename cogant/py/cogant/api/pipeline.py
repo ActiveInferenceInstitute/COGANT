@@ -332,7 +332,10 @@ class PipelineRunner:
 
         * ``"full_hit"`` — nothing changed since ``config.incremental_since``
           and a cached bundle was successfully restored onto ``bundle``.
-          The caller should return the bundle directly.
+          The caller should return the bundle directly. A cached bundle
+          that recorded stage errors, or whose exported artifacts are not
+          present in this run's ``output_dir``, is treated as a miss
+          instead (see :meth:`_cached_bundle_stale_reason`).
         * ``"partial"`` — a previous snapshot for the same config/contract
           exists but sources changed. The cache stores JSON stage results
           only and there is no per-file merge of graphs or mappings, so the
@@ -414,6 +417,14 @@ class PipelineRunner:
             # round-trip through JSON), but stage_results carry every
             # piece of information the CLI actually displays to the user.
             cached = entry.stage_results
+            stale_reason = self._cached_bundle_stale_reason(cached, config)
+            if stale_reason is not None:
+                # No stage runs on a full hit, so a cached bundle is only
+                # reusable when its outputs are where this run wants them
+                # and it did not record stage exceptions.
+                stats["reason"] = stale_reason
+                stats["files_reparsed"] = stats["files_total"]
+                return "miss"
             bundle.stage_results.update(cached.get("stage_results") or {})
             bundle.errors = list(cached.get("errors") or [])
             for name, outcome in (cached.get("stage_outcomes") or {}).items():
@@ -445,8 +456,65 @@ class PipelineRunner:
         )
         return "partial"
 
+    @staticmethod
+    def _cached_bundle_stale_reason(cached: dict[str, Any], config: PipelineConfig) -> str | None:
+        """Return why a no-change cached bundle cannot be returned as-is.
+
+        ``output_dir`` (and the upstream pipeline directory) are excluded
+        from the cache key, and a full hit runs no stage, so the cached
+        bundle is only valid when its export already wrote every artifact
+        into this run's output directory. A cached run that recorded stage
+        exceptions is recomputed rather than replayed, since those failures
+        may be environmental (for example an unwritable output path).
+        Returns ``None`` when the cached bundle can be reused.
+        """
+        if cached.get("errors"):
+            return "cached bundle recorded stage errors; recomputing"
+        if config.dry_run:
+            return None
+        stage_results = cached.get("stage_results") or {}
+        runs = set(config.stages) - set(config.skip_stages)
+        if "export" in runs:
+            out = Path(config.output_dir).expanduser().resolve()
+            export = stage_results.get("export")
+            if not isinstance(export, dict) or not export.get("output_dir"):
+                return "cached bundle has no export result; recomputing"
+            if Path(str(export["output_dir"])).expanduser().resolve() != out:
+                return (
+                    f"cached export was written to {export['output_dir']}, not {out}; recomputing"
+                )
+            if not out.is_dir():
+                return f"cached export artifacts are missing from {out}; recomputing"
+            for artifact in export.get("artifacts") or []:
+                if not PipelineRunner._artifact_present(Path(str(artifact)), out, config):
+                    return f"cached export artifact {artifact} is missing; recomputing"
+        if "validate" in runs and "export" in runs and config.upstream_gnn_pipeline:
+            upstream_dir = (
+                Path(config.upstream_gnn_output_dir)
+                if config.upstream_gnn_output_dir
+                else Path(config.output_dir) / "upstream_pipeline"
+            )
+            if not upstream_dir.expanduser().is_dir():
+                return f"upstream pipeline outputs are missing from {upstream_dir}; recomputing"
+        return None
+
+    @staticmethod
+    def _artifact_present(artifact: Path, out: Path, config: PipelineConfig) -> bool:
+        """Whether an exported artifact still exists (possibly relocated by layout_output)."""
+        if artifact.exists():
+            return True
+        if not config.layout_output:
+            return False
+        # The layout post-pass moves each flat file one level down, into
+        # ``data/``, ``diagrams/``, ``figures/``, ... under ``out``.
+        return any(candidate.is_file() for candidate in out.glob(f"*/{artifact.name}"))
+
     def _incremental_cache_save(self, target: str, bundle: Bundle, config: PipelineConfig) -> None:
         """Persist the bundle's stage_results into the incremental cache.
+
+        A bundle that recorded stage errors is not saved, so the last good
+        entry for the same key survives and a transient failure is retried
+        on the next run instead of being replayed from the cache.
 
         Only JSON-serialisable content is stored (``stage_results`` +
         ``errors``). Live artifacts such as the ``ProgramGraph`` live
@@ -463,6 +531,12 @@ class PipelineRunner:
 
         from cogant.api.bundle import _json_default
         from cogant.cache.store import CacheStore
+
+        if bundle.errors:
+            logger.info(
+                "Incremental cache: not saving a bundle with %d stage error(s)", len(bundle.errors)
+            )
+            return
 
         key = self._cache_key(target, config)
         cache_dir = Path(config.cache_dir) if config.cache_dir else None
