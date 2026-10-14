@@ -67,37 +67,57 @@ def modify_codebase(repo_path: Path) -> None:
         # Look for a class definition
         content = py_file.read_text()
         if "class " in content:
-            # Add a new method
             lines = content.split("\n")
-            new_lines = []
-            added = False
-
-            for i, line in enumerate(lines):
-                new_lines.append(line)
-
-                # Find a method and add after it
-                if not added and line.strip().startswith("def ") and "self" in line:
-                    # Find the end of this method
-                    indent = len(line) - len(line.lstrip())
-                    for j in range(i + 1, len(lines)):
-                        next_line = lines[j]
-                        if next_line.strip() and not next_line.startswith(" " * (indent + 1)):
-                            # End of method found
-                            new_method = (
-                                "\n    def new_method_added(self):\n"
-                                '        """New method added during drift analysis."""\n'
-                                "        return None\n"
-                            )
-                            new_lines.append(new_method)
-                            added = True
-                            break
-
-            if added:
-                py_file.write_text("\n".join(new_lines))
+            modified = _insert_method_after_first_method(lines)
+            if modified is not None:
+                py_file.write_text("\n".join(modified))
                 logger.info(f"Modified {py_file}: added new_method_added()")
                 return
 
     logger.warning("Could not find a class to modify")
+
+
+def _indent_width(line: str) -> int:
+    return len(line) - len(line.lstrip())
+
+
+def _insert_method_after_first_method(lines: list[str]) -> list[str] | None:
+    """Return ``lines`` with ``new_method_added`` placed after the first method.
+
+    The new method is inserted after the *end* of the first ``def ...(self...``
+    body, at that method's indentation, so the class gains a sibling method
+    and the file stays valid Python. Returns ``None`` when no method is found.
+    """
+    for i, line in enumerate(lines):
+        if not (line.strip().startswith("def ") and "self" in line):
+            continue
+        def_indent = line[: _indent_width(line)]
+        # The body ends at the first later code line indented no deeper than
+        # the ``def`` (comments may sit at any column), or at end of file.
+        end = len(lines)
+        body_indent = def_indent + "    "
+        body_seen = False
+        for j in range(i + 1, len(lines)):
+            stripped = lines[j].strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if _indent_width(lines[j]) <= len(def_indent):
+                end = j
+                break
+            if not body_seen:
+                body_indent = lines[j][: _indent_width(lines[j])]
+                body_seen = True
+        # Keep the blank lines that separate the body from what follows.
+        while end > i + 1 and not lines[end - 1].strip():
+            end -= 1
+        new_method = [
+            "",
+            f"{def_indent}def new_method_added(self):",
+            f'{body_indent}"""New method added during drift analysis."""',
+            f"{body_indent}return None",
+        ]
+        return lines[:end] + new_method + lines[end:]
+    return None
 
 
 def main():
