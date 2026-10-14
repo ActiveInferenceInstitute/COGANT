@@ -2,6 +2,11 @@
 
 Controls how the state-space compiler builds, normalizes, and bounds
 matrices for the Active Inference state-space model.
+
+Reserved: these fields are validated and carried on
+``PipelineConfig.statespace``, but no pipeline stage reads them yet, so
+setting them does not change a run (the config loader emits a
+``ReservedConfigWarning``).
 """
 
 from __future__ import annotations

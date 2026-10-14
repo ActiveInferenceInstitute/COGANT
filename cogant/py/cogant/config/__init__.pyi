@@ -18,6 +18,7 @@ from .ingest import IngestConfig as IngestConfig
 from .loaders import ConfigLoader as ConfigLoader
 from .loaders import ConfigLoadError as ConfigLoadError
 from .loaders import ConfigMigrationWarning as ConfigMigrationWarning
+from .loaders import ReservedConfigWarning as ReservedConfigWarning
 from .pipeline import PipelineConfig as PipelineConfig
 from .presets import get_preset as get_named_preset
 from .presets import list_presets as list_presets
@@ -63,6 +64,7 @@ __all__ = [
     "ConfigLoader",
     "ConfigLoadError",
     "ConfigMigrationWarning",
+    "ReservedConfigWarning",
     "DEFAULT_COGANT_CONFIG",
     "DEFAULT_PIPELINE_CONFIG",
     "DEFAULT_EXPORT_CONFIG",

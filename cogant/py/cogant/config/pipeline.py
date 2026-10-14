@@ -1,10 +1,13 @@
 """Composite pipeline configuration.
 
-One :class:`PipelineConfig` per pipeline run. It bundles per-stage
-sub-configs (ingest, graph, translate, statespace, gnn, reverse)
-together with the top-level execution flags that ``PipelineRunner``
-understands (``stages``, ``skip_stages``, ``skip_dynamic``, output
-locations, dynamic-stage data paths, etc.).
+One :class:`PipelineConfig` per pipeline run. It carries the top-level
+execution flags that ``PipelineRunner`` understands (``stages``,
+``skip_stages``, ``skip_dynamic``, output locations, dynamic-stage data
+paths, etc.) plus reserved per-stage sub-configs (ingest, graph, translate,
+statespace, gnn, reverse). The sub-configs are validated but no stage
+handler reads them yet; :class:`cogant.config.loaders.ConfigLoader` emits a
+:class:`~cogant.config.loaders.ReservedConfigWarning` when a config file,
+the environment or the CLI sets one.
 
 This class is a *superset* of the compatibility
 ``cogant.api.pipeline.PipelineConfig`` dataclass: any kwargs that used
@@ -66,8 +69,10 @@ class PipelineConfig(BaseModel):
     call-sites continue to work unchanged.
 
     Nested fields (``ingest``, ``graph``, ``translate``, ``statespace``,
-    ``gnn``, ``reverse``) carry per-stage parameters as frozen
-    sub-configs. Each defaults to its own ``<Stage>Config()``.
+    ``gnn``, ``reverse``) are reserved per-stage parameters held as frozen
+    sub-configs. Each defaults to its own ``<Stage>Config()``; they are
+    validated and serialized but not yet consumed by the stage handlers, so
+    setting them does not change a run.
     """
 
     # --- Execution plan -------------------------------------------------
@@ -135,7 +140,7 @@ class PipelineConfig(BaseModel):
         description="Per-plugin configuration payloads",
     )
 
-    # --- Per-stage sub-configs -----------------------------------------
+    # --- Reserved per-stage sub-configs (validated, not yet consumed) --
     ingest: IngestConfig = Field(default_factory=IngestConfig)
     graph: GraphConfig = Field(default_factory=GraphConfig)
     translate: TranslateConfig = Field(default_factory=TranslateConfig)

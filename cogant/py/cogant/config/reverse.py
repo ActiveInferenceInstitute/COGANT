@@ -2,6 +2,11 @@
 
 Controls the reverse-direction pipeline that synthesizes code from a
 GNN specification.
+
+Reserved: these fields are validated and carried on
+``PipelineConfig.reverse``, but no pipeline stage reads them yet, so
+setting them does not change a run (the config loader emits a
+``ReservedConfigWarning``).
 """
 
 from __future__ import annotations

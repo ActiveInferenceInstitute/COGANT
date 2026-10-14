@@ -2,6 +2,11 @@
 
 Controls how an Active Inference state-space model is serialized into
 a GNN (Generalized Notation Notation) specification.
+
+Reserved: these fields are validated and carried on
+``PipelineConfig.gnn``, but no pipeline stage reads them yet, so
+setting them does not change a run (the config loader emits a
+``ReservedConfigWarning``).
 """
 
 from __future__ import annotations

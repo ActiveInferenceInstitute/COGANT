@@ -2,6 +2,11 @@
 
 Controls how the program-graph builder bounds the graph it constructs
 and which nodes it keeps.
+
+Reserved: these fields are validated and carried on
+``PipelineConfig.graph``, but no pipeline stage reads them yet, so
+setting them does not change a run (the config loader emits a
+``ReservedConfigWarning``).
 """
 
 from __future__ import annotations

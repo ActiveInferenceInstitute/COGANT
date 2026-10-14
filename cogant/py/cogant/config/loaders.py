@@ -32,6 +32,48 @@ class ConfigMigrationWarning(DeprecationWarning):
     """Warning emitted when a legacy configuration is normalized."""
 
 
+class ReservedConfigWarning(UserWarning):
+    """Warning emitted when a configuration sets a reserved, unconsumed key.
+
+    The per-stage ``pipeline`` sections listed in
+    ``_RESERVED_PIPELINE_SECTIONS`` are validated and carried on
+    :class:`PipelineConfig`, but no pipeline stage reads them yet, so a value
+    set there has no effect on a run.
+    """
+
+
+# Validated per-stage sub-configs that no stage handler consumes yet.
+_RESERVED_PIPELINE_SECTIONS: tuple[str, ...] = (
+    "ingest",
+    "graph",
+    "translate",
+    "statespace",
+    "gnn",
+    "reverse",
+)
+
+
+def _warn_reserved_keys(layer: Mapping[str, Any], source: str) -> None:
+    """Warn when a user-supplied layer sets a reserved per-stage key."""
+    pipeline = layer.get("pipeline")
+    if not isinstance(pipeline, Mapping):
+        return
+    keys: list[str] = []
+    for section in _RESERVED_PIPELINE_SECTIONS:
+        value = pipeline.get(section)
+        if isinstance(value, Mapping):
+            keys.extend(f"pipeline.{section}.{field}" for field in value)
+        elif value is not None:
+            keys.append(f"pipeline.{section}")
+    if keys:
+        warnings.warn(
+            f"Reserved configuration keys have no effect yet ({source}): "
+            f"{', '.join(keys)}. They are validated, but no pipeline stage reads them.",
+            ReservedConfigWarning,
+            stacklevel=3,
+        )
+
+
 # One compatibility map is deliberately kept at the loader boundary.  The
 # resulting model remains canonical; this map is not a second configuration
 # registry and can be removed after the documented deprecation cycle.
@@ -283,19 +325,28 @@ class ConfigLoader:
         environment: Mapping[str, str] | None = None,
         cli: Mapping[str, Any] | None = None,
     ) -> ProjectConfig:
-        """Load one validated model using defaults < preset < file < env < CLI."""
+        """Load one validated model using defaults < preset < file < env < CLI.
+
+        User-supplied layers (file, environment, overrides, CLI) that set a
+        reserved per-stage ``pipeline`` section emit a
+        :class:`ReservedConfigWarning`; presets never do.
+        """
         data = ConfigLoader._base(preset)
         if path is not None:
-            data = _deep_merge(
-                data,
-                _normalize_legacy_mapping(ConfigLoader._read_file(path), str(path)),
-            )
+            file_data = _normalize_legacy_mapping(ConfigLoader._read_file(path), str(path))
+            _warn_reserved_keys(file_data, str(path))
+            data = _deep_merge(data, file_data)
         env_data = ConfigLoader._environment(environment if environment is not None else os.environ)
+        _warn_reserved_keys(env_data, "environment")
         data = _deep_merge(data, env_data)
         if overrides is not None:
-            data = _deep_merge(data, _normalize_legacy_mapping(overrides, "overrides"))
+            override_data = _normalize_legacy_mapping(overrides, "overrides")
+            _warn_reserved_keys(override_data, "overrides")
+            data = _deep_merge(data, override_data)
         if cli is not None:
-            data = _deep_merge(data, _normalize_legacy_mapping(cli, "CLI"))
+            cli_data = _normalize_legacy_mapping(cli, "CLI")
+            _warn_reserved_keys(cli_data, "CLI")
+            data = _deep_merge(data, cli_data)
         try:
             return ProjectConfig.model_validate(data)
         except Exception as exc:  # Pydantic exposes several validation subclasses

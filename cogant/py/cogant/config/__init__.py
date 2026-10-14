@@ -22,7 +22,12 @@ from .graph import GraphConfig
 from .ingest import IngestConfig
 
 # Configuration loaders
-from .loaders import ConfigLoader, ConfigLoadError, ConfigMigrationWarning
+from .loaders import (
+    ConfigLoader,
+    ConfigLoadError,
+    ConfigMigrationWarning,
+    ReservedConfigWarning,
+)
 from .pipeline import PipelineConfig
 
 # Named presets
@@ -80,6 +85,7 @@ __all__ = [
     "ConfigLoader",
     "ConfigLoadError",
     "ConfigMigrationWarning",
+    "ReservedConfigWarning",
     # Defaults
     "DEFAULT_COGANT_CONFIG",
     "DEFAULT_PIPELINE_CONFIG",

@@ -2,6 +2,11 @@
 
 Controls the rule-driven translation from a normalized program graph
 into an Active Inference / GNN representation.
+
+Reserved: these fields are validated and carried on
+``PipelineConfig.translate``, but no pipeline stage reads them yet, so
+setting them does not change a run (the config loader emits a
+``ReservedConfigWarning``).
 """
 
 from __future__ import annotations

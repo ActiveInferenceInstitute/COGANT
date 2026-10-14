@@ -45,7 +45,10 @@ def translate(
         None,
         "--config",
         "-c",
-        help="YAML or JSON pipeline config file with stage / plugin overrides.",
+        help=(
+            "YAML or JSON project config file (pipeline, export, validation, ... "
+            "sections). Values sit below the environment and CLI flags."
+        ),
     ),
     skip_stages: str | None = typer.Option(
         None,

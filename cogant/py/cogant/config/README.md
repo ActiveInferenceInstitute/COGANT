@@ -24,7 +24,7 @@ LanguageConfig: Configuration for language-specific analyzers, specifying langua
 PipelineStage: Configuration for a single pipeline stage (name, enabled, timeout_seconds, retry_count, skip_on_error, parameters dict).
 
 PipelineConfig: The canonical execution model for ordered stages, output
-locations, runtime flags, dynamic inputs, and per-stage configuration.
+locations, runtime flags, and dynamic inputs. Its per-stage sub-configs (`ingest`, `graph`, `translate`, `statespace`, `gnn`, `reverse`) are reserved: validated, but not yet read by any stage, so setting them from a file, the environment or the CLI emits a `ReservedConfigWarning`.
 
 ExportConfig: Configuration for output and export behavior (primary_format, output_dir, create_bundle, compression, include_provenance, include_metadata, include_statistics, minify_json, gnn_format).
 
@@ -43,6 +43,8 @@ ConfigLoader: Static utility class with `load_project_config`, `load_from_yaml`,
 validation.
 
 ConfigLoadError: Exception raised when configuration loading fails.
+
+ConfigMigrationWarning / ReservedConfigWarning: Warnings for legacy flat fields that were normalized, and for reserved per-stage keys that have no effect yet.
 
 DEFAULT_COGANT_CONFIG, DEFAULT_PIPELINE_CONFIG, DEFAULT_EXPORT_CONFIG, DEFAULT_VALIDATION_CONFIG: Module-level default instances for each config type.
 

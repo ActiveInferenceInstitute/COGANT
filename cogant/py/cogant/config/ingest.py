@@ -3,6 +3,11 @@
 Controls how the ingest stage discovers, reads, and filters files from
 the target codebase. Frozen so that config objects can be safely shared
 across concurrent stages without risk of mutation.
+
+Reserved: these fields are validated and carried on
+``PipelineConfig.ingest``, but no pipeline stage reads them yet, so
+setting them does not change a run (the config loader emits a
+``ReservedConfigWarning``).
 """
 
 from __future__ import annotations
