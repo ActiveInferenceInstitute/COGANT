@@ -81,7 +81,8 @@ def test_unallowlisted_term_fails_in_tracked_source(tmp_path: Path) -> None:
 
     assert any(o.term.lower() == "fallback" and not o.classified for o in occurrences)
     assert findings
-    assert "unclassified synthetic-surface term" in findings[0].message
+    assert findings[0].message == "INCOMPLETE_SURFACE_UNCLASSIFIED"
+    assert findings[0].format() == "src/bad.py:2: INCOMPLETE_SURFACE_UNCLASSIFIED"
 
 
 def test_unallowlisted_term_fails_in_untracked_source_under_strict(tmp_path: Path) -> None:
@@ -94,7 +95,10 @@ def test_unallowlisted_term_fails_in_untracked_source_under_strict(tmp_path: Pat
     occurrences, findings = mod.audit(repo, strict=True, stub_runner=lambda root: [])
 
     assert any(o.term.lower() == "fallback" and not o.classified for o in occurrences)
-    assert any("unclassified synthetic-surface term" in f.message for f in findings)
+    assert any(
+        f.path == "src/bad.py" and f.line_no == 2 and f.message == "INCOMPLETE_SURFACE_UNCLASSIFIED"
+        for f in findings
+    )
 
 
 def test_registered_manuscript_variables_pass_source_scan(tmp_path: Path) -> None:
