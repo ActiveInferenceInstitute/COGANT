@@ -5,7 +5,63 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Changed
+## [0.7.0] - 2026-10-14
+
+### Changed — upstream Generalized_Notation_Notation 4.1.0
+- **Optional `upstream` extra pinned to GNN 4.1.0** (main@`b4a583a5`, 12 commits past the
+  `v4.1.0` tag `9255e19f`; previously v2.0.0 `11a89f06`). GNN >= 4.0 ships the top-level
+  `gnn` package; the bridge imports it directly, gates on distribution version >= 4.0 and on
+  `gnn` being owned by `generalized-notation-notation`, and routes the renamed validators
+  (`validate_gnn_syntax`, `validate_gnn_source`, `check_gnn_file_structure`).
+- **25-step pass drives one `python -m gnn.main --only-steps …` invocation** (GNN 4.x binds
+  selection, source identity and output ownership to one run) and reads per-step outcomes
+  from `00_pipeline_summary/pipeline_execution_summary.json`. Requested steps upstream never
+  reached are `NOT_RUN`, stale summaries are ignored, timeouts/crashes are reported per step,
+  the skip set is passed explicitly (`--skip-steps`) so skipped steps cannot be auto-included
+  as prerequisites, and prerequisites upstream does add are reported in
+  `UpstreamPipelineResult.auto_included`. Only GNN markdown is staged as the upstream corpus.
+- **Default skip set is now `{1, 2, 11, 12}`** (was `{11, 12}`): from an installed wheel,
+  upstream `1_setup` created a stray `.venv` in the caller's environment and its `uv sync`
+  repair uninstalled the extra; `2_tests` needs the upstream checkout. All call sites share
+  `DEFAULT_SKIP_STEPS`; `skip_llm` also skips step 13.
+- **Emitted `model.gnn.md` is upstream-valid under GNN 4.1.0** (`standard` and `strict`;
+  upstream steps 3/5/6 and the default 20-step selection succeed): grouped multi-source
+  connections `(A_m0, s_f0)>o_m0`, row-layout A/B literals, column-stochastic A (no all-zero
+  likelihood columns), and a declared `G` node whenever connections route into it.
+- `tools/gnn_v2_audit_surface.py` → `tools/gnn_upstream_audit_surface.py`: expectations come
+  from the pyproject pin and `uv.lock`; `--collect` builds a reproducible audit directory
+  (version probe, translation, single-file validation, default upstream selection, pip-audit).
+  Recorded 2026-10-14: all lanes PASS (`docs/evaluation/GNN_UPSTREAM_AUDIT_SURFACE.md`).
+
+### Changed — dependencies, toolchain and CI
+- Python lock refreshed (`uv lock --upgrade`, ~95 packages: mypy 2.4, ruff 0.17, rich 15,
+  pyarrow 26, typer 0.27, pydantic 2.14, fastapi 0.143, starlette 1.8, tree-sitter 0.26,
+  matplotlib 3.11, …); dependency floors track the tested versions.
+- ruff uses an explicit `select` list: ruff 0.17 broadened its default rule set
+  (171 → 446 rules), which would otherwise silently change the lint contract.
+- `httpx` moved from core runtime dependencies (no package module imports it) to the test
+  extras alongside `httpx2` (Starlette's preferred `TestClient` backend); placeholder
+  `pytest-anyio` removed. New `server` extra (`uvicorn[standard]`) used by the Docker image.
+- Python 3.14 supported (classifier, CI matrix, badge); the full suite passes on 3.14.6.
+- Rust workspace: PyO3 0.22 → 0.29, petgraph 0.8, thiserror 2, uuid 1.28, edition 2024;
+  unused workspace dependencies removed; `cogant._rust` API unchanged.
+- GitHub Actions on current majors (checkout v7, setup-python v7, setup-uv v10.3.0, cache v6,
+  upload-artifact v7, Pages actions), least-privilege `permissions`, job timeouts;
+  pre-commit hooks ruff-pre-commit v0.17.0 / pre-commit-hooks v6.0.0; the
+  `metrics-freshness` hook now actually fires (root-anchored path) and CI skips it (the lint
+  job enforces the gate).
+- Docker: official pinned uv binary, frozen `--no-dev --extra server` sync (the former
+  `|| uv sync` fallback could ship an image matching no committed lockfile, and the image
+  lacked uvicorn for its own `CMD`); new `.dockerignore`.
+
+### Fixed
+- `COGANT_DISABLE_UPSTREAM_GNN` was documented as a kill switch but never read; it now beats
+  `COGANT_ENABLE_UPSTREAM_GNN` (never an explicit caller choice). `cogant validate
+  --no-upstream-gnn` help no longer claims upstream validation runs by default, and
+  `--upstream-gnn-skip-steps ""` now means "skip nothing" as in `translate`/`analyze`.
+- Two typing errors surfaced by mypy 2.4 with numpy 2.5 / matplotlib 3.11 stubs.
+
+### Changed — compatibility cleanup (since 0.6.0)
 - **Compatibility cleanup:** removed `cogant.viz.png_export` shim; canonical PNG API is
   `cogant.viz.png` with direct submodule imports in `viz/png/orchestrator.py`.
 - `ProgramGraph` exports only from `cogant.schemas.graph` (no import fallback chain).
