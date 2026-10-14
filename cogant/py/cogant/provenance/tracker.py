@@ -5,7 +5,7 @@ Creates, stores, and queries provenance records linking evidence to extracted el
 """
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any
 
@@ -63,7 +63,7 @@ class ProvenanceTracker:
         Returns:
             Record ID.
         """
-        record_id = f"prov_{target_id}_{len(self.records)}"
+        record_id = self._next_record_id(target_id)
 
         record = ProvenanceRecord(
             id=record_id,
@@ -85,6 +85,20 @@ class ProvenanceTracker:
         self.target_to_records[target_id].append(record_id)
 
         logger.debug(f"Added provenance record {record_id} for {target_type} {target_id}")
+        return record_id
+
+    def _next_record_id(self, target_id: str) -> str:
+        """Return an unused ``prov_<target>_<n>`` id for ``target_id``.
+
+        ``n`` starts at the current record count and is bumped past any id
+        already present, so ids stay unique after records from another
+        tracker (whose counters run independently) have been merged in.
+        """
+        index = len(self.records)
+        record_id = f"prov_{target_id}_{index}"
+        while record_id in self.records:
+            index += 1
+            record_id = f"prov_{target_id}_{index}"
         return record_id
 
     def get_records_for_target(self, target_id: str) -> list[ProvenanceRecord]:
@@ -249,16 +263,31 @@ class ProvenanceTracker:
         """
         Merge provenance from another tracker.
 
+        Record ids are only unique within the tracker that minted them, so
+        two independent trackers routinely both hold ``prov_<target>_0``.
+        An incoming record equal to one already held for the same target
+        (every field but ``id``) is skipped, so merging the same tracker twice
+        is idempotent; any other
+        incoming record whose id is taken is re-keyed with a fresh id rather
+        than dropped. ``other`` is never mutated.
+
         Args:
             other: Another ProvenanceTracker to merge.
         """
         for record_id, record in other.records.items():
-            if record_id not in self.records:
-                self.records[record_id] = record
-                target_id = record.target_id
-                if target_id not in self.target_to_records:
-                    self.target_to_records[target_id] = []
-                self.target_to_records[target_id].append(record_id)
+            target_id = record.target_id
+            existing_ids = self.target_to_records.get(target_id, [])
+            if any(
+                (held := self.records.get(rid)) is not None
+                and replace(held, id=record.id) == record
+                for rid in existing_ids
+            ):
+                continue
+            if record_id in self.records:
+                record_id = self._next_record_id(target_id)
+                record = replace(record, id=record_id)
+            self.records[record_id] = record
+            self.target_to_records.setdefault(target_id, []).append(record_id)
 
     def clear(self) -> None:
         """Clear all provenance records."""
