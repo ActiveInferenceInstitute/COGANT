@@ -9,6 +9,8 @@ import hashlib
 import logging
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
+from urllib.request import url2pathname
 
 from cogant.dynamic.coverage import CoverageIngester
 from cogant.dynamic.traces import TraceIngester
@@ -27,16 +29,76 @@ _CALLABLE_KINDS = frozenset(
 
 
 def _normalize_path(raw: str) -> str:
-    """Return a canonical relative path for matching.
+    """Return a canonical path string for matching.
 
-    Strips leading ``./``, converts backslashes, and lowercases on
-    case-insensitive filesystems so that coverage paths and graph node
-    paths can be compared reliably.
+    Strips leading ``./`` and converts backslashes to forward slashes so
+    that coverage paths and graph node paths can be compared. Case is
+    preserved.
     """
     p = raw.replace("\\", "/")
     while p.startswith("./"):
         p = p[2:]
     return p
+
+
+def _graph_repo_root(graph: ProgramGraph) -> str | None:
+    """Return the normalised local repository root of *graph*, if known.
+
+    The pipeline stamps ``metadata.repo_uri`` with a ``file://`` URI for
+    local targets; any other scheme yields ``None``.
+    """
+    repo_uri = getattr(getattr(graph, "metadata", None), "repo_uri", None)
+    if not isinstance(repo_uri, str):
+        return None
+    parsed = urlparse(repo_uri)
+    if parsed.scheme != "file" or not parsed.path:
+        return None
+    return _normalize_path(url2pathname(parsed.path)).rstrip("/")
+
+
+def _match_key(raw: str, repo_root: str | None) -> str:
+    """Normalise *raw* and make it repo-relative when it lies under *repo_root*.
+
+    coverage.py records absolute file paths while graph nodes carry
+    repo-relative ones; stripping the root lets both meet on one key.
+    """
+    p = _normalize_path(raw)
+    if repo_root and p.startswith(repo_root + "/"):
+        return p[len(repo_root) + 1 :]
+    return p
+
+
+def _is_path_suffix(longer: str, shorter: str) -> bool:
+    """Return True if *shorter* equals the trailing path components of *longer*."""
+    return longer.endswith("/" + shorter)
+
+
+def _resolve_coverage_files(node_keys: set[str], coverage_keys: set[str]) -> dict[str, str]:
+    """Map graph node path keys to coverage file keys.
+
+    Exact matches win. Remaining node paths fall back to a whole-component
+    suffix match in either direction (Cobertura reports paths relative to
+    a source root, which may sit above or below the repository root). A
+    suffix match is used only when it is unambiguous on both sides and the
+    coverage file is not already claimed by an exact match.
+    """
+    resolved = {key: key for key in node_keys if key in coverage_keys}
+    claimed = set(resolved.values())
+    open_coverage = [ck for ck in coverage_keys if ck not in claimed]
+
+    suffix_owners: dict[str, list[str]] = {}
+    for node_key in node_keys - resolved.keys():
+        candidates = [
+            ck
+            for ck in open_coverage
+            if _is_path_suffix(ck, node_key) or _is_path_suffix(node_key, ck)
+        ]
+        if len(candidates) == 1:
+            suffix_owners.setdefault(candidates[0], []).append(node_key)
+    for coverage_key, owners in suffix_owners.items():
+        if len(owners) == 1:
+            resolved[owners[0]] = coverage_key
+    return resolved
 
 
 def _node_spans_line(node: Any, line: int) -> bool:
@@ -100,11 +162,15 @@ def _enrich_with_coverage(
         logger.info("No coverage spans found; skipping coverage enrichment")
         return 0
 
-    # Group spans by normalised file path for fast lookup.
+    # Group spans by normalised, repo-relative file path for fast lookup.
+    repo_root = _graph_repo_root(graph)
     file_spans: dict[str, list[dict[str, Any]]] = {}
     for span in spans:
-        key = _normalize_path(span["file"])
+        key = _match_key(str(span["file"] or ""), repo_root)
         file_spans.setdefault(key, []).append(span)
+
+    node_keys = {_match_key(node.path, repo_root) for node in graph.nodes.values() if node.path}
+    coverage_file_for = _resolve_coverage_files(node_keys, set(file_spans))
 
     enriched_count = 0
 
@@ -113,10 +179,10 @@ def _enrich_with_coverage(
         if not node_path:
             continue
 
-        norm = _normalize_path(node_path)
-        matched_spans = file_spans.get(norm)
-        if matched_spans is None:
+        coverage_key = coverage_file_for.get(_match_key(node_path, repo_root))
+        if coverage_key is None:
             continue
+        matched_spans = file_spans[coverage_key]
 
         hits = 0
         branch_total = 0
@@ -143,6 +209,18 @@ def _enrich_with_coverage(
                 node.metadata["branch_coverage"] = None
             enriched_count += 1
 
+    if not coverage_file_for:
+        logger.warning(
+            "Coverage data for %d file(s) matched no graph node path; "
+            "no node was annotated with coverage",
+            len(file_spans),
+        )
+    elif enriched_count == 0:
+        logger.warning(
+            "Coverage files matched %d graph path(s) but no node line span "
+            "contained a measured line; nodes need source_range line numbers",
+            len(coverage_file_for),
+        )
     logger.info("Coverage enrichment annotated %d nodes", enriched_count)
     return enriched_count
 

@@ -143,7 +143,10 @@ def enrich_graph(
 
 1. **Coverage enrichment** (`_enrich_with_coverage`):
    - For each coverage span (file + line ranges):
-     - Normalize file path (handle ./, backslashes, case-sensitivity)
+     - Normalize file path (handle ./ and backslashes) and strip the graph's
+       `file://` repo root so absolute coverage.py paths meet repo-relative node paths
+     - Fall back to an unambiguous whole-component suffix match (Cobertura paths
+       relative to a source root)
      - Find all graph nodes whose path matches AND source_range overlaps lines
      - Increment coverage_hits count per node
      - Aggregate branch_coverage if available
@@ -175,7 +178,7 @@ class EnrichmentResult:
 ### Helper Functions
 
 **`_normalize_path(raw: str) -> str`**
-- Strip leading ./, convert backslashes, lowercase (for case-insensitive FS)
+- Strip leading ./ and convert backslashes; case is preserved
 - Ensures coverage file paths match graph node paths reliably
 - Example: `./my/module.py` → `my/module.py`; `my\module.py` → `my/module.py`
 
@@ -364,8 +367,11 @@ for span in spans:
 Coverage tools report paths inconsistently (with or without `./`, backslashes, case variations). The dynamic module normalizes all paths before matching:
 - Strip leading `./`
 - Convert backslashes to forward slashes
-- Lowercase on case-insensitive filesystems (optional)
-- Match normalized coverage paths against normalized graph node paths
+- Strip the graph's local repo root (from the `file://` `repo_uri`) from absolute paths
+- Match normalized coverage paths against normalized graph node paths; when no exact
+  match exists, use a whole-component suffix match only if it is unambiguous
+- The pipeline graph stage records `source_range` = `{start_line, end_line}` on class,
+  method and function nodes, which is what line attribution needs
 
 ### Source Range Matching
 
@@ -496,7 +502,8 @@ except Exception as exc:
 **Expected error cases**:
 - File not found → log error, return empty structure
 - Malformed XML/JSON → log warning, skip record, continue
-- Path mismatch → no harm, node simply not enriched
+- Path mismatch → node not enriched; a warning is logged when no coverage file matched
+  any node path, or when paths matched but no node line span contained a measured line
 - Missing source_range → node skipped from coverage attribution
 
 ## File Map

@@ -89,6 +89,24 @@ def _repo_uri(target: str) -> str:
     return target
 
 
+def _line_span(definition: Any) -> dict[str, int] | None:
+    """Return a node ``source_range`` from a parsed definition's line numbers.
+
+    Args:
+        definition: A parser ``FunctionDef``/``ClassDef`` exposing
+            ``line_start`` and ``line_end``.
+
+    Returns:
+        ``{"start_line": ..., "end_line": ...}`` (the shape dynamic coverage
+        enrichment matches against), or ``None`` when the lines are unknown.
+    """
+    start = getattr(definition, "line_start", None)
+    end = getattr(definition, "line_end", None)
+    if not isinstance(start, int) or not isinstance(end, int) or start <= 0:
+        return None
+    return {"start_line": start, "end_line": max(start, end)}
+
+
 def _serialize_node(n: Any) -> dict[str, Any]:
     """Convert a program graph Node dataclass into a JSON-friendly dict.
 
@@ -382,7 +400,10 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
     Re-parses every Python module in the snapshot and builds a typed
     ``ProgramGraph`` with:
 
-    * ``MODULE``/``CLASS``/``METHOD``/``FUNCTION`` nodes
+    * ``MODULE``/``CLASS``/``METHOD``/``FUNCTION`` nodes; class, method
+      and function nodes carry ``source_range`` =
+      ``{"start_line": ..., "end_line": ...}`` so dynamic coverage can be
+      attributed by line
     * ``CONTAINS`` edges - module → class, class → method, module → function
     * ``IMPORTS`` edges - module → imported in-repo module
     * ``INHERITS`` edges - class → base class (resolved in-repo)
@@ -580,6 +601,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                 qualified_name=class_qname,
                 path=rel,
                 language="python",
+                source_range=_line_span(cls),
                 metadata={
                     "bases": list(getattr(cls, "bases", []) or []),
                     "is_test": is_test_file,
@@ -607,6 +629,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                     qualified_name=method_qname,
                     path=rel,
                     language="python",
+                    source_range=_line_span(method),
                     metadata={
                         "is_method": True,
                         "is_test": is_test_file,
@@ -649,6 +672,7 @@ def run_graph(bundle: Any, target: str) -> dict[str, Any]:
                 qualified_name=func_qname,
                 path=rel,
                 language="python",
+                source_range=_line_span(func),
                 metadata={
                     "is_test": is_test_file,
                     "is_generated": is_generated_file,
