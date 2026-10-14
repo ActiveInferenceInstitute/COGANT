@@ -627,11 +627,14 @@ class GNNModelRunner:
             # Actions that reduce entropy (concentrate beliefs) have lower EFE
             uncertainty_reduction = self._entropy(beliefs)
 
-            # Penalize actions based on frequency (encourage exploration)
+            # Penalize frequently chosen actions (encourage exploration).
+            # The lowest EFE wins, so the frequency term must *raise* the
+            # EFE of repeated actions; subtracting it would lock the policy
+            # onto whichever action happened to be chosen first.
             action_frequency = self.action_counts.get(action_name, 0)
-            exploration_bonus = 0.1 * action_frequency
+            frequency_penalty = 0.1 * action_frequency
 
-            efe = uncertainty_reduction - exploration_bonus
+            efe = uncertainty_reduction + frequency_penalty
             policy_scores.append((action_name, efe))
 
         # Sort by EFE (ascending = best)
@@ -869,6 +872,9 @@ class GNNModelRunner:
             "total_ms": 0.0,
         }
         all_traces: list[dict[str, Any]] = []
+        # Same policy bookkeeping as ``run``: the EFE frequency penalty
+        # reads ``self.action_counts``.
+        self.action_counts = defaultdict(int)
 
         total_start = time.perf_counter()
 
@@ -896,7 +902,8 @@ class GNNModelRunner:
 
                 # Select action
                 act_start = time.perf_counter()
-                action = self._select_action_active_inference(beliefs, policy_scores)
+                action, _rationale = self._select_action_active_inference(beliefs, policy_scores)
+                self.action_counts[action] += 1
                 timing["action_select_ms"] += (time.perf_counter() - act_start) * 1000
 
                 # Update state
