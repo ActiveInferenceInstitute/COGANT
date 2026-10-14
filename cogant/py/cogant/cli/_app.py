@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 
 import typer
+from pydantic import ValidationError
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.table import Table
@@ -127,6 +128,32 @@ def render_upstream_pipeline_table(result: object) -> None:
         f"total={float(getattr(result, 'total_duration_s', 0.0)):.2f}s "
         f"output={getattr(result, 'output_dir', '')}[/dim]"
     )
+
+
+def cli_path(value: str) -> str:
+    """Return a command-line path in a form :class:`PipelineConfig` accepts.
+
+    The config model rejects ``..`` components so config files, the
+    environment and server payloads cannot traverse. A path typed on the
+    command line is the user's own choice (they could equally type an
+    absolute path), so a value containing ``..`` is resolved to an absolute
+    path instead of being rejected. Every other value is returned unchanged.
+    """
+
+    if ".." not in Path(value).parts:
+        return value
+    return str(Path(value).expanduser().resolve())
+
+
+def report_invalid_options(exc: ValidationError) -> None:
+    """Print one line per rejected option value instead of a traceback.
+
+    The caller is expected to raise ``typer.Exit(code=1)`` afterwards.
+    """
+
+    for error in exc.errors():
+        field = ".".join(str(part) for part in error.get("loc", ())) or "configuration"
+        console.print(f"[red]Invalid option value for {field}:[/red] {error.get('msg', exc)}")
 
 
 def friendly_pipeline_error(exc: BaseException, target: Path | None = None) -> None:

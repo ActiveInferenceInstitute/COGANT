@@ -10,6 +10,9 @@ from cogant.cli._app import (
     console,
 )
 from cogant.cli._app import (
+    cli_path as _cli_path,
+)
+from cogant.cli._app import (
     friendly_pipeline_error as _friendly_pipeline_error,
 )
 from cogant.cli._app import (
@@ -164,7 +167,7 @@ def init(
         console.print("\n[bold]Running translate pipeline…[/bold]")
         try:
             runner = PipelineRunner()
-            config = PipelineConfig(output_dir=str(project_dir / "output"))
+            config = PipelineConfig(output_dir=_cli_path(str(project_dir / "output")))
             bundle = _run_pipeline_with_progress(
                 runner,
                 str(project_dir),
@@ -175,7 +178,7 @@ def init(
             _friendly_pipeline_error(exc, project_dir)
             raise typer.Exit(code=1) from exc
 
-        bundle_path = project_dir / "output" / "bundle.json"
+        bundle_path = Path(config.output_dir) / "bundle.json"
         bundle_path.parent.mkdir(parents=True, exist_ok=True)
         bundle.save_json(str(bundle_path))
         console.print(

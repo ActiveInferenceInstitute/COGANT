@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import typer
+from pydantic import ValidationError
 from rich.panel import Panel
 from rich.table import Table
 
@@ -17,10 +18,16 @@ from cogant.cli._app import (
     apply_upstream_pipeline_flags as _apply_upstream_pipeline_flags,
 )
 from cogant.cli._app import (
+    cli_path as _cli_path,
+)
+from cogant.cli._app import (
     friendly_pipeline_error as _friendly_pipeline_error,
 )
 from cogant.cli._app import (
     pipeline_run_failed as _pipeline_run_failed,
+)
+from cogant.cli._app import (
+    report_invalid_options as _report_invalid_options,
 )
 from cogant.cli._app import (
     run_pipeline_with_progress as _run_pipeline_with_progress,
@@ -203,30 +210,37 @@ def analyze(
         _friendly_pipeline_error(NotADirectoryError(target), target_path)
         raise typer.Exit(code=1)
 
-    config = PipelineConfig(output_dir=output_dir)
-    if json_mode:
-        config.render_visualizations = False
-    if min_confidence is not None:
-        if not 0.0 <= min_confidence <= 1.0:
-            console.print("[red]--min-confidence must be between 0.0 and 1.0[/red]")
-            raise typer.Exit(code=1)
-        config.min_confidence = min_confidence
-    if skip_stages:
-        config.skip_stages = [s.strip() for s in skip_stages.split(",") if s.strip()]
-    if no_dynamic:
-        config.skip_dynamic = True
-    if incremental:
-        config.incremental_since = incremental
-    if cache_dir:
-        config.cache_dir = cache_dir
-    _apply_upstream_pipeline_flags(
-        config,
-        enable=upstream_gnn_pipeline,
-        only=upstream_gnn_only_steps,
-        skip=upstream_gnn_skip_steps,
-        frameworks=upstream_gnn_frameworks,
-        llm_model=upstream_gnn_llm_model,
-    )
+    if min_confidence is not None and not 0.0 <= min_confidence <= 1.0:
+        console.print("[red]--min-confidence must be between 0.0 and 1.0[/red]")
+        raise typer.Exit(code=1)
+
+    # The config validates construction and every assignment; a rejected
+    # CLI value is reported as a one-line error instead of a traceback.
+    try:
+        config = PipelineConfig(output_dir=_cli_path(output_dir))
+        if json_mode:
+            config.render_visualizations = False
+        if min_confidence is not None:
+            config.min_confidence = min_confidence
+        if skip_stages:
+            config.skip_stages = [s.strip() for s in skip_stages.split(",") if s.strip()]
+        if no_dynamic:
+            config.skip_dynamic = True
+        if incremental:
+            config.incremental_since = incremental
+        if cache_dir:
+            config.cache_dir = _cli_path(cache_dir)
+        _apply_upstream_pipeline_flags(
+            config,
+            enable=upstream_gnn_pipeline,
+            only=upstream_gnn_only_steps,
+            skip=upstream_gnn_skip_steps,
+            frameworks=upstream_gnn_frameworks,
+            llm_model=upstream_gnn_llm_model,
+        )
+    except ValidationError as exc:
+        _report_invalid_options(exc)
+        raise typer.Exit(code=1) from exc
 
     runner = PipelineRunner()
     try:
@@ -249,7 +263,7 @@ def analyze(
         _friendly_pipeline_error(exc, Path(target))
         raise typer.Exit(code=1) from exc
 
-    out = Path(output_dir)
+    out = Path(config.output_dir)
     out.mkdir(parents=True, exist_ok=True)
     bundle_path = out / "bundle.json"
     bundle.save_json(str(bundle_path))

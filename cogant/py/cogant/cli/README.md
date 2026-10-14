@@ -74,6 +74,8 @@ cogant benchmark ./my_repo --iterations 5
 
 main.py: Typer app instance that registers **26 top-level commands** via `@app.command` (17 plain `@app.command()` calls + 9 with an explicit name — 6 positional like `@app.command("analyze-static")`, plus `name="reverse"`, `name="roundtrip"`, and `name="version"`). It also attaches the `plugin` sub-typer (2 leaves: `list`, `info`) and the `migrate` sub-typer (1 leaf) via `app.add_typer`, for **29 leaf commands total**. Each command delegates to Session, PipelineRunner, or ReviewAPI from `cogant.api`. Rich Console for styled table and panel output. Typer.Argument and Typer.Option for parameter handling.
 
+_app.py: Shared console/app plus helpers used by the commands. `cli_path` resolves command-line paths containing `..` (for example `-o ../out`) to absolute paths, because `PipelineConfig` rejects traversal components from config files, the environment and server payloads; `report_invalid_options` turns rejected option values into one-line errors with exit code 1; `stage_status_label` / `pipeline_run_failed` drive the stage outcome tables and exit status of `translate` and `analyze`.
+
 diff.py: Helper functions load_bundle and diff_command for comparing two run directories (flat, `--layout-output` `data/`, or `gnn_package/`) using DriftAnalyzer and CodebaseMetrics.
 
 ## Dependencies

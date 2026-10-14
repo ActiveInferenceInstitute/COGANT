@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import typer
+from pydantic import ValidationError
 from rich.panel import Panel
 from rich.table import Table
 
@@ -15,10 +16,16 @@ from cogant.cli._app import (
     apply_upstream_pipeline_flags as _apply_upstream_pipeline_flags,
 )
 from cogant.cli._app import (
+    cli_path as _cli_path,
+)
+from cogant.cli._app import (
     friendly_pipeline_error as _friendly_pipeline_error,
 )
 from cogant.cli._app import (
     pipeline_run_failed as _pipeline_run_failed,
+)
+from cogant.cli._app import (
+    report_invalid_options as _report_invalid_options,
 )
 from cogant.cli._app import (
     run_pipeline_with_progress as _run_pipeline_with_progress,
@@ -178,7 +185,7 @@ def translate(
     # (lower-precedence layers) would be silently overridden by defaults.
     cli_pipeline: dict[str, object] = {}
     if output_dir is not None:
-        cli_pipeline["output_dir"] = output_dir
+        cli_pipeline["output_dir"] = _cli_path(output_dir)
     if layout_output is not None:
         cli_pipeline["layout_output"] = layout_output
     if min_confidence is not None:
@@ -194,35 +201,41 @@ def translate(
     config = project_config.pipeline
     if config_file:
         console.print(f"[dim]Loaded config from {config_file}[/dim]")
-    if skip_stages:
-        config.skip_stages = [s.strip() for s in skip_stages.split(",") if s.strip()]
+    # The config validates every assignment; a rejected CLI value is
+    # reported as a one-line error instead of a pydantic traceback.
+    try:
+        if skip_stages:
+            config.skip_stages = [s.strip() for s in skip_stages.split(",") if s.strip()]
 
-    # CLI overrides for dynamic-analysis wiring. ``--no-dynamic`` takes
-    # precedence over any coverage / trace paths the user may have
-    # supplied; we still record them on the config so a subsequent call
-    # without ``--no-dynamic`` still has them.
-    if no_dynamic:
-        config.skip_dynamic = True
-        console.print("[dim]--no-dynamic: skipping dynamic analysis stage[/dim]")
-    if coverage_path:
-        config.coverage_path = coverage_path
-    if trace_path:
-        config.trace_path = trace_path
-    if incremental:
-        config.incremental_since = incremental
-        console.print(
-            f"[dim]--incremental {incremental}: only re-parsing files changed since ref[/dim]"
+        # CLI overrides for dynamic-analysis wiring. ``--no-dynamic`` takes
+        # precedence over any coverage / trace paths the user may have
+        # supplied; we still record them on the config so a subsequent call
+        # without ``--no-dynamic`` still has them.
+        if no_dynamic:
+            config.skip_dynamic = True
+            console.print("[dim]--no-dynamic: skipping dynamic analysis stage[/dim]")
+        if coverage_path:
+            config.coverage_path = _cli_path(coverage_path)
+        if trace_path:
+            config.trace_path = _cli_path(trace_path)
+        if incremental:
+            config.incremental_since = incremental
+            console.print(
+                f"[dim]--incremental {incremental}: only re-parsing files changed since ref[/dim]"
+            )
+        if cache_dir:
+            config.cache_dir = _cli_path(cache_dir)
+        _apply_upstream_pipeline_flags(
+            config,
+            enable=upstream_gnn_pipeline,
+            only=upstream_gnn_only_steps,
+            skip=upstream_gnn_skip_steps,
+            frameworks=upstream_gnn_frameworks,
+            llm_model=upstream_gnn_llm_model,
         )
-    if cache_dir:
-        config.cache_dir = cache_dir
-    _apply_upstream_pipeline_flags(
-        config,
-        enable=upstream_gnn_pipeline,
-        only=upstream_gnn_only_steps,
-        skip=upstream_gnn_skip_steps,
-        frameworks=upstream_gnn_frameworks,
-        llm_model=upstream_gnn_llm_model,
-    )
+    except ValidationError as exc:
+        _report_invalid_options(exc)
+        raise typer.Exit(code=1) from exc
 
     runner = PipelineRunner()
     try:
