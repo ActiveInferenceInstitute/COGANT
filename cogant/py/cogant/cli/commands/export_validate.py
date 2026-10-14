@@ -28,7 +28,7 @@ def validate(
         False,
         "--no-upstream-gnn",
         help=(
-            "Skip Active Inference Institute src.gnn validation on model.gnn.md "
+            "Skip Active Inference Institute upstream gnn validation on model.gnn.md "
             "(COGANT structural checks still run). Default is to run upstream. "
             "Or set COGANT_DISABLE_UPSTREAM_GNN=1."
         ),
@@ -49,7 +49,9 @@ def validate(
     upstream_gnn_skip_steps: str | None = typer.Option(
         None,
         "--upstream-gnn-skip-steps",
-        help=("Override the upstream skip list (default '11,12'). Pass '' to run all 25 steps."),
+        help=(
+            "Override the upstream skip list (default '1,2,11,12'). Pass '' to run all 25 steps."
+        ),
     ),
     upstream_gnn_frameworks: str | None = typer.Option(
         None,
@@ -120,6 +122,7 @@ def validate(
 
         if upstream_gnn_pipeline:
             from cogant.gnn.upstream_bridge.pipeline import (
+                DEFAULT_SKIP_STEPS,
                 UpstreamPipelineConfig,
                 run_upstream_pipeline,
             )
@@ -141,7 +144,7 @@ def validate(
                 target_dir=gnn_dir,
                 output_dir=out_dir,
                 only_steps=only,
-                skip_steps=skip if skip is not None else [11, 12],
+                skip_steps=skip if skip is not None else sorted(DEFAULT_SKIP_STEPS),
                 frameworks=upstream_gnn_frameworks or "lite",
                 llm_model=upstream_gnn_llm_model,
             )

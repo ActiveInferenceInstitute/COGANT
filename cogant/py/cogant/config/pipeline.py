@@ -114,7 +114,9 @@ class PipelineConfig(BaseModel):
     upstream_gnn_validation: bool = Field(default=False)
     upstream_gnn_pipeline: bool = Field(default=False)
     upstream_gnn_only_steps: list[int] | None = Field(default=None)
-    upstream_gnn_skip_steps: list[int] = Field(default_factory=lambda: [11, 12])
+    # Mirrors cogant.gnn.upstream_bridge.pipeline.DEFAULT_SKIP_STEPS (kept as a
+    # literal to avoid importing cogant.gnn from config; a unit test pins it).
+    upstream_gnn_skip_steps: list[int] = Field(default_factory=lambda: [1, 2, 11, 12])
     upstream_gnn_output_dir: str | None = Field(default=None)
     upstream_gnn_frameworks: str = Field(default="lite", min_length=1)
     upstream_gnn_llm_model: str | None = Field(default=None)

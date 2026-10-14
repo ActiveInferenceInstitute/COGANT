@@ -97,7 +97,7 @@ def render_upstream_pipeline_table(result: object) -> None:
     if not getattr(result, "available", False):
         console.print(
             "[yellow]Upstream pipeline unavailable:[/yellow] "
-            f"{getattr(result, 'error', None) or 'src.main not importable'}"
+            f"{getattr(result, 'error', None) or 'gnn.main not importable'}"
         )
         return
     table = Table(title="Upstream GNN pipeline")

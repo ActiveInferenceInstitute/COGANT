@@ -105,7 +105,7 @@ def analyze(
         None,
         "--upstream-gnn-skip-steps",
         help=(
-            "Override the upstream pass skip list (default '11,12'). Pass '' to run all 25 steps."
+            "Override the upstream pass skip list (default '1,2,11,12'). Pass '' to run all 25 steps."
         ),
     ),
     upstream_gnn_frameworks: str | None = typer.Option(

@@ -1,4 +1,4 @@
-"""Tests for generalized-notation-notation (src.gnn) bridge — core dependency."""
+"""Tests for the optional generalized-notation-notation (``gnn`` 4.x) bridge."""
 
 from __future__ import annotations
 
@@ -25,14 +25,12 @@ from cogant.gnn.upstream_bridge import (
 )
 
 
-def test_raw_src_gnn_import_fails_without_bridge_layout_activation() -> None:
-    """Pinned upstream needs COGANT's bridge before direct import works.
+def test_retired_src_gnn_import_surface_is_absent() -> None:
+    """Negative control: GNN >= 4.0 removed the GNN 2.x ``src.gnn`` surface.
 
-    This is a verifier negative control: a raw isolated ``import src.gnn``
-    must fail when the optional upstream package is installed through
-    COGANT's bridge layout (repo-style absolute import assumption). Without
-    the optional upstream dependency the import also fails, so the negative
-    control still holds — only the failure reason differs.
+    A clean interpreter must not resolve ``src.gnn`` whether or not the
+    optional upstream extra is installed, so no COGANT code path can depend
+    on the retired layout.
     """
     env = os.environ.copy()
     env.pop("PYTHONPATH", None)
@@ -44,21 +42,147 @@ def test_raw_src_gnn_import_fails_without_bridge_layout_activation() -> None:
         text=True,
     )
     assert proc.returncode != 0
-    if is_upstream_gnn_available():
-        assert "No module named 'gnn'" in proc.stderr
-    else:
-        # Upstream not installed: the import fails at the top-level package.
-        assert "No module named" in proc.stderr
+    assert "No module named" in proc.stderr
 
 
-def test_bridge_activates_upstream_layout_and_imports_src_gnn() -> None:
-    """COGANT's facade activates upstream's installed ``src`` tree."""
+def test_bridge_imports_top_level_gnn_package() -> None:
+    """With the optional extra, the bridge resolves upstream ``gnn`` 4.x directly."""
     if not is_upstream_gnn_available():
-        pytest.skip("optional upstream src.gnn dependency not installed")
-    assert is_upstream_gnn_available() is True
-    import src.gnn as gnn
+        pytest.skip("optional upstream gnn dependency not installed")
+    import gnn
 
-    assert getattr(gnn, "__version__", None) == "1.6.0"
+    version = getattr(gnn, "__version__", "")
+    assert version.split(".")[0] == "4"
+    assert upstream_version() == version
+
+
+def test_bridge_rejects_pre_v4_upstream(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An installed GNN 2.x/3.x distribution is reported as unavailable, not driven."""
+    import importlib.metadata
+
+    import cogant.gnn.upstream_bridge as ub
+
+    monkeypatch.setattr(importlib.metadata, "version", lambda name: "2.0.0")
+    assert ub.is_upstream_gnn_available() is False
+    result = ub.run_upstream_validate_gnn("## GNNSection\nm\n")
+    assert result.available is False
+    assert result.ok is True
+    assert result.skipped_reason is not None
+    assert ">= 4.0" in result.skipped_reason
+
+
+def test_bridge_rejects_foreign_gnn_distribution(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A top-level ``gnn`` owned by another distribution is never used."""
+    import importlib.metadata
+
+    import cogant.gnn.upstream_bridge as ub
+
+    monkeypatch.setattr(importlib.metadata, "version", lambda name: "4.1.0")
+    monkeypatch.setattr(
+        importlib.metadata, "packages_distributions", lambda: {"gnn": ["some-other-gnn"]}
+    )
+    ub._gnn_owned_by_upstream_distribution.cache_clear()
+    try:
+        assert ub.is_upstream_gnn_available() is False
+    finally:
+        ub._gnn_owned_by_upstream_distribution.cache_clear()
+
+
+def test_bridge_reports_missing_distribution(monkeypatch: pytest.MonkeyPatch) -> None:
+    import importlib.metadata
+
+    import cogant.gnn.upstream_bridge as ub
+
+    def _missing(name: str) -> str:
+        raise importlib.metadata.PackageNotFoundError(name)
+
+    monkeypatch.setattr(importlib.metadata, "version", _missing)
+    assert ub.is_upstream_gnn_available() is False
+    assert ub.upstream_version() is None
+    with pytest.raises(ImportError, match="cogant\\[upstream\\]"):
+        ub._require_upstream_gnn()
+
+
+class _FakeUpstream:
+    """Stand-in for the upstream ``gnn`` module (GNN 4.x public names)."""
+
+    __version__ = "4.1.0"
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, tuple[object, ...], dict[str, object]]] = []
+
+    def validate_gnn_syntax(
+        self, path: object, level: object = "standard"
+    ) -> tuple[bool, list[str]]:
+        self.calls.append(("validate_gnn_syntax", (path, level), {}))
+        candidate = Path(str(path))
+        text = candidate.read_text(encoding="utf-8") if candidate.is_file() else str(path)
+        valid = "ModelName" in text
+        return (valid, [] if valid else ["Required section missing: ModelName"])
+
+    def validate_gnn_source(self, source: object, *, is_content: bool = False) -> dict[str, object]:
+        self.calls.append(("validate_gnn_source", (source,), {"is_content": is_content}))
+        return {"is_valid": True, "errors": []}
+
+    def check_gnn_file_structure(self, *args: object, **kwargs: object) -> dict[str, object]:
+        self.calls.append(("check_gnn_file_structure", args, kwargs))
+        return {"valid": True}
+
+
+def test_validate_routes_to_v4_validate_gnn_syntax(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``run_upstream_validate_gnn`` stages a file and forwards the level."""
+    import cogant.gnn.upstream_bridge as ub
+
+    fake = _FakeUpstream()
+    monkeypatch.setattr(ub, "_require_upstream_gnn", lambda: fake)
+
+    ok = ub.run_upstream_validate_gnn("## ModelName\nm\n", validation_level="strict")
+    assert ok.available and ok.ok and ok.errors == [] and ok.version == "4.1.0"
+    name, (path, level), _ = fake.calls[0]
+    assert name == "validate_gnn_syntax"
+    assert level == "strict"
+    assert str(path).endswith(".gnn.md")
+    assert not Path(str(path)).exists(), "temporary staging file must be removed"
+
+    bad = ub.run_upstream_validate_gnn("## GNNSection\nm\n")
+    assert bad.available and not bad.ok
+    assert bad.errors == ["Required section missing: ModelName"]
+
+
+def test_renamed_facades_route_to_v4_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    """GNN 2.x facade names forward to the GNN 4.x replacements."""
+    import cogant.gnn.upstream_bridge as ub
+
+    fake = _FakeUpstream()
+    monkeypatch.setattr(ub, "_require_upstream_gnn", lambda: fake)
+
+    assert ub.upstream_validate_file_content("## ModelName\nm\n") == {
+        "is_valid": True,
+        "errors": [],
+    }
+    assert ub.upstream_validate_structure("model.gnn.md") == {"valid": True}
+    assert ub.upstream_validate_syntax_formal("## ModelName\nm\n")[0] is True
+    assert [c[0] for c in fake.calls] == [
+        "validate_gnn_source",
+        "check_gnn_file_structure",
+        "validate_gnn_syntax",
+    ]
+
+
+def test_validate_reports_upstream_exception(monkeypatch: pytest.MonkeyPatch) -> None:
+    import cogant.gnn.upstream_bridge as ub
+
+    class _Raising(_FakeUpstream):
+        def validate_gnn_syntax(
+            self, path: object, level: object = "standard"
+        ) -> tuple[bool, list[str]]:
+            raise RuntimeError("boom")
+
+    monkeypatch.setattr(ub, "_require_upstream_gnn", lambda: _Raising())
+    r = ub.run_upstream_validate_gnn("## ModelName\nm\n")
+    assert r.available is True
+    assert r.ok is False
+    assert r.errors == ["upstream validate_gnn_syntax raised: boom"]
 
 
 def test_run_upstream_validate_gnn_returns_dataclass() -> None:
@@ -74,19 +198,19 @@ def test_is_upstream_gnn_available_is_bool() -> None:
     assert is_upstream_gnn_available() in (True, False)
 
 
-@pytest.mark.skipif(not is_upstream_gnn_available(), reason="src.gnn not importable")
+@pytest.mark.skipif(not is_upstream_gnn_available(), reason="upstream gnn not importable")
 def test_upstream_version_string_or_none() -> None:
     v = upstream_version()
     assert v is None or isinstance(v, str)
 
 
-@pytest.mark.skipif(not is_upstream_gnn_available(), reason="src.gnn not importable")
+@pytest.mark.skipif(not is_upstream_gnn_available(), reason="upstream gnn not importable")
 def test_upstream_validate_markdown_alias() -> None:
     r = upstream_validate_markdown("## GNNSection\nx\n")
     assert isinstance(r, UpstreamGNNValidation)
 
 
-@pytest.mark.skipif(not is_upstream_gnn_available(), reason="src.gnn not importable")
+@pytest.mark.skipif(not is_upstream_gnn_available(), reason="upstream gnn not importable")
 def test_upstream_parse_file_minimal(tmp_path: Path) -> None:
     md = tmp_path / "t.gnn.md"
     md.write_text(
@@ -155,7 +279,7 @@ def test_validator_runs_upstream_when_core_dep(monkeypatch: pytest.MonkeyPatch) 
     from cogant.gnn.validator import GNNValidator
 
     if not is_upstream_gnn_available():
-        pytest.skip("src.gnn not importable")
+        pytest.skip("upstream gnn not importable")
     monkeypatch.delenv("COGANT_DISABLE_UPSTREAM_GNN", raising=False)
     pkg = tmp_gnn_package()
     v = GNNValidator()
@@ -163,7 +287,7 @@ def test_validator_runs_upstream_when_core_dep(monkeypatch: pytest.MonkeyPatch) 
     assert "upstream_gnn" in r.details
 
 
-@pytest.mark.skipif(not is_upstream_gnn_available(), reason="src.gnn not importable")
+@pytest.mark.skipif(not is_upstream_gnn_available(), reason="upstream gnn not importable")
 def test_get_upstream_gnn_format_enum() -> None:
     """Re-exported enum class from upstream."""
     fmt = get_upstream_gnn_format_enum()
@@ -171,14 +295,14 @@ def test_get_upstream_gnn_format_enum() -> None:
     assert any(m.name == "MARKDOWN" for m in fmt)
 
 
-@pytest.mark.skipif(not is_upstream_gnn_available(), reason="src.gnn not importable")
+@pytest.mark.skipif(not is_upstream_gnn_available(), reason="upstream gnn not importable")
 def test_get_upstream_parsing_system() -> None:
     """Smoke: upstream parser instance constructs."""
     ps = get_upstream_parsing_system()
     assert ps is not None
 
 
-@pytest.mark.skipif(not is_upstream_gnn_available(), reason="src.gnn not importable")
+@pytest.mark.skipif(not is_upstream_gnn_available(), reason="upstream gnn not importable")
 def test_parse_upstream_model_gnn_md_minimal_package() -> None:
     """JSON-safe summary for model.gnn.md under a package directory."""
     pkg = tmp_gnn_package()

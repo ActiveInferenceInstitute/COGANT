@@ -38,7 +38,7 @@ def _upstream_enabled_by_env() -> bool:
 
 
 def _resolve_upstream_flag(explicit: bool | None) -> bool:
-    """Resolve whether to run upstream ``validate_gnn`` on ``model.gnn.md``.
+    """Resolve whether to run upstream ``validate_gnn_syntax`` on ``model.gnn.md``.
 
     * ``explicit is not None`` — caller/pipeline/CLI choice wins.
     * ``None`` — use COGANT's self-contained validator.  The optional upstream
@@ -250,9 +250,12 @@ class GNNValidator:
         Args:
             package_dir: Path to the package directory.
             upstream_gnn: When True, run the Active Inference Institute
-                ``generalized-notation-notation`` validator (``src.gnn``) on
-                ``model.gnn.md``. When ``None``, upstream runs by default unless
-                :envvar:`COGANT_DISABLE_UPSTREAM_GNN` is set.
+                ``generalized-notation-notation`` validator (upstream ``gnn``
+                4.x, ``standard`` level) on ``model.gnn.md``; a requested but
+                unavailable upstream is reported as a capability error. When
+                ``None``, upstream runs only if
+                :envvar:`COGANT_ENABLE_UPSTREAM_GNN` is truthy (and never when
+                :envvar:`COGANT_DISABLE_UPSTREAM_GNN` is set).
 
         Returns:
             ValidationResult object.

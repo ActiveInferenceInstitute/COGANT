@@ -6,39 +6,57 @@ This module composes the Active Inference Institute
 
 The 10-stage COGANT pipeline produces a ``model.gnn.md`` plus the 16 required
 JSON sidecars at ``bundle.artifacts['_gnn_package_dir']``. Pointing the
-upstream pipeline at that directory exercises the full Active Inference
-processing chain (parsing, validation, ontology, ML integration, reporting,
-…) over the bundle COGANT just emitted.
+upstream pipeline at that package exercises the Active Inference processing
+chain (parsing, type checking, validation, export, ontology, reporting, …)
+over the bundle COGANT just emitted.
 
-Default behaviour skips ``11_render`` and ``12_execute``: those steps generate
-framework-specific simulation code (PyMDP, RxInfer, JAX, …) and run it, which
-is heavy and not generally meaningful for codebase-derived bundles. Both can
-be turned back on by passing ``skip_steps=[]`` (or by listing them in
+Upstream contract (GNN 4.x)
+---------------------------
+GNN 4.x ships the top-level ``gnn`` package and binds selection,
+configuration, source identity, output ownership and deadlines to one
+pipeline *invocation* (``python -m gnn.main``): every step reads the same
+frozen source manifest and writes into a leased output root. Running numbered
+scripts one at a time (the GNN 2.x bridge strategy) bypasses that run
+context, so this driver issues exactly one ``python -m gnn.main`` invocation
+with ``--only-steps`` set to the selected steps and reads per-step outcomes
+from ``00_pipeline_summary/pipeline_execution_summary.json``.
+
+Only ``*.gnn.md`` / ``model.gnn.md`` files are staged as upstream inputs:
+upstream discovery treats every ``*.json`` file as a model source, and the
+COGANT JSON sidecars are package evidence, not standalone GNN models.
+
+Default selection skips:
+
+* ``1_setup`` — provisions a uv environment relative to the upstream source
+  checkout; from an installed wheel it creates a stray ``.venv`` inside the
+  caller's environment and attempts ``uv sync`` repairs.
+* ``2_tests`` — runs upstream's own repository test suite, which is not
+  shipped in the wheel (the step cannot pass from an installed package).
+* ``11_render`` / ``12_execute`` — generate and run framework-specific
+  simulation code (PyMDP, RxInfer, JAX, …): heavy, and not generally
+  meaningful for codebase-derived bundles.
+
+All four can be re-enabled by passing ``skip_steps=[]`` (or listing them in
 ``only_steps``).
 
 The pipeline is **advisory**: a failing upstream step is recorded but does
 not raise. Callers can promote any step to fatal by inspecting
 ``UpstreamPipelineResult.steps`` and acting on ``success=False``.
-
-Side-effects of importing :mod:`src.main` (it ``chdir`` s to its own project
-root on import) are contained by :func:`_preserve_cwd`, so the rest of
-COGANT keeps the caller's working directory.
 """
 
 from __future__ import annotations
 
-import contextlib
 import importlib
 import json
 import logging
 import os
 import shutil
+import subprocess
 import sys
 import time
-from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -79,14 +97,29 @@ UPSTREAM_STEP_SCRIPTS: tuple[str, ...] = (
 Indexed by step number: ``UPSTREAM_STEP_SCRIPTS[3] == "3_gnn.py"``.
 """
 
-DEFAULT_SKIP_STEPS: frozenset[int] = frozenset({11, 12})
-"""Steps suppressed by default.
+DEFAULT_SKIP_STEPS: frozenset[int] = frozenset({1, 2, 11, 12})
+"""Steps suppressed by default (see the module docstring for rationale).
 
-* ``11_render`` — generates framework-specific simulation code (PyMDP, RxInfer,
-  JAX, …) which only makes sense for small synthetic Active Inference models.
-* ``12_execute`` — runs the rendered simulation; depends on heavy optional
-  deps (JAX, PyMDP, …) and assumes a runnable model.
+* ``1_setup`` — upstream environment provisioning (mutates the caller's
+  environment when run from an installed wheel).
+* ``2_tests`` — upstream repository test suite (not shipped in the wheel).
+* ``11_render`` — framework-specific simulation code generation.
+* ``12_execute`` — runs the rendered simulations (heavy optional deps).
 """
+
+SUCCESS_STATUSES: frozenset[str] = frozenset({"SUCCESS", "SUCCESS_WITH_WARNINGS", "SKIPPED"})
+"""Upstream step statuses COGANT counts as a passing step."""
+
+DEFAULT_TIMEOUT_S: float = 3600.0
+"""Bridge-level wall-clock ceiling for one upstream invocation (seconds).
+
+Upstream applies its own per-step deadlines inside the invocation; this outer
+bound only guarantees the COGANT caller is never blocked indefinitely.
+"""
+
+_SUMMARY_RELPATH = Path("00_pipeline_summary") / "pipeline_execution_summary.json"
+_STAGED_INPUT_DIRNAME = "_cogant_input"
+_LOG_FILENAME = "upstream_pipeline.log"
 
 
 # ---------------------------------------------------------------------------
@@ -94,28 +127,14 @@ DEFAULT_SKIP_STEPS: frozenset[int] = frozenset({11, 12})
 # ---------------------------------------------------------------------------
 
 
-@contextlib.contextmanager
-def _preserve_cwd() -> Iterator[None]:
-    """Restore ``os.getcwd()`` after the ``with`` block.
+def _import_gnn_main() -> Any | None:
+    """Import upstream :mod:`gnn.main`, returning ``None`` if unavailable.
 
-    Importing :mod:`src.main` ``chdir`` s to the upstream project root; this
-    context manager guarantees the caller never observes that side-effect.
+    GNN 4.x guarantees that importing ``gnn.main`` has no working-directory
+    or import-path side effects, so no cwd guard is needed here.
     """
-    saved = os.getcwd()
     try:
-        yield
-    finally:
-        try:
-            os.chdir(saved)
-        except OSError:
-            pass
-
-
-def _import_src_main() -> Any | None:
-    """Import :mod:`src.main`, returning ``None`` if unavailable."""
-    try:
-        with _preserve_cwd():
-            return importlib.import_module("src.main")
+        return importlib.import_module("gnn.main")
     except ImportError:
         return None
 
@@ -152,8 +171,8 @@ def resolve_steps(
 
 
 def _is_upstream_main_available() -> bool:
-    """Return ``True`` when ``src.main`` can be imported."""
-    return _import_src_main() is not None
+    """Return ``True`` when ``gnn.main`` can be imported."""
+    return _import_gnn_main() is not None
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +189,7 @@ class UpstreamStepResult:
         script: Script filename (e.g. ``"3_gnn.py"``).
         status: Upstream-reported status string
             (``"SUCCESS"`` / ``"SUCCESS_WITH_WARNINGS"`` / ``"SKIPPED"`` /
-            ``"FAILED"`` / ``"UNKNOWN"`` / ``"BRIDGE_ERROR"``).
+            ``"FAILED"`` / ``"TIMEOUT"`` / ``"NOT_RUN"`` / ``"BRIDGE_ERROR"``).
         success: ``True`` iff ``status`` is one of
             ``{"SUCCESS", "SUCCESS_WITH_WARNINGS", "SKIPPED"}``.
         duration_s: Wall-clock duration in seconds.
@@ -210,16 +229,20 @@ class UpstreamPipelineResult:
     """Aggregated outcome of an upstream pipeline run.
 
     Attributes:
-        available: ``False`` when ``src.main`` could not be imported (in
+        available: ``False`` when ``gnn.main`` could not be imported (in
             which case ``steps`` is empty and ``error`` describes why).
         steps: Per-step results in execution order.
-        executed: Step indices actually invoked.
+        executed: Step indices requested from upstream.
         skipped: Step indices intentionally skipped.
-        total_duration_s: Wall-clock duration across all executed steps.
+        total_duration_s: Wall-clock duration of the upstream invocation.
         output_dir: Absolute path to the upstream output root.
         target_dir: Absolute path to the GNN package directory used as
             input.
-        error: Bridge-level error (e.g. ``src.main`` import failure).
+        error: Bridge-level error (e.g. ``gnn.main`` import failure, a
+            timeout, or a missing upstream summary).
+        upstream_status: Upstream ``overall_status`` for the invocation, when
+            the summary was produced.
+        run_id: Upstream invocation ID (``GNN_RUN_ID``), when reported.
     """
 
     available: bool
@@ -230,6 +253,8 @@ class UpstreamPipelineResult:
     output_dir: str | None = None
     target_dir: str | None = None
     error: str | None = None
+    upstream_status: str | None = None
+    run_id: str | None = None
 
     @property
     def success_count(self) -> int:
@@ -258,6 +283,8 @@ class UpstreamPipelineResult:
             "output_dir": self.output_dir,
             "target_dir": self.target_dir,
             "error": self.error,
+            "upstream_status": self.upstream_status,
+            "run_id": self.run_id,
             "steps": [s.to_dict() for s in self.steps],
         }
 
@@ -267,23 +294,25 @@ class UpstreamPipelineConfig:
     """Inputs for :func:`run_upstream_pipeline`.
 
     Attributes:
-        target_dir: Directory containing GNN ``*.md`` files (the COGANT
+        target_dir: Directory containing the GNN markdown model (the COGANT
             ``gnn_package/`` works because it ships ``model.gnn.md`` at the
             root). Required.
-        output_dir: Where upstream writes per-step output sub-directories.
-            Required.
+        output_dir: Upstream output root (per-step sub-directories plus
+            ``00_pipeline_summary/``). Required.
         only_steps: Restrict execution to these step indices. ``None`` means
             "every step in the catalogue".
         skip_steps: Step indices to drop. Defaults to
             :data:`DEFAULT_SKIP_STEPS`.
-        frameworks: Forwarded to upstream ``11_render``/``12_execute`` when
-            those steps are enabled (e.g. ``"lite"``, ``"all"``,
+        frameworks: Forwarded to upstream ``--frameworks`` (used by
+            ``11_render``/``12_execute``; e.g. ``"lite"``, ``"all"``,
             ``"pymdp,jax"``).
-        llm_model: Override ``OLLAMA_MODEL`` for ``13_llm`` (set to ``None``
-            to leave the env var alone).
-        timesteps: Forwarded to upstream ``12_execute``.
-        verbose: Forwarded to upstream's logger / argument parser.
-        skip_llm: Forwarded to upstream's ``--skip-llm`` flag.
+        llm_model: ``OLLAMA_MODEL`` for ``13_llm`` in the upstream child
+            process (``None`` leaves the inherited value alone). The
+            caller's own environment is never modified.
+        timesteps: Forwarded to upstream ``--timesteps`` (``12_execute``).
+        verbose: Forwarded to upstream ``--verbose``.
+        skip_llm: Forwarded to upstream ``--skip-llm``.
+        timeout_s: Bridge-level wall-clock ceiling for the invocation.
     """
 
     target_dir: Path
@@ -295,6 +324,7 @@ class UpstreamPipelineConfig:
     timesteps: int = 15
     verbose: bool = False
     skip_llm: bool = False
+    timeout_s: float = DEFAULT_TIMEOUT_S
 
     def __post_init__(self) -> None:
         self.target_dir = Path(self.target_dir).resolve()
@@ -306,37 +336,15 @@ class UpstreamPipelineConfig:
 # ---------------------------------------------------------------------------
 
 
-def _build_pipeline_arguments(src_main: Any, cfg: UpstreamPipelineConfig) -> Any:
-    """Materialise an upstream :class:`PipelineArguments` from ``cfg``.
-
-    Expects an already-imported ``src.main`` module so we don't pay the
-    import (and its ``chdir`` side-effect) twice.
-    """
-    import sys
-
-    with _preserve_cwd():
-        # ``utils.argument_utils`` lives next to ``src/main.py``; expose it.
-        if str(src_main.SCRIPT_DIR) not in sys.path:
-            sys.path.insert(0, str(src_main.SCRIPT_DIR))
-        from utils.argument_utils import PipelineArguments  # type: ignore[import-not-found]
-
-    return PipelineArguments(
-        target_dir=cfg.target_dir,
-        output_dir=cfg.output_dir,
-        verbose=cfg.verbose,
-        skip_llm=cfg.skip_llm,
-        timesteps=cfg.timesteps,
-        frameworks=cfg.frameworks,
-    )
-
-
-def _render_target_dir(cfg: UpstreamPipelineConfig) -> Path:
-    """Stage only renderable GNN markdown files for upstream render/execute.
+def _stage_target_dir(cfg: UpstreamPipelineConfig) -> Path:
+    """Stage only GNN markdown models as the upstream source corpus.
 
     A COGANT ``gnn_package/`` contains JSON sidecars that are valid package
-    evidence but are not standalone renderable POMDP models. Upstream render
-    scans ``*.json`` as model inputs, so steps 11 and 12 receive a small
-    staging directory containing only ``*.gnn.md`` / ``model.gnn.md`` files.
+    evidence but are not standalone GNN models. Upstream discovery treats
+    every ``*.json`` file as a model source, so the invocation receives a
+    small staging directory containing only ``*.gnn.md`` / ``model.gnn.md``.
+    When no markdown model exists the original directory is returned so
+    upstream reports the empty corpus itself.
     """
     markdown_files = sorted(cfg.target_dir.glob("*.gnn.md"))
     model_path = cfg.target_dir / "model.gnn.md"
@@ -345,7 +353,7 @@ def _render_target_dir(cfg: UpstreamPipelineConfig) -> Path:
     if not markdown_files:
         return cfg.target_dir
 
-    staged = cfg.output_dir / "_cogant_render_input"
+    staged = cfg.output_dir / _STAGED_INPUT_DIRNAME
     staged.mkdir(parents=True, exist_ok=True)
     for existing in staged.iterdir():
         if existing.is_file():
@@ -355,62 +363,46 @@ def _render_target_dir(cfg: UpstreamPipelineConfig) -> Path:
     return staged
 
 
-def _with_target_dir(cfg: UpstreamPipelineConfig, target_dir: Path) -> UpstreamPipelineConfig:
-    """Return a config copy with a different target directory."""
-    return UpstreamPipelineConfig(
-        target_dir=target_dir,
-        output_dir=cfg.output_dir,
-        only_steps=cfg.only_steps,
-        skip_steps=list(cfg.skip_steps),
-        frameworks=cfg.frameworks,
-        llm_model=cfg.llm_model,
-        timesteps=cfg.timesteps,
-        verbose=cfg.verbose,
-        skip_llm=cfg.skip_llm,
-    )
+def _build_main_command(
+    cfg: UpstreamPipelineConfig, target_dir: Path, chosen: list[int]
+) -> list[str]:
+    """Return the single ``python -m gnn.main`` invocation for ``chosen``.
 
-
-def _execute_upstream_step(
-    src_main: Any, script: str, args: Any, *, verbose: bool
-) -> dict[str, Any]:
-    """Run an upstream numbered step with COGANT's active Python interpreter."""
-    with _preserve_cwd():
-        if str(src_main.SCRIPT_DIR) not in sys.path:
-            sys.path.insert(0, str(src_main.SCRIPT_DIR))
-        from pipeline.step_timeouts import get_step_timeout  # type: ignore[import-not-found]
-        from utils.argument_utils import build_step_command_args
-        from utils.execution_utils import (
-            execute_command_streaming,  # type: ignore[import-not-found]
-        )
-
-    script_path = Path(src_main.SCRIPT_DIR) / script
-    cmd = build_step_command_args(
-        script.replace(".py", ""),
-        args,
+    COGANT's active interpreter is used so the child resolves the same
+    installed ``gnn`` package (never an upstream checkout's nested ``.venv``).
+    """
+    cmd = [
         sys.executable,
-        script_path,
-    )
+        "-m",
+        "gnn.main",
+        "--target-dir",
+        str(target_dir),
+        "--output-dir",
+        str(cfg.output_dir),
+        "--only-steps",
+        ",".join(str(step) for step in chosen),
+        "--frameworks",
+        cfg.frameworks,
+        "--timesteps",
+        str(cfg.timesteps),
+        "--verbose" if cfg.verbose else "--no-verbose",
+    ]
+    if cfg.skip_llm:
+        cmd.append("--skip-llm")
+    return cmd
 
+
+def _child_env(cfg: UpstreamPipelineConfig) -> dict[str, str]:
+    """Environment for the upstream child; the caller's env is not mutated."""
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
-    existing_pythonpath = env.get("PYTHONPATH", "")
-    pythonpath_parts = [str(src_main.SCRIPT_DIR)]
-    if existing_pythonpath:
-        pythonpath_parts.extend(p for p in existing_pythonpath.split(os.pathsep) if p)
-    env["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(pythonpath_parts))
-
-    return cast(
-        dict[str, Any],
-        execute_command_streaming(
-            cmd,
-            cwd=src_main.PROJECT_ROOT,
-            env=env,
-            timeout=get_step_timeout(script, comprehensive=False),
-            print_stdout=verbose,
-            print_stderr=True,
-            capture_output=True,
-        ),
-    )
+    # Let upstream mint a fresh invocation ID: an inherited ID or run-context
+    # file would claim an unrelated run's identity.
+    env.pop("GNN_RUN_ID", None)
+    env.pop("GNN_RUN_CONTEXT_FILE", None)
+    if cfg.llm_model is not None:
+        env["OLLAMA_MODEL"] = cfg.llm_model
+    return env
 
 
 def _per_step_output_dir(output_dir: Path, step_index: int) -> Path:
@@ -423,39 +415,195 @@ def _per_step_output_dir(output_dir: Path, step_index: int) -> Path:
     return output_dir / f"{script.removesuffix('.py')}_output"
 
 
+def _last_line(text: str, *, marker: str | None = None) -> str | None:
+    """Return the last non-empty line (optionally containing ``marker``)."""
+    for line in reversed(text.splitlines()):
+        stripped = line.strip()
+        if stripped and (marker is None or marker in stripped):
+            return stripped[:500]
+    return None
+
+
+def _step_error(raw: dict[str, Any]) -> str | None:
+    """Single-line failure reason from an upstream step record."""
+    stderr = str(raw.get("stderr") or "")
+    stdout = str(raw.get("stdout") or "")
+    return (
+        _last_line(stderr)
+        or _last_line(stdout, marker=" - ERROR - ")
+        or _last_line(stdout, marker="FAILED")
+    )
+
+
+def _as_float(value: Any) -> float:
+    try:
+        return float(value or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _as_int(value: Any, default: int = -1) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _steps_from_summary(
+    summary: dict[str, Any], cfg: UpstreamPipelineConfig, chosen: list[int]
+) -> list[UpstreamStepResult]:
+    """Map upstream summary step records onto :class:`UpstreamStepResult`.
+
+    Every requested step yields exactly one result: steps upstream never
+    reached (aborted invocation, exhausted deadline) are reported as
+    ``NOT_RUN`` failures rather than silently disappearing.
+    """
+    by_script: dict[str, dict[str, Any]] = {}
+    for raw in summary.get("steps") or []:
+        if isinstance(raw, dict):
+            by_script[str(raw.get("script_name", ""))] = raw
+
+    results: list[UpstreamStepResult] = []
+    for step_index in chosen:
+        script = UPSTREAM_STEP_SCRIPTS[step_index]
+        out_dir = str(_per_step_output_dir(cfg.output_dir, step_index))
+        raw = by_script.get(script)
+        if raw is None:
+            results.append(
+                UpstreamStepResult(
+                    step_index=step_index,
+                    script=script,
+                    status="NOT_RUN",
+                    success=False,
+                    duration_s=0.0,
+                    output_dir=out_dir,
+                    error="step absent from the upstream pipeline summary",
+                )
+            )
+            continue
+        status = str(raw.get("status", "UNKNOWN"))
+        success = status in SUCCESS_STATUSES
+        results.append(
+            UpstreamStepResult(
+                step_index=step_index,
+                script=script,
+                status=status,
+                success=success,
+                duration_s=_as_float(raw.get("duration_seconds")),
+                exit_code=_as_int(raw.get("exit_code")),
+                memory_delta_mb=_as_float(raw.get("memory_delta_mb")),
+                output_dir=out_dir,
+                error=None if success else _step_error(raw),
+            )
+        )
+    return results
+
+
+def _bridge_failure_steps(
+    cfg: UpstreamPipelineConfig, chosen: list[int], status: str, error: str
+) -> list[UpstreamStepResult]:
+    """One failed result per requested step when no current summary exists."""
+    return [
+        UpstreamStepResult(
+            step_index=step_index,
+            script=UPSTREAM_STEP_SCRIPTS[step_index],
+            status=status,
+            success=False,
+            duration_s=0.0,
+            output_dir=str(_per_step_output_dir(cfg.output_dir, step_index)),
+            error=error,
+        )
+        for step_index in chosen
+    ]
+
+
+def _read_summary(path: Path, started_at: float) -> dict[str, Any] | None:
+    """Load the upstream summary written by *this* invocation, if any.
+
+    A summary older than the invocation start belongs to a previous run in
+    the same output root and must not be reported as current evidence.
+    """
+    try:
+        if path.stat().st_mtime < started_at:
+            return None
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _read_log_tail(path: Path, limit: int = 20_000) -> str:
+    """Return up to the last ``limit`` characters of the upstream log."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+    return text[-limit:]
+
+
+def _write_bridge_summary(
+    cfg: UpstreamPipelineConfig,
+    result: UpstreamPipelineResult,
+) -> None:
+    summary_path = cfg.output_dir / "upstream_pipeline_summary.json"
+    payload = result.to_dict()
+    try:
+        summary_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    except OSError as exc:  # pragma: no cover - defensive
+        logger.warning(
+            "Could not write upstream pipeline summary to %s: %s",
+            summary_path,
+            exc,
+        )
+
+
 def run_upstream_pipeline(
     cfg: UpstreamPipelineConfig,
 ) -> UpstreamPipelineResult:
     """Execute the configured subset of upstream pipeline steps.
 
-    Each enabled step is invoked via :func:`src.main.execute_pipeline_step`,
-    which spawns the numbered script as a subprocess against ``cfg.target_dir``
-    and ``cfg.output_dir``. One failing step does not abort the run; bridge
-    errors are captured per-step into :attr:`UpstreamStepResult.error`.
+    Issues one ``python -m gnn.main --only-steps …`` invocation against a
+    staged copy of the package's GNN markdown, then reads per-step outcomes
+    from the upstream run summary. One failing step does not abort the run
+    (upstream continues past non-critical failures); bridge-level problems —
+    timeout, a crashed invocation, a missing summary — are reported per
+    requested step with ``status`` ``TIMEOUT`` / ``BRIDGE_ERROR`` and on
+    :attr:`UpstreamPipelineResult.error`. The upstream console log is written
+    to ``<output_dir>/upstream_pipeline.log`` and the bridge summary to
+    ``<output_dir>/upstream_pipeline_summary.json``.
 
     Args:
         cfg: Pipeline configuration.
 
     Returns:
         :class:`UpstreamPipelineResult` with one :class:`UpstreamStepResult`
-        per executed step.
+        per requested step.
     """
-    src_main = _import_src_main()
-    if src_main is None:
+    if _import_gnn_main() is None:
         return UpstreamPipelineResult(
             available=False,
-            error=("src.main not importable; install generalized-notation-notation"),
+            error=(
+                "gnn.main not importable; install the optional cogant[upstream] "
+                "extra (generalized-notation-notation)"
+            ),
+            target_dir=str(cfg.target_dir),
+            output_dir=str(cfg.output_dir),
+        )
+
+    chosen = resolve_steps(cfg.only_steps, cfg.skip_steps)
+    skipped = [i for i in range(len(UPSTREAM_STEP_SCRIPTS)) if i not in chosen]
+    if not chosen:
+        # Upstream rejects an empty step selection at admission; an empty
+        # request is a no-op, not a failure.
+        return UpstreamPipelineResult(
+            available=True,
+            skipped=skipped,
             target_dir=str(cfg.target_dir),
             output_dir=str(cfg.output_dir),
         )
 
     cfg.output_dir.mkdir(parents=True, exist_ok=True)
-
-    if cfg.llm_model is not None:
-        os.environ["OLLAMA_MODEL"] = cfg.llm_model
-
-    chosen = resolve_steps(cfg.only_steps, cfg.skip_steps)
-    skipped = [i for i in range(len(UPSTREAM_STEP_SCRIPTS)) if i not in chosen]
+    cmd = _build_main_command(cfg, _stage_target_dir(cfg), chosen)
 
     logger.info(
         "Upstream GNN pipeline: %d/%d steps selected (skipping %s) target=%s",
@@ -465,122 +613,76 @@ def run_upstream_pipeline(
         cfg.target_dir,
     )
 
-    step_results: list[UpstreamStepResult] = []
+    log_path = cfg.output_dir / _LOG_FILENAME
+    started_wall = time.time()
     total_start = time.perf_counter()
-
-    with _preserve_cwd():
-        src_main.setup_step_logging(
-            "cogant.upstream_pipeline",
-            verbose=cfg.verbose,
-        )
-        args = _build_pipeline_arguments(src_main, cfg)
-        render_args = (
-            _build_pipeline_arguments(src_main, _with_target_dir(cfg, _render_target_dir(cfg)))
-            if any(step in {11, 12} for step in chosen)
-            else None
-        )
-
-        for position, step_index in enumerate(chosen, start=1):
-            script = UPSTREAM_STEP_SCRIPTS[step_index]
-            logger.info(
-                "Upstream step %d/%d: %s",
-                position,
-                len(chosen),
-                script,
+    returncode: int | None = None
+    bridge_error: str | None = None
+    bridge_status = "BRIDGE_ERROR"
+    try:
+        with log_path.open("w", encoding="utf-8") as log_handle:
+            completed = subprocess.run(
+                cmd,
+                cwd=cfg.output_dir,
+                env=_child_env(cfg),
+                stdout=log_handle,
+                stderr=subprocess.STDOUT,
+                timeout=cfg.timeout_s,
+                check=False,
             )
-            step_start = time.perf_counter()
-            try:
-                with _preserve_cwd():
-                    raw = _execute_upstream_step(
-                        src_main,
-                        script,
-                        render_args if step_index in {11, 12} and render_args is not None else args,
-                        verbose=cfg.verbose,
-                    )
-            except Exception as exc:  # pragma: no cover - defensive
-                logger.warning("Upstream step %s raised: %s", script, exc, exc_info=True)
-                step_results.append(
-                    UpstreamStepResult(
-                        step_index=step_index,
-                        script=script,
-                        status="BRIDGE_ERROR",
-                        success=False,
-                        duration_s=time.perf_counter() - step_start,
-                        error=f"{type(exc).__name__}: {exc}",
-                        output_dir=str(_per_step_output_dir(cfg.output_dir, step_index)),
-                    )
-                )
-                continue
-
-            status = str(raw.get("status", "UNKNOWN"))
-            success = status in {"SUCCESS", "SUCCESS_WITH_WARNINGS", "SKIPPED"}
-            stderr = str(raw.get("stderr", "") or "")
-            error: str | None = None
-            if not success and stderr:
-                # Trim noisy stderr to a single line for the summary; full
-                # output remains in upstream's per-step log file.
-                error = stderr.strip().splitlines()[-1][:500]
-            duration = time.perf_counter() - step_start
-            log = logger.info if success else logger.warning
-            log(
-                "Upstream step %s -> %s in %.2fs%s",
-                script,
-                status,
-                duration,
-                f" ({error})" if error else "",
-            )
-            step_results.append(
-                UpstreamStepResult(
-                    step_index=step_index,
-                    script=script,
-                    status=status,
-                    success=success,
-                    duration_s=duration,
-                    exit_code=int(raw.get("exit_code", -1)),
-                    memory_delta_mb=float(raw.get("memory_delta_mb", 0.0)),
-                    output_dir=str(_per_step_output_dir(cfg.output_dir, step_index)),
-                    error=error,
-                )
-            )
-
+        returncode = completed.returncode
+    except subprocess.TimeoutExpired:
+        bridge_status = "TIMEOUT"
+        bridge_error = f"upstream gnn.main exceeded the {cfg.timeout_s:g}s bridge timeout"
+    except OSError as exc:
+        bridge_error = f"could not launch upstream gnn.main: {exc}"
     total = time.perf_counter() - total_start
 
-    summary_path = cfg.output_dir / "upstream_pipeline_summary.json"
-    try:
-        summary_path.write_text(
-            json.dumps(
-                {
-                    "target_dir": str(cfg.target_dir),
-                    "output_dir": str(cfg.output_dir),
-                    "executed": chosen,
-                    "skipped": skipped,
-                    "steps": [s.to_dict() for s in step_results],
-                    "total_duration_s": total,
-                },
-                indent=2,
-            ),
-            encoding="utf-8",
-        )
-    except OSError as exc:  # pragma: no cover - defensive
-        logger.warning(
-            "Could not write upstream pipeline summary to %s: %s",
-            summary_path,
-            exc,
+    summary = _read_summary(cfg.output_dir / _SUMMARY_RELPATH, started_wall)
+    upstream_status: str | None = None
+    run_id: str | None = None
+    if summary is not None:
+        steps = _steps_from_summary(summary, cfg, chosen)
+        upstream_status = str(summary.get("overall_status") or "") or None
+        run_id = str(summary.get("run_id") or "") or None
+    else:
+        if bridge_error is None:
+            tail = _last_line(_read_log_tail(log_path)) or "no output"
+            bridge_error = (
+                f"upstream gnn.main exited {returncode} without a pipeline summary: {tail}"
+            )
+        steps = _bridge_failure_steps(cfg, chosen, bridge_status, bridge_error)
+
+    for step in steps:
+        log = logger.info if step.success else logger.warning
+        log(
+            "Upstream step %s -> %s in %.2fs%s",
+            step.script,
+            step.status,
+            step.duration_s,
+            f" ({step.error})" if step.error else "",
         )
 
-    return UpstreamPipelineResult(
+    result = UpstreamPipelineResult(
         available=True,
-        steps=step_results,
+        steps=steps,
         executed=chosen,
         skipped=skipped,
         total_duration_s=total,
         output_dir=str(cfg.output_dir),
         target_dir=str(cfg.target_dir),
+        error=bridge_error,
+        upstream_status=upstream_status,
+        run_id=run_id,
     )
+    _write_bridge_summary(cfg, result)
+    return result
 
 
 __all__ = [
     "DEFAULT_SKIP_STEPS",
+    "DEFAULT_TIMEOUT_S",
+    "SUCCESS_STATUSES",
     "UPSTREAM_STEP_SCRIPTS",
     "UpstreamPipelineConfig",
     "UpstreamPipelineResult",

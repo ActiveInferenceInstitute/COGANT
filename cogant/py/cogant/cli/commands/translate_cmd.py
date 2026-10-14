@@ -107,7 +107,9 @@ def translate(
     upstream_gnn_skip_steps: str | None = typer.Option(
         None,
         "--upstream-gnn-skip-steps",
-        help=("Override the upstream skip list (default '11,12'). Pass '' to run all 25 steps."),
+        help=(
+            "Override the upstream skip list (default '1,2,11,12'). Pass '' to run all 25 steps."
+        ),
     ),
     upstream_gnn_frameworks: str | None = typer.Option(
         None,

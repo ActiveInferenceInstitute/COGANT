@@ -4,6 +4,8 @@ from typing import Any
 
 UPSTREAM_STEP_SCRIPTS: tuple[str, ...]
 DEFAULT_SKIP_STEPS: frozenset[int]
+SUCCESS_STATUSES: frozenset[str]
+DEFAULT_TIMEOUT_S: float
 
 def resolve_steps(
     only: list[int] | None,
@@ -33,6 +35,8 @@ class UpstreamPipelineResult:
     output_dir: str | None
     target_dir: str | None
     error: str | None
+    upstream_status: str | None
+    run_id: str | None
     @property
     def success_count(self) -> int: ...
     @property
@@ -52,6 +56,7 @@ class UpstreamPipelineConfig:
     timesteps: int = ...
     verbose: bool = ...
     skip_llm: bool = ...
+    timeout_s: float = ...
 
 def run_upstream_pipeline(
     cfg: UpstreamPipelineConfig,

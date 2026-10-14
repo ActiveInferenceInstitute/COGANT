@@ -1161,8 +1161,8 @@ def run_validate(
 
     When ``upstream_pipeline`` is ``True`` and a GNN package directory is
     present at ``bundle.artifacts['_gnn_package_dir']``, the upstream 25-step
-    pipeline (Active Inference Institute ``src.main.execute_pipeline_step``)
-    is driven over that directory; results are recorded as
+    pipeline (one Active Inference Institute ``python -m gnn.main``
+    invocation) is driven over that directory; results are recorded as
     ``bundle.artifacts['upstream_pipeline_steps']`` /
     ``['upstream_pipeline_summary']`` and surfaced as ``warnings`` only —
     upstream failures never fail the validate stage.
@@ -1177,7 +1177,8 @@ def run_validate(
             Defaults to ``<gnn_package_dir>/../upstream_pipeline``.
         upstream_pipeline_only_steps: Restrict to these step indices.
         upstream_pipeline_skip_steps: Drop these step indices (defaults to
-            ``[11, 12]`` when ``None``).
+            :data:`~cogant.gnn.upstream_bridge.pipeline.DEFAULT_SKIP_STEPS`,
+            ``[1, 2, 11, 12]``, when ``None``).
         upstream_pipeline_frameworks: Forwarded to upstream render/execute.
         upstream_pipeline_llm_model: Override ``OLLAMA_MODEL`` for step 13.
 
@@ -1231,6 +1232,7 @@ def run_validate(
     if upstream_pipeline and gnn_pkg:
         try:
             from cogant.gnn.upstream_bridge.pipeline import (
+                DEFAULT_SKIP_STEPS,
                 UpstreamPipelineConfig,
                 run_upstream_pipeline,
             )
@@ -1248,7 +1250,7 @@ def run_validate(
                 skip_steps=(
                     list(upstream_pipeline_skip_steps)
                     if upstream_pipeline_skip_steps is not None
-                    else [11, 12]
+                    else sorted(DEFAULT_SKIP_STEPS)
                 ),
                 frameworks=upstream_pipeline_frameworks,
                 llm_model=upstream_pipeline_llm_model,

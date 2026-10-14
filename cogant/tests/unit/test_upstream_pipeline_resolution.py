@@ -10,7 +10,6 @@ from __future__ import annotations
 import os
 import re
 import sys
-import types
 from pathlib import Path
 
 import pytest
@@ -48,10 +47,18 @@ def test_upstream_step_scripts_are_unique() -> None:
     assert len(set(UPSTREAM_STEP_SCRIPTS)) == len(UPSTREAM_STEP_SCRIPTS)
 
 
-def test_default_skip_steps_excludes_render_and_execute() -> None:
-    assert DEFAULT_SKIP_STEPS == frozenset({11, 12})
+def test_default_skip_steps_excludes_setup_tests_render_and_execute() -> None:
+    """Setup/tests mutate or require an upstream checkout; render/execute are heavy."""
+    assert DEFAULT_SKIP_STEPS == frozenset({1, 2, 11, 12})
+    assert UPSTREAM_STEP_SCRIPTS[1] == "1_setup.py"
+    assert UPSTREAM_STEP_SCRIPTS[2] == "2_tests.py"
     assert UPSTREAM_STEP_SCRIPTS[11] == "11_render.py"
     assert UPSTREAM_STEP_SCRIPTS[12] == "12_execute.py"
+
+
+def test_config_default_skip_matches_catalogue_default(tmp_path: Path) -> None:
+    cfg = UpstreamPipelineConfig(target_dir=tmp_path, output_dir=tmp_path / "out")
+    assert cfg.skip_steps == sorted(DEFAULT_SKIP_STEPS)
 
 
 # ---------------------------------------------------------------------------
@@ -63,11 +70,11 @@ def test_resolve_steps_default_returns_full_range() -> None:
     assert resolve_steps(None, None) == list(range(25))
 
 
-def test_resolve_steps_default_skip_drops_render_and_execute() -> None:
+def test_resolve_steps_default_skip_drops_setup_tests_render_and_execute() -> None:
     chosen = resolve_steps(None, sorted(DEFAULT_SKIP_STEPS))
-    assert 11 not in chosen
-    assert 12 not in chosen
-    assert len(chosen) == 23
+    for step in (1, 2, 11, 12):
+        assert step not in chosen
+    assert len(chosen) == 21
 
 
 def test_resolve_steps_only_steps_preserves_order() -> None:
@@ -99,7 +106,7 @@ def test_upstream_pipeline_config_resolves_paths(tmp_path) -> None:
     cfg = UpstreamPipelineConfig(target_dir=target, output_dir=out)
     assert cfg.target_dir == target.resolve()
     assert cfg.output_dir == out.resolve()
-    assert cfg.skip_steps == [11, 12]
+    assert cfg.skip_steps == [1, 2, 11, 12]
     assert cfg.only_steps is None
     assert cfg.frameworks == "lite"
 
@@ -153,14 +160,14 @@ def test_upstream_pipeline_result_success_rate_is_zero_for_empty_run() -> None:
     assert empty.to_dict()["success_rate"] == 0.0
 
 
-def test_run_upstream_pipeline_returns_unavailable_when_src_main_missing(
+def test_run_upstream_pipeline_returns_unavailable_when_gnn_main_missing(
     tmp_path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Bridge stays graceful when ``src.main`` cannot be imported."""
+    """Bridge stays graceful when ``gnn.main`` cannot be imported."""
     from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
 
-    monkeypatch.setattr(pipeline_mod, "_import_src_main", lambda: None)
+    monkeypatch.setattr(pipeline_mod, "_import_gnn_main", lambda: None)
     cfg = UpstreamPipelineConfig(
         target_dir=tmp_path / "pkg",
         output_dir=tmp_path / "out",
@@ -169,111 +176,246 @@ def test_run_upstream_pipeline_returns_unavailable_when_src_main_missing(
     result = pipeline_mod.run_upstream_pipeline(cfg)
     assert result.available is False
     assert result.error is not None
-    assert "src.main" in result.error
+    assert "gnn.main" in result.error
     assert result.steps == []
 
 
-def test_execute_upstream_step_uses_active_python_and_src_pythonpath(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Subprocess bridge must not fall back to upstream's nested ``.venv``."""
-    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
-
-    script_dir = tmp_path / "installed_src"
-    script_dir.mkdir()
-    project_root = tmp_path / "project_root"
-    project_root.mkdir()
-    captured: dict[str, object] = {}
-
-    pipeline_pkg = types.ModuleType("pipeline")
-    pipeline_pkg.__path__ = []  # type: ignore[attr-defined]
-    timeouts_mod = types.ModuleType("pipeline.step_timeouts")
-    timeouts_mod.get_step_timeout = lambda script, comprehensive=False: 123
-
-    utils_pkg = types.ModuleType("utils")
-    utils_pkg.__path__ = []  # type: ignore[attr-defined]
-    args_mod = types.ModuleType("utils.argument_utils")
-
-    def _build_step_command_args(step_name, args, python_executable, script_path):
-        captured["step_name"] = step_name
-        captured["args"] = args
-        captured["python_executable"] = python_executable
-        captured["script_path"] = script_path
-        return [python_executable, str(script_path), "--target-dir", str(args.target_dir)]
-
-    args_mod.build_step_command_args = _build_step_command_args
-    exec_mod = types.ModuleType("utils.execution_utils")
-
-    def _execute_command_streaming(
-        cmd, cwd, env, timeout, print_stdout, print_stderr, capture_output
-    ):
-        captured["cmd"] = cmd
-        captured["cwd"] = cwd
-        captured["env"] = env
-        captured["timeout"] = timeout
-        captured["print_stdout"] = print_stdout
-        captured["print_stderr"] = print_stderr
-        captured["capture_output"] = capture_output
-        return {"status": "SUCCESS", "exit_code": 0}
-
-    exec_mod.execute_command_streaming = _execute_command_streaming
-
-    for name, module in {
-        "pipeline": pipeline_pkg,
-        "pipeline.step_timeouts": timeouts_mod,
-        "utils": utils_pkg,
-        "utils.argument_utils": args_mod,
-        "utils.execution_utils": exec_mod,
-    }.items():
-        monkeypatch.setitem(sys.modules, name, module)
-
-    monkeypatch.setenv("PYTHONPATH", f"/already{os.pathsep}{script_dir}")
-
-    fake_src_main = types.SimpleNamespace(SCRIPT_DIR=script_dir, PROJECT_ROOT=project_root)
-    args = types.SimpleNamespace(target_dir=tmp_path / "pkg")
-    out = pipeline_mod._execute_upstream_step(
-        fake_src_main,
-        "3_gnn.py",
-        args,
-        verbose=True,
-    )
-
-    assert out["status"] == "SUCCESS"
-    assert captured["python_executable"] == sys.executable
-    assert captured["cmd"] == [
-        sys.executable,
-        str(script_dir / "3_gnn.py"),
-        "--target-dir",
-        str(args.target_dir),
-    ]
-    assert captured["cwd"] == project_root
-    assert captured["timeout"] == 123
-    assert captured["print_stdout"] is True
-    assert captured["print_stderr"] is True
-    assert captured["capture_output"] is True
-    pythonpath = str(captured["env"]["PYTHONPATH"])  # type: ignore[index]
-    assert pythonpath.split(os.pathsep).count(str(script_dir)) == 1
-    assert pythonpath.split(os.pathsep)[0] == str(script_dir)
-
-
-def test_render_target_dir_stages_only_gnn_markdown(tmp_path: Path) -> None:
-    """Render/execute steps should not receive JSON sidecars as model inputs."""
-    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
-
+def _package(tmp_path: Path) -> Path:
     package = tmp_path / "gnn_package"
     package.mkdir()
     (package / "model.gnn.md").write_text("## GNNSection\nDemo\n", encoding="utf-8")
     (package / "connections.json").write_text("{}", encoding="utf-8")
+    return package
+
+
+def test_build_main_command_is_one_invocation_with_active_python(tmp_path: Path) -> None:
+    """GNN 4.x binds a run to one ``python -m gnn.main`` invocation."""
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    cfg = UpstreamPipelineConfig(
+        target_dir=_package(tmp_path),
+        output_dir=tmp_path / "out",
+        frameworks="pymdp,jax",
+        timesteps=7,
+        verbose=True,
+        skip_llm=True,
+    )
+    cmd = pipeline_mod._build_main_command(cfg, tmp_path / "staged", [3, 5, 7])
+    assert cmd[:3] == [sys.executable, "-m", "gnn.main"]
+    flags = dict(zip(cmd[3::2], cmd[4::2], strict=False))
+    assert flags["--target-dir"] == str(tmp_path / "staged")
+    assert flags["--output-dir"] == str(cfg.output_dir)
+    assert flags["--only-steps"] == "3,5,7"
+    assert flags["--frameworks"] == "pymdp,jax"
+    assert flags["--timesteps"] == "7"
+    assert "--verbose" in cmd and "--skip-llm" in cmd
+    quiet = UpstreamPipelineConfig(target_dir=cfg.target_dir, output_dir=cfg.output_dir)
+    quiet_cmd = pipeline_mod._build_main_command(quiet, cfg.target_dir, [3])
+    assert "--no-verbose" in quiet_cmd and "--skip-llm" not in quiet_cmd
+
+
+def test_child_env_scopes_llm_model_and_drops_inherited_run_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``llm_model`` reaches only the child; the caller's environment is untouched."""
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    monkeypatch.setenv("GNN_RUN_ID", "stale-run")
+    monkeypatch.setenv("GNN_RUN_CONTEXT_FILE", "/tmp/stale.json")
+    monkeypatch.delenv("OLLAMA_MODEL", raising=False)
+    cfg = UpstreamPipelineConfig(
+        target_dir=tmp_path, output_dir=tmp_path / "out", llm_model="llama3:8b"
+    )
+    env = pipeline_mod._child_env(cfg)
+    assert env["OLLAMA_MODEL"] == "llama3:8b"
+    assert env["PYTHONUNBUFFERED"] == "1"
+    assert "GNN_RUN_ID" not in env and "GNN_RUN_CONTEXT_FILE" not in env
+    assert "OLLAMA_MODEL" not in os.environ
+    assert os.environ["GNN_RUN_ID"] == "stale-run"
+
+
+def test_stage_target_dir_stages_only_gnn_markdown(tmp_path: Path) -> None:
+    """Upstream discovery must not receive JSON sidecars as model sources."""
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    package = _package(tmp_path)
     (package / "notes.md").write_text("# not a gnn model\n", encoding="utf-8")
     out = tmp_path / "out"
     cfg = UpstreamPipelineConfig(target_dir=package, output_dir=out)
 
-    staged = pipeline_mod._render_target_dir(cfg)
+    staged = pipeline_mod._stage_target_dir(cfg)
 
-    assert staged == (out / "_cogant_render_input").resolve()
+    assert staged == (out / "_cogant_input").resolve()
     assert sorted(path.name for path in staged.iterdir()) == ["model.gnn.md"]
     assert (staged / "model.gnn.md").read_text(encoding="utf-8") == "## GNNSection\nDemo\n"
+
+
+def test_stage_target_dir_without_markdown_returns_package(tmp_path: Path) -> None:
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    package = tmp_path / "empty_pkg"
+    package.mkdir()
+    cfg = UpstreamPipelineConfig(target_dir=package, output_dir=tmp_path / "out")
+    assert pipeline_mod._stage_target_dir(cfg) == package.resolve()
+
+
+def _summary(*steps: dict[str, object], status: str = "SUCCESS_WITH_WARNINGS") -> dict[str, object]:
+    return {"overall_status": status, "run_id": "abc123", "steps": list(steps)}
+
+
+def test_steps_from_summary_maps_every_requested_step(tmp_path: Path) -> None:
+    """Records map by script; requested steps missing from the summary are NOT_RUN."""
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    cfg = UpstreamPipelineConfig(target_dir=tmp_path, output_dir=tmp_path / "out")
+    summary = _summary(
+        {
+            "script_name": "3_gnn.py",
+            "status": "SUCCESS_WITH_WARNINGS",
+            "exit_code": 0,
+            "duration_seconds": 0.5,
+            "memory_delta_mb": 1.25,
+        },
+        {
+            "script_name": "6_validation.py",
+            "status": "FAILED",
+            "exit_code": 1,
+            "duration_seconds": "1.5",
+            "stderr": "",
+            "stdout": "x - INFO - ok\ny 6_validation.py - ERROR - Undefined variable\n",
+        },
+    )
+    steps = pipeline_mod._steps_from_summary(summary, cfg, [3, 5, 6])
+    assert [s.step_index for s in steps] == [3, 5, 6]
+    gnn_step, missing, failed = steps
+    assert gnn_step.success and gnn_step.status == "SUCCESS_WITH_WARNINGS"
+    assert gnn_step.memory_delta_mb == 1.25 and gnn_step.error is None
+    assert gnn_step.output_dir == str(cfg.output_dir / "3_gnn_output")
+    assert missing.status == "NOT_RUN" and not missing.success
+    assert failed.status == "FAILED" and failed.exit_code == 1 and failed.duration_s == 1.5
+    assert failed.error is not None and "Undefined variable" in failed.error
+
+
+def _fake_run_writing(summary: dict[str, object] | None, returncode: int = 0):
+    import json as _json
+    import subprocess as _subprocess
+
+    captured: dict[str, object] = {}
+
+    def _run(cmd, cwd, env, stdout, stderr, timeout, check):
+        captured.update(cmd=cmd, cwd=cwd, env=env, timeout=timeout)
+        stdout.write("upstream console line\nlast line of output\n")
+        if summary is not None:
+            out = Path(cmd[cmd.index("--output-dir") + 1])
+            target = out / "00_pipeline_summary" / "pipeline_execution_summary.json"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(_json.dumps(summary), encoding="utf-8")
+        return _subprocess.CompletedProcess(cmd, returncode)
+
+    return _run, captured
+
+
+def test_run_upstream_pipeline_reads_current_invocation_summary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import json
+
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    monkeypatch.setattr(pipeline_mod, "_import_gnn_main", lambda: object())
+    fake_run, captured = _fake_run_writing(
+        _summary({"script_name": "3_gnn.py", "status": "SUCCESS", "exit_code": 0})
+    )
+    monkeypatch.setattr(pipeline_mod.subprocess, "run", fake_run)
+    cfg = UpstreamPipelineConfig(
+        target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3], timeout_s=42
+    )
+
+    result = pipeline_mod.run_upstream_pipeline(cfg)
+
+    assert result.available and result.error is None
+    assert result.executed == [3]
+    assert result.upstream_status == "SUCCESS_WITH_WARNINGS" and result.run_id == "abc123"
+    assert [s.status for s in result.steps] == ["SUCCESS"]
+    assert captured["cwd"] == cfg.output_dir and captured["timeout"] == 42
+    cmd = captured["cmd"]
+    assert cmd[cmd.index("--target-dir") + 1] == str(cfg.output_dir / "_cogant_input")
+    log = (cfg.output_dir / "upstream_pipeline.log").read_text(encoding="utf-8")
+    assert "upstream console line" in log
+    bridge_summary = json.loads(
+        (cfg.output_dir / "upstream_pipeline_summary.json").read_text(encoding="utf-8")
+    )
+    assert bridge_summary["executed"] == [3]
+    assert bridge_summary["steps"][0]["status"] == "SUCCESS"
+
+
+def test_run_upstream_pipeline_ignores_stale_summary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A summary left by an earlier run is never reported as this run's evidence."""
+    import json
+
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    out = tmp_path / "out"
+    stale = out / "00_pipeline_summary" / "pipeline_execution_summary.json"
+    stale.parent.mkdir(parents=True)
+    stale.write_text(
+        json.dumps(_summary({"script_name": "3_gnn.py", "status": "SUCCESS"})), encoding="utf-8"
+    )
+    os.utime(stale, (1_000_000, 1_000_000))
+    monkeypatch.setattr(pipeline_mod, "_import_gnn_main", lambda: object())
+    fake_run, _ = _fake_run_writing(None, returncode=1)
+    monkeypatch.setattr(pipeline_mod.subprocess, "run", fake_run)
+    cfg = UpstreamPipelineConfig(target_dir=_package(tmp_path), output_dir=out, only_steps=[3, 5])
+
+    result = pipeline_mod.run_upstream_pipeline(cfg)
+
+    assert [s.status for s in result.steps] == ["BRIDGE_ERROR", "BRIDGE_ERROR"]
+    assert result.failure_count == 2
+    assert result.error is not None
+    assert "exited 1 without a pipeline summary" in result.error
+    assert "last line of output" in result.error
+
+
+def test_run_upstream_pipeline_reports_timeout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import subprocess
+
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    def _timeout(cmd, **kwargs):
+        raise subprocess.TimeoutExpired(cmd, kwargs["timeout"])
+
+    monkeypatch.setattr(pipeline_mod, "_import_gnn_main", lambda: object())
+    monkeypatch.setattr(pipeline_mod.subprocess, "run", _timeout)
+    cfg = UpstreamPipelineConfig(
+        target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3], timeout_s=5
+    )
+
+    result = pipeline_mod.run_upstream_pipeline(cfg)
+
+    assert [s.status for s in result.steps] == ["TIMEOUT"]
+    assert result.error == "upstream gnn.main exceeded the 5s bridge timeout"
+
+
+def test_run_upstream_pipeline_empty_selection_is_a_noop(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    def _never(*args, **kwargs):
+        raise AssertionError("upstream must not be launched for an empty selection")
+
+    monkeypatch.setattr(pipeline_mod, "_import_gnn_main", lambda: object())
+    monkeypatch.setattr(pipeline_mod.subprocess, "run", _never)
+    cfg = UpstreamPipelineConfig(
+        target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3], skip_steps=[3]
+    )
+    result = pipeline_mod.run_upstream_pipeline(cfg)
+    assert result.available and result.steps == [] and result.executed == []
+    assert len(result.skipped) == 25
 
 
 # ---------------------------------------------------------------------------
@@ -300,3 +442,10 @@ def test_parse_step_csv_rejects_out_of_range() -> None:
         _parse_step_csv("3,99", label="--upstream-gnn-only-steps")
     with pytest.raises(typer.BadParameter):
         _parse_step_csv("not,an,int", label="--upstream-gnn-only-steps")
+
+
+def test_pipeline_config_default_skip_matches_bridge_default() -> None:
+    """``PipelineConfig`` keeps a literal copy of the bridge default; pin it."""
+    from cogant.config.pipeline import PipelineConfig
+
+    assert PipelineConfig().upstream_gnn_skip_steps == sorted(DEFAULT_SKIP_STEPS)

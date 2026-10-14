@@ -288,7 +288,7 @@ def upstream_gnn_command(
         None,
         "--skip-steps",
         help=(
-            "Override the skip list (default '11,12'). "
+            "Override the skip list (default '1,2,11,12'). "
             "Pass an empty string to skip nothing and run all 25 steps."
         ),
     ),
@@ -318,6 +318,7 @@ def upstream_gnn_command(
     upstream steps without re-analysing the source repository.
     """
     from cogant.gnn.upstream_bridge.pipeline import (
+        DEFAULT_SKIP_STEPS,
         UpstreamPipelineConfig,
         run_upstream_pipeline,
     )
@@ -341,7 +342,7 @@ def upstream_gnn_command(
         target_dir=pkg,
         output_dir=output_dir.resolve(),
         only_steps=only,
-        skip_steps=skip if skip is not None else sorted({11, 12}),
+        skip_steps=skip if skip is not None else sorted(DEFAULT_SKIP_STEPS),
         frameworks=frameworks,
         llm_model=llm_model,
         verbose=verbose,

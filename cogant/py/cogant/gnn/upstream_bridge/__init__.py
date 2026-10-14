@@ -1,7 +1,12 @@
 """Integration with the Active Inference Institute **generalized-notation-notation** package.
 
-The PyPI distribution name is ``generalized-notation-notation``; the import path is
-``src.gnn`` (not top-level ``gnn``). This is an **optional** COGANT extra.
+The PyPI distribution name is ``generalized-notation-notation``; since GNN 4.x
+the installed wheel ships the top-level ``gnn`` package (the GNN 2.x
+``src.gnn`` import surface was removed upstream). This is an **optional**
+COGANT extra (``cogant[upstream]``); the bridge requires GNN >= 4.0, whose
+public API uses ``validate_gnn_syntax`` / ``validate_gnn_source`` /
+``check_gnn_file_structure`` (the GNN 2.x ``validate_gnn*`` aliases were
+deleted upstream).
 
 Upstream is **CC-BY-NC-SA-4.0**; see ``LICENSES.md`` at the package root.
 
@@ -14,15 +19,13 @@ the validator/pipeline/CLI option.
 
 from __future__ import annotations
 
+import functools
 import importlib
-import importlib.machinery
-import importlib.util
+import importlib.metadata
 import logging
-import sys
-import types
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any
 
 from cogant.gnn.upstream_bridge.pipeline import (
     DEFAULT_SKIP_STEPS,
@@ -36,60 +39,68 @@ from cogant.gnn.upstream_bridge.pipeline import (
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar("T")
+UPSTREAM_DISTRIBUTION = "generalized-notation-notation"
+"""PyPI distribution that provides the upstream ``gnn`` package."""
+
+UPSTREAM_IMPORT_NAME = "gnn"
+"""Top-level import package shipped by the upstream wheel (GNN >= 4.0)."""
+
+MIN_UPSTREAM_MAJOR = 4
+"""Oldest upstream major release whose public API this bridge targets."""
+
+DEFAULT_VALIDATION_LEVEL = "standard"
+"""Upstream ``ValidationLevel`` used by :func:`run_upstream_validate_gnn`."""
 
 
-def _activate_upstream_src_layout() -> None:
-    """Make upstream's installed ``src/`` tree importable as repo-style modules."""
-    spec = importlib.util.find_spec("src")
-    locations = getattr(spec, "submodule_search_locations", None) if spec else None
-    if not locations:
-        return
+@functools.lru_cache(maxsize=1)
+def _gnn_owned_by_upstream_distribution() -> bool:
+    """True when the importable ``gnn`` package belongs to the upstream wheel.
 
-    src_dir = str(Path(next(iter(locations))))
-    if src_dir not in sys.path:
-        sys.path.insert(0, src_dir)
-
-
-def _install_gnn_alias_for_src_package() -> None:
-    """Expose ``src.gnn`` as ``gnn`` for upstream's internal absolute imports.
-
-    The upstream v2.0.0 git package is distributed as the top-level ``src``
-    package, but several upstream modules import siblings as ``gnn.*``. Creating
-    a transient package alias keeps COGANT's bridge working without patching the
-    installed dependency.
+    A different distribution can also provide a top-level ``gnn`` module; the
+    bridge must not drive an unrelated package under the upstream's name.
+    Editable installs may not record top-level ownership at all; with no
+    recorded owner the import is allowed (the version gate still applies).
     """
-    if "gnn" in sys.modules:
-        return
-
-    spec = importlib.util.find_spec("src.gnn")
-    locations = getattr(spec, "submodule_search_locations", None) if spec else None
-    if not locations:
-        return
-
-    alias = types.ModuleType("gnn")
-    alias.__package__ = "gnn"
-    alias.__path__ = list(locations)  # type: ignore[attr-defined]
-    alias.__spec__ = importlib.machinery.ModuleSpec("gnn", loader=None, is_package=True)
-    sys.modules["gnn"] = alias
+    owners = importlib.metadata.packages_distributions().get(UPSTREAM_IMPORT_NAME, [])
+    return not owners or any(owner.lower() == UPSTREAM_DISTRIBUTION for owner in owners)
 
 
-def _require_src_gnn() -> Any:
-    """Import and return the optional ``src.gnn`` module."""
-    _activate_upstream_src_layout()
+def _major_version(version: str | None) -> int | None:
+    if not version:
+        return None
+    head = version.strip().lstrip("v").split(".", 1)[0]
+    return int(head) if head.isdigit() else None
+
+
+def _require_upstream_gnn() -> Any:
+    """Import and return the optional upstream ``gnn`` package.
+
+    Raises:
+        ImportError: When the upstream distribution is not installed, the
+            importable ``gnn`` belongs to another distribution, or the
+            installed upstream predates GNN 4.0.
+    """
     try:
-        return importlib.import_module("src.gnn")
-    except ImportError as e:
-        _install_gnn_alias_for_src_package()
-        try:
-            return importlib.import_module("src.gnn")
-        except ImportError:
-            pass
+        dist_version = importlib.metadata.version(UPSTREAM_DISTRIBUTION)
+    except importlib.metadata.PackageNotFoundError as e:
         raise ImportError(
-            "generalized-notation-notation (import path src.gnn) is not installed. "
+            "generalized-notation-notation (import package `gnn`) is not installed. "
             "Install the optional `cogant[upstream]` extra to enable this check; "
             "core COGANT remains usable without it."
         ) from e
+    major = _major_version(dist_version)
+    if major is None or major < MIN_UPSTREAM_MAJOR:
+        raise ImportError(
+            f"generalized-notation-notation {dist_version} is installed, but the COGANT "
+            f"bridge requires >= {MIN_UPSTREAM_MAJOR}.0 (top-level `gnn` package); "
+            "reinstall the pinned `cogant[upstream]` extra."
+        )
+    if not _gnn_owned_by_upstream_distribution():
+        raise ImportError(
+            "the importable top-level `gnn` package is not provided by "
+            "generalized-notation-notation; refusing to use it as the upstream reference."
+        )
+    return importlib.import_module(UPSTREAM_IMPORT_NAME)
 
 
 def json_safe(obj: Any) -> Any:
@@ -117,7 +128,7 @@ def json_safe(obj: Any) -> Any:
 
 @dataclass(frozen=True)
 class UpstreamGNNValidation:
-    """Outcome of calling upstream ``validate_gnn`` on markdown content."""
+    """Outcome of calling upstream ``validate_gnn_syntax`` on markdown content."""
 
     available: bool
     ok: bool
@@ -136,37 +147,49 @@ class UpstreamGNNValidation:
 
 
 def is_upstream_gnn_available() -> bool:
-    """Return True if ``src.gnn`` imports successfully."""
+    """Return True if the upstream ``gnn`` package (GNN >= 4.0) imports successfully."""
     try:
-        _require_src_gnn()
+        _require_upstream_gnn()
     except ImportError:
         return False
     return True
 
 
 def upstream_version() -> str | None:
-    """Return ``src.gnn.__version__`` if present."""
+    """Return the upstream ``gnn.__version__`` if available."""
     try:
-        mod = _require_src_gnn()
-        v = getattr(mod, "__version__", None)
-        return v if isinstance(v, str) else None
+        mod = _require_upstream_gnn()
     except ImportError:
         return None
+    v = getattr(mod, "__version__", None)
+    return v if isinstance(v, str) else None
 
 
-def run_upstream_validate_gnn(markdown: str) -> UpstreamGNNValidation:
-    """Run upstream ``validate_gnn`` on GNN markdown (full type-check pipeline).
+def run_upstream_validate_gnn(
+    markdown: str,
+    *,
+    validation_level: str = DEFAULT_VALIDATION_LEVEL,
+) -> UpstreamGNNValidation:
+    """Run upstream ``validate_gnn_syntax`` on GNN markdown.
 
-    Upstream ``src.gnn.validate_gnn`` accepts ``Union[str, Path]`` and probes
-    ``Path(x).exists()`` before treating an input as content. On POSIX, passing
-    raw markdown with embedded newlines can raise ``OSError: [Errno 63] File
-    name too long`` before the content branch is reached. The defensive
-    workaround here stages the markdown to a temp file and passes the path.
+    Upstream ``gnn.validate_gnn_syntax`` delegates to the formal
+    ``schema_validator`` pipeline: every required section must be present with
+    substantive content, and (at ``standard`` and above) connection endpoints
+    must reference declared variables. The markdown is staged to a temporary
+    ``.gnn.md`` file so the verdict never depends on upstream's
+    path-versus-content probe of the input string.
+
+    Args:
+        markdown: GNN markdown document.
+        validation_level: Upstream ``ValidationLevel`` name
+            (``basic`` / ``standard`` / ``strict`` / ``research`` /
+            ``round_trip``). Unknown levels are reported as a validation
+            error by upstream rather than silently skipped.
     """
     import tempfile
 
     try:
-        mod = _require_src_gnn()
+        mod = _require_upstream_gnn()
     except ImportError as e:
         return UpstreamGNNValidation(
             available=False,
@@ -177,12 +200,12 @@ def run_upstream_validate_gnn(markdown: str) -> UpstreamGNNValidation:
             ),
         )
 
-    validate_gnn = getattr(mod, "validate_gnn", None)
-    if validate_gnn is None:
+    validate_gnn_syntax = getattr(mod, "validate_gnn_syntax", None)
+    if validate_gnn_syntax is None:
         return UpstreamGNNValidation(
             available=False,
             ok=True,
-            skipped_reason="src.gnn has no validate_gnn",
+            skipped_reason="upstream gnn has no validate_gnn_syntax",
         )
 
     ver = upstream_version()
@@ -197,13 +220,13 @@ def run_upstream_validate_gnn(markdown: str) -> UpstreamGNNValidation:
             tmp.write(markdown)
             tmp_path = Path(tmp.name)
         try:
-            ok, errors = validate_gnn(tmp_path)
+            ok, errors = validate_gnn_syntax(tmp_path, validation_level)
         finally:
             try:
                 tmp_path.unlink()
             except OSError:
                 pass
-        err_list = list(errors) if errors else []
+        err_list = [str(e) for e in errors] if errors else []
         return UpstreamGNNValidation(
             available=True,
             ok=bool(ok),
@@ -211,11 +234,11 @@ def run_upstream_validate_gnn(markdown: str) -> UpstreamGNNValidation:
             version=ver,
         )
     except Exception as e:
-        logger.warning("Upstream validate_gnn raised: %s", e, exc_info=True)
+        logger.warning("Upstream validate_gnn_syntax raised: %s", e, exc_info=True)
         return UpstreamGNNValidation(
             available=True,
             ok=False,
-            errors=[f"upstream validate_gnn raised: {e}"],
+            errors=[f"upstream validate_gnn_syntax raised: {e}"],
             version=ver,
         )
 
@@ -230,24 +253,24 @@ def upstream_validate_file_content(
     *,
     is_content: bool = True,
 ) -> dict[str, Any]:
-    """Call upstream ``validate_gnn_file`` (path or raw content)."""
-    mod = _require_src_gnn()
-    fn = getattr(mod, "validate_gnn_file", None)
+    """Call upstream ``validate_gnn_source`` (path or raw content)."""
+    mod = _require_upstream_gnn()
+    fn = getattr(mod, "validate_gnn_source", None)
     if fn is None:
-        return {"is_valid": False, "errors": ["src.gnn has no validate_gnn_file"]}
+        return {"is_valid": False, "errors": ["upstream gnn has no validate_gnn_source"]}
     r = fn(content, is_content=is_content)
     return json_safe(r) if isinstance(r, dict) else {"result": json_safe(r)}
 
 
 def upstream_parse_file(path: str | Path) -> Any:
     """Call upstream ``parse_gnn_file``."""
-    mod = _require_src_gnn()
+    mod = _require_upstream_gnn()
     return mod.parse_gnn_file(Path(path))
 
 
 def upstream_discover_files(root: str | Path) -> Any:
     """Call upstream ``discover_gnn_files``."""
-    mod = _require_src_gnn()
+    mod = _require_upstream_gnn()
     return mod.discover_gnn_files(Path(root))
 
 
@@ -257,7 +280,7 @@ def upstream_process_directory(
     **kwargs: Any,
 ) -> Any:
     """Call upstream ``process_gnn_directory``."""
-    mod = _require_src_gnn()
+    mod = _require_upstream_gnn()
     return mod.process_gnn_directory(Path(input_dir), Path(output_dir), **kwargs)
 
 
@@ -267,25 +290,25 @@ def upstream_process_directory_lightweight(
     **kwargs: Any,
 ) -> Any:
     """Call upstream ``process_gnn_directory_lightweight``."""
-    mod = _require_src_gnn()
+    mod = _require_upstream_gnn()
     return mod.process_gnn_directory_lightweight(Path(input_dir), Path(output_dir), **kwargs)
 
 
 def upstream_generate_report(*args: Any, **kwargs: Any) -> Any:
     """Call upstream ``generate_gnn_report``."""
-    mod = _require_src_gnn()
+    mod = _require_upstream_gnn()
     return mod.generate_gnn_report(*args, **kwargs)
 
 
 def upstream_validate_structure(*args: Any, **kwargs: Any) -> Any:
-    """Call upstream ``validate_gnn_structure``."""
-    mod = _require_src_gnn()
-    return mod.validate_gnn_structure(*args, **kwargs)
+    """Call upstream ``check_gnn_file_structure`` (GNN 2.x ``validate_gnn_structure``)."""
+    mod = _require_upstream_gnn()
+    return mod.check_gnn_file_structure(*args, **kwargs)
 
 
 def upstream_module_info(*args: Any, **kwargs: Any) -> Any:
     """Call upstream ``get_module_info``."""
-    mod = _require_src_gnn()
+    mod = _require_upstream_gnn()
     return mod.get_module_info(*args, **kwargs)
 
 
@@ -296,31 +319,31 @@ def upstream_process_multi_format(
     **kwargs: Any,
 ) -> Any:
     """Call upstream ``process_gnn_multi_format`` (may import upstream pipeline helpers)."""
-    mod = _require_src_gnn()
+    mod = _require_upstream_gnn()
     return mod.process_gnn_multi_format(Path(input_dir), Path(output_dir), log or logger, **kwargs)
 
 
 def upstream_parse_formal(*args: Any, **kwargs: Any) -> Any:
     """Call upstream ``parse_gnn_formal``."""
-    mod = _require_src_gnn()
+    mod = _require_upstream_gnn()
     return mod.parse_gnn_formal(*args, **kwargs)
 
 
 def upstream_validate_syntax_formal(*args: Any, **kwargs: Any) -> Any:
-    """Call upstream ``validate_gnn_syntax_formal``."""
-    mod = _require_src_gnn()
-    return mod.validate_gnn_syntax_formal(*args, **kwargs)
+    """Call upstream ``validate_gnn_syntax`` (GNN 2.x ``validate_gnn_syntax_formal``)."""
+    mod = _require_upstream_gnn()
+    return mod.validate_gnn_syntax(*args, **kwargs)
 
 
 def get_upstream_parsing_system() -> Any:
     """Return a new ``GNNParsingSystem`` instance."""
-    mod = _require_src_gnn()
+    mod = _require_upstream_gnn()
     return mod.GNNParsingSystem()
 
 
 def get_upstream_gnn_format_enum() -> Any:
     """Return `GNNFormat` enum class from upstream."""
-    mod = _require_src_gnn()
+    mod = _require_upstream_gnn()
     return mod.GNNFormat
 
 
@@ -339,6 +362,10 @@ def parse_upstream_model_gnn_md(package_dir: str | Path) -> dict[str, Any]:
 
 __all__ = [
     "DEFAULT_SKIP_STEPS",
+    "DEFAULT_VALIDATION_LEVEL",
+    "MIN_UPSTREAM_MAJOR",
+    "UPSTREAM_DISTRIBUTION",
+    "UPSTREAM_IMPORT_NAME",
     "UPSTREAM_STEP_SCRIPTS",
     "UpstreamGNNValidation",
     "UpstreamPipelineConfig",

@@ -1,8 +1,8 @@
 """Integration tests for the upstream GNN 25-step pipeline pass.
 
 Each test exercises ``run_upstream_pipeline`` against a real
-``gnn_package/`` directory (no mocks). Steps actually shell out to the
-upstream numbered scripts via ``src.main.execute_pipeline_step``.
+``gnn_package/`` directory (no mocks). Each run is one real upstream
+``python -m gnn.main --only-steps ...`` invocation (GNN 4.x run contract).
 
 The COGANT-built fixture at ``output/calculator/gnn_package/`` is used
 when present; when it is not, the test builds a fresh one by running
@@ -42,17 +42,7 @@ def _has_required_files(pkg: Path) -> bool:
     return (pkg / "model.gnn.md").is_file() and (pkg / "manifest.json").is_file()
 
 
-@pytest.fixture(scope="module")
-def gnn_package_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Return a real GNN package directory.
-
-    Reuses ``output/calculator/gnn_package/`` when present (so repeated
-    runs don't re-analyze the calculator example each time); otherwise
-    builds a fresh one in a tmp dir.
-    """
-    if _has_required_files(DEFAULT_FIXTURE):
-        return DEFAULT_FIXTURE
-
+def _build_fresh_package(tmp_path_factory: pytest.TempPathFactory) -> Path:
     if not SAMPLE_REPO.is_dir():  # pragma: no cover - fixture is shipped
         pytest.skip(f"sample repo missing: {SAMPLE_REPO}")
 
@@ -66,6 +56,25 @@ def gnn_package_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
     if not _has_required_files(candidate):
         pytest.skip(f"fresh analyze run did not produce a usable gnn_package at {candidate}")
     return candidate
+
+
+@pytest.fixture(scope="module")
+def gnn_package_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Return a real GNN package directory.
+
+    Reuses ``output/calculator/gnn_package/`` when present (so repeated
+    runs don't re-analyze the calculator example each time); otherwise
+    builds a fresh one in a tmp dir.
+    """
+    if _has_required_files(DEFAULT_FIXTURE):
+        return DEFAULT_FIXTURE
+    return _build_fresh_package(tmp_path_factory)
+
+
+@pytest.fixture(scope="module")
+def fresh_gnn_package_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A package emitted by the current formatter (never a stale local output)."""
+    return _build_fresh_package(tmp_path_factory)
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +104,7 @@ def test_run_upstream_pipeline_only_steps_3_5(gnn_package_dir: Path, tmp_path: P
     )
     result = run_upstream_pipeline(cfg)
     if not result.available:
-        pytest.skip(f"upstream src.main not importable: {result.error}")
+        pytest.skip(f"upstream gnn.main not importable: {result.error}")
 
     assert result.executed == [3, 5]
     assert [s.step_index for s in result.steps] == [3, 5]
@@ -104,6 +113,28 @@ def test_run_upstream_pipeline_only_steps_3_5(gnn_package_dir: Path, tmp_path: P
     data = json.loads((out / "upstream_pipeline_summary.json").read_text(encoding="utf-8"))
     assert data["executed"] == [3, 5]
     assert len(data["steps"]) == 2
+
+
+def test_cogant_package_passes_upstream_validation_steps(
+    fresh_gnn_package_dir: Path, tmp_path: Path
+) -> None:
+    """COGANT's emitted model must clear upstream GNN 4.x parse/type/validation.
+
+    Steps 3 (parse), 5 (type check) and 6 (validation) are the upstream
+    acceptance surface for a GNN document; a regression in the emitted
+    connection grammar or matrix literals turns step 6 red.
+    """
+    out = tmp_path / "upstream_validation_steps"
+    cfg = UpstreamPipelineConfig(
+        target_dir=fresh_gnn_package_dir, output_dir=out, only_steps=[3, 5, 6]
+    )
+    result = run_upstream_pipeline(cfg)
+    if not result.available:
+        pytest.skip(f"upstream gnn.main not importable: {result.error}")
+    assert result.error is None
+    statuses = {s.script: s.status for s in result.steps}
+    assert all(s.success for s in result.steps), statuses
+    assert result.upstream_status in {"SUCCESS", "SUCCESS_WITH_WARNINGS"}
 
 
 def test_run_upstream_pipeline_default_skips_render_and_execute(
@@ -118,7 +149,7 @@ def test_run_upstream_pipeline_default_skips_render_and_execute(
     )
     result = run_upstream_pipeline(cfg)
     if not result.available:
-        pytest.skip(f"upstream src.main not importable: {result.error}")
+        pytest.skip(f"upstream gnn.main not importable: {result.error}")
 
     assert 11 not in result.executed
     assert 12 not in result.executed
@@ -136,7 +167,7 @@ def test_pipeline_result_to_dict_is_json_serialisable(
     )
     result = run_upstream_pipeline(cfg)
     if not result.available:
-        pytest.skip(f"upstream src.main not importable: {result.error}")
+        pytest.skip(f"upstream gnn.main not importable: {result.error}")
 
     payload = json.loads(json.dumps(result.to_dict()))
     assert payload["available"] is True
@@ -159,7 +190,7 @@ def test_render_execute_opt_in_runs_when_jax_available(
     )
     result = run_upstream_pipeline(cfg)
     if not result.available:
-        pytest.skip(f"upstream src.main not importable: {result.error}")
+        pytest.skip(f"upstream gnn.main not importable: {result.error}")
     assert {s.step_index for s in result.steps} >= {11, 12}
 
 

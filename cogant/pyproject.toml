@@ -64,7 +64,11 @@ analytics = [
     "duckdb>=0.9",
 ]
 upstream = [
-    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git@11a89f0615f1e48ddacca58d1bcf3c5092b1b055",
+    # GNN 4.1.0 release line: main@b4a583a5 (2026-10-14), 12 commits past the
+    # v4.1.0 tag (9255e19f). GNN >= 4.0 ships the top-level ``gnn`` package;
+    # tools/gnn_upstream_audit_surface.py and tools/audit_release_integrity.py
+    # check this pin against uv.lock.
+    "generalized-notation-notation @ git+https://github.com/ActiveInferenceInstitute/Generalized_Notation_Notation.git@b4a583a5851021612a9a5df94e428f78aa6f76a0",
 ]
 all = [
     "pytest>=7.4.0",
@@ -206,7 +210,7 @@ ignore_missing_imports = true
 # The optional upstream package has no bundled typing metadata and is loaded
 # only by the explicit upstream validation path.
 [[tool.mypy.overrides]]
-module = ["src.gnn", "src.gnn.*"]
+module = ["gnn", "gnn.*"]
 ignore_missing_imports = true
 
 [tool.coverage.run]

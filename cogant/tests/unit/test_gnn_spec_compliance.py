@@ -233,33 +233,56 @@ class TestTimeSection:
 
 
 class TestConnectionSyntax:
-    """GNN 2.0.0 spec: Connections must use bare variable names without parentheses."""
+    """Upstream GNN connection grammar: bare single endpoints, grouped multi-sources."""
 
-    def test_upstream_connections_no_leading_paren(self):
-        """No connection line in ## Connections should start with '('.
-
-        The upstream type-checker splits on '>' to extract source/target names.
-        A source like '(D_f0)' becomes a name containing '(' which the checker
-        flags as 'potentially undefined variable: (D_f0'.
-        """
-        fmt = _build_formatter()
-        md = fmt.format()
-
-        # Isolate the upstream Connections block (first occurrence)
+    @staticmethod
+    def _upstream_connection_lines(md: str) -> list[str]:
         conn_idx = md.index("## Connections")
         conn_block = md[conn_idx:]
         next_section = conn_block.find("## ", 2)
         if next_section > 0:
             conn_block = conn_block[:next_section]
+        return [
+            line.strip()
+            for line in conn_block.splitlines()[1:]
+            if line.strip() and not line.strip().startswith("#")
+        ]
 
-        for line in conn_block.splitlines():
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            assert not line.startswith("("), (
-                f"Connection line must not start with '(': {line!r}. "
-                "Use bare variable names per upstream GNN 2.0.0 spec."
-            )
+    def test_upstream_connections_no_leading_paren(self):
+        """Only a multi-source group may start a connection line with '('.
+
+        A single parenthesized endpoint such as '(D_f0)' is not a group;
+        upstream would read the name with the parenthesis attached.
+        """
+        fmt = _build_formatter()
+        md = fmt.format()
+
+        for line in self._upstream_connection_lines(md):
+            source = line.split(">", 1)[0].strip()
+            if source.startswith("("):
+                assert source.endswith(")") and "," in source, (
+                    f"Only multi-source groups may be parenthesized: {line!r}. "
+                    "Use bare variable names for single endpoints, e.g. 'D_f0>s_f0'."
+                )
+
+    def test_upstream_multi_source_connections_are_grouped(self):
+        """Multi-source edges use the upstream '(a, b)>c' group syntax.
+
+        GNN 4.x reads a bare 'A_m0,s_f0' source as one undeclared variable and
+        fails standard validation ("Undefined variable in connection source").
+        """
+        fmt = _build_formatter()
+        md = fmt.format()
+
+        grouped = 0
+        for line in self._upstream_connection_lines(md):
+            source = line.split(">", 1)[0].strip()
+            if "," in source:
+                assert source.startswith("(") and source.endswith(")"), (
+                    f"Multi-source connection must be parenthesized: {line!r}"
+                )
+                grouped += 1
+        assert grouped > 0, "expected at least one grouped multi-source edge"
 
     def test_upstream_connections_target_no_paren(self):
         """Connection targets must not be wrapped in single-variable parentheses.
@@ -422,9 +445,9 @@ class TestStateSpaceBlockSyntax:
             "s_f0>A_m0",
             "s_f0>A_m1",
             "s_f0>A_m2",
-            "A_m0,s_f0>o_m0",
-            "A_m1,s_f0>o_m1",
-            "A_m2,s_f0>o_m2",
+            "(A_m0, s_f0)>o_m0",
+            "(A_m1, s_f0)>o_m1",
+            "(A_m2, s_f0)>o_m2",
             "A_m0={",
             "A_m1={",
             "A_m2={",
@@ -447,6 +470,43 @@ class TestStateSpaceBlockSyntax:
         assert "num_states:" in md
         assert "num_obs:" in md
         assert "num_actions:" in md
+
+
+class TestLikelihoodLiteral:
+    """``A_m`` literals: upstream row layout and column-stochastic semantics."""
+
+    @staticmethod
+    def _columns(literal: str) -> list[list[float]]:
+        import re
+
+        rows = [
+            [float(v) for v in group.split(",")] for group in re.findall(r"\(([^()]+)\)", literal)
+        ]
+        return [list(col) for col in zip(*rows, strict=True)]
+
+    def test_more_states_than_outcomes_keeps_every_column_a_distribution(self):
+        from cogant.gnn.formatter.upstream import _identity_like_likelihood
+
+        literal = _identity_like_likelihood(obs_card=2, st_card=3)
+        assert literal == "(1.0, 0.0, 0.5), (0.0, 1.0, 0.5)"
+        for column in self._columns(literal):
+            assert abs(sum(column) - 1.0) < 1e-9
+
+    def test_square_and_tall_likelihoods_stay_identity_like(self):
+        from cogant.gnn.formatter.upstream import _identity_like_likelihood
+
+        assert _identity_like_likelihood(2, 2) == "(1.0, 0.0), (0.0, 1.0)"
+        tall = _identity_like_likelihood(obs_card=3, st_card=2)
+        assert tall == "(1.0, 0.0), (0.0, 1.0), (0.0, 0.0)"
+        for column in self._columns(tall):
+            assert abs(sum(column) - 1.0) < 1e-9
+
+    def test_formatter_emits_rows_directly_inside_braces(self):
+        """``A={ (row0), (row1) }`` — an extra paren layer reads as one 1xN row upstream."""
+        md = _build_multi_observation_formatter().format()
+        a_lines = [line for line in md.splitlines() if line.startswith("A_m0={")]
+        assert a_lines, "expected an A_m0 literal"
+        assert a_lines[0].startswith("A_m0={ (") and not a_lines[0].startswith("A_m0={ ((")
 
 
 class TestValidatorSpec:

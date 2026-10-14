@@ -1,14 +1,15 @@
 """GNN markdown → :class:`ReverseGNNModel` parser.
 
 This module is the inverse of :mod:`cogant.gnn.formatter`. It reads a
-GNN v2.0.0.x markdown file (including the v2.0.0.0-engine bundle emitted by
+GNN markdown file (COGANT schema ``GNN v2.0.0``, including the bundle emitted by
 current COGANT) and extracts the structured content required to synthesize a
 Python package: the state space, observation modalities, actions,
 policies, constraints, ontology annotations, and A/B/C/D matrices.
 
-The parser is deliberately **tolerant**: it accepts both current bare upstream
-connection syntax (``D_f0>s_f0``) and compatibility parenthesised examples
-(``(D_f0) > (s_f0)``), both bracketed matrix blocks
+The parser is deliberately **tolerant**: it accepts bare upstream connection
+syntax (``D_f0>s_f0``), grouped multi-source edges (``(A_m0, s_f0)>o_m0``),
+legacy bare comma sources (``A_m0,s_f0>o_m0``), and compatibility
+parenthesised examples (``(D_f0) > (s_f0)``), both bracketed matrix blocks
 (``A[[rows=3][cols=2]]``) and InitialParameterization tuple blocks
 (``D_f0={ (0.3, 0.3, 0.4) }``), and any mix of COGANT's extended
 sections alongside the upstream header. Sections the parser does not
