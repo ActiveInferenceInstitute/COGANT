@@ -7,4 +7,4 @@ GitHub metadata for the COGANT repo: [CODEOWNERS](CODEOWNERS), [pull_request_tem
 ## Coordination
 
 - CI behavior is documented in [`../cogant/docs/CI.md`](../cogant/docs/CI.md).
-- Workflow files: `ci.yml`, `docs.yml`, `perf-smoke.yml` (see [workflows/AGENTS.md](workflows/AGENTS.md)).
+- Workflow files: `ci.yml`, `docs.yml`, `metrics.yml`, `metrics-fresh.yml`, `perf-smoke.yml` (see [workflows/AGENTS.md](workflows/AGENTS.md) for triggers, jobs, and pinned action versions).

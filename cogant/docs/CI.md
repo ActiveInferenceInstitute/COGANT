@@ -37,12 +37,14 @@ uv run python docs/verify_doc_links.py
 
 On pushes to `main`, after a successful `CI` workflow, or through manual dispatch,
 `.github/workflows/docs.yml` installs the dev dependencies, runs `uv run mkdocs build`,
-and deploys `site/` with `peaceiris/actions-gh-pages@v4`. The job uses
-`actions/checkout@v5`, `actions/setup-python@v6`, and `astral-sh/setup-uv@v8.1.0`.
-It grants `contents: write` because the action publishes the generated site to the
-`gh-pages` branch. The workflow also sets
-`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` while the deployment action has not yet
-published a Node 24 release.
+and deploys `site/` with `peaceiris/actions-gh-pages@v4` (which resolves to a
+Node 24 release, so no runtime override is needed). The job uses
+`actions/checkout@v7`, `actions/setup-python@v7`, and `astral-sh/setup-uv@v10.3.0`.
+The workflow defaults to `contents: read`; only the deploy job grants
+`contents: write`, because the action publishes the generated site to the
+`gh-pages` branch. Deploys are serialized with a job-level
+`concurrency: docs-deploy` group so overlapping `push` and post-CI
+`workflow_run` runs never race each other.
 
 For the exact triggers, paths, permissions, and deployment settings, treat the
 workflow file as authoritative rather than copying an independent workflow snippet.

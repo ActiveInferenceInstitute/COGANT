@@ -3,20 +3,29 @@ name: METRICS.yaml freshness gate
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   check-metrics:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
+      # Full history so check_metrics_fresh.py can diff against the recorded
+      # ``generator_git_sha``; all git calls are local, so drop the token.
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - uses: astral-sh/setup-uv@v8.1.0
+      # ``prune-cache: true`` restores the pre-v9 setup-uv default.
+      - uses: astral-sh/setup-uv@v10.3.0
         with:
           version: "latest"
+          prune-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 

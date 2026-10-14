@@ -5,26 +5,36 @@ on:
     - cron: '0 6 * * 1'  # Mondays 6am UTC
   workflow_dispatch:
 
+# upload-artifact authenticates with the runner's artifact token, so the
+# repository token only needs read access.
+permissions:
+  contents: read
+
 jobs:
   perf:
     name: Graph-build benchmark
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: cogant
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
+      # ``prune-cache: true`` restores the pre-v9 setup-uv default.
       - name: Set up uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           enable-cache: true
+          prune-cache: true
 
       - name: Install all extras
         run: uv sync --extra all
@@ -33,7 +43,7 @@ jobs:
         run: uv run python benchmarks/bench_graph_build.py 2>&1 | tee perf_results.txt
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: perf-results
           path: perf_results.txt

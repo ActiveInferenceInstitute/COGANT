@@ -10,7 +10,8 @@
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.10
+    # Keep in step with the ruff pinned in uv.lock (CI's ``uv run ruff``).
+    rev: v0.17.0
     hooks:
       # Lint+format only the package and test trees so the hook matches the
       # CI ratchet (.github/workflows/ci.yml :: Lint (ruff)). Auxiliary
@@ -23,14 +24,20 @@ repos:
       # tree (tools audit tests) which is NOT covered by the CI ruff
       # ratchet and formats under a different ruff config — on CI that made
       # this hook rewrite 24 files and fail every run.
-      - id: ruff
+      # ``ruff-check`` is the canonical id; upstream keeps ``ruff`` only as a
+      # legacy alias.
+      - id: ruff-check
         args: [--fix]
         files: ^cogant/(py/cogant|tests)/
+      # Since ruff-pre-commit v0.16.5 this hook also receives Markdown files
+      # (Python code fences in AGENTS.md/README.md under these trees). That
+      # matches CI: ruff 0.17's ``ruff format --check py/cogant/ tests/``
+      # discovers the same Markdown files, and both read cogant/pyproject.toml.
       - id: ruff-format
         files: ^cogant/(py/cogant|tests)/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer

@@ -119,9 +119,14 @@ uvicorn.run(app, host="0.0.0.0", port=8080, workers=1)
 
 ### Docker
 
+The build context must be the package root (the directory holding
+`Dockerfile`, `pyproject.toml`, and `uv.lock`); the image installs the
+committed lockfile with `uv sync --frozen --no-dev` and fails fast if it is
+missing.
+
 ```bash
-# Build image
-docker build -f cogant/Dockerfile -t cogant:latest .
+# Build image (from the repository root; use `.` when already inside cogant/)
+docker build -t cogant:latest cogant/
 
 # Run container
 docker run -p 8080:8080 \
@@ -133,11 +138,11 @@ docker run -p 8080:8080 \
 ### Docker Compose
 
 ```bash
-# From repository root
-docker-compose up
+# From the repository root (or drop -f when already inside cogant/)
+docker compose -f cogant/docker-compose.yml up --build
 
-# Logs
-docker-compose logs -f cogant_server
+# Logs (the compose service is named `cogant`)
+docker compose -f cogant/docker-compose.yml logs -f cogant
 ```
 
 The `docker-compose.yml` exposes port 8080 and sets standard logging.

@@ -6,21 +6,32 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   metrics:
     runs-on: ubuntu-latest
+    # Regeneration runs the full pytest suite plus pipeline probes (~25 min
+    # on a hosted runner); leave headroom without allowing a 6 h hang.
+    timeout-minutes: 60
     defaults:
       run:
         working-directory: cogant
     steps:
-      - uses: actions/checkout@v5
+      # The drift check below only runs a local ``git diff``.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
-      - uses: astral-sh/setup-uv@v8.1.0
+      # ``prune-cache: true`` restores the pre-v9 setup-uv default.
+      - uses: astral-sh/setup-uv@v10.3.0
         with:
           version: "latest"
+          prune-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 

@@ -16,15 +16,24 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Action versions track ../../../.github/workflows/AGENTS.md (setup-uv has no
+# floating major tag, so it is pinned to an exact release).
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          prune-cache: true
       - name: Build site
         run: uv run --with mkdocs-material --with 'mkdocstrings[python]' mkdocs build
-      - uses: actions/upload-pages-artifact@v3
+      # upload-pages-artifact v4+ leaves dotfiles out of the Pages tarball by
+      # default; the MkDocs ``site/`` output does not rely on any.
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v5

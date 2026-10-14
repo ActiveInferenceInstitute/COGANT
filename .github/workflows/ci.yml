@@ -11,6 +11,11 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege: every CI job only reads the repository. Annotations from
+# ``--output-format=github`` need no extra token scope.
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: cogant
@@ -19,24 +24,32 @@ jobs:
   lint:
     name: Lint (ruff)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         # Full history: check_metrics_fresh.py verifies that METRICS.yaml's
         # ``generator_git_sha`` is an ancestor of HEAD; a shallow checkout
         # (default depth 1) cannot walk ancestry on the PR merge ref, so the
         # gate fails with "not an ancestor of HEAD" even when METRICS is in
-        # sync.
-        uses: actions/checkout@v5
+        # sync. Every git call in CI is local (rev-parse/status/diff/ls-files),
+        # so the token is not left behind for later steps.
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v8.1.0
+        # setup-uv v9 flipped the ``prune-cache`` default to false; keep
+        # pruning pre-built wheels before upload (the v8 behaviour, and the
+        # action's own recommendation for GitHub-hosted runners) so the cache
+        # stays small. Applies to every setup-uv step with caching enabled.
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           enable-cache: true
+          prune-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -133,18 +146,22 @@ jobs:
   typecheck:
     name: Typecheck (mypy)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: lint
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           enable-cache: true
+          prune-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -166,6 +183,9 @@ jobs:
     # its default matrix naming (``test (3.11)`` …), which renders the
     # expanded python version in both skipped and executed states.
     runs-on: ubuntu-latest
+    # The 3.11 leg runs the suite twice (fast pass + coverage gate) and takes
+    # ~45 min on a hosted runner; 3.12/3.13 take ~20 min. Leave ~2x headroom.
+    timeout-minutes: 90
     needs: lint
     strategy:
       fail-fast: false
@@ -173,17 +193,20 @@ jobs:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           enable-cache: true
+          prune-cache: true
 
       - name: Install all extras
         run: uv sync --extra all
@@ -207,9 +230,12 @@ jobs:
   rust-build:
     name: Rust backend checks
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # ``actions-rs/*`` is immutable (Node 12, last released 2020); use the
       # community-maintained ``dtolnay/rust-toolchain`` action which is the
@@ -218,7 +244,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo registry
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -243,22 +269,26 @@ jobs:
   clean-wheel:
     name: Clean wheel install smoke
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: lint
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # audit_release_integrity --check-wheel-reproducibility rebuilds the
       # wheel via ``uv build``; without this step the job dies with
       # FileNotFoundError: 'uv' (latent defect: the job is ``needs: lint``
       # and lint never reached green until now).
       - name: Set up uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           enable-cache: true
+          prune-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -312,17 +342,20 @@ jobs:
     # resource-heavy integration lane from the Actions UI.
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           enable-cache: false
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -362,12 +395,15 @@ jobs:
   pre-commit:
     name: Pre-commit hooks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -379,7 +415,7 @@ jobs:
         run: python -m pip install --upgrade pre-commit
 
       - name: Cache pre-commit hooks
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-py3.11-${{ hashFiles('cogant/.pre-commit-config.yaml') }}

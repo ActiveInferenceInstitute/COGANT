@@ -13,6 +13,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Read-only default; the deploy job below widens only what it needs.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     # Run on direct push, or when triggered by a successful CI run
@@ -21,28 +25,42 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # A docs-touching push to main fires this workflow twice (``push`` and
+    # the ``workflow_run`` after CI). Serialize deploys so overlapping runs
+    # never race each other pushing to ``gh-pages``. Scoped to the job (not
+    # the workflow) so a run whose ``if`` skips the deploy is not queued
+    # behind, or queued ahead of, a real deploy.
+    concurrency:
+      group: docs-deploy
+      cancel-in-progress: false
     defaults:
       run:
         working-directory: cogant
+    # ``peaceiris/actions-gh-pages`` pushes the built site to the
+    # ``gh-pages`` branch. Its floating ``@v4`` tag now resolves to v4.1.0,
+    # which runs on Node 24, so no runtime override is needed.
     permissions:
       contents: write
-    # ``peaceiris/actions-gh-pages@v4`` has not yet shipped a Node-24
-    # release, so opt the whole job into the new runtime explicitly.
-    # Remove this once the action publishes its Node-24 update or we
-    # migrate to ``actions/deploy-pages``.
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
-      - uses: actions/checkout@v5
+      # Default self-checkout (no ``ref``): checkout v7's fork-PR guard for
+      # ``workflow_run`` does not apply, and peaceiris authenticates its push
+      # with ``github_token`` directly, so no credential needs to persist.
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - uses: astral-sh/setup-uv@v8.1.0
+      # setup-uv v10 ``enable-cache: auto`` skips the cache for
+      # ``workflow_run`` events (cache-poisoning guard) and keeps it for
+      # ``push``; ``prune-cache: true`` restores the pre-v9 pruning default.
+      - uses: astral-sh/setup-uv@v10.3.0
         with:
           version: "latest"
+          prune-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 

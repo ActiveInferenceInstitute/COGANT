@@ -27,7 +27,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Run COGANT
         run: |
@@ -37,7 +37,7 @@ jobs:
       # COGANT emits JSON bundles by default; upload-sarif expects SARIF. Add a conversion step
       # or use a different security integration before uploading.
       # - name: Upload SARIF
-      #   uses: github/codeql-action/upload-sarif@v2
+      #   uses: github/codeql-action/upload-sarif@v4
       #   with:
       #     sarif_file: results.sarif
 ```
