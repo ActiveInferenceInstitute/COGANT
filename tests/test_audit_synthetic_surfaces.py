@@ -222,6 +222,44 @@ def test_matrix_sidecar_audit_uses_registry_resolved_source(tmp_path: Path) -> N
     assert any("matrix_values_from_artifact must be true" in f.message for f in findings)
 
 
+def test_gnn_placeholder_rule_covers_only_disclosed_unavailable_artifacts() -> None:
+    mod = _load_module()
+
+    disclosed = mod.classify_occurrence(
+        "cogant/py/cogant/gnn/validator.py",
+        1,
+        'f"Artifact {name} is {status}; {name}.json is a placeholder "',
+        "placeholder",
+    )
+    fabricated = mod.classify_occurrence(
+        "cogant/py/cogant/gnn/validator.py",
+        1,
+        "A = 'placeholder'  # hand-typed matrix",
+        "placeholder",
+    )
+
+    assert disclosed.category == "degraded_output"
+    assert not fabricated.classified
+
+
+def test_current_tree_has_no_unclassified_synthetic_surface_terms() -> None:
+    """The clean-checkout lane (CI runs the audit without ``--strict``) must pass.
+
+    Unlike the strict lane it needs no generated ``output/`` artifacts, so it
+    always runs: every retained term in tracked project files is classified.
+    """
+    result = subprocess.run(
+        [sys.executable, str(AUDIT)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "0 finding(s)" in result.stdout
+
+
 def test_current_tree_strict_audit_passes() -> None:
     result = subprocess.run(
         [sys.executable, str(AUDIT), "--strict"],

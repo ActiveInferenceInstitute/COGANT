@@ -154,10 +154,16 @@ ALLOW_RULES: tuple[AllowRule, ...] = (
         justification="maximum-entropy priors and structural defaults are documented degraded-output values",
     ),
     AllowRule(
-        path=r"(^\.github/workflows/.*\.ya?ml$|^README\.md$|^TODO\.md$|^ISA\.md$|^REVIEW_LOG_[0-9-]+\.md$|^cogant/(\.gitignore|AGENTS\.md|CHANGELOG\.md|CONTRIBUTING\.md|Makefile|README\.md|pyproject\.toml)$|^cogant/docs/|^cogant/evaluation/|^cogant/examples/|^cogant/parsers/|^cogant/specs/|^cogant/rust/|^manuscript/|^scripts/|^tools/)",
+        path=r"(^\.github/workflows/.*\.ya?ml$|^README\.md$|^TODO\.md$|^ISA\.md$|^REVIEW_LOG_[0-9-]+\.md$|^cogant/(\.gitignore|AGENTS\.md|CHANGELOG\.md|CONTRIBUTING\.md|Makefile|README\.md|pyproject\.toml)$|^cogant/docs/|^cogant/evaluation/|^cogant/examples/|^cogant/parsers/|^cogant/scripts/|^cogant/specs/|^cogant/rust/|^manuscript/|^scripts/|^tools/)",
         terms=("fallback", "mock", "stub"),
         category="degraded_output",
-        justification="project documentation, examples, and release notes describe audited degradation or compatibility behavior",
+        justification="project documentation, examples, scripts, and release notes describe audited degradation or compatibility behavior",
+    ),
+    AllowRule(
+        path=r"^cogant/(CHANGELOG\.md|docs/changelog\.md)$",
+        terms=("placeholder",),
+        category="degraded_output",
+        justification="release notes record placeholder removals and disclosures; they ship no placeholder values",
     ),
     AllowRule(
         path=r"^tasks\.yaml$",
@@ -170,6 +176,16 @@ ALLOW_RULES: tuple[AllowRule, ...] = (
         terms=("fallback", "stub"),
         category="degraded_output",
         justification="production occurrences are runtime degradation, compatibility, or disclosure paths covered by package tests",
+    ),
+    AllowRule(
+        path=r"^cogant/py/cogant/gnn/(package\.py|validator\.py|AGENTS\.md)$",
+        terms=("placeholder",),
+        category="degraded_output",
+        line=r"(artifact|payload|GNNValidator|unavailable)",
+        justification=(
+            "best-effort GNN artifacts that fail are written as explicit status: unavailable "
+            "placeholders and reported as validation warnings, never as evidence"
+        ),
     ),
     AllowRule(
         path=r"^cogant/py/cogant/",
