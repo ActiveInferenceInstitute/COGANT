@@ -86,7 +86,11 @@ class TraceEvent:
 **Key Methods**:
 - **`ingest_coverage_py(db_path: str) -> dict[str, Any]`**
   - Parse coverage.py SQLite database (.coverage file, Python built-in)
-  - Decode line_bits.numbits bitmap (coverage.py's compression format)
+  - Decode line_bits.numbits bitmap (coverage.py's compression format), or derive
+    executed lines from the `arc` table when coverage ran in branch mode
+  - Merge rows recorded under different dynamic contexts into one entry per file
+  - `summary.total_lines` / `summary.percent_covered` are `None`: the database stores
+    executed lines only, never the statement total
   - Return {file: {lines_covered: [...], lines_missing: [...], branches: {...}}}
   - See `_decode_numbits()` for bitmap decompression (little-endian bit encoding)
 

@@ -129,7 +129,9 @@ def test_ingest_coverage_py_line_bits_schema(tmp_path):
     assert data["files"][0]["filename"] == "pkg/a.py"
     assert data["files"][0]["line_count"] == 8
     assert data["summary"]["covered_lines"] == 8
-    assert data["summary"]["percent_covered"] == 100.0
+    # The database stores executed lines only, so no percentage is claimed.
+    assert data["summary"]["total_lines"] is None
+    assert data["summary"]["percent_covered"] is None
 
 
 def test_ingest_coverage_py_line_table_schema(tmp_path):

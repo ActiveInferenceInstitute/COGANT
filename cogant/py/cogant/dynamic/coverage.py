@@ -176,11 +176,21 @@ class CoverageIngester:
         """
         Parse .coverage file from coverage.py.
 
+        Line-mode (``line_bits``), branch-mode (``arc``) and the legacy
+        ``line`` schema are supported. Rows recorded under different
+        dynamic contexts are merged, so each file appears once with the
+        union of its executed lines.
+
         Args:
             coverage_file: Path to .coverage file.
 
         Returns:
-            Coverage data mapped to source spans.
+            Coverage data mapped to source spans. The database stores
+            executed lines only, so ``summary["covered_lines"]`` counts
+            distinct executed lines while ``summary["total_lines"]`` and
+            ``summary["percent_covered"]`` are ``None`` (unknown) for a
+            database that was read; they are ``0`` / ``0.0`` when the file
+            is missing or unreadable.
         """
         logger.info(f"Parsing .coverage file from {coverage_file}")
 
@@ -199,9 +209,7 @@ class CoverageIngester:
             }
             return self.coverage_data
 
-        files: list[dict[str, Any]] = []
-        total_lines = 0
-        covered_lines_total = 0
+        executed_by_file: dict[str, set[int]] = {}
 
         try:
             conn = sqlite3.connect(coverage_file)
@@ -236,26 +244,19 @@ class CoverageIngester:
                 }
                 return self.coverage_data
 
+            # Rows are stored per (file, context): with dynamic contexts
+            # (``--cov-context=test``) one file has many rows, so executed
+            # lines are unioned per file before any entry is emitted.
             if "line_bits" in tables or "arc" in tables:
                 # coverage.py >= 5.x schema with line_bits blob
                 if "line_bits" in tables:
                     cursor.execute(
-                        "SELECT f.path, lb.numbits FROM file f JOIN line_bits lb ON f.id = lb.file_id"
+                        "SELECT f.path, lb.numbits FROM file f "
+                        "JOIN line_bits lb ON f.id = lb.file_id ORDER BY f.id"
                     )
                     for filepath, numbits_blob in cursor.fetchall():
-                        line_numbers = _decode_numbits(numbits_blob)
-                        file_covered = len(line_numbers)
-                        covered_lines_total += file_covered
-                        # We don't know total lines from coverage alone;
-                        # count covered as a lower bound.
-                        total_lines += file_covered
-                        files.append(
-                            {
-                                "filename": filepath,
-                                "covered_lines": sorted(line_numbers),
-                                "uncovered_lines": [],
-                                "line_count": file_covered,
-                            }
+                        executed_by_file.setdefault(filepath, set()).update(
+                            _decode_numbits(numbits_blob)
                         )
                 if "arc" in tables:
                     # Branch-mode databases store executed arcs instead of
@@ -265,42 +266,21 @@ class CoverageIngester:
                         "SELECT f.path, a.fromno, a.tono FROM file f "
                         "JOIN arc a ON f.id = a.file_id ORDER BY f.id"
                     )
-                    arc_lines: dict[str, set[int]] = {}
                     for filepath, fromno, tono in cursor.fetchall():
-                        executed = arc_lines.setdefault(filepath, set())
-                        executed.update(n for n in (fromno, tono) if n > 0)
-                    for filepath, executed in arc_lines.items():
-                        file_covered = len(executed)
-                        covered_lines_total += file_covered
-                        total_lines += file_covered
-                        files.append(
-                            {
-                                "filename": filepath,
-                                "covered_lines": sorted(executed),
-                                "uncovered_lines": [],
-                                "line_count": file_covered,
-                            }
+                        executed_by_file.setdefault(filepath, set()).update(
+                            n for n in (fromno, tono) if n > 0
                         )
             elif "line" in tables:
                 # Older coverage.py schema with explicit line table
-                cursor.execute("SELECT id, path FROM file")
+                cursor.execute("SELECT id, path FROM file ORDER BY id")
                 file_rows = cursor.fetchall()
                 for file_id, filepath in file_rows:
                     cursor.execute(
                         "SELECT lineno FROM line WHERE file_id = ?",
                         (file_id,),
                     )
-                    line_numbers = [row[0] for row in cursor.fetchall()]
-                    file_covered = len(line_numbers)
-                    covered_lines_total += file_covered
-                    total_lines += file_covered
-                    files.append(
-                        {
-                            "filename": filepath,
-                            "covered_lines": sorted(line_numbers),
-                            "uncovered_lines": [],
-                            "line_count": file_covered,
-                        }
+                    executed_by_file.setdefault(filepath, set()).update(
+                        row[0] for row in cursor.fetchall()
                     )
             else:
                 logger.warning(
@@ -323,21 +303,32 @@ class CoverageIngester:
             }
             return self.coverage_data
 
-        percent = (covered_lines_total / total_lines * 100.0) if total_lines > 0 else 0.0
+        files: list[dict[str, Any]] = [
+            {
+                "filename": filepath,
+                "covered_lines": sorted(executed),
+                "uncovered_lines": [],
+                "line_count": len(executed),
+            }
+            for filepath, executed in executed_by_file.items()
+        ]
+        covered_lines_total = sum(f["line_count"] for f in files)
 
-        logger.info(
-            f"Parsed {len(files)} files, {covered_lines_total}/{total_lines} "
-            f"lines covered ({percent:.1f}%)"
-        )
+        if not files:
+            logger.warning(f"Coverage database {coverage_file} contains no executed lines")
+        logger.info(f"Parsed {len(files)} files, {covered_lines_total} executed lines")
 
+        # A coverage.py database records executed lines only; the statement
+        # total (and hence a percentage) needs source analysis it does not
+        # store, so both are reported as unknown rather than guessed.
         self.coverage_data = {
             "type": "coverage",
             "format": "coverage_py",
             "files": files,
             "summary": {
-                "total_lines": total_lines,
+                "total_lines": None,
                 "covered_lines": covered_lines_total,
-                "percent_covered": percent,
+                "percent_covered": None,
             },
         }
 
