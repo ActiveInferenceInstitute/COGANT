@@ -27,7 +27,9 @@ Two independent surfaces:
   upstream may still run 11 and 12 as hard prerequisites of selected steps.
 
 See [`AGENTS.md`](AGENTS.md) for the full `upstream_*` API surface,
-the 25-step catalogue, the `UpstreamPipelineConfig` reference, the opt-in
-flags, and the upstream **CC-BY-NC-SA-4.0** license note (also tracked in
-`cogant/LICENSES.md`). Recorded results against the current pin live in
+the 25-step catalogue, the `UpstreamPipelineConfig` reference, the
+opt-in `COGANT_ENABLE_UPSTREAM_GNN` / kill-switch `COGANT_DISABLE_UPSTREAM_GNN`
+env flags (upstream validation is off by default), and the upstream
+**CC-BY-NC-SA-4.0** license note (also tracked in `cogant/LICENSES.md`).
+Recorded results against the current pin live in
 `cogant/docs/evaluation/GNN_UPSTREAM_AUDIT_SURFACE.md`.
