@@ -35,10 +35,20 @@ from cogant.reverse.parser import (
     _normalize_reverse_dimensions,
 )
 
+_FLOAT_DECIMALS = 12
+"""Decimal places kept for embedded matrix literals.
+
+The generated ``likelihood``/``transition`` helpers require a state
+distribution to sum to 1.0 within 1e-6, so the rounding error a literal
+introduces must stay far below that: six decimals turned a uniform prior over
+three states into ``[0.333333] * 3`` (sum 0.999999), which the generated
+package then rejected.
+"""
+
 
 def _format_float(value: float) -> str:
     """Format a float with bounded precision for embedding in source."""
-    return f"{round(float(value), 6)!r}"
+    return f"{round(float(value), _FLOAT_DECIMALS)!r}"
 
 
 def _format_vector(vec: list[float]) -> str:

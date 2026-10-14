@@ -14,12 +14,15 @@ output: we generate a ``ReverseGNNModel`` via Hypothesis, run the
 renderer, exec the generated source to recover the A/B/C/D
 constants, and check the sums.
 
-Tolerance note: the renderer serialises each float as a 6-decimal
+Tolerance note: the renderer serialises each float as a 12-decimal
 literal (``_format_float``), so the worst-case precision loss in a
-column of height ``k`` is ``k * 1e-6``. We allow ``5e-6`` absolute
-tolerance — comfortably above the 6 * 1e-6 worst case across the
-generated dimensions (``n_states ≤ 6``). A genuine renormalisation
-bug would exceed this tolerance by orders of magnitude.
+column of height ``k`` is ``k * 5e-13``. We allow ``1e-9`` absolute
+tolerance — far above that worst case across the generated dimensions
+(``n_states ≤ 6``), yet far below the 1e-6 sum check the generated
+``likelihood``/``transition`` helpers apply to their inputs, so the
+emitted prior is always accepted by the package that embeds it. A
+genuine renormalisation bug would exceed this tolerance by orders of
+magnitude.
 """
 
 from __future__ import annotations
@@ -37,7 +40,7 @@ from cogant.reverse.parser import ReverseGNNModel
 pytestmark = pytest.mark.property
 
 # Serialization-induced absolute tolerance: see module docstring.
-_STOCHASTIC_TOL = 5e-6
+_STOCHASTIC_TOL = 1e-9
 
 
 # ---------------------------------------------------------------------------
