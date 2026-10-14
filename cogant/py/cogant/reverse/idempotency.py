@@ -1285,8 +1285,9 @@ def verify_repo_roundtrip(
     Returns:
         :class:`RoundtripResult` with ``original_roles`` drawn from the
         first forward pass and ``synthesized_roles`` drawn from the
-        second. When planning or synthesis rejects the emitted model, the
-        result has ``roundtrip_status=FAILED`` and the reason in ``errors``.
+        second. When the reverse parser, planning, or synthesis rejects the
+        emitted model, the result has ``roundtrip_status=FAILED`` and the
+        reason in ``errors``.
     """
     from cogant.api.session import Session
 
@@ -1328,10 +1329,11 @@ def verify_repo_roundtrip(
         gnn_path.write_text(gnn_md, encoding="utf-8")
         logger.info("Wrote forward GNN to %s", gnn_path)
 
-        # Stage 2+3: parse → plan → synthesize.  A model that planning or
-        # synthesis rejects is a FAILED round-trip, not a crash.
-        model = parse_gnn(gnn_path)
+        # Stage 2+3: parse → plan → synthesize.  A model that the reverse
+        # parser, planning, or synthesis rejects is a FAILED round-trip, not a
+        # crash.
         try:
+            model = parse_gnn(gnn_path)
             plan = plan_package(model, expected_roles=original_roles)
             if supports_stable_minimal_profile(plan, model):
                 package_path = synthesize_stable_minimal_package(plan, model, reverse_dir)

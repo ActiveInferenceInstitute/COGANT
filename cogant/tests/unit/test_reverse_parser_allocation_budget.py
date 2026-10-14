@@ -12,11 +12,16 @@ HTTP 422) instead of exhausting memory.
 from __future__ import annotations
 
 import time
+from pathlib import Path
 
 import pytest
 
 from cogant.reverse import parser as parser_module
+from cogant.reverse.idempotency import ROUNDTRIP_STATUS_FAILED, verify_repo_roundtrip
 from cogant.reverse.parser import ReverseModelError, parse_gnn
+
+EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
+CALCULATOR = EXAMPLES / "control_positive" / "calculator"
 
 SMALL_BUDGET = 10_000
 
@@ -112,3 +117,17 @@ def test_reverse_endpoint_helper_maps_budget_rejection_to_value_error() -> None:
 
     with pytest.raises(ValueError, match="MAX_REVERSE_MATRIX_ELEMENTS"):
         server_app._synthesize_zip_from_gnn_text(text)
+
+
+def test_repo_roundtrip_reports_budget_rejection_as_failed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # With a 5-cell budget the reverse parser refuses the calculator's own
+    # forward bundle (its fenced B block alone is 1 x 1 x 6 cells).
+    monkeypatch.setattr(parser_module, "MAX_REVERSE_MATRIX_ELEMENTS", 5)
+
+    result = verify_repo_roundtrip(CALCULATOR, output_dir=tmp_path)
+
+    assert result.roundtrip_status == ROUNDTRIP_STATUS_FAILED
+    assert any("MAX_REVERSE_MATRIX_ELEMENTS" in error for error in result.errors)
+    assert result.original_roles
