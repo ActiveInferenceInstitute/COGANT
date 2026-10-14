@@ -39,6 +39,33 @@ class ReverseModelError(ValueError):
     code = "INVALID_REVERSE_MODEL"
 
 
+MAX_REVERSE_MATRIX_ELEMENTS = 2_000_000
+"""Largest number of cells a single A/B/C/D tensor may allocate while parsing.
+
+Every dimension the parser allocates from — ``identity(r,c,d)`` shorthands,
+fenced ``B[[rows=..][cols=..][depth=..]]`` headers, and the Cartesian product
+of declared factor cardinalities — is an integer taken from the GNN text,
+which the ``/reverse`` endpoint accepts from untrusted clients.  A ~100-byte
+document could otherwise request billions of cells.  The budget is checked
+before the nested lists are built; exceeding it raises
+:class:`ReverseModelError`.  Callers that knowingly reverse larger models may
+raise this module attribute.
+"""
+
+
+def _require_element_budget(label: str, *dims: int) -> None:
+    """Raise :class:`ReverseModelError` when ``prod(dims)`` exceeds the budget."""
+    total = 1
+    for dim in dims:
+        total *= max(int(dim), 0)
+    limit = MAX_REVERSE_MATRIX_ELEMENTS
+    if total > limit:
+        raise ReverseModelError(
+            f"{label} would allocate {total} elements, which exceeds "
+            f"MAX_REVERSE_MATRIX_ELEMENTS={limit}"
+        )
+
+
 # ---------------------------------------------------------------------------
 # Data model
 # ---------------------------------------------------------------------------
@@ -364,26 +391,24 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
     per_factor_D: dict[str, list[float]] = {}
     per_factor_C: dict[str, list[float]] = {}
     per_factor_A: dict[str, list[list[float]]] = {}
-    per_factor_B: dict[str, list[list[list[float]]]] = {}
 
     for line in body.splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
 
-        # identity(card,card,depth) shorthand — used for B_fN.
+        # identity(card,card,depth) shorthand — used for B_fN.  The B
+        # projection below always emits identity transitions, so the
+        # shorthand is only checked against the allocation budget here; it
+        # is never materialized eagerly.
         id_match = _IPARAM_IDENTITY_RE.match(line)
         if id_match:
-            name = id_match.group(1)
-            rows = int(id_match.group(2))
-            cols = int(id_match.group(3))
-            depth = int(id_match.group(4))
-            tensor = [
-                [[1.0 if (r == c) else 0.0 for _ in range(depth)] for c in range(cols)]
-                for r in range(rows)
-            ]
-            if name.startswith("B_"):
-                per_factor_B[name] = tensor
+            _require_element_budget(
+                f"{id_match.group(1)}=identity(...)",
+                int(id_match.group(2)),
+                int(id_match.group(3)),
+                int(id_match.group(4)),
+            )
             continue
 
         # ``D_f0={ ( ... ) }`` / ``A_m0={ ( (row0), (row1), ... ) }`` / ``C_m0={ ( ... ) }``
@@ -437,6 +462,9 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
     project_hidden = bool(model.observations or model.actions)
 
     if model.hidden_states and not model.D:
+        for slot in model.hidden_states:
+            _require_element_budget(f"prior for {slot}", model.cardinalities.get(slot, 0))
+        _require_element_budget("projected D prior", hidden_dimension)
         factor_vectors = [
             per_factor_D.get(f"D_f{i}")
             or (
@@ -478,6 +506,9 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
             )
 
     if model.observations and not model.C:
+        for slot in model.observations:
+            _require_element_budget(f"preferences for {slot}", model.cardinalities.get(slot, 0))
+        _require_element_budget("projected C preferences", observation_dimension)
         factor_vectors = [
             per_factor_C.get(f"C_m{i}") or [0.0] * max(model.cardinalities.get(slot, 1), 1)
             for i, slot in enumerate(model.observations)
@@ -500,6 +531,7 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
     if model.observations and model.hidden_states and not model.A:
         n_obs = observation_dimension
         n_states = hidden_dimension
+        _require_element_budget("projected A likelihood", n_obs, n_states)
         raw_rows: list[list[float]] = []
         for i in range(len(model.observations)):
             rows = per_factor_A.get(f"A_m{i}", [])
@@ -534,6 +566,7 @@ def _parse_initial_parameterization(body: str, model: ReverseGNNModel) -> None:
     if model.hidden_states and model.actions and not model.B:
         n_states = hidden_dimension
         n_actions = action_dimension
+        _require_element_budget("projected B transitions", n_states, n_states, n_actions)
         model.B = [
             [[1.0 if row == col else 0.0 for _ in range(n_actions)] for col in range(n_states)]
             for row in range(n_states)
@@ -655,6 +688,13 @@ def _normalize_reverse_dimensions(model: ReverseGNNModel) -> None:
     if len(model.D) == 1 and len(model.hidden_states) == 1:
         declared = model.cardinalities.get(model.hidden_states[0], 0)
         if declared > 1 and abs(model.D[0] - 1.0) < 1e-12:
+            _require_element_budget(f"expanded prior for {model.hidden_states[0]}", declared)
+            if model.A and len(model.A[0]) == 1:
+                _require_element_budget("expanded A likelihood", len(model.A), declared)
+            if model.B and len(model.B) == 1 and model.B[0] and len(model.B[0]) == 1:
+                _require_element_budget(
+                    "expanded B transitions", declared, declared, len(model.B[0][0])
+                )
             model.D = [1.0 / declared] * declared
             # Realign the aggregate matrices to the expanded state dimension.
             # The fenced gnn-matrices block carries one row/column per
@@ -719,6 +759,11 @@ def _parse_matrices_fenced_block(text: str, model: ReverseGNNModel) -> None:
                 model.A = A
         elif tag == "B":
             # Block format: ``# action=k`` header followed by rows rows.
+            # The header dimensions come straight from the text, so check
+            # them before preallocating the tensor.
+            _require_element_budget(
+                f"B[[rows={rows}][cols={cols}][depth={depth}]] header", rows, cols, depth
+            )
             B: list[list[list[float]]] = [[[0.0] * depth for _ in range(cols)] for _ in range(rows)]
             current_action = -1
             row_idx = 0
@@ -898,4 +943,4 @@ def _sanitize_identifier(name: str) -> str:
     return cleaned.lower()
 
 
-__all__ = ["ReverseGNNModel", "parse_gnn"]
+__all__ = ["MAX_REVERSE_MATRIX_ELEMENTS", "ReverseGNNModel", "ReverseModelError", "parse_gnn"]

@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 
-__all__ = ["ReverseGNNModel", "ReverseModelError", "parse_gnn"]
+__all__ = ["MAX_REVERSE_MATRIX_ELEMENTS", "ReverseGNNModel", "ReverseModelError", "parse_gnn"]
+
+MAX_REVERSE_MATRIX_ELEMENTS: int
 
 class ReverseModelError(ValueError):
     code: str
