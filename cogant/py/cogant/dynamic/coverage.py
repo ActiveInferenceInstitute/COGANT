@@ -207,10 +207,13 @@ class CoverageIngester:
             conn = sqlite3.connect(coverage_file)
             cursor = conn.cursor()
 
-            # coverage.py SQLite schema: tables 'file' and 'line_bits'
+            # coverage.py SQLite schema: tables 'file', 'line_bits' and 'arc'
             # 'file' has columns: id, path
-            # 'line_bits' has columns: file_id, numbits
+            # 'line_bits' has columns: file_id, context_id, numbits
             # numbits is a binary blob encoding which lines were executed.
+            # 'arc' has columns: file_id, context_id, fromno, tono and is the
+            # only populated table when coverage ran in branch mode
+            # (``--branch`` / ``--cov-branch``); both tables always exist.
 
             # Check which tables exist to handle schema variations.
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
@@ -233,26 +236,51 @@ class CoverageIngester:
                 }
                 return self.coverage_data
 
-            if "line_bits" in tables:
+            if "line_bits" in tables or "arc" in tables:
                 # coverage.py >= 5.x schema with line_bits blob
-                cursor.execute(
-                    "SELECT f.path, lb.numbits FROM file f JOIN line_bits lb ON f.id = lb.file_id"
-                )
-                for filepath, numbits_blob in cursor.fetchall():
-                    line_numbers = _decode_numbits(numbits_blob)
-                    file_covered = len(line_numbers)
-                    covered_lines_total += file_covered
-                    # We don't know total lines from coverage alone;
-                    # count covered as a lower bound.
-                    total_lines += file_covered
-                    files.append(
-                        {
-                            "filename": filepath,
-                            "covered_lines": sorted(line_numbers),
-                            "uncovered_lines": [],
-                            "line_count": file_covered,
-                        }
+                if "line_bits" in tables:
+                    cursor.execute(
+                        "SELECT f.path, lb.numbits FROM file f JOIN line_bits lb ON f.id = lb.file_id"
                     )
+                    for filepath, numbits_blob in cursor.fetchall():
+                        line_numbers = _decode_numbits(numbits_blob)
+                        file_covered = len(line_numbers)
+                        covered_lines_total += file_covered
+                        # We don't know total lines from coverage alone;
+                        # count covered as a lower bound.
+                        total_lines += file_covered
+                        files.append(
+                            {
+                                "filename": filepath,
+                                "covered_lines": sorted(line_numbers),
+                                "uncovered_lines": [],
+                                "line_count": file_covered,
+                            }
+                        )
+                if "arc" in tables:
+                    # Branch-mode databases store executed arcs instead of
+                    # line bitmaps. Every positive arc endpoint is an executed
+                    # line; negative endpoints mark code-object entry/exit.
+                    cursor.execute(
+                        "SELECT f.path, a.fromno, a.tono FROM file f "
+                        "JOIN arc a ON f.id = a.file_id ORDER BY f.id"
+                    )
+                    arc_lines: dict[str, set[int]] = {}
+                    for filepath, fromno, tono in cursor.fetchall():
+                        executed = arc_lines.setdefault(filepath, set())
+                        executed.update(n for n in (fromno, tono) if n > 0)
+                    for filepath, executed in arc_lines.items():
+                        file_covered = len(executed)
+                        covered_lines_total += file_covered
+                        total_lines += file_covered
+                        files.append(
+                            {
+                                "filename": filepath,
+                                "covered_lines": sorted(executed),
+                                "uncovered_lines": [],
+                                "line_count": file_covered,
+                            }
+                        )
             elif "line" in tables:
                 # Older coverage.py schema with explicit line table
                 cursor.execute("SELECT id, path FROM file")
