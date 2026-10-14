@@ -8,6 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 AUDIT = ROOT / "tools" / "audit_synthetic_surfaces.py"
 
@@ -260,7 +262,24 @@ def test_current_tree_has_no_unclassified_synthetic_surface_terms() -> None:
     assert "0 finding(s)" in result.stdout
 
 
+def _missing_strict_artifacts() -> list[str]:
+    """Generated artifacts the strict lane validates, relative to ``ROOT``."""
+    mod = _load_module()
+    sidecars, registry_findings = mod._registered_forward_matrix_sidecars(ROOT)
+    assert registry_findings == [], registry_findings
+    required = [ROOT / "output" / "manuscript", *sidecars]
+    return [path.relative_to(ROOT).as_posix() for path in required if not path.exists()]
+
+
 def test_current_tree_strict_audit_passes() -> None:
+    """The strict lane also validates generated artifacts, so it needs a rendered tree."""
+    missing = _missing_strict_artifacts()
+    if missing:
+        pytest.skip(
+            "strict synthetic-surface audit needs generated artifacts that are absent on "
+            f"this checkout ({', '.join(missing)}); build them with run_all.py and "
+            "scripts/z_generate_manuscript_variables.py"
+        )
     result = subprocess.run(
         [sys.executable, str(AUDIT), "--strict"],
         cwd=ROOT,
