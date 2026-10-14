@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import warnings
 from collections.abc import Mapping
@@ -101,6 +102,13 @@ _LEGACY_FLAT_FIELDS: dict[str, tuple[str, str]] = {
 }
 
 _LEGACY_ENV_FIELDS = {f"COGANT_{name.upper()}": path for name, path in _LEGACY_FLAT_FIELDS.items()}
+
+# Section names that ``COGANT_<SECTION>__<FIELD>`` environment keys may target.
+_CONFIG_SECTIONS = frozenset(
+    name for name in ProjectConfig.model_fields if name != "schema_version"
+)
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigLoadError(ValueError):
@@ -210,12 +218,27 @@ class ConfigLoader:
 
     @staticmethod
     def _environment(values: Mapping[str, str]) -> dict[str, Any]:
+        """Collect the environment configuration layer from ``COGANT_*`` keys.
+
+        Two spellings are configuration: ``COGANT_<SECTION>__<FIELD>`` (any
+        name containing ``__``) and the deprecated flat names listed in
+        ``_LEGACY_ENV_FIELDS``. Every other single-segment ``COGANT_*``
+        variable, such as ``COGANT_USE_RUST`` or
+        ``COGANT_DISABLE_UPSTREAM_GNN``, is a runtime toggle owned by the
+        subsystem that reads it, so it is ignored here instead of rejected.
+        Keys that use the double-underscore syntax remain strict: a malformed
+        key or unknown section raises :class:`ConfigLoadError`, and unknown
+        fields are rejected by model validation.
+        """
         result: dict[str, Any] = {}
         for key, raw in values.items():
             if not key.startswith("COGANT_"):
                 continue
-            parts = key.removeprefix("COGANT_").split("__")
-            if len(parts) == 1 and key in _LEGACY_ENV_FIELDS:
+            name = key.removeprefix("COGANT_")
+            if "__" not in name:
+                if key not in _LEGACY_ENV_FIELDS:
+                    logger.debug("Ignoring non-configuration environment toggle %s", key)
+                    continue
                 section, field = _LEGACY_ENV_FIELDS[key]
                 warnings.warn(
                     f"Legacy environment variable {key} is deprecated; use "
@@ -223,12 +246,18 @@ class ConfigLoader:
                     ConfigMigrationWarning,
                     stacklevel=3,
                 )
-            elif len(parts) != 2 or not all(parts):
-                raise ConfigLoadError(
-                    f"Environment key {key!r} must use COGANT_SECTION__FIELD syntax"
-                )
             else:
+                parts = name.split("__")
+                if len(parts) != 2 or not all(parts):
+                    raise ConfigLoadError(
+                        f"Environment key {key!r} must use COGANT_SECTION__FIELD syntax"
+                    )
                 section, field = (part.lower() for part in parts)
+                if section not in _CONFIG_SECTIONS:
+                    raise ConfigLoadError(
+                        f"Environment key {key!r} names unknown configuration section "
+                        f"{section!r}; expected one of: {', '.join(sorted(_CONFIG_SECTIONS))}"
+                    )
             try:
                 value: Any = json.loads(raw)
             except json.JSONDecodeError:

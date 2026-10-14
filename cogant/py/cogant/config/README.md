@@ -5,6 +5,12 @@ preset returns that validated Pydantic model. The precedence chain is:
 
 `defaults < preset < file < environment < CLI`
 
+The environment layer reads `COGANT_<SECTION>__<FIELD>` variables (for
+example `COGANT_PIPELINE__OUTPUT_DIR`) plus the deprecated flat names such as
+`COGANT_OUTPUT_DIR`. Other single-segment `COGANT_*` variables, such as
+`COGANT_USE_RUST` or `COGANT_DISABLE_UPSTREAM_GNN`, are runtime toggles read by
+their own subsystems and are ignored by the loader.
+
 ## Classes and Functions
 
 CogantBaseConfig: Base class for all COGANT configs using Pydantic ConfigDict with use_enum_values=False and validate_assignment=True.

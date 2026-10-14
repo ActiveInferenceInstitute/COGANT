@@ -52,7 +52,14 @@ def test_invalid_paths_and_limits_are_rejected() -> None:
 
 def test_environment_keys_must_use_section_field_syntax() -> None:
     with pytest.raises(ConfigLoadError):
-        ConfigLoader.load_project_config(environment={"COGANT_BAD": "1"})
+        ConfigLoader.load_project_config(environment={"COGANT_BAD__KEY__EXTRA": "1"})
+    with pytest.raises(ConfigLoadError, match="unknown configuration section"):
+        ConfigLoader.load_project_config(environment={"COGANT_BAD__KEY": "1"})
+
+
+def test_single_segment_environment_toggles_are_not_configuration() -> None:
+    config = ConfigLoader.load_project_config(environment={"COGANT_BAD": "1"})
+    assert isinstance(config, ProjectConfig)
 
 
 def test_raw_mapping_merge_remains_a_boundary_utility() -> None:
