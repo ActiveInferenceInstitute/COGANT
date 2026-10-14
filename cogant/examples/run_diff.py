@@ -18,8 +18,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-# Add py/ to path for cogant imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "py"))
+# Add py/ to path for cogant imports, and the package root so that
+# ``examples.orchestrate_roundtrip`` resolves when this file is run as a
+# script (which only puts ``examples/`` itself on sys.path).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "py"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from cogant.cli.diff import load_bundle
 from cogant.scoring.drift import DriftAnalyzer
@@ -120,15 +123,19 @@ def _insert_method_after_first_method(lines: list[str]) -> list[str] | None:
     return None
 
 
-def main():
-    """Run the full diff example."""
+def main() -> int:
+    """Run the full diff example.
+
+    Returns:
+        Process exit code: 0 when the drift report was written, 1 otherwise.
+    """
     # Get flask_mini path
     examples_dir = Path(__file__).parent
     flask_mini = examples_dir / "control_positive" / "flask_mini"
 
     if not flask_mini.exists():
         logger.error(f"flask_mini not found at {flask_mini}")
-        return
+        return 1
 
     logger.info(f"Starting diff example with {flask_mini}")
 
@@ -151,7 +158,7 @@ def main():
         logger.info("Running orchestrator on baseline...")
         if not run_orchestrator(baseline_repo, baseline_output):
             logger.error("Failed to run orchestrator on baseline")
-            return
+            return 1
 
         logger.info(f"Baseline output saved to {baseline_output}")
 
@@ -164,7 +171,7 @@ def main():
         logger.info("Running orchestrator on modified version...")
         if not run_orchestrator(modified_repo, modified_output):
             logger.error("Failed to run orchestrator on modified")
-            return
+            return 1
 
         logger.info(f"Modified output saved to {modified_output}")
 
@@ -241,7 +248,8 @@ def main():
         logger.info(drift_report)
         logger.info("=" * 60)
         logger.info(f"Reports saved to {output_base}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

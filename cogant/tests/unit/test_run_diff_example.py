@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import importlib.util
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -53,6 +54,41 @@ def test_modify_codebase_adds_a_method_and_keeps_the_source_valid(tmp_path: Path
     # Every pre-existing method keeps its body.
     for cls, methods in old_methods.items():
         assert set(methods) <= set(new_methods[cls])
+
+
+def test_run_diff_script_can_import_the_roundtrip_orchestrator(tmp_path: Path) -> None:
+    # ``python examples/run_diff.py`` puts only ``examples/`` on sys.path, not
+    # the package root that ``examples.orchestrate_roundtrip`` resolves from.
+    # ``-I`` keeps the cwd off sys.path, mirroring a script launched from
+    # anywhere.
+    probe = (
+        "import runpy, sys\n"
+        f"sys.path.insert(0, {str(_EXAMPLES)!r})\n"
+        f"runpy.run_path({str(_RUN_DIFF)!r}, run_name='run_diff_probe')\n"
+        "from examples.orchestrate_roundtrip import RoundtripOrchestrator\n"
+        "print(RoundtripOrchestrator.__name__)\n"
+    )
+    proc = subprocess.run(
+        [sys.executable, "-I", "-c", probe],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=300,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    assert proc.stdout.strip().endswith("RoundtripOrchestrator")
+
+
+def test_run_diff_main_exits_non_zero_when_the_orchestrator_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_run_diff()
+    monkeypatch.setattr(module, "run_orchestrator", lambda *_args: False)
+
+    # ``SystemExit(None)`` exits 0, so ``None`` counts as success here.
+    assert module.main() not in (0, None)
 
 
 @pytest.mark.parametrize("indent", ["    ", "  "])
