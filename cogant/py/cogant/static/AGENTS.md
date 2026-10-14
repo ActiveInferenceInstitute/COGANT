@@ -95,8 +95,9 @@ The static module is the **bridge between raw source and graph representation**.
 
 **dead_code.py** — `DeadCodeDetector`
 - Identifies unused imports, functions, variables, and unreachable code blocks
-- **Confidence scoring**: 0.95 for imports (high certainty), 0.8 for functions (may be called dynamically), 0.7 for variables
-- Filters private symbols only (starts with `_`) to reduce false positives
+- **Confidence scoring**: 0.95 for imports (high certainty), 0.8 for functions (may be called dynamically), 0.7 for variables, 1.0 for `UNREACHABLE` statements after `return`/`raise`/`break`/`continue` in the same block
+- Filters private symbols only (starts with `_`) to reduce false positives; dunder names are never flagged, and attribute reads (`self._helper()`) count as uses
+- Imports are tracked by the name they bind (`import a.b` binds `a`); `from __future__` and `*` imports are not tracked
 - Scope context: module, function, class
 - Outputs: `DeadCodeEntry` (per-finding) and `DeadCodeReport` (per-file)
 - Method: `analyze(source, file_path) -> DeadCodeReport`
