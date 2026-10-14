@@ -132,6 +132,8 @@ def validate(
                 upstream_gnn_only_steps,
                 label="--upstream-gnn-only-steps",
             )
+            # An explicit empty value means "skip nothing" (run all 25
+            # steps), matching translate/analyze and `cogant upstream-gnn`.
             skip = _parse_step_csv(
                 upstream_gnn_skip_steps,
                 label="--upstream-gnn-skip-steps",
