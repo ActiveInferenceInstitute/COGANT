@@ -248,9 +248,12 @@ def run_pipeline_with_progress(
     The helper is defensive: if Rich fails to initialise a live
     context (e.g. when stdout is captured by pytest), we fall back to
     running the pipeline without the spinner so tests keep working.
+    An exception raised by the pipeline itself propagates after the
+    single run; the pipeline is never executed twice.
     """
 
     description = f"[cyan]{description_prefix}[/cyan]: Parsing source files…"
+    run_started = False
     try:
         with Progress(
             SpinnerColumn(),
@@ -267,6 +270,7 @@ def run_pipeline_with_progress(
                 task,
                 description=f"[cyan]{description_prefix}[/cyan]: Building program graph…",
             )
+            run_started = True
             bundle = runner.run(target, config)
             progress.update(
                 task,
@@ -278,7 +282,10 @@ def run_pipeline_with_progress(
             )
             return bundle
     except Exception:  # noqa: BLE001 — re-raised below, fallback for display only
-        # If the progress context itself blew up (not the pipeline),
-        # retry without a spinner. A real pipeline error will re-raise
-        # from the inner ``runner.run`` and be caught by the caller.
+        # Once the pipeline has started, any exception (from the run or
+        # from tearing down the display) belongs to the caller: re-running
+        # would execute every stage and its side effects a second time.
+        if run_started:
+            raise
+        # The progress display itself failed to start; run without it.
         return runner.run(target, config)
