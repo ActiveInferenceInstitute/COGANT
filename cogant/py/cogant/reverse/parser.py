@@ -232,6 +232,7 @@ _NESTED_TOKEN_RE = re.compile(
 )
 _OPEN_BRACKETS = frozenset("([{")
 _CLOSE_BRACKETS = frozenset(")]}")
+_MAX_LITERAL_NESTING = 16
 
 # Column sums within this distance of 1.0 are treated as rounding in the
 # source literal (``0.33333`` x 3) and renormalized; larger deviations are
@@ -320,12 +321,16 @@ def _parse_nested_numbers(text: str) -> list[Any] | None:
     ``{}``, ``()``, and ``[]`` each open one nesting level, so
     ``{ ((0.9, 0.1), (0.1, 0.9)) }`` and ``{ [[0.9, 0.1], [0.1, 0.9]] }``
     yield the same structure (wrapped in redundant singleton levels that
-    :func:`_squeeze` removes).  Returns ``None`` for unbalanced brackets or
-    non-numeric tokens, so symbolic values are never mistaken for numbers.
+    :func:`_squeeze` removes).  Returns ``None`` for unbalanced brackets,
+    non-numeric tokens (so symbolic values are never mistaken for numbers),
+    or nesting deeper than :data:`_MAX_LITERAL_NESTING` (A/B/C/D need at most
+    three levels plus wrappers; deeper input would only exhaust recursion).
     """
     stack: list[list[Any]] = [[]]
     for token in _NESTED_TOKEN_RE.findall(text):
         if token in _OPEN_BRACKETS:
+            if len(stack) > _MAX_LITERAL_NESTING:
+                return None
             child: list[Any] = []
             stack[-1].append(child)
             stack.append(child)

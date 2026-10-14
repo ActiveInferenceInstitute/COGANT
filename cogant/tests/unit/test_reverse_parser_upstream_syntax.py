@@ -230,6 +230,19 @@ def test_multiline_parameter_blocks_and_bracket_rows_parse() -> None:
     assert not model.degraded
 
 
+def test_pathologically_nested_parameter_literal_is_ignored_not_recursed() -> None:
+    depth = 5_000
+    model = parse_gnn(
+        "## ModelName\nm\n\n## StateSpaceBlock\ns[2,1,type=int]\n\n"
+        f"## InitialParameterization\nD={'{' * depth}0.5, 0.5{'}' * depth}\n\n"
+        "## ActInfOntologyAnnotation\ns=HiddenState\n"
+    )
+
+    # The literal is rejected as unparseable; the declared factor still
+    # yields its (uniform) prior instead of a RecursionError.
+    assert model.D == pytest.approx([0.5, 0.5])
+
+
 def test_zoo_full_pomdp_recovers_named_parameters() -> None:
     model = parse_gnn(ZOO / "12_full_pomdp" / "model.gnn.md")
 
