@@ -305,7 +305,7 @@ Loads and executes GNN models via Active Inference update loops.
 
 **Key Methods:**
 - `load_package(package_dir) -> dict[str, Any]` — load manifest and models
-- `run(steps=10) -> dict[str, Any]` — execute Active Inference for N steps; returns trace history
+- `run(steps=10) -> dict[str, Any]` — execute Active Inference for N steps; returns trace history. A step that raises stops the loop and the result reports `success=False` with `error` and `failed_step` (both `None` after a clean run; also kept on `runner.last_error` / `runner.last_failed_step`)
 - `run_with_profiling(num_steps=10, num_trials=1) -> (traces, stats)` — measure timing and performance
 - `generate_execution_report(trace) -> str` — render execution trace as markdown
 
@@ -497,6 +497,7 @@ print(f"Timing stats: {stats}")
 
 **GNNModelRunner:**
 - Package load failures → exception with diagnostics
+- Step exceptions → loop stops; `run()` returns `success=False` with `error` / `failed_step`, and `generate_execution_report()` reports where the run stopped
 - Belief update divergence → warning logged, traces recorded with NaN handling
 - Free Energy calculation errors → fallback to deterministic policy selection
 

@@ -117,6 +117,9 @@ class GNNModelRunner:
         self.beliefs_history: list[dict[str, float]] = []
         self.free_energy_trajectory: list[float] = []
         self.action_counts: dict[str, int] = defaultdict(int)
+        # Set by ``run`` when a step raises; ``None`` after a clean run.
+        self.last_error: str | None = None
+        self.last_failed_step: int | None = None
 
     def load_package(self, package_dir: str) -> dict[str, Any]:
         """
@@ -194,6 +197,9 @@ class GNNModelRunner:
 
         Returns:
             Execution result dictionary with traces and statistics.
+            ``success`` is ``False`` when a step raised; the loop then
+            stops and ``error`` / ``failed_step`` describe the failure
+            (both ``None`` after a clean run).
         """
         if not self.manifest:
             raise RuntimeError("Package not loaded. Call load_package first.")
@@ -203,6 +209,8 @@ class GNNModelRunner:
         self.beliefs_history = []
         self.free_energy_trajectory = []
         self.action_counts = defaultdict(int)
+        self.last_error = None
+        self.last_failed_step = None
 
         # Initialize beliefs and state
         beliefs = self._initialize_beliefs()
@@ -272,11 +280,15 @@ class GNNModelRunner:
 
             except Exception as e:
                 logger.error(f"Error in step {step_num}: {e}", exc_info=True)
+                self.last_error = f"{type(e).__name__}: {e}"
+                self.last_failed_step = step_num
                 break
 
         # Compile results
         result = {
-            "success": True,
+            "success": self.last_error is None,
+            "error": self.last_error,
+            "failed_step": self.last_failed_step,
             "steps_completed": len(self.traces),
             "total_reward": total_reward,
             "avg_reward": total_reward / len(self.traces) if self.traces else 0.0,
@@ -314,9 +326,22 @@ class GNNModelRunner:
             Markdown report string.
         """
         if trace is None and not self.traces:
+            if self.last_error is not None:
+                return (
+                    "# GNN Execution Report\n\nNo traces to report: the last run "
+                    f"stopped at step {self.last_failed_step} ({self.last_error}).\n"
+                )
             return "# GNN Execution Report\n\nNo traces to report.\n"
 
         trace_data: dict[str, Any] = trace if trace is not None else {}
+        if trace is not None:
+            run_error = trace_data.get("error")
+            failed_step = trace_data.get("failed_step")
+            if run_error is None and trace_data.get("success") is False:
+                run_error = "unknown error"
+        else:
+            run_error = self.last_error
+            failed_step = self.last_failed_step
         traces = trace_data.get("traces", []) if trace_data else [t.to_dict() for t in self.traces]
         stats = trace_data.get("statistics", {}) if trace_data else self._compute_statistics()
         fe_trajectory = (
@@ -335,6 +360,8 @@ class GNNModelRunner:
         report += f"- **Timestamp**: {datetime.now(UTC).isoformat()}\n"
         report += f"- **Package**: {self.package_dir}\n"
         report += f"- **Steps Completed**: {len(traces)}\n"
+        if run_error is not None:
+            report += f"- **Status**: stopped at step {failed_step} ({run_error})\n"
         report += f"- **Total Reward**: {trace_data.get('total_reward', 0.0):.3f}\n"
         report += f"- **Average Reward**: {trace_data.get('avg_reward', 0.0):.3f}\n"
         report += "- **Execution Mode**: Active Inference with Bayesian Belief Updates\n\n"
@@ -432,8 +459,14 @@ class GNNModelRunner:
 
         # Conclusion
         report += "## Conclusion\n\n"
-        report += "GNN model execution with Active Inference completed successfully.\n"
-        report += "The model demonstrates Bayesian belief updating and policy evaluation via Expected Free Energy.\n"
+        if run_error is not None:
+            report += (
+                f"GNN model execution stopped at step {failed_step} after "
+                f"{len(traces)} completed steps: {run_error}.\n"
+            )
+        else:
+            report += "GNN model execution with Active Inference completed successfully.\n"
+            report += "The model demonstrates Bayesian belief updating and policy evaluation via Expected Free Energy.\n"
 
         return report
 
@@ -622,9 +655,11 @@ class GNNModelRunner:
 
         selected_action, selected_efe = policy_scores[0]
 
-        # Generate rationale
-        top_belief_state = max(beliefs.items(), key=lambda x: x[1])[0]
-        top_belief_prob = max(beliefs.values(), default=0.0)
+        # Generate rationale. A model without hidden-state variables has an
+        # empty belief distribution; action selection must still work.
+        top_belief_state, top_belief_prob = max(
+            beliefs.items(), key=lambda x: x[1], default=("-", 0.0)
+        )
         rationale = (
             f"Selected action with lowest EFE ({selected_efe:.4f}). "
             f"Top belief state: {top_belief_state} ({top_belief_prob:.3f})"
