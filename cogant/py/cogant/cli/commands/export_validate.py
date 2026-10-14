@@ -1,7 +1,6 @@
 """CLI command registrations."""
 
 from pathlib import Path
-from typing import Any
 
 import typer
 from rich.panel import Panel
@@ -13,6 +12,9 @@ from cogant.cli._app import (
 )
 from cogant.cli._app import (
     parse_step_csv as _parse_step_csv,
+)
+from cogant.cli._app import (
+    read_bundle_json as _read_bundle_json,
 )
 from cogant.cli._app import (
     render_upstream_pipeline_table as _render_upstream_pipeline_table,
@@ -84,8 +86,6 @@ def validate(
     * a directory that *is* a ``gnn_package`` → same as above
     """
     console.print(f"[bold blue]Validating[/bold blue] {bundle_path}")
-
-    import json
 
     p = Path(bundle_path)
 
@@ -183,18 +183,7 @@ def validate(
         console.print(f"[red]✗ Not a file or directory:[/red] {bundle_path}")
         raise typer.Exit(code=2)
 
-    try:
-        with open(json_path, encoding="utf-8") as f:
-            data = json.load(f)
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        console.print(f"[red]✗ Not a bundle JSON object:[/red] {json_path} ({exc})")
-        raise typer.Exit(code=2) from exc
-    if not isinstance(data, dict):
-        console.print(
-            f"[red]✗ Not a bundle JSON object:[/red] {json_path} "
-            f"(top level is {type(data).__name__})"
-        )
-        raise typer.Exit(code=2)
+    data = _read_bundle_json(json_path)
 
     checks = {
         "has_target": "target" in data,
@@ -280,25 +269,8 @@ def diff(
         raise typer.Exit(code=2)
 
     # JSON bundle diff via DriftAnalyzer when payloads look like bundles.
-    import json
-
-    def _load_bundle_json(path: Path) -> dict[str, Any]:
-        try:
-            with open(path, encoding="utf-8") as f:
-                loaded = json.load(f)
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-            console.print(f"[red]Error: Not a bundle JSON object:[/red] {path} ({exc})")
-            raise typer.Exit(code=2) from exc
-        if not isinstance(loaded, dict):
-            console.print(
-                f"[red]Error: Not a bundle JSON object:[/red] {path} "
-                f"(top level is {type(loaded).__name__})"
-            )
-            raise typer.Exit(code=2)
-        return loaded
-
-    data1 = _load_bundle_json(p_a)
-    data2 = _load_bundle_json(p_b)
+    data1 = _read_bundle_json(p_a)
+    data2 = _read_bundle_json(p_b)
 
     bundle_keys = {"graph", "state_space", "program_graph", "mappings"}
     if (

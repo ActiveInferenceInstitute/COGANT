@@ -1,7 +1,9 @@
 """Shared Typer app, console, and CLI helper utilities."""
 
+import json
 import logging
 from pathlib import Path
+from typing import Any
 
 import typer
 from pydantic import ValidationError
@@ -143,6 +145,31 @@ def cli_path(value: str) -> str:
     if ".." not in Path(value).parts:
         return value
     return str(Path(value).expanduser().resolve())
+
+
+def read_bundle_json(path: Path) -> dict[str, Any]:
+    """Load a bundle JSON object for a CLI command, or exit 2 with a message.
+
+    A missing path, a directory, an unreadable or non-JSON file, and JSON
+    whose top level is not an object are all reported on the console and
+    end the command with exit code 2 instead of a traceback.
+    """
+
+    if not path.exists():
+        console.print(f"[red]✗ Not found:[/red] {path}")
+        raise typer.Exit(code=2)
+    try:
+        with open(path, encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        console.print(f"[red]✗ Not a bundle JSON object:[/red] {path} ({exc})")
+        raise typer.Exit(code=2) from exc
+    if not isinstance(data, dict):
+        console.print(
+            f"[red]✗ Not a bundle JSON object:[/red] {path} (top level is {type(data).__name__})"
+        )
+        raise typer.Exit(code=2)
+    return data
 
 
 def report_invalid_options(exc: ValidationError) -> None:

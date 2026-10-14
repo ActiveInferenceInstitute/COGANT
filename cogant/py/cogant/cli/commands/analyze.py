@@ -27,6 +27,9 @@ from cogant.cli._app import (
     pipeline_run_failed as _pipeline_run_failed,
 )
 from cogant.cli._app import (
+    read_bundle_json as _read_bundle_json,
+)
+from cogant.cli._app import (
     report_invalid_options as _report_invalid_options,
 )
 from cogant.cli._app import (
@@ -440,8 +443,7 @@ def export_gnn(
 
     import json
 
-    with open(bundle_path) as f:
-        data = json.load(f)
+    data = _read_bundle_json(Path(bundle_path))
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -482,10 +484,10 @@ def render(
     """
     console.print(f"[bold blue]Rendering site[/bold blue] for {bundle_path}")
 
-    import json
-
-    with open(bundle_path) as f:
-        data = json.load(f)
+    data = _read_bundle_json(Path(bundle_path))
+    if "target" not in data:
+        console.print(f"[red]✗ Bundle has no 'target' field:[/red] {bundle_path}")
+        raise typer.Exit(code=2)
 
     # Create a Bundle object from data
 
