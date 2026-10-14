@@ -80,6 +80,54 @@ def edge_endpoints(edge: dict[str, Any]) -> tuple[str | None, str | None]:
     return (str(source) if source else None, str(target) if target else None)
 
 
+#: Accepted section names per logical state-space collection, in lookup
+#: order: the pydantic schema uses ``states``; ``model.gnn.json`` and
+#: ``state_space.json`` use ``variables``.
+STATE_SPACE_SECTION_ALIASES: dict[str, tuple[str, ...]] = {
+    "states": ("states", "variables"),
+    "observations": ("observations",),
+    "actions": ("actions",),
+}
+
+#: Primary-key fields per state-space collection, in lookup order.
+STATE_SPACE_ID_KEYS: dict[str, tuple[str, ...]] = {
+    "states": ("var_id", "id"),
+    "observations": ("modality_id", "id"),
+    "actions": ("action_id", "id"),
+}
+
+
+def state_space_index(state_space: Any, section: str) -> dict[str, dict[str, Any]]:
+    """Index one state-space collection by its primary key.
+
+    Accepts the pydantic schema shape (``states`` / ``observations`` /
+    ``actions`` lists keyed by ``var_id`` / ``modality_id`` /
+    ``action_id``) and the ``model.gnn.json`` shape (``variables`` /
+    ``observations`` / ``actions`` dicts keyed by id).
+
+    Args:
+        state_space: The state-space dict (anything else yields ``{}``).
+        section: ``"states"``, ``"observations"``, or ``"actions"``.
+
+    Returns:
+        ``{primary_key: payload}`` for the first section alias present.
+        Payloads without a recognizable primary key are skipped.
+    """
+    if not isinstance(state_space, dict):
+        return {}
+    id_keys = STATE_SPACE_ID_KEYS[section]
+    for alias in STATE_SPACE_SECTION_ALIASES[section]:
+        if alias not in state_space:
+            continue
+        index: dict[str, dict[str, Any]] = {}
+        for record in iter_records(state_space.get(alias), id_key=id_keys[0]):
+            record_id = next((record[k] for k in id_keys if record.get(k)), None)
+            if record_id is not None:
+                index[str(record_id)] = record
+        return index
+    return {}
+
+
 def edge_key(edge: dict[str, Any]) -> tuple[str | None, str | None, str]:
     """Return the identity of an edge payload as ``(source, target, kind)``.
 

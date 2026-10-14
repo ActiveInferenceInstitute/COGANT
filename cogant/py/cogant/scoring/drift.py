@@ -27,7 +27,12 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Any
 
-from cogant.scoring._records import edge_key, iter_records, stable_payload
+from cogant.scoring._records import (
+    edge_key,
+    iter_records,
+    stable_payload,
+    state_space_index,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -304,7 +309,10 @@ class DriftAnalyzer:
 
         Indexes each state space by its natural primary key:
         ``var_id`` for state variables, ``modality_id`` for
-        observations, ``action_id`` for actions. Only counts are
+        observations, ``action_id`` for actions (falling back to
+        ``id``). Both the schema shape (``states`` lists) and the
+        ``model.gnn.json`` shape (``variables`` / ``observations`` /
+        ``actions`` dicts keyed by id) are accepted. Only counts are
         returned (not id lists) because callers typically embed this
         directly in a tabular diff report.
 
@@ -313,14 +321,14 @@ class DriftAnalyzer:
             ``observations_added/removed``, and
             ``actions_added/removed`` keys.
         """
-        states_a = {s.get("var_id"): s for s in self.ss_a.get("states", [])}
-        states_b = {s.get("var_id"): s for s in self.ss_b.get("states", [])}
+        states_a = state_space_index(self.ss_a, "states")
+        states_b = state_space_index(self.ss_b, "states")
 
-        obs_a = {o.get("modality_id"): o for o in self.ss_a.get("observations", [])}
-        obs_b = {o.get("modality_id"): o for o in self.ss_b.get("observations", [])}
+        obs_a = state_space_index(self.ss_a, "observations")
+        obs_b = state_space_index(self.ss_b, "observations")
 
-        actions_a = {a.get("action_id"): a for a in self.ss_a.get("actions", [])}
-        actions_b = {a.get("action_id"): a for a in self.ss_b.get("actions", [])}
+        actions_a = state_space_index(self.ss_a, "actions")
+        actions_b = state_space_index(self.ss_b, "actions")
 
         return {
             "state_vars_added": len(set(states_b.keys()) - set(states_a.keys())),
@@ -388,14 +396,14 @@ class DriftAnalyzer:
             ``1.0`` when every category has been fully replaced.
         """
         # State space churn
-        states_a = len(self.ss_a.get("states", []))
-        states_b = len(self.ss_b.get("states", []))
+        states_a = len(state_space_index(self.ss_a, "states"))
+        states_b = len(state_space_index(self.ss_b, "states"))
 
-        obs_a = len(self.ss_a.get("observations", []))
-        obs_b = len(self.ss_b.get("observations", []))
+        obs_a = len(state_space_index(self.ss_a, "observations"))
+        obs_b = len(state_space_index(self.ss_b, "observations"))
 
-        actions_a = len(self.ss_a.get("actions", []))
-        actions_b = len(self.ss_b.get("actions", []))
+        actions_a = len(state_space_index(self.ss_a, "actions"))
+        actions_b = len(state_space_index(self.ss_b, "actions"))
 
         state_drift = self._compute_count_drift(states_a, states_b)
         obs_drift = self._compute_count_drift(obs_a, obs_b)
