@@ -103,6 +103,19 @@ def run_roundtrip(target: Path) -> dict:
     return {"structurally_isomorphic": "unknown", "role_preservation_score": "unknown"}
 
 
+def roundtrip_structure_verdict(rt_result: dict) -> str:
+    """Summarize what the roundtrip run actually showed about structure.
+
+    Only an explicit ``structurally_isomorphic is True`` counts as preserved;
+    the ``"unknown"`` fallback (unparseable CLI output) and any ``DRIFT`` /
+    ``ROLE_PRESERVED`` / ``FAILED`` status are reported as not established.
+    """
+    status = rt_result.get("roundtrip_status", "unknown")
+    if rt_result.get("structurally_isomorphic") is True:
+        return f"Structure preserved (GNN -> Python -> GNN): roundtrip_status={status}"
+    return f"Structure preservation not established: roundtrip_status={status}"
+
+
 # ---------------------------------------------------------------------------
 # 3. Parse GNN and build runtime
 # ---------------------------------------------------------------------------
@@ -236,10 +249,11 @@ def main() -> None:
     # --- Roundtrip ---
     print("\n[2] Roundtrip isomorphism check")
     rt_result = run_roundtrip(ZOO_01)
+    print(f"    roundtrip_status: {rt_result.get('roundtrip_status', 'unknown')}")
     print(f"    role_preservation_score: {rt_result.get('role_preservation_score', '?')}")
     print(f"    structurally_isomorphic:    {rt_result.get('structurally_isomorphic', '?')}")
     print(f"    original_roles:   {rt_result.get('original_roles', {})}")
-    print("    Galois connection: confirmed (GNN -> Python -> GNN preserves structure)")
+    print(f"    {roundtrip_structure_verdict(rt_result)}")
 
     # --- Build runtime ---
     print("\n[3] Building AgentRuntime from parsed GNN")
