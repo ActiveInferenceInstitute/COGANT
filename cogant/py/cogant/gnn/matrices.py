@@ -88,7 +88,9 @@ _EPSILON = 1e-9  # stability constant (scipy/pymdp convention)
 # as float64 and causes a 380 s / 8.5 GB-peak-RSS run. The cap triggers
 # a principal-submatrix approximation: keep the top-K highest-degree
 # state nodes so that B fits in ≤ _MAX_B_ENTRIES entries. A warning is
-# logged and the ``truncation`` key in ``to_dict()`` records the cut.
+# logged and the ``truncation`` key in ``to_dict()`` records the cut,
+# including the kept states' indices on the full A/D state axis so the
+# smaller B axis can be realigned by consumers.
 #
 # Calibration: 5 M entries ≈ 40 MB at float64; keeps B serialization
 # under ~400 MB JSON even for the largest repos in the eval corpus.
@@ -183,6 +185,10 @@ class GNNMatrices:
         self._b_truncated: bool = False
         self._b_n_states_full: int = 0  # untruncated n_states
         self._b_n_states_kept: int = 0  # n_states after truncation
+        # Indices (into the full A-column / D state axis) of the states
+        # kept on the B axis, ascending. B index ``j`` is full state
+        # ``self._b_kept_state_indices[j]``.
+        self._b_kept_state_indices: list[int] = []
 
     # ------------------------------------------------------------------
     # Dimensions
@@ -266,8 +272,8 @@ class GNNMatrices:
             return []
         return [e for e in self.graph.edges.values() if e.target_id == node_id]
 
-    def _top_k_state_ids(self, state_ids: list[str], k: int) -> list[str]:
-        """Return the *k* state node IDs with the highest combined degree.
+    def _top_k_state_indices(self, state_ids: list[str], k: int) -> list[int]:
+        """Return indices of the *k* states with the highest combined degree.
 
         Used by :meth:`compute_B` when the full ``n_states × n_states ×
         n_actions`` tensor would exceed ``_MAX_B_ENTRIES``.  We keep the
@@ -277,13 +283,16 @@ class GNNMatrices:
 
         Args:
             state_ids: Full ordered list of state node IDs.
-            k: Number of state IDs to keep.
+            k: Number of states to keep.
 
         Returns:
-            A list of at most *k* node IDs, ordered by descending degree.
+            At most *k* indices into ``state_ids``, in ascending order so
+            the kept B axis preserves the A/D state order. Ties in degree
+            are broken by original position, so the selection is
+            deterministic.
         """
         if k >= len(state_ids):
-            return state_ids
+            return list(range(len(state_ids)))
 
         # Count in+out degree for each state node using a single pass
         # over the full edge list (O(|E|), not O(|V|²)).
@@ -297,8 +306,26 @@ class GNNMatrices:
 
         # Sort by descending degree, preserving original order for ties
         # so the truncated matrix is deterministic.
-        ranked = sorted(state_ids, key=lambda nid: -degree.get(nid, 0))
-        return ranked[:k]
+        ranked = sorted(range(len(state_ids)), key=lambda j: -degree.get(state_ids[j], 0))
+        return sorted(ranked[: max(k, 0)])
+
+    def _top_k_state_ids(self, state_ids: list[str], k: int) -> list[str]:
+        """Return the *k* state node IDs with the highest combined degree.
+
+        Thin wrapper over :meth:`_top_k_state_indices`; the IDs are
+        returned in their original (A/D axis) order.
+        """
+        return [state_ids[j] for j in self._top_k_state_indices(state_ids, k)]
+
+    def _state_axis_ids(self) -> list[str]:
+        """Return a stable identifier per hidden state on the A/D axis.
+
+        Compiled state-space variable ids when available, otherwise the
+        HIDDEN_STATE mapping ids.
+        """
+        if self._use_state_space_vars:
+            return [v.id for v in self._state_space_vars]
+        return [m.id for m in self._hidden_states]
 
     # ------------------------------------------------------------------
     # A matrix — likelihood
@@ -413,12 +440,14 @@ class GNNMatrices:
             When ``n_states² × n_actions`` would exceed ``_MAX_B_ENTRIES``
             (default 5 M), the state space is reduced to the top-K
             highest-degree nodes so that the tensor fits in memory and
-            serializes in reasonable time. The truncation is recorded in
-            ``self._b_truncated``, ``self._b_n_states_full``, and
-            ``self._b_n_states_kept``, and surfaced in :meth:`to_dict`
-            under the ``"truncation"`` key. This approximation is a
-            principal submatrix of the full B restricted to the most
-            structurally important state nodes.
+            serializes in reasonable time. The kept states stay in their
+            original A/D order, so B index ``j`` is full state
+            ``self._b_kept_state_indices[j]``. The truncation is recorded
+            in ``self._b_truncated``, ``self._b_n_states_full``,
+            ``self._b_n_states_kept`` and ``self._b_kept_state_indices``,
+            and surfaced in :meth:`to_dict` under the ``"truncation"`` key.
+            This approximation is a principal submatrix of the full B
+            restricted to the most structurally important state nodes.
         """
         n_states = self.n_states
         n_actions = self.n_actions
@@ -436,6 +465,7 @@ class GNNMatrices:
         full_b_entries = n_states * n_states * n_actions
         self._b_n_states_full = n_states
         self._b_truncated = False
+        self._b_kept_state_indices = list(range(n_states))
 
         if full_b_entries > _MAX_B_ENTRIES and n_actions > 0:
             # Solve for max_k: k² × n_actions ≤ _MAX_B_ENTRIES
@@ -463,7 +493,10 @@ class GNNMatrices:
                 full_b_entries,
                 max_k * max_k * n_actions,
             )
-            state_ids = self._top_k_state_ids(state_ids, max_k)
+            kept = self._top_k_state_indices(state_ids, max_k)
+            self._b_kept_state_indices = kept
+            self._b_n_states_kept = len(kept)
+            state_ids = [state_ids[j] for j in kept]
             n_states = len(state_ids)
         else:
             self._b_n_states_kept = n_states
@@ -681,7 +714,15 @@ class GNNMatrices:
             * ``"n_states_full"``: original (un-truncated) n_states
             * ``"n_states_kept"``: n_states after truncation
             * ``"max_b_entries"``: the ``_MAX_B_ENTRIES`` threshold
+            * ``"kept_state_indices"``: ascending indices into the full
+              A-column / D state axis; B index ``j`` is full state
+              ``kept_state_indices[j]``
+            * ``"kept_state_ids"``: the matching state ids
             * ``"reason"``: human-readable explanation
+
+            ``"shapes"`` reports the emitted arrays, so a truncated B is
+            declared as ``[n_states_kept, n_states_kept, n_actions]``
+            while ``"dimensions"`` keeps the full ``n_states``.
         """
         A = self.compute_A()
         B = self.compute_B()
@@ -690,11 +731,15 @@ class GNNMatrices:
 
         truncation: dict[str, Any] | None = None
         if self._b_truncated:
+            axis_ids = self._state_axis_ids()
+            kept = list(self._b_kept_state_indices)
             truncation = {
                 "applied": True,
                 "n_states_full": self._b_n_states_full,
                 "n_states_kept": self._b_n_states_kept,
                 "max_b_entries": _MAX_B_ENTRIES,
+                "kept_state_indices": kept,
+                "kept_state_ids": [axis_ids[j] if j < len(axis_ids) else "" for j in kept],
                 "reason": (
                     f"B tensor ({self._b_n_states_full}² × {self.n_actions} = "
                     f"{self._b_n_states_full**2 * self.n_actions:,} entries) "
@@ -798,6 +843,8 @@ class GNNMatrices:
         n_s = self.n_states
         n_o = self.n_obs
         n_a = self.n_actions
+        # A truncated B covers only the kept states (see compute_B).
+        n_b = self._b_n_states_kept if self._b_truncated else n_s
 
         # A: n_obs x n_states, columns sum to 1.
         # Column-sum tolerance 1e-6 — principled default, matches the
@@ -819,22 +866,22 @@ class GNNMatrices:
                     if abs(col_sum - 1.0) > 1e-6:  # col-norm tolerance
                         errors.append(f"A column {j} does not sum to 1 (sum={col_sum:.6f})")
 
-        # B: n_states x n_states x n_actions
+        # B: n_states x n_states x n_actions (n_states_kept when truncated)
         if n_s > 0:
-            if len(B) != n_s:
-                errors.append(f"B first dim {len(B)} != n_states {n_s}")
-            elif any(len(row) != n_s for row in B):
-                errors.append(f"B second dim != n_states {n_s}")
+            if len(B) != n_b:
+                errors.append(f"B first dim {len(B)} != n_states {n_b}")
+            elif any(len(row) != n_b for row in B):
+                errors.append(f"B second dim != n_states {n_b}")
             elif any(len(cell) != n_a for row in B for cell in row):
                 errors.append(f"B third dim != n_actions {n_a}")
             else:
                 if any(
-                    B[i][j][k] < -1e-9 for i in range(n_s) for j in range(n_s) for k in range(n_a)
+                    B[i][j][k] < -1e-9 for i in range(n_b) for j in range(n_b) for k in range(n_a)
                 ):
                     errors.append("B contains negative probabilities")
                 for k in range(n_a):
-                    for j in range(n_s):
-                        col_sum = sum(B[i][j][k] for i in range(n_s))
+                    for j in range(n_b):
+                        col_sum = sum(B[i][j][k] for i in range(n_b))
                         if abs(col_sum - 1.0) > 1e-6:  # same tolerance as A columns
                             errors.append(
                                 f"B action {k} column {j} does not sum to 1 (sum={col_sum:.6f})"
@@ -902,6 +949,7 @@ class GNNMatrices:
             result["b_truncated"] = True
             result["b_n_states_full"] = self._b_n_states_full
             result["b_n_states_kept"] = self._b_n_states_kept
+            result["b_kept_state_indices"] = list(self._b_kept_state_indices)
 
         return result
 

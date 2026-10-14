@@ -970,6 +970,8 @@ def export_for_pymdp(bundle: dict[str, Any]) -> dict[str, Any]:
             "truncated": True,
             "n_states_full": matrices.get("b_n_states_full"),
             "n_states_kept": matrices.get("b_n_states_kept"),
+            # B index j is full hidden state kept_state_indices[j].
+            "kept_state_indices": matrices.get("b_kept_state_indices"),
         }
 
     return result

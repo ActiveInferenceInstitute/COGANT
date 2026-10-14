@@ -471,7 +471,11 @@ class GNNValidator:
         satisfy:
 
         * A: shape ``[n_obs x n_states]``, columns sum to 1.0.
-        * B: shape ``[n_states x n_states x n_actions]``.
+        * B: shape ``[n_states x n_states x n_actions]``; when
+          ``truncation.applied`` is set (large-repo top-K cut, see
+          :meth:`cogant.gnn.matrices.GNNMatrices.compute_B`) the state
+          axes are ``n_states_kept`` and ``truncation.kept_state_indices``
+          must name those states on the full A/D axis.
         * C: length equal to ``n_obs``.
         * D: length equal to ``n_states``, sums to 1.0.
 
@@ -540,6 +544,7 @@ class GNNValidator:
         n_states = dimension("n_states", inferred_states)
         n_obs = dimension("n_obs", inferred_obs)
         n_actions = dimension("n_actions", inferred_actions)
+        n_b_states = self._truncated_b_state_count(matrices_json, n_states, errors)
 
         shapes = matrices_json.get("shapes")
         if not isinstance(shapes, dict):
@@ -547,7 +552,7 @@ class GNNValidator:
         else:
             expected_shapes = {
                 "A": [n_obs, n_states],
-                "B": [n_states, n_states, n_actions],
+                "B": [n_b_states, n_b_states, n_actions],
                 "C": [n_obs],
                 "D": [n_states],
             }
@@ -606,14 +611,15 @@ class GNNValidator:
         elif A:
             errors.append("A must be empty when observations or hidden states are zero")
 
-        # B: shape n_states x n_states x n_actions.
+        # B: shape n_states x n_states x n_actions (n_states_kept when
+        # the top-K truncation was applied).
         if n_states > 0:
             if n_actions == 0 and not B:
                 pass
-            elif len(B) != n_states:
-                errors.append(f"B first dim {len(B)} != n_states {n_states}")
-            elif any(len(row) != n_states for row in B):
-                errors.append(f"B second dim mismatch; expected {n_states}")
+            elif len(B) != n_b_states:
+                errors.append(f"B first dim {len(B)} != n_states {n_b_states}")
+            elif any(len(row) != n_b_states for row in B):
+                errors.append(f"B second dim mismatch; expected {n_b_states}")
             elif any(len(cell) != n_actions for row in B for cell in row):
                 errors.append(f"B third dim mismatch; expected {n_actions}")
             else:
@@ -621,14 +627,14 @@ class GNNValidator:
                     not isinstance(B[i][j][k], (int, float))
                     or not math.isfinite(float(B[i][j][k]))
                     or B[i][j][k] < -1e-9
-                    for i in range(n_states)
-                    for j in range(n_states)
+                    for i in range(n_b_states)
+                    for j in range(n_b_states)
                     for k in range(n_actions)
                 ):
                     errors.append("B contains negative probabilities")
                 for k in range(n_actions):
-                    for j in range(n_states):
-                        col_sum = sum(B[i][j][k] for i in range(n_states))
+                    for j in range(n_b_states):
+                        col_sum = sum(B[i][j][k] for i in range(n_b_states))
                         if abs(col_sum - 1.0) > 1e-6:
                             errors.append(
                                 f"B action {k} column {j} does not sum to 1 (sum={col_sum:.6f})"
@@ -664,6 +670,50 @@ class GNNValidator:
                 errors.append(f"D does not sum to 1 (sum={sum(D):.6f})")
 
         return errors
+
+    @staticmethod
+    def _truncated_b_state_count(
+        matrices_json: dict[str, Any], n_states: int, errors: list[str]
+    ) -> int:
+        """Return the expected B state-axis length, honouring truncation.
+
+        ``GNNMatrices.compute_B`` keeps only the top-K states when the
+        full tensor would exceed its entry cap and records the cut under
+        ``truncation``. A truncated B is valid only when the metadata says
+        how many states were kept and which full-axis states they are.
+        """
+        truncation = matrices_json.get("truncation")
+        if truncation is None:
+            return n_states
+        if not isinstance(truncation, dict):
+            errors.append("truncation must be an object or null")
+            return n_states
+        if truncation.get("applied") is not True:
+            return n_states
+        kept = truncation.get("n_states_kept")
+        if isinstance(kept, bool) or not isinstance(kept, int) or not 0 < kept <= n_states:
+            errors.append(
+                f"truncation.n_states_kept must be an integer in [1, n_states={n_states}]"
+            )
+            return n_states
+        full = truncation.get("n_states_full", n_states)
+        if full != n_states:
+            errors.append(
+                f"truncation.n_states_full={full!r} does not match declared n_states={n_states}"
+            )
+        indices = truncation.get("kept_state_indices")
+        if (
+            not isinstance(indices, list)
+            or len(indices) != kept
+            or any(isinstance(i, bool) or not isinstance(i, int) for i in indices)
+            or any(not 0 <= i < n_states for i in indices)
+            or indices != sorted(set(indices))
+        ):
+            errors.append(
+                "truncation.kept_state_indices must list n_states_kept distinct, ascending "
+                "indices into the hidden-state axis"
+            )
+        return kept
 
     def _effective_matrix_dimensions(self, matrices_json: dict[str, Any]) -> dict[str, int]:
         """Return matrix dimensions declared in, or inferred from, A/B/C/D."""
