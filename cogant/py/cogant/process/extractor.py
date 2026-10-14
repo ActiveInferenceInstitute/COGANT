@@ -6,6 +6,7 @@ Identifies workflow stages, predecessors/successors, triggers, and side effects.
 
 import logging
 from collections import defaultdict, deque
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 
 from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
@@ -76,6 +77,9 @@ class ProcessExtractor:
         # Optional caller-supplied override for the entry stage. ``None``
         # means "compute via _find_entry_stage()". Set via set_entry_stage().
         self._forced_entry_stage_id: str | None = None
+        # WRITES targets per source node, built once per ``_identify_stages``
+        # pass so side-effect lookup does not rescan every edge per node.
+        self._writes_by_source: dict[str, list[str]] | None = None
 
     def extract(self) -> ProcessModel:
         """
@@ -126,17 +130,36 @@ class ProcessExtractor:
         """
         # First pass: group by module/class
         module_groups: dict[str, list[str]] = {}
+        node_group: dict[str, str] = {}
 
         for node in self.graph.nodes.values():
             module = node.path.split("/")[0] if node.path else "root"
             if module not in module_groups:
                 module_groups[module] = []
             module_groups[module].append(node.id)
+            node_group[node.id] = module
+
+        # One pass over the edges: bucket intra-group call edges per group
+        # (in edge order) and index WRITES targets per source node, instead
+        # of rescanning every edge once per group and once per node.
+        call_edge_kinds = self._call_edge_kinds()
+        group_call_edges: dict[str, list[Edge]] = defaultdict(list)
+        writes_by_source: dict[str, list[str]] = defaultdict(list)
+        for edge in self.graph.edges.values():
+            if edge.kind == EdgeKind.WRITES:
+                writes_by_source[edge.source_id].append(edge.target_id)
+            if edge.kind in call_edge_kinds:
+                group = node_group.get(edge.source_id)
+                if group is not None and group == node_group.get(edge.target_id):
+                    group_call_edges[group].append(edge)
+        self._writes_by_source = writes_by_source
 
         # Second pass: split each module group into connected components
         # using intra-group call-chain analysis
         for module, node_ids in module_groups.items():
-            components = self._find_connected_components(node_ids)
+            components = self._find_connected_components(
+                node_ids, edges=group_call_edges.get(module, [])
+            )
 
             for comp_idx, component_ids in enumerate(components):
                 # Find primary node (method/function) for stage naming
@@ -213,7 +236,17 @@ class ProcessExtractor:
         ranked.sort(key=lambda x: x[0], reverse=True)
         return ranked[0][1]
 
-    def _find_connected_components(self, node_ids: list[str]) -> list[list[str]]:
+    @staticmethod
+    def _call_edge_kinds() -> set[EdgeKind]:
+        """Edge kinds that join two nodes into the same stage."""
+        call_edge_kinds = {EdgeKind.CALLS, EdgeKind.TRIGGERS}
+        if hasattr(EdgeKind, "CONTROL_FLOW"):
+            call_edge_kinds.add(EdgeKind.CONTROL_FLOW)  # type: ignore[attr-defined,unused-ignore]
+        return call_edge_kinds
+
+    def _find_connected_components(
+        self, node_ids: list[str], edges: Iterable[Edge] | None = None
+    ) -> list[list[str]]:
         """
         Find connected components within a set of nodes using call/control-flow edges.
 
@@ -223,6 +256,9 @@ class ProcessExtractor:
 
         Args:
             node_ids: Node IDs to partition.
+            edges: Candidate edges in graph order. Defaults to every graph
+                edge; callers that already bucketed the call edges touching
+                ``node_ids`` pass that bucket to avoid a full edge scan.
 
         Returns:
             List of connected components (each a list of node IDs).
@@ -231,13 +267,11 @@ class ProcessExtractor:
             return []
 
         node_set = set(node_ids)
-        call_edge_kinds = {EdgeKind.CALLS, EdgeKind.TRIGGERS}
-        if hasattr(EdgeKind, "CONTROL_FLOW"):
-            call_edge_kinds.add(EdgeKind.CONTROL_FLOW)  # type: ignore[attr-defined,unused-ignore]
+        call_edge_kinds = self._call_edge_kinds()
 
         # Build adjacency within the node set
         adjacency: dict[str, set[str]] = defaultdict(set)
-        for edge in self.graph.edges.values():
+        for edge in self.graph.edges.values() if edges is None else edges:
             if edge.kind not in call_edge_kinds:
                 continue
             if edge.source_id in node_set and edge.target_id in node_set:
@@ -415,10 +449,17 @@ class ProcessExtractor:
         stage_exits: dict[str, set[str]] = defaultdict(set)
         stage_entries: dict[str, set[str]] = defaultdict(set)
 
+        # node -> stage index; the first stage (in order) holding a node wins,
+        # matching ``_find_stage_for_node`` without its per-edge stage scan.
+        node_to_stage: dict[str, str] = {}
+        for stage_id, stage in self.stages.items():
+            for node_id in stage.node_ids:
+                node_to_stage.setdefault(node_id, stage_id)
+
         for edge in self.graph.edges.values():
             # Find stages containing the endpoints
-            source_stage = self._find_stage_for_node(edge.source_id)
-            target_stage = self._find_stage_for_node(edge.target_id)
+            source_stage = node_to_stage.get(edge.source_id)
+            target_stage = node_to_stage.get(edge.target_id)
 
             # Skip intra-stage edges
             if not source_stage or not target_stage or source_stage == target_stage:
@@ -513,9 +554,13 @@ class ProcessExtractor:
         Returns:
             List of affected state variable/node IDs.
         """
-        side_effects = []
+        side_effects: list[str] = []
 
+        writes_by_source = self._writes_by_source
         for node_id in node_ids:
+            if writes_by_source is not None:
+                side_effects.extend(writes_by_source.get(node_id, ()))
+                continue
             # Find WRITES edges from this node
             for edge in self.graph.get_edges_from(node_id):
                 if edge.kind == EdgeKind.WRITES:
