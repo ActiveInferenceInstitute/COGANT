@@ -12,12 +12,14 @@ rather than importing `cogant._rust` directly.
 
 ## 1. Install the Rust toolchain
 
-Any recent stable Rust (>= 1.75) works. Install via [rustup](https://rustup.rs):
+Stable Rust 1.89 or newer is required: the workspace uses edition 2024, and
+`uuid` 1.28 sets the 1.89 floor (PyO3 0.29 itself needs 1.83). Install via
+[rustup](https://rustup.rs):
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source "$HOME/.cargo/env"
-rustc --version  # should print 1.75 or newer
+rustc --version  # should print 1.89 or newer
 cargo --version
 ```
 
@@ -27,14 +29,21 @@ On macOS you additionally need the Xcode Command Line Tools for the linker:
 xcode-select --install
 ```
 
+Key workspace dependencies: PyO3 0.29 (CPython 3.8–3.15), petgraph 0.8,
+thiserror 2, uuid 1.28, serde 1.0, serde_json 1.0. The authoritative
+requirements live in [`Cargo.toml`](Cargo.toml) under `[workspace.dependencies]`.
+
 ## 2. Install maturin into the COGANT venv
 
 From the repository root (the directory that contains `pyproject.toml`):
 
 ```bash
-uv sync                                   # creates .venv with Python deps
-uv pip install maturin pytest pytest-cov  # maturin is required for the build
+uv sync                                          # creates .venv with Python deps
+uv pip install 'maturin>=1,<2' pytest pytest-cov  # maturin is required for the build
 ```
+
+`rust/cogant-ffi/pyproject.toml` requires `maturin>=1.0,<2.0`; the PyO3 0.29
+build was verified with maturin 1.15.
 
 ## 3. Build the Rust workspace
 
@@ -57,10 +66,14 @@ All eight crates should compile cleanly:
 - `cogant-gnn` — JSON / Markdown GNN emitters
 - `cogant-ffi` — PyO3 bindings (cdylib + rlib)
 
-The `rust/.cargo/config.toml` sets `-undefined dynamic_lookup` on macOS and
-`-Wl,--unresolved-symbols=ignore-all` on Linux so that `cargo build` can link
-the `cogant-ffi` cdylib without a live Python runtime. Maturin sets the same
-flags automatically; the config only affects plain `cargo build`.
+The `rust/.cargo/config.toml` sets
+`PYO3_USE_STABLE_ABI_FORWARD_COMPATIBILITY=1` so that builds against a Python
+newer than PyO3 supports (above 3.15 for PyO3 0.29) fall back to the stable ABI
+instead of failing. Cargo reads that file relative to the current directory, so
+it applies to commands run inside `rust/`, not to `--manifest-path
+rust/Cargo.toml` invocations from the package root. Plain `cargo build` /
+`cargo test` link `cogant-ffi` against libpython; maturin enables the
+`pyo3/extension-module` feature for the wheel build.
 
 ## 4. Build and install the Python extension module
 
@@ -123,10 +136,12 @@ gracefully on machines without the compiled extension.
 
 ## Troubleshooting
 
-**`Undefined symbols for architecture arm64` when running `cargo build`** —
-The `rust/.cargo/config.toml` file is missing or cargo cannot see it. Make
-sure you run `cargo build` from inside the `rust/` directory (cargo walks up
-from CWD to find `.cargo/config.toml`).
+**`the configured Python version (3.x) is newer than PyO3's maximum supported
+version (3.15)`** — PyO3 0.29 supports CPython up to 3.15. For a
+newer interpreter, run cargo from inside `rust/` so `rust/.cargo/config.toml`
+applies, or export `PYO3_USE_STABLE_ABI_FORWARD_COMPATIBILITY=1` for
+`--manifest-path` invocations (cargo walks up from CWD to find
+`.cargo/config.toml`).
 
 **`No module named 'cogant._rust'`** — the wheel was not installed into the
 venv you are currently using. Re-run `maturin develop --release` from
@@ -138,7 +153,3 @@ venv you are currently using. Re-run `maturin develop --release` from
 in the workspace `pyproject.toml`, and `cogant-rust` lives outside that set.
 After running `uv sync` re-run `maturin develop --release` to restore the
 Rust extension.
-
-**Maturin warnings about unused imports** — the warnings in `cogant-gnn`,
-`cogant-store`, and `cogant-translate` are cosmetic and do not affect
-functionality. They can be cleaned up with `cargo fix --lib -p <crate>`.

@@ -9,7 +9,7 @@
 use cogant_core::{EdgeKind, NodeKind};
 use cogant_graph::ProgramGraph;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 /// Sections of a GNN-formatted document.

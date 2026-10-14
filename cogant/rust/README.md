@@ -15,17 +15,25 @@ installed and `COGANT_USE_RUST` permits it.
 - `cogant-gnn/` - Markdown and JSON formatting helpers for Rust graph values.
 - `cogant-ffi/` - PyO3 module exported to Python as `cogant._rust`.
 
+## Toolchain
+
+Edition 2024, stable Rust 1.89 or newer. Key dependencies: PyO3 0.29,
+petgraph 0.8, thiserror 2, uuid 1.28; maturin `>=1.0,<2.0` builds the
+extension. See [`RUST_SETUP.md`](RUST_SETUP.md) for the full setup.
+
 ## Build And Verification
 
 ```bash
 cargo fmt --check
 cargo check --workspace
 cargo test --workspace
-cargo clippy --workspace -- -D warnings
+cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-From the package root ([`..`](../)), `make build-rust` invokes `maturin develop`
-for `cogant-ffi` and writes the extension under `py/cogant/`.
+From the package root ([`..`](../)), `make build-rust` runs
+`cargo build --release`; `maturin develop --release` from `cogant-ffi/` (see
+[`RUST_SETUP.md`](RUST_SETUP.md)) builds the extension and writes it under
+`py/cogant/`.
 
 ## Backend Selection
 

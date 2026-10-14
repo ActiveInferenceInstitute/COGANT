@@ -1,4 +1,4 @@
-#![allow(clippy::too_many_arguments, clippy::useless_conversion)]
+#![allow(clippy::too_many_arguments)]
 
 //! Python FFI for COGANT using PyO3.
 //!
@@ -15,7 +15,11 @@ use serde_json::json;
 use std::collections::HashMap;
 
 /// Python wrapper for StableId.
-#[pyclass]
+// `from_py_object` opts in to the by-value `FromPyObject` extraction that
+// `PyNodeData::new(id: PyStableId, ...)` relies on; PyO3 0.28 made it opt-in
+// (it was implicit for `Clone` pyclasses before). Kept out of the doc comment
+// so the Python `__doc__` is unchanged.
+#[pyclass(from_py_object)]
 #[derive(Clone)]
 pub struct PyStableId {
     pub inner: StableId,
@@ -575,6 +579,23 @@ pub fn format_gnn_markdown(graph: &PyProgramGraph, title: &str) -> String {
     format_markdown(&graph.inner, title)
 }
 
+/// Convert an `io::Error` from `write_artifact_atomic` into its Python exception.
+///
+/// PyO3 0.26+ maps `ErrorKind::OutOfMemory`, `IsADirectory`, and `NotADirectory`
+/// to `MemoryError`, `IsADirectoryError`, and `NotADirectoryError`. The
+/// `cogant._rust` contract keeps raising plain `OSError` for those kinds, as it
+/// did before the PyO3 upgrade; every other kind uses PyO3's standard mapping
+/// (`FileNotFoundError`, `PermissionError`, ...).
+fn artifact_io_error(err: std::io::Error) -> PyErr {
+    use std::io::ErrorKind;
+    match err.kind() {
+        ErrorKind::OutOfMemory | ErrorKind::IsADirectory | ErrorKind::NotADirectory => {
+            pyo3::exceptions::PyOSError::new_err(err)
+        }
+        _ => PyErr::from(err),
+    }
+}
+
 #[pyfunction]
 pub fn write_artifact_atomic(path: String, contents: Vec<u8>) -> PyResult<()> {
     use std::fs;
@@ -584,14 +605,14 @@ pub fn write_artifact_atomic(path: String, contents: Vec<u8>) -> PyResult<()> {
         .parent()
         .map(std::path::Path::to_path_buf)
         .unwrap_or_else(|| std::path::PathBuf::from("."));
-    fs::create_dir_all(&parent)?;
+    fs::create_dir_all(&parent).map_err(artifact_io_error)?;
     let tmp_path = final_path.with_extension("tmp");
     {
-        let mut file = fs::File::create(&tmp_path)?;
-        file.write_all(&contents)?;
-        file.sync_all()?;
+        let mut file = fs::File::create(&tmp_path).map_err(artifact_io_error)?;
+        file.write_all(&contents).map_err(artifact_io_error)?;
+        file.sync_all().map_err(artifact_io_error)?;
     }
-    fs::rename(tmp_path, final_path)?;
+    fs::rename(tmp_path, final_path).map_err(artifact_io_error)?;
     Ok(())
 }
 

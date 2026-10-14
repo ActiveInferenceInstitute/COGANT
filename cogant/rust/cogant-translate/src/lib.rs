@@ -222,14 +222,13 @@ impl TranslationEngine {
 
         // Try matching rules
         let matching = self.rules.matching_rules(node);
-        if let Some(rule) = matching.first() {
-            if rule
+        if let Some(rule) = matching.first()
+            && rule
                 .confidence()
                 .meets_threshold(self.config.min_confidence)
-            {
-                let mapping = rule.apply(node)?;
-                return Ok(mapping.target_role);
-            }
+        {
+            let mapping = rule.apply(node)?;
+            return Ok(mapping.target_role);
         }
 
         // If no confident matches, use the node's existing role

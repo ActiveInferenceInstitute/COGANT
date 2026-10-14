@@ -186,12 +186,11 @@ impl BundleStore for FileStore {
         for entry in fs::read_dir(&self.root_path)? {
             let entry = entry?;
             let path = entry.path();
-            if path.is_dir() {
-                if let Some(name) = path.file_name() {
-                    if let Some(name_str) = name.to_str() {
-                        bundles.push(name_str.to_string());
-                    }
-                }
+            if path.is_dir()
+                && let Some(name) = path.file_name()
+                && let Some(name_str) = name.to_str()
+            {
+                bundles.push(name_str.to_string());
             }
         }
         Ok(bundles)
