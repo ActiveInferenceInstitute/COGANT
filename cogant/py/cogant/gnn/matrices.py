@@ -748,18 +748,21 @@ class GNNMatrices:
                 ),
             }
 
+        # Declared shapes are the logical array shapes. An empty A (zero
+        # observations or zero hidden states) or an empty B (zero hidden
+        # states) is still an ``[n_obs, n_states]`` /
+        # ``[n_states, n_states, n_actions]`` array with a zero axis, so
+        # fall back to the dimensions instead of collapsing to ``[0, 0]``.
         return {
             "A": A,
             "B": B,
             "C": C,
             "D": D,
             "shapes": {
-                "A": [len(A), len(A[0]) if A else 0],
-                "B": [
-                    len(B),
-                    len(B[0]) if B else 0,
-                    len(B[0][0]) if B and B[0] else 0,
-                ],
+                "A": [len(A), len(A[0])] if A else [self.n_obs, self.n_states],
+                "B": [len(B), len(B[0]), len(B[0][0]) if B[0] else 0]
+                if B
+                else [0, 0, self.n_actions],
                 "C": [len(C)],
                 "D": [len(D)],
             },
