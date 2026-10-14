@@ -426,26 +426,26 @@ cogant migrate migrate output/model.gnn.md --dry-run
 
 ### upstream-gnn
 
-Drive the upstream GNN 25-step pipeline (`generalized-notation-notation`) against an existing COGANT-emitted `gnn_package/`. Network- and LLM-bound steps (12 LLM, 14 ML integration, 18 audio, 23 website) are skipped by default to keep CI offline-safe.
+Drive the upstream GNN 25-step pipeline (`generalized-notation-notation`, optional `upstream` extra, GNN 4.1.0 release line) against an existing COGANT-emitted `gnn_package/`. The selected steps run as one `python -m gnn.main --only-steps …` invocation; only `*.gnn.md` files are staged as upstream input. Steps 1 (`setup`), 2 (`tests`), 11 (`render`), and 12 (`execute`) are skipped by default; upstream may still run 11 and 12 as hard prerequisites of selected steps such as `16_analysis` and `18_security`.
 
 ```bash
 cogant upstream-gnn output/gnn_package
 cogant upstream-gnn output/gnn_package --output-dir output/upstream
-cogant upstream-gnn output/gnn_package --only-steps 1,3,8 --frameworks pymdp,rxinfer
-cogant upstream-gnn output/gnn_package --skip-steps 12,14,18,23 --verbose
+cogant upstream-gnn output/gnn_package --only-steps 3,5,6 --frameworks pymdp,rxinfer
+cogant upstream-gnn output/gnn_package --skip-steps 1,2,11,12,13 --verbose
 ```
 
 **Arguments:**
-- `package_dir`: Path to a `gnn_package/` directory (typically produced by `cogant translate`). Required.
+- `package_dir`: Path to a `gnn_package/` directory (typically produced by `cogant translate`), or a parent directory containing one. Required.
 
 **Options:**
-- `--output-dir, -o`: Where upstream artifacts are written. Default: `<package_dir>/upstream_gnn/`.
-- `--only-steps`: Comma-separated 1-based step numbers to run (subset of the 25-step catalog).
-- `--skip-steps`: Comma-separated 1-based step numbers to skip. Defaults to network-bound steps when neither `--only-steps` nor `--skip-steps` is given.
-- `--frameworks`: Comma-separated render targets for upstream step 11 (e.g. `pymdp,rxinfer`).
-- `--llm-model`: Model identifier passed to upstream step 13 (only used when step 13 is enabled).
-- `--verbose, -v`: Forward `-v` to the upstream subprocess.
+- `--output-dir, -o`: Where upstream artifacts are written (per-step `<step>_output/`, `00_pipeline_summary/`, `upstream_pipeline.log`, `upstream_pipeline_summary.json`). Default: `output/upstream_pipeline`.
+- `--only-steps`: Comma-separated step indices `0`–`24` to run (the numeric prefix of each upstream script).
+- `--skip-steps`: Comma-separated step indices to skip. Default `1,2,11,12`; pass an empty string to skip nothing and run all 25 steps.
+- `--frameworks`: Render/execute targets forwarded to upstream (default `lite`; e.g. `all`, `pymdp,rxinfer`).
+- `--llm-model`: `OLLAMA_MODEL` for upstream step 13, set only in the upstream child environment.
+- `--verbose, -v`: Forward `--verbose` to the upstream invocation.
 
 The same wiring is also exposed as opt-in flags on `cogant translate`, `cogant analyze`, and `cogant validate` via `--upstream-gnn-pipeline` (and the matching `--upstream-gnn-only-steps` / `--upstream-gnn-skip-steps` / `--upstream-gnn-frameworks` / `--upstream-gnn-llm-model` knobs); see `cogant translate --help` for the full surface.
 
-**Exit codes:** `0` on success; `1` if the upstream subprocess exits non-zero on any executed step.
+**Exit codes:** `0` on success; `1` if upstream is unavailable or any requested step is not successful (including `NOT_RUN` steps upstream never planned); `2` if the package directory or `model.gnn.md` is missing.

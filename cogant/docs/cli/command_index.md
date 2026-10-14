@@ -29,7 +29,7 @@
 | `reverse` | Synthesize a Python package from a GNN markdown file. |
 | `roundtrip` | Verify forward-reverse-forward round-trip isomorphism. |
 | `version` | Print the COGANT version and exit. |
-| `upstream-gnn` | Re-run the Active Inference Institute 25-step `src.gnn` pipeline on an existing `gnn_package/` directory. |
+| `upstream-gnn` | Re-run the Active Inference Institute 25-step upstream GNN pipeline (`python -m gnn.main`, optional `upstream` extra) on an existing `gnn_package/` directory. |
 | `plugin` | Manage and inspect COGANT plugins (subcommands: `list`, `info`). |
 | `migrate` | Migrate GNN files to the current schema version (single default leaf under the `migrate` sub-typer). |
 

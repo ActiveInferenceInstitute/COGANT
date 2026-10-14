@@ -35,45 +35,78 @@ scoring/  (post-pipeline)  → Drift detection + quality metrics
 
 The GNN module is the boundary between symbolic analysis and Active Inference simulation. All model execution depends on the correctness of the GNN bundle.
 
-### Upstream reference toolkit (`generalized-notation-notation`, **core**)
+### Upstream reference toolkit (`generalized-notation-notation`, **optional**)
 
-The Active Inference Institute **generalized-notation-notation** package is a
-**required** dependency (git-pinned in ``pyproject.toml``; Python import
-``src.gnn``). Bridge: ``cogant.gnn.upstream_bridge`` (re-exported from
-``cogant.gnn``).
+The Active Inference Institute **generalized-notation-notation** package is an
+**optional** dependency, installed only through the ``upstream`` extra
+(``uv sync --extra upstream``; not part of ``all``). The extra pins a full GNN
+4.1.0 release-line commit in ``pyproject.toml`` (mirrored in ``uv.lock``).
+GNN >= 4.0 ships the top-level Python package ``gnn``; the bridge
+(``cogant.gnn.upstream_bridge``, re-exported from ``cogant.gnn``) refuses an
+installed upstream older than 4.0 or a ``gnn`` package owned by another
+distribution. The ``GNN v2.0.0`` value COGANT writes under
+``## GNNVersionAndFlags`` is COGANT's own schema identifier
+(``cogant.schema.versions.CURRENT_GNN_VERSION``), not the upstream release.
 
-By default, ``GNNValidator.validate_package`` runs upstream ``validate_gnn`` on
-``model.gnn.md`` after COGANT checks. Disable with ``upstream_gnn=False``, the
-``cogant validate --no-upstream-gnn`` CLI flag, the env flag
-``COGANT_DISABLE_UPSTREAM_GNN=1``, or ``PipelineConfig.upstream_gnn_validation=False``.
-Compatibility env ``COGANT_GNN_UPSTREAM`` is **not** read (it used to opt-in; upstream
-is now on by default).
+Upstream single-file validation is **off by default**.
+``GNNValidator.validate_package(package_dir, upstream_gnn=...)`` resolves the
+flag through ``_resolve_upstream_flag``:
 
-Upstream is **CC-BY-NC-SA-4.0**; see ``LICENSES.md`` in the package root. Results
-are merged as warnings and stored under ``ValidationResult.details["upstream_gnn"]``.
+* ``upstream_gnn=True`` / ``False`` — the caller's explicit choice wins.
+* ``upstream_gnn=None`` (the default) — upstream runs only when
+  ``COGANT_ENABLE_UPSTREAM_GNN`` is truthy (``1`` / ``true`` / ``yes``,
+  case-insensitive).
+
+The pipeline's validate stage passes ``PipelineConfig.upstream_gnn_validation``
+(default ``False``) explicitly, so pipeline runs need that field set to
+``True``; the environment flag is not consulted there. ``cogant validate`` on
+a package directory passes ``None`` (environment flag decides) and
+``--no-upstream-gnn`` forces ``False``. ``COGANT_DISABLE_UPSTREAM_GNN`` is not
+read by the resolver; with upstream already off by default it changes nothing.
+
+When it runs, the validator calls upstream ``gnn.validate_gnn_syntax`` at the
+``standard`` level on ``model.gnn.md`` and stores the verdict under
+``ValidationResult.details["upstream_gnn"]``. Upstream errors are appended to
+``ValidationResult.errors`` as ``[upstream GNN] …``; a requested but
+unavailable upstream adds a ``CAPABILITY_UNAVAILABLE`` error. Separately, the
+validate stage always attempts the advisory ``parse_upstream_model_gnn_md``
+summary (upstream ``parse_gnn_file``) and records an ``error`` entry when the
+extra is absent; that summary never fails the stage.
+
+Upstream is **CC-BY-NC-SA-4.0**; see ``LICENSES.md`` in the package root.
 
 #### Upstream 25-step pipeline pass (opt-in)
 
 Beyond the markdown validator, COGANT can drive the upstream **25-step
-pipeline** (``src.main.execute_pipeline_step``) over the produced
-``gnn_package/``. The driver lives at ``cogant.gnn.upstream_bridge.pipeline``;
+pipeline** over the produced ``gnn_package/``. The driver
+(``cogant.gnn.upstream_bridge.pipeline``) issues **one**
+``python -m gnn.main --only-steps …`` invocation and reads per-step outcomes
+from ``<output_dir>/00_pipeline_summary/pipeline_execution_summary.json``;
 see ``upstream_bridge/AGENTS.md`` for the per-step catalogue.
 
 * Master switch: ``PipelineConfig.upstream_gnn_pipeline = True`` (default
   ``False``) or CLI ``--upstream-gnn-pipeline`` on
   ``analyze`` / ``translate`` / ``validate``.
-* Default-skip list: ``[11, 12]`` (``11_render`` and ``12_execute`` are
-  framework-specific code generation + simulation; opt in with
-  ``--upstream-gnn-skip-steps ""`` or by listing them in ``--upstream-gnn-only-steps``).
+* Default-skip list: ``DEFAULT_SKIP_STEPS == {1, 2, 11, 12}``
+  (``1_setup`` mutates the caller's environment from an installed wheel,
+  ``2_tests`` needs the upstream source checkout, ``11_render`` /
+  ``12_execute`` are framework-specific code generation + simulation; opt in
+  with ``--upstream-gnn-skip-steps ""`` or by listing them in
+  ``--upstream-gnn-only-steps``).
 * Refine: ``--upstream-gnn-only-steps "3,5,7"``,
-  ``--upstream-gnn-skip-steps "11,12,13"``,
+  ``--upstream-gnn-skip-steps "1,2,11,12,13"``,
   ``--upstream-gnn-frameworks "lite|all|pymdp,jax"``,
   ``--upstream-gnn-llm-model <ollama-tag>``.
 * Standalone: ``cogant upstream-gnn <package_dir>`` runs the same pass
   against an existing package without re-analysing the source repo.
+* Inputs: only ``*.gnn.md`` files are staged into
+  ``<output_dir>/_cogant_input/`` (GNN 4.x would treat every JSON sidecar
+  as a model source).
 * Output: per-step results in ``bundle.artifacts['upstream_pipeline_steps']``
-  and ``['upstream_pipeline_summary']``, plus a JSON summary at
-  ``<output_dir>/upstream_pipeline/upstream_pipeline_summary.json``.
+  and ``['upstream_pipeline_summary']``, plus
+  ``<output_dir>/upstream_pipeline_summary.json`` and the upstream console
+  log ``<output_dir>/upstream_pipeline.log`` (``<output_dir>`` defaults to
+  ``<run output>/upstream_pipeline/`` for pipeline runs).
 * Failure model: **advisory only** — a failing upstream step appends a
   warning to the validate stage but never fails it. Promote to fatal in
   application code by inspecting ``UpstreamPipelineResult.failure_count``.
@@ -81,22 +114,24 @@ see ``upstream_bridge/AGENTS.md`` for the per-step catalogue.
 #### Facades only on ``cogant.gnn.upstream_bridge``
 
 ``cogant.gnn`` re-exports the bridge entry points listed in ``gnn/__init__.py`` ``__all__``.
-Do not import ``src.gnn`` directly from COGANT code: the upstream v2.0.0 package
-uses repo-style sibling imports that the bridge prepares before loading upstream modules.
-If a new upstream entry point is needed, add a facade here instead of bypassing the bridge.
-The current facades are thin wrappers around upstream behavior plus path coercion and
-``json_safe``:
+Do not import upstream ``gnn`` directly from COGANT code: the bridge applies the
+version/ownership gate, keeps the import lazy (upstream pulls in JAX/PyTorch), and
+normalizes return values. If a new upstream entry point is needed, add a facade here
+instead of bypassing the bridge. The current facades are thin wrappers around upstream
+behavior plus path coercion and ``json_safe``:
 
-| Name | Upstream target (typical) |
+| Name | Upstream target (GNN 4.x) |
 |------|---------------------------|
+| ``run_upstream_validate_gnn`` / ``upstream_validate_markdown`` | ``validate_gnn_syntax`` (level ``standard`` by default) |
+| ``upstream_parse_file`` | ``parse_gnn_file`` |
 | ``upstream_discover_files`` | ``discover_gnn_files`` |
 | ``upstream_process_directory`` | ``process_gnn_directory`` |
 | ``upstream_process_directory_lightweight`` | ``process_gnn_directory_lightweight`` |
 | ``upstream_process_multi_format`` | ``process_gnn_multi_format`` |
 | ``upstream_generate_report`` | ``generate_gnn_report`` |
-| ``upstream_validate_structure`` | ``validate_gnn_structure`` |
-| ``upstream_validate_file_content`` | ``validate_gnn_file`` |
-| ``upstream_validate_syntax_formal`` | ``validate_gnn_syntax_formal`` |
+| ``upstream_validate_structure`` | ``check_gnn_file_structure`` |
+| ``upstream_validate_file_content`` | ``validate_gnn_source`` |
+| ``upstream_validate_syntax_formal`` | ``validate_gnn_syntax`` |
 | ``upstream_parse_formal`` | ``parse_gnn_formal`` |
 | ``upstream_module_info`` | ``get_module_info`` |
 

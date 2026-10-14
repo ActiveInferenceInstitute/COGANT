@@ -40,25 +40,37 @@ repo/ ──[ingest]──► ProgramGraph ──[translate]──► SemanticMa
 ## Optional third-party GNN reference implementation
 
 COGANT can validate against the Active Inference Institute
-**generalized-notation-notation** package (Python import `src.gnn`) through an
-explicit optional integration. It is not part of normal installation, routine
-tests, or the `all` extra because its upstream checkout is large and network/
-disk-intensive. The dedicated upstream job pins the source commit, records
-license/provenance, and reports unavailable upstream separately from validation
-failure. That package is licensed **CC-BY-NC-SA-4.0**; see [`LICENSES.md`](LICENSES.md).
-COGANT itself remains MIT.
+**generalized-notation-notation** package (GNN 4.1.0 release line; Python import
+`gnn`) through an explicit optional integration: `uv sync --extra upstream`.
+It is not part of normal installation, routine tests, or the `all` extra because
+the upstream install is large and network/disk-intensive. The `upstream` extra
+pins a full upstream commit (`cogant/pyproject.toml`, mirrored in `uv.lock`), and
+the bridge reports an unavailable upstream separately from validation failure.
+That package is licensed **CC-BY-NC-SA-4.0**; see [`LICENSES.md`](LICENSES.md).
+COGANT itself remains MIT. The `GNN v2.0.0` value COGANT writes under
+`## GNNVersionAndFlags` is COGANT's own schema identifier, not the upstream
+package release.
 
-In addition to single-file `validate_gnn` checks, COGANT can drive the upstream
-**25-step pipeline** (`src.main.execute_pipeline_step`, scripts `0_template.py`
-through `24_intelligent_analysis.py`) over the produced `gnn_package/`. The pass
-is opt-in (`--upstream-gnn-pipeline` on `analyze` / `translate` / `validate`,
-or the standalone `cogant upstream-gnn <package_dir>` command) and skips
-`11_render` and `12_execute` by default — those are framework-specific
-(PyMDP / RxInfer / JAX / DisCoPy) code-generation and simulation steps that
-typically require additional optional dependencies. See
+Upstream checks never run implicitly. Single-file upstream validation
+(`gnn.validate_gnn_syntax` at the `standard` level) runs only when requested:
+`GNNValidator.validate_package(..., upstream_gnn=True)`,
+`PipelineConfig.upstream_gnn_validation=True`, or — for callers that leave the
+choice open (`upstream_gnn=None`, e.g. `cogant validate`) — a truthy
+`COGANT_ENABLE_UPSTREAM_GNN` (`1` / `true` / `yes`).
+
+COGANT can also drive the upstream **25-step pipeline** (scripts `0_template.py`
+through `24_intelligent_analysis.py`) over the produced `gnn_package/` as one
+`python -m gnn.main --only-steps …` invocation. The pass is opt-in
+(`--upstream-gnn-pipeline` on `analyze` / `translate` / `validate`, or the
+standalone `cogant upstream-gnn <package_dir>` command) and skips steps
+`1_setup`, `2_tests`, `11_render`, and `12_execute` by default: setup mutates
+the caller's environment when run from an installed wheel, the upstream test
+suite is not shipped in the wheel, and render/execute are framework-specific
+(PyMDP / RxInfer / JAX / DisCoPy) code-generation and simulation steps. See
 [`py/cogant/gnn/upstream_bridge/AGENTS.md`](py/cogant/gnn/upstream_bridge/AGENTS.md)
-for the full step catalogue, `UpstreamPipelineConfig` surface, and
-`COGANT_RUN_UPSTREAM_PIPELINE=1` slow-test gate.
+for the full step catalogue and `UpstreamPipelineConfig` surface, and
+[`docs/evaluation/GNN_UPSTREAM_AUDIT_SURFACE.md`](docs/evaluation/GNN_UPSTREAM_AUDIT_SURFACE.md)
+for the recorded per-step results against the pinned release.
 
 ## Quick start
 
@@ -158,7 +170,7 @@ from this package root or `./run_all.sh` from the COGANT project root.
 | `reverse` | Synthesize a Python package from a GNN markdown file. |
 | `roundtrip` | Verify forward-reverse-forward round-trip status and invariants. |
 | `version` | Print the COGANT version and exit. |
-| `upstream-gnn` | Re-run the Active Inference Institute 25-step `src.gnn` pipeline on an existing `gnn_package/` directory. |
+| `upstream-gnn` | Re-run the Active Inference Institute 25-step upstream GNN pipeline (`python -m gnn.main`) on an existing `gnn_package/` directory. |
 
 Plus two sub-typer groups attached via `app.add_typer`:
 
@@ -248,7 +260,7 @@ are tracked in [`docs/theory/active_inference.md § Known limitations`](docs/the
 
 ## License
 
-MIT — see [`LICENSES.md`](LICENSES.md) for the COGANT license and third-party license notes (the upstream `src.gnn` package is CC-BY-NC-SA-4.0).
+MIT — see [`LICENSES.md`](LICENSES.md) for the COGANT license and third-party license notes (the optional upstream `generalized-notation-notation` package, import `gnn`, is CC-BY-NC-SA-4.0).
 
 ## Citation
 

@@ -1,29 +1,33 @@
 # `upstream_bridge`
 
 Lazy facade over the Active Inference Institute
-**`generalized-notation-notation`** package (import path `src.gnn`).
-Heavy upstream dependencies are imported only on first use, so
-`import cogant` stays fast.
+**`generalized-notation-notation`** package (GNN 4.1.0 release line; import
+package `gnn`). It is an **optional** dependency, installed only through the
+`upstream` extra (`uv sync --extra upstream`), and heavy upstream dependencies
+are imported only on first use, so `import cogant` stays fast.
 
-Callers should use this facade instead of raw `import src.gnn`. The pinned
-upstream v2.0.0 package is installed as a top-level `src` package but still
-uses repo-style `gnn.*` sibling imports internally; the bridge prepares that
-layout before loading upstream modules or launching upstream subprocess steps.
+Callers should use this facade instead of a raw `import gnn`: the bridge
+refuses an upstream older than 4.0 or a `gnn` package owned by another
+distribution, and maps COGANT's facades onto the GNN 4.x API
+(`validate_gnn_syntax`, `validate_gnn_source`, `check_gnn_file_structure`).
+The GNN 2.x `src.gnn` import surface no longer exists upstream.
 
 Two independent surfaces:
 
 * **Validation / parsing helpers** (`upstream_*` functions) — wrap
-  individual upstream entry points (`validate_gnn`, `parse_gnn_file`,
-  `process_gnn_directory`, …) with JSON-safe returns and graceful
-  fallback when the upstream package is missing.
+  individual upstream entry points (`validate_gnn_syntax`, `parse_gnn_file`,
+  `process_gnn_directory`, …) with JSON-safe returns; validation reports an
+  unavailable upstream instead of raising. Upstream validation is opt-in:
+  `upstream_gnn=True`, `PipelineConfig.upstream_gnn_validation=True`, or a
+  truthy `COGANT_ENABLE_UPSTREAM_GNN` when the caller leaves the choice open.
 * **Pipeline driver** (`pipeline.py`) — runs the upstream **25-step
-  pipeline** (`src.main.execute_pipeline_step`) over a COGANT-built
-  `gnn_package/`. Render (step 11) and Execute (step 12) are skipped
-  by default; everything else runs as a configurable post-validate
-  pass.
+  pipeline** over a COGANT-built `gnn_package/` as one
+  `python -m gnn.main --only-steps …` invocation. Steps `1_setup`, `2_tests`,
+  `11_render`, and `12_execute` are skipped by default (`DEFAULT_SKIP_STEPS`);
+  upstream may still run 11 and 12 as hard prerequisites of selected steps.
 
 See [`AGENTS.md`](AGENTS.md) for the full `upstream_*` API surface,
-the 25-step catalogue, the `UpstreamPipelineConfig` reference, the
-`COGANT_DISABLE_UPSTREAM_GNN` env flag, and the upstream
-**CC-BY-NC-SA-4.0** license note (also tracked in
-`cogant/LICENSES.md`).
+the 25-step catalogue, the `UpstreamPipelineConfig` reference, the opt-in
+flags, and the upstream **CC-BY-NC-SA-4.0** license note (also tracked in
+`cogant/LICENSES.md`). Recorded results against the current pin live in
+`cogant/docs/evaluation/GNN_UPSTREAM_AUDIT_SURFACE.md`.

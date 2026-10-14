@@ -51,7 +51,7 @@ Validates GNN packages and scores 0-100. Checks:
   19. validation_notes — known issues, caveats, recommendations
 - No orphan references, checksums match, provenance complete
 
-Method validate_package(package_dir: str) -> ValidationResult. ValidationResult has valid: bool, score: float (0-100), errors: List[str], warnings: List[str].
+Method validate_package(package_dir: str, *, upstream_gnn: bool | None = None) -> ValidationResult. ValidationResult has valid: bool, score: float (0-100), errors: List[str], warnings: List[str]. Upstream `gnn.validate_gnn_syntax` runs only for `upstream_gnn=True`, or for `upstream_gnn=None` when `COGANT_ENABLE_UPSTREAM_GNN` is truthy (see [`AGENTS.md`](AGENTS.md)).
 
 ### GNNModelRunner (runner.py)
 Loads GNN package and executes Active Inference simulation. Maintains beliefs (probability distribution over hidden states) and performs Bayesian update on observation, then evaluates policies via Expected Free Energy (EFE) and selects action.
@@ -132,3 +132,4 @@ for trace in traces:
 - schemas/ — ProgramGraph, StateSpaceModel, ProcessModel, SemanticMapping
 - gnn_export (internal) — 19 canonical section schemas
 - simulate/ — CategoricalDistribution, FreeEnergyCalculator (Active Inference)
+- Optional: the Active Inference Institute `generalized-notation-notation` package (`cogant[upstream]` extra, GNN 4.1.0 release line, import package `gnn`), reached only through [`upstream_bridge/`](upstream_bridge/README.md). Core GNN building, validation, and execution do not require it.

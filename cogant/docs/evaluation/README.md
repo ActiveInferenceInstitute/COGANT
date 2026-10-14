@@ -23,7 +23,7 @@ directory. The most important files are:
 | [Scaling analysis](SCALING_ANALYSIS.md) | Current scaling constraints and regression targets |
 | [Cross-language roundtrip](CROSS_LANG_ROUNDTRIP.md) | Language-pair evidence outside the Python native ledger |
 | [GNN validation report](GNN_VALIDATION_REPORT.md) | Structural validation of emitted GNN packages |
-| [GNN v2 audit surface](GNN_V2_AUDIT_SURFACE.md) | Version, bridge, upstream-step, and supply-chain claim boundary |
+| [GNN upstream audit surface](GNN_UPSTREAM_AUDIT_SURFACE.md) | Version, bridge, upstream-step, and supply-chain claim boundary, with recorded results against the pinned GNN 4.1.0 release line |
 | [Mutation report](MUTATION_REPORT.md) | Mutation-testing results |
 | [Literature](LITERATURE.md) | Research sources |
 | [Related work](RELATED_WORK.md) | Tool and method comparison |
@@ -35,7 +35,7 @@ directory. The most important files are:
 3. [Roundtrip evaluation](ROUNDTRIP_EVAL.md)
 4. [Roundtrip validation contract](ROUNDTRIP_VALIDATION.md)
 5. [Calibration](CALIBRATION.md)
-6. [GNN v2 audit surface](GNN_V2_AUDIT_SURFACE.md)
+6. [GNN upstream audit surface](GNN_UPSTREAM_AUDIT_SURFACE.md)
 7. [Scaling analysis](SCALING_ANALYSIS.md)
 8. [Literature](LITERATURE.md) and [Related work](RELATED_WORK.md)
 

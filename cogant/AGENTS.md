@@ -95,7 +95,7 @@ uv run cogant analyze-static <repo>          # static analysis report
 uv run cogant analyze-graph <repo>           # network/graph analysis
 uv run cogant visualize <repo>               # generate PDF/PNG/Mermaid outputs
 uv run cogant export <repo> --format all     # export in all 9 formats
-uv run cogant analyze <repo> --upstream-gnn-pipeline   # forward pipeline + AII 25-step pass (Render/Execute off)
+uv run cogant analyze <repo> --upstream-gnn-pipeline   # forward pipeline + AII 25-step pass (needs the upstream extra; skips steps 1,2,11,12)
 uv run cogant upstream-gnn <package_dir>     # re-run the AII 25-step pass on an existing gnn_package/
 uv run pytest tests/ -q                      # full test suite
 MYPYPATH=py uv run mypy --package cogant      # strict type check (0 errors target)

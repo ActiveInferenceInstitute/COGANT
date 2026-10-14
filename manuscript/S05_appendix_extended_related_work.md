@@ -103,9 +103,11 @@ approximation used in continuous-state extensions of COGANT.
 
 [17] Smekal, J., Friedman, D. A. et al. (2023). **Generalized Notation
 Notation: A Text-Based Format for Active Inference Generative Models.**
-Active Inference Institute technical report. The maintained syntax reference
-now distinguishes the syntax engine from the release bundle, and COGANT's
-`cogant.gnn` formatter targets that current upstream bundle.
+Active Inference Institute technical report. The maintained reference
+implementation is the `generalized-notation-notation` package; COGANT's
+`cogant.gnn` formatter is checked against its pinned 4.1.0 release line,
+while the GNN version value COGANT writes under `GNNVersionAndFlags` remains
+COGANT's own schema identifier.
 
 [18] Champion, T., Grzes, M., Bowman, H. (2022). **Branching Time Active
 Inference: Empirical Study and Complexity Class Analysis.** *Neural

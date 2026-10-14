@@ -62,7 +62,7 @@ related-work claims.
 | Manuscript review dashboard | `../tools/manuscript_review_dashboard.py` | Combines figure QA, section evidence, claim ledger, figure-manifest status, and the current evidence review queue |
 | Publication readiness audit | `../tools/audit_publication_readiness.py` | Classifies claims by evidence primitive, checks render-time date autofill, and combines generated evidence surfaces into a ready / caveated / blocked verdict |
 | Claim ledger generator | `../tools/claim_ledger.py` | Indexes numeric, citation, figure, artifact-path, and placeholder claims in the manuscript |
-| GNN v2 audit surface | `../tools/gnn_v2_audit_surface.py` | Separates version, bridge, COGANT-method, upstream-step, and supply-chain claims into JSON/Markdown/SVG evidence |
+| GNN upstream audit surface | `../tools/gnn_upstream_audit_surface.py` | Collects a reproducible upstream audit run and separates version, bridge, COGANT-method, upstream-step, and supply-chain claims into JSON/Markdown/SVG evidence, with expectations derived from the pinned upstream extra and lock file |
 | Organization state-space R&D audit | `../tools/organization_state_space_audit.py` | Validates typed-organization sketches against dynamic-evidence, provenance, temporal-admissibility, role-compatible transition, negative-control, and SVG-review requirements |
 | Metrics freshness check | `../tools/check_metrics_fresh.py` | Detects drift between METRICS.yaml and source artifacts |
 | Manuscript number audit | `../tools/audit_manuscript_numbers.py` | Cross-checks prose numbers against METRICS.yaml |

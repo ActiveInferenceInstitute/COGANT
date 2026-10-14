@@ -179,7 +179,8 @@ cp CHANGELOG.md docs/changelog.md
 
 COGANT is MIT-licensed. By submitting a contribution you agree to license your work under
 the same terms. See [`LICENSES.md`](LICENSES.md) for the full text and third-party
-license notes (the upstream `src.gnn` package is CC-BY-NC-SA-4.0).
+license notes (the optional upstream `generalized-notation-notation` package, import `gnn`,
+is CC-BY-NC-SA-4.0).
 
 ## Questions?
 

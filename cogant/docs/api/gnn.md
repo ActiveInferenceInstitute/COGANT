@@ -30,7 +30,7 @@ Builds the A / B / C / D generative-model matrices from the rule output and the 
 
 ## Upstream bridge
 
-Thin facades to the pinned **generalized-notation-notation** v2.0.0 package, whose upstream implementation is exposed through a repo-style `src.gnn` layout. COGANT callers should not import `src.gnn` directly: use the re-exported symbols on `cogant.gnn` (`run_upstream_validate_gnn`, `parse_upstream_model_gnn_md`, …) or the additional helpers in `cogant.gnn.upstream_bridge` (see `py/cogant/gnn/AGENTS.md`).
+Thin facades to the optional, commit-pinned **generalized-notation-notation** package (`cogant[upstream]`, GNN 4.1.0 release line), which installs the top-level `gnn` package. COGANT callers should not import `gnn` directly: the bridge enforces GNN >= 4.0 and upstream ownership of `gnn`, keeps the heavy import lazy, and maps the facades onto the 4.x API (`validate_gnn_syntax`, `validate_gnn_source`, `check_gnn_file_structure`). Use the re-exported symbols on `cogant.gnn` (`run_upstream_validate_gnn`, `parse_upstream_model_gnn_md`, `run_upstream_pipeline`, …) or the additional helpers in `cogant.gnn.upstream_bridge` (see `py/cogant/gnn/AGENTS.md`).
 
 ::: cogant.gnn.upstream_bridge
 

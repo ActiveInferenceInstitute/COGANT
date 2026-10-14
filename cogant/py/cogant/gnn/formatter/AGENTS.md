@@ -15,6 +15,6 @@ Imported as `cogant.gnn.formatter`; consumed by `gnn/package.py` and export path
 ## Files
 
 - `base.py` — formatter class, `format()`, shared helpers.
-- `upstream.py` — upstream GNN v2.0.0 canonical header sections for the v2.0.0 bundle.
+- `upstream.py` — upstream-canonical GNN header sections, validated against the pinned `generalized-notation-notation` 4.1.0 release line (`validate_gnn_syntax` at `standard` / `strict`, upstream steps 3/5/6): grouped multi-source connections `(A_m0, s_f0)>o_m0`, row-major A/B literals without an extra paren layer, column-stochastic A, and a declared `G` whenever connections route into it. The `GNN v2.0.0` header value is COGANT's own schema identifier.
 - `metadata.py`, `structural.py`, `dynamics.py`, `semantic.py` — section families.
 - `__init__.py` — `GNNMarkdownFormatter` and upstream section constants.

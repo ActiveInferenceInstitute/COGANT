@@ -35,6 +35,7 @@ review and can be made stricter with its release-only flags.
 | [`audit_synthetic_surfaces.py`](audit_synthetic_surfaces.py) | Classify retained synthetic-surface terms and fail unallowlisted fallback/mock/placeholder/stub occurrences; `--strict` also checks generated manuscript variables and matrix sidecar provenance. |
 | [`audit_manuscript_module_refs.py`](audit_manuscript_module_refs.py) | Resolve backticked `cogant.*` references in manuscript source against the installable package; `--strict` also fails dependency/import errors. |
 | [`release_gate.py`](release_gate.py) | Run the aggregate fail-closed code, package, Rust, documentation, evidence, manuscript, provenance, and freshness gate; writes `output/reports/release_gate.json`. |
+| [`gnn_upstream_audit_surface.py`](gnn_upstream_audit_surface.py) | Build (`--collect`) or read a COGANT / upstream GNN audit directory and write JSON / Markdown / SVG evidence that separates version-and-bridge currentness, single-file validation, selected upstream pipeline steps (reconciled against upstream's own plan), and pip-audit findings; the expected upstream commit and version come from the `upstream` extra pin and `cogant/uv.lock`. |
 | [`audit_release_integrity.py`](audit_release_integrity.py) | Validate version consistency, optional-upstream isolation and commit pinning, OpenAPI coverage, wheel `RECORD` hashes, dependency/license inventory, CycloneDX-shaped SBOM output, and reproducible local wheel builds; writes `output/reports/release_integrity.json` plus `output/reports/cogant-sbom.cdx.json`. |
 
 ## Common workflows
@@ -87,6 +88,17 @@ uv run python tools/audit_robustness_table.py
 uv run python tools/audit_roadmap_truth.py
 uv run python tools/citation_claim_ledger.py --keys KEY [KEY ...]
 uv run python tools/organization_state_space_audit.py --strict
+```
+
+Rebuild and summarize the optional upstream GNN audit (needs an interpreter
+with `cogant` and the `upstream` extra; see
+[`../cogant/docs/evaluation/GNN_UPSTREAM_AUDIT_SURFACE.md`](../cogant/docs/evaluation/GNN_UPSTREAM_AUDIT_SURFACE.md)):
+
+```bash
+uv run --directory cogant --extra upstream python ../tools/gnn_upstream_audit_surface.py \
+    --collect --audit-dir /tmp/cogant_gnn_upstream_audit
+uv run python tools/gnn_upstream_audit_surface.py \
+    --audit-dir /tmp/cogant_gnn_upstream_audit --strict-version --strict-upstream
 ```
 
 Run the aggregate release gate from the project root. Use `--skip-tests` only

@@ -3,97 +3,130 @@
 ## Purpose
 
 Lazy facade over the Active Inference Institute upstream package
-**`generalized-notation-notation`** (PyPI distribution name;
-import path `src.gnn`). Lets COGANT validate / parse / round-trip GNN
-markdown using the canonical reference implementation while keeping
-heavy dependencies (JAX, PyTorch) out of the eager import path.
+**`generalized-notation-notation`** (PyPI distribution name; GNN >= 4.0
+installs the top-level import package `gnn`). Lets COGANT validate / parse /
+round-trip GNN markdown using the canonical reference implementation while
+keeping heavy dependencies (JAX, PyTorch) out of the eager import path.
 
+* **Optional** dependency: installed only through the `upstream` extra
+  (`uv sync --extra upstream`; not part of `all`). The extra pins a full
+  commit of the GNN 4.1.0 release line in `cogant/pyproject.toml`
+  (mirrored in `uv.lock`); `tools/gnn_upstream_audit_surface.py` and
+  `tools/audit_release_integrity.py` check that pin against the lock.
+* Version gate: `_require_upstream_gnn()` raises `ImportError` (surfaced as
+  "unavailable") when the distribution is missing, older than
+  `MIN_UPSTREAM_MAJOR` (4), or when the importable `gnn` package belongs to
+  a different distribution.
 * Upstream license: **CC-BY-NC-SA-4.0** — see `cogant/LICENSES.md`.
-* Disable upstream calls with the env flag
-  `COGANT_DISABLE_UPSTREAM_GNN=1`, or via the
-  `PipelineConfig.upstream_gnn_validation = False` knob.
+* Upstream calls are **opt-in**. `GNNValidator.validate_package` runs
+  upstream validation only for `upstream_gnn=True`, or for
+  `upstream_gnn=None` when `COGANT_ENABLE_UPSTREAM_GNN` is truthy
+  (`1` / `true` / `yes`). The pipeline passes
+  `PipelineConfig.upstream_gnn_validation` (default `False`) explicitly,
+  and the 25-step pass needs `PipelineConfig.upstream_gnn_pipeline = True`.
+  `COGANT_DISABLE_UPSTREAM_GNN` is not read by the resolver; upstream is
+  already off by default.
+* The `GNN v2.0.0` value under `## GNNVersionAndFlags` is COGANT's own schema
+  identifier (`cogant.schema.versions.CURRENT_GNN_VERSION`), not the upstream
+  release.
 
 ## Public API
 
-All callers should use the `upstream_*` facade — never `import src.gnn`
+All callers should use the `upstream_*` facade — never `import gnn`
 directly anywhere else in the package.
 
 | Symbol | Returns | Use |
 | --- | --- | --- |
-| `is_upstream_gnn_available()` | `bool` | Probe; never raises. |
-| `upstream_version()` | `str \| None` | Upstream package version, when available. |
+| `is_upstream_gnn_available()` | `bool` | Probe (runs the version/ownership gate); never raises. |
+| `upstream_version()` | `str \| None` | Upstream `gnn.__version__` (`"4.1.0"` for the current pin), when available. |
+| `UPSTREAM_DISTRIBUTION`, `UPSTREAM_IMPORT_NAME`, `MIN_UPSTREAM_MAJOR`, `DEFAULT_VALIDATION_LEVEL` | constants | `"generalized-notation-notation"`, `"gnn"`, `4`, `"standard"`. |
 | `UpstreamGNNValidation` | dataclass | Outcome of a validation call (`available`, `ok`, `errors`, `version`, `skipped_reason`). |
-| `run_upstream_validate_gnn(markdown)` | `UpstreamGNNValidation` | Run upstream validators against an in-memory GNN markdown string. |
-| `upstream_validate_markdown(markdown)` | `UpstreamGNNValidation` | Convenience alias. |
-| `upstream_validate_file_content(text, name)` | `UpstreamGNNValidation` | Validate a string with a synthetic file name (used by reverse path). |
-| `upstream_parse_file(path)` | `Any` | Parse a single `.md` file. |
-| `upstream_discover_files(root)` | `Any` | List GNN files under a root. |
-| `upstream_process_directory(root, **kw)` | `Any` | Run upstream's batch processing pipeline. |
-| `upstream_process_directory_lightweight(root, **kw)` | `Any` | Skip simulator-heavy steps; used in tests. |
-| `upstream_process_multi_format(root, **kw)` | `Any` | Multi-format export driver. |
-| `upstream_parse_formal(*a, **kw)` | `Any` | Bridge to upstream formal-grammar parser. |
-| `upstream_validate_syntax_formal(*a, **kw)` | `Any` | Strict syntactic validation. |
-| `upstream_validate_structure(*a, **kw)` | `Any` | Structural (section-level) validation. |
-| `upstream_generate_report(*a, **kw)` | `Any` | Render upstream's report HTML/JSON. |
-| `upstream_module_info(*a, **kw)` | `Any` | Introspection helper. |
-| `get_upstream_parsing_system()` | `Any` | Upstream `ParsingSystem` instance. |
+| `run_upstream_validate_gnn(markdown, *, validation_level="standard")` | `UpstreamGNNValidation` | Stage the markdown to a temporary `.gnn.md` file and run upstream `validate_gnn_syntax` at the given `ValidationLevel` (`basic` / `standard` / `strict` / `research` / `round_trip`). |
+| `upstream_validate_markdown(markdown)` | `UpstreamGNNValidation` | Alias with the default level. |
+| `upstream_validate_file_content(content, *, is_content=True)` | `dict` | Upstream `validate_gnn_source` on raw content or a path (GNN 2.x `validate_gnn_file`). |
+| `upstream_parse_file(path)` | `Any` | Upstream `parse_gnn_file`. |
+| `upstream_discover_files(root)` | `Any` | Upstream `discover_gnn_files`. |
+| `upstream_process_directory(input_dir, output_dir, **kw)` | `Any` | Upstream `process_gnn_directory`. |
+| `upstream_process_directory_lightweight(input_dir, output_dir, **kw)` | `Any` | Upstream `process_gnn_directory_lightweight`. |
+| `upstream_process_multi_format(input_dir, output_dir, log=None, **kw)` | `Any` | Upstream `process_gnn_multi_format`. |
+| `upstream_parse_formal(*a, **kw)` | `Any` | Upstream `parse_gnn_formal`. |
+| `upstream_validate_syntax_formal(*a, **kw)` | `Any` | Upstream `validate_gnn_syntax` (GNN 2.x `validate_gnn_syntax_formal`). |
+| `upstream_validate_structure(*a, **kw)` | `Any` | Upstream `check_gnn_file_structure` (GNN 2.x `validate_gnn_structure`). |
+| `upstream_generate_report(*a, **kw)` | `Any` | Upstream `generate_gnn_report`. |
+| `upstream_module_info(*a, **kw)` | `Any` | Upstream `get_module_info`. |
+| `get_upstream_parsing_system()` | `Any` | Upstream `GNNParsingSystem` instance. |
 | `get_upstream_gnn_format_enum()` | `Any` | Upstream `GNNFormat` enum. |
-| `parse_upstream_model_gnn_md(package_dir)` | `dict` | One-shot parse of a synthesized package's `model.gnn.md`. |
+| `parse_upstream_model_gnn_md(package_dir)` | `dict` | One-shot parse of a synthesized package's `model.gnn.md`; returns an `error` entry instead of raising. |
 | `json_safe(obj)` | `Any` | Best-effort JSON-coerce upstream return values for bundle storage. |
 
 ## Upstream GNN 25-step pipeline (`pipeline.py`)
 
-`pipeline.py` drives the upstream **`src.main.execute_pipeline_step`**
-orchestrator over a COGANT-built `gnn_package/`, exposing the full 25-step
-Active Inference processing chain as a configurable post-validate pass.
+`pipeline.py` drives the upstream numbered pipeline over a COGANT-built
+`gnn_package/`. GNN 4.x binds step selection, source identity, output
+ownership, and deadlines to one invocation, so the driver issues exactly
+**one** `python -m gnn.main --target-dir … --output-dir … --only-steps …`
+subprocess on COGANT's active interpreter and reads per-step outcomes from
+`<output_dir>/00_pipeline_summary/pipeline_execution_summary.json`.
 
 | Symbol | Purpose |
 | --- | --- |
 | `UPSTREAM_STEP_SCRIPTS: tuple[str, ...]` | Canonical 25 numbered scripts indexed by step number; single source of truth. |
-| `DEFAULT_SKIP_STEPS: frozenset[int]` | `{11, 12}` — render and execute, off by default. |
-| `resolve_steps(only, skip)` | Pure helper returning the ordered step indices to execute. |
-| `UpstreamPipelineConfig` | Inputs: `target_dir`, `output_dir`, `only_steps`, `skip_steps` (default `[11, 12]`), `frameworks`, `llm_model`, `timesteps`, `verbose`, `skip_llm`. |
-| `UpstreamPipelineResult.success_rate` | Convenience ratio in `[0.0, 1.0]`; `0.0` for empty / unavailable runs. |
-| `UpstreamStepResult` | Per-step outcome: `step_index`, `script`, `status`, `success`, `duration_s`, `exit_code`, `memory_delta_mb`, `output_dir`, `error`. |
-| `UpstreamPipelineResult` | Aggregate outcome with `available`, `executed`, `skipped`, `success_count`, `failure_count`, `to_dict()` for JSON storage. |
-| `run_upstream_pipeline(cfg)` | Driver — adapts a `PipelineArguments`, iterates the resolved step set, and calls `src.main.execute_pipeline_step` per step. Captures exceptions per step (one bad step does not abort the run). |
+| `DEFAULT_SKIP_STEPS: frozenset[int]` | `{1, 2, 11, 12}` — setup, tests, render, execute; off by default. |
+| `SUCCESS_STATUSES` | `{"SUCCESS", "SUCCESS_WITH_WARNINGS", "SKIPPED"}` — statuses counted as a passing step. |
+| `DEFAULT_TIMEOUT_S` | Bridge-level wall-clock ceiling (3600 s) for the single invocation; upstream applies its own per-step deadlines inside it. |
+| `resolve_steps(only, skip)` | Pure helper returning the ordered step indices to request. |
+| `UpstreamPipelineConfig` | Inputs: `target_dir`, `output_dir`, `only_steps`, `skip_steps` (default `sorted(DEFAULT_SKIP_STEPS)`), `frameworks`, `llm_model` (child-env `OLLAMA_MODEL`; the caller's env is never mutated), `timesteps`, `verbose`, `skip_llm`, `timeout_s`. |
+| `UpstreamStepResult` | Per-step outcome: `step_index`, `script`, `status` (upstream status, or `NOT_RUN` / `TIMEOUT` / `BRIDGE_ERROR`), `success`, `duration_s`, `exit_code`, `memory_delta_mb`, `output_dir`, `error`. |
+| `UpstreamPipelineResult` | Aggregate: `available`, `steps`, `executed`, `skipped`, `total_duration_s`, `output_dir`, `target_dir`, `error`, `upstream_status`, `run_id`, plus `success_count` / `failure_count` / `success_rate` and `to_dict()`. |
+| `run_upstream_pipeline(cfg)` | Driver: stages `*.gnn.md` into `<output_dir>/_cogant_input/`, runs the single invocation (console log to `<output_dir>/upstream_pipeline.log`), maps the upstream summary onto one `UpstreamStepResult` per requested step, and writes `<output_dir>/upstream_pipeline_summary.json`. |
 
 ### Step catalogue
 
 | # | Script | Default | Notes |
 | --- | --- | --- | --- |
 | 0 | `0_template.py` | on | Project scaffolding sanity check. |
-| 1 | `1_setup.py` | on | Environment / deps; harmless when already met. |
-| 2 | `2_tests.py` | on | Upstream's own GNN test sweep. |
+| **1** | `1_setup.py` | **off** | Provisions a uv environment relative to an upstream source checkout; from an installed wheel it creates a stray `.venv` in the caller's environment and its `uv sync` repair can uninstall packages. Do not enable it against a shared environment. |
+| **2** | `2_tests.py` | **off** | Upstream's own repository test suite, which the wheel does not ship. |
 | 3 | `3_gnn.py` | on | Core GNN parsing / discovery. |
 | 4 | `4_model_registry.py` | on | Register parsed models. |
-| 5 | `5_type_checker.py` | on | Strict type-check of GNN sections. |
+| 5 | `5_type_checker.py` | on | Type-check of GNN sections. |
 | 6 | `6_validation.py` | on | Schema + cross-section validation. |
-| 7 | `7_export.py` | on | Multi-format export (JSON, GraphML, Mermaid). |
+| 7 | `7_export.py` | on | Multi-format export. |
 | 8 | `8_visualization.py` | on | Static visualisations. |
-| 9 | `9_advanced_viz.py` | on | Interactive visualisations (Plotly / d3). Filename retained verbatim for upstream parity. |
+| 9 | `9_advanced_viz.py` | on | Interactive visualisations; some features need the D2 CLI. Filename retained verbatim for upstream parity. |
 | 10 | `10_ontology.py` | on | Active Inference Ontology (AIO) lookup. |
-| **11** | `11_render.py` | **off** | Framework code generation (PyMDP, RxInfer, JAX). Heavy; opt-in via `skip_steps=[]` or `only_steps=[..., 11, ...]`. |
-| **12** | `12_execute.py` | **off** | Runs the rendered model. Requires JAX/PyMDP and a runnable bundle. |
-| 13 | `13_llm.py` | on | LLM analysis (Ollama; honours `--upstream-gnn-llm-model`). |
-| 14 | `14_ml_integration.py` | on | ML pipeline integration. |
+| **11** | `11_render.py` | **off** | Framework code generation (PyMDP, JAX, DisCoPy, bnlearn, …). |
+| **12** | `12_execute.py` | **off** | Runs the rendered scripts (upstream default `GNN_SANDBOX=off`). |
+| 13 | `13_llm.py` | on | LLM analysis (Ollama; honours `--upstream-gnn-llm-model`). With `skip_llm=True` upstream never plans it and the bridge reports `NOT_RUN`. |
+| 14 | `14_ml_integration.py` | on | ML integration (training skipped without scikit-learn). |
 | 15 | `15_audio.py` | on | Audio rendering of model dynamics. |
 | 16 | `16_analysis.py` | on | Statistical analysis. |
-| 17 | `17_integration.py` | on | Integration tests / cross-format checks. |
+| 17 | `17_integration.py` | on | Cross-format integration checks. |
 | 18 | `18_security.py` | on | Security scan of the package. |
 | 19 | `19_research.py` | on | Research-mode exploration. |
 | 20 | `20_website.py` | on | Static HTML report for the package. |
 | 21 | `21_mcp.py` | on | Model Context Protocol exports. |
-| 22 | `22_gui.py` | on | GUI export. |
+| 22 | `22_gui.py` | on | GUI export (static headless artifacts without Gradio). |
 | 23 | `23_report.py` | on | Pipeline report. |
 | 24 | `24_intelligent_analysis.py` | on | Final synthesis pass. |
+
+Upstream GNN 4.1.0 resolves hard step prerequisites inside the invocation:
+`12_execute` requires `3, 11`, `16_analysis` requires `3, 7, 12`, and
+`18_security` requires `11`. With the default selection upstream therefore
+also runs `11_render` and `12_execute` ("Auto-including dependency steps");
+the bridge result still lists them under `skipped` and has no step record for
+them. Read `00_pipeline_summary/pipeline_execution_summary.json`
+(`planned_steps`) or the audit surface (`tools/gnn_upstream_audit_surface.py`)
+for what upstream actually ran.
 
 ### Wiring
 
 * `PipelineConfig.upstream_gnn_pipeline` (default `False`) is the master
   opt-in. When `True`, `PipelineRunner._stage_validate` invokes
   `run_upstream_pipeline` against `bundle.artifacts['_gnn_package_dir']`
-  after COGANT's own GNN validator runs.
+  after COGANT's own GNN validator runs (output root
+  `<run output>/upstream_pipeline/` unless
+  `PipelineConfig.upstream_gnn_output_dir` is set).
 * Per-step results are recorded as
   `bundle.artifacts['upstream_pipeline_steps']` (list of step dicts) and
   `bundle.artifacts['upstream_pipeline_summary']` (aggregate). A failing
@@ -101,46 +134,58 @@ Active Inference processing chain as a configurable post-validate pass.
   validate stage.
 * CLI: `cogant analyze | translate | validate --upstream-gnn-pipeline`
   toggles the pass; `--upstream-gnn-only-steps "3,5,7"` and
-  `--upstream-gnn-skip-steps "11,12,13"` refine it. `cogant upstream-gnn
-  <package_dir>` runs the pass against an existing package directory.
+  `--upstream-gnn-skip-steps "1,2,11,12,13"` refine it (`""` skips
+  nothing). `cogant upstream-gnn <package_dir>` runs the pass against an
+  existing package directory and exits 1 when any requested step fails.
 
 ### Side-effects to know
 
-* Importing `src.main` ``chdir``s to its own project root. The bridge
-  saves and restores `os.getcwd()` around every upstream call via the
-  internal `_preserve_cwd()` context manager so callers never observe
-  the change.
-* Each enabled step runs as a subprocess (upstream invokes
-  `<venv>/bin/python <step>.py`). For the calculator example the full
-  default-skip pass takes a few minutes, hence the
-  `COGANT_RUN_UPSTREAM_PIPELINE=1` gate on the integration sweep.
+* Importing `gnn.main` has no working-directory or import-path side effects
+  in GNN 4.x, so the bridge needs no cwd guard.
+* The child process inherits COGANT's environment with `PYTHONUNBUFFERED=1`,
+  `GNN_RUN_ID` / `GNN_RUN_CONTEXT_FILE` removed (upstream mints a fresh run
+  identity), and `OLLAMA_MODEL` set only when `llm_model` is given.
+* Only GNN markdown is staged as the upstream corpus: GNN 4.x discovery
+  treats every `*.json` file as a model source, and the COGANT sidecars are
+  package evidence, not standalone models.
+* A summary older than the invocation start is ignored (it belongs to a
+  previous run in the same output root); requested steps upstream never
+  reached are reported as `NOT_RUN`.
+* For the calculator example the default selection takes a few minutes
+  (about 140 s on 2026-10-14).
 
 ## Conventions
 
 * Every facade function is **side-effect-free at import time**: heavy
   upstream imports happen inside the function body via
-  `_require_src_gnn()` so `import cogant` does not pull in JAX.
-* Functions never raise on missing upstream — they return an
-  `UpstreamGNNValidation` with `available=False` (or an empty `dict`
-  with an `"error"` key) so callers can fall back to COGANT-only
-  checks.
-* Parsing helpers always return JSON-coercible payloads via
-  `json_safe()` so the bundle's `to_json()` succeeds even when
-  upstream returns Pydantic models or dataclasses.
+  `_require_upstream_gnn()` so `import cogant` does not pull in JAX.
+* `run_upstream_validate_gnn` never raises on a missing upstream — it
+  returns `UpstreamGNNValidation(available=False, ok=True, skipped_reason=…)`
+  so callers can fall back to COGANT-only checks. The thin `upstream_*`
+  passthroughs raise `ImportError` when upstream is unavailable;
+  `parse_upstream_model_gnn_md` returns a dict with an `"error"` key instead.
+* Parsing helpers return JSON-coercible payloads via `json_safe()` so the
+  bundle's `to_json()` succeeds even when upstream returns Pydantic models or
+  dataclasses.
 * `pipeline.py` follows the same rules: it returns an
   `UpstreamPipelineResult(available=False, error=…)` instead of raising
-  when `src.main` cannot be imported.
+  when `gnn.main` cannot be imported.
 
 ## Tests
 
-* `tests/unit/test_upstream_bridge.py` — facade availability + JSON-safe
-  coercion.
+* `tests/unit/test_gnn_upstream_bridge.py` — the absent `src.gnn` surface,
+  the version/ownership gate, renamed-API routing to the GNN 4.x names, and
+  validator wiring.
+* `tests/unit/test_gnn_upstream_bridge_contract.py` — `json_safe` coercion
+  and smoke calls for every `upstream_*` facade.
+* `tests/unit/test_gnn_validator_upstream_flags.py` — `_resolve_upstream_flag`
+  and the validator's upstream branches.
 * `tests/unit/test_upstream_pipeline_resolution.py` — step catalogue
-  invariants, `resolve_steps`, dataclass round-trips, unavailable-bridge
-  fallback.
-* `tests/integration/test_validate_stage.py` exercises
-  `run_upstream_validate_gnn` end-to-end via `run_validate`.
+  invariants, `resolve_steps`, the single-invocation command, summary
+  mapping (`NOT_RUN`, ignored previous summaries, timeouts), and the
+  unavailable-bridge result.
 * `tests/integration/test_upstream_gnn_pipeline.py` — real package, real
-  subprocesses: default skip semantics, `only_steps=[3,5]`, JSON
-  round-trip, render+execute opt-in (gated on `jax`), full-sweep test
-  gated on `COGANT_RUN_UPSTREAM_PIPELINE=1`.
+  `python -m gnn.main` invocations: `only_steps=[3,5]`, upstream acceptance
+  steps 3/5/6 on a freshly emitted package, default-skip semantics, JSON
+  round-trip, and render+execute opt-in (gated on `jax`). Tests skip when
+  `gnn.main` is not importable.

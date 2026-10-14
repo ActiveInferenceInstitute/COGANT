@@ -26,7 +26,7 @@ cogant render: Generate interactive HTML site from bundle.json, creating index.h
 
 cogant viz: Walk a run/output directory and rasterize Mermaid, SVG, dot, and related artifacts to PNG (see `cogant.viz.png`).
 
-cogant validate: Run validation checks on bundle.json, or on a directory containing `gnn_package/` (full GNN package validation when applicable). For a `gnn_package` directory, Active Inference Institute `src.gnn` checks on `model.gnn.md` run by default; pass `--no-upstream-gnn` to skip them while keeping COGANT structural validation, or set `COGANT_DISABLE_UPSTREAM_GNN=1`.
+cogant validate: Run validation checks on bundle.json, or on a directory containing `gnn_package/` (full GNN package validation when applicable). For a `gnn_package` directory, the optional Active Inference Institute upstream check (`gnn.validate_gnn_syntax` from the `upstream` extra, GNN 4.1.0 release line) on `model.gnn.md` runs only when `COGANT_ENABLE_UPSTREAM_GNN` is truthy; `--no-upstream-gnn` forces it off while keeping COGANT structural validation. Add `--upstream-gnn-pipeline` to drive the upstream 25-step pass (default skip `1,2,11,12`).
 
 cogant diff: Compare two bundle.json files showing differences in errors and stages. Supports baseline vs current analysis.
 
@@ -52,7 +52,7 @@ cogant benchmark: Time pipeline performance across multiple runs, reporting aver
 
 cogant version: Print the package version and exit.
 
-cogant upstream-gnn: Re-run the Active Inference Institute 25-step `src.gnn` pipeline on an existing `gnn_package/` directory (skips Render/Execute by default; set `COGANT_RUN_UPSTREAM_PIPELINE=1` for the slow integration path).
+cogant upstream-gnn: Re-run the Active Inference Institute 25-step upstream GNN pipeline (one `python -m gnn.main --only-steps …` invocation; requires the optional `upstream` extra) on an existing `gnn_package/` directory. Skips steps 1 (setup), 2 (tests), 11 (render), and 12 (execute) by default (`--skip-steps ""` runs all 25); exits 1 when upstream is unavailable or any requested step fails.
 
 cogant plugin list / cogant plugin info: Enumerate discovered plugins and print details about a specific plugin.
 

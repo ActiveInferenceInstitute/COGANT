@@ -14,7 +14,7 @@ GNN stands for **Generalized Notation Notation** -- a structured markdown format
 
 A GNN file is a self-contained description of a generative model. It tells you: what hidden states exist, what observations the system can make, what actions it can take, how states transition given actions, how observations relate to hidden states, and what the system prefers. In COGANT's case, the "system" is your codebase and the generative model is derived from static analysis of your source code.
 
-The format is a markdown file with specific `##` section headers that parsers and type-checkers recognize. COGANT now targets the upstream GNN v2.0.0 engine carried by the pinned GeneralizedNotationNotation v2.0.0 release bundle while also appending extended sections for provenance, Markov blankets, and confidence metrics.
+The format is a markdown file with specific `##` section headers that parsers and type-checkers recognize. COGANT emits the upstream-required header sections, checked against the optional, commit-pinned `generalized-notation-notation` reference implementation (GNN 4.1.0 release line; `validate_gnn_syntax` at the `standard` and `strict` levels), while also appending extended sections for provenance, Markov blankets, and confidence metrics.
 
 ## Anatomy of a GNN file
 
@@ -22,7 +22,7 @@ A GNN file emitted by COGANT contains these sections in canonical order:
 
 ### GNNSection and GNNVersionAndFlags
 
-The header block that identifies the file as a GNN model and declares the version. COGANT emits `GNN v2.0.0` with a bundle provenance comment so the upstream checker and COGANT's own validator agree on the required header surface.
+The header block that identifies the file as a GNN model and declares the version. COGANT emits `GNN v2.0.0` — COGANT's own schema identifier (`cogant.schema.versions.CURRENT_GNN_VERSION`), independent of the upstream package release — so the upstream checker and COGANT's own validator agree on the required header surface.
 
 ### ModelName and ModelAnnotation
 
@@ -113,7 +113,7 @@ The behavior described on this page is implemented by the `cogant.gnn` package. 
 | `GNNPackage` directory layout (`model.gnn.md` + satellites) | `gnn/package.py` | [`cogant.gnn` → Package builder](../api/gnn.md#package-builder) | `GNNPackageBuilder` |
 | A / B / C / D matrix construction from rule output | `gnn/matrices.py` | [`cogant.gnn` → Matrix builder](../api/gnn.md#matrix-builder) | `build_matrices`, `MatrixBuilder` |
 | `load_gnn_package()` parser used in [reverse mode](roundtrip.md) | `gnn/runner.py` | [`cogant.gnn` → Runner](../api/gnn.md#runner) | `load_gnn_package` |
-| GNN v2.0.0-engine conformance + 0–100 score | `gnn/validator.py` | [`cogant.gnn` → Validator](../api/gnn.md#validator) | `GNNValidator` |
+| GNN v2.0.0 schema conformance + 0–100 score | `gnn/validator.py` | [`cogant.gnn` → Validator](../api/gnn.md#validator) | `GNNValidator` |
 | Mapping the [seven Active Inference roles](../reference/semantic_roles.md) and supporting evidence roles onto GNN sections | `translate/rules/` | [`cogant.translate` → Rules](../api/translate.md#rules) | `ObservationRule`, `ActionRule`, `MutatingSubsystemRule`, ... — see [Translation rules reference](../reference/translation_rules.md) |
 | State-space basis projection (variables / observations / actions) | `statespace/compiler.py` | [`cogant.statespace`](../api/statespace.md#compiler) | `StateSpaceCompiler` |
 

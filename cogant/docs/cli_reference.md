@@ -38,9 +38,9 @@ cogant translate <repo> [--output DIR] [--layout-output] [--no-dynamic]
 | `--incremental` | Git ref (e.g. `HEAD~1`, commit hash, tag) to use as the incremental baseline; only changed files are re-parsed. |
 | `--cache-dir` | Override the incremental cache directory (default: `~/.cache/cogant`). |
 | `--upstream-gnn-pipeline` / `--no-upstream-gnn-pipeline` | Enable/disable the upstream GNN 25-step pipeline pass after `validate` (default: disabled). |
-| `--upstream-gnn-only-steps` | Comma-separated 1-based step numbers to run (e.g. `1,3,4,8`); subset of the upstream catalog. |
-| `--upstream-gnn-skip-steps` | Comma-separated 1-based step numbers to skip; default skips network-bound steps (LLM, audio, website). |
-| `--upstream-gnn-frameworks` | Comma-separated render targets for upstream step 11 (e.g. `pymdp,rxinfer`). |
+| `--upstream-gnn-only-steps` | Comma-separated step indices `0`–`24` to run (e.g. `3,5,6`); subset of the upstream catalog. |
+| `--upstream-gnn-skip-steps` | Comma-separated step indices to skip; default `1,2,11,12` (setup, tests, render, execute); `""` skips nothing. |
+| `--upstream-gnn-frameworks` | Render/execute targets forwarded to upstream (default `lite`; e.g. `pymdp,rxinfer`). |
 | `--upstream-gnn-llm-model` | Override LLM model identifier for upstream step 13 (only relevant when step 13 is enabled). |
 
 Writes `bundle.json` under the output directory and prints a per-stage status table.
@@ -133,11 +133,11 @@ Defaults to 3 iterations. Each iteration runs the pipeline with `export` and `va
 
 ## Upstream GNN 25-step pipeline
 
-`cogant upstream-gnn` invokes the **git-pinned** dependency `generalized-notation-notation` (declared in `pyproject.toml`; install with `uv sync` from the package root). The bridge imports `src.main.execute_pipeline_step` from that package — there is no `cogant/_extensions/...` checkout inside the COGANT repository. Network- and LLM-dependent steps are skipped by default (configurable via flags). The same wiring is exposed as opt-in flags on `cogant translate`, `cogant analyze`, and `cogant validate` (see `--upstream-gnn-pipeline` above).
+`cogant upstream-gnn` drives the **optional**, commit-pinned dependency `generalized-notation-notation` (GNN 4.1.0 release line, import package `gnn`; install with `uv sync --extra upstream` from the package root — it is not part of `all`). The bridge runs the selected steps as one `python -m gnn.main --only-steps …` invocation on the active interpreter and reads per-step results from upstream's `00_pipeline_summary/pipeline_execution_summary.json` — there is no `cogant/_extensions/...` checkout inside the COGANT repository. Steps 1 (`setup`), 2 (`tests`), 11 (`render`), and 12 (`execute`) are skipped by default (`--skip-steps ""` runs all 25); upstream may still run 11 and 12 as hard prerequisites of selected steps such as `16_analysis` and `18_security`. The command exits 1 when upstream is unavailable or any requested step fails. The same wiring is exposed as opt-in flags on `cogant translate`, `cogant analyze`, and `cogant validate` (see `--upstream-gnn-pipeline` above).
 
 ```bash
 cogant upstream-gnn output/gnn_package
-cogant upstream-gnn output/gnn_package --only-steps 1,3,8 --output-dir output/upstream
+cogant upstream-gnn output/gnn_package --only-steps 3,5,6 --output-dir output/upstream
 cogant upstream-gnn output/gnn_package --frameworks pymdp,rxinfer --verbose
 ```
 
