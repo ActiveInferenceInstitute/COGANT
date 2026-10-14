@@ -1196,6 +1196,11 @@ def _read_matrices_fenced_block(text: str) -> dict[str, Any]:
                 act_match = re.match(r"#\s*action\s*=\s*(\d+)", row_line)
                 if act_match:
                     current_action = int(act_match.group(1))
+                    if current_action >= depth:
+                        raise ReverseModelError(
+                            f"B block header '# action={current_action}' is outside "
+                            f"the declared depth={depth}"
+                        )
                     row_idx = 0
                     i += 1
                     continue
