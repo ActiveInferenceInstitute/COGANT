@@ -457,6 +457,10 @@ fn parse_semantic_role(role: &str) -> PyResult<SemanticRole> {
 /// ``ProgramGraphBuilder.get_connected_components()``. Enable it by setting
 /// the environment variable ``COGANT_USE_RUST=1``.
 ///
+/// A node ID listed more than once is one node at its first position, matching
+/// the Python backend, which keys nodes by ID in a dict. Edges whose endpoints
+/// are not listed are ignored.
+///
 /// Complexity: O(V + E) using petgraph's union-find.
 #[pyfunction]
 pub fn connected_components(nodes: Vec<String>, edges: Vec<(String, String)>) -> Vec<Vec<String>> {
@@ -464,14 +468,19 @@ pub fn connected_components(nodes: Vec<String>, edges: Vec<(String, String)>) ->
         return Vec::new();
     }
 
-    // Map node IDs to petgraph NodeIndex.
+    // Map node IDs to petgraph NodeIndex, keeping each ID's first position
+    // so a duplicated ID cannot be reported in two components.
     let mut node_index: std::collections::HashMap<&str, petgraph::graph::NodeIndex> =
         std::collections::HashMap::with_capacity(nodes.len());
+    let mut unique: Vec<&str> = Vec::with_capacity(nodes.len());
     let mut graph: UnGraph<usize, ()> = UnGraph::with_capacity(nodes.len(), edges.len());
 
-    for (i, node_id) in nodes.iter().enumerate() {
-        let idx = graph.add_node(i);
-        node_index.insert(node_id.as_str(), idx);
+    for node_id in &nodes {
+        if let std::collections::hash_map::Entry::Vacant(slot) = node_index.entry(node_id.as_str())
+        {
+            slot.insert(graph.add_node(unique.len()));
+            unique.push(node_id.as_str());
+        }
     }
 
     for (src, dst) in &edges {
@@ -492,7 +501,7 @@ pub fn connected_components(nodes: Vec<String>, edges: Vec<(String, String)>) ->
     // petgraph doesn't expose the component map directly from
     // `connected_components`, so we run a manual BFS to group them — this
     // keeps the result order deterministic (same as the Python BFS).
-    let n = nodes.len();
+    let n = unique.len();
     let mut visited = vec![false; n];
     let mut components: Vec<Vec<String>> = Vec::with_capacity(num_components);
 
@@ -507,7 +516,7 @@ pub fn connected_components(nodes: Vec<String>, edges: Vec<(String, String)>) ->
         }
     }
 
-    for (i, node_id) in nodes.iter().enumerate() {
+    for i in 0..n {
         if visited[i] {
             continue;
         }
@@ -517,7 +526,7 @@ pub fn connected_components(nodes: Vec<String>, edges: Vec<(String, String)>) ->
         queue.push_back(i);
         visited[i] = true;
         while let Some(cur) = queue.pop_front() {
-            component.push(nodes[cur].clone());
+            component.push(unique[cur].to_string());
             for &nb in &adj[cur] {
                 if !visited[nb] {
                     visited[nb] = true;
@@ -525,8 +534,6 @@ pub fn connected_components(nodes: Vec<String>, edges: Vec<(String, String)>) ->
                 }
             }
         }
-        // Suppress unused warning: node_id is the canonical label for i.
-        let _ = node_id;
         components.push(component);
     }
 
@@ -743,4 +750,33 @@ pub fn cogant_rust_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     )?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ids(items: &[&str]) -> Vec<String> {
+        items.iter().map(|s| s.to_string()).collect()
+    }
+
+    fn pairs(items: &[(&str, &str)]) -> Vec<(String, String)> {
+        items
+            .iter()
+            .map(|(a, b)| (a.to_string(), b.to_string()))
+            .collect()
+    }
+
+    #[test]
+    fn connected_components_keeps_duplicate_ids_in_one_component() {
+        let components = connected_components(ids(&["a", "b", "a", "c"]), pairs(&[("a", "b")]));
+        assert_eq!(components, vec![ids(&["a", "b"]), ids(&["c"])]);
+    }
+
+    #[test]
+    fn connected_components_handles_empty_and_dangling_edges() {
+        assert!(connected_components(Vec::new(), pairs(&[("a", "b")])).is_empty());
+        let components = connected_components(ids(&["a", "b"]), pairs(&[("a", "x"), ("x", "b")]));
+        assert_eq!(components, vec![ids(&["a"]), ids(&["b"])]);
+    }
 }
