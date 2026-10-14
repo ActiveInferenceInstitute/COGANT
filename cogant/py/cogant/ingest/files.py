@@ -120,21 +120,31 @@ class FileEnumerator:
     def _should_ignore(self, path: Path) -> bool:
         """Check if path should be ignored based on patterns.
 
+        Directory patterns are matched against the components *below* the
+        repository root only, so a repository checked out under a directory
+        named ``build``/``dist``/``target``/... is still ingested.
+
         Args:
             path: Path to check.
 
         Returns:
             True if path should be ignored.
         """
+        try:
+            relative = path.relative_to(self.repo_root)
+        except ValueError:
+            # Not lexically below the root (caller passed an unrelated or
+            # unresolved path): fall back to matching every component.
+            relative = path
+
         # Always ignore certain patterns
         for ignore_pattern in IGNORE_PATTERNS:
-            if ignore_pattern in path.parts or path.name.endswith(ignore_pattern):
+            if ignore_pattern in relative.parts or path.name.endswith(ignore_pattern):
                 return True
 
         # Check .gitignore patterns
         if self.respect_gitignore:
             gitignore_patterns = self._load_gitignore()
-            relative = path.relative_to(self.repo_root)
 
             for pattern in gitignore_patterns:
                 # Simple wildcard matching

@@ -80,6 +80,15 @@ SKIP_DIRS: frozenset[str] = frozenset(
 DEFAULT_FILE_BUDGET: int = 5000
 
 
+def _in_skipped_dir(path: Path, root: Path) -> bool:
+    """Return whether ``path`` sits in a :data:`SKIP_DIRS` directory below ``root``.
+
+    Only components *below* ``root`` are considered, so a repository that is
+    itself checked out under e.g. ``/workspace/build/`` is still counted.
+    """
+    return any(part in SKIP_DIRS for part in path.relative_to(root).parts)
+
+
 def count_source_files(
     root: Path,
     *,
@@ -112,7 +121,7 @@ def count_source_files(
         if budget <= 0:
             break
         budget -= 1
-        if any(part in SKIP_DIRS for part in path.parts):
+        if _in_skipped_dir(path, root):
             continue
         if path.is_file() and path.suffix.lower() in SOURCE_EXTENSIONS:
             count += 1
@@ -134,7 +143,7 @@ def _iter_source_files(
         if budget <= 0:
             break
         budget -= 1
-        if any(part in SKIP_DIRS for part in path.parts):
+        if _in_skipped_dir(path, root):
             continue
         if path.is_file() and path.suffix.lower() in SOURCE_EXTENSIONS:
             paths.append(path)
