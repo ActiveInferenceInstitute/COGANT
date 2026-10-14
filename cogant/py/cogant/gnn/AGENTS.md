@@ -163,6 +163,8 @@ Orchestrates creation of a complete GNN package on disk.
 15. `markov_blanket.json` — Active Inference Markov blanket partition
 16. `markov_network.json` — collapsed four-role aggregate network
 
+The Markov blanket pair is best-effort: when extraction fails both files are written as `status: "unavailable"` placeholders and `manifest.json` records `artifact_status.markov_blanket = "unavailable"` plus a warning.
+
 **Key Methods:**
 - `__init__(graph, state_space, process_model, mappings, config)` — initialize builder
 - `build(output_dir) -> dict[str, Any]` — write all files; returns metadata dict
@@ -493,6 +495,7 @@ print(f"Timing stats: {stats}")
 - Missing files → errors list
 - JSON parse errors → logged with file path and line number
 - Section check failures → warning (non-blocking)
+- Placeholder best-effort artifacts (`manifest.artifact_status` not `"success"`, or a `markov_blanket.json` stub with `metadata.status: "unavailable"`) → warning per artifact; status map in `details["artifact_status"]`
 - Confidence aggregation failures → score defaults to 0.0 for that component
 
 **GNNModelRunner:**

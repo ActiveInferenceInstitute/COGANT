@@ -34,6 +34,7 @@ class GNNValidator:
     REQUIRED_FILES: Any
     CANONICAL_SECTIONS: Any
     UPSTREAM_SECTIONS: Any
+    BEST_EFFORT_ARTIFACTS: tuple[str, ...]
     result: ValidationResult
     package_dir: Path
     _upstream_gnn: bool

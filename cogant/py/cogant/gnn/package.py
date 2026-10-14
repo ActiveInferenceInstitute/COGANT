@@ -443,8 +443,12 @@ class GNNPackageBuilder:
             mapping kinds when strategy is ``"mapping_kind"``.
 
         If no semantic mappings are present, the extractor uses its explicit
-        configured strategy against the real graph. Generation errors abort
-        the package so incomplete evidence cannot be published.
+        configured strategy against the real graph. Generation is
+        best-effort: on failure the package still builds, but both files
+        are written as explicit ``status: "unavailable"`` placeholders, the
+        manifest records ``artifact_status.markov_blanket = "unavailable"``
+        plus a warning, and :class:`GNNValidator` reports the placeholder
+        as a validation warning so it is never mistaken for evidence.
         """
         mb_cfg = self.config.get("markov_blanket", {}) if isinstance(self.config, dict) else {}
         strategy = mb_cfg.get("strategy", "auto")

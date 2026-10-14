@@ -313,6 +313,9 @@ class GNNValidator:
         # Check 4: JSON files valid
         self._check_json_files()
 
+        # Check 4b: best-effort artifacts the builder could not produce
+        self._check_artifact_status(manifest)
+
         # Check 5: A/B/C/D matrix block valid
         self._check_matrices()
 
@@ -920,6 +923,60 @@ class GNNValidator:
                 self.result.errors.append(f"Invalid JSON in {filename}: {e}")
             except Exception as e:
                 self.result.errors.append(f"Failed to read {filename}: {e}")
+
+    # Best-effort artifacts whose failure GNNPackageBuilder records in
+    # ``manifest.artifact_status`` while writing a placeholder JSON payload.
+    BEST_EFFORT_ARTIFACTS = ("markov_blanket",)
+
+    def _check_artifact_status(self, manifest: dict[str, Any] | None) -> None:
+        """Warn about best-effort artifacts that are placeholders, not evidence.
+
+        ``GNNPackageBuilder`` keeps a package structurally consumable when a
+        derived artifact (currently the Markov blanket) cannot be computed:
+        it writes a stub payload whose ``metadata`` carries ``error: true`` /
+        ``status: "unavailable"`` and records the outcome in
+        ``manifest.artifact_status``. The stub is valid JSON, so without this
+        check the package would be certified with a full score. Each
+        non-``"success"`` artifact becomes a validation warning; the status
+        map is stored under ``details["artifact_status"]``.
+        """
+        statuses: dict[str, str] = {}
+        raw_status = manifest.get("artifact_status") if isinstance(manifest, dict) else None
+        if isinstance(raw_status, dict):
+            statuses = {str(name): str(status) for name, status in raw_status.items()}
+
+        for name in self.BEST_EFFORT_ARTIFACTS:
+            metadata = self._artifact_metadata(name)
+            stub_status = None
+            if metadata.get("error") is True or metadata.get("status") == "unavailable":
+                stub_status = str(metadata.get("status") or "unavailable")
+            if stub_status and statuses.get(name, "success") == "success":
+                # Older or hand-edited manifests may not record the failure;
+                # the placeholder payload itself still says it is unavailable.
+                statuses[name] = stub_status
+            elif name not in statuses and (self.package_dir / f"{name}.json").exists():
+                statuses[name] = "success"
+
+        self.result.details["artifact_status"] = statuses
+        for name, status in sorted(statuses.items()):
+            if status == "success":
+                continue
+            reason = self._artifact_metadata(name).get("reason")
+            suffix = f": {reason}" if reason else ""
+            self.result.warnings.append(
+                f"Artifact {name} is {status}{suffix}; {name}.json is a placeholder "
+                "and not publication-ready evidence"
+            )
+
+    def _artifact_metadata(self, name: str) -> dict[str, Any]:
+        """Return the ``metadata`` object of ``<name>.json`` (empty if absent)."""
+        path = self.package_dir / f"{name}.json"
+        try:
+            loaded = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+        metadata = loaded.get("metadata") if isinstance(loaded, dict) else None
+        return metadata if isinstance(metadata, dict) else {}
 
     def _check_matrices(self) -> None:
         """Validate the exported ``model.gnn.json`` A/B/C/D matrix block."""
