@@ -6,7 +6,7 @@ Identifies workflow stages, predecessors/successors, triggers, and side effects.
 
 import logging
 from collections import defaultdict, deque
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 
 from cogant.schemas.core import Edge, EdgeKind, Node, NodeKind
@@ -399,17 +399,29 @@ class ProcessExtractor:
         visited: set[str] = set()
         rec_stack: set[str] = set()
 
-        def _dfs_cycle(node: str) -> None:
-            visited.add(node)
-            rec_stack.add(node)
-            for neighbor in out_targets.get(node, []):
-                if neighbor not in visited:
-                    _dfs_cycle(neighbor)
-                elif neighbor in rec_stack:
-                    # Found a cycle -- trace it
-                    loop_members.add(neighbor)
-                    loop_members.add(node)
-            rec_stack.discard(node)
+        def _dfs_cycle(start: str) -> None:
+            # Iterative DFS with an explicit stack of (stage, neighbour
+            # iterator) frames. It visits stages in exactly the order the
+            # recursive form did, but a stage chain longer than the
+            # interpreter recursion limit no longer raises RecursionError.
+            visited.add(start)
+            rec_stack.add(start)
+            stack: list[tuple[str, Iterator[str]]] = [(start, iter(out_targets.get(start, ())))]
+            while stack:
+                node, neighbors = stack[-1]
+                for neighbor in neighbors:
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        rec_stack.add(neighbor)
+                        stack.append((neighbor, iter(out_targets.get(neighbor, ()))))
+                        break
+                    if neighbor in rec_stack:
+                        # Found a cycle (back edge) -- record both endpoints
+                        loop_members.add(neighbor)
+                        loop_members.add(node)
+                else:
+                    rec_stack.discard(node)
+                    stack.pop()
 
         for sid in self.stages:
             if sid not in visited:
