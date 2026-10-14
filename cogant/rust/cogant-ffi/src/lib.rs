@@ -240,22 +240,37 @@ impl PyProgramGraph {
             .collect())
     }
 
-    pub fn get_callees(&self, from_id: String) -> Vec<String> {
-        let id = StableId::new(from_id);
-        self.inner
-            .get_callees(&id)
-            .iter()
-            .map(|n| n.name.clone())
-            .collect()
+    /// Names of the nodes `from_id` calls; `[]` when the id is unknown.
+    ///
+    /// `from_id` is a stable id previously passed to `add_node` (or a node's
+    /// `short_id`). It is resolved through `id_lookup` because the graph keys
+    /// nodes by the full `StableId`, whose UUID is minted at insertion time —
+    /// building a fresh `StableId` from the string would never match.
+    pub fn get_callees(&self, from_id: &str) -> Vec<String> {
+        self.id_lookup
+            .get(from_id)
+            .map(|id| {
+                self.inner
+                    .get_callees(id)
+                    .iter()
+                    .map(|n| n.name.clone())
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 
-    pub fn get_callers(&self, to_id: String) -> Vec<String> {
-        let id = StableId::new(to_id);
-        self.inner
-            .get_callers(&id)
-            .iter()
-            .map(|n| n.name.clone())
-            .collect()
+    /// Names of the nodes that call `to_id`; `[]` when the id is unknown.
+    pub fn get_callers(&self, to_id: &str) -> Vec<String> {
+        self.id_lookup
+            .get(to_id)
+            .map(|id| {
+                self.inner
+                    .get_callers(id)
+                    .iter()
+                    .map(|n| n.name.clone())
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 
     pub fn to_json(&self) -> PyResult<String> {
