@@ -329,60 +329,49 @@ class _UpstreamSectionsMixin:
         return "\n".join(lines)
 
     def _format_initial_parameterization(self) -> str:
-        """Emit ``## InitialParameterization`` — derived A/B/C/D values.
+        """Emit ``## InitialParameterization`` — per-factor A/B/C/D literals.
 
-        COGANT derives Active Inference matrix values from the extracted
-        program graph and semantic mappings using
-        :class:`cogant.gnn.matrices.GNNMatrices`. The derivation is
-        deterministic and always produces valid probability distributions
-        (columns of A sum to 1, columns of B per action slice sum to 1, D
-        sums to 1). C is emitted as an unnormalized log-preference.
+        The upstream variables are indexed per hidden-state factor
+        (``D_f0``, ``B_f0``) and per observation modality (``A_m0``,
+        ``C_m0``) over each factor's own categorical cardinality, which is
+        a different axis from COGANT's aggregate matrices (one entry per
+        variable / observation; see ``model.gnn.json`` ``matrices``). So:
 
-        For factor-indexed variables (``A_m0``, ``B_f0``, ``D_f0``,
-        ``C_m0``), the aggregated matrices are broadcast to the
-        corresponding per-factor shape when COGANT extracted multiple
-        hidden-state factors or observation modalities.
+        * ``D_f`` is a uniform prior over the factor's categories;
+        * ``B_f`` is an identity ("stay") transition for every action;
+        * ``A_m`` is a column-stochastic identity-like likelihood (state
+          ``c`` maps to outcome ``c``; extra states get a uniform column);
+        * ``C_m`` broadcasts the derived log-preference ``C[m]`` from
+          :class:`cogant.gnn.matrices.GNNMatrices` over the modality's
+          outcomes (``0.0`` when it cannot be derived).
+
+        Every emitted A/B/D literal is a valid probability distribution;
+        C is an unnormalized log-preference. Only ``C`` is derived, so the
+        aggregate A/B/D arrays are not computed here.
         """
         # Lazy import to avoid circular imports at module load time.
         from cogant.gnn.matrices import GNNMatrices
 
         lines: list[str] = ["## InitialParameterization"]
-        n_states = len(self.state_space.variables)
         n_obs = len(self.state_space.observations)
         n_act = len(self.state_space.actions)
 
         C: list[Any] = []
-        D: list[Any] = []
-        try:
-            matrices = GNNMatrices(
-                graph=self.graph,
-                mappings=self.mappings,
-                state_space=self.state_space,
-            )
-            # compute_A() / compute_B() are called for their cardinality
-            # bookkeeping side effects (they update internal n_states_kept
-            # state used by compute_C / compute_D for shape matching).
-            matrices.compute_A()
-            matrices.compute_B()
-            C = matrices.compute_C()
-            D = matrices.compute_D()
-        except (ValueError, KeyError, AttributeError):
-            pass
+        if self.state_space.preferences and n_obs > 0:
+            try:
+                C = GNNMatrices(
+                    graph=self.graph,
+                    mappings=self.mappings,
+                    state_space=self.state_space,
+                ).compute_C()
+            except (ValueError, KeyError, AttributeError):
+                C = []
 
-        # D_f: derived prior over hidden states (or uniform fallback).
-        # The aggregate D has one entry per factor/variable; we broadcast
-        # the per-factor mass uniformly across the factor's categorical
-        # cardinality and fall back to a flat uniform when the aggregate
-        # is unavailable. (A peakier broadcast was considered and rejected
-        # because it can produce non-normalised vectors when card != 1/share.)
+        # D_f: uniform prior over each factor's categorical cardinality.
         for i, var in enumerate(self.state_space.variables.values()):
             card = var.cardinality or 2
-            if D and i == 0 and len(D) == n_states:
-                dist = [1.0 / card] * card
-                vec = ", ".join(f"{round(v, 4)}" for v in dist)
-            else:
-                share = round(1.0 / card, 4)
-                vec = ", ".join([f"{share}"] * card)
+            share = round(1.0 / card, 4)
+            vec = ", ".join([f"{share}"] * card)
             lines.append(f"D_f{i}={{ ({vec}) }}")
 
         # A_m: emit an identity-like symbolic likelihood over local outcome
