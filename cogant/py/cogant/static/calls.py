@@ -73,42 +73,20 @@ class CallGraphBuilder:
         Returns:
             List of CallEdge for all calls found.
         """
-        module = self.parser.parse_file(file_path)
-        symbol_table = self.symbol_extractor.extract_from_file(file_path)
-
-        calls = []
-        for func in module.functions:
-            call_visitor = CallExtractorVisitor(file_path, func.name, "module", symbol_table)
-            # Parse again to visit AST
-            try:
-                with open(file_path) as f:
-                    tree = ast.parse(f.read())
-                for node in tree.body:
-                    if isinstance(node, ast.FunctionDef) and node.name == func.name:
-                        call_visitor.visit(node)
-                        calls.extend(call_visitor.calls)
-            except Exception as e:
-                logger.debug(f"Failed to extract calls from {func.name}: {e}")
-
-        for cls in module.classes:
-            for method in cls.methods:
-                call_visitor = CallExtractorVisitor(file_path, method.name, cls.name, symbol_table)
-                try:
-                    with open(file_path) as f:
-                        tree = ast.parse(f.read())
-                    for node in tree.body:
-                        if isinstance(node, ast.ClassDef) and node.name == cls.name:
-                            for item in node.body:
-                                if isinstance(item, ast.FunctionDef) and item.name == method.name:
-                                    call_visitor.visit(item)
-                                    calls.extend(call_visitor.calls)
-                except Exception as e:
-                    logger.debug(f"Failed to extract calls from {cls.name}.{method.name}: {e}")
-
-        return calls
+        try:
+            source = Path(file_path).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as e:
+            logger.debug(f"Failed to read {file_path}: {e}")
+            return []
+        return self.extract_calls_from_source(source, file_path)
 
     def extract_calls_from_source(self, source: str, file_path: Path) -> list[CallEdge]:
         """Extract function/method calls from Python source code.
+
+        Module-level functions are reported first, then class methods, each
+        in source order. Every ``def`` and ``async def`` is visited once with
+        its own visitor, so same-named defs (a property getter and setter,
+        ``@overload`` variants) each contribute their own calls exactly once.
 
         Args:
             source: Python source code.
@@ -117,34 +95,41 @@ class CallGraphBuilder:
         Returns:
             List of CallEdge for all calls found.
         """
-        module = self.parser.parse_string(source, file_path)
-        symbol_table = self.symbol_extractor.extract_from_source(source, file_path)
-
-        calls = []
         try:
             tree = ast.parse(source)
-            for func in module.functions:
-                call_visitor = CallExtractorVisitor(file_path, func.name, "module", symbol_table)
-                for node in tree.body:
-                    if isinstance(node, ast.FunctionDef) and node.name == func.name:
-                        call_visitor.visit(node)
-                        calls.extend(call_visitor.calls)
-
-            for cls in module.classes:
-                for method in cls.methods:
-                    call_visitor = CallExtractorVisitor(
-                        file_path, method.name, cls.name, symbol_table
-                    )
-                    for node in tree.body:
-                        if isinstance(node, ast.ClassDef) and node.name == cls.name:
-                            for item in node.body:
-                                if isinstance(item, ast.FunctionDef) and item.name == method.name:
-                                    call_visitor.visit(item)
-                                    calls.extend(call_visitor.calls)
-        except Exception as e:
+        except (SyntaxError, ValueError) as e:
             logger.debug(f"Failed to extract calls from source: {e}")
+            return []
+        symbol_table = self.symbol_extractor.extract_from_source(source, file_path)
 
+        calls: list[CallEdge] = []
+        for node in tree.body:
+            if isinstance(node, _DEF_NODES):
+                calls.extend(_calls_in_def(node, file_path, "module", symbol_table))
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef):
+                for item in node.body:
+                    if isinstance(item, _DEF_NODES):
+                        calls.extend(_calls_in_def(item, file_path, node.name, symbol_table))
         return calls
+
+
+_DEF_NODES = (ast.FunctionDef, ast.AsyncFunctionDef)
+
+
+def _calls_in_def(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    file_path: Path,
+    scope: str,
+    symbol_table: Any,
+) -> list[CallEdge]:
+    """Return the calls made inside one function definition."""
+    visitor = CallExtractorVisitor(file_path, node.name, scope, symbol_table)
+    try:
+        visitor.visit(node)
+    except Exception as e:
+        logger.debug(f"Failed to extract calls from {scope}.{node.name}: {e}")
+    return visitor.calls
 
 
 class CallExtractorVisitor(ast.NodeVisitor):
