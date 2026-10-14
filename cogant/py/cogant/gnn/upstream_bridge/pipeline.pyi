@@ -37,6 +37,7 @@ class UpstreamPipelineResult:
     error: str | None
     upstream_status: str | None
     run_id: str | None
+    auto_included: list[int]
     @property
     def success_count(self) -> int: ...
     @property

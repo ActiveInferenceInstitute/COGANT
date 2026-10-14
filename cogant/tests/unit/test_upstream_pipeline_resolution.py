@@ -188,6 +188,14 @@ def _package(tmp_path: Path) -> Path:
     return package
 
 
+def _flag_values(cmd: list[str]) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for i, token in enumerate(cmd):
+        if token.startswith("--") and i + 1 < len(cmd) and not cmd[i + 1].startswith("--"):
+            values[token] = cmd[i + 1]
+    return values
+
+
 def test_build_main_command_is_one_invocation_with_active_python(tmp_path: Path) -> None:
     """GNN 4.x binds a run to one ``python -m gnn.main`` invocation."""
     from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
@@ -202,16 +210,60 @@ def test_build_main_command_is_one_invocation_with_active_python(tmp_path: Path)
     )
     cmd = pipeline_mod._build_main_command(cfg, tmp_path / "staged", [3, 5, 7])
     assert cmd[:3] == [sys.executable, "-m", "gnn.main"]
-    flags = dict(zip(cmd[3::2], cmd[4::2], strict=False))
+    flags = _flag_values(cmd)
     assert flags["--target-dir"] == str(tmp_path / "staged")
     assert flags["--output-dir"] == str(cfg.output_dir)
     assert flags["--only-steps"] == "3,5,7"
     assert flags["--frameworks"] == "pymdp,jax"
     assert flags["--timesteps"] == "7"
+    # Default skips plus 13 (skip_llm) are passed explicitly.
+    assert flags["--skip-steps"] == "1,2,11,12,13"
     assert "--verbose" in cmd and "--skip-llm" in cmd
-    quiet = UpstreamPipelineConfig(target_dir=cfg.target_dir, output_dir=cfg.output_dir)
+    quiet = UpstreamPipelineConfig(
+        target_dir=cfg.target_dir, output_dir=cfg.output_dir, skip_steps=[]
+    )
     quiet_cmd = pipeline_mod._build_main_command(quiet, cfg.target_dir, [3])
     assert "--no-verbose" in quiet_cmd and "--skip-llm" not in quiet_cmd
+    assert "--skip-steps" not in quiet_cmd
+
+
+def test_skip_llm_removes_step_13_from_the_selection(tmp_path: Path) -> None:
+    """Upstream never plans 13 under --skip-llm; the bridge must not request it."""
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    cfg = UpstreamPipelineConfig(
+        target_dir=tmp_path, output_dir=tmp_path / "out", only_steps=[3, 13], skip_llm=True
+    )
+    assert pipeline_mod._effective_skip(cfg) == [1, 2, 11, 12, 13]
+    assert resolve_steps(cfg.only_steps, pipeline_mod._effective_skip(cfg)) == [3]
+
+
+def test_auto_included_prerequisites_are_reported_not_hidden(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Steps upstream adds as prerequisites appear in steps/executed/auto_included."""
+    from cogant.gnn.upstream_bridge import pipeline as pipeline_mod
+
+    monkeypatch.setattr(pipeline_mod, "_import_gnn_main", lambda: object())
+    fake_run, _ = _fake_run_writing(
+        _summary(
+            {"script_name": "3_gnn.py", "status": "SUCCESS"},
+            {"script_name": "7_export.py", "status": "SUCCESS"},
+            {"script_name": "16_analysis.py", "status": "SUCCESS_WITH_WARNINGS"},
+        )
+    )
+    monkeypatch.setattr(pipeline_mod.subprocess, "run", fake_run)
+    cfg = UpstreamPipelineConfig(
+        target_dir=_package(tmp_path), output_dir=tmp_path / "out", only_steps=[3, 16]
+    )
+
+    result = pipeline_mod.run_upstream_pipeline(cfg)
+
+    assert [s.step_index for s in result.steps] == [3, 7, 16]
+    assert result.auto_included == [7]
+    assert result.executed == [3, 7, 16]
+    assert 7 not in result.skipped and 12 in result.skipped
+    assert result.to_dict()["auto_included"] == [7]
 
 
 def test_child_env_scopes_llm_model_and_drops_inherited_run_identity(

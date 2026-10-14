@@ -39,6 +39,14 @@ Default selection skips:
 All four can be re-enabled by passing ``skip_steps=[]`` (or listing them in
 ``only_steps``).
 
+Selection semantics: ``skip_steps`` (plus step 13 when ``skip_llm``) is passed
+to upstream as ``--skip-steps``, so a skipped step never runs. Upstream
+resolves declared prerequisites of the requested steps (e.g. ``16_analysis``
+needs ``12_execute``, ``18_security`` needs ``11_render``) and runs any that
+are not explicitly skipped; such steps are reported in
+:attr:`UpstreamPipelineResult.auto_included`. A requested step whose
+prerequisite is skipped still runs, with an upstream prerequisite warning.
+
 The pipeline is **advisory**: a failing upstream step is recorded but does
 not raise. Callers can promote any step to fatal by inspecting
 ``UpstreamPipelineResult.steps`` and acting on ``success=False``.
@@ -232,8 +240,9 @@ class UpstreamPipelineResult:
         available: ``False`` when ``gnn.main`` could not be imported (in
             which case ``steps`` is empty and ``error`` describes why).
         steps: Per-step results in execution order.
-        executed: Step indices requested from upstream.
-        skipped: Step indices intentionally skipped.
+        executed: Step indices requested from upstream plus any it
+            auto-included (see ``auto_included``).
+        skipped: Step indices that did not run.
         total_duration_s: Wall-clock duration of the upstream invocation.
         output_dir: Absolute path to the upstream output root.
         target_dir: Absolute path to the GNN package directory used as
@@ -243,6 +252,8 @@ class UpstreamPipelineResult:
         upstream_status: Upstream ``overall_status`` for the invocation, when
             the summary was produced.
         run_id: Upstream invocation ID (``GNN_RUN_ID``), when reported.
+        auto_included: Steps upstream ran as declared prerequisites of the
+            requested steps although the caller did not request them.
     """
 
     available: bool
@@ -255,6 +266,7 @@ class UpstreamPipelineResult:
     error: str | None = None
     upstream_status: str | None = None
     run_id: str | None = None
+    auto_included: list[int] = field(default_factory=list)
 
     @property
     def success_count(self) -> int:
@@ -285,6 +297,7 @@ class UpstreamPipelineResult:
             "error": self.error,
             "upstream_status": self.upstream_status,
             "run_id": self.run_id,
+            "auto_included": list(self.auto_included),
             "steps": [s.to_dict() for s in self.steps],
         }
 
@@ -363,6 +376,15 @@ def _stage_target_dir(cfg: UpstreamPipelineConfig) -> Path:
     return staged
 
 
+def _effective_skip(cfg: UpstreamPipelineConfig) -> list[int]:
+    """Steps that must not run: ``skip_steps`` plus ``13_llm`` under ``skip_llm``."""
+    universe = range(len(UPSTREAM_STEP_SCRIPTS))
+    skip = {step for step in (cfg.skip_steps or []) if step in universe}
+    if cfg.skip_llm:
+        skip.add(UPSTREAM_STEP_SCRIPTS.index("13_llm.py"))
+    return sorted(skip)
+
+
 def _build_main_command(
     cfg: UpstreamPipelineConfig, target_dir: Path, chosen: list[int]
 ) -> list[str]:
@@ -370,6 +392,8 @@ def _build_main_command(
 
     COGANT's active interpreter is used so the child resolves the same
     installed ``gnn`` package (never an upstream checkout's nested ``.venv``).
+    The skip set is passed explicitly: upstream applies it after resolving
+    prerequisites, so a skipped step cannot be pulled back in as a dependency.
     """
     cmd = [
         sys.executable,
@@ -387,6 +411,9 @@ def _build_main_command(
         str(cfg.timesteps),
         "--verbose" if cfg.verbose else "--no-verbose",
     ]
+    skip = _effective_skip(cfg)
+    if skip:
+        cmd.extend(["--skip-steps", ",".join(str(step) for step in skip)])
     if cfg.skip_llm:
         cmd.append("--skip-llm")
     return cmd
@@ -456,15 +483,22 @@ def _steps_from_summary(
 
     Every requested step yields exactly one result: steps upstream never
     reached (aborted invocation, exhausted deadline) are reported as
-    ``NOT_RUN`` failures rather than silently disappearing.
+    ``NOT_RUN`` failures rather than silently disappearing. Steps upstream ran
+    without being requested (auto-included prerequisites) are reported too,
+    in step order, so the result never hides work that ran.
     """
     by_script: dict[str, dict[str, Any]] = {}
     for raw in summary.get("steps") or []:
         if isinstance(raw, dict):
             by_script[str(raw.get("script_name", ""))] = raw
+    reported = set(chosen) | {
+        UPSTREAM_STEP_SCRIPTS.index(script)
+        for script in by_script
+        if script in UPSTREAM_STEP_SCRIPTS
+    }
 
     results: list[UpstreamStepResult] = []
-    for step_index in chosen:
+    for step_index in sorted(reported):
         script = UPSTREAM_STEP_SCRIPTS[step_index]
         out_dir = str(_per_step_output_dir(cfg.output_dir, step_index))
         raw = by_script.get(script)
@@ -590,7 +624,7 @@ def run_upstream_pipeline(
             output_dir=str(cfg.output_dir),
         )
 
-    chosen = resolve_steps(cfg.only_steps, cfg.skip_steps)
+    chosen = resolve_steps(cfg.only_steps, _effective_skip(cfg))
     skipped = [i for i in range(len(UPSTREAM_STEP_SCRIPTS)) if i not in chosen]
     if not chosen:
         # Upstream rejects an empty step selection at admission; an empty
@@ -641,10 +675,12 @@ def run_upstream_pipeline(
     summary = _read_summary(cfg.output_dir / _SUMMARY_RELPATH, started_wall)
     upstream_status: str | None = None
     run_id: str | None = None
+    auto_included: list[int] = []
     if summary is not None:
         steps = _steps_from_summary(summary, cfg, chosen)
         upstream_status = str(summary.get("overall_status") or "") or None
         run_id = str(summary.get("run_id") or "") or None
+        auto_included = sorted(s.step_index for s in steps if s.step_index not in chosen)
     else:
         if bridge_error is None:
             tail = _last_line(_read_log_tail(log_path)) or "no output"
@@ -663,17 +699,19 @@ def run_upstream_pipeline(
             f" ({step.error})" if step.error else "",
         )
 
+    executed = sorted(set(chosen) | set(auto_included))
     result = UpstreamPipelineResult(
         available=True,
         steps=steps,
-        executed=chosen,
-        skipped=skipped,
+        executed=executed,
+        skipped=[i for i in skipped if i not in auto_included],
         total_duration_s=total,
         output_dir=str(cfg.output_dir),
         target_dir=str(cfg.target_dir),
         error=bridge_error,
         upstream_status=upstream_status,
         run_id=run_id,
+        auto_included=auto_included,
     )
     _write_bridge_summary(cfg, result)
     return result

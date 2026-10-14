@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20705351.svg)](https://doi.org/10.5281/zenodo.20705351)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../LICENSE)
-[![Python](https://img.shields.io/badge/python-3.11%E2%80%933.13-blue.svg)](../cogant/pyproject.toml)
+[![Python](https://img.shields.io/badge/python-3.11%E2%80%933.14-blue.svg)](../cogant/pyproject.toml)
 
 > **Translate software repositories into Active Inference generative models.**
 

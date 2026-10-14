@@ -61,8 +61,9 @@ The pipeline's validate stage passes ``PipelineConfig.upstream_gnn_validation``
 (default ``False``) explicitly, so pipeline runs need that field set to
 ``True``; the environment flag is not consulted there. ``cogant validate`` on
 a package directory passes ``None`` (environment flag decides) and
-``--no-upstream-gnn`` forces ``False``. ``COGANT_DISABLE_UPSTREAM_GNN`` is not
-read by the resolver; with upstream already off by default it changes nothing.
+``--no-upstream-gnn`` forces ``False``. ``COGANT_DISABLE_UPSTREAM_GNN`` is a
+kill switch for the ``None`` case: it wins over ``COGANT_ENABLE_UPSTREAM_GNN``
+but never over an explicit caller choice.
 
 When it runs, the validator calls upstream ``gnn.validate_gnn_syntax`` at the
 ``standard`` level on ``model.gnn.md`` and stores the verdict under

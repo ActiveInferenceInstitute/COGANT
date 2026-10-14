@@ -103,78 +103,86 @@ say that COGANT's package fully executes through every selected upstream step.
 ## Recorded Result (2026-10-14)
 
 Collected on 2026-10-14 with Python 3.13 against the pin above, using the
-default selection and `skip_llm=True`.
+default selection and `skip_llm=True`, in an environment synced from the
+committed `cogant/uv.lock` (`uv sync --frozen --extra upstream --extra dev`):
+
+```bash
+uv run --directory cogant --frozen --extra upstream --extra dev \
+  python ../tools/gnn_upstream_audit_surface.py --collect \
+  --audit-dir /tmp/cogant_gnn_upstream_audit
+```
 
 | Claim | Result |
 | --- | --- |
 | Version and bridge currentness | **PASS**: installed commit `b4a583a5…` equals the pin and the lock; distribution `4.1.0`; `gnn.__version__` `4.1.0`; upstream `HEAD` was the pinned commit at collection time; `v4.1.0` resolves to `9255e19f…`. |
 | Bridge and negative control | **PASS**: the bridge reports `4.1.0`; a clean `import src.gnn` fails with `ModuleNotFoundError: No module named 'src'`; a clean `import gnn` reports `4.1.0`. |
 | Single-file validation | **PASS**: COGANT `GNNValidator` 100.0/100 with 0 errors; upstream `validate_gnn_syntax` 0 errors at both `standard` and `strict`. |
-| Selected upstream steps | **20/21 succeeded**; upstream overall status `SUCCESS_WITH_WARNINGS`; one bridge invocation of about 140 s wall time. |
-| Supply-chain scan | **FINDINGS** in the probe environment (listed below). |
+| Selected upstream steps | **20/20 succeeded**; upstream overall status `SUCCESS_WITH_WARNINGS`; one bridge invocation of about 78 s wall time. |
+| Supply-chain scan | **PASS**: `pip-audit` over the environment's 137 installed distributions reported no known vulnerabilities. |
 
-Per-step outcomes for the bridge selection (steps 0, 3–10, 13–24):
+Per-step outcomes for the bridge selection (steps 0, 3–10, 14–24; step 13 is
+excluded by `skip_llm=True`):
 
-| Step | Script | Status | Duration (s) | Notes |
+| Step | Script | Status | Duration (s) | Reason |
 | --- | --- | --- | --- | --- |
-| 0 | `0_template.py` | SUCCESS | 0.4 | |
-| 3 | `3_gnn.py` | SUCCESS | 0.7 | |
-| 4 | `4_model_registry.py` | SUCCESS | 0.3 | |
-| 5 | `5_type_checker.py` | SUCCESS | 4.3 | |
-| 6 | `6_validation.py` | SUCCESS | 1.1 | |
-| 7 | `7_export.py` | SUCCESS | 0.6 | |
-| 8 | `8_visualization.py` | SUCCESS | 44.3 | |
-| 9 | `9_advanced_viz.py` | SUCCESS | 13.8 | D2 CLI absent: 3 optional diagram features skipped |
-| 10 | `10_ontology.py` | SUCCESS | 0.3 | |
-| 13 | `13_llm.py` | NOT_RUN | 0.0 | Never planned by upstream: `--skip-llm` maps to upstream `skip_steps=13`, and the bridge counts a requested step missing from the upstream summary as a failure |
-| 14 | `14_ml_integration.py` | SUCCESS | 0.7 | scikit-learn absent: ML training skipped |
-| 15 | `15_audio.py` | SUCCESS | 2.1 | |
-| 16 | `16_analysis.py` | SUCCESS | 30.5 | |
-| 17 | `17_integration.py` | SUCCESS | 1.8 | |
-| 18 | `18_security.py` | SUCCESS | 0.3 | |
-| 19 | `19_research.py` | SUCCESS | 0.4 | |
-| 20 | `20_website.py` | SUCCESS | 0.7 | |
-| 21 | `21_mcp.py` | SUCCESS | 4.1 | |
-| 22 | `22_gui.py` | SUCCESS | 0.5 | Gradio absent: static headless GUI artifacts generated |
-| 23 | `23_report.py` | SUCCESS | 0.9 | |
-| 24 | `24_intelligent_analysis.py` | SUCCESS | 0.6 | |
+| 0 | `0_template.py` | SUCCESS | 0.3 |  |
+| 3 | `3_gnn.py` | SUCCESS | 0.4 |  |
+| 4 | `4_model_registry.py` | SUCCESS | 0.3 |  |
+| 5 | `5_type_checker.py` | SUCCESS_WITH_WARNINGS | 4.1 |  |
+| 6 | `6_validation.py` | SUCCESS | 1.2 |  |
+| 7 | `7_export.py` | SUCCESS | 0.6 |  |
+| 8 | `8_visualization.py` | SUCCESS | 40.8 |  |
+| 9 | `9_advanced_viz.py` | SUCCESS | 13.2 |  |
+| 10 | `10_ontology.py` | SUCCESS | 0.3 |  |
+| 14 | `14_ml_integration.py` | SUCCESS | 0.5 |  |
+| 15 | `15_audio.py` | SUCCESS | 1.3 |  |
+| 16 | `16_analysis.py` | SUCCESS_WITH_WARNINGS | 3.1 |  |
+| 17 | `17_integration.py` | SUCCESS | 1.5 |  |
+| 18 | `18_security.py` | SUCCESS_WITH_WARNINGS | 0.3 |  |
+| 19 | `19_research.py` | SUCCESS | 0.3 |  |
+| 20 | `20_website.py` | SUCCESS | 0.5 |  |
+| 21 | `21_mcp.py` | SUCCESS | 4.3 |  |
+| 22 | `22_gui.py` | SUCCESS | 0.4 |  |
+| 23 | `23_report.py` | SUCCESS | 0.6 |  |
+| 24 | `24_intelligent_analysis.py` | SUCCESS | 0.7 |  |
 
-Upstream selection reconciliation. Upstream planned 22 steps, not the 21 the
-bridge selected:
+Selection notes:
 
-- **Auto-included prerequisites.** GNN 4.1.0 declares `12_execute` as
-  requiring `3, 11`, `16_analysis` as requiring `3, 7, 12`, and `18_security`
-  as requiring `11`, so upstream logged `Auto-including dependency steps:
-  [11, 12]` and ran both although `DEFAULT_SKIP_STEPS` contains them.
-  `11_render` succeeded in 0.9 s with 4/4 framework renderings (PyMDP, JAX,
-  DisCoPy, bnlearn); `12_execute` finished `SUCCESS_WITH_WARNINGS` in 27.0 s
-  with 3 rendered scripts executed (DisCoPy, JAX, PyMDP) and 1 skipped
-  (bnlearn not installed). Upstream ran the rendered scripts without a sandbox
-  (`GNN_SANDBOX=off` is the upstream default). The bridge summary lists 11 and
-  12 under `skipped` and carries no step record for them; the audit surface
-  reports them from the upstream run summary, outside the all-step gate.
-- **Selected but unplanned.** Step 13 (see the table).
-- **Not run.** Steps 1 (`1_setup`) and 2 (`2_tests`).
-
-No executed step failed. The one gate failure (step 13) comes from how the
-bridge's `skip_llm=True` interacts with upstream step selection; it is not a
-defect in the model COGANT emits.
-
-Supply-chain findings from `pip-audit` over the probe environment's
-site-packages (COGANT with the `upstream` extra and documentation tooling
-installed); these describe that environment, not COGANT source code:
-`anyio` 4.13.0, `fsspec` 2026.3.0, `idna` 3.11, `mkdocs-material` 9.7.6,
-`multidict` 6.7.1, `pillow` 12.2.0, `pymdown-extensions` 10.21.2,
-`starlette` 1.0.0, and `urllib3` 2.6.3.
+- **Explicit skips hold.** The bridge passes its skip set (`1, 2, 11, 12`
+  plus `13` under `skip_llm`) to upstream as `--skip-steps`. Upstream applies
+  skips after resolving declared prerequisites, so `11_render` and
+  `12_execute` did not run even though `16_analysis` declares `3, 7, 12` and
+  `18_security` declares `11`; both dependents finished
+  `SUCCESS_WITH_WARNINGS` with upstream prerequisite warnings about the
+  missing render/execute outputs.
+- **Auto-included prerequisites are reported.** When a requested step's
+  prerequisite is not skipped, upstream runs it; the bridge lists such steps in
+  `UpstreamPipelineResult.auto_included` and includes their step records.
+  None were auto-included in this run.
+- **Optional extras.** Several steps degrade gracefully without optional
+  upstream extras (D2 CLI for `9_advanced_viz`, scikit-learn for
+  `14_ml_integration`, Gradio for `22_gui`); they still report `SUCCESS`.
+- **Earlier same-day run.** A run made before the bridge passed explicit
+  skips recorded 20/21: upstream auto-included and ran `11_render` (4/4
+  framework renderings) and `12_execute` (`SUCCESS_WITH_WARNINGS`; DisCoPy,
+  JAX and PyMDP scripts executed without a sandbox, upstream default
+  `GNN_SANDBOX=off`), and the requested step 13 was reported `NOT_RUN`
+  because `--skip-llm` removes it upstream. Its `pip-audit` findings
+  (anyio 4.13.0, fsspec 2026.3.0, idna 3.11, mkdocs-material 9.7.6, multidict
+  6.7.1, pillow 12.2.0, pymdown-extensions 10.21.2, starlette 1.0.0, urllib3
+  2.6.3) came from an environment built from the pre-refresh lock; the
+  refreshed lock resolves newer releases of every one of them.
 
 ## Current Boundary
 
 Against the pinned 4.1.0 release line, COGANT's validation, type-check,
 export, visualization, roundtrip, and runner paths pass, the generated
 calculator model passes upstream validation at `standard` and `strict`, and
-every upstream step that ran, including render and execute, succeeded. The
-all-step gate is still not green: with `skip_llm=True` the selected step 13
-never runs. Optional upstream extras (D2, scikit-learn, Gradio, bnlearn, an
-LLM backend) change what several steps can exercise. Treat a 100/100 COGANT
-package score as a structural-validation statement, not as proof that every
-upstream framework backend can render and run every COGANT package.
+every selected upstream step succeeds. Render and execute (`11`/`12`) are off
+by default and were not exercised in this run; opt in with `skip_steps=[]`
+(they ran successfully for the calculator package in the earlier run).
+Optional upstream extras (D2, scikit-learn, Gradio, bnlearn, an LLM backend)
+change what several steps can exercise. Treat a 100/100 COGANT package score
+as a structural-validation statement, not as proof that every upstream
+framework backend can render and run every COGANT package.
+

@@ -24,8 +24,8 @@ keeping heavy dependencies (JAX, PyTorch) out of the eager import path.
   (`1` / `true` / `yes`). The pipeline passes
   `PipelineConfig.upstream_gnn_validation` (default `False`) explicitly,
   and the 25-step pass needs `PipelineConfig.upstream_gnn_pipeline = True`.
-  `COGANT_DISABLE_UPSTREAM_GNN` is not read by the resolver; upstream is
-  already off by default.
+  `COGANT_DISABLE_UPSTREAM_GNN` (truthy) beats `COGANT_ENABLE_UPSTREAM_GNN`
+  for `upstream_gnn=None`; an explicit `True`/`False` always wins.
 * The `GNN v2.0.0` value under `## GNNVersionAndFlags` is COGANT's own schema
   identifier (`cogant.schema.versions.CURRENT_GNN_VERSION`), not the upstream
   release.
@@ -77,7 +77,7 @@ subprocess on COGANT's active interpreter and reads per-step outcomes from
 | `resolve_steps(only, skip)` | Pure helper returning the ordered step indices to request. |
 | `UpstreamPipelineConfig` | Inputs: `target_dir`, `output_dir`, `only_steps`, `skip_steps` (default `sorted(DEFAULT_SKIP_STEPS)`), `frameworks`, `llm_model` (child-env `OLLAMA_MODEL`; the caller's env is never mutated), `timesteps`, `verbose`, `skip_llm`, `timeout_s`. |
 | `UpstreamStepResult` | Per-step outcome: `step_index`, `script`, `status` (upstream status, or `NOT_RUN` / `TIMEOUT` / `BRIDGE_ERROR`), `success`, `duration_s`, `exit_code`, `memory_delta_mb`, `output_dir`, `error`. |
-| `UpstreamPipelineResult` | Aggregate: `available`, `steps`, `executed`, `skipped`, `total_duration_s`, `output_dir`, `target_dir`, `error`, `upstream_status`, `run_id`, plus `success_count` / `failure_count` / `success_rate` and `to_dict()`. |
+| `UpstreamPipelineResult` | Aggregate: `available`, `steps`, `executed`, `skipped`, `total_duration_s`, `output_dir`, `target_dir`, `error`, `upstream_status`, `run_id`, `auto_included`, plus `success_count` / `failure_count` / `success_rate` and `to_dict()`. |
 | `run_upstream_pipeline(cfg)` | Driver: stages `*.gnn.md` into `<output_dir>/_cogant_input/`, runs the single invocation (console log to `<output_dir>/upstream_pipeline.log`), maps the upstream summary onto one `UpstreamStepResult` per requested step, and writes `<output_dir>/upstream_pipeline_summary.json`. |
 
 ### Step catalogue
@@ -97,7 +97,7 @@ subprocess on COGANT's active interpreter and reads per-step outcomes from
 | 10 | `10_ontology.py` | on | Active Inference Ontology (AIO) lookup. |
 | **11** | `11_render.py` | **off** | Framework code generation (PyMDP, JAX, DisCoPy, bnlearn, …). |
 | **12** | `12_execute.py` | **off** | Runs the rendered scripts (upstream default `GNN_SANDBOX=off`). |
-| 13 | `13_llm.py` | on | LLM analysis (Ollama; honours `--upstream-gnn-llm-model`). With `skip_llm=True` upstream never plans it and the bridge reports `NOT_RUN`. |
+| 13 | `13_llm.py` | on | LLM analysis (Ollama; honours `--upstream-gnn-llm-model`). With `skip_llm=True` the bridge adds 13 to the skip set, so it is never requested. |
 | 14 | `14_ml_integration.py` | on | ML integration (training skipped without scikit-learn). |
 | 15 | `15_audio.py` | on | Audio rendering of model dynamics. |
 | 16 | `16_analysis.py` | on | Statistical analysis. |
@@ -112,12 +112,14 @@ subprocess on COGANT's active interpreter and reads per-step outcomes from
 
 Upstream GNN 4.1.0 resolves hard step prerequisites inside the invocation:
 `12_execute` requires `3, 11`, `16_analysis` requires `3, 7, 12`, and
-`18_security` requires `11`. With the default selection upstream therefore
-also runs `11_render` and `12_execute` ("Auto-including dependency steps");
-the bridge result still lists them under `skipped` and has no step record for
-them. Read `00_pipeline_summary/pipeline_execution_summary.json`
-(`planned_steps`) or the audit surface (`tools/gnn_upstream_audit_surface.py`)
-for what upstream actually ran.
+`18_security` requires `11`. Upstream applies `--skip-steps` *after* that
+resolution, so the bridge always passes its skip set (`skip_steps`, plus `13`
+under `skip_llm`) explicitly: a skipped step never runs, and a requested step
+whose prerequisite is skipped still runs with an upstream prerequisite warning
+(the default selection runs `16`/`18` without `11`/`12`). Prerequisites that
+are *not* skipped are auto-included by upstream; the bridge reports them in
+`UpstreamPipelineResult.auto_included`, includes their step records, and
+counts them in `executed`.
 
 ### Wiring
 

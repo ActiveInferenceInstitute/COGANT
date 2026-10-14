@@ -135,6 +135,7 @@ def validate(
             skip = _parse_step_csv(
                 upstream_gnn_skip_steps,
                 label="--upstream-gnn-skip-steps",
+                empty_means=[],
             )
             out_dir = (
                 Path(upstream_gnn_output_dir)
